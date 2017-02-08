@@ -4,18 +4,20 @@ StructureSpawn.prototype.countCreeps = function (type) {
 };
 
 StructureSpawn.prototype.run = function () {
-    if (this.countCreeps('harvester') < 3) {
+    if (this.countCreeps('harvester') < 5) {
         this.createBiggestCreep('harvester');
-    } else if (this.countCreeps('builder') < 3) {
+    } else if (this.countCreeps('builder') < 4) {
         this.createBiggestCreep('builder');
     } else if (this.countCreeps('upgrader') < 2) {
         this.createBiggestCreep('upgrader');
+    } else if (this.countCreeps('repairer') < 1) {
+        this.createBiggestCreep('repairer');
     }
 };
 
 StructureSpawn.prototype.createBiggestCreep = function (roleName) {
     // create a balanced body as big as possible with the given energy
-    var energy = this.room.energyAvailable; // total energy available for spawn + extensions
+    var energy = this.room.energyCapacityAvailable; // total energy available for spawn + extensions
     var numberOfParts = Math.floor(energy / 200);
     // make sure the creep is not too big (more than 50 parts)
     numberOfParts = Math.min(numberOfParts, Math.floor(50 / 3));
