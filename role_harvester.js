@@ -24,7 +24,9 @@ var roleHarvester = {
         }
         // Deposit energy while mode is deposit
         if (creep.memory.mode == 'deposit') {
-           creep.goTransfer();
+           if (creep.goTransfer() != OK) {
+               upgrader.run(creep);
+           }
         }
         else {
             upgrader.run(creep); // run upgrader state if no above conditions are met

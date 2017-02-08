@@ -20,6 +20,7 @@ Creep.prototype.doRole = function () {
 
 Creep.prototype.targetNearestAvailableSource = function () {
     // Set target to the nearest source that isn't already saturated with creeps
+    // TODO: find least saturated source
     var sources = this.room.find(FIND_SOURCES_ACTIVE);
     if (sources.length > 0) {
         var target = sources[0];
@@ -73,15 +74,16 @@ Creep.prototype.targetNearestRepair = function () {
         this.memory.target = structure.id;
         return 0;
     } else {
-        var wall = this.pos.findClosestByPath(FIND_STRUCTURES, {
-            filter: (s) => s.hits < s.hitsMax && s.structureType == STRUCTURE_WALL
-        });
-        if (wall != undefined) {
-            this.memory.target = wall.id;
-            return 0;
-        } else {
-            return 1; // no repair jobs found!
-        }
+        // var wall = this.pos.findClosestByPath(FIND_STRUCTURES, {
+        //     filter: (s) => s.hits < s.hitsMax && s.structureType == STRUCTURE_WALL
+        // });
+        // if (wall != undefined) {
+        //     this.memory.target = wall.id;
+        //     return 0;
+        // } else {
+        //     return 1; // no repair jobs found!
+        // }
+        return 1;
     }
 };
 
@@ -91,8 +93,13 @@ Creep.prototype.goTransfer = function () {
     let res = this.transfer(target, RESOURCE_ENERGY);
     if (res == ERR_NOT_IN_RANGE) {
         this.moveTo(target);
-    } else if (res == ERR_INVALID_TARGET || res == ERR_FULL) {
-        this.targetNearestAvailableSink(); // retarget
+        return 0;
+    } else if (res == ERR_INVALID_TARGET || res == ERR_FULL) { // retarget
+        if (this.targetNearestAvailableSink() == OK) {
+            return this.goTransfer();
+        } else {
+            return 1;
+        }
     }
 };
 
@@ -102,8 +109,13 @@ Creep.prototype.goHarvest = function () {
     let res = this.harvest(target);
     if (res == ERR_NOT_IN_RANGE) {
         this.moveTo(target); // move to target
+        return 0;
     } else if (res == ERR_NOT_ENOUGH_RESOURCES || res == ERR_INVALID_TARGET) {
-        this.targetNearestAvailableSource();
+        if (this.targetNearestAvailableSource() == OK) {
+            return this.goHarvest();
+        } else {
+            return 1;
+        }
     }
 };
 
@@ -113,7 +125,7 @@ Creep.prototype.goBuild = function () {
     let res = this.build(target);
     if (res == ERR_INVALID_TARGET) { // retarget if not valid
         let res = this.targetNearestJob();
-        if (res == 1) {
+        if (res != OK) {
             return res; // 1: no jobs found, deposit mode
         } else {
             return this.goBuild();
@@ -130,7 +142,7 @@ Creep.prototype.goRepair = function () {
     let res = this.repair(target);
     if (res == ERR_INVALID_TARGET) { // retarget if not valid
         let res = this.targetNearestRepair();
-        if (res == 1) {
+        if (res != OK) {
             return res; // 1: no jobs found, deposit mode
         } else {
             return this.goRepair();

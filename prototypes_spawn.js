@@ -4,13 +4,13 @@ StructureSpawn.prototype.countCreeps = function (type) {
 };
 
 StructureSpawn.prototype.run = function () {
-    if (this.countCreeps('harvester') < 5) {
+    if (this.countCreeps('harvester') < 6) {
         this.createBiggestCreep('harvester');
-    } else if (this.countCreeps('builder') < 4) {
+    } else if (this.countCreeps('builder') < 5) {
         this.createBiggestCreep('builder');
-    } else if (this.countCreeps('upgrader') < 2) {
+    } else if (this.countCreeps('upgrader') < 3) {
         this.createBiggestCreep('upgrader');
-    } else if (this.countCreeps('repairer') < 1) {
+    } else if (this.countCreeps('repairer') < 3) {
         this.createBiggestCreep('repairer');
     }
 };
