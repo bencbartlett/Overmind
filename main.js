@@ -3,6 +3,8 @@
 // Import prototype modules (each has own internal imports)
 require('prototypes_creep');
 require('prototypes_spawn');
+require('prototypes_RoomObject');
+require('prototypes_Room');
 
 // Main loop
 module.exports.loop = function () {
@@ -30,11 +32,11 @@ module.exports.loop = function () {
 
     // Animate each creep
     for (let name in Game.creeps) {
-        Game.creeps[name].doRole();
+        Game.creeps[name].run();
     }
 
     // Animate each spawn
     for (let name in Game.spawns) {
-        Game.spawns[name].work();
+        Game.spawns[name].run();
     }
 };
