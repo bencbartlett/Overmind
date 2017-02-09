@@ -3,27 +3,26 @@ var upgrader = require('role_upgrader');
 var roleBuilder = {
     /** @param {Creep} creep **/
     run: function (creep) {
-        // Switch to harvest mode and set new target when done depositing
-        if (creep.memory.mode != 'harvest' && creep.carry.energy == 0) {
-            creep.memory.mode = 'harvest';
-            creep.targetNearestAvailableSource();
-            creep.say("Harvesting!")
+        // Switch to withdraw mode and set new target when done building
+        if (creep.memory.working && creep.carry.energy == 0) {
+            creep.memory.working = false;
+            creep.say("Withdrawing!");
         }
-        // Switch to build mode and set new target when done harvesting
-        if (creep.memory.mode == 'harvest' && creep.carry.energy == creep.carryCapacity) {
+        // Switch to build mode and set new target when done withdrawing
+        if (!creep.memory.working && creep.carry.energy == creep.carryCapacity) {
             if (creep.targetNearestJob() == OK) {
-                creep.memory.mode = 'build';
+                creep.memory.working = true;
                 creep.say("Building!");
             } else {
                 upgrader.run(creep); // act as an upgrader if nothing to build
             }
         }
         // Go harvest while mode is harvest
-        if (creep.memory.mode == 'harvest') {
-            creep.goHarvest();
+        if (!creep.memory.working) {
+            creep.goWithdraw();
         }
         // Go build while mode is build
-        if (creep.memory.mode == 'build') {
+        if (creep.memory.working) {
             if (creep.goBuild() != OK) {
                 upgrader.run(creep); // revert to upgrader state
             }

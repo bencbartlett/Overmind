@@ -1,23 +1,22 @@
 var roleUpgrader = {
     /** @param {Creep} creep **/
     run: function (creep) {
-        // Switch to harvest mode and set new target when done depositing
-        if (creep.memory.mode != 'harvest' && creep.carry.energy == 0) {
-            creep.memory.mode = 'harvest';
-            creep.targetNearestAvailableSource();
-            creep.say("Harvesting!")
+        // Switch to withdraw mode (working=false) when done upgrading
+        if (creep.memory.working && creep.carry.energy == 0) {
+            creep.memory.working = false;
+            creep.say("Withdrawing!");
         }
-        // Switch to build mode  when done harvesting
-        if (creep.memory.mode == 'harvest' && creep.carry.energy == creep.carryCapacity) {
-            creep.memory.mode = 'upgrade';
+        // Switch to upgrading when enough energy
+        if (!creep.memory.working && creep.carry.energy == creep.carryCapacity) {
+            creep.memory.working = true;
             creep.say("Upgrading!")
         }
         // Go harvest while mode is harvest
-        if (creep.memory.mode == 'harvest') {
-            creep.goHarvest();
+        if (!creep.memory.working) {
+            creep.goWithdraw();
         }
         // Go upgrade while mode is upgrade
-        if (creep.memory.mode == 'upgrade') {
+        if (creep.memory.working) {
             if (creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(creep.room.controller);
             }
