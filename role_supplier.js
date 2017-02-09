@@ -25,8 +25,13 @@ var roleSupplier = {
         }
         // Supply energy sinks
         if (creep.memory.working) {
-            if (creep.goTransfer() != OK) {
-                upgrader.run(creep);
+            let res = creep.goTransfer();
+            if (res == ERR_INVALID_TARGET || res == ERR_FULL) { // retarget
+                if (creep.targetNearestAvailableSink() == OK) {
+                    creep.goTransfer();
+                } else {
+                    upgrader.run(creep);
+                }
             }
         }
         else {

@@ -2,11 +2,11 @@ require('constants');
 
 StructureTower.prototype.run = function () {
     // Task priority for towers: attack, then heal, then repair
-    var useTowerToRepairStructres = false;
+    var useTowerToRepairStructures = false;
     return (this.attackNearestEnemy() == OK ||
             this.healNearestAlly() == OK ||
-            !useTowerToRepairStructres ||
-            this.repairNearestStructure() == OK);
+            this.preventRampartDecay(1000) == OK ||
+            this.repairNearestStructure(useTowerToRepairStructures) == OK);
 };
 
 StructureTower.prototype.attackNearestEnemy = function () {
@@ -31,12 +31,28 @@ StructureTower.prototype.healNearestAlly = function () {
     }
 };
 
-StructureTower.prototype.repairNearestStructure = function () {
-    var closestDamagedStructure = this.pos.findClosestByRange(FIND_STRUCTURES, {
-        filter: (s) => s.hits < s.hitsMax && s.structureType != STRUCTURE_WALL
+StructureTower.prototype.repairNearestStructure = function (toggle) {
+    if (toggle) {
+        var closestDamagedStructure = this.pos.findClosestByRange(FIND_STRUCTURES, {
+            filter: (s) => s.hits < s.hitsMax && s.structureType != STRUCTURE_WALL
+        });
+        if (closestDamagedStructure) {
+            this.repair(closestDamagedStructure);
+            return OK;
+        } else {
+            return ERR_NO_TARGET_FOUND;
+        }
+    } else {
+        return ERR_NO_TARGET_FOUND;
+    }
+};
+
+StructureTower.prototype.preventRampartDecay = function (hp) {
+    var closestDyingRampart = this.pos.findClosestByRange(FIND_STRUCTURES, {
+        filter: (s) => s.hits < hp && s.structureType == STRUCTURE_RAMPART
     });
-    if (closestDamagedStructure) {
-        this.repair(closestDamagedStructure);
+    if (closestDyingRampart) {
+        console.log(this.repair(closestDyingRampart));
         return OK;
     } else {
         return ERR_NO_TARGET_FOUND;

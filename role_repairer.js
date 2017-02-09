@@ -6,14 +6,16 @@ var roleRepairer = {
         // Switch to withdraw mode when no energy
         if (creep.memory.working && creep.carry.energy == 0) {
             creep.memory.working = false;
-            creep.targetNearestAvailableSource();
-            creep.say("Harvesting!")
+            creep.say("Withdrawing!");
         }
         // Switch to repair mode when done withdrawing
         if (!creep.memory.working && creep.carry.energy == creep.carryCapacity) {
             if (creep.targetNearestRepair() == OK) {
                 creep.memory.working = true;
                 creep.say("Repairing!");
+            } else if (creep.targetNearestWallLowerThan(20000) == OK) { // manual cutoff
+                creep.memory.working = true;
+                creep.say("Fortifying!");
             } else {
                 builder.run(creep); // act as a builder if nothing to repair
             }
@@ -24,7 +26,7 @@ var roleRepairer = {
         }
         // Deposit energy while mode is deposit
         if (creep.memory.working) {
-            if (creep.goRepair() != OK) {
+            if (creep.goRepair() == ERR_NO_TARGET_FOUND) {
                 builder.run(creep);
             }
         }

@@ -94,24 +94,29 @@ Creep.prototype.targetNearestJob = function () {
     }
 };
 
+Creep.prototype.targetNearestWallLowerThan = function (hp) {
+    var wall = this.pos.findClosestByPath(FIND_STRUCTURES, {
+        filter: (s) => s.hits < hp && (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)
+    });
+    if (wall != undefined) {
+        this.memory.target = wall.id;
+        return OK;
+    } else {
+        return ERR_NO_TARGET_FOUND;
+    }
+};
+
 Creep.prototype.targetNearestRepair = function () {
     var structure = this.pos.findClosestByPath(FIND_STRUCTURES, {
-        filter: (s) => s.hits < 0.9 * s.hitsMax && s.structureType != STRUCTURE_WALL // prioritize non-walls
+        filter: (s) => s.hits < s.hitsMax &&
+                       s.structureType != STRUCTURE_WALL &&
+                       s.structureType != STRUCTURE_RAMPART // prioritize non-walls/non-ramparts
     });
     if (structure != undefined) {
         this.memory.target = structure.id;
         return OK;
     } else {
-        // var wall = this.pos.findClosestByPath(FIND_STRUCTURES, {
-        //     filter: (s) => s.hits < s.hitsMax && s.structureType == STRUCTURE_WALL
-        // });
-        // if (wall != undefined) {
-        //     this.memory.target = wall.id;
-        //     return OK;
-        // } else {
-        //     return ERR_NO_TARGET_FOUND; // no repair jobs found!
-        // }
-        return ERR_NO_TARGET_FOUND;
+        return this.targetNearestWallLowerThan(20000);
     }
 };
 
@@ -161,16 +166,8 @@ Creep.prototype.goTransfer = function () {
     let res = this.transfer(target, RESOURCE_ENERGY);
     if (res == ERR_NOT_IN_RANGE) {
         this.moveTo(target);
-        return OK;
-    } else if (res == ERR_INVALID_TARGET || res == ERR_FULL) { // retarget
-        if (this.targetNearestAvailableSink() == OK) {
-            return this.goTransfer();
-        } else {
-            return ERR_NO_TARGET_FOUND;
-        }
-    } else {
-        return OK;
     }
+    return res;
 };
 
 Creep.prototype.goHarvest = function () {
@@ -257,8 +254,8 @@ Creep.prototype.goWithdraw = function () {
         return OK;
     } else if (res == ERR_INVALID_TARGET || res == ERR_NOT_ENOUGH_RESOURCES) { // retarget if not valid
         let retarget = this.targetFullestContainer();
-        console.log(retarget);
-        if (retarget != OK) {
+        // console.log(retarget);
+        if (retarget == OK) {
             return this.goWithdraw();
         } else {
             return retarget;

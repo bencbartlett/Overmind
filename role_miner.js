@@ -4,18 +4,15 @@ var roleMiner = {
     /** @param {Creep} creep **/
     getAssignment: function (creep) {
         var remainingAssignments = creep.room.remainingMinerSourceAssignments();
-        var minAssignments = Infinity;
-        var sourceAssigned = false;
+        var maxRemainingAssignments = 0;
         for (let ID in remainingAssignments) {
-            // Scan through room sources until you find one that has remaining possible spots
-            if (remainingAssignments[ID] > 0 && remainingAssignments[ID] < minAssignments) {
-                sourceAssigned = true;
+            // Scan through room sources until you find one that has the most remaining open spots
+            if (remainingAssignments[ID] > 0 && remainingAssignments[ID] > maxRemainingAssignments) {
                 minAssignments = remainingAssignments[ID];
                 creep.memory.target = ID;
-                creep.memory.mode = 'mine';
             }
         }
-        if (!sourceAssigned) {
+        if (maxRemainingAssignments == 0) {
             console.log("ERROR: " + creep.name + " could not receive a mining assignment.");
         } else {
             console.log(creep.name + " assigned to source: " + creep.memory.target);
@@ -51,7 +48,11 @@ var roleMiner = {
                 // you have to use FIND_STRUCTURES, not FIND_MY_STRUCTURES; containers are neutral
                 filter: (s) => s.structureType == STRUCTURE_CONTAINER
             });
-            creep.transfer(closestContainer, RESOURCE_ENERGY);
+            if (closestContainer.hits >= closestContainer.hitsMax) { // miners repair their own containers
+                creep.transfer(closestContainer, RESOURCE_ENERGY);
+            } else {
+                creep.repair(closestContainer);
+            }
         }
     }
 };

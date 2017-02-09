@@ -6,20 +6,20 @@ StructureSpawn.prototype.countCreeps = function (type) {
 };
 
 StructureSpawn.prototype.run = function () {
-    if (this.countCreeps('miner') < 5) {
-        this.createBiggestMiner(3, true);
-    } else if (this.countCreeps('supplier') < 4) {
+    if (this.countCreeps('miner') < 4) {
+        this.createBiggestMiner(4, true);
+    } else if (this.countCreeps('supplier') < 3) {
         this.createCreep([WORK, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE], undefined, {role: 'supplier'});
-    } else if (this.countCreeps('builder') < 5) {
+    } else if (this.countCreeps('repairer') < 4) {
+        this.createBiggestCreep('repairer', 3);
+    } else if (this.countCreeps('builder') < 3) {
         this.createBiggestCreep('builder');
     } else if (this.countCreeps('upgrader') < 3) {
         this.createBiggestCreep('upgrader');
-    } else if (this.countCreeps('repairer') < 3) {
-        this.createBiggestCreep('repairer');
-    } else if (this.countCreeps('meleeAttacker') < 2) {
-        this.createMeleeAttacker();
-    } else if (this.countCreeps('healer') < 2) {
+    } else if (this.countCreeps('healer') < 0) {
         this.createHealer();
+    } else if (this.countCreeps('meleeAttacker') < 0) {
+        this.createMeleeAttacker();
     }
 };
 
@@ -46,10 +46,10 @@ StructureSpawn.prototype.createBiggestCreep = function (roleName, partsLimit = I
 StructureSpawn.prototype.createBiggestMiner = function (maxWorkParts, includeCarry) {
     // create a balanced body as big as possible with the given energy
     var energy = this.room.energyCapacityAvailable; // total energy available for spawn + extensions
-    var numberOfParts = Math.floor((energy - (50+50)) / 100); // max number of work parts you can put on
-    numberOfParts = Math.min(numberOfParts, maxWorkParts)
+    var numberOfParts = Math.floor((energy - (50 + 50)) / 100); // max number of work parts you can put on
+    numberOfParts = Math.min(numberOfParts, maxWorkParts);
     // make sure the creep is not too big (more than 50 parts)
-    numberOfParts = Math.min(numberOfParts, 50-2); // don't exceed max parts
+    numberOfParts = Math.min(numberOfParts, 50 - 2); // don't exceed max parts
     var body = [];
     for (let i = 0; i < numberOfParts; i++) {
         body.push(WORK);
