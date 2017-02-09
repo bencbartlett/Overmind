@@ -1,26 +1,34 @@
+require('constants');
+
 StructureSpawn.prototype.countCreeps = function (type) {
     var creeps = _.filter(Game.creeps, (creep) => creep.role() == type);
     return creeps.length;
 };
 
 StructureSpawn.prototype.run = function () {
-    if (this.countCreeps('harvester') < 6) {
-        this.createBiggestCreep('harvester');
+    if (this.countCreeps('miner') < 5) {
+        this.createBiggestMiner(3, true);
+    } else if (this.countCreeps('supplier') < 4) {
+        this.createCreep([WORK, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE], undefined, {role: 'supplier'});
     } else if (this.countCreeps('builder') < 5) {
         this.createBiggestCreep('builder');
     } else if (this.countCreeps('upgrader') < 3) {
         this.createBiggestCreep('upgrader');
     } else if (this.countCreeps('repairer') < 3) {
         this.createBiggestCreep('repairer');
+    } else if (this.countCreeps('meleeAttacker') < 2) {
+        this.createMeleeAttacker();
+    } else if (this.countCreeps('healer') < 2) {
+        this.createHealer();
     }
 };
 
-StructureSpawn.prototype.createBiggestCreep = function (roleName) {
+StructureSpawn.prototype.createBiggestCreep = function (roleName, partsLimit = Infinity) {
     // create a balanced body as big as possible with the given energy
     var energy = this.room.energyCapacityAvailable; // total energy available for spawn + extensions
     var numberOfParts = Math.floor(energy / 200);
     // make sure the creep is not too big (more than 50 parts)
-    numberOfParts = Math.min(numberOfParts, Math.floor(50 / 3));
+    numberOfParts = Math.min(numberOfParts, Math.floor(50 / 3), partsLimit);
     var body = [];
     for (let i = 0; i < numberOfParts; i++) {
         body.push(WORK);
@@ -33,4 +41,30 @@ StructureSpawn.prototype.createBiggestCreep = function (roleName) {
     }
     // create creep with the created body and the given role
     return this.createCreep(body, undefined, {role: roleName});
+};
+
+StructureSpawn.prototype.createBiggestMiner = function (maxWorkParts, includeCarry) {
+    // create a balanced body as big as possible with the given energy
+    var energy = this.room.energyCapacityAvailable; // total energy available for spawn + extensions
+    var numberOfParts = Math.floor((energy - (50+50)) / 100); // max number of work parts you can put on
+    numberOfParts = Math.min(numberOfParts, maxWorkParts)
+    // make sure the creep is not too big (more than 50 parts)
+    numberOfParts = Math.min(numberOfParts, 50-2); // don't exceed max parts
+    var body = [];
+    for (let i = 0; i < numberOfParts; i++) {
+        body.push(WORK);
+    }
+    if (includeCarry) {
+        body.push(CARRY);
+    }
+    body.push(MOVE);
+    return this.createCreep(body, undefined, {role: 'miner'});
+};
+
+StructureSpawn.prototype.createMeleeAttacker = function () {
+    return this.createCreep([ATTACK, MOVE], undefined, {role: 'meleeAttacker'});
+};
+
+StructureSpawn.prototype.createHealer = function () {
+    return this.createCreep([HEAL, MOVE], undefined, {role: 'healer'});
 };
