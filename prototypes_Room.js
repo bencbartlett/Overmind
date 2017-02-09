@@ -19,7 +19,8 @@ Room.prototype.remainingMinerSourceAssignments = function () {
     for (let i in sources) {
         // assignment becomes a dictionary with source ID keys and number of remaining spots as values
         let numAssigned = _.filter(miners, (c) => c.memory.target == sources[i].id).length;
-        assignments[sources[i].id] = sources[i].capacity() - numAssigned;
+        let maxSpots = Math.min(sources[i].capacity(), 2)
+        assignments[sources[i].id] = maxSpots - numAssigned;
     }
     return assignments;
 };
