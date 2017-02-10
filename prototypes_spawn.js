@@ -6,21 +6,27 @@ StructureSpawn.prototype.countCreeps = function (type) {
 };
 
 StructureSpawn.prototype.run = function () {
+    var creepSizeLimit = 3;
     if (this.countCreeps('miner') < 4) {
         this.createBiggestMiner(4, true);
     } else if (this.countCreeps('supplier') < 3) {
-        this.createCreep([WORK, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE], undefined, {role: 'supplier'});
+        this.createCreep([WORK, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
+                         this.creepName('supplier'), {role: 'supplier'});
     } else if (this.countCreeps('repairer') < 4) {
-        this.createBiggestCreep('repairer', 3);
+        this.createBiggestCreep('repairer', creepSizeLimit);
     } else if (this.countCreeps('builder') < 3) {
-        this.createBiggestCreep('builder');
+        this.createBiggestCreep('builder', creepSizeLimit);
     } else if (this.countCreeps('upgrader') < 3) {
-        this.createBiggestCreep('upgrader');
+        this.createBiggestCreep('upgrader', creepSizeLimit);
     } else if (this.countCreeps('healer') < 0) {
         this.createHealer();
     } else if (this.countCreeps('meleeAttacker') < 0) {
         this.createMeleeAttacker();
     }
+};
+
+StructureSpawn.prototype.creepName = function (roleName) {
+    return roleName + '_' + Game.time.toString();
 };
 
 StructureSpawn.prototype.createBiggestCreep = function (roleName, partsLimit = Infinity) {
@@ -40,7 +46,7 @@ StructureSpawn.prototype.createBiggestCreep = function (roleName, partsLimit = I
         body.push(MOVE);
     }
     // create creep with the created body and the given role
-    return this.createCreep(body, undefined, {role: roleName});
+    return this.createCreep(body, this.creepName(roleName), {role: roleName});
 };
 
 StructureSpawn.prototype.createBiggestMiner = function (maxWorkParts, includeCarry) {
@@ -58,13 +64,13 @@ StructureSpawn.prototype.createBiggestMiner = function (maxWorkParts, includeCar
         body.push(CARRY);
     }
     body.push(MOVE);
-    return this.createCreep(body, undefined, {role: 'miner'});
+    return this.createCreep(body, this.creepName('miner'), {role: 'miner'});
 };
 
 StructureSpawn.prototype.createMeleeAttacker = function () {
-    return this.createCreep([ATTACK, MOVE], undefined, {role: 'meleeAttacker'});
+    return this.createCreep([ATTACK, MOVE], this.creepName('meleeAttacker'), {role: 'meleeAttacker'});
 };
 
 StructureSpawn.prototype.createHealer = function () {
-    return this.createCreep([HEAL, MOVE], undefined, {role: 'healer'});
+    return this.createCreep([HEAL, MOVE], this.creepName('meleeAttacker'), {role: 'healer'});
 };

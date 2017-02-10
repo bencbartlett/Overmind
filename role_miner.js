@@ -8,7 +8,7 @@ var roleMiner = {
         for (let ID in remainingAssignments) {
             // Scan through room sources until you find one that has the most remaining open spots
             if (remainingAssignments[ID] > 0 && remainingAssignments[ID] > maxRemainingAssignments) {
-                minAssignments = remainingAssignments[ID];
+                maxRemainingAssignments = remainingAssignments[ID];
                 creep.memory.target = ID;
             }
         }

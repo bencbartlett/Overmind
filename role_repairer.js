@@ -10,7 +10,7 @@ var roleRepairer = {
         }
         // Switch to repair mode when done withdrawing
         if (!creep.memory.working && creep.carry.energy == creep.carryCapacity) {
-            if (creep.targetNearestRepair() == OK) {
+            if (creep.targetNearestUntargetedRepair() == OK) { // should check that no other repairers have same assignment
                 creep.memory.working = true;
                 creep.say("Repairing!");
             } else if (creep.targetNearestWallLowerThan(20000) == OK) { // manual cutoff
@@ -33,6 +33,7 @@ var roleRepairer = {
         else {
             builder.run(creep); // run builder state if no above conditions are met
         }
+        // builder.run(creep);
     }
 };
 
