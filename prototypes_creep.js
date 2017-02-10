@@ -24,7 +24,7 @@ Creep.prototype.moveToVisual = function (target, color = '#fff') {
             stroke: color,
             lineStyle: 'dashed',
             strokeWidth: .15,
-            opacity: .2
+            opacity: .3
         };
         return this.moveTo(target, {visualizePathStyle: pathStyle});
     } else {
@@ -34,6 +34,9 @@ Creep.prototype.moveToVisual = function (target, color = '#fff') {
 
 Creep.prototype.targetNearestAvailableSource = function () {
     // Set target to the nearest source that isn't already saturated with creeps
+    if (this.spawning) {
+        return ERR_BUSY;
+    }
     // TODO: find least saturated source
     var sources = this.room.find(FIND_SOURCES_ACTIVE);
     if (sources.length > 0) {
@@ -53,6 +56,9 @@ Creep.prototype.targetNearestAvailableSource = function () {
 
 Creep.prototype.targetFullestContainer = function () {
     // Set target to the fullest container in the room
+    if (this.spawning) {
+        return ERR_BUSY;
+    }
     var containers = this.room.find(FIND_STRUCTURES, {
         filter: (s) => s.structureType == STRUCTURE_CONTAINER &&
                        s.store[RESOURCE_ENERGY] > 0
@@ -74,15 +80,18 @@ Creep.prototype.targetFullestContainer = function () {
 };
 
 Creep.prototype.targetNearestAvailableSink = function (prioritizeTowers = true) {
-    var targets;
+    if (this.spawning) {
+        return ERR_BUSY;
+    }
+    var target;
     if (prioritizeTowers) {
-        targets = this.room.find(FIND_STRUCTURES, {
+        target = this.pos.findClosestByPath(FIND_STRUCTURES, {
             filter: (structure) => structure.structureType == STRUCTURE_TOWER &&
                                    structure.energy < structure.energyCapacity
         });
     }
-    if (targets.length == 0) {
-        targets = this.room.find(FIND_STRUCTURES, {
+    if (target == undefined) {
+        target = this.pos.findClosestByPath(FIND_STRUCTURES, {
             filter: (structure) => {
                 return (structure.structureType == STRUCTURE_EXTENSION ||
                         structure.structureType == STRUCTURE_SPAWN ||
@@ -90,10 +99,12 @@ Creep.prototype.targetNearestAvailableSink = function (prioritizeTowers = true) 
                        structure.energy < structure.energyCapacity;
             }
         });
+    } // if nothing else needs, dump to storage
+    if (target == undefined) {
+        target = [this.room.storage];
     }
-
-    if (targets.length > 0) { // move to the nearest target
-        this.memory.target = targets[0].id;
+    if (target != undefined) { // move to the nearest target
+        this.memory.target = target.id;
         return OK; // success
     } else { // if everything is full, go deposit at room controller
         return ERR_NO_TARGET_FOUND; // defaulting to upgrading controller
@@ -102,6 +113,9 @@ Creep.prototype.targetNearestAvailableSink = function (prioritizeTowers = true) 
 
 Creep.prototype.targetNearestJob = function () {
     // Set target to nearest construction job
+    if (this.spawning) {
+        return ERR_BUSY;
+    }
     var targets = this.room.find(FIND_CONSTRUCTION_SITES);
     if (targets.length > 0) {
         this.memory.target = targets[0].id;
@@ -113,6 +127,9 @@ Creep.prototype.targetNearestJob = function () {
 
 Creep.prototype.targetNearestWallLowerThan = function (hp) {
     // wall repairs allow duplicate repair jobs
+    if (this.spawning) {
+        return ERR_BUSY;
+    }
     var wall = this.pos.findClosestByPath(FIND_STRUCTURES, {
         filter: (s) => s.hits < hp && (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)
     });
@@ -125,6 +142,9 @@ Creep.prototype.targetNearestWallLowerThan = function (hp) {
 };
 
 Creep.prototype.targetNearestUntargetedRepair = function () {
+    if (this.spawning) {
+        return ERR_BUSY;
+    }
     var structure = this.pos.findClosestByPath(FIND_STRUCTURES, {
         filter: (s) => s.hits < s.hitsMax &&
                        s.isTargeted('repairer') == false &&
@@ -140,6 +160,9 @@ Creep.prototype.targetNearestUntargetedRepair = function () {
 };
 
 Creep.prototype.targetNearestEnemy = function () {
+    if (this.spawning) {
+        return ERR_BUSY;
+    }
     var nearestEnemy = this.pos.findClosestByPath(FIND_HOSTILE_CREEPS);
     if (nearestEnemy != undefined) {
         this.memory.target = nearestEnemy.id;
@@ -150,6 +173,9 @@ Creep.prototype.targetNearestEnemy = function () {
 };
 
 Creep.prototype.targetNearestDamagedCreep = function () {
+    if (this.spawning) {
+        return ERR_BUSY;
+    }
     var nearestDamagedCreep = this.pos.findClosestByPath(FIND_MY_CREEPS, {
         filter: (c) => c.hits < c.hitsMax
     });
@@ -162,6 +188,9 @@ Creep.prototype.targetNearestDamagedCreep = function () {
 };
 
 Creep.prototype.goAttack = function () {
+    if (this.spawning) {
+        return ERR_BUSY;
+    }
     // Move to and attack the target
     var target = Game.getObjectById(this.memory.target);
     let res = this.attack(target);
@@ -180,16 +209,22 @@ Creep.prototype.goAttack = function () {
 };
 
 Creep.prototype.goTransfer = function () {
+    if (this.spawning) {
+        return ERR_BUSY;
+    }
     // Move to and transfer to target
     var target = Game.getObjectById(this.memory.target);
     let res = this.transfer(target, RESOURCE_ENERGY);
     if (res == ERR_NOT_IN_RANGE) {
-        this.moveToVisual(target, 'blue');
+        this.moveToVisual(target, 'purple');
     }
     return res;
 };
 
 Creep.prototype.goHarvest = function () {
+    if (this.spawning) {
+        return ERR_BUSY;
+    }
     // Move to and harvest from target
     var target = Game.getObjectById(this.memory.target);
     let res = this.harvest(target);
@@ -208,6 +243,9 @@ Creep.prototype.goHarvest = function () {
 };
 
 Creep.prototype.goBuild = function () {
+    if (this.spawning) {
+        return ERR_BUSY;
+    }
     var target = Game.getObjectById(this.memory.target);
     // Move to and build target
     let res = this.build(target);
@@ -227,6 +265,9 @@ Creep.prototype.goBuild = function () {
 };
 
 Creep.prototype.goHeal = function () {
+    if (this.spawning) {
+        return ERR_BUSY;
+    }
     var target = Game.getObjectById(this.memory.target);
     // Move to and attack the target
     let res = this.heal(target);
@@ -246,6 +287,9 @@ Creep.prototype.goHeal = function () {
 };
 
 Creep.prototype.goRepair = function () {
+    if (this.spawning) {
+        return ERR_BUSY;
+    }
     var target = Game.getObjectById(this.memory.target);
     // Move to and build target
     let res = this.repair(target);
@@ -265,13 +309,24 @@ Creep.prototype.goRepair = function () {
 };
 
 Creep.prototype.goWithdraw = function () {
+    if (this.spawning) {
+        return ERR_BUSY;
+    }
     var target = Game.getObjectById(this.memory.target);
-    // Move to and build target
+    // Move to and withdraw from target
+    var isEmpty;
+    try {
+        isEmpty = (target.store[RESOURCE_ENERGY] == 0);
+        // console.log(isEmpty);
+    } catch (err) {
+        isEmpty = true;
+        // console.log('isEmpty error from creep' + this.name + ', default to true');
+    }
     let res = this.withdraw(target, RESOURCE_ENERGY);
-    if (res == ERR_NOT_IN_RANGE) {
-        this.moveToVisual(target, 'purple'); // move to target
-        return OK;
-    } else if (res == ERR_INVALID_TARGET || res == ERR_NOT_ENOUGH_RESOURCES) { // retarget if not valid
+    // console.log("withdraw response: " + res);
+    if (isEmpty ||
+        res == ERR_INVALID_TARGET ||
+        res == ERR_NOT_ENOUGH_RESOURCES) { // retarget if not valid
         let retarget = this.targetFullestContainer();
         // console.log(retarget);
         if (retarget == OK) {
@@ -279,6 +334,44 @@ Creep.prototype.goWithdraw = function () {
         } else {
             return retarget;
         }
+    } else if (res == ERR_NOT_IN_RANGE) {
+        this.moveToVisual(target); // move to target
+        return OK;
+    } else {
+        return OK;
+    }
+};
+
+Creep.prototype.goWithdrawStorage = function () {
+    var retargetToContainer = true;
+    if (this.spawning) {
+        return ERR_BUSY;
+    }
+    // change target to room storage
+    this.memory.target = this.room.storage.id;
+    var target = this.room.storage;
+    if (target != undefined) {
+        var res = this.withdraw(target, RESOURCE_ENERGY);
+    } else {
+        console.log(this.name + ": no storage container!");
+        return ERR_NO_TARGET_FOUND;
+    }
+    if (res == ERR_NOT_ENOUGH_RESOURCES || target.store[RESOURCE_ENERGY] == 0) {
+        // try to target container if storage is empty?
+        if (retargetToContainer) {
+            let retarget = this.targetFullestContainer();
+            // console.log(retarget);
+            if (retarget == OK) {
+                return this.goWithdraw();
+            } else {
+                return retarget;
+            }
+        } else {
+            console.log(this.name + ': storage is empty!');
+        }
+    } else if (res == ERR_NOT_IN_RANGE) {
+        this.moveToVisual(target); // move to target
+        return OK;
     } else {
         return OK;
     }
