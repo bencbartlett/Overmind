@@ -5,7 +5,7 @@ StructureTower.prototype.run = function () {
     var useTowerToRepairStructures = false;
     return (this.attackNearestEnemy() == OK ||
             this.healNearestAlly() == OK ||
-            this.preventRampartDecay(1000) == OK ||
+            this.preventRampartDecay(30000) == OK ||
             this.repairNearestStructure(useTowerToRepairStructures) == OK);
 };
 
@@ -24,7 +24,7 @@ StructureTower.prototype.healNearestAlly = function () {
         filter: (c) => c.hits < c.hitsMax
     });
     if (closestDamagedAlly) {
-        this.heal(closestDamagedStructure);
+        this.heal(closestDamagedAlly);
         return OK;
     } else {
         return ERR_NO_TARGET_FOUND;
@@ -34,7 +34,9 @@ StructureTower.prototype.healNearestAlly = function () {
 StructureTower.prototype.repairNearestStructure = function (toggle) {
     if (toggle) {
         var closestDamagedStructure = this.pos.findClosestByRange(FIND_STRUCTURES, {
-            filter: (s) => s.hits < s.hitsMax && s.structureType != STRUCTURE_WALL
+            filter: (s) => s.hits < s.hitsMax &&
+                           s.structureType != STRUCTURE_WALL &&
+                           s.structureType != STRUCTURE_RAMPART
         });
         if (closestDamagedStructure) {
             this.repair(closestDamagedStructure);

@@ -24,3 +24,18 @@ RoomObject.prototype.openSpots = function () {
 RoomObject.prototype.countAdjacentCreeps = function () {
     return this.pos.findInRange(FIND_CREEPS, 1).length;
 };
+
+RoomObject.prototype.isTargeted = function (role = undefined) {
+    var creeps;
+    if (role != undefined) {
+        creeps = _.filter(Game.creeps, (creep) => creep.role() == role);
+    } else {
+        creeps = Game.creeps;
+    }
+    for (let name in creeps) {
+        if (creeps[name].memory.target == this.id) {
+            return creeps[name].id; // return id of first creep found to be targeting this object
+        }
+    }
+    return false;
+};

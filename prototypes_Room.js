@@ -1,3 +1,4 @@
+//noinspection JSUnusedGlobalSymbols
 Room.prototype.totalSourceCapacity = function () {
     if (this.memory.miningCapacity != undefined) {
         return this.memory.miningCapacity;
@@ -19,12 +20,13 @@ Room.prototype.remainingMinerSourceAssignments = function () {
     for (let i in sources) {
         // assignment becomes a dictionary with source ID keys and number of remaining spots as values
         let numAssigned = _.filter(miners, (c) => c.memory.target == sources[i].id).length;
-        let maxSpots = Math.min(sources[i].capacity(), 2)
+        let maxSpots = Math.min(sources[i].capacity(), 2);
         assignments[sources[i].id] = maxSpots - numAssigned;
     }
     return assignments;
 };
 
+//noinspection JSUnusedGlobalSymbols
 Room.prototype.convertAllCreeps = function (convertFrom, convertTo) {
     var creepsToConvert = this.find(FIND_MY_CREEPS, {filter: (c) => c.role == convertFrom});
     for (let i in creepsToConvert) {

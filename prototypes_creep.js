@@ -1,15 +1,7 @@
 require('constants');
 
-var roles = {
-    harvester: require('role_harvester'),
-    miner: require('role_miner'),
-    supplier: require('role_supplier'),
-    builder: require('role_builder'),
-    upgrader: require('role_upgrader'),
-    repairer: require('role_repairer'),
-    meleeAttacker: require('role_meleeAttacker'),
-    healer: require('role_healer')
-};
+var roles = require('rolesMap');
+
 
 Creep.prototype.role = function () {
     return this.memory.role;
@@ -22,6 +14,22 @@ Creep.prototype.run = function () {
 
 Creep.prototype.doRole = function () {
     roles[this.role()].run(this);
+};
+
+Creep.prototype.moveToVisual = function (target, color = '#fff') {
+    var visualizePath = true;
+    if (visualizePath) {
+        var pathStyle = {
+            fill: 'transparent',
+            stroke: color,
+            lineStyle: 'dashed',
+            strokeWidth: .15,
+            opacity: .2
+        };
+        return this.moveTo(target, {visualizePathStyle: pathStyle});
+    } else {
+        return this.moveTo(target);
+    }
 };
 
 Creep.prototype.targetNearestAvailableSource = function () {
@@ -65,16 +73,25 @@ Creep.prototype.targetFullestContainer = function () {
     }
 };
 
-Creep.prototype.targetNearestAvailableSink = function () {
-    // Set target to available energy consumers
-    var targets = this.room.find(FIND_STRUCTURES, {
-        filter: (structure) => {
-            return (structure.structureType == STRUCTURE_EXTENSION ||
-                    structure.structureType == STRUCTURE_SPAWN ||
-                    structure.structureType == STRUCTURE_TOWER) &&
-                   structure.energy < structure.energyCapacity;
-        }
-    });
+Creep.prototype.targetNearestAvailableSink = function (prioritizeTowers = true) {
+    var targets;
+    if (prioritizeTowers) {
+        targets = this.room.find(FIND_STRUCTURES, {
+            filter: (structure) => structure.structureType == STRUCTURE_TOWER &&
+                                   structure.energy < structure.energyCapacity
+        });
+    }
+    if (targets.length == 0) {
+        targets = this.room.find(FIND_STRUCTURES, {
+            filter: (structure) => {
+                return (structure.structureType == STRUCTURE_EXTENSION ||
+                        structure.structureType == STRUCTURE_SPAWN ||
+                        structure.structureType == STRUCTURE_TOWER) &&
+                       structure.energy < structure.energyCapacity;
+            }
+        });
+    }
+
     if (targets.length > 0) { // move to the nearest target
         this.memory.target = targets[0].id;
         return OK; // success
@@ -95,6 +112,7 @@ Creep.prototype.targetNearestJob = function () {
 };
 
 Creep.prototype.targetNearestWallLowerThan = function (hp) {
+    // wall repairs allow duplicate repair jobs
     var wall = this.pos.findClosestByPath(FIND_STRUCTURES, {
         filter: (s) => s.hits < hp && (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)
     });
@@ -106,9 +124,10 @@ Creep.prototype.targetNearestWallLowerThan = function (hp) {
     }
 };
 
-Creep.prototype.targetNearestRepair = function () {
+Creep.prototype.targetNearestUntargetedRepair = function () {
     var structure = this.pos.findClosestByPath(FIND_STRUCTURES, {
         filter: (s) => s.hits < s.hitsMax &&
+                       s.isTargeted('repairer') == false &&
                        s.structureType != STRUCTURE_WALL &&
                        s.structureType != STRUCTURE_RAMPART // prioritize non-walls/non-ramparts
     });
@@ -147,7 +166,7 @@ Creep.prototype.goAttack = function () {
     var target = Game.getObjectById(this.memory.target);
     let res = this.attack(target);
     if (res == ERR_NOT_IN_RANGE) {
-        this.moveTo(target);
+        this.moveToVisual(target, 'red');
         return OK;
     } else if (res == ERR_INVALID_TARGET) { // retarget
         if (this.targetNearestEnemy() == OK) {
@@ -165,7 +184,7 @@ Creep.prototype.goTransfer = function () {
     var target = Game.getObjectById(this.memory.target);
     let res = this.transfer(target, RESOURCE_ENERGY);
     if (res == ERR_NOT_IN_RANGE) {
-        this.moveTo(target);
+        this.moveToVisual(target, 'blue');
     }
     return res;
 };
@@ -175,7 +194,7 @@ Creep.prototype.goHarvest = function () {
     var target = Game.getObjectById(this.memory.target);
     let res = this.harvest(target);
     if (res == ERR_NOT_IN_RANGE) {
-        this.moveTo(target); // move to target
+        this.moveToVisual(target); // move to target
         return OK;
     } else if (res == ERR_NOT_ENOUGH_RESOURCES || res == ERR_INVALID_TARGET) {
         if (this.targetNearestAvailableSource() == OK) {
@@ -200,7 +219,7 @@ Creep.prototype.goBuild = function () {
             return this.goBuild();
         }
     } else if (res == ERR_NOT_IN_RANGE) {
-        this.moveTo(target); // move to target
+        this.moveToVisual(target, 'yellow'); // move to target
         return OK;
     } else {
         return OK;
@@ -212,7 +231,7 @@ Creep.prototype.goHeal = function () {
     // Move to and attack the target
     let res = this.heal(target);
     if (res == ERR_NOT_IN_RANGE) {
-        this.moveTo(target);
+        this.moveToVisual(target, 'green');
         return OK;
     } else if (res == ERR_INVALID_TARGET || target.hits == target.hitsMax) { // retarget
         let retarget = this.targetNearestDamagedCreep();
@@ -231,10 +250,10 @@ Creep.prototype.goRepair = function () {
     // Move to and build target
     let res = this.repair(target);
     if (res == ERR_NOT_IN_RANGE) {
-        this.moveTo(target); // move to target
+        this.moveToVisual(target, 'green'); // move to target
         return OK;
     } else if (res == ERR_INVALID_TARGET || target.hits == target.hitsMax) { // retarget if not valid
-        let retarget = this.targetNearestRepair();
+        let retarget = this.targetNearestUntargetedRepair();
         if (retarget == OK) {
             return this.goRepair(); // 1: no jobs found, deposit mode
         } else {
@@ -250,7 +269,7 @@ Creep.prototype.goWithdraw = function () {
     // Move to and build target
     let res = this.withdraw(target, RESOURCE_ENERGY);
     if (res == ERR_NOT_IN_RANGE) {
-        this.moveTo(target); // move to target
+        this.moveToVisual(target, 'purple'); // move to target
         return OK;
     } else if (res == ERR_INVALID_TARGET || res == ERR_NOT_ENOUGH_RESOURCES) { // retarget if not valid
         let retarget = this.targetFullestContainer();

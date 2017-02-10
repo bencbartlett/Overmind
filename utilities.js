@@ -1,7 +1,7 @@
-global.highlightAllCreeps = function (role) {
+global.highlightAllCreeps = function (role, color = 'green') {
     var creeps = _.filter(Game.creeps, (creep) => creep.role() == role);
     for (let i in creeps) {
-        creeps[i].room.visual.circle(creeps[i].pos, {fill: 'transparent', radius: 0.55, stroke: 'green'});
+        creeps[i].room.visual.circle(creeps[i].pos, {fill: 'transparent', radius: 0.55, stroke: color});
     }
 };
 
@@ -17,20 +17,21 @@ global.modeToWorking = function () {
                                         (creep) => (creep.role() == 'miner' || creep.role() == 'harvester'));
     for (let i in nonMinerHarvesterCreeps) {
         let creep = nonMinerHarvesterCreeps[i];
-        if (creep.memory.mode == 'harvest' || creep.memory.mode == 'withdraw') {
-            creep.working = false;
-        } else {
-            creep.working = true;
-        }
+        creep.working = !(creep.memory.mode == 'harvest' || creep.memory.mode == 'withdraw');
         delete creep.memory.mode;
     }
     for (let i in minerHarvesterCreeps) {
         let creep = minerHarvesterCreeps[i];
-        if (creep.memory.mode == 'harvest' || creep.memory.mode == 'mine') {
-            creep.working = true;
-        } else {
-            creep.working = true;
-        }
+        creep.working = (creep.memory.mode == 'harvest' || creep.memory.mode == 'withdraw');
         delete creep.memory.mode;
     }
-}
+};
+
+global.status = function () {
+    console.log("Creep status: ");
+    var roles = require('rolesMap');
+    for (let role in roles) {
+        console.log(role + ": " + countAllCreeps(role));
+    }
+    return '';
+};
