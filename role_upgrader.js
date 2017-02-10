@@ -13,7 +13,9 @@ var roleUpgrader = {
         }
         // Go harvest while mode is harvest
         if (!creep.memory.working) {
-            creep.goWithdraw();
+            // upgraders withdraw from storage; should be close to controller
+            // goWithdrawStorage() has a toggleable option to withdraw from fullest container if storage is empty
+            creep.goWithdrawStorage();
         }
         // Go upgrade while mode is upgrade
         if (creep.memory.working) {
