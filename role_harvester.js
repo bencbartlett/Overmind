@@ -1,41 +1,53 @@
-var supplier = require('role_supplier');
 var upgrader = require('role_upgrader');
 
 var roleHarvester = {
-    deprecated: true,
     /** @param {Creep} creep **/
-    run: function (creep) {
-        if (!this.deprecated) {
-            // Switch to harvest working and set new target when done depositing
-            if (!creep.memory.working && creep.carry.energy == 0) {
-                creep.memory.working = true;
-                creep.targetNearestAvailableSource();
-                creep.say("Harvesting!")
-            }
-            // Switch to deposit working when done harvesting
-            if (creep.memory.working && creep.carry.energy == creep.carryCapacity) {
-                if (creep.targetNearestAvailableSink() == OK) {
-                    creep.memory.working = false;
-                    creep.say("Depositing!");
-                } else {
-                    upgrader.run(creep);
-                }
-            }
-            // Go harvest while working is harvest
-            if (creep.memory.working) {
-                creep.goHarvest();
-            }
-            // Deposit energy while working is deposit
-            if (!creep.memory.working) {
-                if (creep.goTransfer() != OK) {
-                    upgrader.run(creep);
-                }
-            }
-            else {
-                upgrader.run(creep); // run upgrader state if no above conditions are met
+
+    // Harvest mode: harvest from nearest source
+    harvestMode: function (creep) {
+        if (creep.carry.energy == creep.carryCapacity) { // Switch to deposit working when done harvesting
+            if (creep.targetClosestAvailableSink() == OK) { // try to target nearest thing requiring energy
+                creep.memory.working = false;
+                creep.say("Depositing!");
+                this.depositMode(creep);
+            } else {
+                upgrader.run(creep); // if nothing needs energy, be an upgrader
             }
         } else {
-            supplier.run(creep);
+            if (creep.goHarvest() != OK) { // Go harvest while working is harvest
+                upgrader.run(creep); // be an upgrader if that doesn't work
+            }
+        }
+    },
+
+    // Deposit mode: deposit to nearest sink
+    depositMode: function (creep) {
+        if (creep.carry.energy == 0) { // Switch to harvest working and set new target when done depositing
+            if (creep.targetClosestUnsaturatedSource() == OK) {
+                creep.memory.working = true;
+                creep.say("Harvesting!");
+                this.harvestMode(creep);
+            } else {
+                upgrader.run(creep);
+            }
+        } else {
+            if (creep.goTransfer() != OK) { // Deposit energy while working is deposit
+                upgrader.run(creep); // If you can't do that, then act as an upgrader
+            }
+        }
+    },
+
+    deprecated: true, // set to true if harvesters have been replaced with container mining
+
+    run: function (creep) {
+        if (!this.deprecated) {
+            if (creep.memory.working) {
+                this.harvestMode(creep);
+            } else {
+                this.depositMode(creep);
+            }
+        } else {
+            upgrader.run(creep); // harvesters become upgraders if deprecated
         }
     }
 };
