@@ -9,10 +9,10 @@ StructureSpawn.prototype.run = function () {
     var creepSizeLimit = 3;
     if (this.countCreeps('miner') < 4) {
         this.createBiggestMiner(4, true);
-    } else if (this.countCreeps('supplier') < 2) {
-        this.createCreep([WORK, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
+    } else if (this.countCreeps('supplier') < 3) {
+        this.createCreep([CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
                          this.creepName('supplier'), {role: 'supplier'});
-    } else if (this.countCreeps('hauler') < 2) {
+    } else if (this.countCreeps('hauler') < 0) {
         this.createBiggestHauler(8);
     } else if (this.countCreeps('repairer') < 2) {
         this.createBiggestCreep('repairer', creepSizeLimit);

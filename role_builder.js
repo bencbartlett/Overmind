@@ -2,33 +2,39 @@ var upgrader = require('role_upgrader');
 
 var roleBuilder = {
     /** @param {Creep} creep **/
-    run: function (creep) {
-        // Switch to withdraw mode and set new target when done building
-        if (creep.memory.working && creep.carry.energy == 0) {
+    // Build mode: build any nearby construction jobs
+    buildMode: function (creep) {
+        if (creep.carry.energy == 0) {
             creep.memory.working = false;
             creep.say("Withdrawing!");
+        } else {
+            let response = creep.goBuild();
+            // console.log('builder:' + response);
+            if (response == ERR_NO_TARGET_FOUND) { // no construction jobs
+                upgrader.run(creep); // revert to upgrader state
+            }
         }
-        // Switch to build mode and set new target when done withdrawing
-        if (!creep.memory.working && creep.carry.energy == creep.carryCapacity) {
-            if (creep.targetNearestJob() == OK) {
+    },
+
+    // Withdraw mode: withdraw energy from storage
+    withdrawMode: function (creep) {
+        if (creep.carry.energy == creep.carryCapacity) {
+            if (creep.targetClosestJob() == OK) {
                 creep.memory.working = true;
                 creep.say("Building!");
             } else {
                 upgrader.run(creep); // act as an upgrader if nothing to build
             }
-        }
-        // Go harvest while mode is harvest
-        if (!creep.memory.working) {
+        } else {
             creep.goWithdraw();
         }
-        // Go build while mode is build
+    },
+
+    run: function (creep) {
         if (creep.memory.working) {
-            if (creep.goBuild() != OK) {
-                upgrader.run(creep); // revert to upgrader state
-            }
-        }
-        else {
-            upgrader.run(creep); // run upgrader state if no above conditions are met
+            this.buildMode(creep);
+        } else {
+            this.withdrawMode(creep);
         }
     }
 };

@@ -14,35 +14,33 @@ var roleMiner = {
         }
         if (maxRemainingAssignments == 0) {
             console.log("ERROR: " + creep.name + " could not receive a mining assignment.");
+            return ERR_NO_TARGET_FOUND;
         } else {
             console.log(creep.name + " assigned to source: " + creep.memory.target);
+            return OK;
         }
     },
 
-    run: function (creep) {
-        // Get an assignment if you don't have one already
-        if (creep.memory.target == undefined) {
-            this.getAssignment(creep);
-        }
-        // Switch to harvest mode and set new target when done depositing
-        if (!creep.memory.working && creep.carry.energy == 0) {
-            creep.memory.working = true;
-            creep.say("Mining!");
-        }
-        // Switch to deposit mode when done harvesting
-        if (creep.memory.working && creep.carry.energy == creep.carryCapacity) {
+    mineMode: function (creep) {
+        if (creep.carry.energy == creep.carryCapacity) { // Switch to deposit working when done harvesting
             creep.memory.working = false;
             creep.say("Depositing!");
-        }
-        // Go harvest while mode is harvest
-        if (creep.memory.working) {
+            this.depositMode(creep);
+        } else {
             var target = Game.getObjectById(creep.memory.target);
             if (creep.harvest(target) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(target);
             }
         }
-        // Deposit energy while mode is deposit
-        if (!creep.memory.working) {
+    },
+
+    // Deposit mode: deposit to nearest sink
+    depositMode: function (creep) {
+        if (creep.carry.energy == 0) {
+            creep.memory.working = true;
+            creep.say("Mining!");
+            this.mineMode(creep);
+        } else {
             // Deposit to the closest container. Note: does not change memory.target!
             var closestContainer = creep.pos.findClosestByRange(FIND_STRUCTURES, {
                 // you have to use FIND_STRUCTURES, not FIND_MY_STRUCTURES; containers are neutral
@@ -53,6 +51,18 @@ var roleMiner = {
             } else {
                 creep.repair(closestContainer);
             }
+        }
+    },
+
+    run: function (creep) {
+        // Get an assignment if you don't have one already
+        if (!creep.memory.target) {
+            this.getAssignment(creep);
+        }
+        if (creep.memory.working) {
+            this.mineMode(creep);
+        } else {
+            this.depositMode(creep);
         }
     }
 };

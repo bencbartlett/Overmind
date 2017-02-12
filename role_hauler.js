@@ -15,7 +15,7 @@ var roleHauler = {
                 creep.memory.working = true;
                 creep.say("Storing!");
             } else {
-                if (creep.targetNearestAvailableSink() == OK) {
+                if (creep.targetClosestAvailableSink() == OK) {
                     creep.memory.working = true;
                     creep.say("Supplying!");
                 } else {
