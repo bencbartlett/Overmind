@@ -79,14 +79,16 @@ var roleMiner = {
     },
 
     run: function (creep) {
-        // Get an assignment if you don't have one already
-        if (!creep.memory.target) {
-            this.getAssignment(creep);
-        }
-        if (creep.memory.working) {
-            this.mineMode(creep);
-        } else {
-            this.depositMode(creep);
+        if (creep.donationHandler() == OK) {
+            // Get an assignment if you don't have one already
+            if (!creep.memory.target) {
+                this.getAssignment(creep);
+            }
+            if (creep.memory.working) {
+                this.mineMode(creep);
+            } else {
+                this.depositMode(creep);
+            }
         }
     }
 };

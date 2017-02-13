@@ -16,6 +16,19 @@ Creep.prototype.targetClosestUnsaturatedSource = function () {
     }
 };
 
+Creep.prototype.targetDroppedEnergy = function () {
+    // Set target to the closest container or storage that has at least (creep carry capacity) energy
+    var target = this.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {
+        filter: (r) => r.resourceType == RESOURCE_ENERGY && r.amount > 50
+    });
+    if (target) {
+        this.memory.target = target.id;
+        return OK;
+    } else {
+        return ERR_NO_TARGET_FOUND;
+    }
+};
+
 Creep.prototype.targetFullestContainer = function () {
     // Set target to the fullest container in the room
     var containers = this.room.find(FIND_STRUCTURES, {
@@ -45,6 +58,17 @@ Creep.prototype.targetClosestContainerOrStorage = function () {
                         s.structureType == STRUCTURE_STORAGE) &&
                        s.store[RESOURCE_ENERGY] > this.carryCapacity
     });
+    if (target) {
+        this.memory.target = target.id;
+        return OK;
+    } else {
+        return ERR_NO_TARGET_FOUND;
+    }
+};
+
+Creep.prototype.targetFlaggedContainer = function (flag) {
+    // Set target to the closest container to a given flag
+    var target = flag.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) => s.structureType = STRUCTURE_CONTAINER});
     if (target) {
         this.memory.target = target.id;
         return OK;
@@ -90,7 +114,7 @@ Creep.prototype.targetClosestUntargetedSink = function (prioritizeTowers = true)
         target = this.pos.findClosestByPath(FIND_STRUCTURES, {
             filter: (structure) => structure.structureType == STRUCTURE_TOWER &&
                                    structure.energy < structure.energyCapacity &&
-                                   structure.isTargeted('supplier') == false
+                                   structure.isTargeted('supplier').length == 0
         });
     }
     // Then try and find if anything else needs energy
@@ -100,7 +124,7 @@ Creep.prototype.targetClosestUntargetedSink = function (prioritizeTowers = true)
                                     structure.structureType == STRUCTURE_EXTENSION ||
                                     structure.structureType == STRUCTURE_SPAWN) &&
                                    structure.energy < structure.energyCapacity &&
-                                   structure.isTargeted('supplier') == false
+                                   structure.isTargeted('supplier').length == 0
         });
     }
     // If nothing else needs energy, dump to storage
@@ -140,13 +164,17 @@ Creep.prototype.targetClosestWallLowerThan = function (hp) {
     }
 };
 
-Creep.prototype.targetClosestUntargetedRepair = function (hpPercent = 0.9) {
+Creep.prototype.targetClosestUntargetedRepair = function () {
     // Set target to closest repair job that is not currently targeted by any other repairer
+    // Ignore walls, ramparts, and roads above 20% health, since roads can be taken care of
+    // more efficiently by repairNearbyDamagedRoads() function
     var structure = this.pos.findClosestByPath(FIND_STRUCTURES, {
-        filter: (s) => s.hits < hpPercent * s.hitsMax &&
+        filter: (s) => s.hits < s.hitsMax &&
                        s.isTargeted('repairer') == false &&
+                       s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
                        s.structureType != STRUCTURE_WALL &&
-                       s.structureType != STRUCTURE_RAMPART // prioritize non-walls/non-ramparts
+                       s.structureType != STRUCTURE_RAMPART &&
+                       (s.structureType != STRUCTURE_ROAD || s.hits < 0.2 * s.hitsMax)
     });
     if (structure) {
         this.memory.target = structure.id;
@@ -179,5 +207,3 @@ Creep.prototype.targetClosestDamagedCreep = function () {
         return ERR_NO_TARGET_FOUND;
     }
 };
-
-// TODO: Creep.donate() function to give high level creeps to another (owned) room

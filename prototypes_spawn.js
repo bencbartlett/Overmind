@@ -34,12 +34,26 @@ StructureSpawn.prototype.createBiggestCreep = function (roleName, partsLimit = I
 };
 
 StructureSpawn.prototype.run = function () { // TODO: automatic creep number calculations
-    var creepSizeLimit = 5;
+    var creepSizeLimit = 3;
     for (var roleName in rolesMap) {
         var roleObject = rolesMap[roleName];
         if (this.countCreeps(roleName) < roleObject.amount) {
             roleObject.behavior.create(this, creepSizeLimit);
             break;
         }
+    }
+};
+
+StructureSpawn.prototype.donateCreepToRoom = function (roleName, roomName) {
+    var roleObject = rolesMap[roleName];
+    if (roleObject) {
+        if (Game.rooms[roomName]) {
+            var donatedCreep = roleObject.behavior.create(this, 5); // manual size setter for now
+            donatedCreep.donate(roomName);
+        } else {
+            console.log('Error: ' + roomName + ' is ' + Game.rooms[roomName]);
+        }
+    } else {
+        console.log('Error: ' + roleName + ' is not a valid role.');
     }
 };
