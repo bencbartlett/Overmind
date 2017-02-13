@@ -5,7 +5,7 @@ StructureTower.prototype.run = function () {
     var useTowerToRepairStructures = false;
     return (this.attackNearestEnemy() == OK ||
             this.healNearestAlly() == OK ||
-            this.preventRampartDecay(30000) == OK ||
+            this.preventRampartDecay(10000) == OK ||
             this.repairNearestStructure(useTowerToRepairStructures) == OK);
 };
 
@@ -54,7 +54,7 @@ StructureTower.prototype.preventRampartDecay = function (hp) {
         filter: (s) => s.hits < hp && s.structureType == STRUCTURE_RAMPART
     });
     if (closestDyingRampart) {
-        console.log(this.repair(closestDyingRampart));
+        this.repair(closestDyingRampart);
         return OK;
     } else {
         return ERR_NO_TARGET_FOUND;

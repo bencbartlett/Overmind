@@ -5,6 +5,7 @@ var roleUpgrader = {
         if (creep.carry.energy == 0) {
             creep.memory.working = false;
             creep.say("Withdrawing!");
+            this.withdrawMode(creep);
         } else {
             if (creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
                 creep.moveToVisual(creep.room.controller, 'purple');
@@ -17,8 +18,9 @@ var roleUpgrader = {
         if (creep.carry.energy == creep.carryCapacity) {
             creep.memory.working = true;
             creep.say("Upgrading!");
+            this.upgradeMode(creep);
         } else {
-            creep.goWithdrawStorage();
+            creep.goWithdraw();
         }
     },
 

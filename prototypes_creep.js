@@ -4,18 +4,13 @@ require('prototypes_creep_goTask');
 
 var roles = require('rolesMap');
 
-
-Creep.prototype.role = function () {
-    return this.memory.role;
-};
-
 Creep.prototype.run = function () {
     // TODO: creep need renewal?
     this.doRole();
 };
 
 Creep.prototype.doRole = function () {
-    roles[this.role()].run(this);
+    roles[this.memory.role].run(this);
 };
 
 Creep.prototype.moveToVisual = function (target, color = '#fff') {
@@ -34,3 +29,6 @@ Creep.prototype.moveToVisual = function (target, color = '#fff') {
     }
 };
 
+Creep.prototype.isInRoom = function (roomName) {
+    return (this.room.name == roomName);
+};

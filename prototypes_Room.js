@@ -15,7 +15,7 @@ Room.prototype.totalSourceCapacity = function () {
 
 Room.prototype.remainingMinerSourceAssignments = function () {
     var sources = this.find(FIND_SOURCES);
-    var miners = this.find(FIND_MY_CREEPS, {filter: (c) => c.role() == 'miner'});
+    var miners = this.find(FIND_MY_CREEPS, {filter: (c) => c.memory.role == 'miner'});
     var assignments = {};
     for (let i in sources) {
         // assignment becomes a dictionary with source ID keys and number of remaining spots as values
@@ -28,7 +28,7 @@ Room.prototype.remainingMinerSourceAssignments = function () {
 
 //noinspection JSUnusedGlobalSymbols
 Room.prototype.convertAllCreeps = function (convertFrom, convertTo) {
-    var creepsToConvert = this.find(FIND_MY_CREEPS, {filter: (c) => c.role == convertFrom});
+    var creepsToConvert = this.find(FIND_MY_CREEPS, {filter: (c) => c.memory.role == convertFrom});
     for (let i in creepsToConvert) {
         let creep = creepsToConvert[i];
         // Change role

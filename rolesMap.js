@@ -7,7 +7,8 @@ var rolesMap = {
     upgrader: require('role_upgrader'),
     repairer: require('role_repairer'),
     meleeAttacker: require('role_meleeAttacker'),
-    healer: require('role_healer')
+    healer: require('role_healer'),
+    reserver: require('role_reserver')
 };
 
 module.exports = rolesMap;

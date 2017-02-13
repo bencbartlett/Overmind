@@ -1,12 +1,12 @@
 require('constants');
 
 StructureSpawn.prototype.countCreeps = function (type) {
-    var creeps = _.filter(Game.creeps, (creep) => creep.role() == type);
+    var creeps = _.filter(Game.creeps, (creep) => creep.memory.role == type);
     return creeps.length;
 };
 
-StructureSpawn.prototype.run = function () {
-    var creepSizeLimit = 3;
+StructureSpawn.prototype.run = function () { // TODO: needs refactoring
+    var creepSizeLimit = 5;
     if (this.countCreeps('miner') < 4) {
         this.createBiggestMiner(4, true);
     } else if (this.countCreeps('supplier') < 3) {
@@ -18,6 +18,8 @@ StructureSpawn.prototype.run = function () {
         this.createBiggestCreep('repairer', creepSizeLimit);
     } else if (this.countCreeps('builder') < 3) {
         this.createBiggestCreep('builder', creepSizeLimit);
+    } else if (_.filter(Game.creeps, (c) => (c).memory.role == 'reserver').length < 1) { // TODO: automatic creep number calculations
+        this.createCreep([CLAIM, CLAIM, MOVE, MOVE], this.creepName('reserver'), {role: 'reserver'});
     } else if (this.countCreeps('upgrader') < 2) {
         this.createBiggestCreep('upgrader', creepSizeLimit);
     } else if (this.countCreeps('healer') < 0) {
@@ -28,7 +30,11 @@ StructureSpawn.prototype.run = function () {
 };
 
 StructureSpawn.prototype.creepName = function (roleName) {
-    return roleName + '_' + Game.time.toString();
+    var i = 0;
+    while (Game.creeps[(roleName + '_' + i)] != undefined) {
+        i++;
+    }
+    return (roleName + '_' + i);
 };
 
 StructureSpawn.prototype.createBiggestCreep = function (roleName, partsLimit = Infinity) {
