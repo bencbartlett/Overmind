@@ -1,5 +1,12 @@
 var roleUpgrader = {
     /** @param {Creep} creep **/
+    /** @param {StructureSpawn} spawn **/
+    /** @param {Number} creepSizeLimit **/
+
+    create: function (spawn, creepSizeLimit = Infinity) {
+        return spawn.createBiggestCreep('upgrader', creepSizeLimit);
+    },
+
     // Upgrade mode: upgrade room controller
     upgradeMode: function (creep) {
         if (creep.carry.energy == 0) {

@@ -1,5 +1,12 @@
 var roleSupplier = {
     /** @param {Creep} creep **/
+    /** @param {StructureSpawn} spawn **/
+    /** @param {Number} creepSizeLimit **/
+
+    create: function (spawn, creepSizeLimit = Infinity) {
+        return spawn.createCreep([CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
+                                 spawn.creepName('supplier'), {role: 'supplier'});
+    },
 
     // Supply mode: deposit energy to sinks or storage
     supplyMode: function (creep) {
@@ -29,6 +36,7 @@ var roleSupplier = {
 
     // Withdraw mode: withdraw energy from fullest container
     withdrawMode: function (creep) {
+        // TODO: pick up dropped energy
         if (creep.carry.energy == creep.carryCapacity) { // Switch to deposit mode (working = true) when full
             if (creep.targetClosestUntargetedSink() == OK) { // target closest energy sink that isn't already targeted
                 creep.memory.working = true;

@@ -2,7 +2,7 @@ require('constants');
 require('prototypes_creep_targeting');
 require('prototypes_creep_goTask');
 
-var roles = require('rolesMap');
+var rolesMap = require('rolesMap');
 
 Creep.prototype.run = function () {
     // TODO: creep need renewal?
@@ -10,7 +10,7 @@ Creep.prototype.run = function () {
 };
 
 Creep.prototype.doRole = function () {
-    roles[this.memory.role].run(this);
+    rolesMap[this.memory.role].behavior.run(this);
 };
 
 Creep.prototype.moveToVisual = function (target, color = '#fff') {

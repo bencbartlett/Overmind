@@ -2,6 +2,11 @@ var upgrader = require('role_upgrader');
 
 var roleHarvester = {
     /** @param {Creep} creep **/
+    /** @param {StructureSpawn} spawn **/
+
+    create: function (spawn, creepSizeLimit = Infinity) {
+        return spawn.createBiggestCreep('repairer', creepSizeLimit);
+    },
 
     // Harvest mode: harvest from nearest source
     harvestMode: function (creep) {
