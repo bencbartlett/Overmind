@@ -7,6 +7,7 @@ var roleBuilder = {
         if (creep.carry.energy == 0) {
             creep.memory.working = false;
             creep.say("Withdrawing!");
+            this.withdrawMode(creep);
         } else {
             let response = creep.goBuild();
             // console.log('builder:' + response);
@@ -22,6 +23,7 @@ var roleBuilder = {
             if (creep.targetClosestJob() == OK) {
                 creep.memory.working = true;
                 creep.say("Building!");
+                this.buildMode(creep);
             } else {
                 upgrader.run(creep); // act as an upgrader if nothing to build
             }

@@ -6,7 +6,7 @@ var roleHarvester = {
     // Harvest mode: harvest from nearest source
     harvestMode: function (creep) {
         if (creep.carry.energy == creep.carryCapacity) { // Switch to deposit working when done harvesting
-            if (creep.targetClosestAvailableSink() == OK) { // try to target nearest thing requiring energy
+            if (creep.targetClosestSink() == OK) { // try to target nearest thing requiring energy
                 creep.memory.working = false;
                 creep.say("Depositing!");
                 this.depositMode(creep);

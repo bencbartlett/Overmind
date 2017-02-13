@@ -43,7 +43,7 @@ Creep.prototype.targetClosestContainerOrStorage = function () {
     var target = this.pos.findClosestByPath(FIND_STRUCTURES, {
         filter: (s) => (s.structureType == STRUCTURE_CONTAINER ||
                         s.structureType == STRUCTURE_STORAGE) &&
-                       s.store[RESOURCE_ENERGY] > 0
+                       s.store[RESOURCE_ENERGY] > this.carryCapacity
     });
     if (target) {
         this.memory.target = target.id;
@@ -53,7 +53,7 @@ Creep.prototype.targetClosestContainerOrStorage = function () {
     }
 };
 
-Creep.prototype.targetClosestAvailableSink = function (prioritizeTowers = true) {
+Creep.prototype.targetClosestSink = function (prioritizeTowers = true) {
     var target; // the target object (not ID)
     // First try to find the closest non-full tower
     if (prioritizeTowers) {
@@ -82,6 +82,39 @@ Creep.prototype.targetClosestAvailableSink = function (prioritizeTowers = true) 
         return ERR_NO_TARGET_FOUND;
     }
 };
+
+Creep.prototype.targetClosestUntargetedSink = function (prioritizeTowers = true) {
+    var target; // the target object (not ID)
+    // First try to find the closest non-full tower
+    if (prioritizeTowers) {
+        target = this.pos.findClosestByPath(FIND_STRUCTURES, {
+            filter: (structure) => structure.structureType == STRUCTURE_TOWER &&
+                                   structure.energy < structure.energyCapacity &&
+                                   structure.isTargeted('supplier') == false
+        });
+    }
+    // Then try and find if anything else needs energy
+    if (!target) {
+        target = this.pos.findClosestByPath(FIND_STRUCTURES, {
+            filter: (structure) => (structure.structureType == STRUCTURE_TOWER ||
+                                    structure.structureType == STRUCTURE_EXTENSION ||
+                                    structure.structureType == STRUCTURE_SPAWN) &&
+                                   structure.energy < structure.energyCapacity &&
+                                   structure.isTargeted('supplier') == false
+        });
+    }
+    // If nothing else needs energy, dump to storage
+    if (!target) {
+        target = this.room.storage;
+    }
+    if (target) {
+        this.memory.target = target.id;
+        return OK;
+    } else {
+        return ERR_NO_TARGET_FOUND;
+    }
+};
+
 
 Creep.prototype.targetClosestJob = function () {
     // Set target to closest construction job; allows duplicates
@@ -146,3 +179,5 @@ Creep.prototype.targetClosestDamagedCreep = function () {
         return ERR_NO_TARGET_FOUND;
     }
 };
+
+// TODO: Creep.donate() function to give high level creeps to another (owned) room

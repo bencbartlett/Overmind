@@ -10,7 +10,7 @@ var roleRepairer = {
             creep.say("Withdrawing!");
             this.withdrawMode(creep);
         } else {
-            if (creep.goRepair() == ERR_NO_TARGET_FOUND) { //
+            if (creep.goRepair() == ERR_NO_TARGET_FOUND) {
                 builder.run(creep);
             }
         }

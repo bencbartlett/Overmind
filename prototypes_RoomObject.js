@@ -28,14 +28,14 @@ RoomObject.prototype.countAdjacentCreeps = function () {
 RoomObject.prototype.isTargeted = function (role = undefined) {
     var creeps;
     if (role != undefined) {
-        creeps = _.filter(Game.creeps, (creep) => creep.role() == role);
+        creeps = _.filter(Game.creeps, (creep) => creep.memory.role == role);
     } else {
         creeps = Game.creeps;
     }
-    for (let name in creeps) {
-        if (creeps[name].memory.target == this.id) {
-            return creeps[name].id; // return id of first creep found to be targeting this object
-        }
+    creeps = _.filter(creeps, (creep) => creep.memory.target == this.id); // only ones targeting this object
+    if (creeps.length > 0) {
+        return  creeps; // return list of targeting creeps
+    } else {
+        return false;
     }
-    return false;
 };
