@@ -2,6 +2,13 @@
 
 var roleHealer = {
     /** @param {Creep} creep **/
+    /** @param {StructureSpawn} spawn **/
+    /** @param {Number} creepSizeLimit **/
+
+    create: function (spawn, creepSizeLimit = Infinity) {
+        return spawn.createCreep([HEAL, MOVE], spawn.creepName('meleeAttacker'), {role: 'healer'});
+    },
+
     run: function (creep) {
         // Attack nearest enemy creep
         if (creep.goHeal() != OK) {

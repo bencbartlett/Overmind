@@ -2,6 +2,12 @@ var builder = require('role_builder');
 
 var roleRepairer = {
     /** @param {Creep} creep **/
+    /** @param {StructureSpawn} spawn **/
+    /** @param {Number} creepSizeLimit **/
+
+    create: function (spawn, creepSizeLimit = Infinity) {
+        return spawn.createBiggestCreep('repairer', creepSizeLimit);
+    },
 
     // Repair mode: repair nearby structures less than X% health
     repairMode: function (creep) {
@@ -23,7 +29,7 @@ var roleRepairer = {
                 creep.memory.working = true;
                 creep.say("Repairing!");
                 this.repairMode(creep);
-            } else if (creep.targetClosestWallLowerThan(20000) == OK) { // manual cutoff
+            } else if (creep.targetClosestWallLowerThan(30000) == OK) { // manual cutoff
                 creep.memory.working = true;
                 creep.say("Fortifying!");
                 this.repairMode(creep);

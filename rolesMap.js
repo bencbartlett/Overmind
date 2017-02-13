@@ -1,14 +1,46 @@
+// Prioritized roles map that also acts as spawning instructions for spawner
+
 var rolesMap = {
-    harvester: require('role_harvester'),
-    miner: require('role_miner'),
-    supplier: require('role_supplier'),
-    hauler: require('role_hauler'),
-    builder: require('role_builder'),
-    upgrader: require('role_upgrader'),
-    repairer: require('role_repairer'),
-    meleeAttacker: require('role_meleeAttacker'),
-    healer: require('role_healer'),
-    reserver: require('role_reserver')
+    harvester: {
+        behavior: require('role_harvester'),
+        amount: 0
+    },
+    miner: {
+        behavior: require('role_miner'),
+        amount: 4
+    },
+    supplier: {
+        behavior: require('role_supplier'),
+        amount: 3
+    },
+    hauler: {
+        behavior: require('role_hauler'),
+        amount: 0
+    },
+    repairer: {
+        behavior: require('role_repairer'),
+        amount: 2
+    },
+    builder: {
+        behavior: require('role_builder'),
+        amount: 3
+    },
+    upgrader: {
+        behavior: require('role_upgrader'),
+        amount: 2
+    },
+    reserver: {
+        behavior: require('role_reserver'),
+        amount: 1
+    },
+    healer: {
+        behavior: require('role_healer'),
+        amount: 0
+    },
+    meleeAttacker: {
+        behavior:  require('role_meleeAttacker'),
+        amount: 0
+    }
 };
 
 module.exports = rolesMap;

@@ -2,6 +2,13 @@ var upgrader = require('role_upgrader');
 
 var roleBuilder = {
     /** @param {Creep} creep **/
+    /** @param {StructureSpawn} spawn **/
+    /** @param {Number} creepSizeLimit **/
+
+    create: function (spawn, creepSizeLimit = Infinity) {
+        return spawn.createBiggestCreep('builder', creepSizeLimit);
+    },
+
     // Build mode: build any nearby construction jobs
     buildMode: function (creep) {
         if (creep.carry.energy == 0) {

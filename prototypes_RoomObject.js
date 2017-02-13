@@ -32,7 +32,14 @@ RoomObject.prototype.isTargeted = function (role = undefined) {
     } else {
         creeps = Game.creeps;
     }
-    creeps = _.filter(creeps, (creep) => creep.memory.target == this.id); // only ones targeting this object
+    if (this.hasOwnProperty('id')) {
+        creeps = _.filter(creeps, (creep) => creep.memory.target == this.id); // only ones targeting this object
+    } else if (this.hasOwnProperty('name')) {
+        creeps = _.filter(creeps, (creep) => creep.memory.target == this.name); // only ones targeting this object
+    } else {
+        console.log(this + " does not have a name or ID.");
+        return false;
+    }
     if (creeps.length > 0) {
         return  creeps; // return list of targeting creeps
     } else {

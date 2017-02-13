@@ -2,11 +2,18 @@
 
 var roleReserver = {
     /** @param {Creep} creep **/
+    /** @param {StructureSpawn} spawn **/
+    /** @param {Number} creepSizeLimit **/
+
+    create: function (spawn, creepSizeLimit = Infinity) {
+        return spawn.createCreep([CLAIM, CLAIM, MOVE, MOVE], spawn.creepName('reserver'), {role: 'reserver'});
+    },
+
     getAssignment: function (creep) {
-        var untargetedFlags = _.filter(Game.flags, (f) => f.color == COLOR_PURPLE);// && f.isTargeted('reserver') == false);
+        var untargetedFlags = _.filter(Game.flags, (f) => f.color == COLOR_PURPLE && f.isTargeted('reserver') == false);
         if (untargetedFlags.length > 0) {
-            // var controller = untargetedFlags[0].room.controller;
-            creep.memory.target = untargetedFlags[0].name;
+            // new memory object: assignment. Assignment is like target but is never changed
+            creep.memory.assignment = untargetedFlags[0].name;
             console.log(creep.name + " assigned to: " + untargetedFlags[0].name);
         } else {
             console.log(creep.name + " could not receive an assignment.");
@@ -15,15 +22,15 @@ var roleReserver = {
 
     run: function (creep) {
         // Get an assignment if you don't have one already
-        if (!creep.memory.target) {
+        if (!creep.memory.assignment) {
             this.getAssignment(creep);
         }
-        var targetFlag = Game.flags[creep.memory.target]; // This is a position, not an ID!
-        if (!creep.isInRoom(targetFlag.pos.roomName)) {
-            creep.moveToVisual(targetFlag.pos, 'purple');
+        var assignedFlag = Game.flags[creep.memory.assignment]; // This is a flag, not an ID!
+        if (!creep.isInRoom(assignedFlag.pos.roomName)) {
+            creep.moveToVisual(assignedFlag.pos, 'purple');
         } else {
-            if (creep.reserveController(targetFlag.room.controller) == ERR_NOT_IN_RANGE) {
-                creep.moveToVisual(targetFlag.room.controller, 'purple');
+            if (creep.reserveController(assignedFlag.room.controller) == ERR_NOT_IN_RANGE) {
+                creep.moveToVisual(assignedFlag.room.controller, 'purple');
             }
         }
     }

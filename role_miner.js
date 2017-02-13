@@ -2,6 +2,25 @@
 
 var roleMiner = {
     /** @param {Creep} creep **/
+    /** @param {StructureSpawn} spawn **/
+    /** @param {Number} creepSizeLimit **/
+
+    create: function (spawn, creepSizeLimit = Infinity) {
+        var maxWorkParts = 4; // maximum number of WORK parts to put on the creep
+        var energy = spawn.room.energyCapacityAvailable; // total energy available for spawn + extensions
+        var numberOfParts = Math.floor((energy - (50 + 50)) / 100); // max number of work parts you can put on
+        numberOfParts = Math.min(numberOfParts, maxWorkParts);
+        // make sure the creep is not too big (more than 50 parts)
+        numberOfParts = Math.min(numberOfParts, 50 - 2); // don't exceed max parts
+        var body = [];
+        for (let i = 0; i < numberOfParts; i++) {
+            body.push(WORK);
+        }
+        body.push(CARRY);
+        body.push(MOVE);
+        return spawn.createCreep(body, spawn.creepName('miner'), {role: 'miner'});
+    },
+
     getAssignment: function (creep) {
         var remainingAssignments = creep.room.remainingMinerSourceAssignments();
         var maxRemainingAssignments = 0;
@@ -46,10 +65,15 @@ var roleMiner = {
                 // you have to use FIND_STRUCTURES, not FIND_MY_STRUCTURES; containers are neutral
                 filter: (s) => s.structureType == STRUCTURE_CONTAINER
             });
-            if (closestContainer.hits >= closestContainer.hitsMax) { // miners repair their own containers
-                creep.transfer(closestContainer, RESOURCE_ENERGY);
+            if (closestContainer) {
+                if (closestContainer.hits >= closestContainer.hitsMax) { // miners repair their own containers
+                    creep.transfer(closestContainer, RESOURCE_ENERGY);
+                } else {
+                    creep.repair(closestContainer);
+                }
             } else {
-                creep.repair(closestContainer);
+                console.log(creep.name + ": no container; dropping!");
+                creep.drop(RESOURCE_ENERGY);
             }
         }
     },
