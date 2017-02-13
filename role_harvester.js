@@ -46,10 +46,12 @@ var roleHarvester = {
 
     run: function (creep) {
         if (!this.deprecated) {
-            if (creep.memory.working) {
-                this.harvestMode(creep);
-            } else {
-                this.depositMode(creep);
+            if (creep.donationHandler() == OK) {
+                if (creep.memory.working) {
+                    this.harvestMode(creep);
+                } else {
+                    this.depositMode(creep);
+                }
             }
         } else {
             upgrader.run(creep); // harvesters become upgraders if deprecated

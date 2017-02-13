@@ -11,11 +11,7 @@ var rolesMap = {
     },
     supplier: {
         behavior: require('role_supplier'),
-        amount: 3
-    },
-    hauler: {
-        behavior: require('role_hauler'),
-        amount: 0
+        amount: 2
     },
     repairer: {
         behavior: require('role_repairer'),
@@ -23,10 +19,18 @@ var rolesMap = {
     },
     builder: {
         behavior: require('role_builder'),
-        amount: 3
+        amount: 1
     },
     upgrader: {
         behavior: require('role_upgrader'),
+        amount: 2
+    },
+    remoteMiner: {
+        behavior: require('role_remoteMiner'),
+        amount: 2
+    },
+    hauler: {
+        behavior: require('role_hauler'),
         amount: 2
     },
     reserver: {

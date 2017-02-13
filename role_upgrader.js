@@ -14,6 +14,7 @@ var roleUpgrader = {
             creep.say("Withdrawing!");
             this.withdrawMode(creep);
         } else {
+            // this.repairNearbyDamagedRoad();  // why does this line cause all of them to freeze?
             if (creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
                 creep.moveToVisual(creep.room.controller, 'purple');
             }
@@ -32,10 +33,12 @@ var roleUpgrader = {
     },
 
     run: function (creep) {
-        if (creep.memory.working) {
-            this.upgradeMode(creep);
-        } else {
-            this.withdrawMode(creep);
+        if (creep.donationHandler() == OK) {
+            if (creep.memory.working) {
+                this.upgradeMode(creep);
+            } else {
+                this.withdrawMode(creep);
+            }
         }
     }
 };

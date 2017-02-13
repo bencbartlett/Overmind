@@ -1,38 +1,89 @@
+// Hauler - brings back energy from reserved outposts
+
 var roleHauler = {
     /** @param {Creep} creep **/
-    run: function (creep) {
-        // Switch to withdraw mode (working = false) when run out of energy
-        if (creep.memory.working && creep.carry.energy == 0) {
-            if (creep.targetFullestContainer() == OK) {
-                creep.memory.working = false;
-                creep.say("Withdrawing!");
-            }
+    /** @param {StructureSpawn} spawn **/
+    /** @param {Number} creepSizeLimit **/
+
+    create: function (spawn, creepSizeLimit = Infinity) {
+        var maxSize = 7; // maximum number of CARRY-CARRY-MOVE pushes
+        var energy = spawn.room.energyCapacityAvailable; // total energy available for spawn + extensions
+        var numberOfParts = Math.floor((energy - (50 + 50)) / 100); // max number of work parts you can put on
+        numberOfParts = Math.min(numberOfParts, maxSize);
+        // make sure the creep is not too big (more than 50 parts)
+        numberOfParts = Math.min(numberOfParts, 50 - 2); // don't exceed max parts
+        var body = [];
+        for (let i = 0; i < numberOfParts; i++) {
+            body.push(CARRY);
+            body.push(CARRY);
+            body.push(MOVE);
         }
-        // Switch to deposit mode (working = true) when done withdrawing
-        if (!creep.memory.working && creep.carry.energy == creep.carryCapacity) {
-            if (creep.room.storage != undefined) {
-                creep.memory.target = creep.room.storage.id;
+        body.push(WORK);
+        body.push(MOVE);
+        return spawn.createCreep(body, spawn.creepName('hauler'), {role: 'hauler', origin: spawn.room.name});
+    },
+
+    getAssignment: function (creep) {
+        var untargetedFlags = _.filter(Game.flags, (f) => f.color == COLOR_YELLOW &&
+                                                          f.isTargeted('hauler').length < 2);
+        if (untargetedFlags.length > 0) {
+            // var controller = untargetedFlags[0].room.controller;
+            creep.memory.assignment = untargetedFlags[0].name;
+            console.log(creep.name + " assigned to: " + untargetedFlags[0].name);
+        } else {
+            console.log(creep.name + " could not receive an assignment.");
+        }
+    },
+
+    collectMode: function (creep) {
+        if (creep.carry.energy == creep.carryCapacity) { // Switch to deposit mode (working = true) if done
+            var origin = Game.rooms[creep.memory.origin];
+            if (origin.storage) {
                 creep.memory.working = true;
+                creep.memory.target = origin.storage.id;
                 creep.say("Storing!");
+                this.depositMode(creep);
             } else {
-                if (creep.targetClosestSink() == OK) {
-                    creep.memory.working = true;
-                    creep.say("Supplying!");
-                } else {
-                    console.log(creep.name + ": no storage or sinks...");
-                }
+                console.log(creep.name + ": no storage in origin room!");
+            }
+        } else {
+            if (!creep.memory.target) {
+                creep.targetFlaggedContainer(Game.flags[creep.memory.assignment]);
+            }
+            creep.goWithdraw(null); // no retargeting
+        }
+    },
+
+    depositMode: function (creep) {
+        if (creep.carry.energy == 0) {// Switch to collect mode (working = false) when out of energy
+            var assignedFlag = Game.flags[creep.memory.assignment];
+            if (creep.targetFlaggedContainer(assignedFlag) == OK) {
+                creep.memory.working = false;
+                creep.say("Collecting!");
+                this.collectMode(creep);
+            } else {
+                console.log(creep.name + ": error targeting flagged container!");
+            }
+        } else {
+            var origin = Game.rooms[creep.memory.origin];
+            if (origin.storage) {
+                var res = creep.goTransfer(null); // no retargeting
+            } else {
+                console.log(creep.name + ": no storage in origin room!");
             }
         }
-        // Go withdraw as needed
-        if (!creep.memory.working) {
-            creep.goWithdraw();
+    },
+
+    run: function (creep) {
+        // Get an assignment if you don't have one already
+        if (!creep.memory.assignment) {
+            this.getAssignment(creep);
         }
-        // Supply energy sinks
+        // Haul energy back from extension
         if (creep.memory.working) {
-            let res = creep.goTransfer();
-            if (res == ERR_INVALID_TARGET || res == ERR_FULL) {
-                console.log(creep.name + ": invalid target or full...");
-            }
+            this.depositMode(creep);
+        } else {
+            this.collectMode(creep);
         }
     }
 };

@@ -10,7 +10,8 @@ var roleReserver = {
     },
 
     getAssignment: function (creep) {
-        var untargetedFlags = _.filter(Game.flags, (f) => f.color == COLOR_PURPLE && f.isTargeted('reserver') == false);
+        var untargetedFlags = _.filter(Game.flags, (f) => f.color == COLOR_PURPLE &&
+                                                          f.isTargeted('reserver').length == 0);
         if (untargetedFlags.length > 0) {
             // new memory object: assignment. Assignment is like target but is never changed
             creep.memory.assignment = untargetedFlags[0].name;

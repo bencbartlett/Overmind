@@ -42,10 +42,12 @@ var roleRepairer = {
     },
 
     run: function (creep) {
-        if (creep.memory.working) {
-            this.repairMode(creep);
-        } else {
-            this.withdrawMode(creep);
+        if (creep.donationHandler() == OK) {
+            if (creep.memory.working) {
+                this.repairMode(creep);
+            } else {
+                this.withdrawMode(creep);
+            }
         }
     }
 };

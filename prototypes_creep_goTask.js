@@ -14,10 +14,10 @@ Creep.prototype.goTask = function (actionCall,
     //     retargetCall: string literal executed with eval to handle retargeting
     //     retargetConditions: string literal evaluated to a boolean to handle retargeting conditions
     //     pathColor: string representing the roomVisual path color
+    this.repairNearbyDamagedRoad(); // First, try to repair any damaged roads that are in range
     var target = Game.getObjectById(this.memory.target);
     var response = eval("this." + actionCall);
     if ((!target || eval(retargetConditions)) && retargetCall != null) {
-        // Only the two errors above will trigger a retarget
         // Retarget using the retargetFunc call
         var retargetResponse = eval("this." + retargetCall);
         // console.log("2:"+retargetResponse);
@@ -67,6 +67,14 @@ Creep.prototype.goRepair = function (retarget = 'targetClosestUntargetedRepair()
                        });
 };
 
+Creep.prototype.goPickup = function (retarget = 'targetDroppedEnergy()') {
+    return this.goTask('pickup(target)',
+                       {
+                           retargetCall: retarget,
+                           retargetConditions: '(response == ERR_INVALID_TARGET)'
+                       });
+};
+
 Creep.prototype.goWithdraw = function (retarget = 'targetClosestContainerOrStorage()') {
     return this.goTask('withdraw(target, RESOURCE_ENERGY)',
                        {
@@ -94,5 +102,12 @@ Creep.prototype.goWithdrawStorage = function (retarget = 'targetFullestContainer
                            retargetCall: retarget,
                            retargetConditions: '(response == ERR_INVALID_TARGET || ' +
                                                'response == ERR_NOT_ENOUGH_RESOURCES)'
+                       });
+};
+
+Creep.prototype.goUpgrade = function (retarget = null) { // this doesn't change targets
+    return this.goTask('upgradeController(this.room.controller)',
+                       {
+                           pathColor: 'purple'
                        });
 };

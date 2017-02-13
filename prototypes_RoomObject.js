@@ -40,9 +40,5 @@ RoomObject.prototype.isTargeted = function (role = undefined) {
         console.log(this + " does not have a name or ID.");
         return false;
     }
-    if (creeps.length > 0) {
-        return  creeps; // return list of targeting creeps
-    } else {
-        return false;
-    }
+    return creeps; // return list of targeting creeps
 };
