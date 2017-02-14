@@ -5,7 +5,14 @@ var roleHarvester = {
     /** @param {StructureSpawn} spawn **/
 
     create: function (spawn, creepSizeLimit = Infinity) {
-        return spawn.createBiggestCreep('repairer', creepSizeLimit);
+        // create a balanced body as big as possible with the given energy
+        var energy = spawn.room.energyCapacityAvailable; // total energy available for spawn + extensions
+        var numberOfParts = Math.floor(energy / 200);
+        // make sure the creep is not too big (more than 50 parts)
+        numberOfParts = Math.min(numberOfParts, Math.floor(50 / 3), creepSizeLimit);
+        var body = [WORK, CARRY, MOVE, MOVE];
+        // create creep with the created body and the given role
+        return spawn.createCreep(body, spawn.creepName('harvester'), {role: 'harvester'});
     },
 
     // Harvest mode: harvest from nearest source
@@ -19,9 +26,10 @@ var roleHarvester = {
                 upgrader.run(creep); // if nothing needs energy, be an upgrader
             }
         } else {
-            if (creep.goHarvest() != OK) { // Go harvest while working is harvest
-                upgrader.run(creep); // be an upgrader if that doesn't work
-            }
+            creep.goHarvest();
+            // if (creep.goHarvest() == ERR_NO_TARGET_FOUND) { // Go harvest while working is harvest
+            //     // upgrader.run(creep); // be an upgrader if that doesn't work
+            // }
         }
     },
 
@@ -32,17 +40,16 @@ var roleHarvester = {
                 creep.memory.working = true;
                 creep.say("Harvesting!");
                 this.harvestMode(creep);
-            } else {
-                upgrader.run(creep);
-            }
+            } 
         } else {
-            if (creep.goTransfer() != OK) { // Deposit energy while working is deposit
-                upgrader.run(creep); // If you can't do that, then act as an upgrader
-            }
+            creep.goTransfer();
+            // if (creep.goTransfer() == ERR_NO_TARGET_FOUND) {
+            //     // upgrader.run(creep); // If you can't do that, then act as an upgrader
+            // }
         }
     },
 
-    deprecated: true, // set to true if harvesters have been replaced with container mining
+    deprecated: false, // set to true if harvesters have been replaced with container mining
 
     run: function (creep) {
         if (!this.deprecated) {

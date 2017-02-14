@@ -1,13 +1,13 @@
 // Prioritized roles map that also acts as spawning instructions for spawner
 
-var rolesMap = {
+var rolesMap = { // TODO: replace 'amount' with function giving amount automatically
     harvester: {
         behavior: require('role_harvester'),
         amount: 0
     },
     miner: {
         behavior: require('role_miner'),
-        amount: 4
+        amount: 3
     },
     supplier: {
         behavior: require('role_supplier'),
@@ -15,27 +15,31 @@ var rolesMap = {
     },
     repairer: {
         behavior: require('role_repairer'),
-        amount: 2
+        amount: 10
     },
     builder: {
         behavior: require('role_builder'),
-        amount: 1
+        amount: 0
     },
     upgrader: {
         behavior: require('role_upgrader'),
-        amount: 2
+        amount: 1
     },
     remoteMiner: {
         behavior: require('role_remoteMiner'),
-        amount: 2
+        amount: 0
     },
     hauler: {
         behavior: require('role_hauler'),
-        amount: 2
+        amount: 0
+    },
+    guard: {
+        behavior: require('role_guard'),
+        amount: 0
     },
     reserver: {
         behavior: require('role_reserver'),
-        amount: 1
+        amount: 0
     },
     healer: {
         behavior: require('role_healer'),

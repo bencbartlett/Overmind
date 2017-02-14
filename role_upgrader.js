@@ -15,8 +15,8 @@ var roleUpgrader = {
             this.withdrawMode(creep);
         } else {
             // this.repairNearbyDamagedRoad();  // why does this line cause all of them to freeze?
-            if (creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
-                creep.moveToVisual(creep.room.controller, 'purple');
+            if (creep.upgradeController(Game.rooms['W19N88'].controller) == ERR_NOT_IN_RANGE) { // TODO: fix this
+                creep.moveToVisual(Game.rooms['W19N88'].controller, 'purple');
             }
         }
     },
@@ -28,7 +28,20 @@ var roleUpgrader = {
             creep.say("Upgrading!");
             this.upgradeMode(creep);
         } else {
-            creep.goWithdraw();
+            var res;
+            if (creep.room.storage) {
+                res = creep.goWithdraw(); // withdraw from closest once you have storage
+            } else {
+                res = creep.goWithdrawFullest() // else withdraw from fullest container
+            }
+            if (res == ERR_NO_TARGET_FOUND) {
+                var canHarvest = false;
+                if (canHarvest && creep.goHarvest() == OK) {
+                    creep.say("Harvesting!");
+                } else {
+                    console.log(creep.name + ": error finding source target.");
+                }
+            }
         }
     },
 

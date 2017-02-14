@@ -1,5 +1,12 @@
 'use strict';
 
+// To-do list: ====================
+// TODO: attack capability; calculations for how large of an invasion/defense group to make
+// TODO: small creep distraction cloud? would require manual pathfinding
+// TODO: consolidate bots
+//      TODO: this will go well with a major refactoring of room logic
+// TODO: safe mode trigger
+
 // Import everything needed
 require('require');
 
@@ -25,6 +32,11 @@ module.exports.loop = function () {
     }
     // Animate each spawn
     for (let name in Game.spawns) {
-        Game.spawns[name].run();
+        var spawn = Game.spawns[name];
+        spawn.run();
+        // Safe mode condition - spawn reaches 50% health
+        if (spawn.hits < 0.5 * spawn.hitsMax) {
+            spawn.room.controller.activateSafeMode();
+        }
     }
 };
