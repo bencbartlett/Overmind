@@ -28,14 +28,14 @@ var roleMiner = {
             // Scan through room sources until you find one that has the most remaining open spots
             if (remainingAssignments[ID] > 0 && remainingAssignments[ID] > maxRemainingAssignments) {
                 maxRemainingAssignments = remainingAssignments[ID];
-                creep.memory.target = ID;
+                creep.memory.assignment = ID;
             }
         }
         if (maxRemainingAssignments == 0) {
             console.log("ERROR: " + creep.name + " could not receive a mining assignment.");
             return ERR_NO_TARGET_FOUND;
         } else {
-            console.log(creep.name + " assigned to source: " + creep.memory.target);
+            console.log(creep.name + " assigned to source: " + creep.memory.assignment);
             return OK;
         }
     },
@@ -43,12 +43,25 @@ var roleMiner = {
     mineMode: function (creep) {
         if (creep.carry.energy == creep.carryCapacity) { // Switch to deposit working when done harvesting
             creep.memory.working = false;
-            creep.say("Depositing!");
-            this.depositMode(creep);
+            this.depositBuildMode(creep, true);
         } else {
-            var target = Game.getObjectById(creep.memory.target);
-            if (creep.harvest(target) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(target);
+            var assignment = Game.getObjectById(creep.memory.assignment);
+            if (creep.harvest(assignment) == ERR_NOT_IN_RANGE) {
+                creep.moveToVisual(assignment, 'yellow');
+            }
+        }
+    },
+
+    buildMode: function (creep) {
+        if (creep.carry.energy == 0) {
+            creep.memory.working = true;
+            creep.say("Mining!");
+            this.mineMode(creep);
+        } else {
+            let response = creep.goBuild();
+            // console.log('builder:' + response);
+            if (response == ERR_NO_TARGET_FOUND) { // no construction jobs
+                this.mineMode(creep); // revert to upgrader state
             }
         }
     },
@@ -66,8 +79,11 @@ var roleMiner = {
                 filter: (s) => s.structureType == STRUCTURE_CONTAINER
             });
             if (closestContainer) {
-                if (closestContainer.hits >= closestContainer.hitsMax) { // miners repair their own containers
-                    creep.transfer(closestContainer, RESOURCE_ENERGY);
+                if (closestContainer.hits == closestContainer.hitsMax) { // miners repair their own containers
+                    let res = creep.transfer(closestContainer, RESOURCE_ENERGY);
+                    if (res == ERR_NOT_IN_RANGE) {
+                        creep.moveToVisual(closestContainer);
+                    }
                 } else {
                     creep.repair(closestContainer);
                 }
@@ -78,16 +94,33 @@ var roleMiner = {
         }
     },
 
+    depositBuildMode: function (creep, say = false) {
+        var allowBuild = true;
+        if (creep.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 2, {
+                filter: (s) => s.structureType == STRUCTURE_CONTAINER // miners can help build their own containers
+            }).length > 0 && allowBuild) {
+            if (say) {
+                creep.say("Building!");
+            }
+            this.buildMode(creep);
+        } else {
+            if (say) {
+                creep.say("Depositing!");
+            }
+            this.depositMode(creep);
+        }
+    },
+
     run: function (creep) {
         if (creep.donationHandler() == OK) {
             // Get an assignment if you don't have one already
-            if (!creep.memory.target) {
+            if (!creep.memory.assignment) {
                 this.getAssignment(creep);
             }
             if (creep.memory.working) {
                 this.mineMode(creep);
             } else {
-                this.depositMode(creep);
+                this.depositBuildMode(creep);
             }
         }
     }

@@ -6,7 +6,7 @@
 Creep.prototype.targetClosestUnsaturatedSource = function () {
     // Set target to the closest source that isn't already saturated with creeps
     var target = this.pos.findClosestByPath(FIND_SOURCES_ACTIVE, {
-        filter: (source) => source.openSpots() > 0
+        filter: (source) => true || source.openSpots() > 0
     });
     if (target) {
         this.memory.target = target.id;
@@ -58,6 +58,10 @@ Creep.prototype.targetClosestContainerOrStorage = function () {
                         s.structureType == STRUCTURE_STORAGE) &&
                        s.store[RESOURCE_ENERGY] > this.carryCapacity
     });
+    // if (!target) {
+    //     // target spawn if nothing else; this is only relevant at RCL1
+    //     target = this.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) => (s.structureType == STRUCTURE_SPAWN)});
+    // }
     if (target) {
         this.memory.target = target.id;
         return OK;
@@ -95,14 +99,19 @@ Creep.prototype.targetClosestSink = function (prioritizeTowers = true) {
                                    structure.energy < structure.energyCapacity
         });
     }
-    // If nothing else needs energy, dump to storage
+    // If nothing else needs energy, dump to storage (can be multitargeted)
     if (!target) {
         target = this.room.storage;
+    }
+    // If no storage, upgrade room (can be multitargeted)
+    if (!target && this.getActiveBodyparts(WORK) > 0) {
+        target = this.room.controller;
     }
     if (target) {
         this.memory.target = target.id;
         return OK;
     } else {
+        console.log(this.name + ": error targeting sink!");
         return ERR_NO_TARGET_FOUND;
     }
 };
@@ -127,14 +136,19 @@ Creep.prototype.targetClosestUntargetedSink = function (prioritizeTowers = true)
                                    structure.isTargeted('supplier').length == 0
         });
     }
-    // If nothing else needs energy, dump to storage
+    // If nothing else needs energy, dump to storage (can be multitargeted)
     if (!target) {
         target = this.room.storage;
+    }
+    // If no storage, upgrade room (can be multitargeted)
+    if (!target && this.getActiveBodyparts(WORK) > 0) {
+        target = this.room.controller;
     }
     if (target) {
         this.memory.target = target.id;
         return OK;
     } else {
+        console.log(this.name + ": error targeting sink!");
         return ERR_NO_TARGET_FOUND;
     }
 };

@@ -17,25 +17,33 @@ Creep.prototype.goTask = function (actionCall,
     this.repairNearbyDamagedRoad(); // First, try to repair any damaged roads that are in range
     var target = Game.getObjectById(this.memory.target);
     var response = eval("this." + actionCall);
-    if ((!target || eval(retargetConditions)) && retargetCall != null) {
-        // Retarget using the retargetFunc call
-        var retargetResponse = eval("this." + retargetCall);
-        // console.log("2:"+retargetResponse);
-        if (retargetResponse == OK) {
-            return this.goTask(actionCall, {retargetCall: retargetCall, pathColor: retargetCall});
-        } else {
-            return retargetResponse;
+    try {
+        if ((!target || eval(retargetConditions)) && retargetCall != null) {
+            // Retarget using the retargetFunc call
+            var retargetResponse = eval("this." + retargetCall);
+            // console.log("2:"+retargetResponse);
+            if (retargetResponse == OK) {
+                return this.goTask(actionCall, {retargetCall: retargetCall, pathColor: retargetCall});
+            } else {
+                return retargetResponse;
+            }
+        } else if (response == ERR_NOT_IN_RANGE) { // If target is out of range, move to it
+            if (pathColor) {
+                return this.moveToVisual(target, pathColor);
+            } else {
+                return this.moveToVisual(target);
+            }
         }
-    } else if (response == ERR_NOT_IN_RANGE) { // If target is out of range, move to it
-        if (pathColor) {
-            return this.moveToVisual(target, pathColor);
-        } else {
-            return this.moveToVisual(target);
+        else {
+            return response;
         }
+    } catch(err) {
+        console.log(this.name + ": goTask execution failed. Error: " + err);
+        console.log("    actionCall: " + actionCall);
+        console.log("    retargetCall: " + retargetCall);
+        console.log("    retargetConditions: " + retargetConditions)
     }
-    else {
-        return response;
-    }
+
 };
 
 Creep.prototype.goAttack = function (retarget = 'targetClosestEnemy()') {
@@ -67,6 +75,15 @@ Creep.prototype.goRepair = function (retarget = 'targetClosestUntargetedRepair()
                        });
 };
 
+Creep.prototype.goFortify = function (retarget = 'targetClosestWallLowerThan(10000)') {
+    return this.goTask('repair(target)',
+                       {
+                           retargetCall: retarget,
+                           retargetConditions: '(response == ERR_INVALID_TARGET || target.hits == target.hitsMax)',
+                           pathColor: 'green'
+                       });
+};
+
 Creep.prototype.goPickup = function (retarget = 'targetDroppedEnergy()') {
     return this.goTask('pickup(target)',
                        {
@@ -80,7 +97,8 @@ Creep.prototype.goWithdraw = function (retarget = 'targetClosestContainerOrStora
                        {
                            retargetCall: retarget,
                            retargetConditions: '(response == ERR_INVALID_TARGET || ' +
-                                               'target.store[RESOURCE_ENERGY] == 0 ||' +
+                                               '(target.hasOwnProperty("store") && ' +
+                                               'target.store[RESOURCE_ENERGY] == 0 ) ||' +
                                                'response == ERR_NOT_ENOUGH_RESOURCES)'
                        });
 };
@@ -90,7 +108,8 @@ Creep.prototype.goWithdrawFullest = function (retarget = 'targetFullestContainer
                        {
                            retargetCall: retarget,
                            retargetConditions: '(response == ERR_INVALID_TARGET || ' +
-                                               'target.store[RESOURCE_ENERGY] == 0 ||' +
+                                               '(target.hasOwnProperty("store") && ' +
+                                               'target.store[RESOURCE_ENERGY] == 0 ) ||' +
                                                'response == ERR_NOT_ENOUGH_RESOURCES)'
                        });
 };

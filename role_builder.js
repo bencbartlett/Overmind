@@ -35,7 +35,43 @@ var roleBuilder = {
                 upgrader.run(creep); // act as an upgrader if nothing to build
             }
         } else {
-            creep.goWithdraw();
+            var canHarvest = false; // decides whether builders can try to be their own harvesters (early RCL)
+            if (creep.goWithdraw() == ERR_NO_TARGET_FOUND) {
+                //if (creep.goPickup() == OK) {
+                //    creep.say("Pickup!");
+                //} else 
+                if (canHarvest && creep.goHarvest() == OK) {
+                    creep.say("Harvesting!");
+                } //else if (creep.carry.energy > 10) {
+                  //  creep.memory.working = true;
+                  //  creep.say("Building!");
+                  //  this.buildMode(creep);
+                //} else {
+                //    console.log(creep.name + ": error finding source target.");
+                //}
+            }
+        }
+    },
+
+    pickupMode: function (creep) {
+        if (creep.carry.energy == creep.carryCapacity) { // Switch to deposit mode (working = true) when full
+            if (creep.targetClosestUntargetedSink() == OK) { // target closest energy sink that isn't already targeted
+                creep.memory.working = true;
+                creep.memory.data.pickup = false;
+                creep.say("Supplying!");
+                this.supplyMode(creep);
+            } else {
+                console.log(creep.name + ": no storage or sinks...");
+            }
+        } else { // if you don't need to switch, go withdraw
+            let res = creep.goPickup();
+            console.log(creep.name + ": " + res);
+            if (res == ERR_NO_TARGET_FOUND) {
+                creep.memory.working = false;
+                creep.memory.data.pickup = false;
+                creep.say("Withdrawing!");
+                this.withdrawMode(creep);
+            }
         }
     },
 
