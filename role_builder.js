@@ -35,7 +35,7 @@ var roleBuilder = {
                 upgrader.run(creep); // act as an upgrader if nothing to build
             }
         } else {
-            var canHarvest = false; // decides whether builders can try to be their own harvesters (early RCL)
+            var canHarvest = true; // decides whether builders can try to be their own harvesters (early RCL)
             if (creep.goWithdraw() == ERR_NO_TARGET_FOUND) {
                 //if (creep.goPickup() == OK) {
                 //    creep.say("Pickup!");

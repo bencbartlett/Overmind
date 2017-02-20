@@ -75,7 +75,8 @@ Creep.prototype.goRepair = function (retarget = 'targetClosestUntargetedRepair()
                        });
 };
 
-Creep.prototype.goFortify = function (retarget = 'targetClosestWallLowerThan(10000)') {
+Creep.prototype.goFortify = function (hpLevel, retarget = 'targetClosestWallLowerThan') {
+    retarget = retarget + "(" + hpLevel + ")";
     return this.goTask('repair(target)',
                        {
                            retargetCall: retarget,

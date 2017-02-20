@@ -6,7 +6,7 @@
 Creep.prototype.targetClosestUnsaturatedSource = function () {
     // Set target to the closest source that isn't already saturated with creeps
     var target = this.pos.findClosestByPath(FIND_SOURCES_ACTIVE, {
-        filter: (source) => true || source.openSpots() > 0
+        filter: (source) => source.openSpots() > 0
     });
     if (target) {
         this.memory.target = target.id;
@@ -111,7 +111,7 @@ Creep.prototype.targetClosestSink = function (prioritizeTowers = true) {
         this.memory.target = target.id;
         return OK;
     } else {
-        console.log(this.name + ": error targeting sink!");
+        // console.log(this.name + ": error targeting sink!");
         return ERR_NO_TARGET_FOUND;
     }
 };
@@ -153,10 +153,14 @@ Creep.prototype.targetClosestUntargetedSink = function (prioritizeTowers = true)
     }
 };
 
-
 Creep.prototype.targetClosestJob = function () {
     // Set target to closest construction job; allows duplicates
-    var target = this.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
+    var target = this.pos.findClosestByPath(FIND_CONSTRUCTION_SITES, {
+        filter: s => s.structureType == STRUCTURE_STORAGE
+    });
+    if (!target) {
+        target = this.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
+    }
     if (target) {
         this.memory.target = target.id;
         return OK; // success

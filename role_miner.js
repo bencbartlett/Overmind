@@ -6,18 +6,19 @@ var roleMiner = {
     /** @param {Number} creepSizeLimit **/
 
     create: function (spawn, creepSizeLimit = Infinity) {
-        var maxWorkParts = 4; // maximum number of WORK parts to put on the creep
+        var maxWorkParts = 3; // maximum number of WORK WORK CARRY MOVE combos to put on
         var energy = spawn.room.energyCapacityAvailable; // total energy available for spawn + extensions
-        var numberOfParts = Math.floor((energy - (50 + 50)) / 100); // max number of work parts you can put on
+        var numberOfParts = Math.floor(energy / 300); // max number of work parts you can put on
         numberOfParts = Math.min(numberOfParts, maxWorkParts);
         // make sure the creep is not too big (more than 50 parts)
-        numberOfParts = Math.min(numberOfParts, 50 - 2); // don't exceed max parts
+        numberOfParts = Math.min(numberOfParts, 50/4); // don't exceed max parts
         var body = [];
         for (let i = 0; i < numberOfParts; i++) {
             body.push(WORK);
+            body.push(WORK);
+            body.push(CARRY);
+            body.push(MOVE);
         }
-        body.push(CARRY);
-        body.push(MOVE);
         return spawn.createCreep(body, spawn.creepName('miner'), {role: 'miner'});
     },
 

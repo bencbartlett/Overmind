@@ -13,6 +13,10 @@ RoomObject.prototype.countAdjacentWalls = function () {
     return wallCount;
 };
 
+RoomObject.prototype.log = function(message) {
+    console.log(this.room.name + ' ' + this.name + ': "'  + message + '"');
+};
+
 RoomObject.prototype.capacity = function () {
     return 8 - this.countAdjacentWalls();
 };

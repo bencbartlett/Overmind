@@ -1,4 +1,4 @@
-// Reserver: reserves rooms targeted with a purple flag
+// Reserver: reserves rooms targeted with a purple/grey flag or claims a room with purple/purple flag
 
 var roleReserver = {
     /** @param {Creep} creep **/
@@ -6,7 +6,19 @@ var roleReserver = {
     /** @param {Number} creepSizeLimit **/
 
     create: function (spawn, creepSizeLimit = Infinity) {
-        return spawn.createCreep([CLAIM, CLAIM, MOVE, MOVE], spawn.creepName('reserver'), {role: 'reserver'});
+        var energy = spawn.room.energyCapacityAvailable;
+        var body;
+        if (energy >= 2 * 650) {
+            body = [CLAIM, CLAIM, MOVE, MOVE];
+        } else if (energy > 650) {
+            body = [CLAIM, MOVE];
+        } else {
+            console.log("Not enough energy to spawn a reserver of size 1!");
+            return ERR_NOT_ENOUGH_EXTENSIONS;
+        }
+        return spawn.createCreep(body, spawn.creepName('reserver'), {
+            role: 'reserver', origin: spawn.room.name, data: {}
+        });
     },
 
     getAssignment: function (creep) {
@@ -30,7 +42,13 @@ var roleReserver = {
         if (!creep.isInRoom(assignedFlag.pos.roomName)) {
             creep.moveToVisual(assignedFlag.pos, 'purple');
         } else {
-            if (creep.reserveController(assignedFlag.room.controller) == ERR_NOT_IN_RANGE) {
+            var response;
+            if (assignedFlag.color == COLOR_PURPLE && assignedFlag.secondaryColor == COLOR_PURPLE) {
+                response = creep.claimController(assignedFlag.room.controller);
+            } else {
+                response = creep.reserveController(assignedFlag.room.controller);
+            }
+            if (response == ERR_NOT_IN_RANGE) {
                 creep.moveToVisual(assignedFlag.room.controller, 'purple');
             }
         }
