@@ -2,6 +2,7 @@ require('constants');
 require('prototypes_creep_targeting');
 require('prototypes_creep_goTask');
 
+var tasks = require('tasks');
 var rolesMap = require('rolesMap');
 
 Creep.prototype.run = function () {
@@ -11,6 +12,30 @@ Creep.prototype.run = function () {
 Creep.prototype.doRole = function () {
     rolesMap[this.memory.role].behavior.run(this);
 };
+
+Creep.prototype.assign = function (task, target) { // wrapper for task.assign(creep, target)
+    task.assign(this, target);
+};
+
+Object.defineProperty(Creep.prototype, 'task', {
+    get: function () { // provide new task object recreated from literals stored in creep.memory.task
+        if (this.memory.task != null) {
+            var task = tasks(this.memory.task.name);
+            task.creepName = this.memory.task.creepName;
+            task.targetID = this.memory.task.targetID;
+            return task;
+        } else {
+            return null;
+        }
+    },
+    set: function(newTask) {
+        if (newTask != null) {
+            this.log("use Creep.assign() to assign tasks. Creep.task = ___ should only be used to null a task.");
+        } else {
+            this.memory.task = newTask;
+        }
+    }
+});
 
 Creep.prototype.moveToVisual = function (target, color = '#fff') {
     var visualizePath = true;
@@ -30,6 +55,10 @@ Creep.prototype.moveToVisual = function (target, color = '#fff') {
 
 Creep.prototype.isInRoom = function (roomName) {
     return (this.room.name == roomName);
+};
+
+Creep.prototype.myRoom = function () {
+    return Game.rooms[this.memory.origin];
 };
 
 Creep.prototype.repairNearbyDamagedRoad = function () {

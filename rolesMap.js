@@ -7,15 +7,23 @@ var rolesMap = { // TODO: replace 'amount' with function giving amount automatic
     },
     miner: {
         behavior: require('role_miner'),
-        amount: 3
+        amount: 0
     },
     supplier: {
         behavior: require('role_supplier'),
-        amount: 2
+        amount: 0
+    },
+    // worker: {
+    //     behavior: require('role_worker'),
+    //     amount: 1
+    // },
+    worker: {
+        behavior: require('role_worker'),
+        amount: 1
     },
     repairer: {
         behavior: require('role_repairer'),
-        amount: 10
+        amount: 0
     },
     builder: {
         behavior: require('role_builder'),
@@ -23,7 +31,7 @@ var rolesMap = { // TODO: replace 'amount' with function giving amount automatic
     },
     upgrader: {
         behavior: require('role_upgrader'),
-        amount: 1
+        amount: 0
     },
     remoteMiner: {
         behavior: require('role_remoteMiner'),

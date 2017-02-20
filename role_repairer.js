@@ -29,7 +29,7 @@ var roleRepairer = {
                 creep.memory.working = true;
                 creep.say("Repairing!");
                 this.repairMode(creep);
-            } else if (creep.targetClosestWallLowerThan(1) == OK) { // manual cutoff
+            } else if (creep.targetClosestWallLowerThan(30000) == OK) { // manual cutoff
                 creep.memory.working = true;
                 creep.say("Fortifying!");
                 this.repairMode(creep);

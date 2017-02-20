@@ -5,9 +5,9 @@ var roleRemoteMiner = {
     /** @param {Number} creepSizeLimit **/
 
     create: function (spawn, creepSizeLimit = Infinity) {
-        var maxWorkParts = 4; // maximum number of WORK parts to put on the creep
+        var maxWorkParts = 6; // maximum number of WORK parts to put on the creep
         var energy = spawn.room.energyCapacityAvailable; // total energy available for spawn + extensions
-        var numberOfParts = Math.floor((energy - (50 + 50)) / 100); // max number of work parts you can put on
+        var numberOfParts = Math.floor((energy - (50 * 5)) / 100); // max number of work parts you can put on
         numberOfParts = Math.min(numberOfParts, maxWorkParts);
         // make sure the creep is not too big (more than 50 parts)
         numberOfParts = Math.min(numberOfParts, 50 - 2); // don't exceed max parts
@@ -25,7 +25,7 @@ var roleRemoteMiner = {
 
     getAssignment: function (creep) {
         var untargetedFlags = _.filter(Game.flags, (f) => f.color == COLOR_YELLOW &&
-                                                          f.isTargeted('remoteMiner').length < 2);
+                                                          f.isTargeted('remoteMiner').length < 1);
         if (untargetedFlags.length > 0) {
             // var controller = untargetedFlags[0].room.controller;
             creep.memory.assignment = untargetedFlags[0].name;
@@ -91,7 +91,7 @@ var roleRemoteMiner = {
     },
 
     depositBuildMode: function (creep, say = false) {
-        var allowBuild = false;
+        var allowBuild = true;
         if (creep.room.find(FIND_MY_CONSTRUCTION_SITES).length > 0 && allowBuild) {
             if (say) {
                 creep.say("Building!");

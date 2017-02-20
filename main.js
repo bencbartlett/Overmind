@@ -9,6 +9,7 @@
 
 // Import everything needed
 require('require');
+var roomBrain = require('brain_Room');
 
 // Main loop
 module.exports.loop = function () {
@@ -25,6 +26,8 @@ module.exports.loop = function () {
     // Animate each room
     for (let name in Game.rooms) {
         var room = Game.rooms[name];
+        // Instantiate a brain for each room
+        // Object.defineProperty(room, 'brain', new roomBrain(name));
         var towers = room.find(FIND_MY_STRUCTURES, {filter: (s) => s.structureType == STRUCTURE_TOWER});
         for (let i in towers) {
             towers[i].run();

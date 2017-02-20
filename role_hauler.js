@@ -6,9 +6,9 @@ var roleHauler = {
     /** @param {Number} creepSizeLimit **/
 
     create: function (spawn, creepSizeLimit = Infinity) {
-        var maxSize = 7; // maximum number of CARRY-CARRY-MOVE pushes
+        var maxSize = 5; // maximum number of CARRY-CARRY-MOVE pushes
         var energy = spawn.room.energyCapacityAvailable; // total energy available for spawn + extensions
-        var numberOfParts = Math.floor((energy - (50 + 50)) / 100); // max number of work parts you can put on
+        var numberOfParts = Math.floor((energy - (50 + 50)) / 150); // max number of work parts you can put on
         numberOfParts = Math.min(numberOfParts, maxSize);
         // make sure the creep is not too big (more than 50 parts)
         numberOfParts = Math.min(numberOfParts, 50 - 2); // don't exceed max parts
@@ -50,7 +50,8 @@ var roleHauler = {
             if (!creep.memory.target) {
                 creep.targetFlaggedContainer(Game.flags[creep.memory.assignment]);
             }
-            creep.goWithdraw(null); // no retargeting
+            var res = creep.goWithdraw(null); // no retargeting
+            creep.log(res);
         }
     },
 
@@ -68,6 +69,7 @@ var roleHauler = {
             var origin = Game.rooms[creep.memory.origin];
             if (origin.storage) {
                 var res = creep.goTransfer(null); // no retargeting
+                // creep.log(res);
             } else {
                 console.log(creep.name + ": no storage in origin room!");
             }

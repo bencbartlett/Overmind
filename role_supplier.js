@@ -81,7 +81,7 @@ var roleSupplier = {
             }
         } else { // if you don't need to switch, go withdraw
             let res = creep.goPickup();
-            console.log(creep.name + ": " + res);
+            // console.log(creep.name + ": " + res);
             if (res == ERR_NO_TARGET_FOUND) {
                 creep.memory.working = false;
                 creep.memory.data.pickup = false;

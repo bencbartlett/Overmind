@@ -7,6 +7,18 @@ var roleUpgrader = {
         return spawn.createBiggestCreep('upgrader', creepSizeLimit);
     },
 
+    getAssignment: function (creep) {
+        var untargetedFlags = _.filter(Game.flags, (f) => f.color == COLOR_PURPLE &&
+                                                          f.isTargeted('remoteUpgrader').length < Infinity); // max num?
+        if (untargetedFlags.length > 0) {
+            // new memory object: assignment. Assignment is like target but is never changed
+            creep.memory.assignment = untargetedFlags[0].name;
+            console.log(creep.name + " assigned to: " + untargetedFlags[0].name);
+        } else {
+            console.log(creep.name + " could not receive an assignment.");
+        }
+    },
+
     // Upgrade mode: upgrade room controller
     upgradeMode: function (creep) {
         if (creep.carry.energy == 0) {
@@ -15,8 +27,8 @@ var roleUpgrader = {
             this.withdrawMode(creep);
         } else {
             // this.repairNearbyDamagedRoad();  // why does this line cause all of them to freeze?
-            if (creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) { // TODO: fix this
-                creep.moveToVisual(creep.room.controller, 'purple');
+            if (creep.upgradeController(Game.rooms['W19N88'].controller) == ERR_NOT_IN_RANGE) { // TODO: fix this
+                creep.moveToVisual(Game.rooms['W19N88'].controller, 'purple');
             }
         }
     },
@@ -32,7 +44,7 @@ var roleUpgrader = {
             if (creep.room.storage) {
                 res = creep.goWithdraw(); // withdraw from closest once you have storage
             } else {
-                res = creep.goWithdrawFullest() // else withdraw from fullest container
+                res = creep.goWithdrawFullest(); // else withdraw from fullest container
             }
             if (res == ERR_NO_TARGET_FOUND) {
                 var canHarvest = false;

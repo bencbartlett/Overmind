@@ -22,11 +22,7 @@ StructureSpawn.prototype.createBiggestCreep = function (roleName, partsLimit = I
     var body = [];
     for (let i = 0; i < numberOfParts; i++) {
         body.push(WORK);
-    }
-    for (let i = 0; i < numberOfParts; i++) {
         body.push(CARRY);
-    }
-    for (let i = 0; i < numberOfParts; i++) {
         body.push(MOVE);
     }
     // create creep with the created body and the given role
