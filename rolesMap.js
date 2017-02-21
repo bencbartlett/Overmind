@@ -19,7 +19,7 @@ var rolesMap = { // TODO: replace 'amount' with function giving amount automatic
     // },
     worker: {
         behavior: require('role_worker'),
-        amount: 1
+        amount: 2
     },
     repairer: {
         behavior: require('role_repairer'),

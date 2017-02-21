@@ -1,4 +1,3 @@
-require('constants');
 require('prototypes_creep_targeting');
 require('prototypes_creep_goTask');
 
@@ -13,7 +12,7 @@ Creep.prototype.doRole = function () {
     rolesMap[this.memory.role].behavior.run(this);
 };
 
-Creep.prototype.assign = function (task, target) { // wrapper for task.assign(creep, target)
+Creep.prototype.assign = function (task, target = null) { // wrapper for task.assign(creep, target)
     task.assign(this, target);
 };
 

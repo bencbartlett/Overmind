@@ -1,7 +1,5 @@
 var roomBrain = require('brain_Room');
-// Room.prototype.brain = function () {
-//     return new roomBrain(this.name);
-// };
+var brain = new roomBrain(this.name);
 
 Object.defineProperty(Room.prototype, 'brain', {
     get () {

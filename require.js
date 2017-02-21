@@ -1,5 +1,5 @@
 // Require list
-require('constants');
+require('globals');
 require('utilities');
 require('prototypes_creep');
 require('prototypes_spawn');
