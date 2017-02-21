@@ -5,33 +5,34 @@ var roleWorker = {
     /** @param {Creep} creep **/
 
     settings: {
+        bodyPattern: [WORK, CARRY, MOVE],
         workersCanHarvest: true, // can workers act as harvesters? usually false
         targetFullestContainer: false // if true, target fullest container instead of the closest, ignore storage
     },
 
-    create: function (spawn, creepSizeLimit = Infinity) {
+    create: function (spawn, patternRepetitionLimit = Infinity) {
         /** @param {StructureSpawn} spawn **/
-        /** @param {Number} creepSizeLimit **/
-
-        var energy = spawn.room.energyCapacityAvailable; // total energy available for spawn + extensions
-        var numberOfParts = Math.floor(energy / 200);
+        var bodyPattern = this.settings.bodyPattern; // body pattern to be repeated some number of times
+        // calculate the most number of pattern repetitions you can use with available energy
+        var numRepeats = Math.floor(spawn.room.energyCapacityAvailable / spawn.cost(bodyPattern));
         // make sure the creep is not too big (more than 50 parts)
-        numberOfParts = Math.min(numberOfParts, Math.floor(50 / 3), numberOfParts);
+        numRepeats = Math.min(Math.floor(50/bodyPattern.length), numRepeats, patternRepetitionLimit);
+        // create the body
         var body = [];
-        for (let i = 0; i < numberOfParts; i++) {
-            body.push(WORK);
-            body.push(CARRY);
-            body.push(MOVE);
+        for (let i = 0; i < numRepeats; i++) {
+            body = body.concat(bodyPattern);
         }
+        // create the creep and initialize memory
         return spawn.createCreep(body, spawn.creepName('worker'), {
-            role: 'worker', working: false, task: null, origin: spawn.room.name, data: {}
+            role: 'worker', working: false, task: null, data: {
+                origin: spawn.room.name, serviceRoom: spawn.room.name
+            }
         });
     },
 
     requestTask: function (creep) {
         creep.memory.working = true;
-        let res = creep.room.brain.assignTask(creep);
-        return res;
+        return creep.room.brain.assignTask(creep);
     },
 
     recharge: function (creep) {

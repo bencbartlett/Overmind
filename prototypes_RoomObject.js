@@ -14,7 +14,7 @@ RoomObject.prototype.countAdjacentWalls = function () {
 };
 
 RoomObject.prototype.log = function(message) {
-    console.log(this.room.name + ' ' + this.name + ': "'  + message + '"');
+    console.log(this.room.name + ' ' + this.name + ': "' + message + '"');
 };
 
 RoomObject.prototype.capacity = function () {
@@ -46,3 +46,16 @@ RoomObject.prototype.isTargeted = function (role = undefined) {
     }
     return creeps; // return list of targeting creeps
 };
+
+Object.defineProperty(RoomObject.prototype, 'ref', { // identifier property. id preferred over name over null
+    get: function () {
+        return this.id || this.name || null;
+    }
+});
+
+// List of creeps assigned to this object
+Object.defineProperty(RoomObject.prototype, 'assignedCreeps', { // TODO: fine for small numbers of creeps, might rewrite
+    get: function () {
+        return _.filter(Game.creeps, creep => creep.memory.assignment && creep.memory.assignment == this.id)
+    }
+});

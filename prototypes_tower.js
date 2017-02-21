@@ -1,5 +1,3 @@
-require('constants');
-
 StructureTower.prototype.run = function () {
     // Task priority for towers: attack, then heal, then repair
     var useTowerToRepairStructures = false;

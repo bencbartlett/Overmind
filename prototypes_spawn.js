@@ -1,7 +1,7 @@
 var rolesMap = require('rolesMap');
 
-StructureSpawn.prototype.countCreeps = function (type) {
-    var creeps = _.filter(Game.creeps, (creep) => creep.memory.role == type);
+StructureSpawn.prototype.countCreeps = function (role) {
+    var creeps = _.filter(Game.creeps, (creep) => creep.memory.role == role);
     return creeps.length;
 };
 
@@ -11,6 +11,24 @@ StructureSpawn.prototype.creepName = function (roleName) {
         i++;
     }
     return (roleName + '_' + i);
+};
+
+StructureSpawn.prototype.cost = function (bodyArray) {
+    var partCosts = {
+        'move': 50,
+        'work': 100,
+        'carry': 50,
+        'attack': 80,
+        'ranged_attack': 150,
+        'heal': 250,
+        'claim': 600,
+        'tough': 10
+    };
+    var cost = 0;
+    for (let part of bodyArray) {
+        cost += partCosts[part];
+    }
+    return cost;
 };
 
 StructureSpawn.prototype.createBiggestCreep = function (roleName, partsLimit = Infinity) {
@@ -30,11 +48,11 @@ StructureSpawn.prototype.createBiggestCreep = function (roleName, partsLimit = I
 };
 
 StructureSpawn.prototype.run = function () { // TODO: automatic creep number calculations
-    var creepSizeLimit = 3;
+    var patternRepetitionLimit = this.room.brain.settings.workerPatternRepetitionLimit;
     for (var roleName in rolesMap) {
         var roleObject = rolesMap[roleName];
         if (this.countCreeps(roleName) < roleObject.amount) {
-            roleObject.behavior.create(this, creepSizeLimit);
+            roleObject.behavior.create(this, patternRepetitionLimit);
             break;
         }
     }

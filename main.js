@@ -26,20 +26,20 @@ module.exports.loop = function () {
     // Animate each room
     for (let name in Game.rooms) {
         var room = Game.rooms[name];
-        // Instantiate a brain for each room
-        // Object.defineProperty(room, 'brain', new roomBrain(name));
+        // Animate each room brain
+        room.brain.run();
         var towers = room.find(FIND_MY_STRUCTURES, {filter: (s) => s.structureType == STRUCTURE_TOWER});
         for (let i in towers) {
             towers[i].run();
         }
     }
-    // Animate each spawn
-    for (let name in Game.spawns) {
-        var spawn = Game.spawns[name];
-        spawn.run();
-        // Safe mode condition - spawn reaches 50% health
-        if (spawn.hits < 0.5 * spawn.hitsMax) {
-            spawn.room.controller.activateSafeMode();
-        }
-    }
+    // // Animate each spawn
+    // for (let name in Game.spawns) {
+    //     var spawn = Game.spawns[name];
+    //     spawn.run();
+    //     // Safe mode condition - spawn reaches 50% health
+    //     if (spawn.hits < 0.5 * spawn.hitsMax) {
+    //         spawn.room.controller.activateSafeMode();
+    //     }
+    // }
 };

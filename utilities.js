@@ -27,6 +27,33 @@ global.modeToWorking = function () {
     }
 };
 
+global.convertOldCreepsToWorkers = function () {
+    // One-time use function to migrate repairers, builders, upgraders to worker class
+    var creepsToConvert = _.filter(Game.creeps,
+                                   creep => creep.memory.role == 'repairer' ||
+                                            creep.memory.role == 'builder' ||
+                                            creep.memory.role == 'upgrader');
+    for (let i in creepsToConvert) {
+        var creep = creepsToConvert[i];
+        creep.memory.role = 'worker';
+        creep.memory.working = false;
+        creep.memory.task = null;
+        creep.memory.data = {origin: creep.room.name, serviceRoom: creep.room.name};
+    }
+    return OK;
+};
+
+global.fixMinerMemory = function () {
+    // One-time use function to migrate repairers, builders, upgraders to worker class
+    var creepsToConvert = _.filter(Game.creeps,
+                                   creep => creep.memory.role == 'miner');
+    for (let i in creepsToConvert) {
+        var creep = creepsToConvert[i];
+        creep.memory.data = {origin: creep.room.name, serviceRoom: creep.room.name, replaceNow: false};
+    }
+    return OK;
+};
+
 global.status = function () {
     console.log("Creep status: ");
     var roles = require('rolesMap');
