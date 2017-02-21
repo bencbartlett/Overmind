@@ -32,7 +32,8 @@ var roleWorker = {
 
     requestTask: function (creep) {
         creep.memory.working = true;
-        return creep.room.brain.assignTask(creep);
+        var serviceRoom = Game.rooms[creep.memory.data.serviceRoom];
+        return serviceRoom.brain.assignTask(creep);
     },
 
     recharge: function (creep) {

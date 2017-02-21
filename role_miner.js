@@ -10,7 +10,7 @@ var roleMiner = {
         allowBuild: true
     },
 
-    create: function (spawn, assignment, patternRepetitionLimit = 3) { // 6 or 8 parts will saturate a source
+    create: function (spawn, assignment, {serviceRoom = spawn.room.name, patternRepetitionLimit = 3}) {
         /** @param {StructureSpawn} spawn **/
         var bodyPattern = this.settings.bodyPattern; // body pattern to be repeated some number of times
         // calculate the most number of pattern repetitions you can use with available energy
@@ -25,7 +25,7 @@ var roleMiner = {
         // create the creep and initialize memory
         return spawn.createCreep(body, spawn.creepName('miner'), {
             role: 'miner', working: false, task: null, assignment: assignment, data: {
-                origin: spawn.room.name, serviceRoom: spawn.room.name, replaceNow: false
+                origin: spawn.room.name, serviceRoom: serviceRoom, replaceNow: false
             }
         });
     },
@@ -41,8 +41,7 @@ var roleMiner = {
         creep.memory.working = false;
         var target;
         target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
-            filter: (s) => s.structureType == STRUCTURE_CONTAINER &&
-                           s.store[RESOURCE_ENERGY] > creep.carryCapacity
+            filter: (s) => s.structureType == STRUCTURE_CONTAINER
         });
         if (target) {
             var transfer = tasks('transferEnergy');

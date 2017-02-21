@@ -1,107 +1,99 @@
 // Supplier: local energy transport bot. Picks up dropped energy, energy in containers, deposits to sinks and storage
 
+var tasks = require('tasks');
+
 var roleSupplier = {
     /** @param {Creep} creep **/
     /** @param {StructureSpawn} spawn **/
     /** @param {Number} creepSizeLimit **/
 
-    create: function (spawn, creepSizeLimit = Infinity) {
+    settings: {
+        bodyPattern: [CARRY, CARRY, MOVE]
+    },
+
+    create: function (spawn, {serviceRoom = spawn.room.name, patternRepetitionLimit = 3}) { // 6 or 8 parts will saturate a source
+        /** @param {StructureSpawn} spawn **/
+        var bodyPattern = this.settings.bodyPattern; // body pattern to be repeated some number of times
+        // calculate the most number of pattern repetitions you can use with available energy
+        var numRepeats = Math.floor((spawn.room.energyCapacityAvailable) / spawn.cost(bodyPattern));
+        // make sure the creep is not too big (more than 50 parts)
+        numRepeats = Math.min(Math.floor(50 / (bodyPattern.length)), numRepeats, patternRepetitionLimit);
+        // create the body
         var body = [];
-        for (let i = 0; i < 3; i++) {
-            body.push(CARRY);
-            body.push(CARRY);
-            body.push(MOVE);
+        for (let i = 0; i < numRepeats; i++) {
+            body = body.concat(bodyPattern);
         }
-        return spawn.createCreep(body, spawn.creepName('supplier'), {role: 'supplier', data: {}, working: true});
+        // body.push(WORK);
+        // body.push(MOVE);
+        return spawn.createCreep(body, spawn.creepName('supplier'), {
+            role: 'supplier', working: false, task: null, data: {
+                origin: spawn.room.name, serviceRoom: serviceRoom
+            }
+        });
     },
 
-    // Supply mode: deposit energy to sinks or storage
-    supplyMode: function (creep) {
-        if (creep.carry.energy == 0) { // Switch to withdraw mode (working = false) when run out of energy
-            if (creep.targetDroppedEnergy() == OK) { // try to find any dropped energy
-                creep.memory.working = false;
-                creep.memory.data.pickup = true;
-                creep.say("Pickup!");
-                this.pickupMode(creep);
-            } else if (creep.targetFullestContainer() == OK) { // try to withdraw from fullest container
-                creep.memory.working = false;
-                creep.memory.data.pickup = false;
-                creep.say("Withdrawing!");
-                this.withdrawMode(creep);
-            } else if (creep.targetFullestContainer() == OK) { // use storage if all containers are empty
-                creep.memory.working = false;
-                creep.memory.data.pickup = false;
-                creep.say("Withdrawing!");
-                this.withdrawMode(creep);
-            } else {
-                creep.say("No target!");
-            }
-        } else {
-            let res = creep.goTransfer();
-            // console.log(creep.name + ": " + res);
-        }
+    requestTask: function (creep) {
+        creep.memory.working = true;
+        var serviceRoom = Game.rooms[creep.memory.data.serviceRoom];
+        return serviceRoom.brain.assignTask(creep);
     },
 
-    // Withdraw mode: withdraw energy from fullest container
-    withdrawMode: function (creep) {
-        if (creep.carry.energy == creep.carryCapacity) { // Switch to deposit mode (working = true) when full
-            if (creep.targetClosestSink() == OK) { // target closest energy sink that isn't already targeted
-                creep.memory.working = true;
-                creep.say("Supplying!");
-                this.supplyMode(creep);
-            } else {
-                console.log(creep.name + ": no storage or sinks...");
-            }
-        } else { // if you don't need to switch, go withdraw
-            if (creep.goWithdrawFullest() == ERR_NO_TARGET_FOUND) {
-                if (creep.targetDroppedEnergy() == OK) { // try to find any dropped energy
-                    creep.memory.working = false;
-                    creep.memory.data.pickup = true;
-                    creep.say("Pickup!");
-                    this.pickupMode(creep);
-                } else {
-                    console.log(creep.name + ": no withdrawable energy sources; switching to supply if >0 energy...");
-                    if (creep.carry.energy > 0) {
-                        this.supplyMode(creep);
-                    }
+    recharge: function (creep) {
+        creep.memory.working = false;
+        var recharge = tasks('recharge');
+        var serviceRoom = Game.rooms[creep.memory.data.serviceRoom];
+        var containers = serviceRoom.find(FIND_STRUCTURES, {
+            filter: (s) => s.structureType == STRUCTURE_CONTAINER &&
+                           s.store[RESOURCE_ENERGY] > creep.carryCapacity
+        });
+        var target;
+        if (containers.length > 0) { // loop through results to find the container with the most energy in the room
+            target = containers[0];
+            var maxFullness = 0;
+            for (let i in containers) {
+                if (containers[i].store[RESOURCE_ENERGY] > maxFullness) {
+                    target = containers[i];
+                    maxFullness = containers[i].store[RESOURCE_ENERGY];
                 }
             }
         }
+        if (!target) {
+            target = Game.rooms[creep.memory.data.serviceRoom].storage;
+        }
+        if (target) {
+            creep.assign(recharge, target);
+        } else {
+            creep.log("no storage or sufficiently full containers in " + creep.memory.data.serviceRoom);
+        }
     },
 
-    pickupMode: function (creep) {
-        if (creep.carry.energy == creep.carryCapacity) { // Switch to deposit mode (working = true) when full
-            if (creep.targetClosestSink() == OK) { // target closest energy sink that isn't already targeted
-                creep.memory.working = true;
-                creep.memory.data.pickup = false;
-                creep.say("Supplying!");
-                this.supplyMode(creep);
-            } else {
-                console.log(creep.name + ": no storage or sinks...");
-            }
-        } else { // if you don't need to switch, go withdraw
-            let res = creep.goPickup();
-            // console.log(creep.name + ": " + res);
-            if (res == ERR_NO_TARGET_FOUND) {
-                creep.memory.working = false;
-                creep.memory.data.pickup = false;
-                creep.say("Withdrawing!");
-                this.withdrawMode(creep);
-            }
+    newTask: function (creep) {
+        creep.task = null;
+        if (creep.carry.energy == 0) {
+            this.recharge(creep);
+        } else {
+            this.requestTask(creep);
+        }
+    },
+
+    executeTask: function (creep) {
+        // execute the task
+        if (creep.task.step() == OK) {
+            // this.newTask(creep);
+            // this.run(creep);
         }
     },
 
     run: function (creep) {
-        if (creep.donationHandler() == OK) {
-            if (creep.memory.working) {
-                this.supplyMode(creep);
-            } else {
-                if (creep.memory.data.pickup) {
-                    this.pickupMode(creep);
-                } else {
-                    this.withdrawMode(creep);
-                }
-            }
+        // get new task if this one is invalid
+        if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
+            this.newTask(creep);
+        }
+        if (creep.task) {
+            // execute task
+            this.executeTask(creep);
+        } else {
+            // creep.log("could not receive task!");
         }
     }
 };

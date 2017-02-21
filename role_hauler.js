@@ -1,91 +1,82 @@
 // Hauler - brings back energy from reserved outposts
+var tasks = require('tasks');
 
 var roleHauler = {
     /** @param {Creep} creep **/
     /** @param {StructureSpawn} spawn **/
     /** @param {Number} creepSizeLimit **/
 
-    create: function (spawn, creepSizeLimit = Infinity) {
-        var maxSize = 5; // maximum number of CARRY-CARRY-MOVE pushes
-        var energy = spawn.room.energyCapacityAvailable; // total energy available for spawn + extensions
-        var numberOfParts = Math.floor((energy - (50 + 50)) / 150); // max number of work parts you can put on
-        numberOfParts = Math.min(numberOfParts, maxSize);
+    settings: {
+        bodyPattern: [CARRY, CARRY, MOVE]
+    },
+
+    create: function (spawn, assignment, {serviceRoom = spawn.room.name, patternRepetitionLimit = 5}) { // 6 or 8 parts will saturate a source
+        /** @param {StructureSpawn} spawn **/
+        var bodyPattern = this.settings.bodyPattern; // body pattern to be repeated some number of times
+        // calculate the most number of pattern repetitions you can use with available energy
+        var numRepeats = Math.floor((spawn.room.energyCapacityAvailable - 150) / spawn.cost(bodyPattern));
         // make sure the creep is not too big (more than 50 parts)
-        numberOfParts = Math.min(numberOfParts, 50 - 2); // don't exceed max parts
+        numRepeats = Math.min(Math.floor(50 / (bodyPattern.length + 2)), numRepeats, patternRepetitionLimit);
+        // create the body
         var body = [];
-        for (let i = 0; i < numberOfParts; i++) {
-            body.push(CARRY);
-            body.push(CARRY);
-            body.push(MOVE);
+        for (let i = 0; i < numRepeats; i++) {
+            body = body.concat(bodyPattern);
         }
         body.push(WORK);
         body.push(MOVE);
-        return spawn.createCreep(body, spawn.creepName('hauler'), {role: 'hauler', origin: spawn.room.name});
+        // find the container closest to assignment
+        var assignedContainer = Game.getObjectById(assignment).pos.findClosestByRange(FIND_STRUCTURES, {
+            filter: (s) => s.structureType == STRUCTURE_CONTAINER
+        });
+        return spawn.createCreep(body, spawn.creepName('hauler'), {
+            role: 'hauler', working: false, task: null, assignment: assignment, data: {
+                origin: spawn.room.name, serviceRoom: serviceRoom, assignedContainer: assignedContainer.id
+            }
+        });
     },
 
-    getAssignment: function (creep) {
-        var untargetedFlags = _.filter(Game.flags, (f) => f.color == COLOR_YELLOW &&
-                                                          f.isTargeted('hauler').length < 2);
-        if (untargetedFlags.length > 0) {
-            // var controller = untargetedFlags[0].room.controller;
-            creep.memory.assignment = untargetedFlags[0].name;
-            console.log(creep.name + " assigned to: " + untargetedFlags[0].name);
+    collect: function (creep) {
+        creep.memory.working = false;
+        var withdraw = tasks('recharge');
+        var target = Game.getObjectById(creep.memory.data.assignedContainer);
+        creep.assign(withdraw, target);
+    },
+
+    transfer: function (creep) {
+        creep.memory.working = true;
+        var deposit = tasks('transferEnergy');
+        var target = Game.rooms[creep.memory.data.serviceRoom].storage;
+        if (target) {
+            creep.assign(deposit, target);
         } else {
-            console.log(creep.name + " could not receive an assignment.");
+            creep.log("no storage in " + creep.memory.data.serviceRoom);
         }
     },
 
-    collectMode: function (creep) {
-        if (creep.carry.energy == creep.carryCapacity) { // Switch to deposit mode (working = true) if done
-            var origin = Game.rooms[creep.memory.origin];
-            if (origin.storage) {
-                creep.memory.working = true;
-                creep.memory.target = origin.storage.id;
-                creep.say("Storing!");
-                this.depositMode(creep);
-            } else {
-                console.log(creep.name + ": no storage in origin room!");
-            }
+    newTask: function (creep) {
+        creep.task = null;
+        if (creep.carry.energy == 0) {
+            this.collect(creep);
         } else {
-            if (!creep.memory.target) {
-                creep.targetFlaggedContainer(Game.flags[creep.memory.assignment]);
-            }
-            var res = creep.goWithdraw(null); // no retargeting
-            creep.log(res);
+            this.transfer(creep);
         }
     },
 
-    depositMode: function (creep) {
-        if (creep.carry.energy == 0) {// Switch to collect mode (working = false) when out of energy
-            var assignedFlag = Game.flags[creep.memory.assignment];
-            if (creep.targetFlaggedContainer(assignedFlag) == OK) {
-                creep.memory.working = false;
-                creep.say("Collecting!");
-                this.collectMode(creep);
-            } else {
-                console.log(creep.name + ": error targeting flagged container!");
-            }
-        } else {
-            var origin = Game.rooms[creep.memory.origin];
-            if (origin.storage) {
-                var res = creep.goTransfer(null); // no retargeting
-                // creep.log(res);
-            } else {
-                console.log(creep.name + ": no storage in origin room!");
-            }
-        }
+    executeTask: function (creep) {
+        // execute the task
+        creep.task.step();
     },
 
     run: function (creep) {
-        // Get an assignment if you don't have one already
-        if (!creep.memory.assignment) {
-            this.getAssignment(creep);
+        // get new task if this one is invalid
+        if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
+            this.newTask(creep);
         }
-        // Haul energy back from extension
-        if (creep.memory.working) {
-            this.depositMode(creep);
+        if (creep.task) {
+            // execute task
+            this.executeTask(creep);
         } else {
-            this.collectMode(creep);
+            creep.log("could not receive task!");
         }
     }
 };
