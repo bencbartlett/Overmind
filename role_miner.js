@@ -59,6 +59,7 @@ var roleMiner = {
         creep.memory.working = true;
         var target = Game.getObjectById(creep.memory.assignment);
         var taskHarvest = tasks('harvest');
+        taskHarvest.quiet = true;
         creep.assign(taskHarvest, target);
         return OK;
     },

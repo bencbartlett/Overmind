@@ -6,6 +6,9 @@ var RoomBrain = class {
         this.name = roomName;
         this.room = Game.rooms[roomName];
         this.spawn = this.room.find(FIND_MY_SPAWNS)[0];
+        // if (this.spawn == undefined) {
+        //     this.spawn = this.borrowSpawn();
+        // }
         // Settings shared across all rooms
         this.settings = {
             fortifyLevel: 30000, // fortify all walls/ramparts to this level
@@ -201,6 +204,7 @@ var RoomBrain = class {
         // If another room is at full capacity, lets you borrow their spawn to spawn stuff
         var otherBrain = Game.rooms[roomName].brain;
         if (otherBrain.room.energyAvailable == otherBrain.room.energyCapacityAvailable) {
+            console.log("Borrowing brain from " + roomName);
             return otherBrain.spawn;
         }
     }
@@ -220,6 +224,7 @@ var RoomBrain = class {
             var supplierBehavior = require('role_supplier');
             if (this.spawn) {
                 var newSupplier = supplierBehavior.create(this.spawn, {
+                    serviceRoom: this.room.name,
                     patternRepetitionLimit: this.settings.supplierPatternRepetitionLimit
                 });
                 return OK;
@@ -239,8 +244,10 @@ var RoomBrain = class {
             var workerBehavior = require('role_worker');
             if (this.spawn) {
                 var newWorker = workerBehavior.create(this.spawn, {
+                    serviceRoom: this.room.name,
                     patternRepetitionLimit: this.settings.workerPatternRepetitionLimit
                 });
+                console.log(newWorker);
                 return OK;
             } else {
                 return ERR_NO_SPAWN_IN_ROOM;
