@@ -1,5 +1,5 @@
 var roomBrain = require('brain_Room');
-var brain = new roomBrain(this.name);
+// var brain = new roomBrain(this.name);
 
 Object.defineProperty(Room.prototype, 'brain', {
     get () {
@@ -9,6 +9,14 @@ Object.defineProperty(Room.prototype, 'brain', {
         console.log("cannot set Room.brain for " + this.name);
     }
 });
+
+// Room.prototype.adjacentTo = function (otherRoom) {
+//
+// };
+//
+// Room.prototype.listNeighbors = function() {
+//     var exits = this.find(FIND_EXIT);
+// };
 
 //noinspection JSUnusedGlobalSymbols
 Room.prototype.totalSourceCapacity = function () {
@@ -111,16 +119,6 @@ Room.prototype.isWallLowerThan = function (hp) {
         return OK;
     } else {
         return ERR_NO_TARGET_FOUND;
-    }
-};
-
-Creep.prototype.isJob = function () {
-    // Set target to closest construction job; allows duplicates
-    var target = this.find(FIND_CONSTRUCTION_SITES);
-    if (target) {
-        return OK; // success
-    } else {
-        return ERR_NO_TARGET_FOUND; // no jobs found
     }
 };
 

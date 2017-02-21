@@ -28,6 +28,7 @@ module.exports.loop = function () {
         var room = Game.rooms[name];
         // Animate each room brain
         room.brain.run();
+        // Animate each tower
         var towers = room.find(FIND_MY_STRUCTURES, {filter: (s) => s.structureType == STRUCTURE_TOWER});
         for (let i in towers) {
             towers[i].run();

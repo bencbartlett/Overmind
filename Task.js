@@ -53,7 +53,10 @@ class Task {
     onAssignment() {
         // override if needed
         var creep = this.creep;
-        creep.log("assigned to " + this.name + " " + this.target + ".");
+        var verbose = false;
+        if (verbose) {
+            creep.log("assigned to " + this.name + " " + this.target + ".");
+        }
         creep.say(this.name);
     }
 
@@ -78,6 +81,7 @@ class Task {
             }
             return workResult;
         } else {
+            creep.repairNearbyDamagedRoad(); // repair roads if you are capable
             creep.moveToVisual(target, this.moveColor);
         }
     }

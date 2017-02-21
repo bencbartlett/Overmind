@@ -78,10 +78,10 @@ Creep.prototype.donate = function (roomName) {
     // Donates a creep to a different room. Creep will move to room until it is in the room, then it will
     // continue to work as normal. Does not work with all creep types. Must have vision of room.
     if (Game.rooms[roomName]) {
-        this.memory.donated = roomName;
+        this.memory.data.serviceRoom = roomName;
         return OK;
     } else {
-        console.log('Error donating ' + this.name + ': ' + roomName + ' is ' + Game.rooms[roomName]);
+        this.log('I could not be donated: ' + roomName + ' is ' + Game.rooms[roomName]);
     }
 };
 

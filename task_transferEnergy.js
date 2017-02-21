@@ -16,8 +16,12 @@ class taskTransferEnergy extends Task {
         var target = this.target;
         if (target.structureType == STRUCTURE_LINK) {
             return target.energy < target.storeCapacity * 0.85;
-        } else if (target.structureType == STRUCTURE_CONTAINER || STRUCTURE_STORAGE) {
+        } else if (target.structureType == STRUCTURE_CONTAINER ||
+                   target.structureType == STRUCTURE_STORAGE) {
             return (_.sum(target.store) < target.storeCapacity);
+        } else if (target.structureType == STRUCTURE_SPAWN ||
+                   target.structureType == STRUCTURE_EXTENSION) {
+            return (target.energy < target.energyCapacity);
         }
     }
 
