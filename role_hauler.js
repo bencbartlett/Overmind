@@ -38,6 +38,7 @@ var roleHauler = {
     collect: function (creep) {
         creep.memory.working = false;
         var withdraw = tasks('recharge');
+        withdraw.quiet = true;
         var target = Game.getObjectById(creep.memory.data.assignedContainer);
         creep.assign(withdraw, target);
     },

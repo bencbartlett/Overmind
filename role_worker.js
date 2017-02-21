@@ -10,7 +10,7 @@ var roleWorker = {
         targetFullestContainer: false // if true, target fullest container instead of the closest, ignore storage
     },
 
-    create: function (spawn, patternRepetitionLimit = Infinity) {
+    create: function (spawn, {patternRepetitionLimit = Infinity}) {
         /** @param {StructureSpawn} spawn **/
         var bodyPattern = this.settings.bodyPattern; // body pattern to be repeated some number of times
         // calculate the most number of pattern repetitions you can use with available energy
