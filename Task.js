@@ -4,13 +4,15 @@ class Task {
     constructor(taskName) {
         // Parameters for the task
         this.name = taskName; // name of task
-        this.quiet = false; // suppress console logging
         this.creepName = null; // name of creep assigned to task
         this.targetID = null; // id or name of target task is aimed at
         this.maxPerTarget = Infinity; // maximum number of creeps that can be assigned to a given target
         this.maxPerTask = Infinity; // maximum number of creeps that can be doing this task at once
         this.targetRange = 1; // range you need to be at to execute the task
         this.moveColor = '#fff';
+        this.data = {
+            quiet: false
+        }; // suppress console logging
     }
 
     // Getter/setter for task.creep
@@ -54,7 +56,7 @@ class Task {
     onAssignment() {
         // override if needed
         var creep = this.creep;
-        if (this.quiet == false) {
+        if (this.data.quiet == false) {
             creep.log("assigned to " + this.name + " " + this.target + ".");
         }
         creep.say(this.name);
@@ -76,8 +78,8 @@ class Task {
         var target = this.target;
         if (creep.pos.inRangeTo(target, this.targetRange)) {
             var workResult = this.work();
-            console.log(this.quiet)
-            if (workResult != OK && this.quiet == false) {
+            // console.log(this.data.quiet);
+            if (workResult != OK && this.data.quiet == false) {
                 creep.log("Error executing " + this.name + ", returned " + workResult);
             }
             return workResult;

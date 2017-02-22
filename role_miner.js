@@ -36,15 +36,26 @@ var roleMiner = {
         return OK;
     },
 
+    repairContainer: function (creep, container) {
+        var repair = tasks('repair');
+        creep.assign(repair, container);
+        return OK;
+    },
+
     transfer: function (creep) {
         // try to find closest container or storage
         creep.memory.working = false;
-        var target;
-        target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+        // var target;
+        // target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+        //     filter: (s) => s.structureType == STRUCTURE_CONTAINER
+        // });
+        // select emptiest of containers that are within range 1 of creep (helps with adjacent sources)
+        var target = _.sortBy(creep.pos.findInRange(FIND_STRUCTURES, 1, {
             filter: (s) => s.structureType == STRUCTURE_CONTAINER
-        });
+        }), container => container.store[RESOURCE_ENERGY])[0];
         if (target) {
             var transfer = tasks('transferEnergy');
+            transfer.data.quiet = true;
             creep.assign(transfer, target);
             return OK;
         } else {
@@ -59,7 +70,7 @@ var roleMiner = {
         creep.memory.working = true;
         var target = Game.getObjectById(creep.memory.assignment);
         var taskHarvest = tasks('harvest');
-        taskHarvest.quiet = true;
+        taskHarvest.data.quiet = true;
         creep.assign(taskHarvest, target);
         return OK;
     },

@@ -25,12 +25,12 @@ var roleHauler = {
         body.push(WORK);
         body.push(MOVE);
         // find the container closest to assignment
-        var assignedContainer = Game.getObjectById(assignment).pos.findClosestByRange(FIND_STRUCTURES, {
-            filter: (s) => s.structureType == STRUCTURE_CONTAINER
-        });
+        // var assignedContainer = Game.getObjectById(assignment).pos.findClosestByRange(FIND_STRUCTURES, {
+        //     filter: (s) => s.structureType == STRUCTURE_CONTAINER
+        // });
         return spawn.createCreep(body, spawn.creepName('hauler'), {
             role: 'hauler', working: false, task: null, assignment: assignment, data: {
-                origin: spawn.room.name, serviceRoom: serviceRoom, assignedContainer: assignedContainer.id
+                origin: spawn.room.name, serviceRoom: serviceRoom //, assignedContainer: assignedContainer.id
             }
         });
     },
@@ -38,14 +38,17 @@ var roleHauler = {
     collect: function (creep) {
         creep.memory.working = false;
         var withdraw = tasks('recharge');
-        withdraw.quiet = true;
-        var target = Game.getObjectById(creep.memory.data.assignedContainer);
+        withdraw.data.quiet = true;
+        var target = _.sortBy(Game.getObjectById(creep.memory.assignment).pos.findInRange(FIND_STRUCTURES, 2, {
+            filter: (s) => s.structureType == STRUCTURE_CONTAINER
+        }), container => container.store[RESOURCE_ENERGY])[0];
         creep.assign(withdraw, target);
     },
 
     transfer: function (creep) {
         creep.memory.working = true;
         var deposit = tasks('transferEnergy');
+        deposit.data.quiet = true;
         var target = Game.rooms[creep.memory.data.serviceRoom].storage;
         if (target) {
             creep.assign(deposit, target);

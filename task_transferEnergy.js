@@ -5,6 +5,9 @@ class taskTransferEnergy extends Task {
         super('transferEnergy');
         // Settings
         this.moveColor = 'blue';
+        this.data = {
+            quiet: true
+        }
     }
 
     isValidTask() {
