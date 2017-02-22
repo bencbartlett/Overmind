@@ -8,7 +8,8 @@ var roleSupplier = {
     /** @param {Number} creepSizeLimit **/
 
     settings: {
-        bodyPattern: [CARRY, CARRY, MOVE]
+        bodyPattern: [CARRY, CARRY, MOVE],
+        assistHaulersAtContainerPercent: 0.5 // help out haulers at >this capacity
     },
 
     create: function (spawn, {serviceRoom = spawn.room.name, patternRepetitionLimit = 3}) { // 6 or 8 parts will saturate a source
@@ -44,18 +45,14 @@ var roleSupplier = {
         var serviceRoom = Game.rooms[creep.memory.data.serviceRoom];
         var containers = serviceRoom.find(FIND_STRUCTURES, {
             filter: (s) => s.structureType == STRUCTURE_CONTAINER &&
-                           s.store[RESOURCE_ENERGY] > creep.carryCapacity
+                           s.store[RESOURCE_ENERGY] > this.settings.assistHaulersAtContainerPercent * s.storeCapacity
         });
         var target;
         if (containers.length > 0) { // loop through results to find the container with the most energy in the room
-            target = containers[0];
-            var maxFullness = 0;
-            for (let i in containers) {
-                if (containers[i].store[RESOURCE_ENERGY] > maxFullness) {
-                    target = containers[i];
-                    maxFullness = containers[i].store[RESOURCE_ENERGY];
-                }
-            }
+            let targets = _.sortBy(containers, [function (s) {
+                return s.store[RESOURCE_ENERGY]
+            }]);
+            target = targets[targets.length - 1]; // pick the fullest container
         }
         if (!target) {
             target = Game.rooms[creep.memory.data.serviceRoom].storage;
@@ -63,7 +60,8 @@ var roleSupplier = {
         if (target) {
             creep.assign(recharge, target);
         } else {
-            creep.log("no storage or sufficiently full containers in " + creep.memory.data.serviceRoom);
+            creep.say("Idle");
+            //creep.log("no storage or sufficiently full containers in " + creep.memory.data.serviceRoom);
         }
     },
 

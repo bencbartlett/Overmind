@@ -18,7 +18,6 @@ class taskHarvest extends Task {
     }
 
     work() {
-        console.log("harvest:" + this.quiet);
         return this.creep.harvest(this.target);
     }
 }

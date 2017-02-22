@@ -22,6 +22,7 @@ Object.defineProperty(Creep.prototype, 'task', {
             var task = tasks(this.memory.task.name);
             task.creepName = this.memory.task.creepName;
             task.targetID = this.memory.task.targetID;
+            task.data = this.memory.task.data;
             return task;
         } else {
             return null;

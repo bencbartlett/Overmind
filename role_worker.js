@@ -6,11 +6,11 @@ var roleWorker = {
 
     settings: {
         bodyPattern: [WORK, CARRY, MOVE],
-        workersCanHarvest: true, // can workers act as harvesters? usually false
+        workersCanHarvest: false, // can workers act as harvesters? usually false
         targetFullestContainer: false // if true, target fullest container instead of the closest, ignore storage
     },
 
-    create: function (spawn, {patternRepetitionLimit = Infinity}) {
+    create: function (spawn, {serviceRoom = spawn.room.name, patternRepetitionLimit = Infinity}) {
         /** @param {StructureSpawn} spawn **/
         var bodyPattern = this.settings.bodyPattern; // body pattern to be repeated some number of times
         // calculate the most number of pattern repetitions you can use with available energy
@@ -25,30 +25,38 @@ var roleWorker = {
         // create the creep and initialize memory
         return spawn.createCreep(body, spawn.creepName('worker'), {
             role: 'worker', working: false, task: null, data: {
-                origin: spawn.room.name, serviceRoom: spawn.room.name
+                origin: spawn.room.name, serviceRoom: serviceRoom
             }
         });
     },
 
     requestTask: function (creep) {
-        creep.memory.working = true;
         var serviceRoom = Game.rooms[creep.memory.data.serviceRoom];
-        return serviceRoom.brain.assignTask(creep);
+        if (creep.room != serviceRoom) {
+            creep.moveToVisual(serviceRoom.controller);
+            return ERR_NOT_IN_SERVICE_ROOM;
+        }
+        creep.memory.working = true;
+        var response = serviceRoom.brain.assignTask(creep);
+        // creep.log(response);
+        return response;
     },
 
     recharge: function (creep) {
         // try to find closest container or storage
         creep.memory.working = false;
+        //var serviceRoom = Game.rooms[creep.memory.data.serviceRoom];
         var target;
         if (this.settings.targetFullestContainer) {
             target = creep.room.fullestContainer();
         } else {
-            target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+            target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
                 filter: (s) => (s.structureType == STRUCTURE_CONTAINER ||
                                 s.structureType == STRUCTURE_STORAGE) &&
-                               s.store[RESOURCE_ENERGY] > creep.carryCapacity
+                               s.store[RESOURCE_ENERGY] > 0 // creep.carryCapacity
             });
         }
+        creep.log(target);
         if (target) {
             // assign recharge task to creep
             var taskRecharge = tasks('recharge');
@@ -83,9 +91,9 @@ var roleWorker = {
     newTask: function (creep) {
         creep.task = null;
         if (creep.carry.energy == 0) {
-            this.recharge(creep);
+            return this.recharge(creep);
         } else {
-            this.requestTask(creep);
+            return this.requestTask(creep);
         }
     },
 
@@ -96,11 +104,14 @@ var roleWorker = {
 
     run: function (creep) {
         // get new task if this one is invalid
+        var result;
         if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
-            this.newTask(creep);
+            result = this.newTask(creep);
         }
         // execute task
-        this.executeTask(creep);
+        if (result != ERR_NOT_IN_SERVICE_ROOM && creep.task) {
+            this.executeTask(creep);
+        }
     }
 };
 

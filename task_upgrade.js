@@ -6,6 +6,9 @@ class taskUpgrade extends Task {
         // Settings
         this.targetRange = 3;
         this.moveColor = 'purple';
+        this.data = {
+            quiet: true
+        };
     }
 
     isValidTask() {
