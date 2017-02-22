@@ -67,6 +67,25 @@ var RoomBrain = class {
         console.log(this.name + '_Brain: "' + message + '"');
     }
 
+    peekSpawn(roomName = "W19N88") {
+        // looks at other spawn without changing this.spawn
+        var otherBrain = Game.rooms[roomName].brain;
+        if (otherBrain.room.energyAvailable == otherBrain.room.energyCapacityAvailable) {
+            return otherBrain.spawn;
+        } else {
+            return null; // don't lend it out if not full
+        }
+    }
+
+    borrowSpawn(roomName = "W19N88") {
+        // If another room is at full capacity, lets you borrow their spawn to spawn stuff
+        var otherSpawn = this.peekSpawn(roomName);
+        if (otherSpawn) {
+            this.log("borrowing spawn from " + roomName + "_Brain");
+            this.spawn = otherSpawn;
+        }
+    }
+
     getTasks() { // TODO: use task.maxPerTarget / task.maxPerTask properties to coordinate task assignment
         var prioritizedTargets = {};
         // Priority: (can be switched with DEFCON system)
@@ -158,7 +177,7 @@ var RoomBrain = class {
                                       this.settings.workerPatternRepetitionLimit);
             var equilibriumEnergyPerTick = workerSize * 1.5; // slightly overestimate energy requirements for leeway
             if (this.room.storage == undefined) {
-                equilibriumEnergyPerTick /= 4; // workers spend a lot of time walking around if there's not storage
+                equilibriumEnergyPerTick /= 3; // workers spend a lot of time walking around if there's not storage
             }
             var sourceEnergyPerTick = (3000 / 300) * this.room.find(FIND_SOURCES).length;
             return Math.floor(sourceEnergyPerTick / equilibriumEnergyPerTick);
@@ -183,19 +202,10 @@ var RoomBrain = class {
                 }
                 if (this.spawn) {
                     let newMiner = minerBehavior.create(this.spawn, source.id, {serviceRoom: this.room.name});
-                    return OK;
+                    return newMiner;
                 }
-
-                // else {
-                //     borrowedSpawn = this.borrowSpawn();
-                //     if (borrowedSpawn) {
-                //         let newMiner = minerBehavior.create(borrowedSpawn, source.id, {serviceRoom: this.room.name});
-                //         return OK;
-                //     } else {
-                //         return ERR_NO_SPAWN_IN_ROOM;
-                //     }
-                // }
             }
+            // Check enough haulers are supplied if applicable
             if (this.room.storage != undefined) { // haulers are only built once a room has storage
                 // Check enough haulers are supplied
                 let assignedHaulers = _.filter(source.assignedCreeps,
@@ -214,55 +224,15 @@ var RoomBrain = class {
                             serviceRoom: this.room.name,
                             patternRepetitionLimit: this.settings.haulerPatternRepetitionLimit
                         });
-                        return OK;
+                        return newHauler;
                     }
-
-                    // else {
-                    //     borrowedSpawn = this.borrowSpawn();
-                    //     if (borrowedSpawn) {
-                    //         let newHauler = haulerBehavior.create(borrowedSpawn, source.id, {
-                    //             serviceRoom: this.room.name,
-                    //             patternRepetitionLimit: this.settings.haulerPatternRepetitionLimit});
-                    //         return OK;
-                    //     } else {
-                    //         return ERR_NO_SPAWN_IN_ROOM;
-                    //     }
-                    // }
                 }
             }
         }
+        return OK;
     }
 
-    peekSpawn(roomName = "W19N88") {
-        // looks at other spawn without changing this.spawn
-        var otherBrain = Game.rooms[roomName].brain;
-        if (otherBrain.room.energyAvailable == otherBrain.room.energyCapacityAvailable) {
-            return otherBrain.spawn;
-        } else {
-            return null; // don't lend it out if not full
-        }
-    }
-
-    borrowSpawn(roomName = "W19N88") {
-        // If another room is at full capacity, lets you borrow their spawn to spawn stuff
-        var otherSpawn = this.peekSpawn(roomName);
-        if (otherSpawn) {
-            this.log("borrowing spawn from " + roomName + "_Brain");
-            this.spawn = otherSpawn;
-        }
-    }
-
-    lendSpawn(roomName = "") {
-
-    }
-
-    // TODO: safe mode
-
-    run() { // list of things executed each tick
-        // Handle miners and haulers
-        if (this.handleSources() == OK) {
-            return OK;
-        }
+    handleSuppliers() {
         // Handle suppliers
         var numSuppliers = _.filter(Game.creeps,
                                     creep => creep.memory.role == 'supplier' &&
@@ -286,7 +256,9 @@ var RoomBrain = class {
                 return OK;
             }
         }
-        // Handle workers
+    }
+
+    handleWorkers() {
         var numWorkers = _.filter(Game.creeps,
                                   creep => creep.memory.role == 'worker' &&
                                            creep.memory.data.serviceRoom == this.room.name).length;
@@ -307,9 +279,32 @@ var RoomBrain = class {
                     serviceRoom: this.room.name,
                     patternRepetitionLimit: this.settings.workerPatternRepetitionLimit
                 });
-                console.log(newWorker);
-                return OK;
+                // console.log(newWorker);
+                return newWorker;
             }
+        }
+        return OK;
+    }
+
+
+    // TODO: safe mode
+
+    run() { // list of things executed each tick
+        var handleResponse;
+        // Handle miners and haulers
+        handleResponse = this.handleSources();
+        if (handleResponse != OK) {
+            return handleResponse;
+        }
+        // Handle suppliers
+        handleResponse = this.handleSuppliers();
+        if (handleResponse != OK) {
+            return handleResponse;
+        }
+        // Handle workers
+        handleResponse = this.handleWorkers();
+        if (handleResponse != OK) {
+            return handleResponse;
         }
     }
 };

@@ -63,7 +63,6 @@ Object.defineProperty(RoomObject.prototype, 'assignedCreeps', { // TODO: fine fo
 // List of creeps assigned to this object
 Object.defineProperty(RoomObject.prototype, 'taskedCreeps', {
     get: function () {
-        console.log('hi')
         return _.filter(Game.creeps, creep => creep.task &&
                                               creep.task.target &&
                                               creep.task.target == this.id)

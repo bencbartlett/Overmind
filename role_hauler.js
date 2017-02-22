@@ -10,7 +10,7 @@ var roleHauler = {
         bodyPattern: [CARRY, CARRY, MOVE]
     },
 
-    create: function (spawn, assignment, {serviceRoom = spawn.room.name, patternRepetitionLimit = 5}) { // 6 or 8 parts will saturate a source
+    create: function (spawn, assignment, {serviceRoom = spawn.room.name, patternRepetitionLimit = 5}) {
         /** @param {StructureSpawn} spawn **/
         var bodyPattern = this.settings.bodyPattern; // body pattern to be repeated some number of times
         // calculate the most number of pattern repetitions you can use with available energy
@@ -24,13 +24,9 @@ var roleHauler = {
         }
         body.push(WORK);
         body.push(MOVE);
-        // find the container closest to assignment
-        // var assignedContainer = Game.getObjectById(assignment).pos.findClosestByRange(FIND_STRUCTURES, {
-        //     filter: (s) => s.structureType == STRUCTURE_CONTAINER
-        // });
         return spawn.createCreep(body, spawn.creepName('hauler'), {
             role: 'hauler', working: false, task: null, assignment: assignment, data: {
-                origin: spawn.room.name, serviceRoom: serviceRoom //, assignedContainer: assignedContainer.id
+                origin: spawn.room.name, serviceRoom: serviceRoom
             }
         });
     },
@@ -39,9 +35,12 @@ var roleHauler = {
         creep.memory.working = false;
         var withdraw = tasks('recharge');
         withdraw.data.quiet = true;
-        var target = _.sortBy(Game.getObjectById(creep.memory.assignment).pos.findInRange(FIND_STRUCTURES, 2, {
+        var nearbyContainers = Game.getObjectById(creep.memory.assignment).pos.findInRange(FIND_STRUCTURES, 2, {
             filter: (s) => s.structureType == STRUCTURE_CONTAINER
-        }), container => container.store[RESOURCE_ENERGY])[0];
+        });
+        // target fullest of nearby containers
+        var target = _.sortBy(nearbyContainers,
+                              container => container.store[RESOURCE_ENERGY])[nearbyContainers.length - 1];
         creep.assign(withdraw, target);
     },
 

@@ -53,7 +53,7 @@ var roleWorker = {
             target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
                 filter: (s) => (s.structureType == STRUCTURE_CONTAINER ||
                                 s.structureType == STRUCTURE_STORAGE) &&
-                               s.store[RESOURCE_ENERGY] > 0 // creep.carryCapacity
+                               s.store[RESOURCE_ENERGY] > creep.carryCapacity
             });
         }
         creep.log(target);

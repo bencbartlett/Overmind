@@ -1,11 +1,7 @@
 var rolesMap = require('rolesMap');
 
-StructureSpawn.prototype.countCreeps = function (role) {
-    var creeps = _.filter(Game.creeps, (creep) => creep.memory.role == role);
-    return creeps.length;
-};
-
 StructureSpawn.prototype.creepName = function (roleName) {
+    // generate a creep name based on the role and add a suffix to make it unique
     var i = 0;
     while (Game.creeps[(roleName + '_' + i)] != undefined) {
         i++;
@@ -45,17 +41,6 @@ StructureSpawn.prototype.createBiggestCreep = function (roleName, partsLimit = I
     }
     // create creep with the created body and the given role
     return this.createCreep(body, this.creepName(roleName), {role: roleName});
-};
-
-StructureSpawn.prototype.run = function () { // TODO: automatic creep number calculations
-    var patternRepetitionLimit = this.room.brain.settings.workerPatternRepetitionLimit;
-    for (var roleName in rolesMap) {
-        var roleObject = rolesMap[roleName];
-        if (this.countCreeps(roleName) < roleObject.amount) {
-            roleObject.behavior.create(this, patternRepetitionLimit);
-            break;
-        }
-    }
 };
 
 StructureSpawn.prototype.donateCreepToRoom = function (roleName, roomName) {

@@ -43,12 +43,14 @@ var roleMiner = {
     },
 
     transfer: function (creep) {
-        // try to find closest container or storage
         creep.memory.working = false;
-        // var target;
-        // target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
-        //     filter: (s) => s.structureType == STRUCTURE_CONTAINER
-        // });
+        // find any nearby damaged containers and repair them
+        var damagedContainers = creep.pos.findInRange(FIND_STRUCTURES, 1, {
+            filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.hits < s.hitsMax
+        });
+        if (damagedContainers.length > 0) {
+            return this.repairContainer(creep, damagedContainers[0]);
+        }
         // select emptiest of containers that are within range 1 of creep (helps with adjacent sources)
         var target = _.sortBy(creep.pos.findInRange(FIND_STRUCTURES, 1, {
             filter: (s) => s.structureType == STRUCTURE_CONTAINER
