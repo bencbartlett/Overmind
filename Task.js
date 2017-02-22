@@ -1,6 +1,5 @@
 // Base class for creep tasks. Refactors creep_goTask implementation and is designed to be more extensible
 class Task {
-    /** @param {Creep} creep **/
     constructor(taskName) {
         // Parameters for the task
         this.name = taskName; // name of task

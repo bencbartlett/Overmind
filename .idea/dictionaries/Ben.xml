@@ -5,11 +5,13 @@
       <w>harvestable</w>
       <w>multitargeted</w>
       <w>overwritable</w>
+      <w>pathfinding</w>
       <w>refactors</w>
       <w>reserver</w>
       <w>retargeting</w>
       <w>spawner</w>
       <w>targetable</w>
+      <w>targetless</w>
       <w>untargeted</w>
       <w>upgrader</w>
       <w>upgraders</w>
