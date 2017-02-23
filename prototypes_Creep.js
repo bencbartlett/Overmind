@@ -1,6 +1,3 @@
-//require('prototypes_creep_targeting');
-
-
 var tasks = require('tasks');
 var rolesMap = require('rolesMap');
 

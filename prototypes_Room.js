@@ -18,6 +18,26 @@ Object.defineProperty(Room.prototype, 'brain', {
 //     var exits = this.find(FIND_EXIT);
 // };
 
+Object.defineProperty(Room.prototype, 'creeps', {
+    get () {
+        return _.filter(Game.creeps, creep => creep.memory.data.serviceRoom == this.name);
+    }
+});
+
+Object.defineProperty(Room.prototype, 'tasks', {
+    get () {
+        var tasks = this.creeps.map(creep => creep.task);
+        return _.filter(tasks, task => task != null);
+    }
+});
+
+Object.defineProperty(Room.prototype, 'taskTargets', {
+    get () {
+        var targets = this.tasks.map(task => task.target);
+        return _.filter(targets, target => target != null);
+    }
+});
+
 //noinspection JSUnusedGlobalSymbols
 Room.prototype.totalSourceCapacity = function () {
     if (this.memory.miningCapacity != undefined) {
