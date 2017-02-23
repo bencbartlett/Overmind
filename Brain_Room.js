@@ -130,26 +130,23 @@ var RoomBrain = class {
 
     assignTask(creep) {
         var prioritizedTargets = this.getTasks();
+        var roomTasks = this.room.tasks;
+        var roomTaskTargets = this.room.taskTargets;
         for (let task of this.taskPriorities) { // loop through tasks in descending priority
             // If task exists and can be assigned to this creep, then do so
             if (prioritizedTargets[task].length > 0 &&
                 this.assignmentRoles[task].includes(creep.memory.role) &&
                 this.assignmentConditions[task](creep)) {
-                var taskToExecute = this.taskToExecute[task];
-                // this.log(taskToExecute);
+                var taskToExecute = tasks(this.taskToExecute[task]); // create task object
+                // Find a target that isn't already targeted by the max numbers of creeps.
+                //noinspection JSReferencingMutableVariableFromClosure
                 var target = creep.pos.findClosestByRange(prioritizedTargets[task], {
-                    // filter: (roomObject) => roomObject != null &&
-                    //                         roomObject.taskedCreeps != undefined &&
-                    //                         roomObject.taskedCreeps.length < taskToExecute.maxPerTarget
+                    filter: target => _.filter(roomTaskTargets, t => t == target).length < taskToExecute.maxPerTarget
                 });
-                // this.log(prioritizedTargets[task]);
-                // this.log(target);
                 if (target) {
-                    creep.assign(tasks(taskToExecute), target);
-                    // this.log("assigned " + taskToExecute + " for " + target);
+                    creep.assign(taskToExecute, target);
+                    this.log("assigned " + taskToExecute.name + " for " + target);
                     return OK;
-                } else { // if none of the targets are in this room, find the corresponding exit
-
                 }
             }
         }
@@ -159,13 +156,6 @@ var RoomBrain = class {
     calculateWorkerRequirements() {
         // Calculate needed numbers of workers
         // TODO: better calculation of worker requirements
-        // // Case 1: if room has storage, use average storage fullness as indicator
-        // if (this.room.storage) {
-        //     if (this.room.storage.store[RESOURCE_ENERGY] > 0) {
-        //
-        //     }
-        // }
-        // // Case 2: if room has no storage, ...?
         var spawn = this.spawn;
         if (spawn == undefined) {
             spawn = this.peekSpawn();
@@ -175,12 +165,35 @@ var RoomBrain = class {
             var workerBodyPattern = require('role_worker').settings.bodyPattern;
             var workerSize = Math.min(Math.floor(energy / spawn.cost(workerBodyPattern)),
                                       this.settings.workerPatternRepetitionLimit);
-            var equilibriumEnergyPerTick = workerSize * 1.5; // slightly overestimate energy requirements for leeway
+            var equilibriumEnergyPerTick = workerSize;
             if (this.room.storage == undefined) {
                 equilibriumEnergyPerTick /= 3; // workers spend a lot of time walking around if there's not storage
             }
             var sourceEnergyPerTick = (3000 / 300) * this.room.find(FIND_SOURCES).length;
-            return Math.floor(sourceEnergyPerTick / equilibriumEnergyPerTick);
+            return Math.ceil(0.7 * sourceEnergyPerTick / equilibriumEnergyPerTick); // operate under capacity limit
+        } else {
+            return null;
+        }
+    }
+
+    calculateHaulerRequirements(target) {
+        // Calculate needed numbers of haulers for a source
+        var spawn = this.spawn;
+        if (spawn == undefined) {
+            spawn = this.peekSpawn();
+        }
+        if (spawn && this.room.storage != undefined) {
+            var energy = spawn.room.energyCapacityAvailable;
+            var haulerBodyPattern = require('role_hauler').settings.bodyPattern;
+            var haulerSize = Math.min(Math.floor(energy / spawn.cost(haulerBodyPattern)),
+                                      this.settings.haulerPatternRepetitionLimit);
+            var carryParts = haulerSize * _.filter(haulerBodyPattern, part => part == CARRY).length;
+            var tripLength = 2 * this.room.storage.pos.findPathTo(target).length;
+            var energyPerTrip = 50 * carryParts;
+            var energyPerTick = energyPerTrip / tripLength;
+            var sourceEnergyPerTick = (3000 / 300);
+            var haulersRequiredForEquilibrium = sourceEnergyPerTick / energyPerTick;
+            return Math.ceil(1.2 * haulersRequiredForEquilibrium); // slightly overestimate
         } else {
             return null;
         }
@@ -213,7 +226,7 @@ var RoomBrain = class {
                 // var assignedContainer = source.pos.findClosestByRange(FIND_STRUCTURES, {
                 //     filter: (s) => s.structureType == STRUCTURE_CONTAINER
                 // });
-                if (assignedHaulers.length < this.settings.haulersPerSource) {
+                if (assignedHaulers.length < this.calculateHaulerRequirements(source)) {
                     // spawn a new miner that will ask for an assignment on birth
                     var haulerBehavior = require('role_hauler');
                     if (this.spawn == undefined) {
@@ -243,7 +256,11 @@ var RoomBrain = class {
                                     structure.structureType == STRUCTURE_SPAWN) &&
                                    structure.energy < structure.energyCapacity
         });
-        if (numSuppliers < 3 && energySinks.length > 0) {
+        var supplierLimit = 1;
+        if (this.room.storage) {
+            supplierLimit += 2;
+        }
+        if (numSuppliers < supplierLimit && energySinks.length > 0) {
             var supplierBehavior = require('role_supplier');
             if (this.spawn == undefined) {
                 this.borrowSpawn();
@@ -253,9 +270,10 @@ var RoomBrain = class {
                     serviceRoom: this.room.name,
                     patternRepetitionLimit: this.settings.supplierPatternRepetitionLimit
                 });
-                return OK;
+                return newSupplier;
             }
         }
+        return OK;
     }
 
     handleWorkers() {
