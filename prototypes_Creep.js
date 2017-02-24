@@ -25,7 +25,7 @@ Object.defineProperty(Creep.prototype, 'task', {
             return null;
         }
     },
-    set: function(newTask) {
+    set: function (newTask) {
         if (newTask != null) {
             this.log("use Creep.assign() to assign tasks. Creep.task = ___ should only be used to null a task.");
         } else {
@@ -33,6 +33,40 @@ Object.defineProperty(Creep.prototype, 'task', {
         }
     }
 });
+
+Creep.prototype.calculatePathETA = function (startPoint, endPoint, ignoreCargo = false) {
+    var path = startPoint.findPathTo(endPoint);
+    var massiveParts = [WORK, ATTACK, RANGED_ATTACK, HEAL, TOUGH];
+    var mass = 0;
+    for (let part of massiveParts) {
+        mass += this.getActiveBodyparts(part);
+    }
+    var cargoMass = Math.ceil(_.sum(this.carry) / 50);
+    var moveParts = this.getActiveBodyparts(MOVE);
+    var fatiguePerTick = 2 * mass;
+    if (!ignoreCargo) {
+        fatiguePerTick += 2 * cargoMass;
+    }
+    var ETA = 0;
+    // console.log(mass, cargoMass, moveParts, fatiguePerTick, ETA);
+    for (let step of path) {
+        let road = _.filter(this.room.lookForAt(LOOK_STRUCTURES, step.x, step.y),
+                            s => s.structureType == STRUCTURE_ROAD)[0];
+        let terrain = this.room.lookForAt(LOOK_TERRAIN, step.x, step.y)[0];
+        let multiplier;
+        if (road) {
+            multiplier = 0.5;
+        } else if (terrain == 'plain') {
+            multiplier = 1;
+        } else if (terrain == 'swamp') {
+            multiplier = 5;
+        }
+        let dt = Math.ceil(multiplier * fatiguePerTick / (2 * moveParts));
+        // this.log(dt);
+        ETA += dt;
+    }
+    return ETA;
+};
 
 Creep.prototype.moveToVisual = function (target, color = '#fff') {
     var visualizePath = true;

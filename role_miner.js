@@ -25,7 +25,7 @@ var roleMiner = {
         // create the creep and initialize memory
         return spawn.createCreep(body, spawn.creepName('miner'), {
             role: 'miner', working: false, task: null, assignment: assignment, data: {
-                origin: spawn.room.name, serviceRoom: serviceRoom, replaceNow: false
+                origin: spawn.room.name, serviceRoom: serviceRoom, replaceNow: false, replaceAt: null
             }
         });
     },
@@ -104,6 +104,15 @@ var roleMiner = {
     },
 
     run: function (creep) {
+        // check for expiry calculations and flags
+        // on birth, check that creep has an expiry time calculated
+        if (!creep.memory.data.replaceAt) {
+            creep.memory.data.replaceAt = creep.calculatePathETA(creep.room.spawns[0].pos,
+                                                                 Game.getObjectById(creep.memory.assignment).pos, true);
+        }
+        if (creep.ticksToLive < creep.memory.data.replaceAt) {
+            creep.memory.data.replaceNow = true;
+        }
         // get new task if this one is invalid
         if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
             this.newTask(creep);

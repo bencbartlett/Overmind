@@ -18,6 +18,12 @@ Object.defineProperty(Room.prototype, 'brain', {
 //     var exits = this.find(FIND_EXIT);
 // };
 
+Object.defineProperty(Room.prototype, 'spawns', {
+    get () {
+        return _.filter(Game.spawns, spawn => spawn.room == this);
+    }
+});
+
 Object.defineProperty(Room.prototype, 'creeps', {
     get () {
         return _.filter(Game.creeps, creep => creep.memory.data.serviceRoom == this.name);
