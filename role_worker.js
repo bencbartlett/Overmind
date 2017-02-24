@@ -32,7 +32,7 @@ var roleWorker = {
 
     requestTask: function (creep) {
         var serviceRoom = Game.rooms[creep.memory.data.serviceRoom];
-        if (creep.room != serviceRoom) {
+        if (creep.room != serviceRoom) { // TODO: move to run()
             creep.moveToVisual(serviceRoom.controller);
             return ERR_NOT_IN_SERVICE_ROOM;
         }

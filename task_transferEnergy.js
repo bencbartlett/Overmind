@@ -1,5 +1,5 @@
 var Task = require('Task');
-
+// TODO: separate store task
 class taskTransferEnergy extends Task {
     constructor() {
         super('transferEnergy');

@@ -1,6 +1,8 @@
 // Room brain: processes tasks from room and requests from worker body
 var tasks = require('tasks');
 
+// TODO: plug in Room.findCached() into this
+
 var RoomBrain = class {
     constructor(roomName) {
         this.name = roomName;
@@ -10,12 +12,12 @@ var RoomBrain = class {
         this.flag = this.room.controller.pos.lookFor(LOOK_FLAGS)[0];
         // Settings shared across all rooms
         this.settings = {
-            fortifyLevel: 30000, // fortify all walls/ramparts to this level
-            workerPatternRepetitionLimit: 5, // maximum number of body repetitions for workers
+            fortifyLevel: 100000, // fortify all walls/ramparts to this level
+            fortifyLevelOverride: {"W18N88" : 1000000}, // fortify all walls/ramparts to these levels in these rooms
+            workerPatternRepetitionLimit: 10, // maximum number of body repetitions for workers
             supplierPatternRepetitionLimit: 2, // maximum number of body repetitions for suppliers
-            haulerPatternRepetitionLimit: 5, // maximum number of body repetitions for haulers
+            haulerPatternRepetitionLimit: 10, // maximum number of body repetitions for haulers
             minersPerSource: 1, // number of miners to assign to a source
-            haulersPerSource: 2 // number of haulers to assign to a source
         };
         // Task priorities
         this.taskPriorities = [
@@ -86,7 +88,8 @@ var RoomBrain = class {
         }
     }
 
-    getTasks() { // TODO: use task.maxPerTarget / task.maxPerTask properties to coordinate task assignment
+    getTasks() { // TODO: use task.maxPerTask properties to coordinate task assignment
+        // TODO: suppliers are eating up a lot of CPU
         var prioritizedTargets = {};
         // Priority: (can be switched with DEFCON system)
         // 0: Defense (to be implemented)
@@ -118,8 +121,12 @@ var RoomBrain = class {
         // 4: Build construction jobs
         prioritizedTargets['build'] = this.room.find(FIND_CONSTRUCTION_SITES);
         // 5: Fortify walls
+        var fortifyLevel = this.settings.fortifyLevel; // global fortify level
+        if (this.settings.fortifyLevelOverride[this.room.name]) {
+            fortifyLevel = this.settings.fortifyLevelOverride[this.room.name]; // override for certain rooms
+        }
         prioritizedTargets['fortify'] = this.room.find(FIND_STRUCTURES, {
-            filter: (s) => s.hits < this.settings.fortifyLevel &&
+            filter: (s) => s.hits < fortifyLevel &&
                            (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)
         });
         // 6: Upgrade controller
@@ -199,7 +206,7 @@ var RoomBrain = class {
         }
     }
 
-    handleSources() {
+    handleMiners() {
         var sources = this.room.find(FIND_SOURCES); // don't use ACTIVE_SOURCES; need to always be handled
         for (let source of sources) {
             // TODO: calculation of number of miners to assign to each source based on max size of creep
@@ -218,6 +225,13 @@ var RoomBrain = class {
                     return newMiner;
                 }
             }
+        }
+        return OK;
+    }
+
+    handleHaulers() {
+        var sources = this.room.find(FIND_SOURCES); // don't use ACTIVE_SOURCES; need to always be handled
+        for (let source of sources) {
             // Check enough haulers are supplied if applicable
             if (this.room.storage != undefined) { // haulers are only built once a room has storage
                 // Check enough haulers are supplied
@@ -309,8 +323,13 @@ var RoomBrain = class {
 
     run() { // list of things executed each tick
         var handleResponse;
-        // Handle miners and haulers
-        handleResponse = this.handleSources();
+        // Handle miners
+        handleResponse = this.handleMiners();
+        if (handleResponse != OK) {
+            return handleResponse;
+        }
+        // Handle haulers
+        handleResponse = this.handleHaulers();
         if (handleResponse != OK) {
             return handleResponse;
         }

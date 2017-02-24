@@ -8,8 +8,13 @@
 // Import everything needed
 require('require');
 
+// Enable screeps profiler
+//const profiler = require('screeps-profiler');
+//profiler.enable();
+
 // Main loop
 module.exports.loop = function () {
+    // profiler.wrap(function() {
     // Clear memory for non-existent creeps
     for (let name in Memory.creeps) {
         if (Game.creeps[name] == undefined) {
@@ -23,12 +28,15 @@ module.exports.loop = function () {
     // Animate each room
     for (let name in Game.rooms) {
         var room = Game.rooms[name];
-        // Animate each room brain
-        room.brain.run();
+        // Animate each room brain, but only for owned rooms
+        if (room.controller.my) {
+            room.brain.run();
+        }
         // Animate each tower
         var towers = room.find(FIND_MY_STRUCTURES, {filter: (s) => s.structureType == STRUCTURE_TOWER});
         for (let i in towers) {
             towers[i].run();
         }
     }
+    // });
 };
