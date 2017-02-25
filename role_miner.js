@@ -56,9 +56,9 @@ var roleMiner = {
             filter: (s) => s.structureType == STRUCTURE_CONTAINER
         }), container => container.store[RESOURCE_ENERGY])[0];
         if (target) {
-            var transfer = tasks('transferEnergy');
-            transfer.data.quiet = true;
-            creep.assign(transfer, target);
+            var deposit = tasks('deposit');
+            deposit.data.quiet = true;
+            creep.assign(deposit, target);
             return OK;
         } else {
             var drop = tasks('dropEnergy');

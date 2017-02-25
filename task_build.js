@@ -15,10 +15,15 @@ class taskBuild extends Task {
 
     isValidTarget() {
         var target = this.target;
-        if (target.structureType == STRUCTURE_STORAGE || target.structureType == STRUCTURE_SPAWN) {
-            this.maxPerTarget = Infinity; // these things need to be built quickly
+        if (target) {
+            if (target.structureType == STRUCTURE_STORAGE || target.structureType == STRUCTURE_SPAWN) {
+                this.maxPerTarget = Infinity; // these things need to be built quickly
+            }
+            return (target != null && target.my && target.progress < target.progressTotal);
+        } else {
+            return false;
         }
-        return (target != null && target.my && target.progress < target.progressTotal);
+
     }
 
     work() {

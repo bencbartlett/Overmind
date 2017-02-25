@@ -44,6 +44,12 @@ Object.defineProperty(Room.prototype, 'taskTargets', {
     }
 });
 
+Object.defineProperty(Room.prototype, 'creepsInRoom', {
+    get () {
+        return _.filter(Game.creeps, creep => creep.room == this);
+    }
+});
+
 //noinspection JSUnusedGlobalSymbols
 Room.prototype.totalSourceCapacity = function () {
     if (this.memory.miningCapacity != undefined) {

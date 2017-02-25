@@ -16,6 +16,10 @@ Creep.prototype.assign = function (task, target = null) { // wrapper for task.as
 Object.defineProperty(Creep.prototype, 'task', {
     get: function () { // provide new task object recreated from literals stored in creep.memory.task
         if (this.memory.task != null) {
+            // NOTE: task migration should be performed here
+            // if (this.memory.task.name == 'transferEnergy') {
+            //     this.memory.task.name = 'deposit'
+            // }
             var task = tasks(this.memory.task.name);
             task.creepName = this.memory.task.creepName;
             task.targetID = this.memory.task.targetID;

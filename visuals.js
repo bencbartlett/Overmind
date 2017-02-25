@@ -20,9 +20,16 @@ var visuals = {
         }
     },
 
+    // drawCreepInfo: function (room) {
+    //     for (let creep of room.creepsInRoom) {
+    //         new RoomVisual(room.name).text('🛠', creep.pos);
+    //     }
+    // },
+
     drawAll: function (room) {
         this.drawSpawnInfo(room);
         this.drawStorageInfo(room);
+        // this.drawCreepInfo(room);
     }
 };
 
