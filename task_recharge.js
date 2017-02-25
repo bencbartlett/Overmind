@@ -6,7 +6,7 @@ class taskRecharge extends Task {
         // Settings
         this.moveColor = 'blue';
         this.data = {
-            quiet: true
+            quiet: false
         };
     }
 

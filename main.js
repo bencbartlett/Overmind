@@ -7,6 +7,7 @@
 
 // Import everything needed
 require('require');
+var visuals = require('visuals');
 
 // Enable screeps profiler
 //const profiler = require('screeps-profiler');
@@ -28,6 +29,7 @@ module.exports.loop = function () {
     // Animate each room
     for (let name in Game.rooms) {
         var room = Game.rooms[name];
+        visuals.drawAll(room);
         // Animate each room brain, but only for owned rooms
         if (room.controller.my) {
             room.brain.run();

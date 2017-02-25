@@ -68,6 +68,16 @@ Creep.prototype.calculatePathETA = function (startPoint, endPoint, ignoreCargo =
     return ETA;
 };
 
+Creep.prototype.conditionalMoveToServiceRoom = function () { // move to serviceRoom if not already there
+    var serviceRoom = Game.rooms[this.memory.data.serviceRoom];
+    if (this.room != serviceRoom) {
+        this.moveToVisual(serviceRoom.controller);
+        return ERR_NOT_IN_SERVICE_ROOM;
+    } else {
+        return OK;
+    }
+};
+
 Creep.prototype.moveToVisual = function (target, color = '#fff') {
     var visualizePath = true;
     if (visualizePath) {

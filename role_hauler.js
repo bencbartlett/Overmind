@@ -44,9 +44,9 @@ var roleHauler = {
         creep.assign(withdraw, target);
     },
 
-    transfer: function (creep) {
+    deposit: function (creep) {
         creep.memory.working = true;
-        var deposit = tasks('transferEnergy');
+        var deposit = tasks('deposit');
         deposit.data.quiet = true;
         var target = Game.rooms[creep.memory.data.serviceRoom].storage;
         if (target) {
@@ -61,7 +61,7 @@ var roleHauler = {
         if (creep.carry.energy == 0) {
             this.collect(creep);
         } else {
-            this.transfer(creep);
+            this.deposit(creep);
         }
     },
 
