@@ -50,6 +50,12 @@ Object.defineProperty(Room.prototype, 'creepsInRoom', {
     }
 });
 
+Object.defineProperty(Room.prototype, 'hostiles', {
+    get () {
+        return this.find(FIND_HOSTILE_CREEPS);
+    }
+});
+
 //noinspection JSUnusedGlobalSymbols
 Room.prototype.totalSourceCapacity = function () {
     if (this.memory.miningCapacity != undefined) {
@@ -100,7 +106,7 @@ Room.prototype.findCached = function (findKey, findFunction, reCache = false) {
         findResults = findFunction(this);
         // store find results in cache
         for (let item of findResults) {
-            this.memory.cache[findKey].push(item.id); // ATTN: might be problematic for id-less things like flags
+            this.memory.cache[findKey].push(item.ref); // ATTN: might be problematic for id-less things like flags
         }
     } else { // retrieve cached results
         for (let itemID of this.memory.cache[findKey]) {
@@ -110,18 +116,18 @@ Room.prototype.findCached = function (findKey, findFunction, reCache = false) {
     return findResults;
 };
 
-Room.prototype.remainingMinerSourceAssignments = function () {
-    var sources = this.find(FIND_SOURCES);
-    var miners = this.find(FIND_MY_CREEPS, {filter: (c) => c.memory.role == 'miner'});
-    var assignments = {};
-    for (let i in sources) {
-        // assignment becomes a dictionary with source ID keys and number of remaining spots as values
-        let numAssigned = _.filter(miners, (c) => c.memory.assignment == sources[i].id).length;
-        let maxSpots = Math.min(sources[i].capacity(), 1);
-        assignments[sources[i].id] = maxSpots - numAssigned;
-    }
-    return assignments;
-};
+// Room.prototype.remainingMinerSourceAssignments = function () {
+//     var sources = this.find(FIND_SOURCES);
+//     var miners = this.find(FIND_MY_CREEPS, {filter: (c) => c.memory.role == 'miner'});
+//     var assignments = {};
+//     for (let i in sources) {
+//         // assignment becomes a dictionary with source ID keys and number of remaining spots as values
+//         let numAssigned = _.filter(miners, (c) => c.memory.assignment == sources[i].ref).length;
+//         let maxSpots = Math.min(sources[i].capacity(), 1);
+//         assignments[sources[i].ref] = maxSpots - numAssigned;
+//     }
+//     return assignments;
+// };
 
 Room.prototype.isUntargetedRepair = function () {
     // Set target to closest repair job that is not currently targeted by any other repairer

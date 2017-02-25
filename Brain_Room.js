@@ -10,14 +10,24 @@ var RoomBrain = class {
         this.spawn = this.room.find(FIND_MY_SPAWNS)[0];
         // Brain flag - purple/purple denotes owned room, purple/grey denotes reserved room
         this.flag = this.room.controller.pos.lookFor(LOOK_FLAGS)[0];
+        this.flags = _.filter(Game.flags, flag => flag.memory.room && flag.memory.room == this.name);
         // Settings shared across all rooms
         this.settings = {
             fortifyLevel: 100000, // fortify all walls/ramparts to this level
-            fortifyLevelOverride: {"W18N88": 1000000}, // fortify all walls/ramparts to these levels in these rooms
             workerPatternRepetitionLimit: 5, // maximum number of body repetitions for workers
             supplierPatternRepetitionLimit: 2, // maximum number of body repetitions for suppliers
             haulerPatternRepetitionLimit: 7, // maximum number of body repetitions for haulers
             minersPerSource: 1, // number of miners to assign to a source
+            storageBuffer: 10000, // workers can't withdraw from storage until this level
+            reserveBuffer: 4000 // reserve rooms to this amount
+        };
+        // Settings to override this.settings for a particular room
+        this.override = {
+            workersPerRoom: { // custom number of workers per room
+                "W18N88": 3,
+                "W19N88": 1,
+            },
+            fortifyLevel: {"W18N88": 1000000}, // fortify all walls/ramparts to these levels in these rooms
         };
         // Task priorities
         this.taskPriorities = [
@@ -131,8 +141,8 @@ var RoomBrain = class {
                     break;
                 case 'fortify': // Fortify walls
                     var fortifyLevel = this.settings.fortifyLevel; // global fortify level
-                    if (this.settings.fortifyLevelOverride[this.room.name]) {
-                        fortifyLevel = this.settings.fortifyLevelOverride[this.room.name]; // override for certain rooms
+                    if (this.override.fortifyLevel[this.room.name]) {
+                        fortifyLevel = this.override.fortifyLevel[this.room.name]; // override for certain rooms
                     }
                     //noinspection JSReferencingMutableVariableFromClosure
                     prioritizedTargets['fortify'] = this.room.find(FIND_STRUCTURES, {
@@ -189,8 +199,8 @@ var RoomBrain = class {
                     break;
                 case 'fortify': // Fortify walls
                     var fortifyLevel = this.settings.fortifyLevel; // global fortify level
-                    if (this.settings.fortifyLevelOverride[this.room.name]) {
-                        fortifyLevel = this.settings.fortifyLevelOverride[this.room.name]; // override for certain rooms
+                    if (this.override.fortifyLevel[this.room.name]) {
+                        fortifyLevel = this.override.fortifyLevel[this.room.name]; // override for certain rooms
                     }
                     //noinspection JSReferencingMutableVariableFromClosure
                     targets = this.room.find(FIND_STRUCTURES, {
@@ -240,6 +250,9 @@ var RoomBrain = class {
             spawn = this.peekSpawn();
         }
         if (spawn) {
+            if (this.override.workersPerRoom[this.name]) {
+                return this.override.workersPerRoom[this.name]
+            }
             var energy = spawn.room.energyCapacityAvailable;
             var workerBodyPattern = require('role_worker').settings.bodyPattern;
             var workerSize = Math.min(Math.floor(energy / spawn.cost(workerBodyPattern)),
@@ -267,7 +280,7 @@ var RoomBrain = class {
             var haulerSize = Math.min(Math.floor(energy / spawn.cost(haulerBodyPattern)),
                                       this.settings.haulerPatternRepetitionLimit);
             var carryParts = haulerSize * _.filter(haulerBodyPattern, part => part == CARRY).length;
-            var tripLength = 2 * this.room.storage.pos.findPathTo(target).length;
+            var tripLength = 2 * this.room.storage.pos.findPathTo(target).length; // TODO: this is expensive
             var energyPerTrip = 50 * carryParts;
             var energyPerTick = energyPerTrip / tripLength;
             var sourceEnergyPerTick = (3000 / 300);
@@ -285,15 +298,14 @@ var RoomBrain = class {
             // Check enough miners are supplied
             let assignedMiners = _.filter(source.assignedCreeps,
                                           creep => creep.memory.role == 'miner' &&
-                                                   creep.memory.data.replaceNow == false);
+                                                   creep.ticksToLive > creep.memory.data.replaceAt);
             if (assignedMiners.length < this.settings.minersPerSource) {
-                // spawn a new miner that will ask for an assignment on birth
                 var minerBehavior = require('role_miner');
                 if (this.spawn == undefined) { // attempt to borrow other spawn; this.spawn == undefined if not able
                     this.borrowSpawn();
                 }
                 if (this.spawn) {
-                    let newMiner = minerBehavior.create(this.spawn, source.id, {workRoom: this.room.name});
+                    let newMiner = minerBehavior.create(this.spawn, source.ref, {workRoom: this.room.name});
                     return newMiner;
                 }
             }
@@ -313,13 +325,12 @@ var RoomBrain = class {
                 //     filter: (s) => s.structureType == STRUCTURE_CONTAINER
                 // });
                 if (assignedHaulers.length < this.calculateHaulerRequirements(source)) {
-                    // spawn a new miner that will ask for an assignment on birth
                     var haulerBehavior = require('role_hauler');
                     if (this.spawn == undefined) {
                         this.borrowSpawn();
                     }
                     if (this.spawn) {
-                        let newHauler = haulerBehavior.create(this.spawn, source.id, {
+                        let newHauler = haulerBehavior.create(this.spawn, source.ref, {
                             workRoom: this.room.name,
                             patternRepetitionLimit: this.settings.haulerPatternRepetitionLimit
                         });
@@ -371,7 +382,6 @@ var RoomBrain = class {
                                   structure.structureType == STRUCTURE_STORAGE)
         });
         // Only spawn workers once containers are up
-        // console.log(this.room.name, numWorkers, this.calculateWorkerRequirements(), containers.length);
         var workerRequirements = this.calculateWorkerRequirements();
         if (workerRequirements && numWorkers < workerRequirements && containers.length > 0) {
             var workerBehavior = require('role_worker');
@@ -383,17 +393,102 @@ var RoomBrain = class {
                     workRoom: this.room.name,
                     patternRepetitionLimit: this.settings.workerPatternRepetitionLimit
                 });
-                // console.log(newWorker);
                 return newWorker;
             }
         }
         return OK;
     }
 
+    handleRemoteMiners() {
+        var sourceFlags = _.filter(this.flags, flag => flag.color == COLOR_YELLOW);
+        for (let sourceFlag of sourceFlags) {
+            let assignedMiners = _.filter(sourceFlag.assignedCreeps,
+                                          creep => creep.memory.role == 'miner' &&
+                                                   creep.ticksToLive > creep.memory.data.replaceAt);
+            if (assignedMiners.length < this.settings.minersPerSource) {
+                var minerBehavior = require('role_miner');
+                let newMiner = minerBehavior.create(this.spawn, sourceFlag.ref, {
+                    remote: true,
+                    workRoom: null
+                });
+                return newMiner;
+            }
+        }
+        return OK;
+    }
 
-    // TODO: safe mode
+    handleRemoteHaulers() {
+        if (this.room.storage != undefined) { // haulers are only built once a room has storage
+            var sourceFlags = _.filter(this.flags, flag => flag.color == COLOR_YELLOW);
+            for (let sourceFlag of sourceFlags) {
+                let assignedHaulers = _.filter(sourceFlag.assignedCreeps,
+                                               creep => creep.memory.role == 'hauler');
+                if (assignedHaulers.length < this.calculateHaulerRequirements(sourceFlag)) {
+                    var haulerBehavior = require('role_hauler');
+                    let newMiner = haulerBehavior.create(this.spawn, sourceFlag.ref, {
+                        remote: true,
+                        workRoom: this.room.name,
+                        patternRepetitionLimit: this.settings.haulerPatternRepetitionLimit
+                    });
+                    return newMiner;
+                }
+            }
+        }
+        return OK;
+    }
 
-    run() { // list of things executed each tick
+    handleScouts() {
+        var scoutFlags = _.filter(this.flags, flag => flag.color == COLOR_GREY &&
+                                                      (flag.room == undefined || !flag.room.my));
+        for (let scoutFlag of scoutFlags) {
+            let assignedScouts = _.filter(scoutFlag.assignedCreeps,
+                                          creep => creep.memory.role == 'scout' &&
+                                                   creep.ticksToLive > creep.memory.data.replaceAt);
+            if (assignedScouts.length < 1) {
+                var scoutBehavior = require('role_scout');
+                let newScout = scoutBehavior.create(this.spawn, scoutFlag.ref);
+                return newScout;
+            }
+        }
+        return OK;
+    }
+
+    handleReservers() {
+        var reserverFlags = _.filter(this.flags, flag => flag.color == COLOR_PURPLE);
+        for (let reserverFlag of reserverFlags) {
+            let assignedReservers = _.filter(reserverFlag.assignedCreeps,
+                                             creep => creep.memory.role == 'reserver' &&
+                                                      creep.ticksToLive > creep.memory.data.replaceAt);
+            let reserveAgain = false;
+            if (reserverFlag.room) {
+                reserveAgain = !reserverFlag.room.controller.reservation ||
+                               reserverFlag.room.controller.reservation.ticksToEnd < this.settings.reserveBuffer;
+            }
+            if (assignedReservers.length < 1 && reserveAgain) {
+                var reserverBehavior = require('role_reserver');
+                let newReserver = reserverBehavior.create(this.spawn, reserverFlag.ref);
+                return newReserver;
+            }
+        }
+        return OK;
+    }
+
+    handleGuards() {
+        var guardFlags = _.filter(this.flags, flag => flag.color == COLOR_RED);
+        for (let guardFlag of guardFlags) {
+            let assignedGuards = _.filter(guardFlag.assignedCreeps,
+                                             creep => creep.memory.role == 'guard' &&
+                                                      creep.ticksToLive > creep.memory.data.replaceAt);
+            if (assignedGuards.length < 1) {
+                var guardBehavior = require('role_guard');
+                let newGuard = guardBehavior.create(this.spawn, guardFlag.ref);
+                return newGuard;
+            }
+        }
+        return OK;
+    }
+
+    handleCreeps() {
         var handleResponse;
         // Handle suppliers - this should almost always be at the top of the queue
         handleResponse = this.handleSuppliers();
@@ -415,6 +510,45 @@ var RoomBrain = class {
         if (handleResponse != OK) {
             return handleResponse;
         }
+
+        // TODO: remote haulers
+
+        // Handle scouts
+        handleResponse = this.handleScouts();
+        if (handleResponse != OK) {
+            return handleResponse;
+        }
+        // Handle remote miners
+        handleResponse = this.handleRemoteMiners();
+        if (handleResponse != OK) {
+            return handleResponse;
+        }
+        // Handle reservers
+        handleResponse = this.handleReservers();
+        if (handleResponse != OK) {
+            return handleResponse;
+        }
+        // Handle guards
+        handleResponse = this.handleGuards();
+        if (handleResponse != OK) {
+            return handleResponse;
+        }
+    }
+
+    handleSafeMode() {
+        var criticalBarriers = this.room.find(FIND_STRUCTURES, {
+            filter: (s) => (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART) &&
+                           s.hits < 5000
+        });
+        if (criticalBarriers.length > 0 && this.room.hostiles.length > 0) {
+            this.room.controller.activateSafeMode();
+        }
+    }
+
+    // List of things executed each tick; only run for rooms that are owned
+    run() {
+        this.handleSafeMode();
+        this.handleCreeps(); // build creeps as needed
     }
 };
 

@@ -56,3 +56,4 @@ StructureSpawn.prototype.donateCreepToRoom = function (roleName, roomName) {
         console.log('Error: ' + roleName + ' is not a valid role.');
     }
 };
+

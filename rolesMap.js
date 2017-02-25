@@ -19,6 +19,10 @@ var rolesMap = {
         behavior: require('role_worker'),
         amount: 0
     },
+    scout: {
+        behavior: require('role_scout'),
+        amount: 0
+    },
     guard: {
         behavior: require('role_guard'),
         amount: 0

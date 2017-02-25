@@ -35,7 +35,7 @@ module.exports.loop = function () {
             room.brain.run();
         }
         // Animate each tower
-        var towers = room.find(FIND_MY_STRUCTURES, {filter: (s) => s.structureType == STRUCTURE_TOWER});
+        var towers = room.find(FIND_MY_STRUCTURES, {filter: (s) => s.structureType == STRUCTURE_TOWER}); // TODO: this is costly
         for (let i in towers) {
             towers[i].run();
         }

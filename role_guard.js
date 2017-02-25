@@ -1,56 +1,72 @@
-// var upgrader = require('role_upgrader');
+// Guard: dumb bot that goes to a flag and then attacks everything hostile in the room
 
-var roleGuard = { // TODO: refactor into hauler
+var tasks = require('tasks');
+
+var roleGuard = {
     /** @param {Creep} creep **/
     /** @param {StructureSpawn} spawn **/
     /** @param {Number} creepSizeLimit **/
 
-    create: function (spawn, creepSizeLimit = Infinity) {
-        creepSizeLimit = 5;
+    settings: {
+        bodyPattern: [ATTACK, MOVE]
+    },
+
+    create: function (spawn, assignment, patternRepetitionLimit = 5) {
+        var bodyPattern = this.settings.bodyPattern; // body pattern to be repeated some number of times
+        // calculate the most number of pattern repetitions you can use with available energy
+        var numRepeats = Math.floor(spawn.room.energyCapacityAvailable / spawn.cost(bodyPattern));
+        // make sure the creep is not too big (more than 50 parts)
+        numRepeats = Math.min(Math.floor(50 / bodyPattern.length), numRepeats, patternRepetitionLimit);
+        // create the body
         var body = [];
-        for (let i = 0; i < creepSizeLimit; i++) {
-            body.push(ATTACK);
-            body.push(MOVE);
+        for (let i = 0; i < numRepeats; i++) {
+            body = body.concat(bodyPattern);
         }
-        return spawn.createCreep(body, spawn.creepName('guard'), {role: 'guard'});
+        // create the creep and initialize memory
+        return spawn.createCreep(body, spawn.creepName('guard'), {
+            role: 'guard', task: null, assignment: assignment,
+            data: {origin: spawn.room.name, replaceAt: 0}
+        });
     },
 
-    getAssignment: function (creep) {
-        var untargetedFlags = _.filter(Game.flags, (f) => f.color == COLOR_BLUE &&
-                                                          f.isTargeted('guard').length < 1); // TODO: this assignment pattern can be prototyped
-        if (untargetedFlags.length > 0) {
-            // var controller = untargetedFlags[0].room.controller;
-            creep.memory.assignment = untargetedFlags[0].name;
-            console.log(creep.name + " assigned to: " + untargetedFlags[0].name);
-        } else {
-            console.log(creep.name + " could not receive an assignment.");
+    findTarget: function (creep) {
+        var target;
+        if (!target) {
+            target = creep.pos.findClosestByRange(FIND_HOSTILE_SPAWNS);
         }
-    },
-
-    guardMode: function(creep) {
-        // Attack nearest enemy creep
-        if (creep.goAttack() != OK) {
-            var assignedFlag = Game.flags[creep.memory.assignment];
-            creep.moveToVisual(assignedFlag, 'red'); // return to flag if nothing to attack
+        if (!target) {
+            target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
         }
+        if (!target) {
+            target = creep.pos.findClosestByRange(FIND_HOSTILE_STRUCTURES, {filter: s => s.hits});
+        }
+        if (!target) {
+            target = creep.pos.findClosestByRange(FIND_HOSTILE_CONSTRUCTION_SITES);
+        }
+        return target;
     },
 
     run: function (creep) {
-        // Get an assignment if you don't have one already
-        if (!creep.memory.assignment) {
-            this.getAssignment(creep);
+        var assignment = Game.flags[creep.memory.assignment];
+        if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
+            creep.task = null;
+            var target = this.findTarget(creep);
+            if (target) {
+                task = tasks('attack');
+                creep.assign(task, target);
+            }
         }
-        // var assignedFlag = Game.flags[creep.memory.assignment]; // This is a flag, not an ID!
-        // if (!creep.isInRoom(assignedFlag.pos.roomName)) { // move to the room the flag is in
-        //     creep.moveToVisual(assignedFlag.pos, 'red');
-        // } else {
-        //     if (creep.memory.working) {
-        //         this.mineMode(creep);
-        //     } else {
-        //         this.depositBuildMode(creep);
-        //     }
-        // }
-        this.guardMode(creep);
+        if (creep.task) {
+            creep.task.step();
+        }
+        if (assignment) {
+            if (creep.pos.inRangeTo(assignment.pos, 5) && creep.memory.data.replaceAt == 0) {
+                creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive) + 25;
+            }
+            if (!creep.task) {
+                creep.moveToVisual(assignment.pos, 'red');
+            }
+        }
     }
 };
 

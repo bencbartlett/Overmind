@@ -16,7 +16,7 @@ var roleWorker = {
         // calculate the most number of pattern repetitions you can use with available energy
         var numRepeats = Math.floor(spawn.room.energyCapacityAvailable / spawn.cost(bodyPattern));
         // make sure the creep is not too big (more than 50 parts)
-        numRepeats = Math.min(Math.floor(50/bodyPattern.length), numRepeats, patternRepetitionLimit);
+        numRepeats = Math.min(Math.floor(50 / bodyPattern.length), numRepeats, patternRepetitionLimit);
         // create the body
         var body = [];
         for (let i = 0; i < numRepeats; i++) {
@@ -31,10 +31,6 @@ var roleWorker = {
     },
 
     requestTask: function (creep) {
-        if (creep.room != creep.workRoom) { // TODO: move to run()
-            creep.moveToVisual(creep.workRoom.controller);
-            return ERR_NOT_IN_SERVICE_ROOM;
-        }
         creep.memory.working = true;
         var response = creep.workRoom.brain.assignTask(creep);
         // creep.log(response);
@@ -49,12 +45,12 @@ var roleWorker = {
             target = creep.room.fullestContainer();
         } else {
             target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
-                filter: (s) => (s.structureType == STRUCTURE_CONTAINER ||
-                                s.structureType == STRUCTURE_STORAGE) &&
-                               s.store[RESOURCE_ENERGY] > creep.carryCapacity
+                filter: (s) => (s.structureType == STRUCTURE_CONTAINER
+                                && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
+                               (s.structureType == STRUCTURE_STORAGE
+                                && s.store[RESOURCE_ENERGY] > creep.room.brain.settings.storageBuffer)
             });
         }
-        creep.log(target);
         if (target) {
             // assign recharge task to creep
             var taskRecharge = tasks('recharge');
@@ -65,7 +61,7 @@ var roleWorker = {
             if (this.settings.workersCanHarvest) {
                 return this.harvest(creep);
             } else {
-                creep.log("no containers found and harvesting disabled!");
+                // creep.log("no containers found and harvesting disabled!");
                 return ERR_NO_TARGET_FOUND;
             }
         }
@@ -101,6 +97,10 @@ var roleWorker = {
     },
 
     run: function (creep) {
+        // move to service room
+        if (creep.conditionalMoveToWorkRoom() != OK) {
+            return ERR_NOT_IN_SERVICE_ROOM;
+        }
         // get new task if this one is invalid
         var result;
         if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {

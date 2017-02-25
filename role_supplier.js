@@ -82,7 +82,7 @@ var roleSupplier = {
 
     run: function (creep) {
         // move to service room
-        if (creep.conditionalMoveToServiceRoom() != OK) {
+        if (creep.conditionalMoveToWorkRoom() != OK) {
             return ERR_NOT_IN_SERVICE_ROOM;
         }
         // get new task if this one is invalid
