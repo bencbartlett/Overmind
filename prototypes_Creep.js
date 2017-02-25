@@ -40,9 +40,6 @@ Object.defineProperty(Creep.prototype, 'task', {
 
 Object.defineProperty(Creep.prototype, 'workRoom', { // retrieve the room object (not the name) of the assigned room
     get: function () {
-        if (this.memory.data.serviceRoom) {
-            this.memory.workRoom = this.memory.data.serviceRoom; // TODO: remove after migration
-        }
         return Game.rooms[this.memory.workRoom];
     },
     set: function (newWorkRoom) {

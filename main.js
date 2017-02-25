@@ -2,8 +2,6 @@
 
 // To-do list: ====================
 // TODO: attack capability; calculations for how large of an invasion/defense group to make
-// TODO: small creep distraction cloud? would require manual pathfinding
-// TODO: safe mode trigger
 
 // Import everything needed
 require('require');

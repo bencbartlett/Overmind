@@ -1,5 +1,5 @@
 var Task = require('Task');
-// TODO: separate store task
+
 class taskDeposit extends Task {
     constructor() {
         super('deposit');
