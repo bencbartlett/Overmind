@@ -21,6 +21,7 @@ function setupProfiler() {
             if (Profiler.isProfiling()) {
                 const filter = Memory.profiler.filter;
                 let duration = false;
+                //noinspection PointlessBooleanExpressionJS
                 if (!!Memory.profiler.disableTick) {
                     // Calculate the original duration, profile is enabled on the tick after the first call,
                     // so add 1.
@@ -115,7 +116,7 @@ function profileObjectFunctions(object, label) {
                 const originalFunction = objectToWrap[functionName];
                 objectToWrap[functionName] = profileFunction(originalFunction, extendedLabel);
             }
-        } catch (e) { } /* eslint no-empty:0 */
+        } catch (e) { } /* esLint no-empty:0 */
     });
 
     return objectToWrap;
@@ -134,15 +135,17 @@ function profileFunction(fn, functionName) {
 
 const Profiler = {
     printProfile() {
+        //noinspection JSUnusedAssignment
         console.log(Profiler.output());
     },
 
     emailProfile() {
+        //noinspection JSUnusedAssignment
         Game.notify(Profiler.output());
     },
 
-    output(numresults) {
-        const displayresults = !!numresults ? numresults : 20;
+    output(numResults) {
+        const displayResults = !!numResults ? numResults : 20;
         if (!Memory.profiler || !Memory.profiler.enabledTick) {
             return 'Profiler not active.';
         }
@@ -154,7 +157,8 @@ const Profiler = {
             `Total: ${Memory.profiler.totalTime.toFixed(2)}`,
             `Ticks: ${elapsedTicks}`,
         ].join('\t');
-        return [].concat(header, Profiler.lines().slice(0, displayresults), footer).join('\n');
+        //noinspection JSUnusedAssignment
+        return [].concat(header, Profiler.lines().slice(0, displayResults), footer).join('\n');
     },
 
     lines() {
@@ -208,15 +212,21 @@ const Profiler = {
         if (Game.time >= Memory.profiler.enabledTick) {
             const cpuUsed = Game.cpu.getUsed();
             Memory.profiler.totalTime += cpuUsed;
+            //noinspection JSUnusedAssignment
             Profiler.report();
         }
     },
 
     report() {
+        //noinspection JSUnusedAssignment
         if (Profiler.shouldPrint()) {
+            //noinspection JSUnusedAssignment
             Profiler.printProfile();
-        } else if (Profiler.shouldEmail()) {
-            Profiler.emailProfile();
+        } else { //noinspection JSUnusedAssignment
+            if (Profiler.shouldEmail()) {
+                        //noinspection JSUnusedAssignment
+                Profiler.emailProfile();
+                    }
         }
     },
 
@@ -232,13 +242,16 @@ const Profiler = {
     },
 
     shouldPrint() {
+        //noinspection JSUnusedAssignment
         const streaming = Profiler.type() === 'stream';
+        //noinspection JSUnusedAssignment
         const profiling = Profiler.type() === 'profile';
         const onEndingTick = Memory.profiler.disableTick === Game.time;
         return streaming || (profiling && onEndingTick);
     },
 
     shouldEmail() {
+        //noinspection JSUnusedAssignment
         return Profiler.type() === 'email' && Memory.profiler.disableTick === Game.time;
     },
 };
@@ -264,7 +277,7 @@ module.exports = {
             // var profilerTime = (end - start) - (callbackEnd - callbackStart);
             // var callbackTime = callbackEnd - callbackStart;
             // var unaccounted = end - profilerTime - callbackTime;
-            // console.log('total-', end, 'profiler-', profilerTime, 'callbacktime-',
+            // console.log('total-', end, 'profiler-', profilerTime, 'callBackTime-',
             // callbackTime, 'start-', start, 'unaccounted', unaccounted);
             return returnVal;
         }

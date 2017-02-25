@@ -13,10 +13,10 @@ var RoomBrain = class {
         // Settings shared across all rooms
         this.settings = {
             fortifyLevel: 100000, // fortify all walls/ramparts to this level
-            fortifyLevelOverride: {"W18N88" : 1000000}, // fortify all walls/ramparts to these levels in these rooms
-            workerPatternRepetitionLimit: 10, // maximum number of body repetitions for workers
+            fortifyLevelOverride: {"W18N88": 1000000}, // fortify all walls/ramparts to these levels in these rooms
+            workerPatternRepetitionLimit: 5, // maximum number of body repetitions for workers
             supplierPatternRepetitionLimit: 2, // maximum number of body repetitions for suppliers
-            haulerPatternRepetitionLimit: 10, // maximum number of body repetitions for haulers
+            haulerPatternRepetitionLimit: 7, // maximum number of body repetitions for haulers
             minersPerSource: 1, // number of miners to assign to a source
         };
         // Task priorities
@@ -34,8 +34,8 @@ var RoomBrain = class {
         this.taskToExecute = {
             // 'migrate': 'migrate',
             'pickup': 'pickup',
-            'supplyTowers': 'transferEnergy',
-            'supply': 'transferEnergy',
+            'supplyTowers': 'supply',
+            'supply': 'supply',
             'repair': 'repair',
             'build': 'build',
             'fortify': 'fortify',
@@ -88,76 +88,133 @@ var RoomBrain = class {
         }
     }
 
-    getTasks() { // TODO: use task.maxPerTask properties to coordinate task assignment
-        // TODO: suppliers are eating up a lot of CPU
+    getTasks(tasksToGet) { // TODO: use task.maxPerTask properties to coordinate task assignment
+        // TODO: defense
         var prioritizedTargets = {};
-        // Priority: (can be switched with DEFCON system)
-        // 0: Defense (to be implemented)
-        // 1: Handle source miners/suppliers
-        // Handle migrating creeps
-        // prioritizedTargets['migrate'] = [this.room.controller];
-        // 2: Pick up energy
-        prioritizedTargets['pickup'] = this.room.find(FIND_DROPPED_ENERGY);
-        // Find towers in need of energy
-        prioritizedTargets['supplyTowers'] = this.room.find(FIND_STRUCTURES, {
-            filter: (structure) => structure.structureType == STRUCTURE_TOWER &&
-                                   structure.energy < structure.energyCapacity
-        });
-        // Find structures in need of energy
-        prioritizedTargets['supply'] = this.room.find(FIND_STRUCTURES, {
-            filter: (structure) => (structure.structureType == STRUCTURE_EXTENSION ||
-                                    structure.structureType == STRUCTURE_SPAWN) &&
-                                   structure.energy < structure.energyCapacity
-        });
-        // 3: Repair structures
-        prioritizedTargets['repair'] = this.room.find(FIND_STRUCTURES, {
-            filter: (s) => s.hits < s.hitsMax &&
-                           s.isTargeted('repairer') == false &&
-                           s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
-                           s.structureType != STRUCTURE_WALL && // walls are fortify tasks
-                           s.structureType != STRUCTURE_RAMPART &&
-                           (s.structureType != STRUCTURE_ROAD || s.hits < 0.2 * s.hitsMax) // roads repaired as you go
-        });
-        // 4: Build construction jobs
-        prioritizedTargets['build'] = this.room.find(FIND_CONSTRUCTION_SITES);
-        // 5: Fortify walls
-        var fortifyLevel = this.settings.fortifyLevel; // global fortify level
-        if (this.settings.fortifyLevelOverride[this.room.name]) {
-            fortifyLevel = this.settings.fortifyLevelOverride[this.room.name]; // override for certain rooms
+        for (let task of tasksToGet) {
+            switch (task) {
+                case 'pickup': // Pick up energy
+                    prioritizedTargets['pickup'] = this.room.find(FIND_DROPPED_ENERGY);
+                    break;
+                case 'supplyTowers': // Find towers in need of energy
+                    prioritizedTargets['supplyTowers'] = this.room.find(FIND_STRUCTURES, {
+                        filter: (structure) => structure.structureType == STRUCTURE_TOWER &&
+                                               structure.energy < structure.energyCapacity
+                    });
+                    break;
+                case 'supply': // Find structures in need of energy
+                    prioritizedTargets['supply'] = this.room.find(FIND_STRUCTURES, {
+                        filter: (structure) => (structure.structureType == STRUCTURE_EXTENSION ||
+                                                structure.structureType == STRUCTURE_SPAWN) &&
+                                               structure.energy < structure.energyCapacity
+                    });
+                    break;
+                case 'repair': // Repair structures
+                    prioritizedTargets['repair'] = this.room.find(FIND_STRUCTURES, {
+                        filter: (s) => s.hits < s.hitsMax &&
+                                       s.isTargeted('repairer') == false &&
+                                       s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
+                                       s.structureType != STRUCTURE_WALL && // walls are fortify tasks
+                                       s.structureType != STRUCTURE_RAMPART &&
+                                       (s.structureType != STRUCTURE_ROAD || s.hits < 0.2 * s.hitsMax) // roads repaired as you go
+                    });
+                    break;
+                case 'build': // Build construction jobs
+                    prioritizedTargets['build'] = this.room.find(FIND_CONSTRUCTION_SITES);
+                    break;
+                case 'fortify': // Fortify walls
+                    var fortifyLevel = this.settings.fortifyLevel; // global fortify level
+                    if (this.settings.fortifyLevelOverride[this.room.name]) {
+                        fortifyLevel = this.settings.fortifyLevelOverride[this.room.name]; // override for certain rooms
+                    }
+                    //noinspection JSReferencingMutableVariableFromClosure
+                    prioritizedTargets['fortify'] = this.room.find(FIND_STRUCTURES, {
+                        filter: (s) => s.hits < fortifyLevel &&
+                                       (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)
+                    });
+                    break;
+                case 'upgrade': // Upgrade controller
+                    prioritizedTargets['upgrade'] = [this.room.controller.my && this.room.controller];
+                    break;
+            }
         }
-        prioritizedTargets['fortify'] = this.room.find(FIND_STRUCTURES, {
-            filter: (s) => s.hits < fortifyLevel &&
-                           (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)
-        });
-        // 6: Upgrade controller
-        prioritizedTargets['upgrade'] = [this.room.controller.my && this.room.controller]; // can't upgrade reservations
-        // To within some spatial limit, creeps should always take highest priority task regardless of room.
         return prioritizedTargets;
     }
 
-    assignTask(creep) {
-        var prioritizedTargets = this.getTasks();
-        var roomTasks = this.room.tasks;
-        var roomTaskTargets = this.room.taskTargets;
-        for (let task of this.taskPriorities) { // loop through tasks in descending priority
-            // If task exists and can be assigned to this creep, then do so
-            if (prioritizedTargets[task].length > 0 &&
-                this.assignmentRoles[task].includes(creep.memory.role) &&
-                this.assignmentConditions[task](creep)) {
-                var taskToExecute = tasks(this.taskToExecute[task]); // create task object
-                // Find a target that isn't already targeted by the max numbers of creeps.
-                //noinspection JSReferencingMutableVariableFromClosure
-                var target = creep.pos.findClosestByRange(prioritizedTargets[task], {
-                    filter: target => _.filter(roomTaskTargets, t => t == target).length < taskToExecute.maxPerTarget
-                });
-                if (target) {
-                    creep.assign(taskToExecute, target);
-                    this.log("assigned " + taskToExecute.name + " for " + target);
-                    return OK;
-                }
+    getMostUrgentTask(tasksToGet) {
+        for (let task of tasksToGet) {
+            var targets;
+            switch (task) {
+                case 'pickup': // Pick up energy
+                    targets = this.room.find(FIND_DROPPED_ENERGY);
+                    break;
+                case 'supplyTowers': // Find towers in need of energy
+                    targets = this.room.find(FIND_STRUCTURES, {
+                        filter: (structure) => structure.structureType == STRUCTURE_TOWER &&
+                                               structure.energy < structure.energyCapacity
+                    });
+                    break;
+                case 'supply': // Find structures in need of energy
+                    targets = this.room.find(FIND_STRUCTURES, {
+                        filter: (structure) => (structure.structureType == STRUCTURE_EXTENSION ||
+                                                structure.structureType == STRUCTURE_SPAWN) &&
+                                               structure.energy < structure.energyCapacity
+                    });
+                    break;
+                case 'repair': // Repair structures
+                    targets = this.room.find(FIND_STRUCTURES, {
+                        filter: (s) => s.hits < s.hitsMax &&
+                                       s.isTargeted('repairer') == false &&
+                                       s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
+                                       s.structureType != STRUCTURE_WALL && // walls are fortify tasks
+                                       s.structureType != STRUCTURE_RAMPART &&
+                                       (s.structureType != STRUCTURE_ROAD || s.hits < 0.2 * s.hitsMax) // roads repaired as you go
+                    });
+                    break;
+                case 'build': // Build construction jobs
+                    targets = this.room.find(FIND_CONSTRUCTION_SITES);
+                    break;
+                case 'fortify': // Fortify walls
+                    var fortifyLevel = this.settings.fortifyLevel; // global fortify level
+                    if (this.settings.fortifyLevelOverride[this.room.name]) {
+                        fortifyLevel = this.settings.fortifyLevelOverride[this.room.name]; // override for certain rooms
+                    }
+                    //noinspection JSReferencingMutableVariableFromClosure
+                    targets = this.room.find(FIND_STRUCTURES, {
+                        filter: (s) => s.hits < fortifyLevel &&
+                                       (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)
+                    });
+                    break;
+                case 'upgrade': // Upgrade controller
+                    targets = [this.room.controller.my && this.room.controller];
+                    break;
+            }
+            // remove targets that are already targeted by too many creeps
+            var taskToExecute = tasks(this.taskToExecute[task]); // create task object
+            //noinspection JSReferencingMutableVariableFromClosure
+            _.remove(targets, target => target.targetedBy.length > taskToExecute.maxPerTarget);
+            if (targets.length > 0) { // return on the first instance of a target being found
+                return [taskToExecute, targets];
             }
         }
-        creep.log("could not get assignment from room brain!");
+        return [null, null];
+    }
+
+    assignTask(creep) {
+        var applicableTasks = _.filter(this.taskPriorities,
+                                       task => this.assignmentRoles[task].includes(creep.memory.role) &&
+                                               this.assignmentConditions[task](creep));
+        var [task, targets] = this.getMostUrgentTask(applicableTasks);
+        // var roomTasks = this.room.tasks;
+        // Assign the task
+        if (targets) {
+            var target = creep.pos.findClosestByRange(targets);
+            creep.assign(task, target);
+            this.log("assigned " + task.name + " for " + target);
+            return OK;
+        } else {
+            creep.log("could not get assignment from room brain!");
+        }
     }
 
     calculateWorkerRequirements() {
@@ -177,7 +234,7 @@ var RoomBrain = class {
                 equilibriumEnergyPerTick /= 3; // workers spend a lot of time walking around if there's not storage
             }
             var sourceEnergyPerTick = (3000 / 300) * this.room.find(FIND_SOURCES).length;
-            return Math.ceil(0.7 * sourceEnergyPerTick / equilibriumEnergyPerTick); // operate under capacity limit
+            return Math.ceil(0.5 * sourceEnergyPerTick / equilibriumEnergyPerTick); // operate under capacity limit
         } else {
             return null;
         }
@@ -323,6 +380,11 @@ var RoomBrain = class {
 
     run() { // list of things executed each tick
         var handleResponse;
+        // Handle suppliers - this should almost always be at the top of the queue
+        handleResponse = this.handleSuppliers();
+        if (handleResponse != OK) {
+            return handleResponse;
+        }
         // Handle miners
         handleResponse = this.handleMiners();
         if (handleResponse != OK) {
@@ -330,11 +392,6 @@ var RoomBrain = class {
         }
         // Handle haulers
         handleResponse = this.handleHaulers();
-        if (handleResponse != OK) {
-            return handleResponse;
-        }
-        // Handle suppliers
-        handleResponse = this.handleSuppliers();
         if (handleResponse != OK) {
             return handleResponse;
         }

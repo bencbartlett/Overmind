@@ -56,15 +56,23 @@ Object.defineProperty(RoomObject.prototype, 'ref', { // identifier property. id 
 // List of creeps assigned to this object
 Object.defineProperty(RoomObject.prototype, 'assignedCreeps', { // TODO: fine for small numbers of creeps, might rewrite
     get: function () {
-        return _.filter(Game.creeps, creep => creep.memory.assignment && creep.memory.assignment == this.id)
+        return _.filter(Game.creeps, creep => creep.memory.assignment && creep.memory.assignment == this.id);
+    }
+});
+
+// List of creeps with tasks targeting this object
+Object.defineProperty(RoomObject.prototype, 'targetedBy', { // TODO: fine for small numbers of creeps, might rewrite
+    get: function () {
+        return _.filter(this.room.creeps, creep => creep.task && creep.task.target == this);
     }
 });
 
 // List of creeps assigned to this object
+// TODO: deprecated?
 Object.defineProperty(RoomObject.prototype, 'taskedCreeps', {
     get: function () {
         return _.filter(Game.creeps, creep => creep.task &&
                                               creep.task.target &&
-                                              creep.task.target == this.id)
+                                              creep.task.target == this.id);
     }
 });

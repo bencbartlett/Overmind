@@ -42,7 +42,7 @@ var roleMiner = {
         return OK;
     },
 
-    transfer: function (creep) {
+    deposit: function (creep) {
         creep.memory.working = false;
         // find any nearby damaged containers and repair them
         var damagedContainers = creep.pos.findInRange(FIND_STRUCTURES, 1, {
@@ -89,7 +89,7 @@ var roleMiner = {
                 // if building is allowed, check for nearby container sites
                 this.buildContainer(creep, nearbyContainerSites[0]);
             } else {
-                this.transfer(creep); // transfer to container
+                this.deposit(creep); // deposit to container
             }
         }
         // if (creep.task == null) {

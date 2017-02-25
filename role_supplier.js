@@ -9,7 +9,7 @@ var roleSupplier = {
 
     settings: {
         bodyPattern: [CARRY, CARRY, MOVE],
-        assistHaulersAtContainerPercent: 0.5 // help out haulers at >this capacity
+        assistHaulersAtContainerPercent: 1.1 // help out haulers at >this capacity
     },
 
     create: function (spawn, {serviceRoom = spawn.room.name, patternRepetitionLimit = 3}) { // 6 or 8 parts will saturate a source
@@ -84,6 +84,10 @@ var roleSupplier = {
     },
 
     run: function (creep) {
+        // move to service room
+        if (creep.conditionalMoveToServiceRoom() != OK) {
+            return ERR_NOT_IN_SERVICE_ROOM;
+        }
         // get new task if this one is invalid
         if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
             this.newTask(creep);
@@ -92,7 +96,7 @@ var roleSupplier = {
             // execute task
             this.executeTask(creep);
         } else {
-            // creep.log("could not receive task!");
+            creep.moveToVisual(creep.room.spawns[0]); // TODO: implement idle flag position
         }
     }
 };

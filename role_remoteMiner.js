@@ -74,7 +74,7 @@ var roleRemoteMiner = {
             });
             if (closestContainer) {
                 if (closestContainer.hits == closestContainer.hitsMax) { // miners repair their own containers
-                    let res = creep.transfer(closestContainer, RESOURCE_ENERGY);
+                    let res = creep.deposit(closestContainer, RESOURCE_ENERGY);
                     if (res == ERR_NOT_IN_RANGE) {
                         creep.moveToVisual(closestContainer);
                     }
