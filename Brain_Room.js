@@ -27,6 +27,7 @@ var RoomBrain = class {
             'pickup',
             'repair',
             'build',
+            'buildRoads',
             'fortify',
             'upgrade'
         ];
@@ -37,6 +38,7 @@ var RoomBrain = class {
             'supply': 'supply',
             'repair': 'repair',
             'build': 'build',
+            'buildRoads': 'build',
             'fortify': 'fortify',
             'upgrade': 'upgrade'
         };
@@ -47,6 +49,7 @@ var RoomBrain = class {
             'supply': ['supplier', 'hauler'],
             'repair': ['worker', 'miner'],
             'build': ['worker', 'miner'],
+            'buildRoads': ['worker'],
             'fortify': ['worker'],
             'upgrade': ['worker']
         };
@@ -57,6 +60,7 @@ var RoomBrain = class {
             'supply': creep => creep.getActiveBodyparts(CARRY) > 0,
             'repair': creep => creep.getActiveBodyparts(WORK) > 0,
             'build': creep => creep.getActiveBodyparts(WORK) > 0,
+            'buildRoads': creep => creep.getActiveBodyparts(WORK) > 0,
             'fortify': creep => creep.getActiveBodyparts(WORK) > 0,
             'upgrade': creep => creep.getActiveBodyparts(WORK) > 0
         }
@@ -109,15 +113,21 @@ var RoomBrain = class {
                 case 'repair': // Repair structures
                     prioritizedTargets['repair'] = this.room.find(FIND_STRUCTURES, {
                         filter: (s) => s.hits < s.hitsMax &&
-                                       s.isTargeted('repairer') == false &&
                                        s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
                                        s.structureType != STRUCTURE_WALL && // walls are fortify tasks
                                        s.structureType != STRUCTURE_RAMPART &&
-                                       (s.structureType != STRUCTURE_ROAD || s.hits < 0.2 * s.hitsMax) // roads repaired as you go
+                                       (s.structureType != STRUCTURE_ROAD || s.hits < 0.2 * s.hitsMax)
                     });
                     break;
                 case 'build': // Build construction jobs
-                    prioritizedTargets['build'] = this.room.find(FIND_CONSTRUCTION_SITES);
+                    prioritizedTargets['build'] = this.room.find(FIND_CONSTRUCTION_SITES, {
+                        filter: c => c.structureType != STRUCTURE_ROAD
+                    });
+                    break;
+                case 'buildRoads': // Build construction jobs
+                    prioritizedTargets['buildRoads'] = this.room.find(FIND_CONSTRUCTION_SITES, {
+                        filter: c => c.structureType == STRUCTURE_ROAD
+                    });
                     break;
                 case 'fortify': // Fortify walls
                     var fortifyLevel = this.settings.fortifyLevel; // global fortify level
@@ -161,15 +171,21 @@ var RoomBrain = class {
                 case 'repair': // Repair structures
                     targets = this.room.find(FIND_STRUCTURES, {
                         filter: (s) => s.hits < s.hitsMax &&
-                                       s.isTargeted('repairer') == false &&
                                        s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
                                        s.structureType != STRUCTURE_WALL && // walls are fortify tasks
                                        s.structureType != STRUCTURE_RAMPART &&
-                                       (s.structureType != STRUCTURE_ROAD || s.hits < 0.2 * s.hitsMax) // roads repaired as you go
+                                       (s.structureType != STRUCTURE_ROAD || s.hits < 0.2 * s.hitsMax)
                     });
                     break;
                 case 'build': // Build construction jobs
-                    targets = this.room.find(FIND_CONSTRUCTION_SITES);
+                    targets = this.room.find(FIND_CONSTRUCTION_SITES, {
+                        filter: c => c.structureType != STRUCTURE_ROAD
+                    });
+                    break;
+                case 'buildRoads': // Build construction jobs
+                    targets = this.room.find(FIND_CONSTRUCTION_SITES, {
+                        filter: c => c.structureType == STRUCTURE_ROAD
+                    });
                     break;
                 case 'fortify': // Fortify walls
                     var fortifyLevel = this.settings.fortifyLevel; // global fortify level
@@ -210,7 +226,9 @@ var RoomBrain = class {
             this.log("assigned " + task.name + " for " + target);
             return OK;
         } else {
-            creep.log("could not get assignment from room brain!");
+            if (creep.memory.role != 'supplier') { // suppliers can shut the fuck up
+                creep.log("could not get assignment from room brain!");
+            }
         }
     }
 
