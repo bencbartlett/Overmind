@@ -12,7 +12,7 @@ var roleSupplier = {
         assistHaulersAtContainerPercent: 1.1 // help out haulers at >this capacity
     },
 
-    create: function (spawn, {serviceRoom = spawn.room.name, patternRepetitionLimit = 3}) { // 6 or 8 parts will saturate a source
+    create: function (spawn, {workRoom = spawn.room.name, patternRepetitionLimit = 3}) { // 6 or 8 parts will saturate a source
         /** @param {StructureSpawn} spawn **/
         var bodyPattern = this.settings.bodyPattern; // body pattern to be repeated some number of times
         // calculate the most number of pattern repetitions you can use with available energy
@@ -27,24 +27,22 @@ var roleSupplier = {
         // body.push(WORK);
         // body.push(MOVE);
         return spawn.createCreep(body, spawn.creepName('supplier'), {
-            role: 'supplier', working: false, task: null, data: {
-                origin: spawn.room.name, serviceRoom: serviceRoom
+            role: 'supplier', workRoom: workRoom, working: false, task: null, data: {
+                origin: spawn.room.name
             }
         });
     },
 
     requestTask: function (creep) {
         creep.memory.working = true;
-        var serviceRoom = Game.rooms[creep.memory.data.serviceRoom];
-        var task = serviceRoom.brain.assignTask(creep);
+        var task = creep.workRoom.brain.assignTask(creep);
         return task;
     },
 
     recharge: function (creep) {
         creep.memory.working = false;
         var recharge = tasks('recharge');
-        var serviceRoom = Game.rooms[creep.memory.data.serviceRoom];
-        var containers = serviceRoom.find(FIND_STRUCTURES, {
+        var containers = creep.workRoom.find(FIND_STRUCTURES, {
             filter: (s) => s.structureType == STRUCTURE_CONTAINER &&
                            s.store[RESOURCE_ENERGY] > this.settings.assistHaulersAtContainerPercent * s.storeCapacity
         });
@@ -56,13 +54,12 @@ var roleSupplier = {
             target = targets[targets.length - 1]; // pick the fullest container
         }
         if (!target) {
-            target = Game.rooms[creep.memory.data.serviceRoom].storage;
+            target = creep.workRoom.storage;
         }
         if (target) {
             creep.assign(recharge, target);
         } else {
             creep.say("Idle");
-            //creep.log("no storage or sufficiently full containers in " + creep.memory.data.serviceRoom);
         }
     },
 

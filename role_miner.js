@@ -10,7 +10,7 @@ var roleMiner = {
         allowBuild: true
     },
 
-    create: function (spawn, assignment, {serviceRoom = spawn.room.name, patternRepetitionLimit = 3}) {
+    create: function (spawn, assignment, {workRoom = spawn.room.name, patternRepetitionLimit = 3}) {
         /** @param {StructureSpawn} spawn **/
         var bodyPattern = this.settings.bodyPattern; // body pattern to be repeated some number of times
         // calculate the most number of pattern repetitions you can use with available energy
@@ -24,8 +24,8 @@ var roleMiner = {
         }
         // create the creep and initialize memory
         return spawn.createCreep(body, spawn.creepName('miner'), {
-            role: 'miner', working: false, task: null, assignment: assignment, data: {
-                origin: spawn.room.name, serviceRoom: serviceRoom, replaceNow: false, replaceAt: null
+            role: 'miner', workRoom: workRoom, working: false, task: null, assignment: assignment, data: {
+                origin: spawn.room.name, replaceNow: false, replaceAt: null
             }
         });
     },
