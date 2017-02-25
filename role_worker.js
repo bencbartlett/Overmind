@@ -10,7 +10,7 @@ var roleWorker = {
         targetFullestContainer: false // if true, target fullest container instead of the closest, ignore storage
     },
 
-    create: function (spawn, {serviceRoom = spawn.room.name, patternRepetitionLimit = Infinity}) {
+    create: function (spawn, {workRoom = spawn.room.name, patternRepetitionLimit = Infinity}) {
         /** @param {StructureSpawn} spawn **/
         var bodyPattern = this.settings.bodyPattern; // body pattern to be repeated some number of times
         // calculate the most number of pattern repetitions you can use with available energy
@@ -24,20 +24,19 @@ var roleWorker = {
         }
         // create the creep and initialize memory
         return spawn.createCreep(body, spawn.creepName('worker'), {
-            role: 'worker', working: false, task: null, data: {
-                origin: spawn.room.name, serviceRoom: serviceRoom
+            role: 'worker', workRoom: workRoom, working: false, task: null, data: {
+                origin: spawn.room.name
             }
         });
     },
 
     requestTask: function (creep) {
-        var serviceRoom = Game.rooms[creep.memory.data.serviceRoom];
-        if (creep.room != serviceRoom) { // TODO: move to run()
-            creep.moveToVisual(serviceRoom.controller);
+        if (creep.room != creep.workRoom) { // TODO: move to run()
+            creep.moveToVisual(creep.workRoom.controller);
             return ERR_NOT_IN_SERVICE_ROOM;
         }
         creep.memory.working = true;
-        var response = serviceRoom.brain.assignTask(creep);
+        var response = creep.workRoom.brain.assignTask(creep);
         // creep.log(response);
         return response;
     },
@@ -45,7 +44,6 @@ var roleWorker = {
     recharge: function (creep) {
         // try to find closest container or storage
         creep.memory.working = false;
-        //var serviceRoom = Game.rooms[creep.memory.data.serviceRoom];
         var target;
         if (this.settings.targetFullestContainer) {
             target = creep.room.fullestContainer();

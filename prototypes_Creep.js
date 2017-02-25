@@ -34,6 +34,18 @@ Object.defineProperty(Creep.prototype, 'task', {
     }
 });
 
+Object.defineProperty(Creep.prototype, 'workRoom', { // retrieve the room object (not the name) of the assigned room
+    get: function () {
+        if (this.memory.data.serviceRoom) {
+            this.memory.workRoom = this.memory.data.serviceRoom; // TODO: remove after migration
+        }
+        return Game.rooms[this.memory.workRoom];
+    },
+    set: function (newWorkRoom) {
+        this.memory.workRoom = newWorkRoom.name
+    }
+});
+
 Creep.prototype.calculatePathETA = function (startPoint, endPoint, ignoreCargo = false) {
     var path = startPoint.findPathTo(endPoint);
     var massiveParts = [WORK, ATTACK, RANGED_ATTACK, HEAL, TOUGH];
@@ -68,10 +80,9 @@ Creep.prototype.calculatePathETA = function (startPoint, endPoint, ignoreCargo =
     return ETA;
 };
 
-Creep.prototype.conditionalMoveToServiceRoom = function () { // move to serviceRoom if not already there
-    var serviceRoom = Game.rooms[this.memory.data.serviceRoom];
-    if (this.room != serviceRoom) {
-        this.moveToVisual(serviceRoom.controller);
+Creep.prototype.conditionalMoveToServiceRoom = function () { // move to workRoom if not already there
+    if (this.room != this.workRoom) {
+        this.moveToVisual(this.workRoom.controller);
         return ERR_NOT_IN_SERVICE_ROOM;
     } else {
         return OK;
@@ -120,7 +131,7 @@ Creep.prototype.donate = function (roomName) {
     // Donates a creep to a different room. Creep will move to room until it is in the room, then it will
     // continue to work as normal. Does not work with all creep types. Must have vision of room.
     if (Game.rooms[roomName]) {
-        this.memory.data.serviceRoom = roomName;
+        this.memory.workRoom = roomName;
         return OK;
     } else {
         this.log('I could not be donated: ' + roomName + ' is ' + Game.rooms[roomName]);

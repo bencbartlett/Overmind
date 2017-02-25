@@ -32,7 +32,6 @@ var RoomBrain = class {
         ];
         // Tasks to execute for each prioritized task
         this.taskToExecute = {
-            // 'migrate': 'migrate',
             'pickup': 'pickup',
             'supplyTowers': 'supply',
             'supply': 'supply',
@@ -43,7 +42,6 @@ var RoomBrain = class {
         };
         // Task role conditions
         this.assignmentRoles = {
-            // 'migrate': ['miner', 'worker', 'supplier'], // haulers shouldn't be able to migrate
             'pickup': ['supplier', 'hauler'],
             'supplyTowers': ['supplier', 'hauler'],
             'supply': ['supplier', 'hauler'],
@@ -54,7 +52,6 @@ var RoomBrain = class {
         };
         // Task assignment conditions
         this.assignmentConditions = {
-            // 'migrate': creep => creep.room.name != creep.memory.data.serviceRoom,
             'pickup': creep => creep.getActiveBodyparts(CARRY) > 0 && creep.carry.energy < creep.carryCapacity,
             'supplyTowers': creep => creep.getActiveBodyparts(CARRY) > 0,
             'supply': creep => creep.getActiveBodyparts(CARRY) > 0,
@@ -278,7 +275,7 @@ var RoomBrain = class {
                     this.borrowSpawn();
                 }
                 if (this.spawn) {
-                    let newMiner = minerBehavior.create(this.spawn, source.id, {serviceRoom: this.room.name});
+                    let newMiner = minerBehavior.create(this.spawn, source.id, {workRoom: this.room.name});
                     return newMiner;
                 }
             }
@@ -305,7 +302,7 @@ var RoomBrain = class {
                     }
                     if (this.spawn) {
                         let newHauler = haulerBehavior.create(this.spawn, source.id, {
-                            serviceRoom: this.room.name,
+                            workRoom: this.room.name,
                             patternRepetitionLimit: this.settings.haulerPatternRepetitionLimit
                         });
                         return newHauler;
@@ -320,7 +317,7 @@ var RoomBrain = class {
         // Handle suppliers
         var numSuppliers = _.filter(Game.creeps,
                                     creep => creep.memory.role == 'supplier' &&
-                                             creep.memory.data.serviceRoom == this.room.name).length;
+                                             creep.workRoom == this.room).length;
         var energySinks = this.room.find(FIND_STRUCTURES, {
             filter: (structure) => (structure.structureType == STRUCTURE_TOWER ||
                                     structure.structureType == STRUCTURE_EXTENSION ||
@@ -338,7 +335,7 @@ var RoomBrain = class {
             }
             if (this.spawn) {
                 var newSupplier = supplierBehavior.create(this.spawn, {
-                    serviceRoom: this.room.name,
+                    workRoom: this.room.name,
                     patternRepetitionLimit: this.settings.supplierPatternRepetitionLimit
                 });
                 return newSupplier;
@@ -350,7 +347,7 @@ var RoomBrain = class {
     handleWorkers() {
         var numWorkers = _.filter(Game.creeps,
                                   creep => creep.memory.role == 'worker' &&
-                                           creep.memory.data.serviceRoom == this.room.name).length;
+                                           creep.workRoom == this.room).length;
         var containers = this.room.find(FIND_STRUCTURES, {
             filter: structure => (structure.structureType == STRUCTURE_CONTAINER ||
                                   structure.structureType == STRUCTURE_STORAGE)
@@ -365,7 +362,7 @@ var RoomBrain = class {
             }
             if (this.spawn) {
                 var newWorker = workerBehavior.create(this.spawn, {
-                    serviceRoom: this.room.name,
+                    workRoom: this.room.name,
                     patternRepetitionLimit: this.settings.workerPatternRepetitionLimit
                 });
                 // console.log(newWorker);

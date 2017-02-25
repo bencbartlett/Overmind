@@ -10,7 +10,7 @@ var roleHauler = {
         bodyPattern: [CARRY, CARRY, MOVE]
     },
 
-    create: function (spawn, assignment, {serviceRoom = spawn.room.name, patternRepetitionLimit = 5}) {
+    create: function (spawn, assignment, {workRoom = spawn.room.name, patternRepetitionLimit = 5}) {
         /** @param {StructureSpawn} spawn **/
         var bodyPattern = this.settings.bodyPattern; // body pattern to be repeated some number of times
         // calculate the most number of pattern repetitions you can use with available energy
@@ -25,8 +25,8 @@ var roleHauler = {
         body.push(WORK);
         body.push(MOVE);
         return spawn.createCreep(body, spawn.creepName('hauler'), {
-            role: 'hauler', working: false, task: null, assignment: assignment, data: {
-                origin: spawn.room.name, serviceRoom: serviceRoom
+            role: 'hauler', workRoom: workRoom, working: false, task: null, assignment: assignment, data: {
+                origin: spawn.room.name
             }
         });
     },
@@ -48,11 +48,11 @@ var roleHauler = {
         creep.memory.working = true;
         var deposit = tasks('deposit');
         deposit.data.quiet = true;
-        var target = Game.rooms[creep.memory.data.serviceRoom].storage;
+        var target = creep.workRoom.storage;
         if (target) {
             creep.assign(deposit, target);
         } else {
-            creep.log("no storage in " + creep.memory.data.serviceRoom);
+            creep.log("no storage in " + creep.workRoom.name);
         }
     },
 
