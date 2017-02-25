@@ -56,6 +56,13 @@ Object.defineProperty(Room.prototype, 'hostiles', {
     }
 });
 
+Object.defineProperty(Room.prototype, 'flags', {
+    get () {
+        return _.filter(Game.flags, flag => flag.memory.room && flag.memory.room == this.name);
+    }
+});
+
+
 //noinspection JSUnusedGlobalSymbols
 Room.prototype.totalSourceCapacity = function () {
     if (this.memory.miningCapacity != undefined) {

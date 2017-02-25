@@ -8,9 +8,6 @@ var RoomBrain = class {
         this.name = roomName;
         this.room = Game.rooms[roomName];
         this.spawn = this.room.find(FIND_MY_SPAWNS)[0];
-        // Brain flag - purple/purple denotes owned room, purple/grey denotes reserved room
-        this.flag = this.room.controller.pos.lookFor(LOOK_FLAGS)[0];
-        this.flags = _.filter(Game.flags, flag => flag.memory.room && flag.memory.room == this.name);
         // Settings shared across all rooms
         this.settings = {
             fortifyLevel: 100000, // fortify all walls/ramparts to this level
@@ -24,8 +21,8 @@ var RoomBrain = class {
         // Settings to override this.settings for a particular room
         this.override = {
             workersPerRoom: { // custom number of workers per room
-                "W18N88": 3,
-                "W19N88": 1,
+                // "W18N88": 3,
+                // "W19N88": 1,
             },
             fortifyLevel: {"W18N88": 1000000}, // fortify all walls/ramparts to these levels in these rooms
         };
@@ -78,6 +75,13 @@ var RoomBrain = class {
 
     log(message) {
         console.log(this.name + '_Brain: "' + message + '"');
+    }
+
+    get memory() {
+        if (!Memory.roomBrain[this.name]) {
+            Memory.roomBrain[this.name] = {};
+        }
+        return Memory.roomBrain[this.name];
     }
 
     peekSpawn(roomName = "W19N88") {
@@ -353,7 +357,7 @@ var RoomBrain = class {
                                     structure.structureType == STRUCTURE_SPAWN) &&
                                    structure.energy < structure.energyCapacity
         });
-        var supplierLimit = 1;
+        var supplierLimit = 0;
         if (this.room.storage) {
             supplierLimit += 2;
         }
@@ -400,12 +404,18 @@ var RoomBrain = class {
     }
 
     handleRemoteMiners() {
-        var sourceFlags = _.filter(this.flags, flag => flag.color == COLOR_YELLOW);
+        var sourceFlags = _.filter(this.room.flags, flag => flag.color == COLOR_YELLOW);
         for (let sourceFlag of sourceFlags) {
             let assignedMiners = _.filter(sourceFlag.assignedCreeps,
                                           creep => creep.memory.role == 'miner' &&
                                                    creep.ticksToLive > creep.memory.data.replaceAt);
-            if (assignedMiners.length < this.settings.minersPerSource) {
+            let numConstructionSites = 0;
+            if (sourceFlag.room) {
+                numConstructionSites = sourceFlag.room.find(FIND_MY_CONSTRUCTION_SITES).length;
+            }
+            // add additional miners during initial construction phase
+            let remoteMinersPerSource = this.settings.minersPerSource * (1 + Math.floor(numConstructionSites / 10));
+            if (assignedMiners.length < remoteMinersPerSource) {
                 var minerBehavior = require('role_miner');
                 let newMiner = minerBehavior.create(this.spawn, sourceFlag.ref, {
                     remote: true,
@@ -419,7 +429,7 @@ var RoomBrain = class {
 
     handleRemoteHaulers() {
         if (this.room.storage != undefined) { // haulers are only built once a room has storage
-            var sourceFlags = _.filter(this.flags, flag => flag.color == COLOR_YELLOW);
+            var sourceFlags = _.filter(this.room.flags, flag => flag.color == COLOR_YELLOW);
             for (let sourceFlag of sourceFlags) {
                 let assignedHaulers = _.filter(sourceFlag.assignedCreeps,
                                                creep => creep.memory.role == 'hauler');
@@ -438,8 +448,8 @@ var RoomBrain = class {
     }
 
     handleScouts() {
-        var scoutFlags = _.filter(this.flags, flag => flag.color == COLOR_GREY &&
-                                                      (flag.room == undefined || !flag.room.my));
+        var scoutFlags = _.filter(this.room.flags, flag => flag.color == COLOR_GREY &&
+                                                           (flag.room == undefined || !flag.room.my));
         for (let scoutFlag of scoutFlags) {
             let assignedScouts = _.filter(scoutFlag.assignedCreeps,
                                           creep => creep.memory.role == 'scout' &&
@@ -454,7 +464,7 @@ var RoomBrain = class {
     }
 
     handleReservers() {
-        var reserverFlags = _.filter(this.flags, flag => flag.color == COLOR_PURPLE);
+        var reserverFlags = _.filter(this.room.flags, flag => flag.color == COLOR_PURPLE);
         for (let reserverFlag of reserverFlags) {
             let assignedReservers = _.filter(reserverFlag.assignedCreeps,
                                              creep => creep.memory.role == 'reserver' &&
@@ -474,11 +484,11 @@ var RoomBrain = class {
     }
 
     handleGuards() {
-        var guardFlags = _.filter(this.flags, flag => flag.color == COLOR_RED);
+        var guardFlags = _.filter(this.room.flags, flag => flag.color == COLOR_RED);
         for (let guardFlag of guardFlags) {
             let assignedGuards = _.filter(guardFlag.assignedCreeps,
-                                             creep => creep.memory.role == 'guard' &&
-                                                      creep.ticksToLive > creep.memory.data.replaceAt);
+                                          creep => creep.memory.role == 'guard' &&
+                                                   creep.ticksToLive > creep.memory.data.replaceAt);
             if (assignedGuards.length < 1) {
                 var guardBehavior = require('role_guard');
                 let newGuard = guardBehavior.create(this.spawn, guardFlag.ref);
