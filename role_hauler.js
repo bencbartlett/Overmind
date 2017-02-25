@@ -10,7 +10,7 @@ var roleHauler = {
         bodyPattern: [CARRY, CARRY, MOVE]
     },
 
-    create: function (spawn, assignment, {workRoom = spawn.room.name, patternRepetitionLimit = 5}) {
+    create: function (spawn, assignment, {workRoom = spawn.room.name, patternRepetitionLimit = 5, remote = false}) {
         /** @param {StructureSpawn} spawn **/
         var bodyPattern = this.settings.bodyPattern; // body pattern to be repeated some number of times
         // calculate the most number of pattern repetitions you can use with available energy
@@ -25,9 +25,8 @@ var roleHauler = {
         body.push(WORK);
         body.push(MOVE);
         return spawn.createCreep(body, spawn.creepName('hauler'), {
-            role: 'hauler', workRoom: workRoom, working: false, task: null, assignment: assignment, data: {
-                origin: spawn.room.name
-            }
+            role: 'hauler', workRoom: workRoom, task: null, assignment: assignment, remote: remote, working: false,
+            data: {origin: spawn.room.name}
         });
     },
 
@@ -35,7 +34,13 @@ var roleHauler = {
         creep.memory.working = false;
         var withdraw = tasks('recharge');
         withdraw.data.quiet = true;
-        var nearbyContainers = Game.getObjectById(creep.memory.assignment).pos.findInRange(FIND_STRUCTURES, 2, {
+        var assignment;
+        if (!creep.memory.remote) {
+            assignment = Game.getObjectById(creep.memory.assignment);
+        } else {
+            assignment = Game.flags[creep.memory.assignment];
+        }
+        var nearbyContainers = assignment.pos.findInRange(FIND_STRUCTURES, 2, {
             filter: (s) => s.structureType == STRUCTURE_CONTAINER
         });
         // target fullest of nearby containers

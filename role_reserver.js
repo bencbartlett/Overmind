@@ -1,56 +1,45 @@
 // Reserver: reserves rooms targeted with a purple/grey flag or claims a room with purple/purple flag
+var tasks = require('tasks');
 
 var roleReserver = {
     /** @param {Creep} creep **/
     /** @param {StructureSpawn} spawn **/
     /** @param {Number} creepSizeLimit **/
 
-    create: function (spawn, creepSizeLimit = Infinity) {
-        var energy = spawn.room.energyCapacityAvailable;
-        var body;
-        if (energy >= 2 * 650) {
-            body = [CLAIM, CLAIM, MOVE, MOVE];
-        } else if (energy > 650) {
-            body = [CLAIM, MOVE];
-        } else {
-            console.log("Not enough energy to spawn a reserver of size 1!");
-            return ERR_NOT_ENOUGH_EXTENSIONS;
+    settings: {
+        bodyPattern: [CLAIM, MOVE]
+    },
+
+    create: function (spawn, assignment, patternRepetitionLimit = 2) {
+        var bodyPattern = this.settings.bodyPattern; // body pattern to be repeated some number of times
+        // calculate the most number of pattern repetitions you can use with available energy
+        var numRepeats = Math.floor(spawn.room.energyCapacityAvailable / spawn.cost(bodyPattern));
+        // make sure the creep is not too big (more than 50 parts)
+        numRepeats = Math.min(Math.floor(50 / bodyPattern.length), numRepeats, patternRepetitionLimit);
+        // create the body
+        var body = [];
+        for (let i = 0; i < numRepeats; i++) {
+            body = body.concat(bodyPattern);
         }
+        // create the creep and initialize memory
         return spawn.createCreep(body, spawn.creepName('reserver'), {
-            role: 'reserver', origin: spawn.room.name, data: {}
+            role: 'reserver', task: null, assignment: assignment,
+            data: {origin: spawn.room.name, replaceAt: 0}
         });
     },
 
-    getAssignment: function (creep) {
-        var untargetedFlags = _.filter(Game.flags, (f) => f.color == COLOR_PURPLE &&
-                                                          f.isTargeted('reserver').length == 0);
-        if (untargetedFlags.length > 0) {
-            // new memory object: assignment. Assignment is like target but is never changed
-            creep.memory.assignment = untargetedFlags[0].name;
-            console.log(creep.name + " assigned to: " + untargetedFlags[0].name);
-        } else {
-            console.log(creep.name + " could not receive an assignment.");
-        }
-    },
-
     run: function (creep) {
-        // Get an assignment if you don't have one already
-        if (!creep.memory.assignment) {
-            this.getAssignment(creep);
+        var target = Game.flags[creep.memory.assignment];
+        if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
+            creep.task = null;
+            task = tasks('reserve');
+            creep.assign(task, target.room.controller);
         }
-        var assignedFlag = Game.flags[creep.memory.assignment]; // This is a flag, not an ID!
-        if (!creep.isInRoom(assignedFlag.pos.roomName)) {
-            creep.moveToVisual(assignedFlag.pos, 'purple');
-        } else {
-            var response;
-            if (assignedFlag.color == COLOR_PURPLE && assignedFlag.secondaryColor == COLOR_PURPLE) {
-                response = creep.claimController(assignedFlag.room.controller);
-            } else {
-                response = creep.reserveController(assignedFlag.room.controller);
-            }
-            if (response == ERR_NOT_IN_RANGE) {
-                creep.moveToVisual(assignedFlag.room.controller, 'purple');
-            }
+        if (creep.pos.inRangeTo(target.pos, 1) && creep.memory.data.replaceAt == 0) {
+            creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive) + 25;
+        }
+        if (creep.task) {
+            creep.task.step();
         }
     }
 };

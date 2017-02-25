@@ -46,7 +46,17 @@ Object.defineProperty(Creep.prototype, 'workRoom', { // retrieve the room object
         return Game.rooms[this.memory.workRoom];
     },
     set: function (newWorkRoom) {
-        this.memory.workRoom = newWorkRoom.name
+        this.memory.workRoom = newWorkRoom.name;
+    }
+});
+
+Object.defineProperty(Creep.prototype, 'lifetime', { // retrieve the room object (not the name) of the assigned room
+    get: function () {
+        if (_.map(this.body, part => part.type).includes(CLAIM)) {
+            return 500;
+        } else {
+            return 1500;
+        }
     }
 });
 
@@ -84,7 +94,7 @@ Creep.prototype.calculatePathETA = function (startPoint, endPoint, ignoreCargo =
     return ETA;
 };
 
-Creep.prototype.conditionalMoveToServiceRoom = function () { // move to workRoom if not already there
+Creep.prototype.conditionalMoveToWorkRoom = function () { // move to workRoom if not already there
     if (this.room != this.workRoom) {
         this.moveToVisual(this.workRoom.controller);
         return ERR_NOT_IN_SERVICE_ROOM;
@@ -107,14 +117,6 @@ Creep.prototype.moveToVisual = function (target, color = '#fff') {
     } else {
         return this.moveTo(target);
     }
-};
-
-Creep.prototype.isInRoom = function (roomName) {
-    return (this.room.name == roomName);
-};
-
-Creep.prototype.myRoom = function () {
-    return Game.rooms[this.memory.origin];
 };
 
 Creep.prototype.repairNearbyDamagedRoad = function () {
