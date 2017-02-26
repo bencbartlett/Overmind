@@ -1,5 +1,4 @@
 var roomBrain = require('Brain_Room');
-// var brain = new roomBrain(this.name);
 
 Object.defineProperty(Room.prototype, 'brain', {
     get () {
@@ -9,14 +8,6 @@ Object.defineProperty(Room.prototype, 'brain', {
         console.log("cannot set Room.brain for " + this.name);
     }
 });
-
-// Room.prototype.adjacentTo = function (otherRoom) {
-//
-// };
-//
-// Room.prototype.listNeighbors = function() {
-//     var exits = this.find(FIND_EXIT);
-// };
 
 Object.defineProperty(Room.prototype, 'spawns', {
     get () {
@@ -61,7 +52,6 @@ Object.defineProperty(Room.prototype, 'flags', {
         return _.filter(Game.flags, flag => flag.memory.room && flag.memory.room == this.name);
     }
 });
-
 
 //noinspection JSUnusedGlobalSymbols
 Room.prototype.totalSourceCapacity = function () {
@@ -179,4 +169,28 @@ Room.prototype.convertAllCreeps = function (convertFrom, convertTo) {
         // Clear target
         creep.memory.target = undefined;
     }
+};
+
+// Run function for room. Executed before roomBrain.run.
+Room.prototype.run = function () {
+    // Animate each tower: see prototypes_StructureTower
+    var towers = this.find(FIND_MY_STRUCTURES, {filter: (s) => s.structureType == STRUCTURE_TOWER}); // TODO: this is costly
+    for (let tower of towers) {
+        tower.run();
+    }
+    // Animate each link: transfer to storage when it is >75% full if storage link is empty and cooldown is over
+    var links = this.find(FIND_MY_STRUCTURES, {filter: s => s.structureType == STRUCTURE_LINK});
+    if (links.length > 0) {
+        var storageLink = this.storage.links[0];
+        for (let link of links) {
+            if (link != storageLink) {
+                if (link.energy > 0.75 * link.energyCapacity && link.cooldown == 0 && storageLink.energy == 0) {
+                    link.transferEnergy(storageLink);
+                }
+            }
+        }
+    }
+    // Draw all visuals
+    var visuals = require('visuals');
+    visuals.drawAll(this);
 };

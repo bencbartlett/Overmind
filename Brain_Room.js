@@ -14,6 +14,7 @@ var RoomBrain = class {
             workerPatternRepetitionLimit: 5, // maximum number of body repetitions for workers
             supplierPatternRepetitionLimit: 2, // maximum number of body repetitions for suppliers
             haulerPatternRepetitionLimit: 7, // maximum number of body repetitions for haulers
+            remoteHaulerPatternRepetitionLimit: 8, // maximum number of body repetitions for haulers
             minersPerSource: 1, // number of miners to assign to a source
             storageBuffer: 10000, // workers can't withdraw from storage until this level
             reserveBuffer: 4000 // reserve rooms to this amount
@@ -70,7 +71,7 @@ var RoomBrain = class {
             'buildRoads': creep => creep.getActiveBodyparts(WORK) > 0,
             'fortify': creep => creep.getActiveBodyparts(WORK) > 0,
             'upgrade': creep => creep.getActiveBodyparts(WORK) > 0
-        }
+        };
     }
 
     log(message) {
@@ -112,13 +113,13 @@ var RoomBrain = class {
                     prioritizedTargets['pickup'] = this.room.find(FIND_DROPPED_ENERGY);
                     break;
                 case 'supplyTowers': // Find towers in need of energy
-                    prioritizedTargets['supplyTowers'] = this.room.find(FIND_STRUCTURES, {
+                    prioritizedTargets['supplyTowers'] = this.room.find(FIND_MY_STRUCTURES, {
                         filter: (structure) => structure.structureType == STRUCTURE_TOWER &&
                                                structure.energy < structure.energyCapacity
                     });
                     break;
                 case 'supply': // Find structures in need of energy
-                    prioritizedTargets['supply'] = this.room.find(FIND_STRUCTURES, {
+                    prioritizedTargets['supply'] = this.room.find(FIND_MY_STRUCTURES, {
                         filter: (structure) => (structure.structureType == STRUCTURE_EXTENSION ||
                                                 structure.structureType == STRUCTURE_SPAWN) &&
                                                structure.energy < structure.energyCapacity
@@ -170,13 +171,13 @@ var RoomBrain = class {
                     targets = this.room.find(FIND_DROPPED_ENERGY);
                     break;
                 case 'supplyTowers': // Find towers in need of energy
-                    targets = this.room.find(FIND_STRUCTURES, {
+                    targets = this.room.find(FIND_MY_STRUCTURES, {
                         filter: (structure) => structure.structureType == STRUCTURE_TOWER &&
                                                structure.energy < structure.energyCapacity
                     });
                     break;
                 case 'supply': // Find structures in need of energy
-                    targets = this.room.find(FIND_STRUCTURES, {
+                    targets = this.room.find(FIND_MY_STRUCTURES, {
                         filter: (structure) => (structure.structureType == STRUCTURE_EXTENSION ||
                                                 structure.structureType == STRUCTURE_SPAWN) &&
                                                structure.energy < structure.energyCapacity
@@ -232,10 +233,9 @@ var RoomBrain = class {
                                        task => this.assignmentRoles[task].includes(creep.memory.role) &&
                                                this.assignmentConditions[task](creep));
         var [task, targets] = this.getMostUrgentTask(applicableTasks);
-        // var roomTasks = this.room.tasks;
         // Assign the task
         if (targets) {
-            var target = creep.pos.findClosestByRange(targets);
+            var target = creep.pos.findClosestByRange(targets); // bug: some tasks aren't assigned for findClosestByPath
             creep.assign(task, target);
             this.log("assigned " + task.name + " for " + target);
             return OK;
@@ -272,19 +272,30 @@ var RoomBrain = class {
         }
     }
 
-    calculateHaulerRequirements(target) {
+    calculateHaulerRequirements(target, remote = false) {
         // Calculate needed numbers of haulers for a source
         var spawn = this.spawn;
         if (spawn == undefined) {
             spawn = this.peekSpawn();
         }
         if (spawn && this.room.storage != undefined) {
+            if (target.linked && this.room.storage.linked) { // 0 for linked sources
+                return 0;
+            }
             var energy = spawn.room.energyCapacityAvailable;
             var haulerBodyPattern = require('role_hauler').settings.bodyPattern;
-            var haulerSize = Math.min(Math.floor(energy / spawn.cost(haulerBodyPattern)),
+            var haulerSize;
+            var tripLength;
+            if (!remote) {
+                haulerSize = Math.min(Math.floor(energy / spawn.cost(haulerBodyPattern)),
                                       this.settings.haulerPatternRepetitionLimit);
+                tripLength = 2 * target.pathLengthToStorage;
+            } else {
+                haulerSize = Math.min(Math.floor(energy / spawn.cost(haulerBodyPattern)),
+                                      this.settings.remoteHaulerPatternRepetitionLimit);
+                tripLength = 2 * target.pathLengthToAssignedRoomStorage
+            }
             var carryParts = haulerSize * _.filter(haulerBodyPattern, part => part == CARRY).length;
-            var tripLength = 2 * this.room.storage.pos.findPathTo(target).length; // TODO: this is expensive
             var energyPerTrip = 50 * carryParts;
             var energyPerTick = energyPerTrip / tripLength;
             var sourceEnergyPerTick = (3000 / 300);
@@ -318,16 +329,16 @@ var RoomBrain = class {
     }
 
     handleHaulers() {
-        var sources = this.room.find(FIND_SOURCES); // don't use ACTIVE_SOURCES; need to always be handled
-        for (let source of sources) {
-            // Check enough haulers are supplied if applicable
-            if (this.room.storage != undefined) { // haulers are only built once a room has storage
-                // Check enough haulers are supplied
+        // Check enough haulers are supplied
+        if (this.room.storage != undefined) { // haulers are only built once a room has storage
+            // find all unlinked sources
+            var sources = this.room.find(FIND_SOURCES, {
+                filter: source => source.linked == false || this.room.storage.linked == false
+            });
+            for (let source of sources) {
+                // Check enough haulers are supplied if applicable
                 let assignedHaulers = _.filter(source.assignedCreeps,
                                                creep => creep.memory.role == 'hauler');
-                // var assignedContainer = source.pos.findClosestByRange(FIND_STRUCTURES, {
-                //     filter: (s) => s.structureType == STRUCTURE_CONTAINER
-                // });
                 if (assignedHaulers.length < this.calculateHaulerRequirements(source)) {
                     var haulerBehavior = require('role_hauler');
                     if (this.spawn == undefined) {
@@ -346,18 +357,36 @@ var RoomBrain = class {
         return OK;
     }
 
+    handleLinkers() {
+        // Check enough haulers are supplied
+        if (this.room.storage != undefined && this.room.storage.linked) { // linkers only for storage with links
+            // Check enough haulers are supplied if applicable
+            let assignedLinkers = _.filter(this.room.storage.assignedCreeps,
+                                           creep => creep.memory.role == 'linker');
+            if (assignedLinkers.length < 1) {
+                var linkerBehavior = require('role_linker');
+                let newLinker = linkerBehavior.create(this.spawn, this.room.storage.ref, {
+                    workRoom: this.room.name
+                });
+                return newLinker;
+            }
+        }
+        return OK;
+    }
+
     handleSuppliers() {
         // Handle suppliers
         var numSuppliers = _.filter(Game.creeps,
                                     creep => creep.memory.role == 'supplier' &&
-                                             creep.workRoom == this.room).length;
+                                             creep.workRoom == this.room &&
+                                             creep.ticksToLive > creep.memory.data.replaceAt).length;
         var energySinks = this.room.find(FIND_STRUCTURES, {
             filter: (structure) => (structure.structureType == STRUCTURE_TOWER ||
                                     structure.structureType == STRUCTURE_EXTENSION ||
                                     structure.structureType == STRUCTURE_SPAWN) &&
                                    structure.energy < structure.energyCapacity
         });
-        var supplierLimit = 0;
+        var supplierLimit = 1;
         if (this.room.storage) {
             supplierLimit += 2;
         }
@@ -433,14 +462,20 @@ var RoomBrain = class {
             for (let sourceFlag of sourceFlags) {
                 let assignedHaulers = _.filter(sourceFlag.assignedCreeps,
                                                creep => creep.memory.role == 'hauler');
-                if (assignedHaulers.length < this.calculateHaulerRequirements(sourceFlag)) {
+                // remote haulers should only be spawned for nearly complete (reserved) rooms
+                let numConstructionSites = 0;
+                if (sourceFlag.room) {
+                    numConstructionSites = sourceFlag.room.find(FIND_MY_CONSTRUCTION_SITES).length;
+                }
+                if (assignedHaulers.length < this.calculateHaulerRequirements(sourceFlag, true) &&
+                    numConstructionSites < 3) {
                     var haulerBehavior = require('role_hauler');
-                    let newMiner = haulerBehavior.create(this.spawn, sourceFlag.ref, {
+                    let newRemoteHauler = haulerBehavior.create(this.spawn, sourceFlag.ref, {
                         remote: true,
                         workRoom: this.room.name,
-                        patternRepetitionLimit: this.settings.haulerPatternRepetitionLimit
+                        patternRepetitionLimit: this.settings.remoteHaulerPatternRepetitionLimit
                     });
-                    return newMiner;
+                    return newRemoteHauler;
                 }
             }
         }
@@ -500,49 +535,76 @@ var RoomBrain = class {
 
     handleCreeps() {
         var handleResponse;
-        // Handle suppliers - this should almost always be at the top of the queue
-        handleResponse = this.handleSuppliers();
-        if (handleResponse != OK) {
-            return handleResponse;
-        }
-        // Handle miners
-        handleResponse = this.handleMiners();
-        if (handleResponse != OK) {
-            return handleResponse;
-        }
-        // Handle haulers
-        handleResponse = this.handleHaulers();
-        if (handleResponse != OK) {
-            return handleResponse;
-        }
-        // Handle workers
-        handleResponse = this.handleWorkers();
-        if (handleResponse != OK) {
-            return handleResponse;
+        var handlerPriorities = [
+            () => this.handleSuppliers(),
+            () => this.handleMiners(),
+            () => this.handleLinkers(),
+            () => this.handleHaulers(),
+            () => this.handleWorkers(),
+            () => this.handleScouts(),
+            () => this.handleReservers(),
+            () => this.handleRemoteMiners(),
+            () => this.handleRemoteHaulers(),
+            () => this.handleGuards()
+        ];
+        for (let handler of handlerPriorities) {
+            handleResponse = handler();
+            if (handleResponse != OK) {
+                return handleResponse;
+            }
         }
 
-        // TODO: remote haulers
 
-        // Handle scouts
-        handleResponse = this.handleScouts();
-        if (handleResponse != OK) {
-            return handleResponse;
-        }
-        // Handle remote miners
-        handleResponse = this.handleRemoteMiners();
-        if (handleResponse != OK) {
-            return handleResponse;
-        }
-        // Handle reservers
-        handleResponse = this.handleReservers();
-        if (handleResponse != OK) {
-            return handleResponse;
-        }
-        // Handle guards
-        handleResponse = this.handleGuards();
-        if (handleResponse != OK) {
-            return handleResponse;
-        }
+        // // Handle suppliers - this should almost always be at the top of the queue
+        // handleResponse = this.handleSuppliers();
+        // if (handleResponse != OK) {
+        //     return handleResponse;
+        // }
+        // // Handle miners
+        // handleResponse = this.handleMiners();
+        // if (handleResponse != OK) {
+        //     return handleResponse;
+        // }
+        // // Handle linkers
+        // handleResponse = this.handleLinkers();
+        // if (handleResponse != OK) {
+        //     return handleResponse;
+        // }
+        // // Handle haulers
+        // handleResponse = this.handleHaulers();
+        // if (handleResponse != OK) {
+        //     return handleResponse;
+        // }
+        // // Handle workers
+        // handleResponse = this.handleWorkers();
+        // if (handleResponse != OK) {
+        //     return handleResponse;
+        // }
+        // // Handle scouts
+        // handleResponse = this.handleScouts();
+        // if (handleResponse != OK) {
+        //     return handleResponse;
+        // }
+        // // Handle reservers
+        // handleResponse = this.handleReservers();
+        // if (handleResponse != OK) {
+        //     return handleResponse;
+        // }
+        // // Handle remote miners
+        // handleResponse = this.handleRemoteMiners();
+        // if (handleResponse != OK) {
+        //     return handleResponse;
+        // }
+        // // Handle remote haulers
+        // handleResponse = this.handleRemoteHaulers();
+        // if (handleResponse != OK) {
+        //     return handleResponse;
+        // }
+        // // Handle guards
+        // handleResponse = this.handleGuards();
+        // if (handleResponse != OK) {
+        //     return handleResponse;
+        // }
     }
 
     handleSafeMode() {
