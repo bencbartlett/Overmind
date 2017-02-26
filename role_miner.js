@@ -35,7 +35,7 @@ var roleMiner = {
         });
     },
 
-    buildContainer: function (creep, containerSite) {
+    buildSite: function (creep, containerSite) {
         var build = tasks('build');
         creep.assign(build, containerSite);
         return OK;
@@ -123,12 +123,12 @@ var roleMiner = {
                 constructionSites = creep.room.find(FIND_MY_CONSTRUCTION_SITES); // remote miners can build whatever
             } else {
                 constructionSites = creep.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 2, {
-                    filter: (s) => s.structureType == STRUCTURE_CONTAINER
+                    filter: (s) => s.structureType == STRUCTURE_CONTAINER || s.structureType == STRUCTURE_LINK
                 });
             }
             if (constructionSites.length > 0) {
                 // if building is allowed, check for nearby container sites
-                return this.buildContainer(creep, creep.pos.findClosestByRange(constructionSites));
+                return this.buildSite(creep, creep.pos.findClosestByRange(constructionSites));
             }
         }
         // 4: deposit into link or container

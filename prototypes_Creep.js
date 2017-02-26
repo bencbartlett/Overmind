@@ -1,5 +1,5 @@
 var tasks = require('tasks');
-var rolesMap = require('rolesMap');
+var rolesMap = require('map_roles');
 
 Creep.prototype.run = function () {
     this.doRole();
