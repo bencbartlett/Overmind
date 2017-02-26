@@ -386,11 +386,11 @@ var RoomBrain = class {
                                     structure.structureType == STRUCTURE_SPAWN) &&
                                    structure.energy < structure.energyCapacity
         });
-        var supplierLimit = 1;
-        if (this.room.storage) {
+        var supplierLimit = 1; // there must always be at least one supplier in the room
+        if (this.room.storage && energySinks.length > 0) {
             supplierLimit += 2;
         }
-        if (numSuppliers < supplierLimit && energySinks.length > 0) {
+        if (numSuppliers < supplierLimit) {
             var supplierBehavior = require('role_supplier');
             if (this.spawn == undefined) {
                 this.borrowSpawn();
