@@ -89,8 +89,6 @@ var roleHauler = {
         if (creep.task) {
             // execute task
             this.executeTask(creep);
-        } else {
-            creep.log("could not receive task!");
         }
     }
 };

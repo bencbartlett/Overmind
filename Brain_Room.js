@@ -1,5 +1,6 @@
 // Room brain: processes tasks from room and requests from worker body
 var tasks = require('tasks');
+var flagCodes = require('map_flag_codes');
 
 // TODO: plug in Room.findCached() into this
 
@@ -23,13 +24,12 @@ var RoomBrain = class {
         this.override = {
             workersPerRoom: { // custom number of workers per room
                 // "W18N88": 3,
-                // "W19N88": 1,
+                "W19N88": 3,
             },
             fortifyLevel: {"W18N88": 1000000}, // fortify all walls/ramparts to these levels in these rooms
         };
         // Task priorities
         this.taskPriorities = [
-            // 'migrate',
             'supplyTowers',
             'supply',
             'pickup',
@@ -104,71 +104,73 @@ var RoomBrain = class {
         }
     }
 
-    getTasks(tasksToGet) { // TODO: use task.maxPerTask properties to coordinate task assignment
-        // TODO: defense
-        var prioritizedTargets = {};
-        for (let task of tasksToGet) {
-            switch (task) {
-                case 'pickup': // Pick up energy
-                    prioritizedTargets['pickup'] = this.room.find(FIND_DROPPED_ENERGY);
-                    break;
-                case 'supplyTowers': // Find towers in need of energy
-                    prioritizedTargets['supplyTowers'] = this.room.find(FIND_MY_STRUCTURES, {
-                        filter: (structure) => structure.structureType == STRUCTURE_TOWER &&
-                                               structure.energy < structure.energyCapacity
-                    });
-                    break;
-                case 'supply': // Find structures in need of energy
-                    prioritizedTargets['supply'] = this.room.find(FIND_MY_STRUCTURES, {
-                        filter: (structure) => (structure.structureType == STRUCTURE_EXTENSION ||
-                                                structure.structureType == STRUCTURE_SPAWN) &&
-                                               structure.energy < structure.energyCapacity
-                    });
-                    break;
-                case 'repair': // Repair structures
-                    prioritizedTargets['repair'] = this.room.find(FIND_STRUCTURES, {
-                        filter: (s) => s.hits < s.hitsMax &&
-                                       s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
-                                       s.structureType != STRUCTURE_WALL && // walls are fortify tasks
-                                       s.structureType != STRUCTURE_RAMPART &&
-                                       (s.structureType != STRUCTURE_ROAD || s.hits < 0.2 * s.hitsMax)
-                    });
-                    break;
-                case 'build': // Build construction jobs
-                    prioritizedTargets['build'] = this.room.find(FIND_CONSTRUCTION_SITES, {
-                        filter: c => c.structureType != STRUCTURE_ROAD
-                    });
-                    break;
-                case 'buildRoads': // Build construction jobs
-                    prioritizedTargets['buildRoads'] = this.room.find(FIND_CONSTRUCTION_SITES, {
-                        filter: c => c.structureType == STRUCTURE_ROAD
-                    });
-                    break;
-                case 'fortify': // Fortify walls
-                    var fortifyLevel = this.settings.fortifyLevel; // global fortify level
-                    if (this.override.fortifyLevel[this.room.name]) {
-                        fortifyLevel = this.override.fortifyLevel[this.room.name]; // override for certain rooms
-                    }
-                    //noinspection JSReferencingMutableVariableFromClosure
-                    prioritizedTargets['fortify'] = this.room.find(FIND_STRUCTURES, {
-                        filter: (s) => s.hits < fortifyLevel &&
-                                       (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)
-                    });
-                    break;
-                case 'upgrade': // Upgrade controller
-                    prioritizedTargets['upgrade'] = [this.room.controller.my && this.room.controller];
-                    break;
-            }
-        }
-        return prioritizedTargets;
-    }
+    // getTasks(tasksToGet) {
+    //     var prioritizedTargets = {};
+    //     for (let task of tasksToGet) {
+    //         switch (task) {
+    //             case 'pickup': // Pick up energy
+    //                 prioritizedTargets['pickup'] = this.room.find(FIND_DROPPED_ENERGY, {filter: d => d.amount > 100});
+    //                 break;
+    //             case 'supplyTowers': // Find towers in need of energy
+    //                 prioritizedTargets['supplyTowers'] = this.room.find(FIND_MY_STRUCTURES, {
+    //                     filter: (structure) => structure.structureType == STRUCTURE_TOWER &&
+    //                                            structure.energy < structure.energyCapacity
+    //                 });
+    //                 break;
+    //             case 'supply': // Find structures in need of energy
+    //                 prioritizedTargets['supply'] = this.room.find(FIND_MY_STRUCTURES, {
+    //                     filter: (structure) => (structure.structureType == STRUCTURE_EXTENSION ||
+    //                                             structure.structureType == STRUCTURE_SPAWN) &&
+    //                                            structure.energy < structure.energyCapacity
+    //                 });
+    //                 break;
+    //             case 'repair': // Repair structures
+    //                 prioritizedTargets['repair'] = this.room.find(FIND_STRUCTURES, {
+    //                     filter: (s) => s.hits < s.hitsMax &&
+    //                                    s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
+    //                                    s.structureType != STRUCTURE_WALL && // walls are fortify tasks
+    //                                    s.structureType != STRUCTURE_RAMPART &&
+    //                                    (s.structureType != STRUCTURE_ROAD || s.hits < 0.2 * s.hitsMax)
+    //                 });
+    //                 break;
+    //             case 'build': // Build construction jobs
+    //                 prioritizedTargets['build'] = this.room.find(FIND_CONSTRUCTION_SITES, {
+    //                     filter: c => c.structureType != STRUCTURE_ROAD
+    //                 });
+    //                 break;
+    //             case 'buildRoads': // Build construction jobs
+    //                 prioritizedTargets['buildRoads'] = this.room.find(FIND_CONSTRUCTION_SITES, {
+    //                     filter: c => c.structureType == STRUCTURE_ROAD
+    //                 });
+    //                 break;
+    //             case 'fortify': // Fortify walls
+    //                 var fortifyLevel = this.settings.fortifyLevel; // global fortify level
+    //                 if (this.override.fortifyLevel[this.room.name]) {
+    //                     fortifyLevel = this.override.fortifyLevel[this.room.name]; // override for certain rooms
+    //                 }
+    //                 //noinspection JSReferencingMutableVariableFromClosure
+    //                 prioritizedTargets['fortify'] = this.room.find(FIND_STRUCTURES, {
+    //                     filter: (s) => s.hits < fortifyLevel &&
+    //                                    (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)
+    //                 });
+    //                 break;
+    //             case 'upgrade': // Upgrade controller
+    //                 prioritizedTargets['upgrade'] = [this.room.controller.my && this.room.controller];
+    //                 break;
+    //         }
+    //     }
+    //     return prioritizedTargets;
+    // }
 
     getMostUrgentTask(tasksToGet) {
+        // TODO: use task.maxPerTask properties to coordinate task assignment
+        // TODO: defense
+        // TODO: task.maxPerTarget isn't working properly all the time
         for (let task of tasksToGet) {
             var targets;
             switch (task) {
                 case 'pickup': // Pick up energy
-                    targets = this.room.find(FIND_DROPPED_ENERGY);
+                    targets = this.room.find(FIND_DROPPED_ENERGY, {filter: d => d.amount > 100});
                     break;
                 case 'supplyTowers': // Find towers in need of energy
                     targets = this.room.find(FIND_MY_STRUCTURES, {
@@ -388,8 +390,13 @@ var RoomBrain = class {
         });
         var supplierLimit = 1; // there must always be at least one supplier in the room
         if (this.room.storage && energySinks.length > 0) {
-            supplierLimit += 2;
+            supplierLimit += 1;
         }
+        var expensiveFlags = _.filter(this.room.flags, flag => flagCodes.millitary.filter(flag) ||
+                                                               flagCodes.destroy.filter(flag) ||
+                                                               flagCodes.industry.filter(flag) ||
+                                                               flagCodes.territory.filter(flag));
+        supplierLimit += Math.floor(expensiveFlags.length / 5); // add more suppliers for cases of lots of flags // TODO: better metric
         if (numSuppliers < supplierLimit) {
             var supplierBehavior = require('role_supplier');
             if (this.spawn == undefined) {
@@ -433,7 +440,7 @@ var RoomBrain = class {
     }
 
     handleRemoteMiners() {
-        var sourceFlags = _.filter(this.room.flags, flag => flag.color == COLOR_YELLOW);
+        var sourceFlags = _.filter(this.room.flags, flagCodes.industry.mine.filter);
         for (let sourceFlag of sourceFlags) {
             let assignedMiners = _.filter(sourceFlag.assignedCreeps,
                                           creep => creep.memory.role == 'miner' &&
@@ -443,7 +450,7 @@ var RoomBrain = class {
                 numConstructionSites = sourceFlag.room.find(FIND_MY_CONSTRUCTION_SITES).length;
             }
             // add additional miners during initial construction phase
-            let remoteMinersPerSource = this.settings.minersPerSource * (1 + Math.floor(numConstructionSites / 10));
+            let remoteMinersPerSource = this.settings.minersPerSource * (1 + Math.floor(numConstructionSites / 5));
             if (assignedMiners.length < remoteMinersPerSource) {
                 var minerBehavior = require('role_miner');
                 let newMiner = minerBehavior.create(this.spawn, sourceFlag.ref, {
@@ -458,7 +465,7 @@ var RoomBrain = class {
 
     handleRemoteHaulers() {
         if (this.room.storage != undefined) { // haulers are only built once a room has storage
-            var sourceFlags = _.filter(this.room.flags, flag => flag.color == COLOR_YELLOW);
+            var sourceFlags = _.filter(this.room.flags, flagCodes.industry.mine.filter);
             for (let sourceFlag of sourceFlags) {
                 let assignedHaulers = _.filter(sourceFlag.assignedCreeps,
                                                creep => creep.memory.role == 'hauler');
@@ -483,8 +490,7 @@ var RoomBrain = class {
     }
 
     handleScouts() {
-        var scoutFlags = _.filter(this.room.flags, flag => flag.color == COLOR_GREY &&
-                                                           (flag.room == undefined || !flag.room.my));
+        var scoutFlags = _.filter(this.room.flags, flagCodes.vision.stationary.filter);
         for (let scoutFlag of scoutFlags) {
             let assignedScouts = _.filter(scoutFlag.assignedCreeps,
                                           creep => creep.memory.role == 'scout' &&
@@ -499,7 +505,7 @@ var RoomBrain = class {
     }
 
     handleReservers() {
-        var reserverFlags = _.filter(this.room.flags, flag => flag.color == COLOR_PURPLE);
+        var reserverFlags = _.filter(this.room.flags, flagCodes.territory.reserve.filter);
         for (let reserverFlag of reserverFlags) {
             let assignedReservers = _.filter(reserverFlag.assignedCreeps,
                                              creep => creep.memory.role == 'reserver' &&
@@ -519,12 +525,16 @@ var RoomBrain = class {
     }
 
     handleGuards() {
-        var guardFlags = _.filter(this.room.flags, flag => flag.color == COLOR_RED);
+        var guardFlags = _.filter(this.room.flags, flagCodes.millitary.guard.filter);
         for (let guardFlag of guardFlags) {
             let assignedGuards = _.filter(guardFlag.assignedCreeps,
                                           creep => creep.memory.role == 'guard' &&
                                                    creep.ticksToLive > creep.memory.data.replaceAt);
-            if (assignedGuards.length < 1) {
+            let numGuards = 1;
+            if (guardFlag.memory.amount) {
+                numGuards = guardFlag.memory.amount;
+            }
+            if (assignedGuards.length < numGuards) {
                 var guardBehavior = require('role_guard');
                 let newGuard = guardBehavior.create(this.spawn, guardFlag.ref);
                 return newGuard;

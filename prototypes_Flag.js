@@ -1,5 +1,7 @@
 Flag.prototype.assign = function (roomName) {
     this.memory.room = roomName;
+    console.log(this.name + " now assigned to room " + this.memory.room + ".");
+    return OK;
 };
 
 Object.defineProperty(Flag.prototype, 'pathLengthToAssignedRoomStorage', {

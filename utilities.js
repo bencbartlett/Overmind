@@ -56,7 +56,7 @@ global.fixMinerMemory = function () {
 
 global.status = function () {
     console.log("Creep status: ");
-    var roles = require('rolesMap');
+    var roles = require('map_roles.js');
     for (let role in roles) {
         console.log(role + ": " + countAllCreeps(role));
     }

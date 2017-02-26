@@ -1,4 +1,4 @@
-var rolesMap = require('rolesMap');
+// var rolesMap = require('map_roles');
 
 StructureSpawn.prototype.creepName = function (roleName) {
     // generate a creep name based on the role and add a suffix to make it unique
@@ -43,17 +43,17 @@ StructureSpawn.prototype.createBiggestCreep = function (roleName, partsLimit = I
     return this.createCreep(body, this.creepName(roleName), {role: roleName});
 };
 
-StructureSpawn.prototype.donateCreepToRoom = function (roleName, roomName) {
-    var roleObject = rolesMap[roleName];
-    if (roleObject) {
-        if (Game.rooms[roomName]) {
-            var donatedCreep = roleObject.behavior.create(this, 5); // manual size setter for now
-            donatedCreep.donate(roomName);
-        } else {
-            console.log('Error: ' + roomName + ' is ' + Game.rooms[roomName]);
-        }
-    } else {
-        console.log('Error: ' + roleName + ' is not a valid role.');
-    }
-};
+// StructureSpawn.prototype.donateCreepToRoom = function (roleName, roomName) {
+//     var roleObject = rolesMap[roleName];
+//     if (roleObject) {
+//         if (Game.rooms[roomName]) {
+//             var donatedCreep = roleObject.behavior.create(this, 5); // manual size setter for now
+//             donatedCreep.donate(roomName);
+//         } else {
+//             console.log('Error: ' + roomName + ' is ' + Game.rooms[roomName]);
+//         }
+//     } else {
+//         console.log('Error: ' + roleName + ' is not a valid role.');
+//     }
+// };
 
