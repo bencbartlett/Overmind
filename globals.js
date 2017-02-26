@@ -8,3 +8,18 @@ global.SOURCES = 'sources';
 // global.print = function (msg) {
 //     console.log(msg);
 // };
+
+// Object.defineProperty(String.prototype, 'deref', { // dereference any object from identifier; see ref in RoomObjects
+//     get: function () {
+//         return Game.getObjectById(this) || Game.flags[this] || Game.creeps[this] || Game.rooms[this] || null;
+//     }
+// });
+
+global.deref = function (ref) { // dereference any object from identifier; see ref in RoomObjects
+    return Game.getObjectById(ref) ||
+           Game.flags[ref] ||
+           Game.creeps[ref] ||
+           Game.spawns[ref] ||
+           Game.rooms[ref] ||
+           null;
+};

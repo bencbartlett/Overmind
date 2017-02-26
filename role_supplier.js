@@ -24,11 +24,10 @@ var roleSupplier = {
         for (let i = 0; i < numRepeats; i++) {
             body = body.concat(bodyPattern);
         }
-        // body.push(WORK);
-        // body.push(MOVE);
+        // static replaceAt of 500 to prevent cases where all suppliers die out at the same time
         return spawn.createCreep(body, spawn.creepName('supplier'), {
             role: 'supplier', workRoom: workRoom, working: false, task: null, data: {
-                origin: spawn.room.name
+                origin: spawn.room.name, replaceAt: 500
             }
         });
     },

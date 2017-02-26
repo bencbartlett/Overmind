@@ -11,6 +11,10 @@ var rolesMap = {
         behavior: require('role_hauler'),
         amount: 0
     },
+    linker: {
+        behavior: require('role_linker'),
+        amount: 0
+    },
     supplier: {
         behavior: require('role_supplier'),
         amount: 0

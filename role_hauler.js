@@ -35,11 +35,7 @@ var roleHauler = {
         var withdraw = tasks('recharge');
         withdraw.data.quiet = true;
         var assignment;
-        if (!creep.memory.remote) {
-            assignment = Game.getObjectById(creep.memory.assignment);
-        } else {
-            assignment = Game.flags[creep.memory.assignment];
-        }
+        assignment = deref(creep.memory.assignment);
         var nearbyContainers = assignment.pos.findInRange(FIND_STRUCTURES, 2, {
             filter: (s) => s.structureType == STRUCTURE_CONTAINER
         });
@@ -63,8 +59,18 @@ var roleHauler = {
 
     newTask: function (creep) {
         creep.task = null;
+        var pathLength;
+        if (creep.memory.remote) {
+            pathLength = deref(creep.memory.assignment).pathLengthToAssignedRoomStorage;
+        } else {
+            pathLength = deref(creep.memory.assignment).pathLengthToStorage;
+        }
         if (creep.carry.energy == 0) {
-            this.collect(creep);
+            if (creep.ticksToLive > (2 + 0.5) * pathLength) { // +0.5 for buffer
+                this.collect(creep);
+            } else {
+                creep.suicide(); // kill off so you don't randomly drop tons of energy everywhere
+            }
         } else {
             this.deposit(creep);
         }

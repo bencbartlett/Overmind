@@ -47,13 +47,24 @@ Object.defineProperty(Creep.prototype, 'workRoom', { // retrieve the room object
     }
 });
 
-Object.defineProperty(Creep.prototype, 'lifetime', { // retrieve the room object (not the name) of the assigned room
+Object.defineProperty(Creep.prototype, 'lifetime', { // creep lifetime; 1500 unless claimer, then 500
     get: function () {
         if (_.map(this.body, part => part.type).includes(CLAIM)) {
             return 500;
         } else {
             return 1500;
         }
+    }
+});
+
+Object.defineProperty(Creep.prototype, 'assignment', { // retrieve the assignment object
+    get: function () {
+        return deref(this.memory.assignment);
+    },
+    set: function (newAssignmentObject) {
+        this.log("warning: unsafe change of creep assignment from " +
+                 this.memory.assignment + " to " + newAssignmentObject + "!");
+        this.memory.assignment = newAssignment.ref
     }
 });
 

@@ -47,7 +47,7 @@ RoomObject.prototype.isTargeted = function (role = undefined) {
     return creeps; // return list of targeting creeps
 };
 
-Object.defineProperty(RoomObject.prototype, 'ref', { // identifier property. id preferred over name over null
+Object.defineProperty(RoomObject.prototype, 'ref', { // reference object; see globals.deref (which includes Creep)
     get: function () {
         return this.id || this.name || null;
     }
@@ -64,5 +64,34 @@ Object.defineProperty(RoomObject.prototype, 'assignedCreeps', {
 Object.defineProperty(RoomObject.prototype, 'targetedBy', {
     get: function () {
         return _.filter(this.room.creeps, creep => creep.task && creep.task.target == this);
+    }
+});
+
+// If an object has a nearby link
+Object.defineProperty(RoomObject.prototype, 'linked', {
+    get: function () {
+        return this.pos.findInRange(FIND_MY_STRUCTURES, 3, {
+            filter: (s) => s.structureType == STRUCTURE_LINK
+        }).length > 0;
+    }
+});
+
+// All links that are near an object
+Object.defineProperty(RoomObject.prototype, 'links', {
+    get: function () {
+        return this.pos.findInRange(FIND_MY_STRUCTURES, 3, {filter: (s) => s.structureType == STRUCTURE_LINK});
+    }
+});
+
+Object.defineProperty(RoomObject.prototype, 'pathLengthToStorage', { // find and cache a path length to storage
+    get () {
+        if (!this.room.memory.storagePathLengths) {
+            this.room.memory.storagePathLengths = {}
+        }
+        if (!this.room.memory.storagePathLengths[this.ref]) {
+            this.room.memory.storagePathLengths[this.ref] = PathFinder.search(this.room.storage.pos,
+                                                                              this.pos).path.length
+        }
+        return this.room.memory.storagePathLengths[this.ref];
     }
 });
