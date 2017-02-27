@@ -30,7 +30,7 @@ module.exports.loop = function () {
     for (let name in Game.rooms) {
         var room = Game.rooms[name];
         // Animate each room brain, but only for owned rooms
-        if (room.controller.my) {
+        if (room.controller && room.controller.my) {
             room.run();
             room.brain.run();
         }

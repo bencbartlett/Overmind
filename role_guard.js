@@ -35,10 +35,10 @@ var roleGuard = {
     findTarget: function (creep) {
         var target;
         if (!target) {
-            target = creep.pos.findClosestByRange(FIND_HOSTILE_SPAWNS);
+            target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
         }
         if (!target) {
-            target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+            target = creep.pos.findClosestByRange(FIND_HOSTILE_SPAWNS);
         }
         if (!target) {
             target = creep.pos.findClosestByRange(FIND_HOSTILE_STRUCTURES, {filter: s => s.hits});
@@ -50,12 +50,15 @@ var roleGuard = {
     },
 
     run: function (creep) {
+        // if (creep.name == 'guard_2') {
+        //     return OK;
+        // }
         var assignment = Game.flags[creep.memory.assignment];
         if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
             creep.task = null;
             var target = this.findTarget(creep);
             if (target) {
-                task = tasks('attack');
+                let task = tasks('attack');
                 creep.assign(task, target);
             }
         }

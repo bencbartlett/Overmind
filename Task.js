@@ -48,7 +48,7 @@ class Task {
         this.creep = creep;
         this.target = target;
         creep.memory.task = this;
-        this.onAssignment()
+        this.onAssignment();
         return OK;
     }
 

@@ -16,6 +16,10 @@ Creep.prototype.assign = function (task, target = null) { // wrapper for task.as
     return task.assign(this, target);
 };
 
+Creep.prototype.getBodyparts = function (partType) {
+    return _.filter(this.body, part => part.type == partType).length;
+};
+
 Object.defineProperty(Creep.prototype, 'task', {
     get: function () { // provide new task object recreated from literals stored in creep.memory.task
         if (this.memory.task != null) {
