@@ -42,9 +42,12 @@ var roleSupplier = {
         creep.memory.working = false;
         var recharge = tasks('recharge');
         var containers = creep.workRoom.find(FIND_STRUCTURES, {
-            filter: (s) => s.structureType == STRUCTURE_CONTAINER &&
-                           s.store[RESOURCE_ENERGY] > this.settings.assistHaulersAtContainerPercent * s.storeCapacity
+            filter: (s) => s.structureType == STRUCTURE_CONTAINER
         });
+        if (creep.workRoom.storage) {
+            containers = _.filter(containers, s => s.store[RESOURCE_ENERGY] >
+                                                   this.settings.assistHaulersAtContainerPercent * s.storeCapacity);
+        }
         var target;
         if (containers.length > 0) { // loop through results to find the container with the most energy in the room
             let targets = _.sortBy(containers, [function (s) {
@@ -56,19 +59,28 @@ var roleSupplier = {
             target = creep.workRoom.storage;
         }
         if (target) {
-            creep.assign(recharge, target);
+            return creep.assign(recharge, target);
         } else {
             creep.say("Idle");
+            return ERR_NO_TARGET_FOUND;
         }
     },
 
     newTask: function (creep) {
         creep.task = null;
-        if (creep.carry.energy == 0) {
-            this.recharge(creep);
+        let newTask = this.requestTask(creep);
+        if (newTask == undefined && creep.carry.energy == 0) {
+            return this.recharge(creep);
         } else {
-            this.requestTask(creep);
+            return newTask;
         }
+        // if (creep.carry.energy == 0) {
+        //     let recharge = this.recharge(creep);
+        //     if (recharge == OK) {
+        //         return recharge;
+        //     }
+        // }
+        // return this.requestTask(creep);
     },
 
     executeTask: function (creep) {

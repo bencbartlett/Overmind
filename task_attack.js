@@ -8,7 +8,8 @@ class taskAttack extends Task {
     }
 
     isValidTask() {
-        return (this.creep.getActiveBodyparts(ATTACK) > 0 && this.creep.room.hostiles.length > 0);
+        return (this.creep.getActiveBodyparts(ATTACK) > 0 && (this.creep.room.hostiles.length > 0 ||
+                                                              this.creep.room.hostileStructures.length > 0));
     }
 
     isValidTarget() {

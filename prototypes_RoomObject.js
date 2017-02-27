@@ -29,6 +29,11 @@ RoomObject.prototype.countAdjacentCreeps = function () {
     return this.pos.findInRange(FIND_CREEPS, 1).length;
 };
 
+// determines if object is in same room as other object in possibly undefined room
+RoomObject.prototype.inSameRoomAs = function (otherObject) {
+    return this.pos.inRangeTo(otherObject, 50);
+};
+
 RoomObject.prototype.isTargeted = function (role = undefined) {
     var creeps;
     if (role != undefined) {
@@ -52,6 +57,16 @@ Object.defineProperty(RoomObject.prototype, 'ref', { // reference object; see gl
         return this.id || this.name || null;
     }
 });
+
+Object.defineProperty(RoomObject.prototype, 'flagged', { // if the object has a flag
+    get: function () {
+        return this.pos.flagged;
+    }
+});
+
+RoomObject.prototype.flaggedWith = function (filter) { // if the object has a certain type of flag
+    return this.pos.flaggedWith(filter);
+};
 
 // List of creeps assigned to this object
 Object.defineProperty(RoomObject.prototype, 'assignedCreeps', {

@@ -49,6 +49,7 @@ class Task {
         this.target = target;
         creep.memory.task = this;
         this.onAssignment()
+        return OK;
     }
 
     // Action to do on assignment
@@ -71,20 +72,27 @@ class Task {
         return (this.target != null);
     }
 
+    move() {
+        this.creep.moveToVisual(this.target, this.moveColor);
+    }
+
     // Execute this task each tick. Returns nothing unless work is done.
     step() {
         var creep = this.creep;
         var target = this.target;
+        if (!target) {
+            this.creep.log('null target!');
+            return null; // in case you're targeting something that just became invisible
+        }
         if (creep.pos.inRangeTo(target, this.targetRange)) {
             var workResult = this.work();
-            // console.log(this.data.quiet);
             if (workResult != OK && this.data.quiet == false) {
                 creep.log("Error executing " + this.name + ", returned " + workResult);
             }
             return workResult;
         } else {
             creep.repairNearbyDamagedRoad(); // repair roads if you are capable
-            creep.moveToVisual(target, this.moveColor);
+            this.move();
         }
     }
 
@@ -95,16 +103,5 @@ class Task {
     }
 }
 
-// // Shortcuts to creep and target options
-// Object.defineProperties(Task.prototype, {
-//     creep: {
-//         get: function ,
-//         set: function (creep)
-//     },
-//     target: {
-//         get: function () ,
-//         set: function (target)
-//     }
-// });
 
 module.exports = Task;
