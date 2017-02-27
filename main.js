@@ -1,6 +1,9 @@
 'use strict';
 
 // To-do list: ====================
+// TODO: once we have storage, workers should only spawn when repairs or construction; upgrader creep with varying size
+// TODO: supplier inefficiencies; wasted time ticks between assignments
+// TODO: nearest function that works across rooms and for possibly undefined rooms
 // TODO: attack capability; calculations for how large of an invasion/defense group to make
 
 // Import everything needed

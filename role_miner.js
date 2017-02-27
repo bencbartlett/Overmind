@@ -79,11 +79,12 @@ var roleMiner = {
             deposit.data.quiet = true;
             creep.assign(deposit, target);
             return OK;
-        } else { // if for some reason this doesn't work, try depositing in container
-            creep.log("no link found; depositing to container!");
-            this.depositContainer(creep);
-            return ERR_NO_TARGET_FOUND;
         }
+        // else { // if for some reason this doesn't work, try depositing in container
+        //     creep.log("no link found; depositing to container!");
+        //     this.depositContainer(creep);
+        //     return ERR_NO_TARGET_FOUND;
+        // }
     },
 
     harvest: function (creep) {

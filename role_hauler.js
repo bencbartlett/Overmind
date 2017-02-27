@@ -30,10 +30,10 @@ var roleHauler = {
         });
     },
 
-    collect: function (creep) {
+    collect: function (creep) { // TODO: add ignorecreep and path caching to move() in hauler task classes
         creep.memory.working = false;
-        var withdraw = tasks('recharge');
-        withdraw.data.quiet = true;
+        var recharge = tasks('recharge');
+        recharge.data.quiet = true;
         var assignment;
         assignment = deref(creep.memory.assignment);
         var nearbyContainers = assignment.pos.findInRange(FIND_STRUCTURES, 2, {
@@ -42,7 +42,7 @@ var roleHauler = {
         // target fullest of nearby containers
         var target = _.sortBy(nearbyContainers,
                               container => container.store[RESOURCE_ENERGY])[nearbyContainers.length - 1];
-        creep.assign(withdraw, target);
+        creep.assign(recharge, target);
     },
 
     deposit: function (creep) {

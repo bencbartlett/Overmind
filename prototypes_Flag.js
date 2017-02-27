@@ -1,6 +1,6 @@
 Flag.prototype.assign = function (roomName) {
-    this.memory.room = roomName;
-    console.log(this.name + " now assigned to room " + this.memory.room + ".");
+    this.memory.assignedRoom = roomName;
+    console.log(this.name + " now assigned to room " + this.memory.assignedRoom + ".");
     return OK;
 };
 

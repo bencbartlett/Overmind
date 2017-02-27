@@ -47,9 +47,21 @@ Object.defineProperty(Room.prototype, 'hostiles', {
     }
 });
 
-Object.defineProperty(Room.prototype, 'flags', {
+Object.defineProperty(Room.prototype, 'hostileStructures', {
     get () {
-        return _.filter(Game.flags, flag => flag.memory.room && flag.memory.room == this.name);
+        return this.find(FIND_HOSTILE_STRUCTURES);
+    }
+});
+
+Object.defineProperty(Room.prototype, 'flags', { // flags physically in this room
+    get () {
+        return _.filter(Game.flags, flag => flag.room == this);
+    }
+});
+
+Object.defineProperty(Room.prototype, 'assignedFlags', { // flags assigned to this room
+    get () {
+        return _.filter(Game.flags, flag => flag.memory.assignedRoom && flag.memory.assignedRoom == this.name);
     }
 });
 

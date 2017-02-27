@@ -2,7 +2,10 @@ var tasks = require('tasks');
 var rolesMap = require('map_roles');
 
 Creep.prototype.run = function () {
-    this.doRole();
+    var behavior = rolesMap[this.memory.role].behavior;
+    if (behavior) {
+        behavior.run(this);
+    }
 };
 
 Creep.prototype.doRole = function () {
@@ -10,7 +13,7 @@ Creep.prototype.doRole = function () {
 };
 
 Creep.prototype.assign = function (task, target = null) { // wrapper for task.assign(creep, target)
-    task.assign(this, target);
+    return task.assign(this, target);
 };
 
 Object.defineProperty(Creep.prototype, 'task', {

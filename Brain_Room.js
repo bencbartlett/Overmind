@@ -28,11 +28,12 @@ var RoomBrain = class {
             },
             fortifyLevel: {"W18N88": 1000000}, // fortify all walls/ramparts to these levels in these rooms
         };
-        // Task priorities
+        // Task priorities - the actual priority the tasks are given. Everything else depends on this order
         this.taskPriorities = [
             'supplyTowers',
             'supply',
             'pickup',
+            'collect',
             'repair',
             'build',
             'buildRoads',
@@ -42,6 +43,7 @@ var RoomBrain = class {
         // Tasks to execute for each prioritized task
         this.taskToExecute = {
             'pickup': 'pickup',
+            'collect': 'recharge',
             'supplyTowers': 'supply',
             'supply': 'supply',
             'repair': 'repair',
@@ -53,6 +55,7 @@ var RoomBrain = class {
         // Task role conditions
         this.assignmentRoles = {
             'pickup': ['supplier', 'hauler'],
+            'collect': ['supplier', 'hauler'],
             'supplyTowers': ['supplier', 'hauler'],
             'supply': ['supplier', 'hauler'],
             'repair': ['worker', 'miner'],
@@ -64,13 +67,14 @@ var RoomBrain = class {
         // Task assignment conditions
         this.assignmentConditions = {
             'pickup': creep => creep.getActiveBodyparts(CARRY) > 0 && creep.carry.energy < creep.carryCapacity,
-            'supplyTowers': creep => creep.getActiveBodyparts(CARRY) > 0,
-            'supply': creep => creep.getActiveBodyparts(CARRY) > 0,
-            'repair': creep => creep.getActiveBodyparts(WORK) > 0,
-            'build': creep => creep.getActiveBodyparts(WORK) > 0,
-            'buildRoads': creep => creep.getActiveBodyparts(WORK) > 0,
-            'fortify': creep => creep.getActiveBodyparts(WORK) > 0,
-            'upgrade': creep => creep.getActiveBodyparts(WORK) > 0
+            'collect': creep => creep.getActiveBodyparts(CARRY) > 0 && creep.carry.energy < creep.carryCapacity,
+            'supplyTowers': creep => creep.getActiveBodyparts(CARRY) > 0 && creep.carry.energy > 0,
+            'supply': creep => creep.getActiveBodyparts(CARRY) > 0 && creep.carry.energy > 0,
+            'repair': creep => creep.getActiveBodyparts(WORK) > 0 && creep.carry.energy > 0,
+            'build': creep => creep.getActiveBodyparts(WORK) > 0 && creep.carry.energy > 0,
+            'buildRoads': creep => creep.getActiveBodyparts(WORK) > 0 && creep.carry.energy > 0,
+            'fortify': creep => creep.getActiveBodyparts(WORK) > 0 && creep.carry.energy > 0,
+            'upgrade': creep => creep.getActiveBodyparts(WORK) > 0 && creep.carry.energy > 0
         };
     }
 
@@ -171,6 +175,12 @@ var RoomBrain = class {
             switch (task) {
                 case 'pickup': // Pick up energy
                     targets = this.room.find(FIND_DROPPED_ENERGY, {filter: d => d.amount > 100});
+                    break;
+                case 'collect': // Collect from containers
+                    targets = this.room.find(FIND_STRUCTURES, {
+                        filter: s => s.structureType == STRUCTURE_CONTAINER &&
+                                     s.store[RESOURCE_ENERGY] > 1000
+                    });
                     break;
                 case 'supplyTowers': // Find towers in need of energy
                     targets = this.room.find(FIND_MY_STRUCTURES, {
@@ -385,17 +395,19 @@ var RoomBrain = class {
         var energySinks = this.room.find(FIND_STRUCTURES, {
             filter: (structure) => (structure.structureType == STRUCTURE_TOWER ||
                                     structure.structureType == STRUCTURE_EXTENSION ||
-                                    structure.structureType == STRUCTURE_SPAWN) &&
-                                   structure.energy < structure.energyCapacity
+                                    structure.structureType == STRUCTURE_SPAWN)
         });
+        if (energySinks.length <= 1) {
+            return OK;
+        }
         var supplierLimit = 1; // there must always be at least one supplier in the room
-        if (this.room.storage && energySinks.length > 0) {
+        if (this.room.storage && _.filter(energySinks, s => s.energy < s.energyCapacity).length > 0) {
             supplierLimit += 1;
         }
-        var expensiveFlags = _.filter(this.room.flags, flag => flagCodes.millitary.filter(flag) ||
-                                                               flagCodes.destroy.filter(flag) ||
-                                                               flagCodes.industry.filter(flag) ||
-                                                               flagCodes.territory.filter(flag));
+        var expensiveFlags = _.filter(this.room.assignedFlags, flag => flagCodes.millitary.filter(flag) ||
+                                                                       flagCodes.destroy.filter(flag) ||
+                                                                       flagCodes.industry.filter(flag) ||
+                                                                       flagCodes.territory.filter(flag));
         supplierLimit += Math.floor(expensiveFlags.length / 5); // add more suppliers for cases of lots of flags // TODO: better metric
         if (numSuppliers < supplierLimit) {
             var supplierBehavior = require('role_supplier');
@@ -440,7 +452,7 @@ var RoomBrain = class {
     }
 
     handleRemoteMiners() {
-        var sourceFlags = _.filter(this.room.flags, flagCodes.industry.mine.filter);
+        var sourceFlags = _.filter(this.room.assignedFlags, flagCodes.industry.mine.filter);
         for (let sourceFlag of sourceFlags) {
             let assignedMiners = _.filter(sourceFlag.assignedCreeps,
                                           creep => creep.memory.role == 'miner' &&
@@ -465,7 +477,7 @@ var RoomBrain = class {
 
     handleRemoteHaulers() {
         if (this.room.storage != undefined) { // haulers are only built once a room has storage
-            var sourceFlags = _.filter(this.room.flags, flagCodes.industry.mine.filter);
+            var sourceFlags = _.filter(this.room.assignedFlags, flagCodes.industry.mine.filter);
             for (let sourceFlag of sourceFlags) {
                 let assignedHaulers = _.filter(sourceFlag.assignedCreeps,
                                                creep => creep.memory.role == 'hauler');
@@ -490,7 +502,7 @@ var RoomBrain = class {
     }
 
     handleScouts() {
-        var scoutFlags = _.filter(this.room.flags, flagCodes.vision.stationary.filter);
+        var scoutFlags = _.filter(this.room.assignedFlags, flagCodes.vision.stationary.filter);
         for (let scoutFlag of scoutFlags) {
             let assignedScouts = _.filter(scoutFlag.assignedCreeps,
                                           creep => creep.memory.role == 'scout' &&
@@ -505,7 +517,7 @@ var RoomBrain = class {
     }
 
     handleReservers() {
-        var reserverFlags = _.filter(this.room.flags, flagCodes.territory.reserve.filter);
+        var reserverFlags = _.filter(this.room.assignedFlags, flagCodes.territory.reserve.filter);
         for (let reserverFlag of reserverFlags) {
             let assignedReservers = _.filter(reserverFlag.assignedCreeps,
                                              creep => creep.memory.role == 'reserver' &&
@@ -524,8 +536,8 @@ var RoomBrain = class {
         return OK;
     }
 
-    handleGuards() {
-        var guardFlags = _.filter(this.room.flags, flagCodes.millitary.guard.filter);
+    handleGuards() { // TODO: migrate these flag-based functions to Brain_Flag.js
+        var guardFlags = _.filter(this.room.assignedFlags, flagCodes.millitary.guard.filter);
         for (let guardFlag of guardFlags) {
             let assignedGuards = _.filter(guardFlag.assignedCreeps,
                                           creep => creep.memory.role == 'guard' &&
@@ -543,9 +555,31 @@ var RoomBrain = class {
         return OK;
     }
 
+    handleSiegers() {
+        var siegerFlags = _.filter(this.room.assignedFlags, flagCodes.millitary.sieger.filter);
+        for (let siegerFlag of siegerFlags) {
+            let assignedSiegers = _.filter(siegerFlag.assignedCreeps,
+                                           creep => creep.memory.role == 'sieger' &&
+                                                    creep.ticksToLive > creep.memory.data.replaceAt);
+            let numSiegers = 1;
+            if (siegerFlag.memory.amount) {
+                numSiegers = siegerFlag.memory.amount;
+            }
+            if (assignedSiegers.length < numSiegers) {
+                var siegerBehavior = require('role_sieger');
+                let newSieger = siegerBehavior.create(this.spawn, siegerFlag.ref, {
+                    healFlag: "Siege1HealPoint", // TODO: this is hardwired
+                    patternRepetitionLimit: Infinity
+                });
+                return newSieger;
+            }
+        }
+        return OK;
+    }
+
     handleCreeps() {
         var handleResponse;
-        var handlerPriorities = [
+        var handlerPriorities = [ // TODO: _.chain() ?
             () => this.handleSuppliers(),
             () => this.handleMiners(),
             () => this.handleLinkers(),
@@ -555,66 +589,16 @@ var RoomBrain = class {
             () => this.handleReservers(),
             () => this.handleRemoteMiners(),
             () => this.handleRemoteHaulers(),
-            () => this.handleGuards()
+            () => this.handleGuards(),
+            () => this.handleSiegers()
         ];
+
         for (let handler of handlerPriorities) {
             handleResponse = handler();
             if (handleResponse != OK) {
                 return handleResponse;
             }
         }
-
-
-        // // Handle suppliers - this should almost always be at the top of the queue
-        // handleResponse = this.handleSuppliers();
-        // if (handleResponse != OK) {
-        //     return handleResponse;
-        // }
-        // // Handle miners
-        // handleResponse = this.handleMiners();
-        // if (handleResponse != OK) {
-        //     return handleResponse;
-        // }
-        // // Handle linkers
-        // handleResponse = this.handleLinkers();
-        // if (handleResponse != OK) {
-        //     return handleResponse;
-        // }
-        // // Handle haulers
-        // handleResponse = this.handleHaulers();
-        // if (handleResponse != OK) {
-        //     return handleResponse;
-        // }
-        // // Handle workers
-        // handleResponse = this.handleWorkers();
-        // if (handleResponse != OK) {
-        //     return handleResponse;
-        // }
-        // // Handle scouts
-        // handleResponse = this.handleScouts();
-        // if (handleResponse != OK) {
-        //     return handleResponse;
-        // }
-        // // Handle reservers
-        // handleResponse = this.handleReservers();
-        // if (handleResponse != OK) {
-        //     return handleResponse;
-        // }
-        // // Handle remote miners
-        // handleResponse = this.handleRemoteMiners();
-        // if (handleResponse != OK) {
-        //     return handleResponse;
-        // }
-        // // Handle remote haulers
-        // handleResponse = this.handleRemoteHaulers();
-        // if (handleResponse != OK) {
-        //     return handleResponse;
-        // }
-        // // Handle guards
-        // handleResponse = this.handleGuards();
-        // if (handleResponse != OK) {
-        //     return handleResponse;
-        // }
     }
 
     handleSafeMode() {
