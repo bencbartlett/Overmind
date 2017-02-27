@@ -32,7 +32,7 @@ var roleReserver = {
         var target = Game.flags[creep.memory.assignment];
         if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
             creep.task = null;
-            task = tasks('reserve');
+            let task = tasks('reserve');
             creep.assign(task, target.room.controller);
         }
         if (creep.pos.inRangeTo(target.pos, 1) && creep.memory.data.replaceAt == 0) {

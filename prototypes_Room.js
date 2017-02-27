@@ -49,7 +49,7 @@ Object.defineProperty(Room.prototype, 'hostiles', {
 
 Object.defineProperty(Room.prototype, 'hostileStructures', {
     get () {
-        return this.find(FIND_HOSTILE_STRUCTURES);
+        return this.find(FIND_HOSTILE_STRUCTURES, {filter: s => s.hits});
     }
 });
 

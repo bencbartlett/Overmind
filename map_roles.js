@@ -35,6 +35,10 @@ var rolesMap = {
         behavior: require('role_sieger'),
         amount: 0
     },
+    rallyHealer: {
+        behavior: require('role_rallyHealer'),
+        amount: 0
+    },
     reserver: {
         behavior: require('role_reserver'),
         amount: 0

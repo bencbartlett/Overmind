@@ -26,7 +26,7 @@ var RoomBrain = class {
                 // "W18N88": 3,
                 "W19N88": 3,
             },
-            fortifyLevel: {"W18N88": 1000000}, // fortify all walls/ramparts to these levels in these rooms
+            fortifyLevel: {"W18N88": 2 * Math.pow(10, 6)}, // fortify all walls/ramparts to these levels in these rooms
         };
         // Task priorities - the actual priority the tasks are given. Everything else depends on this order
         this.taskPriorities = [
@@ -258,9 +258,8 @@ var RoomBrain = class {
         }
     }
 
-    calculateWorkerRequirements() {
-        // Calculate needed numbers of workers
-        // TODO: better calculation of worker requirements
+    calculateWorkerRequirementsByEnergy() {
+        // Calculate needed numbers of workers from an energetics standpoint
         var spawn = this.spawn;
         if (spawn == undefined) {
             spawn = this.peekSpawn();
@@ -281,6 +280,38 @@ var RoomBrain = class {
             return Math.ceil(0.5 * sourceEnergyPerTick / equilibriumEnergyPerTick); // operate under capacity limit
         } else {
             return null;
+        }
+    }
+
+    calculateWorkerRequirementsByJobs() {
+        // Calculate needed number of workers based on number of jobs present; used at >=RCL5
+        // repair jobs
+        var numRepairJobs = this.room.find(FIND_STRUCTURES, {
+            filter: (s) => s.hits < s.hitsMax &&
+                           s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
+                           s.structureType != STRUCTURE_WALL && // walls are fortify tasks
+                           s.structureType != STRUCTURE_RAMPART &&
+                           (s.structureType != STRUCTURE_ROAD || s.hits < 0.2 * s.hitsMax)
+        });
+        // construction jobs
+        var numConstructionJobs = this.room.find(FIND_CONSTRUCTION_SITES);
+        // fortify jobs
+        var fortifyLevel = this.settings.fortifyLevel;
+        if (this.override.fortifyLevel[this.room.name]) {
+            fortifyLevel = this.override.fortifyLevel[this.room.name];
+        }
+        //noinspection JSReferencingMutableVariableFromClosure
+        var numFortifyJobs = this.room.find(FIND_STRUCTURES, {
+            filter: (s) => s.hits < fortifyLevel &&
+                           (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)
+        });
+        var numJobs = numRepairJobs + numConstructionJobs + numFortifyJobs;
+        if (numJobs == 0) {
+            return 0;
+        } else {
+            var workerSize = Math.min(Math.floor(energy / spawn.cost(workerBodyPattern)),
+                                      this.settings.workerPatternRepetitionLimit);
+            return Math.ceil((2 / workerSize) * numJobs);
         }
     }
 
@@ -433,8 +464,10 @@ var RoomBrain = class {
             filter: structure => (structure.structureType == STRUCTURE_CONTAINER ||
                                   structure.structureType == STRUCTURE_STORAGE)
         });
+
+
         // Only spawn workers once containers are up
-        var workerRequirements = this.calculateWorkerRequirements();
+        var workerRequirements = this.calculateWorkerRequirementsByEnergy();
         if (workerRequirements && numWorkers < workerRequirements && containers.length > 0) {
             var workerBehavior = require('role_worker');
             if (this.spawn == undefined) {
@@ -546,10 +579,44 @@ var RoomBrain = class {
             if (guardFlag.memory.amount) {
                 numGuards = guardFlag.memory.amount;
             }
+            let maxSize = 4;
+            if (guardFlag.memory.maxSize) {
+                maxSize = guardFlag.memory.maxSize;
+            }
             if (assignedGuards.length < numGuards) {
                 var guardBehavior = require('role_guard');
-                let newGuard = guardBehavior.create(this.spawn, guardFlag.ref);
+                let newGuard = guardBehavior.create(this.spawn, guardFlag.ref, maxSize);
                 return newGuard;
+            }
+        }
+        return OK;
+    }
+
+    handleRallyHealers() {
+        // rally healers should only be built in towerless (unowned) rooms
+        var rallyHealerFlags = _.filter(this.room.assignedFlags,
+                                        flag => flagCodes.rally.healPoint.filter(flag) &&
+                                                !(flag.room && flag.room.find(FIND_MY_STRUCTURES, {
+                                                    filter: s => s.structureType == STRUCTURE_TOWER
+                                                }).length > 0));
+        for (let rallyHealerFlag of rallyHealerFlags) {
+            let assignedSiegers = _.filter(rallyHealerFlag.assignedCreeps,
+                                           creep => creep.memory.role == 'rallyHealer' &&
+                                                    creep.ticksToLive > creep.memory.data.replaceAt);
+            let numRallyHealers = 1;
+            if (rallyHealerFlag.memory.amount) {
+                numRallyHealers = rallyHealerFlag.memory.amount;
+            }
+            let maxSize = Infinity;
+            if (rallyHealerFlag.memory.maxSize) {
+                maxSize = rallyHealerFlag.memory.maxSize;
+            }
+            if (assignedSiegers.length < numRallyHealers) {
+                var rallyHealerBehavior = require('role_rallyHealer');
+                let newRallyHealer = rallyHealerBehavior.create(this.spawn, rallyHealerFlag.ref, {
+                    patternRepetitionLimit: maxSize
+                });
+                return newRallyHealer;
             }
         }
         return OK;
@@ -565,11 +632,15 @@ var RoomBrain = class {
             if (siegerFlag.memory.amount) {
                 numSiegers = siegerFlag.memory.amount;
             }
+            let maxSize = Infinity;
+            if (siegerFlag.memory.maxSize) {
+                maxSize = siegerFlag.memory.maxSize;
+            }
             if (assignedSiegers.length < numSiegers) {
                 var siegerBehavior = require('role_sieger');
                 let newSieger = siegerBehavior.create(this.spawn, siegerFlag.ref, {
-                    healFlag: "Siege1HealPoint", // TODO: this is hardwired
-                    patternRepetitionLimit: Infinity
+                    healFlag: "Siege2HealPoint", // TODO: this is hardwired
+                    patternRepetitionLimit: maxSize
                 });
                 return newSieger;
             }
@@ -590,6 +661,7 @@ var RoomBrain = class {
             () => this.handleRemoteMiners(),
             () => this.handleRemoteHaulers(),
             () => this.handleGuards(),
+            () => this.handleRallyHealers(),
             () => this.handleSiegers()
         ];
 

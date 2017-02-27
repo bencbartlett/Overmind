@@ -41,15 +41,16 @@ var roleSieger = {
         var target;
         var targetPriority = [
             () => creep.pos.findClosestByRange(_.filter(creep.room.flags, flagCodes.destroy.dismantle.filter)),
-            () => creep.pos.findClosestByRange(FIND_HOSTILE_SPAWNS),
+            // () => creep.pos.findClosestByRange(FIND_HOSTILE_SPAWNS),
+            // () => creep.pos.findClosestByRange(
+            //     FIND_HOSTILE_STRUCTURES, {filter: s => s.hits && s.structureType == STRUCTURE_TOWER}),
             () => creep.pos.findClosestByRange(
-                FIND_HOSTILE_STRUCTURES, {filter: s => s.hits && s.structureType == STRUCTURE_TOWER}),
+                FIND_HOSTILE_STRUCTURES, {filter: s => s.hits && s.structureType != STRUCTURE_RAMPART}),
             () => creep.pos.findClosestByRange(FIND_HOSTILE_STRUCTURES, {filter: s => s.hits})
         ];
         for (let targetThis of targetPriority) {
             target = targetThis();
             if (target) {
-                console.log(target);
                 return target;
             }
         }
@@ -57,14 +58,14 @@ var roleSieger = {
     },
 
     retreatAndHeal: function (creep) { // TODO: make this a task
-        var healPos = deref(this.memory.data.healFlag).pos;
+        var healPos = deref(creep.memory.data.healFlag).pos;
         return creep.moveToVisual(healPos, 'green');
     },
 
     run: function (creep) {
         // 1: retreat to heal point when injured
         if (deref(creep.memory.data.healFlag) && // if there's a heal flag
-            (creep.getActiveBodyparts(WORK) == 0 || // if you're injured
+            (creep.getActiveBodyparts(TOUGH) == 0 || // if you're injured
              (creep.memory.needsHealing && creep.hits < creep.hitsMax))) { // if you're healing and not full hp
             // TODO: dps-based calculation
             creep.memory.needsHealing = true;
@@ -86,8 +87,7 @@ var roleSieger = {
             creep.task = null;
             var target = this.findTarget(creep);
             if (target) {
-                creep.log('dismantling')
-                task = tasks('dismantle');
+                let task = tasks('dismantle');
                 creep.moveToVisual(target);
                 creep.assign(task, target);
             }
@@ -97,7 +97,7 @@ var roleSieger = {
             return creep.task.step();
         }
         // remove flag once everything is destroyed
-        if (creep.room.hostileStructures.length == 0) {
+        if (assignment && creep.room.hostileStructures.length == 0) {
             creep.log("No remaining hostile structures in room; deleting flag!");
             assignment.remove();
         }
