@@ -11,9 +11,13 @@
 
 */
 
-// Overmind repository: github.com/bencbartlett/screeps
 
-'use strict';
+
+
+
+
+
+// Overmind repository: github.com/bencbartlett/screeps
 
 // To-do list: ====================
 // TODO: once we have storage, workers should only spawn when repairs or construction; upgrader creep with varying size
@@ -22,6 +26,7 @@
 // TODO: attack capability; calculations for how large of an invasion/defense group to make
 
 // Import everything needed
+'use strict';
 require('require');
 
 // Enable screeps profiler
