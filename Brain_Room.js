@@ -315,7 +315,8 @@ var RoomBrain = class {
         if (numJobs == 0) {
             return 0;
         } else {
-            var workerSize = Math.min(Math.floor(energy / spawn.cost(workerBodyPattern)),
+            var workerBodyPattern = require('role_worker').settings.bodyPattern;
+            var workerSize = Math.min(Math.floor(this.room.energyCapacityAvailable / this.spawn.cost(workerBodyPattern)),
                                       this.settings.workerPatternRepetitionLimit);
             return Math.min(Math.ceil((2 / workerSize) * numJobs), this.settings.maxWorkersPerRoom);
         }
@@ -334,7 +335,7 @@ var RoomBrain = class {
         var energyPerTickPerRepetition = energyPerTripPerRepetition / tripLength; // energy per tick per repetition
         var sourceEnergyPerTick = (3000 / 300); // TODO: adjust for rich energy sources
         var sizeRequiredForEquilibrium = sourceEnergyPerTick / energyPerTickPerRepetition; // size a hauler needs to be
-        return Math.ceil(1.2 * sizeRequiredForEquilibrium); // slightly overestimate
+        return Math.ceil(1.1 * sizeRequiredForEquilibrium); // slightly overestimate
     }
 
     calculateHaulerRequirements(target, remote = false) {
@@ -352,8 +353,9 @@ var RoomBrain = class {
             var numHaulers = 1; // 1 hauler unless it's too large
             var maxHaulerSize = Math.floor(this.room.energyCapacityAvailable / spawn.cost(haulerBodyPattern));
             if (haulerSize > maxHaulerSize) { // if hauler is too big, adjust size to max and number accordingly
-                numHaulers = Math.ceil(haulerSize / maxHaulerSize);
-                haulerSize = maxHaulerSize;
+                numHaulers = haulerSize / maxHaulerSize; // amount needed
+                haulerSize = Math.ceil(maxHaulerSize * (numHaulers / Math.ceil(numHaulers))); // chop off excess
+                numHaulers = Math.ceil(numHaulers); // amount -> integer
             }
             return [haulerSize, numHaulers];
         } else {
@@ -499,7 +501,7 @@ var RoomBrain = class {
         }
         var numUpgraders = _.filter(Game.creeps, creep => creep.memory.role == 'upgrader' &&
                                                           creep.workRoom == this.room).length;
-        if (numUpgraders < 1) {
+        if (numUpgraders < 2) {
             var amountOver = Math.max(this.room.storage.store[RESOURCE_ENERGY] - this.settings.storageBuffer, 0);
             var upgraderSize = 1 + Math.floor(amountOver / 10000);
             var upgraderBehavior = require('role_upgrader');
