@@ -57,9 +57,7 @@ var roleMiner = {
             filter: (s) => s.structureType == STRUCTURE_CONTAINER
         }), container => container.store[RESOURCE_ENERGY])[0];
         if (target) {
-            var deposit = tasks('deposit');
-            deposit.data.quiet = true;
-            return creep.assign(deposit, target);
+            return creep.assign(tasks('deposit'), target);
         } else {
             return this.dropEnergy(creep);
         }
@@ -71,9 +69,7 @@ var roleMiner = {
             filter: (s) => s.structureType == STRUCTURE_LINK && s.energy < s.energyCapacity
         }), link => link.energy)[0];
         if (target) {
-            var deposit = tasks('deposit');
-            deposit.data.quiet = true;
-            return creep.assign(deposit, target);
+            return creep.assign(tasks('deposit'), target);
         }
     },
 

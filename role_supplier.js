@@ -48,7 +48,7 @@ var roleSupplier = {
                                                    this.settings.assistHaulersAtContainerPercent * s.storeCapacity);
         }
         var target;
-        if (containers.length > 0) { // loop through results to find the container with the most energy in the room
+        if (containers.length > 0) {
             let targets = _.sortBy(containers, [function (s) {
                 return s.store[RESOURCE_ENERGY]
             }]);

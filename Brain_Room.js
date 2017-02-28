@@ -13,11 +13,13 @@ var RoomBrain = class {
         this.settings = {
             fortifyLevel: 100000, // fortify all walls/ramparts to this level
             workerPatternRepetitionLimit: 10, // maximum number of body repetitions for workers
+            maxWorkersPerRoom: 3, // maximum number of workers to spawn per room based on number of required jobs
             supplierPatternRepetitionLimit: 4, // maximum number of body repetitions for suppliers
             haulerPatternRepetitionLimit: 7, // maximum number of body repetitions for haulers
             remoteHaulerPatternRepetitionLimit: 8, // maximum number of body repetitions for haulers
             minersPerSource: 1, // number of miners to assign to a source
             storageBuffer: 50000, // workers can't withdraw from storage until this level
+            upgradeBuffer: 75000, // upgraders start scaling off of this level
             reserveBuffer: 4000 // reserve rooms to this amount
         };
         // Settings to override this.settings for a particular room
@@ -62,7 +64,7 @@ var RoomBrain = class {
             'build': ['worker', 'miner'],
             'buildRoads': ['worker', 'guard'],
             'fortify': ['worker'],
-            'upgrade': ['worker']
+            'upgrade': ['worker', 'upgrader']
         };
         // Task assignment conditions
         this.assignmentConditions = {
@@ -253,11 +255,12 @@ var RoomBrain = class {
         if (targets) {
             var target = creep.pos.findClosestByRange(targets); // bug: some tasks aren't assigned for findClosestByPath
             return creep.assign(task, target);
-        } else {
-            if (creep.memory.role != 'supplier') { // suppliers can shut the fuck up
-                creep.log("could not get assignment from room brain!");
-            }
         }
+        // else {
+        //     if (creep.memory.role != 'supplier') { // suppliers can shut the fuck up
+        //         creep.log("could not get assignment from room brain!");
+        //     }
+        // }
         return null;
     }
 
@@ -280,7 +283,7 @@ var RoomBrain = class {
                 equilibriumEnergyPerTick /= 3; // workers spend a lot of time walking around if there's not storage
             }
             var sourceEnergyPerTick = (3000 / 300) * this.room.find(FIND_SOURCES).length;
-            return Math.ceil(0.5 * sourceEnergyPerTick / equilibriumEnergyPerTick); // operate under capacity limit
+            return Math.ceil(0.8 * sourceEnergyPerTick / equilibriumEnergyPerTick); // operate under capacity limit
         } else {
             return null;
         }
@@ -294,7 +297,7 @@ var RoomBrain = class {
                            s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
                            s.structureType != STRUCTURE_WALL && // walls are fortify tasks
                            s.structureType != STRUCTURE_RAMPART &&
-                           (s.structureType != STRUCTURE_ROAD || s.hits < 0.2 * s.hitsMax)
+                           (s.structureType != STRUCTURE_ROAD || s.hits < 0.5 * s.hitsMax)
         });
         // construction jobs
         var numConstructionJobs = this.room.find(FIND_CONSTRUCTION_SITES);
@@ -314,7 +317,7 @@ var RoomBrain = class {
         } else {
             var workerSize = Math.min(Math.floor(energy / spawn.cost(workerBodyPattern)),
                                       this.settings.workerPatternRepetitionLimit);
-            return Math.ceil((2 / workerSize) * numJobs);
+            return Math.min(Math.ceil((2 / workerSize) * numJobs), this.settings.maxWorkersPerRoom);
         }
     }
 
@@ -372,8 +375,7 @@ var RoomBrain = class {
                     this.borrowSpawn();
                 }
                 if (this.spawn) {
-                    let newMiner = minerBehavior.create(this.spawn, source.ref, {workRoom: this.room.name});
-                    return newMiner;
+                    return minerBehavior.create(this.spawn, source.ref, {workRoom: this.room.name});
                 }
             }
         }
@@ -398,11 +400,10 @@ var RoomBrain = class {
                         this.borrowSpawn();
                     }
                     if (this.spawn) {
-                        let newHauler = haulerBehavior.create(this.spawn, source.ref, {
+                        return haulerBehavior.create(this.spawn, source.ref, {
                             workRoom: this.room.name,
                             patternRepetitionLimit: haulerSize
                         });
-                        return newHauler;
                     }
                 }
             }
@@ -418,10 +419,9 @@ var RoomBrain = class {
                                            creep => creep.memory.role == 'linker');
             if (assignedLinkers.length < 1) {
                 var linkerBehavior = require('role_linker');
-                let newLinker = linkerBehavior.create(this.spawn, this.room.storage.ref, {
+                return linkerBehavior.create(this.spawn, this.room.storage.ref, {
                     workRoom: this.room.name
                 });
-                return newLinker;
             }
         }
         return null;
@@ -429,10 +429,9 @@ var RoomBrain = class {
 
     handleSuppliers() {
         // Handle suppliers
-        var numSuppliers = _.filter(Game.creeps,
-                                    creep => creep.memory.role == 'supplier' &&
-                                             creep.workRoom == this.room &&
-                                             creep.ticksToLive > creep.memory.data.replaceAt).length;
+        var numSuppliers = _.filter(Game.creeps, creep => creep.memory.role == 'supplier' &&
+                                                          creep.workRoom == this.room &&
+                                                          creep.ticksToLive > creep.memory.data.replaceAt).length;
         var energySinks = this.room.find(FIND_STRUCTURES, {
             filter: (structure) => (structure.structureType == STRUCTURE_TOWER ||
                                     structure.structureType == STRUCTURE_EXTENSION ||
@@ -456,37 +455,59 @@ var RoomBrain = class {
                 this.borrowSpawn();
             }
             if (this.spawn) {
-                var newSupplier = supplierBehavior.create(this.spawn, {
+                return supplierBehavior.create(this.spawn, {
                     workRoom: this.room.name,
                     patternRepetitionLimit: this.settings.supplierPatternRepetitionLimit
                 });
-                return newSupplier;
             }
         }
         return null;
     }
 
     handleWorkers() {
-        var numWorkers = _.filter(Game.creeps,
-                                  creep => creep.memory.role == 'worker' &&
-                                           creep.workRoom == this.room).length;
+        var numWorkers = _.filter(Game.creeps, creep => creep.memory.role == 'worker' &&
+                                                        creep.workRoom == this.room).length;
         var containers = this.room.find(FIND_STRUCTURES, {
             filter: structure => (structure.structureType == STRUCTURE_CONTAINER ||
                                   structure.structureType == STRUCTURE_STORAGE)
         });
         // Only spawn workers once containers are up
-        var workerRequirements = this.calculateWorkerRequirementsByEnergy();
+        var workerRequirements;
+        if (this.room.storage) {
+            workerRequirements = this.calculateWorkerRequirementsByJobs(); // switch to worker/upgrader once storage
+        } else {
+            workerRequirements = this.calculateWorkerRequirementsByEnergy(); // no static upgraders prior to RCL4
+        }
         if (workerRequirements && numWorkers < workerRequirements && containers.length > 0) {
             var workerBehavior = require('role_worker');
             if (this.spawn == undefined) {
                 this.borrowSpawn();
             }
             if (this.spawn) {
-                var newWorker = workerBehavior.create(this.spawn, {
+                return workerBehavior.create(this.spawn, {
                     workRoom: this.room.name,
                     patternRepetitionLimit: this.settings.workerPatternRepetitionLimit
                 });
-                return newWorker;
+            }
+        }
+        return null;
+    }
+
+    handleUpgraders() {
+        if (!this.room.storage) { // room needs to have storage before upgraders happen
+            return null;
+        }
+        var numUpgraders = _.filter(Game.creeps, creep => creep.memory.role == 'upgrader' &&
+                                                          creep.workRoom == this.room).length;
+        if (numUpgraders < 1) {
+            var amountOver = Math.max(this.room.storage.store[RESOURCE_ENERGY] - this.settings.storageBuffer, 0);
+            var upgraderSize = 1 + Math.floor(amountOver / 10000);
+            var upgraderBehavior = require('role_upgrader');
+            if (this.spawn) {
+                return upgraderBehavior.create(this.spawn, {
+                    workRoom: this.room.name,
+                    patternRepetitionLimit: upgraderSize
+                });
             }
         }
         return null;
@@ -505,6 +526,7 @@ var RoomBrain = class {
             () => this.handleMiners(),
             () => this.handleHaulers(),
             () => this.handleWorkers(),
+            () => this.handleUpgraders(),
         ];
 
         // Handle domestic operations
