@@ -10,7 +10,7 @@ var roleWorker = {
         targetFullestContainer: false // if true, target fullest container instead of the closest, ignore storage
     },
 
-    create: function (spawn, {workRoom = spawn.room.name, patternRepetitionLimit = Infinity}) {
+    create: function (spawn, {workRoom = spawn.room.name, patternRepetitionLimit = Infinity, remote = false}) {
         /** @param {StructureSpawn} spawn **/
         var bodyPattern = this.settings.bodyPattern; // body pattern to be repeated some number of times
         // calculate the most number of pattern repetitions you can use with available energy
@@ -24,14 +24,13 @@ var roleWorker = {
         }
         // create the creep and initialize memory
         return spawn.createCreep(body, spawn.creepName('worker'), {
-            role: 'worker', workRoom: workRoom, working: false, task: null, data: {
+            role: 'worker', workRoom: workRoom, remote: remote, task: null, data: {
                 origin: spawn.room.name
             }
         });
     },
 
     requestTask: function (creep) {
-        creep.memory.working = true;
         var response = creep.workRoom.brain.assignTask(creep);
         // creep.log(response);
         return response;
@@ -39,7 +38,6 @@ var roleWorker = {
 
     recharge: function (creep) {
         // try to find closest container or storage
-        creep.memory.working = false;
         var target;
         if (this.settings.targetFullestContainer) {
             target = creep.room.fullestContainer();
@@ -53,32 +51,27 @@ var roleWorker = {
         }
         if (target) {
             // assign recharge task to creep
-            var taskRecharge = tasks('recharge');
-            creep.assign(taskRecharge, target);
-            return OK;
+            return creep.assign(tasks('recharge'), target);
         } else {
             // if no targetable containers, see if worker can harvest
             if (this.settings.workersCanHarvest) {
                 return this.harvest(creep);
             } else {
                 // creep.log("no containers found and harvesting disabled!");
-                return ERR_NO_TARGET_FOUND;
+                return null;
             }
         }
     },
 
     harvest: function (creep) {
-        creep.memory.working = false;
         var target = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE, {
             filter: (source) => source.openSpots() > 0
         });
         if (target) {
-            var taskHarvest = tasks('harvest');
-            creep.assign(taskHarvest, target);
-            return OK;
+            return creep.assign(tasks('harvest'), target);
         } else {
             creep.log("no harvestable sources found!");
-            return ERR_NO_TARGET_FOUND;
+            return null;
         }
     },
 
@@ -102,12 +95,11 @@ var roleWorker = {
             return ERR_NOT_IN_SERVICE_ROOM;
         }
         // get new task if this one is invalid
-        var result;
         if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
-            result = this.newTask(creep);
+            this.newTask(creep);
         }
         // execute task
-        if (result != ERR_NOT_IN_SERVICE_ROOM && creep.task) {
+        if (creep.task) {
             this.executeTask(creep);
         }
     }

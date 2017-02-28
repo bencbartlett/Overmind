@@ -12,19 +12,19 @@ var RoomBrain = class {
         // Settings shared across all rooms
         this.settings = {
             fortifyLevel: 100000, // fortify all walls/ramparts to this level
-            workerPatternRepetitionLimit: 5, // maximum number of body repetitions for workers
-            supplierPatternRepetitionLimit: 2, // maximum number of body repetitions for suppliers
+            workerPatternRepetitionLimit: 10, // maximum number of body repetitions for workers
+            supplierPatternRepetitionLimit: 4, // maximum number of body repetitions for suppliers
             haulerPatternRepetitionLimit: 7, // maximum number of body repetitions for haulers
             remoteHaulerPatternRepetitionLimit: 8, // maximum number of body repetitions for haulers
             minersPerSource: 1, // number of miners to assign to a source
-            storageBuffer: 10000, // workers can't withdraw from storage until this level
+            storageBuffer: 50000, // workers can't withdraw from storage until this level
             reserveBuffer: 4000 // reserve rooms to this amount
         };
         // Settings to override this.settings for a particular room
         this.override = {
             workersPerRoom: { // custom number of workers per room
-                // "W18N88": 3,
-                "W19N88": 3,
+                // "W18N88": 2,
+                // "W19N88": 5,
             },
             fortifyLevel: {"W18N88": 2 * Math.pow(10, 6)}, // fortify all walls/ramparts to these levels in these rooms
         };
@@ -58,9 +58,9 @@ var RoomBrain = class {
             'collect': ['supplier', 'hauler'],
             'supplyTowers': ['supplier', 'hauler'],
             'supply': ['supplier', 'hauler'],
-            'repair': ['worker', 'miner'],
+            'repair': ['worker', 'miner', 'guard'],
             'build': ['worker', 'miner'],
-            'buildRoads': ['worker'],
+            'buildRoads': ['worker', 'guard'],
             'fortify': ['worker'],
             'upgrade': ['worker']
         };
@@ -78,15 +78,15 @@ var RoomBrain = class {
         };
     }
 
-    log(message) {
-        console.log(this.name + '_Brain: "' + message + '"');
-    }
-
     get memory() {
         if (!Memory.roomBrain[this.name]) {
             Memory.roomBrain[this.name] = {};
         }
         return Memory.roomBrain[this.name];
+    }
+
+    log(message) {
+        console.log(this.name + '_Brain: "' + message + '"');
     }
 
     peekSpawn(roomName = "W19N88") {
@@ -201,7 +201,7 @@ var RoomBrain = class {
                                        s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
                                        s.structureType != STRUCTURE_WALL && // walls are fortify tasks
                                        s.structureType != STRUCTURE_RAMPART &&
-                                       (s.structureType != STRUCTURE_ROAD || s.hits < 0.2 * s.hitsMax)
+                                       (s.structureType != STRUCTURE_ROAD || s.hits < 0.5 * s.hitsMax)
                     });
                     break;
                 case 'build': // Build construction jobs
@@ -226,21 +226,25 @@ var RoomBrain = class {
                     });
                     break;
                 case 'upgrade': // Upgrade controller
-                    targets = [this.room.controller.my && this.room.controller];
+                    if (this.room.controller && this.room.controller.my) {
+                        targets = [this.room.controller];
+                    }
                     break;
             }
-            // remove targets that are already targeted by too many creeps
-            var taskToExecute = tasks(this.taskToExecute[task]); // create task object
-            //noinspection JSReferencingMutableVariableFromClosure
-            _.remove(targets, target => target.targetedBy.length > taskToExecute.maxPerTarget);
-            if (targets.length > 0) { // return on the first instance of a target being found
-                return [taskToExecute, targets];
+            if (targets) {
+                var taskToExecute = tasks(this.taskToExecute[task]); // create task object
+                // remove targets that are already targeted by too many creeps
+                //noinspection JSReferencingMutableVariableFromClosure
+                //targets = _.remove(targets, target => target.targetedBy.length > taskToExecute.maxPerTarget);
+                if (targets.length > 0) { // return on the first instance of a target being found
+                    return [taskToExecute, targets];
+                }
             }
         }
         return [null, null];
     }
 
-    assignTask(creep) {
+    assignTask(creep) { // TODO: fix duplicate task assignments
         var applicableTasks = _.filter(this.taskPriorities,
                                        task => this.assignmentRoles[task].includes(creep.memory.role) &&
                                                this.assignmentConditions[task](creep));
@@ -248,14 +252,13 @@ var RoomBrain = class {
         // Assign the task
         if (targets) {
             var target = creep.pos.findClosestByRange(targets); // bug: some tasks aren't assigned for findClosestByPath
-            creep.assign(task, target);
-            this.log("assigned " + task.name + " for " + target);
-            return OK;
+            return creep.assign(task, target);
         } else {
             if (creep.memory.role != 'supplier') { // suppliers can shut the fuck up
                 creep.log("could not get assignment from room brain!");
             }
         }
+        return null;
     }
 
     calculateWorkerRequirementsByEnergy() {
@@ -315,37 +318,43 @@ var RoomBrain = class {
         }
     }
 
+    calculateHaulerSize(target, remote = false) { // required hauler size to fully saturate a source given distance
+        var haulerBodyPattern = require('role_hauler').settings.bodyPattern;
+        var tripLength; // total round-trip distance, assuming full speed
+        if (!remote) {
+            tripLength = 2 * target.pathLengthToStorage;
+        } else {
+            tripLength = 2 * target.pathLengthToAssignedRoomStorage
+        }
+        var carryPartsPerRepetition = _.filter(haulerBodyPattern, part => part == CARRY).length; // carry parts
+        var energyPerTripPerRepetition = 50 * carryPartsPerRepetition; // energy per trip per repetition of body pattern
+        var energyPerTickPerRepetition = energyPerTripPerRepetition / tripLength; // energy per tick per repetition
+        var sourceEnergyPerTick = (3000 / 300); // TODO: adjust for rich energy sources
+        var sizeRequiredForEquilibrium = sourceEnergyPerTick / energyPerTickPerRepetition; // size a hauler needs to be
+        return Math.ceil(1.2 * sizeRequiredForEquilibrium); // slightly overestimate
+    }
+
     calculateHaulerRequirements(target, remote = false) {
         // Calculate needed numbers of haulers for a source
         var spawn = this.spawn;
         if (spawn == undefined) {
             spawn = this.peekSpawn();
         }
-        if (spawn && this.room.storage != undefined) {
-            if (target.linked && this.room.storage.linked) { // 0 for linked sources
-                return 0;
+        if (spawn && this.room && this.room.storage) {
+            if (target.linked && this.room.storage.linked) { // don't send haulers to linked sources
+                return [null, null];
             }
-            var energy = spawn.room.energyCapacityAvailable;
             var haulerBodyPattern = require('role_hauler').settings.bodyPattern;
-            var haulerSize;
-            var tripLength;
-            if (!remote) {
-                haulerSize = Math.min(Math.floor(energy / spawn.cost(haulerBodyPattern)),
-                                      this.settings.haulerPatternRepetitionLimit);
-                tripLength = 2 * target.pathLengthToStorage;
-            } else {
-                haulerSize = Math.min(Math.floor(energy / spawn.cost(haulerBodyPattern)),
-                                      this.settings.remoteHaulerPatternRepetitionLimit);
-                tripLength = 2 * target.pathLengthToAssignedRoomStorage
+            var haulerSize = this.calculateHaulerSize(target, remote); // calculate required hauler size
+            var numHaulers = 1; // 1 hauler unless it's too large
+            var maxHaulerSize = Math.floor(this.room.energyCapacityAvailable / spawn.cost(haulerBodyPattern));
+            if (haulerSize > maxHaulerSize) { // if hauler is too big, adjust size to max and number accordingly
+                numHaulers = Math.ceil(haulerSize / maxHaulerSize);
+                haulerSize = maxHaulerSize;
             }
-            var carryParts = haulerSize * _.filter(haulerBodyPattern, part => part == CARRY).length;
-            var energyPerTrip = 50 * carryParts;
-            var energyPerTick = energyPerTrip / tripLength;
-            var sourceEnergyPerTick = (3000 / 300);
-            var haulersRequiredForEquilibrium = sourceEnergyPerTick / energyPerTick;
-            return Math.ceil(1.2 * haulersRequiredForEquilibrium); // slightly overestimate
+            return [haulerSize, numHaulers];
         } else {
-            return null;
+            return [null, null];
         }
     }
 
@@ -368,7 +377,7 @@ var RoomBrain = class {
                 }
             }
         }
-        return OK;
+        return null;
     }
 
     handleHaulers() {
@@ -382,7 +391,8 @@ var RoomBrain = class {
                 // Check enough haulers are supplied if applicable
                 let assignedHaulers = _.filter(source.assignedCreeps,
                                                creep => creep.memory.role == 'hauler');
-                if (assignedHaulers.length < this.calculateHaulerRequirements(source)) {
+                var [haulerSize, numHaulers] = this.calculateHaulerRequirements(source);
+                if (assignedHaulers.length < numHaulers) {
                     var haulerBehavior = require('role_hauler');
                     if (this.spawn == undefined) {
                         this.borrowSpawn();
@@ -390,14 +400,14 @@ var RoomBrain = class {
                     if (this.spawn) {
                         let newHauler = haulerBehavior.create(this.spawn, source.ref, {
                             workRoom: this.room.name,
-                            patternRepetitionLimit: this.settings.haulerPatternRepetitionLimit
+                            patternRepetitionLimit: haulerSize
                         });
                         return newHauler;
                     }
                 }
             }
         }
-        return OK;
+        return null;
     }
 
     handleLinkers() {
@@ -414,7 +424,7 @@ var RoomBrain = class {
                 return newLinker;
             }
         }
-        return OK;
+        return null;
     }
 
     handleSuppliers() {
@@ -428,8 +438,8 @@ var RoomBrain = class {
                                     structure.structureType == STRUCTURE_EXTENSION ||
                                     structure.structureType == STRUCTURE_SPAWN)
         });
-        if (energySinks.length <= 1) {
-            return OK;
+        if (energySinks.length <= 1) { // if there's just a spawner in the room, like in RCL1 rooms
+            return null;
         }
         var supplierLimit = 1; // there must always be at least one supplier in the room
         if (this.room.storage && _.filter(energySinks, s => s.energy < s.energyCapacity).length > 0) {
@@ -439,7 +449,7 @@ var RoomBrain = class {
                                                                        flagCodes.destroy.filter(flag) ||
                                                                        flagCodes.industry.filter(flag) ||
                                                                        flagCodes.territory.filter(flag));
-        supplierLimit += Math.floor(expensiveFlags.length / 5); // add more suppliers for cases of lots of flags // TODO: better metric
+        supplierLimit += Math.floor(expensiveFlags.length / 10); // add more suppliers for cases of lots of flags // TODO: better metric
         if (numSuppliers < supplierLimit) {
             var supplierBehavior = require('role_supplier');
             if (this.spawn == undefined) {
@@ -453,7 +463,7 @@ var RoomBrain = class {
                 return newSupplier;
             }
         }
-        return OK;
+        return null;
     }
 
     handleWorkers() {
@@ -464,8 +474,6 @@ var RoomBrain = class {
             filter: structure => (structure.structureType == STRUCTURE_CONTAINER ||
                                   structure.structureType == STRUCTURE_STORAGE)
         });
-
-
         // Only spawn workers once containers are up
         var workerRequirements = this.calculateWorkerRequirementsByEnergy();
         if (workerRequirements && numWorkers < workerRequirements && containers.length > 0) {
@@ -481,199 +489,55 @@ var RoomBrain = class {
                 return newWorker;
             }
         }
-        return OK;
+        return null;
     }
 
-    handleRemoteMiners() {
-        var sourceFlags = _.filter(this.room.assignedFlags, flagCodes.industry.mine.filter);
-        for (let sourceFlag of sourceFlags) {
-            let assignedMiners = _.filter(sourceFlag.assignedCreeps,
-                                          creep => creep.memory.role == 'miner' &&
-                                                   creep.ticksToLive > creep.memory.data.replaceAt);
-            let numConstructionSites = 0;
-            if (sourceFlag.room) {
-                numConstructionSites = sourceFlag.room.find(FIND_MY_CONSTRUCTION_SITES).length;
-            }
-            // add additional miners during initial construction phase
-            let remoteMinersPerSource = this.settings.minersPerSource * (1 + Math.floor(numConstructionSites / 5));
-            if (assignedMiners.length < remoteMinersPerSource) {
-                var minerBehavior = require('role_miner');
-                let newMiner = minerBehavior.create(this.spawn, sourceFlag.ref, {
-                    remote: true,
-                    workRoom: null
-                });
-                return newMiner;
-            }
+    handleSpawnOperations() {
+        if (this.spawn.spawning) { // don't bother calculating if you can't spawn anything...
+            return null;
         }
-        return OK;
-    }
 
-    handleRemoteHaulers() {
-        if (this.room.storage != undefined) { // haulers are only built once a room has storage
-            var sourceFlags = _.filter(this.room.assignedFlags, flagCodes.industry.mine.filter);
-            for (let sourceFlag of sourceFlags) {
-                let assignedHaulers = _.filter(sourceFlag.assignedCreeps,
-                                               creep => creep.memory.role == 'hauler');
-                // remote haulers should only be spawned for nearly complete (reserved) rooms
-                let numConstructionSites = 0;
-                if (sourceFlag.room) {
-                    numConstructionSites = sourceFlag.room.find(FIND_MY_CONSTRUCTION_SITES).length;
-                }
-                if (assignedHaulers.length < this.calculateHaulerRequirements(sourceFlag, true) &&
-                    numConstructionSites < 3) {
-                    var haulerBehavior = require('role_hauler');
-                    let newRemoteHauler = haulerBehavior.create(this.spawn, sourceFlag.ref, {
-                        remote: true,
-                        workRoom: this.room.name,
-                        patternRepetitionLimit: this.settings.remoteHaulerPatternRepetitionLimit
-                    });
-                    return newRemoteHauler;
-                }
-            }
-        }
-        return OK;
-    }
-
-    handleScouts() {
-        var scoutFlags = _.filter(this.room.assignedFlags, flagCodes.vision.stationary.filter);
-        for (let scoutFlag of scoutFlags) {
-            let assignedScouts = _.filter(scoutFlag.assignedCreeps,
-                                          creep => creep.memory.role == 'scout' &&
-                                                   creep.ticksToLive > creep.memory.data.replaceAt);
-            if (assignedScouts.length < 1) {
-                var scoutBehavior = require('role_scout');
-                let newScout = scoutBehavior.create(this.spawn, scoutFlag.ref);
-                return newScout;
-            }
-        }
-        return OK;
-    }
-
-    handleReservers() {
-        var reserverFlags = _.filter(this.room.assignedFlags, flagCodes.territory.reserve.filter);
-        for (let reserverFlag of reserverFlags) {
-            let assignedReservers = _.filter(reserverFlag.assignedCreeps,
-                                             creep => creep.memory.role == 'reserver' &&
-                                                      creep.ticksToLive > creep.memory.data.replaceAt);
-            let reserveAgain = false;
-            if (reserverFlag.room) {
-                reserveAgain = !reserverFlag.room.controller.reservation ||
-                               reserverFlag.room.controller.reservation.ticksToEnd < this.settings.reserveBuffer;
-            }
-            if (assignedReservers.length < 1 && reserveAgain) {
-                var reserverBehavior = require('role_reserver');
-                let newReserver = reserverBehavior.create(this.spawn, reserverFlag.ref);
-                return newReserver;
-            }
-        }
-        return OK;
-    }
-
-    handleGuards() { // TODO: migrate these flag-based functions to Brain_Flag.js
-        var guardFlags = _.filter(this.room.assignedFlags, flagCodes.millitary.guard.filter);
-        for (let guardFlag of guardFlags) {
-            let assignedGuards = _.filter(guardFlag.assignedCreeps,
-                                          creep => creep.memory.role == 'guard' &&
-                                                   creep.ticksToLive > creep.memory.data.replaceAt);
-            let numGuards = 1;
-            if (guardFlag.memory.amount) {
-                numGuards = guardFlag.memory.amount;
-            }
-            let maxSize = 4;
-            if (guardFlag.memory.maxSize) {
-                maxSize = guardFlag.memory.maxSize;
-            }
-            if (assignedGuards.length < numGuards) {
-                var guardBehavior = require('role_guard');
-                let newGuard = guardBehavior.create(this.spawn, guardFlag.ref, maxSize);
-                return newGuard;
-            }
-        }
-        return OK;
-    }
-
-    handleRallyHealers() {
-        // rally healers should only be built in towerless (unowned) rooms
-        var rallyHealerFlags = _.filter(this.room.assignedFlags,
-                                        flag => flagCodes.rally.healPoint.filter(flag) &&
-                                                !(flag.room && flag.room.find(FIND_MY_STRUCTURES, {
-                                                    filter: s => s.structureType == STRUCTURE_TOWER
-                                                }).length > 0));
-        for (let rallyHealerFlag of rallyHealerFlags) {
-            let assignedSiegers = _.filter(rallyHealerFlag.assignedCreeps,
-                                           creep => creep.memory.role == 'rallyHealer' &&
-                                                    creep.ticksToLive > creep.memory.data.replaceAt);
-            let numRallyHealers = 1;
-            if (rallyHealerFlag.memory.amount) {
-                numRallyHealers = rallyHealerFlag.memory.amount;
-            }
-            let maxSize = Infinity;
-            if (rallyHealerFlag.memory.maxSize) {
-                maxSize = rallyHealerFlag.memory.maxSize;
-            }
-            if (assignedSiegers.length < numRallyHealers) {
-                var rallyHealerBehavior = require('role_rallyHealer');
-                let newRallyHealer = rallyHealerBehavior.create(this.spawn, rallyHealerFlag.ref, {
-                    patternRepetitionLimit: maxSize
-                });
-                return newRallyHealer;
-            }
-        }
-        return OK;
-    }
-
-    handleSiegers() {
-        var siegerFlags = _.filter(this.room.assignedFlags, flagCodes.millitary.sieger.filter);
-        for (let siegerFlag of siegerFlags) {
-            let assignedSiegers = _.filter(siegerFlag.assignedCreeps,
-                                           creep => creep.memory.role == 'sieger' &&
-                                                    creep.ticksToLive > creep.memory.data.replaceAt);
-            let numSiegers = 1;
-            if (siegerFlag.memory.amount) {
-                numSiegers = siegerFlag.memory.amount;
-            }
-            let maxSize = Infinity;
-            if (siegerFlag.memory.maxSize) {
-                maxSize = siegerFlag.memory.maxSize;
-            }
-            if (assignedSiegers.length < numSiegers) {
-                var siegerBehavior = require('role_sieger');
-                let newSieger = siegerBehavior.create(this.spawn, siegerFlag.ref, {
-                    healFlag: "Siege2HealPoint", // TODO: this is hardwired
-                    patternRepetitionLimit: maxSize
-                });
-                return newSieger;
-            }
-        }
-        return OK;
-    }
-
-    handleCreeps() {
         var handleResponse;
-        var handlerPriorities = [ // TODO: _.chain() ?
-            () => this.handleSuppliers(),
-            () => this.handleMiners(),
+        var prioritizedDomesticOperations = [
+            // Domestic operations
+            () => this.handleSuppliers(), // don't move this from top
             () => this.handleLinkers(),
+            () => this.handleMiners(),
             () => this.handleHaulers(),
             () => this.handleWorkers(),
-            () => this.handleScouts(),
-            () => this.handleReservers(),
-            () => this.handleRemoteMiners(),
-            () => this.handleRemoteHaulers(),
-            () => this.handleGuards(),
-            () => this.handleRallyHealers(),
-            () => this.handleSiegers()
         ];
 
-        for (let handler of handlerPriorities) {
+        // Handle domestic operations
+        for (let handler of prioritizedDomesticOperations) {
             handleResponse = handler();
-            if (handleResponse != OK) {
+            if (handleResponse != null) {
                 return handleResponse;
             }
         }
+
+        let flags = this.room.assignedFlags;
+        var prioritizedFlagOperations = [
+            _.filter(flags, flagCodes.vision.stationary.filter),
+            _.filter(flags, flagCodes.millitary.guard.filter),
+            _.filter(flags, flagCodes.industry.remoteMine.filter),
+            _.filter(flags, flagCodes.territory.reserve.filter),
+            _.filter(flags, flagCodes.rally.healPoint.filter),
+            _.filter(flags, flagCodes.millitary.sieger.filter)
+        ];
+
+        // Handle actions associated with assigned flags
+        for (let flagPriority of prioritizedFlagOperations) {
+            var flagsSortedByRange = _.sortBy(flagPriority, flag => flag.pathLengthToAssignedRoomStorage || Infinity);
+            for (let flag of flagsSortedByRange) {
+                handleResponse = flag.action(this);
+                if (handleResponse != null) {
+                    return handleResponse;
+                }
+            }
+        }
     }
 
-    handleSafeMode() {
+    handleSafeMode() { // TODO: make this better, defcon system
         var criticalBarriers = this.room.find(FIND_STRUCTURES, {
             filter: (s) => (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART) &&
                            s.hits < 5000
@@ -686,7 +550,7 @@ var RoomBrain = class {
     // List of things executed each tick; only run for rooms that are owned
     run() {
         this.handleSafeMode();
-        this.handleCreeps(); // build creeps as needed
+        this.handleSpawnOperations(); // build creeps as needed
     }
 };
 

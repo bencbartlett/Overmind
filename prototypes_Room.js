@@ -65,6 +65,13 @@ Object.defineProperty(Room.prototype, 'assignedFlags', { // flags assigned to th
     }
 });
 
+Object.defineProperty(Room.prototype, 'remainingConstructionProgress', { // flags assigned to this room
+    get () {
+        return _.sum(_.map(this.find(FIND_MY_CONSTRUCTION_SITES), site => site.progressTotal - site.progress));
+    }
+});
+
+
 //noinspection JSUnusedGlobalSymbols
 Room.prototype.totalSourceCapacity = function () {
     if (this.memory.miningCapacity != undefined) {

@@ -27,15 +27,14 @@ var roleSupplier = {
         // static replaceAt to prevent cases where all suppliers die out at the same time
         return spawn.createCreep(body, spawn.creepName('supplier'), {
             role: 'supplier', workRoom: workRoom, working: false, task: null, data: {
-                origin: spawn.room.name, replaceAt: 300
+                origin: spawn.room.name, replaceAt: 100
             }
         });
     },
 
     requestTask: function (creep) {
         creep.memory.working = true;
-        var task = creep.workRoom.brain.assignTask(creep);
-        return task;
+        return creep.workRoom.brain.assignTask(creep);
     },
 
     recharge: function (creep) {
@@ -62,7 +61,7 @@ var roleSupplier = {
             return creep.assign(recharge, target);
         } else {
             creep.say("Idle");
-            return ERR_NO_TARGET_FOUND;
+            return null;
         }
     },
 
@@ -74,21 +73,11 @@ var roleSupplier = {
         } else {
             return newTask;
         }
-        // if (creep.carry.energy == 0) {
-        //     let recharge = this.recharge(creep);
-        //     if (recharge == OK) {
-        //         return recharge;
-        //     }
-        // }
-        // return this.requestTask(creep);
     },
 
     executeTask: function (creep) {
         // execute the task
-        if (creep.task.step() == OK) {
-            // this.newTask(creep);
-            // this.run(creep);
-        }
+        creep.task.step()
     },
 
     run: function (creep) {
@@ -104,7 +93,14 @@ var roleSupplier = {
             // execute task
             this.executeTask(creep);
         } else {
-            creep.moveToVisual(creep.room.spawns[0]); // TODO: implement idle flag position
+            if (creep.carry.energy < creep.carry.carryCapacity) {
+                return this.recharge(creep); // recharge once there's nothing to do
+            } else { // sit and wait at flag
+                let idleFlag = _.filter(creep.room.flags, require('map_flag_codes').rally.idlePoint.filter)[0];
+                if (idleFlag) {
+                    creep.moveToVisual(idleFlag);
+                }
+            }
         }
     }
 };

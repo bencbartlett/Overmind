@@ -10,8 +10,8 @@ class Task {
         this.targetRange = 1; // range you need to be at to execute the task
         this.moveColor = '#fff';
         this.data = {
-            quiet: false
-        }; // suppress console logging
+            quiet: true // suppress console logging
+        };
     }
 
     // Getter/setter for task.creep
@@ -49,7 +49,7 @@ class Task {
         this.target = target;
         creep.memory.task = this;
         this.onAssignment();
-        return OK;
+        return this.name;
     }
 
     // Action to do on assignment

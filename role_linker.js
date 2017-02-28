@@ -41,7 +41,7 @@ var roleLinker = {
             this.collect(creep);
         } else {
             if (creep.memory.data.replaceAt == 0) { // record first transfer instance
-                creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive);
+                creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive) + 50;
             }
             this.deposit(creep);
         }

@@ -1,14 +1,15 @@
 // Global RoomVisuals drawn in every room
 
+// TODO: this stopped working.. why?
+
 var visuals = {
     drawSpawnInfo: function (room) {
         for (let spawn of room.spawns) {
             let spawning = spawn.spawning;
             if (spawning) {
                 let percent = Math.round(100 * (spawning.needTime - spawning.remainingTime) / spawning.needTime);
-                new RoomVisual(room.name).text(
-                    "🛠 " + spawning.name + " (" + percent + "%)",
-                    spawn.pos.x + 1, spawn.pos.y, {align: 'left'})
+                let message =  "🛠 " + spawning.name + " (" + percent + "%)";
+                new RoomVisual(room.name).text(message, spawn.pos.x + 1, spawn.pos.y, {font: '0.7', align: 'left'});
             }
         }
     },
@@ -16,7 +17,7 @@ var visuals = {
     drawStorageInfo: function (room) {
         if (room.storage) {
             new RoomVisual(room.name).text(
-                Math.floor(room.storage.store[RESOURCE_ENERGY] / 1000) + "K", room.storage.pos);
+                Math.floor(room.storage.store[RESOURCE_ENERGY] / 1000) + "K", room.storage.pos, {font: '0.7'});
         }
     },
 

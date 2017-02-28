@@ -36,6 +36,9 @@ var roleHauler = {
         recharge.data.quiet = true;
         var assignment;
         assignment = deref(creep.memory.assignment);
+        if (!assignment.room) { // if you don't have vision of the room
+            return creep.moveToVisual(assignment.pos, 'blue');
+        }
         var nearbyContainers = assignment.pos.findInRange(FIND_STRUCTURES, 2, {
             filter: (s) => s.structureType == STRUCTURE_CONTAINER
         });

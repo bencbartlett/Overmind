@@ -1,74 +1,102 @@
 // Map of flag codes and associated filters
 
+var flagActions = {
+    millitary: require('flag_millitary'),
+    industry: require('flag_industry'),
+    territory: require('flag_territory'),
+    vision: require('flag_vision'),
+    rally: require('flag_rally')
+};
+
 var flagCodes = {
     millitary: { // actions involving the creation and direction of offensive or defensive creeps; requires assign()
         color: COLOR_RED,
         filter: flag => flag.color == COLOR_RED,
+        action: flagActions.millitary,
         guard: { // spawn and send guard to this flag, primarily for outpost guarding // TODO: call in reinforcements
             color: COLOR_RED,
             secondaryColor: COLOR_BLUE,
-            filter: flag => flag.color == COLOR_RED && flag.secondaryColor == COLOR_BLUE
+            filter: flag => flag.color == COLOR_RED && flag.secondaryColor == COLOR_BLUE,
+            action: flagActions.millitary.guard
         },
         sieger: { // spawn and send sieger/dismantler to this flag; removed when all owned objects in room destroyed
             color: COLOR_RED,
             secondaryColor: COLOR_YELLOW,
-            filter: flag => flag.color == COLOR_RED && flag.secondaryColor == COLOR_YELLOW
+            filter: flag => flag.color == COLOR_RED && flag.secondaryColor == COLOR_YELLOW,
+            action: flagActions.millitary.sieger,
         }
     },
 
     destroy: { // directs millitary creeps to prioritize these objects; flags are removed when object is destroyed
         color: COLOR_ORANGE,
         filter: flag => flag.color == COLOR_ORANGE,
+        action: null,
         dismantle: { // dismantle this structure (with siegers); usually walls
             color: COLOR_ORANGE,
             secondaryColor: COLOR_YELLOW,
-            filter: flag => flag.color == COLOR_ORANGE && flag.secondaryColor == COLOR_YELLOW
+            filter: flag => flag.color == COLOR_ORANGE && flag.secondaryColor == COLOR_YELLOW,
+            action: null,
         }
     },
 
     industry: { // actions related to remote gathering of resources; requires assign()
         color: COLOR_YELLOW,
         filter: flag => flag.color == COLOR_YELLOW,
-        mine: { // send remote miners to this source and send remote haulers once construction is finished
+        action: flagActions.industry,
+        remoteMine: { // send remote miners to this source and send remote haulers once construction is finished
             color: COLOR_YELLOW,
             secondaryColor: COLOR_YELLOW,
-            filter: flag => flag.color == COLOR_YELLOW && flag.secondaryColor == COLOR_YELLOW
+            filter: flag => flag.color == COLOR_YELLOW && flag.secondaryColor == COLOR_YELLOW,
+            action: flagActions.industry.remoteMine
         }
     },
 
     territory: { // actions related to claiming or reserving a room; requires assign()
         color: COLOR_PURPLE,
         filter: flag => flag.color == COLOR_PURPLE,
+        action: flagActions.territory,
         reserve: { // reserve a neutral room
             color: COLOR_PURPLE,
             secondaryColor: COLOR_PURPLE,
-            filter: flag => flag.color == COLOR_PURPLE && flag.secondaryColor == COLOR_PURPLE
+            filter: flag => flag.color == COLOR_PURPLE && flag.secondaryColor == COLOR_PURPLE,
+            action: flagActions.territory.reserve
         },
-        claim: { // claim a new room
-            color: COLOR_PURPLE,
-            secondaryColor: COLOR_WHITE,
-            filter: flag => flag.color == COLOR_PURPLE && flag.secondaryColor == COLOR_WHITE
-        }
+        // claim: { // claim a new room
+        //     color: COLOR_PURPLE,
+        //     secondaryColor: COLOR_WHITE,
+        //     filter: flag => flag.color == COLOR_PURPLE && flag.secondaryColor == COLOR_WHITE,
+        //     action: flagActions.territory.claim
+        // }
     },
 
     vision: { // actions related to gathering intel; requires assign()
         color: COLOR_GREY,
         filter: flag => flag.color == COLOR_GREY,
+        action: flagActions.vision,
         stationary: { // go here and stay here, used for scouts in reserved rooms to preserve vision
             color: COLOR_GREY,
             secondaryColor: COLOR_GREY,
             filter: flag => flag.color == COLOR_GREY && flag.secondaryColor == COLOR_GREY &&
-                            (flag.room == undefined || !flag.room.my)
+                            (flag.room == undefined || !flag.room.my),
+            action: flagActions.vision.stationary
         }
     },
 
     rally: { // directs creeps to rally points for various conditions
         color: COLOR_WHITE,
         filter: flag => flag.color == COLOR_WHITE,
+        action: flagActions.rally,
+        idlePoint: {
+            color: COLOR_WHITE,
+            secondaryColor: COLOR_WHITE,
+            filter: flag => flag.color == COLOR_WHITE && flag.secondaryColor == COLOR_WHITE,
+            action: null
+        },
         healPoint: { // come to me for healing! Ich kummere mich um dich.
             color: COLOR_WHITE,
             secondaryColor: COLOR_GREEN,
-            filter: flag => flag.color == COLOR_WHITE && flag.secondaryColor == COLOR_GREEN
+            filter: flag => flag.color == COLOR_WHITE && flag.secondaryColor == COLOR_GREEN,
+            action: flagActions.rally.rallyHealer
         }
     }
 };

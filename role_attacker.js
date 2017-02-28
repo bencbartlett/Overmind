@@ -1,6 +1,8 @@
 // Guard: dumb bot that goes to a flag and then attacks everything hostile in the room, returning to flag
 // Best used only against low level npc invaders
 
+// TODO: migrate this from guard
+
 var tasks = require('tasks');
 var roleGuard = {
     /** @param {Creep} creep **/
@@ -25,7 +27,6 @@ var roleGuard = {
         for (let i = 0; i < numRepeats; i++) {
             body = body.concat(bodyPattern);
         }
-        body = body.concat([WORK, CARRY]);
         // create the creep and initialize memory
         return spawn.createCreep(body, spawn.creepName('guard'), {
             role: 'guard', task: null, assignment: assignment,
@@ -50,49 +51,18 @@ var roleGuard = {
         return target;
     },
 
-    requestTask: function (creep) {
-        creep.memory.working = true;
-        return creep.room.brain.assignTask(creep);
-    },
-
-    recharge: function (creep) {
-        var target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
-            filter: (s) => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0)
-        });
-        if (target) {
-            return creep.assign(tasks('recharge'), target);
-        }
-    },
-
-    newTask: function (creep) {
-        creep.task = null;
-        // if not in the assigned room, move there; executed in bottom of run function
-        if (creep.assignment && !creep.inSameRoomAs(creep.assignment)) {
-            return null;
-        }
-        // if there are hostiles, drop everything you're doing and attack them
-        if (creep.room.hostiles.length > 0) {
+    run: function (creep) {
+        // if (creep.name == 'guard_2') {
+        //     return OK;
+        // }
+        var assignment = Game.flags[creep.memory.assignment];
+        if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
+            creep.task = null;
             var target = this.findTarget(creep);
             if (target) {
                 let task = tasks('attack');
-                return creep.assign(task, target);
+                creep.assign(task, target);
             }
-        }
-        // if no hostiles and you can repair stuff, do so
-        if (creep.getActiveBodyparts(CARRY) > 0 && creep.getActiveBodyparts(WORK) > 0) {
-            if (creep.carry.energy == 0) {
-                return this.recharge(creep);
-            } else {
-                return this.requestTask(creep);
-            }
-        }
-    },
-
-    run: function (creep) {
-        var assignment = creep.assignment;
-        if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget()) ||
-            (creep.room.hostiles.length > 0 && creep.task && creep.task.name != 'attack')) {
-            this.newTask(creep);
         }
         if (creep.task) {
             return creep.task.step();
