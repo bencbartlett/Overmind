@@ -1,3 +1,18 @@
+/*
+
+ ___________________________________________________________
+
+  _____  _    _ _______  ______ _______ _____ __   _ ______
+ |     |  \  /  |______ |_____/ |  |  |   |   | \  | |     \
+ |_____|   \/   |______ |    \_ |  |  | __|__ |  \_| |_____/
+
+ ___________ Artificial Intelligence for Screeps ___________
+
+
+*/
+
+// Overmind repository: github.com/bencbartlett/screeps
+
 'use strict';
 
 // To-do list: ====================
@@ -20,6 +35,12 @@ module.exports.loop = function () {
     for (let name in Memory.creeps) {
         if (Game.creeps[name] == undefined) {
             delete Memory.creeps[name];
+        }
+    }
+    // Clear memory for non-existent flags
+    for (let name in Memory.flags) {
+        if (Game.flags[name] == undefined) {
+            delete Memory.flags[name];
         }
     }
     // Animate each creep

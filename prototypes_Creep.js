@@ -50,9 +50,15 @@ Object.defineProperty(Creep.prototype, 'workRoom', { // retrieve the room object
         return Game.rooms[this.memory.workRoom];
     },
     set: function (newWorkRoom) {
+        this.task = null; // clear the task
         this.memory.workRoom = newWorkRoom.name;
     }
 });
+
+Creep.prototype.setWorkRoom = function (newWorkRoomName) { // set the new workRoom with a string
+    this.workRoom = Game.rooms[newWorkRoomName];
+    return newWorkRoomName;
+};
 
 Object.defineProperty(Creep.prototype, 'lifetime', { // creep lifetime; 1500 unless claimer, then 500
     get: function () {

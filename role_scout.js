@@ -18,11 +18,13 @@ var roleScout = {
     },
 
     run: function (creep) {
-        var target = Game.flags[creep.memory.assignment].pos;
-        if (!creep.pos.inRangeTo(target, 1)) {
-            creep.moveToVisual(target);
-        } else if (creep.memory.data.replaceAt == 0) {
-            creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive) + 50;
+        if (creep.assignment) {
+            var target = creep.assignment.pos;
+            if (!creep.pos.inRangeTo(target, 1)) {
+                creep.moveToVisual(target);
+            } else if (creep.memory.data.replaceAt == 0) {
+                creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive) + 50;
+            }
         }
     }
 };

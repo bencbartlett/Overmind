@@ -5,9 +5,6 @@ class taskRecharge extends Task {
         super('recharge');
         // Settings
         this.moveColor = 'blue';
-        this.data = {
-            quiet: false
-        };
     }
 
     isValidTask() {

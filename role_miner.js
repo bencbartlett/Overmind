@@ -37,20 +37,18 @@ var roleMiner = {
 
     buildSite: function (creep, containerSite) {
         var build = tasks('build');
-        creep.assign(build, containerSite);
-        return OK;
+        return creep.assign(build, containerSite);
     },
 
     repairContainer: function (creep, container) {
         var repair = tasks('repair');
-        creep.assign(repair, container);
-        return OK;
+        return creep.assign(repair, container);
     },
 
-    dropEnergy: function(creep) {
-        var drop = tasks('dropEnergy');
-        creep.assign(drop);
+    dropEnergy: function (creep) {
         creep.log("no container; dropping!");
+        var drop = tasks('dropEnergy');
+        return creep.assign(drop);
     },
 
     depositContainer: function (creep) {
@@ -61,11 +59,9 @@ var roleMiner = {
         if (target) {
             var deposit = tasks('deposit');
             deposit.data.quiet = true;
-            creep.assign(deposit, target);
-            return OK;
+            return creep.assign(deposit, target);
         } else {
-            this.dropEnergy(creep);
-            return ERR_NO_TARGET_FOUND;
+            return this.dropEnergy(creep);
         }
     },
 
@@ -77,27 +73,21 @@ var roleMiner = {
         if (target) {
             var deposit = tasks('deposit');
             deposit.data.quiet = true;
-            creep.assign(deposit, target);
-            return OK;
+            return creep.assign(deposit, target);
         }
-        // else { // if for some reason this doesn't work, try depositing in container
-        //     creep.log("no link found; depositing to container!");
-        //     this.depositContainer(creep);
-        //     return ERR_NO_TARGET_FOUND;
-        // }
     },
 
     harvest: function (creep) {
         var target;
-        if (!creep.memory.remote) {
-            target = deref(creep.memory.assignment);
+        var assignment = deref(creep.memory.assignment);
+        if (assignment.room) {
+            target = assignment.pos.lookFor(LOOK_SOURCES)[0];
         } else {
-            target = deref(creep.memory.assignment).pos.lookFor(LOOK_SOURCES)[0];
+            target = assignment;
         }
         var taskHarvest = tasks('harvest');
         taskHarvest.data.quiet = true;
-        creep.assign(taskHarvest, target);
-        return OK;
+        return creep.assign(taskHarvest, target);
     },
 
     newTask: function (creep) {
@@ -119,16 +109,10 @@ var roleMiner = {
         }
         // 3: build construction sites
         if (this.settings.allowBuild) {
-            var constructionSites;
-            if (creep.memory.remote) {
-                constructionSites = creep.room.find(FIND_MY_CONSTRUCTION_SITES); // remote miners can build whatever
-            } else {
-                constructionSites = creep.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 2, {
-                    filter: (s) => s.structureType == STRUCTURE_CONTAINER || s.structureType == STRUCTURE_LINK
-                });
-            }
+            var constructionSites = creep.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 2, {
+                filter: (s) => s.structureType == STRUCTURE_CONTAINER // miners can only build their own containers
+            });
             if (constructionSites.length > 0) {
-                // if building is allowed, check for nearby container sites
                 return this.buildSite(creep, creep.pos.findClosestByRange(constructionSites));
             }
         }
@@ -151,11 +135,9 @@ var roleMiner = {
             this.newTask(creep);
         }
         if (creep.task) {
-            // execute task
-            this.executeTask(creep);
-        } else {
-            creep.log("could not receive task!");
+            return this.executeTask(creep);
         }
+        creep.log('Could not receive or execute task. Linkers or containers might be full...')
     }
 };
 
