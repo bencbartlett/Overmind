@@ -23,6 +23,10 @@ var rolesMap = {
         behavior: require('role_worker'),
         amount: 0
     },
+    upgrader: {
+        behavior: require('role_upgrader'),
+        amount: 0
+    },
     scout: {
         behavior: require('role_scout'),
         amount: 0

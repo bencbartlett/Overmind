@@ -5,7 +5,7 @@ var roleUpgrader = {
     /** @param {Creep} creep **/
 
     settings: {
-        bodyPattern: [WORK, WORK, WORK, CARRY, MOVE],
+        bodyPattern: [WORK, WORK, WORK, WORK, CARRY, MOVE],
     },
 
     create: function (spawn, {workRoom = spawn.room.name, patternRepetitionLimit = Infinity}) {
@@ -56,7 +56,6 @@ var roleUpgrader = {
             return ERR_NOT_IN_SERVICE_ROOM;
         }
         // get new task if this one is invalid
-        var result;
         if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
             this.newTask(creep);
         }
