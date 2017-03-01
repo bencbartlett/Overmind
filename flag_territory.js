@@ -1,3 +1,5 @@
+var roles = require('roles');
+
 var territoryFlagActions = {
     reserve: function (flag, brain) {
         // Spawn a reserver bot that will reserve the site
@@ -11,8 +13,10 @@ var territoryFlagActions = {
                                flag.room.controller.reservation.ticksToEnd < brain.settings.reserveBuffer;
             }
             if (assignedReservers.length < 1 && reserveAgain) {
-                var reserverBehavior = require('role_reserver');
-                return reserverBehavior.create(brain.spawn, flag.ref);
+                return roles('reserver').create(brain.spawn, {
+                    assignment: flag,
+                    patternRepetitionLimit: 3
+                });
             } else {
                 return null;
             }
@@ -34,11 +38,10 @@ var territoryFlagActions = {
             // Only spawn workers once containers are up
             var workerRequirements = Math.min(Math.ceil(Math.sqrt(remainingConstruction) / 30), 5);
             if (workerRequirements && numWorkers < workerRequirements && numContainers > 0) {
-                var workerBehavior = require('role_worker');
-                return workerBehavior.create(brain.spawn, {
-                    workRoom: flag.room.name,
-                    patternRepetitionLimit: 5,
-                    remote: true
+                return roles('worker').create(this.spawn, {
+                    assignment: flag,
+                    workRoom: assignment.roomName,
+                    patternRepetitionLimit: 5
                 });
             } else {
                 return null;

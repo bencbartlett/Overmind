@@ -1,4 +1,4 @@
-// Guard: dumb bot that goes to a flag and then attacks everything hostile in the room, returning to flag
+// Ranged guard: dumb bot that goes to a flag and then attacks everything hostile in the room, returning to flag
 // Best used only against low level npc invaders
 
 var tasks = require('tasks');
@@ -6,10 +6,10 @@ var Role = require('Role');
 
 class roleGuard extends Role {
     constructor() {
-        super('guard');
+        super('rangedGuard');
         // Role-specific settings
-        this.settings.bodyPattern = [ATTACK, MOVE];
-        this.roleRequirements = creep => creep.getActiveBodyparts(ATTACK) > 1 &&
+        this.settings.bodyPattern = [RANGED_ATTACK, MOVE];
+        this.roleRequirements = creep => creep.getActiveBodyparts(RANGED_ATTACK) > 1 &&
                                          creep.getActiveBodyparts(MOVE) > 1
     }
 
@@ -60,8 +60,7 @@ class roleGuard extends Role {
         if (creep.room.hostiles.length > 0) {
             var target = this.findTarget(creep);
             if (target) {
-                let task = tasks('attack');
-                return creep.assign(task, target);
+                return creep.assign(tasks('rangedAttack'), target);
             }
         }
         // if no hostiles and you can repair stuff, do so
@@ -77,7 +76,7 @@ class roleGuard extends Role {
     run(creep) {
         var assignment = creep.assignment;
         if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget()) ||
-            (creep.room.hostiles.length > 0 && creep.task && creep.task.name != 'attack')) {
+            (creep.room.hostiles.length > 0 && creep.task && creep.task.name != 'rangedAttack')) {
             this.newTask(creep);
         }
         if (creep.task) {

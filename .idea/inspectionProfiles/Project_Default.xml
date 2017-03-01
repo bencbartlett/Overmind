@@ -5,6 +5,7 @@
     <inspection_tool class="ES6ConvertVarToLetConst" enabled="true" level="INFORMATION" enabled_by_default="true" />
     <inspection_tool class="ES6ModulesDependencies" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
     <inspection_tool class="JSCommentMatchesSignature" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="JSMethodCanBeStatic" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="JSUnfilteredForInLoop" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="JSUnusedGlobalSymbols" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="JSUnusedLocalSymbols" enabled="false" level="WARNING" enabled_by_default="false" />

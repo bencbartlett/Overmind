@@ -110,3 +110,9 @@ Object.defineProperty(RoomObject.prototype, 'pathLengthToStorage', { // find and
         return this.room.memory.storagePathLengths[this.ref];
     }
 });
+
+Object.defineProperty(RoomObject.prototype, 'roomName', {
+    get: function () {
+        return this.pos.roomName;
+    }
+});
