@@ -35,6 +35,7 @@ class roleGuard extends Role {
     }
 
     findTarget(creep) {
+        var target;
         var targetPriority = [
             () => creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS),
             () => creep.pos.findClosestByRange(FIND_HOSTILE_SPAWNS),

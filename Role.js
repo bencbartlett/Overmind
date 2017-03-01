@@ -92,9 +92,12 @@ class Role {
 
     createLargestCreep(spawn, { // default method for creep spawning; separated so it can be referenced in child classes
         assignment = spawn.room.controller,
-        workRoom = assignment.roomName, // TODO: refactor this to take room, not roomName to be more consistent
+        workRoom = null, // TODO: refactor this to take room, not roomName to be more consistent
         patternRepetitionLimit = Infinity
     }) {
+        if (!workRoom) {
+            workRoom = assignment.roomName;
+        }
         // spawn: spawn to add to, assignment: object (not ref) to assign creep to, patternRepetitionLimit: creep size
         var creepBody = this.generateBody(spawn.room.energyCapacityAvailable, patternRepetitionLimit);
         var creepName = spawn.creepName(this.name);
