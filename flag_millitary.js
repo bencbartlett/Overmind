@@ -1,3 +1,5 @@
+var roles = require('roles');
+
 var millitaryFlagActions = {
     guard: function (flag, brain) {
         function handleGuards(flag, brain) {
@@ -8,13 +10,15 @@ var millitaryFlagActions = {
             if (flag.memory.amount) {
                 numGuards = flag.memory.amount;
             }
-            let maxSize = 4;
+            let maxSize = 5;
             if (flag.memory.maxSize) {
                 maxSize = flag.memory.maxSize;
             }
             if (assignedGuards.length < numGuards) {
-                var guardBehavior = require('role_guard');
-                return guardBehavior.create(brain.spawn, flag.ref, maxSize);
+                return roles('guard').create(brain.spawn, {
+                    assignment: flag,
+                    patternRepetitionLimit: maxSize
+                });
             } else {
                 return null;
             }

@@ -23,7 +23,6 @@ class taskBuild extends Task {
         } else {
             return false;
         }
-
     }
 
     work() {

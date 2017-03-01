@@ -1,5 +1,6 @@
 // Room brain: processes tasks from room and requests from worker body
 var tasks = require('tasks');
+var roles = require('roles');
 var flagCodes = require('map_flag_codes');
 
 // TODO: plug in Room.findCached() into this
@@ -18,7 +19,11 @@ var RoomBrain = class {
             haulerPatternRepetitionLimit: 7, // maximum number of body repetitions for haulers
             remoteHaulerPatternRepetitionLimit: 8, // maximum number of body repetitions for haulers
             minersPerSource: 1, // number of miners to assign to a source
-            storageBuffer: 50000, // workers can't withdraw from storage until this level
+            storageBuffer: { // creeps of a given role can't withdraw from storage until this level
+                worker: 50000,
+                upgrader: 75000,
+                default: Infinity
+            },
             upgradeBuffer: 75000, // upgraders start scaling off of this level
             reserveBuffer: 4000 // reserve rooms to this amount
         };
@@ -87,6 +92,20 @@ var RoomBrain = class {
         return Memory.roomBrain[this.name];
     }
 
+    get localSpawnQueue() {
+        if (!this.memory.spawnQueue) {
+            this.memory.spawnQueue = {};
+        }
+        return this.memory.spawnQueue;
+    }
+
+    get globalSpawnQueue() {
+        if (!Memory.globalSpawnQueue) {
+            Memory.globalSpawnQueue = {};
+        }
+        return Memory.globalSpawnQueue;
+    }
+
     log(message) {
         console.log(this.name + '_Brain: "' + message + '"');
     }
@@ -110,63 +129,69 @@ var RoomBrain = class {
         }
     }
 
-    // getTasks(tasksToGet) {
-    //     var prioritizedTargets = {};
-    //     for (let task of tasksToGet) {
-    //         switch (task) {
-    //             case 'pickup': // Pick up energy
-    //                 prioritizedTargets['pickup'] = this.room.find(FIND_DROPPED_ENERGY, {filter: d => d.amount > 100});
-    //                 break;
-    //             case 'supplyTowers': // Find towers in need of energy
-    //                 prioritizedTargets['supplyTowers'] = this.room.find(FIND_MY_STRUCTURES, {
-    //                     filter: (structure) => structure.structureType == STRUCTURE_TOWER &&
-    //                                            structure.energy < structure.energyCapacity
-    //                 });
-    //                 break;
-    //             case 'supply': // Find structures in need of energy
-    //                 prioritizedTargets['supply'] = this.room.find(FIND_MY_STRUCTURES, {
-    //                     filter: (structure) => (structure.structureType == STRUCTURE_EXTENSION ||
-    //                                             structure.structureType == STRUCTURE_SPAWN) &&
-    //                                            structure.energy < structure.energyCapacity
-    //                 });
-    //                 break;
-    //             case 'repair': // Repair structures
-    //                 prioritizedTargets['repair'] = this.room.find(FIND_STRUCTURES, {
-    //                     filter: (s) => s.hits < s.hitsMax &&
-    //                                    s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
-    //                                    s.structureType != STRUCTURE_WALL && // walls are fortify tasks
-    //                                    s.structureType != STRUCTURE_RAMPART &&
-    //                                    (s.structureType != STRUCTURE_ROAD || s.hits < 0.2 * s.hitsMax)
-    //                 });
-    //                 break;
-    //             case 'build': // Build construction jobs
-    //                 prioritizedTargets['build'] = this.room.find(FIND_CONSTRUCTION_SITES, {
-    //                     filter: c => c.structureType != STRUCTURE_ROAD
-    //                 });
-    //                 break;
-    //             case 'buildRoads': // Build construction jobs
-    //                 prioritizedTargets['buildRoads'] = this.room.find(FIND_CONSTRUCTION_SITES, {
-    //                     filter: c => c.structureType == STRUCTURE_ROAD
-    //                 });
-    //                 break;
-    //             case 'fortify': // Fortify walls
-    //                 var fortifyLevel = this.settings.fortifyLevel; // global fortify level
-    //                 if (this.override.fortifyLevel[this.room.name]) {
-    //                     fortifyLevel = this.override.fortifyLevel[this.room.name]; // override for certain rooms
-    //                 }
-    //                 //noinspection JSReferencingMutableVariableFromClosure
-    //                 prioritizedTargets['fortify'] = this.room.find(FIND_STRUCTURES, {
-    //                     filter: (s) => s.hits < fortifyLevel &&
-    //                                    (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)
-    //                 });
-    //                 break;
-    //             case 'upgrade': // Upgrade controller
-    //                 prioritizedTargets['upgrade'] = [this.room.controller.my && this.room.controller];
-    //                 break;
-    //         }
-    //     }
-    //     return prioritizedTargets;
-    // }
+    getTasks(taskType) {
+        var targets = [];
+        switch (taskType) {
+            case 'pickup': // Pick up energy
+                targets = this.room.find(FIND_DROPPED_ENERGY, {filter: d => d.amount > 100});
+                break;
+            case 'collect': // Collect from containers
+                targets = this.room.find(FIND_STRUCTURES, {
+                    filter: s => s.structureType == STRUCTURE_CONTAINER &&
+                                 s.store[RESOURCE_ENERGY] > 1000
+                });
+                break;
+            case 'supplyTowers': // Find towers in need of energy
+                targets = this.room.find(FIND_MY_STRUCTURES, {
+                    filter: (structure) => structure.structureType == STRUCTURE_TOWER &&
+                                           structure.energy < structure.energyCapacity
+                });
+                break;
+            case 'supply': // Find structures in need of energy
+                targets = this.room.find(FIND_MY_STRUCTURES, {
+                    filter: (structure) => (structure.structureType == STRUCTURE_EXTENSION ||
+                                            structure.structureType == STRUCTURE_SPAWN) &&
+                                           structure.energy < structure.energyCapacity
+                });
+                break;
+            case 'repair': // Repair structures
+                targets = this.room.find(FIND_STRUCTURES, {
+                    filter: (s) => s.hits < s.hitsMax &&
+                                   s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
+                                   s.structureType != STRUCTURE_WALL && // walls are fortify tasks
+                                   s.structureType != STRUCTURE_RAMPART &&
+                                   (s.structureType != STRUCTURE_ROAD || s.hits < 0.5 * s.hitsMax)
+                });
+                break;
+            case 'build': // Build construction jobs
+                targets = this.room.find(FIND_CONSTRUCTION_SITES, {
+                    filter: c => c.structureType != STRUCTURE_ROAD
+                });
+                break;
+            case 'buildRoads': // Build construction jobs
+                targets = this.room.find(FIND_CONSTRUCTION_SITES, {
+                    filter: c => c.structureType == STRUCTURE_ROAD
+                });
+                break;
+            case 'fortify': // Fortify walls
+                var fortifyLevel = this.settings.fortifyLevel; // global fortify level
+                if (this.override.fortifyLevel[this.room.name]) {
+                    fortifyLevel = this.override.fortifyLevel[this.room.name]; // override for certain rooms
+                }
+                //noinspection JSReferencingMutableVariableFromClosure
+                targets = this.room.find(FIND_STRUCTURES, {
+                    filter: (s) => s.hits < fortifyLevel &&
+                                   (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)
+                });
+                break;
+            case 'upgrade': // Upgrade controller
+                if (this.room.controller && this.room.controller.my) {
+                    targets = [this.room.controller];
+                }
+                break;
+        }
+        return targets;
+    }
 
     getMostUrgentTask(tasksToGet) {
         // TODO: use task.maxPerTask properties to coordinate task assignment
@@ -315,7 +340,7 @@ var RoomBrain = class {
         if (numJobs == 0) {
             return 0;
         } else {
-            var workerBodyPattern = require('role_worker').settings.bodyPattern;
+            var workerBodyPattern = roles('worker').settings.bodyPattern;
             var workerSize = Math.min(Math.floor(this.room.energyCapacityAvailable / this.spawn.cost(workerBodyPattern)),
                                       this.settings.workerPatternRepetitionLimit);
             return Math.min(Math.ceil((2 / workerSize) * numJobs), this.settings.maxWorkersPerRoom);
@@ -323,7 +348,7 @@ var RoomBrain = class {
     }
 
     calculateHaulerSize(target, remote = false) { // required hauler size to fully saturate a source given distance
-        var haulerBodyPattern = require('role_hauler').settings.bodyPattern;
+        var haulerBodyPattern = roles('hauler').settings.bodyPattern;
         var tripLength; // total round-trip distance, assuming full speed
         if (!remote) {
             tripLength = 2 * target.pathLengthToStorage;
@@ -348,7 +373,7 @@ var RoomBrain = class {
             if (target.linked && this.room.storage.linked) { // don't send haulers to linked sources
                 return [null, null];
             }
-            var haulerBodyPattern = require('role_hauler').settings.bodyPattern;
+            var haulerBodyPattern = roles('hauler').settings.bodyPattern;
             var haulerSize = this.calculateHaulerSize(target, remote); // calculate required hauler size
             var numHaulers = 1; // 1 hauler unless it's too large
             var maxHaulerSize = Math.floor(this.room.energyCapacityAvailable / spawn.cost(haulerBodyPattern));
@@ -372,17 +397,35 @@ var RoomBrain = class {
                                           creep => creep.memory.role == 'miner' &&
                                                    creep.ticksToLive > creep.memory.data.replaceAt);
             if (assignedMiners.length < this.settings.minersPerSource) {
-                var minerBehavior = require('role_miner');
-                if (this.spawn == undefined) { // attempt to borrow other spawn; this.spawn == undefined if not able
-                    this.borrowSpawn();
-                }
-                if (this.spawn) {
-                    return minerBehavior.create(this.spawn, source.ref, {workRoom: this.room.name});
-                }
+                return roles('miner').create(this.spawn, {
+                    assignment: source,
+                    workRoom: this.room.name
+                });
             }
         }
         return null;
     }
+
+    // handleMiners() {
+    //     var sources = this.room.find(FIND_SOURCES); // don't use ACTIVE_SOURCES; need to always be handled
+    //     for (let source of sources) {
+    //         // TODO: calculation of number of miners to assign to each source based on max size of creep
+    //         // Check enough miners are supplied
+    //         let assignedMiners = _.filter(source.assignedCreeps,
+    //                                       creep => creep.memory.role == 'miner' &&
+    //                                                creep.ticksToLive > creep.memory.data.replaceAt);
+    //         if (assignedMiners.length < this.settings.minersPerSource) {
+    //             var minerBehavior = require('role_miner');
+    //             if (this.spawn == undefined) { // attempt to borrow other spawn; this.spawn == undefined if not able
+    //                 this.borrowSpawn();
+    //             }
+    //             if (this.spawn) {
+    //                 return minerBehavior.create(this.spawn, source.ref, {workRoom: this.room.name});
+    //             }
+    //         }
+    //     }
+    //     return null;
+    // }
 
     handleHaulers() {
         // Check enough haulers are supplied
@@ -397,16 +440,11 @@ var RoomBrain = class {
                                                creep => creep.memory.role == 'hauler');
                 var [haulerSize, numHaulers] = this.calculateHaulerRequirements(source);
                 if (assignedHaulers.length < numHaulers) {
-                    var haulerBehavior = require('role_hauler');
-                    if (this.spawn == undefined) {
-                        this.borrowSpawn();
-                    }
-                    if (this.spawn) {
-                        return haulerBehavior.create(this.spawn, source.ref, {
-                            workRoom: this.room.name,
-                            patternRepetitionLimit: haulerSize
-                        });
-                    }
+                    return roles('hauler').create(brain.spawn, {
+                        assignment: source,
+                        workRoom: this.room.name,
+                        patternRepetitionLimit: haulerSize
+                    });
                 }
             }
         }
@@ -420,8 +458,8 @@ var RoomBrain = class {
             let assignedLinkers = _.filter(this.room.storage.assignedCreeps,
                                            creep => creep.memory.role == 'linker');
             if (assignedLinkers.length < 1) {
-                var linkerBehavior = require('role_linker');
-                return linkerBehavior.create(this.spawn, this.room.storage.ref, {
+                return roles('linker').create(this.spawn, {
+                    assignment: this.room.storage,
                     workRoom: this.room.name
                 });
             }
@@ -452,19 +490,53 @@ var RoomBrain = class {
                                                                        flagCodes.territory.filter(flag));
         supplierLimit += Math.floor(expensiveFlags.length / 10); // add more suppliers for cases of lots of flags // TODO: better metric
         if (numSuppliers < supplierLimit) {
-            var supplierBehavior = require('role_supplier');
-            if (this.spawn == undefined) {
-                this.borrowSpawn();
-            }
-            if (this.spawn) {
-                return supplierBehavior.create(this.spawn, {
+                return roles('supplier').create(this.spawn, {
+                    assignment: this.room.controler,
                     workRoom: this.room.name,
                     patternRepetitionLimit: this.settings.supplierPatternRepetitionLimit
                 });
-            }
+        } else {
+            return null;
         }
-        return null;
     }
+
+
+    // handleSuppliers() {
+    //     // Handle suppliers
+    //     var numSuppliers = _.filter(Game.creeps, creep => creep.memory.role == 'supplier' &&
+    //                                                       creep.workRoom == this.room &&
+    //                                                       creep.ticksToLive > creep.memory.data.replaceAt).length;
+    //     var energySinks = this.room.find(FIND_STRUCTURES, {
+    //         filter: (structure) => (structure.structureType == STRUCTURE_TOWER ||
+    //                                 structure.structureType == STRUCTURE_EXTENSION ||
+    //                                 structure.structureType == STRUCTURE_SPAWN)
+    //     });
+    //     if (energySinks.length <= 1) { // if there's just a spawner in the room, like in RCL1 rooms
+    //         return null;
+    //     }
+    //     var supplierLimit = 1; // there must always be at least one supplier in the room
+    //     if (this.room.storage && _.filter(energySinks, s => s.energy < s.energyCapacity).length > 0) {
+    //         supplierLimit += 1;
+    //     }
+    //     var expensiveFlags = _.filter(this.room.assignedFlags, flag => flagCodes.millitary.filter(flag) ||
+    //                                                                    flagCodes.destroy.filter(flag) ||
+    //                                                                    flagCodes.industry.filter(flag) ||
+    //                                                                    flagCodes.territory.filter(flag));
+    //     supplierLimit += Math.floor(expensiveFlags.length / 10); // add more suppliers for cases of lots of flags // TODO: better metric
+    //     if (numSuppliers < supplierLimit) {
+    //         var supplierBehavior = require('role_supplier');
+    //         if (this.spawn == undefined) {
+    //             this.borrowSpawn();
+    //         }
+    //         if (this.spawn) {
+    //             return supplierBehavior.create(this.spawn, {
+    //                 workRoom: this.room.name,
+    //                 patternRepetitionLimit: this.settings.supplierPatternRepetitionLimit
+    //             });
+    //         }
+    //     }
+    //     return null;
+    // }
 
     handleWorkers() {
         var numWorkers = _.filter(Game.creeps, creep => creep.memory.role == 'worker' &&
@@ -481,19 +553,43 @@ var RoomBrain = class {
             workerRequirements = this.calculateWorkerRequirementsByEnergy(); // no static upgraders prior to RCL4
         }
         if (workerRequirements && numWorkers < workerRequirements && containers.length > 0) {
-            var workerBehavior = require('role_worker');
-            if (this.spawn == undefined) {
-                this.borrowSpawn();
-            }
-            if (this.spawn) {
-                return workerBehavior.create(this.spawn, {
-                    workRoom: this.room.name,
-                    patternRepetitionLimit: this.settings.workerPatternRepetitionLimit
-                });
-            }
+            return roles('worker').create(this.spawn, {
+                assignment: this.room.controller,
+                workRoom: assignment.roomName,
+                patternRepetitionLimit: this.settings.workerPatternRepetitionLimit
+            });
         }
         return null;
     }
+
+    // handleWorkers() {
+    //     var numWorkers = _.filter(Game.creeps, creep => creep.memory.role == 'worker' &&
+    //                                                     creep.workRoom == this.room).length;
+    //     var containers = this.room.find(FIND_STRUCTURES, {
+    //         filter: structure => (structure.structureType == STRUCTURE_CONTAINER ||
+    //                               structure.structureType == STRUCTURE_STORAGE)
+    //     });
+    //     // Only spawn workers once containers are up
+    //     var workerRequirements;
+    //     if (this.room.storage) {
+    //         workerRequirements = this.calculateWorkerRequirementsByJobs(); // switch to worker/upgrader once storage
+    //     } else {
+    //         workerRequirements = this.calculateWorkerRequirementsByEnergy(); // no static upgraders prior to RCL4
+    //     }
+    //     if (workerRequirements && numWorkers < workerRequirements && containers.length > 0) {
+    //         var workerBehavior = require('role_worker');
+    //         if (this.spawn == undefined) {
+    //             this.borrowSpawn();
+    //         }
+    //         if (this.spawn) {
+    //             return workerBehavior.create(this.spawn, {
+    //                 workRoom: this.room.name,
+    //                 patternRepetitionLimit: this.settings.workerPatternRepetitionLimit
+    //             });
+    //         }
+    //     }
+    //     return null;
+    // }
 
     handleUpgraders() {
         if (!this.room.storage) { // room needs to have storage before upgraders happen
@@ -502,18 +598,32 @@ var RoomBrain = class {
         var numUpgraders = _.filter(Game.creeps, creep => creep.memory.role == 'upgrader' &&
                                                           creep.workRoom == this.room).length;
         if (numUpgraders < 2) {
-            var amountOver = Math.max(this.room.storage.store[RESOURCE_ENERGY] - this.settings.storageBuffer, 0);
+            var amountOver = Math.max(this.room.storage.store[RESOURCE_ENERGY] - this.settings.upgradeBuffer, 0);
             var upgraderSize = 1 + Math.floor(amountOver / 10000);
-            var upgraderBehavior = require('role_upgrader');
-            if (this.spawn) {
-                return upgraderBehavior.create(this.spawn, {
-                    workRoom: this.room.name,
-                    patternRepetitionLimit: upgraderSize
-                });
-            }
+            return roles('upgrader').create(this.spawn, {patternRepetitionLimit: upgraderSize});
         }
         return null;
     }
+
+    // handleUpgraders() {
+    //     if (!this.room.storage) { // room needs to have storage before upgraders happen
+    //         return null;
+    //     }
+    //     var numUpgraders = _.filter(Game.creeps, creep => creep.memory.role == 'upgrader' &&
+    //                                                       creep.workRoom == this.room).length;
+    //     if (numUpgraders < 2) {
+    //         var amountOver = Math.max(this.room.storage.store[RESOURCE_ENERGY] - this.settings.upgradeBuffer, 0);
+    //         var upgraderSize = 1 + Math.floor(amountOver / 10000);
+    //         var upgraderBehavior = require('role_upgrader');
+    //         if (this.spawn) {
+    //             return upgraderBehavior.create(this.spawn, {
+    //                 workRoom: this.room.name,
+    //                 patternRepetitionLimit: upgraderSize
+    //             });
+    //         }
+    //     }
+    //     return null;
+    // }
 
     handleSpawnOperations() {
         if (this.spawn.spawning) { // don't bother calculating if you can't spawn anything...
@@ -543,8 +653,8 @@ var RoomBrain = class {
         var prioritizedFlagOperations = [
             _.filter(flags, flagCodes.vision.stationary.filter),
             _.filter(flags, flagCodes.millitary.guard.filter),
-            _.filter(flags, flagCodes.industry.remoteMine.filter),
             _.filter(flags, flagCodes.territory.reserve.filter),
+            _.filter(flags, flagCodes.industry.remoteMine.filter),
             _.filter(flags, flagCodes.rally.healPoint.filter),
             _.filter(flags, flagCodes.millitary.sieger.filter)
         ];

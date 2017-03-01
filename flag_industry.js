@@ -1,3 +1,5 @@
+var roles = require('roles');
+
 var industryFlagActions = {
     remoteMine: function (flag, brain) { // remotely setup and mine an outpost
         function handleRemoteMiners(flag, brain) {
@@ -5,11 +7,9 @@ var industryFlagActions = {
                                           creep => creep.memory.role == 'miner' &&
                                                    creep.ticksToLive > creep.memory.data.replaceAt);
             let remoteMinersPerSource = brain.settings.minersPerSource;
-            if (assignedMiners.length < remoteMinersPerSource) {
-                var minerBehavior = require('role_miner');
-                return minerBehavior.create(brain.spawn, flag.ref, {
-                    remote: true,
-                    workRoom: null
+            if (assignedMiners.length < brain.settings.minersPerSource) {
+                return roles('miner').create(brain.spawn, {
+                    assignment: flag
                 });
             } else {
                 return null;
@@ -27,13 +27,11 @@ var industryFlagActions = {
                 }
                 var [haulerSize, numHaulers] = brain.calculateHaulerRequirements(flag, true);
                 if (assignedHaulers.length < numHaulers && numConstructionSites < 3) {
-                    var haulerBehavior = require('role_hauler');
-                    let newRemoteHauler = haulerBehavior.create(brain.spawn, flag.ref, {
-                        remote: true,
+                    return roles('hauler').create(brain.spawn, {
+                        assignment: flag,
                         workRoom: brain.room.name,
                         patternRepetitionLimit: haulerSize
                     });
-                    return newRemoteHauler;
                 } else {
                     return null;
                 }

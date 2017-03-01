@@ -211,5 +211,5 @@ Room.prototype.run = function () {
     }
     // Draw all visuals
     var visuals = require('visuals');
-    visuals.drawAll(this);
+    visuals.drawRoomVisuals(this);
 };

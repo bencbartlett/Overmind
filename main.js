@@ -12,12 +12,7 @@
 */
 
 
-
-
-
-
-
-// Overmind repository: github.com/bencbartlett/screeps
+// Overmind repository: github.com/bencbartlett/overmind
 
 // To-do list: ====================
 // TODO: once we have storage, workers should only spawn when repairs or construction; upgrader creep with varying size
@@ -61,5 +56,8 @@ module.exports.loop = function () {
             room.brain.run();
         }
     }
+    // Draw global visuals
+    var visuals = require('visuals');
+    visuals.drawGlobalVisuals();
     // });
 };

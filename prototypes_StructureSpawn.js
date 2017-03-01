@@ -27,33 +27,12 @@ StructureSpawn.prototype.cost = function (bodyArray) {
     return cost;
 };
 
-StructureSpawn.prototype.createBiggestCreep = function (roleName, partsLimit = Infinity) {
-    // create a balanced body as big as possible with the given energy
-    var energy = this.room.energyCapacityAvailable; // total energy available for spawn + extensions
-    var numberOfParts = Math.floor(energy / 200);
-    // make sure the creep is not too big (more than 50 parts)
-    numberOfParts = Math.min(numberOfParts, Math.floor(50 / 3), partsLimit);
-    var body = [];
-    for (let i = 0; i < numberOfParts; i++) {
-        body.push(WORK);
-        body.push(CARRY);
-        body.push(MOVE);
+Object.defineProperty(StructureSpawn.prototype, 'spawnQueue', {
+    get () {
+        if (!this.memory.spawnQueue) {
+            this.memory.spawnQueue = {};
+        }
+        return this.memory.spawnQueue;
     }
-    // create creep with the created body and the given role
-    return this.createCreep(body, this.creepName(roleName), {role: roleName});
-};
-
-// StructureSpawn.prototype.donateCreepToRoom = function (roleName, roomName) {
-//     var roleObject = rolesMap[roleName];
-//     if (roleObject) {
-//         if (Game.rooms[roomName]) {
-//             var donatedCreep = roleObject.behavior.create(this, 5); // manual size setter for now
-//             donatedCreep.donate(roomName);
-//         } else {
-//             console.log('Error: ' + roomName + ' is ' + Game.rooms[roomName]);
-//         }
-//     } else {
-//         console.log('Error: ' + roleName + ' is not a valid role.');
-//     }
-// };
+});
 
