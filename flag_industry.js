@@ -40,7 +40,33 @@ var industryFlagActions = {
             }
         }
 
-        return handleRemoteMiners(flag, brain) || handleRemoteHaulers(flag, brain);
+        // If there are sites in need of construction and containers have been set up, send in some number of workers
+        function handleRemoteWorkers(flag, brain) {
+            if (!flag.room) { // requires vision of room
+                return null;
+            }
+            var numWorkers = _.filter(Game.creeps,
+                                      creep => creep.memory.role == 'worker' &&
+                                               creep.workRoom == this.room).length;
+            var numContainers = flag.room.find(FIND_STRUCTURES, {
+                filter: structure => (structure.structureType == STRUCTURE_CONTAINER ||
+                                      structure.structureType == STRUCTURE_STORAGE)
+            }).length;
+            var remainingConstruction = flag.room.remainingConstructionProgress;
+            // Only spawn workers once containers are up, spawn a max of 3 per source
+            var workerRequirements = Math.min(Math.ceil(Math.sqrt(remainingConstruction) / 30), 3);
+            if (workerRequirements && numWorkers < workerRequirements && numContainers > 0) {
+                return roles('worker').create(this.spawn, {
+                    assignment: flag,
+                    workRoom: assignment.roomName,
+                    patternRepetitionLimit: 5
+                });
+            } else {
+                return null;
+            }
+        }
+
+        return handleRemoteMiners(flag, brain) || handleRemoteWorkers(flag, brain) || handleRemoteHaulers(flag, brain);
     }
 };
 

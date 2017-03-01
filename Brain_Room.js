@@ -197,69 +197,10 @@ var RoomBrain = class {
         // TODO: use task.maxPerTask properties to coordinate task assignment
         // TODO: defense
         // TODO: task.maxPerTarget isn't working properly all the time
-        for (let task of tasksToGet) {
-            var targets;
-            switch (task) {
-                case 'pickup': // Pick up energy
-                    targets = this.room.find(FIND_DROPPED_ENERGY, {filter: d => d.amount > 100});
-                    break;
-                case 'collect': // Collect from containers
-                    targets = this.room.find(FIND_STRUCTURES, {
-                        filter: s => s.structureType == STRUCTURE_CONTAINER &&
-                                     s.store[RESOURCE_ENERGY] > 1000
-                    });
-                    break;
-                case 'supplyTowers': // Find towers in need of energy
-                    targets = this.room.find(FIND_MY_STRUCTURES, {
-                        filter: (structure) => structure.structureType == STRUCTURE_TOWER &&
-                                               structure.energy < structure.energyCapacity
-                    });
-                    break;
-                case 'supply': // Find structures in need of energy
-                    targets = this.room.find(FIND_MY_STRUCTURES, {
-                        filter: (structure) => (structure.structureType == STRUCTURE_EXTENSION ||
-                                                structure.structureType == STRUCTURE_SPAWN) &&
-                                               structure.energy < structure.energyCapacity
-                    });
-                    break;
-                case 'repair': // Repair structures
-                    targets = this.room.find(FIND_STRUCTURES, {
-                        filter: (s) => s.hits < s.hitsMax &&
-                                       s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
-                                       s.structureType != STRUCTURE_WALL && // walls are fortify tasks
-                                       s.structureType != STRUCTURE_RAMPART &&
-                                       (s.structureType != STRUCTURE_ROAD || s.hits < 0.5 * s.hitsMax)
-                    });
-                    break;
-                case 'build': // Build construction jobs
-                    targets = this.room.find(FIND_CONSTRUCTION_SITES, {
-                        filter: c => c.structureType != STRUCTURE_ROAD
-                    });
-                    break;
-                case 'buildRoads': // Build construction jobs
-                    targets = this.room.find(FIND_CONSTRUCTION_SITES, {
-                        filter: c => c.structureType == STRUCTURE_ROAD
-                    });
-                    break;
-                case 'fortify': // Fortify walls
-                    var fortifyLevel = this.settings.fortifyLevel; // global fortify level
-                    if (this.override.fortifyLevel[this.room.name]) {
-                        fortifyLevel = this.override.fortifyLevel[this.room.name]; // override for certain rooms
-                    }
-                    //noinspection JSReferencingMutableVariableFromClosure
-                    targets = this.room.find(FIND_STRUCTURES, {
-                        filter: (s) => s.hits < fortifyLevel &&
-                                       (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)
-                    });
-                    break;
-                case 'upgrade': // Upgrade controller
-                    if (this.room.controller && this.room.controller.my) {
-                        targets = [this.room.controller];
-                    }
-                    break;
-            }
-            if (targets) {
-                var taskToExecute = tasks(this.taskToExecute[task]); // create task object
+        for (let taskType of tasksToGet) {
+            var targets = this.getTasks(taskType);
+            if (targets.length > 0) {
+                var taskToExecute = tasks(this.taskToExecute[taskType]); // create task object
                 // remove targets that are already targeted by too many creeps
                 //noinspection JSReferencingMutableVariableFromClosure
                 //targets = _.remove(targets, target => target.targetedBy.length > taskToExecute.maxPerTarget);
@@ -300,7 +241,7 @@ var RoomBrain = class {
                 return this.override.workersPerRoom[this.name]
             }
             var energy = spawn.room.energyCapacityAvailable;
-            var workerBodyPattern = require('role_worker').settings.bodyPattern;
+            var workerBodyPattern = roles('worker').settings.bodyPattern;
             var workerSize = Math.min(Math.floor(energy / spawn.cost(workerBodyPattern)),
                                       this.settings.workerPatternRepetitionLimit);
             var equilibriumEnergyPerTick = workerSize;
@@ -323,9 +264,9 @@ var RoomBrain = class {
                            s.structureType != STRUCTURE_WALL && // walls are fortify tasks
                            s.structureType != STRUCTURE_RAMPART &&
                            (s.structureType != STRUCTURE_ROAD || s.hits < 0.5 * s.hitsMax)
-        });
+        }).length;
         // construction jobs
-        var numConstructionJobs = this.room.find(FIND_CONSTRUCTION_SITES);
+        var numConstructionJobs = this.room.find(FIND_CONSTRUCTION_SITES).length;
         // fortify jobs
         var fortifyLevel = this.settings.fortifyLevel;
         if (this.override.fortifyLevel[this.room.name]) {
@@ -335,7 +276,7 @@ var RoomBrain = class {
         var numFortifyJobs = this.room.find(FIND_STRUCTURES, {
             filter: (s) => s.hits < fortifyLevel &&
                            (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)
-        });
+        }).length;
         var numJobs = numRepairJobs + numConstructionJobs + numFortifyJobs;
         if (numJobs == 0) {
             return 0;
@@ -555,7 +496,7 @@ var RoomBrain = class {
         if (workerRequirements && numWorkers < workerRequirements && containers.length > 0) {
             return roles('worker').create(this.spawn, {
                 assignment: this.room.controller,
-                workRoom: assignment.roomName,
+                workRoom: this.room.name,
                 patternRepetitionLimit: this.settings.workerPatternRepetitionLimit
             });
         }
