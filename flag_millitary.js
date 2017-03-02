@@ -10,7 +10,7 @@ var millitaryFlagActions = {
             if (flag.memory.amount) {
                 numGuards = flag.memory.amount;
             }
-            let maxSize = 5;
+            let maxSize = 4;
             if (flag.memory.maxSize) {
                 maxSize = flag.memory.maxSize;
             }

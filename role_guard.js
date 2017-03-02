@@ -1,5 +1,5 @@
 // Guard: dumb bot that goes to a flag and then attacks everything hostile in the room, returning to flag
-// Best used only against low level npc invaders
+// Best used only against low level npc invaders; sized to defend outposts
 
 var tasks = require('tasks');
 var Role = require('Role');
@@ -8,14 +8,16 @@ class roleGuard extends Role {
     constructor() {
         super('guard');
         // Role-specific settings
-        this.settings.bodyPattern = [ATTACK, MOVE];
+        this.settings.bodyPattern = [MOVE, ATTACK, RANGED_ATTACK];
+        this.settings.orderedBodyPattern = true;
         this.roleRequirements = creep => creep.getActiveBodyparts(ATTACK) > 1 &&
+                                         creep.getActiveBodyparts(RANGED_ATTACK) > 1 &&
                                          creep.getActiveBodyparts(MOVE) > 1
     }
 
     create(spawn, {assignment = 'is a flag', workRoom = spawn.roomName, patternRepetitionLimit = Infinity}) {
         if (assignment.room && assignment.room.brain.getTasks('repair').length > 0) { // create a guard to repair stuff
-            this.settings.bodySuffix = [WORK, CARRY, MOVE, MOVE];
+            this.settings.bodySuffix = [WORK, CARRY, MOVE];
             this.settings.proportionalPrefixSuffix = false; // just want one repetition
         }
         return this.createLargestCreep(spawn, {
@@ -57,13 +59,11 @@ class roleGuard extends Role {
         if (creep.assignment && !creep.inSameRoomAs(creep.assignment)) {
             return null;
         }
-        // if there are hostiles, drop everything you're doing and attack them
-        if (creep.room.hostiles.length > 0) {
-            var target = this.findTarget(creep);
-            if (target) {
-                let task = tasks('attack');
-                return creep.assign(task, target);
-            }
+        // first try to find anything you should attack
+        var target = this.findTarget(creep);
+        if (target) {
+            let task = tasks('attack');
+            return creep.assign(task, target);
         }
         // if no hostiles and you can repair stuff, do so
         if (creep.getActiveBodyparts(CARRY) > 0 && creep.getActiveBodyparts(WORK) > 0) {

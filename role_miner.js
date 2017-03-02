@@ -43,7 +43,7 @@ class roleMiner extends Role {
 
     depositContainer(creep) {
         // select emptiest of containers that are within range 1 of creep (helps with adjacent sources)
-        var target = _.sortBy(creep.pos.findInRange(FIND_STRUCTURES, 1, {
+        var target = _.sortBy(creep.pos.findInRange(FIND_STRUCTURES, 2, {
             filter: (s) => s.structureType == STRUCTURE_CONTAINER
         }), container => container.store[RESOURCE_ENERGY])[0];
         if (target) {

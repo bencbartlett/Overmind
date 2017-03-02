@@ -12,7 +12,7 @@ var RoomBrain = class {
         this.spawn = this.room.find(FIND_MY_SPAWNS)[0];
         // Settings shared across all rooms
         this.settings = {
-            fortifyLevel: 100000, // fortify all walls/ramparts to this level
+            fortifyLevel: 1e+6, // fortify all walls/ramparts to this level
             workerPatternRepetitionLimit: 10, // maximum number of body repetitions for workers
             maxWorkersPerRoom: 3, // maximum number of workers to spawn per room based on number of required jobs
             supplierPatternRepetitionLimit: 4, // maximum number of body repetitions for suppliers
@@ -22,10 +22,10 @@ var RoomBrain = class {
             storageBuffer: { // creeps of a given role can't withdraw from storage until this level
                 worker: 50000,
                 upgrader: 75000,
-                default: Infinity
+                default: 0
             },
             upgradeBuffer: 75000, // upgraders start scaling off of this level
-            reserveBuffer: 4000 // reserve rooms to this amount
+            reserveBuffer: 3000 // reserve rooms to this amount
         };
         // Settings to override this.settings for a particular room
         this.override = {
@@ -33,7 +33,9 @@ var RoomBrain = class {
                 // "W18N88": 2,
                 // "W19N88": 5,
             },
-            fortifyLevel: {"W18N88": 2 * Math.pow(10, 6)}, // fortify all walls/ramparts to these levels in these rooms
+            fortifyLevel: {
+                // "W18N88": 2e+6
+            }, // fortify all walls/ramparts to these levels in these rooms
         };
         // Task priorities - the actual priority the tasks are given. Everything else depends on this order
         this.taskPriorities = [
@@ -160,7 +162,7 @@ var RoomBrain = class {
                                    s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
                                    s.structureType != STRUCTURE_WALL && // walls are fortify tasks
                                    s.structureType != STRUCTURE_RAMPART &&
-                                   (s.structureType != STRUCTURE_ROAD || s.hits < 0.5 * s.hitsMax)
+                                   (s.structureType != STRUCTURE_ROAD || s.hits < 0.7 * s.hitsMax)
                 });
                 break;
             case 'build': // Build construction jobs
@@ -218,9 +220,12 @@ var RoomBrain = class {
                                                this.assignmentConditions[task](creep));
         var [task, targets] = this.getMostUrgentTask(applicableTasks);
         // Assign the task
-        if (targets) {
-            var target = creep.pos.findClosestByRange(targets); // bug: some tasks aren't assigned for findClosestByPath
-            return creep.assign(task, target);
+        if (targets != null) {
+            var target = creep.pos.findClosestByRange(targets, {filter: t => t != null}); // bug: some tasks aren't assigned for findClosestByPath
+            // console.log(creep, task, target, targets )
+            if (target) {
+                return creep.assign(task, target);
+            }
         }
         // else {
         //     if (creep.memory.role != 'supplier') { // suppliers can shut the fuck up
@@ -255,28 +260,20 @@ var RoomBrain = class {
         }
     }
 
-    calculateWorkerRequirementsByJobs() {
+    calculateWorkerRequirementsByJobs() { // TODO: replace from number of jobs to total time of jobs
         // Calculate needed number of workers based on number of jobs present; used at >=RCL5
-        // repair jobs
+        // repair jobs - custom calculated; workers should spawn once several repairs are needed to roads
         var numRepairJobs = this.room.find(FIND_STRUCTURES, {
             filter: (s) => s.hits < s.hitsMax &&
                            s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
                            s.structureType != STRUCTURE_WALL && // walls are fortify tasks
                            s.structureType != STRUCTURE_RAMPART &&
-                           (s.structureType != STRUCTURE_ROAD || s.hits < 0.5 * s.hitsMax)
+                           (s.structureType != STRUCTURE_ROAD || s.hits < 0.5 * s.hitsMax) // lower threshold to spawn
         }).length;
         // construction jobs
-        var numConstructionJobs = this.room.find(FIND_CONSTRUCTION_SITES).length;
+        var numConstructionJobs = this.getTasks('build').length + this.getTasks('buildRoads').length;
         // fortify jobs
-        var fortifyLevel = this.settings.fortifyLevel;
-        if (this.override.fortifyLevel[this.room.name]) {
-            fortifyLevel = this.override.fortifyLevel[this.room.name];
-        }
-        //noinspection JSReferencingMutableVariableFromClosure
-        var numFortifyJobs = this.room.find(FIND_STRUCTURES, {
-            filter: (s) => s.hits < fortifyLevel &&
-                           (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)
-        }).length;
+        var numFortifyJobs = this.getTasks('fortify').length;
         var numJobs = numRepairJobs + numConstructionJobs + numFortifyJobs;
         if (numJobs == 0) {
             return 0;
@@ -431,11 +428,11 @@ var RoomBrain = class {
                                                                        flagCodes.territory.filter(flag));
         supplierLimit += Math.floor(expensiveFlags.length / 10); // add more suppliers for cases of lots of flags // TODO: better metric
         if (numSuppliers < supplierLimit) {
-                return roles('supplier').create(this.spawn, {
-                    assignment: this.room.controler,
-                    workRoom: this.room.name,
-                    patternRepetitionLimit: this.settings.supplierPatternRepetitionLimit
-                });
+            return roles('supplier').create(this.spawn, {
+                assignment: this.room.controler,
+                workRoom: this.room.name,
+                patternRepetitionLimit: this.settings.supplierPatternRepetitionLimit
+            });
         } else {
             return null;
         }
@@ -538,9 +535,11 @@ var RoomBrain = class {
         }
         var numUpgraders = _.filter(Game.creeps, creep => creep.memory.role == 'upgrader' &&
                                                           creep.workRoom == this.room).length;
-        if (numUpgraders < 2) {
-            var amountOver = Math.max(this.room.storage.store[RESOURCE_ENERGY] - this.settings.upgradeBuffer, 0);
-            var upgraderSize = 1 + Math.floor(amountOver / 10000);
+        var amountOver = Math.max(this.room.storage.store[RESOURCE_ENERGY] - this.settings.upgradeBuffer, 0);
+        var upgraderSize = 1 + Math.floor(amountOver / 20000);
+        var numUpgradersNeeded = Math.ceil(upgraderSize * roles('upgrader').bodyPatternCost /
+                                           this.room.energyCapacityAvailable); // this causes a jump at 2 upgraders
+        if (numUpgraders < numUpgradersNeeded) {
             return roles('upgrader').create(this.spawn, {patternRepetitionLimit: upgraderSize});
         }
         return null;

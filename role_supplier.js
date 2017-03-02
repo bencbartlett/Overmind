@@ -12,41 +12,41 @@ class roleSupplier extends Role {
                                          creep.getActiveBodyparts(CARRY) > 1
     }
 
-    recharge(creep) {
-        var containers = creep.workRoom.find(FIND_STRUCTURES, {
-            filter: (s) => s.structureType == STRUCTURE_CONTAINER
-        });
-        if (creep.workRoom.storage) {
-            containers = _.filter(containers, s => s.store[RESOURCE_ENERGY] >
-                                                   this.settings.assistHaulersAtContainerPercent * s.storeCapacity);
-        }
-        var target;
-        if (containers.length > 0) {
-            let targets = _.sortBy(containers, [function (s) {
-                return s.store[RESOURCE_ENERGY]
-            }]);
-            target = targets[targets.length - 1]; // pick the fullest container
-        }
-        if (!target) {
-            target = creep.workRoom.storage;
-        }
-        if (target) {
-            return creep.assign(tasks('recharge'), target);
-        } else {
-            creep.say("Idle");
-            return null;
-        }
-    }
+    // recharge(creep) {
+    //     var containers = creep.workRoom.find(FIND_STRUCTURES, {
+    //         filter: (s) => s.structureType == STRUCTURE_CONTAINER
+    //     });
+    //     if (creep.workRoom.storage) {
+    //         containers = _.filter(containers, s => s.store[RESOURCE_ENERGY] >
+    //                                                this.settings.assistHaulersAtContainerPercent * s.storeCapacity);
+    //     }
+    //     var target;
+    //     if (containers.length > 0) {
+    //         let targets = _.sortBy(containers, [function (s) {
+    //             return s.store[RESOURCE_ENERGY]
+    //         }]);
+    //         target = targets[targets.length - 1]; // pick the fullest container
+    //     }
+    //     if (!target) {
+    //         target = creep.workRoom.storage;
+    //     }
+    //     if (target) {
+    //         return creep.assign(tasks('recharge'), target);
+    //     } else {
+    //         creep.say("Idle");
+    //         return null;
+    //     }
+    // }
 
-    newTask(creep) {
-        creep.task = null;
-        let newTask = this.requestTask(creep);
-        if (newTask == undefined && creep.carry.energy == 0) {
-            return this.recharge(creep);
-        } else {
-            return newTask;
-        }
-    }
+    // newTask(creep) {
+    //     creep.task = null;
+    //     let newTask = this.requestTask(creep);
+    //     if (newTask == undefined && creep.carry.energy == 0) {
+    //         return this.recharge(creep);
+    //     } else {
+    //         return newTask;
+    //     }
+    // }
 
     run(creep) {
         // move to service room

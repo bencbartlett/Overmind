@@ -15,7 +15,7 @@ var territoryFlagActions = {
             if (assignedReservers.length < 1 && reserveAgain) {
                 return roles('reserver').create(brain.spawn, {
                     assignment: flag,
-                    patternRepetitionLimit: 3
+                    patternRepetitionLimit: Infinity // build the biggest reserver you can so you don't need to do often
                 });
             } else {
                 return null;

@@ -11,7 +11,7 @@ Object.defineProperty(Room.prototype, 'brain', {
 
 Object.defineProperty(Room.prototype, 'spawns', {
     get () {
-        return _.filter(Game.spawns, spawn => spawn.room == this);
+        return this.find(FIND_MY_SPAWNS);
     }
 });
 

@@ -68,3 +68,15 @@ global.clearLog = function () {
               "[0].parentNode).scope().Console.clear()</script>";
     console.log(clr);
 };
+
+global.clearAllCachedFlagPathLengths = function () { // clear all cached path length associated with flags
+    for (let i in Game.flags) {
+        let flag = Game.flags[i];
+        if (flag.memory.pathLengthToAssignedRoomStorage) {
+            delete flag.memory.pathLengthToAssignedRoomStorage;
+        }
+        if (flag.memory.pathLengthToStorage) {
+            delete flag.memory.pathLengthToStorage;
+        }
+    }
+};

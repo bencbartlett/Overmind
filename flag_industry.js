@@ -18,15 +18,18 @@ var industryFlagActions = {
 
         function handleRemoteHaulers(flag, brain) {
             if (brain.room.storage != undefined) { // haulers are only built once a room has storage
-                let assignedHaulers = _.filter(flag.assignedCreeps,
-                                               creep => creep.memory.role == 'hauler');
+                let assignedHaulers = _.filter(flag.assignedCreeps, creep => creep.memory.role == 'hauler');
                 // remote haulers should only be spawned for nearly complete (reserved) rooms
-                let numConstructionSites = 0;
-                if (flag.room) {
-                    numConstructionSites = flag.room.find(FIND_MY_CONSTRUCTION_SITES).length;
+                if (!flag.room) { // need vision of the room to build haulers
+                    return null;
                 }
+                let numConstructionSites = flag.room.find(FIND_MY_CONSTRUCTION_SITES).length;
+                var numContainers = flag.room.find(FIND_STRUCTURES, {
+                    filter: structure => (structure.structureType == STRUCTURE_CONTAINER ||
+                                          structure.structureType == STRUCTURE_STORAGE)
+                }).length;
                 var [haulerSize, numHaulers] = brain.calculateHaulerRequirements(flag, true);
-                if (assignedHaulers.length < numHaulers && numConstructionSites < 3) {
+                if (assignedHaulers.length < numHaulers && numConstructionSites < 5 && numContainers > 0) {
                     return roles('hauler').create(brain.spawn, {
                         assignment: flag,
                         workRoom: brain.room.name,
@@ -45,20 +48,19 @@ var industryFlagActions = {
             if (!flag.room) { // requires vision of room
                 return null;
             }
-            var numWorkers = _.filter(Game.creeps,
-                                      creep => creep.memory.role == 'worker' &&
-                                               creep.workRoom == this.room).length;
+            var numWorkers = _.filter(Game.creeps, creep => creep.memory.role == 'worker' &&
+                                                            creep.assignment == flag).length;
             var numContainers = flag.room.find(FIND_STRUCTURES, {
                 filter: structure => (structure.structureType == STRUCTURE_CONTAINER ||
                                       structure.structureType == STRUCTURE_STORAGE)
             }).length;
             var remainingConstruction = flag.room.remainingConstructionProgress;
-            // Only spawn workers once containers are up, spawn a max of 3 per source
-            var workerRequirements = Math.min(Math.ceil(Math.sqrt(remainingConstruction) / 30), 3);
+            // Only spawn workers once containers are up, spawn a max of 2 per source
+            var workerRequirements = Math.min(Math.ceil(Math.sqrt(remainingConstruction) / 50), 2);
             if (workerRequirements && numWorkers < workerRequirements && numContainers > 0) {
-                return roles('worker').create(this.spawn, {
+                return roles('worker').create(brain.spawn, {
                     assignment: flag,
-                    workRoom: assignment.roomName,
+                    workRoom: flag.roomName,
                     patternRepetitionLimit: 5
                 });
             } else {
