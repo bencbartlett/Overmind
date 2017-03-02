@@ -13,6 +13,14 @@ class roleWorker extends Role {
                                          creep.getActiveBodyparts(CARRY) > 1
     }
 
+    onRun(creep) {
+        if (creep.conditionalMoveToWorkRoom() != OK) { // workers sometimes stray from their service rooms
+            this.settings.sayQuiet = true;
+            this.settings.consoleQuiet = true;
+            return ERR_NOT_IN_SERVICE_ROOM;
+        }
+    }
+
     // // Old harvest function in case I need it in the future
     // harvest(creep) {
     //     var target = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE, {

@@ -23,8 +23,8 @@ class roleReserver extends Role {
     }
 
     onRun(creep) {
-        if (creep.pos.inRangeTo(creep.assignment.pos, 1) && creep.memory.data.replaceAt == 0) {
-            creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive) + 25;
+        if (creep.pos.inRangeTo(creep.assignment.pos, 3) && creep.memory.data.replaceAt == 0) {
+            creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive);
         }
         if (creep.workRoom && (!creep.workRoom.controller.sign ||
                                creep.workRoom.controller.sign.text != this.settings.signature)) {

@@ -71,6 +71,7 @@ Object.defineProperty(Creep.prototype, 'workRoom', { // retrieve the room object
 });
 
 Creep.prototype.setWorkRoom = function (newWorkRoomName) { // set the new workRoom with a string
+    this.task = null; // delete the old task
     this.workRoom = Game.rooms[newWorkRoomName];
     return newWorkRoomName;
 };

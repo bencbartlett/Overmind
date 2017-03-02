@@ -36,3 +36,28 @@ Object.defineProperty(StructureSpawn.prototype, 'spawnQueue', {
     }
 });
 
+Object.defineProperty(StructureSpawn.prototype, 'spawnUsage', {
+    get () {
+        if (Memory.stats && Memory.stats.spawnUsage && Memory.stats.spawnUsage[this.name]) {
+            let workingTicks = _.filter(Memory.stats.spawnUsage[this.name], entry => entry != "0").length;
+            return workingTicks / Memory.stats.spawnUsage[this.name].length
+        } else {
+            console.log(this.name + ": error accessing spawn usage in Memory!");
+            return null;
+        }
+    }
+});
+
+Object.defineProperty(StructureSpawn.prototype, 'statusMessage', {
+    get () {
+        if (this.spawning) {
+            let spawning = this.spawning;
+            let percent = Math.round(100 * (spawning.needTime - spawning.remainingTime) / spawning.needTime);
+            let message = spawning.name + " (" + percent + "%)";
+            return message;
+        } else {
+            return 'idle'
+        }
+    }
+});
+

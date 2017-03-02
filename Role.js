@@ -19,6 +19,10 @@ class Role {
                                          console.log('Role.roleRequirements should be overwritten!');
     }
 
+    get bodyPatternCost() { // base cost of the body pattern
+        return this.bodyCost(this.settings.bodyPattern);
+    }
+
     bodyCost(bodyArray) {
         var partCosts = {
             'move': 50,
@@ -131,7 +135,7 @@ class Role {
         });
     }
 
-    requestTask(creep) { // default logic for requesting a new task from the room brain
+    requestTask(creep) { // default logic for requesting a new task from the room brain // TODO: why doesn't this work in other rooms?
         var response = creep.workRoom.brain.assignTask(creep);
         if (!response && !this.settings.consoleQuiet) {
             creep.log('could not get task from room brain!')
@@ -150,8 +154,7 @@ class Role {
             filter: (s) => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
                            (s.structureType == STRUCTURE_STORAGE && s.store[RESOURCE_ENERGY] > buffer)
         });
-        if (target) {
-            // assign recharge task to creep
+        if (target) { // assign recharge task to creep
             return creep.assign(tasks('recharge'), target);
         } else {
             if (!this.settings.consoleQuiet) {

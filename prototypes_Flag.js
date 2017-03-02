@@ -31,8 +31,8 @@ Object.defineProperty(Flag.prototype, 'assignedRoom', { // the room the flag is 
 Object.defineProperty(Flag.prototype, 'pathLengthToAssignedRoomStorage', {
     get () {
         if (!this.memory.pathLengthToAssignedRoomStorage) {
-            this.memory.pathLengthToAssignedRoomStorage = PathFinder.search(
-                this.assignedRoom.storage.pos, this.pos).path.length
+            this.memory.pathLengthToAssignedRoomStorage =
+                require('pathing').findPathLengthIncludingRoads(this.assignedRoom.storage.pos, this.pos)
         }
         return this.memory.pathLengthToAssignedRoomStorage;
     }

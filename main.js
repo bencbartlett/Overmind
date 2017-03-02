@@ -11,14 +11,23 @@
 
 */
 
-
+// TypeError: Cannot read property 'id' of null
+// at taskRecharge.set target [as target] (Task:42:31)
+// at taskRecharge.assign (Task:49:21)
+// at Creep.assign (prototypes_Creep:31:17)
+// at roleHauler.collect (role_hauler:40:15)
+// at roleHauler.newTask (role_hauler:62:22)
+// at roleHauler.run (Role:203:18)
+// at Creep.run (prototypes_Creep:6:36)
+// at Object.module.exports.loop (main:47:27)
+// at __mainLoop:1:52
 // Overmind repository: github.com/bencbartlett/overmind
 
 // To-do list: ====================
-// TODO: once we have storage, workers should only spawn when repairs or construction; upgrader creep with varying size
 // TODO: supplier inefficiencies; wasted time ticks between assignments
 // TODO: nearest function that works across rooms and for possibly undefined rooms
 // TODO: attack capability; calculations for how large of an invasion/defense group to make
+// TODO: avoid room edges
 
 // Import everything needed
 'use strict';
@@ -56,6 +65,10 @@ module.exports.loop = function () {
             room.brain.run();
         }
     }
+    // Log stats
+    var LoggerClass = require('data_logger');
+    var logger = new LoggerClass;
+    logger.run();
     // Draw global visuals
     var visuals = require('visuals');
     visuals.drawGlobalVisuals();
