@@ -20,8 +20,9 @@ var visuals = {
 
     drawHUD: function () {
         var fontSize, font, style;
+        fontScale = 1.3;
         // Draw the logo
-        fontSize = 0.25;
+        fontSize = 0.25 * fontScale;
         font = fontSize + ' Courier';
         style = {font: font, align: 'left'};
         var asciiLogo = ['___________________________________________________________',
@@ -33,17 +34,17 @@ var visuals = {
                          '___________________________________________________________'];
         var width = asciiLogo[0].length;
         var row = 0;
-        var column = 39.5;
+        var column = 0;
         for (line of asciiLogo) {
             new RoomVisual().text(line, column, row, style);
-            row += 0.9 * fontSize;
+            row += 0.8 * fontSize;
         }
         row += 2 * fontSize;
         if (Game.cpu.bucket < 9000) {
             new RoomVisual().text("Insufficient CPU bucket to calculate stats.", column, row, style);
         }
         // Display room information for owned rooms
-        fontSize = 0.5;
+        fontSize = 0.45 * fontScale;
         font = fontSize + ' Courier';
         style = {font: font, align: 'left'};
         new RoomVisual().text('Owned rooms:', column, row, style);
@@ -51,7 +52,12 @@ var visuals = {
         var ownedRooms = _.filter(Game.rooms, room => room.controller.my);
         for (let i in ownedRooms) {
             let room = ownedRooms[i];
-            new RoomVisual().text("  ⬛ " + room.name, column, row, style);
+            let progressPercent = Math.round(100 * room.controller.progress / room.controller.progressTotal) + "%";
+            let info = "Pr: " + progressPercent + " ";
+            if (room.storage) {
+                info += "En: " + Math.floor(room.storage.store[RESOURCE_ENERGY] / 1000) + "K "
+            }
+            new RoomVisual().text("  ⬛ " + room.name + ": " + info, column, row, style);
             row += fontSize;
             if (room.spawns.length > 0) {
                 for (let spawn of room.spawns) {
@@ -78,7 +84,7 @@ var visuals = {
             } else if (flag.room.hostiles.length > 0) {
                 icon = "⚔";
             }
-            var info = "no vision!";
+            let info = "no vision!";
             if (flag.room) { // TODO: this is pretty quick and dirty; maybe improve later
                 var totalMiners = 0;
                 var totalHaulers = 0;
