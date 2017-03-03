@@ -10,21 +10,26 @@ class roleGuard extends Role {
         // Role-specific settings
         this.settings.bodyPattern = [MOVE, ATTACK, RANGED_ATTACK];
         this.settings.orderedBodyPattern = true;
+        this.settings.notifyOnNoTask = false;
         this.roleRequirements = creep => creep.getActiveBodyparts(ATTACK) > 1 &&
                                          creep.getActiveBodyparts(RANGED_ATTACK) > 1 &&
                                          creep.getActiveBodyparts(MOVE) > 1
     }
 
-    create(spawn, {assignment = 'is a flag', workRoom = spawn.roomName, patternRepetitionLimit = Infinity}) {
+    create(spawn, {assignment, workRoom, patternRepetitionLimit = Infinity}) {
+        if (!workRoom) {
+            workRoom = assignment.roomName;
+        }
         if (assignment.room && assignment.room.brain.getTasks('repair').length > 0) { // create a guard to repair stuff
             this.settings.bodySuffix = [WORK, CARRY, MOVE];
             this.settings.proportionalPrefixSuffix = false; // just want one repetition
         }
-        return this.createLargestCreep(spawn, {
+        let creep = this.generateLargestCreep(spawn, {
             assignment: assignment,
             workRoom: workRoom,
             patternRepetitionLimit: patternRepetitionLimit
         });
+        return spawn.createCreep(creep.body, creep.name, creep.memory)
     }
 
     recharge(creep) {
@@ -70,7 +75,7 @@ class roleGuard extends Role {
             if (creep.carry.energy == 0) {
                 return this.recharge(creep);
             } else {
-                return this.requestTask(creep);
+                return this.requestTask(creep); // get applicable tasks from room brain
             }
         }
     }

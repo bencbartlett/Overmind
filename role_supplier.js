@@ -7,9 +7,21 @@ class roleSupplier extends Role {
         super('supplier');
         // Role-specific settings
         this.settings.bodyPattern = [CARRY, CARRY, MOVE];
-        this.settings.consoleQuiet = true; // suppliers should shut the fuck up
+        // this.settings.consoleQuiet = true; // suppliers should shut the fuck up
+        this.settings.notifyOnNoRechargeTargets = true;
+        this.settings.notifyOnNoTask = false;
         this.roleRequirements = creep => creep.getActiveBodyparts(MOVE) > 1 &&
                                          creep.getActiveBodyparts(CARRY) > 1
+    }
+
+    create(spawn, {assignment, workRoom, patternRepetitionLimit = Infinity}) {
+        let creep = this.generateLargestCreep(spawn, {
+            assignment: assignment,
+            workRoom: workRoom,
+            patternRepetitionLimit: patternRepetitionLimit // don't need more than 6 work parts on a miner
+        });
+        creep.memory.data.replaceAt = 100; // replace suppliers early!
+        return spawn.createCreep(creep.body, creep.name, creep.memory);
     }
 
     // recharge(creep) {

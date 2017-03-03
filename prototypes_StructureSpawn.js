@@ -56,7 +56,11 @@ Object.defineProperty(StructureSpawn.prototype, 'statusMessage', {
             let message = spawning.name + " (" + percent + "%)";
             return message;
         } else {
-            return 'idle'
+            if (this.room.energyAvailable < this.room.energyCapacityAvailable) {
+                return 'reloading';
+            } else {
+                return 'idle'
+            }
         }
     }
 });

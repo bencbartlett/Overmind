@@ -1,4 +1,5 @@
 var flagCodes = require('map_flag_codes');
+var roles = require('roles');
 
 Flag.prototype.assign = function (roomName) {
     this.memory.assignedRoom = roomName;
@@ -28,6 +29,54 @@ Object.defineProperty(Flag.prototype, 'assignedRoom', { // the room the flag is 
     }
 });
 
+Flag.prototype.getAssignedCreepAmounts = function (role) {
+    let amount = this.assignedCreepAmounts[role];
+    return amount || 0
+};
+
+Object.defineProperty(Flag.prototype, 'assignedCreepAmounts', {
+    get: function () {
+        let assignedCreeps =  _.filter(Game.creeps, creep => creep.memory.assignment &&
+                                                             creep.memory.assignment == this.ref);
+        this.memory.assignedCreepAmounts =  _.mapValues(_.groupBy(assignedCreeps, creep => creep.memory.role),
+                                                        creepList => creepList.length);
+        return this.memory.assignedCreepAmounts;
+    }
+});
+
+Flag.prototype.getRequiredCreepAmounts = function (role) {
+    let amount = this.requiredCreepAmounts[role];
+    return amount || 0;
+};
+
+// an object with roles as keys and required amounts as values
+Object.defineProperty(Flag.prototype, 'requiredCreepAmounts', {
+    get () {
+        if (!this.memory.requiredCreepAmounts) {
+            return this.memory.requiredCreepAmounts = {};
+        }
+        return this.memory.requiredCreepAmounts;
+    }
+});
+
+// if the flag needs more of a certain type of creep
+Flag.prototype.needsAdditional = function (role) {
+    return this.getAssignedCreepAmounts(role) < this.getRequiredCreepAmounts(role);
+};
+
+Flag.prototype.requestCreepIfNeeded = function (brain, role,
+    {assignment = this, workRoom = this.roomName, patternRepetitionLimit = Infinity}) {
+    if (this.needsAdditional(role)) {
+        return roles(role).create(brain.spawn, {
+            assignment: assignment,
+            workRoom: workRoom,
+            patternRepetitionLimit: patternRepetitionLimit
+        });
+    } else {
+        return null;
+    }
+};
+
 Object.defineProperty(Flag.prototype, 'pathLengthToAssignedRoomStorage', {
     get () {
         if (!this.memory.pathLengthToAssignedRoomStorage) {
@@ -41,3 +90,4 @@ Object.defineProperty(Flag.prototype, 'pathLengthToAssignedRoomStorage', {
 Flag.prototype.action = function (...args) {
     return this.type.action(this, ...args); // calls flag action with this as flag argument
 };
+

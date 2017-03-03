@@ -6,23 +6,27 @@ class roleMiner extends Role {
     constructor() {
         super('miner');
         // Role-specific settings
-        this.settings.bodyPattern = [WORK, WORK, CARRY, MOVE];
-        this.settings.remoteBodyPattern = [WORK, WORK, CARRY, MOVE, MOVE];
+        this.settings.bodyPattern = [WORK, WORK, WORK, CARRY, MOVE, MOVE];
+        // this.settings.remoteBodyPattern = [WORK, WORK, CARRY, MOVE, MOVE];
         this.settings.allowBuild = true;
         this.roleRequirements = creep => creep.getActiveBodyparts(WORK) > 5 && // 5 work parts saturate a source
                                          creep.getActiveBodyparts(MOVE) > 1 &&
                                          creep.getActiveBodyparts(CARRY) > 1
     }
 
-    create(spawn, {assignment = 'needs assignment', workRoom = spawn.roomName, patternRepetitionLimit = 3}) {
-        if (!spawn.room.controller.inSameRoomAs(assignment)) {
-            this.settings.bodyPattern = this.settings.remoteBodyPattern; // long distance miner needs to walk
+    create(spawn, {assignment, workRoom = null, patternRepetitionLimit = 2}) {
+        if (!workRoom) {
+            workRoom = assignment.roomName;
         }
-        return this.createLargestCreep(spawn, {
+        // if (!spawn.room.controller.inSameRoomAs(assignment)) {
+        //     this.settings.bodyPattern = this.settings.remoteBodyPattern; // long distance miner needs to walk
+        // }
+        let creep = this.generateLargestCreep(spawn, {
             assignment: assignment,
             workRoom: workRoom,
-            patternRepetitionLimit: 3 // don't need more than 6 work parts on a miner
+            patternRepetitionLimit: 2 // don't need more than 6 work parts on a miner
         });
+        return spawn.createCreep(creep.body, creep.name, creep.memory);
     }
 
     buildSite(creep, containerSite) {
