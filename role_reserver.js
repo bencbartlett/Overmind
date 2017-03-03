@@ -8,7 +8,7 @@ class roleReserver extends Role {
         super('reserver');
         // Role-specific settings
         this.settings.bodyPattern = [CLAIM, MOVE];
-        this.settings.signature = 'Overmind AI';
+        this.settings.signature = 'Overmind Screeps AI';
         this.roleRequirements = creep => creep.getActiveBodyparts(CLAIM) > 1 &&
                                          creep.getActiveBodyparts(MOVE) > 1
     }

@@ -17,7 +17,7 @@ Object.defineProperty(Room.prototype, 'spawns', {
 
 Object.defineProperty(Room.prototype, 'creeps', {
     get () {
-        return _.filter(Game.creeps, creep => creep.memory.data.serviceRoom == this.name);
+        return _.filter(Game.creeps, creep => creep.workRoom == this);
     }
 });
 
@@ -67,7 +67,13 @@ Object.defineProperty(Room.prototype, 'assignedFlags', { // flags assigned to th
 
 Object.defineProperty(Room.prototype, 'remainingConstructionProgress', { // flags assigned to this room
     get () {
-        return _.sum(_.map(this.find(FIND_MY_CONSTRUCTION_SITES), site => site.progressTotal - site.progress));
+        let constructionSites = this.find(FIND_MY_CONSTRUCTION_SITES);
+        if (constructionSites.length == 0) {
+            return 0;
+        } else {
+            return _.sum(_.map(constructionSites, site => site.progressTotal - site.progress));
+        }
+
     }
 });
 

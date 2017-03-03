@@ -10,7 +10,8 @@ class Task {
         this.targetRange = 1; // range you need to be at to execute the task
         this.moveColor = '#fff';
         this.data = {
-            quiet: true // suppress console logging
+            quiet: true, // suppress console logging
+            moveToOptions: {} // default options for creep.moveTo()
         };
     }
 
@@ -31,7 +32,7 @@ class Task {
     // Getter/setter for task.target
     get target() {
         if (this.targetID != null) { // Get task's own target by its ID or name
-            return Game.getObjectById(this.targetID) || Game.spawns[this.targetID] || Game.flags[this.targetID];
+            return deref(this.targetID);
         } else {
             console.log(this.name + ": target is null!");
             return null;
@@ -39,7 +40,7 @@ class Task {
     }
 
     set target(target) {
-        this.targetID = target.id || target.name || null;
+        this.targetID = target.ref;
     }
 
     // Assign the task to a creep
@@ -73,7 +74,17 @@ class Task {
     }
 
     move() {
-        this.creep.moveToVisual(this.target, this.moveColor);
+        var options = {
+            visualizePathStyle: {
+                fill: 'transparent',
+                stroke: this.moveColor,
+                lineStyle: 'dashed',
+                strokeWidth: .15,
+                opacity: .3
+            }
+        };
+        var moveSettings = Object.assign({}, this.data.moveToOptions, options);
+        return this.creep.moveTo(this.target, moveSettings);
     }
 
     // Execute this task each tick. Returns nothing unless work is done.

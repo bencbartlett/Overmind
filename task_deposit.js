@@ -5,9 +5,7 @@ class taskDeposit extends Task {
         super('deposit');
         // Settings
         this.moveColor = 'blue';
-        this.data = {
-            quiet: true
-        }
+        this.data.quiet = true;
     }
 
     isValidTask() {

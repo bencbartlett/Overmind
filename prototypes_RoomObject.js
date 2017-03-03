@@ -13,7 +13,7 @@ RoomObject.prototype.countAdjacentWalls = function () {
     return wallCount;
 };
 
-RoomObject.prototype.log = function(message) {
+RoomObject.prototype.log = function (message) {
     console.log(this.room.name + ' ' + this.name + ': "' + message + '"');
 };
 
@@ -68,17 +68,40 @@ RoomObject.prototype.flaggedWith = function (filter) { // if the object has a ce
     return this.pos.flaggedWith(filter);
 };
 
-// List of creeps assigned to this object
+// RoomObject.prototype.getAssignedCreeps = function (roleName) {
+//     return _.filter(this.assignedCreeps, creep => creep.memory.role == roleName &&
+//                                                   (!creep.memory.data.replaceAt ||
+//                                                    creep.ticksToLive > creep.memory.data.replaceAt));
+// };
+
+// Object of creeps assigned to this roomObject with keys as roles
 Object.defineProperty(RoomObject.prototype, 'assignedCreeps', {
     get: function () {
-        return _.filter(Game.creeps, creep => creep.memory.assignment && creep.memory.assignment == this.ref);
+        return _.groupBy(_.filter(Game.creeps, creep => creep.memory.assignment && creep.memory.assignment == this.ref),
+                         creep => creep.memory.role);
     }
 });
+
+RoomObject.prototype.getAssignedCreepAmounts = function (role) {
+    let amount = this.assignedCreepAmounts[role];
+    return amount || 0
+};
+
+// Object of number of creeps assigned to this roomObject with keys as roles
+Object.defineProperty(RoomObject.prototype, 'assignedCreepAmounts', {
+    get: function () {
+        let assignedCreeps =  _.filter(Game.creeps, creep => creep.memory.assignment &&
+                                                             creep.memory.assignment == this.ref);
+        return _.mapValues(_.groupBy(assignedCreeps, creep => creep.memory.role), creepList => creepList.length);
+    }
+});
+
+//
 
 // List of creeps with tasks targeting this object
 Object.defineProperty(RoomObject.prototype, 'targetedBy', {
     get: function () {
-        return _.filter(this.room.creeps, creep => creep.task && creep.task.target == this);
+        return _.filter(Game.creeps, creep => creep.memory.task && creep.memory.task.targetID == this.ref);
     }
 });
 
@@ -86,8 +109,8 @@ Object.defineProperty(RoomObject.prototype, 'targetedBy', {
 Object.defineProperty(RoomObject.prototype, 'linked', {
     get: function () {
         return this.pos.findInRange(FIND_MY_STRUCTURES, 3, {
-            filter: (s) => s.structureType == STRUCTURE_LINK
-        }).length > 0;
+                filter: (s) => s.structureType == STRUCTURE_LINK
+            }).length > 0;
     }
 });
 

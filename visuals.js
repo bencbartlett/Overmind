@@ -22,9 +22,9 @@ var visuals = {
         var fontSize, font, style;
         fontScale = 1.3;
         // Draw the logo
-        fontSize = 0.25 * fontScale;
+        fontSize = 0.3 * fontScale;
         font = fontSize + ' Courier';
-        style = {font: font, align: 'left'};
+        style = {font: font, align: 'left', opacity: 0.5};
         var asciiLogo = ['___________________________________________________________',
                          '',
                          ' _____  _    _ _______  ______ _______ _____ __   _ ______ ',
@@ -37,27 +37,27 @@ var visuals = {
         var column = 0;
         for (line of asciiLogo) {
             new RoomVisual().text(line, column, row, style);
-            row += 0.8 * fontSize;
+            row += 1 * fontSize;
         }
         row += 2 * fontSize;
         if (Game.cpu.bucket < 9000) {
             new RoomVisual().text("Insufficient CPU bucket to calculate stats.", column, row, style);
         }
         // Display room information for owned rooms
-        fontSize = 0.45 * fontScale;
+        fontSize = 0.5 * fontScale;
         font = fontSize + ' Courier';
-        style = {font: font, align: 'left'};
+        style = {font: font, align: 'left', opacity: 0.5};
         new RoomVisual().text('Owned rooms:', column, row, style);
         row += fontSize;
-        var ownedRooms = _.filter(Game.rooms, room => room.controller.my);
+        var ownedRooms = _.filter(Game.rooms, room => room.controller && room.controller.my);
         for (let i in ownedRooms) {
             let room = ownedRooms[i];
             let progressPercent = Math.round(100 * room.controller.progress / room.controller.progressTotal) + "%";
-            let info = "Pr: " + progressPercent + " ";
+            let info = "Ctrl: " + progressPercent + " ";
             if (room.storage) {
-                info += "En: " + Math.floor(room.storage.store[RESOURCE_ENERGY] / 1000) + "K "
+                info += "Energy: " + Math.floor(room.storage.store[RESOURCE_ENERGY] / 1000) + "K "
             }
-            new RoomVisual().text("  ⬛ " + room.name + ": " + info, column, row, style);
+            new RoomVisual().text("  ⬜ " + room.name + ": " + info, column, row, style);
             row += fontSize;
             if (room.spawns.length > 0) {
                 for (let spawn of room.spawns) {
@@ -76,7 +76,7 @@ var visuals = {
         row += fontSize;
         var reserveFlags = _.filter(Game.flags, flagCodes.territory.reserve.filter);
         for (let flag of reserveFlags) {
-            var icon = "⬜";
+            var icon = "🏳";
             if (!flag.room) {
                 icon = "👁";
             } else if (!(flag.room.controller.reservation && flag.room.controller.reservation.username == "Muon")) {
@@ -86,30 +86,28 @@ var visuals = {
             }
             let info = "no vision!";
             if (flag.room) { // TODO: this is pretty quick and dirty; maybe improve later
-                var totalMiners = 0;
-                var totalHaulers = 0;
-                var totalGuards = 0;
-                var totalReservers = 0;
-                var totalWorkers = 0;
+                var totalMiners = 0, requiredMiners = 0;
+                var totalHaulers = 0, requiredHaulers = 0;
+                var totalGuards = 0, requiredGuards = 0;
+                var totalReservers = 0, requiredReservers = 0;
+                var totalWorkers = 0, requiredWorkers = 0;
                 for (flag of flag.room.flags) {
-                    totalReservers += _.filter(flag.assignedCreeps,
-                                               creep => creep.memory.role == 'reserver' &&
-                                                        creep.ticksToLive > creep.memory.data.replaceAt).length;
-                    totalGuards += _.filter(flag.assignedCreeps,
-                                            creep => creep.memory.role == 'guard' &&
-                                                     creep.ticksToLive > creep.memory.data.replaceAt).length;
-                    totalMiners += _.filter(flag.assignedCreeps,
-                                            creep => creep.memory.role == 'miner' &&
-                                                     creep.ticksToLive > creep.memory.data.replaceAt).length;
-                    totalHaulers += _.filter(flag.assignedCreeps, creep => creep.memory.role == 'hauler').length;
-                    totalWorkers += _.filter(Game.creeps, creep => creep.memory.role == 'worker' &&
-                                                                   creep.assignment == flag).length;
+                    totalReservers += flag.getAssignedCreepAmounts('reserver');
+                    totalGuards += flag.getAssignedCreepAmounts('guard');
+                    totalMiners += flag.getAssignedCreepAmounts('miner');
+                    totalHaulers += flag.getAssignedCreepAmounts('hauler');
+                    totalWorkers += flag.getAssignedCreepAmounts('worker');
+                    requiredReservers += flag.getRequiredCreepAmounts('reserver');
+                    requiredGuards += flag.getRequiredCreepAmounts('guard');
+                    requiredMiners += flag.getRequiredCreepAmounts('miner');
+                    requiredHaulers += flag.getRequiredCreepAmounts('hauler');
+                    requiredWorkers += flag.getRequiredCreepAmounts('worker');
                 }
-                info = totalGuards + "G " +
-                       totalReservers + "R " +
-                       totalMiners + "M " +
-                       totalHaulers + "H " +
-                       totalWorkers + "W";
+                info = totalGuards + "/" + requiredGuards + "G " +
+                       totalReservers + "/" + requiredReservers + "R " +
+                       totalMiners + "/" + requiredMiners + "M " +
+                       totalHaulers + "/" + requiredHaulers + "H " +
+                       totalWorkers + "/" + requiredWorkers + "W";
             }
             new RoomVisual().text("  " + icon + " " + flag.roomName + ": " + info, column, row, style);
             row += fontSize;

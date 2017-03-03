@@ -12,11 +12,14 @@ class Role {
             replaceTimeBuffer: 0, // time to replace the creep at
             consoleQuiet: false, // suppress console output for this role
             sayQuiet: false, // suppress speech bubbles for this role
+            notifyOnNoTask: true, // notify if creep can't get a task from brain or if it doesn't have one
+            notifyOnNoRechargeTargets: false // notify if creep can't recharge for some reason
         };
         this.roleRequirements = creep => creep.getActiveBodyparts(WORK) > 1 && // what is required to do this role
                                          creep.getActiveBodyparts(MOVE) > 1 &&
                                          creep.getActiveBodyparts(CARRY) > 1 &&
                                          console.log('Role.roleRequirements should be overwritten!');
+
     }
 
     get bodyPatternCost() { // base cost of the body pattern
@@ -85,23 +88,17 @@ class Role {
         }
         if (proportionalPrefixSuffix) { // add the suffix
             for (let i = 0; i < numRepeats; i++) {
-                body = body.concat(prefix);
+                body = body.concat(suffix);
             }
         } else {
-            body = body.concat(prefix);
+            body = body.concat(suffix);
         }
         // return it
         return body;
     }
 
-    createLargestCreep(spawn, { // default method for creep spawning; separated so it can be referenced in child classes
-        assignment = spawn.room.controller,
-        workRoom = null, // TODO: refactor this to take room, not roomName to be more consistent
-        patternRepetitionLimit = Infinity
-    }) {
-        if (!workRoom) {
-            workRoom = assignment.roomName;
-        }
+    // generate (but not spawn) the largest creep possible, returns the creep as an object
+    generateLargestCreep(spawn, {assignment, workRoom, patternRepetitionLimit}) {
         // spawn: spawn to add to, assignment: object (not ref) to assign creep to, patternRepetitionLimit: creep size
         var creepBody = this.generateBody(spawn.room.energyCapacityAvailable, patternRepetitionLimit);
         var creepName = spawn.creepName(this.name);
@@ -119,26 +116,24 @@ class Role {
                 }
             }
         };
-        return spawn.createCreep(creep.body, creep.name, creep.memory);
+        return creep;
         // TODO: add to queue, include calculations of how busy queue is and how far creep with have to walk to decide which spawn
     }
 
-    create(spawn, {
-        assignment = spawn.room.controller,
-        workRoom = assignment.roomName,
-        patternRepetitionLimit = Infinity
-    }) {
-        return this.createLargestCreep(spawn, {
+    // spawn the creep, returns spawner response
+    create(spawn, {assignment, workRoom, patternRepetitionLimit = Infinity}) {
+        let creep = this.generateLargestCreep(spawn, {
             assignment: assignment,
             workRoom: workRoom,
             patternRepetitionLimit: patternRepetitionLimit
         });
+        return spawn.createCreep(creep.body, creep.name, creep.memory);
     }
 
     requestTask(creep) { // default logic for requesting a new task from the room brain // TODO: why doesn't this work in other rooms?
         var response = creep.workRoom.brain.assignTask(creep);
-        if (!response && !this.settings.consoleQuiet) {
-            creep.log('could not get task from room brain!')
+        if (!response && !this.settings.consoleQuiet && this.settings.notifyOnNoTask) {
+            creep.log('could not get task from room brain!');
         }
         return response;
     }
@@ -157,7 +152,7 @@ class Role {
         if (target) { // assign recharge task to creep
             return creep.assign(tasks('recharge'), target);
         } else {
-            if (!this.settings.consoleQuiet) {
+            if (!this.settings.consoleQuiet && this.settings.notifyOnNoRechargeTargets) {
                 creep.log('no recharge targets!');
             }
             return null;
@@ -177,10 +172,10 @@ class Role {
         if (creep.task) {
             return creep.task.step();
         } else {
-            if (!this.settings.consoleQuiet) {
+            if (!this.settings.consoleQuiet && this.settings.notifyOnNoTask) {
                 creep.log('no task!');
             }
-            if (!this.settings.sayQuiet) {
+            if (!this.settings.sayQuiet && this.settings.notifyOnNoTask) {
                 creep.say('no task!');
             }
             return null;

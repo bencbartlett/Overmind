@@ -10,16 +10,16 @@ class roleScout extends Role {
         this.roleRequirements = creep => creep.getActiveBodyparts(MOVE) > 1
     }
 
-    create(spawn, {
-        assignment = 'needs flagged assignment',
-        workRoom = assignment.roomName,
-        patternRepetitionLimit = 1
-    }) {
-        return this.createLargestCreep(spawn, {
+    create(spawn, {assignment, workRoom = null, patternRepetitionLimit = 1}) {
+        if (!workRoom) {
+            workRoom = assignment.roomName;
+        }
+        let creep = this.generateLargestCreep(spawn, {
             assignment: assignment,
             workRoom: workRoom,
             patternRepetitionLimit: patternRepetitionLimit
         });
+        return spawn.createCreep(creep.body, creep.name, creep.memory);
     }
 
     run(creep) {

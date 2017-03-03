@@ -61,6 +61,12 @@ var flagCodes = {
             filter: flag => flag.color == COLOR_PURPLE && flag.secondaryColor == COLOR_PURPLE,
             action: flagActions.territory.reserve
         },
+        reserveAndHarvest: { // reserve a neutral room and harvest from all available sources
+            color: COLOR_PURPLE,
+            secondaryColor: COLOR_YELLOW,
+            filter: flag => flag.color == COLOR_PURPLE && flag.secondaryColor == COLOR_YELLOW,
+            action: flagActions.territory.reserveAndHarvest
+        },
         // claim: { // claim a new room
         //     color: COLOR_PURPLE,
         //     secondaryColor: COLOR_WHITE,
