@@ -4,9 +4,14 @@
 // var task = tasks('repair');
 
 var createTaskInstance = function (taskName) {
-    var TaskClass = require('task_' + taskName);
-    var taskInstance = new TaskClass;
-    return taskInstance;
+    try {
+        var TaskClass = require('task_' + taskName);
+        var taskInstance = new TaskClass;
+        return taskInstance;
+    } catch (e) {
+        console.log(e);
+        return null;
+    }
 };
 
 module.exports = createTaskInstance;

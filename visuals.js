@@ -20,7 +20,7 @@ var visuals = {
 
     drawHUD: function () {
         var fontSize, font, style;
-        fontScale = 1.3;
+        var fontScale = 1.3;
         // Draw the logo
         fontSize = 0.3 * fontScale;
         font = fontSize + ' Courier';
@@ -35,7 +35,7 @@ var visuals = {
         var width = asciiLogo[0].length;
         var row = 0;
         var column = 0;
-        for (line of asciiLogo) {
+        for (let line of asciiLogo) {
             new RoomVisual().text(line, column, row, style);
             row += 1 * fontSize;
         }

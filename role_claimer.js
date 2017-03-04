@@ -3,9 +3,9 @@
 var tasks = require('tasks');
 var Role = require('Role');
 
-class roleReserver extends Role {
+class roleClaimer extends Role {
     constructor() {
-        super('reserver');
+        super('claimer');
         // Role-specific settings
         this.settings.bodyPattern = [CLAIM, MOVE];
         this.settings.signature = controllerSignature;
@@ -18,14 +18,14 @@ class roleReserver extends Role {
         if (!creep.assignment.room) {
             creep.moveToVisual(creep.assignment, 'purple'); // TODO: make a moveToRoom task
         } else {
-            creep.assign(tasks('reserve'), creep.assignment.room.controller);
+            creep.assign(tasks('claim'), creep.assignment.room.controller);
         }
     }
 
     onRun(creep) {
-        if (creep.pos.inRangeTo(creep.assignment.pos, 3) && creep.memory.data.replaceAt == 0) {
-            creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive);
-        }
+        // if (creep.pos.inRangeTo(creep.assignment.pos, 3) && creep.memory.data.replaceAt == 0) {
+        //     creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive);
+        // }
         if (creep.workRoom && (!creep.workRoom.controller.sign ||
                                creep.workRoom.controller.sign.text != this.settings.signature)) {
             if (creep.signController(creep.workRoom.controller, this.settings.signature) == ERR_NOT_IN_RANGE) {
@@ -35,4 +35,4 @@ class roleReserver extends Role {
     }
 }
 
-module.exports = roleReserver;
+module.exports = roleClaimer;

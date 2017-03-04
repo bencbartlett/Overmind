@@ -10,11 +10,13 @@ var RoomBrain = class {
         this.name = roomName;
         this.room = Game.rooms[roomName];
         this.spawn = this.room.find(FIND_MY_SPAWNS)[0];
+        this.incubating = (_.filter(this.room.flags, flagCodes.territory.claimAndIncubate.filter).length > 0);
         // Settings shared across all rooms
         this.settings = {
             fortifyLevel: 1e+6, // fortify all walls/ramparts to this level
-            workerPatternRepetitionLimit: 7, // maximum number of body repetitions for workers
+            workerPatternRepetitionLimit: 10, // maximum number of body repetitions for workers
             maxWorkersPerRoom: 2, // maximum number of workers to spawn per room based on number of required jobs
+            incubationWorkersToSend: 4, // number of big workers to send to incubate a room
             supplierPatternRepetitionLimit: 4, // maximum number of body repetitions for suppliers
             haulerPatternRepetitionLimit: 7, // maximum number of body repetitions for haulers
             remoteHaulerPatternRepetitionLimit: 8, // maximum number of body repetitions for haulers
@@ -24,9 +26,27 @@ var RoomBrain = class {
                 upgrader: 75000,
                 default: 0
             },
-            upgradeBuffer: 75000, // upgraders start scaling off of this level
             reserveBuffer: 3000 // reserve rooms to this amount
         };
+        // Settings for new rooms that are being incubated
+        this.incubatingSettings = {
+            fortifyLevel: 1e+3, // fortify all walls/ramparts to this level
+            workerPatternRepetitionLimit: 10, // maximum number of body repetitions for workers
+            maxWorkersPerRoom: 4, // maximum number of workers to spawn per room based on number of required jobs
+            supplierPatternRepetitionLimit: 2, // maximum number of body repetitions for suppliers
+            haulerPatternRepetitionLimit: 7, // maximum number of body repetitions for haulers
+            remoteHaulerPatternRepetitionLimit: 8, // maximum number of body repetitions for haulers
+            minersPerSource: 1, // number of miners to assign to a source
+            storageBuffer: { // creeps of a given role can't withdraw from storage until this level
+                worker: 1000,
+                upgrader: 5000,
+                default: 0
+            },
+            reserveBuffer: 3000 // reserve rooms to this amount
+        };
+        if (this.incubating) {
+            this.settings = this.incubatingSettings; // overwrite settings for incubating rooms
+        }
         // Settings to override this.settings for a particular room
         this.override = {
             workersPerRoom: { // custom number of workers per room
@@ -196,9 +216,6 @@ var RoomBrain = class {
     }
 
     getMostUrgentTask(tasksToGet) {
-        // TODO: use task.maxPerTask properties to coordinate task assignment
-        // TODO: defense
-        // TODO: task.maxPerTarget isn't working properly all the time
         for (let taskType of tasksToGet) {
             var targets = this.getTasks(taskType);
             // if (targets.length > 0) {
@@ -209,6 +226,7 @@ var RoomBrain = class {
             //     console.log(t.targetedBy);
             //     console.log(t, t.targetedBy.length, taskToExecute.maxPerTarget);
             // }
+            // TODO: cache this
             targets = _.filter(targets, target => target.targetedBy.length < taskToExecute.maxPerTarget);
             if (targets.length > 0) { // return on the first instance of a target being found
                 return [taskToExecute, targets];
@@ -237,9 +255,6 @@ var RoomBrain = class {
     calculateWorkerRequirementsByEnergy() {
         // Calculate needed numbers of workers from an energetics standpoint
         var spawn = this.spawn;
-        if (spawn == undefined) {
-            spawn = this.peekSpawn();
-        }
         if (spawn) {
             if (this.override.workersPerRoom[this.name]) {
                 return this.override.workersPerRoom[this.name]
@@ -303,9 +318,6 @@ var RoomBrain = class {
     calculateHaulerRequirements(target, remote = false) {
         // Calculate needed numbers of haulers for a source
         var spawn = this.spawn;
-        if (spawn == undefined) {
-            spawn = this.peekSpawn();
-        }
         if (spawn && this.room && this.room.storage) {
             if (target.linked && this.room.storage.linked) { // don't send haulers to linked sources
                 return [null, null];
@@ -388,6 +400,10 @@ var RoomBrain = class {
                                     structure.structureType == STRUCTURE_EXTENSION ||
                                     structure.structureType == STRUCTURE_SPAWN)
         });
+        var storageUnits = this.room.find(FIND_STRUCTURES, {
+            filter: (structure) => (structure.structureType == STRUCTURE_CONTAINER ||
+                                    structure.structureType == STRUCTURE_STORAGE)
+        });
         if (energySinks.length <= 1) { // if there's just a spawner in the room, like in RCL1 rooms
             return null;
         }
@@ -439,7 +455,8 @@ var RoomBrain = class {
             return null;
         }
         var numUpgraders = this.room.controller.getAssignedCreepAmounts('upgrader');
-        var amountOver = Math.max(this.room.storage.store[RESOURCE_ENERGY] - this.settings.upgradeBuffer, 0);
+        var amountOver = Math.max(this.room.storage.store[RESOURCE_ENERGY]
+                                  - this.settings.storageBuffer['upgrader'], 0);
         var upgraderSize = 1 + Math.floor(amountOver / 20000);
         var numUpgradersNeeded = Math.ceil(upgraderSize * roles('upgrader').bodyPatternCost /
                                            this.room.energyCapacityAvailable); // this causes a jump at 2 upgraders
@@ -453,12 +470,8 @@ var RoomBrain = class {
         return null;
     }
 
-    handleSpawnOperations() {
-        if (this.spawn.spawning) { // don't bother calculating if you can't spawn anything...
-            return null;
-        }
+    handleDomesticSpawnOperations() {
         var handleResponse;
-
         // Domestic operations
         var prioritizedDomesticOperations = [
             () => this.handleSuppliers(), // don't move this from top
@@ -477,10 +490,55 @@ var RoomBrain = class {
             }
         }
 
+        return null;
+    }
+
+    handleIncubationSpawnOperations() { // spawn fat workers to send to a new room to get it running fast
+        var incubateFlags = _.filter(this.room.assignedFlags,
+                                     flag => flagCodes.territory.claimAndIncubate.filter(flag) &&
+                                             flag.room && flag.room.controller.my);
+        incubateFlags = _.sortBy(incubateFlags, flag => flag.pathLengthToAssignedRoomStorage || Infinity);
+        for (let flag of incubateFlags) {
+            // spawn worker creeps
+            let workerBehavior = roles('worker');
+            let numIncubationWorkers = _.filter(flag.room.controller.assignedCreeps['worker'],
+                                                c => c.body.length >= workerBehavior.settings.bodyPattern.length *
+                                                                      this.settings.workerPatternRepetitionLimit);
+            if (numIncubationWorkers.length < this.settings.incubationWorkersToSend) {
+                let creep = workerBehavior.create(this.spawn, {
+                    assignment: flag.room.controller,
+                    workRoom: flag.room.name,
+                    patternRepetitionLimit: this.settings.workerPatternRepetitionLimit
+                });
+                creep.memory.data.renewMe = true;
+                return creep;
+            }
+            // spawn miner creeps
+            let minerBehavior = roles('miner');
+            let numIncubationMiners = _.filter(flag.room.controller.assignedCreeps['miner'],
+                                                c => c.body.length >= minerBehavior.settings.bodyPattern.length * 2);
+            let sources = flag.room.find(FIND_SOURCES);
+            for (let source of sources) {
+                if (numIncubationMiners.length < flag.room.find(FIND_SOURCES)) {
+                    let creep = roles('miner').create(this.spawn, {
+                        assignment: source,
+                        workRoom: flag.room.name
+                    });
+                    creep.memory.data.renewMe = true;
+                    return creep;
+                }
+            }
+        }
+        return null;
+    }
+
+    handleAssignedSpawnOperations() {
+        var handleResponse;
         // Flag operations
-        let flags = this.room.assignedFlags;
+        let flags = this.room.assignedFlags; // TODO: make this a lookup table
         var prioritizedFlagOperations = [
             _.filter(flags, flagCodes.vision.stationary.filter),
+            _.filter(flags, flagCodes.territory.claimAndIncubate.filter),
             _.filter(flags, flagCodes.millitary.guard.filter),
             _.filter(flags, flagCodes.territory.reserve.filter),
             _.filter(flags, flagCodes.industry.remoteMine.filter),
@@ -497,6 +555,37 @@ var RoomBrain = class {
                     return handleResponse;
                 }
             }
+        }
+
+        return null;
+    }
+
+    handleSpawnOperations() {
+        if (this.spawn && !this.spawn.spawning) { // only spawn if you have an available spawner
+            // renewIfNeeded creeps if applicable
+            let creepsNeedingRenewal = this.spawn.pos.findInRange(FIND_MY_CREEPS, 1, {
+                filter: creep => creep.memory.data.renewMe && creep.ticksToLive < 200
+            });
+            if (creepsNeedingRenewal.length > 0) {
+                return null;
+            }
+            // figure out what to spawn next
+            var creep;
+            var prioritizedSpawnOperations = [
+                () => this.handleDomesticSpawnOperations(),
+                () => this.handleIncubationSpawnOperations(),
+                () => this.handleAssignedSpawnOperations()
+            ];
+            // Handle domestic operations
+            for (let spawnThis of prioritizedSpawnOperations) {
+                creep = spawnThis();
+                if (creep != null) {
+                    return this.spawn.createCreep(creep.body, creep.name, creep.memory);
+                }
+            }
+            return null;
+        } else {
+            return null;
         }
     }
 

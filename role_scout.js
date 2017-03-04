@@ -19,7 +19,7 @@ class roleScout extends Role {
             workRoom: workRoom,
             patternRepetitionLimit: patternRepetitionLimit
         });
-        return spawn.createCreep(creep.body, creep.name, creep.memory);
+        return creep; // spawn.createCreep(creep.body, creep.name, creep.memory);
     }
 
     run(creep) {

@@ -26,7 +26,7 @@ class roleMiner extends Role {
             workRoom: workRoom,
             patternRepetitionLimit: 2 // don't need more than 6 work parts on a miner
         });
-        return spawn.createCreep(creep.body, creep.name, creep.memory);
+        return creep; // spawn.createCreep(creep.body, creep.name, creep.memory);
     }
 
     buildSite(creep, containerSite) {
@@ -114,6 +114,10 @@ class roleMiner extends Role {
     onRun(creep) {
         if (creep.getActiveBodyparts(WORK) < 0.75 * creep.getBodyparts(WORK)) {
             creep.suicide(); // kill off miners that might have gotten damaged so they don't sit and try to mine
+        }
+        if (creep.room.brain.incubating) {
+            this.settings.workersCanHarvest = true;
+            this.renewIfNeeded(creep);
         }
     }
 }

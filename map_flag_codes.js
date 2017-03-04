@@ -67,6 +67,12 @@ var flagCodes = {
             filter: flag => flag.color == COLOR_PURPLE && flag.secondaryColor == COLOR_YELLOW,
             action: flagActions.territory.reserveAndHarvest
         },
+        claimAndIncubate: { // claim a neutral room and allow it to piggyback off spanws
+            color: COLOR_PURPLE,
+            secondaryColor: COLOR_WHITE,
+            filter: flag => flag.color == COLOR_PURPLE && flag.secondaryColor == COLOR_WHITE,
+            action: flagActions.territory.claimAndIncubate
+        }
         // claim: { // claim a new room
         //     color: COLOR_PURPLE,
         //     secondaryColor: COLOR_WHITE,

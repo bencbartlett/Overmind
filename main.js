@@ -11,17 +11,9 @@
 
 */
 
-// TypeError: Cannot read property 'id' of null
-// at taskRecharge.set target [as target] (Task:42:31)
-// at taskRecharge.assign (Task:49:21)
-// at Creep.assign (prototypes_Creep:31:17)
-// at roleHauler.collect (role_hauler:40:15)
-// at roleHauler.newTask (role_hauler:62:22)
-// at roleHauler.run (Role:203:18)
-// at Creep.run (prototypes_Creep:6:36)
-// at Object.module.exports.loop (main:47:27)
-// at __mainLoop:1:52
+
 // Overmind repository: github.com/bencbartlett/overmind
+
 
 // To-do list: ====================
 // TODO: supplier inefficiencies; wasted time ticks between assignments

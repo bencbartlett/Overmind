@@ -36,7 +36,7 @@ Object.defineProperty(StructureSpawn.prototype, 'spawnQueue', {
     }
 });
 
-Object.defineProperty(StructureSpawn.prototype, 'spawnUsage', {
+Object.defineProperty(StructureSpawn.prototype, 'uptime', {
     get () {
         if (Memory.stats && Memory.stats.spawnUsage && Memory.stats.spawnUsage[this.name]) {
             let workingTicks = _.filter(Memory.stats.spawnUsage[this.name], entry => entry != "0").length;

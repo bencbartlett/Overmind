@@ -18,9 +18,10 @@ class taskSupply extends Task {
 
     isValidTarget() {
         var target = this.target;
-        if (target.structureType == STRUCTURE_SPAWN ||
+        if (target &&
+            (target.structureType == STRUCTURE_SPAWN ||
             target.structureType == STRUCTURE_EXTENSION ||
-            target.structureType == STRUCTURE_TOWER) {
+            target.structureType == STRUCTURE_TOWER)) {
             return (target.energy < target.energyCapacity);
         } else {
             return false;

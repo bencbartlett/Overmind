@@ -7,7 +7,7 @@ class roleUpgrader extends Role {
         super('upgrader');
         // Role-specific settings
         this.settings.bodyPattern = [WORK, WORK, WORK, WORK, CARRY, MOVE];
-        this.settings.signature = 'Overmind Screeps AI';
+        this.settings.signature = controllerSignature;
         this.settings.consoleQuiet = true;
         this.settings.sayQuiet = true;
         this.roleRequirements = creep => creep.getActiveBodyparts(WORK) > 1 &&
