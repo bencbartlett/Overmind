@@ -4,9 +4,14 @@
 // var role = roles('upgrader');
 
 var createRoleInstance = function (roleName) {
-    var RoleClass = require('role_' + roleName);
-    var roleInstance = new RoleClass;
-    return roleInstance;
+    try {
+        var RoleClass = require('role_' + roleName);
+        var roleInstance = new RoleClass;
+        return roleInstance;
+    } catch (e) {
+        console.log(e);
+        return null;
+    }
 };
 
 module.exports = createRoleInstance;

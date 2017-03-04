@@ -7,13 +7,16 @@ class roleWorker extends Role {
         super('worker');
         // Role-specific settings
         this.settings.bodyPattern = [WORK, CARRY, MOVE];
-        this.settings.workersCanHarvest = false;
         this.roleRequirements = creep => creep.getActiveBodyparts(WORK) > 1 &&
                                          creep.getActiveBodyparts(MOVE) > 1 &&
                                          creep.getActiveBodyparts(CARRY) > 1
     }
 
     onRun(creep) {
+        if (creep.room.brain.incubating) {
+            this.settings.workersCanHarvest = true;
+            this.renewIfNeeded(creep);
+        }
         if (creep.conditionalMoveToWorkRoom() != OK) { // workers sometimes stray from their service rooms
             this.settings.sayQuiet = true;
             this.settings.consoleQuiet = true;
@@ -21,46 +24,46 @@ class roleWorker extends Role {
         }
     }
 
-    // // Old harvest function in case I need it in the future
-    // harvest(creep) {
-    //     var target = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE, {
-    //         filter: (source) => source.openSpots() > 0
-    //     });
-    //     if (target) {
-    //         return creep.assign(tasks('harvest'), target);
-    //     } else {
-    //         creep.log("no harvestable sources found!");
-    //         return null;
-    //     }
-    // }
-    //
-    // // Old recharge function in case I need it in the future
-    // recharge(creep) {
-    //     // try to find closest container or storage
-    //     var target;
-    //     if (this.settings.targetFullestContainer) {
-    //         target = creep.room.fullestContainer();
-    //     } else {
-    //         target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
-    //             filter: (s) => (s.structureType == STRUCTURE_CONTAINER
-    //                             && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
-    //                            (s.structureType == STRUCTURE_STORAGE
-    //                             && s.store[RESOURCE_ENERGY] > creep.room.brain.settings.storageBuffer['worker'])
-    //         });
-    //     }
-    //     if (target) {
-    //         // assign recharge task to creep
-    //         return creep.assign(tasks('recharge'), target);
-    //     } else {
-    //         // if no targetable containers, see if worker can harvest
-    //         if (this.settings.workersCanHarvest) {
-    //             return this.harvest(creep);
-    //         } else {
-    //             // creep.log("no containers found and harvesting disabled!");
-    //             return null;
-    //         }
-    //     }
-    // }
+    // Old harvest function in case I need it in the future
+    harvest(creep) {
+        var target = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE, {
+            filter: (source) => source.openSpots() > 0
+        });
+        if (target) {
+            return creep.assign(tasks('harvest'), target);
+        } else {
+            creep.log("no harvestable sources found!");
+            return null;
+        }
+    }
+
+    // Old recharge function in case I need it in the future
+    recharge(creep) {
+        // try to find closest container or storage
+        var target;
+        if (this.settings.targetFullestContainer) {
+            target = creep.room.fullestContainer();
+        } else {
+            target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+                filter: (s) => (s.structureType == STRUCTURE_CONTAINER
+                                && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
+                               (s.structureType == STRUCTURE_STORAGE
+                                && s.store[RESOURCE_ENERGY] > creep.room.brain.settings.storageBuffer['worker'])
+            });
+        }
+        if (target) {
+            // assign recharge task to creep
+            return creep.assign(tasks('recharge'), target);
+        } else {
+            // if no targetable containers, see if worker can harvest
+            if (this.settings.workersCanHarvest) {
+                return this.harvest(creep);
+            } else {
+                // creep.log("no containers found and harvesting disabled!");
+                return null;
+            }
+        }
+    }
 
 }
 

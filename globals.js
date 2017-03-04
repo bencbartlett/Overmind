@@ -15,3 +15,5 @@ global.deref = function (ref) { // dereference any object from identifier; see r
            Game.rooms[ref] ||
            null;
 };
+
+global.controllerSignature = "Overmind Screeps AI";

@@ -3,24 +3,10 @@ var rolesMap = require('map_roles');
 var roles = require('roles');
 
 Creep.prototype.run = function () {
-    return roles(this.memory.role).run(this);
-    // if (this.memory.role == 'upgrader' ||
-    //     this.memory.role == 'worker' ||
-    //     this.memory.role == 'miner' ||
-    //     this.memory.role == 'supplier' ||
-    //     this.memory.role == 'guard' ||
-    //     this.memory.role == 'hauler' ||
-    //     this.memory.role == 'linker' ||
-    //     this.memory.role == 'reserver' ||
-    //     this.memory.role == 'scout' ||
-    //     this.memory.role == 'sieger' ||
-    //     this.memory.role == 'rangedGuard') {
-    //     return roles(this.memory.role).run(this);
-    // }
-    // var behavior = rolesMap[this.memory.role].behavior;
-    // if (behavior && !this.spawning) {
-    //     return behavior.run(this);
-    // }
+    let behavior = roles(this.memory.role);
+    if (behavior) {
+        behavior.run(this);
+    }
 };
 
 Creep.prototype.doRole = function () {

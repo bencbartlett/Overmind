@@ -127,7 +127,7 @@ class Role {
             workRoom: workRoom,
             patternRepetitionLimit: patternRepetitionLimit
         });
-        return spawn.createCreep(creep.body, creep.name, creep.memory);
+        return creep; // spawn.createCreep(creep.body, creep.name, creep.memory);
     }
 
     requestTask(creep) { // default logic for requesting a new task from the room brain // TODO: why doesn't this work in other rooms?
@@ -186,8 +186,13 @@ class Role {
         // TODO: actions to do when the creap is nearing death
     }
 
-    renew(creep) {
-        // TODO: renew creep if it couldn't be made in this room
+    renewIfNeeded(creep) {
+        // TODO: renewIfNeeded creep if it couldn't be made in this room
+        if (creep.room.spawns[0] && creep.memory.data.renewMe && creep.ticksToLive < 200) {
+            return creep.assign(tasks('getRenewed'), creep.room.spawns[0]);
+        } else {
+            return null;
+        }
     }
 
     onRun(creep) { // Code that you want to run at the beginning of each run() call

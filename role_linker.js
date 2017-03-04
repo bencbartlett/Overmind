@@ -14,17 +14,15 @@ class roleLinker extends Role {
                                          creep.getActiveBodyparts(CARRY) > 1
     }
 
-    // create(spawn, {
-    //     assignment = spawn.room.storage,
-    //     workRoom = assignment.roomName,
-    //     patternRepetitionLimit = 1
-    // }) {
-    //     let creep = this.generateLargestCreep(spawn, {
-    //         assignment: assignment,
-    //         workRoom: workRoom,
-    //         patternRepetitionLimit: patternRepetitionLimit
-    //     });
-    // }
+    create(spawn, {assignment, workRoom, patternRepetitionLimit = Infinity}) {
+        let creep = this.generateLargestCreep(spawn, {
+            assignment: assignment,
+            workRoom: workRoom,
+            patternRepetitionLimit: patternRepetitionLimit
+        });
+        creep.memory.data.replaceAt = 75; // replace linkers early!
+        return creep; // spawn.createCreep(creep.body, creep.name, creep.memory);
+    }
 
     collect(creep) {
         var withdraw = tasks('recharge');

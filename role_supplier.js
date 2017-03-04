@@ -18,10 +18,10 @@ class roleSupplier extends Role {
         let creep = this.generateLargestCreep(spawn, {
             assignment: assignment,
             workRoom: workRoom,
-            patternRepetitionLimit: patternRepetitionLimit // don't need more than 6 work parts on a miner
+            patternRepetitionLimit: patternRepetitionLimit
         });
         creep.memory.data.replaceAt = 100; // replace suppliers early!
-        return spawn.createCreep(creep.body, creep.name, creep.memory);
+        return creep; // spawn.createCreep(creep.body, creep.name, creep.memory);
     }
 
     // recharge(creep) {
