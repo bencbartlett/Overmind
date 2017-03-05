@@ -40,13 +40,19 @@ var visuals = {
             row += 1 * fontSize;
         }
         row += 2 * fontSize;
-        if (Game.cpu.bucket < 9000) {
-            new RoomVisual().text("Insufficient CPU bucket to calculate stats.", column, row, style);
-        }
-        // Display room information for owned rooms
+        // Other information
         fontSize = 0.5 * fontScale;
         font = fontSize + ' Courier';
         style = {font: font, align: 'left', opacity: 0.5};
+        new RoomVisual().text("CPU:" + " bucket:" + Game.cpu.bucket +
+                              " tickLimit:" + Game.cpu.tickLimit, column, row, style);
+        row += fontSize;
+        // Don't display at expense of CPU
+        if (Game.cpu.bucket < 9000) {
+            new RoomVisual().text("Insufficient CPU bucket to calculate stats.", column, row, style);
+            return null;
+        }
+        // Display room information for owned rooms
         new RoomVisual().text('Owned rooms:', column, row, style);
         row += fontSize;
         var ownedRooms = _.filter(Game.rooms, room => room.controller && room.controller.my);

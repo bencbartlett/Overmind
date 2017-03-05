@@ -3,7 +3,7 @@ StructureTower.prototype.run = function () {
     var useTowerToRepairStructures = false;
     return (this.attackNearestEnemy() == OK ||
             this.healNearestAlly() == OK ||
-            this.preventRampartDecay(10000) == OK ||
+            this.preventRampartDecay(500) == OK ||
             this.repairNearestStructure(useTowerToRepairStructures) == OK);
 };
 
