@@ -188,7 +188,7 @@ class Role {
 
     renewIfNeeded(creep) {
         // TODO: renewIfNeeded creep if it couldn't be made in this room
-        if (creep.room.spawns[0] && creep.memory.data.renewMe && creep.ticksToLive < 200) {
+        if (creep.room.spawns[0] && creep.memory.data.renewMe && creep.ticksToLive < 500) {
             return creep.assign(tasks('getRenewed'), creep.room.spawns[0]);
         } else {
             return null;

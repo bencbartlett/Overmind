@@ -85,7 +85,7 @@ class roleMiner extends Role {
         }
         // 1.5: log first time of deposit or build tasks as replacement time
         if (creep.memory.data.replaceAt == 0) {
-            creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive) + 10;
+            creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive) + 20;
         }
         // 2: find any nearby damaged containers and repair them
         var damagedContainers = creep.pos.findInRange(FIND_STRUCTURES, 3, {
@@ -117,7 +117,9 @@ class roleMiner extends Role {
         }
         if (creep.room.brain.incubating) {
             this.settings.workersCanHarvest = true;
-            this.renewIfNeeded(creep);
+            if (creep.carry.energy == 0) { // request renewal after a mining cycle is finished
+                this.renewIfNeeded(creep);
+            }
         }
     }
 }

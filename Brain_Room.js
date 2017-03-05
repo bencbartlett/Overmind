@@ -16,7 +16,7 @@ var RoomBrain = class {
             fortifyLevel: 1e+6, // fortify all walls/ramparts to this level
             workerPatternRepetitionLimit: 10, // maximum number of body repetitions for workers
             maxWorkersPerRoom: 2, // maximum number of workers to spawn per room based on number of required jobs
-            incubationWorkersToSend: 4, // number of big workers to send to incubate a room
+            incubationWorkersToSend: 3, // number of big workers to send to incubate a room
             supplierPatternRepetitionLimit: 4, // maximum number of body repetitions for suppliers
             haulerPatternRepetitionLimit: 7, // maximum number of body repetitions for haulers
             remoteHaulerPatternRepetitionLimit: 8, // maximum number of body repetitions for haulers
@@ -338,6 +338,9 @@ var RoomBrain = class {
     }
 
     handleMiners() {
+        if (this.incubating) {
+            return null; // don't make your own miners during incubation
+        }
         var sources = this.room.find(FIND_SOURCES); // don't use ACTIVE_SOURCES; need to always be handled
         for (let source of sources) {
             // TODO: calculation of number of miners to assign to each source based on max size of creep
@@ -408,7 +411,7 @@ var RoomBrain = class {
             return null;
         }
         var supplierLimit = 1; // there must always be at least one supplier in the room
-        if (this.room.storage && _.filter(energySinks, s => s.energy < s.energyCapacity).length > 0) {
+        if (_.filter(energySinks, s => s.energy < s.energyCapacity).length > 0) {
             supplierLimit += 1;
         }
         var expensiveFlags = _.filter(this.room.assignedFlags, flag => flagCodes.millitary.filter(flag) ||
@@ -428,6 +431,9 @@ var RoomBrain = class {
     }
 
     handleWorkers() {
+        if (this.incubating) {
+            return null; // don't make your own workers during incubation period, just keep existing ones alive
+        }
         var numWorkers = this.room.controller.getAssignedCreepAmounts('worker');
         var containers = this.room.find(FIND_STRUCTURES, {
             filter: structure => (structure.structureType == STRUCTURE_CONTAINER ||
@@ -490,6 +496,14 @@ var RoomBrain = class {
             }
         }
 
+        // Renew expensive creeps if needed
+        let creepsNeedingRenewal = this.spawn.pos.findInRange(FIND_MY_CREEPS, 1, {
+            filter: creep => creep.memory.data.renewMe && creep.ticksToLive < 500
+        });
+        if (creepsNeedingRenewal.length > 0) {
+            return 'renewing (renew call is done through task_getRenewed.work)';
+        }
+
         return null;
     }
 
@@ -499,27 +513,13 @@ var RoomBrain = class {
                                              flag.room && flag.room.controller.my);
         incubateFlags = _.sortBy(incubateFlags, flag => flag.pathLengthToAssignedRoomStorage || Infinity);
         for (let flag of incubateFlags) {
-            // spawn worker creeps
-            let workerBehavior = roles('worker');
-            let numIncubationWorkers = _.filter(flag.room.controller.assignedCreeps['worker'],
-                                                c => c.body.length >= workerBehavior.settings.bodyPattern.length *
-                                                                      this.settings.workerPatternRepetitionLimit);
-            if (numIncubationWorkers.length < this.settings.incubationWorkersToSend) {
-                let creep = workerBehavior.create(this.spawn, {
-                    assignment: flag.room.controller,
-                    workRoom: flag.room.name,
-                    patternRepetitionLimit: this.settings.workerPatternRepetitionLimit
-                });
-                creep.memory.data.renewMe = true;
-                return creep;
-            }
             // spawn miner creeps
             let minerBehavior = roles('miner');
-            let numIncubationMiners = _.filter(flag.room.controller.assignedCreeps['miner'],
-                                                c => c.body.length >= minerBehavior.settings.bodyPattern.length * 2);
+            // let incubationMiners = _.filter(flag.room.controller.assignedCreeps['miner'],
+            //                                     c => c.body.length >= minerBehavior.settings.bodyPattern.length * 2);
             let sources = flag.room.find(FIND_SOURCES);
             for (let source of sources) {
-                if (numIncubationMiners.length < flag.room.find(FIND_SOURCES)) {
+                if (source.getAssignedCreepAmounts('miner') < this.settings.minersPerSource) {
                     let creep = roles('miner').create(this.spawn, {
                         assignment: source,
                         workRoom: flag.room.name
@@ -527,6 +527,20 @@ var RoomBrain = class {
                     creep.memory.data.renewMe = true;
                     return creep;
                 }
+            }
+            // spawn worker creeps
+            let workerBehavior = roles('worker');
+            let incubationWorkers = _.filter(flag.room.controller.assignedCreeps['worker'],
+                                             c => c.body.length >= workerBehavior.settings.bodyPattern.length *
+                                                                   this.settings.workerPatternRepetitionLimit);
+            if (incubationWorkers.length < this.settings.incubationWorkersToSend) {
+                let creep = workerBehavior.create(this.spawn, {
+                    assignment: flag.room.controller,
+                    workRoom: flag.room.name,
+                    patternRepetitionLimit: this.settings.workerPatternRepetitionLimit
+                });
+                creep.memory.data.renewMe = true;
+                return creep;
             }
         }
         return null;
@@ -562,13 +576,6 @@ var RoomBrain = class {
 
     handleSpawnOperations() {
         if (this.spawn && !this.spawn.spawning) { // only spawn if you have an available spawner
-            // renewIfNeeded creeps if applicable
-            let creepsNeedingRenewal = this.spawn.pos.findInRange(FIND_MY_CREEPS, 1, {
-                filter: creep => creep.memory.data.renewMe && creep.ticksToLive < 200
-            });
-            if (creepsNeedingRenewal.length > 0) {
-                return null;
-            }
             // figure out what to spawn next
             var creep;
             var prioritizedSpawnOperations = [
@@ -576,7 +583,7 @@ var RoomBrain = class {
                 () => this.handleIncubationSpawnOperations(),
                 () => this.handleAssignedSpawnOperations()
             ];
-            // Handle domestic operations
+            // Handle all operations
             for (let spawnThis of prioritizedSpawnOperations) {
                 creep = spawnThis();
                 if (creep != null) {
@@ -594,7 +601,8 @@ var RoomBrain = class {
             filter: (s) => (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART) &&
                            s.hits < 5000
         });
-        if (criticalBarriers.length > 0 && this.room.hostiles.length > 0) {
+        if (criticalBarriers.length > 0 && this.room.hostiles.length > 0 && !this.incubating) {
+            // no safe mode for incubating rooms (?)
             this.room.controller.activateSafeMode();
         }
     }

@@ -14,6 +14,7 @@ Creep.prototype.doRole = function () {
 };
 
 Creep.prototype.assign = function (task, target = null) { // wrapper for task.assign(creep, target)
+    this.task = null;
     return task.assign(this, target);
 };
 
@@ -117,7 +118,7 @@ Creep.prototype.calculatePathETA = function (startPoint, endPoint, ignoreCargo =
     return ETA;
 };
 
-Creep.prototype.conditionalMoveToWorkRoom = function () { // move to workRoom if not already there
+Creep.prototype.conditionalMoveToWorkRoom = function () { // move to workRoom if not already there // TODO: make this a task
     if (this.room != this.workRoom) {
         this.moveToVisual(this.workRoom.controller);
         return ERR_NOT_IN_SERVICE_ROOM;
