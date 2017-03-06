@@ -13,7 +13,7 @@ var RoomBrain = class {
         this.incubating = (_.filter(this.room.flags, flagCodes.territory.claimAndIncubate.filter).length > 0);
         // Settings shared across all rooms
         this.settings = {
-            fortifyLevel: 1e+6, // fortify all walls/ramparts to this level
+            fortifyLevel: Math.pow(10, Math.max(this.room.controller.level, 3)), // fortify all walls/ramparts to this
             workerPatternRepetitionLimit: 10, // maximum number of body repetitions for workers
             maxWorkersPerRoom: 2, // maximum number of workers to spawn per room based on number of required jobs
             incubationWorkersToSend: 3, // number of big workers to send to incubate a room
@@ -152,59 +152,61 @@ var RoomBrain = class {
     }
 
     getTasks(taskType) {
+        var recache = (Game.cpu.bucket > 9500);
         var targets = [];
         switch (taskType) {
             case 'pickup': // Pick up energy
-                targets = this.room.find(FIND_DROPPED_ENERGY, {filter: d => d.amount > 100});
+                targets = this.room.find(FIND_DROPPED_ENERGY, {filter: drop => drop.amount > 100});
                 break;
             case 'collect': // Collect from containers
-                targets = this.room.find(FIND_STRUCTURES, {
-                    filter: s => s.structureType == STRUCTURE_CONTAINER &&
-                                 s.store[RESOURCE_ENERGY] > 1000
-                });
+                let containers = this.room.findCached('containers', room => room.find(FIND_STRUCTURES, {
+                    filter: structure => structure.structureType == STRUCTURE_CONTAINER
+                }), recache);
+                targets = _.filter(containers, container => container.store[RESOURCE_ENERGY] > 1000);
                 break;
             case 'supplyTowers': // Find towers in need of energy
-                targets = this.room.find(FIND_MY_STRUCTURES, {
-                    filter: (structure) => structure.structureType == STRUCTURE_TOWER &&
-                                           structure.energy < structure.energyCapacity
-                });
+                let towers = this.room.findCached('towers', room => room.find(FIND_MY_STRUCTURES, {
+                    filter: structure => structure.structureType == STRUCTURE_TOWER
+                }), recache);
+                targets = _.filter(towers, tower => tower.energy < tower.energyCapacity);
                 break;
             case 'supply': // Find structures in need of energy
-                targets = this.room.find(FIND_MY_STRUCTURES, {
-                    filter: (structure) => (structure.structureType == STRUCTURE_EXTENSION ||
-                                            structure.structureType == STRUCTURE_SPAWN) &&
-                                           structure.energy < structure.energyCapacity
-                });
+                let sinks = this.room.findCached('sinks', room => room.find(FIND_MY_STRUCTURES, {
+                    filter: s => (s.structureType == STRUCTURE_EXTENSION || s.structureType == STRUCTURE_SPAWN)
+                }), recache);
+                targets = _.filter(sinks, structure => structure.energy < structure.energyCapacity);
                 break;
             case 'repair': // Repair structures
-                targets = this.room.find(FIND_STRUCTURES, {
-                    filter: (s) => s.hits < s.hitsMax &&
-                                   s.structureType != STRUCTURE_WALL && // walls are fortify tasks
-                                   s.structureType != STRUCTURE_RAMPART &&
-                                   (s.structureType != STRUCTURE_CONTAINER || s.hits < 0.7 * s.hitsMax) &&
-                                   (s.structureType != STRUCTURE_ROAD || s.hits < 0.7 * s.hitsMax)
-                });
+                let repairables = this.room.findCached('repairables', room => room.find(FIND_STRUCTURES, {
+                    filter: (s) => s.structureType != STRUCTURE_WALL && s.structureType != STRUCTURE_RAMPART
+                }), recache);
+                targets = _.filter(repairables,
+                                   s => s.hits < s.hitsMax &&
+                                        (s.structureType != STRUCTURE_CONTAINER || s.hits < 0.7 * s.hitsMax) &&
+                                        (s.structureType != STRUCTURE_ROAD || s.hits < 0.7 * s.hitsMax));
                 break;
             case 'build': // Build construction jobs
-                targets = this.room.find(FIND_CONSTRUCTION_SITES, {
+                let structureSites = this.room.findCached('structureSites', room => room.find(FIND_CONSTRUCTION_SITES, {
                     filter: c => c.structureType != STRUCTURE_ROAD
-                });
+                }), recache);
+                targets = structureSites;
                 break;
             case 'buildRoads': // Build construction jobs
-                targets = this.room.find(FIND_CONSTRUCTION_SITES, {
+                let roadSites = this.room.findCached('roadSites', room => room.find(FIND_CONSTRUCTION_SITES, {
                     filter: c => c.structureType == STRUCTURE_ROAD
-                });
+                }), recache);
+                targets = roadSites;
                 break;
             case 'fortify': // Fortify walls
                 var fortifyLevel = this.settings.fortifyLevel; // global fortify level
                 if (this.override.fortifyLevel[this.room.name]) {
                     fortifyLevel = this.override.fortifyLevel[this.room.name]; // override for certain rooms
                 }
+                let barriers = this.room.findCached('barriers', room => room.find(FIND_STRUCTURES, {
+                    filter: (s) => s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART
+                }));
                 //noinspection JSReferencingMutableVariableFromClosure
-                targets = this.room.find(FIND_STRUCTURES, {
-                    filter: (s) => s.hits < fortifyLevel &&
-                                   (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)
-                });
+                targets = _.filter(barriers, s => s.hits < fortifyLevel);
                 break;
             case 'upgrade': // Upgrade controller
                 if (this.room.controller && this.room.controller.my) {
@@ -368,7 +370,7 @@ var RoomBrain = class {
                 let assignedHaulers = source.getAssignedCreepAmounts('hauler');
                 var [haulerSize, numHaulers] = this.calculateHaulerRequirements(source);
                 if (assignedHaulers < numHaulers) {
-                    return roles('hauler').create(brain.spawn, {
+                    return roles('hauler').create(this.spawn, {
                         assignment: source,
                         workRoom: this.room.name,
                         patternRepetitionLimit: haulerSize

@@ -55,11 +55,17 @@ var visuals = {
         // Display room information for owned rooms
         new RoomVisual().text('Owned rooms:', column, row, style);
         row += fontSize;
-        var ownedRooms = _.filter(Game.rooms, room => room.controller && room.controller.my);
+        var ownedRooms = _.sortBy(_.filter(Game.rooms, room => room.controller && room.controller.my),
+                                  room => -1 * (room.controller.level +
+                                                room.controller.progress / room.controller.progressTotal));
         for (let i in ownedRooms) {
             let room = ownedRooms[i];
             let progressPercent = Math.round(100 * room.controller.progress / room.controller.progressTotal) + "%";
-            let info = "Ctrl: " + progressPercent + " ";
+            let info = "";
+            if (room.brain.incubating) {
+                info += "(incubating) ";
+            }
+            info += "Ctrl: " + progressPercent + " ";
             if (room.storage) {
                 info += "Energy: " + Math.floor(room.storage.store[RESOURCE_ENERGY] / 1000) + "K "
             }
