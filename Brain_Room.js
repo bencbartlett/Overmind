@@ -9,11 +9,11 @@ var RoomBrain = class {
     constructor(roomName) {
         this.name = roomName;
         this.room = Game.rooms[roomName];
-        this.spawn = this.room.find(FIND_MY_SPAWNS)[0];
+        this.spawn = _.filter(this.room.spawns, spawn => !spawn.spawning)[0];
         this.incubating = (_.filter(this.room.flags, flagCodes.territory.claimAndIncubate.filter).length > 0);
         // Settings shared across all rooms
         this.settings = {
-            fortifyLevel: Math.pow(10, Math.max(this.room.controller.level, 3)), // fortify all walls/ramparts to this
+            fortifyLevel: Math.min(Math.pow(10, Math.max(this.room.controller.level, 3)), 1e+6), // fortify wall HP
             workerPatternRepetitionLimit: 10, // maximum number of body repetitions for workers
             maxWorkersPerRoom: 2, // maximum number of workers to spawn per room based on number of required jobs
             incubationWorkersToSend: 3, // number of big workers to send to incubate a room
@@ -26,7 +26,8 @@ var RoomBrain = class {
                 upgrader: 75000,
                 default: 0
             },
-            reserveBuffer: 3000 // reserve rooms to this amount
+            reserveBuffer: 3000, // reserve rooms to this amount
+            maxAssistLifetimePercentage: 0.1 // assist in spawn operations up to (creep.lifetime * this amount) distance
         };
         // Settings for new rooms that are being incubated
         this.incubatingSettings = {
@@ -114,99 +115,58 @@ var RoomBrain = class {
         return Memory.roomBrain[this.name];
     }
 
-    get localSpawnQueue() {
-        if (!this.memory.spawnQueue) {
-            this.memory.spawnQueue = {};
-        }
-        return this.memory.spawnQueue;
-    }
-
-    get globalSpawnQueue() {
-        if (!Memory.globalSpawnQueue) {
-            Memory.globalSpawnQueue = {};
-        }
-        return Memory.globalSpawnQueue;
-    }
+    // get localSpawnQueue() {
+    //     if (!this.memory.spawnQueue) {
+    //         this.memory.spawnQueue = {};
+    //     }
+    //     return this.memory.spawnQueue;
+    // }
+    //
+    // get globalSpawnQueue() {
+    //     if (!Memory.globalSpawnQueue) {
+    //         Memory.globalSpawnQueue = {};
+    //     }
+    //     return Memory.globalSpawnQueue;
+    // }
 
     log(message) {
         console.log(this.name + '_Brain: "' + message + '"');
     }
 
-    peekSpawn(roomName = "W19N88") {
-        // looks at other spawn without changing this.spawn
-        var otherBrain = Game.rooms[roomName].brain;
-        if (otherBrain.room.energyAvailable == otherBrain.room.energyCapacityAvailable) {
-            return otherBrain.spawn;
-        } else {
-            return null; // don't lend it out if not full
-        }
-    }
-
-    borrowSpawn(roomName = "W19N88") {
-        // If another room is at full capacity, lets you borrow their spawn to spawn stuff
-        var otherSpawn = this.peekSpawn(roomName);
-        if (otherSpawn) {
-            this.log("borrowing spawn from " + roomName + "_Brain");
-            this.spawn = otherSpawn;
-        }
-    }
-
     getTasks(taskType) {
-        var recache = (Game.cpu.bucket > 9500);
         var targets = [];
         switch (taskType) {
             case 'pickup': // Pick up energy
                 targets = this.room.find(FIND_DROPPED_ENERGY, {filter: drop => drop.amount > 100});
                 break;
             case 'collect': // Collect from containers
-                let containers = this.room.findCached('containers', room => room.find(FIND_STRUCTURES, {
-                    filter: structure => structure.structureType == STRUCTURE_CONTAINER
-                }), recache);
-                targets = _.filter(containers, container => container.store[RESOURCE_ENERGY] > 1000);
+                targets = _.filter(this.room.containers, container => container.store[RESOURCE_ENERGY] > 1000);
                 break;
             case 'supplyTowers': // Find towers in need of energy
-                let towers = this.room.findCached('towers', room => room.find(FIND_MY_STRUCTURES, {
-                    filter: structure => structure.structureType == STRUCTURE_TOWER
-                }), recache);
-                targets = _.filter(towers, tower => tower.energy < tower.energyCapacity);
+                targets = _.filter(this.room.towers, tower => tower.energy < tower.energyCapacity);
                 break;
             case 'supply': // Find structures in need of energy
-                let sinks = this.room.findCached('sinks', room => room.find(FIND_MY_STRUCTURES, {
-                    filter: s => (s.structureType == STRUCTURE_EXTENSION || s.structureType == STRUCTURE_SPAWN)
-                }), recache);
-                targets = _.filter(sinks, structure => structure.energy < structure.energyCapacity);
+                targets = _.filter(this.room.sinks, structure => structure.energy < structure.energyCapacity);
                 break;
             case 'repair': // Repair structures
-                let repairables = this.room.findCached('repairables', room => room.find(FIND_STRUCTURES, {
-                    filter: (s) => s.structureType != STRUCTURE_WALL && s.structureType != STRUCTURE_RAMPART
-                }), recache);
-                targets = _.filter(repairables,
+                targets = _.filter(this.room.repairables,
                                    s => s.hits < s.hitsMax &&
                                         (s.structureType != STRUCTURE_CONTAINER || s.hits < 0.7 * s.hitsMax) &&
                                         (s.structureType != STRUCTURE_ROAD || s.hits < 0.7 * s.hitsMax));
                 break;
             case 'build': // Build construction jobs
-                let structureSites = this.room.findCached('structureSites', room => room.find(FIND_CONSTRUCTION_SITES, {
-                    filter: c => c.structureType != STRUCTURE_ROAD
-                }), recache);
-                targets = structureSites;
+                targets = this.room.structureSites;
                 break;
             case 'buildRoads': // Build construction jobs
-                let roadSites = this.room.findCached('roadSites', room => room.find(FIND_CONSTRUCTION_SITES, {
-                    filter: c => c.structureType == STRUCTURE_ROAD
-                }), recache);
-                targets = roadSites;
+                targets = this.room.roadSites;
                 break;
             case 'fortify': // Fortify walls
                 var fortifyLevel = this.settings.fortifyLevel; // global fortify level
                 if (this.override.fortifyLevel[this.room.name]) {
                     fortifyLevel = this.override.fortifyLevel[this.room.name]; // override for certain rooms
                 }
-                let barriers = this.room.findCached('barriers', room => room.find(FIND_STRUCTURES, {
-                    filter: (s) => s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART
-                }));
                 //noinspection JSReferencingMutableVariableFromClosure
-                targets = _.filter(barriers, s => s.hits < fortifyLevel);
+                targets = _.filter(this.room.barriers, s => s.hits < fortifyLevel);
                 break;
             case 'upgrade': // Upgrade controller
                 if (this.room.controller && this.room.controller.my) {
@@ -229,7 +189,8 @@ var RoomBrain = class {
             //     console.log(t, t.targetedBy.length, taskToExecute.maxPerTarget);
             // }
             // TODO: cache this
-            targets = _.filter(targets, target => target.targetedBy.length < taskToExecute.maxPerTarget);
+            targets = _.filter(targets, target => target != null &&
+                                                  target.targetedBy.length < taskToExecute.maxPerTarget);
             if (targets.length > 0) { // return on the first instance of a target being found
                 return [taskToExecute, targets];
             }
@@ -261,7 +222,7 @@ var RoomBrain = class {
             if (this.override.workersPerRoom[this.name]) {
                 return this.override.workersPerRoom[this.name]
             }
-            var energy = spawn.room.energyCapacityAvailable;
+            var energy = this.room.energyCapacityAvailable;
             var workerBodyPattern = roles('worker').settings.bodyPattern;
             var workerSize = Math.min(Math.floor(energy / spawn.cost(workerBodyPattern)),
                                       this.settings.workerPatternRepetitionLimit);
@@ -327,7 +288,8 @@ var RoomBrain = class {
             var haulerBodyPattern = roles('hauler').settings.bodyPattern;
             var haulerSize = this.calculateHaulerSize(target, remote); // calculate required hauler size
             var numHaulers = 1; // 1 hauler unless it's too large
-            var maxHaulerSize = Math.floor(this.room.energyCapacityAvailable / spawn.cost(haulerBodyPattern));
+            var maxHaulerSize = Math.min(Math.floor(this.room.energyCapacityAvailable / spawn.cost(haulerBodyPattern)),
+                                         (50 / haulerBodyPattern.length));
             if (haulerSize > maxHaulerSize) { // if hauler is too big, adjust size to max and number accordingly
                 numHaulers = haulerSize / maxHaulerSize; // amount needed
                 haulerSize = Math.ceil(maxHaulerSize * (numHaulers / Math.ceil(numHaulers))); // chop off excess
@@ -517,8 +479,6 @@ var RoomBrain = class {
         for (let flag of incubateFlags) {
             // spawn miner creeps
             let minerBehavior = roles('miner');
-            // let incubationMiners = _.filter(flag.room.controller.assignedCreeps['miner'],
-            //                                     c => c.body.length >= minerBehavior.settings.bodyPattern.length * 2);
             let sources = flag.room.find(FIND_SOURCES);
             for (let source of sources) {
                 if (source.getAssignedCreepAmounts('miner') < this.settings.minersPerSource) {
@@ -559,6 +519,7 @@ var RoomBrain = class {
             _.filter(flags, flagCodes.territory.reserve.filter),
             _.filter(flags, flagCodes.industry.remoteMine.filter),
             _.filter(flags, flagCodes.rally.healPoint.filter),
+            _.filter(flags, flagCodes.millitary.destroyer.filter),
             _.filter(flags, flagCodes.millitary.sieger.filter)
         ];
 
@@ -572,7 +533,32 @@ var RoomBrain = class {
                 }
             }
         }
+        return null;
+    }
 
+    assistAssignedSpawnOperations() { // help out other rooms with their assigned operations
+        // other rooms sorted by increasing distance
+        let myRooms = _.sortBy(_.filter(Game.rooms, room => room.my), room => this.spawn.pathLengthTo(room.spawns[0]));
+        for (let i in myRooms) {
+            let brain = myRooms[i].brain;
+            let distance = this.spawn.pathLengthTo(myRooms[i].spawns[0]);
+            if (!brain.spawn) {
+                brain.spawn = this.spawn;
+                let creepToBuild = brain.handleAssignedSpawnOperations();
+                if (creepToBuild != null) {
+                    let lifetime;
+                    if (_.map(creepToBuild.body, part => part.type).includes(CLAIM)) {
+                        lifetime = 500;
+                    } else {
+                        lifetime = 1500;
+                    }
+                    if (distance < this.settings.maxAssistLifetimePercentage * lifetime) {
+                        // build the creep if it's not too far away
+                        return creepToBuild;
+                    }
+                }
+            }
+        }
         return null;
     }
 
@@ -583,7 +569,8 @@ var RoomBrain = class {
             var prioritizedSpawnOperations = [
                 () => this.handleDomesticSpawnOperations(),
                 () => this.handleIncubationSpawnOperations(),
-                () => this.handleAssignedSpawnOperations()
+                () => this.handleAssignedSpawnOperations(),
+                () => this.assistAssignedSpawnOperations()
             ];
             // Handle all operations
             for (let spawnThis of prioritizedSpawnOperations) {

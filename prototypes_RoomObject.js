@@ -96,8 +96,6 @@ Object.defineProperty(RoomObject.prototype, 'assignedCreepAmounts', {
     }
 });
 
-//
-
 // List of creeps with tasks targeting this object
 Object.defineProperty(RoomObject.prototype, 'targetedBy', {
     get: function () {
@@ -133,6 +131,20 @@ Object.defineProperty(RoomObject.prototype, 'pathLengthToStorage', { // find and
         return this.room.memory.storagePathLengths[this.ref];
     }
 });
+
+// RoomObject.prototype.pathLengthTo = function (roomObj) {
+//     if (!this.room.memory.pathLengths) {
+//         this.room.memory.pathLengths = {}
+//     }
+//     if (!this.room.memory.pathLengths[this.ref]) {
+//         this.room.memory.pathLengths
+//     }
+//     if (!this.room.memory.pathLengths[roomObj.ref]) {
+//         this.room.memory.pathLengths[roomObj.ref] = require('pathing').findPathLengthIncludingRoads(roomObj.pos,
+//                                                                                                     this.pos);
+//     }
+//     return this.room.memory.pathLengths[roomObj.ref];
+// };
 
 Object.defineProperty(RoomObject.prototype, 'roomName', {
     get: function () {

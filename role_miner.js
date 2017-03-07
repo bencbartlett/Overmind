@@ -51,6 +51,7 @@ class roleMiner extends Role {
             filter: (s) => s.structureType == STRUCTURE_CONTAINER
         }), container => container.store[RESOURCE_ENERGY])[0];
         if (target) {
+            creep.moveTo(target); // get on top of the container if you're not already
             return creep.assign(tasks('deposit'), target);
         } else {
             return this.dropEnergy(creep);

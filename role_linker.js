@@ -20,7 +20,7 @@ class roleLinker extends Role {
             workRoom: workRoom,
             patternRepetitionLimit: patternRepetitionLimit
         });
-        creep.memory.data.replaceAt = 75; // replace linkers early!
+        creep.memory.data.replaceAt = 150; // replace linkers early!
         return creep; // spawn.createCreep(creep.body, creep.name, creep.memory);
     }
 

@@ -90,6 +90,28 @@ class roleHauler extends Role {
         }
     }
 
+    onRun(creep) {
+        // Pickup any dropped energy along your route
+        let droppedEnergy = creep.pos.findInRange(FIND_DROPPED_ENERGY, 1);
+        if (droppedEnergy.length > 0) {
+            creep.pickup(droppedEnergy[0]);
+        }
+        // Reduce moveTo usage when in non-crowded rooms
+        if (creep.task) {
+            if (!creep.room.my) {
+                creep.task.data.moveToOptions = {
+                    ignoreCreeps: true,
+                    reusePath: 20
+                }
+            } else {
+                creep.task.data.moveToOptions = {
+                    ignoreCreeps: false,
+                    reusePath: 10
+                }
+            }
+        }
+    }
+
 }
 
 module.exports = roleHauler;

@@ -7,6 +7,12 @@ Flag.prototype.assign = function (roomName) {
     return OK;
 };
 
+Flag.prototype.unassign = function () {
+    console.log(this.name + " now unassigned from " + this.memory.assignedRoom + ".");
+    delete this.memory.assignedRoom;
+    return OK;
+};
+
 Object.defineProperty(Flag.prototype, 'category', { // the category object in flagCodes map
     get () {
         return _.find(flagCodes, cat => cat.color == this.color);

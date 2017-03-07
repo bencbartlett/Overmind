@@ -23,6 +23,28 @@ var millitaryFlagActions = {
         return handleGuards(flag, brain)
     },
 
+    destroyer: function (flag, brain) {
+        function handleDestroyers(flag, brain) {
+            var role = 'destroyer';
+            if (flag.memory.amount) {
+                flag.requiredCreepAmounts[role] = flag.memory.amount;
+            } else {
+                flag.requiredCreepAmounts[role] = 1;
+            }
+            let maxSize = 8;
+            if (flag.memory.maxSize) {
+                maxSize = flag.memory.maxSize;
+            }
+            return flag.requestCreepIfNeeded(brain, role, {
+                assignment: flag,
+                workRoom: flag.workRoom,
+                patternRepetitionLimit: maxSize
+            });
+        }
+
+        return handleDestroyers(flag, brain)
+    },
+
 
     sieger: function (flag, brain) {
         function handleSiegers(flag, brain) { // TODO: reformat this one
