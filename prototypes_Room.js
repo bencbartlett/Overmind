@@ -1,7 +1,11 @@
-var roomBrain = require('Brain_Room');
+// Room prototypes - commonly used room properties and methods
+
+
+// Room brain ==========================================================================================================
 
 Object.defineProperty(Room.prototype, 'brain', {
     get () {
+        let roomBrain = require('Brain_Room');
         return new roomBrain(this.name);
     },
     set () {
@@ -9,62 +13,94 @@ Object.defineProperty(Room.prototype, 'brain', {
     }
 });
 
+// Room properties =====================================================================================================
+
+Object.defineProperty(Room.prototype, 'my', {
+    get () {
+        return this.controller && this.controller.my;
+    }
+});
+
+Object.defineProperty(Room.prototype, 'reservedByMe', {
+    get () {
+        return this.controller && this.controller.reservation && this.controller.reservation.username == myUsername;
+    }
+});
+
+// Room properties: creeps =============================================================================================
+
+// Spawns in the room
 Object.defineProperty(Room.prototype, 'spawns', {
     get () {
         return this.find(FIND_MY_SPAWNS);
     }
 });
 
+// Creeps physically in the room
 Object.defineProperty(Room.prototype, 'creeps', {
+    get () {
+        return this.find(FIND_MY_CREEPS);
+    }
+});
+
+// Creeps assigned to the room
+Object.defineProperty(Room.prototype, 'assignedCreeps', {
     get () {
         return _.filter(Game.creeps, creep => creep.workRoom == this);
     }
 });
 
+// Tasks of creeps assigned to the room
 Object.defineProperty(Room.prototype, 'tasks', {
     get () {
-        var tasks = this.creeps.map(creep => creep.task);
+        let tasks = this.assignedCreeps.map(creep => creep.task);
         return _.filter(tasks, task => task != null);
     }
 });
 
+// Targets of tasks of creeps assigned to the room
 Object.defineProperty(Room.prototype, 'taskTargets', {
     get () {
-        var targets = this.tasks.map(task => task.target);
+        let targets = this.tasks.map(task => task.target);
         return _.filter(targets, target => target != null);
     }
 });
 
-Object.defineProperty(Room.prototype, 'creepsInRoom', {
-    get () {
-        return _.filter(Game.creeps, creep => creep.room == this);
-    }
-});
+// Room properties: hostiles ===========================================================================================
 
+// Hostile creeps currently in the room
 Object.defineProperty(Room.prototype, 'hostiles', {
     get () {
         return this.find(FIND_HOSTILE_CREEPS);
     }
 });
 
+// Hostile structures currently in the room
 Object.defineProperty(Room.prototype, 'hostileStructures', {
     get () {
         return this.find(FIND_HOSTILE_STRUCTURES, {filter: s => s.hits});
     }
 });
 
-Object.defineProperty(Room.prototype, 'flags', { // flags physically in this room
+// Room properties: flags ==============================================================================================
+
+// Flags physically in this room
+Object.defineProperty(Room.prototype, 'flags', {
     get () {
-        return _.filter(Game.flags, flag => flag.room == this);
+        return this.find(FIND_FLAGS);
     }
 });
 
-Object.defineProperty(Room.prototype, 'assignedFlags', { // flags assigned to this room
+// Flags assigned to this room
+Object.defineProperty(Room.prototype, 'assignedFlags', {
     get () {
         return _.filter(Game.flags, flag => flag.memory.assignedRoom && flag.memory.assignedRoom == this.name);
     }
 });
 
+// Room properties: structures =========================================================================================
+
+// Total remaining construction progress in this room
 Object.defineProperty(Room.prototype, 'remainingConstructionProgress', { // flags assigned to this room
     get () {
         let constructionSites = this.find(FIND_MY_CONSTRUCTION_SITES);
@@ -76,22 +112,6 @@ Object.defineProperty(Room.prototype, 'remainingConstructionProgress', { // flag
 
     }
 });
-
-
-//noinspection JSUnusedGlobalSymbols
-Room.prototype.totalSourceCapacity = function () {
-    if (this.memory.miningCapacity != undefined) {
-        return this.memory.miningCapacity;
-    } else {
-        var capacity = 0;
-        var sources = this.find(FIND_SOURCES);
-        for (let i in sources) {
-            capacity += sources[i].capacity();
-        }
-        this.memory.miningCapacity = capacity;
-        return capacity;
-    }
-};
 
 Room.prototype.fullestContainer = function () {
     // Set target to the fullest container in the room
@@ -114,17 +134,29 @@ Room.prototype.fullestContainer = function () {
     }
 };
 
+// Room properties: cached searches ====================================================================================
+
 Room.prototype.findCached = function (findKey, findFunction, reCache = false) {
     // findKey: key to store find results to, such as 'sources', 'towers', 'walls', etc.
     // findFunction: find call; ex: function(room) { return room.find(FIND_*) }
     // reCache: boolean to force the room to re-cache this search
-    if (reCache || !this.memory.cache) { // Initialize cache
+    if (reCache == true &&
+        this.memory.cacheHistory &&
+        this.memory.cacheHistory[findKey] &&
+        this.memory.cacheHistory[findKey] == Game.time) {
+        reCache = false; // don't rerun the same search in the same timestep
+    }
+    if (!this.memory.cache) { // Initialize cache if needed
         this.memory.cache = {};
+    }
+    if (!this.memory.cacheHistory) {
+        this.memory.cacheHistory = {};
     }
     var findResults = [];
     // run search and cache or return cached results
     if (reCache || !this.memory.cache[findKey]) { // search
         this.memory.cache[findKey] = [];
+        this.memory.cacheHistory[findKey] = Game.time; // when this search was last run
         findResults = findFunction(this);
         // store find results in cache
         for (let item of findResults) {
@@ -132,69 +164,90 @@ Room.prototype.findCached = function (findKey, findFunction, reCache = false) {
         }
     } else { // retrieve cached results
         for (let itemID of this.memory.cache[findKey]) {
-            findResults.push(Game.getObjectById(itemID));
+            let object = Game.getObjectById(itemID);
+            if (!object) { // recache if you hit something that's null
+                return this.findCached(findKey, findFunction, true);
+            }
+            findResults.push(object);
         }
     }
     return findResults;
 };
 
-// Room.prototype.remainingMinerSourceAssignments = function () {
-//     var sources = this.find(FIND_SOURCES);
-//     var miners = this.find(FIND_MY_CREEPS, {filter: (c) => c.memory.role == 'miner'});
-//     var assignments = {};
-//     for (let i in sources) {
-//         // assignment becomes a dictionary with source ID keys and number of remaining spots as values
-//         let numAssigned = _.filter(miners, (c) => c.memory.assignment == sources[i].ref).length;
-//         let maxSpots = Math.min(sources[i].capacity(), 1);
-//         assignments[sources[i].ref] = maxSpots - numAssigned;
-//     }
-//     return assignments;
-// };
-
-Room.prototype.isUntargetedRepair = function () {
-    // Set target to closest repair job that is not currently targeted by any other repairer
-    // Ignore walls, ramparts, and roads above 20% health, since roads can be taken care of
-    // more efficiently by repairNearbyDamagedRoads() function
-    var structure = this.find(FIND_STRUCTURES, {
-        filter: (s) => s.hits < s.hitsMax &&
-                       s.isTargeted('repairer') == false &&
-                       s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
-                       s.structureType != STRUCTURE_WALL &&
-                       s.structureType != STRUCTURE_RAMPART &&
-                       (s.structureType != STRUCTURE_ROAD || s.hits < 0.2 * s.hitsMax)
-    });
-    if (structure) {
-        return OK;
-    } else {
-        return ERR_NO_TARGET_FOUND;
+var recache = (Game.cpu.bucket > 9500); // recache automatically at >9000 bucket
+Object.defineProperties(Room.prototype, {
+    'containers': {
+        get() {
+            return this.findCached('containers', room => room.find(FIND_STRUCTURES, {
+                filter: structure => structure.structureType == STRUCTURE_CONTAINER
+            }), recache);
+        }
+    },
+    'storageUnits': {
+        get() {
+            return this.findCached('storageUnits', room => room.find(FIND_STRUCTURES, {
+                filter: structure => structure.structureType == STRUCTURE_CONTAINER ||
+                                     structure.structureType == STRUCTURE_STORAGE
+            }), recache);
+        }
+    },
+    'towers': {
+        get() {
+            return this.findCached('towers', room => room.find(FIND_MY_STRUCTURES, {
+                filter: structure => structure.structureType == STRUCTURE_TOWER
+            }), recache);
+        }
+    },
+    'sources': {
+        get() {
+            return this.findCached('sources', room => room.find(FIND_SOURCES));
+        }
+    },
+    'sinks': {
+        get() {
+            return this.findCached('sinks', room => room.find(FIND_MY_STRUCTURES, {
+                filter: s => (s.structureType == STRUCTURE_EXTENSION || s.structureType == STRUCTURE_SPAWN)
+            }), recache);
+        }
+    },
+    'repairables': {
+        get() {
+            return this.findCached('repairables', room => room.find(FIND_STRUCTURES, {
+                filter: (s) => s.structureType != STRUCTURE_WALL && s.structureType != STRUCTURE_RAMPART
+            }), recache);
+        }
+    },
+    'constructionSites': {
+        get() {
+            return this.findCached('constructionSites', room => room.find(FIND_CONSTRUCTION_SITES), true);
+        }
+    },
+    'structureSites': {
+        get() {
+            return this.findCached('structureSites', room => room.find(FIND_CONSTRUCTION_SITES, {
+                filter: c => c.structureType != STRUCTURE_ROAD
+            }), true);
+        }
+    },
+    'roadSites': {
+        get() {
+            return this.findCached('roadSites', room => room.find(FIND_CONSTRUCTION_SITES, {
+                filter: c => c.structureType == STRUCTURE_ROAD
+            }), true);
+        }
+    },
+    'barriers': {
+        get() {
+            return this.findCached('barriers', room => room.find(FIND_STRUCTURES, {
+                filter: (s) => s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART
+            }), recache);
+        }
     }
-};
+});
 
-Room.prototype.isWallLowerThan = function (hp) {
-    // Set target to closest wall or rampart with less than hp hits; wall repairs allow duplicate repair jobs
-    var wall = this.find(FIND_STRUCTURES, {
-        filter: (s) => s.hits < hp && (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)
-    });
-    if (wall) {
-        return OK;
-    } else {
-        return ERR_NO_TARGET_FOUND;
-    }
-};
 
-//noinspection JSUnusedGlobalSymbols
-Room.prototype.convertAllCreeps = function (convertFrom, convertTo) {
-    var creepsToConvert = this.find(FIND_MY_CREEPS, {filter: (c) => c.memory.role == convertFrom});
-    for (let i in creepsToConvert) {
-        let creep = creepsToConvert[i];
-        // Change role
-        creep.memory.role = convertTo;
-        // Clear mode
-        creep.memory.mode = undefined;
-        // Clear target
-        creep.memory.target = undefined;
-    }
-};
+
+
 
 // Run function for room. Executed before roomBrain.run.
 Room.prototype.run = function () {

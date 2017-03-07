@@ -17,3 +17,5 @@ global.deref = function (ref) { // dereference any object from identifier; see r
 };
 
 global.controllerSignature = "Overmind Screeps AI";
+
+global.myUsername = "Muon";

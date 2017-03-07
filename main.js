@@ -17,6 +17,7 @@
 
 // To-do list: ====================
 // TODO: supplier inefficiencies; wasted time ticks between assignments
+// TODO: keep HUD up but don't update it to save on computation
 // TODO: nearest function that works across rooms and for possibly undefined rooms
 // TODO: attack capability; calculations for how large of an invasion/defense group to make
 // TODO: avoid room edges
@@ -61,8 +62,10 @@ module.exports.loop = function () {
     var LoggerClass = require('data_logger');
     var logger = new LoggerClass;
     logger.run();
-    // Draw global visuals
-    var visuals = require('visuals');
-    visuals.drawGlobalVisuals();
+    // Draw visuals
+    if (Game.cpu.bucket > 7500) {
+        var visuals = require('visuals');
+        visuals.drawGlobalVisuals();
+    }
     // });
 };

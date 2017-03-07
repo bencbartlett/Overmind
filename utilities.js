@@ -80,3 +80,12 @@ global.clearAllCachedFlagPathLengths = function () { // clear all cached path le
         }
     }
 };
+
+global.clearRoomCaches = function () {
+    for (let i in Game.rooms) {
+        Game.rooms[i].memory.cache = {};
+        Game.rooms[i].memory.cacheHistory = {};
+        console.log('Cleared cache for room ' + Game.rooms[i].name);
+    }
+    return OK;
+};

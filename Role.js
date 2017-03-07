@@ -145,7 +145,7 @@ class Role {
         if (bufferSettings[this.name]) {
             buffer = bufferSettings[this.name];
         }
-        var target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+        var target = creep.pos.findClosestByRange(creep.room.storageUnits, {
             filter: (s) => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
                            (s.structureType == STRUCTURE_STORAGE && s.store[RESOURCE_ENERGY] > buffer)
         });

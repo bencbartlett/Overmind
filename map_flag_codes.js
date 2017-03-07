@@ -13,6 +13,12 @@ var flagCodes = {
         color: COLOR_RED,
         filter: flag => flag.color == COLOR_RED,
         action: flagActions.millitary,
+        destroyer: { // spawn and send guard to this flag, primarily for outpost guarding
+            color: COLOR_RED,
+            secondaryColor: COLOR_RED,
+            filter: flag => flag.color == COLOR_RED && flag.secondaryColor == COLOR_RED,
+            action: flagActions.millitary.destroyer
+        },
         guard: { // spawn and send guard to this flag, primarily for outpost guarding // TODO: call in reinforcements
             color: COLOR_RED,
             secondaryColor: COLOR_BLUE,

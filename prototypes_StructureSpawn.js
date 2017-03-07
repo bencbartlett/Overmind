@@ -53,7 +53,8 @@ Object.defineProperty(StructureSpawn.prototype, 'statusMessage', {
         if (this.spawning) {
             let spawning = this.spawning;
             let percent = Math.round(100 * (spawning.needTime - spawning.remainingTime) / spawning.needTime);
-            let message = spawning.name + " (" + percent + "%)";
+            let message = spawning.name + ": " + Game.creeps[spawning.name].assignment.pos.roomName +
+                          " (" + percent + "%)";
             return message;
         } else {
             if (this.room.energyAvailable < this.room.energyCapacityAvailable) {
@@ -65,3 +66,12 @@ Object.defineProperty(StructureSpawn.prototype, 'statusMessage', {
     }
 });
 
+StructureSpawn.prototype.pathLengthTo = function (roomObj) {
+    if (!this.memory.pathLengths) {
+        this.memory.pathLengths = {}
+    }
+    if (!this.memory.pathLengths[roomObj.ref]) {
+        this.memory.pathLengths[roomObj.ref] = require('pathing').findPathLengthIncludingRoads(roomObj.pos, this.pos);
+    }
+    return this.memory.pathLengths[roomObj.ref];
+};
