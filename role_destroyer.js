@@ -105,5 +105,4 @@ class roleDestroyer extends Role {
     }
 }
 
-
 module.exports = roleDestroyer;

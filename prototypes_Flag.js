@@ -1,6 +1,8 @@
 var flagCodes = require('map_flag_codes');
 var roles = require('roles');
 
+
+
 Flag.prototype.assign = function (roomName) {
     this.memory.assignedRoom = roomName;
     console.log(this.name + " now assigned to room " + this.memory.assignedRoom + ".");
@@ -42,10 +44,17 @@ Flag.prototype.getAssignedCreepAmounts = function (role) {
 
 Object.defineProperty(Flag.prototype, 'assignedCreepAmounts', {
     get: function () {
-        let assignedCreeps =  _.filter(Game.creeps, creep => creep.memory.assignment &&
-                                                             creep.memory.assignment == this.ref);
-        this.memory.assignedCreepAmounts =  _.mapValues(_.groupBy(assignedCreeps, creep => creep.memory.role),
-                                                        creepList => creepList.length);
+        if (Memory.preprocessing.assignments[this.ref]) {
+            this.memory.assignedCreepAmounts = _.mapValues(Memory.preprocessing.assignments[this.ref],
+                                                           creepList => creepList.length);
+        } else {
+            // console.log(this.name + " regenerating flag mem!");
+            // let assignedCreeps = _.filter(Game.creeps, creep => creep.memory.assignment &&
+            //                                                     creep.memory.assignment == this.ref);
+            // this.memory.assignedCreepAmounts = _.mapValues(_.groupBy(assignedCreeps, creep => creep.memory.role),
+            //                                                creepList => creepList.length);
+            this.memory.assignedCreepAmounts = {};
+        }
         return this.memory.assignedCreepAmounts;
     }
 });

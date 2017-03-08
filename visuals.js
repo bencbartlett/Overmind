@@ -29,4 +29,7 @@ var visuals = {
     }
 };
 
+const profiler = require('screeps-profiler');
+profiler.registerObject(visuals, 'visuals');
+
 module.exports = visuals;

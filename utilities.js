@@ -54,15 +54,6 @@ global.fixMinerMemory = function () {
     return OK;
 };
 
-global.status = function () {
-    console.log("Creep status: ");
-    var roles = require('map_roles');
-    for (let role in roles) {
-        console.log(role + ": " + countAllCreeps(role));
-    }
-    return '';
-};
-
 global.clearLog = function () {
     let clr = "<script>angular.element(document.getElementsByClassName('fa fa-trash ng-scope')" +
               "[0].parentNode).scope().Console.clear()</script>";
@@ -70,12 +61,14 @@ global.clearLog = function () {
 };
 
 global.clearAllCachedFlagPathLengths = function () { // clear all cached path length associated with flags
-    for (let i in Game.flags) {
-        let flag = Game.flags[i];
+    for (let name in Game.flags) {
+        let flag = Game.flags[name];
         if (flag.memory.pathLengthToAssignedRoomStorage) {
+            console.log("Cleared cached path length for flag " + name);
             delete flag.memory.pathLengthToAssignedRoomStorage;
         }
         if (flag.memory.pathLengthToStorage) {
+            console.log("Cleared cached path length for flag " + name);
             delete flag.memory.pathLengthToStorage;
         }
     }

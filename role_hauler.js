@@ -39,9 +39,7 @@ class roleHauler extends Role {
         var target = _.sortBy(nearbyContainers,
                               container => container.store[RESOURCE_ENERGY])[nearbyContainers.length - 1];
         if (!target) { // if it can't bring a full load, target the fullest container in the room
-            let allContainers = creep.assignment.room.find(FIND_STRUCTURES, {
-                filter: s => s.structureType == STRUCTURE_CONTAINER
-            });
+            let allContainers = creep.assignment.room.containers;
             target = _.sortBy(allContainers, c => c.store[RESOURCE_ENERGY])[allContainers.length - 1];
         }
         if (target) {
@@ -74,12 +72,12 @@ class roleHauler extends Role {
     newTask(creep) {
         creep.task = null;
         if (creep.carry.energy == 0) {
-            var pathLength;
-            if (creep.workRoom.storage.inSameRoomAs(creep.assignment)) {
-                pathLength = creep.assignment.pathLengthToStorage;
-            } else {
-                pathLength = creep.assignment.pathLengthToAssignedRoomStorage;
-            }
+            // var pathLength;
+            // if (creep.workRoom.storage.inSameRoomAs(creep.assignment)) {
+            //     pathLength = creep.assignment.pathLengthToStorage;
+            // } else {
+            //     pathLength = creep.assignment.pathLengthToAssignedRoomStorage;
+            // }
             // if (creep.ticksToLive > (2 + 0.5) * pathLength) { // +0.5 for buffer
             this.collect(creep);
             // } else {
@@ -101,12 +99,12 @@ class roleHauler extends Role {
             if (!creep.room.my) {
                 creep.task.data.moveToOptions = {
                     ignoreCreeps: true,
-                    reusePath: 20
+                    reusePath: 40
                 }
             } else {
                 creep.task.data.moveToOptions = {
                     ignoreCreeps: false,
-                    reusePath: 10
+                    reusePath: 15
                 }
             }
         }

@@ -17,13 +17,13 @@ var industryFlagActions = {
             if (!flag.room) { // requires vision of room
                 return null;
             }
-            var numContainers = flag.room.find(FIND_STRUCTURES, {
-                filter: structure => (structure.structureType == STRUCTURE_CONTAINER ||
-                                      structure.structureType == STRUCTURE_STORAGE)
-            }).length;
+            var numContainers = flag.room.storageUnits.length;
             var remainingConstruction = flag.room.remainingConstructionProgress;
             // Only spawn workers once containers are up, spawn a max of 2 per source
-            var workerRequirements = Math.min(Math.ceil(Math.sqrt(remainingConstruction) / 50), 2);
+            var workerRequirements = 0;
+            if (remainingConstruction > 0) {
+                workerRequirements = 1;
+            }
             if (numContainers == 0) {
                 flag.requiredCreepAmounts[role] = 0;
             } else {
@@ -32,7 +32,7 @@ var industryFlagActions = {
             return flag.requestCreepIfNeeded(brain, role, {
                 assignment: flag,
                 workRoom: flag.roomName,
-                patternRepetitionLimit: 5
+                patternRepetitionLimit: 10
             });
         }
 
@@ -62,5 +62,8 @@ var industryFlagActions = {
         return handleRemoteMiners(flag, brain) || handleRemoteWorkers(flag, brain) || handleRemoteHaulers(flag, brain);
     }
 };
+
+const profiler = require('screeps-profiler');
+profiler.registerObject(industryFlagActions, 'industryFlagActions');
 
 module.exports = industryFlagActions;

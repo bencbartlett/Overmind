@@ -119,4 +119,7 @@ var flagCodes = {
     }
 };
 
+const profiler = require('screeps-profiler');
+profiler.registerObject(flagCodes, 'flagCodes');
+
 module.exports = flagCodes;
