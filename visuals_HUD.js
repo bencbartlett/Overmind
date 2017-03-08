@@ -144,7 +144,7 @@ var HUD = {
         fontSize = 0.5 * fontScale;
         style.font = fontSize + " Courier";
 
-        if (Game.cpu.bucket > 9500) {
+        if (Game.cpu.bucket > 9500 || Game.time % 25 == 0) {
             this.getOwnedRoomInfo();
             this.getOccupiedRoomInfo();
             this.drawRoomInfo();
@@ -157,5 +157,8 @@ var HUD = {
         }
     }
 };
+
+const profiler = require('screeps-profiler');
+profiler.registerObject(HUD, 'HUD');
 
 module.exports = HUD;

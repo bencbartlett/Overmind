@@ -7,6 +7,7 @@ class roleWorker extends Role {
         super('worker');
         // Role-specific settings
         this.settings.bodyPattern = [WORK, CARRY, MOVE];
+        this.settings.notifyOnNoTask = false;
         this.roleRequirements = creep => creep.getActiveBodyparts(WORK) > 1 &&
                                          creep.getActiveBodyparts(MOVE) > 1 &&
                                          creep.getActiveBodyparts(CARRY) > 1
@@ -19,7 +20,7 @@ class roleWorker extends Role {
                 creep.room.find(FIND_MY_CREEPS, {
                     filter: c => c.memory.role == 'miner' && // is a miner
                                  c.pos.findInRange(FIND_SOURCES, 1).length > 0 // is next to a source
-                }).length < creep.room.find(FIND_SOURCES).length; // are all sources are occupied by miners?
+                }).length < creep.room.sources.length; // are all sources are occupied by miners?
             this.renewIfNeeded(creep);
         }
         if (creep.conditionalMoveToWorkRoom() != OK) { // workers sometimes stray from their service rooms
@@ -29,17 +30,17 @@ class roleWorker extends Role {
         }
         // if a creep is trying to harvest and isn't getting any energy and a container becomes available, stop harvest
         if (creep.task && creep.task.name == 'harvest' && creep.pos.findInRange(FIND_SOURCES, 1).length == 0) {
-            if (creep.room.find(FIND_STRUCTURES, {
-                    filter: (s) => (s.structureType == STRUCTURE_CONTAINER
-                                    && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
-                                   (s.structureType == STRUCTURE_STORAGE
-                                    && s.store[RESOURCE_ENERGY] > creep.room.brain.settings.storageBuffer['worker'])
-                }).length > 0) {
+            if (_.filter(creep.room.storageUnits,
+                         s => (s.structureType == STRUCTURE_CONTAINER
+                               && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
+                              (s.structureType == STRUCTURE_STORAGE
+                               && s.store[RESOURCE_ENERGY] > creep.room.brain.settings.storageBuffer['worker'])
+                ).length > 0) {
                 creep.task = null;
             }
         }
         // if a creep was assigned to build an outpost room and it's done, send it back to original room
-        if (creep.room.reservedByMe && creep.room.constructionSites.length == 0)  {
+        if (creep.room.reservedByMe && creep.room.constructionSites.length == 0) {
             creep.setWorkRoom(creep.memory.data.origin);
         }
     }

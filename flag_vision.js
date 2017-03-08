@@ -24,4 +24,7 @@ var visionFlagActions = {
     }
 };
 
+const profiler = require('screeps-profiler');
+profiler.registerObject(visionFlagActions, 'visionFlagActions');
+
 module.exports = visionFlagActions;

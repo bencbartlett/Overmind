@@ -1,5 +1,4 @@
 var tasks = require('tasks');
-var rolesMap = require('map_roles');
 var roles = require('roles');
 
 Creep.prototype.run = function () {
@@ -7,10 +6,6 @@ Creep.prototype.run = function () {
     if (behavior) {
         behavior.run(this);
     }
-};
-
-Creep.prototype.doRole = function () {
-    rolesMap[this.memory.role].behavior.run(this);
 };
 
 Creep.prototype.assign = function (task, target = null) { // wrapper for task.assign(creep, target)
@@ -120,7 +115,8 @@ Creep.prototype.calculatePathETA = function (startPoint, endPoint, ignoreCargo =
 
 Creep.prototype.conditionalMoveToWorkRoom = function () { // move to workRoom if not already there // TODO: make this a task
     if (this.room != this.workRoom) {
-        this.moveToVisual(this.workRoom.controller);
+        let roomPos = new RoomPosition(25, 25, this.memory.workRoom); // arbitrary location, not vision-dependent
+        this.moveToVisual(roomPos);
         return ERR_NOT_IN_SERVICE_ROOM;
     } else {
         return OK;
@@ -146,10 +142,13 @@ Creep.prototype.moveToVisual = function (target, color = '#fff') {
 Creep.prototype.repairNearbyDamagedRoad = function () {
     // repairs roads without sating any extra energy (requiring that there are numWorks*100 hp missing)
     if (this.getActiveBodyparts(WORK) > 0) {
-        var damagedRoads = this.pos.findInRange(FIND_STRUCTURES, 3, {
+        let damagedRoads = this.pos.findInRange(FIND_STRUCTURES, 3, {
             filter: (structure) => structure.structureType == STRUCTURE_ROAD &&
                                    structure.hitsMax - structure.hits > this.getActiveBodyparts(WORK) * 100
         });
+        // let damagedRoads = _.filter(this.pos.lookFor(LOOK_STRUCTURES),
+        //                            s => s.structureType == STRUCTURE_ROAD &&
+        //                                 s.hitsMax - s.hits > this.getActiveBodyparts(WORK) * 100);
         if (damagedRoads.length > 0) {
             return this.repair(damagedRoads[0]);
         }

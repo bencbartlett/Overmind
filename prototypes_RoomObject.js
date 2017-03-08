@@ -77,8 +77,14 @@ RoomObject.prototype.flaggedWith = function (filter) { // if the object has a ce
 // Object of creeps assigned to this roomObject with keys as roles
 Object.defineProperty(RoomObject.prototype, 'assignedCreeps', {
     get: function () {
-        return _.groupBy(_.filter(Game.creeps, creep => creep.memory.assignment && creep.memory.assignment == this.ref),
-                         creep => creep.memory.role);
+        if (Memory.preprocessing.assignments[this.ref]) {
+            return Memory.preprocessing.assignments[this.ref];
+        } else {
+            // return _.groupBy(_.filter(Game.creeps, creep => creep.memory.assignment &&
+            //                                                 creep.memory.assignment == this.ref),
+            //                  creep => creep.memory.role);
+            return {};
+        }
     }
 });
 
@@ -88,18 +94,32 @@ RoomObject.prototype.getAssignedCreepAmounts = function (role) {
 };
 
 // Object of number of creeps assigned to this roomObject with keys as roles
+// Object.defineProperty(RoomObject.prototype, 'assignedCreepAmounts', {
+//     get: function () {
+//         let assignedCreeps =  _.filter(Game.creeps, creep => creep.memory.assignment &&
+//                                                              creep.memory.assignment == this.ref);
+//         return _.mapValues(_.groupBy(assignedCreeps, creep => creep.memory.role), creepList => creepList.length);
+//     }
+// });
+
 Object.defineProperty(RoomObject.prototype, 'assignedCreepAmounts', {
     get: function () {
-        let assignedCreeps =  _.filter(Game.creeps, creep => creep.memory.assignment &&
-                                                             creep.memory.assignment == this.ref);
-        return _.mapValues(_.groupBy(assignedCreeps, creep => creep.memory.role), creepList => creepList.length);
+        if (Memory.preprocessing.assignments[this.ref]) {
+            return _.mapValues(Memory.preprocessing.assignments[this.ref], creepList => creepList.length);
+        } else {
+            console.log("Regenerating assigned creep amounts!");
+            let assignedCreeps =  _.filter(Game.creeps, creep => creep.memory.assignment &&
+                                                                 creep.memory.assignment == this.ref);
+            return _.mapValues(_.groupBy(assignedCreeps, creep => creep.memory.role), creepList => creepList.length);
+        }
     }
 });
 
 // List of creeps with tasks targeting this object
 Object.defineProperty(RoomObject.prototype, 'targetedBy', {
     get: function () {
-        return _.filter(Game.creeps, creep => creep.memory.task && creep.memory.task.targetID == this.ref);
+        // return _.filter(Game.creeps, creep => creep.memory.task && creep.memory.task.targetID == this.ref);
+        return Memory.preprocessing.targets[this.ref] || [];
     }
 });
 

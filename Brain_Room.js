@@ -13,7 +13,7 @@ var RoomBrain = class {
         this.incubating = (_.filter(this.room.flags, flagCodes.territory.claimAndIncubate.filter).length > 0);
         // Settings shared across all rooms
         this.settings = {
-            fortifyLevel: Math.min(Math.pow(10, Math.max(this.room.controller.level, 3)), 1e+6), // fortify wall HP
+            fortifyLevel: 1e+6, // Math.min(Math.pow(10, Math.max(this.room.controller.level, 3)), 1e+6), // fortify wall HP
             workerPatternRepetitionLimit: 10, // maximum number of body repetitions for workers
             maxWorkersPerRoom: 2, // maximum number of workers to spawn per room based on number of required jobs
             incubationWorkersToSend: 3, // number of big workers to send to incubate a room
@@ -230,7 +230,7 @@ var RoomBrain = class {
             if (this.room.storage == undefined) {
                 equilibriumEnergyPerTick /= 3; // workers spend a lot of time walking around if there's not storage
             }
-            var sourceEnergyPerTick = (3000 / 300) * this.room.find(FIND_SOURCES).length;
+            var sourceEnergyPerTick = (3000 / 300) * this.room.sources.length;
             return Math.ceil(0.8 * sourceEnergyPerTick / equilibriumEnergyPerTick); // operate under capacity limit
         } else {
             return null;
@@ -240,13 +240,16 @@ var RoomBrain = class {
     calculateWorkerRequirementsByJobs() { // TODO: replace from number of jobs to total time of jobs
         // Calculate needed number of workers based on number of jobs present; used at >=RCL5
         // repair jobs - custom calculated; workers should spawn once several repairs are needed to roads
-        var numRepairJobs = this.room.find(FIND_STRUCTURES, {
-            filter: (s) => s.hits < s.hitsMax &&
-                           s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
-                           s.structureType != STRUCTURE_WALL && // walls are fortify tasks
-                           s.structureType != STRUCTURE_RAMPART &&
-                           (s.structureType != STRUCTURE_ROAD || s.hits < 0.5 * s.hitsMax) // lower threshold to spawn
-        }).length;
+        // var numRepairJobs = this.room.find(FIND_STRUCTURES, {
+        //     filter: (s) => s.hits < s.hitsMax &&
+        //                    s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
+        //                    s.structureType != STRUCTURE_WALL && // walls are fortify tasks
+        //                    s.structureType != STRUCTURE_RAMPART &&
+        //                    (s.structureType != STRUCTURE_ROAD || s.hits < 0.5 * s.hitsMax) // lower threshold to spawn
+        // }).length;
+        var numRepairJobs = _.filter(this.room.repairables,
+                                     s =>s.hits < s.hitsMax &&
+                                         (s.structureType != STRUCTURE_ROAD || s.hits < 0.5 * s.hitsMax)).length;
         // construction jobs
         var numConstructionJobs = this.getTasks('build').length + this.getTasks('buildRoads').length;
         // fortify jobs
@@ -305,7 +308,7 @@ var RoomBrain = class {
         if (this.incubating) {
             return null; // don't make your own miners during incubation
         }
-        var sources = this.room.find(FIND_SOURCES); // don't use ACTIVE_SOURCES; need to always be handled
+        var sources = this.room.sources; // don't use ACTIVE_SOURCES; need to always be handled
         for (let source of sources) {
             // TODO: calculation of number of miners to assign to each source based on max size of creep
             // Check enough miners are supplied
@@ -324,9 +327,10 @@ var RoomBrain = class {
         // Check enough haulers are supplied
         if (this.room.storage != undefined) { // haulers are only built once a room has storage
             // find all unlinked sources
-            var sources = this.room.find(FIND_SOURCES, {
-                filter: source => source.linked == false || this.room.storage.linked == false
-            });
+            // var sources = this.room.find(FIND_SOURCES, {
+            //     filter: source => source.linked == false || this.room.storage.linked == false
+            // });
+            var sources = _.filter(this.room.sources, s => s.linked == false || this.room.storage.linked == false);
             for (let source of sources) {
                 // Check enough haulers are supplied if applicable
                 let assignedHaulers = source.getAssignedCreepAmounts('hauler');
@@ -362,22 +366,20 @@ var RoomBrain = class {
     handleSuppliers() {
         // Handle suppliers
         var numSuppliers = this.room.controller.getAssignedCreepAmounts('supplier');
-        var energySinks = this.room.find(FIND_STRUCTURES, {
-            filter: (structure) => (structure.structureType == STRUCTURE_TOWER ||
-                                    structure.structureType == STRUCTURE_EXTENSION ||
-                                    structure.structureType == STRUCTURE_SPAWN)
-        });
-        var storageUnits = this.room.find(FIND_STRUCTURES, {
-            filter: (structure) => (structure.structureType == STRUCTURE_CONTAINER ||
-                                    structure.structureType == STRUCTURE_STORAGE)
-        });
-        if (energySinks.length <= 1) { // if there's just a spawner in the room, like in RCL1 rooms
+        // var energySinks = this.room.find(FIND_STRUCTURES, {
+        //     filter: (structure) => (structure.structureType == STRUCTURE_TOWER ||
+        //                             structure.structureType == STRUCTURE_EXTENSION ||
+        //                             structure.structureType == STRUCTURE_SPAWN)
+        // });
+        var numEnergySinks = this.room.sinks.length + this.room.towers.length;
+        var storageUnits = this.room.storageUnits;
+        if (numEnergySinks <= 1) { // if there's just a spawner in the room, like in RCL1 rooms
             return null;
         }
-        var supplierLimit = 1; // there must always be at least one supplier in the room
-        if (_.filter(energySinks, s => s.energy < s.energyCapacity).length > 0) {
-            supplierLimit += 1;
-        }
+        var supplierLimit = 2; // there must always be at least one supplier in the room
+        // if (_.filter(energySinks, s => s.energy < s.energyCapacity).length > 0) {
+        //     supplierLimit += 1;
+        // }
         var expensiveFlags = _.filter(this.room.assignedFlags, flag => flagCodes.millitary.filter(flag) ||
                                                                        flagCodes.destroy.filter(flag) ||
                                                                        flagCodes.industry.filter(flag) ||
@@ -399,10 +401,10 @@ var RoomBrain = class {
             return null; // don't make your own workers during incubation period, just keep existing ones alive
         }
         var numWorkers = this.room.controller.getAssignedCreepAmounts('worker');
-        var containers = this.room.find(FIND_STRUCTURES, {
-            filter: structure => (structure.structureType == STRUCTURE_CONTAINER ||
-                                  structure.structureType == STRUCTURE_STORAGE)
-        });
+        // var containers = this.room.find(FIND_STRUCTURES, {
+        //     filter: structure => (structure.structureType == STRUCTURE_CONTAINER ||
+        //                           structure.structureType == STRUCTURE_STORAGE)
+        // });
         // Only spawn workers once containers are up
         var workerRequirements;
         if (this.room.storage) {
@@ -410,7 +412,7 @@ var RoomBrain = class {
         } else {
             workerRequirements = this.calculateWorkerRequirementsByEnergy(); // no static upgraders prior to RCL4
         }
-        if (workerRequirements && numWorkers < workerRequirements && containers.length > 0) {
+        if (workerRequirements && numWorkers < workerRequirements && this.room.storageUnits.length > 0) {
             return roles('worker').create(this.spawn, {
                 assignment: this.room.controller,
                 workRoom: this.room.name,
@@ -475,12 +477,11 @@ var RoomBrain = class {
         var incubateFlags = _.filter(this.room.assignedFlags,
                                      flag => flagCodes.territory.claimAndIncubate.filter(flag) &&
                                              flag.room && flag.room.controller.my);
-        incubateFlags = _.sortBy(incubateFlags, flag => flag.pathLengthToAssignedRoomStorage || Infinity);
+        incubateFlags = _.sortBy(incubateFlags, flag => flag.pathLengthToAssignedRoomStorage);
         for (let flag of incubateFlags) {
             // spawn miner creeps
             let minerBehavior = roles('miner');
-            let sources = flag.room.find(FIND_SOURCES);
-            for (let source of sources) {
+            for (let source of flag.room.sources) {
                 if (source.getAssignedCreepAmounts('miner') < this.settings.minersPerSource) {
                     let creep = roles('miner').create(this.spawn, {
                         assignment: source,
@@ -525,7 +526,7 @@ var RoomBrain = class {
 
         // Handle actions associated with assigned flags
         for (let flagPriority of prioritizedFlagOperations) {
-            var flagsSortedByRange = _.sortBy(flagPriority, flag => flag.pathLengthToAssignedRoomStorage || Infinity);
+            var flagsSortedByRange = _.sortBy(flagPriority, flag => flag.pathLengthToAssignedRoomStorage);
             for (let flag of flagsSortedByRange) {
                 handleResponse = flag.action(this);
                 if (handleResponse != null) {
@@ -570,7 +571,7 @@ var RoomBrain = class {
                 () => this.handleDomesticSpawnOperations(),
                 () => this.handleIncubationSpawnOperations(),
                 () => this.handleAssignedSpawnOperations(),
-                () => this.assistAssignedSpawnOperations()
+                // () => this.assistAssignedSpawnOperations()
             ];
             // Handle all operations
             for (let spawnThis of prioritizedSpawnOperations) {
@@ -586,10 +587,11 @@ var RoomBrain = class {
     }
 
     handleSafeMode() { // TODO: make this better, defcon system
-        var criticalBarriers = this.room.find(FIND_STRUCTURES, {
-            filter: (s) => (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART) &&
-                           s.hits < 5000
-        });
+        // var criticalBarriers = this.room.find(FIND_STRUCTURES, {
+        //     filter: (s) => (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART) &&
+        //                    s.hits < 5000
+        // });
+        let criticalBarriers = _.filter(this.room.barriers, s => s.hits < 5000);
         if (criticalBarriers.length > 0 && this.room.hostiles.length > 0 && !this.incubating) {
             // no safe mode for incubating rooms (?)
             this.room.controller.activateSafeMode();
@@ -603,5 +605,7 @@ var RoomBrain = class {
     }
 };
 
+const profiler = require('screeps-profiler');
+profiler.registerClass(RoomBrain, 'RoomBrain');
 
 module.exports = RoomBrain;

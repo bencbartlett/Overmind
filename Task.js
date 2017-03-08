@@ -11,7 +11,10 @@ class Task {
         this.moveColor = '#fff';
         this.data = {
             quiet: true, // suppress console logging
-            moveToOptions: {} // default options for creep.moveTo()
+            moveToOptions: {
+                ignoreCreeps: false,
+                reusePath: 15
+            } // default options for creep.moveTo()
         };
     }
 
@@ -45,6 +48,11 @@ class Task {
 
     // Assign the task to a creep
     assign(creep, target = null) {
+        // add target to Memory.preprocessing
+        if (!Memory.preprocessing.targets[target.ref]) {
+            Memory.preprocessing.targets[target.ref] = [];
+        }
+        Memory.preprocessing.targets[target.ref].push(creep.name);
         // register references to creep and target
         this.creep = creep;
         this.target = target;
@@ -91,10 +99,10 @@ class Task {
     step() {
         var creep = this.creep;
         var target = this.target;
-        if (!target) {
-            this.creep.log('null target!');
-            return null; // in case you're targeting something that just became invisible
-        }
+        // if (!target) {
+        //     this.creep.log('null target!');
+        //     return null; // in case you're targeting something that just became invisible
+        // }
         if (creep.pos.inRangeTo(target, this.targetRange)) {
             var workResult = this.work();
             if (workResult != OK && this.data.quiet == false) {
@@ -113,6 +121,9 @@ class Task {
         return ERR_INVALID_ARGS; // needs override
     }
 }
+
+const profiler = require('screeps-profiler');
+profiler.registerClass(Task, 'Task');
 
 
 module.exports = Task;

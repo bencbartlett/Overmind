@@ -15,7 +15,7 @@ var millitaryFlagActions = {
             }
             return flag.requestCreepIfNeeded(brain, role, {
                 assignment: flag,
-                workRoom: flag.workRoom,
+                workRoom: flag.roomName,
                 patternRepetitionLimit: maxSize
             });
         }
@@ -37,7 +37,7 @@ var millitaryFlagActions = {
             }
             return flag.requestCreepIfNeeded(brain, role, {
                 assignment: flag,
-                workRoom: flag.workRoom,
+                workRoom: flag.roomName,
                 patternRepetitionLimit: maxSize
             });
         }
@@ -71,5 +71,8 @@ var millitaryFlagActions = {
         return handleSiegers(flag, brain);
     }
 };
+
+const profiler = require('screeps-profiler');
+profiler.registerObject(millitaryFlagActions, 'millitaryFlagActions');
 
 module.exports = millitaryFlagActions;

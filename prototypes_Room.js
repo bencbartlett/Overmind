@@ -5,11 +5,7 @@
 
 Object.defineProperty(Room.prototype, 'brain', {
     get () {
-        let roomBrain = require('Brain_Room');
-        return new roomBrain(this.name);
-    },
-    set () {
-        console.log("cannot set Room.brain for " + this.name);
+        return Brains[this.name];
     }
 });
 
@@ -174,7 +170,7 @@ Room.prototype.findCached = function (findKey, findFunction, reCache = false) {
     return findResults;
 };
 
-var recache = (Game.cpu.bucket > 9500); // recache automatically at >9000 bucket
+var recache = (Game.cpu.bucket > 9000); // recache automatically at >9000 bucket
 Object.defineProperties(Room.prototype, {
     'containers': {
         get() {
