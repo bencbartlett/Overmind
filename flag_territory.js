@@ -4,7 +4,7 @@ var territoryFlagActions = {
     reserve: function (flag, brain) {
         // Spawn a reserver bot that will reserve the site
         function handleReservers(flag, brain) {
-            role = 'reserver';
+            let role = 'reserver';
             let reserveAgain = false;
             if (flag.room) {
                 reserveAgain = !flag.room.controller.reservation ||
@@ -28,7 +28,7 @@ var territoryFlagActions = {
     claimAndIncubate: function (flag, brain) {
         // Spawn a reserver bot that will reserve the site
         function handleClaimers(flag, brain) {
-            role = 'claimer';
+            let role = 'claimer';
             let reserveAgain = false;
             if (!(flag.room && flag.room.controller.my)) {
                 flag.requiredCreepAmounts[role] = 1;

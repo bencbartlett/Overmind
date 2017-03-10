@@ -6,9 +6,7 @@ class taskSupply extends Task {
         // Settings
         this.maxPerTarget = 1;
         this.moveColor = 'blue';
-        this.data = {
-            quiet: true
-        }
+        this.data.quiet = true;
     }
 
     isValidTask() {
@@ -21,7 +19,9 @@ class taskSupply extends Task {
         if (target &&
             (target.structureType == STRUCTURE_SPAWN ||
             target.structureType == STRUCTURE_EXTENSION ||
-            target.structureType == STRUCTURE_TOWER)) {
+            target.structureType == STRUCTURE_TOWER ||
+            target.structureType == STRUCTURE_LAB ||
+            target.structureType == STRUCTURE_NUKER)) {
             return (target.energy < target.energyCapacity);
         } else {
             return false;

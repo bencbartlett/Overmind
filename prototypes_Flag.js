@@ -13,6 +13,34 @@ Flag.prototype.assign = function (roomName) {
     }
 };
 
+Flag.prototype.setMineral = function (mineralType) {
+    if (flagCodes.minerals.filter(this)) {
+        let validResources = require('map_resources');
+        if (_.includes(validResources, mineralType)) {
+            this.memory.mineralType = mineralType;
+            console.log(this.name + " now instructs lab to contain " + this.memory.mineralType + ".");
+            return OK;
+        } else {
+            console.log(this.name + ": " + mineralType + " is not a valid RESOURCE_*.");
+        }
+    } else {
+        console.log(this.name + " is not a mineral flag.");
+    }
+};
+
+Object.defineProperty(Flag.prototype, 'IO', { // should the lab be loaded or unloaded?
+    get () {
+        return this.memory.IO;
+    },
+    set (inOrOut) {
+        if (!(inOrOut == 'in' || inOrOut == 'out')) {
+            console.log('IO must be "in" or "out".');
+        } else {
+            this.memory.IO = inOrOut;
+        }
+    }
+});
+
 Flag.prototype.unassign = function () {
     console.log(this.name + " now unassigned from " + this.memory.assignedRoom + ".");
     delete this.memory.assignedRoom;

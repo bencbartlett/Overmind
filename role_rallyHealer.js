@@ -12,7 +12,7 @@ class roleRallyHealer extends Role {
                                          creep.getActiveBodyparts(MOVE) > 1
     }
 
-    create(spawn, assignment, {patternRepetitionLimit = Infinity}) {
+    create(spawn, assignment, {patternRepetitionLimit = Infinity}) { // TODO: fix this to match new create() standards
         var bodyPattern = this.settings.bodyPattern; // body pattern to be repeated some number of times
         var numRepeats = Math.floor(spawn.room.energyCapacityAvailable / spawn.cost(bodyPattern));
         numRepeats = Math.min(Math.floor(50 / bodyPattern.length), numRepeats, patternRepetitionLimit);

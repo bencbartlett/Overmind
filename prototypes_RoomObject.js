@@ -107,7 +107,7 @@ Object.defineProperty(RoomObject.prototype, 'assignedCreepAmounts', {
         if (Memory.preprocessing.assignments[this.ref]) {
             return _.mapValues(Memory.preprocessing.assignments[this.ref], creepList => creepList.length);
         } else {
-            console.log("Regenerating assigned creep amounts!");
+            // console.log("Regenerating assigned creep amounts! (Why?)");
             let assignedCreeps =  _.filter(Game.creeps, creep => creep.memory.assignment &&
                                                                  creep.memory.assignment == this.ref);
             return _.mapValues(_.groupBy(assignedCreeps, creep => creep.memory.role), creepList => creepList.length);
