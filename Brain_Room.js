@@ -34,7 +34,7 @@ class RoomBrain {
         this.incubatingSettings = {
             fortifyLevel: 1e+3, // fortify all walls/ramparts to this level
             workerPatternRepetitionLimit: 10, // maximum number of body repetitions for workers
-            maxWorkersPerRoom: 4, // maximum number of workers to spawn per room based on number of required jobs
+            maxWorkersPerRoom: 3, // maximum number of workers to spawn per room based on number of required jobs
             supplierPatternRepetitionLimit: 2, // maximum number of body repetitions for suppliers
             haulerPatternRepetitionLimit: 7, // maximum number of body repetitions for haulers
             remoteHaulerPatternRepetitionLimit: 8, // maximum number of body repetitions for haulers
@@ -255,8 +255,8 @@ class RoomBrain {
         //                    (s.structureType != STRUCTURE_ROAD || s.hits < 0.5 * s.hitsMax) // lower threshold to spawn
         // }).length;
         var numRepairJobs = _.filter(this.room.repairables,
-                                     s =>s.hits < s.hitsMax &&
-                                         (s.structureType != STRUCTURE_ROAD || s.hits < 0.5 * s.hitsMax)).length;
+                                     s => s.hits < s.hitsMax &&
+                                          (s.structureType != STRUCTURE_ROAD || s.hits < 0.5 * s.hitsMax)).length;
         // construction jobs
         var numConstructionJobs = this.getTasks('build').length + this.getTasks('buildRoads').length;
         // fortify jobs
@@ -520,10 +520,9 @@ class RoomBrain {
             }
             // spawn worker creeps
             let workerBehavior = roles('worker');
-            let assignedWorkers = flag.room.controller.assignedCreeps['worker'] || []; // this can be undefined at first
+            let assignedWorkers = flag.room.controller.getAssignedCreepAmounts('worker');
             let incubationWorkers = _.filter(assignedWorkers,
-                                             c => c.body &&
-                                                  c.body.length >= workerBehavior.settings.bodyPattern.length *
+                                             c => c.body.length >= workerBehavior.settings.bodyPattern.length *
                                                                    this.settings.workerPatternRepetitionLimit);
             if (incubationWorkers.length < this.settings.incubationWorkersToSend) {
                 let creep = workerBehavior.create(this.spawn, {

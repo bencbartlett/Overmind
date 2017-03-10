@@ -74,7 +74,7 @@ RoomObject.prototype.flaggedWith = function (filter) { // if the object has a ce
 //                                                    creep.ticksToLive > creep.memory.data.replaceAt));
 // };
 
-// Object of creeps assigned to this roomObject with keys as roles
+// Object of creep NAMES assigned to this roomObject with keys as roles
 Object.defineProperty(RoomObject.prototype, 'assignedCreeps', {
     get: function () {
         if (Memory.preprocessing.assignments[this.ref]) {
@@ -87,6 +87,11 @@ Object.defineProperty(RoomObject.prototype, 'assignedCreeps', {
         }
     }
 });
+
+RoomObject.prototype.getAssignedCreeps = function (role) {
+    let creepNames = this.assignedCreeps[role];
+    return _.map(creepNames, name => Game.creeps[name]);
+};
 
 RoomObject.prototype.getAssignedCreepAmounts = function (role) {
     let amount = this.assignedCreepAmounts[role];
