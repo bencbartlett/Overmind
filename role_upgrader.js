@@ -45,6 +45,13 @@ class roleUpgrader extends Role {
                 creep.moveToVisual(creep.workRoom.controller);
             }
         }
+        let upgraderBoosters = _.filter(creep.room.labs,
+                                        lab => lab.assignedMineralType == RESOURCE_CATALYZED_GHODIUM_ACID &&
+                                               lab.mineralAmount >= 30 * creep.getActiveBodyparts(WORK));
+        if (upgraderBoosters.length > 0 && creep.ticksToLive > 0.95 * creep.lifetime && !creep.memory.boosted) {
+            creep.task = null;
+            creep.assign(tasks('getBoosted'), upgraderBoosters[0]);
+        }
     }
 }
 

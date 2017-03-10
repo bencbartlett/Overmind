@@ -11,7 +11,8 @@
 //
 //
 // To-do list: ====================
-// TODO: supplier inefficiencies; wasted time ticks between assignments
+// TODO: DEFCON + dynamically generated guards
+// TODO: spawn queue - duplicate creeps can be built from double-spawn rooms
 // TODO: nearest function that works across rooms and for possibly undefined rooms
 // TODO: attack capability; calculations for how large of an invasion/defense group to make
 
@@ -39,16 +40,16 @@ module.exports.loop = function () {
                 delete Memory.flags[name];
             }
         }
+
         // Setup =======================================================================================================
         // Preprocessing
         var preprocessing = require('preprocessing');
         preprocessing.run();
-        // Set up room brains
-        var roomBrain = require('Brain_Room');
-        global.Brains = {};
-        for (let name in Game.rooms) {
-            Brains[name] = new roomBrain(name);
-        }
+        // Initialize Overmind object
+        var overmind = require('Overmind');
+        global.Overmind = new overmind;
+        Overmind.initializeAllBrains();
+
         // Animation ===================================================================================================
         // Animate each creep
         for (let name in Game.creeps) {
@@ -64,6 +65,7 @@ module.exports.loop = function () {
                 room.brain.run();
             }
         }
+
         // Postprocessing ==============================================================================================
         // Log stats
         var LoggerClass = require('data_logger');

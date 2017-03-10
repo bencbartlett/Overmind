@@ -5,7 +5,7 @@
 
 Object.defineProperty(Room.prototype, 'brain', {
     get () {
-        return Brains[this.name];
+        return Overmind.RoomBrains[this.name];
     }
 });
 
@@ -172,14 +172,14 @@ Room.prototype.findCached = function (findKey, findFunction, reCache = false) {
 
 var recache = (Game.cpu.bucket > 9000); // recache automatically at >9000 bucket
 Object.defineProperties(Room.prototype, {
-    'containers': {
+    'containers': { // containers in the room
         get() {
             return this.findCached('containers', room => room.find(FIND_STRUCTURES, {
                 filter: structure => structure.structureType == STRUCTURE_CONTAINER
             }), recache);
         }
     },
-    'storageUnits': {
+    'storageUnits': { // containers + storage
         get() {
             return this.findCached('storageUnits', room => room.find(FIND_STRUCTURES, {
                 filter: structure => structure.structureType == STRUCTURE_CONTAINER ||
@@ -187,52 +187,62 @@ Object.defineProperties(Room.prototype, {
             }), recache);
         }
     },
-    'towers': {
+    'towers': { // towers
         get() {
             return this.findCached('towers', room => room.find(FIND_MY_STRUCTURES, {
                 filter: structure => structure.structureType == STRUCTURE_TOWER
             }), recache);
         }
     },
-    'sources': {
+    'labs': { // labs
+        get() {
+            return this.findCached('labs', room => room.find(FIND_MY_STRUCTURES, {
+                filter: structure => structure.structureType == STRUCTURE_LAB
+            }), recache);
+        }
+    },
+    'sources': { // sources
         get() {
             return this.findCached('sources', room => room.find(FIND_SOURCES));
         }
     },
-    'sinks': {
+    'sinks': { // anything requiring a regular supply of energy
         get() {
             return this.findCached('sinks', room => room.find(FIND_MY_STRUCTURES, {
-                filter: s => (s.structureType == STRUCTURE_EXTENSION || s.structureType == STRUCTURE_SPAWN)
+                filter: s => (s.structureType == STRUCTURE_SPAWN ||
+                              s.structureType == STRUCTURE_EXTENSION ||
+                              s.structureType == STRUCTURE_LAB ||
+                              s.structureType == STRUCTURE_TOWER)
             }), recache);
         }
     },
-    'repairables': {
+    'repairables': { // anything that can be repaired, excluding walls+ramparts, which are "fortified"
         get() {
             return this.findCached('repairables', room => room.find(FIND_STRUCTURES, {
                 filter: (s) => s.structureType != STRUCTURE_WALL && s.structureType != STRUCTURE_RAMPART
             }), recache);
         }
     },
-    'constructionSites': {
+    'constructionSites': { // all construction sites; always recached
         get() {
             return this.findCached('constructionSites', room => room.find(FIND_CONSTRUCTION_SITES), true);
         }
     },
-    'structureSites': {
+    'structureSites': { // construction sites that aren't roads
         get() {
             return this.findCached('structureSites', room => room.find(FIND_CONSTRUCTION_SITES, {
                 filter: c => c.structureType != STRUCTURE_ROAD
             }), true);
         }
     },
-    'roadSites': {
+    'roadSites': { // construction sites for roads
         get() {
             return this.findCached('roadSites', room => room.find(FIND_CONSTRUCTION_SITES, {
                 filter: c => c.structureType == STRUCTURE_ROAD
             }), true);
         }
     },
-    'barriers': {
+    'barriers': { // walls and ramparts
         get() {
             return this.findCached('barriers', room => room.find(FIND_STRUCTURES, {
                 filter: (s) => s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART
@@ -240,9 +250,6 @@ Object.defineProperties(Room.prototype, {
         }
     }
 });
-
-
-
 
 
 // Run function for room. Executed before roomBrain.run.

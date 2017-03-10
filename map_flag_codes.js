@@ -63,6 +63,12 @@ var flagCodes = {
         }
     },
 
+    minerals: { // flags to indicate mineral types. Doesn't have internal color coding; types are put in flag memory
+        color: COLOR_CYAN,
+        filter: flag => flag.color == COLOR_CYAN,
+        action: null,
+    },
+
     territory: { // actions related to claiming or reserving a room; requires assign()
         color: COLOR_PURPLE,
         filter: flag => flag.color == COLOR_PURPLE,

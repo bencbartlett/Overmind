@@ -30,7 +30,6 @@ class RoomBrain {
             reserveBuffer: 3000, // reserve rooms to this amount
             maxAssistLifetimePercentage: 0.1 // assist in spawn operations up to (creep.lifetime * this amount) distance
         };
-        this.settings.terminalResourceAmounts = require('settings_terminal').resourceAmounts;
         // Settings for new rooms that are being incubated
         this.incubatingSettings = {
             fortifyLevel: 1e+3, // fortify all walls/ramparts to this level
@@ -87,7 +86,7 @@ class RoomBrain {
         // Task role conditions
         this.assignmentRoles = {
             'pickup': ['supplier', 'hauler'],
-            'collect': ['supplier', 'hauler'],
+            'collect': ['hauler'],
             'supplyTowers': ['supplier', 'hauler'],
             'supply': ['supplier', 'hauler'],
             'repair': ['worker', 'miner', 'guard'],
@@ -361,11 +360,23 @@ class RoomBrain {
     handleLinkers() {
         // Check enough haulers are supplied
         if (this.room.storage != undefined && this.room.storage.linked) { // linkers only for storage with links
-            // Check enough haulers are supplied if applicable
-            let assignedLinkers = this.room.storage.getAssignedCreepAmounts('linker');
-            if (assignedLinkers < 1) {
+            if (this.room.storage.getAssignedCreepAmounts('linker') < 1) {
                 return roles('linker').create(this.spawn, {
                     assignment: this.room.storage,
+                    workRoom: this.room.name,
+                    patternRepetitionLimit: 1
+                });
+            }
+        }
+        return null;
+    }
+
+    handleMineralSuppliers() {
+        // Check enough haulers are supplied
+        if (this.room.terminal != undefined && this.room.labs.length > 0) {
+            if (this.room.terminal.getAssignedCreepAmounts('mineralSupplier') < 1) {
+                return roles('mineralSupplier').create(this.spawn, {
+                    assignment: this.room.terminal,
                     workRoom: this.room.name,
                     patternRepetitionLimit: 1
                 });
@@ -459,6 +470,7 @@ class RoomBrain {
         var prioritizedDomesticOperations = [
             () => this.handleSuppliers(), // don't move this from top
             () => this.handleLinkers(),
+            () => this.handleMineralSuppliers(),
             () => this.handleMiners(),
             () => this.handleHaulers(),
             () => this.handleWorkers(),
@@ -607,7 +619,9 @@ class RoomBrain {
     // Market operations ===============================================================================================
 
     handleTerminalOperations() {
-
+        if (this.room.terminal != undefined) {
+            this.room.terminal.brain.run();
+        }
     }
 
 
@@ -629,6 +643,7 @@ class RoomBrain {
     run() {
         this.handleSafeMode();
         this.handleSpawnOperations(); // build creeps as needed
+        this.handleTerminalOperations(); // repleneish needed resources
     }
 }
 

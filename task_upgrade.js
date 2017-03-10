@@ -21,7 +21,7 @@ class taskUpgrade extends Task {
     }
 
     work() {
-        return this.creep.upgradeController(this.target);
+        let result = this.creep.upgradeController(this.target);
     }
 }
 

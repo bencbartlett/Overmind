@@ -23,7 +23,7 @@ class Task {
         if (this.creepName != null) {
             return Game.creeps[this.creepName];
         } else {
-            console.log(this.name + ": creep is null!");
+            // console.log(this.name + ": creep is null!");
             // console.log(this.name, this.creepName, this.targetID, this.maxPerTarget, this.maxPerTask, this.targetRange, this.moveColor, this.data, this)
             return null;
         }
@@ -38,7 +38,7 @@ class Task {
         if (this.targetID != null) { // Get task's own target by its ID or name
             return deref(this.targetID);
         } else {
-            console.log(this.name + ": target is null!");
+            // console.log(this.name + ": target is null!");
             return null;
         }
     }
