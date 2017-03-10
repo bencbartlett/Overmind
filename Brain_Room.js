@@ -35,7 +35,7 @@ class RoomBrain {
             fortifyLevel: 1e+3, // fortify all walls/ramparts to this level
             workerPatternRepetitionLimit: 10, // maximum number of body repetitions for workers
             maxWorkersPerRoom: 3, // maximum number of workers to spawn per room based on number of required jobs
-            supplierPatternRepetitionLimit: 2, // maximum number of body repetitions for suppliers
+            supplierPatternRepetitionLimit: 4, // maximum number of body repetitions for suppliers
             haulerPatternRepetitionLimit: 7, // maximum number of body repetitions for haulers
             remoteHaulerPatternRepetitionLimit: 8, // maximum number of body repetitions for haulers
             minersPerSource: 1, // number of miners to assign to a source
@@ -520,7 +520,7 @@ class RoomBrain {
             }
             // spawn worker creeps
             let workerBehavior = roles('worker');
-            let assignedWorkers = flag.room.controller.getAssignedCreepAmounts('worker');
+            let assignedWorkers = flag.room.controller.getAssignedCreeps('worker');
             let incubationWorkers = _.filter(assignedWorkers,
                                              c => c.body.length >= workerBehavior.settings.bodyPattern.length *
                                                                    this.settings.workerPatternRepetitionLimit);

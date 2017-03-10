@@ -11,7 +11,7 @@
 //
 //
 // To-do list: ====================
-// TODO: DEFCON + dynamically generated guards
+// TODO: DEFCON + dynamically generated guards (patrolling cops?)
 // TODO: spawn queue - duplicate creeps can be built from double-spawn rooms
 // TODO: nearest function that works across rooms and for possibly undefined rooms
 // TODO: attack capability; calculations for how large of an invasion/defense group to make
