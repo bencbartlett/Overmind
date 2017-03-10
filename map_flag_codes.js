@@ -37,6 +37,12 @@ var flagCodes = {
         color: COLOR_ORANGE,
         filter: flag => flag.color == COLOR_ORANGE,
         action: null,
+        attack: { // dismantle this structure (with siegers); usually walls
+            color: COLOR_ORANGE,
+            secondaryColor: COLOR_RED,
+            filter: flag => flag.color == COLOR_ORANGE && flag.secondaryColor == COLOR_RED,
+            action: null,
+        },
         dismantle: { // dismantle this structure (with siegers); usually walls
             color: COLOR_ORANGE,
             secondaryColor: COLOR_YELLOW,

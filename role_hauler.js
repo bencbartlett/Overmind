@@ -97,12 +97,12 @@ class roleHauler extends Role {
         // Reduce moveTo usage when in non-crowded rooms
         if (creep.task) {
             if (!creep.room.my) {
-                creep.task.data.moveToOptions = {
+                creep.memory.task.data.moveToOptions = {
                     ignoreCreeps: true,
                     reusePath: 40
                 }
             } else {
-                creep.task.data.moveToOptions = {
+                creep.memory.task.data.moveToOptions = {
                     ignoreCreeps: false,
                     reusePath: 15
                 }

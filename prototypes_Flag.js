@@ -4,9 +4,13 @@ var roles = require('roles');
 
 
 Flag.prototype.assign = function (roomName) {
-    this.memory.assignedRoom = roomName;
-    console.log(this.name + " now assigned to room " + this.memory.assignedRoom + ".");
-    return OK;
+    if (Game.rooms[roomName] && Game.rooms[roomName].my) {
+        this.memory.assignedRoom = roomName;
+        console.log(this.name + " now assigned to room " + this.memory.assignedRoom + ".");
+        return OK;
+    } else {
+        console.log(roomName + " is not a valid owned room!");
+    }
 };
 
 Flag.prototype.unassign = function () {

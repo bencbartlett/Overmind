@@ -10,7 +10,7 @@ class roleDestroyer extends Role {
     constructor() {
         super('destroyer');
         // Role-specific settings
-        this.settings.bodyPattern = [TOUGH, ATTACK, ATTACK, HEAL, MOVE, MOVE];
+        this.settings.bodyPattern = [TOUGH, TOUGH, TOUGH, ATTACK, ATTACK, HEAL, MOVE, MOVE, MOVE];
         this.settings.orderedBodyPattern = true;
         this.roleRequirements = creep => creep.getActiveBodyparts(ATTACK) > 1 &&
                                          creep.getActiveBodyparts(HEAL) > 1 &&
@@ -26,21 +26,24 @@ class roleDestroyer extends Role {
             workRoom: workRoom,
             patternRepetitionLimit: patternRepetitionLimit
         });
-        creep.memory.data.healFlag = "HP1";
+        creep.memory.data.healFlag = "HP1"; // TODO: hard coded
         return creep;
     }
 
     findTarget(creep) {
         var target;
         var targetPriority = [
-            () => creep.pos.findClosestByRange(_.filter(creep.room.flags, flagCodes.destroy.dismantle.filter)),
+            () => creep.pos.findClosestByRange(_.filter(creep.room.flags, flagCodes.destroy.attack.filter)),
             // () => creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS),
             // () => creep.pos.findClosestByRange(FIND_HOSTILE_SPAWNS),
-            // () => creep.pos.findClosestByRange(
-            //     FIND_HOSTILE_STRUCTURES, {filter: s => s.hits && s.structureType == STRUCTURE_TOWER}),
+            () => creep.pos.findClosestByRange(
+                FIND_HOSTILE_STRUCTURES, {filter: s => s.hits && s.structureType == STRUCTURE_TOWER}),
             () => creep.pos.findClosestByRange(
                 FIND_HOSTILE_STRUCTURES, {filter: s => s.hits && s.structureType != STRUCTURE_RAMPART}),
-            () => creep.pos.findClosestByRange(FIND_HOSTILE_STRUCTURES, {filter: s => s.hits})
+            () => creep.pos.findClosestByRange(FIND_HOSTILE_STRUCTURES, {filter: s => s.hits}),
+            () => creep.pos.findClosestByRange(FIND_STRUCTURES, {
+                filter: s => !s.my && !s.room.my && !s.room.reservedByMe && s.structureType != STRUCTURE_ROAD
+            }),
         ];
         for (let targetThis of targetPriority) {
             target = targetThis();

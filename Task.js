@@ -13,7 +13,7 @@ class Task {
             quiet: true, // suppress console logging
             moveToOptions: {
                 ignoreCreeps: false,
-                reusePath: 15
+                reusePath: 10
             } // default options for creep.moveTo()
         };
     }
@@ -24,6 +24,7 @@ class Task {
             return Game.creeps[this.creepName];
         } else {
             console.log(this.name + ": creep is null!");
+            // console.log(this.name, this.creepName, this.targetID, this.maxPerTarget, this.maxPerTask, this.targetRange, this.moveColor, this.data, this)
             return null;
         }
     }

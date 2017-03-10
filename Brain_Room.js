@@ -5,7 +5,7 @@ var flagCodes = require('map_flag_codes');
 
 // TODO: plug in Room.findCached() into this
 
-var RoomBrain = class {
+class RoomBrain {
     constructor(roomName) {
         this.name = roomName;
         this.room = Game.rooms[roomName];
@@ -21,7 +21,8 @@ var RoomBrain = class {
             haulerPatternRepetitionLimit: 7, // maximum number of body repetitions for haulers
             remoteHaulerPatternRepetitionLimit: 8, // maximum number of body repetitions for haulers
             minersPerSource: 1, // number of miners to assign to a source
-            storageBuffer: { // creeps of a given role can't withdraw from storage until this level
+            storageBuffer: { // creeps of a given role can't withdraw from (or not deposit to) storage until this level
+                linker: 75000, // linker must deposit to storage below this amount
                 worker: 50000,
                 upgrader: 75000,
                 default: 0
@@ -29,6 +30,7 @@ var RoomBrain = class {
             reserveBuffer: 3000, // reserve rooms to this amount
             maxAssistLifetimePercentage: 0.1 // assist in spawn operations up to (creep.lifetime * this amount) distance
         };
+        this.settings.terminalResourceAmounts = require('settings_terminal').resourceAmounts;
         // Settings for new rooms that are being incubated
         this.incubatingSettings = {
             fortifyLevel: 1e+3, // fortify all walls/ramparts to this level
@@ -133,6 +135,9 @@ var RoomBrain = class {
         console.log(this.name + '_Brain: "' + message + '"');
     }
 
+
+    // Creep task assignment ===========================================================================================
+
     getTasks(taskType) {
         var targets = [];
         switch (taskType) {
@@ -214,6 +219,9 @@ var RoomBrain = class {
         }
         return null;
     }
+
+
+    // Creep quantity and size requirements ============================================================================
 
     calculateWorkerRequirementsByEnergy() {
         // Calculate needed numbers of workers from an energetics standpoint
@@ -303,6 +311,9 @@ var RoomBrain = class {
             return [null, null];
         }
     }
+
+
+    // Domestic creep spawning operations ==============================================================================
 
     handleMiners() {
         if (this.incubating) {
@@ -473,6 +484,10 @@ var RoomBrain = class {
         return null;
     }
 
+
+    // Spawner operations ==============================================================================================
+    // TODO: Move to Brain_Spawn.js
+
     handleIncubationSpawnOperations() { // spawn fat workers to send to a new room to get it running fast
         var incubateFlags = _.filter(this.room.assignedFlags,
                                      flag => flagCodes.territory.claimAndIncubate.filter(flag) &&
@@ -518,10 +533,12 @@ var RoomBrain = class {
             _.filter(flags, flagCodes.territory.claimAndIncubate.filter),
             _.filter(flags, flagCodes.millitary.guard.filter),
             _.filter(flags, flagCodes.territory.reserve.filter),
-            _.filter(flags, flagCodes.industry.remoteMine.filter),
+
             _.filter(flags, flagCodes.rally.healPoint.filter),
             _.filter(flags, flagCodes.millitary.destroyer.filter),
-            _.filter(flags, flagCodes.millitary.sieger.filter)
+            _.filter(flags, flagCodes.millitary.sieger.filter),
+
+            _.filter(flags, flagCodes.industry.remoteMine.filter),
         ];
 
         // Handle actions associated with assigned flags
@@ -586,6 +603,16 @@ var RoomBrain = class {
         }
     }
 
+
+    // Market operations ===============================================================================================
+
+    handleTerminalOperations() {
+
+    }
+
+
+    // Safe mode condition =============================================================================================
+
     handleSafeMode() { // TODO: make this better, defcon system
         // var criticalBarriers = this.room.find(FIND_STRUCTURES, {
         //     filter: (s) => (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART) &&
@@ -603,7 +630,7 @@ var RoomBrain = class {
         this.handleSafeMode();
         this.handleSpawnOperations(); // build creeps as needed
     }
-};
+}
 
 const profiler = require('screeps-profiler');
 profiler.registerClass(RoomBrain, 'RoomBrain');

@@ -3,6 +3,7 @@
 // Globals
 require('globals');
 require('utilities');
+require('settings_user');
 // Libraries
 require('pathing');
 // Prototypes
