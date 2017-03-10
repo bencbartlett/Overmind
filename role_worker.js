@@ -17,10 +17,11 @@ class roleWorker extends Role {
         if (creep.room.brain.incubating) {
             // only harvest if there are miners away from their stations
             this.settings.workersCanHarvest =
-                creep.room.find(FIND_MY_CREEPS, {
-                    filter: c => c.memory.role == 'miner' && // is a miner
-                                 c.pos.findInRange(FIND_SOURCES, 1).length > 0 // is next to a source
-                }).length < creep.room.sources.length; // are all sources are occupied by miners?
+                creep.room.find(FIND_MY_CREEPS, { // are all sources are occupied by miners?
+                    filter: c => c.memory.role == 'miner' && // is there a miner?
+                                 c.pos.findInRange(FIND_SOURCES, 1).length > 0 // is it at its source?
+                }).length < creep.room.sources.length ||
+                creep.room.containers.length < creep.room.sources.length; // or are there not containers yet?
             this.renewIfNeeded(creep);
         }
         if (creep.conditionalMoveToWorkRoom() != OK) { // workers sometimes stray from their service rooms
