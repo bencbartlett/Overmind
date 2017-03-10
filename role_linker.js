@@ -38,7 +38,15 @@ class roleLinker extends Role {
     deposit(creep) {
         var deposit = tasks('deposit');
         deposit.data.quiet = true;
-        var target = creep.workRoom.storage;
+        var target;
+        // Deposit to terminal if you need to and are permitted to
+        if ((creep.workRoom.terminal.store[RESOURCE_ENERGY] <
+            creep.workRoom.brain.settings.terminalResourceAmounts[RESOURCE_ENERGY]) &&
+            (creep.workRoom.storage.store[RESOURCE_ENERGY] > creep.workRoom.brain.settings.storageBuffer[this.name])) {
+            target = creep.workRoom.terminal;
+        } else {
+            target = creep.workRoom.storage;
+        }
         return creep.assign(deposit, target);
     }
 

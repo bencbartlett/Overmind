@@ -12,10 +12,8 @@
 //
 // To-do list: ====================
 // TODO: supplier inefficiencies; wasted time ticks between assignments
-// TODO: keep HUD up but don't update it to save on computation
 // TODO: nearest function that works across rooms and for possibly undefined rooms
 // TODO: attack capability; calculations for how large of an invasion/defense group to make
-// TODO: avoid room edges
 
 // Import everything needed
 'use strict';

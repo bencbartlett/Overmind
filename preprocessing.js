@@ -36,6 +36,10 @@ var preprocessing = {
         }
     },
 
+    allMarketOrders: function () {
+        this.memory.allMarketOrders = Game.market.getAllOrders();
+    },
+
     run: function () {
         Memory.preprocessing = {};
         this.cacheAssignments();
