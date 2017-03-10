@@ -520,8 +520,10 @@ class RoomBrain {
             }
             // spawn worker creeps
             let workerBehavior = roles('worker');
-            let incubationWorkers = _.filter(flag.room.controller.assignedCreeps['worker'],
-                                             c => c.body.length >= workerBehavior.settings.bodyPattern.length *
+            let assignedWorkers = flag.room.controller.assignedCreeps['worker'] || []; // this can be undefined at first
+            let incubationWorkers = _.filter(assignedWorkers,
+                                             c => c.body &&
+                                                  c.body.length >= workerBehavior.settings.bodyPattern.length *
                                                                    this.settings.workerPatternRepetitionLimit);
             if (incubationWorkers.length < this.settings.incubationWorkersToSend) {
                 let creep = workerBehavior.create(this.spawn, {
