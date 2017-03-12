@@ -13,7 +13,7 @@ class RoomBrain {
         this.incubating = (_.filter(this.room.flags, flagCodes.territory.claimAndIncubate.filter).length > 0);
         // Settings shared across all rooms
         this.settings = {
-            fortifyLevel: 1e+6, // Math.min(Math.pow(10, Math.max(this.room.controller.level, 3)), 1e+6), // fortify wall HP
+            fortifyLevel: 1e+6, // fortify wall HP
             workerPatternRepetitionLimit: 10, // maximum number of body repetitions for workers
             maxWorkersPerRoom: 2, // maximum number of workers to spawn per room based on number of required jobs
             incubationWorkersToSend: 3, // number of big workers to send to incubate a room
@@ -30,9 +30,12 @@ class RoomBrain {
             reserveBuffer: 3000, // reserve rooms to this amount
             maxAssistLifetimePercentage: 0.1 // assist in spawn operations up to (creep.lifetime * this amount) distance
         };
+        if (this.room.controller) {
+            this.settings.fortifyLevel = Math.min(Math.pow(10, Math.max(this.room.controller.level, 3)), 1e+6);
+        }
         // Settings for new rooms that are being incubated
         this.incubatingSettings = {
-            fortifyLevel: 1e+3, // fortify all walls/ramparts to this level
+            fortifyLevel: 1e+4, // fortify all walls/ramparts to this level
             workerPatternRepetitionLimit: 10, // maximum number of body repetitions for workers
             maxWorkersPerRoom: 3, // maximum number of workers to spawn per room based on number of required jobs
             supplierPatternRepetitionLimit: 4, // maximum number of body repetitions for suppliers
@@ -464,6 +467,10 @@ class RoomBrain {
         return null;
     }
 
+
+    // Spawner operations ==============================================================================================
+    // TODO: Move to Brain_Spawn.js
+
     handleDomesticSpawnOperations() {
         var handleResponse;
         // Domestic operations
@@ -495,10 +502,6 @@ class RoomBrain {
 
         return null;
     }
-
-
-    // Spawner operations ==============================================================================================
-    // TODO: Move to Brain_Spawn.js
 
     handleIncubationSpawnOperations() { // spawn fat workers to send to a new room to get it running fast
         var incubateFlags = _.filter(this.room.assignedFlags,

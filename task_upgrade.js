@@ -7,7 +7,8 @@ class taskUpgrade extends Task {
         this.targetRange = 3;
         this.moveColor = 'purple';
         this.data = {
-            quiet: true
+            quiet: true,
+            publicMessage: ["For", "the", "swarm!"]
         };
     }
 
@@ -21,6 +22,7 @@ class taskUpgrade extends Task {
     }
 
     work() {
+        this.creep.publicMessage(["For", "the swarm!", "(and GCL)"]);
         let result = this.creep.upgradeController(this.target);
     }
 }

@@ -7,9 +7,13 @@ var millitaryFlagActions = {
             if (flag.memory.amount) {
                 flag.requiredCreepAmounts[role] = flag.memory.amount;
             } else {
-                flag.requiredCreepAmounts[role] = 1;
+                if (flag.room == undefined || flag.room.hostiles.length > 0) { // spawn guard if hostiles or no vision
+                    flag.requiredCreepAmounts[role] = 1;
+                } else {
+                    flag.requiredCreepAmounts[role] = 0;
+                }
             }
-            let maxSize = 8;
+            let maxSize = 12;
             if (flag.memory.maxSize) {
                 maxSize = flag.memory.maxSize;
             }
