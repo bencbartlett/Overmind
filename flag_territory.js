@@ -22,7 +22,36 @@ var territoryFlagActions = {
             });
         }
 
-        return handleReservers(flag, brain);
+        // If there are sites in need of construction and containers have been set up, send in some number of workers
+        function handleRemoteWorkers(flag, brain) {
+            var role = 'worker';
+            if (!flag.room) { // requires vision of room
+                return null;
+            }
+            var numContainers = flag.room.storageUnits.length;
+            // Only spawn workers once containers are up, spawn a max of 2 per source
+            var workerRequirements = 0;
+            var workerSize;
+            if (flag.room.remainingConstructionProgress > 0) { // set up remaining construction
+                workerRequirements = 1;
+                workerSize = 10; // bigger worker for doing construction work
+            } else if (flag.room.brain.getTasks('repair').length > 0) { // repair whatever needs repairing
+                workerRequirements = 1;
+                workerSize = 5; // repair jobs don't need as much
+            }
+            if (numContainers == 0) {
+                flag.requiredCreepAmounts[role] = 0;
+            } else {
+                flag.requiredCreepAmounts[role] = workerRequirements;
+            }
+            return flag.requestCreepIfNeeded(brain, role, {
+                assignment: flag,
+                workRoom: flag.roomName,
+                patternRepetitionLimit: workerSize
+            });
+        }
+
+        return handleReservers(flag, brain) || handleRemoteWorkers(flag, brain);
     },
 
     claimAndIncubate: function (flag, brain) {
