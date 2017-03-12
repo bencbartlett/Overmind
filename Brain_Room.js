@@ -238,7 +238,7 @@ class RoomBrain {
                                       this.settings.workerPatternRepetitionLimit);
             var equilibriumEnergyPerTick = workerSize;
             if (this.room.storage == undefined) {
-                equilibriumEnergyPerTick /= 3; // workers spend a lot of time walking around if there's not storage
+                equilibriumEnergyPerTick /= 1.5; // workers spend a lot of time walking around if there's not storage
             }
             var sourceEnergyPerTick = (3000 / 300) * this.room.sources.length;
             return Math.ceil(0.8 * sourceEnergyPerTick / equilibriumEnergyPerTick); // operate under capacity limit
@@ -319,7 +319,7 @@ class RoomBrain {
 
     handleMiners() {
         if (this.incubating) {
-            return null; // don't make your own miners during incubation
+            return null; // don't make your own miners during incubation or at super low levels
         }
         var sources = this.room.sources; // don't use ACTIVE_SOURCES; need to always be handled
         for (let source of sources) {
@@ -431,13 +431,13 @@ class RoomBrain {
         //                           structure.structureType == STRUCTURE_STORAGE)
         // });
         // Only spawn workers once containers are up
-        var workerRequirements;
+        var workerRequirements = 0;
         if (this.room.storage) {
             workerRequirements = this.calculateWorkerRequirementsByJobs(); // switch to worker/upgrader once storage
         } else {
             workerRequirements = this.calculateWorkerRequirementsByEnergy(); // no static upgraders prior to RCL4
         }
-        if (workerRequirements && numWorkers < workerRequirements && this.room.storageUnits.length > 0) {
+        if (numWorkers < workerRequirements && this.room.storageUnits.length > 0) {
             return roles('worker').create(this.spawn, {
                 assignment: this.room.controller,
                 workRoom: this.room.name,

@@ -170,7 +170,7 @@ Room.prototype.findCached = function (findKey, findFunction, reCache = false) {
     return findResults;
 };
 
-var recache = (Game.cpu.bucket > 9000); // recache automatically at >9000 bucket
+var recache = true; // (Game.cpu.bucket > 9000); // recache automatically at >9000 bucket
 Object.defineProperties(Room.prototype, {
     'containers': { // containers in the room
         get() {
