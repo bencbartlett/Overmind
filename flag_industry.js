@@ -11,30 +11,29 @@ var industryFlagActions = {
             });
         }
 
-        // If there are sites in need of construction and containers have been set up, send in some number of workers
-        function handleRemoteWorkers(flag, brain) {
-            var role = 'worker';
-            if (!flag.room) { // requires vision of room
-                return null;
-            }
-            var numContainers = flag.room.storageUnits.length;
-            var remainingConstruction = flag.room.remainingConstructionProgress;
-            // Only spawn workers once containers are up, spawn a max of 2 per source
-            var workerRequirements = 0;
-            if (remainingConstruction > 0) {
-                workerRequirements = 1;
-            }
-            if (numContainers == 0) {
-                flag.requiredCreepAmounts[role] = 0;
-            } else {
-                flag.requiredCreepAmounts[role] = workerRequirements;
-            }
-            return flag.requestCreepIfNeeded(brain, role, {
-                assignment: flag,
-                workRoom: flag.roomName,
-                patternRepetitionLimit: 10
-            });
-        }
+        // // If there are sites in need of construction and containers have been set up, send in some number of workers
+        // function handleRemoteWorkers(flag, brain) {
+        //     var role = 'worker';
+        //     if (!flag.room) { // requires vision of room
+        //         return null;
+        //     }
+        //     var numContainers = flag.room.storageUnits.length;
+        //     // Only spawn workers once containers are up, spawn a max of 2 per source
+        //     var workerRequirements = 0;
+        //     if (flag.room.remainingConstructionProgress > 0 || room.brain.getTasks('repair').length > 0) {
+        //         workerRequirements = 1;
+        //     }
+        //     if (numContainers == 0) {
+        //         flag.requiredCreepAmounts[role] = 0;
+        //     } else {
+        //         flag.requiredCreepAmounts[role] = workerRequirements;
+        //     }
+        //     return flag.requestCreepIfNeeded(brain, role, {
+        //         assignment: flag,
+        //         workRoom: flag.roomName,
+        //         patternRepetitionLimit: 10
+        //     });
+        // }
 
         function handleRemoteHaulers(flag, brain) {
             var role = 'hauler';
@@ -59,7 +58,7 @@ var industryFlagActions = {
             });
         }
 
-        return handleRemoteMiners(flag, brain) || handleRemoteWorkers(flag, brain) || handleRemoteHaulers(flag, brain);
+        return handleRemoteMiners(flag, brain) || handleRemoteHaulers(flag, brain);
     }
 };
 

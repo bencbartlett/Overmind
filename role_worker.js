@@ -41,7 +41,9 @@ class roleWorker extends Role {
             }
         }
         // if a creep was assigned to build an outpost room and it's done, send it back to original room
-        if (creep.room.reservedByMe && creep.room.constructionSites.length == 0) {
+        if (creep.room.reservedByMe &&
+            creep.room.constructionSites.length == 0 &&
+            creep.room.brain.getTasks('repair').length == 0) {
             creep.setWorkRoom(creep.memory.data.origin);
         }
     }
