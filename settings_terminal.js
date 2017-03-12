@@ -10,6 +10,6 @@ terminalSettings.resourceAmounts[RESOURCE_CATALYZED_GHODIUM_ACID] = 1000;
 terminalSettings.maxBuyPrice[RESOURCE_ENERGY] = 0; // never buy energy...
 terminalSettings.maxBuyPrice[RESOURCE_CATALYZED_GHODIUM_ACID] = 4;
 // Effective market prices go here // TODO: automatically calculate this?
-terminalSettings.avgPrice[RESOURCE_ENERGY] = 0.02;
+terminalSettings.avgPrice[RESOURCE_ENERGY] = 0.01;
 
 module.exports = terminalSettings;

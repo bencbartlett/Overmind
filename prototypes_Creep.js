@@ -181,3 +181,12 @@ Creep.prototype.donationHandler = function () {
         return OK;
     }
 };
+
+Creep.prototype.publicMessage = function (sayList) {
+    if (!this.memory.data.sayCount) {
+        this.memory.data.sayCount = 0;
+    }
+    let count = this.memory.data.sayCount;
+    this.say(sayList[count], true);
+    this.memory.data.sayCount = (count + 1) % sayList.length;
+};

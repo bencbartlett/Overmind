@@ -9,7 +9,7 @@ class taskRecharge extends Task {
 
     isValidTask() {
         var creep = this.creep;
-        return (creep.carry.energy < creep.carryCapacity);
+        return (_.sum(creep.carry) < creep.carryCapacity);
     }
 
     isValidTarget() {

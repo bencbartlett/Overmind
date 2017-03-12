@@ -68,8 +68,8 @@ class Task {
         var creep = this.creep;
         if (this.data.quiet == false) {
             creep.log("assigned to " + this.name + " " + this.target + ".");
+            creep.say(this.name);
         }
-        creep.say(this.name);
     }
 
     // Test every tick to see if task is still valid

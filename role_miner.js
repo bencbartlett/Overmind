@@ -53,9 +53,10 @@ class roleMiner extends Role {
         if (target) {
             creep.moveTo(target); // get on top of the container if you're not already
             return creep.assign(tasks('deposit'), target);
-        } else {
-            return this.dropEnergy(creep);
-        }
+        } 
+        // else {
+        //     return this.dropEnergy(creep);
+        // }
     }
 
     depositLink(creep) {
