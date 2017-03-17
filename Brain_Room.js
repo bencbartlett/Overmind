@@ -250,13 +250,6 @@ class RoomBrain {
     calculateWorkerRequirementsByJobs() { // TODO: replace from number of jobs to total time of jobs
         // Calculate needed number of workers based on number of jobs present; used at >=RCL5
         // repair jobs - custom calculated; workers should spawn once several repairs are needed to roads
-        // var numRepairJobs = this.room.find(FIND_STRUCTURES, {
-        //     filter: (s) => s.hits < s.hitsMax &&
-        //                    s.structureType != STRUCTURE_CONTAINER && // containers are repaired by miners
-        //                    s.structureType != STRUCTURE_WALL && // walls are fortify tasks
-        //                    s.structureType != STRUCTURE_RAMPART &&
-        //                    (s.structureType != STRUCTURE_ROAD || s.hits < 0.5 * s.hitsMax) // lower threshold to spawn
-        // }).length;
         var numRepairJobs = _.filter(this.room.repairables,
                                      s => s.hits < s.hitsMax &&
                                           (s.structureType != STRUCTURE_ROAD || s.hits < 0.5 * s.hitsMax)).length;
@@ -314,8 +307,14 @@ class RoomBrain {
         }
     }
 
+    calculateRemoteHaulingRequirements() {
+        let miningFlags = _.filter(this.room.assignedFlags, flagCodes.industry.remoteMine.filter);
+        let haulingNeeded = _.sum(_.map(miningFlags, flag => flag.haulingNeeded));
+        return haulingNeeded * 1.2; // add a bit of excess to account for inefficiencies
+    }
 
-    // Domestic creep spawning operations ==============================================================================
+
+    // Core creep spawning operations ==================================================================================
 
     handleMiners() {
         if (this.incubating) {
@@ -468,10 +467,28 @@ class RoomBrain {
     }
 
 
+    // Inferred spawner operations =====================================================================================
+    handleRemoteHaulers() {
+        // Check enough haulers exist to satisfy all demand from associated rooms
+        if (this.room.storage != undefined) { // haulers are only built once a room has storage
+            let haulingNeeded = this.calculateRemoteHaulingRequirements();
+            let haulingSupplied = _.sum(_.map(this.room.storage.getAssignedCreeps('hauler')), c => c.carryCapacity);
+            if (haulingSupplied < haulingNeeded) {
+                return roles('hauler').create(this.spawn, {
+                    assignment: this.room.storage, // remote haulers are assigned to storage
+                    workRoom: this.room.name,
+                    patternRepetitionLimit: Infinity
+                });
+            }
+
+        }
+        return null;
+    }
+
     // Spawner operations ==============================================================================================
     // TODO: Move to Brain_Spawn.js
 
-    handleDomesticSpawnOperations() {
+    handleCoreSpawnOperations() { // core operations needed to keep a room running; all creeps target things in room
         var handleResponse;
         // Domestic operations
         var prioritizedDomesticOperations = [
@@ -503,7 +520,7 @@ class RoomBrain {
         return null;
     }
 
-    handleIncubationSpawnOperations() { // spawn fat workers to send to a new room to get it running fast
+    handleIncubationSpawnOperations() { // operations to start up a new room quickly by sending renewable large creeps
         var incubateFlags = _.filter(this.room.assignedFlags,
                                      flag => flagCodes.territory.claimAndIncubate.filter(flag) &&
                                              flag.room && flag.room.controller.my);
@@ -540,7 +557,7 @@ class RoomBrain {
         return null;
     }
 
-    handleAssignedSpawnOperations() {
+    handleAssignedSpawnOperations() { // operations associated with an assigned flags, such as spawning millitary creeps
         var handleResponse;
         // Flag operations
         let flags = this.room.assignedFlags; // TODO: make this a lookup table
@@ -567,6 +584,33 @@ class RoomBrain {
                 }
             }
         }
+        return null;
+    }
+
+
+    handleInferredSpawnOperations() { // spawn operations handled locally but inferred by assigned operations
+        var handleResponse;
+        // Domestic operations
+        var prioritizedDomesticOperations = [
+            () => this.handleRemoteHaulers(),
+        ];
+
+        // Handle domestic operations
+        for (let handler of prioritizedDomesticOperations) {
+            handleResponse = handler();
+            if (handleResponse != null) {
+                return handleResponse;
+            }
+        }
+
+        // Renew expensive creeps if needed
+        let creepsNeedingRenewal = this.spawn.pos.findInRange(FIND_MY_CREEPS, 1, {
+            filter: creep => creep.memory.data.renewMe && creep.ticksToLive < 500
+        });
+        if (creepsNeedingRenewal.length > 0) {
+            return 'renewing (renew call is done through task_getRenewed.work)';
+        }
+
         return null;
     }
 
@@ -601,7 +645,7 @@ class RoomBrain {
             // figure out what to spawn next
             var creep;
             var prioritizedSpawnOperations = [
-                () => this.handleDomesticSpawnOperations(),
+                () => this.handleCoreSpawnOperations(),
                 () => this.handleIncubationSpawnOperations(),
                 () => this.handleAssignedSpawnOperations(),
                 // () => this.assistAssignedSpawnOperations()

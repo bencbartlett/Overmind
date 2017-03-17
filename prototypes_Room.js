@@ -42,14 +42,14 @@ Object.defineProperty(Room.prototype, 'creeps', {
 // Creeps assigned to the room
 Object.defineProperty(Room.prototype, 'assignedCreeps', {
     get () {
-        return _.filter(Game.creeps, creep => creep.workRoom == this);
+        return _.filter(Game.creeps, creep => creep.workRoom == this); // TODO: costly
     }
 });
 
 // Tasks of creeps assigned to the room
 Object.defineProperty(Room.prototype, 'tasks', {
     get () {
-        let tasks = this.assignedCreeps.map(creep => creep.task);
+        let tasks = this.assignedCreepNames.map(name => Game.creeps[name].task);
         return _.filter(tasks, task => task != null);
     }
 });
