@@ -468,6 +468,7 @@ class RoomBrain {
 
 
     // Inferred spawner operations =====================================================================================
+
     handleRemoteHaulers() {
         // Check enough haulers exist to satisfy all demand from associated rooms
         if (this.room.storage != undefined) { // haulers are only built once a room has storage
@@ -480,7 +481,6 @@ class RoomBrain {
                     patternRepetitionLimit: Infinity
                 });
             }
-
         }
         return null;
     }
@@ -590,25 +590,15 @@ class RoomBrain {
 
     handleInferredSpawnOperations() { // spawn operations handled locally but inferred by assigned operations
         var handleResponse;
-        // Domestic operations
-        var prioritizedDomesticOperations = [
+        var prioritizedOperations = [
             () => this.handleRemoteHaulers(),
         ];
 
-        // Handle domestic operations
-        for (let handler of prioritizedDomesticOperations) {
+        for (let handler of prioritizedOperations) {
             handleResponse = handler();
             if (handleResponse != null) {
                 return handleResponse;
             }
-        }
-
-        // Renew expensive creeps if needed
-        let creepsNeedingRenewal = this.spawn.pos.findInRange(FIND_MY_CREEPS, 1, {
-            filter: creep => creep.memory.data.renewMe && creep.ticksToLive < 500
-        });
-        if (creepsNeedingRenewal.length > 0) {
-            return 'renewing (renew call is done through task_getRenewed.work)';
         }
 
         return null;
@@ -648,6 +638,7 @@ class RoomBrain {
                 () => this.handleCoreSpawnOperations(),
                 () => this.handleIncubationSpawnOperations(),
                 () => this.handleAssignedSpawnOperations(),
+                () => this.handleInferredSpawnOperations(),
                 // () => this.assistAssignedSpawnOperations()
             ];
             // Handle all operations

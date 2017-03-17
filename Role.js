@@ -131,6 +131,10 @@ class Role {
     }
 
     requestTask(creep) { // default logic for requesting a new task from the room brain // TODO: why doesn't this work in other rooms?
+        if (!creep.workRoom) {
+            creep.log("no workRoom! Why?");
+            return null;
+        }
         var response = creep.workRoom.brain.assignTask(creep);
         if (!response && !this.settings.consoleQuiet && this.settings.notifyOnNoTask) {
             creep.log('could not get task from room brain!');

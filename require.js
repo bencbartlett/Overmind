@@ -13,6 +13,7 @@ require('prototypes_RoomObject');
 require('prototypes_RoomPosition');
 require('prototypes_RoomVisual');
 require('prototypes_Room');
+require('prototypes_StructureContainer');
 require('prototypes_StructureLab');
 require('prototypes_StructureSpawn');
 require('prototypes_StructureTerminal');

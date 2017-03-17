@@ -13,7 +13,7 @@ var millitaryFlagActions = {
                     flag.requiredCreepAmounts[role] = 0;
                 }
             }
-            let maxSize = 12;
+            let maxSize = 9;
             if (flag.memory.maxSize) {
                 maxSize = flag.memory.maxSize;
             }

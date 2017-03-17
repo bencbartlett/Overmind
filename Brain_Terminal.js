@@ -67,7 +67,10 @@ class TerminalBrain {
     }
 
     run() {
-        this.buyShortages();
+        // buy shortages only if there's enough energy; avoids excessive CPU usage
+        if (this.terminal.store[RESOURCE_ENERGY] > 0.9 * this.settings.resourceAmounts[RESOURCE_ENERGY]) {
+            this.buyShortages();
+        }
     }
 }
 

@@ -61,7 +61,7 @@ Object.defineProperty(RoomObject.prototype, 'assignedCreepAmounts', {
     }
 });
 
-Object.defineProperty(RoomObject.prototype, 'targetedBy', { // List of creeps with tasks targeting this object
+Object.defineProperty(RoomObject.prototype, 'targetedBy', { // List of creep names with tasks targeting this object
     get: function () {
         // return _.filter(Game.creeps, creep => creep.memory.task && creep.memory.task.targetID == this.ref);
         return Memory.preprocessing.targets[this.ref] || [];
