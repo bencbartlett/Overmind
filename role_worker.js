@@ -50,8 +50,8 @@ class roleWorker extends Role {
 
     // Old harvest function in case I need it in the future
     harvest(creep) {
-        var target = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE, {
-            filter: (source) => source.openSpots() > 0
+        var target = creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE, {
+            filter: (source) => source.targetedBy < 3
         });
         if (target) {
             return creep.assign(tasks('harvest'), target);

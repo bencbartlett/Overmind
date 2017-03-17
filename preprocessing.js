@@ -5,7 +5,7 @@ var preprocessing = {
         return Memory.preprocessing;
     },
 
-    cacheAssignments: function () {
+    cacheAssignments: function () { // generates a hash table for creeps assigned to each thing; key: role, val: name
         this.memory.assignments = {};
         for (let name in Game.creeps) {
             let creep = Game.creeps[name];

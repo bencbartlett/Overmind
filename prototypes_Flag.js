@@ -1,7 +1,9 @@
+// Flag prototypes
+
 var flagCodes = require('map_flag_codes');
 var roles = require('roles');
 
-
+// Flag assignment =====================================================================================================
 
 Flag.prototype.assign = function (roomName) {
     if (Game.rooms[roomName] && Game.rooms[roomName].my) {
@@ -12,6 +14,25 @@ Flag.prototype.assign = function (roomName) {
         console.log(roomName + " is not a valid owned room!");
     }
 };
+
+Flag.prototype.unassign = function () {
+    console.log(this.name + " now unassigned from " + this.memory.assignedRoom + ".");
+    delete this.memory.assignedRoom;
+    return OK;
+};
+
+Object.defineProperty(Flag.prototype, 'assignedRoom', { // the room the flag is assigned to
+    get () {
+        if (!this.memory.assignedRoom) {
+            return null;
+        } else {
+            return Game.rooms[this.memory.assignedRoom];
+        }
+    }
+});
+
+
+// Flags for labs and minerals =========================================================================================
 
 Flag.prototype.setMineral = function (mineralType) {
     if (flagCodes.minerals.filter(this)) {
@@ -41,11 +62,8 @@ Object.defineProperty(Flag.prototype, 'IO', { // should the lab be loaded or unl
     }
 });
 
-Flag.prototype.unassign = function () {
-    console.log(this.name + " now unassigned from " + this.memory.assignedRoom + ".");
-    delete this.memory.assignedRoom;
-    return OK;
-};
+
+// Flag code properties ================================================================================================
 
 Object.defineProperty(Flag.prototype, 'category', { // the category object in flagCodes map
     get () {
@@ -59,15 +77,12 @@ Object.defineProperty(Flag.prototype, 'type', { // subcategory object
     }
 });
 
-Object.defineProperty(Flag.prototype, 'assignedRoom', { // the room the flag is assigned to
-    get () {
-        if (!this.memory.assignedRoom) {
-            return null;
-        } else {
-            return Game.rooms[this.memory.assignedRoom];
-        }
-    }
-});
+Flag.prototype.action = function (...args) {
+    return this.type.action(this, ...args); // calls flag action with this as flag argument
+};
+
+
+// Assigned creep indexing =============================================================================================
 
 Flag.prototype.getAssignedCreepAmounts = function (role) {
     let amount = this.assignedCreepAmounts[role];
@@ -77,14 +92,13 @@ Flag.prototype.getAssignedCreepAmounts = function (role) {
 Object.defineProperty(Flag.prototype, 'assignedCreepAmounts', {
     get: function () {
         if (Memory.preprocessing.assignments[this.ref]) {
-            this.memory.assignedCreepAmounts = _.mapValues(Memory.preprocessing.assignments[this.ref],
-                                                           creepList => creepList.length);
+            let creepNamesByRole = Memory.preprocessing.assignments[this.ref];
+            for (let role in creepNamesByRole) { // only include creeps that shouldn't be replaced yet
+                creepNamesByRole[role] = _.filter(creepNamesByRole[role],
+                                                  name => Game.creeps[name].needsReplacing == false)
+            }
+            this.memory.assignedCreepAmounts = _.mapValues(creepNamesByRole, creepList => creepList.length);
         } else {
-            // console.log(this.name + " regenerating flag mem!");
-            // let assignedCreeps = _.filter(Game.creeps, creep => creep.memory.assignment &&
-            //                                                     creep.memory.assignment == this.ref);
-            // this.memory.assignedCreepAmounts = _.mapValues(_.groupBy(assignedCreeps, creep => creep.memory.role),
-            //                                                creepList => creepList.length);
             this.memory.assignedCreepAmounts = {};
         }
         return this.memory.assignedCreepAmounts;
@@ -96,8 +110,7 @@ Flag.prototype.getRequiredCreepAmounts = function (role) {
     return amount || 0;
 };
 
-// an object with roles as keys and required amounts as values
-Object.defineProperty(Flag.prototype, 'requiredCreepAmounts', {
+Object.defineProperty(Flag.prototype, 'requiredCreepAmounts', { // roles as keys and required amounts as values
     get () {
         if (!this.memory.requiredCreepAmounts) {
             return this.memory.requiredCreepAmounts = {};
@@ -106,8 +119,10 @@ Object.defineProperty(Flag.prototype, 'requiredCreepAmounts', {
     }
 });
 
-// if the flag needs more of a certain type of creep
-Flag.prototype.needsAdditional = function (role) {
+
+// Spawning requests ===================================================================================================
+
+Flag.prototype.needsAdditional = function (role) { // if the flag needs more of a certain type of creep
     return this.getAssignedCreepAmounts(role) < this.getRequiredCreepAmounts(role);
 };
 
@@ -124,6 +139,9 @@ Flag.prototype.requestCreepIfNeeded = function (brain, role,
     }
 };
 
+
+// Path length caching =================================================================================================
+
 Object.defineProperty(Flag.prototype, 'pathLengthToAssignedRoomStorage', {
     get () {
         if (!this.memory.pathLengthToAssignedRoomStorage) {
@@ -134,7 +152,22 @@ Object.defineProperty(Flag.prototype, 'pathLengthToAssignedRoomStorage', {
     }
 });
 
-Flag.prototype.action = function (...args) {
-    return this.type.action(this, ...args); // calls flag action with this as flag argument
-};
+Object.defineProperty(Flag.prototype, 'haulingNeeded', { // total amount of energy*distance/tick of hauling needed
+    get () {
+        let source = this.pos.lookFor(LOOK_SOURCES)[0];
+        if (!source) {
+            console.log("No source at " + this.name + "'s position!");
+            return 0;
+        } else {
+            let energyPerTick = source.energyCapacity / 300; // avg amount of energy generated per tick
+            let ticksPerHaul = 2 * this.pathLengthToAssignedRoomStorage; // distance (# of ticks) to haul energy back
+            let haulingPower = energyPerTick * ticksPerHaul; // (energy/tick) * (ticks/1cap haul) = total capacity needs
+            if ((haulingPower * 3/2 + 150) / 1500 > source.energyCapacity / 300) { // check if hauling is profitable
+                console.log("Warning: it is not profitable to harvest from " + this.name +
+                            " given the current assigned room location");
+            }
+            return haulingPower;
+        }
+    }
+});
 

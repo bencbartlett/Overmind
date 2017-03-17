@@ -1,43 +1,36 @@
-var tasks = require('tasks');
-var roles = require('roles');
+// Creep prototypes
 
-Creep.prototype.run = function () {
+var tasks = require('tasks'); // tasks mapper
+var roles = require('roles'); // roles mapper
+
+Creep.prototype.run = function () { // run the creep's associated role
     let behavior = roles(this.memory.role);
     if (behavior) {
         behavior.run(this);
     }
 };
 
-Creep.prototype.assign = function (task, target = null) { // wrapper for task.assign(creep, target)
-    this.task = null;
-    return task.assign(this, target);
+Creep.prototype.publicMessage = function (sayList) { // publically say each element of a list of strings
+    if (!this.memory.data.sayCount) {
+        this.memory.data.sayCount = 0;
+    }
+    let count = this.memory.data.sayCount;
+    this.say(sayList[count], true);
+    this.memory.data.sayCount = (count + 1) % sayList.length;
 };
+
+// Creep properties ====================================================================================================
 
 Creep.prototype.getBodyparts = function (partType) {
     return _.filter(this.body, part => part.type == partType).length;
 };
 
-Object.defineProperty(Creep.prototype, 'task', {
-    get: function () { // provide new task object recreated from literals stored in creep.memory.task
-        if (this.memory.task != null) {
-            // NOTE: task migration should be performed here
-            // if (this.memory.task.name == 'transferEnergy') {
-            //     this.memory.task.name = 'deposit'
-            // }
-            var task = tasks(this.memory.task.name);
-            task.creepName = this.memory.task.creepName;
-            task.targetID = this.memory.task.targetID;
-            task.data = this.memory.task.data;
-            return task;
+Object.defineProperty(Creep.prototype, 'needsReplacing', { // whether the creep needs replacing
+    get: function () {
+        if (this.ticksToLive) { // undefined when spawning
+            return this.ticksToLive < this.memory.data.replaceAt;
         } else {
-            return null;
-        }
-    },
-    set: function (newTask) {
-        if (newTask != null) {
-            this.log("use Creep.assign() to assign tasks. Creep.task = ___ should only be used to null a task.");
-        } else {
-            this.memory.task = newTask;
+            return false;
         }
     }
 });
@@ -78,6 +71,58 @@ Object.defineProperty(Creep.prototype, 'assignment', { // retrieve the assignmen
         this.memory.assignment = newAssignment.ref
     }
 });
+
+
+// Tasks and task assignment ===========================================================================================
+
+Object.defineProperty(Creep.prototype, 'task', {
+    get: function () { // provide new task object recreated from literals stored in creep.memory.task
+        if (this.memory.task != null) {
+            // NOTE: task migration should be performed here
+            // if (this.memory.task.name == 'transferEnergy') {
+            //     this.memory.task.name = 'deposit'
+            // }
+            var task = tasks(this.memory.task.name);
+            task.creepName = this.memory.task.creepName;
+            task.targetID = this.memory.task.targetID;
+            task.data = this.memory.task.data;
+            return task;
+        } else {
+            return null;
+        }
+    },
+    set: function (newTask) {
+        if (newTask != null) {
+            this.log("use Creep.assign() to assign tasks. Creep.task = ___ should only be used to null a task.");
+        } else {
+            this.memory.task = newTask;
+        }
+    }
+});
+
+Creep.prototype.assign = function (task, target = null) { // wrapper for task.assign(creep, target)
+    this.task = null;
+    return task.assign(this, target);
+};
+
+
+// Moving and pathing ==================================================================================================
+
+Creep.prototype.moveToVisual = function (target, color = '#fff') {
+    var visualizePath = true;
+    if (visualizePath) {
+        var pathStyle = {
+            fill: 'transparent',
+            stroke: color,
+            lineStyle: 'dashed',
+            strokeWidth: .15,
+            opacity: .3
+        };
+        return this.moveTo(target, {visualizePathStyle: pathStyle});
+    } else {
+        return this.moveTo(target);
+    }
+};
 
 Creep.prototype.calculatePathETA = function (startPoint, endPoint, ignoreCargo = false) {
     var path = startPoint.findPathTo(endPoint);
@@ -123,22 +168,6 @@ Creep.prototype.conditionalMoveToWorkRoom = function () { // move to workRoom if
     }
 };
 
-Creep.prototype.moveToVisual = function (target, color = '#fff') {
-    var visualizePath = true;
-    if (visualizePath) {
-        var pathStyle = {
-            fill: 'transparent',
-            stroke: color,
-            lineStyle: 'dashed',
-            strokeWidth: .15,
-            opacity: .3
-        };
-        return this.moveTo(target, {visualizePathStyle: pathStyle});
-    } else {
-        return this.moveTo(target);
-    }
-};
-
 Creep.prototype.repairNearbyDamagedRoad = function () {
     // repairs roads without sating any extra energy (requiring that there are numWorks*100 hp missing)
     if (this.getActiveBodyparts(WORK) > 0) {
@@ -165,28 +194,4 @@ Creep.prototype.donate = function (roomName) {
     } else {
         this.log('I could not be donated: ' + roomName + ' is ' + Game.rooms[roomName]);
     }
-};
-
-Creep.prototype.donationHandler = function () {
-    if (this.memory.donated) {
-        var controller = Game.rooms[this.memory.donated].controller;
-        if (!this.pos.inRangeTo(controller.pos, 5)) { // walk to controller (avoids room edge effects)
-            this.memory.target = undefined; // clear target so creep won't come running back to old room
-            this.moveToVisual(controller);
-            return ERR_NOT_IN_RANGE;
-        } else {
-            this.memory.donated = undefined; // clear donation status
-        }
-    } else {
-        return OK;
-    }
-};
-
-Creep.prototype.publicMessage = function (sayList) {
-    if (!this.memory.data.sayCount) {
-        this.memory.data.sayCount = 0;
-    }
-    let count = this.memory.data.sayCount;
-    this.say(sayList[count], true);
-    this.memory.data.sayCount = (count + 1) % sayList.length;
 };
