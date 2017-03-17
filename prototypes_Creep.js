@@ -68,7 +68,7 @@ Object.defineProperty(Creep.prototype, 'assignment', { // retrieve the assignmen
     set: function (newAssignmentObject) {
         this.log("warning: unsafe change of creep assignment from " +
                  this.memory.assignment + " to " + newAssignmentObject + "!");
-        this.memory.assignment = newAssignment.ref
+        this.memory.assignment = newAssignmentObject.ref
     }
 });
 
@@ -78,13 +78,17 @@ Object.defineProperty(Creep.prototype, 'assignment', { // retrieve the assignmen
 Object.defineProperty(Creep.prototype, 'task', {
     get: function () { // provide new task object recreated from literals stored in creep.memory.task
         if (this.memory.task != null) {
-            // NOTE: task migration should be performed here
-            // if (this.memory.task.name == 'transferEnergy') {
-            //     this.memory.task.name = 'deposit'
+            // NOTE: task migration operations should be performed here
+            // if (this.memory.task.targetCoords == undefined) {
+            //     this.memory.task.targetCoords = {};
+            //     this.memory.task.targetCoords.x = deref(this.memory.task.targetID).pos.x;
+            //     this.memory.task.targetCoords.y = deref(this.memory.task.targetID).pos.y;
+            //     this.memory.task.targetCoords.roomName = deref(this.memory.task.targetID).pos.roomName;
             // }
             var task = tasks(this.memory.task.name);
             task.creepName = this.memory.task.creepName;
             task.targetID = this.memory.task.targetID;
+            task.targetCoords = this.memory.task.targetCoords;
             task.data = this.memory.task.data;
             return task;
         } else {

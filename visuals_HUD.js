@@ -65,9 +65,13 @@ var HUD = {
             if (room.brain.incubating) {
                 info += "(incubating) ";
             }
-            info += "Ctrl: " + progressPercent + " ";
+            info += progressPercent + ", ";
             if (room.storage) {
-                info += "Energy: " + Math.floor(room.storage.store[RESOURCE_ENERGY] / 1000) + "K "
+                info += Math.floor(room.storage.store[RESOURCE_ENERGY] / 1000) + "K, ";
+                let numHaulers = room.storage.getAssignedCreepAmounts('hauler');
+                let haulerCargoSize = Math.min((room.energyCapacityAvailable - 150) * 2 / 3, (50 - 2) * 2 / 3 * 50);
+                let neededHaulers = Math.ceil(room.brain.calculateRemoteHaulingRequirements() / haulerCargoSize);
+                info += numHaulers + "/" + neededHaulers + "H";
             }
             text.push("  ⬜ " + room.name + ": " + info);
             if (room.spawns.length > 0) {
@@ -101,7 +105,7 @@ var HUD = {
             let info = "no vision!";
             if (flag.room) { // TODO: this is pretty quick and dirty; maybe improve later
                 var totalMiners = 0, requiredMiners = 0;
-                var totalHaulers = 0, requiredHaulers = 0;
+                // var totalHaulers = 0, requiredHaulers = 0;
                 var totalGuards = 0, requiredGuards = 0;
                 var totalReservers = 0, requiredReservers = 0;
                 var totalWorkers = 0, requiredWorkers = 0;
@@ -109,18 +113,18 @@ var HUD = {
                     totalReservers += flag.getAssignedCreepAmounts('reserver');
                     totalGuards += flag.getAssignedCreepAmounts('guard');
                     totalMiners += flag.getAssignedCreepAmounts('miner');
-                    totalHaulers += flag.getAssignedCreepAmounts('hauler');
+                    // totalHaulers += flag.getAssignedCreepAmounts('hauler');
                     totalWorkers += flag.getAssignedCreepAmounts('worker');
                     requiredReservers += flag.getRequiredCreepAmounts('reserver');
                     requiredGuards += flag.getRequiredCreepAmounts('guard');
                     requiredMiners += flag.getRequiredCreepAmounts('miner');
-                    requiredHaulers += flag.getRequiredCreepAmounts('hauler');
+                    // requiredHaulers += flag.getRequiredCreepAmounts('hauler');
                     requiredWorkers += flag.getRequiredCreepAmounts('worker');
                 }
                 info = totalGuards + "/" + requiredGuards + "G " +
                        totalReservers + "/" + requiredReservers + "R " +
                        totalMiners + "/" + requiredMiners + "M " +
-                       totalHaulers + "/" + requiredHaulers + "H " +
+                       // totalHaulers + "/" + requiredHaulers + "H " +
                        totalWorkers + "/" + requiredWorkers + "W";
             }
             text.push("  " + icon + " " + flag.roomName + ": " + info);

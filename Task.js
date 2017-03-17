@@ -5,6 +5,11 @@ class Task {
         this.name = taskName; // name of task
         this.creepName = null; // name of creep assigned to task
         this.targetID = null; // id or name of target task is aimed at
+        this.targetCoords = { // target's position, which is set on assignment and used for moving purposes
+            x: null,
+            y: null,
+            roomName: null,
+        };
         this.maxPerTarget = Infinity; // maximum number of creeps that can be assigned to a given target
         this.maxPerTask = Infinity; // maximum number of creeps that can be doing this task at once
         this.targetRange = 1; // range you need to be at to execute the task
@@ -47,6 +52,17 @@ class Task {
         this.targetID = target.ref;
     }
 
+    // Getter/setter for task.targetPos
+    get targetPos() {
+        return new RoomPosition(this.targetCoords.x, this.targetCoords.y, this.targetCoords.roomName);
+    }
+
+    set targetPos(targetPosition) {
+        this.targetCoords.x = targetPosition.x;
+        this.targetCoords.y = targetPosition.y;
+        this.targetCoords.roomName = targetPosition.roomName;
+    }
+
     // Assign the task to a creep
     assign(creep, target = null) {
         // add target to Memory.preprocessing
@@ -57,7 +73,8 @@ class Task {
         // register references to creep and target
         this.creep = creep;
         this.target = target;
-        creep.memory.task = this;
+        this.targetPos = target.pos;
+        creep.memory.task = this; // serializes the searalizable portions of the task into memory
         this.onAssignment();
         return this.name;
     }
@@ -93,7 +110,7 @@ class Task {
             }
         };
         var moveSettings = Object.assign({}, this.data.moveToOptions, options);
-        return this.creep.moveTo(this.target, moveSettings);
+        return this.creep.moveTo(this.targetPos, moveSettings);
     }
 
     // Execute this task each tick. Returns nothing unless work is done.

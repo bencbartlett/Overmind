@@ -248,6 +248,22 @@ Object.defineProperties(Room.prototype, {
                 filter: (s) => s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART
             }), recache);
         }
+    },
+    'remoteContainers': { // containers in the room
+        get() {
+            let miningFlags = _.filter(this.assignedFlags, require('map_flag_codes').industry.remoteMine.filter);
+            var containers = [];
+            for (let flag of miningFlags) {
+                if (flag.room == undefined) { // need vision of container
+                    continue;
+                }
+                let nearbyContainers = flag.pos.findInRange(FIND_STRUCTURES, 2, {
+                    filter: s => s.structureType == STRUCTURE_CONTAINER
+                });
+                containers = containers.concat(nearbyContainers);
+            }
+            return containers;
+        }
     }
 });
 

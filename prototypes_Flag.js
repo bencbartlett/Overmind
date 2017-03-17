@@ -154,20 +154,20 @@ Object.defineProperty(Flag.prototype, 'pathLengthToAssignedRoomStorage', {
 
 Object.defineProperty(Flag.prototype, 'haulingNeeded', { // total amount of energy*distance/tick of hauling needed
     get () {
-        let source = this.pos.lookFor(LOOK_SOURCES)[0];
-        if (!source) {
-            console.log("No source at " + this.name + "'s position!");
-            return 0;
+        var sourceEnergy;
+        if (this.room) {
+            sourceEnergy = this.pos.lookFor(LOOK_SOURCES)[0].energyCapacity;
         } else {
-            let energyPerTick = source.energyCapacity / 300; // avg amount of energy generated per tick
-            let ticksPerHaul = 2 * this.pathLengthToAssignedRoomStorage; // distance (# of ticks) to haul energy back
-            let haulingPower = energyPerTick * ticksPerHaul; // (energy/tick) * (ticks/1cap haul) = total capacity needs
-            if ((haulingPower * 3/2 + 150) / 1500 > source.energyCapacity / 300) { // check if hauling is profitable
-                console.log("Warning: it is not profitable to harvest from " + this.name +
-                            " given the current assigned room location");
-            }
-            return haulingPower;
+            sourceEnergy = 3000;
         }
+        let energyPerTick = sourceEnergy / 300; // avg amount of energy generated per tick
+        let ticksPerHaul = 2 * this.pathLengthToAssignedRoomStorage; // distance (# of ticks) to haul energy back
+        let haulingPower = energyPerTick * ticksPerHaul; // (energy/tick) * (ticks/1cap haul) = total capacity needs
+        if ((haulingPower * 3/2 + 150) / 1500 > sourceEnergy / 300) { // check if hauling is profitable
+            console.log("Warning: it is not profitable to harvest from " + this.name +
+                        " given the current assigned room location");
+        }
+        return haulingPower;
     }
 });
 
