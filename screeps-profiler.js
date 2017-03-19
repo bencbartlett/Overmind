@@ -106,31 +106,42 @@ function hookUpPrototypes() {
 
 function profileObjectFunctions(object, label) {
     const objectToWrap = object.prototype ? object.prototype : object;
-
-    Object.getOwnPropertyNames(objectToWrap).forEach(functionName => {
-        const extendedLabel = `${label}.${functionName}`;
-        try {
-            const isFunction = typeof objectToWrap[functionName] === 'function';
-            const notBlackListed = functionBlackList.indexOf(functionName) === -1;
-            if (isFunction && notBlackListed) {
-                const originalFunction = objectToWrap[functionName];
-                objectToWrap[functionName] = profileFunction(originalFunction, extendedLabel);
+    if (enabled) {
+        Object.getOwnPropertyNames(objectToWrap).forEach(functionName => {
+            const extendedLabel = `${label}.${functionName}`;
+            try {
+                const isFunction = typeof objectToWrap[functionName] === 'function';
+                const notBlackListed = functionBlackList.indexOf(functionName) === -1;
+                if (isFunction && notBlackListed) {
+                    const originalFunction = objectToWrap[functionName];
+                    objectToWrap[functionName] = profileFunction(originalFunction, extendedLabel);
+                }
+            } catch (e) {
             }
-        } catch (e) { } /* esLint no-empty:0 */
-    });
+            /* esLint no-empty:0 */
+        });
 
-    return objectToWrap;
+        return objectToWrap;
+    } else {
+        return object;
+    }
+
 }
 
 function profileFunction(fn, functionName) {
-    const fnName = functionName || fn.name;
-    if (!fnName) {
-        console.log('Couldn\'t find a function name for - ', fn);
-        console.log('Will not profile this function.');
+    if (enabled) {
+        const fnName = functionName || fn.name;
+        if (!fnName) {
+            console.log('Couldn\'t find a function name for - ', fn);
+            console.log('Will not profile this function.');
+            return fn;
+        }
+
+        return wrapFunction(fnName, fn);
+    } else {
         return fn;
     }
 
-    return wrapFunction(fnName, fn);
 }
 
 const Profiler = {
@@ -187,14 +198,14 @@ const Profiler = {
     },
 
     prototypes: [
-        { name: 'Game', val: Game },
-        { name: 'Room', val: Room },
-        { name: 'Structure', val: Structure },
-        { name: 'Spawn', val: Spawn },
-        { name: 'Creep', val: Creep },
-        { name: 'RoomPosition', val: RoomPosition },
-        { name: 'Source', val: Source },
-        { name: 'Flag', val: Flag },
+        {name: 'Game', val: Game},
+        {name: 'Room', val: Room},
+        {name: 'Structure', val: Structure},
+        {name: 'Spawn', val: Spawn},
+        {name: 'Creep', val: Creep},
+        {name: 'RoomPosition', val: RoomPosition},
+        {name: 'Source', val: Source},
+        {name: 'Flag', val: Flag},
     ],
 
     record(functionName, time) {
@@ -224,9 +235,9 @@ const Profiler = {
             Profiler.printProfile();
         } else { //noinspection JSUnusedAssignment
             if (Profiler.shouldEmail()) {
-                        //noinspection JSUnusedAssignment
+                //noinspection JSUnusedAssignment
                 Profiler.emailProfile();
-                    }
+            }
         }
     },
 

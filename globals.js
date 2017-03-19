@@ -16,3 +16,4 @@ global.deref = function (ref) { // dereference any object from identifier; see r
            null;
 };
 
+global.profiler = require('screeps-profiler');

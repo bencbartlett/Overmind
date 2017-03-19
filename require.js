@@ -2,10 +2,11 @@
 
 // Globals
 require('globals');
-require('utilities');
+// require('utilities');
 require('settings_user');
 // Libraries
-require('pathing');
+require('pathing'); // Used for calculating road distances to prioritize assigned operations
+require('Traveler'); // BonzAI's excellent moveTo() replacement
 // Prototypes
 require('prototypes_Creep');
 require('prototypes_Flag');

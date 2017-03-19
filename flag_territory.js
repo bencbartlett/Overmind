@@ -143,7 +143,7 @@ var territoryFlagActions = {
     }
 };
 
-const profiler = require('screeps-profiler');
+// const profiler = require('screeps-profiler');
 profiler.registerObject(territoryFlagActions, 'territoryFlagActions');
 
 module.exports = territoryFlagActions;

@@ -74,4 +74,6 @@ class TerminalBrain {
     }
 }
 
+profiler.registerClass(TerminalBrain, 'TerminalBrain');
+
 module.exports = TerminalBrain;

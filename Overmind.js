@@ -19,4 +19,6 @@ class Overmind {
     }
 }
 
+profiler.registerClass(Overmind, 'Overmind');
+
 module.exports = Overmind;

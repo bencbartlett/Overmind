@@ -94,7 +94,8 @@ class roleGuard extends Role {
                 creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive) + 25;
             }
             if (!creep.task) {
-                creep.moveToVisual(assignment.pos, 'red');
+                // creep.moveToVisual(assignment.pos, 'red');
+                creep.travelTo(assignment.pos);
             }
         }
     }

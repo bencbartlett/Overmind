@@ -16,7 +16,8 @@ class roleReserver extends Role {
     newTask(creep) {
         creep.task = null;
         if (!creep.assignment.room) {
-            creep.moveToVisual(creep.assignment, 'purple'); // TODO: make a moveToRoom task
+            // creep.moveToVisual(creep.assignment, 'purple'); // TODO: make a moveToRoom task
+            creep.travelTo(creep.assignment);
         } else {
             creep.assign(tasks('reserve'), creep.assignment.room.controller);
         }
@@ -29,7 +30,7 @@ class roleReserver extends Role {
         if (creep.workRoom && (!creep.workRoom.controller.sign ||
                                creep.workRoom.controller.sign.text != this.settings.signature)) {
             if (creep.signController(creep.workRoom.controller, this.settings.signature) == ERR_NOT_IN_RANGE) {
-                creep.moveToVisual(creep.workRoom.controller);
+                creep.travelTo(creep.workRoom.controller);
             }
         }
     }

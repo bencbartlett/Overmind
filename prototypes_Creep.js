@@ -172,7 +172,7 @@ Creep.prototype.conditionalMoveToWorkRoom = function () { // move to workRoom if
     }
 };
 
-Creep.prototype.repairNearbyDamagedRoad = function () {
+Creep.prototype.repairNearbyDamagedRoad = function () { // TODO: this is costly
     // repairs roads without sating any extra energy (requiring that there are numWorks*100 hp missing)
     if (this.getActiveBodyparts(WORK) > 0) {
         let damagedRoads = this.pos.findInRange(FIND_STRUCTURES, 3, {

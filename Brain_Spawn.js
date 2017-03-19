@@ -46,3 +46,7 @@ class SpawnBrain {
         }
     }
 }
+
+profiler.registerClass(SpawnBrain, 'SpawnBrain');
+
+module.exports = SpawnBrain;
