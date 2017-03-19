@@ -77,7 +77,7 @@ class roleSupplier extends Role {
                 return this.recharge(creep); // recharge once there's nothing to do
             } else { // sit and wait at flag
                 let idleFlag = _.filter(creep.room.flags, require('map_flag_codes').rally.idlePoint.filter)[0];
-                if (idleFlag) {
+                if (idleFlag && !creep.pos.inRangeTo(idleFlag, 3)) {
                     // creep.moveToVisual(idleFlag);
                     creep.travelTo(idleFlag);
                 }
@@ -86,107 +86,5 @@ class roleSupplier extends Role {
     }
 }
 
-// var roleSupplierOld = {
-//     /** @param {Creep} creep **/
-//     /** @param {StructureSpawn} spawn **/
-//     /** @param {Number} creepSizeLimit **/
-//
-//     settings: {
-//         bodyPattern: [CARRY, CARRY, MOVE],
-//         assistHaulersAtContainerPercent: 1.1 // help out haulers at >this capacity
-//     },
-//
-//     create: function (spawn, {workRoom = spawn.room.name, patternRepetitionLimit = 3}) { // 6 or 8 parts will saturate a source
-//         /** @param {StructureSpawn} spawn **/
-//         var bodyPattern = this.settings.bodyPattern; // body pattern to be repeated some number of times
-//         // calculate the most number of pattern repetitions you can use with available energy
-//         var numRepeats = Math.floor((spawn.room.energyCapacityAvailable) / spawn.cost(bodyPattern));
-//         // make sure the creep is not too big (more than 50 parts)
-//         numRepeats = Math.min(Math.floor(50 / (bodyPattern.length)), numRepeats, patternRepetitionLimit);
-//         // create the body
-//         var body = [];
-//         for (let i = 0; i < numRepeats; i++) {
-//             body = body.concat(bodyPattern);
-//         }
-//         // static replaceAt to prevent cases where all suppliers die out at the same time
-//         return spawn.createCreep(body, spawn.creepName('supplier'), {
-//             role: 'supplier', workRoom: workRoom, working: false, task: null, data: {
-//                 origin: spawn.room.name, replaceAt: 100
-//             }
-//         });
-//     },
-//
-//     requestTask: function (creep) {
-//         creep.memory.working = true;
-//         return creep.workRoom.brain.assignTask(creep);
-//     },
-//
-//     recharge: function (creep) {
-//         creep.memory.working = false;
-//         var recharge = tasks('recharge');
-//         var containers = creep.workRoom.find(FIND_STRUCTURES, {
-//             filter: (s) => s.structureType == STRUCTURE_CONTAINER
-//         });
-//         if (creep.workRoom.storage) {
-//             containers = _.filter(containers, s => s.store[RESOURCE_ENERGY] >
-//                                                    this.settings.assistHaulersAtContainerPercent * s.storeCapacity);
-//         }
-//         var target;
-//         if (containers.length > 0) {
-//             let targets = _.sortBy(containers, [function (s) {
-//                 return s.store[RESOURCE_ENERGY]
-//             }]);
-//             target = targets[targets.length - 1]; // pick the fullest container
-//         }
-//         if (!target) {
-//             target = creep.workRoom.storage;
-//         }
-//         if (target) {
-//             return creep.assign(recharge, target);
-//         } else {
-//             creep.say("Idle");
-//             return null;
-//         }
-//     },
-//
-//     newTask: function (creep) {
-//         creep.task = null;
-//         let newTask = this.requestTask(creep);
-//         if (newTask == undefined && creep.carry.energy == 0) {
-//             return this.recharge(creep);
-//         } else {
-//             return newTask;
-//         }
-//     },
-//
-//     executeTask: function (creep) {
-//         // execute the task
-//         creep.task.step()
-//     },
-//
-//     run: function (creep) {
-//         // move to service room
-//         if (creep.conditionalMoveToWorkRoom() != OK) {
-//             return ERR_NOT_IN_SERVICE_ROOM;
-//         }
-//         // get new task if this one is invalid
-//         if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
-//             this.newTask(creep);
-//         }
-//         if (creep.task) {
-//             // execute task
-//             this.executeTask(creep);
-//         } else {
-//             if (creep.carry.energy < creep.carry.carryCapacity) {
-//                 return this.recharge(creep); // recharge once there's nothing to do
-//             } else { // sit and wait at flag
-//                 let idleFlag = _.filter(creep.room.flags, require('map_flag_codes').rally.idlePoint.filter)[0];
-//                 if (idleFlag) {
-//                     creep.moveToVisual(idleFlag);
-//                 }
-//             }
-//         }
-//     }
-// };
 
 module.exports = roleSupplier;

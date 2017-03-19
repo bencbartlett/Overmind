@@ -15,28 +15,28 @@ class roleHauler extends Role {
     }
 
     collect(creep) {
-        let allContainers = creep.workRoom.remoteContainers;
-        let possibleTargets = _.filter(allContainers,
-                                       container => container.predictedEnergyOnArrival > creep.carryCapacity);
-        let target = _.sortBy(possibleTargets, container => container.miningFlag.pathLengthToAssignedRoomStorage)[0];
-        if (!target) { // if nothing needs attention, target whatever is likely fullest
-            target = _.sortBy(allContainers, container => -1 * container.predictedEnergyOnArrival)[0];
+        var target;
+        if (creep.assignment == creep.workRoom.storage) { // remote hauler - assigned to storage
+            let allContainers = creep.workRoom.remoteContainers;
+            let possibleTargets = _.filter(allContainers,
+                                           container => container.predictedEnergyOnArrival > creep.carryCapacity);
+            target = _.sortBy(possibleTargets, container => container.miningFlag.pathLengthToAssignedRoomStorage)[0];
+            if (!target) { // if nothing needs attention, target whatever is likely fullest
+                target = _.sortBy(allContainers, container => -1 * container.predictedEnergyOnArrival)[0];
+            }
+        } else { // local hauler - assigned to source
+            var nearbyContainers = creep.assignment.pos.findInRange(FIND_STRUCTURES, 2, {
+                filter: (s) => s.structureType == STRUCTURE_CONTAINER &&
+                               s.store[RESOURCE_ENERGY] > creep.carry.carryCapacity
+            });
+            // target fullest of nearby containers
+            target = _.sortBy(nearbyContainers,
+                                  container => container.store[RESOURCE_ENERGY])[nearbyContainers.length - 1];
+            if (!target) { // if it can't bring a full load, target the fullest container in the room
+                let allContainers = creep.assignment.room.containers;
+                target = _.sortBy(allContainers, c => c.store[RESOURCE_ENERGY])[allContainers.length - 1];
+            }
         }
-        // if (!creep.assignment.room) { // if you don't have vision of the room
-        //     return creep.moveToVisual(creep.assignment.pos, 'blue');
-        // }
-        // // if you do have vision, go ahead and target the relevant container
-        // var nearbyContainers = creep.assignment.pos.findInRange(FIND_STRUCTURES, 2, {
-        //     filter: (s) => s.structureType == STRUCTURE_CONTAINER &&
-        //                    s.store[RESOURCE_ENERGY] > creep.carry.carryCapacity
-        // });
-        // // target fullest of nearby containers
-        // var target = _.sortBy(nearbyContainers,
-        //                       container => container.store[RESOURCE_ENERGY])[nearbyContainers.length - 1];
-        // if (!target) { // if it can't bring a full load, target the fullest container in the room
-        //     let allContainers = creep.assignment.room.containers;
-        //     target = _.sortBy(allContainers, c => c.store[RESOURCE_ENERGY])[allContainers.length - 1];
-        // }
         if (target) {
             var collect = tasks('recharge');
             creep.assign(collect, target);
@@ -46,7 +46,7 @@ class roleHauler extends Role {
     }
 
     deposit(creep) {
-        creep.assign(tasks('deposit'), creep.assignment);
+        creep.assign(tasks('deposit'), creep.workRoom.storage);
         // var target = creep.assignment;
         // if (target) {
         //     var deposit = tasks('deposit');

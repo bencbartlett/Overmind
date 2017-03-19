@@ -28,7 +28,10 @@ Creep.prototype.getBodyparts = function (partType) {
 Object.defineProperty(Creep.prototype, 'needsReplacing', { // whether the creep needs replacing
     get: function () {
         if (this.ticksToLive) { // undefined when spawning
-            return this.ticksToLive < this.memory.data.replaceAt;
+            let originSpawn = Game.rooms[this.memory.data.origin].spawns[0];
+            let replaceAt = originSpawn.pathLengthTo(this.assignment) / this.moveSpeed; // expected travel time
+            replaceAt += 3 * this.body.length; // expected spawning time
+            return this.ticksToLive < replaceAt;
         } else {
             return false;
         }
@@ -112,6 +115,26 @@ Creep.prototype.assign = function (task, target = null) { // wrapper for task.as
 
 // Moving and pathing ==================================================================================================
 
+Object.defineProperty(Creep.prototype, 'moveSpeed', { // expected moveSpeed on roads in squares/tick; usually 1
+    get: function () {
+        if (!this.memory.data.moveSpeed) {
+            var massiveParts = [WORK, ATTACK, RANGED_ATTACK, HEAL, TOUGH];
+            var mass = 0;
+            for (let part of massiveParts) {
+                mass += this.getActiveBodyparts(part);
+            }
+            var moveParts = this.getActiveBodyparts(MOVE);
+            var fatiguePerTick = 2 * mass;
+            if (fatiguePerTick == 0) {
+                this.memory.data.moveSpeed = 1;
+            } else {
+                this.memory.data.moveSpeed = Math.min(2 * moveParts / fatiguePerTick, 1);
+            }
+        }
+        return this.memory.data.moveSpeed;
+    }
+});
+
 Creep.prototype.moveToVisual = function (target, color = '#fff') {
     var visualizePath = true;
     if (visualizePath) {
@@ -174,17 +197,16 @@ Creep.prototype.conditionalMoveToWorkRoom = function () { // move to workRoom if
 
 Creep.prototype.repairNearbyDamagedRoad = function () { // TODO: this is costly
     // repairs roads without sating any extra energy (requiring that there are numWorks*100 hp missing)
-    if (this.getActiveBodyparts(WORK) > 0) {
-        let damagedRoads = this.pos.findInRange(FIND_STRUCTURES, 3, {
-            filter: (structure) => structure.structureType == STRUCTURE_ROAD &&
-                                   structure.hitsMax - structure.hits > this.getActiveBodyparts(WORK) * 100
-        });
-        // let damagedRoads = _.filter(this.pos.lookFor(LOOK_STRUCTURES),
-        //                            s => s.structureType == STRUCTURE_ROAD &&
-        //                                 s.hitsMax - s.hits > this.getActiveBodyparts(WORK) * 100);
-        if (damagedRoads.length > 0) {
-            return this.repair(damagedRoads[0]);
-        }
+    // let damagedRoads = this.pos.findInRange(FIND_STRUCTURES, 3, {
+    //     filter: (structure) => structure.structureType == STRUCTURE_ROAD &&
+    //                            structure.hitsMax - structure.hits > this.getActiveBodyparts(WORK) * 100
+    // });
+    let damagedRoads = _.filter(this.pos.lookFor(LOOK_STRUCTURES),
+                                s => s.structureType == STRUCTURE_ROAD &&
+                                     s.hitsMax - s.hits > 100);//this.getActiveBodyparts(WORK) * 100);
+    let damagedRoad = damagedRoads[0];
+    if (damagedRoad) {
+        return this.repair(damagedRoad);
     }
     return OK;
 };
