@@ -7,14 +7,14 @@
  */
 
 "use strict";
-const REPORT_CPU_THRESHOLD = 50;
+const REPORT_CPU_THRESHOLD = 100; // TODO: get this to: 50;
 const DEFAULT_MAXOPS = 20000;
 const DEFAULT_STUCK_VALUE = 5;
 class Traveler {
     constructor() {
         // change this memory path to suit your needs
         if (!Memory.empire) {
-            Memory.empire = {};
+            Memory.empire = {}; // this object will have keys as roomNames and values of the controller level
         }
         if (!Memory.empire.hostileRooms) {
             Memory.empire.hostileRooms = {};

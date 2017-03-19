@@ -8,7 +8,7 @@ class taskGetBoosted extends Task {
     }
 
     isValidTask() {
-        return this.creep.ticksToLive > 0.9 * this.creep.lifetime && !this.creep.memory.boosted;
+        return !(this.creep.memory.boosted && this.creep.memory.boosted[this.target.mineralType]);
     }
 
     isValidTarget() {
@@ -19,7 +19,10 @@ class taskGetBoosted extends Task {
     work() {
         let response = this.target.boostCreep(this.creep);
         if (response == OK) {
-            this.creep.memory.boosted = true;
+            if (!this.creep.memory.boosted) {
+                this.creep.memory.boosted = {};
+            }
+            this.creep.memory.boosted[this.target.mineralType] = true;
             this.creep.log('Boosted successfully!');
         }
         return response;

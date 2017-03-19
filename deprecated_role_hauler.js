@@ -94,20 +94,20 @@ class roleHauler extends Role {
         if (droppedEnergy.length > 0) {
             creep.pickup(droppedEnergy[0]);
         }
-        // Reduce moveTo usage when in non-crowded rooms
-        if (creep.task) {
-            if (!creep.room.my) {
-                creep.memory.task.data.moveToOptions = {
-                    ignoreCreeps: true,
-                    reusePath: 40
-                }
-            } else {
-                creep.memory.task.data.moveToOptions = {
-                    ignoreCreeps: false,
-                    reusePath: 15
-                }
-            }
-        }
+        // // Reduce moveTo usage when in non-crowded rooms
+        // if (creep.task) {
+        //     if (!creep.room.my) {
+        //         creep.memory.task.data.moveToOptions = {
+        //             ignoreCreeps: true,
+        //             reusePath: 40
+        //         }
+        //     } else {
+        //         creep.memory.task.data.moveToOptions = {
+        //             ignoreCreeps: false,
+        //             reusePath: 15
+        //         }
+        //     }
+        // }
     }
 
 }

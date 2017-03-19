@@ -120,13 +120,18 @@ class Role {
         // TODO: add to queue, include calculations of how busy queue is and how far creep with have to walk to decide which spawn
     }
 
+    onCreate(creep) { // modification to creep proto-object before spawning it
+        return creep; // Overwrite this as needed
+    }
+
     // spawn the creep, returns spawner response
-    create(spawn, {assignment, workRoom, patternRepetitionLimit = Infinity}) {
+    create(spawn, {assignment, workRoom, patternRepetitionLimit = Infinity}) { // default creation function for creeps
         let creep = this.generateLargestCreep(spawn, {
             assignment: assignment,
             workRoom: workRoom,
             patternRepetitionLimit: patternRepetitionLimit
         });
+        creep = this.onCreate(creep); // modify creep as needed
         return creep; // spawn.createCreep(creep.body, creep.name, creep.memory);
     }
 

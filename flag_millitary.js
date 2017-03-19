@@ -7,7 +7,7 @@ var millitaryFlagActions = {
             if (flag.memory.amount) {
                 flag.requiredCreepAmounts[role] = flag.memory.amount;
             } else {
-                if (flag.room == undefined || flag.room.hostiles.length > 0) { // spawn guard if hostiles or no vision
+                if (flag.memory.alwaysUp || !flag.room || flag.room.hostiles.length > 0) { // spawn guard if hostiles or no vision
                     flag.requiredCreepAmounts[role] = 1;
                 } else {
                     flag.requiredCreepAmounts[role] = 0;
@@ -39,11 +39,12 @@ var millitaryFlagActions = {
             if (flag.memory.maxSize) {
                 maxSize = flag.memory.maxSize;
             }
-            return flag.requestCreepIfNeeded(brain, role, {
+            let creep = flag.requestCreepIfNeeded(brain, role, {
                 assignment: flag,
                 workRoom: flag.roomName,
                 patternRepetitionLimit: maxSize
             });
+            return creep;
         }
 
         return handleDestroyers(flag, brain)

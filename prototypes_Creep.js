@@ -5,7 +5,7 @@ var roles = require('roles'); // roles mapper
 
 Creep.prototype.run = function () { // run the creep's associated role
     let behavior = roles(this.memory.role);
-    if (behavior) {
+    if (!this.spawning && behavior) {
         behavior.run(this);
     }
 };

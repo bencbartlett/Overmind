@@ -16,10 +16,7 @@ class Task {
         this.moveColor = '#fff';
         this.data = {
             quiet: true, // suppress console logging
-            moveToOptions: {
-                ignoreCreeps: false,
-                reusePath: 10
-            } // default options for creep.moveTo()
+            travelToOptions: {} // options for traveling
         };
     }
 
@@ -54,6 +51,10 @@ class Task {
 
     // Getter/setter for task.targetPos
     get targetPos() {
+        let position = this.target.pos; // refresh if you have visibility of the target
+        if (position) {
+            this.targetPos = position;
+        }
         return new RoomPosition(this.targetCoords.x, this.targetCoords.y, this.targetCoords.roomName);
     }
 
@@ -111,7 +112,7 @@ class Task {
         // };
         // var moveSettings = Object.assign({}, this.data.moveToOptions, options);
         // return this.creep.moveTo(this.targetPos, moveSettings);
-        return this.creep.travelTo(this.targetPos);
+        return this.creep.travelTo(this.targetPos, this.data.travelToOptions);
     }
 
     // Execute this task each tick. Returns nothing unless work is done.

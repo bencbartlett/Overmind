@@ -7,8 +7,10 @@ var territoryFlagActions = {
             let role = 'reserver';
             let reserveAgain = false;
             if (flag.room) {
-                reserveAgain = !flag.room.controller.reservation ||
-                               flag.room.controller.reservation.ticksToEnd < brain.settings.reserveBuffer;
+                reserveAgain = !(flag.room.controller.level > 0) && // can't reserved owned rooms
+                               (!flag.room.controller.reservation || // reserve if there's no reservation
+                                (flag.room.reservedByMe && // or if there is one by me and it's about to end
+                                 flag.room.controller.reservation.ticksToEnd < brain.settings.reserveBuffer));
             }
             if (reserveAgain) {
                 flag.requiredCreepAmounts[role] = 1;
