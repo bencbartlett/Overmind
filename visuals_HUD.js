@@ -56,11 +56,23 @@ var HUD = {
         let text = [];
         text.push("Owned rooms:");
         var ownedRooms = _.sortBy(_.filter(Game.rooms, room => room.controller && room.controller.my),
-                                  room => -1 * (room.controller.level +
-                                                room.controller.progress / room.controller.progressTotal));
+                                  function (room) {
+                                      if (room.controller.level < 8) {
+                                          return -1 * (room.controller.level +
+                                                       room.controller.progress / room.controller.progressTotal);
+
+                                      } else {
+                                          return -1 * Infinity;
+                                      }
+                                  });
         for (let i in ownedRooms) {
             let room = ownedRooms[i];
-            let progressPercent = Math.round(100 * room.controller.progress / room.controller.progressTotal) + "%";
+            let progressPercent;
+            if (room.controller.level < 8) {
+                progressPercent = Math.round(100 * room.controller.progress / room.controller.progressTotal) + "%";
+            } else {
+                progressPercent = "100%";
+            }
             let info = "";
             if (room.brain.incubating) {
                 info += "(incubating) ";

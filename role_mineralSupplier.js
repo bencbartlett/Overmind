@@ -14,49 +14,32 @@ class roleMineralSupplier extends Role {
                                          creep.getActiveBodyparts(CARRY) > 1
     }
 
-    create(spawn, {assignment, workRoom, patternRepetitionLimit = Infinity}) {
-        let creep = this.generateLargestCreep(spawn, {
-            assignment: assignment,
-            workRoom: workRoom,
-            patternRepetitionLimit: patternRepetitionLimit
-        });
-        return creep; // spawn.createCreep(creep.body, creep.name, creep.memory);
-    }
-
-    collect(creep) {
-        var withdraw = tasks('withdraw');
-        withdraw.data.resourceType = RESOURCE_CATALYZED_GHODIUM_ACID; // TODO: hardcoded
-        var target = creep.workRoom.terminal;
-        if (target.energy == 0) {
+    collectForLab(creep, lab) {
+        var withdrawThis = tasks('withdraw');
+        withdrawThis.data.resourceType = lab.assignedMineralType;
+        if (creep.workRoom.terminal.store[lab.assignedMineralType] == 0) {
             return OK;
         } else {
-            return creep.assign(withdraw, target);
+            return creep.assign(withdrawThis, creep.workRoom.terminal);
         }
     }
 
-    deposit(creep) {
-        let loadLabs = _.filter(creep.room.labs, lab => lab.assignedMineralType == RESOURCE_CATALYZED_GHODIUM_ACID &&
-                                                        lab.IO == 'in' &&
-                                                        lab.mineralAmount < lab.mineralCapacity - creep.carryCapacity);
-        let target = loadLabs[0];
+    depositForLab(creep, lab) {
         var transfer = tasks('transfer');
-        transfer.data.resourceType = target.assignedMineralType;
-        return creep.assign(transfer, target);
+        transfer.data.resourceType = lab.assignedMineralType;
+        return creep.assign(transfer, lab);
     }
 
     newTask(creep) {
         creep.task = null;
-        let loadLabs = _.filter(creep.room.labs, lab => lab.assignedMineralType == RESOURCE_CATALYZED_GHODIUM_ACID &&
-                                                        lab.IO == 'in' &&
-                                                        lab.mineralAmount < lab.mineralCapacity - creep.carryCapacity);
+        let loadLabs = _.filter(creep.room.labs, lab => lab.IO == 'in' &&
+                                                        lab.mineralAmount < lab.maxAmount - creep.carryCapacity);
         if (loadLabs.length > 0) {
+            let lab = loadLabs[0];
             if (_.sum(creep.carry) == 0) {
-                this.collect(creep);
+                this.collectForLab(creep, lab);
             } else {
-                if (creep.memory.data.replaceAt == 0) { // record first transfer instance
-                    creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive) + 50;
-                }
-                this.deposit(creep);
+                this.depositForLab(creep, lab);
             }
         }
     }

@@ -41,7 +41,9 @@ class roleHauler extends Role {
             var collect = tasks('recharge');
             creep.assign(collect, target);
         } else {
-            creep.log("no collect target!");
+            if (!this.settings.consoleQuiet) {
+                creep.log("no collect target!");
+            }
         }
     }
 

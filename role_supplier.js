@@ -61,10 +61,6 @@ class roleSupplier extends Role {
     // }
 
     run(creep) {
-        // move to service room
-        if (creep.conditionalMoveToWorkRoom() != OK) {
-            return ERR_NOT_IN_SERVICE_ROOM;
-        }
         // get new task if this one is invalid
         if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
             this.newTask(creep);
@@ -77,7 +73,7 @@ class roleSupplier extends Role {
                 return this.recharge(creep); // recharge once there's nothing to do
             } else { // sit and wait at flag
                 let idleFlag = _.filter(creep.room.flags, require('map_flag_codes').rally.idlePoint.filter)[0];
-                if (idleFlag && !creep.pos.inRangeTo(idleFlag, 3)) {
+                if (idleFlag && !creep.pos.inRangeTo(idleFlag, 1)) {
                     // creep.moveToVisual(idleFlag);
                     creep.travelTo(idleFlag);
                 }

@@ -1,7 +1,5 @@
 // Destroyer: go to a room, alternate attacking and retreating to heal, then methodically destroy everything by range
 
-// TODO: finish this
-
 var tasks = require('tasks');
 var flagCodes = require('map_flag_codes');
 var Role = require('Role');
@@ -10,22 +8,28 @@ class roleDestroyer extends Role {
     constructor() {
         super('destroyer');
         // Role-specific settings
-        this.settings.bodyPattern = [TOUGH, TOUGH, TOUGH, ATTACK, ATTACK, HEAL, MOVE, MOVE, MOVE];
+        this.settings.bodyPattern = [TOUGH, ATTACK, MOVE, MOVE, MOVE, HEAL];
+        this.settings.moveBoostedBodyPattern = [TOUGH, ATTACK, ATTACK, MOVE, HEAL];
+        this.settings.boost = {
+            'tough': true,
+            'attack': true,
+            'move': true,
+            'heal': false,
+        };
+        this.settings.boostMinerals = {
+            'tough': RESOURCE_CATALYZED_GHODIUM_ALKALIDE,
+            'attack': RESOURCE_CATALYZED_UTRIUM_ACID,
+            'move': RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE,
+            'heal': RESOURCE_CATALYZED_LEMERGIUM_ALKALIDE,
+        };
         this.settings.orderedBodyPattern = true;
+        this.settings.avoidHostileRooms = false;
         this.roleRequirements = creep => creep.getActiveBodyparts(ATTACK) > 1 &&
                                          creep.getActiveBodyparts(HEAL) > 1 &&
                                          creep.getActiveBodyparts(MOVE) > 1
     }
 
-    create(spawn, {assignment, workRoom, patternRepetitionLimit = Infinity}) {
-        if (!workRoom) {
-            workRoom = assignment.roomName;
-        }
-        let creep = this.generateLargestCreep(spawn, {
-            assignment: assignment,
-            workRoom: workRoom,
-            patternRepetitionLimit: patternRepetitionLimit
-        });
+    onCreate(creep) {
         creep.memory.data.healFlag = "HP1"; // TODO: hard coded
         return creep;
     }
@@ -33,7 +37,8 @@ class roleDestroyer extends Role {
     findTarget(creep) {
         var target;
         var targetPriority = [
-            () => creep.pos.findClosestByRange(_.filter(creep.room.flags, flagCodes.destroy.attack.filter)),
+            () => creep.pos.findClosestByRange(_.map(_.filter(creep.room.flags, flagCodes.destroy.attack.filter),
+                                                     flag => flag.pos.lookFor(LOOK_STRUCTURES)[0])),
             // () => creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS),
             // () => creep.pos.findClosestByRange(FIND_HOSTILE_SPAWNS),
             () => creep.pos.findClosestByRange(
@@ -42,7 +47,7 @@ class roleDestroyer extends Role {
                 FIND_HOSTILE_STRUCTURES, {filter: s => s.hits && s.structureType != STRUCTURE_RAMPART}),
             () => creep.pos.findClosestByRange(FIND_HOSTILE_STRUCTURES, {filter: s => s.hits}),
             () => creep.pos.findClosestByRange(FIND_STRUCTURES, {
-                filter: s => !s.my && !s.room.my && !s.room.reservedByMe && s.structureType != STRUCTURE_ROAD
+                filter: s => !s.my && !s.room.my && !s.room.reservedByMe && s.hits
             }),
         ];
         for (let targetThis of targetPriority) {
@@ -57,13 +62,30 @@ class roleDestroyer extends Role {
     retreatAndHeal(creep) { // TODO: make this a task
         var healPos = deref(creep.memory.data.healFlag).pos;
         creep.heal(creep);
-        return creep.moveToVisual(healPos, 'green');
+        return creep.travelTo(healPos, {allowHostile: true});
+    }
+
+    getBoosted(creep) {
+        for (let bodypart in this.settings.boost) {
+            if (this.settings.boost[bodypart] &&
+                !(creep.memory.boosted && creep.memory.boosted[this.settings.boostMinerals[bodypart]])) {
+                let boosters = _.filter(creep.room.labs,
+                                        lab => lab.assignedMineralType == this.settings.boostMinerals[bodypart] &&
+                                               lab.mineralAmount >= 30 * creep.getActiveBodyparts(bodypart));
+                if (boosters.length > 0) {
+                    creep.task = null;
+                    creep.assign(tasks('getBoosted'), boosters[0]);
+                }
+            }
+        }
     }
 
     run(creep) {
+        this.getBoosted(creep);
+        var assignment = creep.assignment;
         // 1: retreat to heal point when injured
         if (deref(creep.memory.data.healFlag) && // if there's a heal flag
-            (creep.hits < 0.7 * creep.hitsMax || // creep.getActiveBodyparts(TOUGH) == 0 || // if you're injured
+            (creep.getActiveBodyparts(TOUGH) < 0.5 * creep.getBodyparts(TOUGH) || // if you're injured
              (creep.memory.needsHealing && creep.hits < creep.hitsMax))) { // if you're healing and not full hp
             // TODO: dps-based calculation
             creep.memory.needsHealing = true;
@@ -71,29 +93,21 @@ class roleDestroyer extends Role {
         } else {
             creep.memory.needsHealing = false; // turn off when done healing
         }
-        // get assignment and log replacetime
-        var assignment = creep.assignment;
-        if (assignment && creep.inSameRoomAs(assignment) && creep.memory.data.replaceAt == 0) {
-            creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive) + 10;
-        }
-        // 2: move to same room as assignment
-        if (assignment && !creep.inSameRoomAs(assignment)) {
-            var pathStyle = {
-                fill: 'transparent',
-                stroke: 'red',
-                lineStyle: 'dashed',
-                strokeWidth: .15,
-                opacity: .3
-            };
-            return creep.moveTo(assignment.pos, {ignoreCreeps: true, visualizePathStyle: pathStyle});
-        }
-        // 3: get new task if in target room
+        // 2: task assignment
         if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) { // get new task
             creep.task = null;
+            // 2.1: move to same room as assignment
+            if (assignment && !creep.inSameRoomAs(assignment)) {
+                let task = tasks('goToRoom');
+                task.data.travelToOptions['allowHostile'] = true;
+                creep.assign(task, assignment);
+            }
+            // 2.2: ATTACK SOMETHING
             var target = this.findTarget(creep);
             if (target) {
-                creep.moveToVisual(target, 'red');
-                creep.assign(tasks('attack'), target);
+                let task = tasks('attack');
+                task.data.travelToOptions['allowHostile'] = true;
+                creep.assign(task, target);
             }
         }
         // execute task

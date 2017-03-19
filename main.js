@@ -22,8 +22,7 @@
 require('require');
 
 // Enable screeps profiler
-// const profiler = require('screeps-profiler');
-profiler.enable();
+// profiler.enable();
 
 // Main loop
 module.exports.loop = function () {
@@ -55,6 +54,9 @@ module.exports.loop = function () {
         // Animation ===================================================================================================
         // Animate each creep
         for (let name in Game.creeps) {
+            // if (name == 'guard_0') {
+            //     continue;
+            // }
             Game.creeps[name].run();
         }
         // Animate each room
