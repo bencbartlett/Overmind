@@ -88,20 +88,24 @@ class roleHauler extends Role {
                 this.deposit(creep);
             }
         }
+
+        // Repair nearby roads as you go
+        creep.repairNearbyDamagedRoad(); // repair roads if you are capable
+
         // Reduce moveTo usage when in non-crowded rooms
-        if (creep.memory.task) {
-            if (!creep.room.my) {
-                creep.memory.task.data.moveToOptions = {
-                    ignoreCreeps: true,
-                    reusePath: 40
-                }
-            } else {
-                creep.memory.task.data.moveToOptions = {
-                    ignoreCreeps: false,
-                    reusePath: 15
-                }
-            }
-        }
+        // if (creep.memory.task) {
+        //     if (!creep.room.my) {
+        //         creep.memory.task.data.moveToOptions = {
+        //             ignoreCreeps: true,
+        //             reusePath: 40
+        //         }
+        //     } else {
+        //         creep.memory.task.data.moveToOptions = {
+        //             ignoreCreeps: false,
+        //             reusePath: 15
+        //         }
+        //     }
+        // }
     }
 
 }

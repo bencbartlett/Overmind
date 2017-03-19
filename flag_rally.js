@@ -31,4 +31,6 @@ var rallyFlagActions = {
     }
 };
 
+
+profiler.registerObject(rallyFlagActions, 'rallyFlagActions');
 module.exports = rallyFlagActions;

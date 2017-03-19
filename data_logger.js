@@ -46,7 +46,7 @@ class dataLogger {
     }
 }
 
-const profiler = require('screeps-profiler');
+// const profiler = require('screeps-profiler');
 profiler.registerClass(dataLogger, 'dataLogger');
 
 module.exports = dataLogger;

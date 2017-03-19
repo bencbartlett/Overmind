@@ -83,7 +83,7 @@ class roleSieger extends Role {
             var target = this.findTarget(creep);
             if (target) {
                 let task = tasks('dismantle');
-                creep.moveToVisual(target);
+                // creep.moveToVisual(target);
                 creep.assign(task, target);
             }
         }

@@ -78,7 +78,8 @@ class roleSupplier extends Role {
             } else { // sit and wait at flag
                 let idleFlag = _.filter(creep.room.flags, require('map_flag_codes').rally.idlePoint.filter)[0];
                 if (idleFlag) {
-                    creep.moveToVisual(idleFlag);
+                    // creep.moveToVisual(idleFlag);
+                    creep.travelTo(idleFlag);
                 }
             }
         }

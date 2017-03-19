@@ -38,7 +38,7 @@ var industryFlagActions = {
     }
 };
 
-const profiler = require('screeps-profiler');
+// const profiler = require('screeps-profiler');
 profiler.registerObject(industryFlagActions, 'industryFlagActions');
 
 module.exports = industryFlagActions;

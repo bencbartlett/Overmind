@@ -29,4 +29,6 @@ pathing.findPathLengthIncludingRoads = function (startPos, endPos) {
     return path.length + 1; // offset for range
 };
 
+profiler.registerObject(pathing, 'pathing');
+
 module.exports = pathing;

@@ -215,7 +215,7 @@ class Role {
     }
 }
 
-const profiler = require('screeps-profiler');
+// const profiler = require('screeps-profiler');
 profiler.registerClass(Role, 'Role');
 
 module.exports = Role;

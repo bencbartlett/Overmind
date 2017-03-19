@@ -73,7 +73,7 @@ var millitaryFlagActions = {
     }
 };
 
-const profiler = require('screeps-profiler');
+// const profiler = require('screeps-profiler');
 profiler.registerObject(millitaryFlagActions, 'millitaryFlagActions');
 
 module.exports = millitaryFlagActions;

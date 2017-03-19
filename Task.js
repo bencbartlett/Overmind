@@ -100,17 +100,18 @@ class Task {
     }
 
     move() {
-        var options = {
-            visualizePathStyle: {
-                fill: 'transparent',
-                stroke: this.moveColor,
-                lineStyle: 'dashed',
-                strokeWidth: .15,
-                opacity: .3
-            }
-        };
-        var moveSettings = Object.assign({}, this.data.moveToOptions, options);
-        return this.creep.moveTo(this.targetPos, moveSettings);
+        // var options = {
+        //     visualizePathStyle: {
+        //         fill: 'transparent',
+        //         stroke: this.moveColor,
+        //         lineStyle: 'dashed',
+        //         strokeWidth: .15,
+        //         opacity: .3
+        //     }
+        // };
+        // var moveSettings = Object.assign({}, this.data.moveToOptions, options);
+        // return this.creep.moveTo(this.targetPos, moveSettings);
+        return this.creep.travelTo(this.targetPos);
     }
 
     // Execute this task each tick. Returns nothing unless work is done.
@@ -128,7 +129,6 @@ class Task {
             }
             return workResult;
         } else {
-            creep.repairNearbyDamagedRoad(); // repair roads if you are capable
             this.move();
         }
     }
@@ -140,7 +140,7 @@ class Task {
     }
 }
 
-const profiler = require('screeps-profiler');
+// const profiler = require('screeps-profiler');
 profiler.registerClass(Task, 'Task');
 
 

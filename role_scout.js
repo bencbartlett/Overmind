@@ -26,7 +26,7 @@ class roleScout extends Role {
         if (creep.assignment) {
             var target = creep.assignment.pos;
             if (!creep.pos.inRangeTo(target, 0)) {
-                creep.moveToVisual(target);
+                creep.travelTo(target);
             } else if (creep.memory.data.replaceAt == 0) {
                 creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive) + 50;
             }

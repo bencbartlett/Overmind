@@ -162,7 +162,7 @@ var HUD = {
     }
 };
 
-const profiler = require('screeps-profiler');
+// const profiler = require('screeps-profiler');
 profiler.registerObject(HUD, 'HUD');
 
 module.exports = HUD;

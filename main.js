@@ -22,12 +22,13 @@
 require('require');
 
 // Enable screeps profiler
-const profiler = require('screeps-profiler');
-// profiler.enable();
+// const profiler = require('screeps-profiler');
+profiler.enable();
 
 // Main loop
 module.exports.loop = function () {
     profiler.wrap(function () {
+        // return null;
         // Memory management ===========================================================================================
         // Clear memory for non-existent creeps
         for (let name in Memory.creeps) {

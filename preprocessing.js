@@ -47,7 +47,7 @@ var preprocessing = {
     }
 };
 
-const profiler = require('screeps-profiler');
+// const profiler = require('screeps-profiler');
 profiler.registerObject(preprocessing, 'preprocessing');
 
 module.exports = preprocessing;

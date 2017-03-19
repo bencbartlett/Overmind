@@ -62,6 +62,7 @@ class RoomBrain {
                 // "W18N88": 2e+6
             }, // fortify all walls/ramparts to these levels in these rooms
         };
+
         // Task priorities - the actual priority the tasks are given. Everything else depends on this order
         this.taskPriorities = [
             'supplyTowers',
@@ -98,6 +99,9 @@ class RoomBrain {
             'fortify': ['worker'],
             'upgrade': ['worker', 'upgrader']
         };
+        if (this.room.controller && this.room.controller.level == 8) { // workers shouldn't upgrade at GCL 8; only upgraders
+            this.assignmentRoles['upgrade'] = ['upgrader'];
+        }
         // Task assignment conditions
         this.assignmentConditions = {
             'pickup': creep => creep.getActiveBodyparts(CARRY) > 0 && creep.carry.energy < creep.carryCapacity,
@@ -213,7 +217,12 @@ class RoomBrain {
         var [task, targets] = this.getMostUrgentTask(applicableTasks);
         // Assign the task
         if (targets != null) {
-            var target = creep.pos.findClosestByRange(targets, {filter: t => t != null}); // bug: some tasks aren't assigned for findClosestByPath
+            var target;
+            if (task.name == 'fortify') {
+                target = _.sortBy(targets, target => target.hits)[0]; // fortification should target lowest HP barrier
+            } else {
+                target = creep.pos.findClosestByRange(targets);
+            }
             // console.log(creep, task, target, targets )
             if (target) {
                 return creep.assign(task, target);
@@ -409,11 +418,19 @@ class RoomBrain {
                                                                        flagCodes.industry.filter(flag) ||
                                                                        flagCodes.territory.filter(flag));
         supplierLimit += Math.floor(expensiveFlags.length / 10); // add more suppliers for cases of lots of flags // TODO: better metric
+        let supplierSize;
+        if (numSuppliers == 0) { // in case the room runs out of suppliers at low energy
+            supplierSize = Math.min(this.settings.supplierPatternRepetitionLimit,
+                                    this.room.energyAvailable / roles('supplier').bodyCost(
+                                        roles('supplier').settings.bodyPattern));
+        } else {
+            supplierSize = this.settings.supplierPatternRepetitionLimit;
+        }
         if (numSuppliers < supplierLimit) {
             return roles('supplier').create(this.spawn, {
                 assignment: this.room.controller,
                 workRoom: this.room.name,
-                patternRepetitionLimit: this.settings.supplierPatternRepetitionLimit
+                patternRepetitionLimit: supplierSize // this.settings.supplierPatternRepetitionLimit
             });
         } else {
             return null;
@@ -425,10 +442,6 @@ class RoomBrain {
             return null; // don't make your own workers during incubation period, just keep existing ones alive
         }
         var numWorkers = this.room.controller.getAssignedCreepAmounts('worker');
-        // var containers = this.room.find(FIND_STRUCTURES, {
-        //     filter: structure => (structure.structureType == STRUCTURE_CONTAINER ||
-        //                           structure.structureType == STRUCTURE_STORAGE)
-        // });
         // Only spawn workers once containers are up
         var workerRequirements = 0;
         if (this.room.storage) {
@@ -454,6 +467,9 @@ class RoomBrain {
         var amountOver = Math.max(this.room.storage.store[RESOURCE_ENERGY]
                                   - this.settings.storageBuffer['upgrader'], 0);
         var upgraderSize = 1 + Math.floor(amountOver / 20000);
+        if (this.room.controller.level == 8) {
+            upgraderSize = Math.min(upgraderSize, 5); // don't go above 15 work parts at RCL 8
+        }
         var numUpgradersNeeded = Math.ceil(upgraderSize * roles('upgrader').bodyPatternCost /
                                            this.room.energyCapacityAvailable); // this causes a jump at 2 upgraders
         if (numUpgraders < numUpgradersNeeded) {
@@ -686,7 +702,7 @@ class RoomBrain {
     }
 }
 
-const profiler = require('screeps-profiler');
+// const profiler = require('screeps-profiler');
 profiler.registerClass(RoomBrain, 'RoomBrain');
 
 module.exports = RoomBrain;

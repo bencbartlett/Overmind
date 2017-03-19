@@ -16,7 +16,8 @@ class roleClaimer extends Role {
     newTask(creep) {
         creep.task = null;
         if (!creep.assignment.room) {
-            creep.moveToVisual(creep.assignment, 'purple'); // TODO: make a moveToRoom task
+            // creep.moveToVisual(creep.assignment, 'purple'); // TODO: make a moveToRoom task
+            creep.travelTo(creep.assignment);
         } else {
             creep.assign(tasks('claim'), creep.assignment.room.controller);
         }
