@@ -39,6 +39,11 @@ class roleUpgrader extends Role {
         }
     }
 
+    repairContainer(creep, container) {
+        var repair = tasks('repair');
+        return creep.assign(repair, container);
+    }
+
     onRun(creep) {
         if (!creep.workRoom.controller.sign || creep.workRoom.controller.sign.text != this.settings.signature) {
             if (creep.signController(creep.workRoom.controller, this.settings.signature) == ERR_NOT_IN_RANGE) {
@@ -52,6 +57,22 @@ class roleUpgrader extends Role {
             if (upgraderBoosters.length > 0 && creep.ticksToLive > 0.95 * creep.lifetime) {
                 creep.task = null;
                 creep.assign(tasks('getBoosted'), upgraderBoosters[0]);
+            }
+        }
+    }
+
+    newTask(creep) {
+        creep.task = null;
+        if (creep.carry.energy == 0) {
+            return this.recharge(creep);
+        } else {
+            let damagedContainers = creep.pos.findInRange(FIND_STRUCTURES, 3, {
+                filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.hits < s.hitsMax
+            });
+            if (damagedContainers.length > 0) {
+                return this.repairContainer(creep, damagedContainers[0]);
+            } else {
+                return this.requestTask(creep);
             }
         }
     }

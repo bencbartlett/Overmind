@@ -12,6 +12,8 @@ class roleSieger extends Role {
         // Role-specific settings
         this.settings.bodyPattern = [TOUGH, WORK, MOVE, MOVE, MOVE, HEAL];
         this.settings.moveBoostedBodyPattern = [TOUGH, WORK, WORK, MOVE, HEAL];
+        this.settings.nonArmoredBodyPattern = [WORK, MOVE];
+        this.settings.bodyPattern = this.settings.nonArmoredBodyPattern; // TODO: remove this if needed
         this.settings.boost = {
             'tough': false,
             'work': false,

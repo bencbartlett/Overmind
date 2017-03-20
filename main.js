@@ -54,7 +54,7 @@ module.exports.loop = function () {
         // Animation ===================================================================================================
         // Animate each creep
         for (let name in Game.creeps) {
-            // if (name == 'guard_0') {
+            // if (name == 'destroyer_0') {
             //     continue;
             // }
             Game.creeps[name].run();

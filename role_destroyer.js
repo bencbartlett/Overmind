@@ -16,6 +16,9 @@ class roleDestroyer extends Role {
             'move': true,
             'heal': false,
         };
+        if (this.settings.boost.move == true) {
+            this.settings.bodyPattern = this.settings.moveBoostedBodyPattern;
+        }
         this.settings.boostMinerals = {
             'tough': RESOURCE_CATALYZED_GHODIUM_ALKALIDE,
             'attack': RESOURCE_CATALYZED_UTRIUM_ACID,
@@ -32,6 +35,21 @@ class roleDestroyer extends Role {
     onCreate(creep) {
         creep.memory.data.healFlag = "HP1"; // TODO: hard coded
         return creep;
+    }
+
+    getBoosted(creep) {
+        for (let bodypart in this.settings.boost) {
+            if (this.settings.boost[bodypart] &&
+                !(creep.memory.boosted && creep.memory.boosted[this.settings.boostMinerals[bodypart]])) {
+                let boosters = _.filter(creep.room.labs,
+                                        lab => lab.assignedMineralType == this.settings.boostMinerals[bodypart] &&
+                                               lab.mineralAmount >= 30 * creep.getActiveBodyparts(bodypart));
+                if (boosters.length > 0) {
+                    creep.task = null;
+                    creep.assign(tasks('getBoosted'), boosters[0]);
+                }
+            }
+        }
     }
 
     findTarget(creep) {
@@ -63,21 +81,6 @@ class roleDestroyer extends Role {
         var healPos = deref(creep.memory.data.healFlag).pos;
         creep.heal(creep);
         return creep.travelTo(healPos, {allowHostile: true});
-    }
-
-    getBoosted(creep) {
-        for (let bodypart in this.settings.boost) {
-            if (this.settings.boost[bodypart] &&
-                !(creep.memory.boosted && creep.memory.boosted[this.settings.boostMinerals[bodypart]])) {
-                let boosters = _.filter(creep.room.labs,
-                                        lab => lab.assignedMineralType == this.settings.boostMinerals[bodypart] &&
-                                               lab.mineralAmount >= 30 * creep.getActiveBodyparts(bodypart));
-                if (boosters.length > 0) {
-                    creep.task = null;
-                    creep.assign(tasks('getBoosted'), boosters[0]);
-                }
-            }
-        }
     }
 
     run(creep) {
