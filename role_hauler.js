@@ -1,5 +1,6 @@
 // Hauler - brings back energy from reserved outposts
 var tasks = require('tasks');
+var flagCodes = require('map_flag_codes');
 var Role = require('Role');
 
 class roleHauler extends Role {
@@ -27,11 +28,13 @@ class roleHauler extends Role {
         } else { // local hauler - assigned to source
             var nearbyContainers = creep.assignment.pos.findInRange(FIND_STRUCTURES, 2, {
                 filter: (s) => s.structureType == STRUCTURE_CONTAINER &&
+                               _.filter(s.pos.lookFor(LOOK_FLAGS), // don't collect from refillable containers
+                                        flagCodes.industry.refillContainer.filter).length == 0 &&
                                s.store[RESOURCE_ENERGY] > creep.carry.carryCapacity
             });
             // target fullest of nearby containers
             target = _.sortBy(nearbyContainers,
-                                  container => container.store[RESOURCE_ENERGY])[nearbyContainers.length - 1];
+                              container => container.store[RESOURCE_ENERGY])[nearbyContainers.length - 1];
             if (!target) { // if it can't bring a full load, target the fullest container in the room
                 let allContainers = creep.assignment.room.containers;
                 target = _.sortBy(allContainers, c => c.store[RESOURCE_ENERGY])[allContainers.length - 1];
@@ -48,40 +51,29 @@ class roleHauler extends Role {
     }
 
     deposit(creep) {
-        creep.assign(tasks('deposit'), creep.workRoom.storage);
-        // var target = creep.assignment;
-        // if (target) {
-        //     var deposit = tasks('deposit');
-        //     creep.assign(deposit, target);
-        // } else {
-        //     creep.log("no storage in " + creep.workRoom.name);
-        // }
+        let target;
+        let depositContainers = _.filter(creep.workRoom.containers,
+                                         s => _.filter(s.pos.lookFor(LOOK_FLAGS),
+                                                       flagCodes.industry.refillContainer.filter).length > 0 &&
+                                              s.storeCapacity - s.store[RESOURCE_ENERGY] > 0.75 * creep.carryCapacity);
+        if (depositContainers.length > 0) {
+            target = depositContainers[0];
+        } else {
+            target = creep.workRoom.storage;
+        }
+        creep.assign(tasks('deposit'), target);
     }
 
     newTask(creep) {
         creep.task = null;
         if (creep.carry.energy == 0) {
-            // var pathLength;
-            // if (creep.workRoom.storage.inSameRoomAs(creep.assignment)) {
-            //     pathLength = creep.assignment.pathLengthToStorage;
-            // } else {
-            //     pathLength = creep.assignment.pathLengthToAssignedRoomStorage;
-            // }
-            // if (creep.ticksToLive > (2 + 0.5) * pathLength) { // +0.5 for buffer
             this.collect(creep);
-            // } else {
-            //     creep.suicide(); // kill off so you don't randomly drop tons of energy everywhere
-            // }
         } else {
             this.deposit(creep);
         }
     }
 
     onRun(creep) {
-        // // Migrate from old hauler model
-        // creep.assignment = creep.workRoom.storage;
-        // creep.task = null;
-
         // Pickup any dropped energy along your route
         let droppedEnergy = creep.pos.findInRange(FIND_DROPPED_ENERGY, 1)[0];
         if (droppedEnergy) {
@@ -93,21 +85,6 @@ class roleHauler extends Role {
 
         // Repair nearby roads as you go
         creep.repairNearbyDamagedRoad(); // repair roads if you are capable
-
-        // Reduce moveTo usage when in non-crowded rooms
-        // if (creep.memory.task) {
-        //     if (!creep.room.my) {
-        //         creep.memory.task.data.moveToOptions = {
-        //             ignoreCreeps: true,
-        //             reusePath: 40
-        //         }
-        //     } else {
-        //         creep.memory.task.data.moveToOptions = {
-        //             ignoreCreeps: false,
-        //             reusePath: 15
-        //         }
-        //     }
-        // }
     }
 
 }
