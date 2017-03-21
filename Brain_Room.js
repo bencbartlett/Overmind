@@ -3,8 +3,6 @@ var tasks = require('tasks');
 var roles = require('roles');
 var flagCodes = require('map_flag_codes');
 
-// TODO: plug in Room.findCached() into this
-
 class RoomBrain {
     constructor(roomName) {
         this.name = roomName;
@@ -89,7 +87,7 @@ class RoomBrain {
         };
         // Task role conditions
         this.assignmentRoles = {
-            'pickup': ['supplier', 'hauler'],
+            'pickup': [], // ['supplier', 'hauler'],
             'collect': ['hauler'],
             'supplyTowers': ['supplier', 'hauler'],
             'supply': ['supplier', 'hauler'],
@@ -191,39 +189,30 @@ class RoomBrain {
     getMostUrgentTask(tasksToGet) {
         for (let taskType of tasksToGet) {
             var targets = this.getTasks(taskType);
-            // if (targets.length > 0) {
             var taskToExecute = tasks(this.taskToExecute[taskType]); // create task object
-            // remove targets that are already targeted by too many creeps
-            //noinspection JSReferencingMutableVariableFromClosure
-            // for (let t of targets) {
-            //     console.log(t.targetedBy);
-            //     console.log(t, t.targetedBy.length, taskToExecute.maxPerTarget);
-            // }
-            // TODO: cache this
+            // ignore targets that are already targeted by too many creeps
             targets = _.filter(targets, target => target != null &&
                                                   target.targetedBy.length < taskToExecute.maxPerTarget);
             if (targets.length > 0) { // return on the first instance of a target being found
                 return [taskToExecute, targets];
             }
-            //}
         }
         return [null, null];
     }
 
-    assignTask(creep) { // TODO: fix duplicate task assignments
+    assignTask(creep) {
         var applicableTasks = _.filter(this.taskPriorities,
                                        task => this.assignmentRoles[task].includes(creep.memory.role) &&
                                                this.assignmentConditions[task](creep));
         var [task, targets] = this.getMostUrgentTask(applicableTasks);
         // Assign the task
-        if (targets != null) {
+        if (targets != null) { // TODO: is this null check necessary?
             var target;
             if (task.name == 'fortify') {
                 target = _.sortBy(targets, target => target.hits)[0]; // fortification should target lowest HP barrier
             } else {
                 target = creep.pos.findClosestByRange(targets);
             }
-            // console.log(creep, task, target, targets )
             if (target) {
                 return creep.assign(task, target);
             }
@@ -288,7 +277,7 @@ class RoomBrain {
         var carryPartsPerRepetition = _.filter(haulerBodyPattern, part => part == CARRY).length; // carry parts
         var energyPerTripPerRepetition = 50 * carryPartsPerRepetition; // energy per trip per repetition of body pattern
         var energyPerTickPerRepetition = energyPerTripPerRepetition / tripLength; // energy per tick per repetition
-        var sourceEnergyPerTick = (3000 / 300); // TODO: adjust for rich energy sources
+        var sourceEnergyPerTick = (3000 / 300);
         var sizeRequiredForEquilibrium = sourceEnergyPerTick / energyPerTickPerRepetition; // size a hauler needs to be
         return Math.ceil(1.1 * sizeRequiredForEquilibrium); // slightly overestimate
     }
