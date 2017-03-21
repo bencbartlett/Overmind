@@ -26,7 +26,7 @@ class roleHauler extends Role {
     //     });
     // }
 
-    collect(creep) { // TODO: add ignorecreep and path caching to move() in hauler task classes
+    collect(creep) {
         if (!creep.assignment.room) { // if you don't have vision of the room
             return creep.moveToVisual(creep.assignment.pos, 'blue');
         }
