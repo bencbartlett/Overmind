@@ -14,15 +14,13 @@
 // TODO: ignore pathing only for haulers/friendly creeps on track? Gets stuck against enemies
 // TODO: DEFCON + dynamically generated guards (patrolling cops?)
 // TODO: spawn queue - duplicate creeps can be built from double-spawn rooms
-// TODO: nearest function that works across rooms and for possibly undefined rooms
-// TODO: attack capability; calculations for how large of an invasion/defense group to make
 
 // Import everything needed
 'use strict';
 require('require');
 
 // Enable screeps profiler
-// profiler.enable();
+profiler.enable();
 
 // Main loop
 module.exports.loop = function () {

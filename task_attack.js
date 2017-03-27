@@ -10,7 +10,7 @@ class taskAttack extends Task {
         super('attack');
         // Settings
         this.moveColor = 'red';
-        this.targetRange = 3; // for minimum of meleeAttack
+        this.targetRange = 3; // for minimum of meleeAttack  // TODO: shouldn't this be 1?
     }
 
     isValidTask() {

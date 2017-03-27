@@ -48,7 +48,7 @@ class roleHauler extends Role {
                 creep.log("no collect target!");
             }
         }
-    }
+    } 
 
     deposit(creep) {
         let target;

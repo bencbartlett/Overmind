@@ -117,7 +117,6 @@ class Role {
             }
         };
         return creep;
-        // TODO: add to queue, include calculations of how busy queue is and how far creep with have to walk to decide which spawn
     }
 
     onCreate(creep) { // modification to creep proto-object before spawning it
@@ -196,7 +195,6 @@ class Role {
     }
 
     renewIfNeeded(creep) {
-        // TODO: renewIfNeeded creep if it couldn't be made in this room
         if (creep.room.spawns[0] && creep.memory.data.renewMe && creep.ticksToLive < 500) {
             return creep.assign(tasks('getRenewed'), creep.room.spawns[0]);
         } else {
