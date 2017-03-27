@@ -6,6 +6,7 @@ class TerminalBrain {
         this.room = Game.rooms[roomName];
         this.terminal = Game.rooms[roomName].terminal;
         this.settings = require('settings_terminal');
+        this.sendToRoom = "W21N87"; // TODO: hardwired
     }
 
     effectivePricePerUnit(order) {
@@ -66,11 +67,22 @@ class TerminalBrain {
         }
     }
 
+    sendExtraEnergy() {
+        let cost = Game.market.calcTransactionCost(10000, this.room.name, this.sendToRoom);
+        if (this.terminal.store[RESOURCE_ENERGY] >
+            this.settings.resourceAmounts[RESOURCE_ENERGY] + 10000 + cost) {
+            if (this.room.storage.store[RESOURCE_ENERGY] > this.room.brain.unloadStorageBuffer) {
+                this.terminal.send(RESOURCE_ENERGY, 10000, this.sendToRoom, "Excess energy transfer");
+            }
+        }
+    }
+
     run() {
         // buy shortages only if there's enough energy; avoids excessive CPU usage
         if (this.terminal.store[RESOURCE_ENERGY] > 0.9 * this.settings.resourceAmounts[RESOURCE_ENERGY]) {
             this.buyShortages();
         }
+        this.sendExtraEnergy();
     }
 }
 

@@ -23,6 +23,12 @@ Object.defineProperty(Room.prototype, 'reservedByMe', {
     }
 });
 
+Object.defineProperty(Room.prototype, 'signedByMe', {
+    get () {
+        return this.controller && this.controller.sign && this.controller.sign.text == controllerSignature;
+    }
+});
+
 // Room properties: creeps =============================================================================================
 
 // Spawns in the room
@@ -271,7 +277,7 @@ Object.defineProperties(Room.prototype, {
 // Run function for room. Executed before roomBrain.run.
 Room.prototype.run = function () {
     // Animate each tower: see prototypes_StructureTower
-    var towers = this.find(FIND_MY_STRUCTURES, {filter: (s) => s.structureType == STRUCTURE_TOWER}); // TODO: this is costly
+    var towers = this.find(FIND_MY_STRUCTURES, {filter: (s) => s.structureType == STRUCTURE_TOWER});
     for (let tower of towers) {
         tower.run();
     }

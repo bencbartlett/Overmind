@@ -110,20 +110,20 @@ class Task {
         //         opacity: .3
         //     }
         // };
-        // var moveSettings = Object.assign({}, this.data.moveToOptions, options);
-        // return this.creep.moveTo(this.targetPos, moveSettings);
-        return this.creep.travelTo(this.targetPos, this.data.travelToOptions);
+        var options = Object.assign({},
+                                    this.data.travelToOptions,
+                                    {range: this.targetRange});
+        return this.creep.travelTo(this.targetPos, options);
     }
 
     // Execute this task each tick. Returns nothing unless work is done.
     step() {
         var creep = this.creep;
-        var target = this.target;
         // if (!target) {
         //     this.creep.log('null target!');
         //     return null; // in case you're targeting something that just became invisible
         // }
-        if (creep.pos.inRangeTo(target, this.targetRange)) {
+        if (creep.pos.inRangeTo(this.targetPos, this.targetRange)) {
             var workResult = this.work();
             if (workResult != OK && this.data.quiet == false) {
                 creep.log("Error executing " + this.name + ", returned " + workResult);
@@ -141,7 +141,6 @@ class Task {
     }
 }
 
-// const profiler = require('screeps-profiler');
 profiler.registerClass(Task, 'Task');
 
 

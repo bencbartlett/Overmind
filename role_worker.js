@@ -7,7 +7,7 @@ class roleWorker extends Role {
         super('worker');
         // Role-specific settings
         this.settings.bodyPattern = [WORK, CARRY, MOVE];
-        this.settings.notifyOnNoTask = false;
+        this.settings.notifyOnNoTask = true;
         this.roleRequirements = creep => creep.getActiveBodyparts(WORK) > 1 &&
                                          creep.getActiveBodyparts(MOVE) > 1 &&
                                          creep.getActiveBodyparts(CARRY) > 1
@@ -23,11 +23,6 @@ class roleWorker extends Role {
                 }).length < creep.room.sources.length ||
                 creep.room.containers.length < creep.room.sources.length; // or are there not containers yet?
             this.renewIfNeeded(creep);
-        }
-        if (creep.conditionalMoveToWorkRoom() != OK) { // workers sometimes stray from their service rooms
-            this.settings.sayQuiet = true;
-            this.settings.consoleQuiet = true;
-            return ERR_NOT_IN_SERVICE_ROOM;
         }
         // if a creep is trying to harvest and isn't getting any energy and a container becomes available, stop harvest
         if (creep.task && creep.task.name == 'harvest' && creep.pos.findInRange(FIND_SOURCES, 1).length == 0) {
@@ -89,6 +84,20 @@ class roleWorker extends Role {
         }
     }
 
+    run(creep) {
+        // Execute on-run code
+        this.onRun(creep);
+        // TODO: can't get task from room brain of other room because findClosestByRange() doesn't span multiple rooms
+        if (creep.room != creep.workRoom) { // workers need to be in their designated room to get tasks
+            creep.assign(tasks('goToRoom'), creep.memory.workRoom);
+        }
+        // Check each tick that the task is still valid
+        if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
+            this.newTask(creep);
+        }
+        // If there is a task, execute it
+        return this.executeTask(creep);
+    }
 }
 
 module.exports = roleWorker;
