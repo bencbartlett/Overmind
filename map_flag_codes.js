@@ -61,7 +61,7 @@ var flagCodes = {
             filter: flag => flag.color == COLOR_YELLOW && flag.secondaryColor == COLOR_YELLOW,
             action: flagActions.industry.remoteMine,
         },
-        refillContainer: {
+        refillThis: {
             color: COLOR_YELLOW,
             secondaryColor: COLOR_YELLOW,
             filter: flag => flag.color == COLOR_YELLOW && flag.secondaryColor == COLOR_WHITE,

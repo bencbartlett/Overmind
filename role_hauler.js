@@ -29,7 +29,7 @@ class roleHauler extends Role {
             var nearbyContainers = creep.assignment.pos.findInRange(FIND_STRUCTURES, 2, {
                 filter: (s) => s.structureType == STRUCTURE_CONTAINER &&
                                _.filter(s.pos.lookFor(LOOK_FLAGS), // don't collect from refillable containers
-                                        flagCodes.industry.refillContainer.filter).length == 0 &&
+                                        flagCodes.industry.refillThis.filter).length == 0 &&
                                s.store[RESOURCE_ENERGY] > creep.carry.carryCapacity
             });
             // target fullest of nearby containers
@@ -54,7 +54,7 @@ class roleHauler extends Role {
         let target;
         let depositContainers = _.filter(creep.workRoom.containers,
                                          s => _.filter(s.pos.lookFor(LOOK_FLAGS),
-                                                       flagCodes.industry.refillContainer.filter).length > 0 &&
+                                                       flagCodes.industry.refillThis.filter).length > 0 &&
                                               s.storeCapacity - s.store[RESOURCE_ENERGY] > 0.75 * creep.carryCapacity);
         if (depositContainers.length > 0) {
             target = depositContainers[0];
