@@ -6,7 +6,11 @@ class TerminalBrain {
         this.room = Game.rooms[roomName];
         this.terminal = Game.rooms[roomName].terminal;
         this.settings = require('settings_terminal');
-        this.sendToRoom = "W21N87"; // TODO: hardwired
+        this.settings.excessTransferAmount = 10000;
+    }
+
+    log(message) {
+        console.log(this.name + '_Terminal_Brain: "' + message + '"');
     }
 
     effectivePricePerUnit(order) {
@@ -68,12 +72,26 @@ class TerminalBrain {
     }
 
     sendExtraEnergy() {
-        let cost = Game.market.calcTransactionCost(10000, this.room.name, this.sendToRoom);
-        if (this.terminal.store[RESOURCE_ENERGY] >
-            this.settings.resourceAmounts[RESOURCE_ENERGY] + 10000 + cost) {
-            if (this.room.storage.store[RESOURCE_ENERGY] > this.room.brain.unloadStorageBuffer) {
-                this.terminal.send(RESOURCE_ENERGY, 10000, this.sendToRoom, "Excess energy transfer");
+        // calculate best room to send energy to
+        var minCost = Infinity;
+        var minRoom = undefined;
+        for (let name in Game.rooms) {
+            let room = Game.rooms[name];
+            if (room.my && room.terminal &&
+                room.storage && room.storage.store[RESOURCE_ENERGY] < room.brain.settings.unloadStorageBuffer) {
+                let cost = Game.market.calcTransactionCost(this.settings.excessTransferAmount,
+                                                           this.room.name, room.name);
+                if (cost < minCost) {
+                    minCost = cost;
+                    minRoom = room.name;
+                }
             }
+        }
+        // if you have sufficient energy in terminal
+        if (this.terminal.store[RESOURCE_ENERGY] > this.settings.excessTransferAmount + minCost) {
+            let res = this.terminal.send(RESOURCE_ENERGY, this.settings.excessTransferAmount, minRoom,
+                                         "Excess energy transfer");
+            this.log(`Sent ${this.settings.excessTransferAmount} excess energy to ${minRoom}. Response: ${res}.`);
         }
     }
 
@@ -82,7 +100,12 @@ class TerminalBrain {
         if (this.terminal.store[RESOURCE_ENERGY] > 0.9 * this.settings.resourceAmounts[RESOURCE_ENERGY]) {
             this.buyShortages();
         }
-        this.sendExtraEnergy();
+        // send excess energy if terminal and storage both have too much energy
+        if (this.terminal.store[RESOURCE_ENERGY] >
+            this.settings.resourceAmounts[RESOURCE_ENERGY] + this.settings.excessTransferAmount &&
+            this.room.storage.store[RESOURCE_ENERGY] > this.room.brain.settings.unloadStorageBuffer) {
+            // this.sendExtraEnergy();
+        }
     }
 }
 

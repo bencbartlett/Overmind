@@ -14,14 +14,40 @@ class roleSupplier extends Role {
                                          creep.getActiveBodyparts(CARRY) > 1
     }
 
-    create(spawn, {assignment, workRoom, patternRepetitionLimit = Infinity}) {
-        let creep = this.generateLargestCreep(spawn, {
-            assignment: assignment,
-            workRoom: workRoom,
-            patternRepetitionLimit: patternRepetitionLimit
-        });
+    onCreate(creep) {
         creep.memory.data.replaceAt = 100; // replace suppliers early!
-        return creep; // spawn.createCreep(creep.body, creep.name, creep.memory);
+        let workRoom = Game.rooms[creep.memory.workRoom];
+        let idleFlag = _.filter(workRoom.flags,
+                                flag => require('map_flag_codes').rally.idlePoint.filter(flag) &&
+                                        (flag.memory.role == this.name || flag.name.includes(this.name)))[0];
+        if (idleFlag) {
+            creep.memory.data.idleFlag = idleFlag.name;
+        }
+        return creep;
+    }
+
+    recharge(creep) { // default recharging logic for creeps
+        // try to find closest container or storage
+        var bufferSettings = creep.room.brain.settings.storageBuffer; // not creep.workRoom; use rules of room you're in
+        var buffer = bufferSettings.default;
+        if (bufferSettings[this.name]) {
+            buffer = bufferSettings[this.name];
+        }
+        var target = creep.pos.findClosestByRange(creep.room.storageUnits, {
+            filter: (s) => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
+                           (s.structureType == STRUCTURE_STORAGE && s.store[RESOURCE_ENERGY] > buffer)
+        });
+        if (!target) {
+            target = creep.room.terminal; // energy should be sent to room if it is out
+        }
+        if (target) { // assign recharge task to creep
+            return creep.assign(tasks('recharge'), target);
+        } else {
+            if (!this.settings.consoleQuiet && this.settings.notifyOnNoRechargeTargets) {
+                creep.log('no recharge targets!');
+            }
+            return null;
+        }
     }
 
     // recharge(creep) {
@@ -72,9 +98,8 @@ class roleSupplier extends Role {
             if (creep.carry.energy < creep.carry.carryCapacity) {
                 return this.recharge(creep); // recharge once there's nothing to do
             } else { // sit and wait at flag
-                let idleFlag = _.filter(creep.room.flags, require('map_flag_codes').rally.idlePoint.filter)[0];
+                let idleFlag = Game.flags[creep.memory.data.idleFlag];
                 if (idleFlag && !creep.pos.inRangeTo(idleFlag, 1)) {
-                    // creep.moveToVisual(idleFlag);
                     creep.travelTo(idleFlag);
                 }
             }

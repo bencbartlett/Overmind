@@ -14,14 +14,16 @@ class roleLinker extends Role {
                                          creep.getActiveBodyparts(CARRY) > 1
     }
 
-    create(spawn, {assignment, workRoom, patternRepetitionLimit = Infinity}) {
-        let creep = this.generateLargestCreep(spawn, {
-            assignment: assignment,
-            workRoom: workRoom,
-            patternRepetitionLimit: patternRepetitionLimit
-        });
-        creep.memory.data.replaceAt = 150; // replace linkers early!
-        return creep; // spawn.createCreep(creep.body, creep.name, creep.memory);
+    onCreate(creep) {
+        creep.memory.data.replaceAt = 100; // replace suppliers early!
+        let workRoom = Game.rooms[creep.memory.workRoom];
+        let idleFlag = _.filter(workRoom.flags,
+                                flag => require('map_flag_codes').rally.idlePoint.filter(flag) &&
+                                        (flag.memory.role == this.name || flag.name.includes(this.name)))[0];
+        if (idleFlag) {
+            creep.memory.data.idleFlag = idleFlag.name;
+        }
+        return creep;
     }
 
     collect(creep) {
@@ -29,9 +31,16 @@ class roleLinker extends Role {
         withdraw.data.quiet = true;
         var target;
         if (creep.workRoom.storage.links[0].energy > 0) {
+            // try targeting non-empty input links
             target = creep.workRoom.storage.links[0]
-        } else if (_.sum(creep.workRoom.storage.store) > creep.workRoom.brain.unloadStorageBuffer) {
+        } else if (_.sum(creep.workRoom.storage.store) > creep.workRoom.brain.settings.unloadStorageBuffer) {
+            // else try unloading from storage into terminal if there is too much energy
             target = creep.workRoom.storage;
+        } else if (creep.workRoom.terminal && creep.workRoom.terminal.store[RESOURCE_ENERGY] >
+                                              creep.workRoom.terminal.brain.settings.resourceAmounts[RESOURCE_ENERGY]
+                                              + creep.workRoom.terminal.brain.settings.excessTransferAmount) {
+            // if there is not too much energy in storage and there is too much in terminal, collect from terminal
+            target = creep.workRoom.terminal;
         }
         if (target) {
             return creep.assign(withdraw, target);
@@ -43,27 +52,32 @@ class roleLinker extends Role {
         deposit.data.quiet = true;
         let storage = creep.workRoom.storage;
         var target;
-        if (_.sum(storage.store) < creep.workRoom.brain.unloadStorageBuffer) {
+        // deposit to storage
+        if (_.sum(storage.store) < creep.workRoom.brain.settings.unloadStorageBuffer) {
             target = storage;
         }
-        // Deposit to terminal if you need to and are permitted to
+        // overwrite and deposit to terminal if not enough energy in terminal and sufficient energy in storage
         let terminal = creep.workRoom.terminal;
-        if (terminal) {
-            if (!target ||
-                ((terminal.store[RESOURCE_ENERGY] < terminal.brain.settings.resourceAmounts[RESOURCE_ENERGY]) &&
-                 (storage.store[RESOURCE_ENERGY] > creep.workRoom.brain.settings.storageBuffer[this.name]))) {
-                target = terminal;
-            }
+        if (terminal &&
+            terminal.store[RESOURCE_ENERGY] < terminal.brain.settings.resourceAmounts[RESOURCE_ENERGY] &&
+            storage.store[RESOURCE_ENERGY] > creep.workRoom.brain.settings.storageBuffer[this.name]) {
+            target = terminal;
         }
-        return creep.assign(deposit, target);
+        if (target) {
+            return creep.assign(deposit, target);
+        }
     }
 
     newTask(creep) {
         creep.task = null;
+        let idleFlag = Game.flags[creep.memory.data.idleFlag];
+        if (idleFlag && !creep.pos.inRangeTo(idleFlag, 1)) {
+            return creep.assign(tasks('goTo'), idleFlag);
+        }
         if (creep.carry.energy == 0) {
-            this.collect(creep);
+            return this.collect(creep);
         } else {
-            this.deposit(creep);
+            return this.deposit(creep);
         }
     }
 }

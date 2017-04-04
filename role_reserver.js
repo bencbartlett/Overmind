@@ -14,7 +14,7 @@ class roleReserver extends Role {
 
     newTask(creep) {
         if (!creep.assignment.room) {
-            creep.assign(tasks('goToRoom'), creep.assignment);
+            creep.assign(tasks('goToRoom'), creep.assignment.roomName);
         } else {
             if (creep.workRoom && creep.workRoom.controller && !creep.workRoom.signedByMe) {
                 creep.assign(tasks('signController'), creep.workRoom.controller);

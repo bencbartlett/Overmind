@@ -212,7 +212,11 @@ class RoomBrain {
             if (task.name == 'fortify') {
                 target = _.sortBy(targets, target => target.hits)[0]; // fortification should target lowest HP barrier
             } else {
-                target = creep.pos.findClosestByRange(targets);
+                if (creep.room == this.room) {
+                    target = creep.pos.findClosestByRange(targets);
+                } else {
+                    target = targets[0];
+                }
             }
             if (target) {
                 return creep.assign(task, target);
@@ -365,7 +369,7 @@ class RoomBrain {
                 return roles('linker').create(this.spawn, {
                     assignment: this.room.storage,
                     workRoom: this.room.name,
-                    patternRepetitionLimit: 2
+                    patternRepetitionLimit: 8
                 });
             }
         }
@@ -410,9 +414,11 @@ class RoomBrain {
         supplierLimit += Math.floor(expensiveFlags.length / 10); // add more suppliers for cases of lots of flags // TODO: better metric
         let supplierSize;
         if (numSuppliers == 0) { // in case the room runs out of suppliers at low energy
-            supplierSize = Math.min(this.settings.supplierPatternRepetitionLimit,
-                                    this.room.energyAvailable / roles('supplier').bodyCost(
-                                        roles('supplier').settings.bodyPattern));
+            // supplierSize = Math.min(this.settings.supplierPatternRepetitionLimit,
+            //                         this.room.energyAvailable / roles('supplier').bodyCost(
+            //                             roles('supplier').settings.bodyPattern));
+            supplierSize = 1;
+            // this.log(supplierSize)
         } else {
             supplierSize = this.settings.supplierPatternRepetitionLimit;
         }

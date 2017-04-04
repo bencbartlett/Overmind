@@ -20,7 +20,7 @@
 require('require');
 
 // Enable screeps profiler
-profiler.enable();
+// profiler.enable();
 
 // Main loop
 module.exports.loop = function () {
