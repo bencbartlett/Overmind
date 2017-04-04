@@ -4,11 +4,12 @@ class taskGoToRoom extends Task {
     constructor() {
         super('goToRoom');
         // Settings
-        this.targetRange = 23;
+        this.targetRange = 22;
     }
 
     // Getter/setter for task.targetPos
     get targetPos() {
+        // console.log(this.targetCoords.x, this.targetCoords.y, this.targetCoords.roomName)
         return new RoomPosition(this.targetCoords.x, this.targetCoords.y, this.targetCoords.roomName);
     }
 
@@ -20,11 +21,6 @@ class taskGoToRoom extends Task {
 
     // Assign the task to a creep
     assign(creep, roomName = 'roomNameString') {
-        // // add target to Memory.preprocessing
-        // if (!Memory.preprocessing.targets[target.ref]) {
-        //     Memory.preprocessing.targets[target.ref] = [];
-        // }
-        // Memory.preprocessing.targets[target.ref].push(creep.name);
         // register references to creep and target
         this.creep = creep;
         this.targetID = null;
