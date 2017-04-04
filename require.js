@@ -16,6 +16,7 @@ require('prototypes_RoomVisual');
 require('prototypes_Room');
 require('prototypes_StructureContainer');
 require('prototypes_StructureLab');
+require('prototypes_StructureLink');
 require('prototypes_StructureSpawn');
 require('prototypes_StructureTerminal');
 require('prototypes_StructureTower');

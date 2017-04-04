@@ -1,5 +1,5 @@
 // Room prototypes - commonly used room properties and methods
-
+var flagCodes = require('map_flag_codes');
 
 // Room brain ==========================================================================================================
 
@@ -283,12 +283,19 @@ Room.prototype.run = function () {
     }
     // Animate each link: transfer to storage when it is >50% full if storage link is empty and cooldown is over
     var links = this.find(FIND_MY_STRUCTURES, {filter: s => s.structureType == STRUCTURE_LINK});
+    var refillLinks = _.filter(links, s => s.refillThis && s.energy <= 0.5 * s.energyCapacity);
     if (links.length > 0) {
-        var storageLink = this.storage.links[0];
+        var targetLink;
+        if (refillLinks.length > 0) {
+            targetLink = refillLinks[0];
+        } else {
+            targetLink = this.storage.links[0];
+        }
         for (let link of links) {
-            if (link != storageLink) {
-                if (link.energy > 0.5 * link.energyCapacity && link.cooldown == 0 && storageLink.energy == 0) {
-                    link.transferEnergy(storageLink);
+            if (link != targetLink) {
+                if (link.energy > 0.85 * link.energyCapacity && !link.refillThis &&
+                    link.cooldown == 0 && targetLink.energy == 0) {
+                    link.transferEnergy(targetLink);
                 }
             }
         }

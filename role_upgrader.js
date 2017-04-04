@@ -27,6 +27,7 @@ class roleUpgrader extends Role {
         }
         var target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
             filter: (s) => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
+                           (s.structureType == STRUCTURE_LINK && s.energy >= Math.min(creep.carryCapacity, 400)) ||
                            (s.structureType == STRUCTURE_STORAGE && s.store[RESOURCE_ENERGY] > buffer)
         });
         if (target) { // assign recharge task to creep

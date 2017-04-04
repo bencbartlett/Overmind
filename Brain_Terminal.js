@@ -104,7 +104,7 @@ class TerminalBrain {
         if (this.terminal.store[RESOURCE_ENERGY] >
             this.settings.resourceAmounts[RESOURCE_ENERGY] + this.settings.excessTransferAmount &&
             this.room.storage.store[RESOURCE_ENERGY] > this.room.brain.settings.unloadStorageBuffer) {
-            // this.sendExtraEnergy();
+            this.sendExtraEnergy();
         }
     }
 }
