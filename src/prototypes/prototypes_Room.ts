@@ -283,8 +283,8 @@ Room.prototype.run = function () {
         tower.run();
     }
     // Animate each link: transfer to storage when it is >50% full if storage link is empty and cooldown is over
-    var links = this.find(FIND_MY_STRUCTURES, {filter: s => s.structureType == STRUCTURE_LINK});
-    var refillLinks = _.filter(links, (s: StructureLink) => s.refillThis && s.energy <= 0.5 * s.energyCapacity);
+    var links = this.find(FIND_MY_STRUCTURES, {filter: s => s.structureType == STRUCTURE_LINK}) as StructureLink[];
+    var refillLinks = _.filter(links, s => s.refillThis && s.energy <= 0.5 * s.energyCapacity);
     if (links.length > 0) {
         var targetLink;
         if (refillLinks.length > 0) {
@@ -294,8 +294,7 @@ Room.prototype.run = function () {
         }
         for (let link of links) {
             if (link != targetLink) {
-                if (link.energy > 0.85 * link.energyCapacity && !link.refillThis &&
-                    link.cooldown == 0 && targetLink.energy == 0) {
+                if (link.energy > 0.85 * link.energyCapacity && !link.refillThis && link.cooldown == 0) {
                     link.transferEnergy(targetLink);
                 }
             }
