@@ -1,11 +1,11 @@
 // Preprocessing code to be run before animation of anything
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.preprocessing = {
+
+export var preprocessing = {
     get memory() {
         return Memory.preprocessing;
     },
-    cacheAssignments: function () {
+
+    cacheAssignments: function () { // generates a hash table for creeps assigned to each thing; key: role, val: name
         this.memory.assignments = {};
         for (let name in Game.creeps) {
             let creep = Game.creeps[name];
@@ -15,12 +15,13 @@ exports.preprocessing = {
                     this.memory.assignments[assignmentRef] = {};
                 }
                 if (!this.memory.assignments[assignmentRef][creep.memory.role]) {
-                    this.memory.assignments[assignmentRef][creep.memory.role] = [];
+                    this.memory.assignments[assignmentRef][creep.memory.role] = []
                 }
                 this.memory.assignments[assignmentRef][creep.memory.role].push(name);
             }
         }
     },
+
     cacheTargets: function () {
         this.memory.targets = {};
         for (let name in Game.creeps) {
@@ -34,15 +35,17 @@ exports.preprocessing = {
             }
         }
     },
+
     // allMarketOrders: function () {
     //     this.memory.allMarketOrders = Game.market.getAllOrders();
     // },
+
     run: function () {
         Memory.preprocessing = {};
         this.cacheAssignments();
         this.cacheTargets();
     }
 };
+
 // const profiler = require('screeps-profiler');
-const profiler = require("./lib.screeps-profiler");
-profiler.registerObject(exports.preprocessing, 'preprocessing');
+import profiler = require('./lib/screeps-profiler'); profiler.registerObject(preprocessing, 'preprocessing');
