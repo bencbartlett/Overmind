@@ -6,10 +6,16 @@ Screeps is an [MMO strategy game for programmers](https://screeps.com/). The cor
 
 This is the AI system I have been developing for Screeps. It is centrally-managed and task based. Creep activities in each room are prioritized and managed by a central `RoomBrain` object, which handles task assignment and runs the spawners. Currently, the AI is mostly autonomous, requiring input only for structure construction and planning invasions, though this will eventually be automated too.
 
+### Contributing to Overmind
+I'm not accepting contributions to Overmind until the main framework is finished (probably about another 3 weeks of coding at my current rate). After Overmind is "complete", I'll begin accepting pull requests. 
+
 ### Using Overmind as your AI
 If you're new to screeps, I wouldn't recommend using Overmind; most of the fun of the game is programming your own AI and watching your code run like a well-oiled machine! (Or, more frequently, go down in flames like an overly-oiled machine...) However, when I first started playing screeps, I was frustrated by scantily-documented codebases, so Overmind was programmed with readability and documentation in mind, so it might be a good resource to reference when coding your first AI!
 
 If you do want to use Overmind as-is, it "should" work right out of the box, although the codebase is under a lot of development right now, so I might have broken something. If it seems I have, please [submit an issue](https://github.com/bencbartlett/Overmind/issues/new) and I'll try to fix it.
+
+### TypeScript
+I'm currently migrating Overmind's entire codebase to TypeScript 2.2 to make future development easier. Given the size of the existing codebase (~10k lines as of this edit), this could take a while, so my apologies in advance if issues aren't addressed quickly during this period.
 
 ### Find me in game! (username: Muon)
 I'm currently around the `W1XN8X` sector. If my AI is being too agressive, feel free to message me about it. I'm working on developing a whitelist to make Overmind stop attacking players who opt out of it.
@@ -58,7 +64,6 @@ Flags are used as the interaction point between manual user input and the autono
 # Upcoming features
 Overmind is still very much in active development, and some features haven't been fully implemented yet. This is a list of the features I'm planning on adding next, in approximate decreasing order of importance:
 - Decentralized spawner scheduling algorithm based on a global creep production queue
-- More developed pathfinding, possibly using BonzAI's travelTo package
 - Automatic expansion planning
 - Automatic base building
 - Automatic invasion planning
