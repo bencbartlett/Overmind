@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+    "removeComments": false,
+    "noResolve": false,
+    "noImplicitAny": false,
+    "experimentalDecorators": true,
+    "strictNullChecks": false,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
+    "sourceMap": false,
+    "outDir": "./dist",
+    "allowJs": true,
+    "lib": [
+      "dom",
+      "es2016"
+    ]
+  },
+  "compileOnSave": true,
+  "include": [
+    "declarations/**/*.d.ts",
+    "typings/**/*.d.ts",
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "build",
+    "node_modules",
+    "libs"
+  ]
+}

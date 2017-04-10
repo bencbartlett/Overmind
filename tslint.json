@@ -1,0 +1,17 @@
+{
+  "extends" : [
+    "tslint:recommended"
+  ],
+  "rules": {
+    "forin": false,
+    "interface-name": [false],
+    "no-console": [false],
+    "variable-name": [
+      true,
+      "ban-keywords",
+      "check-format",
+      "allow-pascal-case",
+      "allow-leading-underscore"
+    ]
+  }
+}
