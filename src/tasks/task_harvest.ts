@@ -1,10 +1,11 @@
 import {Task} from "./Task";
 
+type targetType = Source;
 export class taskHarvest extends Task {
-    target: Source;
+    target: targetType;
 
-    constructor() {
-        super('harvest');
+    constructor(target: targetType) {
+        super('harvest', target);
         // Settings
         this.moveColor = 'yellow';
     }

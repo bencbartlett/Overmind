@@ -1,10 +1,11 @@
 import {Task} from "./Task";
 
+type targetType = Controller;
 export class taskSignController extends Task {
-    target: StructureController;
+    target: targetType;
 
-    constructor() {
-        super('signController');
+    constructor(target: targetType) {
+        super('signController', target);
         // Settings
         this.moveColor = 'purple';
     }

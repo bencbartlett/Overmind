@@ -1,10 +1,11 @@
 import {Task} from "./Task";
 
+type targetType = Spawn;
 export class taskGetRenewed extends Task {
-    target: StructureSpawn;
+    target: targetType;
 
-    constructor() {
-        super('getRenewed');
+    constructor(target: targetType) {
+        super('getRenewed', target);
         // Settings
         this.moveColor = 'cyan';
     }

@@ -1,21 +1,22 @@
+type targetType = RoomObject; // overwrite this variable in derived classes to specify more precise typing
+
 // Base class for creep tasks. Refactors creep_goTask implementation and is designed to be more extensible
-export abstract class Task {
+export abstract class Task implements ITask {
     name: string;
     creepName: string;
-    targetID: string;
+    targetRef: string;
     targetCoords: { x: number; y: number; roomName: string; };
     maxPerTarget: number;
     maxPerTask: number;
     targetRange: number;
     moveColor: string;
     data: any;
-    targetTypes: any;
 
-    constructor(taskName: string) {
+    constructor(taskName: string, target: targetType) {
         // Parameters for the task
         this.name = taskName; // name of task
         this.creepName = null; // name of creep assigned to task
-        this.targetID = null; // id or name of target task is aimed at
+        this.targetRef = null; // id or name of target task is aimed at
         this.targetCoords = { // target's position, which is set on assignment and used for moving purposes
             x: null,
             y: null,
@@ -29,7 +30,10 @@ export abstract class Task {
             quiet: true, // suppress console logging
             travelToOptions: {} // options for traveling
         };
-        this.targetTypes = RoomObject;
+        if (target) {
+            this.target = target;
+            this.targetPos = target.pos;
+        }
     }
 
     // Getter/setter for task.creep
@@ -43,16 +47,24 @@ export abstract class Task {
 
     // Getter/setter for task.target
     get target(): RoomObject {
-        if (this.targetID != null) { // Get task's own target by its ID or name
-            return deref(this.targetID);
+        let tar = deref(this.targetRef);
+        if (tar) {
+            return tar;
         } else {
-            // console.log(this.name + ": target is null!");
-            return null;
+            if (this.creep) {
+                this.creep.task = null;
+            }
         }
     }
 
     set target(target: RoomObject) {
-        this.targetID = target.ref;
+        if (target) {
+            this.targetRef = target.ref;
+        } else {
+            if (this.creep) {
+                this.creep.task = null;
+            }
+        }
     }
 
     // Getter/setter for task.targetPos
@@ -71,16 +83,14 @@ export abstract class Task {
     }
 
     // Assign the task to a creep
-    assign(creep: Creep, target: RoomObject): string {
+    assign(creep: Creep): string {
         // add target to Memory.preprocessing
-        if (!Memory.preprocessing.targets[target.ref]) {
-            Memory.preprocessing.targets[target.ref] = [];
+        if (!Memory.preprocessing.targets[this.target.ref]) {
+            Memory.preprocessing.targets[this.target.ref] = [];
         }
-        Memory.preprocessing.targets[target.ref].push(creep.name);
+        Memory.preprocessing.targets[this.target.ref].push(creep.name);
         // register references to creep and target
         this.creep = creep;
-        this.target = target;
-        this.targetPos = target.pos;
         creep.memory.task = this; // serializes the searalizable portions of the task into memory
         this.onAssignment();
         return this.name;

@@ -8,7 +8,7 @@ export class TerminalBrain {
     terminal: StructureTerminal;
     settings: any;
 
-    constructor(roomName) {
+    constructor(roomName: string) {
         this.name = roomName;
         this.room = Game.rooms[roomName];
         this.terminal = Game.rooms[roomName].terminal;
@@ -16,11 +16,11 @@ export class TerminalBrain {
         this.settings.excessTransferAmount = 10000;
     }
 
-    log(message) {
+    log(message: string) {
         console.log(this.name + '_Terminal_Brain: "' + message + '"');
     }
 
-    effectivePricePerUnit(order) {
+    effectivePricePerUnit(order: Order) {
         let transferCost = Game.market.calcTransactionCost(1000, this.room.name, order.roomName) / 1000;
         // let expense = order.price + transferCost * this.settings.avgPrice[RESOURCE_ENERGY];
         return order.price + transferCost;
@@ -30,7 +30,7 @@ export class TerminalBrain {
         if (Game.market.credits < reserveCredits) {
             return null;
         }
-        var toBuy = {};
+        var toBuy: {[mineral: string]: number} = {};
         for (let mineral in this.settings.resourceAmounts) {
             if (mineral == RESOURCE_ENERGY) {
                 continue;
@@ -43,7 +43,7 @@ export class TerminalBrain {
         return toBuy;
     }
 
-    buyShortages() { // buy needed minerals from the market for the best price, including energy
+    buyShortages(): void { // buy needed minerals from the market for the best price, including energy
         var toBuy = this.calculateShortages();
         if (toBuy == {}) { // nothing to buy
             return null;

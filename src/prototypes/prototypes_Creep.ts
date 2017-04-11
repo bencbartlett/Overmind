@@ -78,15 +78,12 @@ Object.defineProperty(Creep.prototype, 'task', {
     get: function () { // provide new task object recreated from literals stored in creep.memory.task
         if (this.memory.task != null) {
             // NOTE: task migration operations should be performed here
-            // if (this.memory.task.targetCoords == undefined) {
-            //     this.memory.task.targetCoords = {};
-            //     this.memory.task.targetCoords.x = deref(this.memory.task.targetID).pos.x;
-            //     this.memory.task.targetCoords.y = deref(this.memory.task.targetID).pos.y;
-            //     this.memory.task.targetCoords.roomName = deref(this.memory.task.targetID).pos.roomName;
+            // if (this.memory.task.targetID) {
+            //     this.memory.task.targetRef = this.memory.task.targetID;
             // }
-            var task = tasks(this.memory.task.name);
+            var target = deref(this.memory.task.targetRef);
+            var task = tasks(this.memory.task.name, target);
             task.creepName = this.memory.task.creepName;
-            task.targetID = this.memory.task.targetID;
             task.targetCoords = this.memory.task.targetCoords;
             task.data = this.memory.task.data;
             return task;
@@ -103,9 +100,9 @@ Object.defineProperty(Creep.prototype, 'task', {
     }
 });
 
-Creep.prototype.assign = function (task: Task, target: RoomObject) { // wrapper for task.assign(creep, target)
+Creep.prototype.assign = function (task: Task) { // wrapper for task.assign(creep, target)
     this.task = null;
-    return task.assign(this, target);
+    return task.assign(this);
 };
 
 

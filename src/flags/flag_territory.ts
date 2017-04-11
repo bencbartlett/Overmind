@@ -1,9 +1,11 @@
 // var roles = require('roles.js');
 
+import {RoomBrain} from "../brains/Brain_Room";
+
 export var territoryFlagActions = {
-    reserve: function (flag: Flag, brain: any) {
+    reserve: function (flag: Flag, brain: RoomBrain) {
         // Spawn a reserver bot that will reserve the site
-        function handleReservers(flag, brain) {
+        function handleReservers(flag: Flag, brain: RoomBrain) {
             let role = 'reserver';
             let reserveAgain = false;
             if (flag.room) {
@@ -25,7 +27,7 @@ export var territoryFlagActions = {
         }
 
         // If there are sites in need of construction and containers have been set up, send in some number of workers
-        function handleRemoteWorkers(flag, brain) {
+        function handleRemoteWorkers(flag: Flag, brain: RoomBrain) {
             var role = 'worker';
             if (!flag.room) { // requires vision of room
                 return null;
@@ -56,9 +58,9 @@ export var territoryFlagActions = {
         return handleReservers(flag, brain) || handleRemoteWorkers(flag, brain);
     },
 
-    claimAndIncubate: function (flag: Flag, brain: any) {
+    claimAndIncubate: function (flag: Flag, brain: RoomBrain) {
         // Spawn a reserver bot that will reserve the site
-        function handleClaimers(flag, brain) {
+        function handleClaimers(flag: Flag, brain: RoomBrain) {
             let role = 'claimer';
             if (!(flag.room && flag.room.controller.my)) {
                 flag.requiredCreepAmounts[role] = 1;

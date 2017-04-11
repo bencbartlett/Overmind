@@ -89,14 +89,16 @@ RoomObject.prototype.flaggedWith = function (filter) { // if the object has a ce
 Object.defineProperty(RoomObject.prototype, 'linked', { // If an object has a nearby link
     get: function () {
         return this.pos.findInRange(FIND_MY_STRUCTURES, 3, {
-                filter: (s) => s.structureType == STRUCTURE_LINK
+                filter: (s: Structure) => s.structureType == STRUCTURE_LINK
             }).length > 0;
     }
 });
 
 Object.defineProperty(RoomObject.prototype, 'links', { // All links that are near an object
     get: function () {
-        return this.pos.findInRange(FIND_MY_STRUCTURES, 3, {filter: (s) => s.structureType == STRUCTURE_LINK});
+        return this.pos.findInRange(FIND_MY_STRUCTURES, 3, {
+            filter: (s: Structure) => s.structureType == STRUCTURE_LINK
+        });
     }
 });
 

@@ -1,10 +1,11 @@
 import {Task} from "./Task";
 
+type targetType = Sink;
 export class taskSupply extends Task {
-    target: StructureSpawn | StructureExtension | StructureTower | StructureLab | StructureNuker | StructurePowerSpawn;
+    target: targetType;
 
-    constructor() {
-        super('supply');
+    constructor(target: targetType) {
+        super('supply', target);
         // Settings
         this.maxPerTarget = 1;
         this.moveColor = 'blue';
@@ -20,11 +21,11 @@ export class taskSupply extends Task {
         var target = this.target;
         if (target &&
             (target.structureType == STRUCTURE_SPAWN ||
-            target.structureType == STRUCTURE_EXTENSION ||
-            target.structureType == STRUCTURE_TOWER ||
-            target.structureType == STRUCTURE_LAB ||
-            target.structureType == STRUCTURE_NUKER ||
-            target.structureType == STRUCTURE_POWER_SPAWN)) {
+             target.structureType == STRUCTURE_EXTENSION ||
+             target.structureType == STRUCTURE_TOWER ||
+             target.structureType == STRUCTURE_LAB ||
+             target.structureType == STRUCTURE_NUKER ||
+             target.structureType == STRUCTURE_POWER_SPAWN)) {
             return (target.energy < target.energyCapacity);
         } else {
             return false;

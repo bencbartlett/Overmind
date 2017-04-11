@@ -3,7 +3,7 @@
 import {HUD} from "./visuals_HUD";
 
 export var visuals = {
-    drawSpawnInfo: function (room) {
+    drawSpawnInfo: function (room: Room) {
         for (let spawn of room.spawns) {
             if (spawn.spawning) {
                 new RoomVisual(room.name).text("🛠 " + spawn.statusMessage,
@@ -12,14 +12,14 @@ export var visuals = {
         }
     },
 
-    drawStorageInfo: function (room) {
+    drawStorageInfo: function (room: Room) {
         if (room.storage) {
             new RoomVisual(room.name).text(
                 Math.floor(room.storage.store[RESOURCE_ENERGY] / 1000) + "K", room.storage.pos, {font: '0.7'});
         }
     },
 
-    drawRoomVisuals: function (room) {
+    drawRoomVisuals: function (room: Room) {
         this.drawSpawnInfo(room);
         this.drawStorageInfo(room);
         // this.drawCreepInfo(room);

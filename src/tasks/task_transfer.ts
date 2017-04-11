@@ -1,11 +1,12 @@
 import {Task} from "./Task";
 
+type targetType = StructureContainer | StructureStorage | StructureTerminal |
+    StructureLab | StructureNuker | StructurePowerSpawn;
 export class taskTransfer extends Task {
-    target: StructureContainer | StructureStorage | StructureTerminal |
-        StructureLab | StructureNuker | StructurePowerSpawn;
+    target: targetType;
 
-    constructor() {
-        super('transfer');
+    constructor(target: targetType) {
+        super('transfer', target);
         // Settings
         this.moveColor = 'blue';
         this.data.resourceType = null; // this needs to be overwritten before assignment

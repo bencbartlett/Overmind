@@ -1,10 +1,10 @@
 import {Task} from "./Task";
 
+type targetType = RoomObject;
 export class taskGoTo extends Task {
-    target: RoomObject;
-
-    constructor() {
-        super('goTo');
+    target: targetType;
+    constructor(target: targetType) {
+        super('goTo', target);
         // Settings
         this.targetRange = 1;
     }

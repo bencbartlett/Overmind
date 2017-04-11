@@ -1,10 +1,11 @@
 import {Task} from "./Task";
 
+type targetType = Resource
 export class taskPickup extends Task {
-    target: Resource;
+    target: targetType;
 
-    constructor() {
-        super('pickup');
+    constructor(target: targetType) {
+        super('pickup', target);
         // Settings
         this.maxPerTarget = 1;
         this.moveColor = 'yellow';

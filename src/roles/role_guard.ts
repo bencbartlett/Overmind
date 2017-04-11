@@ -2,7 +2,9 @@
 // Best used only against low level npc invaders; sized to defend outposts
 
 import {Role} from "./Role";
-import {tasks} from "../maps/map_tasks";
+// import {tasks} from "../maps/map_tasks";
+import {taskRecharge} from "../tasks/task_recharge";
+import {taskAttack} from "../tasks/task_attack";
 
 export class roleGuard extends Role {
     constructor() {
@@ -11,12 +13,12 @@ export class roleGuard extends Role {
         this.settings.bodyPattern = [MOVE, ATTACK, RANGED_ATTACK];
         this.settings.orderedBodyPattern = true;
         this.settings.notifyOnNoTask = false;
-        this.roleRequirements = creep => creep.getActiveBodyparts(ATTACK) > 1 &&
-                                         creep.getActiveBodyparts(RANGED_ATTACK) > 1 &&
-                                         creep.getActiveBodyparts(MOVE) > 1
+        this.roleRequirements = (c: Creep) => c.getActiveBodyparts(ATTACK) > 1 &&
+                                              c.getActiveBodyparts(RANGED_ATTACK) > 1 &&
+                                              c.getActiveBodyparts(MOVE) > 1
     }
 
-    create(spawn, {assignment, workRoom, patternRepetitionLimit = Infinity}) {
+    create(spawn: Spawn, {assignment, workRoom, patternRepetitionLimit = Infinity}: creepCall) {
         if (!workRoom) {
             workRoom = assignment.roomName;
         }
@@ -27,30 +29,32 @@ export class roleGuard extends Role {
         let creep = this.generateLargestCreep(spawn, {
             assignment: assignment,
             workRoom: workRoom,
-            patternRepetitionLimit: patternRepetitionLimit
+            patternRepetitionLimit: patternRepetitionLimit,
         });
         return creep; // spawn.createCreep(creep.body, creep.name, creep.memory)
     }
 
-    recharge(creep) {
+    recharge(creep: Creep) {
         var target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
-            filter: (s) => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0)
-        });
+            filter: (s: Container) => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0),
+        }) as Container;
         if (target) {
-            return creep.assign(tasks('recharge'), target);
+            return creep.assign(new taskRecharge(target));
         }
     }
 
-    findTarget(creep) {
+    findTarget(creep: Creep): Creep | Structure {
         var target;
         var targetPriority = [
-            () => creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS, {filter: c => c.getActiveBodyparts(HEAL) > 0}),
+            () => creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS, {
+                filter: (c: Creep) => c.getActiveBodyparts(HEAL) > 0,
+            }),
             () => creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS),
             () => creep.pos.findClosestByRange(FIND_HOSTILE_SPAWNS),
-            () => creep.pos.findClosestByRange(FIND_HOSTILE_STRUCTURES, {filter: s => s.hits})
+            () => creep.pos.findClosestByRange(FIND_HOSTILE_STRUCTURES, {filter: (s: Structure) => s.hits}),
         ];
         for (let targetThis of targetPriority) {
-            target = targetThis();
+            target = targetThis() as Creep | Structure;
             if (target) {
                 return target;
             }
@@ -58,7 +62,7 @@ export class roleGuard extends Role {
         return null;
     }
 
-    newTask(creep) {
+    newTask(creep: Creep) {
         creep.task = null;
         // if not in the assigned room, move there; executed in bottom of run function
         if (creep.assignment && !creep.inSameRoomAs(creep.assignment)) {
@@ -67,8 +71,7 @@ export class roleGuard extends Role {
         // first try to find anything you should attack
         var target = this.findTarget(creep);
         if (target) {
-            let task = tasks('attack');
-            return creep.assign(task, target);
+            return creep.assign(new taskAttack(target));
         }
         // if no hostiles and you can repair stuff, do so
         if (creep.getActiveBodyparts(CARRY) > 0 && creep.getActiveBodyparts(WORK) > 0) {
@@ -80,7 +83,7 @@ export class roleGuard extends Role {
         }
     }
 
-    run(creep) {
+    run(creep: Creep) {
         var assignment = creep.assignment;
         if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget()) ||
             (creep.room.hostiles.length > 0 && creep.task && creep.task.name != 'attack')) {

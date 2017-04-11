@@ -1,7 +1,7 @@
 var terminalSettings = {
-    resourceAmounts: {},
-    maxBuyPrice: {},
-    avgPrice: {}
+    resourceAmounts: <{ [resourceType: string]: number }> {},
+    maxBuyPrice: <{ [resourceType: string]: number }> {},
+    avgPrice: <{ [resourceType: string]: number }> {},
 };
 // Desired equilibrium resource amounts go here
 terminalSettings.resourceAmounts[RESOURCE_ENERGY] = 50000;

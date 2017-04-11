@@ -1,9 +1,10 @@
 import {Task} from "./Task";
 
+type targetType = Creep | Structure;
 export class taskRangedAttack extends Task {
-    target: Creep | Structure;
-    constructor() {
-        super('rangedAtack');
+    target: targetType;
+    constructor(target: targetType) {
+        super('rangedAtack', target);
         // Settings
         this.moveColor = 'red';
         this.targetRange = 3;

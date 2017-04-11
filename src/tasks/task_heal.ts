@@ -1,10 +1,10 @@
 import {Task} from "./Task";
 
+type targetType = Creep;
 export class taskHeal extends Task {
-    target: Creep;
-
-    constructor() {
-        super('heal');
+    target: targetType;
+    constructor(target: targetType) {
+        super('heal', target);
         // Settings
         this.moveColor = 'green';
     }

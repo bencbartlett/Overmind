@@ -1,10 +1,11 @@
 import {Task} from "./Task";
 
+type targetType = StructureStorage | StructureContainer | StructureTerminal;
 export class taskWithdraw extends Task {
-    target: StructureStorage | StructureContainer | StructureTerminal;
+    target: targetType;
 
-    constructor() {
-        super('withdraw');
+    constructor(target: targetType) {
+        super('withdraw', target);
         // Settings
         this.moveColor = 'blue';
         this.data.resourceType = null; // this needs to be overwritten on assignment

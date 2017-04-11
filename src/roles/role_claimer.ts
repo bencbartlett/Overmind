@@ -1,25 +1,28 @@
 // Reserver: reserves rooms targeted with a purple/grey flag or claims a room with purple/purple flag
 
 import {Role} from "./Role";
-import {tasks} from "../maps/map_tasks";
+// import {tasks} from "../maps/map_tasks";
+import {taskGoToRoom} from "../tasks/task_goToRoom";
+import {taskSignController} from "../tasks/task_signController";
+import {taskClaim} from "../tasks/task_claim";
 
 export class roleClaimer extends Role {
     constructor() {
         super('claimer');
         // Role-specific settings
         this.settings.bodyPattern = [CLAIM, MOVE];
-        this.roleRequirements = creep => creep.getActiveBodyparts(CLAIM) > 1 &&
-                                         creep.getActiveBodyparts(MOVE) > 1
+        this.roleRequirements = (c: Creep) => c.getActiveBodyparts(CLAIM) > 1 &&
+                                              c.getActiveBodyparts(MOVE) > 1
     }
 
-    newTask(creep) {
+    newTask(creep: Creep) {
         if (!creep.assignment.room) {
-            creep.assign(tasks('goToRoom'), creep.assignment.roomName);
+            creep.assign(new taskGoToRoom(creep.assignment));
         } else {
             if (creep.workRoom && creep.workRoom.controller && !creep.workRoom.signedByMe) {
-                creep.assign(tasks('signController'), creep.workRoom.controller);
+                creep.assign(new taskSignController(creep.workRoom.controller));
             } else {
-                creep.assign(tasks('claim'), creep.assignment.room.controller);
+                creep.assign(new taskClaim(creep.assignment.room.controller));
             }
         }
     }

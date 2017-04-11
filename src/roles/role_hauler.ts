@@ -2,7 +2,9 @@
 
 import {Role} from "./Role";
 import {flagCodes} from "../maps/map_flag_codes";
-import {tasks} from "../maps/map_tasks";
+// import {tasks} from "../maps/map_tasks";
+import {taskRecharge} from "../tasks/task_recharge";
+import {taskDeposit} from "../tasks/task_deposit";
 
 export class roleHauler extends Role {
     constructor() {
@@ -12,11 +14,11 @@ export class roleHauler extends Role {
         this.settings.bodySuffix = [WORK, MOVE];
         this.settings.proportionalPrefixSuffix = false;
         this.settings.consoleQuiet = true;
-        this.roleRequirements = creep => creep.getActiveBodyparts(MOVE) > 1 &&
-                                         creep.getActiveBodyparts(CARRY) > 1
+        this.roleRequirements = (creep: Creep) => creep.getActiveBodyparts(MOVE) > 1 &&
+                                                  creep.getActiveBodyparts(CARRY) > 1
     }
 
-    collect(creep) {
+    collect(creep: Creep) {
         var target;
         if (creep.assignment == creep.workRoom.storage) { // remote hauler - assigned to storage
             let allContainers: StructureContainer[] = creep.workRoom.remoteContainers;
@@ -27,12 +29,12 @@ export class roleHauler extends Role {
                 target = _.sortBy(allContainers, container => -1 * container.predictedEnergyOnArrival)[0];
             }
         } else { // local hauler - assigned to source
-            var nearbyContainers: StructureContainer[] = creep.assignment.pos.findInRange(FIND_STRUCTURES, 2, {
-                filter: (s) => s.structureType == STRUCTURE_CONTAINER &&
-                               _.filter(s.pos.lookFor(LOOK_FLAGS), // don't collect from refillable containers
-                                        flagCodes.industry.refillThis.filter).length == 0 &&
-                               s.store[RESOURCE_ENERGY] > creep.carry.carryCapacity,
-            });
+            var nearbyContainers = creep.assignment.pos.findInRange(FIND_STRUCTURES, 2, {
+                filter: (s: Container) => s.structureType == STRUCTURE_CONTAINER &&
+                                          _.filter(s.pos.lookFor(LOOK_FLAGS), // don't collect from refill containers
+                                                   flagCodes.industry.refillThis.filter).length == 0 &&
+                                          s.store[RESOURCE_ENERGY] > creep.carry.carryCapacity,
+            }) as Container[];
             // target fullest of nearby containers
             target = _.sortBy(nearbyContainers,
                               container => container.store[RESOURCE_ENERGY])[nearbyContainers.length - 1];
@@ -42,8 +44,7 @@ export class roleHauler extends Role {
             }
         }
         if (target) {
-            var collect = tasks('recharge');
-            creep.assign(collect, target);
+            creep.assign(new taskRecharge(target));
         } else {
             if (!this.settings.consoleQuiet) {
                 creep.log("no collect target!");
@@ -51,7 +52,7 @@ export class roleHauler extends Role {
         }
     }
 
-    deposit(creep) {
+    deposit(creep: Creep) {
         let target;
         let depositContainers = _.filter(creep.workRoom.containers, (s: StructureContainer) =>
                                          _.filter(s.pos.lookFor(LOOK_FLAGS),
@@ -63,10 +64,10 @@ export class roleHauler extends Role {
         } else {
             target = creep.workRoom.storage;
         }
-        creep.assign(tasks('deposit'), target);
+        creep.assign(new taskDeposit(target));
     }
 
-    newTask(creep) {
+    newTask(creep: Creep) {
         creep.task = null;
         if (creep.carry.energy == 0) {
             this.collect(creep);
@@ -75,9 +76,9 @@ export class roleHauler extends Role {
         }
     }
 
-    onRun(creep) {
+    onRun(creep: Creep) {
         // Pickup any dropped energy along your route
-        let droppedEnergy = creep.pos.findInRange(FIND_DROPPED_ENERGY, 1)[0];
+        let droppedEnergy = creep.pos.findInRange(FIND_DROPPED_ENERGY, 1)[0] as Resource;
         if (droppedEnergy) {
             creep.pickup(droppedEnergy);
             if (droppedEnergy.amount > 0.5 * creep.carryCapacity) {

@@ -1,9 +1,10 @@
 import {Task} from "./Task";
 
+type targetType = Creep | Structure;
 export class taskMeleeAttack extends Task {
-    target: Creep | Structure;
-    constructor() {
-        super('meleeAttack');
+    target: targetType;
+    constructor(target: targetType) {
+        super('meleeAttack', target);
         // Settings
         this.moveColor = 'red';
         this.targetRange = 1;

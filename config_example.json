@@ -1,0 +1,22 @@
+{
+  "user": {
+    "email": "YOUR_USERNAME",
+    "password": "YOUR_PASSWORD"
+  },
+  "localPath": "your project root",
+  "defaultTarget": "dev",
+  "targets": {
+    "dev": {
+      "branch": "default",
+      "bundle": false,
+      "lint": false,
+      "lintRequired": false
+    },
+    "prod": {
+      "branch": "default",
+      "bundle": false,
+      "lint": false,
+      "lintRequired": false
+    }
+  }
+}

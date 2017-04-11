@@ -1,7 +1,9 @@
 // Linker - transfers energy from link to storage
 
 import {Role} from "./Role";
-import {tasks} from "../maps/map_tasks";
+// import {tasks} from "../maps/map_tasks";
+import {taskWithdraw} from "../tasks/task_withdraw";
+import {taskTransfer} from "../tasks/task_transfer";
 
 export class roleMineralSupplier extends Role {
     constructor() {
@@ -10,27 +12,27 @@ export class roleMineralSupplier extends Role {
         this.settings.bodyPattern = [CARRY, CARRY, MOVE];
         this.settings.consoleQuiet = true;
         this.settings.sayQuiet = true;
-        this.roleRequirements = creep => creep.getActiveBodyparts(MOVE) > 1 &&
-                                         creep.getActiveBodyparts(CARRY) > 1
+        this.roleRequirements = (creep: Creep) => creep.getActiveBodyparts(MOVE) > 1 &&
+                                                  creep.getActiveBodyparts(CARRY) > 1
     }
 
-    collectForLab(creep, lab) {
-        var withdrawThis = tasks('withdraw');
-        withdrawThis.data.resourceType = lab.assignedMineralType;
+    collectForLab(creep: Creep, lab: Lab) {
         if (creep.workRoom.terminal.store[lab.assignedMineralType] == 0) {
             return OK;
         } else {
-            return creep.assign(withdrawThis, creep.workRoom.terminal);
+            var withdrawThis = new taskWithdraw(creep.workRoom.terminal);
+            withdrawThis.data.resourceType = lab.assignedMineralType;
+            return creep.assign(withdrawThis);
         }
     }
 
-    depositForLab(creep, lab) {
-        var transfer = tasks('transfer');
+    depositForLab(creep: Creep, lab: Lab) {
+        var transfer = new taskTransfer(lab);
         transfer.data.resourceType = lab.assignedMineralType;
-        return creep.assign(transfer, lab);
+        return creep.assign(transfer);
     }
 
-    newTask(creep) {
+    newTask(creep: Creep) {
         creep.task = null;
         let loadLabs = _.filter(creep.room.labs,
                                 (lab: StructureLab) => lab.IO == 'in' &&
@@ -45,7 +47,7 @@ export class roleMineralSupplier extends Role {
         }
     }
 
-    onRun(creep) {
+    onRun(creep: Creep) {
         if (creep.ticksToLive < 100 && _.sum(creep.carry) == 0) {
             creep.suicide();
         }

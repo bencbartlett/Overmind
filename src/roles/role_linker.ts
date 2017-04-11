@@ -1,8 +1,11 @@
 // Linker - transfers energy from link to storage
 
 import {Role} from "./Role";
-import {tasks} from "../maps/map_tasks";
+// import {tasks} from "../maps/map_tasks";
 import {flagCodes} from "../maps/map_flag_codes";
+import {taskRecharge} from "../tasks/task_recharge";
+import {taskDeposit} from "../tasks/task_deposit";
+import {taskGoTo} from "../tasks/task_goTo";
 
 export class roleLinker extends Role {
     constructor() {
@@ -11,11 +14,11 @@ export class roleLinker extends Role {
         this.settings.bodyPattern = [CARRY, CARRY, MOVE];
         this.settings.consoleQuiet = true;
         this.settings.sayQuiet = true;
-        this.roleRequirements = creep => creep.getActiveBodyparts(MOVE) > 1 &&
-                                         creep.getActiveBodyparts(CARRY) > 1
+        this.roleRequirements = (creep: Creep) => creep.getActiveBodyparts(MOVE) > 1 &&
+                                                  creep.getActiveBodyparts(CARRY) > 1
     }
 
-    onCreate(creep) {
+    onCreate(creep: protoCreep): protoCreep {
         creep.memory.data.replaceAt = 100; // replace suppliers early!
         let workRoom = Game.rooms[creep.memory.workRoom];
         let idleFlag = _.filter(workRoom.flags,
@@ -27,10 +30,8 @@ export class roleLinker extends Role {
         return creep;
     }
 
-    collect(creep) {
-        var withdraw = tasks('recharge');
-        withdraw.data.quiet = true;
-        var target;
+    collect(creep: Creep) {
+        var target: Link | StructureStorage | Terminal;
         if (creep.workRoom.storage.links[0].energy > 0) {
             // try targeting non-empty input links
             target = creep.workRoom.storage.links[0]
@@ -44,13 +45,11 @@ export class roleLinker extends Role {
             target = creep.workRoom.terminal;
         }
         if (target) {
-            return creep.assign(withdraw, target);
+            return creep.assign(new taskRecharge(target));
         }
     }
 
-    deposit(creep) {
-        var deposit = tasks('deposit');
-        deposit.data.quiet = true;
+    deposit(creep: Creep) {
         let storage = creep.workRoom.storage;
         var target;
         // deposit to storage
@@ -65,20 +64,21 @@ export class roleLinker extends Role {
             target = terminal;
         }
         if (target) {
-            return creep.assign(deposit, target);
+            return creep.assign(new taskDeposit(target));
         }
     }
 
-    newTask(creep) {
+    newTask(creep: Creep): void {
         creep.task = null;
         let idleFlag = Game.flags[creep.memory.data.idleFlag];
         if (idleFlag && !creep.pos.inRangeTo(idleFlag, 1)) {
-            return creep.assign(tasks('goTo'), idleFlag);
-        }
-        if (creep.carry.energy == 0) {
-            return this.collect(creep);
+            creep.assign(new taskGoTo(idleFlag));
         } else {
-            return this.deposit(creep);
+            if (creep.carry.energy == 0) {
+                this.collect(creep);
+            } else {
+                this.deposit(creep);
+            }
         }
     }
 }
