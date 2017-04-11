@@ -1,11 +1,12 @@
 // var flagCodes = require('map_flag_codes.js');
 import {Task} from "./Task";
 
+type targetType = Structure;
 export class taskDismantle extends Task {
-    target: Structure;
+    target: targetType;
 
-    constructor() {
-        super('dismantle');
+    constructor(target: targetType) {
+        super('dismantle', target);
         // Settings
         this.maxPerTarget = 3;
         this.moveColor = 'red';

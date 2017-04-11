@@ -50,7 +50,7 @@ export class Traveler {
     private memory: {
         hostileRooms: {[roomName: string]: number}
     };
-    private structureMatrixCache: {[roomName: number]: CostMatrix};
+    private structureMatrixCache: {[roomName: string]: CostMatrix};
     private creepMatrixCache: {[roomName: string]: CostMatrix};
     private currentTick: number;
 
@@ -124,7 +124,7 @@ export class Traveler {
             obstacles: [],
         });
 
-        let allowedRooms;
+        let allowedRooms: {[roomName: string]: boolean };
         if (options.useFindRoute || (options.useFindRoute === undefined &&
             Game.map.getRoomLinearDistance(origin.pos.roomName, destination.pos.roomName) > 2)) {
             allowedRooms = this.findAllowedRooms(origin.pos.roomName, destination.pos.roomName, options);

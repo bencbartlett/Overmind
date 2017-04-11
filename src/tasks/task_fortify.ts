@@ -1,10 +1,11 @@
 import {Task} from "./Task";
 
+type targetType = StructureWall | Rampart;
 export class taskFortify extends Task {
-    target: StructureWall | StructureRampart;
+    target: targetType;
 
-    constructor() {
-        super('fortify');
+    constructor(target: targetType) {
+        super('fortify', target);
         // Settings
         this.maxPerTarget = 1;
         this.targetRange = 3;

@@ -1,10 +1,11 @@
 import {Task} from "./Task";
 
+type targetType = Controller;
 export class taskUpgrade extends Task {
-    target: StructureController;
+    target: targetType;
 
-    constructor() {
-        super('upgrade');
+    constructor(target: targetType) {
+        super('upgrade', target);
         // Settings
         this.targetRange = 3;
         this.moveColor = 'purple';

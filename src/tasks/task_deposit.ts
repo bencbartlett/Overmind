@@ -1,10 +1,10 @@
 import {Task} from "./Task";
 
+type targetType = StructureContainer | StructureStorage | StructureTerminal | StructureLink;
 export class taskDeposit extends Task {
-    target: StructureContainer | StructureStorage | StructureTerminal | StructureLink;
-
-    constructor() {
-        super('deposit');
+    target: targetType;
+    constructor(target: targetType) {
+        super('deposit', target);
         // Settings
         this.moveColor = 'blue';
         this.data.quiet = true;

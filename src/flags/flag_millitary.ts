@@ -1,8 +1,10 @@
 // var roles = require('roles.js');
 
+import {RoomBrain} from "../brains/Brain_Room";
+
 export var millitaryFlagActions = {
-    guard: function (flag, brain) {
-        function handleGuards(flag, brain) {
+    guard: function (flag: Flag, brain: RoomBrain) {
+        function handleGuards(flag: Flag, brain: RoomBrain) {
             var role = 'guard';
             if (flag.memory.amount) {
                 flag.requiredCreepAmounts[role] = flag.memory.amount;
@@ -27,8 +29,8 @@ export var millitaryFlagActions = {
         return handleGuards(flag, brain)
     },
 
-    destroyer: function (flag, brain) {
-        function handleDestroyers(flag, brain) {
+    destroyer: function (flag: Flag, brain: RoomBrain) {
+        function handleDestroyers(flag: Flag, brain: RoomBrain) {
             var role = 'destroyer';
             if (flag.memory.amount) {
                 flag.requiredCreepAmounts[role] = flag.memory.amount;
@@ -51,8 +53,8 @@ export var millitaryFlagActions = {
     },
 
 
-    sieger: function (flag, brain) {
-        function handleSiegers(flag, brain) {
+    sieger: function (flag: Flag, brain: RoomBrain) {
+        function handleSiegers(flag: Flag, brain: RoomBrain) {
             var role = 'sieger';
             if (flag.memory.amount) {
                 flag.requiredCreepAmounts[role] = flag.memory.amount;

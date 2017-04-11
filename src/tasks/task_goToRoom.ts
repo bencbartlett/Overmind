@@ -1,10 +1,14 @@
 import {Task} from "./Task";
 
+type targetType = RoomObject;
 export class taskGoToRoom extends Task {
-    constructor() {
-        super('goToRoom');
+    target: targetType;
+
+    constructor(target: targetType) {
+        super('goToRoom', target);
         // Settings
-        this.targetRange = 22;
+        // this.targetRange = 22;
+        // this.setTargetPos(target.roomName);
     }
 
     // // Getter/setter for task.targetPos
@@ -19,25 +23,17 @@ export class taskGoToRoom extends Task {
     //     this.targetCoords.roomName = roomName;
     // }
 
-    setTargetPos(roomName: string) {
-        this.targetCoords.x = 25;
-        this.targetCoords.y = 25;
-        this.targetCoords.roomName = roomName;
-    }
-
-    // Assign the task to a creep
-    assign(creep: Creep, target: RoomObject) {
-        // register references to creep and target
-        this.creep = creep;
-        this.targetID = null;
-        this.setTargetPos(target.roomName);
-        creep.memory.task = this; // serializes the searalizable portions of the task into memory
-        this.onAssignment();
-        return this.name;
-    }
+    // setTargetPos(roomName: string) {
+    //     this.targetCoords.x = 25;
+    //     this.targetCoords.y = 25;
+    //     this.targetCoords.roomName = roomName;
+    // }
 
     isValidTask() {
-        return !this.creep.pos.inRangeTo(this.targetPos, this.targetRange);
+        let creep = this.creep;
+        return !(creep.roomName == this.target.roomName &&
+                 creep.pos.x > 0 && creep.pos.x < 49 &&
+                 creep.pos.y > 0 && creep.pos.y < 49);
     }
 
     isValidTarget() {

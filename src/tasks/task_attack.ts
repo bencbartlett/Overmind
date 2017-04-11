@@ -3,11 +3,11 @@ import {Task} from "./Task";
 // Use meleeAttack and rangedAttack for the exclusive variants.
 
 // TODO: creep is only approaching to range 3
-
+type targetType = Creep | Structure;
 export class taskAttack extends Task {
-    target: Creep | Structure;
-    constructor() {
-        super('attack');
+    target: targetType;
+    constructor(target: targetType) {
+        super('attack', target);
         // Settings
         this.moveColor = 'red';
         this.targetRange = 3; // for minimum of meleeAttack  // TODO: shouldn't this be 1?

@@ -1,13 +1,16 @@
 // var roles = require('roles.js');
 
+import {RoomBrain} from "../brains/Brain_Room";
+
 export var industryFlagActions = {
-    remoteMine: function (flag, brain) { // remotely setup and mine an outpost
-        function handleRemoteMiners(flag, brain) {
+    remoteMine: function (flag: Flag, brain: RoomBrain) { // remotely setup and mine an outpost
+        function handleRemoteMiners(flag: Flag, brain: RoomBrain) {
             var role = 'miner';
             flag.requiredCreepAmounts[role] = brain.settings.minersPerSource;
             return flag.requestCreepIfNeeded(brain, role, {
                 assignment: flag,
-                workRoom: flag.roomName
+                workRoom: flag.roomName,
+                patternRepetitionLimit: 3
             });
         }
 

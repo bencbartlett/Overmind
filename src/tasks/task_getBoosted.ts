@@ -1,10 +1,11 @@
 import {Task} from "./Task";
 
+type targetType = Lab;
 export class taskGetBoosted extends Task {
-    target: StructureLab;
+    target: targetType;
 
-    constructor() {
-        super('getBoosted');
+    constructor(target: targetType) {
+        super('getBoosted', target);
         // Settings
         this.moveColor = 'cyan';
     }

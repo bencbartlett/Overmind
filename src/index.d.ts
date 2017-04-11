@@ -12,32 +12,54 @@ declare var global: any;
 
 declare var Overmind: any;
 
+interface protoCreep {
+    body: string[];
+    name: string;
+    memory: any;
+}
+
+interface creepCall {
+    assignment: RoomObject;
+    workRoom: string;
+    patternRepetitionLimit?: number;
+}
+
 interface Creep {
     run(): void;
     publicMessage(sayList: string[]): void;
-    getBodyparts(partType: string): void;
+    getBodyparts(partType: string): number;
     needsReplacing: boolean;
     workRoom: Room;
     lifetime: number;
     assignment: RoomObject;
     task: any;
-    assign(task: any, target?: any): string;
+    assign(task: ITask): string;
     moveSpeed: number;
     repairNearbyDamagedRoad(): number;
     travelTo(destination: { pos: RoomPosition }, options?: any): number;
 }
 
-// interface Task {
-//     name: string;
-//     creepName: string;
-//     targetID: string;
-//     targetCoords: { x: number; y: number; roomName: string; };
-//     maxPerTarget: number;
-//     maxPerTask: number;
-//     targetRange: number;
-//     moveColor: string;
-//     data: any;
-// }
+interface ITask {
+    name: string;
+    creepName: string;
+    targetRef: string;
+    targetCoords: { x: number; y: number; roomName: string; };
+    maxPerTarget: number;
+    maxPerTask: number;
+    targetRange: number;
+    moveColor: string;
+    data: any;
+    creep: Creep;
+    target: RoomObject;
+    targetPos: RoomPosition;
+    assign(creep: Creep): string;
+    onAssignment(): void;
+    isValidTask(): boolean;
+    isValidTarget(): boolean;
+    move(): number;
+    step(): number | void;
+    work(): number;
+}
 
 interface RoomObject {
     log(message: string): void;
@@ -62,6 +84,8 @@ interface RoomPosition {
     flaggedWith(filter: Function): boolean;
 }
 
+type Sink = StructureSpawn | StructureExtension | StructureLab | StructureTower | StructurePowerSpawn;
+
 interface Room {
     brain: any;
     my: boolean;
@@ -84,7 +108,7 @@ interface Room {
     towers: StructureTower[];
     labs: StructureLab[];
     sources: Source[];
-    sinks: (StructureSpawn | StructureExtension | StructureLab | StructureTower)[];
+    sinks: Sink[];
     repairables: Structure[];
     constructionSites: ConstructionSite[];
     structureSites: ConstructionSite[];
@@ -146,8 +170,10 @@ interface Flag {
     getRequiredCreepAmounts(role: string): number;
     requiredCreepAmounts: { [role: string]: number };
     needsAdditional(role: string): boolean;
-    requestCreepIfNeeded(brain: any, role: string, {assignment: any, workRoom: string, patternRepetitionLimit: number}): any;
+    requestCreepIfNeeded(brain: any, role: string, info: creepCall): protoCreep;
     pathLengthToAssignedRoomStorage: number;
     haulingNeeded: boolean;
 }
+
+
 

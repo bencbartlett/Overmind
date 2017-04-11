@@ -1,10 +1,11 @@
 import {Task} from "./Task";
 
+type targetType = Controller;
 export class taskReserve extends Task {
-    target: StructureController;
+    target: targetType;
 
-    constructor() {
-        super('reserve');
+    constructor(target: targetType) {
+        super('reserve', target);
         // Settings
         this.moveColor = 'purple';
     }

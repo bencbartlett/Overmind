@@ -1,12 +1,15 @@
-import {tasks} from '../maps/map_tasks';
-import {creepCall, protoCreep} from "../interfaces";
+// import {tasks} from '../maps/map_tasks';
+import profiler = require('../lib/screeps-profiler');
+import {Task} from "../tasks/Task";
+import {taskRecharge} from "../tasks/task_recharge";
+import {taskGetRenewed} from "../tasks/task_getRenewed";
 
 export abstract class Role {
     name: string;
     settings: any;
     roleRequirements: Function;
 
-    constructor(roleName) {
+    constructor(roleName: string) {
         this.name = roleName; // name of the role
         this.settings = {
             bodyPattern: [], // body pattern to be repeated
@@ -20,10 +23,10 @@ export abstract class Role {
             notifyOnNoTask: true, // notify if creep can't get a task from brain or if it doesn't have one
             notifyOnNoRechargeTargets: false // notify if creep can't recharge for some reason
         };
-        this.roleRequirements = creep => creep.getActiveBodyparts(WORK) > 1 && // what is required to do this role
-                                         creep.getActiveBodyparts(MOVE) > 1 &&
-                                         creep.getActiveBodyparts(CARRY) > 1 &&
-                                         console.log('Role.roleRequirements should be overwritten!');
+        this.roleRequirements = (c: Creep) => c.getActiveBodyparts(WORK) > 1 && // what is required to do this role
+                                              c.getActiveBodyparts(MOVE) > 1 &&
+                                              c.getActiveBodyparts(CARRY) > 1 &&
+                                              console.log('Role.roleRequirements should be overwritten!');
 
     }
 
@@ -32,7 +35,7 @@ export abstract class Role {
     }
 
     bodyCost(bodyArray: string[]): number {
-        var partCosts = {
+        var partCosts: { [type: string]: number } = {
             'move': 50,
             'work': 100,
             'carry': 50,
@@ -54,7 +57,7 @@ export abstract class Role {
         var prefix = this.settings.bodyPrefix;
         var suffix = this.settings.bodySuffix;
         var proportionalPrefixSuffix = this.settings.proportionalPrefixSuffix;
-        var body = [];
+        var body: string[] = [];
         // calculate repetitions
         if (proportionalPrefixSuffix) { // if prefix and suffix are to be kept proportional to body size
             patternCost = this.bodyCost(prefix) + this.bodyCost(this.settings.bodyPattern) + this.bodyCost(suffix);
@@ -103,7 +106,7 @@ export abstract class Role {
     }
 
     // generate (but not spawn) the largest creep possible, returns the creep as an object
-    generateLargestCreep(spawn: StructureSpawn, {assignment, workRoom, patternRepetitionLimit}: creepCall): protoCreep {
+    generateLargestCreep(spawn: Spawn, {assignment, workRoom, patternRepetitionLimit}: creepCall): protoCreep {
         // spawn: spawn to add to, assignment: object (not ref) to assign creep to, patternRepetitionLimit: creep size
         var creepBody = this.generateBody(spawn.room.energyCapacityAvailable, patternRepetitionLimit);
         var creepName = spawn.creepName(this.name);
@@ -112,7 +115,7 @@ export abstract class Role {
             name: creepName, // name of the creep
             memory: { // memory to initialize with
                 role: this.name, // role of the creep
-                task: null, // task the creep is performing
+                task: <Task> null, // task the creep is performing
                 assignment: assignment.ref, // ref of object/room(use controller) the creep is assigned to
                 workRoom: workRoom, // name of the room the creep is assigned to
                 data: { // rarely-changed data about the creep
@@ -129,12 +132,8 @@ export abstract class Role {
     }
 
     // default creation function for creeps
-    create(spawn: StructureSpawn, {assignment, workRoom, patternRepetitionLimit = Infinity}): protoCreep {
-        let creep = this.generateLargestCreep(spawn, {
-            assignment: assignment,
-            workRoom: workRoom,
-            patternRepetitionLimit: patternRepetitionLimit,
-        });
+    create(spawn: StructureSpawn, {assignment, workRoom, patternRepetitionLimit}: creepCall): protoCreep {
+        let creep = this.generateLargestCreep(spawn, {assignment, workRoom, patternRepetitionLimit});
         creep = this.onCreate(creep); // modify creep as needed
         return creep; // spawn.createCreep(creep.body, creep.name, creep.memory);
     }
@@ -159,11 +158,12 @@ export abstract class Role {
             buffer = bufferSettings[this.name];
         }
         var target = creep.pos.findClosestByRange(creep.room.storageUnits, {
-            filter: (s) => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
-                           (s.structureType == STRUCTURE_STORAGE && s.store[RESOURCE_ENERGY] > buffer),
-        });
+            filter: (s: Container | StructureStorage) =>
+            (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
+            (s.structureType == STRUCTURE_STORAGE && s.store[RESOURCE_ENERGY] > buffer),
+        }) as Container | Storage;
         if (target) { // assign recharge task to creep
-            return creep.assign(tasks('recharge'), target);
+            return creep.assign(new taskRecharge(target));
         } else {
             if (!this.settings.consoleQuiet && this.settings.notifyOnNoRechargeTargets) {
                 creep.log('no recharge targets!');
@@ -197,7 +197,7 @@ export abstract class Role {
 
     renewIfNeeded(creep: Creep): string {
         if (creep.room.spawns[0] && creep.memory.data.renewMe && creep.ticksToLive < 500) {
-            return creep.assign(tasks('getRenewed'), creep.room.spawns[0]);
+            return creep.assign(new taskGetRenewed(creep.room.spawns[0]));
         } else {
             return null;
         }
@@ -220,4 +220,5 @@ export abstract class Role {
 }
 
 // const profiler = require('screeps-profiler');
-import profiler = require('../lib/screeps-profiler'); profiler.registerClass(Role, 'Role');
+
+profiler.registerClass(Role, 'Role');

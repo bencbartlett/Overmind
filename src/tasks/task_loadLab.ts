@@ -1,30 +1,15 @@
 import {Task} from "./Task";
 
+type targetType = Lab;
 export class taskLoadLab extends Task {
-    target: StructureLab;
+    target: targetType;
 
-    constructor() {
-        super('loadLab');
+    constructor(target: targetType) {
+        super('loadLab', target);
         // Settings
         this.maxPerTarget = 1;
         this.moveColor = 'blue';
-        this.data.mineralType = null;
-    }
-
-    // Assign the task to a creep
-    assign(creep, target = null) {
-        // add target to Memory.preprocessing
-        if (!Memory.preprocessing.targets[target.ref]) {
-            Memory.preprocessing.targets[target.ref] = [];
-        }
-        Memory.preprocessing.targets[target.ref].push(creep.name);
-        // register references to creep and target
-        this.creep = creep;
-        this.target = target;
-        this.data.mineralType = target.assignedMineralType;
-        creep.memory.task = this;
-        this.onAssignment();
-        return this.name;
+        this.data.mineralType = this.target.assignedMineralType;
     }
 
     isValidTask() {

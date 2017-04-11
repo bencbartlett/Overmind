@@ -22,7 +22,7 @@ StructureTower.prototype.attackNearestEnemy = function () {
 
 StructureTower.prototype.healNearestAlly = function () {
     var closestDamagedAlly = this.pos.findClosestByRange(FIND_MY_CREEPS, {
-        filter: (c) => c.hits < c.hitsMax
+        filter: (c: Creep) => c.hits < c.hitsMax
     });
     if (closestDamagedAlly) {
         return this.heal(closestDamagedAlly);
@@ -33,7 +33,7 @@ StructureTower.prototype.repairNearestStructure = function () {
     let toggle = false;
     if (toggle) {
         var closestDamagedStructure = this.pos.findClosestByRange(FIND_STRUCTURES, {
-            filter: (s) => s.hits < s.hitsMax &&
+            filter: (s: Structure) => s.hits < s.hitsMax &&
             s.structureType != STRUCTURE_WALL &&
             s.structureType != STRUCTURE_RAMPART
         });
@@ -46,7 +46,7 @@ StructureTower.prototype.repairNearestStructure = function () {
 StructureTower.prototype.preventRampartDecay = function () {
     let hp = 500; // TODO: hardwired
     var closestDyingRampart = this.pos.findClosestByRange(FIND_STRUCTURES, {
-        filter: (s) => s.hits < hp && s.structureType == STRUCTURE_RAMPART
+        filter: (s: Structure) => s.hits < hp && s.structureType == STRUCTURE_RAMPART
     });
     if (closestDyingRampart) {
         return this.repair(closestDyingRampart);

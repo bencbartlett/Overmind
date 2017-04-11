@@ -1,10 +1,11 @@
 import {Task} from "./Task";
 
-export class taskBuild extends Task {
-    target: ConstructionSite;
+type targetType = ConstructionSite;
 
-    constructor() {
-        super('build');
+export class taskBuild extends Task {
+    target: targetType;
+    constructor(target: targetType) {
+        super('build', target);
         // Settings
         this.maxPerTarget = 3;
         this.targetRange = 3;

@@ -1,10 +1,11 @@
 import {Task} from "./Task";
 
+type targetType = Structure;
 export class taskRepair extends Task {
-    target: Structure;
+    target: targetType;
 
-    constructor() {
-        super('repair');
+    constructor(target: targetType) {
+        super('repair', target);
         // Settings
         this.maxPerTarget = 1;
         this.targetRange = 3;

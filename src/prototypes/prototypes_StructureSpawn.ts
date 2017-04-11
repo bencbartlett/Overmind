@@ -10,7 +10,7 @@ StructureSpawn.prototype.creepName = function (roleName) {
 };
 
 StructureSpawn.prototype.cost = function (bodyArray) {
-    var partCosts = {
+    var partCosts: {[type: string]: number} = {
         'move': 50,
         'work': 100,
         'carry': 50,

@@ -2,7 +2,8 @@
 
 import {Role} from "./Role";
 import {flagCodes} from "../maps/map_flag_codes";
-import {tasks} from "../maps/map_tasks";
+import {taskRecharge} from "../tasks/task_recharge";
+// import {tasks} from "../maps/map_tasks";
 
 export class roleSupplier extends Role {
     constructor() {
@@ -12,11 +13,11 @@ export class roleSupplier extends Role {
         // this.settings.consoleQuiet = true; // suppliers should shut the fuck up
         this.settings.notifyOnNoRechargeTargets = true;
         this.settings.notifyOnNoTask = false;
-        this.roleRequirements = creep => creep.getActiveBodyparts(MOVE) > 1 &&
-                                         creep.getActiveBodyparts(CARRY) > 1
+        this.roleRequirements = (creep: Creep) => creep.getActiveBodyparts(MOVE) > 1 &&
+                                                  creep.getActiveBodyparts(CARRY) > 1
     }
 
-    onCreate(creep) {
+    onCreate(creep: protoCreep) {
         creep.memory.data.replaceAt = 100; // replace suppliers early!
         let workRoom = Game.rooms[creep.memory.workRoom];
         let idleFlag = _.filter(workRoom.flags,
@@ -28,22 +29,24 @@ export class roleSupplier extends Role {
         return creep;
     }
 
-    recharge(creep) { // default recharging logic for creeps
+    recharge(creep: Creep) { // default recharging logic for creeps
         // try to find closest container or storage
         var bufferSettings = creep.room.brain.settings.storageBuffer; // not creep.workRoom; use rules of room you're in
         var buffer = bufferSettings.default;
         if (bufferSettings[this.name]) {
             buffer = bufferSettings[this.name];
         }
-        var target = creep.pos.findClosestByRange(creep.room.storageUnits, {
-            filter: (s) => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
-                           (s.structureType == STRUCTURE_STORAGE && s.store[RESOURCE_ENERGY] > buffer)
-        });
+        var target: Container | Storage | Terminal;
+        target = creep.pos.findClosestByRange(creep.room.storageUnits, {
+            filter: (s: Storage | Container) =>
+            (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
+            (s.structureType == STRUCTURE_STORAGE && s.store[RESOURCE_ENERGY] > buffer),
+        }) as Storage | Container;
         if (!target) {
             target = creep.room.terminal; // energy should be sent to room if it is out
         }
         if (target) { // assign recharge task to creep
-            return creep.assign(tasks('recharge'), target);
+            return creep.assign(new taskRecharge(target));
         } else {
             if (!this.settings.consoleQuiet && this.settings.notifyOnNoRechargeTargets) {
                 creep.log('no recharge targets!');
@@ -88,7 +91,7 @@ export class roleSupplier extends Role {
     //     }
     // }
 
-    run(creep) {
+    run(creep: Creep) {
         // get new task if this one is invalid
         if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
             this.newTask(creep);

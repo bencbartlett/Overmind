@@ -1,9 +1,10 @@
 import {Task} from "./Task";
 
+type targetType = StructureStorage | Container | Terminal | Link;
 export class taskRecharge extends Task {
-    target: StructureStorage | StructureContainer;
-    constructor() {
-        super('recharge');
+    target: targetType;
+    constructor(target: targetType) {
+        super('recharge', target);
         // Settings
         this.moveColor = 'blue';
     }
@@ -15,7 +16,11 @@ export class taskRecharge extends Task {
 
     isValidTarget() {
         var target = this.target;
-        return (target != null && target.store && target.store[RESOURCE_ENERGY] > 0);
+        if (target instanceof StructureLink) {
+            return target.energy > 0;
+        } else {
+            return target.store && target.store[RESOURCE_ENERGY] > 0;
+        }
     }
 
     work() {

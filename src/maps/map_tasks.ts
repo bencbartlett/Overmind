@@ -29,58 +29,60 @@ import {taskTransfer} from "../tasks/task_transfer";
 import {taskUpgrade} from "../tasks/task_upgrade";
 import {taskWithdraw} from "../tasks/task_withdraw";
 
-export function tasks(taskName: string): Task {
+export function tasks(taskName: string, target: RoomObject): Task {
     // var TaskClass = require('task_' + taskName);
     // var taskInstance = new TaskClass;
     // return taskInstance;
     switch (taskName) {
         case 'attack':
-            return new taskAttack;
+            return new taskAttack(target as Creep | Structure);
         case 'build':
-            return new taskBuild;
+            return new taskBuild(target as ConstructionSite);
         case 'claim':
-            return new taskClaim;
+            return new taskClaim(target as Controller);
         case 'deposit':
-            return new taskDeposit;
+            return new taskDeposit(target as StructureContainer | StructureStorage | StructureTerminal | StructureLink);
         case 'dismantle':
-            return new taskDismantle;
+            return new taskDismantle(target as Structure);
         case 'fortify':
-            return new taskFortify;
+            return new taskFortify(target as StructureWall | Rampart);
         case 'getBoosted':
-            return new taskGetBoosted;
+            return new taskGetBoosted(target as Lab);
         case 'getRenewed':
-            return new taskGetRenewed;
+            return new taskGetRenewed(target as Spawn);
         case 'goTo':
-            return new taskGoTo;
+            return new taskGoTo(target as RoomObject);
         case 'goToRoom':
-            return new taskGoToRoom;
+            return new taskGoToRoom(target as RoomObject);
         case 'harvest':
-            return new taskHarvest;
+            return new taskHarvest(target as Source);
         case 'heal':
-            return new taskHeal;
+            return new taskHeal(target as Creep);
         case 'loadLab':
-            return new taskLoadLab;
+            return new taskLoadLab(target as Lab);
         case 'meleeAttack':
-            return new taskMeleeAttack;
+            return new taskMeleeAttack(target as Creep | Structure);
         case 'pickup':
-            return new taskPickup;
+            return new taskPickup(target as Resource);
         case 'rangedAttack':
-            return new taskRangedAttack;
+            return new taskRangedAttack(target as Creep | Structure);
         case 'recharge':
-            return new taskRecharge;
+            return new taskRecharge(target as StructureStorage | Container | Terminal);
         case 'repair':
-            return new taskRepair;
+            return new taskRepair(target as Structure);
         case 'reserve':
-            return new taskReserve;
+            return new taskReserve(target as Controller);
         case 'signController':
-            return new taskSignController;
+            return new taskSignController(target as Controller);
         case 'supply':
-            return new taskSupply;
+            return new taskSupply(target as Sink);
         case 'transfer':
-            return new taskTransfer;
+            return new taskTransfer(target as StructureContainer | StructureStorage | StructureTerminal |
+                StructureLab | StructureNuker | StructurePowerSpawn);
         case 'upgrade':
-            return new taskUpgrade;
+            return new taskUpgrade(target as Controller);
         case 'withdraw':
-            return new taskWithdraw;
+            return new taskWithdraw(target as StructureStorage | StructureContainer | StructureTerminal);
     }
 }
+

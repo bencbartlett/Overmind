@@ -2,7 +2,7 @@
 
 // import {tasks} from './tasks';
 import {roles} from '../maps/map_roles';
-import {flagCodes} from '../maps/map_flag_codes';
+import {flagCat, flagCodes, flagSubCat} from '../maps/map_flag_codes';
 import {validResources} from "../maps/map_resources";
 import {pathing} from "../lib/pathing";
 
@@ -69,17 +69,17 @@ Object.defineProperty(Flag.prototype, 'IO', { // should the lab be loaded or unl
 
 Object.defineProperty(Flag.prototype, 'category', { // the category object in flagCodes map
     get () {
-        return _.find(flagCodes, (cat: any) => cat.color == this.color);
+        return _.find(flagCodes, (cat: flagCat) => cat.color == this.color);
     }
 });
 
 Object.defineProperty(Flag.prototype, 'type', { // subcategory object
     get () {
-        return _.find(this.category, (type: any) => type.secondaryColor == this.secondaryColor);
+        return _.find(this.category, (type: flagSubCat) => type.secondaryColor == this.secondaryColor);
     }
 });
 
-Flag.prototype.action = function (...args) {
+Flag.prototype.action = function (...args: any[]) {
     return this.type.action(this, ...args); // calls flag action with this as flag argument
 };
 
