@@ -1,4 +1,4 @@
-![](/img/OvermindLogo.png)
+![](/assets/OvermindLogo.png)
 
 # Overmind Screeps AI
 
@@ -22,7 +22,7 @@ I'm currently around the `W1XN8X` sector. If my AI is being too agressive, feel 
 
 # AI Structure
 
-![AI structural schematic](/img/AIdiagram.png)
+![AI structural schematic](/assets/AIdiagram.png)
 
 
 
