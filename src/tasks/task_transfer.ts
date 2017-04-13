@@ -13,8 +13,12 @@ export class taskTransfer extends Task {
     }
 
     isValidTask() {
-        var creep = this.creep;
-        return (creep.carry[this.data.resourceType] > 0);
+        let carry = this.creep.carry[this.data.resourceType];
+        if (carry) {
+            return carry > 0;
+        } else {
+            return false;
+        }
     }
 
     isValidTarget() {

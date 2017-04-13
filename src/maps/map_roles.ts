@@ -19,7 +19,7 @@ import {roleSupplier} from "../roles/role_supplier";
 import {roleUpgrader} from "../roles/role_upgrader";
 import {roleWorker} from "../roles/role_worker";
 
-export function roles(roleName: string): Role {
+export function roles(roleName: string): Role | void {
     switch (roleName) {
         case 'claimer':
             return new roleClaimer;

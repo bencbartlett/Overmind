@@ -29,7 +29,7 @@ import {taskTransfer} from "../tasks/task_transfer";
 import {taskUpgrade} from "../tasks/task_upgrade";
 import {taskWithdraw} from "../tasks/task_withdraw";
 
-export function tasks(taskName: string, target: RoomObject): Task {
+export function tasks(taskName: string, target: RoomObject): Task | void {
     // var TaskClass = require('task_' + taskName);
     // var taskInstance = new TaskClass;
     // return taskInstance;

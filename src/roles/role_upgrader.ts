@@ -25,7 +25,7 @@ export class roleUpgrader extends Role {
             buffer = bufferSettings[this.name];
         }
         // avoid room decay
-        if (creep.room.controller.ticksToDowngrade < 4000) {
+        if (creep.room.controller && creep.room.controller.ticksToDowngrade < 4000) {
             buffer = 0;
         }
         var target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
@@ -55,7 +55,7 @@ export class roleUpgrader extends Role {
             if (!this.settings.consoleQuiet && this.settings.notifyOnNoRechargeTargets) {
                 creep.log('no recharge targets!');
             }
-            return null;
+            return "";
         }
     }
 

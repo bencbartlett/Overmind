@@ -55,9 +55,9 @@ export var HUD = {
         // Display room information for owned rooms
         let text = [];
         text.push("Owned rooms:");
-        var ownedRooms = _.sortBy(_.filter(Game.rooms, room => room.controller && room.controller.my),
+        var ownedRooms = _.sortBy(_.filter(Game.rooms, room => room.my),
                                   function (room) {
-                                      if (room.controller.level < 8) {
+                                      if (room.controller && room.controller.my && room.controller.level < 8) {
                                           return -1 * (room.controller.level +
                                                        room.controller.progress / room.controller.progressTotal);
 
@@ -68,7 +68,7 @@ export var HUD = {
         for (let i in ownedRooms) {
             let room = ownedRooms[i];
             let progressPercent;
-            if (room.controller.level < 8) {
+            if (room.controller && room.controller.level < 8) {
                 progressPercent = Math.round(100 * room.controller.progress / room.controller.progressTotal) + "%";
             } else {
                 progressPercent = "100%";
@@ -121,7 +121,7 @@ export var HUD = {
                 var totalGuards = 0, requiredGuards = 0;
                 var totalReservers = 0, requiredReservers = 0;
                 var totalWorkers = 0, requiredWorkers = 0;
-                for (flag of flag.room.flags) {
+                for (flag of flag.room!.flags) {
                     totalReservers += flag.getAssignedCreepAmounts('reserver');
                     totalGuards += flag.getAssignedCreepAmounts('guard');
                     totalMiners += flag.getAssignedCreepAmounts('miner');

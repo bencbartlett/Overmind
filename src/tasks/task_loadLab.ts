@@ -13,12 +13,16 @@ export class taskLoadLab extends Task {
     }
 
     isValidTask() {
-        var creep = this.creep;
-        return (creep.carry[this.data.mineralType] > 0);
+        let carry = this.creep.carry[this.data.mineralType];
+        if (carry) {
+            return carry > 0;
+        } else {
+            return false;
+        }
     }
 
     isValidTarget() {
-        var target = this.target;
+        let target = this.target;
         if (target && target.structureType == STRUCTURE_LAB) {
             return (target.mineralAmount < target.mineralCapacity);
         } else {

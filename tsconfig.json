@@ -6,7 +6,7 @@
     "noResolve": false,
     "noImplicitAny": true,
     "experimentalDecorators": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "noUnusedParameters": true,
     "noUnusedLocals": false,
     "suppressExcessPropertyErrors": true,
@@ -27,6 +27,7 @@
   "exclude": [
     "build",
     "node_modules",
-    "libs"
+    "libs",
+    "src/deprecated"
   ]
 }

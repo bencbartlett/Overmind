@@ -7,6 +7,7 @@ export class taskHeal extends Task {
         super('heal', target);
         // Settings
         this.moveColor = 'green';
+        this.targetRange = 3;
     }
 
     isValidTask() {
@@ -15,7 +16,7 @@ export class taskHeal extends Task {
 
     isValidTarget() {
         var target = this.target;
-        return (target && target.hits && target.hits < target.hitsMax && target.my == true);
+        return (target && target.hits < target.hitsMax && target.my == true);
     }
 
     work() {
@@ -23,10 +24,10 @@ export class taskHeal extends Task {
         var target = this.target;
         if (creep.pos.isNearTo(target)) {
             return creep.heal(target);
+        } else {
+            this.move();
         }
-        if (creep.pos.inRangeTo(target, 3)) {
-            return creep.rangedHeal(target);
-        }
+        return creep.rangedHeal(target); // you'll definitely be within range 3 because this.targetRange
     }
 }
 

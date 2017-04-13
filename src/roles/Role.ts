@@ -4,7 +4,7 @@ import {Task} from "../tasks/Task";
 import {taskRecharge} from "../tasks/task_recharge";
 import {taskGetRenewed} from "../tasks/task_getRenewed";
 
-export abstract class Role {
+export abstract class Role implements IRole {
     name: string;
     settings: any;
     roleRequirements: Function;
@@ -115,7 +115,7 @@ export abstract class Role {
             name: creepName, // name of the creep
             memory: { // memory to initialize with
                 role: this.name, // role of the creep
-                task: <Task> null, // task the creep is performing
+                task: null, // task the creep is performing
                 assignment: assignment.ref, // ref of object/room(use controller) the creep is assigned to
                 workRoom: workRoom, // name of the room the creep is assigned to
                 data: { // rarely-changed data about the creep
@@ -127,8 +127,8 @@ export abstract class Role {
         return creep;
     }
 
-    onCreate(creep: protoCreep): protoCreep { // modification to creep proto-object before spawning it
-        return creep; // Overwrite this as needed
+    onCreate(pCreep: protoCreep): protoCreep { // modification to creep proto-object before spawning it
+        return pCreep; // Overwrite this as needed
     }
 
     // default creation function for creeps
@@ -141,7 +141,7 @@ export abstract class Role {
     requestTask(creep: Creep): string { // default logic for requesting a new task from the room brain // TODO: why doesn't this work in other rooms?
         if (!creep.workRoom) {
             creep.log("no workRoom! Why?");
-            return null;
+            return "";
         }
         var response = creep.workRoom.brain.assignTask(creep);
         if (!response && !this.settings.consoleQuiet && this.settings.notifyOnNoTask) {
@@ -168,7 +168,7 @@ export abstract class Role {
             if (!this.settings.consoleQuiet && this.settings.notifyOnNoRechargeTargets) {
                 creep.log('no recharge targets!');
             }
-            return null;
+            return "";
         }
     }
 
@@ -181,7 +181,7 @@ export abstract class Role {
         }
     }
 
-    executeTask(creep: Creep): number {
+    executeTask(creep: Creep): number | void {
         if (creep.task) {
             return creep.task.step();
         } else {
@@ -191,7 +191,6 @@ export abstract class Role {
             if (!this.settings.sayQuiet && this.settings.notifyOnNoTask) {
                 creep.say('no task!');
             }
-            return null;
         }
     }
 
@@ -199,7 +198,7 @@ export abstract class Role {
         if (creep.room.spawns[0] && creep.memory.data.renewMe && creep.ticksToLive < 500) {
             return creep.assign(new taskGetRenewed(creep.room.spawns[0]));
         } else {
-            return null;
+            return "";
         }
     }
 

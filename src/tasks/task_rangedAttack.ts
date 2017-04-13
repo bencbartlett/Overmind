@@ -17,7 +17,7 @@ export class taskRangedAttack extends Task {
 
     isValidTarget() {
         var target = this.target;
-        return (target && target.hits && target.hits > 0); // && target.my == false);
+        return (target && target.hits > 0); // && target.my == false);
     }
 
     work() {

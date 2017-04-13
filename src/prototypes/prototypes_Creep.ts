@@ -1,9 +1,9 @@
 // Creep prototypes
 
 import {tasks} from '../maps/map_tasks';
-import {roles} from '../maps/map_roles';
 import {Traveler, TravelToOptions} from "../lib/Traveler";
 import {Task} from "../tasks/Task";
+import {roles} from "../maps/map_roles";
 
 Creep.prototype.run = function () { // run the creep's associated role
     let behavior = roles(this.memory.role);
@@ -82,7 +82,7 @@ Object.defineProperty(Creep.prototype, 'task', {
             //     this.memory.task.targetRef = this.memory.task.targetID;
             // }
             var target = deref(this.memory.task.targetRef);
-            var task = tasks(this.memory.task.name, target);
+            var task = tasks(this.memory.task.name, target) as Task;
             task.creepName = this.memory.task.creepName;
             task.targetCoords = this.memory.task.targetCoords;
             task.data = this.memory.task.data;

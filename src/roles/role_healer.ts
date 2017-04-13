@@ -16,7 +16,7 @@ export class roleHealer extends Role {
     }
 
 
-    findTarget(creep: Creep): Creep {
+    findTarget(creep: Creep): Creep | void {
         var target;
         var targetPriority = [
             () => creep.pos.findClosestByRange(FIND_MY_CREEPS, {filter: (c: Creep) => c.getBodyparts(HEAL) > 0}),
@@ -31,7 +31,6 @@ export class roleHealer extends Role {
                 return target;
             }
         }
-        return null;
     }
 
 

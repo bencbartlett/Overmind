@@ -3,11 +3,10 @@
 // Sieger will dismanlte walls while under fire until it is low enough that it needs to leave the room to be healed
 
 import {Role} from "./Role";
-import {flagCodes} from "../maps/map_flag_codes";
-// import {tasks} from "../maps/map_tasks";
 import {taskGetBoosted} from "../tasks/task_getBoosted";
 import {taskGoToRoom} from "../tasks/task_goToRoom";
 import {taskDismantle} from "../tasks/task_dismantle";
+import {flagFilters} from "../maps/map_flag_filters";
 
 export class roleSieger extends Role {
     constructor() {
@@ -41,10 +40,10 @@ export class roleSieger extends Role {
         return creep;
     }
 
-    findTarget(creep: Creep): Structure {
+    findTarget(creep: Creep): Structure | void {
         var target;
         var targetPriority = [
-            () => creep.pos.findClosestByRange(_.map(_.filter(creep.room.flags, flagCodes.destroy.dismantle.filter),
+            () => creep.pos.findClosestByRange(_.map(_.filter(creep.room.flags, flagFilters.destroy.dismantle.filter),
                                                      (flag: Flag) => flag.pos.lookFor(LOOK_STRUCTURES)[0])),
             // () => creep.pos.findClosestByRange(FIND_HOSTILE_SPAWNS),
             () => creep.pos.findClosestByRange(
@@ -62,7 +61,6 @@ export class roleSieger extends Role {
                 return target;
             }
         }
-        return null;
     }
 
     retreatAndHeal(creep: Creep) { // TODO: make this a task
