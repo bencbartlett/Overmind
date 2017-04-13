@@ -1,10 +1,9 @@
 // Flag prototypes
 
-// import {tasks} from './tasks';
-import {roles} from '../maps/map_roles';
 import {flagCat, flagCodes, flagSubCat} from '../maps/map_flag_codes';
 import {validResources} from "../maps/map_resources";
 import {pathing} from "../lib/pathing";
+import {Role} from "../roles/Role";
 
 // Flag assignment =====================================================================================================
 
@@ -12,7 +11,6 @@ Flag.prototype.assign = function (roomName) {
     if (Game.rooms[roomName] && Game.rooms[roomName].my) {
         this.memory.assignedRoom = roomName;
         console.log(this.name + " now assigned to room " + this.memory.assignedRoom + ".");
-        return OK;
     } else {
         console.log(roomName + " is not a valid owned room!");
     }
@@ -21,7 +19,6 @@ Flag.prototype.assign = function (roomName) {
 Flag.prototype.unassign = function () {
     console.log(this.name + " now unassigned from " + this.memory.assignedRoom + ".");
     delete this.memory.assignedRoom;
-    return OK;
 };
 
 Object.defineProperty(Flag.prototype, 'assignedRoom', { // the room the flag is assigned to
@@ -42,7 +39,6 @@ Flag.prototype.setMineral = function (mineralType) {
         if (_.includes(validResources, mineralType)) {
             this.memory.mineralType = mineralType;
             console.log(this.name + " now instructs lab to contain " + this.memory.mineralType + ".");
-            return OK;
         } else {
             console.log(this.name + ": " + mineralType + " is not a valid RESOURCE_*.");
         }
@@ -128,16 +124,14 @@ Flag.prototype.needsAdditional = function (role) { // if the flag needs more of 
     return this.getAssignedCreepAmounts(role) < this.getRequiredCreepAmounts(role);
 };
 
-Flag.prototype.requestCreepIfNeeded = function (brain, role,
+Flag.prototype.requestCreepIfNeeded = function (brain, role: Role,
     {assignment = this, workRoom = this.roomName, patternRepetitionLimit = Infinity}) {
-    if (this.needsAdditional(role)) {
-        return roles(role).create(brain.spawn, {
+    if (this.needsAdditional(role.name)) {
+        return role.create(brain.spawn, {
             assignment: assignment,
             workRoom: workRoom,
             patternRepetitionLimit: patternRepetitionLimit
         });
-    } else {
-        return null;
     }
 };
 

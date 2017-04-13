@@ -18,7 +18,7 @@ export class taskRepair extends Task {
 
     isValidTarget() {
         var target = this.target;
-        return (target != null && target.hits && target.hits < target.hitsMax);
+        return target.hits < target.hitsMax;
     }
 
     work() {

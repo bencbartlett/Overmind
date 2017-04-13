@@ -1,8 +1,4 @@
 RoomVisual.prototype.multitext = function(textArray, x, starty, fontSize, style) {
-    // console.log(textArray);
-    if (textArray == null) {
-        return null;
-    }
     var y = starty;
     for (let line of textArray) {
         new RoomVisual().text(line, x, y, style);

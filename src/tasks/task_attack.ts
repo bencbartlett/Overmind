@@ -10,7 +10,7 @@ export class taskAttack extends Task {
         super('attack', target);
         // Settings
         this.moveColor = 'red';
-        this.targetRange = 3; // for minimum of meleeAttack  // TODO: shouldn't this be 1?
+        this.targetRange = 3;
     }
 
     isValidTask() {
@@ -18,15 +18,15 @@ export class taskAttack extends Task {
                 (this.creep.room.hostiles.length > 0 || this.creep.room.hostileStructures.length > 0));
     }
 
-    isValidTarget() {
+    isValidTarget(): boolean {
         var target = this.target;
-        return (target && target.hits && target.hits > 0);
+        return (target && target.hits > 0);
     }
 
     work() {
         var creep = this.creep;
         var target = this.target;
-        var attackReturn, rangedAttackReturn;
+        var attackReturn = 0, rangedAttackReturn = 0;
         if (creep.getActiveBodyparts(ATTACK) > 0) {
             if (creep.pos.isNearTo(target)) {
                 attackReturn = creep.attack(target);
@@ -39,8 +39,13 @@ export class taskAttack extends Task {
         }
         if (attackReturn == OK && rangedAttackReturn == OK) {
             return OK;
+        } else {
+            if (attackReturn != OK) {
+                return rangedAttackReturn;
+            } else {
+                return attackReturn;
+            }
         }
-        return rangedAttackReturn || attackReturn; // if one of them is !OK
     }
 }
 

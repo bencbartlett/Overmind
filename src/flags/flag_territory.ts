@@ -6,18 +6,18 @@ export var territoryFlagActions = {
     reserve: function (flag: Flag, brain: RoomBrain) {
         // Spawn a reserver bot that will reserve the site
         function handleReservers(flag: Flag, brain: RoomBrain) {
-            let role = 'reserver';
+            let role = new roleReserver;
             let reserveAgain = false;
-            if (flag.room) {
+            if (flag.room && flag.room.controller) {
                 reserveAgain = !(flag.room.controller.level > 0) && // can't reserved owned rooms
                                (!flag.room.controller.reservation || // reserve if there's no reservation
                                 (flag.room.reservedByMe && // or if there is one by me and it's about to end
                                  flag.room.controller.reservation.ticksToEnd < brain.settings.reserveBuffer));
             }
             if (reserveAgain) {
-                flag.requiredCreepAmounts[role] = 1;
+                flag.requiredCreepAmounts[role.name] = 1;
             } else {
-                flag.requiredCreepAmounts[role] = 0;
+                flag.requiredCreepAmounts[role.name] = 0;
             }
             return flag.requestCreepIfNeeded(brain, role, {
                 assignment: flag,
@@ -28,7 +28,7 @@ export var territoryFlagActions = {
 
         // If there are sites in need of construction and containers have been set up, send in some number of workers
         function handleRemoteWorkers(flag: Flag, brain: RoomBrain) {
-            var role = 'worker';
+            var role = new roleWorker();
             if (!flag.room) { // requires vision of room
                 return null;
             }
@@ -44,9 +44,9 @@ export var territoryFlagActions = {
                 workerSize = 5; // repair jobs don't need as much
             }
             if (numContainers == 0) {
-                flag.requiredCreepAmounts[role] = 0;
+                flag.requiredCreepAmounts[role.name] = 0;
             } else {
-                flag.requiredCreepAmounts[role] = workerRequirements;
+                flag.requiredCreepAmounts[role.name] = workerRequirements;
             }
             return flag.requestCreepIfNeeded(brain, role, {
                 assignment: flag,
@@ -61,11 +61,11 @@ export var territoryFlagActions = {
     claimAndIncubate: function (flag: Flag, brain: RoomBrain) {
         // Spawn a reserver bot that will reserve the site
         function handleClaimers(flag: Flag, brain: RoomBrain) {
-            let role = 'claimer';
-            if (!(flag.room && flag.room.controller.my)) {
-                flag.requiredCreepAmounts[role] = 1;
+            let role = new roleClaimer();
+            if (!(flag.room && flag.room.controller && flag.room.controller.my)) {
+                flag.requiredCreepAmounts[role.name] = 1;
             } else {
-                flag.requiredCreepAmounts[role] = 0;
+                flag.requiredCreepAmounts[role.name] = 0;
             }
             return flag.requestCreepIfNeeded(brain, role, {
                 assignment: flag,
@@ -79,4 +79,7 @@ export var territoryFlagActions = {
 };
 
 // const profiler = require('screeps-profiler');
-import profiler = require('../lib/screeps-profiler'); profiler.registerObject(territoryFlagActions, 'territoryFlagActions');
+import profiler = require('../lib/screeps-profiler');
+import {roleReserver} from "../roles/role_reserver";
+import {roleWorker} from "../roles/role_worker";
+import {roleClaimer} from "../roles/role_claimer"; profiler.registerObject(territoryFlagActions, 'territoryFlagActions');

@@ -24,7 +24,7 @@ export class taskFortify extends Task {
         if (override.fortifyLevel[this.creep.room.name]) {
             maxHP = override.fortifyLevel[this.creep.room.name]; // override for certain rooms
         }
-        return (target != null && target.hits && target.hits < 1.2 * maxHP); // over-fortify to minimize extra trips
+        return (target != null && target.hits < 1.2 * maxHP); // over-fortify to minimize extra trips
     }
 
     work() {

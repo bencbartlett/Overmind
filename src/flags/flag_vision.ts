@@ -1,12 +1,12 @@
-// var roles = require('roles.js');
-
+import profiler = require('../lib/screeps-profiler');
+import {roleScout} from "../roles/role_scout";
 import {RoomBrain} from "../brains/Brain_Room";
 
 export var visionFlagActions = {
     stationary: function (flag: Flag, brain: RoomBrain) {
         function handleScouts(flag: Flag, brain: RoomBrain) {
-            var role = 'scout';
-            flag.requiredCreepAmounts[role] = 1;
+            var role = new roleScout();
+            flag.requiredCreepAmounts[role.name] = 1;
             return flag.requestCreepIfNeeded(brain, role, {
                 assignment: flag,
                 workRoom: flag.roomName,
@@ -18,5 +18,4 @@ export var visionFlagActions = {
     }
 };
 
-// const profiler = require('screeps-profiler');
-import profiler = require('../lib/screeps-profiler'); profiler.registerObject(visionFlagActions, 'visionFlagActions');
+profiler.registerObject(visionFlagActions, 'visionFlagActions');

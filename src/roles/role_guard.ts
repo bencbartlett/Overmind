@@ -2,7 +2,6 @@
 // Best used only against low level npc invaders; sized to defend outposts
 
 import {Role} from "./Role";
-// import {tasks} from "../maps/map_tasks";
 import {taskRecharge} from "../tasks/task_recharge";
 import {taskAttack} from "../tasks/task_attack";
 
@@ -40,10 +39,12 @@ export class roleGuard extends Role {
         }) as Container;
         if (target) {
             return creep.assign(new taskRecharge(target));
+        } else {
+            return "";
         }
     }
 
-    findTarget(creep: Creep): Creep | Structure {
+    findTarget(creep: Creep): Creep | Structure | void {
         var target;
         var targetPriority = [
             () => creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS, {
@@ -59,7 +60,6 @@ export class roleGuard extends Role {
                 return target;
             }
         }
-        return null;
     }
 
     newTask(creep: Creep) {

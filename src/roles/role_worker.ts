@@ -58,7 +58,7 @@ export class roleWorker extends Role {
             return creep.assign(new taskHarvest(target));
         } else {
             creep.log("no harvestable sources found!");
-            return null;
+            return "";
         }
     }
 
@@ -85,7 +85,7 @@ export class roleWorker extends Role {
                 return this.harvest(creep);
             } else {
                 // creep.log("no containers found and harvesting disabled!");
-                return null;
+                return "";
             }
         }
     }

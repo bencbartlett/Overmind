@@ -42,7 +42,7 @@ export class roleSupplier extends Role {
             (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
             (s.structureType == STRUCTURE_STORAGE && s.store[RESOURCE_ENERGY] > buffer),
         }) as Storage | Container;
-        if (!target) {
+        if (!target && creep.room.terminal) {
             target = creep.room.terminal; // energy should be sent to room if it is out
         }
         if (target) { // assign recharge task to creep
@@ -51,7 +51,7 @@ export class roleSupplier extends Role {
             if (!this.settings.consoleQuiet && this.settings.notifyOnNoRechargeTargets) {
                 creep.log('no recharge targets!');
             }
-            return null;
+            return "";
         }
     }
 
@@ -100,7 +100,7 @@ export class roleSupplier extends Role {
             // execute task
             this.executeTask(creep);
         } else {
-            if (creep.carry.energy < creep.carry.carryCapacity) {
+            if (creep.carry.energy < creep.carryCapacity) {
                 return this.recharge(creep); // recharge once there's nothing to do
             } else { // sit and wait at flag
                 let idleFlag = Game.flags[creep.memory.data.idleFlag];

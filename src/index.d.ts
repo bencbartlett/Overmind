@@ -43,7 +43,7 @@ interface ITask {
     name: string;
     creepName: string;
     targetRef: string;
-    targetCoords: { x: number; y: number; roomName: string; };
+    targetCoords: { x: number | null; y: number | null; roomName: string; };
     maxPerTarget: number;
     maxPerTask: number;
     targetRange: number;
@@ -59,6 +59,25 @@ interface ITask {
     move(): number;
     step(): number | void;
     work(): number;
+}
+
+interface IRole {
+    name: string;
+    settings: any;
+    roleRequirements: Function;
+    bodyPatternCost: number;
+    bodyCost(bodyArray: string[]): number;
+    generateBody(availableEnergy: number, maxRepeats?: number): string[];
+    generateLargestCreep(spawn: Spawn, {assignment, workRoom, patternRepetitionLimit}: creepCall): protoCreep;
+    onCreate(pCreep: protoCreep): protoCreep;
+    create(spawn: StructureSpawn, {assignment, workRoom, patternRepetitionLimit}: creepCall): protoCreep;
+    requestTask(creep: Creep): string;
+    recharge(creep: Creep): string;
+    newTask(creep: Creep): void;
+    executeTask(creep: Creep): number | void;
+    renewIfNeeded(creep: Creep): string;
+    onRun(creep: Creep): any;
+    run(creep: Creep): any;
 }
 
 interface RoomObject {
@@ -157,10 +176,10 @@ interface StructureTower {
 }
 
 interface Flag {
-    assign(roomName: string): number;
-    unassign(): number;
+    assign(roomName: string): void;
+    unassign(): void;
     assignedRoom: Room;
-    setMineral(mineralType: string): number;
+    setMineral(mineralType: string): void;
     IO: string;
     category: any;
     type: any;
@@ -170,7 +189,7 @@ interface Flag {
     getRequiredCreepAmounts(role: string): number;
     requiredCreepAmounts: { [role: string]: number };
     needsAdditional(role: string): boolean;
-    requestCreepIfNeeded(brain: any, role: string, info: creepCall): protoCreep;
+    requestCreepIfNeeded(brain: any, role: IRole, info: creepCall): protoCreep | void;
     pathLengthToAssignedRoomStorage: number;
     haulingNeeded: boolean;
 }

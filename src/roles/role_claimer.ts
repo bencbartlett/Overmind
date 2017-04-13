@@ -22,7 +22,7 @@ export class roleClaimer extends Role {
             if (creep.workRoom && creep.workRoom.controller && !creep.workRoom.signedByMe) {
                 creep.assign(new taskSignController(creep.workRoom.controller));
             } else {
-                creep.assign(new taskClaim(creep.assignment.room.controller));
+                creep.assign(new taskClaim(creep.assignment.room.controller!));
             }
         }
     }

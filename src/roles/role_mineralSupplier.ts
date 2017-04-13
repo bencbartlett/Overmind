@@ -17,12 +17,13 @@ export class roleMineralSupplier extends Role {
     }
 
     collectForLab(creep: Creep, lab: Lab) {
-        if (creep.workRoom.terminal.store[lab.assignedMineralType] == 0) {
-            return OK;
-        } else {
-            var withdrawThis = new taskWithdraw(creep.workRoom.terminal);
+        let term = creep.workRoom.terminal;
+        if (term && term.store[lab.assignedMineralType] > 0) {
+            var withdrawThis = new taskWithdraw(term);
             withdrawThis.data.resourceType = lab.assignedMineralType;
             return creep.assign(withdrawThis);
+        } else {
+            return "";
         }
     }
 

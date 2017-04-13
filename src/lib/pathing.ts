@@ -1,11 +1,11 @@
 export var pathing = {
     findPathLengthIncludingRoads: function (startPos: RoomPosition, endPos: RoomPosition) {
         let ret = PathFinder.search(
-            startPos, {pos: endPos, range: 2},
-            {
+            startPos, [{pos: endPos, range: 2}],
+            [{
                 plainCost: 2,
                 swampCost: 10,
-                roomCallback: function (roomName) {
+                roomCallback: function (roomName: string) {
                     let room = Game.rooms[roomName];
                     if (!room) return;
                     let costs = new PathFinder.CostMatrix;
@@ -22,7 +22,7 @@ export var pathing = {
                     });
                     return costs;
                 },
-            }
+            }]
         );
         let path = ret.path;
         return path.length + 1; // offset for range

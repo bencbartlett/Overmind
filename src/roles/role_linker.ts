@@ -32,20 +32,21 @@ export class roleLinker extends Role {
 
     collect(creep: Creep) {
         var target: Link | StructureStorage | Terminal;
-        if (creep.workRoom.storage.links[0].energy > 0) {
+        let storage = creep.workRoom.storage;
+        if (!storage) {
+            return "";
+        }
+        if (storage.links[0].energy > 0) {
             // try targeting non-empty input links
-            target = creep.workRoom.storage.links[0]
-        } else if (_.sum(creep.workRoom.storage.store) > creep.workRoom.brain.settings.unloadStorageBuffer) {
+            return creep.assign(new taskRecharge(storage.links[0]));
+        } else if (_.sum(storage.store) > creep.workRoom.brain.settings.unloadStorageBuffer) {
             // else try unloading from storage into terminal if there is too much energy
-            target = creep.workRoom.storage;
+            return creep.assign(new taskRecharge(storage));
         } else if (creep.workRoom.terminal && creep.workRoom.terminal.store[RESOURCE_ENERGY] >
                                               creep.workRoom.terminal.brain.settings.resourceAmounts[RESOURCE_ENERGY]
                                               + creep.workRoom.terminal.brain.settings.excessTransferAmount) {
             // if there is not too much energy in storage and there is too much in terminal, collect from terminal
-            target = creep.workRoom.terminal;
-        }
-        if (target) {
-            return creep.assign(new taskRecharge(target));
+            return creep.assign(new taskRecharge(creep.workRoom.terminal));
         }
     }
 
@@ -53,14 +54,14 @@ export class roleLinker extends Role {
         let storage = creep.workRoom.storage;
         var target;
         // deposit to storage
-        if (_.sum(storage.store) < creep.workRoom.brain.settings.unloadStorageBuffer) {
+        if (storage &&_.sum(storage.store) < creep.workRoom.brain.settings.unloadStorageBuffer) {
             target = storage;
         }
         // overwrite and deposit to terminal if not enough energy in terminal and sufficient energy in storage
         let terminal = creep.workRoom.terminal;
         if (terminal &&
             terminal.store[RESOURCE_ENERGY] < terminal.brain.settings.resourceAmounts[RESOURCE_ENERGY] &&
-            storage.store[RESOURCE_ENERGY] > creep.workRoom.brain.settings.storageBuffer[this.name]) {
+            storage && storage.store[RESOURCE_ENERGY] > creep.workRoom.brain.settings.storageBuffer[this.name]) {
             target = terminal;
         }
         if (target) {

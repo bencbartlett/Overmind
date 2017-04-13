@@ -5,7 +5,7 @@ export abstract class Task implements ITask {
     name: string;
     creepName: string;
     targetRef: string;
-    targetCoords: { x: number; y: number; roomName: string; };
+    targetCoords: { x: number | null; y: number | null; roomName: string; };
     maxPerTarget: number;
     maxPerTask: number;
     targetRange: number;
@@ -15,12 +15,12 @@ export abstract class Task implements ITask {
     constructor(taskName: string, target: targetType) {
         // Parameters for the task
         this.name = taskName; // name of task
-        this.creepName = null; // name of creep assigned to task
-        this.targetRef = null; // id or name of target task is aimed at
+        this.creepName = ""; // name of creep assigned to task
+        this.targetRef = ""; // id or name of target task is aimed at
         this.targetCoords = { // target's position, which is set on assignment and used for moving purposes
             x: null,
             y: null,
-            roomName: null,
+            roomName: "",
         };
         this.maxPerTarget = Infinity; // maximum number of creeps that can be assigned to a given target
         this.maxPerTask = Infinity; // maximum number of creeps that can be doing this task at once
@@ -33,6 +33,8 @@ export abstract class Task implements ITask {
         if (target) {
             this.target = target;
             this.targetPos = target.pos;
+        } else {
+            console.log("Task.ts initialization error: target is null!");
         }
     }
 
@@ -48,22 +50,17 @@ export abstract class Task implements ITask {
     // Getter/setter for task.target
     get target(): RoomObject {
         let tar = deref(this.targetRef);
-        if (tar) {
-            return tar;
-        } else {
-            if (this.creep) {
-                this.creep.task = null;
-            }
+        if (!tar) {
+            this.remove();
         }
+        return tar;
     }
 
     set target(target: RoomObject) {
         if (target) {
             this.targetRef = target.ref;
         } else {
-            if (this.creep) {
-                this.creep.task = null;
-            }
+            this.remove();
         }
     }
 
@@ -73,13 +70,20 @@ export abstract class Task implements ITask {
         if (this.target) {
             this.targetPos = this.target.pos;
         }
-        return new RoomPosition(this.targetCoords.x, this.targetCoords.y, this.targetCoords.roomName);
+        return new RoomPosition(this.targetCoords.x!, this.targetCoords.y!, this.targetCoords.roomName);
     }
 
     set targetPos(targetPosition) {
         this.targetCoords.x = targetPosition.x;
         this.targetCoords.y = targetPosition.y;
         this.targetCoords.roomName = targetPosition.roomName;
+    }
+
+    // Remove the task (in case the target disappeared, usually)
+    remove(): void {
+        if (this.creep) {
+            this.creep.task = null;
+        }
     }
 
     // Assign the task to a creep
@@ -113,15 +117,6 @@ export abstract class Task implements ITask {
     abstract isValidTarget(): boolean;
 
     move(): number {
-        // var options = {
-        //     visualizePathStyle: {
-        //         fill: 'transparent',
-        //         stroke: this.moveColor,
-        //         lineStyle: 'dashed',
-        //         strokeWidth: .15,
-        //         opacity: .3
-        //     }
-        // };
         var options = Object.assign({},
             this.data.travelToOptions,
             {range: this.targetRange});

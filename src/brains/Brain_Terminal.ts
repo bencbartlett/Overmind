@@ -11,7 +11,7 @@ export class TerminalBrain {
     constructor(roomName: string) {
         this.name = roomName;
         this.room = Game.rooms[roomName];
-        this.terminal = Game.rooms[roomName].terminal;
+        this.terminal = Game.rooms[roomName].terminal!;
         this.settings = terminalSettings;
         this.settings.excessTransferAmount = 10000;
     }
@@ -21,9 +21,12 @@ export class TerminalBrain {
     }
 
     effectivePricePerUnit(order: Order) {
-        let transferCost = Game.market.calcTransactionCost(1000, this.room.name, order.roomName) / 1000;
-        // let expense = order.price + transferCost * this.settings.avgPrice[RESOURCE_ENERGY];
-        return order.price + transferCost;
+        if (order.roomName) {
+            let transferCost = Game.market.calcTransactionCost(1000, this.room.name, order.roomName) / 1000;
+            return order.price + transferCost;
+        } else {
+            return Infinity;
+        }
     }
 
     calculateShortages() {
@@ -45,35 +48,32 @@ export class TerminalBrain {
 
     buyShortages(): void { // buy needed minerals from the market for the best price, including energy
         var toBuy = this.calculateShortages();
-        if (toBuy == {}) { // nothing to buy
-            return null;
-        }
-        for (let mineral in toBuy) {
-            if (mineral == RESOURCE_ENERGY) {
-                continue;
-            }
-            let relevantOrders = Game.market.getAllOrders(order => order.type == ORDER_SELL &&
-                                                                   order.resourceType == mineral &&
-                                                                   order.remainingAmount > 100);
-            let bestOrder = null;
-            let bestCost = Infinity;
-            for (let order of relevantOrders) {
-                let cost = this.effectivePricePerUnit(order);
-                if (cost < bestCost) {
-                    bestOrder = order;
-                    bestCost = cost;
-                    // console.log(mineral, "from", bestOrder.roomName, "for", bestOrder.price, "credits/unit and",
-                    //             Game.market.calcTransactionCost(1000, this.room.name, bestOrder.roomName) / 1000,
-                    //             "energy/unit");
+        if (toBuy != {}) { // nothing to buy
+            for (let mineral in toBuy!) {
+                if (mineral == RESOURCE_ENERGY) {
+                    continue;
                 }
-            }
-            if (bestOrder && this.effectivePricePerUnit(bestOrder) < this.settings.maxBuyPrice[mineral]) {
-                let amount = Math.min(bestOrder.remainingAmount, toBuy[mineral]);
-                let response = Game.market.deal(bestOrder.id, amount, this.room.name);
-                console.log(this.name + ": bought", amount, mineral, "from", bestOrder.roomName,
-                            "for", bestOrder.price * amount, "credits and",
-                            Game.market.calcTransactionCost(amount, this.room.name, bestOrder.roomName), "energy",
-                            "reponse:", response);
+                let relevantOrders = Game.market.getAllOrders(order => order.type == ORDER_SELL &&
+                                                                       order.resourceType == mineral &&
+                                                                       order.remainingAmount > 100);
+                let bestOrder = null;
+                let bestCost = Infinity;
+                for (let order of relevantOrders) {
+                    let cost = this.effectivePricePerUnit(order);
+                    if (cost < bestCost) {
+                        bestOrder = order;
+                        bestCost = cost;
+                    }
+                }
+                if (bestOrder && bestOrder.roomName &&
+                    this.effectivePricePerUnit(bestOrder) < this.settings.maxBuyPrice[mineral]) {
+                    let amount = Math.min(bestOrder.remainingAmount, toBuy![mineral]);
+                    let response = Game.market.deal(bestOrder.id, amount, this.room.name);
+                    console.log(this.name + ": bought", amount, mineral, "from", bestOrder.roomName,
+                                "for", bestOrder.price * amount, "credits and",
+                                Game.market.calcTransactionCost(amount, this.room.name, bestOrder.roomName), "energy",
+                                "reponse:", response);
+                }
             }
         }
     }
@@ -81,7 +81,7 @@ export class TerminalBrain {
     sendExtraEnergy() {
         // calculate best room to send energy to
         var minCost = Infinity;
-        var minRoom = undefined;
+        var minRoom = null;
         for (let name in Game.rooms) {
             let room = Game.rooms[name];
             if (room.my && room.terminal &&
@@ -95,7 +95,7 @@ export class TerminalBrain {
             }
         }
         // if you have sufficient energy in terminal
-        if (this.terminal.store[RESOURCE_ENERGY] > this.settings.excessTransferAmount + minCost) {
+        if (minRoom && this.terminal.store[RESOURCE_ENERGY] > this.settings.excessTransferAmount + minCost) {
             let res = this.terminal.send(RESOURCE_ENERGY, this.settings.excessTransferAmount, minRoom,
                                          "Excess energy transfer");
             this.log(`Sent ${this.settings.excessTransferAmount} excess energy to ${minRoom}. Response: ${res}.`);
@@ -109,7 +109,7 @@ export class TerminalBrain {
         }
         // send excess energy if terminal and storage both have too much energy
         if (this.terminal.store[RESOURCE_ENERGY] >
-            this.settings.resourceAmounts[RESOURCE_ENERGY] + this.settings.excessTransferAmount &&
+            this.settings.resourceAmounts[RESOURCE_ENERGY] + this.settings.excessTransferAmount && this.room.storage &&
             this.room.storage.store[RESOURCE_ENERGY] > this.room.brain.settings.unloadStorageBuffer) {
             this.sendExtraEnergy();
         }

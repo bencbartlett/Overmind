@@ -5,8 +5,8 @@ import {RoomBrain} from "../brains/Brain_Room";
 export var industryFlagActions = {
     remoteMine: function (flag: Flag, brain: RoomBrain) { // remotely setup and mine an outpost
         function handleRemoteMiners(flag: Flag, brain: RoomBrain) {
-            var role = 'miner';
-            flag.requiredCreepAmounts[role] = brain.settings.minersPerSource;
+            var role = new roleMiner();
+            flag.requiredCreepAmounts[role.name] = brain.settings.minersPerSource;
             return flag.requestCreepIfNeeded(brain, role, {
                 assignment: flag,
                 workRoom: flag.roomName,
@@ -42,5 +42,6 @@ export var industryFlagActions = {
 };
 
 // const profiler = require('screeps-profiler');
-import profiler = require('../lib/screeps-profiler'); profiler.registerObject(industryFlagActions, 'industryFlagActions');
+import profiler = require('../lib/screeps-profiler');
+import {roleMiner} from "../roles/role_miner"; profiler.registerObject(industryFlagActions, 'industryFlagActions');
 

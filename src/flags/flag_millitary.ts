@@ -1,18 +1,21 @@
 // var roles = require('roles.js');
-
+import profiler = require('../lib/screeps-profiler');
+import {roleGuard} from "../roles/role_guard";
+import {roleDestroyer} from "../roles/role_destroyer";
+import {roleSieger} from "../roles/role_sieger";
 import {RoomBrain} from "../brains/Brain_Room";
 
 export var millitaryFlagActions = {
     guard: function (flag: Flag, brain: RoomBrain) {
         function handleGuards(flag: Flag, brain: RoomBrain) {
-            var role = 'guard';
+            var role = new roleGuard();
             if (flag.memory.amount) {
-                flag.requiredCreepAmounts[role] = flag.memory.amount;
+                flag.requiredCreepAmounts[role.name] = flag.memory.amount;
             } else {
                 if (flag.memory.alwaysUp || !flag.room || flag.room.hostiles.length > 0) { // spawn guard if hostiles or no vision
-                    flag.requiredCreepAmounts[role] = 1;
+                    flag.requiredCreepAmounts[role.name] = 1;
                 } else {
-                    flag.requiredCreepAmounts[role] = 0;
+                    flag.requiredCreepAmounts[role.name] = 0;
                 }
             }
             let maxSize = 9;
@@ -31,11 +34,11 @@ export var millitaryFlagActions = {
 
     destroyer: function (flag: Flag, brain: RoomBrain) {
         function handleDestroyers(flag: Flag, brain: RoomBrain) {
-            var role = 'destroyer';
+            var role = new roleDestroyer();
             if (flag.memory.amount) {
-                flag.requiredCreepAmounts[role] = flag.memory.amount;
+                flag.requiredCreepAmounts[role.name] = flag.memory.amount;
             } else {
-                flag.requiredCreepAmounts[role] = 1;
+                flag.requiredCreepAmounts[role.name] = 1;
             }
             let maxSize = Infinity;
             if (flag.memory.maxSize) {
@@ -55,11 +58,11 @@ export var millitaryFlagActions = {
 
     sieger: function (flag: Flag, brain: RoomBrain) {
         function handleSiegers(flag: Flag, brain: RoomBrain) {
-            var role = 'sieger';
+            var role = new roleSieger();
             if (flag.memory.amount) {
-                flag.requiredCreepAmounts[role] = flag.memory.amount;
+                flag.requiredCreepAmounts[role.name] = flag.memory.amount;
             } else {
-                flag.requiredCreepAmounts[role] = 1;
+                flag.requiredCreepAmounts[role.name] = 1;
             }
             let maxSize = Infinity;
             if (flag.memory.maxSize) {
@@ -76,5 +79,4 @@ export var millitaryFlagActions = {
     }
 };
 
-// const profiler = require('screeps-profiler');
-import profiler = require('../lib/screeps-profiler'); profiler.registerObject(millitaryFlagActions, 'millitaryFlagActions');
+profiler.registerObject(millitaryFlagActions, 'millitaryFlagActions');
