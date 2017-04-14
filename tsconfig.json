@@ -6,7 +6,7 @@
     "noResolve": false,
     "noImplicitAny": true,
     "experimentalDecorators": true,
-    "strictNullChecks": true,
+    "strictNullChecks": false,
     "noUnusedParameters": true,
     "noUnusedLocals": false,
     "suppressExcessPropertyErrors": true,

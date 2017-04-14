@@ -70,14 +70,7 @@ export class roleMiner extends Role {
         if (creep.memory.data.replaceAt == 0) {
             creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive) + 20;
         }
-        // 2: find any nearby damaged containers and repair them
-        var damagedContainers = creep.pos.findInRange(FIND_STRUCTURES, 3, {
-            filter: (s: Structure) => s.structureType == STRUCTURE_CONTAINER && s.hits < s.hitsMax,
-        }) as Container[];
-        if (damagedContainers.length > 0) {
-            return this.repairContainer(creep, damagedContainers[0]);
-        }
-        // 3: build construction sites
+        // 2: build construction sites
         if (this.settings.allowBuild) {
             // miners can only build their own containers
             var constructionSites = creep.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 2, {
@@ -86,6 +79,18 @@ export class roleMiner extends Role {
             if (constructionSites.length > 0) {
                 return this.buildSite(creep, creep.pos.findClosestByRange(constructionSites));
             }
+        }
+        // 3: make container site if you need to
+        let nearbyContainers = creep.pos.findInRange(FIND_STRUCTURES, 3, {
+            filter: (s: Structure) => s.structureType == STRUCTURE_CONTAINER
+        }) as Container[];
+        if (nearbyContainers.length == 0 && !creep.room.my) {
+            return creep.room.createConstructionSite(creep.pos, STRUCTURE_CONTAINER);
+        }
+        // 3: find any nearby damaged containers and repair them
+        let damagedContainers = _.filter(nearbyContainers, (s: Container) => s.hits < s.hitsMax) as Container[];
+        if (damagedContainers.length > 0) {
+            return this.repairContainer(creep, damagedContainers[0]);
         }
         // 4: deposit into link or container
         if (creep.assignment.linked) {

@@ -115,7 +115,7 @@ export abstract class Role implements IRole {
             name: creepName, // name of the creep
             memory: { // memory to initialize with
                 role: this.name, // role of the creep
-                task: null, // task the creep is performing
+                task: <Task> null, // task the creep is performing
                 assignment: assignment.ref, // ref of object/room(use controller) the creep is assigned to
                 workRoom: workRoom, // name of the room the creep is assigned to
                 data: { // rarely-changed data about the creep
