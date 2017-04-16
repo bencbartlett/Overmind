@@ -486,7 +486,7 @@ export class RoomBrain {
                                       - this.settings.storageBuffer['upgrader'], 0);
             var upgraderSize = 1 + Math.floor(amountOver / 20000);
             if (this.room.controller!.level == 8) {
-                upgraderSize = Math.min(upgraderSize, 5); // don't go above 15 work parts at RCL 8
+                upgraderSize = Math.min(upgraderSize, 3); // don't go above 15 work parts at RCL 8
             }
             let role = new roleUpgrader();
             var numUpgradersNeeded = Math.ceil(upgraderSize * role.bodyPatternCost /
@@ -568,6 +568,7 @@ export class RoomBrain {
                     let creep = minerBehavior.create(this.spawn, {
                         assignment: source,
                         workRoom: flagRoom.name,
+                        patternRepetitionLimit: 3
                     });
                     creep.memory.data.renewMe = true;
                     return creep;
@@ -715,7 +716,7 @@ export class RoomBrain {
 
     // List of things executed each tick; only run for rooms that are owned
     run() {
-        this.handleSafeMode();
+        // this.handleSafeMode();
         this.handleSpawnOperations(); // build creeps as needed
         this.handleTerminalOperations(); // repleneish needed resources
     }

@@ -16,6 +16,9 @@ export class taskRecharge extends Task {
 
     isValidTarget() {
         var target = this.target;
+        if (!target) {
+            return false;
+        }
         if (target instanceof StructureLink) {
             return target.energy > 0;
         } else {
