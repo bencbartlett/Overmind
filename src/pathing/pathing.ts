@@ -27,7 +27,28 @@ export var pathing = {
         let path = ret.path;
         return path.length + 1; // offset for range
     },
+
+    cachedPathLength: function (arg1: RoomPosition, arg2: RoomPosition) {
+        let pos1, pos2: RoomPosition;
+        if (arg1.name < arg2.name) { // alphabetize since path lengths are the same either direction
+            pos1 = arg1;
+            pos2 = arg2;
+        } else {
+            pos1 = arg2;
+            pos2 = arg1;
+        }
+        if (!Memory.pathLengths) {
+            Memory.pathLengths = {};
+        }
+        if (!Memory.pathLengths[pos1.name]) {
+            Memory.pathLengths[pos1.name] = {};
+        }
+        if (!Memory.pathLengths[pos1.name][pos2.name]) {
+            Memory.pathLengths[pos1.name][pos2.name] = this.findPathLengthIncludingRoads(pos1, pos2);
+        }
+        return Memory.pathLengths[pos1.name][pos2.name];
+    },
 };
 
-import profiler = require('./screeps-profiler'); profiler.registerObject(pathing, 'pathing');
+import profiler = require('../lib/screeps-profiler'); profiler.registerObject(pathing, 'pathing');
 

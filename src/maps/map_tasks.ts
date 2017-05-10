@@ -70,7 +70,7 @@ export function tasks(taskName: string, target: RoomObject): Task | void {
             return new taskRecharge(target as StructureStorage | Container | Terminal);
         case 'repair':
             return new taskRepair(target as Structure);
-        case 'reserve':
+        case 'colony':
             return new taskReserve(target as Controller);
         case 'signController':
             return new taskSignController(target as Controller);

@@ -29,23 +29,13 @@ export class roleUpgrader extends Role {
             buffer = 0;
         }
         var target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
-            // filter: function (s: Container | Storage | Link) {
-            //     let s1 = s as Container | Storage;
-            //     if ((s1.structureType == STRUCTURE_CONTAINER && s1.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
-            //         (s1.structureType == STRUCTURE_STORAGE && s1.store[RESOURCE_ENERGY] > buffer)) {
-            //         return true;
-            //     } else {
-            //         let s2 = s as Link;
-            //         return (s2.structureType == STRUCTURE_LINK && s2.energy >= Math.min(creep.carryCapacity, 400));
-            //     }
-            // }
             filter: function (s: Container | Storage | Link) {
                 if (s instanceof StructureStorage){
                     return s.store[RESOURCE_ENERGY] > creep.carryCapacity;
                 } else if (s instanceof StructureContainer) {
                     return s.store[RESOURCE_ENERGY] > buffer;
                 } else if (s instanceof StructureLink) {
-                    return (s.energy >= Math.min(creep.carryCapacity, 400));
+                    return (s.energy >= 0 && s.pos.getRangeTo(s.room.controller) <= 5 && s.refillThis);
                 }
             },
         }) as (Container | Storage | Link);

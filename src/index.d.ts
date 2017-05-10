@@ -1,16 +1,41 @@
-// import {OM} from "../src/Overmind";
-// import {Task} from "../src/Task";
+declare var global: any;
+declare var Overmind: any;
+declare var flagCodes: { [category: string]: flagCat };
 
-interface Memory {
-    uuid: number;
-    log: any;
+interface Game {
+    cache: {
+        assignments: { [ref: string]: { [roleName: string]: string[] } };
+        targets: { [ref: string]: string[] };
+        structures: { [roomName: string]: { [structureType: string]: Structure[] } };
+        constructionSites: { [roomName: string]: ConstructionSite[] };
+    }
 }
 
-// declare function require(path: string): any;
+interface IColony {
+    name: string;
+    room: Room;
+    rooms: { [roomName: string]: Room };
+    hatchery: any;
+    creeps: Creep[];
+}
 
-declare var global: any;
+interface flagActions {
+    [actionType: string]: Function;
+}
 
-declare var Overmind: any;
+interface flagSubCat {
+    color: number;
+    secondaryColor: number;
+    filter: Function;
+    action: Function | null;
+}
+
+interface flagCat {
+    color: number;
+    filter: Function;
+    action: flagActions | null;
+    [subcat: string]: any;
+}
 
 interface protoCreep {
     body: string[];
@@ -30,6 +55,7 @@ interface Creep {
     getBodyparts(partType: string): number;
     needsReplacing: boolean;
     workRoom: Room;
+    colony: IColony;
     lifetime: number;
     assignment: RoomObject;
     task: any;
@@ -56,6 +82,7 @@ interface ITask {
     onAssignment(): void;
     isValidTask(): boolean;
     isValidTarget(): boolean;
+    isValid(): boolean;
     move(): number;
     step(): number | void;
     work(): number;
@@ -80,6 +107,42 @@ interface IRole {
     run(creep: Creep): any;
 }
 
+type Sink = StructureSpawn | StructureExtension | StructureLab | StructureTower | StructurePowerSpawn;
+
+interface Room {
+    brain: any;
+    my: boolean;
+    reservedByMe: boolean;
+    signedByMe: boolean;
+    creeps: Creep[];
+    // assignedCreeps: Creep[];
+    tasks: any[];
+    taskTargets: RoomObject[];
+    hostiles: Creep[];
+    hostileStructures: Structure[];
+    flags: Flag[];
+    assignedFlags: Flag[];
+    remainingConstructionProgress: number;
+    fullestContainer(): StructureContainer;
+    // Preprocessed structures
+    structures: { [structureType: string]: Structure[] };
+    spawns: Spawn[];
+    extensions: Extension[];
+    containers: StructureContainer[];
+    storageUnits: (StructureContainer | StructureStorage)[];
+    towers: StructureTower[];
+    labs: StructureLab[];
+    sources: Source[];
+    sinks: Sink[];
+    repairables: Structure[];
+    constructionSites: ConstructionSite[];
+    structureSites: ConstructionSite[];
+    roadSites: ConstructionSite[];
+    barriers: (StructureWall | StructureRampart)[]
+    remoteContainers: StructureContainer[];
+    run(): void;
+}
+
 interface RoomObject {
     log(message: string): void;
     inSameRoomAs(otherObject: RoomObject): boolean;
@@ -99,42 +162,9 @@ interface RoomObject {
 }
 
 interface RoomPosition {
+    name: string;
     flagged: boolean;
     flaggedWith(filter: Function): boolean;
-}
-
-type Sink = StructureSpawn | StructureExtension | StructureLab | StructureTower | StructurePowerSpawn;
-
-interface Room {
-    brain: any;
-    my: boolean;
-    reservedByMe: boolean;
-    signedByMe: boolean;
-    spawns: StructureSpawn[];
-    creeps: Creep[];
-    // assignedCreeps: Creep[];
-    tasks: any[];
-    taskTargets: RoomObject[];
-    hostiles: Creep[];
-    hostileStructures: Structure[];
-    flags: Flag[];
-    assignedFlags: Flag[];
-    remainingConstructionProgress: number;
-    fullestContainer(): StructureContainer;
-    findCached(findKey: string, findFunction: Function, reCache?: boolean): RoomObject[];
-    containers: StructureContainer[];
-    storageUnits: (StructureContainer | StructureStorage)[];
-    towers: StructureTower[];
-    labs: StructureLab[];
-    sources: Source[];
-    sinks: Sink[];
-    repairables: Structure[];
-    constructionSites: ConstructionSite[];
-    structureSites: ConstructionSite[];
-    roadSites: ConstructionSite[];
-    barriers: (StructureWall | StructureRampart)[]
-    remoteContainers: StructureContainer[];
-    run(): void;
 }
 
 interface RoomVisual {

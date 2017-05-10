@@ -1,3 +1,9 @@
+Object.defineProperty(RoomPosition.prototype, 'name', { // identifier for the room position, used in caching
+    get: function () {
+        return this.roomName + "x" + this.x + "y" + this.y;
+    }
+});
+
 Object.defineProperty(RoomPosition.prototype, 'flagged', { // if the object has a flag
     get: function () {
         return this.lookFor(LOOK_FLAGS).length > 0;

@@ -19,17 +19,18 @@
 'use strict';
 
 import OM from "./Overmind";
+import {flagCodesMap} from "./maps/map_flag_codes";
+
 import profiler = require('./lib/screeps-profiler');
 
-declare var Overmind: OM;
-
-
 import "./require";
-import {preprocessing} from "./preprocessing";
+import {Preprocessing} from "./Preprocessing";
 import {dataLogger} from './logging/data_logger';
 import {visuals} from './visuals/visuals';
 
-// import * as profiler from "./lib/screeps-profiler.js";
+declare var Overmind: OM;
+declare var flagCodes: { [category: string]: flagCat };
+
 // Enable screeps profiler
 // profiler.enable();
 
@@ -52,7 +53,10 @@ export function loop() {
 
     // Setup =======================================================================================================
     // Preprocessing
+    let preprocessing = new Preprocessing();
     preprocessing.run();
+    // Create global flagCodes reference (avoids circular imports)
+    global.flagCodes = flagCodesMap;
     // Initialize Overmind object
     global.Overmind = new OM;
     Overmind.initializeAllBrains();

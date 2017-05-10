@@ -5,7 +5,7 @@ import "./globals";
 // import "./utilities";
 import "./settings/settings_user";
 // Libraries
-import "./lib/pathing"; // Used for calculating road distances to prioritize assigned operations
+import "./pathing/pathing"; // Used for calculating road distances to prioritize assigned operations
 import "./lib/Traveler"; // BonzAI's excellent moveTo() replacement
 // Prototypes
 import "./prototypes/prototypes_Creep";

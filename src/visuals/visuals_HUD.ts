@@ -1,5 +1,3 @@
-
-import {flagCodes} from "../maps/map_flag_codes";
 var fontSize;
 var style = {color: '#ffffff', align: 'left', opacity: 0.5, font: "1.0"};
 var fontScale = 1.3;
@@ -104,7 +102,7 @@ export var HUD = {
         // Display room information for occupied rooms
         let text = [];
         text.push('Occupied rooms:');
-        var reserveFlags = _.filter(Game.flags, flagCodes.territory.reserve.filter);
+        var reserveFlags = _.filter(Game.flags, flagCodes.territory.colony.filter);
         for (let flag of reserveFlags) {
             var icon = "🏳";
             if (!flag.room) {
