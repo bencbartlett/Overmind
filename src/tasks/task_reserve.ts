@@ -5,7 +5,7 @@ export class taskReserve extends Task {
     target: targetType;
 
     constructor(target: targetType) {
-        super('reserve', target);
+        super('colony', target);
         // Settings
         this.moveColor = 'purple';
     }

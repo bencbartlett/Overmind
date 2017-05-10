@@ -1,6 +1,6 @@
 // Room brain: processes tasks from room and requests from worker body
 // import {tasks} from '../maps/map_tasks';
-import {flagCodes} from '../maps/map_flag_codes';
+
 import {Task} from "../tasks/Task";
 import profiler = require('../lib/screeps-profiler');
 import {taskPickup} from "../tasks/task_pickup";
@@ -11,7 +11,6 @@ import {taskBuild} from "../tasks/task_build";
 import {taskFortify} from "../tasks/task_fortify";
 import {taskUpgrade} from "../tasks/task_upgrade";
 import {roleWorker} from "../roles/role_worker";
-import {roleHealer} from "../roles/role_healer";
 import {roleHauler} from "../roles/role_hauler";
 import {roleMiner} from "../roles/role_miner";
 import {roleLinker} from "../roles/role_linker";
@@ -40,8 +39,8 @@ export class RoomBrain {
         // Settings shared across all rooms
         this.settings = {
             fortifyLevel: 1e+6, // fortify wall HP
-            workerPatternRepetitionLimit: 10, // maximum number of body repetitions for workers
-            maxWorkersPerRoom: 2, // maximum number of workers to spawn per room based on number of required jobs
+            workerPatternRepetitionLimit: 30, // maximum number of body repetitions for workers
+            maxWorkersPerRoom: 1, // maximum number of workers to spawn per room based on number of required jobs
             incubationWorkersToSend: 3, // number of big workers to send to incubate a room
             supplierPatternRepetitionLimit: 4, // maximum number of body repetitions for suppliers
             haulerPatternRepetitionLimit: 7, // maximum number of body repetitions for haulers
@@ -54,7 +53,7 @@ export class RoomBrain {
                 default: 0,
             },
             unloadStorageBuffer: 750000, // start sending energy to other rooms past this amount
-            reserveBuffer: 3000, // reserve rooms to this amount
+            reserveBuffer: 3000, // colony rooms to this amount
             maxAssistLifetimePercentage: 0.1 // assist in spawn operations up to (creep.lifetime * this amount) distance
         };
         if (this.room.controller) {
@@ -74,7 +73,7 @@ export class RoomBrain {
                 upgrader: 5000,
                 default: 0,
             },
-            reserveBuffer: 3000 // reserve rooms to this amount
+            reserveBuffer: 3000 // colony rooms to this amount
         };
         if (this.incubating) {
             this.settings = this.incubatingSettings; // overwrite settings for incubating rooms
@@ -359,9 +358,8 @@ export class RoomBrain {
 
     handleMiners(): protoCreep | void {
         if (!this.incubating) {
-            var sources = this.room.sources; // don't use ACTIVE_SOURCES; need to always be handled
+            var sources = this.room.sources;
             for (let source of sources) {
-                // TODO: calculation of number of miners to assign to each source based on max size of creep
                 // Check enough miners are supplied
                 let assignedMiners = source.getAssignedCreepAmounts('miner');
                 if (assignedMiners < this.settings.minersPerSource) {
@@ -379,9 +377,6 @@ export class RoomBrain {
         // Check enough haulers are supplied
         if (this.room.storage) { // haulers are only built once a room has storage
             // find all unlinked sources
-            // var sources = this.room.find(FIND_SOURCES, {
-            //     filter: source => source.linked == false || this.room.storage.linked == false
-            // });
             var sources = _.filter(this.room.sources, s => s.linked == false || this.room.storage!.linked == false);
             for (let source of sources) {
                 // Check enough haulers are supplied if applicable
@@ -601,7 +596,7 @@ export class RoomBrain {
             _.filter(flags, flagCodes.vision.stationary.filter),
             _.filter(flags, flagCodes.territory.claimAndIncubate.filter),
             _.filter(flags, flagCodes.millitary.guard.filter),
-            _.filter(flags, flagCodes.territory.reserve.filter),
+            _.filter(flags, flagCodes.territory.colony.filter),
 
             // _.filter(flags, flagCodes.rally.healPoint.filter),
             _.filter(flags, flagCodes.millitary.destroyer.filter),

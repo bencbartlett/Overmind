@@ -1,8 +1,7 @@
 // Flag prototypes
 
-import {flagCat, flagCodes, flagSubCat} from '../maps/map_flag_codes';
 import {validResources} from "../maps/map_resources";
-import {pathing} from "../lib/pathing";
+import {pathing} from "../pathing/pathing";
 import {Role} from "../roles/Role";
 
 // Flag assignment =====================================================================================================
@@ -89,8 +88,8 @@ Flag.prototype.getAssignedCreepAmounts = function (role) {
 
 Object.defineProperty(Flag.prototype, 'assignedCreepAmounts', {
     get: function () {
-        if (Memory.preprocessing.assignments[this.ref]) {
-            let creepNamesByRole = Memory.preprocessing.assignments[this.ref];
+        if (Game.cache.assignments[this.ref]) {
+            let creepNamesByRole = Game.cache.assignments[this.ref];
             for (let role in creepNamesByRole) { // only include creeps that shouldn't be replaced yet
                 creepNamesByRole[role] = _.filter(creepNamesByRole[role],
                                                   (name: string) => Game.creeps[name].needsReplacing == false)

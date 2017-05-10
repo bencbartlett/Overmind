@@ -1,5 +1,3 @@
-import {flagCodes} from "../maps/map_flag_codes";
-
 Object.defineProperty(StructureLab.prototype, 'assignedMineralType', {
     get () {
         let flag = _.filter(this.pos.lookFor(LOOK_FLAGS), flagCodes.minerals.filter)[0] as Flag;

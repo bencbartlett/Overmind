@@ -5,7 +5,7 @@ import {Role} from "./Role";
 import {taskGetBoosted} from "../tasks/task_getBoosted";
 import {taskGoToRoom} from "../tasks/task_goToRoom";
 import {taskAttack} from "../tasks/task_attack";
-import {flagFilters} from "../maps/map_flag_filters";
+// import {flagFilters} from "../maps/map_flag_filters";
 
 export class roleDestroyer extends Role {
     constructor() {
@@ -58,7 +58,7 @@ export class roleDestroyer extends Role {
     findTarget(creep: Creep): Creep | Structure | void {
         var target;
         var targetPriority = [
-            () => creep.pos.findClosestByRange(_.map(_.filter(creep.room.flags, flagFilters.destroy.attack.filter),
+            () => creep.pos.findClosestByRange(_.map(_.filter(creep.room.flags, flagCodes.destroy.attack.filter),
                                                      (flag: Flag) => flag.pos.lookFor(LOOK_STRUCTURES)[0])),
             // () => creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS),
             // () => creep.pos.findClosestByRange(FIND_HOSTILE_SPAWNS),

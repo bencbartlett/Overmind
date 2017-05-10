@@ -1,6 +1,6 @@
 // RoomObject prototypes
 
-import {pathing} from "../lib/pathing";
+import {pathing} from "../pathing/pathing";
 
 
 RoomObject.prototype.log = function (message) {
@@ -23,12 +23,9 @@ Object.defineProperty(RoomObject.prototype, 'ref', { // reference object; see gl
 
 Object.defineProperty(RoomObject.prototype, 'assignedCreepNames', { // keys: roles, values: names
     get: function () {
-        if (Memory.preprocessing.assignments[this.ref]) {
-            return Memory.preprocessing.assignments[this.ref];
+        if (Game.cache.assignments[this.ref]) {
+            return Game.cache.assignments[this.ref];
         } else {
-            // return _.groupBy(_.filter(Game.creeps, creep => creep.memory.assignment &&
-            //                                                 creep.memory.assignment == this.ref),
-            //                  creep => creep.memory.role);
             return {};
         }
     }
@@ -46,8 +43,8 @@ RoomObject.prototype.getAssignedCreepAmounts = function (role) {
 
 Object.defineProperty(RoomObject.prototype, 'assignedCreepAmounts', {
     get: function () {
-        if (Memory.preprocessing.assignments[this.ref]) {
-            let creepNamesByRole = Memory.preprocessing.assignments[this.ref];
+        if (Game.cache.assignments[this.ref]) {
+            let creepNamesByRole = Game.cache.assignments[this.ref];
             for (let role in creepNamesByRole) { // only include creeps that shouldn't be replaced yet
                 creepNamesByRole[role] = _.filter(creepNamesByRole[role],
                     (name: string) => Game.creeps[name].needsReplacing == false)
@@ -66,7 +63,7 @@ Object.defineProperty(RoomObject.prototype, 'assignedCreepAmounts', {
 
 Object.defineProperty(RoomObject.prototype, 'targetedBy', { // List of creep names with tasks targeting this object
     get: function () {
-        return Memory.preprocessing.targets[this.ref] || [];
+        return Game.cache.targets[this.ref];
     }
 });
 

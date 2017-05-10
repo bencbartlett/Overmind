@@ -3,7 +3,7 @@
 import {RoomBrain} from "../brains/Brain_Room";
 
 export var territoryFlagActions = {
-    reserve: function (flag: Flag, brain: RoomBrain) {
+    colony: function (flag: Flag, brain: RoomBrain) {
         // Spawn a reserver bot that will reserve the site
         function handleReservers(flag: Flag, brain: RoomBrain) {
             let role = new roleReserver;

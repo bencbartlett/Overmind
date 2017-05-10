@@ -89,11 +89,11 @@ export abstract class Task implements ITask {
 
     // Assign the task to a creep
     assign(creep: Creep): string {
-        // add target to Memory.preprocessing
-        if (!Memory.preprocessing.targets[this.target.ref]) {
-            Memory.preprocessing.targets[this.target.ref] = [];
+        // add target to Game.cache
+        if (!Game.cache.targets[this.target.ref]) {
+            Game.cache.targets[this.target.ref] = [];
         }
-        Memory.preprocessing.targets[this.target.ref].push(creep.name);
+        Game.cache.targets[this.target.ref].push(creep.name);
         // register references to creep and target
         this.creep = creep;
         creep.memory.task = this; // serializes the searalizable portions of the task into memory
@@ -116,6 +116,10 @@ export abstract class Task implements ITask {
 
     // Test every tick to see if target is still valid
     abstract isValidTarget(): boolean;
+
+    isValid(): boolean {
+        return this.isValidTask() && this.isValidTarget();
+    }
 
     move(): number {
         var options = Object.assign({},

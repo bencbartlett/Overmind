@@ -13,7 +13,7 @@ export class TerminalBrain {
         this.room = Game.rooms[roomName];
         this.terminal = Game.rooms[roomName].terminal!;
         this.settings = terminalSettings;
-        this.settings.excessTransferAmount = 10000;
+        this.settings.excessTransferAmount = 100000;
     }
 
     log(message: string) {
@@ -103,15 +103,15 @@ export class TerminalBrain {
     }
 
     run() {
-        // buy shortages only if there's enough energy; avoids excessive CPU usage
-        if (this.terminal.store[RESOURCE_ENERGY] > 0.9 * this.settings.resourceAmounts[RESOURCE_ENERGY]) {
-            this.buyShortages();
-        }
         // send excess energy if terminal and storage both have too much energy
         if (this.terminal.store[RESOURCE_ENERGY] >
             this.settings.resourceAmounts[RESOURCE_ENERGY] + this.settings.excessTransferAmount && this.room.storage &&
             this.room.storage.store[RESOURCE_ENERGY] > this.room.brain.settings.unloadStorageBuffer) {
             this.sendExtraEnergy();
+        }
+        // buy shortages only if there's enough energy; avoids excessive CPU usage
+        if (this.terminal.store[RESOURCE_ENERGY] > 0.9 * this.settings.resourceAmounts[RESOURCE_ENERGY]) {
+            this.buyShortages();
         }
     }
 }

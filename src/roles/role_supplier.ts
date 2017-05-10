@@ -1,9 +1,7 @@
 // Supplier: local energy transport bot. Picks up dropped energy, energy in containers, deposits to sinks and storage
 
 import {Role} from "./Role";
-import {flagCodes} from "../maps/map_flag_codes";
 import {taskRecharge} from "../tasks/task_recharge";
-// import {tasks} from "../maps/map_tasks";
 
 export class roleSupplier extends Role {
     constructor() {

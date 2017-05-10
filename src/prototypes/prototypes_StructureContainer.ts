@@ -1,5 +1,4 @@
 // Container prototypes
-import {flagCodes} from "../maps/map_flag_codes";
 
 Object.defineProperty(StructureContainer.prototype, 'miningFlag', {
     get: function () {

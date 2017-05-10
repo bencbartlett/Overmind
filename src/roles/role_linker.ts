@@ -1,8 +1,6 @@
 // Linker - transfers energy from link to storage
 
 import {Role} from "./Role";
-// import {tasks} from "../maps/map_tasks";
-import {flagCodes} from "../maps/map_flag_codes";
 import {taskRecharge} from "../tasks/task_recharge";
 import {taskDeposit} from "../tasks/task_deposit";
 import {taskGoTo} from "../tasks/task_goTo";
@@ -62,6 +60,9 @@ export class roleLinker extends Role {
         if (terminal &&
             terminal.store[RESOURCE_ENERGY] < terminal.brain.settings.resourceAmounts[RESOURCE_ENERGY] &&
             storage && storage.store[RESOURCE_ENERGY] > creep.workRoom.brain.settings.storageBuffer[this.name]) {
+            target = terminal;
+        } else if (terminal && storage &&
+                   storage.store[RESOURCE_ENERGY] >= creep.workRoom.brain.settings.unloadStorageBuffer) {
             target = terminal;
         }
         if (target) {

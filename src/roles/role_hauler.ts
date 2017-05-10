@@ -4,7 +4,7 @@ import {Role} from "./Role";
 // import {tasks} from "../maps/map_tasks";
 import {taskRecharge} from "../tasks/task_recharge";
 import {taskDeposit} from "../tasks/task_deposit";
-import {flagFilters} from "../maps/map_flag_filters";
+// import {flagFilters} from "../maps/map_flag_filters";
 
 export class roleHauler extends Role {
     constructor() {
@@ -32,7 +32,7 @@ export class roleHauler extends Role {
             var nearbyContainers = creep.assignment.pos.findInRange(FIND_STRUCTURES, 2, {
                 filter: (s: Container) => s.structureType == STRUCTURE_CONTAINER &&
                                           _.filter(s.pos.lookFor(LOOK_FLAGS), // don't collect from refill containers
-                                                   flagFilters.industry.refillThis.filter).length == 0 &&
+                                                   flagCodes.industry.refillThis.filter).length == 0 &&
                                           s.store[RESOURCE_ENERGY] > creep.carryCapacity,
             }) as Container[];
             // target fullest of nearby containers
@@ -60,7 +60,7 @@ export class roleHauler extends Role {
         let target;
         let depositContainers = _.filter(creep.workRoom.containers, (s: StructureContainer) =>
                                          _.filter(s.pos.lookFor(LOOK_FLAGS),
-                                                  flagFilters.industry.refillThis.filter).length > 0 &&
+                                                  flagCodes.industry.refillThis.filter).length > 0 &&
                                          s.storeCapacity - s.store[RESOURCE_ENERGY] > 0.75 * creep.carryCapacity,
         );
         if (depositContainers.length > 0) {

@@ -15,25 +15,7 @@ var flagActions: { [category: string]: flagActions } = {
     rally: rallyFlagActions,
 };
 
-interface flagActions {
-    [actionType: string]: Function;
-}
-
-export interface flagSubCat {
-    color: number;
-    secondaryColor: number;
-    filter: Function;
-    action: Function | null;
-}
-
-export interface flagCat {
-    color: number;
-    filter: Function;
-    action: flagActions | null;
-    [subcat: string]: any;
-}
-
-export var flagCodes: { [category: string]: flagCat } = {
+export var flagCodesMap: { [category: string]: flagCat } = {
     millitary: { // actions involving the creation and direction of offensive or defensive creeps; requires assign()
         color: COLOR_RED,
         filter: (flag: Flag) => flag.color == COLOR_RED,
@@ -104,11 +86,11 @@ export var flagCodes: { [category: string]: flagCat } = {
         color: COLOR_PURPLE,
         filter: (flag: Flag) => flag.color == COLOR_PURPLE,
         action: flagActions.territory,
-        reserve: <flagSubCat> { // reserve a neutral room
+        colony: <flagSubCat> { // reserve a neutral room
             color: COLOR_PURPLE,
             secondaryColor: COLOR_PURPLE,
             filter: (flag: Flag) => flag.color == COLOR_PURPLE && flag.secondaryColor == COLOR_PURPLE,
-            action: flagActions.territory.reserve,
+            action: flagActions.territory.colony,
         },
         // reserveAndHarvest: { // reserve a neutral room and harvest from all available sources
         //     color: COLOR_PURPLE,
@@ -162,4 +144,6 @@ export var flagCodes: { [category: string]: flagCat } = {
     },
 };
 
-profiler.registerObject(flagCodes, 'flagCodes');
+// export default flagCodesMap;
+
+profiler.registerObject(flagCodesMap, 'flagCodes');
