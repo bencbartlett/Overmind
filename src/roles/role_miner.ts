@@ -104,7 +104,7 @@ export class roleMiner extends Role {
         if (creep.getActiveBodyparts(WORK) < 0.75 * creep.getBodyparts(WORK)) {
             creep.suicide(); // kill off miners that might have gotten damaged so they don't sit and try to mine
         }
-        if (creep.room.brain.incubating) {
+        if (creep.colony.incubating) {
             if (creep.carry.energy == 0) { // request renewal after a mining cycle is finished
                 this.renewIfNeeded(creep);
             }

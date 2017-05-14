@@ -85,7 +85,7 @@ export class TerminalBrain {
         for (let name in Game.rooms) {
             let room = Game.rooms[name];
             if (room.my && room.terminal &&
-                room.storage && room.storage.store[RESOURCE_ENERGY] < room.brain.settings.unloadStorageBuffer) {
+                room.storage && room.storage.store[RESOURCE_ENERGY] < room.overlord.settings.unloadStorageBuffer) {
                 let cost = Game.market.calcTransactionCost(this.settings.excessTransferAmount,
                                                            this.room.name, room.name);
                 if (cost < minCost) {
@@ -106,7 +106,7 @@ export class TerminalBrain {
         // send excess energy if terminal and storage both have too much energy
         if (this.terminal.store[RESOURCE_ENERGY] >
             this.settings.resourceAmounts[RESOURCE_ENERGY] + this.settings.excessTransferAmount && this.room.storage &&
-            this.room.storage.store[RESOURCE_ENERGY] > this.room.brain.settings.unloadStorageBuffer) {
+            this.room.storage.store[RESOURCE_ENERGY] > this.room.overlord.settings.unloadStorageBuffer) {
             this.sendExtraEnergy();
         }
         // buy shortages only if there's enough energy; avoids excessive CPU usage

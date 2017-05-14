@@ -38,7 +38,10 @@ export class Hatchery {
         }
     }
 
-    enqueue(protoCreep: protoCreep, priority: number): void {
+    enqueue(protoCreep: protoCreep, priority?: number): void {
+        if (priority == undefined) {
+            priority = 1000; // some large but finite priority for all the remaining stuff to make
+        }
         if (!this.productionQueue[priority]) {
             this.productionQueue[priority] = [];
         }

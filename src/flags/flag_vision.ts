@@ -1,21 +1,16 @@
 import profiler = require('../lib/screeps-profiler');
 import {roleScout} from "../roles/role_scout";
-import {RoomBrain} from "../brains/Brain_Room";
 
 export var visionFlagActions = {
-    stationary: function (flag: Flag, brain: RoomBrain) {
-        function handleScouts(flag: Flag, brain: RoomBrain) {
+    stationary: function (flag: Flag): void {
+        function handleScouts(flag: Flag): void {
             var role = new roleScout();
             flag.requiredCreepAmounts[role.name] = 1;
-            return flag.requestCreepIfNeeded(brain, role, {
-                assignment: flag,
-                workRoom: flag.roomName,
-                patternRepetitionLimit: 1
-            });
+            flag.requestCreepIfNeeded(role, {patternRepetitionLimit: 1});
         }
 
-        return handleScouts(flag, brain);
-    }
+        handleScouts(flag);
+    },
 };
 
 profiler.registerObject(visionFlagActions, 'visionFlagActions');

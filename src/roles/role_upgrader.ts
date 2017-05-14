@@ -19,7 +19,7 @@ export class roleUpgrader extends Role {
     }
 
     recharge(creep: Creep) { // modification to allow upgraders to upgrade if room is close to decay
-        var bufferSettings = creep.room.brain.settings.storageBuffer; // not creep.workRoom; use rules of room you're in
+        var bufferSettings = creep.colony.overlord.settings.storageBuffer; // not creep.workRoom; use rules of room you're in
         var buffer = bufferSettings.default;
         if (bufferSettings[this.name]) {
             buffer = bufferSettings[this.name];

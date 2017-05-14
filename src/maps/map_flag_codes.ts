@@ -90,7 +90,7 @@ export var flagCodesMap: { [category: string]: flagCat } = {
             color: COLOR_PURPLE,
             secondaryColor: COLOR_PURPLE,
             filter: (flag: Flag) => flag.color == COLOR_PURPLE && flag.secondaryColor == COLOR_PURPLE,
-            action: flagActions.territory.colony,
+            action: null, // flagActions.territory.colony,
         },
         // reserveAndHarvest: { // reserve a neutral room and harvest from all available sources
         //     color: COLOR_PURPLE,

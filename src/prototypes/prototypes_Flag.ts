@@ -74,8 +74,8 @@ Object.defineProperty(Flag.prototype, 'type', { // subcategory object
     }
 });
 
-Flag.prototype.action = function (...args: any[]) {
-    return this.type.action(this, ...args); // calls flag action with this as flag argument
+Flag.prototype.action = function () {
+    return this.type.action(this); // calls flag action with this as flag argument
 };
 
 
@@ -123,14 +123,16 @@ Flag.prototype.needsAdditional = function (role) { // if the flag needs more of 
     return this.getAssignedCreepAmounts(role) < this.getRequiredCreepAmounts(role);
 };
 
-Flag.prototype.requestCreepIfNeeded = function (brain, role: Role,
-    {assignment = this, workRoom = this.roomName, patternRepetitionLimit = Infinity}) {
+Flag.prototype.requestCreepIfNeeded = function (role: Role,
+    {assignment = this, patternRepetitionLimit = Infinity}: protoCreepOptions) {
     if (this.needsAdditional(role.name)) {
-        return role.create(brain.spawn, {
-            assignment: assignment,
-            workRoom: workRoom,
-            patternRepetitionLimit: patternRepetitionLimit
-        });
+        let priority = this.colony.overlord.spawnPriorities[role.name];
+        this.colony.hatchery.enqueue(
+            role.create(this.room.colony, {
+                assignment: assignment,
+                patternRepetitionLimit: patternRepetitionLimit
+            }), priority
+        );
     }
 };
 

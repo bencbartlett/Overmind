@@ -14,9 +14,18 @@ interface Game {
 interface IColony {
     name: string;
     room: Room;
-    rooms: { [roomName: string]: Room };
     hatchery: any;
+    storage: StructureStorage;
+    terminal: StructureTerminal;
+    incubating: boolean;
+    outposts: Room[];
+    rooms: Room[];
+    flags: Flag[];
     creeps: Creep[];
+    sources: Source[];
+    miningSites: any[];
+    haulingPowerNeeded: number;
+    overlord: IOverlord;
 }
 
 interface flagActions {
@@ -43,9 +52,8 @@ interface protoCreep {
     memory: any;
 }
 
-interface creepCall {
-    assignment: RoomObject;
-    workRoom: string;
+interface protoCreepOptions {
+    assignment?: RoomObject;
     patternRepetitionLimit?: number;
 }
 
@@ -88,6 +96,13 @@ interface ITask {
     work(): number;
 }
 
+interface IObjective {
+    name: String;
+    target: RoomObject;
+    assignableTo(creep: Creep): boolean;
+    getTask(): ITask;
+}
+
 interface IRole {
     name: string;
     settings: any;
@@ -95,9 +110,9 @@ interface IRole {
     bodyPatternCost: number;
     bodyCost(bodyArray: string[]): number;
     generateBody(availableEnergy: number, maxRepeats?: number): string[];
-    generateLargestCreep(spawn: Spawn, {assignment, workRoom, patternRepetitionLimit}: creepCall): protoCreep;
+    generateLargestCreep(colony: IColony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep;
     onCreate(pCreep: protoCreep): protoCreep;
-    create(spawn: StructureSpawn, {assignment, workRoom, patternRepetitionLimit}: creepCall): protoCreep;
+    create(colony: IColony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep;
     requestTask(creep: Creep): string;
     recharge(creep: Creep): string;
     newTask(creep: Creep): void;
@@ -110,7 +125,10 @@ interface IRole {
 type Sink = StructureSpawn | StructureExtension | StructureLab | StructureTower | StructurePowerSpawn;
 
 interface Room {
-    brain: any;
+    // brain: any;
+    colonyFlag: Flag;
+    colony: IColony;
+    overlord: IOverlord;
     my: boolean;
     reservedByMe: boolean;
     signedByMe: boolean;
@@ -131,6 +149,7 @@ interface Room {
     containers: StructureContainer[];
     storageUnits: (StructureContainer | StructureStorage)[];
     towers: StructureTower[];
+    links: StructureLink[];
     labs: StructureLab[];
     sources: Source[];
     sinks: Sink[];
@@ -176,6 +195,11 @@ interface StructureContainer {
     predictedEnergyOnArrival: number;
 }
 
+interface StructureController {
+    reservedByMe: boolean;
+    signedByMe: boolean;
+}
+
 interface StructureLab {
     assignedMineralType: string;
     IO: string;
@@ -191,7 +215,6 @@ interface StructureTerminal {
 }
 
 interface StructureSpawn {
-    creepName(role: string): string;
     cost(bodyArray: string[]): number;
     uptime: number;
     statusMessage: string;
@@ -219,10 +242,43 @@ interface Flag {
     getRequiredCreepAmounts(role: string): number;
     requiredCreepAmounts: { [role: string]: number };
     needsAdditional(role: string): boolean;
-    requestCreepIfNeeded(brain: any, role: IRole, info: creepCall): protoCreep | void;
+    requestCreepIfNeeded(role: IRole, options: protoCreepOptions): void;
     pathLengthToAssignedRoomStorage: number;
     haulingNeeded: boolean;
 }
 
+interface IMiningSite {
+    name: string;
+    room: Room;
+    pos: RoomPosition;
+    source: Source;
+    energyPerTick: number;
+    miningPowerNeeded: number;
+    output: Container | Link | null;
+    fullness: number | undefined;
+    miners: Creep[];
+}
 
+interface IOverlord {
+    name: string;
+    room: Room;
+    colony: IColony;
+    settings: any;
+    directives: any[]; // TODO: IDirective[]
+    objectives: { [objectiveName: string]: IObjective[] };
+    objectivePriorities: string[];
+    spawnPriorities: { [role: string]: number };
+    log(message: string): void;
+    init(): void;
+    getObjectives(): { [objectiveName: string]: IObjective[] };
+    countObjectives(name: string): number;
+    assignTask(creep: Creep): string;
+    handleCoreSpawnOperations(): void;
+    handleIncubationSpawnOperations(): void;
+    handleAssignedSpawnOperations(): void;
+    handleSpawnOperations(): void;
+    handleTerminalOperations(): void;
+    handleSafeMode(): void;
+    run(): void;
+}
 

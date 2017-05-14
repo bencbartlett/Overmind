@@ -34,7 +34,8 @@ export abstract class Directive {
 
     // Request a creep meeting certain specifications
     requestCreep(requirements: (creep: Creep) => boolean): boolean {
-        let applicableCreeps = _.filter(this.)
+        let applicableCreeps = _.filter(this.creeps, creep => requirements(creep));
+        return false; // TODO: finish
     }
 
     // Test every tick to see if task is still valid
