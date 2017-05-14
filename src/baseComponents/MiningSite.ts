@@ -1,10 +1,8 @@
 // Mining site class for grouping relevant components
 
-import {pathing} from "../pathing/pathing";
-export class MiningSite {
+export class MiningSite implements IMiningSite {
     name: string;
     room: Room;
-    // flag: Flag;
     pos: RoomPosition;
     source: Source;
     energyPerTick: number;

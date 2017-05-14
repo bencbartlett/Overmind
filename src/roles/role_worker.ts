@@ -19,7 +19,7 @@ export class roleWorker extends Role {
 
     onRun(creep: Creep) {
         if (creep.workRoom) {
-            if (creep.workRoom.brain.incubating) {
+            if (creep.colony.incubating) {
                 // only harvest if there are miners away from their stations
                 this.settings.workersCanHarvest =
                     creep.workRoom.find(FIND_MY_CREEPS, { // are all sources are occupied by miners?
@@ -35,7 +35,7 @@ export class roleWorker extends Role {
                              (s.structureType == STRUCTURE_CONTAINER
                               && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
                              (s.structureType == STRUCTURE_STORAGE
-                              && s.store[RESOURCE_ENERGY] > creep.room.brain.settings.storageBuffer['worker']),
+                              && s.store[RESOURCE_ENERGY] > creep.colony.overlord.settings.storageBuffer['worker']),
                     ).length > 0) {
                     creep.task = null;
                 }
@@ -73,7 +73,7 @@ export class roleWorker extends Role {
                 filter: (s: Container | Storage) =>
                 (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
                 (s.structureType == STRUCTURE_STORAGE && s.store[RESOURCE_ENERGY] >
-                                                         creep.room.brain.settings.storageBuffer['worker']),
+                                                         creep.colony.overlord.settings.storageBuffer['worker']),
             }) as Container | Storage;
         }
         if (target) {

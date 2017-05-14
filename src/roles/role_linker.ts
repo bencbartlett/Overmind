@@ -30,39 +30,39 @@ export class roleLinker extends Role {
 
     collect(creep: Creep) {
         var target: Link | StructureStorage | Terminal;
-        let storage = creep.workRoom.storage;
+        let storage = creep.colony.storage;
         if (!storage) {
             return "";
         }
         if (storage.links[0].energy > 0) {
             // try targeting non-empty input links
             return creep.assign(new taskRecharge(storage.links[0]));
-        } else if (_.sum(storage.store) > creep.workRoom.brain.settings.unloadStorageBuffer) {
+        } else if (_.sum(storage.store) > creep.colony.overlord.settings.unloadStorageBuffer) {
             // else try unloading from storage into terminal if there is too much energy
             return creep.assign(new taskRecharge(storage));
-        } else if (creep.workRoom.terminal && creep.workRoom.terminal.store[RESOURCE_ENERGY] >
-                                              creep.workRoom.terminal.brain.settings.resourceAmounts[RESOURCE_ENERGY]
-                                              + creep.workRoom.terminal.brain.settings.excessTransferAmount) {
+        } else if (creep.colony.terminal && creep.colony.terminal.store[RESOURCE_ENERGY] >
+                                              creep.colony.terminal.brain.settings.resourceAmounts[RESOURCE_ENERGY]
+                                              + creep.colony.terminal.brain.settings.excessTransferAmount) {
             // if there is not too much energy in storage and there is too much in terminal, collect from terminal
-            return creep.assign(new taskRecharge(creep.workRoom.terminal));
+            return creep.assign(new taskRecharge(creep.colony.terminal));
         }
     }
 
     deposit(creep: Creep) {
-        let storage = creep.workRoom.storage;
+        let storage = creep.colony.storage;
         var target;
         // deposit to storage
-        if (storage &&_.sum(storage.store) < creep.workRoom.brain.settings.unloadStorageBuffer) {
+        if (storage &&_.sum(storage.store) < creep.colony.overlord.settings.unloadStorageBuffer) {
             target = storage;
         }
         // overwrite and deposit to terminal if not enough energy in terminal and sufficient energy in storage
-        let terminal = creep.workRoom.terminal;
+        let terminal = creep.colony.terminal;
         if (terminal &&
             terminal.store[RESOURCE_ENERGY] < terminal.brain.settings.resourceAmounts[RESOURCE_ENERGY] &&
-            storage && storage.store[RESOURCE_ENERGY] > creep.workRoom.brain.settings.storageBuffer[this.name]) {
+            storage && storage.store[RESOURCE_ENERGY] > creep.colony.overlord.settings.storageBuffer[this.name]) {
             target = terminal;
         } else if (terminal && storage &&
-                   storage.store[RESOURCE_ENERGY] >= creep.workRoom.brain.settings.unloadStorageBuffer) {
+                   storage.store[RESOURCE_ENERGY] >= creep.colony.overlord.settings.unloadStorageBuffer) {
             target = terminal;
         }
         if (target) {

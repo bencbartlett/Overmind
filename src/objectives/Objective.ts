@@ -3,7 +3,7 @@ import {Task} from "../tasks/Task";
 
 type targetType = RoomObject;
 
-export abstract class Objective {
+export abstract class Objective implements IObjective {
     name: string;
     target: targetType;
 

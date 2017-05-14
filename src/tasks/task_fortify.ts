@@ -17,13 +17,8 @@ export class taskFortify extends Task {
     }
 
     isValidTarget() {
-        var target = this.target;
-        var settings = this.creep.room.brain.settings;
-        var override = this.creep.room.brain.override;
-        var maxHP = settings.fortifyLevel; // global fortify level
-        if (override.fortifyLevel[this.creep.room.name]) {
-            maxHP = override.fortifyLevel[this.creep.room.name]; // override for certain rooms
-        }
+        let target = this.target;
+        let maxHP = this.creep.colony.overlord.settings.fortifyLevel;
         return (target != null && target.hits < 1.2 * maxHP); // over-fortify to minimize extra trips
     }
 

@@ -3,11 +3,10 @@ import profiler = require('../lib/screeps-profiler');
 import {roleGuard} from "../roles/role_guard";
 import {roleDestroyer} from "../roles/role_destroyer";
 import {roleSieger} from "../roles/role_sieger";
-import {RoomBrain} from "../brains/Brain_Room";
 
 export var millitaryFlagActions = {
-    guard: function (flag: Flag, brain: RoomBrain) {
-        function handleGuards(flag: Flag, brain: RoomBrain) {
+    guard: function (flag: Flag): void {
+        function handleGuards(flag: Flag): void {
             var role = new roleGuard();
             if (flag.memory.amount) {
                 flag.requiredCreepAmounts[role.name] = flag.memory.amount;
@@ -22,18 +21,14 @@ export var millitaryFlagActions = {
             if (flag.memory.maxSize) {
                 maxSize = flag.memory.maxSize;
             }
-            return flag.requestCreepIfNeeded(brain, role, {
-                assignment: flag,
-                workRoom: flag.roomName,
-                patternRepetitionLimit: maxSize
-            });
+            flag.requestCreepIfNeeded(role, {patternRepetitionLimit: maxSize});
         }
 
-        return handleGuards(flag, brain)
+        handleGuards(flag)
     },
 
-    destroyer: function (flag: Flag, brain: RoomBrain) {
-        function handleDestroyers(flag: Flag, brain: RoomBrain) {
+    destroyer: function (flag: Flag): void {
+        function handleDestroyers(flag: Flag): void {
             var role = new roleDestroyer();
             if (flag.memory.amount) {
                 flag.requiredCreepAmounts[role.name] = flag.memory.amount;
@@ -44,20 +39,15 @@ export var millitaryFlagActions = {
             if (flag.memory.maxSize) {
                 maxSize = flag.memory.maxSize;
             }
-            let creep = flag.requestCreepIfNeeded(brain, role, {
-                assignment: flag,
-                workRoom: flag.roomName,
-                patternRepetitionLimit: maxSize
-            });
-            return creep;
+            flag.requestCreepIfNeeded(role, {patternRepetitionLimit: maxSize});
         }
 
-        return handleDestroyers(flag, brain)
+        handleDestroyers(flag)
     },
 
 
-    sieger: function (flag: Flag, brain: RoomBrain) {
-        function handleSiegers(flag: Flag, brain: RoomBrain) {
+    sieger: function (flag: Flag): void {
+        function handleSiegers(flag: Flag): void {
             var role = new roleSieger();
             if (flag.memory.amount) {
                 flag.requiredCreepAmounts[role.name] = flag.memory.amount;
@@ -68,14 +58,10 @@ export var millitaryFlagActions = {
             if (flag.memory.maxSize) {
                 maxSize = flag.memory.maxSize;
             }
-            return flag.requestCreepIfNeeded(brain, role, {
-                assignment: flag,
-                workRoom: flag.roomName,
-                patternRepetitionLimit: maxSize
-            });
+            flag.requestCreepIfNeeded(role, {patternRepetitionLimit: maxSize});
         }
 
-        return handleSiegers(flag, brain);
+        handleSiegers(flag);
     }
 };
 

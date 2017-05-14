@@ -8,9 +8,12 @@ import {pathing} from "./pathing/pathing";
 export class Colony implements IColony {
     name: string;
     room: Room;
+    outposts: Room[];
+    rooms: Room[];
     hatchery: Hatchery;
     storage: StructureStorage;
-    rooms: Room[];
+    terminal: StructureTerminal;
+    incubating: boolean;
     flags: Flag[];
     creeps: Creep[];
     sources: Source[];
@@ -20,9 +23,13 @@ export class Colony implements IColony {
         // Register colony capitol and associated components
         this.name = roomName;
         this.room = Game.rooms[roomName];
+        this.outposts = _.map(outposts, outpost => Game.rooms[outpost]);
+        this.rooms = [Game.rooms[roomName]].concat(this.outposts);
+        // Associate unique colony components
         this.hatchery = new Hatchery(roomName);
         this.storage = this.room.storage;
-        this.rooms = [Game.rooms[roomName]].concat(_.map(outposts, outpost => Game.rooms[outpost]));
+        this.terminal = this.room.terminal;
+        this.incubating = (_.filter(this.room.flags, flagCodes.territory.claimAndIncubate.filter).length > 0);
         // Register things across all rooms
         this.flags = _.flatten(_.map(this.rooms, room => room.flags));
         this.sources = _.flatten(_.map(this.rooms, room => room.sources));
@@ -40,5 +47,9 @@ export class Colony implements IColony {
             }
         }
         return haulingPower;
+    }
+
+    get overlord(): IOverlord {
+        return Overmind.Overlords[this.name];
     }
 }

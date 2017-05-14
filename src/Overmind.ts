@@ -1,24 +1,21 @@
 // Overmind class - manages colony-scale operations and contains references to all brain objects
 
-import {RoomBrain} from "./brains/Brain_Room";
-import {TerminalBrain} from "./brains/Brain_Terminal";
 import profiler = require('./lib/screeps-profiler');
 import {Colony} from "./Colony";
 import {Overlord} from "./Overlord";
+import {TerminalBrain} from "./brains/Brain_Terminal";
 
 export default class Overmind {
     name: string;
-    RoomBrains: { [roomName: string]: RoomBrain };
-    TerminalBrains: { [roomName: string]: TerminalBrain };
     Colonies: { [roomName: string]: Colony };
     Overlords: { [roomName: string]: Overlord };
+    TerminalBrains: { [roomName: string]: TerminalBrain };
 
     constructor() {
         this.name = "Overmind";
-        this.RoomBrains = {};
-        this.TerminalBrains = {};
         this.Colonies = {};
         this.Overlords = {};
+        this.TerminalBrains = {};
     }
 
     initializeColonies(): void {
@@ -57,13 +54,18 @@ export default class Overmind {
         }
     }
 
-    initializeAllBrains(): void {
-        for (let name in Game.rooms) {
-            this.RoomBrains[name] = new RoomBrain(name);
-            if (Game.rooms[name].terminal != undefined) {
+    initializeTerminalBrains(): void {
+        for (let name in this.Colonies) {
+            if (Game.rooms[name].terminal) {
                 this.TerminalBrains[name] = new TerminalBrain(name);
             }
         }
+    }
+
+    init(): void {
+        this.initializeColonies();
+        this.spawnMoarOverlords();
+        this.initializeTerminalBrains();
     }
 }
 

@@ -75,3 +75,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 .vs/
+!/src/Overmind.ts

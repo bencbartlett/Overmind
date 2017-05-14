@@ -59,26 +59,28 @@ export function loop() {
     global.flagCodes = flagCodesMap;
     // Initialize Overmind object
     global.Overmind = new OM;
-    Overmind.initializeAllBrains();
+    Overmind.init();
 
     // Animation ===================================================================================================
+    // Animate each overlord
+    for (let name in Overmind.Colonies) {
+        Overmind.Overlords[name].run(); // Run the colony overlord
+        Game.rooms[name].run(); // Run the (owned) room
+        Overmind.Colonies[name].hatchery.run(); // Run the hatchery
+    }
     // Animate each creep
     for (let name in Game.creeps) {
-        // if (name == 'destroyer_0') {
-        //     continue;
-        // }
         Game.creeps[name].run();
     }
-    // Animate each room
-    for (let name in Game.rooms) {
-        // Object.defineProperty(Game.rooms[name], 'brain', brains[name]);
-        // Animate each room brain, but only for owned rooms
-        let room = Game.rooms[name];
-        if (room.my) {
-            room.run();
-            room.brain.run();
-        }
-    }
+
+    // for (let name in Game.rooms) {
+    //     // Animate each room brain, but only for owned rooms
+    //     let room = Game.rooms[name];
+    //     if (room.my) {
+    //         room.run();
+    //         room.brain.run();
+    //     }
+    // }
 
     // Postprocessing ==============================================================================================
     // Log stats

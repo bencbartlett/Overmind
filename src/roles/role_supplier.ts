@@ -29,7 +29,7 @@ export class roleSupplier extends Role {
 
     recharge(creep: Creep) { // default recharging logic for creeps
         // try to find closest container or storage
-        var bufferSettings = creep.room.brain.settings.storageBuffer; // not creep.workRoom; use rules of room you're in
+        var bufferSettings = creep.colony.overlord.settings.storageBuffer; // not creep.workRoom; use rules of room you're in
         var buffer = bufferSettings.default;
         if (bufferSettings[this.name]) {
             buffer = bufferSettings[this.name];

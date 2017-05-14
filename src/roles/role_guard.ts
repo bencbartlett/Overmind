@@ -4,6 +4,7 @@
 import {Role} from "./Role";
 import {taskRecharge} from "../tasks/task_recharge";
 import {taskAttack} from "../tasks/task_attack";
+import {Colony} from "../Colony";
 
 export class roleGuard extends Role {
     constructor() {
@@ -17,21 +18,17 @@ export class roleGuard extends Role {
                                               c.getActiveBodyparts(MOVE) > 1
     }
 
-    create(spawn: Spawn, {assignment, workRoom, patternRepetitionLimit = Infinity}: creepCall) {
-        if (!workRoom) {
-            workRoom = assignment.roomName;
-        }
-        if (assignment.room && assignment.room.brain.getTasks('repair').length > 0) { // create a guard to repair stuff
-            this.settings.bodySuffix = [WORK, CARRY, MOVE];
-            this.settings.proportionalPrefixSuffix = false; // just want one repetition
-        }
-        let creep = this.generateLargestCreep(spawn, {
-            assignment: assignment,
-            workRoom: workRoom,
-            patternRepetitionLimit: patternRepetitionLimit,
-        });
-        return creep; // spawn.createCreep(creep.body, creep.name, creep.memory)
-    }
+    // create(colony: Colony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep {
+    //     if (assignment.room && assignment.room.brain.getTasks('repair').length > 0) { // create a guard to repair stuff
+    //         this.settings.bodySuffix = [WORK, CARRY, MOVE];
+    //         this.settings.proportionalPrefixSuffix = false; // just want one repetition
+    //     }
+    //     let creep = this.generateLargestCreep(colony, {
+    //         assignment: assignment,
+    //         patternRepetitionLimit: patternRepetitionLimit,
+    //     });
+    //     return creep; // spawn.createCreep(creep.body, creep.name, creep.memory)
+    // }
 
     recharge(creep: Creep) {
         var target = creep.pos.findClosestByRange(FIND_STRUCTURES, {

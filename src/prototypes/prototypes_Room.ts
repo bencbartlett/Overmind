@@ -3,16 +3,16 @@ import {visuals} from "../visuals/visuals";
 import {Task} from "../tasks/Task";
 
 // Room brain ==========================================================================================================
-Object.defineProperty(Room.prototype, 'brain', {
-    get () {
-        return Overmind.RoomBrains[this.name];
-    },
-});
+// Object.defineProperty(Room.prototype, 'brain', {
+//     get () {
+//         return Overmind.RoomBrains[this.name];
+//     },
+// });
 
 // Colony association ==================================================================================================
 Object.defineProperty(Room.prototype, 'colonyFlag', {
     get () {
-        return this.find(FIND_FLAGS, flagCodes.territory.colony.filter);
+        return this.find(FIND_FLAGS, flagCodes.territory.colony.filter)[0];
     },
 });
 
@@ -23,6 +23,11 @@ Object.defineProperty(Room.prototype, 'colony', { // link to colony object in th
 });
 
 // Overlord ============================================================================================================
+Object.defineProperty(Room.prototype, 'overlord', {
+    get () {
+        return Overmind.Overlords[this.memory.colony];
+    },
+});
 
 // Room properties =====================================================================================================
 
@@ -177,6 +182,11 @@ Object.defineProperties(Room.prototype, {
             return this.structures[STRUCTURE_TOWER];
         },
     },
+    'links': { // labs
+        get() {
+            return this.structures[STRUCTURE_LINK];
+        },
+    },
     'labs': { // labs
         get() {
             return this.structures[STRUCTURE_LAB];
@@ -271,18 +281,15 @@ Room.prototype.run = function () {
         tower.run();
     }
     // Animate each link: transfer to storage when it is >50% full if storage link is empty and cooldown is over
-    var links = this.find(FIND_MY_STRUCTURES, {
-        filter: (s: Structure) => s.structureType == STRUCTURE_LINK,
-    }) as Link[];
-    var refillLinks = _.filter(links, s => s.refillThis && s.energy <= 0.5 * s.energyCapacity);
-    if (links.length > 0) {
+    var refillLinks = _.filter(this.links, (s: Link) => s.refillThis && s.energy <= 0.5 * s.energyCapacity);
+    if (this.links.length > 0) {
         var targetLink;
         if (refillLinks.length > 0) {
             targetLink = refillLinks[0];
         } else {
             targetLink = this.storage.links[0];
         }
-        for (let link of links) {
+        for (let link of this.links) {
             if (link != targetLink) {
                 if (link.energy > 0.85 * link.energyCapacity && !link.refillThis && link.cooldown == 0) {
                     link.transferEnergy(targetLink);

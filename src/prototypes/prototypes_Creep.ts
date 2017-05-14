@@ -142,66 +142,6 @@ Object.defineProperty(Creep.prototype, 'moveSpeed', { // expected moveSpeed on r
     }
 });
 
-// Creep.prototype.moveToVisual = function (target, color = '#fff') {
-//     var visualizePath = true;
-//     if (visualizePath) {
-//         var pathStyle = {
-//             fill: 'transparent',
-//             stroke: color,
-//             lineStyle: 'dashed',
-//             strokeWidth: .15,
-//             opacity: .3
-//         };
-//         return this.moveTo(target, {visualizePathStyle: pathStyle});
-//     } else {
-//         return this.moveTo(target);
-//     }
-// };
-
-// Creep.prototype.calculatePathETA = function (startPoint, endPoint, ignoreCargo = false) {
-//     var path = startPoint.findPathTo(endPoint);
-//     var massiveParts = [WORK, ATTACK, RANGED_ATTACK, HEAL, TOUGH];
-//     var mass = 0;
-//     for (let part of massiveParts) {
-//         mass += this.getActiveBodyparts(part);
-//     }
-//     var cargoMass = Math.ceil(_.sum(this.carry) / 50);
-//     var moveParts = this.getActiveBodyparts(MOVE);
-//     var fatiguePerTick = 2 * mass;
-//     if (!ignoreCargo) {
-//         fatiguePerTick += 2 * cargoMass;
-//     }
-//     var ETA = 0;
-//     // console.log(mass, cargoMass, moveParts, fatiguePerTick, ETA);
-//     for (let step of path) {
-//         let road = _.filter(this.room.lookForAt(LOOK_STRUCTURES, step.x, step.y),
-//                             s => s.structureType == STRUCTURE_ROAD)[0];
-//         let terrain = this.room.lookForAt(LOOK_TERRAIN, step.x, step.y)[0];
-//         let multiplier;
-//         if (road) {
-//             multiplier = 0.5;
-//         } else if (terrain == 'plain') {
-//             multiplier = 1;
-//         } else if (terrain == 'swamp') {
-//             multiplier = 5;
-//         }
-//         let dt = Math.ceil(multiplier * fatiguePerTick / (2 * moveParts));
-//         // this.log(dt);
-//         ETA += dt;
-//     }
-//     return ETA;
-// };
-
-// Creep.prototype.conditionalMoveToWorkRoom = function () { // move to workRoom if not already there // TODO: make this a task
-//     if (this.room != this.workRoom) {
-//         let roomPos = new RoomPosition(25, 25, this.memory.workRoom); // arbitrary location, not vision-dependent
-//         this.moveToVisual(roomPos);
-//         return ERR_NOT_IN_SERVICE_ROOM;
-//     } else {
-//         return OK;
-//     }
-// };
-
 Creep.prototype.repairNearbyDamagedRoad = function () {
     // repairs roads without sating any extra energy (requiring that there are numWorks*100 hp missing)
     // let damagedRoads = this.pos.findInRange(FIND_STRUCTURES, 3, {
@@ -217,13 +157,3 @@ Creep.prototype.repairNearbyDamagedRoad = function () {
     return OK;
 };
 
-// Creep.prototype.donate = function (roomName) {
-//     // Donates a creep to a different room. Creep will move to room until it is in the room, then it will
-//     // continue to work as normal. Does not work with all creep types. Must have vision of room.
-//     if (Game.rooms[roomName]) {
-//         this.memory.workRoom = roomName;
-//         return OK;
-//     } else {
-//         this.log('I could not be donated: ' + roomName + ' is ' + Game.rooms[roomName]);
-//     }
-// };

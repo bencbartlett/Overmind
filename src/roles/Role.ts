@@ -3,6 +3,7 @@ import profiler = require('../lib/screeps-profiler');
 import {Task} from "../tasks/Task";
 import {taskRecharge} from "../tasks/task_recharge";
 import {taskGetRenewed} from "../tasks/task_getRenewed";
+import {Colony} from "../Colony";
 
 export abstract class Role implements IRole {
     name: string;
@@ -52,12 +53,21 @@ export abstract class Role implements IRole {
         return cost;
     };
 
+    generateCreepName = function (roleName: string): string {
+        // generate a creep name based on the role and add a suffix to make it unique
+        let i = 0;
+        while (Game.creeps[(roleName + '_' + i)]) {
+            i++;
+        }
+        return (roleName + '_' + i);
+    };
+
     generateBody(availableEnergy: number, maxRepeats = Infinity): string[] {
-        var patternCost, patternLength, numRepeats;
-        var prefix = this.settings.bodyPrefix;
-        var suffix = this.settings.bodySuffix;
-        var proportionalPrefixSuffix = this.settings.proportionalPrefixSuffix;
-        var body: string[] = [];
+        let patternCost, patternLength, numRepeats;
+        let prefix = this.settings.bodyPrefix;
+        let suffix = this.settings.bodySuffix;
+        let proportionalPrefixSuffix = this.settings.proportionalPrefixSuffix;
+        let body: string[] = [];
         // calculate repetitions
         if (proportionalPrefixSuffix) { // if prefix and suffix are to be kept proportional to body size
             patternCost = this.bodyCost(prefix) + this.bodyCost(this.settings.bodyPattern) + this.bodyCost(suffix);
@@ -106,25 +116,25 @@ export abstract class Role implements IRole {
     }
 
     // generate (but not spawn) the largest creep possible, returns the creep as an object
-    generateLargestCreep(spawn: Spawn, {assignment, workRoom, patternRepetitionLimit}: creepCall): protoCreep {
+    generateLargestCreep(colony: Colony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep {
         // spawn: spawn to add to, assignment: object (not ref) to assign creep to, patternRepetitionLimit: creep size
-        var creepBody = this.generateBody(spawn.room.energyCapacityAvailable, patternRepetitionLimit);
-        var creepName = spawn.creepName(this.name);
-        var creep = { // object to add to spawner queue
+        let creepBody = this.generateBody(colony.room.energyCapacityAvailable, patternRepetitionLimit);
+        let creepName = this.generateCreepName(this.name);
+        let protoCreep: protoCreep = { // object to add to spawner queue
             body: creepBody, // body array
             name: creepName, // name of the creep
             memory: { // memory to initialize with
                 role: this.name, // role of the creep
                 task: <Task> null, // task the creep is performing
                 assignment: assignment.ref, // ref of object/room(use controller) the creep is assigned to
-                workRoom: workRoom, // name of the room the creep is assigned to
+                colony: colony.name, // name of the colony the creep is assigned to
                 data: { // rarely-changed data about the creep
-                    origin: spawn.room.name, // where it was spawned
+                    origin: colony.room.name, // where it was spawned
                     replaceAt: 0, // when it should be replaced
                 },
             },
         };
-        return creep;
+        return protoCreep;
     }
 
     onCreate(pCreep: protoCreep): protoCreep { // modification to creep proto-object before spawning it
@@ -132,10 +142,10 @@ export abstract class Role implements IRole {
     }
 
     // default creation function for creeps
-    create(spawn: StructureSpawn, {assignment, workRoom, patternRepetitionLimit}: creepCall): protoCreep {
-        let creep = this.generateLargestCreep(spawn, {assignment, workRoom, patternRepetitionLimit});
-        creep = this.onCreate(creep); // modify creep as needed
-        return creep; // spawn.createCreep(creep.body, creep.name, creep.memory);
+    create(colony: Colony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep {
+        let protoCreep: protoCreep = this.generateLargestCreep(colony, {assignment, patternRepetitionLimit});
+        protoCreep = this.onCreate(protoCreep); // modify creep as needed
+        return protoCreep; // spawn.createCreep(creep.body, creep.name, creep.memory);
     }
 
     requestTask(creep: Creep): string { // default logic for requesting a new task from the room brain // TODO: why doesn't this work in other rooms?
@@ -143,7 +153,7 @@ export abstract class Role implements IRole {
             creep.log("no workRoom! Why?");
             return "";
         }
-        var response = creep.workRoom.brain.assignTask(creep);
+        let response = creep.colony.overlord.assignTask(creep);
         if (!response && !this.settings.consoleQuiet && this.settings.notifyOnNoTask) {
             creep.log('could not get task from room brain!');
         }
@@ -152,12 +162,12 @@ export abstract class Role implements IRole {
 
     recharge(creep: Creep): string { // default recharging logic for creeps
         // try to find closest container or storage
-        var bufferSettings = creep.room.brain.settings.storageBuffer; // not creep.workRoom; use rules of room you're in
-        var buffer = bufferSettings.default;
+        let bufferSettings = creep.colony.overlord.settings.storageBuffer;
+        let buffer = bufferSettings.default;
         if (bufferSettings[this.name]) {
             buffer = bufferSettings[this.name];
         }
-        var target = creep.pos.findClosestByRange(creep.room.storageUnits, {
+        let target = creep.pos.findClosestByRange(creep.room.storageUnits, {
             filter: (s: Container | StructureStorage) =>
             (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
             (s.structureType == STRUCTURE_STORAGE && s.store[RESOURCE_ENERGY] > buffer),
