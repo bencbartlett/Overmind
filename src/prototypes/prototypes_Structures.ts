@@ -2,6 +2,12 @@
 
 // Container prototypes ================================================================================================
 
+Object.defineProperty(StructureContainer.prototype, 'refillThis', { // should the lab be loaded or unloaded?
+    get () {
+        return _.filter(this.pos.lookFor(LOOK_FLAGS), flagCodes.industry.refillThis.filter).length > 0
+    },
+});
+
 Object.defineProperty(StructureContainer.prototype, 'miningFlag', {
     get: function () {
         return this.pos.findInRange(FIND_FLAGS, 2, {

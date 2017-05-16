@@ -270,6 +270,16 @@ Object.defineProperties(Room.prototype, {
             return _.compact(_.flatten(containers)) || [];
         },
     },
+    'sinkContainers': {
+        get() {
+            return _.filter(this.containers, (s: Container) => s.refillThis);
+        },
+    },
+    'sinkLinks': {
+        get() {
+            return _.filter(this.links, (s: Link) => s.refillThis);
+        },
+    }
 });
 
 

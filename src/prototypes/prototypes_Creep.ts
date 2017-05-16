@@ -40,16 +40,6 @@ Object.defineProperty(Creep.prototype, 'needsReplacing', { // whether the creep 
     }
 });
 
-// Object.defineProperty(Creep.prototype, 'workRoom', { // retrieve the room object (not the name) of the assigned room
-//     get: function () {
-//         return Game.rooms[this.memory.workRoom];
-//     },
-//     set: function (newWorkRoom) {
-//         this.task = null; // clear the task
-//         this.memory.workRoom = newWorkRoom.name;
-//     }
-// });
-
 Object.defineProperty(Creep.prototype, 'colony', { // retrieve the colony object of the creep
     get: function () {
         return Overmind.Colonies[this.memory.colony];
@@ -76,7 +66,7 @@ Object.defineProperty(Creep.prototype, 'assignment', { // retrieve the assignmen
     set: function (newAssignmentObject) {
         this.log("warning: unsafe change of creep assignment from " +
             this.memory.assignment + " to " + newAssignmentObject + "!");
-        this.memory.assignment = newAssignmentObject.ref
+        this.memory.assignment = newAssignmentObject.ref;
     }
 });
 

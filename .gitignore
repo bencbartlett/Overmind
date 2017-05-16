@@ -76,4 +76,3 @@ $RECYCLE.BIN/
 *.lnk
 .vs/
 !/src/Overmind.ts
-/src/roles2/

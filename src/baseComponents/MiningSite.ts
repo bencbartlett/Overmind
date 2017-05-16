@@ -8,6 +8,7 @@ export class MiningSite implements IMiningSite {
     energyPerTick: number;
     miningPowerNeeded: number;
     output: Container | Link | null;
+    outputConstructionSite: ConstructionSite | null;
     fullness: number;
     miners: Creep[];
 
@@ -35,6 +36,12 @@ export class MiningSite implements IMiningSite {
             this.output = nearbyLinks[0];
             this.fullness = this.output.energy / this.output.energyCapacity;
         }
+        // Register output construction sites
+        let nearbyOutputStes = this.pos.findInRange(FIND_CONSTRUCTION_SITES, 2, {
+            filter: (s:Structure) => s.structureType == STRUCTURE_CONTAINER || s.structureType == STRUCTURE_LINK
+        }) as ConstructionSite[];
+        this.outputConstructionSite = nearbyOutputStes[0];
+        // Register miners
         this.miners = source.getAssignedCreeps('miner');
     }
 
