@@ -4,7 +4,7 @@
 
 Screeps is an [MMO strategy game for programmers](https://screeps.com/). The core objective is to expand your colony; to control your units, you write code in JavaScript (or any other transpiled language of your choice). The units run in real-time even when you aren't actively playing the game, so making a reliable AI to control them is important.
 
-This is the AI system I have been developing for Screeps. It is centrally-managed and task based. Creep activities in each room are prioritized and managed by a central `RoomBrain` object, which handles task assignment and runs the spawners. Currently, the AI is mostly autonomous, requiring input only for structure construction and planning invasions, though this will eventually be automated too.
+This is the AI system I have been developing for Screeps. It is a centrally-managed AI with a structure based loosely on the [Zerg's swarm intelligence](http://starcraft.wikia.com/wiki/Overlord) from Starcraft. Creep activities in each colony are prioritized and managed by a central `Overlord` object, which handles task assignment, reacts to stimuli with `objectives` and `directives`, and manages spawner activity through the `hatchery` object.
 
 ### Contributing to Overmind
 I'm not accepting contributions to Overmind until the main framework is finished (probably about another 3 weeks of coding at my current rate). After Overmind is "complete", I'll begin accepting pull requests. 
@@ -15,18 +15,22 @@ If you're new to screeps, I wouldn't recommend using Overmind; most of the fun o
 If you do want to use Overmind as-is, it "should" work right out of the box, although the codebase is under a lot of development right now, so I might have broken something. If it seems I have, please [submit an issue](https://github.com/bencbartlett/Overmind/issues/new) and I'll try to fix it.
 
 ### TypeScript
-I'm currently migrating Overmind's entire codebase to TypeScript 2.2 to make future development easier. Given the size of the existing codebase (~10k lines as of this edit), this could take a while, so my apologies in advance if issues aren't addressed quickly during this period.
+Overmind is coded in TypeScript 2.2, which automatically catches a lot of would-be runtime errors and allows for a much nicer, more object-oriented coding style.
 
 ### Find me in game! (username: Muon)
-I'm currently around the `W1XN8X` sector. If my AI is being too agressive, feel free to message me about it. I'm working on developing a whitelist to make Overmind stop attacking players who opt out of it.
+I'm currently around the [`W1XN8X` sector](https://screeps.com/a/#!/map?pos=-19.173,-88.435). If my AI is being too agressive, feel free to message me about it. I'm working on developing a whitelist to make Overmind stop attacking players who opt out of it.
 
 # AI Structure
+
+[Updated version coming soon.]
 
 ![AI structural schematic](/assets/AIdiagram.png)
 
 
 
 # Design overview
+
+[Updated version coming soon.]
 
 ## Brains
 
