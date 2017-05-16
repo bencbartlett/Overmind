@@ -18,34 +18,26 @@ export class roleWorker extends Role {
     }
 
     onRun(creep: Creep) {
-        if (creep.workRoom) {
-            if (creep.colony.incubating) {
-                // only harvest if there are miners away from their stations
-                this.settings.workersCanHarvest =
-                    creep.workRoom.find(FIND_MY_CREEPS, { // are all sources are occupied by miners?
-                        filter: (c: Creep) => c.memory.role == 'miner' && // is there a miner?
-                                              c.pos.findInRange(FIND_SOURCES, 1).length > 0 // is it at its source?
-                    }).length < creep.room.sources.length ||
-                    creep.room.containers.length < creep.room.sources.length; // or are there not containers yet?
-                this.renewIfNeeded(creep);
+        if (creep.colony.incubating) {
+            // only harvest if there are miners away from their stations
+            this.settings.workersCanHarvest =
+                creep.room.find(FIND_MY_CREEPS, { // are all sources are occupied by miners?
+                    filter: (c: Creep) => c.memory.role == 'miner' && // is there a miner?
+                                          c.pos.findInRange(FIND_SOURCES, 1).length > 0 // is it at its source?
+                }).length < creep.room.sources.length ||
+                creep.room.containers.length < creep.room.sources.length; // or are there not containers yet?
+            this.renewIfNeeded(creep);
+        }
+        // if a creep is trying to harvest and isn't getting any energy and a container becomes available, stop harvest
+        if (creep.task && creep.task.name == 'harvest' && creep.pos.findInRange(FIND_SOURCES, 1).length == 0) {
+            if (_.filter(creep.room.storageUnits, (s: StructureContainer | StructureStorage) =>
+                         (s.structureType == STRUCTURE_CONTAINER
+                          && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
+                         (s.structureType == STRUCTURE_STORAGE
+                          && s.store[RESOURCE_ENERGY] > creep.colony.overlord.settings.storageBuffer['worker']),
+                ).length > 0) {
+                creep.task = null;
             }
-            // if a creep is trying to harvest and isn't getting any energy and a container becomes available, stop harvest
-            if (creep.task && creep.task.name == 'harvest' && creep.pos.findInRange(FIND_SOURCES, 1).length == 0) {
-                if (_.filter(creep.room.storageUnits, (s: StructureContainer | StructureStorage) =>
-                             (s.structureType == STRUCTURE_CONTAINER
-                              && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
-                             (s.structureType == STRUCTURE_STORAGE
-                              && s.store[RESOURCE_ENERGY] > creep.colony.overlord.settings.storageBuffer['worker']),
-                    ).length > 0) {
-                    creep.task = null;
-                }
-            }
-            // // if a creep was assigned to build an outpost room and it's done, send it back to original room
-            // if (creep.workRoom.reservedByMe &&
-            //     creep.workRoom.constructionSites.length == 0 &&
-            //     creep.workRoom.brain.getTasks('repair').length == 0) {
-            //     creep.setWorkRoom(creep.memory.data.origin);
-            // }
         }
     }
 
@@ -93,10 +85,6 @@ export class roleWorker extends Role {
     run(creep: Creep) {
         // Execute on-run code
         this.onRun(creep);
-        // TODO: can't get task from room brain of other room because findClosestByRange() doesn't span multiple rooms
-        if (creep.room != creep.workRoom) { // workers need to be in their designated room to get tasks
-            creep.assign(new taskGoToRoom(creep.assignment));
-        }
         // Check each tick that the task is still valid
         if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
             this.newTask(creep);

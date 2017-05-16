@@ -90,9 +90,6 @@ export class roleGuard extends Role {
             return creep.task.step();
         }
         if (assignment) {
-            if (creep.pos.inRangeTo(assignment.pos, 5) && creep.memory.data.replaceAt == 0) {
-                creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive) + 25;
-            }
             if (!creep.task) {
                 // creep.moveToVisual(assignment.pos, 'red');
                 creep.travelTo(assignment);

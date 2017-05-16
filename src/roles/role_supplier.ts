@@ -16,9 +16,8 @@ export class roleSupplier extends Role {
     }
 
     onCreate(creep: protoCreep) {
-        creep.memory.data.replaceAt = 100; // replace suppliers early!
-        let workRoom = Game.rooms[creep.memory.workRoom];
-        let idleFlag = _.filter(workRoom.flags,
+        let colonyRoom = Game.rooms[creep.memory.colony];
+        let idleFlag = _.filter(colonyRoom.flags,
                                 flag => flagCodes.rally.idlePoint.filter(flag) &&
                                         (flag.memory.role == this.name || flag.name.includes(this.name)))[0];
         if (idleFlag) {
@@ -52,42 +51,6 @@ export class roleSupplier extends Role {
             return "";
         }
     }
-
-    // recharge(creep) {
-    //     var containers = creep.workRoom.find(FIND_STRUCTURES, {
-    //         filter: (s) => s.structureType == STRUCTURE_CONTAINER
-    //     });
-    //     if (creep.workRoom.storage) {
-    //         containers = _.filter(containers, s => s.store[RESOURCE_ENERGY] >
-    //                                                this.settings.assistHaulersAtContainerPercent * s.storeCapacity);
-    //     }
-    //     var target;
-    //     if (containers.length > 0) {
-    //         let targets = _.sortBy(containers, [function (s) {
-    //             return s.store[RESOURCE_ENERGY]
-    //         }]);
-    //         target = targets[targets.length - 1]; // pick the fullest container
-    //     }
-    //     if (!target) {
-    //         target = creep.workRoom.storage;
-    //     }
-    //     if (target) {
-    //         return creep.assign(tasks('recharge'), target);
-    //     } else {
-    //         creep.say("Idle");
-    //         return null;
-    //     }
-    // }
-
-    // newTask(creep) {
-    //     creep.task = null;
-    //     let newTask = this.requestTask(creep);
-    //     if (newTask == undefined && creep.carry.energy == 0) {
-    //         return this.recharge(creep);
-    //     } else {
-    //         return newTask;
-    //     }
-    // }
 
     run(creep: Creep) {
         // get new task if this one is invalid

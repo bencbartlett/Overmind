@@ -5,6 +5,7 @@ export class Preprocessing {
         Game.cache = {
             assignments: {},
             targets: {},
+            objectives: {},
             structures: {},
             constructionSites: {}
         }
@@ -39,6 +40,18 @@ export class Preprocessing {
         }
     }
 
+    cacheObjectives() {
+        for (let name in Game.creeps) {
+            let creep = Game.creeps[name];
+            if (creep.memory.objective) {
+                if (!Game.cache.objectives[creep.memory.objective]) {
+                    Game.cache.objectives[creep.memory.objective] = [];
+                }
+                Game.cache.objectives[creep.memory.objective].push(name);
+            }
+        }
+    }
+
     cacheStructures() {
         for (let name in Game.rooms) {
             let room = Game.rooms[name];
@@ -50,7 +63,6 @@ export class Preprocessing {
 
 
     run() {
-        Memory.preprocessing = {};
         this.cacheAssignments();
         this.cacheTargets();
         this.cacheStructures();

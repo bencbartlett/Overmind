@@ -66,10 +66,6 @@ export class roleMiner extends Role {
         if (creep.carry.energy == 0) {
             return this.harvest(creep);
         }
-        // 1.5: log first time of deposit or build tasks as replacement time
-        if (creep.memory.data.replaceAt == 0) {
-            creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive) + 20;
-        }
         // 2: build construction sites
         if (this.settings.allowBuild) {
             // miners can only build their own containers

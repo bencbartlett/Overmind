@@ -1,9 +1,9 @@
 // Creep prototypes
 
 import {tasks} from '../maps/map_tasks';
-import {Traveler, TravelToOptions} from "../lib/Traveler";
-import {Task} from "../tasks/Task";
 import {roles} from "../maps/map_roles";
+import {Traveler, TravelToOptions} from "../lib/Traveler";
+
 
 Creep.prototype.run = function () { // run the creep's associated role
     let behavior = roles(this.memory.role);
@@ -40,15 +40,15 @@ Object.defineProperty(Creep.prototype, 'needsReplacing', { // whether the creep 
     }
 });
 
-Object.defineProperty(Creep.prototype, 'workRoom', { // retrieve the room object (not the name) of the assigned room
-    get: function () {
-        return Game.rooms[this.memory.workRoom];
-    },
-    set: function (newWorkRoom) {
-        this.task = null; // clear the task
-        this.memory.workRoom = newWorkRoom.name;
-    }
-});
+// Object.defineProperty(Creep.prototype, 'workRoom', { // retrieve the room object (not the name) of the assigned room
+//     get: function () {
+//         return Game.rooms[this.memory.workRoom];
+//     },
+//     set: function (newWorkRoom) {
+//         this.task = null; // clear the task
+//         this.memory.workRoom = newWorkRoom.name;
+//     }
+// });
 
 Object.defineProperty(Creep.prototype, 'colony', { // retrieve the colony object of the creep
     get: function () {
@@ -80,6 +80,17 @@ Object.defineProperty(Creep.prototype, 'assignment', { // retrieve the assignmen
     }
 });
 
+// Objectives ==========================================================================================================
+
+Object.defineProperty(Creep.prototype, 'objective', {
+    get: function () {
+        if (this.memory.objective) {
+            return this.colony.overlord.objectivesByRef[this.memory.objectives];
+        } else {
+            return null;
+        }
+    }
+});
 
 // Tasks and task assignment ===========================================================================================
 
@@ -91,7 +102,7 @@ Object.defineProperty(Creep.prototype, 'task', {
             //     this.memory.task.targetRef = this.memory.task.targetID;
             // }
             var target = deref(this.memory.task.targetRef);
-            var task = tasks(this.memory.task.name, target) as Task;
+            var task = tasks(this.memory.task.name, target) as ITask;
             task.creepName = this.memory.task.creepName;
             task.targetCoords = this.memory.task.targetCoords;
             task.data = this.memory.task.data;
@@ -109,7 +120,7 @@ Object.defineProperty(Creep.prototype, 'task', {
     }
 });
 
-Creep.prototype.assign = function (task: Task) { // wrapper for task.assign(creep, target)
+Creep.prototype.assign = function (task: ITask) { // wrapper for task.assign(creep, target)
     this.task = null;
     return task.assign(this);
 };

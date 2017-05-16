@@ -17,9 +17,8 @@ export class roleLinker extends Role {
     }
 
     onCreate(creep: protoCreep): protoCreep {
-        creep.memory.data.replaceAt = 100; // replace suppliers early!
-        let workRoom = Game.rooms[creep.memory.workRoom];
-        let idleFlag = _.filter(workRoom.flags,
+        let colonyRoom = Game.rooms[creep.memory.colony];
+        let idleFlag = _.filter(colonyRoom.flags,
                                 flag => flagCodes.rally.idlePoint.filter(flag) &&
                                         (flag.memory.role == this.name || flag.name.includes(this.name)))[0];
         if (idleFlag) {

@@ -17,7 +17,7 @@ export class roleMineralSupplier extends Role {
     }
 
     collectForLab(creep: Creep, lab: Lab) {
-        let term = creep.workRoom.terminal;
+        let term = creep.colony.terminal;
         if (term && term.store[lab.assignedMineralType] > 0) {
             var withdrawThis = new taskWithdraw(term);
             withdrawThis.data.resourceType = lab.assignedMineralType;

@@ -17,10 +17,14 @@ export class taskPickup extends Task {
 
     isValidTarget() {
         var target = this.target;
-        return (target != null && target.amount != null && target.amount > 0);
+        return (target && target.amount && target.amount > 0);
     }
 
     work() {
-        return this.creep.pickup(this.target);
+        let res = this.creep.pickup(this.target);
+        if (!this.target) { // if the target is gone, we're done and clear the task
+            this.creep.task = null;
+        }
+        return res;
     }
 }

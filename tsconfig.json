@@ -28,6 +28,7 @@
     "build",
     "node_modules",
     "libs",
-    "src/deprecated"
+    "src/deprecated",
+    "src/roles2"
   ]
 }

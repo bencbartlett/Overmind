@@ -154,17 +154,17 @@ Object.defineProperty(Room.prototype, 'structures', {
 Object.defineProperties(Room.prototype, {
     'spawns': { // containers in the room
         get() {
-            return this.structures[STRUCTURE_SPAWN];
+            return this.structures[STRUCTURE_SPAWN] || [];
         },
     },
     'extensions': { // containers in the room
         get() {
-            return this.structures[STRUCTURE_EXTENSION];
+            return this.structures[STRUCTURE_EXTENSION] || [];
         },
     },
     'containers': { // containers in the room
         get() {
-            return this.structures[STRUCTURE_CONTAINER];
+            return this.structures[STRUCTURE_CONTAINER] || [];
         },
     },
     'storageUnits': { // containers + storage
@@ -172,29 +172,29 @@ Object.defineProperties(Room.prototype, {
             if (!this.structures['storageUnits']) {
                 let storageUnits = [].concat(this.structures[STRUCTURE_CONTAINER],
                                              this.structures[STRUCTURE_STORAGE]);
-                this.structures['storageUnits'] = storageUnits;
+                this.structures['storageUnits'] = _.compact(_.flatten(storageUnits));
             }
-            return this.structures['storageUnits'];
+            return this.structures['storageUnits'] || [];
         },
     },
     'towers': { // towers
         get() {
-            return this.structures[STRUCTURE_TOWER];
+            return this.structures[STRUCTURE_TOWER] || [];
         },
     },
     'links': { // labs
         get() {
-            return this.structures[STRUCTURE_LINK];
+            return this.structures[STRUCTURE_LINK] || [];
         },
     },
     'labs': { // labs
         get() {
-            return this.structures[STRUCTURE_LAB];
+            return this.structures[STRUCTURE_LAB] || [];
         },
     },
     'sources': { // sources
         get() {
-            return this.find(FIND_SOURCES);
+            return this.find(FIND_SOURCES) || [];
         },
     },
     'sinks': { // anything requiring a regular supply of energy
@@ -205,9 +205,9 @@ Object.defineProperties(Room.prototype, {
                                       this.structures[STRUCTURE_LAB],
                                       this.structures[STRUCTURE_TOWER],
                                       this.structures[STRUCTURE_POWER_SPAWN]);
-                this.structures['sinks'] = sinks;
+                this.structures['sinks'] = _.compact(_.flatten(sinks));
             }
-            return this.structures['sinks'];
+            return this.structures['sinks'] || [];
         },
     },
     'repairables': { // anything that can be repaired, excluding walls+ramparts, which are "fortified"
@@ -219,9 +219,9 @@ Object.defineProperties(Room.prototype, {
                         repairables = repairables.concat(this.structures[structureType]);
                     }
                 }
-                this.structures['repairables'] = repairables;
+                this.structures['repairables'] = _.compact(_.flatten(repairables));
             }
-            return this.structures['repairables'];
+            return this.structures['repairables'] || [];
         },
     },
     'constructionSites': { // all construction sites; always recached
@@ -229,19 +229,19 @@ Object.defineProperties(Room.prototype, {
             if (!Game.cache.constructionSites[this.name]) {
                 Game.cache.constructionSites[this.name] = this.find(FIND_CONSTRUCTION_SITES);
             }
-            return Game.cache.constructionSites[this.name];
+            return Game.cache.constructionSites[this.name] || [];
         },
     },
     'structureSites': { // construction sites that aren't roads
         get() {
-            return _.filter(this.constructionSites[this.name],
-                            (c: ConstructionSite) => c.structureType != STRUCTURE_ROAD);
+            return _.filter(this.constructionSites,
+                            (c: ConstructionSite) => c.structureType != STRUCTURE_ROAD) || [];
         },
     },
     'roadSites': { // construction sites for roads
         get() {
-            return _.filter(this.constructionSites[this.name],
-                            (c: ConstructionSite) => c.structureType == STRUCTURE_ROAD);
+            return _.filter(this.constructionSites,
+                            (c: ConstructionSite) => c.structureType == STRUCTURE_ROAD) || [];
         },
     },
     'barriers': { // walls and ramparts
@@ -249,9 +249,9 @@ Object.defineProperties(Room.prototype, {
             if (!this.structures['barriers']) {
                 let barriers = [].concat(this.structures[STRUCTURE_WALL],
                                          this.structures[STRUCTURE_RAMPART]);
-                this.structures['barriers'] = barriers;
+                this.structures['barriers'] = _.compact(_.flatten(barriers));
             }
-            return this.structures['barriers'];
+            return this.structures['barriers'] || [];
         },
     },
     'remoteContainers': { // containers in other rooms
@@ -267,7 +267,7 @@ Object.defineProperties(Room.prototype, {
                 }) as Container[];
                 containers = containers.concat(nearbyContainers);
             }
-            return containers;
+            return _.compact(_.flatten(containers)) || [];
         },
     },
 });
@@ -276,8 +276,7 @@ Object.defineProperties(Room.prototype, {
 // Run function for room. Executed before roomBrain.run.
 Room.prototype.run = function () {
     // Animate each tower: see prototypes_StructureTower
-    var towers = this.find(FIND_MY_STRUCTURES, {filter: (s: Structure) => s.structureType == STRUCTURE_TOWER});
-    for (let tower of towers) {
+    for (let tower of this.towers) {
         tower.run();
     }
     // Animate each link: transfer to storage when it is >50% full if storage link is empty and cooldown is over

@@ -14,8 +14,6 @@ export class roleScout extends Role {
         if (creep.assignment) {
             if (!creep.pos.inRangeTo(creep.assignment.pos, 0)) {
                 creep.travelTo(creep.assignment);
-            } else if (creep.memory.data.replaceAt == 0) {
-                creep.memory.data.replaceAt = (creep.lifetime - creep.ticksToLive) + 50;
             }
         }
     }
