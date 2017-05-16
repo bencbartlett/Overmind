@@ -34,7 +34,8 @@ export abstract class Task implements ITask {
             this.target = target;
             this.targetPos = target.pos;
         } else {
-            console.log("Task.ts initialization error: target is null!");
+            // This can sometimes trigger on things that delete the target with the action, like dismantle or pickup
+            // console.log("Task.ts initialization error: target is null!");
         }
     }
 
@@ -82,7 +83,7 @@ export abstract class Task implements ITask {
     // Remove the task (in case the target disappeared, usually)
     remove(): void {
         if (this.creep) {
-            this.creep.log("Deleting task " + this.name + ": target is null!");
+            // this.creep.log("Deleting task " + this.name + ": target is null!");
             this.creep.task = null;
         }
     }

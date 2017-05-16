@@ -19,10 +19,11 @@ export class roleReserver extends Role {
         if (!creep.assignment.room) {
             creep.assign(new taskGoToRoom(creep.assignment));
         } else {
-            if (creep.workRoom && creep.workRoom.controller && !creep.workRoom.signedByMe) {
-                creep.assign(new taskSignController(creep.workRoom.controller));
+            let controller = creep.assignment.room.controller;
+            if (controller.signedByMe) {
+                creep.assign(new taskSignController(controller));
             } else {
-                creep.assign(new taskReserve(creep.assignment.room.controller!));
+                creep.assign(new taskReserve(controller));
             }
         }
     }

@@ -18,6 +18,15 @@ export default class Overmind {
         this.TerminalBrains = {};
     }
 
+    verifyMemory(): void {
+        if (!Memory.Overmind) {
+            Memory.Overmind = {};
+        }
+        if (!Memory.colonies) {
+            Memory.colonies = {};
+        }
+    }
+
     initializeColonies(): void {
         // Colony call object
         let protoColonies = {} as { [roomName: string]: string[] }; // key: lead room, values: outposts[]
@@ -45,12 +54,20 @@ export default class Overmind {
         for (let colName in protoColonies) {
             this.Colonies[colName] = new Colony(colName, protoColonies[colName]);
         }
+        // Register creeps
+        let creepsByColony = _.groupBy(Game.creeps, creep => creep.memory.colony) as { [colName: string]: Creep[] };
+        for (let colName in this.Colonies) {
+            let colony = this.Colonies[colName];
+            let colCreeps: Creep[] = creepsByColony[colName];
+            colony.creeps = colCreeps;
+            colony.creepsByRole = _.groupBy(colCreeps, creep => creep.memory.role);
+        }
     }
 
     spawnMoarOverlords(): void {
         // Instantiate an overlord for each colony
         for (let name in this.Colonies) {
-            this.Overlords[name] = new Overlord(name);
+            this.Overlords[name] = new Overlord(this.Colonies[name]);
         }
     }
 
@@ -63,6 +80,7 @@ export default class Overmind {
     }
 
     init(): void {
+        this.verifyMemory();
         this.initializeColonies();
         this.spawnMoarOverlords();
         this.initializeTerminalBrains();

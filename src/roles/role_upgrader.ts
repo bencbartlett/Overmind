@@ -63,8 +63,8 @@ export class roleUpgrader extends Role {
                 return creep.assign(new taskGetBoosted(upgraderBoosters[0]));
             }
         }
-        if (creep.workRoom && creep.workRoom.controller && !creep.workRoom.signedByMe) {
-            return creep.assign(new taskSignController(creep.workRoom.controller));
+        if (creep.room.controller.signedByMe) {
+            return creep.assign(new taskSignController(creep.room.controller));
         }
     }
 

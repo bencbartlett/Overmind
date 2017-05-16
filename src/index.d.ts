@@ -6,6 +6,7 @@ interface Game {
     cache: {
         assignments: { [ref: string]: { [roleName: string]: string[] } };
         targets: { [ref: string]: string[] };
+        objectives: { [ref: string]: string[] };
         structures: { [roomName: string]: { [structureType: string]: Structure[] } };
         constructionSites: { [roomName: string]: ConstructionSite[] };
     }
@@ -13,6 +14,7 @@ interface Game {
 
 interface IColony {
     name: string;
+    memory: any;
     room: Room;
     hatchery: any;
     storage: StructureStorage;
@@ -22,8 +24,10 @@ interface IColony {
     rooms: Room[];
     flags: Flag[];
     creeps: Creep[];
+    creepsByRole: { [roleName: string]: Creep[] };
+    getCreepsByRole(roleName: string): Creep[];
     sources: Source[];
-    miningSites: any[];
+    miningSites: { [sourceID: string]: IMiningSite };
     haulingPowerNeeded: number;
     overlord: IOverlord;
 }
@@ -62,10 +66,11 @@ interface Creep {
     publicMessage(sayList: string[]): void;
     getBodyparts(partType: string): number;
     needsReplacing: boolean;
-    workRoom: Room;
+    // workRoom: Room;
     colony: IColony;
     lifetime: number;
     assignment: RoomObject;
+    objective: IObjective | null;
     task: any;
     assign(task: ITask): string;
     moveSpeed: number;
@@ -97,8 +102,13 @@ interface ITask {
 }
 
 interface IObjective {
-    name: String;
+    name: string;
     target: RoomObject;
+    pos: RoomPosition;
+    ref: string;
+    creepNames: string[];
+    maxCreeps: number;
+    assignableToRoles: string[];
     assignableTo(creep: Creep): boolean;
     getTask(): ITask;
 }
@@ -192,6 +202,7 @@ interface RoomVisual {
 
 interface StructureContainer {
     miningFlag: Flag;
+    miningSite: IMiningSite;
     predictedEnergyOnArrival: number;
 }
 
@@ -255,17 +266,20 @@ interface IMiningSite {
     energyPerTick: number;
     miningPowerNeeded: number;
     output: Container | Link | null;
-    fullness: number | undefined;
+    fullness: number;
+    predictedStore: number;
     miners: Creep[];
 }
 
 interface IOverlord {
     name: string;
+    memory: any;
     room: Room;
     colony: IColony;
     settings: any;
     directives: any[]; // TODO: IDirective[]
     objectives: { [objectiveName: string]: IObjective[] };
+    objectivesByRef: { [objectiveRef: string]: IObjective };
     objectivePriorities: string[];
     spawnPriorities: { [role: string]: number };
     log(message: string): void;

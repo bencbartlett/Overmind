@@ -53,15 +53,6 @@ export abstract class Role implements IRole {
         return cost;
     };
 
-    generateCreepName = function (roleName: string): string {
-        // generate a creep name based on the role and add a suffix to make it unique
-        let i = 0;
-        while (Game.creeps[(roleName + '_' + i)]) {
-            i++;
-        }
-        return (roleName + '_' + i);
-    };
-
     generateBody(availableEnergy: number, maxRepeats = Infinity): string[] {
         let patternCost, patternLength, numRepeats;
         let prefix = this.settings.bodyPrefix;
@@ -119,10 +110,9 @@ export abstract class Role implements IRole {
     generateLargestCreep(colony: Colony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep {
         // spawn: spawn to add to, assignment: object (not ref) to assign creep to, patternRepetitionLimit: creep size
         let creepBody = this.generateBody(colony.room.energyCapacityAvailable, patternRepetitionLimit);
-        let creepName = this.generateCreepName(this.name);
         let protoCreep: protoCreep = { // object to add to spawner queue
             body: creepBody, // body array
-            name: creepName, // name of the creep
+            name: this.name, // name of the creep - gets modified by hatchery
             memory: { // memory to initialize with
                 role: this.name, // role of the creep
                 task: <Task> null, // task the creep is performing
@@ -149,10 +139,6 @@ export abstract class Role implements IRole {
     }
 
     requestTask(creep: Creep): string { // default logic for requesting a new task from the room brain // TODO: why doesn't this work in other rooms?
-        if (!creep.workRoom) {
-            creep.log("no workRoom! Why?");
-            return "";
-        }
         let response = creep.colony.overlord.assignTask(creep);
         if (!response && !this.settings.consoleQuiet && this.settings.notifyOnNoTask) {
             creep.log('could not get task from room brain!');

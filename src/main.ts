@@ -9,27 +9,35 @@
 //
 // Overmind repository: github.com/bencbartlett/overmind
 //
-//
-// To-do list: ====================
-// TODO: ignore pathing only for haulers/friendly creeps on track? Gets stuck against enemies
-// TODO: DEFCON + dynamically generated guards (patrolling cops?)
-// TODO: spawn queue - duplicate creeps can be built from double-spawn rooms
 
 // Import everything needed
 'use strict';
-
+// Globals
+import "./globals";
+// import "./utilities";
+import "./settings/settings_user";
+// Libraries
+import "./pathing/pathing"; // Used for calculating road distances to prioritize assigned operations
+import "./lib/Traveler"; // BonzAI's excellent moveTo() replacement
+// Prototypes
+import "./prototypes/prototypes_Creep";
+import "./prototypes/prototypes_Flag";
+import "./prototypes/prototypes_RoomObject";
+import "./prototypes/prototypes_RoomPosition";
+import "./prototypes/prototypes_RoomVisual";
+import "./prototypes/prototypes_Room";
+import "./prototypes/prototypes_Structures";
+// Global objects
 import OM from "./Overmind";
 import {flagCodesMap} from "./maps/map_flag_codes";
-
-import profiler = require('./lib/screeps-profiler');
-
-import "./require";
-import {Preprocessing} from "./Preprocessing";
-import {dataLogger} from './logging/data_logger';
-import {visuals} from './visuals/visuals';
-
 declare var Overmind: OM;
 declare var flagCodes: { [category: string]: flagCat };
+// CPU profiler
+import profiler = require('./lib/screeps-profiler');
+// Other stuff
+import {Preprocessing} from "./preprocessing";
+import {dataLogger} from './logging/data_logger';
+import {visuals} from './visuals/visuals';
 
 // Enable screeps profiler
 // profiler.enable();
