@@ -91,6 +91,7 @@ interface ITask {
     creep: Creep;
     target: RoomObject;
     targetPos: RoomPosition;
+    remove(): void;
     assign(creep: Creep): string;
     onAssignment(): void;
     isValidTask(): boolean;
@@ -111,6 +112,7 @@ interface IObjective {
     assignableToRoles: string[];
     assignableTo(creep: Creep): boolean;
     getTask(): ITask;
+    assignTo(creep: Creep): string;
 }
 
 interface IRole {
@@ -169,6 +171,8 @@ interface Room {
     roadSites: ConstructionSite[];
     barriers: (StructureWall | StructureRampart)[]
     remoteContainers: StructureContainer[];
+    sinkContainers: StructureContainer[];
+    sinkLinks: StructureLink[];
     run(): void;
 }
 
@@ -201,6 +205,7 @@ interface RoomVisual {
 }
 
 interface StructureContainer {
+    refillThis: boolean;
     miningFlag: Flag;
     miningSite: IMiningSite;
     predictedEnergyOnArrival: number;
@@ -266,6 +271,7 @@ interface IMiningSite {
     energyPerTick: number;
     miningPowerNeeded: number;
     output: Container | Link | null;
+    outputConstructionSite: ConstructionSite | null;
     fullness: number;
     predictedStore: number;
     miners: Creep[];

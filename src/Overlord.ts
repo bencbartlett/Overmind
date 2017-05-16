@@ -14,11 +14,13 @@ import {Objective} from "./objectives/Objective";
 import {
     buildObjective,
     buildRoadObjective,
-    collectEnergyMiningSiteObjective, fortifyObjective,
+    collectEnergyMiningSiteObjective,
+    fortifyObjective,
     pickupEnergyObjective,
     repairObjective,
     supplyObjective,
-    supplyTowerObjective, upgradeObjective,
+    supplyTowerObjective,
+    upgradeObjective,
 } from "./objectives/objectives";
 import {roleReserver} from "./roles/role_reserver";
 
