@@ -25,14 +25,15 @@ export class ReserverCreep extends AbstractCreep {
     newTask() {
         // If no vision of the room, go to it
         if (!this.assignment.room) {
-            return this.assign(new taskGoToRoom(this.assignment));
-        }
-        // If there is vision of the room, sign and/or reserve the controller
-        let controller = this.assignment.room.controller;
-        if (!controller.signedByMe) { // Sign the controller if applicable
-            return this.assign(new taskSignController(controller));
-        } else { // Reserve the controller
-            return this.assign(new taskReserve(controller));
+            this.task = new taskGoToRoom(this.assignment);
+        } else {
+            // If there is vision of the room, sign and/or reserve the controller
+            let controller = this.assignment.room.controller;
+            if (!controller.signedByMe) { // Sign the controller if applicable
+                this.task = new taskSignController(controller);
+            } else { // Reserve the controller
+                this.task = new taskReserve(controller);
+            }
         }
     }
 }

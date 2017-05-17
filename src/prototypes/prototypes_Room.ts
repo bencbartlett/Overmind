@@ -58,22 +58,6 @@ Object.defineProperty(Room.prototype, 'creeps', {
     },
 });
 
-// Tasks of creeps assigned to the room
-Object.defineProperty(Room.prototype, 'tasks', {
-    get () {
-        let tasks = this.assignedCreepNames.map((name: string) => Game.icreeps[name].task);
-        return _.filter(tasks, task => task != null);
-    },
-});
-
-// Targets of tasks of creeps assigned to the room
-Object.defineProperty(Room.prototype, 'taskTargets', {
-    get () {
-        let targets = this.tasks.map((task: Task) => task.target);
-        return _.filter(targets, target => target != null);
-    },
-});
-
 // Room properties: hostiles ===========================================================================================
 
 // Hostile creeps currently in the room
@@ -121,26 +105,6 @@ Object.defineProperty(Room.prototype, 'remainingConstructionProgress', { // flag
     },
 });
 
-Room.prototype.fullestContainer = function () {
-    // Set target to the fullest container in the room
-    var containers = this.find(FIND_STRUCTURES, {
-        filter: (s: StructureContainer) => s.structureType == STRUCTURE_CONTAINER &&
-                                           s.store[RESOURCE_ENERGY] > 0,
-    });
-    if (containers.length > 0) { // loop through results to find the container with the most energy in the room
-        var target = containers[0];
-        var maxFullness = 0;
-        for (let i in containers) {
-            if (containers[i].store[RESOURCE_ENERGY] > maxFullness) {
-                target = containers[i];
-                maxFullness = containers[i].store[RESOURCE_ENERGY];
-            }
-        }
-        return target;
-    } else {
-        return null;
-    }
-};
 
 // Cached room properties ==============================================================================================
 

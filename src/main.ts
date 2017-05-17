@@ -12,15 +12,15 @@
 //
 
 
-// Import everything needed
 'use strict';
-// Globals
+// Cached Import and Declarations ======================================================================================
+
+// Global settings and functions
 import "./globals";
-// import "./utilities";
 import "./settings/settings_user";
-// Libraries
-import "./pathing/pathing"; // Used for calculating road distances to prioritize assigned operations
+// External libraries
 import "./lib/Traveler"; // BonzAI's excellent moveTo() replacement
+import profiler = require('./lib/screeps-profiler'); // gdborton's CPU profiler
 // Prototypes
 import "./prototypes/prototypes_Creep";
 import "./prototypes/prototypes_Flag";
@@ -32,19 +32,20 @@ import "./prototypes/prototypes_Structures";
 // Global objects
 import OM from "./Overmind";
 import {flagCodesMap} from "./maps/map_flag_codes";
-declare var Overmind: OM;
-declare var flagCodes: { [category: string]: flagCat };
-// CPU profiler
-import profiler = require('./lib/screeps-profiler');
-// Other stuff
+// Preprocessing and postprocessing modules
 import {Preprocessing} from "./preprocessing";
 import {dataLogger} from './logging/data_logger';
 import {visuals} from './visuals/visuals';
 
+// Global declarations
+declare var Overmind: OM;
+declare var flagCodes: { [category: string]: flagCat };
+
 // Enable screeps profiler
 // profiler.enable();
 
-// Main loop
+// Main loop ===========================================================================================================
+
 export function loop() {
     // profiler.wrap(function () {
     // Memory management ===========================================================================================
@@ -67,16 +68,9 @@ export function loop() {
     preprocessing.run();
     // Create global flagCodes reference (avoids circular imports)
     global.flagCodes = flagCodesMap;
-    // Initialize Overmind object
+    // Initialize Overmind object, wrapping all creeps in Game.icreeps and registering them to colonies
     global.Overmind = new OM;
     Overmind.init();
-    // // Wrap all creeps
-    // Game.icreeps = {};
-    // for (let name in Game.creeps) {
-    //     Game.icreeps[name] = AbstractCreepWrapper(Game.creeps[name]);
-    // }
-
-
 
     // Animation ===================================================================================================
     // Animate each overlord
@@ -87,17 +81,11 @@ export function loop() {
     }
     // Animate each creep
     for (let name in Game.icreeps) {
-        Game.icreeps[name].run();
+        let wrappedCreep = Game.icreeps[name];
+        if (!wrappedCreep.spawning) {
+            wrappedCreep.run();
+        }
     }
-
-    // for (let name in Game.rooms) {
-    //     // Animate each room brain, but only for owned rooms
-    //     let room = Game.rooms[name];
-    //     if (room.my) {
-    //         room.run();
-    //         room.brain.run();
-    //     }
-    // }
 
     // Postprocessing ==============================================================================================
     // Log stats

@@ -85,7 +85,7 @@ export class TerminalBrain {
         for (let name in Game.rooms) {
             let room = Game.rooms[name];
             if (room.my && room.terminal &&
-                room.storage && room.storage.store[RESOURCE_ENERGY] < room.overlord.settings.unloadStorageBuffer) {
+                room.storage && room.storage.energy < room.overlord.settings.unloadStorageBuffer) {
                 let cost = Game.market.calcTransactionCost(this.settings.excessTransferAmount,
                                                            this.room.name, room.name);
                 if (cost < minCost) {
@@ -95,7 +95,7 @@ export class TerminalBrain {
             }
         }
         // if you have sufficient energy in terminal
-        if (minRoom && this.terminal.store[RESOURCE_ENERGY] > this.settings.excessTransferAmount + minCost) {
+        if (minRoom && this.terminal.energy > this.settings.excessTransferAmount + minCost) {
             let res = this.terminal.send(RESOURCE_ENERGY, this.settings.excessTransferAmount, minRoom,
                                          "Excess energy transfer");
             this.log(`Sent ${this.settings.excessTransferAmount} excess energy to ${minRoom}. Response: ${res}.`);
@@ -104,13 +104,13 @@ export class TerminalBrain {
 
     run() {
         // send excess energy if terminal and storage both have too much energy
-        if (this.terminal.store[RESOURCE_ENERGY] >
+        if (this.terminal.energy >
             this.settings.resourceAmounts[RESOURCE_ENERGY] + this.settings.excessTransferAmount && this.room.storage &&
-            this.room.storage.store[RESOURCE_ENERGY] > this.room.overlord.settings.unloadStorageBuffer) {
+            this.room.storage.energy > this.room.overlord.settings.unloadStorageBuffer) {
             this.sendExtraEnergy();
         }
         // buy shortages only if there's enough energy; avoids excessive CPU usage
-        if (this.terminal.store[RESOURCE_ENERGY] > 0.9 * this.settings.resourceAmounts[RESOURCE_ENERGY]) {
+        if (this.terminal.energy > 0.9 * this.settings.resourceAmounts[RESOURCE_ENERGY]) {
             this.buyShortages();
         }
     }

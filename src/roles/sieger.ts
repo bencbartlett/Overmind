@@ -86,10 +86,27 @@ export class SiegerCreep extends AbstractCreep {
                                         lab.mineralAmount >= 30 * this.getActiveBodyparts(bodypart),
                 );
                 if (boosters.length > 0) {
-                    this.task = null;
-                    this.assign(new taskGetBoosted(boosters[0]));
+                    this.task = new taskGetBoosted(boosters[0]);
                 }
             }
+        }
+    }
+
+    newTask() {
+        this.task = null;
+        // 2.1: move to same room as assignment
+        if (this.assignment && !this.creep.inSameRoomAs(this.assignment)) {
+            let task = new taskGoToRoom(this.assignment);
+            task.data.travelToOptions['allowHostile'] = true;
+            this.task = task;
+            return;
+        }
+        // 2.2: ATTACK SOMETHING
+        var target = this.findTarget();
+        if (target) {
+            let task = new taskDismantle(target);
+            task.data.travelToOptions['allowHostile'] = true;
+            this.task = task;
         }
     }
 
@@ -107,22 +124,7 @@ export class SiegerCreep extends AbstractCreep {
             this.memory.needsHealing = false; // turn off when done healing
         }
         // 2: task assignment
-        if ((!this.task || !this.task.isValidTask() || !this.task.isValidTarget())) { // get new task
-            this.task = null;
-            // 2.1: move to same room as assignment
-            if (assignment && !this.creep.inSameRoomAs(assignment)) {
-                let task = new taskGoToRoom(assignment);
-                task.data.travelToOptions['allowHostile'] = true;
-                this.assign(task);
-            }
-            // 2.2: ATTACK SOMETHING
-            var target = this.findTarget();
-            if (target) {
-                let task = new taskDismantle(target);
-                task.data.travelToOptions['allowHostile'] = true;
-                this.assign(task);
-            }
-        }
+        this.assertValidTask();
         // execute task
         if (this.task) {
             return this.task.step();

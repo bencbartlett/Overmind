@@ -40,11 +40,11 @@ export class HealerCreep extends AbstractCreep {
 
     run() {
         var assignment = Game.flags[this.memory.assignmentRef];
-        if ((!this.task || !this.task.isValidTask() || !this.task.isValidTarget())) {
+        if (!this.hasValidTask) {
             this.task = null;
             var target = this.findTarget();
             if (target) {
-                this.assign(new taskHeal(target));
+                this.task = new taskHeal(target);
             }
         }
         if (this.task) {

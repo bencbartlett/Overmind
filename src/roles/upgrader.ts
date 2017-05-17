@@ -26,7 +26,7 @@ export class UpgraderCreep extends AbstractCreep {
         super(creep);
     }
 
-    recharge() {
+    recharge() { // TODO: rewrite this
         var bufferSettings = this.colony.overlord.settings.storageBuffer;
         var buffer = bufferSettings.defaultBuffer;
         if (bufferSettings[this.name]) {
@@ -39,26 +39,25 @@ export class UpgraderCreep extends AbstractCreep {
         var target = this.pos.findClosestByRange(FIND_STRUCTURES, {
             filter: function (s: Container | Storage | Link) {
                 if (s instanceof StructureStorage){
-                    return s.store[RESOURCE_ENERGY] > carryCapacity;
+                    return s.energy > carryCapacity;
                 } else if (s instanceof StructureContainer) {
-                    return s.store[RESOURCE_ENERGY] > buffer;
+                    return s.energy > buffer;
                 } else if (s instanceof StructureLink) {
                     return (s.energy >= 0 && s.pos.getRangeTo(s.room.controller) <= 5 && s.refillThis);
                 }
             },
         }) as (Container | Storage | Link);
         if (target) { // assign recharge task to this
-            return this.assign(new taskRecharge(target));
+            this.task = new taskRecharge(target);
         } else {
             if (!this.settings.consoleQuiet && this.settings.notifyOnNoRechargeTargets) {
                 this.log('no recharge targets!');
             }
-            return "";
         }
     }
 
     repairContainer(container: Container) {
-        return this.assign(new taskRepair(container));
+        this.task = new taskRepair(container);
     }
 
     onRun() {
@@ -68,11 +67,10 @@ export class UpgraderCreep extends AbstractCreep {
                                             lab.mineralAmount >= 30 * this.getActiveBodyparts(WORK),
             );
             if (upgraderBoosters.length > 0 && this.ticksToLive > 0.95 * this.lifetime) {
-                return this.assign(new taskGetBoosted(upgraderBoosters[0]));
+                this.task = new taskGetBoosted(upgraderBoosters[0]);
             }
-        }
-        if (this.room.controller.signedByMe) {
-            return this.assign(new taskSignController(this.room.controller));
+        } else if (this.room.controller.signedByMe) {
+            this.task = new taskSignController(this.room.controller);
         }
     }
 

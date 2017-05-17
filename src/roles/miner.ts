@@ -29,32 +29,27 @@ export class MinerCreep extends AbstractCreep {
     }
 
     newTask() {
-        // Clear the task
-        this.task = null;
-
-        // If you have no energy, get some
-        if (this.carry.energy == 0) {
-            return this.assign(new taskHarvest(this.assignment));
-        }
-
-        // Ensure that the mining site has an output
-        if (!this.miningSite.output) {
-            if (this.miningSite.outputConstructionSite) {
-                // Build the output
-                return this.assign(new taskBuild(this.miningSite.outputConstructionSite));
-            } else {
-                // If there isn't a site for the output, make one
-                return this.room.createConstructionSite(this.pos, STRUCTURE_CONTAINER);
+        // Are you out of energy?
+        if (this.carry.energy == 0) { // If yes, get more energy
+            this.task = new taskHarvest(this.assignment);
+        } else { // If no, continue
+            // Is there an output to the miningSite?
+            if (this.miningSite.output) { // If there is output, repair or deposit to it
+                // Is the miningSite output at full health?
+                if (this.miningSite.output.hits == this.miningSite.output.hitsMax) { // yes: deposit to it
+                    this.task = new taskDeposit(this.miningSite.output);
+                } else { // no: repair it
+                    this.task = new taskRepair(this.miningSite.output);
+                }
+            } else { // If no output, build one
+                // Is there a construction site for the output?
+                if (this.miningSite.outputConstructionSite) { // yes: build output
+                    this.task = new taskBuild(this.miningSite.outputConstructionSite);
+                } else { // no: make a construction site for the output
+                    this.room.createConstructionSite(this.pos, STRUCTURE_CONTAINER);
+                }
             }
         }
-
-        // Repair the output if necessary
-        if (this.miningSite.output.hits < this.miningSite.output.hitsMax) {
-            return this.assign(new taskRepair(this.miningSite.output));
-        }
-
-        // Deposit to the output
-        return this.assign(new taskDeposit(this.miningSite.output));
     }
 
     onRun() {

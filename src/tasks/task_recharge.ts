@@ -1,6 +1,6 @@
 import {Task} from "./Task";
 
-type targetType = StructureStorage | Container | Terminal | Link;
+type targetType = StructureStorage | StructureContainer | StructureTerminal | StructureLink;
 export class taskRecharge extends Task {
     target: targetType;
     constructor(target: targetType) {
@@ -15,15 +15,7 @@ export class taskRecharge extends Task {
     }
 
     isValidTarget() {
-        var target = this.target;
-        if (!target) {
-            return false;
-        }
-        if (target instanceof StructureLink) {
-            return target.energy > 0;
-        } else {
-            return target.store && target.store[RESOURCE_ENERGY] > 0;
-        }
+        return this.target && this.target.energy > 0;
     }
 
     work() {

@@ -27,9 +27,9 @@ export abstract class Objective implements IObjective {
 
     abstract getTask(): Task;
 
-    assignTo(creep: ICreep): string {
+    assignTo(creep: ICreep): void {
         creep.memory.objectiveRef = this.ref; // give creep a reference to this objctive
         this.creepNames.push(creep.name); // register creep assignment
-        return creep.assign(this.getTask()); // unpack task and hand it to creep
+        creep.task = this.getTask(); // unpack task and hand it to creep
     }
 }

@@ -26,7 +26,7 @@ export var flagCodesMap: { [category: string]: flagCat } = {
             filter: (flag: Flag) => flag.color == COLOR_RED && flag.secondaryColor == COLOR_RED,
             action: flagActions.millitary.destroyer,
         },
-        guard: <flagSubCat>  { // spawn and send guard to this flag, primarily for outpost guarding // TODO: call in reinforcements
+        guard: <flagSubCat>  { // spawn and send guard to this flag, primarily for outpost guarding
             color: COLOR_RED,
             secondaryColor: COLOR_BLUE,
             filter: (flag: Flag) => flag.color == COLOR_RED && flag.secondaryColor == COLOR_BLUE,
