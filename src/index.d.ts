@@ -45,6 +45,8 @@ interface ICreep {
     ticksToLive: number;
     // Custom properties
     settings: any;
+    _task: ITask;
+    task: ITask;
     // Creep methods
     attack(target: Creep | Structure): number;
     attackController(controller: StructureController): number;
@@ -71,8 +73,10 @@ interface ICreep {
     travelTo(destination: { pos: RoomPosition }, options?: any): number;
     // Custom creep methods
     log(...args: any[]): void;
-    task: ITask;
-    assign(task: ITask): string;
+    initializeTask(): ITask;
+    hasValidTask: boolean;
+    assertValidTask(): void;
+    // assign(task: ITask): void;
     colony: IColony;
     lifetime: number;
     moveSpeed: number;
@@ -83,11 +87,11 @@ interface ICreep {
     assignment: RoomObject;
     assignmentPos: RoomPosition;
     objective: IObjective;
-    requestTask(): string;
-    recharge(): string;
+    requestTask(): void;
+    recharge(): void;
     newTask(): void;
     executeTask(): number | void;
-    renewIfNeeded(): string;
+    renewIfNeeded(): void;
     onRun(): any;
     run(): any;
 }
@@ -155,11 +159,8 @@ interface ITask {
     target: RoomObject;
     targetPos: RoomPosition;
     remove(): void;
-    assign(creep: ICreep): string;
-    onAssignment(): void;
     isValidTask(): boolean;
     isValidTarget(): boolean;
-    isValid(): boolean;
     move(): number;
     step(): number | void;
     work(): number;
@@ -175,7 +176,7 @@ interface IObjective {
     assignableToRoles: string[];
     assignableTo(creep: ICreep): boolean;
     getTask(): ITask;
-    assignTo(creep: ICreep): string;
+    assignTo(creep: ICreep): void;
 }
 
 interface IMiningSite {
@@ -207,7 +208,7 @@ interface IOverlord {
     init(): void;
     getObjectives(): { [objectiveName: string]: IObjective[] };
     countObjectives(name: string): number;
-    assignTask(creep: ICreep): string;
+    assignTask(creep: ICreep): void;
     handleCoreSpawnOperations(): void;
     handleIncubationSpawnOperations(): void;
     handleAssignedSpawnOperations(): void;

@@ -11,24 +11,6 @@ export class taskGoToRoom extends Task {
         // this.setTargetPos(target.roomName);
     }
 
-    // // Getter/setter for task.targetPos
-    // get targetPos(): RoomPosition {
-    //     // console.log(this.targetCoords.x, this.targetCoords.y, this.targetCoords.roomName)
-    //     return new RoomPosition(this.targetCoords.x, this.targetCoords.y, this.targetCoords.roomName);
-    // }
-    //
-    // set targetPos(roomName: string) {
-    //     this.targetCoords.x = 25;
-    //     this.targetCoords.y = 25;
-    //     this.targetCoords.roomName = roomName;
-    // }
-
-    // setTargetPos(roomName: string) {
-    //     this.targetCoords.x = 25;
-    //     this.targetCoords.y = 25;
-    //     this.targetCoords.roomName = roomName;
-    // }
-
     isValidTask() {
         let creep = this.creep;
         return !(creep.pos.roomName == this.target.roomName &&

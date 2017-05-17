@@ -14,6 +14,11 @@ RoomPosition.prototype.flaggedWith = function (filter) { // if the object has a 
     return _.filter(this.lookFor(LOOK_FLAGS), filter).length > 0;
 };
 
-// RoomPosition.prototype.findClosestByRangeMultiroom = function (positions: RoomPosition[]): RoomPosition {
-//
-// };
+// Get an estimate for the distance to another room position in a possibly different room
+RoomPosition.prototype.getMultiRoomRangeTo = function (pos: RoomPosition): number {
+    if (this.roomName == pos.roomName) {
+        return this.getRangeTo(pos);
+    } else {
+        return 50* Game.map.getRoomLinearDistance(this.roomName, pos.roomName);
+    }
+};

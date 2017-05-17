@@ -15,7 +15,7 @@ export var visuals = {
     drawStorageInfo: function (room: Room) {
         if (room.storage) {
             new RoomVisual(room.name).text(
-                Math.floor(room.storage.store[RESOURCE_ENERGY] / 1000) + "K", room.storage.pos, {font: '0.7'});
+                Math.floor(room.storage.energy / 1000) + "K", room.storage.pos, {font: '0.7'});
         }
     },
 

@@ -1,6 +1,5 @@
 // import {tasks} from '../maps/map_tasks';
 import profiler = require('../lib/screeps-profiler');
-import {Task} from "../tasks/Task";
 import {taskRecharge} from "../tasks/task_recharge";
 import {taskGetRenewed} from "../tasks/task_getRenewed";
 import {Colony} from "../Colony";
@@ -112,7 +111,7 @@ export abstract class AbstractSetup implements ISetup {
             name: this.name, // name of the creep - gets modified by hatchery
             memory: { // memory to initialize with
                 role: this.name, // role of the creep
-                task: <Task> null, // task the creep is performing
+                task: <ITask> null, // task the creep is performing
                 assignmentRef: assignment.ref, // ref of object/room(use controller) the creep is assigned to
                 assignmentPos: assignment.pos, // serialized position of the assignment
                 colony: colony.name, // name of the colony the creep is assigned to
@@ -157,6 +156,7 @@ export abstract class AbstractCreep implements ICreep {
     spawning: boolean;
     ticksToLive: number;
     settings: any;
+    _task: ITask;
 
     constructor(creep: Creep) {
         this.creep = creep;
@@ -176,6 +176,7 @@ export abstract class AbstractCreep implements ICreep {
         this.spawning = creep.spawning;
         this.ticksToLive = creep.ticksToLive;
         this.settings = {};
+        this._task = this.initializeTask();
     }
 
     // Wrapped creep methods ===========================================================================================
@@ -298,7 +299,21 @@ export abstract class AbstractCreep implements ICreep {
         console.log(this.room, ' ', this.name, ': "', ...args, '".');
     }
 
-    get task(): Task {
+    get assignment(): RoomObject {
+        return deref(this.memory.assignmentRef);
+    }
+
+    set assignment(newAssignment: RoomObject) {
+        this.memory.assignmentRef = newAssignment.ref;
+        this.memory.assignmentPos = newAssignment.pos;
+    }
+
+    get assignmentPos(): RoomPosition {
+        let apos = this.memory.assignmentPos;
+        return new RoomPosition(apos.x, apos.y, apos.roomName);
+    }
+
+    initializeTask(): ITask {
         if (this.memory.task != null) {
             // NOTE: task migration operations should be performed here
             // if (this.memory.task.targetID) {
@@ -315,14 +330,53 @@ export abstract class AbstractCreep implements ICreep {
         }
     }
 
-    set task(newTask: Task | null) {
-        this.memory.task = newTask;
+    get task(): ITask {
+        return this._task;
     }
 
-    assign(task: Task): string {
-        this.task = null;
-        return task.assign(this);
-    };
+    set task(task: ITask | null) {
+        // Unregister target from old task if applicable
+        if (this.memory.task) {
+            let oldRef = this.memory.task.targetRef;
+            if (Game.cache.targets[oldRef]) {
+                Game.cache.targets[oldRef] = _.remove(Game.cache.targets[oldRef], name => name == this.name);
+            }
+        }
+        // Set the new task
+        this.memory.task = task;
+        if (task) { // If task isn't null
+            // Register task target in cache
+            if (!Game.cache.targets[task.target.ref]) {
+                Game.cache.targets[task.target.ref] = [];
+            }
+            Game.cache.targets[task.target.ref].push(this.name);
+            // Register references to creep
+            task.creep = this;
+            this.memory.task = task;
+            this._task = task;
+        }
+    }
+
+    get hasValidTask(): boolean {
+        return this.task && this.task.isValidTask() && this.task.isValidTarget();
+    }
+
+    assertValidTask(): void {
+        if (!this.hasValidTask) {
+            this.newTask();
+        }
+        if (!this.task) {
+            this.log("Unable to obtain a task!");
+        }
+    }
+
+    get objective(): Objective {
+        if (this.memory.objective) {
+            return this.colony.overlord.objectivesByRef[this.memory.objectives];
+        } else {
+            return null;
+        }
+    }
 
     get colony(): Colony {
         return this.creep.colony;
@@ -392,49 +446,20 @@ export abstract class AbstractCreep implements ICreep {
         return OK;
     }
 
-    get assignment(): RoomObject {
-        return deref(this.memory.assignmentRef);
-    }
-
-    set assignment(newAssignment: RoomObject) {
-        this.memory.assignmentRef = newAssignment.ref;
-        this.memory.assignmentPos = newAssignment.pos;
-    }
-
-    get assignmentPos(): RoomPosition {
-        let apos = this.memory.assignmentPos;
-        return new RoomPosition(apos.x, apos.y, apos.roomName);
-    }
-
-    get objective(): Objective {
-        if (this.memory.objective) {
-            return this.colony.overlord.objectivesByRef[this.memory.objectives];
-        } else {
-            return null;
-        }
-    }
-
-    requestTask(): string { // default logic for requesting a new task from the colony overlord
-        return this.colony.overlord.assignTask(this);
-    }
-
-    recharge(): string { // default recharging logic for creeps
-        // try to find closest container or storage
-        let bufferSettings = this.colony.overlord.settings.storageBuffer;
-        let buffer = bufferSettings.defaultBuffer;
-        if (bufferSettings[this.roleName]) {
-            buffer = bufferSettings[this.roleName];
-        }
+    recharge(): void { // default recharging logic for creeps
         let target = this.pos.findClosestByRange(this.room.storageUnits, {
-            filter: (s: Container | StructureStorage) =>
-            (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > this.carryCapacity) ||
-            (s.structureType == STRUCTURE_STORAGE && s.store[RESOURCE_ENERGY] > buffer),
-        }) as Container | Storage;
+            filter: (s: StorageUnit) => (s instanceof StructureContainer && s.energy > this.carryCapacity) ||
+                                        (s instanceof StructureStorage && s.creepCanWithdrawEnergy(this)),
+        }) as StorageUnit;
         if (target) { // assign recharge task to creep
-            return this.assign(new taskRecharge(target));
+            this.task = new taskRecharge(target);
         } else {
-            return "";
+            this.say("Can't recharge");
         }
+    }
+
+    requestTask(): void { // default logic for requesting a new task from the colony overlord
+        return this.colony.overlord.assignTask(this);
     }
 
     newTask(): void {
@@ -455,11 +480,9 @@ export abstract class AbstractCreep implements ICreep {
         }
     }
 
-    renewIfNeeded(): string {
+    renewIfNeeded(): void {
         if (this.room.spawns[0] && this.memory.data.renewMe && this.ticksToLive < 500) {
-            return this.assign(new taskGetRenewed(this.room.spawns[0]));
-        } else {
-            return "";
+            this.task = new taskGetRenewed(this.room.spawns[0]);
         }
     }
 
@@ -470,11 +493,9 @@ export abstract class AbstractCreep implements ICreep {
     run(): any {
         // Execute on-run code
         this.onRun();
-        // Check each tick that the task is still valid
-        if ((!this.task || !this.task.isValidTask() || !this.task.isValidTarget())) {
-            this.newTask();
-        }
-        // If there is a task, execute it
-        return this.executeTask();
+        // Assert that there is a valid task; if not, obtain one
+        this.assertValidTask();
+        // Execute the task or complain that you don't have a task
+        this.executeTask();
     }
 }

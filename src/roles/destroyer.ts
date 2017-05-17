@@ -56,8 +56,7 @@ export class DestroyerCreep extends AbstractCreep {
                 lab.assignedMineralType == this.settings.boostMinerals[bodypart] &&
                 lab.mineralAmount >= 30 * this.getActiveBodyparts(bodypart));
                 if (boosters.length > 0) {
-                    this.task = null;
-                    this.assign(new taskGetBoosted(boosters[0]));
+                    this.task = new taskGetBoosted(boosters[0]);
                 }
             }
         }
@@ -92,9 +91,26 @@ export class DestroyerCreep extends AbstractCreep {
         return this.travelTo(this.memory.data.healFlag, {allowHostile: true});
     }
 
+    newTask() {
+        this.task = null;
+        // 2.1: move to same room as assignment
+        if (this.assignment && !this.creep.inSameRoomAs(this.assignment)) {
+            let task = new taskGoToRoom(this.assignment);
+            task.data.travelToOptions['allowHostile'] = true;
+            this.task = task;
+            return;
+        }
+        // 2.2: ATTACK SOMETHING
+        var target = this.findTarget();
+        if (target) {
+            let task = new taskAttack(target);
+            task.data.travelToOptions['allowHostile'] = true;
+            this.task = task;
+        }
+    }
+
     run() {
         this.getBoosted();
-        var assignment = this.assignment;
         // 1: retreat to heal point when injured
         if (deref(this.memory.data.healFlag) && // if there's a heal flag
             (this.getActiveBodyparts(TOUGH) < 0.5 * this.getBodyparts(TOUGH) || // if you're injured
@@ -106,30 +122,15 @@ export class DestroyerCreep extends AbstractCreep {
             this.memory.needsHealing = false; // turn off when done healing
         }
         // 2: task assignment
-        if ((!this.task || !this.task.isValidTask() || !this.task.isValidTarget())) { // get new task
-            this.task = null;
-            // 2.1: move to same room as assignment
-            if (assignment && !this.creep.inSameRoomAs(assignment)) {
-                let task = new taskGoToRoom(assignment);
-                task.data.travelToOptions['allowHostile'] = true;
-                this.assign(task);
-            }
-            // 2.2: ATTACK SOMETHING
-            var target = this.findTarget();
-            if (target) {
-                let task = new taskAttack(target);
-                task.data.travelToOptions['allowHostile'] = true;
-                this.assign(task);
-            }
-        }
+        this.assertValidTask();
         // execute task
         if (this.task) {
             return this.task.step();
         }
         // remove flag once everything is destroyed
-        if (assignment && this.room.hostileStructures.length == 0) {
+        if (this.assignment && this.room.hostileStructures.length == 0) {
             this.log("No remaining hostile structures in room; deleting flag!");
-            assignment.remove();
+            this.assignment.remove();
         }
     }
 }

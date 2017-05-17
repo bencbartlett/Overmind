@@ -25,14 +25,14 @@ export class HaulerCreep extends AbstractCreep {
     doDeposit() {
         let target: StructureContainer | StructureStorage;
         let depositContainers = _.filter(this.colony.room.sinkContainers,
-                                         s => s.storeCapacity - s.store[RESOURCE_ENERGY] > 0.75 * this.carryCapacity);
+                                         s => s.storeCapacity - s.energy > 0.75 * this.carryCapacity);
         if (depositContainers.length > 0) {
             target = depositContainers[0];
         } else {
             target = this.colony.storage;
         }
         if (target) {
-            return this.assign(new taskDeposit(target));
+            this.task = new taskDeposit(target);
         }
     }
 

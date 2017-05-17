@@ -24,17 +24,18 @@ export class ClaimerCreep extends AbstractCreep {
     newTask() {
         // If no vision of the room, go to it
         if (!this.assignment.room) {
-            return this.assign(new taskGoToRoom(this.assignment));
-        }
-        if (this.assignment.room.my) {
-            return this.suicide(); // Suicide when the room is claimed
-        }
-        // If there is vision of the room, sign and/or reserve the controller
-        let controller = this.assignment.room.controller;
-        if (!controller.signedByMe) { // Sign the controller if applicable
-            return this.assign(new taskSignController(controller));
-        } else { // Reserve the controller
-            return this.assign(new taskClaim(controller));
+            this.task = new taskGoToRoom(this.assignment);
+        } else {
+            if (this.assignment.room.my) {
+                return this.suicide(); // Suicide when the room is claimed
+            }
+            // If there is vision of the room, sign and/or reserve the controller
+            let controller = this.assignment.room.controller;
+            if (!controller.signedByMe) { // Sign the controller if applicable
+                this.task = new taskSignController(controller);
+            } else { // Reserve the controller
+                this.task = new taskClaim(controller);
+            }
         }
     }
 }

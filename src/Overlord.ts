@@ -79,7 +79,6 @@ export class Overlord implements IOverlord {
                 linker: 75000, // linker must deposit to storage below this amount
                 worker: 50000,
                 upgrader: 75000,
-                defaultBuffer: 0,
             },
             unloadStorageBuffer: 750000, // start sending energy to other rooms past this amount
             reserveBuffer: 3000, // reserve outpost rooms up to this amount
@@ -178,7 +177,7 @@ export class Overlord implements IOverlord {
         }
     }
 
-    assignTask(creep: ICreep): string {
+    assignTask(creep: ICreep): void {
 
         for (let objType of this.objectivePriorities) {
             // if (creep.memory.role == 'worker') this.log(objType)
@@ -201,8 +200,8 @@ export class Overlord implements IOverlord {
                 let distance = Infinity;
                 let bestDistance = Infinity;
                 let bestObjective: Objective;
-                for (let objective of possibleObjectives) { // TODO: make this work for several rooms
-                    distance = creep.pos.getRangeTo(objective.pos);
+                for (let objective of possibleObjectives) {
+                    distance = creep.pos.getMultiRoomRangeTo(objective.pos);
                     if (distance < bestDistance) {
                         bestDistance = distance;
                         bestObjective = objective;
@@ -211,7 +210,6 @@ export class Overlord implements IOverlord {
                 return bestObjective.assignTo(creep);
             }
         }
-        return "";
     }
 
 
@@ -322,8 +320,7 @@ export class Overlord implements IOverlord {
         // Ensure there are upgraders and scale the size according to how much energy you have
         if (this.room.storage) { // room needs to have storage before upgraders happen
             var numUpgraders = this.colony.getCreepsByRole('upgrader').length;
-            var amountOver = Math.max(this.room.storage.store[RESOURCE_ENERGY]
-                                      - this.settings.storageBuffer['upgrader'], 0);
+            var amountOver = Math.max(this.room.storage.energy - this.settings.storageBuffer['upgrader'], 0);
             var upgraderSize = 1 + Math.floor(amountOver / 20000);
             if (this.room.controller!.level == 8) {
                 upgraderSize = Math.min(upgraderSize, 3); // don't go above 15 work parts at RCL 8

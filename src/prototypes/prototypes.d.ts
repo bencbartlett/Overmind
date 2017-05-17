@@ -35,6 +35,7 @@ interface Flag {
 }
 
 type Sink = StructureSpawn | StructureExtension | StructureLab | StructureTower | StructurePowerSpawn;
+type StorageUnit = StructureContainer | StructureStorage;
 
 interface Room {
     // brain: any;
@@ -45,21 +46,17 @@ interface Room {
     reservedByMe: boolean;
     signedByMe: boolean;
     creeps: Creep[];
-    // assignedCreeps: Creep[];
-    tasks: any[];
-    taskTargets: RoomObject[];
     hostiles: Creep[];
     hostileStructures: Structure[];
     flags: Flag[];
     assignedFlags: Flag[];
     remainingConstructionProgress: number;
-    fullestContainer(): StructureContainer;
     // Preprocessed structures
     structures: { [structureType: string]: Structure[] };
     spawns: Spawn[];
     extensions: Extension[];
     containers: StructureContainer[];
-    storageUnits: (StructureContainer | StructureStorage)[];
+    storageUnits: StorageUnit[];
     towers: StructureTower[];
     links: StructureLink[];
     labs: StructureLab[];
@@ -99,6 +96,7 @@ interface RoomPosition {
     name: string;
     flagged: boolean;
     flaggedWith(filter: Function): boolean;
+    getMultiRoomRangeTo(pos: RoomPosition): number;
 }
 
 interface RoomVisual {
@@ -106,6 +104,7 @@ interface RoomVisual {
 }
 
 interface StructureContainer {
+    energy: number;
     refillThis: boolean;
     miningFlag: Flag;
     miningSite: IMiningSite;
@@ -127,6 +126,11 @@ interface StructureLink {
     refillThis: boolean;
 }
 
+interface StructureStorage {
+    energy: number;
+    creepCanWithdrawEnergy(creep: ICreep): boolean;
+}
+
 interface StructureSpawn {
     cost(bodyArray: string[]): number;
     uptime: number;
@@ -134,6 +138,7 @@ interface StructureSpawn {
 }
 
 interface StructureTerminal {
+    energy: any;
     brain: any;
 }
 

@@ -356,5 +356,3 @@ export class Traveler {
         return new RoomPosition(origin.x + offsetX[direction], origin.y + offsetY[direction], origin.roomName);
     }
 }
-
-// TODO: profiler

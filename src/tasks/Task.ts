@@ -53,8 +53,9 @@ export abstract class Task implements ITask {
         let tar = deref(this.targetRef);
         if (!tar) {
             this.remove();
+        } else {
+            return tar;
         }
-        return tar;
     }
 
     set target(target: RoomObject) {
@@ -88,39 +89,11 @@ export abstract class Task implements ITask {
         }
     }
 
-    // Assign the task to a creep
-    assign(creep: ICreep): string {
-        // add target to Game.cache
-        if (!Game.cache.targets[this.target.ref]) {
-            Game.cache.targets[this.target.ref] = [];
-        }
-        Game.cache.targets[this.target.ref].push(creep.name);
-        // register references to creep and target
-        this.creep = creep;
-        creep.memory.task = this; // serializes the searalizable portions of the task into memory
-        this.onAssignment();
-        return this.name;
-    }
-
-    // Action to do on assignment
-    onAssignment(): void {
-        // override if needed
-        var creep = this.creep;
-        if (this.data.quiet == false) {
-            creep.log("assigned to " + this.name + " " + this.target + ".");
-            creep.say(this.name);
-        }
-    }
-
     // Test every tick to see if task is still valid
     abstract isValidTask(): boolean;
 
     // Test every tick to see if target is still valid
     abstract isValidTarget(): boolean;
-
-    isValid(): boolean {
-        return this.isValidTask() && this.isValidTarget();
-    }
 
     move(): number {
         var options = Object.assign({},

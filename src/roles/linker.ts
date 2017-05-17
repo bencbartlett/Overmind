@@ -43,15 +43,15 @@ export class LinkerCreep extends AbstractCreep {
         }
         if (storage.links[0].energy > 0) {
             // try targeting non-empty input links
-            return this.assign(new taskRecharge(storage.links[0]));
+            this.task = new taskRecharge(storage.links[0]);
         } else if (_.sum(storage.store) > this.colony.overlord.settings.unloadStorageBuffer) {
             // else try unloading from storage into terminal if there is too much energy
-            return this.assign(new taskRecharge(storage));
-        } else if (this.colony.terminal && this.colony.terminal.store[RESOURCE_ENERGY] >
+            this.task = new taskRecharge(storage);
+        } else if (this.colony.terminal && this.colony.terminal.energy >
                                            this.colony.terminal.brain.settings.resourceAmounts[RESOURCE_ENERGY]
                                            + this.colony.terminal.brain.settings.excessTransferAmount) {
             // if there is not too much energy in storage and there is too much in terminal, collect from terminal
-            return this.assign(new taskRecharge(this.colony.terminal));
+            this.task = new taskRecharge(this.colony.terminal);
         }
     }
 
@@ -65,15 +65,15 @@ export class LinkerCreep extends AbstractCreep {
         // overwrite and deposit to terminal if not enough energy in terminal and sufficient energy in storage
         let terminal = this.colony.terminal;
         if (terminal &&
-            terminal.store[RESOURCE_ENERGY] < terminal.brain.settings.resourceAmounts[RESOURCE_ENERGY] &&
-            storage && storage.store[RESOURCE_ENERGY] > this.colony.overlord.settings.storageBuffer[this.name]) {
+            terminal.energy < terminal.brain.settings.resourceAmounts[RESOURCE_ENERGY] &&
+            storage && storage.creepCanWithdrawEnergy(this)) {
             target = terminal;
         } else if (terminal && storage &&
-                   storage.store[RESOURCE_ENERGY] >= this.colony.overlord.settings.unloadStorageBuffer) {
+                   storage.energy >= this.colony.overlord.settings.unloadStorageBuffer) {
             target = terminal;
         }
         if (target) {
-            return this.assign(new taskDeposit(target));
+            this.task = new taskDeposit(target);
         }
     }
 
@@ -81,7 +81,7 @@ export class LinkerCreep extends AbstractCreep {
         this.task = null;
         let idleFlag = Game.flags[this.memory.data.idleFlag];
         if (idleFlag && !this.pos.inRangeTo(idleFlag, 1)) {
-            this.assign(new taskGoTo(idleFlag));
+            this.task = new taskGoTo(idleFlag);
         } else {
             if (this.carry.energy == 0) {
                 this.collect();

@@ -28,17 +28,6 @@ export class GuardCreep extends AbstractCreep {
         super(creep);
     }
 
-    recharge() {
-        var target = this.pos.findClosestByRange(FIND_STRUCTURES, {
-            filter: (s: Container) => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0),
-        }) as Container;
-        if (target) {
-            return this.assign(new taskRecharge(target));
-        } else {
-            return "";
-        }
-    }
-
     findTarget(): Creep | Structure | void {
         var target;
         var targetPriority = [
@@ -66,31 +55,29 @@ export class GuardCreep extends AbstractCreep {
         // first try to find anything you should attack
         var target = this.findTarget();
         if (target) {
-            return this.assign(new taskAttack(target));
-        }
-        // if no hostiles and you can repair stuff, do so
-        if (this.getActiveBodyparts(CARRY) > 0 && this.getActiveBodyparts(WORK) > 0) {
-            if (this.carry.energy == 0) {
-                return this.recharge();
-            } else {
-                return this.requestTask(); // get applicable tasks from room brain
+            this.task = new taskAttack(target);
+        } else {
+            // if no hostiles and you can repair stuff, do so
+            if (this.getActiveBodyparts(CARRY) > 0 && this.getActiveBodyparts(WORK) > 0) {
+                if (this.carry.energy == 0) {
+                    return this.recharge();
+                } else {
+                    return this.requestTask(); // get applicable tasks from room brain
+                }
             }
         }
     }
 
     run() {
-        var assignment = this.assignment;
-        if ((!this.task || !this.task.isValidTask() || !this.task.isValidTarget()) ||
-            (this.room.hostiles.length > 0 && this.task && this.task.name != 'attack')) {
+        if (!this.hasValidTask || (this.room.hostiles.length > 0 && this.task && this.task.name != 'attack')) {
             this.newTask();
         }
         if (this.task) {
             return this.task.step();
         }
-        if (assignment) {
+        if (this.assignment) {
             if (!this.task) {
-                // this.moveToVisual(assignment.pos, 'red');
-                this.travelTo(assignment);
+                this.travelTo(this.assignment);
             }
         }
     }

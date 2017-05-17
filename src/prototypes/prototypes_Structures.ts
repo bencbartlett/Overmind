@@ -2,6 +2,12 @@
 
 // Container prototypes ================================================================================================
 
+Object.defineProperty(StructureContainer.prototype, 'energy', {
+    get () {
+        return this.store[RESOURCE_ENERGY];
+    }
+});
+
 Object.defineProperty(StructureContainer.prototype, 'refillThis', { // should the lab be loaded or unloaded?
     get () {
         return _.filter(this.pos.lookFor(LOOK_FLAGS), flagCodes.industry.refillThis.filter).length > 0
@@ -26,7 +32,7 @@ Object.defineProperty(StructureContainer.prototype, 'miningSite', {
 // Estimated amount of energy a hauler leaving storage now would see when it gets to the container
 Object.defineProperty(StructureContainer.prototype, 'predictedEnergyOnArrival', {
     get: function () {
-        let predictedEnergy = this.store[RESOURCE_ENERGY];
+        let predictedEnergy = this.energy;
         let targetingCreeps = _.map(this.targetedBy, (name: string) => Game.creeps[name]);
         for (let creep of targetingCreeps) {
             predictedEnergy -= creep.carryCapacity;
@@ -125,7 +131,31 @@ Object.defineProperty(StructureSpawn.prototype, 'statusMessage', {
     }
 });
 
+
+// Storage prototypes ==================================================================================================
+
+StructureStorage.prototype.creepCanWithdrawEnergy = function (creep: ICreep): boolean {
+    let bufferAmount: number = this.room.colony.overlord.settings.storageBuffer[creep.roleName];
+    if (!bufferAmount) {
+        bufferAmount = 0;
+    }
+    return this.energy > bufferAmount;
+};
+
+Object.defineProperty(StructureStorage.prototype, 'energy', {
+    get () {
+        return this.store[RESOURCE_ENERGY];
+    }
+});
+
 // Terminal prototypes =================================================================================================
+
+Object.defineProperty(StructureTerminal.prototype, 'energy', {
+    get () {
+        return this.store[RESOURCE_ENERGY];
+    }
+});
+
 Object.defineProperty(StructureTerminal.prototype, 'brain', {
     get () {
         //noinspection NodeModulesDependencies

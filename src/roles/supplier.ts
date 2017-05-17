@@ -34,37 +34,14 @@ export class SupplierCreep extends AbstractCreep {
         super(creep);
     }
 
-    recharge() { // default recharging logic for thiss
-        // try to find closest container or storage
-        var bufferSettings = this.colony.overlord.settings.storageBuffer; // not this.workRoom; use rules of room you're in
-        var buffer = bufferSettings.defaultBuffer;
-        if (bufferSettings[this.name]) {
-            buffer = bufferSettings[this.name];
-        }
-        var target: Container | Storage | Terminal;
-        target = this.pos.findClosestByRange(this.room.storageUnits, {
-            filter: (s: Storage | Container) =>
-            (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > this.carryCapacity) ||
-            (s.structureType == STRUCTURE_STORAGE && s.store[RESOURCE_ENERGY] > buffer),
-        }) as Storage | Container;
-        if (!target && this.room.terminal) {
-            target = this.room.terminal; // energy should be sent to room if it is out
-        }
-        if (target) { // assign recharge task to this
-            return this.assign(new taskRecharge(target));
-        } else {
-            return "";
-        }
-    }
-
     run() {
-        // get new task if this one is invalid
-        if ((!this.task || !this.task.isValidTask() || !this.task.isValidTarget())) {
-            this.newTask();
-        }
+        // Execute on-run code
+        this.onRun();
+        // Check each tick that the task is still valid
+        this.assertValidTask();
+        // If there is a task, execute it
         if (this.task) {
-            // execute task
-            this.executeTask();
+            return this.executeTask();
         } else {
             if (this.carry.energy < this.carryCapacity) {
                 return this.recharge(); // recharge once there's nothing to do
