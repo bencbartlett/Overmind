@@ -1,17 +1,17 @@
 interface Creep {
-    run(): void;
-    publicMessage(sayList: string[]): void;
+//     run(): void;
+//     publicMessage(sayList: string[]): void;
     getBodyparts(partType: string): number;
-    needsReplacing: boolean;
-    // workRoom: Room;
+//     needsReplacing: boolean;
+//     // workRoom: Room;
     colony: IColony;
     lifetime: number;
-    assignment: RoomObject;
-    objective: IObjective | null;
-    task: any;
-    assign(task: ITask): string;
-    moveSpeed: number;
-    repairNearbyDamagedRoad(): number;
+//     assignment: RoomObject;
+//     objective: IObjective | null;
+//     task: ITask;
+//     assign(task: ITask): string;
+//     moveSpeed: number;
+//     repairNearbyDamagedRoad(): number;
     travelTo(destination: { pos: RoomPosition }, options?: any): number;
 }
 
@@ -24,12 +24,12 @@ interface Flag {
     category: any;
     type: any;
     action: Function;
-    getAssignedCreepAmounts(role: string): number;
-    assignedCreepAmounts: { [role: string]: number };
+    // getAssignedCreepAmounts(role: string): number;
+    // assignedCreepAmounts: { [role: string]: number };
     getRequiredCreepAmounts(role: string): number;
     requiredCreepAmounts: { [role: string]: number };
     needsAdditional(role: string): boolean;
-    requestCreepIfNeeded(role: IRole, options: protoCreepOptions): void;
+    requestCreepIfNeeded(role: ISetup, options: protoCreepOptions): void;
     pathLengthToAssignedRoomStorage: number;
     haulingNeeded: boolean;
 }
@@ -80,8 +80,9 @@ interface RoomObject {
     log(message: string): void;
     inSameRoomAs(otherObject: RoomObject): boolean;
     ref: string;
+    colony: IColony;
     assignedCreepNames: { [role: string]: string };
-    getAssignedCreeps(role: string): Creep[];
+    getAssignedCreeps(role: string): ICreep[];
     getAssignedCreepAmounts(role: string): number;
     assignedCreepAmounts: { [role: string]: number };
     targetedBy: string[];

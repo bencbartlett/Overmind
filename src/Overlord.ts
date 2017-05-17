@@ -1,13 +1,7 @@
 // Overlord - assigns directives and dispenses directives to creeps within a colony
 
 import profiler = require('./lib/screeps-profiler');
-import {roleWorker} from "./roles/role_worker";
-import {roleHauler} from "./roles/role_hauler";
-import {roleMiner} from "./roles/role_miner";
-import {roleLinker} from "./roles/role_linker";
-import {roleMineralSupplier} from "./roles/role_mineralSupplier";
-import {roleSupplier} from "./roles/role_supplier";
-import {roleUpgrader} from "./roles/role_upgrader";
+
 import {Colony} from "./Colony";
 import {Directive} from "./directives/Directive";
 import {Objective} from "./objectives/Objective";
@@ -22,7 +16,15 @@ import {
     supplyTowerObjective,
     upgradeObjective,
 } from "./objectives/objectives";
-import {roleReserver} from "./roles/role_reserver";
+import {MinerSetup} from "./roles/miner";
+import {HaulerSetup} from "./roles/hauler";
+import {MineralSupplierSetup} from "./roles/mineralSupplier";
+import {SupplierSetup} from "./roles/supplier";
+import {LinkerSetup} from "./roles/linker";
+import {ReserverSetup} from "./roles/reserver";
+import {WorkerSetup} from "./roles/worker";
+import {UpgraderSetup} from "./roles/upgrader";
+
 
 
 export class Overlord implements IOverlord {
@@ -77,7 +79,7 @@ export class Overlord implements IOverlord {
                 linker: 75000, // linker must deposit to storage below this amount
                 worker: 50000,
                 upgrader: 75000,
-                default: 0,
+                defaultBuffer: 0,
             },
             unloadStorageBuffer: 750000, // start sending energy to other rooms past this amount
             reserveBuffer: 3000, // reserve outpost rooms up to this amount
@@ -176,7 +178,7 @@ export class Overlord implements IOverlord {
         }
     }
 
-    assignTask(creep: Creep): string {
+    assignTask(creep: ICreep): string {
 
         for (let objType of this.objectivePriorities) {
             // if (creep.memory.role == 'worker') this.log(objType)
@@ -225,7 +227,7 @@ export class Overlord implements IOverlord {
             let miningPowerAssigned = _.sum(_.map(site.miners, (creep: Creep) => creep.getActiveBodyparts(WORK)));
             if (miningPowerAssigned < site.miningPowerNeeded) {
                 this.colony.hatchery.enqueue(
-                    new roleMiner().create(this.colony, {
+                    new MinerSetup().create(this.colony, {
                         assignment: site.source,
                         patternRepetitionLimit: 3,
                     }), this.spawnPriorities['miner']);
@@ -238,7 +240,7 @@ export class Overlord implements IOverlord {
                                                creep => creep.getActiveBodyparts(CARRY)));
         if (haulingPowerSupplied < this.colony.haulingPowerNeeded) {
             this.colony.hatchery.enqueue(
-                new roleHauler().create(this.colony, {
+                new HaulerSetup().create(this.colony, {
                     assignment: this.room.storage, // remote haulers are assigned to storage
                     patternRepetitionLimit: Infinity,
                 }), this.spawnPriorities['hauler']);
@@ -247,14 +249,14 @@ export class Overlord implements IOverlord {
 
         // Ensure the room has enough suppliers if there's stuff to supply and miners to harvest energy
         if (this.room.sinks.length > 0 && this.colony.getCreepsByRole('miner').length > 0) {
-            let numSuppliers = this.room.controller!.getAssignedCreepAmounts('supplier');
+            let numSuppliers = this.colony.getCreepsByRole('supplier').length;
             let supplierSize = this.settings.supplierPatternRepetitionLimit;
             if (numSuppliers == 0) { // If the room runs out of suppliers at low energy, spawn a small supplier
                 supplierSize = 1;
             }
             let numSuppliersNeeded = 2;
             if (numSuppliers < numSuppliersNeeded) {
-                let protocreep = new roleSupplier().create(this.colony, {
+                let protocreep = new SupplierSetup().create(this.colony, {
                     assignment: this.room.controller!,
                     patternRepetitionLimit: supplierSize // this.settings.supplierPatternRepetitionLimit
                 });
@@ -265,9 +267,9 @@ export class Overlord implements IOverlord {
 
         // Ensure the room storage has a linker
         if (this.room.storage && this.room.storage.linked) { // linkers only for storage with links
-            if (this.room.storage.getAssignedCreepAmounts('linker') < 1) {
+            if (this.colony.getCreepsByRole('linker').length < 1) {
                 this.colony.hatchery.enqueue(
-                    new roleLinker().create(this.colony, {
+                    new LinkerSetup().create(this.colony, {
                         assignment: this.room.storage,
                         patternRepetitionLimit: 8,
                     }), this.spawnPriorities['linker']);
@@ -277,9 +279,9 @@ export class Overlord implements IOverlord {
 
         // Ensure there's a mineral supplier for the labs
         if (this.room.terminal && this.room.labs.length > 0) {
-            if (this.room.terminal.getAssignedCreepAmounts('mineralSupplier') < 1) {
+            if (this.colony.getCreepsByRole('mineralSupplier').length < 1) {
                 this.colony.hatchery.enqueue(
-                    new roleMineralSupplier().create(this.colony, {
+                    new MineralSupplierSetup().create(this.colony, {
                         assignment: this.room.terminal,
                         patternRepetitionLimit: 1,
                     }), this.spawnPriorities['mineralSupplier']);
@@ -294,7 +296,7 @@ export class Overlord implements IOverlord {
                 (controller.reservedByMe && controller.reservation.ticksToEnd < this.settings.reserveBuffer)) {
                 let reservationFlag = controller.room.colonyFlag;
                 this.colony.hatchery.enqueue(
-                    new roleReserver().create(this.colony, {
+                    new ReserverSetup().create(this.colony, {
                         assignment: reservationFlag,
                         patternRepetitionLimit: 4,
                     }), this.spawnPriorities['reserver']);
@@ -304,12 +306,12 @@ export class Overlord implements IOverlord {
 
         // Ensure there's enough workers
         if (!this.colony.incubating) { // don't make your own workers during incubation period, just keep existing ones alive
-            let numWorkers = this.room.controller!.getAssignedCreepAmounts('worker');
+            let numWorkers = this.colony.getCreepsByRole('worker').length;
             // Only spawn workers once containers are up
             let numWorkersNeeded = 1; // TODO: maybe a better metric than this
             if (numWorkers < numWorkersNeeded && this.room.storageUnits.length > 0) {
                 this.colony.hatchery.enqueue(
-                    new roleWorker().create(this.colony, {
+                    new WorkerSetup().create(this.colony, {
                         assignment: this.room.controller!,
                         patternRepetitionLimit: this.settings.workerPatternRepetitionLimit,
                     }), this.spawnPriorities['worker']);
@@ -319,14 +321,14 @@ export class Overlord implements IOverlord {
 
         // Ensure there are upgraders and scale the size according to how much energy you have
         if (this.room.storage) { // room needs to have storage before upgraders happen
-            var numUpgraders = this.room.controller!.getAssignedCreepAmounts('upgrader');
+            var numUpgraders = this.colony.getCreepsByRole('upgrader').length;
             var amountOver = Math.max(this.room.storage.store[RESOURCE_ENERGY]
                                       - this.settings.storageBuffer['upgrader'], 0);
             var upgraderSize = 1 + Math.floor(amountOver / 20000);
             if (this.room.controller!.level == 8) {
                 upgraderSize = Math.min(upgraderSize, 3); // don't go above 15 work parts at RCL 8
             }
-            let upgraderRole = new roleUpgrader();
+            let upgraderRole = new UpgraderSetup();
             var numUpgradersNeeded = Math.ceil(upgraderSize * upgraderRole.bodyPatternCost /
                                                this.room.energyCapacityAvailable); // this causes a jump at 2 upgraders
             if (numUpgraders < numUpgradersNeeded) {
@@ -350,40 +352,41 @@ export class Overlord implements IOverlord {
 
 
     handleIncubationSpawnOperations(): void { // operations to start up a new room quickly by sending large creeps
-        var incubateFlags = _.filter(this.room.assignedFlags,
-                                     flag => flagCodes.territory.claimAndIncubate.filter(flag) &&
-                                             flag.room && flag.room.my);
-        incubateFlags = _.sortBy(incubateFlags, flag => flag.pathLengthToAssignedRoomStorage);
-        for (let flag of incubateFlags) {
-            // spawn miner creeps
-            let minerBehavior = new roleMiner();
-            for (let source of flag.room.sources) {
-                if (source.getAssignedCreepAmounts('miner') < this.settings.minersPerSource) {
-                    let protoCreep = minerBehavior.create(this.colony, {
-                        assignment: source,
-                        patternRepetitionLimit: 3,
-                    });
-                    protoCreep.memory.colony = flag.room.name;
-                    protoCreep.memory.data.renewMe = true;
-                    this.colony.hatchery.enqueue(protoCreep);
-                }
-            }
-            // spawn worker creeps
-            let workerBehavior = new roleWorker();
-            let assignedWorkers = flag.room.controller!.getAssignedCreeps('worker');
-            let incubationWorkers = _.filter(assignedWorkers,
-                                             c => c.body.length >= workerBehavior.settings.bodyPattern.length *
-                                                                   this.settings.workerPatternRepetitionLimit);
-            if (incubationWorkers.length < this.settings.incubationWorkersToSend) {
-                let protoCreep = workerBehavior.create(this.colony, {
-                    assignment: flag.room.controller!,
-                    patternRepetitionLimit: this.settings.workerPatternRepetitionLimit,
-                });
-                protoCreep.memory.colony = flag.room.name;
-                protoCreep.memory.data.renewMe = true;
-                this.colony.hatchery.enqueue(protoCreep);
-            }
-        }
+        // var incubateFlags = _.filter(this.room.assignedFlags,
+        //                              flag => flagCodes.territory.claimAndIncubate.filter(flag) &&
+        //                                      flag.room && flag.room.my);
+        // incubateFlags = _.sortBy(incubateFlags, flag => flag.pathLengthToAssignedRoomStorage);
+        // for (let flag of incubateFlags) {
+        //     // Spawn remote miners
+        //     for (let siteID in flag.colony.miningSites) {
+        //         let site = flag.colony.miningSites[siteID];
+        //         let miningPowerAssigned = _.sum(_.map(site.miners, (creep: Creep) => creep.getActiveBodyparts(WORK)));
+        //         if (miningPowerAssigned < site.miningPowerNeeded) {
+        //             let protoCreep = new MinerSetup().create(this.colony, {
+        //                 assignment: site.source,
+        //                 patternRepetitionLimit: 3,
+        //             });
+        //             protoCreep.memory.colony = flag.room.name;
+        //             protoCreep.memory.data.renewMe = true;
+        //             this.colony.hatchery.enqueue(protoCreep);
+        //         }
+        //     }
+        //     // Spawn remote workers
+        //     let assignedWorkers = flag.room.controller!.getAssignedCreeps('worker');
+        //     let incubationWorkers = _.filter(assignedWorkers,
+        //                                      c => c.body.length >= new WorkerSetup().settings.bodyPattern.length *
+        //                                                            this.settings.workerPatternRepetitionLimit);
+        //     if (incubationWorkers.length < this.settings.incubationWorkersToSend) {
+        //         let protoCreep = new WorkerSetup().create(this.colony, {
+        //             assignment: flag.room.controller!,
+        //             patternRepetitionLimit: this.settings.workerPatternRepetitionLimit,
+        //         });
+        //         protoCreep.memory.colony = flag.room.name;
+        //         protoCreep.memory.data.renewMe = true;
+        //         this.colony.hatchery.enqueue(protoCreep);
+        //     }
+        // }
+        // TODO: rewrite this using the core spawn methods + request calls
     }
 
     handleAssignedSpawnOperations(): void { // operations associated with an assigned flags

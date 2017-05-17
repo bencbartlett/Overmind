@@ -27,7 +27,7 @@ export class taskGetRenewed extends Task {
     }
 
     work() {
-        let response = this.target.renewCreep(this.creep); // TODO: change this to spawn.requestRenewal and implement priority in spawner logic
+        let response = this.target.renewCreep(this.creep.creep);
         this.creep.log("Renewing! " + this.creep.ticksToLive + "/" + this.creep.lifetime);
         return response;
     }

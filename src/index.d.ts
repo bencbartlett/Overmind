@@ -9,7 +9,87 @@ interface Game {
         objectives: { [ref: string]: string[] };
         structures: { [roomName: string]: { [structureType: string]: Structure[] } };
         constructionSites: { [roomName: string]: ConstructionSite[] };
-    }
+    };
+    icreeps: { [name: string]: ICreep };
+}
+
+interface ISetup {
+    name: string;
+    settings: any;
+    roleRequirements: Function;
+    bodyPatternCost: number;
+    bodyCost(bodyArray: string[]): number;
+    generateBody(availableEnergy: number, maxRepeats?: number): string[];
+    generateLargestCreep(colony: IColony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep;
+    onCreate(pCreep: protoCreep): protoCreep;
+    create(colony: IColony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep;
+}
+
+interface ICreep {
+    // Creep properties
+    creep: Creep;
+    body: BodyPartDefinition[];
+    carry: StoreDefinition;
+    carryCapacity: number;
+    fatigue: number;
+    hits: number;
+    hitsMax: number;
+    id: string;
+    memory: any;
+    name: string;
+    pos: RoomPosition;
+    ref: string;
+    roleName: string;
+    room: Room;
+    spawning: boolean;
+    ticksToLive: number;
+    // Custom properties
+    settings: any;
+    // Creep methods
+    attack(target: Creep | Structure): number;
+    attackController(controller: StructureController): number;
+    build(target: ConstructionSite): number;
+    claimController(controller: StructureController): number;
+    dismantle(target: Structure): number;
+    drop(resourceType: string, amount?: number): number;
+    getActiveBodyparts(type: string): number;
+    harvest(source: Source | Mineral): number;
+    move(direction: number): number;
+    pickup(resource: Resource): number;
+    rangedAttack(target: Creep | Structure): number;
+    rangedMassAttack(): number;
+    repair(target: Structure): number;
+    reserveController(controller: StructureController): number;
+    say(message: string, pub?: boolean): number;
+    signController(target: Controller, text: string): number;
+    suicide(): number;
+    upgradeController(controller: StructureController): number;
+    heal(target: Creep | ICreep): number;
+    rangedHeal(target: Creep | ICreep): number;
+    transfer(target: Creep | ICreep | Structure, resourceType: string, amount?: number): number;
+    withdraw(target: Creep | ICreep | Structure, resourceType: string, amount?: number): number;
+    travelTo(destination: { pos: RoomPosition }, options?: any): number;
+    // Custom creep methods
+    log(...args: any[]): void;
+    task: ITask;
+    assign(task: ITask): string;
+    colony: IColony;
+    lifetime: number;
+    moveSpeed: number;
+    needsReplacing: boolean;
+    getBodyparts(partType: string): number;
+    publicMessage(sayList: string[]): void;
+    repairNearbyDamagedRoad(): number;
+    assignment: RoomObject;
+    assignmentPos: RoomPosition;
+    objective: IObjective;
+    requestTask(): string;
+    recharge(): string;
+    newTask(): void;
+    executeTask(): number | void;
+    renewIfNeeded(): string;
+    onRun(): any;
+    run(): any;
 }
 
 interface IColony {
@@ -23,9 +103,9 @@ interface IColony {
     outposts: Room[];
     rooms: Room[];
     flags: Flag[];
-    creeps: Creep[];
-    creepsByRole: { [roleName: string]: Creep[] };
-    getCreepsByRole(roleName: string): Creep[];
+    creeps: ICreep[];
+    creepsByRole: { [roleName: string]: ICreep[] };
+    getCreepsByRole(roleName: string): ICreep[];
     sources: Source[];
     miningSites: { [sourceID: string]: IMiningSite };
     haulingPowerNeeded: number;
@@ -71,11 +151,11 @@ interface ITask {
     targetRange: number;
     moveColor: string;
     data: any;
-    creep: Creep;
+    creep: ICreep;
     target: RoomObject;
     targetPos: RoomPosition;
     remove(): void;
-    assign(creep: Creep): string;
+    assign(creep: ICreep): string;
     onAssignment(): void;
     isValidTask(): boolean;
     isValidTarget(): boolean;
@@ -83,25 +163,6 @@ interface ITask {
     move(): number;
     step(): number | void;
     work(): number;
-}
-
-interface IRole {
-    name: string;
-    settings: any;
-    roleRequirements: Function;
-    bodyPatternCost: number;
-    bodyCost(bodyArray: string[]): number;
-    generateBody(availableEnergy: number, maxRepeats?: number): string[];
-    generateLargestCreep(colony: IColony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep;
-    onCreate(pCreep: protoCreep): protoCreep;
-    create(colony: IColony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep;
-    requestTask(creep: Creep): string;
-    recharge(creep: Creep): string;
-    newTask(creep: Creep): void;
-    executeTask(creep: Creep): number | void;
-    renewIfNeeded(creep: Creep): string;
-    onRun(creep: Creep): any;
-    run(creep: Creep): any;
 }
 
 interface IObjective {
@@ -112,9 +173,9 @@ interface IObjective {
     creepNames: string[];
     maxCreeps: number;
     assignableToRoles: string[];
-    assignableTo(creep: Creep): boolean;
+    assignableTo(creep: ICreep): boolean;
     getTask(): ITask;
-    assignTo(creep: Creep): string;
+    assignTo(creep: ICreep): string;
 }
 
 interface IMiningSite {
@@ -128,7 +189,7 @@ interface IMiningSite {
     outputConstructionSite: ConstructionSite | null;
     fullness: number;
     predictedStore: number;
-    miners: Creep[];
+    miners: ICreep[];
 }
 
 interface IOverlord {
@@ -146,7 +207,7 @@ interface IOverlord {
     init(): void;
     getObjectives(): { [objectiveName: string]: IObjective[] };
     countObjectives(name: string): number;
-    assignTask(creep: Creep): string;
+    assignTask(creep: ICreep): string;
     handleCoreSpawnOperations(): void;
     handleIncubationSpawnOperations(): void;
     handleAssignedSpawnOperations(): void;

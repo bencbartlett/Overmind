@@ -1,9 +1,10 @@
 // Supplier: local energy transport bot. Picks up dropped energy, energy in containers, deposits to sinks and storage
 
-import {Role} from "./Role";
 import {taskRecharge} from "../tasks/task_recharge";
+import {AbstractCreep, AbstractSetup} from "./Abstract";
 
-export class roleSupplier extends Role {
+
+export class SupplierSetup extends AbstractSetup {
     constructor() {
         super('supplier');
         // Role-specific settings
@@ -14,7 +15,7 @@ export class roleSupplier extends Role {
         this.roleRequirements = (creep: Creep) => creep.getActiveBodyparts(MOVE) > 1 &&
                                                   creep.getActiveBodyparts(CARRY) > 1
     }
-
+    
     onCreate(creep: protoCreep) {
         let colonyRoom = Game.rooms[creep.memory.colony];
         let idleFlag = _.filter(colonyRoom.flags,
@@ -25,51 +26,54 @@ export class roleSupplier extends Role {
         }
         return creep;
     }
+}
 
-    recharge(creep: Creep) { // default recharging logic for creeps
+export class SupplierCreep extends AbstractCreep {
+    
+    constructor(creep: Creep) {
+        super(creep);
+    }
+
+    recharge() { // default recharging logic for thiss
         // try to find closest container or storage
-        var bufferSettings = creep.colony.overlord.settings.storageBuffer; // not creep.workRoom; use rules of room you're in
-        var buffer = bufferSettings.default;
+        var bufferSettings = this.colony.overlord.settings.storageBuffer; // not this.workRoom; use rules of room you're in
+        var buffer = bufferSettings.defaultBuffer;
         if (bufferSettings[this.name]) {
             buffer = bufferSettings[this.name];
         }
         var target: Container | Storage | Terminal;
-        target = creep.pos.findClosestByRange(creep.room.storageUnits, {
+        target = this.pos.findClosestByRange(this.room.storageUnits, {
             filter: (s: Storage | Container) =>
-            (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > creep.carryCapacity) ||
+            (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > this.carryCapacity) ||
             (s.structureType == STRUCTURE_STORAGE && s.store[RESOURCE_ENERGY] > buffer),
         }) as Storage | Container;
-        if (!target && creep.room.terminal) {
-            target = creep.room.terminal; // energy should be sent to room if it is out
+        if (!target && this.room.terminal) {
+            target = this.room.terminal; // energy should be sent to room if it is out
         }
-        if (target) { // assign recharge task to creep
-            return creep.assign(new taskRecharge(target));
+        if (target) { // assign recharge task to this
+            return this.assign(new taskRecharge(target));
         } else {
-            if (!this.settings.consoleQuiet && this.settings.notifyOnNoRechargeTargets) {
-                creep.log('no recharge targets!');
-            }
             return "";
         }
     }
 
-    run(creep: Creep) {
+    run() {
         // get new task if this one is invalid
-        if ((!creep.task || !creep.task.isValidTask() || !creep.task.isValidTarget())) {
-            this.newTask(creep);
+        if ((!this.task || !this.task.isValidTask() || !this.task.isValidTarget())) {
+            this.newTask();
         }
-        if (creep.task) {
+        if (this.task) {
             // execute task
-            this.executeTask(creep);
+            this.executeTask();
         } else {
-            if (creep.carry.energy < creep.carryCapacity) {
-                return this.recharge(creep); // recharge once there's nothing to do
+            if (this.carry.energy < this.carryCapacity) {
+                return this.recharge(); // recharge once there's nothing to do
             } else { // sit and wait at flag
-                let idleFlag = Game.flags[creep.memory.data.idleFlag];
-                if (idleFlag && !creep.pos.inRangeTo(idleFlag, 1)) {
-                    creep.travelTo(idleFlag);
+                let idleFlag = Game.flags[this.memory.data.idleFlag];
+                if (idleFlag && !this.pos.inRangeTo(idleFlag, 1)) {
+                    this.travelTo(idleFlag);
                 }
             }
         }
     }
 }
-

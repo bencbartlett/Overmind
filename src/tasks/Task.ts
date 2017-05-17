@@ -40,11 +40,11 @@ export abstract class Task implements ITask {
     }
 
     // Getter/setter for task.creep
-    get creep(): Creep { // Get task's own creep by its name
-        return Game.creeps[this.creepName];
+    get creep(): ICreep { // Get task's own creep by its name
+        return Game.icreeps[this.creepName];
     }
 
-    set creep(creep: Creep) {
+    set creep(creep: ICreep) {
         this.creepName = creep.name;
     }
 
@@ -89,7 +89,7 @@ export abstract class Task implements ITask {
     }
 
     // Assign the task to a creep
-    assign(creep: Creep): string {
+    assign(creep: ICreep): string {
         // add target to Game.cache
         if (!Game.cache.targets[this.target.ref]) {
             Game.cache.targets[this.target.ref] = [];

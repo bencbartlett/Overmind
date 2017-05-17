@@ -18,6 +18,13 @@ Object.defineProperty(RoomObject.prototype, 'ref', { // reference object; see gl
     }
 });
 
+// Colony association ==================================================================================================
+
+Object.defineProperty(RoomObject.prototype, 'colony', { // link to colony object in the overmind
+    get () {
+        return this.room.colony;
+    },
+});
 
 // Assigned and targeted creep indexing ================================================================================
 
@@ -33,7 +40,7 @@ Object.defineProperty(RoomObject.prototype, 'assignedCreepNames', { // keys: rol
 
 RoomObject.prototype.getAssignedCreeps = function (role) {
     let creepNames = this.assignedCreepNames[role];
-    return _.filter(_.map(creepNames, (name: string) => Game.creeps[name]), creep => creep.needsReplacing == false);
+    return _.filter(_.map(creepNames, (name: string) => Game.icreeps[name]), creep => creep.needsReplacing == false);
 };
 
 RoomObject.prototype.getAssignedCreepAmounts = function (role) {
@@ -47,12 +54,12 @@ Object.defineProperty(RoomObject.prototype, 'assignedCreepAmounts', {
             let creepNamesByRole = Game.cache.assignments[this.ref];
             for (let role in creepNamesByRole) { // only include creeps that shouldn't be replaced yet
                 creepNamesByRole[role] = _.filter(creepNamesByRole[role],
-                    (name: string) => Game.creeps[name].needsReplacing == false)
+                    (name: string) => Game.icreeps[name].needsReplacing == false)
             }
             return _.mapValues(creepNamesByRole, creepList => creepList.length);
         } else {
             console.log("Regenerating assigned creep amounts! (Why?)");
-            let assignedCreeps = _.filter(Game.creeps,
+            let assignedCreeps = _.filter(Game.icreeps,
                 creep => creep.memory.assignment &&
                 creep.memory.assignment == this.ref &&
                 creep.needsReplacing == false);

@@ -20,7 +20,7 @@ export class taskGetBoosted extends Task {
     }
 
     work() {
-        let response = this.target.boostCreep(this.creep);
+        let response = this.target.boostCreep(this.creep.creep); // boostCreep takes an unwrapped creep as argument
         if (response == OK) {
             if (!this.creep.memory.boosted) {
                 this.creep.memory.boosted = {};

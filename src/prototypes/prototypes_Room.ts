@@ -61,7 +61,7 @@ Object.defineProperty(Room.prototype, 'creeps', {
 // Tasks of creeps assigned to the room
 Object.defineProperty(Room.prototype, 'tasks', {
     get () {
-        let tasks = this.assignedCreepNames.map((name: string) => Game.creeps[name].task);
+        let tasks = this.assignedCreepNames.map((name: string) => Game.icreeps[name].task);
         return _.filter(tasks, task => task != null);
     },
 });

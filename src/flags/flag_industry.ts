@@ -41,5 +41,5 @@ export var industryFlagActions = {
 
 // const profiler = require('screeps-profiler');
 import profiler = require('../lib/screeps-profiler');
-import {roleMiner} from "../roles/role_miner"; profiler.registerObject(industryFlagActions, 'industryFlagActions');
+profiler.registerObject(industryFlagActions, 'industryFlagActions');
 

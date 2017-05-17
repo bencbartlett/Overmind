@@ -1,10 +1,11 @@
 import profiler = require('../lib/screeps-profiler');
-import {roleScout} from "../roles/role_scout";
+import {ScoutSetup} from "../roles/scout";
+
 
 export var visionFlagActions = {
     stationary: function (flag: Flag): void {
         function handleScouts(flag: Flag): void {
-            var role = new roleScout();
+            var role = new ScoutSetup();
             flag.requiredCreepAmounts[role.name] = 1;
             flag.requestCreepIfNeeded(role, {patternRepetitionLimit: 1});
         }

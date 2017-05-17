@@ -1,13 +1,13 @@
 // var roles = require('roles.js');
 import profiler = require('../lib/screeps-profiler');
-import {roleGuard} from "../roles/role_guard";
-import {roleDestroyer} from "../roles/role_destroyer";
-import {roleSieger} from "../roles/role_sieger";
+import {GuardSetup} from "../roles/guard";
+import {DestroyerSetup} from "../roles/destroyer";
+import {SiegerSetup} from "../roles/sieger";
 
 export var millitaryFlagActions = {
     guard: function (flag: Flag): void {
         function handleGuards(flag: Flag): void {
-            var role = new roleGuard();
+            var role = new GuardSetup();
             if (flag.memory.amount) {
                 flag.requiredCreepAmounts[role.name] = flag.memory.amount;
             } else {
@@ -29,7 +29,7 @@ export var millitaryFlagActions = {
 
     destroyer: function (flag: Flag): void {
         function handleDestroyers(flag: Flag): void {
-            var role = new roleDestroyer();
+            var role = new DestroyerSetup();
             if (flag.memory.amount) {
                 flag.requiredCreepAmounts[role.name] = flag.memory.amount;
             } else {
@@ -48,7 +48,7 @@ export var millitaryFlagActions = {
 
     sieger: function (flag: Flag): void {
         function handleSiegers(flag: Flag): void {
-            var role = new roleSieger();
+            var role = new SiegerSetup();
             if (flag.memory.amount) {
                 flag.requiredCreepAmounts[role.name] = flag.memory.amount;
             } else {
