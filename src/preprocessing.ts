@@ -14,7 +14,7 @@ export class Preprocessing {
     cacheAssignments() { // generates a hash table for creeps assigned to each thing; key: role, val: name
         for (let name in Game.creeps) {
             let creep = Game.creeps[name];
-            let assignmentRef = creep.memory.assignment;
+            let assignmentRef = creep.memory.assignmentRef;
             if (assignmentRef) {
                 if (!Game.cache.assignments[assignmentRef]) {
                     Game.cache.assignments[assignmentRef] = {};

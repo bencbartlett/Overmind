@@ -28,17 +28,18 @@ export class UpgraderCreep extends AbstractCreep {
 
     recharge() {
         var bufferSettings = this.colony.overlord.settings.storageBuffer;
-        var buffer = bufferSettings.default;
+        var buffer = bufferSettings.defaultBuffer;
         if (bufferSettings[this.name]) {
             buffer = bufferSettings[this.name];
         }
         if (this.room.controller.ticksToDowngrade < 4000) { // avoid room decay
             buffer = 0;
         }
+        var carryCapacity = this.carryCapacity; // filter function can overwrite "this"
         var target = this.pos.findClosestByRange(FIND_STRUCTURES, {
             filter: function (s: Container | Storage | Link) {
                 if (s instanceof StructureStorage){
-                    return s.store[RESOURCE_ENERGY] > this.carryCapacity;
+                    return s.store[RESOURCE_ENERGY] > carryCapacity;
                 } else if (s instanceof StructureContainer) {
                     return s.store[RESOURCE_ENERGY] > buffer;
                 } else if (s instanceof StructureLink) {

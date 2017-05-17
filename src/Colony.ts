@@ -16,8 +16,8 @@ export class Colony implements IColony {
     terminal: StructureTerminal;
     incubating: boolean;
     flags: Flag[];
-    creeps: Creep[];
-    creepsByRole: { [roleName: string]: Creep[] };
+    creeps: ICreep[];
+    creepsByRole: { [roleName: string]: ICreep[] };
     sources: Source[];
     miningSites: { [sourceID: string]: MiningSite };
 
@@ -69,7 +69,7 @@ export class Colony implements IColony {
         return Overmind.Overlords[this.name];
     }
 
-    getCreepsByRole(roleName: string): Creep[] {
+    getCreepsByRole(roleName: string): ICreep[] {
         return this.creepsByRole[roleName] || [];
     }
 }

@@ -4,6 +4,7 @@ import profiler = require('./lib/screeps-profiler');
 import {Colony} from "./Colony";
 import {Overlord} from "./Overlord";
 import {TerminalBrain} from "./brains/Brain_Terminal";
+import {AbstractCreepWrapper} from "./maps/map_roles";
 
 export default class Overmind {
     name: string;
@@ -54,14 +55,6 @@ export default class Overmind {
         for (let colName in protoColonies) {
             this.Colonies[colName] = new Colony(colName, protoColonies[colName]);
         }
-        // Register creeps
-        let creepsByColony = _.groupBy(Game.creeps, creep => creep.memory.colony) as { [colName: string]: Creep[] };
-        for (let colName in this.Colonies) {
-            let colony = this.Colonies[colName];
-            let colCreeps: Creep[] = creepsByColony[colName];
-            colony.creeps = colCreeps;
-            colony.creepsByRole = _.groupBy(colCreeps, creep => creep.memory.role);
-        }
     }
 
     spawnMoarOverlords(): void {
@@ -79,11 +72,28 @@ export default class Overmind {
         }
     }
 
+    initializeCreeps(): void {
+        // Wrap all creeps
+        Game.icreeps = {};
+        for (let name in Game.creeps) {
+            Game.icreeps[name] = AbstractCreepWrapper(Game.creeps[name]);
+        }
+        // Register creeps
+        let creepsByColony = _.groupBy(Game.icreeps, creep => creep.memory.colony) as { [colName: string]: ICreep[] };
+        for (let colName in this.Colonies) {
+            let colony = this.Colonies[colName];
+            let colCreeps: ICreep[] = creepsByColony[colName];
+            colony.creeps = colCreeps;
+            colony.creepsByRole = _.groupBy(colCreeps, creep => creep.memory.role);
+        }
+    }
+
     init(): void {
         this.verifyMemory();
         this.initializeColonies();
         this.spawnMoarOverlords();
         this.initializeTerminalBrains();
+        this.initializeCreeps();
     }
 }
 

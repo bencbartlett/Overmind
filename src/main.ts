@@ -1,3 +1,4 @@
+//
 // ___________________________________________________________
 //
 //  _____  _    _ _______  ______ _______ _____ __   _ ______
@@ -9,6 +10,7 @@
 //
 // Overmind repository: github.com/bencbartlett/overmind
 //
+
 
 // Import everything needed
 'use strict';
@@ -68,6 +70,13 @@ export function loop() {
     // Initialize Overmind object
     global.Overmind = new OM;
     Overmind.init();
+    // // Wrap all creeps
+    // Game.icreeps = {};
+    // for (let name in Game.creeps) {
+    //     Game.icreeps[name] = AbstractCreepWrapper(Game.creeps[name]);
+    // }
+
+
 
     // Animation ===================================================================================================
     // Animate each overlord
@@ -77,8 +86,8 @@ export function loop() {
         Overmind.Colonies[name].hatchery.run(); // Run the hatchery
     }
     // Animate each creep
-    for (let name in Game.creeps) {
-        Game.creeps[name].run();
+    for (let name in Game.icreeps) {
+        Game.icreeps[name].run();
     }
 
     // for (let name in Game.rooms) {

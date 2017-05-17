@@ -1,9 +1,8 @@
 // var roles = require('roles.js');
 
 import profiler = require('../lib/screeps-profiler');
-import {roleReserver} from "../roles/role_reserver";
-import {roleWorker} from "../roles/role_worker";
-import {roleClaimer} from "../roles/role_claimer";
+import {ClaimerSetup} from "../roles/claimer";
+
 
 export var territoryFlagActions = {
     // colony: function (flag: Flag): void {
@@ -58,7 +57,7 @@ export var territoryFlagActions = {
     claimAndIncubate: function (flag: Flag): void {
         // Spawn a reserver bot that will reserve the site
         function handleClaimers(flag: Flag): void {
-            let role = new roleClaimer();
+            let role = new ClaimerSetup();
             if (!(flag.room && flag.room.controller && flag.room.controller.my)) {
                 flag.requiredCreepAmounts[role.name] = 1;
             } else {

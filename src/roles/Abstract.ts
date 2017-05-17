@@ -5,11 +5,10 @@ import {taskRecharge} from "../tasks/task_recharge";
 import {taskGetRenewed} from "../tasks/task_getRenewed";
 import {Colony} from "../Colony";
 import {Objective} from "../objectives/Objective";
-import {Traveler, TravelToOptions} from "../lib/Traveler";
 import {tasks} from "../maps/map_tasks";
 
 
-export abstract class AbstractSetup {
+export abstract class AbstractSetup implements ISetup {
     name: string;
     settings: any;
     roleRequirements: Function;
@@ -114,7 +113,8 @@ export abstract class AbstractSetup {
             memory: { // memory to initialize with
                 role: this.name, // role of the creep
                 task: <Task> null, // task the creep is performing
-                assignment: assignment.ref, // ref of object/room(use controller) the creep is assigned to
+                assignmentRef: assignment.ref, // ref of object/room(use controller) the creep is assigned to
+                assignmentPos: assignment.pos, // serialized position of the assignment
                 colony: colony.name, // name of the colony the creep is assigned to
                 data: { // rarely-changed data about the creep
                     origin: colony.room.name, // where it was spawned
@@ -138,9 +138,8 @@ export abstract class AbstractSetup {
 }
 
 
-export abstract class AbstractCreep {
+export abstract class AbstractCreep implements ICreep {
 
-    settings: any;
     creep: Creep;
     body: BodyPartDefinition[];
     carry: StoreDefinition;
@@ -157,10 +156,9 @@ export abstract class AbstractCreep {
     room: Room;
     spawning: boolean;
     ticksToLive: number;
-    traveler: Traveler;
+    settings: any;
 
     constructor(creep: Creep) {
-        this.settings = {};
         this.creep = creep;
         this.body = creep.body;
         this.carry = creep.carry;
@@ -177,7 +175,7 @@ export abstract class AbstractCreep {
         this.room = creep.room;
         this.spawning = creep.spawning;
         this.ticksToLive = creep.ticksToLive;
-        this.traveler = new Traveler();
+        this.settings = {};
     }
 
     // Wrapped creep methods ===========================================================================================
@@ -242,6 +240,10 @@ export abstract class AbstractCreep {
         return this.creep.say(message, pub);
     }
 
+    signController(target: Controller, text: string): number {
+        return this.creep.signController(target, text);
+    }
+
     suicide(): number {
         return this.creep.suicide();
     }
@@ -284,8 +286,8 @@ export abstract class AbstractCreep {
         }
     }
 
-    travelTo(destination: { pos: RoomPosition }, options?: TravelToOptions) {
-        return this.traveler.travelTo(this.creep, destination, options);
+    travelTo(destination: { pos: RoomPosition }, options?: any): number {
+        return this.creep.travelTo(destination, options);
     };
 
     // End of wrapped creep methods ====================================================================================
@@ -293,7 +295,7 @@ export abstract class AbstractCreep {
     // Begin custom creep methods ======================================================================================
 
     log(...args: any[]): void {
-        console.log(this.room , ' ' , this.name , ': "' , ...args , '".');
+        console.log(this.room, ' ', this.name, ': "', ...args, '".');
     }
 
     get task(): Task {
@@ -303,7 +305,7 @@ export abstract class AbstractCreep {
             //     this.memory.task.targetRef = this.memory.task.targetID;
             // }
             let target = deref(this.memory.task.targetRef);
-            let task = tasks(this.memory.task.name, target) as Task;
+            let task = tasks(this.memory.task.name, target) as ITask;
             task.creepName = this.memory.task.creepName;
             task.targetCoords = this.memory.task.targetCoords;
             task.data = this.memory.task.data;
@@ -312,21 +314,22 @@ export abstract class AbstractCreep {
             return null;
         }
     }
+
     set task(newTask: Task | null) {
         this.memory.task = newTask;
     }
 
     assign(task: Task): string {
         this.task = null;
-        return task.assign(this.creep);
+        return task.assign(this);
     };
 
     get colony(): Colony {
-        return Overmind.Colonies[this.memory.colony];
+        return this.creep.colony;
     }
 
     set colony(newColony: Colony) {
-        this.memory.colony = newColony.name;
+        this.creep.colony = newColony;
     }
 
     get lifetime(): number {
@@ -412,13 +415,13 @@ export abstract class AbstractCreep {
     }
 
     requestTask(): string { // default logic for requesting a new task from the colony overlord
-        return this.creep.colony.overlord.assignTask(this.creep);
+        return this.colony.overlord.assignTask(this);
     }
 
     recharge(): string { // default recharging logic for creeps
         // try to find closest container or storage
         let bufferSettings = this.colony.overlord.settings.storageBuffer;
-        let buffer = bufferSettings.default;
+        let buffer = bufferSettings.defaultBuffer;
         if (bufferSettings[this.roleName]) {
             buffer = bufferSettings[this.roleName];
         }

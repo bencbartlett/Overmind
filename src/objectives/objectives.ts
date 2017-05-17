@@ -19,7 +19,7 @@ export class pickupEnergyObjective extends Objective {
         this.maxCreeps = 1;
     }
 
-    assignableTo(creep: Creep) {
+    assignableTo(creep: ICreep) {
         return this.assignableToRoles.includes(creep.memory.role) &&
                creep.getActiveBodyparts(CARRY) > 0 &&
                creep.carry.energy < creep.carryCapacity;
@@ -40,7 +40,7 @@ export class collectEnergyContainerObjective extends Objective {
         this.maxCreeps = Infinity;
     }
 
-    assignableTo(creep: Creep) {
+    assignableTo(creep: ICreep) {
         return this.assignableToRoles.includes(creep.memory.role) &&
                creep.getActiveBodyparts(CARRY) > 0 &&
                creep.carry.energy < 0.5 * creep.carryCapacity;
@@ -61,7 +61,7 @@ export class collectEnergyMiningSiteObjective extends Objective {
         this.maxCreeps = Infinity;
     }
 
-    assignableTo(creep: Creep) {
+    assignableTo(creep: ICreep) {
         return this.assignableToRoles.includes(creep.memory.role) &&
                this.target.miningSite.predictedStore >= 0.75 * (creep.carryCapacity - _.sum(creep.carry)) &&
                creep.getActiveBodyparts(CARRY) > 0;
@@ -82,7 +82,7 @@ export class supplyTowerObjective extends Objective {
         this.maxCreeps = 1;
     }
 
-    assignableTo(creep: Creep) {
+    assignableTo(creep: ICreep) {
         return this.assignableToRoles.includes(creep.memory.role) &&
                creep.getActiveBodyparts(CARRY) > 0 &&
                creep.carry.energy > 0;
@@ -103,7 +103,7 @@ export class supplyObjective extends Objective {
         this.maxCreeps = 1;
     }
 
-    assignableTo(creep: Creep) {
+    assignableTo(creep: ICreep) {
         return this.assignableToRoles.includes(creep.memory.role) &&
                creep.getActiveBodyparts(CARRY) > 0 &&
                creep.carry.energy > 0;
@@ -124,7 +124,7 @@ export class repairObjective extends Objective {
         this.maxCreeps = 1;
     }
 
-    assignableTo(creep: Creep) {
+    assignableTo(creep: ICreep) {
         return this.assignableToRoles.includes(creep.memory.role) &&
                creep.getActiveBodyparts(WORK) > 0 &&
                creep.carry.energy > 0;
@@ -145,7 +145,7 @@ export class buildObjective extends Objective {
         this.maxCreeps = 3;
     }
 
-    assignableTo(creep: Creep) {
+    assignableTo(creep: ICreep) {
         return this.assignableToRoles.includes(creep.memory.role) &&
                creep.getActiveBodyparts(WORK) > 0 &&
                creep.carry.energy > 0;
@@ -166,7 +166,7 @@ export class buildRoadObjective extends Objective {
         this.maxCreeps = 1;
     }
 
-    assignableTo(creep: Creep) {
+    assignableTo(creep: ICreep) {
         return this.assignableToRoles.includes(creep.memory.role) &&
                creep.getActiveBodyparts(WORK) > 0 &&
                creep.carry.energy > 0;
@@ -187,7 +187,7 @@ export class fortifyObjective extends Objective {
         this.maxCreeps = 1;
     }
 
-    assignableTo(creep: Creep) {
+    assignableTo(creep: ICreep) {
         return this.assignableToRoles.includes(creep.memory.role) &&
                creep.getActiveBodyparts(WORK) > 0 &&
                creep.carry.energy > 0;
@@ -208,7 +208,7 @@ export class upgradeObjective extends Objective {
         this.maxCreeps = Infinity;
     }
 
-    assignableTo(creep: Creep) {
+    assignableTo(creep: ICreep) {
         return this.assignableToRoles.includes(creep.memory.role) &&
                creep.getActiveBodyparts(WORK) > 0 &&
                creep.carry.energy > 0;

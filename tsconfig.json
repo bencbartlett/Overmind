@@ -22,6 +22,7 @@
   "include": [
     "declarations/**/*.d.ts",
     "typings/**/*.d.ts",
+    "src/**/*.d.ts",
     "src/**/*.ts"
   ],
   "exclude": [

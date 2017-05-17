@@ -2,7 +2,8 @@
 
 import {validResources} from "../maps/map_resources";
 import {pathing} from "../pathing/pathing";
-import {Role} from "../roles/Role";
+import {AbstractSetup} from "../roles/Abstract";
+
 
 // Flag assignment =====================================================================================================
 
@@ -81,26 +82,26 @@ Flag.prototype.action = function () {
 
 // Assigned creep indexing =============================================================================================
 
-Flag.prototype.getAssignedCreepAmounts = function (role) {
-    let amount = this.assignedCreepAmounts[role];
-    return amount || 0
-};
-
-Object.defineProperty(Flag.prototype, 'assignedCreepAmounts', {
-    get: function () {
-        if (Game.cache.assignments[this.ref]) {
-            let creepNamesByRole = Game.cache.assignments[this.ref];
-            for (let role in creepNamesByRole) { // only include creeps that shouldn't be replaced yet
-                creepNamesByRole[role] = _.filter(creepNamesByRole[role],
-                                                  (name: string) => Game.creeps[name].needsReplacing == false)
-            }
-            this.memory.assignedCreepAmounts = _.mapValues(creepNamesByRole, creepList => creepList.length);
-        } else {
-            this.memory.assignedCreepAmounts = {};
-        }
-        return this.memory.assignedCreepAmounts;
-    }
-});
+// Flag.prototype.getAssignedCreepAmounts = function (role) {
+//     let amount = this.assignedCreepAmounts[role];
+//     return amount || 0
+// };
+//
+// Object.defineProperty(Flag.prototype, 'assignedCreepAmounts', {
+//     get: function () {
+//         if (Game.cache.assignments[this.ref]) {
+//             let creepNamesByRole = Game.cache.assignments[this.ref];
+//             for (let role in creepNamesByRole) { // only include creeps that shouldn't be replaced yet
+//                 creepNamesByRole[role] = _.filter(creepNamesByRole[role],
+//                                                   (name: string) => Game.icreeps[name].needsReplacing == false)
+//             }
+//             this.memory.assignedCreepAmounts = _.mapValues(creepNamesByRole, creepList => creepList.length);
+//         } else {
+//             this.memory.assignedCreepAmounts = {};
+//         }
+//         return this.memory.assignedCreepAmounts;
+//     }
+// });
 
 Flag.prototype.getRequiredCreepAmounts = function (role) {
     let amount = this.requiredCreepAmounts[role];
@@ -123,12 +124,12 @@ Flag.prototype.needsAdditional = function (role) { // if the flag needs more of 
     return this.getAssignedCreepAmounts(role) < this.getRequiredCreepAmounts(role);
 };
 
-Flag.prototype.requestCreepIfNeeded = function (role: Role,
+Flag.prototype.requestCreepIfNeeded = function (setup: AbstractSetup,
     {assignment = this, patternRepetitionLimit = Infinity}: protoCreepOptions) {
-    if (this.needsAdditional(role.name)) {
-        let priority = this.colony.overlord.spawnPriorities[role.name];
+    if (this.needsAdditional(setup.name)) {
+        let priority = this.colony.overlord.spawnPriorities[setup.name];
         this.colony.hatchery.enqueue(
-            role.create(this.room.colony, {
+            setup.create(this.room.colony, {
                 assignment: assignment,
                 patternRepetitionLimit: patternRepetitionLimit
             }), priority

@@ -3,51 +3,52 @@
 // var roles = require('roles');
 // var role = roles('upgrader');
 
-import {Role} from '../roles/Role';
-import {roleClaimer} from "../roles/role_claimer";
-import {roleDestroyer} from "../roles/role_destroyer";
-import {roleGuard} from "../roles/role_guard";
-import {roleHauler} from "../roles/role_hauler";
-import {roleHealer} from "../roles/role_healer";
-import {roleLinker} from "../roles/role_linker";
-import {roleMiner} from "../roles/role_miner";
-import {roleMineralSupplier} from "../roles/role_mineralSupplier";
-import {roleReserver} from "../roles/role_reserver";
-import {roleScout} from "../roles/role_scout";
-import {roleSieger} from "../roles/role_sieger";
-import {roleSupplier} from "../roles/role_supplier";
-import {roleUpgrader} from "../roles/role_upgrader";
-import {roleWorker} from "../roles/role_worker";
+import {AbstractCreep} from "../roles/Abstract";
+import {ClaimerCreep} from "../roles/claimer";
+import {DestroyerCreep} from "../roles/destroyer";
+import {GuardCreep} from "../roles/guard";
+import {HaulerCreep} from "../roles/hauler";
+import {HealerCreep} from "../roles/healer";
+import {LinkerCreep} from "../roles/linker";
+import {MinerCreep} from "../roles/miner";
+import {MineralSupplierCreep} from "../roles/mineralSupplier";
+import {ReserverCreep} from "../roles/reserver";
+import {ScoutCreep} from "../roles/scout";
+import {SiegerCreep} from "../roles/sieger";
+import {SupplierCreep} from "../roles/supplier";
+import {UpgraderCreep} from "../roles/upgrader";
+import {WorkerCreep} from "../roles/worker";
 
-export function roles(roleName: string): Role | void {
+export function AbstractCreepWrapper(creep: Creep): AbstractCreep {
+    let roleName = creep.memory.role;
     switch (roleName) {
         case 'claimer':
-            return new roleClaimer;
+            return new ClaimerCreep(creep);
         case 'destroyer':
-            return new roleDestroyer;
+            return new DestroyerCreep(creep);
         case 'guard':
-            return new roleGuard;
+            return new GuardCreep(creep);
         case 'hauler':
-            return new roleHauler;
+            return new HaulerCreep(creep);
         case 'healer':
-            return new roleHealer;
+            return new HealerCreep(creep);
         case 'linker':
-            return new roleLinker;
+            return new LinkerCreep(creep);
         case 'miner':
-            return new roleMiner;
+            return new MinerCreep(creep);
         case 'mineralSupplier':
-            return new roleMineralSupplier;
+            return new MineralSupplierCreep(creep);
         case 'reserver':
-            return new roleReserver;
+            return new ReserverCreep(creep);
         case 'scout':
-            return new roleScout;
+            return new ScoutCreep(creep);
         case 'sieger':
-            return new roleSieger;
+            return new SiegerCreep(creep);
         case 'supplier':
-            return new roleSupplier;
+            return new SupplierCreep(creep);
         case 'upgrader':
-            return new roleUpgrader;
+            return new UpgraderCreep(creep);
         case 'worker':
-            return new roleWorker;
+            return new WorkerCreep(creep);
     }
 }

@@ -10,7 +10,6 @@ export class MiningSite implements IMiningSite {
     output: Container | Link | null;
     outputConstructionSite: ConstructionSite | null;
     fullness: number;
-    miners: Creep[];
 
     constructor(source: Source) {
         this.source = source;
@@ -41,8 +40,10 @@ export class MiningSite implements IMiningSite {
             filter: (s:Structure) => s.structureType == STRUCTURE_CONTAINER || s.structureType == STRUCTURE_LINK
         }) as ConstructionSite[];
         this.outputConstructionSite = nearbyOutputStes[0];
-        // Register miners
-        this.miners = source.getAssignedCreeps('miner');
+    }
+
+    get miners(): ICreep[] {
+        return this.source.getAssignedCreeps('miner');
     }
 
     get predictedStore(): number {
