@@ -1,33 +1,34 @@
-import {Task} from "./Task";
+import {Task} from './Task';
 
 type targetType = Creep;
 export class taskHeal extends Task {
-    target: targetType;
-    constructor(target: targetType) {
-        super('heal', target);
-        // Settings
-        this.moveColor = 'green';
-        this.targetRange = 3;
-    }
+	target: targetType;
 
-    isValidTask() {
-        return (this.creep.getActiveBodyparts(HEAL) > 0);
-    }
+	constructor(target: targetType) {
+		super('heal', target);
+		// Settings
+		this.taskData.moveColor = 'green';
+		this.taskData.targetRange = 3;
+	}
 
-    isValidTarget() {
-        var target = this.target;
-        return (target && target.hits < target.hitsMax && target.my == true);
-    }
+	isValidTask() {
+		return (this.creep.getActiveBodyparts(HEAL) > 0);
+	}
 
-    work() {
-        var creep = this.creep;
-        var target = this.target;
-        if (creep.pos.isNearTo(target)) {
-            return creep.heal(target);
-        } else {
-            this.move();
-        }
-        return creep.rangedHeal(target); // you'll definitely be within range 3 because this.targetRange
-    }
+	isValidTarget() {
+		var target = this.target;
+		return (target && target.hits < target.hitsMax && target.my == true);
+	}
+
+	work() {
+		var creep = this.creep;
+		var target = this.target;
+		if (creep.pos.isNearTo(target)) {
+			return creep.heal(target);
+		} else {
+			this.move();
+		}
+		return creep.rangedHeal(target); // you'll definitely be within range 3 because this.targetRange
+	}
 }
 

@@ -1,27 +1,26 @@
-import {Task} from "./Task";
+/* This is the task for withdrawing energy. For withdrawing other resources, see taskWithdrawResource. */
 
-type targetType = StructureStorage | StructureContainer | StructureTerminal;
+import {Task} from './Task';
+
+type targetType = StructureStorage | StructureContainer | StructureTerminal | StructureLink;
 export class taskWithdraw extends Task {
-    target: targetType;
+	target: targetType;
 
-    constructor(target: targetType) {
-        super('withdraw', target);
-        // Settings
-        this.moveColor = 'blue';
-        this.data.resourceType = null; // this needs to be overwritten on assignment
-    }
+	constructor(target: targetType) {
+		super('recharge', target);
+		// Settings
+		this.taskData.moveColor = 'blue';
+	}
 
-    isValidTask() {
-        var creep = this.creep;
-        return (_.sum(creep.carry) < creep.carryCapacity);
-    }
+	isValidTask() {
+		return _.sum(this.creep.carry) < this.creep.carryCapacity;
+	}
 
-    isValidTarget() {
-        var target = this.target;
-        return (target != null && target.store && target.store[this.data.resourceType] > 0);
-    }
+	isValidTarget() {
+		return this.target && this.target.energy > 0;
+	}
 
-    work() {
-        return this.creep.withdraw(this.target, this.data.resourceType);
-    }
+	work() {
+		return this.creep.withdraw(this.target, RESOURCE_ENERGY);
+	}
 }

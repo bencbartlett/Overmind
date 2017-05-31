@@ -12,6 +12,31 @@
       "check-format",
       "allow-pascal-case",
       "allow-leading-underscore"
-    ]
+    ],
+    "triple-equals": false,
+    "indent": false,
+    "quotemark": false,
+    "class-name": false,
+    "member-access": false,
+    "no-var-keyword": false,
+    "no-consecutive-blank-lines": false,
+    "prefer-const": false,
+    "ordered-imports": false,
+    "object-literal-sort-keys": false,
+    "max-classes-per-file": false,
+    "object-literal-shorthand": false,
+    "trailing-comma": false,
+    "member-ordering": false,
+    "no-angle-bracket-type-assertion": false,
+    "semicolon": false,
+    "one-variable-per-declaration": false,
+    "space-before-function-paren": false,
+    "only-arrow-functions": false,
+    "no-shadowed-variable": false,
+    "arrow-parens": false,
+    "array-type": false,
+    "no-string-literal": false,
+    "curly": false,
+    "align": false
   }
 }

@@ -1,6 +1,5 @@
-export var rallyFlagActions = {
-
-};
+export var rallyFlagActions = {};
 
 
-import profiler = require('../lib/screeps-profiler'); profiler.registerObject(rallyFlagActions, 'rallyFlagActions');
+import profiler = require('../lib/screeps-profiler');
+profiler.registerObject(rallyFlagActions, 'rallyFlagActions');

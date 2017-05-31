@@ -10,7 +10,7 @@
     "noUnusedParameters": true,
     "noUnusedLocals": false,
     "suppressExcessPropertyErrors": true,
-    "sourceMap": false,
+    "sourceMap": true,
     "outDir": "./dist",
     "allowJs": true,
     "lib": [
@@ -20,15 +20,16 @@
   },
   "compileOnSave": true,
   "include": [
-    "declarations/**/*.d.ts",
+    "webpack.config.ts",
+    "config/*.ts",
+    "libs/*.ts",
     "typings/**/*.d.ts",
-    "src/**/*.d.ts",
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "src/**/*.d.ts"
   ],
   "exclude": [
-    "build",
+    "dist",
     "node_modules",
-    "libs",
-    "src/deprecated"
+    "src/snippets"
   ]
 }

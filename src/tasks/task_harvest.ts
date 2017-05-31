@@ -1,26 +1,24 @@
-import {Task} from "./Task";
+import {Task} from './Task';
 
 type targetType = Source;
 export class taskHarvest extends Task {
-    target: targetType;
+	target: targetType;
 
-    constructor(target: targetType) {
-        super('harvest', target);
-        // Settings
-        this.moveColor = 'yellow';
-    }
+	constructor(target: targetType) {
+		super('harvest', target);
+		// Settings
+		this.taskData.moveColor = 'yellow';
+	}
 
-    isValidTask() {
-        var creep = this.creep;
-        return (creep.carry.energy < creep.carryCapacity);
-    }
+	isValidTask() {
+		return this.creep.carry.energy < this.creep.carryCapacity;
+	}
 
-    isValidTarget() {
-        var target = this.target;
-        return (target != null && target.energy != null && target.energy > 0);
-    }
+	isValidTarget() {
+		return this.target && this.target.energy > 0;
+	}
 
-    work() {
-        return this.creep.harvest(this.target);
-    }
+	work() {
+		return this.creep.harvest(this.target);
+	}
 }

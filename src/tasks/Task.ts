@@ -1,127 +1,143 @@
 type targetType = RoomObject; // overwrite this variable in derived classes to specify more precise typing
 
-// Base class for creep tasks. Refactors creep_goTask implementation and is designed to be more extensible
+/* An abstract class for encapsulating creep actions. This generalizes the concept of "do action X to thing Y until
+ * condition Z is met" and saves a lot of convoluted and duplicated code in creep logic. A Task object contains
+ * the necessary logic for traveling to a target, performing a task, and realizing when a task is no longer sensible
+ * to continue.*/
 export abstract class Task implements ITask {
-    name: string;
-    creepName: string;
-    targetRef: string;
-    targetCoords: { x: number | null; y: number | null; roomName: string; };
-    maxPerTarget: number;
-    maxPerTask: number;
-    targetRange: number;
-    moveColor: string;
-    data: any;
+	name: string;				// Name of the task type, e.g. 'upgrade'
+	_creep: { 					// Data for the creep the task is assigned to"
+		name: string;				// Name of the creep
+	};
+	_target: { 					// Data for the target the task is directed to:
+		ref: string; 				// Target id or name
+		_pos: protoPos; 			// Target position's coordinates in case vision is lost
+	};
+	taskData: { 				// Data pertaining to a given type of task; shouldn't be modified on an instance-basis
+		targetRange: number;		// How close you must be to the target to do the work() function
+		maxPerTask: number; 		// How many creeps can be assigned a type of task (DEPRECATED - see objectives)
+		maxPerTarget: number;		// How many creeps can be assigned to a single target (DEPRECATED - see objectives)
+		moveColor: string; 			// Color to draw movement lines with visuals (will be re-implemented later)
+	};
+	data: { 					// Data pertaining to a given instance of a task
+		quiet: boolean; 			// Don't complain about shit in the console
+		travelToOptions: any; 		// Movement options: for example, attackers can move through hostile rooms
+		resourceType?: string; 		// For non-energy resource movement tasks
+	};
 
-    constructor(taskName: string, target: targetType) {
-        // Parameters for the task
-        this.name = taskName; // name of task
-        this.creepName = ""; // name of creep assigned to task
-        this.targetRef = ""; // id or name of target task is aimed at
-        this.targetCoords = { // target's position, which is set on assignment and used for moving purposes
-            x: null,
-            y: null,
-            roomName: "",
-        };
-        this.maxPerTarget = Infinity; // maximum number of creeps that can be assigned to a given target
-        this.maxPerTask = Infinity; // maximum number of creeps that can be doing this task at once
-        this.targetRange = 1; // range you need to be at to execute the task
-        this.moveColor = '#fff';
-        this.data = {
-            quiet: true, // suppress console logging
-            travelToOptions: {} // options for traveling
-        };
-        if (target) {
-            this.target = target;
-            this.targetPos = target.pos;
-        } else {
-            // This can sometimes trigger on things that delete the target with the action, like dismantle or pickup
-            // console.log("Task.ts initialization error: target is null!");
-        }
-    }
+	constructor(taskName: string, target: targetType) {
+		// Parameters for the task
+		this.name = taskName;
+		this._creep = {
+			name: '',
+		};
+		this._target = {
+			ref : '',
+			_pos: {
+				x       : null,
+				y       : null,
+				roomName: '',
+			},
+		};
+		this.taskData = {
+			maxPerTarget: Infinity,
+			maxPerTask  : Infinity,
+			targetRange : 1,
+			moveColor   : '#fff',
+		};
+		this.data = {
+			quiet          : true,
+			travelToOptions: {},
+		};
+		if (target) {
+			this.target = target;
+			this.targetPos = target.pos;
+		} else {
+			// A task must have a target. If a task is reinstantiated without a target (for example, dismantling
+			// the target on the previous tick), it will be caught in the same tick by isValidTarget().
+		}
+	}
 
-    // Getter/setter for task.creep
-    get creep(): ICreep { // Get task's own creep by its name
-        return Game.icreeps[this.creepName];
-    }
+	// Getter/setter for task.creep
+	get creep(): ICreep { // Get task's own creep by its name
+		let creep = Game.icreeps[this._creep.name];
+		return creep;
+	}
 
-    set creep(creep: ICreep) {
-        this.creepName = creep.name;
-    }
+	set creep(creep: ICreep) {
+		this._creep.name = creep.name;
+	}
 
-    // Getter/setter for task.target
-    get target(): RoomObject {
-        let tar = deref(this.targetRef);
-        if (!tar) {
-            this.remove();
-        } else {
-            return tar;
-        }
-    }
+	// Getter/setter for task.target
+	get target(): RoomObject {
+		let tar = deref(this._target.ref);
+		if (!tar) {
+			this.remove();
+		} else {
+			return tar;
+		}
+	}
 
-    set target(target: RoomObject) {
-        if (target) {
-            this.targetRef = target.ref;
-        } else {
-            this.remove();
-        }
-    }
+	set target(target: RoomObject) {
+		if (target) {
+			this._target.ref = target.ref;
+		} else {
+			this.remove();
+		}
+	}
 
-    // Getter/setter for task.targetPos
-    get targetPos(): RoomPosition {
-        // let position = this.target.pos; // refresh if you have visibility of the target
-        if (this.target) {
-            this.targetPos = this.target.pos;
-        }
-        return new RoomPosition(this.targetCoords.x!, this.targetCoords.y!, this.targetCoords.roomName);
-    }
+	// Getter/setter for task.targetPos
+	get targetPos(): RoomPosition {
+		// refresh if you have visibility of the target
+		if (this.target) {
+			this._target._pos = this.target.pos;
+		}
+		return derefRoomPosition(this._target._pos);
+	}
 
-    set targetPos(targetPosition) {
-        this.targetCoords.x = targetPosition.x;
-        this.targetCoords.y = targetPosition.y;
-        this.targetCoords.roomName = targetPosition.roomName;
-    }
+	set targetPos(targetPosition: RoomPosition) {
+		this._target._pos.x = targetPosition.x;
+		this._target._pos.y = targetPosition.y;
+		this._target._pos.roomName = targetPosition.roomName;
+	}
 
-    // Remove the task (in case the target disappeared, usually)
-    remove(): void {
-        if (this.creep) {
-            // this.creep.log("Deleting task " + this.name + ": target is null!");
-            this.creep.task = null;
-        }
-    }
+	// Remove the task (in case the target disappeared, usually)
+	remove(): void {
+		if (this.creep) {
+			// this.creep.log("Deleting task " + this.name + ": target is null!");
+			this.creep.task = null;
+		}
+	}
 
-    // Test every tick to see if task is still valid
-    abstract isValidTask(): boolean;
+	// Test every tick to see if task is still valid
+	abstract isValidTask(): boolean;
 
-    // Test every tick to see if target is still valid
-    abstract isValidTarget(): boolean;
+	// Test every tick to see if target is still valid
+	abstract isValidTarget(): boolean;
 
-    move(): number {
-        var options = Object.assign({},
-            this.data.travelToOptions,
-            {range: this.targetRange});
-        return this.creep.travelTo(this.target, options);
-    }
+	move(): number {
+		let options = Object.assign({},
+									this.data.travelToOptions,
+									{range: this.taskData.targetRange});
+		return this.creep.travelTo(this.target, options);
+	}
 
-    // Execute this task each tick. Returns nothing unless work is done.
-    step(): number | void {
-        var creep = this.creep;
-        // if (!target) {
-        //     this.creep.log('null target!');
-        //     return null; // in case you're targeting something that just became invisible
-        // }
-        if (creep.pos.inRangeTo(this.targetPos, this.targetRange)) {
-            var workResult = this.work();
-            if (workResult != OK && this.data.quiet == false) {
-                creep.log("Error executing " + this.name + ", returned " + workResult);
-            }
-            return workResult;
-        } else {
-            this.move();
-        }
-    }
+	// Execute this task each tick. Returns nothing unless work is done.
+	step(): number | void {
+		if (this.creep.pos.inRangeTo(this.targetPos, this.taskData.targetRange)) {
+			let workResult = this.work();
+			if (workResult != OK && this.data.quiet == false) {
+				this.creep.log('Error executing ' + this.name + ', returned ' + workResult);
+			}
+			return workResult;
+		} else {
+			this.move();
+		}
+	}
 
-    // Task to perform when at the target
-    abstract work(): number;
+	// Task to perform when at the target
+	abstract work(): number;
 }
 
-import profiler = require('../lib/screeps-profiler'); profiler.registerClass(Task, 'Task');
+import profiler = require('../lib/screeps-profiler');
+profiler.registerClass(Task, 'Task');

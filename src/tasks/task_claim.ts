@@ -1,24 +1,25 @@
-import {Task} from "./Task";
+import {Task} from './Task';
 
 type targetType = Controller;
 export class taskClaim extends Task {
-    target: targetType;
-    constructor(target: targetType) {
-        super('claim', target);
-        // Settings
-        this.moveColor = 'purple';
-    }
+	target: targetType;
 
-    isValidTask() {
-        return (this.creep.getActiveBodyparts(CLAIM) > 0);
-    }
+	constructor(target: targetType) {
+		super('claim', target);
+		// Settings
+		this.taskData.moveColor = 'purple';
+	}
 
-    isValidTarget() {
-        var target = this.target;
-        return (target != null && (!target.room || !target.owner));
-    }
+	isValidTask() {
+		return (this.creep.getActiveBodyparts(CLAIM) > 0);
+	}
 
-    work() {
-        return this.creep.claimController(this.target);
-    }
+	isValidTarget() {
+		var target = this.target;
+		return (target != null && (!target.room || !target.owner));
+	}
+
+	work() {
+		return this.creep.claimController(this.target);
+	}
 }

@@ -1,7 +1,7 @@
 var terminalSettings = {
-    resourceAmounts: <{ [resourceType: string]: number }> {},
-    maxBuyPrice: <{ [resourceType: string]: number }> {},
-    avgPrice: <{ [resourceType: string]: number }> {},
+	resourceAmounts: <{ [resourceType: string]: number }> {},
+	maxBuyPrice    : <{ [resourceType: string]: number }> {},
+	avgPrice       : <{ [resourceType: string]: number }> {},
 };
 // Desired equilibrium resource amounts go here
 terminalSettings.resourceAmounts[RESOURCE_ENERGY] = 50000;
@@ -21,3 +21,4 @@ terminalSettings.maxBuyPrice[RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE] = 4;
 terminalSettings.avgPrice[RESOURCE_ENERGY] = 0.01;
 
 export = terminalSettings;
+
