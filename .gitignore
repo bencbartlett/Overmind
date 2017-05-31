@@ -76,3 +76,5 @@ $RECYCLE.BIN/
 *.lnk
 .vs/
 !/src/Overmind.ts
+!/src/baseComponents/MiningSite.ts
+/ScreepsAutocomplete-master/

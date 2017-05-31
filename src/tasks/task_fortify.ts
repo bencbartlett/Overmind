@@ -1,27 +1,27 @@
-import {Task} from "./Task";
+import {Task} from './Task';
 
 type targetType = StructureWall | Rampart;
 export class taskFortify extends Task {
-    target: targetType;
+	target: targetType;
 
-    constructor(target: targetType) {
-        super('fortify', target);
-        // Settings
-        this.maxPerTarget = 1;
-        this.targetRange = 3;
-        this.moveColor = 'green';
-    }
+	constructor(target: targetType) {
+		super('fortify', target);
+		// Settings
+		this.taskData.maxPerTarget = 1;
+		this.taskData.targetRange = 3;
+		this.taskData.moveColor = 'green';
+	}
 
-    isValidTask() {
-        return (this.creep.carry.energy > 0);
-    }
+	isValidTask() {
+		return (this.creep.carry.energy > 0);
+	}
 
-    isValidTarget() {
-        let target = this.target;
-        return (target != null && target.hits < target.hitsMax); // over-fortify to minimize extra trips
-    }
+	isValidTarget() {
+		let target = this.target;
+		return (target != null && target.hits < target.hitsMax); // over-fortify to minimize extra trips
+	}
 
-    work() {
-        return this.creep.repair(this.target);
-    }
+	work() {
+		return this.creep.repair(this.target);
+	}
 }

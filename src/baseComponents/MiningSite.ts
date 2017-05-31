@@ -1,62 +1,108 @@
 // Mining site class for grouping relevant components
 
-export class MiningSite implements IMiningSite {
-    name: string;
-    room: Room;
-    pos: RoomPosition;
-    source: Source;
-    energyPerTick: number;
-    miningPowerNeeded: number;
-    output: Container | Link | null;
-    outputConstructionSite: ConstructionSite | null;
-    fullness: number;
+import {BaseComponent} from './BaseComponent';
+import {taskBuild} from '../tasks/task_build';
+import {taskRepair} from '../tasks/task_repair';
 
-    constructor(source: Source) {
-        this.source = source;
-        this.name = source.ref;
-        this.pos = source.pos;
-        this.room = source.room;
-        this.energyPerTick = source.energyCapacity / ENERGY_REGEN_TIME;
-        this.miningPowerNeeded = Math.ceil(this.energyPerTick / HARVEST_POWER) + 1;
-        // Register output method
-        this.output = null;
-        this.fullness = 0;
-        let nearbyContainers = this.pos.findInRange(FIND_STRUCTURES, 2, {
-            filter: (s:Structure) => s.structureType == STRUCTURE_CONTAINER
-        }) as Container[];
-        if (nearbyContainers.length > 0) {
-            this.output = nearbyContainers[0];
-            this.fullness = _.sum(this.output.store) / this.output.storeCapacity;
-        }
-        let nearbyLinks = this.pos.findInRange(FIND_STRUCTURES, 2, {
-            filter: (s:Structure) => s.structureType == STRUCTURE_LINK
-        }) as Link[];
-        if (nearbyLinks.length > 0) {
-            this.output = nearbyLinks[0];
-            this.fullness = this.output.energy / this.output.energyCapacity;
-        }
-        // Register output construction sites
-        let nearbyOutputStes = this.pos.findInRange(FIND_CONSTRUCTION_SITES, 2, {
-            filter: (s:Structure) => s.structureType == STRUCTURE_CONTAINER || s.structureType == STRUCTURE_LINK
-        }) as ConstructionSite[];
-        this.outputConstructionSite = nearbyOutputStes[0];
-    }
+export class MiningSite extends BaseComponent implements IMiningSite {
+	source: Source;
+	energyPerTick: number;
+	miningPowerNeeded: number;
+	output: StructureContainer | StructureLink | null;
+	outputConstructionSite: ConstructionSite | null;
+	_miners: ICreep[];
 
-    get miners(): ICreep[] {
-        return this.source.getAssignedCreeps('miner');
-    }
+	constructor(colony: IColony, source: Source) {
+		super(colony, source);
+		this.source = source;
+		this.energyPerTick = source.energyCapacity / ENERGY_REGEN_TIME;
+		this.miningPowerNeeded = Math.ceil(this.energyPerTick / HARVEST_POWER) + 1;
+		// Register output method
+		this.output = null;
+		let siteContainer = this.pos.findClosestByLimitedRange(this.room.containers, 2);
+		if (siteContainer) {
+			this.output = siteContainer;
+		}
+		let siteLink = this.pos.findClosestByLimitedRange(this.room.links, 2);
+		if (siteLink) {
+			this.output = siteLink;
+		}
+		// Register output construction sites
+		let nearbyOutputSites = this.pos.findInRange(this.room.structureSites, 2, {
+			filter: (s: ConstructionSite) => s.structureType == STRUCTURE_CONTAINER ||
+											 s.structureType == STRUCTURE_LINK,
+		}) as ConstructionSite[];
+		this.outputConstructionSite = nearbyOutputSites[0];
+	}
 
-    get predictedStore(): number {
-        // This should really only be used on container sites
-        if (this.output instanceof StructureContainer) {
-            let targetingCreeps = _.map(this.output.targetedBy, name => Game.creeps[name]);
-            // Assume all haulers are withdrawing from mining site so you don't have to scan through tasks
-            let targetingHaulers = _.filter(targetingCreeps, creep => creep.memory.role == 'hauler');
-            // Return storage minus the amount that currently assigned haulers will withdraw
-            return _.sum(this.output.store) - _.sum(_.map(targetingHaulers,
-                                                          hauler => hauler.carryCapacity - _.sum(hauler.carry)));
-        } else if (this.output instanceof StructureLink) {
-            return this.output.energy;
-        }
-    }
+	get miners(): ICreep[] {
+		// Wrapper for miner reference that avoids the Game.icreeps requires Colonies requires Game.icreeps issue
+		if (!this._miners) {
+			this._miners = this.source.getAssignedCreeps('miner');
+		}
+		return this._miners;
+	}
+
+	/* Predicted store amount given the number of haulers currently targeting the container */
+	get predictedStore(): number {
+		// This should really only be used on container sites
+		if (this.output instanceof StructureContainer) {
+			let targetingCreeps = _.map(this.output.targetedBy, name => Game.creeps[name]);
+			// Assume all haulers are withdrawing from mining site so you don't have to scan through tasks
+			let targetingHaulers = _.filter(targetingCreeps, creep => creep.memory.role == 'hauler');
+			// Return storage minus the amount that currently assigned haulers will withdraw
+			return _.sum(this.output.store) - _.sum(_.map(targetingHaulers,
+														  hauler => hauler.carryCapacity - _.sum(hauler.carry)));
+		} else if (this.output instanceof StructureLink) {
+			return this.output.energy;
+		}
+	}
+
+	init(): void {
+		// Handle energy output
+		if (this.output instanceof StructureContainer) {
+			let avgHaulerCap = CARRY_CAPACITY * this.colony.data.haulingPowerSupplied / this.colony.data.numHaulers;
+			if (this.predictedStore > 0.75 * avgHaulerCap) { // TODO: add path length dependence
+				this.overlord.resourceRequests.registerWithdrawalRequest(this.output);
+			}
+		} else if (this.output instanceof StructureLink) {
+			// If the link will be full with next deposit from the miner
+			let minerCapacity = 150; // hardcoded value, I know, but saves import time
+			if (this.output.energy + minerCapacity > this.output.energyCapacity) {
+				if (this.overlord.resourceRequests.resourceIn.link.length > 0) {
+					let targetLink = this.overlord.resourceRequests.resourceIn.link.shift().target as Link;
+					this.output.transferEnergy(targetLink);
+				} else if (this.colony.commandCenter && this.colony.commandCenter.link) {
+					this.output.transferEnergy(this.colony.commandCenter.link);
+				}
+			}
+		}
+	}
+
+	run(): void {
+		// Make a construction site for an output if needed
+		if (!this.output && !this.outputConstructionSite) {
+			// Miners only get energy from harvesting, so miners with >0 energy are in position; build output there
+			let minerInPosition = _.filter(this.miners, miner => miner.carry.energy > 0)[0];
+			if (minerInPosition) {
+				this.room.createConstructionSite(minerInPosition.pos, STRUCTURE_CONTAINER);
+				return; // This guarantees that there is either an output or a construction site past this eval point
+			}
+		}
+		// Build and maintain the output
+		for (let miner of this.miners) {
+			if (miner.carry.energy > 0) {
+				if (this.output) {
+					if (this.output.hits < this.output.hitsMax) {
+						miner.task = new taskRepair(this.output);
+					}
+				} else {
+					if (this.outputConstructionSite) {
+						miner.task = new taskBuild(this.outputConstructionSite);
+					}
+				}
+			}
+		}
+	}
 }
+

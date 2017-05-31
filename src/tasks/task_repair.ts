@@ -1,27 +1,27 @@
-import {Task} from "./Task";
+import {Task} from './Task';
 
 type targetType = Structure;
 export class taskRepair extends Task {
-    target: targetType;
+	target: targetType;
 
-    constructor(target: targetType) {
-        super('repair', target);
-        // Settings
-        this.maxPerTarget = 1;
-        this.targetRange = 3;
-        this.moveColor = 'green';
-    }
+	constructor(target: targetType) {
+		super('repair', target);
+		// Settings
+		this.taskData.maxPerTarget = 1;
+		this.taskData.targetRange = 3;
+		this.taskData.moveColor = 'green';
+	}
 
-    isValidTask() {
-        return (this.creep.carry.energy > 0);
-    }
+	isValidTask() {
+		return (this.creep.carry.energy > 0);
+	}
 
-    isValidTarget() {
-        var target = this.target;
-        return target.hits < target.hitsMax;
-    }
+	isValidTarget() {
+		var target = this.target;
+		return target.hits < target.hitsMax;
+	}
 
-    work() {
-        return this.creep.repair(this.target);
-    }
+	work() {
+		return this.creep.repair(this.target);
+	}
 }

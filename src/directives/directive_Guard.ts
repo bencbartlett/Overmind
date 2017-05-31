@@ -1,27 +1,27 @@
-import {Directive} from "./Directive";
+import {Directive} from './Directive';
 
 export class directiveGuard extends Directive {
 
-    guards: Creep[];
-    hostiles: Creep[];
+	guards: Creep[];
+	hostiles: Creep[];
 
-    constructor(flag: Flag) {
-        super('guard', flag);
-    }
+	constructor(flag: Flag) {
+		super('guard', flag);
+	}
 
-    isValid() {
-        return this.room.hostiles.length > 0;
-    }
+	isValid() {
+		return this.room.hostiles.length > 0;
+	}
 
-    init() {
-        this.hostiles = this.room.hostiles;
-    }
+	init() {
+		this.hostiles = this.room.hostiles;
+	}
 
-    getAgents() {
+	getAgents() {
 
-    }
+	}
 
-    run() {
+	run() {
 
-    }
+	}
 }

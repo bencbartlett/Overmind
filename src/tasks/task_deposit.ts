@@ -1,37 +1,42 @@
-import {Task} from "./Task";
+import {Task} from './Task';
 
-type targetType = StructureContainer | StructureStorage | StructureTerminal | StructureLink;
+type targetType =
+	StructureContainer |
+	StructureExtension |
+	StructureLab |
+	StructureLink |
+	StructureNuker |
+	StructurePowerSpawn |
+	StructureSpawn |
+	StructureStorage |
+	StructureTerminal;
 export class taskDeposit extends Task {
-    target: targetType;
-    constructor(target: targetType) {
-        super('deposit', target);
-        // Settings
-        this.moveColor = 'blue';
-        this.data.quiet = true;
-    }
+	target: targetType;
 
-    isValidTask() {
-        var creep = this.creep;
-        return (creep.carry.energy > 0);
-    }
+	constructor(target: targetType) {
+		super('deposit', target);
+		// Settings
+		this.taskData.moveColor = 'blue';
+		this.data.quiet = true;
+	}
 
-    isValidTarget() {
-        var target = this.target;
-        if (target.structureType == STRUCTURE_CONTAINER ||
-            target.structureType == STRUCTURE_STORAGE ||
-            target.structureType == STRUCTURE_TERMINAL) {
-            let tgt = target as StructureContainer | StructureStorage | StructureTerminal;
-            return (_.sum(tgt.store) < tgt.storeCapacity);
-        } else if (target.structureType == STRUCTURE_LINK) {
-            let tgt = target as StructureLink;
-            return tgt.energy < tgt.energyCapacity;
-        } else {
-            return false;
-        }
-    }
+	isValidTask() {
+		return this.creep.carry.energy > 0;
+	}
 
-    work() {
-        return this.creep.transfer(this.target, RESOURCE_ENERGY);
-    }
+	isValidTarget() {
+		let target = this.target;
+		if (target instanceof StructureLab ||
+			target instanceof StructureNuker ||
+			target instanceof StructurePowerSpawn) {
+			return target.energy < target.energyCapacity;
+		} else {
+			return !target.isFull;
+		}
+	}
+
+	work() {
+		return this.creep.transfer(this.target, RESOURCE_ENERGY);
+	}
 }
 

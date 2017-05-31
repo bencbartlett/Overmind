@@ -1,31 +1,27 @@
-import {Task} from "./Task";
+import {Task} from './Task';
 
 type targetType = Controller;
 export class taskUpgrade extends Task {
-    target: targetType;
+	target: targetType;
 
-    constructor(target: targetType) {
-        super('upgrade', target);
-        // Settings
-        this.targetRange = 3;
-        this.moveColor = 'purple';
-        this.data = {
-            quiet: true,
-            publicMessage: ["For", "the", "swarm!"]
-        };
-    }
+	constructor(target: targetType) {
+		super('upgrade', target);
+		// Settings
+		this.taskData.targetRange = 3;
+		this.taskData.moveColor = 'purple';
+		this.data.quiet = true;
+	}
 
-    isValidTask() {
-        return (this.creep.carry.energy > 0);
-    }
+	isValidTask() {
+		return (this.creep.carry.energy > 0);
+	}
 
-    isValidTarget() {
-        var target = this.target;
-        return (target != null && target.structureType == STRUCTURE_CONTROLLER && target.my);
-    }
+	isValidTarget() {
+		return this.target && this.target.my;
+	}
 
-    work() {
-        this.creep.publicMessage(["For", "the swarm!", "(and GCL)"]);
-        return this.creep.upgradeController(this.target);
-    }
+	work() {
+		this.creep.sayLoop(['For', 'the swarm!', '(and GCL)']);
+		return this.creep.upgradeController(this.target);
+	}
 }

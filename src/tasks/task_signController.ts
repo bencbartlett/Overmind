@@ -1,26 +1,27 @@
-import {Task} from "./Task";
+import {Task} from './Task';
+import {controllerSignature} from '../settings/settings_user';
 
 type targetType = Controller;
 export class taskSignController extends Task {
-    target: targetType;
+	target: targetType;
 
-    constructor(target: targetType) {
-        super('signController', target);
-        // Settings
-        this.moveColor = 'purple';
-    }
+	constructor(target: targetType) {
+		super('signController', target);
+		// Settings
+		this.taskData.moveColor = 'purple';
+	}
 
-    isValidTask() {
-        return true;
-    }
+	isValidTask() {
+		return true;
+	}
 
-    isValidTarget() {
-        let controller = this.target;
-        return (!controller.sign || controller.sign.text != controllerSignature)
-    }
+	isValidTarget() {
+		let controller = this.target;
+		return (!controller.sign || controller.sign.text != controllerSignature);
+	}
 
-    work() {
-        return this.creep.signController(this.target, controllerSignature);
-    }
+	work() {
+		return this.creep.signController(this.target, controllerSignature);
+	}
 }
 

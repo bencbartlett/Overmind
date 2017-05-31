@@ -1,23 +1,24 @@
-import {Task} from "./Task";
+import {Task} from './Task';
 
 type targetType = RoomObject;
 export class taskGoTo extends Task {
-    target: targetType;
-    constructor(target: targetType) {
-        super('goTo', target);
-        // Settings
-        this.targetRange = 1;
-    }
+	target: targetType;
 
-    isValidTask() {
-        return !this.creep.pos.inRangeTo(this.targetPos, this.targetRange);
-    }
+	constructor(target: targetType) {
+		super('goTo', target);
+		// Settings
+		this.taskData.targetRange = 1;
+	}
 
-    isValidTarget() {
-        return this.target != null;
-    }
+	isValidTask() {
+		return !this.creep.pos.inRangeTo(this.targetPos, this.taskData.targetRange);
+	}
 
-    work() {
-        return OK;
-    }
+	isValidTarget() {
+		return this.target != null;
+	}
+
+	work() {
+		return OK;
+	}
 }
