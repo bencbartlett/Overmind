@@ -166,6 +166,9 @@ export class Colony implements IColony {
 		if (this.commandCenter) {
 			this.commandCenter.run();
 		}
+		if (this.upgradeSite) {
+			this.upgradeSite.run();
+		}
 		for (let siteID in this.miningSites) {
 			let site = this.miningSites[siteID];
 			site.run();
