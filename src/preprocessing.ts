@@ -33,8 +33,8 @@ export class Preprocessing {
 	cacheTargets() {
 		for (let name in Game.creeps) {
 			let creep = Game.creeps[name];
-			if (creep.memory.task && creep.memory.task.targetID) {
-				let targetRef = creep.memory.task.targetID;
+			if (creep.memory.task && creep.memory.task._target && creep.memory.task._target.ref) {
+				let targetRef = creep.memory.task._target.ref;
 				if (!Game.cache.targets[targetRef]) {
 					Game.cache.targets[targetRef] = [];
 				}
