@@ -79,3 +79,4 @@ $RECYCLE.BIN/
 !/src/baseComponents/MiningSite.ts
 /ScreepsAutocomplete-master/
 /webpack.config.js
+/test/

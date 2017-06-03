@@ -1,6 +1,0 @@
---compilers ts:ts-node/register
---recursive
---full-trace
---bail
---require source-map-support/register
---require test/helper
