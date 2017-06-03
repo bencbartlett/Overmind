@@ -1,7 +1,7 @@
 import {Task} from './Task';
 
 type targetType = Creep;
-export class taskHeal extends Task {
+export class TaskHeal extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

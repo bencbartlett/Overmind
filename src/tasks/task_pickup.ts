@@ -1,7 +1,7 @@
 import {Task} from './Task';
 
 type targetType = Resource;
-export class taskPickup extends Task {
+export class TaskPickup extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

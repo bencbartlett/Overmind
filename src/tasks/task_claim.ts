@@ -1,7 +1,7 @@
 import {Task} from './Task';
 
 type targetType = Controller;
-export class taskClaim extends Task {
+export class TaskClaim extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

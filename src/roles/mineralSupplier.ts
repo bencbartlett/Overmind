@@ -1,7 +1,7 @@
 // Mineral supplier - supplied minerals to labs for boosting and processing
 
-import {taskWithdraw} from '../tasks/task_withdraw';
-import {taskTransfer} from '../tasks/task_transfer';
+import {TaskWithdraw} from '../tasks/task_withdraw';
+import {TaskTransfer} from '../tasks/task_transfer';
 import {AbstractCreep, AbstractSetup} from './Abstract';
 
 export class MineralSupplierSetup extends AbstractSetup {
@@ -25,14 +25,14 @@ export class MineralSupplierCreep extends AbstractCreep {
 	collectForLab(lab: Lab) {
 		let term = this.colony.terminal;
 		if (term && term.store[lab.assignedMineralType] > 0) {
-			var withdrawThis = new taskWithdraw(term);
+			var withdrawThis = new TaskWithdraw(term);
 			withdrawThis.data.resourceType = lab.assignedMineralType;
 			this.task = withdrawThis;
 		}
 	}
 
 	depositForLab(lab: Lab) {
-		var transfer = new taskTransfer(lab);
+		var transfer = new TaskTransfer(lab);
 		transfer.data.resourceType = lab.assignedMineralType;
 		this.task = transfer;
 	}

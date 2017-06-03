@@ -1,8 +1,8 @@
 // Upgrade site for grouping relevant components for an upgrader station
 
 import {BaseComponent} from './BaseComponent';
-import {taskRepair} from '../tasks/task_repair';
-import {taskBuild} from '../tasks/task_build';
+import {TaskRepair} from '../tasks/task_repair';
+import {TaskBuild} from '../tasks/task_build';
 
 export class UpgradeSite extends BaseComponent implements IUpgradeSite {
 	controller: StructureController;
@@ -54,11 +54,11 @@ export class UpgradeSite extends BaseComponent implements IUpgradeSite {
 			if (upgrader.carry.energy > 0) {
 				if (this.input) {
 					if (this.input.hits < this.input.hitsMax) {
-						upgrader.task = new taskRepair(this.input);
+						upgrader.task = new TaskRepair(this.input);
 					}
 				} else {
 					if (this.inputConstructionSite) {
-						upgrader.task = new taskBuild(this.inputConstructionSite);
+						upgrader.task = new TaskBuild(this.inputConstructionSite);
 					}
 				}
 			}

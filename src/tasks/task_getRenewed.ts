@@ -1,7 +1,7 @@
 import {Task} from './Task';
 
 type targetType = Spawn;
-export class taskGetRenewed extends Task {
+export class TaskGetRenewed extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

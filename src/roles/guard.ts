@@ -1,7 +1,7 @@
 // Guard: dumb bot that goes to a flag and then attacks everything hostile in the room, returning to flag
 // Best used only against low level npc invaders; sized to defend outposts
 
-import {taskAttack} from '../tasks/task_attack';
+import {TaskAttack} from '../tasks/task_attack';
 import {AbstractCreep, AbstractSetup} from './Abstract';
 
 
@@ -54,7 +54,7 @@ export class GuardCreep extends AbstractCreep {
 		// first try to find anything you should attack
 		var target = this.findTarget();
 		if (target) {
-			this.task = new taskAttack(target);
+			this.task = new TaskAttack(target);
 		} else {
 			// if no hostiles and you can repair stuff, do so
 			if (this.getActiveBodyparts(CARRY) > 0 && this.getActiveBodyparts(WORK) > 0) {

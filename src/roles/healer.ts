@@ -1,6 +1,6 @@
 // RallyHealer - meant to complement sieger. Sits in adjacent room to fortified target room and heals damaged siegers
 
-import {taskHeal} from '../tasks/task_heal';
+import {TaskHeal} from '../tasks/task_heal';
 import {AbstractCreep, AbstractSetup} from './Abstract';
 
 export class HealerSetup extends AbstractSetup {
@@ -44,7 +44,7 @@ export class HealerCreep extends AbstractCreep {
 			this.task = null;
 			var target = this.findTarget();
 			if (target) {
-				this.task = new taskHeal(target);
+				this.task = new TaskHeal(target);
 			}
 		}
 		if (this.task) {

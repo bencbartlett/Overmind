@@ -1,7 +1,7 @@
 // import {tasks} from '../maps/map_tasks';
 import profiler = require('../lib/screeps-profiler');
-import {taskWithdraw} from '../tasks/task_withdraw';
-import {taskGetRenewed} from '../tasks/task_getRenewed';
+import {TaskWithdraw} from '../tasks/task_withdraw';
+import {TaskGetRenewed} from '../tasks/task_getRenewed';
 import {Colony} from '../Colony';
 import {Objective} from '../objectives/Objective';
 import {taskFromPrototask} from '../maps/map_tasks';
@@ -475,7 +475,7 @@ export abstract class AbstractCreep implements ICreep {
 										(s instanceof StructureStorage && s.creepCanWithdrawEnergy(this)),
 		}) as StorageUnit;
 		if (target) { // assign recharge task to creep
-			this.task = new taskWithdraw(target);
+			this.task = new TaskWithdraw(target);
 		} else {
 			this.say('Can\'t recharge');
 		}
@@ -507,7 +507,7 @@ export abstract class AbstractCreep implements ICreep {
 	/* Mostly used for incubation purposes - get renewed from a spawn if you're getting old. */
 	renewIfNeeded(): void {
 		if (this.room.spawns[0] && this.memory.data.renewMe && this.ticksToLive < 500) {
-			this.task = new taskGetRenewed(this.room.spawns[0]);
+			this.task = new TaskGetRenewed(this.room.spawns[0]);
 		}
 	}
 

@@ -4,7 +4,7 @@ import {Task} from './Task';
 
 // TODO: creep is only approaching to range 3
 type targetType = Creep | Structure;
-export class taskAttack extends Task {
+export class TaskAttack extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

@@ -2,9 +2,9 @@
 // Best used to siege a contiguous room; healing stations of some sort should be stationed in the neighboring room
 // Sieger will dismanlte walls while under fire until it is low enough that it needs to leave the room to be healed
 
-import {taskGetBoosted} from '../tasks/task_getBoosted';
-import {taskGoToRoom} from '../tasks/task_goToRoom';
-import {taskDismantle} from '../tasks/task_dismantle';
+import {TaskGetBoosted} from '../tasks/task_getBoosted';
+import {TaskGoToRoom} from '../tasks/task_goToRoom';
+import {TaskDismantle} from '../tasks/task_dismantle';
 import {AbstractCreep, AbstractSetup} from './Abstract';
 
 
@@ -86,7 +86,7 @@ export class SiegerCreep extends AbstractCreep {
 										lab.mineralAmount >= 30 * this.getActiveBodyparts(bodypart),
 				);
 				if (boosters.length > 0) {
-					this.task = new taskGetBoosted(boosters[0]);
+					this.task = new TaskGetBoosted(boosters[0]);
 				}
 			}
 		}
@@ -96,7 +96,7 @@ export class SiegerCreep extends AbstractCreep {
 		this.task = null;
 		// 2.1: move to same room as assignment
 		if (this.assignment && !this.creep.inSameRoomAs(this.assignment)) {
-			let task = new taskGoToRoom(this.assignment);
+			let task = new TaskGoToRoom(this.assignment);
 			task.data.travelToOptions['allowHostile'] = true;
 			this.task = task;
 			return;
@@ -104,7 +104,7 @@ export class SiegerCreep extends AbstractCreep {
 		// 2.2: ATTACK SOMETHING
 		var target = this.findTarget();
 		if (target) {
-			let task = new taskDismantle(target);
+			let task = new TaskDismantle(target);
 			task.data.travelToOptions['allowHostile'] = true;
 			this.task = task;
 		}

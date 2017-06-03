@@ -32,7 +32,7 @@ import OM from './Overmind';
 import {flagCodesMap} from './maps/map_flag_codes';
 // Preprocessing and postprocessing modules
 import {Preprocessing} from './preprocessing';
-import {dataLogger} from './logging/data_logger';
+import {DataLogger} from './logging/data_logger';
 import {visuals} from './visuals/visuals';
 import profiler = require('./lib/screeps-profiler');  // gdborton's CPU profiler
 // import {migrate} from './versionMigration/migration';
@@ -86,7 +86,7 @@ export function loop() {
 
 	// Postprocessing ==============================================================================================
 	// Log stats
-	var logger = new dataLogger();
+	var logger = new DataLogger();
 	logger.run();
 	// Draw visuals
 	if (Game.cpu.bucket > 7500) {

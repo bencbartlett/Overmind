@@ -1,8 +1,8 @@
 // Mining site class for grouping relevant components
 
 import {BaseComponent} from './BaseComponent';
-import {taskBuild} from '../tasks/task_build';
-import {taskRepair} from '../tasks/task_repair';
+import {TaskBuild} from '../tasks/task_build';
+import {TaskRepair} from '../tasks/task_repair';
 
 export class MiningSite extends BaseComponent implements IMiningSite {
 	source: Source;
@@ -94,11 +94,11 @@ export class MiningSite extends BaseComponent implements IMiningSite {
 			if (miner.carry.energy > 0) {
 				if (this.output) {
 					if (this.output.hits < this.output.hitsMax) {
-						miner.task = new taskRepair(this.output);
+						miner.task = new TaskRepair(this.output);
 					}
 				} else {
 					if (this.outputConstructionSite) {
-						miner.task = new taskBuild(this.outputConstructionSite);
+						miner.task = new TaskBuild(this.outputConstructionSite);
 					}
 				}
 			}

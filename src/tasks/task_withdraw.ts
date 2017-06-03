@@ -3,7 +3,7 @@
 import {Task} from './Task';
 
 type targetType = StructureStorage | StructureContainer | StructureTerminal | StructureLink;
-export class taskWithdraw extends Task {
+export class TaskWithdraw extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

@@ -1,7 +1,7 @@
 // Supplier: local energy transport bot. Picks up dropped energy, energy in containers, deposits to sinks and storage
 
 import {AbstractCreep, AbstractSetup} from './Abstract';
-import {taskWithdraw} from '../tasks/task_withdraw';
+import {TaskWithdraw} from '../tasks/task_withdraw';
 
 
 export class SupplierSetup extends AbstractSetup {
@@ -44,9 +44,9 @@ export class SupplierCreep extends AbstractCreep {
 	/* Recharge from link if possible, else try to recharge from battery, else complain */
 	recharge(): void {
 		if (this.hatchery.link && !this.hatchery.link.isEmpty) {
-			this.task = new taskWithdraw(this.hatchery.link);
+			this.task = new TaskWithdraw(this.hatchery.link);
 		} else if (this.hatchery.battery && !this.hatchery.battery.isEmpty) {
-			this.task = new taskWithdraw(this.hatchery.battery);
+			this.task = new TaskWithdraw(this.hatchery.battery);
 		} else {
 			this.log('Hatchery is out of energy!');
 			let target = this.pos.findClosestByRange(this.room.storageUnits, {
@@ -54,7 +54,7 @@ export class SupplierCreep extends AbstractCreep {
 											(s instanceof StructureStorage && s.creepCanWithdrawEnergy(this)),
 			}) as StorageUnit;
 			if (target) { // assign recharge task to creep
-				this.task = new taskWithdraw(target);
+				this.task = new TaskWithdraw(target);
 			} else {
 				this.say('Can\'t recharge');
 			}

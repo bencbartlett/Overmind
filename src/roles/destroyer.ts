@@ -1,8 +1,8 @@
 // Destroyer: go to a room, alternate attacking and retreating to heal, then methodically destroy everything by range
 
-import {taskGetBoosted} from '../tasks/task_getBoosted';
-import {taskGoToRoom} from '../tasks/task_goToRoom';
-import {taskAttack} from '../tasks/task_attack';
+import {TaskGetBoosted} from '../tasks/task_getBoosted';
+import {TaskGoToRoom} from '../tasks/task_goToRoom';
+import {TaskAttack} from '../tasks/task_attack';
 import {AbstractCreep, AbstractSetup} from './Abstract';
 
 export class DestroyerSetup extends AbstractSetup {
@@ -56,7 +56,7 @@ export class DestroyerCreep extends AbstractCreep {
 				lab.assignedMineralType == this.settings.boostMinerals[bodypart] &&
 				lab.mineralAmount >= 30 * this.getActiveBodyparts(bodypart));
 				if (boosters.length > 0) {
-					this.task = new taskGetBoosted(boosters[0]);
+					this.task = new TaskGetBoosted(boosters[0]);
 				}
 			}
 		}
@@ -95,7 +95,7 @@ export class DestroyerCreep extends AbstractCreep {
 		this.task = null;
 		// 2.1: move to same room as assignment
 		if (this.assignment && !this.creep.inSameRoomAs(this.assignment)) {
-			let task = new taskGoToRoom(this.assignment);
+			let task = new TaskGoToRoom(this.assignment);
 			task.data.travelToOptions['allowHostile'] = true;
 			this.task = task;
 			return;
@@ -103,7 +103,7 @@ export class DestroyerCreep extends AbstractCreep {
 		// 2.2: ATTACK SOMETHING
 		var target = this.findTarget();
 		if (target) {
-			let task = new taskAttack(target);
+			let task = new TaskAttack(target);
 			task.data.travelToOptions['allowHostile'] = true;
 			this.task = task;
 		}

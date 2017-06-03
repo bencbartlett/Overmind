@@ -2,7 +2,7 @@
 import {Task} from './Task';
 
 type targetType = Structure;
-export class taskDismantle extends Task {
+export class TaskDismantle extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

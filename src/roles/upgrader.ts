@@ -1,10 +1,10 @@
 // Upgrader creep - sits and upgrades spawn
-import {taskGetBoosted} from '../tasks/task_getBoosted';
-import {taskSignController} from '../tasks/task_signController';
-import {taskWithdraw} from '../tasks/task_withdraw';
+import {TaskGetBoosted} from '../tasks/task_getBoosted';
+import {TaskSignController} from '../tasks/task_signController';
+import {TaskWithdraw} from '../tasks/task_withdraw';
 import {AbstractCreep, AbstractSetup} from './Abstract';
 import {controllerSignature} from '../settings/settings_user';
-import {taskUpgrade} from '../tasks/task_upgrade';
+import {TaskUpgrade} from '../tasks/task_upgrade';
 
 export class UpgraderSetup extends AbstractSetup {
 	constructor() {
@@ -35,7 +35,7 @@ export class UpgraderCreep extends AbstractCreep {
 
 	rechargeFromInput() {
 		if (this.upgradeSite.input && this.upgradeSite.input.energy > 0) {
-			this.task = new taskWithdraw(this.upgradeSite.input);
+			this.task = new TaskWithdraw(this.upgradeSite.input);
 		} else {
 			this.recharge();
 		}
@@ -48,10 +48,10 @@ export class UpgraderCreep extends AbstractCreep {
 											lab.mineralAmount >= 30 * this.getActiveBodyparts(WORK),
 			);
 			if (upgraderBoosters.length > 0 && this.ticksToLive > 0.95 * this.lifetime) {
-				this.task = new taskGetBoosted(upgraderBoosters[0]);
+				this.task = new TaskGetBoosted(upgraderBoosters[0]);
 			}
 		} else if (this.room.controller.signedByMe) {
-			this.task = new taskSignController(this.room.controller);
+			this.task = new TaskSignController(this.room.controller);
 		}
 	}
 
@@ -60,7 +60,7 @@ export class UpgraderCreep extends AbstractCreep {
 		if (this.carry.energy == 0) {
 			this.rechargeFromInput();
 		} else {
-			this.task = new taskUpgrade(this.upgradeSite.controller);
+			this.task = new TaskUpgrade(this.upgradeSite.controller);
 		}
 	}
 

@@ -1,16 +1,16 @@
 // All objectives required for colony homeostasis
 
 import {Objective} from './Objective';
-import {taskPickup} from '../tasks/task_pickup';
-import {taskWithdraw} from '../tasks/task_withdraw';
-import {taskSupply} from '../tasks/task_supply';
-import {taskRepair} from '../tasks/task_repair';
-import {taskBuild} from '../tasks/task_build';
-import {taskFortify} from '../tasks/task_fortify';
-import {taskUpgrade} from '../tasks/task_upgrade';
+import {TaskPickup} from '../tasks/task_pickup';
+import {TaskWithdraw} from '../tasks/task_withdraw';
+import {TaskSupply} from '../tasks/task_supply';
+import {TaskRepair} from '../tasks/task_repair';
+import {TaskBuild} from '../tasks/task_build';
+import {TaskFortify} from '../tasks/task_fortify';
+import {TaskUpgrade} from '../tasks/task_upgrade';
 
 // Objective to pick up dropped energy in a room
-export class pickupEnergyObjective extends Objective {
+export class ObjectivePickupEnergy extends Objective {
 	target: Resource;
 
 	constructor(target: Resource) {
@@ -26,12 +26,12 @@ export class pickupEnergyObjective extends Objective {
 	}
 
 	getTask() {
-		return new taskPickup(this.target);
+		return new TaskPickup(this.target);
 	}
 }
 
 // Objective to collect energy from a container
-export class collectEnergyContainerObjective extends Objective {
+export class ObjectiveCollectEnergyContainer extends Objective {
 	target: Container;
 
 	constructor(target: Container) {
@@ -47,12 +47,12 @@ export class collectEnergyContainerObjective extends Objective {
 	}
 
 	getTask() {
-		return new taskWithdraw(this.target);
+		return new TaskWithdraw(this.target);
 	}
 }
 
 // Objective to collect energy from a container that is part of a mining site
-export class collectEnergyMiningSiteObjective extends Objective {
+export class ObjectiveCollectEnergyMiningSite extends Objective {
 	target: Container;
 
 	constructor(target: Container) {
@@ -68,12 +68,12 @@ export class collectEnergyMiningSiteObjective extends Objective {
 	}
 
 	getTask() {
-		return new taskWithdraw(this.target);
+		return new TaskWithdraw(this.target);
 	}
 }
 
 // Objective to supply energy to a tower
-export class supplyTowerObjective extends Objective {
+export class ObjectiveSupplyTower extends Objective {
 	target: Tower;
 
 	constructor(target: Tower) {
@@ -89,12 +89,12 @@ export class supplyTowerObjective extends Objective {
 	}
 
 	getTask() {
-		return new taskSupply(this.target);
+		return new TaskSupply(this.target);
 	}
 }
 
 // Objective to supply energy to a sink
-export class supplyObjective extends Objective {
+export class ObjectiveSupply extends Objective {
 	target: Sink;
 
 	constructor(target: Sink) {
@@ -110,12 +110,12 @@ export class supplyObjective extends Objective {
 	}
 
 	getTask() {
-		return new taskSupply(this.target);
+		return new TaskSupply(this.target);
 	}
 }
 
 // Objective to repair a structure
-export class repairObjective extends Objective {
+export class ObjectiveRepair extends Objective {
 	target: Structure;
 
 	constructor(target: Structure) {
@@ -131,12 +131,12 @@ export class repairObjective extends Objective {
 	}
 
 	getTask() {
-		return new taskRepair(this.target);
+		return new TaskRepair(this.target);
 	}
 }
 
 // Objective to build a construction site
-export class buildObjective extends Objective {
+export class ObjectiveBuild extends Objective {
 	target: ConstructionSite;
 
 	constructor(target: ConstructionSite) {
@@ -152,12 +152,12 @@ export class buildObjective extends Objective {
 	}
 
 	getTask() {
-		return new taskBuild(this.target);
+		return new TaskBuild(this.target);
 	}
 }
 
 // Objective to build a road site
-export class buildRoadObjective extends Objective {
+export class ObjectiveBuildRoad extends Objective {
 	target: ConstructionSite;
 
 	constructor(target: ConstructionSite) {
@@ -173,12 +173,12 @@ export class buildRoadObjective extends Objective {
 	}
 
 	getTask() {
-		return new taskBuild(this.target);
+		return new TaskBuild(this.target);
 	}
 }
 
 // Objective to fortify walls
-export class fortifyObjective extends Objective {
+export class ObjectiveFortify extends Objective {
 	target: StructureWall | StructureRampart;
 
 	constructor(target: StructureWall | StructureRampart) {
@@ -194,12 +194,12 @@ export class fortifyObjective extends Objective {
 	}
 
 	getTask() {
-		return new taskFortify(this.target);
+		return new TaskFortify(this.target);
 	}
 }
 
 // Objective to upgrade the controller
-export class upgradeObjective extends Objective {
+export class ObjectiveUpgrade extends Objective {
 	target: StructureController;
 
 	constructor(target: StructureController) {
@@ -215,7 +215,7 @@ export class upgradeObjective extends Objective {
 	}
 
 	getTask() {
-		return new taskUpgrade(this.target);
+		return new TaskUpgrade(this.target);
 	}
 }
 

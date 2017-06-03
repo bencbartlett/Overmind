@@ -1,7 +1,7 @@
 // Claimer: claims a new room
-import {taskGoToRoom} from '../tasks/task_goToRoom';
-import {taskSignController} from '../tasks/task_signController';
-import {taskClaim} from '../tasks/task_claim';
+import {TaskGoToRoom} from '../tasks/task_goToRoom';
+import {TaskSignController} from '../tasks/task_signController';
+import {TaskClaim} from '../tasks/task_claim';
 import {AbstractCreep, AbstractSetup} from './Abstract';
 
 export class ClaimerSetup extends AbstractSetup {
@@ -24,7 +24,7 @@ export class ClaimerCreep extends AbstractCreep {
 	newTask() {
 		// If no vision of the room, go to it
 		if (!this.assignment.room) {
-			this.task = new taskGoToRoom(this.assignment);
+			this.task = new TaskGoToRoom(this.assignment);
 		} else {
 			if (this.assignment.room.my) {
 				return this.suicide(); // Suicide when the room is claimed
@@ -32,9 +32,9 @@ export class ClaimerCreep extends AbstractCreep {
 			// If there is vision of the room, sign and/or reserve the controller
 			let controller = this.assignment.room.controller;
 			if (!controller.signedByMe) { // Sign the controller if applicable
-				this.task = new taskSignController(controller);
+				this.task = new TaskSignController(controller);
 			} else { // Reserve the controller
-				this.task = new taskClaim(controller);
+				this.task = new TaskClaim(controller);
 			}
 		}
 	}
