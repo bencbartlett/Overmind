@@ -1,7 +1,7 @@
 // Data logging procedures; collects relevant data at every tick and stores them in memory
 // Eventually will move over to asynchronous memory segments when memory requirements are too large
 
-export class dataLogger {
+export class DataLogger {
 	settings: any;
 
 	constructor() {
@@ -50,4 +50,4 @@ export class dataLogger {
 
 // const profiler = require('screeps-profiler');
 import profiler = require('../lib/screeps-profiler');
-profiler.registerClass(dataLogger, 'dataLogger');
+profiler.registerClass(DataLogger, 'DataLogger');

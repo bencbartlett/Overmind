@@ -1,8 +1,8 @@
 // Reserver: reserves rooms targeted with a purple/grey flag or claims a room with purple/purple flag
 
-import {taskGoToRoom} from '../tasks/task_goToRoom';
-import {taskSignController} from '../tasks/task_signController';
-import {taskReserve} from '../tasks/task_reserve';
+import {TaskGoToRoom} from '../tasks/task_goToRoom';
+import {TaskSignController} from '../tasks/task_signController';
+import {TaskReserve} from '../tasks/task_reserve';
 import {AbstractCreep, AbstractSetup} from './Abstract';
 
 export class ReserverSetup extends AbstractSetup {
@@ -25,14 +25,14 @@ export class ReserverCreep extends AbstractCreep {
 	newTask() {
 		// If no vision of the room, go to it
 		if (!this.assignment.room) {
-			this.task = new taskGoToRoom(this.assignment);
+			this.task = new TaskGoToRoom(this.assignment);
 		} else {
 			// If there is vision of the room, sign and/or reserve the controller
 			let controller = this.assignment.room.controller;
 			if (!controller.signedByMe) { // Sign the controller if applicable
-				this.task = new taskSignController(controller);
+				this.task = new TaskSignController(controller);
 			} else { // Reserve the controller
-				this.task = new taskReserve(controller);
+				this.task = new TaskReserve(controller);
 			}
 		}
 	}

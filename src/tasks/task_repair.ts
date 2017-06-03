@@ -1,7 +1,7 @@
 import {Task} from './Task';
 
 type targetType = Structure;
-export class taskRepair extends Task {
+export class TaskRepair extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

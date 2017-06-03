@@ -1,8 +1,8 @@
 // // Linker - transfers energy from link to storage
 //
-// import {taskWithdraw} from '../tasks/task_withdraw';
-// import {taskDeposit} from '../tasks/task_deposit';
-// import {taskGoTo} from '../tasks/task_goTo';
+// import {TaskWithdraw} from '../tasks/task_withdraw';
+// import {TaskDeposit} from '../tasks/task_deposit';
+// import {TaskGoTo} from '../tasks/task_goTo';
 // import {AbstractCreep, AbstractSetup} from './Abstract';
 //
 // export class LinkerSetup extends AbstractSetup {
@@ -43,15 +43,15 @@
 // 		}
 // 		if (storage.links[0].energy > 0) {
 // 			// try targeting non-empty input links
-// 			this.task = new taskWithdraw(storage.links[0]);
+// 			this.task = new TaskWithdraw(storage.links[0]);
 // 		} else if (_.sum(storage.store) > this.colony.overlord.settings.unloadStorageBuffer) {
 // 			// else try unloading from storage into terminal if there is too much energy
-// 			this.task = new taskWithdraw(storage);
+// 			this.task = new TaskWithdraw(storage);
 // 		} else if (this.colony.terminal && this.colony.terminal.energy >
 // 										   this.colony.terminal.brain.settings.resourceAmounts[RESOURCE_ENERGY]
 // 										   + this.colony.terminal.brain.settings.excessTransferAmount) {
 // 			// if there is not too much energy in storage and there is too much in terminal, collect from terminal
-// 			this.task = new taskWithdraw(this.colony.terminal);
+// 			this.task = new TaskWithdraw(this.colony.terminal);
 // 		}
 // 	}
 //
@@ -73,7 +73,7 @@
 // 			target = terminal;
 // 		}
 // 		if (target) {
-// 			this.task = new taskDeposit(target);
+// 			this.task = new TaskDeposit(target);
 // 		}
 // 	}
 //
@@ -81,7 +81,7 @@
 // 		this.task = null;
 // 		let idleFlag = Game.flags[this.memory.data.idleFlag];
 // 		if (idleFlag && !this.pos.inRangeTo(idleFlag, 1)) {
-// 			this.task = new taskGoTo(idleFlag);
+// 			this.task = new TaskGoTo(idleFlag);
 // 		} else {
 // 			if (this.carry.energy == 0) {
 // 				this.collect();

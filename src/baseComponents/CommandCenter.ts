@@ -1,7 +1,7 @@
 // Mining site class for grouping relevant components
 
-import {taskWithdraw} from '../tasks/task_withdraw';
-import {taskDeposit} from '../tasks/task_deposit';
+import {TaskWithdraw} from '../tasks/task_withdraw';
+import {TaskDeposit} from '../tasks/task_deposit';
 import {BaseComponent} from './BaseComponent';
 
 export class CommandCenter extends BaseComponent implements ICommandCenter {
@@ -153,17 +153,17 @@ export class CommandCenter extends BaseComponent implements ICommandCenter {
 		if (manager.carry.energy > 0) {
 			// If you have energy, deposit it to the best location
 			if (this.depositStructures.length > 0) {
-				manager.task = new taskDeposit(this.depositStructures[0]); 	// deposit here if something needs energy
+				manager.task = new TaskDeposit(this.depositStructures[0]); 	// deposit here if something needs energy
 			} else {
-				manager.task = new taskDeposit(this.storage); 				// else deposit to storage
+				manager.task = new TaskDeposit(this.storage); 				// else deposit to storage
 			}
 		} else {
 			// If you're out of energy and there are strucutres that need energy deposited or withdrawn, do so
 			if (this.depositStructures.length > 0 || this.withdrawStructures.length > 0) {
 				if (this.withdrawStructures.length > 0) { // if something actively needs withdrawing
-					manager.task = new taskWithdraw(this.withdrawStructures[0]);
+					manager.task = new TaskWithdraw(this.withdrawStructures[0]);
 				} else {
-					manager.task = new taskWithdraw(this.storage);
+					manager.task = new TaskWithdraw(this.storage);
 				}
 			}
 		}

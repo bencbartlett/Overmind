@@ -1,7 +1,7 @@
 import {Task} from './Task';
 
 type targetType = Source;
-export class taskHarvest extends Task {
+export class TaskHarvest extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

@@ -1,7 +1,7 @@
 import {Task} from './Task';
 
 type targetType = Controller;
-export class taskReserve extends Task {
+export class TaskReserve extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

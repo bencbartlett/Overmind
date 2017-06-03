@@ -1,6 +1,8 @@
 // Worker creep - combines repairer, builder, and upgrader functionality
 
 import {AbstractCreep, AbstractSetup} from './Abstract';
+import {TaskWithdraw} from '../tasks/task_withdraw';
+import {TaskPickup} from '../tasks/task_pickup';
 
 export class WorkerSetup extends AbstractSetup {
 	constructor() {
@@ -17,6 +19,26 @@ export class WorkerSetup extends AbstractSetup {
 export class WorkerCreep extends AbstractCreep {
 	constructor(creep: Creep) {
 		super(creep);
+	}
+
+	/* Default logic for a worker-type creep to refill its energy supply */
+	recharge(): void { // default recharging logic for creeps
+		let possibleTargets = [].concat(this.room.storageUnits, this.room.droppedEnergy);
+		let target = this.pos.findClosestByRange(possibleTargets, {
+			filter: (s: StorageUnit | Resource) =>
+			(s instanceof Resource && s.amount > this.carryCapacity) ||
+			(s instanceof StructureContainer && s.energy > this.carryCapacity) ||
+			(s instanceof StructureStorage && s.creepCanWithdrawEnergy(this))
+		}) as Resource | StructureContainer | StructureStorage;
+		if (target) { // assign recharge task to creep
+			if (target instanceof Resource) {
+				this.task = new TaskPickup(target);
+			} else {
+				this.task = new TaskWithdraw(target);
+			}
+		} else {
+			this.say('Can\'t recharge');
+		}
 	}
 
 	// onRun(creep: Creep) {

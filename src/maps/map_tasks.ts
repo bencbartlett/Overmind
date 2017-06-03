@@ -1,30 +1,30 @@
 // Reinstantiation of a task object from protoTask data
 
 import {Task} from '../tasks/Task';
-import {taskAttack} from '../tasks/task_attack';
-import {taskBuild} from '../tasks/task_build';
-import {taskClaim} from '../tasks/task_claim';
-import {taskDeposit} from '../tasks/task_deposit';
-import {taskDismantle} from '../tasks/task_dismantle';
-import {taskFortify} from '../tasks/task_fortify';
-import {taskGetBoosted} from '../tasks/task_getBoosted';
-import {taskGetRenewed} from '../tasks/task_getRenewed';
-import {taskGoTo} from '../tasks/task_goTo';
-import {taskGoToRoom} from '../tasks/task_goToRoom';
-import {taskHarvest} from '../tasks/task_harvest';
-import {taskHeal} from '../tasks/task_heal';
-import {taskLoadLab} from '../tasks/task_loadLab';
-import {taskMeleeAttack} from '../tasks/task_meleeAttack';
-import {taskPickup} from '../tasks/task_pickup';
-import {taskRangedAttack} from '../tasks/task_rangedAttack';
-import {taskWithdraw} from '../tasks/task_withdraw';
-import {taskRepair} from '../tasks/task_repair';
-import {taskReserve} from '../tasks/task_reserve';
-import {taskSignController} from '../tasks/task_signController';
-import {taskSupply} from '../tasks/task_supply';
-import {taskTransfer} from '../tasks/task_transfer';
-import {taskUpgrade} from '../tasks/task_upgrade';
-import {taskWithdrawResource} from '../tasks/task_withdrawResource';
+import {TaskAttack} from '../tasks/task_attack';
+import {TaskBuild} from '../tasks/task_build';
+import {TaskClaim} from '../tasks/task_claim';
+import {TaskDeposit} from '../tasks/task_deposit';
+import {TaskDismantle} from '../tasks/task_dismantle';
+import {TaskFortify} from '../tasks/task_fortify';
+import {TaskGetBoosted} from '../tasks/task_getBoosted';
+import {TaskGetRenewed} from '../tasks/task_getRenewed';
+import {TaskGoTo} from '../tasks/task_goTo';
+import {TaskGoToRoom} from '../tasks/task_goToRoom';
+import {TaskHarvest} from '../tasks/task_harvest';
+import {TaskHeal} from '../tasks/task_heal';
+import {TaskLoadLab} from '../tasks/task_loadLab';
+import {TaskMeleeAttack} from '../tasks/task_meleeAttack';
+import {TaskPickup} from '../tasks/task_pickup';
+import {TaskRangedAttack} from '../tasks/task_rangedAttack';
+import {TaskWithdraw} from '../tasks/task_withdraw';
+import {TaskRepair} from '../tasks/task_repair';
+import {TaskReserve} from '../tasks/task_reserve';
+import {TaskSignController} from '../tasks/task_signController';
+import {TaskSupply} from '../tasks/task_supply';
+import {TaskTransfer} from '../tasks/task_transfer';
+import {TaskUpgrade} from '../tasks/task_upgrade';
+import {TaskWithdrawResource} from '../tasks/task_withdrawResource';
 
 export function taskFromPrototask(protoTask: protoTask): Task {
 	// Retrieve name and target data from the protoTask
@@ -34,77 +34,77 @@ export function taskFromPrototask(protoTask: protoTask): Task {
 	// Create a task object of the correct type
 	switch (taskName) {
 		case 'attack':
-			task = new taskAttack(target as Creep | Structure);
+			task = new TaskAttack(target as Creep | Structure);
 			break;
 		case 'build':
-			task = new taskBuild(target as ConstructionSite);
+			task = new TaskBuild(target as ConstructionSite);
 			break;
 		case 'claim':
-			task = new taskClaim(target as Controller);
+			task = new TaskClaim(target as Controller);
 			break;
 		case 'deposit':
-			task = new taskDeposit(target as StructureContainer | StructureStorage | StructureTerminal | StructureLink);
+			task = new TaskDeposit(target as StructureContainer | StructureStorage | StructureTerminal | StructureLink);
 			break;
 		case 'dismantle':
-			task = new taskDismantle(target as Structure);
+			task = new TaskDismantle(target as Structure);
 			break;
 		case 'fortify':
-			task = new taskFortify(target as StructureWall | Rampart);
+			task = new TaskFortify(target as StructureWall | Rampart);
 			break;
 		case 'getBoosted':
-			task = new taskGetBoosted(target as Lab);
+			task = new TaskGetBoosted(target as Lab);
 			break;
 		case 'getRenewed':
-			task = new taskGetRenewed(target as Spawn);
+			task = new TaskGetRenewed(target as Spawn);
 			break;
 		case 'goTo':
-			task = new taskGoTo(target as RoomObject);
+			task = new TaskGoTo(target as RoomObject);
 			break;
 		case 'goToRoom':
-			task = new taskGoToRoom(target as RoomObject);
+			task = new TaskGoToRoom(target as RoomObject);
 			break;
 		case 'harvest':
-			task = new taskHarvest(target as Source);
+			task = new TaskHarvest(target as Source);
 			break;
 		case 'heal':
-			task = new taskHeal(target as Creep);
+			task = new TaskHeal(target as Creep);
 			break;
 		case 'loadLab':
-			task = new taskLoadLab(target as Lab);
+			task = new TaskLoadLab(target as Lab);
 			break;
 		case 'meleeAttack':
-			task = new taskMeleeAttack(target as Creep | Structure);
+			task = new TaskMeleeAttack(target as Creep | Structure);
 			break;
 		case 'pickup':
-			task = new taskPickup(target as Resource);
+			task = new TaskPickup(target as Resource);
 			break;
 		case 'rangedAttack':
-			task = new taskRangedAttack(target as Creep | Structure);
+			task = new TaskRangedAttack(target as Creep | Structure);
 			break;
 		case 'recharge':
-			task = new taskWithdraw(target as StructureStorage | Container | Terminal);
+			task = new TaskWithdraw(target as StructureStorage | Container | Terminal);
 			break;
 		case 'repair':
-			task = new taskRepair(target as Structure);
+			task = new TaskRepair(target as Structure);
 			break;
 		case 'colony':
-			task = new taskReserve(target as Controller);
+			task = new TaskReserve(target as Controller);
 			break;
 		case 'signController':
-			task = new taskSignController(target as Controller);
+			task = new TaskSignController(target as Controller);
 			break;
 		case 'supply':
-			task = new taskSupply(target as Sink);
+			task = new TaskSupply(target as Sink);
 			break;
 		case 'transfer':
-			task = new taskTransfer(target as StructureContainer | StructureStorage | StructureTerminal |
+			task = new TaskTransfer(target as StructureContainer | StructureStorage | StructureTerminal |
 				StructureLab | StructureNuker | StructurePowerSpawn);
 			break;
 		case 'upgrade':
-			task = new taskUpgrade(target as Controller);
+			task = new TaskUpgrade(target as Controller);
 			break;
 		case 'withdrawResource':
-			task = new taskWithdrawResource(target as StructureStorage | StructureContainer | StructureTerminal);
+			task = new TaskWithdrawResource(target as StructureStorage | StructureContainer | StructureTerminal);
 			break;
 	}
 	// Modify the task object to reflect any changed properties

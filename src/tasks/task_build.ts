@@ -2,7 +2,7 @@ import {Task} from './Task';
 
 type targetType = ConstructionSite;
 
-export class taskBuild extends Task {
+export class TaskBuild extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

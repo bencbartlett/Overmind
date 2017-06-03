@@ -3,7 +3,7 @@
 import {Task} from './Task';
 
 type targetType = StructureStorage | StructureContainer | StructureTerminal;
-export class taskWithdrawResource extends Task {
+export class TaskWithdrawResource extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

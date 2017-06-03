@@ -1,7 +1,7 @@
 import {Task} from './Task';
 
 type targetType = Lab;
-export class taskGetBoosted extends Task {
+export class TaskGetBoosted extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

@@ -1,7 +1,7 @@
 import {Task} from './Task';
 
 type targetType = StructureWall | Rampart;
-export class taskFortify extends Task {
+export class TaskFortify extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

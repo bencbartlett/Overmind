@@ -5,13 +5,13 @@ import profiler = require('./lib/screeps-profiler');
 import {Colony} from './Colony';
 import {Directive} from './directives/Directive';
 import {
-	buildObjective,
-	buildRoadObjective,
-	collectEnergyMiningSiteObjective,
-	fortifyObjective,
-	pickupEnergyObjective,
-	repairObjective,
-	upgradeObjective
+	ObjectiveBuild,
+	ObjectiveBuildRoad,
+	ObjectiveCollectEnergyMiningSite,
+	ObjectiveFortify,
+	ObjectivePickupEnergy,
+	ObjectiveRepair,
+	ObjectiveUpgrade
 } from './objectives/objectives';
 import {MinerSetup} from './roles/miner';
 import {HaulerSetup} from './roles/hauler';
@@ -93,7 +93,7 @@ export class Overlord implements IOverlord {
 										  request => request.resourceType == RESOURCE_ENERGY);
 		let collectSites = _.map(withdrawalRequests, request => request.target);
 		let collectEnergyMiningSiteObjectives = _.map(collectSites, site =>
-			new collectEnergyMiningSiteObjective(site as Container));
+			new ObjectiveCollectEnergyMiningSite(site as Container));
 
 		this.objectiveGroup.registerObjectives(collectEnergyMiningSiteObjectives);
 
@@ -101,35 +101,35 @@ export class Overlord implements IOverlord {
 		for (let room of this.colony.rooms) {
 			// Pick up energy
 			let droppedEnergy: Resource[] = _.filter(room.droppedEnergy, d => d.amount > 100);
-			let pickupEnergyObjectives = _.map(droppedEnergy, target => new pickupEnergyObjective(target));
+			let pickupEnergyObjectives = _.map(droppedEnergy, target => new ObjectivePickupEnergy(target));
 
 			// // Find towers in need of energy
 			// let supplyTowers = _.filter(room.towers, tower => tower.energy < tower.energyCapacity);
-			// let supplyTowerObjectives = _.map(supplyTowers, target => new supplyTowerObjective(target));
+			// let supplyTowerObjectives = _.map(supplyTowers, target => new ObjectiveSupplyTower(target));
 
 			// // Find structures in need of energy
 			// let supplyStructures = _.filter(room.sinks, sink => sink.energy < sink.energyCapacity);
-			// let supplyObjectives = _.map(supplyStructures, target => new supplyObjective(target));
+			// let supplyObjectives = _.map(supplyStructures, target => new ObjectiveSupply(target));
 
 			// Repair structures
 			let repairStructures = _.filter(room.repairables,
 											s => s.hits < s.hitsMax &&
 												 (s.structureType != STRUCTURE_CONTAINER || s.hits < 0.7 * s.hitsMax) &&
 												 (s.structureType != STRUCTURE_ROAD || s.hits < 0.7 * s.hitsMax));
-			let repairObjectives = _.map(repairStructures, target => new repairObjective(target));
+			let repairObjectives = _.map(repairStructures, target => new ObjectiveRepair(target));
 
 			// Build construction jobs that aren't roads
-			let buildObjectives = _.map(room.structureSites, site => new buildObjective(site));
+			let buildObjectives = _.map(room.structureSites, site => new ObjectiveBuild(site));
 
 			// Build roads
-			let buildRoadObjectives = _.map(room.roadSites, site => new buildRoadObjective(site));
+			let buildRoadObjectives = _.map(room.roadSites, site => new ObjectiveBuildRoad(site));
 
 			// Fortify barriers
 			let lowestBarriers = _.sortBy(room.barriers, barrier => barrier.hits).slice(0, 5);
-			let fortifyObjectives = _.map(lowestBarriers, barrier => new fortifyObjective(barrier));
+			let fortifyObjectives = _.map(lowestBarriers, barrier => new ObjectiveFortify(barrier));
 
 			// Upgrade controller
-			let upgradeObjectives = [new upgradeObjective(room.controller)];
+			let upgradeObjectives = [new ObjectiveUpgrade(room.controller)];
 
 			// Register the objectives in the objectiveGroup
 			this.objectiveGroup.registerObjectives(pickupEnergyObjectives,

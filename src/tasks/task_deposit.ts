@@ -10,7 +10,7 @@ type targetType =
 	StructureSpawn |
 	StructureStorage |
 	StructureTerminal;
-export class taskDeposit extends Task {
+export class TaskDeposit extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

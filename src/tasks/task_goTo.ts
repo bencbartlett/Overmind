@@ -1,7 +1,7 @@
 import {Task} from './Task';
 
 type targetType = RoomObject;
-export class taskGoTo extends Task {
+export class TaskGoTo extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

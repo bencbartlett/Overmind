@@ -16,7 +16,6 @@
     "triple-equals": false,
     "indent": false,
     "quotemark": false,
-    "class-name": false,
     "member-access": false,
     "no-var-keyword": false,
     "no-consecutive-blank-lines": false,

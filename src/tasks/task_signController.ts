@@ -2,7 +2,7 @@ import {Task} from './Task';
 import {controllerSignature} from '../settings/settings_user';
 
 type targetType = Controller;
-export class taskSignController extends Task {
+export class TaskSignController extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

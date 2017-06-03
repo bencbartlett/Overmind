@@ -1,6 +1,6 @@
 // Hauler - brings back energy from reserved outposts
 
-import {taskDeposit} from '../tasks/task_deposit';
+import {TaskDeposit} from '../tasks/task_deposit';
 import {AbstractCreep, AbstractSetup} from './Abstract';
 
 export class HaulerSetup extends AbstractSetup {
@@ -32,7 +32,7 @@ export class HaulerCreep extends AbstractCreep {
 			target = this.colony.storage;
 		}
 		if (target) {
-			this.task = new taskDeposit(target);
+			this.task = new TaskDeposit(target);
 		}
 	}
 

@@ -1,9 +1,9 @@
 // Hatchery - groups all spawns in a colony
 
 import {ObjectiveGroup} from '../objectives/ObjectiveGroup';
-import {supplyObjective, supplyTowerObjective} from '../objectives/objectives';
-import {taskWithdraw} from '../tasks/task_withdraw';
-import {taskDeposit} from '../tasks/task_deposit';
+import {ObjectiveSupply, ObjectiveSupplyTower} from '../objectives/objectives';
+import {TaskWithdraw} from '../tasks/task_withdraw';
+import {TaskDeposit} from '../tasks/task_deposit';
 import {BaseComponent} from './BaseComponent';
 
 export class Hatchery extends BaseComponent implements IHatchery {
@@ -107,9 +107,9 @@ export class Hatchery extends BaseComponent implements IHatchery {
 	private registerObjectives(): void {
 		// Supply all of the hatchery components with energy
 		let supplySpawns = _.filter(this.spawns, spawn => !spawn.isFull);
-		let supplySpawnObjectives = _.map(supplySpawns, spawn => new supplyObjective(spawn));
+		let supplySpawnObjectives = _.map(supplySpawns, spawn => new ObjectiveSupply(spawn));
 		let supplyExtensions = _.filter(this.extensions, extension => !extension.isFull);
-		let supplyExtensionObjectives = _.map(supplyExtensions, extension => new supplyObjective(extension));
+		let supplyExtensionObjectives = _.map(supplyExtensions, extension => new ObjectiveSupply(extension));
 		let supplyTowers: Tower[];
 		if (supplySpawnObjectives.length + supplyExtensionObjectives.length > 0) {
 			// If there are other things to do, don't worry about filling towers to completely full levels
@@ -118,7 +118,7 @@ export class Hatchery extends BaseComponent implements IHatchery {
 			// If nothing else to do, go ahead and fill up towers
 			supplyTowers = _.filter(this.towers, tower => tower.energy < tower.energyCapacity);
 		}
-		let supplyTowerObjectives = _.map(supplyTowers, tower => new supplyTowerObjective(tower));
+		let supplyTowerObjectives = _.map(supplyTowers, tower => new ObjectiveSupplyTower(tower));
 		// Register the objectives in the objectiveGroup
 		this.objectiveGroup.registerObjectives(supplySpawnObjectives, supplyExtensionObjectives, supplyTowerObjectives);
 	}
@@ -229,13 +229,13 @@ export class Hatchery extends BaseComponent implements IHatchery {
 				// Can energy be moved from the link to the battery?
 				if (!this.battery.isFull && !this.link.isEmpty) { 	// move energy to battery
 					if (supplier.carry.energy < supplier.carryCapacity) {
-						supplier.task = new taskWithdraw(this.link);
+						supplier.task = new TaskWithdraw(this.link);
 					} else {
-						supplier.task = new taskDeposit(this.battery);
+						supplier.task = new TaskDeposit(this.battery);
 					}
 				} else {
 					if (supplier.carry.energy < supplier.carryCapacity) { // make sure you're recharged
-						supplier.task = new taskWithdraw(this.link);
+						supplier.task = new TaskWithdraw(this.link);
 					}
 				}
 			}

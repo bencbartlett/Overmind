@@ -1,7 +1,7 @@
 import {Task} from './Task';
 
 type targetType = Creep | Structure;
-export class taskRangedAttack extends Task {
+export class TaskRangedAttack extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

@@ -3,7 +3,7 @@ import {Task} from './Task';
 type targetType = StructureContainer | StructureStorage | StructureTerminal |
 	StructureLab | StructureNuker | StructurePowerSpawn;
 
-export class taskTransfer extends Task {
+export class TaskTransfer extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {

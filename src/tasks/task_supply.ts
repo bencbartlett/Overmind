@@ -1,7 +1,7 @@
 import {Task} from './Task';
 
 type targetType = Sink;
-export class taskSupply extends Task {
+export class TaskSupply extends Task {
 	target: targetType;
 
 	constructor(target: targetType) {
