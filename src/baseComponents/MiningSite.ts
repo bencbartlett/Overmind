@@ -10,10 +10,10 @@ export class MiningSite extends BaseComponent implements IMiningSite {
 	miningPowerNeeded: number;
 	output: StructureContainer | StructureLink | null;
 	outputConstructionSite: ConstructionSite | null;
-	_miners: ICreep[];
+	private _miners: ICreep[];
 
 	constructor(colony: IColony, source: Source) {
-		super(colony, source);
+		super(colony, source, 'miningSite');
 		this.source = source;
 		this.energyPerTick = source.energyCapacity / ENERGY_REGEN_TIME;
 		this.miningPowerNeeded = Math.ceil(this.energyPerTick / HARVEST_POWER) + 1;

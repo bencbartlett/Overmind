@@ -79,11 +79,12 @@ export class SupplierCreep extends AbstractCreep {
 		let suppliers = this.colony.getCreepsByRole('supplier');
 		for (let supplier of suppliers) {
 			// Delete emergency suppliers in the case a larger one is available
-			// if (supplier.name != this.name &&
-			// 	supplier.getActiveBodyparts(CARRY) > this.getActiveBodyparts(CARRY) &&
-			// 	this.getActiveBodyparts(CARRY) == 2) {
-			// 	this.suicide();
-			// }
+			if (supplier.name != this.name &&
+				supplier.getActiveBodyparts(CARRY) > this.getActiveBodyparts(CARRY) &&
+				this.getActiveBodyparts(CARRY) == 2) {
+				this.log('A larger supplier is available, time to die!');
+				this.suicide();
+			}
 		}
 	}
 }

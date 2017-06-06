@@ -122,6 +122,8 @@ interface IColony {
 	commandCenter: ICommandCenter | null;
 	hatchery: IHatchery | null;
 	upgradeSite: IUpgradeSite | null;
+	miningGroups: IMiningGroup[];
+	miningSites: { [sourceID: string]: IMiningSite };
 	incubating: boolean;
 	outposts: Room[];
 	rooms: Room[];
@@ -130,14 +132,11 @@ interface IColony {
 	creepsByRole: { [roleName: string]: ICreep[] };
 	getCreepsByRole(roleName: string): ICreep[];
 	sources: Source[];
-	miningSites: { [sourceID: string]: IMiningSite };
 	data: {
 		numHaulers: number,
 		haulingPowerSupplied: number,
 		haulingPowerNeeded: number,
 	};
-	populateColonyData(): void;
-	instantiateVirtualComponents(): void;
 	init(): void;
 	run(): void;
 }
@@ -255,8 +254,10 @@ interface IBaseComponent {
 	colonyName: string;
 	room: Room;
 	pos: RoomPosition;
+	componentName: string;
 	overlord: IOverlord;
 	colony: IColony;
+	log(...args: any[]): void;
 	init(): void;
 	run(): void;
 }
@@ -269,7 +270,20 @@ interface IMiningSite extends IBaseComponent {
 	outputConstructionSite: ConstructionSite | null;
 	predictedStore: number;
 	miners: ICreep[];
-	_miners: ICreep[];
+}
+
+interface IMiningGroup extends IBaseComponent {
+	dropoff: StructureLink | StructureStorage;
+	backupLinks: StructureLink[] | null;
+	miningSites: IMiningSite[];
+	parkingSpots: RoomPosition[];
+	data: {
+		numHaulers: number,
+		haulingPowerSupplied: number,
+		haulingPowerNeeded: number,
+		linkPowerNeeded: number,
+		linkPowerAvailable: number,
+	};
 }
 
 interface ICommandCenter extends IBaseComponent {
@@ -298,10 +312,8 @@ interface IHatchery extends IBaseComponent {
 	extensions: Extension[];
 	link: StructureLink;
 	battery: StructureContainer;
-	objectivePriorities: string[];
 	objectiveGroup: IObjectiveGroup;
 	spawnPriorities: { [role: string]: number };
-	productionQueue: { [priority: number]: protoCreep[] };
 	supplier: ICreep;
 	idlePos: RoomPosition;
 	enqueue(protoCreep: protoCreep, priority?: number): void;
@@ -313,7 +325,6 @@ interface IUpgradeSite extends IBaseComponent {
 	controller: StructureController;
 	input: StructureLink | StructureContainer | null;
 	inputConstructionSite: ConstructionSite | null;
-	_upgraders: ICreep[];
 }
 
 interface IOverlord {

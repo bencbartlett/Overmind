@@ -33,8 +33,6 @@ export function AbstractCreepWrapper(creep: Creep): AbstractCreep {
 			return new HaulerCreep(creep);
 		case 'healer':
 			return new HealerCreep(creep);
-		// case 'linker':
-		// 	return new LinkerCreep(creep);
 		case 'manager':
 			return new ManagerCreep(creep);
 		case 'miner':

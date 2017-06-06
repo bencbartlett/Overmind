@@ -28,12 +28,13 @@ export class Colony implements IColony {
 	commandCenter: ICommandCenter | null;				// Component with logic for non-spawning structures
 	hatchery: IHatchery | null;							// Component to encapsulate spawner logic
 	upgradeSite: IUpgradeSite | null;					// Component to provide upgraders with uninterrupted energy
+	miningGroups: IMiningGroup[]; 						// Component to group mining sites into a hauling group
+	miningSites: { [sourceID: string]: IMiningSite };	// Component with logic for mining and hauling
 	incubating: boolean;								// If the colony is currently being cared for by another one
 	flags: Flag[];										// Flags across the colony
 	creeps: ICreep[];									// Creeps bound to the colony
 	creepsByRole: { [roleName: string]: ICreep[] };		// Creeps hashed by their role name
 	sources: Source[];									// Sources in all colony rooms
-	miningSites: { [sourceID: string]: IMiningSite };	// Component with logic for mining and hauling
 	data: {												// Data about the colony, calculated once per tick
 		numHaulers: number,									// Number of haulers in the colony
 		haulingPowerSupplied: number,						// Amount of hauling supplied in units of CARRY parts
@@ -77,7 +78,7 @@ export class Colony implements IColony {
 	}
 
 	/* Instantiate and associate virtual colony components to group similar structures together */
-	instantiateVirtualComponents(): void {
+	private instantiateVirtualComponents(): void {
 		// Instantiate the command center if there is storage in the room - this must be done first!
 		if (this.storage && this.storage.linked) {
 			this.commandCenter = new CommandCenter(this, this.storage);
@@ -86,17 +87,20 @@ export class Colony implements IColony {
 		if (this.spawns[0]) {
 			this.hatchery = new Hatchery(this, this.spawns[0]);
 		}
-		// Instantiate the upgradeSite if there is storage
-		if (this.storage) {
-			this.upgradeSite = new UpgradeSite(this, this.controller);
-		}
+		// Instantiate the upgradeSite
+		this.upgradeSite = new UpgradeSite(this, this.controller);
+		// Instantiate a MiningGroup for each non-component link and for storage
+		let claimedLinks = _.compact([this.commandCenter.link,
+									  this.hatchery.link,
+									  this.upgradeSite.input]);
+		let unclaimedLinks = _.remove(this.links, link => claimedLinks.includes(link));
 		// Mining sites is an object of ID's and MiningSites
 		let sourceIDs = _.map(this.sources, source => source.ref);
 		let miningSites = _.map(this.sources, source => new MiningSite(this, source));
 		this.miningSites = _.zipObject(sourceIDs, miningSites) as { [sourceID: string]: MiningSite };
 	}
 
-	populateColonyData(): void {
+	private populateColonyData(): void {
 		// Calculate hauling power needed (in units of number of CARRY parts)
 		let haulingPowerNeededValue: number;
 		if (this.storage) {

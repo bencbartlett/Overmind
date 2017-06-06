@@ -48,8 +48,8 @@ export class Overlord implements IOverlord {
 			'pickupEnergy',
 			'collectEnergyMiningSite',
 			'collectEnergyContainer',
-			'repair',
 			'build',
+			'repair',
 			'buildRoad',
 			'fortify',
 			'upgrade',
@@ -59,7 +59,7 @@ export class Overlord implements IOverlord {
 		// Configurable settings
 		this.settings = {
 			incubationWorkersToSend       : 3,  // number of big workers to send to incubate a room
-			supplierPatternRepetitionLimit: 8,  // maximum number of body repetitions for suppliers
+			supplierPatternRepetitionLimit: _.min([2 * this.room.controller.level, 8]),  // supplier body repetitions
 			storageBuffer                 : {   // creeps of a given role can't withdraw until this level
 				manager : 75000,
 				worker  : 50000,
@@ -72,7 +72,7 @@ export class Overlord implements IOverlord {
 	}
 
 	log(...args: any[]): void {
-		console.log(this.room, ' ', this.name, ': "', ...args, '".');
+		console.log(this.name, ' Overlord: "', ...args, '".');
 	}
 
 
@@ -176,20 +176,20 @@ export class Overlord implements IOverlord {
 				}));
 		}
 
-		// Ensure the hatchery has suppliers and miners to harvest energy
+		// Ensure the hatchery has suppliers; emergency suppliers handled directly by hatchery
 		if (this.room.sinks.length > 0 && this.colony.getCreepsByRole('miner').length > 0) {
 			let supplierSize = this.settings.supplierPatternRepetitionLimit;
-			let supplierCost = supplierSize * (new SupplierSetup().bodyPatternCost);
-			if (this.room.energyAvailable < supplierCost) {
-				supplierSize = 1; // If the room runs out of suppliers at low energy, spawn a small supplier
-			}
+			// let supplierCost = supplierSize * (new SupplierSetup().bodyPatternCost);
+			// if (this.room.energyAvailable < supplierCost) {
+			// 	supplierSize = 1; // If the room runs out of suppliers at low energy, spawn a small supplier
+			// }
 			let numSuppliers = _.filter(this.colony.getCreepsByRole('supplier'), // number of big suppliers in colony
-										creep => creep.getActiveBodyparts(MOVE) >= supplierSize).length;
+										creep => creep.getActiveBodyparts(MOVE) == supplierSize).length;
 			let numSuppliersNeeded = 1;
 			if (numSuppliers < numSuppliersNeeded) {
 				this.colony.hatchery.enqueue(new SupplierSetup().create(this.colony, {
 					assignment            : this.room.controller!,
-					patternRepetitionLimit: supplierSize // this.settings.supplierPatternRepetitionLimit
+					patternRepetitionLimit: supplierSize,
 				}));
 			}
 		}

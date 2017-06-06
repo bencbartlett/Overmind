@@ -10,6 +10,12 @@ Object.defineProperty(RoomPosition.prototype, 'flagged', { // if the object has 
 	},
 });
 
+Object.defineProperty(RoomPosition.prototype, 'isEdge', { // if the position is at the edge of a room
+	get: function () {
+		return this.x == 0 || this.x == 49 || this.y == 0 || this.y == 49;
+	},
+});
+
 RoomPosition.prototype.getAdjacentPositions = function () {
 	let adjPos: RoomPosition[] = [];
 	for (let dx of [-1, 0, 1]) {
