@@ -1,17 +1,7 @@
 interface Creep {
-//     run(): void;
-//     sayLoop(sayList: string[]): void;
 	getBodyparts(partType: string): number;
-//     needsReplacing: boolean;
-//     // workRoom: Room;
 	colony: IColony;
 	lifetime: number;
-//     assignment: RoomObject;
-//     objective: IObjective | null;
-//     task: ITask;
-//     assign(task: ITask): string;
-//     moveSpeed: number;
-//     repairNearbyDamagedRoad(): number;
 	travelTo(destination: RoomPosition | { pos: RoomPosition }, options?: any): number;
 }
 
@@ -24,8 +14,6 @@ interface Flag {
 	category: any;
 	type: any;
 	action: Function;
-	// getAssignedCreepAmounts(role: string): number;
-	// assignedCreepAmounts: { [role: string]: number };
 	getRequiredCreepAmounts(role: string): number;
 	requiredCreepAmounts: { [role: string]: number };
 	needsAdditional(role: string): boolean;
@@ -38,7 +26,6 @@ type Sink = StructureSpawn | StructureExtension | StructureTower;
 type StorageUnit = StructureContainer | StructureStorage;
 
 interface Room {
-	// brain: any;
 	colonyFlag: Flag;
 	colony: IColony;
 	setColony(colonyName: string): void;
@@ -55,6 +42,8 @@ interface Room {
 	// Preprocessed structures
 	drops: { [resourceType: string]: Resource[] };
 	droppedEnergy: Resource[];
+	droppedMinerals: Resource[];
+	droppedPower: Resource[];
 	structures: { [structureType: string]: Structure[] };
 	getStructures(structureType: string): Structure[];
 	spawns: Spawn[];
@@ -134,8 +123,6 @@ interface StructureLab {
 	assignedMineralType: string;
 	IO: string;
 	maxAmount: number;
-	// isFull: boolean;
-	// isEmpty: boolean;
 }
 
 interface StructureLink {
@@ -145,13 +132,11 @@ interface StructureLink {
 }
 
 interface StructureNuker {
-	// isFull: boolean;
-	// isEmpty: boolean;
+
 }
 
 interface StructurePowerSpawn {
-	// isFull: boolean;
-	// isEmpty: boolean;
+
 }
 
 interface StructureStorage {

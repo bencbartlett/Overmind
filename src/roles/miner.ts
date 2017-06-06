@@ -3,7 +3,6 @@
 import {TaskDeposit} from '../tasks/task_deposit';
 import {TaskHarvest} from '../tasks/task_harvest';
 import {AbstractCreep, AbstractSetup} from './Abstract';
-import {MiningSite} from '../baseComponents/MiningSite';
 import {TaskGoToRoom} from '../tasks/task_goToRoom';
 
 export class MinerSetup extends AbstractSetup {
@@ -20,7 +19,7 @@ export class MinerSetup extends AbstractSetup {
 
 export class MinerCreep extends AbstractCreep {
 	assignment: Source;
-	miningSite: MiningSite;
+	miningSite: IMiningSite;
 
 	constructor(creep: Creep) {
 		super(creep);

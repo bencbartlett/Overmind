@@ -191,7 +191,7 @@ export class Traveler {
 
 	public travelTo(creep: Creep, destination: RoomPosition | { pos: RoomPosition },
 					options: TravelToOptions = {}): number {
-		// Allow travelTo to accept roomPositoin directly:
+		// Allow travelTo to accept roomPosition directly:
 		if (destination instanceof RoomPosition) {
 			destination = {pos: destination};
 		}

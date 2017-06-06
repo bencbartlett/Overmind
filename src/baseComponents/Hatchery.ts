@@ -5,6 +5,7 @@ import {ObjectiveSupply, ObjectiveSupplyTower} from '../objectives/objectives';
 import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskDeposit} from '../tasks/task_deposit';
 import {BaseComponent} from './BaseComponent';
+import {SupplierSetup} from '../roles/supplier';
 
 export class Hatchery extends BaseComponent implements IHatchery {
 
@@ -15,20 +16,20 @@ export class Hatchery extends BaseComponent implements IHatchery {
 	link: StructureLink; 									// The input link
 	towers: StructureTower[]; 								// All towers that aren't in the command center
 	battery: StructureContainer;							// The container to provide an energy buffer
-	objectivePriorities: string[]; 							// Priorities for objectives in the objectiveGroup
+	private objectivePriorities: string[]; 					// Priorities for objectives in the objectiveGroup
 	objectiveGroup: ObjectiveGroup; 						// Objectives for hatchery operation and maintenance
 	spawnPriorities: { [role: string]: number }; 			// Default priorities for spawning creeps of various roles
-	productionQueue: { [priority: number]: protoCreep[] };  // Priority queue of protocreeps
-	private _supplier: ICreep; 								// The supplier working the hatchery
-	private _idlePos: RoomPosition; 						// Idling position for the supplier when out of tasks
 	settings: {												// Settings for hatchery operation
 		refillTowersBelow: number,  							// What value to refill towers at?
 		linksRequestEnergyBelow: number, 						// What value will links request more energy at?
 	};
+	private productionQueue: { [priority: number]: protoCreep[] };  // Priority queue of protocreeps
+	private _supplier: ICreep; 										// The supplier working the hatchery
+	private _idlePos: RoomPosition; 								// Idling position for the supplier
 
 
 	constructor(colony: IColony, headSpawn: StructureSpawn) {
-		super(colony, headSpawn);
+		super(colony, headSpawn, 'hatchery');
 		// Set up memory
 		this.memory = colony.memory.hatchery;
 		// Register structure components
@@ -74,7 +75,7 @@ export class Hatchery extends BaseComponent implements IHatchery {
 
 	get supplier(): ICreep {
 		if (!this._supplier) {
-			this._supplier = this.room.colony.getCreepsByRole('supplier')[0];
+			this._supplier = this.colony.getCreepsByRole('supplier')[0];
 		}
 		return this._supplier;
 	}
@@ -179,6 +180,18 @@ export class Hatchery extends BaseComponent implements IHatchery {
 		}
 	}
 
+	private spawnEmergencySupplier(): number | string {
+		let emergencySupplier = new SupplierSetup().create(this.colony, {
+			assignment: this.room.controller,
+			patternRepetitionLimit: 1
+		});
+		let result = this.createCreep(emergencySupplier);
+		if (result != OK) {
+			this.log ("Cannot create emergency supplier: ", result);
+		}
+		return result;
+	}
+
 	// Idle position for suppliers =====================================================================================
 
 	get idlePos(): RoomPosition {
@@ -247,6 +260,13 @@ export class Hatchery extends BaseComponent implements IHatchery {
 	}
 
 	private handleSpawns(): void {
+		// See if an emergency supplier needs to be spawned
+		let numSuppliers = this.colony.getCreepsByRole('supplier').length;
+		let supplierSize = this.overlord.settings.supplierPatternRepetitionLimit;
+		// Emergency suppliers spawn when numSuppliers = 0 and when there isn't enough energy to spawn new supplier
+		if (numSuppliers == 0 && supplierSize * (new SupplierSetup().bodyPatternCost) > this.room.energyAvailable) {
+			this.spawnEmergencySupplier();
+		}
 		// Spawn all queued creeps that you can
 		while (this.availableSpawns.length > 0) {
 			if (this.spawnHighestPriorityCreep() != OK) {

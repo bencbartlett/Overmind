@@ -8,10 +8,10 @@ export class UpgradeSite extends BaseComponent implements IUpgradeSite {
 	controller: StructureController;
 	input: StructureLink | StructureContainer | null;
 	inputConstructionSite: ConstructionSite | null;
-	_upgraders: ICreep[];
+	private _upgraders: ICreep[];
 
 	constructor(colony: IColony, controller: StructureController) {
-		super(colony, controller);
+		super(colony, controller, 'upgradeSite');
 		this.controller = controller;
 		// Register input
 		let siteContainer = this.pos.findClosestByLimitedRange(this.room.containers, 4);

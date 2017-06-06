@@ -106,7 +106,7 @@ export abstract class AbstractSetup implements ISetup {
 	}
 
 	/* Generate (but not spawn) the largest creep possible, returns the creep as an object */
-	generateLargestCreep(colony: Colony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep {
+	generateLargestCreep(colony: IColony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep {
 		let creepBody = this.generateBody(colony.room.energyCapacityAvailable, patternRepetitionLimit);
 		let protoCreep: protoCreep = { 				// object to add to spawner queue
 			body  : creepBody, 						// body array
@@ -132,7 +132,7 @@ export abstract class AbstractSetup implements ISetup {
 	}
 
 	/* Create a protocreep, modify it as needed, and return the object. Does not spawn the creep. */
-	create(colony: Colony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep {
+	create(colony: IColony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep {
 		let protoCreep: protoCreep = this.generateLargestCreep(colony, {assignment, patternRepetitionLimit});
 		protoCreep = this.onCreate(protoCreep); // modify creep as needed
 		return protoCreep;
@@ -394,11 +394,11 @@ export abstract class AbstractCreep implements ICreep {
 	}
 
 	/* Colony that the creep belongs to. */
-	get colony(): Colony {
+	get colony(): IColony {
 		return this.creep.colony;
 	}
 
-	set colony(newColony: Colony) {
+	set colony(newColony: IColony) {
 		this.creep.colony = newColony;
 	}
 

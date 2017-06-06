@@ -23,7 +23,7 @@ export class CommandCenter extends BaseComponent implements ICommandCenter {
 	};
 
 	constructor(colony: IColony, storage: StructureStorage) {
-		super(colony, storage);
+		super(colony, storage, 'commandCenter');
 		// Set up command center, register colony and memory
 		this.memory = colony.memory.commandCenter;
 		this.storage = colony.storage;

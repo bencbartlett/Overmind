@@ -148,6 +148,24 @@ Object.defineProperties(Room.prototype, {
 		},
 	},
 
+	droppedMinerals: {
+		get() {
+			let minerals: Resource[] = [];
+			for (let resourceType in this.drops) {
+				if (resourceType != RESOURCE_ENERGY && resourceType != RESOURCE_POWER) {
+					minerals = minerals.concat(this.drops[resourceType]);
+				}
+			}
+			return minerals;
+		},
+	},
+
+	droppedPower: {
+		get() {
+			return this.drops[RESOURCE_POWER] || [];
+		},
+	},
+
 	// Spawns in the room
 	spawns: {
 		get() {
