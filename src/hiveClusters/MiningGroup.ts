@@ -1,10 +1,10 @@
 // Mining group for creating a collection of mining sites that deposit to a common location (link or storage)
 
-import {BaseComponent} from './BaseComponent';
+import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {pathing} from '../pathing/pathing';
 
 
-export class MiningGroup extends BaseComponent implements IMiningGroup {
+export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 	dropoff: StructureLink | StructureStorage;		// Where haulers drop off to
 	backupLinks: StructureLink[] | undefined;		// Extra links they can drop off to if the first one is on cooldown
 	miningSites: IMiningSite[];						// Mining sites that deposit via this mining group

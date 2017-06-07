@@ -4,10 +4,10 @@ import {ObjectiveGroup} from '../objectives/ObjectiveGroup';
 import {ObjectiveSupply, ObjectiveSupplyTower} from '../objectives/objectives';
 import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskDeposit} from '../tasks/task_deposit';
-import {BaseComponent} from './BaseComponent';
+import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {SupplierSetup} from '../roles/supplier';
 
-export class Hatchery extends BaseComponent implements IHatchery {
+export class Hatchery extends AbstractHiveCluster implements IHatchery {
 
 	memory: any; 											// Memory.colonies.hatchery
 	spawns: Spawn[]; 										// List of spawns in the hatchery
