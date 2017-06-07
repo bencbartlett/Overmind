@@ -10,7 +10,7 @@ export class TaskWithdrawResource extends Task {
 		super('withdrawResource', target);
 		// Settings
 		this.taskData.moveColor = 'blue';
-		this.data.resourceType = null; // this needs to be overwritten on assignment
+		this.data.resourceType = undefined; // this needs to be overwritten on assignment
 	}
 
 	isValidTask() {
@@ -20,10 +20,10 @@ export class TaskWithdrawResource extends Task {
 
 	isValidTarget() {
 		let target = this.target;
-		return target && target.store && target.store[this.data.resourceType] > 0;
+		return target && target.store && target.store[this.data.resourceType!] > 0; // TODO: refactor
 	}
 
 	work() {
-		return this.creep.withdraw(this.target, this.data.resourceType);
+		return this.creep.withdraw(this.target, this.data.resourceType!);
 	}
 }

@@ -21,7 +21,7 @@ export class ManagerCreep extends AbstractCreep {
 
 	constructor(creep: Creep) {
 		super(creep);
-		this.commandCenter = this.colony.commandCenter;
+		this.commandCenter = this.colony.commandCenter!;
 	}
 
 	run() {

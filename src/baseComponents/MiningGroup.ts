@@ -6,7 +6,7 @@ import {pathing} from '../pathing/pathing';
 
 export class MiningGroup extends BaseComponent implements IMiningGroup {
 	dropoff: StructureLink | StructureStorage;		// Where haulers drop off to
-	backupLinks: StructureLink[] | null;			// Extra links they can drop off to if the first one is on cooldown
+	backupLinks: StructureLink[] | undefined;		// Extra links they can drop off to if the first one is on cooldown
 	miningSites: IMiningSite[];						// Mining sites that deposit via this mining group
 	parkingSpots: RoomPosition[]; 					// Good places for haulers to idle near the dropoff
 	private _haulers: ICreep[]; 					// Haulers assigned to this mining group
@@ -54,9 +54,9 @@ export class MiningGroup extends BaseComponent implements IMiningGroup {
 		// Available link power
 		let linkPowerAvailableValue = 0;
 		if (this.dropoff instanceof StructureLink && this.colony.storage) {
-			let links = [].concat([this.dropoff], this.backupLinks);
+			let links: Link[] = [this.dropoff].concat(this.backupLinks!);
 			linkPowerAvailableValue = _.sum(_.map(links, link => LINK_CAPACITY /
-																 link.pos.getRangeTo(this.colony.storage)));
+																 link.pos.getRangeTo(this.colony.storage!)));
 		}
 		this.data = {
 			numHaulers          : this.haulers.length,

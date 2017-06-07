@@ -7,14 +7,14 @@ import {BaseComponent} from './BaseComponent';
 export class CommandCenter extends BaseComponent implements ICommandCenter {
 	memory: any;
 	storage: StructureStorage;
-	link: StructureLink;
-	terminal: StructureTerminal;
+	link: StructureLink | undefined;
+	terminal: StructureTerminal | undefined;
 	towers: StructureTower[];
 	labs: StructureLab[];
-	powerSpawn: StructurePowerSpawn;
-	nuker: StructureNuker;
-	observer: StructureObserver;
-	private _manager: ICreep;
+	powerSpawn: StructurePowerSpawn | undefined;
+	nuker: StructureNuker | undefined;
+	observer: StructureObserver | undefined;
+	private _manager: ICreep | undefined;
 	private _idlePos: RoomPosition;
 	private _depositStructures: (Link | Tower | Terminal | StructureNuker | PowerSpawn | Lab)[];
 	private _withdrawStructures: (Link | Terminal)[];
@@ -26,7 +26,7 @@ export class CommandCenter extends BaseComponent implements ICommandCenter {
 		super(colony, storage, 'commandCenter');
 		// Set up command center, register colony and memory
 		this.memory = colony.memory.commandCenter;
-		this.storage = colony.storage;
+		this.storage = storage;
 		this.link = this.pos.findClosestByLimitedRange(colony.links, 2);
 		this.terminal = colony.terminal;
 		this.towers = this.pos.findInRange(colony.towers, 3); // my layout has non-labs in a 4x3 rectangle
@@ -130,8 +130,8 @@ export class CommandCenter extends BaseComponent implements ICommandCenter {
 		];
 		for (let structure of proximateStructures) {
 			if (structure) {
-				let filteredPositions = _.filter(possiblePositions, p => p.isNearTo(structure) &&
-																		 !p.isEqualTo(structure));
+				let filteredPositions = _.filter(possiblePositions,
+												 p => p.isNearTo(structure!) && !p.isEqualTo(structure!));
 				if (filteredPositions.length == 0) { // stop when it's impossible to match any more structures
 					return possiblePositions[0];
 				} else {
@@ -146,30 +146,29 @@ export class CommandCenter extends BaseComponent implements ICommandCenter {
 	 * use an objectiveGroup; instead it directly manipulates the manager's tasks. */
 	handleManager(): void {
 		let manager = this.manager;
-		if (!manager) {
-			return;
-		}
-		// Handle manager deposit and withdrawal of energy
-		if (manager.carry.energy > 0) {
-			// If you have energy, deposit it to the best location
-			if (this.depositStructures.length > 0) {
-				manager.task = new TaskDeposit(this.depositStructures[0]); 	// deposit here if something needs energy
-			} else {
-				manager.task = new TaskDeposit(this.storage); 				// else deposit to storage
-			}
-		} else {
-			// If you're out of energy and there are strucutres that need energy deposited or withdrawn, do so
-			if (this.depositStructures.length > 0 || this.withdrawStructures.length > 0) {
-				if (this.withdrawStructures.length > 0) { // if something actively needs withdrawing
-					manager.task = new TaskWithdraw(this.withdrawStructures[0]);
+		if (manager) {
+			// Handle manager deposit and withdrawal of energy
+			if (manager.carry.energy > 0) {
+				// If you have energy, deposit it to the best location
+				if (this.depositStructures.length > 0) {
+					manager.task = new TaskDeposit(this.depositStructures[0]); 	// deposit here if something needs energy
 				} else {
-					manager.task = new TaskWithdraw(this.storage);
+					manager.task = new TaskDeposit(this.storage); 				// else deposit to storage
+				}
+			} else {
+				// If you're out of energy and there are strucutres that need energy deposited or withdrawn, do so
+				if (this.depositStructures.length > 0 || this.withdrawStructures.length > 0) {
+					if (this.withdrawStructures.length > 0) { // if something actively needs withdrawing
+						manager.task = new TaskWithdraw(this.withdrawStructures[0]);
+					} else {
+						manager.task = new TaskWithdraw(this.storage);
+					}
 				}
 			}
-		}
-		// If you still have nothing to do, go to the idle point
-		if (manager.isIdle && !manager.pos.isEqualTo(this.idlePos)) {
-			manager.travelTo(this.idlePos);
+			// If you still have nothing to do, go to the idle point
+			if (manager.isIdle && !manager.pos.isEqualTo(this.idlePos)) {
+				manager.travelTo(this.idlePos);
+			}
 		}
 	}
 

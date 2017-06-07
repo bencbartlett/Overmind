@@ -22,34 +22,50 @@ import {ManagerCreep} from '../roles/manager';
 
 export function AbstractCreepWrapper(creep: Creep): AbstractCreep {
 	let roleName = creep.memory.role;
+	let role;
 	switch (roleName) {
 		case 'claimer':
-			return new ClaimerCreep(creep);
+			role =  new ClaimerCreep(creep);
+			break;
 		case 'destroyer':
-			return new DestroyerCreep(creep);
+			role =  new DestroyerCreep(creep);
+			break;
 		case 'guard':
-			return new GuardCreep(creep);
+			role =  new GuardCreep(creep);
+			break;
 		case 'hauler':
-			return new HaulerCreep(creep);
+			role =  new HaulerCreep(creep);
+			break;
 		case 'healer':
-			return new HealerCreep(creep);
+			role =  new HealerCreep(creep);
+			break;
 		case 'manager':
-			return new ManagerCreep(creep);
+			role =  new ManagerCreep(creep);
+			break;
 		case 'miner':
-			return new MinerCreep(creep);
+			role =  new MinerCreep(creep);
+			break;
 		case 'mineralSupplier':
-			return new MineralSupplierCreep(creep);
+			role =  new MineralSupplierCreep(creep);
+			break;
 		case 'reserver':
-			return new ReserverCreep(creep);
+			role =  new ReserverCreep(creep);
+			break;
 		case 'scout':
-			return new ScoutCreep(creep);
+			role =  new ScoutCreep(creep);
+			break;
 		case 'sieger':
-			return new SiegerCreep(creep);
+			role =  new SiegerCreep(creep);
+			break;
 		case 'supplier':
-			return new SupplierCreep(creep);
+			role =  new SupplierCreep(creep);
+			break;
 		case 'upgrader':
-			return new UpgraderCreep(creep);
+			role =  new UpgraderCreep(creep);
+			break;
 		case 'worker':
-			return new WorkerCreep(creep);
+			role =  new WorkerCreep(creep);
+			break;
 	}
+	return role!;
 }

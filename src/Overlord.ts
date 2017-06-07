@@ -3,7 +3,6 @@
 import profiler = require('./lib/screeps-profiler');
 
 import {Colony} from './Colony';
-import {Directive} from './directives/Directive';
 import {
 	ObjectiveBuild,
 	ObjectiveBuildRoad,
@@ -31,7 +30,7 @@ export class Overlord implements IOverlord {
 	room: Room; 								// Colony room
 	colony: Colony; 							// Instantiated colony object
 	settings: any; 								// Adjustable settings
-	directives: Directive[]; 					// Directives for response to stimuli
+	// directives: Directive[]; 					// Directives for response to stimuli
 	objectivePriorities: string[]; 				// Prioritization for objectives in the objectiveGroup
 	objectiveGroup: ObjectiveGroup; 			// Box for objectives assignable from this object
 	resourceRequests: ResourceRequestGroup;		// Box for resource requests
@@ -59,7 +58,7 @@ export class Overlord implements IOverlord {
 		// Configurable settings
 		this.settings = {
 			incubationWorkersToSend       : 3,  // number of big workers to send to incubate a room
-			supplierPatternRepetitionLimit: _.min([2 * this.room.controller.level, 8]),  // supplier body repetitions
+			supplierPatternRepetitionLimit: _.min([2 * this.room.controller!.level, 8]),  // supplier body repetitions
 			storageBuffer                 : {   // creeps of a given role can't withdraw until this level
 				manager : 75000,
 				worker  : 50000,
@@ -103,14 +102,6 @@ export class Overlord implements IOverlord {
 			let droppedEnergy: Resource[] = _.filter(room.droppedEnergy, d => d.amount > 100);
 			let pickupEnergyObjectives = _.map(droppedEnergy, target => new ObjectivePickupEnergy(target));
 
-			// // Find towers in need of energy
-			// let supplyTowers = _.filter(room.towers, tower => tower.energy < tower.energyCapacity);
-			// let supplyTowerObjectives = _.map(supplyTowers, target => new ObjectiveSupplyTower(target));
-
-			// // Find structures in need of energy
-			// let supplyStructures = _.filter(room.sinks, sink => sink.energy < sink.energyCapacity);
-			// let supplyObjectives = _.map(supplyStructures, target => new ObjectiveSupply(target));
-
 			// Repair structures
 			let repairStructures = _.filter(room.repairables,
 											s => s.hits < s.hitsMax &&
@@ -129,12 +120,13 @@ export class Overlord implements IOverlord {
 			let fortifyObjectives = _.map(lowestBarriers, barrier => new ObjectiveFortify(barrier));
 
 			// Upgrade controller
-			let upgradeObjectives = [new ObjectiveUpgrade(room.controller)];
+			let upgradeObjectives: IObjective[] = [];
+			if (room.controller) {
+				upgradeObjectives = [new ObjectiveUpgrade(room.controller)];
+			}
 
 			// Register the objectives in the objectiveGroup
 			this.objectiveGroup.registerObjectives(pickupEnergyObjectives,
-												   // supplyTowerObjectives,
-												   // supplyObjectives,
 												   repairObjectives,
 												   buildObjectives,
 												   buildRoadObjectives,
@@ -217,7 +209,7 @@ export class Overlord implements IOverlord {
 		}
 
 		// Ensure each controller in colony outposts has a reserver if needed
-		let outpostControllers = _.compact(_.map(this.colony.outposts, (room: Room) => room.controller));
+		let outpostControllers = _.compact(_.map(this.colony.outposts, room => room.controller)) as Controller[];
 		for (let controller of outpostControllers) {
 			if (!controller.reservation ||
 				(controller.reservedByMe && controller.reservation.ticksToEnd < this.settings.reserveBuffer)) {

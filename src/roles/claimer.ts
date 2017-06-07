@@ -30,7 +30,7 @@ export class ClaimerCreep extends AbstractCreep {
 				return this.suicide(); // Suicide when the room is claimed
 			}
 			// If there is vision of the room, sign and/or reserve the controller
-			let controller = this.assignment.room.controller;
+			let controller = this.assignment.room.controller!;
 			if (!controller.signedByMe) { // Sign the controller if applicable
 				this.task = new TaskSignController(controller);
 			} else { // Reserve the controller

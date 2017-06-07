@@ -24,7 +24,8 @@ export class WorkerCreep extends AbstractCreep {
 	/* Default logic for a worker-type creep to refill its energy supply */
 	recharge(): void { // default recharging logic for creeps
 		// Allowing workers to recharge from dropped energy lets you move storage
-		let possibleTargets = [].concat(this.room.storageUnits, this.room.droppedEnergy);
+		let possibleTargets: (StructureContainer | StructureStorage | Resource)[] = [];
+		possibleTargets = possibleTargets.concat(this.room.storageUnits, this.room.droppedEnergy);
 		let target = this.pos.findClosestByRange(possibleTargets, {
 			filter: (s: StorageUnit | Resource) =>
 			(s instanceof Resource && s.amount > this.carryCapacity) ||
