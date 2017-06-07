@@ -28,5 +28,7 @@ I'm currently around the [`W1XN8X` sector](https://screeps.com/a/#!/map?pos=-19.
 
 # Design overview
 
-[Updated version coming soon.]
+Check out the [Overmind wiki](https://github.com/bencbartlett/Overmind/wiki) for in-depth explanations of parts of the design of the AI.
+
+* [Hive clusters](https://github.com/bencbartlett/Overmind/wiki/Design:-Hive-Clusters)
 
