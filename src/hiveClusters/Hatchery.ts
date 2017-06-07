@@ -19,7 +19,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 	private objectivePriorities: string[]; 					// Priorities for objectives in the objectiveGroup
 	objectiveGroup: ObjectiveGroup; 						// Objectives for hatchery operation and maintenance
 	spawnPriorities: { [role: string]: number }; 			// Default priorities for spawning creeps of various roles
-	settings: {												// Settings for hatchery operation
+	private settings: {										// Settings for hatchery operation
 		refillTowersBelow: number,  							// What value to refill towers at?
 		linksRequestEnergyBelow: number, 						// What value will links request more energy at?
 	};

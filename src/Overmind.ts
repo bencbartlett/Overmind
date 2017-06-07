@@ -3,16 +3,15 @@
 import profiler = require('./lib/screeps-profiler');
 import {Colony} from './Colony';
 import {Overlord} from './Overlord';
-import {TerminalBrain} from './brains/Brain_Terminal';
 import {AbstractCreepWrapper} from './maps/map_roles';
 
-export default class Overmind {
+export default class Overmind implements IOvermind {
 	name: string;											// I AM THE SWARM
 	Colonies: { [roomName: string]: Colony };				// Global hash of all colony objects
 	colonyMap: { [roomName: string]: string };				// Global map of colony associations for possibly-null rooms
 	invisibleRooms: string[]; 								// Names of rooms across all colonies that are invisible
 	Overlords: { [roomName: string]: Overlord };			// Global hash of colony overlords
-	TerminalBrains: { [roomName: string]: TerminalBrain };	// Global hash of terminal brains TODO: deprecate soon
+	// TerminalBrains: { [roomName: string]: TerminalBrain };	// Global hash of terminal brains TODO: deprecate soon
 
 	constructor() {
 		this.name = 'Overmind';
@@ -20,11 +19,11 @@ export default class Overmind {
 		this.colonyMap = {};
 		this.invisibleRooms = [];
 		this.Overlords = {};
-		this.TerminalBrains = {};
+		// this.TerminalBrains = {};
 	}
 
 	/* Ensure top-level memory values are initialized */
-	verifyMemory(): void {
+	private verifyMemory(): void {
 		if (!Memory.Overmind) {
 			Memory.Overmind = {};
 		}
@@ -34,7 +33,7 @@ export default class Overmind {
 	}
 
 	/* Instantiate a new colony for each owned rom */
-	initializeColonies(): void {
+	private initializeColonies(): void {
 		// Colony call object
 		let protoColonies = {} as { [roomName: string]: string[] }; // key: lead room, values: outposts[]
 		// Register colony capitols
@@ -67,23 +66,23 @@ export default class Overmind {
 	}
 
 	/* Instantiate a colony overlord for each colony */
-	spawnMoarOverlords(): void {
+	private spawnMoarOverlords(): void {
 		// Instantiate an overlord for each colony
 		for (let name in this.Colonies) {
 			this.Overlords[name] = new Overlord(this.Colonies[name]);
 		}
 	}
 
-	initializeTerminalBrains(): void {
-		for (let name in this.Colonies) {
-			if (Game.rooms[name].terminal) {
-				this.TerminalBrains[name] = new TerminalBrain(name);
-			}
-		}
-	}
+	// initializeTerminalBrains(): void {
+	// 	for (let name in this.Colonies) {
+	// 		if (Game.rooms[name].terminal) {
+	// 			this.TerminalBrains[name] = new TerminalBrain(name);
+	// 		}
+	// 	}
+	// }
 
 	/* Wrap each creep in a role-contextualized wrapper */
-	initializeCreeps(): void {
+	private initializeCreeps(): void {
 		// Wrap all creeps
 		Game.icreeps = {};
 		for (let name in Game.creeps) {
@@ -99,7 +98,7 @@ export default class Overmind {
 		}
 	}
 
-	handleObservers(): void {
+	private handleObservers(): void {
 		// Shuffle list of invisible rooms to allow different ones to be observed each tick
 		this.invisibleRooms = _.shuffle(this.invisibleRooms);
 		// Generate a map of available observers
@@ -137,7 +136,7 @@ export default class Overmind {
 		this.verifyMemory();
 		this.initializeColonies();
 		this.spawnMoarOverlords();
-		this.initializeTerminalBrains();
+		// this.initializeTerminalBrains();
 		this.initializeCreeps();
 	}
 

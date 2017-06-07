@@ -38,7 +38,7 @@ import profiler = require('./lib/screeps-profiler');  // gdborton's CPU profiler
 // import {migrate} from './versionMigration/migration';
 
 // Global declarations
-declare var Overmind: OM;
+declare var Overmind: IOvermind;
 declare var flagCodes: { [category: string]: flagCat };
 
 // Enable screeps profiler

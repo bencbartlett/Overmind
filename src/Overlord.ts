@@ -31,7 +31,7 @@ export class Overlord implements IOverlord {
 	colony: Colony; 							// Instantiated colony object
 	settings: any; 								// Adjustable settings
 	// directives: Directive[]; 					// Directives for response to stimuli
-	objectivePriorities: string[]; 				// Prioritization for objectives in the objectiveGroup
+	private objectivePriorities: string[]; 		// Prioritization for objectives in the objectiveGroup
 	objectiveGroup: ObjectiveGroup; 			// Box for objectives assignable from this object
 	resourceRequests: ResourceRequestGroup;		// Box for resource requests
 
@@ -75,18 +75,11 @@ export class Overlord implements IOverlord {
 	}
 
 
-	// Initialization ==================================================================================================
-
-	init(): void {
-		this.registerObjectives();
-	}
-
-
 	// Objective management ============================================================================================
 
 	/* Register objectives from across the colony in the objectiveGroup. Some objectives are registered by other
 	 * colony objects, like Hatchery and CommandCenter objectives. */
-	registerObjectives(): void {
+	private registerObjectives(): void {
 		// Collect energy from component sites that have requested a hauler withdrawal
 		let withdrawalRequests = _.filter(this.resourceRequests.resourceOut.haul,
 										  request => request.resourceType == RESOURCE_ENERGY);
@@ -145,7 +138,7 @@ export class Overlord implements IOverlord {
 
 	/* Handle all creep spawning requirements for homeostatic processes.
 	 * Injects protocreeps into a priority queue in Hatchery. Other spawn operations are done with directives.*/
-	handleCoreSpawnOperations(): void {
+	private handleCoreSpawnOperations(): void {
 		// Ensure each source in the colony has the right number of miners assigned to it
 		for (let siteID in this.colony.miningSites) {
 			let site = this.colony.miningSites[siteID];
@@ -270,7 +263,7 @@ export class Overlord implements IOverlord {
 	}
 
 
-	handleIncubationSpawnOperations(): void { // operations to start up a new room quickly by sending large creeps
+	private handleIncubationSpawnOperations(): void { // operations to start up a new room quickly by sending large creeps
 		// var incubateFlags = _.filter(this.room.assignedFlags,
 		//                              flag => flagCodes.territory.claimAndIncubate.filter(flag) &&
 		//                                      flag.room && flag.room.my);
@@ -308,7 +301,7 @@ export class Overlord implements IOverlord {
 		// TODO: rewrite this using the core spawn methods + request calls
 	}
 
-	handleAssignedSpawnOperations(): void { // operations associated with an assigned flags
+	private handleAssignedSpawnOperations(): void { // operations associated with an assigned flags
 		// Flag operations
 		let flags = this.room.assignedFlags; // TODO: make this a lookup table
 		var prioritizedFlagOperations = [
@@ -333,7 +326,7 @@ export class Overlord implements IOverlord {
 	}
 
 	/* Handle all types of spawn operations */
-	handleSpawnOperations(): void {
+	private handleSpawnOperations(): void {
 		if (this.colony.hatchery.availableSpawns.length > 0) { // only spawn if you have an available spawner
 			this.handleCoreSpawnOperations();
 			this.handleIncubationSpawnOperations();
@@ -344,16 +337,16 @@ export class Overlord implements IOverlord {
 
 	// Market operations ===============================================================================================
 
-	handleTerminalOperations(): void {
-		if (this.room.terminal) {
-			this.room.terminal.brain.run();
-		}
-	}
+	// handleTerminalOperations(): void {
+	// 	if (this.room.terminal) {
+	// 		this.room.terminal.brain.run();
+	// 	}
+	// }
 
 
 	// Safe mode condition =============================================================================================
 
-	handleSafeMode(): void {
+	private handleSafeMode(): void {
 		// Simple safe mode handler; will eventually be replaced by something more sophisticated
 		// Calls for safe mode when walls are about to be breached and there are non-NPC hostiles in the room
 		let criticalBarriers = _.filter(this.room.barriers, s => s.hits < 5000);
@@ -363,11 +356,18 @@ export class Overlord implements IOverlord {
 		}
 	}
 
-	// List of things executed each tick; only run for rooms that are owned
+	// Initialization ==================================================================================================
+
+	init(): void {
+		this.registerObjectives();
+	}
+
+	// Operation =======================================================================================================
+
 	run(): void { // TODO: make register_, handle_ more consistent with init() and run()
 		this.handleSafeMode();
 		this.handleSpawnOperations(); // build creeps as needed
-		this.handleTerminalOperations(); // replenish needed resources
+		// this.handleTerminalOperations(); // replenish needed resources
 	}
 }
 

@@ -156,7 +156,7 @@ interface StructureSpawn {
 
 interface StructureTerminal {
 	energy: any;
-	brain: any;
+	// brain: any;
 	isFull: boolean;
 	isEmpty: boolean;
 }

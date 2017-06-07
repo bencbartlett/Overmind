@@ -1,24 +1,27 @@
-var terminalSettings = {
-	resourceAmounts: <{ [resourceType: string]: number }> {},
-	maxBuyPrice    : <{ [resourceType: string]: number }> {},
-	avgPrice       : <{ [resourceType: string]: number }> {},
-};
 // Desired equilibrium resource amounts go here
-terminalSettings.resourceAmounts[RESOURCE_ENERGY] = 50000;
-terminalSettings.resourceAmounts[RESOURCE_CATALYZED_GHODIUM_ACID] = 1000;
-terminalSettings.resourceAmounts[RESOURCE_CATALYZED_GHODIUM_ALKALIDE] = 500;
-terminalSettings.resourceAmounts[RESOURCE_CATALYZED_UTRIUM_ACID] = 500;
-terminalSettings.resourceAmounts[RESOURCE_CATALYZED_ZYNTHIUM_ACID] = 500;
-terminalSettings.resourceAmounts[RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE] = 500;
+let resourceAmounts: { [resourceType: string]: number } = {};
+resourceAmounts[RESOURCE_ENERGY] = 50000;
+resourceAmounts[RESOURCE_CATALYZED_GHODIUM_ACID] = 1000;
+resourceAmounts[RESOURCE_CATALYZED_GHODIUM_ALKALIDE] = 500;
+resourceAmounts[RESOURCE_CATALYZED_UTRIUM_ACID] = 500;
+resourceAmounts[RESOURCE_CATALYZED_ZYNTHIUM_ACID] = 500;
+resourceAmounts[RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE] = 500;
+
 // Maximum values to buy things at go here
-terminalSettings.maxBuyPrice[RESOURCE_ENERGY] = 0; // never buy energy...
-terminalSettings.maxBuyPrice[RESOURCE_CATALYZED_GHODIUM_ACID] = 4;
-terminalSettings.maxBuyPrice[RESOURCE_CATALYZED_GHODIUM_ALKALIDE] = 4;
-terminalSettings.maxBuyPrice[RESOURCE_CATALYZED_UTRIUM_ACID] = 4;
-terminalSettings.maxBuyPrice[RESOURCE_CATALYZED_ZYNTHIUM_ACID] = 4;
-terminalSettings.maxBuyPrice[RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE] = 4;
+let maxBuyPrice: { [resourceType: string]: number } = {};
+maxBuyPrice[RESOURCE_ENERGY] = 0; // never buy energy...
+maxBuyPrice[RESOURCE_CATALYZED_GHODIUM_ACID] = 4;
+maxBuyPrice[RESOURCE_CATALYZED_GHODIUM_ALKALIDE] = 4;
+maxBuyPrice[RESOURCE_CATALYZED_UTRIUM_ACID] = 4;
+maxBuyPrice[RESOURCE_CATALYZED_ZYNTHIUM_ACID] = 4;
+maxBuyPrice[RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE] = 4;
+
 // Effective market prices go here // TODO: automatically calculate this?
-terminalSettings.avgPrice[RESOURCE_ENERGY] = 0.01;
+let avgPrice: { [resourceType: string]: number } = {};
+avgPrice[RESOURCE_ENERGY] = 0.01;
 
-export = terminalSettings;
-
+export var terminalSettings = {
+	resourceAmounts: resourceAmounts,
+	maxBuyPrice    : maxBuyPrice,
+	avgPrice       : avgPrice,
+};
