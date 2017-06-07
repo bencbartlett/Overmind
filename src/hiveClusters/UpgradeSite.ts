@@ -1,10 +1,10 @@
 // Upgrade site for grouping relevant components for an upgrader station
 
-import {BaseComponent} from './BaseComponent';
+import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {TaskRepair} from '../tasks/task_repair';
 import {TaskBuild} from '../tasks/task_build';
 
-export class UpgradeSite extends BaseComponent implements IUpgradeSite {
+export class UpgradeSite extends AbstractHiveCluster implements IUpgradeSite {
 	controller: StructureController;
 	input: StructureLink | StructureContainer | null;
 	inputConstructionSite: ConstructionSite | null;

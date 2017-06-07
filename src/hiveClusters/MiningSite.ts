@@ -1,10 +1,10 @@
 // Mining site class for grouping relevant components
 
-import {BaseComponent} from './BaseComponent';
+import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {TaskBuild} from '../tasks/task_build';
 import {TaskRepair} from '../tasks/task_repair';
 
-export class MiningSite extends BaseComponent implements IMiningSite {
+export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 	source: Source;
 	energyPerTick: number;
 	miningPowerNeeded: number;

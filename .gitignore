@@ -76,7 +76,7 @@ $RECYCLE.BIN/
 *.lnk
 .vs/
 !/src/Overmind.ts
-!/src/baseComponents/MiningSite.ts
+!/src/hiveClusters/MiningSite.ts
 /ScreepsAutocomplete-master/
 /webpack.config.js
 /test/

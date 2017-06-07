@@ -1,6 +1,6 @@
 /* Generalized class for a base component */
 
-export abstract class BaseComponent implements IBaseComponent {
+export abstract class AbstractHiveCluster implements IHiveCluster {
 	colonyName: string; 	// Name of the colony
 	room: Room;				// Room of the baseComponent (not necessarily colong room)
 	pos: RoomPosition; 		// Position of the instantiation object

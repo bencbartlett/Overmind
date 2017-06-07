@@ -1,8 +1,6 @@
 declare var global: any;
 declare var Overmind: any;
 declare var flagCodes: { [category: string]: flagCat };
-// declare function deref (ref: string): RoomObject;
-// declare function derefRoomPosition(protoPos: protoPos): RoomPosition;
 
 interface Game {
 	cache: {
@@ -250,7 +248,7 @@ interface IObjectiveGroup {
 	assignTask(creep: ICreep): void;
 }
 
-interface IBaseComponent {
+interface IHiveCluster {
 	colonyName: string;
 	room: Room;
 	pos: RoomPosition;
@@ -262,7 +260,7 @@ interface IBaseComponent {
 	run(): void;
 }
 
-interface IMiningSite extends IBaseComponent {
+interface IMiningSite extends IHiveCluster {
 	source: Source;
 	energyPerTick: number;
 	miningPowerNeeded: number;
@@ -272,7 +270,7 @@ interface IMiningSite extends IBaseComponent {
 	miners: ICreep[];
 }
 
-interface IMiningGroup extends IBaseComponent {
+interface IMiningGroup extends IHiveCluster {
 	dropoff: StructureLink | StructureStorage;
 	backupLinks: StructureLink[] | undefined;
 	miningSites: IMiningSite[];
@@ -286,7 +284,7 @@ interface IMiningGroup extends IBaseComponent {
 	};
 }
 
-interface ICommandCenter extends IBaseComponent {
+interface ICommandCenter extends IHiveCluster {
 	memory: any;
 	storage: StructureStorage;
 	link: StructureLink | undefined;
@@ -305,7 +303,7 @@ interface ICommandCenter extends IBaseComponent {
 	};
 }
 
-interface IHatchery extends IBaseComponent {
+interface IHatchery extends IHiveCluster {
 	memory: any;
 	spawns: Spawn[];
 	availableSpawns: Spawn[];
@@ -321,7 +319,7 @@ interface IHatchery extends IBaseComponent {
 	energySpentInLastLifetime: number;
 }
 
-interface IUpgradeSite extends IBaseComponent {
+interface IUpgradeSite extends IHiveCluster {
 	controller: StructureController;
 	input: StructureLink | StructureContainer | null;
 	inputConstructionSite: ConstructionSite | null;

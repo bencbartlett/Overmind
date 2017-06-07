@@ -2,9 +2,9 @@
 
 import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskDeposit} from '../tasks/task_deposit';
-import {BaseComponent} from './BaseComponent';
+import {AbstractHiveCluster} from './AbstractHiveCluster';
 
-export class CommandCenter extends BaseComponent implements ICommandCenter {
+export class CommandCenter extends AbstractHiveCluster implements ICommandCenter {
 	memory: any;
 	storage: StructureStorage;
 	link: StructureLink | undefined;

@@ -1,10 +1,10 @@
 // Colony class - organizes all assets of an owned room into a colony
 
 import {pathing} from './pathing/pathing';
-import {MiningSite} from './baseComponents/MiningSite';
-import {Hatchery} from './baseComponents/Hatchery';
-import {CommandCenter} from './baseComponents/CommandCenter';
-import {UpgradeSite} from './baseComponents/UpgradeSite';
+import {MiningSite} from './hiveClusters/MiningSite';
+import {Hatchery} from './hiveClusters/Hatchery';
+import {CommandCenter} from './hiveClusters/CommandCenter';
+import {UpgradeSite} from './hiveClusters/UpgradeSite';
 
 
 export class Colony implements IColony {
