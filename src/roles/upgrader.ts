@@ -50,8 +50,8 @@ export class UpgraderCreep extends AbstractCreep {
 			if (upgraderBoosters.length > 0 && this.ticksToLive > 0.95 * this.lifetime) {
 				this.task = new TaskGetBoosted(upgraderBoosters[0]);
 			}
-		} else if (this.room.controller.signedByMe) {
-			this.task = new TaskSignController(this.room.controller);
+		} else if (this.room.controller!.signedByMe) {
+			this.task = new TaskSignController(this.room.controller!);
 		}
 	}
 

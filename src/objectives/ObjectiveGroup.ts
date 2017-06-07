@@ -69,7 +69,7 @@ export class ObjectiveGroup implements IObjectiveGroup {
 				// Find closest objective by position
 				let distance = Infinity;
 				let bestDistance = Infinity;
-				let bestObjective: Objective;
+				let bestObjective;
 				for (let objective of possibleObjectives) {
 					distance = creep.pos.getMultiRoomRangeTo(objective.pos);
 					if (distance < bestDistance) {
@@ -77,7 +77,9 @@ export class ObjectiveGroup implements IObjectiveGroup {
 						bestObjective = objective;
 					}
 				}
-				return bestObjective.assignTo(creep);
+				if (bestObjective) {
+					return bestObjective.assignTo(creep);
+				}
 			}
 		}
 	}

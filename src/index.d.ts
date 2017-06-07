@@ -48,7 +48,7 @@ interface ICreep {
 	ticksToLive: number;
 	// Custom properties
 	settings: any;
-	task: ITask;
+	task: ITask | null;
 	// Creep methods
 	attack(target: Creep | Structure): number;
 	attackController(controller: StructureController): number;
@@ -75,7 +75,7 @@ interface ICreep {
 	travelTo(destination: RoomPosition | { pos: RoomPosition }, options?: any): number;
 	// Custom creep methods
 	log(...args: any[]): void;
-	initializeTask(protoTask: protoTask): ITask;
+	initializeTask(protoTask: protoTask): ITask | null;
 	hasValidTask: boolean;
 	isIdle: boolean;
 	assertValidTask(): void;
@@ -91,7 +91,7 @@ interface ICreep {
 	assignmentPos: RoomPosition;
 	inAssignedRoom: boolean;
 	assignedRoomFlag: Flag
-	objective: IObjective;
+	objective: IObjective | null;
 	requestTask(): void;
 	recharge(): void;
 	newTask(): void;
@@ -111,17 +111,17 @@ interface IColony {
 	controller: StructureController;
 	spawns: StructureSpawn[];
 	extensions: StructureExtension[];
-	storage: StructureStorage | null;
+	storage: StructureStorage | undefined;
 	links: StructureLink[];
-	terminal: StructureTerminal | null;
+	terminal: StructureTerminal | undefined;
 	towers: StructureTower[];
 	labs: StructureLab[];
-	powerSpawn: StructurePowerSpawn | null;
-	nuker: StructureNuker | null;
-	observer: StructureObserver | null;
-	commandCenter: ICommandCenter | null;
-	hatchery: IHatchery | null;
-	upgradeSite: IUpgradeSite | null;
+	powerSpawn: StructurePowerSpawn | undefined;
+	nuker: StructureNuker | undefined;
+	observer: StructureObserver | undefined;
+	commandCenter: ICommandCenter | undefined;
+	hatchery: IHatchery;
+	upgradeSite: IUpgradeSite;
 	miningGroups: IMiningGroup[];
 	miningSites: { [sourceID: string]: IMiningSite };
 	incubating: boolean;
@@ -200,7 +200,7 @@ interface protoTask {
 
 interface ITask extends protoTask {
 	creep: ICreep;
-	target: RoomObject;
+	target: RoomObject | null;
 	targetPos: RoomPosition;
 	remove(): void;
 	isValidTask(): boolean;
@@ -266,15 +266,15 @@ interface IMiningSite extends IBaseComponent {
 	source: Source;
 	energyPerTick: number;
 	miningPowerNeeded: number;
-	output: Container | Link | null;
-	outputConstructionSite: ConstructionSite | null;
+	output: Container | Link | undefined;
+	outputConstructionSite: ConstructionSite | undefined;
 	predictedStore: number;
 	miners: ICreep[];
 }
 
 interface IMiningGroup extends IBaseComponent {
 	dropoff: StructureLink | StructureStorage;
-	backupLinks: StructureLink[] | null;
+	backupLinks: StructureLink[] | undefined;
 	miningSites: IMiningSite[];
 	parkingSpots: RoomPosition[];
 	data: {
@@ -289,13 +289,13 @@ interface IMiningGroup extends IBaseComponent {
 interface ICommandCenter extends IBaseComponent {
 	memory: any;
 	storage: StructureStorage;
-	link: StructureLink;
-	terminal: StructureTerminal;
+	link: StructureLink | undefined;
+	terminal: StructureTerminal | undefined;
 	towers: StructureTower[];
 	labs: StructureLab[];
-	powerSpawn: StructurePowerSpawn;
-	nuker: StructureNuker;
-	observer: StructureObserver;
+	powerSpawn: StructurePowerSpawn | undefined;
+	nuker: StructureNuker | undefined;
+	observer: StructureObserver | undefined;
 	manager: ICreep;
 	idlePos: RoomPosition;
 	depositStructures: (Link | Tower | Terminal | StructureNuker | PowerSpawn | Lab)[];
@@ -333,7 +333,7 @@ interface IOverlord {
 	room: Room;
 	colony: IColony;
 	settings: any;
-	directives: any[]; // TODO: IDirective[]
+	// directives: any[]; // TODO: IDirective[]
 	objectivePriorities: string[];
 	objectiveGroup: IObjectiveGroup;
 	resourceRequests: IResourceRequestGroup;

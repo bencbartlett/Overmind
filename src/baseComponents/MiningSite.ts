@@ -8,8 +8,8 @@ export class MiningSite extends BaseComponent implements IMiningSite {
 	source: Source;
 	energyPerTick: number;
 	miningPowerNeeded: number;
-	output: StructureContainer | StructureLink | null;
-	outputConstructionSite: ConstructionSite | null;
+	output: StructureContainer | StructureLink | undefined;
+	outputConstructionSite: ConstructionSite | undefined;
 	private _miners: ICreep[];
 
 	constructor(colony: IColony, source: Source) {
@@ -18,7 +18,6 @@ export class MiningSite extends BaseComponent implements IMiningSite {
 		this.energyPerTick = source.energyCapacity / ENERGY_REGEN_TIME;
 		this.miningPowerNeeded = Math.ceil(this.energyPerTick / HARVEST_POWER) + 1;
 		// Register output method
-		this.output = null;
 		let siteContainer = this.pos.findClosestByLimitedRange(this.room.containers, 2);
 		if (siteContainer) {
 			this.output = siteContainer;
@@ -55,6 +54,8 @@ export class MiningSite extends BaseComponent implements IMiningSite {
 														  hauler => hauler.carryCapacity - _.sum(hauler.carry)));
 		} else if (this.output instanceof StructureLink) {
 			return this.output.energy;
+		} else { // if there is no output
+			return 0;
 		}
 	}
 
@@ -69,8 +70,9 @@ export class MiningSite extends BaseComponent implements IMiningSite {
 			// If the link will be full with next deposit from the miner
 			let minerCapacity = 150; // hardcoded value, I know, but saves import time
 			if (this.output.energy + minerCapacity > this.output.energyCapacity) {
-				if (this.overlord.resourceRequests.resourceIn.link.length > 0) {
-					let targetLink = this.overlord.resourceRequests.resourceIn.link.shift().target as Link;
+				let linkRequest = this.overlord.resourceRequests.resourceIn.link.shift();
+				if (linkRequest) {
+					let targetLink = linkRequest.target as Link;
 					this.output.transferEnergy(targetLink);
 				} else if (this.colony.commandCenter && this.colony.commandCenter.link) {
 					this.output.transferEnergy(this.colony.commandCenter.link);

@@ -9,7 +9,7 @@ export abstract class BaseComponent implements IBaseComponent {
 	constructor(colony: IColony, instantiationObject: RoomObject, componentName: string) {
 		// Set up hatchery, register colony and memory
 		this.colonyName = colony.name;
-		this.room = instantiationObject.room;
+		this.room = instantiationObject.room!;
 		this.pos = instantiationObject.pos;
 		this.componentName = componentName;
 	}

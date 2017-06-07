@@ -9,11 +9,11 @@ export class TaskLoadLab extends Task {
 		// Settings
 		this.taskData.maxPerTarget = 1;
 		this.taskData.moveColor = 'blue';
-		this.data.resourceType = this.target.assignedMineralType;
+		this.data.resourceType = this.target.assignedMineralType; // TODO: refactor soon
 	}
 
 	isValidTask() {
-		let carry = this.creep.carry[this.data.resourceType];
+		let carry = this.creep.carry[this.data.resourceType!];
 		if (carry) {
 			return carry > 0;
 		} else {
@@ -31,6 +31,6 @@ export class TaskLoadLab extends Task {
 	}
 
 	work() {
-		return this.creep.transfer(this.target, this.data.resourceType);
+		return this.creep.transfer(this.target, this.data.resourceType!);
 	}
 }

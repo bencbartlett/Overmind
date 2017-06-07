@@ -136,11 +136,9 @@ export class Hatchery extends BaseComponent implements IHatchery {
 		return (roleName + '_' + i);
 	};
 
-	private createCreep(protoCreep: protoCreep): number | string {
-		if (this.availableSpawns.length == 0) {
-			return ERR_BUSY;
-		} else {
-			let spawnToUse = this.availableSpawns.shift(); // get a spawn to use
+	private createCreep(protoCreep: protoCreep): number {
+		let spawnToUse = this.availableSpawns.shift(); // get a spawn to use
+		if (spawnToUse) { // if there is a spawn, create the creep
 			protoCreep.name = this.generateCreepName(protoCreep.name); // modify the creep name to make it unique
 			let result = spawnToUse.createCreep(protoCreep.body, protoCreep.name, protoCreep.memory);
 			if (result == OK) {
@@ -149,6 +147,8 @@ export class Hatchery extends BaseComponent implements IHatchery {
 				this.availableSpawns.unshift(spawnToUse); // return the spawn to the available spawns list
 				return result;
 			}
+		} else { // otherwise, return busy
+			return ERR_BUSY;
 		}
 	}
 
@@ -164,11 +164,11 @@ export class Hatchery extends BaseComponent implements IHatchery {
 		this.productionQueue[priority].push(protoCreep);
 	}
 
-	private spawnHighestPriorityCreep(): number | string {
+	private spawnHighestPriorityCreep(): number | void {
 		let priorities: number[] = _.map(Object.keys(this.productionQueue), key => parseInt(key, 10)).sort();
 		for (let priority of priorities) {
-			if (this.productionQueue[priority].length > 0) {
-				let protocreep = this.productionQueue[priority].shift();
+			let protocreep = this.productionQueue[priority].shift();
+			if (protocreep) {
 				let result = this.createCreep(protocreep);
 				if (result == OK) {
 					return result;
@@ -180,14 +180,14 @@ export class Hatchery extends BaseComponent implements IHatchery {
 		}
 	}
 
-	private spawnEmergencySupplier(): number | string {
+	private spawnEmergencySupplier(): number {
 		let emergencySupplier = new SupplierSetup().create(this.colony, {
-			assignment: this.room.controller,
+			assignment            : this.room.controller,
 			patternRepetitionLimit: 1
 		});
 		let result = this.createCreep(emergencySupplier);
 		if (result != OK) {
-			this.log ("Cannot create emergency supplier: ", result);
+			this.log('Cannot create emergency supplier: ', result);
 		}
 		return result;
 	}

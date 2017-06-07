@@ -30,7 +30,7 @@ export function taskFromPrototask(protoTask: protoTask): Task {
 	// Retrieve name and target data from the protoTask
 	let taskName = protoTask.name;
 	let target = deref(protoTask._target.ref);
-	let task: ITask;
+	let task;
 	// Create a task object of the correct type
 	switch (taskName) {
 		case 'attack':
@@ -108,11 +108,11 @@ export function taskFromPrototask(protoTask: protoTask): Task {
 			break;
 	}
 	// Modify the task object to reflect any changed properties
-	task._creep = protoTask._creep;
-	task._target = protoTask._target;
-	task.taskData = protoTask.taskData;
-	task.data = protoTask.data;
+	task!._creep = protoTask._creep;
+	task!._target = protoTask._target;
+	task!.taskData = protoTask.taskData;
+	task!.data = protoTask.data;
 	// Return it
-	return task;
+	return task!;
 }
 

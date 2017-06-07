@@ -113,18 +113,20 @@ export default class Overmind {
 		// Loop until you run out of rooms to observe or observers
 		while (this.invisibleRooms.length > 0 && _.size(availableObservers) > 0) {
 			let roomName = this.invisibleRooms.shift();
-			let colonyName = this.colonyMap[roomName];
-			if (availableObservers[colonyName]) {
-				availableObservers[colonyName].observeRoom(roomName);
-				delete availableObservers[colonyName];
-			} else {
-				let observerRooms = _.keys(availableObservers);
-				let inRangeRoom = _.find(observerRooms,
-										 oRoomName => Game.map.getRoomLinearDistance(oRoomName, roomName)
-													  <= OBSERVER_RANGE);
-				if (inRangeRoom) {
-					availableObservers[inRangeRoom].observeRoom(roomName);
+			if (roomName) {
+				let colonyName = this.colonyMap[roomName];
+				if (availableObservers[colonyName]) {
+					availableObservers[colonyName].observeRoom(roomName);
 					delete availableObservers[colonyName];
+				} else {
+					let observerRooms = _.keys(availableObservers);
+					let inRangeRoom = _.find(observerRooms,
+											 oRoomName => Game.map.getRoomLinearDistance(oRoomName, roomName!)
+														  <= OBSERVER_RANGE);
+					if (inRangeRoom) {
+						availableObservers[inRangeRoom].observeRoom(roomName);
+						delete availableObservers[colonyName];
+					}
 				}
 			}
 		}

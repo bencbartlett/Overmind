@@ -2,7 +2,6 @@
 import profiler = require('../lib/screeps-profiler');
 import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskGetRenewed} from '../tasks/task_getRenewed';
-import {Colony} from '../Colony';
 import {Objective} from '../objectives/Objective';
 import {taskFromPrototask} from '../maps/map_tasks';
 
@@ -108,18 +107,18 @@ export abstract class AbstractSetup implements ISetup {
 	/* Generate (but not spawn) the largest creep possible, returns the creep as an object */
 	generateLargestCreep(colony: IColony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep {
 		let creepBody = this.generateBody(colony.room.energyCapacityAvailable, patternRepetitionLimit);
-		let protoCreep: protoCreep = { 				// object to add to spawner queue
-			body  : creepBody, 						// body array
-			name  : this.name, 						// name of the creep - gets modified by hatchery
-			memory: { 								// memory to initialize with
-				role         : this.name,			// role of the creep
-				task         : <ITask> null, 		// task the creep is performing
-				assignmentRef: assignment.ref, 		// ref of object/room(use controller) the creep is assigned to
-				assignmentPos: assignment.pos, 		// serialized position of the assignment
-				colony       : colony.name, 		// name of the colony the creep is assigned to
-				data         : { 					// rarely-changed data about the creep
-					origin   : colony.room.name,	// where it was spawned
-					replaceAt: 0, 					// when it should be replaced
+		let protoCreep: protoCreep = { 									// object to add to spawner queue
+			body  : creepBody, 											// body array
+			name  : this.name, 											// name of the creep - gets modified by hatchery
+			memory: { 													// memory to initialize with
+				role         : this.name,								// role of the creep
+				task         : null, 									// task the creep is performing
+				assignmentRef: assignment ? assignment.ref : null, 		// ref of object the creep is assigned to
+				assignmentPos: assignment ? assignment.pos : null, 		// serialized position of the assignment
+				colony       : colony.name, 							// name of the colony the creep is assigned to
+				data         : { 										// rarely-changed data about the creep
+					origin   : colony.room.name,						// where it was spawned
+					replaceAt: 0, 										// when it should be replaced
 				},
 			},
 		};
@@ -158,7 +157,7 @@ export abstract class AbstractCreep implements ICreep {
 	spawning: boolean;				// |
 	ticksToLive: number;			// |
 	settings: any;					// Adjustable settings object, can vary across roles
-	private _task: ITask; 			// Cached Task object that is instantiated once per tick and every time task changes
+	private _task: ITask | null; 	// Cached Task object that is instantiated once per tick and every time task changes
 
 	constructor(creep: Creep) {
 		this.creep = creep;
@@ -320,14 +319,14 @@ export abstract class AbstractCreep implements ICreep {
 	get assignedRoomFlag(): Flag {
 		let roomName = this.assignmentPos.roomName;
 		let colonyName = Overmind.colonyMap[roomName];
-		let flagName = roomName + ":" + colonyName;
+		let flagName = roomName + ':' + colonyName;
 		return Game.flags[flagName];
 	}
 
 	/* Instantiate the _task object when needed */
-	initializeTask(): ITask {
+	initializeTask(): ITask | null {
 		let protoTask = this.memory.task as protoTask;
-		if (this.memory.task) {
+		if (protoTask) {
 			// PERFORM TASK MIGRATION HERE
 			return taskFromPrototask(protoTask);
 		} else {
@@ -336,7 +335,7 @@ export abstract class AbstractCreep implements ICreep {
 	}
 
 	/* Wrapper for _task */
-	get task(): ITask {
+	get task(): ITask | null {
 		if (!this._task) {
 			this._task = this.initializeTask();
 		}
@@ -355,7 +354,7 @@ export abstract class AbstractCreep implements ICreep {
 		}
 		// Set the new task
 		this.memory.task = task;
-		if (task) { // If task isn't null
+		if (task && task.target) { // If task isn't null
 			// Register task target in cache
 			if (!Game.cache.targets[task.target.ref]) {
 				Game.cache.targets[task.target.ref] = [];
@@ -369,7 +368,8 @@ export abstract class AbstractCreep implements ICreep {
 
 	/* Does the creep have a valid task at the moment? */
 	get hasValidTask(): boolean {
-		return this.task && this.task.creep && this.task.target && this.task.isValidTask() && this.task.isValidTarget();
+		return this.task != null && this.task.creep != null && this.task.target != null &&
+			   this.task.isValidTask() && this.task.isValidTarget();
 	}
 
 	/* Creeps are idle if they don't have a task. */
@@ -385,7 +385,7 @@ export abstract class AbstractCreep implements ICreep {
 	}
 
 	/* Dereference the objective that the creep is working on. */
-	get objective(): Objective {
+	get objective(): Objective | null {
 		if (this.memory.objective) {
 			return this.colony.overlord.objectiveGroup.objectivesByRef[this.memory.objectives];
 		} else {

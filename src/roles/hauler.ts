@@ -23,16 +23,12 @@ export class HaulerCreep extends AbstractCreep {
 	}
 
 	doDeposit() {
-		let target: StructureContainer | StructureStorage;
 		let depositContainers = _.map(this.colony.overlord.resourceRequests.resourceIn.haul,
 									  request => request.target) as Container[];
 		if (depositContainers.length > 0) {
-			target = depositContainers[0];
-		} else {
-			target = this.colony.storage;
-		}
-		if (target) {
-			this.task = new TaskDeposit(target);
+			this.task = new TaskDeposit(depositContainers[0]);
+		} else if (this.colony.storage) {
+			this.task = new TaskDeposit(this.colony.storage);
 		}
 	}
 

@@ -34,8 +34,8 @@ export abstract class Task implements ITask {
 		this._target = {
 			ref : '',
 			_pos: {
-				x       : null,
-				y       : null,
+				x       : -1,
+				y       : -1,
 				roomName: '',
 			},
 		};
@@ -51,7 +51,6 @@ export abstract class Task implements ITask {
 		};
 		if (target) {
 			this.target = target;
-			this.targetPos = target.pos;
 		} else {
 			// A task must have a target. If a task is reinstantiated without a target (for example, dismantling
 			// the target on the previous tick), it will be caught in the same tick by isValidTarget().
@@ -69,18 +68,20 @@ export abstract class Task implements ITask {
 	}
 
 	// Getter/setter for task.target
-	get target(): RoomObject {
+	get target(): RoomObject | null {
 		let tar = deref(this._target.ref);
 		if (!tar) {
 			this.remove();
+			return null;
 		} else {
 			return tar;
 		}
 	}
 
-	set target(target: RoomObject) {
+	set target(target: RoomObject | null) {
 		if (target) {
 			this._target.ref = target.ref;
+			this.targetPos = target.pos;
 		} else {
 			this.remove();
 		}
@@ -119,7 +120,7 @@ export abstract class Task implements ITask {
 		let options = Object.assign({},
 									this.data.travelToOptions,
 									{range: this.taskData.targetRange});
-		return this.creep.travelTo(this.target, options);
+		return this.creep.travelTo(this.targetPos, options);
 	}
 
 	// Execute this task each tick. Returns nothing unless work is done.

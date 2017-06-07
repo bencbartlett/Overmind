@@ -10,11 +10,11 @@ export class TaskTransfer extends Task {
 		super('transfer', target);
 		// Settings
 		this.taskData.moveColor = 'blue';
-		this.data.resourceType = null; // this needs to be overwritten before assignment
+		this.data.resourceType = undefined; // this needs to be overwritten before assignment
 	}
 
 	isValidTask() {
-		let carry = this.creep.carry[this.data.resourceType];
+		let carry = this.creep.carry[this.data.resourceType!]; // TODO: refactor
 		if (carry) {
 			return carry > 0;
 		} else {
@@ -44,6 +44,6 @@ export class TaskTransfer extends Task {
 	}
 
 	work() {
-		return this.creep.transfer(this.target, this.data.resourceType);
+		return this.creep.transfer(this.target, this.data.resourceType!);
 	}
 }

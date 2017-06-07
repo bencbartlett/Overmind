@@ -17,17 +17,17 @@ export class Colony implements IColony {
 	controller: StructureController;					// These are all duplicated from room properties
 	spawns: StructureSpawn[];							// |
 	extensions: StructureExtension[];					// |
-	storage: StructureStorage | null;					// |
+	storage: StructureStorage | undefined;				// |
 	links: StructureLink[];								// |
-	terminal: StructureTerminal | null;					// |
+	terminal: StructureTerminal | undefined;			// |
 	towers: StructureTower[];							// |
 	labs: StructureLab[];								// |
-	powerSpawn: StructurePowerSpawn | null;				// |
-	nuker: StructureNuker | null;						// |
-	observer: StructureObserver | null;					// |
-	commandCenter: ICommandCenter | null;				// Component with logic for non-spawning structures
-	hatchery: IHatchery | null;							// Component to encapsulate spawner logic
-	upgradeSite: IUpgradeSite | null;					// Component to provide upgraders with uninterrupted energy
+	powerSpawn: StructurePowerSpawn | undefined;		// |
+	nuker: StructureNuker | undefined;					// |
+	observer: StructureObserver | undefined;			// |
+	commandCenter: ICommandCenter | undefined;			// Component with logic for non-spawning structures
+	hatchery: IHatchery;								// Component to encapsulate spawner logic
+	upgradeSite: IUpgradeSite;							// Component to provide upgraders with uninterrupted energy
 	miningGroups: IMiningGroup[]; 						// Component to group mining sites into a hauling group
 	miningSites: { [sourceID: string]: IMiningSite };	// Component with logic for mining and hauling
 	incubating: boolean;								// If the colony is currently being cared for by another one
@@ -59,7 +59,7 @@ export class Colony implements IColony {
 		this.outposts = _.compact(_.map(outposts, outpost => Game.rooms[outpost]));
 		this.rooms = [Game.rooms[roomName]].concat(this.outposts);
 		// Associate real colony components
-		this.controller = this.room.controller;
+		this.controller = this.room.controller!; // must be controller since colonies are based in owned rooms
 		this.spawns = this.room.spawns;
 		this.extensions = this.room.extensions;
 		this.storage = this.room.storage;
@@ -83,17 +83,15 @@ export class Colony implements IColony {
 		if (this.storage && this.storage.linked) {
 			this.commandCenter = new CommandCenter(this, this.storage);
 		}
-		// Instantiate the hatchery if there are spawns
-		if (this.spawns[0]) {
-			this.hatchery = new Hatchery(this, this.spawns[0]);
-		}
+		// Instantiate the hatchery
+		this.hatchery = new Hatchery(this, this.spawns[0]);
 		// Instantiate the upgradeSite
 		this.upgradeSite = new UpgradeSite(this, this.controller);
 		// Instantiate a MiningGroup for each non-component link and for storage
-		let claimedLinks = _.compact([this.commandCenter.link,
-									  this.hatchery.link,
+		let claimedLinks = _.compact([this.commandCenter ? this.commandCenter.link : null,
+									  this.hatchery ? this.hatchery.link : null,
 									  this.upgradeSite.input]);
-		let unclaimedLinks = _.remove(this.links, link => claimedLinks.includes(link));
+		let unclaimedLinks = _.filter(this.links, link => claimedLinks.includes(link) == false);
 		// Mining sites is an object of ID's and MiningSites
 		let sourceIDs = _.map(this.sources, source => source.ref);
 		let miningSites = _.map(this.sources, source => new MiningSite(this, source));
