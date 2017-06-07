@@ -260,12 +260,12 @@ Object.defineProperty(StructureTerminal.prototype, 'energy', {
 	},
 });
 
-Object.defineProperty(StructureTerminal.prototype, 'brain', {
-	get () {
-		//noinspection NodeModulesDependencies
-		return Overmind.TerminalBrains[this.room.name];
-	},
-});
+// Object.defineProperty(StructureTerminal.prototype, 'brain', {
+// 	get () {
+// 		//noinspection NodeModulesDependencies
+// 		return Overmind.TerminalBrains[this.room.name];
+// 	},
+// });
 
 Object.defineProperty(StructureTerminal.prototype, 'isFull', { // if this container-like object is full
 	get () {

@@ -1,5 +1,5 @@
 declare var global: any;
-declare var Overmind: any;
+declare var Overmind: IOvermind;
 declare var flagCodes: { [category: string]: flagCat };
 
 interface Game {
@@ -296,11 +296,8 @@ interface ICommandCenter extends IHiveCluster {
 	observer: StructureObserver | undefined;
 	manager: ICreep;
 	idlePos: RoomPosition;
-	depositStructures: (Link | Tower | Terminal | StructureNuker | PowerSpawn | Lab)[];
-	withdrawStructures: (Link | Terminal)[];
-	settings: {
-		refillTowersBelow: number,
-	};
+	// depositStructures: (Link | Tower | Terminal | StructureNuker | PowerSpawn | Lab)[];
+	// withdrawStructures: (Link | Terminal)[];
 }
 
 interface IHatchery extends IHiveCluster {
@@ -325,6 +322,16 @@ interface IUpgradeSite extends IHiveCluster {
 	inputConstructionSite: ConstructionSite | null;
 }
 
+interface IOvermind {
+	name: string;
+	Colonies: { [roomName: string]: IColony };
+	colonyMap: { [roomName: string]: string };
+	invisibleRooms: string[];
+	Overlords: { [roomName: string]: IOverlord };
+	init(): void;
+	run(): void;
+}
+
 interface IOverlord {
 	name: string;
 	memory: any;
@@ -332,20 +339,20 @@ interface IOverlord {
 	colony: IColony;
 	settings: any;
 	// directives: any[]; // TODO: IDirective[]
-	objectivePriorities: string[];
+	// objectivePriorities: string[];
 	objectiveGroup: IObjectiveGroup;
 	resourceRequests: IResourceRequestGroup;
 	log(message: string): void;
 	init(): void;
-	registerObjectives(): void;
+	// registerObjectives(): void;
 	// countObjectives(name: string): number;
 	assignTask(creep: ICreep): void;
-	handleCoreSpawnOperations(): void;
-	handleIncubationSpawnOperations(): void;
-	handleAssignedSpawnOperations(): void;
-	handleSpawnOperations(): void;
-	handleTerminalOperations(): void;
-	handleSafeMode(): void;
+	// handleCoreSpawnOperations(): void;
+	// handleIncubationSpawnOperations(): void;
+	// handleAssignedSpawnOperations(): void;
+	// handleSpawnOperations(): void;
+	// handleTerminalOperations(): void;
+	// handleSafeMode(): void;
 	run(): void;
 }
 
