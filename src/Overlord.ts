@@ -169,7 +169,7 @@ export class Overlord implements IOverlord {
 			// 	supplierSize = 1; // If the room runs out of suppliers at low energy, spawn a small supplier
 			// }
 			let numSuppliers = _.filter(this.colony.getCreepsByRole('supplier'), // number of big suppliers in colony
-										creep => creep.getActiveBodyparts(MOVE) == supplierSize).length;
+										creep => creep.getActiveBodyparts(CARRY) == supplierSize).length;
 			let numSuppliersNeeded = 1;
 			if (numSuppliers < numSuppliersNeeded) {
 				this.colony.hatchery.enqueue(new SupplierSetup().create(this.colony, {
@@ -221,9 +221,12 @@ export class Overlord implements IOverlord {
 		// Ensure there's enough workers
 		if (!this.colony.incubating) { // don't make your own workers during incubation period, just keep existing ones alive
 			let numWorkers = this.colony.getCreepsByRole('worker').length;
+			let numMiners = this.colony.getCreepsByRole('miner').length;
 			// Only spawn workers once containers are up
+			// Spawn 1 worker for each miner
+			// Spawn worker if there is too much energy stored and room controller is below 3 (faster expand)
 			let numWorkersNeeded = 1; // TODO: maybe a better metric than this
-			if (numWorkers < numWorkersNeeded && this.room.storageUnits.length > 0) {
+			if ((numWorkers < numWorkersNeeded || numWorkers < numMiners/2 || (this.colony.energyInRoom > 1000 && this.room.controller.level < 3)) && this.room.storageUnits.length > 0) {
 				this.colony.hatchery.enqueue(
 					new WorkerSetup().create(this.colony, {
 						assignment            : this.room.controller!,

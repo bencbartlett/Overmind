@@ -35,6 +35,7 @@ export class Colony implements IColony {
 	creeps: ICreep[];									// Creeps bound to the colony
 	creepsByRole: { [roleName: string]: ICreep[] };		// Creeps hashed by their role name
 	sources: Source[];									// Sources in all colony rooms
+	energyInRoom: number;              // All energy in room
 	data: {												// Data about the colony, calculated once per tick
 		numHaulers: number,									// Number of haulers in the colony
 		haulingPowerSupplied: number,						// Amount of hauling supplied in units of CARRY parts
@@ -75,6 +76,7 @@ export class Colony implements IColony {
 		// Register things across all rooms in the colony
 		this.flags = _.flatten(_.map(this.rooms, room => room.flags));
 		this.sources = _.flatten(_.map(this.rooms, room => room.sources));
+		this.energyInRoom = 0;
 	}
 
 	/* Instantiate and associate virtual colony components to group similar structures together */
@@ -122,6 +124,16 @@ export class Colony implements IColony {
 			haulingPowerSupplied: haulingPowerSuppliedValue,
 			numHaulers          : numHaulersValue,
 		};
+
+		let energySum = 0;
+		let myStructures = this.room.find(FIND_STRUCTURES);
+  		for (let structureName in myStructures) {
+    		let structure = myStructures[structureName];
+    		if(structure.store && structure.store[RESOURCE_ENERGY] > 0){
+      		energySum += structure.store[RESOURCE_ENERGY];
+    		}
+  		}
+		this.energyInRoom = energySum;
 	}
 
 	get overlord(): IOverlord {
@@ -183,4 +195,3 @@ export class Colony implements IColony {
 		}
 	}
 }
-
