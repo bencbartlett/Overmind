@@ -169,7 +169,7 @@ export class Overlord implements IOverlord {
 			// 	supplierSize = 1; // If the room runs out of suppliers at low energy, spawn a small supplier
 			// }
 			let numSuppliers = _.filter(this.colony.getCreepsByRole('supplier'), // number of big suppliers in colony
-										creep => creep.getActiveBodyparts(MOVE) == supplierSize).length;
+										creep => creep.getActiveBodyparts(CARRY) == supplierSize).length;
 			let numSuppliersNeeded = 1;
 			if (numSuppliers < numSuppliersNeeded) {
 				this.colony.hatchery.enqueue(new SupplierSetup().create(this.colony, {
