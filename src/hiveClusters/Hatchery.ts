@@ -8,7 +8,7 @@ import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {SupplierSetup} from '../roles/supplier';
 
 export class Hatchery extends AbstractHiveCluster implements IHatchery {
-	memory: any; 											// Memory.colonies.hatchery
+	memory: HatcheryMemory; 								// Memory.colonies.hatchery
 	spawns: Spawn[]; 										// List of spawns in the hatchery
 	availableSpawns: Spawn[]; 								// Spawns that are available to make stuff right now
 	extensions: Extension[]; 								// List of extensions in the hatchery
@@ -135,11 +135,11 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		return (roleName + '_' + i);
 	};
 
-	private createCreep(protoCreep: protoCreep): number {
+	private spawnCreep(protoCreep: protoCreep): number {
 		let spawnToUse = this.availableSpawns.shift(); // get a spawn to use
 		if (spawnToUse) { // if there is a spawn, create the creep
 			protoCreep.name = this.generateCreepName(protoCreep.name); // modify the creep name to make it unique
-			let result = spawnToUse.createCreep(protoCreep.body, protoCreep.name, protoCreep.memory);
+			let result = spawnToUse.spawnCreep(protoCreep.body, protoCreep.name, {memory: protoCreep.memory});
 			if (result == OK) {
 				return result;
 			} else {
@@ -168,7 +168,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		for (let priority of priorities) {
 			let protocreep = this.productionQueue[priority].shift();
 			if (protocreep) {
-				let result = this.createCreep(protocreep);
+				let result = this.spawnCreep(protocreep);
 				if (result == OK) {
 					return result;
 				} else {
@@ -184,7 +184,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 			assignment            : this.room.controller,
 			patternRepetitionLimit: 1
 		});
-		let result = this.createCreep(emergencySupplier);
+		let result = this.spawnCreep(emergencySupplier);
 		if (result != OK) {
 			this.log('Cannot create emergency supplier: ', result);
 		}

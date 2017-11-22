@@ -1,6 +1,6 @@
 // Global settings file containing player information
 
-export var myUsername: string = 'Muon'; // Your player name, used for checking reservations
+export var myUsername: string = 'Muon'; // TODO: change to global constant // Your player name, used for checking reservations
 
 export var reserveCredits: number  = 10000; // Number of credits to reserve before buying market orders
 

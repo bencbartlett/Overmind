@@ -1,5 +1,4 @@
 // import {tasks} from '../maps/map_tasks';
-import profiler = require('../lib/screeps-profiler');
 import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskGetRenewed} from '../tasks/task_getRenewed';
 import {Objective} from '../objectives/Objective';
@@ -51,12 +50,12 @@ export abstract class AbstractSetup implements ISetup {
 
 	/* Generate the largest body of a given pattern that is producable from a room,
 	 * subject to limitations from maxRepeats */
-	generateBody(availableEnergy: number, maxRepeats = Infinity): string[] {
+	generateBody(availableEnergy: number, maxRepeats = Infinity): BodyPartConstant[] {
 		let patternCost, patternLength, numRepeats;
 		let prefix = this.settings.bodyPrefix;
 		let suffix = this.settings.bodySuffix;
 		let proportionalPrefixSuffix = this.settings.proportionalPrefixSuffix;
-		let body: string[] = [];
+		let body: BodyPartConstant[] = [];
 		// calculate repetitions
 		if (proportionalPrefixSuffix) { // if prefix and suffix are to be kept proportional to body size
 			patternCost = this.bodyCost(prefix) + this.bodyCost(this.settings.bodyPattern) + this.bodyCost(suffix);
@@ -151,7 +150,7 @@ export abstract class AbstractCreep implements ICreep {
 	hits: number;					// |
 	hitsMax: number;				// |
 	id: string;						// |
-	memory: ICreepMemory;			// | See the ICreepMemory interface for structure
+	memory: CreepMemory;			// | See the ICreepMemory interface for structure
 	name: string;					// |
 	pos: RoomPosition;				// |
 	ref: string;					// |
@@ -204,11 +203,11 @@ export abstract class AbstractCreep implements ICreep {
 		return this.creep.dismantle(target);
 	}
 
-	drop(resourceType: string, amount?: number): number {
+	drop(resourceType: ResourceConstant, amount?: number): number {
 		return this.creep.drop(resourceType, amount);
 	}
 
-	getActiveBodyparts(type: string): number {
+	getActiveBodyparts(type: BodyPartConstant): number {
 		return this.creep.getActiveBodyparts(type);
 	}
 
@@ -216,7 +215,7 @@ export abstract class AbstractCreep implements ICreep {
 		return this.creep.harvest(source);
 	}
 
-	move(direction: number): number {
+	move(direction: DirectionConstant): number {
 		return this.creep.move(direction);
 	}
 
@@ -272,7 +271,7 @@ export abstract class AbstractCreep implements ICreep {
 		}
 	}
 
-	transfer(target: Creep | AbstractCreep | Structure, resourceType: string, amount?: number): number {
+	transfer(target: Creep | AbstractCreep | Structure, resourceType: ResourceConstant, amount?: number): number {
 		if (target instanceof AbstractCreep) {
 			return this.creep.transfer(target.creep, resourceType, amount);
 		} else {
@@ -280,7 +279,7 @@ export abstract class AbstractCreep implements ICreep {
 		}
 	}
 
-	withdraw(target: Creep | AbstractCreep | Structure, resourceType: string, amount?: number): number {
+	withdraw(target: Creep | AbstractCreep | Structure, resourceType: ResourceConstant, amount?: number): number {
 		if (target instanceof Creep) {
 			return target.transfer(this.creep, resourceType, amount);
 		} else if (target instanceof AbstractCreep) {

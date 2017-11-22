@@ -1,5 +1,5 @@
 interface Creep {
-	memory: ICreepMemory; // this must be changed in the screeps typings index.d.ts
+	memory: CreepMemory; // this must be changed in the screeps typings index.d.ts
 	getBodyparts(partType: string): number;
 	colony: IColony;
 	lifetime: number;

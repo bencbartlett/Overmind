@@ -1,6 +1,5 @@
 // Destroyer: go to a room, alternate attacking and retreating to heal, then methodically destroy everything by range
 
-import {TaskGetBoosted} from '../tasks/task_getBoosted';
 import {TaskGoToRoom} from '../tasks/task_goToRoom';
 import {TaskAttack} from '../tasks/task_attack';
 import {AbstractCreep, AbstractSetup} from './Abstract';

@@ -87,7 +87,7 @@ export function taskFromPrototask(protoTask: protoTask): Task {
 		case 'repair':
 			task = new TaskRepair(target as Structure);
 			break;
-		case 'colony':
+		case 'colony': // TODO: change to reserve
 			task = new TaskReserve(target as Controller);
 			break;
 		case 'signController':

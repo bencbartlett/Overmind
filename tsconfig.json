@@ -4,29 +4,27 @@
     "target": "es6",
     "removeComments": false,
     "noEmitOnError": true,
+    "noImplicitThis": false,
     "noResolve": false,
-    "strict": true,
-    "noImplicitThis": false, // prototypes complain if this is turned on
-//    "noImplicitAny": true,
     "experimentalDecorators": true,
-//    "strictNullChecks": false,
+    "strict": true,
     "noUnusedParameters": true,
-    "noUnusedLocals": false,
-    "suppressExcessPropertyErrors": true,
+    "noUnusedLocals": true,
     "sourceMap": true,
-    "outDir": "./dist",
+    "baseUrl": "./src/",
+    "outDir": "./dist/",
     "allowJs": true,
     "lib": [
       "dom",
       "es2016"
-    ]
+    ],
+    "types": ["lodash", "typed-screeps", "screeps-profiler"]
   },
   "compileOnSave": false,
   "include": [
     "webpack.config.ts",
     "config/*.ts",
     "libs/*.ts",
-    "typings/**/*.d.ts",
     "src/**/*.ts",
     "src/**/*.d.ts"
   ],
@@ -36,3 +34,42 @@
     "src/snippets"
   ]
 }
+
+//{
+//  "compilerOptions": {
+//    "module": "commonjs",
+//    "target": "es6",
+//    "removeComments": false,
+//    "noEmitOnError": true,
+//    "noResolve": false,
+//    "strict": true,
+//    "noImplicitThis": false, // prototypes complain if this is turned on
+////    "noImplicitAny": true,
+//    "experimentalDecorators": true,
+////    "strictNullChecks": false,
+//    "noUnusedParameters": true,
+//    "noUnusedLocals": false,
+//    "suppressExcessPropertyErrors": true,
+//    "sourceMap": true,
+//    "outDir": "./dist",
+//    "allowJs": true,
+//    "lib": [
+//      "dom",
+//      "es2016"
+//    ]
+//  },
+//  "compileOnSave": false,
+//  "include": [
+//    "webpack.config.ts",
+//    "config/*.ts",
+//    "libs/*.ts",
+//    "typings/**/*.d.ts",
+//    "src/**/*.ts",
+//    "src/**/*.d.ts"
+//  ],
+//  "exclude": [
+//    "dist",
+//    "node_modules",
+//    "src/snippets"
+//  ]
+//}

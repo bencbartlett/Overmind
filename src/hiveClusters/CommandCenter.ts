@@ -7,7 +7,7 @@ import {reserveCredits} from '../settings/settings_user';
 import {terminalSettings} from '../settings/settings_terminal';
 
 export class CommandCenter extends AbstractHiveCluster implements ICommandCenter {
-	memory: any;											// Memory.colonies.commandCenter
+	memory: CommandCenterMemory;							// Memory.colonies.commandCenter
 	storage: StructureStorage;								// The colony storage, also the instantiation object
 	link: StructureLink | undefined;						// Link closest to storage
 	terminal: StructureTerminal | undefined;				// The colony terminal
@@ -119,7 +119,7 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 		}
 		let toBuy: { [mineral: string]: number } = {};
 		for (let mineral in this.terminalSettings.resourceAmounts) {
-			let amount = this.terminal.store[mineral] || 0;
+			let amount = this.terminal.store[<ResourceConstant>mineral] || 0;
 			if (mineral != RESOURCE_ENERGY && amount < this.terminalSettings.resourceAmounts[mineral]) {
 				toBuy[mineral] = this.terminalSettings.resourceAmounts[mineral] - amount;
 			}

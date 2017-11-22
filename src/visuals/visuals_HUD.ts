@@ -1,5 +1,5 @@
 var fontSize;
-var style = {color: '#ffffff', align: 'left', opacity: 0.5, font: '1.0'};
+var style = {color: '#ffffff', align: 'left', opacity: 0.5, font: '1.0'} as TextStyle;
 var fontScale = 1.3;
 var row = 0;
 var column = 0;

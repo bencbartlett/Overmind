@@ -15,7 +15,7 @@ export class TaskGetBoosted extends Task {
 	}
 
 	isValidTarget() {
-		var target = this.target;
+		// var target = this.target;
 		return false; // (target != null && target.my && target.structureType == STRUCTURE_LAB);
 	}
 

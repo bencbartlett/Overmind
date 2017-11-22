@@ -1,4 +1,12 @@
-declare var global: any;
+declare namespace NodeJS {
+	interface Global {
+		deref(ref: string): RoomObject;
+		derefRoomPosition(protoPos: protoPos): RoomPosition;
+		Overmind: IOvermind;
+		flagCodes: { [category: string]: flagCat };
+	}
+}
+
 declare var Overmind: IOvermind;
 declare var flagCodes: { [category: string]: flagCat };
 
@@ -26,7 +34,8 @@ interface ISetup {
 	create(colony: IColony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep;
 }
 
-interface ICreepMemory {
+
+interface CreepMemory {
 	role: string;
 	task: protoTask | null;
 	assignmentRef: string | null;
@@ -49,6 +58,43 @@ interface ICreepMemory {
 	_trav: any;
 }
 
+interface FlagMemory {
+	amount?: number;
+	alwaysUp?: boolean;
+	maxSize?: number;
+	mineralType?: MineralConstant;
+	IO?: string;
+	maxAmount?: number;
+	assignedRoom?: string;
+	role?: string;
+}
+
+interface RoomMemory {
+	colony: string;
+	avoid?: number;
+}
+
+interface SpawnMemory {
+}
+
+interface ColonyMemory {
+	overlord: OverlordMemory;
+	hatchery: HatcheryMemory;
+	commandCenter: CommandCenterMemory;
+}
+
+interface OverlordMemory {
+}
+
+interface HatcheryMemory {
+	productionQueue: { [priority: number]: protoCreep[] };
+	idlePos: protoPos;
+}
+
+interface CommandCenterMemory {
+	idlePos: protoPos;
+}
+
 interface ICreep {
 	// Creep properties
 	creep: Creep;
@@ -59,7 +105,7 @@ interface ICreep {
 	hits: number;
 	hitsMax: number;
 	id: string;
-	memory: ICreepMemory;
+	memory: CreepMemory;
 	name: string;
 	pos: RoomPosition;
 	ref: string;
@@ -125,7 +171,7 @@ interface ICreep {
 
 interface IColony {
 	name: string;
-	memory: any;
+	memory: ColonyMemory;
 	roomNames: string[];
 	room: Room;
 	overlord: IOverlord;
@@ -183,7 +229,7 @@ interface flagCat {
 }
 
 interface protoCreep {
-	body: string[];
+	body: BodyPartConstant[];
 	name: string;
 	memory: any;
 }
@@ -314,7 +360,7 @@ interface IMiningGroup extends IHiveCluster {
 }
 
 interface ICommandCenter extends IHiveCluster {
-	memory: any;
+	memory: CommandCenterMemory;
 	storage: StructureStorage;
 	link: StructureLink | undefined;
 	terminal: StructureTerminal | undefined;
@@ -325,12 +371,10 @@ interface ICommandCenter extends IHiveCluster {
 	observer: StructureObserver | undefined;
 	manager: ICreep;
 	idlePos: RoomPosition;
-	// depositStructures: (Link | Tower | Terminal | StructureNuker | PowerSpawn | Lab)[];
-	// withdrawStructures: (Link | Terminal)[];
 }
 
 interface IHatchery extends IHiveCluster {
-	memory: any;
+	memory: HatcheryMemory;
 	spawns: Spawn[];
 	availableSpawns: Spawn[];
 	extensions: Extension[];
@@ -363,25 +407,15 @@ interface IOvermind {
 
 interface IOverlord {
 	name: string;
-	memory: any;
+	memory: OverlordMemory;
 	room: Room;
 	colony: IColony;
 	settings: any;
-	// directives: any[]; // TODO: IDirective[]
-	// objectivePriorities: string[];
 	objectiveGroup: IObjectiveGroup;
 	resourceRequests: IResourceRequestGroup;
 	log(message: string): void;
 	init(): void;
-	// registerObjectives(): void;
-	// countObjectives(name: string): number;
 	assignTask(creep: ICreep): void;
-	// handleCoreSpawnOperations(): void;
-	// handleIncubationSpawnOperations(): void;
-	// handleAssignedSpawnOperations(): void;
-	// handleSpawnOperations(): void;
-	// handleTerminalOperations(): void;
-	// handleSafeMode(): void;
 	run(): void;
 }
 

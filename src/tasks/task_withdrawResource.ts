@@ -20,7 +20,13 @@ export class TaskWithdrawResource extends Task {
 
 	isValidTarget() {
 		let target = this.target;
-		return target && target.store && target.store[this.data.resourceType!] > 0; // TODO: refactor
+		if (target) {
+			let amount = target.store[<ResourceConstant>this.data.resourceType!];
+			if (amount) {
+				return amount > 0;
+			}
+		}
+		return false;
 	}
 
 	work() {

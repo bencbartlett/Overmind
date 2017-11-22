@@ -13,7 +13,7 @@ export class TaskLoadLab extends Task {
 	}
 
 	isValidTask() {
-		let carry = this.creep.carry[this.data.resourceType!];
+		let carry = this.creep.carry[<ResourceConstant>this.data.resourceType!];
 		if (carry) {
 			return carry > 0;
 		} else {

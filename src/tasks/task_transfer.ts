@@ -14,7 +14,7 @@ export class TaskTransfer extends Task {
 	}
 
 	isValidTask() {
-		let carry = this.creep.carry[this.data.resourceType!]; // TODO: refactor
+		let carry = this.creep.carry[<ResourceConstant>this.data.resourceType!]; // TODO: refactor
 		if (carry) {
 			return carry > 0;
 		} else {

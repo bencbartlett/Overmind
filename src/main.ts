@@ -34,12 +34,12 @@ import {flagCodesMap} from './maps/map_flag_codes';
 import {Preprocessing} from './preprocessing';
 import {DataLogger} from './logging/data_logger';
 import {visuals} from './visuals/visuals';
-import profiler = require('./lib/screeps-profiler');  // gdborton's CPU profiler
+// import profiler = require('./lib/screeps-profiler');  // gdborton's CPU profiler
 // import {migrate} from './versionMigration/migration';
 
 // Global declarations
-declare var Overmind: IOvermind;
-declare var flagCodes: { [category: string]: flagCat };
+// declare var Overmind: IOvermind;
+// declare var flagCodes: { [category: string]: flagCat };
 
 // Enable screeps profiler
 // profiler.enable();

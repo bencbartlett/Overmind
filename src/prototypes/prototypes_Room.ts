@@ -1,5 +1,5 @@
 // Room prototypes - commonly used room properties and methods
-import {visuals} from '../visuals/visuals';
+// import {visuals} from '../visuals/visuals';
 import {controllerSignature, myUsername} from '../settings/settings_user';
 
 // Room brain ==========================================================================================================

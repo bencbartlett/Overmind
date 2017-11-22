@@ -1,3 +1,27 @@
+//{
+//  "extends" : [
+//    "tslint:recommended"
+//  ],
+//  "rules": {
+//    "forin": false,
+//    "interface-name": [false],
+//    "no-console": [false],
+//    "no-namespace": [true, "allow-declarations"],
+//    "trailing-comma": [
+//      true,
+//      "never"
+//    ],
+//    "variable-name": [
+//      true,
+//      "ban-keywords",
+//      "check-format",
+//      "allow-pascal-case",
+//      "allow-leading-underscore"
+//    ]
+//  }
+//}
+
+
 {
   "extends" : [
     "tslint:recommended"

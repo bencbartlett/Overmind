@@ -9,6 +9,7 @@ type targetType =
 	StructurePowerSpawn |
 	StructureSpawn |
 	StructureStorage |
+	StructureTower |
 	StructureTerminal;
 export class TaskDeposit extends Task {
 	target: targetType;

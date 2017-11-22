@@ -26,7 +26,7 @@ import {ManagerSetup} from './roles/manager';
 
 export class Overlord implements IOverlord {
 	name: string; 								// Name of the primary colony room
-	memory: any; 								// Memory.colony.overlord
+	memory: OverlordMemory; 					// Memory.colony.overlord
 	room: Room; 								// Colony room
 	colony: Colony; 							// Instantiated colony object
 	settings: any; 								// Adjustable settings

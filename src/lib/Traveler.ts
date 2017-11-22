@@ -149,7 +149,7 @@ export class Traveler {
 			options.returnData.state = state;
 			options.returnData.path = travelData.path;
 		}
-		return creep.move(nextDirection);
+		return creep.move(<DirectionConstant>nextDirection);
 	}
 
 	/**
@@ -269,7 +269,7 @@ export class Traveler {
 			if (route) { allowedRooms = route; }
 		}
 
-		let roomsSearched = 0;
+		// let roomsSearched = 0;
 
 		let callback = (roomName: string): CostMatrix | boolean => {
 
@@ -282,7 +282,7 @@ export class Traveler {
 				return false;
 			}
 
-			roomsSearched++;
+			// roomsSearched++;
 
 			let matrix;
 			let room = Game.rooms[roomName];

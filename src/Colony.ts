@@ -10,7 +10,7 @@ import {MiningGroup} from './hiveClusters/MiningGroup';
 
 export class Colony implements IColony {
 	name: string;										// Name of the primary colony room
-	memory: any;										// Memory.colonies[name]
+	memory: ColonyMemory;								// Memory.colonies[name]
 	roomNames: string[];								// The names of all rooms including the primary room
 	room: Room;											// Primary (owned) room of the colony
 	outposts: Room[];									// Rooms for remote resource collection

@@ -24,10 +24,13 @@ export class MineralSupplierCreep extends AbstractCreep {
 
 	collectForLab(lab: Lab) {
 		let term = this.colony.terminal;
-		if (term && term.store[lab.assignedMineralType] > 0) {
-			var withdrawThis = new TaskWithdraw(term);
-			withdrawThis.data.resourceType = lab.assignedMineralType;
-			this.task = withdrawThis;
+		if (term) {
+			let amount = term.store[<ResourceConstant>lab.assignedMineralType];
+			if (amount && amount > 0) {
+				var withdrawThis = new TaskWithdraw(term);
+				withdrawThis.data.resourceType = lab.assignedMineralType;
+				this.task = withdrawThis;
+			}
 		}
 	}
 

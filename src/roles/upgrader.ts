@@ -1,5 +1,4 @@
 // Upgrader creep - sits and upgrades spawn
-import {TaskGetBoosted} from '../tasks/task_getBoosted';
 import {TaskSignController} from '../tasks/task_signController';
 import {TaskWithdraw} from '../tasks/task_withdraw';
 import {AbstractCreep, AbstractSetup} from './Abstract';

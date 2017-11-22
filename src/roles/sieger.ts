@@ -2,7 +2,6 @@
 // Best used to siege a contiguous room; healing stations of some sort should be stationed in the neighboring room
 // Sieger will dismanlte walls while under fire until it is low enough that it needs to leave the room to be healed
 
-import {TaskGetBoosted} from '../tasks/task_getBoosted';
 import {TaskGoToRoom} from '../tasks/task_goToRoom';
 import {TaskDismantle} from '../tasks/task_dismantle';
 import {AbstractCreep, AbstractSetup} from './Abstract';

@@ -4,7 +4,6 @@ import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {pathing} from '../pathing/pathing';
 import {ObjectiveGroup} from '../objectives/ObjectiveGroup';
 import {ObjectiveCollectEnergyMiningSite} from '../objectives/objectives';
-import {ResourceRequestGroup} from '../resourceRequests/ResourceRequestGroup';
 
 
 export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
@@ -70,7 +69,7 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 			linkPowerAvailableValue = _.sum(_.map(this.links!, link => LINK_CAPACITY /
 																	   link.pos.getRangeTo(this.colony.storage!)));
 			if (linkPowerNeededValue > linkPowerAvailableValue) {
-				this.log('Insufficient linking power:', linkPowerAvailableValue + "/" + linkPowerNeededValue);
+				this.log('Insufficient linking power:', linkPowerAvailableValue + '/' + linkPowerNeededValue);
 			}
 		}
 		// Stick everything in the data object
