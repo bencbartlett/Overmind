@@ -47,11 +47,11 @@ export class Preprocessing {
 	cacheObjectives() {
 		for (let name in Game.creeps) {
 			let creep = Game.creeps[name];
-			if (creep.memory.objective) {
-				if (!Game.cache.objectives[creep.memory.objective]) {
-					Game.cache.objectives[creep.memory.objective] = [];
+			if (creep.memory.objectiveRef) {
+				if (!Game.cache.objectives[creep.memory.objectiveRef]) {
+					Game.cache.objectives[creep.memory.objectiveRef] = [];
 				}
-				Game.cache.objectives[creep.memory.objective].push(name);
+				Game.cache.objectives[creep.memory.objectiveRef].push(name);
 			}
 		}
 	}

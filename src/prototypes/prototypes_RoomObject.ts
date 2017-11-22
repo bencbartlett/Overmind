@@ -61,8 +61,7 @@ Object.defineProperty(RoomObject.prototype, 'assignedCreepAmounts', {
 		} else {
 			console.log('Regenerating assigned creep amounts! (Why?)');
 			let assignedCreeps = _.filter(Game.icreeps,
-										  creep => creep.memory.assignment &&
-												   creep.memory.assignment == this.ref &&
+										  creep => creep.memory.assignmentRef == this.ref &&
 												   creep.needsReplacing == false);
 			return _.mapValues(_.groupBy(assignedCreeps, creep => creep.memory.role), creepList => creepList.length);
 		}

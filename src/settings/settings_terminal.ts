@@ -16,7 +16,7 @@ maxBuyPrice[RESOURCE_CATALYZED_UTRIUM_ACID] = 4;
 maxBuyPrice[RESOURCE_CATALYZED_ZYNTHIUM_ACID] = 4;
 maxBuyPrice[RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE] = 4;
 
-// Effective market prices go here // TODO: automatically calculate this?
+// Effective market prices go here
 let avgPrice: { [resourceType: string]: number } = {};
 avgPrice[RESOURCE_ENERGY] = 0.01;
 

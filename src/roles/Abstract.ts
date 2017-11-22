@@ -115,11 +115,14 @@ export abstract class AbstractSetup implements ISetup {
 				task         : null, 									// task the creep is performing
 				assignmentRef: assignment ? assignment.ref : null, 		// ref of object the creep is assigned to
 				assignmentPos: assignment ? assignment.pos : null, 		// serialized position of the assignment
+				objectiveRef : null,									// reference to creep's current objective
 				colony       : colony.name, 							// name of the colony the creep is assigned to
 				data         : { 										// rarely-changed data about the creep
 					origin   : colony.room.name,						// where it was spawned
 					replaceAt: 0, 										// when it should be replaced
+					boosts   : {} 										// keeps track of what boosts creep has/needs
 				},
+				roleData     : {}, 										// empty role data object
 			},
 		};
 		return protoCreep;
@@ -148,7 +151,7 @@ export abstract class AbstractCreep implements ICreep {
 	hits: number;					// |
 	hitsMax: number;				// |
 	id: string;						// |
-	memory: any;					// |
+	memory: ICreepMemory;			// | See the ICreepMemory interface for structure
 	name: string;					// |
 	pos: RoomPosition;				// |
 	ref: string;					// |
@@ -291,36 +294,55 @@ export abstract class AbstractCreep implements ICreep {
 		return this.creep.travelTo(destination, options);
 	};
 
-	// Ccustom creep methods ===========================================================================================
+	// Custom creep methods ============================================================================================
 
 	/* Wrapper for console.log that includes creep information */
 	log(...args: any[]): void {
 		console.log(this.room, ' ', this.name, ': "', ...args, '".');
 	}
 
-	get assignment(): RoomObject {
-		return deref(this.memory.assignmentRef);
+	get assignment(): RoomObject | null {
+		if (this.memory.assignmentRef) {
+			return deref(this.memory.assignmentRef);
+		} else {
+			return null;
+		}
 	}
 
-	set assignment(newAssignment: RoomObject) {
-		this.memory.assignmentRef = newAssignment.ref;
-		this.memory.assignmentPos = newAssignment.pos;
+	set assignment(newAssignment: RoomObject | null) {
+		if (newAssignment) {
+			this.memory.assignmentRef = newAssignment.ref;
+			this.memory.assignmentPos = newAssignment.pos;
+		} else {
+			this.memory.assignmentRef = null;
+			this.memory.assignmentPos = null;
+		}
 	}
 
-	get assignmentPos(): RoomPosition {
+	get assignmentPos(): RoomPosition | null {
 		let apos = this.memory.assignmentPos;
-		return new RoomPosition(apos.x, apos.y, apos.roomName);
+		if (apos) {
+			return new RoomPosition(apos.x, apos.y, apos.roomName);
+		} else {
+			return null;
+		}
 	}
 
+	/* Is the creep in the same room as its assignment? */
 	get inAssignedRoom(): boolean {
-		return this.pos.roomName == this.assignmentPos.roomName;
+		return this.assignmentPos != null && this.pos.roomName == this.assignmentPos.roomName;
 	}
 
-	get assignedRoomFlag(): Flag {
-		let roomName = this.assignmentPos.roomName;
-		let colonyName = Overmind.colonyMap[roomName];
-		let flagName = roomName + ':' + colonyName;
-		return Game.flags[flagName];
+	/* Returns the colony flag for the room containing this creep's assignment */
+	get assignedRoomFlag(): Flag | null {
+		if (this.assignmentPos) {
+			let roomName = this.assignmentPos.roomName;
+			let colonyName = Overmind.colonyMap[roomName];
+			let flagName = roomName + ':' + colonyName;
+			return Game.flags[flagName];
+		} else {
+			return null;
+		}
 	}
 
 	/* Instantiate the _task object when needed */
@@ -386,8 +408,8 @@ export abstract class AbstractCreep implements ICreep {
 
 	/* Dereference the objective that the creep is working on. */
 	get objective(): Objective | null {
-		if (this.memory.objective) {
-			return this.colony.overlord.objectiveGroup.objectivesByRef[this.memory.objectives];
+		if (this.memory.objectiveRef) {
+			return this.colony.overlord.objectiveGroup.objectivesByRef[this.memory.objectiveRef];
 		} else {
 			return null;
 		}
@@ -432,7 +454,7 @@ export abstract class AbstractCreep implements ICreep {
 
 	/* Whether the creep is close enough to death that you should start spawning its replacement */
 	get needsReplacing(): boolean {
-		if (this.ticksToLive) { // undefined when spawning
+		if (this.ticksToLive && this.assignment) { // undefined when spawning
 			let originSpawn = Game.rooms[this.memory.data.origin].spawns[0];
 			let replaceAt = originSpawn.pathLengthTo(this.assignment) / this.moveSpeed; // expected travel time
 			replaceAt += 3 * this.body.length; // expected spawning time

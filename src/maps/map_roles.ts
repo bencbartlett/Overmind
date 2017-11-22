@@ -22,7 +22,7 @@ import {ManagerCreep} from '../roles/manager';
 
 export function AbstractCreepWrapper(creep: Creep): AbstractCreep {
 	let roleName = creep.memory.role;
-	let role;
+	let role: any;
 	switch (roleName) {
 		case 'claimer':
 			role =  new ClaimerCreep(creep);

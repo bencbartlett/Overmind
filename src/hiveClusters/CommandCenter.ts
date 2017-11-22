@@ -94,6 +94,12 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 		return possiblePositions[0];
 	}
 
+	// Boosting logic ==================================================================================================
+
+	// get availableBoosters: {[resourceName: string]: StructureLab} {
+	//
+	// }
+
 	// Terminal logic ==================================================================================================
 
 	/* Cost per unit including transfer price with energy converted to credits */

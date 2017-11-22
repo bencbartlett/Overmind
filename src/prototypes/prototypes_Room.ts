@@ -330,30 +330,30 @@ Object.defineProperties(Room.prototype, {
 });
 
 
-// Run function for room. Executed before roomBrain.run.
-Room.prototype.run = function () {
-	// Animate each tower: see prototypes_StructureTower
-	for (let tower of this.towers) {
-		tower.run();
-	}
-	// // Animate each link: transfer to storage when it is >50% full if storage link is empty and cooldown is over
-	// var refillLinks = _.filter(this.links, (s: Link) => s.refillThis && s.energy <= 0.5 * s.energyCapacity);
-	// if (this.links.length > 0) {
-	// 	var targetLink;
-	// 	if (refillLinks.length > 0) {
-	// 		targetLink = refillLinks[0];
-	// 	} else {
-	// 		targetLink = this.storage.links[0];
-	// 	}
-	// 	for (let link of this.links) {
-	// 		if (link != targetLink) {
-	// 			if (link.energy > 0.85 * link.energyCapacity && !link.refillThis && link.cooldown == 0) {
-	// 				link.transferEnergy(targetLink);
-	// 			}
-	// 		}
-	// 	}
-	// }
-	// Draw all visuals
-	// visuals.drawRoomVisuals(this);
-};
+// // Run function for room. Executed before roomBrain.run.
+// Room.prototype.run = function () {
+// 	// Animate each tower: see prototypes_StructureTower
+// 	for (let tower of this.towers) {
+// 		tower.run();
+// 	}
+// 	// // Animate each link: transfer to storage when it is >50% full if storage link is empty and cooldown is over
+// 	// var refillLinks = _.filter(this.links, (s: Link) => s.refillThis && s.energy <= 0.5 * s.energyCapacity);
+// 	// if (this.links.length > 0) {
+// 	// 	var targetLink;
+// 	// 	if (refillLinks.length > 0) {
+// 	// 		targetLink = refillLinks[0];
+// 	// 	} else {
+// 	// 		targetLink = this.storage.links[0];
+// 	// 	}
+// 	// 	for (let link of this.links) {
+// 	// 		if (link != targetLink) {
+// 	// 			if (link.energy > 0.85 * link.energyCapacity && !link.refillThis && link.cooldown == 0) {
+// 	// 				link.transferEnergy(targetLink);
+// 	// 			}
+// 	// 		}
+// 	// 	}
+// 	// }
+// 	// Draw all visuals
+// 	// visuals.drawRoomVisuals(this);
+// };
 

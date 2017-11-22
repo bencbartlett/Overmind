@@ -3,6 +3,7 @@
 import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {TaskBuild} from '../tasks/task_build';
 import {TaskRepair} from '../tasks/task_repair';
+import {pathing} from '../pathing/pathing';
 
 export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 	source: Source;
@@ -10,6 +11,7 @@ export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 	miningPowerNeeded: number;
 	output: StructureContainer | StructureLink | undefined;
 	outputConstructionSite: ConstructionSite | undefined;
+	miningGroup: IMiningGroup | undefined;
 	private _miners: ICreep[];
 
 	constructor(colony: IColony, source: Source) {
@@ -32,6 +34,12 @@ export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 											 s.structureType == STRUCTURE_LINK,
 		}) as ConstructionSite[];
 		this.outputConstructionSite = nearbyOutputSites[0];
+		// Register mining site with the best mining group
+		let bestGroup = this.findBestMiningGroup();
+		if (bestGroup) {
+			this.miningGroup = bestGroup;
+			bestGroup.miningSites.push(this);
+		}
 	}
 
 	get miners(): ICreep[] {
@@ -59,8 +67,9 @@ export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 		}
 	}
 
-	init(): void {
-		// Handle energy output
+	/* Register appropriate resource withdrawal requests when the output gets sufficiently full */
+	private registerOutputRequests(): void {
+		// Handle energy output via resource requests
 		if (this.output instanceof StructureContainer) {
 			let avgHaulerCap = CARRY_CAPACITY * this.colony.data.haulingPowerSupplied / this.colony.data.numHaulers;
 			if (this.predictedStore > 0.75 * avgHaulerCap) { // TODO: add path length dependence
@@ -70,17 +79,29 @@ export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 			// If the link will be full with next deposit from the miner
 			let minerCapacity = 150; // hardcoded value, I know, but saves import time
 			if (this.output.energy + minerCapacity > this.output.energyCapacity) {
-				let linkRequest = this.overlord.resourceRequests.resourceIn.link.shift();
-				if (linkRequest) {
-					let targetLink = linkRequest.target as Link;
-					this.output.transferEnergy(targetLink);
-				} else if (this.colony.commandCenter && this.colony.commandCenter.link) {
-					this.output.transferEnergy(this.colony.commandCenter.link);
-				}
+				this.overlord.resourceRequests.registerWithdrawalRequest(this.output);
 			}
 		}
 	}
 
+	private findBestMiningGroup(): IMiningGroup | undefined {
+		if (this.colony.miningGroups) {
+			if (this.room == this.colony.room) {
+				return this.colony.miningGroups[this.colony.storage!.ref]
+			} else {
+				let groupsByDistance = _.sortBy(this.colony.miningGroups,
+												group => pathing.cachedPathLength(this.pos, group.pos));
+				return groupsByDistance[0];
+			}
+		}
+	}
+
+	/* Initialization tasks: register resource transfer reqeusts */
+	init(): void {
+		this.registerOutputRequests();
+	}
+
+	/* Run tasks: make output construciton site if needed; build and maintain the output structure */
 	run(): void {
 		// Make a construction site for an output if needed
 		if (!this.output && !this.outputConstructionSite) {

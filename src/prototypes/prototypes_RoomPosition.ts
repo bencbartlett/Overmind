@@ -16,6 +16,12 @@ Object.defineProperty(RoomPosition.prototype, 'isEdge', { // if the position is 
 	},
 });
 
+Object.defineProperty(RoomPosition.prototype, 'rangeToEdge', { // range to the nearest room edge
+	get: function () {
+		return _.min([this.x, 49 - this.x, this.y, 49 - this.y]);
+	},
+});
+
 RoomPosition.prototype.getAdjacentPositions = function () {
 	let adjPos: RoomPosition[] = [];
 	for (let dx of [-1, 0, 1]) {

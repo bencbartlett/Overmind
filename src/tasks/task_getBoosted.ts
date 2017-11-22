@@ -11,23 +11,25 @@ export class TaskGetBoosted extends Task {
 	}
 
 	isValidTask() {
-		return !(this.creep.memory.boosted && this.creep.memory.boosted[this.target.mineralType]);
+		return false; // !(this.creep.memory.boosted && this.creep.memory.boosted[this.target.mineralType]);
 	}
 
 	isValidTarget() {
 		var target = this.target;
-		return (target != null && target.my && target.structureType == STRUCTURE_LAB);
+		return false; // (target != null && target.my && target.structureType == STRUCTURE_LAB);
 	}
 
 	work() {
 		let response = this.target.boostCreep(this.creep.creep); // boostCreep takes an unwrapped creep as argument
-		if (response == OK) {
-			if (!this.creep.memory.boosted) {
-				this.creep.memory.boosted = {};
-			}
-			this.creep.memory.boosted[this.target.mineralType] = true;
-			this.creep.log('Boosted successfully!');
-		}
+		// if (response == OK) {
+		// 	if (!this.creep.memory.boosted) {
+		// 		this.creep.memory.boosted = {};
+		// 	}
+		// 	this.creep.memory.boosted[this.target.mineralType] = true;
+		// 	this.creep.log('Boosted successfully!');
+		// }
 		return response;
 	}
 }
+
+// TODO: fix boosting system

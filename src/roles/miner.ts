@@ -42,7 +42,9 @@ export class MinerCreep extends AbstractCreep {
 				this.task = new TaskDeposit(this.miningSite.output);
 			}
 		} else {
-			this.task = new TaskGoToRoom(this.assignedRoomFlag);
+			if (this.assignedRoomFlag) {
+				this.task = new TaskGoToRoom(this.assignedRoomFlag);
+			}
 		}
 	}
 

@@ -36,7 +36,7 @@ export class SiegerSetup extends AbstractSetup {
 	}
 
 	onCreate(creep: protoCreep): protoCreep {
-		creep.memory.data.healFlag = 'HP1'; // TODO: hard coded
+		creep.memory.roleData.healFlag = 'HP1'; // TODO: hard coded
 		return creep;
 	}
 }
@@ -74,22 +74,22 @@ export class SiegerCreep extends AbstractCreep {
 
 	retreatAndHeal() { // TODO: make this a task
 		this.heal(this);
-		return this.travelTo(this.memory.data.healFlag, {allowHostile: true});
+		return this.travelTo(this.memory.roleData.healFlag, {allowHostile: true});
 	}
 
-	getBoosted() {
-		for (let bodypart in this.settings.boost) {
-			if (this.settings.boost[bodypart] &&
-				!(this.memory.boosted && this.memory.boosted[this.settings.boostMinerals[bodypart]])) {
-				let boosters = _.filter(this.room.labs, (lab: StructureLab) =>
-										lab.assignedMineralType == this.settings.boostMinerals[bodypart] &&
-										lab.mineralAmount >= 30 * this.getActiveBodyparts(bodypart),
-				);
-				if (boosters.length > 0) {
-					this.task = new TaskGetBoosted(boosters[0]);
-				}
-			}
-		}
+	getBoosted(): void {
+		// for (let bodypart in this.settings.boost) {
+		// 	if (this.settings.boost[bodypart] &&
+		// 		!(this.memory.boosted && this.memory.boosted[this.settings.boostMinerals[bodypart]])) {
+		// 		let boosters = _.filter(this.room.labs, (lab: StructureLab) =>
+		// 								lab.assignedMineralType == this.settings.boostMinerals[bodypart] &&
+		// 								lab.mineralAmount >= 30 * this.getActiveBodyparts(bodypart),
+		// 		);
+		// 		if (boosters.length > 0) {
+		// 			this.task = new TaskGetBoosted(boosters[0]);
+		// 		}
+		// 	}
+		// }
 	}
 
 	newTask() {
@@ -114,14 +114,14 @@ export class SiegerCreep extends AbstractCreep {
 		this.getBoosted();
 		var assignment = this.assignment as Flag;
 		// 1: retreat to heal point when injured
-		if (deref(this.memory.data.healFlag) && // if there's a heal flag
+		if (deref(this.memory.roleData.healFlag) && // if there's a heal flag
 			(this.getActiveBodyparts(TOUGH) < 0.5 * this.getBodyparts(TOUGH) || // if you're injured
-			 (this.memory.needsHealing && this.hits < this.hitsMax))) { // if you're healing and not full hp
+			 (this.memory.roleData.needsHealing && this.hits < this.hitsMax))) { // if you're healing and not full hp
 			// TODO: dps-based calculation
-			this.memory.needsHealing = true;
+			this.memory.roleData.needsHealing = true;
 			return this.retreatAndHeal();
 		} else {
-			this.memory.needsHealing = false; // turn off when done healing
+			this.memory.roleData.needsHealing = false; // turn off when done healing
 		}
 		// 2: task assignment
 		this.assertValidTask();

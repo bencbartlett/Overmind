@@ -8,7 +8,6 @@ import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {SupplierSetup} from '../roles/supplier';
 
 export class Hatchery extends AbstractHiveCluster implements IHatchery {
-
 	memory: any; 											// Memory.colonies.hatchery
 	spawns: Spawn[]; 										// List of spawns in the hatchery
 	availableSpawns: Spawn[]; 								// Spawns that are available to make stuff right now

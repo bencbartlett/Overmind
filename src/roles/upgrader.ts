@@ -42,7 +42,7 @@ export class UpgraderCreep extends AbstractCreep {
 	}
 
 	onRun() {
-		if (!this.memory.boosted) { // get boosted if you aren't already
+		/*if (!this.memory.boosted) { // get boosted if you aren't already
 			let upgraderBoosters = _.filter(this.room.labs, (lab: StructureLab) =>
 											lab.assignedMineralType == RESOURCE_CATALYZED_GHODIUM_ACID &&
 											lab.mineralAmount >= 30 * this.getActiveBodyparts(WORK),
@@ -50,7 +50,7 @@ export class UpgraderCreep extends AbstractCreep {
 			if (upgraderBoosters.length > 0 && this.ticksToLive > 0.95 * this.lifetime) {
 				this.task = new TaskGetBoosted(upgraderBoosters[0]);
 			}
-		} else if (this.room.controller!.signedByMe) {
+		} else */if (this.room.controller!.signedByMe) {
 			this.task = new TaskSignController(this.room.controller!);
 		}
 	}

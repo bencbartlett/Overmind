@@ -3,6 +3,7 @@
     "module": "commonjs",
     "target": "es6",
     "removeComments": false,
+    "noEmitOnError": true,
     "noResolve": false,
     "strict": true,
     "noImplicitThis": false, // prototypes complain if this is turned on
@@ -20,7 +21,7 @@
       "es2016"
     ]
   },
-  "compileOnSave": true,
+  "compileOnSave": false,
   "include": [
     "webpack.config.ts",
     "config/*.ts",

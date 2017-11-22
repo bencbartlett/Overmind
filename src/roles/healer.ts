@@ -39,7 +39,6 @@ export class HealerCreep extends AbstractCreep {
 	}
 
 	run() {
-		var assignment = Game.flags[this.memory.assignmentRef];
 		if (!this.hasValidTask) {
 			this.task = null;
 			var target = this.findTarget();
@@ -50,9 +49,9 @@ export class HealerCreep extends AbstractCreep {
 		if (this.task) {
 			return this.task.step();
 		}
-		if (assignment) {
+		if (this.assignment) {
 			if (!this.task) {
-				this.travelTo(assignment);
+				this.travelTo(this.assignment);
 			}
 		}
 	}

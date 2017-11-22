@@ -1,4 +1,5 @@
 interface Creep {
+	memory: ICreepMemory; // this must be changed in the screeps typings index.d.ts
 	getBodyparts(partType: string): number;
 	colony: IColony;
 	lifetime: number;
@@ -63,7 +64,7 @@ interface Room {
 	remoteContainers: StructureContainer[];
 	sinkContainers: StructureContainer[];
 	sinkLinks: StructureLink[];
-	run(): void;
+	// run(): void;
 }
 
 interface RoomObject {
@@ -88,6 +89,8 @@ interface RoomObject {
 interface RoomPosition {
 	name: string;
 	flagged: boolean;
+	isEdge: boolean;
+	rangeToEdge: number;
 	getAdjacentPositions(): RoomPosition[];
 	flaggedWith(filter: Function): boolean;
 	getMultiRoomRangeTo(pos: RoomPosition): number;

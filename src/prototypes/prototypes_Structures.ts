@@ -197,8 +197,11 @@ Object.defineProperty(StructureSpawn.prototype, 'statusMessage', {
 		if (this.spawning) {
 			let spawning = this.spawning;
 			let percent = Math.round(100 * (spawning.needTime - spawning.remainingTime) / spawning.needTime);
-			let message = spawning.name + ': ' + Game.icreeps[spawning.name].assignment.pos.roomName +
-						  ' (' + percent + '%)';
+			let message = spawning.name;
+			let assignment = Game.icreeps[spawning.name].assignment;
+			if (assignment) {
+				message += ': ' + assignment.pos.roomName + ' (' + percent + '%)';
+			}
 			return message;
 		} else {
 			if (this.room.energyAvailable < this.room.energyCapacityAvailable) {

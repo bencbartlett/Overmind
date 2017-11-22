@@ -30,7 +30,7 @@ export function taskFromPrototask(protoTask: protoTask): Task {
 	// Retrieve name and target data from the protoTask
 	let taskName = protoTask.name;
 	let target = deref(protoTask._target.ref);
-	let task;
+	let task: any;
 	// Create a task object of the correct type
 	switch (taskName) {
 		case 'attack':

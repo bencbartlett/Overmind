@@ -113,7 +113,7 @@ export var HUD = {
 	//             icon = "⚔";
 	//         }
 	//         let info = "no vision!";
-	//         if (flag.room) { // TODO: this is pretty quick and dirty; maybe improve later
+	//         if (flag.room) {
 	//             var totalMiners = 0, requiredMiners = 0;
 	//             // var totalHaulers = 0, requiredHaulers = 0;
 	//             var totalGuards = 0, requiredGuards = 0;

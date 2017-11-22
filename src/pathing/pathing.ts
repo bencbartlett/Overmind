@@ -22,7 +22,7 @@ export var pathing = {
 					});
 					return costs;
 				},
-			}],
+			}] as PathFinderOpts,
 		);
 		let path = ret.path;
 		return path.length + 1; // offset for range

@@ -1,0 +1,19 @@
+To install:
+
+In the Overmind root directory, run:
+
+> npm install
+
+or, if you are using yarn, run:
+
+> yarn
+
+Then, drag the typings folder included in this directory to the root level, overwriting the node index.d.ts and screeps
+index.d.ts files. (Without these changes, the source will not compile correctly.)
+
+To deploy the project on screeps servers, modify the credentials.example.json file in the config directory. (Make sure
+not to include it in your github repo!) To lint, compile, and deploy the project, run this in the Overmind root:
+
+> npm run deploy
+
+This will default to deploying in the "dev" branch.

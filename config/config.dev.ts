@@ -10,6 +10,7 @@ function webpackConfig(options: EnvOptions = {}): Config {
   // get the common configuration to start with
   const config = CommonConfig.init(options);
 
+
   // make "dev" specific changes here
   const credentials: Credentials = require("./credentials.json");
   credentials.branch = "dev";

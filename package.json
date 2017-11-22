@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "",
   "main": "./dist/main.js",
-  "repository": "screepers/screeps-typescript-starter",
+  "repository": "bencbartlett/Overmind",
   "scripts": {
     "postinstall": "typings install",
     "deploy": "webpack --colors --env.ENV=dev",

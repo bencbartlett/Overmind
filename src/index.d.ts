@@ -26,6 +26,29 @@ interface ISetup {
 	create(colony: IColony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep;
 }
 
+interface ICreepMemory {
+	role: string;
+	task: protoTask | null;
+	assignmentRef: string | null;
+	assignmentPos: protoPos | null;
+	objectiveRef: string | null;
+	colony: string;
+	data: {
+		origin: string;
+		replaceAt: number;
+		boosts: { [resourceName: string]: boolean }; // resourceName: if boost has been performed
+		moveSpeed?: number;
+		sayCount?: number;
+		renewMe?: boolean;
+	};
+	roleData: {
+		[propertyName: string]: any;
+	}
+	// Traveler components
+	_travel: any;
+	_trav: any;
+}
+
 interface ICreep {
 	// Creep properties
 	creep: Creep;
@@ -36,7 +59,7 @@ interface ICreep {
 	hits: number;
 	hitsMax: number;
 	id: string;
-	memory: any;
+	memory: ICreepMemory;
 	name: string;
 	pos: RoomPosition;
 	ref: string;
@@ -85,10 +108,10 @@ interface ICreep {
 	getBodyparts(partType: string): number;
 	sayLoop(sayList: string[]): void;
 	repairNearbyDamagedRoad(): number;
-	assignment: RoomObject;
-	assignmentPos: RoomPosition;
+	assignment: RoomObject | null;
+	assignmentPos: RoomPosition | null;
 	inAssignedRoom: boolean;
-	assignedRoomFlag: Flag
+	assignedRoomFlag: Flag | null;
 	objective: IObjective | null;
 	requestTask(): void;
 	recharge(): void;
@@ -120,7 +143,9 @@ interface IColony {
 	commandCenter: ICommandCenter | undefined;
 	hatchery: IHatchery;
 	upgradeSite: IUpgradeSite;
-	miningGroups: IMiningGroup[];
+	claimedLinks: StructureLink[];
+	unclaimedLinks: StructureLink[];
+	miningGroups: { [structID: string]: IMiningGroup } | undefined;
 	miningSites: { [sourceID: string]: IMiningSite };
 	incubating: boolean;
 	outposts: Room[];
@@ -253,6 +278,7 @@ interface IHiveCluster {
 	room: Room;
 	pos: RoomPosition;
 	componentName: string;
+	ref: string;
 	overlord: IOverlord;
 	colony: IColony;
 	log(...args: any[]): void;
@@ -266,15 +292,18 @@ interface IMiningSite extends IHiveCluster {
 	miningPowerNeeded: number;
 	output: Container | Link | undefined;
 	outputConstructionSite: ConstructionSite | undefined;
+	miningGroup: IMiningGroup | undefined;
 	predictedStore: number;
 	miners: ICreep[];
 }
 
 interface IMiningGroup extends IHiveCluster {
 	dropoff: StructureLink | StructureStorage;
-	backupLinks: StructureLink[] | undefined;
+	links: StructureLink[] | undefined;
+	availableLinks: StructureLink[] | undefined;
 	miningSites: IMiningSite[];
 	parkingSpots: RoomPosition[];
+	objectiveGroup: IObjectiveGroup;
 	data: {
 		numHaulers: number,
 		haulingPowerSupplied: number,

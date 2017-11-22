@@ -13,7 +13,7 @@ export class TaskGetRenewed extends Task {
 	isValidTask() {
 		var creep = this.creep;
 		// energyAvailable requirement avoids jams where everything stops to get renewed at the same time
-		let condition = creep.ticksToLive < 0.9 * creep.lifetime && creep.room.energyAvailable > 300; // TODO: calculate this
+		let condition = creep.ticksToLive < 0.9 * creep.lifetime && creep.room.energyAvailable > 300;
 		// console.log(creep.ticksToLive, creep.lifetime, condition);
 		return condition;
 		// this.creep.log("task" + r)

@@ -24,7 +24,7 @@ export class ObjectiveGroup implements IObjectiveGroup {
 		}
 	}
 
-	finalizeObjectives(): void {
+	private finalizeObjectives(): void {
 		// Prepare the grouped objectives. For best performance, registerObjectives should only be called once.
 		this._objectivesByRef = _.indexBy(this.flatObjectives, 'ref');
 		this._objectives = _.groupBy(this.flatObjectives, objective => objective.name);

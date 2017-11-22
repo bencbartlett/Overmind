@@ -5,6 +5,7 @@ import {MiningSite} from './hiveClusters/MiningSite';
 import {Hatchery} from './hiveClusters/Hatchery';
 import {CommandCenter} from './hiveClusters/CommandCenter';
 import {UpgradeSite} from './hiveClusters/UpgradeSite';
+import {MiningGroup} from './hiveClusters/MiningGroup';
 
 
 export class Colony implements IColony {
@@ -20,7 +21,7 @@ export class Colony implements IColony {
 	storage: StructureStorage | undefined;				// |
 	links: StructureLink[];								// |
 	terminal: StructureTerminal | undefined;			// |
-	towers: StructureTower[];							// |
+	towers: StructureTower[];							// | All towers, including those owned by a virtual component
 	labs: StructureLab[];								// |
 	powerSpawn: StructurePowerSpawn | undefined;		// |
 	nuker: StructureNuker | undefined;					// |
@@ -28,7 +29,9 @@ export class Colony implements IColony {
 	commandCenter: ICommandCenter | undefined;			// Component with logic for non-spawning structures
 	hatchery: IHatchery;								// Component to encapsulate spawner logic
 	upgradeSite: IUpgradeSite;							// Component to provide upgraders with uninterrupted energy
-	miningGroups: IMiningGroup[]; 						// Component to group mining sites into a hauling group
+	claimedLinks: StructureLink[];						// Links belonging to hive cluseters excluding mining groups
+	unclaimedLinks: StructureLink[]; 					// Links not belonging to a hive cluster, free for mining group
+	miningGroups: { [id: string]: IMiningGroup } | undefined;	// Component to group mining sites into a hauling group
 	miningSites: { [sourceID: string]: IMiningSite };	// Component with logic for mining and hauling
 	incubating: boolean;								// If the colony is currently being cared for by another one
 	flags: Flag[];										// Flags across the colony
@@ -87,11 +90,30 @@ export class Colony implements IColony {
 		this.hatchery = new Hatchery(this, this.spawns[0]);
 		// Instantiate the upgradeSite
 		this.upgradeSite = new UpgradeSite(this, this.controller);
+		// Sort claimed and unclaimed links
+		this.claimedLinks = _.filter(_.compact([this.commandCenter ? this.commandCenter.link : null,
+											   this.hatchery ? this.hatchery.link : null,
+											   this.upgradeSite.input]), s => s instanceof StructureLink) as Link[];
+		this.unclaimedLinks = _.filter(this.links, link => this.claimedLinks.includes(link) == false);
 		// Instantiate a MiningGroup for each non-component link and for storage
-		let claimedLinks = _.compact([this.commandCenter ? this.commandCenter.link : null,
-									  this.hatchery ? this.hatchery.link : null,
-									  this.upgradeSite.input]);
-		let unclaimedLinks = _.filter(this.links, link => claimedLinks.includes(link) == false);
+		if (this.storage) {
+			let miningGroupLinks = _.filter(this.unclaimedLinks, link => link.pos.rangeToEdge <= 3);
+			let miningGroups: { [structRef: string]: MiningGroup } = {};
+			miningGroups[this.storage.ref] = new MiningGroup(this, this.storage);
+			for (let link of miningGroupLinks) {
+				let createNewGroup = true;
+				for (let structRef in miningGroups) {
+					let group = miningGroups[structRef];
+					if (group.links && group.links.includes(link)) {
+						createNewGroup = false;
+					}
+				}
+				if (createNewGroup) {
+					miningGroups[link.ref] = new MiningGroup(this, link);
+				}
+			}
+			this.miningGroups = miningGroups;
+		}
 		// Mining sites is an object of ID's and MiningSites
 		let sourceIDs = _.map(this.sources, source => source.ref);
 		let miningSites = _.map(this.sources, source => new MiningSite(this, source));
@@ -124,6 +146,37 @@ export class Colony implements IColony {
 		};
 	}
 
+	/* Run the tower logic for each tower in the colony */
+	private handleTowers(): void {
+		for (let tower of this.towers) {
+			tower.run();
+		}
+	}
+
+	/* Examine the link resource requests and try to efficiently (but greedily) match links that need energy in and
+	 * out, then send the remaining resourceOut link requests to the command center link */
+	private handleLinks(): void {
+		// Generate lists of links that want to send or receive energy
+		let transmitLinks = _.map(this.overlord.resourceRequests.resourceOut.link, request => request.target) as Link[];
+		let receiveLinks = _.map(this.overlord.resourceRequests.resourceIn.link, request => request.target) as Link[];
+		// For each receiving link, greedily get energy from the closest transmitting link - at most 9 operations
+		for (let receiveLink of receiveLinks) {
+			let closestTransmitLink = receiveLink.pos.findClosestByRange(transmitLinks);
+			if (closestTransmitLink) {
+				// If a send-receive match is found, transfer that first, then remove the pair from the link lists
+				closestTransmitLink.transferEnergy(receiveLink);
+				_.remove(transmitLinks, link => link == closestTransmitLink);
+				_.remove(receiveLinks, link => link == receiveLink);
+			}
+		}
+		// Now send all remaining transmit link requests to the command center
+		if (this.commandCenter && this.commandCenter.link) {
+			for (let transmitLink of transmitLinks) {
+				transmitLink.transferEnergy(this.commandCenter.link);
+			}
+		}
+	}
+
 	get overlord(): IOverlord {
 		return Overmind.Overlords[this.name];
 	}
@@ -150,6 +203,11 @@ export class Colony implements IColony {
 			let site = this.miningSites[siteID];
 			site.init();
 		}
+		if (this.miningGroups) { // Mining groups must be initialized after mining sites
+			for (let groupID in this.miningGroups) {
+				this.miningGroups[groupID].init();
+			}
+		}
 		// 3: Initialize the colony overlord, must be run AFTER all components are initialized
 		this.overlord.init();
 		// 4: Initialize each creep in the colony
@@ -161,7 +219,7 @@ export class Colony implements IColony {
 	run(): void {
 		// 1: Run the colony overlord, must be run BEFORE all components are run
 		this.overlord.run();
-		// 2: Run the colony components
+		// 2: Run the colony virtual components
 		if (this.hatchery) {
 			this.hatchery.run();
 		}
@@ -175,8 +233,14 @@ export class Colony implements IColony {
 			let site = this.miningSites[siteID];
 			site.run();
 		}
-		// 3: Run the colony room TODO: (soon to be deprecated)
-		this.room.run();
+		if (this.miningGroups) {
+			for (let groupID in this.miningGroups) {
+				this.miningGroups[groupID].run();
+			}
+		}
+		// 3 Run the colony real components
+		this.handleTowers();
+		this.handleLinks();
 		// 4: Run each creep in the colony
 		for (let name in this.creeps) {
 			this.creeps[name].run();

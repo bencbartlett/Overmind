@@ -2,13 +2,19 @@
 
 import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {pathing} from '../pathing/pathing';
+import {ObjectiveGroup} from '../objectives/ObjectiveGroup';
+import {ObjectiveCollectEnergyMiningSite} from '../objectives/objectives';
+import {ResourceRequestGroup} from '../resourceRequests/ResourceRequestGroup';
 
 
 export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 	dropoff: StructureLink | StructureStorage;		// Where haulers drop off to
-	backupLinks: StructureLink[] | undefined;		// Extra links they can drop off to if the first one is on cooldown
+	links: StructureLink[] | undefined;				// List of links contained in the mining group
+	availableLinks: StructureLink[] | undefined; 	// List of links in mining group that are ready to send
 	miningSites: IMiningSite[];						// Mining sites that deposit via this mining group
 	parkingSpots: RoomPosition[]; 					// Good places for haulers to idle near the dropoff
+	private objectivePriorities: string[]; 			// Prioritization for objectives in the objective group
+	objectiveGroup: ObjectiveGroup; 				// Box for objectives assigned to this mining group
 	private _haulers: ICreep[]; 					// Haulers assigned to this mining group
 	data: {											// Data about the mining group, calculated once per tick
 		numHaulers: number,								// Number of haulers assigned to this miningGroup
@@ -22,8 +28,14 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 		super(colony, dropoff, 'miningGroup');
 		this.dropoff = dropoff;
 		if (this.dropoff instanceof StructureLink) { // register supplementary links
-			this.backupLinks = this.pos.findInRange(this.room.links, 3);
+			this.links = this.pos.findInRange(colony.unclaimedLinks, 2);
+			this.availableLinks = _.filter(this.links, link => link.cooldown == 0);
 		}
+		// Instantiate objective group and resource requests
+		this.objectivePriorities = [
+			'collectEnergyMiningSite',
+		];
+		this.objectiveGroup = new ObjectiveGroup(this.objectivePriorities);
 		// Mining sites are populated with MiningSite instantiation
 		this.miningSites = [];
 	}
@@ -36,9 +48,10 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 		return this._haulers;
 	}
 
+	/* Calculate needed and supplied hauling power and link transfer power for entities assigned to the mining group */
 	private populateData(): void {
 		// Supplied hauling power
-		let haulingPowerSuppliedValue = _.sum(_.map(this._haulers, creep => creep.getActiveBodyparts(CARRY)));
+		let haulingPowerSuppliedValue = _.sum(_.map(this.haulers, creep => creep.getActiveBodyparts(CARRY)));
 		// Needed hauling power
 		let haulingPowerNeededValue: number;
 		let haulingPower = 0;
@@ -49,15 +62,18 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 			}
 		}
 		haulingPowerNeededValue = haulingPower / CARRY_CAPACITY;
-		// Needed link power
-		let linkPowerNeededValue = _.sum(_.map(this.miningSites, site => site.energyPerTick));
-		// Available link power
+		// Compute link power requirements
+		let linkPowerNeededValue = 0;
 		let linkPowerAvailableValue = 0;
 		if (this.dropoff instanceof StructureLink && this.colony.storage) {
-			let links: Link[] = [this.dropoff].concat(this.backupLinks!);
-			linkPowerAvailableValue = _.sum(_.map(links, link => LINK_CAPACITY /
-																 link.pos.getRangeTo(this.colony.storage!)));
+			linkPowerNeededValue = _.sum(_.map(this.miningSites, site => site.energyPerTick));
+			linkPowerAvailableValue = _.sum(_.map(this.links!, link => LINK_CAPACITY /
+																	   link.pos.getRangeTo(this.colony.storage!)));
+			if (linkPowerNeededValue > linkPowerAvailableValue) {
+				this.log('Insufficient linking power:', linkPowerAvailableValue + "/" + linkPowerNeededValue);
+			}
 		}
+		// Stick everything in the data object
 		this.data = {
 			numHaulers          : this.haulers.length,
 			haulingPowerSupplied: haulingPowerSuppliedValue,
@@ -67,11 +83,39 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 		};
 	}
 
-	init(): void {
+	/* Register hauler collection objectives across the assigned mining sites */
+	private registerObjectives(): void {
+		// Find resource requests from the Overlord that have a target matching the output of a mining site
+		let assignedContainers = _.map(this.miningSites, site => site.output) as Container[];
+		let withdrawalRequests = _.filter(this.overlord.resourceRequests.resourceOut.haul,
+										  request => _.includes(assignedContainers, request.target) &&
+													 request.resourceType == RESOURCE_ENERGY);
+		// Create an energy collection objective for each relevant withdrawal request
+		let withdrawContainers = _.map(withdrawalRequests, request => request.target) as Container[];
+		let collectionObjectives = _.map(withdrawContainers, cont => new ObjectiveCollectEnergyMiningSite(cont));
+		// Register the objectives to the objective group
+		this.objectiveGroup.registerObjectives(collectionObjectives);
+	}
 
+	/* Register a link transfer request if the link is sufficiently full */
+	private registerLinkTransferRequests(): void {
+		if (this.dropoff instanceof StructureLink) {
+			let allowableEmptiness = 100;
+			if (this.dropoff.energy + allowableEmptiness > this.dropoff.energyCapacity) {
+				this.overlord.resourceRequests.registerWithdrawalRequest(this.dropoff);
+			}
+		}
+	}
+
+	/* Initialization tasks: register miningSite collection objectives, register link transfer requests */
+	init(): void {
+		this.populateData();
+		this.registerObjectives();
+		this.registerLinkTransferRequests();
 	}
 
 	run(): void {
-
+		return;
 	}
 }
+

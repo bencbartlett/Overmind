@@ -53,6 +53,7 @@ export class Overlord implements IOverlord {
 			'fortify',
 			'upgrade',
 		];
+		// Instantiate objective and resource request groups
 		this.objectiveGroup = new ObjectiveGroup(this.objectivePriorities);
 		this.resourceRequests = new ResourceRequestGroup();
 		// Configurable settings
@@ -83,9 +84,9 @@ export class Overlord implements IOverlord {
 		// Collect energy from component sites that have requested a hauler withdrawal
 		let withdrawalRequests = _.filter(this.resourceRequests.resourceOut.haul,
 										  request => request.resourceType == RESOURCE_ENERGY);
-		let collectSites = _.map(withdrawalRequests, request => request.target);
-		let collectEnergyMiningSiteObjectives = _.map(collectSites, site =>
-			new ObjectiveCollectEnergyMiningSite(site as Container));
+		let collectContainers = _.map(withdrawalRequests, request => request.target);
+		let collectEnergyMiningSiteObjectives = _.map(collectContainers, container =>
+			new ObjectiveCollectEnergyMiningSite(container as Container));
 
 		this.objectiveGroup.registerObjectives(collectEnergyMiningSiteObjectives);
 
@@ -137,7 +138,7 @@ export class Overlord implements IOverlord {
 	// Spawner operations ==============================================================================================
 
 	/* Handle all creep spawning requirements for homeostatic processes.
-	 * Injects protocreeps into a priority queue in Hatchery. Other spawn operations are done with directives.*/
+	 * Injects protocreeps into a priority queue in Hatchery. Other spawn operations are done with directives. */
 	private handleCoreSpawnOperations(): void {
 		// Ensure each source in the colony has the right number of miners assigned to it
 		for (let siteID in this.colony.miningSites) {
@@ -152,22 +153,31 @@ export class Overlord implements IOverlord {
 			}
 		}
 
-		// Ensure enough haulers exist to satisfy all demand from all colony rooms
-		if (this.colony.data.haulingPowerSupplied < this.colony.data.haulingPowerNeeded) {
-			this.colony.hatchery.enqueue(
-				new HaulerSetup().create(this.colony, {
-					assignment            : this.room.storage, // remote haulers are assigned to storage
-					patternRepetitionLimit: Infinity,
-				}));
+		if (this.colony.miningGroups) {
+			for (let groupID in this.colony.miningGroups) {
+				let group = this.colony.miningGroups[groupID];
+				if (group.data.haulingPowerSupplied < group.data.haulingPowerNeeded) {
+					this.colony.hatchery.enqueue(
+						new HaulerSetup().create(this.colony, {
+							assignment            : group.dropoff, // assign hauler to group dropoff location
+							patternRepetitionLimit: Infinity,
+						}));
+				}
+			}
+		} else { // TODO: this is probably redundant and can be removed
+			// Ensure enough haulers exist to satisfy all demand from all colony rooms
+			if (this.colony.data.haulingPowerSupplied < this.colony.data.haulingPowerNeeded) {
+				this.colony.hatchery.enqueue(
+					new HaulerSetup().create(this.colony, {
+						assignment            : this.room.storage,
+						patternRepetitionLimit: Infinity,
+					}));
+			}
 		}
 
 		// Ensure the hatchery has suppliers; emergency suppliers handled directly by hatchery
 		if (this.room.sinks.length > 0 && this.colony.getCreepsByRole('miner').length > 0) {
 			let supplierSize = this.settings.supplierPatternRepetitionLimit;
-			// let supplierCost = supplierSize * (new SupplierSetup().bodyPatternCost);
-			// if (this.room.energyAvailable < supplierCost) {
-			// 	supplierSize = 1; // If the room runs out of suppliers at low energy, spawn a small supplier
-			// }
 			let numSuppliers = _.filter(this.colony.getCreepsByRole('supplier'), // number of big suppliers in colony
 										creep => creep.getActiveBodyparts(MOVE) == supplierSize).length;
 			let numSuppliersNeeded = 1;
@@ -335,15 +345,6 @@ export class Overlord implements IOverlord {
 	}
 
 
-	// Market operations ===============================================================================================
-
-	// handleTerminalOperations(): void {
-	// 	if (this.room.terminal) {
-	// 		this.room.terminal.brain.run();
-	// 	}
-	// }
-
-
 	// Safe mode condition =============================================================================================
 
 	private handleSafeMode(): void {
@@ -364,10 +365,9 @@ export class Overlord implements IOverlord {
 
 	// Operation =======================================================================================================
 
-	run(): void { // TODO: make register_, handle_ more consistent with init() and run()
+	run(): void {
 		this.handleSafeMode();
 		this.handleSpawnOperations(); // build creeps as needed
-		// this.handleTerminalOperations(); // replenish needed resources
 	}
 }
 
