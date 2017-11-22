@@ -6,9 +6,6 @@ Screeps is an [MMO strategy game for programmers](https://screeps.com/). The cor
 
 This is the AI system I have been developing for Screeps. It is a centrally-managed AI with a structure based loosely on the [Zerg's swarm intelligence](http://starcraft.wikia.com/wiki/Overlord) from Starcraft. Creep activities in each colony are prioritized and managed by a central `Overlord` object, which handles task assignment, reacts to stimuli with `objectives` and `directives`, and manages spawner activity through the `hatchery` object.
 
-### Contributing to Overmind
-I'm not accepting contributions to Overmind until the main framework is finished (probably about another 3 weeks of coding at my current rate). After Overmind is "complete", I'll begin accepting pull requests. 
-
 ### Using Overmind as your AI
 If you're new to screeps, I wouldn't recommend using Overmind; most of the fun of the game is programming your own AI and watching your code run like a well-oiled machine! (Or, more frequently, go down in flames like an overly-oiled machine...) However, when I first started playing screeps, I was frustrated by scantily-documented codebases, so Overmind was programmed with readability and documentation in mind, so it might be a good resource to reference when coding your first AI!
 
