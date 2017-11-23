@@ -30,6 +30,9 @@ export abstract class AbstractHiveCluster implements IHiveCluster {
 		console.log(this.colonyName, ' ', this.ref, ': "', ...args, '".');
 	}
 
+	// Logic for requesting creeps from the hatchery. These are called at the end of the init() phase
+	protected abstract registerCreepRequests(): void;
+
 	// Pre-run logic, such as registering objectives
 	abstract init(): void;
 

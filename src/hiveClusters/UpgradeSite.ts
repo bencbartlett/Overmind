@@ -3,6 +3,7 @@
 import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {TaskRepair} from '../tasks/task_repair';
 import {TaskBuild} from '../tasks/task_build';
+import {UpgraderSetup} from '../roles/upgrader';
 
 export class UpgradeSite extends AbstractHiveCluster implements IUpgradeSite {
 	controller: StructureController;
@@ -36,6 +37,27 @@ export class UpgradeSite extends AbstractHiveCluster implements IUpgradeSite {
 		return this._upgraders;
 	}
 
+	/* Ensure there are upgraders and scale the size according to how much energy you have */
+	protected registerCreepRequests(): void {
+		if (this.room.storage) { // Workers perform upgrading until storage is set up
+			let amountOver = Math.max(this.room.storage.energy - this.overlord.settings.storageBuffer['upgrader'], 0);
+			let upgraderSize = 1 + Math.floor(amountOver / 20000);
+			if (this.controller.level == 8) {
+				upgraderSize = Math.min(upgraderSize, 3); // don't go above 15 work parts at RCL 8
+			}
+			let upgraderRole = new UpgraderSetup();
+			let numUpgradersNeeded = Math.ceil(upgraderSize * upgraderRole.bodyPatternCost /
+											   this.room.energyCapacityAvailable); // this causes a jump at 2 upgraders
+			if (this.upgraders.length < numUpgradersNeeded) {
+				this.colony.hatchery.enqueue(
+					upgraderRole.create(this.colony, {
+						assignment            : this.room.controller!,
+						patternRepetitionLimit: upgraderSize,
+					}));
+			}
+		}
+	}
+
 	init(): void {
 		if (this.input instanceof StructureLink) {
 			if (this.input.energy < 400) {
@@ -46,6 +68,7 @@ export class UpgradeSite extends AbstractHiveCluster implements IUpgradeSite {
 				this.overlord.resourceRequests.registerResourceRequest(this.input);
 			}
 		}
+		this.registerCreepRequests();
 	}
 
 	run(): void {

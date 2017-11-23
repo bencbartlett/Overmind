@@ -4,6 +4,7 @@ import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {TaskBuild} from '../tasks/task_build';
 import {TaskRepair} from '../tasks/task_repair';
 import {pathing} from '../pathing/pathing';
+import {MinerSetup} from '../roles/miner';
 
 export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 	source: Source;
@@ -96,9 +97,22 @@ export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 		}
 	}
 
-	/* Initialization tasks: register resource transfer reqeusts */
+	/* Request another miner if there is insufficient mining power at this site */
+	protected registerCreepRequests(): void {
+		let miningPowerAssigned = _.sum(_.map(this.miners, creep => creep.getActiveBodyparts(WORK)));
+		if (miningPowerAssigned < this.miningPowerNeeded) {
+			this.colony.hatchery.enqueue(
+				new MinerSetup().create(this.colony, {
+					assignment            : this.source,
+					patternRepetitionLimit: 3,
+				}));
+		}
+	}
+
+	/* Initialization tasks: register resource transfer reqeusts, register creep requests */
 	init(): void {
 		this.registerOutputRequests();
+		this.registerCreepRequests();
 	}
 
 	/* Run tasks: make output construciton site if needed; build and maintain the output structure */

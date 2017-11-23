@@ -410,7 +410,13 @@ interface IOverlord {
 	memory: OverlordMemory;
 	room: Room;
 	colony: IColony;
-	settings: any;
+	settings: {
+		incubationWorkersToSend: number;
+		storageBuffer: { [role: string]: number };
+		unloadStorageBuffer: number;
+		reserveBuffer: number;
+		maxAssistLifetimePercentage: number;
+	};
 	objectiveGroup: IObjectiveGroup;
 	resourceRequests: IResourceRequestGroup;
 	log(message: string): void;

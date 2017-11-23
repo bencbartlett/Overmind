@@ -5,6 +5,7 @@ import {TaskDeposit} from '../tasks/task_deposit';
 import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {reserveCredits} from '../settings/settings_user';
 import {terminalSettings} from '../settings/settings_terminal';
+import {ManagerSetup} from '../roles/manager';
 
 export class CommandCenter extends AbstractHiveCluster implements ICommandCenter {
 	memory: CommandCenterMemory;							// Memory.colonies.commandCenter
@@ -23,6 +24,7 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 	private settings: {										// Settings for cluster operation
 		refillTowersBelow: number;  							// What value to refill towers at?
 		excessEnergyTransferSize: number; 						// How much excess energy does a terminal send at once
+		managerSize: number;									// Size of manager in body pattern repetition units
 	};
 	private terminalSettings: {								// Settings for terminal operation
 		resourceAmounts: { [resourceType: string]: number };	// Desired equilibrium levels of resources
@@ -45,6 +47,7 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 		this.settings = {
 			refillTowersBelow: 200,
 			excessEnergyTransferSize: 100000,
+			managerSize: 8,
 		};
 		this.terminalSettings = terminalSettings;
 	}
@@ -307,11 +310,21 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 		}
 	}
 
+	/* Request a manager if there isn't one already */
+	protected registerCreepRequests(): void {
+		if (!this.manager) {
+			this.colony.hatchery.enqueue(
+				new ManagerSetup().create(this.colony, {
+					assignment            : this.room.storage,
+					patternRepetitionLimit: this.settings.managerSize,
+				}));
+		}
+	}
 
 	// Initialization and operation ====================================================================================
 
 	init(): void {
-		return;
+		this.registerCreepRequests();
 	}
 
 	run(): void {

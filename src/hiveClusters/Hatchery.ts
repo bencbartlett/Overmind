@@ -21,6 +21,8 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 	private settings: {										// Settings for hatchery operation
 		refillTowersBelow: number,  							// What value to refill towers at?
 		linksRequestEnergyBelow: number, 						// What value will links request more energy at?
+		supplierPatternRepetitionLimit: number,					// Size of suppliers in body patern repetition units
+		numSuppliers: number,									// Number of suppliers the Hatchery needs
 	};
 	private productionQueue: { [priority: number]: protoCreep[] };  // Priority queue of protocreeps
 	private _supplier: ICreep; 										// The supplier working the hatchery
@@ -53,7 +55,6 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		this.spawnPriorities = {
 			supplier       : 0,
 			scout          : 1,
-			linker         : 1,
 			manager        : 1,
 			guard          : 2,
 			mineralSupplier: 3,
@@ -67,8 +68,10 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		this.memory.productionQueue = {}; // cleared every tick; only in memory for inspection purposes
 		this.productionQueue = this.memory.productionQueue; // reference this outside of memory for typing purposes
 		this.settings = {
-			refillTowersBelow      : 500,
-			linksRequestEnergyBelow: 0,
+			refillTowersBelow             : 500,
+			linksRequestEnergyBelow       : 0,
+			supplierPatternRepetitionLimit: _.min([2 * this.room.controller!.level, 8]),
+			numSuppliers                  : 1,
 		};
 	}
 
@@ -261,15 +264,31 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 	private handleSpawns(): void {
 		// See if an emergency supplier needs to be spawned
 		let numSuppliers = this.colony.getCreepsByRole('supplier').length;
-		let supplierSize = this.overlord.settings.supplierPatternRepetitionLimit;
+		let supplierSize = this.settings.supplierPatternRepetitionLimit;
 		// Emergency suppliers spawn when numSuppliers = 0 and when there isn't enough energy to spawn new supplier
 		if (numSuppliers == 0 && supplierSize * (new SupplierSetup().bodyPatternCost) > this.room.energyAvailable) {
 			this.spawnEmergencySupplier();
+		} else {
+			// Spawn all queued creeps that you can
+			while (this.availableSpawns.length > 0) {
+				if (this.spawnHighestPriorityCreep() != OK) {
+					break;
+				}
+			}
 		}
-		// Spawn all queued creeps that you can
-		while (this.availableSpawns.length > 0) {
-			if (this.spawnHighestPriorityCreep() != OK) {
-				break;
+	}
+
+	/* Request a new supplier if there are structures to deposit into and if there is energy income */
+	protected registerCreepRequests(): void {
+		if (this.room.sinks.length > 0 && this.colony.getCreepsByRole('miner').length > 0) {
+			let supplierSize = this.settings.supplierPatternRepetitionLimit;
+			let numSuppliers = _.filter(this.colony.getCreepsByRole('supplier'), // number of big suppliers in colony
+										creep => creep.getActiveBodyparts(MOVE) == supplierSize).length;
+			if (numSuppliers < this.settings.numSuppliers) {
+				this.colony.hatchery.enqueue(new SupplierSetup().create(this.colony, {
+					assignment            : this.room.controller!,
+					patternRepetitionLimit: supplierSize,
+				}));
 			}
 		}
 	}
@@ -278,6 +297,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 	init(): void {
 		this.registerObjectives();
 		this.registerEnergyRequests();
+		this.registerCreepRequests();
 	}
 
 	run(): void {

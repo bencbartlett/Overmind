@@ -4,6 +4,7 @@ import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {pathing} from '../pathing/pathing';
 import {ObjectiveGroup} from '../objectives/ObjectiveGroup';
 import {ObjectiveCollectEnergyMiningSite} from '../objectives/objectives';
+import {HaulerSetup} from '../roles/hauler';
 
 
 export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
@@ -106,11 +107,23 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 		}
 	}
 
+	/* Request a hauler if there is insufficient available hauling power */
+	protected registerCreepRequests(): void {
+		if (this.data.haulingPowerSupplied < this.data.haulingPowerNeeded) {
+			this.colony.hatchery.enqueue(
+				new HaulerSetup().create(this.colony, {
+					assignment            : this.dropoff, // assign hauler to group dropoff location
+					patternRepetitionLimit: Infinity,
+				}));
+		}
+	}
+
 	/* Initialization tasks: register miningSite collection objectives, register link transfer requests */
 	init(): void {
 		this.populateData();
 		this.registerObjectives();
 		this.registerLinkTransferRequests();
+		this.registerCreepRequests();
 	}
 
 	run(): void {
