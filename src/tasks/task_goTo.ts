@@ -1,6 +1,8 @@
 import {Task} from './Task';
 
 type targetType = RoomObject;
+
+// TODO: this should accept a room position as well
 export class TaskGoTo extends Task {
 	target: targetType;
 

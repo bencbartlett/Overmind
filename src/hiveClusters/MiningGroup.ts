@@ -99,10 +99,12 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 
 	/* Register a link transfer request if the link is sufficiently full */
 	private registerLinkTransferRequests(): void {
-		if (this.dropoff instanceof StructureLink) {
-			let allowableEmptiness = 100;
-			if (this.dropoff.energy + allowableEmptiness > this.dropoff.energyCapacity) {
-				this.overlord.resourceRequests.registerWithdrawalRequest(this.dropoff);
+		if (this.links) {
+			for (let link of this.links) {
+				let allowableEmptiness = 100;
+				if (link.energy > link.energyCapacity - allowableEmptiness) {
+					this.overlord.resourceRequests.registerWithdrawalRequest(link);
+				}
 			}
 		}
 	}

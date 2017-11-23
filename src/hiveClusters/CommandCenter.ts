@@ -196,8 +196,9 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 		if (!this._depositStructures) {
 			// Generate a prioritized list of what needs energy
 			let depositStructures: (Link | Tower | Terminal | StructureNuker | PowerSpawn | Lab)[] = [];
-			if (this.link && this.link.energy < 0.9 * this.link.energyCapacity) { 	// If link is not almost full
-				if (this.overlord.resourceRequests.resourceIn.link.length > 0) { 	// If link should send energy
+			// If the link is empty and can send energy and something needs energy, fill it up
+			if (this.link && this.link.energy < 0.9 * this.link.energyCapacity  && this.link.cooldown <= 1) {
+				if (this.overlord.resourceRequests.resourceIn.link.length > 0) { 	// If something wants energy
 					depositStructures.push(this.link);
 				}
 			}
@@ -237,6 +238,7 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 		if (!this._withdrawStructures) {
 			// Generate a prioritized list of things that need energy withdrawn
 			let withdrawStructures: (Link | Terminal)[] = [];
+			// If the link has energy and nothing needs it, empty it
 			if (this.link && this.link.energy > 0) {
 				if (this.overlord.resourceRequests.resourceIn.link.length == 0) { // nothing needs link to send energy
 					withdrawStructures.push(this.link);
@@ -277,8 +279,11 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 				}
 			}
 			// If you still have nothing to do, go to the idle point
-			if (manager.isIdle && !manager.pos.isEqualTo(this.idlePos)) {
-				manager.travelTo(this.idlePos);
+			if (manager.isIdle) {
+				manager.task = null;
+				if (!manager.pos.isEqualTo(this.idlePos)) {
+					manager.travelTo(this.idlePos);
+				}
 			}
 		}
 	}

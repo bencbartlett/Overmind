@@ -165,9 +165,11 @@ export class Colony implements IColony {
 		// For each receiving link, greedily get energy from the closest transmitting link - at most 9 operations
 		for (let receiveLink of receiveLinks) {
 			let closestTransmitLink = receiveLink.pos.findClosestByRange(transmitLinks);
+			// If a send-receive match is found, transfer that first, then remove the pair from the link lists
 			if (closestTransmitLink) {
-				// If a send-receive match is found, transfer that first, then remove the pair from the link lists
-				closestTransmitLink.transferEnergy(receiveLink);
+				// Send min of (all the energy in sender link, amount of available space in receiver link)
+				let amountToSend = _.min([closestTransmitLink.energy, receiveLink.energyCapacity - receiveLink.energy]);
+				closestTransmitLink.transferEnergy(receiveLink, amountToSend);
 				_.remove(transmitLinks, link => link == closestTransmitLink);
 				_.remove(receiveLinks, link => link == receiveLink);
 			}

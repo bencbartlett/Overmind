@@ -25,7 +25,7 @@ export class ManagerCreep extends AbstractCreep {
 	}
 
 	run() {
-		// Managers are controlled by the hatchery and don't have internal logic
+		// Managers are controlled by the command center and don't have internal logic
 		this.executeTask();
 	}
 }
