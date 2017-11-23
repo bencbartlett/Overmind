@@ -48,6 +48,4 @@ export class DataLogger {
 	}
 }
 
-// const profiler = require('screeps-profiler');
-import profiler = require('../lib/screeps-profiler');
-profiler.registerClass(DataLogger, 'DataLogger');
+

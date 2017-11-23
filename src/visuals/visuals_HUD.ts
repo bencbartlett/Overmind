@@ -172,6 +172,3 @@ export var HUD = {
 	},
 };
 
-// const profiler = require('screeps-profiler');
-import profiler = require('../lib/screeps-profiler');
-profiler.registerObject(HUD, 'HUD');

@@ -70,7 +70,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		this.settings = {
 			refillTowersBelow             : 500,
 			linksRequestEnergyBelow       : 0,
-			supplierPatternRepetitionLimit: _.min([2 * this.room.controller!.level, 8]),
+			supplierPatternRepetitionLimit: _.min([_.ceil(2 * (this.extensions.length + 1) / 5), 8]),
 			numSuppliers                  : 1,
 		};
 	}

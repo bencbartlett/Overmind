@@ -39,6 +39,7 @@ export class Colony implements IColony {
 	creepsByRole: { [roleName: string]: ICreep[] };		// Creeps hashed by their role name
 	sources: Source[];									// Sources in all colony rooms
 	data: {												// Data about the colony, calculated once per tick
+		energyPerTick: number, 								// Energy income of the colony per tick
 		numHaulers: number,									// Number of haulers in the colony
 		haulingPowerSupplied: number,						// Amount of hauling supplied in units of CARRY parts
 		haulingPowerNeeded: number,							// Amount of hauling needed in units of CARRY parts
@@ -92,8 +93,8 @@ export class Colony implements IColony {
 		this.upgradeSite = new UpgradeSite(this, this.controller);
 		// Sort claimed and unclaimed links
 		this.claimedLinks = _.filter(_.compact([this.commandCenter ? this.commandCenter.link : null,
-											   this.hatchery ? this.hatchery.link : null,
-											   this.upgradeSite.input]), s => s instanceof StructureLink) as Link[];
+												this.hatchery ? this.hatchery.link : null,
+												this.upgradeSite.input]), s => s instanceof StructureLink) as Link[];
 		this.unclaimedLinks = _.filter(this.links, link => this.claimedLinks.includes(link) == false);
 		// Instantiate a MiningGroup for each non-component link and for storage
 		if (this.storage) {
@@ -122,6 +123,7 @@ export class Colony implements IColony {
 
 	private populateColonyData(): void {
 		// Calculate hauling power needed (in units of number of CARRY parts)
+		let energyPerTickValue = _.sum(_.map(this.miningSites, site => site.energyPerTick));
 		let haulingPowerNeededValue: number;
 		if (this.storage) {
 			let haulingPower = 0;
@@ -140,6 +142,7 @@ export class Colony implements IColony {
 													creep => creep.getActiveBodyparts(CARRY)));
 		let numHaulersValue = this.getCreepsByRole('hauler').length;
 		this.data = {
+			energyPerTick       : energyPerTickValue,
 			haulingPowerNeeded  : haulingPowerNeededValue,
 			haulingPowerSupplied: haulingPowerSuppliedValue,
 			numHaulers          : numHaulersValue,

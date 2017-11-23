@@ -1,6 +1,5 @@
 // Overmind class - manages colony-scale operations and contains references to all brain objects
 
-import profiler = require('./lib/screeps-profiler');
 import {Colony} from './Colony';
 import {Overlord} from './Overlord';
 import {AbstractCreepWrapper} from './maps/map_roles';
@@ -146,5 +145,4 @@ export default class Overmind implements IOvermind {
 };
 
 
-profiler.registerClass(Overmind, 'Overmind');
 

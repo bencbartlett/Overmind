@@ -11,8 +11,16 @@ If you're new to screeps, I wouldn't recommend using Overmind; most of the fun o
 
 If you do want to use Overmind as-is, it "should" work right out of the box, although the codebase is under a lot of development right now, so I might have broken something. If it seems I have, please [submit an issue](https://github.com/bencbartlett/Overmind/issues/new) and I'll try to fix it.
 
-### TypeScript
-Overmind is coded in TypeScript 2.2, which automatically catches a lot of would-be runtime errors and allows for a much nicer, more object-oriented coding style.
+### Installation 
+Setting up the code base is simple with `npm`. To install, navigate to the Overmind root directory and run
+
+```npm install```
+
+To compile (to a single `main.js` file) and deploy to the Screeps server, create a `credentials.json` file from the example in the `/config` directory, then nagivate to the Overmind root and run
+
+
+```npm run deploy```
+
 
 ### Find me in game! (username: Muon)
 I'm currently around the [`W1XN8X` sector](https://screeps.com/a/#!/map?pos=-19.173,-88.435). If my AI is being too agressive, feel free to message me about it. I'm working on developing a whitelist to make Overmind stop attacking players who opt out of it.

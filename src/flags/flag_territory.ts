@@ -1,6 +1,5 @@
 // var roles = require('roles.js');
 
-import profiler = require('../lib/screeps-profiler');
 import {ClaimerSetup} from '../roles/claimer';
 
 
@@ -70,4 +69,3 @@ export var territoryFlagActions = {
 	},
 };
 
-profiler.registerObject(territoryFlagActions, 'territoryFlagActions');

@@ -49,7 +49,3 @@ export var pathing = {
 		return Memory.pathLengths[pos1.name][pos2.name];
 	},
 };
-
-import profiler = require('../lib/screeps-profiler');
-profiler.registerObject(pathing, 'pathing');
-

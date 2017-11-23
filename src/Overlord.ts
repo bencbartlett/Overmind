@@ -1,6 +1,5 @@
 /* The Overlord object handles most of the task assignment and directs the spawning operations for each Colony. */
 
-import profiler = require('./lib/screeps-profiler');
 
 import {Colony} from './Colony';
 import {
@@ -372,4 +371,3 @@ export class Overlord implements IOverlord {
 	}
 }
 
-profiler.registerClass(Overlord, 'Overlord');

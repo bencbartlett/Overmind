@@ -85,6 +85,3 @@ export class Preprocessing {
 	}
 }
 
-// const profiler = require('screeps-profiler');
-import profiler = require('./lib/screeps-profiler');
-profiler.registerClass(Preprocessing, 'Preprocessing');

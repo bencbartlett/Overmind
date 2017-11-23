@@ -140,5 +140,3 @@ export abstract class Task implements ITask {
 	abstract work(): number;
 }
 
-import profiler = require('../lib/screeps-profiler');
-profiler.registerClass(Task, 'Task');

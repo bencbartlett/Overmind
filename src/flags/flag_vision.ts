@@ -1,4 +1,3 @@
-import profiler = require('../lib/screeps-profiler');
 import {ScoutSetup} from '../roles/scout';
 
 
@@ -13,6 +12,4 @@ export var visionFlagActions = {
 		handleScouts(flag);
 	},
 };
-
-profiler.registerObject(visionFlagActions, 'visionFlagActions');
 

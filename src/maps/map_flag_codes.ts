@@ -1,6 +1,5 @@
 // Map of flag codes and associated filters
 
-import profiler = require('../lib/screeps-profiler');
 import {millitaryFlagActions} from '../flags/flag_millitary';
 import {industryFlagActions} from '../flags/flag_industry';
 import {territoryFlagActions} from '../flags/flag_territory';
@@ -146,4 +145,3 @@ export var flagCodesMap: { [category: string]: flagCat } = {
 
 // export default flagCodesMap;
 
-profiler.registerObject(flagCodesMap, 'flagCodes');

@@ -29,7 +29,3 @@ export var visuals = {
 		HUD.draw();
 	},
 };
-
-// const profiler = require('screeps-profiler');
-import profiler = require('../lib/screeps-profiler');
-profiler.registerObject(visuals, 'visuals');

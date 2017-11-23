@@ -40,6 +40,5 @@ export var industryFlagActions = {
 };
 
 // const profiler = require('screeps-profiler');
-import profiler = require('../lib/screeps-profiler');
-profiler.registerObject(industryFlagActions, 'industryFlagActions');
+
 

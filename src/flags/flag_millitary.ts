@@ -1,5 +1,4 @@
 // var roles = require('roles.js');
-import profiler = require('../lib/screeps-profiler');
 import {GuardSetup} from '../roles/guard';
 import {DestroyerSetup} from '../roles/destroyer';
 import {SiegerSetup} from '../roles/sieger';
@@ -65,4 +64,3 @@ export var millitaryFlagActions = {
 	},
 };
 
-profiler.registerObject(millitaryFlagActions, 'millitaryFlagActions');
