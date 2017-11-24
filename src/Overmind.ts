@@ -87,7 +87,7 @@ export default class Overmind implements IOvermind {
 		for (let name in Game.creeps) {
 			Game.icreeps[name] = AbstractCreepWrapper(Game.creeps[name]);
 		}
-		// Register creeps
+		// Register creeps to their colonies
 		let creepsByColony = _.groupBy(Game.icreeps, creep => creep.memory.colony) as { [colName: string]: ICreep[] };
 		for (let colName in this.Colonies) {
 			let colony = this.Colonies[colName];

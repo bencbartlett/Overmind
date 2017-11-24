@@ -1,7 +1,3 @@
-// Creep prototypes
-
-// import {Traveler, TravelToOptions} from '../lib/Traveler';
-
 // Creep properties ====================================================================================================
 
 Creep.prototype.getBodyparts = function (partType) {
@@ -26,15 +22,3 @@ Object.defineProperty(Creep.prototype, 'lifetime', { // creep lifetime; 1500 unl
 		}
 	},
 });
-
-// const traveler = new Traveler();
-// Creep.prototype.travelTo = function (destination: RoomPosition | { pos: RoomPosition }, options?: TravelToOptions) {
-// 	if (options) {
-// 		return traveler.travelTo(this, destination, options);
-// 	} else {
-// 		return traveler.travelTo(this, destination);
-// 	}
-// // };
-// Creep.prototype.travelTo = function(destination: RoomPosition|{pos: RoomPosition}, options?: TravelToOptions) {
-// 	return Traveler.travelTo(this, destination, options);
-// };

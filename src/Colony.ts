@@ -33,11 +33,12 @@ export class Colony implements IColony {
 	unclaimedLinks: StructureLink[]; 					// Links not belonging to a hive cluster, free for mining group
 	miningGroups: { [id: string]: IMiningGroup } | undefined;	// Component to group mining sites into a hauling group
 	miningSites: { [sourceID: string]: IMiningSite };	// Component with logic for mining and hauling
+	sources: Source[];									// Sources in all colony rooms
 	incubating: boolean;								// If the colony is currently being cared for by another one
 	flags: Flag[];										// Flags across the colony
 	creeps: ICreep[];									// Creeps bound to the colony
 	creepsByRole: { [roleName: string]: ICreep[] };		// Creeps hashed by their role name
-	sources: Source[];									// Sources in all colony rooms
+	hostiles: Creep[];									// Hostile creeps in one of the rooms
 	data: {												// Data about the colony, calculated once per tick
 		energyPerTick: number, 								// Energy income of the colony per tick
 		numHaulers: number,									// Number of haulers in the colony
@@ -79,6 +80,10 @@ export class Colony implements IColony {
 		// Register things across all rooms in the colony
 		this.flags = _.flatten(_.map(this.rooms, room => room.flags));
 		this.sources = _.flatten(_.map(this.rooms, room => room.sources));
+		// Creep registration is done by Overmind.initializeCreeps()
+		this.creeps = [];
+		// Register enemies across colony rooms
+		this.hostiles = _.flatten(_.map(this.rooms, room => room.hostiles));
 	}
 
 	/* Instantiate and associate virtual colony components to group similar structures together */

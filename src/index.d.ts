@@ -199,6 +199,7 @@ interface IColony {
 	flags: Flag[];
 	creeps: ICreep[];
 	creepsByRole: { [roleName: string]: ICreep[] };
+	hostiles: Creep[];
 	getCreepsByRole(roleName: string): ICreep[];
 	sources: Source[];
 	data: {

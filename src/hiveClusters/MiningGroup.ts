@@ -29,10 +29,14 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 
 	constructor(colony: IColony, dropoff: StructureLink | StructureStorage) {
 		super(colony, dropoff, 'miningGroup');
+		this.settings = {
+			linksTrasmitAt: LINK_CAPACITY - 100,
+		};
 		this.dropoff = dropoff;
 		if (this.dropoff instanceof StructureLink) { // register supplementary links
 			this.links = this.pos.findInRange(colony.unclaimedLinks, 2);
-			this.availableLinks = _.filter(this.links, link => link.cooldown == 0);
+			this.availableLinks = _.filter(this.links, link => link.cooldown == 0 &&
+															   link.energy <= this.settings.linksTrasmitAt);
 		}
 		// Instantiate objective group and resource requests
 		this.objectivePriorities = [
@@ -41,9 +45,6 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 		this.objectiveGroup = new ObjectiveGroup(this.objectivePriorities);
 		// Mining sites are populated with MiningSite instantiation
 		this.miningSites = [];
-		this.settings = {
-			linksTrasmitAt: LINK_CAPACITY - 100,
-		}
 	}
 
 	get haulers(): ICreep[] {
