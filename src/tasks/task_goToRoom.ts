@@ -7,7 +7,7 @@ export class TaskGoToRoom extends Task {
 	constructor(target: targetType) {
 		super('goToRoom', target);
 		// Settings
-		this.taskData.targetRange = 2; // Target is almost always controller flag, so range of 2 is acceptable
+		this.taskData.targetRange = 1; // Target is almost always controller flag, so range of 2 is acceptable
 	}
 
 	isValidTask() {

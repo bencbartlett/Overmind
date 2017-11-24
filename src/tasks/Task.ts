@@ -125,7 +125,7 @@ export abstract class Task implements ITask {
 
 	// Execute this task each tick. Returns nothing unless work is done.
 	step(): number | void {
-		if (this.creep.pos.inRangeTo(this.targetPos, this.taskData.targetRange)) {
+		if (this.creep.pos.inRangeTo(this.targetPos, this.taskData.targetRange) && !this.creep.pos.isEdge) {
 			let workResult = this.work();
 			if (workResult != OK && this.data.quiet == false) {
 				this.creep.log('Error executing ' + this.name + ', returned ' + workResult);

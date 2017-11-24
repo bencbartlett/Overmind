@@ -16,6 +16,9 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 	private objectivePriorities: string[]; 			// Prioritization for objectives in the objective group
 	objectiveGroup: ObjectiveGroup; 				// Box for objectives assigned to this mining group
 	private _haulers: ICreep[]; 					// Haulers assigned to this mining group
+	private settings: {								// Settings for mining group
+		linksTrasmitAt: number,							// Threshold at which links will send energy
+	};
 	data: {											// Data about the mining group, calculated once per tick
 		numHaulers: number,								// Number of haulers assigned to this miningGroup
 		haulingPowerSupplied: number,					// Amount of hauling supplied in units of CARRY parts
@@ -38,6 +41,9 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 		this.objectiveGroup = new ObjectiveGroup(this.objectivePriorities);
 		// Mining sites are populated with MiningSite instantiation
 		this.miningSites = [];
+		this.settings = {
+			linksTrasmitAt: LINK_CAPACITY - 100,
+		}
 	}
 
 	get haulers(): ICreep[] {
@@ -101,8 +107,7 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 	private registerLinkTransferRequests(): void {
 		if (this.links) {
 			for (let link of this.links) {
-				let allowableEmptiness = 100;
-				if (link.energy > link.energyCapacity - allowableEmptiness) {
+				if (link.energy > this.settings.linksTrasmitAt) {
 					this.overlord.resourceRequests.registerWithdrawalRequest(link);
 				}
 			}

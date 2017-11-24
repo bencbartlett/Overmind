@@ -22,6 +22,7 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 	private _depositStructures: (Link | Tower | Terminal | StructureNuker | PowerSpawn | Lab)[];	// Deposit to these
 	private _withdrawStructures: (Link | Terminal)[];		// Withdraw from these
 	private settings: {										// Settings for cluster operation
+		linksTransmitAt: number;
 		refillTowersBelow: number;  							// What value to refill towers at?
 		excessEnergyTransferSize: number; 						// How much excess energy does a terminal send at once
 		managerSize: number;									// Size of manager in body pattern repetition units
@@ -45,9 +46,10 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 		this.nuker = colony.nuker;
 		this.observer = colony.observer;
 		this.settings = {
-			refillTowersBelow: 200,
+			linksTransmitAt         : LINK_CAPACITY - 100,
+			refillTowersBelow       : 200,
 			excessEnergyTransferSize: 100000,
-			managerSize: 8,
+			managerSize             : 8,
 		};
 		this.terminalSettings = terminalSettings;
 	}
@@ -197,7 +199,7 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 			// Generate a prioritized list of what needs energy
 			let depositStructures: (Link | Tower | Terminal | StructureNuker | PowerSpawn | Lab)[] = [];
 			// If the link is empty and can send energy and something needs energy, fill it up
-			if (this.link && this.link.energy < 0.9 * this.link.energyCapacity  && this.link.cooldown <= 1) {
+			if (this.link && this.link.energy < 0.9 * this.link.energyCapacity && this.link.cooldown <= 1) {
 				if (this.overlord.resourceRequests.resourceIn.link.length > 0) { 	// If something wants energy
 					depositStructures.push(this.link);
 				}
@@ -288,16 +290,25 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 		}
 	}
 
-	private handleLink(): void {
-		if (!this.link) {
-			return;
-		}
-		if (this.overlord.resourceRequests.resourceIn.link.length > 0 &&
-			this.link.energy >= 0.9 * this.link.energyCapacity) {
-			let targetLink = this.overlord.resourceRequests.resourceIn.link[0].target as Link;
-			this.link.transferEnergy(targetLink);
+	/* Register a link transfer request if the link is sufficiently full */
+	private registerLinkTransferRequests(): void {
+		if (this.link) {
+			if (this.link.energy > this.settings.linksTransmitAt) {
+				this.overlord.resourceRequests.registerWithdrawalRequest(this.link);
+			}
 		}
 	}
+
+	// private handleLink(): void {
+	// 	if (!this.link) {
+	// 		return;
+	// 	}
+	// 	if (this.overlord.resourceRequests.resourceIn.link.length > 0 &&
+	// 		this.link.energy >= 0.9 * this.link.energyCapacity) {
+	// 		let targetLink = this.overlord.resourceRequests.resourceIn.link[0].target as Link;
+	// 		this.link.transferEnergy(targetLink);
+	// 	}
+	// }
 
 	private handleTerminal(): void {
 		if (!this.terminal) {
@@ -329,12 +340,12 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 	// Initialization and operation ====================================================================================
 
 	init(): void {
+		this.registerLinkTransferRequests()
 		this.registerCreepRequests();
 	}
 
 	run(): void {
 		this.handleManager();
-		this.handleLink();
 		this.handleTerminal();
 	}
 }
