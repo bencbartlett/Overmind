@@ -1,7 +1,6 @@
 // Guard: dumb bot that goes to a flag and then attacks everything hostile in the room, returning to flag
 // Best used only against low level npc invaders; sized to defend outposts
 
-import {TaskAttack} from '../tasks/task_attack';
 import {AbstractCreep, AbstractSetup} from './Abstract';
 
 
@@ -9,75 +8,86 @@ export class GuardSetup extends AbstractSetup {
 	constructor() {
 		super('guard');
 		// Role-specific settings
-		this.settings.bodyPattern = [MOVE, ATTACK, RANGED_ATTACK];
+		this.settings.bodyPattern = [TOUGH, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, HEAL];
 		this.settings.orderedBodyPattern = true;
 		this.settings.notifyOnNoTask = false;
-		this.roleRequirements = (c: Creep) => c.getActiveBodyparts(ATTACK) > 1 &&
-											  c.getActiveBodyparts(RANGED_ATTACK) > 1 &&
-											  c.getActiveBodyparts(MOVE) > 1;
 	}
 }
 
 
 export class GuardCreep extends AbstractCreep {
 
-	assignment: Flag;
+	assignment: Flag | null;
+	task: null; // Guard creeps don't use tasks
 
 	constructor(creep: Creep) {
 		super(creep);
 	}
 
-	findTarget(): Creep | Structure | void {
-		var target;
-		var targetPriority = [
-			() => this.pos.findClosestByRange(FIND_HOSTILE_CREEPS, {
-				filter: (c: Creep) => c.getActiveBodyparts(HEAL) > 0,
-			}),
-			() => this.pos.findClosestByRange(FIND_HOSTILE_CREEPS),
-			() => this.pos.findClosestByRange(FIND_HOSTILE_SPAWNS),
-			() => this.pos.findClosestByRange(FIND_HOSTILE_STRUCTURES, {filter: (s: Structure) => s.hits}),
-		];
-		for (let targetThis of targetPriority) {
-			target = targetThis() as Creep | Structure;
-			if (target) {
-				return target;
-			}
+	private findAttackTarget(): Creep | Structure | void {
+		// Prioritize healers?
+		// let enemyHealers = _.filter(this.room.hostiles, creep => creep.getActiveBodyparts(HEAL) > 0);
+		// if (enemyHealers.length > 0) {
+		// 	return this.pos.findClosestByRange(enemyHealers);
+		// }
+		if (this.room.hostiles.length > 0) {
+			return this.pos.findClosestByRange(this.room.hostiles);
+		}
+		if (this.room.hostileStructures.length > 0) {
+			return this.pos.findClosestByRange(this.room.hostileStructures);
 		}
 	}
 
-	newTask() {
-		this.task = null;
-		// if not in the assigned room, move there; executed in bottom of run function
-		if (this.assignment && !this.creep.inSameRoomAs(this.assignment)) {
-			return null;
-		}
-		// first try to find anything you should attack
-		var target = this.findTarget();
-		if (target) {
-			this.task = new TaskAttack(target);
-		} else {
-			// if no hostiles and you can repair stuff, do so
-			if (this.getActiveBodyparts(CARRY) > 0 && this.getActiveBodyparts(WORK) > 0) {
-				if (this.carry.energy == 0) {
-					return this.recharge();
-				} else {
-					return this.requestTask(); // get applicable tasks from room brain
-				}
+	private findHealTarget(): Creep | void {
+		this.pos.findClosestByRange(_.filter(this.room.creeps, creep => creep.hits < creep.hitsMax));
+	}
+
+	/* Attack and chase the specified target */
+	private attackActions(attackTarget: Creep | Structure): void {
+		if (this.pos.isNearTo(attackTarget)) {
+			// Attack if you can, otherwise heal yourself
+			if (this.attack(attackTarget) != OK) {
+				this.heal(this);
 			}
+			// Move in the direction of the creep to prevent it from running away
+			this.move(this.pos.getDirectionTo(attackTarget));
+		} else {
+			this.travelTo(attackTarget, {movingTarget: true});
+		}
+	}
+
+	/* Move to and heal/rangedHeal the specified target */
+	private healActions(healTarget: Creep): void {
+		// Heal or ranged heal the nearest damaged creep
+		let range = this.pos.getRangeTo(healTarget);
+		if (range > 1) {
+			this.travelTo(healTarget, {movingTarget: true});
+		}
+		if (range === 1) {
+			this.heal(healTarget);
+		}
+		else if (range <= 3) {
+			this.rangedHeal(healTarget);
 		}
 	}
 
 	run() {
-		if (!this.hasValidTask || (this.room.hostiles.length > 0 && this.task && this.task.name != 'attack')) {
-			this.newTask();
-		}
-		if (this.task) {
-			return this.task.step();
-		}
-		if (this.assignment) {
-			if (!this.task) {
-				this.travelTo(this.assignment);
+		if (this.assignment && this.pos.roomName != this.assignment.pos.roomName) {
+			// Move into the assigned room if there is a guard flag present
+			this.travelTo(this.assignment.pos);
+		} else { // If you're in the assigned room or if there is no assignment, try to attack or heal
+			let attackTarget = this.findAttackTarget();
+			let healTarget = this.findHealTarget();
+			if (attackTarget) {
+				this.attackActions(attackTarget);
+			} else if (healTarget) {
+				this.healActions(healTarget);
 			}
+			// else {
+			// 	// If there's no more attackTargets, delete your assigned flag and remove from memory
+			// 	this.assignment.remove();
+			// 	this.assignment = null;
+			// }
 		}
 	}
 }

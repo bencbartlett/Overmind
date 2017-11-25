@@ -1,6 +1,6 @@
 declare namespace NodeJS {
 	interface Global {
-		deref(ref: string): RoomObject;
+		deref(ref: string): RoomObject | null;
 		derefRoomPosition(protoPos: protoPos): RoomPosition;
 		Overmind: IOvermind;
 		flagCodes: { [category: string]: flagCat };
@@ -33,7 +33,6 @@ interface ISetup {
 	onCreate(pCreep: protoCreep): protoCreep;
 	create(colony: IColony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep;
 }
-
 
 interface CreepMemory {
 	role: string;
@@ -196,6 +195,7 @@ interface IColony {
 	incubating: boolean;
 	outposts: Room[];
 	rooms: Room[];
+	defcon: 0 | 1 | 2 | 3 | 4 | 5;
 	flags: Flag[];
 	creeps: ICreep[];
 	creepsByRole: { [roleName: string]: ICreep[] };

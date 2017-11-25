@@ -139,7 +139,7 @@ export class Overlord implements IOverlord {
 
 	/* Handle remaining creep spawning requirements for homeostatic processes which aren't handled by hiveClusters.
 	 * Injects protocreeps into a priority queue in Hatchery. Other spawn operations are done with directives. */
-	private handleCoreSpawnOperations(): void {
+	private registerCreepRequests(): void {
 
 		// Ensure there's a mineral supplier for the labs
 		if (this.room.terminal && this.room.labs.length > 0) {
@@ -184,8 +184,10 @@ export class Overlord implements IOverlord {
 		}
 
 		// Spawn a guard if there is an NPC invasion happening
-		if (this.colony.hostiles.length > 0) {
-			// TODO
+		for (let room of this.colony.rooms) {
+			if (room.hostiles.length > 0) { // place the room at
+
+			}
 		}
 	}
 
@@ -228,19 +230,44 @@ export class Overlord implements IOverlord {
 		// TODO: rewrite this using the core spawn methods + request calls
 	}
 
+	/* Place event-driven flags where needed */
+	private registerFlagRequests(): void {
+		// Place guard flags in the event of an invasion
+		for (let room of this.colony.rooms) {
+			let guardFlags = _.filter(room.flags, flagCodes.millitary.guard.filter);
+			if (room.hostiles.length > 0 && guardFlags.length == 0) {
+				console.log("Placing guard flag in "+room.name);
+				room.createFlag(room.hostiles[0].pos, "guard:"+room.name,
+								flagCodes.millitary.guard.color, flagCodes.millitary.guard.secondaryColor);
+			}
+		}
+	}
+
+	private handleFlagOperations(): void {
+		// Flag operations
+		let flags = this.colony.flags;
+		var prioritizedFlagOperations = [
+			_.filter(flags, flagCodes.millitary.guard.filter),
+		];
+
+		// Handle actions associated with assigned flags
+		for (let flagPriority of prioritizedFlagOperations) {
+			for (let flag of flagPriority) {
+				flag.action();
+			}
+		}
+	}
+
 	private handleAssignedSpawnOperations(): void { // operations associated with an assigned flags
 		// Flag operations
 		let flags = this.room.assignedFlags; // TODO: make this a lookup table
 		var prioritizedFlagOperations = [
-			_.filter(flags, flagCodes.vision.stationary.filter),
+			// _.filter(flags, flagCodes.vision.stationary.filter),
 			_.filter(flags, flagCodes.territory.claimAndIncubate.filter),
-			_.filter(flags, flagCodes.millitary.guard.filter),
+			// _.filter(flags, flagCodes.millitary.guard.filter),
 			// _.filter(flags, flagCodes.territory.colony.filter),
-
 			_.filter(flags, flagCodes.millitary.destroyer.filter),
 			_.filter(flags, flagCodes.millitary.sieger.filter),
-
-			// _.filter(flags, flagCodes.industry.remoteMine.filter),
 		];
 
 		// Handle actions associated with assigned flags
@@ -255,7 +282,6 @@ export class Overlord implements IOverlord {
 	/* Handle all types of spawn operations */
 	private handleSpawnOperations(): void {
 		if (this.colony.hatchery.availableSpawns.length > 0) { // only spawn if you have an available spawner
-			this.handleCoreSpawnOperations();
 			this.handleIncubationSpawnOperations();
 			this.handleAssignedSpawnOperations();
 		}
@@ -278,11 +304,14 @@ export class Overlord implements IOverlord {
 
 	init(): void {
 		this.registerObjectives();
+		this.registerCreepRequests();
+		this.registerFlagRequests();
 	}
 
 	// Operation =======================================================================================================
 
 	run(): void {
+		this.handleFlagOperations();
 		this.handleSafeMode();
 		this.handleSpawnOperations(); // build creeps as needed
 	}

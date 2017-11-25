@@ -309,9 +309,24 @@ export abstract class AbstractCreep implements ICreep {
 	}
 
 	set assignment(newAssignment: RoomObject | null) {
+		// Remove cache references to old assignments
+		let ref = this.memory.assignmentRef;
+		if (ref && Game.cache.assignments[ref] && Game.cache.assignments[ref][this.roleName]) {
+			Game.cache.assignments[ref][this.roleName] = _.remove(Game.cache.assignments[ref][this.roleName],
+																  name => name == this.name);
+		}
 		if (newAssignment) {
+			// Change assignments in memory
 			this.memory.assignmentRef = newAssignment.ref;
 			this.memory.assignmentPos = newAssignment.pos;
+			// Update the cache references
+			if (!Game.cache.assignments[newAssignment.ref]) {
+				Game.cache.assignments[newAssignment.ref] = {};
+			}
+			if (!Game.cache.assignments[newAssignment.ref][this.roleName]) {
+				Game.cache.assignments[newAssignment.ref][this.roleName] = [];
+			}
+			Game.cache.assignments[newAssignment.ref][this.roleName].push(this.name)
 		} else {
 			this.memory.assignmentRef = null;
 			this.memory.assignmentPos = null;

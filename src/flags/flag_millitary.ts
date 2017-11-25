@@ -5,25 +5,30 @@ import {SiegerSetup} from '../roles/sieger';
 
 export var millitaryFlagActions = {
 	guard: function (flag: Flag): void {
-		function handleGuards(flag: Flag): void {
-			var role = new GuardSetup();
-			if (flag.memory.amount) {
-				flag.requiredCreepAmounts[role.name] = flag.memory.amount;
-			} else {
-				if (flag.memory.alwaysUp || !flag.room || flag.room.hostiles.length > 0) { // spawn guard if hostiles or no vision
-					flag.requiredCreepAmounts[role.name] = 1;
-				} else {
-					flag.requiredCreepAmounts[role.name] = 0;
-				}
-			}
-			let maxSize = 9;
-			if (flag.memory.maxSize) {
-				maxSize = flag.memory.maxSize;
-			}
-			flag.requestCreepIfNeeded(role, {patternRepetitionLimit: maxSize});
+		// Find all idle guards and assign them to this flag
+		console.log(flag.name, flag.pos, flag.roomName, flag.colony);
+		let idleGuards = _.filter(flag.colony.getCreepsByRole('guard'), (guard: ICreep) => !guard.assignment);
+		for (let guard of idleGuards) {
+			guard.assignment = flag;
 		}
-
-		handleGuards(flag);
+		let assignedGuards = flag.getAssignedCreeps('guard');
+		// If there are no hostiles left in the room, remove the flag
+		if (flag.room && flag.room.hostiles.length == 0 && flag.room.hostileStructures.length == 0) {
+			for (let guard of assignedGuards) {
+				guard.assignment = null;
+			}
+			flag.remove();
+			return;
+		}
+		// If there are insufficient guards assigned, spawn more
+		// TODO: figure out how many guards are needed
+		if (assignedGuards.length < 1) {
+			flag.colony.hatchery.enqueue(
+				new GuardSetup().create(flag.colony, {
+					assignment            : this,
+					patternRepetitionLimit: 3,
+				}));
+		}
 	},
 
 	destroyer: function (flag: Flag): void {

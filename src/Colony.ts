@@ -35,6 +35,7 @@ export class Colony implements IColony {
 	miningSites: { [sourceID: string]: IMiningSite };	// Component with logic for mining and hauling
 	sources: Source[];									// Sources in all colony rooms
 	incubating: boolean;								// If the colony is currently being cared for by another one
+	defcon: 0 | 1 | 2 | 3 | 4 | 5; 						// Defensive alert level of the colony
 	flags: Flag[];										// Flags across the colony
 	creeps: ICreep[];									// Creeps bound to the colony
 	creepsByRole: { [roleName: string]: ICreep[] };		// Creeps hashed by their role name
@@ -77,6 +78,8 @@ export class Colony implements IColony {
 		this.observer = this.room.getStructures(STRUCTURE_OBSERVER)[0] as StructureObserver;
 		// Get incubation status
 		this.incubating = (_.filter(this.room.flags, flagCodes.territory.claimAndIncubate.filter).length > 0);
+		// Defcon starts at 0, is updated in initDefconLevel()
+		this.defcon = 0;
 		// Register things across all rooms in the colony
 		this.flags = _.flatten(_.map(this.rooms, room => room.flags));
 		this.sources = _.flatten(_.map(this.rooms, room => room.sources));
@@ -153,6 +156,12 @@ export class Colony implements IColony {
 			numHaulers          : numHaulersValue,
 		};
 	}
+
+	// private initDefconLevel(): void {
+	// 	if (this.hostiles.length > 0) {
+	// 		this.defcon = 1;
+	// 	}
+	// }
 
 	/* Run the tower logic for each tower in the colony */
 	private handleTowers(): void {
