@@ -300,11 +300,6 @@ export abstract class AbstractCreep implements ICreep {
 
 	// Custom creep methods ============================================================================================
 
-	/* Wrapper for console.log that includes creep information */
-	log(...args: any[]): void {
-		console.log(this.room, ' ', this.name, ': "', ...args, '".');
-	}
-
 	get assignment(): RoomObject | null {
 		if (this.memory.assignmentRef) {
 			return deref(this.memory.assignmentRef);

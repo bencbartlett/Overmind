@@ -3,6 +3,7 @@
 import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskTransfer} from '../tasks/task_transfer';
 import {AbstractCreep, AbstractSetup} from './Abstract';
+import {profileClass} from '../profiling';
 
 export class MineralSupplierSetup extends AbstractSetup {
 	constructor() {
@@ -61,4 +62,7 @@ export class MineralSupplierCreep extends AbstractCreep {
 		}
 	}
 }
+
+profileClass(MineralSupplierSetup);
+profileClass(MineralSupplierCreep);
 

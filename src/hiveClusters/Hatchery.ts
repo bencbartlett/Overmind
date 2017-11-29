@@ -6,6 +6,8 @@ import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskDeposit} from '../tasks/task_deposit';
 import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {SupplierSetup} from '../roles/supplier';
+import {profileClass} from '../profiling';
+import {log} from '../lib/logger/log';
 
 export class Hatchery extends AbstractHiveCluster implements IHatchery {
 	memory: HatcheryMemory; 								// Memory.colonies.hatchery
@@ -161,7 +163,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		if (spawnToUse) { // if there is a spawn, create the creep
 			protoCreep.name = this.generateCreepName(protoCreep.name); // modify the creep name to make it unique
 			if (protoCreep.memory.colony != this.colony.name) {
-				this.log('Spawning ' + protoCreep.name + ' for ' + protoCreep.memory.colony);
+				log.info('Spawning ' + protoCreep.name + ' for ' + protoCreep.memory.colony);
 			}
 			protoCreep.memory.data.origin = spawnToUse.roomName;
 			let result = spawnToUse.spawnCreep(protoCreep.body, protoCreep.name, {memory: protoCreep.memory});
@@ -186,7 +188,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 			this.bodyCost(protoCreep.body) > this.room.energyCapacityAvailable) {
 			// If you are incubating and can't build the requested creep, enqueue it to the incubation hatchery
 			this.colony.incubator.hatchery.enqueue(protoCreep);
-			this.log('Requesting ' + roleName + ' from ' + this.colony.incubator.name);
+			log.info('Requesting ' + roleName + ' from ' + this.colony.incubator.name);
 		} else {
 			// Otherwise, queue the creep to yourself
 			if (!this.productionQueue[priority]) {
@@ -219,7 +221,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		});
 		let result = this.spawnCreep(emergencySupplier);
 		if (result != OK) {
-			this.log('Cannot create emergency supplier: ', result);
+			log.warning('Cannot create emergency supplier: ', result);
 		}
 		return result;
 	}
@@ -335,4 +337,6 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		this.handleSpawns();
 	}
 }
+
+profileClass(Hatchery);
 

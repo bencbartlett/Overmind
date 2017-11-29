@@ -4,6 +4,7 @@ import {TaskWithdraw} from '../tasks/task_withdraw';
 import {AbstractCreep, AbstractSetup} from './Abstract';
 import {controllerSignature} from '../settings/settings_user';
 import {TaskUpgrade} from '../tasks/task_upgrade';
+import {profileClass} from '../profiling';
 
 export class UpgraderSetup extends AbstractSetup {
 	constructor() {
@@ -18,7 +19,6 @@ export class UpgraderSetup extends AbstractSetup {
 												  creep.getActiveBodyparts(CARRY) > 1;
 	}
 }
-
 
 export class UpgraderCreep extends AbstractCreep {
 	assignment: StructureController;
@@ -62,5 +62,7 @@ export class UpgraderCreep extends AbstractCreep {
 			this.task = new TaskUpgrade(this.upgradeSite.controller);
 		}
 	}
-
 }
+
+profileClass(UpgraderSetup);
+profileClass(UpgraderCreep);

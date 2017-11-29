@@ -3,9 +3,9 @@
 import {pathing} from '../pathing/pathing';
 
 
-RoomObject.prototype.log = function (message) {
-	console.log(this.room.name + ' ' + this.name + ': "' + message + '"');
-};
+// RoomObject.prototype.log = function (message) {
+// 	console.log(this.room.name + ' ' + this.name + ': "' + message + '"');
+// };
 
 // determines if object is in same room as other object in possibly undefined room
 RoomObject.prototype.inSameRoomAs = function (otherObject) {

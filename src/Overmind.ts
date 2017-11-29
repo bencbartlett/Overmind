@@ -4,6 +4,7 @@ import {Colony} from './Colony';
 import {Overlord} from './Overlord';
 import {AbstractCreepWrapper} from './maps/map_roles';
 import {DirectiveWrapper} from './maps/map_directives';
+import {profileClass} from './profiling';
 
 export default class Overmind implements IOvermind {
 	name: string;											// I AM THE SWARM
@@ -171,5 +172,5 @@ export default class Overmind implements IOvermind {
 	}
 };
 
-
+profileClass(Overmind);
 

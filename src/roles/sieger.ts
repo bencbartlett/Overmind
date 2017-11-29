@@ -5,6 +5,8 @@
 import {TaskGoToRoom} from '../tasks/task_goToRoom';
 import {TaskDismantle} from '../tasks/task_dismantle';
 import {AbstractCreep, AbstractSetup} from './Abstract';
+import {log} from '../lib/logger/log';
+import {profileClass} from '../profiling';
 
 
 export class SiegerSetup extends AbstractSetup {
@@ -130,8 +132,11 @@ export class SiegerCreep extends AbstractCreep {
 		}
 		// remove flag once everything is destroyed
 		if (assignment && this.room.hostileStructures.length == 0) {
-			this.log('No remaining hostile structures in room; deleting flag!');
+			log.info('No remaining hostile structures in room; deleting flag!');
 			assignment.remove();
 		}
 	}
 }
+
+profileClass(SiegerSetup);
+profileClass(SiegerCreep);

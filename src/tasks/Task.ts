@@ -1,3 +1,4 @@
+import {log} from '../lib/logger/log';
 type targetType = RoomObject; // overwrite this variable in derived classes to specify more precise typing
 
 /* An abstract class for encapsulating creep actions. This generalizes the concept of "do action X to thing Y until
@@ -131,7 +132,7 @@ export abstract class Task implements ITask {
 		if (this.creep.pos.inRangeTo(this.targetPos, this.taskData.targetRange) && !this.creep.pos.isEdge) {
 			let workResult = this.work();
 			if (workResult != OK && this.data.quiet == false) {
-				this.creep.log('Error executing ' + this.name + ', returned ' + workResult);
+				log.debug('Error executing ' + this.name + ', returned ' + workResult);
 			}
 			return workResult;
 		} else {

@@ -1,4 +1,5 @@
 import {Task} from './Task';
+import {profileClass} from '../profiling';
 
 type targetType = Structure;
 export class TaskRepair extends Task {
@@ -25,3 +26,5 @@ export class TaskRepair extends Task {
 		return this.creep.repair(this.target);
 	}
 }
+
+profileClass(TaskRepair);

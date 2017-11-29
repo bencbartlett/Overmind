@@ -1,5 +1,6 @@
 // var flagCodes = require('map_flag_codes.js');
 import {Task} from './Task';
+import {profileClass} from '../profiling';
 
 type targetType = Structure;
 export class TaskDismantle extends Task {
@@ -25,3 +26,5 @@ export class TaskDismantle extends Task {
 		return this.creep.dismantle(this.target);
 	}
 }
+
+profileClass(TaskDismantle);

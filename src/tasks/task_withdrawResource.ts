@@ -1,6 +1,7 @@
 /* This is the withdrawal task for non-energy resources. */
 
 import {Task} from './Task';
+import {profileClass} from '../profiling';
 
 type targetType = StructureStorage | StructureContainer | StructureTerminal;
 export class TaskWithdrawResource extends Task {
@@ -33,3 +34,5 @@ export class TaskWithdrawResource extends Task {
 		return this.creep.withdraw(this.target, this.data.resourceType!);
 	}
 }
+
+profileClass(TaskWithdrawResource);

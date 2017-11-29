@@ -1,6 +1,7 @@
 // Data logging procedures; collects relevant data at every tick and stores them in memory
 // Eventually will move over to asynchronous memory segments when memory requirements are too large
 
+import {profileClass} from '../profiling';
 export class DataLogger {
 	settings: any;
 
@@ -48,4 +49,4 @@ export class DataLogger {
 	}
 }
 
-
+profileClass(DataLogger);

@@ -1,4 +1,5 @@
 import {Task} from './Task';
+import {profileClass} from '../profiling';
 
 type targetType = Controller;
 export class TaskReserve extends Task {
@@ -24,3 +25,4 @@ export class TaskReserve extends Task {
 	}
 }
 
+profileClass(TaskReserve);

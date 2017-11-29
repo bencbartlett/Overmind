@@ -1,4 +1,5 @@
 import {Task} from './Task';
+import {profileClass} from '../profiling';
 
 type targetType = Sink;
 export class TaskSupply extends Task {
@@ -25,3 +26,4 @@ export class TaskSupply extends Task {
 	}
 }
 
+profileClass(TaskSupply);

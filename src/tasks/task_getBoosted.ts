@@ -1,4 +1,5 @@
 import {Task} from './Task';
+import {profileClass} from '../profiling';
 
 type targetType = Lab;
 export class TaskGetBoosted extends Task {
@@ -33,3 +34,5 @@ export class TaskGetBoosted extends Task {
 }
 
 // TODO: fix boosting system
+
+profileClass(TaskGetBoosted);

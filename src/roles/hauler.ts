@@ -4,6 +4,7 @@ import {TaskDeposit} from '../tasks/task_deposit';
 import {AbstractCreep, AbstractSetup} from './Abstract';
 import {TaskGoToRoom} from '../tasks/task_goToRoom';
 import {TaskGoTo} from '../tasks/task_goTo';
+import {profileClass} from '../profiling';
 
 export class HaulerSetup extends AbstractSetup {
 	constructor() {
@@ -85,3 +86,5 @@ export class HaulerCreep extends AbstractCreep {
 	}
 }
 
+profileClass(HaulerSetup);
+profileClass(HaulerCreep);

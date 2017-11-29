@@ -1,4 +1,6 @@
 import {Task} from './Task';
+import {log} from '../lib/logger/log';
+import {profileClass} from '../profiling';
 
 type targetType = Spawn;
 export class TaskGetRenewed extends Task {
@@ -28,8 +30,9 @@ export class TaskGetRenewed extends Task {
 
 	work() {
 		let response = this.target.renewCreep(this.creep.creep);
-		this.creep.log('Renewing! ' + this.creep.ticksToLive + '/' + this.creep.lifetime);
+		log.debug('Renewing! ' + this.creep.ticksToLive + '/' + this.creep.lifetime);
 		return response;
 	}
 }
 
+profileClass(TaskGetRenewed);

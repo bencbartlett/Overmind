@@ -1,5 +1,6 @@
 import {Directive} from './Directive';
 import {ReserverSetup} from '../roles/reserver';
+import {profileClass} from '../profiling';
 
 export class DirectiveOccupy extends Directive {
 
@@ -40,3 +41,6 @@ export class DirectiveOccupy extends Directive {
 		return;
 	}
 }
+
+profileClass(DirectiveOccupy);
+

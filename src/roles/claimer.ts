@@ -3,6 +3,7 @@ import {TaskGoToRoom} from '../tasks/task_goToRoom';
 import {TaskSignController} from '../tasks/task_signController';
 import {TaskClaim} from '../tasks/task_claim';
 import {AbstractCreep, AbstractSetup} from './Abstract';
+import {profileClass} from '../profiling';
 
 export class ClaimerSetup extends AbstractSetup {
 	constructor() {
@@ -39,3 +40,6 @@ export class ClaimerCreep extends AbstractCreep {
 		}
 	}
 }
+
+profileClass(ClaimerSetup);
+profileClass(ClaimerCreep);

@@ -1,5 +1,6 @@
 import {Task} from './Task';
 import {controllerSignature} from '../settings/settings_user';
+import {profileClass} from '../profiling';
 
 type targetType = Controller;
 export class TaskSignController extends Task {
@@ -24,4 +25,6 @@ export class TaskSignController extends Task {
 		return this.creep.signController(this.target, controllerSignature);
 	}
 }
+
+profileClass(TaskSignController);
 

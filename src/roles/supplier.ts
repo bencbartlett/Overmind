@@ -2,6 +2,8 @@
 
 import {AbstractCreep, AbstractSetup} from './Abstract';
 import {TaskWithdraw} from '../tasks/task_withdraw';
+import {log} from '../lib/logger/log';
+import {profileClass} from '../profiling';
 
 
 export class SupplierSetup extends AbstractSetup {
@@ -52,7 +54,7 @@ export class SupplierCreep extends AbstractCreep {
 		} else if (this.hatchery.battery && !this.hatchery.battery.isEmpty) {
 			this.task = new TaskWithdraw(this.hatchery.battery);
 		} else {
-			this.log('Hatchery is out of energy!');
+			log.info('Hatchery is out of energy!');
 			let target = this.pos.findClosestByRange(this.room.storageUnits, {
 				filter: (s: StorageUnit) => (s instanceof StructureContainer && !s.isEmpty) ||
 											(s instanceof StructureStorage && s.creepCanWithdrawEnergy(this)),
@@ -86,9 +88,12 @@ export class SupplierCreep extends AbstractCreep {
 			if (supplier.name != this.name &&
 				supplier.getActiveBodyparts(CARRY) > this.getActiveBodyparts(CARRY) &&
 				this.getActiveBodyparts(CARRY) == 2) {
-				this.log('A larger supplier is available, time to die!');
+				log.info('A larger supplier is available, time to die!');
 				this.suicide();
 			}
 		}
 	}
 }
+
+profileClass(SupplierSetup);
+profileClass(SupplierCreep);

@@ -1,4 +1,5 @@
 import {Task} from './Task';
+import {profileClass} from '../profiling';
 
 type targetType = StructureWall | Rampart;
 export class TaskFortify extends Task {
@@ -25,3 +26,5 @@ export class TaskFortify extends Task {
 		return this.creep.repair(this.target);
 	}
 }
+
+profileClass(TaskFortify);

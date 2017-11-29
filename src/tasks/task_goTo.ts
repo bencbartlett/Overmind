@@ -1,4 +1,5 @@
 import {Task} from './Task';
+import {profileClass} from '../profiling';
 
 type targetType = RoomObject;
 
@@ -24,3 +25,5 @@ export class TaskGoTo extends Task {
 		return OK;
 	}
 }
+
+profileClass(TaskGoTo);

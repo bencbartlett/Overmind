@@ -26,10 +26,6 @@ export abstract class AbstractHiveCluster implements IHiveCluster {
 		return Overmind.Colonies[this.colonyName];
 	}
 
-	log(...args: any[]): void {
-		console.log(this.colonyName, ' ', this.ref, ': "', ...args, '".');
-	}
-
 	// Logic for requesting creeps from the hatchery. These are called at the end of the init() phase
 	protected abstract registerCreepRequests(): void;
 

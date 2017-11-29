@@ -1,4 +1,5 @@
 import {Task} from './Task';
+import {profileClass} from '../profiling';
 
 type targetType = Source;
 export class TaskHarvest extends Task {
@@ -22,3 +23,5 @@ export class TaskHarvest extends Task {
 		return this.creep.harvest(this.target);
 	}
 }
+
+profileClass(TaskHarvest);

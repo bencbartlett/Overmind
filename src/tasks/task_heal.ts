@@ -1,4 +1,5 @@
 import {Task} from './Task';
+import {profileClass} from '../profiling';
 
 type targetType = Creep;
 export class TaskHeal extends Task {
@@ -32,3 +33,4 @@ export class TaskHeal extends Task {
 	}
 }
 
+profileClass(TaskHeal);

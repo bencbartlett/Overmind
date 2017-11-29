@@ -1,4 +1,5 @@
 import {Task} from './Task';
+import {profileClass} from '../profiling';
 
 type targetType =
 	StructureContainer |
@@ -40,4 +41,6 @@ export class TaskDeposit extends Task {
 		return this.creep.transfer(this.target, RESOURCE_ENERGY);
 	}
 }
+
+profileClass(TaskDeposit);
 

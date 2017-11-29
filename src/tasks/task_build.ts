@@ -1,4 +1,5 @@
 import {Task} from './Task';
+import {profileClass} from '../profiling';
 
 type targetType = ConstructionSite;
 
@@ -26,3 +27,5 @@ export class TaskBuild extends Task {
 		return this.creep.build(this.target);
 	}
 }
+
+profileClass(TaskBuild);

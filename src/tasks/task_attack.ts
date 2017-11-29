@@ -1,4 +1,5 @@
 import {Task} from './Task';
+import {profileClass} from '../profiling';
 // Attack task, includes attack and ranged attack if applicable.
 // Use meleeAttack and rangedAttack for the exclusive variants.
 
@@ -51,3 +52,4 @@ export class TaskAttack extends Task {
 	}
 }
 
+profileClass(TaskAttack);

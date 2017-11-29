@@ -2,6 +2,7 @@
 
 import {TaskHeal} from '../tasks/task_heal';
 import {AbstractCreep, AbstractSetup} from './Abstract';
+import {profileClass} from '../profiling';
 
 export class HealerSetup extends AbstractSetup {
 	constructor() {
@@ -56,3 +57,6 @@ export class HealerCreep extends AbstractCreep {
 		}
 	}
 }
+
+profileClass(HealerSetup);
+profileClass(HealerCreep);

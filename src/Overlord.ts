@@ -16,6 +16,7 @@ import {WorkerSetup} from './roles/worker';
 import {ObjectiveGroup} from './objectives/ObjectiveGroup';
 import {ResourceRequestGroup} from './resourceRequests/ResourceRequestGroup';
 import {DirectiveGuard} from './directives/directive_guard';
+import {profileClass} from './profiling';
 
 export class Overlord implements IOverlord {
 	name: string; 								// Name of the primary colony room
@@ -72,10 +73,6 @@ export class Overlord implements IOverlord {
 		this.directives = [];
 	}
 
-	log(...args: any[]): void {
-		console.log(this.name, ' Overlord: "', ...args, '".');
-	}
-
 
 	// Objective management ============================================================================================
 
@@ -111,8 +108,11 @@ export class Overlord implements IOverlord {
 			let buildRoadObjectives = _.map(room.roadSites, site => new ObjectiveBuildRoad(site));
 
 			// Fortify barriers
-			let lowestBarriers = _.sortBy(room.barriers, barrier => barrier.hits).slice(0, 5);
-			let fortifyObjectives = _.map(lowestBarriers, barrier => new ObjectiveFortify(barrier));
+			let fortifyObjectives: IObjective[] = [];
+			if (!this.colony.incubator) {
+				let lowestBarriers = _.sortBy(room.barriers, barrier => barrier.hits).slice(0, 5);
+				fortifyObjectives = _.map(lowestBarriers, barrier => new ObjectiveFortify(barrier));
+			}
 
 			// Upgrade controller
 			let upgradeObjectives: IObjective[] = [];
@@ -172,7 +172,12 @@ export class Overlord implements IOverlord {
 
 			// Ensure there's enough workers
 			let numWorkers = this.colony.getCreepsByRole('worker').length;
-			let numWorkersNeeded = 1; // TODO: maybe a better metric than this
+			let numWorkersNeeded; // TODO: maybe a better metric than this
+			if (this.colony.incubator) {
+				numWorkersNeeded = 3;
+			} else {
+				numWorkersNeeded = 1;
+			}
 			// Only spawn workers once containers are up
 			if (numWorkers < numWorkersNeeded && this.room.storageUnits.length > 0) {
 				this.colony.hatchery.enqueue(
@@ -317,3 +322,4 @@ export class Overlord implements IOverlord {
 	}
 }
 
+profileClass(Overlord);

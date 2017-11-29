@@ -1,6 +1,7 @@
 // Scout - grants vision in reserved rooms
 
 import {AbstractCreep, AbstractSetup} from './Abstract';
+import {profileClass} from '../profiling';
 
 export class ScoutSetup extends AbstractSetup {
 	constructor() {
@@ -24,3 +25,6 @@ export class ScoutCreep extends AbstractCreep {
 		// }
 	}
 }
+
+profileClass(ScoutSetup);
+profileClass(ScoutCreep);

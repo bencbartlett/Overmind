@@ -1,6 +1,7 @@
 // Linker - transfers energy from link to storage
 
 import {AbstractCreep, AbstractSetup} from './Abstract';
+import {profileClass} from '../profiling';
 
 export class ManagerSetup extends AbstractSetup {
 	constructor() {
@@ -29,3 +30,6 @@ export class ManagerCreep extends AbstractCreep {
 		this.executeTask();
 	}
 }
+
+profileClass(ManagerSetup);
+profileClass(ManagerCreep);

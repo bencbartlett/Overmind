@@ -5,6 +5,7 @@ import {TaskBuild} from '../tasks/task_build';
 import {TaskRepair} from '../tasks/task_repair';
 import {pathing} from '../pathing/pathing';
 import {MinerSetup} from '../roles/miner';
+import {profileClass} from '../profiling';
 
 export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 	source: Source;
@@ -143,3 +144,4 @@ export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 	}
 }
 
+profileClass(MiningSite);

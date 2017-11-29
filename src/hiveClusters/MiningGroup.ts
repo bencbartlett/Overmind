@@ -5,6 +5,8 @@ import {pathing} from '../pathing/pathing';
 import {ObjectiveGroup} from '../objectives/ObjectiveGroup';
 import {ObjectiveCollectEnergyMiningSite} from '../objectives/objectives';
 import {HaulerSetup} from '../roles/hauler';
+import {log} from '../lib/logger/log';
+import {profileClass} from '../profiling';
 
 
 export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
@@ -76,9 +78,9 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 			linkPowerNeededValue = _.sum(_.map(this.miningSites, site => site.energyPerTick));
 			linkPowerAvailableValue = _.sum(_.map(this.links!, link => LINK_CAPACITY /
 																	   link.pos.getRangeTo(this.colony.storage!)));
-			// if (linkPowerNeededValue > linkPowerAvailableValue) {
-			// 	this.log('Insufficient linking power:', linkPowerAvailableValue + '/' + linkPowerNeededValue);
-			// }
+			if (linkPowerNeededValue > linkPowerAvailableValue) {
+				log.info('Insufficient linking power:', linkPowerAvailableValue + '/' + linkPowerNeededValue);
+			}
 		}
 		// Stick everything in the data object
 		this.data = {
@@ -139,3 +141,4 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 	}
 }
 
+profileClass(MiningGroup);

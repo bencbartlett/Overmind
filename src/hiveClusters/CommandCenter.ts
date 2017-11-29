@@ -6,6 +6,8 @@ import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {reserveCredits} from '../settings/settings_user';
 import {terminalSettings} from '../settings/settings_terminal';
 import {ManagerSetup} from '../roles/manager';
+import {profileClass} from '../profiling';
+import {log} from '../lib/logger/log';
 
 export class CommandCenter extends AbstractHiveCluster implements ICommandCenter {
 	memory: CommandCenterMemory;							// Memory.colonies.commandCenter
@@ -188,7 +190,7 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 		if (minRoom && this.terminal.energy > this.settings.excessEnergyTransferSize + minCost) {
 			let res = this.terminal.send(RESOURCE_ENERGY, this.settings.excessEnergyTransferSize, minRoom,
 										 'Excess energy transfer');
-			this.log(`Sent ${this.settings.excessEnergyTransferSize} excess energy to ${minRoom}. Response: ${res}.`);
+			log.info(`Sent ${this.settings.excessEnergyTransferSize} excess energy to ${minRoom}. Response: ${res}.`);
 		}
 	}
 
@@ -354,3 +356,5 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 		this.handleTerminal();
 	}
 }
+
+profileClass(CommandCenter);

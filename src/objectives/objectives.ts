@@ -8,6 +8,7 @@ import {TaskRepair} from '../tasks/task_repair';
 import {TaskBuild} from '../tasks/task_build';
 import {TaskFortify} from '../tasks/task_fortify';
 import {TaskUpgrade} from '../tasks/task_upgrade';
+import {profileClass} from '../profiling';
 
 // Objective to pick up dropped energy in a room
 export class ObjectivePickupEnergy extends Objective {
@@ -219,3 +220,12 @@ export class ObjectiveUpgrade extends Objective {
 	}
 }
 
+profileClass(ObjectivePickupEnergy);
+profileClass(ObjectiveCollectEnergyContainer);
+profileClass(ObjectiveCollectEnergyMiningSite);
+profileClass(ObjectiveSupplyTower);
+profileClass(ObjectiveSupply);
+profileClass(ObjectiveRepair);
+profileClass(ObjectiveBuild);
+profileClass(ObjectiveFortify);
+profileClass(ObjectiveUpgrade);

@@ -18,7 +18,7 @@
 import './globals';
 import './settings/settings_user';
 // External libraries
-import './lib/Traveler'; // BonzAI's excellent moveTo() replacement
+import './lib/traveler/Traveler'; // BonzAI's excellent moveTo() replacement
 // Prototypes
 import './prototypes/prototypes_Creep';
 import './prototypes/prototypes_Flag';
@@ -34,10 +34,23 @@ import {flagCodesMap} from './maps/map_flag_codes';
 import {Preprocessing} from './caching';
 import {DataLogger} from './logging/data_logger';
 import {visuals} from './visuals/visuals';
+// Configuration, logging, and profiling
+import * as Config from './config/config';
+import {log} from './lib/logger/log';
+import * as Profiler from 'screeps-profiler';
 
 // Main loop ===========================================================================================================
 
-export function loop() {
+if (Config.USE_PROFILER) {
+	Profiler.enable();
+}
+
+function mainLoop() {
+	if (Config.USE_PROFILER && Game.time % 100 == 0) {
+		console.log('Reminder: CPU profiling is currently enabled. Turn off when not needed to improve performance.');
+	}
+	global.log = log;
+	global.Profiler = Profiler;
 	// Memory management ===========================================================================================
 	// Clear memory for non-existent creeps
 	for (let name in Memory.creeps) {
@@ -83,3 +96,6 @@ export function loop() {
 	}
 }
 
+export const loop = !Config.USE_PROFILER ? mainLoop : () => {
+	Profiler.wrap(mainLoop);
+};

@@ -1,3 +1,4 @@
+import {profileClass} from '../../profiling';
 /**
  * To start using Traveler, require it in main.js:
  * Example: var Traveler = require('Traveler.js');
@@ -663,3 +664,5 @@ const STATE_DEST_ROOMNAME = 6;
 Creep.prototype.travelTo = function(destination: RoomPosition|{pos: RoomPosition}, options?: TravelToOptions) {
     return Traveler.travelTo(this, destination, options);
 };
+
+profileClass(Traveler);

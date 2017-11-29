@@ -69,7 +69,7 @@ interface Room {
 }
 
 interface RoomObject {
-	log(message: string): void;
+	// log(message: string): void;
 	inSameRoomAs(otherObject: RoomObject): boolean;
 	ref: string;
 	colony: IColony | undefined;

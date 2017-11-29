@@ -4,6 +4,7 @@ import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {TaskRepair} from '../tasks/task_repair';
 import {TaskBuild} from '../tasks/task_build';
 import {UpgraderSetup} from '../roles/upgrader';
+import {profileClass} from '../profiling';
 
 export class UpgradeSite extends AbstractHiveCluster implements IUpgradeSite {
 	controller: StructureController;
@@ -89,3 +90,4 @@ export class UpgradeSite extends AbstractHiveCluster implements IUpgradeSite {
 	}
 }
 
+profileClass(UpgradeSite);

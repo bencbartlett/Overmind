@@ -1,4 +1,5 @@
 import {Task} from './Task';
+import {profileClass} from '../profiling';
 
 type targetType = Resource;
 export class TaskPickup extends Task {
@@ -27,3 +28,5 @@ export class TaskPickup extends Task {
 		return res;
 	}
 }
+
+profileClass(TaskPickup);

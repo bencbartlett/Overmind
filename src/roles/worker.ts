@@ -3,6 +3,7 @@
 import {AbstractCreep, AbstractSetup} from './Abstract';
 import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskPickup} from '../tasks/task_pickup';
+import {profileClass} from '../profiling';
 
 export class WorkerSetup extends AbstractSetup {
 	constructor() {
@@ -67,3 +68,6 @@ export class WorkerCreep extends AbstractCreep {
 	//     }
 	// }
 }
+
+profileClass(WorkerSetup);
+profileClass(WorkerCreep);

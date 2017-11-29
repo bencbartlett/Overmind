@@ -1,6 +1,8 @@
 // A grouping for objectives that allows colony components to have their own objectives instead of all being on Overlord
 
 
+import {profileClass} from '../profiling';
+
 export class ResourceRequestGroup implements IResourceRequestGroup {
 
 	resourceIn: {
@@ -62,3 +64,4 @@ export class ResourceRequestGroup implements IResourceRequestGroup {
 	}
 }
 
+profileClass(ResourceRequestGroup);

@@ -6,6 +6,7 @@ import {Hatchery} from './hiveClusters/Hatchery';
 import {CommandCenter} from './hiveClusters/CommandCenter';
 import {UpgradeSite} from './hiveClusters/UpgradeSite';
 import {MiningGroup} from './hiveClusters/MiningGroup';
+import {profileClass} from './profiling';
 
 
 export class Colony implements IColony {
@@ -290,3 +291,4 @@ export class Colony implements IColony {
 	}
 }
 
+profileClass(Colony);
