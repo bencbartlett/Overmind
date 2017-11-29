@@ -8,11 +8,9 @@ export class HealerSetup extends AbstractSetup {
 	constructor() {
 		super('rallyHealer');
 		// Role-specific settings
-		this.settings.bodyPattern = [HEAL, MOVE];
-		this.settings.bodyPrefix = [TOUGH, TOUGH, TOUGH];
-		this.settings.proportionalPrefixSuffix = false;
-		this.roleRequirements = (creep: Creep) => creep.getActiveBodyparts(HEAL) > 1 &&
-												  creep.getActiveBodyparts(MOVE) > 1;
+		this.body.pattern = [HEAL, MOVE];
+		this.body.prefix = [TOUGH, TOUGH, TOUGH];
+		this.body.proportionalPrefixSuffix = false;
 	}
 }
 

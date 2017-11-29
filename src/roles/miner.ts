@@ -9,11 +9,7 @@ export class MinerSetup extends AbstractSetup {
 	constructor() {
 		super('miner');
 		// Role-specific settings
-		this.settings.bodyPattern = [WORK, WORK, CARRY, MOVE];
-		this.settings.allowBuild = true;
-		this.roleRequirements = (creep: Creep) => creep.getActiveBodyparts(WORK) > 1 &&
-												  creep.getActiveBodyparts(MOVE) > 1 &&
-												  creep.getActiveBodyparts(CARRY) > 1;
+		this.body.pattern = [WORK, WORK, CARRY, MOVE];
 	}
 }
 

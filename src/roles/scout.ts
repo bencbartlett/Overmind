@@ -7,8 +7,7 @@ export class ScoutSetup extends AbstractSetup {
 	constructor() {
 		super('scout');
 		// Role-specific settings
-		this.settings.bodyPattern = [MOVE];
-		this.roleRequirements = (c: Creep) => c.getActiveBodyparts(MOVE) > 1;
+		this.body.pattern = [MOVE];
 	}
 }
 
@@ -21,7 +20,7 @@ export class ScoutCreep extends AbstractCreep {
 
 	run() {
 		// if (!this.pos.inRangeTo(this.assignment, 1)) {
-			this.travelTo(this.assignment);
+		this.travelTo(this.assignment);
 		// }
 	}
 }

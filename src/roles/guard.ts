@@ -9,9 +9,8 @@ export class GuardSetup extends AbstractSetup {
 	constructor() {
 		super('guard');
 		// Role-specific settings
-		this.settings.bodyPattern = [TOUGH, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, HEAL];
-		this.settings.orderedBodyPattern = true;
-		this.settings.notifyOnNoTask = false;
+		this.body.pattern = [TOUGH, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, HEAL];
+		this.body.ordered = true;
 	}
 }
 

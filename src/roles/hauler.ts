@@ -10,12 +10,9 @@ export class HaulerSetup extends AbstractSetup {
 	constructor() {
 		super('hauler');
 		// Role-specific settings
-		this.settings.bodyPattern = [CARRY, CARRY, MOVE];
-		this.settings.bodySuffix = [WORK, MOVE];
-		this.settings.proportionalPrefixSuffix = false;
-		this.settings.consoleQuiet = true;
-		this.roleRequirements = (creep: Creep) => creep.getActiveBodyparts(MOVE) > 1 &&
-												  creep.getActiveBodyparts(CARRY) > 1;
+		this.body.pattern = [CARRY, CARRY, MOVE];
+		this.body.suffix = [WORK, MOVE];
+		this.body.proportionalPrefixSuffix = false;
 	}
 }
 

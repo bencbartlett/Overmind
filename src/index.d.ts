@@ -27,8 +27,13 @@ interface Game {
 
 interface ISetup {
 	name: string;
-	settings: any;
-	roleRequirements: Function;
+	body: {
+		pattern: BodyPartConstant[];
+		prefix: BodyPartConstant[];
+		suffix: BodyPartConstant[];
+		proportionalPrefixSuffix: boolean;
+		ordered: boolean;
+	}
 	bodyPatternCost: number;
 	bodyCost(bodyArray: string[]): number;
 	generateBody(availableEnergy: number, maxRepeats?: number): string[];

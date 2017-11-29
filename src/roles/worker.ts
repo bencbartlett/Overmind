@@ -9,11 +9,7 @@ export class WorkerSetup extends AbstractSetup {
 	constructor() {
 		super('worker');
 		// Role-specific settings
-		this.settings.bodyPattern = [WORK, CARRY, MOVE];
-		this.settings.notifyOnNoTask = true;
-		this.roleRequirements = (creep: Creep) => creep.getActiveBodyparts(WORK) > 1 &&
-												  creep.getActiveBodyparts(MOVE) > 1 &&
-												  creep.getActiveBodyparts(CARRY) > 1;
+		this.body.pattern = [WORK, CARRY, MOVE];
 	}
 }
 

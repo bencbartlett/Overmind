@@ -10,12 +10,7 @@ export class SupplierSetup extends AbstractSetup {
 	constructor() {
 		super('supplier');
 		// Role-specific settings
-		this.settings.bodyPattern = [CARRY, CARRY, MOVE];
-		// this.settings.consoleQuiet = true; // suppliers should shut the fuck up
-		this.settings.notifyOnNoRechargeTargets = true;
-		this.settings.notifyOnNoTask = false;
-		this.roleRequirements = (creep: Creep) => creep.getActiveBodyparts(MOVE) > 1 &&
-												  creep.getActiveBodyparts(CARRY) > 1;
+		this.body.pattern = [CARRY, CARRY, MOVE];
 	}
 
 	onCreate(creep: protoCreep) {

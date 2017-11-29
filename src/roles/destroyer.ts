@@ -10,28 +10,18 @@ export class DestroyerSetup extends AbstractSetup {
 	constructor() {
 		super('destroyer');
 		// Role-specific settings
-		this.settings.bodyPattern = [TOUGH, ATTACK, MOVE, MOVE, MOVE, HEAL];
-		this.settings.moveBoostedBodyPattern = [TOUGH, ATTACK, ATTACK, MOVE, HEAL];
-		this.settings.boost = {
-			tough : true,
-			attack: true,
-			move  : true,
-			heal  : false,
-		};
-		if (this.settings.boost.move == true) {
-			this.settings.bodyPattern = this.settings.moveBoostedBodyPattern;
-		}
-		this.settings.boostMinerals = {
+		this.body.boost = {
 			tough : RESOURCE_CATALYZED_GHODIUM_ALKALIDE,
 			attack: RESOURCE_CATALYZED_UTRIUM_ACID,
 			move  : RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE,
 			heal  : RESOURCE_CATALYZED_LEMERGIUM_ALKALIDE,
 		};
-		this.settings.orderedBodyPattern = true;
-		this.settings.avoidHostileRooms = false;
-		this.roleRequirements = (c: Creep) => c.getActiveBodyparts(ATTACK) > 1 &&
-											  c.getActiveBodyparts(HEAL) > 1 &&
-											  c.getActiveBodyparts(MOVE) > 1;
+		if (this.body.boost && this.body.boost.move) {
+			this.body.pattern = [TOUGH, ATTACK, ATTACK, MOVE, HEAL]; // Fewer move parts needed
+		} else {
+			this.body.pattern = [TOUGH, ATTACK, MOVE, MOVE, MOVE, HEAL];
+		}
+		this.body.ordered = true;
 	}
 
 	onCreate(creep: protoCreep) {

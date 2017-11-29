@@ -2,21 +2,13 @@
 import {TaskSignController} from '../tasks/task_signController';
 import {TaskWithdraw} from '../tasks/task_withdraw';
 import {AbstractCreep, AbstractSetup} from './Abstract';
-import {controllerSignature} from '../settings/settings_user';
 import {TaskUpgrade} from '../tasks/task_upgrade';
 import {profileClass} from '../profiling';
 
 export class UpgraderSetup extends AbstractSetup {
 	constructor() {
 		super('upgrader');
-		// Role-specific settings
-		this.settings.bodyPattern = [WORK, WORK, WORK, CARRY, MOVE];
-		this.settings.signature = controllerSignature;
-		this.settings.consoleQuiet = true;
-		this.settings.sayQuiet = true;
-		this.roleRequirements = (creep: Creep) => creep.getActiveBodyparts(WORK) > 1 &&
-												  creep.getActiveBodyparts(MOVE) > 1 &&
-												  creep.getActiveBodyparts(CARRY) > 1;
+		this.body.pattern = [WORK, WORK, WORK, CARRY, MOVE];
 	}
 }
 

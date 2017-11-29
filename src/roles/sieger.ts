@@ -13,27 +13,20 @@ export class SiegerSetup extends AbstractSetup {
 	constructor() {
 		super('sieger');
 		// Role-specific settings
-		this.settings.bodyPattern = [TOUGH, WORK, MOVE, MOVE, MOVE, HEAL];
-		this.settings.moveBoostedBodyPattern = [TOUGH, WORK, WORK, MOVE, HEAL];
-		this.settings.nonArmoredBodyPattern = [WORK, MOVE];
-		this.settings.bodyPattern = this.settings.nonArmoredBodyPattern; // TODO: remove this if needed
-		this.settings.boost = {
-			tough: false,
-			work : false,
-			move : false,
-			heal : false,
-		};
-		this.settings.boostMinerals = {
+		this.body.boost = {
 			tough: RESOURCE_CATALYZED_GHODIUM_ALKALIDE,
 			work : RESOURCE_CATALYZED_ZYNTHIUM_ACID,
 			move : RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE,
 			heal : RESOURCE_CATALYZED_LEMERGIUM_ALKALIDE,
 		};
-		this.settings.orderedBodyPattern = true;
-		this.settings.avoidHostileRooms = false;
-		this.roleRequirements = (creep: Creep) => creep.getActiveBodyparts(WORK) > 1 &&
-												  creep.getActiveBodyparts(HEAL) > 1 &&
-												  creep.getActiveBodyparts(MOVE) > 1;
+		if (this.body.boost && this.body.boost.move) {
+			this.body.pattern = [TOUGH, WORK, WORK, MOVE, HEAL];
+		} else {
+			this.body.pattern = [TOUGH, WORK, MOVE, MOVE, MOVE, HEAL];
+		}
+		this.body.ordered = true;
+		let nonArmoredBodyPattern = [WORK, MOVE];
+		this.body.pattern = nonArmoredBodyPattern;
 	}
 
 	onCreate(creep: protoCreep): protoCreep {

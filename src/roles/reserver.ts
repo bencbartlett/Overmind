@@ -10,9 +10,7 @@ export class ReserverSetup extends AbstractSetup {
 	constructor() {
 		super('reserver');
 		// Role-specific settings
-		this.settings.bodyPattern = [CLAIM, MOVE];
-		this.roleRequirements = (creep: Creep) => creep.getActiveBodyparts(CLAIM) > 1 &&
-												  creep.getActiveBodyparts(MOVE) > 1;
+		this.body.pattern = [CLAIM, MOVE];
 	}
 }
 

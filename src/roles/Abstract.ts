@@ -6,27 +6,31 @@ import {taskFromPrototask} from '../maps/map_tasks';
 
 
 export abstract class AbstractSetup implements ISetup {
-	name: string;
-	settings: any;
-	roleRequirements: (c: Creep) => boolean;
+	name: string;								// Name of the role
+	body: {
+		pattern: BodyPartConstant[];			// body pattern to be repeated
+		prefix: BodyPartConstant[];				// stuff at beginning of body
+		suffix: BodyPartConstant[];				// stuff at end of body
+		proportionalPrefixSuffix: boolean;		// (?) prefix/suffix scale with body size
+		ordered: boolean;						// (?) assemble as WORK WORK MOVE MOVE instead of WORK MOVE WORK MOVE
+		boost?: { [partToBoost: string]: ResourceConstant };	// Bost body parts with specified minerals
+	};
 
 	constructor(roleName: string) {
-		this.name = roleName; 					// name of the role
-		this.settings = {
-			bodyPattern             : [], 		// body pattern to be repeated
-			bodyPrefix              : [], 		// stuff at beginning of body
-			bodySuffix              : [], 		// stuff at end of body
-			proportionalPrefixSuffix: true, 	// prefix/suffix scale with body size
-			orderedBodyPattern      : false, 	// assemble as WORK WORK MOVE MOVE instead of WORK MOVE WORK MOVE,
+		this.name = roleName;
+		// Defaults for a creep setup
+		this.body = {
+			pattern                 : [],
+			prefix                  : [],
+			suffix                  : [],
+			proportionalPrefixSuffix: true,
+			ordered                 : false,
 		};
-		this.roleRequirements = (c: Creep) => c.getActiveBodyparts(WORK) > 1 && // what is required to do this role
-											  c.getActiveBodyparts(MOVE) > 1 &&
-											  c.getActiveBodyparts(CARRY) > 1;
 	}
 
 	/* The cost of a single repetition of the basic bodyPattern for this role */
 	get bodyPatternCost(): number {
-		return this.bodyCost(this.settings.bodyPattern);
+		return this.bodyCost(this.body.pattern);
 	}
 
 	/* Return the cost of an entire array of body parts */
@@ -52,22 +56,22 @@ export abstract class AbstractSetup implements ISetup {
 	 * subject to limitations from maxRepeats */
 	generateBody(availableEnergy: number, maxRepeats = Infinity): BodyPartConstant[] {
 		let patternCost, patternLength, numRepeats;
-		let prefix = this.settings.bodyPrefix;
-		let suffix = this.settings.bodySuffix;
-		let proportionalPrefixSuffix = this.settings.proportionalPrefixSuffix;
+		let prefix = this.body.prefix;
+		let suffix = this.body.suffix;
+		let proportionalPrefixSuffix = this.body.proportionalPrefixSuffix;
 		let body: BodyPartConstant[] = [];
 		// calculate repetitions
 		if (proportionalPrefixSuffix) { // if prefix and suffix are to be kept proportional to body size
-			patternCost = this.bodyCost(prefix) + this.bodyCost(this.settings.bodyPattern) + this.bodyCost(suffix);
-			patternLength = prefix.length + this.settings.bodyPattern.length + suffix.length;
+			patternCost = this.bodyCost(prefix) + this.bodyCost(this.body.pattern) + this.bodyCost(suffix);
+			patternLength = prefix.length + this.body.pattern.length + suffix.length;
 			numRepeats = Math.floor(availableEnergy / patternCost); // maximum number of repeats we can afford
 			numRepeats = Math.min(Math.floor(50 / patternLength),
 								  numRepeats,
 								  maxRepeats);
 		} else { // if prefix and suffix don't scale
 			let extraCost = this.bodyCost(prefix) + this.bodyCost(suffix);
-			patternCost = this.bodyCost(this.settings.bodyPattern);
-			patternLength = this.settings.bodyPattern.length;
+			patternCost = this.bodyCost(this.body.pattern);
+			patternLength = this.body.pattern.length;
 			numRepeats = Math.floor((availableEnergy - extraCost) / patternCost); // max number of remaining patterns
 			numRepeats = Math.min(Math.floor((50 - prefix.length - suffix.length) / patternLength),
 								  numRepeats,
@@ -81,15 +85,15 @@ export abstract class AbstractSetup implements ISetup {
 		} else {
 			body = body.concat(prefix);
 		}
-		if (this.settings.orderedBodyPattern) { // repeated body pattern
-			for (let part of this.settings.bodyPattern) {
+		if (this.body.ordered) { // repeated body pattern
+			for (let part of this.body.pattern) {
 				for (let i = 0; i < numRepeats; i++) {
 					body.push(part);
 				}
 			}
 		} else {
 			for (let i = 0; i < numRepeats; i++) {
-				body = body.concat(this.settings.bodyPattern);
+				body = body.concat(this.body.pattern);
 			}
 		}
 		if (proportionalPrefixSuffix) { // add the suffix
