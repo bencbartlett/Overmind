@@ -79,8 +79,6 @@ export class Traveler {
             delete travelData.path;
         }
 
-        // TODO:handle case where creep moved by some other function, but destination is still the same
-
         // delete path cache if destination is different
         if (!this.samePos(state.destination, destination)) {
             if (options.movingTarget && state.destination.isNearTo(destination)) {
@@ -153,7 +151,8 @@ export class Traveler {
         return creep.move(<DirectionConstant>nextDirection);
     }
 
-    /**
+	//noinspection JSValidateJSDoc
+	/**
      * make position objects consistent so that either can be used as an argument
      * @param destination
      * @returns {any}
@@ -356,7 +355,6 @@ export class Traveler {
                     return ret;
                 }
 
-                // TODO: handle case where a wall or some other obstacle is blocking the exit assumed by findRoute
             } else {
 
             }
@@ -464,7 +462,8 @@ export class Traveler {
         }
     }
 
-    /**
+	//noinspection JSValidateJSDoc
+	/**
      * build a cost matrix based on structures in the room. Will be cached for more than one tick. Requires vision.
      * @param room
      * @param freshMatrix
@@ -480,7 +479,8 @@ export class Traveler {
         return this.structureMatrixCache[room.name];
     }
 
-    /**
+	//noinspection JSValidateJSDoc
+	/**
      * build a cost matrix based on creeps and structures in the room. Will be cached for one tick. Requires vision.
      * @param room
      * @returns {any}

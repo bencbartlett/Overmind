@@ -12,7 +12,6 @@ export default class Overmind implements IOvermind {
 	colonyMap: { [roomName: string]: string };				// Global map of colony associations for possibly-null rooms
 	invisibleRooms: string[]; 								// Names of rooms across all colonies that are invisible
 	Overlords: { [roomName: string]: Overlord };			// Global hash of colony overlords
-	// TerminalBrains: { [roomName: string]: TerminalBrain };	// Global hash of terminal brains TODO: deprecate soon
 
 	constructor() {
 		this.name = 'Overmind';
@@ -20,7 +19,6 @@ export default class Overmind implements IOvermind {
 		this.colonyMap = {};
 		this.invisibleRooms = [];
 		this.Overlords = {};
-		// this.TerminalBrains = {};
 	}
 
 	/* Ensure top-level memory values are initialized */

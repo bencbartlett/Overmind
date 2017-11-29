@@ -63,8 +63,6 @@ interface IHatchery extends IHiveCluster {
 	supplier: ICreep;
 	idlePos: RoomPosition;
 	enqueue(protoCreep: protoCreep, priority?: number): void;
-	uptime: number;
-	energySpentInLastLifetime: number;
 }
 
 interface IUpgradeSite extends IHiveCluster {

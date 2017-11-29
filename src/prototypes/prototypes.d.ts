@@ -61,11 +61,7 @@ interface Room {
 	constructionSites: ConstructionSite[];
 	structureSites: ConstructionSite[];
 	roadSites: ConstructionSite[];
-	barriers: (StructureWall | StructureRampart)[]
-	remoteContainers: StructureContainer[];
-	sinkContainers: StructureContainer[];
-	sinkLinks: StructureLink[];
-	// run(): void;
+	barriers: (StructureWall | StructureRampart)[];
 }
 
 interface RoomObject {

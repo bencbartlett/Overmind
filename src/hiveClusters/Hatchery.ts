@@ -84,16 +84,6 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		return this._supplier;
 	}
 
-	get uptime(): number { // TODO
-		// Calculate the approximate rolling average uptime
-		return 0;
-	}
-
-	get energySpentInLastLifetime(): number { // TODO
-		// Energy spent making creeps over the last 1500 ticks
-		return 0;
-	}
-
 	// Objective management ============================================================================================
 
 	/* Request more energy when appropriate either via link or hauler */
