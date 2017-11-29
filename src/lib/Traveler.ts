@@ -256,6 +256,19 @@ export class Traveler {
             options.range = 0;
         }
 
+		// Fixes bug that causes creeps to idle on the other side of a room
+		let distanceToEdge: number;
+		if (destination instanceof RoomPosition) {
+			distanceToEdge = _.min([destination.x, 49 - destination.x,
+									destination.y, 49 - destination.y]);
+		} else {
+			distanceToEdge = _.min([destination.pos.x, 49 - destination.pos.x,
+									destination.pos.y, 49 - destination.pos.y]);
+		}
+		if (distanceToEdge < options.range!) {
+			options.range = distanceToEdge - 1;
+		}
+
         origin = this.normalizePos(origin);
         destination = this.normalizePos(destination);
         let originRoomName = origin.roomName;

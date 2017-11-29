@@ -117,6 +117,9 @@ export abstract class Task implements ITask {
 	abstract isValidTarget(): boolean;
 
 	move(): number {
+		if (this.creep.pos.isEdge && this.creep.pos.roomName == this.targetPos.roomName) {
+			return this.creep.move(this.creep.pos.getDirectionTo(this.targetPos));
+		}
 		let options = Object.assign({},
 									this.data.travelToOptions,
 									{range: this.taskData.targetRange});

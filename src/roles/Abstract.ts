@@ -1,6 +1,6 @@
 // import {tasks} from '../maps/map_tasks';
 import {TaskWithdraw} from '../tasks/task_withdraw';
-import {TaskGetRenewed} from '../tasks/task_getRenewed';
+// import {TaskGetRenewed} from '../tasks/task_getRenewed';
 import {Objective} from '../objectives/Objective';
 import {taskFromPrototask} from '../maps/map_tasks';
 
@@ -105,7 +105,12 @@ export abstract class AbstractSetup implements ISetup {
 
 	/* Generate (but not spawn) the largest creep possible, returns the creep as an object */
 	generateLargestCreep(colony: IColony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep {
-		let creepBody = this.generateBody(colony.room.energyCapacityAvailable, patternRepetitionLimit);
+		let creepBody: BodyPartConstant[];
+		if (colony.incubator) { // if you're being incubated, build as big a creep as you want
+			creepBody = this.generateBody(colony.incubator.room.energyCapacityAvailable, patternRepetitionLimit);
+		} else { // otherwise limit yourself to actual energy constraints
+			creepBody = this.generateBody(colony.room.energyCapacityAvailable, patternRepetitionLimit);
+		}
 		let protoCreep: protoCreep = { 									// object to add to spawner queue
 			body  : creepBody, 											// body array
 			name  : this.name, 											// name of the creep - gets modified by hatchery
@@ -117,7 +122,7 @@ export abstract class AbstractSetup implements ISetup {
 				objectiveRef : null,									// reference to creep's current objective
 				colony       : colony.name, 							// name of the colony the creep is assigned to
 				data         : { 										// rarely-changed data about the creep
-					origin   : colony.room.name,						// where it was spawned
+					origin   : '',										// where it was spawned, filled in at spawn time
 					replaceAt: 0, 										// when it should be replaced
 					boosts   : {} 										// keeps track of what boosts creep has/needs
 				},
@@ -326,7 +331,7 @@ export abstract class AbstractCreep implements ICreep {
 			if (!Game.cache.assignments[newAssignment.ref][this.roleName]) {
 				Game.cache.assignments[newAssignment.ref][this.roleName] = [];
 			}
-			Game.cache.assignments[newAssignment.ref][this.roleName].push(this.name)
+			Game.cache.assignments[newAssignment.ref][this.roleName].push(this.name);
 		} else {
 			this.memory.assignmentRef = null;
 			this.memory.assignmentPos = null;
@@ -541,11 +546,11 @@ export abstract class AbstractCreep implements ICreep {
 	}
 
 	/* Mostly used for incubation purposes - get renewed from a spawn if you're getting old. */
-	renewIfNeeded(): void {
-		if (this.room.spawns[0] && this.memory.data.renewMe && this.ticksToLive < 500) {
-			this.task = new TaskGetRenewed(this.room.spawns[0]);
-		}
-	}
+	// renewIfNeeded(): void {
+	// 	if (this.room.spawns[0] && this.memory.data.renewMe && this.ticksToLive < 500) {
+	// 		this.task = new TaskGetRenewed(this.room.spawns[0]);
+	// 	}
+	// }
 
 	/* Code that you want to run at the beginning of each run() call. */
 	onRun(): void {

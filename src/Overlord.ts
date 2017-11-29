@@ -12,10 +12,10 @@ import {
 	ObjectiveUpgrade
 } from './objectives/objectives';
 import {MineralSupplierSetup} from './roles/mineralSupplier';
-import {ReserverSetup} from './roles/reserver';
 import {WorkerSetup} from './roles/worker';
 import {ObjectiveGroup} from './objectives/ObjectiveGroup';
 import {ResourceRequestGroup} from './resourceRequests/ResourceRequestGroup';
+import {DirectiveGuard} from './directives/directive_guard_janky_workaround';
 
 export class Overlord implements IOverlord {
 	name: string; 								// Name of the primary colony room
@@ -26,11 +26,11 @@ export class Overlord implements IOverlord {
 	private objectivePriorities: string[]; 		// Prioritization for objectives in the objectiveGroup
 	objectiveGroup: ObjectiveGroup; 			// Box for objectives assignable from this object
 	resourceRequests: ResourceRequestGroup;		// Box for resource requests
+	directives: IDirective[]; 					// Directives across the colony
 	settings: {									// Adjustable settings
 		incubationWorkersToSend: number,			// number of big workers to send to incubate a room
 		storageBuffer: { [role: string]: number },	// creeps of a given role can't withdraw until this level
 		unloadStorageBuffer: number,				// start sending energy to other rooms past this amount
-		reserveBuffer: number,						// reserve outpost rooms up to this amount
 		maxAssistLifetimePercentage: number,		// assist in spawn operations up to (creep.lifetime * this) distance
 		workerPatternRepetitionLimit: number,		// maximum worker size
 	};
@@ -65,10 +65,11 @@ export class Overlord implements IOverlord {
 				upgrader: 75000,
 			},
 			unloadStorageBuffer         : 750000,
-			reserveBuffer               : 3000,
 			maxAssistLifetimePercentage : 0.1,
 			workerPatternRepetitionLimit: Infinity,
 		};
+		// Placeholder array for directives, filled in by Overmind
+		this.directives = [];
 	}
 
 	log(...args: any[]): void {
@@ -140,40 +141,39 @@ export class Overlord implements IOverlord {
 	/* Handle remaining creep spawning requirements for homeostatic processes which aren't handled by hiveClusters.
 	 * Injects protocreeps into a priority queue in Hatchery. Other spawn operations are done with directives. */
 	private registerCreepRequests(): void {
-
-		// Ensure there's a mineral supplier for the labs
-		if (this.room.terminal && this.room.labs.length > 0) {
-			if (this.colony.getCreepsByRole('mineralSupplier').length < 1) {
-				this.colony.hatchery.enqueue(
-					new MineralSupplierSetup().create(this.colony, {
-						assignment            : this.room.terminal,
-						patternRepetitionLimit: 1,
-					}));
-			}
-		}
-
-		// Ensure each controller in colony outposts has a reserver if needed
-		let outpostControllers = _.compact(_.map(this.colony.outposts, room => room.controller)) as Controller[];
-		for (let controller of outpostControllers) {
-			if (!controller.reservation ||
-				(controller.reservedByMe && controller.reservation.ticksToEnd < this.settings.reserveBuffer)) {
-				let reservationFlag = controller.room.colonyFlag;
-				let assignedReservers = reservationFlag.getAssignedCreepAmounts('reserver');
-				if (assignedReservers == 0) {
+		if (this.colony.hatchery) {
+			// Ensure there's a mineral supplier for the labs
+			if (this.room.terminal && this.room.labs.length > 0) {
+				if (this.colony.getCreepsByRole('mineralSupplier').length < 1) {
 					this.colony.hatchery.enqueue(
-						new ReserverSetup().create(this.colony, {
-							assignment            : reservationFlag,
-							patternRepetitionLimit: 4,
+						new MineralSupplierSetup().create(this.colony, {
+							assignment            : this.room.terminal,
+							patternRepetitionLimit: 1,
 						}));
 				}
 			}
-		}
 
-		// Ensure there's enough workers
-		if (!this.colony.incubating) { // don't make own workers during incubation period, just keep existing ones alive
+			// // Ensure each controller in colony outposts has a reserver if needed
+			// let outpostControllers = _.compact(_.map(this.colony.outposts, room => room.controller)) as Controller[];
+			// for (let controller of outpostControllers) {
+			// 	if (!controller.reservation ||
+			// 		(controller.reservedByMe && controller.reservation.ticksToEnd < this.settings.reserveBuffer)) {
+			// 		let reservationFlag = controller.room.colonyFlag;
+			// 		let assignedReservers = reservationFlag.getAssignedCreepAmounts('reserver');
+			// 		if (assignedReservers == 0) {
+			// 			this.colony.hatchery.enqueue(
+			// 				new ReserverSetup().create(this.colony, {
+			// 					assignment            : reservationFlag,
+			// 					patternRepetitionLimit: 4,
+			// 				}));
+			// 		}
+			// 	}
+			// }
+
+			// Ensure there's enough workers
 			let numWorkers = this.colony.getCreepsByRole('worker').length;
-			// Only spawn workers once containers are up
 			let numWorkersNeeded = 1; // TODO: maybe a better metric than this
+			// Only spawn workers once containers are up
 			if (numWorkers < numWorkersNeeded && this.room.storageUnits.length > 0) {
 				this.colony.hatchery.enqueue(
 					new WorkerSetup().create(this.colony, {
@@ -183,107 +183,99 @@ export class Overlord implements IOverlord {
 			}
 		}
 
-		// Spawn a guard if there is an NPC invasion happening
-		for (let room of this.colony.rooms) {
-			if (room.hostiles.length > 0) { // place the room at
-
-			}
-		}
 	}
 
 
-	private handleIncubationSpawnOperations(): void { // operations to start up a new room quickly by sending large creeps
-		// var incubateFlags = _.filter(this.room.assignedFlags,
-		//                              flag => flagCodes.territory.claimAndIncubate.filter(flag) &&
-		//                                      flag.room && flag.room.my);
-		// incubateFlags = _.sortBy(incubateFlags, flag => flag.pathLengthToAssignedRoomStorage);
-		// for (let flag of incubateFlags) {
-		//     // Spawn remote miners
-		//     for (let siteID in flag.colony.miningSites) {
-		//         let site = flag.colony.miningSites[siteID];
-		//         let miningPowerAssigned = _.sum(_.map(site.miners, (creep: Creep) => creep.getActiveBodyparts(WORK)));
-		//         if (miningPowerAssigned < site.miningPowerNeeded) {
-		//             let protoCreep = new MinerSetup().create(this.colony, {
-		//                 assignment: site.source,
-		//                 patternRepetitionLimit: 3,
-		//             });
-		//             protoCreep.memory.colony = flag.room.name;
-		//             protoCreep.memory.data.renewMe = true;
-		//             this.colony.hatchery.enqueue(protoCreep);
-		//         }
-		//     }
-		//     // Spawn remote workers
-		//     let assignedWorkers = flag.room.controller!.getAssignedCreeps('worker');
-		//     let incubationWorkers = _.filter(assignedWorkers,
-		//                                      c => c.body.length >= new WorkerSetup().settings.bodyPattern.length *
-		//                                                            this.settings.workerPatternRepetitionLimit);
-		//     if (incubationWorkers.length < this.settings.incubationWorkersToSend) {
-		//         let protoCreep = new WorkerSetup().create(this.colony, {
-		//             assignment: flag.room.controller!,
-		//             patternRepetitionLimit: this.settings.workerPatternRepetitionLimit,
-		//         });
-		//         protoCreep.memory.colony = flag.room.name;
-		//         protoCreep.memory.data.renewMe = true;
-		//         this.colony.hatchery.enqueue(protoCreep);
-		//     }
-		// }
-		// TODO: rewrite this using the core spawn methods + request calls
-	}
+	// private handleIncubationSpawnOperations(): void { // operations to start up a new room quickly by sending large creeps
+	// 	var incubateFlags = _.filter(this.room.assignedFlags,
+	// 	                             flag => flagCodes.territory.claimAndIncubate.filter(flag) &&
+	// 	                                     flag.room && flag.room.my);
+	// 	incubateFlags = _.sortBy(incubateFlags, flag => flag.pathLengthToAssignedRoomStorage);
+	// 	for (let flag of incubateFlags) {
+	// 	    // Spawn remote miners
+	// 	    for (let siteID in flag.colony.miningSites) {
+	// 	        let site = flag.colony.miningSites[siteID];
+	// 	        let miningPowerAssigned = _.sum(_.map(site.miners, (creep: Creep) => creep.getActiveBodyparts(WORK)));
+	// 	        if (miningPowerAssigned < site.miningPowerNeeded) {
+	// 	            let protoCreep = new MinerSetup().create(this.colony, {
+	// 	                assignment: site.source,
+	// 	                patternRepetitionLimit: 3,
+	// 	            });
+	// 	            protoCreep.memory.colony = flag.room.name;
+	// 	            protoCreep.memory.data.renewMe = true;
+	// 	            this.colony.hatchery.enqueue(protoCreep);
+	// 	        }
+	// 	    }
+	// 	    // Spawn remote workers
+	// 	    let assignedWorkers = flag.room.controller!.getAssignedCreeps('worker');
+	// 	    let incubationWorkers = _.filter(assignedWorkers,
+	// 	                                     c => c.body.length >= new WorkerSetup().settings.bodyPattern.length *
+	// 	                                                           this.settings.workerPatternRepetitionLimit);
+	// 	    if (incubationWorkers.length < this.settings.incubationWorkersToSend) {
+	// 	        let protoCreep = new WorkerSetup().create(this.colony, {
+	// 	            assignment: flag.room.controller!,
+	// 	            patternRepetitionLimit: this.settings.workerPatternRepetitionLimit,
+	// 	        });
+	// 	        protoCreep.memory.colony = flag.room.name;
+	// 	        protoCreep.memory.data.renewMe = true;
+	// 	        this.colony.hatchery.enqueue(protoCreep);
+	// 	    }
+	// 	}
+	// 	// TODO: rewrite this using the core spawn methods + request calls
+	// }
 
-	/* Place event-driven flags where needed */
-	private registerFlagRequests(): void {
+	// private handleFlagOperations(): void {
+	// 	// Flag operations
+	// 	let flags = this.colony.flags;
+	// 	var prioritizedFlagOperations = [
+	// 		_.filter(flags, flagCodes.millitary.guard.filter),
+	// 	];
+	//
+	// 	// Handle actions associated with assigned flags
+	// 	for (let flagPriority of prioritizedFlagOperations) {
+	// 		for (let flag of flagPriority) {
+	// 			flag.action();
+	// 		}
+	// 	}
+	// }
+
+	// private handleAssignedSpawnOperations(): void { // operations associated with an assigned flags
+	// 	// Flag operations
+	// 	let flags = this.room.assignedFlags; // TODO: make this a lookup table
+	// 	var prioritizedFlagOperations = [
+	// 		// _.filter(flags, flagCodes.vision.stationary.filter),
+	// 		_.filter(flags, flagCodes.territory.claimAndIncubate.filter),
+	// 		// _.filter(flags, flagCodes.millitary.guard.filter),
+	// 		// _.filter(flags, flagCodes.territory.colony.filter),
+	// 		_.filter(flags, flagCodes.millitary.destroyer.filter),
+	// 		_.filter(flags, flagCodes.millitary.sieger.filter),
+	// 	];
+	//
+	// 	// Handle actions associated with assigned flags
+	// 	for (let flagPriority of prioritizedFlagOperations) {
+	// 		let flagsSortedByRange = _.sortBy(flagPriority, flag => flag.pathLengthToAssignedRoomStorage);
+	// 		for (let flag of flagsSortedByRange) {
+	// 			flag.action();
+	// 		}
+	// 	}
+	// }
+
+	// /* Handle all types of spawn operations */
+	// private handleSpawnOperations(): void {
+	// 	if (this.colony.hatchery && this.colony.hatchery.availableSpawns.length > 0) {
+	// 		this.handleIncubationSpawnOperations();
+	// 		this.handleAssignedSpawnOperations();
+	// 	}
+	// }
+
+	/* Place new event-driven flags where needed to be instantiated on the next tick */
+	private placeDirectives(): void {
 		// Place guard flags in the event of an invasion
-		for (let room of this.colony.rooms) {
-			let guardFlags = _.filter(room.flags, flagCodes.millitary.guard.filter);
+		for (let room of this.colony.outposts) {
+			let guardFlags = _.filter(room.flags, flag => DirectiveGuard.filter(flag));
 			if (room.hostiles.length > 0 && guardFlags.length == 0) {
-				console.log("Placing guard flag in "+room.name);
-				room.createFlag(room.hostiles[0].pos, "guard:"+room.name,
-								flagCodes.millitary.guard.color, flagCodes.millitary.guard.secondaryColor);
+				DirectiveGuard.create(room.hostiles[0].pos);
 			}
-		}
-	}
-
-	private handleFlagOperations(): void {
-		// Flag operations
-		let flags = this.colony.flags;
-		var prioritizedFlagOperations = [
-			_.filter(flags, flagCodes.millitary.guard.filter),
-		];
-
-		// Handle actions associated with assigned flags
-		for (let flagPriority of prioritizedFlagOperations) {
-			for (let flag of flagPriority) {
-				flag.action();
-			}
-		}
-	}
-
-	private handleAssignedSpawnOperations(): void { // operations associated with an assigned flags
-		// Flag operations
-		let flags = this.room.assignedFlags; // TODO: make this a lookup table
-		var prioritizedFlagOperations = [
-			// _.filter(flags, flagCodes.vision.stationary.filter),
-			_.filter(flags, flagCodes.territory.claimAndIncubate.filter),
-			// _.filter(flags, flagCodes.millitary.guard.filter),
-			// _.filter(flags, flagCodes.territory.colony.filter),
-			_.filter(flags, flagCodes.millitary.destroyer.filter),
-			_.filter(flags, flagCodes.millitary.sieger.filter),
-		];
-
-		// Handle actions associated with assigned flags
-		for (let flagPriority of prioritizedFlagOperations) {
-			let flagsSortedByRange = _.sortBy(flagPriority, flag => flag.pathLengthToAssignedRoomStorage);
-			for (let flag of flagsSortedByRange) {
-				flag.action();
-			}
-		}
-	}
-
-	/* Handle all types of spawn operations */
-	private handleSpawnOperations(): void {
-		if (this.colony.hatchery.availableSpawns.length > 0) { // only spawn if you have an available spawner
-			this.handleIncubationSpawnOperations();
-			this.handleAssignedSpawnOperations();
 		}
 	}
 
@@ -295,7 +287,7 @@ export class Overlord implements IOverlord {
 		// Calls for safe mode when walls are about to be breached and there are non-NPC hostiles in the room
 		let criticalBarriers = _.filter(this.room.barriers, s => s.hits < 5000);
 		let nonInvaderHostiles = _.filter(this.room.hostiles, creep => creep.owner.username != 'Invader');
-		if (criticalBarriers.length > 0 && nonInvaderHostiles.length > 0 && !this.colony.incubating) {
+		if (criticalBarriers.length > 0 && nonInvaderHostiles.length > 0 && !this.colony.incubator) {
 			this.room.controller!.activateSafeMode();
 		}
 	}
@@ -305,15 +297,23 @@ export class Overlord implements IOverlord {
 	init(): void {
 		this.registerObjectives();
 		this.registerCreepRequests();
-		this.registerFlagRequests();
+		// Handle directives
+		for (let i in this.directives) {
+			this.directives[i].init();
+		}
 	}
 
 	// Operation =======================================================================================================
 
 	run(): void {
-		this.handleFlagOperations();
+		// Handle directives
+		for (let i in this.directives) {
+			this.directives[i].run();
+		}
+		// this.handleFlagOperations();
 		this.handleSafeMode();
-		this.handleSpawnOperations(); // build creeps as needed
+		// this.handleSpawnOperations(); // build creeps as needed
+		this.placeDirectives();
 	}
 }
 

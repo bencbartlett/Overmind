@@ -12,6 +12,7 @@ interface Flag {
 	assignedRoom: Room;
 	setMineral(mineralType: string): void;
 	IO: string;
+	code: string;
 	category: any;
 	type: any;
 	action: Function;
@@ -71,7 +72,8 @@ interface RoomObject {
 	log(message: string): void;
 	inSameRoomAs(otherObject: RoomObject): boolean;
 	ref: string;
-	colony: IColony;
+	colony: IColony | undefined;
+	colonyName: string | undefined;
 	assignedCreepNames: { [role: string]: string };
 	getAssignedCreeps(role: string): ICreep[];
 	getAssignedCreepAmounts(role: string): number;
@@ -84,6 +86,7 @@ interface RoomObject {
 	pathLengthToStorage: number;
 	roomName: string;
 	pathLengthTo(otherObject: RoomObject): number;
+	serialize(): protoRoomObject;
 }
 
 interface RoomPosition {

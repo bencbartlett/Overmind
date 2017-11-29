@@ -268,7 +268,12 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 				if (this.depositStructures.length > 0) {
 					manager.task = new TaskDeposit(this.depositStructures[0]); 	// deposit if something needs energy
 				} else {
-					manager.task = new TaskDeposit(this.storage); 				// else deposit to storage
+					if (this.storage.storeCapacity - _.sum(this.storage.store) >= manager.carry.energy) {
+						manager.task = new TaskDeposit(this.storage); 			// deposit to storage if you can
+					} else if (this.terminal &&
+							   this.terminal.storeCapacity - _.sum(this.terminal.store) >= manager.carry.energy) {
+						manager.task = new TaskDeposit(this.terminal); 			// else try to cram into terminal
+					}
 				}
 			} else {
 				// If you're out of energy and there are strucutres that need energy deposited or withdrawn, do so
@@ -328,7 +333,7 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 
 	/* Request a manager if there isn't one already */
 	protected registerCreepRequests(): void {
-		if (!this.manager) {
+		if (!this.manager && this.colony.hatchery) {
 			this.colony.hatchery.enqueue(
 				new ManagerSetup().create(this.colony, {
 					assignment            : this.room.storage,
@@ -340,7 +345,7 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 	// Initialization and operation ====================================================================================
 
 	init(): void {
-		this.registerLinkTransferRequests()
+		this.registerLinkTransferRequests();
 		this.registerCreepRequests();
 	}
 

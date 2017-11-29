@@ -34,20 +34,10 @@ import {flagCodesMap} from './maps/map_flag_codes';
 import {Preprocessing} from './caching';
 import {DataLogger} from './logging/data_logger';
 import {visuals} from './visuals/visuals';
-// import profiler = require('./lib/screeps-profiler');  // gdborton's CPU profiler
-// import {migrate} from './versionMigration/migration';
-
-// Global declarations
-// declare var Overmind: IOvermind;
-// declare var flagCodes: { [category: string]: flagCat };
-
-// Enable screeps profiler
-// profiler.enable();
 
 // Main loop ===========================================================================================================
 
 export function loop() {
-	// profiler.wrap(function () {
 	// Memory management ===========================================================================================
 	// Clear memory for non-existent creeps
 	for (let name in Memory.creeps) {
@@ -61,7 +51,6 @@ export function loop() {
 			delete Memory.flags[name];
 		}
 	}
-
 
 	// Setup =======================================================================================================
 	// Preprocessing
@@ -92,6 +81,5 @@ export function loop() {
 	if (Game.cpu.bucket > 7500) {
 		visuals.drawGlobalVisuals();
 	}
-	// });
 }
 

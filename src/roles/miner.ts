@@ -3,7 +3,6 @@
 import {TaskDeposit} from '../tasks/task_deposit';
 import {TaskHarvest} from '../tasks/task_harvest';
 import {AbstractCreep, AbstractSetup} from './Abstract';
-import {TaskGoToRoom} from '../tasks/task_goToRoom';
 
 export class MinerSetup extends AbstractSetup {
 	constructor() {
@@ -41,21 +40,14 @@ export class MinerCreep extends AbstractCreep {
 			} else if (this.miningSite && this.miningSite.output) { // output construction sites handled by miningSite
 				this.task = new TaskDeposit(this.miningSite.output);
 			}
-		} else {
-			if (this.assignedRoomFlag) {
-				this.task = new TaskGoToRoom(this.assignedRoomFlag);
-			}
+		} else if (this.assignmentPos) {
+			this.travelTo(this.assignmentPos);
 		}
 	}
 
 	onRun() {
 		if (this.getActiveBodyparts(WORK) < 0.75 * this.getBodyparts(WORK)) {
 			this.suicide(); // kill off miners that might have gotten damaged so they don't sit and try to mine
-		}
-		if (this.colony.incubating) {
-			if (this.carry.energy == 0) { // request renewal after a mining cycle is finished
-				this.renewIfNeeded();
-			}
 		}
 	}
 }

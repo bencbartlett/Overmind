@@ -76,9 +76,9 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 			linkPowerNeededValue = _.sum(_.map(this.miningSites, site => site.energyPerTick));
 			linkPowerAvailableValue = _.sum(_.map(this.links!, link => LINK_CAPACITY /
 																	   link.pos.getRangeTo(this.colony.storage!)));
-			if (linkPowerNeededValue > linkPowerAvailableValue) {
-				this.log('Insufficient linking power:', linkPowerAvailableValue + '/' + linkPowerNeededValue);
-			}
+			// if (linkPowerNeededValue > linkPowerAvailableValue) {
+			// 	this.log('Insufficient linking power:', linkPowerAvailableValue + '/' + linkPowerNeededValue);
+			// }
 		}
 		// Stick everything in the data object
 		this.data = {
@@ -117,7 +117,7 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 
 	/* Request a hauler if there is insufficient available hauling power */
 	protected registerCreepRequests(): void {
-		if (this.data.haulingPowerSupplied < this.data.haulingPowerNeeded) {
+		if (this.data.haulingPowerSupplied < this.data.haulingPowerNeeded && this.colony.hatchery) {
 			this.colony.hatchery.enqueue(
 				new HaulerSetup().create(this.colony, {
 					assignment            : this.dropoff, // assign hauler to group dropoff location

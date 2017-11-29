@@ -27,14 +27,14 @@ export class Colony implements IColony {
 	nuker: StructureNuker | undefined;					// |
 	observer: StructureObserver | undefined;			// |
 	commandCenter: ICommandCenter | undefined;			// Component with logic for non-spawning structures
-	hatchery: IHatchery;								// Component to encapsulate spawner logic
+	hatchery: IHatchery | undefined;					// Component to encapsulate spawner logic
 	upgradeSite: IUpgradeSite;							// Component to provide upgraders with uninterrupted energy
 	claimedLinks: StructureLink[];						// Links belonging to hive cluseters excluding mining groups
 	unclaimedLinks: StructureLink[]; 					// Links not belonging to a hive cluster, free for mining group
 	miningGroups: { [id: string]: IMiningGroup } | undefined;	// Component to group mining sites into a hauling group
 	miningSites: { [sourceID: string]: IMiningSite };	// Component with logic for mining and hauling
 	sources: Source[];									// Sources in all colony rooms
-	incubating: boolean;								// If the colony is currently being cared for by another one
+	incubator: IColony | undefined; 					// The colony responsible for incubating this one, if any
 	defcon: 0 | 1 | 2 | 3 | 4 | 5; 						// Defensive alert level of the colony
 	flags: Flag[];										// Flags across the colony
 	creeps: ICreep[];									// Creeps bound to the colony
@@ -76,17 +76,16 @@ export class Colony implements IColony {
 		this.powerSpawn = this.room.getStructures(STRUCTURE_POWER_SPAWN)[0] as StructurePowerSpawn;
 		this.nuker = this.room.getStructures(STRUCTURE_NUKER)[0] as StructureNuker;
 		this.observer = this.room.getStructures(STRUCTURE_OBSERVER)[0] as StructureObserver;
-		// Get incubation status
-		this.incubating = (_.filter(this.room.flags, flagCodes.territory.claimAndIncubate.filter).length > 0);
 		// Defcon starts at 0, is updated in initDefconLevel()
 		this.defcon = 0;
-		// Register things across all rooms in the colony
-		this.flags = _.flatten(_.map(this.rooms, room => room.flags));
+		// Register physical objects across all rooms in the colony
 		this.sources = _.flatten(_.map(this.rooms, room => room.sources));
-		// Creep registration is done by Overmind.initializeCreeps()
-		this.creeps = [];
 		// Register enemies across colony rooms
 		this.hostiles = _.flatten(_.map(this.rooms, room => room.hostiles));
+		// Create placeholder arrays for remaining properties to be filled in by the Overmind
+		this.creeps = []; // This is done by Overmind.registerCreeps()
+		this.creepsByRole = {};
+		this.flags = [];
 	}
 
 	/* Instantiate and associate virtual colony components to group similar structures together */
@@ -95,10 +94,14 @@ export class Colony implements IColony {
 		if (this.storage && this.storage.linked) {
 			this.commandCenter = new CommandCenter(this, this.storage);
 		}
-		// Instantiate the hatchery
-		this.hatchery = new Hatchery(this, this.spawns[0]);
+		// Instantiate the hatchery - the incubation directive assignes hatchery to incubator's hatchery if none exists
+		if (this.spawns[0]) {
+			this.hatchery = new Hatchery(this, this.spawns[0]);
+		}
 		// Instantiate the upgradeSite
-		this.upgradeSite = new UpgradeSite(this, this.controller);
+		if (this.controller) {
+			this.upgradeSite = new UpgradeSite(this, this.controller);
+		}
 		// Sort claimed and unclaimed links
 		this.claimedLinks = _.filter(_.compact([this.commandCenter ? this.commandCenter.link : null,
 												this.hatchery ? this.hatchery.link : null,
@@ -204,10 +207,30 @@ export class Colony implements IColony {
 		return this.creepsByRole[roleName] || [];
 	}
 
-	init(): void {
-		// 1: Initialize the colony itself
+	// private registerIncubation(): void {
+	// 	// Get incubation status and register colony associations
+	// 	let incubationFlag = _.filter(this.room.flags, flagCodes.territory.claimAndIncubate.filter)[0];
+	// 	if (incubationFlag) {
+	// 		this.incubating = true;
+	// 		let incubatingColonyName = incubationFlag.name.split(':')[1];
+	// 		this.incubator = Overmind.Colonies[incubatingColonyName];
+	// 		if (this.incubator.hatchery) {
+	// 			this.hatchery = this.incubator.hatchery;
+	// 		}
+	// 	} else {
+	// 		this.incubating = false;
+	// 	}
+	// }
+
+	/* Instantiate the virtual components of the colony and populate data */
+	build(): void {
 		this.instantiateVirtualComponents();	// Instantiate the virtual components of the colony
 		this.populateColonyData();				// Calculate relevant data about the colony per tick
+	}
+
+	init(): void {
+		// // 1: Register incubation status
+		// this.registerIncubation();
 		// 2: Initialize each colony component
 		if (this.hatchery) {
 			this.hatchery.init();

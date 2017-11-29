@@ -27,6 +27,12 @@ Object.defineProperty(RoomObject.prototype, 'colony', { // link to colony object
 	},
 });
 
+Object.defineProperty(RoomObject.prototype, 'colonyName', { // name of the colony object in the overmind
+	get () {
+		return Overmind.colonyMap[this.pos.roomName];
+	},
+});
+
 // Assigned and targeted creep indexing ================================================================================
 
 Object.defineProperty(RoomObject.prototype, 'assignedCreepNames', { // keys: roles, values: names
@@ -39,6 +45,7 @@ Object.defineProperty(RoomObject.prototype, 'assignedCreepNames', { // keys: rol
 	},
 });
 
+// TODO: put needsReplacing in its own function on creeps
 RoomObject.prototype.getAssignedCreeps = function (role) {
 	let creepNames = this.assignedCreepNames[role];
 	return _.filter(_.map(creepNames, (name: string) => Game.icreeps[name]), creep => creep.needsReplacing == false);
@@ -146,4 +153,16 @@ RoomObject.prototype.pathLengthTo = function (roomObj) {
 		this.memory.pathLengths[roomObj.ref] = pathing.findPathLengthIncludingRoads(roomObj.pos, this.pos);
 	}
 	return this.memory.pathLengths[roomObj.ref];
+};
+
+RoomObject.prototype.serialize = function (): protoRoomObject {
+	let pos: protoPos = {
+		x       : this.pos.x,
+		y       : this.pos.y,
+		roomName: this.pos.roomName
+	};
+	return {
+		pos: pos,
+		ref: this.ref
+	};
 };

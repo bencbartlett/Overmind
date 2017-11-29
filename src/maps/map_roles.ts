@@ -1,7 +1,4 @@
-// Wrapper for task require statements.
-// Example:
-// var roles = require('roles');
-// var role = roles('upgrader');
+// Jump table to instantiate wrapped creeps based on role
 
 import {AbstractCreep} from '../roles/Abstract';
 import {ClaimerCreep} from '../roles/claimer';
@@ -9,7 +6,6 @@ import {DestroyerCreep} from '../roles/destroyer';
 import {GuardCreep} from '../roles/guard';
 import {HaulerCreep} from '../roles/hauler';
 import {HealerCreep} from '../roles/healer';
-// import {LinkerCreep} from '../roles/linker';
 import {MinerCreep} from '../roles/miner';
 import {MineralSupplierCreep} from '../roles/mineralSupplier';
 import {ReserverCreep} from '../roles/reserver';

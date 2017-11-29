@@ -129,6 +129,24 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 
 	// Creep queueing and spawning =====================================================================================
 
+	private bodyCost(bodyArray: string[]): number {
+		var partCosts: { [type: string]: number } = {
+			move         : 50,
+			work         : 100,
+			carry        : 50,
+			attack       : 80,
+			ranged_attack: 150,
+			heal         : 250,
+			claim        : 600,
+			tough        : 10,
+		};
+		var cost = 0;
+		for (let part of bodyArray) {
+			cost += partCosts[part];
+		}
+		return cost;
+	};
+
 	private generateCreepName(roleName: string): string {
 		// generate a creep name based on the role and add a suffix to make it unique
 		let i = 0;
@@ -142,6 +160,10 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		let spawnToUse = this.availableSpawns.shift(); // get a spawn to use
 		if (spawnToUse) { // if there is a spawn, create the creep
 			protoCreep.name = this.generateCreepName(protoCreep.name); // modify the creep name to make it unique
+			if (protoCreep.memory.colony != this.colony.name) {
+				this.log('Spawning ' + protoCreep.name + ' for ' + protoCreep.memory.colony);
+			}
+			protoCreep.memory.data.origin = spawnToUse.roomName;
 			let result = spawnToUse.spawnCreep(protoCreep.body, protoCreep.name, {memory: protoCreep.memory});
 			if (result == OK) {
 				return result;
@@ -160,10 +182,18 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		if (priority == undefined) {
 			priority = 1000; // some large but finite priority for all the remaining stuff to make
 		}
-		if (!this.productionQueue[priority]) {
-			this.productionQueue[priority] = [];
+		if (this.colony.incubator && this.colony.incubator.hatchery &&
+			this.bodyCost(protoCreep.body) > this.room.energyCapacityAvailable) {
+			// If you are incubating and can't build the requested creep, enqueue it to the incubation hatchery
+			this.colony.incubator.hatchery.enqueue(protoCreep);
+			this.log('Requesting ' + roleName + ' from ' + this.colony.incubator.name);
+		} else {
+			// Otherwise, queue the creep to yourself
+			if (!this.productionQueue[priority]) {
+				this.productionQueue[priority] = [];
+			}
+			this.productionQueue[priority].push(protoCreep);
 		}
-		this.productionQueue[priority].push(protoCreep);
 	}
 
 	private spawnHighestPriorityCreep(): number | void {
@@ -285,7 +315,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 			let numSuppliers = _.filter(this.colony.getCreepsByRole('supplier'), // number of big suppliers in colony
 										creep => creep.getActiveBodyparts(MOVE) == supplierSize).length;
 			if (numSuppliers < this.settings.numSuppliers) {
-				this.colony.hatchery.enqueue(new SupplierSetup().create(this.colony, {
+				this.enqueue(new SupplierSetup().create(this.colony, {
 					assignment            : this.room.controller!,
 					patternRepetitionLimit: supplierSize,
 				}));

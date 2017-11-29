@@ -3,6 +3,7 @@
 import {Colony} from './Colony';
 import {Overlord} from './Overlord';
 import {AbstractCreepWrapper} from './maps/map_roles';
+import {DirectiveWrapper} from './maps/map_directives';
 
 export default class Overmind implements IOvermind {
 	name: string;											// I AM THE SWARM
@@ -32,7 +33,7 @@ export default class Overmind implements IOvermind {
 	}
 
 	/* Instantiate a new colony for each owned rom */
-	private initializeColonies(): void {
+	private registerColonies(): void {
 		// Colony call object
 		let protoColonies = {} as { [roomName: string]: string[] }; // key: lead room, values: outposts[]
 		// Register colony capitols
@@ -40,6 +41,7 @@ export default class Overmind implements IOvermind {
 			if (Game.rooms[name].my) { // Add a new colony for each owned room
 				Game.rooms[name].memory.colony = name; // register colony to itself
 				protoColonies[name] = [];
+				this.colonyMap[name] = name;
 			}
 		}
 		// Register colony outposts
@@ -62,6 +64,14 @@ export default class Overmind implements IOvermind {
 		for (let colName in protoColonies) {
 			this.Colonies[colName] = new Colony(colName, protoColonies[colName]);
 		}
+		// Register colony incubations
+		let incubationFlags = _.filter(Game.flags, flagCodes.territory.claimAndIncubate.filter);
+		for (let flag of incubationFlags) {
+			// flag.colony.registerIncubation();
+			if (!flag.room) {
+				this.invisibleRooms.push(flag.roomName);
+			}
+		}
 	}
 
 	/* Instantiate a colony overlord for each colony */
@@ -72,16 +82,8 @@ export default class Overmind implements IOvermind {
 		}
 	}
 
-	// initializeTerminalBrains(): void {
-	// 	for (let name in this.Colonies) {
-	// 		if (Game.rooms[name].terminal) {
-	// 			this.TerminalBrains[name] = new TerminalBrain(name);
-	// 		}
-	// 	}
-	// }
-
 	/* Wrap each creep in a role-contextualized wrapper */
-	private initializeCreeps(): void {
+	private registerCreeps(): void {
 		// Wrap all creeps
 		Game.icreeps = {};
 		for (let name in Game.creeps) {
@@ -91,9 +93,32 @@ export default class Overmind implements IOvermind {
 		let creepsByColony = _.groupBy(Game.icreeps, creep => creep.memory.colony) as { [colName: string]: ICreep[] };
 		for (let colName in this.Colonies) {
 			let colony = this.Colonies[colName];
-			let colCreeps: ICreep[] = creepsByColony[colName];
-			colony.creeps = colCreeps;
-			colony.creepsByRole = _.groupBy(colCreeps, creep => creep.memory.role);
+			colony.creeps = creepsByColony[colName];
+			colony.creepsByRole = _.groupBy(creepsByColony[colName], creep => creep.memory.role);
+		}
+	}
+
+	private buildColonies(): void {
+		for (let name in this.Colonies) {
+			this.Colonies[name].build();
+		}
+	}
+
+	/* Wrap each flag in a color coded wrapper */
+	private registerDirectives(): void {
+		// Wrap all flags
+		Game.directives = {};
+		for (let name in Game.flags) {
+			let directive = DirectiveWrapper(Game.flags[name]);
+			if (directive) {
+				Game.directives[name] = directive;
+			}
+		}
+		// Register directives to their respective overlords
+		let assignedDirectives = _.groupBy(Game.directives, d => d.assignedTo);
+		for (let name in this.Overlords) {
+			let overlord = this.Overlords[name];
+			overlord.directives = assignedDirectives[name];
 		}
 	}
 
@@ -132,11 +157,13 @@ export default class Overmind implements IOvermind {
 
 	/* Intialize everything in pre-init phase of main loop. Does not call colony.init(). */
 	init(): void {
-		this.verifyMemory();
-		this.initializeColonies();
-		this.spawnMoarOverlords();
-		// this.initializeTerminalBrains();
-		this.initializeCreeps();
+		// The order in which these functions are called is important
+		this.verifyMemory();			// 1: Check that memory is properly formatted
+		this.registerColonies();		// 2: Initialize each colony. Build() is called in main.ts
+		this.spawnMoarOverlords();		// 3: Make an overlord for each colony.
+		this.registerCreeps();			// 4: Wrap all the creeps and assign to respective colonies
+		this.buildColonies();			// 5: Build the colony, instantiating virtual components
+		this.registerDirectives(); 		// 5: Wrap all the directives and assign to respective overlords
 	}
 
 	run(): void {

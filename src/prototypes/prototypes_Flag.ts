@@ -63,6 +63,12 @@ Object.defineProperty(Flag.prototype, 'IO', { // should the lab be loaded or unl
 
 // Flag code properties ================================================================================================
 
+Object.defineProperty(Flag.prototype, 'code', { // the category object in flagCodes map
+	get () {
+		return this.color + ',' + this.secondaryColor;
+	},
+});
+
 Object.defineProperty(Flag.prototype, 'category', { // the category object in flagCodes map
 	get () {
 		return _.find(flagCodes, (cat: flagCat) => cat.color == this.color);

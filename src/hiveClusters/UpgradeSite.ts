@@ -48,7 +48,7 @@ export class UpgradeSite extends AbstractHiveCluster implements IUpgradeSite {
 			let upgraderRole = new UpgraderSetup();
 			let numUpgradersNeeded = Math.ceil(upgraderSize * upgraderRole.bodyPatternCost /
 											   this.room.energyCapacityAvailable); // this causes a jump at 2 upgraders
-			if (this.upgraders.length < numUpgradersNeeded) {
+			if (this.upgraders.length < numUpgradersNeeded && this.colony.hatchery) {
 				this.colony.hatchery.enqueue(
 					upgraderRole.create(this.colony, {
 						assignment            : this.room.controller!,

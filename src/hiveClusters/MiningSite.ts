@@ -100,7 +100,7 @@ export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 	/* Request another miner if there is insufficient mining power at this site */
 	protected registerCreepRequests(): void {
 		let miningPowerAssigned = _.sum(_.map(this.miners, creep => creep.getActiveBodyparts(WORK)));
-		if (miningPowerAssigned < this.miningPowerNeeded) {
+		if (miningPowerAssigned < this.miningPowerNeeded && this.colony.hatchery) {
 			this.colony.hatchery.enqueue(
 				new MinerSetup().create(this.colony, {
 					assignment            : this.source,

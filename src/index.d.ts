@@ -20,6 +20,7 @@ interface Game {
 		constructionSites: { [roomName: string]: ConstructionSite[] };
 	};
 	icreeps: { [name: string]: ICreep };
+	directives: { [name: string]: IDirective };
 }
 
 interface ISetup {
@@ -162,7 +163,7 @@ interface ICreep {
 	recharge(): void;
 	newTask(): void;
 	executeTask(): number | void;
-	renewIfNeeded(): void;
+	// renewIfNeeded(): void;
 	onRun(): void;
 	init(): void;
 	run(): void;
@@ -186,13 +187,14 @@ interface IColony {
 	nuker: StructureNuker | undefined;
 	observer: StructureObserver | undefined;
 	commandCenter: ICommandCenter | undefined;
-	hatchery: IHatchery;
+	hatchery: IHatchery | undefined;
 	upgradeSite: IUpgradeSite;
 	claimedLinks: StructureLink[];
 	unclaimedLinks: StructureLink[];
 	miningGroups: { [structID: string]: IMiningGroup } | undefined;
 	miningSites: { [sourceID: string]: IMiningSite };
-	incubating: boolean;
+	// incubating: boolean;
+	incubator: IColony | undefined;
 	outposts: Room[];
 	rooms: Room[];
 	defcon: 0 | 1 | 2 | 3 | 4 | 5;
@@ -207,7 +209,10 @@ interface IColony {
 		haulingPowerSupplied: number,
 		haulingPowerNeeded: number,
 	};
+	// registerIncubation(): void;
+	build(): void;
 	init(): void;
+	// postInit(): void;
 	run(): void;
 }
 
@@ -229,6 +234,30 @@ interface flagCat {
 	[subcat: string]: any;
 }
 
+interface ColorCode {
+	color: ColorConstant;
+	secondaryColor: ColorConstant;
+}
+
+interface IDirective {
+	flag: Flag;
+	name: string;
+	colony: IColony | undefined;
+	colonyName: string | undefined;
+	assignedTo: string | undefined;
+	pos: RoomPosition;
+	room: Room | undefined;
+	memory: FlagMemory;
+	color: ColorConstant;
+	secondaryColor: ColorConstant;
+	remove(): number;
+	setColor(color: ColorConstant, secondaryColor?: ColorConstant): number;
+	setPosition(pos: RoomPosition): number;
+	getAssignedCreeps(roleName: string): ICreep[];
+	init(): void;
+	run(): void;
+}
+
 interface protoCreep {
 	body: BodyPartConstant[];
 	name: string;
@@ -238,6 +267,11 @@ interface protoCreep {
 interface protoCreepOptions {
 	assignment?: RoomObject;
 	patternRepetitionLimit?: number;
+}
+
+interface protoRoomObject {
+	ref: string;
+	pos: protoPos;
 }
 
 interface protoPos {
@@ -411,11 +445,11 @@ interface IOverlord {
 	memory: OverlordMemory;
 	room: Room;
 	colony: IColony;
+	directives: IDirective[];
 	settings: {
 		incubationWorkersToSend: number;
 		storageBuffer: { [role: string]: number };
 		unloadStorageBuffer: number;
-		reserveBuffer: number;
 		maxAssistLifetimePercentage: number;
 	};
 	objectiveGroup: IObjectiveGroup;

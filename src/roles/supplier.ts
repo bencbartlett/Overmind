@@ -37,7 +37,11 @@ export class SupplierCreep extends AbstractCreep {
 	}
 
 	init() {
-		this.hatchery = this.colony.hatchery;
+		if (this.colony.hatchery) {
+			this.hatchery = this.colony.hatchery;
+		} else {
+			this.suicide();
+		}
 	}
 
 
@@ -63,7 +67,7 @@ export class SupplierCreep extends AbstractCreep {
 
 	/* Overwrite the default requestTask method to only receive tasks from the hatchery. */
 	requestTask(): void {
-		this.colony.hatchery.objectiveGroup.assignTask(this);
+		this.hatchery.objectiveGroup.assignTask(this);
 	}
 
 	newTask(): void {
