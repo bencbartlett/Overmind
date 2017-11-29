@@ -15,7 +15,7 @@ import {MineralSupplierSetup} from './roles/mineralSupplier';
 import {WorkerSetup} from './roles/worker';
 import {ObjectiveGroup} from './objectives/ObjectiveGroup';
 import {ResourceRequestGroup} from './resourceRequests/ResourceRequestGroup';
-import {DirectiveGuard} from './directives/directive_guard_janky_workaround';
+import {DirectiveGuard} from './directives/directive_guard';
 
 export class Overlord implements IOverlord {
 	name: string; 								// Name of the primary colony room

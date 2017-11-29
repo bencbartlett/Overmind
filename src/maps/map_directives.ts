@@ -1,6 +1,6 @@
 // Jump table to instantiate flags based on type
 
-import {DirectiveGuard} from '../directives/directive_guard_janky_workaround';
+import {DirectiveGuard} from '../directives/directive_guard';
 import {DirectiveIncubate} from '../directives/directive_incubate';
 import {DirectiveOccupy} from '../directives/directive_occupy';
 
