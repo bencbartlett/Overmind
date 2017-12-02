@@ -7,6 +7,7 @@ import {ObjectiveCollectEnergyMiningSite} from '../objectives/objectives';
 import {HaulerSetup} from '../roles/hauler';
 import {log} from '../lib/logger/log';
 import {profileClass} from '../profiling';
+import {ResourceRequestGroup} from '../resourceRequests/ResourceRequestGroup';
 
 
 export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
@@ -16,6 +17,7 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 	miningSites: IMiningSite[];						// Mining sites that deposit via this mining group
 	parkingSpots: RoomPosition[]; 					// Good places for haulers to idle near the dropoff
 	private objectivePriorities: string[]; 			// Prioritization for objectives in the objective group
+	resourceRequests: ResourceRequestGroup;			// Box for resource requests
 	objectiveGroup: ObjectiveGroup; 				// Box for objectives assigned to this mining group
 	private _haulers: ICreep[]; 					// Haulers assigned to this mining group
 	private settings: {								// Settings for mining group
@@ -45,6 +47,7 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 			'collectEnergyMiningSite',
 		];
 		this.objectiveGroup = new ObjectiveGroup(this.objectivePriorities);
+		this.resourceRequests = new ResourceRequestGroup();
 		// Mining sites are populated with MiningSite instantiation
 		this.miningSites = [];
 	}
@@ -94,13 +97,9 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 
 	/* Register hauler collection objectives across the assigned mining sites */
 	private registerObjectives(): void {
-		// Find resource requests from the Overlord that have a target matching the output of a mining site
-		let assignedContainers = _.map(this.miningSites, site => site.output) as Container[];
-		let withdrawalRequests = _.filter(this.overlord.resourceRequests.resourceOut.haul,
-										  request => _.includes(assignedContainers, request.target) &&
-													 request.resourceType == RESOURCE_ENERGY);
 		// Create an energy collection objective for each relevant withdrawal request
-		let withdrawContainers = _.map(withdrawalRequests, request => request.target) as Container[];
+		let withdrawContainers = _.map(this.resourceRequests.resourceOut.haul,
+									   request => request.target) as Container[];
 		let collectionObjectives = _.map(withdrawContainers, cont => new ObjectiveCollectEnergyMiningSite(cont));
 		// Register the objectives to the objective group
 		this.objectiveGroup.registerObjectives(collectionObjectives);

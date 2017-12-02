@@ -1,13 +1,12 @@
 // Colony class - organizes all assets of an owned room into a colony
 
-import {pathing} from './pathing/pathing';
 import {MiningSite} from './hiveClusters/MiningSite';
 import {Hatchery} from './hiveClusters/Hatchery';
 import {CommandCenter} from './hiveClusters/CommandCenter';
 import {UpgradeSite} from './hiveClusters/UpgradeSite';
 import {MiningGroup} from './hiveClusters/MiningGroup';
 import {profileClass} from './profiling';
-
+import {pathing} from './pathing/pathing';
 
 export class Colony implements IColony {
 	name: string;										// Name of the primary colony room
@@ -36,6 +35,11 @@ export class Colony implements IColony {
 	miningSites: { [sourceID: string]: IMiningSite };	// Component with logic for mining and hauling
 	sources: Source[];									// Sources in all colony rooms
 	incubator: IColony | undefined; 					// The colony responsible for incubating this one, if any
+	incubatingColonies: IColony[];						// List of colonies that this colony is incubating
+	stage: 												// The stage of the colony "lifecycle"
+		'larva' |										// No storage and no incubator
+		'pupa' |										// Has storage but RCL < 8
+		'adult';										// RCL 8 room
 	defcon: 0 | 1 | 2 | 3 | 4 | 5; 						// Defensive alert level of the colony
 	flags: Flag[];										// Flags across the colony
 	creeps: ICreep[];									// Creeps bound to the colony
@@ -77,6 +81,14 @@ export class Colony implements IColony {
 		this.powerSpawn = this.room.getStructures(STRUCTURE_POWER_SPAWN)[0] as StructurePowerSpawn;
 		this.nuker = this.room.getStructures(STRUCTURE_NUKER)[0] as StructureNuker;
 		this.observer = this.room.getStructures(STRUCTURE_OBSERVER)[0] as StructureObserver;
+		// Set the colony stage
+		if (this.storage && this.controller.level == 8) {
+			this.stage = 'adult';
+		} else if (this.storage && this.controller.level < 8) {
+			this.stage = 'pupa';
+		} else {
+			this.stage = 'larva';
+		}
 		// Defcon starts at 0, is updated in initDefconLevel()
 		this.defcon = 0;
 		// Register physical objects across all rooms in the colony
@@ -87,6 +99,7 @@ export class Colony implements IColony {
 		this.creeps = []; // This is done by Overmind.registerCreeps()
 		this.creepsByRole = {};
 		this.flags = [];
+		this.incubatingColonies = [];
 	}
 
 	/* Instantiate and associate virtual colony components to group similar structures together */
@@ -118,7 +131,7 @@ export class Colony implements IColony {
 				for (let structRef in miningGroups) {
 					let group = miningGroups[structRef];
 					if (group.links && group.links.includes(link)) {
-						createNewGroup = false;
+						createNewGroup = false; // don't create a new group if one already includes this link
 					}
 				}
 				if (createNewGroup) {
@@ -133,22 +146,23 @@ export class Colony implements IColony {
 		this.miningSites = _.zipObject(sourceIDs, miningSites) as { [sourceID: string]: MiningSite };
 	}
 
-	private populateColonyData(): void {
+
+	private populateColonyData(): void { // TODO: cache this
 		// Calculate hauling power needed (in units of number of CARRY parts)
 		let energyPerTickValue = _.sum(_.map(this.miningSites, site => site.energyPerTick));
-		let haulingPowerNeededValue: number;
-		if (this.storage) {
-			let haulingPower = 0;
-			for (let siteID in this.miningSites) {
-				let site = this.miningSites[siteID];
-				if (site.output instanceof StructureContainer) { // only count container mining sites
+		let haulingPower = 0;
+		for (let siteID in this.miningSites) {
+			let site = this.miningSites[siteID];
+			if (site.output instanceof StructureContainer) { // only count container mining sites
+				if (this.storage) {
 					haulingPower += site.energyPerTick * (2 * pathing.cachedPathLength(this.storage.pos, site.pos));
+				} else { // if there is no storage, use controller position as a benchmark
+					haulingPower += site.energyPerTick * (2 * pathing.cachedPathLength(this.controller.pos, site.pos));
 				}
 			}
-			haulingPowerNeededValue = haulingPower / CARRY_CAPACITY;
-		} else {
-			haulingPowerNeededValue = 0;
 		}
+		let haulingPowerNeededValue = haulingPower / CARRY_CAPACITY;
+
 		// Hauling power currently supplied (in carry parts)
 		let haulingPowerSuppliedValue = _.sum(_.map(this.getCreepsByRole('hauler'),
 													creep => creep.getActiveBodyparts(CARRY)));
@@ -208,21 +222,6 @@ export class Colony implements IColony {
 		return this.creepsByRole[roleName] || [];
 	}
 
-	// private registerIncubation(): void {
-	// 	// Get incubation status and register colony associations
-	// 	let incubationFlag = _.filter(this.room.flags, flagCodes.territory.claimAndIncubate.filter)[0];
-	// 	if (incubationFlag) {
-	// 		this.incubating = true;
-	// 		let incubatingColonyName = incubationFlag.name.split(':')[1];
-	// 		this.incubator = Overmind.Colonies[incubatingColonyName];
-	// 		if (this.incubator.hatchery) {
-	// 			this.hatchery = this.incubator.hatchery;
-	// 		}
-	// 	} else {
-	// 		this.incubating = false;
-	// 	}
-	// }
-
 	/* Instantiate the virtual components of the colony and populate data */
 	build(): void {
 		this.instantiateVirtualComponents();	// Instantiate the virtual components of the colony
@@ -230,9 +229,7 @@ export class Colony implements IColony {
 	}
 
 	init(): void {
-		// // 1: Register incubation status
-		// this.registerIncubation();
-		// 2: Initialize each colony component
+		// 1: Initialize each colony component
 		if (this.hatchery) {
 			this.hatchery.init();
 		}
@@ -251,9 +248,9 @@ export class Colony implements IColony {
 				this.miningGroups[groupID].init();
 			}
 		}
-		// 3: Initialize the colony overlord, must be run AFTER all components are initialized
+		// 2: Initialize the colony overlord, must be run AFTER all components are initialized
 		this.overlord.init();
-		// 4: Initialize each creep in the colony
+		// 3: Initialize each creep in the colony
 		for (let name in this.creeps) {
 			this.creeps[name].init();
 		}

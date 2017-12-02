@@ -6,6 +6,7 @@ import {
 	ObjectiveBuild,
 	ObjectiveBuildRoad,
 	ObjectiveCollectEnergyMiningSite,
+	ObjectiveDepositContainer,
 	ObjectiveFortify,
 	ObjectivePickupEnergy,
 	ObjectiveRepair,
@@ -48,6 +49,7 @@ export class Overlord implements IOverlord {
 			'pickupEnergy',
 			'collectEnergyMiningSite',
 			'collectEnergyContainer',
+			'depositContainer',
 			'build',
 			'repair',
 			'buildRoad',
@@ -79,14 +81,21 @@ export class Overlord implements IOverlord {
 	/* Register objectives from across the colony in the objectiveGroup. Some objectives are registered by other
 	 * colony objects, like Hatchery and CommandCenter objectives. */
 	private registerObjectives(): void {
-		// Collect energy from component sites that have requested a hauler withdrawal
+		// Collect energy from component sites that have requested a hauler/supplier withdrawal
 		let withdrawalRequests = _.filter(this.resourceRequests.resourceOut.haul,
 										  request => request.resourceType == RESOURCE_ENERGY);
 		let collectContainers = _.map(withdrawalRequests, request => request.target);
 		let collectEnergyMiningSiteObjectives = _.map(collectContainers, container =>
 			new ObjectiveCollectEnergyMiningSite(container as Container));
 
-		this.objectiveGroup.registerObjectives(collectEnergyMiningSiteObjectives);
+		// Deposit energy to containers requesting a refill
+		let depositRequests = _.filter(this.resourceRequests.resourceIn.haul,
+									   request => request.resourceType == RESOURCE_ENERGY);
+		let depositContainers = _.map(depositRequests, request => request.target);
+		let depositContainerObjectives = _.map(depositContainers, container =>
+			new ObjectiveDepositContainer(container as Container));
+
+		this.objectiveGroup.registerObjectives(collectEnergyMiningSiteObjectives, depositContainerObjectives);
 
 		// Register tasks across all rooms in colony
 		for (let room of this.colony.rooms) {
@@ -153,23 +162,6 @@ export class Overlord implements IOverlord {
 				}
 			}
 
-			// // Ensure each controller in colony outposts has a reserver if needed
-			// let outpostControllers = _.compact(_.map(this.colony.outposts, room => room.controller)) as Controller[];
-			// for (let controller of outpostControllers) {
-			// 	if (!controller.reservation ||
-			// 		(controller.reservedByMe && controller.reservation.ticksToEnd < this.settings.reserveBuffer)) {
-			// 		let reservationFlag = controller.room.colonyFlag;
-			// 		let assignedReservers = reservationFlag.getAssignedCreepAmounts('reserver');
-			// 		if (assignedReservers == 0) {
-			// 			this.colony.hatchery.enqueue(
-			// 				new ReserverSetup().create(this.colony, {
-			// 					assignment            : reservationFlag,
-			// 					patternRepetitionLimit: 4,
-			// 				}));
-			// 		}
-			// 	}
-			// }
-
 			// Ensure there's enough workers
 			let numWorkers = this.colony.getCreepsByRole('worker').length;
 			let numWorkersNeeded; // TODO: maybe a better metric than this
@@ -187,13 +179,15 @@ export class Overlord implements IOverlord {
 					}));
 			}
 		}
-
 	}
 
 	/* Place new event-driven flags where needed to be instantiated on the next tick */
 	private placeDirectives(): void {
 		// Place guard flags in the event of an invasion
-		for (let room of this.colony.outposts) {
+		// Defend your outposts and all rooms of colonies that you are incubating
+		let roomsToCheck = _.flattenDeep([this.colony.outposts,
+										  _.map(this.colony.incubatingColonies, col => col.rooms)]) as Room[];
+		for (let room of roomsToCheck) {
 			let guardFlags = _.filter(room.flags, flag => DirectiveGuard.filter(flag));
 			if (room.hostiles.length > 0 && guardFlags.length == 0) {
 				DirectiveGuard.create(room.hostiles[0].pos);

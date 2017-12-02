@@ -9,6 +9,7 @@ import {TaskBuild} from '../tasks/task_build';
 import {TaskFortify} from '../tasks/task_fortify';
 import {TaskUpgrade} from '../tasks/task_upgrade';
 import {profileClass} from '../profiling';
+import {TaskDeposit} from '../tasks/task_deposit';
 
 // Objective to pick up dropped energy in a room
 export class ObjectivePickupEnergy extends Objective {
@@ -16,7 +17,7 @@ export class ObjectivePickupEnergy extends Objective {
 
 	constructor(target: Resource) {
 		super('pickupEnergy', target);
-		this.assignableToRoles = ['hauler'];
+		this.assignableToRoles = ['hauler', 'supplier'];
 		this.maxCreeps = 1;
 	}
 
@@ -37,7 +38,7 @@ export class ObjectiveCollectEnergyContainer extends Objective {
 
 	constructor(target: Container) {
 		super('collectEnergyContainer', target);
-		this.assignableToRoles = ['hauler'];
+		this.assignableToRoles = ['hauler', 'supplier'];
 		this.maxCreeps = Infinity;
 	}
 
@@ -58,7 +59,7 @@ export class ObjectiveCollectEnergyMiningSite extends Objective {
 
 	constructor(target: Container) {
 		super('collectEnergyMiningSite', target);
-		this.assignableToRoles = ['hauler'];
+		this.assignableToRoles = ['hauler', 'supplier'];
 		this.maxCreeps = Infinity;
 	}
 
@@ -79,7 +80,7 @@ export class ObjectiveSupplyTower extends Objective {
 
 	constructor(target: Tower) {
 		super('supplyTower', target);
-		this.assignableToRoles = ['supplier'];
+		this.assignableToRoles = ['supplier', 'queen'];
 		this.maxCreeps = 1;
 	}
 
@@ -100,7 +101,7 @@ export class ObjectiveSupply extends Objective {
 
 	constructor(target: Sink) {
 		super('supply', target);
-		this.assignableToRoles = ['supplier'];
+		this.assignableToRoles = ['supplier', 'queen'];
 		this.maxCreeps = 1;
 	}
 
@@ -112,6 +113,28 @@ export class ObjectiveSupply extends Objective {
 
 	getTask() {
 		return new TaskSupply(this.target);
+	}
+}
+
+// Objective to deposit energy to a container
+export class ObjectiveDepositContainer extends Objective {
+
+	target: StructureContainer;
+
+	constructor(target: StructureContainer) {
+		super('depositContainer', target);
+		this.assignableToRoles = ['supplier', 'queen'];
+		this.maxCreeps = 1;
+	}
+
+	assignableTo(creep: ICreep) {
+		return this.assignableToRoles.includes(creep.memory.role) &&
+			   creep.getActiveBodyparts(CARRY) > 0 &&
+			   creep.carry.energy > 0;
+	}
+
+	getTask() {
+		return new TaskDeposit(this.target);
 	}
 }
 

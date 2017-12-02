@@ -68,7 +68,7 @@ export default class Overmind implements IOvermind {
 		for (let flag of incubationFlags) {
 			// flag.colony.registerIncubation();
 			if (!flag.room) {
-				this.invisibleRooms.push(flag.roomName);
+				this.invisibleRooms.push(flag.pos.roomName);
 			}
 		}
 	}

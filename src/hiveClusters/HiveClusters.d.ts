@@ -28,6 +28,7 @@ interface IMiningGroup extends IHiveCluster {
 	miningSites: IMiningSite[];
 	parkingSpots: RoomPosition[];
 	objectiveGroup: IObjectiveGroup;
+	resourceRequests: IResourceRequestGroup;
 	data: {
 		numHaulers: number,
 		haulingPowerSupplied: number,
@@ -47,7 +48,7 @@ interface ICommandCenter extends IHiveCluster {
 	powerSpawn: StructurePowerSpawn | undefined;
 	nuker: StructureNuker | undefined;
 	observer: StructureObserver | undefined;
-	manager: ICreep;
+	manager: ICreep | undefined;
 	idlePos: RoomPosition;
 }
 
@@ -56,11 +57,11 @@ interface IHatchery extends IHiveCluster {
 	spawns: Spawn[];
 	availableSpawns: Spawn[];
 	extensions: Extension[];
-	link: StructureLink;
-	battery: StructureContainer;
+	link: StructureLink | undefined;
+	battery: StructureContainer | undefined;
 	objectiveGroup: IObjectiveGroup;
 	spawnPriorities: { [role: string]: number };
-	supplier: ICreep;
+	queen: ICreep | undefined;
 	idlePos: RoomPosition;
 	enqueue(protoCreep: protoCreep, priority?: number): void;
 }

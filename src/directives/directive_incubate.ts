@@ -20,6 +20,7 @@ export class DirectiveIncubate extends Directive {
 		if (this.colony) {
 			// Register incubation status
 			this.colony.incubator = this.incubator;
+			this.incubator.incubatingColonies.push(this.incubator);
 			// Reassign the hatchery if needed
 			if (!this.colony.hatchery && this.incubator.hatchery) {
 				this.colony.hatchery = this.incubator.hatchery;

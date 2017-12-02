@@ -15,6 +15,7 @@ import {SupplierCreep} from '../roles/supplier';
 import {UpgraderCreep} from '../roles/upgrader';
 import {WorkerCreep} from '../roles/worker';
 import {ManagerCreep} from '../roles/manager';
+import {QueenCreep} from '../roles/queen';
 
 export function AbstractCreepWrapper(creep: Creep): AbstractCreep {
 	let roleName = creep.memory.role;
@@ -43,6 +44,9 @@ export function AbstractCreepWrapper(creep: Creep): AbstractCreep {
 			break;
 		case 'mineralSupplier':
 			role =  new MineralSupplierCreep(creep);
+			break;
+		case 'queen':
+			role = new QueenCreep(creep);
 			break;
 		case 'reserver':
 			role =  new ReserverCreep(creep);

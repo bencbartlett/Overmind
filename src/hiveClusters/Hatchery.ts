@@ -8,26 +8,30 @@ import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {SupplierSetup} from '../roles/supplier';
 import {profileClass} from '../profiling';
 import {log} from '../lib/logger/log';
+import {QueenSetup} from '../roles/queen';
 
 export class Hatchery extends AbstractHiveCluster implements IHatchery {
 	memory: HatcheryMemory; 								// Memory.colonies.hatchery
 	spawns: Spawn[]; 										// List of spawns in the hatchery
 	availableSpawns: Spawn[]; 								// Spawns that are available to make stuff right now
 	extensions: Extension[]; 								// List of extensions in the hatchery
-	link: StructureLink; 									// The input link
+	link: StructureLink | undefined; 						// The input link
 	towers: StructureTower[]; 								// All towers that aren't in the command center
-	battery: StructureContainer;							// The container to provide an energy buffer
+	battery: StructureContainer | undefined;				// The container to provide an energy buffer
 	private objectivePriorities: string[]; 					// Priorities for objectives in the objectiveGroup
 	objectiveGroup: ObjectiveGroup; 						// Objectives for hatchery operation and maintenance
 	spawnPriorities: { [role: string]: number }; 			// Default priorities for spawning creeps of various roles
 	private settings: {										// Settings for hatchery operation
 		refillTowersBelow: number,  							// What value to refill towers at?
 		linksRequestEnergyBelow: number, 						// What value will links request more energy at?
-		supplierPatternRepetitionLimit: number,					// Size of suppliers in body patern repetition units
-		numSuppliers: number,									// Number of suppliers the Hatchery needs
+		supplierSize: number,									// Size of supplier in body pattern units
+		numSuppliers: number,									// Number of suppliers to maintain
+		queenSize: number,										// Size of queen in body patern repetition units
+		numQueens: number,										// Number of queens the Hatchery needs
+		renewQueenAt: number,									// Renew idle queens below this ticksRemaining value
 	};
 	private productionQueue: { [priority: number]: protoCreep[] };  // Priority queue of protocreeps
-	private _supplier: ICreep; 										// The supplier working the hatchery
+	private _queen: ICreep; 										// The supplier working the hatchery
 	private _idlePos: RoomPosition; 								// Idling position for the supplier
 
 
@@ -56,6 +60,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		// Priorities for the productionQueue
 		this.spawnPriorities = {
 			supplier       : 0,
+			queen          : 1,
 			scout          : 1,
 			manager        : 1,
 			guard          : 2,
@@ -70,18 +75,21 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		this.memory.productionQueue = {}; // cleared every tick; only in memory for inspection purposes
 		this.productionQueue = this.memory.productionQueue; // reference this outside of memory for typing purposes
 		this.settings = {
-			refillTowersBelow             : 500,
-			linksRequestEnergyBelow       : 0,
-			supplierPatternRepetitionLimit: _.min([_.ceil(2 * (this.extensions.length + 1) / 5), 8]),
-			numSuppliers                  : 1,
+			refillTowersBelow      : 500,
+			linksRequestEnergyBelow: 0,
+			supplierSize           : _.min([_.ceil(2 * (this.extensions.length + 1) / 5), 8]),
+			numSuppliers           : 1,
+			queenSize              : _.min([_.ceil(2 * (this.extensions.length + 1) / 5), 8]),
+			numQueens              : 1,
+			renewQueenAt           : 1000,
 		};
 	}
 
-	get supplier(): ICreep {
-		if (!this._supplier) {
-			this._supplier = this.colony.getCreepsByRole('supplier')[0];
+	get queen(): ICreep | undefined {
+		if (!this._queen) {
+			this._queen = this.colony.getCreepsByRole('queen')[0];
 		}
-		return this._supplier;
+		return this._queen;
 	}
 
 	// Objective management ============================================================================================
@@ -114,8 +122,17 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 			supplyTowers = _.filter(this.towers, tower => tower.energy < tower.energyCapacity);
 		}
 		let supplyTowerObjectives = _.map(supplyTowers, tower => new ObjectiveSupplyTower(tower));
-		// Register the objectives in the objectiveGroup
-		this.objectiveGroup.registerObjectives(supplySpawnObjectives, supplyExtensionObjectives, supplyTowerObjectives);
+
+		// Register the objectives to the appropriate group
+		if (this.queen) { // if the hatchery has a queen, stick objectives in this group
+			this.objectiveGroup.registerObjectives(supplySpawnObjectives,
+												   supplyExtensionObjectives,
+												   supplyTowerObjectives);
+		} else { // otherwise, put them in the overlord's objectiveGroup
+			this.overlord.objectiveGroup.registerObjectives(supplySpawnObjectives,
+															supplyExtensionObjectives,
+															supplyTowerObjectives);
+		}
 	}
 
 
@@ -155,7 +172,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 			if (protoCreep.memory.colony != this.colony.name) {
 				log.info('Spawning ' + protoCreep.name + ' for ' + protoCreep.memory.colony);
 			}
-			protoCreep.memory.data.origin = spawnToUse.roomName;
+			protoCreep.memory.data.origin = spawnToUse.pos.roomName;
 			let result = spawnToUse.spawnCreep(protoCreep.body, protoCreep.name, {memory: protoCreep.memory});
 			if (result == OK) {
 				return result;
@@ -207,7 +224,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 	private spawnEmergencySupplier(): number {
 		let emergencySupplier = new SupplierSetup().create(this.colony, {
 			assignment            : this.room.controller,
-			patternRepetitionLimit: 1
+			patternRepetitionLimit: 2
 		});
 		let result = this.spawnCreep(emergencySupplier);
 		if (result != OK) {
@@ -240,8 +257,8 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		];
 		for (let structure of proximateStructures) {
 			if (structure) {
-				let filteredPositions = _.filter(possiblePositions, p => p.isNearTo(structure) &&
-																		 !p.isEqualTo(structure));
+				let filteredPositions = _.filter(possiblePositions, p => p.isNearTo(structure!) &&
+																		 !p.isEqualTo(structure!));
 				if (filteredPositions.length == 0) { // stop when it's impossible to match any more structures
 					return possiblePositions[0];
 				} else {
@@ -252,43 +269,51 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		return possiblePositions[0];
 	}
 
-	private handleSuppliers(): void {
-		// Handle the supplier
-		let supplier = this.supplier;
-		if (!supplier) {
+	private handleQueen(): void {
+		// Handle the queen
+		let queen = this.queen;
+		if (!queen) {
 			return;
 		}
-		// Try to ensure the supplier has something to do
-		supplier.assertValidTask();
+		// Try to ensure the queen has something to do
+		queen.assertValidTask();
 		// If there aren't any tasks that need to be done, recharge the battery from link
-		if (supplier.isIdle) {
+		if (queen.isIdle) {
 			if (this.battery && this.link) { // is there a battery and a link?
 				// Can energy be moved from the link to the battery?
 				if (!this.battery.isFull && !this.link.isEmpty) { 	// move energy to battery
-					if (supplier.carry.energy < supplier.carryCapacity) {
-						supplier.task = new TaskWithdraw(this.link);
+					if (queen.carry.energy < queen.carryCapacity) {
+						queen.task = new TaskWithdraw(this.link);
 					} else {
-						supplier.task = new TaskDeposit(this.battery);
+						queen.task = new TaskDeposit(this.battery);
 					}
 				} else {
-					if (supplier.carry.energy < supplier.carryCapacity) { // make sure you're recharged
-						supplier.task = new TaskWithdraw(this.link);
+					if (queen.carry.energy < queen.carryCapacity) { // make sure you're recharged
+						queen.task = new TaskWithdraw(this.link);
 					}
 				}
 			}
 		}
-		// If all of the above is done, move to the idle point
-		if (supplier.isIdle && !supplier.pos.isEqualTo(this.idlePos)) {
-			supplier.travelTo(this.idlePos);
+		// If all of the above is done, move to the idle point and renew as needed
+		if (queen.isIdle) {
+			if (queen.pos.isEqualTo(this.idlePos)) {
+				// If queen is at idle position, renew her as needed
+				if (queen.ticksToLive < this.settings.renewQueenAt && this.availableSpawns.length > 0) {
+					this.availableSpawns[0].renewCreep(queen.creep);
+				}
+			} else {
+				// Otherwise, travel back to idle position
+				queen.travelTo(this.idlePos);
+			}
 		}
 	}
 
 	private handleSpawns(): void {
 		// See if an emergency supplier needs to be spawned
 		let numSuppliers = this.colony.getCreepsByRole('supplier').length;
-		let supplierSize = this.settings.supplierPatternRepetitionLimit;
 		// Emergency suppliers spawn when numSuppliers = 0 and when there isn't enough energy to spawn new supplier
-		if (numSuppliers == 0 && supplierSize * (new SupplierSetup().bodyPatternCost) > this.room.energyAvailable) {
+		if (numSuppliers == 0 &&
+			this.settings.supplierSize * (new SupplierSetup().bodyPatternCost) > this.room.energyAvailable) {
 			this.spawnEmergencySupplier();
 		} else {
 			// Spawn all queued creeps that you can
@@ -300,16 +325,19 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		}
 	}
 
-	/* Request a new supplier if there are structures to deposit into and if there is energy income */
+	/* Request a new queen if there are structures to deposit into and if there is energy income */
 	protected registerCreepRequests(): void {
+		if (!this.queen && this.room.storage) {
+			this.enqueue(new QueenSetup().create(this.colony, {
+				assignment            : this.room.controller!,
+				patternRepetitionLimit: this.settings.queenSize,
+			}));
+		}
 		if (this.room.sinks.length > 0 && this.colony.getCreepsByRole('miner').length > 0) {
-			let supplierSize = this.settings.supplierPatternRepetitionLimit;
-			let numSuppliers = _.filter(this.colony.getCreepsByRole('supplier'), // number of big suppliers in colony
-										creep => creep.getActiveBodyparts(MOVE) == supplierSize).length;
-			if (numSuppliers < this.settings.numSuppliers) {
+			if (this.colony.getCreepsByRole('supplier').length < this.settings.numSuppliers) {
 				this.enqueue(new SupplierSetup().create(this.colony, {
 					assignment            : this.room.controller!,
-					patternRepetitionLimit: supplierSize,
+					patternRepetitionLimit: this.settings.supplierSize,
 				}));
 			}
 		}
@@ -323,7 +351,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 	}
 
 	run(): void {
-		this.handleSuppliers();
+		this.handleQueen();
 		this.handleSpawns();
 	}
 }

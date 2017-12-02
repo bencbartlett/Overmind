@@ -56,7 +56,7 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 		this.terminalSettings = terminalSettings;
 	}
 
-	get manager(): ICreep {
+	get manager(): ICreep | undefined {
 		if (!this._manager) {
 			this._manager = this.storage.getAssignedCreeps('manager')[0];
 		}

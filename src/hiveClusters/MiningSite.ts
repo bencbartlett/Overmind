@@ -71,17 +71,26 @@ export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 
 	/* Register appropriate resource withdrawal requests when the output gets sufficiently full */
 	private registerOutputRequests(): void {
+		// Figure out which request group to submit requests to
+		let resourceRequestGroup: IResourceRequestGroup;
+		if (this.miningGroup) {
+			resourceRequestGroup = this.miningGroup.resourceRequests;
+		} else {
+			resourceRequestGroup = this.overlord.resourceRequests;
+		}
 		// Handle energy output via resource requests
 		if (this.output instanceof StructureContainer) {
-			let avgHaulerCap = CARRY_CAPACITY * this.colony.data.haulingPowerSupplied / this.colony.data.numHaulers;
+			let colonyHaulers = this.colony.getCreepsByRole('hauler');
+			let avgHaulerCap = _.sum(_.map(colonyHaulers, hauler => hauler.carryCapacity)) / colonyHaulers.length;
+			// let avgHaulerCap = CARRY_CAPACITY * this.colony.data.haulingPowerSupplied / this.colony.data.numHaulers;
 			if (this.predictedStore > 0.75 * avgHaulerCap) { // TODO: add path length dependence
-				this.overlord.resourceRequests.registerWithdrawalRequest(this.output);
+				resourceRequestGroup.registerWithdrawalRequest(this.output);
 			}
 		} else if (this.output instanceof StructureLink) {
 			// If the link will be full with next deposit from the miner
 			let minerCapacity = 150; // hardcoded value, I know, but saves import time
 			if (this.output.energy + minerCapacity > this.output.energyCapacity) {
-				this.overlord.resourceRequests.registerWithdrawalRequest(this.output);
+				resourceRequestGroup.registerWithdrawalRequest(this.output);
 			}
 		}
 	}
@@ -89,11 +98,11 @@ export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 	private findBestMiningGroup(): IMiningGroup | undefined {
 		if (this.colony.miningGroups) {
 			if (this.room == this.colony.room) {
-				return this.colony.miningGroups[this.colony.storage!.ref]
+				return this.colony.miningGroups[this.colony.storage!.ref];
 			} else {
 				let groupsByDistance = _.sortBy(this.colony.miningGroups,
 												group => pathing.cachedPathLength(this.pos, group.pos));
-				return groupsByDistance[0];
+				return _.head(groupsByDistance);
 			}
 		}
 	}

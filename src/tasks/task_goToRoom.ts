@@ -13,7 +13,7 @@ export class TaskGoToRoom extends Task {
 
 	isValidTask() {
 		let creep = this.creep;
-		return !(creep.pos.roomName == this.target.roomName &&
+		return !(creep.pos.roomName == this.target.pos.roomName &&
 				 creep.pos.x > 0 && creep.pos.x < 49 &&
 				 creep.pos.y > 0 && creep.pos.y < 49);
 	}

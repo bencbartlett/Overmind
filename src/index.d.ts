@@ -201,8 +201,10 @@ interface IColony {
 	miningSites: { [sourceID: string]: IMiningSite };
 	// incubating: boolean;
 	incubator: IColony | undefined;
+	incubatingColonies: IColony[];
 	outposts: Room[];
 	rooms: Room[];
+	stage: 'larva' | 'pupa' | 'adult';
 	defcon: 0 | 1 | 2 | 3 | 4 | 5;
 	flags: Flag[];
 	creeps: ICreep[];
@@ -211,10 +213,11 @@ interface IColony {
 	getCreepsByRole(roleName: string): ICreep[];
 	sources: Source[];
 	data: {
+		energyPerTick: number,
 		numHaulers: number,
 		haulingPowerSupplied: number,
 		haulingPowerNeeded: number,
-	};
+	}
 	// registerIncubation(): void;
 	build(): void;
 	init(): void;

@@ -125,26 +125,6 @@ Object.defineProperty(RoomObject.prototype, 'pathLengthToStorage', { // find and
 	},
 });
 
-// RoomObject.prototype.pathLengthTo = function (roomObj) {
-//     if (!this.room.memory.pathLengths) {
-//         this.room.memory.pathLengths = {}
-//     }
-//     if (!this.room.memory.pathLengths[this.ref]) {
-//         this.room.memory.pathLengths
-//     }
-//     if (!this.room.memory.pathLengths[roomObj.ref]) {
-//         this.room.memory.pathLengths[roomObj.ref] = require('pathing').findPathLengthIncludingRoads(roomObj.pos,
-//                                                                                                     this.pos);
-//     }
-//     return this.room.memory.pathLengths[roomObj.ref];
-// };
-
-Object.defineProperty(RoomObject.prototype, 'roomName', {
-	get: function () {
-		return this.pos.roomName;
-	},
-});
-
 RoomObject.prototype.pathLengthTo = function (roomObj) {
 	if (!this.memory.pathLengths) {
 		this.memory.pathLengths = {};

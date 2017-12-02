@@ -80,7 +80,7 @@ interface RoomObject {
 	linked: boolean;
 	links: StructureLink[];
 	pathLengthToStorage: number;
-	roomName: string;
+	// roomName: string;
 	pathLengthTo(otherObject: RoomObject): number;
 	serialize(): protoRoomObject;
 }
