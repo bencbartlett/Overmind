@@ -38,7 +38,7 @@ export class QueenCreep extends AbstractCreep {
 		} else if (this.hatchery.battery && !this.hatchery.battery.isEmpty) {
 			this.task = new TaskWithdraw(this.hatchery.battery);
 		} else {
-			log.alert('Hatchery is out of energy!');
+			log.info('Hatchery is out of energy!');
 		}
 	}
 

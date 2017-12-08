@@ -21,6 +21,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 	private objectivePriorities: string[]; 					// Priorities for objectives in the objectiveGroup
 	objectiveGroup: ObjectiveGroup; 						// Objectives for hatchery operation and maintenance
 	spawnPriorities: { [role: string]: number }; 			// Default priorities for spawning creeps of various roles
+	emergencyMode: boolean;									// Has the room catastrophically crashed?
 	private settings: {										// Settings for hatchery operation
 		refillTowersBelow: number,  							// What value to refill towers at?
 		linksRequestEnergyBelow: number, 						// What value will links request more energy at?
@@ -71,6 +72,8 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 			reserver       : 6,
 			upgrader       : 7,
 		};
+		// Emergency mode is off by default; modified by an emergency directive
+		this.emergencyMode = false;
 		// Set up production queue in memory so we can inspect it easily
 		this.memory.productionQueue = {}; // cleared every tick; only in memory for inspection purposes
 		this.productionQueue = this.memory.productionQueue; // reference this outside of memory for typing purposes
@@ -185,9 +188,12 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		}
 	}
 
-	enqueue(protoCreep: protoCreep): void {
+	enqueue(protoCreep: protoCreep, overridePriority?: number): void {
 		let roleName = protoCreep.name; // This depends on creeps being named for their roles (before generateCreepName)
 		let priority = this.spawnPriorities[roleName];
+		if (overridePriority != undefined) {
+			priority = overridePriority;
+		}
 		if (priority == undefined) {
 			priority = 1000; // some large but finite priority for all the remaining stuff to make
 		}
@@ -219,18 +225,6 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 				}
 			}
 		}
-	}
-
-	private spawnEmergencySupplier(): number {
-		let emergencySupplier = new SupplierSetup().create(this.colony, {
-			assignment            : this.room.controller,
-			patternRepetitionLimit: 2
-		});
-		let result = this.spawnCreep(emergencySupplier);
-		if (result != OK) {
-			log.warning('Cannot create emergency supplier: ', result);
-		}
-		return result;
 	}
 
 	// Idle position for suppliers =====================================================================================
@@ -294,33 +288,25 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 				}
 			}
 		}
-		// If all of the above is done, move to the idle point and renew as needed
-		if (queen.isIdle) {
-			if (queen.pos.isEqualTo(this.idlePos)) {
-				// If queen is at idle position, renew her as needed
-				if (queen.ticksToLive < this.settings.renewQueenAt && this.availableSpawns.length > 0) {
-					this.availableSpawns[0].renewCreep(queen.creep);
-				}
-			} else {
-				// Otherwise, travel back to idle position
-				queen.travelTo(this.idlePos);
-			}
-		}
+		// // If all of the above is done and hatchery is not in emergencyMode, move to the idle point and renew as needed
+		// if (!this.emergencyMode && queen.isIdle) {
+		// 	if (queen.pos.isEqualTo(this.idlePos)) {
+		// 		// If queen is at idle position, renew her as needed
+		// 		if (queen.ticksToLive < this.settings.renewQueenAt && this.availableSpawns.length > 0) {
+		// 			this.availableSpawns[0].renewCreep(queen.creep);
+		// 		}
+		// 	} else {
+		// 		// Otherwise, travel back to idle position
+		// 		queen.travelTo(this.idlePos);
+		// 	}
+		// }
 	}
 
 	private handleSpawns(): void {
-		// See if an emergency supplier needs to be spawned
-		let numSuppliers = this.colony.getCreepsByRole('supplier').length;
-		// Emergency suppliers spawn when numSuppliers = 0 and when there isn't enough energy to spawn new supplier
-		if (numSuppliers == 0 &&
-			this.settings.supplierSize * (new SupplierSetup().bodyPatternCost) > this.room.energyAvailable) {
-			this.spawnEmergencySupplier();
-		} else {
-			// Spawn all queued creeps that you can
-			while (this.availableSpawns.length > 0) {
-				if (this.spawnHighestPriorityCreep() != OK) {
-					break;
-				}
+		// Spawn all queued creeps that you can
+		while (this.availableSpawns.length > 0) {
+			if (this.spawnHighestPriorityCreep() != OK) {
+				break;
 			}
 		}
 	}

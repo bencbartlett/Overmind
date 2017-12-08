@@ -39,20 +39,14 @@ export var flagCodesMap: { [category: string]: flagCat } = {
 		},
 	},
 
-	destroy: { // directs millitary creeps to prioritize these objects; flags are removed when object is destroyed
+	operatingMode: { // directs millitary creeps to prioritize these objects; flags are removed when object is destroyed
 		color    : COLOR_ORANGE,
 		filter   : (flag: Flag) => flag.color == COLOR_ORANGE,
 		action   : null,
-		attack   : <flagSubCat> { // dismantle this structure (with siegers); usually walls
+		emergency: <flagSubCat> { // dismantle this structure (with siegers); usually walls
 			color         : COLOR_ORANGE,
-			secondaryColor: COLOR_RED,
-			filter        : (flag: Flag) => flag.color == COLOR_ORANGE && flag.secondaryColor == COLOR_RED,
-			action        : null,
-		},
-		dismantle: <flagSubCat> { // dismantle this structure (with siegers); usually walls
-			color         : COLOR_ORANGE,
-			secondaryColor: COLOR_YELLOW,
-			filter        : (flag: Flag) => flag.color == COLOR_ORANGE && flag.secondaryColor == COLOR_YELLOW,
+			secondaryColor: COLOR_ORANGE,
+			filter        : (flag: Flag) => flag.color == COLOR_ORANGE && flag.secondaryColor == COLOR_ORANGE,
 			action        : null,
 		},
 	},

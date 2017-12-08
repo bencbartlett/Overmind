@@ -3,6 +3,7 @@
 import {DirectiveGuard} from '../directives/directive_guard';
 import {DirectiveIncubate} from '../directives/directive_incubate';
 import {DirectiveOccupy} from '../directives/directive_occupy';
+import {DirectiveEmergency} from '../directives/directive_emergency';
 
 function codeToString(colorCode: ColorCode): string {
 	return `${colorCode.color}/${colorCode.secondaryColor}`;
@@ -26,6 +27,10 @@ export function DirectiveWrapper(flag: Flag): IDirective | undefined {
 
 		case codeToString(DirectiveIncubate.colorCode):
 			directive = new DirectiveIncubate(flag);
+			break;
+
+		case codeToString(DirectiveEmergency.colorCode):
+			directive = new DirectiveEmergency(flag);
 			break;
 
 		// default:

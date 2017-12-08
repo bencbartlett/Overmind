@@ -1,3 +1,4 @@
+import {log} from '../lib/logger/log';
 export abstract class Directive implements IDirective {
 
 	flag: Flag;								// The flag instantiating this directive
@@ -55,12 +56,15 @@ export abstract class Directive implements IDirective {
 	// Custom directive methods ========================================================================================
 
 	/* Create an appropriate flag to instantiate this directive in the next tick */
-	static create(pos: RoomPosition, name?: string): number {
-		if (!name) {
-			name = this.directiveName + pos.roomName;
-		}
-		console.log(`Creating ${this.directiveName} directive in room ${pos.roomName}!`);
-		return Game.rooms[pos.roomName].createFlag(pos, name, this.colorCode.color, this.colorCode.secondaryColor);
+	static create(pos: RoomPosition, options: { name?: string, allowMultiple?: boolean } = {}): number {
+		_.defaults(options, {
+			name         : this.directiveName + pos.roomName,
+			allowMultiple: false,
+		});
+		// TODO: cache flags by type and room so that you can do room.flags when you don't have vision
+		log.alert(`Creating ${this.directiveName} directive in room ${pos.roomName}!`);
+		return Game.rooms[pos.roomName].createFlag(pos, options.name,
+												   this.colorCode.color, this.colorCode.secondaryColor);
 	}
 
 	/* Filter for _.filter() that checks if a flag is of the matching type */

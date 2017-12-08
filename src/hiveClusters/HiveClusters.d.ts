@@ -63,6 +63,7 @@ interface IHatchery extends IHiveCluster {
 	spawnPriorities: { [role: string]: number };
 	queen: ICreep | undefined;
 	idlePos: RoomPosition;
+	emergencyMode: boolean;
 	enqueue(protoCreep: protoCreep, priority?: number): void;
 }
 

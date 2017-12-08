@@ -85,7 +85,32 @@ export class Log {
 	}
 
 	public set level(value: number) {
-		Memory.log.level = value;
+		let changeValue = true;
+		switch (value) {
+			case LogLevels.ERROR:
+				console.log(`Logging level set to ${value}. Displaying: ERROR.`);
+				break;
+			case LogLevels.WARNING:
+				console.log(`Logging level set to ${value}. Displaying: ERROR, WARNING.`);
+				break;
+			case LogLevels.ALERT:
+				console.log(`Logging level set to ${value}. Displaying: ERROR, WARNING, ALERT.`);
+				break;
+			case LogLevels.INFO:
+				console.log(`Logging level set to ${value}. Displaying: ERROR, WARNING, ALERT, INFO.`);
+				break;
+			case LogLevels.DEBUG:
+				console.log(`Logging level set to ${value}. Displaying: ERROR, WARNING, ALERT, INFO, DEBUG.`);
+				break;
+			default:
+				console.log(`Invalid input: ${value}. Loging level can be set to integers between `
+							+ LogLevels.ERROR + ' and ' + LogLevels.DEBUG + ', inclusive.');
+				changeValue = false;
+				break;
+		}
+		if (changeValue) {
+			Memory.log.level = value;
+		}
 	}
 
 	public get showSource(): boolean {
@@ -179,7 +204,10 @@ export class Log {
 				out.push(color('ERROR  ', 'red'));
 				break;
 			case LogLevels.WARNING:
-				out.push(color('WARNING', 'yellow'));
+				out.push(color('WARNING', 'orange'));
+				break;
+			case LogLevels.ALERT:
+				out.push(color('ALERT', 'yellow'));
 				break;
 			case LogLevels.INFO:
 				out.push(color('INFO   ', 'green'));

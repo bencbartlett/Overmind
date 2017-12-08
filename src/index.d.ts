@@ -12,6 +12,7 @@ declare namespace NodeJS {
 declare var Overmind: IOvermind;
 declare var flagCodes: { [category: string]: flagCat };
 
+
 interface Game {
 	cache: {
 		assignments: { [ref: string]: { [roleName: string]: string[] } };
@@ -201,6 +202,7 @@ interface IColony {
 	miningSites: { [sourceID: string]: IMiningSite };
 	// incubating: boolean;
 	incubator: IColony | undefined;
+	isIncubating: boolean;
 	incubatingColonies: IColony[];
 	outposts: Room[];
 	rooms: Room[];

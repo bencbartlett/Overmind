@@ -35,6 +35,7 @@ export class Colony implements IColony {
 	miningSites: { [sourceID: string]: IMiningSite };	// Component with logic for mining and hauling
 	sources: Source[];									// Sources in all colony rooms
 	incubator: IColony | undefined; 					// The colony responsible for incubating this one, if any
+	isIncubating: boolean;								// If the colony is incubating
 	incubatingColonies: IColony[];						// List of colonies that this colony is incubating
 	stage: 												// The stage of the colony "lifecycle"
 		'larva' |										// No storage and no incubator
@@ -89,6 +90,7 @@ export class Colony implements IColony {
 		} else {
 			this.stage = 'larva';
 		}
+		this.isIncubating = false;
 		// Defcon starts at 0, is updated in initDefconLevel()
 		this.defcon = 0;
 		// Register physical objects across all rooms in the colony

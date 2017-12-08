@@ -18,6 +18,7 @@ import {ObjectiveGroup} from './objectives/ObjectiveGroup';
 import {ResourceRequestGroup} from './resourceRequests/ResourceRequestGroup';
 import {DirectiveGuard} from './directives/directive_guard';
 import {profileClass} from './profiling';
+import {DirectiveEmergency, EMERGENCY_ENERGY_THRESHOLD} from './directives/directive_emergency';
 
 export class Overlord implements IOverlord {
 	name: string; 								// Name of the primary colony room
@@ -183,14 +184,27 @@ export class Overlord implements IOverlord {
 
 	/* Place new event-driven flags where needed to be instantiated on the next tick */
 	private placeDirectives(): void {
-		// Place guard flags in the event of an invasion
-		// Defend your outposts and all rooms of colonies that you are incubating
+		// Guard directive: defend your outposts and all rooms of colonies that you are incubating
 		let roomsToCheck = _.flattenDeep([this.colony.outposts,
 										  _.map(this.colony.incubatingColonies, col => col.rooms)]) as Room[];
 		for (let room of roomsToCheck) {
 			let guardFlags = _.filter(room.flags, flag => DirectiveGuard.filter(flag));
 			if (room.hostiles.length > 0 && guardFlags.length == 0) {
 				DirectiveGuard.create(room.hostiles[0].pos);
+			}
+		}
+
+		// Emergency directive: in the event of catastrophic room crash, enter emergency spawn mode.
+		// Doesn't apply to incubating colonies.
+		if (!this.colony.isIncubating && this.colony.hatchery) {
+			let roomHasEnergy = this.room.energyAvailable >= EMERGENCY_ENERGY_THRESHOLD; 		// Enough spawn energy?
+			let roomHasEnergySupply = (this.room.storage != undefined &&						// Has storage and
+									   this.room.storage.energy > EMERGENCY_ENERGY_THRESHOLD && // energy in storage and
+									   this.colony.getCreepsByRole('supplier').length > 0);		// can carry to spawn?
+			let roomHasMiners = this.colony.getCreepsByRole('miner').length > 0;				// Has miners?
+			let emergencyFlags = _.filter(this.room.flags, flag => DirectiveEmergency.filter(flag));
+			if (!roomHasEnergy && !roomHasEnergySupply && !roomHasMiners && emergencyFlags.length == 0) {
+				DirectiveEmergency.create(this.colony.hatchery.pos);
 			}
 		}
 	}
@@ -211,12 +225,12 @@ export class Overlord implements IOverlord {
 	// Initialization ==================================================================================================
 
 	init(): void {
-		this.registerObjectives();
-		this.registerCreepRequests();
-		// Handle directives
+		// Handle directives - should be done first
 		for (let i in this.directives) {
 			this.directives[i].init();
 		}
+		this.registerObjectives();
+		this.registerCreepRequests();
 	}
 
 	// Operation =======================================================================================================
