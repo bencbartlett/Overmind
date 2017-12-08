@@ -5,6 +5,7 @@ type targetType = RoomObject; // overwrite this variable in derived classes to s
  * condition Z is met" and saves a lot of convoluted and duplicated code in creep logic. A Task object contains
  * the necessary logic for traveling to a target, performing a task, and realizing when a task is no longer sensible
  * to continue.*/
+
 export abstract class Task implements ITask {
 	name: string;				// Name of the task type, e.g. 'upgrade'
 	_creep: { 					// Data for the creep the task is assigned to"
@@ -14,10 +15,9 @@ export abstract class Task implements ITask {
 		ref: string; 				// Target id or name
 		_pos: protoPos; 			// Target position's coordinates in case vision is lost
 	};
-	taskData: { 				// Data pertaining to a given type of task; shouldn't be modified on an instance-basis
+	_parent: protoTask | null; 	// The parent of this task, if any. Task is changed to parent upon completion.
+	settings: { 				// Data pertaining to a given type of task; shouldn't be modified on an instance-basis
 		targetRange: number;		// How close you must be to the target to do the work() function
-		maxPerTask: number; 		// How many creeps can be assigned a type of task (DEPRECATED - see objectives)
-		maxPerTarget: number;		// How many creeps can be assigned to a single target (DEPRECATED - see objectives)
 		moveColor: string; 			// Color to draw movement lines with visuals (will be re-implemented later)
 	};
 	data: { 					// Data pertaining to a given instance of a task
@@ -40,11 +40,10 @@ export abstract class Task implements ITask {
 				roomName: '',
 			},
 		};
-		this.taskData = {
-			maxPerTarget: Infinity,
-			maxPerTask  : Infinity,
-			targetRange : 1,
-			moveColor   : '#fff',
+		this._parent = null;
+		this.settings = {
+			targetRange: 1,
+			moveColor  : '#fff',
 		};
 		this.data = {
 			quiet          : true,
@@ -60,8 +59,7 @@ export abstract class Task implements ITask {
 
 	// Getter/setter for task.creep
 	get creep(): ICreep { // Get task's own creep by its name
-		let creep = Game.icreeps[this._creep.name];
-		return creep;
+		return Game.icreeps[this._creep.name];
 	}
 
 	set creep(creep: ICreep) {
@@ -70,13 +68,8 @@ export abstract class Task implements ITask {
 
 	// Getter/setter for task.target
 	get target(): RoomObject | null {
-		let tar = deref(this._target.ref);
-		if (!tar) {
-			this.remove();
-			return null;
-		} else {
-			return tar;
-		}
+		let targ = deref(this._target.ref);
+		return (targ ? targ : null);
 	}
 
 	set target(target: RoomObject | null) {
@@ -84,7 +77,7 @@ export abstract class Task implements ITask {
 			this._target.ref = target.ref;
 			this.targetPos = target.pos;
 		} else {
-			this.remove();
+			log.info('Null target set: something is wrong.');
 		}
 	}
 
@@ -103,12 +96,24 @@ export abstract class Task implements ITask {
 		this._target._pos.roomName = targetPosition.roomName;
 	}
 
-	// Remove the task (in case the target disappeared, usually)
-	remove(): void {
+	// Getter/setter for task parent
+	get parent(): ITask | null {
+		return (this._parent ? taskFromPrototask(this._parent) : null);
+	}
+
+	set parent(parentTask: ITask | null) {
+		this._parent = parentTask;
+		// If the task is already assigned to a creep, update their memory
+		// Although assigning something to a creep and then changing the parent is bad practice...
 		if (this.creep) {
-			// this.creep.log("Deleting task " + this.name + ": target is null!");
-			this.creep.task = null;
+			this.creep.task = this;
 		}
+	}
+
+	// Fork the task, assigning a new task to the creep with this task as its parent
+	fork(newTask: ITask): void {
+		newTask.parent = this;
+		this.creep.task = newTask;
 	}
 
 	// Test every tick to see if task is still valid
@@ -117,30 +122,38 @@ export abstract class Task implements ITask {
 	// Test every tick to see if target is still valid
 	abstract isValidTarget(): boolean;
 
+
 	move(): number {
 		if (this.creep.pos.isEdge && this.creep.pos.roomName == this.targetPos.roomName) {
 			return this.creep.move(this.creep.pos.getDirectionTo(this.targetPos));
 		}
 		let options = Object.assign({},
 									this.data.travelToOptions,
-									{range: this.taskData.targetRange});
+									{range: this.settings.targetRange});
 		return this.creep.travelTo(this.targetPos, options);
 	}
 
 	// Execute this task each tick. Returns nothing unless work is done.
-	step(): number | void {
-		if (this.creep.pos.inRangeTo(this.targetPos, this.taskData.targetRange) && !this.creep.pos.isEdge) {
+	run(): number {
+		if (this.creep.pos.inRangeTo(this.targetPos, this.settings.targetRange) && !this.creep.pos.isEdge) {
 			let workResult = this.work();
 			if (workResult != OK && this.data.quiet == false) {
 				log.debug('Error executing ' + this.name + ', returned ' + workResult);
 			}
 			return workResult;
 		} else {
-			this.move();
+			return this.move();
 		}
 	}
 
 	// Task to perform when at the target
 	abstract work(): number;
+
+	// Finalize the task and switch to parent task (or null if there is none)
+	finish(): void {
+		if (this.creep) {
+			this.creep.task = this.parent;
+		}
+	}
 }
 

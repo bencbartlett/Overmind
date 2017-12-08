@@ -11,8 +11,8 @@ export class TaskAttack extends Task {
 	constructor(target: targetType) {
 		super('attack', target);
 		// Settings
-		this.taskData.moveColor = 'red';
-		this.taskData.targetRange = 3;
+		this.settings.moveColor = 'red';
+		this.settings.targetRange = 3;
 	}
 
 	isValidTask() {

@@ -18,7 +18,7 @@ export class TaskDeposit extends Task {
 	constructor(target: targetType) {
 		super('deposit', target);
 		// Settings
-		this.taskData.moveColor = 'blue';
+		this.settings.moveColor = 'blue';
 		this.data.quiet = true;
 	}
 

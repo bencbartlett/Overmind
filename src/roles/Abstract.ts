@@ -2,7 +2,6 @@
 import {TaskWithdraw} from '../tasks/task_withdraw';
 // import {TaskGetRenewed} from '../tasks/task_getRenewed';
 import {Objective} from '../objectives/Objective';
-import {taskFromPrototask} from '../maps/map_tasks';
 
 
 export abstract class AbstractSetup implements ISetup {
@@ -540,7 +539,7 @@ export abstract class AbstractCreep implements ICreep {
 	/* Execute the task you currently have. */
 	executeTask(): number | void {
 		if (this.task) {
-			return this.task.step();
+			return this.task.run();
 		}
 	}
 

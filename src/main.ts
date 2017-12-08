@@ -38,6 +38,7 @@ import {visuals} from './visuals/visuals';
 import * as Config from './config/config';
 import {log} from './lib/logger/log';
 import * as Profiler from 'screeps-profiler';
+import {taskInstantiator} from './maps/map_tasks';
 
 // Main loop ===========================================================================================================
 
@@ -71,6 +72,8 @@ function mainLoop() {
 	preprocessing.run();
 	// Create global flagCodes reference (avoids circular imports)
 	global.flagCodes = flagCodesMap;
+	// Create a global task instantiator (avoids circular imports)
+	global.taskFromPrototask = taskInstantiator;
 	// Initialize Overmind object, wrapping all creeps in Game.icreeps and registering them to colonies
 	global.Overmind = new OM();
 

@@ -10,7 +10,7 @@ export class TaskTransfer extends Task {
 	constructor(target: targetType) {
 		super('transfer', target);
 		// Settings
-		this.taskData.moveColor = 'blue';
+		this.settings.moveColor = 'blue';
 		this.data.resourceType = undefined; // this needs to be overwritten before assignment
 	}
 

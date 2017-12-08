@@ -8,8 +8,8 @@ export class TaskRangedAttack extends Task {
 	constructor(target: targetType) {
 		super('rangedAtack', target);
 		// Settings
-		this.taskData.moveColor = 'red';
-		this.taskData.targetRange = 3;
+		this.settings.moveColor = 'red';
+		this.settings.targetRange = 3;
 	}
 
 	isValidTask() {

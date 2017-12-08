@@ -26,7 +26,7 @@ import {TaskTransfer} from '../tasks/task_transfer';
 import {TaskUpgrade} from '../tasks/task_upgrade';
 import {TaskWithdrawResource} from '../tasks/task_withdrawResource';
 
-export function taskFromPrototask(protoTask: protoTask): Task {
+export function taskInstantiator(protoTask: protoTask): Task {
 	// Retrieve name and target data from the protoTask
 	let taskName = protoTask.name;
 	let target = deref(protoTask._target.ref);
@@ -110,7 +110,8 @@ export function taskFromPrototask(protoTask: protoTask): Task {
 	// Modify the task object to reflect any changed properties
 	task!._creep = protoTask._creep;
 	task!._target = protoTask._target;
-	task!.taskData = protoTask.taskData;
+	task!._parent = protoTask._parent;
+	task!.settings = protoTask.settings;
 	task!.data = protoTask.data;
 	// Return it
 	return task!;

@@ -8,7 +8,7 @@ export class TaskHarvest extends Task {
 	constructor(target: targetType) {
 		super('harvest', target);
 		// Settings
-		this.taskData.moveColor = 'yellow';
+		this.settings.moveColor = 'yellow';
 	}
 
 	isValidTask() {

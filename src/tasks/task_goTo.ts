@@ -10,11 +10,11 @@ export class TaskGoTo extends Task {
 	constructor(target: targetType) {
 		super('goTo', target);
 		// Settings
-		this.taskData.targetRange = 1;
+		this.settings.targetRange = 1;
 	}
 
 	isValidTask() {
-		return !this.creep.pos.inRangeTo(this.targetPos, this.taskData.targetRange);
+		return !this.creep.pos.inRangeTo(this.targetPos, this.settings.targetRange);
 	}
 
 	isValidTarget() {

@@ -8,7 +8,7 @@ export class TaskReserve extends Task {
 	constructor(target: targetType) {
 		super('colony', target);
 		// Settings
-		this.taskData.moveColor = 'purple';
+		this.settings.moveColor = 'purple';
 	}
 
 	isValidTask() {

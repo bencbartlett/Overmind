@@ -9,7 +9,7 @@ export class TaskGetRenewed extends Task {
 	constructor(target: targetType) {
 		super('getRenewed', target);
 		// Settings
-		this.taskData.moveColor = 'cyan';
+		this.settings.moveColor = 'cyan';
 	}
 
 	isValidTask() {

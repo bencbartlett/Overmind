@@ -10,7 +10,7 @@ export class TaskWithdraw extends Task {
 	constructor(target: targetType) {
 		super('recharge', target);
 		// Settings
-		this.taskData.moveColor = 'blue';
+		this.settings.moveColor = 'blue';
 	}
 
 	isValidTask() {

@@ -8,9 +8,7 @@ export class TaskFortify extends Task {
 	constructor(target: targetType) {
 		super('fortify', target);
 		// Settings
-		this.taskData.maxPerTarget = 1;
-		this.taskData.targetRange = 3;
-		this.taskData.moveColor = 'green';
+		this.settings.moveColor = 'green';
 	}
 
 	isValidTask() {

@@ -8,7 +8,7 @@ export class TaskClaim extends Task {
 	constructor(target: targetType) {
 		super('claim', target);
 		// Settings
-		this.taskData.moveColor = 'purple';
+		this.settings.moveColor = 'purple';
 	}
 
 	isValidTask() {

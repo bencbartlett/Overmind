@@ -8,8 +8,7 @@ export class TaskLoadLab extends Task {
 	constructor(target: targetType) {
 		super('loadLab', target);
 		// Settings
-		this.taskData.maxPerTarget = 1;
-		this.taskData.moveColor = 'blue';
+		this.settings.moveColor = 'blue';
 		this.data.resourceType = this.target.assignedMineralType; // TODO: refactor soon
 	}
 

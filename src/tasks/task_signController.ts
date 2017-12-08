@@ -9,7 +9,7 @@ export class TaskSignController extends Task {
 	constructor(target: targetType) {
 		super('signController', target);
 		// Settings
-		this.taskData.moveColor = 'purple';
+		this.settings.moveColor = 'purple';
 	}
 
 	isValidTask() {

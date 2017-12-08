@@ -8,8 +8,8 @@ export class TaskMeleeAttack extends Task {
 	constructor(target: targetType) {
 		super('meleeAttack', target);
 		// Settings
-		this.taskData.moveColor = 'red';
-		this.taskData.targetRange = 1;
+		this.settings.moveColor = 'red';
+		this.settings.targetRange = 1;
 	}
 
 	isValidTask() {

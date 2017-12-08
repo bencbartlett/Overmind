@@ -8,8 +8,8 @@ export class TaskUpgrade extends Task {
 	constructor(target: targetType) {
 		super('upgrade', target);
 		// Settings
-		this.taskData.targetRange = 3;
-		this.taskData.moveColor = 'purple';
+		this.settings.targetRange = 3;
+		this.settings.moveColor = 'purple';
 		this.data.quiet = true;
 	}
 

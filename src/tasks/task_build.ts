@@ -9,9 +9,7 @@ export class TaskBuild extends Task {
 	constructor(target: targetType) {
 		super('build', target);
 		// Settings
-		this.taskData.maxPerTarget = 3;
-		this.taskData.targetRange = 3;
-		this.taskData.moveColor = 'yellow';
+		this.settings.moveColor = 'yellow';
 	}
 
 	isValidTask() {

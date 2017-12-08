@@ -8,8 +8,7 @@ export class TaskSupply extends Task {
 	constructor(target: targetType) {
 		super('supply', target);
 		// Settings
-		this.taskData.maxPerTarget = 1;
-		this.taskData.moveColor = 'blue';
+		this.settings.moveColor = 'blue';
 		this.data.quiet = true;
 	}
 

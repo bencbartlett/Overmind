@@ -121,7 +121,7 @@ export class SiegerCreep extends AbstractCreep {
 		this.assertValidTask();
 		// execute task
 		if (this.task) {
-			return this.task.step();
+			return this.task.run();
 		}
 		// remove flag once everything is destroyed
 		if (assignment && this.room.hostileStructures.length == 0) {

@@ -8,8 +8,8 @@ export class TaskHeal extends Task {
 	constructor(target: targetType) {
 		super('heal', target);
 		// Settings
-		this.taskData.moveColor = 'green';
-		this.taskData.targetRange = 3;
+		this.settings.moveColor = 'green';
+		this.settings.targetRange = 3;
 	}
 
 	isValidTask() {

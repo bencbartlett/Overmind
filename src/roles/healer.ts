@@ -46,7 +46,7 @@ export class HealerCreep extends AbstractCreep {
 			}
 		}
 		if (this.task) {
-			return this.task.step();
+			return this.task.run();
 		}
 		if (this.assignment) {
 			if (!this.task) {

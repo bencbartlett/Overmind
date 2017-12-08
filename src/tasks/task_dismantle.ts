@@ -9,8 +9,7 @@ export class TaskDismantle extends Task {
 	constructor(target: targetType) {
 		super('dismantle', target);
 		// Settings
-		this.taskData.maxPerTarget = 3;
-		this.taskData.moveColor = 'red';
+		this.settings.moveColor = 'red';
 	}
 
 	isValidTask() {

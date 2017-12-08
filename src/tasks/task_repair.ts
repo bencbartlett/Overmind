@@ -8,9 +8,7 @@ export class TaskRepair extends Task {
 	constructor(target: targetType) {
 		super('repair', target);
 		// Settings
-		this.taskData.maxPerTarget = 1;
-		this.taskData.targetRange = 3;
-		this.taskData.moveColor = 'green';
+		this.settings.moveColor = 'green';
 	}
 
 	isValidTask() {

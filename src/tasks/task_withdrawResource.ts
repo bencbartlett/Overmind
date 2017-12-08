@@ -10,7 +10,7 @@ export class TaskWithdrawResource extends Task {
 	constructor(target: targetType) {
 		super('withdrawResource', target);
 		// Settings
-		this.taskData.moveColor = 'blue';
+		this.settings.moveColor = 'blue';
 		this.data.resourceType = undefined; // this needs to be overwritten on assignment
 	}
 

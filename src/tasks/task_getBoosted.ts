@@ -8,7 +8,7 @@ export class TaskGetBoosted extends Task {
 	constructor(target: targetType) {
 		super('getBoosted', target);
 		// Settings
-		this.taskData.moveColor = 'cyan';
+		this.settings.moveColor = 'cyan';
 	}
 
 	isValidTask() {

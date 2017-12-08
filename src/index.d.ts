@@ -4,6 +4,7 @@ declare namespace NodeJS {
 		derefRoomPosition(protoPos: protoPos): RoomPosition;
 		Overmind: IOvermind;
 		flagCodes: { [category: string]: flagCat };
+		taskFromPrototask(protoTask: protoTask): ITask;
 		log: any;
 		Profiler: any;
 	}
@@ -11,6 +12,7 @@ declare namespace NodeJS {
 
 declare var Overmind: IOvermind;
 declare var flagCodes: { [category: string]: flagCat };
+declare function taskFromPrototask(protoTask: protoTask): ITask;
 
 
 interface Game {
@@ -300,10 +302,9 @@ interface protoTask {
 		ref: string;
 		_pos: protoPos;
 	};
-	taskData: {
+	_parent: protoTask | null;
+	settings: {
 		targetRange: number;
-		maxPerTask: number;
-		maxPerTarget: number;
 		moveColor: string;
 	};
 	data: {
@@ -317,12 +318,14 @@ interface ITask extends protoTask {
 	creep: ICreep;
 	target: RoomObject | null;
 	targetPos: RoomPosition;
-	remove(): void;
+	parent: ITask | null;
+	fork(newTask: ITask): void
 	isValidTask(): boolean;
 	isValidTarget(): boolean;
 	move(): number;
-	step(): number | void;
+	run(): number;
 	work(): number;
+	finish(): void;
 }
 
 interface IResourceRequest {
