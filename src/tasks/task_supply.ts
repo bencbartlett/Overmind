@@ -1,12 +1,14 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = Sink;
-export class TaskSupply extends Task {
-	target: targetType;
+export type supplyTargetType = Sink;
+export const supplyTaskName = 'supply';
 
-	constructor(target: targetType) {
-		super('supply', target);
+export class TaskSupply extends Task {
+	target: supplyTargetType;
+
+	constructor(target: supplyTargetType) {
+		super(supplyTaskName, target);
 		// Settings
 		this.settings.moveColor = 'blue';
 		this.data.quiet = true;

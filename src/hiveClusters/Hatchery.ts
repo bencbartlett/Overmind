@@ -1,7 +1,6 @@
 // Hatchery - groups all spawns in a colony
 
 import {ObjectiveGroup} from '../objectives/ObjectiveGroup';
-import {ObjectiveSupply, ObjectiveSupplyTower} from '../objectives/objectives';
 import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskDeposit} from '../tasks/task_deposit';
 import {AbstractHiveCluster} from './AbstractHiveCluster';
@@ -9,6 +8,8 @@ import {SupplierSetup} from '../roles/supplier';
 import {profileClass} from '../profiling';
 import {log} from '../lib/logger/log';
 import {QueenSetup} from '../roles/queen';
+import {ObjectiveSupply} from '../objectives/objective_supply';
+import {ObjectiveSupplyTower} from '../objectives/objective_supplyTower';
 
 export class Hatchery extends AbstractHiveCluster implements IHatchery {
 	memory: HatcheryMemory; 								// Memory.colonies.hatchery

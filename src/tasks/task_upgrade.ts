@@ -1,12 +1,14 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = Controller;
-export class TaskUpgrade extends Task {
-	target: targetType;
+export type upgradeTargetType = Controller;
+export const upgradeTaskName = 'upgrade';
 
-	constructor(target: targetType) {
-		super('upgrade', target);
+export class TaskUpgrade extends Task {
+	target: upgradeTargetType;
+
+	constructor(target: upgradeTargetType) {
+		super(upgradeTaskName, target);
 		// Settings
 		this.settings.targetRange = 3;
 		this.settings.moveColor = 'purple';

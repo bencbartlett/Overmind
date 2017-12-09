@@ -1,11 +1,13 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = Creep;
-export class TaskHeal extends Task {
-	target: targetType;
+export type healTargetType = Creep;
+export const healTaskName = 'heal';
 
-	constructor(target: targetType) {
+export class TaskHeal extends Task {
+	target: healTargetType;
+
+	constructor(target: healTargetType) {
 		super('heal', target);
 		// Settings
 		this.settings.moveColor = 'green';

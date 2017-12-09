@@ -1,12 +1,14 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = Lab;
-export class TaskLoadLab extends Task {
-	target: targetType;
+export type loadLabTargetType = Lab;
+export const loadLabTaskName = 'loadLab';
 
-	constructor(target: targetType) {
-		super('loadLab', target);
+export class TaskLoadLab extends Task {
+	target: loadLabTargetType;
+
+	constructor(target: loadLabTargetType) {
+		super(loadLabTaskName, target);
 		// Settings
 		this.settings.moveColor = 'blue';
 		this.data.resourceType = this.target.assignedMineralType; // TODO: refactor soon

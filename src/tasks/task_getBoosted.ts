@@ -1,12 +1,14 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = Lab;
-export class TaskGetBoosted extends Task {
-	target: targetType;
+export type getBoostedTargetType = Lab;
+export const getBoostedTaskName = 'getBoosted';
 
-	constructor(target: targetType) {
-		super('getBoosted', target);
+export class TaskGetBoosted extends Task {
+	target: getBoostedTargetType;
+
+	constructor(target: getBoostedTargetType) {
+		super(getBoostedTaskName, target);
 		// Settings
 		this.settings.moveColor = 'cyan';
 	}

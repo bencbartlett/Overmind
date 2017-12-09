@@ -162,7 +162,7 @@ export class Log {
 	}
 
 	public alert(...args: any[]) {
-		if (this.level >= LogLevels.INFO) {
+		if (this.level >= LogLevels.ALERT) {
 			console.log.apply(this, this.buildArguments(LogLevels.ALERT).concat([].slice.call(args)));
 		}
 	}

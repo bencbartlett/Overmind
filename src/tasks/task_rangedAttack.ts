@@ -1,12 +1,14 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = Creep | Structure;
-export class TaskRangedAttack extends Task {
-	target: targetType;
+export type rangedAttackTargetType = Creep | Structure;
+export const rangedAttackTaskName = 'rangedAttack';
 
-	constructor(target: targetType) {
-		super('rangedAtack', target);
+export class TaskRangedAttack extends Task {
+	target: rangedAttackTargetType;
+
+	constructor(target: rangedAttackTargetType) {
+		super(rangedAttackTaskName, target);
 		// Settings
 		this.settings.moveColor = 'red';
 		this.settings.targetRange = 3;

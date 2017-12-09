@@ -1,14 +1,15 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = RoomObject;
+export type goToTargetType = RoomObject;
+export const goToTaskName = 'goTo';
 
 // TODO: this should accept a room position as well
 export class TaskGoTo extends Task {
-	target: targetType;
+	target: goToTargetType;
 
-	constructor(target: targetType) {
-		super('goTo', target);
+	constructor(target: goToTargetType) {
+		super(goToTaskName, target);
 		// Settings
 		this.settings.targetRange = 1;
 	}

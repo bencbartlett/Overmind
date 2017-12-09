@@ -7,6 +7,9 @@ type targetType = RoomObject; // overwrite this variable in derived classes to s
  * to continue.*/
 
 export abstract class Task implements ITask {
+
+	static taskName: string;
+
 	name: string;				// Name of the task type, e.g. 'upgrade'
 	_creep: { 					// Data for the creep the task is assigned to"
 		name: string;				// Name of the creep
@@ -122,6 +125,16 @@ export abstract class Task implements ITask {
 	// Test every tick to see if target is still valid
 	abstract isValidTarget(): boolean;
 
+	// isValid(): boolean {
+	// 	if (this.creep) {
+	// 		let validTask = this.isValidTask();
+	// 	}
+	// 	if (this.target) {
+	// 		let validTarg = this.isValidTarget();
+	// 	} else {
+	// 		if (this.creep.room)
+	// 			}
+	// }
 
 	move(): number {
 		if (this.creep.pos.isEdge && this.creep.pos.roomName == this.targetPos.roomName) {

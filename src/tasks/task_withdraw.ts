@@ -3,12 +3,14 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = StructureStorage | StructureContainer | StructureTerminal | StructureLink;
-export class TaskWithdraw extends Task {
-	target: targetType;
+export type withdrawTargetType = StructureStorage | StructureContainer | StructureTerminal | StructureLink;
+export const withdrawTaskName = 'recharge';
 
-	constructor(target: targetType) {
-		super('recharge', target);
+export class TaskWithdraw extends Task {
+	target: withdrawTargetType;
+
+	constructor(target: withdrawTargetType) {
+		super(withdrawTaskName, target);
 		// Settings
 		this.settings.moveColor = 'blue';
 	}

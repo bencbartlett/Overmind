@@ -1,12 +1,14 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = Structure;
-export class TaskRepair extends Task {
-	target: targetType;
+export type repairTargetType = Structure;
+export const repairTaskName = 'repair';
 
-	constructor(target: targetType) {
-		super('repair', target);
+export class TaskRepair extends Task {
+	target: repairTargetType;
+
+	constructor(target: repairTargetType) {
+		super(repairTaskName, target);
 		// Settings
 		this.settings.moveColor = 'green';
 	}

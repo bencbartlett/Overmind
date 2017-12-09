@@ -2,12 +2,14 @@ import {Task} from './Task';
 import {log} from '../lib/logger/log';
 import {profileClass} from '../profiling';
 
-type targetType = Spawn;
-export class TaskGetRenewed extends Task {
-	target: targetType;
+export type getRenewedTargetType = Spawn;
+export const getRenewedTaskName = 'getRenewed';
 
-	constructor(target: targetType) {
-		super('getRenewed', target);
+export class TaskGetRenewed extends Task {
+	target: getRenewedTargetType;
+
+	constructor(target: getRenewedTargetType) {
+		super(getRenewedTaskName, target);
 		// Settings
 		this.settings.moveColor = 'cyan';
 	}

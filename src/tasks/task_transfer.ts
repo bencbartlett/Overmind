@@ -1,14 +1,15 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = StructureContainer | StructureStorage | StructureTerminal |
+export type transferTargetType = StructureContainer | StructureStorage | StructureTerminal |
 	StructureLab | StructureNuker | StructurePowerSpawn;
+export const transferTaskName = 'transfer';
 
 export class TaskTransfer extends Task {
-	target: targetType;
+	target: transferTargetType;
 
-	constructor(target: targetType) {
-		super('transfer', target);
+	constructor(target: transferTargetType) {
+		super(transferTaskName, target);
 		// Settings
 		this.settings.moveColor = 'blue';
 		this.data.resourceType = undefined; // this needs to be overwritten before assignment

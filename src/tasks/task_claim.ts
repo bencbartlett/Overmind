@@ -1,12 +1,14 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = Controller;
-export class TaskClaim extends Task {
-	target: targetType;
+export type claimTargetType = StructureController;
+export const claimTaskName = 'claim';
 
-	constructor(target: targetType) {
-		super('claim', target);
+export class TaskClaim extends Task {
+	target: claimTargetType;
+
+	constructor(target: claimTargetType) {
+		super(claimTaskName, target);
 		// Settings
 		this.settings.moveColor = 'purple';
 	}

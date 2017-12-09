@@ -1,12 +1,14 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = RoomObject;
-export class TaskGoToRoom extends Task {
-	target: targetType;
+export type goToRoomTargetType = RoomObject;
+export const goToRoomTaskName = 'goToRoom';
 
-	constructor(target: targetType) {
-		super('goToRoom', target);
+export class TaskGoToRoom extends Task {
+	target: goToRoomTargetType;
+
+	constructor(target: goToRoomTargetType) {
+		super(goToRoomTaskName, target);
 		// Settings
 		this.settings.targetRange = 1; // Target is almost always controller flag, so range of 2 is acceptable
 	}

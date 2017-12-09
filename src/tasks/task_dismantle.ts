@@ -2,12 +2,14 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = Structure;
-export class TaskDismantle extends Task {
-	target: targetType;
+export type dismantleTargetType = Structure;
+export const dismantleTaskName = 'dismantle';
 
-	constructor(target: targetType) {
-		super('dismantle', target);
+export class TaskDismantle extends Task {
+	target: dismantleTargetType;
+
+	constructor(target: dismantleTargetType) {
+		super(dismantleTaskName, target);
 		// Settings
 		this.settings.moveColor = 'red';
 	}

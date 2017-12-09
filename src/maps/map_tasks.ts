@@ -1,30 +1,34 @@
 // Reinstantiation of a task object from protoTask data
 
 import {Task} from '../tasks/Task';
-import {TaskAttack} from '../tasks/task_attack';
-import {TaskBuild} from '../tasks/task_build';
-import {TaskClaim} from '../tasks/task_claim';
-import {TaskDeposit} from '../tasks/task_deposit';
-import {TaskDismantle} from '../tasks/task_dismantle';
-import {TaskFortify} from '../tasks/task_fortify';
-import {TaskGetBoosted} from '../tasks/task_getBoosted';
-import {TaskGetRenewed} from '../tasks/task_getRenewed';
-import {TaskGoTo} from '../tasks/task_goTo';
-import {TaskGoToRoom} from '../tasks/task_goToRoom';
-import {TaskHarvest} from '../tasks/task_harvest';
-import {TaskHeal} from '../tasks/task_heal';
-import {TaskLoadLab} from '../tasks/task_loadLab';
-import {TaskMeleeAttack} from '../tasks/task_meleeAttack';
-import {TaskPickup} from '../tasks/task_pickup';
-import {TaskRangedAttack} from '../tasks/task_rangedAttack';
-import {TaskWithdraw} from '../tasks/task_withdraw';
-import {TaskRepair} from '../tasks/task_repair';
-import {TaskReserve} from '../tasks/task_reserve';
-import {TaskSignController} from '../tasks/task_signController';
-import {TaskSupply} from '../tasks/task_supply';
-import {TaskTransfer} from '../tasks/task_transfer';
-import {TaskUpgrade} from '../tasks/task_upgrade';
-import {TaskWithdrawResource} from '../tasks/task_withdrawResource';
+import {attackTargetType, attackTaskName, TaskAttack} from '../tasks/task_attack';
+import {buildTargetType, buildTaskName, TaskBuild} from '../tasks/task_build';
+import {claimTargetType, claimTaskName, TaskClaim} from '../tasks/task_claim';
+import {depositTargetType, depositTaskName, TaskDeposit} from '../tasks/task_deposit';
+import {dismantleTargetType, dismantleTaskName, TaskDismantle} from '../tasks/task_dismantle';
+import {fortifyTargetType, fortifyTaskName, TaskFortify} from '../tasks/task_fortify';
+import {getBoostedTargetType, getBoostedTaskName, TaskGetBoosted} from '../tasks/task_getBoosted';
+import {getRenewedTargetType, getRenewedTaskName, TaskGetRenewed} from '../tasks/task_getRenewed';
+import {goToTaskName, TaskGoTo} from '../tasks/task_goTo';
+import {goToRoomTargetType, goToRoomTaskName, TaskGoToRoom} from '../tasks/task_goToRoom';
+import {harvestTargetType, harvestTaskName, TaskHarvest} from '../tasks/task_harvest';
+import {healTargetType, healTaskName, TaskHeal} from '../tasks/task_heal';
+import {loadLabTargetType, loadLabTaskName, TaskLoadLab} from '../tasks/task_loadLab';
+import {meleeAttackTargetType, meleeAttackTaskName, TaskMeleeAttack} from '../tasks/task_meleeAttack';
+import {pickupTargetType, pickupTaskName, TaskPickup} from '../tasks/task_pickup';
+import {rangedAttackTargetType, rangedAttackTaskName, TaskRangedAttack} from '../tasks/task_rangedAttack';
+import {TaskWithdraw, withdrawTargetType, withdrawTaskName} from '../tasks/task_withdraw';
+import {repairTargetType, repairTaskName, TaskRepair} from '../tasks/task_repair';
+import {reserveTargetType, reserveTaskName, TaskReserve} from '../tasks/task_reserve';
+import {signControllerTargetType, signControllerTaskName, TaskSignController} from '../tasks/task_signController';
+import {supplyTargetType, supplyTaskName, TaskSupply} from '../tasks/task_supply';
+import {TaskTransfer, transferTargetType, transferTaskName} from '../tasks/task_transfer';
+import {TaskUpgrade, upgradeTargetType, upgradeTaskName} from '../tasks/task_upgrade';
+import {
+	TaskWithdrawResource,
+	withdrawResourceTargetType,
+	withdrawResourceTaskName
+} from '../tasks/task_withdrawResource';
 
 export function taskInstantiator(protoTask: protoTask): Task {
 	// Retrieve name and target data from the protoTask
@@ -33,78 +37,77 @@ export function taskInstantiator(protoTask: protoTask): Task {
 	let task: any;
 	// Create a task object of the correct type
 	switch (taskName) {
-		case 'attack':
-			task = new TaskAttack(target as Creep | Structure);
+		case attackTaskName:
+			task = new TaskAttack(target as attackTargetType);
 			break;
-		case 'build':
-			task = new TaskBuild(target as ConstructionSite);
+		case buildTaskName:
+			task = new TaskBuild(target as buildTargetType);
 			break;
-		case 'claim':
-			task = new TaskClaim(target as Controller);
+		case claimTaskName:
+			task = new TaskClaim(target as claimTargetType);
 			break;
-		case 'deposit':
-			task = new TaskDeposit(target as StructureContainer | StructureStorage | StructureTerminal | StructureLink);
+		case depositTaskName:
+			task = new TaskDeposit(target as depositTargetType);
 			break;
-		case 'dismantle':
-			task = new TaskDismantle(target as Structure);
+		case dismantleTaskName:
+			task = new TaskDismantle(target as dismantleTargetType);
 			break;
-		case 'fortify':
-			task = new TaskFortify(target as StructureWall | Rampart);
+		case fortifyTaskName:
+			task = new TaskFortify(target as fortifyTargetType);
 			break;
-		case 'getBoosted':
-			task = new TaskGetBoosted(target as Lab);
+		case getBoostedTaskName:
+			task = new TaskGetBoosted(target as getBoostedTargetType);
 			break;
-		case 'getRenewed':
-			task = new TaskGetRenewed(target as Spawn);
+		case getRenewedTaskName:
+			task = new TaskGetRenewed(target as getRenewedTargetType);
 			break;
-		case 'goTo':
-			task = new TaskGoTo(target as RoomObject);
+		case goToTaskName:
+			task = new TaskGoTo(target as goToRoomTargetType);
 			break;
-		case 'goToRoom':
-			task = new TaskGoToRoom(target as RoomObject);
+		case goToRoomTaskName:
+			task = new TaskGoToRoom(target as goToRoomTargetType);
 			break;
-		case 'harvest':
-			task = new TaskHarvest(target as Source);
+		case harvestTaskName:
+			task = new TaskHarvest(target as harvestTargetType);
 			break;
-		case 'heal':
-			task = new TaskHeal(target as Creep);
+		case healTaskName:
+			task = new TaskHeal(target as healTargetType);
 			break;
-		case 'loadLab':
-			task = new TaskLoadLab(target as Lab);
+		case loadLabTaskName:
+			task = new TaskLoadLab(target as loadLabTargetType);
 			break;
-		case 'meleeAttack':
-			task = new TaskMeleeAttack(target as Creep | Structure);
+		case meleeAttackTaskName:
+			task = new TaskMeleeAttack(target as meleeAttackTargetType);
 			break;
-		case 'pickup':
-			task = new TaskPickup(target as Resource);
+		case pickupTaskName:
+			task = new TaskPickup(target as pickupTargetType);
 			break;
-		case 'rangedAttack':
-			task = new TaskRangedAttack(target as Creep | Structure);
+		case rangedAttackTaskName:
+			task = new TaskRangedAttack(target as rangedAttackTargetType);
 			break;
-		case 'recharge':
-			task = new TaskWithdraw(target as StructureStorage | Container | Terminal);
+		case withdrawTaskName:
+			task = new TaskWithdraw(target as withdrawTargetType);
 			break;
-		case 'repair':
-			task = new TaskRepair(target as Structure);
+		case repairTaskName:
+			task = new TaskRepair(target as repairTargetType);
 			break;
-		case 'colony': // TODO: change to reserve
-			task = new TaskReserve(target as Controller);
+		case reserveTaskName:
+			task = new TaskReserve(target as reserveTargetType);
 			break;
-		case 'signController':
-			task = new TaskSignController(target as Controller);
+		case signControllerTaskName:
+			task = new TaskSignController(target as signControllerTargetType);
 			break;
-		case 'supply':
-			task = new TaskSupply(target as Sink);
+		case supplyTaskName:
+			task = new TaskSupply(target as supplyTargetType);
 			break;
-		case 'transfer':
-			task = new TaskTransfer(target as StructureContainer | StructureStorage | StructureTerminal |
-				StructureLab | StructureNuker | StructurePowerSpawn);
+		case transferTaskName:
+			task = new TaskTransfer(target as transferTargetType);
 			break;
-		case 'upgrade':
-			task = new TaskUpgrade(target as Controller);
+		case upgradeTaskName:
+			task = new TaskUpgrade(target as upgradeTargetType);
 			break;
-		case 'withdrawResource':
-			task = new TaskWithdrawResource(target as StructureStorage | StructureContainer | StructureTerminal);
+		case withdrawResourceTaskName:
+			task = new TaskWithdrawResource(target as withdrawResourceTargetType);
 			break;
 	}
 	// Modify the task object to reflect any changed properties

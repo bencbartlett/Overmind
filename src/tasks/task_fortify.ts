@@ -1,12 +1,14 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = StructureWall | Rampart;
-export class TaskFortify extends Task {
-	target: targetType;
+export type fortifyTargetType = StructureWall | Rampart;
+export const fortifyTaskName = 'fortify';
 
-	constructor(target: targetType) {
-		super('fortify', target);
+export class TaskFortify extends Task {
+	target: fortifyTargetType;
+
+	constructor(target: fortifyTargetType) {
+		super(fortifyTaskName, target);
 		// Settings
 		this.settings.moveColor = 'green';
 	}

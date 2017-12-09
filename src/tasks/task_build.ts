@@ -1,13 +1,14 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = ConstructionSite;
+export type buildTargetType = ConstructionSite;
+export const buildTaskName = 'build';
 
 export class TaskBuild extends Task {
-	target: targetType;
+	target: buildTargetType;
 
-	constructor(target: targetType) {
-		super('build', target);
+	constructor(target: buildTargetType) {
+		super(buildTaskName, target);
 		// Settings
 		this.settings.moveColor = 'yellow';
 	}

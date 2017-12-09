@@ -3,11 +3,11 @@
 import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {pathing} from '../pathing/pathing';
 import {ObjectiveGroup} from '../objectives/ObjectiveGroup';
-import {ObjectiveCollectEnergyMiningSite} from '../objectives/objectives';
 import {HaulerSetup} from '../roles/hauler';
 import {log} from '../lib/logger/log';
 import {profileClass} from '../profiling';
 import {ResourceRequestGroup} from '../resourceRequests/ResourceRequestGroup';
+import {ObjectiveCollectEnergyMiningSite} from '../objectives/objective_collectEnergyMiningSite';
 
 
 export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {

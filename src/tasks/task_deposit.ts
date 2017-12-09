@@ -1,7 +1,7 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType =
+export type depositTargetType =
 	StructureContainer |
 	StructureExtension |
 	StructureLab |
@@ -12,11 +12,13 @@ type targetType =
 	StructureStorage |
 	StructureTower |
 	StructureTerminal;
-export class TaskDeposit extends Task {
-	target: targetType;
+export const depositTaskName = 'deposit';
 
-	constructor(target: targetType) {
-		super('deposit', target);
+export class TaskDeposit extends Task {
+	target: depositTargetType;
+
+	constructor(target: depositTargetType) {
+		super(depositTaskName, target);
 		// Settings
 		this.settings.moveColor = 'blue';
 		this.data.quiet = true;

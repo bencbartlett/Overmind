@@ -1,16 +1,15 @@
-// Objective to supply energy to a sink
+// Objective to supply energy to a tower
 import {Objective} from './Objective';
-import {supplyTargetType, TaskSupply} from '../tasks/task_supply';
+import {TaskSupply} from '../tasks/task_supply';
 import {profileClass} from '../profiling';
 
-export const supplyObjectiveName = 'supply';
+export const supplyTowerObjectiveName = 'supplyTower';
 
-// Objective to supply energy to a sink
-export class ObjectiveSupply extends Objective {
-	target: supplyTargetType;
+export class ObjectiveSupplyTower extends Objective {
+	target: Tower;
 
-	constructor(target: Sink) {
-		super(supplyObjectiveName, target);
+	constructor(target: Tower) {
+		super(supplyTowerObjectiveName, target);
 		this.assignableToRoles = ['supplier', 'queen'];
 		this.maxCreeps = 1;
 	}
@@ -26,4 +25,4 @@ export class ObjectiveSupply extends Objective {
 	}
 }
 
-profileClass(ObjectiveSupply);
+profileClass(ObjectiveSupplyTower);

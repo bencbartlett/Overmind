@@ -1,11 +1,13 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = Resource;
-export class TaskPickup extends Task {
-	target: targetType;
+export type pickupTargetType = Resource;
+export const pickupTaskName = 'pickup';
 
-	constructor(target: targetType) {
+export class TaskPickup extends Task {
+	target: pickupTargetType;
+
+	constructor(target: pickupTargetType) {
 		super('pickup', target);
 		// Settings
 		this.settings.moveColor = 'yellow';

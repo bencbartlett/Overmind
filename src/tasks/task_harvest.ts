@@ -1,12 +1,14 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = Source;
-export class TaskHarvest extends Task {
-	target: targetType;
+export type harvestTargetType = Source;
+export const harvestTaskName = 'harvest';
 
-	constructor(target: targetType) {
-		super('harvest', target);
+export class TaskHarvest extends Task {
+	target: harvestTargetType;
+
+	constructor(target: harvestTargetType) {
+		super(harvestTaskName, target);
 		// Settings
 		this.settings.moveColor = 'yellow';
 	}

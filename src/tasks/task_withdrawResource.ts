@@ -3,12 +3,14 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = StructureStorage | StructureContainer | StructureTerminal;
-export class TaskWithdrawResource extends Task {
-	target: targetType;
+export type withdrawResourceTargetType = StructureStorage | StructureContainer | StructureTerminal;
+export const withdrawResourceTaskName = 'withdrawResource';
 
-	constructor(target: targetType) {
-		super('withdrawResource', target);
+export class TaskWithdrawResource extends Task {
+	target: withdrawResourceTargetType;
+
+	constructor(target: withdrawResourceTargetType) {
+		super(withdrawResourceTaskName, target);
 		// Settings
 		this.settings.moveColor = 'blue';
 		this.data.resourceType = undefined; // this needs to be overwritten on assignment

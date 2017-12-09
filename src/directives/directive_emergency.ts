@@ -53,7 +53,9 @@ export class DirectiveEmergency extends Directive {
 	}
 
 	run(): void {
-		if (this.colony.getCreepsByRole('miner').length > 0 && this.colony.getCreepsByRole('supplier').length > 0) {
+		if (this.colony.getCreepsByRole('miner').length > 0 &&
+			this.colony.getCreepsByRole('supplier').length > 0 &&
+			this.room.energyAvailable >= _.min([EMERGENCY_ENERGY_THRESHOLD, this.room.energyCapacityAvailable])) {
 			log.alert(`Colony ${this.room.name} has recovered from crash; removing emergency directive.`);
 			this.remove();
 		}

@@ -2,16 +2,6 @@
 
 
 import {Colony} from './Colony';
-import {
-	ObjectiveBuild,
-	ObjectiveBuildRoad,
-	ObjectiveCollectEnergyMiningSite,
-	ObjectiveDepositContainer,
-	ObjectiveFortify,
-	ObjectivePickupEnergy,
-	ObjectiveRepair,
-	ObjectiveUpgrade
-} from './objectives/objectives';
 import {MineralSupplierSetup} from './roles/mineralSupplier';
 import {WorkerSetup} from './roles/worker';
 import {ObjectiveGroup} from './objectives/ObjectiveGroup';
@@ -19,6 +9,14 @@ import {ResourceRequestGroup} from './resourceRequests/ResourceRequestGroup';
 import {DirectiveGuard} from './directives/directive_guard';
 import {profileClass} from './profiling';
 import {DirectiveEmergency, EMERGENCY_ENERGY_THRESHOLD} from './directives/directive_emergency';
+import {ObjectiveCollectEnergyMiningSite} from './objectives/objective_collectEnergyMiningSite';
+import {ObjectiveDepositContainer} from './objectives/objective_depositContainer';
+import {ObjectivePickupEnergy} from './objectives/objective_pickupEnergy';
+import {ObjectiveRepair} from './objectives/objective_repair';
+import {ObjectiveBuild} from './objectives/objective_build';
+import {ObjectiveBuildRoad} from './objectives/objective_buildRoad';
+import {ObjectiveFortify} from './objectives/objective_fortify';
+import {ObjectiveUpgrade} from './objectives/objective_upgrade';
 
 export class Overlord implements IOverlord {
 	name: string; 								// Name of the primary colony room
@@ -197,13 +195,17 @@ export class Overlord implements IOverlord {
 		// Emergency directive: in the event of catastrophic room crash, enter emergency spawn mode.
 		// Doesn't apply to incubating colonies.
 		if (!this.colony.isIncubating && this.colony.hatchery) {
-			let roomHasEnergy = this.room.energyAvailable >= EMERGENCY_ENERGY_THRESHOLD; 		// Enough spawn energy?
-			let roomHasEnergySupply = (this.room.storage != undefined &&						// Has storage and
-									   this.room.storage.energy > EMERGENCY_ENERGY_THRESHOLD && // energy in storage and
-									   this.colony.getCreepsByRole('supplier').length > 0);		// can carry to spawn?
-			let roomHasMiners = this.colony.getCreepsByRole('miner').length > 0;				// Has miners?
+			let hasEnergy = this.room.energyAvailable >= EMERGENCY_ENERGY_THRESHOLD; 		// Enough spawn energy?
+			let hasMiners = this.colony.getCreepsByRole('miner').length > 0;
+			let hasSupplier = this.colony.getCreepsByRole('supplier').length > 0;
+			// let hasEnergySupply = (this.room.storage != undefined &&						// Has storage and
+			// 					   this.room.storage.energy > EMERGENCY_ENERGY_THRESHOLD && // energy in storage and
+			// 					   this.colony.getCreepsByRole('supplier').length > 0);		// can carry to spawn?
+			// let hasLogistics = (this.colony.getCreepsByRole('supplier').length > 0 ||
+			// 					this.colony.getCreepsByRole('queen').length > 0);
+			// let roomHasMiners = this.colony.getCreepsByRole('miner').length > 0;				// Has miners?
 			let emergencyFlags = _.filter(this.room.flags, flag => DirectiveEmergency.filter(flag));
-			if (!roomHasEnergy && !roomHasEnergySupply && !roomHasMiners && emergencyFlags.length == 0) {
+			if (!hasEnergy && !hasMiners && !hasSupplier && emergencyFlags.length == 0) {
 				DirectiveEmergency.create(this.colony.hatchery.pos);
 			}
 		}

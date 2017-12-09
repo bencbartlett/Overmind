@@ -4,12 +4,14 @@ import {profileClass} from '../profiling';
 // Use meleeAttack and rangedAttack for the exclusive variants.
 
 // TODO: creep is only approaching to range 3
-type targetType = Creep | Structure;
-export class TaskAttack extends Task {
-	target: targetType;
+export type attackTargetType = Creep | Structure;
+export const attackTaskName = 'attack';
 
-	constructor(target: targetType) {
-		super('attack', target);
+export class TaskAttack extends Task {
+	target: attackTargetType;
+
+	constructor(target: attackTargetType) {
+		super(attackTaskName, target);
 		// Settings
 		this.settings.moveColor = 'red';
 		this.settings.targetRange = 3;

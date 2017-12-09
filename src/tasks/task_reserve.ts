@@ -1,12 +1,14 @@
 import {Task} from './Task';
 import {profileClass} from '../profiling';
 
-type targetType = Controller;
-export class TaskReserve extends Task {
-	target: targetType;
+export type reserveTargetType = Controller;
+export const reserveTaskName = 'colony';
 
-	constructor(target: targetType) {
-		super('colony', target);
+export class TaskReserve extends Task {
+	target: reserveTargetType;
+
+	constructor(target: reserveTargetType) {
+		super(reserveTaskName, target);
 		// Settings
 		this.settings.moveColor = 'purple';
 	}
