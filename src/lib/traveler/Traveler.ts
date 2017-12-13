@@ -266,7 +266,7 @@ export class Traveler {
 									destination.pos.y, 49 - destination.pos.y]);
 		}
 		if (distanceToEdge < options.range!) {
-			options.range = distanceToEdge - 1;
+			options.range = _.min([distanceToEdge - 1, 0]);
 		}
 
         origin = this.normalizePos(origin);

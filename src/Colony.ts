@@ -194,8 +194,16 @@ export class Colony implements IColony {
 	 * out, then send the remaining resourceOut link requests to the command center link */
 	private handleLinks(): void {
 		// Generate lists of links that want to send or receive energy
-		let transmitLinks = _.map(this.overlord.resourceRequests.resourceOut.link, request => request.target) as Link[];
-		let receiveLinks = _.map(this.overlord.resourceRequests.resourceIn.link, request => request.target) as Link[];
+		let transmitRequests = this.overlord.resourceRequests.resourceOut.link;
+		let receiveRequests = this.overlord.resourceRequests.resourceIn.link;
+		if (this.miningGroups) {
+			transmitRequests = transmitRequests.concat(
+				_.flatten(_.map(this.miningGroups, group => group.resourceRequests.resourceOut.link)));
+			receiveRequests = receiveRequests.concat(
+				_.flatten(_.map(this.miningGroups, group => group.resourceRequests.resourceIn.link)));
+		}
+		let transmitLinks = _.map(transmitRequests, request => request.target) as Link[];
+		let receiveLinks = _.map(receiveRequests, request => request.target) as Link[];
 		// For each receiving link, greedily get energy from the closest transmitting link - at most 9 operations
 		for (let receiveLink of receiveLinks) {
 			let closestTransmitLink = receiveLink.pos.findClosestByRange(transmitLinks);

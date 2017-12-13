@@ -11,6 +11,9 @@ Overmind is unaffiliated with the thematically-similar and more recent Overlords
 ### We're on slack!
 Found something you like, hate, or find confusing? Join the discussion on Slack in the [#overmind](https://screeps.slack.com/messages/overmind) channel!
 
+### Another rewrite
+I've added a lot of changes recently and they don't all play well with each other. I have a lot of ideas and finally a large chunk of free time, so over the next few weeks I'll be doing a third rewrite of the AI which I plan to result in version 1.0. Stay tuned for more!
+
 ### Using Overmind as your AI
 If you're new to screeps, I wouldn't recommend using Overmind; most of the fun of the game is programming your own AI and watching your code run like a well-oiled machine! However, when I first started playing Screeps and was looking for inspiration in other codebases, I was frustrated by a general lack of documentation and readibility, so Overmind was programmed with this in mind; it might be a good resource to reference when coding your first AI!
 

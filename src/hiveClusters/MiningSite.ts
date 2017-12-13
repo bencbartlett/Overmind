@@ -74,7 +74,7 @@ export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 		// Figure out which request group to submit requests to
 		let resourceRequestGroup: IResourceRequestGroup;
 		if (this.miningGroup) {
-			resourceRequestGroup = this.miningGroup.resourceRequests;
+			resourceRequestGroup = this.miningGroup.resourceRequests; // TODO: bug here
 		} else {
 			resourceRequestGroup = this.overlord.resourceRequests;
 		}
