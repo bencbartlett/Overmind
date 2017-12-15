@@ -32,13 +32,13 @@ import OM from './Overmind';
 import {flagCodesMap} from './maps/map_flag_codes';
 // Preprocessing and postprocessing modules
 import {Preprocessing} from './caching';
-import {DataLogger} from './logging/data_logger';
 import {visuals} from './visuals/visuals';
 // Configuration, logging, and profiling
 import * as Config from './config/config';
 import {log} from './lib/logger/log';
 import * as Profiler from 'screeps-profiler';
 import {taskInstantiator} from './maps/map_tasks';
+import {sandbox} from './sandbox/sandbox';
 
 // Main loop ===========================================================================================================
 
@@ -90,13 +90,16 @@ function mainLoop() {
 	Overmind.run();
 
 	// Postprocessing ==============================================================================================
-	// Log stats
-	var logger = new DataLogger();
-	logger.run();
+	// // Log stats
+	// var logger = new DataLogger();
+	// logger.run();
 	// Draw visuals
 	if (Game.cpu.bucket > 7500) {
 		visuals.drawGlobalVisuals();
 	}
+
+	// Run test code
+	sandbox();
 }
 
 export const loop = !Config.USE_PROFILER ? mainLoop : () => {

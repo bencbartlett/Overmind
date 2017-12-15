@@ -1,4 +1,8 @@
-export var commandCenterLayout: { [rcl: number]: any } = {
+export var commandCenterLayout: StructureLayout = {
+	data: {
+		pos: {'x': 25, 'y': 25}
+	},
+
 	3: {
 		'name'     : 'commandCenter',
 		'shard'    : 'shard0',

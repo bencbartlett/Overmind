@@ -5,23 +5,23 @@ var row = 0;
 var column = 0;
 
 export var HUD = {
-	verifyMemory: function () {
-		if (!Memory.visuals) {
-			Memory.visuals = {};
-		}
-		if (!Memory.visuals.HUD) {
-			Memory.visuals.HUD = {};
-		}
-		// if (!Memory.visuals.HUD.ownedRoomInfo) {
-		//     this.getOwnedRoomInfo();
-		// }
-		// if (!Memory.visuals.HUD.occupiedRoomInfo) {
-		//     this.getOccupiedRoomInfo();
-		// }
-		// if (!Memory.visuals.HUD.lastCalculated) {
-		//     Memory.visuals.HUD.lastCalculated = Game.time;
-		// }
-	},
+	// verifyMemory: function () {
+	// 	if (!Memory.visuals) {
+	// 		Memory.visuals = {};
+	// 	}
+	// 	if (!Memory.visuals.HUD) {
+	// 		Memory.visuals.HUD = {};
+	// 	}
+	// 	// if (!Memory.visuals.HUD.ownedRoomInfo) {
+	// 	//     this.getOwnedRoomInfo();
+	// 	// }
+	// 	// if (!Memory.visuals.HUD.occupiedRoomInfo) {
+	// 	//     this.getOccupiedRoomInfo();
+	// 	// }
+	// 	// if (!Memory.visuals.HUD.lastCalculated) {
+	// 	//     Memory.visuals.HUD.lastCalculated = Game.time;
+	// 	// }
+	// },
 
 	drawLogo: function () {
 		// Draw the logo
@@ -151,7 +151,7 @@ export var HUD = {
 	// },
 
 	draw: function () {
-		this.verifyMemory();
+		// this.verifyMemory();
 		this.drawLogo();
 		this.drawCpuInfo();
 		// // Don't display at expense of CPU

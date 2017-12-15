@@ -180,17 +180,17 @@ Object.defineProperty(StructureLink.prototype, 'isEmpty', { // if this container
 
 // Spawn prototypes ====================================================================================================
 
-Object.defineProperty(StructureSpawn.prototype, 'uptime', {
-	get () {
-		if (Memory.stats && Memory.stats.spawnUsage && Memory.stats.spawnUsage[this.name]) {
-			let workingTicks = _.filter(Memory.stats.spawnUsage[this.name], entry => entry != '0').length;
-			return workingTicks / Memory.stats.spawnUsage[this.name].length;
-		} else {
-			console.log(this.name + ': error accessing spawn usage in Memory!');
-			return null;
-		}
-	},
-});
+// Object.defineProperty(StructureSpawn.prototype, 'uptime', {
+// 	get () {
+// 		if (Memory.stats && Memory.stats.spawnUsage && Memory.stats.spawnUsage[this.name]) {
+// 			let workingTicks = _.filter(Memory.stats.spawnUsage[this.name], entry => entry != '0').length;
+// 			return workingTicks / Memory.stats.spawnUsage[this.name].length;
+// 		} else {
+// 			console.log(this.name + ': error accessing spawn usage in Memory!');
+// 			return null;
+// 		}
+// 	},
+// });
 
 Object.defineProperty(StructureSpawn.prototype, 'statusMessage', {
 	get () {

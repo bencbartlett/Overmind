@@ -102,6 +102,13 @@ export class Traveler {
 
             state.destination = destination;
 
+			// Fixes bug that causes creeps to idle on the other side of a room
+			let distanceToEdge = _.min([destination.x, 49 - destination.x,
+										destination.y, 49 - destination.y]);
+			if (options.range && distanceToEdge <= options.range) {
+				options.range = _.min([Math.abs(distanceToEdge - 1), 0]);
+			}
+
             let cpu = Game.cpu.getUsed();
             let ret = this.findTravelPath(creep.pos, destination, options);
 
@@ -255,19 +262,6 @@ export class Traveler {
         if (options.movingTarget) {
             options.range = 0;
         }
-
-		// Fixes bug that causes creeps to idle on the other side of a room
-		let distanceToEdge: number;
-		if (destination instanceof RoomPosition) {
-			distanceToEdge = _.min([destination.x, 49 - destination.x,
-									destination.y, 49 - destination.y]);
-		} else {
-			distanceToEdge = _.min([destination.pos.x, 49 - destination.pos.x,
-									destination.pos.y, 49 - destination.pos.y]);
-		}
-		if (distanceToEdge < options.range!) {
-			options.range = _.min([distanceToEdge - 1, 0]);
-		}
 
         origin = this.normalizePos(origin);
         destination = this.normalizePos(destination);
@@ -662,7 +656,7 @@ const STATE_DEST_ROOMNAME = 6;
 
 // assigns a function to Creep.prototype: creep.travelTo(destination)
 Creep.prototype.travelTo = function(destination: RoomPosition|{pos: RoomPosition}, options?: TravelToOptions) {
-    return Traveler.travelTo(this, destination, options);
+	return Traveler.travelTo(this, destination, options);
 };
 
 profileClass(Traveler);

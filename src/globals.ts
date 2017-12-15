@@ -11,3 +11,4 @@ declare function derefRoomPosition(protoPos: protoPos): RoomPosition;
 global.derefRoomPosition = function (protoPos: protoPos): RoomPosition {
 	return new RoomPosition(protoPos.x, protoPos.y, protoPos.roomName);
 };
+

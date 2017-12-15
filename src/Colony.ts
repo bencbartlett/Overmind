@@ -59,9 +59,9 @@ export class Colony implements IColony {
 		// Set up memory if needed
 		if (!Memory.colonies[this.name]) {
 			Memory.colonies[this.name] = {
-				overlord     : {},
-				hatchery     : {},
-				commandCenter: {},
+				overlord     : <OverlordMemory>{},
+				hatchery     : <HatcheryMemory>{},
+				commandCenter: <CommandCenterMemory>{},
 			};
 		}
 		this.memory = Memory.colonies[this.name];

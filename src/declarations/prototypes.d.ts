@@ -99,6 +99,11 @@ interface RoomPosition {
 
 interface RoomVisual {
 	multitext(textArray: string[], x: number, starty: number, fontSize: number, style: any): number;
+	structure(x: number, y: number, type: string, opts?: { [option: string]: any }): RoomVisual;
+	connectRoads(opts?: { [option: string]: any }): RoomVisual | void;
+	speech(text: string, x: number, y: number, opts?: { [option: string]: any }): RoomVisual;
+	animatedPosition(x: number, y: number, opts?: { [option: string]: any }): RoomVisual;
+	test(): RoomVisual;
 }
 
 interface StructureContainer {
@@ -150,7 +155,7 @@ interface StructureStorage {
 
 interface StructureSpawn {
 	cost(bodyArray: string[]): number;
-	uptime: number;
+	// uptime: number;
 	statusMessage: string;
 	isFull: boolean;
 	isEmpty: boolean;

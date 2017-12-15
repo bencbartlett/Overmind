@@ -1,4 +1,8 @@
-export var hatcheryLayout: { [rcl: number]: any } = {
+export var hatcheryLayout: StructureLayout = {
+	data: {
+		pos: {'x': 25, 'y': 24}
+	},
+
 	1: {
 		'name'     : 'hatchery',
 		'shard'    : 'shard0',

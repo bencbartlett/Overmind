@@ -30,7 +30,7 @@ export class MinerCreep extends AbstractCreep {
 
 	newTask() {
 		// Ensure you are in the assigned room
-		if (this.inAssignedRoom) {
+		if (this.inAssignedRoom && !this.pos.isEdge) {
 			// Are you out of energy?
 			if (this.carry.energy == 0) {
 				this.task = new TaskHarvest(this.assignment);
