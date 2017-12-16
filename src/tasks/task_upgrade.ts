@@ -1,9 +1,11 @@
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
-export type upgradeTargetType = Controller;
+export type upgradeTargetType = StructureController;
 export const upgradeTaskName = 'upgrade';
 
+
+@profile
 export class TaskUpgrade extends Task {
 	target: upgradeTargetType;
 
@@ -29,4 +31,3 @@ export class TaskUpgrade extends Task {
 	}
 }
 
-profileClass(TaskUpgrade);

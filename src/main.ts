@@ -34,24 +34,21 @@ import {flagCodesMap} from './maps/map_flag_codes';
 import {Preprocessing} from './caching';
 import {visuals} from './visuals/visuals';
 // Configuration, logging, and profiling
-import * as Config from './config/config';
 import {log} from './lib/logger/log';
-import * as Profiler from 'screeps-profiler';
+import * as Profiler from 'lib/Profiler';
 import {taskInstantiator} from './maps/map_tasks';
 import {sandbox} from './sandbox/sandbox';
+import {USE_PROFILER} from './config/config';
 
 // Main loop ===========================================================================================================
+global.log = log;
+global.Profiler = Profiler.init();
 
-if (Config.USE_PROFILER) {
-	Profiler.enable();
-}
-
-function mainLoop() {
-	if (Config.USE_PROFILER && Game.time % 100 == 0) {
+export function loop() {
+	if (USE_PROFILER && Game.time % 100 == 0) {
 		console.log('Reminder: CPU profiling is currently enabled. Turn off when not needed to improve performance.');
 	}
-	global.log = log;
-	global.Profiler = Profiler;
+
 	// Memory management ===========================================================================================
 	// Clear memory for non-existent creeps
 	for (let name in Memory.creeps) {
@@ -102,6 +99,3 @@ function mainLoop() {
 	sandbox();
 }
 
-export const loop = !Config.USE_PROFILER ? mainLoop : () => {
-	Profiler.wrap(mainLoop);
-};

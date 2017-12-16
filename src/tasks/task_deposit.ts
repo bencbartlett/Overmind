@@ -1,5 +1,5 @@
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
 export type depositTargetType =
 	StructureContainer |
@@ -14,6 +14,7 @@ export type depositTargetType =
 	StructureTerminal;
 export const depositTaskName = 'deposit';
 
+@profile
 export class TaskDeposit extends Task {
 	target: depositTargetType;
 
@@ -44,5 +45,4 @@ export class TaskDeposit extends Task {
 	}
 }
 
-profileClass(TaskDeposit);
 

@@ -1,11 +1,12 @@
 /* This is the task for withdrawing energy. For withdrawing other resources, see taskWithdrawResource. */
 
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
 export type withdrawTargetType = StructureStorage | StructureContainer | StructureTerminal | StructureLink;
 export const withdrawTaskName = 'recharge';
 
+@profile
 export class TaskWithdraw extends Task {
 	target: withdrawTargetType;
 
@@ -27,5 +28,3 @@ export class TaskWithdraw extends Task {
 		return this.creep.withdraw(this.target, RESOURCE_ENERGY);
 	}
 }
-
-profileClass(TaskWithdraw);

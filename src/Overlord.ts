@@ -7,7 +7,6 @@ import {WorkerSetup} from './roles/worker';
 import {ObjectiveGroup} from './objectives/ObjectiveGroup';
 import {ResourceRequestGroup} from './resourceRequests/ResourceRequestGroup';
 import {DirectiveGuard} from './directives/directive_guard';
-import {profileClass} from './profiling';
 import {DirectiveEmergency, EMERGENCY_ENERGY_THRESHOLD} from './directives/directive_emergency';
 import {ObjectiveCollectEnergyMiningSite} from './objectives/objective_collectEnergyMiningSite';
 import {ObjectiveDepositContainer} from './objectives/objective_depositContainer';
@@ -17,7 +16,9 @@ import {ObjectiveBuild} from './objectives/objective_build';
 import {ObjectiveBuildRoad} from './objectives/objective_buildRoad';
 import {ObjectiveFortify} from './objectives/objective_fortify';
 import {ObjectiveUpgrade} from './objectives/objective_upgrade';
+import {profile} from './lib/Profiler';
 
+@profile
 export class Overlord implements IOverlord {
 	name: string; 								// Name of the primary colony room
 	memory: OverlordMemory; 					// Memory.colony.overlord
@@ -85,14 +86,14 @@ export class Overlord implements IOverlord {
 										  request => request.resourceType == RESOURCE_ENERGY);
 		let collectContainers = _.map(withdrawalRequests, request => request.target);
 		let collectEnergyMiningSiteObjectives = _.map(collectContainers, container =>
-			new ObjectiveCollectEnergyMiningSite(container as Container));
+			new ObjectiveCollectEnergyMiningSite(container as StructureContainer));
 
 		// Deposit energy to containers requesting a refill
 		let depositRequests = _.filter(this.resourceRequests.resourceIn.haul,
 									   request => request.resourceType == RESOURCE_ENERGY);
 		let depositContainers = _.map(depositRequests, request => request.target);
 		let depositContainerObjectives = _.map(depositContainers, container =>
-			new ObjectiveDepositContainer(container as Container));
+			new ObjectiveDepositContainer(container as StructureContainer));
 
 		this.objectiveGroup.registerObjectives(collectEnergyMiningSiteObjectives, depositContainerObjectives);
 
@@ -248,5 +249,3 @@ export class Overlord implements IOverlord {
 		this.placeDirectives();
 	}
 }
-
-profileClass(Overlord);

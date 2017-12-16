@@ -1,14 +1,15 @@
 // Mining site class for grouping relevant components
 
 import {TaskWithdraw} from '../tasks/task_withdraw';
-import {TaskDeposit} from '../tasks/task_deposit';
+import {depositTargetType, TaskDeposit} from '../tasks/task_deposit';
 import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {reserveCredits} from '../settings/settings_user';
 import {terminalSettings} from '../settings/settings_terminal';
 import {ManagerSetup} from '../roles/manager';
-import {profileClass} from '../profiling';
 import {log} from '../lib/logger/log';
+import {profile} from '../lib/Profiler';
 
+@profile
 export class CommandCenter extends AbstractHiveCluster implements ICommandCenter {
 	memory: CommandCenterMemory;							// Memory.colonies.commandCenter
 	storage: StructureStorage;								// The colony storage, also the instantiation object
@@ -21,8 +22,10 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 	observer: StructureObserver | undefined;				// Colony observer
 	private _manager: ICreep | undefined; 					// Cached manager
 	private _idlePos: RoomPosition;							// Cached idle position
-	private _depositStructures: (Link | Tower | Terminal | StructureNuker | PowerSpawn | Lab)[];	// Deposit to these
-	private _withdrawStructures: (Link | Terminal)[];		// Withdraw from these
+	private _depositStructures: depositTargetType[];		// Deposit to these
+	private _withdrawStructures: (
+		StructureLink |
+		StructureTerminal)[];								// Withdraw from these
 	private settings: {										// Settings for cluster operation
 		linksTransmitAt: number;
 		refillTowersBelow: number;  							// What value to refill towers at?
@@ -159,9 +162,9 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 					let amount = Math.min(bestOrder.remainingAmount, toBuy![mineral]);
 					let response = Game.market.deal(bestOrder.id, amount, this.room.name);
 					console.log(this.componentName + ': bought', amount, mineral, 'from', bestOrder.roomName,
-								'for', bestOrder.price * amount, 'credits and',
-								Game.market.calcTransactionCost(amount, this.room.name, bestOrder.roomName), 'energy',
-								'reponse:', response);
+																 'for', bestOrder.price * amount, 'credits and',
+																 Game.market.calcTransactionCost(amount, this.room.name, bestOrder.roomName), 'energy',
+																 'reponse:', response);
 				}
 			}
 		}
@@ -199,7 +202,7 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 	private get depositStructures() {
 		if (!this._depositStructures) {
 			// Generate a prioritized list of what needs energy
-			let depositStructures: (Link | Tower | Terminal | StructureNuker | PowerSpawn | Lab)[] = [];
+			let depositStructures: depositTargetType[] = [];
 			// If the link is empty and can send energy and something needs energy, fill it up
 			if (this.link && this.link.energy < 0.9 * this.link.energyCapacity && this.link.cooldown <= 1) {
 				if (this.overlord.resourceRequests.resourceIn.link.length > 0) { 	// If something wants energy
@@ -241,7 +244,7 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 	private get withdrawStructures() {
 		if (!this._withdrawStructures) {
 			// Generate a prioritized list of things that need energy withdrawn
-			let withdrawStructures: (Link | Terminal)[] = [];
+			let withdrawStructures: (StructureLink | StructureTerminal)[] = [];
 			// If the link has energy and nothing needs it, empty it
 			if (this.link && this.link.energy > 0) {
 				if (this.overlord.resourceRequests.resourceIn.link.length == 0) { // nothing needs link to send energy
@@ -357,4 +360,3 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 	}
 }
 
-profileClass(CommandCenter);

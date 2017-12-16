@@ -251,7 +251,7 @@ export abstract class AbstractCreep implements ICreep {
 		return this.creep.say(message, pub);
 	}
 
-	signController(target: Controller, text: string): number {
+	signController(target: StructureController, text: string): number {
 		return this.creep.signController(target, text);
 	}
 

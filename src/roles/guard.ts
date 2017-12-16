@@ -2,9 +2,9 @@
 // Best used only against low level npc invaders; sized to defend outposts
 
 import {AbstractCreep, AbstractSetup} from './Abstract';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
-
+@profile
 export class GuardSetup extends AbstractSetup {
 	constructor() {
 		super('guard');
@@ -14,7 +14,7 @@ export class GuardSetup extends AbstractSetup {
 	}
 }
 
-
+@profile
 export class GuardCreep extends AbstractCreep {
 
 	assignment: Flag | null;
@@ -92,5 +92,3 @@ export class GuardCreep extends AbstractCreep {
 	}
 }
 
-profileClass(GuardSetup);
-profileClass(GuardCreep);

@@ -53,7 +53,8 @@ interface ICreep {
 	repair(target: Structure): number;
 	reserveController(controller: StructureController): number;
 	say(message: string, pub?: boolean): number;
-	signController(target: Controller, text: string): number;
+
+	signController(target: StructureController, text: string): number;
 	suicide(): number;
 	upgradeController(controller: StructureController): number;
 	heal(target: Creep | ICreep): number;

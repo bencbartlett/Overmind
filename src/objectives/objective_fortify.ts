@@ -1,10 +1,12 @@
 // Objective to fortify walls
 import {Objective} from './Objective';
 import {TaskFortify} from '../tasks/task_fortify';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
+
 
 export const fortifyObjectiveName = 'fortify';
 
+@profile
 export class ObjectiveFortify extends Objective {
 	target: StructureWall | StructureRampart;
 
@@ -24,5 +26,3 @@ export class ObjectiveFortify extends Objective {
 		return new TaskFortify(this.target);
 	}
 }
-
-profileClass(ObjectiveFortify);

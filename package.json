@@ -2,43 +2,40 @@
   "name": "Overmind",
   "version": "0.0.0",
   "description": "",
-  "private": true,
-  "repository": "bencbartlett/Overmind",
-  "scripts": {
-    "deploy": "webpack --colors --env.ENV=dev",
-    "lint": "tslint \"src/**/*.ts\" -e \"**/src/lib/**/*.ts\"",
-    "lint-webpack": "tslint \"config/**/*.ts\" \"webpack.config.ts\" \"libs/**/*.ts\"",
-    "local": "webpack --colors --env.ENV=local",
-    "start": "webpack --colors --watch",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "watch-local": "webpack --colors --watch --env.ENV=local"
+  "author": "Ben Bartlett",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bencbartlett/Overmind.git"
   },
-  "author": "",
+  "homepage": "https://github.com/bencbartlett/Overmind#readme",
+  "bugs": {
+    "url": "https://github.com/bencbartlett/Overmind/issues"
+  },
+  "scripts": {
+    "lint": "tslint \"src/**/*.ts\"",
+    "push-main": "rollup -c --dest main",
+    "push-pserver": "rollup -c --dest pserver",
+    "push-sim": "rollup -c --dest sim",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch-main": "rollup -cw --dest main",
+    "watch-pserver": "rollup -cw --dest pserver",
+    "watch-sim": "rollup -cw --dest sim"
+  },
   "license": "MIT",
   "devDependencies": {
-    "@types/lodash": "^3.10.0",
-    "@types/node": "^8.0.25",
-    "@types/source-map": "^0.5.1",
-    "@types/webpack": "^2.2.0",
-    "@types/webpack-chain": "^3.0.4",
-    "@types/webpack-sources": "^0.1.3",
-    "clean-webpack-plugin": "^0.1.16",
-    "fork-ts-checker-webpack-plugin": "^0.2.8",
-    "git-rev-sync": "^1.9.1",
-    "screeps-webpack-plugin": "git://github.com/langri-sha/screeps-webpack-plugin.git",
-    "source-map-loader": "^0.2.1",
-    "ts-loader": "^3.1.0",
-    "ts-node": "^3.0.4",
+    "@types/lodash": "^3.10.1",
+    "@types/source-map": "^0.5.2",
+    "rollup": "^0.51.8",
+    "rollup-plugin-clean": "^1.0.0",
+    "rollup-plugin-commonjs": "^8.2.6",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-screeps": "0.0.1",
+    "rollup-plugin-typescript2": "^0.8.1",
     "tslint": "^5.8.0",
-    "typed-screeps": "^1.0.3",
-    "typescript": "^2.3.2",
-    "typings": "^2.1.1",
-    "webpack": "^2.5.1",
-    "webpack-chain": "^3.2.0"
+    "typed-screeps": "^2.0.0",
+    "typescript": "^2.6.1"
   },
   "dependencies": {
-    "@types/screeps-profiler": "^1.2.0",
-    "screeps-profiler": "^1.3.0",
-    "source-map": "^0.5.6"
+    "source-map": "^0.6.1"
   }
 }

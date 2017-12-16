@@ -1,9 +1,11 @@
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
-export type reserveTargetType = Controller;
+
+export type reserveTargetType = StructureController;
 export const reserveTaskName = 'colony';
 
+@profile
 export class TaskReserve extends Task {
 	target: reserveTargetType;
 
@@ -26,5 +28,3 @@ export class TaskReserve extends Task {
 		return this.creep.reserveController(this.target);
 	}
 }
-
-profileClass(TaskReserve);

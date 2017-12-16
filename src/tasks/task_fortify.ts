@@ -1,9 +1,11 @@
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
-export type fortifyTargetType = StructureWall | Rampart;
+
+export type fortifyTargetType = StructureWall | StructureRampart;
 export const fortifyTaskName = 'fortify';
 
+@profile
 export class TaskFortify extends Task {
 	target: fortifyTargetType;
 
@@ -26,5 +28,3 @@ export class TaskFortify extends Task {
 		return this.creep.repair(this.target);
 	}
 }
-
-profileClass(TaskFortify);

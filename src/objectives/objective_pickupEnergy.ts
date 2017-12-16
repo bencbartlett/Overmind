@@ -1,10 +1,12 @@
 // Objective to pick up dropped energy in a room
 import {Objective} from './Objective';
 import {TaskPickup} from '../tasks/task_pickup';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
+
 
 export const pickupEnergyObjectiveName = 'pickupEnergy';
 
+@profile
 export class ObjectivePickupEnergy extends Objective {
 	target: Resource;
 
@@ -24,5 +26,3 @@ export class ObjectivePickupEnergy extends Objective {
 		return new TaskPickup(this.target);
 	}
 }
-
-profileClass(ObjectivePickupEnergy);

@@ -1,7 +1,8 @@
 import {Directive} from './Directive';
 import {ClaimerSetup} from '../roles/claimer';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
+@profile
 export class DirectiveIncubate extends Directive {
 	incubator: IColony;
 	claimers: ICreep[];
@@ -51,5 +52,3 @@ export class DirectiveIncubate extends Directive {
 		return;
 	}
 }
-
-profileClass(DirectiveIncubate);

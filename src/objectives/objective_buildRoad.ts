@@ -2,10 +2,11 @@
 
 import {Objective} from './Objective';
 import {TaskBuild} from '../tasks/task_build';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
 export const buildRoadObjectiveName = 'buildRoad';
 
+@profile
 export class ObjectiveBuildRoad extends Objective {
 	target: ConstructionSite;
 
@@ -25,5 +26,3 @@ export class ObjectiveBuildRoad extends Objective {
 		return new TaskBuild(this.target);
 	}
 }
-
-profileClass(ObjectiveBuildRoad);

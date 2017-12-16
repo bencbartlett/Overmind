@@ -5,9 +5,10 @@ import {Hatchery} from './hiveClusters/Hatchery';
 import {CommandCenter} from './hiveClusters/CommandCenter';
 import {UpgradeSite} from './hiveClusters/UpgradeSite';
 import {MiningGroup} from './hiveClusters/MiningGroup';
-import {profileClass} from './profiling';
 import {pathing} from './pathing/pathing';
+import {profile} from './lib/Profiler';
 
+@profile
 export class Colony implements IColony {
 	name: string;										// Name of the primary colony room
 	memory: ColonyMemory;								// Memory.colonies[name]
@@ -119,9 +120,10 @@ export class Colony implements IColony {
 			this.upgradeSite = new UpgradeSite(this, this.controller);
 		}
 		// Sort claimed and unclaimed links
-		this.claimedLinks = _.filter(_.compact([this.commandCenter ? this.commandCenter.link : null,
-												this.hatchery ? this.hatchery.link : null,
-												this.upgradeSite.input]), s => s instanceof StructureLink) as Link[];
+		let claimedLinkCandidates = _.compact([this.commandCenter ? this.commandCenter.link : null,
+											   this.hatchery ? this.hatchery.link : null,
+											   this.upgradeSite.input]);
+		this.claimedLinks = _.filter(claimedLinkCandidates, s => s instanceof StructureLink) as StructureLink[];
 		this.unclaimedLinks = _.filter(this.links, link => this.claimedLinks.includes(link) == false);
 		// Instantiate a MiningGroup for each non-component link and for storage
 		if (this.storage) {
@@ -202,8 +204,8 @@ export class Colony implements IColony {
 			receiveRequests = receiveRequests.concat(
 				_.flatten(_.map(this.miningGroups, group => group.resourceRequests.resourceIn.link)));
 		}
-		let transmitLinks = _.map(transmitRequests, request => request.target) as Link[];
-		let receiveLinks = _.map(receiveRequests, request => request.target) as Link[];
+		let transmitLinks = _.map(transmitRequests, request => request.target) as StructureLink[];
+		let receiveLinks = _.map(receiveRequests, request => request.target) as StructureLink[];
 		// For each receiving link, greedily get energy from the closest transmitting link - at most 9 operations
 		for (let receiveLink of receiveLinks) {
 			let closestTransmitLink = receiveLink.pos.findClosestByRange(transmitLinks);
@@ -297,5 +299,3 @@ export class Colony implements IColony {
 		}
 	}
 }
-
-profileClass(Colony);

@@ -3,9 +3,9 @@
 import {AbstractCreep, AbstractSetup} from './Abstract';
 import {TaskWithdraw} from '../tasks/task_withdraw';
 import {log} from '../lib/logger/log';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
-
+@profile
 export class QueenSetup extends AbstractSetup {
 	constructor() {
 		super('queen');
@@ -14,6 +14,7 @@ export class QueenSetup extends AbstractSetup {
 	}
 }
 
+@profile
 export class QueenCreep extends AbstractCreep {
 	assignment: Spawn;
 	hatchery: IHatchery;
@@ -69,6 +70,3 @@ export class QueenCreep extends AbstractCreep {
 	// 	}
 	// }
 }
-
-profileClass(QueenSetup);
-profileClass(QueenCreep);

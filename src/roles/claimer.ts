@@ -3,8 +3,9 @@ import {TaskGoToRoom} from '../tasks/task_goToRoom';
 import {TaskSignController} from '../tasks/task_signController';
 import {TaskClaim} from '../tasks/task_claim';
 import {AbstractCreep, AbstractSetup} from './Abstract';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
+@profile
 export class ClaimerSetup extends AbstractSetup {
 	constructor() {
 		super('claimer');
@@ -13,6 +14,7 @@ export class ClaimerSetup extends AbstractSetup {
 	}
 }
 
+@profile
 export class ClaimerCreep extends AbstractCreep {
 	assignment: Flag;
 
@@ -38,6 +40,3 @@ export class ClaimerCreep extends AbstractCreep {
 		}
 	}
 }
-
-profileClass(ClaimerSetup);
-profileClass(ClaimerCreep);

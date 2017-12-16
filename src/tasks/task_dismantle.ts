@@ -1,10 +1,12 @@
 // var flagCodes = require('map_flag_codes.js');
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
+
 
 export type dismantleTargetType = Structure;
 export const dismantleTaskName = 'dismantle';
 
+@profile
 export class TaskDismantle extends Task {
 	target: dismantleTargetType;
 
@@ -27,5 +29,3 @@ export class TaskDismantle extends Task {
 		return this.creep.dismantle(this.target);
 	}
 }
-
-profileClass(TaskDismantle);

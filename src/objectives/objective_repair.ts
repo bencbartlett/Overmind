@@ -1,10 +1,11 @@
 // Objective to repair a structure
 import {Objective} from './Objective';
 import {TaskRepair} from '../tasks/task_repair';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
 export const repairObjectiveName = 'repair';
 
+@profile
 export class ObjectiveRepair extends Objective {
 	target: Structure;
 
@@ -24,5 +25,3 @@ export class ObjectiveRepair extends Objective {
 		return new TaskRepair(this.target);
 	}
 }
-
-profileClass(ObjectiveRepair);

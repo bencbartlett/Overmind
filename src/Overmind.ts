@@ -4,8 +4,9 @@ import {Colony} from './Colony';
 import {Overlord} from './Overlord';
 import {AbstractCreepWrapper} from './maps/map_roles';
 import {DirectiveWrapper} from './maps/map_directives';
-import {profileClass} from './profiling';
+import {profile} from './lib/Profiler';
 
+@profile
 export default class Overmind implements IOvermind {
 	name: string;											// I AM THE SWARM
 	Colonies: { [roomName: string]: Colony };				// Global hash of all colony objects
@@ -169,6 +170,4 @@ export default class Overmind implements IOvermind {
 		this.handleObservers();
 	}
 };
-
-profileClass(Overmind);
 

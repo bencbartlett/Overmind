@@ -1,11 +1,12 @@
 // Objective to supply energy to a sink
 import {Objective} from './Objective';
 import {supplyTargetType, TaskSupply} from '../tasks/task_supply';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
 export const supplyObjectiveName = 'supply';
 
 // Objective to supply energy to a sink
+@profile
 export class ObjectiveSupply extends Objective {
 	target: supplyTargetType;
 
@@ -25,5 +26,3 @@ export class ObjectiveSupply extends Objective {
 		return new TaskSupply(this.target);
 	}
 }
-
-profileClass(ObjectiveSupply);

@@ -1,14 +1,15 @@
 // Emergency directive: recover from a catastrophic room crash
 
 import {Directive} from './Directive';
-import {profileClass} from '../profiling';
 import {SupplierSetup} from '../roles/supplier';
 import {log} from '../lib/logger/log';
 import {MinerSetup} from '../roles/miner';
 import {ManagerSetup} from '../roles/manager';
+import {profile} from '../lib/Profiler';
 
 export const EMERGENCY_ENERGY_THRESHOLD = 1300;
 
+@profile
 export class DirectiveEmergency extends Directive {
 	colony: IColony; 				// Emergency flag definitely has a colony
 	room: Room;						// Definitely has a room
@@ -87,5 +88,3 @@ export class DirectiveEmergency extends Directive {
 		}
 	}
 }
-
-profileClass(DirectiveEmergency);

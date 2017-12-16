@@ -1,8 +1,0 @@
-title: Overmind Blog
-description: 
-google_analytics: 
-show_downloads: false
-theme: jekyll-theme-slate
-
-gems:
-  - jekyll-mentions

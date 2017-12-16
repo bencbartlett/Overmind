@@ -1,7 +1,8 @@
 import {Directive} from './Directive';
 import {GuardSetup} from '../roles/guard';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
+@profile
 export class DirectiveGuard extends Directive {
 	guards: ICreep[];
 	invasionHappening: boolean;
@@ -57,5 +58,3 @@ export class DirectiveGuard extends Directive {
 		}
 	}
 }
-
-profileClass(DirectiveGuard);

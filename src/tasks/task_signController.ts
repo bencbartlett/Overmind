@@ -1,10 +1,11 @@
 import {Task} from './Task';
 import {controllerSignature} from '../settings/settings_user';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
-export type signControllerTargetType = Controller;
+export type signControllerTargetType = StructureController;
 export const signControllerTaskName = 'signController';
 
+@profile
 export class TaskSignController extends Task {
 	target: signControllerTargetType;
 
@@ -27,6 +28,4 @@ export class TaskSignController extends Task {
 		return this.creep.signController(this.target, controllerSignature);
 	}
 }
-
-profileClass(TaskSignController);
 

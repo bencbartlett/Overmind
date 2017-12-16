@@ -1,5 +1,5 @@
 interface Creep {
-	memory: CreepMemory; // this must be changed in the screeps typings index.d.ts
+	memory: CreepMemory;
 	getBodyparts(partType: string): number;
 	colony: IColony;
 	lifetime: number;
@@ -49,7 +49,7 @@ interface Room {
 	structures: { [structureType: string]: Structure[] };
 	getStructures(structureType: string): Structure[];
 	spawns: Spawn[];
-	extensions: Extension[];
+	extensions: StructureExtension[];
 	containers: StructureContainer[];
 	storageUnits: StorageUnit[];
 	towers: StructureTower[];

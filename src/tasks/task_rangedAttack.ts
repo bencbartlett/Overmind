@@ -1,9 +1,11 @@
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
+
 
 export type rangedAttackTargetType = Creep | Structure;
 export const rangedAttackTaskName = 'rangedAttack';
 
+@profile
 export class TaskRangedAttack extends Task {
 	target: rangedAttackTargetType;
 
@@ -29,4 +31,3 @@ export class TaskRangedAttack extends Task {
 	}
 }
 
-profileClass(TaskRangedAttack);

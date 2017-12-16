@@ -1,9 +1,10 @@
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
-export type getBoostedTargetType = Lab;
+export type getBoostedTargetType = StructureLab;
 export const getBoostedTaskName = 'getBoosted';
 
+@profile
 export class TaskGetBoosted extends Task {
 	target: getBoostedTargetType;
 
@@ -37,4 +38,3 @@ export class TaskGetBoosted extends Task {
 
 // TODO: fix boosting system
 
-profileClass(TaskGetBoosted);

@@ -1,10 +1,11 @@
 import {Task} from './Task';
 import {log} from '../lib/logger/log';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
 export type getRenewedTargetType = Spawn;
 export const getRenewedTaskName = 'getRenewed';
 
+@profile
 export class TaskGetRenewed extends Task {
 	target: getRenewedTargetType;
 
@@ -36,5 +37,3 @@ export class TaskGetRenewed extends Task {
 		return response;
 	}
 }
-
-profileClass(TaskGetRenewed);

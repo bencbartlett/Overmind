@@ -1,14 +1,15 @@
 // Objective to collect energy from a container
 import {Objective} from './Objective';
 import {TaskWithdraw} from '../tasks/task_withdraw';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
 export const collectEnergyContainerObjectiveName = 'collectEnergyContainer';
 
+@profile
 export class ObjectiveCollectEnergyContainer extends Objective {
-	target: Container;
+	target: StructureContainer;
 
-	constructor(target: Container) {
+	constructor(target: StructureContainer) {
 		super(collectEnergyContainerObjectiveName, target);
 		this.assignableToRoles = ['hauler', 'supplier'];
 		this.maxCreeps = Infinity;
@@ -24,6 +25,4 @@ export class ObjectiveCollectEnergyContainer extends Objective {
 		return new TaskWithdraw(this.target);
 	}
 }
-
-profileClass(ObjectiveCollectEnergyContainer);
 

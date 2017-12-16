@@ -1,7 +1,7 @@
 import {SourceMapConsumer} from 'source-map';
 import * as Config from '../../config/config';
 import {LogLevels} from './logLevels';
-import {profileClass} from '../../profiling';
+import {profile} from '../Profiler';
 
 // <caller> (<source>:<line>:<column>)
 const stackLineRe = /([^ ]*) \(([^:]*):([0-9]*):([0-9]*)\)/;
@@ -65,6 +65,7 @@ function time(): string {
 	return color(Game.time.toString(), 'gray');
 }
 
+@profile
 export class Log {
 	public static sourceMap: any;
 
@@ -253,4 +254,3 @@ if (Config.LOG_LOAD_SOURCE_MAP) {
 
 export const log = new Log();
 
-profileClass(Log);

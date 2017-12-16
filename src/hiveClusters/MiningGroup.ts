@@ -5,11 +5,11 @@ import {pathing} from '../pathing/pathing';
 import {ObjectiveGroup} from '../objectives/ObjectiveGroup';
 import {HaulerSetup} from '../roles/hauler';
 import {log} from '../lib/logger/log';
-import {profileClass} from '../profiling';
 import {ResourceRequestGroup} from '../resourceRequests/ResourceRequestGroup';
 import {ObjectiveCollectEnergyMiningSite} from '../objectives/objective_collectEnergyMiningSite';
+import {profile} from '../lib/Profiler';
 
-
+@profile
 export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 	dropoff: StructureLink | StructureStorage;		// Where haulers drop off to
 	links: StructureLink[] | undefined;				// List of links contained in the mining group
@@ -99,7 +99,7 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 	private registerObjectives(): void {
 		// Create an energy collection objective for each relevant withdrawal request
 		let withdrawContainers = _.map(this.resourceRequests.resourceOut.haul,
-									   request => request.target) as Container[];
+									   request => request.target) as StructureContainer[];
 		let collectionObjectives = _.map(withdrawContainers, cont => new ObjectiveCollectEnergyMiningSite(cont));
 		// Register the objectives to the objective group
 		this.objectiveGroup.registerObjectives(collectionObjectives);
@@ -139,5 +139,3 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 		return;
 	}
 }
-
-profileClass(MiningGroup);

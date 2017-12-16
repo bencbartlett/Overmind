@@ -4,8 +4,9 @@ import {TaskDeposit} from '../tasks/task_deposit';
 import {AbstractCreep, AbstractSetup} from './Abstract';
 import {TaskGoToRoom} from '../tasks/task_goToRoom';
 import {TaskGoTo} from '../tasks/task_goTo';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
+@profile
 export class HaulerSetup extends AbstractSetup {
 	constructor() {
 		super('hauler');
@@ -16,6 +17,7 @@ export class HaulerSetup extends AbstractSetup {
 	}
 }
 
+@profile
 export class HaulerCreep extends AbstractCreep {
 	assignment: StructureLink | StructureStorage;
 	miningGroup: IMiningGroup;
@@ -42,7 +44,7 @@ export class HaulerCreep extends AbstractCreep {
 			}
 		} else if (dropoff instanceof StructureStorage) {
 			let requestorContainers = _.map(this.colony.overlord.resourceRequests.resourceIn.haul,
-										  request => request.target) as Container[];
+											request => request.target) as StructureContainer[];
 			if (requestorContainers.length > 0) {
 				this.task = new TaskDeposit(requestorContainers[0]);
 			} else {
@@ -82,6 +84,3 @@ export class HaulerCreep extends AbstractCreep {
 		this.repairNearbyDamagedRoad(); // repair roads if you are capable
 	}
 }
-
-profileClass(HaulerSetup);
-profileClass(HaulerCreep);

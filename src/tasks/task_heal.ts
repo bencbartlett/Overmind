@@ -1,9 +1,10 @@
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
 export type healTargetType = Creep;
 export const healTaskName = 'heal';
 
+@profile
 export class TaskHeal extends Task {
 	target: healTargetType;
 
@@ -34,5 +35,3 @@ export class TaskHeal extends Task {
 		return creep.rangedHeal(target); // you'll definitely be within range 3 because this.targetRange
 	}
 }
-
-profileClass(TaskHeal);

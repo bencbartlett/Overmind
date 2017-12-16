@@ -4,8 +4,9 @@ import {TaskGoToRoom} from '../tasks/task_goToRoom';
 import {TaskSignController} from '../tasks/task_signController';
 import {TaskReserve} from '../tasks/task_reserve';
 import {AbstractCreep, AbstractSetup} from './Abstract';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
+@profile
 export class ReserverSetup extends AbstractSetup {
 	constructor() {
 		super('reserver');
@@ -14,6 +15,7 @@ export class ReserverSetup extends AbstractSetup {
 	}
 }
 
+@profile
 export class ReserverCreep extends AbstractCreep {
 	assignment: Flag;
 
@@ -36,6 +38,3 @@ export class ReserverCreep extends AbstractCreep {
 		}
 	}
 }
-
-profileClass(ReserverSetup);
-profileClass(ReserverCreep);

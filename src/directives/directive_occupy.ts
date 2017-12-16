@@ -1,7 +1,8 @@
 import {Directive} from './Directive';
 import {ReserverSetup} from '../roles/reserver';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
+@profile
 export class DirectiveOccupy extends Directive {
 
 	reserveBuffer: number;
@@ -41,6 +42,4 @@ export class DirectiveOccupy extends Directive {
 		return;
 	}
 }
-
-profileClass(DirectiveOccupy);
 

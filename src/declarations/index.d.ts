@@ -1,3 +1,6 @@
+declare const require: (module: string) => any;
+declare var global: any;
+
 interface flagActions {
 	[actionType: string]: Function;
 }
@@ -13,6 +16,7 @@ interface flagCat {
 	color: number;
 	filter: Function;
 	action: flagActions | null;
+
 	[subcat: string]: any;
 }
 
@@ -39,6 +43,7 @@ interface BuildingPlannerOutput {
 
 interface StructureLayout {
 	[rcl: number]: BuildingPlannerOutput | undefined;
+
 	data: {
 		pos: Coord;
 	}
@@ -63,11 +68,17 @@ interface IDirective {
 	memory: FlagMemory;
 	color: ColorConstant;
 	secondaryColor: ColorConstant;
+
 	remove(): number;
+
 	setColor(color: ColorConstant, secondaryColor?: ColorConstant): number;
+
 	setPosition(pos: RoomPosition): number;
+
 	getAssignedCreeps(roleName: string): ICreep[];
+
 	init(): void;
+
 	run(): void;
 }
 
@@ -119,12 +130,19 @@ interface ITask extends protoTask {
 	target: RoomObject | null;
 	targetPos: RoomPosition;
 	parent: ITask | null;
+
 	fork(newTask: ITask): void
+
 	isValidTask(): boolean;
+
 	isValidTarget(): boolean;
+
 	move(): number;
+
 	run(): number;
+
 	work(): number;
+
 	finish(): void;
 }
 
@@ -143,7 +161,9 @@ interface IResourceRequestGroup {
 		haul: IResourceRequest[],
 		link: IResourceRequest[]
 	};
+
 	registerResourceRequest(target: StructureLink | StructureContainer, resourceType?: string): void;
+
 	registerWithdrawalRequest(target: StructureLink | StructureContainer, resourceType?: string): void;
 }
 
@@ -155,8 +175,11 @@ interface IObjective {
 	creepNames: string[];
 	maxCreeps: number;
 	assignableToRoles: string[];
+
 	assignableTo(creep: ICreep): boolean;
+
 	getTask(): ITask;
+
 	assignTo(creep: ICreep): void;
 }
 
@@ -164,7 +187,9 @@ interface IObjectiveGroup {
 	objectives: { [objectiveName: string]: IObjective[] };
 	objectivesByRef: { [objectiveRef: string]: IObjective };
 	objectivePriorities: string[];
+
 	registerObjectives(...args: IObjective[][]): void;
+
 	assignTask(creep: ICreep): void;
 }
 

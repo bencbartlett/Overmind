@@ -3,8 +3,9 @@ import {TaskSignController} from '../tasks/task_signController';
 import {TaskWithdraw} from '../tasks/task_withdraw';
 import {AbstractCreep, AbstractSetup} from './Abstract';
 import {TaskUpgrade} from '../tasks/task_upgrade';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
+@profile
 export class UpgraderSetup extends AbstractSetup {
 	constructor() {
 		super('upgrader');
@@ -12,6 +13,7 @@ export class UpgraderSetup extends AbstractSetup {
 	}
 }
 
+@profile
 export class UpgraderCreep extends AbstractCreep {
 	assignment: StructureController;
 	upgradeSite: IUpgradeSite;
@@ -55,6 +57,3 @@ export class UpgraderCreep extends AbstractCreep {
 		}
 	}
 }
-
-profileClass(UpgraderSetup);
-profileClass(UpgraderCreep);

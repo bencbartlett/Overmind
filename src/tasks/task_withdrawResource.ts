@@ -1,11 +1,12 @@
 /* This is the withdrawal task for non-energy resources. */
 
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
 export type withdrawResourceTargetType = StructureStorage | StructureContainer | StructureTerminal;
 export const withdrawResourceTaskName = 'withdrawResource';
 
+@profile
 export class TaskWithdrawResource extends Task {
 	target: withdrawResourceTargetType;
 
@@ -37,4 +38,3 @@ export class TaskWithdrawResource extends Task {
 	}
 }
 
-profileClass(TaskWithdrawResource);

@@ -1,9 +1,10 @@
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
 export type supplyTargetType = Sink;
 export const supplyTaskName = 'supply';
 
+@profile
 export class TaskSupply extends Task {
 	target: supplyTargetType;
 
@@ -27,4 +28,3 @@ export class TaskSupply extends Task {
 	}
 }
 
-profileClass(TaskSupply);

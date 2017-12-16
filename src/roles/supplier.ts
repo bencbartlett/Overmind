@@ -2,9 +2,9 @@
 // Used for energy collection before storage is built and mining groups spawn
 
 import {AbstractCreep, AbstractSetup} from './Abstract';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
-
+@profile
 export class SupplierSetup extends AbstractSetup {
 	constructor() {
 		super('supplier');
@@ -13,6 +13,7 @@ export class SupplierSetup extends AbstractSetup {
 	}
 }
 
+@profile
 export class SupplierCreep extends AbstractCreep {
 	assignment: StructureController;
 
@@ -48,6 +49,3 @@ export class SupplierCreep extends AbstractCreep {
 	// }
 
 }
-
-profileClass(SupplierSetup);
-profileClass(SupplierCreep);

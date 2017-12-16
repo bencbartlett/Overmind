@@ -1,5 +1,6 @@
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
+
 // Attack task, includes attack and ranged attack if applicable.
 // Use meleeAttack and rangedAttack for the exclusive variants.
 
@@ -7,6 +8,7 @@ import {profileClass} from '../profiling';
 export type attackTargetType = Creep | Structure;
 export const attackTaskName = 'attack';
 
+@profile
 export class TaskAttack extends Task {
 	target: attackTargetType;
 
@@ -53,5 +55,3 @@ export class TaskAttack extends Task {
 		}
 	}
 }
-
-profileClass(TaskAttack);

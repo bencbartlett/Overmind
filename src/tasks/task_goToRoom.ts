@@ -1,9 +1,11 @@
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
+
 
 export type goToRoomTargetType = RoomObject;
 export const goToRoomTaskName = 'goToRoom';
 
+@profile
 export class TaskGoToRoom extends Task {
 	target: goToRoomTargetType;
 
@@ -29,4 +31,3 @@ export class TaskGoToRoom extends Task {
 	}
 }
 
-profileClass(TaskGoToRoom);

@@ -2,10 +2,12 @@
 
 import {Objective} from './Objective';
 import {TaskDeposit} from '../tasks/task_deposit';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
+
 
 export const depositContainerObjectiveName = 'depositContainer';
 
+@profile
 export class ObjectiveDepositContainer extends Objective {
 
 	target: StructureContainer;
@@ -26,5 +28,3 @@ export class ObjectiveDepositContainer extends Objective {
 		return new TaskDeposit(this.target);
 	}
 }
-
-profileClass(ObjectiveDepositContainer);

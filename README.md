@@ -4,7 +4,7 @@
 
 Screeps is an [MMO strategy game for programmers](https://screeps.com/). The core objective is to expand your colony; to control your units, you write code in JavaScript (or a transpiled language). The units run in real-time even when you aren't actively playing the game.
 
-This is the AI system I have been developing for Screeps, themed loosely on the [Zerg's swarm intelligence](http://starcraft.wikia.com/wiki/Overlord) from Starcraft: creep activities in each colony are prioritized and managed by a central `Overlord` object, which handles task assignment, reacts to stimuli with `objectives` and `directives`, and manages spawner activity through the `hatchery` object.
+This is the AI system I have been developing for Screeps, themed loosely on the [Zerg's swarm intelligence](http://starcraft.wikia.com/wiki/Overlord) from Starcraft. Creep activities in each colony are prioritized and managed by a central `Overlord` object, which handles task assignment, reacts to stimuli with `objectives` and `directives`, and manages spawner activity through the `hatchery` object.
 
 Overmind is unaffiliated with the thematically-similar and more recent Overlords alliance.
 
@@ -20,15 +20,15 @@ If you're new to screeps, I wouldn't recommend using Overmind; most of the fun o
 If you do want to use Overmind as-is, it "should" work right out of the box, although the codebase is under a lot of development right now, so I might have broken something. If it seems I have, please [submit an issue](https://github.com/bencbartlett/Overmind/issues/new) and I'll try to fix it.
 
 ### Installation 
-Setting up the code base is simple with `npm`. To install, navigate to the Overmind root directory and run
+Overmind uses the [`screeps-typescript-starter v3.0`](https://github.com/screepers/screeps-typescript-starter) installation and deployment scripts. Setting up the code base is simple with `npm`. To install, navigate to the Overmind root directory and run
 
 ```npm install```
 
-To compile (to a single `main.js` file) and deploy to the Screeps server, create a `credentials.json` file from the example in the `/config` directory, then nagivate to the Overmind root and run
+To compile (to a single `main.js` file) and deploy to the Screeps server, create a `screeps.json` file from the example, then nagivate to the Overmind root and run
 
+```npm run push-main```
 
-```npm run deploy```
-
+For additional help, see the [`screeps-typescript-starter` GitBook](https://screepers.gitbooks.io/screeps-typescript-starter/getting-started/deploying.html).
 
 ### Find me in game! (username: Muon)
 I'm currently around the [`W1XN8X` sector](https://screeps.com/a/#!/map?pos=-19.173,-88.435), but I plan on respawning to a faster shard sometime in the near future!

@@ -3,8 +3,9 @@
 import {TaskDeposit} from '../tasks/task_deposit';
 import {TaskHarvest} from '../tasks/task_harvest';
 import {AbstractCreep, AbstractSetup} from './Abstract';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
+@profile
 export class MinerSetup extends AbstractSetup {
 	constructor() {
 		super('miner');
@@ -13,6 +14,7 @@ export class MinerSetup extends AbstractSetup {
 	}
 }
 
+@profile
 export class MinerCreep extends AbstractCreep {
 	assignment: Source;
 	miningSite: IMiningSite;
@@ -48,6 +50,3 @@ export class MinerCreep extends AbstractCreep {
 		}
 	}
 }
-
-profileClass(MinerSetup);
-profileClass(MinerCreep);

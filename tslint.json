@@ -1,3 +1,39 @@
+{
+  "extends": [
+    "tslint:recommended"
+  ],
+  "rules": {
+    "forin": false,
+    "interface-name": [
+      true,
+      "never-prefix"
+    ],
+    "member-ordering": [
+      false
+    ],
+    "no-console": [
+      false
+    ],
+    "no-namespace": [
+      true,
+      "allow-declarations"
+    ],
+    "trailing-comma": [
+      true,
+      {
+        "multiline": "never",
+        "singleline": "never"
+      }
+    ],
+    "variable-name": [
+      true,
+      "ban-keywords",
+      "check-format",
+      "allow-pascal-case",
+      "allow-leading-underscore"
+    ]
+  }
+}
 //{
 //  "extends" : [
 //    "tslint:recommended"
@@ -6,60 +42,36 @@
 //    "forin": false,
 //    "interface-name": [false],
 //    "no-console": [false],
-//    "no-namespace": [true, "allow-declarations"],
-//    "trailing-comma": [
-//      true,
-//      "never"
-//    ],
 //    "variable-name": [
 //      true,
 //      "ban-keywords",
 //      "check-format",
 //      "allow-pascal-case",
 //      "allow-leading-underscore"
-//    ]
+//    ],
+//    "triple-equals": false,
+//    "indent": false,
+//    "quotemark": false,
+//    "member-access": false,
+//    "no-var-keyword": false,
+//    "no-consecutive-blank-lines": false,
+//    "prefer-const": false,
+//    "ordered-imports": false,
+//    "object-literal-sort-keys": false,
+//    "max-classes-per-file": false,
+//    "object-literal-shorthand": false,
+//    "trailing-comma": false,
+//    "member-ordering": false,
+//    "no-angle-bracket-type-assertion": false,
+//    "semicolon": false,
+//    "one-variable-per-declaration": false,
+//    "space-before-function-paren": false,
+//    "only-arrow-functions": false,
+//    "no-shadowed-variable": false,
+//    "arrow-parens": false,
+//    "array-type": false,
+//    "no-string-literal": false,
+//    "curly": false,
+//    "align": false
 //  }
 //}
-
-
-{
-  "extends" : [
-    "tslint:recommended"
-  ],
-  "rules": {
-    "forin": false,
-    "interface-name": [false],
-    "no-console": [false],
-    "variable-name": [
-      true,
-      "ban-keywords",
-      "check-format",
-      "allow-pascal-case",
-      "allow-leading-underscore"
-    ],
-    "triple-equals": false,
-    "indent": false,
-    "quotemark": false,
-    "member-access": false,
-    "no-var-keyword": false,
-    "no-consecutive-blank-lines": false,
-    "prefer-const": false,
-    "ordered-imports": false,
-    "object-literal-sort-keys": false,
-    "max-classes-per-file": false,
-    "object-literal-shorthand": false,
-    "trailing-comma": false,
-    "member-ordering": false,
-    "no-angle-bracket-type-assertion": false,
-    "semicolon": false,
-    "one-variable-per-declaration": false,
-    "space-before-function-paren": false,
-    "only-arrow-functions": false,
-    "no-shadowed-variable": false,
-    "arrow-parens": false,
-    "array-type": false,
-    "no-string-literal": false,
-    "curly": false,
-    "align": false
-  }
-}

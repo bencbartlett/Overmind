@@ -1,8 +1,9 @@
 // Linker - transfers energy from link to storage
 
 import {AbstractCreep, AbstractSetup} from './Abstract';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
+@profile
 export class ManagerSetup extends AbstractSetup {
 	constructor() {
 		super('manager');
@@ -11,9 +12,9 @@ export class ManagerSetup extends AbstractSetup {
 	}
 }
 
-
+@profile
 export class ManagerCreep extends AbstractCreep {
-	assignment: Storage;
+	assignment: StructureStorage;
 	commandCenter: ICommandCenter;
 
 	constructor(creep: Creep) {
@@ -27,5 +28,3 @@ export class ManagerCreep extends AbstractCreep {
 	}
 }
 
-profileClass(ManagerSetup);
-profileClass(ManagerCreep);

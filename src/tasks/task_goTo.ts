@@ -1,10 +1,11 @@
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
 export type goToTargetType = RoomObject;
 export const goToTaskName = 'goTo';
 
 // TODO: this should accept a room position as well
+@profile
 export class TaskGoTo extends Task {
 	target: goToTargetType;
 
@@ -26,5 +27,3 @@ export class TaskGoTo extends Task {
 		return OK;
 	}
 }
-
-profileClass(TaskGoTo);

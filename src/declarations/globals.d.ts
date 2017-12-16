@@ -14,7 +14,6 @@ declare var Overmind: IOvermind;
 declare var flagCodes: { [category: string]: flagCat };
 declare function taskFromPrototask(protoTask: protoTask): ITask;
 
-
 interface Game {
 	cache: {
 		assignments: { [ref: string]: { [roleName: string]: string[] } };

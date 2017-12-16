@@ -1,9 +1,10 @@
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
 export type harvestTargetType = Source;
 export const harvestTaskName = 'harvest';
 
+@profile
 export class TaskHarvest extends Task {
 	target: harvestTargetType;
 
@@ -26,4 +27,3 @@ export class TaskHarvest extends Task {
 	}
 }
 
-profileClass(TaskHarvest);

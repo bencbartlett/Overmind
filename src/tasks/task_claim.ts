@@ -1,9 +1,10 @@
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
 export type claimTargetType = StructureController;
 export const claimTaskName = 'claim';
 
+@profile
 export class TaskClaim extends Task {
 	target: claimTargetType;
 
@@ -26,5 +27,3 @@ export class TaskClaim extends Task {
 		return this.creep.claimController(this.target);
 	}
 }
-
-profileClass(TaskClaim);

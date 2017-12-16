@@ -5,17 +5,18 @@ import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskDeposit} from '../tasks/task_deposit';
 import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {SupplierSetup} from '../roles/supplier';
-import {profileClass} from '../profiling';
 import {log} from '../lib/logger/log';
 import {QueenSetup} from '../roles/queen';
 import {ObjectiveSupply} from '../objectives/objective_supply';
 import {ObjectiveSupplyTower} from '../objectives/objective_supplyTower';
+import {profile} from '../lib/Profiler';
 
+@profile
 export class Hatchery extends AbstractHiveCluster implements IHatchery {
 	memory: HatcheryMemory; 								// Memory.colonies.hatchery
 	spawns: Spawn[]; 										// List of spawns in the hatchery
 	availableSpawns: Spawn[]; 								// Spawns that are available to make stuff right now
-	extensions: Extension[]; 								// List of extensions in the hatchery
+	extensions: StructureExtension[]; 						// List of extensions in the hatchery
 	link: StructureLink | undefined; 						// The input link
 	towers: StructureTower[]; 								// All towers that aren't in the command center
 	battery: StructureContainer | undefined;				// The container to provide an energy buffer
@@ -117,7 +118,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		let supplySpawnObjectives = _.map(supplySpawns, spawn => new ObjectiveSupply(spawn));
 		let supplyExtensions = _.filter(this.extensions, extension => !extension.isFull);
 		let supplyExtensionObjectives = _.map(supplyExtensions, extension => new ObjectiveSupply(extension));
-		let supplyTowers: Tower[];
+		let supplyTowers: StructureTower[];
 		if (supplySpawnObjectives.length + supplyExtensionObjectives.length > 0) {
 			// If there are other things to do, don't worry about filling towers to completely full levels
 			supplyTowers = _.filter(this.towers, tower => tower.energy < this.settings.refillTowersBelow);
@@ -342,6 +343,4 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		this.handleSpawns();
 	}
 }
-
-profileClass(Hatchery);
 

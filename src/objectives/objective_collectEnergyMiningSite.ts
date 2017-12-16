@@ -2,14 +2,15 @@
 
 import {Objective} from './Objective';
 import {TaskWithdraw} from '../tasks/task_withdraw';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
 export const collectEnergyMiningSiteObjectiveName = 'collectEnergyMiningSite';
 
+@profile
 export class ObjectiveCollectEnergyMiningSite extends Objective {
-	target: Container;
+	target: StructureContainer;
 
-	constructor(target: Container) {
+	constructor(target: StructureContainer) {
 		super('collectEnergyMiningSite', target);
 		this.assignableToRoles = ['hauler', 'supplier'];
 		this.maxCreeps = Infinity;
@@ -25,6 +26,3 @@ export class ObjectiveCollectEnergyMiningSite extends Objective {
 		return new TaskWithdraw(this.target);
 	}
 }
-
-profileClass(ObjectiveCollectEnergyMiningSite);
-

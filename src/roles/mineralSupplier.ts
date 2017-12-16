@@ -3,8 +3,9 @@
 import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskTransfer} from '../tasks/task_transfer';
 import {AbstractCreep, AbstractSetup} from './Abstract';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
+@profile
 export class MineralSupplierSetup extends AbstractSetup {
 	constructor() {
 		super('mineralSupplier');
@@ -13,13 +14,14 @@ export class MineralSupplierSetup extends AbstractSetup {
 	}
 }
 
+@profile
 export class MineralSupplierCreep extends AbstractCreep {
 
 	constructor(creep: Creep) {
 		super(creep);
 	}
 
-	collectForLab(lab: Lab) {
+	collectForLab(lab: StructureLab) {
 		let term = this.colony.terminal;
 		if (term) {
 			let amount = term.store[<ResourceConstant>lab.assignedMineralType];
@@ -31,7 +33,7 @@ export class MineralSupplierCreep extends AbstractCreep {
 		}
 	}
 
-	depositForLab(lab: Lab) {
+	depositForLab(lab: StructureLab) {
 		var transfer = new TaskTransfer(lab);
 		transfer.data.resourceType = lab.assignedMineralType;
 		this.task = transfer;
@@ -58,7 +60,3 @@ export class MineralSupplierCreep extends AbstractCreep {
 		}
 	}
 }
-
-profileClass(MineralSupplierSetup);
-profileClass(MineralSupplierCreep);
-

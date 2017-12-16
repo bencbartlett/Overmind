@@ -1,9 +1,10 @@
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
 export type pickupTargetType = Resource;
 export const pickupTaskName = 'pickup';
 
+@profile
 export class TaskPickup extends Task {
 	target: pickupTargetType;
 
@@ -29,5 +30,3 @@ export class TaskPickup extends Task {
 		return res;
 	}
 }
-
-profileClass(TaskPickup);

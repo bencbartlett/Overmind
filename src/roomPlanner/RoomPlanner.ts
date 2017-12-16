@@ -2,11 +2,11 @@
 import {hatcheryLayout} from './layouts/hatchery';
 import {commandCenterLayout} from './layouts/commandCenter';
 import {log} from '../lib/logger/log';
-import {profileClass} from '../profiling';
 import {Pathing} from '../pathing/pathing';
 import {Visualizer} from '../visuals/Visualizer';
+import {profile} from '../lib/Profiler';
 
-
+@profile
 export class RoomPlanner {
 	roomName: string;			// Name of the room this is for
 	room: Room;					// Room object
@@ -148,6 +148,3 @@ export class RoomPlanner {
 
 
 }
-
-
-profileClass(RoomPlanner);

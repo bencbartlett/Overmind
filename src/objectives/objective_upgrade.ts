@@ -1,10 +1,11 @@
 // Objective to upgrade the controller
 import {Objective} from './Objective';
 import {TaskUpgrade} from '../tasks/task_upgrade';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
 export const upgradeObjectiveName = 'upgrade';
 
+@profile
 export class ObjectiveUpgrade extends Objective {
 	target: StructureController;
 
@@ -24,5 +25,3 @@ export class ObjectiveUpgrade extends Objective {
 		return new TaskUpgrade(this.target);
 	}
 }
-
-profileClass(ObjectiveUpgrade);

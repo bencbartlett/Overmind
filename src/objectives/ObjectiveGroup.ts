@@ -1,9 +1,9 @@
 // A grouping for objectives that allows colony components to have their own objectives instead of all being on Overlord
 
 import {Objective} from './Objective';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
-
+@profile
 export class ObjectiveGroup implements IObjectiveGroup {
 
 	private flatObjectives: Objective[];
@@ -85,5 +85,3 @@ export class ObjectiveGroup implements IObjectiveGroup {
 		}
 	}
 }
-
-profileClass(ObjectiveGroup);

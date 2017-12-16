@@ -1,10 +1,12 @@
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
+
 
 export type transferTargetType = StructureContainer | StructureStorage | StructureTerminal |
 	StructureLab | StructureNuker | StructurePowerSpawn;
 export const transferTaskName = 'transfer';
 
+@profile
 export class TaskTransfer extends Task {
 	target: transferTargetType;
 
@@ -49,5 +51,3 @@ export class TaskTransfer extends Task {
 		return this.creep.transfer(this.target, this.data.resourceType!);
 	}
 }
-
-profileClass(TaskTransfer);

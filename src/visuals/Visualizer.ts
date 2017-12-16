@@ -1,5 +1,6 @@
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
+@profile
 export class Visualizer {
 
 	static drawLayout(structureMap: StructureMap, roomName?: string): RoomVisual {
@@ -51,5 +52,3 @@ export class Visualizer {
 		new RoomVisual(pos.roomName).text(text, pos, style);
 	}
 }
-
-profileClass(Visualizer);

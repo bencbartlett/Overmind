@@ -14,7 +14,7 @@ interface IMiningSite extends IHiveCluster {
 	source: Source;
 	energyPerTick: number;
 	miningPowerNeeded: number;
-	output: Container | Link | undefined;
+	output: StructureContainer | StructureLink | undefined;
 	outputConstructionSite: ConstructionSite | undefined;
 	miningGroup: IMiningGroup | undefined;
 	predictedStore: number;
@@ -56,7 +56,7 @@ interface IHatchery extends IHiveCluster {
 	memory: HatcheryMemory;
 	spawns: Spawn[];
 	availableSpawns: Spawn[];
-	extensions: Extension[];
+	extensions: StructureExtension[];
 	link: StructureLink | undefined;
 	battery: StructureContainer | undefined;
 	objectiveGroup: IObjectiveGroup;

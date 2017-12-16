@@ -1,7 +1,20 @@
+# Screeps Config
+screeps.json
+
 # Ignore basic folders
 /dist
 /node_modules
 /typings
+/.rpt2_cache
+/tsc-out
+
+# yarn lock file
+/yarn.lock
+
+/webpack.config.js
+
+# npm lock file (v5.0.0+)
+/package-lock.json
 
 # Screeps config file
 /config.json
@@ -74,9 +87,3 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
-.vs/
-!/src/Overmind.ts
-!/src/hiveClusters/MiningSite.ts
-/ScreepsAutocomplete-master/
-/webpack.config.js
-/test/

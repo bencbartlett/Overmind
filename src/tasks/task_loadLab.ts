@@ -1,9 +1,10 @@
 import {Task} from './Task';
-import {profileClass} from '../profiling';
+import {profile} from '../lib/Profiler';
 
-export type loadLabTargetType = Lab;
+export type loadLabTargetType = StructureLab;
 export const loadLabTaskName = 'loadLab';
 
+@profile
 export class TaskLoadLab extends Task {
 	target: loadLabTargetType;
 
@@ -36,5 +37,3 @@ export class TaskLoadLab extends Task {
 		return this.creep.transfer(this.target, this.data.resourceType!);
 	}
 }
-
-profileClass(TaskLoadLab);
