@@ -65,22 +65,21 @@ interface Room {
 }
 
 interface RoomObject {
-	// log(message: string): void;
 	inSameRoomAs(otherObject: RoomObject): boolean;
 	ref: string;
 	colony: IColony | undefined;
 	colonyName: string | undefined;
 	assignedCreepNames: { [role: string]: string };
 	getAssignedCreeps(role: string): ICreep[];
-	getAssignedCreepAmounts(role: string): number;
-	assignedCreepAmounts: { [role: string]: number };
+
+	// getAssignedCreepAmounts(role: string): number;
+	// assignedCreepAmounts: { [role: string]: number };
 	targetedBy: string[];
-	flagged: boolean;
-	flaggedWith(filter: Function): boolean;
+	// flagged: boolean;
+	// flaggedWith(filter: Function): boolean;
 	linked: boolean;
 	links: StructureLink[];
 	pathLengthToStorage: number;
-	// roomName: string;
 	pathLengthTo(otherObject: RoomObject): number;
 	serialize(): protoRoomObject;
 }

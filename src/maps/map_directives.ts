@@ -41,3 +41,13 @@ export function DirectiveWrapper(flag: Flag): IDirective | undefined {
 	}
 	return directive!;
 }
+
+
+// export var FlagMap = {
+// 	COLOR_RED: military,
+// 	COLOR_ORANGE: status,
+// 	COLOR_WHITE: routing,
+// 	COLOR_GREY: hiveCluters,
+// 	COLOR_PURPLE: territory,
+// };
+

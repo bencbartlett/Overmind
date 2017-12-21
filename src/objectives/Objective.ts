@@ -17,7 +17,7 @@ export abstract class Objective implements IObjective {
 		this.target = target;
 		this.pos = target.pos;
 		this.ref = this.name + ':' + this.target.ref;
-		this.creepNames = Game.cache.objectives[this.ref] || [];
+		this.creepNames = Overmind.cache.objectives[this.ref] || [];
 		// These properties will need to be modified in child classes
 		this.maxCreeps = 1;
 		this.assignableToRoles = [];

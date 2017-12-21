@@ -125,20 +125,19 @@ Object.defineProperty(Room.prototype, 'remainingConstructionProgress', { // flag
 
 Object.defineProperty(Room.prototype, 'structures', {
 	get () {
-		return Game.cache.structures[this.name];
+		return Overmind.cache.structures[this.name];
 	},
 });
 
 Object.defineProperty(Room.prototype, 'drops', {
 	get () {
-		return Game.cache.drops[this.name];
+		return Overmind.cache.drops[this.name];
 	},
 });
 
 Room.prototype.getStructures = function (structureType: string): Structure[] {
 	return this.structures[structureType] || [];
 };
-
 
 Object.defineProperties(Room.prototype, {
 	// Dropped resources that are eneryg
@@ -261,26 +260,21 @@ Object.defineProperties(Room.prototype, {
 	// All construction sites
 	constructionSites: {
 		get() {
-			if (!Game.cache.constructionSites[this.name]) {
-				Game.cache.constructionSites[this.name] = this.find(FIND_CONSTRUCTION_SITES);
-			}
-			return Game.cache.constructionSites[this.name] || [];
+			return Overmind.cache.constructionSites[this.name] || [];
 		},
 	},
 
 	// All non-road construction sites
 	structureSites: {
 		get() {
-			return _.filter(this.constructionSites,
-							(c: ConstructionSite) => c.structureType != STRUCTURE_ROAD) || [];
+			return Overmind.cache.structureSites[this.name] || [];
 		},
 	},
 
 	// All construction sites for roads
 	roadSites: {
 		get() {
-			return _.filter(this.constructionSites,
-							(c: ConstructionSite) => c.structureType == STRUCTURE_ROAD) || [];
+			return Overmind.cache.roadSites[this.name] || [];
 		},
 	},
 

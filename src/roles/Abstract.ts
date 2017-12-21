@@ -2,8 +2,9 @@
 import {TaskWithdraw} from '../tasks/task_withdraw';
 // import {TaskGetRenewed} from '../tasks/task_getRenewed';
 import {Objective} from '../objectives/Objective';
+import {profile} from '../lib/Profiler';
 
-
+@profile
 export abstract class AbstractSetup implements ISetup {
 	name: string;								// Name of the role
 	body: {
@@ -148,7 +149,7 @@ export abstract class AbstractSetup implements ISetup {
 	}
 }
 
-
+@profile
 export abstract class AbstractCreep implements ICreep {
 	creep: Creep; 					// The creep that this wrapper class will control
 	body: BodyPartDefinition[];     // These properties are all wrapped from this.creep.* to this.*
@@ -314,8 +315,8 @@ export abstract class AbstractCreep implements ICreep {
 	set assignment(newAssignment: RoomObject | null) {
 		// Remove cache references to old assignments
 		let ref = this.memory.assignmentRef;
-		if (ref && Game.cache.assignments[ref] && Game.cache.assignments[ref][this.roleName]) {
-			Game.cache.assignments[ref][this.roleName] = _.remove(Game.cache.assignments[ref][this.roleName],
+		if (ref && Overmind.cache.assignments[ref] && Overmind.cache.assignments[ref][this.roleName]) {
+			Overmind.cache.assignments[ref][this.roleName] = _.remove(Overmind.cache.assignments[ref][this.roleName],
 																  name => name == this.name);
 		}
 		if (newAssignment) {
@@ -323,13 +324,13 @@ export abstract class AbstractCreep implements ICreep {
 			this.memory.assignmentRef = newAssignment.ref;
 			this.memory.assignmentPos = newAssignment.pos;
 			// Update the cache references
-			if (!Game.cache.assignments[newAssignment.ref]) {
-				Game.cache.assignments[newAssignment.ref] = {};
+			if (!Overmind.cache.assignments[newAssignment.ref]) {
+				Overmind.cache.assignments[newAssignment.ref] = {};
 			}
-			if (!Game.cache.assignments[newAssignment.ref][this.roleName]) {
-				Game.cache.assignments[newAssignment.ref][this.roleName] = [];
+			if (!Overmind.cache.assignments[newAssignment.ref][this.roleName]) {
+				Overmind.cache.assignments[newAssignment.ref][this.roleName] = [];
 			}
-			Game.cache.assignments[newAssignment.ref][this.roleName].push(this.name);
+			Overmind.cache.assignments[newAssignment.ref][this.roleName].push(this.name);
 		} else {
 			this.memory.assignmentRef = null;
 			this.memory.assignmentPos = null;
@@ -387,18 +388,18 @@ export abstract class AbstractCreep implements ICreep {
 		let oldProtoTask = this.memory.task as protoTask;
 		if (oldProtoTask) {
 			let oldRef = oldProtoTask._target.ref;
-			if (Game.cache.targets[oldRef]) {
-				Game.cache.targets[oldRef] = _.remove(Game.cache.targets[oldRef], name => name == this.name);
+			if (Overmind.cache.targets[oldRef]) {
+				Overmind.cache.targets[oldRef] = _.remove(Overmind.cache.targets[oldRef], name => name == this.name);
 			}
 		}
 		// Set the new task
 		this.memory.task = task;
 		if (task && task.target) { // If task isn't null
 			// Register task target in cache
-			if (!Game.cache.targets[task.target.ref]) {
-				Game.cache.targets[task.target.ref] = [];
+			if (!Overmind.cache.targets[task.target.ref]) {
+				Overmind.cache.targets[task.target.ref] = [];
 			}
-			Game.cache.targets[task.target.ref].push(this.name);
+			Overmind.cache.targets[task.target.ref].push(this.name);
 			// Register references to creep
 			task.creep = this;
 			this._task = task;

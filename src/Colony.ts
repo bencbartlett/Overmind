@@ -46,6 +46,7 @@ export class Colony implements IColony {
 	flags: Flag[];										// Flags across the colony
 	creeps: ICreep[];									// Creeps bound to the colony
 	creepsByRole: { [roleName: string]: ICreep[] };		// Creeps hashed by their role name
+	creepsByOverseer: { [overseer: string]: ICreep[] };	// Creeps hashed by their overseer
 	hostiles: Creep[];									// Hostile creeps in one of the rooms
 	data: {												// Data about the colony, calculated once per tick
 		energyPerTick: number, 								// Energy income of the colony per tick
@@ -238,6 +239,7 @@ export class Colony implements IColony {
 	build(): void {
 		this.instantiateVirtualComponents();	// Instantiate the virtual components of the colony
 		this.populateColonyData();				// Calculate relevant data about the colony per tick
+
 	}
 
 	init(): void {

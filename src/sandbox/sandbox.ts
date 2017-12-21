@@ -6,6 +6,25 @@ import {Pathing} from '../pathing/pathing';
 import {log} from '../lib/logger/log';
 import {Graph, Vertex} from '../dataStructures/Graph';
 
+export class TestCache {
+	times: number[];
+
+	constructor() {
+		this.times = [];
+	}
+
+	update() {
+		this.times.push(Game.time);
+	}
+}
+
+export class TestRef {
+	thing: number;
+
+	constructor(thing: any) {
+		this.thing = thing.times;
+	}
+}
 
 let colonyName = 'W19N86';
 
@@ -54,7 +73,7 @@ export function sandbox() {
 		// Test code goes here
 		// testGraph();
 		// testVisualizer()
-		testRoomPlanner();
+		// testRoomPlanner();
 	} catch (e) {
 		log.error(e);
 	}

@@ -70,6 +70,16 @@ export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 		}
 	}
 
+	// get pathToDropoff(): RoomPosition[] {
+	// 	// TODO: calculate path from dropoff to within range 1 of source.
+	// 	// _.last(path) gives creep harvest location
+	// 	//
+	// }
+	//
+	// get outputPos(): RoomPosition {
+	// 	// TODO: put output here
+	// }
+
 	/* Register appropriate resource withdrawal requests when the output gets sufficiently full */
 	private registerOutputRequests(): void {
 		// Figure out which request group to submit requests to

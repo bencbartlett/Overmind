@@ -17,8 +17,6 @@
 // Global settings and functions
 import './globals';
 import './settings/settings_user';
-// External libraries
-import './lib/traveler/Traveler'; // BonzAI's excellent moveTo() replacement
 // Prototypes
 import './prototypes/prototypes_Creep';
 import './prototypes/prototypes_Flag';
@@ -31,7 +29,6 @@ import './prototypes/prototypes_Structures';
 import OM from './Overmind';
 import {flagCodesMap} from './maps/map_flag_codes';
 // Preprocessing and postprocessing modules
-import {Preprocessing} from './caching';
 import {visuals} from './visuals/visuals';
 // Configuration, logging, and profiling
 import {log} from './lib/logger/log';
@@ -44,7 +41,9 @@ import {USE_PROFILER} from './config/config';
 global.log = log;
 global.Profiler = Profiler.init();
 
-export function loop() {
+
+export function loop(): void {
+
 	if (USE_PROFILER && Game.time % 100 == 0) {
 		console.log('Reminder: CPU profiling is currently enabled. Turn off when not needed to improve performance.');
 	}
@@ -64,15 +63,13 @@ export function loop() {
 	}
 
 	// Setup =======================================================================================================
-	// Preprocessing
-	let preprocessing = new Preprocessing();
-	preprocessing.run();
 	// Create global flagCodes reference (avoids circular imports)
 	global.flagCodes = flagCodesMap;
 	// Create a global task instantiator (avoids circular imports)
 	global.taskFromPrototask = taskInstantiator;
 	// Initialize Overmind object, wrapping all creeps in Game.icreeps and registering them to colonies
 	global.Overmind = new OM();
+	Overmind.rebuild();
 
 	// Initialization ==============================================================================================
 	Overmind.init();
@@ -87,9 +84,6 @@ export function loop() {
 	Overmind.run();
 
 	// Postprocessing ==============================================================================================
-	// // Log stats
-	// var logger = new DataLogger();
-	// logger.run();
 	// Draw visuals
 	if (Game.cpu.bucket > 7500) {
 		visuals.drawGlobalVisuals();

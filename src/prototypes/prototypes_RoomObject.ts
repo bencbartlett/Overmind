@@ -2,11 +2,6 @@
 
 import {pathing} from '../pathing/pathing';
 
-
-// RoomObject.prototype.log = function (message) {
-// 	console.log(this.room.name + ' ' + this.name + ': "' + message + '"');
-// };
-
 // determines if object is in same room as other object in possibly undefined room
 RoomObject.prototype.inSameRoomAs = function (otherObject) {
 	return this.pos.inRangeTo(otherObject, 50);
@@ -37,8 +32,8 @@ Object.defineProperty(RoomObject.prototype, 'colonyName', { // name of the colon
 
 Object.defineProperty(RoomObject.prototype, 'assignedCreepNames', { // keys: roles, values: names
 	get: function () {
-		if (Game.cache.assignments[this.ref]) {
-			return Game.cache.assignments[this.ref];
+		if (Overmind.cache.assignments[this.ref]) {
+			return Overmind.cache.assignments[this.ref];
 		} else {
 			return {};
 		}
@@ -51,48 +46,48 @@ RoomObject.prototype.getAssignedCreeps = function (role) {
 	return _.filter(_.map(creepNames, (name: string) => Game.icreeps[name]), creep => creep.needsReplacing == false);
 };
 
-RoomObject.prototype.getAssignedCreepAmounts = function (role) {
-	let amount = this.getAssignedCreeps(role).length;
-	return amount || 0;
-};
-
-Object.defineProperty(RoomObject.prototype, 'assignedCreepAmounts', {
-	get: function () {
-		if (Game.cache.assignments[this.ref]) {
-			let creepNamesByRole = Game.cache.assignments[this.ref];
-			for (let role in creepNamesByRole) { // only include creeps that shouldn't be replaced yet
-				creepNamesByRole[role] = _.filter(creepNamesByRole[role],
-												  (name: string) => Game.icreeps[name].needsReplacing == false);
-			}
-			return _.mapValues(creepNamesByRole, creepList => creepList.length);
-		} else {
-			console.log('Regenerating assigned creep amounts! (Why?)');
-			let assignedCreeps = _.filter(Game.icreeps,
-										  creep => creep.memory.assignmentRef == this.ref &&
-												   creep.needsReplacing == false);
-			return _.mapValues(_.groupBy(assignedCreeps, creep => creep.memory.role), creepList => creepList.length);
-		}
-	},
-});
+// RoomObject.prototype.getAssignedCreepAmounts = function (role) {
+// 	let amount = this.getAssignedCreeps(role).length;
+// 	return amount || 0;
+// };
+//
+// Object.defineProperty(RoomObject.prototype, 'assignedCreepAmounts', {
+// 	get: function () {
+// 		if (Overmind.cache.assignments[this.ref]) {
+// 			let creepNamesByRole = Overmind.cache.assignments[this.ref];
+// 			for (let role in creepNamesByRole) { // only include creeps that shouldn't be replaced yet
+// 				creepNamesByRole[role] = _.filter(creepNamesByRole[role],
+// 												  (name: string) => Game.icreeps[name].needsReplacing == false);
+// 			}
+// 			return _.mapValues(creepNamesByRole, creepList => creepList.length);
+// 		} else {
+// 			console.log('Regenerating assigned creep amounts! (Why?)');
+// 			let assignedCreeps = _.filter(Game.icreeps,
+// 										  creep => creep.memory.assignmentRef == this.ref &&
+// 												   creep.needsReplacing == false);
+// 			return _.mapValues(_.groupBy(assignedCreeps, creep => creep.memory.role), creepList => creepList.length);
+// 		}
+// 	},
+// });
 
 Object.defineProperty(RoomObject.prototype, 'targetedBy', { // List of creep names with tasks targeting this object
 	get: function () {
-		return Game.cache.targets[this.ref];
+		return Overmind.cache.targets[this.ref];
 	},
 });
 
 
 // Flag association ====================================================================================================
 
-Object.defineProperty(RoomObject.prototype, 'flagged', { // if the object has a flag
-	get: function () {
-		return this.pos.flagged;
-	},
-});
-
-RoomObject.prototype.flaggedWith = function (filter) { // if the object has a certain type of flag
-	return this.pos.flaggedWith(filter);
-};
+// Object.defineProperty(RoomObject.prototype, 'flagged', { // if the object has a flag
+// 	get: function () {
+// 		return this.pos.flagged;
+// 	},
+// });
+//
+// RoomObject.prototype.flaggedWith = function (filter) { // if the object has a certain type of flag
+// 	return this.pos.flaggedWith(filter);
+// };
 
 
 // Link association ====================================================================================================

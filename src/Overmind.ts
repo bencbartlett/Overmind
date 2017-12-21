@@ -5,17 +5,18 @@ import {Overlord} from './Overlord';
 import {AbstractCreepWrapper} from './maps/map_roles';
 import {DirectiveWrapper} from './maps/map_directives';
 import {profile} from './lib/Profiler';
+import {GameCache} from './caching';
 
 @profile
 export default class Overmind implements IOvermind {
-	name: string;											// I AM THE SWARM
+	cache: ICache;
 	Colonies: { [roomName: string]: Colony };				// Global hash of all colony objects
 	colonyMap: { [roomName: string]: string };				// Global map of colony associations for possibly-null rooms
 	invisibleRooms: string[]; 								// Names of rooms across all colonies that are invisible
 	Overlords: { [roomName: string]: Overlord };			// Global hash of colony overlords
 
 	constructor() {
-		this.name = 'Overmind';
+		this.cache = new GameCache();
 		this.Colonies = {};
 		this.colonyMap = {};
 		this.invisibleRooms = [];
@@ -48,7 +49,7 @@ export default class Overmind implements IOvermind {
 		let colonyFlags = _.filter(Game.flags, flagCodes.territory.colony.filter);
 		for (let flag of colonyFlags) {
 			let colonyName = flag.name.split(':')[1];
-			if (colonyName) {
+			if (colonyName && protoColonies[colonyName]) {
 				let roomName = flag.pos.roomName;
 				this.colonyMap[roomName] = colonyName; // Create an association between room and colony name
 				let thisRoom = Game.rooms[roomName];
@@ -82,19 +83,23 @@ export default class Overmind implements IOvermind {
 		}
 	}
 
-	/* Wrap each creep in a role-contextualized wrapper */
-	private registerCreeps(): void {
+	private initCreeps(): void {
 		// Wrap all creeps
 		Game.icreeps = {};
 		for (let name in Game.creeps) {
 			Game.icreeps[name] = AbstractCreepWrapper(Game.creeps[name]);
 		}
+	}
+
+	/* Wrap each creep in a role-contextualized wrapper */
+	private registerCreeps(): void {
 		// Register creeps to their colonies
 		let creepsByColony = _.groupBy(Game.icreeps, creep => creep.memory.colony) as { [colName: string]: ICreep[] };
 		for (let colName in this.Colonies) {
 			let colony = this.Colonies[colName];
 			colony.creeps = creepsByColony[colName];
 			colony.creepsByRole = _.groupBy(creepsByColony[colName], creep => creep.memory.role);
+			colony.creepsByOverseer = _.groupBy(creepsByColony[colName], creep => creep.memory.overseer);
 		}
 	}
 
@@ -155,10 +160,24 @@ export default class Overmind implements IOvermind {
 		}
 	}
 
+	/* Global instantiation of Overmind object; run once every global refresh */
+	build(): void {
+		this.verifyMemory();
+		this.cache.build();
+		this.registerColonies();
+	}
+
+	/* Refresh the state of the Overmind; run at the beginning of every tick */
+	rebuild(): void {
+		this.initCreeps();
+		this.cache.rebuild();
+	}
+
 	/* Intialize everything in pre-init phase of main loop. Does not call colony.init(). */
 	init(): void {
 		// The order in which these functions are called is important
-		this.verifyMemory();			// 1: Check that memory is properly formatted
+		this.verifyMemory();
+		this.initCreeps();
 		this.registerColonies();		// 2: Initialize each colony. Build() is called in main.ts
 		this.spawnMoarOverlords();		// 3: Make an overlord for each colony.
 		this.registerCreeps();			// 4: Wrap all the creeps and assign to respective colonies

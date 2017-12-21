@@ -33,6 +33,7 @@ interface IColony {
 	flags: Flag[];
 	creeps: ICreep[];
 	creepsByRole: { [roleName: string]: ICreep[] };
+	creepsByOverseer: { [overseer: string]: ICreep[] };
 	hostiles: Creep[];
 	getCreepsByRole(roleName: string): ICreep[];
 	sources: Source[];

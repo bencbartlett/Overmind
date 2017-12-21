@@ -1,6 +1,5 @@
 /* The Overlord object handles most of the task assignment and directs the spawning operations for each Colony. */
 
-
 import {Colony} from './Colony';
 import {MineralSupplierSetup} from './roles/mineralSupplier';
 import {WorkerSetup} from './roles/worker';
@@ -223,6 +222,10 @@ export class Overlord implements IOverlord {
 		if (criticalBarriers.length > 0 && nonInvaderHostiles.length > 0 && !this.colony.incubator) {
 			this.room.controller!.activateSafeMode();
 		}
+	}
+
+	build(): void {
+
 	}
 
 	// Initialization ==================================================================================================
