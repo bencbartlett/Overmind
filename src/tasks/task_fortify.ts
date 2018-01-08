@@ -9,8 +9,8 @@ export const fortifyTaskName = 'fortify';
 export class TaskFortify extends Task {
 	target: fortifyTargetType;
 
-	constructor(target: fortifyTargetType) {
-		super(fortifyTaskName, target);
+	constructor(target: fortifyTargetType, options = {} as TaskOptions) {
+		super(fortifyTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'green';
 	}

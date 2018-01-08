@@ -9,8 +9,8 @@ export const upgradeTaskName = 'upgrade';
 export class TaskUpgrade extends Task {
 	target: upgradeTargetType;
 
-	constructor(target: upgradeTargetType) {
-		super(upgradeTaskName, target);
+	constructor(target: upgradeTargetType, options = {} as TaskOptions) {
+		super(upgradeTaskName, target, options);
 		// Settings
 		this.settings.targetRange = 3;
 		this.settings.moveColor = 'purple';
@@ -26,7 +26,7 @@ export class TaskUpgrade extends Task {
 	}
 
 	work() {
-		this.creep.sayLoop(['For', 'the swarm!', '(and GCL)']);
+		// this.creep.sayLoop(['For', 'the swarm!', '(and GCL)']);
 		return this.creep.upgradeController(this.target);
 	}
 }

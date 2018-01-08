@@ -8,8 +8,8 @@ export const getBoostedTaskName = 'getBoosted';
 export class TaskGetBoosted extends Task {
 	target: getBoostedTargetType;
 
-	constructor(target: getBoostedTargetType) {
-		super(getBoostedTaskName, target);
+	constructor(target: getBoostedTargetType, options = {} as TaskOptions) {
+		super(getBoostedTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'cyan';
 	}

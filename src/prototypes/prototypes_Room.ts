@@ -10,39 +10,40 @@ import {controllerSignature, myUsername} from '../settings/settings_user';
 // });
 
 // Colony association ==================================================================================================
-Object.defineProperty(Room.prototype, 'colonyFlag', {
-	get () {
-		return this.find(FIND_FLAGS, flagCodes.territory.colony.filter)[0];
-	},
-});
+// Object.defineProperty(Room.prototype, 'colonyFlag', {
+// 	get () {
+// 		return this.find(FIND_FLAGS, flagCodes.territory.colony.filter)[0];
+// 	},
+// });
 
 Object.defineProperty(Room.prototype, 'colony', { // link to colony object in the overmind
 	get () {
-		return Overmind.Colonies[this.memory.colony];
+		return Overmind.Colonies[Overmind.colonyMap[this.name]];
 	},
 });
-Room.prototype.setColony = function (colonyName: string) {
-	if (!Overmind.Colonies[colonyName]) {
-		console.log('Colony does not exist!');
-	} else {
-		if (this.colonyFlag) {
-			this.colonyFlag.remove();
-		}
-		if (this.controller) {
-			this.createFlag(this.controller.pos, this.name + ':' + colonyName, COLOR_PURPLE, COLOR_PURPLE);
-		} else {
-			this.createFlag(25, 25, this.name + ':' + colonyName, COLOR_PURPLE, COLOR_PURPLE);
-		}
-		console.log('Room ' + this.name + ' has been assigned to colony ' + colonyName + '.');
-	}
-};
 
-// Overlord ============================================================================================================
-Object.defineProperty(Room.prototype, 'overlord', {
-	get () {
-		return Overmind.Overlords[this.memory.colony];
-	},
-});
+// Room.prototype.setColony = function (colonyName: string) {
+// 	if (!Overmind.Colonies[colonyName]) {
+// 		console.log('Colony does not exist!');
+// 	} else {
+// 		if (this.colonyFlag) {
+// 			this.colonyFlag.remove();
+// 		}
+// 		if (this.controller) {
+// 			this.createFlag(this.controller.pos, this.name + ':' + colonyName, COLOR_PURPLE, COLOR_PURPLE);
+// 		} else {
+// 			this.createFlag(25, 25, this.name + ':' + colonyName, COLOR_PURPLE, COLOR_PURPLE);
+// 		}
+// 		console.log('Room ' + this.name + ' has been assigned to colony ' + colonyName + '.');
+// 	}
+// };
+
+// Overseer ============================================================================================================
+// Object.defineProperty(Room.prototype, 'overseer', {
+// 	get () {
+// 		return Overmind.Overseers[this.memory.colony];
+// 	},
+// });
 
 // Room properties =====================================================================================================
 
@@ -98,12 +99,12 @@ Object.defineProperty(Room.prototype, 'flags', {
 	},
 });
 
-// Flags assigned to this room
-Object.defineProperty(Room.prototype, 'assignedFlags', {
-	get () {
-		return _.filter(Game.flags, flag => flag.memory.assignedRoom && flag.memory.assignedRoom == this.name);
-	},
-});
+// // Flags assigned to this room
+// Object.defineProperty(Room.prototype, 'assignedFlags', {
+// 	get () {
+// 		return _.filter(Game.flags, flag => flag.memory.assignedRoom && flag.memory.assignedRoom == this.name);
+// 	},
+// });
 
 // Room properties: structures =========================================================================================
 
@@ -191,7 +192,8 @@ Object.defineProperties(Room.prototype, {
 		get() {
 			if (!this.structures['storageUnits']) {
 				let storageUnits = [].concat(this.structures[STRUCTURE_CONTAINER],
-											 this.structures[STRUCTURE_STORAGE]);
+											 this.structures[STRUCTURE_STORAGE],
+											 this.structures[STRUCTURE_TERMINAL]);
 				this.structures['storageUnits'] = _.compact(_.flatten(storageUnits));
 			}
 			return this.structures['storageUnits'] || [];
@@ -226,20 +228,20 @@ Object.defineProperties(Room.prototype, {
 		},
 	},
 
-	// All objects requiring a regular supply of energy
-	sinks: {
-		get() {
-			if (!this.structures['sinks']) {
-				let sinks = [].concat(this.structures[STRUCTURE_SPAWN],
-									  this.structures[STRUCTURE_EXTENSION],
-									  this.structures[STRUCTURE_LAB],
-									  this.structures[STRUCTURE_TOWER],
-									  this.structures[STRUCTURE_POWER_SPAWN]);
-				this.structures['sinks'] = _.compact(_.flatten(sinks));
-			}
-			return this.structures['sinks'] || [];
-		},
-	},
+	// // All objects requiring a regular supply of energy
+	// sinks: {
+	// 	get() {
+	// 		if (!this.structures['sinks']) {
+	// 			let sinks = [].concat(this.structures[STRUCTURE_SPAWN],
+	// 								  this.structures[STRUCTURE_EXTENSION],
+	// 								  this.structures[STRUCTURE_LAB],
+	// 								  this.structures[STRUCTURE_TOWER],
+	// 								  this.structures[STRUCTURE_POWER_SPAWN]);
+	// 			this.structures['sinks'] = _.compact(_.flatten(sinks));
+	// 		}
+	// 		return this.structures['sinks'] || [];
+	// 	},
+	// },
 
 	// All non-barrier repairable objects
 	repairables: {

@@ -14,30 +14,89 @@ export class Pathing {
 	// 	return serializedPath;
 	// }
 
-	static savePath(path: RoomPosition[]) {
+	static savePath(path: RoomPosition[]): void {
 		let savedPath: CachedPath = {
 			path  : path,
 			length: path.length,
 			tick  : Game.time
 		};
-		if (!Memory.pathing) {
-			Memory.pathing = {
-				paths: {}
-			};
-		}
-
 		let originName = _.first(path).name;
 		let destinationName = _.last(path).name;
-
 		if (!Memory.pathing.paths[originName]) {
 			Memory.pathing.paths[originName] = {};
 		}
 		Memory.pathing.paths[originName][destinationName] = savedPath;
 	}
 
+	/* Calculate and/or cache the length of the shortest path between two points.
+	 * Cache is probabilistically cleared in Memcheck */
+	static distance(arg1: RoomPosition, arg2: RoomPosition): number {
+		let pos1, pos2: RoomPosition;
+		if (arg1.name < arg2.name) { // alphabetize since path lengths are the same either direction
+			pos1 = arg1;
+			pos2 = arg2;
+		} else {
+			pos1 = arg2;
+			pos2 = arg1;
+		}
+		if (!Memory.pathing.distances[pos1.name]) {
+			Memory.pathing.distances[pos1.name] = {};
+		}
+		if (!Memory.pathing.distances[pos1.name][pos2.name]) {
+			Memory.pathing.distances[pos1.name][pos2.name] = this.findShortestDistance(pos1, pos2);
+		}
+		return Memory.pathing.distances[pos1.name][pos2.name];
+	}
+
+	static calculatePathWeight(startPos: RoomPosition, endPos: RoomPosition, options: TravelToOptions = {}): number {
+		_.defaults(options, {
+			range  : 1,
+			allowSK: true,
+		});
+		let ret = Traveler.findTravelPath(startPos, endPos, options);
+		if (ret.incomplete) {
+			return Infinity;
+		} else {
+			let weight = 0;
+			for (let pos of ret.path) {
+				if (_.find(pos.lookFor(LOOK_STRUCTURES), (s: Structure) => s.structureType == STRUCTURE_ROAD)) {
+					weight += 1;
+				} else {
+					let terrain = pos.lookFor(LOOK_TERRAIN)[0];
+					if (terrain == 'plain') {
+						weight += 2;
+					} else if (terrain == 'swamp') {
+						weight += 10;
+					}
+				}
+			}
+			return weight;
+		}
+	}
+
+	/* Calculates and/or caches the weighted distance for the most efficient path. Weight is sum of tile weights:
+	 * Road = 1, Plain = 2, Swamp = 10. Cached weights are cleared in Memcheck occasionally. */
+	static weightedDistance(arg1: RoomPosition, arg2: RoomPosition): number {
+		let pos1, pos2: RoomPosition;
+		if (arg1.name < arg2.name) { // alphabetize since path lengths are the same either direction
+			pos1 = arg1;
+			pos2 = arg2;
+		} else {
+			pos1 = arg2;
+			pos2 = arg1;
+		}
+		if (!Memory.pathing.weightedDistances[pos1.name]) {
+			Memory.pathing.weightedDistances[pos1.name] = {};
+		}
+		if (!Memory.pathing.weightedDistances[pos1.name][pos2.name]) {
+			Memory.pathing.weightedDistances[pos1.name][pos2.name] = this.calculatePathWeight(pos1, pos2);
+		}
+		return Memory.pathing.weightedDistances[pos1.name][pos2.name];
+	}
 
 	/* Returns the shortest path from start to end position, regardless of (passable) terrain */
-	static findShortestPath(startPos: RoomPosition, endPos: RoomPosition, options: TravelToOptions = {}) {
+	static findShortestPath(startPos: RoomPosition, endPos: RoomPosition,
+							options: TravelToOptions = {}): RoomPosition[] {
 		_.defaults(options, {
 			range  : 1,
 			offRoad: true,
@@ -47,8 +106,27 @@ export class Pathing {
 		return Traveler.findTravelPath(startPos, endPos, options).path;
 	}
 
+	/* Returns the length of the shortest path from start to end position regardless of passable terrain.
+	 * Returns Infinity if the path is incomplete. */
+	static findShortestDistance(startPos: RoomPosition, endPos: RoomPosition,
+								options: TravelToOptions = {}): number {
+		_.defaults(options, {
+			range  : 1,
+			offRoad: true,
+			allowSK: true,
+
+		});
+		let ret = Traveler.findTravelPath(startPos, endPos, options);
+		if (ret.incomplete) {
+			return Infinity;
+		} else {
+			return ret.path.length;
+		}
+	}
+
 	/* Find the shortest path, preferentially stepping on tiles with road routing flags */
-	static routeRoadPath(origin: RoomPosition, destination: RoomPosition, options: TravelToOptions = {}) {
+	static routeRoadPath(origin: RoomPosition, destination: RoomPosition,
+						 options: TravelToOptions = {}): RoomPosition[] {
 		_.defaults(options, {
 			range  : 1,
 			offRoad: true,
@@ -120,54 +198,54 @@ export class Pathing {
 }
 
 
-export var pathing = {
-	findPathLengthIncludingRoads: function (startPos: RoomPosition, endPos: RoomPosition) {
-		let ret = PathFinder.search(
-			startPos, [{pos: endPos, range: 2}],
-			[{
-				plainCost   : 2,
-				swampCost   : 10,
-				roomCallback: function (roomName: string) {
-					let room = Game.rooms[roomName];
-					if (!room) return;
-					let costs = new PathFinder.CostMatrix();
-
-					room.find(FIND_STRUCTURES).forEach(function (structure: any) {
-						if (structure.structureType === STRUCTURE_ROAD) {
-							// Favor roads over plain tiles
-							costs.set(structure.pos.x, structure.pos.y, 1);
-						} else if (structure.structureType !== STRUCTURE_CONTAINER &&
-								   (structure.structureType !== STRUCTURE_RAMPART || !structure.my)) {
-							// Can't walk through non-walkable buildings
-							costs.set(structure.pos.x, structure.pos.y, 0xff);
-						}
-					});
-					return costs;
-				},
-			}] as PathFinderOpts,
-		);
-		let path = ret.path;
-		return path.length + 1; // offset for range
-	},
-
-	cachedPathLength: function (arg1: RoomPosition, arg2: RoomPosition) {
-		let pos1, pos2: RoomPosition;
-		if (arg1.name < arg2.name) { // alphabetize since path lengths are the same either direction
-			pos1 = arg1;
-			pos2 = arg2;
-		} else {
-			pos1 = arg2;
-			pos2 = arg1;
-		}
-		if (!Memory.pathLengths) {
-			Memory.pathLengths = {};
-		}
-		if (!Memory.pathLengths[pos1.name]) {
-			Memory.pathLengths[pos1.name] = {};
-		}
-		if (!Memory.pathLengths[pos1.name][pos2.name]) {
-			Memory.pathLengths[pos1.name][pos2.name] = this.findPathLengthIncludingRoads(pos1, pos2);
-		}
-		return Memory.pathLengths[pos1.name][pos2.name];
-	},
-};
+// export var pathing = {
+// 	findPathLengthIncludingRoads: function (startPos: RoomPosition, endPos: RoomPosition) {
+// 		let ret = PathFinder.search(
+// 			startPos, [{pos: endPos, range: 2}],
+// 			[{
+// 				plainCost   : 2,
+// 				swampCost   : 10,
+// 				roomCallback: function (roomName: string) {
+// 					let room = Game.rooms[roomName];
+// 					if (!room) return;
+// 					let costs = new PathFinder.CostMatrix();
+//
+// 					room.find(FIND_STRUCTURES).forEach(function (structure: any) {
+// 						if (structure.structureType === STRUCTURE_ROAD) {
+// 							// Favor roads over plain tiles
+// 							costs.set(structure.pos.x, structure.pos.y, 1);
+// 						} else if (structure.structureType !== STRUCTURE_CONTAINER &&
+// 								   (structure.structureType !== STRUCTURE_RAMPART || !structure.my)) {
+// 							// Can't walk through non-walkable buildings
+// 							costs.set(structure.pos.x, structure.pos.y, 0xff);
+// 						}
+// 					});
+// 					return costs;
+// 				},
+// 			}] as PathFinderOpts,
+// 		);
+// 		let path = ret.path;
+// 		return path.length + 1; // offset for range
+// 	},
+//
+// 	cachedPathLength: function (arg1: RoomPosition, arg2: RoomPosition) {
+// 		let pos1, pos2: RoomPosition;
+// 		if (arg1.name < arg2.name) { // alphabetize since path lengths are the same either direction
+// 			pos1 = arg1;
+// 			pos2 = arg2;
+// 		} else {
+// 			pos1 = arg2;
+// 			pos2 = arg1;
+// 		}
+// 		if (!Memory.distances) {
+// 			Memory.distances = {};
+// 		}
+// 		if (!Memory.distances[pos1.name]) {
+// 			Memory.distances[pos1.name] = {};
+// 		}
+// 		if (!Memory.distances[pos1.name][pos2.name]) {
+// 			Memory.distances[pos1.name][pos2.name] = this.findPathLengthIncludingRoads(pos1, pos2);
+// 		}
+// 		return Memory.distances[pos1.name][pos2.name];
+// 	},
+// };

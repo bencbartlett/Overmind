@@ -1,12 +1,17 @@
 interface IHiveCluster {
-	colonyName: string;
+	// colonyName: string;
 	room: Room;
 	pos: RoomPosition;
 	componentName: string;
-	ref: string;
-	overlord: IOverlord;
+	name: string;
+	memory: any;
+	// overlords: { [name: string]: IOverlord };
+	overlord: IOverlord | undefined;
+
 	colony: IColony;
+
 	init(): void;
+
 	run(): void;
 }
 
@@ -18,7 +23,8 @@ interface IMiningSite extends IHiveCluster {
 	outputConstructionSite: ConstructionSite | undefined;
 	miningGroup: IMiningGroup | undefined;
 	predictedStore: number;
-	miners: ICreep[];
+	overlord: IOverlord;
+	// miners: Zerg[];
 }
 
 interface IMiningGroup extends IHiveCluster {
@@ -27,15 +33,16 @@ interface IMiningGroup extends IHiveCluster {
 	availableLinks: StructureLink[] | undefined;
 	miningSites: IMiningSite[];
 	parkingSpots: RoomPosition[];
-	objectiveGroup: IObjectiveGroup;
-	resourceRequests: IResourceRequestGroup;
+	// objectiveGroup: IObjectiveGroup;
+	transportRequests: ITransportRequestGroup;
 	data: {
-		numHaulers: number,
-		haulingPowerSupplied: number,
+		// numHaulers: number,
+		// haulingPowerSupplied: number,
 		haulingPowerNeeded: number,
 		linkPowerNeeded: number,
 		linkPowerAvailable: number,
 	};
+	overlord: IOverlord;
 }
 
 interface ICommandCenter extends IHiveCluster {
@@ -48,8 +55,27 @@ interface ICommandCenter extends IHiveCluster {
 	powerSpawn: StructurePowerSpawn | undefined;
 	nuker: StructureNuker | undefined;
 	observer: StructureObserver | undefined;
-	manager: ICreep | undefined;
+	// manager: Zerg | undefined;
 	idlePos: RoomPosition;
+	depositStructures: (StructureContainer |
+		StructureExtension |
+		StructureLab |
+		StructureLink |
+		StructureNuker |
+		StructurePowerSpawn |
+		StructureSpawn |
+		StructureStorage |
+		StructureTower |
+		StructureTerminal)[];
+	withdrawStructures: (StructureLink | StructureTerminal | StructureStorage)[];
+	settings: {
+		linksTransmitAt: number;
+		refillTowersBelow: number;
+		excessEnergyTransferSize: number;
+		managerSize: number;
+		unloadStorageBuffer: number;
+	};
+	// overlords: {commandCenter?: IOverlord};
 }
 
 interface IHatchery extends IHiveCluster {
@@ -59,17 +85,21 @@ interface IHatchery extends IHiveCluster {
 	extensions: StructureExtension[];
 	link: StructureLink | undefined;
 	battery: StructureContainer | undefined;
-	objectiveGroup: IObjectiveGroup;
-	spawnPriorities: { [role: string]: number };
-	queen: ICreep | undefined;
+	// objectiveGroup: IObjectiveGroup;
+	// spawnPriorities: { [role: string]: number };
+	// queen: Zerg | undefined;
 	idlePos: RoomPosition;
-	emergencyMode: boolean;
-	enqueue(protoCreep: protoCreep, priority?: number): void;
+
+	// emergencyMode: boolean;
+
+	enqueue(protoCreep: protoCreep, priority: number): void;
 }
 
 interface IUpgradeSite extends IHiveCluster {
 	controller: StructureController;
 	input: StructureLink | StructureContainer | null;
 	inputConstructionSite: ConstructionSite | null;
+	upgradePowerNeeded: number;
+	overlord: IOverlord;
 }
 

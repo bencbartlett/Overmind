@@ -1,37 +1,53 @@
 interface Creep {
 	memory: CreepMemory;
-	getBodyparts(partType: string): number;
-	colony: IColony;
-	lifetime: number;
+	// getBodyparts(partType: string): number;
+	// colony: IColony;
+	// lifetime: number;
 	travelTo(destination: RoomPosition | { pos: RoomPosition }, options?: any): number;
 }
 
 interface Flag {
-	assign(roomName: string): void;
-	unassign(): void;
-	assignedRoom: Room;
-	setMineral(mineralType: string): void;
-	IO: string;
-	code: string;
-	category: any;
-	type: any;
-	action: Function;
-	getRequiredCreepAmounts(role: string): number;
-	requiredCreepAmounts: { [role: string]: number };
-	needsAdditional(role: string): boolean;
-	requestCreepIfNeeded(role: ISetup, options: protoCreepOptions): void;
-	pathLengthToAssignedRoomStorage: number;
-	haulingNeeded: boolean;
+	colony: IColony;
+
+	recalculateColony(restrictDistance?: number): void;
+
+	// assign(roomName: string): void;
+	// unassign(): void;
+	// assignedRoom: Room;
+	// setMineral(mineralType: string): void;
+	// IO: string;
+	// code: string;
+	// category: any;
+	// type: any;
+	// action: Function;
+	// getRequiredCreepAmounts(role: string): number;
+	// requiredCreepAmounts: { [role: string]: number };
+	// needsAdditional(role: string): boolean;
+	// requestCreepIfNeeded(role: ISetup, options: protoCreepOptions): void;
+	// pathLengthToAssignedRoomStorage: number;
+	// haulingNeeded: boolean;
 }
 
-type Sink = StructureSpawn | StructureExtension | StructureTower;
-type StorageUnit = StructureContainer | StructureStorage;
+type Sink = StructureSpawn |
+	StructureExtension |
+	StructureLab |
+	StructurePowerSpawn |
+	StructureNuker |
+	StructureTower;
+type StorageUnit = StructureContainer | StructureTerminal | StructureStorage;
+
+// type StoreStructure = StructureTerminal|StructureContainer|StructureStorage;
+// interface EnergyStructure extends Structure {
+// 	pos: RoomPosition;
+// 	energy: number;
+// 	energyCapacity: number;
+// }
 
 interface Room {
-	colonyFlag: Flag;
+	// colonyFlag: Flag;
 	colony: IColony;
-	setColony(colonyName: string): void;
-	overlord: IOverlord;
+	// setColony(colonyName: string): void;
+	// overseer: IOverseer;
 	my: boolean;
 	reservedByMe: boolean;
 	signedByMe: boolean;
@@ -39,7 +55,7 @@ interface Room {
 	hostiles: Creep[];
 	hostileStructures: Structure[];
 	flags: Flag[];
-	assignedFlags: Flag[];
+	// assignedFlags: Flag[];
 	remainingConstructionProgress: number;
 	// Preprocessed structures
 	drops: { [resourceType: string]: Resource[] };
@@ -56,7 +72,7 @@ interface Room {
 	links: StructureLink[];
 	labs: StructureLab[];
 	sources: Source[];
-	sinks: Sink[];
+	// sinks: Sink[];
 	repairables: Structure[];
 	constructionSites: ConstructionSite[];
 	structureSites: ConstructionSite[];
@@ -65,32 +81,35 @@ interface Room {
 }
 
 interface RoomObject {
-	inSameRoomAs(otherObject: RoomObject): boolean;
+	// inSameRoomAs(otherObject: RoomObject | IDirective): boolean;
 	ref: string;
-	colony: IColony | undefined;
-	colonyName: string | undefined;
-	assignedCreepNames: { [role: string]: string };
-	getAssignedCreeps(role: string): ICreep[];
+	// colony: IColony | undefined;
+	// colonyName: string | undefined;
+	// assignedCreepNames: { [role: string]: string };
+	// getAssignedCreeps(role: string): Zerg[];
 
 	// getAssignedCreepAmounts(role: string): number;
 	// assignedCreepAmounts: { [role: string]: number };
 	targetedBy: string[];
+
+	isTargetFor(taskName?: string): ITask[];
 	// flagged: boolean;
 	// flaggedWith(filter: Function): boolean;
 	linked: boolean;
-	links: StructureLink[];
-	pathLengthToStorage: number;
-	pathLengthTo(otherObject: RoomObject): number;
+	nearbyLinks: StructureLink[];
+	// pathLengthToStorage: number;
+	// pathLengthTo(otherObject: RoomObject): number;
 	serialize(): protoRoomObject;
 }
 
 interface RoomPosition {
 	name: string;
-	flagged: boolean;
+	// flagged: boolean;
 	isEdge: boolean;
 	rangeToEdge: number;
 	getAdjacentPositions(): RoomPosition[];
-	flaggedWith(filter: Function): boolean;
+
+	// flaggedWith(filter: Function): boolean;
 	getMultiRoomRangeTo(pos: RoomPosition): number;
 	findClosestByLimitedRange<T>(objects: T[] | RoomPosition[], rangeLimit: number,
 								 opts?: { filter: any | string; }): T;
@@ -107,8 +126,8 @@ interface RoomVisual {
 
 interface StructureContainer {
 	energy: number;
-	refillThis: boolean;
-	miningFlag: Flag;
+	// refillThis: boolean;
+	// miningFlag: Flag;
 	miningSite: IMiningSite;
 	predictedEnergyOnArrival: number;
 	isFull: boolean;
@@ -116,6 +135,7 @@ interface StructureContainer {
 }
 
 interface StructureController {
+	needsReserving(reserveBuffer: number): boolean;
 	reservedByMe: boolean;
 	signedByMe: boolean;
 }
@@ -126,13 +146,13 @@ interface StructureExtension {
 }
 
 interface StructureLab {
-	assignedMineralType: string;
-	IO: string;
-	maxAmount: number;
+	// assignedMineralType: string;
+	// IO: string;
+	// maxAmount: number;
 }
 
 interface StructureLink {
-	refillThis: boolean;
+	// refillThis: boolean;
 	isFull: boolean;
 	isEmpty: boolean;
 }
@@ -147,7 +167,8 @@ interface StructurePowerSpawn {
 
 interface StructureStorage {
 	energy: number;
-	creepCanWithdrawEnergy(creep: ICreep): boolean;
+
+	creepCanWithdrawEnergy(creep: Zerg): boolean;
 	isFull: boolean;
 	isEmpty: boolean;
 }
@@ -155,7 +176,7 @@ interface StructureStorage {
 interface StructureSpawn {
 	cost(bodyArray: string[]): number;
 	// uptime: number;
-	statusMessage: string;
+	// statusMessage: string;
 	isFull: boolean;
 	isEmpty: boolean;
 }

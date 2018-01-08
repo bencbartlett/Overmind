@@ -8,8 +8,8 @@ export const claimTaskName = 'claim';
 export class TaskClaim extends Task {
 	target: claimTargetType;
 
-	constructor(target: claimTargetType) {
-		super(claimTaskName, target);
+	constructor(target: claimTargetType, options = {} as TaskOptions) {
+		super(claimTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'purple';
 	}
@@ -19,8 +19,7 @@ export class TaskClaim extends Task {
 	}
 
 	isValidTarget() {
-		var target = this.target;
-		return (target != null && (!target.room || !target.owner));
+		return (this.target != null && (!this.target.room || !this.target.owner));
 	}
 
 	work() {

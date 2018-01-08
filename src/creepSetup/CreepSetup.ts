@@ -1,25 +1,18 @@
 import {profile} from '../lib/Profiler/Profiler';
 
 export interface bodyOptions {
-	pattern: BodyPartConstant[];
-	sizeLimit: number;
-	prefix: BodyPartConstant[];
-	suffix: BodyPartConstant[];
-	proportionalPrefixSuffix: boolean;
-	ordered: boolean;
+	pattern: BodyPartConstant[];			// body pattern to be repeated
+	sizeLimit: number;						// maximum number of unit repetitions to make body
+	prefix: BodyPartConstant[];				// stuff at beginning of body
+	suffix: BodyPartConstant[];				// stuff at end of body
+	proportionalPrefixSuffix: boolean;		// (?) prefix/suffix scale with body size
+	ordered: boolean;						// (?) assemble as WORK WORK MOVE MOVE instead of WORK MOVE WORK MOVE
 }
 
 @profile
 export class CreepSetup {
-	role: string;								// Name of the role
-	body: {
-		pattern: BodyPartConstant[];				// body pattern to be repeated
-		sizeLimit: number;						// maximum number of unit repetitions to make body
-		prefix: BodyPartConstant[];				// stuff at beginning of body
-		suffix: BodyPartConstant[];				// stuff at end of body
-		proportionalPrefixSuffix: boolean;		// (?) prefix/suffix scale with body size
-		ordered: boolean;						// (?) assemble as WORK WORK MOVE MOVE instead of WORK MOVE WORK MOVE
-	};
+	role: string;
+	body: bodyOptions;
 
 	constructor(roleName: string, bodySettings = {}) {
 		this.role = roleName;
@@ -32,7 +25,7 @@ export class CreepSetup {
 			proportionalPrefixSuffix: false,
 			ordered                 : true,
 		});
-		this.body = bodySettings;
+		this.body = bodySettings as bodyOptions;
 	}
 
 	/* The cost of a single repetition of the basic bodyPattern for this role */

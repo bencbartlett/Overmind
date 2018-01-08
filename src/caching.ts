@@ -4,9 +4,10 @@ import {profile} from './lib/Profiler';
 
 @profile
 export class GameCache implements ICache {
-	assignments: { [ref: string]: { [roleName: string]: string[] } };
+	// assignments: { [ref: string]: { [roleName: string]: string[] } };
+	overlords: { [overlord: string]: { [roleName: string]: string[] } };
 	targets: { [ref: string]: string[] };
-	objectives: { [ref: string]: string[] };
+	// objectives: { [ref: string]: string[] };
 	structures: { [roomName: string]: { [structureType: string]: Structure[] } };
 	constructionSites: { [roomName: string]: ConstructionSite[] };
 	structureSites: { [roomName: string]: ConstructionSite[] };
@@ -14,9 +15,10 @@ export class GameCache implements ICache {
 	drops: { [roomName: string]: { [resourceType: string]: Resource[] } };
 
 	constructor() {
-		this.assignments = {};
+		// this.assignments = {};
+		this.overlords = {};
 		this.targets = {};
-		this.objectives = {};
+		// this.objectives = {};
 		this.structures = {};
 		this.constructionSites = {};
 		this.structureSites = {};
@@ -24,11 +26,19 @@ export class GameCache implements ICache {
 		this.drops = {};
 	}
 
+	// /* Generates a hash table for creeps assigned to each object: key: assignmentRef, val: (key: role, val: names[]) */
+	// private cacheAssignments() {
+	// 	let namesByAssignment = _.groupBy(_.keys(Game.creeps), name => Game.creeps[name].memory.assignmentRef);
+	// 	for (let ref in namesByAssignment) {
+	// 		this.assignments[ref] = _.groupBy(namesByAssignment[ref], name => Game.creeps[name].memory.role);
+	// 	}
+	// }
+
 	/* Generates a hash table for creeps assigned to each object: key: assignmentRef, val: (key: role, val: names[]) */
-	private cacheAssignments() {
-		let namesByAssignment = _.groupBy(_.keys(Game.creeps), name => Game.creeps[name].memory.assignmentRef);
-		for (let ref in namesByAssignment) {
-			this.assignments[ref] = _.groupBy(namesByAssignment[ref], name => Game.creeps[name].memory.role);
+	private cacheOverlords() {
+		let creepNamesByOverlord = _.groupBy(_.keys(Game.creeps), name => Game.creeps[name].memory.overlord);
+		for (let name in creepNamesByOverlord) {
+			this.overlords[name] = _.groupBy(creepNamesByOverlord[name], name => Game.creeps[name].memory.role);
 		}
 	}
 
@@ -41,10 +51,10 @@ export class GameCache implements ICache {
 		// }
 	}
 
-	/* Generates a hash table for objective handling: key: objective ID, val: handling creep names */
-	private cacheObjectives() {
-		this.objectives = _.groupBy(_.keys(Game.creeps), name => Game.creeps[name].memory.objectiveRef);
-	}
+	// /* Generates a hash table for objective handling: key: objective ID, val: handling creep names */
+	// private cacheObjectives() {
+	// 	this.objectives = _.groupBy(_.keys(Game.creeps), name => Game.creeps[name].memory.objectiveRef);
+	// }
 
 	/* Generates a nested hash table for structure lookup: {[roomName], {[structureType]: Structures[]} */
 	private cacheStructures() {
@@ -75,9 +85,10 @@ export class GameCache implements ICache {
 	}
 
 	rebuild() {
-		this.cacheAssignments();
+		// this.cacheAssignments();
+		this.cacheOverlords();
 		this.cacheTargets();
-		this.cacheObjectives();
+		// this.cacheObjectives();
 		this.cacheStructures();
 		this.cacheConstructionSites();
 		this.cacheDrops();

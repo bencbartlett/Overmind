@@ -9,8 +9,8 @@ export const getRenewedTaskName = 'getRenewed';
 export class TaskGetRenewed extends Task {
 	target: getRenewedTargetType;
 
-	constructor(target: getRenewedTargetType) {
-		super(getRenewedTaskName, target);
+	constructor(target: getRenewedTargetType, options = {} as TaskOptions) {
+		super(getRenewedTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'cyan';
 	}

@@ -9,8 +9,8 @@ export const signControllerTaskName = 'signController';
 export class TaskSignController extends Task {
 	target: signControllerTargetType;
 
-	constructor(target: signControllerTargetType) {
-		super(signControllerTaskName, target);
+	constructor(target: signControllerTargetType, options = {} as TaskOptions) {
+		super(signControllerTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'purple';
 	}

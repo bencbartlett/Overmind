@@ -3,7 +3,8 @@ declare namespace NodeJS {
 		deref(ref: string): RoomObject | null;
 		derefRoomPosition(protoPos: protoPos): RoomPosition;
 		Overmind: IOvermind;
-		flagCodes: { [category: string]: flagCat };
+
+		// flagCodes: { [category: string]: flagCat };
 		taskFromPrototask(protoTask: protoTask): ITask;
 		log: any;
 		Profiler: any;
@@ -19,14 +20,15 @@ interface Game {
 	// 	drops: { [roomName: string]: { [resourceType: string]: Resource[] } };
 	// 	constructionSites: { [roomName: string]: ConstructionSite[] };
 	// };
-	icreeps: { [name: string]: ICreep };
+	zerg: { [name: string]: Zerg };
 	directives: { [name: string]: IDirective };
 }
 
 interface ICache {
-	assignments: { [ref: string]: { [roleName: string]: string[] } };
+	// assignments: { [ref: string]: { [roleName: string]: string[] } };
+	overlords: { [overlord: string]: { [roleName: string]: string[] } };
 	targets: { [ref: string]: string[] };
-	objectives: { [ref: string]: string[] };
+	// objectives: { [ref: string]: string[] };
 	structures: { [roomName: string]: { [structureType: string]: Structure[] } };
 	constructionSites: { [roomName: string]: ConstructionSite[] };
 	structureSites: { [roomName: string]: ConstructionSite[] };
@@ -44,7 +46,8 @@ interface IOvermind {
 	Colonies: { [roomName: string]: IColony };
 	colonyMap: { [roomName: string]: string };
 	invisibleRooms: string[];
-	Overlords: { [roomName: string]: IOverlord };
+
+	// Overseers: { [roomName: string]: IOverseer };
 
 	build(): void;
 
@@ -54,6 +57,7 @@ interface IOvermind {
 }
 
 declare var Overmind: IOvermind;
-declare var flagCodes: { [category: string]: flagCat };
+
+// declare var flagCodes: { [category: string]: flagCat };
 
 declare function taskFromPrototask(protoTask: protoTask): ITask;

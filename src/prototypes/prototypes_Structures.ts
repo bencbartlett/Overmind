@@ -3,6 +3,7 @@
 // Container prototypes ================================================================================================
 
 import {controllerSignature, myUsername} from '../settings/settings_user';
+
 Object.defineProperty(StructureContainer.prototype, 'energy', {
 	get () {
 		return this.store[RESOURCE_ENERGY];
@@ -20,19 +21,19 @@ Object.defineProperty(StructureContainer.prototype, 'isEmpty', { // if this cont
 	},
 });
 
-Object.defineProperty(StructureContainer.prototype, 'refillThis', { // should the lab be loaded or unloaded?
-	get () {
-		return _.filter(this.pos.lookFor(LOOK_FLAGS), flagCodes.industry.refillThis.filter).length > 0;
-	},
-});
-
-Object.defineProperty(StructureContainer.prototype, 'miningFlag', {
-	get: function () {
-		return this.pos.findInRange(FIND_FLAGS, 2, {
-			filter: flagCodes.industry.remoteMine.filter,
-		})[0];
-	},
-});
+// Object.defineProperty(StructureContainer.prototype, 'refillThis', { // should the lab be loaded or unloaded?
+// 	get () {
+// 		return _.filter(this.pos.lookFor(LOOK_FLAGS), flagCodes.industry.refillThis.filter).length > 0;
+// 	},
+// });
+//
+// Object.defineProperty(StructureContainer.prototype, 'miningFlag', {
+// 	get: function () {
+// 		return this.pos.findInRange(FIND_FLAGS, 2, {
+// 			filter: flagCodes.industry.remoteMine.filter,
+// 		})[0];
+// 	},
+// });
 
 Object.defineProperty(StructureContainer.prototype, 'miningSite', {
 	get: function () {
@@ -55,6 +56,16 @@ Object.defineProperty(StructureContainer.prototype, 'predictedEnergyOnArrival', 
 });
 
 // Controller prototypes ===============================================================================================
+
+// Object.defineProperty(StructureController.prototype, 'reservedByMe', {
+// 	get: function () {
+// 		return this.reservation && this.reservation.username == myUsername;
+// 	},
+// });
+
+StructureController.prototype.needsReserving = function (reserveBuffer: number) {
+	return !this.reservation || (this.reservedByMe && this.reservation.ticksToEnd < reserveBuffer);
+};
 
 Object.defineProperty(StructureController.prototype, 'reservedByMe', {
 	get: function () {
@@ -84,38 +95,38 @@ Object.defineProperty(StructureExtension.prototype, 'isEmpty', { // if this cont
 
 // Lab prototypes ======================================================================================================
 
-Object.defineProperty(StructureLab.prototype, 'assignedMineralType', {
-	get () {
-		let flag = _.filter(this.pos.lookFor(LOOK_FLAGS), flagCodes.minerals.filter)[0] as Flag;
-		if (flag) {
-			let mineralType = flag.memory.mineralType;
-			if (mineralType) {
-				return mineralType;
-			}
-		}
-		return null;
-	},
-});
-
-Object.defineProperty(StructureLab.prototype, 'IO', { // should the lab be loaded or unloaded?
-	get () {
-		let flag = _.filter(this.pos.lookFor(LOOK_FLAGS), flagCodes.minerals.filter)[0] as Flag;
-		if (flag) {
-			return flag.memory.IO;
-		}
-		return null;
-	},
-});
-
-Object.defineProperty(StructureLab.prototype, 'maxAmount', { // should the lab be loaded or unloaded?
-	get () {
-		let flag = _.filter(this.pos.lookFor(LOOK_FLAGS), flagCodes.minerals.filter)[0] as Flag;
-		if (flag) {
-			return flag.memory.maxAmount || this.mineralCapacity;
-		}
-		return null;
-	},
-});
+// Object.defineProperty(StructureLab.prototype, 'assignedMineralType', {
+// 	get () {
+// 		let flag = _.filter(this.pos.lookFor(LOOK_FLAGS), flagCodes.minerals.filter)[0] as Flag;
+// 		if (flag) {
+// 			let mineralType = flag.memory.mineralType;
+// 			if (mineralType) {
+// 				return mineralType;
+// 			}
+// 		}
+// 		return null;
+// 	},
+// });
+//
+// Object.defineProperty(StructureLab.prototype, 'IO', { // should the lab be loaded or unloaded?
+// 	get () {
+// 		let flag = _.filter(this.pos.lookFor(LOOK_FLAGS), flagCodes.minerals.filter)[0] as Flag;
+// 		if (flag) {
+// 			return flag.memory.IO;
+// 		}
+// 		return null;
+// 	},
+// });
+//
+// Object.defineProperty(StructureLab.prototype, 'maxAmount', { // should the lab be loaded or unloaded?
+// 	get () {
+// 		let flag = _.filter(this.pos.lookFor(LOOK_FLAGS), flagCodes.minerals.filter)[0] as Flag;
+// 		if (flag) {
+// 			return flag.memory.maxAmount || this.mineralCapacity;
+// 		}
+// 		return null;
+// 	},
+// });
 
 // Object.defineProperty(StructureLab.prototype, 'isFull', { // if this container-like object is full
 // 	get () {
@@ -131,11 +142,11 @@ Object.defineProperty(StructureLab.prototype, 'maxAmount', { // should the lab b
 
 // Link prototypes =====================================================================================================
 
-Object.defineProperty(StructureLink.prototype, 'refillThis', { // should the lab be loaded or unloaded?
-	get () {
-		return _.filter(this.pos.lookFor(LOOK_FLAGS), flagCodes.industry.refillThis.filter).length > 0;
-	},
-});
+// Object.defineProperty(StructureLink.prototype, 'refillThis', { // should the lab be loaded or unloaded?
+// 	get () {
+// 		return _.filter(this.pos.lookFor(LOOK_FLAGS), flagCodes.industry.refillThis.filter).length > 0;
+// 	},
+// });
 
 Object.defineProperty(StructureLink.prototype, 'isFull', { // if this container-like object is full
 	get () {
@@ -192,26 +203,26 @@ Object.defineProperty(StructureLink.prototype, 'isEmpty', { // if this container
 // 	},
 // });
 
-Object.defineProperty(StructureSpawn.prototype, 'statusMessage', {
-	get () {
-		if (this.spawning) {
-			let spawning = this.spawning;
-			let percent = Math.round(100 * (spawning.needTime - spawning.remainingTime) / spawning.needTime);
-			let message = spawning.name;
-			let assignment = Game.icreeps[spawning.name].assignment;
-			if (assignment) {
-				message += ': ' + assignment.pos.roomName + ' (' + percent + '%)';
-			}
-			return message;
-		} else {
-			if (this.room.energyAvailable < this.room.energyCapacityAvailable) {
-				return 'reloading';
-			} else {
-				return 'idle';
-			}
-		}
-	},
-});
+// Object.defineProperty(StructureSpawn.prototype, 'statusMessage', {
+// 	get () {
+// 		if (this.spawning) {
+// 			let spawning = this.spawning;
+// 			let percent = Math.round(100 * (spawning.needTime - spawning.remainingTime) / spawning.needTime);
+// 			let message = spawning.name;
+// 			let assignment = Game.zerg[spawning.name].assignment;
+// 			if (assignment) {
+// 				message += ': ' + assignment.pos.roomName + ' (' + percent + '%)';
+// 			}
+// 			return message;
+// 		} else {
+// 			if (this.room.energyAvailable < this.room.energyCapacityAvailable) {
+// 				return 'reloading';
+// 			} else {
+// 				return 'idle';
+// 			}
+// 		}
+// 	},
+// });
 
 Object.defineProperty(StructureSpawn.prototype, 'isFull', { // if this container-like object is full
 	get () {
@@ -228,8 +239,8 @@ Object.defineProperty(StructureSpawn.prototype, 'isEmpty', { // if this containe
 
 // Storage prototypes ==================================================================================================
 
-StructureStorage.prototype.creepCanWithdrawEnergy = function (creep: ICreep): boolean {
-	let bufferAmount: number = this.room.colony.overlord.settings.storageBuffer[creep.roleName];
+StructureStorage.prototype.creepCanWithdrawEnergy = function (creep: Zerg): boolean {
+	let bufferAmount: number = this.room.colony.overseer.settings.storageBuffer[creep.roleName];
 	if (!bufferAmount) {
 		bufferAmount = 0;
 	}

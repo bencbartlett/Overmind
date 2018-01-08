@@ -9,11 +9,11 @@ import {dismantleTargetType, dismantleTaskName, TaskDismantle} from '../tasks/ta
 import {fortifyTargetType, fortifyTaskName, TaskFortify} from '../tasks/task_fortify';
 import {getBoostedTargetType, getBoostedTaskName, TaskGetBoosted} from '../tasks/task_getBoosted';
 import {getRenewedTargetType, getRenewedTaskName, TaskGetRenewed} from '../tasks/task_getRenewed';
-import {goToTaskName, TaskGoTo} from '../tasks/task_goTo';
+import {goToTargetType, goToTaskName, TaskGoTo} from '../tasks/task_goTo';
 import {goToRoomTargetType, goToRoomTaskName, TaskGoToRoom} from '../tasks/task_goToRoom';
 import {harvestTargetType, harvestTaskName, TaskHarvest} from '../tasks/task_harvest';
 import {healTargetType, healTaskName, TaskHeal} from '../tasks/task_heal';
-import {loadLabTargetType, loadLabTaskName, TaskLoadLab} from '../tasks/task_loadLab';
+// import {loadLabTargetType, loadLabTaskName, TaskLoadLab} from '../tasks/task_loadLab';
 import {meleeAttackTargetType, meleeAttackTaskName, TaskMeleeAttack} from '../tasks/task_meleeAttack';
 import {pickupTargetType, pickupTaskName, TaskPickup} from '../tasks/task_pickup';
 import {rangedAttackTargetType, rangedAttackTaskName, TaskRangedAttack} from '../tasks/task_rangedAttack';
@@ -21,12 +21,10 @@ import {TaskWithdraw, withdrawTargetType, withdrawTaskName} from '../tasks/task_
 import {repairTargetType, repairTaskName, TaskRepair} from '../tasks/task_repair';
 import {reserveTargetType, reserveTaskName, TaskReserve} from '../tasks/task_reserve';
 import {signControllerTargetType, signControllerTaskName, TaskSignController} from '../tasks/task_signController';
-import {supplyTargetType, supplyTaskName, TaskSupply} from '../tasks/task_supply';
 import {TaskTransfer, transferTargetType, transferTaskName} from '../tasks/task_transfer';
 import {TaskUpgrade, upgradeTargetType, upgradeTaskName} from '../tasks/task_upgrade';
 import {
-	TaskWithdrawResource,
-	withdrawResourceTargetType,
+	TaskWithdrawResource, withdrawResourceTargetType,
 	withdrawResourceTaskName
 } from '../tasks/task_withdrawResource';
 
@@ -62,10 +60,10 @@ export function taskInstantiator(protoTask: protoTask): Task {
 			task = new TaskGetRenewed(target as getRenewedTargetType);
 			break;
 		case goToTaskName:
-			task = new TaskGoTo(target as goToRoomTargetType);
+			task = new TaskGoTo(protoTask._target._pos as goToTargetType);
 			break;
 		case goToRoomTaskName:
-			task = new TaskGoToRoom(target as goToRoomTargetType);
+			task = new TaskGoToRoom(protoTask._target._pos.roomName as goToRoomTargetType);
 			break;
 		case harvestTaskName:
 			task = new TaskHarvest(target as harvestTargetType);
@@ -73,9 +71,9 @@ export function taskInstantiator(protoTask: protoTask): Task {
 		case healTaskName:
 			task = new TaskHeal(target as healTargetType);
 			break;
-		case loadLabTaskName:
-			task = new TaskLoadLab(target as loadLabTargetType);
-			break;
+		// case loadLabTaskName:
+		// 	task = new TaskLoadLab(target as loadLabTargetType);
+		// 	break;
 		case meleeAttackTaskName:
 			task = new TaskMeleeAttack(target as meleeAttackTargetType);
 			break;
@@ -97,9 +95,6 @@ export function taskInstantiator(protoTask: protoTask): Task {
 		case signControllerTaskName:
 			task = new TaskSignController(target as signControllerTargetType);
 			break;
-		case supplyTaskName:
-			task = new TaskSupply(target as supplyTargetType);
-			break;
 		case transferTaskName:
 			task = new TaskTransfer(target as transferTargetType);
 			break;
@@ -115,6 +110,7 @@ export function taskInstantiator(protoTask: protoTask): Task {
 	task!._target = protoTask._target;
 	task!._parent = protoTask._parent;
 	task!.settings = protoTask.settings;
+	task!.options = protoTask.options;
 	task!.data = protoTask.data;
 	// Return it
 	return task!;

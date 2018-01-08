@@ -8,16 +8,15 @@ export const meleeAttackTaskName = 'meleeAttack';
 export class TaskMeleeAttack extends Task {
 	target: meleeAttackTargetType;
 
-	constructor(target: meleeAttackTargetType) {
-		super(meleeAttackTaskName, target);
+	constructor(target: meleeAttackTargetType, options = {} as TaskOptions) {
+		super(meleeAttackTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'red';
 		this.settings.targetRange = 1;
 	}
 
 	isValidTask() {
-		return (this.creep.getActiveBodyparts(ATTACK) > 0 && (this.creep.room.hostiles.length > 0 ||
-															  this.creep.room.hostileStructures.length > 0));
+		return this.creep.getActiveBodyparts(ATTACK) > 0;
 	}
 
 	isValidTarget() {

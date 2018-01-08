@@ -3,15 +3,16 @@
 import {Task} from './Task';
 import {profile} from '../lib/Profiler';
 
-export type withdrawTargetType = StructureStorage | StructureContainer | StructureTerminal | StructureLink;
-export const withdrawTaskName = 'recharge';
+export type withdrawTargetType = StructureContainer | StructureExtension | StructureLab | StructureLink |
+	StructureNuker | StructurePowerSpawn | StructureSpawn | StructureStorage | StructureTerminal | StructureTower;
+export const withdrawTaskName = 'withdraw';
 
 @profile
 export class TaskWithdraw extends Task {
 	target: withdrawTargetType;
 
-	constructor(target: withdrawTargetType) {
-		super(withdrawTaskName, target);
+	constructor(target: withdrawTargetType, options = {} as TaskOptions) {
+		super(withdrawTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'blue';
 	}

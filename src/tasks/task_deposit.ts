@@ -1,25 +1,16 @@
 import {Task} from './Task';
 import {profile} from '../lib/Profiler';
 
-export type depositTargetType =
-	StructureContainer |
-	StructureExtension |
-	StructureLab |
-	StructureLink |
-	StructureNuker |
-	StructurePowerSpawn |
-	StructureSpawn |
-	StructureStorage |
-	StructureTower |
-	StructureTerminal;
+export type depositTargetType = StructureContainer | StructureExtension | StructureLab | StructureLink |
+	StructureNuker | StructurePowerSpawn | StructureSpawn | StructureStorage | StructureTerminal | StructureTower;
 export const depositTaskName = 'deposit';
 
 @profile
 export class TaskDeposit extends Task {
 	target: depositTargetType;
 
-	constructor(target: depositTargetType) {
-		super(depositTaskName, target);
+	constructor(target: depositTargetType, options = {} as TaskOptions) {
+		super(depositTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'blue';
 		this.data.quiet = true;

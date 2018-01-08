@@ -27,20 +27,25 @@ import './prototypes/prototypes_Room';
 import './prototypes/prototypes_Structures';
 // Global objects
 import OM from './Overmind';
-import {flagCodesMap} from './maps/map_flag_codes';
 // Preprocessing and postprocessing modules
-import {visuals} from './visuals/visuals';
 // Configuration, logging, and profiling
 import {log} from './lib/logger/log';
 import * as Profiler from 'lib/Profiler';
 import {taskInstantiator} from './maps/map_tasks';
 import {sandbox} from './sandbox/sandbox';
 import {USE_PROFILER} from './config/config';
+import {Memcheck} from './memcheck';
 
-// Main loop ===========================================================================================================
+
+// Global declarations
 global.log = log;
 global.Profiler = Profiler.init();
+global.taskFromPrototask = taskInstantiator;
 
+// Memory formatting
+Memcheck.format();
+
+// Main loop ===========================================================================================================
 
 export function loop(): void {
 
@@ -49,45 +54,26 @@ export function loop(): void {
 	}
 
 	// Memory management ===========================================================================================
-	// Clear memory for non-existent creeps
-	for (let name in Memory.creeps) {
-		if (Game.creeps[name] == undefined) {
-			delete Memory.creeps[name];
-		}
-	}
-	// Clear memory for non-existent flags
-	for (let name in Memory.flags) {
-		if (Game.flags[name] == undefined) {
-			delete Memory.flags[name];
-		}
-	}
+	Memcheck.clean();
 
 	// Setup =======================================================================================================
-	// Create global flagCodes reference (avoids circular imports)
-	global.flagCodes = flagCodesMap;
-	// Create a global task instantiator (avoids circular imports)
-	global.taskFromPrototask = taskInstantiator;
-	// Initialize Overmind object, wrapping all creeps in Game.icreeps and registering them to colonies
+	// Initialize Overmind object, wrapping all creeps in Game.zerg and registering them to colonies
 	global.Overmind = new OM();
-	Overmind.rebuild();
+	Overmind.build();
 
 	// Initialization ==============================================================================================
 	Overmind.init();
-	for (let name in Overmind.Colonies) {
-		Overmind.Colonies[name].init();
-	}
+	// for (let name in Overmind.Colonies) {
+	// 	Overmind.Colonies[name].init();
+	// }
 
 	// Animation ===================================================================================================
-	for (let name in Overmind.Colonies) {
-		Overmind.Colonies[name].run();
-	}
+	// for (let name in Overmind.Colonies) {
+	// 	Overmind.Colonies[name].run();
+	// }
 	Overmind.run();
 
 	// Postprocessing ==============================================================================================
-	// Draw visuals
-	if (Game.cpu.bucket > 7500) {
-		visuals.drawGlobalVisuals();
-	}
 
 	// Run test code
 	sandbox();

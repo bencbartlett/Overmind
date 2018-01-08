@@ -1,5 +1,6 @@
 import {log} from '../lib/logger/log';
-type targetType = RoomObject; // overwrite this variable in derived classes to specify more precise typing
+
+type targetType = { ref: string | null, pos: RoomPosition }; // overwrite this variable in derived classes to specify more precise typing
 
 /* An abstract class for encapsulating creep actions. This generalizes the concept of "do action X to thing Y until
  * condition Z is met" and saves a lot of convoluted and duplicated code in creep logic. A Task object contains
@@ -23,13 +24,13 @@ export abstract class Task implements ITask {
 		targetRange: number;		// How close you must be to the target to do the work() function
 		moveColor: string; 			// Color to draw movement lines with visuals (will be re-implemented later)
 	};
+	options: TaskOptions;
 	data: { 					// Data pertaining to a given instance of a task
-		quiet: boolean; 			// Don't complain about shit in the console
-		travelToOptions: any; 		// Movement options: for example, attackers can move through hostile rooms
+		quiet?: boolean; 			// Don't complain about shit in the console
 		resourceType?: string; 		// For non-energy resource movement tasks
 	};
 
-	constructor(taskName: string, target: targetType) {
+	constructor(taskName: string, target: targetType, options = {} as TaskOptions) {
 		// Parameters for the task
 		this.name = taskName;
 		this._creep = {
@@ -48,31 +49,29 @@ export abstract class Task implements ITask {
 			targetRange: 1,
 			moveColor  : '#fff',
 		};
-		this.data = {
-			quiet          : true,
+		_.defaults(options, {
+			blind          : false,
 			travelToOptions: {},
+		});
+		this.options = options;
+		this.data = {
+			quiet: true,
 		};
-		if (target) {
-			this.target = target;
-		} else {
-			// A task must have a target. If a task is reinstantiated without a target (for example, dismantling
-			// the target on the previous tick), it will be caught in the same tick by isValidTarget().
-		}
+		this.target = target as RoomObject;
 	}
 
 	// Getter/setter for task.creep
-	get creep(): ICreep { // Get task's own creep by its name
-		return Game.icreeps[this._creep.name];
+	get creep(): Zerg { // Get task's own creep by its name
+		return Game.zerg[this._creep.name];
 	}
 
-	set creep(creep: ICreep) {
+	set creep(creep: Zerg) {
 		this._creep.name = creep.name;
 	}
 
 	// Getter/setter for task.target
 	get target(): RoomObject | null {
-		let targ = deref(this._target.ref);
-		return (targ ? targ : null);
+		return deref(this._target.ref);
 	}
 
 	set target(target: RoomObject | null) {
@@ -125,25 +124,43 @@ export abstract class Task implements ITask {
 	// Test every tick to see if target is still valid
 	abstract isValidTarget(): boolean;
 
-	// isValid(): boolean {
-	// 	if (this.creep) {
-	// 		let validTask = this.isValidTask();
-	// 	}
-	// 	if (this.target) {
-	// 		let validTarg = this.isValidTarget();
-	// 	} else {
-	// 		if (this.creep.room)
-	// 			}
-	// }
+	isValid(): boolean {
+		let validTask = false;
+		if (this.creep) {
+			validTask = this.isValidTask();
+		}
+		let validTarget = false;
+		if (this.target) {
+			validTarget = this.isValidTarget();
+		} else if (this.options.blind && !Game.rooms[this.targetPos.roomName]) {
+			// If you can't see the target's room but you have blind enabled, then that's okay
+			validTarget = true;
+		}
+		// Return if the task is valid; if not, finalize/delete the task and return false
+		if (validTask && validTarget) {
+			return true;
+		} else {
+			// Switch to parent task if there is one
+			this.finish();
+			if (this.creep.task) {  // return whether parent task is valid if there is one
+				return this.creep.task.isValid();
+			} else {
+				return false;
+			}
+		}
+	}
 
 	move(): number {
 		// if (this.creep.pos.isEdge && this.creep.pos.roomName == this.targetPos.roomName) {
 		// 	return this.creep.move(this.creep.pos.getDirectionTo(this.targetPos));
 		// }
-		let options = Object.assign({},
-									this.data.travelToOptions,
-									{range: this.settings.targetRange});
-		return this.creep.travelTo(this.targetPos, options);
+		// let options = Object.assign({},
+		// 							this.options.travelToOptions,
+		// 							{range: this.settings.targetRange});
+		if (this.options.travelToOptions && !this.options.travelToOptions.range) {
+			this.options.travelToOptions.range = this.settings.targetRange;
+		}
+		return this.creep.travelTo(this.targetPos, this.options.travelToOptions);
 	}
 
 	// Execute this task each tick. Returns nothing unless work is done.

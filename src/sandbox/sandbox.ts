@@ -37,7 +37,7 @@ export function testVisualizer() {
 	Visualizer.drawLayout(planner.map, colonyName);
 
 	let path = Pathing.findShortestPath(deref('58f3c9cc2451c2bb06d9c64c')!.pos, deref('5873bcd711e3e4361b4d8452')!.pos);
-	Visualizer.drawRoad(path);
+	Visualizer.drawRoad(path!);
 }
 
 export function testGraph() {

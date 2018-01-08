@@ -8,19 +8,18 @@ export const repairTaskName = 'repair';
 export class TaskRepair extends Task {
 	target: repairTargetType;
 
-	constructor(target: repairTargetType) {
-		super(repairTaskName, target);
+	constructor(target: repairTargetType, options = {} as TaskOptions) {
+		super(repairTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'green';
 	}
 
 	isValidTask() {
-		return (this.creep.carry.energy > 0);
+		return this.creep.carry.energy > 0;
 	}
 
 	isValidTarget() {
-		var target = this.target;
-		return target.hits < target.hitsMax;
+		return this.target && this.target.hits < this.target.hitsMax;
 	}
 
 	work() {

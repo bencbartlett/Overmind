@@ -10,8 +10,8 @@ export const dismantleTaskName = 'dismantle';
 export class TaskDismantle extends Task {
 	target: dismantleTargetType;
 
-	constructor(target: dismantleTargetType) {
-		super(dismantleTaskName, target);
+	constructor(target: dismantleTargetType, options = {} as TaskOptions) {
+		super(dismantleTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'red';
 	}

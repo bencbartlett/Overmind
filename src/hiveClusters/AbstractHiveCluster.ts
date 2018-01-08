@@ -1,33 +1,46 @@
 /* Generalized class for a base component */
 
 export abstract class AbstractHiveCluster implements IHiveCluster {
-	colonyName: string; 	// Name of the colony
+	// colonyName: string; 	// Name of the colony
+	colony: IColony;
 	room: Room;				// Room of the baseComponent (not necessarily colony room)
 	pos: RoomPosition; 		// Position of the instantiation object
 	componentName: string; 	// Name of the component (e.g. "hatchery")
-	ref: string;			// Unique identifier for the instance of the hive cluster
+	name: string;			// Unique identifier for the instance of the hive cluster
+	memory: any;
+	// overlords: { [name: string]: IOverlord };
+	overlord: IOverlord | undefined;
 
 	constructor(colony: IColony, instantiationObject: RoomObject, componentName: string) {
 		// Set up hatchery, register colony and memory
-		this.colonyName = colony.name;
+		this.colony = colony;
+		// this.colonyName = colony.name;
 		this.room = instantiationObject.room!;
 		this.pos = instantiationObject.pos;
 		this.componentName = componentName;
-		this.ref = this.componentName + ":" + instantiationObject.ref;
+		this.name = this.componentName + ':' + instantiationObject.ref;
+		// this.overlords = {};
 	}
 
-	// Reference to the colony overlord - must be used as a getter to reference fully initialized overlord
-	get overlord(): IOverlord {
-		return Overmind.Overlords[this.colonyName];
+	protected initMemory(memory: any, memName: string, memoryToWrite = {}) {
+		if (!memory[memName]) {
+			memory[memName] = memoryToWrite;
+		}
 	}
 
-	// Reference to the colony object
-	get colony(): IColony {
-		return Overmind.Colonies[this.colonyName];
-	}
+	//
+	// // Reference to the colony overseer - must be used as a getter to reference fully initialized overseer
+	// get overlord(): IOverseer {
+	// 	return Overmind.Overseers[this.colonyName];
+	// }
 
-	// Logic for requesting creeps from the hatchery. These are called at the end of the init() phase
-	protected abstract registerCreepRequests(): void;
+	// // Reference to the colony object
+	// get colony(): IColony {
+	// 	return Overmind.Colonies[this.colonyName];
+	// }
+
+	// // Logic for requesting creeps from the hatchery. These are called at the end of the init() phase
+	// protected abstract registerCreepRequests(): void;
 
 	// Pre-run logic, such as registering objectives
 	abstract init(): void;

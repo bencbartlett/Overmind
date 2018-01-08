@@ -1,9 +1,13 @@
 interface IColony {
 	name: string;
+	colony: IColony;
 	memory: ColonyMemory;
 	roomNames: string[];
 	room: Room;
-	overlord: IOverlord;
+	rooms: Room[];
+	outposts: Room[];
+	pos: RoomPosition;
+	overseer: IOverseer;
 	controller: StructureController;
 	spawns: StructureSpawn[];
 	extensions: StructureExtension[];
@@ -26,45 +30,54 @@ interface IColony {
 	incubator: IColony | undefined;
 	isIncubating: boolean;
 	incubatingColonies: IColony[];
-	outposts: Room[];
-	rooms: Room[];
-	stage: 'larva' | 'pupa' | 'adult';
-	defcon: 0 | 1 | 2 | 3 | 4 | 5;
+	stage: number;
+	// stage: 'larva' | 'pupa' | 'adult';
+	// defcon: 0 | 1 | 2 | 3 | 4 | 5;
 	flags: Flag[];
-	creeps: ICreep[];
-	creepsByRole: { [roleName: string]: ICreep[] };
-	creepsByOverseer: { [overseer: string]: ICreep[] };
+	creeps: Zerg[];
+	creepsByRole: { [roleName: string]: Zerg[] };
+	// creepsByOverseer: { [overseer: string]: Zerg[] };
 	hostiles: Creep[];
-	getCreepsByRole(roleName: string): ICreep[];
+
+	overlords: { [name: string]: IOverlord };
+
+	getCreepsByRole(roleName: string): Zerg[];
+
 	sources: Source[];
-	data: {
-		energyPerTick: number,
-		numHaulers: number,
-		haulingPowerSupplied: number,
-		haulingPowerNeeded: number,
-	}
+	linkRequests: ILinkRequestGroup;
+	transportRequests: ITransportRequestGroup;				// Box for resource requests
+	// data: {
+	// 	energyPerTick: number,
+	// 	numHaulers: number,
+	// 	haulingPowerSupplied: number,
+	// 	haulingPowerNeeded: number,
+	// }
 	// registerIncubation(): void;
-	build(): void;
+	// build(): void;
 	init(): void;
+
 	// postInit(): void;
 	run(): void;
 }
 
-interface IOverlord {
+interface IOverseer {
 	name: string;
-	memory: OverlordMemory;
-	room: Room;
+	memory: OverseerMemory;
+	// room: Room;
 	colony: IColony;
 	directives: IDirective[];
-	settings: {
-		incubationWorkersToSend: number;
-		storageBuffer: { [role: string]: number };
-		unloadStorageBuffer: number;
-		maxAssistLifetimePercentage: number;
-	};
-	objectiveGroup: IObjectiveGroup;
-	resourceRequests: IResourceRequestGroup;
+	// directives: { [priority: number]: IDirective[] };
+	overlords: { [priority: number]: IOverlord[] };
+	// settings: {
+	// 	incubationWorkersToSend: number;
+	// 	storageBuffer: { [role: string]: number };
+	// 	unloadStorageBuffer: number;
+	// 	maxAssistLifetimePercentage: number;
+	// };
+	// objectiveGroup: IObjectiveGroup;
+	// transportRequests: ITransportRequestGroup;
 	init(): void;
-	assignTask(creep: ICreep): void;
+
+	// assignTask(creep: Zerg): void;
 	run(): void;
 }

@@ -1,13 +1,13 @@
 // Mining site class for grouping relevant components
 
-import {TaskWithdraw} from '../tasks/task_withdraw';
-import {depositTargetType, TaskDeposit} from '../tasks/task_deposit';
+import {depositTargetType} from '../tasks/task_deposit';
 import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {reserveCredits} from '../settings/settings_user';
 import {terminalSettings} from '../settings/settings_terminal';
-import {ManagerSetup} from '../roles/manager';
 import {log} from '../lib/logger/log';
 import {profile} from '../lib/Profiler';
+import {CommandCenterOverlord} from '../overlords/overlord_commandCenter';
+import {Priority} from '../config/priorities';
 
 @profile
 export class CommandCenter extends AbstractHiveCluster implements ICommandCenter {
@@ -20,17 +20,18 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 	powerSpawn: StructurePowerSpawn | undefined;			// Colony Power Spawn
 	nuker: StructureNuker | undefined;						// Colony nuker
 	observer: StructureObserver | undefined;				// Colony observer
-	private _manager: ICreep | undefined; 					// Cached manager
+	// private _manager: Zerg | undefined; 					// Cached manager
 	private _idlePos: RoomPosition;							// Cached idle position
 	private _depositStructures: depositTargetType[];		// Deposit to these
 	private _withdrawStructures: (
 		StructureLink |
 		StructureTerminal)[];								// Withdraw from these
-	private settings: {										// Settings for cluster operation
+	settings: {												// Settings for cluster operation
 		linksTransmitAt: number;
 		refillTowersBelow: number;  							// What value to refill towers at?
 		excessEnergyTransferSize: number; 						// How much excess energy does a terminal send at once
 		managerSize: number;									// Size of manager in body pattern repetition units
+		unloadStorageBuffer: number;							// Start sending energy to other rooms past this amount
 	};
 	private terminalSettings: {								// Settings for terminal operation
 		resourceAmounts: { [resourceType: string]: number };	// Desired equilibrium levels of resources
@@ -38,10 +39,12 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 		avgPrice: { [resourceType: string]: number };			// Effective market prices
 	};
 
+	// overlords: { commandCenter?: CommandCenterOverlord };
+
 	constructor(colony: IColony, storage: StructureStorage) {
 		super(colony, storage, 'commandCenter');
 		// Set up command center, register colony and memory
-		this.memory = colony.memory.commandCenter;
+		// this.memory = colony.memory.commandCenter;
 		this.storage = storage;
 		this.link = this.pos.findClosestByLimitedRange(colony.links, 2);
 		this.terminal = colony.terminal;
@@ -55,16 +58,21 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 			refillTowersBelow       : 200,
 			excessEnergyTransferSize: 100000,
 			managerSize             : 8,
+			unloadStorageBuffer     : 900000,
 		};
 		this.terminalSettings = terminalSettings;
+		this.initMemory(colony.memory, 'commandCenter');
+		if (this.storage.linked) {
+			this.overlord = new CommandCenterOverlord(this, Priority.High);
+		}
 	}
 
-	get manager(): ICreep | undefined {
-		if (!this._manager) {
-			this._manager = this.storage.getAssignedCreeps('manager')[0];
-		}
-		return this._manager;
-	}
+	// get manager(): Zerg | undefined {
+	// 	if (!this._manager) {
+	// 		this._manager = this.storage.getAssignedCreeps('manager')[0];
+	// 	}
+	// 	return this._manager;
+	// }
 
 	// Idle positions ==================================================================================================
 
@@ -180,7 +188,7 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 		for (let name in Game.rooms) {
 			let room = Game.rooms[name];
 			if (room.my && room.terminal &&
-				room.storage && room.storage.energy < room.overlord.settings.unloadStorageBuffer) {
+				room.storage && room.storage.energy < this.settings.unloadStorageBuffer) {
 				let cost = Game.market.calcTransactionCost(this.settings.excessEnergyTransferSize,
 														   this.room.name, room.name);
 				if (cost < minCost) {
@@ -199,13 +207,13 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 
 	// Prioritize depositing and withdrawing ===========================================================================
 
-	private get depositStructures() {
+	get depositStructures() {
 		if (!this._depositStructures) {
 			// Generate a prioritized list of what needs energy
 			let depositStructures: depositTargetType[] = [];
 			// If the link is empty and can send energy and something needs energy, fill it up
 			if (this.link && this.link.energy < 0.9 * this.link.energyCapacity && this.link.cooldown <= 1) {
-				if (this.overlord.resourceRequests.resourceIn.link.length > 0) { 	// If something wants energy
+				if (this.colony.linkRequests.receive.length > 0) { 	// If something wants energy
 					depositStructures.push(this.link);
 				}
 			}
@@ -241,13 +249,13 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 		return this._depositStructures;
 	}
 
-	private get withdrawStructures() {
+	get withdrawStructures() {
 		if (!this._withdrawStructures) {
 			// Generate a prioritized list of things that need energy withdrawn
 			let withdrawStructures: (StructureLink | StructureTerminal)[] = [];
 			// If the link has energy and nothing needs it, empty it
 			if (this.link && this.link.energy > 0) {
-				if (this.overlord.resourceRequests.resourceIn.link.length == 0) { // nothing needs link to send energy
+				if (this.colony.linkRequests.receive.length == 0) { // nothing needs link to send energy
 					withdrawStructures.push(this.link);
 				}
 			}
@@ -262,49 +270,49 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 
 	// Handle manager actions ==========================================================================================
 
-	/* Handle the manager of the command center. Because of the rapid load/unload cycle, the command center doesn't
-	 * use an objectiveGroup; instead it directly manipulates the manager's tasks. */
-	private handleManager(): void {
-		let manager = this.manager;
-		if (manager) {
-			// Handle manager deposit and withdrawal of energy
-			if (manager.carry.energy > 0) {
-				// If you have energy, deposit it to the best location
-				if (this.depositStructures.length > 0) {
-					manager.task = new TaskDeposit(this.depositStructures[0]); 	// deposit if something needs energy
-				} else {
-					if (this.storage.storeCapacity - _.sum(this.storage.store) >= manager.carry.energy) {
-						manager.task = new TaskDeposit(this.storage); 			// deposit to storage if you can
-					} else if (this.terminal &&
-							   this.terminal.storeCapacity - _.sum(this.terminal.store) >= manager.carry.energy) {
-						manager.task = new TaskDeposit(this.terminal); 			// else try to cram into terminal
-					}
-				}
-			} else {
-				// If you're out of energy and there are strucutres that need energy deposited or withdrawn, do so
-				if (this.depositStructures.length > 0 || this.withdrawStructures.length > 0) {
-					if (this.withdrawStructures.length > 0) { // if something actively needs withdrawing
-						manager.task = new TaskWithdraw(this.withdrawStructures[0]);
-					} else {
-						manager.task = new TaskWithdraw(this.storage);
-					}
-				}
-			}
-			// If you still have nothing to do, go to the idle point
-			if (manager.isIdle) {
-				manager.task = null;
-				if (!manager.pos.isEqualTo(this.idlePos)) {
-					manager.travelTo(this.idlePos);
-				}
-			}
-		}
-	}
+	// /* Handle the manager of the command center. Because of the rapid load/unload cycle, the command center doesn't
+	//  * use an objectiveGroup; instead it directly manipulates the manager's tasks. */
+	// private handleManager(): void {
+	// 	let manager = this.manager;
+	// 	if (manager) {
+	// 		// Handle manager deposit and withdrawal of energy
+	// 		if (manager.carry.energy > 0) {
+	// 			// If you have energy, deposit it to the best location
+	// 			if (this.depositStructures.length > 0) {
+	// 				manager.task = new TaskDeposit(this.depositStructures[0]); 	// deposit if something needs energy
+	// 			} else {
+	// 				if (this.storage.storeCapacity - _.sum(this.storage.store) >= manager.carry.energy) {
+	// 					manager.task = new TaskDeposit(this.storage); 			// deposit to storage if you can
+	// 				} else if (this.terminal &&
+	// 						   this.terminal.storeCapacity - _.sum(this.terminal.store) >= manager.carry.energy) {
+	// 					manager.task = new TaskDeposit(this.terminal); 			// else try to cram into terminal
+	// 				}
+	// 			}
+	// 		} else {
+	// 			// If you're out of energy and there are strucutres that need energy deposited or withdrawn, do so
+	// 			if (this.depositStructures.length > 0 || this.withdrawStructures.length > 0) {
+	// 				if (this.withdrawStructures.length > 0) { // if something actively needs withdrawing
+	// 					manager.task = new TaskWithdraw(this.withdrawStructures[0]);
+	// 				} else {
+	// 					manager.task = new TaskWithdraw(this.storage);
+	// 				}
+	// 			}
+	// 		}
+	// 		// If you still have nothing to do, go to the idle point
+	// 		if (manager.isIdle) {
+	// 			manager.task = null;
+	// 			if (!manager.pos.isEqualTo(this.idlePos)) {
+	// 				manager.travelTo(this.idlePos);
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	/* Register a link transfer request if the link is sufficiently full */
 	private registerLinkTransferRequests(): void {
 		if (this.link) {
 			if (this.link.energy > this.settings.linksTransmitAt) {
-				this.overlord.resourceRequests.registerWithdrawalRequest(this.link);
+				this.colony.transportRequests.requestWithdrawal(this.link);
 			}
 		}
 	}
@@ -327,7 +335,7 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 		// send excess energy if terminal and storage both have too much energy
 		if (this.terminal.energy > this.terminalSettings.resourceAmounts[RESOURCE_ENERGY]
 								   + this.settings.excessEnergyTransferSize &&
-			this.room.storage && this.room.storage.energy > this.room.overlord.settings.unloadStorageBuffer) {
+			this.room.storage && this.room.storage.energy > this.settings.unloadStorageBuffer) {
 			this.sendExtraEnergy();
 		}
 		// buy shortages only if there's enough energy; avoids excessive CPU usage
@@ -336,26 +344,26 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 		}
 	}
 
-	/* Request a manager if there isn't one already */
-	protected registerCreepRequests(): void {
-		if (!this.manager && this.colony.hatchery) {
-			this.colony.hatchery.enqueue(
-				new ManagerSetup().create(this.colony, {
-					assignment            : this.room.storage,
-					patternRepetitionLimit: this.settings.managerSize,
-				}));
-		}
-	}
+	// /* Request a manager if there isn't one already */
+	// protected registerCreepRequests(): void {
+	// 	if (!this.manager && this.colony.hatchery) {
+	// 		this.colony.hatchery.enqueue(
+	// 			new ManagerSetup().create(this.colony, {
+	// 				assignment            : this.room.storage,
+	// 				patternRepetitionLimit: this.settings.managerSize,
+	// 			}));
+	// 	}
+	// }
 
 	// Initialization and operation ====================================================================================
 
 	init(): void {
 		this.registerLinkTransferRequests();
-		this.registerCreepRequests();
+		// this.registerCreepRequests();
 	}
 
 	run(): void {
-		this.handleManager();
+		// this.handleManager();
 		this.handleTerminal();
 	}
 }

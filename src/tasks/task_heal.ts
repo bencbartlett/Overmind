@@ -8,8 +8,8 @@ export const healTaskName = 'heal';
 export class TaskHeal extends Task {
 	target: healTargetType;
 
-	constructor(target: healTargetType) {
-		super('heal', target);
+	constructor(target: healTargetType, options = {} as TaskOptions) {
+		super(healTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'green';
 		this.settings.targetRange = 3;

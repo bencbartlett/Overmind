@@ -8,8 +8,8 @@ export const buildTaskName = 'build';
 export class TaskBuild extends Task {
 	target: buildTargetType;
 
-	constructor(target: buildTargetType) {
-		super(buildTaskName, target);
+	constructor(target: buildTargetType, options = {} as TaskOptions) {
+		super(buildTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'yellow';
 	}
@@ -19,8 +19,7 @@ export class TaskBuild extends Task {
 	}
 
 	isValidTarget() {
-		let target = this.target;
-		return target && target.my && target.progress < target.progressTotal;
+		return this.target && this.target.my && this.target.progress < this.target.progressTotal;
 	}
 
 	work() {

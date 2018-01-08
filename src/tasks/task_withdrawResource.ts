@@ -10,8 +10,8 @@ export const withdrawResourceTaskName = 'withdrawResource';
 export class TaskWithdrawResource extends Task {
 	target: withdrawResourceTargetType;
 
-	constructor(target: withdrawResourceTargetType) {
-		super(withdrawResourceTaskName, target);
+	constructor(target: withdrawResourceTargetType, options = {} as TaskOptions) {
+		super(withdrawResourceTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'blue';
 		this.data.resourceType = undefined; // this needs to be overwritten on assignment

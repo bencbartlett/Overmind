@@ -8,8 +8,8 @@ export const harvestTaskName = 'harvest';
 export class TaskHarvest extends Task {
 	target: harvestTargetType;
 
-	constructor(target: harvestTargetType) {
-		super(harvestTaskName, target);
+	constructor(target: harvestTargetType, options = {} as TaskOptions) {
+		super(harvestTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'yellow';
 	}

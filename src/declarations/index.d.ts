@@ -60,14 +60,14 @@ interface RoomPlan {
 interface IDirective {
 	flag: Flag;
 	name: string;
-	colony: IColony | undefined;
-	colonyName: string | undefined;
-	assignedTo: string | undefined;
+	colony: IColony;
+	// assignedTo: string | undefined;
 	pos: RoomPosition;
 	room: Room | undefined;
+	// color: ColorConstant;
+	// secondaryColor: ColorConstant;
 	memory: FlagMemory;
-	color: ColorConstant;
-	secondaryColor: ColorConstant;
+	overlords: { [name: string]: IOverlord };
 
 	remove(): number;
 
@@ -75,7 +75,32 @@ interface IDirective {
 
 	setPosition(pos: RoomPosition): number;
 
-	getAssignedCreeps(roleName: string): ICreep[];
+	// getAssignedCreeps(roleName: string): Zerg[];
+
+	init(): void;
+
+	run(): void;
+}
+
+interface IOverlordInitializer {
+	name: string;
+	room: Room | undefined;
+	pos: RoomPosition;
+	colony: IColony;
+	memory: any;
+}
+
+interface IOverlord {
+	// directive: IDirective;
+	// flag: Flag;
+	// initializer: IOverlordInitializer;
+	name: string;
+	ref: string;
+	colony: IColony;
+	creeps: { [roleName: string]: Zerg[] };
+	memory: OverlordMemory;
+
+	spawn(): void;
 
 	init(): void;
 
@@ -104,6 +129,11 @@ interface protoPos {
 	roomName: string;
 }
 
+interface TaskOptions {
+	blind?: boolean;
+	travelToOptions: TravelToOptions;
+}
+
 interface protoTask {
 	name: string;
 	_creep: {
@@ -118,15 +148,15 @@ interface protoTask {
 		targetRange: number;
 		moveColor: string;
 	};
+	options: TaskOptions;
 	data: {
-		quiet: boolean;
-		travelToOptions: any;
+		quiet?: boolean;
 		resourceType?: string;
 	};
 }
 
 interface ITask extends protoTask {
-	creep: ICreep;
+	creep: Zerg;
 	target: RoomObject | null;
 	targetPos: RoomPosition;
 	parent: ITask | null;
@@ -136,6 +166,8 @@ interface ITask extends protoTask {
 	isValidTask(): boolean;
 
 	isValidTarget(): boolean;
+
+	isValid(): boolean;
 
 	move(): number;
 
@@ -147,24 +179,42 @@ interface ITask extends protoTask {
 }
 
 interface IResourceRequest {
-	target: StructureLink | StructureContainer;
+	target: EnergyRequestStructure | ResourceRequestStructure;
 	amount: number;
 	resourceType: string;
 }
 
-interface IResourceRequestGroup {
-	resourceIn: {
-		haul: IResourceRequest[],
-		link: IResourceRequest[]
-	};
-	resourceOut: {
-		haul: IResourceRequest[],
-		link: IResourceRequest[]
-	};
+interface IWithdrawRequest {
+	target: EnergyWithdrawStructure | ResourceWithdrawStructure;
+	amount: number;
+	resourceType: string;
+}
 
-	registerResourceRequest(target: StructureLink | StructureContainer, resourceType?: string): void;
+type EnergyRequestStructure = Sink | StructureContainer;
+type ResourceRequestStructure = StructureLab | StructureNuker | StructurePowerSpawn | StructureContainer;
+type EnergyWithdrawStructure = StructureContainer | StructureTerminal | StructureLink;
+type ResourceWithdrawStructure = StructureLab | StructureContainer | StructureTerminal;
 
-	registerWithdrawalRequest(target: StructureLink | StructureContainer, resourceType?: string): void;
+interface ITransportRequestGroup {
+	supply: IResourceRequest[];
+	withdraw: IWithdrawRequest[];
+
+	requestEnergy(target: EnergyRequestStructure, amount?: number): void
+
+	requestResource(target: ResourceRequestStructure, resourceType: ResourceConstant, amount?: number): void
+
+	requestWithdrawal(target: EnergyWithdrawStructure, amount?: number): void
+
+	requestResourceWithdrawal(target: ResourceWithdrawStructure, resourceType: ResourceConstant, amount?: number): void
+}
+
+interface ILinkRequestGroup {
+	receive: StructureLink[];
+	transmit: StructureLink[];
+
+	requestReceive(link: StructureLink): void;
+
+	requestTransmit(link: StructureLink): void
 }
 
 interface IObjective {
@@ -176,11 +226,11 @@ interface IObjective {
 	maxCreeps: number;
 	assignableToRoles: string[];
 
-	assignableTo(creep: ICreep): boolean;
+	assignableTo(creep: Zerg): boolean;
 
 	getTask(): ITask;
 
-	assignTo(creep: ICreep): void;
+	assignTo(creep: Zerg): void;
 }
 
 interface IObjectiveGroup {
@@ -190,7 +240,7 @@ interface IObjectiveGroup {
 
 	registerObjectives(...args: IObjective[][]): void;
 
-	assignTask(creep: ICreep): void;
+	assignTask(creep: Zerg): void;
 }
 
 

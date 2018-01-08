@@ -1,16 +1,19 @@
 import {Task} from './Task';
 import {profile} from '../lib/Profiler';
 
-export type goToTargetType = RoomObject;
+export type goToTargetType = { pos: RoomPosition } | RoomPosition;
 export const goToTaskName = 'goTo';
 
-// TODO: this should accept a room position as well
 @profile
 export class TaskGoTo extends Task {
-	target: goToTargetType;
+	target: null;
 
-	constructor(target: goToTargetType) {
-		super(goToTaskName, target);
+	constructor(target: goToTargetType, options = {} as TaskOptions) {
+		if (target instanceof RoomPosition) {
+			super(goToTaskName, {ref: null, pos: target}, options);
+		} else {
+			super(goToTaskName, {ref: null, pos: target.pos}, options);
+		}
 		// Settings
 		this.settings.targetRange = 1;
 	}
@@ -20,10 +23,30 @@ export class TaskGoTo extends Task {
 	}
 
 	isValidTarget() {
-		return this.target != null;
+		return true;
+	}
+
+	isValid(): boolean {
+		let validTask = false;
+		if (this.creep) {
+			validTask = this.isValidTask();
+		}
+		// Return if the task is valid; if not, finalize/delete the task and return false
+		if (validTask) {
+			return true;
+		} else {
+			// Switch to parent task if there is one
+			this.finish();
+			if (this.creep.task) {  // return whether parent task is valid if there is one
+				return this.creep.task.isValid();
+			} else {
+				return false;
+			}
+		}
 	}
 
 	work() {
 		return OK;
 	}
+
 }

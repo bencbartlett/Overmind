@@ -8,8 +8,8 @@ export const pickupTaskName = 'pickup';
 export class TaskPickup extends Task {
 	target: pickupTargetType;
 
-	constructor(target: pickupTargetType) {
-		super('pickup', target);
+	constructor(target: pickupTargetType, options = {} as TaskOptions) {
+		super('pickup', target, options);
 		// Settings
 		this.settings.moveColor = 'yellow';
 	}
@@ -23,10 +23,10 @@ export class TaskPickup extends Task {
 	}
 
 	work() {
-		let res = this.creep.pickup(this.target);
-		if (!this.target) { // if the target is gone, we're done and clear the task
-			this.creep.task = null;
-		}
-		return res;
+		// let res =
+		// if (!this.target) { // if the target is gone, we're done and clear the task
+		// 	this.finish();
+		// }
+		return this.creep.pickup(this.target);
 	}
 }

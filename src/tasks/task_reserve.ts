@@ -9,8 +9,8 @@ export const reserveTaskName = 'colony';
 export class TaskReserve extends Task {
 	target: reserveTargetType;
 
-	constructor(target: reserveTargetType) {
-		super(reserveTaskName, target);
+	constructor(target: reserveTargetType, options = {} as TaskOptions) {
+		super(reserveTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'purple';
 	}

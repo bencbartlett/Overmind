@@ -12,21 +12,19 @@ export const attackTaskName = 'attack';
 export class TaskAttack extends Task {
 	target: attackTargetType;
 
-	constructor(target: attackTargetType) {
-		super(attackTaskName, target);
+	constructor(target: attackTargetType, options = {} as TaskOptions) {
+		super(attackTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'red';
 		this.settings.targetRange = 3;
 	}
 
 	isValidTask() {
-		return ((this.creep.getActiveBodyparts(ATTACK) > 0 || this.creep.getActiveBodyparts(RANGED_ATTACK) > 0) &&
-				(this.creep.room.hostiles.length > 0 || this.creep.room.hostileStructures.length > 0));
+		return (this.creep.getActiveBodyparts(ATTACK) > 0 || this.creep.getActiveBodyparts(RANGED_ATTACK) > 0);
 	}
 
 	isValidTarget(): boolean {
-		var target = this.target;
-		return (target && target.hits > 0);
+		return this.target && this.target.hits > 0;
 	}
 
 	work() {

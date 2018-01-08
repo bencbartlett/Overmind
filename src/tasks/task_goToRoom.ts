@@ -2,28 +2,44 @@ import {Task} from './Task';
 import {profile} from '../lib/Profiler';
 
 
-export type goToRoomTargetType = RoomObject;
+export type goToRoomTargetType = string;
 export const goToRoomTaskName = 'goToRoom';
 
 @profile
 export class TaskGoToRoom extends Task {
-	target: goToRoomTargetType;
+	target: null;
 
-	constructor(target: goToRoomTargetType) {
-		super(goToRoomTaskName, target);
+	constructor(roomName: goToRoomTargetType, options = {} as TaskOptions) {
+		super(goToRoomTaskName, {ref: null, pos: new RoomPosition(25, 25, roomName)}, options);
 		// Settings
-		this.settings.targetRange = 1; // Target is almost always controller flag, so range of 2 is acceptable
+		this.settings.targetRange = 24; // Target is almost always controller flag, so range of 2 is acceptable
 	}
 
 	isValidTask() {
-		let creep = this.creep;
-		return !(creep.pos.roomName == this.target.pos.roomName &&
-				 creep.pos.x > 0 && creep.pos.x < 49 &&
-				 creep.pos.y > 0 && creep.pos.y < 49);
+		return !this.creep.pos.inRangeTo(this.targetPos, this.settings.targetRange);
 	}
 
 	isValidTarget() {
 		return true;
+	}
+
+	isValid(): boolean {
+		let validTask = false;
+		if (this.creep) {
+			validTask = this.isValidTask();
+		}
+		// Return if the task is valid; if not, finalize/delete the task and return false
+		if (validTask) {
+			return true;
+		} else {
+			// Switch to parent task if there is one
+			this.finish();
+			if (this.creep.task) {  // return whether parent task is valid if there is one
+				return this.creep.task.isValid();
+			} else {
+				return false;
+			}
+		}
 	}
 
 	work() {
