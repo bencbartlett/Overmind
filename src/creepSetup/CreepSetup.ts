@@ -106,36 +106,4 @@ export class CreepSetup {
 		// return it
 		return body;
 	}
-
-	// /* Generate (but not spawn) the largest creep possible, returns the creep as an object */
-	// generateLargestCreep(overseer: IOverseer): protoCreep {
-	// 	let creepBody: BodyPartConstant[];
-	// 	if (colony.incubator) { // if you're being incubated, build as big a creep as you want
-	// 		creepBody = this.generateBody(overseer.colony.incubator.room.energyCapacityAvailable);
-	// 	} else { // otherwise limit yourself to actual energy constraints
-	// 		creepBody = this.generateBody(overseer.colony.room.energyCapacityAvailable);
-	// 	}
-	// 	let protoCreep: protoCreep = { 									// object to add to spawner queue
-	// 		body  : creepBody, 											// body array
-	// 		name  : this.name, 											// name of the creep - gets modified by hatchery
-	// 		memory: { 													// memory to initialize with
-	// 			colony  : overseer.colony.name, 							// name of the colony the creep is assigned to
-	// 			overseer: overseer.name,							// name of the overseer running this creep
-	// 			role    : this.name,								// role of the creep
-	// 			task    : null, 									// task the creep is performing
-	// 			data    : { 										// rarely-changed data about the creep
-	// 				origin   : '',										// where it was spawned, filled in at spawn time
-	// 				replaceAt: 0, 										// when it should be replaced
-	// 				boosts   : {} 										// keeps track of what boosts creep has/needs
-	// 			},
-	// 			roleData: {}, 										// empty role data object
-	// 		},
-	// 	};
-	// 	return protoCreep;
-	// }
-	//
-	// /* Create a protocreep, modify it as needed, and return the object. Does not spawn the creep. */
-	// create(overseer: IOverseer): protoCreep {
-	// 	return this.generateLargestCreep(overseer);
-	// }
 }

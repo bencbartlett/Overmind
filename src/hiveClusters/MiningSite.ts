@@ -50,14 +50,6 @@ export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 		this.overlord = new MiningOverlord(this, priority);
 	}
 
-	// get miners(): Zerg[] {
-	// 	// Wrapper for miner reference that avoids the Game.zerg requires Colonies requires Game.zerg issue
-	// 	if (!this._miners) {
-	// 		this._miners = this.source.getAssignedCreeps('miner');
-	// 	}
-	// 	return this._miners;
-	// }
-
 	/* Predicted store amount given the number of haulers currently targeting the container */
 	get predictedStore(): number {
 		// This should really only be used on container sites
@@ -123,22 +115,9 @@ export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 		}
 	}
 
-	// /* Request another miner if there is insufficient mining power at this site */
-	// protected registerCreepRequests(): void {
-	// 	let miningPowerAssigned = _.sum(_.map(this.miners, creep => creep.getActiveBodyparts(WORK)));
-	// 	if (miningPowerAssigned < this.miningPowerNeeded && this.colony.hatchery) {
-	// 		this.colony.hatchery.enqueue(
-	// 			new MinerSetup().create(this.colony, {
-	// 				assignment            : this.source,
-	// 				patternRepetitionLimit: 3,
-	// 			}));
-	// 	}
-	// }
-
 	/* Initialization tasks: register resource transfer reqeusts, register creep requests */
 	init(): void {
 		this.registerOutputRequests();
-		// this.registerCreepRequests();
 	}
 
 	/* Run tasks: make output construciton site if needed; build and maintain the output structure */
@@ -155,20 +134,5 @@ export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 			// TODO:
 			// this.room.createConstructionSite(minerInPosition.pos, STRUCTURE_CONTAINER);
 		}
-
-		// // Build and maintain the output
-		// for (let miner of this.miners) {
-		// 	if (miner.carry.energy > 0) {
-		// 		if (this.output) {
-		// 			if (this.output.hits < this.output.hitsMax) {
-		// 				miner.task = new TaskRepair(this.output);
-		// 			}
-		// 		} else {
-		// 			if (this.outputConstructionSite) {
-		// 				miner.task = new TaskBuild(this.outputConstructionSite);
-		// 			}
-		// 		}
-		// 	}
-		// }
 	}
 }

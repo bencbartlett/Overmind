@@ -61,11 +61,8 @@ interface IDirective {
 	flag: Flag;
 	name: string;
 	colony: IColony;
-	// assignedTo: string | undefined;
 	pos: RoomPosition;
 	room: Room | undefined;
-	// color: ColorConstant;
-	// secondaryColor: ColorConstant;
 	memory: FlagMemory;
 	overlords: { [name: string]: IOverlord };
 
@@ -75,8 +72,6 @@ interface IDirective {
 
 	setPosition(pos: RoomPosition): number;
 
-	// getAssignedCreeps(roleName: string): Zerg[];
-
 	init(): void;
 
 	run(): void;
@@ -84,7 +79,6 @@ interface IDirective {
 
 interface IOverlordInitializer {
 	name: string;
-	// ref: string;
 	room: Room | undefined;
 	pos: RoomPosition;
 	colony: IColony;
@@ -92,9 +86,6 @@ interface IOverlordInitializer {
 }
 
 interface IOverlord {
-	// directive: IDirective;
-	// flag: Flag;
-	// initializer: IOverlordInitializer;
 	name: string;
 	ref: string;
 	colony: IColony;

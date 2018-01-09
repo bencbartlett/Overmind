@@ -2,48 +2,12 @@
 // import {visuals} from '../visuals/visuals';
 import {controllerSignature, myUsername} from '../settings/settings_user';
 
-// Room brain ==========================================================================================================
-// Object.defineProperty(Room.prototype, 'brain', {
-//     get () {
-//         return Overmind.RoomBrains[this.name];
-//     },
-// });
-
-// Colony association ==================================================================================================
-// Object.defineProperty(Room.prototype, 'colonyFlag', {
-// 	get () {
-// 		return this.find(FIND_FLAGS, flagCodes.territory.colony.filter)[0];
-// 	},
-// });
 
 Object.defineProperty(Room.prototype, 'colony', { // link to colony object in the overmind
 	get () {
 		return Overmind.Colonies[Overmind.colonyMap[this.name]];
 	},
 });
-
-// Room.prototype.setColony = function (colonyName: string) {
-// 	if (!Overmind.Colonies[colonyName]) {
-// 		console.log('Colony does not exist!');
-// 	} else {
-// 		if (this.colonyFlag) {
-// 			this.colonyFlag.remove();
-// 		}
-// 		if (this.controller) {
-// 			this.createFlag(this.controller.pos, this.name + ':' + colonyName, COLOR_PURPLE, COLOR_PURPLE);
-// 		} else {
-// 			this.createFlag(25, 25, this.name + ':' + colonyName, COLOR_PURPLE, COLOR_PURPLE);
-// 		}
-// 		console.log('Room ' + this.name + ' has been assigned to colony ' + colonyName + '.');
-// 	}
-// };
-
-// Overseer ============================================================================================================
-// Object.defineProperty(Room.prototype, 'overseer', {
-// 	get () {
-// 		return Overmind.Overseers[this.memory.colony];
-// 	},
-// });
 
 // Room properties =====================================================================================================
 
@@ -99,30 +63,7 @@ Object.defineProperty(Room.prototype, 'flags', {
 	},
 });
 
-// // Flags assigned to this room
-// Object.defineProperty(Room.prototype, 'assignedFlags', {
-// 	get () {
-// 		return _.filter(Game.flags, flag => flag.memory.assignedRoom && flag.memory.assignedRoom == this.name);
-// 	},
-// });
-
 // Room properties: structures =========================================================================================
-
-// Total remaining construction progress in this room
-Object.defineProperty(Room.prototype, 'remainingConstructionProgress', { // flags assigned to this room
-	get () {
-		let constructionSites = this.find(FIND_MY_CONSTRUCTION_SITES) as ConstructionSite[];
-		if (constructionSites.length == 0) {
-			return 0;
-		} else {
-			return _.sum(_.map(constructionSites, site => site.progressTotal - site.progress));
-		}
-
-	},
-});
-
-
-// Cached room properties ==============================================================================================
 
 Object.defineProperty(Room.prototype, 'structures', {
 	get () {

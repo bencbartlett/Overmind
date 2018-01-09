@@ -1,23 +1,4 @@
-// interface ISetup {
-// 	name: string;
-// 	body: {
-// 		pattern: BodyPartConstant[];
-// 		prefix: BodyPartConstant[];
-// 		suffix: BodyPartConstant[];
-// 		proportionalPrefixSuffix: boolean;
-// 		ordered: boolean;
-// 	}
-// 	bodyPatternCost: number;
-// 	bodyCost(bodyArray: string[]): number;
-// 	generateBody(availableEnergy: number, maxRepeats?: number): string[];
-// 	generateLargestCreep(colony: IColony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep;
-// 	onCreate(pCreep: protoCreep): protoCreep;
-// 	create(colony: IColony, {assignment, patternRepetitionLimit}: protoCreepOptions): protoCreep;
-// }
-
-
 interface Zerg {
-	// Creep properties
 	creep: Creep;
 	body: BodyPartDefinition[];
 	carry: StoreDefinition;
@@ -34,27 +15,48 @@ interface Zerg {
 	room: Room;
 	spawning: boolean;
 	ticksToLive: number;
-	// Custom properties
-	// settings: any;
 	task: ITask | null;
-	// Creep methods
+	hasValidTask: boolean;
+	isIdle: boolean;
+	colony: IColony;
+	lifetime: number;
+	moveSpeed: number;
+	overlord: IOverlord | null;
+
 	attack(target: Creep | Structure): number;
+
 	attackController(controller: StructureController): number;
+
 	build(target: ConstructionSite): number;
+
 	claimController(controller: StructureController): number;
+
 	dismantle(target: Structure): number;
+
 	drop(resourceType: string, amount?: number): number;
+
 	getActiveBodyparts(type: string): number;
+
 	harvest(source: Source | Mineral): number;
+
 	move(direction: number): number;
+
 	pickup(resource: Resource): number;
+
 	rangedAttack(target: Creep | Structure): number;
+
 	rangedMassAttack(): number;
+
 	repair(target: Structure): number;
+
 	reserveController(controller: StructureController): number;
+
 	say(message: string, pub?: boolean): number;
+
 	signController(target: StructureController, text: string): number;
+
 	suicide(): number;
+
 	upgradeController(controller: StructureController): number;
 
 	heal(target: Creep | Zerg): number;
@@ -64,36 +66,12 @@ interface Zerg {
 	transfer(target: Creep | Zerg | Structure, resourceType: string, amount?: number): number;
 
 	withdraw(target: Creep | Zerg | Structure, resourceType: string, amount?: number): number;
-	travelTo(destination: RoomPosition | { pos: RoomPosition }, options?: any): number;
-	// Custom creep methods
-	initializeTask(protoTask: protoTask): ITask | null;
-	hasValidTask: boolean;
-	isIdle: boolean;
-	// assertValidTask(): void;
-	// assign(task: ITask): void;
-	colony: IColony;
-	lifetime: number;
-	moveSpeed: number;
 
-	// needsReplacing: boolean;
+	travelTo(destination: RoomPosition | { pos: RoomPosition }, options?: any): number;
+
+	initializeTask(protoTask: protoTask): ITask | null;
+
 	getBodyparts(partType: string): number;
 
-	overlord: IOverlord | null;
-	// sayLoop(sayList: string[]): void;
-	// repairNearbyDamagedRoad(): number;
-	// assignment: RoomObject | null;
-	// assignmentPos: RoomPosition | null;
-	// inAssignedRoom: boolean;
-	// inSameRoomAs(other: RoomObject | IDirective): boolean;
-	// assignedRoomFlag: Flag | null;
-	// objective: IObjective | null;
-	// requestTask(): void;
-	recharge(): void;
-
-	// newTask(): void;
-	// executeTask(): number | void;
-	// renewIfNeeded(): void;
-	// onRun(): void;
-	// init(): void;
 	run(): number | void;
 }

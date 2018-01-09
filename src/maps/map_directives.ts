@@ -5,12 +5,6 @@ import {DirectiveIncubate} from '../directives/directive_incubate';
 import {DirectiveOutpost} from '../directives/directive_outpost';
 import {DirectiveBootstrap} from '../directives/directive_bootstrap';
 
-// function codeToString(colorCode: ColorCode): string {
-// 	return `${colorCode.color}/${colorCode.secondaryColor}`;
-// }
-//
-
-
 export function DirectiveWrapper(flag: Flag): IDirective | undefined {
 	switch (flag.color) {
 		// Colony directives =================================================
@@ -62,49 +56,6 @@ export function DirectiveWrapper(flag: Flag): IDirective | undefined {
 	}
 }
 
-//
-// function MilitaryDirectiveWrapper(flag: Flag): IDirective | undefined {
-// 	switch (flag.secondaryColor) {
-// 		case COLOR_BLUE:
-// 			return new DirectiveGuard(flag);
-// 	}
-// }
-//
-//
-// var military = {
-// 	// COLOR_RED: DirectiveAttack,
-// 	COLOR_BLUE: DirectiveGuard,
-// };
-//
-// var operation = {
-// 	COLOR_ORANGE: DirectiveBootstrap,
-// };
-//
-// var energy = {
-// 	// COLOR_YELLOW: DirectiveMine,
-// };
-//
-// var routing = {
-// 	// COLOR_WHITE: DirectiveRoute,
-// };
-//
-// var hiveClusters = {};
-//
-// var colony = {
-// 	// COLOR_PURPLE: DirectiveColony,
-// 	COLOR_BLUE : DirectiveOutpost,
-// 	COLOR_WHITE: DirectiveIncubate,
-// };
-//
-//
-// export var FlagMap = {
-// 	COLOR_RED   : military,
-// 	COLOR_ORANGE: operation,
-// 	COLOR_YELLOW: energy,
-// 	COLOR_WHITE : routing,
-// 	COLOR_GREY  : hiveClusters,
-// 	COLOR_PURPLE: colony,
-// };
 
 
 

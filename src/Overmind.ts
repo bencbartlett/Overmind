@@ -4,7 +4,7 @@ import {Colony} from './Colony';
 import {DirectiveWrapper} from './maps/map_directives';
 import {profile} from './lib/Profiler';
 import {GameCache} from './caching';
-import {WrappedCreep} from './roles/Abstract';
+import {WrappedCreep} from './Zerg';
 import {DirectiveOutpost} from './directives/directive_outpost';
 
 
@@ -14,14 +14,12 @@ export default class Overmind implements IOvermind {
 	Colonies: { [roomName: string]: Colony };				// Global hash of all colony objects
 	colonyMap: { [roomName: string]: string };				// Global map of colony associations for possibly-null rooms
 	invisibleRooms: string[]; 								// Names of rooms across all colonies that are invisible
-	// Overseers: { [roomName: string]: Overseer };			// Global hash of colony overlords
 
 	constructor() {
 		this.cache = new GameCache();
 		this.Colonies = {};
 		this.colonyMap = {};
 		this.invisibleRooms = [];
-		// this.Overseers = {};
 	}
 
 
@@ -35,10 +33,6 @@ export default class Overmind implements IOvermind {
 			if (Game.rooms[name].my) { 			// Will add a new colony for each owned room
 				colonyOutposts[name] = [];		// Make a blank list of outposts
 				this.colonyMap[name] = name;	// Register capitols to their own colonies
-				// Place a new colony flag for any owned rooms on the controller if there isn't one
-				// if (Game.rooms[name].controller!.pos.lookFor(LOOK_FLAGS).length == 0) {
-				// 	DirectiveColony.create(Game.rooms[name].controller!.pos);
-				// }
 			}
 		}
 
@@ -66,22 +60,8 @@ export default class Overmind implements IOvermind {
 
 		// Initialize the Colonies and give each one an Overseer
 		for (let colonyName in colonyOutposts) {
-			// let colonyFlag = Game.rooms[name].controller!.pos.lookFor(LOOK_FLAGS);
 			this.Colonies[colonyName] = new Colony(colonyName, colonyOutposts[colonyName]);
-			// this.Overseers[colonyName] = new Overseer(this.Colonies[colonyName]);
-			// for (let outpostName of colonyOutposts[colonyName]) {
-			// 	this.Colonies[outpostName] = this.Colonies[colonyName];
-			// }
 		}
-
-		// // Register colony incubations
-		// let incubationFlags = _.filter(Game.flags, flagCodes.territory.claimAndIncubate.filter);
-		// for (let flag of incubationFlags) {
-		// 	// flag.colony.registerIncubation();
-		// 	if (!flag.room) {
-		// 		this.invisibleRooms.push(flag.pos.roomName);
-		// 	}
-		// }
 	}
 
 	private wrapCreeps(): void {
@@ -104,12 +84,6 @@ export default class Overmind implements IOvermind {
 		}
 	}
 
-	// private buildColonies(): void {
-	// 	for (let name in this.Colonies) {
-	// 		this.Colonies[name].build();
-	// 	}
-	// }
-
 	/* Wrap each flag in a color coded wrapper */
 	private registerDirectives(): void {
 		// Create a directive for each flag (registration takes place on construction)
@@ -120,12 +94,6 @@ export default class Overmind implements IOvermind {
 				Game.directives[name] = directive;
 			}
 		}
-		// // Register directives to their respective overlords
-		// let assignedDirectives = _.groupBy(Game.directives, d => d.assignedTo);
-		// for (let name in this.Overseers) {
-		// 	let overseer = this.Overseers[name];
-		// 	overseer.directives = assignedDirectives[name];
-		// }
 	}
 
 	// private handleObservers(): void {
@@ -163,7 +131,6 @@ export default class Overmind implements IOvermind {
 
 	/* Global instantiation of Overmind object; run once every global refresh */
 	build(): void {
-		// this.verifyMemory();
 		this.cache.build();
 		this.wrapCreeps();
 		this.registerColonies();
@@ -194,7 +161,6 @@ export default class Overmind implements IOvermind {
 		for (let colonyName in this.Colonies) {
 			this.Colonies[colonyName].run();
 		}
-		// this.handleObservers();
 	}
 };
 

@@ -1,41 +1,31 @@
 declare namespace NodeJS {
 	interface Global {
-		deref(ref: string): RoomObject | null;
-		derefRoomPosition(protoPos: protoPos): RoomPosition;
 		Overmind: IOvermind;
-
-		// flagCodes: { [category: string]: flagCat };
-		taskFromPrototask(protoTask: protoTask): ITask;
 		log: any;
 		Profiler: any;
+
+		deref(ref: string): RoomObject | null;
+
+		derefRoomPosition(protoPos: protoPos): RoomPosition;
+
+		taskFromPrototask(protoTask: protoTask): ITask;
 	}
 }
 
 interface Game {
-	// cache: {
-	// 	assignments: { [ref: string]: { [roleName: string]: string[] } };
-	// 	targets: { [ref: string]: string[] };
-	// 	objectives: { [ref: string]: string[] };
-	// 	structures: { [roomName: string]: { [structureType: string]: Structure[] } };
-	// 	drops: { [roomName: string]: { [resourceType: string]: Resource[] } };
-	// 	constructionSites: { [roomName: string]: ConstructionSite[] };
-	// };
 	zerg: { [name: string]: Zerg };
 	directives: { [name: string]: IDirective };
 }
 
 interface ICache {
-	// assignments: { [ref: string]: { [roleName: string]: string[] } };
 	overlords: { [overlord: string]: { [roleName: string]: string[] } };
 	targets: { [ref: string]: string[] };
-	// objectives: { [ref: string]: string[] };
 	structures: { [roomName: string]: { [structureType: string]: Structure[] } };
 	constructionSites: { [roomName: string]: ConstructionSite[] };
 	structureSites: { [roomName: string]: ConstructionSite[] };
 	roadSites: { [roomName: string]: ConstructionSite[] };
 	drops: { [roomName: string]: { [resourceType: string]: Resource[] } };
 
-	// constructionSites: { [roomName: string]: ConstructionSite[] };
 	build(): void;
 
 	rebuild(): void;
@@ -47,17 +37,15 @@ interface IOvermind {
 	colonyMap: { [roomName: string]: string };
 	invisibleRooms: string[];
 
-	// Overseers: { [roomName: string]: IOverseer };
-
 	build(): void;
 
 	rebuild(): void;
+
 	init(): void;
+
 	run(): void;
 }
 
 declare var Overmind: IOvermind;
-
-// declare var flagCodes: { [category: string]: flagCat };
 
 declare function taskFromPrototask(protoTask: protoTask): ITask;

@@ -9,22 +9,18 @@ interface Memory {
 	empire: any;
 	pathing: PathingMemory;
 	log: LoggerMemory;
-
 	pathLengths: any;
 }
 
 interface CreepMemory {
 	role: string;
 	task: protoTask | null;
-	// assignmentRef: string | null;
-	// assignmentPos: protoPos | null;
-	// objectiveRef: string | null;
 	overlord: string | null;
 	colony: string;
 	data: {
 		origin: string;
 		replaceAt: number;
-		boosts: { [resourceName: string]: boolean }; // resourceName: if boost has been performed
+		boosts: { [resourceName: string]: boolean };
 		moveSpeed?: number;
 		supplyRequests?: IResourceRequest[];
 	};
@@ -53,20 +49,11 @@ interface PathingMemory {
 }
 
 interface FlagMemory {
-	// amount?: number;
-	// alwaysUp?: boolean;
-	// maxSize?: number;
-	// mineralType?: MineralConstant;
-	// IO?: string;
-	// maxAmount?: number;
-	// assignedRoom?: string;
-	// role?: string;
 	colony?: string;
 	overlords: { [overlordName: string]: OverlordMemory };
 }
 
 interface RoomMemory {
-	// colony: string;
 	avoid?: number;
 }
 
@@ -91,7 +78,6 @@ interface OverlordMemory {
 }
 
 interface HatcheryMemory {
-	// productionQueue: { [priority: number]: protoCreep[] };
 	idlePos: protoPos;
 }
 

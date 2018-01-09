@@ -15,11 +15,11 @@ export class DirectiveOutpost extends Directive {
 	}
 
 	init(): void {
-		// this.initOverlords();
+
 	}
 
 	run(): void {
-		// this.runOverlords();
+
 	}
 }
 

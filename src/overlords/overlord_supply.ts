@@ -4,11 +4,6 @@ import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskDeposit} from '../tasks/task_deposit';
 import {blankPriorityQueue, Priority} from '../config/priorities';
 
-// enum Priorities {
-// 	High   = 1,
-// 	Normal = 2,
-// 	Low    = 3,
-// }
 
 // TODO: make this work with more resources than just energy
 export class SupplierOverlord extends Overlord {

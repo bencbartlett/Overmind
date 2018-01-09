@@ -60,24 +60,15 @@ export class Colony implements IColony {
 	isIncubating: boolean;								// If the colony is incubating
 	incubatingColonies: IColony[];						// List of colonies that this colony is incubating
 	stage: number;										// The stage of the colony "lifecycle"
-	// defcon: 0 | 1 | 2 | 3 | 4 | 5; 						// Defensive alert level of the colony
 	// Creeps and subsets
 	creeps: Zerg[];										// Creeps bound to the colony
 	creepsByRole: { [roleName: string]: Zerg[] };		// Creeps hashed by their role name
-	// creepsByOverseer: { [overseer: string]: Zerg[] };	// Creeps hashed by their overseer
 	hostiles: Creep[];									// Hostile creeps in one of the rooms
 	// Resource requests
 	linkRequests: LinkRequestGroup;
-	transportRequests: TransportRequestGroup;				// Box for resource requests
+	transportRequests: TransportRequestGroup;			// Box for resource requests
 	// Overlords
 	overlords: { [name: string]: IOverlord };
-	// Colony data
-	// data: {												// Data about the colony, calculated once per tick
-	// 	energyPerTick: number, 								// Energy income of the colony per tick
-	// 	numHaulers: number,									// Number of haulers in the colony
-	// 	haulingPowerSupplied: number,						// Amount of hauling supplied in units of CARRY parts
-	// 	haulingPowerNeeded: number,							// Amount of hauling needed in units of CARRY parts
-	// };
 
 	constructor(roomName: string, outposts: string[]) {
 		// Name the colony
@@ -123,15 +114,6 @@ export class Colony implements IColony {
 		} else {
 			this.stage = ColonyStage.Larva;
 		}
-		// if (this.storage && this.controller.level == 8) {
-		// 	this.stage = 'adult';
-		// } else if (this.storage && this.controller.level < 8) {
-		// 	this.stage = 'pupa';
-		// } else {
-		// 	this.stage = 'larva';
-		// }
-		// // Defcon starts at 0, is updated in initDefconLevel()
-		// this.defcon = 0;
 		// Register physical objects across all rooms in the colony
 		this.sources = _.flatten(_.map(this.rooms, room => room.sources));
 		// Register enemies across colony rooms
@@ -146,8 +128,6 @@ export class Colony implements IColony {
 		this.transportRequests = new TransportRequestGroup();
 		// Build the hive clusters
 		this.buildHiveClusters();
-		// Calculate relevant data about the colony
-		// this.populateColonyData();
 		// Register colony overlords
 		this.spawnMoarOverlords();
 	}
@@ -203,41 +183,6 @@ export class Colony implements IColony {
 		this.overlords.work = new WorkerOverlord(this, Priority.Normal);
 	}
 
-
-	// private populateColonyData(): void { // TODO: cache this
-	// 	// Calculate hauling power needed (in units of number of CARRY parts)
-	// 	let energyPerTickValue = _.sum(_.map(this.miningSites, site => site.energyPerTick));
-	// 	let haulingPower = 0;
-	// 	for (let siteID in this.miningSites) {
-	// 		let site = this.miningSites[siteID];
-	// 		if (site.output instanceof StructureContainer) { // only count container mining sites
-	// 			if (this.storage) {
-	// 				haulingPower += site.energyPerTick * (2 * Pathing.weightedDistance(this.storage.pos, site.pos));
-	// 			} else { // if there is no storage, use controller position as a benchmark
-	// 				haulingPower += site.energyPerTick * (2 * Pathing.weightedDistance(this.controller.pos, site.pos));
-	// 			}
-	// 		}
-	// 	}
-	// 	let haulingPowerNeededValue = haulingPower / CARRY_CAPACITY;
-	//
-	// 	// Hauling power currently supplied (in carry parts)
-	// 	let haulingPowerSuppliedValue = _.sum(_.map(this.getCreepsByRole('hauler'),
-	// 												creep => creep.getActiveBodyparts(CARRY)));
-	// 	let numHaulersValue = this.getCreepsByRole('hauler').length;
-	// 	this.data = {
-	// 		energyPerTick       : energyPerTickValue,
-	// 		haulingPowerNeeded  : haulingPowerNeededValue,
-	// 		haulingPowerSupplied: haulingPowerSuppliedValue,
-	// 		numHaulers          : numHaulersValue,
-	// 	};
-	// }
-
-	// private initDefconLevel(): void {
-	// 	if (this.hostiles.length > 0) {
-	// 		this.defcon = 1;
-	// 	}
-	// }
-
 	/* Run the tower logic for each tower in the colony */
 	private handleTowers(): void {
 		for (let tower of this.towers) {
@@ -248,17 +193,6 @@ export class Colony implements IColony {
 	/* Examine the link resource requests and try to efficiently (but greedily) match links that need energy in and
 	 * out, then send the remaining resourceOut link requests to the command center link */
 	private handleLinks(): void {
-		// // Generate lists of links that want to send or receive energy
-		// let transmitRequests = this.transportRequests.withdraw.link;
-		// let receiveRequests = this.transportRequests.supply.link;
-		// if (this.miningGroups) {
-		// 	transmitRequests = transmitRequests.concat(
-		// 		_.flatten(_.map(this.miningGroups, group => group.transportRequests.withdraw.link)));
-		// 	receiveRequests = receiveRequests.concat(
-		// 		_.flatten(_.map(this.miningGroups, group => group.transportRequests.supply.link)));
-		// }
-		// let transmitLinks = _.map(transmitRequests, request => request.target) as StructureLink[];
-		// let receiveLinks = _.map(receiveRequests, request => request.target) as StructureLink[];
 		// For each receiving link, greedily get energy from the closest transmitting link - at most 9 operations
 		for (let receiveLink of this.linkRequests.receive) {
 			let closestTransmitLink = receiveLink.pos.findClosestByRange(this.linkRequests.transmit);
@@ -279,10 +213,6 @@ export class Colony implements IColony {
 		}
 	}
 
-	// get overseer(): IOverseer {
-	// 	return Overmind.Overseers[this.name];
-	// }
-
 	getCreepsByRole(roleName: string): Zerg[] {
 		return this.creepsByRole[roleName] || [];
 	}
@@ -292,7 +222,7 @@ export class Colony implements IColony {
 	// 		}
 
 	init(): void {
-		// 1: Initialize each colony component
+		// Initialize each colony component
 		if (this.hatchery) {
 			this.hatchery.init();
 		}
@@ -311,12 +241,8 @@ export class Colony implements IColony {
 				this.miningGroups[groupID].init();
 			}
 		}
-		// 2: Initialize the colony overlord, must be run AFTER all components are initialized
+		// Initialize the colony overseer, must be run AFTER all components are initialized
 		this.overseer.init();
-		// 3: Initialize each creep in the colony
-		// for (let name in this.creeps) {
-		// 	this.creeps[name].init();
-		// }
 	}
 
 	run(): void {

@@ -2,6 +2,11 @@
 import {USE_PROFILER} from '../../config/config';
 
 export function init(): Profiler {
+
+	if (USE_PROFILER) {
+		console.log('Reminder: CPU profiling is currently enabled. Turn off when not needed to improve performance.');
+	}
+
 	const defaults = {
 		data : {},
 		total: 0,

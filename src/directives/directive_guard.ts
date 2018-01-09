@@ -15,11 +15,10 @@ export class DirectiveGuard extends Directive {
 	}
 
 	init(): void {
-		// this.initOverlords();
+
 	}
 
 	run(): void {
-		// this.runOverlords();
 		// If there are no hostiles left in the room, remove the flag
 		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) { // TODO: wait until everyone's healed too
 			this.remove();
