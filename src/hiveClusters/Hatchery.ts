@@ -111,6 +111,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 
 	/* Request more energy when appropriate either via link or hauler */
 	private registerEnergyRequests(): void {
+		// Register requests for input into the hatchery (goes on colony request group)
 		if (this.link) {
 			if (this.link.isEmpty) {
 				this.colony.linkRequests.requestReceive(this.link);
@@ -120,6 +121,13 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 				this.colony.transportRequests.requestEnergy(this.battery);
 			}
 		}
+		// Register energy transport requests (goes on hatchery request group, which can be colony request group)
+		let refillSpawns = _.filter(this.spawns, spawn => spawn.energy < spawn.energyCapacity);
+		let refillExtensions = _.filter(this.extensions, extension => extension.energy < extension.energyCapacity);
+		let refillTowers = _.filter(this.towers, tower => tower.energy < tower.energyCapacity);
+		_.forEach(refillSpawns, spawn => this.transportRequests.requestEnergy(spawn));
+		_.forEach(refillExtensions, extension => this.transportRequests.requestEnergy(extension));
+		_.forEach(refillTowers, tower => this.transportRequests.requestEnergy(tower));
 	}
 
 	// private registerObjectives(): void {

@@ -169,10 +169,10 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 					this.effectivePricePerUnit(bestOrder) < this.terminalSettings.maxBuyPrice[mineral]) {
 					let amount = Math.min(bestOrder.remainingAmount, toBuy![mineral]);
 					let response = Game.market.deal(bestOrder.id, amount, this.room.name);
-					console.log(this.componentName + ': bought', amount, mineral, 'from', bestOrder.roomName,
-																 'for', bestOrder.price * amount, 'credits and',
-																 Game.market.calcTransactionCost(amount, this.room.name, bestOrder.roomName), 'energy',
-																 'reponse:', response);
+					console.log(this.name + ': bought', amount, mineral, 'from', bestOrder.roomName,
+														'for', bestOrder.price * amount, 'credits and',
+														Game.market.calcTransactionCost(amount, this.room.name, bestOrder.roomName), 'energy',
+														'reponse:', response);
 				}
 			}
 		}

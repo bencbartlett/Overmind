@@ -11,7 +11,7 @@ export class ClaimingOverlord extends Overlord {
 
 	constructor(directive: IDirective, priority = Priority.Normal) {
 		super(directive, 'claim', priority);
-		this.claimers = this.creeps['claimer'];
+		this.claimers = this.getCreeps('claimer');
 	}
 
 	spawn() {

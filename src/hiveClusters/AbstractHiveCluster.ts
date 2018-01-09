@@ -11,14 +11,14 @@ export abstract class AbstractHiveCluster implements IHiveCluster {
 	// overlords: { [name: string]: IOverlord };
 	overlord: IOverlord | undefined;
 
-	constructor(colony: IColony, instantiationObject: RoomObject, componentName: string) {
+	constructor(colony: IColony, instantiationObject: RoomObject, name: string) {
 		// Set up hatchery, register colony and memory
 		this.colony = colony;
 		// this.colonyName = colony.name;
 		this.room = instantiationObject.room!;
 		this.pos = instantiationObject.pos;
-		this.componentName = componentName;
-		this.name = this.componentName + ':' + instantiationObject.ref;
+		this.componentName = name;
+		this.name = name + ':' + instantiationObject.ref;
 		// this.overlords = {};
 	}
 
@@ -26,6 +26,7 @@ export abstract class AbstractHiveCluster implements IHiveCluster {
 		if (!memory[memName]) {
 			memory[memName] = memoryToWrite;
 		}
+		this.memory = memory[memName];
 	}
 
 	//

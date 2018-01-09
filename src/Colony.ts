@@ -11,6 +11,7 @@ import {LinkRequestGroup} from './resourceRequests/LinkRequests';
 import {Overseer} from './Overseer';
 import {SupplierOverlord} from './overlords/overlord_supply';
 import {Priority} from './config/priorities';
+import {WorkerOverlord} from './overlords/overlord_work';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -199,6 +200,7 @@ export class Colony implements IColony {
 	private spawnMoarOverlords(): void {
 		this.overlords = {};
 		this.overlords.supply = new SupplierOverlord(this, Priority.High);
+		this.overlords.work = new WorkerOverlord(this, Priority.Normal);
 	}
 
 
@@ -343,8 +345,8 @@ export class Colony implements IColony {
 		this.handleTowers();
 		this.handleLinks();
 		// 4: Run each creep in the colony
-		// for (let name in this.creeps) {
-		// 	this.creeps[name].run();
-		// }
+		for (let name in this.creeps) {
+			this.creeps[name].run();
+		}
 	}
 }

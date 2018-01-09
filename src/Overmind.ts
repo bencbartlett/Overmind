@@ -43,7 +43,7 @@ export default class Overmind implements IOvermind {
 		}
 
 		// Register colony outposts
-		let outpostFlags = _.filter(Game.flags, DirectiveOutpost.filter);
+		let outpostFlags = _.filter(Game.flags, flag => DirectiveOutpost.filter(flag));
 		for (let flag of outpostFlags) {
 			if (!flag.memory.colony) {
 				flag.recalculateColony();
@@ -84,13 +84,16 @@ export default class Overmind implements IOvermind {
 		// }
 	}
 
-	/* Wrap each creep in a role-contextualized wrapper and register to their respective colonies */
-	private registerCreeps(): void {
+	private wrapCreeps(): void {
 		// Wrap all creeps
 		Game.zerg = {};
 		for (let name in Game.creeps) {
 			Game.zerg[name] = new WrappedCreep(Game.creeps[name]);
 		}
+	}
+
+	/* Wrap each creep in a role-contextualized wrapper and register to their respective colonies */
+	private registerCreeps(): void {
 		// Register creeps to their colonies
 		let creepsByColony = _.groupBy(Game.zerg, creep => creep.memory.colony) as { [colName: string]: Zerg[] };
 		for (let colName in this.Colonies) {
@@ -162,6 +165,7 @@ export default class Overmind implements IOvermind {
 	build(): void {
 		// this.verifyMemory();
 		this.cache.build();
+		this.wrapCreeps();
 		this.registerColonies();
 		this.registerCreeps();			// 4: Wrap all the creeps and assign to respective colonies
 		// this.buildColonies();			// 5: Build the colony, instantiating virtual components

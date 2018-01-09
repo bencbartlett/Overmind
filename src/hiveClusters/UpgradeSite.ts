@@ -16,6 +16,7 @@ export class UpgradeSite extends AbstractHiveCluster implements IUpgradeSite {
 
 	constructor(colony: IColony, controller: StructureController) {
 		super(colony, controller, 'upgradeSite');
+		this.initMemory(colony.memory, 'upgradeSite');
 		this.controller = controller;
 		// Register input
 		let siteContainer = this.pos.findClosestByLimitedRange(this.room.containers, 4);

@@ -90,3 +90,12 @@ export class UpgraderSetup extends CreepSetup {
 		});
 	}
 }
+
+export class WorkerSetup extends CreepSetup {
+	constructor() {
+		super('worker', {
+			pattern  : [WORK, WORK, CARRY, MOVE],
+			sizeLimit: Infinity,
+		});
+	}
+}

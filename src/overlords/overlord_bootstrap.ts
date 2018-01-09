@@ -5,6 +5,7 @@ import {CreepSetup} from '../creepSetup/CreepSetup';
 import {MiningOverlord} from './overlord_mine';
 import {TaskDeposit} from '../tasks/task_deposit';
 import {TaskWithdraw} from '../tasks/task_withdraw';
+import {ColonyStage} from '../Colony';
 
 export class BoostrapMinerSetup extends CreepSetup {
 	constructor() {
@@ -38,7 +39,7 @@ export class BootstrappingOverlord extends Overlord {
 
 	constructor(directive: DirectiveBootstrap, priority = Priority.Critical) {
 		super(directive, 'bootstrap', priority);
-		this.fillers = this.creeps['filler'];
+		this.fillers = this.getCreeps('filler');
 		// Calculate structures fillers can supply / withdraw from
 		this.supplyStructures = _.filter([...this.colony.spawns, ...this.colony.extensions],
 										 structure => structure.energy < structure.energyCapacity);
@@ -69,7 +70,7 @@ export class BootstrappingOverlord extends Overlord {
 												  creep => creep.getActiveBodyparts(WORK)));
 			if (miningPowerAssigned < overlord.miningSite.miningPowerNeeded) {
 				let protoCreep = this.generateProtoCreep(new BoostrapMinerSetup());
-				protoCreep.memory.overlord = this.name; // Donate the miner to the miningSite
+				protoCreep.memory.overlord = overlord.ref; // Donate the miner to the miningSite
 				if (this.colony.hatchery) {
 					this.colony.hatchery.enqueue(protoCreep, this.priority);
 				}
@@ -78,11 +79,19 @@ export class BootstrappingOverlord extends Overlord {
 	}
 
 	spawn() {
+		// At early levels, spawn one miner, then a filler, then the rest of the miners
+		if (this.colony.stage == ColonyStage.Larva) {
+			if (this.colony.getCreepsByRole('miner').length == 0) {
+				this.spawnBootstrapMiners();
+			}
+		}
+		// Spawn fillers
+		this.wishlist(1, new FillerSetup());
+		// Then spawn the rest of the needed miners
 		let energyInStructures = _.sum(_.map(this.withdrawStructures, structure => structure.energy));
 		if (energyInStructures < this.settings.spawnBootstrapMinerThreshold) {
 			this.spawnBootstrapMiners();
 		}
-		this.wishlist(1, new FillerSetup());
 	}
 
 	init() {
@@ -100,9 +109,7 @@ export class BootstrappingOverlord extends Overlord {
 
 	private rechargeActions(filler: Zerg) {
 		let target = filler.pos.findClosestByRange(this.withdrawStructures);
-		if (target) {
-			filler.task = new TaskWithdraw(target);
-		}
+		if (target) filler.task = new TaskWithdraw(target);
 	}
 
 	private handleFiller(filler: Zerg) {

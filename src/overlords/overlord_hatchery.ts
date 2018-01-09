@@ -17,7 +17,7 @@ export class HatcheryOverlord extends Overlord {
 	constructor(hatchery: IHatchery, priority = Priority.High) {
 		super(hatchery, 'hatchery', priority);
 		this.hatchery = hatchery;
-		this.queens = this.creeps['queen'];
+		this.queens = this.getCreeps('queen');
 		this.settings = {
 			refillTowersBelow: 500,
 		};

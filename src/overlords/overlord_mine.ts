@@ -14,7 +14,7 @@ export class MiningOverlord extends Overlord {
 
 	constructor(miningSite: IMiningSite, priority = Priority.Normal) {
 		super(miningSite, 'mine', priority);
-		this.miners = this.creeps['miner'];
+		this.miners = this.getCreeps('miner');
 		this.miningSite = miningSite;
 	}
 

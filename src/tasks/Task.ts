@@ -142,11 +142,12 @@ export abstract class Task implements ITask {
 		} else {
 			// Switch to parent task if there is one
 			this.finish();
-			if (this.creep.task) {  // return whether parent task is valid if there is one
-				return this.creep.task.isValid();
-			} else {
-				return false;
-			}
+			// if (this.creep.task) {  // return whether parent task is valid if there is one
+			// 	return this.creep.task.isValid();
+			// } else {
+			// 	return false;
+			// }
+			return false;
 		}
 	}
 

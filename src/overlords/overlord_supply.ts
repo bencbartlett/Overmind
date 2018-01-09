@@ -22,7 +22,7 @@ export class SupplierOverlord extends Overlord {
 
 	constructor(directive: IColony | IHiveCluster, priority = Priority.Normal) {
 		super(directive, 'supply', priority);
-		this.suppliers = this.creeps['supplier'];
+		this.suppliers = this.getCreeps('supplier');
 		this.settings = {
 			refillTowersBelow: 500,
 		};
@@ -123,7 +123,7 @@ export class SupplierOverlord extends Overlord {
 		}
 	}
 
-	private handleSuppliers(supplier: Zerg) {
+	private handleSupplier(supplier: Zerg) {
 		if (supplier.carry.energy > 0) {
 			this.supplyActions(supplier);
 		} else {
@@ -134,7 +134,7 @@ export class SupplierOverlord extends Overlord {
 	run() {
 		for (let supplier of this.suppliers) {
 			if (supplier.isIdle) {
-				this.handleSuppliers(supplier);
+				this.handleSupplier(supplier);
 			}
 			supplier.run();
 		}

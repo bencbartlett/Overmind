@@ -11,7 +11,7 @@ export class GuardOverlord extends Overlord {
 
 	constructor(directive: DirectiveGuard, priority = Priority.Normal) {
 		super(directive, 'guard', priority);
-		this.guards = this.creeps['guard'];
+		this.guards = this.getCreeps('guard');
 	}
 
 	private reassignIdleGuards(): void {

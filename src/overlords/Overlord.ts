@@ -27,10 +27,18 @@ export abstract class Overlord implements IOverlord {
 		this.pos = initializer.pos;
 		this.colony = initializer.colony;
 		this.creeps = _.mapValues(Overmind.cache.overlords[this.ref],
-								  creepsOfRole => _.map(creepsOfRole, creepName => Game.zerg[creepName])) || [];
+								  creepsOfRole => _.map(creepsOfRole, creepName => Game.zerg[creepName]));
 		this.initMemory(initializer);
 		// Register the overlord on the colony overseer
 		this.colony.overseer.overlords[this.priority].push(this);
+	}
+
+	protected getCreeps(role: string): Zerg[] {
+		if (this.creeps[role]) {
+			return this.creeps[role];
+		} else {
+			return [];
+		}
 	}
 
 	protected initMemory(initializer: IOverlordInitializer): void {
@@ -55,7 +63,7 @@ export abstract class Overlord implements IOverlord {
 		// Generate the creep memory
 		let creepMemory: CreepMemory = {
 			colony  : this.colony.name, 						// name of the colony the creep is assigned to
-			overlord: this.name,								// name of the overseer running this creep
+			overlord: this.ref,								// name of the overseer running this creep
 			role    : setup.role,								// role of the creep
 			task    : null, 									// task the creep is performing
 			data    : { 										// rarely-changed data about the creep
@@ -82,7 +90,7 @@ export abstract class Overlord implements IOverlord {
 		if (this.colony.hatchery) {
 			spawnDistance = Pathing.distance(this.pos, this.colony.hatchery.pos);
 		}
-		return _.filter(creeps, creep => creep.ticksToLive <= 3 * creep.body.length + spawnDistance);
+		return _.filter(creeps, creep => creep.ticksToLive > 3 * creep.body.length + spawnDistance);
 	}
 
 	/* Create a creep setup and enqueue it to the Hatchery */
@@ -94,7 +102,7 @@ export abstract class Overlord implements IOverlord {
 
 	/* Wishlist of creeps to simplify spawning logic */
 	protected wishlist(quantity: number, setup: CreepSetup, priority = this.priority) {
-		if (this.lifetimeFilter(this.creeps[setup.role]).length < quantity && this.colony.hatchery) {
+		if (this.lifetimeFilter(this.getCreeps(setup.role)).length < quantity && this.colony.hatchery) {
 			this.colony.hatchery.enqueue(this.generateProtoCreep(setup), priority);
 		}
 	}

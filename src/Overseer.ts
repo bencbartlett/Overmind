@@ -176,7 +176,7 @@ export class Overseer implements IOverseer {
 		let roomsToCheck = _.flattenDeep([this.colony.outposts,
 										  _.map(this.colony.incubatingColonies, col => col.rooms)]) as Room[];
 		for (let room of roomsToCheck) {
-			let guardFlags = _.filter(room.flags, DirectiveGuard.filter);
+			let guardFlags = _.filter(room.flags, flag => DirectiveGuard.filter(flag));
 			if (room.hostiles.length > 0 && guardFlags.length == 0) {
 				DirectiveGuard.create(room.hostiles[0].pos);
 			}
@@ -194,7 +194,7 @@ export class Overseer implements IOverseer {
 			// let hasLogistics = (this.colony.getCreepsByRole('supplier').length > 0 ||
 			// 					this.colony.getCreepsByRole('queen').length > 0);
 			// let roomHasMiners = this.colony.getCreepsByRole('miner').length > 0;				// Has miners?
-			let emergencyFlags = _.filter(this.colony.room.flags, DirectiveBootstrap.filter);
+			let emergencyFlags = _.filter(this.colony.room.flags, flag => DirectiveBootstrap.filter(flag));
 			if (!hasEnergy && !hasMiners && !hasSupplier && emergencyFlags.length == 0) {
 				DirectiveBootstrap.create(this.colony.hatchery!.pos);
 			}

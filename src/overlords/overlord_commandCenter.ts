@@ -14,7 +14,7 @@ export class CommandCenterOverlord extends Overlord {
 	constructor(commandCenter: ICommandCenter, priority = Priority.High) {
 		super(commandCenter, 'manager', priority);
 		this.commandCenter = commandCenter;
-		this.managers = this.creeps['manager'];
+		this.managers = this.getCreeps('manager');
 	}
 
 	spawn() {

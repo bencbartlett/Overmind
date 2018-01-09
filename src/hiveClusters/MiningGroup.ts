@@ -33,6 +33,7 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 
 	constructor(colony: IColony, dropoff: StructureLink | StructureStorage) {
 		super(colony, dropoff, 'miningGroup');
+		this.initMemory(colony.memory, this.name);
 		this.settings = {
 			linksTrasmitAt: LINK_CAPACITY - 100,
 		};
@@ -50,7 +51,6 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 		this.transportRequests = new TransportRequestGroup();
 		// Mining sites are populated with MiningSite instantiation
 		this.miningSites = [];
-		this.initMemory(colony.memory, this.name);
 		// Regiser hauling overlord
 		this.overlord = new HaulingOverlord(this);
 	}

@@ -84,6 +84,7 @@ interface IDirective {
 
 interface IOverlordInitializer {
 	name: string;
+	// ref: string;
 	room: Room | undefined;
 	pos: RoomPosition;
 	colony: IColony;

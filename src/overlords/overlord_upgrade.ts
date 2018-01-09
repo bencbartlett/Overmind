@@ -15,7 +15,7 @@ export class UpgradingOverlord extends Overlord {
 
 	constructor(upgradeSite: IUpgradeSite, priority = Priority.Normal) {
 		super(upgradeSite, 'upgrade', priority);
-		this.upgraders = this.creeps['upgrader'];
+		this.upgraders = this.getCreeps('upgrader');
 		this.upgradeSite = upgradeSite;
 	}
 
@@ -23,7 +23,7 @@ export class UpgradingOverlord extends Overlord {
 		let upgradePower = _.sum(_.map(this.lifetimeFilter(this.upgraders), creep => creep.getActiveBodyparts(WORK)));
 		if (upgradePower < this.upgradeSite.upgradePowerNeeded) {
 			let workPartsPerUpgraderUnit = 3; // TODO: Hard-coded
-			let upgraderSize = Math.ceil(upgradePower / workPartsPerUpgraderUnit);
+			let upgraderSize = Math.ceil(this.upgradeSite.upgradePowerNeeded / workPartsPerUpgraderUnit);
 			this.requestCreep(new UpgraderSetup(upgraderSize));
 		}
 	}
