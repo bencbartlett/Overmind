@@ -5,6 +5,8 @@ import {profile} from '../lib/Profiler';
 import {Pathing} from '../pathing/pathing';
 import {MiningOverlord} from '../overlords/overlord_mine';
 import {Priority} from '../config/priorities';
+import {Colony} from '../Colony';
+import {Overlord} from '../overlords/Overlord';
 
 @profile
 export class MiningSite extends AbstractHiveCluster implements IMiningSite {
@@ -14,11 +16,11 @@ export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 	output: StructureContainer | StructureLink | undefined;
 	outputConstructionSite: ConstructionSite | undefined;
 	miningGroup: IMiningGroup | undefined;
-	overlord: IOverlord;
+	overlord: Overlord;
 
 	// private _miners: Zerg[];
 
-	constructor(colony: IColony, source: Source) {
+	constructor(colony: Colony, source: Source) {
 		super(colony, source, 'miningSite');
 		this.initMemory(colony.memory, this.name);
 		this.source = source;

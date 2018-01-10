@@ -1,4 +1,5 @@
 import {log} from '../lib/logger/log';
+import {taskInstantiator} from '../maps/map_tasks';
 
 type targetType = { ref: string | null, pos: RoomPosition }; // overwrite this variable in derived classes to specify more precise typing
 
@@ -100,7 +101,7 @@ export abstract class Task implements ITask {
 
 	// Getter/setter for task parent
 	get parent(): ITask | null {
-		return (this._parent ? taskFromPrototask(this._parent) : null);
+		return (this._parent ? taskInstantiator(this._parent) : null);
 	}
 
 	set parent(parentTask: ITask | null) {

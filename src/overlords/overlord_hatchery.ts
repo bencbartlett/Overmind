@@ -1,5 +1,5 @@
 import {Overlord} from './Overlord';
-import {blankPriorityQueue, Priority} from '../config/priorities';
+import {Priority} from '../config/priorities';
 import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskDeposit} from '../tasks/task_deposit';
 import {log} from '../lib/logger/log';
@@ -12,7 +12,7 @@ export class HatcheryOverlord extends Overlord {
 	queens: Zerg[];
 	settings: any;
 
-	private _prioritizedRefills: { [priority: number]: IResourceRequest[] };
+	// private _prioritizedRefills: { [priority: number]: IResourceRequest[] };
 
 	constructor(hatchery: IHatchery, priority = Priority.High) {
 		super(hatchery, 'hatchery', priority);
@@ -31,38 +31,38 @@ export class HatcheryOverlord extends Overlord {
 		this.spawn();
 	}
 
-	private get prioritizedRefillRequests(): { [priority: number]: IResourceRequest[] } {
-		// Prioritized list of things that can be refilled
-		if (!this._prioritizedRefills) {
-			this._prioritizedRefills = blankPriorityQueue();
-
-			for (let request of this.colony.transportRequests.supply) {
-				let priority: number;
-				if (request.target instanceof StructureSpawn) {
-					priority = Priority.Normal;
-				} else if (request.target instanceof StructureExtension) {
-					priority = Priority.Normal;
-				} else if (request.target instanceof StructureTower) {
-					if (request.target.energy < this.settings.refillTowersBelow) {
-						priority = Priority.High;
-					} else {
-						priority = Priority.Low;
-					}
-				} else {
-					priority = Priority.Normal;
-				}
-				// Push the request to the specified priority
-				this._prioritizedRefills[priority].push(request);
-			}
-		}
-		return this._prioritizedRefills;
-	}
+	// private get prioritizedRefillRequests(): { [priority: number]: IResourceRequest[] } {
+	// 	// Prioritized list of things that can be refilled
+	// 	if (!this._prioritizedRefills) {
+	// 		this._prioritizedRefills = blankPriorityQueue();
+	//
+	// 		for (let request of this.colony.transportRequests.supply) {
+	// 			let priority: number;
+	// 			if (request.target instanceof StructureSpawn) {
+	// 				priority = Priority.Normal;
+	// 			} else if (request.target instanceof StructureExtension) {
+	// 				priority = Priority.Normal;
+	// 			} else if (request.target instanceof StructureTower) {
+	// 				if (request.target.energy < this.settings.refillTowersBelow) {
+	// 					priority = Priority.High;
+	// 				} else {
+	// 					priority = Priority.Low;
+	// 				}
+	// 			} else {
+	// 				priority = Priority.Normal;
+	// 			}
+	// 			// Push the request to the specified priority
+	// 			this._prioritizedRefills[priority].push(request);
+	// 		}
+	// 	}
+	// 	return this._prioritizedRefills;
+	// }
 
 	private supplyActions(queen: Zerg) {
 		// Select the closest supply target out of the highest priority and refill it
 		let target: EnergyRequestStructure | ResourceRequestStructure;
-		for (let priority in this.prioritizedRefillRequests) {
-			let targets = _.map(this.prioritizedRefillRequests[priority], request => request.target);
+		for (let priority in this.hatchery.transportRequests.supply) {
+			let targets = _.map(this.hatchery.transportRequests.supply[priority], request => request.target);
 			target = queen.pos.findClosestByRange(targets);
 			if (target) {
 				queen.task = new TaskDeposit(target);

@@ -33,7 +33,7 @@ interface ICache {
 
 interface IOvermind {
 	cache: ICache;
-	Colonies: { [roomName: string]: IColony };
+	Colonies: { [roomName: string]: any };
 	colonyMap: { [roomName: string]: string };
 	invisibleRooms: string[];
 

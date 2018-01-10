@@ -1,7 +1,7 @@
 import {Overlord} from './Overlord';
 import {Priority} from '../config/priorities';
 import {WorkerSetup} from '../creepSetup/defaultSetups';
-import {ColonyStage} from '../Colony';
+import {Colony, ColonyStage} from '../Colony';
 import {profile} from '../lib/Profiler';
 import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskRepair} from '../tasks/task_repair';
@@ -17,7 +17,7 @@ export class WorkerOverlord extends Overlord {
 	repairStructures: Structure[];
 	rechargeStructures: (StructureStorage | StructureTerminal | StructureContainer | StructureLink)[];
 
-	constructor(colony: IColony, priority = Priority.Normal) {
+	constructor(colony: Colony, priority = Priority.Normal) {
 		super(colony, 'worker', priority);
 		this.workers = this.getCreeps('worker');
 		this.constructionSites = this.room.constructionSites;
@@ -32,21 +32,30 @@ export class WorkerOverlord extends Overlord {
 		});
 		this.rechargeStructures = _.compact([this.colony.storage!,
 											 this.colony.terminal!,
+											 this.colony.upgradeSite.input!,
 											 ..._.map(this.room.sources,
 													  source => this.colony.miningSites[source.id].output!)]);
 	}
 
 	spawn() {
-		let constructionTicks = _.sum(_.map(this.constructionSites,
-											site => site.progressTotal - site.progress)) / BUILD_POWER;
-		let repairTicks = _.sum(_.map(this.repairStructures,
-									  structure => structure.hitsMax - structure.hits)) / REPAIR_POWER;
 		let workPartsPerWorker = _.filter(this.generateProtoCreep(new WorkerSetup()).body, part => part == WORK).length;
-		let numWorkers = Math.ceil(2 * (constructionTicks + repairTicks) / (workPartsPerWorker * CREEP_LIFE_TIME));
-		if (this.colony.stage == ColonyStage.Larva) { // Always want at least 1 worker before dedicated upgraders spawn
-			numWorkers += 1;
+		if (this.colony.stage == ColonyStage.Larva) {
+			// At lower levels, try to saturate the energy throughput of the colony
+			let energyPerTick = _.sum(_.map(this.colony.miningSites, site => site.energyPerTick));
+			let energyPerTickPerWorker = 1.1 * workPartsPerWorker; // Average energy per tick when workers are working
+			let workerUptime = 0.5;
+			let numWorkers = Math.ceil(energyPerTick / (energyPerTickPerWorker * workerUptime));
+			this.wishlist(numWorkers, new WorkerSetup());
+		} else {
+			// At higher levels, spawn workers based on construction and repair that needs to be done
+			let constructionTicks = _.sum(_.map(this.constructionSites,
+												site => site.progressTotal - site.progress)) / BUILD_POWER;
+			let repairTicks = _.sum(_.map(this.repairStructures,
+										  structure => structure.hitsMax - structure.hits)) / REPAIR_POWER;
+			let numWorkers = Math.ceil(2 * (constructionTicks + repairTicks) /
+									   (workPartsPerWorker * CREEP_LIFE_TIME));
+			this.wishlist(numWorkers, new WorkerSetup());
 		}
-		this.wishlist(numWorkers, new WorkerSetup());
 	}
 
 	init() {

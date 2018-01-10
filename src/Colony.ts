@@ -12,6 +12,7 @@ import {Overseer} from './Overseer';
 import {SupplierOverlord} from './overlords/overlord_supply';
 import {Priority} from './config/priorities';
 import {WorkerOverlord} from './overlords/overlord_work';
+import {Overlord} from './overlords/Overlord';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -24,10 +25,10 @@ export class Colony implements IColony {
 	// Colony memory
 	memory: ColonyMemory;								// Memory.colonies[name]
 	// Colony overseer
-	overseer: IOverseer;								// This runs the directives and overlords
+	overseer: Overseer;								// This runs the directives and overlords
 	// Room associations
 	name: string;										// Name of the primary colony room
-	colony: IColony;									// Reference to itself for simple overlord instantiation
+	colony: Colony;									// Reference to itself for simple overlord instantiation
 	roomNames: string[];								// The names of all rooms including the primary room
 	room: Room;											// Primary (owned) room of the colony
 	outposts: Room[];									// Rooms for remote resource collection
@@ -56,9 +57,9 @@ export class Colony implements IColony {
 	miningGroups: { [id: string]: IMiningGroup } | undefined;	// Component to group mining sites into a hauling group
 	miningSites: { [sourceID: string]: IMiningSite };	// Component with logic for mining and hauling
 	// Incubation status
-	incubator: IColony | undefined; 					// The colony responsible for incubating this one, if any
+	incubator: Colony | undefined; 					// The colony responsible for incubating this one, if any
 	isIncubating: boolean;								// If the colony is incubating
-	incubatingColonies: IColony[];						// List of colonies that this colony is incubating
+	incubatingColonies: Colony[];						// List of colonies that this colony is incubating
 	stage: number;										// The stage of the colony "lifecycle"
 	// Creeps and subsets
 	creeps: Zerg[];										// Creeps bound to the colony
@@ -68,7 +69,7 @@ export class Colony implements IColony {
 	linkRequests: LinkRequestGroup;
 	transportRequests: TransportRequestGroup;			// Box for resource requests
 	// Overlords
-	overlords: { [name: string]: IOverlord };
+	overlords: { [name: string]: Overlord };
 
 	constructor(roomName: string, outposts: string[]) {
 		// Name the colony

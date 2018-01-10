@@ -1,6 +1,7 @@
 // A grouping for objectives that allows colony components to have their own objectives instead of all being on Overlord
 
 import {profile} from '../lib/Profiler';
+import {blankPriorityQueue, Priority} from '../config/priorities';
 
 type EnergyRequestStructure = Sink | StructureContainer;
 type ResourceRequestStructure = StructureLab | StructureNuker | StructurePowerSpawn | StructureContainer;
@@ -12,15 +13,15 @@ type ResourceWithdrawStructure = StructureLab | StructureContainer | StructureTe
 @profile
 export class TransportRequestGroup implements ITransportRequestGroup {
 
-	supply: IResourceRequest[];
-	withdraw: IWithdrawRequest[];
+	supply: { [priority: number]: IResourceRequest[] };
+	withdraw: { [priority: number]: IWithdrawRequest[] };
 
 	constructor() {
-		this.supply = [];
-		this.withdraw = [];
+		this.supply = blankPriorityQueue();
+		this.withdraw = blankPriorityQueue();
 	}
 
-	requestEnergy(target: EnergyRequestStructure, amount?: number): void {
+	requestEnergy(target: EnergyRequestStructure, priority = Priority.Normal, amount?: number): void {
 		let request: IResourceRequest;
 		if (!amount) {
 			if (target instanceof StructureContainer) {
@@ -34,10 +35,11 @@ export class TransportRequestGroup implements ITransportRequestGroup {
 			amount      : amount,
 			resourceType: RESOURCE_ENERGY,
 		};
-		this.supply.push(request);
+		this.supply[priority].push(request);
 	}
 
-	requestResource(target: ResourceRequestStructure, resourceType: ResourceConstant, amount?: number): void {
+	requestResource(target: ResourceRequestStructure, resourceType: ResourceConstant,
+					priority = Priority.Normal, amount?: number): void {
 		let request: IResourceRequest;
 		if (!amount) {
 			if (target instanceof StructureLab) {
@@ -55,10 +57,10 @@ export class TransportRequestGroup implements ITransportRequestGroup {
 			amount      : amount,
 			resourceType: resourceType,
 		};
-		this.supply.push(request);
+		this.supply[priority].push(request);
 	}
 
-	requestWithdrawal(target: EnergyWithdrawStructure, amount?: number): void {
+	requestWithdrawal(target: EnergyWithdrawStructure, priority = Priority.Normal, amount?: number): void {
 		let request: IWithdrawRequest;
 		if (!amount) {
 			if (target instanceof StructureContainer) {
@@ -72,10 +74,11 @@ export class TransportRequestGroup implements ITransportRequestGroup {
 			amount      : amount!,
 			resourceType: RESOURCE_ENERGY,
 		};
-		this.withdraw.push(request);
+		this.withdraw[priority].push(request);
 	}
 
-	requestResourceWithdrawal(target: ResourceWithdrawStructure, resourceType: ResourceConstant, amount?: number): void {
+	requestResourceWithdrawal(target: ResourceWithdrawStructure, resourceType: ResourceConstant,
+							  priority = Priority.Normal, amount?: number): void {
 		let request: IWithdrawRequest;
 		if (!amount) {
 			if (target instanceof StructureLab) {
@@ -93,7 +96,7 @@ export class TransportRequestGroup implements ITransportRequestGroup {
 			amount      : amount,
 			resourceType: resourceType,
 		};
-		this.withdraw.push(request);
+		this.withdraw[priority].push(request);
 	}
 
 }

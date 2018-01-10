@@ -3,6 +3,7 @@
 import {AbstractHiveCluster} from './AbstractHiveCluster';
 import {profile} from '../lib/Profiler';
 import {UpgradingOverlord} from '../overlords/overlord_upgrade';
+import {Colony} from '../Colony';
 
 @profile
 export class UpgradeSite extends AbstractHiveCluster implements IUpgradeSite {
@@ -11,9 +12,9 @@ export class UpgradeSite extends AbstractHiveCluster implements IUpgradeSite {
 	input: StructureLink | StructureContainer | null;	// The object receiving energy for the site
 	inputConstructionSite: ConstructionSite | null;		// The construction site for the input, if there is one
 	private settings: { [property: string]: number };
-	overlord: IOverlord;
+	overlord: UpgradingOverlord;
 
-	constructor(colony: IColony, controller: StructureController) {
+	constructor(colony: Colony, controller: StructureController) {
 		super(colony, controller, 'upgradeSite');
 		this.initMemory(colony.memory, 'upgradeSite');
 		this.controller = controller;

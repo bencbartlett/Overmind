@@ -5,7 +5,7 @@ interface Creep {
 }
 
 interface Flag {
-	colony: IColony;
+	// colony: IColony;
 
 	recalculateColony(restrictDistance?: number): void;
 }
@@ -26,7 +26,7 @@ type StorageUnit = StructureContainer | StructureTerminal | StructureStorage;
 // }
 
 interface Room {
-	colony: IColony;
+	// colony: IColony;
 	my: boolean;
 	reservedByMe: boolean;
 	signedByMe: boolean;

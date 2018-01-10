@@ -8,6 +8,7 @@ import {log} from '../lib/logger/log';
 import {profile} from '../lib/Profiler';
 import {CommandCenterOverlord} from '../overlords/overlord_commandCenter';
 import {Priority} from '../config/priorities';
+import {Colony} from '../Colony';
 
 @profile
 export class CommandCenter extends AbstractHiveCluster implements ICommandCenter {
@@ -38,7 +39,7 @@ export class CommandCenter extends AbstractHiveCluster implements ICommandCenter
 		avgPrice: { [resourceType: string]: number };			// Effective market prices
 	};
 
-	constructor(colony: IColony, storage: StructureStorage) {
+	constructor(colony: Colony, storage: StructureStorage) {
 		super(colony, storage, 'commandCenter');
 		// Set up command center, register colony and memory
 		this.initMemory(colony.memory, 'commandCenter');

@@ -3,11 +3,11 @@
 import {controllerSignature, myUsername} from '../settings/settings_user';
 
 
-Object.defineProperty(Room.prototype, 'colony', { // link to colony object in the overmind
-	get () {
-		return Overmind.Colonies[Overmind.colonyMap[this.name]];
-	},
-});
+// Object.defineProperty(Room.prototype, 'colony', { // link to colony object in the overmind
+// 	get () {
+// 		return Overmind.Colonies[Overmind.colonyMap[this.name]];
+// 	},
+// });
 
 // Room properties =====================================================================================================
 

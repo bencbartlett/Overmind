@@ -11,6 +11,7 @@ export class TaskBuild extends Task {
 	constructor(target: buildTargetType, options = {} as TaskOptions) {
 		super(buildTaskName, target, options);
 		// Settings
+		this.settings.targetRange = 3;
 		this.settings.moveColor = 'yellow';
 	}
 

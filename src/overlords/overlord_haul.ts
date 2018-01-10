@@ -27,12 +27,20 @@ export class HaulingOverlord extends Overlord {
 		this.spawn();
 	}
 
+	// Gets a prioritized request if any
+	private getWithdrawRequest(): IWithdrawRequest | undefined {
+		for (let priority in this.miningGroup.transportRequests.withdraw) {
+			let request = this.miningGroup.transportRequests.withdraw[priority][0];
+			if (request) return request;
+		}
+	}
+
 	private handleHauler(hauler: Zerg) {
 		if (hauler.carry.energy == 0) {
 			// Withdraw from any miningSites requesting a withdrawal
-			let withdrawRequest = this.miningGroup.transportRequests.withdraw[0];
-			if (withdrawRequest) {
-				hauler.task = new TaskWithdraw(withdrawRequest.target);
+			let request = this.getWithdrawRequest();
+			if (request) {
+				hauler.task = new TaskWithdraw(request.target);
 			} else {
 				// hauler.park(); // TODO
 			}

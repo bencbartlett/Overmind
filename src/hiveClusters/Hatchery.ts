@@ -5,8 +5,10 @@ import {log} from '../lib/logger/log';
 import {profile} from '../lib/Profiler';
 import {HatcheryOverlord} from '../overlords/overlord_hatchery';
 import {Priority} from '../config/priorities';
-import {ColonyStage} from '../Colony';
+import {Colony, ColonyStage} from '../Colony';
 import {TransportRequestGroup} from '../resourceRequests/TransportRequestGroup';
+import {CreepSetup} from '../creepSetup/CreepSetup';
+import {Overlord} from '../overlords/Overlord';
 
 @profile
 export class Hatchery extends AbstractHiveCluster implements IHatchery {
@@ -32,7 +34,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 	private _idlePos: RoomPosition; 								// Idling position for the supplier
 	private _energyStructures: (StructureSpawn | StructureExtension)[];
 
-	constructor(colony: IColony, headSpawn: StructureSpawn) {
+	constructor(colony: Colony, headSpawn: StructureSpawn) {
 		super(colony, headSpawn, 'hatchery');
 		this.initMemory(colony.memory, 'hatchery');
 		// Register structure components
@@ -85,13 +87,12 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		let refillSpawns = _.filter(this.spawns, spawn => spawn.energy < spawn.energyCapacity);
 		let refillExtensions = _.filter(this.extensions, extension => extension.energy < extension.energyCapacity);
 		let refillTowers = _.filter(this.towers, tower => tower.energy < tower.energyCapacity);
-		_.forEach(refillSpawns, spawn => this.transportRequests.requestEnergy(spawn));
-		_.forEach(refillExtensions, extension => this.transportRequests.requestEnergy(extension));
-		_.forEach(refillTowers, tower => this.transportRequests.requestEnergy(tower));
+		_.forEach(refillSpawns, spawn => this.transportRequests.requestEnergy(spawn, Priority.Normal));
+		_.forEach(refillExtensions, extension => this.transportRequests.requestEnergy(extension, Priority.Normal));
+		_.forEach(refillTowers, tower =>
+			this.transportRequests.requestEnergy(tower, tower.energy < this.settings.refillTowersBelow ?
+														Priority.High : Priority.Low));
 	}
-
-	// TODO: prioritize transport requests
-
 
 	// Creep queueing and spawning =====================================================================================
 
@@ -121,6 +122,38 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		}
 		return (roleName + '_' + i);
 	};
+
+	/* Generate (but not spawn) the largest creep possible, returns the protoCreep as an object */
+	generateProtoCreep(setup: CreepSetup, overlord: Overlord): protoCreep {
+		// Generate the creep body
+		let creepBody: BodyPartConstant[];
+		if (this.colony.incubator) { // if you're being incubated, build as big a creep as you want
+			creepBody = setup.generateBody(this.colony.incubator.room.energyCapacityAvailable);
+		} else { // otherwise limit yourself to actual energy constraints
+			creepBody = setup.generateBody(this.colony.room.energyCapacityAvailable);
+		}
+		// Generate the creep memory
+		let creepMemory: CreepMemory = {
+			colony  : overlord.colony.name, 						// name of the colony the creep is assigned to
+			overlord: overlord.ref,								// name of the overseer running this creep
+			role    : setup.role,								// role of the creep
+			task    : null, 									// task the creep is performing
+			data    : { 										// rarely-changed data about the creep
+				origin   : '',										// where it was spawned, filled in at spawn time
+				replaceAt: 0, 										// when it should be replaced
+				boosts   : {} 										// keeps track of what boosts creep has/needs
+			},
+			_trav   : null,
+			_travel : null,
+		};
+		// Create the protocreep and return it
+		let protoCreep: protoCreep = { 							// object to add to spawner queue
+			body  : creepBody, 										// body array
+			name  : setup.role, 									// name of the creep - gets modified by hatchery
+			memory: creepMemory,									// memory to initialize with
+		};
+		return protoCreep;
+	}
 
 	private get energyStructures(): (StructureSpawn | StructureExtension)[] {
 		if (!this._energyStructures) {
@@ -166,21 +199,17 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 		// }
 
 		// If you are incubating and can't build the requested creep, enqueue it to the incubation hatchery
-		// if (this.colony.incubator && this.colony.incubator.hatchery &&
-		// 	this.bodyCost(protoCreep.body) > this.room.energyCapacityAvailable) {
-		// 	this.colony.incubator.hatchery.enqueue(protoCreep);
-		// 	log.info('Requesting ' + roleName + ' from ' + this.colony.incubator.name);
-		// } else {
-		// 	// Otherwise, queue the creep to yourself
-		// 	if (!this.productionQueue[priority]) {
-		// 		this.productionQueue[priority] = [];
-		// 	}
-		// 	this.productionQueue[priority].push(protoCreep);
-		// }
-		if (!this.productionQueue[priority]) {
-			this.productionQueue[priority] = [];
+		if (this.colony.incubator && this.colony.incubator.hatchery &&
+			this.bodyCost(protoCreep.body) > this.room.energyCapacityAvailable) {
+			this.colony.incubator.hatchery.enqueue(protoCreep, priority);
+			log.info('Requesting ' + protoCreep.name + ' from ' + this.colony.incubator.name);
+		} else {
+			// Otherwise, queue the creep to yourself
+			if (!this.productionQueue[priority]) {
+				this.productionQueue[priority] = [];
+			}
+			this.productionQueue[priority].push(protoCreep);
 		}
-		this.productionQueue[priority].push(protoCreep);
 	}
 
 	private spawnHighestPriorityCreep(): number | void {

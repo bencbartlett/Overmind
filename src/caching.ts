@@ -4,6 +4,7 @@ import {profile} from './lib/Profiler';
 
 @profile
 export class GameCache implements ICache {
+
 	overlords: { [overlord: string]: { [roleName: string]: string[] } };
 	targets: { [ref: string]: string[] };
 	structures: { [roomName: string]: { [structureType: string]: Structure[] } };

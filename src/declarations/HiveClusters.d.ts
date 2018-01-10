@@ -77,6 +77,7 @@ interface IHatchery extends IHiveCluster {
 	link: StructureLink | undefined;
 	battery: StructureContainer | undefined;
 	idlePos: RoomPosition;
+	transportRequests: ITransportRequestGroup;
 
 	enqueue(protoCreep: protoCreep, priority: number): void;
 }

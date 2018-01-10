@@ -5,6 +5,7 @@ import {log} from '../lib/logger/log';
 import {profile} from '../lib/Profiler';
 import {BootstrappingOverlord} from '../overlords/overlord_bootstrap';
 import {Priority} from '../config/priorities';
+import {Colony} from '../Colony';
 
 
 export const EMERGENCY_ENERGY_THRESHOLD = 1300;
@@ -16,7 +17,7 @@ export class DirectiveBootstrap extends Directive {
 	static color = COLOR_ORANGE;
 	static secondaryColor = COLOR_ORANGE;
 
-	colony: IColony; 					// Emergency flag definitely has a colony
+	colony: Colony; 					// Emergency flag definitely has a colony
 	room: Room;							// Definitely has a room
 	private needsEnergy: boolean; 		// Whether there is enough energy in the room
 	private needsMiner: boolean;		// Whether a miner needs to be spawned
@@ -44,6 +45,12 @@ export class DirectiveBootstrap extends Directive {
 	run(): void {
 		if (!this.needsMiner && !this.needsManager && !this.needsSupplier && !this.needsEnergy) {
 			log.alert(`Colony ${this.room.name} has recovered from crash; removing bootstrap directive.`);
+			// Suicide any fillers so they don't get in the way
+			let overlord = this.overlords.bootstrap as BootstrappingOverlord;
+			for (let filler of overlord.fillers) {
+				filler.suicide();
+			}
+			// Remove the directive
 			this.remove();
 		}
 	}

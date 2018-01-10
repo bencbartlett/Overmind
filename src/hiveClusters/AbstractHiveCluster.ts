@@ -1,16 +1,19 @@
 /* Generalized class for a base component */
 
+import {Colony} from '../Colony';
+import {Overlord} from '../overlords/Overlord';
+
 export abstract class AbstractHiveCluster implements IHiveCluster {
 
-	colony: IColony;					// Colony the cluster belongs to
+	colony: Colony;					// Colony the cluster belongs to
 	room: Room;							// Room of the baseComponent (not necessarily colony room)
 	pos: RoomPosition; 					// Position of the instantiation object
 	componentName: string; 				// Name of the component (e.g. "hatchery")
 	name: string;						// Unique identifier for the instance of the hive cluster
 	memory: any;						// Memory for the hive cluster; can be typecasted in child classes
-	overlord: IOverlord | undefined;	// Overlord (singular) for the hive cluster if there is one
+	overlord: Overlord | undefined;	// Overlord (singular) for the hive cluster if there is one
 
-	constructor(colony: IColony, instantiationObject: RoomObject, name: string) {
+	constructor(colony: Colony, instantiationObject: RoomObject, name: string) {
 		// Set up hatchery, register colony and memory
 		this.colony = colony;
 		this.room = instantiationObject.room!;

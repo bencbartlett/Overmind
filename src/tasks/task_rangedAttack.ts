@@ -1,7 +1,6 @@
 import {Task} from './Task';
 import {profile} from '../lib/Profiler';
 
-
 export type rangedAttackTargetType = Creep | Structure;
 export const rangedAttackTaskName = 'rangedAttack';
 

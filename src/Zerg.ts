@@ -1,4 +1,6 @@
 import {profile} from './lib/Profiler';
+import {taskInstantiator} from './maps/map_tasks';
+import {Colony} from './Colony';
 
 @profile
 export class WrappedCreep implements Zerg {
@@ -195,7 +197,7 @@ export class WrappedCreep implements Zerg {
 		let protoTask = this.memory.task as protoTask;
 		if (protoTask) {
 			// PERFORM TASK MIGRATION HERE
-			return taskFromPrototask(protoTask);
+			return taskInstantiator(protoTask);
 		} else {
 			return null;
 		}
@@ -244,11 +246,11 @@ export class WrappedCreep implements Zerg {
 	}
 
 	/* Colony that the creep belongs to. */
-	get colony(): IColony {
+	get colony(): Colony {
 		return Overmind.Colonies[this.memory.colony];
 	}
 
-	set colony(newColony: IColony) {
+	set colony(newColony: Colony) {
 		this.memory.colony = newColony.name;
 	}
 

@@ -1,29 +1,29 @@
 declare const require: (module: string) => any;
 declare var global: any;
 
-interface flagActions {
-	[actionType: string]: Function;
-}
-
-interface flagSubCat {
-	color: number;
-	secondaryColor: number;
-	filter: Function;
-	action: Function | null;
-}
-
-interface flagCat {
-	color: number;
-	filter: Function;
-	action: flagActions | null;
-
-	[subcat: string]: any;
-}
-
-interface ColorCode {
-	color: ColorConstant;
-	secondaryColor: ColorConstant;
-}
+// interface flagActions {
+// 	[actionType: string]: Function;
+// }
+//
+// interface flagSubCat {
+// 	color: number;
+// 	secondaryColor: number;
+// 	filter: Function;
+// 	action: Function | null;
+// }
+//
+// interface flagCat {
+// 	color: number;
+// 	filter: Function;
+// 	action: flagActions | null;
+//
+// 	[subcat: string]: any;
+// }
+//
+// interface ColorCode {
+// 	color: ColorConstant;
+// 	secondaryColor: ColorConstant;
+// }
 
 interface Coord {
 	x: number;
@@ -88,6 +88,7 @@ interface IOverlordInitializer {
 interface IOverlord {
 	name: string;
 	ref: string;
+	room: Room | undefined;
 	colony: IColony;
 	creeps: { [roleName: string]: Zerg[] };
 	memory: OverlordMemory;
@@ -188,16 +189,18 @@ type EnergyWithdrawStructure = StructureContainer | StructureTerminal | Structur
 type ResourceWithdrawStructure = StructureLab | StructureContainer | StructureTerminal;
 
 interface ITransportRequestGroup {
-	supply: IResourceRequest[];
-	withdraw: IWithdrawRequest[];
+	supply: { [priority: number]: IResourceRequest[] };
+	withdraw: { [priority: number]: IWithdrawRequest[] };
 
-	requestEnergy(target: EnergyRequestStructure, amount?: number): void
+	requestEnergy(target: EnergyRequestStructure, priority?: number, amount?: number): void
 
-	requestResource(target: ResourceRequestStructure, resourceType: ResourceConstant, amount?: number): void
+	requestResource(target: ResourceRequestStructure, resourceType: ResourceConstant,
+					priority?: number, amount?: number): void
 
-	requestWithdrawal(target: EnergyWithdrawStructure, amount?: number): void
+	requestWithdrawal(target: EnergyWithdrawStructure, priority?: number, amount?: number): void
 
-	requestResourceWithdrawal(target: ResourceWithdrawStructure, resourceType: ResourceConstant, amount?: number): void
+	requestResourceWithdrawal(target: ResourceWithdrawStructure, resourceType: ResourceConstant,
+							  priority?: number, amount?: number): void
 }
 
 interface ILinkRequestGroup {

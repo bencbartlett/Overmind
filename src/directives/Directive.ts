@@ -1,5 +1,7 @@
 import {log} from '../lib/logger/log';
 import {profile} from '../lib/Profiler';
+import {Colony} from '../Colony';
+import {Overlord} from '../overlords/Overlord';
 
 
 @profile
@@ -11,16 +13,16 @@ export abstract class Directive implements IDirective {
 
 	flag: Flag;									// The flag instantiating this directive
 	name: string;								// The name of the flag
-	colony: IColony; 							// The colony of the directive (directive is removed if undefined)
+	colony: Colony; 							// The colony of the directive (directive is removed if undefined)
 	pos: RoomPosition; 							// Flag position
 	room: Room | undefined;						// Flag room
 	memory: FlagMemory;							// Flag memory
-	overlords: { [name: string]: IOverlord };	// Overlords
+	overlords: { [name: string]: Overlord };	// Overlords
 
 	constructor(flag: Flag) {
 		this.flag = flag;
 		this.name = flag.name;
-		this.colony = flag.colony;
+		this.colony = this.getFlagColony(flag);
 		this.pos = flag.pos;
 		this.room = flag.room;
 		this.memory = flag.memory;
@@ -30,6 +32,20 @@ export abstract class Directive implements IDirective {
 			this.remove();
 		} else {
 			this.colony.overseer.directives.push(this);
+		}
+	}
+
+	protected getFlagColony(flag: Flag): Colony {
+		if (flag.memory.colony) {
+			return Overmind.Colonies[flag.memory.colony];
+		} else {
+			let colonyName = Overmind.colonyMap[flag.pos.roomName];
+			if (colonyName) {
+				return Overmind.Colonies[colonyName];
+			} else {
+				flag.recalculateColony();
+				return Overmind.Colonies[flag.memory.colony!];
+			}
 		}
 	}
 

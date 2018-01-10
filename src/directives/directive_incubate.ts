@@ -1,7 +1,7 @@
 import {profile} from '../lib/Profiler';
 import {Directive} from './Directive';
 import {ClaimingOverlord} from '../overlords/overlord_claim';
-import {ColonyStage} from '../Colony';
+import {Colony, ColonyStage} from '../Colony';
 
 // Claims a new room and incubates it from the nearest (or specified) colony
 
@@ -12,12 +12,12 @@ export class DirectiveIncubate extends Directive {
 	static color = COLOR_PURPLE;
 	static secondaryColor = COLOR_WHITE;
 
-	incubatingColony: IColony | undefined;
+	incubatingColony: Colony | undefined;
 
 	constructor(flag: Flag) {
 		super(flag);
 		// Register incubation status
-		this.incubatingColony = this.room ? this.room.colony : undefined;
+		this.incubatingColony = this.room ? Overmind.Colonies[Overmind.colonyMap[this.room.name]] : undefined;
 		if (this.incubatingColony && this.colony != this.incubatingColony) {
 			// this.colony is from Flag memory and is the incubator; this.room.colony is the new colony
 			this.incubatingColony.incubator = this.colony;
@@ -31,6 +31,7 @@ export class DirectiveIncubate extends Directive {
 	}
 
 	init() {
+
 	}
 
 	run() {

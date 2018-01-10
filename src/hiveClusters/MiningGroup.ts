@@ -6,6 +6,7 @@ import {TransportRequestGroup} from '../resourceRequests/TransportRequestGroup';
 import {profile} from '../lib/Profiler';
 import {Pathing} from '../pathing/pathing';
 import {HaulingOverlord} from '../overlords/overlord_haul';
+import {Colony} from '../Colony';
 
 @profile
 export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
@@ -24,9 +25,9 @@ export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
 		linkPowerNeeded: number,						// Amount of link power needed in units of energy/tick
 		linkPowerAvailable: number,						// Amount of link power available in units of energy/tick
 	};
-	overlord: IOverlord;
+	overlord: HaulingOverlord;
 
-	constructor(colony: IColony, dropoff: StructureLink | StructureStorage) {
+	constructor(colony: Colony, dropoff: StructureLink | StructureStorage) {
 		super(colony, dropoff, 'miningGroup');
 		this.initMemory(colony.memory, this.name);
 		this.settings = {

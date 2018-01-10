@@ -12,6 +12,7 @@ export class TaskRepair extends Task {
 		super(repairTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'green';
+		this.settings.targetRange = 3;
 	}
 
 	isValidTask() {
