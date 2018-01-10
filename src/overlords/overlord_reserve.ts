@@ -3,13 +3,15 @@ import {ReserverSetup} from '../creepSetup/defaultSetups';
 import {TaskReserve} from '../tasks/task_reserve';
 import {TaskGoTo} from '../tasks/task_goTo';
 import {Priority} from '../config/priorities';
+import {Zerg} from '../Zerg';
+import {DirectiveOutpost} from '../directives/directive_outpost';
 
 export class ReservingOverlord extends Overlord {
 
 	reservers: Zerg[];
 	reserveBuffer: number;
 
-	constructor(directive: IDirective, priority = Priority.Normal) {
+	constructor(directive: DirectiveOutpost, priority = Priority.Normal) {
 		super(directive, 'reserve', priority);
 		this.reservers = this.getCreeps('reserver');
 		this.reserveBuffer = 3000;

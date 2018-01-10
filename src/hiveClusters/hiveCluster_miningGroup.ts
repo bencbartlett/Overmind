@@ -1,20 +1,21 @@
 // Mining group for creating a collection of mining sites that deposit to a common location (link or storage)
 
-import {AbstractHiveCluster} from './AbstractHiveCluster';
+import {HiveCluster} from './HiveCluster';
 import {log} from '../lib/logger/log';
 import {TransportRequestGroup} from '../resourceRequests/TransportRequestGroup';
 import {profile} from '../lib/Profiler';
 import {Pathing} from '../pathing/pathing';
 import {HaulingOverlord} from '../overlords/overlord_haul';
 import {Colony} from '../Colony';
+import {MiningSite} from './hiveCluster_miningSite';
 
 @profile
-export class MiningGroup extends AbstractHiveCluster implements IMiningGroup {
+export class MiningGroup extends HiveCluster {
 	memory: any;
 	dropoff: StructureLink | StructureStorage;		// Where haulers drop off to
 	links: StructureLink[] | undefined;				// List of links contained in the mining group
 	availableLinks: StructureLink[] | undefined; 	// List of links in mining group that are ready to send
-	miningSites: IMiningSite[];						// Mining sites that deposit via this mining group
+	miningSites: MiningSite[];						// Mining sites that deposit via this mining group
 	parkingSpots: RoomPosition[]; 					// Good places for haulers to idle near the dropoff
 	transportRequests: TransportRequestGroup;			// Box for resource requests
 	private settings: {								// Settings for mining group

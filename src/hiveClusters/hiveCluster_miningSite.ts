@@ -1,21 +1,23 @@
 // Mining site class for grouping relevant components
 
-import {AbstractHiveCluster} from './AbstractHiveCluster';
+import {HiveCluster} from './HiveCluster';
 import {profile} from '../lib/Profiler';
 import {Pathing} from '../pathing/pathing';
 import {MiningOverlord} from '../overlords/overlord_mine';
 import {Priority} from '../config/priorities';
 import {Colony} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
+import {MiningGroup} from './hiveCluster_miningGroup';
+import {TransportRequestGroup} from '../resourceRequests/TransportRequestGroup';
 
 @profile
-export class MiningSite extends AbstractHiveCluster implements IMiningSite {
+export class MiningSite extends HiveCluster {
 	source: Source;
 	energyPerTick: number;
 	miningPowerNeeded: number;
 	output: StructureContainer | StructureLink | undefined;
 	outputConstructionSite: ConstructionSite | undefined;
-	miningGroup: IMiningGroup | undefined;
+	miningGroup: MiningGroup | undefined;
 	overlord: Overlord;
 
 	// private _miners: Zerg[];
@@ -82,7 +84,7 @@ export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 	/* Register appropriate resource withdrawal requests when the output gets sufficiently full */
 	private registerOutputRequests(): void {
 		// Figure out which request group to submit requests to
-		let resourceRequestGroup: ITransportRequestGroup;
+		let resourceRequestGroup: TransportRequestGroup;
 		if (this.miningGroup) {
 			resourceRequestGroup = this.miningGroup.transportRequests; // TODO: bug here
 		} else {
@@ -105,7 +107,7 @@ export class MiningSite extends AbstractHiveCluster implements IMiningSite {
 		}
 	}
 
-	private findBestMiningGroup(): IMiningGroup | undefined {
+	private findBestMiningGroup(): MiningGroup | undefined {
 		if (this.colony.miningGroups) {
 			if (this.room == this.colony.room) {
 				return this.colony.miningGroups[this.colony.storage!.ref];

@@ -1,10 +1,10 @@
 // Colony class - organizes all assets of an owned room into a colony
 
-import {MiningSite} from './hiveClusters/MiningSite';
-import {Hatchery} from './hiveClusters/Hatchery';
-import {CommandCenter} from './hiveClusters/CommandCenter';
-import {UpgradeSite} from './hiveClusters/UpgradeSite';
-import {MiningGroup} from './hiveClusters/MiningGroup';
+import {MiningSite} from './hiveClusters/hiveCluster_miningSite';
+import {Hatchery} from './hiveClusters/hiveCluster_hatchery';
+import {CommandCenter} from './hiveClusters/hiveCluster_commandCenter';
+import {UpgradeSite} from './hiveClusters/hiveCluster_upgradeSite';
+import {MiningGroup} from './hiveClusters/hiveCluster_miningGroup';
 import {profile} from './lib/Profiler';
 import {TransportRequestGroup} from './resourceRequests/TransportRequestGroup';
 import {LinkRequestGroup} from './resourceRequests/LinkRequests';
@@ -13,6 +13,7 @@ import {SupplierOverlord} from './overlords/overlord_supply';
 import {Priority} from './config/priorities';
 import {WorkerOverlord} from './overlords/overlord_work';
 import {Overlord} from './overlords/Overlord';
+import {Zerg} from './Zerg';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -21,7 +22,7 @@ export enum ColonyStage {
 }
 
 @profile
-export class Colony implements IColony {
+export class Colony {
 	// Colony memory
 	memory: ColonyMemory;								// Memory.colonies[name]
 	// Colony overseer
@@ -51,11 +52,11 @@ export class Colony implements IColony {
 	sources: Source[];									// | Sources in all colony rooms
 	flags: Flag[];										// | Flags across the colony
 	// Hive clusters
-	commandCenter: ICommandCenter | undefined;			// Component with logic for non-spawning structures
-	hatchery: IHatchery | undefined;					// Component to encapsulate spawner logic
-	upgradeSite: IUpgradeSite;							// Component to provide upgraders with uninterrupted energy
-	miningGroups: { [id: string]: IMiningGroup } | undefined;	// Component to group mining sites into a hauling group
-	miningSites: { [sourceID: string]: IMiningSite };	// Component with logic for mining and hauling
+	commandCenter: CommandCenter | undefined;			// Component with logic for non-spawning structures
+	hatchery: Hatchery | undefined;					// Component to encapsulate spawner logic
+	upgradeSite: UpgradeSite;							// Component to provide upgraders with uninterrupted energy
+	miningGroups: { [id: string]: MiningGroup } | undefined;	// Component to group mining sites into a hauling group
+	miningSites: { [sourceID: string]: MiningSite };	// Component with logic for mining and hauling
 	// Incubation status
 	incubator: Colony | undefined; 					// The colony responsible for incubating this one, if any
 	isIncubating: boolean;								// If the colony is incubating

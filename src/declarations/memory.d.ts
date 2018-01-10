@@ -22,7 +22,7 @@ interface CreepMemory {
 		replaceAt: number;
 		boosts: { [resourceName: string]: boolean };
 		moveSpeed?: number;
-		supplyRequests?: IResourceRequest[];
+		// supplyRequests?: IResourceRequest[];
 	};
 	// Traveler components
 	_travel: any;

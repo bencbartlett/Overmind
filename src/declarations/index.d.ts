@@ -1,29 +1,55 @@
 declare const require: (module: string) => any;
 declare var global: any;
 
-// interface flagActions {
-// 	[actionType: string]: Function;
-// }
-//
-// interface flagSubCat {
-// 	color: number;
-// 	secondaryColor: number;
-// 	filter: Function;
-// 	action: Function | null;
-// }
-//
-// interface flagCat {
-// 	color: number;
-// 	filter: Function;
-// 	action: flagActions | null;
-//
-// 	[subcat: string]: any;
-// }
-//
-// interface ColorCode {
-// 	color: ColorConstant;
-// 	secondaryColor: ColorConstant;
-// }
+declare namespace NodeJS {
+	interface Global {
+		Overmind: IOvermind;
+		log: any;
+		Profiler: any;
+
+		deref(ref: string): RoomObject | null;
+
+		derefRoomPosition(protoPos: protoPos): RoomPosition;
+	}
+}
+
+interface Game {
+	zerg: { [name: string]: any };
+	directives: { [name: string]: any };
+}
+
+interface ICache {
+	overlords: { [overlord: string]: { [roleName: string]: string[] } };
+	targets: { [ref: string]: string[] };
+	structures: { [roomName: string]: { [structureType: string]: Structure[] } };
+	constructionSites: { [roomName: string]: ConstructionSite[] };
+	structureSites: { [roomName: string]: ConstructionSite[] };
+	roadSites: { [roomName: string]: ConstructionSite[] };
+	drops: { [roomName: string]: { [resourceType: string]: Resource[] } };
+
+	build(): void;
+
+	rebuild(): void;
+}
+
+interface IOvermind {
+	cache: ICache;
+	Colonies: { [roomName: string]: any };
+	overlords: { [overlordName: string]: any };
+	colonyMap: { [roomName: string]: string };
+	invisibleRooms: string[];
+
+	build(): void;
+
+	rebuild(): void;
+
+	init(): void;
+
+	run(): void;
+}
+
+declare var Overmind: IOvermind;
+
 
 interface Coord {
 	x: number;
@@ -55,49 +81,6 @@ interface RoomPlan {
 		pos: RoomPosition;
 		rotation: number;
 	}
-}
-
-interface IDirective {
-	flag: Flag;
-	name: string;
-	colony: IColony;
-	pos: RoomPosition;
-	room: Room | undefined;
-	memory: FlagMemory;
-	overlords: { [name: string]: IOverlord };
-
-	remove(): number;
-
-	setColor(color: ColorConstant, secondaryColor?: ColorConstant): number;
-
-	setPosition(pos: RoomPosition): number;
-
-	init(): void;
-
-	run(): void;
-}
-
-interface IOverlordInitializer {
-	name: string;
-	room: Room | undefined;
-	pos: RoomPosition;
-	colony: IColony;
-	memory: any;
-}
-
-interface IOverlord {
-	name: string;
-	ref: string;
-	room: Room | undefined;
-	colony: IColony;
-	creeps: { [roleName: string]: Zerg[] };
-	memory: OverlordMemory;
-
-	spawn(): void;
-
-	init(): void;
-
-	run(): void;
 }
 
 interface protoCreep {
@@ -147,96 +130,3 @@ interface protoTask {
 		resourceType?: string;
 	};
 }
-
-interface ITask extends protoTask {
-	creep: Zerg;
-	target: RoomObject | null;
-	targetPos: RoomPosition;
-	parent: ITask | null;
-
-	fork(newTask: ITask): void
-
-	isValidTask(): boolean;
-
-	isValidTarget(): boolean;
-
-	isValid(): boolean;
-
-	move(): number;
-
-	run(): number;
-
-	work(): number;
-
-	finish(): void;
-}
-
-interface IResourceRequest {
-	target: EnergyRequestStructure | ResourceRequestStructure;
-	amount: number;
-	resourceType: string;
-}
-
-interface IWithdrawRequest {
-	target: EnergyWithdrawStructure | ResourceWithdrawStructure;
-	amount: number;
-	resourceType: string;
-}
-
-type EnergyRequestStructure = Sink | StructureContainer;
-type ResourceRequestStructure = StructureLab | StructureNuker | StructurePowerSpawn | StructureContainer;
-type EnergyWithdrawStructure = StructureContainer | StructureTerminal | StructureLink;
-type ResourceWithdrawStructure = StructureLab | StructureContainer | StructureTerminal;
-
-interface ITransportRequestGroup {
-	supply: { [priority: number]: IResourceRequest[] };
-	withdraw: { [priority: number]: IWithdrawRequest[] };
-
-	requestEnergy(target: EnergyRequestStructure, priority?: number, amount?: number): void
-
-	requestResource(target: ResourceRequestStructure, resourceType: ResourceConstant,
-					priority?: number, amount?: number): void
-
-	requestWithdrawal(target: EnergyWithdrawStructure, priority?: number, amount?: number): void
-
-	requestResourceWithdrawal(target: ResourceWithdrawStructure, resourceType: ResourceConstant,
-							  priority?: number, amount?: number): void
-}
-
-interface ILinkRequestGroup {
-	receive: StructureLink[];
-	transmit: StructureLink[];
-
-	requestReceive(link: StructureLink): void;
-
-	requestTransmit(link: StructureLink): void
-}
-
-interface IObjective {
-	name: string;
-	target: RoomObject;
-	pos: RoomPosition;
-	ref: string;
-	creepNames: string[];
-	maxCreeps: number;
-	assignableToRoles: string[];
-
-	assignableTo(creep: Zerg): boolean;
-
-	getTask(): ITask;
-
-	assignTo(creep: Zerg): void;
-}
-
-interface IObjectiveGroup {
-	objectives: { [objectiveName: string]: IObjective[] };
-	objectivesByRef: { [objectiveRef: string]: IObjective };
-	objectivePriorities: string[];
-
-	registerObjectives(...args: IObjective[][]): void;
-
-	assignTask(creep: Zerg): void;
-}
-
-
-

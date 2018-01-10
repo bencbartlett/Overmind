@@ -34,7 +34,7 @@ export class TaskWithdrawResource extends Task {
 	}
 
 	work() {
-		return this.creep.withdraw(this.target, this.data.resourceType!);
+		return this.creep.withdraw(this.target, <ResourceConstant>this.data.resourceType!);
 	}
 }
 

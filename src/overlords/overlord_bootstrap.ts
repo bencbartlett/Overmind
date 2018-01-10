@@ -6,6 +6,7 @@ import {MiningOverlord} from './overlord_mine';
 import {TaskDeposit} from '../tasks/task_deposit';
 import {TaskWithdraw} from '../tasks/task_withdraw';
 import {ColonyStage} from '../Colony';
+import {Zerg} from '../Zerg';
 
 export class BoostrapMinerSetup extends CreepSetup {
 	constructor() {

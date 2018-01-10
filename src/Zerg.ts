@@ -1,9 +1,11 @@
 import {profile} from './lib/Profiler';
 import {taskInstantiator} from './maps/map_tasks';
 import {Colony} from './Colony';
+import {Overlord} from './overlords/Overlord';
+import {Task} from './tasks/Task';
 
 @profile
-export class WrappedCreep implements Zerg {
+export class Zerg {
 	creep: Creep; 					// The creep that this wrapper class will control
 	body: BodyPartDefinition[];     // These properties are all wrapped from this.creep.* to this.*
 	carry: StoreDefinition;			// |
@@ -21,7 +23,7 @@ export class WrappedCreep implements Zerg {
 	spawning: boolean;				// |
 	ticksToLive: number;			// |
 	// settings: any;					// Adjustable settings object, can vary across roles
-	private _task: ITask | null; 	// Cached Task object that is instantiated once per tick and every time task changes
+	private _task: Task | null; 	// Cached Task object that is instantiated once per tick and every time task changes
 
 	constructor(creep: Creep) {
 		this.creep = creep;
@@ -117,34 +119,34 @@ export class WrappedCreep implements Zerg {
 		return this.creep.upgradeController(controller);
 	}
 
-	heal(target: Creep | WrappedCreep): number {
-		if (target instanceof WrappedCreep) {
+	heal(target: Creep | Zerg): number {
+		if (target instanceof Zerg) {
 			return this.creep.heal(target.creep);
 		} else {
 			return this.creep.heal(target);
 		}
 	}
 
-	rangedHeal(target: Creep | WrappedCreep): number {
-		if (target instanceof WrappedCreep) {
+	rangedHeal(target: Creep | Zerg): number {
+		if (target instanceof Zerg) {
 			return this.creep.rangedHeal(target.creep);
 		} else {
 			return this.creep.rangedHeal(target);
 		}
 	}
 
-	transfer(target: Creep | WrappedCreep | Structure, resourceType: ResourceConstant, amount?: number): number {
-		if (target instanceof WrappedCreep) {
+	transfer(target: Creep | Zerg | Structure, resourceType: ResourceConstant, amount?: number): number {
+		if (target instanceof Zerg) {
 			return this.creep.transfer(target.creep, resourceType, amount);
 		} else {
 			return this.creep.transfer(target, resourceType, amount);
 		}
 	}
 
-	withdraw(target: Creep | WrappedCreep | Structure, resourceType: ResourceConstant, amount?: number): number {
+	withdraw(target: Creep | Zerg | Structure, resourceType: ResourceConstant, amount?: number): number {
 		if (target instanceof Creep) {
 			return target.transfer(this.creep, resourceType, amount);
-		} else if (target instanceof WrappedCreep) {
+		} else if (target instanceof Zerg) {
 			return target.creep.transfer(this.creep, resourceType, amount);
 		} else {
 			return this.creep.withdraw(target, resourceType, amount);
@@ -157,20 +159,21 @@ export class WrappedCreep implements Zerg {
 
 	// Custom creep methods ============================================================================================
 
-	get overlord(): IOverlord | null {
-		if (this.memory.overlord) {
-			let [directiveName, overlordName] = this.memory.overlord.split(':');
-			if (Game.directives[directiveName] && Game.directives[directiveName].overlords[overlordName]) {
-				return Game.directives[directiveName].overlords[overlordName];
-			} else {
-				return null;
-			}
+	get overlord(): Overlord | null {
+		if (this.memory.overlord && Overmind.overlords[this.memory.overlord]) {
+			// let [directiveName, overlordName] = this.memory.overlord.split(':');
+			// if (Game.directives[directiveName] && Game.directives[directiveName].overlords[overlordName]) {
+			// 	return Game.directives[directiveName].overlords[overlordName];
+			// } else {
+			// 	return null;
+			// }
+			return Overmind.overlords[this.memory.overlord];
 		} else {
 			return null;
 		}
 	}
 
-	set overlord(newOverlord: IOverlord | null) {
+	set overlord(newOverlord: Overlord | null) {
 		// Remove cache references to old assignments
 		let ref = this.memory.overlord;
 		if (ref && Overmind.cache.overlords[ref] && Overmind.cache.overlords[ref][this.roleName]) {
@@ -193,7 +196,7 @@ export class WrappedCreep implements Zerg {
 	}
 
 	/* Instantiate the _task object when needed */
-	initializeTask(): ITask | null {
+	initializeTask(): Task | null {
 		let protoTask = this.memory.task as protoTask;
 		if (protoTask) {
 			// PERFORM TASK MIGRATION HERE
@@ -204,7 +207,7 @@ export class WrappedCreep implements Zerg {
 	}
 
 	/* Wrapper for _task */
-	get task(): ITask | null {
+	get task(): Task | null {
 		if (!this._task) {
 			this._task = this.initializeTask();
 		}
@@ -212,7 +215,7 @@ export class WrappedCreep implements Zerg {
 	}
 
 	/* Assign the creep a task with the setter, replacing creep.assign(Task) */
-	set task(task: ITask | null) {
+	set task(task: Task | null) {
 		// Unregister target from old task if applicable
 		let oldProtoTask = this.memory.task as protoTask;
 		if (oldProtoTask) {

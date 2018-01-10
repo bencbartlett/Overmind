@@ -4,6 +4,7 @@ import {Overlord} from './Overlord';
 import {GuardSetup} from '../creepSetup/defaultSetups';
 import {DirectiveGuard} from '../directives/directive_guard';
 import {Priority} from '../config/priorities';
+import {Zerg} from '../Zerg';
 
 export class GuardOverlord extends Overlord {
 

@@ -5,7 +5,7 @@ import {Overlord} from '../overlords/Overlord';
 
 
 @profile
-export abstract class Directive implements IDirective {
+export abstract class Directive {
 
 	static directiveName: string;				// Name of the type of directive, e.g. "incubate"
 	static color: ColorConstant; 				// Flag color

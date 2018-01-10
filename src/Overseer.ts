@@ -6,13 +6,14 @@ import {profile} from './lib/Profiler';
 import {blankPriorityQueue} from './config/priorities';
 import {Colony} from './Colony';
 import {Overlord} from './overlords/Overlord';
+import {Directive} from './directives/Directive';
 
 @profile
 export class Overseer {
 	name: string; 								// Name of the primary colony room
 	memory: OverseerMemory; 					// Memory.colony.overseer
 	colony: Colony; 							// Instantiated colony object
-	directives: IDirective[];					// Directives across the colony
+	directives: Directive[];					// Directives across the colony
 	overlords: {
 		[priority: number]: Overlord[]
 	};

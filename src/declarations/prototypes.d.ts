@@ -5,8 +5,6 @@ interface Creep {
 }
 
 interface Flag {
-	// colony: IColony;
-
 	recalculateColony(restrictDistance?: number): void;
 }
 
@@ -26,7 +24,6 @@ type StorageUnit = StructureContainer | StructureTerminal | StructureStorage;
 // }
 
 interface Room {
-	// colony: IColony;
 	my: boolean;
 	reservedByMe: boolean;
 	signedByMe: boolean;
@@ -65,7 +62,7 @@ interface RoomObject {
 	linked: boolean;
 	nearbyLinks: StructureLink[];
 
-	isTargetFor(taskName?: string): ITask[];
+	// isTargetFor(taskName?: string): ITask[];
 
 	serialize(): protoRoomObject;
 }
@@ -99,7 +96,6 @@ interface RoomVisual {
 
 interface StructureContainer {
 	energy: number;
-	miningSite: IMiningSite;
 	predictedEnergyOnArrival: number;
 	isFull: boolean;
 	isEmpty: boolean;
@@ -137,8 +133,6 @@ interface StructureStorage {
 	energy: number;
 	isFull: boolean;
 	isEmpty: boolean;
-
-	creepCanWithdrawEnergy(creep: Zerg): boolean;
 
 }
 

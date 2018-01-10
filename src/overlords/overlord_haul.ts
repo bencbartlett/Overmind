@@ -4,13 +4,17 @@ import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskGoTo} from '../tasks/task_goTo';
 import {TaskDeposit} from '../tasks/task_deposit';
 import {Priority} from '../config/priorities';
+import {MiningGroup} from '../hiveClusters/hiveCluster_miningGroup';
+import {IWithdrawRequest} from '../resourceRequests/TransportRequestGroup';
+import {Zerg} from '../Zerg';
 
 
 export class HaulingOverlord extends Overlord {
-	haulers: Zerg[];
-	miningGroup: IMiningGroup;
 
-	constructor(miningGroup: IMiningGroup, priority = Priority.Normal) {
+	haulers: Zerg[];
+	miningGroup: MiningGroup;
+
+	constructor(miningGroup: MiningGroup, priority = Priority.Normal) {
 		super(miningGroup, 'haul', priority);
 		this.haulers = this.getCreeps('hauler');
 		this.miningGroup = miningGroup;

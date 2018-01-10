@@ -4,6 +4,9 @@ import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskDeposit} from '../tasks/task_deposit';
 import {Priority} from '../config/priorities';
 import {Colony} from '../Colony';
+import {HiveCluster} from '../hiveClusters/HiveCluster';
+import {IResourceRequest, IWithdrawRequest} from '../resourceRequests/TransportRequestGroup';
+import {Zerg} from '../Zerg';
 
 
 // TODO: make this work with more resources than just energy
@@ -16,7 +19,7 @@ export class SupplierOverlord extends Overlord {
 	private _prioritizedRefills: { [priority: number]: IResourceRequest[] };
 	private _prioritizedWithdrawals: { [priority: number]: IWithdrawRequest[] };
 
-	constructor(directive: Colony | IHiveCluster, priority = Priority.Normal) {
+	constructor(directive: Colony | HiveCluster, priority = Priority.Normal) {
 		super(directive, 'supply', priority);
 		this.suppliers = this.getCreeps('supplier');
 		this.settings = {

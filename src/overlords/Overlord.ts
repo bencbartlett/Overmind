@@ -4,9 +4,19 @@ import {CreepSetup} from '../creepSetup/CreepSetup';
 import {profile} from '../lib/Profiler';
 import {Pathing} from '../pathing/pathing';
 import {Priority} from '../config/priorities';
+import {Colony} from '../Colony';
+import {Zerg} from '../Zerg';
+
+export interface IOverlordInitializer {
+	name: string;
+	room: Room | undefined;
+	pos: RoomPosition;
+	colony: Colony;
+	memory: any;
+}
 
 @profile
-export abstract class Overlord implements IOverlord {
+export abstract class Overlord {
 
 	// directive: IDirective;
 	// flag: Flag;
@@ -15,7 +25,7 @@ export abstract class Overlord implements IOverlord {
 	priority: number;
 	ref: string;
 	pos: RoomPosition;
-	colony: IColony;
+	colony: Colony;
 	creeps: { [roleName: string]: Zerg[] };
 	memory: OverlordMemory;
 
@@ -29,8 +39,9 @@ export abstract class Overlord implements IOverlord {
 		this.creeps = _.mapValues(Overmind.cache.overlords[this.ref],
 								  creepsOfRole => _.map(creepsOfRole, creepName => Game.zerg[creepName]));
 		this.initMemory(initializer);
-		// Register the overlord on the colony overseer
+		// Register the overlord on the colony overseer and on the overmind
 		this.colony.overseer.overlords[this.priority].push(this);
+		Overmind.overlords[this.ref] = this;
 	}
 
 	protected getCreeps(role: string): Zerg[] {

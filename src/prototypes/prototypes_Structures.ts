@@ -21,12 +21,12 @@ Object.defineProperty(StructureContainer.prototype, 'isEmpty', { // if this cont
 	},
 });
 
-Object.defineProperty(StructureContainer.prototype, 'miningSite', {
-	get: function () {
-		let source = this.pos.findInRange(FIND_SOURCES, 2)[0];
-		return this.room.colony.miningSites[source.ref];
-	},
-});
+// Object.defineProperty(StructureContainer.prototype, 'miningSite', {
+// 	get: function () {
+// 		let source = this.pos.findInRange(FIND_SOURCES, 2)[0];
+// 		return this.room.colony.miningSites[source.ref];
+// 	},
+// });
 
 // Estimated amount of energy a hauler leaving storage now would see when it gets to the container
 Object.defineProperty(StructureContainer.prototype, 'predictedEnergyOnArrival', {
@@ -112,13 +112,13 @@ Object.defineProperty(StructureSpawn.prototype, 'isEmpty', { // if this containe
 
 // Storage prototypes ==================================================================================================
 
-StructureStorage.prototype.creepCanWithdrawEnergy = function (creep: Zerg): boolean {
-	let bufferAmount: number = this.room.colony.overseer.settings.storageBuffer[creep.roleName];
-	if (!bufferAmount) {
-		bufferAmount = 0;
-	}
-	return this.energy > bufferAmount;
-};
+// StructureStorage.prototype.creepCanWithdrawEnergy = function (creep: Zerg): boolean {
+// 	let bufferAmount: number = this.room.colony.overseer.settings.storageBuffer[creep.roleName];
+// 	if (!bufferAmount) {
+// 		bufferAmount = 0;
+// 	}
+// 	return this.energy > bufferAmount;
+// };
 
 Object.defineProperty(StructureStorage.prototype, 'energy', {
 	get () {

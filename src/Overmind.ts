@@ -4,20 +4,23 @@ import {Colony} from './Colony';
 import {DirectiveWrapper} from './maps/map_directives';
 import {profile} from './lib/Profiler';
 import {GameCache} from './caching';
-import {WrappedCreep} from './Zerg';
+import {Zerg} from './Zerg';
 import {DirectiveOutpost} from './directives/directive_outpost';
+import {Overlord} from './overlords/Overlord';
 
 
 @profile
 export default class Overmind implements IOvermind {
 	cache: ICache;
 	Colonies: { [roomName: string]: Colony };				// Global hash of all colony objects
+	overlords: { [overlordName: string]: Overlord };
 	colonyMap: { [roomName: string]: string };				// Global map of colony associations for possibly-null rooms
 	invisibleRooms: string[]; 								// Names of rooms across all colonies that are invisible
 
 	constructor() {
 		this.cache = new GameCache();
 		this.Colonies = {};
+		this.overlords = {};
 		this.colonyMap = {};
 		this.invisibleRooms = [];
 	}
@@ -68,7 +71,7 @@ export default class Overmind implements IOvermind {
 		// Wrap all creeps
 		Game.zerg = {};
 		for (let name in Game.creeps) {
-			Game.zerg[name] = new WrappedCreep(Game.creeps[name]);
+			Game.zerg[name] = new Zerg(Game.creeps[name]);
 		}
 	}
 

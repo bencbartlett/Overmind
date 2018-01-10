@@ -7,6 +7,7 @@ import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskRepair} from '../tasks/task_repair';
 import {TaskBuild} from '../tasks/task_build';
 import {TaskUpgrade} from '../tasks/task_upgrade';
+import {Zerg} from '../Zerg';
 
 @profile
 export class WorkerOverlord extends Overlord {

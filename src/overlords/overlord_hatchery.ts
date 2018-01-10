@@ -4,17 +4,20 @@ import {TaskWithdraw} from '../tasks/task_withdraw';
 import {TaskDeposit} from '../tasks/task_deposit';
 import {log} from '../lib/logger/log';
 import {QueenSetup} from '../creepSetup/defaultSetups';
+import {Hatchery} from '../hiveClusters/hiveCluster_hatchery';
+import {EnergyRequestStructure, ResourceRequestStructure} from '../resourceRequests/TransportRequestGroup';
+import {Zerg} from '../Zerg';
 
 // Hatchery overlord: spawn and run a dedicated supplier-like hatchery attendant (called after colony has storage)
 export class HatcheryOverlord extends Overlord {
 
-	hatchery: IHatchery;
+	hatchery: Hatchery;
 	queens: Zerg[];
 	settings: any;
 
 	// private _prioritizedRefills: { [priority: number]: IResourceRequest[] };
 
-	constructor(hatchery: IHatchery, priority = Priority.High) {
+	constructor(hatchery: Hatchery, priority = Priority.High) {
 		super(hatchery, 'hatchery', priority);
 		this.hatchery = hatchery;
 		this.queens = this.getCreeps('queen');

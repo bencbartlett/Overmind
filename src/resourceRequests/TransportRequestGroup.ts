@@ -3,15 +3,26 @@
 import {profile} from '../lib/Profiler';
 import {blankPriorityQueue, Priority} from '../config/priorities';
 
-type EnergyRequestStructure = Sink | StructureContainer;
-type ResourceRequestStructure = StructureLab | StructureNuker | StructurePowerSpawn | StructureContainer;
+export type EnergyRequestStructure = Sink | StructureContainer;
+export type ResourceRequestStructure = StructureLab | StructureNuker | StructurePowerSpawn | StructureContainer;
 
-type EnergyWithdrawStructure = StructureContainer | StructureTerminal | StructureLink;
-type ResourceWithdrawStructure = StructureLab | StructureContainer | StructureTerminal;
+export type EnergyWithdrawStructure = StructureContainer | StructureTerminal | StructureLink;
+export type ResourceWithdrawStructure = StructureLab | StructureContainer | StructureTerminal;
 
+export interface IResourceRequest {
+	target: EnergyRequestStructure | ResourceRequestStructure;
+	amount: number;
+	resourceType: string;
+}
+
+export interface IWithdrawRequest {
+	target: EnergyWithdrawStructure | ResourceWithdrawStructure;
+	amount: number;
+	resourceType: string;
+}
 
 @profile
-export class TransportRequestGroup implements ITransportRequestGroup {
+export class TransportRequestGroup {
 
 	supply: { [priority: number]: IResourceRequest[] };
 	withdraw: { [priority: number]: IWithdrawRequest[] };

@@ -3,15 +3,17 @@ import {Priority} from '../config/priorities';
 import {ManagerSetup} from '../creepSetup/defaultSetups';
 import {TaskDeposit} from '../tasks/task_deposit';
 import {TaskWithdraw} from '../tasks/task_withdraw';
+import {CommandCenter} from '../hiveClusters/hiveCluster_commandCenter';
+import {Zerg} from '../Zerg';
 
 
 // Command center overlord: spawn and run a dediated commandCenter attendant
 export class CommandCenterOverlord extends Overlord {
 
 	managers: Zerg[];
-	commandCenter: ICommandCenter;
+	commandCenter: CommandCenter;
 
-	constructor(commandCenter: ICommandCenter, priority = Priority.High) {
+	constructor(commandCenter: CommandCenter, priority = Priority.High) {
 		super(commandCenter, 'manager', priority);
 		this.commandCenter = commandCenter;
 		this.managers = this.getCreeps('manager');

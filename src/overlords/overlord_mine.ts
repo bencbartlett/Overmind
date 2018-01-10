@@ -6,13 +6,15 @@ import {TaskBuild} from '../tasks/task_build';
 import {MinerSetup} from '../creepSetup/defaultSetups';
 import {TaskGoTo} from '../tasks/task_goTo';
 import {Priority} from '../config/priorities';
+import {MiningSite} from '../hiveClusters/hiveCluster_miningSite';
+import {Zerg} from '../Zerg';
 
 export class MiningOverlord extends Overlord {
 
 	miners: Zerg[];
-	miningSite: IMiningSite;
+	miningSite: MiningSite;
 
-	constructor(miningSite: IMiningSite, priority = Priority.Normal) {
+	constructor(miningSite: MiningSite, priority = Priority.Normal) {
 		super(miningSite, 'mine', priority);
 		this.miners = this.getCreeps('miner');
 		this.miningSite = miningSite;

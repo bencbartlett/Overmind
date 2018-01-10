@@ -1,12 +1,12 @@
 // Upgrade site for grouping relevant components for an upgrader station
 
-import {AbstractHiveCluster} from './AbstractHiveCluster';
+import {HiveCluster} from './HiveCluster';
 import {profile} from '../lib/Profiler';
 import {UpgradingOverlord} from '../overlords/overlord_upgrade';
 import {Colony} from '../Colony';
 
 @profile
-export class UpgradeSite extends AbstractHiveCluster implements IUpgradeSite {
+export class UpgradeSite extends HiveCluster {
 
 	controller: StructureController;					// The controller for the site
 	input: StructureLink | StructureContainer | null;	// The object receiving energy for the site

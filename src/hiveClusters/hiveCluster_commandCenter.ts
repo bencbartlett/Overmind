@@ -1,7 +1,7 @@
 // Mining site class for grouping relevant components
 
 import {depositTargetType} from '../tasks/task_deposit';
-import {AbstractHiveCluster} from './AbstractHiveCluster';
+import {HiveCluster} from './HiveCluster';
 import {reserveCredits} from '../settings/settings_user';
 import {terminalSettings} from '../settings/settings_terminal';
 import {log} from '../lib/logger/log';
@@ -11,7 +11,7 @@ import {Priority} from '../config/priorities';
 import {Colony} from '../Colony';
 
 @profile
-export class CommandCenter extends AbstractHiveCluster implements ICommandCenter {
+export class CommandCenter extends HiveCluster {
 	memory: CommandCenterMemory;							// Memory.colonies.commandCenter
 	storage: StructureStorage;								// The colony storage, also the instantiation object
 	link: StructureLink | undefined;						// Link closest to storage

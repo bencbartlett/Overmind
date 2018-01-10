@@ -5,15 +5,17 @@ import {TaskRepair} from '../tasks/task_repair';
 import {TaskBuild} from '../tasks/task_build';
 import {TaskWithdraw} from '../tasks/task_withdraw';
 import {Priority} from '../config/priorities';
+import {UpgradeSite} from '../hiveClusters/hiveCluster_upgradeSite';
+import {Zerg} from '../Zerg';
 
 export class UpgradingOverlord extends Overlord {
 
 	upgraders: Zerg[];
-	upgradeSite: IUpgradeSite;
+	upgradeSite: UpgradeSite;
 	settings: { [property: string]: number };
 	room: Room;	//  Operates in owned room
 
-	constructor(upgradeSite: IUpgradeSite, priority = Priority.Normal) {
+	constructor(upgradeSite: UpgradeSite, priority = Priority.Normal) {
 		super(upgradeSite, 'upgrade', priority);
 		this.upgraders = this.getCreeps('upgrader');
 		this.upgradeSite = upgradeSite;

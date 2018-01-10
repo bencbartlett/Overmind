@@ -1,5 +1,6 @@
 import {log} from '../lib/logger/log';
 import {taskInstantiator} from '../maps/map_tasks';
+import {Zerg} from '../Zerg';
 
 type targetType = { ref: string | null, pos: RoomPosition }; // overwrite this variable in derived classes to specify more precise typing
 
@@ -8,7 +9,7 @@ type targetType = { ref: string | null, pos: RoomPosition }; // overwrite this v
  * the necessary logic for traveling to a target, performing a task, and realizing when a task is no longer sensible
  * to continue.*/
 
-export abstract class Task implements ITask {
+export abstract class Task {
 
 	static taskName: string;
 
@@ -100,11 +101,11 @@ export abstract class Task implements ITask {
 	}
 
 	// Getter/setter for task parent
-	get parent(): ITask | null {
+	get parent(): Task | null {
 		return (this._parent ? taskInstantiator(this._parent) : null);
 	}
 
-	set parent(parentTask: ITask | null) {
+	set parent(parentTask: Task | null) {
 		this._parent = parentTask;
 		// If the task is already assigned to a creep, update their memory
 		// Although assigning something to a creep and then changing the parent is bad practice...
@@ -114,7 +115,7 @@ export abstract class Task implements ITask {
 	}
 
 	// Fork the task, assigning a new task to the creep with this task as its parent
-	fork(newTask: ITask): void {
+	fork(newTask: Task): void {
 		newTask.parent = this;
 		this.creep.task = newTask;
 	}

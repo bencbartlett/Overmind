@@ -4,12 +4,14 @@ import {TaskClaim} from '../tasks/task_claim';
 import {TaskGoTo} from '../tasks/task_goTo';
 import {TaskSignController} from '../tasks/task_signController';
 import {Priority} from '../config/priorities';
+import {Zerg} from '../Zerg';
+import {DirectiveIncubate} from '../directives/directive_incubate';
 
 export class ClaimingOverlord extends Overlord {
 
 	claimers: Zerg[];
 
-	constructor(directive: IDirective, priority = Priority.Normal) {
+	constructor(directive: DirectiveIncubate, priority = Priority.Normal) {
 		super(directive, 'claim', priority);
 		this.claimers = this.getCreeps('claimer');
 	}

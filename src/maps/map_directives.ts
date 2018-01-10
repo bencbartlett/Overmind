@@ -4,8 +4,9 @@ import {DirectiveGuard} from '../directives/directive_guard';
 import {DirectiveIncubate} from '../directives/directive_incubate';
 import {DirectiveOutpost} from '../directives/directive_outpost';
 import {DirectiveBootstrap} from '../directives/directive_bootstrap';
+import {Directive} from '../directives/Directive';
 
-export function DirectiveWrapper(flag: Flag): IDirective | undefined {
+export function DirectiveWrapper(flag: Flag): Directive | undefined {
 	switch (flag.color) {
 		// Colony directives =================================================
 		case COLOR_PURPLE:

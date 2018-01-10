@@ -1,6 +1,6 @@
 // Hatchery - groups all spawns in a colony
 
-import {AbstractHiveCluster} from './AbstractHiveCluster';
+import {HiveCluster} from './HiveCluster';
 import {log} from '../lib/logger/log';
 import {profile} from '../lib/Profiler';
 import {HatcheryOverlord} from '../overlords/overlord_hatchery';
@@ -11,7 +11,7 @@ import {CreepSetup} from '../creepSetup/CreepSetup';
 import {Overlord} from '../overlords/Overlord';
 
 @profile
-export class Hatchery extends AbstractHiveCluster implements IHatchery {
+export class Hatchery extends HiveCluster {
 	memory: HatcheryMemory; 								// Memory.colonies.hatchery
 	spawns: Spawn[]; 										// List of spawns in the hatchery
 	availableSpawns: Spawn[]; 								// Spawns that are available to make stuff right now
@@ -19,7 +19,7 @@ export class Hatchery extends AbstractHiveCluster implements IHatchery {
 	link: StructureLink | undefined; 						// The input link
 	towers: StructureTower[]; 								// All towers that aren't in the command center
 	battery: StructureContainer | undefined;				// The container to provide an energy buffer
-	transportRequests: ITransportRequestGroup;				// Box for energy requests
+	transportRequests: TransportRequestGroup;				// Box for energy requests
 	overlord: HatcheryOverlord | undefined;					// Hatchery overlord if past larva stage
 	private settings: {										// Settings for hatchery operation
 		refillTowersBelow: number,  							// What value to refill towers at?

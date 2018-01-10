@@ -3,7 +3,7 @@
 import {Colony} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
 
-export abstract class AbstractHiveCluster implements IHiveCluster {
+export abstract class HiveCluster {
 
 	colony: Colony;					// Colony the cluster belongs to
 	room: Room;							// Room of the baseComponent (not necessarily colony room)

@@ -3,7 +3,7 @@
 import {profile} from '../lib/Profiler';
 
 @profile
-export class LinkRequestGroup implements ILinkRequestGroup {
+export class LinkRequestGroup {
 
 	receive: StructureLink[];
 	transmit: StructureLink[];
