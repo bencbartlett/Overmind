@@ -4,6 +4,7 @@ import {HiveCluster} from './HiveCluster';
 import {profile} from '../lib/Profiler';
 import {UpgradingOverlord} from '../overlords/overlord_upgrade';
 import {Colony} from '../Colony';
+import {Memcheck} from '../memcheck';
 
 @profile
 export class UpgradeSite extends HiveCluster {
@@ -11,12 +12,15 @@ export class UpgradeSite extends HiveCluster {
 	controller: StructureController;					// The controller for the site
 	input: StructureLink | StructureContainer | null;	// The object receiving energy for the site
 	inputConstructionSite: ConstructionSite | null;		// The construction site for the input, if there is one
-	private settings: { [property: string]: number };
+	private settings: {
+		storageBuffer: number,
+		energyPerBodyUnit: number
+	};
 	overlord: UpgradingOverlord;
 
 	constructor(colony: Colony, controller: StructureController) {
 		super(colony, controller, 'upgradeSite');
-		this.initMemory(colony.memory, 'upgradeSite');
+		this.memory = Memcheck.safeAssign(colony.memory, 'upgradeSite');
 		this.controller = controller;
 		// Register input
 		let siteContainer = this.pos.findClosestByLimitedRange(this.room.containers, 4);
@@ -25,7 +29,7 @@ export class UpgradeSite extends HiveCluster {
 			this.input = siteLink;
 		} else if (siteContainer) {
 			this.input = siteContainer;
-		}
+		}// TODO: add container as battery
 		// Register input construction sites
 		let nearbyInputSites = this.pos.findInRange(this.room.structureSites, 4, {
 			filter: (s: ConstructionSite) => s.structureType == STRUCTURE_CONTAINER ||
@@ -43,7 +47,7 @@ export class UpgradeSite extends HiveCluster {
 	get upgradePowerNeeded(): number {
 		if (this.room.storage) { // Workers perform upgrading until storage is set up
 			let amountOver = Math.max(this.room.storage.energy - this.settings.storageBuffer, 0);
-			let upgradePower = 1 + Math.floor(amountOver / 20000);
+			let upgradePower = 1 + Math.floor(amountOver / this.settings.energyPerBodyUnit);
 			if (this.controller.level == 8) {
 				upgradePower = Math.min(upgradePower, 15); // don't go above 15 work parts at RCL 8
 			}

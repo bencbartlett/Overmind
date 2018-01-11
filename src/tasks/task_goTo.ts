@@ -10,9 +10,9 @@ export class TaskGoTo extends Task {
 
 	constructor(target: goToTargetType, options = {} as TaskOptions) {
 		if (target instanceof RoomPosition) {
-			super(goToTaskName, {ref: null, pos: target}, options);
+			super(goToTaskName, {ref: '', pos: target}, options);
 		} else {
-			super(goToTaskName, {ref: null, pos: target.pos}, options);
+			super(goToTaskName, {ref: '', pos: target.pos}, options);
 		}
 		// Settings
 		this.settings.targetRange = 1;
@@ -36,12 +36,12 @@ export class TaskGoTo extends Task {
 			return true;
 		} else {
 			// Switch to parent task if there is one
-			this.finish();
-			if (this.creep.task) {  // return whether parent task is valid if there is one
-				return this.creep.task.isValid();
-			} else {
-				return false;
+			let isValid = false;
+			if (this.parent) {
+				let isValid = this.parent.isValid();
 			}
+			this.finish();
+			return isValid;
 		}
 	}
 

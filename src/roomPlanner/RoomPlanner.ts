@@ -5,6 +5,35 @@ import {log} from '../lib/logger/log';
 import {Pathing} from '../pathing/pathing';
 import {Visualizer} from '../visuals/Visualizer';
 import {profile} from '../lib/Profiler';
+import {Memcheck} from '../memcheck';
+
+export interface BuildingPlannerOutput {
+	name: string;
+	shard: string;
+	rcl: string;
+	buildings: { [structureType: string]: { pos: Coord[] } };
+}
+
+export interface StructureLayout {
+	[rcl: number]: BuildingPlannerOutput | undefined;
+
+	data: {
+		pos: Coord;
+	}
+}
+
+export interface RoomPlan {
+	[componentName: string]: {
+		map: StructureMap;
+		pos: RoomPosition;
+		rotation: number;
+	}
+}
+
+export interface PlannerMemory {
+	active: boolean;
+	map: StructureMap;
+}
 
 @profile
 export class RoomPlanner {
@@ -12,65 +41,67 @@ export class RoomPlanner {
 	room: Room;					// Room object
 	map: StructureMap;			// Flattened {structureType: RoomPositions[]} containing the final structure placements
 	plan: RoomPlan;				// Contains maps, positions, and rotations of each hivecluster component
-	memory: LayoutMemory;
+	isActive: boolean; 			// Whether the planner is activated
+	memory: PlannerMemory;		// Memory, stored on the room memory
 
 	constructor(roomName: string) {
 		this.roomName = roomName;
 		this.room = Game.rooms[roomName];
+		this.memory = Memcheck.safeAssign(this.room.memory, 'roomPlanner', {
+			active: false,
+			map   : {},
+		});
 		this.plan = {};
-		this.map = {};
-		this.init();
+		this.isActive = this.memory.active;
+		this.map = this.memory.map;
 	}
 
-	init(): void {
-		this.addComponentsByFlags();
-		this.generateMap();
-	}
-
-	addComponentsByFlags(): void {
-		let structureFlags = _.filter(this.room.flags, flag => flag.color == COLOR_GREY);
-		for (let flag of structureFlags) {
-			switch (flag.secondaryColor) {
-				case COLOR_PURPLE:
-					this.addComponent('hatchery', flag.pos, Game.time % 4);
-					break;
-				case COLOR_YELLOW:
-					this.addComponent('commandCenter', flag.pos, Game.time % 4);
-					break;
-			}
-		}
-	}
+	// addComponentsByFlags(): void {
+	// 	let structureFlags = _.filter(this.room.flags, flag => flag.color == COLOR_GREY);
+	// 	for (let flag of structureFlags) {
+	// 		switch (flag.secondaryColor) {
+	// 			case COLOR_PURPLE:
+	// 				this.addComponent('hatchery', flag.pos, Game.time % 4);
+	// 				break;
+	// 			case COLOR_YELLOW:
+	// 				this.addComponent('commandCenter', flag.pos, Game.time % 4);
+	// 				break;
+	// 		}
+	// 	}
+	// }
 
 	addComponent(componentName: string, pos: RoomPosition, rotation = 0): void {
-		let componentLayout: StructureLayout;
-		let anchor: Coord;
-		switch (componentName) {
-			case 'hatchery':
-				componentLayout = hatcheryLayout;
-				anchor = hatcheryLayout.data.pos;
-				break;
-			case 'commandCenter':
-				componentLayout = commandCenterLayout;
-				anchor = componentLayout.data.pos;
-				break;
-			default:
-				log.error(`${componentName} is not a valid component name.`);
-				return;
+		if (this.isActive) {
+			let componentLayout: StructureLayout;
+			let anchor: Coord;
+			switch (componentName) {
+				case 'hatchery':
+					componentLayout = hatcheryLayout;
+					anchor = hatcheryLayout.data.pos;
+					break;
+				case 'commandCenter':
+					componentLayout = commandCenterLayout;
+					anchor = componentLayout.data.pos;
+					break;
+				default:
+					log.error(`${componentName} is not a valid component name.`);
+					return;
+			}
+			let componentMap = this.parseLayout(componentLayout);
+			this.translateComponent(componentMap, anchor, pos);
+			if (rotation != 0) {
+				this.rotateComponent(componentMap, pos, rotation);
+			}
+			this.plan[componentName] = {
+				map     : componentMap,
+				pos     : new RoomPosition(anchor.x, anchor.y, this.roomName),
+				rotation: rotation,
+			};
 		}
-		let componentMap = this.parseLayout(componentLayout);
-		this.translateComponent(componentMap, anchor, pos);
-		if (rotation != 0) {
-			this.rotateComponent(componentMap, pos, rotation);
-		}
-		this.plan[componentName] = {
-			map     : componentMap,
-			pos     : new RoomPosition(anchor.x, anchor.y, this.roomName),
-			rotation: rotation,
-		};
 	}
 
 	/* Generate a flatened map */
-	generateMap(): void {
+	private generateMap(): void {
 		this.map = {};
 		let componentMaps: StructureMap[] = _.map(this.plan, componentPlan => componentPlan.map);
 		let structureNames: string[] = _.unique(_.flatten(_.map(componentMaps, map => _.keys(map))));
@@ -128,7 +159,7 @@ export class RoomPlanner {
 		}
 	}
 
-	planRoad(pos1: RoomPosition, pos2: RoomPosition) {
+	private planRoad(pos1: RoomPosition, pos2: RoomPosition) {
 		// Find the shortest path, preferentially stepping on tiles with road routing flags on them
 		let roadPath = Pathing.routeRoadPath(pos1, pos2);
 		let shortestPath = Pathing.findShortestPath(pos1, pos2);
@@ -146,5 +177,13 @@ export class RoomPlanner {
 		}
 	}
 
+	init(): void {
 
+	}
+
+	run(): void {
+		if (this.isActive) {
+			this.generateMap();
+		}
+	}
 }

@@ -59,13 +59,13 @@ export function testGraph() {
 
 export function testRoomPlanner() {
 
-	let colony = Overmind.Colonies[colonyName];
-	let planner = new RoomPlanner(colonyName);
-	Visualizer.drawLayout(planner.map, colonyName);
-
-	for (let source of colony.sources) {
-		planner.planRoad(colony.storage!.pos, source.pos);
-	}
+	// let colony = Overmind.Colonies[colonyName];
+	// let planner = new RoomPlanner(colonyName);
+	// Visualizer.drawLayout(planner.map, colonyName);
+	//
+	// for (let source of colony.sources) {
+	// 	planner.planRoad(colony.storage!.pos, source.pos);
+	// }
 }
 
 export function sandbox() {

@@ -7,8 +7,8 @@ import {terminalSettings} from '../settings/settings_terminal';
 import {log} from '../lib/logger/log';
 import {profile} from '../lib/Profiler';
 import {CommandCenterOverlord} from '../overlords/overlord_commandCenter';
-import {Priority} from '../config/priorities';
 import {Colony} from '../Colony';
+import {Memcheck} from '../memcheck';
 
 @profile
 export class CommandCenter extends HiveCluster {
@@ -42,7 +42,7 @@ export class CommandCenter extends HiveCluster {
 	constructor(colony: Colony, storage: StructureStorage) {
 		super(colony, storage, 'commandCenter');
 		// Set up command center, register colony and memory
-		this.initMemory(colony.memory, 'commandCenter');
+		this.memory = Memcheck.safeAssign(colony.memory, 'commandCenter');
 		// Register physical components
 		this.storage = storage;
 		this.link = this.pos.findClosestByLimitedRange(colony.links, 2);
@@ -61,7 +61,7 @@ export class CommandCenter extends HiveCluster {
 		};
 		this.terminalSettings = terminalSettings;
 		if (this.storage.linked) {
-			this.overlord = new CommandCenterOverlord(this, Priority.High);
+			this.overlord = new CommandCenterOverlord(this);
 		}
 	}
 
@@ -257,7 +257,7 @@ export class CommandCenter extends HiveCluster {
 	private registerLinkTransferRequests(): void {
 		if (this.link) {
 			if (this.link.energy > this.settings.linksTransmitAt) {
-				this.colony.transportRequests.requestWithdrawal(this.link);
+				this.colony.linkRequests.requestTransmit(this.link);
 			}
 		}
 	}

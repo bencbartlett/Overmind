@@ -41,19 +41,13 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			}
 			break;
 
-		// Routing directives ================================================
+		// Room planning directives ==========================================
 		case COLOR_WHITE:
 			switch (flag.secondaryColor) {
 
 			}
 			break;
 
-		// Room planning directives ==========================================
-		case COLOR_GREY:
-			switch (flag.secondaryColor) {
-
-			}
-			break;
 	}
 }
 

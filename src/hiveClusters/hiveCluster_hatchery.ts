@@ -9,6 +9,7 @@ import {Colony, ColonyStage} from '../Colony';
 import {TransportRequestGroup} from '../resourceRequests/TransportRequestGroup';
 import {CreepSetup} from '../creepSetup/CreepSetup';
 import {Overlord} from '../overlords/Overlord';
+import {Memcheck} from '../memcheck';
 
 @profile
 export class Hatchery extends HiveCluster {
@@ -36,7 +37,7 @@ export class Hatchery extends HiveCluster {
 
 	constructor(colony: Colony, headSpawn: StructureSpawn) {
 		super(colony, headSpawn, 'hatchery');
-		this.initMemory(colony.memory, 'hatchery');
+		this.memory = Memcheck.safeAssign(colony.memory, 'hatchery');
 		// Register structure components
 		this.spawns = colony.spawns;
 		this.availableSpawns = _.filter(this.spawns, (spawn: Spawn) => !spawn.spawning);
@@ -61,7 +62,7 @@ export class Hatchery extends HiveCluster {
 		};
 		// Register the hatchery overlord
 		if (this.colony.stage > ColonyStage.Larva) {
-			this.overlord = new HatcheryOverlord(this, Priority.High);
+			this.overlord = new HatcheryOverlord(this);
 		}
 		// Assign a separate request group if hatchery has a dedicated attendant
 		if (this.overlord && this.overlord.queens.length > 0) {

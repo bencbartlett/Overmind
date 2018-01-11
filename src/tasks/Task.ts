@@ -2,7 +2,7 @@ import {log} from '../lib/logger/log';
 import {taskInstantiator} from '../maps/map_tasks';
 import {Zerg} from '../Zerg';
 
-type targetType = { ref: string | null, pos: RoomPosition }; // overwrite this variable in derived classes to specify more precise typing
+type targetType = { ref: string, pos: RoomPosition }; // overwrite this variable in derived classes to specify more precise typing
 
 /* An abstract class for encapsulating creep actions. This generalizes the concept of "do action X to thing Y until
  * condition Z is met" and saves a lot of convoluted and duplicated code in creep logic. A Task object contains
@@ -38,14 +38,21 @@ export abstract class Task {
 		this._creep = {
 			name: '',
 		};
-		this._target = {
-			ref : '',
-			_pos: {
-				x       : -1,
-				y       : -1,
-				roomName: '',
-			},
-		};
+		if (target) { // Handles edge cases like when you're done building something and target disappears
+			this._target = {
+				ref : target.ref,
+				_pos: target.pos,
+			};
+		} else {
+			this._target = {
+				ref : '',
+				_pos: {
+					x       : -1,
+					y       : -1,
+					roomName: '',
+				}
+			};
+		}
 		this._parent = null;
 		this.settings = {
 			targetRange: 1,
@@ -59,7 +66,7 @@ export abstract class Task {
 		this.data = {
 			quiet: true,
 		};
-		this.target = target as RoomObject;
+		// this.target = target as RoomObject;
 	}
 
 	// Getter/setter for task.creep
@@ -76,29 +83,29 @@ export abstract class Task {
 		return deref(this._target.ref);
 	}
 
-	set target(target: RoomObject | null) {
-		if (target) {
-			this._target.ref = target.ref;
-			this.targetPos = target.pos;
-		} else {
-			log.info('Null target set: something is wrong.');
-		}
-	}
+	// set target(target: RoomObject | null) {
+	// 	if (target) {
+	// 		this._target.ref = target.ref;
+	// 		this.targetPos = target.pos;
+	// 	} else {
+	// 		log.info('Null target set: something is wrong.');
+	// 	}
+	// }
 
 	// Getter/setter for task.targetPos
 	get targetPos(): RoomPosition {
 		// refresh if you have visibility of the target
-		if (this.target) {
+		if (this.options.travelToOptions.movingTarget && this.target) {
 			this._target._pos = this.target.pos;
 		}
 		return derefRoomPosition(this._target._pos);
 	}
 
-	set targetPos(targetPosition: RoomPosition) {
-		this._target._pos.x = targetPosition.x;
-		this._target._pos.y = targetPosition.y;
-		this._target._pos.roomName = targetPosition.roomName;
-	}
+	// set targetPos(targetPosition: RoomPosition) {
+	// 	this._target._pos.x = targetPosition.x;
+	// 	this._target._pos.y = targetPosition.y;
+	// 	this._target._pos.roomName = targetPosition.roomName;
+	// }
 
 	// Getter/setter for task parent
 	get parent(): Task | null {
@@ -143,13 +150,12 @@ export abstract class Task {
 			return true;
 		} else {
 			// Switch to parent task if there is one
+			let isValid = false;
+			if (this.parent) {
+				let isValid = this.parent.isValid();
+			}
 			this.finish();
-			// if (this.creep.task) {  // return whether parent task is valid if there is one
-			// 	return this.creep.task.isValid();
-			// } else {
-			// 	return false;
-			// }
-			return false;
+			return isValid;
 		}
 	}
 

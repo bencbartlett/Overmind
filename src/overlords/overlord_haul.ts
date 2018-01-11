@@ -1,12 +1,10 @@
 import {Overlord} from './Overlord';
 import {HaulerSetup} from '../creepSetup/defaultSetups';
-import {TaskWithdraw} from '../tasks/task_withdraw';
-import {TaskGoTo} from '../tasks/task_goTo';
-import {TaskDeposit} from '../tasks/task_deposit';
 import {Priority} from '../config/priorities';
 import {MiningGroup} from '../hiveClusters/hiveCluster_miningGroup';
 import {IWithdrawRequest} from '../resourceRequests/TransportRequestGroup';
 import {Zerg} from '../Zerg';
+import {Tasks} from '../tasks/Tasks';
 
 
 export class HaulingOverlord extends Overlord {
@@ -14,7 +12,7 @@ export class HaulingOverlord extends Overlord {
 	haulers: Zerg[];
 	miningGroup: MiningGroup;
 
-	constructor(miningGroup: MiningGroup, priority = Priority.Normal) {
+	constructor(miningGroup: MiningGroup, priority = Priority.NormalLow) {
 		super(miningGroup, 'haul', priority);
 		this.haulers = this.getCreeps('hauler');
 		this.miningGroup = miningGroup;
@@ -34,7 +32,8 @@ export class HaulingOverlord extends Overlord {
 	// Gets a prioritized request if any
 	private getWithdrawRequest(): IWithdrawRequest | undefined {
 		for (let priority in this.miningGroup.transportRequests.withdraw) {
-			let request = this.miningGroup.transportRequests.withdraw[priority][0];
+			// Shift the first request from the group to prevent all idle haulers from targeting at once
+			let request = this.miningGroup.transportRequests.withdraw[priority].shift();
 			if (request) return request;
 		}
 	}
@@ -44,7 +43,7 @@ export class HaulingOverlord extends Overlord {
 			// Withdraw from any miningSites requesting a withdrawal
 			let request = this.getWithdrawRequest();
 			if (request) {
-				hauler.task = new TaskWithdraw(request.target);
+				hauler.task = Tasks.withdraw(request.target);
 			} else {
 				// hauler.park(); // TODO
 			}
@@ -52,12 +51,12 @@ export class HaulingOverlord extends Overlord {
 			// If you're near the dropoff point, deposit, else go back to the dropoff point
 			if (hauler.pos.inRangeTo(this.miningGroup.dropoff.pos, 3)) {
 				if (this.miningGroup.availableLinks && this.miningGroup.availableLinks[0]) {
-					hauler.task = new TaskDeposit(this.miningGroup.availableLinks[0]);
+					hauler.task = Tasks.deposit(this.miningGroup.availableLinks[0]);
 				} else {
-					hauler.task = new TaskDeposit(this.miningGroup.dropoff);
+					hauler.task = Tasks.deposit(this.miningGroup.dropoff);
 				}
 			} else {
-				hauler.task = new TaskGoTo(this.miningGroup.dropoff);
+				hauler.task = Tasks.goTo(this.miningGroup.dropoff);
 			}
 		}
 	}

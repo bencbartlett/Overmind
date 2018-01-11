@@ -3,11 +3,8 @@ import {Priority} from '../config/priorities';
 import {WorkerSetup} from '../creepSetup/defaultSetups';
 import {Colony, ColonyStage} from '../Colony';
 import {profile} from '../lib/Profiler';
-import {TaskWithdraw} from '../tasks/task_withdraw';
-import {TaskRepair} from '../tasks/task_repair';
-import {TaskBuild} from '../tasks/task_build';
-import {TaskUpgrade} from '../tasks/task_upgrade';
 import {Zerg} from '../Zerg';
+import {Tasks} from '../tasks/Tasks';
 
 @profile
 export class WorkerOverlord extends Overlord {
@@ -18,10 +15,10 @@ export class WorkerOverlord extends Overlord {
 	repairStructures: Structure[];
 	rechargeStructures: (StructureStorage | StructureTerminal | StructureContainer | StructureLink)[];
 
-	constructor(colony: Colony, priority = Priority.Normal) {
+	constructor(colony: Colony, priority = Priority.NormalHigh) {
 		super(colony, 'worker', priority);
 		this.workers = this.getCreeps('worker');
-		this.constructionSites = this.room.constructionSites;
+		this.constructionSites = this.room.constructionSites; // todo: colony-wide construction sites or pavers
 		this.repairStructures = _.filter(this.room.repairables, function (structure) {
 			if (structure.structureType == STRUCTURE_ROAD) {
 				return structure.hits < 0.7 * structure.hitsMax;
@@ -65,23 +62,27 @@ export class WorkerOverlord extends Overlord {
 
 	private repairActions(worker: Zerg) {
 		let target = worker.pos.findClosestByRange(this.repairStructures);
-		if (target) worker.task = new TaskRepair(target);
+		if (target) worker.task = Tasks.repair(target);
 	}
 
 	private buildActions(worker: Zerg) {
 		// TODO: prioritize sites by type
 		let target = worker.pos.findClosestByRange(this.constructionSites);
-		if (target) worker.task = new TaskBuild(target);
+		if (target) worker.task = Tasks.build(target);
+	}
+
+	private pavingActions(worker: Zerg) {
+		// TODO
 	}
 
 	private upgradeActions(worker: Zerg) {
-		worker.task = new TaskUpgrade(this.room.controller!);
+		worker.task = Tasks.upgrade(this.room.controller!);
 	}
 
 	private rechargeActions(worker: Zerg) {
 		let target = worker.pos.findClosestByRange(_.filter(this.rechargeStructures,
 															structure => structure.energy > worker.carryCapacity));
-		if (target) worker.task = new TaskWithdraw(target);
+		if (target) worker.task = Tasks.withdraw(target);
 	}
 
 	private handleWorker(worker: Zerg) {

@@ -50,7 +50,6 @@ interface IOvermind {
 
 declare var Overmind: IOvermind;
 
-
 interface Coord {
 	x: number;
 	y: number;
@@ -58,29 +57,6 @@ interface Coord {
 
 interface StructureMap {
 	[structureType: string]: RoomPosition[];
-}
-
-interface BuildingPlannerOutput {
-	name: string;
-	shard: string;
-	rcl: string;
-	buildings: { [structureType: string]: { pos: Coord[] } };
-}
-
-interface StructureLayout {
-	[rcl: number]: BuildingPlannerOutput | undefined;
-
-	data: {
-		pos: Coord;
-	}
-}
-
-interface RoomPlan {
-	[componentName: string]: {
-		map: StructureMap;
-		pos: RoomPosition;
-		rotation: number;
-	}
 }
 
 interface protoCreep {

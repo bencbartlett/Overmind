@@ -10,7 +10,7 @@ export class GuardOverlord extends Overlord {
 
 	guards: Zerg[];
 
-	constructor(directive: DirectiveGuard, priority = Priority.Normal) {
+	constructor(directive: DirectiveGuard, priority = Priority.High) {
 		super(directive, 'guard', priority);
 		this.guards = this.getCreeps('guard');
 	}
@@ -23,7 +23,7 @@ export class GuardOverlord extends Overlord {
 			guard.overlord = this;
 		}
 		// Refresh the list of guards
-		this.guards = this.creeps['guard'];
+		this.guards = this.getCreeps('guard');
 	}
 
 	private findAttackTarget(guard: Zerg): Creep | Structure | void {

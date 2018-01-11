@@ -25,7 +25,7 @@
 // 	}
 //
 // 	onCreate(creep: protoCreep) {
-// 		creep.memory.roleData.healFlag = 'HP1'; // TODO: hard coded
+// 		creep.memory.roleData.healFlag = 'HP1';
 // 		return creep;
 // 	}
 // }
@@ -77,7 +77,7 @@
 // 		}
 // 	}
 //
-// 	retreatAndHeal() { // TODO: make this a task
+// 	retreatAndHeal() {
 // 		this.heal(this);
 // 		return this.travelTo(this.memory.roleData.healFlag, {allowHostile: true});
 // 	}
@@ -106,7 +106,6 @@
 // 		if (deref(this.memory.roleData.healFlag) && // if there's a heal flag
 // 			(this.getActiveBodyparts(TOUGH) < 0.5 * this.getBodyparts(TOUGH) || // if you're injured
 // 			 (this.memory.roleData.needsHealing && this.hits < this.hitsMax))) { // if you're healing and not full hp
-// 			// TODO: dps-based calculation
 // 			this.memory.roleData.needsHealing = true;
 // 			return this.retreatAndHeal();
 // 		} else {

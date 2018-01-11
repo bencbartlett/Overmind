@@ -60,7 +60,7 @@ export function taskInstantiator(protoTask: protoTask): Task {
 			task = new TaskGetRenewed(target as getRenewedTargetType);
 			break;
 		case goToTaskName:
-			task = new TaskGoTo(protoTask._target._pos as goToTargetType);
+			task = new TaskGoTo(derefRoomPosition(protoTask._target._pos) as goToTargetType);
 			break;
 		case goToRoomTaskName:
 			task = new TaskGoToRoom(protoTask._target._pos.roomName as goToRoomTargetType);

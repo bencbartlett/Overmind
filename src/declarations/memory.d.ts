@@ -57,10 +57,6 @@ interface RoomMemory {
 	avoid?: number;
 }
 
-interface LayoutMemory {
-	map: StructureMap;
-}
-
 interface SpawnMemory {
 }
 

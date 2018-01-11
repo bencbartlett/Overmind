@@ -9,6 +9,13 @@ export class Memcheck {
 		}
 	}
 
+	static safeAssign(memory: any, memName: string, memoryToWrite = {}) {
+		if (!memory[memName]) {
+			memory[memName] = memoryToWrite;
+		}
+		return memory[memName];
+	}
+
 	static formatPathingMemory() {
 		if (!Memory.pathing) {
 			Memory.pathing = {} as PathingMemory; // Hacky workaround

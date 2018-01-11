@@ -78,6 +78,7 @@ export class Overseer {
 		}
 		// Handle overlords in decreasing priority {
 		for (let priority in this.overlords) {
+			if (!this.overlords[priority]) continue;
 			for (let overlord of this.overlords[priority]) {
 				overlord.init();
 			}
@@ -95,6 +96,7 @@ export class Overseer {
 		}
 		// Handle overlords in decreasing priority {
 		for (let priority in this.overlords) {
+			if (!this.overlords[priority]) continue;
 			for (let overlord of this.overlords[priority]) {
 				overlord.run();
 			}

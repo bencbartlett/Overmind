@@ -1,3 +1,5 @@
+import {StructureLayout} from '../RoomPlanner';
+
 export var commandCenterLayout: StructureLayout = {
 	data: {
 		pos: {'x': 25, 'y': 25}

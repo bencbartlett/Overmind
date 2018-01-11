@@ -117,7 +117,7 @@ export class Pathing {
 
 		});
 		let ret = Traveler.findTravelPath(startPos, endPos, options);
-		if (ret.incomplete) {
+		if (ret.incomplete) { // TODO: this is causing a bug with double miners and haulers?
 			return Infinity;
 		} else {
 			return ret.path.length;

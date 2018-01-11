@@ -4,7 +4,6 @@ import {Directive} from './Directive';
 import {log} from '../lib/logger/log';
 import {profile} from '../lib/Profiler';
 import {BootstrappingOverlord} from '../overlords/overlord_bootstrap';
-import {Priority} from '../config/priorities';
 import {Colony} from '../Colony';
 
 
@@ -31,9 +30,9 @@ export class DirectiveBootstrap extends Directive {
 		this.needsMiner = (this.colony.getCreepsByRole('miner').length == 0);
 		this.needsManager = (this.colony.commandCenter != undefined &&
 							 this.colony.commandCenter.overlord != undefined &&
-							 this.colony.getCreepsByRole('manager').length > 0);
+							 this.colony.getCreepsByRole('manager').length == 0);
 		this.needsSupplier = (this.colony.getCreepsByRole('supplier').length == 0);
-		this.overlords.bootstrap = new BootstrappingOverlord(this, Priority.Critical);
+		this.overlords.bootstrap = new BootstrappingOverlord(this);
 	}
 
 	init(): void {

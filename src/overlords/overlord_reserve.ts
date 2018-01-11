@@ -11,14 +11,14 @@ export class ReservingOverlord extends Overlord {
 	reservers: Zerg[];
 	reserveBuffer: number;
 
-	constructor(directive: DirectiveOutpost, priority = Priority.Normal) {
+	constructor(directive: DirectiveOutpost, priority = Priority.NormalHigh) {
 		super(directive, 'reserve', priority);
 		this.reservers = this.getCreeps('reserver');
 		this.reserveBuffer = 3000;
 	}
 
 	spawn() {
-		if (this.room && this.room.controller!.needsReserving(this.reserveBuffer)) {
+		if (!this.room || this.room.controller!.needsReserving(this.reserveBuffer)) {
 			this.wishlist(1, new ReserverSetup());
 		}
 	}

@@ -10,10 +10,10 @@ import {TransportRequestGroup} from './resourceRequests/TransportRequestGroup';
 import {LinkRequestGroup} from './resourceRequests/LinkRequests';
 import {Overseer} from './Overseer';
 import {SupplierOverlord} from './overlords/overlord_supply';
-import {Priority} from './config/priorities';
 import {WorkerOverlord} from './overlords/overlord_work';
 import {Overlord} from './overlords/Overlord';
 import {Zerg} from './Zerg';
+import {RoomPlanner} from './roomPlanner/RoomPlanner';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -71,6 +71,8 @@ export class Colony {
 	transportRequests: TransportRequestGroup;			// Box for resource requests
 	// Overlords
 	overlords: { [name: string]: Overlord };
+	// Room planner
+	roomPlanner: RoomPlanner;
 
 	constructor(roomName: string, outposts: string[]) {
 		// Name the colony
@@ -132,6 +134,8 @@ export class Colony {
 		this.buildHiveClusters();
 		// Register colony overlords
 		this.spawnMoarOverlords();
+		// Register a room planner
+		this.roomPlanner = new RoomPlanner(this.room.name);
 	}
 
 	/* Instantiate and associate virtual colony components to group similar structures together */
@@ -181,8 +185,8 @@ export class Colony {
 
 	private spawnMoarOverlords(): void {
 		this.overlords = {};
-		this.overlords.supply = new SupplierOverlord(this, Priority.High);
-		this.overlords.work = new WorkerOverlord(this, Priority.Normal);
+		this.overlords.supply = new SupplierOverlord(this);
+		this.overlords.work = new WorkerOverlord(this);
 	}
 
 	/* Run the tower logic for each tower in the colony */
@@ -245,6 +249,8 @@ export class Colony {
 		}
 		// Initialize the colony overseer, must be run AFTER all components are initialized
 		this.overseer.init();
+		// Initialize the room planner
+		this.roomPlanner.init();
 	}
 
 	run(): void {
@@ -276,5 +282,7 @@ export class Colony {
 		for (let name in this.creeps) {
 			this.creeps[name].run();
 		}
+		// Run the room planner
+		this.roomPlanner.run();
 	}
 }

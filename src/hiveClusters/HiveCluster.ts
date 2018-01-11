@@ -22,12 +22,12 @@ export abstract class HiveCluster {
 		this.name = name + ':' + instantiationObject.ref;
 	}
 
-	protected initMemory(memory: any, memName: string, memoryToWrite = {}) {
-		if (!memory[memName]) {
-			memory[memName] = memoryToWrite;
-		}
-		this.memory = memory[memName];
-	}
+	// protected initMemory(memory: any, memName: string, memoryToWrite = {}) {
+	// 	if (!memory[memName]) {
+	// 		memory[memName] = memoryToWrite;
+	// 	}
+	// 	this.memory = memory[memName];
+	// }
 
 	// Pre-run logic, such as registering energy requests
 	abstract init(): void;
@@ -35,5 +35,7 @@ export abstract class HiveCluster {
 	// Runtime logic, such as controlling creep actions
 	abstract run(): void;
 
+	// TODO: Display visuals of relevant information
+	// abstract visuals(): void;
 }
 

@@ -2,7 +2,7 @@
 
 Object.defineProperty(RoomObject.prototype, 'ref', { // reference object; see globals.deref (which includes Creep)
 	get: function () {
-		return this.id || this.name || null;
+		return this.id || this.name || '';
 	},
 });
 

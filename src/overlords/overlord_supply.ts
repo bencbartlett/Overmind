@@ -19,7 +19,7 @@ export class SupplierOverlord extends Overlord {
 	private _prioritizedRefills: { [priority: number]: IResourceRequest[] };
 	private _prioritizedWithdrawals: { [priority: number]: IWithdrawRequest[] };
 
-	constructor(directive: Colony | HiveCluster, priority = Priority.Normal) {
+	constructor(directive: Colony | HiveCluster, priority = Priority.High) {
 		super(directive, 'supply', priority);
 		this.suppliers = this.getCreeps('supplier');
 		this.settings = {
@@ -28,58 +28,12 @@ export class SupplierOverlord extends Overlord {
 	}
 
 	spawn() {
-		this.wishlist(1, new SupplierSetup(4));
+		this.wishlist(1, new SupplierSetup(Infinity)); // TODO: scale suppliers better
 	}
 
 	init() {
 		this.spawn();
 	}
-
-	// private get prioritizedRefillRequests(): { [priority: number]: IResourceRequest[] } {
-	// 	// Prioritized list of things that can be refilled
-	// 	if (!this._prioritizedRefills) {
-	// 		this._prioritizedRefills = blankPriorityQueue();
-	//
-	// 		for (let request of this.colony.transportRequests.supply) {
-	// 			let priority: number;
-	// 			if (request.target instanceof StructureSpawn) {
-	// 				priority = Priority.Normal;
-	// 			} else if (request.target instanceof StructureExtension) {
-	// 				priority = Priority.Normal;
-	// 			} else if (request.target instanceof StructureTower) {
-	// 				if (request.target.energy < this.settings.refillTowersBelow) {
-	// 					priority = Priority.High;
-	// 				} else {
-	// 					priority = Priority.Low;
-	// 				}
-	// 			} else if (request.target instanceof StructureNuker) {
-	// 				priority = Priority.Low;
-	// 			} else {
-	// 				priority = Priority.Normal;
-	// 			}
-	// 			// Push the request to the specified priority
-	// 			this._prioritizedRefills[priority].push(request);
-	// 		}
-	// 	}
-	// 	return this._prioritizedRefills;
-	// }
-	//
-	// private get prioritizedWithdrawalRequests(): { [priority: number]: IWithdrawRequest[] } {
-	// 	// Prioritized list of things that need withdrawals
-	// 	if (!this._prioritizedWithdrawals) {
-	// 		this._prioritizedWithdrawals = {};
-	// 		this._prioritizedWithdrawals[Priority.High] = [];
-	// 		this._prioritizedWithdrawals[Priority.Normal] = [];
-	// 		this._prioritizedWithdrawals[Priority.Low] = [];
-	//
-	// 		for (let request of this.colony.transportRequests.withdraw) {
-	// 			let priority = Priority.Normal;
-	// 			// Push the request to the specified priority
-	// 			this._prioritizedWithdrawals[priority].push(request);
-	// 		}
-	// 	}
-	// 	return this._prioritizedWithdrawals;
-	// }
 
 	private supplyActions(supplier: Zerg) {
 		// Select the closest supply target out of the highest priority and refill it
@@ -107,7 +61,9 @@ export class SupplierOverlord extends Overlord {
 		}
 		// Otherwise, if nothing actively wants a withdraw, refill from nearest storage or mining container
 		let viableTargets: StorageUnit[] = [];
-		if (this.room.storage) viableTargets.push(this.room.storage);
+		if (this.room.storage && this.room.storage.energy > supplier.carryCapacity) {
+			viableTargets.push(this.room.storage);
+		}
 		for (let source of this.room.sources) {
 			let output = this.colony.miningSites[source.id].output;
 			if (output instanceof StructureContainer && output.energy > supplier.carryCapacity) {

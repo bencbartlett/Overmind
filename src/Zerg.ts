@@ -226,12 +226,14 @@ export class Zerg {
 		}
 		// Set the new task
 		this.memory.task = task;
-		if (task && task.target) { // If task isn't null
-			// Register task target in cache
-			if (!Overmind.cache.targets[task.target.ref]) {
-				Overmind.cache.targets[task.target.ref] = [];
+		if (task) {
+			if (task.target) {
+				// Register task target in cache if it is actively targeting something (excludes goTo and similar)
+				if (!Overmind.cache.targets[task.target.ref]) {
+					Overmind.cache.targets[task.target.ref] = [];
+				}
+				Overmind.cache.targets[task.target.ref].push(this.name);
 			}
-			Overmind.cache.targets[task.target.ref].push(this.name);
 			// Register references to creep
 			task.creep = this;
 			this._task = task;

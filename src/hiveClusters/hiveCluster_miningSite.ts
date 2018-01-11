@@ -9,6 +9,7 @@ import {Colony} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
 import {MiningGroup} from './hiveCluster_miningGroup';
 import {TransportRequestGroup} from '../resourceRequests/TransportRequestGroup';
+import {Memcheck} from '../memcheck';
 
 @profile
 export class MiningSite extends HiveCluster {
@@ -24,7 +25,7 @@ export class MiningSite extends HiveCluster {
 
 	constructor(colony: Colony, source: Source) {
 		super(colony, source, 'miningSite');
-		this.initMemory(colony.memory, this.name);
+		this.memory = Memcheck.safeAssign(colony.memory, this.name);
 		this.source = source;
 		this.energyPerTick = source.energyCapacity / ENERGY_REGEN_TIME;
 		this.miningPowerNeeded = Math.ceil(this.energyPerTick / HARVEST_POWER) + 1;
@@ -50,20 +51,31 @@ export class MiningSite extends HiveCluster {
 			bestGroup.miningSites.push(this);
 		}
 		// Create a mining overlord for this
-		let priority = this.room.my ? Priority.High : Priority.Normal;
+		let priority = this.room.my ? Priority.High : Priority.NormalHigh;
 		this.overlord = new MiningOverlord(this, priority);
 	}
 
-	/* Predicted store amount given the number of haulers currently targeting the container */
+	/* Predicted store amount a hauler will see once it arrives at the miningSite traveling from the miningGroup
+	 * dropoff location, taking into account the other haulers targeting the output */
 	get predictedStore(): number {
 		// This should really only be used on container sites
 		if (this.output instanceof StructureContainer) {
 			let targetingCreeps = _.map(this.output.targetedBy, name => Game.creeps[name]);
 			// Assume all haulers are withdrawing from mining site so you don't have to scan through tasks
 			let targetingHaulers = _.filter(targetingCreeps, creep => creep.memory.role == 'hauler');
+			let hauledOff = _.sum(_.map(targetingHaulers, hauler => hauler.carryCapacity - _.sum(hauler.carry)));
+			// Figure out the approximate number of ticks it will take for a hauler to get here
+			let dropoffLocation: RoomPosition;
+			if (this.miningGroup) {
+				dropoffLocation = this.miningGroup.dropoff.pos;
+			} else if (this.colony.storage) {
+				dropoffLocation = this.colony.storage.pos;
+			} else {
+				dropoffLocation = this.colony.controller.pos;
+			}
+			let ticksUntilArrival = Pathing.weightedDistance(this.output.pos, dropoffLocation);
 			// Return storage minus the amount that currently assigned haulers will withdraw
-			return _.sum(this.output.store) - _.sum(_.map(targetingHaulers,
-														  hauler => hauler.carryCapacity - _.sum(hauler.carry)));
+			return _.sum(this.output.store) - hauledOff + ticksUntilArrival * this.energyPerTick;
 		} else if (this.output instanceof StructureLink) {
 			return this.output.energy;
 		} else { // if there is no output
@@ -94,8 +106,7 @@ export class MiningSite extends HiveCluster {
 		if (this.output instanceof StructureContainer) {
 			let colonyHaulers = this.colony.getCreepsByRole('hauler');
 			let avgHaulerCap = _.sum(_.map(colonyHaulers, hauler => hauler.carryCapacity)) / colonyHaulers.length;
-			// let avgHaulerCap = CARRY_CAPACITY * this.colony.data.haulingPowerSupplied / this.colony.data.numHaulers;
-			if (this.predictedStore > 0.75 * avgHaulerCap) { // TODO: add path length dependence
+			if (this.predictedStore > 0.9 * avgHaulerCap) {
 				resourceRequestGroup.requestWithdrawal(this.output);
 			}
 		} else if (this.output instanceof StructureLink) {
@@ -135,7 +146,7 @@ export class MiningSite extends HiveCluster {
 			// 	return; // This guarantees that there is either an output or a construction site past this eval point
 			// }
 
-			// TODO:
+			// TODO: build mining site output
 			// this.room.createConstructionSite(minerInPosition.pos, STRUCTURE_CONTAINER);
 		}
 	}

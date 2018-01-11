@@ -1,12 +1,10 @@
 import {Overlord} from './Overlord';
 import {Priority} from '../config/priorities';
-import {TaskWithdraw} from '../tasks/task_withdraw';
-import {TaskDeposit} from '../tasks/task_deposit';
-import {log} from '../lib/logger/log';
 import {QueenSetup} from '../creepSetup/defaultSetups';
 import {Hatchery} from '../hiveClusters/hiveCluster_hatchery';
 import {EnergyRequestStructure, ResourceRequestStructure} from '../resourceRequests/TransportRequestGroup';
 import {Zerg} from '../Zerg';
+import {Tasks} from '../tasks/Tasks';
 
 // Hatchery overlord: spawn and run a dedicated supplier-like hatchery attendant (called after colony has storage)
 export class HatcheryOverlord extends Overlord {
@@ -34,33 +32,6 @@ export class HatcheryOverlord extends Overlord {
 		this.spawn();
 	}
 
-	// private get prioritizedRefillRequests(): { [priority: number]: IResourceRequest[] } {
-	// 	// Prioritized list of things that can be refilled
-	// 	if (!this._prioritizedRefills) {
-	// 		this._prioritizedRefills = blankPriorityQueue();
-	//
-	// 		for (let request of this.colony.transportRequests.supply) {
-	// 			let priority: number;
-	// 			if (request.target instanceof StructureSpawn) {
-	// 				priority = Priority.Normal;
-	// 			} else if (request.target instanceof StructureExtension) {
-	// 				priority = Priority.Normal;
-	// 			} else if (request.target instanceof StructureTower) {
-	// 				if (request.target.energy < this.settings.refillTowersBelow) {
-	// 					priority = Priority.High;
-	// 				} else {
-	// 					priority = Priority.Low;
-	// 				}
-	// 			} else {
-	// 				priority = Priority.Normal;
-	// 			}
-	// 			// Push the request to the specified priority
-	// 			this._prioritizedRefills[priority].push(request);
-	// 		}
-	// 	}
-	// 	return this._prioritizedRefills;
-	// }
-
 	private supplyActions(queen: Zerg) {
 		// Select the closest supply target out of the highest priority and refill it
 		let target: EnergyRequestStructure | ResourceRequestStructure;
@@ -68,7 +39,7 @@ export class HatcheryOverlord extends Overlord {
 			let targets = _.map(this.hatchery.transportRequests.supply[priority], request => request.target);
 			target = queen.pos.findClosestByRange(targets);
 			if (target) {
-				queen.task = new TaskDeposit(target);
+				queen.task = Tasks.deposit(target);
 				return;
 			}
 		}
@@ -78,29 +49,32 @@ export class HatcheryOverlord extends Overlord {
 
 	private rechargeActions(queen: Zerg): void {
 		if (this.hatchery.link && !this.hatchery.link.isEmpty) {
-			queen.task = new TaskWithdraw(this.hatchery.link);
+			queen.task = Tasks.withdraw(this.hatchery.link);
 		} else if (this.hatchery.battery && !this.hatchery.battery.isEmpty) {
-			queen.task = new TaskWithdraw(this.hatchery.battery);
-		} else {
-			log.info('Hatchery is out of energy!');
+			queen.task = Tasks.withdraw(this.hatchery.battery);
 		}
 	}
 
 	private idleActions(queen: Zerg): void {
-		if (this.hatchery.battery && this.hatchery.link) { // is there a battery and a link?
-			// Can energy be moved from the link to the battery?
-			if (!this.hatchery.battery.isFull && !this.hatchery.link.isEmpty) { 	// move energy to battery
-				if (queen.carry.energy < queen.carryCapacity) {
-					queen.task = new TaskWithdraw(this.hatchery.link);
+		if (this.hatchery.battery) { // is there a battery and a link?
+			if (this.hatchery.battery.hits < this.hatchery.battery.hitsMax) {
+				queen.task = Tasks.repair(this.hatchery.battery);
+			} else if (this.hatchery.link) {
+				// Can energy be moved from the link to the battery?
+				if (!this.hatchery.battery.isFull && !this.hatchery.link.isEmpty) { 	// move energy to battery
+					if (queen.carry.energy < queen.carryCapacity) {
+						queen.task = Tasks.withdraw(this.hatchery.link);
+					} else {
+						queen.task = Tasks.deposit(this.hatchery.battery);
+					}
 				} else {
-					queen.task = new TaskDeposit(this.hatchery.battery);
-				}
-			} else {
-				if (queen.carry.energy < queen.carryCapacity) { // make sure you're recharged
-					queen.task = new TaskWithdraw(this.hatchery.link);
+					if (queen.carry.energy < queen.carryCapacity) { // make sure you're recharged
+						queen.task = Tasks.withdraw(this.hatchery.link);
+					}
 				}
 			}
 		}
+		// If you're still idle, move back to the idle point
 		if (queen.isIdle) {
 			queen.travelTo(this.hatchery.idlePos);
 		}

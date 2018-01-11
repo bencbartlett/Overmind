@@ -1,20 +1,16 @@
 import {Overlord} from './Overlord';
-import {TaskHarvest} from '../tasks/task_harvest';
-import {TaskDeposit} from '../tasks/task_deposit';
-import {TaskRepair} from '../tasks/task_repair';
-import {TaskBuild} from '../tasks/task_build';
 import {MinerSetup} from '../creepSetup/defaultSetups';
-import {TaskGoTo} from '../tasks/task_goTo';
 import {Priority} from '../config/priorities';
 import {MiningSite} from '../hiveClusters/hiveCluster_miningSite';
 import {Zerg} from '../Zerg';
+import {Tasks} from '../tasks/Tasks';
 
 export class MiningOverlord extends Overlord {
 
 	miners: Zerg[];
 	miningSite: MiningSite;
 
-	constructor(miningSite: MiningSite, priority = Priority.Normal) {
+	constructor(miningSite: MiningSite, priority = Priority.NormalHigh) {
 		super(miningSite, 'mine', priority);
 		this.miners = this.getCreeps('miner');
 		this.miningSite = miningSite;
@@ -37,24 +33,24 @@ export class MiningOverlord extends Overlord {
 		if (miner.room == this.room && !miner.pos.isEdge) {
 			// Harvest if out of energy
 			if (miner.carry.energy == 0) {
-				miner.task = new TaskHarvest(this.miningSite.source);
+				miner.task = Tasks.harvest(this.miningSite.source);
 			}
 			// Else see if there is an output to depsit to or to maintain
 			else if (this.miningSite.output) {
 				if (this.miningSite.output.hits < this.miningSite.output.hitsMax) {
-					miner.task = new TaskRepair(this.miningSite.output);
+					miner.task = Tasks.repair(this.miningSite.output);
 				} else {
-					miner.task = new TaskDeposit(this.miningSite.output);
+					miner.task = Tasks.deposit(this.miningSite.output);
 				}
 			}
 			// Else build the output if there is a constructionSite (placement handled by miningSite)
 			else {
 				if (this.miningSite.outputConstructionSite) {
-					miner.task = new TaskBuild(this.miningSite.outputConstructionSite);
+					miner.task = Tasks.build(this.miningSite.outputConstructionSite);
 				}
 			}
 		} else {
-			miner.task = new TaskGoTo(this.miningSite);
+			miner.task = Tasks.goTo(this.miningSite);
 		}
 	}
 
