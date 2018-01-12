@@ -1,4 +1,5 @@
 import {Traveler} from '../lib/traveler/Traveler';
+import {log} from '../lib/logger/log';
 
 /* Module for pathing-related operations. Interfaces with Traveler. */
 export class Pathing {
@@ -43,7 +44,10 @@ export class Pathing {
 			Memory.pathing.distances[pos1.name] = {};
 		}
 		if (!Memory.pathing.distances[pos1.name][pos2.name]) {
-			Memory.pathing.distances[pos1.name][pos2.name] = this.findShortestDistance(pos1, pos2);
+			let ret = this.findShortestPath(pos1, pos2);
+			if (!ret.incomplete) {
+				Memory.pathing.distances[pos1.name][pos2.name] = ret.path.length;
+			}
 		}
 		return Memory.pathing.distances[pos1.name][pos2.name];
 	}
@@ -54,24 +58,20 @@ export class Pathing {
 			allowSK: true,
 		});
 		let ret = Traveler.findTravelPath(startPos, endPos, options);
-		if (ret.incomplete) {
-			return Infinity;
-		} else {
-			let weight = 0;
-			for (let pos of ret.path) {
-				if (_.find(pos.lookFor(LOOK_STRUCTURES), (s: Structure) => s.structureType == STRUCTURE_ROAD)) {
-					weight += 1;
-				} else {
-					let terrain = pos.lookFor(LOOK_TERRAIN)[0];
-					if (terrain == 'plain') {
-						weight += 2;
-					} else if (terrain == 'swamp') {
-						weight += 10;
-					}
+		let weight = 0;
+		for (let pos of ret.path) {
+			if (_.find(pos.lookFor(LOOK_STRUCTURES), (s: Structure) => s.structureType == STRUCTURE_ROAD)) {
+				weight += 1;
+			} else {
+				let terrain = pos.lookFor(LOOK_TERRAIN)[0];
+				if (terrain == 'plain') {
+					weight += 2;
+				} else if (terrain == 'swamp') {
+					weight += 10;
 				}
 			}
-			return weight;
 		}
+		return weight;
 	}
 
 	/* Calculates and/or caches the weighted distance for the most efficient path. Weight is sum of tile weights:
@@ -96,20 +96,7 @@ export class Pathing {
 
 	/* Returns the shortest path from start to end position, regardless of (passable) terrain */
 	static findShortestPath(startPos: RoomPosition, endPos: RoomPosition,
-							options: TravelToOptions = {}): RoomPosition[] {
-		_.defaults(options, {
-			range  : 1,
-			offRoad: true,
-			allowSK: true,
-
-		});
-		return Traveler.findTravelPath(startPos, endPos, options).path;
-	}
-
-	/* Returns the length of the shortest path from start to end position regardless of passable terrain.
-	 * Returns Infinity if the path is incomplete. */
-	static findShortestDistance(startPos: RoomPosition, endPos: RoomPosition,
-								options: TravelToOptions = {}): number {
+							options: TravelToOptions = {}): PathfinderReturn {
 		_.defaults(options, {
 			range  : 1,
 			offRoad: true,
@@ -117,12 +104,27 @@ export class Pathing {
 
 		});
 		let ret = Traveler.findTravelPath(startPos, endPos, options);
-		if (ret.incomplete) { // TODO: this is causing a bug with double miners and haulers?
-			return Infinity;
-		} else {
-			return ret.path.length;
-		}
+		if (ret.incomplete) log.info(`Incomplete travel path from ${startPos} to ${endPos}!`);
+		return ret;
 	}
+
+	// /* Returns the length of the shortest path from start to end position regardless of passable terrain.
+	//  * Returns Infinity if the path is incomplete. */
+	// static findShortestDistance(startPos: RoomPosition, endPos: RoomPosition,
+	// 							options: TravelToOptions = {}): number {
+	// 	_.defaults(options, {
+	// 		range  : 1,
+	// 		offRoad: true,
+	// 		allowSK: true,
+	//
+	// 	});
+	// 	let ret = Traveler.findTravelPath(startPos, endPos, options);
+	// 	if (ret.incomplete) { // TODO: this is causing a bug with double miners and haulers?
+	// 		return Infinity;
+	// 	} else {
+	// 		return ret.path.length;
+	// 	}
+	// }
 
 	/* Find the shortest path, preferentially stepping on tiles with road routing flags */
 	static routeRoadPath(origin: RoomPosition, destination: RoomPosition,

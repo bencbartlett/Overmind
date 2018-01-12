@@ -1,13 +1,6 @@
 // Room prototypes - commonly used room properties and methods
-// import {visuals} from '../visuals/visuals';
+
 import {controllerSignature, myUsername} from '../settings/settings_user';
-
-
-// Object.defineProperty(Room.prototype, 'colony', { // link to colony object in the overmind
-// 	get () {
-// 		return Overmind.Colonies[Overmind.colonyMap[this.name]];
-// 	},
-// });
 
 // Room properties =====================================================================================================
 

@@ -1,12 +1,61 @@
-RoomVisual.prototype.multitext = function (textArray, x, starty, fontSize, style) {
-	var y = starty;
-	for (let line of textArray) {
-		new RoomVisual().text(line, x, y, style);
-		y += fontSize;
+RoomVisual.prototype.infoBox = function (info: string[], x: number, y: number, opts = {}): RoomVisual {
+	_.defaults(opts, {
+		background: colors.speechBackground,
+		textcolor : colors.speechText,
+		textstyle : false,
+		textsize  : speechSize,
+		textfont  : 'monospace',
+		opacity   : 1.0,
+	});
+
+	let fontstring = '';
+	if (opts.textstyle) {
+		fontstring = opts.textstyle + ' ';
 	}
-	return y; // returns vertical position of last line
+	fontstring += opts.textsize + ' ' + opts.textfont;
+
+	let pointer = [
+		[.9, -0.25],
+		[.9, 0.25],
+		[0.3, 0.0],
+	];
+	pointer = relPoly(x, y, pointer);
+	pointer.push(pointer[0]);
+
+	// Draw arrow
+	this.poly(pointer, {
+		fill       : opts.background,
+		stroke     : opts.background,
+		opacity    : opts.opacity,
+		strokeWidth: 0.0
+	});
+
+	// Draw box
+	this.rect(x + 0.9, y - 0.8 * opts.textsize,
+		0.6 * opts.textsize * _.max(_.map(info, line => line.length)), info.length * opts.textsize,
+		{
+			fill   : opts.background,
+			opacity: opts.opacity
+		});
+
+	// Draw text
+	let dy = 0;
+	for (let line of info) {
+		this.text(line, x + 1, y + dy, {
+			color            : opts.textcolor,
+			// backgroundColor  : opts.background,
+			backgroundPadding: 0.1,
+			opacity          : opts.opacity,
+			font             : fontstring,
+			align            : 'left',
+		});
+		dy += opts.textsize;
+	}
+
+	return this;
 };
 
+// Taken from https://github.com/screepers/RoomVisual with slight modification: ========================================
 
 const colors = {
 	gray            : '#555555',
@@ -17,7 +66,7 @@ const colors = {
 	dark            : '#181818',
 	outline         : '#8FBB93',
 	speechText      : '#000000',
-	speechBackground: '#2ccf3b'
+	speechBackground: '#aebcc4'
 };
 
 const speechSize = 0.5;
@@ -436,7 +485,7 @@ function relPoly(x: number, y: number, poly: number[][]): number[][] {
 	});
 }
 
-RoomVisual.prototype.test = function test(): RoomVisual {
+RoomVisual.prototype.test = function (): RoomVisual {
 	let demopos = [19, 24];
 	this.clear();
 	this.structure(demopos[0] + 0, demopos[1] + 0, STRUCTURE_LAB);
@@ -446,6 +495,11 @@ RoomVisual.prototype.test = function test(): RoomVisual {
 	this.structure(demopos[0] + 4, demopos[1] + 0, STRUCTURE_EXTENSION);
 	this.structure(demopos[0] + 5, demopos[1] + 1, STRUCTURE_SPAWN);
 
+	this.animatedPosition(demopos[0] + 7, demopos[1]);
+
+	this.speech('This is a test!', demopos[0] + 10, demopos[1], {opacity: 0.7});
+
+	this.infoBox(['This is', 'a test', 'mmmmmmmmmmmmm'], demopos[0] + 15, demopos[1]);
+
 	return this;
 };
-

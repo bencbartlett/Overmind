@@ -12,15 +12,6 @@ Object.defineProperty(RoomObject.prototype, 'targetedBy', { // List of creep nam
 	},
 });
 
-// RoomObject.prototype.isTargetFor = function (taskName?: string): ITask[] {
-// 	if (taskName) {
-// 		let targetingTasks = _.compact(_.map(this.targetedBy, (name: string) => Game.zerg[name].task)) as ITask[];
-// 		return _.filter(targetingTasks, task => task.name == taskName);
-// 	} else {
-// 		return _.compact(_.map(this.targetedBy, (name: string) => Game.zerg[name].task)) as ITask[];
-// 	}
-// };
-
 // Link association ====================================================================================================
 
 Object.defineProperty(RoomObject.prototype, 'linked', { // If an object has a nearby link

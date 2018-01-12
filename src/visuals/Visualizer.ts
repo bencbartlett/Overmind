@@ -1,9 +1,22 @@
 import {profile} from '../lib/Profiler';
 
+export var asciiLogo: string[] = ['___________________________________________________________',
+								  '',
+								  ' _____  _    _ _______  ______ _______ _____ __   _ ______ ',
+								  '|     |  \\  /  |______ |_____/ |  |  |   |   | \\  | |     \\',
+								  '|_____|   \\/   |______ |    \\_ |  |  | __|__ |  \\_| |_____/',
+								  '',
+								  '_______________________ Screeps AI ________________________'];
+
 @profile
 export class Visualizer {
 
-	static drawLayout(structureMap: StructureMap, roomName?: string): RoomVisual {
+	static get enabled(): boolean {
+		return Memory.settings.enableVisuals;
+	}
+
+	static drawLayout(structureMap: StructureMap, roomName?: string): RoomVisual | void {
+		if (!this.enabled) return;
 		let vis: RoomVisual;
 		if (roomName) {
 			vis = new RoomVisual(roomName);
@@ -48,37 +61,38 @@ export class Visualizer {
 		}
 	}
 
+	static showInfo(info: string[], calledFrom: { room: Room | undefined, pos: RoomPosition }, opts = {}): RoomVisual {
+		if (calledFrom.room) {
+			return calledFrom.room.visual.infoBox(info, calledFrom.pos.x, calledFrom.pos.y, opts);
+		} else {
+			return new RoomVisual(calledFrom.pos.roomName).infoBox(info, calledFrom.pos.x, calledFrom.pos.y, opts);
+		}
+	}
+
 	static text(text: string, pos: RoomPosition, style?: TextStyle): void {
 		new RoomVisual(pos.roomName).text(text, pos, style);
 	}
 
-	static drawHUD(): void {
-		// Draw Overmind logo
-		var fontSize;
-		var style = {color: '#ffffff', align: 'left', opacity: 0.5, font: '1.0'} as TextStyle;
-		var fontScale = 1.3;
-		var row = 0;
-		var column = 0;
-		// Draw the logo
-		fontSize = 0.3 * fontScale;
-		style.font = fontSize + ' Courier';
-		var asciiLogo = ['___________________________________________________________',
-						 '',
-						 ' _____  _    _ _______  ______ _______ _____ __   _ ______ ',
-						 '|     |  \\  /  |______ |_____/ |  |  |   |   | \\  | |     \\',
-						 '|_____|   \\/   |______ |    \\_ |  |  | __|__ |  \\_| |_____/',
-						 '',
-						 '___________________________________________________________'];
-		row = 0;
-		style.color = '#ffffff';
-		row = new RoomVisual().multitext(asciiLogo, column, row, fontSize, style);
-		row += 2 * fontSize;
-		// Draw CPU info
-		fontSize = 0.5 * fontScale;
-		style.font = fontSize + ' Courier';
-		// Display CPU Information
-		new RoomVisual().text('CPU:' + ' bucket:' + Game.cpu.bucket +
-							  ' tickLimit:' + Game.cpu.tickLimit, column, row, style);
-		row += fontSize;
-	}
+	// static drawHUD(): void {
+	// 	// Draw Overmind logo
+	// 	var fontSize;
+	// 	var style = {color: '#ffffff', align: 'left', opacity: 0.5, font: '1.0'} as TextStyle;
+	// 	var fontScale = 1.3;
+	// 	var row = 0;
+	// 	var column = 0;
+	// 	// Draw the logo
+	// 	fontSize = 0.3 * fontScale;
+	// 	style.font = fontSize + ' Courier';
+	// 	row = 0;
+	// 	style.color = '#ffffff';
+	// 	row = new RoomVisual().multitext(asciiLogo, column, row, fontSize, style);
+	// 	row += 2 * fontSize;
+	// 	// Draw CPU info
+	// 	fontSize = 0.5 * fontScale;
+	// 	style.font = fontSize + ' Courier';
+	// 	// Display CPU Information
+	// 	new RoomVisual().text('CPU:' + ' bucket:' + Game.cpu.bucket +
+	// 						  ' tickLimit:' + Game.cpu.tickLimit, column, row, style);
+	// 	row += fontSize;
+	// }
 }

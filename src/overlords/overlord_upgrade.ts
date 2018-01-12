@@ -17,7 +17,7 @@ export class UpgradingOverlord extends Overlord {
 
 	constructor(upgradeSite: UpgradeSite, priority = Priority.Normal) {
 		super(upgradeSite, 'upgrade', priority);
-		this.upgraders = this.getCreeps('upgrader');
+		this.upgraders = this.creeps('upgrader');
 		this.upgradeSite = upgradeSite;
 	}
 

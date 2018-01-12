@@ -1,25 +1,7 @@
-// // Flag prototypes
-//
 import {Pathing} from '../pathing/pathing';
 import {log} from '../lib/logger/log';
-//
-// Object.defineProperty(RoomObject.prototype, 'colony', { // link to colony object in the overmind
-// 	get() {
-// 		if (this.memory.colony) {
-// 			return Overmind.Colonies[this.memory.colony];
-// 		} else {
-// 			let colonyName = Overmind.colonyMap[this.pos.roomName];
-// 			if (colonyName) {
-// 				return Overmind.Colonies[colonyName];
-// 			} else {
-// 				this.recalculateColony();
-// 				return Overmind.Colonies[this.memory.colony];
-// 			}
-// 		}
-// 	}
-// });
-//
-//
+
+
 // Set the colony of the flag to be
 Flag.prototype.recalculateColony = function (restrictDistance = 10): void {
 	log.info(`Recalculating colony association for ${this.name} in ${this.pos.roomName}`);
@@ -27,7 +9,8 @@ Flag.prototype.recalculateColony = function (restrictDistance = 10): void {
 	let minDistance = Infinity;
 	let colonyRooms = _.filter(Game.rooms, room => room.my);
 	for (let room of colonyRooms) {
-		let path = Pathing.findShortestPath(this.pos, room.controller!.pos, {restrictDistance: restrictDistance});
+		let path = Pathing.findShortestPath(this.pos, room.controller!.pos,
+											{restrictDistance: restrictDistance}).path;
 		if (path) {
 			if (path.length < minDistance) {
 				nearestColonyName = room.name;

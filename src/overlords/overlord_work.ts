@@ -17,7 +17,7 @@ export class WorkerOverlord extends Overlord {
 
 	constructor(colony: Colony, priority = Priority.NormalHigh) {
 		super(colony, 'worker', priority);
-		this.workers = this.getCreeps('worker');
+		this.workers = this.creeps('worker');
 		this.constructionSites = this.room.constructionSites; // todo: colony-wide construction sites or pavers
 		this.repairStructures = _.filter(this.room.repairables, function (structure) {
 			if (structure.structureType == STRUCTURE_ROAD) {

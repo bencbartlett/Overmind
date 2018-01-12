@@ -296,8 +296,6 @@ export class Zerg {
 	run(): number | void {
 		if (this.task) {
 			return this.task.run();
-		} else {
-			return this.say('No task!');
 		}
 	}
 

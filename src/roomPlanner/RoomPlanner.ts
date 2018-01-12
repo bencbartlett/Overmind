@@ -162,7 +162,7 @@ export class RoomPlanner {
 	private planRoad(pos1: RoomPosition, pos2: RoomPosition) {
 		// Find the shortest path, preferentially stepping on tiles with road routing flags on them
 		let roadPath = Pathing.routeRoadPath(pos1, pos2);
-		let shortestPath = Pathing.findShortestPath(pos1, pos2);
+		let shortestPath = Pathing.findShortestPath(pos1, pos2).path;
 		if (roadPath.length == shortestPath.length) {
 			Visualizer.drawRoad(roadPath);
 		} else if (roadPath.length > shortestPath.length) {

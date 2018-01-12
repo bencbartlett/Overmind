@@ -2,10 +2,7 @@
 declare function deref(ref: string): RoomObject | null;
 
 global.deref = function (ref: string): RoomObject | null { // dereference any object from identifier; see ref in RoomObjects
-	return Game.getObjectById(ref) as RoomObject ||
-		   Game.flags[ref] as Flag ||
-		   Game.creeps[ref] as Creep ||
-		   null;
+	return Game.getObjectById(ref) || Game.flags[ref] || Game.creeps[ref] || Game.spawns[ref] || null;
 };
 
 declare function derefRoomPosition(protoPos: protoPos): RoomPosition;

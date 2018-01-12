@@ -13,7 +13,7 @@ export class ReservingOverlord extends Overlord {
 
 	constructor(directive: DirectiveOutpost, priority = Priority.NormalHigh) {
 		super(directive, 'reserve', priority);
-		this.reservers = this.getCreeps('reserver');
+		this.reservers = this.creeps('reserver');
 		this.reserveBuffer = 3000;
 	}
 

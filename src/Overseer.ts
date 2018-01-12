@@ -10,7 +10,6 @@ import {Directive} from './directives/Directive';
 
 @profile
 export class Overseer {
-	name: string; 								// Name of the primary colony room
 	memory: OverseerMemory; 					// Memory.colony.overseer
 	colony: Colony; 							// Instantiated colony object
 	directives: Directive[];					// Directives across the colony
@@ -19,7 +18,6 @@ export class Overseer {
 	};
 
 	constructor(colony: Colony) {
-		this.name = colony.name;
 		this.colony = colony;
 		this.memory = colony.memory.overseer;
 		this.directives = [];

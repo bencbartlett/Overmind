@@ -21,7 +21,7 @@ export class SupplierOverlord extends Overlord {
 
 	constructor(directive: Colony | HiveCluster, priority = Priority.High) {
 		super(directive, 'supply', priority);
-		this.suppliers = this.getCreeps('supplier');
+		this.suppliers = this.creeps('supplier');
 		this.settings = {
 			refillTowersBelow: 500,
 		};

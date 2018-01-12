@@ -28,9 +28,11 @@ export class DirectiveGuard extends Directive {
 				this.setPosition(this.room.hostiles[0].pos);
 			}
 		}
-		// If there are no hostiles left in the room, remove the flag
-		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) { // TODO: wait until everyone's healed too
-			this.remove();
+		// If there are no hostiles left in the room and everyone's healed, then remove the flag
+		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
+			if (_.filter(this.room.creeps, creep => creep.hits < creep.hitsMax).length == 0) {
+				this.remove();
+			}
 		}
 	}
 }

@@ -81,7 +81,7 @@ interface RoomPosition {
 }
 
 interface RoomVisual {
-	multitext(textArray: string[], x: number, starty: number, fontSize: number, style: any): number;
+	infoBox(info: string[], x: number, y: number, opts?: { [option: string]: any }): RoomVisual;
 
 	structure(x: number, y: number, type: string, opts?: { [option: string]: any }): RoomVisual;
 

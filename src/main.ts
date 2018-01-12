@@ -5,7 +5,7 @@
 // |     |  \  /  |______ |_____/ |  |  |   |   | \  | |     \
 // |_____|   \/   |______ |    \_ |  |  | __|__ |  \_| |_____/
 //
-// ___________ Artificial Intelligence for Screeps ___________
+// _______________________ Screeps AI ________________________
 //
 //
 // Overmind repository: github.com/bencbartlett/overmind
@@ -30,12 +30,14 @@ import {taskInstantiator} from './maps/map_tasks';
 import {sandbox} from './sandbox/sandbox';
 import {Memcheck} from './memcheck';
 import OM from './Overmind';
+import {Commands} from './commands';
 
 // Execute this every global reset
 global.log = log;
 global.Profiler = Profiler.init();
 global.taskFromPrototask = taskInstantiator;
 Memcheck.format();
+Commands.init();
 
 // Main loop
 export function loop(): void {

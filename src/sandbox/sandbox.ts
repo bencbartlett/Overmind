@@ -36,7 +36,7 @@ export function testVisualizer() {
 	let planner = new RoomPlanner(colonyName);
 	Visualizer.drawLayout(planner.map, colonyName);
 
-	let path = Pathing.findShortestPath(deref('58f3c9cc2451c2bb06d9c64c')!.pos, deref('5873bcd711e3e4361b4d8452')!.pos);
+	let path = Pathing.findShortestPath(deref('58f3c9cc2451c2bb06d9c64c')!.pos, deref('5873bcd711e3e4361b4d8452')!.pos).path;
 	Visualizer.drawRoad(path!);
 }
 
@@ -74,6 +74,7 @@ export function sandbox() {
 		// testGraph();
 		// testVisualizer()
 		// testRoomPlanner();
+		new RoomVisual().test();
 	} catch (e) {
 		log.error(e);
 	}

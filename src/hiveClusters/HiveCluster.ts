@@ -20,6 +20,7 @@ export abstract class HiveCluster {
 		this.pos = instantiationObject.pos;
 		this.componentName = name;
 		this.name = name + ':' + instantiationObject.ref;
+		this.colony.hiveClusters.push(this);
 	}
 
 	// protected initMemory(memory: any, memName: string, memoryToWrite = {}) {
@@ -35,7 +36,9 @@ export abstract class HiveCluster {
 	// Runtime logic, such as controlling creep actions
 	abstract run(): void;
 
-	// TODO: Display visuals of relevant information
-	// abstract visuals(): void;
+	// Overwrite this to display relevant information
+	visuals(): void {
+
+	};
 }
 

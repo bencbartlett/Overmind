@@ -95,4 +95,9 @@ export abstract class Directive {
 
 	/* Runtime logic goes here, called in overseer.run() */
 	abstract run(): void
+
+	// Overwrite this in child classes to display relevant information
+	visuals(): void {
+
+	}
 }

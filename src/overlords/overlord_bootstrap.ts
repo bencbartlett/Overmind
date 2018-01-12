@@ -40,7 +40,7 @@ export class BootstrappingOverlord extends Overlord {
 
 	constructor(directive: DirectiveBootstrap, priority = Priority.Critical) {
 		super(directive, 'bootstrap', priority);
-		this.fillers = this.getCreeps('filler');
+		this.fillers = this.creeps('filler');
 		// Calculate structures fillers can supply / withdraw from
 		this.supplyStructures = _.filter([...this.colony.spawns, ...this.colony.extensions],
 										 structure => structure.energy < structure.energyCapacity);

@@ -31,6 +31,13 @@ export class Memcheck {
 		// Format the memory as needed, done once every global reset
 		this.formatOvermindMemory();
 		this.formatPathingMemory();
+		// Rest of memory formatting
+		if (!Memory.settings) {
+			Memory.settings = {};
+		}
+		_.defaults(Memory.settings, {
+			enableVisuals: true,
+		});
 	}
 
 	static cleanCreeps() {
@@ -57,17 +64,26 @@ export class Memcheck {
 
 		// Randomly clear some cached path lengths
 		for (let pos1Name in Memory.pathing.distances) {
-			for (let pos2Name in Memory.pathing.distances[pos1Name]) {
-				if (Math.random() < distanceCleanProbability) {
-					delete Memory.pathing.distances[pos1Name][pos2Name];
+			if (_.isEmpty(Memory.pathing.distances[pos1Name])) {
+				delete Memory.pathing.distances[pos1Name];
+			} else {
+				for (let pos2Name in Memory.pathing.distances[pos1Name]) {
+					if (Math.random() < distanceCleanProbability) {
+						delete Memory.pathing.distances[pos1Name][pos2Name];
+					}
 				}
 			}
 		}
 
+		// Randomly clear weighted distances
 		for (let pos1Name in Memory.pathing.weightedDistances) {
-			for (let pos2Name in Memory.pathing.weightedDistances[pos1Name]) {
-				if (Math.random() < weightedDistanceCleanProbability) {
-					delete Memory.pathing.weightedDistances[pos1Name][pos2Name];
+			if (_.isEmpty(Memory.pathing.weightedDistances[pos1Name])) {
+				delete Memory.pathing.weightedDistances[pos1Name];
+			} else {
+				for (let pos2Name in Memory.pathing.weightedDistances[pos1Name]) {
+					if (Math.random() < weightedDistanceCleanProbability) {
+						delete Memory.pathing.weightedDistances[pos1Name][pos2Name];
+					}
 				}
 			}
 		}

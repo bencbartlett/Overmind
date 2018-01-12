@@ -14,6 +14,7 @@ import {WorkerOverlord} from './overlords/overlord_work';
 import {Overlord} from './overlords/Overlord';
 import {Zerg} from './Zerg';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
+import {HiveCluster} from './hiveClusters/HiveCluster';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -52,13 +53,14 @@ export class Colony {
 	sources: Source[];									// | Sources in all colony rooms
 	flags: Flag[];										// | Flags across the colony
 	// Hive clusters
+	hiveClusters: HiveCluster[];						// List of all hive clusters
 	commandCenter: CommandCenter | undefined;			// Component with logic for non-spawning structures
-	hatchery: Hatchery | undefined;					// Component to encapsulate spawner logic
+	hatchery: Hatchery | undefined;						// Component to encapsulate spawner logic
 	upgradeSite: UpgradeSite;							// Component to provide upgraders with uninterrupted energy
 	miningGroups: { [id: string]: MiningGroup } | undefined;	// Component to group mining sites into a hauling group
 	miningSites: { [sourceID: string]: MiningSite };	// Component with logic for mining and hauling
 	// Incubation status
-	incubator: Colony | undefined; 					// The colony responsible for incubating this one, if any
+	incubator: Colony | undefined; 						// The colony responsible for incubating this one, if any
 	isIncubating: boolean;								// If the colony is incubating
 	incubatingColonies: Colony[];						// List of colonies that this colony is incubating
 	stage: number;										// The stage of the colony "lifecycle"
@@ -131,6 +133,7 @@ export class Colony {
 		this.linkRequests = new LinkRequestGroup();
 		this.transportRequests = new TransportRequestGroup();
 		// Build the hive clusters
+		this.hiveClusters = [];
 		this.buildHiveClusters();
 		// Register colony overlords
 		this.spawnMoarOverlords();
@@ -228,25 +231,8 @@ export class Colony {
 	// 		}
 
 	init(): void {
-		// Initialize each colony component
-		if (this.hatchery) {
-			this.hatchery.init();
-		}
-		if (this.commandCenter) {
-			this.commandCenter.init();
-		}
-		if (this.upgradeSite) {
-			this.upgradeSite.init();
-		}
-		for (let siteID in this.miningSites) {
-			let site = this.miningSites[siteID];
-			site.init();
-		}
-		if (this.miningGroups) { // Mining groups must be initialized after mining sites
-			for (let groupID in this.miningGroups) {
-				this.miningGroups[groupID].init();
-			}
-		}
+		// Initialize each hive cluster
+		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.init());
 		// Initialize the colony overseer, must be run AFTER all components are initialized
 		this.overseer.init();
 		// Initialize the room planner
@@ -257,32 +243,15 @@ export class Colony {
 		// 1: Run the colony overlord, must be run BEFORE all components are run
 		this.overseer.run();
 		// 2: Run the colony virtual components
-		if (this.hatchery) {
-			this.hatchery.run();
-		}
-		if (this.commandCenter) {
-			this.commandCenter.run();
-		}
-		if (this.upgradeSite) {
-			this.upgradeSite.run();
-		}
-		for (let siteID in this.miningSites) {
-			let site = this.miningSites[siteID];
-			site.run();
-		}
-		if (this.miningGroups) {
-			for (let groupID in this.miningGroups) {
-				this.miningGroups[groupID].run();
-			}
-		}
+		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.run());
 		// 3 Run the colony real components
 		this.handleTowers();
 		this.handleLinks();
 		// 4: Run each creep in the colony
-		for (let name in this.creeps) {
-			this.creeps[name].run();
-		}
+		_.forEach(this.creeps, creep => creep.run());
 		// Run the room planner
 		this.roomPlanner.run();
+		// Display hiveCluster visuals
+		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.visuals());
 	}
 }

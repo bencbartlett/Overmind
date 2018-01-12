@@ -14,7 +14,7 @@ export class HaulingOverlord extends Overlord {
 
 	constructor(miningGroup: MiningGroup, priority = Priority.NormalLow) {
 		super(miningGroup, 'haul', priority);
-		this.haulers = this.getCreeps('hauler');
+		this.haulers = this.creeps('hauler');
 		this.miningGroup = miningGroup;
 	}
 
