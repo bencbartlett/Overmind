@@ -32,7 +32,7 @@ RoomVisual.prototype.infoBox = function (info: string[], x: number, y: number, o
 
 	// Draw box
 	this.rect(x + 0.9, y - 0.8 * opts.textsize,
-		0.6 * opts.textsize * _.max(_.map(info, line => line.length)), info.length * opts.textsize,
+		0.55 * opts.textsize * _.max(_.map(info, line => line.length)), info.length * opts.textsize,
 		{
 			fill   : opts.background,
 			opacity: opts.opacity

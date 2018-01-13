@@ -7,6 +7,7 @@ import {GameCache} from './caching';
 import {Zerg} from './Zerg';
 import {DirectiveOutpost} from './directives/directive_outpost';
 import {Overlord} from './overlords/Overlord';
+import {Directive} from './directives/Directive';
 
 
 @profile
@@ -95,6 +96,9 @@ export default class Overmind implements IOvermind {
 			let directive = DirectiveWrapper(Game.flags[name]);
 			if (directive) {
 				Game.directives[name] = directive;
+				directive.colony.flags.push(directive.flag);
+			} else {
+				Directive.getFlagColony(Game.flags[name]).flags.push(Game.flags[name]);
 			}
 		}
 	}

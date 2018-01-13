@@ -49,6 +49,7 @@ interface PathingMemory {
 }
 
 interface FlagMemory {
+	rotation?: number;
 	colony?: string;
 	overlords: { [overlordName: string]: OverlordMemory };
 }

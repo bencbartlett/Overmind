@@ -4,7 +4,7 @@ import {HiveCluster} from './HiveCluster';
 import {profile} from '../lib/Profiler';
 import {UpgradingOverlord} from '../overlords/overlord_upgrade';
 import {Colony} from '../Colony';
-import {Memcheck} from '../memcheck';
+import {Mem} from '../memcheck';
 
 @profile
 export class UpgradeSite extends HiveCluster {
@@ -20,7 +20,7 @@ export class UpgradeSite extends HiveCluster {
 
 	constructor(colony: Colony, controller: StructureController) {
 		super(colony, controller, 'upgradeSite');
-		this.memory = Memcheck.safeAssign(colony.memory, 'upgradeSite');
+		this.memory = Mem.wrap(colony.memory, 'upgradeSite');
 		this.controller = controller;
 		// Register input
 		let siteContainer = this.pos.findClosestByLimitedRange(this.room.containers, 4);

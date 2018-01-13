@@ -71,9 +71,7 @@ export class Overseer {
 
 	init(): void {
 		// Handle directives - should be done first
-		for (let i in this.directives) {
-			this.directives[i].init();
-		}
+		_.forEach(this.directives, directive => directive.init());
 		// Handle overlords in decreasing priority {
 		for (let priority in this.overlords) {
 			if (!this.overlords[priority]) continue;
@@ -89,9 +87,7 @@ export class Overseer {
 
 	run(): void {
 		// Handle directives
-		for (let i in this.directives) {
-			this.directives[i].run();
-		}
+		_.forEach(this.directives, directive => directive.run());
 		// Handle overlords in decreasing priority {
 		for (let priority in this.overlords) {
 			if (!this.overlords[priority]) continue;
@@ -103,5 +99,7 @@ export class Overseer {
 		this.handleSafeMode();
 		// this.handleSpawnOperations(); // build creeps as needed
 		this.placeDirectives();
+		// Draw visuals
+		_.forEach(this.directives, directive => directive.visuals());
 	}
 }

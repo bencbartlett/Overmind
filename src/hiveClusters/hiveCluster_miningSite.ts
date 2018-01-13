@@ -9,7 +9,7 @@ import {Colony} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
 import {MiningGroup} from './hiveCluster_miningGroup';
 import {TransportRequestGroup} from '../resourceRequests/TransportRequestGroup';
-import {Memcheck} from '../memcheck';
+import {Mem} from '../memcheck';
 
 @profile
 export class MiningSite extends HiveCluster {
@@ -25,7 +25,7 @@ export class MiningSite extends HiveCluster {
 
 	constructor(colony: Colony, source: Source) {
 		super(colony, source, 'miningSite');
-		this.memory = Memcheck.safeAssign(colony.memory, this.name);
+		this.memory = Mem.wrap(colony.memory, this.name);
 		this.source = source;
 		this.energyPerTick = source.energyCapacity / ENERGY_REGEN_TIME;
 		this.miningPowerNeeded = Math.ceil(this.energyPerTick / HARVEST_POWER) + 1;

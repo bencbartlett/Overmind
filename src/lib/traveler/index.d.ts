@@ -21,7 +21,7 @@ interface TravelToOptions {
     allowHostile?: boolean;
     allowSK?: boolean;
     range?: number;
-    obstacles?: {pos: RoomPosition}[];
+	obstacles?: RoomPosition[];
     roomCallback?: (roomName: string, matrix: CostMatrix) => CostMatrix | boolean;
     routeCallback?: (roomName: string) => number;
     returnData?: TravelToReturnData;

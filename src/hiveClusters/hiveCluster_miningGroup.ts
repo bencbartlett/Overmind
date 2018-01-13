@@ -8,7 +8,7 @@ import {Pathing} from '../pathing/pathing';
 import {HaulingOverlord} from '../overlords/overlord_haul';
 import {Colony} from '../Colony';
 import {MiningSite} from './hiveCluster_miningSite';
-import {Memcheck} from '../memcheck';
+import {Mem} from '../memcheck';
 
 @profile
 export class MiningGroup extends HiveCluster {
@@ -31,7 +31,7 @@ export class MiningGroup extends HiveCluster {
 
 	constructor(colony: Colony, dropoff: StructureLink | StructureStorage) {
 		super(colony, dropoff, 'miningGroup');
-		this.memory = Memcheck.safeAssign(colony.memory, this.name);
+		this.memory = Mem.wrap(colony.memory, this.name);
 		this.settings = {
 			linksTrasmitAt: LINK_CAPACITY - 100,
 		};

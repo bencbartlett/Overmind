@@ -30,7 +30,7 @@ export class Pathing {
 	}
 
 	/* Calculate and/or cache the length of the shortest path between two points.
-	 * Cache is probabilistically cleared in Memcheck */
+	 * Cache is probabilistically cleared in Mem */
 	static distance(arg1: RoomPosition, arg2: RoomPosition): number {
 		let pos1, pos2: RoomPosition;
 		if (arg1.name < arg2.name) { // alphabetize since path lengths are the same either direction
@@ -75,7 +75,7 @@ export class Pathing {
 	}
 
 	/* Calculates and/or caches the weighted distance for the most efficient path. Weight is sum of tile weights:
-	 * Road = 1, Plain = 2, Swamp = 10. Cached weights are cleared in Memcheck occasionally. */
+	 * Road = 1, Plain = 2, Swamp = 10. Cached weights are cleared in Mem occasionally. */
 	static weightedDistance(arg1: RoomPosition, arg2: RoomPosition): number {
 		let pos1, pos2: RoomPosition;
 		if (arg1.name < arg2.name) { // alphabetize since path lengths are the same either direction
@@ -101,7 +101,6 @@ export class Pathing {
 			range  : 1,
 			offRoad: true,
 			allowSK: true,
-
 		});
 		let ret = Traveler.findTravelPath(startPos, endPos, options);
 		if (ret.incomplete) log.info(`Incomplete travel path from ${startPos} to ${endPos}!`);
@@ -133,7 +132,6 @@ export class Pathing {
 			range  : 1,
 			offRoad: true,
 			allowSK: true,
-
 		});
 		let originRoomName = origin.roomName;
 		let destRoomName = destination.roomName;
@@ -173,10 +171,10 @@ export class Pathing {
 				if (options.obstacles) {
 					matrix = matrix.clone();
 					for (let obstacle of options.obstacles) {
-						if (obstacle.pos.roomName !== roomName) {
+						if (obstacle.roomName !== roomName) {
 							continue;
 						}
-						matrix.set(obstacle.pos.x, obstacle.pos.y, 0xff);
+						matrix.set(obstacle.x, obstacle.y, 0xff);
 					}
 				}
 				// Prefer pathing through flags

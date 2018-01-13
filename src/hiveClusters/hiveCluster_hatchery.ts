@@ -9,7 +9,8 @@ import {Colony, ColonyStage} from '../Colony';
 import {TransportRequestGroup} from '../resourceRequests/TransportRequestGroup';
 import {CreepSetup} from '../creepSetup/CreepSetup';
 import {Overlord} from '../overlords/Overlord';
-import {Memcheck} from '../memcheck';
+import {Mem} from '../memcheck';
+import {Visualizer} from '../visuals/Visualizer';
 
 @profile
 export class Hatchery extends HiveCluster {
@@ -37,7 +38,7 @@ export class Hatchery extends HiveCluster {
 
 	constructor(colony: Colony, headSpawn: StructureSpawn) {
 		super(colony, headSpawn, 'hatchery');
-		this.memory = Memcheck.safeAssign(colony.memory, 'hatchery');
+		this.memory = Mem.wrap(colony.memory, 'hatchery');
 		// Register structure components
 		this.spawns = colony.spawns;
 		this.availableSpawns = _.filter(this.spawns, (spawn: Spawn) => !spawn.spawning);
@@ -280,6 +281,20 @@ export class Hatchery extends HiveCluster {
 
 	run(): void {
 		this.handleSpawns();
+	}
+
+	visuals() {
+		let spawnInfo = '';
+		_.forEach(this.spawns, function (spawn) {
+			if (spawn.spawning) {
+				spawnInfo += ' ' + spawn.spawning.name.split('_')[0];
+			}
+		});
+		let info = [
+			`Energy: ${this.room.energyAvailable} / ${this.room.energyCapacityAvailable}`,
+			`Status: ${spawnInfo != '' ? 'spawning' + spawnInfo : 'idle' }`,
+		];
+		Visualizer.showInfo(info, this);
 	}
 }
 

@@ -1,4 +1,4 @@
-export class Memcheck {
+export class Mem {
 
 	static formatOvermindMemory() {
 		if (!Memory.Overmind) {
@@ -9,9 +9,9 @@ export class Memcheck {
 		}
 	}
 
-	static safeAssign(memory: any, memName: string, memoryToWrite = {}) {
+	static wrap(memory: any, memName: string, defaults = {}) {
 		if (!memory[memName]) {
-			memory[memName] = memoryToWrite;
+			memory[memName] = defaults;
 		}
 		return memory[memName];
 	}

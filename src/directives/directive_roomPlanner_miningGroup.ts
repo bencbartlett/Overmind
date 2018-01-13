@@ -4,7 +4,7 @@ import {profile} from '../lib/Profiler';
 @profile
 export class DirectiveRPMiningGroup extends Directive {
 
-	static directiveName = 'roomPlanner:MininGroup';
+	static directiveName = 'roomPlanner:MiningGroup';
 	static color = COLOR_WHITE;
 	static secondaryColor = COLOR_YELLOW;
 

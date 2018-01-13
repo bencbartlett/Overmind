@@ -22,7 +22,7 @@ export abstract class Directive {
 	constructor(flag: Flag) {
 		this.flag = flag;
 		this.name = flag.name;
-		this.colony = this.getFlagColony(flag);
+		this.colony = Directive.getFlagColony(flag);
 		this.pos = flag.pos;
 		this.room = flag.room;
 		this.memory = flag.memory;
@@ -35,7 +35,7 @@ export abstract class Directive {
 		}
 	}
 
-	protected getFlagColony(flag: Flag): Colony {
+	static getFlagColony(flag: Flag): Colony {
 		if (flag.memory.colony) {
 			return Overmind.Colonies[flag.memory.colony];
 		} else {

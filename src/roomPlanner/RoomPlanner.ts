@@ -5,7 +5,8 @@ import {log} from '../lib/logger/log';
 import {Pathing} from '../pathing/pathing';
 import {Visualizer} from '../visuals/Visualizer';
 import {profile} from '../lib/Profiler';
-import {Memcheck} from '../memcheck';
+import {Mem} from '../memcheck';
+import {Colony} from '../Colony';
 
 export interface BuildingPlannerOutput {
 	name: string;
@@ -32,82 +33,110 @@ export interface RoomPlan {
 
 export interface PlannerMemory {
 	active: boolean;
-	map: StructureMap;
+	mapsByLevel: { [rcl: number]: StructureMap };
+	roadPositions: protoPos[];
+	savedFlags: { secondaryColor: ColorConstant, pos: protoPos, memory: FlagMemory }[];
 }
+
+let memoryDefaults = {
+	active       : true,
+	mapsByLevel  : {},
+	roadPositions: [],
+	savedFlags   : [],
+};
 
 @profile
 export class RoomPlanner {
-	roomName: string;			// Name of the room this is for
-	room: Room;					// Room object
-	map: StructureMap;			// Flattened {structureType: RoomPositions[]} containing the final structure placements
-	plan: RoomPlan;				// Contains maps, positions, and rotations of each hivecluster component
-	isActive: boolean; 			// Whether the planner is activated
-	memory: PlannerMemory;		// Memory, stored on the room memory
+	colony: Colony;							// The colony this is for
+	map: StructureMap;						// Flattened {structureType: RoomPositions[]} for final structure placements
+	placements: { [name: string]: RoomPosition }; // Used for generating the plan
+	plan: RoomPlan;							// Contains maps, positions, and rotations of each hivecluster component
+	// memory: PlannerMemory;					// Memory, stored on the room memory
+	roadPositions: RoomPosition[];			// Roads that aren't part of components
 
-	constructor(roomName: string) {
-		this.roomName = roomName;
-		this.room = Game.rooms[roomName];
-		this.memory = Memcheck.safeAssign(this.room.memory, 'roomPlanner', {
-			active: false,
-			map   : {},
-		});
+	constructor(colony: Colony) {
+		this.colony = colony;
+		// this.memory = Mem.wrap(this.colony.memory, 'roomPlanner', memoryDefaults);
+		this.placements = {};
 		this.plan = {};
-		this.isActive = this.memory.active;
-		this.map = this.memory.map;
+		this.map = {};
+		this.roadPositions = [];
 	}
 
-	// addComponentsByFlags(): void {
-	// 	let structureFlags = _.filter(this.room.flags, flag => flag.color == COLOR_GREY);
-	// 	for (let flag of structureFlags) {
-	// 		switch (flag.secondaryColor) {
-	// 			case COLOR_PURPLE:
-	// 				this.addComponent('hatchery', flag.pos, Game.time % 4);
-	// 				break;
-	// 			case COLOR_YELLOW:
-	// 				this.addComponent('commandCenter', flag.pos, Game.time % 4);
-	// 				break;
-	// 		}
-	// 	}
-	// }
+	get memory(): PlannerMemory {
+		return Mem.wrap(this.colony.memory, 'roomPlanner', memoryDefaults);
+	}
+
+	get active(): boolean {
+		return this.memory.active;
+	}
+
+	set active(active: boolean) {
+		this.memory.active = active;
+		if (active) {
+			this.reactivate();
+		}
+	}
+
+	private reactivate(): void {
+		// Reinstantiate flags
+		for (let protoFlag of this.memory.savedFlags) {
+			let pos = derefRoomPosition(protoFlag.pos);
+			let result = Game.rooms[pos.roomName].createFlag(pos, undefined, COLOR_WHITE, protoFlag.secondaryColor);
+			// if (typeof result == 'string') {
+			// 	_.remove(this.memory.savedFlags, protoFlag);
+			// }
+			// TODO: add memory back on flag
+		}
+		this.memory.savedFlags = [];
+
+		// Display the activation message
+		let msg = [
+			`Room planner activated for ${this.colony.name}. Reinstantiating flags from previous session on next tick.`,
+			'Place colony components and routing hints with room planner flags:',
+			'    Place hatchery:        white/green',
+			'    Place command center:  white/blue',
+			'    Place upgrade site:    white/purple',
+			'    Place mining group:    white/yellow',
+			'    Routing hints:         white/white',
+			'Set component rotation by writing an angle (0,90,180,270 or 0,1,2,3) to flag.memory.rotation.',
+			'Finalize layout '
+		];
+		_.forEach(msg, command => console.log(command));
+	}
 
 	addComponent(componentName: string, pos: RoomPosition, rotation = 0): void {
-		if (this.isActive) {
-			let componentLayout: StructureLayout;
-			let anchor: Coord;
-			switch (componentName) {
-				case 'hatchery':
-					componentLayout = hatcheryLayout;
-					anchor = hatcheryLayout.data.pos;
-					break;
-				case 'commandCenter':
-					componentLayout = commandCenterLayout;
-					anchor = componentLayout.data.pos;
-					break;
-				default:
-					log.error(`${componentName} is not a valid component name.`);
-					return;
-			}
-			let componentMap = this.parseLayout(componentLayout);
-			this.translateComponent(componentMap, anchor, pos);
-			if (rotation != 0) {
-				this.rotateComponent(componentMap, pos, rotation);
-			}
-			this.plan[componentName] = {
-				map     : componentMap,
-				pos     : new RoomPosition(anchor.x, anchor.y, this.roomName),
-				rotation: rotation,
-			};
+		this.placements[componentName] = pos;
+	}
+
+	private getLayout(name: string): StructureLayout | undefined {
+		switch (name) {
+			case 'hatchery':
+				return hatcheryLayout;
+			case 'commandCenter':
+				return commandCenterLayout;
 		}
 	}
 
-	/* Generate a flatened map */
-	private generateMap(): void {
-		this.map = {};
-		let componentMaps: StructureMap[] = _.map(this.plan, componentPlan => componentPlan.map);
-		let structureNames: string[] = _.unique(_.flatten(_.map(componentMaps, map => _.keys(map))));
-		for (let name of structureNames) {
-			this.map[name] = _.compact(_.flatten(_.map(componentMaps, map => map[name])));
+	private generatePlan(level = 8): RoomPlan {
+		let plan: RoomPlan = {};
+		for (let name in this.placements) {
+			let layout = this.getLayout(name);
+			if (layout) {
+				let anchor: Coord = layout.data.pos;
+				let pos = this.placements[name];
+				let rotation: number = pos.lookFor(LOOK_FLAGS)[0]!.memory.rotation || 0;
+				let componentMap = this.parseLayout(layout, level);
+				this.translateComponent(componentMap, anchor, pos);
+				if (rotation != 0) this.rotateComponent(componentMap, pos, rotation);
+				plan[name] = {
+					map     : componentMap,
+					pos     : new RoomPosition(anchor.x, anchor.y, this.colony.name),
+					rotation: rotation,
+				};
+			}
 		}
+		return plan;
 	}
 
 	/* Generate a map of (structure type: RoomPositions[]) for a given layout */
@@ -117,8 +146,19 @@ export class RoomPlanner {
 		if (layout) {
 			for (let buildingName in layout.buildings) {
 				map[buildingName] = _.map(layout.buildings[buildingName].pos,
-										  pos => new RoomPosition(pos.x, pos.y, this.roomName));
+										  pos => new RoomPosition(pos.x, pos.y, this.colony.name));
 			}
+		}
+		return map;
+	}
+
+	/* Generate a flatened map */
+	private mapFromPlan(plan: RoomPlan): StructureMap {
+		let map: StructureMap = {};
+		let componentMaps: StructureMap[] = _.map(plan, componentPlan => componentPlan.map);
+		let structureNames: string[] = _.unique(_.flatten(_.map(componentMaps, map => _.keys(map))));
+		for (let name of structureNames) {
+			map[name] = _.compact(_.flatten(_.map(componentMaps, map => map[name])));
 		}
 		return map;
 	}
@@ -159,21 +199,82 @@ export class RoomPlanner {
 		}
 	}
 
-	private planRoad(pos1: RoomPosition, pos2: RoomPosition) {
+	// Plan a road between two locations; this.map must have been generated first!
+	planRoad(pos1: RoomPosition, pos2: RoomPosition, opts: TravelToOptions = {}): void {
+		let obstacles: RoomPosition[] = [];
+		for (let structureType in this.map) {
+			if (structureType != STRUCTURE_ROAD) obstacles = obstacles.concat(this.map[structureType]);
+		}
+		obstacles = _.unique(obstacles);
+		opts = _.merge(opts, {obstacles: obstacles});
 		// Find the shortest path, preferentially stepping on tiles with road routing flags on them
-		let roadPath = Pathing.routeRoadPath(pos1, pos2);
-		let shortestPath = Pathing.findShortestPath(pos1, pos2).path;
+		let roadPath = Pathing.routeRoadPath(pos1, pos2, opts);
+		let shortestPath = Pathing.findShortestPath(pos1, pos2, opts).path;
 		if (roadPath.length == shortestPath.length) {
-			Visualizer.drawRoad(roadPath);
+			this.roadPositions = this.roadPositions.concat(roadPath);
 		} else if (roadPath.length > shortestPath.length) {
-			Visualizer.drawRoad(shortestPath);
+			Visualizer.drawRoads(shortestPath);
 			Visualizer.drawPath(roadPath, {stroke: 'red'});
 			let textPos = roadPath[Math.floor(roadPath.length / 2 - 1)];
 			Visualizer.text(`Road length: ${roadPath.length}; shortest length: ${shortestPath.length}`,
 							textPos, {color: 'red'});
 		} else {
 			log.error(`${pos1} to ${pos2}: shortest path has length ${shortestPath.length}` +
-					  `longer than road path length ${roadPath.length}`);
+					  `longer than road path length ${roadPath.length}... whaaaa?`);
+		}
+	}
+
+	private planRoads(): void {
+		// Connect commandCenter to hatchery, upgradeSites, and all miningSites
+		if (this.placements.commandCenter) {
+			if (this.placements.hatchery) this.planRoad(this.placements.commandCenter, this.placements.hatchery);
+			if (this.placements.upgradeSite) this.planRoad(this.placements.commandCenter, this.placements.upgradeSite);
+			_.forEach(this.colony.miningSites,
+					  site => this.planRoad(this.placements.commandCenter, site.pos, {range: 2}));
+		}
+		this.formatRoadPositions();
+	}
+
+	// Ensure that the roads doesn't overlap with roads from this.map and that the positions are unique
+	private formatRoadPositions(): void {
+		// Make road position list unique
+		this.roadPositions = _.unique(this.roadPositions);
+		// Remove any roads duplicated in this.map
+		_.remove(this.roadPositions, pos => this.map[STRUCTURE_ROAD].includes(pos));
+	}
+
+	finalize(): void {
+		let layoutIsValid: boolean = !!this.placements.commandCenter &&
+									 !!this.placements.hatchery &&
+									 !!this.placements.upgradeSite;
+		if (layoutIsValid) { // Write everything to memory
+			// Generate maps for each rcl
+			this.memory.mapsByLevel = {};
+			for (let rcl = 1; rcl <= 8; rcl++) {
+				let plan = this.generatePlan(rcl);
+				let map = this.mapFromPlan(plan);
+				this.memory.mapsByLevel[rcl] = map;
+			}
+			// Write road positions to memory, sorted by distance to storage
+			this.memory.roadPositions = _.sortBy(this.roadPositions,
+												 pos => pos.getMultiRoomRangeTo(this.placements.commandCenter));
+			// Save flags and remove them
+			let flagsToWrite = _.filter(this.colony.flags, flag => flag.color == COLOR_WHITE);
+			for (let flag of flagsToWrite) {
+				console.log({secondaryColor: flag.secondaryColor, pos: flag.pos, memory: {} as FlagMemory});//flag.memory});
+				this.memory.savedFlags.push({
+												secondaryColor: flag.secondaryColor,
+												pos           : flag.pos,
+												memory        : {} as FlagMemory
+											});//flag.memory});
+				flag.remove();
+			}
+			_.forEach(this.memory.savedFlags, i => console.log(i));
+			console.log(this.memory.savedFlags.length);
+			console.log('Room layout and flag positions have been saved.');
+			this.active = false;
+		} else {
+			console.log('Not a valid room layout! Must have hatchery, commandCenter and upgradeSite placements.');
 		}
 	}
 
@@ -182,8 +283,18 @@ export class RoomPlanner {
 	}
 
 	run(): void {
-		if (this.isActive) {
-			this.generateMap();
+		if (this.active) {
+			this.plan = this.generatePlan();
+			this.map = this.mapFromPlan(this.plan);
+			this.planRoads();
+			this.visuals();
 		}
 	}
+
+	visuals(): void {
+		// Draw the map
+		Visualizer.drawLayout(this.map, this.colony.name);
+		Visualizer.drawRoads(this.roadPositions);
+	}
+
 }

@@ -138,7 +138,7 @@ export class Colony {
 		// Register colony overlords
 		this.spawnMoarOverlords();
 		// Register a room planner
-		this.roomPlanner = new RoomPlanner(this.room.name);
+		this.roomPlanner = new RoomPlanner(this);
 	}
 
 	/* Instantiate and associate virtual colony components to group similar structures together */

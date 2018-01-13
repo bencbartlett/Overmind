@@ -13,7 +13,7 @@ export class DirectiveRPHatchery extends Directive {
 	}
 
 	init(): void {
-		this.colony.roomPlanner.addComponent('hatchery', this.pos, Game.time % 4);
+		this.colony.roomPlanner.addComponent('hatchery', this.pos, this.memory.rotation);
 	}
 
 	run(): void {

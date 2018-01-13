@@ -13,7 +13,7 @@ export class DirectiveRPUpgradeSite extends Directive {
 	}
 
 	init(): void {
-
+		this.colony.roomPlanner.addComponent('upgradeSite', this.pos, this.memory.rotation);
 	}
 
 	run(): void {

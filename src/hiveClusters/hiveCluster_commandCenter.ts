@@ -8,7 +8,7 @@ import {log} from '../lib/logger/log';
 import {profile} from '../lib/Profiler';
 import {CommandCenterOverlord} from '../overlords/overlord_commandCenter';
 import {Colony} from '../Colony';
-import {Memcheck} from '../memcheck';
+import {Mem} from '../memcheck';
 
 @profile
 export class CommandCenter extends HiveCluster {
@@ -42,7 +42,7 @@ export class CommandCenter extends HiveCluster {
 	constructor(colony: Colony, storage: StructureStorage) {
 		super(colony, storage, 'commandCenter');
 		// Set up command center, register colony and memory
-		this.memory = Memcheck.safeAssign(colony.memory, 'commandCenter');
+		this.memory = Mem.wrap(colony.memory, 'commandCenter');
 		// Register physical components
 		this.storage = storage;
 		this.link = this.pos.findClosestByLimitedRange(colony.links, 2);
@@ -288,6 +288,8 @@ export class CommandCenter extends HiveCluster {
 		this.handleTerminal();
 	}
 
+	visuals() {
 
+	}
 }
 

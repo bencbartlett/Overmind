@@ -13,7 +13,7 @@ export class DirectiveRPCommandCenter extends Directive {
 	}
 
 	init(): void {
-		this.colony.roomPlanner.addComponent('commandCenter', this.pos, Game.time % 4);
+		this.colony.roomPlanner.addComponent('commandCenter', this.pos, this.memory.rotation);
 	}
 
 	run(): void {

@@ -15,13 +15,13 @@ export class Visualizer {
 		return Memory.settings.enableVisuals;
 	}
 
-	static drawLayout(structureMap: StructureMap, roomName?: string): RoomVisual | void {
-		if (!this.enabled) return;
+	static drawLayout(structureMap: StructureMap, roomName: string, forceDraw = false): RoomVisual | void {
+		if (!this.enabled && !forceDraw) return;
 		let vis: RoomVisual;
-		if (roomName) {
-			vis = new RoomVisual(roomName);
+		if (Game.rooms[roomName]) {
+			vis = Game.rooms[roomName].visual;
 		} else {
-			vis = new RoomVisual();
+			vis = new RoomVisual(roomName);
 		}
 		for (let structureType in structureMap) {
 			for (let pos of structureMap[structureType]) {
@@ -32,8 +32,8 @@ export class Visualizer {
 		return vis;
 	}
 
-	static drawRoad(path: RoomPosition[]): void {
-		let pointsByRoom = _.groupBy(path, pos => pos.roomName);
+	static drawRoads(positoins: RoomPosition[]): void {
+		let pointsByRoom = _.groupBy(positoins, pos => pos.roomName);
 		for (let roomName in pointsByRoom) {
 			let vis = new RoomVisual(roomName);
 			for (let pos of pointsByRoom[roomName]) {
@@ -41,17 +41,6 @@ export class Visualizer {
 			}
 			vis.connectRoads();
 		}
-		// let roomName = _.first(path).roomName;
-		// let vis = new RoomVisual(roomName);
-		// for (let pos of path) {
-		// 	if (pos.roomName != roomName) {
-		// 		vis.connectRoads();
-		// 		roomName = pos.roomName;
-		// 		vis = new RoomVisual(roomName);
-		// 	}
-		// 	vis.structure(pos.x, pos.y, STRUCTURE_ROAD);
-		// }
-		// vis.connectRoads();
 	}
 
 	static drawPath(path: RoomPosition[], style?: PolyStyle): void {

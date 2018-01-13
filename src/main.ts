@@ -28,7 +28,7 @@ import {log} from './lib/logger/log';
 import * as Profiler from 'lib/Profiler';
 import {taskInstantiator} from './maps/map_tasks';
 import {sandbox} from './sandbox/sandbox';
-import {Memcheck} from './memcheck';
+import {Mem} from './memcheck';
 import OM from './Overmind';
 import {Commands} from './commands';
 
@@ -36,12 +36,12 @@ import {Commands} from './commands';
 global.log = log;
 global.Profiler = Profiler.init();
 global.taskFromPrototask = taskInstantiator;
-Memcheck.format();
+Mem.format();
 Commands.init();
 
 // Main loop
 export function loop(): void {
-	Memcheck.clean();			// Clean memory
+	Mem.clean();			// Clean memory
 	global.Overmind = new OM();	// Instantiate the Overmind
 	Overmind.build();			// Build phase: instantiate caches and colony components
 	Overmind.init();			// Init phase: spawning and energy requests

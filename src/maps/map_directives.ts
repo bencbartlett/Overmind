@@ -5,6 +5,10 @@ import {DirectiveIncubate} from '../directives/directive_incubate';
 import {DirectiveOutpost} from '../directives/directive_outpost';
 import {DirectiveBootstrap} from '../directives/directive_bootstrap';
 import {Directive} from '../directives/Directive';
+import {DirectiveRPHatchery} from '../directives/directive_roomPlanner_hatchery';
+import {DirectiveRPCommandCenter} from '../directives/directive_roomPlanner_commandCenter';
+import {DirectiveRPUpgradeSite} from '../directives/directive_roomPlanner_upgradeSite';
+import {DirectiveRPMiningGroup} from '../directives/directive_roomPlanner_miningGroup';
 
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 	switch (flag.color) {
@@ -44,7 +48,14 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 		// Room planning directives ==========================================
 		case COLOR_WHITE:
 			switch (flag.secondaryColor) {
-
+				case COLOR_GREEN:
+					return new DirectiveRPHatchery(flag);
+				case COLOR_BLUE:
+					return new DirectiveRPCommandCenter(flag);
+				case COLOR_PURPLE:
+					return new DirectiveRPUpgradeSite(flag);
+				case COLOR_YELLOW:
+					return new DirectiveRPMiningGroup(flag);
 			}
 			break;
 
