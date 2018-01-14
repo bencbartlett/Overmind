@@ -82,6 +82,16 @@ export class SupplierSetup extends CreepSetup {
 	}
 }
 
+export class TransporterSetup extends CreepSetup {
+	constructor() {
+		super('transport', {
+			pattern  : [CARRY, CARRY, MOVE],
+			sizeLimit: Infinity,
+
+		});
+	}
+}
+
 export class UpgraderSetup extends CreepSetup {
 	constructor(sizeLimit: number) {
 		super('upgrader', {

@@ -20,7 +20,6 @@ export class UpgradeSite extends HiveCluster {
 
 	constructor(colony: Colony, controller: StructureController) {
 		super(colony, controller, 'upgradeSite');
-		this.memory = Mem.wrap(colony.memory, 'upgradeSite');
 		this.controller = controller;
 		// Register input
 		let siteContainer = this.pos.findClosestByLimitedRange(this.room.containers, 4);
@@ -42,6 +41,10 @@ export class UpgradeSite extends HiveCluster {
 		};
 		// Register overlord
 		this.overlord = new UpgradingOverlord(this);
+	}
+
+	get memory() {
+		return Mem.wrap(this.colony.memory, 'upgradeSite');
 	}
 
 	get upgradePowerNeeded(): number {

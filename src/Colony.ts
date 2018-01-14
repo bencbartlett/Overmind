@@ -52,6 +52,8 @@ export class Colony {
 	observer: StructureObserver | undefined;			// |
 	sources: Source[];									// | Sources in all colony rooms
 	flags: Flag[];										// | Flags across the colony
+	constructionSites: ConstructionSite[];				// | Construction sites in all colony rooms
+	repairables: Structure[];
 	// Hive clusters
 	hiveClusters: HiveCluster[];						// List of all hive clusters
 	commandCenter: CommandCenter | undefined;			// Component with logic for non-spawning structures
@@ -122,6 +124,8 @@ export class Colony {
 		}
 		// Register physical objects across all rooms in the colony
 		this.sources = _.flatten(_.map(this.rooms, room => room.sources));
+		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites));
+		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
 		// Register enemies across colony rooms
 		this.hostiles = _.flatten(_.map(this.rooms, room => room.hostiles));
 		// Create placeholder arrays for remaining properties to be filled in by the Overmind

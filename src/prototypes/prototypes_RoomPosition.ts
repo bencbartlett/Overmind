@@ -43,3 +43,19 @@ RoomPosition.prototype.findClosestByLimitedRange = function <T>(objects: T[] | R
 	return this.findClosestByRange(objectsInRange);
 };
 
+// RoomPosition.prototype.findClosestByMultiRoomRange = function <T extends _HasRoomPosition |
+// 	RoomPosition>(objects: T[] | RoomPosition[], opts?: { filter: any | string; }): T {
+// 	let distances = _.map(objects, obj => this.getMultiRoomRangeTo(obj.pos?obj.pos : obj));
+// 	let minDistance = Infinity;
+// 	let i = 0;
+// 	let minIndex = 0;
+// 	for (let distance of distances) {
+// 		if (distance < minDistance) {
+// 			minDistance = distance;
+// 			minIndex = i;
+// 		}
+// 		i++;
+// 	}
+// 	return objects[i];
+// };
+

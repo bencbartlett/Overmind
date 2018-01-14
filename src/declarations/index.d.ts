@@ -81,6 +81,10 @@ interface protoPos {
 	roomName: string;
 }
 
+interface HasPos {
+	pos: RoomPosition
+}
+
 interface TaskOptions {
 	blind?: boolean;
 	travelToOptions: TravelToOptions;

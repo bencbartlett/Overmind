@@ -12,7 +12,6 @@ import {Mem} from '../memcheck';
 
 @profile
 export class CommandCenter extends HiveCluster {
-	memory: CommandCenterMemory;							// Memory.colonies.commandCenter
 	storage: StructureStorage;								// The colony storage, also the instantiation object
 	link: StructureLink | undefined;						// Link closest to storage
 	terminal: StructureTerminal | undefined;				// The colony terminal
@@ -41,8 +40,6 @@ export class CommandCenter extends HiveCluster {
 
 	constructor(colony: Colony, storage: StructureStorage) {
 		super(colony, storage, 'commandCenter');
-		// Set up command center, register colony and memory
-		this.memory = Mem.wrap(colony.memory, 'commandCenter');
 		// Register physical components
 		this.storage = storage;
 		this.link = this.pos.findClosestByLimitedRange(colony.links, 2);
@@ -63,6 +60,10 @@ export class CommandCenter extends HiveCluster {
 		if (this.storage.linked) {
 			this.overlord = new CommandCenterOverlord(this);
 		}
+	}
+
+	get memory(): CommandCenterMemory {
+		return Mem.wrap(this.colony.memory, 'commandCenter');
 	}
 
 	// Idle position

@@ -7,6 +7,7 @@ import {Visualizer} from '../visuals/Visualizer';
 import {profile} from '../lib/Profiler';
 import {Mem} from '../memcheck';
 import {Colony} from '../Colony';
+import {BuildPriorities} from '../config/priorities';
 
 export interface BuildingPlannerOutput {
 	name: string;
@@ -53,14 +54,21 @@ export class RoomPlanner {
 	plan: RoomPlan;							// Contains maps, positions, and rotations of each hivecluster component
 	// memory: PlannerMemory;					// Memory, stored on the room memory
 	roadPositions: RoomPosition[];			// Roads that aren't part of components
+	private settings: {
+		siteCheckFrequency: number;
+		maxSitesPerColony: number;
+	};
 
 	constructor(colony: Colony) {
 		this.colony = colony;
-		// this.memory = Mem.wrap(this.colony.memory, 'roomPlanner', memoryDefaults);
 		this.placements = {};
 		this.plan = {};
 		this.map = {};
 		this.roadPositions = [];
+		this.settings = {
+			siteCheckFrequency: 10,
+			maxSitesPerColony : 20,
+		};
 	}
 
 	get memory(): PlannerMemory {
@@ -82,7 +90,7 @@ export class RoomPlanner {
 		// Reinstantiate flags
 		for (let protoFlag of this.memory.savedFlags) {
 			let pos = derefRoomPosition(protoFlag.pos);
-			let result = Game.rooms[pos.roomName].createFlag(pos, undefined, COLOR_WHITE, protoFlag.secondaryColor);
+			let result = pos.createFlag(undefined, COLOR_WHITE, protoFlag.secondaryColor);
 			// if (typeof result == 'string') {
 			// 	_.remove(this.memory.savedFlags, protoFlag);
 			// }
@@ -282,12 +290,63 @@ export class RoomPlanner {
 
 	}
 
+	static shouldBuild(structureType: BuildableStructureConstant, pos: RoomPosition): boolean {
+		let buildings = _.filter(pos.lookFor(LOOK_STRUCTURES), s => s && s.structureType == structureType);
+		let sites = pos.lookFor(LOOK_CONSTRUCTION_SITES);
+		if (!buildings || buildings.length == 0) {
+			if (!sites || sites.length == 0) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private buildMissing(): void {
+		// Max buildings that can be placed each tick
+		let count = this.settings.maxSitesPerColony - this.colony.constructionSites.length;
+		// Recall the appropriate map
+		this.map = this.memory.mapsByLevel[this.colony.controller.level];
+		// Build missing structures
+		for (let structureType of BuildPriorities) {
+			if (this.map[structureType]) {
+				for (let protoPos of this.map[structureType]) {
+					let pos = derefRoomPosition(protoPos);
+					if (count > 0 && RoomPlanner.shouldBuild(structureType, pos)) {
+						let ret = pos.createConstructionSite(structureType);
+						if (ret != OK) {
+							log.error(`${this.colony.name}: couldn't create construction site! ` +
+									  `pos: ${pos.x} ${pos.y} ${pos.roomName}, type: ${structureType}, Result: ${ret}`);
+						} else {
+							count--;
+						}
+					}
+				}
+			}
+		}
+		// Build missing roads
+		this.roadPositions = _.map(this.memory.roadPositions, protoPos => derefRoomPosition(protoPos));
+		for (let pos of this.roadPositions) {
+			if (count > 0 && RoomPlanner.shouldBuild(STRUCTURE_ROAD, pos)) {
+				let ret = pos.createConstructionSite(STRUCTURE_ROAD);
+				if (ret != OK) {
+					log.error(`${this.colony.name}: couldn't create construction site! ` +
+							  `pos: ${pos.x} ${pos.y} ${pos.roomName}, type: ${STRUCTURE_ROAD}, Result: ${ret}`);
+				} else {
+					count--;
+				}
+			}
+		}
+	}
+
 	run(): void {
 		if (this.active) {
 			this.plan = this.generatePlan();
 			this.map = this.mapFromPlan(this.plan);
 			this.planRoads();
 			this.visuals();
+		}
+		if (Game.time % this.settings.siteCheckFrequency == 0) {
+			this.buildMissing();
 		}
 	}
 

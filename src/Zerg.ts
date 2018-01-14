@@ -4,6 +4,13 @@ import {Colony} from './Colony';
 import {Overlord} from './overlords/Overlord';
 import {Task} from './tasks/Task';
 
+
+interface ParkingOptions {
+	range: number;
+	exactRange: boolean;
+	offroad: boolean;
+}
+
 @profile
 export class Zerg {
 	creep: Creep; 					// The creep that this wrapper class will control
@@ -159,6 +166,8 @@ export class Zerg {
 
 	// Custom creep methods ============================================================================================
 
+	// Overlord logic --------------------------------------------------------------------------------------------------
+
 	get overlord(): Overlord | null {
 		if (this.memory.overlord && Overmind.overlords[this.memory.overlord]) {
 			// let [directiveName, overlordName] = this.memory.overlord.split(':');
@@ -194,6 +203,8 @@ export class Zerg {
 			this.memory.overlord = null;
 		}
 	}
+
+	// Task logic ------------------------------------------------------------------------------------------------------
 
 	/* Instantiate the _task object when needed */
 	initializeTask(): Task | null {
@@ -250,6 +261,15 @@ export class Zerg {
 		return !this.hasValidTask;
 	}
 
+	/* Execute the task you currently have. */
+	run(): number | void {
+		if (this.task) {
+			return this.task.run();
+		}
+	}
+
+	// Colony association ----------------------------------------------------------------------------------------------
+
 	/* Colony that the creep belongs to. */
 	get colony(): Colony {
 		return Overmind.Colonies[this.memory.colony];
@@ -259,12 +279,19 @@ export class Zerg {
 		this.memory.colony = newColony.name;
 	}
 
+	// Body configuration and related data -----------------------------------------------------------------------------
+
+	/* The same as creep.getActiveBodyparts, but just counts bodyparts regardless of condition. */
+	getBodyparts(partType: BodyPartConstant): number {
+		return _.filter(this.body, (part: BodyPartDefinition) => part.type == partType).length;
+	}
+
 	/* Return the maximum (not remaining) lifetime of the creep */
 	get lifetime(): number {
-		if (_.map(this.body, (part: BodyPartDefinition) => part.type).includes(CLAIM)) {
-			return 500;
+		if (this.getBodyparts(CLAIM) > 0) {
+			return CREEP_CLAIM_LIFE_TIME;
 		} else {
-			return 1500;
+			return CREEP_LIFE_TIME;
 		}
 	}
 
@@ -287,17 +314,16 @@ export class Zerg {
 		return this.memory.data.moveSpeed;
 	}
 
-	/* The same as creep.getActiveBodyparts, but just counts bodyparts regardless of condition. */
-	getBodyparts(partType: string): number {
-		return _.filter(this.body, (part: BodyPartDefinition) => part.type == partType).length;
-	}
+	// Parking logic ---------------------------------------------------------------------------------------------------
 
-	/* Execute the task you currently have. */
-	run(): number | void {
-		if (this.task) {
-			return this.task.run();
-		}
-	}
+	// park(near: RoomPosition, opts = {} as ParkingOptions) {
+	// 	_.defaults(opts, {
+	// 		range: 2,
+	// 		exactRange: true,
+	// 		offRoad: true,
+	// 	});
+	// 	let validSpots =
+	// }
 
 }
 

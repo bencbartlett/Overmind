@@ -25,7 +25,6 @@ export class MiningSite extends HiveCluster {
 
 	constructor(colony: Colony, source: Source) {
 		super(colony, source, 'miningSite');
-		this.memory = Mem.wrap(colony.memory, this.name);
 		this.source = source;
 		this.energyPerTick = source.energyCapacity / ENERGY_REGEN_TIME;
 		this.miningPowerNeeded = Math.ceil(this.energyPerTick / HARVEST_POWER) + 1;
@@ -53,6 +52,10 @@ export class MiningSite extends HiveCluster {
 		// Create a mining overlord for this
 		let priority = this.room.my ? Priority.High : Priority.NormalHigh;
 		this.overlord = new MiningOverlord(this, priority);
+	}
+
+	get memory() {
+		return Mem.wrap(this.colony.memory, this.name);
 	}
 
 	/* Predicted store amount a hauler will see once it arrives at the miningSite traveling from the miningGroup

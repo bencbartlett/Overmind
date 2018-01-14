@@ -12,7 +12,6 @@ import {Mem} from '../memcheck';
 
 @profile
 export class MiningGroup extends HiveCluster {
-	memory: any;
 	dropoff: StructureLink | StructureStorage;		// Where haulers drop off to
 	links: StructureLink[] | undefined;				// List of links contained in the mining group
 	availableLinks: StructureLink[] | undefined; 	// List of links in mining group that are ready to send
@@ -31,7 +30,6 @@ export class MiningGroup extends HiveCluster {
 
 	constructor(colony: Colony, dropoff: StructureLink | StructureStorage) {
 		super(colony, dropoff, 'miningGroup');
-		this.memory = Mem.wrap(colony.memory, this.name);
 		this.settings = {
 			linksTrasmitAt: LINK_CAPACITY - 100,
 		};
@@ -46,6 +44,10 @@ export class MiningGroup extends HiveCluster {
 		this.miningSites = [];
 		// Regiser hauling overlord
 		this.overlord = new HaulingOverlord(this);
+	}
+
+	get memory() {
+		return Mem.wrap(this.colony.memory, this.name);
 	}
 
 	/* Calculate needed and supplied hauling power and link transfer power for entities assigned to the mining group */

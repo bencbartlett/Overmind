@@ -82,7 +82,7 @@ export abstract class Directive {
 			}
 		}
 		log.alert(`Creating ${this.directiveName} directive in room ${pos.roomName}!`);
-		return Game.rooms[pos.roomName].createFlag(pos, name, this.color, this.secondaryColor);
+		return pos.createFlag(name, this.color, this.secondaryColor);
 	}
 
 	/* Filter for _.filter() that checks if a flag is of the matching type */

@@ -14,7 +14,6 @@ import {Visualizer} from '../visuals/Visualizer';
 
 @profile
 export class Hatchery extends HiveCluster {
-	memory: HatcheryMemory; 								// Memory.colonies.hatchery
 	spawns: Spawn[]; 										// List of spawns in the hatchery
 	availableSpawns: Spawn[]; 								// Spawns that are available to make stuff right now
 	extensions: StructureExtension[]; 						// List of extensions in the hatchery
@@ -38,7 +37,6 @@ export class Hatchery extends HiveCluster {
 
 	constructor(colony: Colony, headSpawn: StructureSpawn) {
 		super(colony, headSpawn, 'hatchery');
-		this.memory = Mem.wrap(colony.memory, 'hatchery');
 		// Register structure components
 		this.spawns = colony.spawns;
 		this.availableSpawns = _.filter(this.spawns, (spawn: Spawn) => !spawn.spawning);
@@ -73,17 +71,18 @@ export class Hatchery extends HiveCluster {
 		}
 	}
 
+	get memory(): HatcheryMemory {
+		return Mem.wrap(this.colony.memory, 'hatchery');
+	}
+
 	/* Request more energy when appropriate either via link or hauler */
 	private registerEnergyRequests(): void {
 		// Register requests for input into the hatchery (goes on colony request group)
-		if (this.link) {
-			if (this.link.isEmpty) {
-				this.colony.linkRequests.requestReceive(this.link);
-			}
-		} else {
-			if (this.battery && this.battery.energy < 0.25 * this.battery.storeCapacity) {
-				this.colony.transportRequests.requestEnergy(this.battery);
-			}
+		if (this.link && this.link.isEmpty) {
+			this.colony.linkRequests.requestReceive(this.link);
+		}
+		if (this.battery && this.battery.energy < 0.25 * this.battery.storeCapacity) {
+			this.colony.transportRequests.requestEnergy(this.battery);
 		}
 		// Register energy transport requests (goes on hatchery request group, which can be colony request group)
 		let refillSpawns = _.filter(this.spawns, spawn => spawn.energy < spawn.energyCapacity);

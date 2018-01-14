@@ -55,5 +55,5 @@ interface Creep {
 }
 
 // type Coord = {x: number, y: number};
-type HasPos = {pos: RoomPosition}
+// type HasPos = {pos: RoomPosition}
 
