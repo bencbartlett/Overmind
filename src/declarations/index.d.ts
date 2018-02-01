@@ -41,7 +41,7 @@ interface IOvermind {
 
 	build(): void;
 
-	rebuild(): void;
+	// rebuild(): void;
 
 	init(): void;
 

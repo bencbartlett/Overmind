@@ -185,6 +185,7 @@ export class Zerg {
 	set overlord(newOverlord: Overlord | null) {
 		// Remove cache references to old assignments
 		let ref = this.memory.overlord;
+		let oldOverlord: Overlord | null = ref ? Overmind.overlords[ref] : null;
 		if (ref && Overmind.cache.overlords[ref] && Overmind.cache.overlords[ref][this.roleName]) {
 			_.remove(Overmind.cache.overlords[ref][this.roleName], name => name == this.name);
 		}
@@ -202,6 +203,8 @@ export class Zerg {
 		} else {
 			this.memory.overlord = null;
 		}
+		if (oldOverlord) oldOverlord.recalculateCreeps();
+		if (newOverlord) newOverlord.recalculateCreeps();
 	}
 
 	// Task logic ------------------------------------------------------------------------------------------------------

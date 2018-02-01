@@ -41,7 +41,7 @@ Commands.init();
 
 // Main loop
 export function loop(): void {
-	Mem.clean();			// Clean memory
+	Mem.clean();				// Clean memory
 	global.Overmind = new OM();	// Instantiate the Overmind
 	Overmind.build();			// Build phase: instantiate caches and colony components
 	Overmind.init();			// Init phase: spawning and energy requests

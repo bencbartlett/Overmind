@@ -158,16 +158,7 @@ export class Pathing {
 			let matrix;
 			let room = Game.rooms[roomName];
 			if (room) {
-				if (options.ignoreStructures) {
-					matrix = new PathFinder.CostMatrix();
-					if (!options.ignoreCreeps) {
-						Traveler.addCreepsToMatrix(room, matrix);
-					}
-				} else if (options.ignoreCreeps || roomName !== originRoomName) {
-					matrix = Traveler.getStructureMatrix(room, options.freshMatrix);
-				} else {
-					matrix = Traveler.getCreepMatrix(room);
-				}
+				matrix = Traveler.getStructureMatrix(room, options.freshMatrix);
 				if (options.obstacles) {
 					matrix = matrix.clone();
 					for (let obstacle of options.obstacles) {

@@ -9,7 +9,7 @@ export const ENABLE_DEBUG_MODE: boolean = true;
 /**
  * Enable this to enable screeps profiler
  */
-export const USE_PROFILER: boolean = true;
+export const USE_PROFILER: boolean = false;
 
 /**
  * Debug level for log output

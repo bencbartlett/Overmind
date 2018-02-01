@@ -71,16 +71,16 @@ interface RoomPosition {
 	name: string;
 	isEdge: boolean;
 	rangeToEdge: number;
-
-	getAdjacentPositions(): RoomPosition[];
+	roomCoords: Coord;
+	neighbors: RoomPosition[];
+	adjacentSpots: RoomPosition[];
 
 	getMultiRoomRangeTo(pos: RoomPosition): number;
 
 	findClosestByLimitedRange<T>(objects: T[] | RoomPosition[], rangeLimit: number,
 								 opts?: { filter: any | string; }): T;
 
-	// findClosestByMultiRoomRange<T extends _HasRoomPosition |
-	// 	RoomPosition>(objects: T[], opts?: { filter: any | string; }): T;
+	findClosestByMultiRoomRange<T extends _HasRoomPosition>(objects: T[], opts?: { filter: any | string; }): T;
 }
 
 interface RoomVisual {

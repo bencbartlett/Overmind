@@ -51,7 +51,7 @@ export function testRoomPlanner() {
 
 export function sandbox() {
 	try { // Test code goes here
-		testRoomPlanner();
+		// testRoomPlanner();
 		// let start = Game.cpu.getUsed();
 		// for (let i = 0; i < 10000; i++) {
 		// 	let vis = Game.rooms.W8N3.visual;

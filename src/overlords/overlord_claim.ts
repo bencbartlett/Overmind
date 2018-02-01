@@ -1,11 +1,9 @@
 import {Overlord} from './Overlord';
 import {ClaimerSetup} from '../creepSetup/defaultSetups';
-import {TaskClaim} from '../tasks/task_claim';
-import {TaskGoTo} from '../tasks/task_goTo';
-import {TaskSignController} from '../tasks/task_signController';
 import {Priority} from '../config/priorities';
 import {Zerg} from '../Zerg';
 import {DirectiveIncubate} from '../directives/directive_incubate';
+import {Tasks} from '../tasks/Tasks';
 
 export class ClaimingOverlord extends Overlord {
 
@@ -29,12 +27,12 @@ export class ClaimingOverlord extends Overlord {
 	private handleClaimer(claimer: Zerg): void {
 		if (claimer.room == this.room && !claimer.pos.isEdge) {
 			if (this.room.controller!.signedByMe) {
-				claimer.task = new TaskClaim(this.room.controller!);
+				claimer.task = Tasks.claim(this.room.controller!);
 			} else {
-				claimer.task = new TaskSignController(this.room.controller!);
+				claimer.task = Tasks.signController(this.room.controller!);
 			}
 		} else {
-			claimer.task = new TaskGoTo(this.pos);
+			claimer.task = Tasks.goTo(this.pos);
 		}
 	}
 

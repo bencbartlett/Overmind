@@ -146,10 +146,10 @@ export default class Overmind implements IOvermind {
 		this.registerDirectives(); 		// 5: Wrap all the directives and assign to respective overlords
 	}
 
-	/* Refresh the state of the Overmind; run at the beginning of every tick */
-	rebuild(): void {
-		this.cache.rebuild();
-	}
+	// /* Refresh the state of the Overmind; run at the beginning of every tick */
+	// rebuild(): void {
+	// 	this.cache.rebuild();
+	// }
 
 	/* Intialize everything in pre-init phase of main loop. Does not call colony.init(). */
 	init(): void {

@@ -1,12 +1,11 @@
 import {Overlord} from './Overlord';
 import {SupplierSetup} from '../creepSetup/defaultSetups';
-import {TaskWithdraw} from '../tasks/task_withdraw';
-import {TaskDeposit} from '../tasks/task_deposit';
 import {Priority} from '../config/priorities';
 import {Colony} from '../Colony';
 import {HiveCluster} from '../hiveClusters/HiveCluster';
 import {IResourceRequest, IWithdrawRequest} from '../resourceRequests/TransportRequestGroup';
 import {Zerg} from '../Zerg';
+import {Tasks} from '../tasks/Tasks';
 
 
 // TODO: make this work with more resources than just energy
@@ -41,7 +40,7 @@ export class SupplierOverlord extends Overlord {
 			let targets = _.map(this.colony.transportRequests.supply[priority], request => request.target);
 			let target = supplier.pos.findClosestByRange(targets);
 			if (target) {
-				supplier.task = new TaskDeposit(target);
+				supplier.task = Tasks.deposit(target);
 				return;
 			}
 		}
@@ -55,7 +54,7 @@ export class SupplierOverlord extends Overlord {
 			let targets = _.map(this.colony.transportRequests.withdraw[priority], request => request.target);
 			let target = supplier.pos.findClosestByRange(targets);
 			if (target) {
-				supplier.task = new TaskWithdraw(target);
+				supplier.task = Tasks.withdraw(target);
 				return;
 			}
 		}
@@ -70,9 +69,9 @@ export class SupplierOverlord extends Overlord {
 				viableTargets.push(output);
 			}
 		}
-		let target = supplier.pos.findClosestByRange(viableTargets);
+		let target = supplier.pos.findClosestByMultiRoomRange(viableTargets);
 		if (target) {
-			supplier.task = new TaskWithdraw(target);
+			supplier.task = Tasks.withdraw(target);
 		}
 	}
 

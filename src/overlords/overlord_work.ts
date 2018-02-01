@@ -14,14 +14,14 @@ export class WorkerOverlord extends Overlord {
 	repairStructures: Structure[];
 	rechargeStructures: (StructureStorage | StructureTerminal | StructureContainer | StructureLink)[];
 
-	constructor(colony: Colony, priority = Priority.NormalHigh) {
+	constructor(colony: Colony, priority = Priority.NormalLow) {
 		super(colony, 'worker', priority);
 		this.workers = this.creeps('worker');
 		this.repairStructures = _.filter(this.colony.repairables, function (structure) {
 			if (structure.structureType == STRUCTURE_ROAD) {
-				return structure.hits < 0.7 * structure.hitsMax;
+				return structure.hits < 0.5 * structure.hitsMax;
 			} else if (structure.structureType == STRUCTURE_CONTAINER) {
-				return structure.hits < 0.7 * structure.hitsMax;
+				return structure.hits < 0.5 * structure.hitsMax;
 			} else {
 				return structure.hits < structure.hitsMax;
 			}
@@ -29,19 +29,19 @@ export class WorkerOverlord extends Overlord {
 		this.rechargeStructures = _.compact([this.colony.storage!,
 											 this.colony.terminal!,
 											 this.colony.upgradeSite.input!,
-											 ..._.map(this.room.sources,
-													  source => this.colony.miningSites[source.id].output!)]);
+											 ..._.map(this.colony.miningSites, site => site.output!)]);
 	}
 
 	spawn() {
 		let workPartsPerWorker = _.filter(this.generateProtoCreep(new WorkerSetup()).body, part => part == WORK).length;
+		let MAX_WORKERS = 10; // Maximum number of workers to spawn
 		if (this.colony.stage == ColonyStage.Larva) {
 			// At lower levels, try to saturate the energy throughput of the colony
 			let energyPerTick = _.sum(_.map(this.colony.miningSites, site => site.energyPerTick));
 			let energyPerTickPerWorker = 1.1 * workPartsPerWorker; // Average energy per tick when workers are working
 			let workerUptime = 0.5;
 			let numWorkers = Math.ceil(energyPerTick / (energyPerTickPerWorker * workerUptime));
-			this.wishlist(numWorkers, new WorkerSetup());
+			this.wishlist(Math.min(numWorkers, MAX_WORKERS), new WorkerSetup());
 		} else {
 			// At higher levels, spawn workers based on construction and repair that needs to be done
 			let constructionTicks = _.sum(_.map(this.colony.constructionSites,
@@ -50,7 +50,7 @@ export class WorkerOverlord extends Overlord {
 										  structure => structure.hitsMax - structure.hits)) / REPAIR_POWER;
 			let numWorkers = Math.ceil(2 * (constructionTicks + repairTicks) /
 									   (workPartsPerWorker * CREEP_LIFE_TIME));
-			this.wishlist(numWorkers, new WorkerSetup());
+			this.wishlist(Math.min(numWorkers, MAX_WORKERS), new WorkerSetup());
 		}
 	}
 
@@ -59,7 +59,7 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	private repairActions(worker: Zerg) {
-		let target = worker.pos.findClosestByRange(this.repairStructures);
+		let target = worker.pos.findClosestByMultiRoomRange(this.repairStructures);
 		if (target) worker.task = Tasks.repair(target);
 	}
 
@@ -67,8 +67,9 @@ export class WorkerOverlord extends Overlord {
 		let groupedSites = _.groupBy(this.colony.constructionSites, site => site.structureType);
 		for (let structureType of BuildPriorities) {
 			if (groupedSites[structureType]) {
-				let ranges = _.map(groupedSites[structureType], site => worker.pos.getMultiRoomRangeTo(site.pos));
-				let target = groupedSites[structureType][_.indexOf(ranges, _.min(ranges))];
+				// let ranges = _.map(groupedSites[structureType], site => worker.pos.getMultiRoomRangeTo(site.pos));
+				// let target = groupedSites[structureType][_.indexOf(ranges, _.min(ranges))];
+				let target = worker.pos.findClosestByMultiRoomRange(groupedSites[structureType]);
 				if (target) {
 					worker.task = Tasks.build(target);
 					return;
@@ -86,14 +87,16 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	private rechargeActions(worker: Zerg) {
-		let target = worker.pos.findClosestByRange(_.filter(this.rechargeStructures,
+		let target = worker.pos.findClosestByMultiRoomRange(_.filter(this.rechargeStructures,
 															structure => structure.energy > worker.carryCapacity));
 		if (target) worker.task = Tasks.withdraw(target);
 	}
 
 	private handleWorker(worker: Zerg) {
 		if (worker.carry.energy > 0) {
-			if (this.repairStructures.length > 0) {
+			if (this.colony.controller.ticksToDowngrade <= 1000) {
+				this.upgradeActions(worker);
+			} else if (this.repairStructures.length > 0) {
 				this.repairActions(worker);
 			} else if (this.colony.constructionSites.length > 0) {
 				this.buildActions(worker);

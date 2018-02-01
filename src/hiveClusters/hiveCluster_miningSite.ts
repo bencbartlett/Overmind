@@ -50,7 +50,7 @@ export class MiningSite extends HiveCluster {
 			bestGroup.miningSites.push(this);
 		}
 		// Create a mining overlord for this
-		let priority = this.room.my ? Priority.High : Priority.NormalHigh;
+		let priority = this.room.my ? Priority.NormalHigh : Priority.Normal;
 		this.overlord = new MiningOverlord(this, priority);
 	}
 
@@ -76,7 +76,7 @@ export class MiningSite extends HiveCluster {
 			} else {
 				dropoffLocation = this.colony.controller.pos;
 			}
-			let ticksUntilArrival = Pathing.weightedDistance(this.output.pos, dropoffLocation);
+			let ticksUntilArrival = Pathing.distance(this.output.pos, dropoffLocation);
 			// Return storage minus the amount that currently assigned haulers will withdraw
 			return _.sum(this.output.store) - hauledOff + ticksUntilArrival * this.energyPerTick;
 		} else if (this.output instanceof StructureLink) {
@@ -85,16 +85,6 @@ export class MiningSite extends HiveCluster {
 			return 0;
 		}
 	}
-
-	// get pathToDropoff(): RoomPosition[] {
-	// 	// TODO: calculate path from dropoff to within range 1 of source.
-	// 	// _.last(path) gives creep harvest location
-	// 	//
-	// }
-	//
-	// get outputPos(): RoomPosition {
-	// 	// TODO: put output here
-	// }
 
 	/* Register appropriate resource withdrawal requests when the output gets sufficiently full */
 	private registerOutputRequests(): void {

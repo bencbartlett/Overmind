@@ -1,10 +1,9 @@
 import {Overlord} from './Overlord';
 import {ReserverSetup} from '../creepSetup/defaultSetups';
-import {TaskReserve} from '../tasks/task_reserve';
-import {TaskGoTo} from '../tasks/task_goTo';
 import {Priority} from '../config/priorities';
 import {Zerg} from '../Zerg';
 import {DirectiveOutpost} from '../directives/directive_outpost';
+import {Tasks} from '../tasks/Tasks';
 
 export class ReservingOverlord extends Overlord {
 
@@ -29,9 +28,9 @@ export class ReservingOverlord extends Overlord {
 
 	private handleReserver(reserver: Zerg): void {
 		if (reserver.room == this.room && !reserver.pos.isEdge) {
-			reserver.task = new TaskReserve(this.room.controller!);
+			reserver.task = Tasks.reserve(this.room.controller!);
 		} else {
-			reserver.task = new TaskGoTo(this.pos);
+			reserver.task = Tasks.goTo(this.pos);
 		}
 	}
 

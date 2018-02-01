@@ -66,7 +66,7 @@ export class RoomPlanner {
 		this.map = {};
 		this.roadPositions = [];
 		this.settings = {
-			siteCheckFrequency: 10,
+			siteCheckFrequency: 200,
 			maxSitesPerColony : 20,
 		};
 	}
@@ -113,10 +113,53 @@ export class RoomPlanner {
 		_.forEach(msg, command => console.log(command));
 	}
 
+	/* Run the room planner to generate a plan and map*/
+	private make(level = 8): void {
+		// Reset everything
+		this.plan = {};
+		this.map = {};
+		this.roadPositions = [];
+		// Generate a plan, placing components by flags
+		this.plan = this.generatePlan(level);
+		// Flatten it into a map
+		this.map = this.mapFromPlan(this.plan);
+		// Connect commandCenter to hatchery, upgradeSites, and all miningSites, and place containers
+		if (this.placements.commandCenter) {
+			// Connect commandCenter to hatchery
+			if (this.placements.hatchery) this.planRoad(this.placements.commandCenter, this.placements.hatchery);
+			// Connect commandCenter to upgradeSite and place container site as necessary
+			if (this.placements.upgradeSite) {
+				this.planRoad(this.placements.commandCenter, this.placements.upgradeSite);
+				this.placeStructure(STRUCTURE_CONTAINER, this.placements.upgradeSite);
+			}
+			// Connect commandCenter to each miningSite in the colony and place a container appropriately
+			for (let i in this.colony.miningSites) {
+				let site = this.colony.miningSites[i];
+				let path = this.planRoad(this.placements.commandCenter, site.pos);
+				if (path) { // replace the last element of the path with a container for the mining site
+					let containerPos = _.last(path);
+					_.remove(this.roadPositions, containerPos);
+					this.placeStructure(STRUCTURE_CONTAINER, containerPos);
+				}
+			}
+			_.forEach(this.colony.miningSites,
+					  site => this.planRoad(this.placements.commandCenter, site.pos, {range: 2}));
+		}
+		this.formatRoadPositions();
+	}
+
+	/* Adds the specified structure directly to the map. Only callable after this.map is generated.
+	 * Doesn't check for conflicts, so don't use freely. */
+	private placeStructure(type: StructureConstant, pos: RoomPosition): void {
+		if (!this.map[type]) this.map[type] = [];
+		this.map[type].push(pos);
+	}
+
 	addComponent(componentName: string, pos: RoomPosition, rotation = 0): void {
 		this.placements[componentName] = pos;
 	}
 
+	/* Switcher that takes a component name and returns a layout */
 	private getLayout(name: string): StructureLayout | undefined {
 		switch (name) {
 			case 'hatchery':
@@ -126,6 +169,7 @@ export class RoomPlanner {
 		}
 	}
 
+	/* Generate a plan of component placements for a given RCL */
 	private generatePlan(level = 8): RoomPlan {
 		let plan: RoomPlan = {};
 		for (let name in this.placements) {
@@ -160,7 +204,7 @@ export class RoomPlanner {
 		return map;
 	}
 
-	/* Generate a flatened map */
+	/* Generate a flatened map from a plan */
 	private mapFromPlan(plan: RoomPlan): StructureMap {
 		let map: StructureMap = {};
 		let componentMaps: StructureMap[] = _.map(plan, componentPlan => componentPlan.map);
@@ -208,7 +252,7 @@ export class RoomPlanner {
 	}
 
 	// Plan a road between two locations; this.map must have been generated first!
-	planRoad(pos1: RoomPosition, pos2: RoomPosition, opts: TravelToOptions = {}): void {
+	planRoad(pos1: RoomPosition, pos2: RoomPosition, opts: TravelToOptions = {}): RoomPosition[] | void {
 		let obstacles: RoomPosition[] = [];
 		for (let structureType in this.map) {
 			if (structureType != STRUCTURE_ROAD) obstacles = obstacles.concat(this.map[structureType]);
@@ -220,6 +264,7 @@ export class RoomPlanner {
 		let shortestPath = Pathing.findShortestPath(pos1, pos2, opts).path;
 		if (roadPath.length == shortestPath.length) {
 			this.roadPositions = this.roadPositions.concat(roadPath);
+			return roadPath;
 		} else if (roadPath.length > shortestPath.length) {
 			Visualizer.drawRoads(shortestPath);
 			Visualizer.drawPath(roadPath, {stroke: 'red'});
@@ -232,25 +277,17 @@ export class RoomPlanner {
 		}
 	}
 
-	private planRoads(): void {
-		// Connect commandCenter to hatchery, upgradeSites, and all miningSites
-		if (this.placements.commandCenter) {
-			if (this.placements.hatchery) this.planRoad(this.placements.commandCenter, this.placements.hatchery);
-			if (this.placements.upgradeSite) this.planRoad(this.placements.commandCenter, this.placements.upgradeSite);
-			_.forEach(this.colony.miningSites,
-					  site => this.planRoad(this.placements.commandCenter, site.pos, {range: 2}));
-		}
-		this.formatRoadPositions();
-	}
-
-	// Ensure that the roads doesn't overlap with roads from this.map and that the positions are unique
+	/* Ensure that the roads doesn't overlap with roads from this.map and that the positions are unique */
 	private formatRoadPositions(): void {
 		// Make road position list unique
 		this.roadPositions = _.unique(this.roadPositions);
+		// Remove roads located on exit tiles
+		_.remove(this.roadPositions, pos => pos.isEdge);
 		// Remove any roads duplicated in this.map
-		_.remove(this.roadPositions, pos => this.map[STRUCTURE_ROAD].includes(pos));
+		_.remove(this.roadPositions, pos => this.map[STRUCTURE_ROAD] && this.map[STRUCTURE_ROAD].includes(pos));
 	}
 
+	/* Write everything to memory at the end of activation */
 	finalize(): void {
 		let layoutIsValid: boolean = !!this.placements.commandCenter &&
 									 !!this.placements.hatchery &&
@@ -259,9 +296,8 @@ export class RoomPlanner {
 			// Generate maps for each rcl
 			this.memory.mapsByLevel = {};
 			for (let rcl = 1; rcl <= 8; rcl++) {
-				let plan = this.generatePlan(rcl);
-				let map = this.mapFromPlan(plan);
-				this.memory.mapsByLevel[rcl] = map;
+				this.make(rcl);
+				this.memory.mapsByLevel[rcl] = this.map;
 			}
 			// Write road positions to memory, sorted by distance to storage
 			this.memory.roadPositions = _.sortBy(this.roadPositions,
@@ -269,7 +305,6 @@ export class RoomPlanner {
 			// Save flags and remove them
 			let flagsToWrite = _.filter(this.colony.flags, flag => flag.color == COLOR_WHITE);
 			for (let flag of flagsToWrite) {
-				console.log({secondaryColor: flag.secondaryColor, pos: flag.pos, memory: {} as FlagMemory});//flag.memory});
 				this.memory.savedFlags.push({
 												secondaryColor: flag.secondaryColor,
 												pos           : flag.pos,
@@ -278,7 +313,6 @@ export class RoomPlanner {
 				flag.remove();
 			}
 			_.forEach(this.memory.savedFlags, i => console.log(i));
-			console.log(this.memory.savedFlags.length);
 			console.log('Room layout and flag positions have been saved.');
 			this.active = false;
 		} else {
@@ -291,6 +325,7 @@ export class RoomPlanner {
 	}
 
 	static shouldBuild(structureType: BuildableStructureConstant, pos: RoomPosition): boolean {
+		if (!Game.rooms[pos.roomName]) return false;
 		let buildings = _.filter(pos.lookFor(LOOK_STRUCTURES), s => s && s.structureType == structureType);
 		let sites = pos.lookFor(LOOK_CONSTRUCTION_SITES);
 		if (!buildings || buildings.length == 0) {
@@ -301,11 +336,15 @@ export class RoomPlanner {
 		return false;
 	}
 
+	/* Create construction sites for any buildings that need to be built */
 	private buildMissing(): void {
 		// Max buildings that can be placed each tick
 		let count = this.settings.maxSitesPerColony - this.colony.constructionSites.length;
 		// Recall the appropriate map
 		this.map = this.memory.mapsByLevel[this.colony.controller.level];
+		if (!this.map) { // in case a map hasn't been generated yet
+			log.info(this.colony.name + ' does not have a room plan yet! Unable to build missing structures.');
+		}
 		// Build missing structures
 		for (let structureType of BuildPriorities) {
 			if (this.map[structureType]) {
@@ -340,13 +379,12 @@ export class RoomPlanner {
 
 	run(): void {
 		if (this.active) {
-			this.plan = this.generatePlan();
-			this.map = this.mapFromPlan(this.plan);
-			this.planRoads();
+			this.make();
 			this.visuals();
-		}
-		if (Game.time % this.settings.siteCheckFrequency == 0) {
-			this.buildMissing();
+		} else {
+			if (Game.time % this.settings.siteCheckFrequency == 0) {
+				this.buildMissing();
+			}
 		}
 	}
 

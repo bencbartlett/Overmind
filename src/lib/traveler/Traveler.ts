@@ -36,6 +36,13 @@ export class Traveler {
 
 		destination = this.normalizePos(destination);
 
+		// Fixes bug that causes creeps to idle on the other side of a room
+		let distanceToEdge = _.min([destination.x, 49 - destination.x,
+									destination.y, 49 - destination.y]);
+		if (options.range && distanceToEdge <= options.range) {
+			options.range = _.min([Math.abs(distanceToEdge - 1), 0]);
+		}
+
 		// manage case where creep is nearby destination
 		let rangeToDestination = creep.pos.getRangeTo(destination);
 		if (options.range && rangeToDestination <= options.range) {
@@ -106,13 +113,6 @@ export class Traveler {
 			}
 
 			state.destination = destination;
-
-			// Fixes bug that causes creeps to idle on the other side of a room
-			let distanceToEdge = _.min([destination.x, 49 - destination.x,
-										destination.y, 49 - destination.y]);
-			if (options.range && distanceToEdge <= options.range) {
-				options.range = _.min([Math.abs(distanceToEdge - 1), 0]);
-			}
 
 			let cpu = Game.cpu.getUsed();
 			let ret = this.findTravelPath(creep.pos, destination, options);

@@ -9,6 +9,7 @@ import {profile} from '../lib/Profiler';
 import {CommandCenterOverlord} from '../overlords/overlord_commandCenter';
 import {Colony} from '../Colony';
 import {Mem} from '../memcheck';
+import {Priority} from '../config/priorities';
 
 @profile
 export class CommandCenter extends HiveCluster {
@@ -51,7 +52,7 @@ export class CommandCenter extends HiveCluster {
 		this.observer = colony.observer;
 		this.settings = {
 			linksTransmitAt         : LINK_CAPACITY - 100,
-			refillTowersBelow       : 200,
+			refillTowersBelow       : 500,
 			excessEnergyTransferSize: 100000,
 			managerSize             : 8,
 			unloadStorageBuffer     : 900000,
@@ -81,7 +82,7 @@ export class CommandCenter extends HiveCluster {
 	/* Find the best idle position */
 	private findIdlePos(): RoomPosition {
 		// Get the adjacent squares to storage
-		let possiblePositions = this.storage.pos.getAdjacentPositions();
+		let possiblePositions = this.storage.pos.neighbors;
 		// Try to match as many other structures as possible
 		let proximateStructures = [
 			this.link,
@@ -103,6 +104,12 @@ export class CommandCenter extends HiveCluster {
 		return possiblePositions[0];
 	}
 
+	private registerEnergyRequests(): void {
+		let refillTowers = _.filter(this.towers, tower => tower.energy < tower.energyCapacity);
+		_.forEach(refillTowers, tower =>
+			this.colony.transportRequests.requestEnergy(tower, tower.energy < this.settings.refillTowersBelow ?
+															   Priority.High : Priority.Low));
+	}
 
 	// Terminal logic ==================================================================================================
 
@@ -283,6 +290,7 @@ export class CommandCenter extends HiveCluster {
 
 	init(): void {
 		this.registerLinkTransferRequests();
+		this.registerEnergyRequests();
 	}
 
 	run(): void {

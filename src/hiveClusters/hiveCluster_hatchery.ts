@@ -4,7 +4,7 @@ import {HiveCluster} from './HiveCluster';
 import {log} from '../lib/logger/log';
 import {profile} from '../lib/Profiler';
 import {HatcheryOverlord} from '../overlords/overlord_hatchery';
-import {Priority} from '../config/priorities';
+import {blankPriorityQueue, Priority} from '../config/priorities';
 import {Colony, ColonyStage} from '../Colony';
 import {TransportRequestGroup} from '../resourceRequests/TransportRequestGroup';
 import {CreepSetup} from '../creepSetup/CreepSetup';
@@ -49,7 +49,7 @@ export class Hatchery extends HiveCluster {
 		} else {
 			this.towers = colony.towers;
 		}
-		this.productionQueue = {};
+		this.productionQueue = blankPriorityQueue();
 		this.settings = {
 			refillTowersBelow      : 500,
 			linksRequestEnergyBelow: 0,
@@ -88,8 +88,8 @@ export class Hatchery extends HiveCluster {
 		let refillSpawns = _.filter(this.spawns, spawn => spawn.energy < spawn.energyCapacity);
 		let refillExtensions = _.filter(this.extensions, extension => extension.energy < extension.energyCapacity);
 		let refillTowers = _.filter(this.towers, tower => tower.energy < tower.energyCapacity);
-		_.forEach(refillSpawns, spawn => this.transportRequests.requestEnergy(spawn, Priority.Normal));
-		_.forEach(refillExtensions, extension => this.transportRequests.requestEnergy(extension, Priority.Normal));
+		_.forEach(refillSpawns, spawn => this.transportRequests.requestEnergy(spawn, Priority.NormalHigh));
+		_.forEach(refillExtensions, extension => this.transportRequests.requestEnergy(extension, Priority.NormalHigh));
 		_.forEach(refillTowers, tower =>
 			this.transportRequests.requestEnergy(tower, tower.energy < this.settings.refillTowersBelow ?
 														Priority.High : Priority.Low));
@@ -170,9 +170,9 @@ export class Hatchery extends HiveCluster {
 		let spawnToUse = this.availableSpawns.shift(); // get a spawn to use
 		if (spawnToUse) { // if there is a spawn, create the creep
 			protoCreep.name = this.generateCreepName(protoCreep.name); // modify the creep name to make it unique
-			if (protoCreep.memory.colony != this.colony.name) {
-				log.info('Spawning ' + protoCreep.name + ' for ' + protoCreep.memory.colony);
-			}
+			// if (protoCreep.memory.colony != this.colony.name) {
+			// 	log.info('Spawning ' + protoCreep.name + ' for ' + protoCreep.memory.colony);
+			// }
 			protoCreep.memory.data.origin = spawnToUse.pos.roomName;
 			let result = spawnToUse.spawnCreep(protoCreep.body, protoCreep.name, {
 				memory          : protoCreep.memory,
@@ -203,7 +203,7 @@ export class Hatchery extends HiveCluster {
 		if (this.colony.incubator && this.colony.incubator.hatchery &&
 			this.bodyCost(protoCreep.body) > this.room.energyCapacityAvailable) {
 			this.colony.incubator.hatchery.enqueue(protoCreep, priority);
-			log.info('Requesting ' + protoCreep.name + ' from ' + this.colony.incubator.name);
+			// log.info('Requesting ' + protoCreep.name + ' from ' + this.colony.incubator.name);
 		} else {
 			// Otherwise, queue the creep to yourself
 			if (!this.productionQueue[priority]) {
@@ -214,15 +214,15 @@ export class Hatchery extends HiveCluster {
 	}
 
 	private spawnHighestPriorityCreep(): number | void {
-		let priorities: number[] = _.map(Object.keys(this.productionQueue), key => parseInt(key, 10)).sort();
-		for (let priority of priorities) {
-			let protocreep = this.productionQueue[priority].shift();
-			if (protocreep) {
-				let result = this.spawnCreep(protocreep);
+		for (let priority in this.productionQueue) {
+			let protoCreep = this.productionQueue[priority].shift();
+			if (protoCreep) {
+				let result = this.spawnCreep(protoCreep);
 				if (result == OK) {
+					log.info(`${this.colony.name}: spawning ${protoCreep.name} for ${protoCreep.memory.colony}`);
 					return result;
 				} else {
-					this.productionQueue[priority].unshift(protocreep);
+					this.productionQueue[priority].unshift(protoCreep);
 					return result;
 				}
 			}
@@ -243,7 +243,7 @@ export class Hatchery extends HiveCluster {
 
 	/* Find the best position for suppliers to idle at */
 	private findIdlePos(): RoomPosition {
-		let possiblePositions = this.spawns[0].pos.getAdjacentPositions();
+		let possiblePositions = this.spawns[0].pos.neighbors;
 		let proximateStructures = [
 			this.spawns[1],
 			this.spawns[2],

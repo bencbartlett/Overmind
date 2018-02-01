@@ -3,10 +3,9 @@ import {DirectiveBootstrap} from '../directives/directive_bootstrap';
 import {Priority} from '../config/priorities';
 import {CreepSetup} from '../creepSetup/CreepSetup';
 import {MiningOverlord} from './overlord_mine';
-import {TaskDeposit} from '../tasks/task_deposit';
-import {TaskWithdraw} from '../tasks/task_withdraw';
 import {ColonyStage} from '../Colony';
 import {Zerg} from '../Zerg';
+import {Tasks} from '../tasks/Tasks';
 
 export class BoostrapMinerSetup extends CreepSetup {
 	constructor() {
@@ -102,7 +101,7 @@ export class BootstrappingOverlord extends Overlord {
 	private supplyActions(filler: Zerg) {
 		let target = filler.pos.findClosestByRange(this.supplyStructures);
 		if (target) {
-			filler.task = new TaskDeposit(target);
+			filler.task = Tasks.deposit(target);
 		} else {
 			this.rechargeActions(filler);
 		}
@@ -110,7 +109,7 @@ export class BootstrappingOverlord extends Overlord {
 
 	private rechargeActions(filler: Zerg) {
 		let target = filler.pos.findClosestByRange(this.withdrawStructures);
-		if (target) filler.task = new TaskWithdraw(target);
+		if (target) filler.task = Tasks.withdraw(target);
 	}
 
 	private handleFiller(filler: Zerg) {

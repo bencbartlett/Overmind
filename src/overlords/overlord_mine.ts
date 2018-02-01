@@ -10,7 +10,7 @@ export class MiningOverlord extends Overlord {
 	miners: Zerg[];
 	miningSite: MiningSite;
 
-	constructor(miningSite: MiningSite, priority = Priority.NormalHigh) {
+	constructor(miningSite: MiningSite, priority = Priority.Normal) {
 		super(miningSite, 'mine', priority);
 		this.miners = this.creeps('miner');
 		this.miningSite = miningSite;
@@ -19,7 +19,9 @@ export class MiningOverlord extends Overlord {
 	spawn() {
 		let miningPowerAssigned = _.sum(_.map(this.lifetimeFilter(this.miners),
 											  creep => creep.getActiveBodyparts(WORK)));
-		if (miningPowerAssigned < this.miningSite.miningPowerNeeded) {
+		if (miningPowerAssigned < this.miningSite.miningPowerNeeded &&
+			this.miners.length < this.miningSite.pos.adjacentSpots.length) {
+			// Handles edge case at startup of <3 spots near mining site
 			this.requestCreep(new MinerSetup());
 		}
 	}

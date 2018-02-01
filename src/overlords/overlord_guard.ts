@@ -35,8 +35,8 @@ export class GuardOverlord extends Overlord {
 		}
 	}
 
-	private findHealTarget(guard: Zerg): Creep | void {
-		guard.pos.findClosestByRange(_.filter(guard.room.creeps, creep => creep.hits < creep.hitsMax));
+	private findHealTarget(guard: Zerg): Creep | undefined {
+		return guard.pos.findClosestByRange(_.filter(guard.room.creeps, creep => creep.hits < creep.hitsMax));
 	}
 
 	/* Attack and chase the specified target */
@@ -71,7 +71,7 @@ export class GuardOverlord extends Overlord {
 		}
 
 		// Heal or ranged-heal the garget
-		if (range === 1) {
+		if (range <= 1) {
 			guard.heal(target);
 		} else if (range <= 3) {
 			guard.rangedHeal(target);

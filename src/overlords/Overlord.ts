@@ -35,11 +35,15 @@ export abstract class Overlord {
 		this.ref = initializer.name + ':' + this.name;
 		this.pos = initializer.pos;
 		this.colony = initializer.colony;
-		this._creeps = _.mapValues(Overmind.cache.overlords[this.ref],
-								  creepsOfRole => _.map(creepsOfRole, creepName => Game.zerg[creepName]));
+		this.recalculateCreeps();
 		// Register the overlord on the colony overseer and on the overmind
 		this.colony.overseer.overlords[this.priority].push(this);
 		Overmind.overlords[this.ref] = this;
+	}
+
+	recalculateCreeps(): void {
+		this._creeps = _.mapValues(Overmind.cache.overlords[this.ref],
+								   creepsOfRole => _.map(creepsOfRole, creepName => Game.zerg[creepName]));
 	}
 
 	protected creeps(role: string): Zerg[] {
@@ -94,23 +98,30 @@ export abstract class Overlord {
 
 
 	// TODO: include creep move speed
-	protected lifetimeFilter(creeps: Zerg[]): Zerg[] {
+	lifetimeFilter(creeps: Zerg[], prespawn = 50): Zerg[] {
 		let spawnDistance = 0;
 		if (this.colony.hatchery) {
-			spawnDistance = Pathing.distance(this.pos, this.colony.hatchery.pos);
+			// Use distance or 0 (in case distance returns something undefined due to incomplete pathfinding)
+			spawnDistance = Pathing.distance(this.pos, this.colony.hatchery.pos) || 0;
 		}
-		return _.filter(creeps, creep => creep.spawning || creep.ticksToLive > 3 * creep.body.length + spawnDistance);
+
+
+		// The last condition fixes a bug only present on private servers that took me a fucking week to isolate.
+		// At the tick of birth, creep.spawning = false and creep.ticksTolive = undefined
+		// See: https://screeps.com/forum/topic/443/creep-spawning-is-not-updated-correctly-after-spawn-process
+		return _.filter(creeps, creep => creep.ticksToLive > 3 * creep.body.length + spawnDistance + prespawn ||
+										 creep.spawning || (!creep.spawning && !creep.ticksToLive));
 	}
 
 	/* Create a creep setup and enqueue it to the Hatchery */
-	protected requestCreep(setup: CreepSetup, priority = this.priority) {
+	protected requestCreep(setup: CreepSetup, prespawn = 50, priority = this.priority) {
 		if (this.colony.hatchery) {
 			this.colony.hatchery.enqueue(this.generateProtoCreep(setup), priority);
 		}
 	}
 
 	/* Wishlist of creeps to simplify spawning logic */
-	protected wishlist(quantity: number, setup: CreepSetup, priority = this.priority) {
+	protected wishlist(quantity: number, setup: CreepSetup, prespawn = 50, priority = this.priority) {
 		if (this.lifetimeFilter(this.creeps(setup.role)).length < quantity && this.colony.hatchery) {
 			this.colony.hatchery.enqueue(this.generateProtoCreep(setup), priority);
 		}
