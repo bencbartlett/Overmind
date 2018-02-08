@@ -34,7 +34,7 @@ export class PioneerOverlord extends Overlord {
 					return source.energy > 0 &&
 						   _.filter(source.pos.neighbors, pos => pos.isPassible()).length > 0;
 				});
-				pioneer.task = Tasks.harvest(this.pos.findClosestByRange(availableSources));
+				pioneer.task = Tasks.harvest(pioneer.pos.findClosestByRange(availableSources));
 			} else if (this.spawnSite) {
 				pioneer.task = Tasks.build(this.spawnSite);
 			}

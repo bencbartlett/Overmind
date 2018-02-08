@@ -190,6 +190,8 @@ export class Zerg {
 			_.remove(Overmind.cache.overlords[ref][this.roleName], name => name == this.name);
 		}
 		if (newOverlord) {
+			// Change to the new overlord's colony
+			this.colony = newOverlord.colony;
 			// Change assignments in memory
 			this.memory.overlord = newOverlord.ref;
 			// Update the cache references

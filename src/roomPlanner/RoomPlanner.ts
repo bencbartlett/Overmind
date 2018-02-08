@@ -312,10 +312,9 @@ export class RoomPlanner {
 												secondaryColor: flag.secondaryColor,
 												pos           : flag.pos,
 												memory        : {} as FlagMemory
-											});//flag.memory});
+											});
 				flag.remove();
 			}
-			_.forEach(this.memory.savedFlags, i => console.log(i));
 			console.log('Room layout and flag positions have been saved.');
 			this.active = false;
 			this.buildMissing();
