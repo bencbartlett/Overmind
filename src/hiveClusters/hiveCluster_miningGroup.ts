@@ -2,13 +2,13 @@
 
 import {HiveCluster} from './HiveCluster';
 import {log} from '../lib/logger/log';
-import {TransportRequestGroup} from '../resourceRequests/TransportRequestGroup';
 import {profile} from '../lib/Profiler';
 import {Pathing} from '../pathing/pathing';
 import {HaulingOverlord} from '../overlords/overlord_haul';
 import {Colony} from '../Colony';
 import {MiningSite} from './hiveCluster_miningSite';
 import {Mem} from '../memcheck';
+import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 
 @profile
 export class MiningGroup extends HiveCluster {

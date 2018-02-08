@@ -46,6 +46,15 @@ export class ManagerSetup extends CreepSetup {
 	}
 }
 
+export class PioneerSetup extends CreepSetup {
+	constructor() {
+		super('pioneer', {
+			pattern  : [WORK, CARRY, MOVE],
+			sizeLimit: Infinity,
+		});
+	}
+}
+
 export class QueenSetup extends CreepSetup {
 	constructor() {
 		super('queen', {
@@ -104,7 +113,7 @@ export class UpgraderSetup extends CreepSetup {
 export class WorkerSetup extends CreepSetup {
 	constructor() {
 		super('worker', {
-			pattern  : [WORK, WORK, CARRY, MOVE],
+			pattern  : [WORK, CARRY, MOVE],
 			sizeLimit: Infinity,
 		});
 	}

@@ -39,5 +39,9 @@ export class DirectiveIncubate extends Directive {
 		if (this.incubatingColony && this.incubatingColony.stage > ColonyStage.Larva) {
 			this.remove();
 		}
+		// // You can set memory.onlyBuildSpawn = true to remove the flag once spawn is built, skipping incubation
+		// if (this.memory.onlyBuildSpawn && this.incubatingColony && this.incubatingColony.spawns.length > 0) {
+		// 	this.remove();
+		// }
 	}
 }

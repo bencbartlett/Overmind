@@ -1,22 +1,33 @@
 // All structure prototypes
 
+// General structure prototypes ========================================================================================
+
+Object.defineProperty(StructureContainer.prototype, 'isPassible', {
+	get() {
+		return this.structureType != STRUCTURE_ROAD &&
+			   this.structureType != STRUCTURE_CONTAINER &&
+			   !(this.structureType == STRUCTURE_RAMPART && (<StructureRampart>this.my ||
+															 <StructureRampart>this.isPublic));
+	},
+});
+
 // Container prototypes ================================================================================================
 
 import {controllerSignature, myUsername} from '../settings/settings_user';
 
 Object.defineProperty(StructureContainer.prototype, 'energy', {
-	get () {
+	get() {
 		return this.store[RESOURCE_ENERGY];
 	},
 });
 
 Object.defineProperty(StructureContainer.prototype, 'isFull', { // if this container-like object is full
-	get () {
+	get() {
 		return _.sum(this.store) >= this.storeCapacity;
 	},
 });
 Object.defineProperty(StructureContainer.prototype, 'isEmpty', { // if this container-like object is empty
-	get () {
+	get() {
 		return _.sum(this.store) == 0;
 	},
 });
@@ -55,13 +66,13 @@ StructureController.prototype.needsReserving = function (reserveBuffer: number):
 // Extension prototypes ================================================================================================
 
 Object.defineProperty(StructureExtension.prototype, 'isFull', { // if this container-like object is full
-	get () {
+	get() {
 		return this.energy >= this.energyCapacity;
 	},
 });
 
 Object.defineProperty(StructureExtension.prototype, 'isEmpty', { // if this container-like object is empty
-	get () {
+	get() {
 		return this.energy == 0;
 	},
 });
@@ -72,13 +83,13 @@ Object.defineProperty(StructureExtension.prototype, 'isEmpty', { // if this cont
 // Link prototypes =====================================================================================================
 
 Object.defineProperty(StructureLink.prototype, 'isFull', { // if this container-like object is full
-	get () {
+	get() {
 		return this.energy >= this.energyCapacity;
 	},
 });
 
 Object.defineProperty(StructureLink.prototype, 'isEmpty', { // if this container-like object is empty
-	get () {
+	get() {
 		return this.energy == 0;
 	},
 });
@@ -91,13 +102,13 @@ Object.defineProperty(StructureLink.prototype, 'isEmpty', { // if this container
 // Spawn prototypes ====================================================================================================
 
 Object.defineProperty(StructureSpawn.prototype, 'isFull', { // if this container-like object is full
-	get () {
+	get() {
 		return this.energy >= this.energyCapacity;
 	},
 });
 
 Object.defineProperty(StructureSpawn.prototype, 'isEmpty', { // if this container-like object is empty
-	get () {
+	get() {
 		return this.energy == 0;
 	},
 });
@@ -114,19 +125,19 @@ Object.defineProperty(StructureSpawn.prototype, 'isEmpty', { // if this containe
 // };
 
 Object.defineProperty(StructureStorage.prototype, 'energy', {
-	get () {
+	get() {
 		return this.store[RESOURCE_ENERGY];
 	},
 });
 
 Object.defineProperty(StructureStorage.prototype, 'isFull', { // if this container-like object is full
-	get () {
+	get() {
 		return _.sum(this.store) >= this.storeCapacity;
 	},
 });
 
 Object.defineProperty(StructureStorage.prototype, 'isEmpty', { // if this container-like object is empty
-	get () {
+	get() {
 		return _.sum(this.store) == 0;
 	},
 });
@@ -135,19 +146,19 @@ Object.defineProperty(StructureStorage.prototype, 'isEmpty', { // if this contai
 // Terminal prototypes =================================================================================================
 
 Object.defineProperty(StructureTerminal.prototype, 'energy', {
-	get () {
+	get() {
 		return this.store[RESOURCE_ENERGY];
 	},
 });
 
 Object.defineProperty(StructureTerminal.prototype, 'isFull', { // if this container-like object is full
-	get () {
+	get() {
 		return _.sum(this.store) >= this.storeCapacity;
 	},
 });
 
 Object.defineProperty(StructureTerminal.prototype, 'isEmpty', { // if this container-like object is empty
-	get () {
+	get() {
 		return _.sum(this.store) == 0;
 	},
 });
@@ -210,13 +221,13 @@ StructureTower.prototype.preventRampartDecay = function () {
 };
 
 Object.defineProperty(StructureTower.prototype, 'isFull', { // if this container-like object is full
-	get () {
+	get() {
 		return this.energy >= this.energyCapacity;
 	},
 });
 
 Object.defineProperty(StructureTower.prototype, 'isEmpty', { // if this container-like object is empty
-	get () {
+	get() {
 		return this.energy == 0;
 	},
 });

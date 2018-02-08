@@ -1,12 +1,11 @@
 // import {Overlord} from './Overlord';
-// import {Priority} from '../config/priorities';
-// import {Zerg} from '../Zerg';
 // import {HaulerSetup} from '../creepSetup/defaultSetups';
+// import {Priority} from '../config/priorities';
 // import {MiningGroup} from '../hiveClusters/hiveCluster_miningGroup';
-// import {IWithdrawRequest} from '../resourceRequests/TransportRequestGroup';
+// import {EnergyWithdrawStructure, IWithdrawRequest} from '../logistics/TransportRequestGroup';
+// import {Zerg} from '../Zerg';
 // import {Tasks} from '../tasks/Tasks';
-// import {TaskDeposit} from '../tasks/task_deposit';
-// import {TaskWithdraw} from '../tasks/task_withdraw';
+//
 //
 // export class TransportOverlord extends Overlord {
 //
@@ -14,13 +13,13 @@
 // 	miningGroup: MiningGroup;
 //
 // 	constructor(miningGroup: MiningGroup, priority = Priority.NormalLow) {
-// 		super(miningGroup, 'transport', priority);
-// 		this.transporters = this.creeps('transporter');
+// 		super(miningGroup, 'haul', priority);
+// 		this.haulers = this.creeps('hauler');
 // 		this.miningGroup = miningGroup;
 // 	}
 //
 // 	spawn() {
-// 		let haulingPower = _.sum(_.map(this.lifetimeFilter(this.transporters), creep => creep.getActiveBodyparts(CARRY)));
+// 		let haulingPower = _.sum(_.map(this.lifetimeFilter(this.haulers), creep => creep.getActiveBodyparts(CARRY)));
 // 		if (haulingPower < this.miningGroup.data.haulingPowerNeeded) {
 // 			this.requestCreep(new HaulerSetup());
 // 		}
@@ -28,47 +27,6 @@
 //
 // 	init() {
 // 		this.spawn();
-// 	}
-//
-// 	private supplyActions(supplier: Zerg) {
-// 		// Select the closest supply target out of the highest priority and refill it
-// 		for (let priority in this.colony.transportRequests.supply) {
-// 			let targets = _.map(this.colony.transportRequests.supply[priority], request => request.target);
-// 			let target = supplier.pos.findClosestByRange(targets);
-// 			if (target) {
-// 				supplier.task = new TaskDeposit(target);
-// 				return;
-// 			}
-// 		}
-// 		// Otherwise, if there are no targets, refill yourself
-// 		this.rechargeActions(supplier);
-// 	}
-//
-// 	private rechargeActions(supplier: Zerg) {
-// 		// Select the closest target of highest priority requesting a withdrawal
-// 		for (let priority in this.colony.transportRequests.withdraw) {
-// 			let targets = _.map(this.colony.transportRequests.withdraw[priority], request => request.target);
-// 			let target = supplier.pos.findClosestByRange(targets);
-// 			if (target) {
-// 				supplier.task = new TaskWithdraw(target);
-// 				return;
-// 			}
-// 		}
-// 		// Otherwise, if nothing actively wants a withdraw, refill from nearest storage or mining container
-// 		let viableTargets: StorageUnit[] = [];
-// 		if (this.room.storage && this.room.storage.energy > supplier.carryCapacity) {
-// 			viableTargets.push(this.room.storage);
-// 		}
-// 		for (let source of this.room.sources) {
-// 			let output = this.colony.miningSites[source.id].output;
-// 			if (output instanceof StructureContainer && output.energy > supplier.carryCapacity) {
-// 				viableTargets.push(output);
-// 			}
-// 		}
-// 		let target = supplier.pos.findClosestByRange(viableTargets);
-// 		if (target) {
-// 			supplier.task = new TaskWithdraw(target);
-// 		}
 // 	}
 //
 // 	// Gets a prioritized request if any
@@ -103,8 +61,9 @@
 // 		}
 // 	}
 //
+//
 // 	run() {
-// 		for (let hauler of this.transporters) {
+// 		for (let hauler of this.haulers) {
 // 			if (hauler.isIdle) {
 // 				this.handleHauler(hauler);
 // 			}

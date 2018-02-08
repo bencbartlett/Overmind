@@ -10,6 +10,12 @@ Object.defineProperty(RoomPosition.prototype, 'isEdge', { // if the position is 
 	},
 });
 
+Object.defineProperty(RoomPosition.prototype, 'isVisible', { // if the position is in a defined room
+	get: function () {
+		return Game.rooms[this.roomName] != undefined;
+	},
+});
+
 Object.defineProperty(RoomPosition.prototype, 'rangeToEdge', { // range to the nearest room edge
 	get: function () {
 		return _.min([this.x, 49 - this.x, this.y, 49 - this.y]);
@@ -45,18 +51,41 @@ Object.defineProperty(RoomPosition.prototype, 'neighbors', {
 	}
 });
 
-Object.defineProperty(RoomPosition.prototype, 'adjacentSpots', {
-	get: function () {
-		let spots: RoomPosition[] = [];
-		for (let neighbor of this.neighbors) {
-			if (Game.map.getTerrainAt(neighbor) != 'wall') {
-				// Doesn't include constructed walls
-				spots.push(neighbor);
-			}
-		}
-		return spots;
+// Object.defineProperty(RoomPosition.prototype, 'adjacentSpots', {
+// 	get: function () {
+// 		return spots;
+// 	}
+// });
+
+RoomPosition.prototype.isPassible = function (ignoreCreeps = false): boolean {
+	// Is terrain passable?
+	if (Game.map.getTerrainAt(this) == 'wall') return false;
+	if (this.isVisible) {
+		// Are there creeps?
+		if (ignoreCreeps == false && this.lookFor(LOOK_CREEPS).length > 0) return false;
+		// Are there structures?
+		if (_.filter(this.lookFor(LOOK_STRUCTURES), (s: Structure) => s.isPassible).length > 0) return false;
 	}
-});
+	return true;
+};
+
+// Object.defineProperty(RoomPosition.prototype, 'availableAdjacentSpots', {
+// 	get: function () {
+// 		if (this.isVisible) {
+// 			let spots: RoomPosition[] = [];
+// 			for (let spot of this.adjacentSpots) {
+// 				let structures = this.look;
+// 				if (Game.map.getTerrainAt(neighbor) != 'wall') {
+// 					// Doesn't include constructed walls
+// 					spots.push(neighbor);
+// 				}
+// 			}
+// 			return spots;
+// 		} else {
+// 			return this.adjacentSpots; // Assume there's nothing there
+// 		}
+// 	}
+// });
 
 // Get an estimate for the distance to another room position in a possibly different room
 RoomPosition.prototype.getMultiRoomRangeTo = function (pos: RoomPosition): number {

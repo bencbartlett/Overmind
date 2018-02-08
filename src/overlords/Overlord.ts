@@ -105,7 +105,6 @@ export abstract class Overlord {
 			spawnDistance = Pathing.distance(this.pos, this.colony.hatchery.pos) || 0;
 		}
 
-
 		// The last condition fixes a bug only present on private servers that took me a fucking week to isolate.
 		// At the tick of birth, creep.spawning = false and creep.ticksTolive = undefined
 		// See: https://screeps.com/forum/topic/443/creep-spawning-is-not-updated-correctly-after-spawn-process

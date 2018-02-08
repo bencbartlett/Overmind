@@ -2,9 +2,9 @@ import {Overlord} from './Overlord';
 import {Priority} from '../config/priorities';
 import {QueenSetup} from '../creepSetup/defaultSetups';
 import {Hatchery} from '../hiveClusters/hiveCluster_hatchery';
-import {EnergyRequestStructure, ResourceRequestStructure} from '../resourceRequests/TransportRequestGroup';
 import {Zerg} from '../Zerg';
 import {Tasks} from '../tasks/Tasks';
+import {EnergyRequestStructure, ResourceRequestStructure} from '../logistics/TransportRequestGroup';
 
 // Hatchery overlord: spawn and run a dedicated supplier-like hatchery attendant (called after colony has storage)
 export class HatcheryOverlord extends Overlord {

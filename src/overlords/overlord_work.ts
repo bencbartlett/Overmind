@@ -13,10 +13,37 @@ export class WorkerOverlord extends Overlord {
 	room: Room;
 	repairStructures: Structure[];
 	rechargeStructures: (StructureStorage | StructureTerminal | StructureContainer | StructureLink)[];
+	fortifyStructures: (StructureWall | StructureRampart)[];
+	settings: {
+		barrierHits: { [rcl: number]: number };
+		workerWithdrawLimit: number;
+	};
 
-	constructor(colony: Colony, priority = Priority.NormalLow) {
+	constructor(colony: Colony, priority = Priority.Normal) {
 		super(colony, 'worker', priority);
 		this.workers = this.creeps('worker');
+		this.rechargeStructures = _.compact([this.colony.storage!,
+											 this.colony.terminal!,
+											 this.colony.upgradeSite.input!,
+											 ..._.map(this.colony.miningSites, site => site.output!)]);
+		// Barrier settings
+		this.settings = {
+			barrierHits        : {
+				1: 3000,
+				2: 3000,
+				3: 3000,
+				4: 10000,
+				5: 100000,
+				6: 1000000,
+				7: 10000000,
+				8: 30000000,
+			},
+			workerWithdrawLimit: this.colony.stage > ColonyStage.Larva ? 750 : 100,
+		};
+		this.fortifyStructures = _.sortBy(_.filter(this.room.barriers,
+												   s => s.hits < this.settings.barrierHits[this.colony.level]),
+										  s => s.hits);
+		// Generate a list of structures needing repairing (different from fortifying except in critical case)
 		this.repairStructures = _.filter(this.colony.repairables, function (structure) {
 			if (structure.structureType == STRUCTURE_ROAD) {
 				return structure.hits < 0.5 * structure.hitsMax;
@@ -26,17 +53,16 @@ export class WorkerOverlord extends Overlord {
 				return structure.hits < structure.hitsMax;
 			}
 		});
-		this.rechargeStructures = _.compact([this.colony.storage!,
-											 this.colony.terminal!,
-											 this.colony.upgradeSite.input!,
-											 ..._.map(this.colony.miningSites, site => site.output!)]);
+		let criticalHits = 1000; // Fortifying changes to repair status at this point
+		let criticalBarriers = _.filter(this.fortifyStructures, s => s.hits <= criticalHits);
+		this.repairStructures = this.repairStructures.concat(criticalBarriers);
 	}
 
 	spawn() {
 		let workPartsPerWorker = _.filter(this.generateProtoCreep(new WorkerSetup()).body, part => part == WORK).length;
-		let MAX_WORKERS = 10; // Maximum number of workers to spawn
 		if (this.colony.stage == ColonyStage.Larva) {
 			// At lower levels, try to saturate the energy throughput of the colony
+			let MAX_WORKERS = 10; // Maximum number of workers to spawn
 			let energyPerTick = _.sum(_.map(this.colony.miningSites, site => site.energyPerTick));
 			let energyPerTickPerWorker = 1.1 * workPartsPerWorker; // Average energy per tick when workers are working
 			let workerUptime = 0.5;
@@ -44,6 +70,7 @@ export class WorkerOverlord extends Overlord {
 			this.wishlist(Math.min(numWorkers, MAX_WORKERS), new WorkerSetup());
 		} else {
 			// At higher levels, spawn workers based on construction and repair that needs to be done
+			let MAX_WORKERS = 5; // Maximum number of workers to spawn
 			let constructionTicks = _.sum(_.map(this.colony.constructionSites,
 												site => site.progressTotal - site.progress)) / BUILD_POWER;
 			let repairTicks = _.sum(_.map(this.repairStructures,
@@ -82,13 +109,20 @@ export class WorkerOverlord extends Overlord {
 		// TODO
 	}
 
+	private fortifyActions(worker: Zerg) {
+		let numBarriersToConsider = 5; // Choose the closest barrier of the N barriers with lowest hits
+		let lowHitBarriers = _.take(this.fortifyStructures, numBarriersToConsider);
+		let target = worker.pos.findClosestByMultiRoomRange(lowHitBarriers);
+		if (target) worker.task = Tasks.repair(target);
+	}
+
 	private upgradeActions(worker: Zerg) {
 		worker.task = Tasks.upgrade(this.room.controller!);
 	}
 
 	private rechargeActions(worker: Zerg) {
-		let target = worker.pos.findClosestByMultiRoomRange(_.filter(this.rechargeStructures,
-															structure => structure.energy > worker.carryCapacity));
+		let rechargeStructures = _.filter(this.rechargeStructures, s => s.energy > this.settings.workerWithdrawLimit);
+		let target = worker.pos.findClosestByMultiRoomRange(rechargeStructures);
 		if (target) worker.task = Tasks.withdraw(target);
 	}
 
@@ -100,6 +134,8 @@ export class WorkerOverlord extends Overlord {
 				this.repairActions(worker);
 			} else if (this.colony.constructionSites.length > 0) {
 				this.buildActions(worker);
+			} else if (this.fortifyStructures.length > 0) {
+				this.fortifyActions(worker);
 			} else {
 				this.upgradeActions(worker);
 			}

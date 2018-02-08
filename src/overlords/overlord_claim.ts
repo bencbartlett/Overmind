@@ -2,14 +2,14 @@ import {Overlord} from './Overlord';
 import {ClaimerSetup} from '../creepSetup/defaultSetups';
 import {Priority} from '../config/priorities';
 import {Zerg} from '../Zerg';
-import {DirectiveIncubate} from '../directives/directive_incubate';
 import {Tasks} from '../tasks/Tasks';
+import {Directive} from '../directives/Directive';
 
 export class ClaimingOverlord extends Overlord {
 
 	claimers: Zerg[];
 
-	constructor(directive: DirectiveIncubate, priority = Priority.Normal) {
+	constructor(directive: Directive, priority = Priority.NormalHigh) {
 		super(directive, 'claim', priority);
 		this.claimers = this.creeps('claimer');
 	}

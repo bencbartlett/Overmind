@@ -6,7 +6,7 @@ import {profile} from '../lib/Profiler';
 import {HatcheryOverlord} from '../overlords/overlord_hatchery';
 import {blankPriorityQueue, Priority} from '../config/priorities';
 import {Colony, ColonyStage} from '../Colony';
-import {TransportRequestGroup} from '../resourceRequests/TransportRequestGroup';
+import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {CreepSetup} from '../creepSetup/CreepSetup';
 import {Overlord} from '../overlords/Overlord';
 import {Mem} from '../memcheck';

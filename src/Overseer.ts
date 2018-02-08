@@ -88,7 +88,7 @@ export class Overseer {
 	run(): void {
 		// Handle directives
 		_.forEach(this.directives, directive => directive.run());
-		// Handle overlords in decreasing priority {
+		// Handle overlords in decreasing priority
 		for (let priority in this.overlords) {
 			if (!this.overlords[priority]) continue;
 			for (let overlord of this.overlords[priority]) {

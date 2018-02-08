@@ -8,7 +8,7 @@ import {Priority} from '../config/priorities';
 import {Colony} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
 import {MiningGroup} from './hiveCluster_miningGroup';
-import {TransportRequestGroup} from '../resourceRequests/TransportRequestGroup';
+import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {Mem} from '../memcheck';
 
 @profile

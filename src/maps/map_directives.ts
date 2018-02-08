@@ -9,20 +9,24 @@ import {DirectiveRPHatchery} from '../directives/directive_roomPlanner_hatchery'
 import {DirectiveRPCommandCenter} from '../directives/directive_roomPlanner_commandCenter';
 import {DirectiveRPUpgradeSite} from '../directives/directive_roomPlanner_upgradeSite';
 import {DirectiveRPMiningGroup} from '../directives/directive_roomPlanner_miningGroup';
+import {DirectiveColonize} from '../directives/directive_colonize';
 
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 	switch (flag.color) {
-		// Colony directives =================================================
+
+		// Colony directives ===========================================================================================
 		case COLOR_PURPLE:
 			switch (flag.secondaryColor) {
 				case COLOR_PURPLE:
 					return new DirectiveOutpost(flag);
 				case COLOR_WHITE:
 					return new DirectiveIncubate(flag);
+				case COLOR_GREY:
+					return new DirectiveColonize(flag);
 			}
 			break;
 
-		// Military directives ===============================================
+		// Military directives =========================================================================================
 		case COLOR_RED:
 			switch (flag.secondaryColor) {
 				case COLOR_BLUE:
@@ -30,7 +34,7 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			}
 			break;
 
-		// Operation directives ==============================================
+		// Operation directives ========================================================================================
 		case COLOR_ORANGE:
 			switch (flag.secondaryColor) {
 				case COLOR_ORANGE:
@@ -38,14 +42,14 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			}
 			break;
 
-		// Energy directives =================================================
+		// Energy directives ===========================================================================================
 		case COLOR_YELLOW:
 			switch (flag.secondaryColor) {
 
 			}
 			break;
 
-		// Room planning directives ==========================================
+		// Room planning directives ====================================================================================
 		case COLOR_WHITE:
 			switch (flag.secondaryColor) {
 				case COLOR_GREEN:

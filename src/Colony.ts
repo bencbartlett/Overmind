@@ -6,15 +6,15 @@ import {CommandCenter} from './hiveClusters/hiveCluster_commandCenter';
 import {UpgradeSite} from './hiveClusters/hiveCluster_upgradeSite';
 import {MiningGroup} from './hiveClusters/hiveCluster_miningGroup';
 import {profile} from './lib/Profiler';
-import {TransportRequestGroup} from './resourceRequests/TransportRequestGroup';
-import {LinkRequestGroup} from './resourceRequests/LinkRequests';
+
 import {Overseer} from './Overseer';
 import {SupplierOverlord} from './overlords/overlord_supply';
 import {WorkerOverlord} from './overlords/overlord_work';
-import {Overlord} from './overlords/Overlord';
 import {Zerg} from './Zerg';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
 import {HiveCluster} from './hiveClusters/HiveCluster';
+import {LinkRequestGroup} from './logistics/LinkRequests';
+import {TransportRequestGroup} from './logistics/TransportRequestGroup';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -65,6 +65,7 @@ export class Colony {
 	incubator: Colony | undefined; 						// The colony responsible for incubating this one, if any
 	isIncubating: boolean;								// If the colony is incubating
 	incubatingColonies: Colony[];						// List of colonies that this colony is incubating
+	level: number; 										// Level of the colony's main room
 	stage: number;										// The stage of the colony "lifecycle"
 	// Creeps and subsets
 	creeps: Zerg[];										// Creeps bound to the colony
@@ -74,7 +75,10 @@ export class Colony {
 	linkRequests: LinkRequestGroup;
 	transportRequests: TransportRequestGroup;			// Box for resource requests
 	// Overlords
-	overlords: { [name: string]: Overlord };
+	overlords: {
+		supply: SupplierOverlord;
+		work: WorkerOverlord;
+	};
 	// Room planner
 	roomPlanner: RoomPlanner;
 
@@ -112,6 +116,7 @@ export class Colony {
 		this.nuker = this.room.getStructures(STRUCTURE_NUKER)[0] as StructureNuker;
 		this.observer = this.room.getStructures(STRUCTURE_OBSERVER)[0] as StructureObserver;
 		// Set the colony stage
+		this.level = this.controller.level;
 		this.isIncubating = false;
 		if (this.storage && this.storage.isActive()) {
 			if (this.controller.level == 8) {
@@ -191,9 +196,10 @@ export class Colony {
 	}
 
 	private spawnMoarOverlords(): void {
-		this.overlords = {};
-		this.overlords.supply = new SupplierOverlord(this);
-		this.overlords.work = new WorkerOverlord(this);
+		this.overlords = {
+			supply: new SupplierOverlord(this),
+			work  : new WorkerOverlord(this),
+		};
 	}
 
 	/* Run the tower logic for each tower in the colony */

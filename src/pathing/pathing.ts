@@ -60,14 +60,18 @@ export class Pathing {
 		let ret = Traveler.findTravelPath(startPos, endPos, options);
 		let weight = 0;
 		for (let pos of ret.path) {
-			if (_.find(pos.lookFor(LOOK_STRUCTURES), (s: Structure) => s.structureType == STRUCTURE_ROAD)) {
+			if (!Game.rooms[pos.roomName]) { // If you don't have vision, assume there are roads
 				weight += 1;
 			} else {
-				let terrain = pos.lookFor(LOOK_TERRAIN)[0];
-				if (terrain == 'plain') {
-					weight += 2;
-				} else if (terrain == 'swamp') {
-					weight += 10;
+				if (_.find(pos.lookFor(LOOK_STRUCTURES), (s: Structure) => s.structureType == STRUCTURE_ROAD)) {
+					weight += 1;
+				} else {
+					let terrain = pos.lookFor(LOOK_TERRAIN)[0];
+					if (terrain == 'plain') {
+						weight += 2;
+					} else if (terrain == 'swamp') {
+						weight += 10;
+					}
 				}
 			}
 		}

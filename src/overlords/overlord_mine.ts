@@ -17,10 +17,10 @@ export class MiningOverlord extends Overlord {
 	}
 
 	spawn() {
-		let miningPowerAssigned = _.sum(_.map(this.lifetimeFilter(this.miners),
-											  creep => creep.getActiveBodyparts(WORK)));
+		let filteredMiners = this.lifetimeFilter(this.miners);
+		let miningPowerAssigned = _.sum(_.map(filteredMiners, creep => creep.getActiveBodyparts(WORK)));
 		if (miningPowerAssigned < this.miningSite.miningPowerNeeded &&
-			this.miners.length < this.miningSite.pos.adjacentSpots.length) {
+			filteredMiners.length < _.filter(this.miningSite.pos.neighbors, pos => pos.isPassible()).length) {
 			// Handles edge case at startup of <3 spots near mining site
 			this.requestCreep(new MinerSetup());
 		}

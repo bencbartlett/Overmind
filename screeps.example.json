@@ -1,7 +1,6 @@
 {
   "main": {
-    "email": "you@provider.tld",
-    "password": "Password",
+    "token": "YOUR_TOKEN",
     "protocol": "https",
     "hostname": "screeps.com",
     "port": 443,
@@ -9,8 +8,7 @@
     "branch": "main"
   },
   "sim": {
-    "email": "you@provider.tld",
-    "password": "Password",
+    "token": "YOUR_TOKEN",
     "protocol": "https",
     "hostname": "screeps.com",
     "port": 443,

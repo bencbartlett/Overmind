@@ -15,21 +15,25 @@ export class Visualizer {
 		return Memory.settings.enableVisuals;
 	}
 
-	static drawLayout(structureMap: StructureMap, roomName: string, forceDraw = false): RoomVisual | void {
-		if (!this.enabled && !forceDraw) return;
-		let vis: RoomVisual;
-		if (Game.rooms[roomName]) {
-			vis = Game.rooms[roomName].visual;
-		} else {
-			vis = new RoomVisual(roomName);
-		}
+	static drawLayout(structureMap: StructureMap): void {
+		if (!this.enabled) return;
+		let vis: { [roomName: string]: RoomVisual } = {};
+		// if (Game.rooms[roomName]) {
+		// 	vis = Game.rooms[roomName].visual;
+		// } else {
+		// 	vis = new RoomVisual(roomName);
+		// }
 		for (let structureType in structureMap) {
 			for (let pos of structureMap[structureType]) {
-				vis.structure(pos.x, pos.y, structureType);
+				if (!vis[pos.roomName]) {
+					vis[pos.roomName] = new RoomVisual(pos.roomName);
+				}
+				vis[pos.roomName].structure(pos.x, pos.y, structureType);
 			}
 		}
-		vis.connectRoads();
-		return vis;
+		for (let roomName in vis) {
+			vis[roomName].connectRoads();
+		}
 	}
 
 	static drawRoads(positoins: RoomPosition[]): void {

@@ -70,10 +70,14 @@ interface RoomObject {
 interface RoomPosition {
 	name: string;
 	isEdge: boolean;
+	isVisible: boolean;
 	rangeToEdge: number;
 	roomCoords: Coord;
 	neighbors: RoomPosition[];
-	adjacentSpots: RoomPosition[];
+	// adjacentSpots: RoomPosition[];
+	// availableAdjacentSpots: RoomPosition[];
+
+	isPassible(ignoreCreeps?: boolean): boolean;
 
 	getMultiRoomRangeTo(pos: RoomPosition): number;
 
@@ -95,6 +99,10 @@ interface RoomVisual {
 	animatedPosition(x: number, y: number, opts?: { [option: string]: any }): RoomVisual;
 
 	test(): RoomVisual;
+}
+
+interface Structure {
+	isPassible: boolean;
 }
 
 interface StructureContainer {

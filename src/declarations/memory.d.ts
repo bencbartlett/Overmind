@@ -52,6 +52,8 @@ interface FlagMemory {
 	rotation?: number;
 	colony?: string;
 	overlords: { [overlordName: string]: OverlordMemory };
+
+	[otherProperties: string]: any;
 }
 
 interface RoomMemory {

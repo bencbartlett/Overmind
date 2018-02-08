@@ -2,9 +2,9 @@ import {Overlord} from './Overlord';
 import {HaulerSetup} from '../creepSetup/defaultSetups';
 import {Priority} from '../config/priorities';
 import {MiningGroup} from '../hiveClusters/hiveCluster_miningGroup';
-import {IWithdrawRequest} from '../resourceRequests/TransportRequestGroup';
 import {Zerg} from '../Zerg';
 import {Tasks} from '../tasks/Tasks';
+import {IWithdrawRequest} from '../logistics/TransportRequestGroup';
 
 
 export class HaulingOverlord extends Overlord {

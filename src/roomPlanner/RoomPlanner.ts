@@ -136,14 +136,17 @@ export class RoomPlanner {
 			for (let i in this.colony.miningSites) {
 				let site = this.colony.miningSites[i];
 				let path = this.planRoad(this.placements.commandCenter, site.pos);
-				if (path) { // replace the last element of the path with a container for the mining site
+				let siteHasContainer = site.outputConstructionSite || site.output;
+				if (path && !siteHasContainer) { // replace the last element of the path with a container
 					let containerPos = _.last(path);
 					_.remove(this.roadPositions, containerPos);
 					this.placeStructure(STRUCTURE_CONTAINER, containerPos);
 				}
 			}
-			_.forEach(this.colony.miningSites,
-					  site => this.planRoad(this.placements.commandCenter, site.pos, {range: 2}));
+			// Connect hatchery to each outpost controller
+			for (let outpost of this.colony.outposts) {
+				if (outpost.controller) this.planRoad(this.placements.commandCenter, outpost.controller.pos);
+			}
 		}
 		this.formatRoadPositions();
 	}
@@ -315,6 +318,7 @@ export class RoomPlanner {
 			_.forEach(this.memory.savedFlags, i => console.log(i));
 			console.log('Room layout and flag positions have been saved.');
 			this.active = false;
+			this.buildMissing();
 		} else {
 			console.log('Not a valid room layout! Must have hatchery, commandCenter and upgradeSite placements.');
 		}
@@ -390,7 +394,7 @@ export class RoomPlanner {
 
 	visuals(): void {
 		// Draw the map
-		Visualizer.drawLayout(this.map, this.colony.name);
+		Visualizer.drawLayout(this.map);
 		Visualizer.drawRoads(this.roadPositions);
 	}
 

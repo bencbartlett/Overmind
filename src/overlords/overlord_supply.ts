@@ -3,7 +3,7 @@ import {SupplierSetup} from '../creepSetup/defaultSetups';
 import {Priority} from '../config/priorities';
 import {Colony} from '../Colony';
 import {HiveCluster} from '../hiveClusters/HiveCluster';
-import {IResourceRequest, IWithdrawRequest} from '../resourceRequests/TransportRequestGroup';
+import {IResourceRequest, IWithdrawRequest} from '../logistics/TransportRequestGroup';
 import {Zerg} from '../Zerg';
 import {Tasks} from '../tasks/Tasks';
 
@@ -27,7 +27,9 @@ export class SupplierOverlord extends Overlord {
 	}
 
 	spawn() {
-		this.wishlist(1, new SupplierSetup(Infinity)); // TODO: scale suppliers better
+		let numSuppliers = 1;
+		if (2 <= this.room.controller!.level && this.room.controller!.level <= 3) numSuppliers = 2;
+		this.wishlist(numSuppliers, new SupplierSetup(Infinity)); // TODO: scale suppliers better
 	}
 
 	init() {
@@ -65,7 +67,7 @@ export class SupplierOverlord extends Overlord {
 		}
 		for (let source of this.room.sources) {
 			let output = this.colony.miningSites[source.id].output;
-			if (output instanceof StructureContainer && output.energy > supplier.carryCapacity) {
+			if (output instanceof StructureContainer && output.energy > 0.5 * supplier.carryCapacity) {
 				viableTargets.push(output);
 			}
 		}
