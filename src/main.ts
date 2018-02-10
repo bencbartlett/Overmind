@@ -46,6 +46,7 @@ export function loop(): void {
 	Overmind.build();			// Build phase: instantiate caches and colony components
 	Overmind.init();			// Init phase: spawning and energy requests
 	Overmind.run();				// Run phase: execute state-changing actions
+	Overmind.visuals(); 		// Draw visuals
 	sandbox();					// Sandbox: run any testing code
 }
 

@@ -2,8 +2,13 @@ import {Task} from './Task';
 import {profile} from '../lib/Profiler';
 
 
-export type transferTargetType = StructureContainer | StructureStorage | StructureTerminal |
-	StructureLab | StructureNuker | StructurePowerSpawn;
+export type transferTargetType =
+	StructureContainer
+	| StructureStorage
+	| StructureTerminal
+	| StructureLab
+	| StructureNuker
+	| StructurePowerSpawn;
 export const transferTaskName = 'transfer';
 
 @profile

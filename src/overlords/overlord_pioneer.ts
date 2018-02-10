@@ -30,11 +30,10 @@ export class PioneerOverlord extends Overlord {
 		if (pioneer.room == this.room && !pioneer.pos.isEdge) {
 			// Harvest if out of energy
 			if (pioneer.carry.energy == 0) {
-				let availableSources = _.filter(this.room.sources, function (source) {
-					return source.energy > 0 &&
-						   _.filter(source.pos.neighbors, pos => pos.isPassible()).length > 0;
-				});
-				pioneer.task = Tasks.harvest(pioneer.pos.findClosestByRange(availableSources));
+				let availableSources = _.filter(this.room.sources,
+												s => s.energy > 0 && s.pos.availableNeighbors().length > 0);
+				let target = pioneer.pos.findClosestByRange(availableSources);
+				if (target) pioneer.task = Tasks.harvest(target);
 			} else if (this.spawnSite) {
 				pioneer.task = Tasks.build(this.spawnSite);
 			}

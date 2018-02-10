@@ -63,7 +63,7 @@ export class Pathing {
 			if (!Game.rooms[pos.roomName]) { // If you don't have vision, assume there are roads
 				weight += 1;
 			} else {
-				if (_.find(pos.lookFor(LOOK_STRUCTURES), (s: Structure) => s.structureType == STRUCTURE_ROAD)) {
+				if (pos.lookForStructure(STRUCTURE_ROAD)) {
 					weight += 1;
 				} else {
 					let terrain = pos.lookFor(LOOK_TERRAIN)[0];

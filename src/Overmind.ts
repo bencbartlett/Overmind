@@ -8,6 +8,7 @@ import {Zerg} from './Zerg';
 import {DirectiveOutpost} from './directives/directive_outpost';
 import {Overlord} from './overlords/Overlord';
 import {Directive} from './directives/Directive';
+import {Visualizer} from './visuals/Visualizer';
 
 
 @profile
@@ -167,6 +168,15 @@ export default class Overmind implements IOvermind {
 	run(): void {
 		for (let colonyName in this.Colonies) {
 			this.Colonies[colonyName].run();
+		}
+	}
+
+	visuals(): void {
+		// Draw global visuals
+		Visualizer.visuals();
+		// Draw colony visuals
+		for (let colonyName in this.Colonies) {
+			this.Colonies[colonyName].visuals();
 		}
 	}
 };

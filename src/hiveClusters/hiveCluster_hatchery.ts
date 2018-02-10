@@ -69,10 +69,25 @@ export class Hatchery extends HiveCluster {
 		} else {
 			this.transportRequests = this.colony.transportRequests;
 		}
+		this.memory.stats = this.getStats();
 	}
 
 	get memory(): HatcheryMemory {
 		return Mem.wrap(this.colony.memory, 'hatchery');
+	}
+
+	private getStats() {
+		// Compute uptime
+		let spawnUsageThisTick = _.filter(this.spawns, spawn => spawn.spawning).length / this.spawns.length;
+		let uptime: number;
+		if (this.memory.stats && this.memory.stats.uptime) {
+			uptime = (this.memory.stats.uptime * (CREEP_LIFE_TIME - 1) + spawnUsageThisTick) / CREEP_LIFE_TIME;
+		} else {
+			uptime = spawnUsageThisTick;
+		}
+		return {
+			uptime: uptime,
+		};
 	}
 
 	/* Request more energy when appropriate either via link or hauler */
@@ -243,25 +258,31 @@ export class Hatchery extends HiveCluster {
 
 	/* Find the best position for suppliers to idle at */
 	private findIdlePos(): RoomPosition {
-		let possiblePositions = this.spawns[0].pos.neighbors;
-		let proximateStructures = [
-			this.spawns[1],
-			this.spawns[2],
-			this.link,
-			this.battery,
-		];
-		for (let structure of proximateStructures) {
-			if (structure) {
-				let filteredPositions = _.filter(possiblePositions, p => p.isNearTo(structure!) &&
-																		 !p.isEqualTo(structure!));
-				if (filteredPositions.length == 0) { // stop when it's impossible to match any more structures
-					return possiblePositions[0];
-				} else {
-					possiblePositions = filteredPositions;
-				}
-			}
+		if (this.battery) {
+			return this.battery.pos;
+		} else {
+			let possiblePositions = this.spawns[0].pos.neighbors;
+			let proximateStructures: Structure[] = _.compact([...this.spawns,
+															  this.link!,
+															  this.battery!,]);
+			let numNearbyStructures = (pos: RoomPosition) =>
+				_.filter(proximateStructures, s => s.pos.isNearTo(pos) && !s.pos.isEqualTo(pos)).length;
+			let nearbyStructuresEachPos = _.map(possiblePositions, pos => numNearbyStructures(pos));
+			let maxIndex = _.findIndex(nearbyStructuresEachPos, _.max(nearbyStructuresEachPos));
+			return possiblePositions[maxIndex];
 		}
-		return possiblePositions[0];
+		// for (let structure of proximateStructures) {
+		// 	if (structure) {
+		// 		let filteredPositions = _.filter(possiblePositions, p => p.isNearTo(structure!) &&
+		// 																 !p.isEqualTo(structure!));
+		// 		if (filteredPositions.length == 0) { // stop when it's impossible to match any more structures
+		// 			return possiblePositions[0];
+		// 		} else {
+		// 			possiblePositions = filteredPositions;
+		// 		}
+		// 	}
+		// }
+		// return possiblePositions[0];
 	}
 
 	private handleSpawns(): void {
@@ -291,7 +312,8 @@ export class Hatchery extends HiveCluster {
 		});
 		let info = [
 			`Energy: ${this.room.energyAvailable} / ${this.room.energyCapacityAvailable}`,
-			`Status: ${spawnInfo != '' ? 'spawning' + spawnInfo : 'idle' }`,
+			`Status: ${spawnInfo != '' ? 'spawning' + ' ' + spawnInfo : 'idle' }`,
+			`Uptime: ${Number(this.memory.stats.uptime).toFixed(2)}`
 		];
 		Visualizer.showInfo(info, this);
 	}

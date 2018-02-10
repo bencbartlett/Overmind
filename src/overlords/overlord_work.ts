@@ -65,7 +65,7 @@ export class WorkerOverlord extends Overlord {
 			let MAX_WORKERS = 10; // Maximum number of workers to spawn
 			let energyPerTick = _.sum(_.map(this.colony.miningSites, site => site.energyPerTick));
 			let energyPerTickPerWorker = 1.1 * workPartsPerWorker; // Average energy per tick when workers are working
-			let workerUptime = 0.5;
+			let workerUptime = 0.8;
 			let numWorkers = Math.ceil(energyPerTick / (energyPerTickPerWorker * workerUptime));
 			this.wishlist(Math.min(numWorkers, MAX_WORKERS), new WorkerSetup());
 		} else {
@@ -113,7 +113,7 @@ export class WorkerOverlord extends Overlord {
 		let numBarriersToConsider = 5; // Choose the closest barrier of the N barriers with lowest hits
 		let lowHitBarriers = _.take(this.fortifyStructures, numBarriersToConsider);
 		let target = worker.pos.findClosestByMultiRoomRange(lowHitBarriers);
-		if (target) worker.task = Tasks.repair(target);
+		if (target) worker.task = Tasks.fortify(target);
 	}
 
 	private upgradeActions(worker: Zerg) {
@@ -149,7 +149,15 @@ export class WorkerOverlord extends Overlord {
 			if (worker.isIdle) {
 				this.handleWorker(worker);
 			}
-			worker.run();
+			let result = worker.run();
+			if (result != OK) {
+				// TODO: this is super expensive
+				// If you haven't done anything, try to repair something in range
+				let nearbyRepairables = _.sortBy(_.filter(this.room.repairables, s => worker.pos.getRangeTo(s) <= 3),
+												 s => s.hits);
+				let target = nearbyRepairables[0];
+				if (target) worker.repair(target);
+			}
 		}
 	}
 }

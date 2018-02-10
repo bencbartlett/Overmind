@@ -78,6 +78,10 @@ export var hatcheryLayout: StructureLayout = {
 				'pos': [
 					{
 						'x': 25,
+						'y': 25
+					},
+					{
+						'x': 25,
 						'y': 20
 					},
 					{
@@ -292,6 +296,10 @@ export var hatcheryLayout: StructureLayout = {
 		'buildings': {
 			'road'     : {
 				'pos': [
+					{
+						'x': 25,
+						'y': 25
+					},
 					{
 						'x': 25,
 						'y': 20
@@ -548,6 +556,10 @@ export var hatcheryLayout: StructureLayout = {
 		'buildings': {
 			'road'     : {
 				'pos': [
+					{
+						'x': 25,
+						'y': 25
+					},
 					{
 						'x': 25,
 						'y': 20
@@ -860,6 +872,10 @@ export var hatcheryLayout: StructureLayout = {
 		'buildings': {
 			'road'     : {
 				'pos': [
+					{
+						'x': 25,
+						'y': 25
+					},
 					{
 						'x': 25,
 						'y': 20
@@ -1418,6 +1434,10 @@ export var hatcheryLayout: StructureLayout = {
 				'pos': [
 					{
 						'x': 25,
+						'y': 25
+					},
+					{
+						'x': 25,
 						'y': 20
 					},
 					{
@@ -1852,6 +1872,10 @@ export var hatcheryLayout: StructureLayout = {
 			},
 			'road'     : {
 				'pos': [
+					{
+						'x': 25,
+						'y': 25
+					},
 					{
 						'x': 25,
 						'y': 20

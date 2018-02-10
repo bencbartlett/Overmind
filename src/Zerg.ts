@@ -321,6 +321,35 @@ export class Zerg {
 
 	// Parking logic ---------------------------------------------------------------------------------------------------
 
+
+	park(pos: RoomPosition, maintainDistance = false): number {
+		let road = this.pos.lookForStructure(STRUCTURE_ROAD);
+		if (!road) return OK;
+
+		let positions = _.sortBy(this.pos.availableNeighbors(), (p: RoomPosition) => p.getRangeTo(pos));
+		if (maintainDistance) {
+			let currentRange = this.pos.getRangeTo(pos);
+			positions = _.filter(positions, (p: RoomPosition) => p.getRangeTo(pos) <= currentRange);
+		}
+
+		let swampPosition;
+		for (let position of positions) {
+			if (position.lookForStructure(STRUCTURE_ROAD)) continue;
+			let terrain = position.lookFor(LOOK_TERRAIN)[0];
+			if (terrain === 'swamp') {
+				swampPosition = position;
+			} else {
+				return this.move(this.pos.getDirectionTo(position));
+			}
+		}
+
+		if (swampPosition) {
+			return this.move(this.pos.getDirectionTo(swampPosition));
+		}
+
+		return this.travelTo(pos);
+	}
+
 	// park(near: RoomPosition, opts = {} as ParkingOptions) {
 	// 	_.defaults(opts, {
 	// 		range: 2,

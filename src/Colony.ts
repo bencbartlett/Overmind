@@ -105,7 +105,7 @@ export class Colony {
 		// Associate real colony components
 		this.controller = this.room.controller!; // must be controller since colonies are based in owned rooms
 		this.pos = this.controller.pos; // This is used for overlord initialization but isn't actually useful
-		this.spawns = this.room.spawns;
+		this.spawns = _.filter(this.room.spawns, spawn => spawn.my);
 		this.extensions = this.room.extensions;
 		this.storage = this.room.storage;
 		this.links = this.room.links;
@@ -261,6 +261,11 @@ export class Colony {
 		_.forEach(this.creeps, creep => creep.run());
 		// Run the room planner
 		this.roomPlanner.run();
+	}
+
+	visuals(): void {
+		// Display overlord creep information
+		this.overseer.visuals();
 		// Display hiveCluster visuals
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.visuals());
 	}

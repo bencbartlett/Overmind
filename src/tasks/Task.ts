@@ -25,6 +25,7 @@ export abstract class Task {
 	settings: { 				// Data pertaining to a given type of task; shouldn't be modified on an instance-basis
 		targetRange: number;		// How close you must be to the target to do the work() function
 		moveColor: string; 			// Color to draw movement lines with visuals (will be re-implemented later)
+		workOffRoad: boolean; 	// Should the task be performed off-road (e.g. working, upgrading, etc)
 	};
 	options: TaskOptions;
 	data: { 					// Data pertaining to a given instance of a task
@@ -57,6 +58,7 @@ export abstract class Task {
 		this.settings = {
 			targetRange: 1,
 			moveColor  : '#fff',
+			workOffRoad: false,
 		};
 		_.defaults(options, {
 			blind          : false,
@@ -173,15 +175,19 @@ export abstract class Task {
 	}
 
 	// Execute this task each tick. Returns nothing unless work is done.
-	run(): number {
+	run(): number | void {
 		if (this.creep.pos.inRangeTo(this.targetPos, this.settings.targetRange) && !this.creep.pos.isEdge) {
+			if (this.settings.workOffRoad) {
+				// Move to somewhere nearby that isn't on a road
+				this.creep.park(this.targetPos, true);
+			}
 			let workResult = this.work();
 			if (workResult != OK && this.data.quiet == false) {
 				log.debug('Error executing ' + this.name + ', returned ' + workResult);
 			}
 			return workResult;
 		} else {
-			return this.move();
+			this.move();
 		}
 	}
 

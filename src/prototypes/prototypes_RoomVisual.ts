@@ -1,11 +1,10 @@
 RoomVisual.prototype.infoBox = function (info: string[], x: number, y: number, opts = {}): RoomVisual {
 	_.defaults(opts, {
-		background: colors.speechBackground,
-		textcolor : colors.speechText,
-		textstyle : false,
-		textsize  : speechSize,
-		textfont  : 'monospace',
-		opacity   : 1.0,
+		color    : colors.infoBoxGood,
+		textstyle: false,
+		textsize : speechSize,
+		textfont : 'verdana',
+		opacity  : 0.7,
 	});
 
 	let fontstring = '';
@@ -24,25 +23,32 @@ RoomVisual.prototype.infoBox = function (info: string[], x: number, y: number, o
 
 	// Draw arrow
 	this.poly(pointer, {
-		fill       : opts.background,
-		stroke     : opts.background,
+		fill       : undefined,
+		stroke     : opts.color,
 		opacity    : opts.opacity,
 		strokeWidth: 0.0
 	});
 
-	// Draw box
-	this.rect(x + 0.9, y - 0.8 * opts.textsize,
-		0.55 * opts.textsize * _.max(_.map(info, line => line.length)), info.length * opts.textsize,
-		{
-			fill   : opts.background,
-			opacity: opts.opacity
-		});
+	// // Draw box
+	// this.rect(x + 0.9, y - 0.8 * opts.textsize,
+	// 	0.55 * opts.textsize * _.max(_.map(info, line => line.length)), info.length * opts.textsize,
+	// 	{
+	// 		fill   : undefined,
+	// 		opacity: opts.opacity
+	// 	});
+
+	// Draw vertical bar
+	let x0 = x + 0.9;
+	let y0 = y - 0.8 * opts.textsize;
+	this.line(x0, y0, x0, y0 + info.length * opts.textsize, {
+		color: opts.color,
+	});
 
 	// Draw text
 	let dy = 0;
 	for (let line of info) {
 		this.text(line, x + 1, y + dy, {
-			color            : opts.textcolor,
+			color            : opts.color,
 			// backgroundColor  : opts.background,
 			backgroundPadding: 0.1,
 			opacity          : opts.opacity,
@@ -55,6 +61,47 @@ RoomVisual.prototype.infoBox = function (info: string[], x: number, y: number, o
 	return this;
 };
 
+RoomVisual.prototype.multitext = function (textLines: string[], x: number, y: number, opts = {}): RoomVisual {
+	_.defaults(opts, {
+		color    : colors.infoBoxGood,
+		textstyle: false,
+		textsize : speechSize,
+		textfont : 'verdana',
+		opacity  : 0.7,
+	});
+
+	let fontstring = '';
+	if (opts.textstyle) {
+		fontstring = opts.textstyle + ' ';
+	}
+	fontstring += opts.textsize + ' ' + opts.textfont;
+
+	// // Draw vertical bar
+	// let x0 = x + 0.9;
+	// let y0 = y - 0.8 * opts.textsize;
+	// this.line(x0, y0, x0, y0 + textLines.length * opts.textsize, {
+	// 	color: opts.color,
+	// });
+
+	// Draw text
+	let dy = 0;
+	for (let line of textLines) {
+		this.text(line, x, y + dy, {
+			color            : opts.color,
+			// backgroundColor  : opts.background,
+			backgroundPadding: 0.1,
+			opacity          : opts.opacity,
+			font             : fontstring,
+			align            : 'left',
+		});
+		dy += opts.textsize;
+	}
+
+	return this;
+};
+
+
+
 // Taken from https://github.com/screepers/RoomVisual with slight modification: ========================================
 
 const colors = {
@@ -66,7 +113,9 @@ const colors = {
 	dark            : '#181818',
 	outline         : '#8FBB93',
 	speechText      : '#000000',
-	speechBackground: '#aebcc4'
+	speechBackground: '#aebcc4',
+	infoBoxGood     : '#09ff00',
+	infoBoxBad      : '#ff2600'
 };
 
 const speechSize = 0.5;

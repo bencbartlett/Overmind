@@ -18,11 +18,6 @@ export class Visualizer {
 	static drawLayout(structureMap: StructureMap): void {
 		if (!this.enabled) return;
 		let vis: { [roomName: string]: RoomVisual } = {};
-		// if (Game.rooms[roomName]) {
-		// 	vis = Game.rooms[roomName].visual;
-		// } else {
-		// 	vis = new RoomVisual(roomName);
-		// }
 		for (let structureType in structureMap) {
 			for (let pos of structureMap[structureType]) {
 				if (!vis[pos.roomName]) {
@@ -66,26 +61,19 @@ export class Visualizer {
 		new RoomVisual(pos.roomName).text(text, pos, style);
 	}
 
-	// static drawHUD(): void {
-	// 	// Draw Overmind logo
-	// 	var fontSize;
-	// 	var style = {color: '#ffffff', align: 'left', opacity: 0.5, font: '1.0'} as TextStyle;
-	// 	var fontScale = 1.3;
-	// 	var row = 0;
-	// 	var column = 0;
-	// 	// Draw the logo
-	// 	fontSize = 0.3 * fontScale;
-	// 	style.font = fontSize + ' Courier';
-	// 	row = 0;
-	// 	style.color = '#ffffff';
-	// 	row = new RoomVisual().multitext(asciiLogo, column, row, fontSize, style);
-	// 	row += 2 * fontSize;
-	// 	// Draw CPU info
-	// 	fontSize = 0.5 * fontScale;
-	// 	style.font = fontSize + ' Courier';
-	// 	// Display CPU Information
-	// 	new RoomVisual().text('CPU:' + ' bucket:' + Game.cpu.bucket +
-	// 						  ' tickLimit:' + Game.cpu.tickLimit, column, row, style);
-	// 	row += fontSize;
-	// }
+	static drawHUD(): void {
+		// Draw Overmind logo
+		new RoomVisual().multitext(asciiLogo, 0, 0, {textfont: 'monospace'});
+		// // Display CPU Information
+		// new RoomVisual().text('CPU:' + ' bucket:' + Game.cpu.bucket +
+		// 					  ' tickLimit:' + Game.cpu.tickLimit, column, row, style);
+	}
+
+	static colonyReport(colonyName: string, text: string[]) {
+		new RoomVisual(colonyName).multitext(text, 0, 4, {textfont: 'monospace'});
+	}
+
+	static visuals(): void {
+		this.drawHUD();
+	}
 }

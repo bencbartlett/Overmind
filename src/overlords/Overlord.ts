@@ -25,6 +25,7 @@ export abstract class Overlord {
 	pos: RoomPosition;
 	colony: Colony;
 	protected _creeps: { [roleName: string]: Zerg[] };
+	creepUsageReport: { [role: string]: [number, number] | undefined };
 	memory: OverlordMemory;
 
 	constructor(initializer: IOverlordInitializer, name: string, priority = Priority.Normal) {
@@ -36,6 +37,7 @@ export abstract class Overlord {
 		this.pos = initializer.pos;
 		this.colony = initializer.colony;
 		this.recalculateCreeps();
+		this.creepUsageReport = _.mapValues(this._creeps, creep => undefined);
 		// Register the overlord on the colony overseer and on the overmind
 		this.colony.overseer.overlords[this.priority].push(this);
 		Overmind.overlords[this.ref] = this;
@@ -52,6 +54,10 @@ export abstract class Overlord {
 		} else {
 			return [];
 		}
+	}
+
+	protected creepReport(role: string, currentAmt: number, neededAmt: number) {
+		this.creepUsageReport[role] = [currentAmt, neededAmt];
 	}
 
 	protected initMemory(initializer: IOverlordInitializer): void {
@@ -112,18 +118,20 @@ export abstract class Overlord {
 										 creep.spawning || (!creep.spawning && !creep.ticksToLive));
 	}
 
-	/* Create a creep setup and enqueue it to the Hatchery */
+	/* Create a creep setup and enqueue it to the Hatchery; does not include automatic reporting */
 	protected requestCreep(setup: CreepSetup, prespawn = 50, priority = this.priority) {
 		if (this.colony.hatchery) {
 			this.colony.hatchery.enqueue(this.generateProtoCreep(setup), priority);
 		}
 	}
 
-	/* Wishlist of creeps to simplify spawning logic */
+	/* Wishlist of creeps to simplify spawning logic; includes automatic reporting */
 	protected wishlist(quantity: number, setup: CreepSetup, prespawn = 50, priority = this.priority) {
-		if (this.lifetimeFilter(this.creeps(setup.role)).length < quantity && this.colony.hatchery) {
+		let creepQuantity = this.lifetimeFilter(this.creeps(setup.role)).length;
+		if (creepQuantity < quantity && this.colony.hatchery) {
 			this.colony.hatchery.enqueue(this.generateProtoCreep(setup), priority);
 		}
+		this.creepReport(setup.role, creepQuantity, quantity);
 	}
 
 	abstract spawn(): void;

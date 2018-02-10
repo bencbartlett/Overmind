@@ -17,11 +17,18 @@ type Sink = StructureSpawn |
 type StorageUnit = StructureContainer | StructureTerminal | StructureStorage;
 
 // type StoreStructure = StructureTerminal|StructureContainer|StructureStorage;
-// interface EnergyStructure extends Structure {
-// 	pos: RoomPosition;
-// 	energy: number;
-// 	energyCapacity: number;
-// }
+
+interface EnergyStructure extends Structure {
+	energy: number;
+	energyCapacity: number;
+}
+
+interface StorageStructure extends Structure {
+	store: StoreDefinition;
+	storeCapacity: number;
+}
+
+// type MineralStructure = StructureLab | StructureNuker | StructurePowerSpawn;
 
 interface Room {
 	my: boolean;
@@ -77,7 +84,11 @@ interface RoomPosition {
 	// adjacentSpots: RoomPosition[];
 	// availableAdjacentSpots: RoomPosition[];
 
+	lookForStructure(structureType: StructureConstant): Structure | undefined;
+
 	isPassible(ignoreCreeps?: boolean): boolean;
+
+	availableNeighbors(ignoreCreeps?: boolean): RoomPosition[];
 
 	getMultiRoomRangeTo(pos: RoomPosition): number;
 
@@ -89,6 +100,8 @@ interface RoomPosition {
 
 interface RoomVisual {
 	infoBox(info: string[], x: number, y: number, opts?: { [option: string]: any }): RoomVisual;
+
+	multitext(textLines: string[], x: number, y: number, opts?: { [option: string]: any }): RoomVisual;
 
 	structure(x: number, y: number, type: string, opts?: { [option: string]: any }): RoomVisual;
 
@@ -130,14 +143,6 @@ interface StructureLab {
 interface StructureLink {
 	isFull: boolean;
 	isEmpty: boolean;
-}
-
-interface StructureNuker {
-
-}
-
-interface StructurePowerSpawn {
-
 }
 
 interface StructureStorage {

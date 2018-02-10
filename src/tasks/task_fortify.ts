@@ -13,6 +13,7 @@ export class TaskFortify extends Task {
 		super(fortifyTaskName, target, options);
 		// Settings
 		this.settings.moveColor = 'green';
+		this.settings.workOffRoad = true;
 	}
 
 	isValidTask() {

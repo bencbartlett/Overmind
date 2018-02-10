@@ -24,6 +24,7 @@ export class MiningOverlord extends Overlord {
 			// Handles edge case at startup of <3 spots near mining site
 			this.requestCreep(new MinerSetup());
 		}
+		this.creepReport(MinerSetup.role, miningPowerAssigned, this.miningSite.miningPowerNeeded);
 	}
 
 	init() {

@@ -5,6 +5,7 @@ import {profile} from '../lib/Profiler';
 import {UpgradingOverlord} from '../overlords/overlord_upgrade';
 import {Colony} from '../Colony';
 import {Mem} from '../memcheck';
+import {Visualizer} from '../visuals/Visualizer';
 
 @profile
 export class UpgradeSite extends HiveCluster {
@@ -75,5 +76,15 @@ export class UpgradeSite extends HiveCluster {
 
 	run(): void {
 
+	}
+
+	visuals() {
+		let progress = `${Math.floor(this.controller.progress / 1000)}K`;
+		let progressTotal = `${Math.floor(this.controller.progressTotal / 1000)}K`;
+		let percent = `${Math.floor(100 * this.controller.progress / this.controller.progressTotal)}`;
+		let info = [
+			`Progress: ${progress}/${progressTotal} (${percent}%)`,
+		];
+		Visualizer.showInfo(info, this);
 	}
 }

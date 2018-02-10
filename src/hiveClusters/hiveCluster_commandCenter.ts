@@ -10,6 +10,7 @@ import {CommandCenterOverlord} from '../overlords/overlord_commandCenter';
 import {Colony} from '../Colony';
 import {Mem} from '../memcheck';
 import {Priority} from '../config/priorities';
+import {Visualizer} from '../visuals/Visualizer';
 
 @profile
 export class CommandCenter extends HiveCluster {
@@ -84,24 +85,31 @@ export class CommandCenter extends HiveCluster {
 		// Get the adjacent squares to storage
 		let possiblePositions = this.storage.pos.neighbors;
 		// Try to match as many other structures as possible
-		let proximateStructures = [
-			this.link,
-			this.terminal,
-			this.powerSpawn,
-			this.nuker,
-		];
-		for (let structure of proximateStructures) {
-			if (structure) {
-				let filteredPositions = _.filter(possiblePositions,
-												 p => p.isNearTo(structure!) && !p.isEqualTo(structure!));
-				if (filteredPositions.length == 0) { // stop when it's impossible to match any more structures
-					return possiblePositions[0];
-				} else {
-					possiblePositions = filteredPositions;
-				}
-			}
-		}
-		return possiblePositions[0];
+		let proximateStructures: Structure[] = _.compact([
+															 this.link!,
+															 this.terminal!,
+															 this.powerSpawn!,
+															 this.nuker!,
+															 ...this.towers,
+														 ]);
+		let numNearbyStructures = (pos: RoomPosition) =>
+			_.filter(proximateStructures, s => s.pos.isNearTo(pos) && !s.pos.isEqualTo(pos)).length;
+		let nearbyStructuresEachPos = _.map(possiblePositions, pos => numNearbyStructures(pos));
+		let maxIndex = _.findIndex(nearbyStructuresEachPos, _.max(nearbyStructuresEachPos));
+		return possiblePositions[maxIndex];
+
+		// for (let structure of proximateStructures) {
+		// 	if (structure) {
+		// 		let filteredPositions = _.filter(possiblePositions,
+		// 										 p => p.isNearTo(structure!) && !p.isEqualTo(structure!));
+		// 		if (filteredPositions.length == 0) { // stop when it's impossible to match any more structures
+		// 			return possiblePositions[0];
+		// 		} else {
+		// 			possiblePositions = filteredPositions;
+		// 		}
+		// 	}
+		// }
+		// return possiblePositions[0];
 	}
 
 	private registerEnergyRequests(): void {
@@ -298,7 +306,10 @@ export class CommandCenter extends HiveCluster {
 	}
 
 	visuals() {
-
+		let info = [
+			`Energy: ${Math.floor(this.storage.store[RESOURCE_ENERGY] / 1000)} K`,
+		];
+		Visualizer.showInfo(info, this);
 	}
 }
 

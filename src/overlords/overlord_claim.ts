@@ -17,6 +17,8 @@ export class ClaimingOverlord extends Overlord {
 	spawn() {
 		if (!(this.room && this.room.controller && this.room.controller.my)) {
 			this.wishlist(1, new ClaimerSetup());
+		} else {
+			this.wishlist(0, new ClaimerSetup());
 		}
 	}
 

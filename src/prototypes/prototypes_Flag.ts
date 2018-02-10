@@ -9,14 +9,14 @@ Flag.prototype.recalculateColony = function (restrictDistance = 10): void {
 	let minDistance = Infinity;
 	let colonyRooms = _.filter(Game.rooms, room => room.my);
 	for (let room of colonyRooms) {
-		let path = Pathing.findShortestPath(this.pos, room.controller!.pos,
-											{restrictDistance: restrictDistance}).path;
-		if (path) {
-			if (path.length < minDistance) {
+		let ret = Pathing.findShortestPath(this.pos, room.controller!.pos,
+										   {restrictDistance: restrictDistance});
+		if (!ret.incomplete) {
+			if (ret.path.length < minDistance) {
 				nearestColonyName = room.name;
-				minDistance = path.length;
+				minDistance = ret.path.length;
 			}
-			log.info(`Path length to ${room.name}: ${path.length}`);
+			log.info(`Path length to ${room.name}: ${ret.path.length}`);
 		} else {
 			log.info(`Incomplete path found to ${room.name}`);
 		}

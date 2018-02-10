@@ -78,6 +78,9 @@ interface OverlordMemory {
 
 interface HatcheryMemory {
 	idlePos: protoPos;
+	stats: {
+		uptime: number;
+	};
 }
 
 interface CommandCenterMemory {

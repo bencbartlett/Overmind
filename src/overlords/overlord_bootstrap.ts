@@ -66,9 +66,11 @@ export class BootstrappingOverlord extends Overlord {
 
 		// Create a bootstrapMiners and donate them to the miningSite overlords as needed
 		for (let overlord of miningOverlords) {
+			let filteredMiners = this.lifetimeFilter(overlord.miners);
 			let miningPowerAssigned = _.sum(_.map(this.lifetimeFilter(overlord.miners),
 												  creep => creep.getActiveBodyparts(WORK)));
-			if (miningPowerAssigned < overlord.miningSite.miningPowerNeeded) {
+			if (miningPowerAssigned < overlord.miningSite.miningPowerNeeded &&
+				filteredMiners.length < overlord.miningSite.pos.availableNeighbors().length) {
 				let protoCreep = this.generateProtoCreep(new BoostrapMinerSetup());
 				protoCreep.memory.overlord = overlord.ref; // Donate the miner to the miningSite
 				if (this.colony.hatchery) {

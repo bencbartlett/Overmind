@@ -25,6 +25,7 @@ export class UpgradingOverlord extends Overlord {
 			let upgraderSize = Math.ceil(this.upgradeSite.upgradePowerNeeded / workPartsPerUpgraderUnit);
 			this.requestCreep(new UpgraderSetup(upgraderSize));
 		}
+		this.creepReport(UpgraderSetup.role, upgradePower, this.upgradeSite.upgradePowerNeeded);
 	}
 
 	init() {
@@ -44,7 +45,11 @@ export class UpgradingOverlord extends Overlord {
 					return;
 				}
 			}
-			upgrader.task = Tasks.upgrade(this.upgradeSite.controller);
+			if (!this.upgradeSite.controller.signedByMe) {
+				upgrader.task = Tasks.signController(this.upgradeSite.controller);
+			} else {
+				upgrader.task = Tasks.upgrade(this.upgradeSite.controller);
+			}
 		} else {
 			// Recharge from best source
 			if (this.upgradeSite.input && this.upgradeSite.input.energy > 0) {

@@ -69,6 +69,9 @@ export class RoomPlanner {
 			siteCheckFrequency: 200,
 			maxSitesPerColony : 20,
 		};
+		if (this.active && Game.time % 25 == 0) {
+			log.info(`RoomPlanner for ${this.colony.name} is still active! Finalize or cancel to save CPU.`);
+		}
 	}
 
 	get memory(): PlannerMemory {

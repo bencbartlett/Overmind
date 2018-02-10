@@ -1,8 +1,10 @@
 import {CreepSetup} from './CreepSetup';
 
 export class MinerSetup extends CreepSetup {
+	static role = 'miner';
+
 	constructor() {
-		super('miner', {
+		super(MinerSetup.role, {
 			pattern  : [WORK, WORK, CARRY, MOVE],
 			sizeLimit: 3,
 		});
@@ -10,8 +12,10 @@ export class MinerSetup extends CreepSetup {
 }
 
 export class ClaimerSetup extends CreepSetup {
+	static role = 'claimer';
+
 	constructor() {
-		super('claimer', {
+		super(ClaimerSetup.role, {
 			pattern  : [CLAIM, MOVE],
 			sizeLimit: 1
 		});
@@ -19,8 +23,10 @@ export class ClaimerSetup extends CreepSetup {
 }
 
 export class GuardSetup extends CreepSetup {
+	static role = 'guard';
+
 	constructor() {
-		super('guard', {
+		super(GuardSetup.role, {
 			pattern  : [TOUGH, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, HEAL],
 			sizeLimit: 3,
 		});
@@ -28,8 +34,10 @@ export class GuardSetup extends CreepSetup {
 }
 
 export class HaulerSetup extends CreepSetup {
+	static role = 'hauler';
+
 	constructor() {
-		super('hauler', {
+		super(HaulerSetup.role, {
 			pattern  : [CARRY, CARRY, MOVE],
 			sizeLimit: Infinity,
 
@@ -38,8 +46,10 @@ export class HaulerSetup extends CreepSetup {
 }
 
 export class ManagerSetup extends CreepSetup {
+	static role = 'manager';
+
 	constructor() {
-		super('manager', {
+		super(ManagerSetup.role, {
 			pattern  : [CARRY, CARRY, MOVE],
 			sizeLimit: 8,
 		});
@@ -47,8 +57,10 @@ export class ManagerSetup extends CreepSetup {
 }
 
 export class PioneerSetup extends CreepSetup {
+	static role = 'pioneer';
+
 	constructor() {
-		super('pioneer', {
+		super(PioneerSetup.role, {
 			pattern  : [WORK, CARRY, MOVE],
 			sizeLimit: Infinity,
 		});
@@ -56,8 +68,10 @@ export class PioneerSetup extends CreepSetup {
 }
 
 export class QueenSetup extends CreepSetup {
+	static role = 'queen';
+
 	constructor() {
-		super('queen', {
+		super(QueenSetup.role, {
 			pattern  : [CARRY, CARRY, MOVE],
 			sizeLimit: 8,
 		});
@@ -65,8 +79,10 @@ export class QueenSetup extends CreepSetup {
 }
 
 export class ReserverSetup extends CreepSetup {
+	static role = 'reserver';
+
 	constructor() {
-		super('reserver', {
+		super(ReserverSetup.role, {
 			pattern  : [CLAIM, MOVE],
 			sizeLimit: 4,
 		});
@@ -74,8 +90,10 @@ export class ReserverSetup extends CreepSetup {
 }
 
 export class ScoutSetup extends CreepSetup {
+	static role = 'scout';
+
 	constructor() {
-		super('scout', {
+		super(ScoutSetup.role, {
 			pattern  : [MOVE],
 			sizeLimit: 1,
 		});
@@ -83,8 +101,11 @@ export class ScoutSetup extends CreepSetup {
 }
 
 export class SupplierSetup extends CreepSetup {
+
+	static role = 'supplier';
+
 	constructor(sizeLimit: number) {
-		super('supplier', {
+		super(SupplierSetup.role, {
 			pattern  : [CARRY, CARRY, MOVE],
 			sizeLimit: sizeLimit,
 		});
@@ -92,8 +113,10 @@ export class SupplierSetup extends CreepSetup {
 }
 
 export class TransporterSetup extends CreepSetup {
+	static role = 'transport';
+
 	constructor() {
-		super('transport', {
+		super(TransporterSetup.role, {
 			pattern  : [CARRY, CARRY, MOVE],
 			sizeLimit: Infinity,
 
@@ -102,8 +125,10 @@ export class TransporterSetup extends CreepSetup {
 }
 
 export class UpgraderSetup extends CreepSetup {
+	static role = 'upgrader';
+
 	constructor(sizeLimit: number) {
-		super('upgrader', {
+		super(UpgraderSetup.role, {
 			pattern  : [WORK, WORK, WORK, CARRY, MOVE],
 			sizeLimit: sizeLimit,
 		});
@@ -111,8 +136,10 @@ export class UpgraderSetup extends CreepSetup {
 }
 
 export class WorkerSetup extends CreepSetup {
+	static role = 'worker';
+
 	constructor() {
-		super('worker', {
+		super(WorkerSetup.role, {
 			pattern  : [WORK, CARRY, MOVE],
 			sizeLimit: Infinity,
 		});

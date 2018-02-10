@@ -7,6 +7,8 @@ import {blankPriorityQueue} from './config/priorities';
 import {Colony} from './Colony';
 import {Overlord} from './overlords/Overlord';
 import {Directive} from './directives/Directive';
+import {log} from './lib/logger/log';
+import {Visualizer} from './visuals/Visualizer';
 
 @profile
 export class Overseer {
@@ -59,9 +61,12 @@ export class Overseer {
 		// Simple safe mode handler; will eventually be replaced by something more sophisticated
 		// Calls for safe mode when walls are about to be breached and there are non-NPC hostiles in the room
 		let criticalBarriers = _.filter(this.colony.room.barriers, s => s.hits < 5000);
-		let nonInvaderHostiles = _.filter(this.colony.room.hostiles, creep => creep.owner.username != 'Invader');
+		let creepIsDangerous = (creep: Creep) => (creep.getActiveBodyparts(ATTACK) > 0 ||
+												  creep.getActiveBodyparts(RANGED_ATTACK) > 0);
+		let nonInvaderHostiles = _.filter(this.colony.room.hostiles, creep => creep.owner.username != 'Invader' &&
+																			  creepIsDangerous(creep));
 		if (criticalBarriers.length > 0 && nonInvaderHostiles.length > 0 && !this.colony.isIncubating) {
-			this.colony.room.controller!.activateSafeMode();
+			this.colony.controller.activateSafeMode();
 		}
 	}
 
@@ -103,5 +108,33 @@ export class Overseer {
 		this.placeDirectives();
 		// Draw visuals
 		_.forEach(this.directives, directive => directive.visuals());
+	}
+
+	visuals(): void {
+		let roleOccupancy: { [role: string]: [number, number] } = {};
+		// Handle overlords in decreasing priority
+		for (let priority in this.overlords) {
+			if (!this.overlords[priority]) continue;
+			for (let overlord of this.overlords[priority]) {
+				for (let role in overlord.creepUsageReport) {
+					let report = overlord.creepUsageReport[role];
+					if (!report) {
+						log.info(`Role ${role} is not reported by ${overlord.name}!`);
+					} else {
+						if (!roleOccupancy[role]) roleOccupancy[role] = [0, 0];
+						roleOccupancy[role][0] += report[0];
+						roleOccupancy[role][1] += report[1];
+					}
+				}
+			}
+		}
+		let stringReport: string[] = [`Creep usage for ${this.colony.name}:`];
+		for (let role in roleOccupancy) {
+			let [current, needed] = roleOccupancy[role];
+			if (needed > 0) {
+				stringReport.push(`${role}: ${Math.floor(100 * current / needed)}%`);
+			}
+		}
+		Visualizer.colonyReport(this.colony.name, stringReport);
 	}
 }

@@ -1,6 +1,5 @@
 import {Task} from './Task';
 import {profile} from '../lib/Profiler';
-import {controllerSignature} from '../settings/settings_user';
 
 
 export type reserveTargetType = StructureController;
@@ -26,9 +25,6 @@ export class TaskReserve extends Task {
 	}
 
 	work() {
-		if (Game.time % 100 == 0 && !this.target.signedByMe) {
-			this.creep.signController(this.target, controllerSignature);
-		}
 		return this.creep.reserveController(this.target);
 	}
 }

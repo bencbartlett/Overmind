@@ -23,6 +23,7 @@ export class HaulingOverlord extends Overlord {
 		if (haulingPower < this.miningGroup.data.haulingPowerNeeded) {
 			this.requestCreep(new HaulerSetup());
 		}
+		this.creepReport(HaulerSetup.role, haulingPower, this.miningGroup.data.haulingPowerNeeded);
 	}
 
 	init() {

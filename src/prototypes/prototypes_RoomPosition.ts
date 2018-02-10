@@ -4,6 +4,10 @@ Object.defineProperty(RoomPosition.prototype, 'name', { // identifier for the ro
 	},
 });
 
+RoomPosition.prototype.lookForStructure = function (structureType: StructureConstant): Structure | undefined {
+	return _.find(this.lookFor(LOOK_STRUCTURES), s => s.structureType == structureType);
+};
+
 Object.defineProperty(RoomPosition.prototype, 'isEdge', { // if the position is at the edge of a room
 	get: function () {
 		return this.x == 0 || this.x == 49 || this.y == 0 || this.y == 49;
@@ -67,6 +71,10 @@ RoomPosition.prototype.isPassible = function (ignoreCreeps = false): boolean {
 		if (_.filter(this.lookFor(LOOK_STRUCTURES), (s: Structure) => s.isPassible).length > 0) return false;
 	}
 	return true;
+};
+
+RoomPosition.prototype.availableNeighbors = function (ignoreCreeps = false): RoomPosition[] {
+	return _.filter(this.neighbors, pos => pos.isPassible(ignoreCreeps));
 };
 
 // Object.defineProperty(RoomPosition.prototype, 'availableAdjacentSpots', {

@@ -19,6 +19,8 @@ export class ReservingOverlord extends Overlord {
 	spawn() {
 		if (!this.room || this.room.controller!.needsReserving(this.reserveBuffer)) {
 			this.wishlist(1, new ReserverSetup());
+		} else {
+			this.wishlist(0, new ReserverSetup());
 		}
 	}
 
@@ -28,7 +30,11 @@ export class ReservingOverlord extends Overlord {
 
 	private handleReserver(reserver: Zerg): void {
 		if (reserver.room == this.room && !reserver.pos.isEdge) {
-			reserver.task = Tasks.reserve(this.room.controller!);
+			if (!this.room.controller!.signedByMe) {
+				reserver.task = Tasks.signController(this.room.controller!);
+			} else {
+				reserver.task = Tasks.reserve(this.room.controller!);
+			}
 		} else {
 			reserver.task = Tasks.goTo(this.pos);
 		}

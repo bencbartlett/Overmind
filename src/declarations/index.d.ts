@@ -46,6 +46,8 @@ interface IOvermind {
 	init(): void;
 
 	run(): void;
+
+	visuals(): void;
 }
 
 declare var Overmind: IOvermind;
