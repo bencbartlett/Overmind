@@ -1,10 +1,11 @@
 import {Overlord} from './Overlord';
-import {Priority} from '../config/priorities';
 import {QueenSetup} from '../creepSetup/defaultSetups';
 import {Hatchery} from '../hiveClusters/hiveCluster_hatchery';
 import {Zerg} from '../Zerg';
 import {Tasks} from '../tasks/Tasks';
 import {EnergyRequestStructure, ResourceRequestStructure} from '../logistics/TransportRequestGroup';
+import {log} from '../lib/logger/log';
+import {OverlordPriority} from './priorities_overlords';
 
 // Hatchery overlord: spawn and run a dedicated supplier-like hatchery attendant (called after colony has storage)
 export class HatcheryOverlord extends Overlord {
@@ -15,7 +16,7 @@ export class HatcheryOverlord extends Overlord {
 
 	// private _prioritizedRefills: { [priority: number]: IResourceRequest[] };
 
-	constructor(hatchery: Hatchery, priority = Priority.High) {
+	constructor(hatchery: Hatchery, priority = OverlordPriority.spawning.hatchery) {
 		super(hatchery, 'hatchery', priority);
 		this.hatchery = hatchery;
 		this.queens = this.creeps('queen');
@@ -52,25 +53,38 @@ export class HatcheryOverlord extends Overlord {
 			queen.task = Tasks.withdraw(this.hatchery.link);
 		} else if (this.hatchery.battery && !this.hatchery.battery.isEmpty) {
 			queen.task = Tasks.withdraw(this.hatchery.battery);
+		} else {
+			let rechargeStructures = _.compact([this.colony.storage!,
+												this.colony.terminal!,
+												this.colony.upgradeSite.input!,
+												..._.map(this.colony.miningSites, site => site.output!)]);
+			let target = queen.pos.findClosestByMultiRoomRange(rechargeStructures);
+			if (target) {
+				queen.task = Tasks.withdraw(target);
+			} else {
+				log.warning('No valid withdraw target for queen!');
+			}
 		}
 	}
 
 	private idleActions(queen: Zerg): void {
-		if (this.hatchery.battery) { // is there a battery and a link?
-			if (this.hatchery.battery.hits < this.hatchery.battery.hitsMax) {
-				queen.task = Tasks.repair(this.hatchery.battery);
-			} else if (this.hatchery.link) {
-				// Can energy be moved from the link to the battery?
-				if (!this.hatchery.battery.isFull && !this.hatchery.link.isEmpty) { 	// move energy to battery
-					if (queen.carry.energy < queen.carryCapacity) {
-						queen.task = Tasks.withdraw(this.hatchery.link);
-					} else {
-						queen.task = Tasks.deposit(this.hatchery.battery);
-					}
+		// if (this.hatchery.battery) { // is there a battery and a link?
+		// 	if (this.hatchery.battery.hits < this.hatchery.battery.hitsMax) {
+		// 		queen.task = Tasks.repair(this.hatchery.battery); // TODO: queen doesn't have work parts, dumbass...
+		// 	} else
+		// }
+		if (this.hatchery.link) {
+			// Can energy be moved from the link to the battery?
+			if (this.hatchery.battery && !this.hatchery.battery.isFull && !this.hatchery.link.isEmpty) {
+				// Move energy to battery as needed
+				if (queen.carry.energy < queen.carryCapacity) {
+					queen.task = Tasks.withdraw(this.hatchery.link);
 				} else {
-					if (queen.carry.energy < queen.carryCapacity) { // make sure you're recharged
-						queen.task = Tasks.withdraw(this.hatchery.link);
-					}
+					queen.task = Tasks.deposit(this.hatchery.battery);
+				}
+			} else {
+				if (queen.carry.energy < queen.carryCapacity) { // make sure you're recharged
+					queen.task = Tasks.withdraw(this.hatchery.link);
 				}
 			}
 		}

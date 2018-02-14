@@ -1,15 +1,14 @@
 // Hatchery - groups all spawns in a colony
 
 import {HiveCluster} from './HiveCluster';
-import {log} from '../lib/logger/log';
 import {profile} from '../lib/Profiler';
 import {HatcheryOverlord} from '../overlords/overlord_hatchery';
-import {blankPriorityQueue, Priority} from '../config/priorities';
+import {Priority} from '../config/priorities';
 import {Colony, ColonyStage} from '../Colony';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {CreepSetup} from '../creepSetup/CreepSetup';
 import {Overlord} from '../overlords/Overlord';
-import {Mem} from '../memcheck';
+import {Mem} from '../memory';
 import {Visualizer} from '../visuals/Visualizer';
 
 @profile
@@ -31,6 +30,7 @@ export class Hatchery extends HiveCluster {
 		numQueens: number,										// Number of queens the Hatchery needs
 		renewQueenAt: number,									// Renew idle queens below this ticksRemaining value
 	};
+	private productionPriorities: number[];
 	private productionQueue: { [priority: number]: protoCreep[] };  // Priority queue of protocreeps
 	private _idlePos: RoomPosition; 								// Idling position for the supplier
 	private _energyStructures: (StructureSpawn | StructureExtension)[];
@@ -49,7 +49,8 @@ export class Hatchery extends HiveCluster {
 		} else {
 			this.towers = colony.towers;
 		}
-		this.productionQueue = blankPriorityQueue();
+		this.productionPriorities = [];
+		this.productionQueue = {};
 		this.settings = {
 			refillTowersBelow      : 500,
 			linksRequestEnergyBelow: 0,
@@ -223,18 +224,20 @@ export class Hatchery extends HiveCluster {
 			// Otherwise, queue the creep to yourself
 			if (!this.productionQueue[priority]) {
 				this.productionQueue[priority] = [];
+				this.productionPriorities.push(priority);
 			}
 			this.productionQueue[priority].push(protoCreep);
 		}
 	}
 
 	private spawnHighestPriorityCreep(): number | void {
-		for (let priority in this.productionQueue) {
+		let sortedKeys = _.sortBy(this.productionPriorities);
+		for (let priority of sortedKeys) {
 			let protoCreep = this.productionQueue[priority].shift();
 			if (protoCreep) {
 				let result = this.spawnCreep(protoCreep);
 				if (result == OK) {
-					log.info(`${this.colony.name}: spawning ${protoCreep.name} for ${protoCreep.memory.colony}`);
+					// log.info(`${this.colony.name}: spawning ${protoCreep.name} for ${protoCreep.memory.colony}`);
 					return result;
 				} else {
 					this.productionQueue[priority].unshift(protoCreep);

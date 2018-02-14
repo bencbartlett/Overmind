@@ -1,17 +1,18 @@
 import {Overlord} from './Overlord';
 import {MinerSetup} from '../creepSetup/defaultSetups';
-import {Priority} from '../config/priorities';
 import {MiningSite} from '../hiveClusters/hiveCluster_miningSite';
 import {Zerg} from '../Zerg';
 import {Tasks} from '../tasks/Tasks';
+import {OverlordPriority} from './priorities_overlords';
 
 export class MiningOverlord extends Overlord {
 
 	miners: Zerg[];
 	miningSite: MiningSite;
 
-	constructor(miningSite: MiningSite, priority = Priority.Normal) {
+	constructor(miningSite: MiningSite, priority: number) {
 		super(miningSite, 'mine', priority);
+		this.priority += this.outpostIndex * OverlordPriority.remoteRoom.roomIncrement;
 		this.miners = this.creeps('miner');
 		this.miningSite = miningSite;
 	}

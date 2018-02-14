@@ -6,7 +6,7 @@ import {blankPriorityQueue, Priority} from '../config/priorities';
 export type EnergyRequestStructure = Sink | StructureContainer;
 export type ResourceRequestStructure = StructureLab | StructureNuker | StructurePowerSpawn | StructureContainer;
 
-export type EnergyWithdrawStructure = StructureContainer | StructureTerminal | StructureLink;
+export type EnergyWithdrawStructure = StructureContainer | StructureTerminal | StructureLink | Resource;
 export type ResourceWithdrawStructure = StructureLab | StructureContainer | StructureTerminal;
 
 export interface IResourceRequest {
@@ -77,6 +77,8 @@ export class TransportRequestGroup {
 		if (!amount) {
 			if (target instanceof StructureContainer) {
 				amount = target.store[RESOURCE_ENERGY];
+			} else if (target instanceof Resource) {
+				amount = target.amount;
 			} else {
 				amount = target.energy;
 			}

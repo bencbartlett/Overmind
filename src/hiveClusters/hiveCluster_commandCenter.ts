@@ -8,7 +8,7 @@ import {log} from '../lib/logger/log';
 import {profile} from '../lib/Profiler';
 import {CommandCenterOverlord} from '../overlords/overlord_commandCenter';
 import {Colony} from '../Colony';
-import {Mem} from '../memcheck';
+import {Mem} from '../memory';
 import {Priority} from '../config/priorities';
 import {Visualizer} from '../visuals/Visualizer';
 
@@ -180,7 +180,7 @@ export class CommandCenter extends HiveCluster {
 	}
 
 	private sendExtraEnergy(): void {
-		if (!this.terminal) {
+		if (!this.terminal || this.terminal.energy < this.settings.excessEnergyTransferSize) {
 			return;
 		}
 		// calculate best room to send energy to

@@ -57,7 +57,10 @@ export class Visualizer {
 		}
 	}
 
-	static text(text: string, pos: RoomPosition, style?: TextStyle): void {
+	static text(text: string, pos: RoomPosition, style: TextStyle = {}): void {
+		_.defaults(style, {
+			font: '0.7 verdana',
+		});
 		new RoomVisual(pos.roomName).text(text, pos, style);
 	}
 
@@ -70,7 +73,7 @@ export class Visualizer {
 	}
 
 	static colonyReport(colonyName: string, text: string[]) {
-		new RoomVisual(colonyName).multitext(text, 0, 4, {textfont: 'monospace'});
+		new RoomVisual(colonyName).multitext(text, 0, 4, {textfont: 'monospace', textsize: 0.75});
 	}
 
 	static visuals(): void {

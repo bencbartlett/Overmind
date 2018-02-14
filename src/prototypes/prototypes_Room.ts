@@ -193,6 +193,13 @@ Object.defineProperties(Room.prototype, {
 		},
 	},
 
+	// All containers in the room
+	roads: {
+		get() {
+			return this.structures[STRUCTURE_ROAD] || [];
+		},
+	},
+
 	// All construction sites
 	constructionSites: {
 		get() {

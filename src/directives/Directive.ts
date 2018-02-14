@@ -26,6 +26,7 @@ export abstract class Directive {
 		this.pos = flag.pos;
 		this.room = flag.room;
 		this.memory = flag.memory;
+		if (!this.memory.created) this.memory.created = Game.time;
 		this.overlords = {};
 		// Register to colony overseer or delete the directive if the colony is dead
 		if (!this.colony) {

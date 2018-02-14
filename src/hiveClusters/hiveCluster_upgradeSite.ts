@@ -4,15 +4,15 @@ import {HiveCluster} from './HiveCluster';
 import {profile} from '../lib/Profiler';
 import {UpgradingOverlord} from '../overlords/overlord_upgrade';
 import {Colony} from '../Colony';
-import {Mem} from '../memcheck';
+import {Mem} from '../memory';
 import {Visualizer} from '../visuals/Visualizer';
 
 @profile
 export class UpgradeSite extends HiveCluster {
 
 	controller: StructureController;					// The controller for the site
-	input: StructureLink | StructureContainer | null;	// The object receiving energy for the site
-	inputConstructionSite: ConstructionSite | null;		// The construction site for the input, if there is one
+	input: StructureLink | StructureContainer | undefined;	// The object receiving energy for the site
+	inputConstructionSite: ConstructionSite | undefined;		// The construction site for the input, if there is one
 	private settings: {
 		storageBuffer: number,
 		energyPerBodyUnit: number
@@ -38,7 +38,7 @@ export class UpgradeSite extends HiveCluster {
 		this.inputConstructionSite = nearbyInputSites[0];
 		this.settings = {
 			storageBuffer    : 100000,	// Number of upgrader parts scales with energy - this value
-			energyPerBodyUnit: 20000,	// Scaling factor: this much excess energy adds one extra body repetition
+			energyPerBodyUnit: 50000,	// Scaling factor: this much excess energy adds one extra body repetition
 		};
 		// Register overlord
 		this.overlord = new UpgradingOverlord(this);

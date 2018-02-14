@@ -1,10 +1,11 @@
 import {Overlord} from './Overlord';
-import {BuildPriorities, Priority} from '../config/priorities';
+import {BuildPriorities} from '../config/priorities';
 import {WorkerSetup} from '../creepSetup/defaultSetups';
 import {Colony, ColonyStage} from '../Colony';
 import {profile} from '../lib/Profiler';
 import {Zerg} from '../Zerg';
 import {Tasks} from '../tasks/Tasks';
+import {OverlordPriority} from './priorities_overlords';
 
 @profile
 export class WorkerOverlord extends Overlord {
@@ -19,7 +20,7 @@ export class WorkerOverlord extends Overlord {
 		workerWithdrawLimit: number;
 	};
 
-	constructor(colony: Colony, priority = Priority.Normal) {
+	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.work) {
 		super(colony, 'worker', priority);
 		this.workers = this.creeps('worker');
 		this.rechargeStructures = _.compact([this.colony.storage!,
@@ -38,7 +39,7 @@ export class WorkerOverlord extends Overlord {
 				7: 10000000,
 				8: 30000000,
 			},
-			workerWithdrawLimit: this.colony.stage > ColonyStage.Larva ? 750 : 100,
+			workerWithdrawLimit: this.colony.stage == ColonyStage.Larva ? 750 : 100,
 		};
 		this.fortifyStructures = _.sortBy(_.filter(this.room.barriers,
 												   s => s.hits < this.settings.barrierHits[this.colony.level]),
@@ -46,9 +47,9 @@ export class WorkerOverlord extends Overlord {
 		// Generate a list of structures needing repairing (different from fortifying except in critical case)
 		this.repairStructures = _.filter(this.colony.repairables, function (structure) {
 			if (structure.structureType == STRUCTURE_ROAD) {
-				return structure.hits < 0.5 * structure.hitsMax;
+				return structure.hits < 0.75 * structure.hitsMax;
 			} else if (structure.structureType == STRUCTURE_CONTAINER) {
-				return structure.hits < 0.5 * structure.hitsMax;
+				return structure.hits < 0.75 * structure.hitsMax;
 			} else {
 				return structure.hits < structure.hitsMax;
 			}

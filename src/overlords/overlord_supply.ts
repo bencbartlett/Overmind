@@ -1,11 +1,11 @@
 import {Overlord} from './Overlord';
 import {SupplierSetup} from '../creepSetup/defaultSetups';
-import {Priority} from '../config/priorities';
 import {Colony} from '../Colony';
 import {HiveCluster} from '../hiveClusters/HiveCluster';
 import {IResourceRequest, IWithdrawRequest} from '../logistics/TransportRequestGroup';
 import {Zerg} from '../Zerg';
 import {Tasks} from '../tasks/Tasks';
+import {OverlordPriority} from './priorities_overlords';
 
 
 // TODO: make this work with more resources than just energy
@@ -18,7 +18,7 @@ export class SupplierOverlord extends Overlord {
 	private _prioritizedRefills: { [priority: number]: IResourceRequest[] };
 	private _prioritizedWithdrawals: { [priority: number]: IWithdrawRequest[] };
 
-	constructor(directive: Colony | HiveCluster, priority = Priority.High) {
+	constructor(directive: Colony | HiveCluster, priority = OverlordPriority.ownedRoom.supply) {
 		super(directive, 'supply', priority);
 		this.suppliers = this.creeps('supplier');
 		this.settings = {
@@ -56,7 +56,11 @@ export class SupplierOverlord extends Overlord {
 			let targets = _.map(this.colony.transportRequests.withdraw[priority], request => request.target);
 			let target = supplier.pos.findClosestByRange(targets);
 			if (target) {
-				supplier.task = Tasks.withdraw(target);
+				if (target instanceof Resource) {
+					supplier.task = Tasks.pickup(target);
+				} else {
+					supplier.task = Tasks.withdraw(target);
+				}
 				return;
 			}
 		}

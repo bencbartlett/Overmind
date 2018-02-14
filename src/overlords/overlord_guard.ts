@@ -3,14 +3,14 @@
 import {Overlord} from './Overlord';
 import {GuardSetup} from '../creepSetup/defaultSetups';
 import {DirectiveGuard} from '../directives/directive_guard';
-import {Priority} from '../config/priorities';
 import {Zerg} from '../Zerg';
+import {OverlordPriority} from './priorities_overlords';
 
 export class GuardOverlord extends Overlord {
 
 	guards: Zerg[];
 
-	constructor(directive: DirectiveGuard, priority = Priority.High) {
+	constructor(directive: DirectiveGuard, priority = OverlordPriority.defense.guard) {
 		super(directive, 'guard', priority);
 		this.guards = this.creeps('guard');
 	}

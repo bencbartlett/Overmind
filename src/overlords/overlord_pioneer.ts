@@ -1,16 +1,16 @@
 import {Overlord} from './Overlord';
-import {Priority} from '../config/priorities';
 import {Zerg} from '../Zerg';
 import {Tasks} from '../tasks/Tasks';
 import {Directive} from '../directives/Directive';
 import {PioneerSetup} from '../creepSetup/defaultSetups';
+import {OverlordPriority} from './priorities_overlords';
 
 export class PioneerOverlord extends Overlord {
 
 	pioneers: Zerg[];
 	spawnSite: ConstructionSite | undefined;
 
-	constructor(directive: Directive, priority = Priority.NormalHigh) {
+	constructor(directive: Directive, priority = OverlordPriority.realTime.pioneer) {
 		super(directive, 'pioneer', priority);
 		this.pioneers = this.creeps('pioneer');
 		this.spawnSite = this.room ? _.filter(this.room.constructionSites,

@@ -244,7 +244,7 @@ export class Traveler {
 			return;
 		}
 		if (room.controller) {
-			if (room.controller.owner && !room.controller.my) {
+			if (room.controller.owner && !room.controller.my && room.towers.length > 0) {
 				room.memory.avoid = 1;
 			} else {
 				delete room.memory.avoid;

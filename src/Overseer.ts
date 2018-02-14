@@ -3,12 +3,12 @@
 import {DirectiveGuard} from './directives/directive_guard';
 import {DirectiveBootstrap, EMERGENCY_ENERGY_THRESHOLD} from './directives/directive_bootstrap';
 import {profile} from './lib/Profiler';
-import {blankPriorityQueue} from './config/priorities';
 import {Colony} from './Colony';
 import {Overlord} from './overlords/Overlord';
 import {Directive} from './directives/Directive';
 import {log} from './lib/logger/log';
 import {Visualizer} from './visuals/Visualizer';
+import {Pathing} from './pathing/pathing';
 
 @profile
 export class Overseer {
@@ -23,7 +23,14 @@ export class Overseer {
 		this.colony = colony;
 		this.memory = colony.memory.overseer;
 		this.directives = [];
-		this.overlords = blankPriorityQueue();
+		this.overlords = {};
+	}
+
+	registerOverlord(overlord: Overlord): void {
+		if (!this.overlords[overlord.priority]) {
+			this.overlords[overlord.priority] = [];
+		}
+		this.overlords[overlord.priority].push(overlord);
 	}
 
 	/* Place new event-driven flags where needed to be instantiated on the next tick */
@@ -60,12 +67,18 @@ export class Overseer {
 	private handleSafeMode(): void {
 		// Simple safe mode handler; will eventually be replaced by something more sophisticated
 		// Calls for safe mode when walls are about to be breached and there are non-NPC hostiles in the room
-		let criticalBarriers = _.filter(this.colony.room.barriers, s => s.hits < 5000);
 		let creepIsDangerous = (creep: Creep) => (creep.getActiveBodyparts(ATTACK) > 0 ||
 												  creep.getActiveBodyparts(RANGED_ATTACK) > 0);
 		let nonInvaderHostiles = _.filter(this.colony.room.hostiles, creep => creep.owner.username != 'Invader' &&
 																			  creepIsDangerous(creep));
-		if (criticalBarriers.length > 0 && nonInvaderHostiles.length > 0 && !this.colony.isIncubating) {
+		let hostilesCanReachSpawn = false;
+		if (this.colony.spawns[0] && nonInvaderHostiles.length > 0) {
+			let obstacles = _.map(this.colony.room.barriers, barrier => barrier.pos);
+			let ret = Pathing.findShortestPath(nonInvaderHostiles[0].pos, this.colony.spawns[0].pos,
+											   {obstacles: obstacles});
+			if (!ret.incomplete) hostilesCanReachSpawn = true;
+		}
+		if (nonInvaderHostiles.length > 0 && hostilesCanReachSpawn) {
 			this.colony.controller.activateSafeMode();
 		}
 	}
@@ -129,10 +142,12 @@ export class Overseer {
 			}
 		}
 		let stringReport: string[] = [`Creep usage for ${this.colony.name}:`];
+		let padLength = _.max(_.map(_.keys(roleOccupancy), str => str.length)) + 2;
 		for (let role in roleOccupancy) {
 			let [current, needed] = roleOccupancy[role];
 			if (needed > 0) {
-				stringReport.push(`${role}: ${Math.floor(100 * current / needed)}%`);
+				stringReport.push('| ' + `${role}:`.padRight(padLength) +
+								  `${Math.floor(100 * current / needed)}%`.padLeft(4));
 			}
 		}
 		Visualizer.colonyReport(this.colony.name, stringReport);

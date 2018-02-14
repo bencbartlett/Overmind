@@ -1,10 +1,10 @@
 import {Overlord} from './Overlord';
 import {HaulerSetup} from '../creepSetup/defaultSetups';
-import {Priority} from '../config/priorities';
 import {MiningGroup} from '../hiveClusters/hiveCluster_miningGroup';
 import {Zerg} from '../Zerg';
 import {Tasks} from '../tasks/Tasks';
 import {IWithdrawRequest} from '../logistics/TransportRequestGroup';
+import {OverlordPriority} from './priorities_overlords';
 
 
 export class HaulingOverlord extends Overlord {
@@ -12,7 +12,7 @@ export class HaulingOverlord extends Overlord {
 	haulers: Zerg[];
 	miningGroup: MiningGroup;
 
-	constructor(miningGroup: MiningGroup, priority = Priority.NormalLow) {
+	constructor(miningGroup: MiningGroup, priority = OverlordPriority.ownedRoom.haul) {
 		super(miningGroup, 'haul', priority);
 		this.haulers = this.creeps('hauler');
 		this.miningGroup = miningGroup;
@@ -44,7 +44,11 @@ export class HaulingOverlord extends Overlord {
 			// Withdraw from any miningSites requesting a withdrawal
 			let request = this.getWithdrawRequest();
 			if (request) {
-				hauler.task = Tasks.withdraw(request.target);
+				if (request.target instanceof Resource) {
+					hauler.task = Tasks.pickup(request.target);
+				} else {
+					hauler.task = Tasks.withdraw(request.target);
+				}
 			} else {
 				// hauler.park(); // TODO
 			}

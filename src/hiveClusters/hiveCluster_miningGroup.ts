@@ -7,7 +7,7 @@ import {Pathing} from '../pathing/pathing';
 import {HaulingOverlord} from '../overlords/overlord_haul';
 import {Colony} from '../Colony';
 import {MiningSite} from './hiveCluster_miningSite';
-import {Mem} from '../memcheck';
+import {Mem} from '../memory';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 
 @profile
@@ -57,7 +57,9 @@ export class MiningGroup extends HiveCluster {
 		let haulingPower = 0;
 		for (let siteID in this.miningSites) {
 			let site = this.miningSites[siteID];
-			if (site.output instanceof StructureContainer) { // only count container mining sites
+			if (site.output instanceof StructureContainer && site.overlord.miners.length > 0) {
+				// Only count sites which have a container output and which have at least one miner present
+				// (this helps in difficult "rebooting" situations)
 				haulingPower += site.energyPerTick * (2 * Pathing.weightedDistance(this.pos, site.pos));
 			}
 		}
@@ -69,7 +71,7 @@ export class MiningGroup extends HiveCluster {
 			linkPowerNeededValue = _.sum(_.map(this.miningSites, site => site.energyPerTick));
 			linkPowerAvailableValue = _.sum(_.map(this.links!, link => LINK_CAPACITY /
 																	   link.pos.getRangeTo(this.colony.storage!)));
-			if (linkPowerNeededValue > linkPowerAvailableValue) {
+			if (Game.time % 25 == 0 && linkPowerNeededValue > linkPowerAvailableValue) {
 				log.info('Insufficient linking power:', linkPowerAvailableValue + '/' + linkPowerNeededValue);
 			}
 		}
@@ -86,7 +88,7 @@ export class MiningGroup extends HiveCluster {
 		if (this.links) {
 			for (let link of this.links) {
 				if (link.energy > this.settings.linksTrasmitAt) {
-					this.colony.transportRequests.requestWithdrawal(link);
+					this.colony.linkRequests.requestTransmit(link);
 				}
 			}
 		}

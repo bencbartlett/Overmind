@@ -1,9 +1,9 @@
 import {Overlord} from './Overlord';
 import {UpgraderSetup} from '../creepSetup/defaultSetups';
-import {Priority} from '../config/priorities';
 import {UpgradeSite} from '../hiveClusters/hiveCluster_upgradeSite';
 import {Zerg} from '../Zerg';
 import {Tasks} from '../tasks/Tasks';
+import {OverlordPriority} from './priorities_overlords';
 
 export class UpgradingOverlord extends Overlord {
 
@@ -12,7 +12,7 @@ export class UpgradingOverlord extends Overlord {
 	settings: { [property: string]: number };
 	room: Room;	//  Operates in owned room
 
-	constructor(upgradeSite: UpgradeSite, priority = Priority.Normal) {
+	constructor(upgradeSite: UpgradeSite, priority = OverlordPriority.ownedRoom.upgrade) {
 		super(upgradeSite, 'upgrade', priority);
 		this.upgraders = this.creeps('upgrader');
 		this.upgradeSite = upgradeSite;

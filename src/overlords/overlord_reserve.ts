@@ -1,17 +1,19 @@
 import {Overlord} from './Overlord';
 import {ReserverSetup} from '../creepSetup/defaultSetups';
-import {Priority} from '../config/priorities';
 import {Zerg} from '../Zerg';
 import {DirectiveOutpost} from '../directives/directive_outpost';
 import {Tasks} from '../tasks/Tasks';
+import {OverlordPriority} from './priorities_overlords';
 
 export class ReservingOverlord extends Overlord {
 
 	reservers: Zerg[];
 	reserveBuffer: number;
 
-	constructor(directive: DirectiveOutpost, priority = Priority.NormalHigh) {
+	constructor(directive: DirectiveOutpost, priority = OverlordPriority.remoteRoom.reserve) {
 		super(directive, 'reserve', priority);
+		// Change priority to operate per-outpost
+		this.priority += this.outpostIndex * OverlordPriority.remoteRoom.roomIncrement;
 		this.reservers = this.creeps('reserver');
 		this.reserveBuffer = 3000;
 	}

@@ -102,9 +102,10 @@ export class Pathing {
 	static findShortestPath(startPos: RoomPosition, endPos: RoomPosition,
 							options: TravelToOptions = {}): PathfinderReturn {
 		_.defaults(options, {
-			range  : 1,
-			offRoad: true,
-			allowSK: true,
+			ignoreCreeps: true,
+			range       : 1,
+			offRoad     : true,
+			allowSK     : true,
 		});
 		let ret = Traveler.findTravelPath(startPos, endPos, options);
 		if (ret.incomplete) log.info(`Incomplete travel path from ${startPos} to ${endPos}!`);
@@ -131,11 +132,12 @@ export class Pathing {
 
 	/* Find the shortest path, preferentially stepping on tiles with road routing flags */
 	static routeRoadPath(origin: RoomPosition, destination: RoomPosition,
-						 options: TravelToOptions = {}): RoomPosition[] {
+						 options: TravelToOptions = {}): PathfinderReturn {
 		_.defaults(options, {
-			range  : 1,
-			offRoad: true,
-			allowSK: true,
+			ignoreCreeps: true,
+			range       : 1,
+			offRoad     : true,
+			allowSK     : true,
 		});
 		let originRoomName = origin.roomName;
 		let destRoomName = destination.roomName;
@@ -188,6 +190,6 @@ export class Pathing {
 			plainCost   : 2,
 			swampCost   : 2,
 			roomCallback: callback,
-		}).path;
+		});
 	}
 }

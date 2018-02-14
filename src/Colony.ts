@@ -15,6 +15,7 @@ import {RoomPlanner} from './roomPlanner/RoomPlanner';
 import {HiveCluster} from './hiveClusters/HiveCluster';
 import {LinkRequestGroup} from './logistics/LinkRequests';
 import {TransportRequestGroup} from './logistics/TransportRequestGroup';
+import {Priority} from './config/priorities';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -118,7 +119,9 @@ export class Colony {
 		// Set the colony stage
 		this.level = this.controller.level;
 		this.isIncubating = false;
-		if (this.storage && this.storage.isActive()) {
+		if (this.storage && this.storage.isActive() &&
+			this.spawns[0] && this.spawns[0].pos.findClosestByLimitedRange(this.room.containers, 2)) {
+			// If the colony has storage and a hatchery and a hatchery battery
 			if (this.controller.level == 8) {
 				this.stage = ColonyStage.Adult;
 			} else {
@@ -243,6 +246,12 @@ export class Colony {
 	init(): void {
 		// Initialize each hive cluster
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.init());
+		// Register drop pickup requests // TODO: make this cleaner
+		for (let room of this.rooms) {
+			for (let drop of room.droppedEnergy) {
+				this.transportRequests.requestWithdrawal(drop, Priority.High);
+			}
+		}
 		// Initialize the colony overseer, must be run AFTER all components are initialized
 		this.overseer.init();
 		// Initialize the room planner

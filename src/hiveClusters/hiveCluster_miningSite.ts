@@ -4,12 +4,12 @@ import {HiveCluster} from './HiveCluster';
 import {profile} from '../lib/Profiler';
 import {Pathing} from '../pathing/pathing';
 import {MiningOverlord} from '../overlords/overlord_mine';
-import {Priority} from '../config/priorities';
 import {Colony} from '../Colony';
-import {Overlord} from '../overlords/Overlord';
 import {MiningGroup} from './hiveCluster_miningGroup';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
-import {Mem} from '../memcheck';
+import {Mem} from '../memory';
+import {log} from '../lib/logger/log';
+import {OverlordPriority} from '../overlords/priorities_overlords';
 
 @profile
 export class MiningSite extends HiveCluster {
@@ -19,9 +19,7 @@ export class MiningSite extends HiveCluster {
 	output: StructureContainer | StructureLink | undefined;
 	outputConstructionSite: ConstructionSite | undefined;
 	miningGroup: MiningGroup | undefined;
-	overlord: Overlord;
-
-	// private _miners: Zerg[];
+	overlord: MiningOverlord;
 
 	constructor(colony: Colony, source: Source) {
 		super(colony, source, 'miningSite');
@@ -50,8 +48,11 @@ export class MiningSite extends HiveCluster {
 			bestGroup.miningSites.push(this);
 		}
 		// Create a mining overlord for this
-		let priority = this.room.my ? Priority.NormalHigh : Priority.Normal;
+		let priority = this.room.my ? OverlordPriority.ownedRoom.mine : OverlordPriority.remoteRoom.mine;
 		this.overlord = new MiningOverlord(this, priority);
+		if (Game.time % 100 == 0 && !this.output && !this.outputConstructionSite) {
+			log.warning(`${this.name} has no output!`);
+		}
 	}
 
 	get memory() {

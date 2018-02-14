@@ -1,9 +1,9 @@
 import {Overlord} from './Overlord';
-import {Priority} from '../config/priorities';
 import {ManagerSetup} from '../creepSetup/defaultSetups';
 import {CommandCenter} from '../hiveClusters/hiveCluster_commandCenter';
 import {Zerg} from '../Zerg';
 import {Tasks} from '../tasks/Tasks';
+import {OverlordPriority} from './priorities_overlords';
 
 
 // Command center overlord: spawn and run a dediated commandCenter attendant
@@ -12,7 +12,7 @@ export class CommandCenterOverlord extends Overlord {
 	managers: Zerg[];
 	commandCenter: CommandCenter;
 
-	constructor(commandCenter: CommandCenter, priority = Priority.High) {
+	constructor(commandCenter: CommandCenter, priority = OverlordPriority.spawning.commandCenter) {
 		super(commandCenter, 'manager', priority);
 		this.commandCenter = commandCenter;
 		this.managers = this.creeps('manager');
@@ -78,12 +78,7 @@ export class CommandCenterOverlord extends Overlord {
 		if (this.managers.length > 1) {
 			let nearbyManagers = _.filter(this.managers, manager => manager.pos.inRangeTo(this.commandCenter.pos, 3));
 			let managerToSuicide = _.first(_.sortBy(nearbyManagers, manager => manager.ticksToLive));
-			if (managerToSuicide) {
-				for (let value of _.values(managerToSuicide.memory)) {
-					console.log(value);
-				}
-				managerToSuicide.suicide();
-			}
+			if (managerToSuicide) managerToSuicide.suicide();
 		}
 	}
 }

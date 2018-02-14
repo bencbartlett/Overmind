@@ -1,15 +1,15 @@
 import {Overlord} from './Overlord';
 import {ClaimerSetup} from '../creepSetup/defaultSetups';
-import {Priority} from '../config/priorities';
 import {Zerg} from '../Zerg';
 import {Tasks} from '../tasks/Tasks';
 import {Directive} from '../directives/Directive';
+import {OverlordPriority} from './priorities_overlords';
 
 export class ClaimingOverlord extends Overlord {
 
 	claimers: Zerg[];
 
-	constructor(directive: Directive, priority = Priority.NormalHigh) {
+	constructor(directive: Directive, priority = OverlordPriority.realTime.claim) {
 		super(directive, 'claim', priority);
 		this.claimers = this.creeps('claimer');
 	}

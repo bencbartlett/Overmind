@@ -5,7 +5,7 @@ import {log} from '../lib/logger/log';
 import {Pathing} from '../pathing/pathing';
 import {Visualizer} from '../visuals/Visualizer';
 import {profile} from '../lib/Profiler';
-import {Mem} from '../memcheck';
+import {Mem} from '../memory';
 import {Colony} from '../Colony';
 import {BuildPriorities} from '../config/priorities';
 
@@ -54,6 +54,7 @@ export class RoomPlanner {
 	plan: RoomPlan;							// Contains maps, positions, and rotations of each hivecluster component
 	// memory: PlannerMemory;					// Memory, stored on the room memory
 	roadPositions: RoomPosition[];			// Roads that aren't part of components
+	private textPositions: RoomPosition[];
 	private settings: {
 		siteCheckFrequency: number;
 		maxSitesPerColony: number;
@@ -65,6 +66,7 @@ export class RoomPlanner {
 		this.plan = {};
 		this.map = {};
 		this.roadPositions = [];
+		this.textPositions = [];
 		this.settings = {
 			siteCheckFrequency: 200,
 			maxSitesPerColony : 20,
@@ -138,12 +140,17 @@ export class RoomPlanner {
 			// Connect commandCenter to each miningSite in the colony and place a container appropriately
 			for (let i in this.colony.miningSites) {
 				let site = this.colony.miningSites[i];
-				let path = this.planRoad(this.placements.commandCenter, site.pos);
-				let siteHasContainer = site.outputConstructionSite || site.output;
-				if (path && !siteHasContainer) { // replace the last element of the path with a container
-					let containerPos = _.last(path);
-					_.remove(this.roadPositions, containerPos);
-					this.placeStructure(STRUCTURE_CONTAINER, containerPos);
+				let output = site.outputConstructionSite || site.output;
+				if (!output) { // replace the last element of the path with a container
+					let path = this.planRoad(this.placements.commandCenter, site.pos);
+					if (path) {
+						let containerPos = _.last(path);
+						_.remove(this.roadPositions, containerPos);
+						this.placeStructure(STRUCTURE_CONTAINER, containerPos);
+					}
+				} else {
+					let path = this.planRoad(this.placements.commandCenter, output.pos);
+					this.placeStructure(STRUCTURE_CONTAINER, output.pos); // include the current container position
 				}
 			}
 			// Connect hatchery to each outpost controller
@@ -260,23 +267,36 @@ export class RoomPlanner {
 	// Plan a road between two locations; this.map must have been generated first!
 	planRoad(pos1: RoomPosition, pos2: RoomPosition, opts: TravelToOptions = {}): RoomPosition[] | void {
 		let obstacles: RoomPosition[] = [];
+		let passableStructureTypes: string[] = [STRUCTURE_ROAD, STRUCTURE_CONTAINER, STRUCTURE_RAMPART];
 		for (let structureType in this.map) {
-			if (structureType != STRUCTURE_ROAD) obstacles = obstacles.concat(this.map[structureType]);
+			if (!passableStructureTypes.includes(structureType)) {
+				obstacles = obstacles.concat(this.map[structureType]);
+			}
 		}
 		obstacles = _.unique(obstacles);
 		opts = _.merge(opts, {obstacles: obstacles});
 		// Find the shortest path, preferentially stepping on tiles with road routing flags on them
-		let roadPath = Pathing.routeRoadPath(pos1, pos2, opts);
+		let roadPath = Pathing.routeRoadPath(pos1, pos2, opts).path;
 		let shortestPath = Pathing.findShortestPath(pos1, pos2, opts).path;
-		if (roadPath.length == shortestPath.length) {
+		let errorTolerance = 1; // largest acceptable difference between planned and shortest path
+		if (shortestPath.length <= roadPath.length &&
+			roadPath.length <= shortestPath.length + errorTolerance) {
 			this.roadPositions = this.roadPositions.concat(roadPath);
 			return roadPath;
-		} else if (roadPath.length > shortestPath.length) {
-			Visualizer.drawRoads(shortestPath);
+		} else if (roadPath.length > shortestPath.length + errorTolerance) {
+			Visualizer.drawPath(shortestPath, {stroke: 'green'});
 			Visualizer.drawPath(roadPath, {stroke: 'red'});
-			let textPos = roadPath[Math.floor(roadPath.length / 2 - 1)];
-			Visualizer.text(`Road length: ${roadPath.length}; shortest length: ${shortestPath.length}`,
-							textPos, {color: 'red'});
+			let textPos = roadPath[Math.min(5, roadPath.length - 1)];
+			if (this.textPositions.includes(textPos)) {
+				textPos.y += 1;
+			}
+			this.textPositions.push(textPos);
+			Visualizer.text(`Planned: ${roadPath.length}`, textPos,
+							{color: 'red', align: 'left'});
+			Visualizer.text(`Shortest: ${shortestPath.length} `, textPos,
+							{color: 'green', align: 'right'});
+			this.roadPositions = this.roadPositions.concat(roadPath);
+			return roadPath;
 		} else {
 			log.error(`${pos1} to ${pos2}: shortest path has length ${shortestPath.length}` +
 					  `longer than road path length ${roadPath.length}... whaaaa?`);

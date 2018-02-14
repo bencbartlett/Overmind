@@ -23,21 +23,22 @@ import './prototypes/prototypes_RoomPosition';
 import './prototypes/prototypes_RoomVisual';
 import './prototypes/prototypes_Room';
 import './prototypes/prototypes_Structures';
+import './prototypes/prototypes_other';
 // Configuration, logging, and profiling
 import {log} from './lib/logger/log';
 import * as Profiler from 'lib/Profiler';
 import {taskInstantiator} from './maps/map_tasks';
 import {sandbox} from './sandbox/sandbox';
-import {Mem} from './memcheck';
+import {Mem} from './memory';
 import OM from './Overmind';
-import {Commands} from './commands';
+import {Console} from './console';
 
 // Execute this every global reset
 global.log = log;
 global.Profiler = Profiler.init();
 global.taskFromPrototask = taskInstantiator;
 Mem.format();
-Commands.init();
+Console.init();
 
 // Main loop
 export function loop(): void {

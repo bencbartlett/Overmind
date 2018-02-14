@@ -52,6 +52,7 @@ interface Room {
 	links: StructureLink[];
 	labs: StructureLab[];
 	sources: Source[];
+	roads: StructureRoad[];
 	// sinks: Sink[];
 	repairables: Structure[];
 	constructionSites: ConstructionSite[];
@@ -179,4 +180,10 @@ interface StructureTower {
 	repairNearestStructure(): number;
 
 	preventRampartDecay(): number;
+}
+
+interface String {
+	padRight(length: number, char?: string): string;
+
+	padLeft(length: number, char?: string): string;
 }

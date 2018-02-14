@@ -1,11 +1,11 @@
 import {Overlord} from './Overlord';
 import {DirectiveBootstrap} from '../directives/directive_bootstrap';
-import {Priority} from '../config/priorities';
 import {CreepSetup} from '../creepSetup/CreepSetup';
 import {MiningOverlord} from './overlord_mine';
 import {ColonyStage} from '../Colony';
 import {Zerg} from '../Zerg';
 import {Tasks} from '../tasks/Tasks';
+import {OverlordPriority} from './priorities_overlords';
 
 export class BoostrapMinerSetup extends CreepSetup {
 	constructor() {
@@ -37,7 +37,7 @@ export class BootstrappingOverlord extends Overlord {
 		spawnBootstrapMinerThreshold: number;
 	};
 
-	constructor(directive: DirectiveBootstrap, priority = Priority.Critical) {
+	constructor(directive: DirectiveBootstrap, priority = OverlordPriority.emergency.bootstrap) {
 		super(directive, 'bootstrap', priority);
 		this.fillers = this.creeps('filler');
 		// Calculate structures fillers can supply / withdraw from

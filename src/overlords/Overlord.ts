@@ -39,13 +39,18 @@ export abstract class Overlord {
 		this.recalculateCreeps();
 		this.creepUsageReport = _.mapValues(this._creeps, creep => undefined);
 		// Register the overlord on the colony overseer and on the overmind
-		this.colony.overseer.overlords[this.priority].push(this);
+		this.colony.overseer.registerOverlord(this);
 		Overmind.overlords[this.ref] = this;
 	}
 
 	recalculateCreeps(): void {
 		this._creeps = _.mapValues(Overmind.cache.overlords[this.ref],
 								   creepsOfRole => _.map(creepsOfRole, creepName => Game.zerg[creepName]));
+	}
+
+	/* Gets the "ID" of the outpost this overlord is operating in. 0 for owned rooms, >= 1 for outposts, -1 for other */
+	get outpostIndex(): number {
+		return _.findIndex(this.colony.roomNames, this.pos.roomName);
 	}
 
 	protected creeps(role: string): Zerg[] {
