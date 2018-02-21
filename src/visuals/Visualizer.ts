@@ -15,6 +15,10 @@ export class Visualizer {
 		return Memory.settings.enableVisuals;
 	}
 
+	static marker(pos: RoomPosition, opts = {}): RoomVisual {
+		return new RoomVisual(pos.roomName).animatedPosition(pos.x, pos.y, opts);
+	}
+
 	static drawLayout(structureMap: StructureMap): void {
 		if (!this.enabled) return;
 		let vis: { [roomName: string]: RoomVisual } = {};

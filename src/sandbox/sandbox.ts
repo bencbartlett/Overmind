@@ -19,14 +19,16 @@ export class TestCache {
 
 export function sandbox() {
 	try { // Test code goes here
-		// var data = {
-		// 	"commander@0.6.1": 1,
-		// 	"minimatch@0.2.14": 3,
-		// 	"mkdirp@0.3.5": 2,
-		// 	"sigmund@1.0.0": 3
-		// };
-		//
-		// console.log(columnify(data))
+		// let asdf = Traveler.findTravelPath(Overmind.Colonies.E5S47.pos, deref('Flag17:E5S47:healPoint')!.pos,
+		// 								   {
+		// 									   ignoreCreeps: true,
+		// 									   range       : 1,
+		// 									   offRoad     : true,
+		// 									   allowSK     : true,
+		// 									   ensurePath: true,
+		// 								   });
+		// console.log(asdf.path.length)
+		// console.log(asdf.incomplete)
 	} catch (e) {
 		log.error(e);
 	}

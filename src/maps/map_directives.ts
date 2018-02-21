@@ -10,6 +10,9 @@ import {DirectiveRPCommandCenter} from '../directives/directive_roomPlanner_comm
 import {DirectiveRPUpgradeSite} from '../directives/directive_roomPlanner_upgradeSite';
 import {DirectiveRPMiningGroup} from '../directives/directive_roomPlanner_miningGroup';
 import {DirectiveColonize} from '../directives/directive_colonize';
+import {DirectiveTargetSiege} from '../directives/directive_target_siege';
+import {DirectiveSiege} from '../directives/directive_siege';
+import {DirectiveHealPoint} from '../directives/directive_healPoint';
 
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 	switch (flag.color) {
@@ -31,6 +34,10 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			switch (flag.secondaryColor) {
 				case COLOR_BLUE:
 					return new DirectiveGuard(flag);
+				case COLOR_ORANGE:
+					return new DirectiveSiege(flag);
+				case COLOR_GREEN:
+					return new DirectiveHealPoint(flag);
 			}
 			break;
 
@@ -49,6 +56,14 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			}
 			break;
 
+		// Targeting colors ============================================================================================
+		case COLOR_GREY:
+			switch (flag.secondaryColor) {
+				case COLOR_ORANGE:
+					return new DirectiveTargetSiege(flag);
+			}
+			break;
+
 		// Room planning directives ====================================================================================
 		case COLOR_WHITE:
 			switch (flag.secondaryColor) {
@@ -60,6 +75,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveRPUpgradeSite(flag);
 				case COLOR_YELLOW:
 					return new DirectiveRPMiningGroup(flag);
+				case COLOR_WHITE:
+					break; // Reserved for road routing hints
 			}
 			break;
 

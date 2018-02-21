@@ -322,7 +322,7 @@ export class Zerg {
 	// Parking logic ---------------------------------------------------------------------------------------------------
 
 
-	park(pos: RoomPosition, maintainDistance = false): number {
+	park(pos: RoomPosition = this.pos, maintainDistance = false): number {
 		let road = this.pos.lookForStructure(STRUCTURE_ROAD);
 		if (!road) return OK;
 

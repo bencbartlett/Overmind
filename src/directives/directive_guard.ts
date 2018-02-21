@@ -2,12 +2,18 @@ import {Directive} from './Directive';
 import {profile} from '../lib/Profiler';
 import {GuardOverlord} from '../overlords/overlord_guard';
 
+interface DirectiveGuardMemory extends FlagMemory {
+	persistent?: boolean;
+}
+
 @profile
 export class DirectiveGuard extends Directive {
 
 	static directiveName = 'guard';
 	static color = COLOR_RED;
 	static secondaryColor = COLOR_BLUE;
+
+	memory: DirectiveGuardMemory;
 
 	private relocateFrequency: number;
 
@@ -29,7 +35,8 @@ export class DirectiveGuard extends Directive {
 			}
 		}
 		// If there are no hostiles left in the room and everyone's healed, then remove the flag
-		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
+		if (!this.memory.persistent &&
+			this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
 			if (_.filter(this.room.creeps, creep => creep.hits < creep.hitsMax).length == 0) {
 				this.remove();
 			}

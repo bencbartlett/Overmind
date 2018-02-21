@@ -112,6 +112,18 @@ export class Pathing {
 		return ret;
 	}
 
+	/* Returns the shortest path from start to end position, regardless of (passable) terrain */
+	static findTravelPath(startPos: RoomPosition, endPos: RoomPosition,
+						  options: TravelToOptions = {}): PathfinderReturn {
+		_.defaults(options, {
+			ignoreCreeps: true,
+			range       : 1,
+		});
+		let ret = Traveler.findTravelPath(startPos, endPos, options);
+		if (ret.incomplete) log.info(`Incomplete travel path from ${startPos} to ${endPos}!`);
+		return ret;
+	}
+
 	// /* Returns the length of the shortest path from start to end position regardless of passable terrain.
 	//  * Returns Infinity if the path is incomplete. */
 	// static findShortestDistance(startPos: RoomPosition, endPos: RoomPosition,

@@ -31,6 +31,7 @@ interface StorageStructure extends Structure {
 // type MineralStructure = StructureLab | StructureNuker | StructurePowerSpawn;
 
 interface Room {
+	print: string;
 	my: boolean;
 	reservedByMe: boolean;
 	signedByMe: boolean;
@@ -76,6 +77,7 @@ interface RoomObject {
 }
 
 interface RoomPosition {
+	print: string;
 	name: string;
 	isEdge: boolean;
 	isVisible: boolean;
@@ -186,4 +188,8 @@ interface String {
 	padRight(length: number, char?: string): string;
 
 	padLeft(length: number, char?: string): string;
+}
+
+interface Number {
+	toPercent(decimals?: number): string;
 }

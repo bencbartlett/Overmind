@@ -45,6 +45,18 @@ export class HaulerSetup extends CreepSetup {
 	}
 }
 
+export class HealerSetup extends CreepSetup {
+	static role = 'healer';
+
+	constructor() {
+		super(HealerSetup.role, {
+			pattern  : [HEAL, MOVE],
+			sizeLimit: Infinity,
+
+		});
+	}
+}
+
 export class ManagerSetup extends CreepSetup {
 	static role = 'manager';
 
@@ -96,6 +108,17 @@ export class ScoutSetup extends CreepSetup {
 		super(ScoutSetup.role, {
 			pattern  : [MOVE],
 			sizeLimit: 1,
+		});
+	}
+}
+
+export class SiegerSetup extends CreepSetup {
+	static role = 'sieger';
+
+	constructor(hasHealParts = true) {
+		super(SiegerSetup.role, {
+			pattern  : hasHealParts ? [WORK, HEAL, MOVE, MOVE] : [WORK, MOVE],
+			sizeLimit: Infinity,
 		});
 	}
 }

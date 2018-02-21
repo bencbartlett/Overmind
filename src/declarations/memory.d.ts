@@ -50,8 +50,10 @@ interface PathingMemory {
 
 interface FlagMemory {
 	created?: number;
+	setPosition: RoomPosition;
 	rotation?: number;
 	colony?: string;
+	parent?: string;
 	overlords: { [overlordName: string]: OverlordMemory };
 
 	[otherProperties: string]: any;
@@ -75,6 +77,13 @@ interface OverseerMemory {
 
 interface OverlordMemory {
 
+}
+
+interface MiningSiteMemory {
+	stats: {
+		usage: number;
+		downtime: number;
+	};
 }
 
 interface HatcheryMemory {

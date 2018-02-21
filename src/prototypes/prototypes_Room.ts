@@ -2,22 +2,29 @@
 
 import {controllerSignature, myUsername} from '../settings/settings_user';
 
+// Logging =============================================================================================================
+Object.defineProperty(Room.prototype, 'print', {
+	get() {
+		return '<a href="#!/room/' + this.name + '">' + this.name + '</a>';
+	}
+});
+
 // Room properties =====================================================================================================
 
 Object.defineProperty(Room.prototype, 'my', {
-	get () {
+	get() {
 		return this.controller && this.controller.my;
 	},
 });
 
 Object.defineProperty(Room.prototype, 'reservedByMe', {
-	get () {
+	get() {
 		return this.controller && this.controller.reservation && this.controller.reservation.username == myUsername;
 	},
 });
 
 Object.defineProperty(Room.prototype, 'signedByMe', {
-	get () {
+	get() {
 		return this.controller && this.controller.sign && this.controller.sign.text == controllerSignature;
 	},
 });
@@ -26,7 +33,7 @@ Object.defineProperty(Room.prototype, 'signedByMe', {
 
 // Creeps physically in the room
 Object.defineProperty(Room.prototype, 'creeps', {
-	get () {
+	get() {
 		return this.find(FIND_MY_CREEPS);
 	},
 });
@@ -35,14 +42,14 @@ Object.defineProperty(Room.prototype, 'creeps', {
 
 // Hostile creeps currently in the room
 Object.defineProperty(Room.prototype, 'hostiles', {
-	get () {
+	get() {
 		return this.find(FIND_HOSTILE_CREEPS);
 	},
 });
 
 // Hostile structures currently in the room
 Object.defineProperty(Room.prototype, 'hostileStructures', {
-	get () {
+	get() {
 		return this.find(FIND_HOSTILE_STRUCTURES, {filter: (s: Structure) => s.hits});
 	},
 });
@@ -51,7 +58,7 @@ Object.defineProperty(Room.prototype, 'hostileStructures', {
 
 // Flags physically in this room
 Object.defineProperty(Room.prototype, 'flags', {
-	get () {
+	get() {
 		return this.find(FIND_FLAGS);
 	},
 });
@@ -59,13 +66,13 @@ Object.defineProperty(Room.prototype, 'flags', {
 // Room properties: structures =========================================================================================
 
 Object.defineProperty(Room.prototype, 'structures', {
-	get () {
+	get() {
 		return Overmind.cache.structures[this.name];
 	},
 });
 
 Object.defineProperty(Room.prototype, 'drops', {
-	get () {
+	get() {
 		return Overmind.cache.drops[this.name];
 	},
 });

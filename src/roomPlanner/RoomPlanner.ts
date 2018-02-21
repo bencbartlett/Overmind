@@ -153,10 +153,10 @@ export class RoomPlanner {
 					this.placeStructure(STRUCTURE_CONTAINER, output.pos); // include the current container position
 				}
 			}
-			// Connect hatchery to each outpost controller
-			for (let outpost of this.colony.outposts) {
-				if (outpost.controller) this.planRoad(this.placements.commandCenter, outpost.controller.pos);
-			}
+			// // Connect hatchery to each outpost controller
+			// for (let outpost of this.colony.outposts) {
+			// 	if (outpost.controller) this.planRoad(this.placements.commandCenter, outpost.controller.pos);
+			// }
 		}
 		this.formatRoadPositions();
 	}

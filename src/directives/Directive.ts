@@ -3,7 +3,6 @@ import {profile} from '../lib/Profiler';
 import {Colony} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
 
-
 @profile
 export abstract class Directive {
 
@@ -40,10 +39,20 @@ export abstract class Directive {
 		if (flag.memory.colony) {
 			return Overmind.Colonies[flag.memory.colony];
 		} else {
+			// If flag contains a colony name as a substring, assign to that colony
+			let colonyNames = _.keys(Overmind.Colonies);
+			for (let name of colonyNames) {
+				if (flag.name.includes(name)) {
+					flag.memory.colony = name;
+					return Overmind.Colonies[name];
+				}
+			}
+			// If flag is in a room belonging to a colony, assign to there
 			let colonyName = Overmind.colonyMap[flag.pos.roomName];
 			if (colonyName) {
 				return Overmind.Colonies[colonyName];
 			} else {
+				// Otherwise assign to closest colony
 				flag.recalculateColony();
 				return Overmind.Colonies[flag.memory.colony!];
 			}
@@ -89,6 +98,12 @@ export abstract class Directive {
 	/* Filter for _.filter() that checks if a flag is of the matching type */
 	static filter(flag: Flag): boolean {
 		return flag.color == this.color && flag.secondaryColor == this.secondaryColor;
+	}
+
+	/* Map a list of flags to directives, accepting a filter */
+	static find(flags: Flag[]): Directive[] {
+		flags = _.filter(flags, flag => this.filter(flag));
+		return _.compact(_.map(flags, flag => Game.directives[flag.name]));
 	}
 
 	/* Initialization logic goes here, called in overseer.init() */

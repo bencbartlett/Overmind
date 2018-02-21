@@ -90,6 +90,8 @@ export class GuardOverlord extends Overlord {
 				this.combatActions(guard, attackTarget);
 			} else if (healTarget) {
 				this.medicActions(guard, healTarget);
+			} else {
+				guard.park(); // Move off-road
 			}
 		}
 	}

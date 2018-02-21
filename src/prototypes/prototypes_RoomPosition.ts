@@ -1,3 +1,9 @@
+Object.defineProperty(RoomPosition.prototype, 'print', {
+	get() {
+		return '<a href="#!/room/' + this.roomName + '">[' + this.roomName + ', ' + this.x + ', ' + this.y + ']</a>';
+	}
+});
+
 Object.defineProperty(RoomPosition.prototype, 'name', { // identifier for the room position, used in caching
 	get: function () {
 		return this.roomName + ':' + this.x + ':' + this.y;

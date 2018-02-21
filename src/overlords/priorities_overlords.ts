@@ -22,9 +22,13 @@ export var OverlordPriority = {
 		haul   : 403,
 		upgrade: 404,
 	},
+	offense   : {			// Offensive operations like raids or sieges
+		healPoint: 500,
+		siege    : 501,
+	},
 	remoteRoom: { 			// Operation of a remote room. Allows colonies to restart one room at a time.
-		reserve      : 500,
-		mine         : 501,
+		reserve      : 600,
+		mine         : 601,
 		// haul         : 502, // hauling is a weird exception; see miningGroup for details
 		roomIncrement: 10, 	// remote room priorities are incremented by 10 for each outpost
 	},

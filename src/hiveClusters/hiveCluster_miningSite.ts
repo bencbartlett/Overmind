@@ -10,6 +10,7 @@ import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {Mem} from '../memory';
 import {log} from '../lib/logger/log';
 import {OverlordPriority} from '../overlords/priorities_overlords';
+import {Visualizer} from '../visuals/Visualizer';
 
 @profile
 export class MiningSite extends HiveCluster {
@@ -51,12 +52,29 @@ export class MiningSite extends HiveCluster {
 		let priority = this.room.my ? OverlordPriority.ownedRoom.mine : OverlordPriority.remoteRoom.mine;
 		this.overlord = new MiningOverlord(this, priority);
 		if (Game.time % 100 == 0 && !this.output && !this.outputConstructionSite) {
-			log.warning(`${this.name} has no output!`);
+			log.warning(`Mining site at ${this.pos.print} has no output!`);
 		}
+		// Calculate statistics
+		this.stats();
 	}
 
-	get memory() {
+	get memory(): MiningSiteMemory {
 		return Mem.wrap(this.colony.memory, this.name);
+	}
+
+	private stats() {
+		let defaults = {
+			usage   : 0,
+			downtime: 0,
+		};
+		if (!this.memory.stats) this.memory.stats = defaults;
+		_.defaults(this.memory.stats, defaults);
+		// Compute uptime
+		if (this.source.ticksToRegeneration == 1) {
+			this.memory.stats.usage = (this.source.energyCapacity - this.source.energy) / this.source.energyCapacity;
+		}
+		this.memory.stats.downtime = (this.memory.stats.downtime * (CREEP_LIFE_TIME - 1) +
+									  (this.output ? +this.output.isFull : 0)) / CREEP_LIFE_TIME;
 	}
 
 	/* Predicted store amount a hauler will see once it arrives at the miningSite traveling from the miningGroup
@@ -143,5 +161,10 @@ export class MiningSite extends HiveCluster {
 			// TODO: build mining site output
 			// this.room.createConstructionSite(minerInPosition.pos, STRUCTURE_CONTAINER);
 		}
+	}
+
+	visuals() {
+		Visualizer.showInfo([`Usage:  ${this.memory.stats.usage.toPercent()}`,
+							 `Uptime: ${(1 - this.memory.stats.downtime).toPercent()}`], this);
 	}
 }
