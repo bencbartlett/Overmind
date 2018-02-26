@@ -2,7 +2,7 @@ import {Task} from './Task';
 import {log} from '../lib/logger/log';
 import {profile} from '../lib/Profiler';
 
-export type getRenewedTargetType = Spawn;
+export type getRenewedTargetType = StructureSpawn;
 export const getRenewedTaskName = 'getRenewed';
 
 @profile

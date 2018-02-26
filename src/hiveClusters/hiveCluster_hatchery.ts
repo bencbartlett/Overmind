@@ -13,8 +13,8 @@ import {Visualizer} from '../visuals/Visualizer';
 
 @profile
 export class Hatchery extends HiveCluster {
-	spawns: Spawn[]; 										// List of spawns in the hatchery
-	availableSpawns: Spawn[]; 								// Spawns that are available to make stuff right now
+	spawns: StructureSpawn[]; 										// List of spawns in the hatchery
+	availableSpawns: StructureSpawn[]; 								// Spawns that are available to make stuff right now
 	extensions: StructureExtension[]; 						// List of extensions in the hatchery
 	link: StructureLink | undefined; 						// The input link
 	towers: StructureTower[]; 								// All towers that aren't in the command center
@@ -39,7 +39,7 @@ export class Hatchery extends HiveCluster {
 		super(colony, headSpawn, 'hatchery');
 		// Register structure components
 		this.spawns = colony.spawns;
-		this.availableSpawns = _.filter(this.spawns, (spawn: Spawn) => !spawn.spawning);
+		this.availableSpawns = _.filter(this.spawns, (spawn: StructureSpawn) => !spawn.spawning);
 		this.extensions = colony.extensions;
 		this.link = this.pos.findClosestByLimitedRange(colony.links, 2);
 		this.battery = this.pos.findClosestByLimitedRange(this.room.containers, 2);
