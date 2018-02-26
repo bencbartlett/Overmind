@@ -9,6 +9,7 @@ import {DirectiveOutpost} from './directives/directive_outpost';
 import {Overlord} from './overlords/Overlord';
 import {Directive} from './directives/Directive';
 import {Visualizer} from './visuals/Visualizer';
+import {Stats} from './stats';
 
 
 @profile
@@ -161,13 +162,17 @@ export default class Overmind implements IOvermind {
 		// // this.buildColonies();			// 5: Build the colony, instantiating virtual components
 		// this.registerDirectives(); 		// 5: Wrap all the directives and assign to respective overlords
 		for (let colonyName in this.Colonies) {
+			let start = Game.cpu.getUsed();
 			this.Colonies[colonyName].init();
+			Stats.log(`cpu.usage.${colonyName}.init`, Game.cpu.getUsed() - start);
 		}
 	}
 
 	run(): void {
 		for (let colonyName in this.Colonies) {
+			let start = Game.cpu.getUsed();
 			this.Colonies[colonyName].run();
+			Stats.log(`cpu.usage.${colonyName}.run`, Game.cpu.getUsed() - start);
 		}
 	}
 
@@ -176,7 +181,9 @@ export default class Overmind implements IOvermind {
 		Visualizer.visuals();
 		// Draw colony visuals
 		for (let colonyName in this.Colonies) {
+			let start = Game.cpu.getUsed();
 			this.Colonies[colonyName].visuals();
+			Stats.log(`cpu.usage.${colonyName}.visuals`, Game.cpu.getUsed() - start);
 		}
 	}
 };

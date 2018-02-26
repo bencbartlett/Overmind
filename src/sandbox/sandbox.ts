@@ -2,7 +2,6 @@
 
 import {log} from '../lib/logger/log';
 
-// const columnify = require('../lib/columnify/index')
 
 export class TestCache {
 	times: number[];
@@ -19,16 +18,7 @@ export class TestCache {
 
 export function sandbox() {
 	try { // Test code goes here
-		// let asdf = Traveler.findTravelPath(Overmind.Colonies.E5S47.pos, deref('Flag17:E5S47:healPoint')!.pos,
-		// 								   {
-		// 									   ignoreCreeps: true,
-		// 									   range       : 1,
-		// 									   offRoad     : true,
-		// 									   allowSK     : true,
-		// 									   ensurePath: true,
-		// 								   });
-		// console.log(asdf.path.length)
-		// console.log(asdf.incomplete)
+
 	} catch (e) {
 		log.error(e);
 	}

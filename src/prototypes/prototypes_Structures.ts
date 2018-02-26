@@ -2,6 +2,9 @@
 
 // General structure prototypes ========================================================================================
 
+import {controllerSignature} from '../do-not-modify/do-not-modify';
+import {myUsername} from '../settings/settings_user';
+
 Object.defineProperty(StructureContainer.prototype, 'isPassible', {
 	get() {
 		return this.structureType != STRUCTURE_ROAD &&
@@ -12,8 +15,6 @@ Object.defineProperty(StructureContainer.prototype, 'isPassible', {
 });
 
 // Container prototypes ================================================================================================
-
-import {controllerSignature, myUsername} from '../settings/settings_user';
 
 Object.defineProperty(StructureContainer.prototype, 'energy', {
 	get() {

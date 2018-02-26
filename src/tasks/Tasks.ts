@@ -20,6 +20,7 @@ import {TaskTransfer, transferTargetType} from './task_transfer';
 import {TaskUpgrade, upgradeTargetType} from './task_upgrade';
 import {TaskWithdraw, withdrawTargetType} from './task_withdraw';
 import {TaskWithdrawResource, withdrawResourceTargetType} from './task_withdrawResource';
+import {dropTargetType, TaskDrop} from './task_drop';
 
 export class Tasks {
 
@@ -41,6 +42,10 @@ export class Tasks {
 
 	static dismantle(target: dismantleTargetType): TaskDismantle {
 		return new TaskDismantle(target);
+	}
+
+	static drop(target: dropTargetType): TaskDrop {
+		return new TaskDrop(target);
 	}
 
 	static fortify(target: fortifyTargetType): TaskFortify {

@@ -126,7 +126,9 @@ export abstract class Task {
 	// Fork the task, assigning a new task to the creep with this task as its parent
 	fork(newTask: Task): void {
 		newTask.parent = this;
-		this.creep.task = newTask;
+		if (this.creep) {
+			this.creep.task = newTask;
+		}
 	}
 
 	// Test every tick to see if task is still valid

@@ -1,73 +1,87 @@
-// import {Overlord} from './Overlord';
-// import {HaulerSetup} from '../creepSetup/defaultSetups';
-// import {Priority} from '../config/priorities';
-// import {MiningGroup} from '../hiveClusters/hiveCluster_miningGroup';
-// import {EnergyWithdrawStructure, IWithdrawRequest} from '../logistics/TransportRequestGroup';
-// import {Zerg} from '../Zerg';
-// import {Tasks} from '../tasks/Tasks';
-//
-//
-// export class TransportOverlord extends Overlord {
-//
-// 	transporters: Zerg[];
-// 	miningGroup: MiningGroup;
-//
-// 	constructor(miningGroup: MiningGroup, priority = Priority.NormalLow) {
-// 		super(miningGroup, 'haul', priority);
-// 		this.haulers = this.creeps('hauler');
-// 		this.miningGroup = miningGroup;
-// 	}
-//
-// 	spawn() {
-// 		let haulingPower = _.sum(_.map(this.lifetimeFilter(this.haulers), creep => creep.getActiveBodyparts(CARRY)));
-// 		if (haulingPower < this.miningGroup.data.haulingPowerNeeded) {
-// 			this.requestCreep(new HaulerSetup());
-// 		}
-// 	}
-//
-// 	init() {
-// 		this.spawn();
-// 	}
-//
-// 	// Gets a prioritized request if any
-// 	private getWithdrawRequest(): IWithdrawRequest | undefined {
-// 		for (let priority in this.miningGroup.transportRequests.withdraw) {
-// 			// Shift the first request from the group to prevent all idle haulers from targeting at once
-// 			let request = this.miningGroup.transportRequests.withdraw[priority].shift();
-// 			if (request) return request;
-// 		}
-// 	}
-//
-// 	private handleHauler(hauler: Zerg) {
-// 		if (hauler.carry.energy == 0) {
-// 			// Withdraw from any miningSites requesting a withdrawal
-// 			let request = this.getWithdrawRequest();
-// 			if (request) {
-// 				hauler.task = Tasks.withdraw(request.target);
-// 			} else {
-// 				// hauler.park(); // TODO
-// 			}
-// 		} else {
-// 			// If you're near the dropoff point, deposit, else go back to the dropoff point
-// 			if (hauler.pos.inRangeTo(this.miningGroup.dropoff.pos, 3)) {
-// 				if (this.miningGroup.availableLinks && this.miningGroup.availableLinks[0]) {
-// 					hauler.task = Tasks.deposit(this.miningGroup.availableLinks[0]);
-// 				} else {
-// 					hauler.task = Tasks.deposit(this.miningGroup.dropoff);
-// 				}
-// 			} else {
-// 				hauler.task = Tasks.goTo(this.miningGroup.dropoff);
-// 			}
-// 		}
-// 	}
-//
-//
-// 	run() {
-// 		for (let hauler of this.haulers) {
-// 			if (hauler.isIdle) {
-// 				this.handleHauler(hauler);
-// 			}
-// 		}
-// 	}
-//
-// }
+import {Overlord} from './Overlord';
+import {Zerg} from '../Zerg';
+import {Tasks} from '../tasks/Tasks';
+import {Colony} from '../Colony';
+import {BufferTarget, LogisticsGroup} from '../logistics/LogisticsGroup';
+import {TransporterSetup} from '../creepSetup/defaultSetups';
+import {OverlordPriority} from './priorities_overlords';
+
+
+export class TransportOverlord extends Overlord {
+
+	transporters: Zerg[];
+	logisticsGroup: LogisticsGroup;
+
+	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.haul) {
+		super(colony, 'logistics', priority);
+		this.transporters = this.creeps(TransporterSetup.role);
+		this.logisticsGroup = new LogisticsGroup(colony); //colony.logisticsGroup;
+	}
+
+	spawn() {
+		let haulingPower = _.sum(_.map(this.lifetimeFilter(this.transporters),
+									   creep => creep.getActiveBodyparts(CARRY)));
+		let needed = this.colony.miningGroups![this.colony.storage!.ref].data.haulingPowerNeeded;
+		if (haulingPower < needed) {
+			this.requestCreep(new TransporterSetup());
+		}
+		this.creepReport(TransporterSetup.role, haulingPower, needed);
+	}
+
+	init() {
+		this.spawn();
+	}
+
+
+	private handleTransporter(transporter: Zerg) {
+		let request = this.logisticsGroup.matching[transporter.name];
+		if (request) {
+			let choices = this.logisticsGroup.bufferChoices(transporter, request);
+			let bestChoice = _.last(_.sortBy(choices, choice => choice.deltaResource / choice.deltaTicks));
+			let task = null;
+			if (request.amount > 0) { // request needs refilling
+				if (request.target instanceof Flag) {
+					task = Tasks.drop(request.target);
+				} else {
+					task = Tasks.deposit(request.target);
+				}
+				if (bestChoice.targetRef != request.target.ref) {
+					// If we need to go to a buffer first to get more stuff
+					let buffer = deref(bestChoice.targetRef) as BufferTarget;
+					let oldTask = task;
+					task = Tasks.withdraw(buffer);
+					task.parent = oldTask;
+				}
+			} else if (request.amount < 0) { // request needs withdrawal
+				if (request.target instanceof Flag) {
+					let resource = request.target.pos.lookFor(LOOK_RESOURCES)[0]; // TODO: include resourceType
+					if (!resource) return;
+					task = Tasks.pickup(resource);
+				} else {
+					task = Tasks.withdraw(request.target);
+				}
+				if (bestChoice.targetRef != request.target.ref) {
+					// If we need to go to a buffer first to get more stuff
+					let buffer = deref(bestChoice.targetRef) as BufferTarget;
+					let oldTask = task;
+					task = Tasks.deposit(buffer);
+					task.parent = oldTask;
+				}
+			}
+			transporter.task = task;
+		}
+	}
+
+
+	run() {
+		for (let transporter of this.transporters) {
+			if (transporter.isIdle) {
+				this.handleTransporter(transporter);
+			}
+			if (transporter.task) {
+				transporter.say(`${transporter.task.name[0]}:${transporter.task.targetPos.x},${transporter.task.targetPos.y},${transporter.task.targetPos.roomName}`);
+			}
+		}
+	}
+
+}

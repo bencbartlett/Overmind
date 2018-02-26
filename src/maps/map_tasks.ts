@@ -24,9 +24,11 @@ import {signControllerTargetType, signControllerTaskName, TaskSignController} fr
 import {TaskTransfer, transferTargetType, transferTaskName} from '../tasks/task_transfer';
 import {TaskUpgrade, upgradeTargetType, upgradeTaskName} from '../tasks/task_upgrade';
 import {
-	TaskWithdrawResource, withdrawResourceTargetType,
+	TaskWithdrawResource,
+	withdrawResourceTargetType,
 	withdrawResourceTaskName
 } from '../tasks/task_withdrawResource';
+import {dropTargetType, dropTaskName, TaskDrop} from '../tasks/task_drop';
 
 export function taskInstantiator(protoTask: protoTask): Task {
 	// Retrieve name and target data from the protoTask
@@ -49,6 +51,9 @@ export function taskInstantiator(protoTask: protoTask): Task {
 			break;
 		case dismantleTaskName:
 			task = new TaskDismantle(target as dismantleTargetType);
+			break;
+		case dropTaskName:
+			task = new TaskDrop(target as dropTargetType);
 			break;
 		case fortifyTaskName:
 			task = new TaskFortify(target as fortifyTargetType);

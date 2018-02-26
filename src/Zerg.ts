@@ -13,24 +13,24 @@ interface ParkingOptions {
 
 @profile
 export class Zerg {
-	creep: Creep; 					// The creep that this wrapper class will control
-	body: BodyPartDefinition[];     // These properties are all wrapped from this.creep.* to this.*
-	carry: StoreDefinition;			// |
-	carryCapacity: number;			// |
-	fatigue: number;				// |
-	hits: number;					// |
-	hitsMax: number;				// |
-	id: string;						// |
-	memory: CreepMemory;			// | See the ICreepMemory interface for structure
-	name: string;					// |
-	pos: RoomPosition;				// |
-	ref: string;					// |
-	roleName: string;				// |
-	room: Room;						// |
-	spawning: boolean;				// |
-	ticksToLive: number;			// |
+	creep: Creep; 						// The creep that this wrapper class will control
+	body: BodyPartDefinition[];    	 	// These properties are all wrapped from this.creep.* to this.*
+	carry: StoreDefinition;				// |
+	carryCapacity: number;				// |
+	fatigue: number;					// |
+	hits: number;						// |
+	hitsMax: number;					// |
+	id: string;							// |
+	memory: CreepMemory;				// | See the ICreepMemory interface for structure
+	name: string;						// |
+	pos: RoomPosition;					// |
+	ref: string;						// |
+	roleName: string;					// |
+	room: Room;							// |
+	spawning: boolean;					// |
+	ticksToLive: number | undefined;	// |
 	// settings: any;					// Adjustable settings object, can vary across roles
-	private _task: Task | null; 	// Cached Task object that is instantiated once per tick and every time task changes
+	private _task: Task | null; 		// Cached Task object that is instantiated once per tick and on change
 
 	constructor(creep: Creep) {
 		this.creep = creep;

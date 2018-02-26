@@ -32,6 +32,7 @@ import {sandbox} from './sandbox/sandbox';
 import {Mem} from './memory';
 import OM from './Overmind';
 import {Console} from './console';
+import {Stats} from './stats';
 
 // Execute this every global reset
 global.log = log;
@@ -48,6 +49,7 @@ export function loop(): void {
 	Overmind.init();			// Init phase: spawning and energy requests
 	Overmind.run();				// Run phase: execute state-changing actions
 	Overmind.visuals(); 		// Draw visuals
+	Stats.run(); 				// Record statistics
 	sandbox();					// Sandbox: run any testing code
 }
 

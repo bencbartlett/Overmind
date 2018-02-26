@@ -274,7 +274,7 @@ export class RoomPlanner {
 			}
 		}
 		obstacles = _.unique(obstacles);
-		opts = _.merge(opts, {obstacles: obstacles});
+		opts = _.merge(opts, {obstacles: obstacles, ensurePath: true, range: 1});
 		// Find the shortest path, preferentially stepping on tiles with road routing flags on them
 		let roadPath = Pathing.routeRoadPath(pos1, pos2, opts).path;
 		let shortestPath = Pathing.findShortestPath(pos1, pos2, opts).path;
@@ -284,22 +284,36 @@ export class RoomPlanner {
 			this.roadPositions = this.roadPositions.concat(roadPath);
 			return roadPath;
 		} else if (roadPath.length > shortestPath.length + errorTolerance) {
-			Visualizer.drawPath(shortestPath, {stroke: 'green'});
-			Visualizer.drawPath(roadPath, {stroke: 'red'});
+			Visualizer.drawPath(shortestPath, {stroke: 'green', strokeWidth: 0.2});
+			Visualizer.drawPath(roadPath, {stroke: 'red', strokeWidth: 0.2});
 			let textPos = roadPath[Math.min(5, roadPath.length - 1)];
 			if (this.textPositions.includes(textPos)) {
 				textPos.y += 1;
 			}
 			this.textPositions.push(textPos);
-			Visualizer.text(`Planned: ${roadPath.length}`, textPos,
+			Visualizer.text(`Planned: ${roadPath.length} (SHOWN)`, textPos,
 							{color: 'red', align: 'left'});
 			Visualizer.text(`Shortest: ${shortestPath.length} `, textPos,
 							{color: 'green', align: 'right'});
 			this.roadPositions = this.roadPositions.concat(roadPath);
 			return roadPath;
 		} else {
-			log.error(`${pos1} to ${pos2}: shortest path has length ${shortestPath.length}` +
-					  `longer than road path length ${roadPath.length}... whaaaa?`);
+			// Pathing algorithm fucked up here; defaulting to shortest path
+			Visualizer.drawPath(shortestPath, {stroke: 'green', strokeWidth: 0.2});
+			Visualizer.drawPath(roadPath, {stroke: 'red', strokeWidth: 0.2});
+			let textPos = roadPath[Math.min(5, roadPath.length - 1)];
+			if (this.textPositions.includes(textPos)) {
+				textPos.y += 1;
+			}
+			this.textPositions.push(textPos);
+			Visualizer.text(`Planned: ${roadPath.length} (ERROR)`, textPos,
+							{color: 'red', align: 'left'});
+			Visualizer.text(`Shortest: ${shortestPath.length} (SHOWN) `, textPos,
+							{color: 'green', align: 'right'});
+			this.roadPositions = this.roadPositions.concat(shortestPath);
+			return shortestPath;
+			// log.error(`${pos1} to ${pos2}: shortest path has length ${shortestPath.length}, ` +
+			// 		  `longer than road path length ${roadPath.length}... whaaaa?`);
 		}
 	}
 

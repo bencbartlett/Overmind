@@ -18,17 +18,15 @@ export default {
     input: "src/main.ts",
     output: {
         file: "dist/main.js",
-        format: "cjs"
+        format: "cjs",
+        sourcemap: true
     },
-
-    sourcemap: true,
 
     plugins: [
         clean(),
         resolve(),
         commonjs(),
         typescript({tsconfig: "./tsconfig.json"}),
-        screeps({config: cfg, dryRun: cfg == null}),
+        screeps({config: cfg, dryRun: cfg == null})
     ]
-
 }

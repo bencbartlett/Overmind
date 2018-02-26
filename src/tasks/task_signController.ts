@@ -1,6 +1,6 @@
 import {Task} from './Task';
-import {controllerSignature} from '../settings/settings_user';
 import {profile} from '../lib/Profiler';
+import {controllerSignature} from '../do-not-modify/do-not-modify';
 
 export type signControllerTargetType = StructureController;
 export const signControllerTaskName = 'signController';

@@ -45,8 +45,8 @@ export class UpgradingOverlord extends Overlord {
 					return;
 				}
 			}
-			if (!this.upgradeSite.controller.signedByMe) {
-				upgrader.task = Tasks.signController(this.upgradeSite.controller);
+			if (!this.upgradeSite.controller.signedByMe) {							// <DO-NOT-MODIFY>: see license
+				upgrader.task = Tasks.signController(this.upgradeSite.controller); 	// <DO-NOT-MODIFY>: see license
 			} else {
 				upgrader.task = Tasks.upgrade(this.upgradeSite.controller);
 			}
@@ -56,7 +56,7 @@ export class UpgradingOverlord extends Overlord {
 				upgrader.task = Tasks.withdraw(this.upgradeSite.input);
 			} else {
 				let target = upgrader.pos.findClosestByRange(this.room.storageUnits);
-				upgrader.task = Tasks.withdraw(target);
+				if (target) upgrader.task = Tasks.withdraw(target);
 			}
 		}
 	}

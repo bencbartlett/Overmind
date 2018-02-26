@@ -10,6 +10,46 @@ interface Memory {
 	pathing: PathingMemory;
 	log: LoggerMemory;
 	pathLengths: any;
+	// stats: StatsMemory;
+}
+
+interface StatsMemory {
+	cpu: {
+		getUsed: number;
+		limit: number;
+		bucket: number;
+		usage: {
+			[colonyName: string]: {
+				init: number;
+				run: number;
+				visuals: number;
+			}
+		}
+	}
+	gcl: {
+		progress: number;
+		progressTotal: number;
+		level: number;
+	}
+	colonies: {
+		[colonyName: string]: {
+			hatchery: {
+				uptime: number;
+			}
+			miningSite: {
+				usage: number;
+				downtime: number;
+			}
+			storage: {
+				energy: number;
+			}
+			rcl: {
+				level: number,
+				progress: number,
+				progressTotal: number,
+			}
+		}
+	}
 }
 
 interface CreepMemory {

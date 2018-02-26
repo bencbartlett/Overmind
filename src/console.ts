@@ -1,13 +1,17 @@
 // Command line
 
 import {asciiLogo} from './visuals/Visualizer';
+import {Colony} from './Colony';
+import {toColumns} from './utils';
 
 export class Console {
+
 	static init() {
 		global.help = this.help();
 		global.openRoomPlanner = this.openRoomPlanner;
 		global.closeRoomPlanner = this.closeRoomPlanner;
 		global.cancelRoomPlanner = this.cancelRoomPlanner;
+		global.listActiveRoomPlanners = this.listActiveRoomPlanners;
 	}
 
 	static help() {
@@ -15,52 +19,30 @@ export class Console {
 		for (let line of asciiLogo) {
 			msg += line + '\n';
 		}
-		msg += '\nOvermind repository: github.com/bencbartlett/Overmind\n';
+		msg += '\nOvermind repository: github.com/bencbartlett/Overmind\n\n';
+
+		let descr: { [functionName: string]: string } = {};
+		descr['help'] = 'show this message';
+		descr['log.level = [int]'] = 'set the logging level from 0 - 4';
+		descr['openRoomPlanner(roomName)'] = 'open the room planner for a room';
+		descr['closeRoomPalnner(roomName)'] = 'close the room planner and save changes';
+		descr['cancelRoomPlanner(roomName)'] = 'close the room planner and discard changes';
+		descr['listActiveRoomPlanners()'] = 'display a list of colonies with open room planners';
 		// Console list
-		msg += 'Console ======================================= \n' +
-			   'help				     	show this message \n' +
-			   'log.level = (0-1)			set the loging level \n' +
-			   'openRoomPlanner(roomName)	open the room planner\n' +
-			   'closeRoomPlanner(roomName) 	close the room planner and save changes\n' +
-			   'cancelRoomPlanner(roomName) close the room planner and discard changes\n';
+		let descrMsg = toColumns(descr, {justify: true, padChar: '.'});
+		let maxLineLength = _.max(_.map(descrMsg, line => line.length));
+		msg += 'Console Commands: '.padRight(maxLineLength, '=') + '\n' + descrMsg.join('\n');
 
-		msg += '\nRefer to the repository for more information\n';
-
-		// let output = '';
-		//
-		// // get function name max length
-		// const longestName = (_.max(data, (d) => d.name.length)).name.length + 2;
-		//
-		// //// Header line
-		// output += _.padRight('Function', longestName);
-		// output += _.padLeft('Tot Calls', 12);
-		// output += _.padLeft('CPU/Call', 12);
-		// output += _.padLeft('Calls/Tick', 12);
-		// output += _.padLeft('CPU/Tick', 12);
-		// output += _.padLeft('% of Tot\n', 12);
-		//
-		// ////  Data lines
-		// data.forEach((d) => {
-		// 	output += _.padRight(`${d.name}`, longestName);
-		// 	output += _.padLeft(`${d.calls}`, 12);
-		// 	output += _.padLeft(`${d.cpuPerCall.toFixed(2)}ms`, 12);
-		// 	output += _.padLeft(`${d.callsPerTick.toFixed(2)}`, 12);
-		// 	output += _.padLeft(`${d.cpuPerTick.toFixed(2)}ms`, 12);
-		// 	output += _.padLeft(`${(d.cpuPerTick / totalCpu * 100).toFixed(0)} %\n`, 12);
-		// });
-		//
-		// //// Footer line
-		// output += `${totalTicks} total ticks measured`;
-		// output += `\t\t\t${totalCpu.toFixed(2)} average CPU profiled per tick`;
-		// console.log(output);
+		msg += '\n\nRefer to the repository for more information\n';
 
 		return msg;
 	}
 
-	static openRoomPlanner(roomName: string): string | void {
+	static openRoomPlanner(roomName: string): string {
 		if (Overmind.Colonies[roomName]) {
 			if (Overmind.Colonies[roomName].roomPlanner.active != true) {
 				Overmind.Colonies[roomName].roomPlanner.active = true;
+				return '';
 			} else {
 				return `RoomPlanner for ${roomName} is already active!`;
 			}
@@ -69,10 +51,11 @@ export class Console {
 		}
 	}
 
-	static closeRoomPlanner(roomName: string): string | void {
+	static closeRoomPlanner(roomName: string): string {
 		if (Overmind.Colonies[roomName]) {
 			if (Overmind.Colonies[roomName].roomPlanner.active == true) {
 				Overmind.Colonies[roomName].roomPlanner.finalize();
+				return '';
 			} else {
 				return `RoomPlanner for ${roomName} is not active!`;
 			}
@@ -81,7 +64,7 @@ export class Console {
 		}
 	}
 
-	static cancelRoomPlanner(roomName: string): string | void {
+	static cancelRoomPlanner(roomName: string): string {
 		if (Overmind.Colonies[roomName]) {
 			if (Overmind.Colonies[roomName].roomPlanner.active == true) {
 				Overmind.Colonies[roomName].roomPlanner.active = false;
@@ -91,6 +74,19 @@ export class Console {
 			}
 		} else {
 			return `Error: ${roomName} is not a valid colony!`;
+		}
+	}
+
+	static listActiveRoomPlanners(): string {
+		let coloniesWithActiveRoomPlanners: Colony[] = _.filter(
+			_.map(_.keys(Overmind.Colonies), colonyName => Overmind.Colonies[colonyName]),
+			(colony: Colony) => colony.roomPlanner.active);
+		let names: string[] = _.map(coloniesWithActiveRoomPlanners, colony => colony.room.print);
+		if (names.length > 0) {
+			console.log('Colonies with active room planners: ' + names);
+			return '';
+		} else {
+			return `No colonies with active room planners`;
 		}
 	}
 }

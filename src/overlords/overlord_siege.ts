@@ -45,7 +45,6 @@ export class SiegeOverlord extends Overlord {
 		}
 	}
 
-	/* Attack and chase the specified target */
 	private siegeActions(sieger: Zerg, target: Structure): void {
 		// console.log(`sieging to ${target.pos}`);
 		let hasDismantled = false;

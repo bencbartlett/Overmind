@@ -11,6 +11,7 @@ import {Mem} from '../memory';
 import {log} from '../lib/logger/log';
 import {OverlordPriority} from '../overlords/priorities_overlords';
 import {Visualizer} from '../visuals/Visualizer';
+import {Stats} from '../stats';
 
 @profile
 export class MiningSite extends HiveCluster {
@@ -75,6 +76,8 @@ export class MiningSite extends HiveCluster {
 		}
 		this.memory.stats.downtime = (this.memory.stats.downtime * (CREEP_LIFE_TIME - 1) +
 									  (this.output ? +this.output.isFull : 0)) / CREEP_LIFE_TIME;
+		Stats.log(`colonies.${this.colony.name}.miningSites.${this.name}.usage`, this.memory.stats.usage);
+		Stats.log(`colonies.${this.colony.name}.miningSites.${this.name}.downtime`, this.memory.stats.downtime);
 	}
 
 	/* Predicted store amount a hauler will see once it arrives at the miningSite traveling from the miningGroup
@@ -118,8 +121,9 @@ export class MiningSite extends HiveCluster {
 		if (this.output instanceof StructureContainer) {
 			let colonyHaulers = this.colony.getCreepsByRole('hauler');
 			let avgHaulerCap = _.sum(_.map(colonyHaulers, hauler => hauler.carryCapacity)) / colonyHaulers.length;
-			if (this.predictedStore > 0.9 * avgHaulerCap) {
+			if (this.predictedStore > 0.9 * avgHaulerCap) { // TODO: hardcoded
 				resourceRequestGroup.requestWithdrawal(this.output);
+				// this.colony.logisticsGroup.provide(this.output);
 			}
 		} else if (this.output instanceof StructureLink) {
 			// If the link will be full with next deposit from the miner

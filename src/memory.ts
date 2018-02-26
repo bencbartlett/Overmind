@@ -38,6 +38,7 @@ export class Mem {
 		_.defaults(Memory.settings, {
 			enableVisuals: true,
 		});
+
 	}
 
 	static cleanCreeps() {
@@ -94,5 +95,6 @@ export class Mem {
 		this.cleanCreeps();
 		this.cleanFlags();
 		this.cleanPathingMemory();
+		Memory.stats = {};
 	}
 }

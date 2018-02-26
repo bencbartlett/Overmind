@@ -1,6 +1,7 @@
 // Room prototypes - commonly used room properties and methods
 
-import {controllerSignature, myUsername} from '../settings/settings_user';
+import {myUsername} from '../settings/settings_user';
+import {controllerSignature} from '../do-not-modify/do-not-modify';
 
 // Logging =============================================================================================================
 Object.defineProperty(Room.prototype, 'print', {

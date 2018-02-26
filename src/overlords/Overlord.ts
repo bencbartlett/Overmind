@@ -111,7 +111,9 @@ export abstract class Overlord {
 	// TODO: include creep move speed
 	lifetimeFilter(creeps: Zerg[], prespawn = 50): Zerg[] {
 		let spawnDistance = 0;
-		if (this.colony.hatchery) {
+		if (this.colony.incubator) {
+			spawnDistance = Pathing.distance(this.pos, this.colony.incubator.hatchery!.pos) || 0;
+		} else if (this.colony.hatchery) {
 			// Use distance or 0 (in case distance returns something undefined due to incomplete pathfinding)
 			spawnDistance = Pathing.distance(this.pos, this.colony.hatchery.pos) || 0;
 		}
@@ -119,7 +121,7 @@ export abstract class Overlord {
 		// The last condition fixes a bug only present on private servers that took me a fucking week to isolate.
 		// At the tick of birth, creep.spawning = false and creep.ticksTolive = undefined
 		// See: https://screeps.com/forum/topic/443/creep-spawning-is-not-updated-correctly-after-spawn-process
-		return _.filter(creeps, creep => creep.ticksToLive > 3 * creep.body.length + spawnDistance + prespawn ||
+		return _.filter(creeps, creep => creep.ticksToLive! > 3 * creep.body.length + spawnDistance + prespawn ||
 										 creep.spawning || (!creep.spawning && !creep.ticksToLive));
 	}
 

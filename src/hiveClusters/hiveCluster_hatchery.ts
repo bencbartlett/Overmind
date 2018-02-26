@@ -10,6 +10,7 @@ import {CreepSetup} from '../creepSetup/CreepSetup';
 import {Overlord} from '../overlords/Overlord';
 import {Mem} from '../memory';
 import {Visualizer} from '../visuals/Visualizer';
+import {Stats} from '../stats';
 
 @profile
 export class Hatchery extends HiveCluster {
@@ -86,6 +87,7 @@ export class Hatchery extends HiveCluster {
 		} else {
 			uptime = spawnUsageThisTick;
 		}
+		Stats.log(`colonies.${this.colony.name}.hatchery.uptime`, uptime);
 		return {
 			uptime: uptime,
 		};
@@ -99,6 +101,7 @@ export class Hatchery extends HiveCluster {
 		}
 		if (this.battery && this.battery.energy < 0.25 * this.battery.storeCapacity) {
 			this.colony.transportRequests.requestEnergy(this.battery);
+			// this.colony.logisticsGroup.request(this.battery, {multiplier: 1.5});
 		}
 		// Register energy transport requests (goes on hatchery request group, which can be colony request group)
 		let refillSpawns = _.filter(this.spawns, spawn => spawn.energy < spawn.energyCapacity);

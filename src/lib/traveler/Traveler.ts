@@ -267,6 +267,7 @@ export class Traveler {
 			ignoreCreeps: true,
 			maxOps      : DEFAULT_MAXOPS,
 			range       : 1,
+			ensurePath  : true
 		});
 
 		if (options.movingTarget) {
@@ -683,7 +684,7 @@ const STATE_DEST_Y = 5;
 const STATE_DEST_ROOMNAME = 6;
 
 // assigns a function to Creep.prototype: creep.travelTo(destination)
-Creep.prototype.travelTo = function(destination: RoomPosition|{pos: RoomPosition}, options?: TravelToOptions) {
+Creep.prototype.travelTo = function (destination: RoomPosition | { pos: RoomPosition }, options?: TravelToOptions) {
 	return Traveler.travelTo(this, destination, options);
 };
 

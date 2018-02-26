@@ -16,6 +16,9 @@ import {HiveCluster} from './hiveClusters/HiveCluster';
 import {LinkRequestGroup} from './logistics/LinkRequests';
 import {TransportRequestGroup} from './logistics/TransportRequestGroup';
 import {Priority} from './config/priorities';
+import {Stats} from './stats';
+// import {LogisticsGroup} from './logistics/LogisticsGroup';
+// import {TransportOverlord} from './overlords/overlord_transport';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -75,10 +78,12 @@ export class Colony {
 	// Resource requests
 	linkRequests: LinkRequestGroup;
 	transportRequests: TransportRequestGroup;			// Box for resource requests
+	// logisticsGroup: LogisticsGroup;
 	// Overlords
 	overlords: {
 		supply: SupplierOverlord;
 		work: WorkerOverlord;
+		// logistics: TransportOverlord;
 	};
 	// Room planner
 	roomPlanner: RoomPlanner;
@@ -144,6 +149,7 @@ export class Colony {
 		// Resource requests
 		this.linkRequests = new LinkRequestGroup();
 		this.transportRequests = new TransportRequestGroup();
+		// this.logisticsGroup = new LogisticsGroup(this);
 		// Build the hive clusters
 		this.hiveClusters = [];
 		this.buildHiveClusters();
@@ -202,6 +208,7 @@ export class Colony {
 		this.overlords = {
 			supply: new SupplierOverlord(this),
 			work  : new WorkerOverlord(this),
+			// logistics: new TransportOverlord(this),
 		};
 	}
 
@@ -270,6 +277,15 @@ export class Colony {
 		_.forEach(this.creeps, creep => creep.run());
 		// Run the room planner
 		this.roomPlanner.run();
+		// Record statistics
+		this.stats();
+	}
+
+	stats(): void {
+		Stats.log(`colonies.${this.name}.storage.energy`, this.storage ? this.storage.energy : undefined);
+		Stats.log(`colonies.${this.name}.rcl.level`, this.controller.level);
+		Stats.log(`colonies.${this.name}.rcl.progress`, this.controller.progress);
+		Stats.log(`colonies.${this.name}.rcl.progressTotal`, this.controller.progressTotal);
 	}
 
 	visuals(): void {

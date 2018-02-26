@@ -13,7 +13,5 @@ function getUsername(): string {
 
 export var myUsername: string = getUsername(); // Your username
 
-export var reserveCredits: number  = 10000; // Number of credits to reserve before buying market orders
-
-export var controllerSignature: string = 'Overmind Screeps AI'; // Signature to place on owned and occupied rooms
+export var reserveCredits = 10000; // Number of credits to reserve before buying market orders
 
