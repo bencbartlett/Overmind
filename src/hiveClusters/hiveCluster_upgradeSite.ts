@@ -2,7 +2,7 @@
 
 import {HiveCluster} from './HiveCluster';
 import {profile} from '../lib/Profiler';
-import {UpgradingOverlord} from '../overlords/overlord_upgrade';
+import {UpgradingOverlord} from '../overlords/core/overlord_upgrade';
 import {Colony} from '../Colony';
 import {Mem} from '../memory';
 import {Visualizer} from '../visuals/Visualizer';
@@ -38,7 +38,7 @@ export class UpgradeSite extends HiveCluster {
 		this.inputConstructionSite = nearbyInputSites[0];
 		this.settings = {
 			storageBuffer    : 100000,	// Number of upgrader parts scales with energy - this value
-			energyPerBodyUnit: 50000,	// Scaling factor: this much excess energy adds one extra body repetition
+			energyPerBodyUnit: 25000,	// Scaling factor: this much excess energy adds one extra body repetition
 		};
 		// Register overlord
 		this.overlord = new UpgradingOverlord(this);

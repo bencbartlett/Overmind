@@ -6,10 +6,10 @@ import {reserveCredits} from '../settings/settings_user';
 import {terminalSettings} from '../settings/settings_terminal';
 import {log} from '../lib/logger/log';
 import {profile} from '../lib/Profiler';
-import {CommandCenterOverlord} from '../overlords/overlord_commandCenter';
+import {CommandCenterOverlord} from '../overlords/hiveCluster/overlord_commandCenter';
 import {Colony} from '../Colony';
 import {Mem} from '../memory';
-import {Priority} from '../config/priorities';
+import {Priority} from '../settings/priorities';
 import {Visualizer} from '../visuals/Visualizer';
 
 @profile
@@ -117,6 +117,8 @@ export class CommandCenter extends HiveCluster {
 		_.forEach(refillTowers, tower =>
 			this.colony.transportRequests.requestEnergy(tower, tower.energy < this.settings.refillTowersBelow ?
 															   Priority.High : Priority.Low));
+		let refillLabs = _.filter(this.labs, lab => lab.energy < lab.energyCapacity);
+		_.forEach(refillLabs, lab => this.colony.transportRequests.requestEnergy(lab, Priority.NormalLow));
 	}
 
 	// Terminal logic ==================================================================================================
@@ -289,7 +291,7 @@ export class CommandCenter extends HiveCluster {
 			this.sendExtraEnergy();
 		}
 		// buy shortages only if there's enough energy; avoids excessive CPU usage
-		if (this.terminal.energy > 0.9 * this.terminalSettings.resourceAmounts[RESOURCE_ENERGY]) {
+		if (Game.time % 10 == 0) {
 			this.buyShortages();
 		}
 	}

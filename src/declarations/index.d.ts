@@ -57,6 +57,13 @@ interface Coord {
 	y: number;
 }
 
+interface RoomCoord {
+	x: number;
+	y: number;
+	xDir: string;
+	yDir: string;
+}
+
 interface StructureMap {
 	[structureType: string]: RoomPosition[];
 }
@@ -104,7 +111,6 @@ interface protoTask {
 	_parent: protoTask | null;
 	settings: {
 		targetRange: number;
-		moveColor: string;
 	};
 	options: TaskOptions;
 	data: {

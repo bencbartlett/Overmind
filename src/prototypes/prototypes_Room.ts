@@ -1,12 +1,12 @@
 // Room prototypes - commonly used room properties and methods
 
 import {myUsername} from '../settings/settings_user';
-import {controllerSignature} from '../do-not-modify/do-not-modify';
+import {overmindSignature} from '../settings/do-not-modify';
 
 // Logging =============================================================================================================
 Object.defineProperty(Room.prototype, 'print', {
 	get() {
-		return '<a href="#!/room/' + this.name + '">' + this.name + '</a>';
+		return '<a href="#!/room/' + Game.shard.name + '/' + this.name + '">' + this.name + '</a>';
 	}
 });
 
@@ -26,7 +26,7 @@ Object.defineProperty(Room.prototype, 'reservedByMe', {
 
 Object.defineProperty(Room.prototype, 'signedByMe', {
 	get() {
-		return this.controller && this.controller.sign && this.controller.sign.text == controllerSignature;
+		return this.controller && this.controller.sign && this.controller.sign.text == overmindSignature;
 	},
 });
 
@@ -44,7 +44,7 @@ Object.defineProperty(Room.prototype, 'creeps', {
 // Hostile creeps currently in the room
 Object.defineProperty(Room.prototype, 'hostiles', {
 	get() {
-		return this.find(FIND_HOSTILE_CREEPS);
+		return _.filter(this.find(FIND_HOSTILE_CREEPS), (creep: Creep) => creep.owner.username != 'Source Keeper');
 	},
 });
 

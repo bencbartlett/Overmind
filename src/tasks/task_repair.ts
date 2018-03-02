@@ -11,7 +11,6 @@ export class TaskRepair extends Task {
 	constructor(target: repairTargetType, options = {} as TaskOptions) {
 		super(repairTaskName, target, options);
 		// Settings
-		this.settings.moveColor = 'green';
 		this.settings.targetRange = 3;
 	}
 

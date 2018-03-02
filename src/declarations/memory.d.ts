@@ -62,11 +62,13 @@ interface CreepMemory {
 		replaceAt: number;
 		boosts: { [resourceName: string]: boolean };
 		moveSpeed?: number;
-		// supplyRequests?: IResourceRequest[];
 	};
 	// Traveler components
 	_travel: any;
 	_trav: any;
+	// Combat
+	partner?: string;
+	retreating?: boolean;
 }
 
 interface LoggerMemory {

@@ -1,5 +1,5 @@
 import {SourceMapConsumer} from 'source-map';
-import * as Config from '../../config/config';
+import * as Config from '../../settings/config';
 import {LogLevels} from './logLevels';
 import {profile} from '../Profiler';
 

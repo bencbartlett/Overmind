@@ -13,7 +13,6 @@ export class TaskBuild extends Task {
 		// Settings
 		this.settings.targetRange = 3;
 		this.settings.workOffRoad = true;
-		this.settings.moveColor = 'yellow';
 	}
 
 	isValidTask() {

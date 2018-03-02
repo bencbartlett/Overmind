@@ -1,7 +1,7 @@
 /* The Overlord object handles most of the task assignment and directs the spawning operations for each Colony. */
 
-import {DirectiveGuard} from './directives/directive_guard';
-import {DirectiveBootstrap, EMERGENCY_ENERGY_THRESHOLD} from './directives/directive_bootstrap';
+import {DirectiveGuard} from './directives/combat/directive_guard';
+import {DirectiveBootstrap, EMERGENCY_ENERGY_THRESHOLD} from './directives/core/directive_bootstrap';
 import {profile} from './lib/Profiler';
 import {Colony} from './Colony';
 import {Overlord} from './overlords/Overlord';
@@ -9,6 +9,7 @@ import {Directive} from './directives/Directive';
 import {log} from './lib/logger/log';
 import {Visualizer} from './visuals/Visualizer';
 import {Pathing} from './pathing/pathing';
+import {DirectiveGuardSwarm} from './directives/combat/directive_guard_swarm';
 
 @profile
 export class Overseer {
@@ -40,7 +41,14 @@ export class Overseer {
 										  _.map(this.colony.incubatingColonies, col => col.rooms)]) as Room[];
 		for (let room of roomsToCheck) {
 			let guardFlags = _.filter(room.flags, flag => DirectiveGuard.filter(flag));
-			if (room.hostiles.length > 0 && guardFlags.length == 0) {
+			let guardSwarmFlags = _.filter(room.flags, flag => DirectiveGuardSwarm.filter(flag));
+			let bigHostiles = _.filter(room.hostiles, creep => creep.body.length >= 10);
+			// let hostiles = _.filter(room.hostiles, creep => creep.getActiveBodyparts(ATTACK) > 0 ||
+			// 												creep.getActiveBodyparts(WORK) > 0 ||
+			// 												creep.getActiveBodyparts(RANGED_ATTACK) > 0 ||
+			// 												creep.getActiveBodyparts(HEAL) > 0);
+			if ((room.hostiles.length > 0 && guardFlags.length + guardSwarmFlags.length == 0) ||
+				(bigHostiles.length > 0 && guardFlags.length == 0)) {
 				DirectiveGuard.create(room.hostiles[0].pos);
 			}
 		}

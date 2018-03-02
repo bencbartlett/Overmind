@@ -112,7 +112,23 @@ export class Pathing {
 		return ret;
 	}
 
-	/* Returns the shortest path from start to end position, regardless of (passable) terrain */
+	/* Whether another object in the same room can be reached from the current position */
+	static isReachable(startPos: RoomPosition, endPos: RoomPosition, options: TravelToOptions = {}): boolean {
+		_.defaults(options, {
+			ignoreCreeps: false,
+			range       : 1,
+			offRoad     : true,
+			allowSK     : true,
+			allowHostile: true,
+			maxRooms    : 1,
+			maxOps      : 2000,
+			ensurePath  : false
+		});
+		let ret = Traveler.findTravelPath(startPos, endPos, options);
+		return !(ret.incomplete);
+	}
+
+	/* Returns the shortest path from start to end position */
 	static findTravelPath(startPos: RoomPosition, endPos: RoomPosition,
 						  options: TravelToOptions = {}): PathfinderReturn {
 		_.defaults(options, {

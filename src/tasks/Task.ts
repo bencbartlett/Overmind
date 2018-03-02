@@ -1,4 +1,3 @@
-import {log} from '../lib/logger/log';
 import {taskInstantiator} from '../maps/map_tasks';
 import {Zerg} from '../Zerg';
 
@@ -24,13 +23,10 @@ export abstract class Task {
 	_parent: protoTask | null; 	// The parent of this task, if any. Task is changed to parent upon completion.
 	settings: { 				// Data pertaining to a given type of task; shouldn't be modified on an instance-basis
 		targetRange: number;		// How close you must be to the target to do the work() function
-		moveColor: string; 			// Color to draw movement lines with visuals (will be re-implemented later)
 		workOffRoad: boolean; 	// Should the task be performed off-road (e.g. working, upgrading, etc)
 	};
 	options: TaskOptions;
 	data: { 					// Data pertaining to a given instance of a task
-		quiet?: boolean; 			// Don't complain about shit in the console
-		resourceType?: string; 		// For non-energy resource movement tasks
 	};
 
 	constructor(taskName: string, target: targetType, options = {} as TaskOptions) {
@@ -57,7 +53,6 @@ export abstract class Task {
 		this._parent = null;
 		this.settings = {
 			targetRange: 1,
-			moveColor  : '#fff',
 			workOffRoad: false,
 		};
 		_.defaults(options, {
@@ -183,11 +178,11 @@ export abstract class Task {
 				// Move to somewhere nearby that isn't on a road
 				this.creep.park(this.targetPos, true);
 			}
-			let workResult = this.work();
-			if (workResult != OK && this.data.quiet == false) {
-				log.debug('Error executing ' + this.name + ', returned ' + workResult);
-			}
-			return workResult;
+			// let workResult = this.work();
+			// if (workResult != OK && this.data.quiet == false) {
+			// 	log.debug('Error executing ' + this.name + ', returned ' + workResult);
+			// }
+			return this.work();
 		} else {
 			this.move();
 		}

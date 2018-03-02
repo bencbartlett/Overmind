@@ -2,8 +2,9 @@
 
 // General structure prototypes ========================================================================================
 
-import {controllerSignature} from '../do-not-modify/do-not-modify';
+import {overmindSignature} from '../settings/do-not-modify';
 import {myUsername} from '../settings/settings_user';
+import {DirectiveLabMineral} from '../directives/labs/directive_labMineralType';
 
 Object.defineProperty(StructureContainer.prototype, 'isPassible', {
 	get() {
@@ -56,7 +57,7 @@ Object.defineProperty(StructureController.prototype, 'reservedByMe', {
 
 Object.defineProperty(StructureController.prototype, 'signedByMe', {
 	get: function () {
-		return this.sign && this.sign.text == controllerSignature;
+		return this.sign && this.sign.text == overmindSignature;
 	},
 });
 
@@ -79,7 +80,17 @@ Object.defineProperty(StructureExtension.prototype, 'isEmpty', { // if this cont
 });
 
 // Lab prototypes ======================================================================================================
-
+StructureLab.prototype.getMineralType = function (): _ResourceConstantSansEnergy | undefined {
+	if (this.mineralType) {
+		return this.mineralType;
+	} else {
+		let flags = this.pos.lookFor(LOOK_FLAGS);
+		let dir = _.first(DirectiveLabMineral.find(flags) as DirectiveLabMineral[]);
+		if (dir.mineralType) {
+			return dir.mineralType;
+		}
+	}
+};
 
 // Link prototypes =====================================================================================================
 
@@ -116,14 +127,6 @@ Object.defineProperty(StructureSpawn.prototype, 'isEmpty', { // if this containe
 
 
 // Storage prototypes ==================================================================================================
-
-// StructureStorage.prototype.creepCanWithdrawEnergy = function (creep: Zerg): boolean {
-// 	let bufferAmount: number = this.room.colony.overseer.settings.storageBuffer[creep.roleName];
-// 	if (!bufferAmount) {
-// 		bufferAmount = 0;
-// 	}
-// 	return this.energy > bufferAmount;
-// };
 
 Object.defineProperty(StructureStorage.prototype, 'energy', {
 	get() {
@@ -164,63 +167,6 @@ Object.defineProperty(StructureTerminal.prototype, 'isEmpty', { // if this conta
 	},
 });
 
-// Tower prototypes ====================================================================================================
-
-StructureTower.prototype.run = function () {
-	// Task priority for towers: attack, then heal, then repair
-	var taskPriority = [
-		() => this.attackNearestEnemy(),
-		() => this.healNearestAlly(),
-		() => this.preventRampartDecay(),
-		() => this.repairNearestStructure(),
-	];
-	for (let task of taskPriority) {
-		if (task() == OK) {
-			break;
-		}
-	}
-};
-
-StructureTower.prototype.attackNearestEnemy = function () {
-	var closestHostile = this.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-	if (closestHostile != undefined) {
-		return this.attack(closestHostile);
-	}
-};
-
-StructureTower.prototype.healNearestAlly = function () {
-	var closestDamagedAlly = this.pos.findClosestByRange(FIND_MY_CREEPS, {
-		filter: (c: Creep) => c.hits < c.hitsMax,
-	});
-	if (closestDamagedAlly) {
-		return this.heal(closestDamagedAlly);
-	}
-};
-
-StructureTower.prototype.repairNearestStructure = function () {
-	let toggle = false;
-	if (toggle) {
-		var closestDamagedStructure = this.pos.findClosestByRange(FIND_STRUCTURES, {
-			filter: (s: Structure) => s.hits < s.hitsMax &&
-									  s.structureType != STRUCTURE_WALL &&
-									  s.structureType != STRUCTURE_RAMPART,
-		});
-		if (closestDamagedStructure) {
-			return this.repair(closestDamagedStructure);
-		}
-	}
-};
-
-StructureTower.prototype.preventRampartDecay = function () {
-	let hp = 500; // TODO: hardwired
-	var closestDyingRampart = this.pos.findClosestByRange(FIND_STRUCTURES, {
-		filter: (s: Structure) => s.hits < hp && s.structureType == STRUCTURE_RAMPART,
-	});
-	if (closestDyingRampart) {
-		return this.repair(closestDyingRampart);
-	}
-};
-
 Object.defineProperty(StructureTower.prototype, 'isFull', { // if this container-like object is full
 	get() {
 		return this.energy >= this.energyCapacity;
@@ -232,5 +178,7 @@ Object.defineProperty(StructureTower.prototype, 'isEmpty', { // if this containe
 		return this.energy == 0;
 	},
 });
+
+
 
 

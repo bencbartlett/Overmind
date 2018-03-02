@@ -16,11 +16,14 @@ export var OverlordPriority = {
 		pioneer: 301,
 	},
 	ownedRoom : { 			// Operation of an owned room
-		supply : 400,
-		mine   : 401,
-		work   : 402,
-		haul   : 403,
-		upgrade: 404,
+		supply       : 400,
+		mine         : 401,
+		work         : 402,
+		mineralSupply: 403,
+		destroy      : 404, // TODO: war spawning mode
+		haul         : 405,
+		upgrade      : 406,
+
 	},
 	offense   : {			// Offensive operations like raids or sieges
 		healPoint: 500,

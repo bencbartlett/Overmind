@@ -14,7 +14,7 @@
 
 'use strict';
 // Import global settings and prototypes
-import './globals';
+import './console/globals';
 import './settings/settings_user';
 import './prototypes/prototypes_Creep';
 import './prototypes/prototypes_Flag';
@@ -28,11 +28,11 @@ import './prototypes/prototypes_other';
 import {log} from './lib/logger/log';
 import * as Profiler from 'lib/Profiler';
 import {taskInstantiator} from './maps/map_tasks';
-import {sandbox} from './sandbox/sandbox';
+import {sandbox} from './sandbox';
 import {Mem} from './memory';
 import OM from './Overmind';
-import {Console} from './console';
-import {Stats} from './stats';
+import {Console} from './console/console';
+import {Stats} from './stats/stats';
 
 // Execute this every global reset
 global.log = log;

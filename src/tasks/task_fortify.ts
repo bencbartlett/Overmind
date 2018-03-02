@@ -12,7 +12,6 @@ export class TaskFortify extends Task {
 	constructor(target: fortifyTargetType, options = {} as TaskOptions) {
 		super(fortifyTaskName, target, options);
 		// Settings
-		this.settings.moveColor = 'green';
 		this.settings.workOffRoad = true;
 	}
 

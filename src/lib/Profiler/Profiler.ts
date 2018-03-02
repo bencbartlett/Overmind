@@ -1,5 +1,5 @@
 /* tslint:disable:ban-types */
-import {USE_PROFILER} from '../../config/config';
+import {USE_PROFILER} from '../../settings/config';
 
 export function init(): Profiler {
 

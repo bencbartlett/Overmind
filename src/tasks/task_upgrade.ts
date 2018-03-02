@@ -13,9 +13,7 @@ export class TaskUpgrade extends Task {
 		super(upgradeTaskName, target, options);
 		// Settings
 		this.settings.targetRange = 3;
-		this.settings.moveColor = 'purple';
 		this.settings.workOffRoad = true;
-		this.data.quiet = true;
 	}
 
 	isValidTask() {

@@ -11,8 +11,6 @@ export class TaskGetRenewed extends Task {
 
 	constructor(target: getRenewedTargetType, options = {} as TaskOptions) {
 		super(getRenewedTaskName, target, options);
-		// Settings
-		this.settings.moveColor = 'cyan';
 	}
 
 	isValidTask() {

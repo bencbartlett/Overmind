@@ -27,7 +27,7 @@ export class GuardSetup extends CreepSetup {
 
 	constructor() {
 		super(GuardSetup.role, {
-			pattern  : [TOUGH, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, HEAL],
+			pattern  : [TOUGH, MOVE, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, HEAL],
 			sizeLimit: 3,
 		});
 	}

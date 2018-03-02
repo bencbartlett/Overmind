@@ -13,8 +13,6 @@ export class TaskWithdraw extends Task {
 
 	constructor(target: withdrawTargetType, options = {} as TaskOptions) {
 		super(withdrawTaskName, target, options);
-		// Settings
-		this.settings.moveColor = 'blue';
 	}
 
 	isValidTask() {

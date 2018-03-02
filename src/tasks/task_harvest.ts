@@ -10,8 +10,6 @@ export class TaskHarvest extends Task {
 
 	constructor(target: harvestTargetType, options = {} as TaskOptions) {
 		super(harvestTaskName, target, options);
-		// Settings
-		this.settings.moveColor = 'yellow';
 	}
 
 	isValidTask() {

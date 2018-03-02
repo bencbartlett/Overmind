@@ -6,35 +6,34 @@ export const getBoostedTaskName = 'getBoosted';
 
 @profile
 export class TaskGetBoosted extends Task {
+
 	target: getBoostedTargetType;
 
-	constructor(target: getBoostedTargetType, options = {} as TaskOptions) {
+	data: {
+		amount: number | undefined;
+	};
+
+	constructor(target: getBoostedTargetType, amount: number | undefined = undefined, options = {} as TaskOptions) {
 		super(getBoostedTaskName, target, options);
 		// Settings
-		this.settings.moveColor = 'cyan';
+		this.data.amount = amount;
 	}
 
 	isValidTask() {
-		return false; // !(this.creep.memory.boosted && this.creep.memory.boosted[this.target.mineralType]);
+		if (this.data.amount && this.target.mineralType) {
+			return this.creep.boostCounts[this.target.mineralType] <= this.data.amount;
+		} else {
+			return !this.creep.boosts.includes(this.target.mineralType as _ResourceConstantSansEnergy);
+		}
 	}
 
 	isValidTarget() {
-		// var target = this.target;
-		return false; // (target != null && target.my && target.structureType == STRUCTURE_LAB);
+		return true; // Warning: this will block creep actions if the lab is left unsupplied of energy or minerals
 	}
 
 	work() {
-		let response = this.target.boostCreep(this.creep.creep); // boostCreep takes an unwrapped creep as argument
-		// if (response == OK) {
-		// 	if (!this.creep.memory.boosted) {
-		// 		this.creep.memory.boosted = {};
-		// 	}
-		// 	this.creep.memory.boosted[this.target.mineralType] = true;
-		// 	this.creep.log('Boosted successfully!');
-		// }
-		return response;
+		return this.target.boostCreep(this.creep.creep);
 	}
 }
 
-// TODO: fix boosting system
 

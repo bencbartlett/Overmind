@@ -1,58 +1,68 @@
 import {Task} from './Task';
 import {profile} from '../lib/Profiler';
+import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../declarations/typeGuards';
 
 
 export type transferTargetType =
-	StructureContainer
-	| StructureStorage
-	| StructureTerminal
+	EnergyStructure
+	| StoreStructure
 	| StructureLab
 	| StructureNuker
-	| StructurePowerSpawn;
+	| StructurePowerSpawn
+	| Creep;
+
 export const transferTaskName = 'transfer';
 
 @profile
 export class TaskTransfer extends Task {
-	target: transferTargetType;
 
-	constructor(target: transferTargetType, options = {} as TaskOptions) {
+	target: transferTargetType;
+	data: {
+		resourceType: ResourceConstant
+		amount: number | undefined
+	};
+
+	constructor(target: transferTargetType,
+				resourceType: ResourceConstant = RESOURCE_ENERGY,
+				amount: number | undefined     = undefined,
+				options                        = {} as TaskOptions) {
 		super(transferTaskName, target, options);
 		// Settings
-		this.settings.moveColor = 'blue';
-		this.data.resourceType = undefined; // this needs to be overwritten before assignment
+		this.data.resourceType = resourceType;
+		this.data.amount = amount;
 	}
 
 	isValidTask() {
-		let carry = this.creep.carry[<ResourceConstant>this.data.resourceType!]; // TODO: refactor
-		if (carry) {
-			return carry > 0;
-		} else {
-			return false;
-		}
+		let amount = this.data.amount || 0;
+		let resourcesInCarry = this.creep.carry[this.data.resourceType] || 0;
+		return resourcesInCarry >= amount && resourcesInCarry > 0;
 	}
 
 	isValidTarget() {
-		var target = this.target;
-		if (target.structureType == STRUCTURE_CONTAINER ||
-			target.structureType == STRUCTURE_STORAGE ||
-			target.structureType == STRUCTURE_TERMINAL) {
-			let t = target as StructureContainer | StructureStorage | StructureTerminal;
-			return (_.sum(t.store) < t.storeCapacity);
-		} else if (target.structureType == STRUCTURE_LAB) {
-			let t = target as StructureLab;
-			return t.mineralAmount < t.mineralCapacity;
-		} else if (target.structureType == STRUCTURE_NUKER) {
-			let t = target as StructureNuker;
-			return t.ghodium < t.ghodiumCapacity;
-		} else if (target.structureType == STRUCTURE_POWER_SPAWN) {
-			let t = target as StructurePowerSpawn;
-			return t.power < t.powerCapacity;
+		let amount = this.data.amount || 0;
+		let target = this.target;
+		if (target instanceof Creep) {
+			return _.sum(target.carry) < target.carryCapacity - amount;
+		} else if (isStoreStructure(target)) {
+			return _.sum(target.store) < target.storeCapacity - amount;
+		} else if (isEnergyStructure(target) && this.data.resourceType == RESOURCE_ENERGY) {
+			return target.energy < target.energyCapacity - amount;
 		} else {
-			return false;
+			if (target instanceof StructureLab) {
+				return this.data.resourceType == target.mineralType &&
+					   target.mineralAmount < target.mineralCapacity - amount;
+			} else if (target instanceof StructureNuker) {
+				return this.data.resourceType == RESOURCE_GHODIUM &&
+					   target.ghodium < target.ghodiumCapacity - amount;
+			} else if (target instanceof StructurePowerSpawn) {
+				return this.data.resourceType == RESOURCE_POWER &&
+					   target.power < target.powerCapacity - amount;
+			}
 		}
+		return false;
 	}
 
 	work() {
-		return this.creep.transfer(this.target, <ResourceConstant>this.data.resourceType!);
+		return this.creep.transfer(this.target, this.data.resourceType, this.data.amount);
 	}
 }

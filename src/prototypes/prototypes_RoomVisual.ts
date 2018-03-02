@@ -453,6 +453,7 @@ RoomVisual.prototype.connectRoads = function (opts = {}): RoomVisual | void {
 RoomVisual.prototype.speech = function (text: string, x: number, y: number, opts = {}): RoomVisual {
 	var background = !!opts.background ? opts.background : colors.speechBackground;
 	var textcolor = !!opts.textcolor ? opts.textcolor : colors.speechText;
+	// noinspection PointlessBooleanExpressionJS
 	var textstyle = !!opts.textstyle ? opts.textstyle : false;
 	var textsize = !!opts.textsize ? opts.textsize : speechSize;
 	var textfont = !!opts.textfont ? opts.textfont : speechFont;

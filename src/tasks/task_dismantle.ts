@@ -12,8 +12,6 @@ export class TaskDismantle extends Task {
 
 	constructor(target: dismantleTargetType, options = {} as TaskOptions) {
 		super(dismantleTaskName, target, options);
-		// Settings
-		this.settings.moveColor = 'red';
 	}
 
 	isValidTask() {

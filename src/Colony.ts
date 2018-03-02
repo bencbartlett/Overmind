@@ -8,15 +8,18 @@ import {MiningGroup} from './hiveClusters/hiveCluster_miningGroup';
 import {profile} from './lib/Profiler';
 
 import {Overseer} from './Overseer';
-import {SupplierOverlord} from './overlords/overlord_supply';
-import {WorkerOverlord} from './overlords/overlord_work';
+import {SupplierOverlord} from './overlords/core/overlord_supply';
+import {WorkerOverlord} from './overlords/core/overlord_work';
 import {Zerg} from './Zerg';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
 import {HiveCluster} from './hiveClusters/HiveCluster';
 import {LinkRequestGroup} from './logistics/LinkRequests';
 import {TransportRequestGroup} from './logistics/TransportRequestGroup';
-import {Priority} from './config/priorities';
-import {Stats} from './stats';
+import {Priority} from './settings/priorities';
+import {Stats} from './stats/stats';
+import {SporeCrawler} from './hiveClusters/hiveCluster_sporeCrawler';
+import {MineralSupplierOverlord} from './overlords/core/overlord_mineralSupplier';
+import {DirectiveLabMineral} from './directives/labs/directive_labMineralType';
 // import {LogisticsGroup} from './logistics/LogisticsGroup';
 // import {TransportOverlord} from './overlords/overlord_transport';
 
@@ -63,6 +66,7 @@ export class Colony {
 	commandCenter: CommandCenter | undefined;			// Component with logic for non-spawning structures
 	hatchery: Hatchery | undefined;						// Component to encapsulate spawner logic
 	upgradeSite: UpgradeSite;							// Component to provide upgraders with uninterrupted energy
+	sporeCrawlers: SporeCrawler[];
 	miningGroups: { [id: string]: MiningGroup } | undefined;	// Component to group mining sites into a hauling group
 	miningSites: { [sourceID: string]: MiningSite };	// Component with logic for mining and hauling
 	// Incubation status
@@ -84,6 +88,7 @@ export class Colony {
 		supply: SupplierOverlord;
 		work: WorkerOverlord;
 		// logistics: TransportOverlord;
+		mineralSupply?: MineralSupplierOverlord;
 	};
 	// Room planner
 	roomPlanner: RoomPlanner;
@@ -173,6 +178,8 @@ export class Colony {
 		if (this.controller) {
 			this.upgradeSite = new UpgradeSite(this, this.controller);
 		}
+		// Instantiate spore crawlers to wrap towers
+		this.sporeCrawlers = _.map(this.towers, tower => new SporeCrawler(this, tower));
 		// Sort claimed and unclaimed links
 		let claimedLinkCandidates = _.compact([this.commandCenter ? this.commandCenter.link : null,
 											   this.hatchery ? this.hatchery.link : null,
@@ -210,14 +217,19 @@ export class Colony {
 			work  : new WorkerOverlord(this),
 			// logistics: new TransportOverlord(this),
 		};
-	}
-
-	/* Run the tower logic for each tower in the colony */
-	private handleTowers(): void {
-		for (let tower of this.towers) {
-			tower.run();
+		if (this.labs.length > 0) {
+			if (_.filter(this.room.flags, flag => DirectiveLabMineral.filter(flag)).length > 0) {
+				this.overlords.mineralSupply = new MineralSupplierOverlord(this);
+			}
 		}
 	}
+
+	// /* Run the tower logic for each tower in the colony */
+	// private handleTowers(): void {
+	// 	for (let tower of this.towers) {
+	// 		tower.run();
+	// 	}
+	// }
 
 	/* Examine the link resource requests and try to efficiently (but greedily) match links that need energy in and
 	 * out, then send the remaining resourceOut link requests to the command center link */
@@ -271,7 +283,7 @@ export class Colony {
 		// 2: Run the colony virtual components
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.run());
 		// 3 Run the colony real components
-		this.handleTowers();
+		// this.handleTowers();
 		this.handleLinks();
 		// 4: Run each creep in the colony
 		_.forEach(this.creeps, creep => creep.run());

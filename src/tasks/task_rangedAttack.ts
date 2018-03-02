@@ -11,7 +11,6 @@ export class TaskRangedAttack extends Task {
 	constructor(target: rangedAttackTargetType, options = {} as TaskOptions) {
 		super(rangedAttackTaskName, target, options);
 		// Settings
-		this.settings.moveColor = 'red';
 		this.settings.targetRange = 3;
 	}
 

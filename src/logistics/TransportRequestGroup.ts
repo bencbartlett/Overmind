@@ -1,7 +1,7 @@
 // A grouping for objectives that allows colony components to have their own objectives instead of all being on Overlord
 
 import {profile} from '../lib/Profiler';
-import {blankPriorityQueue, Priority} from '../config/priorities';
+import {blankPriorityQueue, Priority} from '../settings/priorities';
 
 export type EnergyRequestStructure = Sink | StructureContainer;
 export type ResourceRequestStructure = StructureLab | StructureNuker | StructurePowerSpawn | StructureContainer;

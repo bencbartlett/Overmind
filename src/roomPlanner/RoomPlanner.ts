@@ -7,7 +7,7 @@ import {Visualizer} from '../visuals/Visualizer';
 import {profile} from '../lib/Profiler';
 import {Mem} from '../memory';
 import {Colony} from '../Colony';
-import {BuildPriorities} from '../config/priorities';
+import {BuildPriorities} from '../settings/priorities';
 
 export interface BuildingPlannerOutput {
 	name: string;
@@ -72,7 +72,7 @@ export class RoomPlanner {
 			maxSitesPerColony : 20,
 		};
 		if (this.active && Game.time % 25 == 0) {
-			log.info(`RoomPlanner for ${this.colony.name} is still active! Finalize or cancel to save CPU.`);
+			log.info(`RoomPlanner for ${this.colony.room.print} is still active! Finalize or cancel to save CPU.`);
 		}
 	}
 

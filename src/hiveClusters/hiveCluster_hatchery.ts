@@ -2,15 +2,15 @@
 
 import {HiveCluster} from './HiveCluster';
 import {profile} from '../lib/Profiler';
-import {HatcheryOverlord} from '../overlords/overlord_hatchery';
-import {Priority} from '../config/priorities';
+import {HatcheryOverlord} from '../overlords/hiveCluster/overlord_hatchery';
+import {Priority} from '../settings/priorities';
 import {Colony, ColonyStage} from '../Colony';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {CreepSetup} from '../creepSetup/CreepSetup';
 import {Overlord} from '../overlords/Overlord';
 import {Mem} from '../memory';
 import {Visualizer} from '../visuals/Visualizer';
-import {Stats} from '../stats';
+import {Stats} from '../stats/stats';
 
 @profile
 export class Hatchery extends HiveCluster {

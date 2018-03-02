@@ -5,11 +5,11 @@ import {DirectiveWrapper} from './maps/map_directives';
 import {profile} from './lib/Profiler';
 import {GameCache} from './caching';
 import {Zerg} from './Zerg';
-import {DirectiveOutpost} from './directives/directive_outpost';
+import {DirectiveOutpost} from './directives/core/directive_outpost';
 import {Overlord} from './overlords/Overlord';
 import {Directive} from './directives/Directive';
 import {Visualizer} from './visuals/Visualizer';
-import {Stats} from './stats';
+import {Stats} from './stats/stats';
 
 
 @profile

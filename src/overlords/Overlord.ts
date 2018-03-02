@@ -1,11 +1,12 @@
-// Overseer: coordinates and directs related creep and structure actions in a more distributed manner than hive clusters
+// Overseer: coordinates creep actions and spawn requests related to a common objective
 
 import {CreepSetup} from '../creepSetup/CreepSetup';
 import {profile} from '../lib/Profiler';
 import {Pathing} from '../pathing/pathing';
-import {Priority} from '../config/priorities';
 import {Colony} from '../Colony';
 import {Zerg} from '../Zerg';
+import {TaskGetBoosted} from '../tasks/task_getBoosted';
+import {log} from '../lib/logger/log';
 
 export interface IOverlordInitializer {
 	name: string;
@@ -27,8 +28,9 @@ export abstract class Overlord {
 	protected _creeps: { [roleName: string]: Zerg[] };
 	creepUsageReport: { [role: string]: [number, number] | undefined };
 	memory: OverlordMemory;
+	boosts: { [roleName: string]: _ResourceConstantSansEnergy[] | undefined };
 
-	constructor(initializer: IOverlordInitializer, name: string, priority = Priority.Normal) {
+	constructor(initializer: IOverlordInitializer, name: string, priority: number) {
 		this.initMemory(initializer);
 		this.name = name;
 		this.room = initializer.room;
@@ -40,6 +42,7 @@ export abstract class Overlord {
 		this.creepUsageReport = _.mapValues(this._creeps, creep => undefined);
 		// Register the overlord on the colony overseer and on the overmind
 		this.colony.overseer.registerOverlord(this);
+		this.boosts = _.mapValues(this._creeps, creep => undefined);
 		Overmind.overlords[this.ref] = this;
 	}
 
@@ -141,10 +144,29 @@ export abstract class Overlord {
 		this.creepReport(setup.role, creepQuantity, quantity);
 	}
 
-	abstract spawn(): void;
+	protected handleBoosts(creep: Zerg): void {
+		let neededBoosts = this.boosts[creep.roleName];
+		if (neededBoosts) {
+			let remainingBoosts = _.difference(neededBoosts, creep.boosts);
+			let boost = _.first(remainingBoosts);
+			if (boost && this.colony.labs.length > 0) {
+				let labsContainingBoost = _.filter(this.colony.labs, lab => lab.mineralType == boost);
+				let lab = _.first(labsContainingBoost);
+				if (lab) {
+					creep.task = new TaskGetBoosted(lab);
+				} else {
+					log.info(`No labs containing ${boost} are in ${this.colony.name}!`);
+				}
+			}
+		}
+	}
 
 	abstract init(): void;
 
 	abstract run(): void;
+
+	visuals(): void {
+
+	}
 
 }

@@ -3,7 +3,7 @@
 import {HiveCluster} from './HiveCluster';
 import {profile} from '../lib/Profiler';
 import {Pathing} from '../pathing/pathing';
-import {MiningOverlord} from '../overlords/overlord_mine';
+import {MiningOverlord} from '../overlords/core/overlord_mine';
 import {Colony} from '../Colony';
 import {MiningGroup} from './hiveCluster_miningGroup';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
@@ -11,7 +11,7 @@ import {Mem} from '../memory';
 import {log} from '../lib/logger/log';
 import {OverlordPriority} from '../overlords/priorities_overlords';
 import {Visualizer} from '../visuals/Visualizer';
-import {Stats} from '../stats';
+import {Stats} from '../stats/stats';
 
 @profile
 export class MiningSite extends HiveCluster {

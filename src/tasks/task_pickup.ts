@@ -10,8 +10,6 @@ export class TaskPickup extends Task {
 
 	constructor(target: pickupTargetType, options = {} as TaskOptions) {
 		super('pickup', target, options);
-		// Settings
-		this.settings.moveColor = 'yellow';
 	}
 
 	isValidTask() {

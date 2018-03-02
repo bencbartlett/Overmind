@@ -11,7 +11,6 @@ export class TaskMeleeAttack extends Task {
 	constructor(target: meleeAttackTargetType, options = {} as TaskOptions) {
 		super(meleeAttackTaskName, target, options);
 		// Settings
-		this.settings.moveColor = 'red';
 		this.settings.targetRange = 1;
 	}
 

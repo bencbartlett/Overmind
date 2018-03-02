@@ -1,6 +1,6 @@
 import {Task} from './Task';
 import {profile} from '../lib/Profiler';
-import {controllerSignature} from '../do-not-modify/do-not-modify';
+import {overmindSignature} from '../settings/do-not-modify';
 
 export type signControllerTargetType = StructureController;
 export const signControllerTaskName = 'signController';
@@ -11,8 +11,6 @@ export class TaskSignController extends Task {
 
 	constructor(target: signControllerTargetType, options = {} as TaskOptions) {
 		super(signControllerTaskName, target, options);
-		// Settings
-		this.settings.moveColor = 'purple';
 	}
 
 	isValidTask() {
@@ -21,11 +19,11 @@ export class TaskSignController extends Task {
 
 	isValidTarget() {
 		let controller = this.target;
-		return (!controller.sign || controller.sign.text != controllerSignature);
+		return (!controller.sign || controller.sign.text != overmindSignature);
 	}
 
 	work() {
-		return this.creep.signController(this.target, controllerSignature);
+		return this.creep.signController(this.target, overmindSignature);
 	}
 }
 

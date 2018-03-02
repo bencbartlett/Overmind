@@ -49,3 +49,94 @@ export var validResources = {
 	RESOURCE_CATALYZED_GHODIUM_ALKALIDE  : 'XGHO2',
 };
 
+export var boostParts = {
+
+	'UH': ATTACK,
+	'UO': WORK,
+	'KH': CARRY,
+	'KO': RANGED_ATTACK,
+	'LH': WORK,
+	'LO': HEAL,
+	'ZH': WORK,
+	'ZO': MOVE,
+	'GH': WORK,
+	'GO': TOUGH,
+
+	'UH2O': ATTACK,
+	'UHO2': WORK,
+	'KH2O': CARRY,
+	'KHO2': RANGED_ATTACK,
+	'LH2O': WORK,
+	'LHO2': HEAL,
+	'ZH2O': WORK,
+	'ZHO2': MOVE,
+	'GH2O': WORK,
+	'GHO2': TOUGH,
+
+	'XUH2O': ATTACK,
+	'XUHO2': WORK,
+	'XKH2O': CARRY,
+	'XKHO2': RANGED_ATTACK,
+	'XLH2O': WORK,
+	'XLHO2': HEAL,
+	'XZH2O': WORK,
+	'XZHO2': MOVE,
+	'XGH2O': WORK,
+	'XGHO2': TOUGH,
+
+};
+
+export var boostResources: { [actionName: string]: { [boostLevel: number]: _ResourceConstantSansEnergy } } = {
+	'attack'       : {
+		1: 'UH',
+		2: 'UH2O',
+		3: 'XUH2O',
+	},
+	'carry'        : {
+		1: 'KH',
+		2: 'KH2O',
+		3: 'XKH2O',
+	},
+	'ranged_attack': {
+		1: 'KO',
+		2: 'KHO2',
+		3: 'XKHO2',
+	},
+	'heal'         : {
+		1: 'LO',
+		2: 'LHO2',
+		3: 'XLHO2',
+	},
+	'move'         : {
+		1: 'ZO',
+		2: 'ZHO2',
+		3: 'XZHO2',
+	},
+	'tough'        : {
+		1: 'GO',
+		2: 'GHO2',
+		3: 'XGHO2',
+	},
+	'harvest'      : {
+		1: 'UO',
+		2: 'UHO2',
+		3: 'XUHO2',
+	},
+	'construct'    : {
+		1: 'LH',
+		2: 'LH2O',
+		3: 'XLH2O',
+	},
+	'dismantle'    : {
+		1: 'ZH',
+		2: 'ZH2O',
+		3: 'XZH2O',
+	},
+	'upgrade'      : {
+		1: 'GH',
+		2: 'GH2O',
+		3: 'XGH2O',
+	},
+
+};
+

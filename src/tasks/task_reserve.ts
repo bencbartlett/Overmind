@@ -11,8 +11,6 @@ export class TaskReserve extends Task {
 
 	constructor(target: reserveTargetType, options = {} as TaskOptions) {
 		super(reserveTaskName, target, options);
-		// Settings
-		this.settings.moveColor = 'purple';
 	}
 
 	isValidTask() {

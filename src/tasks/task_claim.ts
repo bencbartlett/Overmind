@@ -11,7 +11,6 @@ export class TaskClaim extends Task {
 	constructor(target: claimTargetType, options = {} as TaskOptions) {
 		super(claimTaskName, target, options);
 		// Settings
-		this.settings.moveColor = 'purple';
 	}
 
 	isValidTask() {

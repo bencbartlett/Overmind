@@ -16,20 +16,6 @@ type Sink = StructureSpawn |
 	StructureTower;
 type StorageUnit = StructureContainer | StructureTerminal | StructureStorage;
 
-// type StoreStructure = StructureTerminal|StructureContainer|StructureStorage;
-
-interface EnergyStructure extends Structure {
-	energy: number;
-	energyCapacity: number;
-}
-
-interface StorageStructure extends Structure {
-	store: StoreDefinition;
-	storeCapacity: number;
-}
-
-// type MineralStructure = StructureLab | StructureNuker | StructurePowerSpawn;
-
 interface Room {
 	print: string;
 	my: boolean;
@@ -93,6 +79,8 @@ interface RoomPosition {
 
 	availableNeighbors(ignoreCreeps?: boolean): RoomPosition[];
 
+	getPositionAtDirection(direction: DirectionConstant, range?: number): RoomPosition;
+
 	getMultiRoomRangeTo(pos: RoomPosition): number;
 
 	findClosestByLimitedRange<T>(objects: T[] | RoomPosition[], rangeLimit: number,
@@ -141,6 +129,7 @@ interface StructureExtension {
 }
 
 interface StructureLab {
+	getMineralType(): _ResourceConstantSansEnergy | undefined;
 }
 
 interface StructureLink {
@@ -173,15 +162,15 @@ interface StructureTower {
 	isFull: boolean;
 	isEmpty: boolean;
 
-	run(): void;
-
-	attackNearestEnemy(): number;
-
-	healNearestAlly(): number;
-
-	repairNearestStructure(): number;
-
-	preventRampartDecay(): number;
+	// run(): void;
+	//
+	// attackNearestEnemy(): number;
+	//
+	// healNearestAlly(): number;
+	//
+	// repairNearestStructure(): number;
+	//
+	// preventRampartDecay(): number;
 }
 
 interface String {

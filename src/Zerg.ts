@@ -29,6 +29,7 @@ export class Zerg {
 	room: Room;							// |
 	spawning: boolean;					// |
 	ticksToLive: number | undefined;	// |
+	actionLog: { [actionName: string]: boolean }; // Tracks the actions that a creep has completed this tick
 	// settings: any;					// Adjustable settings object, can vary across roles
 	private _task: Task | null; 		// Cached Task object that is instantiated once per tick and on change
 
@@ -49,133 +50,214 @@ export class Zerg {
 		this.room = creep.room;
 		this.spawning = creep.spawning;
 		this.ticksToLive = creep.ticksToLive;
+		this.actionLog = {};
 		// this.settings = {};
 	}
 
 	// Wrapped creep methods ===========================================================================================
 
-	attack(target: Creep | Structure): number {
-		return this.creep.attack(target);
+	attack(target: Creep | Structure) {
+		let result = this.creep.attack(target);
+		this.actionLog.attack = (result == OK);
+		return result;
 	}
 
-	attackController(controller: StructureController): number {
-		return this.creep.attackController(controller);
+	attackController(controller: StructureController) {
+		let result = this.creep.attackController(controller);
+		this.actionLog.attackController = (result == OK);
+		return result;
 	}
 
-	build(target: ConstructionSite): number {
-		return this.creep.build(target);
+	build(target: ConstructionSite) {
+		let result = this.creep.build(target);
+		this.actionLog.build = (result == OK);
+		return result;
 	}
 
-	claimController(controller: StructureController): number {
-		return this.creep.claimController(controller);
+	claimController(controller: StructureController) {
+		let result = this.creep.claimController(controller);
+		this.actionLog.claimController = (result == OK);
+		return result;
 	}
 
-	dismantle(target: Structure): number {
-		return this.creep.dismantle(target);
+	dismantle(target: Structure): CreepActionReturnCode {
+		let result = this.creep.dismantle(target);
+		this.actionLog.dismantle = (result == OK);
+		return result;
 	}
 
-	drop(resourceType: ResourceConstant, amount?: number): number {
-		return this.creep.drop(resourceType, amount);
+	drop(resourceType: ResourceConstant, amount?: number) {
+		let result = this.creep.drop(resourceType, amount);
+		this.actionLog.drop = (result == OK);
+		return result;
 	}
 
-	getActiveBodyparts(type: BodyPartConstant): number {
-		return this.creep.getActiveBodyparts(type);
+	harvest(source: Source | Mineral) {
+		let result = this.creep.harvest(source);
+		this.actionLog.harvest = (result == OK);
+		return result;
 	}
 
-	harvest(source: Source | Mineral): number {
-		return this.creep.harvest(source);
+	move(direction: DirectionConstant) {
+		let result = this.creep.move(direction);
+		this.actionLog.move = (result == OK);
+		return result;
 	}
 
-	move(direction: DirectionConstant): number {
-		return this.creep.move(direction);
+	pickup(resource: Resource) {
+		let result = this.creep.pickup(resource);
+		this.actionLog.pickup = (result == OK);
+		return result;
 	}
 
-	pickup(resource: Resource): number {
-		return this.creep.pickup(resource);
+	rangedAttack(target: Creep | Structure) {
+		let result = this.creep.rangedAttack(target);
+		this.actionLog.rangedAttack = (result == OK);
+		return result;
 	}
 
-	rangedAttack(target: Creep | Structure): number {
-		return this.creep.rangedAttack(target);
+	rangedMassAttack() {
+		let result = this.creep.rangedMassAttack();
+		this.actionLog.rangedMassAttack = (result == OK);
+		return result;
 	}
 
-	rangedMassAttack(): number {
-		return this.creep.rangedMassAttack();
+	repair(target: Structure) {
+		let result = this.creep.repair(target);
+		this.actionLog.repair = (result == OK);
+		return result;
 	}
 
-	repair(target: Structure): number {
-		return this.creep.repair(target);
+	reserveController(controller: StructureController) {
+		let result = this.creep.reserveController(controller);
+		this.actionLog.reserveController = (result == OK);
+		return result;
 	}
 
-	reserveController(controller: StructureController): number {
-		return this.creep.reserveController(controller);
-	}
-
-	say(message: string, pub?: boolean): number {
+	say(message: string, pub?: boolean) {
 		return this.creep.say(message, pub);
 	}
 
-	signController(target: StructureController, text: string): number {
-		return this.creep.signController(target, text);
+	signController(target: StructureController, text: string) {
+		let result = this.creep.signController(target, text);
+		this.actionLog.signController = (result == OK);
+		return result;
 	}
 
-	suicide(): number {
+	suicide() {
 		return this.creep.suicide();
 	}
 
-	upgradeController(controller: StructureController): number {
-		return this.creep.upgradeController(controller);
+	upgradeController(controller: StructureController) {
+		let result = this.creep.upgradeController(controller);
+		this.actionLog.upgradeController = (result == OK);
+		return result;
 	}
 
-	heal(target: Creep | Zerg): number {
+	heal(target: Creep | Zerg, rangedHealInstead = true) {
+		let result: CreepActionReturnCode;
+		if (rangedHealInstead && !this.pos.isNearTo(target)) {
+			return this.rangedHeal(target);
+		}
 		if (target instanceof Zerg) {
-			return this.creep.heal(target.creep);
+			result = this.creep.heal(target.creep);
 		} else {
-			return this.creep.heal(target);
+			result = this.creep.heal(target);
 		}
+		this.actionLog.heal = (result == OK);
+		return result;
 	}
 
-	rangedHeal(target: Creep | Zerg): number {
+	rangedHeal(target: Creep | Zerg) {
+		let result: CreepActionReturnCode;
 		if (target instanceof Zerg) {
-			return this.creep.rangedHeal(target.creep);
+			result = this.creep.rangedHeal(target.creep);
 		} else {
-			return this.creep.rangedHeal(target);
+			result = this.creep.rangedHeal(target);
 		}
+		this.actionLog.rangedHeal = (result == OK);
+		return result;
 	}
 
-	transfer(target: Creep | Zerg | Structure, resourceType: ResourceConstant, amount?: number): number {
+	transfer(target: Creep | Zerg | Structure, resourceType: ResourceConstant, amount?: number) {
+		let result;
 		if (target instanceof Zerg) {
-			return this.creep.transfer(target.creep, resourceType, amount);
+			result = this.creep.transfer(target.creep, resourceType, amount);
 		} else {
-			return this.creep.transfer(target, resourceType, amount);
+			result = this.creep.transfer(target, resourceType, amount);
 		}
+		this.actionLog.transfer = (result == OK);
+		return result;
 	}
 
-	withdraw(target: Creep | Zerg | Structure, resourceType: ResourceConstant, amount?: number): number {
-		if (target instanceof Creep) {
-			return target.transfer(this.creep, resourceType, amount);
-		} else if (target instanceof Zerg) {
-			return target.creep.transfer(this.creep, resourceType, amount);
-		} else {
-			return this.creep.withdraw(target, resourceType, amount);
-		}
+	withdraw(target: Structure, resourceType: ResourceConstant, amount?: number) {
+		let result = this.creep.withdraw(target, resourceType, amount);
+		this.actionLog.withdraw = (result == OK);
+		return result;
 	}
 
-	travelTo(destination: RoomPosition | { pos: RoomPosition }, options?: any): number {
-		return this.creep.travelTo(destination, options);
-	};
+	// Simultaneous creep actions ==------------------------------------------------------------------------------------
+
+	/* Determine whether the given action will conflict with an action the creep has already taken.
+	 * See http://docs.screeps.com/simultaneous-actions.html for more details. */
+	canExecute(actionName: string): boolean {
+		// Only one action can be executed from within a single pipeline
+		// Last pipeline is more complex because it depends on the energy a creep has; sidelining this for now
+		let pipelines: string[][] = [
+			['harvest', 'attack', 'build', 'repair', 'dismantle', 'attackController', 'rangedHeal', 'heal'],
+			['rangedAttack', 'rangedMassAttack', 'build', 'repair', 'rangedHeal'],
+			// ['upgradeController', 'build', 'repair', 'withdraw', 'transfer', 'drop'],
+		];
+		let conflictingActions: string[] = [];
+		for (let pipeline of pipelines) {
+			if (pipeline.includes(actionName)) conflictingActions = conflictingActions.concat(pipeline);
+		}
+		for (let action of conflictingActions) {
+			if (this.actionLog[action]) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	// Body configuration and related data -----------------------------------------------------------------------------
+
+	getActiveBodyparts(type: BodyPartConstant) {
+		return this.creep.getActiveBodyparts(type);
+	}
+
+	/* The same as creep.getActiveBodyparts, but just counts bodyparts regardless of condition. */
+	getBodyparts(partType: BodyPartConstant): number {
+		return _.filter(this.body, (part: BodyPartDefinition) => part.type == partType).length;
+	}
 
 	// Custom creep methods ============================================================================================
+
+
+	// Boosting logic --------------------------------------------------------------------------------------------------
+
+	get boosts(): _ResourceConstantSansEnergy[] {
+		return _.compact(_.unique(_.map(this.body, bodyPart => bodyPart.boost))) as _ResourceConstantSansEnergy[];
+	}
+
+	get boostCounts(): { [boostType: string]: number } {
+		return _.countBy(this.body, bodyPart => bodyPart.boost);
+	}
+
+	get needsBoosts(): boolean {
+		if (this.overlord) {
+			let neededBoosts = this.overlord.boosts[this.roleName];
+			if (neededBoosts) {
+				return _.difference(neededBoosts, this.boosts).length > 0;
+			}
+		}
+		return false;
+	}
 
 	// Overlord logic --------------------------------------------------------------------------------------------------
 
 	get overlord(): Overlord | null {
 		if (this.memory.overlord && Overmind.overlords[this.memory.overlord]) {
-			// let [directiveName, overlordName] = this.memory.overlord.split(':');
-			// if (Game.directives[directiveName] && Game.directives[directiveName].overlords[overlordName]) {
-			// 	return Game.directives[directiveName].overlords[overlordName];
-			// } else {
-			// 	return null;
-			// }
 			return Overmind.overlords[this.memory.overlord];
 		} else {
 			return null;
@@ -284,13 +366,6 @@ export class Zerg {
 		this.memory.colony = newColony.name;
 	}
 
-	// Body configuration and related data -----------------------------------------------------------------------------
-
-	/* The same as creep.getActiveBodyparts, but just counts bodyparts regardless of condition. */
-	getBodyparts(partType: BodyPartConstant): number {
-		return _.filter(this.body, (part: BodyPartDefinition) => part.type == partType).length;
-	}
-
 	/* Return the maximum (not remaining) lifetime of the creep */
 	get lifetime(): number {
 		if (this.getBodyparts(CLAIM) > 0) {
@@ -319,8 +394,15 @@ export class Zerg {
 		return this.memory.data.moveSpeed;
 	}
 
-	// Parking logic ---------------------------------------------------------------------------------------------------
+	// Movement and location -------------------------------------------------------------------------------------------
 
+	travelTo(destination: RoomPosition | { pos: RoomPosition }, options?: any) {
+		return this.creep.travelTo(destination, options);
+	};
+
+	inSameRoomAs(target: HasPos): boolean {
+		return (this.pos.roomName == target.pos.roomName);
+	}
 
 	park(pos: RoomPosition = this.pos, maintainDistance = false): number {
 		let road = this.pos.lookForStructure(STRUCTURE_ROAD);
@@ -350,14 +432,52 @@ export class Zerg {
 		return this.travelTo(pos);
 	}
 
-	// park(near: RoomPosition, opts = {} as ParkingOptions) {
-	// 	_.defaults(opts, {
-	// 		range: 2,
-	// 		exactRange: true,
-	// 		offRoad: true,
-	// 	});
-	// 	let validSpots =
-	// }
+	moveOnExit(): ScreepsReturnCode | undefined {
+		if (this.pos.rangeToEdge > 0 && this.fatigue == 0) {
+			let directions = [1, 3, 5, 7, 2, 4, 6, 8] as DirectionConstant[];
+			for (let direction of directions) {
+				let position = this.pos.getPositionAtDirection(direction);
+				let terrain = position.lookFor(LOOK_TERRAIN)[0];
+				if (terrain != 'wall' && position.rangeToEdge == 0) {
+					let outcome = this.move(direction);
+					return outcome;
+				}
+			}
+			console.log(`moveOnExit() assumes nearby exit tile, position: ${this.pos}`);
+			return ERR_NO_PATH;
+		}
+	}
+
+	moveOffExit(avoidSwamp = true): ScreepsReturnCode {
+		let swampDirection;
+		let directions = [1, 3, 5, 7, 2, 4, 6, 8] as DirectionConstant[];
+		for (let direction of directions) {
+			let position = this.pos.getPositionAtDirection(direction);
+			if (position.rangeToEdge > 0 && position.isPassible()) {
+				let terrain = position.lookFor(LOOK_TERRAIN)[0];
+				if (avoidSwamp && terrain == 'swamp') {
+					swampDirection = direction;
+					continue;
+				}
+				return this.move(direction);
+			}
+		}
+		if (swampDirection) {
+			return this.move(swampDirection as DirectionConstant);
+		}
+		return ERR_NO_PATH;
+	}
+
+	moveOffExitToward(pos: RoomPosition, detour = true): number | undefined {
+		for (let position of this.pos.availableNeighbors()) {
+			if (position.getRangeTo(pos) == 1) {
+				return this.travelTo(position);
+			}
+		}
+		if (detour) {
+			this.travelTo(pos, {ignoreCreeps: false});
+		}
+	}
 
 }
 

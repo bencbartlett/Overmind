@@ -1,6 +1,6 @@
 Object.defineProperty(RoomPosition.prototype, 'print', {
 	get() {
-		return '<a href="#!/room/' + this.roomName + '">[' + this.roomName + ', ' + this.x + ', ' + this.y + ']</a>';
+		return '<a href="#!/room/' + Game.shard.name + '/' + this.roomName + '">[' + this.roomName + ', ' + this.x + ', ' + this.y + ']</a>';
 	}
 });
 
@@ -82,6 +82,43 @@ RoomPosition.prototype.isPassible = function (ignoreCreeps = false): boolean {
 RoomPosition.prototype.availableNeighbors = function (ignoreCreeps = false): RoomPosition[] {
 	return _.filter(this.neighbors, pos => pos.isPassible(ignoreCreeps));
 };
+
+RoomPosition.prototype.getPositionAtDirection = function (direction: DirectionConstant, range = 1): RoomPosition {
+	let x = this.x;
+	let y = this.y;
+	switch (direction) {
+		case 1:
+			y -= range;
+			break;
+		case 2:
+			y -= range;
+			x += range;
+			break;
+		case 3:
+			x += range;
+			break;
+		case 4:
+			x += range;
+			y += range;
+			break;
+		case 5:
+			y += range;
+			break;
+		case 6:
+			y += range;
+			x -= range;
+			break;
+		case 7:
+			x -= range;
+			break;
+		case 8:
+			x -= range;
+			y -= range;
+			break;
+	}
+	return new RoomPosition(x, y, this.roomName);
+};
+
 
 // Object.defineProperty(RoomPosition.prototype, 'availableAdjacentSpots', {
 // 	get: function () {

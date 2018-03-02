@@ -11,9 +11,6 @@ export class TaskDeposit extends Task {
 
 	constructor(target: depositTargetType, options = {} as TaskOptions) {
 		super(depositTaskName, target, options);
-		// Settings
-		this.settings.moveColor = 'blue';
-		this.data.quiet = true;
 	}
 
 	isValidTask() {

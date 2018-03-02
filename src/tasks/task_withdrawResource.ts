@@ -2,39 +2,63 @@
 
 import {Task} from './Task';
 import {profile} from '../lib/Profiler';
+import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../declarations/typeGuards';
 
-export type withdrawResourceTargetType = StructureStorage | StructureContainer | StructureTerminal;
+export type withdrawResourceTargetType =
+	EnergyStructure
+	| StoreStructure
+	| StructureLab
+	| StructureNuker
+	| StructurePowerSpawn;
+
 export const withdrawResourceTaskName = 'withdrawResource';
 
 @profile
 export class TaskWithdrawResource extends Task {
-	target: withdrawResourceTargetType;
 
-	constructor(target: withdrawResourceTargetType, options = {} as TaskOptions) {
+	target: withdrawResourceTargetType;
+	data: {
+		resourceType: ResourceConstant,
+		amount: number | undefined,
+	};
+
+	constructor(target: withdrawResourceTargetType,
+				resourceType: ResourceConstant = RESOURCE_ENERGY,
+				amount: number | undefined     = undefined,
+				options                        = {} as TaskOptions) {
 		super(withdrawResourceTaskName, target, options);
 		// Settings
-		this.settings.moveColor = 'blue';
-		this.data.resourceType = undefined; // this needs to be overwritten on assignment
+		this.data.resourceType = resourceType;
+		this.data.amount = amount;
 	}
 
 	isValidTask() {
-		var creep = this.creep;
-		return (_.sum(creep.carry) < creep.carryCapacity);
+		let amount = this.data.amount || 0;
+		return (_.sum(this.creep.carry) < this.creep.carryCapacity - amount);
 	}
 
 	isValidTarget() {
+		let amount = this.data.amount || 0;
 		let target = this.target;
-		if (target) {
-			let amount = target.store[<ResourceConstant>this.data.resourceType!];
-			if (amount) {
-				return amount > 0;
+		if (isStoreStructure(target)) {
+			return (target.store[this.data.resourceType] || 0) >= amount;
+		} else if (isEnergyStructure(target) && this.data.resourceType == RESOURCE_ENERGY) {
+			return target.energy >= amount;
+		} else {
+			if (target instanceof StructureLab) {
+				return this.data.resourceType == target.mineralType && target.mineralAmount >= amount;
+			} else if (target instanceof StructureNuker) {
+				return this.data.resourceType == RESOURCE_GHODIUM && target.ghodium >= amount;
+			} else if (target instanceof StructurePowerSpawn) {
+				return this.data.resourceType == RESOURCE_POWER && target.power >= amount;
 			}
 		}
 		return false;
 	}
 
 	work() {
-		return this.creep.withdraw(this.target, <ResourceConstant>this.data.resourceType!);
+		return this.creep.withdraw(this.target, this.data.resourceType, this.data.amount);
 	}
+
 }
 
