@@ -33,7 +33,9 @@ I've recently respawned to shard2 in the [`EXS4X` sector](https://screeps.com/a/
 
 # AI Structure
 
-![AI structural schematic](/assets/AIdiagram.png)
+(Click the image to see a higher-resolution version.)
+
+![[AI structural schematic](/assets/AIdiagram.png)](https://raw.githubusercontent.com/bencbartlett/Overmind/master/assets/AIdiagram.png)
 
 
 # Design overview
