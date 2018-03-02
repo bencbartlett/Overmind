@@ -15,8 +15,6 @@ function getUsername(): string {
 
 export var myUsername: string = getUsername(); // Your username
 
-export var reserveCredits = 10000; // Number of credits to reserve before buying market orders
-
 
 // Configuring controller signature ====================================================================================
 

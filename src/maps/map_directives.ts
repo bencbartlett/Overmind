@@ -32,7 +32,7 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			}
 			break;
 
-		// Military directives =========================================================================================
+		// Combat directives ===========================================================================================
 		case COLOR_RED:
 			switch (flag.secondaryColor) {
 				case COLOR_BLUE:
@@ -48,7 +48,7 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			}
 			break;
 
-		// Operation directives ========================================================================================
+		// Situational directives ======================================================================================
 		case COLOR_ORANGE:
 			switch (flag.secondaryColor) {
 				case COLOR_ORANGE:

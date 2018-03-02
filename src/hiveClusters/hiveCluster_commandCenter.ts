@@ -37,7 +37,6 @@ export class CommandCenter extends HiveCluster {
 	private terminalSettings: {								// Settings for terminal operation
 		resourceAmounts: { [resourceType: string]: number };	// Desired equilibrium levels of resources
 		maxBuyPrice: { [resourceType: string]: number }; 		// Maximum price to buy resources on market at
-		avgPrice: { [resourceType: string]: number };			// Effective market prices
 	};
 
 	constructor(colony: Colony, storage: StructureStorage) {
@@ -141,6 +140,8 @@ export class CommandCenter extends HiveCluster {
 		let toBuy: { [mineral: string]: number } = {};
 		for (let mineral in this.terminalSettings.resourceAmounts) {
 			let amount = this.terminal.store[<ResourceConstant>mineral] || 0;
+			let maxPrice = this.terminalSettings.resourceAmounts[mineral] ||
+						   this.terminalSettings.resourceAmounts.default;
 			if (mineral != RESOURCE_ENERGY && amount < this.terminalSettings.resourceAmounts[mineral]) {
 				toBuy[mineral] = this.terminalSettings.resourceAmounts[mineral] - amount;
 			}
