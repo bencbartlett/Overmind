@@ -2,8 +2,7 @@
 
 import {depositTargetType} from '../tasks/task_deposit';
 import {HiveCluster} from './HiveCluster';
-import {reserveCredits} from '../settings/settings_user';
-import {terminalSettings} from '../settings/settings_terminal';
+import {reserveCredits, terminalSettings} from '../settings/settings_terminal';
 import {log} from '../lib/logger/log';
 import {profile} from '../lib/Profiler';
 import {CommandCenterOverlord} from '../overlords/hiveCluster/overlord_commandCenter';
