@@ -2,19 +2,20 @@
 
 import {depositTargetType} from '../tasks/task_deposit';
 import {HiveCluster} from './HiveCluster';
-import {terminalSettings} from '../settings/settings_terminal';
 import {profile} from '../lib/Profiler';
 import {CommandCenterOverlord} from '../overlords/hiveCluster/overlord_commandCenter';
 import {Colony} from '../Colony';
 import {Mem} from '../memory';
 import {Priority} from '../settings/priorities';
 import {Visualizer} from '../visuals/Visualizer';
+import {TerminalNetwork} from '../logistics/TerminalNetwork';
 
 @profile
 export class CommandCenter extends HiveCluster {
 	storage: StructureStorage;								// The colony storage, also the instantiation object
 	link: StructureLink | undefined;						// Link closest to storage
 	terminal: StructureTerminal | undefined;				// The colony terminal
+	terminalNetwork: TerminalNetwork;						// Reference to Overmind.terminalNetwork
 	towers: StructureTower[];								// Towers within range 3 of storage are part of cmdCenter
 	labs: StructureLab[];									// Colony labs
 	powerSpawn: StructurePowerSpawn | undefined;			// Colony Power Spawn
@@ -32,10 +33,6 @@ export class CommandCenter extends HiveCluster {
 		managerSize: number;									// Size of manager in body pattern repetition units
 		unloadStorageBuffer: number;							// Start sending energy to other rooms past this amount
 	};
-	private terminalSettings: {								// Settings for terminal operation
-		resourceAmounts: { [resourceType: string]: number };	// Desired equilibrium levels of resources
-		maxBuyPrice: { [resourceType: string]: number }; 		// Maximum price to buy resources on market at
-	};
 
 	constructor(colony: Colony, storage: StructureStorage) {
 		super(colony, storage, 'commandCenter');
@@ -43,6 +40,7 @@ export class CommandCenter extends HiveCluster {
 		this.storage = storage;
 		this.link = this.pos.findClosestByLimitedRange(colony.links, 2);
 		this.terminal = colony.terminal;
+		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetwork;
 		this.towers = this.pos.findInRange(colony.towers, 3);
 		this.labs = colony.labs;
 		this.powerSpawn = colony.powerSpawn;
@@ -55,7 +53,6 @@ export class CommandCenter extends HiveCluster {
 			managerSize             : 8,
 			unloadStorageBuffer     : 900000,
 		};
-		this.terminalSettings = terminalSettings;
 		if (this.storage.linked) {
 			this.overlord = new CommandCenterOverlord(this);
 		}
@@ -224,7 +221,7 @@ export class CommandCenter extends HiveCluster {
 					depositStructures.push(tower);
 				}
 			}
-			if (this.terminal && this.terminal.energy < this.terminalSettings.resourceAmounts[RESOURCE_ENERGY]) {
+			if (this.terminal && this.terminal.energy < this.terminalNetwork.settings.energy.inThreshold) {
 				depositStructures.push(this.terminal);
 			}
 			if (this.nuker && this.nuker.energy < this.nuker.energyCapacity) {
@@ -261,8 +258,7 @@ export class CommandCenter extends HiveCluster {
 					withdrawStructures.push(this.link);
 				}
 			}
-			if (this.terminal &&
-				this.terminal.energy > this.terminalSettings.resourceAmounts[RESOURCE_ENERGY] + 10000) {
+			if (this.terminal && this.terminal.energy > this.terminalNetwork.settings.energy.outThreshold) {
 				withdrawStructures.push(this.terminal);
 			}
 			this._withdrawStructures = withdrawStructures;

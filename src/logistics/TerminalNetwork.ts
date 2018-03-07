@@ -16,7 +16,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 	private cache: {
 		sellPrice: { [resourceType: string]: number }
 	};
-	private settings: {
+	settings: {
 		energy: {
 			outThreshold: number,
 			inThreshold: number,
