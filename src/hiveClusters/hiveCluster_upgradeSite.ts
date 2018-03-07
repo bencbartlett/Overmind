@@ -65,7 +65,7 @@ export class UpgradeSite extends HiveCluster {
 		// Register energy requests
 		if (this.input instanceof StructureLink) {
 			if (this.input.energy < 400) {
-				this.colony.linkRequests.requestReceive(this.input);
+				this.colony.linkNetwork.requestReceive(this.input);
 			}
 		} else if (this.input instanceof StructureContainer) {
 			if (this.input.energy < 0.5 * this.input.storeCapacity) {

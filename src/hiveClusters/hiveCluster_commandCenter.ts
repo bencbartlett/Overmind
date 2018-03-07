@@ -212,7 +212,7 @@ export class CommandCenter extends HiveCluster {
 			let depositStructures: depositTargetType[] = [];
 			// If the link is empty and can send energy and something needs energy, fill it up
 			if (this.link && this.link.energy < 0.9 * this.link.energyCapacity && this.link.cooldown <= 1) {
-				if (this.colony.linkRequests.receive.length > 0) { 	// If something wants energy
+				if (this.colony.linkNetwork.receive.length > 0) { 	// If something wants energy
 					depositStructures.push(this.link);
 				}
 			}
@@ -254,7 +254,7 @@ export class CommandCenter extends HiveCluster {
 			let withdrawStructures: (StructureLink | StructureTerminal)[] = [];
 			// If the link has energy and nothing needs it, empty it
 			if (this.link && this.link.energy > 0) {
-				if (this.colony.linkRequests.receive.length == 0) { // nothing needs link to send energy
+				if (this.colony.linkNetwork.receive.length == 0) { // nothing needs link to send energy
 					withdrawStructures.push(this.link);
 				}
 			}
@@ -270,7 +270,7 @@ export class CommandCenter extends HiveCluster {
 	private registerLinkTransferRequests(): void {
 		if (this.link) {
 			if (this.link.energy > this.settings.linksTransmitAt) {
-				this.colony.linkRequests.requestTransmit(this.link);
+				this.colony.linkNetwork.requestTransmit(this.link);
 			}
 		}
 	}

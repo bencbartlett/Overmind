@@ -12,7 +12,7 @@ import {WorkerOverlord} from './overlords/core/overlord_work';
 import {Zerg} from './Zerg';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
 import {HiveCluster} from './hiveClusters/HiveCluster';
-import {LinkRequestGroup} from './logistics/LinkRequests';
+import {LinkNetwork} from './logistics/LinkNetwork';
 import {TransportRequestGroup} from './logistics/TransportRequestGroup';
 import {Priority} from './settings/priorities';
 import {Stats} from './stats/stats';
@@ -78,7 +78,7 @@ export class Colony {
 	creepsByRole: { [roleName: string]: Zerg[] };		// Creeps hashed by their role name
 	hostiles: Creep[];									// Hostile creeps in one of the rooms
 	// Resource requests
-	linkRequests: LinkRequestGroup;
+	linkNetwork: LinkNetwork;
 	transportRequests: TransportRequestGroup;			// Box for resource requests
 	// logisticsGroup: LogisticsGroup;
 	// Overlords
@@ -152,7 +152,7 @@ export class Colony {
 		this.flags = [];
 		this.incubatingColonies = [];
 		// Resource requests
-		this.linkRequests = new LinkRequestGroup();
+		this.linkNetwork = new LinkNetwork(this);
 		this.transportRequests = new TransportRequestGroup();
 		// this.logisticsGroup = new LogisticsGroup(this);
 		// Build the hive clusters
@@ -237,20 +237,20 @@ export class Colony {
 	 * out, then send the remaining resourceOut link requests to the command center link */
 	private handleLinks(): void {
 		// For each receiving link, greedily get energy from the closest transmitting link - at most 9 operations
-		for (let receiveLink of this.linkRequests.receive) {
-			let closestTransmitLink = receiveLink.pos.findClosestByRange(this.linkRequests.transmit);
+		for (let receiveLink of this.linkNetwork.receive) {
+			let closestTransmitLink = receiveLink.pos.findClosestByRange(this.linkNetwork.transmit);
 			// If a send-receive match is found, transfer that first, then remove the pair from the link lists
 			if (closestTransmitLink) {
 				// Send min of (all the energy in sender link, amount of available space in receiver link)
 				let amountToSend = _.min([closestTransmitLink.energy, receiveLink.energyCapacity - receiveLink.energy]);
 				closestTransmitLink.transferEnergy(receiveLink, amountToSend);
-				_.remove(this.linkRequests.transmit, closestTransmitLink);
-				_.remove(this.linkRequests.receive, receiveLink);
+				_.remove(this.linkNetwork.transmit, closestTransmitLink);
+				_.remove(this.linkNetwork.receive, receiveLink);
 			}
 		}
 		// Now send all remaining transmit link requests to the command center
 		if (this.commandCenter && this.commandCenter.link) {
-			for (let transmitLink of this.linkRequests.transmit) {
+			for (let transmitLink of this.linkNetwork.transmit) {
 				transmitLink.transferEnergy(this.commandCenter.link);
 			}
 		}
@@ -277,6 +277,8 @@ export class Colony {
 		this.overseer.init();
 		// Initialize the road network
 		this.roadLogistics.init();
+		// Initialize link network
+		this.linkNetwork.init();
 		// Initialize the room planner
 		this.roomPlanner.init();
 	}
@@ -286,9 +288,8 @@ export class Colony {
 		this.overseer.run();
 		// 2: Run the colony virtual components
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.run());
-		// 3 Run the colony real components
-		// this.handleTowers();
-		this.handleLinks();
+		// Run the link network
+		this.linkNetwork.run();
 		// 4: Run each creep in the colony
 		_.forEach(this.creeps, creep => creep.run());
 		// Run the road network

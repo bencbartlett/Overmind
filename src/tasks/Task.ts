@@ -23,7 +23,7 @@ export abstract class Task {
 	_parent: protoTask | null; 	// The parent of this task, if any. Task is changed to parent upon completion.
 	settings: { 				// Data pertaining to a given type of task; shouldn't be modified on an instance-basis
 		targetRange: number;		// How close you must be to the target to do the work() function
-		workOffRoad: boolean; 	// Should the task be performed off-road (e.g. working, upgrading, etc)
+		workOffRoad: boolean; 		// If the task should be performed off-road (e.g. working, upgrading, etc)
 	};
 	options: TaskOptions;
 	data: { 					// Data pertaining to a given instance of a task

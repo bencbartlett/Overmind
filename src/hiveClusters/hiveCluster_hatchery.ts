@@ -97,7 +97,7 @@ export class Hatchery extends HiveCluster {
 	private registerEnergyRequests(): void {
 		// Register requests for input into the hatchery (goes on colony request group)
 		if (this.link && this.link.isEmpty) {
-			this.colony.linkRequests.requestReceive(this.link);
+			this.colony.linkNetwork.requestReceive(this.link);
 		}
 		if (this.battery && this.battery.energy < 0.25 * this.battery.storeCapacity) {
 			this.colony.transportRequests.requestEnergy(this.battery);

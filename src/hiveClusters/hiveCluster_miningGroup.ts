@@ -88,7 +88,7 @@ export class MiningGroup extends HiveCluster {
 		if (this.links) {
 			for (let link of this.links) {
 				if (link.energy > this.settings.linksTrasmitAt) {
-					this.colony.linkRequests.requestTransmit(link);
+					this.colony.linkNetwork.requestTransmit(link);
 				}
 			}
 		}
