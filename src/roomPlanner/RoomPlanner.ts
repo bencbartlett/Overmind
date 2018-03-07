@@ -36,6 +36,7 @@ export interface PlannerMemory {
 	active: boolean;
 	mapsByLevel: { [rcl: number]: StructureMap };
 	roadPositions: protoPos[];
+	roadLookup: { [roadPosName: string]: boolean };
 	savedFlags: { secondaryColor: ColorConstant, pos: protoPos, memory: FlagMemory }[];
 }
 
@@ -52,7 +53,6 @@ export class RoomPlanner {
 	map: StructureMap;						// Flattened {structureType: RoomPositions[]} for final structure placements
 	placements: { [name: string]: RoomPosition }; // Used for generating the plan
 	plan: RoomPlan;							// Contains maps, positions, and rotations of each hivecluster component
-	// memory: PlannerMemory;					// Memory, stored on the room memory
 	roadPositions: RoomPosition[];			// Roads that aren't part of components
 	private textPositions: RoomPosition[];
 	private settings: {
@@ -342,6 +342,8 @@ export class RoomPlanner {
 			// Write road positions to memory, sorted by distance to storage
 			this.memory.roadPositions = _.sortBy(this.roadPositions,
 												 pos => pos.getMultiRoomRangeTo(this.placements.commandCenter));
+			let allRoadPos: RoomPosition[] = this.map[STRUCTURE_ROAD].concat(this.roadPositions);
+			this.memory.roadLookup = _.zipObject(_.map(allRoadPos, pos => pos.name), _.map(allRoadPos, pos => true));
 			// Save flags and remove them
 			let flagsToWrite = _.filter(this.colony.flags, flag => flag.color == COLOR_WHITE);
 			for (let flag of flagsToWrite) {
@@ -415,6 +417,19 @@ export class RoomPlanner {
 				}
 			}
 		}
+	}
+
+	/* Quick lookup for if a road should be in this position */
+	roadShouldBeHere(pos: RoomPosition): boolean {
+		// Initial migration code, can delete later
+		if (!this.memory.roadLookup) {
+			let allRoadPos: RoomPosition[] = _.map(this.memory.mapsByLevel[8][STRUCTURE_ROAD],
+												   pos => derefRoomPosition(pos));
+			allRoadPos = allRoadPos.concat(_.map(this.memory.roadPositions,
+												 pos => derefRoomPosition(pos)));
+			this.memory.roadLookup = _.zipObject(_.map(allRoadPos, pos => pos.name), _.map(allRoadPos, pos => true));
+		}
+		return this.memory.roadLookup[pos.name] || false;
 	}
 
 	run(): void {

@@ -113,7 +113,6 @@ interface Structure {
 
 interface StructureContainer {
 	energy: number;
-	predictedEnergyOnArrival: number;
 	isFull: boolean;
 	isEmpty: boolean;
 }

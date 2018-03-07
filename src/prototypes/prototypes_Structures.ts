@@ -34,19 +34,6 @@ Object.defineProperty(StructureContainer.prototype, 'isEmpty', { // if this cont
 	},
 });
 
-// Estimated amount of energy a hauler leaving storage now would see when it gets to the container
-Object.defineProperty(StructureContainer.prototype, 'predictedEnergyOnArrival', {
-	get: function () {
-		let predictedEnergy = this.energy;
-		let targetingCreeps = _.map(this.targetedBy, (name: string) => Game.creeps[name]);
-		for (let creep of targetingCreeps) {
-			predictedEnergy -= creep.carryCapacity;
-		}
-		predictedEnergy += (3000 / 300) * this.miningFlag.pathLengthToAssignedRoomStorage;
-		return predictedEnergy;
-	},
-});
-
 // Controller prototypes ===============================================================================================
 
 Object.defineProperty(StructureController.prototype, 'reservedByMe', {

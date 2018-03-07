@@ -195,13 +195,15 @@ Object.defineProperties(Room.prototype, {
 	// 	},
 	// },
 
-	// All non-barrier repairable objects
+	// All non-barrier, non-road repairable objects
 	repairables: {
 		get() {
 			if (!this.structures['repairables']) {
 				let repairables: Structure[] = [];
 				for (let structureType in this.structures) {
-					if (structureType != STRUCTURE_WALL && structureType != STRUCTURE_RAMPART) {
+					if (structureType != STRUCTURE_WALL &&
+						structureType != STRUCTURE_RAMPART &&
+						structureType != STRUCTURE_ROAD) {
 						repairables = repairables.concat(this.structures[structureType]);
 					}
 				}

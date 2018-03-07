@@ -19,6 +19,7 @@ import {Stats} from './stats/stats';
 import {SporeCrawler} from './hiveClusters/hiveCluster_sporeCrawler';
 import {MineralSupplierOverlord} from './overlords/core/overlord_mineralSupplier';
 import {DirectiveLabMineral} from './directives/labs/directive_labMineralType';
+import {RoadLogistics} from './logistics/RoadLogistics';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -87,6 +88,8 @@ export class Colony {
 		// logistics: TransportOverlord;
 		mineralSupply?: MineralSupplierOverlord;
 	};
+	// Road network
+	roadLogistics: RoadLogistics;
 	// Room planner
 	roomPlanner: RoomPlanner;
 
@@ -157,6 +160,8 @@ export class Colony {
 		this.buildHiveClusters();
 		// Register colony overlords
 		this.spawnMoarOverlords();
+		// Register road network
+		this.roadLogistics = new RoadLogistics(this);
 		// Register a room planner
 		this.roomPlanner = new RoomPlanner(this);
 	}
@@ -270,6 +275,8 @@ export class Colony {
 		}
 		// Initialize the colony overseer, must be run AFTER all components are initialized
 		this.overseer.init();
+		// Initialize the road network
+		this.roadLogistics.init();
 		// Initialize the room planner
 		this.roomPlanner.init();
 	}
@@ -284,6 +291,8 @@ export class Colony {
 		this.handleLinks();
 		// 4: Run each creep in the colony
 		_.forEach(this.creeps, creep => creep.run());
+		// Run the road network
+		this.roadLogistics.run();
 		// Run the room planner
 		this.roomPlanner.run();
 		// Record statistics

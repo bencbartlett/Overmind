@@ -17,6 +17,7 @@ export class WorkerOverlord extends Overlord {
 	fortifyStructures: (StructureWall | StructureRampart)[];
 	settings: {
 		barrierHits: { [rcl: number]: number };
+		barrierLowHighHits: number;
 		workerWithdrawLimit: number;
 	};
 
@@ -39,6 +40,7 @@ export class WorkerOverlord extends Overlord {
 				7: 10000000,
 				8: 30000000,
 			},
+			barrierLowHighHits : 100000,
 			workerWithdrawLimit: this.colony.stage == ColonyStage.Larva ? 750 : 100,
 		};
 		this.fortifyStructures = _.sortBy(_.filter(this.room.barriers,
@@ -46,10 +48,8 @@ export class WorkerOverlord extends Overlord {
 										  s => s.hits);
 		// Generate a list of structures needing repairing (different from fortifying except in critical case)
 		this.repairStructures = _.filter(this.colony.repairables, function (structure) {
-			if (structure.structureType == STRUCTURE_ROAD) {
-				return structure.hits < 0.75 * structure.hitsMax;
-			} else if (structure.structureType == STRUCTURE_CONTAINER) {
-				return structure.hits < 0.75 * structure.hitsMax;
+			if (structure.structureType == STRUCTURE_CONTAINER) {
+				return structure.hits < 0.5 * structure.hitsMax;
 			} else {
 				return structure.hits < structure.hitsMax;
 			}
@@ -80,13 +80,26 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	private pavingActions(worker: Zerg) {
-		// TODO
+		let roomToRepave = this.colony.roadLogistics.workerShouldRepave(worker)!;
+		this.colony.roadLogistics.registerWorkerAssignment(worker, roomToRepave);
+		let target = worker.pos.findClosestByMultiRoomRange(this.colony.roadLogistics.repairableRoads(roomToRepave));
+		if (target) worker.task = Tasks.repair(target);
 	}
 
 	private fortifyActions(worker: Zerg) {
-		let numBarriersToConsider = 5; // Choose the closest barrier of the N barriers with lowest hits
-		let lowHitBarriers = _.take(this.fortifyStructures, numBarriersToConsider);
-		let target = worker.pos.findClosestByMultiRoomRange(lowHitBarriers);
+		let lowBarriers: (StructureWall | StructureRampart)[];
+		let highestBarrierHits = _.max(_.map(this.fortifyStructures, structure => structure.hits));
+		if (highestBarrierHits > this.settings.barrierLowHighHits) {
+			// At high barrier HP, fortify only structures that are within a threshold of the lowest
+			let lowestBarrierHits = _.min(_.map(this.fortifyStructures, structure => structure.hits));
+			lowBarriers = _.filter(this.fortifyStructures, structure => structure.hits < lowestBarrierHits +
+																		this.settings.barrierLowHighHits);
+		} else {
+			// Otherwise fortify the lowest N structures
+			let numBarriersToConsider = 5; // Choose the closest barrier of the N barriers with lowest hits
+			lowBarriers = _.take(this.fortifyStructures, numBarriersToConsider);
+		}
+		let target = worker.pos.findClosestByMultiRoomRange(lowBarriers);
 		if (target) worker.task = Tasks.fortify(target);
 	}
 
@@ -106,6 +119,8 @@ export class WorkerOverlord extends Overlord {
 				this.upgradeActions(worker);
 			} else if (this.repairStructures.length > 0) {
 				this.repairActions(worker);
+			} else if (this.colony.roadLogistics.workerShouldRepave(worker)) {
+				this.pavingActions(worker);
 			} else if (this.colony.constructionSites.length > 0) {
 				this.buildActions(worker);
 			} else if (this.fortifyStructures.length > 0) {
@@ -130,7 +145,7 @@ export class WorkerOverlord extends Overlord {
 			this.wishlist(Math.min(numWorkers, MAX_WORKERS), new WorkerSetup());
 		} else {
 			// At higher levels, spawn workers based on construction and repair that needs to be done
-			let MAX_WORKERS = 5; // Maximum number of workers to spawn
+			let MAX_WORKERS = 3; // Maximum number of workers to spawn
 			let constructionTicks = _.sum(_.map(this.colony.constructionSites,
 												site => site.progressTotal - site.progress)) / BUILD_POWER;
 			let repairTicks = _.sum(_.map(this.repairStructures,
@@ -152,15 +167,16 @@ export class WorkerOverlord extends Overlord {
 			if (worker.isIdle) {
 				this.handleWorker(worker);
 			}
-			let result = worker.run();
-			if (result != OK) {
-				// TODO: this is super expensive
-				// If you haven't done anything, try to repair something in range
-				let nearbyRepairables = _.sortBy(_.filter(this.room.repairables, s => worker.pos.getRangeTo(s) <= 3),
-												 s => s.hits);
-				let target = nearbyRepairables[0];
-				if (target) worker.repair(target);
-			}
+			worker.run();
+			// let result = worker.run();
+			// if (result != OK) {
+			// 	// TODO: this is super expensive
+			// 	// If you haven't done anything, try to repair something in range
+			// 	let nearbyRepairables = _.sortBy(_.filter(this.room.repairables, s => worker.pos.getRangeTo(s) <= 3),
+			// 									 s => s.hits);
+			// 	let target = nearbyRepairables[0];
+			// 	if (target) worker.repair(target);
+			// }
 		}
 	}
 }
