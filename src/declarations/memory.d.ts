@@ -92,6 +92,7 @@ interface PathingMemory {
 
 interface FlagMemory {
 	created?: number;
+	persistent?: boolean;
 	setPosition: RoomPosition;
 	rotation?: number;
 	colony?: string;

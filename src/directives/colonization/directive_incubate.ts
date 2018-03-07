@@ -11,6 +11,7 @@ export class DirectiveIncubate extends Directive {
 	static directiveName = 'incubate';
 	static color = COLOR_PURPLE;
 	static secondaryColor = COLOR_WHITE;
+	static requiredRCL = 7;
 
 	incubatingColony: Colony | undefined;
 
@@ -36,7 +37,7 @@ export class DirectiveIncubate extends Directive {
 
 	run() {
 		// Incubation directive gets removed once the colony has a command center (storage)
-		if (this.incubatingColony && this.incubatingColony.stage > ColonyStage.Larva) {
+		if (!this.memory.persistent && this.incubatingColony && this.incubatingColony.stage > ColonyStage.Larva) {
 			this.remove();
 		}
 		// // You can set memory.onlyBuildSpawn = true to remove the flag once spawn is built, skipping incubation

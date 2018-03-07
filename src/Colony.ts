@@ -1,12 +1,11 @@
 // Colony class - organizes all assets of an owned room into a colony
 
+import {profile} from './lib/Profiler';
 import {MiningSite} from './hiveClusters/hiveCluster_miningSite';
 import {Hatchery} from './hiveClusters/hiveCluster_hatchery';
 import {CommandCenter} from './hiveClusters/hiveCluster_commandCenter';
 import {UpgradeSite} from './hiveClusters/hiveCluster_upgradeSite';
 import {MiningGroup} from './hiveClusters/hiveCluster_miningGroup';
-import {profile} from './lib/Profiler';
-
 import {Overseer} from './Overseer';
 import {SupplierOverlord} from './overlords/core/overlord_supply';
 import {WorkerOverlord} from './overlords/core/overlord_work';
@@ -20,8 +19,6 @@ import {Stats} from './stats/stats';
 import {SporeCrawler} from './hiveClusters/hiveCluster_sporeCrawler';
 import {MineralSupplierOverlord} from './overlords/core/overlord_mineralSupplier';
 import {DirectiveLabMineral} from './directives/labs/directive_labMineralType';
-// import {LogisticsGroup} from './logistics/LogisticsGroup';
-// import {TransportOverlord} from './overlords/overlord_transport';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -34,10 +31,10 @@ export class Colony {
 	// Colony memory
 	memory: ColonyMemory;								// Memory.colonies[name]
 	// Colony overseer
-	overseer: Overseer;								// This runs the directives and overlords
+	overseer: Overseer;									// This runs the directives and overlords
 	// Room associations
 	name: string;										// Name of the primary colony room
-	colony: Colony;									// Reference to itself for simple overlord instantiation
+	colony: Colony;										// Reference to itself for simple overlord instantiation
 	roomNames: string[];								// The names of all rooms including the primary room
 	room: Room;											// Primary (owned) room of the colony
 	outposts: Room[];									// Rooms for remote resource collection

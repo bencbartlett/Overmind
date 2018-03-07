@@ -237,11 +237,11 @@ export class Zerg {
 	// Boosting logic --------------------------------------------------------------------------------------------------
 
 	get boosts(): _ResourceConstantSansEnergy[] {
-		return _.compact(_.unique(_.map(this.body, bodyPart => bodyPart.boost))) as _ResourceConstantSansEnergy[];
+		return this.creep.boosts;
 	}
 
 	get boostCounts(): { [boostType: string]: number } {
-		return _.countBy(this.body, bodyPart => bodyPart.boost);
+		return this.creep.boostCounts;
 	}
 
 	get needsBoosts(): boolean {
@@ -378,13 +378,13 @@ export class Zerg {
 	/* The average movespeed of the creep on blank terrain */
 	get moveSpeed(): number {
 		if (!this.memory.data.moveSpeed) {
-			var massiveParts = [WORK, ATTACK, RANGED_ATTACK, HEAL, TOUGH];
-			var mass = 0;
+			let massiveParts = [WORK, ATTACK, RANGED_ATTACK, HEAL, TOUGH];
+			let mass = 0;
 			for (let part of massiveParts) {
 				mass += this.getActiveBodyparts(part);
 			}
-			var moveParts = this.getActiveBodyparts(MOVE);
-			var fatiguePerTick = 2 * mass;
+			let moveParts = this.getActiveBodyparts(MOVE);
+			let fatiguePerTick = 2 * mass;
 			if (fatiguePerTick == 0) {
 				this.memory.data.moveSpeed = 1;
 			} else {

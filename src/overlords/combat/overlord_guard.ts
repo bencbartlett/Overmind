@@ -16,16 +16,16 @@ export class GuardOverlord extends CombatOverlord {
 		this.guards = this.creeps('guard');
 	}
 
-	private reassignIdleGuards(): void {
-		// Find all idle guards
-		let idleGuards = _.filter(this.colony.getCreepsByRole('guard'), (guard: Zerg) => !guard.overlord);
-		// Reassign them all to this flag
-		for (let guard of idleGuards) {
-			guard.overlord = this;
-		}
-		// Refresh the list of guards
-		this.guards = this.creeps('guard');
-	}
+	// private reassignIdleGuards(): void {
+	// 	// Find all idle guards
+	// 	let idleGuards = _.filter(this.colony.getCreepsByRole('guard'), (guard: Zerg) => !guard.overlord);
+	// 	// Reassign them all to this flag
+	// 	for (let guard of idleGuards) {
+	// 		guard.overlord = this;
+	// 	}
+	// 	// Refresh the list of guards
+	// 	this.guards = this.creeps('guard');
+	// }
 
 	private findAttackTarget(guard: Zerg): Creep | Structure | void {
 		let targetingDirectives = DirectiveTargetSiege.find(guard.room.flags) as DirectiveTargetSiege[];
@@ -67,7 +67,7 @@ export class GuardOverlord extends CombatOverlord {
 	}
 
 	init() {
-		this.reassignIdleGuards();
+		this.reassignIdleCreeps(GuardSetup.role);
 		// TODO: figure out how many guards are needed
 		this.wishlist(1, new GuardSetup());
 	}

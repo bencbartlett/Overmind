@@ -86,7 +86,7 @@ StructureLab.prototype.getMineralType = function (): _ResourceConstantSansEnergy
 	} else {
 		let flags = this.pos.lookFor(LOOK_FLAGS);
 		let dir = _.first(DirectiveLabMineral.find(flags) as DirectiveLabMineral[]);
-		if (dir.mineralType) {
+		if (dir && dir.mineralType) {
 			return dir.mineralType;
 		}
 	}

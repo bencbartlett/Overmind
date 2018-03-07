@@ -1,11 +1,12 @@
 interface Creep {
 	memory: CreepMemory;
-
+	boosts: _ResourceConstantSansEnergy[];
+	boostCounts: { [boostType: string]: number };
 	travelTo(destination: RoomPosition | { pos: RoomPosition }, options?: any): number;
 }
 
 interface Flag {
-	recalculateColony(restrictDistance?: number): void;
+	// recalculateColony(restrictDistance?: number): void;
 }
 
 type Sink = StructureSpawn |
@@ -23,6 +24,7 @@ interface Room {
 	signedByMe: boolean;
 	creeps: Creep[];
 	hostiles: Creep[];
+	playerHostiles: Creep[];
 	hostileStructures: Structure[];
 	flags: Flag[];
 	// Preprocessed structures

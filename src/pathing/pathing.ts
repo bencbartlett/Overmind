@@ -140,24 +140,6 @@ export class Pathing {
 		return ret;
 	}
 
-	// /* Returns the length of the shortest path from start to end position regardless of passable terrain.
-	//  * Returns Infinity if the path is incomplete. */
-	// static findShortestDistance(startPos: RoomPosition, endPos: RoomPosition,
-	// 							options: TravelToOptions = {}): number {
-	// 	_.defaults(options, {
-	// 		range  : 1,
-	// 		offRoad: true,
-	// 		allowSK: true,
-	//
-	// 	});
-	// 	let ret = Traveler.findTravelPath(startPos, endPos, options);
-	// 	if (ret.incomplete) { // TODO: this is causing a bug with double miners and haulers?
-	// 		return Infinity;
-	// 	} else {
-	// 		return ret.path.length;
-	// 	}
-	// }
-
 	/* Find the shortest path, preferentially stepping on tiles with road routing flags */
 	static routeRoadPath(origin: RoomPosition, destination: RoomPosition,
 						 options: TravelToOptions = {}): PathfinderReturn {

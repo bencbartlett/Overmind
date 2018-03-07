@@ -2,6 +2,7 @@ import {log} from '../lib/logger/log';
 import {profile} from '../lib/Profiler';
 import {Colony} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
+import {Pathing} from '../pathing/pathing';
 
 @profile
 export abstract class Directive {
@@ -12,16 +13,18 @@ export abstract class Directive {
 
 	flag: Flag;									// The flag instantiating this directive
 	name: string;								// The name of the flag
+	requiredRCL: number; 						// Required RCL for a colony to handle this directive
 	colony: Colony; 							// The colony of the directive (directive is removed if undefined)
 	pos: RoomPosition; 							// Flag position
 	room: Room | undefined;						// Flag room
 	memory: FlagMemory;							// Flag memory
 	overlords: { [name: string]: Overlord };	// Overlords
 
-	constructor(flag: Flag) {
+	constructor(flag: Flag, requiredRCL = 1) {
 		this.flag = flag;
 		this.name = flag.name;
-		this.colony = Directive.getFlagColony(flag);
+		this.requiredRCL = requiredRCL;
+		this.colony = Directive.getFlagColony(flag, requiredRCL);
 		this.pos = flag.pos;
 		this.room = flag.room;
 		this.memory = flag.memory;
@@ -35,11 +38,12 @@ export abstract class Directive {
 		}
 	}
 
-	static getFlagColony(flag: Flag): Colony {
+	static getFlagColony(flag: Flag, requiredRCL = 1): Colony {
+		// If something is written to flag.colony, use that as the colony
 		if (flag.memory.colony) {
 			return Overmind.Colonies[flag.memory.colony];
 		} else {
-			// If flag contains a colony name as a substring, assign to that colony
+			// If flag contains a colony name as a substring, assign to that colony, regardless of RCL
 			let colonyNames = _.keys(Overmind.Colonies);
 			for (let name of colonyNames) {
 				if (flag.name.includes(name)) {
@@ -47,15 +51,49 @@ export abstract class Directive {
 					return Overmind.Colonies[name];
 				}
 			}
-			// If flag is in a room belonging to a colony, assign to there
-			let colonyName = Overmind.colonyMap[flag.pos.roomName];
-			if (colonyName) {
-				return Overmind.Colonies[colonyName];
+			// If flag is in a room belonging to a colony and the colony has sufficient RCL, assign to there
+			let colony = Overmind.Colonies[Overmind.colonyMap[flag.pos.roomName]];
+			if (colony && colony.level >= requiredRCL) {
+				return colony;
 			} else {
 				// Otherwise assign to closest colony
-				flag.recalculateColony();
+				this.recalculateColony(flag, requiredRCL);
 				return Overmind.Colonies[flag.memory.colony!];
 			}
+		}
+	}
+
+	static recalculateColony(flag: Flag, requiredRCL = 1, restrictDistance = 10, verbose = false) {
+		if (verbose) log.info(`Recalculating colony association for ${flag.name} in ${flag.pos.roomName}`);
+		let nearestColonyName = '';
+		let minDistance = Infinity;
+		let colonyRooms = _.filter(Game.rooms, room => room.my);
+		for (let room of colonyRooms) {
+			if (room.controller!.level >= requiredRCL) {
+				let ret = Pathing.findShortestPath(flag.pos, room.controller!.pos,
+												   {restrictDistance: restrictDistance});
+				if (!ret.incomplete) {
+					if (ret.path.length < minDistance) {
+						nearestColonyName = room.name;
+						minDistance = ret.path.length;
+					}
+					if (verbose) log.info(`Path length to ${room.name}: ${ret.path.length}`);
+				} else {
+					if (verbose) log.info(`Incomplete path found to ${room.name}`);
+				}
+			} else {
+				if (verbose) {
+					log.info(`RCL for ${room.name} insufficient: ` +
+							 `needs ${requiredRCL}, is ${room.controller!.level}`);
+				}
+			}
+
+		}
+		if (nearestColonyName != '') {
+			log.info(`Colony ${nearestColonyName!} assigned to ${flag.name}.`);
+			flag.memory.colony = nearestColonyName;
+		} else {
+			log.warning(`Could not find colony match for ${flag.name} in ${flag.pos.roomName}!`);
 		}
 	}
 

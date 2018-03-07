@@ -3,8 +3,7 @@ import {profile} from '../../lib/Profiler';
 import {GuardOverlord} from '../../overlords/combat/overlord_guard';
 
 interface DirectiveGuardMemory extends FlagMemory {
-	persistent?: boolean;
-	created: number;
+	safeTick?: number;
 }
 
 @profile
@@ -35,11 +34,19 @@ export class DirectiveGuard extends Directive {
 				this.setPosition(this.room.hostiles[0].pos);
 			}
 		}
-		// If there are no hostiles left in the room and everyone's healed, then remove the flag
-		if (!this.memory.persistent && Game.time - this.memory.created > 100 &&
-			this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
-			if (_.filter(this.room.creeps, creep => creep.hits < creep.hitsMax).length == 0) {
+		// If there are no hostiles left in the room...
+		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
+			// If everyone's healed up, mark as safe
+			if (_.filter(this.room.creeps, creep => creep.hits < creep.hitsMax).length == 0 && !this.memory.safeTick) {
+				this.memory.safeTick = Game.time;
+			}
+			// If not persistent and has been safe for more than 100 ticks, remove directive
+			if (!this.memory.persistent && this.memory.safeTick && Game.time - this.memory.safeTick > 100) {
 				this.remove();
+			}
+		} else {
+			if (this.memory.safeTick) {
+				delete this.memory.safeTick;
 			}
 		}
 	}

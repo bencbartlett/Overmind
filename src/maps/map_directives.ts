@@ -16,6 +16,7 @@ import {DirectiveHealPoint} from '../directives/combat/directive_healPoint';
 import {DirectiveGuardSwarm} from '../directives/combat/directive_guard_swarm';
 import {DirectiveLabMineral} from '../directives/labs/directive_labMineralType';
 import {DirectiveDestroy} from '../directives/combat/directive_destroy';
+import {DirectiveInvasionDefense} from '../directives/combat/directive_invasion';
 
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 	switch (flag.color) {
@@ -53,6 +54,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			switch (flag.secondaryColor) {
 				case COLOR_ORANGE:
 					return new DirectiveBootstrap(flag);
+				case COLOR_RED:
+					return new DirectiveInvasionDefense(flag);
 			}
 			break;
 

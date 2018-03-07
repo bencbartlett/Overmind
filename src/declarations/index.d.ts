@@ -32,13 +32,18 @@ interface ICache {
 	rebuild(): void;
 }
 
+interface IOvermindMemory {
+	terminalNetwork: any;
+}
+
 interface IOvermind {
 	cache: ICache;
 	Colonies: { [roomName: string]: any };
 	overlords: { [overlordName: string]: any };
 	colonyMap: { [roomName: string]: string };
 	invisibleRooms: string[];
-
+	memory: IOvermindMemory;
+	terminalNetwork: ITerminalNetwork;
 	build(): void;
 
 	// rebuild(): void;
@@ -48,6 +53,17 @@ interface IOvermind {
 	run(): void;
 
 	visuals(): void;
+}
+
+interface ITerminalNetwork {
+	// terminals: StructureTerminal[];
+	memory: any;
+
+	requestResource(resourceType: ResourceConstant, terminal: StructureTerminal, amount?: number): void;
+
+	init(): void;
+
+	run(): void;
 }
 
 declare var Overmind: IOvermind;

@@ -24,6 +24,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/lodash": "^3.10.1",
+    "@types/lodash.minby": "^4.6.3",
     "@types/source-map": "^0.5.2",
     "rollup": "^0.51.8",
     "rollup-plugin-clean": "^1.0.0",
@@ -36,6 +37,7 @@
     "typescript": "2.6.2"
   },
   "dependencies": {
+    "lodash.minby": "^4.6.0",
     "source-map": "^0.6.1"
   }
 }

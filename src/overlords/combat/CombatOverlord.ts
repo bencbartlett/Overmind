@@ -141,6 +141,8 @@ export abstract class CombatOverlord extends Overlord {
 			} else if (range <= 3) {
 				healer.rangedHeal(target);
 			}
+		} else {
+			healer.park();
 		}
 	}
 

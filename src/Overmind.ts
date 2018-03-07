@@ -10,6 +10,7 @@ import {Overlord} from './overlords/Overlord';
 import {Directive} from './directives/Directive';
 import {Visualizer} from './visuals/Visualizer';
 import {Stats} from './stats/stats';
+import {TerminalNetwork} from './logistics/TerminalNetwork';
 
 
 @profile
@@ -18,7 +19,9 @@ export default class Overmind implements IOvermind {
 	Colonies: { [roomName: string]: Colony };				// Global hash of all colony objects
 	overlords: { [overlordName: string]: Overlord };
 	colonyMap: { [roomName: string]: string };				// Global map of colony associations for possibly-null rooms
+	terminalNetwork: ITerminalNetwork;
 	invisibleRooms: string[]; 								// Names of rooms across all colonies that are invisible
+
 
 	constructor() {
 		this.cache = new GameCache();
@@ -26,6 +29,23 @@ export default class Overmind implements IOvermind {
 		this.overlords = {};
 		this.colonyMap = {};
 		this.invisibleRooms = [];
+		this.terminalNetwork = this.makeTerminalNetwork();
+	}
+
+	get memory(): IOvermindMemory {
+		return Memory.Overmind as IOvermindMemory;
+	}
+
+	private makeTerminalNetwork(): TerminalNetwork {
+		// Initialize the terminal netowrk
+		let terminals: StructureTerminal[] = [];
+		for (let i in Game.rooms) {
+			let room = Game.rooms[i];
+			if (room.my && room.terminal) {
+				terminals.push(room.terminal);
+			}
+		}
+		return new TerminalNetwork(terminals);
 	}
 
 
@@ -46,7 +66,7 @@ export default class Overmind implements IOvermind {
 		let outpostFlags = _.filter(Game.flags, flag => DirectiveOutpost.filter(flag));
 		for (let flag of outpostFlags) {
 			if (!flag.memory.colony) {
-				flag.recalculateColony();
+				Directive.recalculateColony(flag);
 			}
 			let colonyName = flag.memory.colony as string;
 			if (colonyOutposts[colonyName]) {
@@ -166,6 +186,7 @@ export default class Overmind implements IOvermind {
 			this.Colonies[colonyName].init();
 			Stats.log(`cpu.usage.${colonyName}.init`, Game.cpu.getUsed() - start);
 		}
+		this.terminalNetwork.init();
 	}
 
 	run(): void {
@@ -174,6 +195,7 @@ export default class Overmind implements IOvermind {
 			this.Colonies[colonyName].run();
 			Stats.log(`cpu.usage.${colonyName}.run`, Game.cpu.getUsed() - start);
 		}
+		this.terminalNetwork.run();
 	}
 
 	visuals(): void {

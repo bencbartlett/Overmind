@@ -48,6 +48,16 @@ Object.defineProperty(Room.prototype, 'hostiles', {
 	},
 });
 
+Object.defineProperty(Room.prototype, 'playerHostiles', {
+	get() {
+		// let creepIsDangerous = (creep: Creep) => (creep.getActiveBodyparts(ATTACK) > 0 ||
+		// 										  creep.getActiveBodyparts(WORK) > 0 ||
+		// 										  creep.getActiveBodyparts(RANGED_ATTACK) > 0);
+		return _.filter(this.hostiles, (creep: Creep) => creep.owner.username != 'Invader');
+	},
+});
+
+
 // Hostile structures currently in the room
 Object.defineProperty(Room.prototype, 'hostileStructures', {
 	get() {

@@ -10,6 +10,7 @@ import {log} from './lib/logger/log';
 import {Visualizer} from './visuals/Visualizer';
 import {Pathing} from './pathing/pathing';
 import {DirectiveGuardSwarm} from './directives/combat/directive_guard_swarm';
+import {DirectiveInvasionDefense} from './directives/combat/directive_invasion';
 
 @profile
 export class Overseer {
@@ -40,18 +41,28 @@ export class Overseer {
 		let roomsToCheck = _.flattenDeep([this.colony.outposts,
 										  _.map(this.colony.incubatingColonies, col => col.rooms)]) as Room[];
 		for (let room of roomsToCheck) {
-			let guardFlags = _.filter(room.flags, flag => DirectiveGuard.filter(flag));
-			let guardSwarmFlags = _.filter(room.flags, flag => DirectiveGuardSwarm.filter(flag));
+			let defenseFlags = _.filter(room.flags, flag => DirectiveGuard.filter(flag) ||
+															DirectiveInvasionDefense.filter(flag) ||
+															DirectiveGuardSwarm.filter(flag));
 			let bigHostiles = _.filter(room.hostiles, creep => creep.body.length >= 10);
 			// let hostiles = _.filter(room.hostiles, creep => creep.getActiveBodyparts(ATTACK) > 0 ||
 			// 												creep.getActiveBodyparts(WORK) > 0 ||
 			// 												creep.getActiveBodyparts(RANGED_ATTACK) > 0 ||
 			// 												creep.getActiveBodyparts(HEAL) > 0);
-			if ((room.hostiles.length > 0 && guardFlags.length + guardSwarmFlags.length == 0) ||
-				(bigHostiles.length > 0 && guardFlags.length == 0)) {
+			if ((room.hostiles.length > 0 && defenseFlags.length == 0) ||
+				(bigHostiles.length > 0 && defenseFlags.length == 0)) {
 				DirectiveGuard.create(room.hostiles[0].pos);
 			}
 		}
+
+		if (this.colony.room) {
+			let effectiveInvaderCount = _.sum(_.map(this.colony.room.hostiles, invader => invader.boosts.length > 0 ? 2 : 1));
+			let invasionDefenseFlags = _.filter(this.colony.room.flags, flag => DirectiveInvasionDefense.filter(flag));
+			if (effectiveInvaderCount >= 3 && invasionDefenseFlags.length == 0) {
+				DirectiveInvasionDefense.create(this.colony.controller.pos);
+			}
+		}
+
 
 		// Emergency directive: in the event of catastrophic room crash, enter emergency spawn mode.
 		// Doesn't apply to incubating colonies.
@@ -73,21 +84,17 @@ export class Overseer {
 	// Safe mode condition =============================================================================================
 
 	private handleSafeMode(): void {
-		// Simple safe mode handler; will eventually be replaced by something more sophisticated
-		// Calls for safe mode when walls are about to be breached and there are non-NPC hostiles in the room
+		// Safe mode activates when there are player
 		let creepIsDangerous = (creep: Creep) => (creep.getActiveBodyparts(ATTACK) > 0 ||
+												  creep.getActiveBodyparts(WORK) > 0 ||
 												  creep.getActiveBodyparts(RANGED_ATTACK) > 0);
-		let nonInvaderHostiles = _.filter(this.colony.room.hostiles, creep => creep.owner.username != 'Invader' &&
-																			  creepIsDangerous(creep));
-		let hostilesCanReachSpawn = false;
-		if (this.colony.spawns[0] && nonInvaderHostiles.length > 0) {
-			let obstacles = _.map(this.colony.room.barriers, barrier => barrier.pos);
-			let ret = Pathing.findShortestPath(nonInvaderHostiles[0].pos, this.colony.spawns[0].pos,
-											   {obstacles: obstacles});
-			if (!ret.incomplete) hostilesCanReachSpawn = true;
-		}
-		if (nonInvaderHostiles.length > 0 && hostilesCanReachSpawn) {
-			this.colony.controller.activateSafeMode();
+		let barrierPositions = _.map(this.colony.room.barriers, barrier => barrier.pos);
+		let baddies = _.filter(this.colony.room.playerHostiles, hostile => creepIsDangerous(hostile));
+		for (let hostile of baddies) {
+			if (this.colony.spawns[0] && Pathing.isReachable(hostile.pos, this.colony.spawns[0].pos,
+															 {obstacles: barrierPositions})) {
+				this.colony.controller.activateSafeMode();
+			}
 		}
 	}
 

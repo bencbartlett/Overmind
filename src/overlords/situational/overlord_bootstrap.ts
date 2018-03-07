@@ -47,10 +47,10 @@ export class BootstrappingOverlord extends Overlord {
 													  this.colony.terminal!,
 													  this.colony.powerSpawn!,
 													  this.colony.nuker!,
-													  ...this.colony.room.containers,
-													  ...this.colony.links,
-													  ...this.colony.towers,
-													  ...this.colony.labs]), structure => structure.energy > 0);
+													  ...this.room.containers,
+													  ...this.room.links,
+													  ...this.room.towers,
+													  ...this.room.labs]), structure => structure.energy > 0);
 		this.settings = {
 			spawnBootstrapMinerThreshold: 1000,
 		};

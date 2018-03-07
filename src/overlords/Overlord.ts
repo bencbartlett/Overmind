@@ -56,6 +56,15 @@ export abstract class Overlord {
 		return _.findIndex(this.colony.roomNames, this.pos.roomName);
 	}
 
+	protected reassignIdleCreeps(role: string): void {
+		// Find all idle guards
+		let idleCreeps = _.filter(this.colony.getCreepsByRole(role), (zerg: Zerg) => !zerg.overlord);
+		// Reassign them all to this flag
+		for (let creep of idleCreeps) {
+			creep.overlord = this;
+		}
+	}
+
 	protected creeps(role: string): Zerg[] {
 		if (this._creeps[role]) {
 			return this._creeps[role];
@@ -158,6 +167,27 @@ export abstract class Overlord {
 					log.info(`No labs containing ${boost} are in ${this.colony.name}!`);
 				}
 			}
+		}
+	}
+
+	protected labsHaveBoosts(): boolean {
+		for (let role in this.boosts) {
+			if (this.boosts[role]) {
+				let boosts = this.boosts[role]!;
+				for (let boost of boosts) {
+					if (_.filter(this.colony.labs, lab => lab.getMineralType() == boost &&
+														  lab.mineralAmount > 0).length == 0) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	protected requestBoost(resourceType: _ResourceConstantSansEnergy): void {
+		if (this.colony.terminal) {
+			Overmind.terminalNetwork.requestResource(resourceType, this.colony.terminal);
 		}
 	}
 

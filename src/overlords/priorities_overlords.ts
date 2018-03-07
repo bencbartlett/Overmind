@@ -9,7 +9,8 @@ export var OverlordPriority = {
 		commandCenter: 101,
 	},
 	defense   : {			// Defense of local and remote rooms
-		guard: 200,
+		invasion: 200,
+		guard   : 201,
 	},
 	realTime  : { 			// Requests that a user is typically actively waiting for
 		claim  : 300,
