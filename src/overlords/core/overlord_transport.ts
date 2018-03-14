@@ -21,14 +21,21 @@ export class TransportOverlord extends Overlord {
 
 	private neededTransportPower(): number {
 		let transportPower = 0;
+		let dropoffLocation: RoomPosition;
+		if (this.colony.commandCenter) {
+			dropoffLocation = this.colony.commandCenter.pos;
+		} else if (this.colony.hatchery && this.colony.hatchery.battery) {
+			dropoffLocation = this.colony.hatchery.battery.pos;
+		} else {
+			return 0;
+		}
 		for (let siteID in this.colony.miningSites) {
 			let site = this.colony.miningSites[siteID];
 			if (site.output instanceof StructureContainer && site.overlord.miners.length > 0) {
 				// Only count sites which have a container output and which have at least one miner present
 				// (this helps in difficult "rebooting" situations)
-				let approximateDropoffPos = this.colony.commandCenter ? this.colony.commandCenter.pos :
-											this.colony.hatchery ? this.colony.hatchery.pos : this.colony.pos;
-				transportPower += site.energyPerTick * (2 * Pathing.distance(this.pos, site.pos));
+				let scaling = 1.75; // Average distance you have to carry resources
+				transportPower += site.energyPerTick * (scaling * Pathing.distance(site.pos, dropoffLocation));
 			}
 		}
 		return transportPower / CARRY_CAPACITY;

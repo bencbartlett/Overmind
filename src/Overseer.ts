@@ -80,10 +80,10 @@ export class Overseer {
 		if (!this.colony.isIncubating) {
 			let hasEnergy = this.colony.room.energyAvailable >= EMERGENCY_ENERGY_THRESHOLD; // Enough spawn energy?
 			let hasMiners = this.colony.getCreepsByRole('miner').length > 0;		// Has energy supply?
-			let hasSupplier = this.colony.getCreepsByRole('supplier').length > 0;	// Has suppliers?
+			let hasQueen = this.colony.getCreepsByRole('queen').length > 0;		// Has a queen?
 			// let canSpawnSupplier = this.colony.room.energyAvailable >= this.colony.overlords.supply.generateProtoCreep()
 			let emergencyFlags = _.filter(this.colony.room.flags, flag => DirectiveBootstrap.filter(flag));
-			if (!hasEnergy && !hasMiners && !hasSupplier && emergencyFlags.length == 0) {
+			if (!hasEnergy && !hasMiners && !hasQueen && emergencyFlags.length == 0) {
 				if (this.colony.hatchery) {
 					DirectiveBootstrap.create(this.colony.hatchery.pos);
 				}

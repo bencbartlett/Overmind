@@ -21,7 +21,7 @@ export class DirectiveBootstrap extends Directive {
 	private needsEnergy: boolean; 		// Whether there is enough energy in the room
 	private needsMiner: boolean;		// Whether a miner needs to be spawned
 	private needsManager: boolean;		// Whether a manager needs to be spawned
-	private needsSupplier: boolean;		// Whether a supplier needs to be spawned
+	private needsQueen: boolean;		// Whether a supplier needs to be spawned
 
 	constructor(flag: Flag) {
 		super(flag);
@@ -31,7 +31,7 @@ export class DirectiveBootstrap extends Directive {
 		this.needsManager = (this.colony.commandCenter != undefined &&
 							 this.colony.commandCenter.overlord != undefined &&
 							 this.colony.getCreepsByRole('manager').length == 0);
-		this.needsSupplier = (this.colony.getCreepsByRole('supplier').length == 0);
+		this.needsQueen = (this.colony.getCreepsByRole('queen').length == 0);
 		this.overlords.bootstrap = new BootstrappingOverlord(this);
 	}
 
@@ -42,7 +42,7 @@ export class DirectiveBootstrap extends Directive {
 	}
 
 	run(): void {
-		if (!this.needsMiner && !this.needsManager && !this.needsSupplier) {
+		if (!this.needsMiner && !this.needsManager && !this.needsQueen) {
 			log.alert(`Colony ${this.room.name} has recovered from crash; removing bootstrap directive.`);
 			// Suicide any fillers so they don't get in the way
 			let overlord = this.overlords.bootstrap as BootstrappingOverlord;
