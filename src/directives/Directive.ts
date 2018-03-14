@@ -13,6 +13,7 @@ export abstract class Directive {
 
 	flag: Flag;									// The flag instantiating this directive
 	name: string;								// The name of the flag
+	ref: string;								// Also the name of the flag; used for task targeting
 	requiredRCL: number; 						// Required RCL for a colony to handle this directive
 	colony: Colony; 							// The colony of the directive (directive is removed if undefined)
 	pos: RoomPosition; 							// Flag position
@@ -23,6 +24,7 @@ export abstract class Directive {
 	constructor(flag: Flag, requiredRCL = 1) {
 		this.flag = flag;
 		this.name = flag.name;
+		this.ref = flag.ref;
 		this.requiredRCL = requiredRCL;
 		this.colony = Directive.getFlagColony(flag, requiredRCL);
 		this.pos = flag.pos;

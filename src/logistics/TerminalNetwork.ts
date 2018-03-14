@@ -162,11 +162,13 @@ export class TerminalNetwork implements ITerminalNetwork {
 				t != terminal && t.store.energy < this.settings.energy.outThreshold - this.settings.energy.sendSize);
 			let bestTerminal = minBy(okTerminals, (receiver: StructureTerminal) =>
 				Game.market.calcTransactionCost(this.settings.energy.sendSize, terminal.room.name, receiver.room.name));
-			let cost = Game.market.calcTransactionCost(this.settings.energy.sendSize,
-													   terminal.room.name, bestTerminal.room.name);
-			terminal.send(RESOURCE_ENERGY, this.settings.energy.sendSize, bestTerminal.room.name);
-			log.info(`Sent ${this.settings.energy.sendSize} energy from ${terminal.room.name} to ` +
-					 `${bestTerminal.room.name}. Fee: ${cost - this.settings.energy.sendSize}`);
+			if (bestTerminal) {
+				let cost = Game.market.calcTransactionCost(this.settings.energy.sendSize,
+														   terminal.room.name, bestTerminal.room.name);
+				terminal.send(RESOURCE_ENERGY, this.settings.energy.sendSize, bestTerminal.room.name);
+				log.info(`Sent ${this.settings.energy.sendSize} energy from ${terminal.room.name} to ` +
+						 `${bestTerminal.room.name}. Fee: ${cost - this.settings.energy.sendSize}`);
+			}
 		}
 	}
 

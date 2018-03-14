@@ -91,6 +91,7 @@ interface PathingMemory {
 }
 
 interface FlagMemory {
+	amount?: number;
 	created?: number;
 	persistent?: boolean;
 	setPosition: RoomPosition;
@@ -99,7 +100,7 @@ interface FlagMemory {
 	parent?: string;
 	overlords: { [overlordName: string]: OverlordMemory };
 
-	[otherProperties: string]: any;
+	// [otherProperties: string]: any;
 }
 
 interface RoomMemory {

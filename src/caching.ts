@@ -37,8 +37,17 @@ export class GameCache implements ICache {
 	/* Generates a hash table for targets: key: TargetRef, val: targeting creep names*/
 	private cacheTargets() {
 		this.targets = {};
-		this.targets = _.groupBy(_.keys(Game.creeps), name => Game.creeps[name].memory.task ?
-															  Game.creeps[name].memory.task!._target.ref : null);
+		for (let i in Game.creeps) {
+			let creep = Game.creeps[i];
+			let task = creep.memory.task;
+			while (task) {
+				if (!this.targets[task._target.ref]) this.targets[task._target.ref] = [];
+				this.targets[task._target.ref].push(creep.name);
+				task = task._parent;
+			}
+		}
+		// this.targets = _.groupBy(_.keys(Game.creeps), name => Game.creeps[name].memory.task ?
+		// 													  Game.creeps[name].memory.task!._target.ref : null);
 	}
 
 	/* Generates a nested hash table for structure lookup: {[roomName], {[structureType]: Structures[]} */

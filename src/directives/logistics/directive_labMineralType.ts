@@ -13,6 +13,8 @@ export class DirectiveLabMineral extends Directive {
 	static color = COLOR_CYAN;
 	static secondaryColor = COLOR_CYAN;
 
+	memory: DirectiveLabMineralMemory;
+
 	constructor(flag: Flag) {
 		super(flag);
 	}

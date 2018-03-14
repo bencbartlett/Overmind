@@ -5,21 +5,20 @@ import {MiningSite} from './hiveClusters/hiveCluster_miningSite';
 import {Hatchery} from './hiveClusters/hiveCluster_hatchery';
 import {CommandCenter} from './hiveClusters/hiveCluster_commandCenter';
 import {UpgradeSite} from './hiveClusters/hiveCluster_upgradeSite';
-import {MiningGroup} from './hiveClusters/hiveCluster_miningGroup';
 import {Overseer} from './Overseer';
-import {SupplierOverlord} from './overlords/core/overlord_supply';
+// import {SupplierOverlord} from './overlords/core/overlord_supply';
 import {WorkerOverlord} from './overlords/core/overlord_work';
 import {Zerg} from './Zerg';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
 import {HiveCluster} from './hiveClusters/HiveCluster';
 import {LinkNetwork} from './logistics/LinkNetwork';
-import {TransportRequestGroup} from './logistics/TransportRequestGroup';
-import {Priority} from './settings/priorities';
 import {Stats} from './stats/stats';
 import {SporeCrawler} from './hiveClusters/hiveCluster_sporeCrawler';
 import {MineralSupplierOverlord} from './overlords/core/overlord_mineralSupplier';
-import {DirectiveLabMineral} from './directives/labs/directive_labMineralType';
+import {DirectiveLabMineral} from './directives/logistics/directive_labMineralType';
 import {RoadLogistics} from './logistics/RoadLogistics';
+import {LogisticsGroup} from './logistics/LogisticsGroup';
+import {TransportOverlord} from './overlords/core/overlord_transport';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -65,7 +64,7 @@ export class Colony {
 	hatchery: Hatchery | undefined;						// Component to encapsulate spawner logic
 	upgradeSite: UpgradeSite;							// Component to provide upgraders with uninterrupted energy
 	sporeCrawlers: SporeCrawler[];
-	miningGroups: { [id: string]: MiningGroup } | undefined;	// Component to group mining sites into a hauling group
+	// miningGroups: { [id: string]: MiningGroup } | undefined;	// Component to group mining sites into a hauling group
 	miningSites: { [sourceID: string]: MiningSite };	// Component with logic for mining and hauling
 	// Incubation status
 	incubator: Colony | undefined; 						// The colony responsible for incubating this one, if any
@@ -79,13 +78,14 @@ export class Colony {
 	hostiles: Creep[];									// Hostile creeps in one of the rooms
 	// Resource requests
 	linkNetwork: LinkNetwork;
-	transportRequests: TransportRequestGroup;			// Box for resource requests
-	// logisticsGroup: LogisticsGroup;
+	// transportRequests: TransportRequestGroup;			// Box for resource requests
+	logisticsGroup: LogisticsGroup;
+	// logisticsNetwork: LogisticsNetwork;
 	// Overlords
 	overlords: {
-		supply: SupplierOverlord;
+		// supply: SupplierOverlord;
 		work: WorkerOverlord;
-		// logistics: TransportOverlord;
+		logistics: TransportOverlord;
 		mineralSupply?: MineralSupplierOverlord;
 	};
 	// Road network
@@ -153,17 +153,18 @@ export class Colony {
 		this.incubatingColonies = [];
 		// Resource requests
 		this.linkNetwork = new LinkNetwork(this);
-		this.transportRequests = new TransportRequestGroup();
-		// this.logisticsGroup = new LogisticsGroup(this);
+		// this.transportRequests = new TransportRequestGroup();
+		this.logisticsGroup = new LogisticsGroup(this);
+		// this.logisticsNetwork = new LogisticsNetwork(this);
+		// Register a room planner
+		this.roomPlanner = new RoomPlanner(this);
+		// Register road network
+		this.roadLogistics = new RoadLogistics(this);
 		// Build the hive clusters
 		this.hiveClusters = [];
 		this.buildHiveClusters();
 		// Register colony overlords
 		this.spawnMoarOverlords();
-		// Register road network
-		this.roadLogistics = new RoadLogistics(this);
-		// Register a room planner
-		this.roomPlanner = new RoomPlanner(this);
 	}
 
 	/* Instantiate and associate virtual colony components to group similar structures together */
@@ -188,25 +189,25 @@ export class Colony {
 											   this.upgradeSite.input]);
 		this.claimedLinks = _.filter(claimedLinkCandidates, s => s instanceof StructureLink) as StructureLink[];
 		this.unclaimedLinks = _.filter(this.links, link => this.claimedLinks.includes(link) == false);
-		// Instantiate a MiningGroup for each non-component link and for storage
-		if (this.storage) {
-			let miningGroupLinks = _.filter(this.unclaimedLinks, link => link.pos.rangeToEdge <= 3);
-			let miningGroups: { [structRef: string]: MiningGroup } = {};
-			miningGroups[this.storage.ref] = new MiningGroup(this, this.storage);
-			for (let link of miningGroupLinks) {
-				let createNewGroup = true;
-				for (let structRef in miningGroups) {
-					let group = miningGroups[structRef];
-					if (group.links && group.links.includes(link)) {
-						createNewGroup = false; // don't create a new group if one already includes this link
-					}
-				}
-				if (createNewGroup) {
-					miningGroups[link.ref] = new MiningGroup(this, link);
-				}
-			}
-			this.miningGroups = miningGroups;
-		}
+		// // Instantiate a MiningGroup for each non-component link and for storage
+		// if (this.storage) {
+		// 	let miningGroupLinks = _.filter(this.unclaimedLinks, link => link.pos.rangeToEdge <= 3);
+		// 	let miningGroups: { [structRef: string]: MiningGroup } = {};
+		// 	miningGroups[this.storage.ref] = new MiningGroup(this, this.storage);
+		// 	for (let link of miningGroupLinks) {
+		// 		let createNewGroup = true;
+		// 		for (let structRef in miningGroups) {
+		// 			let group = miningGroups[structRef];
+		// 			if (group.links && group.links.includes(link)) {
+		// 				createNewGroup = false; // don't create a new group if one already includes this link
+		// 			}
+		// 		}
+		// 		if (createNewGroup) {
+		// 			miningGroups[link.ref] = new MiningGroup(this, link);
+		// 		}
+		// 	}
+		// 	this.miningGroups = miningGroups;
+		// }
 		// Mining sites is an object of ID's and MiningSites
 		let sourceIDs = _.map(this.sources, source => source.ref);
 		let miningSites = _.map(this.sources, source => new MiningSite(this, source));
@@ -215,9 +216,9 @@ export class Colony {
 
 	private spawnMoarOverlords(): void {
 		this.overlords = {
-			supply: new SupplierOverlord(this),
-			work  : new WorkerOverlord(this),
-			// logistics: new TransportOverlord(this),
+			// supply: new SupplierOverlord(this),
+			work     : new WorkerOverlord(this),
+			logistics: new TransportOverlord(this),
 		};
 		if (this.labs.length > 0) {
 			if (_.filter(this.room.flags, flag => DirectiveLabMineral.filter(flag)).length > 0) {
@@ -267,12 +268,13 @@ export class Colony {
 	init(): void {
 		// Initialize each hive cluster
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.init());
-		// Register drop pickup requests // TODO: make this cleaner
-		for (let room of this.rooms) {
-			for (let drop of room.droppedEnergy) {
-				this.transportRequests.requestWithdrawal(drop, Priority.High);
-			}
-		}
+		// Register drop pickup requests // TODO: make this cleaner, refactor for tombstones
+		// for (let room of this.rooms) {
+		// 	for (let drop of room.droppedEnergy) {
+		// 		// this.transportRequests.requestWithdrawal(drop, Priority.High);
+		// 		this.logisticsGroup.provide(drop,{multiplier:1.5});
+		// 	}
+		// }
 		// Initialize the colony overseer, must be run AFTER all components are initialized
 		this.overseer.init();
 		// Initialize the road network
@@ -281,6 +283,13 @@ export class Colony {
 		this.linkNetwork.init();
 		// Initialize the room planner
 		this.roomPlanner.init();
+		// console.log('==================================================================================');
+
+		// if (true) {
+		// 	console.log('==================================================================================');
+		// 	console.log(`Summary of logistics group for ${this.colony.name} at init() ${Game.time}`);
+		// 	this.logisticsGroup.summarize();
+		// }
 	}
 
 	run(): void {
@@ -298,6 +307,10 @@ export class Colony {
 		this.roomPlanner.run();
 		// Record statistics
 		this.stats();
+		// if (true) {
+		// 	console.log(`Summary of logistics group for ${this.colony.name} at run() ${Game.time}`);
+		// 	this.logisticsGroup.summarize();
+		// }
 	}
 
 	stats(): void {

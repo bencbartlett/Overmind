@@ -18,6 +18,7 @@ export class UpgradeSite extends HiveCluster {
 		energyPerBodyUnit: number
 	};
 	overlord: UpgradingOverlord;
+	energyPerTick: number;
 
 	constructor(colony: Colony, controller: StructureController) {
 		super(colony, controller, 'upgradeSite');
@@ -42,6 +43,7 @@ export class UpgradeSite extends HiveCluster {
 		};
 		// Register overlord
 		this.overlord = new UpgradingOverlord(this);
+		this.energyPerTick = _.sum(_.map(this.overlord.upgraders, upgrader => upgrader.getActiveBodyparts(WORK)));
 	}
 
 	get memory() {
@@ -69,9 +71,11 @@ export class UpgradeSite extends HiveCluster {
 			}
 		} else if (this.input instanceof StructureContainer) {
 			if (this.input.energy < 0.5 * this.input.storeCapacity) {
-				this.colony.transportRequests.requestEnergy(this.input);
-				// this.colony.logisticsGroup.request(this.input);
+				// this.colony.transportRequests.requestEnergy(this.input);
+				// this.colony.logisticsNetwork.request(this.input);
+				this.colony.logisticsGroup.request(this.input, {dAmountdt: this.energyPerTick});
 			}
+
 		}
 	}
 

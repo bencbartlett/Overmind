@@ -33,30 +33,30 @@ export class TaskTransfer extends Task {
 	}
 
 	isValidTask() {
-		let amount = this.data.amount || 0;
+		let amount = this.data.amount || 1;
 		let resourcesInCarry = this.creep.carry[this.data.resourceType] || 0;
-		return resourcesInCarry >= amount && resourcesInCarry > 0;
+		return resourcesInCarry >= amount;
 	}
 
 	isValidTarget() {
-		let amount = this.data.amount || 0;
+		let amount = this.data.amount || 1;
 		let target = this.target;
 		if (target instanceof Creep) {
-			return _.sum(target.carry) < target.carryCapacity - amount;
+			return _.sum(target.carry) <= target.carryCapacity - amount;
 		} else if (isStoreStructure(target)) {
-			return _.sum(target.store) < target.storeCapacity - amount;
+			return _.sum(target.store) <= target.storeCapacity - amount;
 		} else if (isEnergyStructure(target) && this.data.resourceType == RESOURCE_ENERGY) {
-			return target.energy < target.energyCapacity - amount;
+			return target.energy <= target.energyCapacity - amount;
 		} else {
 			if (target instanceof StructureLab) {
 				return this.data.resourceType == target.mineralType &&
-					   target.mineralAmount < target.mineralCapacity - amount;
+					   target.mineralAmount <= target.mineralCapacity - amount;
 			} else if (target instanceof StructureNuker) {
 				return this.data.resourceType == RESOURCE_GHODIUM &&
-					   target.ghodium < target.ghodiumCapacity - amount;
+					   target.ghodium <= target.ghodiumCapacity - amount;
 			} else if (target instanceof StructurePowerSpawn) {
 				return this.data.resourceType == RESOURCE_POWER &&
-					   target.power < target.powerCapacity - amount;
+					   target.power <= target.powerCapacity - amount;
 			}
 		}
 		return false;

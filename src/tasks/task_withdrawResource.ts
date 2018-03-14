@@ -33,12 +33,12 @@ export class TaskWithdrawResource extends Task {
 	}
 
 	isValidTask() {
-		let amount = this.data.amount || 0;
-		return (_.sum(this.creep.carry) < this.creep.carryCapacity - amount);
+		let amount = this.data.amount || 1;
+		return (_.sum(this.creep.carry) <= this.creep.carryCapacity - amount);
 	}
 
 	isValidTarget() {
-		let amount = this.data.amount || 0;
+		let amount = this.data.amount || 1;
 		let target = this.target;
 		if (isStoreStructure(target)) {
 			return (target.store[this.data.resourceType] || 0) >= amount;

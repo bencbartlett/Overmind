@@ -6,7 +6,6 @@ import {profile} from '../lib/Profiler';
 import {CommandCenterOverlord} from '../overlords/hiveCluster/overlord_commandCenter';
 import {Colony} from '../Colony';
 import {Mem} from '../memory';
-import {Priority} from '../settings/priorities';
 import {Visualizer} from '../visuals/Visualizer';
 import {TerminalNetwork} from '../logistics/TerminalNetwork';
 
@@ -91,118 +90,22 @@ export class CommandCenter extends HiveCluster {
 		let nearbyStructuresEachPos = _.map(possiblePositions, pos => numNearbyStructures(pos));
 		let maxIndex = _.findIndex(nearbyStructuresEachPos, _.max(nearbyStructuresEachPos));
 		return possiblePositions[maxIndex];
-
-		// for (let structure of proximateStructures) {
-		// 	if (structure) {
-		// 		let filteredPositions = _.filter(possiblePositions,
-		// 										 p => p.isNearTo(structure!) && !p.isEqualTo(structure!));
-		// 		if (filteredPositions.length == 0) { // stop when it's impossible to match any more structures
-		// 			return possiblePositions[0];
-		// 		} else {
-		// 			possiblePositions = filteredPositions;
-		// 		}
-		// 	}
-		// }
-		// return possiblePositions[0];
 	}
 
 	private registerEnergyRequests(): void {
 		let refillTowers = _.filter(this.towers, tower => tower.energy < tower.energyCapacity);
+		// _.forEach(refillTowers, tower =>
+		// 	this.colony.transportRequests.requestEnergy(tower, tower.energy < this.settings.refillTowersBelow ?
+		// 													   Priority.High : Priority.Low));
 		_.forEach(refillTowers, tower =>
-			this.colony.transportRequests.requestEnergy(tower, tower.energy < this.settings.refillTowersBelow ?
-															   Priority.High : Priority.Low));
+			this.colony.logisticsGroup.request(tower, {
+				multiplier: tower.energy < this.settings.refillTowersBelow ? 2 : 0.5
+			}));
 		let refillLabs = _.filter(this.labs, lab => lab.energy < lab.energyCapacity);
-		_.forEach(refillLabs, lab => this.colony.transportRequests.requestEnergy(lab, Priority.NormalLow));
+		// _.forEach(refillLabs, lab => this.colony.transportRequests.requestEnergy(lab, Priority.NormalLow));
+		_.forEach(refillLabs, lab => this.colony.logisticsGroup.request(lab));
 	}
 
-	// Terminal logic ==================================================================================================
-
-	// /* Cost per unit including transfer price with energy converted to credits */
-	// private effectivePricePerUnit(order: Order): number {
-	// 	if (order.roomName) {
-	// 		let transferCost = Game.market.calcTransactionCost(1000, this.room.name, order.roomName) / 1000;
-	// 		return order.price + transferCost;
-	// 	} else {
-	// 		return Infinity;
-	// 	}
-	// }
-	//
-	// /* Calculate what needs buying */
-	// private calculateShortages(): { [mineralType: string]: number } {
-	// 	if (Game.market.credits < reserveCredits || !this.terminal) {
-	// 		return {};
-	// 	}
-	// 	let toBuy: { [mineral: string]: number } = {};
-	// 	for (let mineral in this.terminalSettings.resourceAmounts) {
-	// 		let amount = this.terminal.store[<ResourceConstant>mineral] || 0;
-	// 		let maxPrice = this.terminalSettings.resourceAmounts[mineral] ||
-	// 					   this.terminalSettings.resourceAmounts.default;
-	// 		if (mineral != RESOURCE_ENERGY && amount < this.terminalSettings.resourceAmounts[mineral]) {
-	// 			toBuy[mineral] = this.terminalSettings.resourceAmounts[mineral] - amount;
-	// 		}
-	// 	}
-	// 	return toBuy;
-	// }
-	//
-	// /* Buy needed resources for the best available price on market */
-	// private buyShortages(): void {
-	// 	var toBuy = this.calculateShortages();
-	// 	if (toBuy != {}) { // nothing to buy
-	// 		for (let mineral in toBuy!) {
-	// 			if (mineral == RESOURCE_ENERGY) {
-	// 				continue;
-	// 			}
-	// 			let relevantOrders = Game.market.getAllOrders(order => order.type == ORDER_SELL &&
-	// 																   order.resourceType == mineral &&
-	// 																   order.remainingAmount > 100);
-	// 			let bestOrder = null;
-	// 			let bestCost = Infinity;
-	// 			for (let order of relevantOrders) {
-	// 				let cost = this.effectivePricePerUnit(order);
-	// 				if (cost < bestCost) {
-	// 					bestOrder = order;
-	// 					bestCost = cost;
-	// 				}
-	// 			}
-	// 			if (bestOrder && bestOrder.roomName &&
-	// 				this.effectivePricePerUnit(bestOrder) < this.terminalSettings.maxBuyPrice[mineral]) {
-	// 				let amount = Math.min(bestOrder.remainingAmount, toBuy![mineral]);
-	// 				let response = Game.market.deal(bestOrder.id, amount, this.room.name);
-	// 				console.log(this.name + ': bought', amount, mineral, 'from', bestOrder.roomName,
-	// 													'for', bestOrder.price * amount, 'credits and',
-	// 													Game.market.calcTransactionCost(amount, this.room.name, bestOrder.roomName), 'energy',
-	// 													'reponse:', response);
-	// 			}
-	// 		}
-	// 	}
-	// }
-	//
-	// private sendExtraEnergy(): void {
-	// 	if (!this.terminal || this.terminal.energy < this.settings.excessEnergyTransferSize) {
-	// 		return;
-	// 	}
-	// 	// calculate best room to send energy to
-	// 	var minCost = Infinity;
-	// 	var minRoom = null;
-	// 	for (let name in Game.rooms) {
-	// 		let room = Game.rooms[name];
-	// 		if (room.my && room.terminal &&
-	// 			room.storage && room.storage.energy < this.settings.unloadStorageBuffer) {
-	// 			let cost = Game.market.calcTransactionCost(this.settings.excessEnergyTransferSize,
-	// 													   this.room.name, room.name);
-	// 			if (cost < minCost) {
-	// 				minCost = cost;
-	// 				minRoom = room.name;
-	// 			}
-	// 		}
-	// 	}
-	// 	// if you have sufficient energy in terminal
-	// 	if (minRoom && this.terminal.energy > this.settings.excessEnergyTransferSize + minCost) {
-	// 		let res = this.terminal.send(RESOURCE_ENERGY, this.settings.excessEnergyTransferSize, minRoom,
-	// 									 'Excess energy transfer');
-	// 		log.info(`Sent ${this.settings.excessEnergyTransferSize} excess energy to ${minRoom}. Response: ${res}.`);
-	// 	}
-	// }
 
 	// Prioritize depositing and withdrawing ===========================================================================
 
@@ -275,21 +178,6 @@ export class CommandCenter extends HiveCluster {
 		}
 	}
 
-	// private handleTerminal(): void {
-	// 	if (!this.terminal) {
-	// 		return;
-	// 	}
-	// 	// send excess energy if terminal and storage both have too much energy
-	// 	if (this.terminal.energy > this.terminalSettings.resourceAmounts[RESOURCE_ENERGY]
-	// 							   + this.settings.excessEnergyTransferSize &&
-	// 		this.room.storage && this.room.storage.energy > this.settings.unloadStorageBuffer) {
-	// 		this.sendExtraEnergy();
-	// 	}
-	// 	// buy shortages only if there's enough energy; avoids excessive CPU usage
-	// 	if (Game.time % 10 == 0) {
-	// 		this.buyShortages();
-	// 	}
-	// }
 
 	// Initialization and operation ====================================================================================
 
@@ -299,7 +187,7 @@ export class CommandCenter extends HiveCluster {
 	}
 
 	run(): void {
-		// this.handleTerminal();
+
 	}
 
 	visuals() {

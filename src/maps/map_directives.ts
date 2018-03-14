@@ -14,7 +14,7 @@ import {DirectiveTargetSiege} from '../directives/targeting/directive_target_sie
 import {DirectiveSiege} from '../directives/combat/directive_siege';
 import {DirectiveHealPoint} from '../directives/combat/directive_healPoint';
 import {DirectiveGuardSwarm} from '../directives/combat/directive_guard_swarm';
-import {DirectiveLabMineral} from '../directives/labs/directive_labMineralType';
+import {DirectiveLabMineral} from '../directives/logistics/directive_labMineralType';
 import {DirectiveDestroy} from '../directives/combat/directive_destroy';
 import {DirectiveInvasionDefense} from '../directives/combat/directive_invasion';
 
@@ -59,10 +59,11 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			}
 			break;
 
-		// Energy directives ===========================================================================================
+		// Logistics directives ========================================================================================
 		case COLOR_YELLOW:
 			switch (flag.secondaryColor) {
-
+				case COLOR_YELLOW:
+				// return new DirectiveLogisticsRequest(flag);
 			}
 			break;
 

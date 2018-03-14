@@ -118,12 +118,24 @@ export abstract class Task {
 		}
 	}
 
+	// Return a list of [this, this.parent, this.parent.parent, ...]
+	get manifest(): Task[] {
+		let manifest: Task[] = [this];
+		let parent = this.parent;
+		while (parent) {
+			manifest.push(parent);
+			parent = parent.parent;
+		}
+		return manifest;
+	}
+
 	// Fork the task, assigning a new task to the creep with this task as its parent
-	fork(newTask: Task): void {
+	fork(newTask: Task): Task {
 		newTask.parent = this;
 		if (this.creep) {
 			this.creep.task = newTask;
 		}
+		return newTask;
 	}
 
 	// Test every tick to see if task is still valid
@@ -149,11 +161,8 @@ export abstract class Task {
 			return true;
 		} else {
 			// Switch to parent task if there is one
-			let isValid = false;
-			if (this.parent) {
-				let isValid = this.parent.isValid();
-			}
 			this.finish();
+			let isValid = this.parent ? this.parent.isValid() : false;
 			return isValid;
 		}
 	}
@@ -195,6 +204,8 @@ export abstract class Task {
 	finish(): void {
 		if (this.creep) {
 			this.creep.task = this.parent;
+		} else {
+			console.log(`No creep executing ${this.name}!`);
 		}
 	}
 }

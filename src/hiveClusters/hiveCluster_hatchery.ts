@@ -4,7 +4,7 @@ import {HiveCluster} from './HiveCluster';
 import {profile} from '../lib/Profiler';
 import {HatcheryOverlord} from '../overlords/hiveCluster/overlord_hatchery';
 import {Priority} from '../settings/priorities';
-import {Colony, ColonyStage} from '../Colony';
+import {Colony} from '../Colony';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {CreepSetup} from '../creepSetup/CreepSetup';
 import {Overlord} from '../overlords/Overlord';
@@ -14,8 +14,8 @@ import {Stats} from '../stats/stats';
 
 @profile
 export class Hatchery extends HiveCluster {
-	spawns: StructureSpawn[]; 										// List of spawns in the hatchery
-	availableSpawns: StructureSpawn[]; 								// Spawns that are available to make stuff right now
+	spawns: StructureSpawn[]; 								// List of spawns in the hatchery
+	availableSpawns: StructureSpawn[]; 						// Spawns that are available to make stuff right now
 	extensions: StructureExtension[]; 						// List of extensions in the hatchery
 	link: StructureLink | undefined; 						// The input link
 	towers: StructureTower[]; 								// All towers that aren't in the command center
@@ -62,15 +62,9 @@ export class Hatchery extends HiveCluster {
 			renewQueenAt           : 1000,
 		};
 		// Register the hatchery overlord
-		if (this.colony.stage > ColonyStage.Larva) {
-			this.overlord = new HatcheryOverlord(this);
-		}
+		this.overlord = new HatcheryOverlord(this);
 		// Assign a separate request group if hatchery has a dedicated attendant
-		if (this.overlord && this.overlord.queens.length > 0) {
-			this.transportRequests = new TransportRequestGroup();
-		} else {
-			this.transportRequests = this.colony.transportRequests;
-		}
+		this.transportRequests = new TransportRequestGroup();
 		this.memory.stats = this.getStats();
 	}
 
@@ -99,9 +93,12 @@ export class Hatchery extends HiveCluster {
 		if (this.link && this.link.isEmpty) {
 			this.colony.linkNetwork.requestReceive(this.link);
 		}
-		if (this.battery && this.battery.energy < 0.25 * this.battery.storeCapacity) {
-			this.colony.transportRequests.requestEnergy(this.battery);
-			// this.colony.logisticsGroup.request(this.battery, {multiplier: 1.5});
+		if (this.battery) {
+			if (this.battery.energy < 0.25 * this.battery.storeCapacity) {
+				// this.colony.transportRequests.requestEnergy(this.battery);
+				// this.colony.logisticsNetwork.request(this.battery);
+				this.colony.logisticsGroup.request(this.battery);
+			}
 		}
 		// Register energy transport requests (goes on hatchery request group, which can be colony request group)
 		let refillSpawns = _.filter(this.spawns, spawn => spawn.energy < spawn.energyCapacity);

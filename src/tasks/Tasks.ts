@@ -22,7 +22,7 @@ import {TaskWithdraw, withdrawTargetType} from './task_withdraw';
 import {TaskWithdrawResource, withdrawResourceTargetType} from './task_withdrawResource';
 import {dropTargetType, TaskDrop} from './task_drop';
 
-export class Tasks {
+export class Tasks { // TODO: update arguments for transfer and similar
 
 	static attack(target: attackTargetType): TaskAttack {
 		return new TaskAttack(target);
@@ -100,8 +100,11 @@ export class Tasks {
 		return new TaskSignController(target);
 	}
 
-	static transfer(target: transferTargetType): TaskTransfer {
-		return new TaskTransfer(target);
+	static transfer(target: transferTargetType,
+					resourceType: ResourceConstant = RESOURCE_ENERGY,
+					amount: number | undefined     = undefined,
+					options                        = {} as TaskOptions): TaskTransfer {
+		return new TaskTransfer(target, resourceType, amount, options);
 	}
 
 	static upgrade(target: upgradeTargetType): TaskUpgrade {
@@ -112,8 +115,11 @@ export class Tasks {
 		return new TaskWithdraw(target);
 	}
 
-	static withdrawResource(target: withdrawResourceTargetType): TaskWithdrawResource {
-		return new TaskWithdrawResource(target);
+	static withdrawResource(target: withdrawResourceTargetType,
+							resourceType: ResourceConstant = RESOURCE_ENERGY,
+							amount: number | undefined     = undefined,
+							options                        = {} as TaskOptions): TaskWithdrawResource {
+		return new TaskWithdrawResource(target, resourceType, amount, options);
 	}
 
 	// static fromProto(protoTask: protoTask): any {

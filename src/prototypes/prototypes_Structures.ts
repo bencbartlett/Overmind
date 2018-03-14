@@ -4,7 +4,7 @@
 
 import {overmindSignature} from '../settings/do-not-modify';
 import {myUsername} from '../settings/settings_user';
-import {DirectiveLabMineral} from '../directives/labs/directive_labMineralType';
+import {DirectiveLabMineral} from '../directives/logistics/directive_labMineralType';
 
 Object.defineProperty(StructureContainer.prototype, 'isPassible', {
 	get() {

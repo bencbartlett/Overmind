@@ -2,9 +2,19 @@
 
 import {Task} from './Task';
 import {profile} from '../lib/Profiler';
+import {EnergyStructure, isEnergyStructure, StoreStructure} from '../declarations/typeGuards';
 
-export type withdrawTargetType = StructureContainer | StructureExtension | StructureLab | StructureLink |
-	StructureNuker | StructurePowerSpawn | StructureSpawn | StructureStorage | StructureTerminal | StructureTower;
+export type withdrawTargetType = EnergyStructure | StoreStructure;
+// StructureContainer
+// | StructureExtension
+// | StructureLab
+// | StructureLink
+// | StructureNuker
+// | StructurePowerSpawn
+// | StructureSpawn
+// | StructureStorage
+// | StructureTerminal
+// | StructureTower;
 export const withdrawTaskName = 'withdraw';
 
 @profile
@@ -20,7 +30,12 @@ export class TaskWithdraw extends Task {
 	}
 
 	isValidTarget() {
-		return this.target && this.target.energy > 0;
+		if (isEnergyStructure(this.target)) {
+			return this.target && this.target.energy > 0;
+		} else {
+			return this.target && this.target.store[RESOURCE_ENERGY] > 0;
+		}
+
 	}
 
 	work() {

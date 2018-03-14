@@ -37,6 +37,17 @@ export class Overseer {
 
 	/* Place new event-driven flags where needed to be instantiated on the next tick */
 	private placeDirectives(): void {
+		// // Register drop pickup requests // TODO: make this cleaner, refactor for tombstones
+		// for (let room of this.colony.rooms) {
+		// 	for (let drop of room.droppedEnergy) {
+		// 		if (drop.amount > 100) {
+		// 			let requesterFlags = _.filter(drop.pos.lookFor(LOOK_FLAGS) || [],
+		// 				flag => DirectiveLogisticsRequest.filter(flag!));
+		// 			if (requesterFlags.length == 0) DirectiveLogisticsRequest.create(drop.pos);
+		// 		}
+		// 	}
+		// }
+
 		// Guard directive: defend your outposts and all rooms of colonies that you are incubating
 		let roomsToCheck = _.flattenDeep([this.colony.outposts,
 										  _.map(this.colony.incubatingColonies, col => col.rooms)]) as Room[];

@@ -28,6 +28,9 @@ export class WorkerOverlord extends Overlord {
 											 this.colony.terminal!,
 											 this.colony.upgradeSite.input!,
 											 ..._.map(this.colony.miningSites, site => site.output!)]);
+		if (this.colony.hatchery && this.colony.hatchery.battery) {
+			this.rechargeStructures.push(this.colony.hatchery.battery);
+		}
 		// Barrier settings
 		this.settings = {
 			barrierHits        : {
@@ -57,6 +60,35 @@ export class WorkerOverlord extends Overlord {
 		let criticalHits = 1000; // Fortifying changes to repair status at this point
 		let criticalBarriers = _.filter(this.fortifyStructures, s => s.hits <= criticalHits);
 		this.repairStructures = this.repairStructures.concat(criticalBarriers);
+	}
+
+	init() {
+		let workPartsPerWorker = _.filter(this.generateProtoCreep(new WorkerSetup()).body, part => part == WORK).length;
+		if (this.colony.stage == ColonyStage.Larva) {
+			// At lower levels, try to saturate the energy throughput of the colony
+			let MAX_WORKERS = 7; // Maximum number of workers to spawn
+			let energyPerTick = _.sum(_.map(this.colony.miningSites, site => site.energyPerTick));
+			let energyPerTickPerWorker = 1.1 * workPartsPerWorker; // Average energy per tick when workers are working
+			let workerUptime = 0.8;
+			let numWorkers = Math.ceil(energyPerTick / (energyPerTickPerWorker * workerUptime));
+			this.wishlist(Math.min(numWorkers, MAX_WORKERS), new WorkerSetup());
+		} else {
+			// At higher levels, spawn workers based on construction and repair that needs to be done
+			let MAX_WORKERS = 3; // Maximum number of workers to spawn
+			let constructionTicks = _.sum(_.map(this.colony.constructionSites,
+												site => site.progressTotal - site.progress)) / BUILD_POWER;
+			let repairTicks = _.sum(_.map(this.repairStructures,
+										  structure => structure.hitsMax - structure.hits)) / REPAIR_POWER;
+			let fortifyTicks = 0.25 * _.sum(_.map(this.fortifyStructures,
+												  barrier => this.settings.barrierHits[this.colony.level]
+															 - barrier.hits)) / REPAIR_POWER;
+			if (this.colony.storage!.energy < 500000) {
+				fortifyTicks = 0; // Ignore fortification duties below this energy level
+			}
+			let numWorkers = Math.ceil(2 * (constructionTicks + repairTicks + fortifyTicks) /
+									   (workPartsPerWorker * CREEP_LIFE_TIME));
+			this.wishlist(Math.min(numWorkers, MAX_WORKERS), new WorkerSetup());
+		}
 	}
 
 	private repairActions(worker: Zerg) {
@@ -130,35 +162,6 @@ export class WorkerOverlord extends Overlord {
 			}
 		} else {
 			this.rechargeActions(worker);
-		}
-	}
-
-	init() {
-		let workPartsPerWorker = _.filter(this.generateProtoCreep(new WorkerSetup()).body, part => part == WORK).length;
-		if (this.colony.stage == ColonyStage.Larva) {
-			// At lower levels, try to saturate the energy throughput of the colony
-			let MAX_WORKERS = 7; // Maximum number of workers to spawn
-			let energyPerTick = _.sum(_.map(this.colony.miningSites, site => site.energyPerTick));
-			let energyPerTickPerWorker = 1.1 * workPartsPerWorker; // Average energy per tick when workers are working
-			let workerUptime = 0.8;
-			let numWorkers = Math.ceil(energyPerTick / (energyPerTickPerWorker * workerUptime));
-			this.wishlist(Math.min(numWorkers, MAX_WORKERS), new WorkerSetup());
-		} else {
-			// At higher levels, spawn workers based on construction and repair that needs to be done
-			let MAX_WORKERS = 3; // Maximum number of workers to spawn
-			let constructionTicks = _.sum(_.map(this.colony.constructionSites,
-												site => site.progressTotal - site.progress)) / BUILD_POWER;
-			let repairTicks = _.sum(_.map(this.repairStructures,
-										  structure => structure.hitsMax - structure.hits)) / REPAIR_POWER;
-			let fortifyTicks = 0.25 * _.sum(_.map(this.fortifyStructures,
-												  barrier => this.settings.barrierHits[this.colony.level]
-															 - barrier.hits)) / REPAIR_POWER;
-			if (this.colony.storage!.energy < 500000) {
-				fortifyTicks = 0; // Ignore fortification duties below this energy level
-			}
-			let numWorkers = Math.ceil(2 * (constructionTicks + repairTicks + fortifyTicks) /
-									   (workPartsPerWorker * CREEP_LIFE_TIME));
-			this.wishlist(Math.min(numWorkers, MAX_WORKERS), new WorkerSetup());
 		}
 	}
 
