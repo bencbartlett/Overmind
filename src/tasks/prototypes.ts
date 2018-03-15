@@ -1,0 +1,37 @@
+// This binds a getter/setter creep.task property
+
+import {initializeTask} from './initializer';
+
+Object.defineProperty(Creep.prototype, 'task', {
+	get() {
+		if (!this._task) {
+			let protoTask = this.memory.task;
+			this._task = protoTask ? initializeTask(protoTask) : null;
+		}
+		return this._task;
+	},
+	set(task: ITask | null) {
+		// Unregister target from old task if applicable
+		let oldProtoTask = this.memory.task as protoTask;
+		if (oldProtoTask) {
+			let oldRef = oldProtoTask._target.ref;
+			if (Overmind.cache.targets[oldRef]) {
+				Overmind.cache.targets[oldRef] = _.remove(Overmind.cache.targets[oldRef], name => name == this.name);
+			}
+		}
+		// Set the new task
+		this.memory.task = task ? task.proto : null;
+		if (task) {
+			if (task.target) {
+				// Register task target in cache if it is actively targeting something (excludes goTo and similar)
+				if (!Overmind.cache.targets[task.target.ref]) {
+					Overmind.cache.targets[task.target.ref] = [];
+				}
+				Overmind.cache.targets[task.target.ref].push(this.name);
+			}
+			// Register references to creep
+			task.creep = this;
+			this._task = task;
+		}
+	},
+});

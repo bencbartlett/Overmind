@@ -418,8 +418,8 @@ export class LogisticsGroup {
 		console.log('Transporters:');
 		for (let transporter of this.colony.getCreepsByRole(TransporterSetup.role)) {
 			let task = transporter.task ? transporter.task.name : 'none';
-			let target = transporter.task ? transporter.task._target.ref + ' ' + transporter.task.targetPos.print :
-						 'none';
+			let target = transporter.task ?
+						 transporter.task.proto._target.ref + ' ' + transporter.task.targetPos.print : 'none';
 			let nextAvailability = this.nextAvailability(transporter);
 			console.log(`    Creep: ${transporter.name}    Pos: ${transporter.pos.print}    Task: ${task}    Target: ${target}    ` +
 						`Available in ${Math.floor(nextAvailability[0])} ticks at ${nextAvailability[1].print}`);

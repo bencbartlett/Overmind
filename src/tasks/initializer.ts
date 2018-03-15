@@ -1,36 +1,31 @@
 // Reinstantiation of a task object from protoTask data
 
-import {Task} from '../tasks/Task';
-import {attackTargetType, attackTaskName, TaskAttack} from '../tasks/task_attack';
-import {buildTargetType, buildTaskName, TaskBuild} from '../tasks/task_build';
-import {claimTargetType, claimTaskName, TaskClaim} from '../tasks/task_claim';
-import {depositTargetType, depositTaskName, TaskDeposit} from '../tasks/task_deposit';
-import {dismantleTargetType, dismantleTaskName, TaskDismantle} from '../tasks/task_dismantle';
-import {fortifyTargetType, fortifyTaskName, TaskFortify} from '../tasks/task_fortify';
-import {getBoostedTargetType, getBoostedTaskName, TaskGetBoosted} from '../tasks/task_getBoosted';
-import {getRenewedTargetType, getRenewedTaskName, TaskGetRenewed} from '../tasks/task_getRenewed';
-import {goToTargetType, goToTaskName, TaskGoTo} from '../tasks/task_goTo';
-import {goToRoomTargetType, goToRoomTaskName, TaskGoToRoom} from '../tasks/task_goToRoom';
-import {harvestTargetType, harvestTaskName, TaskHarvest} from '../tasks/task_harvest';
-import {healTargetType, healTaskName, TaskHeal} from '../tasks/task_heal';
+import {attackTargetType, attackTaskName, TaskAttack} from './task_attack';
+import {buildTargetType, buildTaskName, TaskBuild} from './task_build';
+import {claimTargetType, claimTaskName, TaskClaim} from './task_claim';
+import {depositTargetType, depositTaskName, TaskDeposit} from './task_deposit';
+import {dismantleTargetType, dismantleTaskName, TaskDismantle} from './task_dismantle';
+import {fortifyTargetType, fortifyTaskName, TaskFortify} from './task_fortify';
+import {getBoostedTargetType, getBoostedTaskName, TaskGetBoosted} from './task_getBoosted';
+import {getRenewedTargetType, getRenewedTaskName, TaskGetRenewed} from './task_getRenewed';
+import {goToTargetType, goToTaskName, TaskGoTo} from './task_goTo';
+import {goToRoomTargetType, goToRoomTaskName, TaskGoToRoom} from './task_goToRoom';
+import {harvestTargetType, harvestTaskName, TaskHarvest} from './task_harvest';
+import {healTargetType, healTaskName, TaskHeal} from './task_heal';
 // import {loadLabTargetType, loadLabTaskName, TaskLoadLab} from '../tasks/task_loadLab';
-import {meleeAttackTargetType, meleeAttackTaskName, TaskMeleeAttack} from '../tasks/task_meleeAttack';
-import {pickupTargetType, pickupTaskName, TaskPickup} from '../tasks/task_pickup';
-import {rangedAttackTargetType, rangedAttackTaskName, TaskRangedAttack} from '../tasks/task_rangedAttack';
-import {TaskWithdraw, withdrawTargetType, withdrawTaskName} from '../tasks/task_withdraw';
-import {repairTargetType, repairTaskName, TaskRepair} from '../tasks/task_repair';
-import {reserveTargetType, reserveTaskName, TaskReserve} from '../tasks/task_reserve';
-import {signControllerTargetType, signControllerTaskName, TaskSignController} from '../tasks/task_signController';
-import {TaskTransfer, transferTargetType, transferTaskName} from '../tasks/task_transfer';
-import {TaskUpgrade, upgradeTargetType, upgradeTaskName} from '../tasks/task_upgrade';
-import {
-	TaskWithdrawResource,
-	withdrawResourceTargetType,
-	withdrawResourceTaskName
-} from '../tasks/task_withdrawResource';
-import {dropTargetType, dropTaskName, TaskDrop} from '../tasks/task_drop';
+import {meleeAttackTargetType, meleeAttackTaskName, TaskMeleeAttack} from './task_meleeAttack';
+import {pickupTargetType, pickupTaskName, TaskPickup} from './task_pickup';
+import {rangedAttackTargetType, rangedAttackTaskName, TaskRangedAttack} from './task_rangedAttack';
+import {TaskWithdraw, withdrawTargetType, withdrawTaskName} from './task_withdraw';
+import {repairTargetType, repairTaskName, TaskRepair} from './task_repair';
+import {reserveTargetType, reserveTaskName, TaskReserve} from './task_reserve';
+import {signControllerTargetType, signControllerTaskName, TaskSignController} from './task_signController';
+import {TaskTransfer, transferTargetType, transferTaskName} from './task_transfer';
+import {TaskUpgrade, upgradeTargetType, upgradeTaskName} from './task_upgrade';
+import {TaskWithdrawResource, withdrawResourceTargetType, withdrawResourceTaskName} from './task_withdrawResource';
+import {dropTargetType, dropTaskName, TaskDrop} from './task_drop';
 
-export function taskInstantiator(protoTask: protoTask): Task {
+export function initializeTask(protoTask: protoTask): any {
 	// Retrieve name and target data from the protoTask
 	let taskName = protoTask.name;
 	let target = deref(protoTask._target.ref);
@@ -111,12 +106,7 @@ export function taskInstantiator(protoTask: protoTask): Task {
 			break;
 	}
 	// Modify the task object to reflect any changed properties
-	task!._creep = protoTask._creep;
-	task!._target = protoTask._target;
-	task!._parent = protoTask._parent;
-	task!.settings = protoTask.settings;
-	task!.options = protoTask.options;
-	task!.data = protoTask.data;
+	task!.proto = protoTask;
 	// Return it
 	return task!;
 }

@@ -1,5 +1,4 @@
 import {Task} from './Task';
-import {log} from '../lib/logger/log';
 import {profile} from '../lib/Profiler';
 
 export type getRenewedTargetType = StructureSpawn;
@@ -14,26 +13,16 @@ export class TaskGetRenewed extends Task {
 	}
 
 	isValidTask() {
-		var creep = this.creep;
-		// energyAvailable requirement avoids jams where everything stops to get renewed at the same time
-		let condition = creep.ticksToLive != undefined &&
-						creep.ticksToLive < 0.9 * creep.lifetime &&
-						creep.room.energyAvailable > 300;
-		// console.log(creep.ticksToLive, creep.lifetime, condition);
-		return condition;
-		// this.creep.log("task" + r)
+		let hasClaimPart = _.filter(this.creep.body, (part: BodyPartDefinition) => part.type == CLAIM).length > 0;
+		let lifetime = hasClaimPart ? CREEP_CLAIM_LIFE_TIME : CREEP_LIFE_TIME;
+		return this.creep.ticksToLive != undefined && this.creep.ticksToLive < 0.9 * lifetime;
 	}
 
 	isValidTarget() {
-		var target = this.target;
-		let r = (target != null && target.my && target.structureType == STRUCTURE_SPAWN);
-		// this.creep.log(r)
-		return r;
+		return this.target.my && !this.target.spawning;
 	}
 
 	work() {
-		let response = this.target.renewCreep(this.creep.creep);
-		log.debug('Renewing! ' + this.creep.ticksToLive + '/' + this.creep.lifetime);
-		return response;
+		return this.target.renewCreep(this.creep);
 	}
 }

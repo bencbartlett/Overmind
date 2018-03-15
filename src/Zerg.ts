@@ -1,5 +1,4 @@
 import {profile} from './lib/Profiler';
-import {taskInstantiator} from './maps/map_tasks';
 import {Colony} from './Colony';
 import {Overlord} from './overlords/Overlord';
 import {Task} from './tasks/Task';
@@ -293,49 +292,41 @@ export class Zerg {
 
 	// Task logic ------------------------------------------------------------------------------------------------------
 
-	/* Instantiate the _task object when needed */
-	initializeTask(): Task | null {
-		let protoTask = this.memory.task as protoTask;
-		if (protoTask) {
-			// PERFORM TASK MIGRATION HERE
-			return taskInstantiator(protoTask);
-		} else {
-			return null;
-		}
-	}
-
 	/* Wrapper for _task */
-	get task(): Task | null {
-		if (!this._task) {
-			this._task = this.initializeTask();
-		}
-		return this._task;
+	get task(): ITask | null {
+		// if (!this._task) {
+		// 	let protoTask = this.memory.task;
+		// 	this._task = protoTask ? initializeTask(protoTask) : null;
+		// }
+		// return this._task;
+		return this.creep.task;
 	}
 
 	/* Assign the creep a task with the setter, replacing creep.assign(Task) */
-	set task(task: Task | null) {
-		// Unregister target from old task if applicable
-		let oldProtoTask = this.memory.task as protoTask;
-		if (oldProtoTask) {
-			let oldRef = oldProtoTask._target.ref;
-			if (Overmind.cache.targets[oldRef]) {
-				Overmind.cache.targets[oldRef] = _.remove(Overmind.cache.targets[oldRef], name => name == this.name);
-			}
-		}
-		// Set the new task
-		this.memory.task = task;
-		if (task) {
-			if (task.target) {
-				// Register task target in cache if it is actively targeting something (excludes goTo and similar)
-				if (!Overmind.cache.targets[task.target.ref]) {
-					Overmind.cache.targets[task.target.ref] = [];
-				}
-				Overmind.cache.targets[task.target.ref].push(this.name);
-			}
-			// Register references to creep
-			task.creep = this;
-			this._task = task;
-		}
+	set task(task: ITask | null) {
+		// // Unregister target from old task if applicable
+		// let oldProtoTask = this.memory.task as protoTask;
+		// if (oldProtoTask) {
+		// 	let oldRef = oldProtoTask._target.ref;
+		// 	if (Overmind.cache.targets[oldRef]) {
+		// 		Overmind.cache.targets[oldRef] = _.remove(Overmind.cache.targets[oldRef], name => name == this.name);
+		// 	}
+		// }
+		// // Set the new task
+		// this.memory.task = task ? task.proto : null;
+		// if (task) {
+		// 	if (task.target) {
+		// 		// Register task target in cache if it is actively targeting something (excludes goTo and similar)
+		// 		if (!Overmind.cache.targets[task.target.ref]) {
+		// 			Overmind.cache.targets[task.target.ref] = [];
+		// 		}
+		// 		Overmind.cache.targets[task.target.ref].push(this.name);
+		// 	}
+		// 	// Register references to creep
+		// 	task.creep = this;
+		// 	this._task = task;
+		// }
+		this.creep.task = task;
 	}
 
 	/* Does the creep have a valid task at the moment? */

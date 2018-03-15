@@ -9,10 +9,6 @@ export class TaskGetBoosted extends Task {
 
 	target: getBoostedTargetType;
 
-	data: {
-		amount: number | undefined;
-	};
-
 	constructor(target: getBoostedTargetType, amount: number | undefined = undefined, options = {} as TaskOptions) {
 		super(getBoostedTaskName, target, options);
 		// Settings
@@ -32,7 +28,7 @@ export class TaskGetBoosted extends Task {
 	}
 
 	work() {
-		return this.target.boostCreep(this.creep.creep);
+		return this.target.boostCreep(this.creep);
 	}
 }
 

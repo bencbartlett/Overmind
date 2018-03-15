@@ -1,4 +1,3 @@
-// var flagCodes = require('map_flag_codes.js');
 import {Task} from './Task';
 import {profile} from '../lib/Profiler';
 

@@ -1,5 +1,18 @@
-import {taskInstantiator} from '../maps/map_tasks';
-import {Zerg} from '../Zerg';
+/**
+ * Creep tasks setup instructions
+ *
+ * Javascript:
+ * 1. In main.js:    require("tasks/prototypes.js");
+ * 2. As needed:    var Tasks = require("<path to Tasks.js>");
+ *
+ * Typescript:
+ * 1. In main.ts:    import "./tasks/prototypes";
+ * 2. As needed:    import {Tasks} from "<path to Tasks.ts>"
+ *
+ * If you use Travler, change all occurrences of creep.moveTo() to creep.travelTo()
+ */
+
+import {initializeTask} from './initializer';
 
 type targetType = { ref: string, pos: RoomPosition }; // overwrite this variable in derived classes to specify more precise typing
 
@@ -8,7 +21,7 @@ type targetType = { ref: string, pos: RoomPosition }; // overwrite this variable
  * the necessary logic for traveling to a target, performing a task, and realizing when a task is no longer sensible
  * to continue.*/
 
-export abstract class Task {
+export abstract class Task implements ITask {
 
 	static taskName: string;
 
@@ -21,13 +34,9 @@ export abstract class Task {
 		_pos: protoPos; 			// Target position's coordinates in case vision is lost
 	};
 	_parent: protoTask | null; 	// The parent of this task, if any. Task is changed to parent upon completion.
-	settings: { 				// Data pertaining to a given type of task; shouldn't be modified on an instance-basis
-		targetRange: number;		// How close you must be to the target to do the work() function
-		workOffRoad: boolean; 		// If the task should be performed off-road (e.g. working, upgrading, etc)
-	};
-	options: TaskOptions;
-	data: { 					// Data pertaining to a given instance of a task
-	};
+	settings: TaskSettings;		// Settings for a given type of task; shouldn't be modified on an instance-basis
+	options: TaskOptions;		// Options for a specific instance of a task
+	data: TaskData; 			// Data pertaining to a given instance of a task
 
 	constructor(taskName: string, target: targetType, options = {} as TaskOptions) {
 		// Parameters for the task
@@ -66,12 +75,32 @@ export abstract class Task {
 		// this.target = target as RoomObject;
 	}
 
-	// Getter/setter for task.creep
-	get creep(): Zerg { // Get task's own creep by its name
-		return Game.zerg[this._creep.name];
+	get proto(): protoTask {
+		return {
+			name   : this.name,
+			_creep : this._creep,
+			_target: this._target,
+			_parent: this._parent,
+			options: this.options,
+			data   : this.data,
+		};
 	}
 
-	set creep(creep: Zerg) {
+	set proto(protoTask: protoTask) {
+		// Don't write to this.name; used in task switcher
+		this._creep = protoTask._creep;
+		this._target = protoTask._target;
+		this._parent = protoTask._parent;
+		this.options = protoTask.options;
+		this.data = protoTask.data;
+	}
+
+	// Getter/setter for task.creep
+	get creep(): Creep { // Get task's own creep by its name
+		return Game.creeps[this._creep.name];
+	}
+
+	set creep(creep: Creep) {
 		this._creep.name = creep.name;
 	}
 
@@ -106,11 +135,11 @@ export abstract class Task {
 
 	// Getter/setter for task parent
 	get parent(): Task | null {
-		return (this._parent ? taskInstantiator(this._parent) : null);
+		return (this._parent ? initializeTask(this._parent) : null);
 	}
 
 	set parent(parentTask: Task | null) {
-		this._parent = parentTask;
+		this._parent = parentTask ? parentTask.proto : null;
 		// If the task is already assigned to a creep, update their memory
 		// Although assigning something to a creep and then changing the parent is bad practice...
 		if (this.creep) {
@@ -168,12 +197,6 @@ export abstract class Task {
 	}
 
 	move(): number {
-		// if (this.creep.pos.isEdge && this.creep.pos.roomName == this.targetPos.roomName) {
-		// 	return this.creep.move(this.creep.pos.getDirectionTo(this.targetPos));
-		// }
-		// let options = Object.assign({},
-		// 							this.options.travelToOptions,
-		// 							{range: this.settings.targetRange});
 		if (this.options.travelToOptions && !this.options.travelToOptions.range) {
 			this.options.travelToOptions.range = this.settings.targetRange;
 		}
@@ -185,16 +208,41 @@ export abstract class Task {
 		if (this.creep.pos.inRangeTo(this.targetPos, this.settings.targetRange) && !this.creep.pos.isEdge) {
 			if (this.settings.workOffRoad) {
 				// Move to somewhere nearby that isn't on a road
-				this.creep.park(this.targetPos, true);
+				this.parkCreep(this.creep, this.targetPos, true);
 			}
-			// let workResult = this.work();
-			// if (workResult != OK && this.data.quiet == false) {
-			// 	log.debug('Error executing ' + this.name + ', returned ' + workResult);
-			// }
 			return this.work();
 		} else {
 			this.move();
 		}
+	}
+
+	/* Bundled form of zerg.park(); adapted from BonzAI codebase*/
+	protected parkCreep(creep: Creep, pos: RoomPosition = creep.pos, maintainDistance = false): number {
+		let road = _.find(creep.pos.lookFor(LOOK_STRUCTURES), s => s.structureType == STRUCTURE_ROAD);
+		if (!road) return OK;
+
+		let positions = _.sortBy(creep.pos.availableNeighbors(), (p: RoomPosition) => p.getRangeTo(pos));
+		if (maintainDistance) {
+			let currentRange = creep.pos.getRangeTo(pos);
+			positions = _.filter(positions, (p: RoomPosition) => p.getRangeTo(pos) <= currentRange);
+		}
+
+		let swampPosition;
+		for (let position of positions) {
+			if (_.find(position.lookFor(LOOK_STRUCTURES), s => s.structureType == STRUCTURE_ROAD)) continue;
+			let terrain = position.lookFor(LOOK_TERRAIN)[0];
+			if (terrain === 'swamp') {
+				swampPosition = position;
+			} else {
+				return creep.move(creep.pos.getDirectionTo(position));
+			}
+		}
+
+		if (swampPosition) {
+			return creep.move(creep.pos.getDirectionTo(swampPosition));
+		}
+
+		return creep.travelTo(pos);
 	}
 
 	// Task to perform when at the target

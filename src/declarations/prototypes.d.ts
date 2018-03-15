@@ -33,7 +33,7 @@ interface Room {
 	droppedMinerals: Resource[];
 	droppedPower: Resource[];
 	structures: { [structureType: string]: Structure[] };
-	spawns: Spawn[];
+	spawns: StructureSpawn[];
 	extensions: StructureExtension[];
 	containers: StructureContainer[];
 	storageUnits: StorageUnit[];

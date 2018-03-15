@@ -110,27 +110,3 @@ interface HasPos {
 	pos: RoomPosition
 }
 
-interface TaskOptions {
-	blind?: boolean;
-	travelToOptions: TravelToOptions;
-}
-
-interface protoTask {
-	name: string;
-	_creep: {
-		name: string;
-	};
-	_target: {
-		ref: string;
-		_pos: protoPos;
-	};
-	_parent: protoTask | null;
-	settings: {
-		targetRange: number;
-	};
-	options: TaskOptions;
-	data: {
-		quiet?: boolean;
-		resourceType?: string;
-	};
-}

@@ -54,7 +54,7 @@ interface StatsMemory {
 
 interface CreepMemory {
 	role: string;
-	task: protoTask | null;
+	// task: protoTask | null;
 	overlord: string | null;
 	colony: string;
 	data: {
