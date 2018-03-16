@@ -1,5 +1,5 @@
 import {Directive} from '../Directive';
-import {profile} from '../../lib/Profiler';
+import {profile} from '../../profiler/decorator';
 import {SiegeOverlord} from '../../overlords/combat/overlord_siege';
 import {Pathing} from '../../pathing/pathing';
 import {DirectiveHealPoint} from './directive_healPoint';

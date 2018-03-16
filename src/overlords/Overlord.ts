@@ -1,7 +1,7 @@
 // Overseer: coordinates creep actions and spawn requests related to a common objective
 
 import {CreepSetup} from '../creepSetup/CreepSetup';
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 import {Pathing} from '../pathing/pathing';
 import {Colony} from '../Colony';
 import {Zerg} from '../Zerg';

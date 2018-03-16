@@ -2,7 +2,7 @@
 
 import {Directive} from '../Directive';
 import {log} from '../../lib/logger/log';
-import {profile} from '../../lib/Profiler';
+import {profile} from '../../profiler/decorator';
 import {BootstrappingOverlord} from '../../overlords/situational/overlord_bootstrap';
 import {Colony} from '../../Colony';
 

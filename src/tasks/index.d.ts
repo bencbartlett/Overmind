@@ -60,4 +60,8 @@ interface CreepMemory {
 
 interface Creep {
 	task: ITask | null;
+	hasValidTask: boolean;
+	isIdle: boolean;
+
+	run(): number | void;
 }

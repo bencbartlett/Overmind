@@ -1,7 +1,7 @@
 /* This is the task for withdrawing energy. For withdrawing other resources, see taskWithdrawResource. */
 
 import {Task} from './Task';
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 import {EnergyStructure, isEnergyStructure, StoreStructure} from '../declarations/typeGuards';
 
 export type withdrawTargetType = EnergyStructure | StoreStructure;

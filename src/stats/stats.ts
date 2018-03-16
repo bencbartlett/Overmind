@@ -1,4 +1,4 @@
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 
 export var COLLECT_STATS_FREQUENCY = 10; // Gather stats every N ticks
 

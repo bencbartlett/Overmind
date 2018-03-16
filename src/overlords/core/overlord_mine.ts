@@ -4,7 +4,9 @@ import {MiningSite} from '../../hiveClusters/hiveCluster_miningSite';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../priorities_overlords';
+import {profile} from '../../profiler/decorator';
 
+@profile
 export class MiningOverlord extends Overlord {
 
 	miners: Zerg[];
@@ -41,6 +43,11 @@ export class MiningOverlord extends Overlord {
 					miner.task = Tasks.repair(this.miningSite.output);
 				} else {
 					miner.task = Tasks.deposit(this.miningSite.output);
+				}
+				// Move onto the output container if you're the only miner
+				if (!miner.pos.isEqualTo(this.miningSite.output.pos) && this.miners.length == 1 &&
+					this.miningSite.output instanceof StructureContainer) {
+					miner.travelTo(this.miningSite.output, {range: 0});
 				}
 			}
 			// Else build the output if there is a constructionSite (placement handled by miningSite)

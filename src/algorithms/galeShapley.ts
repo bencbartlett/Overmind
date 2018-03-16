@@ -1,5 +1,5 @@
 /* Generate stable matching between string-indexed bipartite groups with possibly unequal numbers using Gale-Shapley */
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 
 @profile
 export class Matcher {

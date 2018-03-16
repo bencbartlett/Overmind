@@ -1,7 +1,7 @@
 import {log} from '../lib/logger/log';
 import minBy from 'lodash.minby';
 import {Mem} from '../memory';
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 
 @profile
 export class TerminalNetwork implements ITerminalNetwork {

@@ -1,6 +1,7 @@
-// A grouping for objectives that allows colony components to have their own objectives instead of all being on Overlord
+// Logistics Group: efficiently partners resource requests with transporters using a stable matching algorithm to
+// provide general-purpose resource transport
 
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 import {Zerg} from '../Zerg';
 import {log} from '../lib/logger/log';
 import {Pathing} from '../pathing/pathing';
@@ -18,7 +19,6 @@ export type LogisticsTarget =
 	| StructureNuker
 	| StructurePowerSpawn
 	| DirectiveLogisticsRequest// | Zerg;
-// export type LogisticsTarget = StructureContainer | StructureStorage | Flag;
 export type BufferTarget = StructureStorage | StructureTerminal;
 
 export interface Request {
@@ -131,32 +131,6 @@ export class LogisticsGroup {
 		return 0;
 	}
 
-	// private getRequestAmount(target: LogisticsTarget, resourceType: ResourceConstant): number {
-	// 	if (target instanceof StructureContainer || target instanceof StructureStorage) {
-	// 		return target.storeCapacity - _.sum(target.store);
-	// 	} else if (target instanceof Flag) {
-	// 		let droppedResource = _.filter(target.pos.lookFor(LOOK_RESOURCES),
-	// 									   resource => resource && resource.resourceType == resourceType)[0];
-	// 		let amount: number = droppedResource ? droppedResource.amount : 0;
-	// 		return this.settings.flagDropAmount - amount;
-	// 	}
-	// 	log.warning('Could not determine requestor amount!');
-	// 	return 0;
-	// }
-	//
-	// private getProvideAmount(target: LogisticsTarget, resourceType: ResourceConstant): number {
-	// 	if (target instanceof StructureContainer || target instanceof StructureStorage) {
-	// 		return target.store[resourceType] || 0;
-	// 	} else if (target instanceof Flag) {
-	// 		let droppedResource = _.filter(target.pos.lookFor(LOOK_RESOURCES),
-	// 									   resource => resource && resource.resourceType == resourceType)[0];
-	// 		let amount: number = droppedResource ? droppedResource.amount : 0;
-	// 		return amount;
-	// 	}
-	// 	log.warning('Could not determine provider amount!');
-	// 	return 0;
-	// }
-
 	/* Request for resources to be deposited into this target */
 	request(target: LogisticsTarget, opts = {} as RequestOptions): void {
 		_.defaults(opts, {
@@ -210,8 +184,9 @@ export class LogisticsGroup {
 		this.targetToRequest[req.target.ref] = requestID;
 	}
 
+
 	/* Number of ticks until the transporter is available and where it will be */
-	nextAvailability(transporter: Zerg): [number, RoomPosition] {
+	private nextAvailability(transporter: Zerg): [number, RoomPosition] {
 		if (transporter.task) {
 			let approximateDistance = 0;
 			let pos = transporter.pos;
@@ -235,11 +210,16 @@ export class LogisticsGroup {
 		}
 	}
 
+	private targetingTransporters(target: LogisticsTarget, excludedTransporter?: Zerg): Zerg[] {
+		let targetingZerg = _.map(target.targetedBy, name => Game.zerg[name]);
+		let targetingTransporters = _.filter(targetingZerg, zerg => zerg.roleName == TransporterSetup.role);
+		if (excludedTransporter) _.remove(targetingTransporters, transporter => transporter == excludedTransporter);
+		return targetingTransporters;
+	}
+
 	/* Returns the effective amount of the request given other targeting creeps */
 	predictedAmount(transporter: Zerg, request: Request, availability = 0, newPos = transporter.pos): number {
-		let targetingZerg = _.map(request.target.targetedBy, name => Game.zerg[name]);
-		let otherTargetingTransporters = _.filter(targetingZerg, zerg => zerg.roleName == TransporterSetup.role &&
-																		 zerg != transporter);
+		let otherTargetingTransporters = this.targetingTransporters(request.target, transporter);
 		let ETA = this.settings.rangeToPathHeuristic * request.target.pos.getMultiRoomRangeTo(newPos) + availability;
 		let predictedDifference = request.dAmountdt * ETA;
 		if (request.amount > 0) { // request state, energy in
@@ -254,7 +234,7 @@ export class LogisticsGroup {
 	}
 
 	/* Returns the predicted state of the transporter's carry at the end of its task */
-	predictedCarry(transporter: Zerg): StoreDefinition {
+	private predictedCarry(transporter: Zerg): StoreDefinition {
 		if (transporter.task && transporter.task.target) {
 			let requestID = this.targetToRequest[transporter.task.target.ref];
 			if (requestID) {
@@ -351,9 +331,7 @@ export class LogisticsGroup {
 		let choices = this.bufferChoices(transporter, request);
 		let resourceChangeRate = _.map(choices, choice => choice.deltaResource / choice.deltaTicks);
 		return _.max(resourceChangeRate);
-
 		// TODO: handle case where lots of small requests next to each other
-		// TODO: include predictive amounts of resources
 	}
 
 	/* Generate requestor preferences in terms of transporters */
@@ -410,8 +388,7 @@ export class LogisticsGroup {
 			let targetType = request.target instanceof DirectiveLogisticsRequest ? 'flag' :
 							 request.target.structureType;
 			let energy = request.target instanceof StructureContainer ? request.target.energy : 0;
-			let targetingTransporters = _.filter(request.target.targetedBy,
-												 name => Game.zerg[name].roleName == TransporterSetup.role);
+			let targetingTransporters = this.targetingTransporters(request.target);
 			console.log(`    Target: ${targetType} ${request.target.pos.print} ${request.target.ref}    ` +
 						`Amount: ${request.amount}    Energy: ${energy}    Targeted by: ${targetingTransporters}`);
 		}

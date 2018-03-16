@@ -1,5 +1,5 @@
 import {Task} from './Task';
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 import {overmindSignature} from '../settings/do-not-modify';
 
 export type signControllerTargetType = StructureController;

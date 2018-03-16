@@ -1,5 +1,5 @@
 import {Directive} from '../Directive';
-import {profile} from '../../lib/Profiler';
+import {profile} from '../../profiler/decorator';
 import {ArcherDefenseOverlord} from '../../overlords/combat/overlord_archer';
 
 interface DirectiveInvasionDefenseMemory extends FlagMemory {

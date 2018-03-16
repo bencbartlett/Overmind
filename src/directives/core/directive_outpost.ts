@@ -1,5 +1,5 @@
 import {Directive} from '../Directive';
-import {profile} from '../../lib/Profiler';
+import {profile} from '../../profiler/decorator';
 import {ReservingOverlord} from '../../overlords/colonization/overlord_reserve';
 
 @profile

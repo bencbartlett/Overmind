@@ -5,7 +5,9 @@ import {Zerg} from '../../Zerg';
 import {OverlordPriority} from '../priorities_overlords';
 import {DirectiveHealPoint} from '../../directives/combat/directive_healPoint';
 import {CombatOverlord} from './CombatOverlord';
+import {profile} from '../../profiler/decorator';
 
+@profile
 export class HealPointOverlord extends CombatOverlord {
 
 	healers: Zerg[];

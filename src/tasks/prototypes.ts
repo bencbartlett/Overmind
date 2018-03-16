@@ -35,3 +35,22 @@ Object.defineProperty(Creep.prototype, 'task', {
 		}
 	},
 });
+
+Creep.prototype.run = function (): void {
+	if (this.task) {
+		return this.task.run();
+	}
+};
+
+Object.defineProperties(Creep.prototype, {
+	'hasValidTask': {
+		get() {
+			return this.task && this.task.isValid();
+		}
+	},
+	'isIdle'      : {
+		get() {
+			return !this.hasValidTask;
+		}
+	}
+});

@@ -1,4 +1,4 @@
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 
 export interface bodyOptions {
 	pattern: BodyPartConstant[];			// body pattern to be repeated

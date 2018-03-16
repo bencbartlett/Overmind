@@ -21,7 +21,9 @@ import {TaskUpgrade, upgradeTargetType} from './task_upgrade';
 import {TaskWithdraw, withdrawTargetType} from './task_withdraw';
 import {TaskWithdrawResource, withdrawResourceTargetType} from './task_withdrawResource';
 import {dropTargetType, TaskDrop} from './task_drop';
+import {profile} from '../profiler/decorator';
 
+@profile
 export class Tasks { // TODO: update arguments for transfer and similar
 
 	static attack(target: attackTargetType): TaskAttack {

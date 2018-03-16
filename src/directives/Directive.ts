@@ -1,5 +1,5 @@
 import {log} from '../lib/logger/log';
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
 import {Pathing} from '../pathing/pathing';

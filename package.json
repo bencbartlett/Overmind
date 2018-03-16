@@ -1,6 +1,6 @@
 {
   "name": "Overmind",
-  "version": "0.9.1",
+  "version": "0.2.0",
   "description": "Overmind Screeps AI (pre-release)",
   "author": "Ben Bartlett",
   "repository": {
@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "lodash.minby": "^4.6.0",
+    "screeps-profiler": "^2.0.1",
     "source-map": "^0.6.1"
   }
 }

@@ -27,21 +27,23 @@ import './prototypes/prototypes_other';
 import './tasks/prototypes';
 // Configuration, logging, and profiling
 import {log} from './lib/logger/log';
-import * as Profiler from 'lib/Profiler';
 import {sandbox} from './sandbox';
 import {Mem} from './memory';
 import OM from './Overmind';
 import {Console} from './console/console';
 import {Stats} from './stats/stats';
+import {USE_PROFILER} from './settings/config';
+import * as Profiler from 'screeps-profiler';
+
+if (USE_PROFILER) Profiler.enable();
 
 // Execute this every global reset
 global.log = log;
-global.Profiler = Profiler.init();
 Mem.format();
 Console.init();
 
 // Main loop
-export function loop(): void {
+function main(): void {
 	Mem.clean();				// Clean memory
 	global.Overmind = new OM();	// Instantiate the Overmind
 	Overmind.build();			// Build phase: instantiate caches and colony components
@@ -50,5 +52,9 @@ export function loop(): void {
 	Overmind.visuals(); 		// Draw visuals
 	Stats.run(); 				// Record statistics
 	sandbox();					// Sandbox: run any testing code
+}
+
+export function loop(): void {
+	Profiler.wrap(main);
 }
 

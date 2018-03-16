@@ -1,6 +1,6 @@
 // A grouping for objectives that allows colony components to have their own objectives instead of all being on Overlord
 
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 import {Zerg} from '../Zerg';
 import {log} from '../lib/logger/log';
 import {Colony} from '../Colony';

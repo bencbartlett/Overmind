@@ -1,5 +1,5 @@
 import {Task} from './Task';
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 
 // Attack task, includes attack and ranged attack if applicable.
 // Use meleeAttack and rangedAttack for the exclusive variants.

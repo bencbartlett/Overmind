@@ -7,6 +7,7 @@ import {CombatOverlord} from './CombatOverlord';
 import {boostResources} from '../../maps/map_resources';
 import {DirectiveDestroy} from '../../directives/combat/directive_destroy';
 import {CreepSetup} from '../../creepSetup/CreepSetup';
+import {profile} from '../../profiler/decorator';
 
 export class AttackerSetup extends CreepSetup {
 	static role = 'attacker';
@@ -30,7 +31,7 @@ export class HealerSetup extends CreepSetup {
 	}
 }
 
-
+@profile
 export class DestroyerOverlord extends CombatOverlord {
 
 	attackers: Zerg[];

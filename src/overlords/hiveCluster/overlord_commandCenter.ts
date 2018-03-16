@@ -1,12 +1,13 @@
+// Command center overlord: spawn and run a dediated commandCenter attendant
 import {Overlord} from '../Overlord';
 import {ManagerSetup} from '../../creepSetup/defaultSetups';
 import {CommandCenter} from '../../hiveClusters/hiveCluster_commandCenter';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../priorities_overlords';
+import {profile} from '../../profiler/decorator';
 
-
-// Command center overlord: spawn and run a dediated commandCenter attendant
+@profile
 export class CommandCenterOverlord extends Overlord {
 
 	managers: Zerg[];

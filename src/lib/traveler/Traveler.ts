@@ -2,7 +2,7 @@
  * To start using Traveler, require it in main.js:
  * Example: var Traveler = require('Traveler.js');
  */
-import {profile} from '../Profiler';
+import {profile} from '../../profiler/decorator';
 
 @profile
 export class Traveler {

@@ -7,7 +7,9 @@ import {DirectiveTargetSiege} from '../../directives/targeting/directive_target_
 import {DirectiveSiege} from '../../directives/combat/directive_siege';
 import {Tasks} from '../../tasks/Tasks';
 import {CombatOverlord} from './CombatOverlord';
+import {profile} from '../../profiler/decorator';
 
+@profile
 export class SiegeOverlord extends CombatOverlord {
 
 	siegers: Zerg[];

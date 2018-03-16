@@ -6,6 +6,7 @@ import {ColonyStage} from '../../Colony';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../priorities_overlords';
+import {profile} from '../../profiler/decorator';
 
 export class BoostrapMinerSetup extends CreepSetup {
 	constructor() {
@@ -26,6 +27,7 @@ export class FillerSetup extends CreepSetup {
 }
 
 // Bootstrapping overlord: spawns small miners and suppliers to recover from a catastrohpic colony crash
+@profile
 export class BootstrappingOverlord extends Overlord {
 
 	room: Room; // Definitely has vision

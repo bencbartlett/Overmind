@@ -1,4 +1,4 @@
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 import {HiveCluster} from './HiveCluster';
 import {Colony} from '../Colony';
 

@@ -16,7 +16,44 @@ declare namespace NodeJS {
 interface Game {
 	zerg: { [name: string]: any };
 	directives: { [name: string]: any };
+	profiler: ScreepsGameProfiler;
 }
+
+
+interface ScreepsGameProfiler {
+
+	profile(ticks: number, functionFilter?: string): void;
+
+	stream(ticks: number, functionFilter?: string): void;
+
+	email(ticks: number, functionFilter?: string): void;
+
+	background(functionFilter?: string): void;
+
+	output(lineCount?: number): void;
+
+	reset(): void;
+
+	restart(): void;
+}
+
+interface ScreepsProfilerStatic {
+
+
+}
+
+declare module 'screeps-profiler' {
+	export function enable(): void;
+
+	export function wrap(callback: Function): Function;
+
+	export function registerClass(constructor: Function, className: string): void;
+
+	export function registerObject(object: any, objectName: string): void;
+
+	export function registerFN(fn: Function, fnName?: string): Function;
+}
+
 
 interface ICache {
 	overlords: { [overlord: string]: { [roleName: string]: string[] } };

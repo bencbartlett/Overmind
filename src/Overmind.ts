@@ -2,7 +2,7 @@
 
 import {Colony} from './Colony';
 import {DirectiveWrapper} from './maps/map_directives';
-import {profile} from './lib/Profiler';
+import {profile} from './profiler/decorator';
 import {GameCache} from './caching';
 import {Zerg} from './Zerg';
 import {DirectiveOutpost} from './directives/core/directive_outpost';

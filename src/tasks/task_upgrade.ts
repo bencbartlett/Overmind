@@ -1,5 +1,5 @@
 import {Task} from './Task';
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 
 export type upgradeTargetType = StructureController;
 export const upgradeTaskName = 'upgrade';
