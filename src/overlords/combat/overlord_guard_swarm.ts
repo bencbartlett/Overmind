@@ -5,6 +5,7 @@ import {OverlordPriority} from '../priorities_overlords';
 import {DirectiveGuardSwarm} from '../../directives/combat/directive_guard_swarm';
 import {CreepSetup} from '../../creepSetup/CreepSetup';
 import {CombatOverlord} from './CombatOverlord';
+import {profile} from '../../profiler/decorator';
 
 export class EarlyGuardSetup extends CreepSetup {
 	static role = 'smolGuard';
@@ -17,6 +18,7 @@ export class EarlyGuardSetup extends CreepSetup {
 	}
 }
 
+@profile
 export class GuardSwarmOverlord extends CombatOverlord {
 
 	directive: DirectiveGuardSwarm;

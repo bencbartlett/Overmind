@@ -2,7 +2,7 @@
 
 import {DirectiveGuard} from './directives/combat/directive_guard';
 import {DirectiveBootstrap, EMERGENCY_ENERGY_THRESHOLD} from './directives/core/directive_bootstrap';
-import {profile} from './lib/Profiler';
+import {profile} from './profiler/decorator';
 import {Colony} from './Colony';
 import {Overlord} from './overlords/Overlord';
 import {Directive} from './directives/Directive';

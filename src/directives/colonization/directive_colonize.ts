@@ -1,4 +1,4 @@
-import {profile} from '../../lib/Profiler';
+import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
 import {ClaimingOverlord} from '../../overlords/colonization/overlord_claim';
 import {Colony} from '../../Colony';

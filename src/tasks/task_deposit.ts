@@ -1,5 +1,5 @@
 import {Task} from './Task';
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 import {EnergyStructure, isEnergyStructure, StoreStructure} from '../declarations/typeGuards';
 
 export type depositTargetType = StructureLink | EnergyStructure | StoreStructure;

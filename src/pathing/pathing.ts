@@ -1,7 +1,9 @@
 import {Traveler} from '../lib/traveler/Traveler';
 import {log} from '../lib/logger/log';
+import {profile} from '../profiler/decorator';
 
 /* Module for pathing-related operations. Interfaces with Traveler. */
+@profile
 export class Pathing {
 	// static serializePath(startPos: RoomPosition, path: RoomPosition[]): string {
 	// 	let serializedPath = "";

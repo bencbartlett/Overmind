@@ -13,6 +13,7 @@
  */
 
 import {initializeTask} from './initializer';
+import {profile} from '../profiler/decorator';
 
 type targetType = { ref: string, pos: RoomPosition }; // overwrite this variable in derived classes to specify more precise typing
 
@@ -21,6 +22,7 @@ type targetType = { ref: string, pos: RoomPosition }; // overwrite this variable
  * the necessary logic for traveling to a target, performing a task, and realizing when a task is no longer sensible
  * to continue.*/
 
+@profile
 export abstract class Task implements ITask {
 
 	static taskName: string;

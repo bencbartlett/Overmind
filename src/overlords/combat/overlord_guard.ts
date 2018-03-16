@@ -6,7 +6,9 @@ import {Zerg} from '../../Zerg';
 import {OverlordPriority} from '../priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/directive_target_siege';
 import {CombatOverlord} from './CombatOverlord';
+import {profile} from '../../profiler/decorator';
 
+@profile
 export class GuardOverlord extends CombatOverlord {
 
 	guards: Zerg[];

@@ -1,7 +1,7 @@
 import {SourceMapConsumer} from 'source-map';
 import * as Config from '../../settings/config';
 import {LogLevels} from './logLevels';
-import {profile} from '../Profiler';
+import {profile} from '../../profiler/decorator';
 
 // <caller> (<source>:<line>:<column>)
 const stackLineRe = /([^ ]*) \(([^:]*):([0-9]*):([0-9]*)\)/;

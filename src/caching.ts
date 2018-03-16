@@ -1,6 +1,6 @@
 // Preprocessing code to be run before animation of anything
 
-import {profile} from './lib/Profiler';
+import {profile} from './profiler/decorator';
 
 @profile
 export class GameCache implements ICache {

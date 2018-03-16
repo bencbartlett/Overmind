@@ -38,7 +38,8 @@ export class Mem {
 		_.defaults(Memory.settings, {
 			enableVisuals: true,
 		});
-
+		// Changes to ensure backwards compatibility
+		this.backwardsCompatibility();
 	}
 
 	static cleanCreeps() {
@@ -96,5 +97,33 @@ export class Mem {
 		this.cleanFlags();
 		this.cleanPathingMemory();
 		Memory.stats = {};
+	}
+
+	static backwardsCompatibility() {
+		// Delete old profiler memory to migrate to new one
+		if (Memory.profiler && Memory.profiler.data) {
+			delete Memory.profiler;
+		}
+		// Convert all haulers to transporters
+		for (let name in Game.creeps) {
+			let creep = Game.creeps[name];
+			if (creep.memory.role == 'hauler') {
+				creep.memory.role = 'transport';
+				creep.memory.overlord = creep.memory.colony + ':logistics';
+				creep.memory.task = null;
+			}
+		}
+		// // Convert all transporters back to haulers in case I need to revert this
+		// for (let name in Game.creeps) {
+		// 	let creep = Game.creeps[name];
+		// 	if (creep.memory.role == 'transport') {
+		// 		let creepRoom = Game.rooms[creep.memory.colony];
+		// 		if (creepRoom && creepRoom.storage) {
+		// 			creep.memory.role = 'hauler';
+		// 			creep.memory.overlord = 'miningGroup:' + creepRoom.storage.id + ':haul';
+		// 			creep.memory.task = null;
+		// 		}
+		// 	}
+		// }
 	}
 }

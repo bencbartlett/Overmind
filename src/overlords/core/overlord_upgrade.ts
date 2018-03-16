@@ -4,7 +4,9 @@ import {UpgradeSite} from '../../hiveClusters/hiveCluster_upgradeSite';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../priorities_overlords';
+import {profile} from '../../profiler/decorator';
 
+@profile
 export class UpgradingOverlord extends Overlord {
 
 	upgraders: Zerg[];

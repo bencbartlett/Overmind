@@ -1,7 +1,7 @@
 // Upgrade site for grouping relevant components for an upgrader station
 
 import {HiveCluster} from './HiveCluster';
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 import {UpgradingOverlord} from '../overlords/core/overlord_upgrade';
 import {Colony} from '../Colony';
 import {Mem} from '../memory';

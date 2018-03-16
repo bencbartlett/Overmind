@@ -4,7 +4,9 @@ import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {Directive} from '../../directives/Directive';
 import {OverlordPriority} from '../priorities_overlords';
+import {profile} from '../../profiler/decorator';
 
+@profile
 export class ClaimingOverlord extends Overlord {
 
 	claimers: Zerg[];

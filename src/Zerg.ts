@@ -1,4 +1,4 @@
-import {profile} from './lib/Profiler';
+import {profile} from './profiler/decorator';
 import {Colony} from './Colony';
 import {Overlord} from './overlords/Overlord';
 import {Task} from './tasks/Task';
@@ -331,19 +331,17 @@ export class Zerg {
 
 	/* Does the creep have a valid task at the moment? */
 	get hasValidTask(): boolean {
-		return this.task != null && this.task.isValid();
+		return this.creep.hasValidTask;
 	}
 
 	/* Creeps are idle if they don't have a task. */
 	get isIdle(): boolean {
-		return !this.hasValidTask;
+		return this.creep.isIdle;
 	}
 
 	/* Execute the task you currently have. */
 	run(): number | void {
-		if (this.task) {
-			return this.task.run();
-		}
+		return this.creep.run();
 	}
 
 	// Colony association ----------------------------------------------------------------------------------------------

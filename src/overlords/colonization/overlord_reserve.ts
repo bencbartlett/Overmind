@@ -4,7 +4,9 @@ import {Zerg} from '../../Zerg';
 import {DirectiveOutpost} from '../../directives/core/directive_outpost';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../priorities_overlords';
+import {profile} from '../../profiler/decorator';
 
+@profile
 export class ReservingOverlord extends Overlord {
 
 	reservers: Zerg[];

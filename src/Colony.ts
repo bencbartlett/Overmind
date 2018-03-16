@@ -1,6 +1,6 @@
 // Colony class - organizes all assets of an owned room into a colony
 
-import {profile} from './lib/Profiler';
+import {profile} from './profiler/decorator';
 import {MiningSite} from './hiveClusters/hiveCluster_miningSite';
 import {Hatchery} from './hiveClusters/hiveCluster_hatchery';
 import {CommandCenter} from './hiveClusters/hiveCluster_commandCenter';
@@ -14,8 +14,6 @@ import {HiveCluster} from './hiveClusters/HiveCluster';
 import {LinkNetwork} from './logistics/LinkNetwork';
 import {Stats} from './stats/stats';
 import {SporeCrawler} from './hiveClusters/hiveCluster_sporeCrawler';
-import {MineralSupplierOverlord} from './overlords/core/overlord_mineralSupplier';
-import {DirectiveLabMineral} from './directives/logistics/directive_labMineralType';
 import {RoadLogistics} from './logistics/RoadLogistics';
 import {LogisticsGroup} from './logistics/LogisticsGroup';
 import {TransportOverlord} from './overlords/core/overlord_transport';
@@ -86,7 +84,6 @@ export class Colony {
 		// supply: SupplierOverlord;
 		work: WorkerOverlord;
 		logistics: TransportOverlord;
-		mineralSupply?: MineralSupplierOverlord;
 	};
 	// Road network
 	roadLogistics: RoadLogistics;
@@ -116,7 +113,7 @@ export class Colony {
 		// Associate real colony components
 		this.controller = this.room.controller!; // must be controller since colonies are based in owned rooms
 		this.pos = this.controller.pos; // This is used for overlord initialization but isn't actually useful
-		this.spawns = _.filter(this.room.spawns, spawn => spawn.my);
+		this.spawns = _.sortBy(_.filter(this.room.spawns, spawn => spawn.my), spawn => spawn.ref);
 		this.extensions = this.room.extensions;
 		this.storage = this.room.storage;
 		this.links = this.room.links;
@@ -220,11 +217,11 @@ export class Colony {
 			work     : new WorkerOverlord(this),
 			logistics: new TransportOverlord(this),
 		};
-		if (this.labs.length > 0) {
-			if (_.filter(this.room.flags, flag => DirectiveLabMineral.filter(flag)).length > 0) {
-				this.overlords.mineralSupply = new MineralSupplierOverlord(this);
-			}
-		}
+		// if (this.labs.length > 0) {
+		// 	if (_.filter(this.room.flags, flag => DirectiveLabMineral.filter(flag)).length > 0) {
+		// 		this.overlords.mineralSupply = new MineralSupplierOverlord(this);
+		// 	}
+		// }
 	}
 
 	// /* Run the tower logic for each tower in the colony */

@@ -2,7 +2,7 @@
 
 import {depositTargetType} from '../tasks/task_deposit';
 import {HiveCluster} from './HiveCluster';
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 import {CommandCenterOverlord} from '../overlords/hiveCluster/overlord_commandCenter';
 import {Colony} from '../Colony';
 import {Mem} from '../memory';

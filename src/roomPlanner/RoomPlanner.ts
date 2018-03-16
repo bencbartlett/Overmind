@@ -4,7 +4,7 @@ import {commandCenterLayout} from './layouts/commandCenter';
 import {log} from '../lib/logger/log';
 import {Pathing} from '../pathing/pathing';
 import {Visualizer} from '../visuals/Visualizer';
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 import {Mem} from '../memory';
 import {Colony} from '../Colony';
 import {BuildPriorities} from '../settings/priorities';

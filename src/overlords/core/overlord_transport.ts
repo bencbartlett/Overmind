@@ -7,13 +7,16 @@ import {TransporterSetup} from '../../creepSetup/defaultSetups';
 import {OverlordPriority} from '../priorities_overlords';
 import {Pathing} from '../../pathing/pathing';
 import {DirectiveLogisticsRequest} from '../../directives/logistics/directive_logisticsRequest';
+import {profile} from '../../profiler/decorator';
 
+@profile
 export class TransportOverlord extends Overlord {
 
 	transporters: Zerg[];
 	logisticsGroup: LogisticsGroup;
 
-	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.haul) {
+	constructor(colony: Colony, priority = colony.getCreepsByRole(TransporterSetup.role).length > 0 ?
+										   OverlordPriority.ownedRoom.haul : OverlordPriority.ownedRoom.supply) {
 		super(colony, 'logistics', priority);
 		this.transporters = this.creeps(TransporterSetup.role);
 		this.logisticsGroup = colony.logisticsGroup;

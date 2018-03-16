@@ -1,5 +1,5 @@
 import {Directive} from '../Directive';
-import {profile} from '../../lib/Profiler';
+import {profile} from '../../profiler/decorator';
 import {AttackStructurePriorities} from '../../settings/priorities';
 import {Visualizer} from '../../visuals/Visualizer';
 

@@ -1,11 +1,10 @@
-import {profile} from '../../lib/Profiler';
+import {profile} from '../../profiler/decorator';
 import {Overlord} from '../Overlord';
 import {Zerg} from '../../Zerg';
 import {Pathing} from '../../pathing/pathing';
 import {Directive} from '../../directives/Directive';
 import {WorldMap} from '../../utilities/WorldMap';
 import {AttackStructurePriorities} from '../../settings/priorities';
-
 
 export interface CombatOverlordMemory extends OverlordMemory {
 	fallback?: protoPos;

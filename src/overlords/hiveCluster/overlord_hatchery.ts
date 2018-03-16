@@ -1,3 +1,4 @@
+// Hatchery overlord: spawn and run a dedicated supplier-like hatchery attendant (called after colony has storage)
 import {Overlord} from '../Overlord';
 import {QueenSetup} from '../../creepSetup/defaultSetups';
 import {Hatchery} from '../../hiveClusters/hiveCluster_hatchery';
@@ -6,8 +7,9 @@ import {Tasks} from '../../tasks/Tasks';
 import {EnergyRequestStructure, ResourceRequestStructure} from '../../logistics/TransportRequestGroup';
 import {log} from '../../lib/logger/log';
 import {OverlordPriority} from '../priorities_overlords';
+import {profile} from '../../profiler/decorator';
 
-// Hatchery overlord: spawn and run a dedicated supplier-like hatchery attendant (called after colony has storage)
+@profile
 export class HatcheryOverlord extends Overlord {
 
 	hatchery: Hatchery;
@@ -50,11 +52,13 @@ export class HatcheryOverlord extends Overlord {
 		} else if (this.hatchery.battery && !this.hatchery.battery.isEmpty) {
 			queen.task = Tasks.withdraw(this.hatchery.battery);
 		} else {
-			let rechargeStructures = _.compact([this.colony.storage!,
-												this.colony.terminal!,
-												this.colony.upgradeSite.input!,
-												..._.map(this.colony.miningSites, site => site.output!)]);
-			let target = queen.pos.findClosestByMultiRoomRange(rechargeStructures);
+			let rechargeTargets = _.compact([this.colony.storage!,
+											 this.colony.terminal!,
+											 this.colony.upgradeSite.input!,
+											 ..._.map(this.colony.miningSites, site => site.output!)]);
+			let target = queen.pos.findClosestByMultiRoomRange(_.filter(rechargeTargets,
+																		s => s.energy > queen.carryCapacity));
+			if (!target) target = queen.pos.findClosestByMultiRoomRange(_.filter(rechargeTargets, s => s.energy > 0));
 			if (target) {
 				queen.task = Tasks.withdraw(target);
 			} else {

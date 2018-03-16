@@ -1,6 +1,9 @@
 // Helper methods for Game.map
 // Much of this code was taken with slight modification from BonzAI codebase
 
+import {profile} from '../profiler/decorator';
+
+@profile
 export class WorldMap {
 
 	public static findRelativeRoomName(roomName: string, xDelta: number, yDelta: number): string {

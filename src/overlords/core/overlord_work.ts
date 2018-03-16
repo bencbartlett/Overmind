@@ -2,7 +2,7 @@ import {Overlord} from '../Overlord';
 import {BuildPriorities} from '../../settings/priorities';
 import {WorkerSetup} from '../../creepSetup/defaultSetups';
 import {Colony, ColonyStage} from '../../Colony';
-import {profile} from '../../lib/Profiler';
+import {profile} from '../../profiler/decorator';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../priorities_overlords';
@@ -76,7 +76,8 @@ export class WorkerOverlord extends Overlord {
 			// At higher levels, spawn workers based on construction and repair that needs to be done
 			let MAX_WORKERS = 3; // Maximum number of workers to spawn
 			let constructionTicks = _.sum(_.map(this.colony.constructionSites,
-												site => site.progressTotal - site.progress)) / BUILD_POWER;
+												site => Math.max(site.progressTotal - site.progress, 0)))
+									/ BUILD_POWER; // Math.max for if you manually set progress on private server
 			let repairTicks = _.sum(_.map(this.repairStructures,
 										  structure => structure.hitsMax - structure.hits)) / REPAIR_POWER;
 			let fortifyTicks = 0.25 * _.sum(_.map(this.fortifyStructures,

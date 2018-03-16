@@ -1,4 +1,4 @@
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 
 export var asciiLogo: string[] = ['___________________________________________________________',
 								  '',

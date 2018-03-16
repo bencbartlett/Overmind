@@ -7,6 +7,7 @@ import {CombatOverlord} from './CombatOverlord';
 import {CreepSetup} from '../../creepSetup/CreepSetup';
 import {boostResources} from '../../maps/map_resources';
 import {DirectiveInvasionDefense} from '../../directives/combat/directive_invasion';
+import {profile} from '../../profiler/decorator';
 
 export class ArcherSetup extends CreepSetup {
 	static role = 'archer';
@@ -19,7 +20,7 @@ export class ArcherSetup extends CreepSetup {
 	}
 }
 
-
+@profile
 export class ArcherDefenseOverlord extends CombatOverlord {
 
 	archers: Zerg[];

@@ -1,14 +1,9 @@
 // Road network: groups roads in a single object for more intelligent repair requests
 
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
 import {Zerg} from '../Zerg';
 import {repairTaskName} from '../tasks/task_repair';
-
-
-// interface RoadNetworkMemory {
-// 	needsRepair: boolean;
-// }
 
 
 @profile

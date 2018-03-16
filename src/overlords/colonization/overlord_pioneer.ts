@@ -4,7 +4,9 @@ import {Tasks} from '../../tasks/Tasks';
 import {Directive} from '../../directives/Directive';
 import {PioneerSetup} from '../../creepSetup/defaultSetups';
 import {OverlordPriority} from '../priorities_overlords';
+import {profile} from '../../profiler/decorator';
 
+@profile
 export class PioneerOverlord extends Overlord {
 
 	pioneers: Zerg[];

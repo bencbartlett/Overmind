@@ -1,6 +1,6 @@
 // A grouping for objectives that allows colony components to have their own objectives instead of all being on Overlord
 
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 import {blankPriorityQueue, Priority} from '../settings/priorities';
 
 export type EnergyRequestStructure = Sink | StructureContainer;

@@ -1,7 +1,7 @@
 // Hatchery - groups all spawns in a colony
 
 import {HiveCluster} from './HiveCluster';
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 import {HatcheryOverlord} from '../overlords/hiveCluster/overlord_hatchery';
 import {Priority} from '../settings/priorities';
 import {Colony} from '../Colony';

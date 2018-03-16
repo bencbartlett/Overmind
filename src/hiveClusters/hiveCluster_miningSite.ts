@@ -1,7 +1,7 @@
 // Mining site class for grouping relevant components
 
 import {HiveCluster} from './HiveCluster';
-import {profile} from '../lib/Profiler';
+import {profile} from '../profiler/decorator';
 import {MiningOverlord} from '../overlords/core/overlord_mine';
 import {Colony} from '../Colony';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
