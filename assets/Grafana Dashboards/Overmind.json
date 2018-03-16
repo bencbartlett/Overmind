@@ -58,7 +58,7 @@
   "gnetId": null,
   "graphTooltip": 1,
   "id": null,
-  "iteration": 1521162267080,
+  "iteration": 1521173336127,
   "links": [],
   "panels": [
     {
@@ -139,14 +139,16 @@
       "targets": [
         {
           "hide": false,
+          "refCount": 0,
           "refId": "A",
-          "target": "asPercent(movingAverage(screeps.muon.cpu.getUsed, 5), #B)",
-          "targetFull": "asPercent(movingAverage(screeps.muon.cpu.getUsed, 5), screeps.muon.cpu.limit)"
+          "target": "asPercent(movingAverage(screeps.$User.cpu.getUsed, 5), #B)",
+          "targetFull": "asPercent(movingAverage(screeps.$User.cpu.getUsed, 5), screeps.$User.cpu.limit)"
         },
         {
           "hide": true,
+          "refCount": -1,
           "refId": "B",
-          "target": "screeps.muon.cpu.limit"
+          "target": "screeps.$User.cpu.limit"
         }
       ],
       "thresholds": "70,85",
@@ -226,7 +228,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "screeps.muon.cpu.bucket"
+          "target": "screeps.$User.cpu.bucket"
         }
       ],
       "thresholds": "5000,1000",
@@ -297,21 +299,25 @@
       "targets": [
         {
           "hide": false,
+          "refCount": 0,
           "refId": "B",
-          "target": "alias(screeps.muon.cpu.getUsed, 'CPU')"
+          "target": "alias(screeps.$User.cpu.getUsed, 'CPU')"
         },
         {
+          "refCount": 0,
           "refId": "A",
-          "target": "alias(screeps.muon.cpu.bucket, 'Bucket')"
+          "target": "alias(screeps.$User.cpu.bucket, 'Bucket')"
         },
         {
           "hide": false,
+          "refCount": 0,
           "refId": "C",
-          "target": "alias(movingAverage(screeps.muon.cpu.getUsed, 100), 'Average CPU')"
+          "target": "alias(movingAverage(screeps.$User.cpu.getUsed, 100), 'Average CPU')"
         },
         {
+          "refCount": 0,
           "refId": "D",
-          "target": "alias(screeps.muon.cpu.limit, 'Limit')",
+          "target": "alias(screeps.$User.cpu.limit, 'Limit')",
           "textEditor": false
         }
       ],
@@ -432,14 +438,17 @@
       "targets": [
         {
           "hide": false,
+          "refCount": 0,
           "refId": "A",
-          "target": "asPercent(screeps.muon.gcl.progress, #B)",
+          "target": "asPercent(screeps.$User.gcl.progress, #B)",
+          "targetFull": "asPercent(screeps.$User.gcl.progress, screeps.$User.gcl.progressTotal)",
           "textEditor": false
         },
         {
           "hide": true,
+          "refCount": -1,
           "refId": "B",
-          "target": "screeps.muon.gcl.progressTotal",
+          "target": "screeps.$User.gcl.progressTotal",
           "textEditor": false
         }
       ],
@@ -523,27 +532,31 @@
       "targets": [
         {
           "hide": true,
+          "refCount": 1,
           "refId": "A",
-          "target": "alias(scale(movingAverage(perSecond(keepLastValue(screeps.muon.gcl.progress)), 500), 86400), 'GCL / 24hr (avg)')",
-          "textEditor": true
+          "target": "alias(scale(movingAverage(perSecond(keepLastValue(screeps.$User.gcl.progress)), 500), 86400), 'GCL / 24hr (avg)')",
+          "textEditor": false
         },
         {
           "hide": true,
+          "refCount": 1,
           "refId": "B",
-          "target": "alias(keepLastValue(diffSeries(screeps.muon.gcl.progressTotal, screeps.muon.gcl.progress)), 'Progress to go')",
-          "textEditor": true
+          "target": "alias(keepLastValue(diffSeries(screeps.$User.gcl.progressTotal, screeps.$User.gcl.progress)), 'Progress to go')",
+          "textEditor": false
         },
         {
           "hide": false,
+          "refCount": 0,
           "refId": "C",
           "target": "alias(divideSeries(#B, #A), 'Rem')",
-          "targetFull": "alias(divideSeries(alias(keepLastValue(diffSeries(screeps.muon.gcl.progressTotal, screeps.muon.gcl.progress)), 'Progress to go'), alias(scale(movingAverage(perSecond(keepLastValue(screeps.muon.gcl.progress)), 500), 86400), 'GCL / 24hr (avg)')), 'Rem')",
-          "textEditor": true
+          "targetFull": "alias(divideSeries(alias(keepLastValue(diffSeries(screeps.$User.gcl.progressTotal, screeps.$User.gcl.progress)), 'Progress to go'), alias(scale(movingAverage(perSecond(keepLastValue(screeps.$User.gcl.progress)), 500), 86400), 'GCL / 24hr (avg)')), 'Rem')",
+          "textEditor": false
         },
         {
           "hide": true,
+          "refCount": 0,
           "refId": "D",
-          "target": "alias(screeps.muon.gcl.progress, 'Progress')",
+          "target": "alias(screeps.$User.gcl.progress, 'Progress')",
           "textEditor": false
         }
       ],
@@ -616,20 +629,23 @@
       "targets": [
         {
           "hide": false,
+          "refCount": 0,
           "refId": "A",
-          "target": "alias(scale(movingAverage(perSecond(keepLastValue(screeps.muon.gcl.progress)), 10), 86400), 'GCL / 24hr')",
-          "textEditor": true
+          "target": "alias(scale(movingAverage(perSecond(keepLastValue(screeps.$User.gcl.progress)), 10), 86400), 'GCL / 24hr')",
+          "textEditor": false
         },
         {
           "hide": true,
+          "refCount": 0,
           "refId": "B",
-          "target": "alias(diffSeries(screeps.muon.gcl.progressTotal, screeps.muon.gcl.progress), \"Remaining until next level\")",
-          "textEditor": true
+          "target": "alias(diffSeries(screeps.$User.gcl.progressTotal, screeps.muon.gcl.progress), 'Remaining until next level')",
+          "textEditor": false
         },
         {
+          "refCount": 0,
           "refId": "C",
-          "target": "alias(scale(movingAverage(perSecond(keepLastValue(screeps.muon.gcl.progress)), 500), 86400), 'GCL / 24hr (avg)')",
-          "textEditor": true
+          "target": "alias(scale(movingAverage(perSecond(keepLastValue(screeps.$User.gcl.progress)), 500), 86400), 'GCL / 24hr (avg)')",
+          "textEditor": false
         }
       ],
       "thresholds": [],
@@ -717,7 +733,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(sortByTotal(scale(movingAverage(perSecond(keepLastValue(screeps.muon.colonies.$colonies.rcl.progress)), 3600), 86400)), 3)",
+          "target": "aliasByNode(sortByTotal(scale(movingAverage(perSecond(keepLastValue(screeps.$User.colonies.$colonies.rcl.progress)), 3600), 86400)), 3)",
           "textEditor": false
         }
       ],
@@ -766,8 +782,8 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(scale(movingAverage(perSecond(keepLastValue(screeps.muon.colonies.$colonies.rcl.progress)), 200), 86400), 3)",
-          "textEditor": true
+          "target": "aliasByNode(scale(movingAverage(perSecond(keepLastValue(screeps.$User.colonies.$colonies.rcl.progress)), 200), 86400), 3)",
+          "textEditor": false
         }
       ],
       "thresholds": [],
@@ -846,8 +862,8 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(keepLastValue(screeps.muon.colonies.$colonies.hatchery.uptime), 3)",
-          "textEditor": true
+          "target": "aliasByNode(keepLastValue(screeps.$User.colonies.$colonies.hatchery.uptime), 3)",
+          "textEditor": false
         }
       ],
       "thresholds": [],
@@ -927,8 +943,8 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(keepLastValue(screeps.muon.colonies.$colonies.storage.energy), 3)",
-          "textEditor": true
+          "target": "aliasByNode(keepLastValue(screeps.$User.colonies.$colonies.storage.energy), 3)",
+          "textEditor": false
         }
       ],
       "thresholds": [],
@@ -982,12 +998,32 @@
         "current": {},
         "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
         "hide": 0,
+        "includeAll": false,
+        "label": "",
+        "multi": false,
+        "name": "User",
+        "options": [],
+        "query": "screeps.*",
+        "refresh": 1,
+        "regex": "",
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {},
+        "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
+        "hide": 0,
         "includeAll": true,
         "label": "Colonies",
         "multi": true,
         "name": "colonies",
         "options": [],
-        "query": "screeps.muon.colonies.*",
+        "query": "screeps.$User.colonies.*",
         "refresh": 2,
         "regex": "",
         "sort": 0,
@@ -1039,5 +1075,5 @@
   "timezone": "browser",
   "title": "Overmind",
   "uid": "000002135",
-  "version": 22
+  "version": 2
 }
