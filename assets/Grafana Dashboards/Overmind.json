@@ -58,7 +58,7 @@
   "gnetId": null,
   "graphTooltip": 1,
   "id": null,
-  "iteration": 1521282014471,
+  "iteration": 1521284587194,
   "links": [],
   "panels": [
     {
@@ -461,7 +461,7 @@
       "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "editable": true,
       "error": false,
-      "fill": 1,
+      "fill": 0,
       "grid": {},
       "gridPos": {
         "h": 8,
@@ -493,11 +493,7 @@
       "renderer": "flot",
       "seriesOverrides": [
         {
-          "alias": "Bucket",
-          "yaxis": 2
-        },
-        {
-          "alias": "CPU",
+          "alias": "Memory",
           "fill": 2,
           "linewidth": 1
         }
@@ -516,7 +512,7 @@
           "hide": false,
           "refCount": 0,
           "refId": "B",
-          "target": "2048000",
+          "target": "alias(offset(scale(screeps.$User.memory.used, 0), 2048000), 'Limit')",
           "textEditor": false
         }
       ],
@@ -540,7 +536,7 @@
       },
       "yaxes": [
         {
-          "format": "short",
+          "format": "decbytes",
           "label": null,
           "logBase": 1,
           "max": null,
