@@ -58,7 +58,7 @@
   "gnetId": null,
   "graphTooltip": 1,
   "id": null,
-  "iteration": 1521173336127,
+  "iteration": 1521282014471,
   "links": [],
   "panels": [
     {
@@ -80,9 +80,9 @@
       "colorBackground": false,
       "colorValue": false,
       "colors": [
-        "rgba(27, 101, 24, 0.97)",
-        "#e5ac0e",
-        "rgba(182, 42, 42, 0.9)"
+        "rgba(50, 172, 45, 0.97)",
+        "rgba(237, 129, 40, 0.89)",
+        "rgba(245, 54, 54, 0.9)"
       ],
       "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "editable": true,
@@ -169,16 +169,16 @@
       "colorBackground": false,
       "colorValue": false,
       "colors": [
-        "rgba(16, 69, 14, 0.97)",
-        "rgba(152, 84, 27, 0.89)",
-        "rgba(184, 41, 41, 0.9)"
+        "rgba(245, 54, 54, 0.9)",
+        "rgba(237, 129, 40, 0.89)",
+        "rgba(50, 172, 45, 0.97)"
       ],
       "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "editable": true,
       "error": false,
       "format": "none",
       "gauge": {
-        "maxValue": 100,
+        "maxValue": 10000,
         "minValue": 0,
         "show": true,
         "thresholdLabels": false,
@@ -231,7 +231,7 @@
           "target": "screeps.$User.cpu.bucket"
         }
       ],
-      "thresholds": "5000,1000",
+      "thresholds": "1500,3000",
       "title": "Bucket",
       "type": "singlestat",
       "valueFontSize": "80%",
@@ -366,6 +366,205 @@
         "x": 0,
         "y": 9
       },
+      "id": 87,
+      "panels": [],
+      "title": "Memory",
+      "type": "row"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "rgba(50, 172, 45, 0.97)",
+        "rgba(237, 129, 40, 0.89)",
+        "rgba(245, 54, 54, 0.9)"
+      ],
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
+      "editable": true,
+      "error": false,
+      "format": "decbytes",
+      "gauge": {
+        "maxValue": 2048000,
+        "minValue": 0,
+        "show": true,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 10
+      },
+      "id": 84,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "hide": false,
+          "refCount": 0,
+          "refId": "A",
+          "target": "movingAverage(screeps.$User.memory.used, 5)"
+        }
+      ],
+      "thresholds": "1433600,1740800",
+      "title": "Memory Usage",
+      "type": "singlestat",
+      "valueFontSize": "100%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
+      "editable": true,
+      "error": false,
+      "fill": 1,
+      "grid": {},
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 6,
+        "y": 10
+      },
+      "height": "",
+      "id": 85,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "sideWidth": null,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 2,
+      "links": [],
+      "nullPointMode": "connected",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "alias": "Bucket",
+          "yaxis": 2
+        },
+        {
+          "alias": "CPU",
+          "fill": 2,
+          "linewidth": 1
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "refCount": 0,
+          "refId": "A",
+          "target": "alias(screeps.$User.memory.used, 'Memory')",
+          "textEditor": false
+        },
+        {
+          "hide": false,
+          "refCount": 0,
+          "refId": "B",
+          "target": "2048000",
+          "textEditor": false
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Memory",
+      "tooltip": {
+        "msResolution": true,
+        "shared": true,
+        "sort": 0,
+        "value_type": "cumulative"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": 0,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": 0,
+          "show": true
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
       "id": 82,
       "panels": [],
       "repeat": null,
@@ -377,9 +576,9 @@
       "colorBackground": false,
       "colorValue": false,
       "colors": [
-        "rgba(62, 8, 62, 0.9)",
-        "rgba(20, 77, 112, 0.9)",
-        "rgba(32, 119, 29, 0.97)"
+        "rgba(245, 54, 54, 0.9)",
+        "rgba(237, 129, 40, 0.89)",
+        "rgba(50, 172, 45, 0.97)"
       ],
       "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "decimals": 1,
@@ -397,7 +596,7 @@
         "h": 8,
         "w": 4,
         "x": 0,
-        "y": 10
+        "y": 19
       },
       "height": "",
       "id": 59,
@@ -432,7 +631,7 @@
         "fillColor": "rgba(31, 118, 189, 0.18)",
         "full": false,
         "lineColor": "rgb(31, 120, 193)",
-        "show": false
+        "show": true
       },
       "tableColumn": "",
       "targets": [
@@ -492,7 +691,7 @@
         "h": 8,
         "w": 4,
         "x": 4,
-        "y": 10
+        "y": 19
       },
       "id": 60,
       "interval": null,
@@ -587,7 +786,7 @@
         "h": 8,
         "w": 16,
         "x": 8,
-        "y": 10
+        "y": 19
       },
       "id": 50,
       "legend": {
@@ -691,7 +890,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 27
       },
       "id": 83,
       "panels": [],
@@ -714,7 +913,7 @@
         "h": 10,
         "w": 6,
         "x": 0,
-        "y": 19
+        "y": 28
       },
       "id": 63,
       "interval": null,
@@ -753,7 +952,7 @@
         "h": 10,
         "w": 18,
         "x": 6,
-        "y": 19
+        "y": 28
       },
       "id": 61,
       "legend": {
@@ -833,7 +1032,7 @@
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 29
+        "y": 38
       },
       "id": 64,
       "legend": {
@@ -914,7 +1113,7 @@
         "h": 10,
         "w": 12,
         "x": 12,
-        "y": 29
+        "y": 38
       },
       "id": 62,
       "legend": {
@@ -1075,5 +1274,5 @@
   "timezone": "browser",
   "title": "Overmind",
   "uid": "000002135",
-  "version": 2
+  "version": 6
 }

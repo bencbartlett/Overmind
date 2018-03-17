@@ -28,7 +28,11 @@ export class Stats {
 		Memory.stats['gcl.progress'] = Game.gcl.progress;
 		Memory.stats['gcl.progressTotal'] = Game.gcl.progressTotal;
 		Memory.stats['gcl.level'] = Game.gcl.level;
-	}
+    }
+
+    static memory() {
+        Memory.stats['memory.used'] = RawMemory.get().length
+    }
 
 	static log(key: string, value: number | undefined): void {
 		// if (Game.time % COLLECT_STATS_FREQUENCY == 1) {
@@ -48,7 +52,8 @@ export class Stats {
 		// if (Game.time % COLLECT_STATS_FREQUENCY == 1) {
 		// 	Memory.stats = {}; // Overwrite old / deprecated stats
 		this.cpu();
-		this.gcl();
+        this.gcl();
+        this.memory();
 		// }
 	}
 
