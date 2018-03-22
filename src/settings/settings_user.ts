@@ -29,7 +29,7 @@ export var myUsername: string = getUsername(); // Your username
 // will eventually include features limiting aggression toward new players on public servers and preferably targeting
 // other bots.
 
-var overmindSignature = 'Overmind Screeps AI'; // <DO-NOT-MODIFY> see license for details
+let overmindSignature = 'Overmind Screeps AI'; // <DO-NOT-MODIFY> see license for details
 
 let suffix = ''; // Put your signature suffix here; will be signed as "Overmind Screeps AI: <suffix>"
 

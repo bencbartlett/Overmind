@@ -1,7 +1,6 @@
 // Room prototypes - commonly used room properties and methods
 
-import {myUsername} from '../settings/settings_user';
-import {overmindSignature} from '../settings/do-not-modify';
+import {myUsername, signature} from '../settings/settings_user';
 
 // Logging =============================================================================================================
 Object.defineProperty(Room.prototype, 'print', {
@@ -26,7 +25,7 @@ Object.defineProperty(Room.prototype, 'reservedByMe', {
 
 Object.defineProperty(Room.prototype, 'signedByMe', {
 	get() {
-		return this.controller && this.controller.sign && this.controller.sign.text == overmindSignature;
+		return this.controller && this.controller.sign && this.controller.sign.text == signature;
 	},
 });
 

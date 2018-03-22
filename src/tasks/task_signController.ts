@@ -1,6 +1,6 @@
 import {Task} from './Task';
 import {profile} from '../profiler/decorator';
-import {overmindSignature} from '../settings/do-not-modify';
+import {signature} from '../settings/settings_user';
 
 export type signControllerTargetType = StructureController;
 export const signControllerTaskName = 'signController';
@@ -19,11 +19,11 @@ export class TaskSignController extends Task {
 
 	isValidTarget() {
 		let controller = this.target;
-		return (!controller.sign || controller.sign.text != overmindSignature);
+		return (!controller.sign || controller.sign.text != signature);
 	}
 
 	work() {
-		return this.creep.signController(this.target, overmindSignature);
+		return this.creep.signController(this.target, signature);
 	}
 }
 

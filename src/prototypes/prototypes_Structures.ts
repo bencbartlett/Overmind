@@ -2,8 +2,7 @@
 
 // General structure prototypes ========================================================================================
 
-import {overmindSignature} from '../settings/do-not-modify';
-import {myUsername} from '../settings/settings_user';
+import {myUsername, signature} from '../settings/settings_user';
 import {DirectiveLabMineral} from '../directives/logistics/directive_labMineralType';
 
 Object.defineProperty(StructureContainer.prototype, 'isPassible', {
@@ -44,7 +43,7 @@ Object.defineProperty(StructureController.prototype, 'reservedByMe', {
 
 Object.defineProperty(StructureController.prototype, 'signedByMe', {
 	get: function () {
-		return this.sign && this.sign.text == overmindSignature;
+		return this.sign && this.sign.text == signature;
 	},
 });
 
