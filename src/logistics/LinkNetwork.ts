@@ -43,7 +43,7 @@ export class LinkNetwork {
 	}
 
 	init(): void {
-		for (let link of this.colony.unclaimedLinks) {
+		for (let link of this.colony.dropoffLinks) {
 			if (link.energy > this.settings.linksTrasmitAt) {
 				this.requestTransmit(link);
 			}

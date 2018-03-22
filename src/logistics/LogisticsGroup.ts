@@ -188,16 +188,23 @@ export class LogisticsGroup {
 	/* Number of ticks until the transporter is available and where it will be */
 	private nextAvailability(transporter: Zerg): [number, RoomPosition] {
 		if (transporter.task) {
-			let approximateDistance = 0;
+			let approximateDistance = transporter.task.eta;
 			let pos = transporter.pos;
-			let manifest = transporter.task.manifest;
-			for (let task of manifest) {
-				approximateDistance += pos.getMultiRoomRangeTo(task.targetPos) * this.settings.rangeToPathHeuristic;
-				pos = task.targetPos;
+			let targetPositions = transporter.task.targetPosManifest;
+			// If there is a well-defined task ETA, use that as the first leg, else set dist to zero and use range
+			if (approximateDistance) {
+				for (let targetPos of targetPositions.slice(1)) {
+					approximateDistance += pos.getMultiRoomRangeTo(targetPos) * this.settings.rangeToPathHeuristic;
+					pos = targetPos;
+				}
+			} else {
+				approximateDistance = 0;
+				for (let targetPos of targetPositions) {
+					approximateDistance += pos.getMultiRoomRangeTo(targetPos) * this.settings.rangeToPathHeuristic;
+					pos = targetPos;
+				}
 			}
-			// transporter.pos.getMultiRoomRangeTo(transporter.task.targetPos) *
-			// 						  this.settings.rangeToPathHeuristic;
-			return [approximateDistance, _.last(manifest).targetPos];
+			return [approximateDistance, _.last(targetPositions)];
 		} else {
 			return [0, transporter.pos];
 			// let requestPositions = _.map(this.requests, req => req.target.pos);
@@ -210,7 +217,32 @@ export class LogisticsGroup {
 		}
 	}
 
-	private targetingTransporters(target: LogisticsTarget, excludedTransporter?: Zerg): Zerg[] {
+	// /* Number of ticks until the transporter is available and where it will be */
+	// private nextAvailability(transporter: Zerg): [number, RoomPosition] {
+	// 	if (transporter.task) {
+	// 		let approximateDistance = 0;
+	// 		let pos = transporter.pos;
+	// 		let manifest = transporter.task.manifest;
+	// 		for (let task of manifest) {
+	// 			approximateDistance += pos.getMultiRoomRangeTo(task.targetPos) * this.settings.rangeToPathHeuristic;
+	// 			pos = task.targetPos;
+	// 		}
+	// 		// transporter.pos.getMultiRoomRangeTo(transporter.task.targetPos) *
+	// 		// 						  this.settings.rangeToPathHeuristic;
+	// 		return [approximateDistance, _.last(manifest).targetPos];
+	// 	} else {
+	// 		return [0, transporter.pos];
+	// 		// let requestPositions = _.map(this.requests, req => req.target.pos);
+	// 		// let nearby = transporter.pos.findInRange(requestPositions, 2)[0];
+	// 		// if (nearby) {
+	// 		// 	return [0, nearby];
+	// 		// } else {
+	// 		// 	return [0, transporter.pos];
+	// 		// }
+	// 	}
+	// }
+
+	static targetingTransporters(target: LogisticsTarget, excludedTransporter?: Zerg): Zerg[] {
 		let targetingZerg = _.map(target.targetedBy, name => Game.zerg[name]);
 		let targetingTransporters = _.filter(targetingZerg, zerg => zerg.roleName == TransporterSetup.role);
 		if (excludedTransporter) _.remove(targetingTransporters, transporter => transporter == excludedTransporter);
@@ -219,8 +251,13 @@ export class LogisticsGroup {
 
 	/* Returns the effective amount of the request given other targeting creeps */
 	predictedAmount(transporter: Zerg, request: Request, availability = 0, newPos = transporter.pos): number {
-		let otherTargetingTransporters = this.targetingTransporters(request.target, transporter);
-		let ETA = this.settings.rangeToPathHeuristic * request.target.pos.getMultiRoomRangeTo(newPos) + availability;
+		let otherTargetingTransporters = LogisticsGroup.targetingTransporters(request.target, transporter);
+		let ETA: number | undefined;
+		if (transporter.task && transporter.task.target == request.target) {
+			ETA = transporter.task.eta;
+		}
+		if (!ETA) ETA = this.settings.rangeToPathHeuristic * request.target.pos.getMultiRoomRangeTo(newPos)
+						+ availability;
 		let predictedDifference = request.dAmountdt * ETA;
 		if (request.amount > 0) { // request state, energy in
 			let resourceInflux = _.sum(_.map(otherTargetingTransporters,
@@ -254,7 +291,7 @@ export class LogisticsGroup {
 		return transporter.carry;
 	}
 
-	/* Consider all possibilities of what to visit on the way to fulfilling the request */
+	/* Consider all possibilities of buffer structures to visit on the way to fulfilling the request */
 	bufferChoices(transporter: Zerg, request: Request): {
 		deltaResource: number,
 		deltaTicks: number,
@@ -308,7 +345,7 @@ export class LogisticsGroup {
 			}
 			// if (request.resourceType == RESOURCE_ENERGY) {
 			// 	// Only for when you're picking up more energy: check to see if you can put to available links
-			// 	for (let link of this.colony.unclaimedLinks) {
+			// 	for (let link of this.colony.dropoffLinks) {
 			// 		let linkDeltaResource = Math.min(Math.abs(amount), transporter.carryCapacity,
 			// 			2 * link.energyCapacity);
 			// 		let ticksUntilDropoff = Math.max(Pathing.distance(newPos, link.pos),
@@ -388,7 +425,7 @@ export class LogisticsGroup {
 			let targetType = request.target instanceof DirectiveLogisticsRequest ? 'flag' :
 							 request.target.structureType;
 			let energy = request.target instanceof StructureContainer ? request.target.energy : 0;
-			let targetingTransporters = this.targetingTransporters(request.target);
+			let targetingTransporters = LogisticsGroup.targetingTransporters(request.target);
 			console.log(`    Target: ${targetType} ${request.target.pos.print} ${request.target.ref}    ` +
 						`Amount: ${request.amount}    Energy: ${energy}    Targeted by: ${targetingTransporters}`);
 		}

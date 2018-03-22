@@ -99,7 +99,7 @@ export class TransportOverlord extends Overlord {
 		} else {
 			if (transporter.carry.energy > 0) {
 				let dropoffPoints: (StructureLink | StructureStorage)[] = _.compact([this.colony.storage!,
-																					 ...this.colony.unclaimedLinks]);
+																					 ...this.colony.dropoffLinks]);
 				// let bestDropoffPoint = minBy(dropoffPoints, function(dropoff: StructureLink | StructureStorage) {
 				// 	let range = transporter.pos.getMultiRoomRangeTo(dropoff.pos);
 				// 	if (dropoff instanceof StructureLink) {
@@ -216,7 +216,7 @@ export class TransportOverlord extends Overlord {
 	run() {
 		for (let transporter of this.transporters) {
 			// this.handleTransporterOld(transporter);
-			if (transporter.isIdle || Game.time % 5 == 0) {
+			if (transporter.isIdle) {
 				this.handleTransporter(transporter);
 			}
 		}

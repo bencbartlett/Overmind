@@ -71,8 +71,6 @@ export class UpgradeSite extends HiveCluster {
 			}
 		} else if (this.input instanceof StructureContainer) {
 			if (this.input.energy < 0.5 * this.input.storeCapacity) {
-				// this.colony.transportRequests.requestEnergy(this.input);
-				// this.colony.logisticsNetwork.request(this.input);
 				this.colony.logisticsGroup.request(this.input, {dAmountdt: this.energyPerTick});
 			}
 

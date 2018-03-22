@@ -106,21 +106,12 @@ export abstract class Task implements ITask {
 		this._creep.name = creep.name;
 	}
 
-	// Getter/setter for task.target
+	// Dereferences the target
 	get target(): RoomObject | null {
 		return deref(this._target.ref);
 	}
 
-	// set target(target: RoomObject | null) {
-	// 	if (target) {
-	// 		this._target.ref = target.ref;
-	// 		this.targetPos = target.pos;
-	// 	} else {
-	// 		log.info('Null target set: something is wrong.');
-	// 	}
-	// }
-
-	// Getter/setter for task.targetPos
+	// Dereferences the saved target position; useful for situations where you might lose vision
 	get targetPos(): RoomPosition {
 		// refresh if you have visibility of the target
 		if (this.options.travelToOptions.movingTarget && this.target) {
@@ -128,12 +119,6 @@ export abstract class Task implements ITask {
 		}
 		return derefRoomPosition(this._target._pos);
 	}
-
-	// set targetPos(targetPosition: RoomPosition) {
-	// 	this._target._pos.x = targetPosition.x;
-	// 	this._target._pos.y = targetPosition.y;
-	// 	this._target._pos.roomName = targetPosition.roomName;
-	// }
 
 	// Getter/setter for task parent
 	get parent(): Task | null {
@@ -149,7 +134,7 @@ export abstract class Task implements ITask {
 		}
 	}
 
-	// Return a list of [this, this.parent, this.parent.parent, ...]
+	// Return a list of [this, this.parent, this.parent.parent, ...] as tasks
 	get manifest(): Task[] {
 		let manifest: Task[] = [this];
 		let parent = this.parent;
@@ -158,6 +143,28 @@ export abstract class Task implements ITask {
 			parent = parent.parent;
 		}
 		return manifest;
+	}
+
+	// Return a list of [this.target, this.parent.target, ...] without fully instantiating the list of tasks
+	get targetManifest(): (RoomObject | null)[] {
+		let targetRefs: string[] = [this._target.ref];
+		let parent = this._parent;
+		while (parent) {
+			targetRefs.push(parent._target.ref);
+			parent = parent._parent;
+		}
+		return _.map(targetRefs, ref => deref(ref));
+	}
+
+	// Return a list of [this.target, this.parent.target, ...] without fully instantiating the list of tasks
+	get targetPosManifest(): RoomPosition[] {
+		let targetPositions: protoPos[] = [this._target._pos];
+		let parent = this._parent;
+		while (parent) {
+			targetPositions.push(parent._target._pos);
+			parent = parent._parent;
+		}
+		return _.map(targetPositions, protoPos => derefRoomPosition(protoPos));
 	}
 
 	// Fork the task, assigning a new task to the creep with this task as its parent
@@ -174,6 +181,7 @@ export abstract class Task implements ITask {
 
 	// Test every tick to see if target is still valid
 	abstract isValidTarget(): boolean;
+
 
 	isValid(): boolean {
 		let validTask = false;
@@ -203,6 +211,13 @@ export abstract class Task implements ITask {
 			this.options.travelToOptions.range = this.settings.targetRange;
 		}
 		return this.creep.travelTo(this.targetPos, this.options.travelToOptions);
+	}
+
+	// Return expected number of ticks until creep arrives at its first destination
+	get eta(): number | undefined {
+		if (this.creep && this.creep.memory._trav) {
+			return this.creep.memory._trav.path.length;
+		}
 	}
 
 	// Execute this task each tick. Returns nothing unless work is done.

@@ -64,8 +64,8 @@ interface CreepMemory {
 		moveSpeed?: number;
 	};
 	// Traveler components
-	_travel: any;
-	_trav: any;
+	// _travel: any;
+	_trav: TravelData | null;
 	// Combat
 	partner?: string;
 	retreating?: boolean;

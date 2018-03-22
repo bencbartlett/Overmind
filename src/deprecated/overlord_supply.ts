@@ -1,11 +1,11 @@
-// import {Overlord} from '../Overlord';
-// import {SupplierSetup} from '../../creepSetup/defaultSetups';
-// import {Colony} from '../../Colony';
-// import {HiveCluster} from '../../hiveClusters/HiveCluster';
-// import {IResourceRequest, IWithdrawRequest} from '../../logistics/TransportRequestGroup';
-// import {Zerg} from '../../Zerg';
-// import {Tasks} from '../../tasks/Tasks';
-// import {OverlordPriority} from '../priorities_overlords';
+// import {Overlord} from '../overlords/Overlord';
+// import {SupplierSetup} from '../creepSetup/defaultSetups';
+// import {Colony} from '../Colony';
+// import {HiveCluster} from '../hiveClusters/HiveCluster';
+// import {IResourceRequest, IWithdrawRequest} from '../logistics/TransportRequestGroup';
+// import {Zerg} from '../Zerg';
+// import {Tasks} from '../tasks/Tasks';
+// import {OverlordPriority} from '../overlords/priorities_overlords';
 //
 //
 // // TODO: make this work with more resources than just energy

@@ -1,14 +1,14 @@
 // // Temporary mineral supplier to work labs while I finish up the massive logistics update
 //
-// import {CreepSetup} from '../../creepSetup/CreepSetup';
-// import {Overlord} from '../Overlord';
-// import {Zerg} from '../../Zerg';
-// import {Colony} from '../../Colony';
-// import {OverlordPriority} from '../priorities_overlords';
-// import {HiveCluster} from '../../hiveClusters/HiveCluster';
-// import {DirectiveLabMineral} from '../../directives/logistics/directive_labMineralType';
-// import {TaskTransfer} from '../../tasks/task_transfer';
-// import {TaskWithdrawResource} from '../../tasks/task_withdrawResource';
+// import {CreepSetup} from '../creepSetup/CreepSetup';
+// import {Overlord} from '../overlords/Overlord';
+// import {Zerg} from '../Zerg';
+// import {Colony} from '../Colony';
+// import {OverlordPriority} from '../overlords/priorities_overlords';
+// import {HiveCluster} from '../hiveClusters/HiveCluster';
+// import {DirectiveLabMineral} from '../directives/logistics/directive_labMineralType';
+// import {TaskTransfer} from '../tasks/task_transfer';
+// import {TaskWithdrawResource} from '../tasks/task_withdrawResource';
 //
 // export class MineralSupplierSetup extends CreepSetup {
 //

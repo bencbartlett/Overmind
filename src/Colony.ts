@@ -44,8 +44,8 @@ export class Colony {
 	extensions: StructureExtension[];					// |
 	storage: StructureStorage | undefined;				// |
 	links: StructureLink[];								// |
-	unclaimedLinks: StructureLink[]; 					// | Links not belonging to a hiveCluster, free for miningGroup
 	claimedLinks: StructureLink[];						// | Links belonging to hive cluseters excluding mining groups
+	dropoffLinks: StructureLink[]; 						// | Links not belonging to a hiveCluster, used as dropoff
 	terminal: StructureTerminal | undefined;			// |
 	towers: StructureTower[];							// |
 	labs: StructureLab[];								// |
@@ -62,7 +62,6 @@ export class Colony {
 	hatchery: Hatchery | undefined;						// Component to encapsulate spawner logic
 	upgradeSite: UpgradeSite;							// Component to provide upgraders with uninterrupted energy
 	sporeCrawlers: SporeCrawler[];
-	// miningGroups: { [id: string]: MiningGroup } | undefined;	// Component to group mining sites into a hauling group
 	miningSites: { [sourceID: string]: MiningSite };	// Component with logic for mining and hauling
 	// Incubation status
 	incubator: Colony | undefined; 						// The colony responsible for incubating this one, if any
@@ -76,9 +75,7 @@ export class Colony {
 	hostiles: Creep[];									// Hostile creeps in one of the rooms
 	// Resource requests
 	linkNetwork: LinkNetwork;
-	// transportRequests: TransportRequestGroup;			// Box for resource requests
 	logisticsGroup: LogisticsGroup;
-	// logisticsNetwork: LogisticsNetwork;
 	// Overlords
 	overlords: {
 		// supply: SupplierOverlord;
@@ -185,26 +182,7 @@ export class Colony {
 											   this.hatchery ? this.hatchery.link : null,
 											   this.upgradeSite.input]);
 		this.claimedLinks = _.filter(claimedLinkCandidates, s => s instanceof StructureLink) as StructureLink[];
-		this.unclaimedLinks = _.filter(this.links, link => this.claimedLinks.includes(link) == false);
-		// // Instantiate a MiningGroup for each non-component link and for storage
-		// if (this.storage) {
-		// 	let miningGroupLinks = _.filter(this.unclaimedLinks, link => link.pos.rangeToEdge <= 3);
-		// 	let miningGroups: { [structRef: string]: MiningGroup } = {};
-		// 	miningGroups[this.storage.ref] = new MiningGroup(this, this.storage);
-		// 	for (let link of miningGroupLinks) {
-		// 		let createNewGroup = true;
-		// 		for (let structRef in miningGroups) {
-		// 			let group = miningGroups[structRef];
-		// 			if (group.links && group.links.includes(link)) {
-		// 				createNewGroup = false; // don't create a new group if one already includes this link
-		// 			}
-		// 		}
-		// 		if (createNewGroup) {
-		// 			miningGroups[link.ref] = new MiningGroup(this, link);
-		// 		}
-		// 	}
-		// 	this.miningGroups = miningGroups;
-		// }
+		this.dropoffLinks = _.filter(this.links, link => this.claimedLinks.includes(link) == false);
 		// Mining sites is an object of ID's and MiningSites
 		let sourceIDs = _.map(this.sources, source => source.ref);
 		let miningSites = _.map(this.sources, source => new MiningSite(this, source));
@@ -213,54 +191,15 @@ export class Colony {
 
 	private spawnMoarOverlords(): void {
 		this.overlords = {
-			// supply: new SupplierOverlord(this),
 			work     : new WorkerOverlord(this),
 			logistics: new TransportOverlord(this),
 		};
-		// if (this.labs.length > 0) {
-		// 	if (_.filter(this.room.flags, flag => DirectiveLabMineral.filter(flag)).length > 0) {
-		// 		this.overlords.mineralSupply = new MineralSupplierOverlord(this);
-		// 	}
-		// }
-	}
-
-	// /* Run the tower logic for each tower in the colony */
-	// private handleTowers(): void {
-	// 	for (let tower of this.towers) {
-	// 		tower.run();
-	// 	}
-	// }
-
-	/* Examine the link resource requests and try to efficiently (but greedily) match links that need energy in and
-	 * out, then send the remaining resourceOut link requests to the command center link */
-	private handleLinks(): void {
-		// For each receiving link, greedily get energy from the closest transmitting link - at most 9 operations
-		for (let receiveLink of this.linkNetwork.receive) {
-			let closestTransmitLink = receiveLink.pos.findClosestByRange(this.linkNetwork.transmit);
-			// If a send-receive match is found, transfer that first, then remove the pair from the link lists
-			if (closestTransmitLink) {
-				// Send min of (all the energy in sender link, amount of available space in receiver link)
-				let amountToSend = _.min([closestTransmitLink.energy, receiveLink.energyCapacity - receiveLink.energy]);
-				closestTransmitLink.transferEnergy(receiveLink, amountToSend);
-				_.remove(this.linkNetwork.transmit, closestTransmitLink);
-				_.remove(this.linkNetwork.receive, receiveLink);
-			}
-		}
-		// Now send all remaining transmit link requests to the command center
-		if (this.commandCenter && this.commandCenter.link) {
-			for (let transmitLink of this.linkNetwork.transmit) {
-				transmitLink.transferEnergy(this.commandCenter.link);
-			}
-		}
 	}
 
 	getCreepsByRole(roleName: string): Zerg[] {
 		return this.creepsByRole[roleName] || [];
 	}
 
-	// /* Instantiate the virtual components of the colony and populate data */
-	// build(): void {
-	// 		}
 
 	init(): void {
 		// Initialize each hive cluster

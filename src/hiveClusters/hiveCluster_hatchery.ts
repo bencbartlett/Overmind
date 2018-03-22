@@ -161,7 +161,6 @@ export class Hatchery extends HiveCluster {
 				boosts   : {} 										// keeps track of what boosts creep has/needs
 			},
 			_trav   : null,
-			_travel : null,
 		};
 		// Create the protocreep and return it
 		let protoCreep: protoCreep = { 							// object to add to spawner queue

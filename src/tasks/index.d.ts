@@ -36,6 +36,9 @@ interface ITask extends protoTask {
 	targetPos: RoomPosition;
 	parent: ITask | null;
 	manifest: ITask[];
+	targetManifest: (RoomObject | null)[];
+	targetPosManifest: RoomPosition[];
+	eta: number | undefined;
 
 	fork(newTask: ITask): ITask;
 

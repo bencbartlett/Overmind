@@ -59,7 +59,7 @@ export class LogisticsNetwork {
 		};
 		this.colony = colony;
 		this.buffers = _.compact([colony.storage!, colony.terminal!]);
-		this.links = colony.unclaimedLinks;
+		this.links = colony.dropoffLinks;
 	}
 
 	private getRequestAmount(target: LogisticsTarget, resourceType: ResourceConstant): number {
