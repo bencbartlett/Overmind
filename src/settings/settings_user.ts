@@ -1,7 +1,5 @@
 // Global settings file containing player information
 
-import {overmindSignature} from './do-not-modify';
-
 function getUsername(): string {
 	for (let i in Game.rooms) {
 		let room = Game.rooms[i];
@@ -30,6 +28,8 @@ export var myUsername: string = getUsername(); // Your username
 // to prevent parts of the AI from being modified. Currently, this covers not modifying the controller signature, but
 // will eventually include features limiting aggression toward new players on public servers and preferably targeting
 // other bots.
+
+var overmindSignature = 'Overmind Screeps AI'; // <DO-NOT-MODIFY> see license for details
 
 let suffix = ''; // Put your signature suffix here; will be signed as "Overmind Screeps AI: <suffix>"
 

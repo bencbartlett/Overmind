@@ -1,4 +1,16 @@
-// Useful functions
+//
+// ___________________________________________________________
+//
+//  _____  _    _ _______  ______ _______ _____ __   _ ______
+// |     |  \  /  |______ |_____/ |  |  |   |   | \  | |     \
+// |_____|   \/   |______ |    \_ |  |  | __|__ |  \_| |_____/
+//
+// _______________________ Screeps AI ________________________
+//
+//
+// Overmind repository: github.com/bencbartlett/overmind
+//
+
 declare function deref(ref: string): RoomObject | null;
 
 global.deref = function (ref: string): RoomObject | null { // dereference any object from identifier; see ref in RoomObjects
