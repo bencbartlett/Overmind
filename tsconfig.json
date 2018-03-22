@@ -10,6 +10,7 @@
     "baseUrl": "src/",
     "sourceMap": false,
     "strict": true,
+    "strictPropertyInitialization": false,
     "noImplicitThis": false,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
