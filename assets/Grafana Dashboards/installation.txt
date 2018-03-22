@@ -1,0 +1,5 @@
+To set up Grafana dashboard:
+
+1. Register for grafana service at screepspl.us: https://screepspl.us/services/grafana
+2. Setup grafana agent: https://github.com/bonzaiferroni/bonzAI/wiki/Screepspl.us-agent-with-Compute-Engine
+3. Import Overmind.json dashboard and change $User to your username. (Make sure to use Grafana 5! screepspl.us/grafana5)
