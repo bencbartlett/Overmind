@@ -33,9 +33,9 @@ import OM from './Overmind';
 import {Console} from './console/console';
 import {Stats} from './stats/stats';
 import {USE_PROFILER} from './settings/config';
-import * as Profiler from 'screeps-profiler';
+import profiler from 'screeps-profiler';
 
-if (USE_PROFILER) Profiler.enable();
+if (USE_PROFILER) profiler.enable();
 
 // Execute this every global reset
 global.log = log;
@@ -55,6 +55,6 @@ function main(): void {
 }
 
 export function loop(): void {
-	Profiler.wrap(main);
+	profiler.wrap(main);
 }
 

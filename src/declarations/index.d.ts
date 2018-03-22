@@ -5,7 +5,8 @@ declare namespace NodeJS {
 	interface Global {
 		Overmind: IOvermind;
 		log: any;
-		Profiler: any;
+
+		// Profiler: any;
 
 		deref(ref: string): RoomObject | null;
 

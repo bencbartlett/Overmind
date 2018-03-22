@@ -1,6 +1,6 @@
 import {Traveler} from '../lib/traveler/Traveler';
 import {log} from '../lib/logger/log';
-import * as Profiler from 'screeps-profiler';
+import profiler from 'screeps-profiler';
 
 /* Module for pathing-related operations. Interfaces with Traveler. */
 export class Pathing {
@@ -205,5 +205,5 @@ export class Pathing {
 	}
 }
 
-Profiler.registerClass(Pathing, 'Pathing');
+profiler.registerClass(Pathing, 'Pathing');
 

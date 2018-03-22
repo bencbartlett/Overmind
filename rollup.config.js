@@ -31,8 +31,7 @@ export default {
         resolve(),
         commonjs({
                      namedExports: {
-                         'node_modules/screeps-profiler/screeps-profiler.js':
-                             ['enable', 'wrap', 'registerFN', 'registerClass']
+                         'screeps-profiler': ['profiler']
                      }
                  }),
         typescript({tsconfig: "./tsconfig.json"}),
