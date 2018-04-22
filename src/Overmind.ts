@@ -11,17 +11,19 @@ import {Directive} from './directives/Directive';
 import {Visualizer} from './visuals/Visualizer';
 import {Stats} from './stats/stats';
 import {TerminalNetwork} from './logistics/TerminalNetwork';
+import {myUsername} from './settings/settings_user';
+import {AllContracts} from './contracts/contractsList';
 
 
 @profile
 export default class Overmind implements IOvermind {
+
 	cache: ICache;
 	Colonies: { [roomName: string]: Colony };				// Global hash of all colony objects
 	overlords: { [overlordName: string]: Overlord };
 	colonyMap: { [roomName: string]: string };				// Global map of colony associations for possibly-null rooms
 	terminalNetwork: ITerminalNetwork;
 	invisibleRooms: string[]; 								// Names of rooms across all colonies that are invisible
-
 
 	constructor() {
 		this.cache = new GameCache();
@@ -190,11 +192,19 @@ export default class Overmind implements IOvermind {
 	}
 
 	run(): void {
+		// Run all colonies
 		for (let colonyName in this.Colonies) {
 			let start = Game.cpu.getUsed();
 			this.Colonies[colonyName].run();
 			Stats.log(`cpu.usage.${colonyName}.run`, Game.cpu.getUsed() - start);
 		}
+		// Run all contracts
+		if (myUsername == 'Muon') { // This ensures that my contracts don't run by default on other people's accounts
+			for (let contract of AllContracts) {
+				contract.run();
+			}
+		}
+		// Run terminal network
 		this.terminalNetwork.run();
 	}
 

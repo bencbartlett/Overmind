@@ -61,7 +61,7 @@ interface IOvermind {
 }
 
 interface ITerminalNetwork {
-	// terminals: StructureTerminal[];
+	terminals: StructureTerminal[];
 	memory: any;
 
 	requestResource(resourceType: ResourceConstant, terminal: StructureTerminal, amount?: number): void;

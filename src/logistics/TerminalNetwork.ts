@@ -6,8 +6,8 @@ import {profile} from '../profiler/decorator';
 @profile
 export class TerminalNetwork implements ITerminalNetwork {
 
-	private terminals: StructureTerminal[];
-	private manifests: {
+	terminals: StructureTerminal[];					// All terminals
+	private manifests: {							// Resources that various terminals need
 		[terminalName: string]: {
 			[resourceType: string]: number
 		}
@@ -165,9 +165,12 @@ export class TerminalNetwork implements ITerminalNetwork {
 			if (bestTerminal) {
 				let cost = Game.market.calcTransactionCost(this.settings.energy.sendSize,
 														   terminal.room.name, bestTerminal.room.name);
-				terminal.send(RESOURCE_ENERGY, this.settings.energy.sendSize, bestTerminal.room.name);
+				let resp = terminal.send(RESOURCE_ENERGY, this.settings.energy.sendSize, bestTerminal.room.name);
 				log.info(`Sent ${this.settings.energy.sendSize} energy from ${terminal.room.name} to ` +
-						 `${bestTerminal.room.name}. Fee: ${cost - this.settings.energy.sendSize}`);
+						 `${bestTerminal.room.name}. Fee: ${cost - this.settings.energy.sendSize}. Response: ${resp}`);
+				if (resp == OK) {
+					this.alreadyReceived.push(bestTerminal);
+				}
 			}
 		}
 	}
