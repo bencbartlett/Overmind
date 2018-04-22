@@ -55,17 +55,17 @@ export class Overseer {
 			let defenseFlags = _.filter(room.flags, flag => DirectiveGuard.filter(flag) ||
 															DirectiveInvasionDefense.filter(flag) ||
 															DirectiveGuardSwarm.filter(flag));
-			let bigHostiles = _.filter(room.hostiles, creep => creep.body.length >= 10);
-			// let hostiles = _.filter(room.hostiles, creep => creep.getActiveBodyparts(ATTACK) > 0 ||
-			// 												creep.getActiveBodyparts(WORK) > 0 ||
-			// 												creep.getActiveBodyparts(RANGED_ATTACK) > 0 ||
-			// 												creep.getActiveBodyparts(HEAL) > 0);
-			if ((room.hostiles.length > 0 && defenseFlags.length == 0) ||
-				(bigHostiles.length > 0 && defenseFlags.length == 0)) {
-				DirectiveGuard.create(room.hostiles[0].pos);
+			// let bigHostiles = _.filter(room.hostiles, creep => creep.body.length >= 10);
+			let hostiles = _.filter(room.hostiles, creep => creep.getActiveBodyparts(ATTACK) > 0 ||
+															creep.getActiveBodyparts(WORK) > 0 ||
+															creep.getActiveBodyparts(RANGED_ATTACK) > 0 ||
+															creep.getActiveBodyparts(HEAL) > 0);
+			if (hostiles.length > 0 && defenseFlags.length == 0) {
+				DirectiveGuard.create(hostiles[0].pos);
 			}
 		}
 
+		// Defend against invasions in owned rooms
 		if (this.colony.room) {
 			let effectiveInvaderCount = _.sum(_.map(this.colony.room.hostiles, invader => invader.boosts.length > 0 ? 2 : 1));
 			let invasionDefenseFlags = _.filter(this.colony.room.flags, flag => DirectiveInvasionDefense.filter(flag));
