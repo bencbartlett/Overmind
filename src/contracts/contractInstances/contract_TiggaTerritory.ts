@@ -19,7 +19,7 @@ export class Contract_TiggaTerritoryAgreement extends Contract {
 		super();
 		this.payment = 30000;
 		this.period = 1000;
-		this.description = 'Truce / occupation payment';
+		this.description = 'Payment from Muon: truce / occupation rights';
 	}
 
 	isValid(): boolean {
