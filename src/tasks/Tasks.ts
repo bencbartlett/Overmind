@@ -1,7 +1,7 @@
 import {attackTargetType, TaskAttack} from './task_attack';
 import {buildTargetType, TaskBuild} from './task_build';
 import {claimTargetType, TaskClaim} from './task_claim';
-import {depositTargetType, TaskDeposit} from './task_deposit';
+// import {depositTargetType, TaskDeposit} from './task_deposit';
 import {dismantleTargetType, TaskDismantle} from './task_dismantle';
 import {fortifyTargetType, TaskFortify} from './task_fortify';
 import {getBoostedTargetType, TaskGetBoosted} from './task_getBoosted';
@@ -19,7 +19,7 @@ import {signControllerTargetType, TaskSignController} from './task_signControlle
 import {TaskTransfer, transferTargetType} from './task_transfer';
 import {TaskUpgrade, upgradeTargetType} from './task_upgrade';
 import {TaskWithdraw, withdrawTargetType} from './task_withdraw';
-import {TaskWithdrawResource, withdrawResourceTargetType} from './task_withdrawResource';
+// import {TaskWithdrawResource, withdrawResourceTargetType} from './task_withdrawResource';
 import {dropTargetType, TaskDrop} from './task_drop';
 import {profile} from '../profiler/decorator';
 
@@ -38,9 +38,9 @@ export class Tasks { // TODO: update arguments for transfer and similar
 		return new TaskClaim(target);
 	}
 
-	static deposit(target: depositTargetType): TaskDeposit {
-		return new TaskDeposit(target);
-	}
+	// static deposit(target: depositTargetType): TaskDeposit {
+	// 	return new TaskDeposit(target);
+	// }
 
 	static dismantle(target: dismantleTargetType): TaskDismantle {
 		return new TaskDismantle(target);
@@ -113,15 +113,15 @@ export class Tasks { // TODO: update arguments for transfer and similar
 		return new TaskUpgrade(target);
 	}
 
-	static withdraw(target: withdrawTargetType): TaskWithdraw {
-		return new TaskWithdraw(target);
-	}
+	// static withdraw(target: withdrawTargetType): TaskWithdraw {
+	// 	return new TaskWithdraw(target);
+	// }
 
-	static withdrawResource(target: withdrawResourceTargetType,
-							resourceType: ResourceConstant = RESOURCE_ENERGY,
-							amount: number | undefined     = undefined,
-							options                        = {} as TaskOptions): TaskWithdrawResource {
-		return new TaskWithdrawResource(target, resourceType, amount, options);
+	static withdraw(target: withdrawTargetType,
+					resourceType: ResourceConstant = RESOURCE_ENERGY,
+					amount: number | undefined     = undefined,
+					options                        = {} as TaskOptions): TaskWithdraw {
+		return new TaskWithdraw(target, resourceType, amount, options);
 	}
 
 }

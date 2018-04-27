@@ -1,6 +1,5 @@
 // Mining site class for grouping relevant components
 
-import {depositTargetType} from '../tasks/task_deposit';
 import {HiveCluster} from './HiveCluster';
 import {profile} from '../profiler/decorator';
 import {CommandCenterOverlord} from '../overlords/hiveCluster/overlord_commandCenter';
@@ -8,6 +7,8 @@ import {Colony} from '../Colony';
 import {Mem} from '../memory';
 import {Visualizer} from '../visuals/Visualizer';
 import {TerminalNetwork} from '../logistics/TerminalNetwork';
+import {transferTargetType} from '../tasks/task_transfer';
+import {Energetics} from '../logistics/Energetics';
 
 @profile
 export class CommandCenter extends HiveCluster {
@@ -21,7 +22,7 @@ export class CommandCenter extends HiveCluster {
 	nuker: StructureNuker | undefined;						// Colony nuker
 	observer: StructureObserver | undefined;				// Colony observer
 	private _idlePos: RoomPosition;							// Cached idle position
-	private _depositStructures: depositTargetType[];		// Deposit to these
+	private _depositStructures: transferTargetType[];		// Deposit to these
 	private _withdrawStructures: (							// Withdraw from these
 		StructureLink |
 		StructureTerminal)[];
@@ -112,7 +113,7 @@ export class CommandCenter extends HiveCluster {
 	get depositStructures() {
 		if (!this._depositStructures) {
 			// Generate a prioritized list of what needs energy
-			let depositStructures: depositTargetType[] = [];
+			let depositStructures: transferTargetType[] = [];
 			// If the link is empty and can send energy and something needs energy, fill it up
 			if (this.link && this.link.energy < 0.9 * this.link.energyCapacity && this.link.cooldown <= 1) {
 				if (this.colony.linkNetwork.receive.length > 0) { 	// If something wants energy
@@ -124,7 +125,7 @@ export class CommandCenter extends HiveCluster {
 					depositStructures.push(tower);
 				}
 			}
-			if (this.terminal && this.terminal.energy < this.terminalNetwork.settings.energy.inThreshold) {
+			if (this.terminal && this.terminal.energy < Energetics.settings.terminal.energy.inThreshold) {
 				depositStructures.push(this.terminal);
 			}
 			if (this.nuker && this.nuker.energy < this.nuker.energyCapacity) {
@@ -161,8 +162,11 @@ export class CommandCenter extends HiveCluster {
 					withdrawStructures.push(this.link);
 				}
 			}
-			if (this.terminal && this.terminal.energy > this.terminalNetwork.settings.energy.outThreshold) {
-				withdrawStructures.push(this.terminal);
+			// Withdraw energy from terminal if it has more than equilibrium amount and there is room for it in storage
+			if (this.terminal && this.terminal.energy > Energetics.settings.terminal.energy.equilibrium) {
+				if (_.sum(this.storage.store) < Energetics.settings.storage.total.cap) {
+					withdrawStructures.push(this.terminal);
+				}
 			}
 			this._withdrawStructures = withdrawStructures;
 		}

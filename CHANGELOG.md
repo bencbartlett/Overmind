@@ -5,6 +5,25 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added 
+- Lots of new content to the Wiki!
+- TerminalNetwork stat collection, which accumulates all `send()` calls and transfer costs by resourceType between origin and destination
+    - Added Grafana dashboard support for new stats
+- Preliminary contract module for making deals between players
+- Added `Energetics` module, which will make high-level decisions based on energy distributions
+- Colonies now have a `lowPowerMode` operational state, which scales back production of miners and transporters at RCL8 with full storage/terminal
+
+### Changed
+- `Task.creep` once again points to a `Zerg` object rather than a `Creep` object (Tasks are still hosted on creep prototypes, however)
+- `TaskRepair` will now attempt to move to within range 2 if repairing a road; this should fix the move-stop-repair-move-stop-repair behavior of workers repairing remote roads
+
+### Removed
+- Deprecated `TaskDeposit`; use `TaskTransfer` instead
+- `TaskWithdrawResource` has replaced `TaskWithdraw`
+
+### Fixed 
+- Bugfixes with `TaskDrop`, `TaskGoTo`, `TaskGoToRoom`
+- Fixed bug (hopefully) with creeps not approaching to range 1 in `TaskAttack` and `TaskHeal`
 
 ## Overmind [0.2.1] - 2018.3.22
 ### Added

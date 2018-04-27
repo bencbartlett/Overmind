@@ -27,13 +27,13 @@ export class CommandCenterOverlord extends Overlord {
 		// If you have energy, deposit it to the best location
 		if (this.commandCenter.depositStructures.length > 0) {
 			// If something needs energy, put it there
-			manager.task = Tasks.deposit(this.commandCenter.depositStructures[0]);
+			manager.task = Tasks.transfer(this.commandCenter.depositStructures[0]);
 		} else {
 			// Otherwise put to storage or terminal
 			if (_.sum(this.commandCenter.storage.store) < this.commandCenter.settings.unloadStorageBuffer) {
-				manager.task = Tasks.deposit(this.commandCenter.storage);
+				manager.task = Tasks.transfer(this.commandCenter.storage);
 			} else if (this.commandCenter.terminal) {
-				manager.task = Tasks.deposit(this.commandCenter.terminal);
+				manager.task = Tasks.transfer(this.commandCenter.terminal);
 			}
 		}
 	}

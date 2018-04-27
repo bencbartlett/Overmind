@@ -14,23 +14,21 @@ export class TaskHeal extends Task {
 		this.settings.targetRange = 3;
 	}
 
+
 	isValidTask() {
 		return (this.creep.getActiveBodyparts(HEAL) > 0);
 	}
 
 	isValidTarget() {
-		var target = this.target;
-		return (target && target.hits < target.hitsMax && target.my == true);
+		return this.target && this.target.hits < this.target.hitsMax && this.target.my;
 	}
 
 	work() {
-		var creep = this.creep;
-		var target = this.target;
-		if (creep.pos.isNearTo(target)) {
-			return creep.heal(target);
+		if (this.creep.pos.isNearTo(this.target)) {
+			return this.creep.heal(this.target);
 		} else {
-			this.move();
+			this.move(1);
 		}
-		return creep.rangedHeal(target); // you'll definitely be within range 3 because this.targetRange
+		return this.creep.rangedHeal(this.target);
 	}
 }

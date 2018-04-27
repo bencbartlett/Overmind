@@ -39,7 +39,7 @@ export class TaskDrop extends Task {
 			// Switch to parent task if there is one
 			let isValid = false;
 			if (this.parent) {
-				let isValid = this.parent.isValid();
+				isValid = this.parent.isValid();
 			}
 			this.finish();
 			return isValid;
@@ -47,10 +47,6 @@ export class TaskDrop extends Task {
 	}
 
 	work() {
-		// let res =
-		// if (!this.target) { // if the target is gone, we're done and clear the task
-		// 	this.finish();
-		// }
 		return this.creep.drop(RESOURCE_ENERGY);
 	}
 }

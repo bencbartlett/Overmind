@@ -38,7 +38,7 @@ export class HatcheryOverlord extends Overlord {
 			let targets = _.map(this.hatchery.transportRequests.supply[priority], request => request.target);
 			target = queen.pos.findClosestByRange(targets);
 			if (target) {
-				queen.task = Tasks.deposit(target);
+				queen.task = Tasks.transfer(target);
 				return;
 			}
 		}
@@ -80,7 +80,7 @@ export class HatcheryOverlord extends Overlord {
 				if (queen.carry.energy < queen.carryCapacity) {
 					queen.task = Tasks.withdraw(this.hatchery.link);
 				} else {
-					queen.task = Tasks.deposit(this.hatchery.battery);
+					queen.task = Tasks.transfer(this.hatchery.battery);
 				}
 			} else {
 				if (queen.carry.energy < queen.carryCapacity) { // make sure you're recharged

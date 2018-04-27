@@ -153,6 +153,20 @@ Object.defineProperty(StructureTerminal.prototype, 'isEmpty', { // if this conta
 	},
 });
 
+// StructureTerminal.prototype._send = StructureTerminal.prototype.send;
+// StructureTerminal.prototype.send = function(resourceType: ResourceConstant, amount: number, destination: string,
+// 											description?: string): ScreepsReturnCode {
+// 	// Log stats
+// 	let origin = this.room.name;
+// 	let response = this._send(resourceType, amount, destination, description);
+// 	if (response == OK) {
+// 		TerminalNetwork.logTransfer(resourceType,amount,origin, destination)
+// 	}
+// 	return response;
+// };
+
+// Tower prototypes
+
 Object.defineProperty(StructureTower.prototype, 'isFull', { // if this container-like object is full
 	get() {
 		return this.energy >= this.energyCapacity;

@@ -21,11 +21,14 @@ export class Zerg {
 	hitsMax: number;					// |
 	id: string;							// |
 	memory: CreepMemory;				// | See the ICreepMemory interface for structure
+	// my: boolean;						// |
 	name: string;						// |
+	// owner: Owner; 						// |
 	pos: RoomPosition;					// |
 	ref: string;						// |
 	roleName: string;					// |
 	room: Room;							// |
+	saying: string;						// |
 	spawning: boolean;					// |
 	ticksToLive: number | undefined;	// |
 	actionLog: { [actionName: string]: boolean }; // Tracks the actions that a creep has completed this tick
@@ -42,11 +45,14 @@ export class Zerg {
 		this.hitsMax = creep.hitsMax;
 		this.id = creep.id;
 		this.memory = creep.memory;
+		// this.my = creep.my;
 		this.name = creep.name;
+		// this.owner = creep.owner;
 		this.pos = creep.pos;
 		this.ref = creep.ref;
 		this.roleName = creep.memory.role;
 		this.room = creep.room;
+		this.saying = creep.saying;
 		this.spawning = creep.spawning;
 		this.ticksToLive = creep.ticksToLive;
 		this.actionLog = {};
@@ -73,6 +79,11 @@ export class Zerg {
 		return result;
 	}
 
+	cancelOrder(methodName: string): OK | ERR_NOT_FOUND {
+		console.log('NOT IMPLEMENTED');
+		return ERR_NOT_FOUND;
+	}
+
 	claimController(controller: StructureController) {
 		let result = this.creep.claimController(controller);
 		this.actionLog.claimController = (result == OK);
@@ -91,6 +102,10 @@ export class Zerg {
 		return result;
 	}
 
+	generateSafeMode(target: StructureController) {
+		return this.creep.generateSafeMode(target);
+	}
+
 	harvest(source: Source | Mineral) {
 		let result = this.creep.harvest(source);
 		this.actionLog.harvest = (result == OK);
@@ -101,6 +116,22 @@ export class Zerg {
 		let result = this.creep.move(direction);
 		this.actionLog.move = (result == OK);
 		return result;
+	}
+
+	moveByPath(path: PathStep[] | RoomPosition[] | string) {
+		let result = this.creep.moveByPath(path);
+		this.actionLog.move = (result == OK);
+		return result;
+	}
+
+	moveTo(target: RoomPosition | { pos: RoomPosition }, opts?: MoveToOpts) {
+		let result = this.creep.moveTo(target, opts);
+		this.actionLog.move = (result == OK);
+		return result;
+	}
+
+	notifyWhenAttacked(enabled: boolean) {
+		return this.creep.notifyWhenAttacked(enabled);
 	}
 
 	pickup(resource: Resource) {
@@ -150,6 +181,12 @@ export class Zerg {
 	upgradeController(controller: StructureController) {
 		let result = this.creep.upgradeController(controller);
 		this.actionLog.upgradeController = (result == OK);
+		// Determine amount of upgrade power
+		// let weightedUpgraderParts = _.map(this.boostCounts, )
+		// let upgradeAmount = this.getActiveBodyparts(WORK) * UPGRADE_CONTROLLER_POWER;
+		// let upgrade
+
+		// Stats.accumulate(`colonies.${this.colony.name}.rcl.progressTotal`, upgradeAmount);
 		return result;
 	}
 
@@ -179,7 +216,7 @@ export class Zerg {
 	}
 
 	transfer(target: Creep | Zerg | Structure, resourceType: ResourceConstant, amount?: number) {
-		let result;
+		let result: ScreepsReturnCode;
 		if (target instanceof Zerg) {
 			result = this.creep.transfer(target.creep, resourceType, amount);
 		} else {

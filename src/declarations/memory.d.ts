@@ -11,6 +11,7 @@ interface Memory {
 	log: LoggerMemory;
 	pathLengths: any;
 	// stats: StatsMemory;
+	// permastats: any;
 }
 
 interface StatsMemory {

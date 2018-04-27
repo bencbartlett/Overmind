@@ -41,6 +41,10 @@ export class TransportOverlord extends Overlord {
 				transportPower += site.energyPerTick * (scaling * Pathing.distance(site.pos, dropoffLocation));
 			}
 		}
+		if (this.colony.lowPowerMode) {
+			// Reduce needed transporters when colony is in low power mode
+			transportPower *= 0.5;
+		}
 		return transportPower / CARRY_CAPACITY;
 	}
 
@@ -67,7 +71,7 @@ export class TransportOverlord extends Overlord {
 				if (request.target instanceof DirectiveLogisticsRequest) {
 					task = Tasks.drop(request.target);
 				} else {
-					task = Tasks.deposit(request.target);
+					task = Tasks.transfer(request.target);
 				}
 				if (bestChoice.targetRef != request.target.ref) {
 					// If we need to go to a buffer first to get more stuff
@@ -86,7 +90,7 @@ export class TransportOverlord extends Overlord {
 				if (bestChoice.targetRef != request.target.ref) {
 					// If we need to go to a buffer first to deposit stuff
 					let buffer = deref(bestChoice.targetRef) as BufferTarget | StructureLink;
-					task = task.fork(Tasks.deposit(buffer));
+					task = task.fork(Tasks.transfer(buffer));
 				}
 			} else {
 				console.log(`${transporter.name} chooses a request with 0 amount!`);
@@ -109,7 +113,7 @@ export class TransportOverlord extends Overlord {
 				// 	}
 				// });
 				let bestDropoffPoint = transporter.pos.findClosestByMultiRoomRange(dropoffPoints);
-				if (bestDropoffPoint) transporter.task = Tasks.deposit(bestDropoffPoint);
+				if (bestDropoffPoint) transporter.task = Tasks.transfer(bestDropoffPoint);
 			} else {
 				let parkingSpot = this.colony.storage ? this.colony.storage.pos : transporter.pos;
 				transporter.park(parkingSpot);

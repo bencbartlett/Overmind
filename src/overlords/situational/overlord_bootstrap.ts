@@ -101,7 +101,7 @@ export class BootstrappingOverlord extends Overlord {
 	private supplyActions(filler: Zerg) {
 		let target = filler.pos.findClosestByRange(this.supplyStructures);
 		if (target) {
-			filler.task = Tasks.deposit(target);
+			filler.task = Tasks.transfer(target);
 		} else {
 			this.rechargeActions(filler);
 		}

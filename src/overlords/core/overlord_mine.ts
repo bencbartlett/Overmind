@@ -42,7 +42,7 @@ export class MiningOverlord extends Overlord {
 				if (this.miningSite.output.hits < this.miningSite.output.hitsMax) {
 					miner.task = Tasks.repair(this.miningSite.output);
 				} else {
-					miner.task = Tasks.deposit(this.miningSite.output);
+					miner.task = Tasks.transfer(this.miningSite.output);
 				}
 				// Move onto the output container if you're the only miner
 				if (!miner.pos.isEqualTo(this.miningSite.output.pos) && this.miners.length == 1 &&

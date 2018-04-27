@@ -38,7 +38,7 @@ export class TaskGoTo extends Task {
 			// Switch to parent task if there is one
 			let isValid = false;
 			if (this.parent) {
-				let isValid = this.parent.isValid();
+				isValid = this.parent.isValid();
 			}
 			this.finish();
 			return isValid;

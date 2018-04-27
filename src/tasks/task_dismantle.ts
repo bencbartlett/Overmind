@@ -18,8 +18,7 @@ export class TaskDismantle extends Task {
 	}
 
 	isValidTarget() {
-		let target = this.target;
-		return target && target.hits > 0;
+		return this.target && this.target.hits > 0;
 	}
 
 	work() {

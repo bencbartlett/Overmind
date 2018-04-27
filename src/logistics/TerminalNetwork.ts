@@ -2,6 +2,7 @@ import {log} from '../lib/logger/log';
 import minBy from 'lodash.minby';
 import {Mem} from '../memory';
 import {profile} from '../profiler/decorator';
+import {Energetics} from './Energetics';
 
 @profile
 export class TerminalNetwork implements ITerminalNetwork {
@@ -17,12 +18,6 @@ export class TerminalNetwork implements ITerminalNetwork {
 		sellPrice: { [resourceType: string]: number }
 	};
 	settings: {
-		energy: {
-			outThreshold: number,
-			inThreshold: number,
-			equilibrium: number,
-			sendSize: number,
-		}
 		market: {
 			reserveCredits: number,
 			requestResourceAmount: number,
@@ -38,12 +33,6 @@ export class TerminalNetwork implements ITerminalNetwork {
 		this.manifests = {};
 		this.alreadyReceived = [];
 		this.settings = {
-			energy: {
-				sendSize    : 25000,
-				inThreshold : 50000,
-				outThreshold: 150000,
-				equilibrium : 100000, // This needs to be energyInThreshold + 2 * energySendSize
-			},
 			market: {
 				reserveCredits       : 10000,
 				requestResourceAmount: 1000,
@@ -59,6 +48,10 @@ export class TerminalNetwork implements ITerminalNetwork {
 		return Mem.wrap(Memory.Overmind, 'terminalNetwork', {
 			cache: {}
 		});
+	}
+
+	static get stats() {
+		return Mem.wrap(Memory.stats.persistent, 'terminalNetwork');
 	}
 
 	/* Request resources to be transferred from another terminal or bought on the market */
@@ -133,16 +126,36 @@ export class TerminalNetwork implements ITerminalNetwork {
 
 	}
 
+	static logTransfer(resourceType: ResourceConstant, amount: number, origin: string, destination: string) {
+		if (!this.stats.transfers) this.stats.transfers = {};
+		if (!this.stats.transfers[resourceType]) this.stats.transfers[resourceType] = {};
+		if (!this.stats.transfers[resourceType][origin]) this.stats.transfers[resourceType][origin] = {};
+		if (!this.stats.transfers[resourceType][origin][destination]) {
+			this.stats.transfers[resourceType][origin][destination] = 0;
+		}
+		this.stats.transfers[resourceType][origin][destination] += amount;
+		this.logTransferCosts(amount, origin, destination);
+	}
+
+	private static logTransferCosts(amount: number, origin: string, destination: string) {
+		if (!this.stats.transfers.costs) this.stats.transfers.costs = {};
+		if (!this.stats.transfers.costs[origin]) this.stats.transfers.costs[origin] = {};
+		if (!this.stats.transfers.costs[origin][destination]) this.stats.transfers.costs[origin][destination] = 0;
+		let transactionCost = Game.market.calcTransactionCost(amount, origin, destination);
+		this.stats.transfers.costs[origin][destination] += transactionCost;
+	}
+
 	/* Whether the terminal has very little total energy in the room including storage */
 	private terminalNeedsEnergy(terminal: StructureTerminal): boolean {
 		let energy = terminal.store.energy;
 		if (terminal.room.storage) {
 			energy += terminal.room.storage.energy;
 		}
-		return energy < this.settings.energy.inThreshold;
+		return energy < Energetics.settings.terminal.energy.outThreshold;
 	}
 
 	private sendExcessEnergy(terminal: StructureTerminal): void {
+		let {sendSize, inThreshold, outThreshold, equilibrium} = Energetics.settings.terminal.energy;
 		// See if there are any rooms actively needing energy first
 		let needyTerminals = _.filter(this.terminals, t => t != terminal &&
 														   this.terminalNeedsEnergy(t) &&
@@ -150,25 +163,28 @@ export class TerminalNetwork implements ITerminalNetwork {
 		if (needyTerminals.length > 0) {
 			// Send to the most cost-efficient needy terminal
 			let bestTerminal = minBy(needyTerminals, (receiver: StructureTerminal) =>
-				Game.market.calcTransactionCost(this.settings.energy.sendSize, terminal.room.name, receiver.room.name));
-			let cost = Game.market.calcTransactionCost(this.settings.energy.sendSize,
-													   terminal.room.name, bestTerminal.room.name);
-			terminal.send(RESOURCE_ENERGY, this.settings.energy.sendSize, bestTerminal.room.name);
-			log.info(`Sent ${this.settings.energy.sendSize} energy from ${terminal.room.name} to ` +
-					 `${bestTerminal.room.name}. Fee: ${cost - this.settings.energy.sendSize}`);
+				Game.market.calcTransactionCost(sendSize, terminal.room.name, receiver.room.name));
+			let cost = Game.market.calcTransactionCost(sendSize, terminal.room.name, bestTerminal.room.name);
+			let response = terminal.send(RESOURCE_ENERGY, sendSize, bestTerminal.room.name);
+			log.info(`Sent ${sendSize} energy from ${terminal.room.name} to ` +
+					 `${bestTerminal.room.name}. Fee: ${cost}`);
+			if (response == OK) {
+				TerminalNetwork.logTransfer(RESOURCE_ENERGY, sendSize, terminal.room.name, bestTerminal.room.name);
+				this.alreadyReceived.push(bestTerminal);
+			}
 		} else {
 			// Send to the most cost-efficient terminal not already trying to get rid of stuff
 			let okTerminals = _.filter(this.terminals, t =>
-				t != terminal && t.store.energy < this.settings.energy.outThreshold - this.settings.energy.sendSize);
+				t != terminal && t.store.energy < outThreshold - sendSize && !this.alreadyReceived.includes(t));
 			let bestTerminal = minBy(okTerminals, (receiver: StructureTerminal) =>
-				Game.market.calcTransactionCost(this.settings.energy.sendSize, terminal.room.name, receiver.room.name));
+				Game.market.calcTransactionCost(sendSize, terminal.room.name, receiver.room.name));
 			if (bestTerminal) {
-				let cost = Game.market.calcTransactionCost(this.settings.energy.sendSize,
-														   terminal.room.name, bestTerminal.room.name);
-				let resp = terminal.send(RESOURCE_ENERGY, this.settings.energy.sendSize, bestTerminal.room.name);
-				log.info(`Sent ${this.settings.energy.sendSize} energy from ${terminal.room.name} to ` +
-						 `${bestTerminal.room.name}. Fee: ${cost - this.settings.energy.sendSize}. Response: ${resp}`);
-				if (resp == OK) {
+				let cost = Game.market.calcTransactionCost(sendSize, terminal.room.name, bestTerminal.room.name);
+				let response = terminal.send(RESOURCE_ENERGY, sendSize, bestTerminal.room.name);
+				log.info(`Sent ${sendSize} energy from ${terminal.room.name} to ` +
+						 `${bestTerminal.room.name}. Fee: ${cost}. Response: ${response}`);
+				if (response == OK) {
+					TerminalNetwork.logTransfer(RESOURCE_ENERGY, sendSize, terminal.room.name, bestTerminal.room.name);
 					this.alreadyReceived.push(bestTerminal);
 				}
 			}
@@ -183,7 +199,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 
 	run(): void {
 		for (let terminal of this.terminals) {
-			if (terminal.energy > this.settings.energy.outThreshold) {
+			if (terminal.energy > Energetics.settings.terminal.energy.outThreshold) {
 				this.sendExcessEnergy(terminal);
 			}
 			if (Game.time % 10 == 4) {

@@ -99,7 +99,8 @@ export abstract class Task implements ITask {
 
 	// Getter/setter for task.creep
 	get creep(): Creep { // Get task's own creep by its name
-		return Game.creeps[this._creep.name];
+		// Returns zerg wrapper instead of creep to use monkey-patched functions
+		return Game.zerg[this._creep.name] as Creep;
 	}
 
 	set creep(creep: Creep) {
@@ -206,9 +207,9 @@ export abstract class Task implements ITask {
 		}
 	}
 
-	move(): number {
+	move(range = this.settings.targetRange): number {
 		if (this.options.travelToOptions && !this.options.travelToOptions.range) {
-			this.options.travelToOptions.range = this.settings.targetRange;
+			this.options.travelToOptions.range = range;
 		}
 		return this.creep.travelTo(this.targetPos, this.options.travelToOptions);
 	}

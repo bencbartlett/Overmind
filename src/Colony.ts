@@ -17,6 +17,7 @@ import {SporeCrawler} from './hiveClusters/hiveCluster_sporeCrawler';
 import {RoadLogistics} from './logistics/RoadLogistics';
 import {LogisticsGroup} from './logistics/LogisticsGroup';
 import {TransportOverlord} from './overlords/core/overlord_transport';
+import {Energetics} from './logistics/Energetics';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -63,12 +64,13 @@ export class Colony {
 	upgradeSite: UpgradeSite;							// Component to provide upgraders with uninterrupted energy
 	sporeCrawlers: SporeCrawler[];
 	miningSites: { [sourceID: string]: MiningSite };	// Component with logic for mining and hauling
-	// Incubation status
+	// Operational mode
 	incubator: Colony | undefined; 						// The colony responsible for incubating this one, if any
 	isIncubating: boolean;								// If the colony is incubating
 	incubatingColonies: Colony[];						// List of colonies that this colony is incubating
 	level: number; 										// Level of the colony's main room
 	stage: number;										// The stage of the colony "lifecycle"
+	lowPowerMode: boolean; 								// Activate if RCL8 and full energy
 	// Creeps and subsets
 	creeps: Zerg[];										// Creeps bound to the colony
 	creepsByRole: { [roleName: string]: Zerg[] };		// Creeps hashed by their role name
@@ -120,7 +122,7 @@ export class Colony {
 		this.powerSpawn = this.room.getStructures(STRUCTURE_POWER_SPAWN)[0] as StructurePowerSpawn;
 		this.nuker = this.room.getStructures(STRUCTURE_NUKER)[0] as StructureNuker;
 		this.observer = this.room.getStructures(STRUCTURE_OBSERVER)[0] as StructureObserver;
-		// Set the colony stage
+		// Set the colony operational state
 		this.level = this.controller.level;
 		this.isIncubating = false;
 		if (this.storage && this.storage.isActive() &&
@@ -134,6 +136,7 @@ export class Colony {
 		} else {
 			this.stage = ColonyStage.Larva;
 		}
+		this.lowPowerMode = Energetics.lowPowerMode(this);
 		// Register physical objects across all rooms in the colony
 		this.sources = _.flatten(_.map(this.rooms, room => room.sources));
 		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites));

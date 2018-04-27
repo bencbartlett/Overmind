@@ -8,6 +8,7 @@ import {Contract} from '../contract';
 import {Colony} from '../../Colony';
 import minBy from 'lodash.minby';
 import {log} from '../../lib/logger/log';
+import {TerminalNetwork} from '../../logistics/TerminalNetwork';
 
 export class Contract_TiggaTerritoryAgreement extends Contract {
 
@@ -47,10 +48,11 @@ export class Contract_TiggaTerritoryAgreement extends Contract {
 			if (sender) {
 				let cost = Game.market.calcTransactionCost(this.payment, sender.room.name, destination);
 				sender.send(RESOURCE_ENERGY, this.payment, destination, this.description);
+				TerminalNetwork.logTransfer(RESOURCE_ENERGY, this.payment, sender.room.name, destination);
 				log.info(`Sent ${this.payment} energy from ${sender.room.name} to ` +
-						 `${sender.room.name}. Fee: ${cost}`);
+						 `${destination}. Fee: ${cost}`);
 				Game.notify(`Sent ${this.payment} energy from ${sender.room.name} to ` +
-							`${sender.room.name}. Fee: ${cost}`);
+							`${destination}. Fee: ${cost}`);
 			} else {
 				log.warning('No terminal to send payment for Contract_TiggaTerritoryAgreement!');
 				Game.notify('No terminal to send payment for Contract_TiggaTerritoryAgreement!');

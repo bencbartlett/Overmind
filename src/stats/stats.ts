@@ -5,18 +5,30 @@ export var COLLECT_STATS_FREQUENCY = 10; // Gather stats every N ticks
 @profile
 export class Stats {
 
-	// static format() {
-	// 	Memory.stats = {
-	// 		cpu: {
-	// 			getUsed: undefined,
-	// 			limit: undefined,
-	// 			bucket: undefined,
-	// 			usage: {},
-	// 		},
-	// 		gcl: {},
-	// 		colonies: {},
-	// 	}
-	// }
+	static clean() {
+		let protectedKeys = [
+			'persistent',
+		];
+		for (let key in Memory.stats) {
+			if (!protectedKeys.includes(key)) {
+				delete Memory.stats[key];
+			}
+		}
+	}
+
+	static format() {
+		// Memory.stats = {
+		// 	cpu: {
+		// 		getUsed: undefined,
+		// 		limit: undefined,
+		// 		bucket: undefined,
+		// 		usage: {},
+		// 	},
+		// 	gcl: {},
+		// 	colonies: {},
+		// }
+
+	}
 
 	static cpu() {
 		Memory.stats['cpu.getUsed'] = Game.cpu.getUsed();
@@ -35,10 +47,22 @@ export class Stats {
     }
 
 	static log(key: string, value: number | undefined): void {
-		// if (Game.time % COLLECT_STATS_FREQUENCY == 1) {
 		Memory.stats[key] = value;
-		// }
 	}
+
+	static accumulate(key: string, value: number): void {
+		if (!Memory.stats[key]) {
+			Memory.stats[key] = 0;
+		}
+		Memory.stats[key] += value;
+	}
+
+	// static accumulate(key: string, value: number): void {
+	// 	if (!Memory.permastats[key]) {
+	// 		Memory.permastats[key] = 0;
+	// 	}
+	// 	Memory.permastats[key] += value;
+	// }
 
 	static run() {
 		// Create a stats object if needed

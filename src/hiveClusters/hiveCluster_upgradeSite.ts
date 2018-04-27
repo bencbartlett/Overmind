@@ -82,12 +82,14 @@ export class UpgradeSite extends HiveCluster {
 	}
 
 	visuals() {
-		let progress = `${Math.floor(this.controller.progress / 1000)}K`;
-		let progressTotal = `${Math.floor(this.controller.progressTotal / 1000)}K`;
-		let percent = `${Math.floor(100 * this.controller.progress / this.controller.progressTotal)}`;
-		let info = [
-			`Progress: ${progress}/${progressTotal} (${percent}%)`,
-		];
-		Visualizer.showInfo(info, this);
+		if (this.controller.level != 8) {
+			let progress = `${Math.floor(this.controller.progress / 1000)}K`;
+			let progressTotal = `${Math.floor(this.controller.progressTotal / 1000)}K`;
+			let percent = `${Math.floor(100 * this.controller.progress / this.controller.progressTotal)}`;
+			let info = [
+				`Progress: ${progress}/${progressTotal} (${percent}%)`,
+			];
+			Visualizer.showInfo(info, this);
+		}
 	}
 }

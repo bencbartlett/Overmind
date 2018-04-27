@@ -1,3 +1,5 @@
+import {Stats} from './stats/stats';
+
 export class Mem {
 
 	static formatOvermindMemory() {
@@ -38,6 +40,12 @@ export class Mem {
 		_.defaults(Memory.settings, {
 			enableVisuals: true,
 		});
+		if (!Memory.stats) {
+			Memory.stats = {};
+		}
+		if (!Memory.stats.persistent) {
+			Memory.stats.persistent = {};
+		}
 		// Changes to ensure backwards compatibility
 		this.backwardsCompatibility();
 	}
@@ -96,34 +104,34 @@ export class Mem {
 		this.cleanCreeps();
 		this.cleanFlags();
 		this.cleanPathingMemory();
-		Memory.stats = {};
+		Stats.clean();
 	}
 
 	static backwardsCompatibility() {
-		// Delete old profiler memory to migrate to new one
-		if (Memory.profiler && Memory.profiler.data) {
-			delete Memory.profiler;
-		}
-		// Convert all haulers to transporters
-		for (let name in Game.creeps) {
-			let creep = Game.creeps[name];
-			if (creep.memory.role == 'hauler') {
-				creep.memory.role = 'transport';
-				creep.memory.overlord = creep.memory.colony + ':logistics';
-				creep.memory.task = null;
-			}
-		}
-		// // Convert all transporters back to haulers in case I need to revert this
+		// // Delete old profiler memory to migrate to new one
+		// if (Memory.profiler && Memory.profiler.data) {
+		// 	delete Memory.profiler;
+		// }
+		// // Convert all haulers to transporters
 		// for (let name in Game.creeps) {
 		// 	let creep = Game.creeps[name];
-		// 	if (creep.memory.role == 'transport') {
-		// 		let creepRoom = Game.rooms[creep.memory.colony];
-		// 		if (creepRoom && creepRoom.storage) {
-		// 			creep.memory.role = 'hauler';
-		// 			creep.memory.overlord = 'miningGroup:' + creepRoom.storage.id + ':haul';
-		// 			creep.memory.task = null;
-		// 		}
+		// 	if (creep.memory.role == 'hauler') {
+		// 		creep.memory.role = 'transport';
+		// 		creep.memory.overlord = creep.memory.colony + ':logistics';
+		// 		creep.memory.task = null;
 		// 	}
 		// }
+		// // // Convert all transporters back to haulers in case I need to revert this
+		// // for (let name in Game.creeps) {
+		// // 	let creep = Game.creeps[name];
+		// // 	if (creep.memory.role == 'transport') {
+		// // 		let creepRoom = Game.rooms[creep.memory.colony];
+		// // 		if (creepRoom && creepRoom.storage) {
+		// // 			creep.memory.role = 'hauler';
+		// // 			creep.memory.overlord = 'miningGroup:' + creepRoom.storage.id + ':haul';
+		// // 			creep.memory.task = null;
+		// // 		}
+		// // 	}
+		// // }
 	}
 }
