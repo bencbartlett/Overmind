@@ -47,6 +47,13 @@ Object.defineProperty(StructureController.prototype, 'signedByMe', {
 	},
 });
 
+Object.defineProperty(StructureController.prototype, 'signedByScreeps', {
+	get: function () {
+		return this.sign && this.sign.username == 'Screeps';
+	},
+});
+
+
 StructureController.prototype.needsReserving = function (reserveBuffer: number): boolean {
 	return !this.reservation || (this.reservedByMe && this.reservation.ticksToEnd < reserveBuffer);
 };

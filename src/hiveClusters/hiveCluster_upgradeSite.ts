@@ -54,6 +54,9 @@ export class UpgradeSite extends HiveCluster {
 		if (this.room.storage) { // Workers perform upgrading until storage is set up
 			let amountOver = Math.max(this.room.storage.energy - this.settings.storageBuffer, 0);
 			let upgradePower = 1 + Math.floor(amountOver / this.settings.energyPerBodyUnit);
+			if (amountOver > 500000) {
+				upgradePower *= 2; // double upgrade power if we have lots of surplus energy
+			}
 			if (this.controller.level == 8) {
 				upgradePower = Math.min(upgradePower, 15); // don't go above 15 work parts at RCL 8
 			}

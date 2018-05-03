@@ -45,6 +45,7 @@ export class DestroyerOverlord extends CombatOverlord {
 		super(directive, 'siege', priority);
 		this.attackers = this.creeps('attacker');
 		this.healers = this.creeps('healer');
+		// Comment out boost lines if you don't want to spawn boosted attackers/healers
 		this.boosts.attacker = [
 			boostResources.attack[3],
 			boostResources.tough[3],

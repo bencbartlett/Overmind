@@ -3,7 +3,6 @@
 import {attackTargetType, attackTaskName, TaskAttack} from './task_attack';
 import {buildTargetType, buildTaskName, TaskBuild} from './task_build';
 import {claimTargetType, claimTaskName, TaskClaim} from './task_claim';
-// import {depositTargetType, depositTaskName, TaskDeposit} from './task_deposit';
 import {dismantleTargetType, dismantleTaskName, TaskDismantle} from './task_dismantle';
 import {fortifyTargetType, fortifyTaskName, TaskFortify} from './task_fortify';
 import {getBoostedTargetType, getBoostedTaskName, TaskGetBoosted} from './task_getBoosted';
@@ -21,7 +20,6 @@ import {reserveTargetType, reserveTaskName, TaskReserve} from './task_reserve';
 import {signControllerTargetType, signControllerTaskName, TaskSignController} from './task_signController';
 import {TaskTransfer, transferTargetType, transferTaskName} from './task_transfer';
 import {TaskUpgrade, upgradeTargetType, upgradeTaskName} from './task_upgrade';
-// import {TaskWithdrawResource, withdrawResourceTargetType, withdrawResourceTaskName} from './task_withdrawResource';
 import {dropTargetType, dropTaskName, TaskDrop} from './task_drop';
 import {TaskInvalid} from './task_invalid';
 
@@ -41,9 +39,6 @@ export function initializeTask(protoTask: protoTask): any {
 		case claimTaskName:
 			task = new TaskClaim(target as claimTargetType);
 			break;
-		// case depositTaskName:
-		// 	task = new TaskDeposit(target as depositTargetType);
-		// 	break;
 		case dismantleTaskName:
 			task = new TaskDismantle(target as dismantleTargetType);
 			break;
@@ -98,9 +93,6 @@ export function initializeTask(protoTask: protoTask): any {
 		case upgradeTaskName:
 			task = new TaskUpgrade(target as upgradeTargetType);
 			break;
-		// case withdrawResourceTaskName:
-		// 	task = new TaskWithdrawResource(target as withdrawResourceTargetType);
-		// 	break;
 		default:
 			console.log(`Invalid task name: ${taskName}! task.creep: ${protoTask._creep.name}. Deleting from memory!`);
 			task = new TaskInvalid(target as any);

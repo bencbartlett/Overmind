@@ -27,7 +27,6 @@ export class SiegeOverlord extends CombatOverlord {
 		};
 	}
 
-
 	private findSiegeTarget(sieger: Zerg): Structure | void {
 		if (this.room) {
 			let targetingDirectives = DirectiveTargetSiege.find(this.room.flags) as DirectiveTargetSiege[];

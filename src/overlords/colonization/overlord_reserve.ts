@@ -30,8 +30,14 @@ export class ReservingOverlord extends Overlord {
 
 	private handleReserver(reserver: Zerg): void {
 		if (reserver.room == this.room && !reserver.pos.isEdge) {
+			// If reserver is in the room and not on exit tile
 			if (!this.room.controller!.signedByMe) {
-				reserver.task = Tasks.signController(this.room.controller!);
+				// Takes care of an edge case where planned newbie zone signs prevents signing until room is reserved
+				if (!this.room.my && this.room.controller!.signedByScreeps) {
+					reserver.task = Tasks.reserve(this.room.controller!);
+				} else {
+					reserver.task = Tasks.signController(this.room.controller!);
+				}
 			} else {
 				reserver.task = Tasks.reserve(this.room.controller!);
 			}

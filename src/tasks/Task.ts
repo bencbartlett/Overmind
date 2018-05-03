@@ -216,7 +216,7 @@ export abstract class Task implements ITask {
 
 	// Return expected number of ticks until creep arrives at its first destination
 	get eta(): number | undefined {
-		if (this.creep && this.creep.memory._trav) {
+		if (this.creep && this.creep.memory._trav && this.creep.memory._trav.path) {
 			return this.creep.memory._trav.path.length;
 		}
 	}

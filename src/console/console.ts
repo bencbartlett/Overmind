@@ -12,6 +12,8 @@ export class Console {
 		global.closeRoomPlanner = this.closeRoomPlanner;
 		global.cancelRoomPlanner = this.cancelRoomPlanner;
 		global.listActiveRoomPlanners = this.listActiveRoomPlanners;
+		global.destroyAllHostileStructures = this.destroyAllHostlileStructures;
+		global.destroyAllBarriers = this.destroyAllBarriers;
 	}
 
 	static help() {
@@ -28,6 +30,8 @@ export class Console {
 		descr['closeRoomPalnner(roomName)'] = 'close the room planner and save changes';
 		descr['cancelRoomPlanner(roomName)'] = 'close the room planner and discard changes';
 		descr['listActiveRoomPlanners()'] = 'display a list of colonies with open room planners';
+		descr['destroyAllHostileStructures()'] = 'destroys all hostile structures in an owned room';
+		descr['destroyAllBarriers()'] = 'destroys all ramparts and barriers in a room';
 		// Console list
 		let descrMsg = toColumns(descr, {justify: true, padChar: '.'});
 		let maxLineLength = _.max(_.map(descrMsg, line => line.length));
@@ -88,5 +92,26 @@ export class Console {
 		} else {
 			return `No colonies with active room planners`;
 		}
+	}
+
+	static destroyAllHostlileStructures(roomName: string): string {
+		let room = Game.rooms[roomName];
+		if (!room) return `${roomName} is undefined! (No vision?)`;
+		if (!room.my) return `${roomName} is not owned by you!`;
+		let hostileStructures = room.find(FIND_HOSTILE_STRUCTURES);
+		for (let structure of hostileStructures) {
+			structure.destroy();
+		}
+		return `Destroyed ${hostileStructures.length} hostile structures.`;
+	}
+
+	static destroyAllBarriers(roomName: string): string {
+		let room = Game.rooms[roomName];
+		if (!room) return `${roomName} is undefined! (No vision?)`;
+		if (!room.my) return `${roomName} is not owned by you!`;
+		for (let barrier of room.barriers) {
+			barrier.destroy();
+		}
+		return `Destroyed ${room.barriers.length} barriers.`;
 	}
 }

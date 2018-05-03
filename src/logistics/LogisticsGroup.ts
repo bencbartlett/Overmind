@@ -366,8 +366,8 @@ export class LogisticsGroup {
 	/* Compute the best possible value of |dResource / dt| */
 	private resourceChangeRate(transporter: Zerg, request: Request): number {
 		let choices = this.bufferChoices(transporter, request);
-		let resourceChangeRate = _.map(choices, choice => choice.deltaResource / choice.deltaTicks);
-		return _.max(resourceChangeRate);
+		let dResource_dt = _.map(choices, choice => request.multiplier * choice.deltaResource / choice.deltaTicks);
+		return _.max(dResource_dt);
 		// TODO: handle case where lots of small requests next to each other
 	}
 

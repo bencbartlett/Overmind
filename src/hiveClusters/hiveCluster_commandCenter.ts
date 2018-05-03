@@ -1,4 +1,4 @@
-// Mining site class for grouping relevant components
+// Command center: groups many RCL8 components, storge, lab, terminal, and some towers
 
 import {HiveCluster} from './HiveCluster';
 import {profile} from '../profiler/decorator';

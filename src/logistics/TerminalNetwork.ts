@@ -37,7 +37,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 				reserveCredits       : 10000,
 				requestResourceAmount: 1000,
 				maxPrice             : {
-					default: 4.0,
+					default: 5.0,
 				}
 			},
 		};
