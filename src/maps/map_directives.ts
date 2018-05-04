@@ -17,6 +17,8 @@ import {DirectiveGuardSwarm} from '../directives/combat/directive_guard_swarm';
 import {DirectiveLabMineral} from '../directives/logistics/directive_labMineralType';
 import {DirectiveDestroy} from '../directives/combat/directive_destroy';
 import {DirectiveInvasionDefense} from '../directives/combat/directive_invasion';
+import {DirectiveLogisticsRequest} from '../directives/logistics/directive_logisticsRequest';
+import {DirectiveHaul} from '../directives/logistics/directive_haul';
 
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 	switch (flag.color) {
@@ -63,7 +65,9 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 		case COLOR_YELLOW:
 			switch (flag.secondaryColor) {
 				case COLOR_YELLOW:
-				// return new DirectiveLogisticsRequest(flag);
+					return new DirectiveLogisticsRequest(flag);
+				case COLOR_BLUE:
+					return new DirectiveHaul(flag);
 			}
 			break;
 

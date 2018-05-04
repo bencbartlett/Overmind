@@ -11,6 +11,7 @@ import {Visualizer} from './visuals/Visualizer';
 import {Pathing} from './pathing/pathing';
 import {DirectiveGuardSwarm} from './directives/combat/directive_guard_swarm';
 import {DirectiveInvasionDefense} from './directives/combat/directive_invasion';
+import {DirectiveLogisticsRequest} from './directives/logistics/directive_logisticsRequest';
 
 @profile
 export class Overseer {
@@ -37,16 +38,22 @@ export class Overseer {
 
 	/* Place new event-driven flags where needed to be instantiated on the next tick */
 	private placeDirectives(): void {
-		// // Register drop pickup requests // TODO: make this cleaner, refactor for tombstones
-		// for (let room of this.colony.rooms) {
-		// 	for (let drop of room.droppedEnergy) {
-		// 		if (drop.amount > 100) {
-		// 			let requesterFlags = _.filter(drop.pos.lookFor(LOOK_FLAGS) || [],
-		// 				flag => DirectiveLogisticsRequest.filter(flag!));
-		// 			if (requesterFlags.length == 0) DirectiveLogisticsRequest.create(drop.pos);
-		// 		}
-		// 	}
-		// }
+		// Register logistics requests for all dropped resources and tombstones
+		for (let room of this.colony.rooms) {
+			// Pick up all nontrivial dropped resources
+			for (let resourceType in room.drops) {
+				for (let drop of room.drops[resourceType]) {
+					if (drop.amount > 100 || drop.resourceType != RESOURCE_ENERGY) {
+						DirectiveLogisticsRequest.createIfNotPresent(drop.pos, 'pos');
+					}
+				}
+			}
+		}
+		for (let tombstone of this.colony.tombstones) {
+			if (_.sum(tombstone.store) > 0) {
+				DirectiveLogisticsRequest.createIfNotPresent(tombstone.pos, 'pos');
+			}
+		}
 
 		// Guard directive: defend your outposts and all rooms of colonies that you are incubating
 		let roomsToCheck = _.flattenDeep([this.colony.outposts,
@@ -74,8 +81,7 @@ export class Overseer {
 			}
 		}
 
-
-		// Emergency directive: in the event of catastrophic room crash, enter emergency spawn mode.
+		// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
 		// Doesn't apply to incubating colonies.
 		if (!this.colony.isIncubating) {
 			let hasEnergy = this.colony.room.energyAvailable >= EMERGENCY_ENERGY_THRESHOLD; // Enough spawn energy?

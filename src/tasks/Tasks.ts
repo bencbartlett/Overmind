@@ -113,10 +113,6 @@ export class Tasks { // TODO: update arguments for transfer and similar
 		return new TaskUpgrade(target);
 	}
 
-	// static withdraw(target: withdrawTargetType): TaskWithdraw {
-	// 	return new TaskWithdraw(target);
-	// }
-
 	static withdraw(target: withdrawTargetType,
 					resourceType: ResourceConstant = RESOURCE_ENERGY,
 					amount: number | undefined     = undefined,

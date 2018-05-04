@@ -145,49 +145,64 @@ export class TerminalNetwork implements ITerminalNetwork {
 		this.stats.transfers.costs[origin][destination] += transactionCost;
 	}
 
-	/* Whether the terminal has very little total energy in the room including storage */
+	/* Whether the terminal is actively requesting energy */
 	private terminalNeedsEnergy(terminal: StructureTerminal): boolean {
-		let energy = terminal.store.energy;
-		if (terminal.room.storage) {
-			energy += terminal.room.storage.energy;
+		return terminal.energy < Energetics.settings.terminal.energy.inThreshold;
+	}
+
+	/* Amount of space available in storage and terminal */
+	private remainingRoomCapacity(room: Room): number {
+		let remainingCapacity = 0;
+		if (room.storage) {
+			remainingCapacity += room.storage.storeCapacity - _.sum(room.storage.store);
 		}
-		return energy < Energetics.settings.terminal.energy.outThreshold;
+		if (room.terminal) {
+			remainingCapacity += room.terminal.storeCapacity - _.sum(room.terminal.store);
+		}
+		return remainingCapacity;
+	}
+
+	/* Amount of energy in storage and terminal */
+	private energyInRoom(room: Room): number {
+		let energyInRoom = 0;
+		if (room.storage) {
+			energyInRoom += room.storage.energy;
+		}
+		if (room.terminal) {
+			energyInRoom += room.terminal.energy;
+		}
+		return energyInRoom;
+	}
+
+	private transferEnergy(sender: StructureTerminal, receiver: StructureTerminal,
+						   amount = Energetics.settings.terminal.energy.sendSize): number {
+		let cost = Game.market.calcTransactionCost(amount, sender.room.name, receiver.room.name);
+		let response = sender.send(RESOURCE_ENERGY, amount, receiver.room.name);
+		log.info(`Sent ${amount} energy from ${sender.room.name} to ` +
+				 `${receiver.room.name}. Fee: ${cost}. Response: ${response}`);
+		if (response == OK) {
+			TerminalNetwork.logTransfer(RESOURCE_ENERGY, amount, sender.room.name, receiver.room.name);
+			this.alreadyReceived.push(receiver);
+		}
+		return response;
 	}
 
 	private sendExcessEnergy(terminal: StructureTerminal): void {
 		let {sendSize, inThreshold, outThreshold, equilibrium} = Energetics.settings.terminal.energy;
 		// See if there are any rooms actively needing energy first
-		let needyTerminals = _.filter(this.terminals, t => t != terminal &&
-														   this.terminalNeedsEnergy(t) &&
-														   !this.alreadyReceived.includes(t));
+		let needyTerminals = _.filter(this.terminals, t =>
+			t != terminal && this.terminalNeedsEnergy(t) && !this.alreadyReceived.includes(t));
 		if (needyTerminals.length > 0) {
 			// Send to the most cost-efficient needy terminal
 			let bestTerminal = minBy(needyTerminals, (receiver: StructureTerminal) =>
 				Game.market.calcTransactionCost(sendSize, terminal.room.name, receiver.room.name));
-			let cost = Game.market.calcTransactionCost(sendSize, terminal.room.name, bestTerminal.room.name);
-			let response = terminal.send(RESOURCE_ENERGY, sendSize, bestTerminal.room.name);
-			log.info(`Sent ${sendSize} energy from ${terminal.room.name} to ` +
-					 `${bestTerminal.room.name}. Fee: ${cost}`);
-			if (response == OK) {
-				TerminalNetwork.logTransfer(RESOURCE_ENERGY, sendSize, terminal.room.name, bestTerminal.room.name);
-				this.alreadyReceived.push(bestTerminal);
-			}
+			if (bestTerminal) this.transferEnergy(terminal, bestTerminal);
 		} else {
-			// Send to the most cost-efficient terminal not already trying to get rid of stuff
+			// Send to the terminal with least energy that is not already trying to get rid of stuff
 			let okTerminals = _.filter(this.terminals, t =>
 				t != terminal && t.store.energy < outThreshold - sendSize && !this.alreadyReceived.includes(t));
-			let bestTerminal = minBy(okTerminals, (receiver: StructureTerminal) =>
-				Game.market.calcTransactionCost(sendSize, terminal.room.name, receiver.room.name));
-			if (bestTerminal) {
-				let cost = Game.market.calcTransactionCost(sendSize, terminal.room.name, bestTerminal.room.name);
-				let response = terminal.send(RESOURCE_ENERGY, sendSize, bestTerminal.room.name);
-				log.info(`Sent ${sendSize} energy from ${terminal.room.name} to ` +
-						 `${bestTerminal.room.name}. Fee: ${cost}. Response: ${response}`);
-				if (response == OK) {
-					TerminalNetwork.logTransfer(RESOURCE_ENERGY, sendSize, terminal.room.name, bestTerminal.room.name);
-					this.alreadyReceived.push(bestTerminal);
-				}
-			}
+			let bestTerminal = minBy(okTerminals, (receiver: StructureTerminal) => this.energyInRoom(receiver.room));
+			if (bestTerminal) this.transferEnergy(terminal, bestTerminal);
 		}
 	}
 

@@ -35,7 +35,7 @@
 // 	private supplyActions(supplier: Zerg) {
 // 		// Select the closest supply target out of the highest priority and refill it
 // 		for (let priority in this.colony.transportRequests.supply) {
-// 			let targets = _.map(this.colony.transportRequests.supply[priority], request => request.target);
+// 			let targets = _.map(this.colony.transportRequests.supply[priority], store => store.target);
 // 			let target = supplier.pos.findClosestByRange(targets);
 // 			if (target) {
 // 				supplier.task = Tasks.deposit(target);
@@ -49,7 +49,7 @@
 // 	private rechargeActions(supplier: Zerg) {
 // 		// Select the closest target of highest priority requesting a withdrawal
 // 		for (let priority in this.colony.transportRequests.withdraw) {
-// 			let targets = _.map(this.colony.transportRequests.withdraw[priority], request => request.target);
+// 			let targets = _.map(this.colony.transportRequests.withdraw[priority], store => store.target);
 // 			let target = supplier.pos.findClosestByRange(targets);
 // 			if (target) {
 // 				if (target instanceof Resource) {

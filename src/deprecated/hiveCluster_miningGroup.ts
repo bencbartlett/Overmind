@@ -81,7 +81,7 @@ export class MiningGroup extends HiveCluster {
 		};
 	}
 
-	/* Register a link transfer request if the link is sufficiently full */
+	/* Register a link transfer store if the link is sufficiently full */
 	private registerLinkTransferRequests(): void {
 		if (this.links) {
 			for (let link of this.links) {

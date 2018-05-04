@@ -53,6 +53,7 @@ export class Colony {
 	powerSpawn: StructurePowerSpawn | undefined;		// |
 	nuker: StructureNuker | undefined;					// |
 	observer: StructureObserver | undefined;			// |
+	tombstones: Tombstone[]; 							// | Tombstones in all colony rooms
 	sources: Source[];									// | Sources in all colony rooms
 	flags: Flag[];										// | Flags across the colony
 	constructionSites: ConstructionSite[];				// | Construction sites in all colony rooms
@@ -140,6 +141,7 @@ export class Colony {
 		// Register physical objects across all rooms in the colony
 		this.sources = _.flatten(_.map(this.rooms, room => room.sources));
 		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites));
+		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
 		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
 		// Register enemies across colony rooms
 		this.hostiles = _.flatten(_.map(this.rooms, room => room.hostiles));

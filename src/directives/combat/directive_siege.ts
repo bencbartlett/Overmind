@@ -56,7 +56,7 @@ export class DirectiveSiege extends Directive {
 
 	placeRecoveryFlag(waypoint: RoomPosition): void {
 		if (waypoint.isVisible) {
-			DirectiveHealPoint.create(waypoint, this.name + ':healPoint');
+			DirectiveHealPoint.create(waypoint, {name: this.name + ':healPoint'});
 			log.info(`Placed recovery flag for ${this.pos.print} at ${waypoint.print}`);
 		}
 	}

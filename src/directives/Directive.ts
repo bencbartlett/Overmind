@@ -4,6 +4,11 @@ import {Colony} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
 import {Pathing} from '../pathing/pathing';
 
+interface DirectiveCreateOptions {
+	name?: string;
+	quiet?: boolean;
+}
+
 @profile
 export abstract class Directive {
 
@@ -120,7 +125,8 @@ export abstract class Directive {
 	// Custom directive methods ========================================================================================
 
 	/* Create an appropriate flag to instantiate this directive in the next tick */
-	static create(pos: RoomPosition, name?: string): number {
+	static create(pos: RoomPosition, opts: DirectiveCreateOptions = {}): number {
+		let name = opts.name;
 		if (!name) {
 			name = this.directiveName + ':' + pos.roomName;
 			if (Game.flags[name]) {
@@ -131,8 +137,37 @@ export abstract class Directive {
 				name = name + i;
 			}
 		}
-		log.alert(`Creating ${this.directiveName} directive in room ${pos.roomName}!`);
+		if (!opts.quiet) {
+			log.alert(`Creating ${this.directiveName} directive in room ${pos.roomName}!`);
+		}
 		return pos.createFlag(name, this.color, this.secondaryColor);
+	}
+
+	/* Create a directive if one of the same type is not already present (in room | at position) */
+	static createIfNotPresent(pos: RoomPosition, scope: 'room' | 'pos',
+							  opts: DirectiveCreateOptions = {}): number | void {
+		let room = Game.rooms[pos.roomName];
+		if (!room) {
+			log.error(`No vision at ${pos.print}; can't create directive!`);
+		}
+		let flagsOfThisType: Flag[];
+		switch (scope) {
+			case 'room':
+				flagsOfThisType = _.filter(room.flags, flag => this.filter(flag));
+				if (flagsOfThisType.length == 0) {
+					return this.create(pos, opts);
+				}
+				break;
+			case 'pos':
+				flagsOfThisType = _.filter(pos.lookFor(LOOK_FLAGS), flag => this.filter(flag));
+				if (flagsOfThisType.length == 0) {
+					return this.create(pos, opts);
+				}
+				break;
+			default:
+				log.error(`Directive.createIfNotPresent: scope must be "room" or "pos"!`);
+				break;
+		}
 	}
 
 	/* Filter for _.filter() that checks if a flag is of the matching type */

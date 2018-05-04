@@ -1,10 +1,11 @@
 import {Overlord} from '../Overlord';
-import {MinerSetup} from '../../creepSetup/defaultSetups';
+import {MinerLongDistanceSetup, MinerSetup} from '../../creepSetup/defaultSetups';
 import {MiningSite} from '../../hiveClusters/hiveCluster_miningSite';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../priorities_overlords';
 import {profile} from '../../profiler/decorator';
+import {Pathing} from '../../pathing/pathing';
 
 @profile
 export class MiningOverlord extends Overlord {
@@ -20,14 +21,19 @@ export class MiningOverlord extends Overlord {
 	}
 
 	init() {
+		let creepSetup = new MinerSetup();
+		if (this.colony.hatchery && Pathing.distance(this.colony.hatchery.pos, this.pos) > 50 * 3) {
+			creepSetup = new MinerLongDistanceSetup(); // long distance miners
+			// todo: this.colony.hatchery is normal hatcher for incubating once spawns[0] != undefined
+		}
 		let filteredMiners = this.lifetimeFilter(this.miners);
 		let miningPowerAssigned = _.sum(_.map(filteredMiners, creep => creep.getActiveBodyparts(WORK)));
 		if (miningPowerAssigned < this.miningSite.miningPowerNeeded &&
 			filteredMiners.length < _.filter(this.miningSite.pos.neighbors, pos => pos.isPassible()).length) {
 			// Handles edge case at startup of <3 spots near mining site
-			this.requestCreep(new MinerSetup());
+			this.requestCreep(creepSetup);
 		}
-		this.creepReport(MinerSetup.role, miningPowerAssigned, this.miningSite.miningPowerNeeded);
+		this.creepReport(creepSetup.role, miningPowerAssigned, this.miningSite.miningPowerNeeded);
 	}
 
 	private handleMiner(miner: Zerg): void {

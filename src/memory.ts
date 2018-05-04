@@ -128,7 +128,7 @@ export class Mem {
 		// // 		let creepRoom = Game.rooms[creep.memory.colony];
 		// // 		if (creepRoom && creepRoom.storage) {
 		// // 			creep.memory.role = 'hauler';
-		// // 			creep.memory.overlord = 'miningGroup:' + creepRoom.storage.id + ':haul';
+		// // 			creep.memory.overlord = 'miningGroup:' + creepRoom.storage.id + ':transport';
 		// // 			creep.memory.task = null;
 		// // 		}
 		// // 	}

@@ -28,6 +28,7 @@ interface Room {
 	hostileStructures: Structure[];
 	flags: Flag[];
 	// Preprocessed structures
+	tombstones: Tombstone[];
 	drops: { [resourceType: string]: Resource[] };
 	droppedEnergy: Resource[];
 	droppedMinerals: Resource[];

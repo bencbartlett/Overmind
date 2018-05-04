@@ -13,19 +13,19 @@ export class DirectiveIncubate extends Directive {
 	static secondaryColor = COLOR_WHITE;
 	static requiredRCL = 7;
 
-	incubatingColony: Colony | undefined;
+	incubatee: Colony | undefined; // the colony being incubated by the incubator
 
 	constructor(flag: Flag) {
 		super(flag);
 		// Register incubation status
-		this.incubatingColony = this.room ? Overmind.Colonies[Overmind.colonyMap[this.room.name]] : undefined;
-		if (this.incubatingColony && this.colony != this.incubatingColony) {
+		this.incubatee = this.room ? Overmind.Colonies[Overmind.colonyMap[this.room.name]] : undefined;
+		if (this.incubatee && this.colony != this.incubatee) {
 			// this.colony is from Flag memory and is the incubator; this.room.colony is the new colony
-			this.incubatingColony.incubator = this.colony;
-			this.incubatingColony.isIncubating = true;
-			this.colony.incubatingColonies.push(this.incubatingColony);
-			if (!this.incubatingColony.hatchery && this.colony.hatchery) {
-				this.incubatingColony.hatchery = this.colony.hatchery;
+			this.incubatee.incubator = this.colony;
+			this.incubatee.isIncubating = true;
+			this.colony.incubatingColonies.push(this.incubatee);
+			if (!this.incubatee.hatchery && this.colony.hatchery) {
+				this.incubatee.hatchery = this.colony.hatchery;
 			}
 		}
 		this.overlords.claim = new ClaimingOverlord(this);
@@ -37,11 +37,11 @@ export class DirectiveIncubate extends Directive {
 
 	run() {
 		// Incubation directive gets removed once the colony has a command center (storage)
-		if (!this.memory.persistent && this.incubatingColony && this.incubatingColony.stage > ColonyStage.Larva) {
+		if (!this.memory.persistent && this.incubatee && this.incubatee.stage > ColonyStage.Larva) {
 			this.remove();
 		}
 		// // You can set memory.onlyBuildSpawn = true to remove the flag once spawn is built, skipping incubation
-		// if (this.memory.onlyBuildSpawn && this.incubatingColony && this.incubatingColony.spawns.length > 0) {
+		// if (this.memory.onlyBuildSpawn && this.incubatee && this.incubatee.spawns.length > 0) {
 		// 	this.remove();
 		// }
 	}

@@ -226,7 +226,7 @@ export class Log {
 		if (this.showTick) {
 			out.push(time());
 		}
-		if (this.showSource) {
+		if (this.showSource && level <= LogLevels.ERROR) {
 			out.push(this.getFileLine());
 		}
 		return out;

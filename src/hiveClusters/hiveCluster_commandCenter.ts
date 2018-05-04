@@ -173,7 +173,7 @@ export class CommandCenter extends HiveCluster {
 		return this._withdrawStructures;
 	}
 
-	/* Register a link transfer request if the link is sufficiently full */
+	/* Register a link transfer store if the link is sufficiently full */
 	private registerLinkTransferRequests(): void {
 		if (this.link) {
 			if (this.link.energy > this.settings.linksTransmitAt) {

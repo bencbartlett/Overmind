@@ -16,7 +16,7 @@ export class TransportOverlord extends Overlord {
 	logisticsGroup: LogisticsGroup;
 
 	constructor(colony: Colony, priority = colony.getCreepsByRole(TransporterSetup.role).length > 0 ?
-										   OverlordPriority.ownedRoom.haul : OverlordPriority.ownedRoom.supply) {
+										   OverlordPriority.ownedRoom.transport : OverlordPriority.ownedRoom.firstTransport) {
 		super(colony, 'logistics', priority);
 		this.transporters = this.creeps(TransporterSetup.role);
 		this.logisticsGroup = colony.logisticsGroup;
@@ -67,7 +67,7 @@ export class TransportOverlord extends Overlord {
 			// console.log(`${transporter.name}: bestChoice: deltaResource: ${bestChoice.deltaResource}, deltaTicks: ${bestChoice.deltaTicks}`);
 			let task = null;
 			let amount = this.logisticsGroup.predictedAmount(transporter, request);
-			if (amount > 0) { // request needs refilling
+			if (amount > 0) { // store needs refilling
 				if (request.target instanceof DirectiveLogisticsRequest) {
 					task = Tasks.drop(request.target);
 				} else {
@@ -76,29 +76,29 @@ export class TransportOverlord extends Overlord {
 				if (bestChoice.targetRef != request.target.ref) {
 					// If we need to go to a buffer first to get more stuff
 					let buffer = deref(bestChoice.targetRef) as BufferTarget;
-					task = task.fork(Tasks.withdraw(buffer));
+					let withdrawAmount = Math.min(buffer.store[request.resourceType] || 0, amount);
+					task = task.fork(Tasks.withdraw(buffer, request.resourceType, amount));
 				}
-			} else if (amount < 0) { // request needs withdrawal
+			} else if (amount < 0) { // store needs withdrawal
 				if (request.target instanceof DirectiveLogisticsRequest) {
 					let drops = request.target.drops[request.resourceType] || [];
 					let resource = drops[0];
-					if (!resource) return;
-					task = Tasks.pickup(resource);
+					if (resource) {
+						task = Tasks.pickup(resource);
+					}
 				} else {
 					task = Tasks.withdraw(request.target);
 				}
-				if (bestChoice.targetRef != request.target.ref) {
+				if (task && bestChoice.targetRef != request.target.ref) {
 					// If we need to go to a buffer first to deposit stuff
 					let buffer = deref(bestChoice.targetRef) as BufferTarget | StructureLink;
-					task = task.fork(Tasks.transfer(buffer));
+					task = task.fork(Tasks.transfer(buffer, request.resourceType));
 				}
 			} else {
-				console.log(`${transporter.name} chooses a request with 0 amount!`);
+				// console.log(`${transporter.name} chooses a store with 0 amount!`);
+				transporter.park();
 			}
-			// if (task) {
-			// 	console.log(`${transporter.name} task: ${task.name} target ${task.targetPos.print}, ` +
-			// 				`parent: ${task.parent ? task.parent.name + 'target: ' + task.parent.targetPos.print : 'none'}`);
-			// }
+			// Assign the task to the transporter
 			transporter.task = task;
 		} else {
 			if (transporter.carry.energy > 0) {
@@ -168,9 +168,9 @@ export class TransportOverlord extends Overlord {
 	// 	return transporter.pos.findClosestByMultiRoomRange(targets);
 	// }
 	//
-	// private getWithdrawTarget(transporter: Zerg, request: LogisticsItem) {
+	// private getWithdrawTarget(transporter: Zerg, store: LogisticsItem) {
 	// 	let applicableBuffers = _.filter(this.colony.logisticsNetwork.buffers,
-	// 									 buffer => (buffer.store[request.resourceType] || 0) >= request.amount);
+	// 									 buffer => (buffer.store[store.resourceType] || 0) >= store.amount);
 	// 	return transporter.pos.findClosestByMultiRoomRange(applicableBuffers);
 	// }
 	//
@@ -219,7 +219,6 @@ export class TransportOverlord extends Overlord {
 
 	run() {
 		for (let transporter of this.transporters) {
-			// this.handleTransporterOld(transporter);
 			if (transporter.isIdle) {
 				this.handleTransporter(transporter);
 			}

@@ -3,7 +3,7 @@ import {profile} from '../../profiler/decorator';
 
 
 interface DirectiveLogisticsReqeustMemory extends FlagMemory {
-	request?: { [resourceType: string]: number };
+	store?: StoreDefinition;
 	storeCapacity?: number;
 	provider: boolean;
 }
@@ -15,7 +15,7 @@ export class DirectiveLogisticsRequest extends Directive {
 	static color = COLOR_YELLOW;
 	static secondaryColor = COLOR_YELLOW;
 
-	ref: string;	// To comply with targeting requirements
+	ref: string; // To comply with targeting requirements
 
 	private _store: StoreDefinition;
 	private _drops: { [resourceType: string]: Resource[] };
@@ -32,6 +32,9 @@ export class DirectiveLogisticsRequest extends Directive {
 	}
 
 	get drops(): { [resourceType: string]: Resource[] } {
+		if (!this.pos.isVisible) {
+			return {};
+		}
 		if (!this._drops) {
 			let drops = (this.pos.lookFor(LOOK_RESOURCES) || []) as Resource[];
 			this._drops = _.groupBy(drops, drop => drop.resourceType);
@@ -40,21 +43,73 @@ export class DirectiveLogisticsRequest extends Directive {
 	}
 
 	get provider(): boolean {
-		if (!this.memory.provider) {
-			this.memory.provider = (_.keys(this.drops).length > 0);
+		if (this.memory.provider === undefined) { // strict comparison; this can be true or false or undefined
+			if (!this.pos.isVisible) { // assume this is a provider flag if you don't have vision
+				this.memory.provider = true;
+			} else { // is provider if there is some resource already there
+				this.memory.provider = (_.sum(this.store) > 0);
+			}
 		}
 		return this.memory.provider;
 	}
 
+	// get store(): StoreDefinition {
+	// 	if (!this._store) {
+	// 		let store = _.mapValues(this.drops, drops => _.sum(_.map(drops, drop => drop.amount)));
+	// 		if (!store.energy) store.energy = 0;
+	// 		this._store = store as StoreDefinition;
+	// 	}
+	// 	return this._store;
+	// }
+
+	get hasDrops(): boolean {
+		return _.keys(this.drops).length > 0;
+	}
+
+	get storeStructure(): StructureContainer | Tombstone | undefined {
+		if (this.pos.isVisible) {
+			let container = <StructureContainer>this.pos.lookForStructure(STRUCTURE_CONTAINER);
+			let tombstone = <Tombstone>this.pos.lookFor(LOOK_TOMBSTONES)[0];
+			return container || tombstone;
+		}
+		return undefined;
+	}
+
+	/* Recalculates the state of the store; assumes you have vision of the room */
+	private calculateStore(): StoreDefinition {
+		// Merge the "storage" of drops with the store of structure
+		let store: { [resourceType: string]: number } = {};
+		if (this.storeStructure) {
+			store = this.storeStructure.store;
+		} else {
+			store = {'energy': 0};
+		}
+		// Merge with drops
+		for (let resourceType of _.keys(this.drops)) {
+			let totalResourceAmount = _.sum(this.drops[resourceType], drop => drop.amount);
+			if (store[resourceType]) {
+				store[resourceType] += totalResourceAmount;
+			} else {
+				store[resourceType] = totalResourceAmount;
+			}
+		}
+		return store as StoreDefinition;
+	}
+
 	get store(): StoreDefinition {
 		if (!this._store) {
-			let store = _.mapValues(this.drops, drops => _.sum(_.map(drops, drop => drop.amount)));
-			if (!store.energy) store.energy = 0;
-			this._store = store as StoreDefinition;
+			if (this.pos.isVisible) {
+				this._store = this.calculateStore();
+			} else if (this.memory.store) {
+				this._store = this.memory.store;
+			} else {
+				this._store = {'energy': 500};
+			}
 		}
 		return this._store;
 	}
 
+	/* If being used as a drop-requestor, max amount of resources to drop at location */
 	get storeCapacity(): number {
 		if (this.memory.storeCapacity) {
 			return this.memory.storeCapacity;
@@ -64,19 +119,23 @@ export class DirectiveLogisticsRequest extends Directive {
 	}
 
 	init(): void {
+		if (this.pos.isVisible) {
+			// Refresh the state of the store in flag memory
+			this.memory.store = this.store;
+		}
 		if (this.provider) {
-			this.colony.logisticsGroup.provide(this);
+			this.colony.logisticsGroup.provideAll(this);
 		} else {
 			this.colony.logisticsGroup.request(this);
 		}
 	}
 
 	run(): void {
+		// Remove flag if you are a provider and out of resources
 		if (this.provider && _.sum(this.store) == 0) {
 			this.remove();
 		}
 	}
-
 
 }
 

@@ -43,7 +43,7 @@ export function initializeTask(protoTask: protoTask): any {
 			task = new TaskDismantle(target as dismantleTargetType);
 			break;
 		case dropTaskName:
-			task = new TaskDrop(target as dropTargetType);
+			task = new TaskDrop(derefRoomPosition(protoTask._target._pos) as dropTargetType);
 			break;
 		case fortifyTaskName:
 			task = new TaskFortify(target as fortifyTargetType);

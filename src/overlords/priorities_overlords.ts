@@ -1,39 +1,53 @@
 // Default ordering for processing spawning requests and prioritizing overlords
 
 export var OverlordPriority = {
-	emergency : {			// Colony-wide emergencies such as a catastrohic crash
+	emergency: {				// Colony-wide emergencies such as a catastrohic crash
 		bootstrap: 0
 	},
-	spawning  : {			// Functionality related to spawning more creeps
+
+	spawning: {					// Functionality related to spawning more creeps
 		hatchery     : 100,
 		commandCenter: 101,
 	},
-	defense   : {			// Defense of local and remote rooms
+
+	defense: {					// Defense of local and remote rooms
 		invasion: 200,
 		guard   : 201,
 	},
-	realTime  : { 			// Requests that a user is typically actively waiting for
+
+	realTime: { 				// Requests that a user is typically actively waiting for in real life
 		claim  : 300,
 		pioneer: 301,
 	},
-	ownedRoom : { 			// Operation of an owned room
-		supply       : 400,
-		mine         : 401,
-		work         : 402,
-		mineralSupply: 403,
-		destroy      : 404, // TODO: war spawning mode
-		haul         : 405,
-		upgrade      : 406,
 
+	ownedRoom: { 				// Operation of an owned room
+		firstTransport: 400,		// High priority to spawn the first transporter
+		mine          : 401,
+		work          : 402,
+		transport     : 403,		// Spawn the rest of the transporters
 	},
-	offense   : {			// Offensive operations like raids or sieges
-		healPoint: 500,
-		siege    : 501,
+
+	offense: {					// Offensive operations like raids or sieges
+		destroy  : 500,
+		healPoint: 501,
+		siege    : 502,
 	},
-	remoteRoom: { 			// Operation of a remote room. Allows colonies to restart one room at a time.
-		reserve      : 600,
-		mine         : 601,
-		// haul         : 502, // hauling is a weird exception; see miningGroup for details
-		roomIncrement: 10, 	// remote room priorities are incremented by 10 for each outpost
+
+	upgrading: {				// Spawning upgraders
+		upgrade: 600,
+	},
+
+	collectionUrgent: { 		// Collecting resources that are time sensitive, like decaying resources on ground
+		haul: 700
+	},
+
+	remoteRoom: { 				// Operation of a remote room. Allows colonies to restart one room at a time.
+		reserve      : 800,
+		mine         : 801,
+		roomIncrement: 5, 			// remote room priorities are incremented by this for each outpost
+	},
+
+	collection: {				// Non-urgent collection of resources, like from a deserted storage
+		haul: 900
 	},
 };

@@ -1,4 +1,4 @@
-// Hatchery - groups all spawns in a colony
+// Hatchery - groups all spawns and extensions in a colony
 
 import {HiveCluster} from './HiveCluster';
 import {profile} from '../profiler/decorator';
@@ -24,7 +24,7 @@ export class Hatchery extends HiveCluster {
 	overlord: HatcheryOverlord | undefined;					// Hatchery overlord if past larva stage
 	private settings: {										// Settings for hatchery operation
 		refillTowersBelow: number,  							// What value to refill towers at?
-		linksRequestEnergyBelow: number, 						// What value will links request more energy at?
+		linksRequestEnergyBelow: number, 						// What value will links store more energy at?
 		supplierSize: number,									// Size of supplier in body pattern units
 		numSuppliers: number,									// Number of suppliers to maintain
 		queenSize: number,										// Size of queen in body patern repetition units
@@ -63,7 +63,7 @@ export class Hatchery extends HiveCluster {
 		};
 		// Register the hatchery overlord
 		this.overlord = new HatcheryOverlord(this);
-		// Assign a separate request group if hatchery has a dedicated attendant
+		// Assign a separate store group if hatchery has a dedicated attendant
 		this.transportRequests = new TransportRequestGroup();
 		this.memory.stats = this.getStats();
 	}
@@ -89,18 +89,18 @@ export class Hatchery extends HiveCluster {
 
 	/* Request more energy when appropriate either via link or hauler */
 	private registerEnergyRequests(): void {
-		// Register requests for input into the hatchery (goes on colony request group)
+		// Register requests for input into the hatchery (goes on colony store group)
 		if (this.link && this.link.isEmpty) {
 			this.colony.linkNetwork.requestReceive(this.link);
 		}
 		if (this.battery) {
 			if (this.battery.energy < 0.25 * this.battery.storeCapacity) {
 				// this.colony.transportRequests.requestEnergy(this.battery);
-				// this.colony.logisticsNetwork.request(this.battery);
+				// this.colony.logisticsNetwork.store(this.battery);
 				this.colony.logisticsGroup.request(this.battery);
 			}
 		}
-		// Register energy transport requests (goes on hatchery request group, which can be colony request group)
+		// Register energy transport requests (goes on hatchery store group, which can be colony store group)
 		let refillSpawns = _.filter(this.spawns, spawn => spawn.energy < spawn.energyCapacity);
 		let refillExtensions = _.filter(this.extensions, extension => extension.energy < extension.energyCapacity);
 		let refillTowers = _.filter(this.towers, tower => tower.energy < tower.energyCapacity);

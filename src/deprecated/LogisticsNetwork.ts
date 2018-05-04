@@ -140,7 +140,7 @@ export class LogisticsNetwork {
 		let targetingTransporters = _.filter(targetingZerg, zerg => zerg.roleName == TransporterSetup.role);
 		let energyInflux = _.sum(_.map(targetingTransporters, transporter => transporter.carryCapacity));
 		opts.amount = Math.max(opts.amount - energyInflux, 0);
-		// Register the request
+		// Register the store
 		// let requestID = this.requests.length.toString();
 		let req = {
 			// id          : requestID,
@@ -168,7 +168,7 @@ export class LogisticsNetwork {
 		let targetingTransporters = _.filter(targetingZerg, zerg => zerg.roleName == TransporterSetup.role);
 		let energyOutflux = _.sum(_.map(targetingTransporters, transporter => transporter.carryCapacity));
 		opts.amount = Math.min(opts.amount + energyOutflux, 0);
-		// Register the request
+		// Register the store
 		// let requestID = this.requests.length.toString();
 		let req = {
 			// id          : requestID,
@@ -196,7 +196,7 @@ export class LogisticsNetwork {
 		let targetingTransporters = _.filter(targetingZerg, zerg => zerg.roleName == TransporterSetup.role);
 		let energyOutflux = _.sum(_.map(targetingTransporters, transporter => transporter.carryCapacity));
 		opts.amount = Math.min(opts.amount + energyOutflux, 0);
-		// Register the request
+		// Register the store
 		// let requestID = this.requests.length.toString();
 		let req = {
 			// id          : requestID,

@@ -8,18 +8,14 @@
     ],
     "outDir": "tsc-out",
     "baseUrl": "src/",
-    "sourceMap": false,
+    "sourceMap": true,
     "strict": true,
     "strictPropertyInitialization": false,
     "noImplicitThis": false,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "allowUnreachableCode": false,
-    "removeComments": false,
-    "types": [
-      "lodash",
-      "typed-screeps"
-    ]
+    "removeComments": false
   },
   "exclude": [
     "node_modules"

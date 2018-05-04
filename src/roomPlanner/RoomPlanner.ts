@@ -69,10 +69,10 @@ export class RoomPlanner {
 		this.textPositions = [];
 		this.settings = {
 			siteCheckFrequency: 200,
-			maxSitesPerColony : 20,
+			maxSitesPerColony : 10,
 		};
 		if (this.active && Game.time % 25 == 0) {
-			log.info(`RoomPlanner for ${this.colony.room.print} is still active! Finalize or cancel to save CPU.`);
+			log.alert(`RoomPlanner for ${this.colony.room.print} is still active! Finalize or cancel to save CPU.`);
 		}
 	}
 

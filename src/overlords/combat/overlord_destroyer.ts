@@ -41,7 +41,7 @@ export class DestroyerOverlord extends CombatOverlord {
 		reengageHitsPercent: number,
 	};
 
-	constructor(directive: DirectiveDestroy, priority = OverlordPriority.ownedRoom.destroy) {
+	constructor(directive: DirectiveDestroy, priority = OverlordPriority.offense.destroy) {
 		super(directive, 'siege', priority);
 		this.attackers = this.creeps('attacker');
 		this.healers = this.creeps('healer');

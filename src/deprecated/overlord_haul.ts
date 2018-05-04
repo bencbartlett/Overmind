@@ -11,8 +11,8 @@
 // 	haulers: Zerg[];
 // 	miningGroup: MiningGroup;
 //
-// 	constructor(miningGroup: MiningGroup, priority = OverlordPriority.ownedRoom.haul) {
-// 		super(miningGroup, 'haul', priority);
+// 	constructor(miningGroup: MiningGroup, priority = OverlordPriority.ownedRoom.transport) {
+// 		super(miningGroup, 'transport', priority);
 // 		this.haulers = this.creeps('hauler');
 // 		this.miningGroup = miningGroup;
 // 	}
@@ -25,24 +25,24 @@
 // 		this.creepReport(HaulerSetup.role, haulingPower, this.miningGroup.data.haulingPowerNeeded);
 // 	}
 //
-// 	// Gets a prioritized request if any
+// 	// Gets a prioritized store if any
 // 	private getWithdrawRequest(): IWithdrawRequest | undefined {
 // 		for (let priority in this.miningGroup.transportRequests.withdraw) {
-// 			// Shift the first request from the group to prevent all idle haulers from targeting at once
-// 			let request = this.miningGroup.transportRequests.withdraw[priority].shift();
-// 			if (request) return request;
+// 			// Shift the first store from the group to prevent all idle haulers from targeting at once
+// 			let store = this.miningGroup.transportRequests.withdraw[priority].shift();
+// 			if (store) return store;
 // 		}
 // 	}
 //
 // 	private handleHauler(hauler: Zerg) {
 // 		if (hauler.carry.energy == 0) {
 // 			// Withdraw from any miningSites requesting a withdrawal
-// 			let request = this.getWithdrawRequest();
-// 			if (request) {
-// 				if (request.target instanceof Resource) {
-// 					hauler.task = Tasks.pickup(request.target);
+// 			let store = this.getWithdrawRequest();
+// 			if (store) {
+// 				if (store.target instanceof Resource) {
+// 					hauler.task = Tasks.pickup(store.target);
 // 				} else {
-// 					hauler.task = Tasks.withdraw(request.target);
+// 					hauler.task = Tasks.withdraw(store.target);
 // 				}
 // 			} else {
 // 				// hauler.park(); // TODO

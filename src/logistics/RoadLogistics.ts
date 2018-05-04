@@ -29,7 +29,7 @@ export class RoadLogistics {
 		this._assignedWorkers = {};
 		this.settings = {
 			allowedPaversPerRoom: 1,
-			criticalThreshold   : 0.25, // When the roadnetwork forces a repair request
+			criticalThreshold   : 0.25, // When the roadnetwork forces a repair store
 			repairThreshold     : 0.9
 		};
 		this.cache = {

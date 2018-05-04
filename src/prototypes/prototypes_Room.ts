@@ -75,6 +75,12 @@ Object.defineProperty(Room.prototype, 'flags', {
 
 // Room properties: structures =========================================================================================
 
+Object.defineProperty(Room.prototype, 'tombstones', {
+	get() {
+		return this.find(FIND_TOMBSTONES);
+	},
+});
+
 Object.defineProperty(Room.prototype, 'structures', {
 	get() {
 		return Overmind.cache.structures[this.name];

@@ -17,7 +17,11 @@ export class TaskHarvest extends Task {
 	}
 
 	isValidTarget() {
-		return this.target && this.target.energy > 0;
+		if (this.target && this.target.energy > 0) {
+			// Valid only if there's enough space for harvester to work - prevents doing tons of useless pathfinding
+			return this.target.pos.availableNeighbors().length > 0 || this.creep.pos.isNearTo(this.target.pos);
+		}
+		return false;
 	}
 
 	work() {

@@ -14,7 +14,7 @@ export class UpgradingOverlord extends Overlord {
 	settings: { [property: string]: number };
 	room: Room;	//  Operates in owned room
 
-	constructor(upgradeSite: UpgradeSite, priority = OverlordPriority.ownedRoom.upgrade) {
+	constructor(upgradeSite: UpgradeSite, priority = OverlordPriority.upgrading.upgrade) {
 		super(upgradeSite, 'upgrade', priority);
 		this.upgraders = this.creeps('upgrader');
 		this.upgradeSite = upgradeSite;
@@ -64,7 +64,6 @@ export class UpgradingOverlord extends Overlord {
 			if (upgrader.isIdle) {
 				this.handleUpgrader(upgrader);
 			}
-			upgrader.run();
 		}
 	}
 }

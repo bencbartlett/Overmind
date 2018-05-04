@@ -22,9 +22,9 @@ export type LogisticsTarget =
 export type BufferTarget = StructureStorage | StructureTerminal;
 
 export interface Request {
-	id: string;							// ID of the request; used for matching purposes
-	target: LogisticsTarget;			// Target making the request
-	amount: number;						// Amount to request
+	id: string;							// ID of the store; used for matching purposes
+	target: LogisticsTarget;			// Target making the store
+	amount: number;						// Amount to store
 	dAmountdt: number;					// Optional value showing how fast it fills up / empties (e.g. mining rates)
 	resourceType: ResourceConstant;		// Resource type being requested
 	multiplier: number;					// Multiplier to prioritize important requests
@@ -144,7 +144,7 @@ export class LogisticsGroup {
 		if (!opts.amount) {
 			opts.amount = this.getRequestAmount(target, opts.resourceType!);
 		}
-		// Register the request
+		// Register the store
 		let requestID = this.requests.length;
 		let req: Request = {
 			id          : requestID.toString(),
@@ -170,7 +170,7 @@ export class LogisticsGroup {
 		}
 		opts.amount *= -1;
 		(opts.dAmountdt!) *= -1;
-		// Register the request
+		// Register the store
 		let requestID = this.requests.length;
 		let req: Request = {
 			id          : requestID.toString(),
@@ -184,6 +184,16 @@ export class LogisticsGroup {
 		this.targetToRequest[req.target.ref] = requestID;
 	}
 
+	/* Makes a provide for every resourceType in a requestor object */
+	provideAll(target: StoreStructure | DirectiveLogisticsRequest, opts = {} as RequestOptions): void {
+		for (let resourceType in target.store) {
+			let amount = target.store[<ResourceConstant>resourceType] || 0;
+			if (amount > 0) {
+				opts.resourceType = <ResourceConstant>resourceType;
+				this.provide(target, opts);
+			}
+		}
+	}
 
 	/* Number of ticks until the transporter is available and where it will be */
 	private nextAvailability(transporter: Zerg): [number, RoomPosition] {
@@ -249,7 +259,7 @@ export class LogisticsGroup {
 		return targetingTransporters;
 	}
 
-	/* Returns the effective amount of the request given other targeting creeps */
+	/* Returns the effective amount of the store given other targeting creeps */
 	predictedAmount(transporter: Zerg, request: Request, availability = 0, newPos = transporter.pos): number {
 		let otherTargetingTransporters = LogisticsGroup.targetingTransporters(request.target, transporter);
 		let ETA: number | undefined;
@@ -259,7 +269,7 @@ export class LogisticsGroup {
 		if (!ETA) ETA = this.settings.rangeToPathHeuristic * request.target.pos.getMultiRoomRangeTo(newPos)
 						+ availability;
 		let predictedDifference = request.dAmountdt * ETA;
-		if (request.amount > 0) { // request state, energy in
+		if (request.amount > 0) { // store state, energy in
 			let resourceInflux = _.sum(_.map(otherTargetingTransporters,
 											 transporter => transporter.carry[request.resourceType] || 0));
 			return Math.max(request.amount + predictedDifference - resourceInflux, 0);
@@ -279,7 +289,7 @@ export class LogisticsGroup {
 				if (request) {
 					let carry = transporter.carry;
 					if (carry[request.resourceType]) {
-						// Need to multiply amount by -1 since transporter is doing complement of request
+						// Need to multiply amount by -1 since transporter is doing complement of store
 						carry[request.resourceType]! += -1 * this.predictedAmount(transporter, request);
 					} else {
 						carry[request.resourceType] = this.predictedAmount(transporter, request);
@@ -291,7 +301,7 @@ export class LogisticsGroup {
 		return transporter.carry;
 	}
 
-	/* Consider all possibilities of buffer structures to visit on the way to fulfilling the request */
+	/* Consider all possibilities of buffer structures to visit on the way to fulfilling the store */
 	bufferChoices(transporter: Zerg, request: Request): {
 		deltaResource: number,
 		deltaTicks: number,
@@ -302,7 +312,7 @@ export class LogisticsGroup {
 		let amount = this.predictedAmount(transporter, request, ticksUntilFree, newPos);
 		let carry = this.predictedCarry(transporter);
 		if (amount > 0) { // requestor instance, needs refilling
-			// Change in resources if transporter goes straight to request
+			// Change in resources if transporter goes straight to store
 			let immediateDeltaResource = Math.min(amount, carry[request.resourceType] || 0);
 			let immediateDistance = Pathing.distance(newPos, request.target.pos) + ticksUntilFree;
 			choices.push({
@@ -323,7 +333,7 @@ export class LogisticsGroup {
 							 });
 			}
 		} else if (amount < 0) { // provider instance, needs pickup
-			// Change in resources if transporter goes straight to request
+			// Change in resources if transporter goes straight to store
 			let immediateDeltaResource = Math.min(Math.abs(amount), transporter.carryCapacity - _.sum(carry));
 			let immediateDistance = Pathing.distance(newPos, request.target.pos) + ticksUntilFree;
 			choices.push({
@@ -343,7 +353,7 @@ export class LogisticsGroup {
 								 targetRef    : buffer.ref
 							 });
 			}
-			// if (request.resourceType == RESOURCE_ENERGY) {
+			// if (store.resourceType == RESOURCE_ENERGY) {
 			// 	// Only for when you're picking up more energy: check to see if you can put to available links
 			// 	for (let link of this.colony.dropoffLinks) {
 			// 		let linkDeltaResource = Math.min(Math.abs(amount), transporter.carryCapacity,
@@ -351,7 +361,7 @@ export class LogisticsGroup {
 			// 		let ticksUntilDropoff = Math.max(Pathing.distance(newPos, link.pos),
 			// 										 this.colony.linkNetwork.getDropoffAvailability(link));
 			// 		let linkDistance = ticksUntilDropoff +
-			// 						   Pathing.distance(link.pos, request.target.pos) + ticksUntilFree;
+			// 						   Pathing.distance(link.pos, store.target.pos) + ticksUntilFree;
 			// 		choices.push({
 			// 						 deltaResource: linkDeltaResource,
 			// 						 deltaTicks   : linkDistance,
@@ -377,7 +387,7 @@ export class LogisticsGroup {
 		return _.sortBy(transporters, transporter => -1 * this.resourceChangeRate(transporter, request)); // -1 -> desc
 	}
 
-	/* Generate transporter preferences in terms of request structures */
+	/* Generate transporter preferences in terms of store structures */
 	private transporterPreferences(transporter: Zerg): Request[] {
 		// Transporters prioritize requestors by change in resources per tick until pickup/delivery
 		return _.sortBy(this.requests, request => -1 * this.resourceChangeRate(transporter, request)); // -1 -> desc

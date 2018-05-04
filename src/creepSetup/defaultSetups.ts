@@ -11,6 +11,17 @@ export class MinerSetup extends CreepSetup {
 	}
 }
 
+export class MinerLongDistanceSetup extends CreepSetup {
+	static role = 'miner';
+
+	constructor() {
+		super(MinerSetup.role, {
+			pattern  : [WORK, WORK, CARRY, MOVE, MOVE, MOVE],
+			sizeLimit: 3,
+		});
+	}
+}
+
 export class ClaimerSetup extends CreepSetup {
 	static role = 'claimer';
 
@@ -38,7 +49,7 @@ export class HaulerSetup extends CreepSetup {
 
 	constructor() {
 		super(HaulerSetup.role, {
-			pattern  : [CARRY, CARRY, MOVE],
+			pattern  : [CARRY, MOVE],
 			sizeLimit: Infinity,
 
 		});
