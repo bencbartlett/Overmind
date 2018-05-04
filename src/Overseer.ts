@@ -44,14 +44,15 @@ export class Overseer {
 			for (let resourceType in room.drops) {
 				for (let drop of room.drops[resourceType]) {
 					if (drop.amount > 100 || drop.resourceType != RESOURCE_ENERGY) {
-						DirectiveLogisticsRequest.createIfNotPresent(drop.pos, 'pos');
+						DirectiveLogisticsRequest.createIfNotPresent(drop.pos, 'pos', {quiet: true});
 					}
 				}
 			}
 		}
 		for (let tombstone of this.colony.tombstones) {
-			if (_.sum(tombstone.store) > 0) {
-				DirectiveLogisticsRequest.createIfNotPresent(tombstone.pos, 'pos');
+			// Place a logistics request directive for every tombstone with non-empty store that isn't on a container
+			if (_.sum(tombstone.store) > 0 && !tombstone.pos.lookForStructure(STRUCTURE_CONTAINER)) {
+				DirectiveLogisticsRequest.createIfNotPresent(tombstone.pos, 'pos', {quiet: true});
 			}
 		}
 

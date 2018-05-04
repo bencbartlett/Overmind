@@ -6,9 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added 
-- Lots of new content to the Wiki!
+- Lots of new content added to the [Wiki](https://github.com/bencbartlett/Overmind/wiki)!
 - TerminalNetwork stat collection, which accumulates all `send()` calls and transfer costs by resourceType between origin and destination
-    - Added Grafana dashboard support for new stats
+    - Added Grafana dashboard support for new stats (in /assets)
+- Hauling directives and overlords for hauling large amounts of resources long distances (e.g. scavenging from abandoned storage)
+- Finished integrating LogisticsRequestDirectives: these act as requestor or provider objects at a position
+    - Requestor: requests energy to be dropped at a positiion
+    - Provider: resources dropped at position or in a tombstone should be collected
 - Preliminary contract module for making deals between players
 - Added `Energetics` module, which will make high-level decisions based on energy distributions
 - Colonies now have a `lowPowerMode` operational state, which scales back production of miners and transporters at RCL8 with full storage/terminal
@@ -16,6 +20,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - `Task.creep` once again points to a `Zerg` object rather than a `Creep` object (Tasks are still hosted on creep prototypes, however)
 - `TaskRepair` will now attempt to move to within range 2 if repairing a road; this should fix the move-stop-repair-move-stop-repair behavior of workers repairing remote roads
+- TerminalNetwork now sends excess energy to room with least energy rather than non-full room with least send cost overhead
+- More upgraders spawn when room is at very high energy capacity
+- Removed stack tracing for all logging except errors; removed some annoying alerts ("transporter chooses request with 0 amount!")
 
 ### Removed
 - Deprecated `TaskDeposit`; use `TaskTransfer` instead
@@ -23,6 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed 
 - Bugfixes with `TaskDrop`, `TaskGoTo`, `TaskGoToRoom`
+- Even more bugfixes with `TaskDrop`
 - Fixed bug (hopefully) with creeps not approaching to range 1 in `TaskAttack` and `TaskHeal`
 
 ## Overmind [0.2.1] - 2018.3.22
