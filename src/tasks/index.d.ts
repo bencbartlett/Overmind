@@ -24,6 +24,7 @@ interface protoTask {
 		_pos: protoPos;
 	};
 	_parent: protoTask | null;
+	tick: number;
 	options: TaskOptions;
 	data: TaskData;
 }

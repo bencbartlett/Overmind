@@ -68,6 +68,7 @@ interface RoomObject {
 interface RoomPosition {
 	print: string;
 	name: string;
+	coordName: string;
 	isEdge: boolean;
 	isVisible: boolean;
 	rangeToEdge: number;
@@ -109,7 +110,7 @@ interface RoomVisual {
 }
 
 interface Structure {
-	isPassible: boolean;
+	blocksMovement: boolean;
 }
 
 interface StructureContainer {
@@ -175,6 +176,10 @@ interface StructureTower {
 	// repairNearestStructure(): number;
 	//
 	// preventRampartDecay(): number;
+}
+
+interface Tombstone {
+	energy: number;
 }
 
 interface String {

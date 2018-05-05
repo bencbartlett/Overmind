@@ -49,9 +49,6 @@ Object.defineProperty(Room.prototype, 'hostiles', {
 
 Object.defineProperty(Room.prototype, 'playerHostiles', {
 	get() {
-		// let creepIsDangerous = (creep: Creep) => (creep.getActiveBodyparts(ATTACK) > 0 ||
-		// 										  creep.getActiveBodyparts(WORK) > 0 ||
-		// 										  creep.getActiveBodyparts(RANGED_ATTACK) > 0);
 		return _.filter(this.hostiles, (creep: Creep) => creep.owner.username != 'Invader');
 	},
 });
@@ -184,21 +181,6 @@ Object.defineProperties(Room.prototype, {
 			return this.find(FIND_SOURCES) || [];
 		},
 	},
-
-	// // All objects requiring a regular supply of energy
-	// sinks: {
-	// 	get() {
-	// 		if (!this.structures['sinks']) {
-	// 			let sinks = [].concat(this.structures[STRUCTURE_SPAWN],
-	// 								  this.structures[STRUCTURE_EXTENSION],
-	// 								  this.structures[STRUCTURE_LAB],
-	// 								  this.structures[STRUCTURE_TOWER],
-	// 								  this.structures[STRUCTURE_POWER_SPAWN]);
-	// 			this.structures['sinks'] = _.compact(_.flatten(sinks));
-	// 		}
-	// 		return this.structures['sinks'] || [];
-	// 	},
-	// },
 
 	// All non-barrier, non-road repairable objects
 	repairables: {

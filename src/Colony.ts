@@ -33,6 +33,7 @@ export class Colony {
 	overseer: Overseer;									// This runs the directives and overlords
 	// Room associations
 	name: string;										// Name of the primary colony room
+	id: number; 										// Order in which colony is instantiated from Overmind
 	colony: Colony;										// Reference to itself for simple overlord instantiation
 	roomNames: string[];								// The names of all rooms including the primary room
 	room: Room;											// Primary (owned) room of the colony
@@ -90,8 +91,9 @@ export class Colony {
 	// Room planner
 	roomPlanner: RoomPlanner;
 
-	constructor(roomName: string, outposts: string[]) {
+	constructor(id: number, roomName: string, outposts: string[]) {
 		// Name the colony
+		this.id = id;
 		this.name = roomName;
 		this.colony = this;
 		// Set up memory if needed
@@ -139,7 +141,8 @@ export class Colony {
 		}
 		this.lowPowerMode = Energetics.lowPowerMode(this);
 		// Register physical objects across all rooms in the colony
-		this.sources = _.flatten(_.map(this.rooms, room => room.sources));
+		this.sources = _.sortBy(_.flatten(_.map(this.rooms, room => room.sources)),
+								source => source.pos.getMultiRoomRangeTo(this.pos)); // sort for roadnetwork determinism
 		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites));
 		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
 		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
@@ -152,9 +155,7 @@ export class Colony {
 		this.incubatingColonies = [];
 		// Resource requests
 		this.linkNetwork = new LinkNetwork(this);
-		// this.transportRequests = new TransportRequestGroup();
 		this.logisticsGroup = new LogisticsGroup(this);
-		// this.logisticsNetwork = new LogisticsNetwork(this);
 		// Register a room planner
 		this.roomPlanner = new RoomPlanner(this);
 		// Register road network

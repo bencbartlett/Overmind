@@ -36,6 +36,7 @@ export abstract class Task implements ITask {
 		_pos: protoPos; 			// Target position's coordinates in case vision is lost
 	};
 	_parent: protoTask | null; 	// The parent of this task, if any. Task is changed to parent upon completion.
+	tick: number;				// When the task was set
 	settings: TaskSettings;		// Settings for a given type of task; shouldn't be modified on an instance-basis
 	options: TaskOptions;		// Options for a specific instance of a task
 	data: TaskData; 			// Data pertaining to a given instance of a task
@@ -70,11 +71,9 @@ export abstract class Task implements ITask {
 			blind          : false,
 			travelToOptions: {},
 		});
+		this.tick = Game.time;
 		this.options = options;
-		this.data = {
-			quiet: true,
-		};
-		// this.target = target as RoomObject;
+		this.data = {};
 	}
 
 	get proto(): protoTask {
@@ -83,6 +82,7 @@ export abstract class Task implements ITask {
 			_creep : this._creep,
 			_target: this._target,
 			_parent: this._parent,
+			tick   : this.tick,
 			options: this.options,
 			data   : this.data,
 		};
@@ -93,6 +93,7 @@ export abstract class Task implements ITask {
 		this._creep = protoTask._creep;
 		this._target = protoTask._target;
 		this._parent = protoTask._parent;
+		this.tick = protoTask.tick;
 		this.options = protoTask.options;
 		this.data = protoTask.data;
 	}

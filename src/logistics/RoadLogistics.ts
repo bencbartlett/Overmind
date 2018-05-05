@@ -80,7 +80,8 @@ export class RoadLogistics {
 	criticalRoads(room: Room): StructureRoad[] {
 		if (!this.cache.criticalRoads[room.name]) {
 			this.cache.criticalRoads[room.name] = _.filter(room.roads, road =>
-				road.hits < road.hitsMax * this.settings.criticalThreshold);
+				road.hits < road.hitsMax * this.settings.criticalThreshold &&
+				this.colony.roomPlanner.roadShouldBeHere(road.pos));
 		}
 		return this.cache.criticalRoads[room.name];
 	}
@@ -88,11 +89,11 @@ export class RoadLogistics {
 	repairableRoads(room: Room): StructureRoad[] {
 		if (!this.cache.repairableRoads[room.name]) {
 			this.cache.repairableRoads[room.name] = _.filter(room.roads, road =>
-				road.hits < road.hitsMax * this.settings.repairThreshold);
+				road.hits < road.hitsMax * this.settings.repairThreshold &&
+				this.colony.roomPlanner.roadShouldBeHere(road.pos));
 		}
 		return this.cache.repairableRoads[room.name];
 	}
-
 
 	/* Total amount of energy needed to repair all roads in the room */
 	energyToRepave(room: Room): number {

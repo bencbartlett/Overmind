@@ -115,6 +115,7 @@ interface ColonyMemory {
 	overseer: OverseerMemory;
 	hatchery: HatcheryMemory;
 	commandCenter: CommandCenterMemory;
+	persistent?: boolean;
 }
 
 interface OverseerMemory {
@@ -124,12 +125,6 @@ interface OverlordMemory {
 
 }
 
-interface MiningSiteMemory {
-	stats: {
-		usage: number;
-		downtime: number;
-	};
-}
 
 interface HatcheryMemory {
 	idlePos: protoPos;

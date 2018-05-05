@@ -55,7 +55,8 @@ export class HatcheryOverlord extends Overlord {
 			let rechargeTargets = _.compact([this.colony.storage!,
 											 this.colony.terminal!,
 											 this.colony.upgradeSite.input!,
-											 ..._.map(this.colony.miningSites, site => site.output!)]);
+											 ..._.map(this.colony.miningSites, site => site.output!),
+											 ..._.filter(this.colony.tombstones, ts => ts.store.energy > 0)]);
 			let target = queen.pos.findClosestByMultiRoomRange(_.filter(rechargeTargets,
 																		s => s.energy > queen.carryCapacity));
 			if (!target) target = queen.pos.findClosestByMultiRoomRange(_.filter(rechargeTargets, s => s.energy > 0));

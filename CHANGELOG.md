@@ -9,15 +9,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Lots of new content added to the [Wiki](https://github.com/bencbartlett/Overmind/wiki)!
 - TerminalNetwork stat collection, which accumulates all `send()` calls and transfer costs by resourceType between origin and destination
     - Added Grafana dashboard support for new stats (in /assets)
+- Lots of automation improvements to the room planner! Now once you create a room plan at RCL 1, you can dynamically add and remove outposts without needing to open/close the planner.
+    - Road planning is now done with the RoadPlanner, which is instantiated from a room planner, and provides a much higher degree of automation:
+        - Road planning is continuously recalculated every 1000 ticks with a heuristic that encourages road merging at minimal expense to path length
+        - Roads which become deprecated (no longer in the optimal road plan) are allowed to decay
+        - Road routing hints (white/white flags) no longer have any effect. (The new routing algorithm uses a variant of this idea to merge roads more intelligently.)
+    - UpgradeSites now automatically calculate their optimal location instead of needing to be placed manually
+    - MiningSites at outposts now automatically build container outputs without you needing to open and close the room planner for their colony
 - Hauling directives and overlords for hauling large amounts of resources long distances (e.g. scavenging from abandoned storage)
 - Finished integrating LogisticsRequestDirectives: these act as requestor or provider objects at a position
     - Requestor: requests energy to be dropped at a positiion
-    - Provider: resources dropped at position or in a tombstone should be collected
+    - Provider: resources dropped at position or in a tombstone to be collected
 - Preliminary contract module for making deals between players
 - Added `Energetics` module, which will make high-level decisions based on energy distributions
 - Colonies now have a `lowPowerMode` operational state, which scales back production of miners and transporters at RCL8 with full storage/terminal
 
 ### Changed
+- Transporters now use a single-sided greedy selection at RCL<4, since stable matching only works well when the transporter carry is a significant fraction of the logisticsRequest target's capacity
+- Workers and queens include tombstones in their recharge target list
 - `Task.creep` once again points to a `Zerg` object rather than a `Creep` object (Tasks are still hosted on creep prototypes, however)
 - `TaskRepair` will now attempt to move to within range 2 if repairing a road; this should fix the move-stop-repair-move-stop-repair behavior of workers repairing remote roads
 - TerminalNetwork now sends excess energy to room with least energy rather than non-full room with least send cost overhead

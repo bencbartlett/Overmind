@@ -1,4 +1,5 @@
 import {profile} from '../profiler/decorator';
+import {StructureMap} from '../roomPlanner/RoomPlanner';
 
 export var asciiLogo: string[] = ['___________________________________________________________',
 								  '',

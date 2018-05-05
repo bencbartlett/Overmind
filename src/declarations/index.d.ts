@@ -85,10 +85,6 @@ interface RoomCoord {
 	yDir: string;
 }
 
-interface StructureMap {
-	[structureType: string]: RoomPosition[];
-}
-
 interface protoCreep {
 	body: BodyPartConstant[];
 	name: string;

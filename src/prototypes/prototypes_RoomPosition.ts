@@ -4,9 +4,15 @@ Object.defineProperty(RoomPosition.prototype, 'print', {
 	}
 });
 
-Object.defineProperty(RoomPosition.prototype, 'name', { // identifier for the room position, used in caching
+Object.defineProperty(RoomPosition.prototype, 'name', { // identifier for the pos, used in caching
 	get: function () {
 		return this.roomName + ':' + this.x + ':' + this.y;
+	},
+});
+
+Object.defineProperty(RoomPosition.prototype, 'coordName', { // name, but without the roomName
+	get: function () {
+		return this.x + ':' + this.y;
 	},
 });
 
@@ -74,7 +80,7 @@ RoomPosition.prototype.isPassible = function (ignoreCreeps = false): boolean {
 		// Are there creeps?
 		if (ignoreCreeps == false && this.lookFor(LOOK_CREEPS).length > 0) return false;
 		// Are there structures?
-		if (_.filter(this.lookFor(LOOK_STRUCTURES), (s: Structure) => s.isPassible).length > 0) return false;
+		if (_.filter(this.lookFor(LOOK_STRUCTURES), (s: Structure) => s.blocksMovement).length > 0) return false;
 	}
 	return true;
 };

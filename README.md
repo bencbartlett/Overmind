@@ -2,14 +2,15 @@
 
 # Overmind Screeps AI
 
-Current release: [Overmind v0.2.x - "Logistics Logic"](https://github.com/bencbartlett/Overmind/releases)
+#### Current release: [Overmind v0.2.x - "Logistics Logic"](https://github.com/bencbartlett/Overmind/releases)
 
-See the [changelog](https://github.com/bencbartlett/Overmind/blob/master/CHANGELOG.md) for patch notes. Documentation is available in the [wiki](https://github.com/bencbartlett/Overmind/wiki).
+- See the [changelog](https://github.com/bencbartlett/Overmind/blob/master/CHANGELOG.md) for patch notes.
+- Documentation is available in the [wiki](https://github.com/bencbartlett/Overmind/wiki).
 
 ---
 
 ## What is Screeps?
-Screeps is an [MMO strategy game for programmers](https://screeps.com/). The core objective is to expand your colony to gather more resources. The game runs 24/7, even when you aren't actively playing; to control your units, you program their behavior in JavaScript or any other transpiled language. This is the AI I have been developing for Screeps, themed loosely around the [Zerg's swarm intelligence](http://starcraft.wikia.com/wiki/Overlord) from Starcraft. Creeps belong to [Colonies](https://github.com/bencbartlett/Overmind/blob/master/src/Colony.ts), which have several [Hive Clusters](https://github.com/bencbartlett/Overmind/blob/master/src/hiveClusters/HiveCluster.ts). Creep actions for a given process are orchestrated by [Overlords](https://github.com/bencbartlett/Overmind/blob/master/src/overlords/Overlord.ts). The colony [Overseer](https://github.com/bencbartlett/Overmind/blob/master/src/Overseer.ts) places [Directives](https://github.com/bencbartlett/Overmind/blob/master/src/directives/Directive.ts) to adapt to stimuli.
+Screeps is an [MMO strategy game for programmers](https://screeps.com/). The core objective is to expand your colony to gather more resources. The game is played on a massive shared server which runs 24/7, even when you aren't actively playing. To control your units, you program their behavior in JavaScript or any other transpiled language. This is the AI I have been developing for Screeps, themed loosely around the [Zerg's swarm intelligence](http://starcraft.wikia.com/wiki/Overlord) from Starcraft. Creeps belong to [Colonies](https://github.com/bencbartlett/Overmind/blob/master/src/Colony.ts), which have several [Hive Clusters](https://github.com/bencbartlett/Overmind/blob/master/src/hiveClusters/HiveCluster.ts). Creep actions for a given process are orchestrated by [Overlords](https://github.com/bencbartlett/Overmind/blob/master/src/overlords/Overlord.ts). The colony [Overseer](https://github.com/bencbartlett/Overmind/blob/master/src/Overseer.ts) places [Directives](https://github.com/bencbartlett/Overmind/blob/master/src/directives/Directive.ts) to adapt to stimuli.
 
 ### We're on slack!
 Found something you like, hate, or find confusing? Join the discussion on Slack in the [#overmind](https://screeps.slack.com/messages/overmind) channel!
@@ -30,7 +31,7 @@ If you want to install the full codebase, download or clone the repository, then
 
 ```npm install```
 
-(This will take about a minute to execute.) To compile and deploy the codebase, create a `screeps.json` file from the [example file](https://github.com/bencbartlett/Overmind/blob/master/screeps.example.json), then nagivate to the Overmind root directory and do one of the following actions:
+To compile and deploy the codebase, create a `screeps.json` file from the [example file](https://github.com/bencbartlett/Overmind/blob/master/screeps.example.json), then nagivate to the Overmind root directory and do one of the following actions:
 
 - Compile and deploy to public server: `npm run push-main`
 - Compile and deploy to private server: `npm run push-pserver`

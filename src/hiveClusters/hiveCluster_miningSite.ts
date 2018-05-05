@@ -12,6 +12,13 @@ import {Stats} from '../stats/stats';
 import {LogisticsGroup} from '../logistics/LogisticsGroup';
 import {Pathing} from '../pathing/pathing';
 
+interface MiningSiteMemory {
+	stats: {
+		usage: number;
+		downtime: number;
+	};
+}
+
 @profile
 export class MiningSite extends HiveCluster {
 	source: Source;
@@ -19,7 +26,7 @@ export class MiningSite extends HiveCluster {
 	miningPowerNeeded: number;
 	output: StructureContainer | StructureLink | undefined;
 	outputConstructionSite: ConstructionSite | undefined;
-	// miningGroup: MiningGroup | undefined;
+	private _outputPos: RoomPosition | undefined;
 	overlord: MiningOverlord;
 
 	constructor(colony: Colony, source: Source) {
@@ -111,13 +118,60 @@ export class MiningSite extends HiveCluster {
 		this.registerOutputRequests();
 	}
 
+	/* Calculate where the output will be built for this site */
+	private calculateOutpotPos(): RoomPosition | undefined {
+		let originPos: RoomPosition | undefined = undefined;
+		if (this.colony.storage) {
+			originPos = this.colony.storage.pos;
+		} else if (this.colony.roomPlanner.storagePos) {
+			originPos = this.colony.roomPlanner.storagePos;
+		}
+		if (originPos) {
+			let path = Pathing.findShortestPath(this.pos, originPos).path;
+			return path[0];
+		}
+	}
+
+	get outputPos(): RoomPosition | undefined {
+		if (this.output) {
+			return this.output.pos;
+		} else if (this.outputConstructionSite) {
+			return this.outputConstructionSite.pos;
+		} else {
+			if (!this._outputPos) {
+				this._outputPos = this.calculateOutpotPos();
+				if (!this._outputPos) {
+					log.warning(`Mining site at ${this.pos.print}: cannot determine outputPos!`);
+				}
+			}
+			return this._outputPos;
+		}
+	}
+
+	/* Build a container output at the optimal location */
+	private buildContainerIfMissing(): void {
+		if (!this.output && !this.outputConstructionSite) {
+			let buildHere = this.outputPos;
+			if (buildHere) {
+				let result = buildHere.createConstructionSite(STRUCTURE_CONTAINER);
+				if (result == OK) {
+					return;
+				} else {
+					log.warning(`Mining site at ${this.pos.print}: cannot build output! Result: ${result}`);
+				}
+			}
+		}
+	}
+
 	/* Run tasks: make output construciton site if needed; build and maintain the output structure */
 	run(): void {
-
+		if (Game.time % 10 == 5) {
+			this.buildContainerIfMissing();
+		}
 	}
 
 	visuals() {
 		Visualizer.showInfo([`Usage:  ${this.memory.stats.usage.toPercent()}`,
-							 `Uptime: ${(1 - this.memory.stats.downtime).toPercent()}`], this);
+							 `Downtime: ${this.memory.stats.downtime.toPercent()}`], this);
 	}
 }

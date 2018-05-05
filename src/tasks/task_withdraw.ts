@@ -54,7 +54,8 @@ export type withdrawTargetType =
 	| StoreStructure
 	| StructureLab
 	| StructureNuker
-	| StructurePowerSpawn;
+	| StructurePowerSpawn
+	| Tombstone;
 
 export const withdrawTaskName = 'withdraw';
 
@@ -85,7 +86,7 @@ export class TaskWithdraw extends Task {
 	isValidTarget() {
 		let amount = this.data.amount || 1;
 		let target = this.target;
-		if (isStoreStructure(target)) {
+		if (target instanceof Tombstone || isStoreStructure(target)) {
 			return (target.store[this.data.resourceType] || 0) >= amount;
 		} else if (isEnergyStructure(target) && this.data.resourceType == RESOURCE_ENERGY) {
 			return target.energy >= amount;

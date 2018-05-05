@@ -158,6 +158,18 @@ export class TransporterSetup extends CreepSetup {
 	}
 }
 
+export class TransporterEarlySetup extends CreepSetup {
+	static role = 'transport';
+
+	constructor() {
+		super(TransporterSetup.role, {
+			pattern  : [CARRY, MOVE],
+			sizeLimit: Infinity,
+
+		});
+	}
+}
+
 export class UpgraderSetup extends CreepSetup {
 	static role = 'upgrader';
 

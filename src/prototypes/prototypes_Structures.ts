@@ -5,7 +5,7 @@
 import {myUsername, signature} from '../settings/settings_user';
 import {DirectiveLabMineral} from '../directives/logistics/directive_labMineralType';
 
-Object.defineProperty(StructureContainer.prototype, 'isPassible', {
+Object.defineProperty(Structure.prototype, 'blocksMovement', {
 	get() {
 		return this.structureType != STRUCTURE_ROAD &&
 			   this.structureType != STRUCTURE_CONTAINER &&
@@ -186,6 +186,10 @@ Object.defineProperty(StructureTower.prototype, 'isEmpty', { // if this containe
 	},
 });
 
-
-
+// Tombstone prototypes ================================================================================================
+Object.defineProperty(Tombstone.prototype, 'energy', {
+	get() {
+		return this.store[RESOURCE_ENERGY];
+	},
+});
 

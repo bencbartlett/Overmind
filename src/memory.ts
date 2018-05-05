@@ -2,7 +2,14 @@ import {Stats} from './stats/stats';
 
 export class Mem {
 
-	static formatOvermindMemory() {
+	static wrap(memory: any, memName: string, defaults = {}) {
+		if (!memory[memName]) {
+			memory[memName] = defaults;
+		}
+		return memory[memName];
+	}
+
+	private static formatOvermindMemory() {
 		if (!Memory.Overmind) {
 			Memory.Overmind = {};
 		}
@@ -11,14 +18,7 @@ export class Mem {
 		}
 	}
 
-	static wrap(memory: any, memName: string, defaults = {}) {
-		if (!memory[memName]) {
-			memory[memName] = defaults;
-		}
-		return memory[memName];
-	}
-
-	static formatPathingMemory() {
+	private static formatPathingMemory() {
 		if (!Memory.pathing) {
 			Memory.pathing = {} as PathingMemory; // Hacky workaround
 		}
@@ -50,7 +50,7 @@ export class Mem {
 		this.backwardsCompatibility();
 	}
 
-	static cleanCreeps() {
+	private static cleanCreeps() {
 		// Clear memory for non-existent creeps
 		for (let name in Memory.creeps) {
 			if (!Game.creeps[name]) {
@@ -59,7 +59,7 @@ export class Mem {
 		}
 	}
 
-	static cleanFlags() {
+	private static cleanFlags() {
 		// Clear memory for non-existent flags
 		for (let name in Memory.flags) {
 			if (!Game.flags[name]) {
@@ -68,7 +68,20 @@ export class Mem {
 		}
 	}
 
-	static cleanPathingMemory() {
+	private static cleanColonies() {
+		// Clear memory of dead colonies
+		for (let name in Memory.colonies) {
+			let room = Game.rooms[name];
+			if (!(room && room.my)) {
+				// Delete only if "persistent" is not set - use case: praise rooms
+				if (!Memory.colonies[name].persistent) {
+					delete Memory.colonies[name];
+				}
+			}
+		}
+	}
+
+	private static cleanPathingMemory() {
 		let distanceCleanProbability = 0.001;
 		let weightedDistanceCleanProbability = 0.01;
 
@@ -103,35 +116,12 @@ export class Mem {
 		// Clean the memory of non-existent objects every tick
 		this.cleanCreeps();
 		this.cleanFlags();
+		this.cleanColonies();
 		this.cleanPathingMemory();
 		Stats.clean();
 	}
 
 	static backwardsCompatibility() {
-		// // Delete old profiler memory to migrate to new one
-		// if (Memory.profiler && Memory.profiler.data) {
-		// 	delete Memory.profiler;
-		// }
-		// // Convert all haulers to transporters
-		// for (let name in Game.creeps) {
-		// 	let creep = Game.creeps[name];
-		// 	if (creep.memory.role == 'hauler') {
-		// 		creep.memory.role = 'transport';
-		// 		creep.memory.overlord = creep.memory.colony + ':logistics';
-		// 		creep.memory.task = null;
-		// 	}
-		// }
-		// // // Convert all transporters back to haulers in case I need to revert this
-		// // for (let name in Game.creeps) {
-		// // 	let creep = Game.creeps[name];
-		// // 	if (creep.memory.role == 'transport') {
-		// // 		let creepRoom = Game.rooms[creep.memory.colony];
-		// // 		if (creepRoom && creepRoom.storage) {
-		// // 			creep.memory.role = 'hauler';
-		// // 			creep.memory.overlord = 'miningGroup:' + creepRoom.storage.id + ':transport';
-		// // 			creep.memory.task = null;
-		// // 		}
-		// // 	}
-		// // }
+
 	}
 }

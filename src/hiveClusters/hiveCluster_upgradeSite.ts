@@ -6,6 +6,11 @@ import {UpgradingOverlord} from '../overlords/core/overlord_upgrade';
 import {Colony} from '../Colony';
 import {Mem} from '../memory';
 import {Visualizer} from '../visuals/Visualizer';
+import {log} from '../lib/logger/log';
+
+interface UpgradeSiteMemory {
+	input?: { pos: protoPos, tick: number };
+}
 
 @profile
 export class UpgradeSite extends HiveCluster {
@@ -13,6 +18,7 @@ export class UpgradeSite extends HiveCluster {
 	controller: StructureController;					// The controller for the site
 	input: StructureLink | StructureContainer | undefined;	// The object receiving energy for the site
 	inputConstructionSite: ConstructionSite | undefined;		// The construction site for the input, if there is one
+	private _inputPos: RoomPosition | undefined;
 	private settings: {
 		storageBuffer: number,
 		energyPerBodyUnit: number
@@ -46,7 +52,7 @@ export class UpgradeSite extends HiveCluster {
 		this.energyPerTick = _.sum(_.map(this.overlord.upgraders, upgrader => upgrader.getActiveBodyparts(WORK)));
 	}
 
-	get memory() {
+	get memory(): UpgradeSiteMemory {
 		return Mem.wrap(this.colony.memory, 'upgradeSite');
 	}
 
@@ -80,8 +86,76 @@ export class UpgradeSite extends HiveCluster {
 		}
 	}
 
-	run(): void {
+	/* Calculate where the input will be built for this site */
+	private calculateInputPos(): RoomPosition | undefined {
+		let originPos: RoomPosition | undefined = undefined;
+		if (this.colony.storage) {
+			originPos = this.colony.storage.pos;
+		} else if (this.colony.roomPlanner.storagePos) {
+			originPos = this.colony.roomPlanner.storagePos;
+		} else {
+			return;
+		}
+		// Find all positions at range 2 from controller
+		let inputLocations: RoomPosition[] = [];
+		for (let dx of [-2, -1, 0, 1, 2]) {
+			for (let dy of [-2, -1, 0, 1, 2]) {
+				if ((dx == -2 || dx == 2) || (dy == -2 || dy == 2)) {
+					let pos = new RoomPosition(this.pos.x + dx, this.pos.y + dy, this.pos.roomName);
+					if (!pos.isEdge && pos.isPassible(true)) {
+						inputLocations.push(pos);
+					}
+				}
+			}
+		}
+		// Return location closest to storage by path
+		let inputPos = originPos.findClosestByPath(inputLocations);
+		if (inputPos) {
+			this.memory.input = {pos: inputPos, tick: Game.time};
+			return inputPos;
+		}
+	}
 
+	get inputPos(): RoomPosition | undefined {
+		if (this.input) {
+			return this.input.pos;
+		} else if (this.inputConstructionSite) {
+			return this.inputConstructionSite.pos;
+		} else {
+			// Recalculate the input position or pull from memory if recent enough
+			if (!this._inputPos) {
+				if (this.memory.input && Game.time - this.memory.input.tick < 100) {
+					this._inputPos = derefRoomPosition(this.memory.input.pos);
+				} else {
+					this._inputPos = this.calculateInputPos();
+					if (!this._inputPos) {
+						log.warning(`Upgrade site at ${this.pos.print}: cannot determine inputPos!`);
+					}
+				}
+			}
+			return this._inputPos;
+		}
+	}
+
+	/* Build a container output at the optimal location */
+	private buildContainerIfMissing(): void {
+		if (!this.input && !this.inputConstructionSite) {
+			let buildHere = this.inputPos;
+			if (buildHere) {
+				let result = buildHere.createConstructionSite(STRUCTURE_CONTAINER);
+				if (result == OK) {
+					return;
+				} else {
+					log.warning(`Upgrade site at ${this.pos.print}: cannot build input! Result: ${result}`);
+				}
+			}
+		}
+	}
+
+	run(): void {
+		if (Game.time % 25 == 7) {
+			this.buildContainerIfMissing();
+		}
 	}
 
 	visuals() {

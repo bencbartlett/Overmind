@@ -13,7 +13,7 @@ export class WorkerOverlord extends Overlord {
 	workers: Zerg[];
 	room: Room;
 	repairStructures: Structure[];
-	rechargeStructures: (StructureStorage | StructureTerminal | StructureContainer | StructureLink)[];
+	rechargeObjects: (StructureStorage | StructureTerminal | StructureContainer | StructureLink | Tombstone)[];
 	fortifyStructures: (StructureWall | StructureRampart)[];
 	settings: {
 		barrierHits: { [rcl: number]: number };
@@ -24,12 +24,13 @@ export class WorkerOverlord extends Overlord {
 	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.work) {
 		super(colony, 'worker', priority);
 		this.workers = this.creeps('worker');
-		this.rechargeStructures = _.compact([this.colony.storage!,
-											 this.colony.terminal!,
-											 this.colony.upgradeSite.input!,
-											 ..._.map(this.colony.miningSites, site => site.output!)]);
+		this.rechargeObjects = _.compact([this.colony.storage!,
+										  this.colony.terminal!,
+										  this.colony.upgradeSite.input!,
+										  ..._.map(this.colony.miningSites, site => site.output!),
+										  ..._.filter(this.colony.tombstones, ts => ts.store.energy > 0)]);
 		if (this.colony.hatchery && this.colony.hatchery.battery) {
-			this.rechargeStructures.push(this.colony.hatchery.battery);
+			this.rechargeObjects.push(this.colony.hatchery.battery);
 		}
 		// Barrier settings
 		this.settings = {
@@ -101,8 +102,11 @@ export class WorkerOverlord extends Overlord {
 		let groupedSites = _.groupBy(this.colony.constructionSites, site => site.structureType);
 		for (let structureType of BuildPriorities) {
 			if (groupedSites[structureType]) {
-				// let ranges = _.map(groupedSites[structureType], site => worker.pos.getMultiRoomRangeTo(site.pos));
-				// let target = groupedSites[structureType][_.indexOf(ranges, _.min(ranges))];
+				// Skip building mining site containers outside of your room
+				if (structureType == STRUCTURE_CONTAINER) {
+					groupedSites[structureType] = _.filter(groupedSites[structureType],
+														   site => site.pos.roomName == this.colony.name);
+				}
 				let target = worker.pos.findClosestByMultiRoomRange(groupedSites[structureType]);
 				if (target) {
 					worker.task = Tasks.build(target);
@@ -141,8 +145,9 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	private rechargeActions(worker: Zerg) {
-		let rechargeStructures = _.filter(this.rechargeStructures, s => s.energy > this.settings.workerWithdrawLimit);
-		let target = worker.pos.findClosestByMultiRoomRange(rechargeStructures);
+		let rechargeTargets = _.filter(this.rechargeObjects, s => s instanceof Tombstone ||
+																  s.energy > this.settings.workerWithdrawLimit);
+		let target = worker.pos.findClosestByMultiRoomRange(rechargeTargets);
 		if (target) worker.task = Tasks.withdraw(target);
 	}
 
@@ -171,16 +176,6 @@ export class WorkerOverlord extends Overlord {
 			if (worker.isIdle) {
 				this.handleWorker(worker);
 			}
-			worker.run();
-			// let result = worker.run();
-			// if (result != OK) {
-			// 	// TODO: this is super expensive
-			// 	// If you haven't done anything, try to repair something in range
-			// 	let nearbyRepairables = _.sortBy(_.filter(this.room.repairables, s => worker.pos.getRangeTo(s) <= 3),
-			// 									 s => s.hits);
-			// 	let target = nearbyRepairables[0];
-			// 	if (target) worker.repair(target);
-			// }
 		}
 	}
 }

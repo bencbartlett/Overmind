@@ -21,7 +21,7 @@ export type LogisticsTarget =
 	| DirectiveLogisticsRequest// | Zerg;
 export type BufferTarget = StructureStorage | StructureTerminal;
 
-export interface Request {
+export interface LogisticsRequest {
 	id: string;							// ID of the store; used for matching purposes
 	target: LogisticsTarget;			// Target making the store
 	amount: number;						// Amount to store
@@ -40,25 +40,20 @@ interface RequestOptions {
 @profile
 export class LogisticsGroup {
 
-	requests: Request[];// { [priority: number]: Request[] };
-	buffers: BufferTarget[]; // TODO: add links
+	requests: LogisticsRequest[];// { [priority: number]: Request[] };
+	buffers: BufferTarget[];
 	colony: Colony;
 	private targetToRequest: { [targetRef: string]: number };
-	private _matching: { [creepName: string]: Request | undefined } | undefined;
-	// providers: Request[]; //{ [priority: number]: Request[] };
-	// transporters: Zerg[];
-	settings: {
-		flagDropAmount: number;
-		rangeToPathHeuristic: number;
+	private _matching: { [creepName: string]: LogisticsRequest | undefined } | undefined;
+	static settings = {
+		flagDropAmount      : 1000,
+		rangeToPathHeuristic: 1.1, 	// findClosestByRange * this ~= findClosestByPos except in pathological cases
+		carryThreshold      : 800, 	// only do stable matching on transporters at least this big (RCL4+)
 	};
 
 	constructor(colony: Colony) {
 		this.requests = [];
 		this.targetToRequest = {};
-		this.settings = {
-			flagDropAmount      : 1000,
-			rangeToPathHeuristic: 1.1, // findClosestByRange * this ~= findClosestByPos except in pathological cases
-		};
 		this.colony = colony;
 		this.buffers = _.compact([colony.storage!, colony.terminal!]);
 	}
@@ -146,7 +141,7 @@ export class LogisticsGroup {
 		}
 		// Register the store
 		let requestID = this.requests.length;
-		let req: Request = {
+		let req: LogisticsRequest = {
 			id          : requestID.toString(),
 			target      : target,
 			amount      : opts.amount,
@@ -172,7 +167,7 @@ export class LogisticsGroup {
 		(opts.dAmountdt!) *= -1;
 		// Register the store
 		let requestID = this.requests.length;
-		let req: Request = {
+		let req: LogisticsRequest = {
 			id          : requestID.toString(),
 			target      : target,
 			amount      : opts.amount,
@@ -204,13 +199,15 @@ export class LogisticsGroup {
 			// If there is a well-defined task ETA, use that as the first leg, else set dist to zero and use range
 			if (approximateDistance) {
 				for (let targetPos of targetPositions.slice(1)) {
-					approximateDistance += pos.getMultiRoomRangeTo(targetPos) * this.settings.rangeToPathHeuristic;
+					approximateDistance += pos.getMultiRoomRangeTo(targetPos)
+										   * LogisticsGroup.settings.rangeToPathHeuristic;
 					pos = targetPos;
 				}
 			} else {
 				approximateDistance = 0;
 				for (let targetPos of targetPositions) {
-					approximateDistance += pos.getMultiRoomRangeTo(targetPos) * this.settings.rangeToPathHeuristic;
+					approximateDistance += pos.getMultiRoomRangeTo(targetPos)
+										   * LogisticsGroup.settings.rangeToPathHeuristic;
 					pos = targetPos;
 				}
 			}
@@ -260,13 +257,13 @@ export class LogisticsGroup {
 	}
 
 	/* Returns the effective amount of the store given other targeting creeps */
-	predictedAmount(transporter: Zerg, request: Request, availability = 0, newPos = transporter.pos): number {
+	predictedAmount(transporter: Zerg, request: LogisticsRequest, availability = 0, newPos = transporter.pos): number {
 		let otherTargetingTransporters = LogisticsGroup.targetingTransporters(request.target, transporter);
 		let ETA: number | undefined;
 		if (transporter.task && transporter.task.target == request.target) {
 			ETA = transporter.task.eta;
 		}
-		if (!ETA) ETA = this.settings.rangeToPathHeuristic * request.target.pos.getMultiRoomRangeTo(newPos)
+		if (!ETA) ETA = LogisticsGroup.settings.rangeToPathHeuristic * request.target.pos.getMultiRoomRangeTo(newPos)
 						+ availability;
 		let predictedDifference = request.dAmountdt * ETA;
 		if (request.amount > 0) { // store state, energy in
@@ -302,7 +299,7 @@ export class LogisticsGroup {
 	}
 
 	/* Consider all possibilities of buffer structures to visit on the way to fulfilling the store */
-	bufferChoices(transporter: Zerg, request: Request): {
+	bufferChoices(transporter: Zerg, request: LogisticsRequest): {
 		deltaResource: number,
 		deltaTicks: number,
 		targetRef: string
@@ -374,7 +371,7 @@ export class LogisticsGroup {
 	}
 
 	/* Compute the best possible value of |dResource / dt| */
-	private resourceChangeRate(transporter: Zerg, request: Request): number {
+	private resourceChangeRate(transporter: Zerg, request: LogisticsRequest): number {
 		let choices = this.bufferChoices(transporter, request);
 		let dResource_dt = _.map(choices, choice => request.multiplier * choice.deltaResource / choice.deltaTicks);
 		return _.max(dResource_dt);
@@ -382,22 +379,22 @@ export class LogisticsGroup {
 	}
 
 	/* Generate requestor preferences in terms of transporters */
-	private requestPreferences(request: Request, transporters: Zerg[]): Zerg[] {
+	requestPreferences(request: LogisticsRequest, transporters: Zerg[]): Zerg[] {
 		// Requestors priortize transporters by change in resources per tick until pickup/delivery
 		return _.sortBy(transporters, transporter => -1 * this.resourceChangeRate(transporter, request)); // -1 -> desc
 	}
 
 	/* Generate transporter preferences in terms of store structures */
-	private transporterPreferences(transporter: Zerg): Request[] {
+	transporterPreferences(transporter: Zerg): LogisticsRequest[] {
 		// Transporters prioritize requestors by change in resources per tick until pickup/delivery
 		return _.sortBy(this.requests, request => -1 * this.resourceChangeRate(transporter, request)); // -1 -> desc
 	}
 
-	get matching(): { [creepName: string]: Request | undefined } {
+	get matching(): { [creepName: string]: LogisticsRequest | undefined } {
 		if (!this._matching) {
-			let transporters = _.filter(this.colony.getCreepsByRole(TransporterSetup.role), creep => !creep.spawning);
+			let transporters = _.filter(this.colony.getCreepsByRole(TransporterSetup.role), creep =>
+				!creep.spawning && creep.carryCapacity >= LogisticsGroup.settings.carryThreshold);
 			this._matching = this.stableMatching(transporters);
-			// this.summarizeMatching();
 		}
 		return this._matching;
 	}
@@ -445,14 +442,15 @@ export class LogisticsGroup {
 			let target = transporter.task ?
 						 transporter.task.proto._target.ref + ' ' + transporter.task.targetPos.print : 'none';
 			let nextAvailability = this.nextAvailability(transporter);
-			console.log(`    Creep: ${transporter.name}    Pos: ${transporter.pos.print}    Task: ${task}    Target: ${target}    ` +
+			console.log(`    Creep: ${transporter.name}    Pos: ${transporter.pos.print}    ` +
+						`Task: ${task}    Target: ${target}    ` +
 						`Available in ${Math.floor(nextAvailability[0])} ticks at ${nextAvailability[1].print}`);
 		}
 		console.log();
 	}
 
 	/* Generate a stable matching of transporters to requests with Gale-Shapley algorithm */
-	private stableMatching(transporters: Zerg[]): { [creepName: string]: Request | undefined } {
+	private stableMatching(transporters: Zerg[]): { [creepName: string]: LogisticsRequest | undefined } {
 		let tPrefs: { [transporterName: string]: string[] } = {};
 		for (let transporter of transporters) {
 			tPrefs[transporter.name] = _.map(this.transporterPreferences(transporter), request => request.id);

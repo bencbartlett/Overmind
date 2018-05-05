@@ -49,8 +49,8 @@ export class Overseer {
 				}
 			}
 		}
+		// Place a logistics request directive for every tombstone with non-empty store that isn't on a container
 		for (let tombstone of this.colony.tombstones) {
-			// Place a logistics request directive for every tombstone with non-empty store that isn't on a container
 			if (_.sum(tombstone.store) > 0 && !tombstone.pos.lookForStructure(STRUCTURE_CONTAINER)) {
 				DirectiveLogisticsRequest.createIfNotPresent(tombstone.pos, 'pos', {quiet: true});
 			}

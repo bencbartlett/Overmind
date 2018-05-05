@@ -87,8 +87,10 @@ export default class Overmind implements IOvermind {
 		}
 
 		// Initialize the Colonies and give each one an Overseer
+		let id = 0;
 		for (let colonyName in colonyOutposts) {
-			this.Colonies[colonyName] = new Colony(colonyName, colonyOutposts[colonyName]);
+			this.Colonies[colonyName] = new Colony(id, colonyName, colonyOutposts[colonyName]);
+			id++;
 		}
 	}
 

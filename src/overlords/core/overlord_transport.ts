@@ -1,9 +1,9 @@
 import {Overlord} from '../Overlord';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
-import {Colony} from '../../Colony';
-import {BufferTarget, LogisticsGroup} from '../../logistics/LogisticsGroup';
-import {TransporterSetup} from '../../creepSetup/defaultSetups';
+import {Colony, ColonyStage} from '../../Colony';
+import {BufferTarget, LogisticsGroup, LogisticsRequest} from '../../logistics/LogisticsGroup';
+import {TransporterEarlySetup, TransporterSetup} from '../../creepSetup/defaultSetups';
 import {OverlordPriority} from '../priorities_overlords';
 import {Pathing} from '../../pathing/pathing';
 import {DirectiveLogisticsRequest} from '../../directives/logistics/directive_logisticsRequest';
@@ -49,22 +49,20 @@ export class TransportOverlord extends Overlord {
 	}
 
 	init() {
+		let setup = this.colony.stage == ColonyStage.Larva ? new TransporterEarlySetup() : new TransporterSetup();
 		let transportPower = _.sum(_.map(this.lifetimeFilter(this.transporters),
 										 creep => creep.getActiveBodyparts(CARRY)));
 		let neededTransportPower = this.neededTransportPower();
 		if (transportPower < neededTransportPower) {
-			this.requestCreep(new TransporterSetup());
+			this.requestCreep(setup);
 		}
-		this.creepReport(TransporterSetup.role, transportPower, neededTransportPower);
+		this.creepReport(setup.role, transportPower, neededTransportPower);
 	}
 
-
-	private handleTransporter(transporter: Zerg) {
-		let request = this.logisticsGroup.matching[transporter.name];
+	private handleTransporter(transporter: Zerg, request: LogisticsRequest | undefined) {
 		if (request) {
 			let choices = this.logisticsGroup.bufferChoices(transporter, request);
 			let bestChoice = _.last(_.sortBy(choices, choice => choice.deltaResource / choice.deltaTicks));
-			// console.log(`${transporter.name}: bestChoice: deltaResource: ${bestChoice.deltaResource}, deltaTicks: ${bestChoice.deltaTicks}`);
 			let task = null;
 			let amount = this.logisticsGroup.predictedAmount(transporter, request);
 			if (amount > 0) { // store needs refilling
@@ -121,108 +119,27 @@ export class TransportOverlord extends Overlord {
 		}
 	}
 
-	// private transferMinerals(transporter: Zerg) {
-	// 	let carry = transporter.carry as { [resource: string]: number };
-	// 	for (let resource in carry) {
-	// 		if (resource != RESOURCE_ENERGY && carry[resource] > 0) {
-	// 			let target = this.getRequester(transporter, resource) || this.colony.terminal;
-	// 			if (target) {
-	// 				transporter.task = Tasks.transfer(target, <ResourceConstant>resource);
-	// 			} else {
-	// 				console.log(`${transporter.name}: no place to put ${resource}!`);
-	// 			}
-	// 		}
-	// 	}
-	// }
-	//
-	// private transporterIsTargeting(target: LogisticsTarget): boolean {
-	// 	let targetingZerg = _.map(target.targetedBy, name => Game.zerg[name]);
-	// 	let targetingTransporters = _.filter(targetingZerg, zerg => zerg.roleName == TransporterSetup.role);
-	// 	return targetingTransporters.length > 0;
-	// }
-	//
-	// private getActiveProvder(transporter: Zerg, resourceType: string = RESOURCE_ENERGY): LogisticsTarget | undefined {
-	// 	let items = _.filter(this.colony.logisticsNetwork.activeProviders, item => item.resourceType == resourceType);
-	// 	let targets = _.filter(_.map(items, item => item.target), target => !this.transporterIsTargeting(target));
-	// 	return transporter.pos.findClosestByMultiRoomRange(targets);
-	// }
-	//
-	// private getPassiveProvider(transporter: Zerg, resourceType: string = RESOURCE_ENERGY): LogisticsTarget | undefined {
-	// 	let items = _.filter(this.colony.logisticsNetwork.passiveProviders, item => item.resourceType == resourceType);
-	// 	let targets = _.filter(_.map(items, item => item.target), target => !this.transporterIsTargeting(target));
-	// 	return transporter.pos.findClosestByMultiRoomRange(targets);
-	// }
-	//
-	// private getRequester(transporter: Zerg, resourceType: string = RESOURCE_ENERGY): LogisticsTarget | undefined {
-	// 	let items = _.filter(this.colony.logisticsNetwork.requesters, item => item.resourceType == resourceType);
-	// 	let targets = _.filter(_.map(items, item => item.target), target => !this.transporterIsTargeting(target));
-	// 	return transporter.pos.findClosestByMultiRoomRange(targets);
-	// }
-	//
-	// private closestEnergyDropoff(transporter: Zerg): StructureLink | StoreStructure | undefined {
-	// 	let freeLinks = _.filter(this.colony.logisticsNetwork.links,
-	// 							 link => link.cooldown < transporter.pos.getRangeTo(link) &&
-	// 									 link.energy == 0 &&
-	// 									 !this.transporterIsTargeting(link));
-	// 	let targets = [...freeLinks, ...this.logisticsGroup.buffers];
-	// 	return transporter.pos.findClosestByMultiRoomRange(targets);
-	// }
-	//
-	// private getWithdrawTarget(transporter: Zerg, store: LogisticsItem) {
-	// 	let applicableBuffers = _.filter(this.colony.logisticsNetwork.buffers,
-	// 									 buffer => (buffer.store[store.resourceType] || 0) >= store.amount);
-	// 	return transporter.pos.findClosestByMultiRoomRange(applicableBuffers);
-	// }
-	//
-	//
-	// private handleTransporter(transporter: Zerg) {
-	// 	if (_.sum(transporter.carry) == 0) {
-	// 		let unhandledRequests = _.filter(this.colony.logisticsNetwork.requesters,
-	// 										 item => !this.transporterIsTargeting(item.target));
-	// 		let closestRequest = transporter.pos.findClosestByMultiRoomRange(unhandledRequests);
-	// 		if (closestRequest) {
-	// 			let amount = Math.min(transporter.carryCapacity, closestRequest.amount);
-	// 			let withdrawTarget = this.getWithdrawTarget(transporter, closestRequest);
-	// 			if (withdrawTarget) {
-	// 				let task: Task = Tasks.transfer(closestRequest.target, closestRequest.resourceType, amount)
-	// 									  .fork(Tasks.withdrawResource(withdrawTarget, closestRequest.resourceType,
-	// 																   amount));
-	// 				transporter.task = task;
-	// 				return;
-	// 			}
-	// 		}
-	// 		let provideItems = _.filter(this.colony.logisticsNetwork.activeProviders,
-	// 									item => !this.transporterIsTargeting(item.target));
-	// 		let closestItem = transporter.pos.findClosestByMultiRoomRange(provideItems);
-	// 		if (closestItem) {
-	// 			transporter.task = Tasks.withdrawResource(closestItem.target, closestItem.resourceType);
-	// 		} else {
-	// 			transporter.park();
-	// 		}
-	// 	} else {
-	// 		if (transporter.inSameRoomAs(this.colony)) {
-	// 			if (_.sum(transporter.carry) > transporter.carry.energy) {
-	// 				// If transporter has minerals, get rid of them first
-	// 				this.transferMinerals(transporter);
-	// 			} else {
-	// 				// Handle energy requests
-	// 				let target = this.getRequester(transporter) || this.closestEnergyDropoff(transporter);
-	// 				if (target) {
-	// 					transporter.task = Tasks.deposit(target);
-	// 				}
-	// 			}
-	// 		} else {
-	// 			transporter.task = Tasks.goToRoom(this.colony.room.name);
-	// 		}
-	// 	}
-	// }
+	private handleBigTransporter(bigTransporter: Zerg) {
+		let bestRequestViaStableMatching = this.logisticsGroup.matching[bigTransporter.name];
+		this.handleTransporter(bigTransporter, bestRequestViaStableMatching);
+	}
+
+	/* Handles small transporters, which don't do well with the logisticsGroup's stable matching system */
+	private handleSmolTransporter(smolTransporter: Zerg) {
+		// Just perform a single-sided greedy selection of all requests
+		let bestRequestViaGreedy = _.first(this.logisticsGroup.transporterPreferences(smolTransporter));
+		this.handleTransporter(smolTransporter, bestRequestViaGreedy);
+	}
 
 	run() {
 		for (let transporter of this.transporters) {
 			if (transporter.isIdle) {
-				this.handleTransporter(transporter);
+				if (transporter.carryCapacity >= LogisticsGroup.settings.carryThreshold) {
+					this.handleBigTransporter(transporter);
+				} else {
+					this.handleSmolTransporter(transporter);
+				}
 			}
 		}
 	}
-
 }
