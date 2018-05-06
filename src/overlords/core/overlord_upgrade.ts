@@ -43,8 +43,9 @@ export class UpgradingOverlord extends Overlord {
 					return;
 				}
 			}
-			if (!this.upgradeSite.controller.signedByMe) {							// <DO-NOT-MODIFY>: see license
-				upgrader.task = Tasks.signController(this.upgradeSite.controller); 	// <DO-NOT-MODIFY>: see license
+			if (!this.upgradeSite.controller.signedByMe && 							// <DO-NOT-MODIFY>: see license
+				!this.upgradeSite.controller.signedByScreeps) {						// <DO-NOT-MODIFY>
+				upgrader.task = Tasks.signController(this.upgradeSite.controller); 	// <DO-NOT-MODIFY>
 			} else {
 				upgrader.task = Tasks.upgrade(this.upgradeSite.controller);
 			}
@@ -53,7 +54,7 @@ export class UpgradingOverlord extends Overlord {
 			if (this.upgradeSite.input && this.upgradeSite.input.energy > 0) {
 				upgrader.task = Tasks.withdraw(this.upgradeSite.input);
 			} else {
-				let target = upgrader.pos.findClosestByRange(this.room.storageUnits);
+				let target = upgrader.pos.findClosestByRange(_.filter(this.room.storageUnits, s => s.energy > 0));
 				if (target) upgrader.task = Tasks.withdraw(target);
 			}
 		}

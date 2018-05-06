@@ -19,7 +19,7 @@ export class TaskSignController extends Task {
 
 	isValidTarget() {
 		let controller = this.target;
-		return (!controller.sign || controller.sign.text != signature);
+		return (!controller.sign || controller.sign.text != signature) && !controller.signedByScreeps;
 	}
 
 	work() {

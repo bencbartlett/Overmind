@@ -14,7 +14,8 @@ export class HaulingOverlord extends Overlord {
 	haulers: Zerg[];
 	directive: DirectiveHaul;
 
-	constructor(directive: DirectiveHaul, priority = OverlordPriority.ownedRoom.transport) {
+	constructor(directive: DirectiveHaul, priority = directive.hasDrops ? OverlordPriority.collectionUrgent.haul :
+													 OverlordPriority.collection.haul) {
 		super(directive, 'haul', priority);
 		this.directive = directive;
 		this.haulers = this.creeps(HaulerSetup.role);

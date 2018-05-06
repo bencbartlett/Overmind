@@ -134,7 +134,7 @@ export class LogisticsGroup {
 			dAmountdt   : 0,
 		});
 		if (target.room != this.colony.room) {
-			console.log(`${target} is outside colony room; shouldn't request!`);
+			log.warning(`${target.ref} at ${target.pos.print} is outside colony room; shouldn't request!`);
 		}
 		if (!opts.amount) {
 			opts.amount = this.getRequestAmount(target, opts.resourceType!);
@@ -266,9 +266,9 @@ export class LogisticsGroup {
 		if (!ETA) ETA = LogisticsGroup.settings.rangeToPathHeuristic * request.target.pos.getMultiRoomRangeTo(newPos)
 						+ availability;
 		let predictedDifference = request.dAmountdt * ETA;
-		if (request.amount > 0) { // store state, energy in
+		if (request.amount > 0) { // requester state, energy in
 			let resourceInflux = _.sum(_.map(otherTargetingTransporters,
-											 transporter => transporter.carry[request.resourceType] || 0));
+											 transporter => (transporter.carry[request.resourceType] || 0)));
 			return Math.max(request.amount + predictedDifference - resourceInflux, 0);
 		} else { // provide state, energy out
 			let resourceOutflux = _.sum(_.map(otherTargetingTransporters,
@@ -373,9 +373,9 @@ export class LogisticsGroup {
 	/* Compute the best possible value of |dResource / dt| */
 	private resourceChangeRate(transporter: Zerg, request: LogisticsRequest): number {
 		let choices = this.bufferChoices(transporter, request);
-		let dResource_dt = _.map(choices, choice => request.multiplier * choice.deltaResource / choice.deltaTicks);
+		let dResource_dt = _.map(choices, choice =>
+			request.multiplier * choice.deltaResource / Math.max(choice.deltaTicks, 0.1));
 		return _.max(dResource_dt);
-		// TODO: handle case where lots of small requests next to each other
 	}
 
 	/* Generate requestor preferences in terms of transporters */
@@ -388,15 +388,6 @@ export class LogisticsGroup {
 	transporterPreferences(transporter: Zerg): LogisticsRequest[] {
 		// Transporters prioritize requestors by change in resources per tick until pickup/delivery
 		return _.sortBy(this.requests, request => -1 * this.resourceChangeRate(transporter, request)); // -1 -> desc
-	}
-
-	get matching(): { [creepName: string]: LogisticsRequest | undefined } {
-		if (!this._matching) {
-			let transporters = _.filter(this.colony.getCreepsByRole(TransporterSetup.role), creep =>
-				!creep.spawning && creep.carryCapacity >= LogisticsGroup.settings.carryThreshold);
-			this._matching = this.stableMatching(transporters);
-		}
-		return this._matching;
 	}
 
 	/* Logs the output of the stable matching result */
@@ -447,6 +438,16 @@ export class LogisticsGroup {
 						`Available in ${Math.floor(nextAvailability[0])} ticks at ${nextAvailability[1].print}`);
 		}
 		console.log();
+	}
+
+
+	get matching(): { [creepName: string]: LogisticsRequest | undefined } {
+		if (!this._matching) {
+			let transporters = _.filter(this.colony.getCreepsByRole(TransporterSetup.role), creep =>
+				!creep.spawning && creep.carryCapacity >= LogisticsGroup.settings.carryThreshold);
+			this._matching = this.stableMatching(transporters);
+		}
+		return this._matching;
 	}
 
 	/* Generate a stable matching of transporters to requests with Gale-Shapley algorithm */

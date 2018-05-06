@@ -11,7 +11,6 @@ import {Visualizer} from './visuals/Visualizer';
 import {Pathing} from './pathing/pathing';
 import {DirectiveGuardSwarm} from './directives/combat/directive_guard_swarm';
 import {DirectiveInvasionDefense} from './directives/combat/directive_invasion';
-import {DirectiveLogisticsRequest} from './directives/logistics/directive_logisticsRequest';
 
 @profile
 export class Overseer {
@@ -38,23 +37,24 @@ export class Overseer {
 
 	/* Place new event-driven flags where needed to be instantiated on the next tick */
 	private placeDirectives(): void {
-		// Register logistics requests for all dropped resources and tombstones
-		for (let room of this.colony.rooms) {
-			// Pick up all nontrivial dropped resources
-			for (let resourceType in room.drops) {
-				for (let drop of room.drops[resourceType]) {
-					if (drop.amount > 100 || drop.resourceType != RESOURCE_ENERGY) {
-						DirectiveLogisticsRequest.createIfNotPresent(drop.pos, 'pos', {quiet: true});
-					}
-				}
-			}
-		}
-		// Place a logistics request directive for every tombstone with non-empty store that isn't on a container
-		for (let tombstone of this.colony.tombstones) {
-			if (_.sum(tombstone.store) > 0 && !tombstone.pos.lookForStructure(STRUCTURE_CONTAINER)) {
-				DirectiveLogisticsRequest.createIfNotPresent(tombstone.pos, 'pos', {quiet: true});
-			}
-		}
+		// TODO: figure out what's causing these bugs
+		// // Register logistics requests for all dropped resources and tombstones
+		// for (let room of this.colony.rooms) {
+		// 	// Pick up all nontrivial dropped resources
+		// 	for (let resourceType in room.drops) {
+		// 		for (let drop of room.drops[resourceType]) {
+		// 			if (drop.amount > 100 || drop.resourceType != RESOURCE_ENERGY) {
+		// 				DirectiveLogisticsRequest.createIfNotPresent(drop.pos, 'pos', {quiet: true});
+		// 			}
+		// 		}
+		// 	}
+		// }
+		// // Place a logistics request directive for every tombstone with non-empty store that isn't on a container
+		// for (let tombstone of this.colony.tombstones) {
+		// 	if (_.sum(tombstone.store) > 0 && !tombstone.pos.lookForStructure(STRUCTURE_CONTAINER)) {
+		// 		DirectiveLogisticsRequest.createIfNotPresent(tombstone.pos, 'pos', {quiet: true});
+		// 	}
+		// }
 
 		// Guard directive: defend your outposts and all rooms of colonies that you are incubating
 		let roomsToCheck = _.flattenDeep([this.colony.outposts,

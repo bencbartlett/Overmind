@@ -1,7 +1,7 @@
 import {Overlord} from '../Overlord';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
-import {Colony, ColonyStage} from '../../Colony';
+import {Colony} from '../../Colony';
 import {BufferTarget, LogisticsGroup, LogisticsRequest} from '../../logistics/LogisticsGroup';
 import {TransporterEarlySetup, TransporterSetup} from '../../creepSetup/defaultSetups';
 import {OverlordPriority} from '../priorities_overlords';
@@ -37,7 +37,7 @@ export class TransportOverlord extends Overlord {
 			if (site.output instanceof StructureContainer && site.overlord.miners.length > 0) {
 				// Only count sites which have a container output and which have at least one miner present
 				// (this helps in difficult "rebooting" situations)
-				let scaling = 1.75; // Average distance you have to carry resources
+				let scaling = 1.75; // Average round-trip distance you have to carry resources
 				transportPower += site.energyPerTick * (scaling * Pathing.distance(site.pos, dropoffLocation));
 			}
 		}
@@ -49,7 +49,7 @@ export class TransportOverlord extends Overlord {
 	}
 
 	init() {
-		let setup = this.colony.stage == ColonyStage.Larva ? new TransporterEarlySetup() : new TransporterSetup();
+		let setup = this.colony.level <= 3 ? new TransporterEarlySetup() : new TransporterSetup();
 		let transportPower = _.sum(_.map(this.lifetimeFilter(this.transporters),
 										 creep => creep.getActiveBodyparts(CARRY)));
 		let neededTransportPower = this.neededTransportPower();
@@ -71,6 +71,7 @@ export class TransportOverlord extends Overlord {
 				} else {
 					task = Tasks.transfer(request.target);
 				}
+				// TODO: buffer with parent system is causing bugs
 				if (bestChoice.targetRef != request.target.ref) {
 					// If we need to go to a buffer first to get more stuff
 					let buffer = deref(bestChoice.targetRef) as BufferTarget;

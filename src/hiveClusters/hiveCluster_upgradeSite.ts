@@ -7,6 +7,7 @@ import {Colony} from '../Colony';
 import {Mem} from '../memory';
 import {Visualizer} from '../visuals/Visualizer';
 import {log} from '../lib/logger/log';
+import {WorkerSetup} from '../creepSetup/defaultSetups';
 
 interface UpgradeSiteMemory {
 	input?: { pos: protoPos, tick: number };
@@ -30,6 +31,8 @@ export class UpgradeSite extends HiveCluster {
 		super(colony, controller, 'upgradeSite');
 		this.controller = controller;
 		// Register input
+		let allowableContainers = _.filter(this.room.containers, container =>
+			container.pos.findInRange(FIND_SOURCES, 1).length == 0); // only count containers that aren't near sources
 		let siteContainer = this.pos.findClosestByLimitedRange(this.room.containers, 4);
 		let siteLink = this.pos.findClosestByLimitedRange(colony.links, 4);
 		if (siteLink) {
@@ -49,7 +52,11 @@ export class UpgradeSite extends HiveCluster {
 		};
 		// Register overlord
 		this.overlord = new UpgradingOverlord(this);
-		this.energyPerTick = _.sum(_.map(this.overlord.upgraders, upgrader => upgrader.getActiveBodyparts(WORK)));
+		// Energy per tick is sum of upgrader body parts and nearby worker body parts
+		this.energyPerTick = (_.sum(_.map(this.overlord.upgraders, upgrader => upgrader.getActiveBodyparts(WORK))) +
+							  _.sum(_.map(_.filter(this.colony.getCreepsByRole(WorkerSetup.role),
+												   worker => worker.pos.inRangeTo((this.input || this).pos, 2)),
+										  worker => worker.getActiveBodyparts(WORK)))) * UPGRADE_CONTROLLER_POWER;
 	}
 
 	get memory(): UpgradeSiteMemory {

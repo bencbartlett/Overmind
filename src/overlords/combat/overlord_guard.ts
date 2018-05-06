@@ -7,6 +7,7 @@ import {OverlordPriority} from '../priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/directive_target_siege';
 import {CombatOverlord} from './CombatOverlord';
 import {profile} from '../../profiler/decorator';
+import {DirectiveHaul} from '../../directives/logistics/directive_haul';
 
 @profile
 export class GuardOverlord extends CombatOverlord {
@@ -29,7 +30,7 @@ export class GuardOverlord extends CombatOverlord {
 	// 	this.guards = this.creeps('guard');
 	// }
 
-	private findAttackTarget(guard: Zerg): Creep | Structure | void {
+	private findAttackTarget(guard: Zerg): Creep | Structure | undefined {
 		let targetingDirectives = DirectiveTargetSiege.find(guard.room.flags) as DirectiveTargetSiege[];
 		let targetedStructures = _.compact(_.map(targetingDirectives,
 												 directive => directive.getTarget())) as Structure[];
@@ -41,7 +42,10 @@ export class GuardOverlord extends CombatOverlord {
 			return guard.pos.findClosestByRange(targets);
 		}
 		if (guard.room.hostileStructures.length > 0) {
-			return guard.pos.findClosestByRange(guard.room.hostileStructures);
+			let haulFlags = _.filter(guard.room.flags, flag => DirectiveHaul.filter(flag));
+			if (haulFlags.length == 0) {
+				return guard.pos.findClosestByRange(guard.room.hostileStructures);
+			}
 		}
 	}
 

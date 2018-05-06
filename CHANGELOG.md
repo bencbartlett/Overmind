@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `TaskRepair` will now attempt to move to within range 2 if repairing a road; this should fix the move-stop-repair-move-stop-repair behavior of workers repairing remote roads
 - TerminalNetwork now sends excess energy to room with least energy rather than non-full room with least send cost overhead
 - More upgraders spawn when room is at very high energy capacity
-- Removed stack tracing for all logging except errors; removed some annoying alerts ("transporter chooses request with 0 amount!")
+- Disabled stack tracing for all logging except errors; removed some annoying alerts ("transporter chooses request with 0 amount!")
 
 ### Removed
 - Deprecated `TaskDeposit`; use `TaskTransfer` instead

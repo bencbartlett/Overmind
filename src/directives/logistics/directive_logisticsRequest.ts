@@ -103,7 +103,7 @@ export class DirectiveLogisticsRequest extends Directive {
 			} else if (this.memory.store) {
 				this._store = this.memory.store;
 			} else {
-				this._store = {'energy': 500};
+				this._store = {'energy': 500}; // Assume a default amount of energy to get stable matching to care
 			}
 		}
 		return this._store;
