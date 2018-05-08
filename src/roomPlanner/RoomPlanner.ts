@@ -346,8 +346,8 @@ export class RoomPlanner {
 					if (count > 0 && RoomPlanner.shouldBuild(structureType, pos)) {
 						let ret = pos.createConstructionSite(structureType);
 						if (ret != OK) {
-							log.error(`${this.colony.name}: couldn't create construction site! ` +
-									  `pos: ${pos.x} ${pos.y} ${pos.roomName}, type: ${structureType}, Result: ${ret}`);
+							log.error(`${this.colony.name}: couldn't create construction site of type` +
+									  `"${structureType}" at ${pos.print}. Result: ${ret}`);
 						} else {
 							count--;
 						}

@@ -24,6 +24,8 @@ export class TransportOverlord extends Overlord {
 
 	private neededTransportPower(): number {
 		let transportPower = 0;
+		let scaling = 2; // Average round-trip distance you have to carry resources
+		// Add contributions to transport power from hauling energy from mining sites
 		let dropoffLocation: RoomPosition;
 		if (this.colony.commandCenter) {
 			dropoffLocation = this.colony.commandCenter.pos;
@@ -37,7 +39,6 @@ export class TransportOverlord extends Overlord {
 			if (site.output instanceof StructureContainer && site.overlord.miners.length > 0) {
 				// Only count sites which have a container output and which have at least one miner present
 				// (this helps in difficult "rebooting" situations)
-				let scaling = 1.75; // Average round-trip distance you have to carry resources
 				transportPower += site.energyPerTick * (scaling * Pathing.distance(site.pos, dropoffLocation));
 			}
 		}
@@ -45,6 +46,10 @@ export class TransportOverlord extends Overlord {
 			// Reduce needed transporters when colony is in low power mode
 			transportPower *= 0.5;
 		}
+		// Add transport power needed to move to upgradeSite
+		transportPower += this.colony.upgradeSite.upgradePowerNeeded * scaling *
+						  Pathing.distance(dropoffLocation, (this.colony.upgradeSite.input ||
+															 this.colony.upgradeSite).pos);
 		return transportPower / CARRY_CAPACITY;
 	}
 
@@ -69,14 +74,15 @@ export class TransportOverlord extends Overlord {
 				if (request.target instanceof DirectiveLogisticsRequest) {
 					task = Tasks.drop(request.target);
 				} else {
-					task = Tasks.transfer(request.target);
+					task = Tasks.transfer(request.target, request.resourceType);
 				}
 				// TODO: buffer with parent system is causing bugs
 				if (bestChoice.targetRef != request.target.ref) {
 					// If we need to go to a buffer first to get more stuff
 					let buffer = deref(bestChoice.targetRef) as BufferTarget;
-					let withdrawAmount = Math.min(buffer.store[request.resourceType] || 0, amount);
-					task = task.fork(Tasks.withdraw(buffer, request.resourceType, amount));
+					let withdrawAmount = Math.min(buffer.store[request.resourceType] || 0,
+						transporter.carryCapacity - _.sum(transporter.carry), amount);
+					task = task.fork(Tasks.withdraw(buffer, request.resourceType, withdrawAmount));
 				}
 			} else if (amount < 0) { // store needs withdrawal
 				if (request.target instanceof DirectiveLogisticsRequest) {
@@ -86,7 +92,7 @@ export class TransportOverlord extends Overlord {
 						task = Tasks.pickup(resource);
 					}
 				} else {
-					task = Tasks.withdraw(request.target);
+					task = Tasks.withdraw(request.target, request.resourceType);
 				}
 				if (task && bestChoice.targetRef != request.target.ref) {
 					// If we need to go to a buffer first to deposit stuff

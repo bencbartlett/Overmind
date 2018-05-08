@@ -6,18 +6,14 @@
 
 - See the [changelog](https://github.com/bencbartlett/Overmind/blob/master/CHANGELOG.md) for patch notes.
 - Documentation is available in the [wiki](https://github.com/bencbartlett/Overmind/wiki).
+- Join the discussion in the [#overmind](https://screeps.slack.com/messages/overmind) Slack channel!
 - Development roadmap can be seen [here](https://github.com/bencbartlett/Overmind/projects/1).
+- Find me in game [here](https://screeps.com/a/#!/profile/Muon).
 
 ---
 
 ## What is Screeps?
 Screeps is an [MMO strategy game for programmers](https://screeps.com/). The core objective is to expand your colony to gather more resources. The game is played on a massive shared server which runs 24/7, even when you aren't actively playing. To control your units, you program their behavior in JavaScript or any other transpiled language. This is the AI I have been developing for Screeps, themed loosely around the [Zerg's swarm intelligence](http://starcraft.wikia.com/wiki/Overlord) from Starcraft. Creeps belong to [Colonies](https://github.com/bencbartlett/Overmind/blob/master/src/Colony.ts), which have several [Hive Clusters](https://github.com/bencbartlett/Overmind/blob/master/src/hiveClusters/HiveCluster.ts). Creep actions for a given process are orchestrated by [Overlords](https://github.com/bencbartlett/Overmind/blob/master/src/overlords/Overlord.ts). The colony [Overseer](https://github.com/bencbartlett/Overmind/blob/master/src/Overseer.ts) places [Directives](https://github.com/bencbartlett/Overmind/blob/master/src/directives/Directive.ts) to adapt to stimuli.
-
-### We're on slack!
-Found something you like, hate, or find confusing? Join the discussion on Slack in the [#overmind](https://screeps.slack.com/messages/overmind) channel!
-
-### Find me in game! (username: Muon)
-I've recently respawned to shard2 in the [`EXS4X` sector](https://screeps.com/a/#!/map/shard2?pos=5.826,44.939).
 
 ## Using Overmind as your AI
 If you're new to Screeps, I wouldn't recommend using Overmind as your AI: most of the fun of the game is programming your own AI and watching your little ant farm run! However, I've tried to make the codebase readable and well-documented, so feel free to fork the project or use it as inspiration when writing your AI. 
@@ -25,9 +21,9 @@ If you're new to Screeps, I wouldn't recommend using Overmind as your AI: most o
 If you do want to use Overmind as-is, the [latest release](https://github.com/bencbartlett/Overmind/releases) should work right out of the box. However, if you find something broken, please [submit an issue](https://github.com/bencbartlett/Overmind/issues/new) and I'll try to fix it.
 
 ### Out of the box
-If you just want to run Overmind without modification, you can copy the compiled `main.js` file attached to the [latest release](https://github.com/bencbartlett/Overmind/releases) into your script.
+If you just want to run Overmind without modification, you can copy the compiled `main.js` file attached to the [latest release](https://github.com/bencbartlett/Overmind/releases) into your script. Please note that Overmind is not (yet) fully automated; refer to the [Overmind wiki](https://github.com/bencbartlett/Overmind/wiki) for how to run the bot.
 
-### Full installation 
+### Installing from source
 If you want to install the full codebase, download or clone the repository, then navigate to the Overmind root directory and run:
 
 ```npm install```
@@ -38,11 +34,11 @@ To compile and deploy the codebase, create a `screeps.json` file from the [examp
 - Compile and deploy to private server: `npm run push-pserver`
 - Compile without deploying: `rollup -c`
 
-The deployment scripts are based on [`screeps-typescript-starter`](https://github.com/screepers/screeps-typescript-starter); for additional help, refer to their [GitBook](https://screepers.gitbooks.io/screeps-typescript-starter/getting-started/deploying.html) or [submit an issue](https://github.com/bencbartlett/Overmind/issues/new).
+The deployment scripts are based on [`screeps-typescript-starter`](https://github.com/screepers/screeps-typescript-starter); for additional help, refer to their [GitBook](https://screepers.gitbooks.io/screeps-typescript-starter/getting-started/deploying.html) or [submit an issue](https://github.com/bencbartlett/Overmind/issues/new). Please note that while the latest release of Overmind should always be stable, the latest commit may contain unstable features.
 
 # Design overview
 
-Check out the [Overmind wiki](https://github.com/bencbartlett/Overmind/wiki) for in-depth explanations of parts of the design of the AI. (Click the image below to see a higher-resolution version.)
+Check out the [Overmind wiki](https://github.com/bencbartlett/Overmind/wiki) for in-depth explanations of parts of the design of the AI. (Click the diagram below to see a higher-resolution version.)
 
 ![[AI structural schematic](/assets/AIdiagram.png)](https://raw.githubusercontent.com/bencbartlett/Overmind/master/assets/AIdiagram.png)
 

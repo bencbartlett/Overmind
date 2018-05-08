@@ -75,14 +75,6 @@ export default class Overmind implements IOvermind {
 				let outpostName = flag.pos.roomName;
 				this.colonyMap[outpostName] = colonyName; // Create an association between room and colony name
 				colonyOutposts[colonyName].push(outpostName);
-
-				// // TODO: handle observer logic
-				// let thisRoom = Game.rooms[roomName];
-				// if (thisRoom) {
-				// 	thisRoom.memory.colony = colonyName;
-				// } else {
-				// 	this.invisibleRooms.push(roomName); // register room as invisible to be handled by observer
-				// }
 			}
 		}
 
@@ -129,39 +121,6 @@ export default class Overmind implements IOvermind {
 		}
 	}
 
-	// private handleObservers(): void {
-	// 	// Shuffle list of invisible rooms to allow different ones to be observed each tick
-	// 	this.invisibleRooms = _.shuffle(this.invisibleRooms);
-	// 	// Generate a map of available observers
-	// 	let availableObservers: { [colonyName: string]: StructureObserver } = {};
-	// 	for (let colonyName in this.Colonies) {
-	// 		let colony = this.Colonies[colonyName];
-	// 		if (colony.observer) {
-	// 			availableObservers[colonyName] = colony.observer;
-	// 		}
-	// 	}
-	// 	// Loop until you run out of rooms to observe or observers
-	// 	while (this.invisibleRooms.length > 0 && _.size(availableObservers) > 0) {
-	// 		let roomName = this.invisibleRooms.shift();
-	// 		if (roomName) {
-	// 			let colonyName = this.colonyMap[roomName];
-	// 			if (availableObservers[colonyName]) {
-	// 				availableObservers[colonyName].observeRoom(roomName);
-	// 				delete availableObservers[colonyName];
-	// 			} else {
-	// 				let observerRooms = _.keys(availableObservers);
-	// 				let inRangeRoom = _.find(observerRooms,
-	// 										 oRoomName => Game.map.getRoomLinearDistance(oRoomName, roomName!)
-	// 													  <= OBSERVER_RANGE);
-	// 				if (inRangeRoom) {
-	// 					availableObservers[inRangeRoom].observeRoom(roomName);
-	// 					delete availableObservers[colonyName];
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
-
 	/* Global instantiation of Overmind object; run once every global refresh */
 	build(): void {
 		this.cache.build();
@@ -179,12 +138,6 @@ export default class Overmind implements IOvermind {
 
 	/* Intialize everything in pre-init phase of main loop. Does not call colony.init(). */
 	init(): void {
-		// // The order in which these functions are called is important
-		// this.verifyMemory();
-		// this.registerColonies();		// 2: Initialize each colony. Build() is called in main.ts
-		// this.registerCreeps();			// 4: Wrap all the creeps and assign to respective colonies
-		// // this.buildColonies();			// 5: Build the colony, instantiating virtual components
-		// this.registerDirectives(); 		// 5: Wrap all the directives and assign to respective overlords
 		for (let colonyName in this.Colonies) {
 			let start = Game.cpu.getUsed();
 			this.Colonies[colonyName].init();
@@ -220,5 +173,6 @@ export default class Overmind implements IOvermind {
 			Stats.log(`cpu.usage.${colonyName}.visuals`, Game.cpu.getUsed() - start);
 		}
 	}
+
 };
 

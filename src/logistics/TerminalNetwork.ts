@@ -178,8 +178,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 						   amount = Energetics.settings.terminal.energy.sendSize): number {
 		let cost = Game.market.calcTransactionCost(amount, sender.room.name, receiver.room.name);
 		let response = sender.send(RESOURCE_ENERGY, amount, receiver.room.name);
-		log.info(`Sent ${amount} energy from ${sender.room.name} to ` +
-				 `${receiver.room.name}. Fee: ${cost}. Response: ${response}`);
+		log.info(`Sent ${amount} energy from ${sender.room.print} to ` +
+				 `${receiver.room.print}. Fee: ${cost}. Response: ${response}`);
 		if (response == OK) {
 			TerminalNetwork.logTransfer(RESOURCE_ENERGY, amount, sender.room.name, receiver.room.name);
 			this.alreadyReceived.push(receiver);

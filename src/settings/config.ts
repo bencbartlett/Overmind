@@ -23,7 +23,7 @@ export const LOG_PRINT_LINES: boolean = false;
 /**
  * Load source maps and resolve source lines back to typeascript.
  */
-export const LOG_LOAD_SOURCE_MAP: boolean = false;
+export const LOG_LOAD_SOURCE_MAP: boolean = true;
 
 /**
  * Maximum padding for source links (for aligning log output).

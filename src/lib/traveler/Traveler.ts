@@ -3,6 +3,7 @@
  * Example: var Traveler = require('Traveler.js');
  */
 import {profile} from '../../profiler/decorator';
+import {log} from '../logger/log';
 
 @profile
 export class Traveler {
@@ -119,10 +120,10 @@ export class Traveler {
 
 			let cpuUsed = Game.cpu.getUsed() - cpu;
 			state.cpu = _.round(cpuUsed + state.cpu);
-			if (state.cpu > REPORT_CPU_THRESHOLD) {
+			if (Game.time % 10 == 0 && state.cpu > REPORT_CPU_THRESHOLD) {
 				// see note at end of file for more info on this
-				console.log(`TRAVELER: heavy cpu use: ${creep.name}, cpu: ${state.cpu} origin: ${
-								creep.pos}, dest: ${destination}`);
+				log.alert(`TRAVELER: heavy cpu use: ${creep.name}, cpu: ${state.cpu} origin: ${
+							  creep.pos.print}, dest: ${destination.print}`);
 			}
 
 			let color = 'orange';
@@ -358,11 +359,11 @@ export class Traveler {
 				// can happen for situations where the creep would have to take an uncommonly indirect path
 				// options.allowedRooms and options.routeCallback can also be used to handle this situation
 				if (roomDistance <= 2) {
-					console.log(`TRAVELER: path failed without findroute, trying with options.useFindRoute = true`);
-					console.log(`from: ${origin}, destination: ${destination}`);
+					log.warning(`TRAVELER: path failed without findroute. Origin: ${origin.print}, ` +
+								`destination: ${destination.print}. Trying again with options.useFindRoute = true...`);
 					options.useFindRoute = true;
 					ret = this.findTravelPath(origin, destination, options);
-					console.log(`TRAVELER: second attempt was ${ret.incomplete ? 'not ' : ''}successful`);
+					log.warning(`TRAVELER: second attempt was ${ret.incomplete ? 'not ' : ''}successful`);
 					return ret;
 				}
 

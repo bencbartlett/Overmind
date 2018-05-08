@@ -118,8 +118,24 @@ export class MiningSite extends HiveCluster {
 		this.registerOutputRequests();
 	}
 
-	/* Calculate where the output will be built for this site */
-	private calculateOutpotPos(): RoomPosition | undefined {
+	get outputPos(): RoomPosition | undefined {
+		if (this.output) {
+			return this.output.pos;
+		} else if (this.outputConstructionSite) {
+			return this.outputConstructionSite.pos;
+		} else {
+			if (!this._outputPos) {
+				this._outputPos = this.calculateContainerPos();
+				if (!this._outputPos) {
+					log.warning(`Mining site at ${this.pos.print}: cannot determine outputPos!`);
+				}
+			}
+			return this._outputPos;
+		}
+	}
+
+	/* Calculate where the container output will be built for this site */
+	private calculateContainerPos(): RoomPosition | undefined {
 		let originPos: RoomPosition | undefined = undefined;
 		if (this.colony.storage) {
 			originPos = this.colony.storage.pos;
@@ -132,41 +148,87 @@ export class MiningSite extends HiveCluster {
 		}
 	}
 
-	get outputPos(): RoomPosition | undefined {
-		if (this.output) {
-			return this.output.pos;
-		} else if (this.outputConstructionSite) {
-			return this.outputConstructionSite.pos;
-		} else {
-			if (!this._outputPos) {
-				this._outputPos = this.calculateOutpotPos();
-				if (!this._outputPos) {
-					log.warning(`Mining site at ${this.pos.print}: cannot determine outputPos!`);
+	/* Calculate where the link will be built */
+	private calculateLinkPos(): RoomPosition | undefined {
+		let originPos: RoomPosition | undefined = undefined;
+		if (this.colony.storage) {
+			originPos = this.colony.storage.pos;
+		} else if (this.colony.roomPlanner.storagePos) {
+			originPos = this.colony.roomPlanner.storagePos;
+		}
+		if (originPos) {
+			let path = Pathing.findShortestPath(this.pos, originPos).path;
+			for (let pos of path) {
+				if (this.source.pos.getRangeTo(pos) == 2) {
+					return pos;
 				}
 			}
-			return this._outputPos;
 		}
 	}
 
 	/* Build a container output at the optimal location */
-	private buildContainerIfMissing(): void {
+	private buildOutputIfNeeded(): void {
 		if (!this.output && !this.outputConstructionSite) {
 			let buildHere = this.outputPos;
 			if (buildHere) {
-				let result = buildHere.createConstructionSite(STRUCTURE_CONTAINER);
+				// Build a link if one is available
+				let structureType: StructureConstant = STRUCTURE_CONTAINER;
+				if (this.room == this.colony.room) {
+					let numLinks = this.colony.links.length +
+								   _.filter(this.colony.constructionSites,
+											site => site.structureType == STRUCTURE_LINK).length;
+					let numLinksAllowed = CONTROLLER_STRUCTURES.link[this.colony.level];
+					if (numLinks < numLinksAllowed &&
+						this.colony.hatchery && this.colony.hatchery.link &&
+						this.colony.commandCenter && this.colony.commandCenter.link) {
+						structureType = STRUCTURE_LINK;
+						buildHere = this.calculateLinkPos()!; // link pos will definitely be defined if buildHere is defined
+					}
+				}
+				let result = buildHere.createConstructionSite(structureType);
 				if (result == OK) {
 					return;
 				} else {
-					log.warning(`Mining site at ${this.pos.print}: cannot build output! Result: ${result}`);
+					log.error(`Mining site at ${this.pos.print}: cannot build output! Result: ${result}`);
 				}
 			}
 		}
 	}
 
+	private destroyContainerIfNeeded(): void {
+		let storage = this.colony.storage;
+		let replaceContainerAboveDistance = 10;
+		// Possibly replace if you are in colony room, have a container output and are sufficiently far from storage
+		if (this.room == this.colony.room && this.output && this.output instanceof StructureContainer &&
+			storage && Pathing.distance(this.output.pos, storage.pos) > replaceContainerAboveDistance) {
+			let numLinks = this.colony.links.length +
+						   _.filter(this.colony.constructionSites, s => s.structureType == STRUCTURE_LINK).length;
+			let numLinksAllowed = CONTROLLER_STRUCTURES.link[this.colony.level];
+			let miningSitesInRoom = _.filter(_.values(this.colony.miningSites), (site: MiningSite) =>
+				site.pos.roomName == this.colony.pos.roomName) as MiningSite[];
+			let fartherSites = _.filter(miningSitesInRoom, site =>
+				Pathing.distance(storage!.pos, site.pos) > Pathing.distance(storage!.pos, this.pos));
+			let everyFartherSiteHasLink = _.every(fartherSites, site => site.output instanceof StructureLink);
+			// Destroy the output if 1) more links can be built, 2) every farther site has a link and
+			// 3) hatchery and commandCenter both have links
+			if (numLinksAllowed - numLinks > 0 && everyFartherSiteHasLink &&
+				this.colony.hatchery && this.colony.hatchery.link &&
+				this.colony.commandCenter && this.colony.commandCenter.link) {
+				this.output.destroy();
+			}
+		}
+
+	};
+
 	/* Run tasks: make output construciton site if needed; build and maintain the output structure */
 	run(): void {
-		if (Game.time % 10 == 5) {
-			this.buildContainerIfMissing();
+		let rebuildOnTick = 5;
+		let rebuildFrequency = 10;
+		if (Game.time % rebuildFrequency == rebuildOnTick - 1) {
+			this.destroyContainerIfNeeded();
+		}
+		if (Game.time % rebuildFrequency == rebuildOnTick) {
+			this.buildOutputIfNeeded();
 		}
 	}
 

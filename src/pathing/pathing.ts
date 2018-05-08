@@ -109,7 +109,7 @@ export class Pathing {
 			allowSK     : true,
 		});
 		let ret = Traveler.findTravelPath(startPos, endPos, options);
-		if (ret.incomplete) log.info(`Incomplete travel path from ${startPos} to ${endPos}!`);
+		if (ret.incomplete) log.alert(`Incomplete travel path from ${startPos.print} to ${endPos.print}!`);
 		return ret;
 	}
 
@@ -137,7 +137,7 @@ export class Pathing {
 			range       : 1,
 		});
 		let ret = Traveler.findTravelPath(startPos, endPos, options);
-		if (ret.incomplete) log.info(`Incomplete travel path from ${startPos} to ${endPos}!`);
+		if (ret.incomplete) log.alert(`Incomplete travel path from ${startPos.print} to ${endPos.print}!`);
 		return ret;
 	}
 

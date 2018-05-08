@@ -4,7 +4,6 @@ import {Zerg} from '../../Zerg';
 import {OverlordPriority} from '../priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/directive_target_siege';
 import {CombatOverlord} from './CombatOverlord';
-import {boostResources} from '../../maps/map_resources';
 import {DirectiveDestroy} from '../../directives/combat/directive_destroy';
 import {CreepSetup} from '../../creepSetup/CreepSetup';
 import {profile} from '../../profiler/decorator';
@@ -36,9 +35,10 @@ export class DestroyerOverlord extends CombatOverlord {
 
 	attackers: Zerg[];
 	healers: Zerg[];
-	settings: {
-		retreatHitsPercent: number,
-		reengageHitsPercent: number,
+
+	static settings = {
+		retreatHitsPercent : 0.85,
+		reengageHitsPercent: 0.95,
 	};
 
 	constructor(directive: DirectiveDestroy, priority = OverlordPriority.offense.destroy) {
@@ -46,18 +46,14 @@ export class DestroyerOverlord extends CombatOverlord {
 		this.attackers = this.creeps('attacker');
 		this.healers = this.creeps('healer');
 		// Comment out boost lines if you don't want to spawn boosted attackers/healers
-		this.boosts.attacker = [
-			boostResources.attack[3],
-			boostResources.tough[3],
-		];
-		this.boosts.healer = [
-			boostResources.heal[3],
-			boostResources.tough[3],
-		];
-		this.settings = {
-			retreatHitsPercent : 0.85,
-			reengageHitsPercent: 0.95,
-		};
+		// this.boosts.attacker = [
+		// 	boostResources.attack[3],
+		// 	boostResources.tough[3],
+		// ];
+		// this.boosts.healer = [
+		// 	boostResources.heal[3],
+		// 	boostResources.tough[3],
+		// ];
 	}
 
 	private findTarget(attacker: Zerg): Creep | Structure | undefined {
@@ -81,9 +77,10 @@ export class DestroyerOverlord extends CombatOverlord {
 
 	private retreatActions(attacker: Zerg, healer: Zerg): void {
 		this.pairwiseMove(healer, attacker, this.fallback);
-		if (attacker.hits > this.settings.reengageHitsPercent * attacker.hits &&
-			healer.hits > this.settings.reengageHitsPercent * healer.hits) {
+		if (attacker.hits > DestroyerOverlord.settings.reengageHitsPercent * attacker.hits &&
+			healer.hits > DestroyerOverlord.settings.reengageHitsPercent * healer.hits) {
 			attacker.memory.retreating = false;
+			// TODO: never actually do retreat actions???
 		}
 	}
 
@@ -109,8 +106,8 @@ export class DestroyerOverlord extends CombatOverlord {
 			}
 		} else { // have an active healer
 			// Handle retreating actions
-			if (attacker.hits < this.settings.retreatHitsPercent * attacker.hitsMax ||
-				healer.hits < this.settings.retreatHitsPercent * healer.hitsMax) {
+			if (attacker.hits < DestroyerOverlord.settings.retreatHitsPercent * attacker.hitsMax ||
+				healer.hits < DestroyerOverlord.settings.retreatHitsPercent * healer.hitsMax) {
 				attacker.memory.retreating = true;
 			}
 			if (attacker.memory.retreating) {

@@ -60,6 +60,10 @@ export class MiningOverlord extends Overlord {
 			else {
 				if (this.miningSite.outputConstructionSite) {
 					miner.task = Tasks.build(this.miningSite.outputConstructionSite);
+					if (miner.pos.isEqualTo(this.miningSite.outputConstructionSite.pos)) {
+						// Move off of the contructionSite (link sites won't build)
+						miner.travelTo(this.colony.controller);
+					}
 				}
 			}
 		} else {

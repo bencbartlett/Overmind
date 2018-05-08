@@ -8,9 +8,11 @@ import {Mem} from '../memory';
 import {Visualizer} from '../visuals/Visualizer';
 import {log} from '../lib/logger/log';
 import {WorkerSetup} from '../creepSetup/defaultSetups';
+import {Stats} from '../stats/stats';
 
 interface UpgradeSiteMemory {
 	input?: { pos: protoPos, tick: number };
+	stats: { downtime: number };
 }
 
 @profile
@@ -56,7 +58,9 @@ export class UpgradeSite extends HiveCluster {
 		this.energyPerTick = (_.sum(_.map(this.overlord.upgraders, upgrader => upgrader.getActiveBodyparts(WORK))) +
 							  _.sum(_.map(_.filter(this.colony.getCreepsByRole(WorkerSetup.role),
 												   worker => worker.pos.inRangeTo((this.input || this).pos, 2)),
-										  worker => worker.getActiveBodyparts(WORK)))) * UPGRADE_CONTROLLER_POWER;
+										  worker => worker.getActiveBodyparts(WORK))));
+		// Compute stats
+		this.stats();
 	}
 
 	get memory(): UpgradeSiteMemory {
@@ -159,6 +163,18 @@ export class UpgradeSite extends HiveCluster {
 		}
 	}
 
+	private stats() {
+		let defaults = {
+			downtime: 0,
+		};
+		if (!this.memory.stats) this.memory.stats = defaults;
+		_.defaults(this.memory.stats, defaults);
+		// Compute downtime
+		this.memory.stats.downtime = (this.memory.stats.downtime * (CREEP_LIFE_TIME - 1) +
+									  (this.input ? +this.input.isEmpty : 0)) / CREEP_LIFE_TIME;
+		Stats.log(`colonies.${this.colony.name}.upgradeSite.downtime`, this.memory.stats.downtime);
+	}
+
 	run(): void {
 		if (Game.time % 25 == 7) {
 			this.buildContainerIfMissing();
@@ -166,14 +182,15 @@ export class UpgradeSite extends HiveCluster {
 	}
 
 	visuals() {
+		let info = [];
 		if (this.controller.level != 8) {
 			let progress = `${Math.floor(this.controller.progress / 1000)}K`;
 			let progressTotal = `${Math.floor(this.controller.progressTotal / 1000)}K`;
 			let percent = `${Math.floor(100 * this.controller.progress / this.controller.progressTotal)}`;
-			let info = [
-				`Progress: ${progress}/${progressTotal} (${percent}%)`,
-			];
-			Visualizer.showInfo(info, this);
+			info.push(`Progress: ${progress}/${progressTotal} (${percent}%)`);
+
 		}
+		info.push(`Downtime: ${this.memory.stats.downtime.toPercent()}`);
+		Visualizer.showInfo(info, this);
 	}
 }

@@ -5,6 +5,8 @@ import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../priorities_overlords';
 import {profile} from '../../profiler/decorator';
+import minBy from 'lodash.minby';
+import {Pathing} from '../../pathing/pathing';
 
 @profile
 export class UpgradingOverlord extends Overlord {
@@ -54,7 +56,14 @@ export class UpgradingOverlord extends Overlord {
 			if (this.upgradeSite.input && this.upgradeSite.input.energy > 0) {
 				upgrader.task = Tasks.withdraw(this.upgradeSite.input);
 			} else {
-				let target = upgrader.pos.findClosestByRange(_.filter(this.room.storageUnits, s => s.energy > 0));
+				let rechargeTargets = _.filter(_.compact([this.colony.storage!,
+														  this.colony.terminal!,
+														  this.colony.upgradeSite.input!,
+														  ..._.map(this.colony.miningSites, site => site.output!),
+														  ...this.colony.tombstones]),
+											   s => s.energy > 0);
+				let target = minBy(rechargeTargets, (s: RoomObject) => Pathing.distance(this.upgradeSite.pos, s.pos));
+				// let target = upgrader.pos.findClosestByRange(_.filter(this.room.storageUnits, s => s.energy > 0));
 				if (target) upgrader.task = Tasks.withdraw(target);
 			}
 		}

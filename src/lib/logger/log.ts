@@ -212,7 +212,7 @@ export class Log {
 				out.push(color('WARNING', 'orange'));
 				break;
 			case LogLevels.ALERT:
-				out.push(color('ALERT', 'yellow'));
+				out.push(color('ALERT  ', 'yellow'));
 				break;
 			case LogLevels.INFO:
 				out.push(color('INFO   ', 'green'));

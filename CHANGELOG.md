@@ -11,18 +11,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
     - Added Grafana dashboard support for new stats (in /assets)
 - Lots of automation improvements to the room planner! Now once you create a room plan at RCL 1, you can dynamically add and remove outposts without needing to open/close the planner.
     - Road planning is now done with the RoadPlanner, which is instantiated from a room planner, and provides a much higher degree of automation:
-        - Road planning is continuously recalculated every 1000 ticks with a heuristic that encourages road merging at minimal expense to path length
+        - Road network is continuously recalculated every 1000 ticks with a heuristic that encourages road merging at minimal expense to path length
         - Roads which become deprecated (no longer in the optimal road plan) are allowed to decay
         - Road routing hints (white/white flags) no longer have any effect. (The new routing algorithm uses a variant of this idea to merge roads more intelligently.)
-    - UpgradeSites now automatically calculate their optimal location instead of needing to be placed manually
-    - MiningSites at outposts now automatically build container outputs without you needing to open and close the room planner for their colony
+    - UpgradeSites now automatically calculate input location and no longer need to be placed in room planner
+    - MiningSites at outposts now automatically build container outputs without you needing to reboot room planner
+    - MiningSites in rooms now automatically upgrade their container to a link if necessary
 - Hauling directives and overlords for hauling large amounts of resources long distances (e.g. scavenging from abandoned storage)
-- Finished integrating LogisticsRequestDirectives: these act as requestor or provider objects at a position
-    - Requestor: requests energy to be dropped at a positiion
-    - Provider: resources dropped at position or in a tombstone to be collected
+- Finished coding LogisticsRequestDirectives: these flags act as requestor or provider targets and have a `store` property
+    - `provider == false`: requests energy to be dropped at a positiion
+    - `provider == true`: resources dropped at position or in a tombstone to be collected
 - Preliminary contract module for making deals between players
-- Added `Energetics` module, which will make high-level decisions based on energy distributions
-- Colonies now have a `lowPowerMode` operational state, which scales back production of miners and transporters at RCL8 with full storage/terminal
+- `Energetics` module, which will make high-level decisions based on energy distributions
+    - Colonies now have a `lowPowerMode` operational state, which scales back production of miners and transporters at RCL8 with full storage/terminal
 
 ### Changed
 - Transporters now use a single-sided greedy selection at RCL<4, since stable matching only works well when the transporter carry is a significant fraction of the logisticsRequest target's capacity
@@ -41,6 +42,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Bugfixes with `TaskDrop`, `TaskGoTo`, `TaskGoToRoom`
 - Even more bugfixes with `TaskDrop`
 - Fixed bug (hopefully) with creeps not approaching to range 1 in `TaskAttack` and `TaskHeal`
+- Fixed bugs where claimers and reservers would get stuck trying to sign a room that was perma-signed by Screeps as a future newbie zone
+- Fixed a bug where upgradeSites could misidentify their input in some pathological room layouts
 
 ## Overmind [0.2.1] - 2018.3.22
 ### Added
