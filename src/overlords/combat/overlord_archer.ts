@@ -37,7 +37,6 @@ export class ArcherDefenseOverlord extends CombatOverlord {
 		if (boosted) {
 			this.boosts.archer = [
 				boostResources.ranged_attack[3],
-				boostResources.tough[3],
 				boostResources.heal[3],
 			];
 		}

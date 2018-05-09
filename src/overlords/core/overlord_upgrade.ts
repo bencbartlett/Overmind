@@ -34,36 +34,43 @@ export class UpgradingOverlord extends Overlord {
 
 	private handleUpgrader(upgrader: Zerg): void {
 		if (upgrader.carry.energy > 0) {
-			if (this.upgradeSite.input) {
-				if (this.upgradeSite.input.hits < this.upgradeSite.input.hitsMax) {
-					upgrader.task = Tasks.repair(this.upgradeSite.input);
-					return;
-				}
-			} else {
-				if (this.upgradeSite.inputConstructionSite) {
-					upgrader.task = Tasks.build(this.upgradeSite.inputConstructionSite);
-					return;
-				}
+			// Repair link
+			if (this.upgradeSite.link && this.upgradeSite.link.hits < this.upgradeSite.link.hitsMax) {
+				upgrader.task = Tasks.repair(this.upgradeSite.link);
+				return;
 			}
+			// Repair container
+			if (this.upgradeSite.battery && this.upgradeSite.battery.hits < this.upgradeSite.battery.hitsMax) {
+				upgrader.task = Tasks.repair(this.upgradeSite.battery);
+				return;
+			}
+			// Build construction site
+			if (this.upgradeSite.inputConstructionSite) {
+				upgrader.task = Tasks.build(this.upgradeSite.inputConstructionSite);
+				return;
+			}
+			// Sign controller if needed
 			if (!this.upgradeSite.controller.signedByMe && 							// <DO-NOT-MODIFY>: see license
 				!this.upgradeSite.controller.signedByScreeps) {						// <DO-NOT-MODIFY>
 				upgrader.task = Tasks.signController(this.upgradeSite.controller); 	// <DO-NOT-MODIFY>
-			} else {
-				upgrader.task = Tasks.upgrade(this.upgradeSite.controller);
+				return;
 			}
+			upgrader.task = Tasks.upgrade(this.upgradeSite.controller);
 		} else {
-			// Recharge from best source
-			if (this.upgradeSite.input && this.upgradeSite.input.energy > 0) {
-				upgrader.task = Tasks.withdraw(this.upgradeSite.input);
-			} else {
+			// Recharge from link or battery
+			if (this.upgradeSite.link && this.upgradeSite.link.energy > 0) {
+				upgrader.task = Tasks.withdraw(this.upgradeSite.link);
+			} else if (this.upgradeSite.battery && this.upgradeSite.battery.energy > 0) {
+				upgrader.task = Tasks.withdraw(this.upgradeSite.battery);
+			}
+			// Find somewhere else to recharge from
+			else {
 				let rechargeTargets = _.filter(_.compact([this.colony.storage!,
 														  this.colony.terminal!,
-														  this.colony.upgradeSite.input!,
 														  ..._.map(this.colony.miningSites, site => site.output!),
 														  ...this.colony.tombstones]),
 											   s => s.energy > 0);
 				let target = minBy(rechargeTargets, (s: RoomObject) => Pathing.distance(this.upgradeSite.pos, s.pos));
-				// let target = upgrader.pos.findClosestByRange(_.filter(this.room.storageUnits, s => s.energy > 0));
 				if (target) upgrader.task = Tasks.withdraw(target);
 			}
 		}

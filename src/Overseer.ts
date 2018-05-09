@@ -11,10 +11,10 @@ import {Visualizer} from './visuals/Visualizer';
 import {Pathing} from './pathing/pathing';
 import {DirectiveGuardSwarm} from './directives/combat/directive_guard_swarm';
 import {DirectiveInvasionDefense} from './directives/combat/directive_invasion';
+import {Mem} from './memory';
 
 @profile
 export class Overseer {
-	memory: OverseerMemory; 					// Memory.colony.overseer
 	colony: Colony; 							// Instantiated colony object
 	directives: Directive[];					// Directives across the colony
 	overlords: {
@@ -23,9 +23,12 @@ export class Overseer {
 
 	constructor(colony: Colony) {
 		this.colony = colony;
-		this.memory = colony.memory.overseer;
 		this.directives = [];
 		this.overlords = {};
+	}
+
+	get memory(): OverseerMemory {
+		return Mem.wrap(this.colony.memory, 'overseer', {});
 	}
 
 	registerOverlord(overlord: Overlord): void {
@@ -74,11 +77,11 @@ export class Overseer {
 		}
 
 		// Defend against invasions in owned rooms
-		if (this.colony.room) {
-			let effectiveInvaderCount = _.sum(_.map(this.colony.room.hostiles, invader => invader.boosts.length > 0 ? 2 : 1));
-			let invasionDefenseFlags = _.filter(this.colony.room.flags, flag => DirectiveInvasionDefense.filter(flag));
-			if (effectiveInvaderCount >= 3 && invasionDefenseFlags.length == 0) {
-				DirectiveInvasionDefense.create(this.colony.controller.pos);
+		if (this.colony.room && this.colony.level >= DirectiveInvasionDefense.requiredRCL) {
+			let effectiveInvaderCount = _.sum(_.map(this.colony.room.hostiles,
+													invader => invader.boosts.length > 0 ? 2 : 1));
+			if (effectiveInvaderCount >= 3) {
+				DirectiveInvasionDefense.createIfNotPresent(this.colony.controller.pos, 'room');
 			}
 		}
 
@@ -93,6 +96,7 @@ export class Overseer {
 			if (!hasEnergy && !hasMiners && !hasQueen && emergencyFlags.length == 0) {
 				if (this.colony.hatchery) {
 					DirectiveBootstrap.create(this.colony.hatchery.pos);
+					this.colony.hatchery.settings.suppressSpawning = true;
 				}
 			}
 		}

@@ -48,7 +48,7 @@ export class TransportOverlord extends Overlord {
 		}
 		// Add transport power needed to move to upgradeSite
 		transportPower += this.colony.upgradeSite.upgradePowerNeeded * scaling *
-						  Pathing.distance(dropoffLocation, (this.colony.upgradeSite.input ||
+						  Pathing.distance(dropoffLocation, (this.colony.upgradeSite.battery ||
 															 this.colony.upgradeSite).pos);
 		return transportPower / CARRY_CAPACITY;
 	}

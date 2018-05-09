@@ -1,8 +1,8 @@
 // Command line
 
-import {asciiLogo} from '../visuals/Visualizer';
 import {Colony} from '../Colony';
 import {toColumns} from '../utilities/utils';
+import {asciiLogo} from '../visuals/logos';
 
 export class Console {
 

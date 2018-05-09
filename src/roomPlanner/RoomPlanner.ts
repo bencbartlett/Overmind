@@ -38,6 +38,7 @@ export interface RoomPlan {
 
 export interface PlannerMemory {
 	active: boolean;
+	lastGenerated?: number;
 	mapsByLevel: { [rcl: number]: { [structureType: string]: protoPos[] } };
 	savedFlags: { secondaryColor: ColorConstant, pos: protoPos, memory: FlagMemory }[];
 }
@@ -281,9 +282,28 @@ export class RoomPlanner {
 		return _.unique(obstacles);
 	}
 
+	/* Check to see if there are any structures that can't be built */
+	private findCollision(ignoreRoads = false): RoomPosition | undefined {
+		for (let structureType in this.map) {
+			if (ignoreRoads && structureType == STRUCTURE_ROAD) {
+				continue;
+			}
+			for (let pos of this.map[structureType]) {
+				if (Game.map.getTerrainAt(pos) == 'wall') {
+					return pos;
+				}
+			}
+		}
+	}
 
-	/* Write everything to memory at the end of activation */
-	finalize(): void {
+	/* Write everything to memory at the end of activation. If ignoreRoads is set, it will allow collisions with
+	 * roads, but will continue to alert you every time it fails to build a road in the terrain pos (WIP) */
+	finalize(ignoreRoads = false): void {
+		let collision = this.findCollision(ignoreRoads);
+		if (collision) {
+			console.log(`Invalid layout: collision detected at ${collision.print}!`);
+			return;
+		}
 		let layoutIsValid: boolean = !!this.placements.commandCenter && !!this.placements.hatchery;
 		if (layoutIsValid) { // Write everything to memory
 			// Generate maps for each rcl
@@ -304,12 +324,13 @@ export class RoomPlanner {
 											});
 				flag.remove();
 			}
+			this.memory.lastGenerated = Game.time;
 			console.log('Room layout and flag positions have been saved.');
 			this.active = false;
 			this.buildMissing();
 			// Finalize the road planner layout
 		} else {
-			console.log('Not a valid room layout! Must have hatchery, commandCenter and upgradeSite placements.');
+			console.log('Not a valid room layout! Must have hatchery and commandCenter placements.');
 		}
 	}
 
@@ -346,7 +367,7 @@ export class RoomPlanner {
 					if (count > 0 && RoomPlanner.shouldBuild(structureType, pos)) {
 						let ret = pos.createConstructionSite(structureType);
 						if (ret != OK) {
-							log.error(`${this.colony.name}: couldn't create construction site of type` +
+							log.error(`${this.colony.name}: couldn't create construction site of type ` +
 									  `"${structureType}" at ${pos.print}. Result: ${ret}`);
 						} else {
 							count--;

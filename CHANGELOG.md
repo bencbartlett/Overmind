@@ -1,10 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) 
-and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## Overmind [0.3.0] - 2018.5.9
 ### Added 
 - Lots of new content added to the [Wiki](https://github.com/bencbartlett/Overmind/wiki)!
 - TerminalNetwork stat collection, which accumulates all `send()` calls and transfer costs by resourceType between origin and destination
@@ -16,14 +17,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
         - Road routing hints (white/white flags) no longer have any effect. (The new routing algorithm uses a variant of this idea to merge roads more intelligently.)
     - UpgradeSites now automatically calculate input location and no longer need to be placed in room planner
     - MiningSites at outposts now automatically build container outputs without you needing to reboot room planner
-    - MiningSites in rooms now automatically upgrade their container to a link if necessary
+    - Automatic link placement
+        - MiningSites will replace their containers with links if above 10 path length from storage (prioritizing farthest)
+        - UpgradeSites will add a link if above 10 path length from storage if miningSites already have links
+            - UpgradeSites now have `link` and `battery` properties which request energy independently
+- Added some version migration code in `sandbox.ts` which will reboot the room planner for each colony one at a time to account for the new changes
 - Hauling directives and overlords for hauling large amounts of resources long distances (e.g. scavenging from abandoned storage)
 - Finished coding LogisticsRequestDirectives: these flags act as requestor or provider targets and have a `store` property
     - `provider == false`: requests energy to be dropped at a positiion
     - `provider == true`: resources dropped at position or in a tombstone to be collected
+    - These directives are functional, but their automatic placement has been disabled until a future patch while I continue to improve the logistics system performance
 - Preliminary contract module for making deals between players
 - `Energetics` module, which will make high-level decisions based on energy distributions
     - Colonies now have a `lowPowerMode` operational state, which scales back production of miners and transporters at RCL8 with full storage/terminal
+- New version updater system alerts you when a new release of Overmind is available
+    - Currently only available on shard2; shard1 and shard0 support coming soon
 
 ### Changed
 - Transporters now use a single-sided greedy selection at RCL<4, since stable matching only works well when the transporter carry is a significant fraction of the logisticsRequest target's capacity
@@ -32,11 +40,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `TaskRepair` will now attempt to move to within range 2 if repairing a road; this should fix the move-stop-repair-move-stop-repair behavior of workers repairing remote roads
 - TerminalNetwork now sends excess energy to room with least energy rather than non-full room with least send cost overhead
 - More upgraders spawn when room is at very high energy capacity
+- Changed how `colony.dropoffLinks` is computed
 - Disabled stack tracing for all logging except errors; removed some annoying alerts ("transporter chooses request with 0 amount!")
 
 ### Removed
 - Deprecated `TaskDeposit`; use `TaskTransfer` instead
 - `TaskWithdrawResource` has replaced `TaskWithdraw`
+- Removed the source for `Overmind.ts` and replaced it with an obfuscated, pre-compiled `Overmind_obfuscated.js`
+    - This is in preparation for implementing behavioral locks which will make Overmind more fair to new players
+        - See the header in `Overmind_obfuscated.js` for more details
 
 ### Fixed 
 - Bugfixes with `TaskDrop`, `TaskGoTo`, `TaskGoToRoom`
@@ -85,7 +97,8 @@ This release was initially deployed on 2018.3.2 but was re-versioned on 2018.3.1
 ### Added
 - Initial pre-release of Overmind after 190 commits and about 80,000 additions.
 
-[Unreleased]: https://github.com/bencbartlett/Overmind/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/bencbartlett/Overmind/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/bencbartlett/Overmind/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/bencbartlett/Overmind/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/bencbartlett/Overmind/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/bencbartlett/Overmind/releases/tag/v0.1.0

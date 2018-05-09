@@ -29,6 +29,10 @@ export class MiningSite extends HiveCluster {
 	private _outputPos: RoomPosition | undefined;
 	overlord: MiningOverlord;
 
+	static settings = {
+		minLinkDistance: 10
+	};
+
 	constructor(colony: Colony, source: Source) {
 		super(colony, source, 'miningSite');
 		this.source = source;
@@ -126,8 +130,8 @@ export class MiningSite extends HiveCluster {
 		} else {
 			if (!this._outputPos) {
 				this._outputPos = this.calculateContainerPos();
-				if (!this._outputPos) {
-					log.warning(`Mining site at ${this.pos.print}: cannot determine outputPos!`);
+				if (!this._outputPos && Game.time % 25 == 0) {
+					log.alert(`Mining site at ${this.pos.print}: no room plan set; cannot determine outputPos!`);
 				}
 			}
 			return this._outputPos;
@@ -178,17 +182,17 @@ export class MiningSite extends HiveCluster {
 								   _.filter(this.colony.constructionSites,
 											site => site.structureType == STRUCTURE_LINK).length;
 					let numLinksAllowed = CONTROLLER_STRUCTURES.link[this.colony.level];
-					if (numLinks < numLinksAllowed &&
+					if (numLinksAllowed > numLinks &&
 						this.colony.hatchery && this.colony.hatchery.link &&
-						this.colony.commandCenter && this.colony.commandCenter.link) {
+						this.colony.commandCenter && this.colony.commandCenter.link &&
+						Pathing.distance(this.pos,
+										 this.colony.commandCenter.pos) > MiningSite.settings.minLinkDistance) {
 						structureType = STRUCTURE_LINK;
-						buildHere = this.calculateLinkPos()!; // link pos will definitely be defined if buildHere is defined
+						buildHere = this.calculateLinkPos()!; // link pos definitely defined if buildHere is defined
 					}
 				}
 				let result = buildHere.createConstructionSite(structureType);
-				if (result == OK) {
-					return;
-				} else {
+				if (result != OK) {
 					log.error(`Mining site at ${this.pos.print}: cannot build output! Result: ${result}`);
 				}
 			}
@@ -197,27 +201,32 @@ export class MiningSite extends HiveCluster {
 
 	private destroyContainerIfNeeded(): void {
 		let storage = this.colony.storage;
-		let replaceContainerAboveDistance = 10;
 		// Possibly replace if you are in colony room, have a container output and are sufficiently far from storage
 		if (this.room == this.colony.room && this.output && this.output instanceof StructureContainer &&
-			storage && Pathing.distance(this.output.pos, storage.pos) > replaceContainerAboveDistance) {
+			storage && Pathing.distance(this.pos, storage.pos) > MiningSite.settings.minLinkDistance) {
 			let numLinks = this.colony.links.length +
 						   _.filter(this.colony.constructionSites, s => s.structureType == STRUCTURE_LINK).length;
 			let numLinksAllowed = CONTROLLER_STRUCTURES.link[this.colony.level];
-			let miningSitesInRoom = _.filter(_.values(this.colony.miningSites), (site: MiningSite) =>
-				site.pos.roomName == this.colony.pos.roomName) as MiningSite[];
+			let miningSitesInRoom = _.map(this.room.sources, s => this.colony.miningSites[s.id]) as MiningSite[];
 			let fartherSites = _.filter(miningSitesInRoom, site =>
 				Pathing.distance(storage!.pos, site.pos) > Pathing.distance(storage!.pos, this.pos));
 			let everyFartherSiteHasLink = _.every(fartherSites, site => site.output instanceof StructureLink);
 			// Destroy the output if 1) more links can be built, 2) every farther site has a link and
 			// 3) hatchery and commandCenter both have links
-			if (numLinksAllowed - numLinks > 0 && everyFartherSiteHasLink &&
+			if (numLinksAllowed > numLinks && everyFartherSiteHasLink &&
 				this.colony.hatchery && this.colony.hatchery.link &&
 				this.colony.commandCenter && this.colony.commandCenter.link) {
 				this.output.destroy();
 			}
 		}
-
+		// Destroy container if you already have a link output and it's not being used by anything else
+		if (this.output && this.output instanceof StructureLink) {
+			let containerOutput = this.source.pos.findClosestByLimitedRange(this.room.containers, 2);
+			if (containerOutput && this.colony.hatchery && containerOutput.pos.getRangeTo(this.colony.hatchery) > 2 &&
+				containerOutput.pos.getRangeTo(this.colony.upgradeSite) > 3) {
+				containerOutput.destroy();
+			}
+		}
 	};
 
 	/* Run tasks: make output construciton site if needed; build and maintain the output structure */

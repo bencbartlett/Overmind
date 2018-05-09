@@ -39,6 +39,7 @@ interface ICache {
 
 interface IOvermindMemory {
 	terminalNetwork: any;
+	versions: { [version: string]: any };
 }
 
 interface IOvermind {
@@ -49,6 +50,7 @@ interface IOvermind {
 	invisibleRooms: string[];
 	memory: IOvermindMemory;
 	terminalNetwork: ITerminalNetwork;
+
 	build(): void;
 
 	// rebuild(): void;

@@ -25,12 +25,20 @@ export default {
         format: "cjs",
         sourcemap: true
     },
-
+    onwarn: function (warning) {
+        // Skip default export warnings from using obfuscated overmind file in main
+        if (warning.toString().includes('commonjs-proxy')) {
+            return;
+        }
+        // console.warn everything else
+        console.warn(warning.message);
+    },
     plugins: [
         clean(),
         resolve(),
         commonjs({
                      namedExports: {
+                         'src/Overmind_obfuscated': ['_Overmind'],
                          'screeps-profiler': ['profiler']
                      }
                  }),

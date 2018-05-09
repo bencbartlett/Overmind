@@ -9,6 +9,8 @@ import {Visualizer} from '../visuals/Visualizer';
 import {log} from '../lib/logger/log';
 import {WorkerSetup} from '../creepSetup/defaultSetups';
 import {Stats} from '../stats/stats';
+import {Pathing} from '../pathing/pathing';
+import {MiningSite} from './hiveCluster_miningSite';
 
 interface UpgradeSiteMemory {
 	input?: { pos: protoPos, tick: number };
@@ -18,16 +20,20 @@ interface UpgradeSiteMemory {
 @profile
 export class UpgradeSite extends HiveCluster {
 
-	controller: StructureController;					// The controller for the site
-	input: StructureLink | StructureContainer | undefined;	// The object receiving energy for the site
-	inputConstructionSite: ConstructionSite | undefined;		// The construction site for the input, if there is one
-	private _inputPos: RoomPosition | undefined;
-	private settings: {
-		storageBuffer: number,
-		energyPerBodyUnit: number
-	};
+	controller: StructureController;						// The controller for the site
+	link: StructureLink | undefined;	// The primary object receiving energy for the site
+	battery: StructureContainer | undefined; 				// The container to provide an energy buffer
+	inputConstructionSite: ConstructionSite | undefined;	// The construction site for the input, if there is one
+	private _batteryPos: RoomPosition | undefined;
 	overlord: UpgradingOverlord;
 	energyPerTick: number;
+
+	static settings = {
+		storageBuffer    : 100000,	// Number of upgrader parts scales with energy - this value
+		energyPerBodyUnit: 25000,	// Scaling factor: this much excess energy adds one extra body repetition
+		minLinkDistance  : 10,		// Required distance to build link
+		linksRequestBelow: 200,		// Links request energy when less than this amount
+	};
 
 	constructor(colony: Colony, controller: StructureController) {
 		super(colony, controller, 'upgradeSite');
@@ -35,29 +41,20 @@ export class UpgradeSite extends HiveCluster {
 		// Register input
 		let allowableContainers = _.filter(this.room.containers, container =>
 			container.pos.findInRange(FIND_SOURCES, 1).length == 0); // only count containers that aren't near sources
-		let siteContainer = this.pos.findClosestByLimitedRange(allowableContainers, 3);
-		let siteLink = this.pos.findClosestByLimitedRange(colony.links, 3);
-		if (siteLink) {
-			this.input = siteLink;
-		} else if (siteContainer) {
-			this.input = siteContainer;
-		}// TODO: add container as battery
+		this.battery = this.pos.findClosestByLimitedRange(allowableContainers, 3);
+		this.link = this.pos.findClosestByLimitedRange(colony.links, 3);
 		// Register input construction sites
 		let nearbyInputSites = this.pos.findInRange(this.room.structureSites, 4, {
 			filter: (s: ConstructionSite) => s.structureType == STRUCTURE_CONTAINER ||
 											 s.structureType == STRUCTURE_LINK,
 		});
 		this.inputConstructionSite = nearbyInputSites[0];
-		this.settings = {
-			storageBuffer    : 100000,	// Number of upgrader parts scales with energy - this value
-			energyPerBodyUnit: 25000,	// Scaling factor: this much excess energy adds one extra body repetition
-		};
 		// Register overlord
 		this.overlord = new UpgradingOverlord(this);
 		// Energy per tick is sum of upgrader body parts and nearby worker body parts
 		this.energyPerTick = (_.sum(_.map(this.overlord.upgraders, upgrader => upgrader.getActiveBodyparts(WORK))) +
-							  _.sum(_.map(_.filter(this.colony.getCreepsByRole(WorkerSetup.role),
-												   worker => worker.pos.inRangeTo((this.input || this).pos, 2)),
+							  _.sum(_.map(_.filter(this.colony.getCreepsByRole(WorkerSetup.role), worker =>
+											  worker.pos.inRangeTo((this.link || this.battery || this).pos, 2)),
 										  worker => worker.getActiveBodyparts(WORK))));
 		// Compute stats
 		this.stats();
@@ -69,8 +66,8 @@ export class UpgradeSite extends HiveCluster {
 
 	get upgradePowerNeeded(): number {
 		if (this.room.storage) { // Workers perform upgrading until storage is set up
-			let amountOver = Math.max(this.room.storage.energy - this.settings.storageBuffer, 0);
-			let upgradePower = 1 + Math.floor(amountOver / this.settings.energyPerBodyUnit);
+			let amountOver = Math.max(this.room.storage.energy - UpgradeSite.settings.storageBuffer, 0);
+			let upgradePower = 1 + Math.floor(amountOver / UpgradeSite.settings.energyPerBodyUnit);
 			if (amountOver > 500000) {
 				upgradePower *= 2; // double upgrade power if we have lots of surplus energy
 			}
@@ -85,20 +82,16 @@ export class UpgradeSite extends HiveCluster {
 
 	init(): void {
 		// Register energy requests
-		if (this.input instanceof StructureLink) {
-			if (this.input.energy < 400) {
-				this.colony.linkNetwork.requestReceive(this.input);
-			}
-		} else if (this.input instanceof StructureContainer) {
-			if (this.input.energy < 0.5 * this.input.storeCapacity) {
-				this.colony.logisticsGroup.request(this.input, {dAmountdt: this.energyPerTick});
-			}
-
+		if (this.link && this.link.energy < UpgradeSite.settings.linksRequestBelow) {
+			this.colony.linkNetwork.requestReceive(this.link);
+		}
+		if (this.battery && this.battery.energy < 0.5 * this.battery.storeCapacity) {
+			this.colony.logisticsGroup.request(this.battery, {dAmountdt: this.energyPerTick});
 		}
 	}
 
 	/* Calculate where the input will be built for this site */
-	private calculateInputPos(): RoomPosition | undefined {
+	private calculateBatteryPos(): RoomPosition | undefined {
 		let originPos: RoomPosition | undefined = undefined;
 		if (this.colony.storage) {
 			originPos = this.colony.storage.pos;
@@ -112,13 +105,21 @@ export class UpgradeSite extends HiveCluster {
 		for (let dx of [-2, -1, 0, 1, 2]) {
 			for (let dy of [-2, -1, 0, 1, 2]) {
 				if ((dx == -2 || dx == 2) || (dy == -2 || dy == 2)) {
-					let pos = new RoomPosition(this.pos.x + dx, this.pos.y + dy, this.pos.roomName);
-					if (!pos.isEdge && pos.isPassible(true)) {
-						inputLocations.push(pos);
+					let x = this.pos.x + dx;
+					let y = this.pos.y + dy;
+					if (1 <= x && x <= 49 && 1 <= y && y <= 49) { // Don't use edges or invalid room positions
+						let pos = new RoomPosition(x, y, this.pos.roomName);
+						if (pos.isPassible(true)) {
+							inputLocations.push(pos);
+						}
 					}
 				}
 			}
 		}
+		// Try to find locations where there is maximal standing room
+		let maxNeighbors = _.max(_.map(inputLocations, pos => pos.availableNeighbors(true).length));
+		inputLocations = _.filter(inputLocations,
+								  pos => pos.availableNeighbors(true).length >= maxNeighbors);
 		// Return location closest to storage by path
 		let inputPos = originPos.findClosestByPath(inputLocations);
 		if (inputPos) {
@@ -127,37 +128,84 @@ export class UpgradeSite extends HiveCluster {
 		}
 	}
 
-	get inputPos(): RoomPosition | undefined {
-		if (this.input) {
-			return this.input.pos;
+	/* Calculate where the link will be built for this site */
+	private calculateLinkPos(): RoomPosition | undefined {
+		let originPos: RoomPosition | undefined = undefined;
+		if (this.colony.storage) {
+			originPos = this.colony.storage.pos;
+		} else if (this.colony.roomPlanner.storagePos) {
+			originPos = this.colony.roomPlanner.storagePos;
+		}
+		if (originPos && this.batteryPos) {
+			// Build link at last location on path from origin to battery
+			let path = Pathing.findShortestPath(this.batteryPos, originPos).path;
+			return path[0];
+		}
+	}
+
+	get batteryPos(): RoomPosition | undefined {
+		if (this.battery) {
+			return this.battery.pos;
 		} else if (this.inputConstructionSite) {
 			return this.inputConstructionSite.pos;
 		} else {
 			// Recalculate the input position or pull from memory if recent enough
-			if (!this._inputPos) {
+			if (!this._batteryPos) {
 				if (this.memory.input && Game.time - this.memory.input.tick < 100) {
-					this._inputPos = derefRoomPosition(this.memory.input.pos);
+					this._batteryPos = derefRoomPosition(this.memory.input.pos);
 				} else {
-					this._inputPos = this.calculateInputPos();
-					if (!this._inputPos) {
-						log.warning(`Upgrade site at ${this.pos.print}: cannot determine inputPos!`);
+					this._batteryPos = this.calculateBatteryPos();
+					if (!this._batteryPos && Game.time % 25 == 0) {
+						log.alert(`Upgrade site at ${this.pos.print}: no room plan set; ` +
+								  `cannot determine battery position!`);
 					}
 				}
 			}
-			return this._inputPos;
+			return this._batteryPos;
 		}
 	}
 
 	/* Build a container output at the optimal location */
-	private buildContainerIfMissing(): void {
-		if (!this.input && !this.inputConstructionSite) {
-			let buildHere = this.inputPos;
+	private buildBatteryIfMissing(): void {
+		if (!this.battery && !this.inputConstructionSite) {
+			let buildHere = this.batteryPos;
 			if (buildHere) {
 				let result = buildHere.createConstructionSite(STRUCTURE_CONTAINER);
 				if (result == OK) {
 					return;
 				} else {
-					log.warning(`Upgrade site at ${this.pos.print}: cannot build input! Result: ${result}`);
+					log.warning(`Upgrade site at ${this.pos.print}: cannot build battery! Result: ${result}`);
+				}
+			}
+		}
+	}
+
+	/* Build an input link at the optimal location */
+	private buildLinkIfMissing(): void {
+		if (!this.colony.storage ||
+			Pathing.distance(this.pos, this.colony.storage.pos) < UpgradeSite.settings.minLinkDistance) {
+			return;
+		}
+		let numLinks = this.colony.links.length +
+					   _.filter(this.colony.constructionSites,
+								site => site.structureType == STRUCTURE_LINK).length;
+		let numLinksAllowed = CONTROLLER_STRUCTURES.link[this.colony.level];
+		// Proceed if you don't have a link or one being built and there are extra links that can be built
+		if (!this.link && !this.inputConstructionSite && numLinksAllowed > numLinks) {
+			let clustersHaveLinks: boolean = (!!this.colony.hatchery && !!this.colony.hatchery.link &&
+											  !!this.colony.commandCenter && !!this.colony.commandCenter.link);
+			let miningSitesInRoom = _.map(this.room.sources, s => this.colony.miningSites[s.id]) as MiningSite[];
+			let farSites = _.filter(miningSitesInRoom, site =>
+				Pathing.distance(this.colony.storage!.pos, site.pos) > MiningSite.settings.minLinkDistance);
+			let sitesHaveLinks = _.every(farSites, site => site.output instanceof StructureLink);
+			// Proceed if all mining sites have links if needed and all clusters have links
+			if (clustersHaveLinks && sitesHaveLinks) {
+				let buildHere = this.calculateLinkPos();
+				if (buildHere) {
+					let result = buildHere.createConstructionSite(STRUCTURE_LINK);
+					if (result != OK) {
+						log.warning(`Upgrade site at ${this.pos.print}: cannot build link! Result: ${result}`);
+					}
 				}
 			}
 		}
@@ -171,13 +219,15 @@ export class UpgradeSite extends HiveCluster {
 		_.defaults(this.memory.stats, defaults);
 		// Compute downtime
 		this.memory.stats.downtime = (this.memory.stats.downtime * (CREEP_LIFE_TIME - 1) +
-									  (this.input ? +this.input.isEmpty : 0)) / CREEP_LIFE_TIME;
+									  (this.battery ? +this.battery.isEmpty : 0)) / CREEP_LIFE_TIME;
 		Stats.log(`colonies.${this.colony.name}.upgradeSite.downtime`, this.memory.stats.downtime);
 	}
 
 	run(): void {
 		if (Game.time % 25 == 7) {
-			this.buildContainerIfMissing();
+			this.buildBatteryIfMissing();
+		} else if (Game.time % 25 == 8) {
+			this.buildLinkIfMissing();
 		}
 	}
 

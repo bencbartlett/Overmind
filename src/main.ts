@@ -29,11 +29,16 @@ import './settings/settings_user';
 import {log} from './lib/logger/log';
 import {sandbox} from './sandbox';
 import {Mem} from './memory';
-import OM from './Overmind';
 import {Console} from './console/console';
 import {Stats} from './stats/stats';
+// Profiling
 import {USE_PROFILER} from './settings/config';
 import profiler from 'screeps-profiler';
+import OM from 'Overmind_obfuscated';
+// Import overmind from obfuscated source
+
+// import {_Overmind} from 'Overmind';
+var _Overmind = (<any>OM)._Overmind as (new() => IOvermind);
 
 if (USE_PROFILER) profiler.enable();
 
@@ -44,14 +49,14 @@ Console.init();
 
 // Main loop
 function main(): void {
-	Mem.clean();				// Clean memory
-	global.Overmind = new OM();	// Instantiate the Overmind
-	Overmind.build();			// Build phase: instantiate caches and colony components
-	Overmind.init();			// Init phase: spawning and energy requests
-	Overmind.run();				// Run phase: execute state-changing actions
-	Overmind.visuals(); 		// Draw visuals
-	Stats.run(); 				// Record statistics
-	sandbox();					// Sandbox: run any testing code
+	Mem.clean();										// Clean memory
+	global.Overmind = new _Overmind();					// Instantiate the Overmind
+	Overmind.build();									// Build phase: instantiate caches and colony components
+	Overmind.init();									// Init phase: spawning and energy requests
+	Overmind.run();										// Run phase: execute state-changing actions
+	Overmind.visuals(); 								// Draw visuals
+	Stats.run(); 										// Record statistics
+	sandbox();											// Sandbox: run any testing code
 }
 
 export function loop(): void {

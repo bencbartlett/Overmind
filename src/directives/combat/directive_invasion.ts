@@ -13,6 +13,7 @@ export class DirectiveInvasionDefense extends Directive {
 	static directiveName = 'invasionDefense';
 	static color = COLOR_ORANGE;
 	static secondaryColor = COLOR_RED;
+	static requiredRCL = 4;
 
 	memory: DirectiveInvasionDefenseMemory;
 	room: Room;
@@ -20,7 +21,7 @@ export class DirectiveInvasionDefense extends Directive {
 	private relocateFrequency: number;
 
 	constructor(flag: Flag) {
-		super(flag);
+		super(flag, DirectiveInvasionDefense.requiredRCL);
 		let bigInvaders = _.filter(this.room.hostiles, hostile => hostile.body.length >= 30);
 		let boostedInvasion = _.filter(bigInvaders, invader => invader.boosts.length > 0).length > 0;
 		this.overlords.archer = new ArcherDefenseOverlord(this, boostedInvasion);

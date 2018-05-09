@@ -184,10 +184,19 @@ export class Colony {
 		// Instantiate spore crawlers to wrap towers
 		this.sporeCrawlers = _.map(this.towers, tower => new SporeCrawler(this, tower));
 		// Sort claimed and unclaimed links
-		let claimedLinkCandidates = _.compact([this.commandCenter ? this.commandCenter.link : null,
-											   this.hatchery ? this.hatchery.link : null,
-											   this.upgradeSite.input]);
-		this.claimedLinks = _.filter(claimedLinkCandidates, s => s instanceof StructureLink) as StructureLink[];
+		let claimedPositions = _.map(_.compact([this.commandCenter, this.hatchery, this.upgradeSite]),
+									 hiveCluster => hiveCluster!.pos);
+		this.claimedLinks = _.filter(this.links, function (link) {
+			let nearbyClaimingThings = link.pos.findInRange(claimedPositions, 3);
+			if (nearbyClaimingThings) {
+				return nearbyClaimingThings.length > 0;
+			}
+			let nearbySources = link.pos.findInRange(FIND_SOURCES, 2);
+			if (nearbySources) {
+				return nearbySources.length > 0;
+			}
+			return false;
+		}) as StructureLink[];
 		this.dropoffLinks = _.filter(this.links, link => this.claimedLinks.includes(link) == false);
 		// Mining sites is an object of ID's and MiningSites
 		let sourceIDs = _.map(this.sources, source => source.ref);
@@ -235,7 +244,7 @@ export class Colony {
 	}
 
 	run(): void {
-		// 1: Run the colony overlord, must be run BEFORE all components are run
+		// 1: Run the colony overseer, must be run BEFORE all components are run
 		this.overseer.run();
 		// 2: Run the colony virtual components
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.run());

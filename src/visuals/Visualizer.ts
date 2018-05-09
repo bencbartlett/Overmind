@@ -1,13 +1,6 @@
 import {profile} from '../profiler/decorator';
 import {StructureMap} from '../roomPlanner/RoomPlanner';
-
-export var asciiLogo: string[] = ['___________________________________________________________',
-								  '',
-								  ' _____  _    _ _______  ______ _______ _____ __   _ ______ ',
-								  '|     |  \\  /  |______ |_____/ |  |  |   |   | \\  | |     \\',
-								  '|_____|   \\/   |______ |    \\_ |  |  | __|__ |  \\_| |_____/',
-								  '',
-								  '_______________________ Screeps AI ________________________'];
+import {asciiLogo} from './logos';
 
 @profile
 export class Visualizer {

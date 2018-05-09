@@ -1,6 +1,6 @@
 {
   "name": "Overmind",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Overmind Screeps AI (pre-release)",
   "author": "Ben Bartlett",
   "repository": {
@@ -13,6 +13,7 @@
   },
   "scripts": {
     "lint": "tslint \"src/**/*.ts\"",
+    "build-obfuscated-overmind": "tsc && javascript-obfuscator tsc-out/Overmind.js --output src/Overmind_obfuscated.js --compact false --self-defending true --string-array true --string-array-threshold 1 --string-array-encoding true",
     "push-main": "rollup -c --dest main",
     "push-pserver": "rollup -c --dest pserver",
     "push-sim": "rollup -c --dest sim",

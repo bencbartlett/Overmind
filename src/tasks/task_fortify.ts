@@ -12,6 +12,7 @@ export class TaskFortify extends Task {
 	constructor(target: fortifyTargetType, options = {} as TaskOptions) {
 		super(fortifyTaskName, target, options);
 		// Settings
+		this.settings.targetRange = 3;
 		this.settings.workOffRoad = true;
 	}
 

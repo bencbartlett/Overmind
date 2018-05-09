@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "allowJs": true,
     "module": "commonjs",
     "target": "es5",
     "lib": [
@@ -18,6 +19,9 @@
     "allowUnreachableCode": false,
     "removeComments": false
   },
+  "include": [
+    "src/**/*"
+  ],
   "exclude": [
     "node_modules"
   ]

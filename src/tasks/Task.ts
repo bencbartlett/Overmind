@@ -243,7 +243,7 @@ export abstract class Task implements ITask {
 		let positions = _.sortBy(creep.pos.availableNeighbors(), (p: RoomPosition) => p.getRangeTo(pos));
 		if (maintainDistance) {
 			let currentRange = creep.pos.getRangeTo(pos);
-			positions = _.filter(positions, (p: RoomPosition) => p.getRangeTo(pos) <= currentRange);
+			positions = _.filter(positions, p => p.getRangeTo(pos) <= currentRange);
 		}
 
 		let swampPosition;

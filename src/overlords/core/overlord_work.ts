@@ -26,7 +26,7 @@ export class WorkerOverlord extends Overlord {
 		this.workers = this.creeps('worker');
 		this.rechargeObjects = _.compact([this.colony.storage!,
 										  this.colony.terminal!,
-										  this.colony.upgradeSite.input!,
+										  this.colony.upgradeSite.battery!,
 										  ..._.map(this.colony.miningSites, site => site.output!),
 										  ..._.filter(this.colony.tombstones, ts => ts.store.energy > 0)]);
 		if (this.colony.hatchery && this.colony.hatchery.battery) {

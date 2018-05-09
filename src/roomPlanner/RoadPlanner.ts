@@ -50,7 +50,7 @@ export class RoadPlanner {
 	// Connect commandCenter to hatchery, upgradeSites, and all miningSites, and place containers
 	private buildRoadNetwork(commandCenterPos: RoomPosition, hatcheryPos: RoomPosition,
 							 obstacles: RoomPosition[]): void {
-		let upgradePos = this.colony.upgradeSite.inputPos;
+		let upgradePos = this.colony.upgradeSite.batteryPos;
 		let miningSitePositions = _.mapValues(this.colony.miningSites, site => site.outputPos);
 		if (!upgradePos || _.any(miningSitePositions, pos => pos == undefined)) {
 			log.warning(`RoadPlanner for ${this.colony.room.print}: cannot build road network! (missing pos)`);
@@ -227,8 +227,7 @@ export class RoadPlanner {
 			if (count > 0 && RoomPlanner.shouldBuild(STRUCTURE_ROAD, pos)) {
 				let ret = pos.createConstructionSite(STRUCTURE_ROAD);
 				if (ret != OK) {
-					log.error(`${this.colony.name}: couldn't create construction site! ` +
-							  `pos: ${pos.x} ${pos.y} ${pos.roomName}, type: ${STRUCTURE_ROAD}, Result: ${ret}`);
+					log.error(`${this.colony.name}: couldn't create road site at ${pos.print}. Result: ${ret}`);
 				} else {
 					count--;
 				}

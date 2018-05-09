@@ -22,7 +22,7 @@ export class Hatchery extends HiveCluster {
 	battery: StructureContainer | undefined;				// The container to provide an energy buffer
 	transportRequests: TransportRequestGroup;				// Box for energy requests
 	overlord: HatcheryOverlord | undefined;					// Hatchery overlord if past larva stage
-	private settings: {										// Settings for hatchery operation
+	settings: {												// Settings for hatchery operation
 		refillTowersBelow: number,  							// What value to refill towers at?
 		linksRequestEnergyBelow: number, 						// What value will links store more energy at?
 		supplierSize: number,									// Size of supplier in body pattern units
@@ -30,6 +30,7 @@ export class Hatchery extends HiveCluster {
 		queenSize: number,										// Size of queen in body patern repetition units
 		numQueens: number,										// Number of queens the Hatchery needs
 		renewQueenAt: number,									// Renew idle queens below this ticksRemaining value
+		suppressSpawning: boolean,             					// Prevents the hatchery from spawning this tick
 	};
 	private productionPriorities: number[];
 	private productionQueue: { [priority: number]: protoCreep[] };  // Priority queue of protocreeps
@@ -60,6 +61,7 @@ export class Hatchery extends HiveCluster {
 			queenSize              : _.min([_.ceil(2 * (this.extensions.length + 1) / 5), 8]),
 			numQueens              : 1,
 			renewQueenAt           : 1000,
+			suppressSpawning       : false,
 		};
 		// Register the hatchery overlord
 		this.overlord = new HatcheryOverlord(this);
@@ -302,7 +304,9 @@ export class Hatchery extends HiveCluster {
 	}
 
 	run(): void {
-		this.handleSpawns();
+		if (!this.settings.suppressSpawning) {
+			this.handleSpawns();
+		}
 	}
 
 	visuals() {
