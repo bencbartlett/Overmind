@@ -2,7 +2,7 @@
 
 # Overmind Screeps AI
 
-### Current release: [Overmind v0.2.x - "Logistics Logic"](https://github.com/bencbartlett/Overmind/releases)
+### Current release: [Overmind v0.3.x - "Back to Base-ics"](https://github.com/bencbartlett/Overmind/releases)
 
 - See the [changelog](https://github.com/bencbartlett/Overmind/blob/master/CHANGELOG.md) for patch notes.
 - Documentation is available in the [wiki](https://github.com/bencbartlett/Overmind/wiki).
