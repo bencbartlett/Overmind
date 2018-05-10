@@ -14,9 +14,9 @@
 
 # About Overmind
 
-### What is Screeps?
-
 <img align="right" src="/assets/img/exampleRoomBanner.png" width=200>
+
+### What is Screeps?
 
 Screeps is an [MMO strategy game for programmers](https://screeps.com/). The core objective is to expand your colony, gathering resources and fighting other players along the way. To control your units, you code an AI in JavaScript; everything from moving, mining, building, fighting, and trading is entirely driven by your code. Because Screeps is an MMO, it takes place on a single server that runs 24/7, populated by every other player and their army of creeps. When you log off, your population continues buzzing away with whatever task you set them. Screeps pits your programming prowess head-to-head with other people to see who can think of the most efficient methods of completing tasks or imagine new ways to defeat enemies.
 
@@ -47,13 +47,13 @@ The deployment scripts are based on [`screeps-typescript-starter`](https://githu
 
 ### Setting up the Grafana dashboard
 
-![](/assets/img/dashboard_compacted_2.png)
-
-Overmind includes a [Grafana dashboard](https://github.com/bencbartlett/Overmind/tree/master/assets/Grafana%20Dashboards) which tracks detailed operating statistics. To set up the dashboard:
+Overmind includes a [Grafana dashboard](https://github.com/bencbartlett/Overmind/tree/master/assets/Grafana%20Dashboards) (shown below) which tracks detailed operating statistics. To set up the dashboard:
 
 1. Register for grafana service at [screepspl.us](https://screepspl.us/services/grafana)
 2. Setup the Grafana agent. I would suggest [running it on a free micro instance of Google Compute](https://github.com/bonzaiferroni/bonzAI/wiki/Screepspl.us-agent-with-Compute-Engine).
 3. Import the dashboard from [Overmind.json](https://github.com/bencbartlett/Overmind/blob/master/assets/Grafana%20Dashboards/Overmind.json) and change `$User` to your username. (Make sure to use Grafana 5! screepspl.us/grafana5)
+
+![](/assets/img/dashboard_compacted_2.png)
 
 # Design overview
 
