@@ -1,4 +1,4 @@
-![](/assets/OvermindLogo.png)
+![](/assets/img/OvermindLogo.png)
 
 # Overmind Screeps AI
 
@@ -40,5 +40,5 @@ The deployment scripts are based on [`screeps-typescript-starter`](https://githu
 
 Check out the [Overmind wiki](https://github.com/bencbartlett/Overmind/wiki) for in-depth explanations of parts of the design of the AI. (Click the diagram below to see a higher-resolution version.)
 
-![[AI structural schematic](/assets/AIdiagram.png)](https://raw.githubusercontent.com/bencbartlett/Overmind/master/assets/AIdiagram.png)
+![[AI structural schematic](/assets/AIdiagram.png)](https://raw.githubusercontent.com/bencbartlett/Overmind/master/assets/img/AIdiagram.png)
 

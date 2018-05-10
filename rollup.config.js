@@ -23,7 +23,7 @@ export default {
     output: {
         file: "dist/main.js",
         format: "cjs",
-        sourcemap: true
+        sourcemap: false
     },
     onwarn: function (warning) {
         // Skip default export warnings from using obfuscated overmind file in main

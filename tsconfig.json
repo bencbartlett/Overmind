@@ -9,7 +9,7 @@
     ],
     "outDir": "tsc-out",
     "baseUrl": "src/",
-    "sourceMap": true,
+    "sourceMap": false,
     "strict": true,
     "strictPropertyInitialization": false,
     "noImplicitThis": false,
