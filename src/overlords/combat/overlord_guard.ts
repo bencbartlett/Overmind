@@ -59,7 +59,7 @@ export class GuardOverlord extends CombatOverlord {
 
 	private handleGuard(guard: Zerg): void {
 
-		if (!guard.inSameRoomAs(this)) { // TODO: make edge-safe
+		if (!guard.inSameRoomAs(this) && !guard.pos.isEdge) {
 			// Move into the assigned room if there is a guard flag present
 			guard.travelTo(this.pos);
 		} else { // If you're in the assigned room or if there is no assignment, try to attack or heal

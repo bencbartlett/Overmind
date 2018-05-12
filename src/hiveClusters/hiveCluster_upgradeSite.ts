@@ -3,7 +3,7 @@
 import {HiveCluster} from './HiveCluster';
 import {profile} from '../profiler/decorator';
 import {UpgradingOverlord} from '../overlords/core/overlord_upgrade';
-import {Colony} from '../Colony';
+import {Colony, ColonyStage} from '../Colony';
 import {Mem} from '../memory';
 import {Visualizer} from '../visuals/Visualizer';
 import {log} from '../lib/logger/log';
@@ -21,7 +21,7 @@ interface UpgradeSiteMemory {
 export class UpgradeSite extends HiveCluster {
 
 	controller: StructureController;						// The controller for the site
-	link: StructureLink | undefined;	// The primary object receiving energy for the site
+	link: StructureLink | undefined;						// The primary object receiving energy for the site
 	battery: StructureContainer | undefined; 				// The container to provide an energy buffer
 	inputConstructionSite: ConstructionSite | undefined;	// The construction site for the input, if there is one
 	private _batteryPos: RoomPosition | undefined;
@@ -85,7 +85,8 @@ export class UpgradeSite extends HiveCluster {
 		if (this.link && this.link.energy < UpgradeSite.settings.linksRequestBelow) {
 			this.colony.linkNetwork.requestReceive(this.link);
 		}
-		if (this.battery && this.battery.energy < 0.5 * this.battery.storeCapacity) {
+		let inThreshold = this.colony.stage > ColonyStage.Larva ? 0.5 : 0.75;
+		if (this.battery && this.battery.energy < inThreshold * this.battery.storeCapacity) {
 			this.colony.logisticsGroup.request(this.battery, {dAmountdt: this.energyPerTick});
 		}
 	}

@@ -101,6 +101,7 @@ export class RoadPlanner {
 							 options: TravelToOptions = {}): PathfinderReturn {
 		_.defaults(options, {
 			ignoreCreeps: true,
+			ensurePath  : true,
 			range       : 1,
 			offRoad     : true,
 			allowSK     : true,

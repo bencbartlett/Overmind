@@ -141,7 +141,7 @@ export class RoomPlanner {
 			'Place colony components and routing hints with room planner flags:',
 			'    Place hatchery:        white/green',
 			'    Place command center:  white/blue',
-			'Set component rotation by writing an angle (0,90,180,270 or 0,1,2,3) to flag.memory.rotation.',
+			// 'Set component rotation by writing an angle (0,90,180,270 or 0,1,2,3) to flag.memory.rotation.',
 			'Finalize layout '
 		];
 		_.forEach(msg, command => console.log(command));
@@ -237,6 +237,7 @@ export class RoomPlanner {
 		}
 	}
 
+	// TODO: component rotation isn't currently fully supported
 	/* Rotates component positions about a pivot point counterclockwise by the given angle; done in-place */
 	private rotateComponent(map: StructureMap, pivot: RoomPosition | Coord, angle: number): void {
 		let R = ([x, y]: number[]) => ([x, y]);

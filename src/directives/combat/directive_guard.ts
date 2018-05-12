@@ -30,7 +30,7 @@ export class DirectiveGuard extends Directive {
 	run(): void {
 		// Reloacate the flag
 		if (Game.time % this.relocateFrequency == 0) {
-			if (this.room && this.room.hostiles[0]) {
+			if (this.room && this.room.hostiles[0] && !this.room.hostiles[0].pos.isEdge) {
 				this.setPosition(this.room.hostiles[0].pos);
 			}
 		}

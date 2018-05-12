@@ -6,7 +6,6 @@ import {Hatchery} from './hiveClusters/hiveCluster_hatchery';
 import {CommandCenter} from './hiveClusters/hiveCluster_commandCenter';
 import {UpgradeSite} from './hiveClusters/hiveCluster_upgradeSite';
 import {Overseer} from './Overseer';
-// import {SupplierOverlord} from './overlords/core/overlord_supply';
 import {WorkerOverlord} from './overlords/core/overlord_work';
 import {Zerg} from './Zerg';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
@@ -215,53 +214,22 @@ export class Colony {
 		return this.creepsByRole[roleName] || [];
 	}
 
-
 	init(): void {
-		// Initialize each hive cluster
-		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.init());
-		// Register drop pickup requests // TODO: make this cleaner, refactor for tombstones
-		// for (let room of this.rooms) {
-		// 	for (let drop of room.droppedEnergy) {
-		// 		// this.transportRequests.requestWithdrawal(drop, Priority.High);
-		// 		this.logisticsGroup.provide(drop,{multiplier:1.5});
-		// 	}
-		// }
-		// Initialize the colony overseer, must be run AFTER all components are initialized
-		this.overseer.init();
-		// Initialize the road network
-		this.roadLogistics.init();
-		// Initialize link network
-		this.linkNetwork.init();
-		// Initialize the room planner
-		this.roomPlanner.init();
-		// console.log('==================================================================================');
-
-		// if (true) {
-		// 	console.log('==================================================================================');
-		// 	console.log(`Summary of logistics group for ${this.colony.name} at init() ${Game.time}`);
-		// 	this.logisticsGroup.summarize();
-		// }
+		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.init());	// Initialize each hive cluster
+		this.overseer.init();												// Initialize overseer AFTER hive clusters
+		this.roadLogistics.init();											// Initialize the road network
+		this.linkNetwork.init();											// Initialize link network
+		this.roomPlanner.init();											// Initialize the room planner
 	}
 
 	run(): void {
-		// 1: Run the colony overseer, must be run BEFORE all components are run
-		this.overseer.run();
-		// 2: Run the colony virtual components
-		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.run());
-		// Run the link network
-		this.linkNetwork.run();
-		// 4: Run each creep in the colony
-		_.forEach(this.creeps, creep => creep.run());
-		// Run the road network
-		this.roadLogistics.run();
-		// Run the room planner
-		this.roomPlanner.run();
-		// Record statistics
-		this.stats();
-		// if (true) {
-		// 	console.log(`Summary of logistics group for ${this.colony.name} at run() ${Game.time}`);
-		// 	this.logisticsGroup.summarize();
-		// }
+		this.overseer.run();												// Run overseer BEFORE hive clusters
+		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.run());		// Run each hive cluster
+		this.linkNetwork.run();												// Run the link network
+		this.roadLogistics.run();											// Run the road network
+		this.roomPlanner.run();												// Run the room planner
+		_.forEach(this.creeps, creep => creep.run());						// Animate all creeps
+		this.stats();														// Log stats per tick
 	}
 
 	stats(): void {
@@ -272,9 +240,7 @@ export class Colony {
 	}
 
 	visuals(): void {
-		// Display overlord creep information
-		this.overseer.visuals();
-		// Display hiveCluster visuals
-		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.visuals());
+		this.overseer.visuals();											// Display overlord creep information
+		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.visuals()); // Display hiveCluster visuals
 	}
 }

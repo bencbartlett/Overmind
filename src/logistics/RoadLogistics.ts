@@ -98,7 +98,7 @@ export class RoadLogistics {
 	/* Total amount of energy needed to repair all roads in the room */
 	energyToRepave(room: Room): number {
 		if (!this.cache.energyToRepave[room.name]) {
-			this.cache.energyToRepave[room.name] = _.sum(_.map(room.roads,
+			this.cache.energyToRepave[room.name] = _.sum(_.map(this.repairableRoads(room),
 															   road => (road.hitsMax - road.hits) / REPAIR_POWER));
 		}
 		return this.cache.energyToRepave[room.name];

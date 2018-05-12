@@ -3,7 +3,7 @@
 import {HiveCluster} from './HiveCluster';
 import {profile} from '../profiler/decorator';
 import {MiningOverlord} from '../overlords/core/overlord_mine';
-import {Colony} from '../Colony';
+import {Colony, ColonyStage} from '../Colony';
 import {Mem} from '../memory';
 import {log} from '../lib/logger/log';
 import {OverlordPriority} from '../overlords/priorities_overlords';
@@ -104,8 +104,8 @@ export class MiningSite extends HiveCluster {
 		// Register logisticsGroup requests if approximate predicted amount exceeds transporter capacity
 		if (this.output instanceof StructureContainer) {
 			let transportCapacity = 200 * this.colony.level;
-			// if (this.approximatePredictedEnergy > transportCapacity) {
-			if (this.output.energy > 0.8 * transportCapacity) {
+			let threshold = this.colony.stage > ColonyStage.Larva ? 0.8 : 0.5;
+			if (this.output.energy > threshold * transportCapacity) {
 				this.colony.logisticsGroup.provide(this.output, {dAmountdt: this.energyPerTick});
 			}
 		} else if (this.output instanceof StructureLink) {
