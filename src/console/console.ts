@@ -27,7 +27,7 @@ export class Console {
 		descr['help'] = 'show this message';
 		descr['log.level = [int]'] = 'set the logging level from 0 - 4';
 		descr['openRoomPlanner(roomName)'] = 'open the room planner for a room';
-		descr['closeRoomPalnner(roomName)'] = 'close the room planner and save changes';
+		descr['closeRoomPlanner(roomName)'] = 'close the room planner and save changes';
 		descr['cancelRoomPlanner(roomName)'] = 'close the room planner and discard changes';
 		descr['listActiveRoomPlanners()'] = 'display a list of colonies with open room planners';
 		descr['destroyAllHostileStructures()'] = 'destroys all hostile structures in an owned room';
