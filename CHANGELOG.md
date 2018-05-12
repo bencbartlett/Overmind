@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## Overmind [0.3.1] - 2018.5.12
+### Added
+- Workers sign controllers at low RCL
+
+### Fixed
+- Bugfix with workers being idle due to being unable to find a valid paving target
+
 ## Overmind [0.3.0] - 2018.5.9
 ### Added 
 - Lots of new content added to the [Wiki](https://github.com/bencbartlett/Overmind/wiki)!
@@ -97,7 +104,8 @@ This release was initially deployed on 2018.3.2 but was re-versioned on 2018.3.1
 ### Added
 - Initial pre-release of Overmind after 190 commits and about 80,000 additions.
 
-[Unreleased]: https://github.com/bencbartlett/Overmind/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/bencbartlett/Overmind/compare/v0.3.1...HEAD
+[0.3.0]: https://github.com/bencbartlett/Overmind/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/bencbartlett/Overmind/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/bencbartlett/Overmind/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/bencbartlett/Overmind/compare/v0.1.0...v0.2.0
