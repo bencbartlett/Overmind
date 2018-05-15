@@ -1,7 +1,6 @@
 import {attackTargetType, TaskAttack} from './task_attack';
 import {buildTargetType, TaskBuild} from './task_build';
 import {claimTargetType, TaskClaim} from './task_claim';
-// import {depositTargetType, TaskDeposit} from './task_deposit';
 import {dismantleTargetType, TaskDismantle} from './task_dismantle';
 import {fortifyTargetType, TaskFortify} from './task_fortify';
 import {getBoostedTargetType, TaskGetBoosted} from './task_getBoosted';
@@ -19,12 +18,11 @@ import {signControllerTargetType, TaskSignController} from './task_signControlle
 import {TaskTransfer, transferTargetType} from './task_transfer';
 import {TaskUpgrade, upgradeTargetType} from './task_upgrade';
 import {TaskWithdraw, withdrawTargetType} from './task_withdraw';
-// import {TaskWithdrawResource, withdrawResourceTargetType} from './task_withdrawResource';
 import {dropTargetType, TaskDrop} from './task_drop';
 import {profile} from '../profiler/decorator';
 
 @profile
-export class Tasks { // TODO: update arguments for transfer and similar
+export class Tasks {
 
 	static attack(target: attackTargetType): TaskAttack {
 		return new TaskAttack(target);
@@ -37,10 +35,6 @@ export class Tasks { // TODO: update arguments for transfer and similar
 	static claim(target: claimTargetType): TaskClaim {
 		return new TaskClaim(target);
 	}
-
-	// static deposit(target: depositTargetType): TaskDeposit {
-	// 	return new TaskDeposit(target);
-	// }
 
 	static dismantle(target: dismantleTargetType): TaskDismantle {
 		return new TaskDismantle(target);

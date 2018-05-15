@@ -72,8 +72,10 @@ export class RoadPlanner {
 	private planRoad(pos1: RoomPosition, pos2: RoomPosition, obstacles: RoomPosition[]): void {
 		let opts = {obstacles: obstacles, ensurePath: true, range: 1};
 		// Find the shortest path, preferentially stepping on tiles with road routing flags on them
-		let roadPath = this.generateRoadPath(pos1, pos2, opts).path;
-		this.roadPositions = this.roadPositions.concat(roadPath);
+		let roadPath = this.generateRoadPath(pos1, pos2, opts);
+		if (roadPath) {
+			this.roadPositions = this.roadPositions.concat(roadPath);
+		}
 	}
 
 	private initCostMatrix(roomName: string, options: TravelToOptions) {
@@ -98,7 +100,7 @@ export class RoadPlanner {
 
 	/* Generates a road path and modifies cost matrices to encourage merging with future roads */
 	private generateRoadPath(origin: RoomPosition, destination: RoomPosition,
-							 options: TravelToOptions = {}): PathfinderReturn {
+							 options: TravelToOptions = {}): RoomPosition[] | undefined {
 		_.defaults(options, {
 			ignoreCreeps: true,
 			ensurePath  : true,
@@ -146,6 +148,10 @@ export class RoadPlanner {
 			swampCost   : 2,
 			roomCallback: callback,
 		});
+
+		if (ret.incomplete) {
+			return;
+		}
 		// Set every n-th tile of a planned path to be cost 1 to encourage road overlap for future pathing
 		if (RoadPlanner.settings.encourageRoadMerging) {
 			let interval = RoadPlanner.settings.tileCostReductionInterval;
@@ -159,7 +165,7 @@ export class RoadPlanner {
 			}
 		}
 		// Return the pathfinder results
-		return ret;
+		return ret.path;
 	}
 
 	/* Ensure that the roads doesn't overlap with roads from this.map and that the positions are unique */
