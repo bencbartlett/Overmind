@@ -5,7 +5,6 @@ import {Zerg} from '../../Zerg';
 import {OverlordPriority} from '../priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/directive_target_siege';
 import {DirectiveSiege} from '../../directives/combat/directive_siege';
-import {Tasks} from '../../tasks/Tasks';
 import {CombatOverlord} from './CombatOverlord';
 import {profile} from '../../profiler/decorator';
 
@@ -71,10 +70,7 @@ export class SiegeOverlord extends CombatOverlord {
 			sieger.pos.roomName != this.pos.roomName &&
 			sieger.pos.roomName != this.recoveryWaypoint.roomName) {
 			// Go to the recovery point first
-			let goto = Tasks.goTo(this.recoveryWaypoint);
-			goto.options.travelToOptions = this.moveOpts;
-			sieger.task = goto;
-			return;
+			sieger.travelTo(this.recoveryWaypoint, this.moveOpts);
 		}
 		if (sieger.pos.roomName == this.pos.roomName) {
 			if (sieger.hits > this.settings.retreatHitsPercent * sieger.hitsMax) {
@@ -102,10 +98,11 @@ export class SiegeOverlord extends CombatOverlord {
 
 	run() {
 		for (let sieger of this.siegers) {
-			if (sieger.isIdle) {
-				this.handleSieger(sieger);
-			} else {
+			// Run the creep if it has a task given to it by something else; otherwise, proceed with non-task actions
+			if (sieger.hasValidTask) {
 				sieger.run();
+			} else {
+				this.handleSieger(sieger);
 			}
 		}
 	}

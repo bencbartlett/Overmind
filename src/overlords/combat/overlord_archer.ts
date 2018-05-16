@@ -137,14 +137,15 @@ export class ArcherDefenseOverlord extends CombatOverlord {
 
 	run() {
 		for (let archer of this.archers) {
-			if (archer.isIdle) {
+			// Run the creep if it has a task given to it by something else; otherwise, proceed with non-task actions
+			if (archer.hasValidTask) {
+				archer.run();
+			} else {
 				if (archer.needsBoosts && this.labsHaveBoosts()) {
 					this.handleBoosts(archer);
 				} else {
 					this.handleArcher(archer);
 				}
-			} else {
-				archer.run();
 			}
 		}
 

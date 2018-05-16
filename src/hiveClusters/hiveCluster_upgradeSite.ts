@@ -38,13 +38,15 @@ export class UpgradeSite extends HiveCluster {
 	constructor(colony: Colony, controller: StructureController) {
 		super(colony, controller, 'upgradeSite');
 		this.controller = controller;
-		// Register input
+		// Register bettery
 		let allowableContainers = _.filter(this.room.containers, container =>
 			container.pos.findInRange(FIND_SOURCES, 1).length == 0); // only count containers that aren't near sources
 		this.battery = this.pos.findClosestByLimitedRange(allowableContainers, 3);
+		// Register link
+		let allowableLinks = _.filter(this.room.links, link => link.pos.findInRange(FIND_SOURCES, 2).length == 0);
 		this.link = this.pos.findClosestByLimitedRange(colony.links, 4);
 		// Register input construction sites
-		let nearbyInputSites = this.pos.findInRange(this.room.structureSites, 4, {
+		let nearbyInputSites = this.pos.findInRange(this.room.constructionSites, 4, {
 			filter: (s: ConstructionSite) => s.structureType == STRUCTURE_CONTAINER ||
 											 s.structureType == STRUCTURE_LINK,
 		});
@@ -87,7 +89,7 @@ export class UpgradeSite extends HiveCluster {
 		}
 		let inThreshold = this.colony.stage > ColonyStage.Larva ? 0.5 : 0.75;
 		if (this.battery && this.battery.energy < inThreshold * this.battery.storeCapacity) {
-			this.colony.logisticsGroup.request(this.battery, {dAmountdt: this.energyPerTick});
+			this.colony.logisticsNetwork.request(this.battery, {dAmountdt: this.energyPerTick});
 		}
 	}
 

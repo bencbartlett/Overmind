@@ -169,26 +169,27 @@ export class DestroyerOverlord extends CombatOverlord {
 
 	run() {
 		for (let attacker of this.attackers) {
-			if (attacker.isIdle) {
+			// Run the creep if it has a task given to it by something else; otherwise, proceed with non-task actions
+			if (attacker.hasValidTask) {
+				attacker.run();
+			} else {
 				if (attacker.needsBoosts) {
 					this.handleBoosts(attacker);
 				} else {
 					this.handleSquad(attacker);
 				}
-			} else {
-				attacker.run();
 			}
 		}
 
 		for (let healer of this.healers) {
-			if (healer.isIdle) {
+			if (healer.hasValidTask) {
+				healer.run();
+			} else {
 				if (healer.needsBoosts) {
 					this.handleBoosts(healer);
 				} else {
 					this.handleHealer(healer);
 				}
-			} else {
-				healer.run();
 			}
 		}
 	}

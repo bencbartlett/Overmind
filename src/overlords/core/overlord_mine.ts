@@ -6,6 +6,7 @@ import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Pathing} from '../../pathing/pathing';
+import {DEFCON} from '../../Colony';
 
 @profile
 export class MiningOverlord extends Overlord {
@@ -71,11 +72,30 @@ export class MiningOverlord extends Overlord {
 		}
 	}
 
+	private fleeResponse(miner: Zerg): void {
+		if (miner.room == this.colony.room) {
+			// If there is a large invasion happening in the colony room, flee
+			if (this.colony.defcon > DEFCON.invasionNPC) {
+				miner.task = Tasks.flee(this.colony.controller);
+			}
+		} else {
+			// If there are baddies in the room, flee
+			let dangerousHostiles = _.filter(miner.room.hostiles, creep => creep.getActiveBodyparts(ATTACK) > 0 ||
+																		   creep.getActiveBodyparts(WORK) > 0 ||
+																		   creep.getActiveBodyparts(RANGED_ATTACK) > 0 ||
+																		   creep.getActiveBodyparts(HEAL) > 0);
+			if (dangerousHostiles.length > 0) {
+				miner.task = Tasks.flee(this.colony.controller);
+			}
+		}
+	}
+
 	run() {
 		for (let miner of this.miners) {
 			if (miner.isIdle) {
 				this.handleMiner(miner);
 			}
+			this.fleeResponse(miner);
 			miner.run();
 		}
 	}

@@ -9,7 +9,7 @@ import {log} from '../lib/logger/log';
 import {OverlordPriority} from '../overlords/priorities_overlords';
 import {Visualizer} from '../visuals/Visualizer';
 import {Stats} from '../stats/stats';
-import {LogisticsGroup} from '../logistics/LogisticsGroup';
+import {LogisticsNetwork} from '../logistics/LogisticsNetwork';
 import {Pathing} from '../pathing/pathing';
 
 interface MiningSiteMemory {
@@ -48,7 +48,7 @@ export class MiningSite extends HiveCluster {
 			this.output = siteLink;
 		}
 		// Register output construction sites
-		let nearbyOutputSites = this.pos.findInRange(this.room.structureSites, 2, {
+		let nearbyOutputSites = this.pos.findInRange(this.room.constructionSites, 2, {
 			filter: (s: ConstructionSite) => s.structureType == STRUCTURE_CONTAINER ||
 											 s.structureType == STRUCTURE_LINK,
 		}) as ConstructionSite[];
@@ -90,7 +90,7 @@ export class MiningSite extends HiveCluster {
 		if (!(this.output && this.output instanceof StructureContainer)) {
 			return 0;
 		}
-		let targetingTransporters = LogisticsGroup.targetingTransporters(this.output);
+		let targetingTransporters = LogisticsNetwork.targetingTransporters(this.output);
 		let dropoffPoint = this.colony.storage ? this.colony.storage.pos :
 						   this.colony.hatchery ? this.colony.hatchery.pos : undefined;
 		let distance = dropoffPoint ? Pathing.distance(this.output.pos, dropoffPoint) : 0;
@@ -101,12 +101,12 @@ export class MiningSite extends HiveCluster {
 
 	/* Register appropriate resource withdrawal requests when the output gets sufficiently full */
 	private registerOutputRequests(): void {
-		// Register logisticsGroup requests if approximate predicted amount exceeds transporter capacity
+		// Register logisticsNetwork requests if approximate predicted amount exceeds transporter capacity
 		if (this.output instanceof StructureContainer) {
 			let transportCapacity = 200 * this.colony.level;
 			let threshold = this.colony.stage > ColonyStage.Larva ? 0.8 : 0.5;
 			if (this.output.energy > threshold * transportCapacity) {
-				this.colony.logisticsGroup.provide(this.output, {dAmountdt: this.energyPerTick});
+				this.colony.logisticsNetwork.provide(this.output, {dAmountdt: this.energyPerTick});
 			}
 		} else if (this.output instanceof StructureLink) {
 			// If the link will be full with next deposit from the miner

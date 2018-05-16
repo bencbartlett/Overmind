@@ -59,17 +59,20 @@ export class CommandCenterOverlord extends Overlord {
 		} else {
 			this.withdrawActions(manager);
 		}
-		// If you still have nothing to do, go to the idle point
-		if (manager.isIdle) {
-			if (!manager.pos.isEqualTo(this.commandCenter.idlePos)) {
-				manager.travelTo(this.commandCenter.idlePos);
-			}
-		}
 	}
 
 	run() {
 		for (let manager of this.managers) {
+			// Get a task
 			this.handleManager(manager);
+			// If you have a valid task, run it; else go to idle pos
+			if (manager.hasValidTask) {
+				manager.run();
+			} else {
+				if (!manager.pos.isEqualTo(this.commandCenter.idlePos)) {
+					manager.travelTo(this.commandCenter.idlePos);
+				}
+			}
 		}
 		// Delete extraneous managers in the case there are multiple
 		if (this.managers.length > 1) {

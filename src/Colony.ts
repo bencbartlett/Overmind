@@ -14,7 +14,7 @@ import {LinkNetwork} from './logistics/LinkNetwork';
 import {Stats} from './stats/stats';
 import {SporeCrawler} from './hiveClusters/hiveCluster_sporeCrawler';
 import {RoadLogistics} from './logistics/RoadLogistics';
-import {LogisticsGroup} from './logistics/LogisticsGroup';
+import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {TransportOverlord} from './overlords/core/overlord_transport';
 import {Energetics} from './logistics/Energetics';
 
@@ -22,6 +22,14 @@ export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
 	Pupa  = 1,		// Has storage but RCL < 8
 	Adult = 2,		// RCL 8 room
+}
+
+export enum DEFCON {
+	safe               = 0,
+	invasionNPC        = 1,
+	boostedInvasionNPC = 2,
+	playerInvasion     = 2,
+	bigPlayerInvasion  = 3,
 }
 
 @profile
@@ -71,6 +79,7 @@ export class Colony {
 	incubatingColonies: Colony[];						// List of colonies that this colony is incubating
 	level: number; 										// Level of the colony's main room
 	stage: number;										// The stage of the colony "lifecycle"
+	defcon: number;
 	lowPowerMode: boolean; 								// Activate if RCL8 and full energy
 	// Creeps and subsets
 	creeps: Zerg[];										// Creeps bound to the colony
@@ -78,7 +87,7 @@ export class Colony {
 	hostiles: Creep[];									// Hostile creeps in one of the rooms
 	// Resource requests
 	linkNetwork: LinkNetwork;
-	logisticsGroup: LogisticsGroup;
+	logisticsNetwork: LogisticsNetwork;
 	// Overlords
 	overlords: {
 		// supply: SupplierOverlord;
@@ -90,11 +99,13 @@ export class Colony {
 	// Room planner
 	roomPlanner: RoomPlanner;
 
-	constructor(id: number, roomName: string, outposts: string[]) {
+	constructor(id: number, roomName: string, outposts: string[], creeps: Zerg[]) {
 		// Name the colony
 		this.id = id;
 		this.name = roomName;
 		this.colony = this;
+		this.creeps = creeps;
+		this.creepsByRole = _.groupBy(creeps, creep => creep.memory.role);
 		// Set up memory if needed
 		if (!Memory.colonies[this.name]) {
 			Memory.colonies[this.name] = {
@@ -139,6 +150,22 @@ export class Colony {
 			this.stage = ColonyStage.Larva;
 		}
 		this.lowPowerMode = Energetics.lowPowerMode(this);
+		// Set DEFCON level
+		// TODO: finish this
+		let dangerousHostiles = _.filter(this.room.hostiles, creep => creep.getActiveBodyparts(ATTACK) > 0 ||
+																	  creep.getActiveBodyparts(WORK) > 0 ||
+																	  creep.getActiveBodyparts(RANGED_ATTACK) > 0 ||
+																	  creep.getActiveBodyparts(HEAL) > 0);
+		if (dangerousHostiles.length > 0) {
+			let effectiveHostileCount = _.sum(_.map(dangerousHostiles, hostile => hostile.boosts.length > 0 ? 2 : 1));
+			if (effectiveHostileCount >= 3) {
+				this.defcon = DEFCON.boostedInvasionNPC;
+			} else {
+				this.defcon = DEFCON.invasionNPC;
+			}
+		} else {
+			this.defcon = DEFCON.safe;
+		}
 		// Register physical objects across all rooms in the colony
 		this.sources = _.sortBy(_.flatten(_.map(this.rooms, room => room.sources)),
 								source => source.pos.getMultiRoomRangeTo(this.pos)); // sort for roadnetwork determinism
@@ -148,13 +175,11 @@ export class Colony {
 		// Register enemies across colony rooms
 		this.hostiles = _.flatten(_.map(this.rooms, room => room.hostiles));
 		// Create placeholder arrays for remaining properties to be filled in by the Overmind
-		this.creeps = []; // This is done by Overmind.registerCreeps()
-		this.creepsByRole = {};
 		this.flags = [];
 		this.incubatingColonies = [];
 		// Resource requests
 		this.linkNetwork = new LinkNetwork(this);
-		this.logisticsGroup = new LogisticsGroup(this);
+		this.logisticsNetwork = new LogisticsNetwork(this);
 		// Register a room planner
 		this.roomPlanner = new RoomPlanner(this);
 		// Register road network
@@ -228,7 +253,7 @@ export class Colony {
 		this.linkNetwork.run();												// Run the link network
 		this.roadLogistics.run();											// Run the road network
 		this.roomPlanner.run();												// Run the room planner
-		_.forEach(this.creeps, creep => creep.run());						// Animate all creeps
+		// _.forEach(this.creeps, creep => creep.run());						// Animate all creeps
 		this.stats();														// Log stats per tick
 	}
 

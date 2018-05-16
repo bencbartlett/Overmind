@@ -72,7 +72,12 @@ export class GuardSwarmOverlord extends CombatOverlord {
 
 	run() {
 		for (let guard of this.guards) {
-			this.handleGuard(guard);
+			// Run the creep if it has a task given to it by something else; otherwise, proceed with non-task actions
+			if (guard.hasValidTask) {
+				guard.run();
+			} else {
+				this.handleGuard(guard);
+			}
 		}
 	}
 }

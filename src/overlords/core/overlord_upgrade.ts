@@ -81,6 +81,7 @@ export class UpgradingOverlord extends Overlord {
 			if (upgrader.isIdle) {
 				this.handleUpgrader(upgrader);
 			}
+			upgrader.run();
 		}
 	}
 }

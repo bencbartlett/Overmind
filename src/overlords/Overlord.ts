@@ -99,7 +99,7 @@ export abstract class Overlord {
 		// Generate the creep memory
 		let creepMemory: CreepMemory = {
 			colony  : this.colony.name, 						// name of the colony the creep is assigned to
-			overlord: this.ref,								// name of the overseer running this creep
+			overlord: this.ref,									// name of the Overlord running this creep
 			role    : setup.role,								// role of the creep
 			task    : null, 									// task the creep is performing
 			data    : { 										// rarely-changed data about the creep

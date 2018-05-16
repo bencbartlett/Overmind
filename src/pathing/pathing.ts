@@ -1,8 +1,10 @@
 import {Traveler} from '../lib/traveler/Traveler';
 import {log} from '../lib/logger/log';
 import profiler from 'screeps-profiler';
+import {profile} from '../profiler/decorator';
 
 /* Module for pathing-related operations. Interfaces with Traveler. */
+@profile
 export class Pathing {
 	// static serializePath(startPos: RoomPosition, path: RoomPosition[]): string {
 	// 	let serializedPath = "";
@@ -33,24 +35,17 @@ export class Pathing {
 	/* Calculate and/or cache the length of the shortest path between two points.
 	 * Cache is probabilistically cleared in Mem */
 	static distance(arg1: RoomPosition, arg2: RoomPosition): number {
-		let pos1, pos2: RoomPosition;
-		if (arg1.name < arg2.name) { // alphabetize since path lengths are the same either direction
-			pos1 = arg1;
-			pos2 = arg2;
-		} else {
-			pos1 = arg2;
-			pos2 = arg1;
+		let [name1, name2] = [arg1.name, arg2.name].sort(); // alphabetize since path is the same in either direction
+		if (!Memory.pathing.distances[name1]) {
+			Memory.pathing.distances[name1] = {};
 		}
-		if (!Memory.pathing.distances[pos1.name]) {
-			Memory.pathing.distances[pos1.name] = {};
-		}
-		if (!Memory.pathing.distances[pos1.name][pos2.name]) {
-			let ret = this.findShortestPath(pos1, pos2);
+		if (!Memory.pathing.distances[name1][name2]) {
+			let ret = this.findShortestPath(arg1, arg2);
 			if (!ret.incomplete) {
-				Memory.pathing.distances[pos1.name][pos2.name] = ret.path.length;
+				Memory.pathing.distances[name1][name2] = ret.path.length;
 			}
 		}
-		return Memory.pathing.distances[pos1.name][pos2.name];
+		return Memory.pathing.distances[name1][name2];
 	}
 
 	static calculatePathWeight(startPos: RoomPosition, endPos: RoomPosition, options: TravelToOptions = {}): number {
@@ -109,7 +104,7 @@ export class Pathing {
 			allowSK     : true,
 		});
 		let ret = Traveler.findTravelPath(startPos, endPos, options);
-		if (ret.incomplete) log.alert(`Incomplete travel path from ${startPos.print} to ${endPos.print}!`);
+		if (ret.incomplete) log.alert(`Pathing: incomplete path from ${startPos.print} to ${endPos.print}!`);
 		return ret;
 	}
 

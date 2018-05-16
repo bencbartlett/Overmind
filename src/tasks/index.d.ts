@@ -12,6 +12,8 @@ interface TaskData {
 	quiet?: boolean;
 	resourceType?: string;
 	amount?: number;
+
+	[other: string]: any;
 }
 
 interface protoTask {
@@ -53,7 +55,7 @@ interface ITask extends protoTask {
 
 	run(): number | void;
 
-	work(): number;
+	work(): number | void;
 
 	finish(): void;
 }

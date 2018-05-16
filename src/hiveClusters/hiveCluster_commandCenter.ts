@@ -99,12 +99,12 @@ export class CommandCenter extends HiveCluster {
 		// 	this.colony.transportRequests.requestEnergy(tower, tower.energy < this.settings.refillTowersBelow ?
 		// 													   Priority.High : Priority.Low));
 		_.forEach(refillTowers, tower =>
-			this.colony.logisticsGroup.request(tower, {
+			this.colony.logisticsNetwork.request(tower, {
 				multiplier: tower.energy < this.settings.refillTowersBelow ? 2 : 0.5
 			}));
 		let refillLabs = _.filter(this.labs, lab => lab.energy < lab.energyCapacity);
 		// _.forEach(refillLabs, lab => this.colony.transportRequests.requestEnergy(lab, Priority.NormalLow));
-		_.forEach(refillLabs, lab => this.colony.logisticsGroup.request(lab));
+		_.forEach(refillLabs, lab => this.colony.logisticsNetwork.request(lab));
 	}
 
 

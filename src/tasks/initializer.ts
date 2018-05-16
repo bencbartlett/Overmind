@@ -22,6 +22,7 @@ import {TaskTransfer, transferTargetType, transferTaskName} from './task_transfe
 import {TaskUpgrade, upgradeTargetType, upgradeTaskName} from './task_upgrade';
 import {dropTargetType, dropTaskName, TaskDrop} from './task_drop';
 import {TaskInvalid} from './task_invalid';
+import {fleeTargetType, fleeTaskName, TaskFlee} from './task_flee';
 
 export function initializeTask(protoTask: protoTask): any {
 	// Retrieve name and target data from the protoTask
@@ -44,6 +45,9 @@ export function initializeTask(protoTask: protoTask): any {
 			break;
 		case dropTaskName:
 			task = new TaskDrop(derefRoomPosition(protoTask._target._pos) as dropTargetType);
+			break;
+		case fleeTaskName:
+			task = new TaskFlee(derefRoomPosition(protoTask._target._pos) as fleeTargetType);
 			break;
 		case fortifyTaskName:
 			task = new TaskFortify(target as fortifyTargetType);

@@ -58,8 +58,7 @@ export class GuardOverlord extends CombatOverlord {
 	}
 
 	private handleGuard(guard: Zerg): void {
-
-		if (!guard.inSameRoomAs(this) && !guard.pos.isEdge) {
+		if (!guard.inSameRoomAs(this) || guard.pos.isEdge) {
 			// Move into the assigned room if there is a guard flag present
 			guard.travelTo(this.pos);
 		} else { // If you're in the assigned room or if there is no assignment, try to attack or heal
@@ -80,7 +79,12 @@ export class GuardOverlord extends CombatOverlord {
 
 	run() {
 		for (let guard of this.guards) {
-			this.handleGuard(guard);
+			// Run the creep if it has a task given to it by something else; otherwise, proceed with non-task actions
+			if (guard.hasValidTask) {
+				guard.run();
+			} else {
+				this.handleGuard(guard);
+			}
 		}
 	}
 }

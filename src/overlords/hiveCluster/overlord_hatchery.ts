@@ -90,10 +90,6 @@ export class HatcheryOverlord extends Overlord {
 				}
 			}
 		}
-		// If you're still idle, move back to the idle point
-		if (queen.isIdle) {
-			queen.travelTo(this.hatchery.idlePos);
-		}
 	}
 
 	private handleQueen(queen: Zerg): void {
@@ -122,7 +118,14 @@ export class HatcheryOverlord extends Overlord {
 
 	run() {
 		for (let queen of this.queens) {
+			// Get a task
 			this.handleQueen(queen);
+			// Run the task if you have one; else move back to idle pos
+			if (queen.hasValidTask) {
+				queen.run();
+			} else {
+				queen.travelTo(this.hatchery.idlePos);
+			}
 		}
 		// Delete extraneous queens in the case there are multiple
 		if (this.queens.length > 1) {

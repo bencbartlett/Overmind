@@ -28,8 +28,8 @@ interface ICache {
 	targets: { [ref: string]: string[] };
 	structures: { [roomName: string]: { [structureType: string]: Structure[] } };
 	constructionSites: { [roomName: string]: ConstructionSite[] };
-	structureSites: { [roomName: string]: ConstructionSite[] };
-	roadSites: { [roomName: string]: ConstructionSite[] };
+	// structureSites: { [roomName: string]: ConstructionSite[] };
+	// roadSites: { [roomName: string]: ConstructionSite[] };
 	drops: { [roomName: string]: { [resourceType: string]: Resource[] } };
 
 	build(): void;

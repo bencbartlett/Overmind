@@ -2,7 +2,7 @@ import {Overlord} from '../Overlord';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {Colony} from '../../Colony';
-import {BufferTarget, LogisticsGroup, LogisticsRequest} from '../../logistics/LogisticsGroup';
+import {BufferTarget, LogisticsNetwork, LogisticsRequest} from '../../logistics/LogisticsNetwork';
 import {TransporterEarlySetup, TransporterSetup} from '../../creepSetup/defaultSetups';
 import {OverlordPriority} from '../priorities_overlords';
 import {Pathing} from '../../pathing/pathing';
@@ -13,13 +13,13 @@ import {profile} from '../../profiler/decorator';
 export class TransportOverlord extends Overlord {
 
 	transporters: Zerg[];
-	logisticsGroup: LogisticsGroup;
+	logisticsGroup: LogisticsNetwork;
 
 	constructor(colony: Colony, priority = colony.getCreepsByRole(TransporterSetup.role).length > 0 ?
 										   OverlordPriority.ownedRoom.transport : OverlordPriority.ownedRoom.firstTransport) {
 		super(colony, 'logistics', priority);
 		this.transporters = this.creeps(TransporterSetup.role);
-		this.logisticsGroup = colony.logisticsGroup;
+		this.logisticsGroup = colony.logisticsNetwork;
 	}
 
 	private neededTransportPower(): number {
@@ -67,9 +67,9 @@ export class TransportOverlord extends Overlord {
 	private handleTransporter(transporter: Zerg, request: LogisticsRequest | undefined) {
 		if (request) {
 			let choices = this.logisticsGroup.bufferChoices(transporter, request);
-			let bestChoice = _.last(_.sortBy(choices, choice => choice.deltaResource / choice.deltaTicks));
+			let bestChoice = _.last(_.sortBy(choices, choice => choice.dQ / choice.dt));
 			let task = null;
-			let amount = this.logisticsGroup.predictedAmount(transporter, request);
+			let amount = this.logisticsGroup.predictedRequestAmount(transporter, request);
 			if (amount > 0) { // store needs refilling
 				if (request.target instanceof DirectiveLogisticsRequest) {
 					task = Tasks.drop(request.target);
@@ -131,7 +131,7 @@ export class TransportOverlord extends Overlord {
 		this.handleTransporter(bigTransporter, bestRequestViaStableMatching);
 	}
 
-	/* Handles small transporters, which don't do well with the logisticsGroup's stable matching system */
+	/* Handles small transporters, which don't do well with the logisticsNetwork's stable matching system */
 	private handleSmolTransporter(smolTransporter: Zerg) {
 		// Just perform a single-sided greedy selection of all requests
 		let bestRequestViaGreedy = _.first(this.logisticsGroup.transporterPreferences(smolTransporter));
@@ -141,12 +141,13 @@ export class TransportOverlord extends Overlord {
 	run() {
 		for (let transporter of this.transporters) {
 			if (transporter.isIdle) {
-				if (transporter.carryCapacity >= LogisticsGroup.settings.carryThreshold) {
+				if (transporter.carryCapacity >= LogisticsNetwork.settings.carryThreshold) {
 					this.handleBigTransporter(transporter);
 				} else {
 					this.handleSmolTransporter(transporter);
 				}
 			}
+			transporter.run();
 		}
 	}
 }

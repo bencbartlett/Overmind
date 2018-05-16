@@ -1,5 +1,7 @@
 import {Stats} from './stats/stats';
+import {profile} from './profiler/decorator';
 
+@profile
 export class Mem {
 
 	static wrap(memory: any, memName: string, defaults = {}) {
@@ -82,7 +84,7 @@ export class Mem {
 	}
 
 	private static cleanPathingMemory() {
-		let distanceCleanProbability = 0.001;
+		let distanceCleanProbability = 1 / 1000;
 		let weightedDistanceCleanProbability = 0.01;
 
 		// Randomly clear some cached path lengths

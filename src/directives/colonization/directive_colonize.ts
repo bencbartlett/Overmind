@@ -13,6 +13,7 @@ export class DirectiveColonize extends Directive {
 	static directiveName = 'colonize';
 	static color = COLOR_PURPLE;
 	static secondaryColor = COLOR_GREY;
+	static requiredRCL = 4;
 
 	toColonize: Colony | undefined;
 	overlords: {
@@ -33,7 +34,6 @@ export class DirectiveColonize extends Directive {
 	}
 
 	run() {
-		// You can set memory.onlyBuildSpawn = true to remove the flag once spawn is built, skipping incubation
 		if (this.toColonize && this.toColonize.spawns.length > 0) {
 			// Reassign all pioneers to be miners and workers
 			let miningOverlords = _.map(this.toColonize.miningSites, site => site.overlord) as MiningOverlord[];

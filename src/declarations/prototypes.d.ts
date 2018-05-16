@@ -2,7 +2,8 @@ interface Creep {
 	memory: CreepMemory;
 	boosts: _ResourceConstantSansEnergy[];
 	boostCounts: { [boostType: string]: number };
-	travelTo(destination: RoomPosition | { pos: RoomPosition }, options?: any): number;
+
+	travelTo(destination: RoomPosition | { pos: RoomPosition }, options?: TravelToOptions): number;
 }
 
 interface Flag {
@@ -46,8 +47,8 @@ interface Room {
 	// sinks: Sink[];
 	repairables: Structure[];
 	constructionSites: ConstructionSite[];
-	structureSites: ConstructionSite[];
-	roadSites: ConstructionSite[];
+	// structureSites: ConstructionSite[];
+	// roadSites: ConstructionSite[];
 	barriers: (StructureWall | StructureRampart)[];
 
 	getStructures(structureType: string): Structure[];

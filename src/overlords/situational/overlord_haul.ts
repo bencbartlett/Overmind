@@ -106,6 +106,7 @@ export class HaulingOverlord extends Overlord {
 			if (hauler.isIdle) {
 				this.handleHauler(hauler);
 			}
+			hauler.run();
 		}
 	}
 }

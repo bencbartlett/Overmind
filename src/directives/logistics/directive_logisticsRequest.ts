@@ -124,9 +124,9 @@ export class DirectiveLogisticsRequest extends Directive {
 			this.memory.store = this.store;
 		}
 		if (this.provider) {
-			this.colony.logisticsGroup.provideAll(this);
+			this.colony.logisticsNetwork.provideAll(this);
 		} else {
-			this.colony.logisticsGroup.request(this);
+			this.colony.logisticsNetwork.request(this);
 		}
 	}
 

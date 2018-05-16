@@ -99,7 +99,7 @@ export class Hatchery extends HiveCluster {
 			if (this.battery.energy < 0.25 * this.battery.storeCapacity) {
 				// this.colony.transportRequests.requestEnergy(this.battery);
 				// this.colony.logisticsNetwork.store(this.battery);
-				this.colony.logisticsGroup.request(this.battery);
+				this.colony.logisticsNetwork.request(this.battery);
 			}
 		}
 		// Register energy transport requests (goes on hatchery store group, which can be colony store group)

@@ -125,6 +125,7 @@ export class BootstrappingOverlord extends Overlord {
 			if (filler.isIdle) {
 				this.handleFiller(filler);
 			}
+			filler.run();
 		}
 	}
 }

@@ -37,7 +37,7 @@ export class ClaimingOverlord extends Overlord {
 				claimer.task = Tasks.claim(this.room.controller!);
 			}
 		} else {
-			claimer.task = Tasks.goTo(this.pos);
+			claimer.task = Tasks.goTo(this.pos, {travelToOptions: {ensurePath: true}});
 		}
 	}
 

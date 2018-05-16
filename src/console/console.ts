@@ -2,7 +2,7 @@
 
 import {Colony} from '../Colony';
 import {toColumns} from '../utilities/utils';
-import {asciiLogo} from '../visuals/logos';
+import {asciiLogoSmall} from '../visuals/logos';
 
 export class Console {
 
@@ -14,14 +14,16 @@ export class Console {
 		global.listActiveRoomPlanners = this.listActiveRoomPlanners;
 		global.destroyAllHostileStructures = this.destroyAllHostlileStructures;
 		global.destroyAllBarriers = this.destroyAllBarriers;
+		global.listAllDirectives = this.listAllDirectives;
+		global.listPersistentDirectives = this.listPersistentDirectives;
 	}
 
 	static help() {
-		let msg = '\n';
-		for (let line of asciiLogo) {
+		let msg = '\n<font color="#ff00ff">';
+		for (let line of asciiLogoSmall) {
 			msg += line + '\n';
 		}
-		msg += '\nOvermind repository: github.com/bencbartlett/Overmind\n\n';
+		msg += '</font>';
 
 		let descr: { [functionName: string]: string } = {};
 		descr['help'] = 'show this message';
@@ -30,11 +32,13 @@ export class Console {
 		descr['closeRoomPlanner(roomName)'] = 'close the room planner and save changes';
 		descr['cancelRoomPlanner(roomName)'] = 'close the room planner and discard changes';
 		descr['listActiveRoomPlanners()'] = 'display a list of colonies with open room planners';
-		descr['destroyAllHostileStructures()'] = 'destroys all hostile structures in an owned room';
-		descr['destroyAllBarriers()'] = 'destroys all ramparts and barriers in a room';
+		descr['destroyAllHostileStructures(roomName)'] = 'destroys all hostile structures in an owned room';
+		descr['destroyAllBarriers(roomName)'] = 'destroys all ramparts and barriers in a room';
+		descr['listAllDirectives()'] = 'print type, name, pos of every directive';
+		descr['listPersistentDirectives()'] = 'print type, name, pos of every persistent directive';
 		// Console list
 		let descrMsg = toColumns(descr, {justify: true, padChar: '.'});
-		let maxLineLength = _.max(_.map(descrMsg, line => line.length));
+		let maxLineLength = _.max(_.map(descrMsg, line => line.length)) + 2;
 		msg += 'Console Commands: '.padRight(maxLineLength, '=') + '\n' + descrMsg.join('\n');
 
 		msg += '\n\nRefer to the repository for more information\n';
@@ -92,6 +96,30 @@ export class Console {
 		} else {
 			return `No colonies with active room planners`;
 		}
+	}
+
+	static listAllDirectives(): string {
+		let msg = '';
+		for (let i in Game.directives) {
+			let dir = Game.directives[i];
+			msg += `Type: ${dir.directiveName}`.padRight(20) +
+				   `Name: ${dir.name}`.padRight(15) +
+				   `Pos: ${dir.pos.print}\n`;
+		}
+		return msg;
+	}
+
+	static listPersistentDirectives(): string {
+		let msg = '';
+		for (let i in Game.directives) {
+			let dir = Game.directives[i];
+			if (dir.memory.persistent) {
+				msg += `Type: ${dir.directiveName}`.padRight(20) +
+					   `Name: ${dir.name}`.padRight(15) +
+					   `Pos: ${dir.pos.print}\n`;
+			}
+		}
+		return msg;
 	}
 
 	static destroyAllHostlileStructures(roomName: string): string {

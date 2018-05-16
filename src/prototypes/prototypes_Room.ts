@@ -214,19 +214,19 @@ Object.defineProperties(Room.prototype, {
 		},
 	},
 
-	// All non-road construction sites
-	structureSites: {
-		get() {
-			return Overmind.cache.structureSites[this.name] || [];
-		},
-	},
-
-	// All construction sites for roads
-	roadSites: {
-		get() {
-			return Overmind.cache.roadSites[this.name] || [];
-		},
-	},
+	// // All non-road construction sites
+	// structureSites: {
+	// 	get() {
+	// 		return Overmind.cache.structureSites[this.name] || [];
+	// 	},
+	// },
+	//
+	// // All construction sites for roads
+	// roadSites: {
+	// 	get() {
+	// 		return Overmind.cache.roadSites[this.name] || [];
+	// 	},
+	// },
 
 	// All walls and ramparts
 	barriers: {

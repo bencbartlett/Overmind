@@ -64,6 +64,10 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	init() {
+		// In case colony just started up, don't spawn workers until colony has something you can withdraw from
+		if (_.compact(_.map(this.colony.miningSites, site => site.output)).length == 0) {
+			return;
+		}
 		let workPartsPerWorker = _.filter(this.generateProtoCreep(new WorkerSetup()).body, part => part == WORK).length;
 		if (this.colony.stage == ColonyStage.Larva) {
 			// At lower levels, try to saturate the energy throughput of the colony
@@ -154,7 +158,15 @@ export class WorkerOverlord extends Overlord {
 		let rechargeTargets = _.filter(this.rechargeObjects, s => s instanceof Tombstone ||
 																  s.energy > this.settings.workerWithdrawLimit);
 		let target = worker.pos.findClosestByMultiRoomRange(rechargeTargets);
-		if (target) worker.task = Tasks.withdraw(target);
+		if (target) {
+			worker.task = Tasks.withdraw(target);
+		} else {
+			// Harvest from a source if there is no recharge target available
+			let availableSources = _.filter(this.room.sources,
+											s => s.energy > 0 && s.pos.availableNeighbors().length > 0);
+			let target = worker.pos.findClosestByMultiRoomRange(availableSources);
+			if (target) worker.task = Tasks.harvest(target);
+		}
 	}
 
 	private handleWorker(worker: Zerg) {
@@ -182,6 +194,7 @@ export class WorkerOverlord extends Overlord {
 			if (worker.isIdle) {
 				this.handleWorker(worker);
 			}
+			worker.run();
 		}
 	}
 }

@@ -265,7 +265,7 @@ export abstract class Task implements ITask {
 	}
 
 	// Task to perform when at the target
-	abstract work(): number;
+	abstract work(): number | void;
 
 	// Finalize the task and switch to parent task (or null if there is none)
 	finish(): void {
