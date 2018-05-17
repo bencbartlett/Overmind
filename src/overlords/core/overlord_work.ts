@@ -183,7 +183,7 @@ export class WorkerOverlord extends Overlord {
 				this.repairActions(worker);
 			} else if (this.colony.roadLogistics.workerShouldRepave(worker)) {
 				this.pavingActions(worker);
-			} else if (this.colony.constructionSites.length > 0) {
+			} else if (this.constructionSites.length > 0) {
 				this.buildActions(worker);
 			} else if (this.fortifyStructures.length > 0) {
 				this.fortifyActions(worker);
