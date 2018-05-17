@@ -23,12 +23,8 @@ export abstract class HiveCluster {
 		this.colony.hiveClusters.push(this);
 	}
 
-	// protected initMemory(memory: any, memName: string, memoryToWrite = {}) {
-	// 	if (!memory[memName]) {
-	// 		memory[memName] = memoryToWrite;
-	// 	}
-	// 	this.memory = memory[memName];
-	// }
+	// Logic to refresh the state of the hive cluster between ticks
+	// abstract rebuild(): void;
 
 	// Pre-run logic, such as registering energy requests
 	abstract init(): void;

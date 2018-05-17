@@ -47,9 +47,27 @@ Object.defineProperty(Room.prototype, 'hostiles', {
 	},
 });
 
+Object.defineProperty(Room.prototype, 'dangerousHostiles', {
+	get() {
+		return _.filter(this.hostiles, (creep: Creep) => creep.getActiveBodyparts(ATTACK) > 0
+														 || creep.getActiveBodyparts(WORK) > 0
+														 || creep.getActiveBodyparts(RANGED_ATTACK) > 0
+														 || creep.getActiveBodyparts(HEAL) > 0);
+	},
+});
+
 Object.defineProperty(Room.prototype, 'playerHostiles', {
 	get() {
 		return _.filter(this.hostiles, (creep: Creep) => creep.owner.username != 'Invader');
+	},
+});
+
+Object.defineProperty(Room.prototype, 'dangerousPlayerHostiles', {
+	get() {
+		return _.filter(this.playerHostiles, (creep: Creep) => creep.getActiveBodyparts(ATTACK) > 0
+															   || creep.getActiveBodyparts(WORK) > 0
+															   || creep.getActiveBodyparts(RANGED_ATTACK) > 0
+															   || creep.getActiveBodyparts(HEAL) > 0);
 	},
 });
 

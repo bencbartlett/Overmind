@@ -34,11 +34,11 @@ import {Stats} from './stats/stats';
 // Profiling
 import {USE_PROFILER} from './settings/config';
 import profiler from 'screeps-profiler';
-/* Import overmind from obfuscated JS file included in public repository */
+// 1: Import overmind from standard TS source
+// import {_Overmind} from 'Overmind';
+// 2: Import overmind from obfuscated JS file included in public repository
 import OM from 'Overmind_obfuscated';
 
-/* Import overmind from standard TS source */
-// import {_Overmind} from 'Overmind';
 var _Overmind = (<any>OM)._Overmind as (new() => IOvermind);
 
 if (USE_PROFILER) profiler.enable();

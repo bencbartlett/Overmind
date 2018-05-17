@@ -2,6 +2,7 @@ import {attackTargetType, TaskAttack} from './task_attack';
 import {buildTargetType, TaskBuild} from './task_build';
 import {claimTargetType, TaskClaim} from './task_claim';
 import {dismantleTargetType, TaskDismantle} from './task_dismantle';
+import {fleeTargetType, TaskFlee} from './task_flee';
 import {fortifyTargetType, TaskFortify} from './task_fortify';
 import {getBoostedTargetType, TaskGetBoosted} from './task_getBoosted';
 import {getRenewedTargetType, TaskGetRenewed} from './task_getRenewed';
@@ -16,11 +17,11 @@ import {repairTargetType, TaskRepair} from './task_repair';
 import {reserveTargetType, TaskReserve} from './task_reserve';
 import {signControllerTargetType, TaskSignController} from './task_signController';
 import {TaskTransfer, transferTargetType} from './task_transfer';
+import {TaskTransferAll, transferAllTargetType} from './task_transferAll';
 import {TaskUpgrade, upgradeTargetType} from './task_upgrade';
 import {TaskWithdraw, withdrawTargetType} from './task_withdraw';
 import {dropTargetType, TaskDrop} from './task_drop';
 import {profile} from '../profiler/decorator';
-import {fleeTargetType, TaskFlee} from './task_flee';
 
 @profile
 export class Tasks {
@@ -112,6 +113,10 @@ export class Tasks {
 					amount: number | undefined     = undefined,
 					options                        = {} as TaskOptions): TaskTransfer {
 		return new TaskTransfer(target, resourceType, amount, options);
+	}
+
+	static transferAll(target: transferAllTargetType, options = {} as TaskOptions): TaskTransferAll {
+		return new TaskTransferAll(target, options);
 	}
 
 	static upgrade(target: upgradeTargetType, options = {} as TaskOptions): TaskUpgrade {

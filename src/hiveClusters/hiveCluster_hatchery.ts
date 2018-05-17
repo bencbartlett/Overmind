@@ -34,7 +34,7 @@ export class Hatchery extends HiveCluster {
 	};
 	private productionPriorities: number[];
 	private productionQueue: { [priority: number]: protoCreep[] };  // Priority queue of protocreeps
-	private _idlePos: RoomPosition; 								// Idling position for the supplier
+	// private _idlePos: RoomPosition; 								// Idling position for the supplier
 	private _energyStructures: (StructureSpawn | StructureExtension)[];
 
 	constructor(colony: Colony, headSpawn: StructureSpawn) {
@@ -250,44 +250,26 @@ export class Hatchery extends HiveCluster {
 
 	// Idle position for suppliers
 	get idlePos(): RoomPosition {
-		if (this.memory.idlePos && Game.time % 100 != 0) {
-			let memPos = this.memory.idlePos;
-			this._idlePos = new RoomPosition(memPos.x, memPos.y, memPos.roomName);
-		} else {
-			this._idlePos = this.findIdlePos();
-			this.memory.idlePos = this._idlePos;
-		}
-		return this._idlePos;
-	}
-
-	/* Find the best position for suppliers to idle at */
-	private findIdlePos(): RoomPosition {
 		if (this.battery) {
 			return this.battery.pos;
 		} else {
-			let possiblePositions = this.spawns[0].pos.neighbors;
-			let proximateStructures: Structure[] = _.compact([...this.spawns,
-															  this.link!,
-															  this.battery!,]);
-			let numNearbyStructures = (pos: RoomPosition) =>
-				_.filter(proximateStructures, s => s.pos.isNearTo(pos) && !s.pos.isEqualTo(pos)).length;
-			let nearbyStructuresEachPos = _.map(possiblePositions, pos => numNearbyStructures(pos));
-			let maxIndex = _.findIndex(nearbyStructuresEachPos, _.max(nearbyStructuresEachPos));
-			return possiblePositions[maxIndex];
+			return this.spawns[0].pos.availableNeighbors()[0];
 		}
-		// for (let structure of proximateStructures) {
-		// 	if (structure) {
-		// 		let filteredPositions = _.filter(possiblePositions, p => p.isNearTo(structure!) &&
-		// 																 !p.isEqualTo(structure!));
-		// 		if (filteredPositions.length == 0) { // stop when it's impossible to match any more structures
-		// 			return possiblePositions[0];
-		// 		} else {
-		// 			possiblePositions = filteredPositions;
-		// 		}
-		// 	}
-		// }
-		// return possiblePositions[0];
 	}
+
+	// /* Find the best position for suppliers to idle at */
+	// private findIdlePos(): RoomPosition {
+	// 	if (this.battery) {
+	// 		return this.battery.pos;
+	// 	} else {
+	// 		let proximateStructures: Structure[] = _.compact([...this.spawns,
+	// 														  this.link!,
+	// 														  this.battery!,]);
+	// 		let numNearbyStructures = (pos: RoomPosition) =>
+	// 			_.filter(proximateStructures, s => s.pos.isNearTo(pos) && !s.pos.isEqualTo(pos)).length;
+	// 		return _.last(_.sortBy(this.spawns[0].pos.neighbors, pos => numNearbyStructures(pos)));
+	// 	}
+	// }
 
 	private handleSpawns(): void {
 		// Spawn all queued creeps that you can

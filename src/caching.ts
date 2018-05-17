@@ -9,8 +9,6 @@ export class GameCache implements ICache {
 	targets: { [ref: string]: string[] };
 	structures: { [roomName: string]: { [structureType: string]: Structure[] } };
 	constructionSites: { [roomName: string]: ConstructionSite[] };
-	// structureSites: { [roomName: string]: ConstructionSite[] };
-	// roadSites: { [roomName: string]: ConstructionSite[] };
 	drops: { [roomName: string]: { [resourceType: string]: Resource[] } };
 
 	constructor() {
@@ -18,8 +16,6 @@ export class GameCache implements ICache {
 		this.targets = {};
 		this.structures = {};
 		this.constructionSites = {};
-		// this.structureSites = {};
-		// this.roadSites = {};
 		this.drops = {};
 	}
 
@@ -46,8 +42,6 @@ export class GameCache implements ICache {
 				task = task._parent;
 			}
 		}
-		// this.targets = _.groupBy(_.keys(Game.creeps), name => Game.creeps[name].memory.task ?
-		// 													  Game.creeps[name].memory.task!._target.ref : null);
 	}
 
 	/* Generates a nested hash table for structure lookup: {[roomName], {[structureType]: Structures[]} */
@@ -61,12 +55,8 @@ export class GameCache implements ICache {
 	/* Generates a nested hash table for structure lookup: {[roomName], {[structureType]: Structures[]} */
 	private cacheConstructionSites() {
 		this.constructionSites = {};
-		// this.structureSites = {};
-		// this.roadSites = {};
 		for (let name in Game.rooms) {
 			this.constructionSites[name] = Game.rooms[name].find(FIND_CONSTRUCTION_SITES);
-			// this.structureSites[name] = _.filter(this.constructionSites[name], s => s.structureType != STRUCTURE_ROAD);
-			// this.roadSites[name] = _.filter(this.constructionSites[name], s => s.structureType == STRUCTURE_ROAD);
 		}
 	}
 
@@ -79,15 +69,17 @@ export class GameCache implements ICache {
 	}
 
 	build() {
-		this.rebuild();
-	}
-
-	rebuild() {
 		this.cacheOverlords();
 		this.cacheTargets();
 		this.cacheStructures();
 		this.cacheConstructionSites();
 		this.cacheDrops();
+	}
+
+	rebuild() {
+		// Recache the cheap or critical stuff: Overlords, constructionSites, drops
+		this.cacheOverlords();
+
 	}
 }
 

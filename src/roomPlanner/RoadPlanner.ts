@@ -50,6 +50,8 @@ export class RoadPlanner {
 	// Connect commandCenter to hatchery, upgradeSites, and all miningSites, and place containers
 	private buildRoadNetwork(commandCenterPos: RoomPosition, hatcheryPos: RoomPosition,
 							 obstacles: RoomPosition[]): void {
+		this.costMatrices = {};
+		this.roadPositions = [];
 		let upgradePos = this.colony.upgradeSite.batteryPos;
 		let miningSitePositions = _.mapValues(this.colony.miningSites, site => site.outputPos);
 		if (!upgradePos || _.any(miningSitePositions, pos => pos == undefined)) {

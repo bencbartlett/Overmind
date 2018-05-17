@@ -80,11 +80,7 @@ export class MiningOverlord extends Overlord {
 			}
 		} else {
 			// If there are baddies in the room, flee
-			let dangerousHostiles = _.filter(miner.room.hostiles, creep => creep.getActiveBodyparts(ATTACK) > 0 ||
-																		   creep.getActiveBodyparts(WORK) > 0 ||
-																		   creep.getActiveBodyparts(RANGED_ATTACK) > 0 ||
-																		   creep.getActiveBodyparts(HEAL) > 0);
-			if (dangerousHostiles.length > 0) {
+			if (miner.room.dangerousHostiles.length > 0) {
 				miner.task = Tasks.flee(this.colony.controller);
 			}
 		}

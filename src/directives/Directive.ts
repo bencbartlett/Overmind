@@ -138,7 +138,7 @@ export abstract class Directive {
 			}
 		}
 		if (!opts.quiet) {
-			log.alert(`Creating ${this.directiveName} directive in room ${pos.roomName}!`);
+			log.alert(`Creating ${this.directiveName} directive at ${pos.print}!`);
 		}
 		return pos.createFlag(name, this.color, this.secondaryColor);
 	}

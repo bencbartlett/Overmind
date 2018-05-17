@@ -5,6 +5,7 @@ import {Pathing} from '../../pathing/pathing';
 import {Directive} from '../../directives/Directive';
 import {WorldMap} from '../../utilities/WorldMap';
 import {AttackStructurePriorities} from '../../settings/priorities';
+import {log} from '../../lib/logger/log';
 
 export interface CombatOverlordMemory extends OverlordMemory {
 	fallback?: protoPos;
@@ -169,7 +170,6 @@ export abstract class CombatOverlord extends Overlord {
 			}
 			return ERR_NOT_IN_RANGE;
 		}
-
 	}
 
 	/* Fallback is a location on the other side of the nearest exit the directive is placed at */
@@ -201,7 +201,7 @@ export abstract class CombatOverlord extends Overlord {
 				fallback.roomName = WorldMap.findRelativeRoomName(fallback.roomName, 0, 1);
 				break;
 			default:
-				console.log('Error getting fallback position!');
+				log.error('Error getting fallback position!');
 				break;
 		}
 		return fallback;

@@ -67,12 +67,8 @@ export class Overseer {
 															DirectiveInvasionDefense.filter(flag) ||
 															DirectiveGuardSwarm.filter(flag));
 			// let bigHostiles = _.filter(room.hostiles, creep => creep.body.length >= 10);
-			let hostiles = _.filter(room.hostiles, creep => creep.getActiveBodyparts(ATTACK) > 0 ||
-															creep.getActiveBodyparts(WORK) > 0 ||
-															creep.getActiveBodyparts(RANGED_ATTACK) > 0 ||
-															creep.getActiveBodyparts(HEAL) > 0);
-			if (hostiles.length > 0 && defenseFlags.length == 0) {
-				DirectiveGuard.create(hostiles[0].pos);
+			if (room.dangerousHostiles.length > 0 && defenseFlags.length == 0) {
+				DirectiveGuard.create(room.dangerousHostiles[0].pos);
 			}
 		}
 
@@ -106,16 +102,14 @@ export class Overseer {
 	// Safe mode condition =============================================================================================
 
 	private handleSafeMode(): void {
-		// Safe mode activates when there are player
-		let creepIsDangerous = (creep: Creep) => (creep.getActiveBodyparts(ATTACK) > 0 ||
-												  creep.getActiveBodyparts(WORK) > 0 ||
-												  creep.getActiveBodyparts(RANGED_ATTACK) > 0);
+		// Safe mode activates when there are dangerous player hostiles that can reach the spawn
+		// TODO: update this for SWC
 		let barrierPositions = _.map(this.colony.room.barriers, barrier => barrier.pos);
-		let baddies = _.filter(this.colony.room.playerHostiles, hostile => creepIsDangerous(hostile));
-		for (let hostile of baddies) {
+		for (let hostile of this.colony.room.dangerousPlayerHostiles) {
 			if (this.colony.spawns[0] && Pathing.isReachable(hostile.pos, this.colony.spawns[0].pos,
 															 {obstacles: barrierPositions})) {
 				this.colony.controller.activateSafeMode();
+				return;
 			}
 		}
 	}
@@ -136,8 +130,6 @@ export class Overseer {
 				overlord.init();
 			}
 		}
-		// this.registerObjectives();
-		// this.registerCreepRequests();
 	}
 
 	// Operation =======================================================================================================
@@ -152,9 +144,7 @@ export class Overseer {
 				overlord.run();
 			}
 		}
-		// this.handleFlagOperations();
 		this.handleSafeMode();
-		// this.handleSpawnOperations(); // build creeps as needed
 		this.placeDirectives();
 		// Draw visuals
 		_.forEach(this.directives, directive => directive.visuals());

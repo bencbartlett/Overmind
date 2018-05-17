@@ -64,33 +64,23 @@ export class CommandCenter extends HiveCluster {
 
 	// Idle position
 	get idlePos(): RoomPosition {
-		if (this.memory.idlePos && Game.time % 100 != 0) {
-			let memPos = this.memory.idlePos;
-			this._idlePos = new RoomPosition(memPos.x, memPos.y, memPos.roomName);
-		} else {
-			this._idlePos = this.findIdlePos();
-			this.memory.idlePos = this._idlePos;
+		if (!this.memory.idlePos || Game.time % 25 == 0) {
+			this.memory.idlePos = this.findIdlePos();
 		}
-		return this._idlePos;
+		return derefRoomPosition(this.memory.idlePos);
 	}
 
 	/* Find the best idle position */
 	private findIdlePos(): RoomPosition {
-		// Get the adjacent squares to storage
-		let possiblePositions = this.storage.pos.neighbors;
 		// Try to match as many other structures as possible
-		let proximateStructures: Structure[] = _.compact([
-															 this.link!,
-															 this.terminal!,
-															 this.powerSpawn!,
-															 this.nuker!,
-															 ...this.towers,
-														 ]);
+		let proximateStructures: Structure[] = _.compact([this.link!,
+														  this.terminal!,
+														  this.powerSpawn!,
+														  this.nuker!,
+														  ...this.towers]);
 		let numNearbyStructures = (pos: RoomPosition) =>
 			_.filter(proximateStructures, s => s.pos.isNearTo(pos) && !s.pos.isEqualTo(pos)).length;
-		let nearbyStructuresEachPos = _.map(possiblePositions, pos => numNearbyStructures(pos));
-		let maxIndex = _.findIndex(nearbyStructuresEachPos, _.max(nearbyStructuresEachPos));
-		return possiblePositions[maxIndex];
+		return _.last(_.sortBy(this.storage.pos.neighbors, pos => numNearbyStructures(pos)));
 	}
 
 	private registerEnergyRequests(): void {

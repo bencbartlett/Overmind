@@ -23,6 +23,8 @@ import {TaskUpgrade, upgradeTargetType, upgradeTaskName} from './task_upgrade';
 import {dropTargetType, dropTaskName, TaskDrop} from './task_drop';
 import {TaskInvalid} from './task_invalid';
 import {fleeTargetType, fleeTaskName, TaskFlee} from './task_flee';
+import {TaskTransferAll, transferAllTargetType, transferAllTaskName} from './task_transferAll';
+import {log} from '../lib/logger/log';
 
 export function initializeTask(protoTask: protoTask): any {
 	// Retrieve name and target data from the protoTask
@@ -94,14 +96,16 @@ export function initializeTask(protoTask: protoTask): any {
 		case transferTaskName:
 			task = new TaskTransfer(target as transferTargetType);
 			break;
+		case transferAllTaskName:
+			task = new TaskTransferAll(target as transferAllTargetType);
+			break;
 		case upgradeTaskName:
 			task = new TaskUpgrade(target as upgradeTargetType);
 			break;
 		default:
-			console.log(`Invalid task name: ${taskName}! task.creep: ${protoTask._creep.name}. Deleting from memory!`);
+			log.error(`Invalid task name: ${taskName}! task.creep: ${protoTask._creep.name}. Deleting from memory!`);
 			task = new TaskInvalid(target as any);
 			break;
-
 	}
 	// Modify the task object to reflect any changed properties
 	task.proto = protoTask;

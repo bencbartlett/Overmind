@@ -1,24 +1,24 @@
 // Jump table to instantiate flags based on type
 
-import {DirectiveGuard} from '../directives/combat/directive_guard';
-import {DirectiveIncubate} from '../directives/colonization/directive_incubate';
-import {DirectiveOutpost} from '../directives/core/directive_outpost';
-import {DirectiveBootstrap} from '../directives/core/directive_bootstrap';
-import {Directive} from '../directives/Directive';
-import {DirectiveRPHatchery} from '../directives/roomPlanner/directive_roomPlanner_hatchery';
-import {DirectiveRPCommandCenter} from '../directives/roomPlanner/directive_roomPlanner_commandCenter';
-import {DirectiveRPUpgradeSite} from '../directives/roomPlanner/directive_roomPlanner_upgradeSite';
-import {DirectiveRPMiningGroup} from '../directives/roomPlanner/directive_roomPlanner_miningGroup';
-import {DirectiveColonize} from '../directives/colonization/directive_colonize';
-import {DirectiveTargetSiege} from '../directives/targeting/directive_target_siege';
-import {DirectiveSiege} from '../directives/combat/directive_siege';
-import {DirectiveHealPoint} from '../directives/combat/directive_healPoint';
-import {DirectiveGuardSwarm} from '../directives/combat/directive_guard_swarm';
-import {DirectiveLabMineral} from '../directives/logistics/directive_labMineralType';
-import {DirectiveDestroy} from '../directives/combat/directive_destroy';
-import {DirectiveInvasionDefense} from '../directives/combat/directive_invasion';
-import {DirectiveLogisticsRequest} from '../directives/logistics/directive_logisticsRequest';
-import {DirectiveHaul} from '../directives/logistics/directive_haul';
+import {DirectiveGuard} from './combat/directive_guard';
+import {DirectiveIncubate} from './colonization/directive_incubate';
+import {DirectiveOutpost} from './core/directive_outpost';
+import {DirectiveBootstrap} from './core/directive_bootstrap';
+import {Directive} from './Directive';
+import {DirectiveRPHatchery} from './roomPlanner/directive_roomPlanner_hatchery';
+import {DirectiveRPCommandCenter} from './roomPlanner/directive_roomPlanner_commandCenter';
+import {DirectiveRPUpgradeSite} from './roomPlanner/directive_roomPlanner_upgradeSite';
+import {DirectiveRPMiningGroup} from './roomPlanner/directive_roomPlanner_miningGroup';
+import {DirectiveColonize} from './colonization/directive_colonize';
+import {DirectiveTargetSiege} from './targeting/directive_target_siege';
+import {DirectiveSiege} from './combat/directive_siege';
+import {DirectiveHealPoint} from './combat/directive_healPoint';
+import {DirectiveGuardSwarm} from './combat/directive_guard_swarm';
+import {DirectiveLabMineral} from './logistics/directive_labMineralType';
+import {DirectiveDestroy} from './combat/directive_destroy';
+import {DirectiveInvasionDefense} from './combat/directive_invasion';
+import {DirectiveLogisticsRequest} from './logistics/directive_logisticsRequest';
+import {DirectiveHaul} from './logistics/directive_haul';
 
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 	switch (flag.color) {
@@ -102,10 +102,5 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					break; // Reserved for road routing hints
 			}
 			break;
-
 	}
 }
-
-
-
-

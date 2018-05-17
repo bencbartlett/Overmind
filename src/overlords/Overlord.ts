@@ -46,6 +46,12 @@ export abstract class Overlord {
 		Overmind.overlords[this.ref] = this;
 	}
 
+	/* Refreshes portions of the overlord state */
+	rebuild(): void {
+		this.recalculateCreeps();
+		this.creepUsageReport = _.mapValues(this._creeps, creep => undefined);
+	}
+
 	recalculateCreeps(): void {
 		this._creeps = _.mapValues(Overmind.cache.overlords[this.ref],
 								   creepsOfRole => _.map(creepsOfRole, creepName => Game.zerg[creepName]));

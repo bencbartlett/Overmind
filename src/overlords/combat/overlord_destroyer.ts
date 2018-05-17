@@ -37,7 +37,7 @@ export class DestroyerOverlord extends CombatOverlord {
 	healers: Zerg[];
 
 	static settings = {
-		retreatHitsPercent : 0.85,
+		retreatHitsPercent : 0.75,
 		reengageHitsPercent: 0.95,
 	};
 
@@ -76,12 +76,12 @@ export class DestroyerOverlord extends CombatOverlord {
 	}
 
 	private retreatActions(attacker: Zerg, healer: Zerg): void {
-		this.pairwiseMove(healer, attacker, this.fallback);
 		if (attacker.hits > DestroyerOverlord.settings.reengageHitsPercent * attacker.hits &&
 			healer.hits > DestroyerOverlord.settings.reengageHitsPercent * healer.hits) {
 			attacker.memory.retreating = false;
-			// TODO: never actually do retreat actions???
 		}
+		// Healer leads retreat to fallback position
+		this.pairwiseMove(healer, attacker, this.fallback);
 	}
 
 	private attackActions(attacker: Zerg, healer: Zerg): void {
@@ -97,38 +97,44 @@ export class DestroyerOverlord extends CombatOverlord {
 
 	private handleSquad(attacker: Zerg): void {
 		let healer = this.findPartner(attacker, this.healers);
-		if (!healer || healer.spawning || healer.needsBoosts) { // you don't have an active partner
+		// Case 1: you don't have an active healer
+		if (!healer || healer.spawning || healer.needsBoosts) {
 			// Wait near the colony controller if you don't have a healer
 			if (attacker.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 5) {
 				attacker.travelTo(this.colony.controller);
 			} else {
 				attacker.park();
 			}
-		} else { // have an active healer
-			// Handle retreating actions
+		}
+		// Case 2: you have an active healer
+		else {
+			// Activate retreat condition if necessary
 			if (attacker.hits < DestroyerOverlord.settings.retreatHitsPercent * attacker.hitsMax ||
 				healer.hits < DestroyerOverlord.settings.retreatHitsPercent * healer.hitsMax) {
 				attacker.memory.retreating = true;
 			}
 			if (attacker.memory.retreating) {
+				// Retreat to fallback position
 				this.retreatActions(attacker, healer);
-			}
-			// Move to room and then perform attacking actions
-			if (!attacker.inSameRoomAs(this)) {
-				this.pairwiseMove(attacker, healer, this.pos);
 			} else {
-				this.attackActions(attacker, healer);
+				// Move to room and then perform attacking actions
+				if (!attacker.inSameRoomAs(this)) {
+					this.pairwiseMove(attacker, healer, this.pos);
+				} else {
+					this.attackActions(attacker, healer);
+				}
 			}
 		}
 	}
 
 	private handleHealer(healer: Zerg): void {
-		if (this.room && this.room.hostiles.length == 0) { // No hostiles in the room
+		// If there are no hostiles in the designated room, run medic actions
+		if (this.room && this.room.hostiles.length == 0) {
 			this.medicActions(healer);
 			return;
 		}
-
 		let attacker = this.findPartner(healer, this.attackers);
+		// Case 1: you don't have an attacker partner
 		if (!attacker || attacker.spawning || attacker.needsBoosts) {
 			if (healer.hits < healer.hitsMax) {
 				healer.heal(healer);
@@ -139,7 +145,9 @@ export class DestroyerOverlord extends CombatOverlord {
 			} else {
 				healer.park();
 			}
-		} else { // you have an attacker partner
+		}
+		// Case 2: you have an attacker partner
+		else {
 			if (attacker.hitsMax - attacker.hits > healer.hitsMax - healer.hits &&
 				attacker.hitsMax - attacker.hits > 0) {
 				// Attacker needs healing more

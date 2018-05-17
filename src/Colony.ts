@@ -17,6 +17,7 @@ import {RoadLogistics} from './logistics/RoadLogistics';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {TransportOverlord} from './overlords/core/overlord_transport';
 import {Energetics} from './logistics/Energetics';
+import {StoreStructure} from './declarations/typeGuards';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -84,7 +85,6 @@ export class Colony {
 	// Creeps and subsets
 	creeps: Zerg[];										// Creeps bound to the colony
 	creepsByRole: { [roleName: string]: Zerg[] };		// Creeps hashed by their role name
-	hostiles: Creep[];									// Hostile creeps in one of the rooms
 	// Resource requests
 	linkNetwork: LinkNetwork;
 	logisticsNetwork: LogisticsNetwork;
@@ -100,13 +100,10 @@ export class Colony {
 	roomPlanner: RoomPlanner;
 
 	constructor(id: number, roomName: string, outposts: string[], creeps: Zerg[]) {
-		// Name the colony
+		// Primitive colony setup
 		this.id = id;
 		this.name = roomName;
 		this.colony = this;
-		this.creeps = creeps;
-		this.creepsByRole = _.groupBy(creeps, creep => creep.memory.role);
-		// Set up memory if needed
 		if (!Memory.colonies[this.name]) {
 			Memory.colonies[this.name] = {
 				overseer     : <OverseerMemory>{},
@@ -115,14 +112,34 @@ export class Colony {
 			};
 		}
 		this.memory = Memory.colonies[this.name];
+		// Register creeps
+		this.registerCreeps(creeps);
 		// Instantiate the colony overseer
 		this.overseer = new Overseer(this);
-		// Register colony capitol and associated components
+		// Register colony capitol and outposts
 		this.roomNames = [roomName].concat(outposts);
 		this.room = Game.rooms[roomName];
 		this.outposts = _.compact(_.map(outposts, outpost => Game.rooms[outpost]));
 		this.rooms = [Game.rooms[roomName]].concat(this.outposts);
-		// Associate real colony components
+		// Register real colony components
+		this.registerRoomObjects();
+		// Set the colony operational state
+		this.registerOperationalState();
+		// Create placeholder arrays for remaining properties to be filled in by the Overmind
+		this.flags = [];
+		this.registerUtilities();
+		// Build the hive clusters
+		this.registerHiveClusters();
+		// Register colony overlords
+		this.spawnMoarOverlords();
+	}
+
+	private registerCreeps(creeps: Zerg[]): void {
+		this.creeps = creeps;
+		this.creepsByRole = _.groupBy(creeps, creep => creep.memory.role);
+	}
+
+	private registerRoomObjects(): void {
 		this.controller = this.room.controller!; // must be controller since colonies are based in owned rooms
 		this.pos = this.controller.pos; // This is used for overlord initialization but isn't actually useful
 		this.spawns = _.sortBy(_.filter(this.room.spawns, spawn => spawn.my), spawn => spawn.ref);
@@ -135,7 +152,15 @@ export class Colony {
 		this.powerSpawn = this.room.getStructures(STRUCTURE_POWER_SPAWN)[0] as StructurePowerSpawn;
 		this.nuker = this.room.getStructures(STRUCTURE_NUKER)[0] as StructureNuker;
 		this.observer = this.room.getStructures(STRUCTURE_OBSERVER)[0] as StructureObserver;
-		// Set the colony operational state
+		// Register physical objects across all rooms in the colony
+		this.sources = _.sortBy(_.flatten(_.map(this.rooms, room => room.sources)),
+								source => source.pos.getMultiRoomRangeTo(this.pos)); // sort for roadnetwork determinism
+		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites));
+		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
+		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
+	}
+
+	private registerOperationalState(): void {
 		this.level = this.controller.level;
 		this.isIncubating = false;
 		if (this.storage && this.storage.isActive() &&
@@ -149,6 +174,7 @@ export class Colony {
 		} else {
 			this.stage = ColonyStage.Larva;
 		}
+		this.incubatingColonies = [];
 		this.lowPowerMode = Energetics.lowPowerMode(this);
 		// Set DEFCON level
 		// TODO: finish this
@@ -166,17 +192,9 @@ export class Colony {
 		} else {
 			this.defcon = DEFCON.safe;
 		}
-		// Register physical objects across all rooms in the colony
-		this.sources = _.sortBy(_.flatten(_.map(this.rooms, room => room.sources)),
-								source => source.pos.getMultiRoomRangeTo(this.pos)); // sort for roadnetwork determinism
-		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites));
-		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
-		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
-		// Register enemies across colony rooms
-		this.hostiles = _.flatten(_.map(this.rooms, room => room.hostiles));
-		// Create placeholder arrays for remaining properties to be filled in by the Overmind
-		this.flags = [];
-		this.incubatingColonies = [];
+	}
+
+	private registerUtilities(): void {
 		// Resource requests
 		this.linkNetwork = new LinkNetwork(this);
 		this.logisticsNetwork = new LogisticsNetwork(this);
@@ -184,15 +202,11 @@ export class Colony {
 		this.roomPlanner = new RoomPlanner(this);
 		// Register road network
 		this.roadLogistics = new RoadLogistics(this);
-		// Build the hive clusters
-		this.hiveClusters = [];
-		this.buildHiveClusters();
-		// Register colony overlords
-		this.spawnMoarOverlords();
 	}
 
 	/* Instantiate and associate virtual colony components to group similar structures together */
-	private buildHiveClusters(): void {
+	private registerHiveClusters(): void {
+		this.hiveClusters = [];
 		// Instantiate the command center if there is storage in the room - this must be done first!
 		if (this.stage > ColonyStage.Larva) {
 			this.commandCenter = new CommandCenter(this, this.storage!);
@@ -235,8 +249,30 @@ export class Colony {
 		};
 	}
 
+	// /* Refreshes portions of the colony state between ticks without rebuilding the entire object */
+	// rebuild(): void {
+	// 	this.flags = []; 			// Reset flags list since Overmind will re-instantiate directives
+	// 	this.overseer.rebuild();	// Rebuild the overseer, which rebuilds overlords
+	// }
+
 	getCreepsByRole(roleName: string): Zerg[] {
 		return this.creepsByRole[roleName] || [];
+	}
+
+	/* Summarizes the total of all resources currently in a colony store structure */
+	getAllAssets(): { [resourceType: string]: number } {
+		let allAssets: { [resourceType: string]: number } = {};
+		let storeStructures = _.compact([this.storage, this.terminal]) as StoreStructure[];
+		for (let structure of storeStructures) {
+			for (let resourceType in structure.store) {
+				let amount = structure.store[<ResourceConstant>resourceType] || 0;
+				if (!allAssets[resourceType]) {
+					allAssets[resourceType] = 0;
+				}
+				allAssets[resourceType] += amount;
+			}
+		}
+		return allAssets as StoreDefinition;
 	}
 
 	init(): void {

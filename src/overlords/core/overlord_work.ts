@@ -15,6 +15,7 @@ export class WorkerOverlord extends Overlord {
 	repairStructures: Structure[];
 	rechargeObjects: (StructureStorage | StructureTerminal | StructureContainer | StructureLink | Tombstone)[];
 	fortifyStructures: (StructureWall | StructureRampart)[];
+	constructionSites: ConstructionSite[];
 	settings: {
 		barrierHits: { [rcl: number]: number };
 		barrierLowHighHits: number;
@@ -47,6 +48,7 @@ export class WorkerOverlord extends Overlord {
 			barrierLowHighHits : 100000,
 			workerWithdrawLimit: this.colony.stage == ColonyStage.Larva ? 750 : 100,
 		};
+
 		this.fortifyStructures = _.sortBy(_.filter(this.room.barriers,
 												   s => s.hits < this.settings.barrierHits[this.colony.level]),
 										  s => s.hits);
@@ -61,6 +63,15 @@ export class WorkerOverlord extends Overlord {
 		let criticalHits = 1000; // Fortifying changes to repair status at this point
 		let criticalBarriers = _.filter(this.fortifyStructures, s => s.hits <= criticalHits);
 		this.repairStructures = this.repairStructures.concat(criticalBarriers);
+		// All constructionSites that a worker should work on
+		let homeRoomName = this.colony.room.name;
+		this.constructionSites = _.filter(this.colony.constructionSites, function (site) {
+			if (site.structureType == STRUCTURE_CONTAINER && site.pos.roomName != homeRoomName) { // no outpost contnrs
+				return false;
+			} else {
+				return !(site.room && site.room.dangerousHostiles.length > 0);
+			}
+		});
 	}
 
 	init() {
@@ -103,14 +114,9 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	private buildActions(worker: Zerg) {
-		let groupedSites = _.groupBy(this.colony.constructionSites, site => site.structureType);
+		let groupedSites = _.groupBy(this.constructionSites, site => site.structureType);
 		for (let structureType of BuildPriorities) {
 			if (groupedSites[structureType]) {
-				// Skip building mining site containers outside of your room
-				if (structureType == STRUCTURE_CONTAINER) {
-					groupedSites[structureType] = _.filter(groupedSites[structureType],
-														   site => site.pos.roomName == this.colony.name);
-				}
 				let target = worker.pos.findClosestByMultiRoomRange(groupedSites[structureType]);
 				if (target) {
 					worker.task = Tasks.build(target);

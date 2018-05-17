@@ -25,7 +25,9 @@ interface Room {
 	signedByMe: boolean;
 	creeps: Creep[];
 	hostiles: Creep[];
+	dangerousHostiles: Creep[];
 	playerHostiles: Creep[];
+	dangerousPlayerHostiles: Creep[];
 	hostileStructures: Structure[];
 	flags: Flag[];
 	// Preprocessed structures
