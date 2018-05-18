@@ -295,7 +295,8 @@ export class LogisticsNetwork {
 	static targetingTransporters(target: LogisticsTarget, excludedTransporter?: Zerg): Zerg[] {
 		let targetingZerg = _.map(target.targetedBy, name => Game.zerg[name]);
 		let targetingTransporters = _.filter(targetingZerg, zerg => zerg.roleName == TransporterSetup.role);
-		if (excludedTransporter) _.remove(targetingTransporters, transporter => transporter == excludedTransporter);
+		if (excludedTransporter) _.remove(targetingTransporters,
+										  transporter => transporter.name == excludedTransporter.name);
 		return targetingTransporters;
 	}
 
@@ -354,17 +355,27 @@ export class LogisticsNetwork {
 		// let eta = busyUntil + Pathing.distance(newPos, request.target.pos);
 		let eta = busyUntil + LogisticsNetwork.settings.rangeToPathHeuristic *
 				  newPos.getMultiRoomRangeTo(request.target.pos);
-		let predictedDifference = request.dAmountdt * eta;
+		let predictedDifference = request.dAmountdt * eta; // dAmountdt has same sign as amount
 		// Account for other transporters targeting the target
 		let otherTargetingTransporters = LogisticsNetwork.targetingTransporters(request.target, transporter);
+		// let closerTargetingTransporters = _.filter(otherTargetingTransporters,
+		// 										   transporter => this.nextAvailability(transporter)[0] < eta);
 		if (request.amount > 0) { // requester state, energy in
 			let resourceInflux = _.sum(_.map(otherTargetingTransporters,
-											 transporter => (transporter.carry[request.resourceType] || 0)));
-			return Math.max(request.amount + predictedDifference - resourceInflux, 0);
+											 other => (other.carry[request.resourceType] || 0)));
+			let predictedAmount = Math.max(request.amount + predictedDifference - resourceInflux, 0);
+			if (isStoreStructure(<Structure>request.target)) { 	// cap predicted amount at storeCapacity
+				predictedAmount = Math.min(predictedAmount, (<StoreStructure>request.target).storeCapacity);
+			}
+			return predictedAmount;
 		} else { // provide state, energy out
 			let resourceOutflux = _.sum(_.map(otherTargetingTransporters,
-											  transporter => transporter.carryCapacity - _.sum(transporter.carry)));
-			return Math.min(request.amount + predictedDifference + resourceOutflux, 0);
+											  other => other.carryCapacity - _.sum(other.carry)));
+			let predictedAmount = Math.min(request.amount + predictedDifference + resourceOutflux, 0);
+			if (isStoreStructure(<Structure>request.target)) { 	// cap predicted amount at -1 * storeCapacity
+				predictedAmount = Math.max(predictedAmount, -1 * (<StoreStructure>request.target).storeCapacity);
+			}
+			return predictedAmount;
 		}
 	}
 

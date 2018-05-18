@@ -47,6 +47,7 @@ if (USE_PROFILER) profiler.enable();
 global.log = log;
 Mem.format();
 Console.init();
+log.alert(`Codebase updated (or global reset)`);
 
 // Main loop
 function main(): void {

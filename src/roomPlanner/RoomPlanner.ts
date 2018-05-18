@@ -8,6 +8,7 @@ import {Mem} from '../memory';
 import {Colony} from '../Colony';
 import {BuildPriorities} from '../settings/priorities';
 import {RoadPlanner} from './RoadPlanner';
+import {BarrierPlanner} from './BarrierPlanner';
 
 export interface BuildingPlannerOutput {
 	name: string;
@@ -57,6 +58,7 @@ export class RoomPlanner {
 		[name: string]: RoomPosition
 	};
 	plan: RoomPlan;							// Contains maps, positions, and rotations of each hivecluster component
+	barrierPlanner: BarrierPlanner;
 	roadPlanner: RoadPlanner;
 
 	static settings = {
@@ -69,6 +71,7 @@ export class RoomPlanner {
 		this.placements = {};
 		this.plan = {};
 		this.map = {};
+		this.barrierPlanner = new BarrierPlanner(this);
 		this.roadPlanner = new RoadPlanner(this);
 		if (this.active && Game.time % 25 == 0) {
 			log.alert(`RoomPlanner for ${this.colony.room.print} is still active! Close to save CPU.`);
@@ -138,7 +141,7 @@ export class RoomPlanner {
 		// Display the activation message
 		let msg = [
 			`Room planner activated for ${this.colony.name}. Reinstantiating flags from previous session on next tick.`,
-			'Place colony components and routing hints with room planner flags:',
+			'Place colony components with room planner flags:',
 			'    Place hatchery:        white/green',
 			'    Place command center:  white/blue',
 			// 'Set component rotation by writing an angle (0,90,180,270 or 0,1,2,3) to flag.memory.rotation.',
@@ -262,6 +265,7 @@ export class RoomPlanner {
 		}
 	}
 
+
 	/* Generates a list of impassible obstacles from this.map or from this.memory.map */
 	getObstacles(): RoomPosition[] {
 		let obstacles: RoomPosition[] = [];
@@ -313,6 +317,8 @@ export class RoomPlanner {
 				this.make(rcl);
 				this.memory.mapsByLevel[rcl] = this.map;
 			}
+			// Finalize the barrier planner
+			this.barrierPlanner.finalize();
 			// Finalize the road planner
 			this.roadPlanner.finalize();
 			// Save flags and remove them
@@ -336,9 +342,11 @@ export class RoomPlanner {
 	}
 
 	init(): void {
-
+		this.barrierPlanner.init();
+		this.roadPlanner.init();
 	}
 
+	/* Whether a constructionSite should be placed at a position */
 	static shouldBuild(structureType: BuildableStructureConstant, pos: RoomPosition): boolean {
 		if (!Game.rooms[pos.roomName]) return false;
 		let buildings = _.filter(pos.lookFor(LOOK_STRUCTURES), s => s && s.structureType == structureType);
@@ -401,6 +409,8 @@ export class RoomPlanner {
 				this.buildMissing();
 			}
 		}
+		// Run the barrier planner
+		this.barrierPlanner.run();
 		// Run the road planner
 		this.roadPlanner.run();
 	}

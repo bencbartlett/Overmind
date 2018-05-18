@@ -37,12 +37,16 @@ export class DirectiveIncubate extends Directive {
 
 	run() {
 		// Incubation directive gets removed once the colony has a command center (storage)
-		if (!this.memory.persistent && this.incubatee && this.incubatee.stage > ColonyStage.Larva) {
-			this.remove();
+		if (!this.memory.persistent && this.incubatee) {
+			if (this.colony.stage == ColonyStage.Adult) { // if incubator is an adult, incubate colony to adulthood
+				if (this.incubatee.stage == ColonyStage.Adult) {
+					this.remove();
+				}
+			} else { // otherwise remove once storage is built
+				if (this.incubatee.stage > ColonyStage.Larva) {
+					this.remove();
+				}
+			}
 		}
-		// // You can set memory.onlyBuildSpawn = true to remove the flag once spawn is built, skipping incubation
-		// if (this.memory.onlyBuildSpawn && this.incubatee && this.incubatee.spawns.length > 0) {
-		// 	this.remove();
-		// }
 	}
 }

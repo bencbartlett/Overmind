@@ -64,7 +64,7 @@ export class HatcheryOverlord extends Overlord {
 			if (target) {
 				queen.task = Tasks.withdraw(target);
 			} else {
-				log.warning('No valid withdraw target for queen!');
+				log.warning(`No valid withdraw target for queen at ${queen.pos.print}!`);
 			}
 		}
 	}

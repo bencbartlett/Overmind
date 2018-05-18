@@ -141,11 +141,12 @@ export class TransportOverlord extends Overlord {
 	run() {
 		for (let transporter of this.transporters) {
 			if (transporter.isIdle) {
-				if (transporter.carryCapacity >= LogisticsNetwork.settings.carryThreshold) {
-					this.handleBigTransporter(transporter);
-				} else {
-					this.handleSmolTransporter(transporter);
-				}
+				// if (transporter.carryCapacity >= LogisticsNetwork.settings.carryThreshold) {
+				// 	this.handleBigTransporter(transporter);
+				// } else {
+				// 	this.handleSmolTransporter(transporter);
+				// }
+				this.handleSmolTransporter(transporter);
 			}
 			transporter.run();
 		}

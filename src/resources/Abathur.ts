@@ -105,14 +105,17 @@ export class Abathur {
 	}
 
 	private getShortage(): Shortage | undefined {
-		for (let resourceType in _priorityStock) {
-			let amountOwned = this.assets[resourceType] || 0;
-			let amountNeeded = _priorityStock[resourceType];
-			if (amountOwned < amountNeeded) { // if there is a shortage of this resource
-				return this.recursivelyFindShortage({
-														mineralType: resourceType,
-														amount     : amountNeeded - amountOwned
-													});
+		let stocksToCheck = [_priorityStock, _wantedStock];
+		for (let stocks of stocksToCheck) {
+			for (let resourceType in _priorityStock) {
+				let amountOwned = this.assets[resourceType] || 0;
+				let amountNeeded = _priorityStock[resourceType];
+				if (amountOwned < amountNeeded) { // if there is a shortage of this resource
+					return this.recursivelyFindShortage({
+															mineralType: resourceType,
+															amount     : amountNeeded - amountOwned
+														});
+				}
 			}
 		}
 	}

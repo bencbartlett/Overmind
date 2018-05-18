@@ -164,6 +164,7 @@ export class Zerg {
 		return result;
 	}
 
+	/* Say a message; maximum message length is 10 characters */
 	say(message: string, pub?: boolean) {
 		return this.creep.say(message, pub);
 	}
@@ -458,6 +459,15 @@ export class Zerg {
 		return this.travelTo(pos);
 	}
 
+	/* Moves a creep off of the current tile to the first available neighbor */
+	moveOffCurrentPos(): ScreepsReturnCode | undefined {
+		let destinationPos = _.first(_.filter(this.pos.availableNeighbors(), pos => !pos.isEdge));
+		if (destinationPos) {
+			return this.move(this.pos.getDirectionTo(destinationPos));
+		}
+	}
+
+	/* Moves onto an exit tile */
 	moveOnExit(): ScreepsReturnCode | undefined {
 		if (this.pos.rangeToEdge > 0 && this.fatigue == 0) {
 			let directions = [1, 3, 5, 7, 2, 4, 6, 8] as DirectionConstant[];
@@ -474,6 +484,7 @@ export class Zerg {
 		}
 	}
 
+	/* Moves off of an exit tile */
 	moveOffExit(avoidSwamp = true): ScreepsReturnCode {
 		let swampDirection;
 		let directions = [1, 3, 5, 7, 2, 4, 6, 8] as DirectionConstant[];
@@ -503,6 +514,12 @@ export class Zerg {
 		if (detour) {
 			this.travelTo(pos, {ignoreCreeps: false});
 		}
+	}
+
+	// Miscellaneous fun stuff -----------------------------------------------------------------------------------------
+
+	sayLoop(messageList: string[], pub?: boolean) {
+		return this.say(messageList[Game.time % messageList.length], pub);
 	}
 
 }

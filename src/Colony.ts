@@ -66,7 +66,7 @@ export class Colony {
 	sources: Source[];									// | Sources in all colony rooms
 	flags: Flag[];										// | Flags across the colony
 	constructionSites: ConstructionSite[];				// | Construction sites in all colony rooms
-	repairables: Structure[];
+	repairables: Structure[];							// | Repairable structures, discounting barriers and roads
 	// Hive clusters
 	hiveClusters: HiveCluster[];						// List of all hive clusters
 	commandCenter: CommandCenter | undefined;			// Component with logic for non-spawning structures
@@ -178,12 +178,9 @@ export class Colony {
 		this.lowPowerMode = Energetics.lowPowerMode(this);
 		// Set DEFCON level
 		// TODO: finish this
-		let dangerousHostiles = _.filter(this.room.hostiles, creep => creep.getActiveBodyparts(ATTACK) > 0 ||
-																	  creep.getActiveBodyparts(WORK) > 0 ||
-																	  creep.getActiveBodyparts(RANGED_ATTACK) > 0 ||
-																	  creep.getActiveBodyparts(HEAL) > 0);
-		if (dangerousHostiles.length > 0) {
-			let effectiveHostileCount = _.sum(_.map(dangerousHostiles, hostile => hostile.boosts.length > 0 ? 2 : 1));
+		if (this.room.dangerousHostiles.length > 0) {
+			let effectiveHostileCount = _.sum(_.map(this.room.dangerousHostiles,
+													hostile => hostile.boosts.length > 0 ? 2 : 1));
 			if (effectiveHostileCount >= 3) {
 				this.defcon = DEFCON.boostedInvasionNPC;
 			} else {
@@ -294,10 +291,20 @@ export class Colony {
 	}
 
 	stats(): void {
+		// Log energy and rcl
 		Stats.log(`colonies.${this.name}.storage.energy`, this.storage ? this.storage.energy : undefined);
 		Stats.log(`colonies.${this.name}.rcl.level`, this.controller.level);
 		Stats.log(`colonies.${this.name}.rcl.progress`, this.controller.progress);
 		Stats.log(`colonies.${this.name}.rcl.progressTotal`, this.controller.progressTotal);
+		// Log average miningSite usage and uptime and estimated colony energy income
+		let numSites = _.keys(this.miningSites).length;
+		let avgDowntime = _.sum(_.map(this.miningSites, (site: MiningSite) => site.memory.stats.downtime)) / numSites;
+		let avgUsage = _.sum(_.map(this.miningSites, (site: MiningSite) => site.memory.stats.usage)) / numSites;
+		let energyInPerTick = _.sum(_.map(this.miningSites, (site: MiningSite) =>
+			site.source.energyCapacity * site.memory.stats.usage)) / ENERGY_REGEN_TIME;
+		Stats.log(`colonies.${this.name}.miningSites.avgDowntime`, avgDowntime);
+		Stats.log(`colonies.${this.name}.miningSites.avgUsage`, avgUsage);
+		Stats.log(`colonies.${this.name}.miningSites.energyInPerTick`, energyInPerTick);
 	}
 
 	visuals(): void {

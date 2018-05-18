@@ -119,6 +119,12 @@ export class WorkerOverlord extends Overlord {
 			if (groupedSites[structureType]) {
 				let target = worker.pos.findClosestByMultiRoomRange(groupedSites[structureType]);
 				if (target) {
+					// Fixes issue #9 - workers freeze if creep sitting on square
+					if (target.pos.lookFor(LOOK_CREEPS).length > 0) {
+						let zerg = Game.zerg[_.first(target.pos.lookFor(LOOK_CREEPS)).name];
+						if (zerg) zerg.moveOffCurrentPos();
+						worker.say('move pls');
+					}
 					worker.task = Tasks.build(target);
 					return;
 				}

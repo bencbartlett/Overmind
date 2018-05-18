@@ -19,7 +19,11 @@ export class TaskGoTo extends Task {
 	}
 
 	isValidTask() {
-		return !this.creep.pos.inRangeTo(this.targetPos, this.settings.targetRange);
+		let range = this.settings.targetRange;
+		if (this.options.travelToOptions.range != undefined) {
+			range = this.options.travelToOptions.range;
+		}
+		return !this.creep.pos.inRangeTo(this.targetPos, range);
 	}
 
 	isValidTarget() {

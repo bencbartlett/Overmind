@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Lots of under-the-hood improvements to the logistics system!
+    - You should see about a 60% reduction in CPU usage from `LogisticsNetwork` due to better internal caching
+    - Tweaks to the predictive functions reduce the chance that transporters occasionally get stuck in an oscillatory pattern
+- RoomPlanner now includes automatic barrier planning!
+    - `roomPlanner.barrierPlanner` uses a modified min-cut algorithm to compute the best location to place ramparts
+    - Opening and closing the roomPlanner for a colony which already has walls will create duplicate walls. Use `destroyAllBarriers(roomName)` if you wish to get rid of your old barriers.
+- Added flee response to miners in outpost rooms
+    - Miners in colony rooms will also retreat to the safety of the controller if there is a large invasion happening
+- Added preliminary DEFCON system to classify colony safety levels
+- Added `combatIntel` module, which contains an assortment of methods related to making combat-related decisions
+- Preliminary support for mineral processing!
+    - New hiveCluter to manage boosting and mineral production: `EvolutionChamber`
+    - Reaction cycles planned by the `Abathur` module, which makes decisions related to the global production of resources, guiding the evolution of the swarm
+        - Module `Abathur` incompatible with pronouns
+
+### Changed
+- `LogisticsGroup` renamed to `LogisticsNetwork`
+
+### Fixed
+- Fixed a bug where the roadPlanner would plan roads for incomplete paths
+- Fixed a bug where workers will occasionally stop working if outpost mining site containers are under construction
 
 ## Overmind [0.3.1] - 2018.5.12
 ### Added

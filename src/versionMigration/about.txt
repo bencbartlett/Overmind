@@ -1,0 +1,11 @@
+Since Overmind is not in a stable development cycle yet (v0.x), there will sometimes be non-backward
+compatible changes. This directory contains code to help you migrate an existing installation of Overmind
+to a more recent version. When a new version of Overmind is released, migration code will usually be
+included and will run automatically; however, this migration code will eventually be removed once most
+people have updated to the most recent version and will be archived to this directory.
+
+To update a very old version of Overmind, add the corresponding migration function to the end of your main
+loop and run it until the console alerts you that the version has been safely migrated. Do this one
+migration step at a time (e.g. to update from 0.2.X to 0.4.X, use 0.2.x->0.3.0 until it is finished, then
+use 0.3.x->0.4.0 until finished). If you run into technical difficulties, feel free to ping me on the
+#overmind Slack channel @Muon.

@@ -8,7 +8,6 @@ import {Mem} from '../memory';
 import {log} from '../lib/logger/log';
 import {OverlordPriority} from '../overlords/priorities_overlords';
 import {Visualizer} from '../visuals/Visualizer';
-import {Stats} from '../stats/stats';
 import {LogisticsNetwork} from '../logistics/LogisticsNetwork';
 import {Pathing} from '../pathing/pathing';
 
@@ -80,8 +79,8 @@ export class MiningSite extends HiveCluster {
 		}
 		this.memory.stats.downtime = (this.memory.stats.downtime * (CREEP_LIFE_TIME - 1) +
 									  (this.output ? +this.output.isFull : 0)) / CREEP_LIFE_TIME;
-		Stats.log(`colonies.${this.colony.name}.miningSites.${this.name}.usage`, this.memory.stats.usage);
-		Stats.log(`colonies.${this.colony.name}.miningSites.${this.name}.downtime`, this.memory.stats.downtime);
+		// Stats.log(`colonies.${this.colony.name}.miningSites.${this.name}.usage`, this.memory.stats.usage);
+		// Stats.log(`colonies.${this.colony.name}.miningSites.${this.name}.downtime`, this.memory.stats.downtime);
 	}
 
 	/* Return the approximate predicted energy if a transporter needed to come from storage.
