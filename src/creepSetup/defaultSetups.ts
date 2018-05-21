@@ -22,6 +22,17 @@ export class MinerLongDistanceSetup extends CreepSetup {
 	}
 }
 
+export class DroneSetup extends CreepSetup {
+	static role = 'drone';
+
+	constructor() {
+		super(DroneSetup.role, {
+			pattern: [WORK, WORK, WORK, CARRY, MOVE],
+			sizeLimit: Infinity,
+		})
+	}
+}
+
 export class ClaimerSetup extends CreepSetup {
 	static role = 'claimer';
 

@@ -104,6 +104,10 @@ export abstract class Task implements ITask {
 		return Game.zerg[this._creep.name] as Creep;
 	}
 
+	//set creep(creep: Creep) {
+	//	this._creep.name = creep.name;
+	//}
+
 	set creep(creep: Creep) {
 		this._creep.name = creep.name;
 		if (this.parent) {
