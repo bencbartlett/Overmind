@@ -90,3 +90,9 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# VStudio files
+applicationhost.config
+*.suo
+*.njsproj
+*.sln
