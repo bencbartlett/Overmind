@@ -6,7 +6,6 @@ import {fleeTargetType, TaskFlee} from './task_flee';
 import {fortifyTargetType, TaskFortify} from './task_fortify';
 import {getBoostedTargetType, TaskGetBoosted} from './task_getBoosted';
 import {getRenewedTargetType, TaskGetRenewed} from './task_getRenewed';
-import {goToTargetType, TaskGoTo} from './task_goTo';
 import {goToRoomTargetType, TaskGoToRoom} from './task_goToRoom';
 import {harvestTargetType, TaskHarvest} from './task_harvest';
 import {healTargetType, TaskHeal} from './task_heal';
@@ -67,9 +66,9 @@ export class Tasks {
 		return new TaskGetRenewed(target, options);
 	}
 
-	static goTo(target: goToTargetType, options = {} as TaskOptions): TaskGoTo {
-		return new TaskGoTo(target, options);
-	}
+	// static goTo(target: goToTargetType, options = {} as TaskOptions): TaskGoTo {
+	// 	return new TaskGoTo(target, options);
+	// }
 
 	static goToRoom(target: goToRoomTargetType, options = {} as TaskOptions): TaskGoToRoom {
 		return new TaskGoToRoom(target, options);

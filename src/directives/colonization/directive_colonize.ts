@@ -13,7 +13,7 @@ export class DirectiveColonize extends Directive {
 	static directiveName = 'colonize';
 	static color = COLOR_PURPLE;
 	static secondaryColor = COLOR_GREY;
-	static requiredRCL = 4;
+	static requiredRCL = 3;
 
 	toColonize: Colony | undefined;
 	overlords: {

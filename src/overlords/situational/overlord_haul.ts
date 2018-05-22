@@ -7,12 +7,15 @@ import {Tasks} from '../../tasks/Tasks';
 import {isStoreStructure} from '../../declarations/typeGuards';
 import {log} from '../../lib/logger/log';
 import {Pathing} from '../../pathing/pathing';
+import {Energetics} from '../../logistics/Energetics';
 
 
 export class HaulingOverlord extends Overlord {
 
 	haulers: Zerg[];
 	directive: DirectiveHaul;
+
+	requiredRCL: 4;
 
 	constructor(directive: DirectiveHaul, priority = directive.hasDrops ? OverlordPriority.collectionUrgent.haul :
 													 OverlordPriority.collection.haul) {
@@ -22,11 +25,15 @@ export class HaulingOverlord extends Overlord {
 	}
 
 	init() {
+		if (!this.colony.storage || _.sum(this.colony.storage.store) > Energetics.settings.storage.total.cap) {
+			return;
+		}
 		// Spawn a number of haulers sufficient to move all resources within a lifetime, up to a max
-		let MAX_HAULERS = 10;
+		let MAX_HAULERS = 5;
 		// Calculate total needed amount of hauling power as (resource amount * trip distance)
 		let tripDistance = 2 * Pathing.distance((this.colony.storage || this.colony).pos, this.directive.pos);
-		let haulingPowerNeeded = this.directive.totalResources * tripDistance;
+		let haulingPowerNeeded = Math.min(this.directive.totalResources,
+			this.colony.storage.storeCapacity - _.sum(this.colony.storage.store)) * tripDistance;
 		// Calculate amount of hauling each hauler provides in a lifetime
 		let haulerCarryParts = _.filter(this.generateProtoCreep(new HaulerSetup()).body, part => part == CARRY).length;
 		let haulingPowerPerLifetime = CREEP_LIFE_TIME * haulerCarryParts * CARRY_CAPACITY;
@@ -67,7 +74,8 @@ export class HaulingOverlord extends Overlord {
 				// Shouldn't reach here
 				log.warning(`${hauler.name} in ${hauler.room.print}: nothing to collect!`);
 			} else {
-				hauler.task = Tasks.goTo(this.directive);
+				// hauler.task = Tasks.goTo(this.directive);
+				hauler.travelTo(this.directive);
 			}
 		} else {
 			// Travel to colony room and deposit resources

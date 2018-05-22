@@ -3,8 +3,26 @@
 
 import {profile} from '../profiler/decorator';
 
+export const ROOMTYPE_SOURCEKEEPER = 'SK';
+export const ROOMTYPE_CORE = 'CORE';
+export const ROOMTYPE_CONTROLLER = 'CTRLR';
+export const ROOMTYPE_ALLEY = 'ALLEY';
+
 @profile
 export class WorldMap {
+
+	public static roomType(roomName: string): string {
+		let coords = this.getRoomCoordinates(roomName);
+		if (coords.x % 10 === 0 || coords.y % 10 === 0) {
+			return ROOMTYPE_ALLEY;
+		} else if (coords.x % 5 === 0 && coords.y % 5 === 0) {
+			return ROOMTYPE_CORE;
+		} else if (coords.x % 10 <= 6 && coords.x % 10 >= 4 && coords.y % 10 <= 6 && coords.y % 10 >= 4) {
+			return ROOMTYPE_SOURCEKEEPER;
+		} else {
+			return ROOMTYPE_CONTROLLER;
+		}
+	}
 
 	public static findRelativeRoomName(roomName: string, xDelta: number, yDelta: number): string {
 		let coords = this.getRoomCoordinates(roomName);

@@ -9,18 +9,16 @@ import {Pathing} from '../../pathing/pathing';
 import {DEFCON} from '../../Colony';
 
 @profile
-export class MiningOverlord extends Overlord {
+export class DropMiningOverlord extends Overlord {
 
 	miners: Zerg[];
 	miningSite: MiningSite;
-	private allowDropMining: boolean;
 
-	constructor(miningSite: MiningSite, priority: number, allowDropMining = false) {
+	constructor(miningSite: MiningSite, priority: number) {
 		super(miningSite, 'mine', priority);
 		this.priority += this.outpostIndex * OverlordPriority.remoteRoom.roomIncrement;
 		this.miners = this.creeps('miner');
 		this.miningSite = miningSite;
-		this.allowDropMining = allowDropMining;
 	}
 
 	init() {
@@ -67,11 +65,6 @@ export class MiningOverlord extends Overlord {
 						// Move off of the contructionSite (link sites won't build)
 						miner.travelTo(this.colony.controller);
 					}
-				} else if (this.allowDropMining) {
-					// Dropmining at early levels
-					let nearbyDrops = miner.pos.findInRange(this.room.droppedEnergy, 1);
-					let dropPos = nearbyDrops.length > 0 ? _.first(nearbyDrops).pos : miner.pos;
-					miner.task = Tasks.drop(dropPos);
 				}
 			}
 		} else {

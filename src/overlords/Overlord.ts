@@ -69,6 +69,7 @@ export abstract class Overlord {
 		for (let creep of idleCreeps) {
 			creep.overlord = this;
 		}
+		this.recalculateCreeps();
 	}
 
 	protected creeps(role: string): Zerg[] {

@@ -1,6 +1,6 @@
 import {Overlord} from '../Overlord';
 import {BuildPriorities} from '../../settings/priorities';
-import {WorkerSetup} from '../../creepSetup/defaultSetups';
+import {WorkerEarlySetup, WorkerSetup} from '../../creepSetup/defaultSetups';
 import {Colony, ColonyStage} from '../../Colony';
 import {profile} from '../../profiler/decorator';
 import {Zerg} from '../../Zerg';
@@ -13,6 +13,7 @@ export class WorkerOverlord extends Overlord {
 	workers: Zerg[];
 	room: Room;
 	repairStructures: Structure[];
+	dismantleStructures: Structure[];
 	rechargeObjects: (StructureStorage | StructureTerminal | StructureContainer | StructureLink | Tombstone)[];
 	fortifyStructures: (StructureWall | StructureRampart)[];
 	constructionSites: ConstructionSite[];
@@ -63,6 +64,15 @@ export class WorkerOverlord extends Overlord {
 		let criticalHits = 1000; // Fortifying changes to repair status at this point
 		let criticalBarriers = _.filter(this.fortifyStructures, s => s.hits <= criticalHits);
 		this.repairStructures = this.repairStructures.concat(criticalBarriers);
+		// TODO: workers shouldn't repair structures in unsafe rooms
+		// this.repairStructures = _.filter(this.repairStructures, function (s) {
+		// 	if (s.structureType == STRUCTURE_CONTAINER && s.pos.roomName != homeRoomName) { // no outpost contnrs
+		// 		return false;
+		// 	} else {
+		// 		return !(s.room && s.room.dangerousHostiles.length > 0);
+		// 	}
+		// });
+		this.dismantleStructures = [];
 		// All constructionSites that a worker should work on
 		let homeRoomName = this.colony.room.name;
 		this.constructionSites = _.filter(this.colony.constructionSites, function (site) {
@@ -79,7 +89,8 @@ export class WorkerOverlord extends Overlord {
 		if (_.compact(_.map(this.colony.miningSites, site => site.output)).length == 0) {
 			return;
 		}
-		let workPartsPerWorker = _.filter(this.generateProtoCreep(new WorkerSetup()).body, part => part == WORK).length;
+		let setup = this.colony.stage == ColonyStage.Larva ? new WorkerEarlySetup() : new WorkerSetup();
+		let workPartsPerWorker = _.filter(this.generateProtoCreep(setup).body, part => part == WORK).length;
 		if (this.colony.stage == ColonyStage.Larva) {
 			// At lower levels, try to saturate the energy throughput of the colony
 			let MAX_WORKERS = 7; // Maximum number of workers to spawn
@@ -87,7 +98,7 @@ export class WorkerOverlord extends Overlord {
 			let energyPerTickPerWorker = 1.1 * workPartsPerWorker; // Average energy per tick when workers are working
 			let workerUptime = 0.8;
 			let numWorkers = Math.ceil(energyPerTick / (energyPerTickPerWorker * workerUptime));
-			this.wishlist(Math.min(numWorkers, MAX_WORKERS), new WorkerSetup());
+			this.wishlist(Math.min(numWorkers, MAX_WORKERS), setup);
 		} else {
 			// At higher levels, spawn workers based on construction and repair that needs to be done
 			let MAX_WORKERS = 3; // Maximum number of workers to spawn
@@ -104,7 +115,7 @@ export class WorkerOverlord extends Overlord {
 			}
 			let numWorkers = Math.ceil(2 * (constructionTicks + repairTicks + fortifyTicks) /
 									   (workPartsPerWorker * CREEP_LIFE_TIME));
-			this.wishlist(Math.min(numWorkers, MAX_WORKERS), new WorkerSetup());
+			this.wishlist(Math.min(numWorkers, MAX_WORKERS), setup);
 		}
 	}
 
@@ -129,6 +140,15 @@ export class WorkerOverlord extends Overlord {
 					return;
 				}
 			}
+		}
+	}
+
+	private dismantleActions(worker: Zerg) {
+		let targets = _.filter(this.dismantleStructures, s => (s.targetedBy || []).length < 3);
+		let target = worker.pos.findClosestByMultiRoomRange(targets);
+		if (target) {
+			_.remove(this.dismantleStructures, s => s == target);
+			worker.task = Tasks.dismantle(target);
 		}
 	}
 
@@ -191,6 +211,8 @@ export class WorkerOverlord extends Overlord {
 				this.pavingActions(worker);
 			} else if (this.constructionSites.length > 0) {
 				this.buildActions(worker);
+			} else if (this.dismantleStructures.length > 0) {
+				this.dismantleActions(worker);
 			} else if (this.fortifyStructures.length > 0) {
 				this.fortifyActions(worker);
 			} else {

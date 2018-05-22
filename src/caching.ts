@@ -56,7 +56,7 @@ export class GameCache implements ICache {
 	private cacheConstructionSites() {
 		this.constructionSites = {};
 		for (let name in Game.rooms) {
-			this.constructionSites[name] = Game.rooms[name].find(FIND_CONSTRUCTION_SITES);
+			this.constructionSites[name] = Game.rooms[name].find(FIND_MY_CONSTRUCTION_SITES);
 		}
 	}
 

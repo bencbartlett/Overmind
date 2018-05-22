@@ -39,7 +39,7 @@ Object.defineProperty(Room.prototype, 'creeps', {
 });
 
 // Room properties: hostiles ===========================================================================================
-
+// TODO: fix memoize bug
 // Hostile creeps currently in the room
 Object.defineProperty(Room.prototype, 'hostiles', {
 	get() {

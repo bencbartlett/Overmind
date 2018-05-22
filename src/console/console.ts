@@ -16,6 +16,7 @@ export class Console {
 		global.destroyAllBarriers = this.destroyAllBarriers;
 		global.listAllDirectives = this.listAllDirectives;
 		global.listPersistentDirectives = this.listPersistentDirectives;
+		global.removeAllLogisticsDirectives = this.removeAllLogisticsDirectives;
 	}
 
 	static help() {
@@ -107,6 +108,15 @@ export class Console {
 				   `Pos: ${dir.pos.print}\n`;
 		}
 		return msg;
+	}
+
+	static removeAllLogisticsDirectives(): string {
+		let logisticsFlags = _.filter(Game.flags, flag => flag.color == COLOR_YELLOW &&
+														  flag.secondaryColor == COLOR_YELLOW);
+		for (let dir of logisticsFlags) {
+			dir.remove();
+		}
+		return `Removed ${logisticsFlags.length} logistics directives.`;
 	}
 
 	static listPersistentDirectives(): string {

@@ -42,7 +42,8 @@ export class ReservingOverlord extends Overlord {
 				reserver.task = Tasks.reserve(this.room.controller!);
 			}
 		} else {
-			reserver.task = Tasks.goTo(this.pos);
+			// reserver.task = Tasks.goTo(this.pos);
+			reserver.travelTo(this.pos);
 		}
 	}
 

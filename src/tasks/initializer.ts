@@ -7,7 +7,7 @@ import {dismantleTargetType, dismantleTaskName, TaskDismantle} from './task_dism
 import {fortifyTargetType, fortifyTaskName, TaskFortify} from './task_fortify';
 import {getBoostedTargetType, getBoostedTaskName, TaskGetBoosted} from './task_getBoosted';
 import {getRenewedTargetType, getRenewedTaskName, TaskGetRenewed} from './task_getRenewed';
-import {goToTargetType, goToTaskName, TaskGoTo} from './task_goTo';
+import {goToTaskName} from './task_goTo';
 import {goToRoomTargetType, goToRoomTaskName, TaskGoToRoom} from './task_goToRoom';
 import {harvestTargetType, harvestTaskName, TaskHarvest} from './task_harvest';
 import {healTargetType, healTaskName, TaskHeal} from './task_heal';
@@ -61,7 +61,8 @@ export function initializeTask(protoTask: protoTask): any {
 			task = new TaskGetRenewed(target as getRenewedTargetType);
 			break;
 		case goToTaskName:
-			task = new TaskGoTo(derefRoomPosition(protoTask._target._pos) as goToTargetType);
+			// task = new TaskGoTo(derefRoomPosition(protoTask._target._pos) as goToTargetType);
+			task = new TaskInvalid(target as any);
 			break;
 		case goToRoomTaskName:
 			task = new TaskGoToRoom(protoTask._target._pos.roomName as goToRoomTargetType);

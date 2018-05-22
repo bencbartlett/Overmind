@@ -68,7 +68,8 @@ export class CombatIntel {
 		}
 	}
 
-	private findBestExit(matrix: CostMatrix, towers: StructureTower[], spawns: StructureSpawn[]): RoomPosition | undefined {
+	private findBestExit(matrix: CostMatrix, towers: StructureTower[],
+						 spawns: StructureSpawn[]): RoomPosition | undefined {
 		if (!this.room) {
 			return;
 		}

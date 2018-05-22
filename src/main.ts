@@ -51,6 +51,9 @@ log.alert(`Codebase updated (or global reset)`);
 
 // Main loop
 function main(): void {
+	if (Game.cpu.bucket < 500) {	// Don't run anything at low bucket
+		return;
+	}
 	Mem.clean();										// Clean memory
 	global.Overmind = new _Overmind();					// Instantiate the Overmind
 	Overmind.build();									// Build phase: instantiate caches and colony components

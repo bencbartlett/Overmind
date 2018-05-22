@@ -84,7 +84,7 @@ export class PioneerSetup extends CreepSetup {
 
 	constructor() {
 		super(PioneerSetup.role, {
-			pattern  : [WORK, CARRY, MOVE],
+			pattern  : [WORK, CARRY, MOVE, MOVE],
 			sizeLimit: Infinity,
 		});
 	}
@@ -187,6 +187,17 @@ export class WorkerSetup extends CreepSetup {
 	constructor() {
 		super(WorkerSetup.role, {
 			pattern  : [WORK, CARRY, MOVE],
+			sizeLimit: Infinity,
+		});
+	}
+}
+
+export class WorkerEarlySetup extends CreepSetup {
+	static role = 'worker';
+
+	constructor() {
+		super(WorkerSetup.role, {
+			pattern  : [WORK, CARRY, MOVE, MOVE],
 			sizeLimit: Infinity,
 		});
 	}

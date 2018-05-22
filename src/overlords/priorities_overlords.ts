@@ -11,8 +11,9 @@ export var OverlordPriority = {
 	},
 
 	defense: {					// Defense of local and remote rooms
-		invasion: 200,
-		guard   : 201,
+		meleeDefense : 200,
+		rangedDefense: 201,
+		guard        : 202,
 	},
 
 	realTime: { 				// Requests that a user is typically actively waiting for in real life

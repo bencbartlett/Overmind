@@ -3,7 +3,7 @@
 import {DirectiveGuard} from './directives/combat/directive_guard';
 import {DirectiveBootstrap, EMERGENCY_ENERGY_THRESHOLD} from './directives/core/directive_bootstrap';
 import {profile} from './profiler/decorator';
-import {Colony} from './Colony';
+import {Colony, ColonyStage} from './Colony';
 import {Overlord} from './overlords/Overlord';
 import {Directive} from './directives/Directive';
 import {log} from './lib/logger/log';
@@ -40,13 +40,29 @@ export class Overseer {
 
 	/* Place new event-driven flags where needed to be instantiated on the next tick */
 	private placeDirectives(): void {
+		// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
+		// Doesn't apply to incubating colonies.
+		if (!this.colony.isIncubating) {
+			let hasEnergy = this.colony.room.energyAvailable >= EMERGENCY_ENERGY_THRESHOLD; // Enough spawn energy?
+			let hasMiners = this.colony.getCreepsByRole('miner').length > 0;		// Has energy supply?
+			let hasQueen = this.colony.getCreepsByRole('queen').length > 0;		// Has a queen?
+			// let canSpawnSupplier = this.colony.room.energyAvailable >= this.colony.overlords.supply.generateProtoCreep()
+			let emergencyFlags = _.filter(this.colony.room.flags, flag => DirectiveBootstrap.filter(flag));
+			if (!hasEnergy && !hasMiners && !hasQueen && emergencyFlags.length == 0) {
+				if (this.colony.hatchery) {
+					DirectiveBootstrap.create(this.colony.hatchery.pos);
+					this.colony.hatchery.settings.suppressSpawning = true;
+				}
+			}
+		}
+
 		// TODO: figure out what's causing these bugs
 		// // Register logistics requests for all dropped resources and tombstones
 		// for (let room of this.colony.rooms) {
 		// 	// Pick up all nontrivial dropped resources
 		// 	for (let resourceType in room.drops) {
 		// 		for (let drop of room.drops[resourceType]) {
-		// 			if (drop.amount > 100 || drop.resourceType != RESOURCE_ENERGY) {
+		// 			if (drop.amount > 200 || drop.resourceType != RESOURCE_ENERGY) {
 		// 				DirectiveLogisticsRequest.createIfNotPresent(drop.pos, 'pos', {quiet: true});
 		// 			}
 		// 		}
@@ -80,22 +96,6 @@ export class Overseer {
 				DirectiveInvasionDefense.createIfNotPresent(this.colony.controller.pos, 'room');
 			}
 		}
-
-		// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
-		// Doesn't apply to incubating colonies.
-		if (!this.colony.isIncubating) {
-			let hasEnergy = this.colony.room.energyAvailable >= EMERGENCY_ENERGY_THRESHOLD; // Enough spawn energy?
-			let hasMiners = this.colony.getCreepsByRole('miner').length > 0;		// Has energy supply?
-			let hasQueen = this.colony.getCreepsByRole('queen').length > 0;		// Has a queen?
-			// let canSpawnSupplier = this.colony.room.energyAvailable >= this.colony.overlords.supply.generateProtoCreep()
-			let emergencyFlags = _.filter(this.colony.room.flags, flag => DirectiveBootstrap.filter(flag));
-			if (!hasEnergy && !hasMiners && !hasQueen && emergencyFlags.length == 0) {
-				if (this.colony.hatchery) {
-					DirectiveBootstrap.create(this.colony.hatchery.pos);
-					this.colony.hatchery.settings.suppressSpawning = true;
-				}
-			}
-		}
 	}
 
 
@@ -103,11 +103,21 @@ export class Overseer {
 
 	private handleSafeMode(): void {
 		// Safe mode activates when there are dangerous player hostiles that can reach the spawn
-		// TODO: update this for SWC
-		let barrierPositions = _.map(this.colony.room.barriers, barrier => barrier.pos);
-		for (let hostile of this.colony.room.dangerousPlayerHostiles) {
-			if (this.colony.spawns[0] && Pathing.isReachable(hostile.pos, this.colony.spawns[0].pos,
-															 {obstacles: barrierPositions})) {
+		let criticalStructures = _.compact([...this.colony.spawns,
+											this.colony.storage,
+											this.colony.terminal]) as Structure[];
+		for (let structure of criticalStructures) {
+			if (structure.hits < structure.hitsMax &&
+				structure.pos.findInRange(this.colony.room.dangerousHostiles, 1).length > 0) {
+				this.colony.controller.activateSafeMode();
+				return;
+			}
+		}
+		if (this.colony.stage > ColonyStage.Larva) {
+			let barriers = _.map(this.colony.room.barriers, barrier => barrier.pos);
+			let firstHostile = _.first(this.colony.room.dangerousHostiles);
+			if (firstHostile && this.colony.spawns[0] &&
+				Pathing.isReachable(firstHostile.pos, this.colony.spawns[0].pos, {obstacles: barriers})) {
 				this.colony.controller.activateSafeMode();
 				return;
 			}
@@ -159,7 +169,9 @@ export class Overseer {
 				for (let role in overlord.creepUsageReport) {
 					let report = overlord.creepUsageReport[role];
 					if (!report) {
-						log.info(`Role ${role} is not reported by ${overlord.name}!`);
+						if (Game.time % 100 == 0) {
+							log.info(`Role ${role} is not reported by ${overlord.name}!`);
+						}
 					} else {
 						if (!roleOccupancy[role]) roleOccupancy[role] = [0, 0];
 						roleOccupancy[role][0] += report[0];

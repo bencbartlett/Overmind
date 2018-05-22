@@ -23,7 +23,7 @@ export abstract class CombatOverlord extends Overlord {
 		this.directive = directive;
 		this.moveOpts = {
 			allowSK     : true,
-			allowHostile: true,
+			// allowHostile: false,
 			ensurePath  : true,
 		};
 	}
@@ -99,10 +99,10 @@ export abstract class CombatOverlord extends Overlord {
 			} else {
 				return zerg.pos.findClosestByRange(targets);
 			}
-
 		}
 	}
 
+	/* This method is expensive */
 	findClosestReachable(pos: RoomPosition, targets: (Creep | Structure)[]): Creep | Structure | undefined {
 		let targetsByRange = _.sortBy(targets, target => pos.getRangeTo(target));
 		return _.find(targetsByRange, target => Pathing.isReachable(pos, target.pos));
@@ -174,37 +174,31 @@ export abstract class CombatOverlord extends Overlord {
 
 	/* Fallback is a location on the other side of the nearest exit the directive is placed at */
 	get fallback(): RoomPosition {
-		let rangesToExit = [
-			[this.directive.pos.x, 'left'],
-			[49 - this.directive.pos.x, 'right'],
-			[this.directive.pos.y, 'top'],
-			[49 - this.directive.pos.y, 'bottom'],
-		];
-		let fallback = _.clone(this.directive.pos);
-		let roomCoords = this.directive.pos.roomCoords;
+		let {x, y, roomName} = this.directive.pos;
+		let rangesToExit = [[x, 'left'], [49 - x, 'right'], [y, 'top'], [49 - y, 'bottom']];
 		let [range, direction] = _.first(_.sortBy(rangesToExit, pair => pair[0]));
 		switch (direction) {
 			case 'left':
-				fallback.x = 48;
-				fallback.roomName = WorldMap.findRelativeRoomName(fallback.roomName, -1, 0);
+				x = 48;
+				roomName = WorldMap.findRelativeRoomName(roomName, -1, 0);
 				break;
 			case 'right':
-				fallback.x = 1;
-				fallback.roomName = WorldMap.findRelativeRoomName(fallback.roomName, 1, 0);
+				x = 1;
+				roomName = WorldMap.findRelativeRoomName(roomName, 1, 0);
 				break;
 			case 'top':
-				fallback.y = 48;
-				fallback.roomName = WorldMap.findRelativeRoomName(fallback.roomName, 0, -1);
+				y = 48;
+				roomName = WorldMap.findRelativeRoomName(roomName, 0, -1);
 				break;
 			case 'bottom':
-				fallback.y = 1;
-				fallback.roomName = WorldMap.findRelativeRoomName(fallback.roomName, 0, 1);
+				y = 1;
+				roomName = WorldMap.findRelativeRoomName(roomName, 0, 1);
 				break;
 			default:
 				log.error('Error getting fallback position!');
 				break;
 		}
-		return fallback;
+		return new RoomPosition(x, y, roomName);
 	}
 
 }

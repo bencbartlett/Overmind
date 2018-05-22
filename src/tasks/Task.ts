@@ -106,6 +106,9 @@ export abstract class Task implements ITask {
 
 	set creep(creep: Creep) {
 		this._creep.name = creep.name;
+		if (this.parent) {
+			this.parent.creep = creep;
+		}
 	}
 
 	// Dereferences the target
@@ -209,7 +212,7 @@ export abstract class Task implements ITask {
 	}
 
 	move(range = this.settings.targetRange): number {
-		if (this.options.travelToOptions && !this.options.travelToOptions.range) {
+		if (!this.options.travelToOptions.range) {
 			this.options.travelToOptions.range = range;
 		}
 		return this.creep.travelTo(this.targetPos, this.options.travelToOptions);

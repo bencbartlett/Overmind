@@ -6,6 +6,7 @@ import {DirectiveGuardSwarm} from '../../directives/combat/directive_guard_swarm
 import {CreepSetup} from '../../creepSetup/CreepSetup';
 import {CombatOverlord} from './CombatOverlord';
 import {profile} from '../../profiler/decorator';
+import {DirectiveGuard} from '../../directives/combat/directive_guard';
 
 export class EarlyGuardSetup extends CreepSetup {
 	static role = 'smolGuard';
@@ -21,10 +22,10 @@ export class EarlyGuardSetup extends CreepSetup {
 @profile
 export class GuardSwarmOverlord extends CombatOverlord {
 
-	directive: DirectiveGuardSwarm;
+	directive: DirectiveGuardSwarm | DirectiveGuard;
 	guards: Zerg[];
 
-	constructor(directive: DirectiveGuardSwarm, priority = OverlordPriority.defense.guard) {
+	constructor(directive: DirectiveGuardSwarm | DirectiveGuard, priority = OverlordPriority.defense.guard) {
 		super(directive, 'swarmGuard', priority);
 		this.directive = directive;
 		this.guards = this.creeps(EarlyGuardSetup.role);

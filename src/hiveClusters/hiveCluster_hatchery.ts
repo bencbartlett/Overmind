@@ -4,13 +4,15 @@ import {HiveCluster} from './HiveCluster';
 import {profile} from '../profiler/decorator';
 import {HatcheryOverlord} from '../overlords/hiveCluster/overlord_hatchery';
 import {Priority} from '../settings/priorities';
-import {Colony} from '../Colony';
+import {Colony, ColonyStage} from '../Colony';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {CreepSetup} from '../creepSetup/CreepSetup';
 import {Overlord} from '../overlords/Overlord';
 import {Mem} from '../memory';
 import {Visualizer} from '../visuals/Visualizer';
 import {Stats} from '../stats/stats';
+
+const ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH = -10;
 
 @profile
 export class Hatchery extends HiveCluster {
@@ -45,6 +47,7 @@ export class Hatchery extends HiveCluster {
 		this.extensions = colony.extensions;
 		this.link = this.pos.findClosestByLimitedRange(colony.links, 2);
 		this.battery = this.pos.findClosestByLimitedRange(this.room.containers, 2);
+		this.colony.obstacles.push(this.idlePos);
 		// Associate all towers that aren't part of the command center if there is one
 		if (colony.commandCenter) { // TODO: make this not order-dependent
 			this.towers = _.difference(colony.towers, colony.commandCenter.towers);
@@ -96,10 +99,9 @@ export class Hatchery extends HiveCluster {
 			this.colony.linkNetwork.requestReceive(this.link);
 		}
 		if (this.battery) {
-			if (this.battery.energy < 0.25 * this.battery.storeCapacity) {
-				// this.colony.transportRequests.requestEnergy(this.battery);
-				// this.colony.logisticsNetwork.store(this.battery);
-				this.colony.logisticsNetwork.request(this.battery);
+			let threshold = this.colony.stage == ColonyStage.Larva ? 0.75 : 0.5;
+			if (this.battery.energy < threshold * this.battery.storeCapacity) {
+				this.colony.logisticsNetwork.request(this.battery, {multiplier: 1.5});
 			}
 		}
 		// Register energy transport requests (goes on hatchery store group, which can be colony store group)
@@ -190,6 +192,9 @@ export class Hatchery extends HiveCluster {
 			// if (protoCreep.memory.colony != this.colony.name) {
 			// 	log.info('Spawning ' + protoCreep.name + ' for ' + protoCreep.memory.colony);
 			// }
+			if (this.bodyCost(protoCreep.body) > this.room.energyCapacityAvailable) {
+				return ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH;
+			}
 			protoCreep.memory.data.origin = spawnToUse.pos.roomName;
 			let result = spawnToUse.spawnCreep(protoCreep.body, protoCreep.name, {
 				memory          : protoCreep.memory,
@@ -207,15 +212,6 @@ export class Hatchery extends HiveCluster {
 	}
 
 	enqueue(protoCreep: protoCreep, priority: number): void {
-		// let roleName = protoCreep.name; // This depends on creeps being named for their roles (before generateCreepName)
-		// let priority = this.spawnPriorities[roleName];
-		// if (overridePriority != undefined) {
-		// 	priority = overridePriority;
-		// }
-		// if (priority == undefined) {
-		// 	priority = 1000; // some large but finite priority for all the remaining stuff to make
-		// }
-
 		// If you are incubating and can't build the requested creep, enqueue it to the incubation hatchery
 		if (this.colony.incubator && this.colony.incubator.hatchery &&
 			this.bodyCost(protoCreep.body) > this.room.energyCapacityAvailable) {
@@ -238,9 +234,8 @@ export class Hatchery extends HiveCluster {
 			if (protoCreep) {
 				let result = this.spawnCreep(protoCreep);
 				if (result == OK) {
-					// log.info(`${this.colony.name}: spawning ${protoCreep.name} for ${protoCreep.memory.colony}`);
 					return result;
-				} else {
+				} else if (result != ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH) {
 					this.productionQueue[priority].unshift(protoCreep);
 					return result;
 				}

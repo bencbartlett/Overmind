@@ -15,6 +15,7 @@
     "lint": "tslint \"src/**/*.ts\"",
     "clean": "rm -rf tsc-out",
     "build-obfuscated-overmind": "tsc && javascript-obfuscator tsc-out/Overmind.js --output src/Overmind_obfuscated.js --compact false --self-defending true --string-array true --string-array-threshold 1 --string-array-encoding true",
+    "compile": "rollup -c && rm -rf .rpt2_cache",
     "push-main": "rollup -c --dest main",
     "push-pserver": "rollup -c --dest pserver",
     "push-sim": "rollup -c --dest sim",

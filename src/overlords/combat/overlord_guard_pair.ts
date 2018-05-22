@@ -4,16 +4,16 @@ import {Zerg} from '../../Zerg';
 import {OverlordPriority} from '../priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/directive_target_siege';
 import {CombatOverlord} from './CombatOverlord';
-import {DirectiveDestroy} from '../../directives/combat/directive_destroy';
 import {CreepSetup} from '../../creepSetup/CreepSetup';
 import {profile} from '../../profiler/decorator';
+import {DirectiveGuard} from '../../directives/combat/directive_guard';
 
 export class AttackerSetup extends CreepSetup {
 	static role = 'attacker';
 
 	constructor() {
 		super(AttackerSetup.role, {
-			pattern  : [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE],
+			pattern  : [ATTACK, MOVE],
 			sizeLimit: Infinity,
 			ordered  : false
 		});
@@ -25,7 +25,7 @@ export class HealerSetup extends CreepSetup {
 
 	constructor() {
 		super(HealerSetup.role, {
-			pattern  : [TOUGH, HEAL, HEAL, MOVE, MOVE, MOVE],
+			pattern  : [HEAL, MOVE],
 			sizeLimit: Infinity,
 			ordered  : false
 		});
@@ -33,18 +33,18 @@ export class HealerSetup extends CreepSetup {
 }
 
 @profile
-export class DestroyerOverlord extends CombatOverlord {
+export class GuardPairOverlord extends CombatOverlord {
 
 	attackers: Zerg[];
 	healers: Zerg[];
 
 	static settings = {
-		retreatHitsPercent : 0.75,
+		retreatHitsPercent : 0.50,
 		reengageHitsPercent: 0.95,
 	};
 
-	constructor(directive: DirectiveDestroy, priority = OverlordPriority.offense.destroy) {
-		super(directive, 'destroy', priority);
+	constructor(directive: DirectiveGuard, priority = OverlordPriority.defense.guard) {
+		super(directive, 'guardPair', priority);
 		this.attackers = this.creeps('attacker');
 		this.healers = this.creeps('healer');
 		// Comment out boost lines if you don't want to spawn boosted attackers/healers
@@ -78,12 +78,12 @@ export class DestroyerOverlord extends CombatOverlord {
 	}
 
 	private retreatActions(attacker: Zerg, healer: Zerg): void {
-		if (attacker.hits > DestroyerOverlord.settings.reengageHitsPercent * attacker.hits &&
-			healer.hits > DestroyerOverlord.settings.reengageHitsPercent * healer.hits) {
+		if (attacker.hits > GuardPairOverlord.settings.reengageHitsPercent * attacker.hits &&
+			healer.hits > GuardPairOverlord.settings.reengageHitsPercent * healer.hits) {
 			attacker.memory.retreating = false;
 		}
 		// Healer leads retreat to fallback position
-		this.pairwiseMove(healer, attacker, this.fallback);
+		this.pairwiseMove(healer, attacker, this.colony.controller);
 	}
 
 	private attackActions(attacker: Zerg, healer: Zerg): void {
@@ -111,8 +111,8 @@ export class DestroyerOverlord extends CombatOverlord {
 		// Case 2: you have an active healer
 		else {
 			// Activate retreat condition if necessary
-			if (attacker.hits < DestroyerOverlord.settings.retreatHitsPercent * attacker.hitsMax ||
-				healer.hits < DestroyerOverlord.settings.retreatHitsPercent * healer.hitsMax) {
+			if (attacker.hits < GuardPairOverlord.settings.retreatHitsPercent * attacker.hitsMax ||
+				healer.hits < GuardPairOverlord.settings.retreatHitsPercent * healer.hitsMax) {
 				attacker.memory.retreating = true;
 			}
 			if (attacker.memory.retreating) {
@@ -167,12 +167,20 @@ export class DestroyerOverlord extends CombatOverlord {
 	}
 
 	init() {
+		this.reassignIdleCreeps(AttackerSetup.role);
+		this.reassignIdleCreeps(HealerSetup.role);
 		let amount;
 		if (this.directive.memory.amount) {
 			amount = this.directive.memory.amount;
 		} else {
 			amount = 1;
 		}
+		// if (this.room) {
+		// 	let hostileAttackPower = _.sum(this.room.hostiles, hostile => hostile.getActiveBodyparts(ATTACK)
+		// 																  + hostile.getActiveBodyparts(RANGED_ATTACK));
+		// 	let hostileHealPower = _.sum(this.room.hostiles, hostile=>hostile.getActiveBodyparts(HEAL));
+		//
+		// }
 		this.wishlist(amount, new AttackerSetup());
 		this.wishlist(amount, new HealerSetup());
 	}

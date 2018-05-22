@@ -46,6 +46,7 @@ export class CommandCenter extends HiveCluster {
 		this.powerSpawn = colony.powerSpawn;
 		this.nuker = colony.nuker;
 		this.observer = colony.observer;
+		this.colony.obstacles.push(this.idlePos);
 		this.settings = {
 			linksTransmitAt         : LINK_CAPACITY - 100,
 			refillTowersBelow       : 500,

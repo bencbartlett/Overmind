@@ -31,7 +31,8 @@ export class ArcherDefenseOverlord extends CombatOverlord {
 		reengageHitsPercent: number,
 	};
 
-	constructor(directive: DirectiveInvasionDefense, boosted = false, priority = OverlordPriority.defense.invasion) {
+	constructor(directive: DirectiveInvasionDefense, boosted = false,
+				priority                                     = OverlordPriority.defense.rangedDefense) {
 		super(directive, 'archer', priority);
 		this.archers = this.creeps(ArcherSetup.role);
 		if (boosted) {

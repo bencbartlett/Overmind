@@ -14,6 +14,8 @@ export class GuardOverlord extends CombatOverlord {
 
 	guards: Zerg[];
 
+	static requiredRCL = 3;
+
 	constructor(directive: DirectiveGuard, priority = OverlordPriority.defense.guard) {
 		super(directive, 'guard', priority);
 		this.guards = this.creeps('guard');

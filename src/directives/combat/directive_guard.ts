@@ -1,6 +1,7 @@
 import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {GuardOverlord} from '../../overlords/combat/overlord_guard';
+import {GuardSwarmOverlord} from '../../overlords/combat/overlord_guard_swarm';
 
 interface DirectiveGuardMemory extends FlagMemory {
 	safeTick?: number;
@@ -19,7 +20,13 @@ export class DirectiveGuard extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag);
-		this.overlords.guard = new GuardOverlord(this);
+		if (this.colony.level >= GuardOverlord.requiredRCL) {
+			this.overlords.guard = new GuardOverlord(this);
+			// this.overlords.guardPair = new GuardPairOverlord(this);
+		} else {
+			this.overlords.swarmGuard = new GuardSwarmOverlord(this);
+		}
+
 		this.relocateFrequency = 10; // Relocate the flag to follow enemy movement every n ticks
 	}
 
@@ -30,7 +37,7 @@ export class DirectiveGuard extends Directive {
 	run(): void {
 		// Reloacate the flag
 		if (Game.time % this.relocateFrequency == 0) {
-			if (this.room && this.room.hostiles[0] && !this.room.hostiles[0].pos.isEdge) {
+			if (this.room && this.room.hostiles[0] && this.room.hostiles[0].pos.rangeToEdge >= 3) {
 				this.setPosition(this.room.hostiles[0].pos);
 			}
 		}

@@ -2,6 +2,7 @@ import {profile} from './profiler/decorator';
 import {Colony} from './Colony';
 import {Overlord} from './overlords/Overlord';
 import {Task} from './tasks/Task';
+import {ManagerSetup, QueenSetup} from './creepSetup/defaultSetups';
 
 
 interface ParkingOptions {
@@ -423,12 +424,26 @@ export class Zerg {
 
 	// Movement and location -------------------------------------------------------------------------------------------
 
-	travelTo(destination: RoomPosition | { pos: RoomPosition }, options?: any) {
+	travelTo(destination: RoomPosition | { pos: RoomPosition }, options: TravelToOptions = {}) {
+		// Add default obstacle avoidance
+		if (options.obstacles) {
+			options.obstacles = options.obstacles.concat(this.getObstacles());
+		} else {
+			options.obstacles = this.getObstacles();
+		}
 		return this.creep.travelTo(destination, options);
 	};
 
 	inSameRoomAs(target: HasPos): boolean {
 		return (this.pos.roomName == target.pos.roomName);
+	}
+
+	getObstacles(): RoomPosition[] {
+		if (this.roleName == ManagerSetup.role || this.roleName == QueenSetup.role) {
+			return [];
+		} else {
+			return this.colony.obstacles;
+		}
 	}
 
 	park(pos: RoomPosition = this.pos, maintainDistance = false): number {
@@ -520,6 +535,10 @@ export class Zerg {
 
 	sayLoop(messageList: string[], pub?: boolean) {
 		return this.say(messageList[Game.time % messageList.length], pub);
+	}
+
+	sayRandom(phrases: string[], pub?: boolean) {
+		return this.say(phrases[Math.floor(Math.random() * phrases.length)], pub);
 	}
 
 }

@@ -25,7 +25,7 @@ export class TaskFlee extends Task {
 		this.settings.targetRange = 4;
 		// Options
 		this.options.travelToOptions = {
-			allowHostile: true,
+			// allowHostile: true,
 			allowSK     : true,
 		};
 	}

@@ -19,6 +19,7 @@ import {DirectiveDestroy} from './combat/directive_destroy';
 import {DirectiveInvasionDefense} from './combat/directive_invasion';
 import {DirectiveLogisticsRequest} from './logistics/directive_logisticsRequest';
 import {DirectiveHaul} from './logistics/directive_haul';
+import {DirectiveDismantle} from './targeting/directive_dismantle';
 
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 	switch (flag.color) {
@@ -50,6 +51,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveDestroy(flag);
 			}
 			break;
+
+		// Combat directives ===========================================================================================
 
 		// Situational directives ======================================================================================
 		case COLOR_ORANGE:
@@ -84,6 +87,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			switch (flag.secondaryColor) {
 				case COLOR_ORANGE:
 					return new DirectiveTargetSiege(flag);
+				case COLOR_YELLOW:
+					return new DirectiveDismantle(flag);
 			}
 			break;
 

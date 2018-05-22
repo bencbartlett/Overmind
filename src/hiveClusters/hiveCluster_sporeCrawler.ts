@@ -6,6 +6,7 @@ import {Colony} from '../Colony';
 
 @profile
 export class SporeCrawler extends HiveCluster {
+
 	tower: StructureTower;
 
 	constructor(colony: Colony, tower: StructureTower) {
@@ -71,7 +72,6 @@ export class SporeCrawler extends HiveCluster {
 			() => this.attackNearestEnemy(),
 			() => this.healNearestAlly(),
 			() => this.preventRampartDecay(),
-			// () => this.repairNearestStructure(),
 		];
 		for (let task of taskPriority) {
 			if (task() == OK) {

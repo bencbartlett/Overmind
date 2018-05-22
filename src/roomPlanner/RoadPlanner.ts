@@ -8,7 +8,6 @@ import {Colony} from '../Colony';
 import {Traveler} from '../lib/traveler/Traveler';
 
 export interface RoadPlannerMemory {
-	active: boolean;
 	roadLookup: { [roomName: string]: { [roadCoordName: string]: boolean } };
 }
 
@@ -28,6 +27,7 @@ export class RoadPlanner {
 		encourageRoadMerging          : true,		// will reduce cost of some tiles in existing paths to encourage merging
 		tileCostReductionInterval     : 10,			// spatial frequency of tile cost reduction
 		recalculateRoadNetworkInterval: 1000, 		// recalculate road networks every (this many) ticks
+		buildRoadsAtRCL               : 4,
 	};
 
 	constructor(roomPlanner: RoomPlanner) {
@@ -193,7 +193,7 @@ export class RoadPlanner {
 			roomPlannerRoads = _.map(this.roomPlanner.memory.mapsByLevel[8][STRUCTURE_ROAD],
 									 protoPos => derefRoomPosition(protoPos));
 		}
-		let allRoadPos: RoomPosition[] = this.roadPositions.concat(roomPlannerRoads);
+		let allRoadPos: RoomPosition[] = _.compact(this.roadPositions.concat(roomPlannerRoads));
 		// Encode the coordinates of the road as keys in a truthy hash table for fast lookup
 		this.memory.roadLookup = {};
 		for (let pos of allRoadPos) {
@@ -268,7 +268,8 @@ export class RoadPlanner {
 												this.roomPlanner.getObstacles());
 				}
 			}
-			if (Game.time % RoomPlanner.settings.siteCheckFrequency == this.colony.id) {
+			if (this.colony.level >= RoadPlanner.settings.buildRoadsAtRCL &&
+				Game.time % RoomPlanner.settings.siteCheckFrequency == this.colony.id + 2) {
 				this.buildMissing();
 			}
 		}

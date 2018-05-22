@@ -1,7 +1,7 @@
 import {Overlord} from '../Overlord';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
-import {Colony} from '../../Colony';
+import {Colony, ColonyStage} from '../../Colony';
 import {BufferTarget, LogisticsNetwork, LogisticsRequest} from '../../logistics/LogisticsNetwork';
 import {TransporterEarlySetup, TransporterSetup} from '../../creepSetup/defaultSetups';
 import {OverlordPriority} from '../priorities_overlords';
@@ -24,7 +24,7 @@ export class TransportOverlord extends Overlord {
 
 	private neededTransportPower(): number {
 		let transportPower = 0;
-		let scaling = 2; // Average round-trip distance you have to carry resources
+		let scaling = this.colony.stage == ColonyStage.Larva ? 1.5 : 1.75; // aggregate round-trip multiplier
 		// Add contributions to transport power from hauling energy from mining sites
 		let dropoffLocation: RoomPosition;
 		if (this.colony.commandCenter) {
@@ -36,10 +36,14 @@ export class TransportOverlord extends Overlord {
 		}
 		for (let siteID in this.colony.miningSites) {
 			let site = this.colony.miningSites[siteID];
-			if (site.output instanceof StructureContainer && site.overlord.miners.length > 0) {
+			if (site.overlord.miners.length > 0) {
 				// Only count sites which have a container output and which have at least one miner present
 				// (this helps in difficult "rebooting" situations)
-				transportPower += site.energyPerTick * (scaling * Pathing.distance(site.pos, dropoffLocation));
+				if (site.output && site.output instanceof StructureContainer) {
+					transportPower += site.energyPerTick * (scaling * Pathing.distance(site.pos, dropoffLocation));
+				} else if (site.shouldDropMine) {
+					transportPower += .75 * site.energyPerTick * (scaling * Pathing.distance(site.pos, dropoffLocation));
+				}
 			}
 		}
 		if (this.colony.lowPowerMode) {
@@ -54,7 +58,7 @@ export class TransportOverlord extends Overlord {
 	}
 
 	init() {
-		let setup = this.colony.level <= 3 ? new TransporterEarlySetup() : new TransporterSetup();
+		let setup = this.colony.stage == ColonyStage.Larva ? new TransporterEarlySetup() : new TransporterSetup();
 		let transportPower = _.sum(_.map(this.lifetimeFilter(this.transporters),
 										 creep => creep.getActiveBodyparts(CARRY)));
 		let neededTransportPower = this.neededTransportPower();
@@ -120,7 +124,12 @@ export class TransportOverlord extends Overlord {
 				let bestDropoffPoint = transporter.pos.findClosestByMultiRoomRange(dropoffPoints);
 				if (bestDropoffPoint) transporter.task = Tasks.transfer(bestDropoffPoint);
 			} else {
-				let parkingSpot = this.colony.storage ? this.colony.storage.pos : transporter.pos;
+				let parkingSpot = transporter.pos;
+				if (this.colony.storage) {
+					parkingSpot = this.colony.storage.pos;
+				} else if (this.colony.roomPlanner.storagePos) {
+					parkingSpot = this.colony.roomPlanner.storagePos;
+				}
 				transporter.park(parkingSpot);
 			}
 		}

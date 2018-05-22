@@ -1,6 +1,8 @@
 import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {ArcherDefenseOverlord} from '../../overlords/combat/overlord_archer';
+import {ColonyStage} from '../../Colony';
+import {RampartDefenseOverlord} from '../../overlords/combat/overlord_rampartDefense';
 
 interface DirectiveInvasionDefenseMemory extends FlagMemory {
 	persistent?: boolean;
@@ -13,7 +15,7 @@ export class DirectiveInvasionDefense extends Directive {
 	static directiveName = 'invasionDefense';
 	static color = COLOR_ORANGE;
 	static secondaryColor = COLOR_RED;
-	static requiredRCL = 4;
+	static requiredRCL = 3;
 
 	memory: DirectiveInvasionDefenseMemory;
 	room: Room;
@@ -24,7 +26,17 @@ export class DirectiveInvasionDefense extends Directive {
 		super(flag, DirectiveInvasionDefense.requiredRCL);
 		let bigInvaders = _.filter(this.room.hostiles, hostile => hostile.body.length >= 30);
 		let boostedInvasion = _.filter(bigInvaders, invader => invader.boosts.length > 0).length > 0;
-		this.overlords.archer = new ArcherDefenseOverlord(this, boostedInvasion);
+		let percentWalls = _.filter(this.room.barriers, s => s.structureType == STRUCTURE_WALL).length /
+						   this.room.barriers.length;
+		let meleeHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(ATTACK) > 0 ||
+																	hostile.getActiveBodyparts(WORK) > 0);
+		let rangedHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0);
+		if (this.colony.stage > ColonyStage.Larva && rangedHostiles.length > 0) {
+			this.overlords.archer = new ArcherDefenseOverlord(this, boostedInvasion);
+		}
+		if (meleeHostiles.length > 0) {
+			this.overlords.rampartDefense = new RampartDefenseOverlord(this, boostedInvasion);
+		}
 	}
 
 	init(): void {

@@ -10,6 +10,7 @@ import {OverlordPriority} from '../overlords/priorities_overlords';
 import {Visualizer} from '../visuals/Visualizer';
 import {LogisticsNetwork} from '../logistics/LogisticsNetwork';
 import {Pathing} from '../pathing/pathing';
+import {ROOMTYPE_CORE, ROOMTYPE_SOURCEKEEPER, WorldMap} from '../utilities/WorldMap';
 
 interface MiningSiteMemory {
 	stats: {
@@ -26,6 +27,7 @@ export class MiningSite extends HiveCluster {
 	output: StructureContainer | StructureLink | undefined;
 	outputConstructionSite: ConstructionSite | undefined;
 	private _outputPos: RoomPosition | undefined;
+	shouldDropMine: boolean;
 	overlord: MiningOverlord;
 
 	static settings = {
@@ -54,8 +56,11 @@ export class MiningSite extends HiveCluster {
 		this.outputConstructionSite = nearbyOutputSites[0];
 		// Create a mining overlord for this
 		let priority = this.room.my ? OverlordPriority.ownedRoom.mine : OverlordPriority.remoteRoom.mine;
-		this.overlord = new MiningOverlord(this, priority);
-		if (Game.time % 100 == 0 && !this.output && !this.outputConstructionSite) {
+		this.shouldDropMine = !this.room.my && !this.room.reservedByMe &&
+							  WorldMap.roomType(this.room.name) != ROOMTYPE_SOURCEKEEPER &&
+							  WorldMap.roomType(this.room.name) != ROOMTYPE_CORE;
+		this.overlord = new MiningOverlord(this, priority, this.shouldDropMine);
+		if (!this.shouldDropMine && Game.time % 100 == 0 && !this.output && !this.outputConstructionSite) {
 			log.warning(`Mining site at ${this.pos.print} has no output!`);
 		}
 		// Calculate statistics
@@ -171,6 +176,9 @@ export class MiningSite extends HiveCluster {
 
 	/* Build a container output at the optimal location */
 	private buildOutputIfNeeded(): void {
+		if (this.shouldDropMine) {
+			return; // only build containers in reserved, owned, or SK rooms
+		}
 		if (!this.output && !this.outputConstructionSite) {
 			let buildHere = this.outputPos;
 			if (buildHere) {

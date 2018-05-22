@@ -24,7 +24,7 @@ export class Contract_TiggaTerritoryAgreement extends Contract {
 	}
 
 	isValid(): boolean {
-		return Game.time < 6461275;
+		return Game.shard.name == 'shard2' && Game.time < 6461275;
 	}
 
 	run(): void {

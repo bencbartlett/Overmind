@@ -67,6 +67,7 @@ export class Colony {
 	flags: Flag[];										// | Flags across the colony
 	constructionSites: ConstructionSite[];				// | Construction sites in all colony rooms
 	repairables: Structure[];							// | Repairable structures, discounting barriers and roads
+	obstacles: RoomPosition[]; 							// | List of other obstacles, e.g. immobile creeps
 	// Hive clusters
 	hiveClusters: HiveCluster[];						// List of all hive clusters
 	commandCenter: CommandCenter | undefined;			// Component with logic for non-spawning structures
@@ -158,6 +159,7 @@ export class Colony {
 		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites));
 		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
 		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
+		this.obstacles = [];
 	}
 
 	private registerOperationalState(): void {

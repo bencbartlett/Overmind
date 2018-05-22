@@ -19,7 +19,7 @@ export class BarrierPlanner {
 	barrierPositions: RoomPosition[];
 
 	static settings = {
-		buildBarriersAtRCL: 4,
+		buildBarriersAtRCL: 3,
 		padding           : 3, // allow this much space between structures and barriers
 	};
 
@@ -117,7 +117,8 @@ export class BarrierPlanner {
 			}
 			this.visuals();
 		} else {
-			if (Game.time % RoomPlanner.settings.siteCheckFrequency == this.colony.id) {
+			if (this.colony.level >= BarrierPlanner.settings.buildBarriersAtRCL &&
+				Game.time % RoomPlanner.settings.siteCheckFrequency == this.colony.id + 1) {
 				this.buildMissing();
 			}
 		}

@@ -167,9 +167,11 @@ export class LogisticsNetwork {
 			return target.storeCapacity - _.sum(target.store);
 		} else if (isEnergyStructure(target) && resourceType == RESOURCE_ENERGY) {
 			return target.energyCapacity - target.energy;
-		} else if (target instanceof Zerg) {
-			return target.carryCapacity - _.sum(target.carry);
-		} else {
+		}
+		// else if (target instanceof Zerg) {
+		// 	return target.carryCapacity - _.sum(target.carry);
+		// }
+		else {
 			if (target instanceof StructureLab) {
 				if (resourceType == target.mineralType) {
 					return target.mineralCapacity - target.mineralAmount;
@@ -201,9 +203,11 @@ export class LogisticsNetwork {
 			return target.store[resourceType]!;
 		} else if (isEnergyStructure(target) && resourceType == RESOURCE_ENERGY) {
 			return target.energy;
-		} else if (target instanceof Zerg) {
-			return target.carry[resourceType]!;
-		} else {
+		}
+		// else if (target instanceof Zerg) {
+		// 	return target.carry[resourceType]!;
+		// }
+		else {
 			if (target instanceof StructureLab) {
 				if (resourceType == target.mineralType) {
 					return target.mineralAmount;

@@ -36,7 +36,8 @@ export class PioneerOverlord extends Overlord {
 				pioneer.task = Tasks.build(this.spawnSite);
 			}
 		} else {
-			pioneer.task = Tasks.goTo(this.pos);
+			// pioneer.task = Tasks.goTo(this.pos);
+			pioneer.travelTo(this.pos);
 		}
 	}
 

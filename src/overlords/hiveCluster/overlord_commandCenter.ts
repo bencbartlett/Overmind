@@ -54,9 +54,9 @@ export class CommandCenterOverlord extends Overlord {
 
 	private handleManager(manager: Zerg): void {
 		// Manager should initially go to idlePos before doing anything else
-		if ((manager.ticksToLive || 0) >= CREEP_LIFE_TIME - 1) {
-			manager.task = Tasks.goTo(this.commandCenter.idlePos, {travelToOptions: {range: 0}});
-		}
+		// if ((manager.ticksToLive || 0) >= CREEP_LIFE_TIME - 1) {
+		// 	manager.task = Tasks.goTo(this.commandCenter.idlePos, {travelToOptions: {range: 0}});
+		// }
 		// Handle manager deposit and withdrawal of energy
 		if (manager.carry.energy > 0) {
 			this.depositActions(manager);
