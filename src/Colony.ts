@@ -2,7 +2,7 @@
 
 import {profile} from './profiler/decorator';
 import {MiningSite} from './hiveClusters/hiveCluster_miningSite';
-import {MineralSite} from './hiveClusters/hiveCluster_mineralSite';
+//import {MineralSite} from './hiveClusters/hiveCluster_mineralSite';
 import {Hatchery} from './hiveClusters/hiveCluster_hatchery';
 import {CommandCenter} from './hiveClusters/hiveCluster_commandCenter';
 import {UpgradeSite} from './hiveClusters/hiveCluster_upgradeSite';
@@ -65,7 +65,7 @@ export class Colony {
 	observer: StructureObserver | undefined;			// |
 	tombstones: Tombstone[]; 							// | Tombstones in all colony rooms
 	sources: Source[];									// | Sources in all colony rooms
-	mineral: Mineral;
+	//mineral: Mineral;
 	flags: Flag[];										// | Flags across the colony
 	constructionSites: ConstructionSite[];				// | Construction sites in all colony rooms
 	repairables: Structure[];							// | Repairable structures, discounting barriers and roads
@@ -77,7 +77,7 @@ export class Colony {
 	upgradeSite: UpgradeSite;							// Component to provide upgraders with uninterrupted energy
 	sporeCrawlers: SporeCrawler[];
 	miningSites: { [sourceID: string]: MiningSite };	// Component with logic for mining and hauling
-	mineralSite: MineralSite;
+	//mineralSite: MineralSite;
 	// Operational mode
 	incubator: Colony | undefined; 						// The colony responsible for incubating this one, if any
 	isIncubating: boolean;								// If the colony is incubating
@@ -159,7 +159,7 @@ export class Colony {
 		// Register physical objects across all rooms in the colony
 		this.sources = _.sortBy(_.flatten(_.map(this.rooms, room => room.sources)),
 			source => source.pos.getMultiRoomRangeTo(this.pos)); // sort for roadnetwork determinism
-		this.mineral = this.room.find(FIND_MINERALS)[0];
+		//this.mineral = this.room.find(FIND_MINERALS)[0];
 		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites));
 		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
 		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
@@ -243,7 +243,7 @@ export class Colony {
 		let sourceIDs = _.map(this.sources, source => source.ref);
 		let miningSites = _.map(this.sources, source => new MiningSite(this, source));
 		this.miningSites = _.zipObject(sourceIDs, miningSites) as { [sourceID: string]: MiningSite };
-		this.mineralSite = new MineralSite(this, this.mineral);
+		//this.mineralSite = new MineralSite(this, this.mineral);
 	}
 
 	private spawnMoarOverlords(): void {
