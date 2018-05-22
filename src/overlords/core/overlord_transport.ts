@@ -46,11 +46,14 @@ export class TransportOverlord extends Overlord {
 				}
 			}
 		}
-		transportPower += this.colony.mineralSite.mineralPerTick * (scaling * Pathing.distance(this.colony.mineralSite.pos, dropoffLocation));
+		
 		if (this.colony.lowPowerMode) {
 			// Reduce needed transporters when colony is in low power mode
 			transportPower *= 0.5;
 		}
+
+		transportPower += this.colony.mineralSite.mineralPerTick * (scaling * Pathing.distance(this.colony.mineralSite.pos, dropoffLocation));
+
 		// Add transport power needed to move to upgradeSite
 		transportPower += this.colony.upgradeSite.upgradePowerNeeded * scaling *
 						  Pathing.distance(dropoffLocation, (this.colony.upgradeSite.battery ||
