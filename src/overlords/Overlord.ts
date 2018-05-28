@@ -5,7 +5,7 @@ import {profile} from '../profiler/decorator';
 import {Pathing} from '../pathing/pathing';
 import {Colony} from '../Colony';
 import {Zerg} from '../Zerg';
-import {TaskGetBoosted} from '../tasks/task_getBoosted';
+import {TaskGetBoosted} from '../tasks/instances/getBoosted';
 import {log} from '../lib/logger/log';
 
 export interface IOverlordInitializer {

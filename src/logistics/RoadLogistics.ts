@@ -3,7 +3,7 @@
 import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
 import {Zerg} from '../Zerg';
-import {repairTaskName} from '../tasks/task_repair';
+import {repairTaskName} from '../tasks/instances/repair';
 
 
 @profile

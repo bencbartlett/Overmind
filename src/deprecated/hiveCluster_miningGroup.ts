@@ -4,7 +4,7 @@ import {HiveCluster} from '../hiveClusters/HiveCluster';
 import {log} from '../lib/logger/log';
 import {Pathing} from '../pathing/pathing';
 import {Colony} from '../Colony';
-import {MiningSite} from '../hiveClusters/hiveCluster_miningSite';
+import {MiningSite} from '../hiveClusters/miningSite';
 import {Mem} from '../memory';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 

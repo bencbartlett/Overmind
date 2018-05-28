@@ -1,29 +1,29 @@
 // Reinstantiation of a task object from protoTask data
 
-import {attackTargetType, attackTaskName, TaskAttack} from './task_attack';
-import {buildTargetType, buildTaskName, TaskBuild} from './task_build';
-import {claimTargetType, claimTaskName, TaskClaim} from './task_claim';
-import {dismantleTargetType, dismantleTaskName, TaskDismantle} from './task_dismantle';
-import {fortifyTargetType, fortifyTaskName, TaskFortify} from './task_fortify';
-import {getBoostedTargetType, getBoostedTaskName, TaskGetBoosted} from './task_getBoosted';
-import {getRenewedTargetType, getRenewedTaskName, TaskGetRenewed} from './task_getRenewed';
-import {goToTaskName} from './task_goTo';
-import {goToRoomTargetType, goToRoomTaskName, TaskGoToRoom} from './task_goToRoom';
-import {harvestTargetType, harvestTaskName, TaskHarvest} from './task_harvest';
-import {healTargetType, healTaskName, TaskHeal} from './task_heal';
-import {meleeAttackTargetType, meleeAttackTaskName, TaskMeleeAttack} from './task_meleeAttack';
-import {pickupTargetType, pickupTaskName, TaskPickup} from './task_pickup';
-import {rangedAttackTargetType, rangedAttackTaskName, TaskRangedAttack} from './task_rangedAttack';
-import {TaskWithdraw, withdrawTargetType, withdrawTaskName} from './task_withdraw';
-import {repairTargetType, repairTaskName, TaskRepair} from './task_repair';
-import {reserveTargetType, reserveTaskName, TaskReserve} from './task_reserve';
-import {signControllerTargetType, signControllerTaskName, TaskSignController} from './task_signController';
-import {TaskTransfer, transferTargetType, transferTaskName} from './task_transfer';
-import {TaskUpgrade, upgradeTargetType, upgradeTaskName} from './task_upgrade';
-import {dropTargetType, dropTaskName, TaskDrop} from './task_drop';
-import {TaskInvalid} from './task_invalid';
-import {fleeTargetType, fleeTaskName, TaskFlee} from './task_flee';
-import {TaskTransferAll, transferAllTargetType, transferAllTaskName} from './task_transferAll';
+import {attackTargetType, attackTaskName, TaskAttack} from './instances/attack';
+import {buildTargetType, buildTaskName, TaskBuild} from './instances/build';
+import {claimTargetType, claimTaskName, TaskClaim} from './instances/claim';
+import {dismantleTargetType, dismantleTaskName, TaskDismantle} from './instances/dismantle';
+import {fortifyTargetType, fortifyTaskName, TaskFortify} from './instances/fortify';
+import {getBoostedTargetType, getBoostedTaskName, TaskGetBoosted} from './instances/getBoosted';
+import {getRenewedTargetType, getRenewedTaskName, TaskGetRenewed} from './instances/getRenewed';
+import {goToTaskName} from './instances/goTo';
+import {goToRoomTargetType, goToRoomTaskName, TaskGoToRoom} from './instances/goToRoom';
+import {harvestTargetType, harvestTaskName, TaskHarvest} from './instances/harvest';
+import {healTargetType, healTaskName, TaskHeal} from './instances/heal';
+import {meleeAttackTargetType, meleeAttackTaskName, TaskMeleeAttack} from './instances/meleeAttack';
+import {pickupTargetType, pickupTaskName, TaskPickup} from './instances/pickup';
+import {rangedAttackTargetType, rangedAttackTaskName, TaskRangedAttack} from './instances/rangedAttack';
+import {TaskWithdraw, withdrawTargetType, withdrawTaskName} from './instances/withdraw';
+import {repairTargetType, repairTaskName, TaskRepair} from './instances/repair';
+import {reserveTargetType, reserveTaskName, TaskReserve} from './instances/reserve';
+import {signControllerTargetType, signControllerTaskName, TaskSignController} from './instances/signController';
+import {TaskTransfer, transferTargetType, transferTaskName} from './instances/transfer';
+import {TaskUpgrade, upgradeTargetType, upgradeTaskName} from './instances/upgrade';
+import {dropTargetType, dropTaskName, TaskDrop} from './instances/drop';
+import {TaskInvalid} from './instances/invalid';
+import {fleeTargetType, fleeTaskName, TaskFlee} from './instances/flee';
+import {TaskTransferAll, transferAllTargetType, transferAllTaskName} from './instances/transferAll';
 import {log} from '../lib/logger/log';
 
 export function initializeTask(protoTask: protoTask): any {

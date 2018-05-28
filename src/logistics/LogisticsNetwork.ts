@@ -9,9 +9,9 @@ import {Pathing} from '../pathing/pathing';
 import {Colony} from '../Colony';
 import {Matcher} from '../algorithms/galeShapley';
 import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../declarations/typeGuards';
-import {DirectiveLogisticsRequest} from '../directives/logistics/directive_logisticsRequest';
+import {DirectiveLogisticsRequest} from '../directives/logistics/logisticsRequest';
 import {Mem} from '../memory';
-import {TransporterSetup} from '../overlords/core/overlord_transport';
+import {TransporterSetup} from '../overlords/core/transporter';
 
 export type LogisticsTarget =
 	EnergyStructure

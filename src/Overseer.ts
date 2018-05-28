@@ -1,7 +1,7 @@
 /* The Overlord object handles most of the task assignment and directs the spawning operations for each Colony. */
 
-import {DirectiveGuard} from './directives/combat/directive_guard';
-import {DirectiveBootstrap, EMERGENCY_ENERGY_THRESHOLD} from './directives/core/directive_bootstrap';
+import {DirectiveGuard} from './directives/defense/guard';
+import {DirectiveBootstrap, EMERGENCY_ENERGY_THRESHOLD} from './directives/core/bootstrap';
 import {profile} from './profiler/decorator';
 import {Colony, ColonyStage} from './Colony';
 import {Overlord} from './overlords/Overlord';
@@ -9,10 +9,10 @@ import {Directive} from './directives/Directive';
 import {log} from './lib/logger/log';
 import {Visualizer} from './visuals/Visualizer';
 import {Pathing} from './pathing/pathing';
-import {DirectiveGuardSwarm} from './directives/combat/directive_guard_swarm';
-import {DirectiveInvasionDefense} from './directives/combat/directive_invasion';
+import {DirectiveGuardSwarm} from './directives/defense/guardSwarm';
+import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
 import {Mem} from './memory';
-import {DirectiveNukeResponse} from './directives/defense/directive_nukeResponse';
+import {DirectiveNukeResponse} from './directives/defense/nukeResponse';
 
 @profile
 export class Overseer {

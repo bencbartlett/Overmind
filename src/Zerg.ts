@@ -2,8 +2,8 @@ import {profile} from './profiler/decorator';
 import {Colony} from './Colony';
 import {Overlord} from './overlords/Overlord';
 import {Task} from './tasks/Task';
-import {ManagerSetup} from './overlords/hiveCluster/overlord_commandCenter';
-import {QueenSetup} from './overlords/hiveCluster/overlord_hatchery';
+import {ManagerSetup} from './overlords/hiveCluster/commandCenter';
+import {QueenSetup} from './overlords/hiveCluster/hatchery';
 
 
 interface ParkingOptions {

@@ -1,21 +1,21 @@
 // Colony class - organizes all assets of an owned room into a colony
 
 import {profile} from './profiler/decorator';
-import {MiningSite} from './hiveClusters/hiveCluster_miningSite';
-import {Hatchery} from './hiveClusters/hiveCluster_hatchery';
-import {CommandCenter} from './hiveClusters/hiveCluster_commandCenter';
-import {UpgradeSite} from './hiveClusters/hiveCluster_upgradeSite';
+import {MiningSite} from './hiveClusters/miningSite';
+import {Hatchery} from './hiveClusters/hatchery';
+import {CommandCenter} from './hiveClusters/commandCenter';
+import {UpgradeSite} from './hiveClusters/upgradeSite';
 import {Overseer} from './Overseer';
-import {WorkerOverlord} from './overlords/core/overlord_work';
+import {WorkerOverlord} from './overlords/core/worker';
 import {Zerg} from './Zerg';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
 import {HiveCluster} from './hiveClusters/HiveCluster';
 import {LinkNetwork} from './logistics/LinkNetwork';
 import {Stats} from './stats/stats';
-import {SporeCrawler} from './hiveClusters/hiveCluster_sporeCrawler';
+import {SporeCrawler} from './hiveClusters/sporeCrawler';
 import {RoadLogistics} from './logistics/RoadLogistics';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
-import {TransportOverlord} from './overlords/core/overlord_transport';
+import {TransportOverlord} from './overlords/core/transporter';
 import {Energetics} from './logistics/Energetics';
 import {StoreStructure} from './declarations/typeGuards';
 

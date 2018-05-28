@@ -4,7 +4,7 @@ import {profile} from '../profiler/decorator';
 import {log} from '../lib/logger/log';
 import {Colony} from '../Colony';
 import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../declarations/typeGuards';
-import {TransporterSetup} from '../overlords/core/overlord_transport';
+import {TransporterSetup} from '../overlords/core/transporter';
 
 
 export type LogisticsTarget = EnergyStructure | StoreStructure | StructureLab | StructureNuker | StructurePowerSpawn //| Zerg;

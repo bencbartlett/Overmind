@@ -1,4 +1,4 @@
-import {Contract_TiggaTerritoryAgreement} from './contractInstances/contract_TiggaTerritory';
+import {Contract_TiggaTerritoryAgreement} from './contractInstances/TiggaTerritory';
 
 
 // List of all contracts to run each tick. Note that contracts do not run unless myUsername == "Muon".
