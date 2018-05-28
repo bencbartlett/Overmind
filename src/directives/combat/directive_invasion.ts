@@ -3,6 +3,7 @@ import {profile} from '../../profiler/decorator';
 import {ArcherDefenseOverlord} from '../../overlords/combat/overlord_archer';
 import {ColonyStage} from '../../Colony';
 import {RampartDefenseOverlord} from '../../overlords/combat/overlord_rampartDefense';
+import {log} from '../../lib/logger/log';
 
 interface DirectiveInvasionDefenseMemory extends FlagMemory {
 	persistent?: boolean;
@@ -31,11 +32,12 @@ export class DirectiveInvasionDefense extends Directive {
 		let meleeHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(ATTACK) > 0 ||
 																	hostile.getActiveBodyparts(WORK) > 0);
 		let rangedHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0);
-		if (this.colony.stage > ColonyStage.Larva && rangedHostiles.length > 0) {
+		if (this.colony.stage > ColonyStage.Larva && percentWalls > 0.5) {
 			this.overlords.archer = new ArcherDefenseOverlord(this, boostedInvasion);
-		}
-		if (meleeHostiles.length > 0) {
+		} else if (meleeHostiles.length > 0) {
 			this.overlords.rampartDefense = new RampartDefenseOverlord(this, boostedInvasion);
+		} else {
+			log.warning(`No overlord!`);
 		}
 	}
 

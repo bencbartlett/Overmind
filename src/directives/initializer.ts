@@ -20,6 +20,7 @@ import {DirectiveInvasionDefense} from './combat/directive_invasion';
 import {DirectiveLogisticsRequest} from './logistics/directive_logisticsRequest';
 import {DirectiveHaul} from './logistics/directive_haul';
 import {DirectiveDismantle} from './targeting/directive_dismantle';
+import {DirectiveNukeResponse} from './defense/directive_nukeResponse';
 
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 	switch (flag.color) {
@@ -61,6 +62,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveBootstrap(flag);
 				case COLOR_RED:
 					return new DirectiveInvasionDefense(flag);
+				case COLOR_BLUE:
+					return new DirectiveNukeResponse(flag);
 			}
 			break;
 

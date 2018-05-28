@@ -12,6 +12,7 @@ import {Pathing} from './pathing/pathing';
 import {DirectiveGuardSwarm} from './directives/combat/directive_guard_swarm';
 import {DirectiveInvasionDefense} from './directives/combat/directive_invasion';
 import {Mem} from './memory';
+import {DirectiveNukeResponse} from './directives/defense/directive_nukeResponse';
 
 @profile
 export class Overseer {
@@ -94,6 +95,14 @@ export class Overseer {
 													invader => invader.boosts.length > 0 ? 2 : 1));
 			if (effectiveInvaderCount >= 3) {
 				DirectiveInvasionDefense.createIfNotPresent(this.colony.controller.pos, 'room');
+			}
+		}
+
+		// Place nuke response directive if there is a nuke present in colony room
+		if (this.colony.room && this.colony.level >= DirectiveNukeResponse.requiredRCL) {
+			let nuke = this.colony.room.find(FIND_NUKES)[0];
+			if (nuke) {
+				DirectiveNukeResponse.createIfNotPresent(nuke.pos, 'pos');
 			}
 		}
 	}

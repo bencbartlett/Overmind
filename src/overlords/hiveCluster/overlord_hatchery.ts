@@ -1,6 +1,5 @@
 // Hatchery overlord: spawn and run a dedicated supplier-like hatchery attendant (called after colony has storage)
 import {Overlord} from '../Overlord';
-import {QueenSetup} from '../../creepSetup/defaultSetups';
 import {Hatchery} from '../../hiveClusters/hiveCluster_hatchery';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
@@ -8,6 +7,12 @@ import {EnergyRequestStructure, ResourceRequestStructure} from '../../logistics/
 import {log} from '../../lib/logger/log';
 import {OverlordPriority} from '../priorities_overlords';
 import {profile} from '../../profiler/decorator';
+import {CreepSetup} from '../CreepSetup';
+
+export const QueenSetup = new CreepSetup('queen', {
+	pattern  : [CARRY, CARRY, MOVE],
+	sizeLimit: 8,
+});
 
 @profile
 export class HatcheryOverlord extends Overlord {
@@ -28,7 +33,7 @@ export class HatcheryOverlord extends Overlord {
 	}
 
 	init() {
-		this.wishlist(1, new QueenSetup());
+		this.wishlist(1, QueenSetup);
 	}
 
 	private supplyActions(queen: Zerg) {

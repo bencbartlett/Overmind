@@ -1,10 +1,15 @@
 import {Overlord} from '../Overlord';
-import {ClaimerSetup} from '../../creepSetup/defaultSetups';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {Directive} from '../../directives/Directive';
 import {OverlordPriority} from '../priorities_overlords';
 import {profile} from '../../profiler/decorator';
+import {CreepSetup} from '../CreepSetup';
+
+const ClaimerSetup = new CreepSetup('claimer', {
+	pattern  : [CLAIM, MOVE],
+	sizeLimit: 1
+});
 
 @profile
 export class ClaimingOverlord extends Overlord {
@@ -17,11 +22,8 @@ export class ClaimingOverlord extends Overlord {
 	}
 
 	init() {
-		if (!(this.room && this.room.controller && this.room.controller.my)) {
-			this.wishlist(1, new ClaimerSetup());
-		} else {
-			this.wishlist(0, new ClaimerSetup());
-		}
+		let amount = (this.room && this.room.controller && this.room.controller.my) ? 0 : 1;
+		this.wishlist(amount, ClaimerSetup);
 	}
 
 	private handleClaimer(claimer: Zerg): void {
@@ -38,7 +40,7 @@ export class ClaimingOverlord extends Overlord {
 			}
 		} else {
 			// claimer.task = Tasks.goTo(this.pos, {travelToOptions: {ensurePath: true}});
-			claimer.travelTo(this.pos, {ensurePath: true});
+			claimer.travelTo(this.pos, {ensurePath: true, preferHighway: true});
 		}
 	}
 

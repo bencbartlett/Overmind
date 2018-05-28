@@ -1,5 +1,4 @@
 import {Overlord} from '../Overlord';
-import {MinerLongDistanceSetup, MinerSetup} from '../../creepSetup/defaultSetups';
 import {MiningSite} from '../../hiveClusters/hiveCluster_miningSite';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
@@ -7,6 +6,18 @@ import {OverlordPriority} from '../priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Pathing} from '../../pathing/pathing';
 import {DEFCON} from '../../Colony';
+import {CreepSetup} from '../CreepSetup';
+
+const MinerSetup = new CreepSetup('miner', {
+	pattern  : [WORK, WORK, CARRY, MOVE],
+	sizeLimit: 3,
+});
+
+const MinerLongDistanceSetup = new CreepSetup('miner', {
+	pattern  : [WORK, WORK, CARRY, MOVE, MOVE, MOVE],
+	sizeLimit: 3,
+});
+
 
 @profile
 export class MiningOverlord extends Overlord {
@@ -24,9 +35,9 @@ export class MiningOverlord extends Overlord {
 	}
 
 	init() {
-		let creepSetup = new MinerSetup();
+		let creepSetup = MinerSetup;
 		if (this.colony.hatchery && Pathing.distance(this.colony.hatchery.pos, this.pos) > 50 * 3) {
-			creepSetup = new MinerLongDistanceSetup(); // long distance miners
+			creepSetup = MinerLongDistanceSetup; // long distance miners
 			// todo: this.colony.hatchery is normal hatcher for incubating once spawns[0] != undefined
 		}
 		let filteredMiners = this.lifetimeFilter(this.miners);

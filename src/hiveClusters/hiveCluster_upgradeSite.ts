@@ -7,10 +7,10 @@ import {Colony, ColonyStage} from '../Colony';
 import {Mem} from '../memory';
 import {Visualizer} from '../visuals/Visualizer';
 import {log} from '../lib/logger/log';
-import {WorkerSetup} from '../creepSetup/defaultSetups';
 import {Stats} from '../stats/stats';
 import {Pathing} from '../pathing/pathing';
 import {MiningSite} from './hiveCluster_miningSite';
+import {WorkerSetup} from '../overlords/core/overlord_work';
 
 interface UpgradeSiteMemory {
 	input?: { pos: protoPos, tick: number };

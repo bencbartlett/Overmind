@@ -1,11 +1,16 @@
 // Command center overlord: spawn and run a dediated commandCenter attendant
 import {Overlord} from '../Overlord';
-import {ManagerSetup} from '../../creepSetup/defaultSetups';
 import {CommandCenter} from '../../hiveClusters/hiveCluster_commandCenter';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../priorities_overlords';
 import {profile} from '../../profiler/decorator';
+import {CreepSetup} from '../CreepSetup';
+
+export const ManagerSetup = new CreepSetup('manager', {
+	pattern  : [CARRY, CARRY, MOVE],
+	sizeLimit: 8,
+});
 
 @profile
 export class CommandCenterOverlord extends Overlord {
@@ -20,7 +25,7 @@ export class CommandCenterOverlord extends Overlord {
 	}
 
 	init() {
-		this.wishlist(1, new ManagerSetup());
+		this.wishlist(1, ManagerSetup);
 	}
 
 	private depositActions(manager: Zerg) {

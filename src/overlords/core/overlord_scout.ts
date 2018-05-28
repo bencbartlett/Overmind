@@ -1,9 +1,14 @@
 import {Overlord} from '../Overlord';
-import {ScoutSetup} from '../../creepSetup/defaultSetups';
 import {Zerg} from '../../Zerg';
 import {OverlordPriority} from '../priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../../directives/Directive';
+import {CreepSetup} from '../CreepSetup';
+
+const ScoutSetup = new CreepSetup('scout', {
+	pattern  : [MOVE],
+	sizeLimit: 1,
+});
 
 @profile
 export class ScoutOverlord extends Overlord {
@@ -18,7 +23,7 @@ export class ScoutOverlord extends Overlord {
 	}
 
 	init() {
-		this.wishlist(1, new ScoutSetup());
+		this.wishlist(1, ScoutSetup);
 	}
 
 	private handleScout(scout: Zerg): void {

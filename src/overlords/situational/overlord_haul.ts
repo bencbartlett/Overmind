@@ -2,13 +2,19 @@ import {Overlord} from '../Overlord';
 import {OverlordPriority} from '../priorities_overlords';
 import {Zerg} from '../../Zerg';
 import {DirectiveHaul} from '../../directives/logistics/directive_haul';
-import {HaulerSetup} from '../../creepSetup/defaultSetups';
 import {Tasks} from '../../tasks/Tasks';
 import {isStoreStructure} from '../../declarations/typeGuards';
 import {log} from '../../lib/logger/log';
 import {Pathing} from '../../pathing/pathing';
 import {Energetics} from '../../logistics/Energetics';
+import {CreepSetup} from '../CreepSetup';
 
+
+const HaulerSetup = new CreepSetup('hauler', {
+	pattern  : [CARRY, MOVE],
+	sizeLimit: Infinity,
+
+});
 
 export class HaulingOverlord extends Overlord {
 
@@ -35,12 +41,12 @@ export class HaulingOverlord extends Overlord {
 		let haulingPowerNeeded = Math.min(this.directive.totalResources,
 			this.colony.storage.storeCapacity - _.sum(this.colony.storage.store)) * tripDistance;
 		// Calculate amount of hauling each hauler provides in a lifetime
-		let haulerCarryParts = _.filter(this.generateProtoCreep(new HaulerSetup()).body, part => part == CARRY).length;
+		let haulerCarryParts = _.filter(this.generateProtoCreep(HaulerSetup).body, part => part == CARRY).length;
 		let haulingPowerPerLifetime = CREEP_LIFE_TIME * haulerCarryParts * CARRY_CAPACITY;
 		// Calculate number of haulers
 		let numHaulers = Math.min(Math.ceil(haulingPowerNeeded / haulingPowerPerLifetime), MAX_HAULERS);
 		// Request the haulers
-		this.wishlist(numHaulers, new HaulerSetup());
+		this.wishlist(numHaulers, HaulerSetup);
 	}
 
 	private handleHauler(hauler: Zerg) {

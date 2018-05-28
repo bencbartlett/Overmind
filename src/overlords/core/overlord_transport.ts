@@ -3,11 +3,23 @@ import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {Colony, ColonyStage} from '../../Colony';
 import {BufferTarget, LogisticsNetwork, LogisticsRequest} from '../../logistics/LogisticsNetwork';
-import {TransporterEarlySetup, TransporterSetup} from '../../creepSetup/defaultSetups';
 import {OverlordPriority} from '../priorities_overlords';
 import {Pathing} from '../../pathing/pathing';
 import {DirectiveLogisticsRequest} from '../../directives/logistics/directive_logisticsRequest';
 import {profile} from '../../profiler/decorator';
+import {CreepSetup} from '../CreepSetup';
+
+
+export const TransporterSetup = new CreepSetup('transport', {
+	pattern  : [CARRY, CARRY, MOVE],
+	sizeLimit: Infinity,
+});
+
+export const TransporterEarlySetup = new CreepSetup('transport', {
+	pattern  : [CARRY, MOVE],
+	sizeLimit: Infinity,
+});
+
 
 @profile
 export class TransportOverlord extends Overlord {
@@ -58,7 +70,7 @@ export class TransportOverlord extends Overlord {
 	}
 
 	init() {
-		let setup = this.colony.stage == ColonyStage.Larva ? new TransporterEarlySetup() : new TransporterSetup();
+		let setup = this.colony.stage == ColonyStage.Larva ? TransporterEarlySetup : TransporterSetup;
 		let transportPower = _.sum(_.map(this.lifetimeFilter(this.transporters),
 										 creep => creep.getActiveBodyparts(CARRY)));
 		let neededTransportPower = this.neededTransportPower();

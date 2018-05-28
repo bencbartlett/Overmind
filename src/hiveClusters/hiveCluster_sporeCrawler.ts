@@ -1,6 +1,7 @@
 import {profile} from '../profiler/decorator';
 import {HiveCluster} from './HiveCluster';
 import {Colony} from '../Colony';
+import {CombatIntel} from '../intel/combatIntel';
 
 // Hive cluster for wrapping towers
 
@@ -67,17 +68,35 @@ export class SporeCrawler extends HiveCluster {
 	}
 
 	run() {
-		// Task priority for towers: attack, then heal, then repair
-		var taskPriority = [
-			() => this.attackNearestEnemy(),
-			() => this.healNearestAlly(),
-			() => this.preventRampartDecay(),
-		];
-		for (let task of taskPriority) {
-			if (task() == OK) {
-				break;
+		if (this.room.hostiles.length > 0) {
+			let myDefenders = _.filter(this.room.creeps, creep => creep.getActiveBodyparts(ATTACK) > 1);
+			let myRangedDefenders = _.filter(this.room.creeps, creep => creep.getActiveBodyparts(RANGED_ATTACK) > 1);
+			let myDamage = ATTACK_POWER * _.sum(_.map(myDefenders, creep => CombatIntel.getAttackPotential(creep))) +
+						   RANGED_ATTACK_POWER * _.sum(_.map(myRangedDefenders,
+															 creep => CombatIntel.getRangedAttackPotential(creep)));
+			let possibleTargets = _.filter(this.room.hostiles,
+										   hostile => CombatIntel.hostileHealPotential(hostile) <
+													  CombatIntel.towerDamageAtPos(hostile.pos, true)! + myDamage);
+			let target = this.pos.findClosestByRange(possibleTargets);
+			if (target) {
+				return this.tower.attack(target);
 			}
 		}
+
+		let closestDamagedAlly = this.pos.findClosestByRange(_.filter(this.room.creeps,
+																	  creep => creep.hits < creep.hitsMax));
+		if (closestDamagedAlly) {
+			return this.tower.heal(closestDamagedAlly);
+		}
+
+		// Towers build nuke response ramparts
+		let nearbyNukeRamparts = _.filter(this.colony.overlords.work.nukeDefenseRamparts,
+										  rampart => this.pos.getRangeTo(rampart) <= TOWER_OPTIMAL_RANGE);
+		if (nearbyNukeRamparts.length > 0) {
+			return this.tower.repair(nearbyNukeRamparts[0]);
+		}
+
+		this.preventRampartDecay();
 	}
 
 	visuals() {

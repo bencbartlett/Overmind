@@ -67,6 +67,25 @@ Object.defineProperty(RoomPosition.prototype, 'neighbors', {
 	}
 });
 
+RoomPosition.prototype.getPositionsInRange = function (range: number,
+													   includeWalls = false, includeEdges = false): RoomPosition[] {
+	let adjPos: RoomPosition[] = [];
+	let [xmin, xmax] = includeEdges ? [0, 49] : [1, 48];
+	let [ymin, ymax] = includeEdges ? [0, 49] : [1, 48];
+	for (let dx = -1 * range; dx <= range; dx++) {
+		for (let dy = -1 * range; dy <= range; dy++) {
+			let x = this.x + dx;
+			let y = this.y + dy;
+			if (xmin <= x && x <= xmax && xmin <= y && y <= xmax) {
+				if (includeWalls || Game.map.getTerrainAt(x, y, this.roomName) != 'wall') {
+					adjPos.push(new RoomPosition(x, y, this.roomName));
+				}
+			}
+		}
+	}
+	return adjPos;
+};
+
 // Object.defineProperty(RoomPosition.prototype, 'adjacentSpots', {
 // 	get: function () {
 // 		return spots;

@@ -1,6 +1,6 @@
 import {Overlord} from '../Overlord';
 import {DirectiveBootstrap} from '../../directives/core/directive_bootstrap';
-import {CreepSetup} from '../../creepSetup/CreepSetup';
+import {CreepSetup} from '../CreepSetup';
 import {MiningOverlord} from '../core/overlord_mine';
 import {ColonyStage} from '../../Colony';
 import {Zerg} from '../../Zerg';

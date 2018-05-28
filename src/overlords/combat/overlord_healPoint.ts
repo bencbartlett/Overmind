@@ -1,11 +1,18 @@
 // Siege overlord - spawns sieger creeps to break down walls and structures
 
-import {HealerSetup} from '../../creepSetup/defaultSetups';
 import {Zerg} from '../../Zerg';
 import {OverlordPriority} from '../priorities_overlords';
 import {DirectiveHealPoint} from '../../directives/combat/directive_healPoint';
 import {CombatOverlord} from './CombatOverlord';
 import {profile} from '../../profiler/decorator';
+import {CreepSetup} from '../CreepSetup';
+
+
+const PointHealerSetup = new CreepSetup('pointHealer', {
+	pattern  : [HEAL, MOVE],
+	sizeLimit: Infinity,
+	ordered  : false
+});
 
 @profile
 export class HealPointOverlord extends CombatOverlord {
@@ -15,7 +22,7 @@ export class HealPointOverlord extends CombatOverlord {
 
 	constructor(directive: DirectiveHealPoint, priority = OverlordPriority.offense.healPoint) {
 		super(directive, 'healPoint', priority);
-		this.healers = this.creeps('healer');
+		this.healers = this.creeps(PointHealerSetup.role);
 		this.moveOpts = {
 			allowSK   : true,
 			ensurePath: true,
@@ -31,7 +38,7 @@ export class HealPointOverlord extends CombatOverlord {
 	}
 
 	init() {
-		this.wishlist(1, new HealerSetup());
+		this.wishlist(1, PointHealerSetup);
 	}
 
 	run() {

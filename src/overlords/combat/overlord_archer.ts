@@ -4,7 +4,7 @@ import {Zerg} from '../../Zerg';
 import {OverlordPriority} from '../priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/directive_target_siege';
 import {CombatOverlord} from './CombatOverlord';
-import {CreepSetup} from '../../creepSetup/CreepSetup';
+import {CreepSetup} from '../CreepSetup';
 import {boostResources} from '../../resources/map_resources';
 import {DirectiveInvasionDefense} from '../../directives/combat/directive_invasion';
 import {profile} from '../../profiler/decorator';

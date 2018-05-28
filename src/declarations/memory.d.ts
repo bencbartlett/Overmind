@@ -112,6 +112,10 @@ interface SpawnMemory {
 }
 
 interface ColonyMemory {
+	defcon: {
+		level: number,
+		tick: number,
+	}
 	overseer: OverseerMemory;
 	hatchery: HatcheryMemory;
 	commandCenter: CommandCenterMemory;

@@ -3,7 +3,7 @@
 import {Zerg} from '../../Zerg';
 import {OverlordPriority} from '../priorities_overlords';
 import {CombatOverlord} from './CombatOverlord';
-import {CreepSetup} from '../../creepSetup/CreepSetup';
+import {CreepSetup} from '../CreepSetup';
 import {boostResources} from '../../resources/map_resources';
 import {DirectiveInvasionDefense} from '../../directives/combat/directive_invasion';
 import {profile} from '../../profiler/decorator';
@@ -61,11 +61,13 @@ export class RampartDefenseOverlord extends CombatOverlord {
 	init() {
 		this.reassignIdleCreeps(RampartDefenderSetup.role);
 		let amount;
+		let maxAmount = 5;
 		if (this.directive.memory.amount) {
 			amount = this.directive.memory.amount;
 		} else {
 			amount = _.sum(_.map(this.room.dangerousHostiles, hostile => hostile.boosts.length > 0 ? 2 : 1));
 		}
+		amount = Math.max(amount, maxAmount);
 		this.wishlist(amount, new RampartDefenderSetup());
 	}
 

@@ -52,6 +52,7 @@ interface Room {
 	// structureSites: ConstructionSite[];
 	// roadSites: ConstructionSite[];
 	barriers: (StructureWall | StructureRampart)[];
+	ramparts: StructureRampart[];
 
 	getStructures(structureType: string): Structure[];
 
@@ -79,6 +80,8 @@ interface RoomPosition {
 	neighbors: RoomPosition[];
 	// adjacentSpots: RoomPosition[];
 	// availableAdjacentSpots: RoomPosition[];
+
+	getPositionsInRange(range: number, includeWalls?: boolean, includeEdges?: boolean): RoomPosition[];
 
 	lookForStructure(structureType: StructureConstant): Structure | undefined;
 

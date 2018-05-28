@@ -6,7 +6,7 @@ import {HatcheryOverlord} from '../overlords/hiveCluster/overlord_hatchery';
 import {Priority} from '../settings/priorities';
 import {Colony, ColonyStage} from '../Colony';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
-import {CreepSetup} from '../creepSetup/CreepSetup';
+import {CreepSetup} from '../overlords/CreepSetup';
 import {Overlord} from '../overlords/Overlord';
 import {Mem} from '../memory';
 import {Visualizer} from '../visuals/Visualizer';

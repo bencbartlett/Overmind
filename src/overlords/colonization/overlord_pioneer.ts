@@ -2,9 +2,14 @@ import {Overlord} from '../Overlord';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {Directive} from '../../directives/Directive';
-import {PioneerSetup} from '../../creepSetup/defaultSetups';
 import {OverlordPriority} from '../priorities_overlords';
 import {profile} from '../../profiler/decorator';
+import {CreepSetup} from '../CreepSetup';
+
+const PioneerSetup = new CreepSetup('pioneer', {
+	pattern  : [WORK, CARRY, MOVE, MOVE],
+	sizeLimit: Infinity,
+});
 
 @profile
 export class PioneerOverlord extends Overlord {
@@ -20,7 +25,7 @@ export class PioneerOverlord extends Overlord {
 	}
 
 	init() {
-		this.wishlist(4, new PioneerSetup());
+		this.wishlist(4, PioneerSetup);
 	}
 
 	private handlePioneer(pioneer: Zerg): void {
@@ -37,7 +42,7 @@ export class PioneerOverlord extends Overlord {
 			}
 		} else {
 			// pioneer.task = Tasks.goTo(this.pos);
-			pioneer.travelTo(this.pos);
+			pioneer.travelTo(this.pos, {ensurePath: true, preferHighway: true});
 		}
 	}
 

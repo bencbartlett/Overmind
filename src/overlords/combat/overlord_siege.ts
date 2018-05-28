@@ -1,12 +1,22 @@
 // Siege overlord - spawns sieger creeps to break down walls and structures
 
-import {SiegerSetup} from '../../creepSetup/defaultSetups';
 import {Zerg} from '../../Zerg';
 import {OverlordPriority} from '../priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/directive_target_siege';
 import {DirectiveSiege} from '../../directives/combat/directive_siege';
 import {CombatOverlord} from './CombatOverlord';
 import {profile} from '../../profiler/decorator';
+import {CreepSetup} from '../CreepSetup';
+
+const SiegerSetup = new CreepSetup('sieger', {
+	pattern  : [WORK, MOVE],
+	sizeLimit: Infinity,
+});
+
+const SiegerSetupWithHeals = new CreepSetup('sieger', {
+	pattern  : [WORK, HEAL, MOVE, MOVE],
+	sizeLimit: Infinity,
+});
 
 @profile
 export class SiegeOverlord extends CombatOverlord {
@@ -93,7 +103,7 @@ export class SiegeOverlord extends CombatOverlord {
 	}
 
 	init() {
-		this.wishlist(3, new SiegerSetup(false));
+		this.wishlist(3, SiegerSetup);
 	}
 
 	run() {

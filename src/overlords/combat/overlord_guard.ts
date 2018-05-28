@@ -1,6 +1,5 @@
 // Guard overlord: spawns guards as needed to deal with an invasion
 
-import {GuardSetup} from '../../creepSetup/defaultSetups';
 import {DirectiveGuard} from '../../directives/combat/directive_guard';
 import {Zerg} from '../../Zerg';
 import {OverlordPriority} from '../priorities_overlords';
@@ -8,6 +7,13 @@ import {DirectiveTargetSiege} from '../../directives/targeting/directive_target_
 import {CombatOverlord} from './CombatOverlord';
 import {profile} from '../../profiler/decorator';
 import {DirectiveHaul} from '../../directives/logistics/directive_haul';
+import {CreepSetup} from '../CreepSetup';
+
+const GuardSetup = new CreepSetup('guard', {
+	pattern  : [TOUGH, MOVE, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, HEAL],
+	sizeLimit: 3,
+});
+
 
 @profile
 export class GuardOverlord extends CombatOverlord {
@@ -76,7 +82,7 @@ export class GuardOverlord extends CombatOverlord {
 	init() {
 		this.reassignIdleCreeps(GuardSetup.role);
 		// TODO: figure out how many guards are needed
-		this.wishlist(1, new GuardSetup());
+		this.wishlist(1, GuardSetup);
 	}
 
 	run() {

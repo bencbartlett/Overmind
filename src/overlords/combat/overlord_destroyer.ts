@@ -5,32 +5,20 @@ import {OverlordPriority} from '../priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/directive_target_siege';
 import {CombatOverlord} from './CombatOverlord';
 import {DirectiveDestroy} from '../../directives/combat/directive_destroy';
-import {CreepSetup} from '../../creepSetup/CreepSetup';
+import {CreepSetup} from '../CreepSetup';
 import {profile} from '../../profiler/decorator';
 
-export class AttackerSetup extends CreepSetup {
-	static role = 'attacker';
+const AttackerSetup = new CreepSetup('attacker', {
+	pattern  : [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE],
+	sizeLimit: Infinity,
+	ordered  : false
+});
 
-	constructor() {
-		super(AttackerSetup.role, {
-			pattern  : [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE],
-			sizeLimit: Infinity,
-			ordered  : false
-		});
-	}
-}
-
-export class HealerSetup extends CreepSetup {
-	static role = 'healer';
-
-	constructor() {
-		super(HealerSetup.role, {
-			pattern  : [TOUGH, HEAL, HEAL, MOVE, MOVE, MOVE],
-			sizeLimit: Infinity,
-			ordered  : false
-		});
-	}
-}
+const HealerSetup = new CreepSetup('healer', {
+	pattern  : [TOUGH, HEAL, HEAL, MOVE, MOVE, MOVE],
+	sizeLimit: Infinity,
+	ordered  : false
+});
 
 @profile
 export class DestroyerOverlord extends CombatOverlord {
@@ -173,8 +161,8 @@ export class DestroyerOverlord extends CombatOverlord {
 		} else {
 			amount = 1;
 		}
-		this.wishlist(amount, new AttackerSetup());
-		this.wishlist(amount, new HealerSetup());
+		this.wishlist(amount, AttackerSetup);
+		this.wishlist(amount, HealerSetup);
 	}
 
 	run() {

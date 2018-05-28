@@ -257,6 +257,12 @@ Object.defineProperties(Room.prototype, {
 			return this.structures['barriers'] || [];
 		},
 	},
+
+	ramparts: {
+		get() {
+			return this.structures[STRUCTURE_RAMPART] || [];
+		},
+	},
 });
 
 

@@ -15,6 +15,9 @@ export class DirectiveDismantle extends Directive {
 	}
 
 	getTarget(): Structure | undefined {
+		if (!this.pos.isVisible) {
+			return;
+		}
 		let targetedStructures = this.pos.lookFor(LOOK_STRUCTURES) as Structure[];
 		for (let structure of targetedStructures) {
 			for (let structureType of AttackStructurePriorities) {

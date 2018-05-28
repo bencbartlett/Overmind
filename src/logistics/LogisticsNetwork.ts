@@ -7,11 +7,11 @@ import {Zerg} from '../Zerg';
 import {log} from '../lib/logger/log';
 import {Pathing} from '../pathing/pathing';
 import {Colony} from '../Colony';
-import {TransporterSetup} from '../creepSetup/defaultSetups';
 import {Matcher} from '../algorithms/galeShapley';
 import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../declarations/typeGuards';
 import {DirectiveLogisticsRequest} from '../directives/logistics/directive_logisticsRequest';
 import {Mem} from '../memory';
+import {TransporterSetup} from '../overlords/core/overlord_transport';
 
 export type LogisticsTarget =
 	EnergyStructure

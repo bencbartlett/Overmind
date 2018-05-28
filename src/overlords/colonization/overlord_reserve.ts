@@ -1,10 +1,15 @@
 import {Overlord} from '../Overlord';
-import {ReserverSetup} from '../../creepSetup/defaultSetups';
 import {Zerg} from '../../Zerg';
 import {DirectiveOutpost} from '../../directives/core/directive_outpost';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../priorities_overlords';
 import {profile} from '../../profiler/decorator';
+import {CreepSetup} from '../CreepSetup';
+
+const ReserverSetup = new CreepSetup('reserver', {
+	pattern  : [CLAIM, MOVE],
+	sizeLimit: 4,
+});
 
 @profile
 export class ReservingOverlord extends Overlord {
@@ -22,9 +27,9 @@ export class ReservingOverlord extends Overlord {
 
 	init() {
 		if (!this.room || this.room.controller!.needsReserving(this.reserveBuffer)) {
-			this.wishlist(1, new ReserverSetup());
+			this.wishlist(1, ReserverSetup);
 		} else {
-			this.wishlist(0, new ReserverSetup());
+			this.wishlist(0, ReserverSetup);
 		}
 	}
 

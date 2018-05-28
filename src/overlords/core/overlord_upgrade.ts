@@ -1,5 +1,4 @@
 import {Overlord} from '../Overlord';
-import {UpgraderSetup} from '../../creepSetup/defaultSetups';
 import {UpgradeSite} from '../../hiveClusters/hiveCluster_upgradeSite';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
@@ -7,6 +6,18 @@ import {OverlordPriority} from '../priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import minBy from 'lodash.minby';
 import {Pathing} from '../../pathing/pathing';
+import {CreepSetup} from '../CreepSetup';
+
+class UpgraderSetup extends CreepSetup {
+	static role = 'upgrader';
+
+	constructor(sizeLimit: number) {
+		super(UpgraderSetup.role, {
+			pattern  : [WORK, WORK, WORK, CARRY, MOVE],
+			sizeLimit: sizeLimit,
+		});
+	}
+}
 
 @profile
 export class UpgradingOverlord extends Overlord {

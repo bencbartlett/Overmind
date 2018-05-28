@@ -4,6 +4,7 @@ import {Directive} from '../directives/Directive';
 import {Mem} from '../memory';
 import {Colony} from '../Colony';
 import {Traveler} from '../lib/traveler/Traveler';
+import {boostResources} from '../resources/map_resources';
 
 interface CombatIntelMemory {
 	cache: {
@@ -41,12 +42,12 @@ export class CombatIntel {
 	}
 
 	/* Total tower tamage from all towers in room at a given position */
-	static towerDamageAtPos(pos: RoomPosition): number | undefined {
+	static towerDamageAtPos(pos: RoomPosition, ignoreEnergy = false): number | undefined {
 		let room = Game.rooms[pos.roomName];
 		if (room) {
 			let expectedDamage = 0;
 			for (let tower of room.towers) {
-				if (!tower.my && tower.energy > 0) {
+				if (tower.energy > 0 || ignoreEnergy) {
 					expectedDamage += this.singleTowerDamage(pos.getRangeTo(tower));
 				}
 			}
@@ -144,5 +145,72 @@ export class CombatIntel {
 		return bestExit;
 	}
 
+
+	// Creep potentials
+
+	// Heal potential of a single creep
+	static getHealPotential(creep: Creep): number {
+		return _.sum(_.map(creep.body, function (part) {
+			if (part.type == HEAL) {
+				if (!part.boost) {
+					return 1;
+				} else if (part.boost == boostResources.heal[1]) {
+					return BOOSTS.heal.LO.heal;
+				} else if (part.boost == boostResources.heal[2]) {
+					return BOOSTS.heal.LHO2.heal;
+				} else if (part.boost == boostResources.heal[3]) {
+					return BOOSTS.heal.XLHO2.heal;
+				}
+			}
+			return 0;
+		}));
+	}
+
+	// Heal potential of a single creep
+	static getAttackPotential(creep: Creep): number {
+		return _.sum(_.map(creep.body, function (part) {
+			if (part.type == ATTACK) {
+				if (!part.boost) {
+					return 1;
+				} else if (part.boost == boostResources.attack[1]) {
+					return BOOSTS.attack.UH.attack;
+				} else if (part.boost == boostResources.attack[2]) {
+					return BOOSTS.attack.UH2O.attack;
+				} else if (part.boost == boostResources.attack[3]) {
+					return BOOSTS.attack.XUH2O.attack;
+				}
+			}
+			return 0;
+		}));
+	}
+
+	// Heal potential of a single creep
+	static getRangedAttackPotential(creep: Creep): number {
+		return _.sum(_.map(creep.body, function (part) {
+			if (part.type == RANGED_ATTACK) {
+				if (!part.boost) {
+					return 1;
+				} else if (part.boost == boostResources.ranged_attack[1]) {
+					return BOOSTS.ranged_attack.KO.rangedAttack;
+				} else if (part.boost == boostResources.ranged_attack[2]) {
+					return BOOSTS.ranged_attack.KHO2.rangedAttack;
+				} else if (part.boost == boostResources.ranged_attack[3]) {
+					return BOOSTS.ranged_attack.XKHO2.rangedAttack;
+				}
+			}
+			return 0;
+		}));
+	}
+
+	// Heal potential of self and possible healer neighbors
+	static hostileHealPotential(creep: Creep): number {
+		let selfHealing = HEAL_POWER * this.getHealPotential(creep);
+		let neighbors = _.filter(creep.room.hostiles, hostile => hostile.pos.isNearTo(creep));
+		let neighborHealing = HEAL_POWER * _.sum(_.map(neighbors, neighbor => this.getHealPotential(neighbor)));
+		let rangedHealers = _.filter(creep.room.hostiles, hostile => hostile.pos.getRangeTo(creep) <= 3 &&
+																	 !neighbors.includes(hostile));
+		let rangedHealing = RANGED_HEAL_POWER * _.sum(_.map(rangedHealers, healer => this.getHealPotential(healer)));
+		return selfHealing + neighborHealing + rangedHealing;
+	}
 
 }

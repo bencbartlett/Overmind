@@ -107,6 +107,7 @@ export class Colony {
 		this.colony = this;
 		if (!Memory.colonies[this.name]) {
 			Memory.colonies[this.name] = {
+				defcon       : {level: DEFCON.safe, tick: Game.time},
 				overseer     : <OverseerMemory>{},
 				hatchery     : <HatcheryMemory>{},
 				commandCenter: <CommandCenterMemory>{},
@@ -180,17 +181,34 @@ export class Colony {
 		this.lowPowerMode = Energetics.lowPowerMode(this);
 		// Set DEFCON level
 		// TODO: finish this
+		let defcon = DEFCON.safe;
+		let defconDecayTime = 200;
 		if (this.room.dangerousHostiles.length > 0) {
 			let effectiveHostileCount = _.sum(_.map(this.room.dangerousHostiles,
 													hostile => hostile.boosts.length > 0 ? 2 : 1));
 			if (effectiveHostileCount >= 3) {
-				this.defcon = DEFCON.boostedInvasionNPC;
+				defcon = DEFCON.boostedInvasionNPC;
 			} else {
-				this.defcon = DEFCON.invasionNPC;
+				defcon = DEFCON.invasionNPC;
+			}
+		}
+		if (this.memory.defcon) {
+			if (defcon < this.memory.defcon.level) { // decay defcon level over time if defcon less than memory value
+				if (this.memory.defcon.tick + defconDecayTime < Game.time) {
+					this.memory.defcon.level = defcon;
+					this.memory.defcon.tick = Game.time;
+				}
+			} else if (defcon > this.memory.defcon.level) { // refresh defcon time if it increases by a level
+				this.memory.defcon.level = defcon;
+				this.memory.defcon.tick = Game.time;
 			}
 		} else {
-			this.defcon = DEFCON.safe;
+			this.memory.defcon = {
+				level: defcon,
+				tick : Game.time
+			};
 		}
+		this.defcon = this.memory.defcon.level;
 	}
 
 	private registerUtilities(): void {
