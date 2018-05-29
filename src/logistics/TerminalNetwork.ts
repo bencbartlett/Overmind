@@ -3,17 +3,19 @@ import minBy from 'lodash.minby';
 import {Mem} from '../memory';
 import {profile} from '../profiler/decorator';
 import {Energetics} from './Energetics';
+import {Colony} from '../Colony';
 
 @profile
 export class TerminalNetwork implements ITerminalNetwork {
 
 	terminals: StructureTerminal[];					// All terminals
+	assets: { [resourceType: string]: number };		// All assets
 	private manifests: {							// Resources that various terminals need
 		[terminalName: string]: {
 			[resourceType: string]: number
 		}
 	};
-	private alreadyReceived: StructureTerminal[];
+	// private alreadyReceived: StructureTerminal[];
 	private cache: {
 		sellPrice: { [resourceType: string]: number }
 	};
@@ -25,23 +27,54 @@ export class TerminalNetwork implements ITerminalNetwork {
 				default: number,
 				[resourceType: string]: number,
 			}
+		},
+		equalize: {
+			maxSendSize: number,
+			tolerance: {
+				energy: number,
+				default: number,
+				[resourceType: string]: number,
+			}
 		}
 	};
 
 	constructor(terminals: StructureTerminal[]) {
 		this.terminals = terminals;
 		this.manifests = {};
-		this.alreadyReceived = [];
+		// this.alreadyReceived = [];
 		this.settings = {
-			market: {
+			market  : {
 				reserveCredits       : 10000,
 				requestResourceAmount: 1000,
 				maxPrice             : {
 					default: 5.0,
 				}
 			},
+			equalize: {
+				maxSendSize: 25000,
+				tolerance  : {
+					energy : 100000,
+					default: 1000
+				}
+			}
 		};
 		this.cache = this.memory.cache;
+	}
+
+	/* Summarizes the total of all resources currently in a colony store structure */
+	private getAllAssets(): { [resourceType: string]: number } {
+		let allAssets: { [resourceType: string]: number } = {};
+		for (let terminal of this.terminals) {
+			let assets = (<Colony>Overmind.Colonies[terminal.room.name]).assets;
+			for (let resourceType in assets) {
+				let amount = assets[resourceType] || 0;
+				if (!allAssets[resourceType]) {
+					allAssets[resourceType] = 0;
+				}
+				allAssets[resourceType] += amount;
+			}
+		}
+		return allAssets as StoreDefinition;
 	}
 
 	get memory() {
@@ -174,35 +207,68 @@ export class TerminalNetwork implements ITerminalNetwork {
 		return energyInRoom;
 	}
 
-	private transferEnergy(sender: StructureTerminal, receiver: StructureTerminal,
-						   amount = Energetics.settings.terminal.energy.sendSize): number {
+	private transfer(sender: StructureTerminal, receiver: StructureTerminal, resourceType: ResourceConstant,
+					 amount: number): number {
 		let cost = Game.market.calcTransactionCost(amount, sender.room.name, receiver.room.name);
-		let response = sender.send(RESOURCE_ENERGY, amount, receiver.room.name);
-		log.info(`Sent ${amount} energy from ${sender.room.print} to ` +
-				 `${receiver.room.print}. Fee: ${cost}. Response: ${response}`);
+		let response = sender.send(resourceType, amount, receiver.room.name);
 		if (response == OK) {
-			TerminalNetwork.logTransfer(RESOURCE_ENERGY, amount, sender.room.name, receiver.room.name);
-			this.alreadyReceived.push(receiver);
+			log.info(`Sent ${amount} ${resourceType} from ${sender.room.print} to ` +
+					 `${receiver.room.print}. Fee: ${cost}.`);
+			TerminalNetwork.logTransfer(resourceType, amount, sender.room.name, receiver.room.name);
+			// this.alreadyReceived.push(receiver);
+		} else {
+			log.error(`Could not send ${amount} ${resourceType} from ${sender.room.print} to ` +
+					  `${receiver.room.print}! Response: ${response}`);
 		}
 		return response;
 	}
 
-	private sendExcessEnergy(terminal: StructureTerminal): void {
-		let {sendSize, inThreshold, outThreshold, equilibrium} = Energetics.settings.terminal.energy;
-		// See if there are any rooms actively needing energy first
-		let needyTerminals = _.filter(this.terminals, t =>
-			t != terminal && this.terminalNeedsEnergy(t) && !this.alreadyReceived.includes(t));
-		if (needyTerminals.length > 0) {
-			// Send to the most cost-efficient needy terminal
-			let bestTerminal = minBy(needyTerminals, (receiver: StructureTerminal) =>
-				Game.market.calcTransactionCost(sendSize, terminal.room.name, receiver.room.name));
-			if (bestTerminal) this.transferEnergy(terminal, bestTerminal);
-		} else {
-			// Send to the terminal with least energy that is not already trying to get rid of stuff
-			let okTerminals = _.filter(this.terminals, t =>
-				t != terminal && t.store.energy < outThreshold - sendSize && !this.alreadyReceived.includes(t));
-			let bestTerminal = minBy(okTerminals, (receiver: StructureTerminal) => this.energyInRoom(receiver.room));
-			if (bestTerminal) this.transferEnergy(terminal, bestTerminal);
+	// private sendExcessEnergy(terminal: StructureTerminal): void {
+	// 	let {sendSize, inThreshold, outThreshold, equilibrium} = Energetics.settings.terminal.energy;
+	// 	// See if there are any rooms actively needing energy first
+	// 	let needyTerminals = _.filter(this.terminals, t =>
+	// 		t != terminal && this.terminalNeedsEnergy(t) && !this.alreadyReceived.includes(t));
+	// 	if (needyTerminals.length > 0) {
+	// 		// Send to the most cost-efficient needy terminal
+	// 		let bestTerminal = minBy(needyTerminals, (receiver: StructureTerminal) =>
+	// 			Game.market.calcTransactionCost(sendSize, terminal.room.name, receiver.room.name));
+	// 		if (bestTerminal) this.transferEnergy(terminal, bestTerminal);
+	// 	} else {
+	// 		// Send to the terminal with least energy that is not already trying to get rid of stuff
+	// 		let okTerminals = _.filter(this.terminals, t =>
+	// 			t != terminal && t.store.energy < outThreshold - sendSize && !this.alreadyReceived.includes(t));
+	// 		let bestTerminal = minBy(okTerminals, (receiver: StructureTerminal) => this.energyInRoom(receiver.room));
+	// 		if (bestTerminal) this.transferEnergy(terminal, bestTerminal);
+	// 	}
+	// }
+
+	private equalize(resourceType: ResourceConstant) {
+		let colonyOf: (terminal: StructureTerminal) => Colony = (terminal => Overmind.Colonies[terminal.room.name]);
+		let averageAmount = _.sum(_.map(this.terminals, terminal =>
+			(colonyOf(terminal).assets[resourceType] || 0))) / this.terminals.length;
+		let terminalsByResource = _.sortBy(this.terminals, terminal => (colonyOf(terminal).assets[resourceType] || 0));
+		// Min-max match terminals
+		let receivers = _.take(terminalsByResource, Math.floor(terminalsByResource.length / 2));
+		terminalsByResource.reverse();
+		let senders = _.take(terminalsByResource, Math.floor(terminalsByResource.length / 2));
+		for (let [sender, receiver] of _.zip(senders, receivers)) {
+			let senderAmount = colonyOf(sender).assets[resourceType] || 0;
+			let receiverAmount = colonyOf(receiver).assets[resourceType] || 0;
+			let tolerance = this.settings.equalize.tolerance[resourceType] || this.settings.equalize.tolerance.default;
+			if (senderAmount - receiverAmount < tolerance) {
+				continue;
+			}
+			let senderSurplus = senderAmount - averageAmount;
+			let receiverDeficit = averageAmount - receiverAmount;
+			let sendAmount = Math.min(senderSurplus, receiverDeficit, this.settings.equalize.maxSendSize);
+			sendAmount = Math.floor(Math.max(sendAmount, 0));
+			let sendCost = Game.market.calcTransactionCost(sendAmount, sender.room.name, receiver.room.name);
+			sendAmount = Math.min(sendAmount, (sender.store[resourceType] || 0) - sendCost - 10,
+								  (receiver.storeCapacity - _.sum(receiver.store)));
+			if (sendAmount < TERMINAL_MIN_SEND) {
+				continue;
+			}
+			this.transfer(sender, receiver, resourceType, sendAmount);
 		}
 	}
 
@@ -210,16 +276,18 @@ export class TerminalNetwork implements ITerminalNetwork {
 		// if (Game.time % 500 == 2) {
 		// 	this.cacheBestSellPrices();
 		// }
+		this.assets = this.getAllAssets();
 	}
 
 	run(): void {
-		for (let terminal of this.terminals) {
-			if (terminal.energy > Energetics.settings.terminal.energy.outThreshold) {
-				this.sendExcessEnergy(terminal);
-			}
-			if (Game.time % 10 == 4) {
+		if (Game.time % (TERMINAL_COOLDOWN + 1) == 0) {
+			for (let terminal of this.terminals) {
+				// if (terminal.energy > Energetics.settings.terminal.energy.outThreshold) {
+				// 	this.sendExcessEnergy(terminal);
+				// }
 				this.buyShortages(terminal);
 			}
+			this.equalize(RESOURCE_ENERGY); // todo: include other resources on rotation
 		}
 	}
 

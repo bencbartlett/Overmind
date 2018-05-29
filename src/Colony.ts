@@ -48,6 +48,7 @@ export class Colony {
 	outposts: Room[];									// Rooms for remote resource collection
 	rooms: Room[];										// All rooms including the primary room
 	pos: RoomPosition;
+	assets: { [resourceType: string]: number };
 	// Physical colony structures and roomObjects
 	controller: StructureController;					// These are all duplicated from room properties
 	spawns: StructureSpawn[];							// |
@@ -79,7 +80,7 @@ export class Colony {
 	incubator: Colony | undefined; 						// The colony responsible for incubating this one, if any
 	isIncubating: boolean;								// If the colony is incubating
 	incubatingColonies: Colony[];						// List of colonies that this colony is incubating
-	level: number; 										// Level of the colony's main room
+	level: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; 				// Level of the colony's main room
 	stage: number;										// The stage of the colony "lifecycle"
 	defcon: number;
 	lowPowerMode: boolean; 								// Activate if RCL8 and full energy
@@ -161,10 +162,11 @@ export class Colony {
 		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
 		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
 		this.obstacles = [];
+		this.assets = this.getAllAssets();
 	}
 
 	private registerOperationalState(): void {
-		this.level = this.controller.level;
+		this.level = this.controller.level as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 		this.isIncubating = false;
 		if (this.storage && this.storage.isActive() &&
 			this.spawns[0] && this.spawns[0].pos.findClosestByLimitedRange(this.room.containers, 2)) {
@@ -277,7 +279,7 @@ export class Colony {
 	}
 
 	/* Summarizes the total of all resources currently in a colony store structure */
-	getAllAssets(): { [resourceType: string]: number } {
+	private getAllAssets(): { [resourceType: string]: number } {
 		let allAssets: { [resourceType: string]: number } = {};
 		let storeStructures = _.compact([this.storage, this.terminal]) as StoreStructure[];
 		for (let structure of storeStructures) {

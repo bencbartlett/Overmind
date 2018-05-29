@@ -79,7 +79,7 @@ export class Abathur {
 		this.colony = colony;
 		this.priorityStock = priorityStock;
 		this.wantedStock = wantedStock;
-		this.assets = colony.getAllAssets();
+		this.assets = colony.assets;
 	}
 
 	/* Summarizes the total of all resources currently in a colony store structure */
@@ -128,7 +128,6 @@ export class Abathur {
 		}
 		if (amountNeeded > 0) { // if you need more of this resource
 			let reagents = REAGENTS[shortage.mineralType];
-			let shortageFound;
 			if (reagents) {  // if the resource is not a base mineral
 				for (let reagent of reagents) {
 					let shortage = this.recursivelyFindShortage({

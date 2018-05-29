@@ -77,17 +77,36 @@ export class ArcherDefenseOverlord extends CombatOverlord {
 	private attackActions(attacker: Zerg): void {
 		let target = this.findTarget(attacker);
 		if (target) {
-			let range = attacker.pos.getRangeTo(target);
-			if (range < 3) {
+			let range = Math.min(attacker.pos.getRangeTo(target), attacker.pos.rangeToEdge);
+			if (range < 3) { // retreat to controller if too close
 				attacker.travelTo(this.colony.controller);
 			}
-			if (range == 3) {
+			if (range == 3) { // attack the target
 				attacker.rangedAttack(target);
-			} else {
+			} else { // approach the target if too far
 				attacker.travelTo(target, _.merge(this.moveOpts, {range: 3}));
 			}
 		}
 	}
+
+	private healActions(archer: Zerg): void {
+		if (this.room && this.room.hostiles.length == 0) { // No hostiles in the room
+			this.medicActions(archer);
+			return;
+		}
+
+		if (archer.hitsMax - archer.hits > 0) {
+			archer.heal(archer);
+		} else {
+			// Try to heal whatever else is in range
+			let target = archer.pos.findClosestByRange(this.archers);
+			if (target) {
+				archer.heal(target, false);
+				archer.travelTo(target);
+			}
+		}
+	}
+
 
 	private handleArcher(archer: Zerg): void {
 		// Handle retreating actions
@@ -103,25 +122,6 @@ export class ArcherDefenseOverlord extends CombatOverlord {
 		} else {
 			this.attackActions(archer);
 			this.healActions(archer);
-		}
-	}
-
-
-	private healActions(archer: Zerg): void {
-		if (this.room && this.room.hostiles.length == 0) { // No hostiles in the room
-			this.medicActions(archer);
-			return;
-		}
-
-		if (archer.hitsMax - archer.hits > 0) {
-			archer.heal(archer);
-		} else {
-			// Try to heal whatever else is in range
-			let target = archer.pos.findClosestByRange(this.archers);
-			if (target) {
-				archer.heal(target, true);
-				archer.travelTo(target);
-			}
 		}
 	}
 

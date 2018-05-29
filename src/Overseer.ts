@@ -189,7 +189,10 @@ export class Overseer {
 				}
 			}
 		}
-		let stringReport: string[] = [`Creep usage for ${this.colony.name}:`];
+		let safeOutposts = _.filter(this.colony.outposts, room => !!room && room.dangerousHostiles.length == 0);
+		let stringReport: string[] = [
+			`DEFCON: ${this.colony.defcon}  Safe outposts: ${safeOutposts.length}/${this.colony.outposts.length}`,
+			`Creep usage for ${this.colony.name}:`];
 		let padLength = _.max(_.map(_.keys(roleOccupancy), str => str.length)) + 2;
 		for (let role in roleOccupancy) {
 			let [current, needed] = roleOccupancy[role];

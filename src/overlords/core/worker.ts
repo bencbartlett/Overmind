@@ -28,10 +28,19 @@ export class WorkerOverlord extends Overlord {
 	fortifyStructures: (StructureWall | StructureRampart)[];
 	constructionSites: ConstructionSite[];
 	nukeDefenseRamparts: StructureRampart[];
-	settings: {
-		barrierHits: { [rcl: number]: number };
-		barrierLowHighHits: number;
-		workerWithdrawLimit: number;
+
+	static settings = {
+		barrierHits       : {
+			1: 3000,
+			2: 3000,
+			3: 3000,
+			4: 10000,
+			5: 100000,
+			6: 1000000,
+			7: 10000000,
+			8: 30000000,
+		},
+		barrierLowHighHits: 100000,
 	};
 
 	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.work) {
@@ -45,25 +54,9 @@ export class WorkerOverlord extends Overlord {
 		if (this.colony.hatchery && this.colony.hatchery.battery) {
 			this.rechargeObjects.push(this.colony.hatchery.battery);
 		}
-		// Barrier settings
-		this.settings = {
-			barrierHits        : {
-				1: 3000,
-				2: 3000,
-				3: 3000,
-				4: 10000,
-				5: 100000,
-				6: 1000000,
-				7: 10000000,
-				8: 30000000,
-			},
-			barrierLowHighHits : 100000,
-			workerWithdrawLimit: this.colony.stage == ColonyStage.Larva ? 750 : 100,
-		};
 		// Fortification structures
-		this.fortifyStructures = _.sortBy(_.filter(this.room.barriers,
-												   s => s.hits < this.settings.barrierHits[this.colony.level]),
-										  s => s.hits);
+		this.fortifyStructures = _.sortBy(_.filter(this.room.barriers, s =>
+			s.hits < WorkerOverlord.settings.barrierHits[this.colony.level]), s => s.hits);
 		// Generate a list of structures needing repairing (different from fortifying except in critical case)
 		this.repairStructures = _.filter(this.colony.repairables, function (structure) {
 			if (structure.structureType == STRUCTURE_CONTAINER) {
@@ -137,7 +130,7 @@ export class WorkerOverlord extends Overlord {
 			let repairTicks = _.sum(_.map(this.repairStructures,
 										  structure => structure.hitsMax - structure.hits)) / REPAIR_POWER;
 			let fortifyTicks = 0.25 * _.sum(_.map(this.fortifyStructures,
-												  barrier => this.settings.barrierHits[this.colony.level]
+												  barrier => WorkerOverlord.settings.barrierHits[this.colony.level]
 															 - barrier.hits)) / REPAIR_POWER;
 			if (this.colony.storage!.energy < 500000) {
 				fortifyTicks = 0; // Ignore fortification duties below this energy level
@@ -191,11 +184,11 @@ export class WorkerOverlord extends Overlord {
 	private fortifyActions(worker: Zerg, fortifyStructures = this.fortifyStructures) {
 		let lowBarriers: (StructureWall | StructureRampart)[];
 		let highestBarrierHits = _.max(_.map(fortifyStructures, structure => structure.hits));
-		if (highestBarrierHits > this.settings.barrierLowHighHits) {
+		if (highestBarrierHits > WorkerOverlord.settings.barrierLowHighHits) {
 			// At high barrier HP, fortify only structures that are within a threshold of the lowest
 			let lowestBarrierHits = _.min(_.map(fortifyStructures, structure => structure.hits));
 			lowBarriers = _.filter(fortifyStructures, structure => structure.hits < lowestBarrierHits +
-																		this.settings.barrierLowHighHits);
+																   WorkerOverlord.settings.barrierLowHighHits);
 		} else {
 			// Otherwise fortify the lowest N structures
 			let numBarriersToConsider = 5; // Choose the closest barrier of the N barriers with lowest hits
@@ -216,8 +209,9 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	private rechargeActions(worker: Zerg) {
+		let workerWithdrawLimit = this.colony.stage == ColonyStage.Larva ? 750 : 100;
 		let rechargeTargets = _.filter(this.rechargeObjects, s => s instanceof Tombstone ||
-																  s.energy > this.settings.workerWithdrawLimit);
+																  s.energy > workerWithdrawLimit);
 		let target = worker.pos.findClosestByMultiRoomRange(rechargeTargets);
 		if (target) {
 			worker.task = Tasks.withdraw(target);
@@ -260,7 +254,7 @@ export class WorkerOverlord extends Overlord {
 			else if (this.fortifyStructures.length > 0) {
 				this.fortifyActions(worker);
 			}
-			// Upgrade controller
+			// Upgrade controller if there's nothing left to do
 			else {
 				this.upgradeActions(worker);
 			}

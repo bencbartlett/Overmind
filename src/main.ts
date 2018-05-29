@@ -15,14 +15,14 @@
 'use strict';
 // Import global settings and prototypes
 import './console/globals';
-import './prototypes/prototypes_Creep';
-import './prototypes/prototypes_Flag';
-import './prototypes/prototypes_RoomObject';
-import './prototypes/prototypes_RoomPosition';
-import './prototypes/prototypes_RoomVisual';
+import './prototypes/Creep';
+import './prototypes/Flag';
+import './prototypes/RoomObject';
+import './prototypes/RoomPosition';
+import './prototypes/RoomVisual';
 import './prototypes/Room';
 import './prototypes/Structures';
-import './prototypes/prototypes_other';
+import './prototypes/Miscellaneous';
 import './tasks/prototypes';
 import './settings/settings_user';
 // Configuration, logging, and profiling
@@ -35,11 +35,11 @@ import {Stats} from './stats/stats';
 import {USE_PROFILER} from './settings/config';
 import profiler from 'screeps-profiler';
 // 1: Import overmind from standard TS source
-// import {_Overmind} from 'Overmind';
+import {_Overmind} from 'Overmind';
 // 2: Import overmind from obfuscated JS file included in public repository
-import OM from 'Overmind_obfuscated';
-
-var _Overmind = (<any>OM)._Overmind as (new() => IOvermind);
+// import OM from 'Overmind_obfuscated';
+//
+// var _Overmind = (<any>OM)._Overmind as (new() => IOvermind);
 
 if (USE_PROFILER) profiler.enable();
 
