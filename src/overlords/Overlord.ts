@@ -110,9 +110,7 @@ export abstract class Overlord {
 			role    : setup.role,								// role of the creep
 			task    : null, 									// task the creep is performing
 			data    : { 										// rarely-changed data about the creep
-				origin   : '',										// where it was spawned, filled in at spawn time
-				replaceAt: 0, 										// when it should be replaced
-				boosts   : {} 										// keeps track of what boosts creep has/needs
+				origin: '',										// where it was spawned, filled in at spawn time
 			},
 			_trav   : null,
 		};

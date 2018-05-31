@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
         - Module `Abathur` incompatible with pronouns
 
 ### Changed
+- `TerminalNetwork` now uses an `equalize()` routine to distribute resources between colonies
 - `LogisticsGroup` renamed to `LogisticsNetwork`
 - CreepSetups moved to respective overlord; now are constant instances rather than extending classes
 

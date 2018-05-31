@@ -404,24 +404,24 @@ export class Zerg {
 		}
 	}
 
-	/* The average movespeed of the creep on blank terrain */
-	get moveSpeed(): number {
-		if (!this.memory.data.moveSpeed) {
-			let massiveParts = [WORK, ATTACK, RANGED_ATTACK, HEAL, TOUGH];
-			let mass = 0;
-			for (let part of massiveParts) {
-				mass += this.getActiveBodyparts(part);
-			}
-			let moveParts = this.getActiveBodyparts(MOVE);
-			let fatiguePerTick = 2 * mass;
-			if (fatiguePerTick == 0) {
-				this.memory.data.moveSpeed = 1;
-			} else {
-				this.memory.data.moveSpeed = Math.min(2 * moveParts / fatiguePerTick, 1);
-			}
-		}
-		return this.memory.data.moveSpeed;
-	}
+	// /* The average movespeed of the creep on blank terrain */
+	// get moveSpeed(): number {
+	// 	if (!this.memory.data.moveSpeed) {
+	// 		let massiveParts = [WORK, ATTACK, RANGED_ATTACK, HEAL, TOUGH];
+	// 		let mass = 0;
+	// 		for (let part of massiveParts) {
+	// 			mass += this.getActiveBodyparts(part);
+	// 		}
+	// 		let moveParts = this.getActiveBodyparts(MOVE);
+	// 		let fatiguePerTick = 2 * mass;
+	// 		if (fatiguePerTick == 0) {
+	// 			this.memory.data.moveSpeed = 1;
+	// 		} else {
+	// 			this.memory.data.moveSpeed = Math.min(2 * moveParts / fatiguePerTick, 1);
+	// 		}
+	// 	}
+	// 	return this.memory.data.moveSpeed;
+	// }
 
 	// Movement and location -------------------------------------------------------------------------------------------
 

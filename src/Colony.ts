@@ -18,6 +18,7 @@ import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {TransportOverlord} from './overlords/core/transporter';
 import {Energetics} from './logistics/Energetics';
 import {StoreStructure} from './declarations/typeGuards';
+import {ManagerSetup} from './overlords/hiveCluster/commandCenter';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -145,7 +146,7 @@ export class Colony {
 	private registerRoomObjects(): void {
 		this.controller = this.room.controller!; // must be controller since colonies are based in owned rooms
 		this.pos = this.controller.pos; // This is used for overlord initialization but isn't actually useful
-		this.spawns = _.sortBy(_.filter(this.room.spawns, spawn => spawn.my), spawn => spawn.ref);
+		this.spawns = _.sortBy(_.filter(this.room.spawns, spawn => spawn.my && spawn.isActive()), spawn => spawn.ref);
 		this.extensions = this.room.extensions;
 		this.storage = this.room.storage;
 		this.links = this.room.links;
@@ -278,13 +279,35 @@ export class Colony {
 		return this.creepsByRole[roleName] || [];
 	}
 
-	/* Summarizes the total of all resources currently in a colony store structure */
+	/* Summarizes the total of all resources in colony store structures, labs, and some creeps */
 	private getAllAssets(): { [resourceType: string]: number } {
 		let allAssets: { [resourceType: string]: number } = {};
+		// Include storage structures
 		let storeStructures = _.compact([this.storage, this.terminal]) as StoreStructure[];
 		for (let structure of storeStructures) {
 			for (let resourceType in structure.store) {
 				let amount = structure.store[<ResourceConstant>resourceType] || 0;
+				if (!allAssets[resourceType]) {
+					allAssets[resourceType] = 0;
+				}
+				allAssets[resourceType] += amount;
+			}
+		}
+		// Include lab amounts
+		for (let lab of this.labs) {
+			if (lab.mineralType) {
+				if (!allAssets[lab.mineralType]) {
+					allAssets[lab.mineralType] = 0;
+				}
+				allAssets[lab.mineralType] += lab.mineralAmount;
+			}
+		}
+		// Include manager carry amount
+		let creepCarriesToInclude = _.map(_.filter(this.creeps, creep => creep.roleName == ManagerSetup.role),
+										  creep => creep.carry) as { [resourceType: string]: number }[];
+		for (let carry of creepCarriesToInclude) {
+			for (let resourceType in carry) {
+				let amount = carry[resourceType] || 0;
 				if (!allAssets[resourceType]) {
 					allAssets[resourceType] = 0;
 				}
@@ -308,7 +331,6 @@ export class Colony {
 		this.linkNetwork.run();												// Run the link network
 		this.roadLogistics.run();											// Run the road network
 		this.roomPlanner.run();												// Run the room planner
-		// _.forEach(this.creeps, creep => creep.run());						// Animate all creeps
 		this.stats();														// Log stats per tick
 	}
 

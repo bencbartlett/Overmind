@@ -55,14 +55,14 @@ interface StatsMemory {
 
 interface CreepMemory {
 	role: string;
-	// task: protoTask | null;
+	task: protoTask | null;
 	overlord: string | null;
 	colony: string;
 	data: {
 		origin: string;
-		replaceAt: number;
-		boosts: { [resourceName: string]: boolean };
-		moveSpeed?: number;
+		// replaceAt: number;
+		// boosts: { [resourceName: string]: boolean };
+		// moveSpeed?: number;
 	};
 	// Traveler components
 	// _travel: any;

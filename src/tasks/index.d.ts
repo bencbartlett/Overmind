@@ -60,9 +60,9 @@ interface ITask extends protoTask {
 	finish(): void;
 }
 
-interface CreepMemory {
-	task: protoTask | null;
-}
+// interface CreepMemory {
+// 	task: protoTask | null;
+// }
 
 interface Creep {
 	task: ITask | null;

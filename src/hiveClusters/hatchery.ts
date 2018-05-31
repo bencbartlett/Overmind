@@ -6,11 +6,13 @@ import {HatcheryOverlord} from '../overlords/hiveCluster/hatchery';
 import {Priority} from '../settings/priorities';
 import {Colony, ColonyStage} from '../Colony';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
-import {CreepSetup} from '../overlords/CreepSetup';
+import {bodyCost, CreepSetup} from '../overlords/CreepSetup';
 import {Overlord} from '../overlords/Overlord';
 import {Mem} from '../memory';
 import {Visualizer} from '../visuals/Visualizer';
 import {Stats} from '../stats/stats';
+import {Zerg} from '../Zerg';
+import {log} from '../lib/logger/log';
 
 const ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH = -10;
 
@@ -77,6 +79,15 @@ export class Hatchery extends HiveCluster {
 		return Mem.wrap(this.colony.memory, 'hatchery');
 	}
 
+	// Idle position for queen
+	get idlePos(): RoomPosition {
+		if (this.battery) {
+			return this.battery.pos;
+		} else {
+			return this.spawns[0].pos.availableNeighbors()[0];
+		}
+	}
+
 	private getStats() {
 		// Compute uptime
 		let spawnUsageThisTick = _.filter(this.spawns, spawn => spawn.spawning).length / this.spawns.length;
@@ -117,24 +128,6 @@ export class Hatchery extends HiveCluster {
 
 	// Creep queueing and spawning =====================================================================================
 
-	private bodyCost(bodyArray: string[]): number {
-		var partCosts: { [type: string]: number } = {
-			move         : 50,
-			work         : 100,
-			carry        : 50,
-			attack       : 80,
-			ranged_attack: 150,
-			heal         : 250,
-			claim        : 600,
-			tough        : 10,
-		};
-		var cost = 0;
-		for (let part of bodyArray) {
-			cost += partCosts[part];
-		}
-		return cost;
-	};
-
 	private generateCreepName(roleName: string): string {
 		// Generate a creep name based on the role and add a suffix to make it unique
 		let i = 0;
@@ -160,9 +153,7 @@ export class Hatchery extends HiveCluster {
 			role    : setup.role,								// role of the creep
 			task    : null, 									// task the creep is performing
 			data    : { 										// rarely-changed data about the creep
-				origin   : '',										// where it was spawned, filled in at spawn time
-				replaceAt: 0, 										// when it should be replaced
-				boosts   : {} 										// keeps track of what boosts creep has/needs
+				origin: '',										// where it was spawned, filled in at spawn time
 			},
 			_trav   : null,
 		};
@@ -189,10 +180,7 @@ export class Hatchery extends HiveCluster {
 		let spawnToUse = this.availableSpawns.shift(); // get a spawn to use
 		if (spawnToUse) { // if there is a spawn, create the creep
 			protoCreep.name = this.generateCreepName(protoCreep.name); // modify the creep name to make it unique
-			// if (protoCreep.memory.colony != this.colony.name) {
-			// 	log.info('Spawning ' + protoCreep.name + ' for ' + protoCreep.memory.colony);
-			// }
-			if (this.bodyCost(protoCreep.body) > this.room.energyCapacityAvailable) {
+			if (bodyCost(protoCreep.body) > this.room.energyCapacityAvailable) {
 				return ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH;
 			}
 			protoCreep.memory.data.origin = spawnToUse.pos.roomName;
@@ -211,19 +199,29 @@ export class Hatchery extends HiveCluster {
 		}
 	}
 
+	canSpawn(body: BodyPartConstant[]): boolean {
+		return bodyCost(body) <= this.room.energyCapacityAvailable;
+	}
+
+	canSpawnZerg(zerg: Zerg): boolean {
+		return this.canSpawn(_.map(zerg.body, part => part.type));
+	}
+
 	enqueue(protoCreep: protoCreep, priority: number): void {
-		// If you are incubating and can't build the requested creep, enqueue it to the incubation hatchery
-		if (this.colony.incubator && this.colony.incubator.hatchery &&
-			this.bodyCost(protoCreep.body) > this.room.energyCapacityAvailable) {
-			this.colony.incubator.hatchery.enqueue(protoCreep, priority);
-			// log.info('Requesting ' + protoCreep.name + ' from ' + this.colony.incubator.name);
-		} else {
-			// Otherwise, queue the creep to yourself
+		if (this.canSpawn(protoCreep.body)) {
+			// Spawn the creep yourself if you can
 			if (!this.productionQueue[priority]) {
 				this.productionQueue[priority] = [];
 				this.productionPriorities.push(priority);
 			}
 			this.productionQueue[priority].push(protoCreep);
+		} else {
+			// If you are incubating and can't build the requested creep, enqueue it to the incubation hatchery
+			if (this.colony.incubator && this.colony.incubator.hatchery) {
+				this.colony.incubator.hatchery.enqueue(protoCreep, priority);
+			} else {
+				log.warning(`${this.room.print} hatchery: cannot spawn creep ${protoCreep.name}!`);
+			}
 		}
 	}
 
@@ -242,29 +240,6 @@ export class Hatchery extends HiveCluster {
 			}
 		}
 	}
-
-	// Idle position for suppliers
-	get idlePos(): RoomPosition {
-		if (this.battery) {
-			return this.battery.pos;
-		} else {
-			return this.spawns[0].pos.availableNeighbors()[0];
-		}
-	}
-
-	// /* Find the best position for suppliers to idle at */
-	// private findIdlePos(): RoomPosition {
-	// 	if (this.battery) {
-	// 		return this.battery.pos;
-	// 	} else {
-	// 		let proximateStructures: Structure[] = _.compact([...this.spawns,
-	// 														  this.link!,
-	// 														  this.battery!,]);
-	// 		let numNearbyStructures = (pos: RoomPosition) =>
-	// 			_.filter(proximateStructures, s => s.pos.isNearTo(pos) && !s.pos.isEqualTo(pos)).length;
-	// 		return _.last(_.sortBy(this.spawns[0].pos.neighbors, pos => numNearbyStructures(pos)));
-	// 	}
-	// }
 
 	private handleSpawns(): void {
 		// Spawn all queued creeps that you can

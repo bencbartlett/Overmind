@@ -1,4 +1,5 @@
 import {profile} from '../profiler/decorator';
+import {Mem} from '../memory';
 
 export var COLLECT_STATS_FREQUENCY = 10; // Gather stats every N ticks
 
@@ -47,7 +48,7 @@ export class Stats {
     }
 
 	static log(key: string, value: number | undefined): void {
-		Memory.stats[key] = value;
+		Mem.setDeep(Memory.stats, key, value);
 	}
 
 	static accumulate(key: string, value: number): void {
@@ -57,28 +58,16 @@ export class Stats {
 		Memory.stats[key] += value;
 	}
 
-	// static accumulate(key: string, value: number): void {
-	// 	if (!Memory.permastats[key]) {
-	// 		Memory.permastats[key] = 0;
-	// 	}
-	// 	Memory.permastats[key] += value;
-	// }
-
 	static run() {
-		// Create a stats object if needed
-		if (!Memory.stats) {
-			Memory.stats = {};
-		}
-		//
-		// Memory.stats = {};
-
-		// Run all logging functions
-		// if (Game.time % COLLECT_STATS_FREQUENCY == 1) {
-		// 	Memory.stats = {}; // Overwrite old / deprecated stats
-		this.cpu();
-        this.gcl();
-        this.memory();
-		// }
+		// Log GCL
+		this.log('gcl.progress', Game.gcl.progress);
+		this.log('gcl.progressTotal', Game.gcl.progressTotal);
+		this.log('gcl.level', Game.gcl.level);
+		// Log memory usage
+		this.log('memory.used', RawMemory.get().length);
+		// Log CPU
+		this.log('cpu.getUsed', Game.cpu.getUsed());
+		this.log('cpu.limit', Game.cpu.limit);
+		this.log('cpu.bucket', Game.cpu.bucket);
 	}
-
 }

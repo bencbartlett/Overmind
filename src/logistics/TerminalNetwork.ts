@@ -242,7 +242,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 	// 	}
 	// }
 
-	private equalize(resourceType: ResourceConstant) {
+	private equalize(resourceType: ResourceConstant): void {
 		let colonyOf: (terminal: StructureTerminal) => Colony = (terminal => Overmind.Colonies[terminal.room.name]);
 		let averageAmount = _.sum(_.map(this.terminals, terminal =>
 			(colonyOf(terminal).assets[resourceType] || 0))) / this.terminals.length;
@@ -256,7 +256,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 			let receiverAmount = colonyOf(receiver).assets[resourceType] || 0;
 			let tolerance = this.settings.equalize.tolerance[resourceType] || this.settings.equalize.tolerance.default;
 			if (senderAmount - receiverAmount < tolerance) {
-				continue;
+				continue; // skip if colonies are close to equilibrium
 			}
 			let senderSurplus = senderAmount - averageAmount;
 			let receiverDeficit = averageAmount - receiverAmount;
