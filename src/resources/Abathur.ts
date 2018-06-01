@@ -2,6 +2,7 @@
 
 import {Colony} from '../Colony';
 import {REAGENTS} from './map_resources';
+import {mergeSum} from '../utilities/utils';
 
 const _priorityStock: { [key: string]: number } = {
 	XGHO2: 1000,	// For toughness
@@ -84,17 +85,11 @@ export class Abathur {
 
 	/* Summarizes the total of all resources currently in a colony store structure */
 	private computeGlobalAssets(): { [resourceType: string]: number } {
-		let globalAssets: { [resourceType: string]: number } = {};
+		let colonyAssets: { [resourceType: string]: number }[] = [];
 		for (let i in Overmind.colonies) {
-			let colonyAssets = Overmind.colonies[i].getAllAssets();
-			for (let resourceType in colonyAssets) {
-				if (!globalAssets[resourceType]) {
-					globalAssets[resourceType] = 0;
-				}
-				globalAssets[resourceType] += (colonyAssets[resourceType] || 0);
-			}
+			colonyAssets.push(Overmind.colonies[i].assets);
 		}
-		return globalAssets;
+		return mergeSum(colonyAssets);
 	}
 
 	get globalAssets(): { [resourceType: string]: number } {

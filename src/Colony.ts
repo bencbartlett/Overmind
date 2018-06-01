@@ -19,6 +19,7 @@ import {TransportOverlord} from './overlords/core/transporter';
 import {Energetics} from './logistics/Energetics';
 import {StoreStructure} from './declarations/typeGuards';
 import {ManagerSetup} from './overlords/hiveCluster/commandCenter';
+import {mergeSum} from './utilities/utils';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -281,18 +282,11 @@ export class Colony {
 
 	/* Summarizes the total of all resources in colony store structures, labs, and some creeps */
 	private getAllAssets(): { [resourceType: string]: number } {
-		let allAssets: { [resourceType: string]: number } = {};
-		// Include storage structures
-		let storeStructures = _.compact([this.storage, this.terminal]) as StoreStructure[];
-		for (let structure of storeStructures) {
-			for (let resourceType in structure.store) {
-				let amount = structure.store[<ResourceConstant>resourceType] || 0;
-				if (!allAssets[resourceType]) {
-					allAssets[resourceType] = 0;
-				}
-				allAssets[resourceType] += amount;
-			}
-		}
+		// Include storage structures and manager carry
+		let stores = _.map(<StoreStructure[]>_.compact([this.storage, this.terminal]), s => s.store);
+		let creepCarriesToInclude = _.map(_.filter(this.creeps, creep => creep.roleName == ManagerSetup.role),
+										  creep => creep.carry) as { [resourceType: string]: number }[];
+		let allAssets: { [resourceType: string]: number } = mergeSum([...stores, ...creepCarriesToInclude]);
 		// Include lab amounts
 		for (let lab of this.labs) {
 			if (lab.mineralType) {
@@ -302,19 +296,7 @@ export class Colony {
 				allAssets[lab.mineralType] += lab.mineralAmount;
 			}
 		}
-		// Include manager carry amount
-		let creepCarriesToInclude = _.map(_.filter(this.creeps, creep => creep.roleName == ManagerSetup.role),
-										  creep => creep.carry) as { [resourceType: string]: number }[];
-		for (let carry of creepCarriesToInclude) {
-			for (let resourceType in carry) {
-				let amount = carry[resourceType] || 0;
-				if (!allAssets[resourceType]) {
-					allAssets[resourceType] = 0;
-				}
-				allAssets[resourceType] += amount;
-			}
-		}
-		return allAssets as StoreDefinition;
+		return allAssets;
 	}
 
 	init(): void {

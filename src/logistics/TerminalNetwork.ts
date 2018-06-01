@@ -4,6 +4,18 @@ import {Mem} from '../memory';
 import {profile} from '../profiler/decorator';
 import {Energetics} from './Energetics';
 import {Colony} from '../Colony';
+import {mergeSum} from '../utilities/utils';
+
+interface TerminalNetworkMemory {
+	cache: {
+		sellPrice: { [resourceType: string]: number },
+	};
+	equalizeIndex: number;
+}
+
+function colonyOf(terminal: StructureTerminal): Colony {
+	return Overmind.colonies[terminal.room.name];
+}
 
 @profile
 export class TerminalNetwork implements ITerminalNetwork {
@@ -63,23 +75,15 @@ export class TerminalNetwork implements ITerminalNetwork {
 
 	/* Summarizes the total of all resources currently in a colony store structure */
 	private getAllAssets(): { [resourceType: string]: number } {
-		let allAssets: { [resourceType: string]: number } = {};
-		for (let terminal of this.terminals) {
-			let assets = (<Colony>Overmind.colonies[terminal.room.name]).assets;
-			for (let resourceType in assets) {
-				let amount = assets[resourceType] || 0;
-				if (!allAssets[resourceType]) {
-					allAssets[resourceType] = 0;
-				}
-				allAssets[resourceType] += amount;
-			}
-		}
-		return allAssets as StoreDefinition;
+		return mergeSum(_.map(this.terminals, terminal => colonyOf(terminal).assets));
 	}
 
-	get memory() {
+	get memory(): TerminalNetworkMemory {
 		return Mem.wrap(Memory.Overmind, 'terminalNetwork', {
-			cache: {}
+			cache        : {
+				sellPrice: {},
+			},
+			equalizeIndex: 0,
 		});
 	}
 
@@ -243,7 +247,6 @@ export class TerminalNetwork implements ITerminalNetwork {
 	// }
 
 	private equalize(resourceType: ResourceConstant): void {
-		let colonyOf: (terminal: StructureTerminal) => Colony = (terminal => Overmind.colonies[terminal.room.name]);
 		let averageAmount = _.sum(_.map(this.terminals, terminal =>
 			(colonyOf(terminal).assets[resourceType] || 0))) / this.terminals.length;
 		let terminalsByResource = _.sortBy(this.terminals, terminal => (colonyOf(terminal).assets[resourceType] || 0));
@@ -282,12 +285,17 @@ export class TerminalNetwork implements ITerminalNetwork {
 	run(): void {
 		if (Game.time % (TERMINAL_COOLDOWN + 1) == 0) {
 			for (let terminal of this.terminals) {
-				// if (terminal.energy > Energetics.settings.terminal.energy.outThreshold) {
-				// 	this.sendExcessEnergy(terminal);
-				// }
 				this.buyShortages(terminal);
 			}
-			this.equalize(RESOURCE_ENERGY); // todo: include other resources on rotation
+			// Equalize current resource type
+			this.equalize(RESOURCES_ALL[this.memory.equalizeIndex]);
+			// Determine next resource type to equalize across terminals; most recent resourceType gets cycled to end
+			let resourceEqualizeOrder = RESOURCES_ALL.slice(this.memory.equalizeIndex + 1)
+													 .concat(RESOURCES_ALL.slice(0, this.memory.equalizeIndex + 1));
+			let nextResourceType = _.find(resourceEqualizeOrder, resourceType =>
+				this.assets[resourceType] > this.settings.equalize.tolerance.default);
+			// Set next equalize resource index
+			this.memory.equalizeIndex = _.findIndex(RESOURCES_ALL, resourceType => resourceType == nextResourceType);
 		}
 	}
 

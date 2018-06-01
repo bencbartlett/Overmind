@@ -8,6 +8,7 @@ export class Mem {
 		if (!memory[memName]) {
 			memory[memName] = defaults;
 		}
+		_.defaults(memory[memName], defaults);
 		return memory[memName];
 	}
 

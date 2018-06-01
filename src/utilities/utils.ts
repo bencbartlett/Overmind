@@ -5,7 +5,7 @@ interface toColumnsOpts {
 	justify: boolean
 }
 
-/* Create column-aligned text array from object with string key/values*/
+/* Create column-aligned text array from object with string key/values */
 export function toColumns(obj: { [key: string]: string }, opts = {} as toColumnsOpts): string[] {
 	_.defaults(opts, {
 		padChar: ' ',	// Character to pad with, e.g. "." would be key........val
@@ -27,4 +27,17 @@ export function toColumns(obj: { [key: string]: string }, opts = {} as toColumns
 	return ret;
 }
 
-// export function timeIt()
+/* Merges a list of store-like objects, summing overlapping keys. Useful for calculating assets from multiple sources */
+export function mergeSum(objects: { [key: string]: number | undefined }[]): { [key: string]: number } {
+	let ret: { [key: string]: number } = {};
+	for (let object of objects) {
+		for (let key in object) {
+			let amount = object[key] || 0;
+			if (!ret[key]) {
+				ret[key] = 0;
+			}
+			ret[key] += amount;
+		}
+	}
+	return ret;
+}
