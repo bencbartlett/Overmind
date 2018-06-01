@@ -27,11 +27,11 @@ export abstract class Overlord {
 	colony: Colony;
 	protected _creeps: { [roleName: string]: Zerg[] };
 	creepUsageReport: { [role: string]: [number, number] | undefined };
-	memory: OverlordMemory;
+	// memory: OverlordMemory;
 	boosts: { [roleName: string]: _ResourceConstantSansEnergy[] | undefined };
 
 	constructor(initializer: IOverlordInitializer, name: string, priority: number) {
-		this.initMemory(initializer);
+		// this.initMemory(initializer);
 		this.name = name;
 		this.room = initializer.room;
 		this.priority = priority;
@@ -84,15 +84,15 @@ export abstract class Overlord {
 		this.creepUsageReport[role] = [currentAmt, neededAmt];
 	}
 
-	protected initMemory(initializer: IOverlordInitializer): void {
-		if (!initializer.memory.overlords) {
-			initializer.memory.overlords = {};
-		}
-		if (!initializer.memory.overlords[this.name]) {
-			initializer.memory.overlords[this.name] = {};
-		}
-		this.memory = initializer.memory.overlords[this.name];
-	}
+	// protected initMemory(initializer: IOverlordInitializer): void {
+	// 	if (!initializer.memory.overlords) {
+	// 		initializer.memory.overlords = {};
+	// 	}
+	// 	if (!initializer.memory.overlords[this.name]) {
+	// 		initializer.memory.overlords[this.name] = {};
+	// 	}
+	// 	this.memory = initializer.memory.overlords[this.name];
+	// }
 
 	/* Generate (but not spawn) the largest creep possible, returns the protoCreep as an object */
 	protected generateProtoCreep(setup: CreepSetup): protoCreep {

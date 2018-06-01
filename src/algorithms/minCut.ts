@@ -351,7 +351,7 @@ export function createGraph(roomName: string, toProtect: Rectangle[],
 	let bot = 0;
 	let dx = 0;
 	let dy = 0;
-	max = 49;
+	// max = 49;
 	const baseCapacity = 10;
 	const modifyWeight = preferCloserBarriers ? 1 : 0;
 	for (x = bounds.x1 + 1; x < bounds.x2; x++) {
@@ -486,7 +486,7 @@ export function pruneDeadEnds(roomName: string, cutTiles: Coord[]) {
 		}
 	}
 	// Remove min-Cut-Tile if there is no EXIT reachable by it
-	let leadsToExit = false;
+	let leadsToExit: boolean;
 	const validCut: Coord[] = [];
 	for (tile of cutTiles) {
 		leadsToExit = false;
@@ -509,7 +509,7 @@ export function pruneDeadEnds(roomName: string, cutTiles: Coord[]) {
  * @param roomName - the name of the room to use for the test, must be visible
  */
 export function testMinCut(colonyName: string, preferCloserBarriers = true) {
-	let colony = Overmind.Colonies[colonyName];
+	let colony = Overmind.colonies[colonyName];
 	if (!colony) {
 		return `No colony: ${colonyName}`;
 	}
@@ -552,7 +552,7 @@ export function testMinCut(colonyName: string, preferCloserBarriers = true) {
  * @param roomName - the name of the room to use for the test, must be visible
  */
 export function testMinCutSubset(colonyName: string) {
-	let colony = Overmind.Colonies[colonyName];
+	let colony = Overmind.colonies[colonyName];
 	if (!colony) {
 		return `No colony: ${colonyName}`;
 	}

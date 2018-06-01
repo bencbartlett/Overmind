@@ -48,24 +48,24 @@ export abstract class Directive {
 	static getFlagColony(flag: Flag, requiredRCL = 1): Colony {
 		// If something is written to flag.colony, use that as the colony
 		if (flag.memory.colony) {
-			return Overmind.Colonies[flag.memory.colony];
+			return Overmind.colonies[flag.memory.colony];
 		} else {
 			// If flag contains a colony name as a substring, assign to that colony, regardless of RCL
-			let colonyNames = _.keys(Overmind.Colonies);
+			let colonyNames = _.keys(Overmind.colonies);
 			for (let name of colonyNames) {
 				if (flag.name.includes(name)) {
 					flag.memory.colony = name;
-					return Overmind.Colonies[name];
+					return Overmind.colonies[name];
 				}
 			}
 			// If flag is in a room belonging to a colony and the colony has sufficient RCL, assign to there
-			let colony = Overmind.Colonies[Overmind.colonyMap[flag.pos.roomName]];
+			let colony = Overmind.colonies[Overmind.colonyMap[flag.pos.roomName]];
 			if (colony && colony.level >= requiredRCL) {
 				return colony;
 			} else {
 				// Otherwise assign to closest colony
 				this.recalculateColony(flag, requiredRCL);
-				return Overmind.Colonies[flag.memory.colony!];
+				return Overmind.colonies[flag.memory.colony!];
 			}
 		}
 	}
@@ -106,6 +106,7 @@ export abstract class Directive {
 
 	// Wrapped flag methods ============================================================================================
 	remove(): number {
+		delete this.memory;
 		return this.flag.remove();
 	}
 

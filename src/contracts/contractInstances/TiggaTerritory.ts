@@ -34,7 +34,7 @@ export class Contract_TiggaTerritoryAgreement extends Contract {
 		if (this.isValid() && Game.time % this.period == 3) {
 			let sender: StructureTerminal | undefined;
 
-			let E2S43 = Overmind.Colonies.E2S43 as Colony;
+			let E2S43 = Overmind.colonies.E2S43 as Colony;
 			if (E2S43 && E2S43.terminal && E2S43.terminal.cooldown == 0) {
 				sender = E2S43.terminal;
 			} else {

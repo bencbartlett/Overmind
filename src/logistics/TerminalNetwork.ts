@@ -65,7 +65,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 	private getAllAssets(): { [resourceType: string]: number } {
 		let allAssets: { [resourceType: string]: number } = {};
 		for (let terminal of this.terminals) {
-			let assets = (<Colony>Overmind.Colonies[terminal.room.name]).assets;
+			let assets = (<Colony>Overmind.colonies[terminal.room.name]).assets;
 			for (let resourceType in assets) {
 				let amount = assets[resourceType] || 0;
 				if (!allAssets[resourceType]) {
@@ -243,7 +243,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 	// }
 
 	private equalize(resourceType: ResourceConstant): void {
-		let colonyOf: (terminal: StructureTerminal) => Colony = (terminal => Overmind.Colonies[terminal.room.name]);
+		let colonyOf: (terminal: StructureTerminal) => Colony = (terminal => Overmind.colonies[terminal.room.name]);
 		let averageAmount = _.sum(_.map(this.terminals, terminal =>
 			(colonyOf(terminal).assets[resourceType] || 0))) / this.terminals.length;
 		let terminalsByResource = _.sortBy(this.terminals, terminal => (colonyOf(terminal).assets[resourceType] || 0));

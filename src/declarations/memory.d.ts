@@ -99,7 +99,7 @@ interface FlagMemory {
 	rotation?: number;
 	colony?: string;
 	parent?: string;
-	overlords: { [overlordName: string]: OverlordMemory };
+	// overlords: { [overlordName: string]: OverlordMemory };
 
 	// [otherProperties: string]: any;
 }

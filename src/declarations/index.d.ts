@@ -44,7 +44,7 @@ interface IOvermindMemory {
 
 interface IOvermind {
 	cache: ICache;
-	Colonies: { [roomName: string]: any };
+	colonies: { [roomName: string]: any };
 	overlords: { [overlordName: string]: any };
 	colonyMap: { [roomName: string]: string };
 	invisibleRooms: string[];

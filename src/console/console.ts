@@ -17,6 +17,7 @@ export class Console {
 		global.listAllDirectives = this.listAllDirectives;
 		global.listPersistentDirectives = this.listPersistentDirectives;
 		global.removeAllLogisticsDirectives = this.removeAllLogisticsDirectives;
+		global.deepCleanMemory = this.deepCleanMemory;
 	}
 
 	static help() {
@@ -37,6 +38,7 @@ export class Console {
 		descr['destroyAllBarriers(roomName)'] = 'destroys all ramparts and barriers in a room';
 		descr['listAllDirectives()'] = 'print type, name, pos of every directive';
 		descr['listPersistentDirectives()'] = 'print type, name, pos of every persistent directive';
+		descr['deepCleanMemory()'] = 'deletes all non-critical portions of memory (be careful!)';
 		// Console list
 		let descrMsg = toColumns(descr, {justify: true, padChar: '.'});
 		let maxLineLength = _.max(_.map(descrMsg, line => line.length)) + 2;
@@ -48,9 +50,9 @@ export class Console {
 	}
 
 	static openRoomPlanner(roomName: string): string {
-		if (Overmind.Colonies[roomName]) {
-			if (Overmind.Colonies[roomName].roomPlanner.active != true) {
-				Overmind.Colonies[roomName].roomPlanner.active = true;
+		if (Overmind.colonies[roomName]) {
+			if (Overmind.colonies[roomName].roomPlanner.active != true) {
+				Overmind.colonies[roomName].roomPlanner.active = true;
 				return '';
 			} else {
 				return `RoomPlanner for ${roomName} is already active!`;
@@ -61,9 +63,9 @@ export class Console {
 	}
 
 	static closeRoomPlanner(roomName: string): string {
-		if (Overmind.Colonies[roomName]) {
-			if (Overmind.Colonies[roomName].roomPlanner.active == true) {
-				Overmind.Colonies[roomName].roomPlanner.finalize();
+		if (Overmind.colonies[roomName]) {
+			if (Overmind.colonies[roomName].roomPlanner.active == true) {
+				Overmind.colonies[roomName].roomPlanner.finalize();
 				return '';
 			} else {
 				return `RoomPlanner for ${roomName} is not active!`;
@@ -74,9 +76,9 @@ export class Console {
 	}
 
 	static cancelRoomPlanner(roomName: string): string {
-		if (Overmind.Colonies[roomName]) {
-			if (Overmind.Colonies[roomName].roomPlanner.active == true) {
-				Overmind.Colonies[roomName].roomPlanner.active = false;
+		if (Overmind.colonies[roomName]) {
+			if (Overmind.colonies[roomName].roomPlanner.active == true) {
+				Overmind.colonies[roomName].roomPlanner.active = false;
 				return `RoomPlanner for ${roomName} has been deactivated without saving changes`;
 			} else {
 				return `RoomPlanner for ${roomName} is not active!`;
@@ -88,7 +90,7 @@ export class Console {
 
 	static listActiveRoomPlanners(): string {
 		let coloniesWithActiveRoomPlanners: Colony[] = _.filter(
-			_.map(_.keys(Overmind.Colonies), colonyName => Overmind.Colonies[colonyName]),
+			_.map(_.keys(Overmind.colonies), colonyName => Overmind.colonies[colonyName]),
 			(colony: Colony) => colony.roomPlanner.active);
 		let names: string[] = _.map(coloniesWithActiveRoomPlanners, colony => colony.room.print);
 		if (names.length > 0) {
@@ -151,5 +153,39 @@ export class Console {
 			barrier.destroy();
 		}
 		return `Destroyed ${room.barriers.length} barriers.`;
+	}
+
+	static deepCleanMemory(): string {
+		// Clean colony memory
+		let protectedColonyKeys = ['defcon', 'roomPlanner', 'roadPlanner', 'barrierPlanner'];
+		for (let colName in Memory.colonies) {
+			for (let key in Memory.colonies[colName]) {
+				if (!protectedColonyKeys.includes(key)) {
+					delete (<any>Memory.colonies[colName])[key];
+				}
+			}
+		}
+		// Suicide any creeps which have no memory
+		for (let i in Game.creeps) {
+			if (<any>Game.creeps[i].memory == {}) {
+				Game.creeps[i].suicide();
+			}
+		}
+		// Remove profiler memory
+		delete Memory.profiler;
+		// Remove overlords memory from flags
+		for (let i in Memory.flags) {
+			if ((<any>Memory.flags[i]).overlords) {
+				delete (<any>Memory.flags[i]).overlords;
+			}
+		}
+		// Clean creep memory
+		for (let i in Memory.creeps) {
+			// Remove all creep tasks to fix memory leak in 0.3.1
+			if (Memory.creeps[i].task) {
+				Memory.creeps[i].task = null;
+			}
+		}
+		return `Memory has been cleaned.`;
 	}
 }

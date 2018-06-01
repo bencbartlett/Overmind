@@ -388,7 +388,7 @@ export class Zerg {
 
 	/* Colony that the creep belongs to. */
 	get colony(): Colony {
-		return Overmind.Colonies[this.memory.colony];
+		return Overmind.colonies[this.memory.colony];
 	}
 
 	set colony(newColony: Colony) {
@@ -427,12 +427,7 @@ export class Zerg {
 
 	travelTo(destination: RoomPosition | { pos: RoomPosition }, options: TravelToOptions = {}) {
 		// Add default obstacle avoidance
-		if (options.obstacles) {
-			options.obstacles = options.obstacles.concat(this.getObstacles());
-		} else {
-			options.obstacles = this.getObstacles();
-		}
-		return this.creep.travelTo(destination, options);
+		return this.creep.travelTo(destination, _.merge(options, {obstacles: this.getObstacles()}));
 	};
 
 	inSameRoomAs(target: HasPos): boolean {

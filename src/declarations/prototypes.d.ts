@@ -196,4 +196,6 @@ interface String {
 
 interface Number {
 	toPercent(decimals?: number): string;
+
+	truncate(decimals: number): number;
 }

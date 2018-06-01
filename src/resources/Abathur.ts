@@ -47,7 +47,7 @@ interface Shortage {
 }
 
 // Compute priority and wanted stock
-let numColonies = 1; //_.keys(Overmind.Colonies).length;
+let numColonies = 1; //_.keys(Overmind.colonies).length;
 let priorityStock: Shortage[] = [];
 for (let resourceType in _priorityStock) {
 	let stock = {
@@ -85,8 +85,8 @@ export class Abathur {
 	/* Summarizes the total of all resources currently in a colony store structure */
 	private computeGlobalAssets(): { [resourceType: string]: number } {
 		let globalAssets: { [resourceType: string]: number } = {};
-		for (let i in Overmind.Colonies) {
-			let colonyAssets = Overmind.Colonies[i].getAllAssets();
+		for (let i in Overmind.colonies) {
+			let colonyAssets = Overmind.colonies[i].getAllAssets();
 			for (let resourceType in colonyAssets) {
 				if (!globalAssets[resourceType]) {
 					globalAssets[resourceType] = 0;

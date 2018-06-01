@@ -18,7 +18,7 @@ export class DirectiveIncubate extends Directive {
 	constructor(flag: Flag) {
 		super(flag, DirectiveIncubate.requiredRCL);
 		// Register incubation status
-		this.incubatee = this.room ? Overmind.Colonies[Overmind.colonyMap[this.room.name]] : undefined;
+		this.incubatee = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
 		if (this.incubatee && this.colony != this.incubatee) {
 			// this.colony is from Flag memory and is the incubator; this.room.colony is the new colony
 			this.incubatee.incubator = this.colony;

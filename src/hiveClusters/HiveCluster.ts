@@ -19,7 +19,7 @@ export abstract class HiveCluster {
 		this.room = instantiationObject.room!;
 		this.pos = instantiationObject.pos;
 		this.componentName = name;
-		this.name = name + ':' + instantiationObject.ref;
+		this.name = name + '@' + instantiationObject.pos.name;
 		this.colony.hiveClusters.push(this);
 	}
 

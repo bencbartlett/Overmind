@@ -3,8 +3,8 @@ import {log} from '../lib/logger/log';
 import {Colony} from '../Colony';
 
 export function migrate_02X_03X() {
-	for (let name in Overmind.Colonies) {
-		let colony = Overmind.Colonies[name] as Colony;
+	for (let name in Overmind.colonies) {
+		let colony = Overmind.colonies[name] as Colony;
 		let lastBuilt = colony.roomPlanner.memory.lastGenerated;
 		// Reboot colony room planners one at a time every 3 ticks
 		if (!lastBuilt) {

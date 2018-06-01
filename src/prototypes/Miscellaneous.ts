@@ -9,3 +9,9 @@ String.prototype.padLeft = function (length: number, char = ' '): string {
 Number.prototype.toPercent = function (decimals = 0): string {
 	return (this * 100).toFixed(decimals) + '%';
 };
+
+Number.prototype.truncate = function (decimals: number): number {
+	var re = new RegExp('(\\d+\\.\\d{' + decimals + '})(\\d)'),
+		m  = this.toString().match(re);
+	return m ? parseFloat(m[1]) : this.valueOf();
+};

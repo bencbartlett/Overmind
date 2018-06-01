@@ -41,13 +41,17 @@ export class Stats {
 		Memory.stats['gcl.progress'] = Game.gcl.progress;
 		Memory.stats['gcl.progressTotal'] = Game.gcl.progressTotal;
 		Memory.stats['gcl.level'] = Game.gcl.level;
-    }
+	}
 
-    static memory() {
-        Memory.stats['memory.used'] = RawMemory.get().length
-    }
+	static memory() {
+		Memory.stats['memory.used'] = RawMemory.get().length;
+	}
 
-	static log(key: string, value: number | undefined): void {
+	static log(key: string, value: number | undefined, truncateNumbers = true): void {
+		if (truncateNumbers && typeof value == 'number') {
+			let decimals = 5;
+			value = value.truncate(decimals);
+		}
 		Mem.setDeep(Memory.stats, key, value);
 	}
 
