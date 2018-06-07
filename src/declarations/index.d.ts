@@ -50,6 +50,7 @@ interface IOvermind {
 	invisibleRooms: string[];
 	memory: IOvermindMemory;
 	terminalNetwork: ITerminalNetwork;
+	tradeNetwork: ITradeNetwork;
 
 	build(): void;
 
@@ -71,6 +72,12 @@ interface ITerminalNetwork {
 	init(): void;
 
 	run(): void;
+}
+
+interface ITradeNetwork {
+	memory: any;
+
+	buyMineral(terminal: StructureTerminal, mineralType: ResourceConstant, amount: number): void;
 }
 
 declare var Overmind: IOvermind;

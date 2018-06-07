@@ -18,16 +18,11 @@ export class CommandCenter extends HiveCluster {
 	terminal: StructureTerminal | undefined;				// The colony terminal
 	terminalNetwork: TerminalNetwork;						// Reference to Overmind.terminalNetwork
 	towers: StructureTower[];								// Towers within range 3 of storage are part of cmdCenter
-	// labs: StructureLab[];									// Colony labs
 	powerSpawn: StructurePowerSpawn | undefined;			// Colony Power Spawn
 	nuker: StructureNuker | undefined;						// Colony nuker
 	observer: StructureObserver | undefined;				// Colony observer
 	transportRequests: TransportRequestGroup;				// Box for energy requests
 	private _idlePos: RoomPosition;							// Cached idle position
-	// private _depositStructures: transferTargetType[];		// Deposit to these
-	// private _withdrawStructures: (							// Withdraw from these
-	// 	StructureLink |
-	// 	StructureTerminal)[];
 	settings: {												// Settings for cluster operation
 		linksTransmitAt: number;
 		refillTowersBelow: number;  							// What value to refill towers at?
@@ -98,7 +93,7 @@ export class CommandCenter extends HiveCluster {
 
 	private registerRequests(): void {
 
-		// Supply requests
+		// Supply requests:
 
 		// If the link is empty and can send energy and something needs energy, fill it up
 		if (this.link && this.link.energy < 0.9 * this.link.energyCapacity && this.link.cooldown <= 1) {
@@ -124,7 +119,7 @@ export class CommandCenter extends HiveCluster {
 			this.transportRequests.request(this.nuker, Priority.Low);
 		}
 
-		// Withdraw requests
+		// Withdraw requests:
 
 		// If the link has energy and nothing needs it, empty it
 		if (this.link && this.link.energy > 0) {
@@ -132,79 +127,7 @@ export class CommandCenter extends HiveCluster {
 				this.transportRequests.provide(this.link, Priority.High);
 			}
 		}
-		// // Withdraw energy from terminal if it has more than equilibrium amount and there is room for it in storage
-		// if (this.terminal && this.terminal.energy > Energetics.settings.terminal.energy.equilibrium) {
-		// 	if (_.sum(this.storage.store) < Energetics.settings.storage.total.cap) {
-		// 		this.transportRequests.provide(this.terminal, Priority.Normal);
-		// 	}
-		// }
 	}
-
-
-	// Prioritize depositing and withdrawing ===========================================================================
-
-	// get depositStructures() {
-	// 	if (!this._depositStructures) {
-	// 		// Generate a prioritized list of what needs energy
-	// 		let depositStructures: transferTargetType[] = [];
-	// 		// If the link is empty and can send energy and something needs energy, fill it up
-	// 		if (this.link && this.link.energy < 0.9 * this.link.energyCapacity && this.link.cooldown <= 1) {
-	// 			if (this.colony.linkNetwork.receive.length > 0) { 	// If something wants energy
-	// 				depositStructures.push(this.link);
-	// 			}
-	// 		}
-	// 		for (let tower of this.towers) {
-	// 			if (tower.energy < this.settings.refillTowersBelow) { // If towers urgently need energy
-	// 				depositStructures.push(tower);
-	// 			}
-	// 		}
-	// 		if (this.terminal && this.terminal.energy < Energetics.settings.terminal.energy.inThreshold) {
-	// 			depositStructures.push(this.terminal);
-	// 		}
-	// 		if (this.nuker && this.nuker.energy < this.nuker.energyCapacity) {
-	// 			depositStructures.push(this.nuker);
-	// 		}
-	// 		if (this.powerSpawn && this.powerSpawn.energy < this.powerSpawn.energyCapacity) {
-	// 			depositStructures.push(this.powerSpawn);
-	// 		}
-	// 		// for (let lab of this.labs) {
-	// 		// 	if (lab.energy < lab.energyCapacity) {
-	// 		// 		depositStructures.push(lab);
-	// 		// 	}
-	// 		// }
-	// 		// If nothing else needs depositing, fill up towers completely
-	// 		if (depositStructures.length == 0) {
-	// 			for (let tower of this.towers) {
-	// 				if (tower.energy < tower.energyCapacity) {
-	// 					depositStructures.push(tower);
-	// 				}
-	// 			}
-	// 		}
-	// 		this._depositStructures = depositStructures;
-	// 	}
-	// 	return this._depositStructures;
-	// }
-	//
-	// get withdrawStructures() {
-	// 	if (!this._withdrawStructures) {
-	// 		// Generate a prioritized list of things that need energy withdrawn
-	// 		let withdrawStructures: (StructureLink | StructureTerminal)[] = [];
-	// 		// If the link has energy and nothing needs it, empty it
-	// 		if (this.link && this.link.energy > 0) {
-	// 			if (this.colony.linkNetwork.receive.length == 0) { // nothing needs link to send energy
-	// 				withdrawStructures.push(this.link);
-	// 			}
-	// 		}
-	// 		// Withdraw energy from terminal if it has more than equilibrium amount and there is room for it in storage
-	// 		if (this.terminal && this.terminal.energy > Energetics.settings.terminal.energy.equilibrium) {
-	// 			if (_.sum(this.storage.store) < Energetics.settings.storage.total.cap) {
-	// 				withdrawStructures.push(this.terminal);
-	// 			}
-	// 		}
-	// 		this._withdrawStructures = withdrawStructures;
-	// 	}
-	// 	return this._withdrawStructures;
-	// }
 
 	// Initialization and operation ====================================================================================
 

@@ -1,5 +1,6 @@
 import {log} from '../lib/logger/log';
 import {Mem} from '../memory';
+import minBy from 'lodash.minby';
 import {profile} from '../profiler/decorator';
 
 interface TraderMemory {
@@ -10,7 +11,7 @@ interface TraderMemory {
 }
 
 @profile
-export class TraderJoe {
+export class TraderJoe implements ITradeNetwork {
 
 	private cache: {
 		sellPrice: { [resourceType: string]: number }
@@ -25,7 +26,7 @@ export class TraderJoe {
 		},
 	};
 
-	constructor(terminals: StructureTerminal[]) {
+	constructor() {
 		this.cache = this.memory.cache;
 	}
 
@@ -58,7 +59,7 @@ export class TraderJoe {
 	private effectivePricePerUnit(order: Order, terminal: StructureTerminal): number {
 		if (order.roomName) {
 			let transferCost = Game.market.calcTransactionCost(1000, order.roomName, terminal.room.name) / 1000;
-			let energyToCreditMultiplier = 0.3; //this.cache.sellPrice[RESOURCE_ENERGY] * 1.5;
+			let energyToCreditMultiplier = 0.01; //this.cache.sellPrice[RESOURCE_ENERGY] * 1.5;
 			return order.price + transferCost * energyToCreditMultiplier;
 		} else {
 			return Infinity;
@@ -80,6 +81,22 @@ export class TraderJoe {
 	// 		}
 	// 	}
 	// }
+
+	buyMineral(terminal: StructureTerminal, mineralType: ResourceConstant, amount: number) {
+		if (terminal.store[RESOURCE_ENERGY] < 10000) {
+			return;
+		}
+		amount += 10;
+		let ordersForMineral = Game.market.getAllOrders(
+			order => order.type == ORDER_SELL && order.resourceType == mineralType && order.amount >= amount
+		);
+		let bestOrder = minBy(ordersForMineral, (order: Order) => this.effectivePricePerUnit(order, terminal)) as Order;
+		let maxPrice = TraderJoe.settings.market.maxPrice.default;
+		if (bestOrder && bestOrder.price <= maxPrice) {
+			let response = Game.market.deal(bestOrder.id, amount, terminal.room.name);
+			this.logTransaction(bestOrder, terminal.room.name, amount, response);
+		}
+	}
 
 	private logTransaction(order: Order, destinationRoomName: string, amount: number, response: number): void {
 		let action = order.type == ORDER_SELL ? 'Bought' : 'Sold';

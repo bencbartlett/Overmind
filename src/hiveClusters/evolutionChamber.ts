@@ -10,14 +10,14 @@ import {Pathing} from '../pathing/pathing';
 import {log} from '../lib/logger/log';
 import {REAGENTS} from '../resources/map_resources';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
+import {Priority} from '../settings/priorities';
 
 export enum LabStatus {
 	Idle              = 0,
-	// ReadyForNewProcess = 1,
-	AcquiringMinerals = 2,
-	LoadingLabs       = 3,
-	Synthesizing      = 4,
-	UnloadingLabs     = 5,
+	AcquiringMinerals = 1,
+	LoadingLabs       = 2,
+	Synthesizing      = 3,
+	UnloadingLabs     = 4,
 }
 
 interface EvolutionChamberMemory {
@@ -146,18 +146,81 @@ export class EvolutionChamber extends HiveCluster {
 				this.memory.status = LabStatus.Idle;
 				break;
 		}
+
+	}
+
+	private reagentLabRequests(): void {
+		if (this.memory.activeReaction) {
+			let {mineralType, amount} = this.memory.activeReaction;
+			let [ing1, ing2] = REAGENTS[mineralType];
+			let [lab1, lab2] = this.reagentLabs;
+			// Empty out any incorrect minerals and request the correct reagents
+			if (lab1.mineralType != ing1 && lab1.mineralAmount > 0) {
+				this.transportRequests.provide(lab1, Priority.Normal, {resourceType: lab1.mineralType});
+			} else if (this.memory.status == LabStatus.LoadingLabs && lab1.mineralAmount < amount) {
+				this.transportRequests.request(lab1, Priority.Normal, {
+					resourceType: ing1,
+					amount      : amount - lab1.mineralAmount,
+				});
+			}
+			if (lab2.mineralType != ing2 && lab2.mineralAmount > 0) {
+				this.transportRequests.provide(lab2, Priority.Normal, {resourceType: lab2.mineralType});
+			} else if (this.memory.status == LabStatus.LoadingLabs && lab2.mineralAmount < amount) {
+				this.transportRequests.request(lab2, Priority.Normal, {
+					resourceType: ing2,
+					amount      : amount - lab2.mineralAmount,
+				});
+			}
+		} else {
+			// Labs should be empty when no reaction process is currently happening
+			for (let lab of this.reagentLabs) {
+				this.transportRequests.provide(lab, Priority.Normal, {resourceType: lab.mineralType});
+			}
+		}
+	}
+
+	private productLabRequests(): void {
+		if (this.memory.activeReaction) {
+			let {mineralType, amount} = this.memory.activeReaction;
+			for (let lab of this.productLabs) {
+				let labHasWrongMineral = lab.mineralType != mineralType && lab.mineralAmount > 0;
+				let labIsFull = lab.mineralAmount == lab.mineralCapacity;
+				// Empty out incorrect minerals or if it's time to unload or if lab is full
+				if ((this.memory.status == LabStatus.UnloadingLabs && lab.mineralAmount > 0) ||
+					labHasWrongMineral || labIsFull) {
+					this.transportRequests.provide(lab, Priority.NormalLow, {resourceType: lab.mineralType});
+				}
+			}
+		} else {
+			// Labs should be empty when no reaction process is currently happening
+			for (let lab of this.productLabs) {
+				this.transportRequests.provide(lab, Priority.NormalLow, {resourceType: lab.mineralType});
+			}
+		}
+	}
+
+	private boosterLabRequests(lab: StructureLab): void {
+		let {mineralType, amount} = this.labReservations[lab.id];
+		// Empty out incorrect minerals
+		if (lab.mineralType != mineralType && lab.mineralAmount > 0) {
+			this.transportRequests.provide(lab, Priority.NormalHigh, {resourceType: lab.mineralType});
+		} else {
+			this.transportRequests.request(lab, Priority.NormalHigh, {
+				resourceType: <ResourceConstant>mineralType,
+				amount      : amount - lab.mineralAmount
+			});
+		}
 	}
 
 	private registerRequests(): void {
 		// Refill labs needing energy
 		let refillLabs = _.filter(this.labs, lab => lab.energy < lab.energyCapacity);
-		_.forEach(refillLabs, lab => this.transportRequests.request(lab));
-		// TODO: Request resources delivered to lab
+		_.forEach(refillLabs, lab => this.transportRequests.request(lab, Priority.NormalLow));
+		// Request resources delivered to / withdrawn from each type of lab
+		this.reagentLabRequests();
+		this.productLabRequests();
+		_.forEach(_.keys(this.labReservations), id => this.boosterLabRequests(<StructureLab>deref(id)));
 	}
-
-	// get memory(): EvolutionChamberMemory {
-	// 	return Mem.wrap(this.colony.memory, 'evolutionChamber', EvolutionChamberMemoryDefaults);
-	// }
 
 	// Lab mineral reservations ========================================================================================
 
@@ -178,10 +241,27 @@ export class EvolutionChamber extends HiveCluster {
 			this.memory.activeReaction = this.memory.reactionQueue.shift();
 		}
 		this.initLabStatus();
+		this.registerRequests();
 	}
 
 	run(): void {
-
+		if (this.memory.status == LabStatus.Synthesizing) {
+			let [lab1, lab2] = this.reagentLabs;
+			for (let lab of this.productLabs) {
+				if (lab.cooldown == 0) {
+					lab.runReaction(lab1, lab2);
+				}
+			}
+		}
+		if (this.terminal.cooldown == 0) {
+			let missingBasicMinerals = this.colony.abathur.getMissingBasicMinerals(this.memory.reactionQueue);
+			for (let resourceType in missingBasicMinerals) {
+				if (missingBasicMinerals[resourceType] > 0) {
+					this.terminalNetwork.requestResource(this.terminal, <ResourceConstant>resourceType,
+														 missingBasicMinerals[resourceType]);
+				}
+			}
+		}
 	}
 
 	visuals() {

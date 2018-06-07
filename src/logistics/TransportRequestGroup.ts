@@ -1,4 +1,4 @@
-// A stripped-down version of the logistics network intended for local delivery
+// A stripped-down version of the logistics network intended for local deliveries
 
 import {profile} from '../profiler/decorator';
 import {blankPriorityQueue, Priority} from '../settings/priorities';
@@ -11,13 +11,6 @@ export type TransportRequestTarget =
 	| StructureLab
 	| StructureNuker
 	| StructurePowerSpawn
-
-// export type EnergyRequestStructure = Sink | StructureContainer;
-// export type ResourceRequestStructure = StructureLab | StructureNuker | StructurePowerSpawn | StructureContainer;
-//
-// export type EnergyWithdrawStructure = StructureContainer | StructureTerminal | StructureLink | Resource;
-// export type ResourceWithdrawStructure = StructureLab | StructureContainer | StructureTerminal;
-
 export interface TransportRequest {
 	target: TransportRequestTarget;
 	amount: number;
@@ -28,13 +21,6 @@ interface TransportRequestOptions {
 	amount?: number;
 	resourceType?: ResourceConstant;
 }
-
-// export interface WithdrawRequest {
-// 	target: TransportRequestTarget;
-// 	amount: number;
-// 	resourceType: string;
-// }
-
 
 @profile
 export class TransportRequestGroup {
@@ -90,7 +76,9 @@ export class TransportRequestGroup {
 			resourceType: opts.resourceType!,
 			amount      : opts.amount!,
 		};
-		this.supply[priority].push(req);
+		if (opts.amount > 0) {
+			this.supply[priority].push(req);
+		}
 	}
 
 	/* Request for resources to be withdrawn from this target */
@@ -107,7 +95,9 @@ export class TransportRequestGroup {
 			resourceType: opts.resourceType!,
 			amount      : opts.amount!,
 		};
-		this.withdraw[priority].push(req);
+		if (opts.amount > 0) {
+			this.withdraw[priority].push(req);
+		}
 	}
 
 	/* Makes a provide for every resourceType in a requestor object */

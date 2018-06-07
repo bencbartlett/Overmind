@@ -1,5 +1,4 @@
 import {log} from '../lib/logger/log';
-import minBy from 'lodash.minby';
 import {Mem} from '../memory';
 import {profile} from '../profiler/decorator';
 import {Energetics} from './Energetics';
@@ -27,7 +26,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 			[resourceType: string]: number
 		}
 	};
-	// private alreadyReceived: StructureTerminal[];
+	private alreadyReceived: StructureTerminal[];
+	private alreadySent: StructureTerminal[];
 	private cache: {
 		sellPrice: { [resourceType: string]: number }
 	};
@@ -53,7 +53,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 	constructor(terminals: StructureTerminal[]) {
 		this.terminals = terminals;
 		this.manifests = {};
-		// this.alreadyReceived = [];
+		this.alreadyReceived = [];
+		this.alreadySent = [];
 		this.settings = {
 			market  : {
 				reserveCredits       : 10000,
@@ -139,29 +140,29 @@ export class TerminalNetwork implements ITerminalNetwork {
 		return shortages;
 	}
 
-	private buyShortages(terminal: StructureTerminal): void {
-		let shortages = this.calculateShortages(terminal);
-		for (let resourceType in shortages) {
-			let orders = Game.market.getAllOrders(order => order.type == ORDER_SELL &&
-														   !!order.roomName &&
-														   order.resourceType == resourceType &&
-														   order.remainingAmount > 100);
-			let bestOrder = minBy(orders, (order: Order) => this.effectivePricePerUnit(order, terminal));
-			if (this.effectivePricePerUnit(bestOrder, terminal) <= this.settings.market.maxPrice[resourceType]) {
-				let amount = Math.min(bestOrder.remainingAmount, shortages[resourceType]);
-				let response = Game.market.deal(bestOrder.id, amount, terminal.room.name);
-				this.logTransaction(bestOrder, terminal.room.name, amount, response);
-			}
-		}
-	}
+	// private buyShortages(terminal: StructureTerminal): void {
+	// 	let shortages = this.calculateShortages(terminal);
+	// 	for (let resourceType in shortages) {
+	// 		let orders = Game.market.getAllOrders(order => order.type == ORDER_SELL &&
+	// 													   !!order.roomName &&
+	// 													   order.resourceType == resourceType &&
+	// 													   order.remainingAmount > 100);
+	// 		let bestOrder = minBy(orders, (order: Order) => this.effectivePricePerUnit(order, terminal));
+	// 		if (this.effectivePricePerUnit(bestOrder, terminal) <= this.settings.market.maxPrice[resourceType]) {
+	// 			let amount = Math.min(bestOrder.remainingAmount, shortages[resourceType]);
+	// 			let response = Game.market.deal(bestOrder.id, amount, terminal.room.name);
+	// 			this.logTransaction(bestOrder, terminal.room.name, amount, response);
+	// 		}
+	// 	}
+	// }
 
-	private logTransaction(order: Order, destinationRoomName: string, amount: number, response: number): void {
-		let action = order.type == ORDER_SELL ? 'Bought' : 'Sold';
-		let fee = order.roomName ? Game.market.calcTransactionCost(amount, order.roomName, destinationRoomName) : 0;
-		log.info(`${destinationRoomName}: ${action} ${amount} of ${order.resourceType} from ${order.roomName} ` +
-				 `for ${order.price * amount} credits and ${fee} energy. Response: ${response}`);
-
-	}
+	// private logTransaction(order: Order, destinationRoomName: string, amount: number, response: number): void {
+	// 	let action = order.type == ORDER_SELL ? 'Bought' : 'Sold';
+	// 	let fee = order.roomName ? Game.market.calcTransactionCost(amount, order.roomName, destinationRoomName) : 0;
+	// 	log.info(`${destinationRoomName}: ${action} ${amount} of ${order.resourceType} from ${order.roomName} ` +
+	// 			 `for ${order.price * amount} credits and ${fee} energy. Response: ${response}`);
+	//
+	// }
 
 	static logTransfer(resourceType: ResourceConstant, amount: number, origin: string, destination: string) {
 		if (!this.stats.transfers) this.stats.transfers = {};
@@ -219,7 +220,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 			log.info(`Sent ${amount} ${resourceType} from ${sender.room.print} to ` +
 					 `${receiver.room.print}. Fee: ${cost}.`);
 			TerminalNetwork.logTransfer(resourceType, amount, sender.room.name, receiver.room.name);
-			// this.alreadyReceived.push(receiver);
+			this.alreadySent.push(sender);
+			this.alreadyReceived.push(receiver);
 		} else {
 			log.error(`Could not send ${amount} ${resourceType} from ${sender.room.print} to ` +
 					  `${receiver.room.print}! Response: ${response}`);
@@ -233,7 +235,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 		let maxResourceAmount = 0;
 		for (let terminal of this.terminals) {
 			let terminalAmount = (terminal.store[resourceType] || 0);
-			if (terminalAmount > amount + 4000 && terminalAmount > maxResourceAmount) {
+			if (terminalAmount > amount + 4000 && terminalAmount > maxResourceAmount
+				&& terminal.cooldown == 0 && !this.alreadySent.includes(terminal)) {
 				sender = terminal;
 				maxResourceAmount = sender.store[resourceType]!;
 			}
@@ -241,7 +244,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		if (sender) {
 			this.transfer(sender, receiver, resourceType, amount);
 		} else {
-			// buyMineralsForLabs(receiver, resourceType, amount);
+			Overmind.tradeNetwork.buyMineral(receiver, resourceType, amount);
 		}
 	}
 
@@ -302,9 +305,9 @@ export class TerminalNetwork implements ITerminalNetwork {
 
 	run(): void {
 		if (Game.time % (TERMINAL_COOLDOWN + 1) == 0) {
-			for (let terminal of this.terminals) {
-				this.buyShortages(terminal);
-			}
+			// for (let terminal of this.terminals) {
+			// 	this.buyShortages(terminal);
+			// }
 			let equalizeAllResources = false;
 			if (equalizeAllResources) {
 				// Equalize current resource type

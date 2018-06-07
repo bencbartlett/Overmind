@@ -247,7 +247,7 @@ export class Colony {
 			this.hatchery = new Hatchery(this, this.spawns[0]);
 		}
 		// Instantiate evolution chamber
-		if (this.terminal && this.terminal.isActive()) {
+		if (this.terminal && this.terminal.isActive() && this.labs.length >= 3) {
 			this.evolutionChamber = new EvolutionChamber(this, this.terminal);
 		}
 		// Instantiate the upgradeSite

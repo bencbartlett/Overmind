@@ -58,14 +58,6 @@ export class CommandCenterOverlord extends Overlord {
 				}
 			}
 		}
-		// else {
-		// 	// Otherwise put to storage or terminal
-		// 	if (_.sum(this.commandCenter.storage.store) < this.commandCenter.settings.unloadStorageBuffer) {
-		// 		manager.task = Tasks.transfer(this.commandCenter.storage);
-		// 	} else if (this.commandCenter.terminal) {
-		// 		manager.task = Tasks.transfer(this.commandCenter.terminal);
-		// 	}
-		// }
 	}
 
 	private withdrawActions(manager: Zerg) {
@@ -74,17 +66,6 @@ export class CommandCenterOverlord extends Overlord {
 			let amount = Math.min(request.amount, manager.carryCapacity - _.sum(manager.carry));
 			manager.task = Tasks.withdraw(request.target, request.resourceType, amount);
 		}
-		// // If you're out of energy and there are strucutres that need energy deposited or withdrawn, then fill up
-		// // (Otherwise, stay empty to accept incoming link transmissions)
-		// if (this.commandCenter.depositStructures.length > 0 || this.commandCenter.withdrawStructures.length > 0) {
-		// 	if (this.commandCenter.withdrawStructures.length > 0) {
-		// 		// Try to withdraw from something actively reqeusting a withdrawal
-		// 		manager.task = Tasks.withdraw(this.commandCenter.withdrawStructures[0]);
-		// 	} else {
-		// 		// Otherwise, just default to withdrawing from storage
-		// 		manager.task = Tasks.withdraw(this.commandCenter.storage);
-		// 	}
-		// }
 	}
 
 	private equalizeStorageAndTerminal(manager: Zerg) {
@@ -127,12 +108,6 @@ export class CommandCenterOverlord extends Overlord {
 	}
 
 	private handleManager(manager: Zerg): void {
-		// // Handle manager deposit and withdrawal of energy
-		// if (manager.carry.energy > 0) {
-		// 	this.supplyActions(manager);
-		// } else {
-		// 	this.withdrawActions(manager);
-		// }
 		if (manager.ticksToLive! < 50) {
 			let nearbyManagers = _.filter(this.managers, manager => manager.pos.inRangeTo(this.commandCenter.pos, 3));
 			if (nearbyManagers.length > 1) {
@@ -168,11 +143,5 @@ export class CommandCenterOverlord extends Overlord {
 				}
 			}
 		}
-		// // Delete extraneous managers in the case there are multiple
-		// if (this.managers.length > 1) {
-		// 	let nearbyManagers = _.filter(this.managers, manager => manager.pos.inRangeTo(this.commandCenter.pos, 3));
-		// 	let managerToSuicide = _.first(_.sortBy(nearbyManagers, manager => manager.ticksToLive));
-		// 	if (managerToSuicide) managerToSuicide.suicide();
-		// }
 	}
 }
