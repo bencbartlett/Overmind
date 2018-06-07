@@ -66,7 +66,7 @@ interface ITerminalNetwork {
 	terminals: StructureTerminal[];
 	memory: any;
 
-	requestResource(resourceType: ResourceConstant, terminal: StructureTerminal, amount?: number): void;
+	requestResource(terminal: StructureTerminal, resourceType: ResourceConstant, amount: number): void;
 
 	init(): void;
 
@@ -112,4 +112,8 @@ interface protoPos {
 interface HasPos {
 	pos: RoomPosition
 }
+
+// interface StoreLike {
+// 	[resourceType: string]: number
+// }
 

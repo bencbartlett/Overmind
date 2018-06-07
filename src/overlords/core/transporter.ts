@@ -171,5 +171,6 @@ export class TransportOverlord extends Overlord {
 			}
 			transporter.run();
 		}
+		this.parkCreepsIfIdle(this.transporters);
 	}
 }

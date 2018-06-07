@@ -2,7 +2,7 @@
 
 import {HiveCluster} from './HiveCluster';
 import {profile} from '../profiler/decorator';
-import {HatcheryOverlord} from '../overlords/hiveCluster/hatchery';
+import {HatcheryOverlord} from '../overlords/core/queen';
 import {Priority} from '../settings/priorities';
 import {Colony, ColonyStage} from '../Colony';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
@@ -40,6 +40,7 @@ export class Hatchery extends HiveCluster {
 	private productionQueue: { [priority: number]: protoCreep[] };  // Priority queue of protocreeps
 	// private _idlePos: RoomPosition; 								// Idling position for the supplier
 	private _energyStructures: (StructureSpawn | StructureExtension)[];
+	static restrictedRange = 6;								// Don't stand idly within this range of hatchery
 
 	constructor(colony: Colony, headSpawn: StructureSpawn) {
 		super(colony, headSpawn, 'hatchery');
@@ -49,6 +50,9 @@ export class Hatchery extends HiveCluster {
 		this.extensions = colony.extensions;
 		this.link = this.pos.findClosestByLimitedRange(colony.links, 2);
 		this.battery = this.pos.findClosestByLimitedRange(this.room.containers, 2);
+		if (this.battery) {
+			this.pos = this.battery.pos;
+		}
 		this.colony.obstacles.push(this.idlePos);
 		// Associate all towers that aren't part of the command center if there is one
 		if (colony.commandCenter) { // TODO: make this not order-dependent
@@ -119,11 +123,11 @@ export class Hatchery extends HiveCluster {
 		let refillSpawns = _.filter(this.spawns, spawn => spawn.energy < spawn.energyCapacity);
 		let refillExtensions = _.filter(this.extensions, extension => extension.energy < extension.energyCapacity);
 		let refillTowers = _.filter(this.towers, tower => tower.energy < tower.energyCapacity);
-		_.forEach(refillSpawns, spawn => this.transportRequests.requestEnergy(spawn, Priority.NormalHigh));
-		_.forEach(refillExtensions, extension => this.transportRequests.requestEnergy(extension, Priority.NormalHigh));
+		_.forEach(refillSpawns, spawn => this.transportRequests.request(spawn, Priority.NormalHigh));
+		_.forEach(refillExtensions, extension => this.transportRequests.request(extension, Priority.NormalHigh));
 		_.forEach(refillTowers, tower =>
-			this.transportRequests.requestEnergy(tower, tower.energy < this.settings.refillTowersBelow ?
-														Priority.High : Priority.Low));
+			this.transportRequests.request(tower, tower.energy < this.settings.refillTowersBelow ?
+												  Priority.High : Priority.Low));
 	}
 
 	// Creep queueing and spawning =====================================================================================

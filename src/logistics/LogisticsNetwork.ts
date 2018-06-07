@@ -544,7 +544,6 @@ export class LogisticsNetwork {
 		console.log();
 	}
 
-
 	get matching(): { [creepName: string]: LogisticsRequest | undefined } {
 		if (!this._matching) {
 			this._matching = this.stableMatching(this.transporters);

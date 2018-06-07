@@ -1,116 +1,183 @@
-// A grouping for objectives that allows colony components to have their own objectives instead of all being on Overlord
+// A stripped-down version of the logistics network intended for local delivery
 
 import {profile} from '../profiler/decorator';
 import {blankPriorityQueue, Priority} from '../settings/priorities';
+import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../declarations/typeGuards';
+import {log} from '../lib/logger/log';
 
-export type EnergyRequestStructure = Sink | StructureContainer;
-export type ResourceRequestStructure = StructureLab | StructureNuker | StructurePowerSpawn | StructureContainer;
+export type TransportRequestTarget =
+	EnergyStructure
+	| StoreStructure
+	| StructureLab
+	| StructureNuker
+	| StructurePowerSpawn
 
-export type EnergyWithdrawStructure = StructureContainer | StructureTerminal | StructureLink | Resource;
-export type ResourceWithdrawStructure = StructureLab | StructureContainer | StructureTerminal;
+// export type EnergyRequestStructure = Sink | StructureContainer;
+// export type ResourceRequestStructure = StructureLab | StructureNuker | StructurePowerSpawn | StructureContainer;
+//
+// export type EnergyWithdrawStructure = StructureContainer | StructureTerminal | StructureLink | Resource;
+// export type ResourceWithdrawStructure = StructureLab | StructureContainer | StructureTerminal;
 
-export interface IResourceRequest {
-	target: EnergyRequestStructure | ResourceRequestStructure;
+export interface TransportRequest {
+	target: TransportRequestTarget;
 	amount: number;
-	resourceType: string;
+	resourceType: ResourceConstant;
 }
 
-export interface IWithdrawRequest {
-	target: EnergyWithdrawStructure | ResourceWithdrawStructure;
-	amount: number;
-	resourceType: string;
+interface TransportRequestOptions {
+	amount?: number;
+	resourceType?: ResourceConstant;
 }
+
+// export interface WithdrawRequest {
+// 	target: TransportRequestTarget;
+// 	amount: number;
+// 	resourceType: string;
+// }
 
 
 @profile
 export class TransportRequestGroup {
 
-	supply: { [priority: number]: IResourceRequest[] };
-	withdraw: { [priority: number]: IWithdrawRequest[] };
+	supply: { [priority: number]: TransportRequest[] };
+	withdraw: { [priority: number]: TransportRequest[] };
 
 	constructor() {
 		this.supply = blankPriorityQueue();
 		this.withdraw = blankPriorityQueue();
 	}
 
-	requestEnergy(target: EnergyRequestStructure, priority = Priority.Normal, amount?: number): void {
-		let request: IResourceRequest;
-		if (!amount) {
-			if (target instanceof StructureContainer) {
-				amount = target.storeCapacity - _.sum(target.store);
-			} else {
-				amount = target.energyCapacity - target.energy;
+	get needsSupplying(): boolean {
+		for (let priority in this.supply) {
+			if (this.supply[priority].length > 0) {
+				return true;
 			}
 		}
-		request = {
-			target      : target,
-			amount      : amount,
+		return false;
+	}
+
+	get needsWithdrawing(): boolean {
+		for (let priority in this.withdraw) {
+			if (this.withdraw[priority].length > 0) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	getPrioritizedClosestRequest(pos: RoomPosition, type: 'supply' | 'withdraw'): TransportRequest | undefined {
+		let requests = type == 'withdraw' ? this.withdraw : this.supply;
+		for (let priority in requests) {
+			let targets = _.map(requests[priority], request => request.target);
+			let target = pos.findClosestByRange(targets);
+			if (target) {
+				return _.find(requests[priority], request => request.target.ref == target.ref);
+			}
+		}
+	}
+
+	/* Request for resources to be deposited into this target */
+	request(target: TransportRequestTarget, priority = Priority.Normal, opts = {} as TransportRequestOptions): void {
+		_.defaults(opts, {
 			resourceType: RESOURCE_ENERGY,
+		});
+		if (!opts.amount) {
+			opts.amount = this.getRequestAmount(target, opts.resourceType!);
+		}
+		// Register the request
+		let req: TransportRequest = {
+			target      : target,
+			resourceType: opts.resourceType!,
+			amount      : opts.amount!,
 		};
-		this.supply[priority].push(request);
+		this.supply[priority].push(req);
 	}
 
-	requestResource(target: ResourceRequestStructure, resourceType: ResourceConstant,
-					priority = Priority.Normal, amount?: number): void {
-		let request: IResourceRequest;
-		if (!amount) {
-			if (target instanceof StructureLab) {
-				amount = target.mineralCapacity - target.mineralAmount;
-			} else if (target instanceof StructureNuker) {
-				amount = target.ghodiumCapacity - target.ghodium;
-			} else if (target instanceof StructurePowerSpawn) {
-				amount = target.powerCapacity - target.power;
-			} else {
-				amount = target.storeCapacity - _.sum(target.store);
-			}
-		}
-		request = {
-			target      : target,
-			amount      : amount,
-			resourceType: resourceType,
-		};
-		this.supply[priority].push(request);
-	}
-
-	requestWithdrawal(target: EnergyWithdrawStructure, priority = Priority.Normal, amount?: number): void {
-		let request: IWithdrawRequest;
-		if (!amount) {
-			if (target instanceof StructureContainer) {
-				amount = target.store[RESOURCE_ENERGY];
-			} else if (target instanceof Resource) {
-				amount = target.amount;
-			} else {
-				amount = target.energy;
-			}
-		}
-		request = {
-			target      : target,
-			amount      : amount!,
+	/* Request for resources to be withdrawn from this target */
+	provide(target: TransportRequestTarget, priority = Priority.Normal, opts = {} as TransportRequestOptions): void {
+		_.defaults(opts, {
 			resourceType: RESOURCE_ENERGY,
+		});
+		if (!opts.amount) {
+			opts.amount = this.getProvideAmount(target, opts.resourceType!);
+		}
+		// Register the request
+		let req: TransportRequest = {
+			target      : target,
+			resourceType: opts.resourceType!,
+			amount      : opts.amount!,
 		};
-		this.withdraw[priority].push(request);
+		this.withdraw[priority].push(req);
 	}
 
-	requestResourceWithdrawal(target: ResourceWithdrawStructure, resourceType: ResourceConstant,
-							  priority = Priority.Normal, amount?: number): void {
-		let request: IWithdrawRequest;
-		if (!amount) {
-			if (target instanceof StructureLab) {
-				amount = target.mineralAmount;
-			} else if (target instanceof StructureNuker) {
-				amount = target.ghodium;
-			} else if (target instanceof StructurePowerSpawn) {
-				amount = target.power;
-			} else {
-				amount = target.store[resourceType]!;
+	/* Makes a provide for every resourceType in a requestor object */
+	provideAll(target: StoreStructure, priority = Priority.Normal, opts = {} as TransportRequestOptions): void {
+		for (let resourceType in target.store) {
+			let amount = target.store[<ResourceConstant>resourceType] || 0;
+			if (amount > 0) {
+				opts.resourceType = <ResourceConstant>resourceType;
+				this.provide(target, priority, opts);
 			}
 		}
-		request = {
-			target      : target,
-			amount      : amount,
-			resourceType: resourceType,
-		};
-		this.withdraw[priority].push(request);
 	}
 
+	private getRequestAmount(target: TransportRequestTarget, resourceType: ResourceConstant): number {
+		if (isStoreStructure(target)) {
+			return target.storeCapacity - _.sum(target.store);
+		} else if (isEnergyStructure(target) && resourceType == RESOURCE_ENERGY) {
+			return target.energyCapacity - target.energy;
+		} else {
+			if (target instanceof StructureLab) {
+				if (resourceType == target.mineralType) {
+					return target.mineralCapacity - target.mineralAmount;
+				} else if (resourceType == RESOURCE_ENERGY) {
+					return target.energyCapacity - target.energy;
+				}
+			} else if (target instanceof StructureNuker) {
+				if (resourceType == RESOURCE_GHODIUM) {
+					return target.ghodiumCapacity - target.ghodium;
+				} else if (resourceType == RESOURCE_ENERGY) {
+					return target.energyCapacity - target.energy;
+				}
+			} else if (target instanceof StructurePowerSpawn) {
+				if (resourceType == RESOURCE_POWER) {
+					return target.powerCapacity - target.power;
+				} else if (resourceType == RESOURCE_ENERGY) {
+					return target.energyCapacity - target.energy;
+				}
+			}
+		}
+		log.warning('Could not determine requestor amount!');
+		return 0;
+	}
+
+	private getProvideAmount(target: TransportRequestTarget, resourceType: ResourceConstant): number {
+		if (isStoreStructure(target)) {
+			return target.store[resourceType]!;
+		} else if (isEnergyStructure(target) && resourceType == RESOURCE_ENERGY) {
+			return target.energy;
+		} else {
+			if (target instanceof StructureLab) {
+				if (resourceType == target.mineralType) {
+					return target.mineralAmount;
+				} else if (resourceType == RESOURCE_ENERGY) {
+					return target.energy;
+				}
+			} else if (target instanceof StructureNuker) {
+				if (resourceType == RESOURCE_GHODIUM) {
+					return target.ghodium;
+				} else if (resourceType == RESOURCE_ENERGY) {
+					return target.energy;
+				}
+			} else if (target instanceof StructurePowerSpawn) {
+				if (resourceType == RESOURCE_POWER) {
+					return target.power;
+				} else if (resourceType == RESOURCE_ENERGY) {
+					return target.energy;
+				}
+			}
+		}
+		log.warning('Could not determine provider amount!');
+		return 0;
+	}
 }

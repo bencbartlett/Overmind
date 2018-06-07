@@ -80,6 +80,14 @@ export abstract class Overlord {
 		}
 	}
 
+	protected allCreeps(): Zerg[] {
+		let allCreeps: Zerg[] = [];
+		for (let role in _.keys(this._creeps)) {
+			allCreeps = allCreeps.concat(this._creeps[role]);
+		}
+		return allCreeps;
+	}
+
 	protected creepReport(role: string, currentAmt: number, neededAmt: number) {
 		this.creepUsageReport[role] = [currentAmt, neededAmt];
 	}
@@ -142,6 +150,29 @@ export abstract class Overlord {
 										 creep.spawning || (!creep.spawning && !creep.ticksToLive));
 	}
 
+	parkCreepsIfIdle(creeps: Zerg[], outsideHatchery = true) {
+		for (let creep of creeps) {
+			if (!creep) {
+				console.log(`creeps: ${_.map(creeps, creep => creep.name)}`);
+				continue;
+			}
+			if (creep.isIdle && creep.canExecute('move')) {
+				if (this.colony.hatchery) {
+					let hatcheryRestrictedRange = 6;
+					if (creep.pos.getRangeTo(this.colony.hatchery.pos) < hatcheryRestrictedRange) {
+						let hatcheryBorder = this.colony.hatchery.pos.getPositionsAtRange(hatcheryRestrictedRange);
+						let moveToPos = creep.pos.findClosestByRange(hatcheryBorder);
+						creep.travelTo(moveToPos);
+					} else {
+						creep.park();
+					}
+				} else {
+					creep.park();
+				}
+			}
+		}
+	}
+
 	/* Create a creep setup and enqueue it to the Hatchery; does not include automatic reporting */
 	protected requestCreep(setup: CreepSetup, prespawn = 50, priority = this.priority) {
 		if (this.colony.hatchery) {
@@ -192,7 +223,8 @@ export abstract class Overlord {
 
 	protected requestBoost(resourceType: _ResourceConstantSansEnergy): void {
 		if (this.colony.terminal) {
-			Overmind.terminalNetwork.requestResource(resourceType, this.colony.terminal);
+			// TODO
+			// Overmind.terminalNetwork.requestResource(resourceType, this.colony.terminal);
 		}
 	}
 

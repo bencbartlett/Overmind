@@ -68,7 +68,6 @@ export abstract class Task implements ITask {
 			workOffRoad: false,
 		};
 		_.defaults(options, {
-			blind          : false,
 			travelToOptions: {},
 		});
 		this.tick = Game.time;
@@ -133,7 +132,6 @@ export abstract class Task implements ITask {
 	set parent(parentTask: Task | null) {
 		this._parent = parentTask ? parentTask.proto : null;
 		// If the task is already assigned to a creep, update their memory
-		// Although assigning something to a creep and then changing the parent is bad practice...
 		if (this.creep) {
 			this.creep.task = this;
 		}
@@ -211,11 +209,20 @@ export abstract class Task implements ITask {
 		}
 	}
 
+	/* Move to within range of the target */
 	move(range = this.settings.targetRange): number {
 		if (!this.options.travelToOptions.range) {
 			this.options.travelToOptions.range = range;
 		}
 		return this.creep.travelTo(this.targetPos, this.options.travelToOptions);
+	}
+
+	/* Moves to the next position on the agenda if specified - call this in some tasks after work() is completed */
+	moveToNextPos(): number | undefined {
+		if (this.options.nextPos) {
+			let nextPos = derefRoomPosition(this.options.nextPos);
+			return this.creep.travelTo(nextPos);
+		}
 	}
 
 	// Return expected number of ticks until creep arrives at its first destination

@@ -18,8 +18,10 @@ import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {TransportOverlord} from './overlords/core/transporter';
 import {Energetics} from './logistics/Energetics';
 import {StoreStructure} from './declarations/typeGuards';
-import {ManagerSetup} from './overlords/hiveCluster/commandCenter';
+import {ManagerSetup} from './overlords/core/manager';
 import {mergeSum} from './utilities/utils';
+import {Abathur} from './resources/Abathur';
+import {EvolutionChamber} from './hiveClusters/evolutionChamber';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -33,6 +35,10 @@ export enum DEFCON {
 	boostedInvasionNPC = 2,
 	playerInvasion     = 2,
 	bigPlayerInvasion  = 3,
+}
+
+export function getAllColonies(): Colony[] {
+	return _.values(Overmind.colonies);
 }
 
 @profile
@@ -74,6 +80,7 @@ export class Colony {
 	// Hive clusters
 	hiveClusters: HiveCluster[];						// List of all hive clusters
 	commandCenter: CommandCenter | undefined;			// Component with logic for non-spawning structures
+	evolutionChamber: EvolutionChamber | undefined; 	// Component for mineral processing
 	hatchery: Hatchery | undefined;						// Component to encapsulate spawner logic
 	upgradeSite: UpgradeSite;							// Component to provide upgraders with uninterrupted energy
 	sporeCrawlers: SporeCrawler[];
@@ -102,6 +109,7 @@ export class Colony {
 	roadLogistics: RoadLogistics;
 	// Room planner
 	roomPlanner: RoomPlanner;
+	abathur: Abathur;
 
 	constructor(id: number, roomName: string, outposts: string[], creeps: Zerg[]) {
 		// Primitive colony setup
@@ -137,6 +145,8 @@ export class Colony {
 		this.registerHiveClusters();
 		// Register colony overlords
 		this.spawnMoarOverlords();
+		// Add an Abathur
+		this.abathur = new Abathur(this);
 	}
 
 	private registerCreeps(creeps: Zerg[]): void {
@@ -153,7 +163,7 @@ export class Colony {
 		this.links = this.room.links;
 		this.terminal = this.room.terminal;
 		this.towers = this.room.towers;
-		this.labs = this.room.labs;
+		this.labs = _.sortBy(_.filter(this.room.labs, lab => lab.my && lab.isActive()), lab => lab.ref);
 		this.powerSpawn = this.room.getStructures(STRUCTURE_POWER_SPAWN)[0] as StructurePowerSpawn;
 		this.nuker = this.room.getStructures(STRUCTURE_NUKER)[0] as StructureNuker;
 		this.observer = this.room.getStructures(STRUCTURE_OBSERVER)[0] as StructureObserver;
@@ -236,10 +246,12 @@ export class Colony {
 		if (this.spawns[0]) {
 			this.hatchery = new Hatchery(this, this.spawns[0]);
 		}
-		// Instantiate the upgradeSite
-		if (this.controller) {
-			this.upgradeSite = new UpgradeSite(this, this.controller);
+		// Instantiate evolution chamber
+		if (this.terminal && this.terminal.isActive()) {
+			this.evolutionChamber = new EvolutionChamber(this, this.terminal);
 		}
+		// Instantiate the upgradeSite
+		this.upgradeSite = new UpgradeSite(this, this.controller);
 		// Instantiate spore crawlers to wrap towers
 		this.sporeCrawlers = _.map(this.towers, tower => new SporeCrawler(this, tower));
 		// Sort claimed and unclaimed links
@@ -261,6 +273,8 @@ export class Colony {
 		let sourceIDs = _.map(this.sources, source => source.ref);
 		let miningSites = _.map(this.sources, source => new MiningSite(this, source));
 		this.miningSites = _.zipObject(sourceIDs, miningSites) as { [sourceID: string]: MiningSite };
+		// Reverse the hive clusters for correct order for init() and run()
+		this.hiveClusters.reverse();
 	}
 
 	private spawnMoarOverlords(): void {
@@ -300,7 +314,8 @@ export class Colony {
 	}
 
 	init(): void {
-		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.init());	// Initialize each hive cluster
+		_.forEach(this.hiveClusters, 										// Initialize each hive cluster
+				  hiveCluster => hiveCluster.init());
 		this.overseer.init();												// Initialize overseer AFTER hive clusters
 		this.roadLogistics.init();											// Initialize the road network
 		this.linkNetwork.init();											// Initialize link network
@@ -309,7 +324,8 @@ export class Colony {
 
 	run(): void {
 		this.overseer.run();												// Run overseer BEFORE hive clusters
-		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.run());		// Run each hive cluster
+		_.forEach(this.hiveClusters, 										// Run each hive cluster
+				  hiveCluster => hiveCluster.run());
 		this.linkNetwork.run();												// Run the link network
 		this.roadLogistics.run();											// Run the road network
 		this.roomPlanner.run();												// Run the room planner

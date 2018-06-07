@@ -2,8 +2,8 @@ import {profile} from './profiler/decorator';
 import {Colony} from './Colony';
 import {Overlord} from './overlords/Overlord';
 import {Task} from './tasks/Task';
-import {ManagerSetup} from './overlords/hiveCluster/commandCenter';
-import {QueenSetup} from './overlords/hiveCluster/hatchery';
+import {ManagerSetup} from './overlords/core/manager';
+import {QueenSetup} from './overlords/core/queen';
 
 
 interface ParkingOptions {
@@ -247,7 +247,7 @@ export class Zerg {
 			['rangedAttack', 'rangedMassAttack', 'build', 'repair', 'rangedHeal'],
 			// ['upgradeController', 'build', 'repair', 'withdraw', 'transfer', 'drop'],
 		];
-		let conflictingActions: string[] = [];
+		let conflictingActions: string[] = [actionName];
 		for (let pipeline of pipelines) {
 			if (pipeline.includes(actionName)) conflictingActions = conflictingActions.concat(pipeline);
 		}

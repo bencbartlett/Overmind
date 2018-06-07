@@ -154,6 +154,7 @@ export abstract class Directive {
 		let flagsOfThisType: Flag[];
 		switch (scope) {
 			case 'room':
+				// TODO: room can be undefined
 				flagsOfThisType = _.filter(room.flags, flag => this.filter(flag));
 				if (flagsOfThisType.length == 0) {
 					return this.create(pos, opts);

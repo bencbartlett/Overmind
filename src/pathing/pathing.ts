@@ -56,7 +56,7 @@ export class Pathing {
 		let ret = Traveler.findTravelPath(startPos, endPos, options);
 		let weight = 0;
 		for (let pos of ret.path) {
-			if (!Game.rooms[pos.roomName]) { // If you don't have vision, assume there are roads
+			if (!pos.room) { // If you don't have vision, assume there are roads
 				weight += 1;
 			} else {
 				if (pos.lookForStructure(STRUCTURE_ROAD)) {

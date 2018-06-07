@@ -5,6 +5,7 @@ interface TaskSettings {
 
 interface TaskOptions {
 	blind?: boolean;
+	nextPos?: protoPos;
 	travelToOptions: TravelToOptions;
 }
 
@@ -52,6 +53,8 @@ interface ITask extends protoTask {
 	isValid(): boolean;
 
 	move(): number;
+
+	moveToNextPos(): number | undefined;
 
 	run(): number | void;
 

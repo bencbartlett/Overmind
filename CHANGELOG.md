@@ -5,9 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 ### Added
-- Lots of under-the-hood improvements to the logistics system!
-    - You should see about a 60% reduction in CPU usage from `LogisticsNetwork` due to better internal caching
-    - Tweaks to the predictive functions reduce the chance that transporters occasionally get stuck in an oscillatory pattern
+- Preliminary support for mineral processing!
+    - New hiveCluter to manage boosting and mineral production: `EvolutionChamber`
+    - Reaction cycles planned by the `Abathur` module, which makes decisions related to the global production of resources, guiding the evolution of the swarm
+        - Module `Abathur` incompatible with pronouns
 - RoomPlanner now includes automatic barrier planning!
     - `roomPlanner.barrierPlanner` uses a modified min-cut algorithm to compute the best location to place ramparts
     - Opening and closing the roomPlanner for a colony which already has walls will create duplicate walls. Use `destroyAllBarriers(roomName)` if you wish to get rid of your old barriers.
@@ -17,15 +18,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - Preliminary DEFCON system to classify colony safety levels
 - New RampartDefenders spawn in rooms with a sufficiently high rampart/walls ratio and defend against melee attacks
 - New `combatIntel` module, which contains an assortment of methods related to making combat-related decisions
-- Preliminary support for mineral processing!
-    - New hiveCluter to manage boosting and mineral production: `EvolutionChamber`
-    - Reaction cycles planned by the `Abathur` module, which makes decisions related to the global production of resources, guiding the evolution of the swarm
-        - Module `Abathur` incompatible with pronouns
 
 ### Changed
+- Lots of under-the-hood improvements to the logistics system!
+    - You should see about a 60% reduction in CPU usage from `LogisticsNetwork` due to better internal caching
+    - Tweaks to the predictive functions reduce the chance that transporters occasionally get stuck in an oscillatory pattern
 - `TerminalNetwork` now uses an `equalize()` routine to distribute resources between colonies
 - `LogisticsGroup` renamed to `LogisticsNetwork`
 - CreepSetups moved to respective overlord; now are constant instances rather than extending classes
+- Improved memory footprint of stats collection and shortened hiveCluster names in memory; you should see about a 30% reduction in memory usage
 
 ### Fixed
 - Fixed a bug where the roadPlanner would plan roads for incomplete paths

@@ -1,4 +1,5 @@
 import {profile} from '../profiler/decorator';
+import {Colony} from '../Colony';
 
 export interface bodySetup {
 	pattern: BodyPartConstant[];			// body pattern to be repeated
@@ -86,6 +87,11 @@ export class CreepSetup {
 		}
 		// return it
 		return body;
+	}
+
+	getBodyPotential(partType: BodyPartConstant, colony: Colony): number {
+		let body = this.generateBody(colony.room.energyCapacityAvailable);
+		return _.filter(body, (part: BodyPartConstant) => part == partType).length;
 	}
 
 }

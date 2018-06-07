@@ -71,6 +71,7 @@ interface RoomObject {
 
 interface RoomPosition {
 	print: string;
+	room: Room | undefined;
 	name: string;
 	coordName: string;
 	isEdge: boolean;
@@ -80,6 +81,7 @@ interface RoomPosition {
 	neighbors: RoomPosition[];
 	// adjacentSpots: RoomPosition[];
 	// availableAdjacentSpots: RoomPosition[];
+	getPositionsAtRange(range: number, includeWalls?: boolean, includeEdges?: boolean): RoomPosition[];
 
 	getPositionsInRange(range: number, includeWalls?: boolean, includeEdges?: boolean): RoomPosition[];
 

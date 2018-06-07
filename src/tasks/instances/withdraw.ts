@@ -1,49 +1,4 @@
-// /* This is the task for withdrawing energy. For withdrawing other resources, see taskWithdrawResource. */
-//
-// import {Task} from './Task';
-// import {profile} from '../profiler/decorator';
-// import {EnergyStructure, isEnergyStructure, StoreStructure} from '../declarations/typeGuards';
-//
-// export type withdrawTargetType = EnergyStructure | StoreStructure;
-// // StructureContainer
-// // | StructureExtension
-// // | StructureLab
-// // | StructureLink
-// // | StructureNuker
-// // | StructurePowerSpawn
-// // | StructureSpawn
-// // | StructureStorage
-// // | StructureTerminal
-// // | StructureTower;
-// export const withdrawTaskName = 'withdraw';
-//
-// @profile
-// export class TaskWithdraw extends Task {
-// 	target: withdrawTargetType;
-//
-// 	constructor(target: withdrawTargetType, options = {} as TaskOptions) {
-// 		super(withdrawTaskName, target, options);
-// 	}
-//
-// 	isValidTask() {
-// 		return _.sum(this.creep.carry) < this.creep.carryCapacity;
-// 	}
-//
-// 	isValidTarget() {
-// 		if (isEnergyStructure(this.target)) {
-// 			return this.target && this.target.energy > 0;
-// 		} else {
-// 			return this.target && this.target.store[RESOURCE_ENERGY] > 0;
-// 		}
-//
-// 	}
-//
-// 	work() {
-// 		return this.creep.withdraw(this.target, RESOURCE_ENERGY);
-// 	}
-// }
-
-/* This is the withdrawal task for non-energy resources. */
+/* Withdraw a resource from a target */
 
 import {Task} from '../Task';
 import {profile} from '../../profiler/decorator';
@@ -103,6 +58,7 @@ export class TaskWithdraw extends Task {
 	}
 
 	work() {
+		this.moveToNextPos();
 		return this.creep.withdraw(this.target, this.data.resourceType, this.data.amount);
 	}
 

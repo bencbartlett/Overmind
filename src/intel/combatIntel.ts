@@ -43,10 +43,9 @@ export class CombatIntel {
 
 	/* Total tower tamage from all towers in room at a given position */
 	static towerDamageAtPos(pos: RoomPosition, ignoreEnergy = false): number | undefined {
-		let room = Game.rooms[pos.roomName];
-		if (room) {
+		if (pos.room) {
 			let expectedDamage = 0;
-			for (let tower of room.towers) {
+			for (let tower of pos.room.towers) {
 				if (tower.energy > 0 || ignoreEnergy) {
 					expectedDamage += this.singleTowerDamage(pos.getRangeTo(tower));
 				}
@@ -146,7 +145,7 @@ export class CombatIntel {
 	}
 
 
-	// Creep potentials
+	// Creep potentials ================================================================================================
 
 	// Heal potential of a single creep
 	static getHealPotential(creep: Creep): number {
@@ -200,6 +199,24 @@ export class CombatIntel {
 			}
 			return 0;
 		}));
+	}
+
+	// Maximum damage that is dealable at a given position by enemy forces
+	static maxDamageAtPos(pos: RoomPosition): number {
+		if (!pos.room) {
+			return 0;
+		}
+		let hostilesInMeleeRange = _.filter(pos.room.dangerousHostiles, creep => pos.getRangeTo(creep) <= 3);
+		let meleeDamage = _.sum(_.map(hostilesInMeleeRange,
+									  hostile => ATTACK_POWER * this.getAttackPotential(hostile)));
+		let hostilesInRange = _.filter(pos.room.dangerousHostiles, creep => pos.getRangeTo(creep) <= 3);
+		let rangedDamage = _.sum(_.map(hostilesInRange,
+									   hostile => RANGED_ATTACK_POWER * this.getRangedAttackPotential(hostile)));
+		let totalDamage = meleeDamage + rangedDamage;
+		if (!pos.room.my) {
+			totalDamage += this.towerDamageAtPos(pos) || 0;
+		}
+		return totalDamage;
 	}
 
 	// Heal potential of self and possible healer neighbors

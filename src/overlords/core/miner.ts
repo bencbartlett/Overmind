@@ -110,7 +110,7 @@ export class MiningOverlord extends Overlord {
 			if (miner.isIdle) {
 				this.handleMiner(miner);
 			}
-			this.fleeResponse(miner);
+			// this.fleeResponse(miner);
 			miner.run();
 		}
 	}

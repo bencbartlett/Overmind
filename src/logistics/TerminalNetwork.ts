@@ -91,14 +91,14 @@ export class TerminalNetwork implements ITerminalNetwork {
 		return Mem.wrap(Memory.stats.persistent, 'terminalNetwork');
 	}
 
-	/* Request resources to be transferred from another terminal or bought on the market */
-	requestResource(resourceType: ResourceConstant, terminal: StructureTerminal,
-					amount = this.settings.market.requestResourceAmount) {
-		if (!this.manifests[terminal.room.name]) {
-			this.manifests[terminal.room.name] = {};
-		}
-		this.manifests[terminal.room.name][resourceType] = amount;
-	}
+	// /* Request resources to be transferred from another terminal or bought on the market */
+	// requestResource(resourceType: ResourceConstant, terminal: StructureTerminal,
+	// 				amount = this.settings.market.requestResourceAmount) {
+	// 	if (!this.manifests[terminal.room.name]) {
+	// 		this.manifests[terminal.room.name] = {};
+	// 	}
+	// 	this.manifests[terminal.room.name][resourceType] = amount;
+	// }
 
 	private cacheBestSellPrices(): void {
 		// Recache best selling prices on the market
@@ -227,6 +227,24 @@ export class TerminalNetwork implements ITerminalNetwork {
 		return response;
 	}
 
+	requestResource(receiver: StructureTerminal, resourceType: ResourceConstant, amount: number) {
+		amount += 100;
+		let sender: StructureTerminal | undefined = undefined;
+		let maxResourceAmount = 0;
+		for (let terminal of this.terminals) {
+			let terminalAmount = (terminal.store[resourceType] || 0);
+			if (terminalAmount > amount + 4000 && terminalAmount > maxResourceAmount) {
+				sender = terminal;
+				maxResourceAmount = sender.store[resourceType]!;
+			}
+		}
+		if (sender) {
+			this.transfer(sender, receiver, resourceType, amount);
+		} else {
+			// buyMineralsForLabs(receiver, resourceType, amount);
+		}
+	}
+
 	// private sendExcessEnergy(terminal: StructureTerminal): void {
 	// 	let {sendSize, inThreshold, outThreshold, equilibrium} = Energetics.settings.terminal.energy;
 	// 	// See if there are any rooms actively needing energy first
@@ -287,15 +305,20 @@ export class TerminalNetwork implements ITerminalNetwork {
 			for (let terminal of this.terminals) {
 				this.buyShortages(terminal);
 			}
-			// Equalize current resource type
-			this.equalize(RESOURCES_ALL[this.memory.equalizeIndex]);
-			// Determine next resource type to equalize across terminals; most recent resourceType gets cycled to end
-			let resourceEqualizeOrder = RESOURCES_ALL.slice(this.memory.equalizeIndex + 1)
-													 .concat(RESOURCES_ALL.slice(0, this.memory.equalizeIndex + 1));
-			let nextResourceType = _.find(resourceEqualizeOrder, resourceType =>
-				this.assets[resourceType] > this.settings.equalize.tolerance.default);
-			// Set next equalize resource index
-			this.memory.equalizeIndex = _.findIndex(RESOURCES_ALL, resourceType => resourceType == nextResourceType);
+			let equalizeAllResources = false;
+			if (equalizeAllResources) {
+				// Equalize current resource type
+				this.equalize(RESOURCES_ALL[this.memory.equalizeIndex]);
+				// Determine next resource type to equalize; most recent resourceType gets cycled to end
+				let resourceEqualizeOrder = RESOURCES_ALL.slice(this.memory.equalizeIndex + 1)
+														 .concat(RESOURCES_ALL.slice(0, this.memory.equalizeIndex + 1));
+				let nextResourceType = _.find(resourceEqualizeOrder, resourceType =>
+					this.assets[resourceType] > this.settings.equalize.tolerance.default);
+				// Set next equalize resource index
+				this.memory.equalizeIndex = _.findIndex(RESOURCES_ALL, resource => resource == nextResourceType);
+			} else {
+				this.equalize(RESOURCE_ENERGY);
+			}
 		}
 	}
 

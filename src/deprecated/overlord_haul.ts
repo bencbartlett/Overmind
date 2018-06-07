@@ -2,7 +2,7 @@
 // import {HaulerSetup} from '../creepSetup/defaultSetups';
 // import {Zerg} from '../Zerg';
 // import {Tasks} from '../tasks/Tasks';
-// import {IWithdrawRequest} from '../logistics/TransportRequestGroup';
+// import {WithdrawRequest} from '../logistics/TransportRequestGroup';
 // import {OverlordPriority} from '../overlords/priorities_overlords';
 //
 //
@@ -26,7 +26,7 @@
 // 	}
 //
 // 	// Gets a prioritized store if any
-// 	private getWithdrawRequest(): IWithdrawRequest | undefined {
+// 	private getWithdrawRequest(): WithdrawRequest | undefined {
 // 		for (let priority in this.miningGroup.transportRequests.withdraw) {
 // 			// Shift the first store from the group to prevent all idle haulers from targeting at once
 // 			let store = this.miningGroup.transportRequests.withdraw[priority].shift();

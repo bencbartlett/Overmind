@@ -2,7 +2,7 @@
 // import {SupplierSetup} from '../creepSetup/defaultSetups';
 // import {Colony} from '../Colony';
 // import {HiveCluster} from '../hiveClusters/HiveCluster';
-// import {IResourceRequest, IWithdrawRequest} from '../logistics/TransportRequestGroup';
+// import {TransportRequest, WithdrawRequest} from '../logistics/TransportRequestGroup';
 // import {Zerg} from '../Zerg';
 // import {Tasks} from '../tasks/Tasks';
 // import {OverlordPriority} from '../overlords/priorities_overlords';
@@ -15,8 +15,8 @@
 // 	settings: any;
 // 	room: Room; // Suppliers only work in owned rooms so there is definitely vision
 //
-// 	private _prioritizedRefills: { [priority: number]: IResourceRequest[] };
-// 	private _prioritizedWithdrawals: { [priority: number]: IWithdrawRequest[] };
+// 	private _prioritizedRefills: { [priority: number]: TransportRequest[] };
+// 	private _prioritizedWithdrawals: { [priority: number]: WithdrawRequest[] };
 //
 // 	constructor(colony: Colony | HiveCluster, priority = OverlordPriority.ownedRoom.supply) {
 // 		super(colony, 'supply', priority);

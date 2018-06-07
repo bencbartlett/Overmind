@@ -348,7 +348,7 @@ export class RoomPlanner {
 
 	/* Whether a constructionSite should be placed at a position */
 	static shouldBuild(structureType: BuildableStructureConstant, pos: RoomPosition): boolean {
-		if (!Game.rooms[pos.roomName]) return false;
+		if (!pos.room) return false;
 		let buildings = _.filter(pos.lookFor(LOOK_STRUCTURES), s => s && s.structureType == structureType);
 		let sites = pos.lookFor(LOOK_CONSTRUCTION_SITES);
 		if (!buildings || buildings.length == 0) {

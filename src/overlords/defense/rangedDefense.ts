@@ -8,22 +8,17 @@ import {CreepSetup} from '../CreepSetup';
 import {boostResources} from '../../resources/map_resources';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 import {profile} from '../../profiler/decorator';
+import {CombatIntel} from '../../intel/combatIntel';
 
-export class ArcherSetup extends CreepSetup {
-	static role = 'archer';
-
-	constructor() {
-		super(ArcherSetup.role, {
-			pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, HEAL, MOVE, MOVE],
-			sizeLimit: Infinity,
-		});
-	}
-}
+const HydraliskSetup = new CreepSetup('hydralisk', {
+	pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, HEAL, MOVE, MOVE],
+	sizeLimit: Infinity,
+});
 
 @profile
-export class ArcherDefenseOverlord extends CombatOverlord {
+export class RangedDefenseOverlord extends CombatOverlord {
 
-	archers: Zerg[];
+	defenders: Zerg[];
 	private retreatPos: RoomPosition;
 	room: Room;
 	settings: {
@@ -33,8 +28,8 @@ export class ArcherDefenseOverlord extends CombatOverlord {
 
 	constructor(directive: DirectiveInvasionDefense, boosted = false,
 				priority                                     = OverlordPriority.defense.rangedDefense) {
-		super(directive, 'archer', priority);
-		this.archers = this.creeps(ArcherSetup.role);
+		super(directive, 'rangedDefense', priority);
+		this.defenders = this.creeps(HydraliskSetup.role);
 		if (boosted) {
 			this.boosts.archer = [
 				boostResources.ranged_attack[3],
@@ -99,7 +94,7 @@ export class ArcherDefenseOverlord extends CombatOverlord {
 			archer.heal(archer);
 		} else {
 			// Try to heal whatever else is in range
-			let target = archer.pos.findClosestByRange(this.archers);
+			let target = archer.pos.findClosestByRange(this.defenders);
 			if (target) {
 				archer.heal(target, false);
 				archer.travelTo(target);
@@ -108,47 +103,53 @@ export class ArcherDefenseOverlord extends CombatOverlord {
 	}
 
 
-	private handleArcher(archer: Zerg): void {
+	private handleDefender(defender: Zerg): void {
 		// Handle retreating actions
-		if (archer.hits < this.settings.retreatHitsPercent * archer.hitsMax) {
-			archer.memory.retreating = true;
+		if (defender.hits < this.settings.retreatHitsPercent * defender.hitsMax) {
+			defender.memory.retreating = true;
 		}
-		if (archer.memory.retreating) {
-			this.retreatActions(archer);
+		if (defender.memory.retreating) {
+			this.retreatActions(defender);
 		}
 		// Move to room and then perform attacking actions
-		if (!archer.inSameRoomAs(this)) {
-			archer.travelTo(this.pos);
+		if (!defender.inSameRoomAs(this)) {
+			defender.travelTo(this.pos);
 		} else {
-			this.attackActions(archer);
-			this.healActions(archer);
+			this.attackActions(defender);
+			this.healActions(defender);
 		}
 	}
 
 	init() {
-		this.reassignIdleCreeps(ArcherSetup.role);
-		let amount;
-		if (this.directive.memory.amount) {
-			amount = this.directive.memory.amount;
-		} else {
-			amount = _.sum(_.map(this.room.hostiles, hostile => hostile.boosts.length > 0 ? 2 : 1));
-		}
-		this.wishlist(amount, new ArcherSetup());
+		this.reassignIdleCreeps(HydraliskSetup.role);
+		// let amount;
+		// if (this.directive.memory.amount) {
+		// 	amount = this.directive.memory.amount;
+		// } else {
+		// 	amount = _.sum(_.map(this.room.hostiles, hostile => hostile.boosts.length > 0 ? 2 : 1));
+		// }
+		let rangedPotential = _.sum(_.map(this.room.dangerousHostiles,
+										  hostile => CombatIntel.getRangedAttackPotential(hostile)));
+		// Match the hostile potential times some multiplier
+		let amount = 0.5 * rangedPotential / HydraliskSetup.getBodyPotential(RANGED_ATTACK, this.colony);
+		this.wishlist(amount, HydraliskSetup);
 	}
 
 	run() {
-		for (let archer of this.archers) {
+		for (let defender of this.defenders) {
 			// Run the creep if it has a task given to it by something else; otherwise, proceed with non-task actions
-			if (archer.hasValidTask) {
-				archer.run();
+			if (defender.hasValidTask) {
+				defender.run();
 			} else {
-				if (archer.needsBoosts && this.labsHaveBoosts()) {
-					this.handleBoosts(archer);
+				if (defender.needsBoosts && this.labsHaveBoosts()) {
+					this.handleBoosts(defender);
 				} else {
-					this.handleArcher(archer);
+					this.handleDefender(defender);
 				}
 			}
 		}
-
+		if (this.room.hostiles.length == 0) {
+			this.parkCreepsIfIdle(this.defenders);
+		}
 	}
 }

@@ -3,7 +3,6 @@ import {Overlord} from '../Overlord';
 import {Hatchery} from '../../hiveClusters/hatchery';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
-import {EnergyRequestStructure, ResourceRequestStructure} from '../../logistics/TransportRequestGroup';
 import {log} from '../../lib/logger/log';
 import {OverlordPriority} from '../priorities_overlords';
 import {profile} from '../../profiler/decorator';
@@ -21,7 +20,7 @@ export class HatcheryOverlord extends Overlord {
 	queens: Zerg[];
 	settings: any;
 
-	// private _prioritizedRefills: { [priority: number]: IResourceRequest[] };
+	// private _prioritizedRefills: { [priority: number]: TransportRequest[] };
 
 	constructor(hatchery: Hatchery, priority = OverlordPriority.spawning.hatchery) {
 		super(hatchery, 'hatchery', priority);
@@ -38,17 +37,12 @@ export class HatcheryOverlord extends Overlord {
 
 	private supplyActions(queen: Zerg) {
 		// Select the closest supply target out of the highest priority and refill it
-		let target: EnergyRequestStructure | ResourceRequestStructure;
-		for (let priority in this.hatchery.transportRequests.supply) {
-			let targets = _.map(this.hatchery.transportRequests.supply[priority], request => request.target);
-			target = queen.pos.findClosestByRange(targets);
-			if (target) {
-				queen.task = Tasks.transfer(target);
-				return;
-			}
+		let request = this.hatchery.transportRequests.getPrioritizedClosestRequest(queen.pos, 'supply');
+		if (request) {
+			queen.task = Tasks.transfer(request.target);
+		} else {
+			this.rechargeActions(queen); // if there are no targets, refill yourself
 		}
-		// Otherwise, if there are no targets, refill yourself
-		this.rechargeActions(queen);
 	}
 
 	private rechargeActions(queen: Zerg): void {
