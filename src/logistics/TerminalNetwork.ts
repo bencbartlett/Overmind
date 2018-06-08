@@ -32,18 +32,20 @@ export class TerminalNetwork implements ITerminalNetwork {
 		sellPrice: { [resourceType: string]: number }
 	};
 	settings: {
-		market: {
-			reserveCredits: number,
-			requestResourceAmount: number,
-			maxPrice: {
-				default: number,
-				[resourceType: string]: number,
-			}
-		},
+		// market: {
+		// 	reserveCredits: number,
+		// 	requestResourceAmount: number,
+		// 	maxPrice: {
+		// 		default: number,
+		// 		[resourceType: string]: number,
+		// 	}
+		// },
 		equalize: {
+			frequency: number,
 			maxSendSize: number,
 			tolerance: {
 				energy: number,
+				power: number,
 				default: number,
 				[resourceType: string]: number,
 			}
@@ -56,17 +58,19 @@ export class TerminalNetwork implements ITerminalNetwork {
 		this.alreadyReceived = [];
 		this.alreadySent = [];
 		this.settings = {
-			market  : {
-				reserveCredits       : 10000,
-				requestResourceAmount: 1000,
-				maxPrice             : {
-					default: 5.0,
-				}
-			},
+			// market  : {
+			// 	reserveCredits       : 10000,
+			// 	requestResourceAmount: 1000,
+			// 	maxPrice             : {
+			// 		default: 5.0,
+			// 	}
+			// },
 			equalize: {
+				frequency  : 500,
 				maxSendSize: 25000,
 				tolerance  : {
 					energy : 100000,
+					power  : 5000,
 					default: 1000
 				}
 			}
@@ -124,21 +128,21 @@ export class TerminalNetwork implements ITerminalNetwork {
 		}
 	}
 
-	/* Calculate what needs buying */
-	private calculateShortages(terminal: StructureTerminal): { [mineralType: string]: number } {
-		if (Game.market.credits < this.settings.market.reserveCredits) {
-			return {};
-		}
-		let shortages: { [mineral: string]: number } = {};
-		for (let resourceType in this.manifests[terminal.room.name]) {
-			let amountInTerminal = terminal.store[<ResourceConstant>resourceType] || 0;
-			let amountNeeded = this.manifests[terminal.room.name][resourceType];
-			if (amountInTerminal < amountNeeded) {
-				shortages[resourceType] = amountNeeded - amountInTerminal;
-			}
-		}
-		return shortages;
-	}
+	// /* Calculate what needs buying */
+	// private calculateShortages(terminal: StructureTerminal): { [mineralType: string]: number } {
+	// 	if (Game.market.credits < this.settings.market.reserveCredits) {
+	// 		return {};
+	// 	}
+	// 	let shortages: { [mineral: string]: number } = {};
+	// 	for (let resourceType in this.manifests[terminal.room.name]) {
+	// 		let amountInTerminal = terminal.store[<ResourceConstant>resourceType] || 0;
+	// 		let amountNeeded = this.manifests[terminal.room.name][resourceType];
+	// 		if (amountInTerminal < amountNeeded) {
+	// 			shortages[resourceType] = amountNeeded - amountInTerminal;
+	// 		}
+	// 	}
+	// 	return shortages;
+	// }
 
 	// private buyShortages(terminal: StructureTerminal): void {
 	// 	let shortages = this.calculateShortages(terminal);
@@ -229,7 +233,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		return response;
 	}
 
-	requestResource(receiver: StructureTerminal, resourceType: ResourceConstant, amount: number) {
+	requestResource(receiver: StructureTerminal, resourceType: ResourceConstant, amount: number, allowBuy = true) {
 		amount += 100;
 		let sender: StructureTerminal | undefined = undefined;
 		let maxResourceAmount = 0;
@@ -243,7 +247,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		}
 		if (sender) {
 			this.transfer(sender, receiver, resourceType, amount);
-		} else {
+		} else if (allowBuy) {
 			Overmind.tradeNetwork.buyMineral(receiver, resourceType, amount);
 		}
 	}
@@ -267,10 +271,10 @@ export class TerminalNetwork implements ITerminalNetwork {
 	// 	}
 	// }
 
-	private equalize(resourceType: ResourceConstant): void {
-		let averageAmount = _.sum(_.map(this.terminals, terminal =>
-			(colonyOf(terminal).assets[resourceType] || 0))) / this.terminals.length;
-		let terminalsByResource = _.sortBy(this.terminals, terminal => (colonyOf(terminal).assets[resourceType] || 0));
+	private equalize(resourceType: ResourceConstant, terminals = this.terminals): void {
+		let averageAmount = _.sum(_.map(terminals,
+										terminal => (colonyOf(terminal).assets[resourceType] || 0))) / terminals.length;
+		let terminalsByResource = _.sortBy(terminals, terminal => (colonyOf(terminal).assets[resourceType] || 0));
 		// Min-max match terminals
 		let receivers = _.take(terminalsByResource, Math.floor(terminalsByResource.length / 2));
 		terminalsByResource.reverse();
@@ -296,6 +300,18 @@ export class TerminalNetwork implements ITerminalNetwork {
 		}
 	}
 
+	private equalizeCycle(): void {
+		// Equalize current resource type
+		this.equalize(RESOURCES_ALL[this.memory.equalizeIndex]);
+		// Determine next resource type to equalize; most recent resourceType gets cycled to end
+		let resourceEqualizeOrder = RESOURCES_ALL.slice(this.memory.equalizeIndex + 1)
+												 .concat(RESOURCES_ALL.slice(0, this.memory.equalizeIndex + 1));
+		let nextResourceType = _.find(resourceEqualizeOrder, resourceType =>
+			this.assets[resourceType] > this.settings.equalize.tolerance.default);
+		// Set next equalize resource index
+		this.memory.equalizeIndex = _.findIndex(RESOURCES_ALL, resource => resource == nextResourceType);
+	}
+
 	init(): void {
 		// if (Game.time % 500 == 2) {
 		// 	this.cacheBestSellPrices();
@@ -304,24 +320,11 @@ export class TerminalNetwork implements ITerminalNetwork {
 	}
 
 	run(): void {
-		if (Game.time % (TERMINAL_COOLDOWN + 1) == 0) {
-			// for (let terminal of this.terminals) {
-			// 	this.buyShortages(terminal);
-			// }
-			let equalizeAllResources = false;
-			if (equalizeAllResources) {
-				// Equalize current resource type
-				this.equalize(RESOURCES_ALL[this.memory.equalizeIndex]);
-				// Determine next resource type to equalize; most recent resourceType gets cycled to end
-				let resourceEqualizeOrder = RESOURCES_ALL.slice(this.memory.equalizeIndex + 1)
-														 .concat(RESOURCES_ALL.slice(0, this.memory.equalizeIndex + 1));
-				let nextResourceType = _.find(resourceEqualizeOrder, resourceType =>
-					this.assets[resourceType] > this.settings.equalize.tolerance.default);
-				// Set next equalize resource index
-				this.memory.equalizeIndex = _.findIndex(RESOURCES_ALL, resource => resource == nextResourceType);
-			} else {
-				this.equalize(RESOURCE_ENERGY);
-			}
+		if (Game.time % this.settings.equalize.frequency == 0) {
+			this.equalize(RESOURCE_ENERGY);
+		} else if (Game.time % this.settings.equalize.frequency == 20) {
+			let powerTerminals = _.filter(this.terminals, t => colonyOf(t).powerSpawn != undefined);
+			this.equalize(RESOURCE_POWER, powerTerminals);
 		}
 	}
 

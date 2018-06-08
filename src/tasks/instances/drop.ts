@@ -25,6 +25,7 @@ export class TaskDrop extends Task {
 		}
 		// Settings
 		this.settings.targetRange = 0;
+		this.settings.oneShot = true;
 		// Data
 		this.data.resourceType = resourceType;
 		this.data.amount = amount;

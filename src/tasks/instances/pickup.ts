@@ -10,6 +10,7 @@ export class TaskPickup extends Task {
 
 	constructor(target: pickupTargetType, options = {} as TaskOptions) {
 		super('pickup', target, options);
+		this.settings.oneShot = true;
 	}
 
 	isValidTask() {
@@ -21,10 +22,6 @@ export class TaskPickup extends Task {
 	}
 
 	work() {
-		// let res =
-		// if (!this.target) { // if the target is gone, we're done and clear the task
-		// 	this.finish();
-		// }
 		return this.creep.pickup(this.target);
 	}
 }

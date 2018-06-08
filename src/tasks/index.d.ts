@@ -1,12 +1,13 @@
 interface TaskSettings {
 	targetRange: number;
 	workOffRoad: boolean;
+	oneShot: boolean;
 }
 
 interface TaskOptions {
 	blind?: boolean;
 	nextPos?: protoPos;
-	travelToOptions: TravelToOptions;
+	travelToOptions?: TravelToOptions;
 }
 
 interface TaskData {
@@ -58,7 +59,7 @@ interface ITask extends protoTask {
 
 	run(): number | void;
 
-	work(): number | void;
+	work(): number;
 
 	finish(): void;
 }

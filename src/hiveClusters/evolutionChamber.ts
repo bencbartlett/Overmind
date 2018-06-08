@@ -11,17 +11,27 @@ import {log} from '../lib/logger/log';
 import {REAGENTS} from '../resources/map_resources';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {Priority} from '../settings/priorities';
+import {Visualizer} from '../visuals/Visualizer';
 
-export enum LabStatus {
-	Idle              = 0,
-	AcquiringMinerals = 1,
-	LoadingLabs       = 2,
-	Synthesizing      = 3,
-	UnloadingLabs     = 4,
-}
+const LabStatus = {
+	Idle             : 0,
+	AcquiringMinerals: 1,
+	LoadingLabs      : 2,
+	Synthesizing     : 3,
+	UnloadingLabs    : 4,
+};
+
+const LabStageTimeouts = {
+	Idle             : Infinity,
+	AcquiringMinerals: 100,
+	LoadingLabs      : 100,
+	Synthesizing     : 10000,
+	UnloadingLabs    : 1000
+};
 
 interface EvolutionChamberMemory {
-	status: LabStatus;
+	status: number;
+	statusTick: number;
 	activeReaction: Shortage | undefined;
 	reactionQueue: Shortage[];
 	labMineralTypes: {
@@ -31,6 +41,7 @@ interface EvolutionChamberMemory {
 
 const EvolutionChamberMemoryDefaults: EvolutionChamberMemory = {
 	status         : LabStatus.Idle,
+	statusTick     : 0,
 	activeReaction : undefined,
 	reactionQueue  : [],
 	labMineralTypes: {},
@@ -55,7 +66,7 @@ export class EvolutionChamber extends HiveCluster {
 	boostingLab: StructureLab;
 	transportRequests: TransportRequestGroup;				// Box for resource requests
 
-	memory: EvolutionChamberMemory;
+	// memory: EvolutionChamberMemory;
 
 	private labReservations: {
 		[labID: string]: { mineralType: string, amount: number }
@@ -65,7 +76,7 @@ export class EvolutionChamber extends HiveCluster {
 
 	constructor(colony: Colony, terminal: StructureTerminal) {
 		super(colony, terminal, 'evolutionChamber');
-		this.memory = Mem.wrap(this.colony.memory, 'evolutionChamber', EvolutionChamberMemoryDefaults);
+		// this.memory = Mem.wrap(this.colony.memory, 'evolutionChamber', EvolutionChamberMemoryDefaults);
 		// Register physical components
 		this.terminal = terminal;
 		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetwork;
@@ -73,8 +84,9 @@ export class EvolutionChamber extends HiveCluster {
 		// Boosting lab is the closest by path to terminal (fastest to empty and refill)
 		this.boostingLab = _.first(_.sortBy(this.labs, lab => Pathing.distance(this.terminal.pos, lab.pos)));
 		// Reagent labs are range=2 from all other labs (there are two in my layout at RCL8)
-		let range2Labs = _.filter(this.labs, lab => _.all(this.labs, otherLab => lab.pos.inRangeTo(otherLab, 2)));
-		this.reagentLabs = _.take(_.sortBy(range2Labs, lab => lab == this.boostingLab ? 1 : 0), 2); // boostLab to end
+		let range2Labs = _.filter(this.labs, lab => _.all(this.labs, otherLab => lab.pos.inRangeTo(otherLab, 2)) &&
+													lab != this.boostingLab);
+		this.reagentLabs = _.take(_.sortBy(range2Labs, lab => -1 * neighboringLabs(lab.pos).length), 2); // most neighbr
 		// Product labs are everything that isn't a reagent lab. (boostingLab can also be a productLab)
 		this.productLabs = _.difference(this.labs, this.reagentLabs);
 		// This keeps track of reservations for boosting
@@ -87,8 +99,46 @@ export class EvolutionChamber extends HiveCluster {
 		}
 	}
 
-	private initLabStatus(): void {
+	get memory(): EvolutionChamberMemory {
+		return Mem.wrap(this.colony.memory, 'evolutionChamber', EvolutionChamberMemoryDefaults);
+	}
 
+	private statusTimeoutCheck(): void {
+		let ticksInStatus = Game.time - this.memory.statusTick;
+		let timeout = false;
+		switch (this.memory.status) {
+			case LabStatus.Idle:
+				timeout = ticksInStatus > LabStageTimeouts.Idle;
+				break;
+			case LabStatus.AcquiringMinerals:
+				timeout = ticksInStatus > LabStageTimeouts.AcquiringMinerals;
+				break;
+			case LabStatus.LoadingLabs:
+				timeout = ticksInStatus > LabStageTimeouts.LoadingLabs;
+				break;
+			case LabStatus.Synthesizing:
+				timeout = ticksInStatus > LabStageTimeouts.Synthesizing;
+				break;
+			case LabStatus.UnloadingLabs:
+				timeout = ticksInStatus > LabStageTimeouts.UnloadingLabs;
+				break;
+			default:
+				log.warning(`Bad lab state at ${this.room.print}!`);
+				this.memory.status = LabStatus.Idle;
+				this.memory.statusTick = Game.time;
+				break;
+		}
+		if (timeout) {
+			log.warning(`${this.room.print}: stuck in state ${this.memory.status} for ${ticksInStatus} ticks, ` +
+						`rebuilding reaction queue and reverting to idle state!`);
+			this.memory.status = LabStatus.Idle;
+			this.memory.statusTick = Game.time;
+			this.memory.activeReaction = undefined;
+			this.memory.reactionQueue = [];
+		}
+	}
+
+	private initLabStatus(): void {
 		if (!this.memory.activeReaction && this.memory.status != LabStatus.Idle) {
 			log.warning(`No active reaction at ${this.room.print}!`);
 			this.memory.status = LabStatus.Idle;
@@ -101,52 +151,49 @@ export class EvolutionChamber extends HiveCluster {
 					log.info(`${this.room.print}: starting synthesis of ${ing1} + ${ing2} -> ` +
 							 this.memory.activeReaction.mineralType);
 					this.memory.status = LabStatus.AcquiringMinerals;
-				} else {
-					this.memory.status = LabStatus.Idle;
+					this.memory.statusTick = Game.time;
 				}
 				break;
 
-			case LabStatus.AcquiringMinerals:
+			case LabStatus.AcquiringMinerals: // "We acquire more mineralzzz"
 				let missingIngredients = this.colony.abathur.getMissingBasicMinerals([this.memory.activeReaction!]);
-				if (_.any(missingIngredients, amount => amount > 0)) {
-					// Acquiring minerals if you don't have everything you need in assets
-					this.memory.status = LabStatus.AcquiringMinerals;
-				} else {
+				if (_.all(missingIngredients, amount => amount == 0)) {
 					// Loading labs if all minerals are present but labs not at desired capacity yet
 					this.memory.status = LabStatus.LoadingLabs;
+					this.memory.statusTick = Game.time;
 				}
 				break;
 
 			case LabStatus.LoadingLabs:
-				if (_.any(this.reagentLabs, lab => lab.mineralAmount < this.memory.activeReaction!.amount)) {
-					this.memory.status = LabStatus.LoadingLabs;
-				} else {
+				if (_.all(this.reagentLabs, lab => lab.mineralAmount >= this.memory.activeReaction!.amount &&
+												   REAGENTS[this.memory.activeReaction!.mineralType]
+													   .includes(<ResourceConstant>lab.mineralType))) {
 					this.memory.status = LabStatus.Synthesizing;
+					this.memory.statusTick = Game.time;
 				}
 				break;
 
 			case LabStatus.Synthesizing:
-				if (_.any(this.reagentLabs, lab => lab.mineralAmount > 0)) {
-					this.memory.status = LabStatus.Synthesizing;
-				} else {
+				if (_.any(this.reagentLabs, lab => lab.mineralAmount == 0)) {
 					this.memory.status = LabStatus.UnloadingLabs;
+					this.memory.statusTick = Game.time;
 				}
 				break;
 
 			case LabStatus.UnloadingLabs:
-				if (_.any([...this.reagentLabs, ...this.productLabs], lab => lab.mineralAmount > 0)) {
-					this.memory.status = LabStatus.UnloadingLabs;
-				} else {
+				if (_.all([...this.reagentLabs, ...this.productLabs], lab => lab.mineralAmount == 0)) {
 					this.memory.status = LabStatus.Idle;
+					this.memory.statusTick = Game.time;
 				}
 				break;
 
 			default:
 				log.warning(`Bad lab state at ${this.room.print}!`);
 				this.memory.status = LabStatus.Idle;
+				this.memory.statusTick = Game.time;
 				break;
 		}
-
+		this.statusTimeoutCheck();
 	}
 
 	private reagentLabRequests(): void {
@@ -234,12 +281,15 @@ export class EvolutionChamber extends HiveCluster {
 
 	init(): void {
 		// Get a reaction queue if needed
-		if (!this.memory.reactionQueue) {
+		if (this.memory.reactionQueue.length == 0) {
 			this.memory.reactionQueue = this.colony.abathur.getReactionQueue();
 		}
+		// Switch to next reaction on the queue if you are idle
 		if (this.memory.status == LabStatus.Idle) {
 			this.memory.activeReaction = this.memory.reactionQueue.shift();
 		}
+		// log.info('status: ' + this.memory.status + '  activeReaction: ' + JSON.stringify(this.memory.activeReaction));
+		// log.info('reactionQueue:' + JSON.stringify(this.memory.reactionQueue));
 		this.initLabStatus();
 		this.registerRequests();
 	}
@@ -254,7 +304,11 @@ export class EvolutionChamber extends HiveCluster {
 			}
 		}
 		if (this.terminal.cooldown == 0) {
-			let missingBasicMinerals = this.colony.abathur.getMissingBasicMinerals(this.memory.reactionQueue);
+			let queue = this.memory.reactionQueue;
+			if (this.memory.activeReaction && this.memory.status == LabStatus.AcquiringMinerals) {
+				queue = [this.memory.activeReaction].concat(queue);
+			}
+			let missingBasicMinerals = this.colony.abathur.getMissingBasicMinerals(queue);
 			for (let resourceType in missingBasicMinerals) {
 				if (missingBasicMinerals[resourceType] > 0) {
 					this.terminalNetwork.requestResource(this.terminal, <ResourceConstant>resourceType,
@@ -265,7 +319,13 @@ export class EvolutionChamber extends HiveCluster {
 	}
 
 	visuals() {
-
+		for (let lab of this.reagentLabs) {
+			Visualizer.circle(lab.pos, 'red');
+		}
+		for (let lab of this.productLabs) {
+			Visualizer.circle(lab.pos, 'blue');
+		}
+		Visualizer.circle(this.boostingLab.pos, 'green');
 	}
 }
 

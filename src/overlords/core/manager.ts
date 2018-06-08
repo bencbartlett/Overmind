@@ -13,7 +13,7 @@ import {Energetics} from '../../logistics/Energetics';
 
 export const ManagerSetup = new CreepSetup('manager', {
 	pattern  : [CARRY, CARRY, MOVE],
-	sizeLimit: 8,
+	sizeLimit: 10,
 });
 
 @profile
@@ -41,7 +41,8 @@ export class CommandCenterOverlord extends Overlord {
 		let request = this.transportRequests.getPrioritizedClosestRequest(manager.pos, 'supply');
 		if (request) {
 			let amount = Math.min(request.amount, manager.carryCapacity);
-			manager.task = Tasks.transfer(request.target, request.resourceType, amount);
+			manager.task = Tasks.transfer(request.target, request.resourceType, amount,
+										  {nextPos: this.commandCenter.idlePos});
 			if ((manager.carry[request.resourceType] || 0) < amount) {
 				// If you are currently carrying other crap, overwrite current task and put junk in terminal/storage
 				if (_.sum(manager.carry) > (manager.carry[request.resourceType] || 0)) {
@@ -54,7 +55,8 @@ export class CommandCenterOverlord extends Overlord {
 						withdrawFrom = this.commandCenter.terminal;
 					}
 					let withdrawAmount = amount - _.sum(manager.carry);
-					manager.task.fork(Tasks.withdraw(withdrawFrom, request.resourceType, withdrawAmount));
+					manager.task.fork(Tasks.withdraw(withdrawFrom, request.resourceType, withdrawAmount,
+													 {nextPos: request.target.pos}));
 				}
 			}
 		}

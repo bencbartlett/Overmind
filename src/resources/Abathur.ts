@@ -77,7 +77,8 @@ export class Abathur {
 	private _globalAssets: { [resourceType: string]: number };
 
 	static settings = {
-		defaultBatchSize: 800, // Manager carry capacity
+		minBatchSize: 100,	// anything less than this wastes time
+		maxBatchSize: 1000, // manager carry capacity
 	};
 
 	constructor(colony: Colony) {
@@ -155,10 +156,7 @@ export class Abathur {
 				let amountOwned = this.assets[resourceType] || 0;
 				let amountNeeded = stocks[resourceType];
 				if (amountOwned < amountNeeded) { // if there is a shortage of this resource
-					let ret = this.buildReactionQueue(<ResourceConstant>resourceType, amountNeeded - amountOwned);
-					console.log(`${this.colony.name}: want ${resourceType}, queue: ${JSON.stringify(ret)}`);
-					console.log(`missing base minerals: ${JSON.stringify(this.getMissingBasicMinerals(ret))}`);
-					return ret;
+					return this.buildReactionQueue(<ResourceConstant>resourceType, amountNeeded - amountOwned);
 				}
 			}
 		}
@@ -203,22 +201,37 @@ export class Abathur {
 	/* Build a reaction queue for a target compound */
 	private buildReactionQueue(mineral: ResourceConstant, amount: number): Shortage[] {
 		// Recipe iteration order is guaranteed to follow insertion order for non-integer keys in ES2015 and later
-		let recipe: { [resourceType: string]: number } = {};
-		for (let ingredient of this.ingredientsList(mineral)) {
-			if (!recipe[ingredient]) {
-				recipe[ingredient] = 0;
-			}
-			recipe[ingredient] += amount;
-		}
+		// let recipe: { [resourceType: string]: number } = {};
+		// for (let ingredient of this.ingredientsList(mineral)) {
+		// 	if (!recipe[ingredient]) {
+		// 		recipe[ingredient] = 0;
+		// 	}
+		// 	recipe[ingredient] += amount;
+		// }
 		let reactionQueue: Shortage[] = [];
-		for (let ingredient in recipe) {
-			let amount = Math.max(recipe[ingredient] - (this.assets[ingredient] || 0), 0);
-			if (amount == 0) {
-				continue;
+		for (let ingredient of this.ingredientsList(mineral)) {
+			let productionAmount = amount;
+			if (ingredient != mineral) {
+				productionAmount = Math.max(productionAmount - (this.assets[ingredient] || 0), 0);
 			}
-			amount = Math.max(amount, Abathur.settings.defaultBatchSize);
-			reactionQueue.push({mineralType: ingredient, amount: recipe[ingredient]});
+			productionAmount = Math.min(productionAmount, Abathur.settings.maxBatchSize);
+			reactionQueue.push({mineralType: ingredient, amount: productionAmount});
+
 		}
+
+		// Scan backwards through the queue and reduce the production amount of subsequently baser resources as needed
+		if (reactionQueue.length == 0) return reactionQueue;
+		let minAmount = reactionQueue[0].amount;
+		reactionQueue.reverse();
+		for (let shortage of reactionQueue) {
+			if (shortage.amount < minAmount) {
+				minAmount = shortage.amount;
+			}
+			shortage.amount = Math.min(shortage.amount, minAmount);
+		}
+		reactionQueue.reverse();
+		reactionQueue = _.filter(reactionQueue, shortage => shortage.amount > 0);
+		_.forEach(reactionQueue, shrtage => shrtage.amount = Math.max(shrtage.amount, Abathur.settings.minBatchSize));
 		return reactionQueue;
 	}
 

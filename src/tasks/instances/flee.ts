@@ -88,7 +88,7 @@ export class TaskFlee extends Task {
 	}
 
 	work() {
-
+		return OK;
 	}
 
 }

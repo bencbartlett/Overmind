@@ -98,7 +98,9 @@ interface RoomPosition {
 	findClosestByLimitedRange<T>(objects: T[] | RoomPosition[], rangeLimit: number,
 								 opts?: { filter: any | string; }): T;
 
-	findClosestByMultiRoomRange<T extends _HasRoomPosition>(objects: T[], opts?: { filter: any | string; }): T;
+	findClosestByMultiRoomRange<T extends _HasRoomPosition>(objects: T[]): T;
+
+	findClosestByRangeThenPath<T extends _HasRoomPosition>(objects: T[]): T;
 }
 
 interface RoomVisual {

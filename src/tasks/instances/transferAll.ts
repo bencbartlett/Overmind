@@ -36,5 +36,6 @@ export class TaskTransferAll extends Task {
 				return this.creep.transfer(this.target, <ResourceConstant>resourceType);
 			}
 		}
+		return -1;
 	}
 }

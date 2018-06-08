@@ -64,8 +64,9 @@ export abstract class Task implements ITask {
 		}
 		this._parent = null;
 		this.settings = {
-			targetRange: 1,
-			workOffRoad: false,
+			targetRange: 1,		// range at which you can perform action
+			workOffRoad: false,	// whether work() should be performed off road
+			oneShot    : false, // remove this task once work() returns OK, regardless of validity
 		};
 		_.defaults(options, {
 			travelToOptions: {},
@@ -118,7 +119,7 @@ export abstract class Task implements ITask {
 	// Dereferences the saved target position; useful for situations where you might lose vision
 	get targetPos(): RoomPosition {
 		// refresh if you have visibility of the target
-		if (this.options.travelToOptions.movingTarget && this.target) {
+		if (this.options.travelToOptions!.movingTarget && this.target) {
 			this._target._pos = this.target.pos;
 		}
 		return derefRoomPosition(this._target._pos);
@@ -211,8 +212,8 @@ export abstract class Task implements ITask {
 
 	/* Move to within range of the target */
 	move(range = this.settings.targetRange): number {
-		if (!this.options.travelToOptions.range) {
-			this.options.travelToOptions.range = range;
+		if (!this.options.travelToOptions!.range) {
+			this.options.travelToOptions!.range = range;
 		}
 		return this.creep.travelTo(this.targetPos, this.options.travelToOptions);
 	}
@@ -239,7 +240,11 @@ export abstract class Task implements ITask {
 				// Move to somewhere nearby that isn't on a road
 				this.parkCreep(this.creep, this.targetPos, true);
 			}
-			return this.work();
+			let result = this.work();
+			if (this.settings.oneShot && result == OK) {
+				this.finish();
+			}
+			return result;
 		} else {
 			this.move();
 		}
@@ -275,7 +280,7 @@ export abstract class Task implements ITask {
 	}
 
 	// Task to perform when at the target
-	abstract work(): number | void;
+	abstract work(): number;
 
 	// Finalize the task and switch to parent task (or null if there is none)
 	finish(): void {

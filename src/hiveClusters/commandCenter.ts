@@ -115,7 +115,7 @@ export class CommandCenter extends HiveCluster {
 			this.transportRequests.request(this.powerSpawn, Priority.Normal);
 		}
 		// Refill nuker with low priority
-		if (this.nuker && this.nuker.energy < this.nuker.energyCapacity) {
+		if (this.nuker && this.nuker.energy < this.nuker.energyCapacity && this.storage.energy > 100000) {
 			this.transportRequests.request(this.nuker, Priority.Low);
 		}
 

@@ -9,6 +9,15 @@ export class Visualizer {
 		return Memory.settings.enableVisuals;
 	}
 
+	static circle(pos: RoomPosition, color = 'red', opts = {}): RoomVisual {
+		_.defaults(opts, {
+			fill   : color,
+			radius : 0.35,
+			opacity: 0.5,
+		});
+		return new RoomVisual(pos.roomName).circle(pos.x, pos.y, opts);
+	}
+
 	static marker(pos: RoomPosition, opts = {}): RoomVisual {
 		return new RoomVisual(pos.roomName).animatedPosition(pos.x, pos.y, opts);
 	}

@@ -37,9 +37,9 @@ import profiler from 'screeps-profiler';
 // Version migration
 import {migrate_03X_04X} from './versionMigration/0.3.x to 0.4.x';
 // Importing overmind object
-// import {_Overmind} from 'Overmind'; 	// Option 1: only use this if you are me! (this should be commented out)
-import OM from 'Overmind_obfuscated'; // Option 2: Import overmind from obfuscated JS file in public repository
-var _Overmind = (<any>OM)._Overmind as (new() => IOvermind); // These two lines shouldn't be commented out
+import {_Overmind} from 'Overmind'; // Option 1: only use this if you are me! (this should be commented out)
+// import OM from 'Overmind_obfuscated'; // Option 2: Import overmind from obfuscated JS file in public repository
+// var _Overmind = (<any>OM)._Overmind as (new() => IOvermind); // These two lines shouldn't be commented out
 
 if (USE_PROFILER) profiler.enable();
 

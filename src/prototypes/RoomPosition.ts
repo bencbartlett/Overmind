@@ -1,3 +1,5 @@
+import minBy from 'lodash.minby';
+
 Object.defineProperty(RoomPosition.prototype, 'print', {
 	get() {
 		return '<a href="#!/room/' + Game.shard.name + '/' + this.roomName + '">[' + this.roomName + ', ' + this.x + ', ' + this.y + ']</a>';
@@ -210,19 +212,19 @@ RoomPosition.prototype.findClosestByLimitedRange = function <T>(objects: T[] | R
 	return this.findClosestByRange(objectsInRange, opts);
 };
 
-RoomPosition.prototype.findClosestByMultiRoomRange =
-	function <T extends _HasRoomPosition>(objects: T[], opts?: { filter: any | string; }): T {
-		let distances = _.map(objects, obj => this.getMultiRoomRangeTo(obj.pos));
-		let minDistance = Infinity;
-		let i = 0;
-		let minIndex = 0;
-		for (let distance of distances) {
-			if (distance < minDistance) {
-				minDistance = distance;
-				minIndex = i;
-			}
-			i++;
-		}
-		return objects[minIndex];
-	};
+RoomPosition.prototype.findClosestByMultiRoomRange = function <T extends _HasRoomPosition>(objects: T[]): T {
+	return minBy(objects, (obj: T) => this.getMultiRoomRangeTo(obj.pos));
+};
+
+// This should only be used within a single room
+RoomPosition.prototype.findClosestByRangeThenPath = function <T extends _HasRoomPosition>(objects: T[]): T {
+	let distances = _.map(objects, obj => this.getRangeTo(obj));
+	let minDistance = _.min(distances);
+	if (minDistance > 4) {
+		return this.findClosestByRange(objects);
+	} else {
+		let closestObjects = _.filter(objects, obj => this.getRangeTo(obj) == minDistance);
+		return this.findClosestByPath(closestObjects); // don't clutter up pathing.distance cached values
+	}
+};
 

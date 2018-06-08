@@ -146,6 +146,7 @@ export class Colony {
 		// Register colony overlords
 		this.spawnMoarOverlords();
 		// Add an Abathur
+		this.assets = this.getAllAssets();
 		this.abathur = new Abathur(this);
 	}
 
@@ -163,7 +164,8 @@ export class Colony {
 		this.links = this.room.links;
 		this.terminal = this.room.terminal;
 		this.towers = this.room.towers;
-		this.labs = _.sortBy(_.filter(this.room.labs, lab => lab.my && lab.isActive()), lab => lab.ref);
+		this.labs = _.sortBy(_.filter(this.room.labs, lab => lab.my && lab.isActive()),
+							 lab => 50 * lab.pos.y + lab.pos.x); // Labs are sorted in reading order of positions
 		this.powerSpawn = this.room.getStructures(STRUCTURE_POWER_SPAWN)[0] as StructurePowerSpawn;
 		this.nuker = this.room.getStructures(STRUCTURE_NUKER)[0] as StructureNuker;
 		this.observer = this.room.getStructures(STRUCTURE_OBSERVER)[0] as StructureObserver;
@@ -174,7 +176,6 @@ export class Colony {
 		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
 		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
 		this.obstacles = [];
-		this.assets = this.getAllAssets();
 	}
 
 	private registerOperationalState(): void {
@@ -314,8 +315,7 @@ export class Colony {
 	}
 
 	init(): void {
-		_.forEach(this.hiveClusters, 										// Initialize each hive cluster
-				  hiveCluster => hiveCluster.init());
+		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.init());	// Initialize each hive cluster
 		this.overseer.init();												// Initialize overseer AFTER hive clusters
 		this.roadLogistics.init();											// Initialize the road network
 		this.linkNetwork.init();											// Initialize link network
@@ -324,8 +324,7 @@ export class Colony {
 
 	run(): void {
 		this.overseer.run();												// Run overseer BEFORE hive clusters
-		_.forEach(this.hiveClusters, 										// Run each hive cluster
-				  hiveCluster => hiveCluster.run());
+		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.run());		// Run each hive cluster
 		this.linkNetwork.run();												// Run the link network
 		this.roadLogistics.run();											// Run the road network
 		this.roomPlanner.run();												// Run the room planner
