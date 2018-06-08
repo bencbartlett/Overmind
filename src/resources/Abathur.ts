@@ -220,7 +220,9 @@ export class Abathur {
 		}
 
 		// Scan backwards through the queue and reduce the production amount of subsequently baser resources as needed
-		if (reactionQueue.length == 0) return reactionQueue;
+		if (reactionQueue.length == 0) {
+			return reactionQueue;
+		}
 		let minAmount = reactionQueue[0].amount;
 		reactionQueue.reverse();
 		for (let shortage of reactionQueue) {
