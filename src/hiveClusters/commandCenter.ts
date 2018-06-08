@@ -35,7 +35,8 @@ export class CommandCenter extends HiveCluster {
 		super(colony, storage, 'commandCenter');
 		// Register physical components
 		this.storage = storage;
-		this.link = this.pos.findClosestByLimitedRange(colony.links, 2);
+		this.link = this.pos.findClosestByLimitedRange(colony.availableLinks, 2);
+		this.colony.linkNetwork.claimLink(this.link);
 		this.terminal = colony.terminal;
 		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetwork;
 		this.towers = this.pos.findInRange(colony.towers, 3);

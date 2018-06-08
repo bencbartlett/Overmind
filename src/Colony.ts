@@ -63,6 +63,7 @@ export class Colony {
 	extensions: StructureExtension[];					// |
 	storage: StructureStorage | undefined;				// |
 	links: StructureLink[];								// |
+	availableLinks: StructureLink[];
 	claimedLinks: StructureLink[];						// | Links belonging to hive cluseters excluding mining groups
 	dropoffLinks: StructureLink[]; 						// | Links not belonging to a hiveCluster, used as dropoff
 	terminal: StructureTerminal | undefined;			// |
@@ -148,6 +149,9 @@ export class Colony {
 		// Add an Abathur
 		this.assets = this.getAllAssets();
 		this.abathur = new Abathur(this);
+		// Register colony globally to allow 'W1N1' and 'w1n1' to refer to Overmind.colonies.W1N1
+		global[this.name] = this;
+		global[this.name.toLowerCase()] = this;
 	}
 
 	private registerCreeps(creeps: Zerg[]): void {
@@ -162,6 +166,7 @@ export class Colony {
 		this.extensions = this.room.extensions;
 		this.storage = this.room.storage;
 		this.links = this.room.links;
+		this.availableLinks = _.clone(this.room.links);
 		this.terminal = this.room.terminal;
 		this.towers = this.room.towers;
 		this.labs = _.sortBy(_.filter(this.room.labs, lab => lab.my && lab.isActive()),
@@ -255,21 +260,23 @@ export class Colony {
 		this.upgradeSite = new UpgradeSite(this, this.controller);
 		// Instantiate spore crawlers to wrap towers
 		this.sporeCrawlers = _.map(this.towers, tower => new SporeCrawler(this, tower));
-		// Sort claimed and unclaimed links
-		let claimedPositions = _.map(_.compact([this.commandCenter, this.hatchery, this.upgradeSite]),
-									 hiveCluster => hiveCluster!.pos);
-		this.claimedLinks = _.filter(this.links, function (link) {
-			let nearbyClaimingThings = link.pos.findInRange(claimedPositions, 3);
-			if (nearbyClaimingThings) {
-				return nearbyClaimingThings.length > 0;
-			}
-			let nearbySources = link.pos.findInRange(FIND_SOURCES, 2);
-			if (nearbySources) {
-				return nearbySources.length > 0;
-			}
-			return false;
-		}) as StructureLink[];
-		this.dropoffLinks = _.filter(this.links, link => this.claimedLinks.includes(link) == false);
+		// // Sort claimed and unclaimed links
+		// let claimedPositions = _.map(_.compact([this.commandCenter, this.hatchery, this.upgradeSite]),
+		// 							 hiveCluster => hiveCluster!.pos);
+		// this.claimedLinks = _.filter(this.links, function (link) {
+		// 	let nearbyClaimingThings = link.pos.findInRange(claimedPositions, 3);
+		// 	if (nearbyClaimingThings) {
+		// 		return nearbyClaimingThings.length > 0;
+		// 	}
+		// 	let nearbySources = link.pos.findInRange(FIND_SOURCES, 2);
+		// 	if (nearbySources) {
+		// 		return nearbySources.length > 0;
+		// 	}
+		// 	return false;
+		// }) as StructureLink[];
+
+		// Dropoff links are freestanding links or ones at mining sites
+		this.dropoffLinks = _.clone(this.availableLinks);
 		// Mining sites is an object of ID's and MiningSites
 		let sourceIDs = _.map(this.sources, source => source.ref);
 		let miningSites = _.map(this.sources, source => new MiningSite(this, source));

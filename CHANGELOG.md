@@ -23,12 +23,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - Lots of under-the-hood improvements to the logistics system!
     - You should see about a 60% reduction in CPU usage from `LogisticsNetwork` due to better internal caching
     - Tweaks to the predictive functions reduce the chance that transporters occasionally get stuck in an oscillatory pattern
+- Improved memory footprint of stats collection and shortened hiveCluster names in memory; you should see about a 30% reduction in memory usage
 - `TerminalNetwork` now uses an `equalize()` routine to distribute resources between colonies
 - `LogisticsGroup` renamed to `LogisticsNetwork`
 - CreepSetups moved to respective overlord; now are constant instances rather than extending classes
-- Improved memory footprint of stats collection and shortened hiveCluster names in memory; you should see about a 30% reduction in memory usage
+- Colonies now register a shorthand reference on `global`: 'E4S41' and 'e4s41' both refer to `Overmind.colonies.E4S41`
 
 ### Fixed
+- Made link allocation less buggy; hiveClusters now claim their link, preventing others from registering the same link
 - Fixed a bug where the roadPlanner would plan roads for incomplete paths
 - Fixed a bug where workers will occasionally stop working if outpost mining site containers are under construction
 

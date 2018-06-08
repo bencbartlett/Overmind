@@ -44,9 +44,10 @@ export class MiningSite extends HiveCluster {
 		if (siteContainer) {
 			this.output = siteContainer;
 		}
-		let siteLink = this.pos.findClosestByLimitedRange(this.room.links, 2);
+		let siteLink = this.pos.findClosestByLimitedRange(this.colony.availableLinks, 2);
 		if (siteLink) {
 			this.output = siteLink;
+			this.colony.linkNetwork.claimLink(this.output);
 		}
 		// Register output construction sites
 		let nearbyOutputSites = this.pos.findInRange(this.room.constructionSites, 2, {

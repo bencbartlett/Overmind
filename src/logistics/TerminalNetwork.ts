@@ -66,10 +66,10 @@ export class TerminalNetwork implements ITerminalNetwork {
 			// 	}
 			// },
 			equalize: {
-				frequency  : 500,
+				frequency  : 100,
 				maxSendSize: 25000,
 				tolerance  : {
-					energy : 100000,
+					energy : 50000,
 					power  : 5000,
 					default: 1000
 				}

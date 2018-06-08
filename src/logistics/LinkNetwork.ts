@@ -23,6 +23,10 @@ export class LinkNetwork {
 		};
 	}
 
+	claimLink(link: StructureLink | undefined): void {
+		_.remove(this.colony.availableLinks, l => l == link);
+	}
+
 	requestReceive(link: StructureLink): void {
 		this.receive.push(link);
 	}
@@ -62,7 +66,7 @@ export class LinkNetwork {
 				let amountToSend = _.min([closestTransmitLink.energy, receiveLink.energyCapacity - receiveLink.energy]);
 				closestTransmitLink.transferEnergy(receiveLink, amountToSend);
 				_.remove(this.transmit, link => link == closestTransmitLink);
-				_.remove(this.receive, link => link == receiveLink);
+				// _.remove(this.receive, link => link == receiveLink);
 			}
 		}
 		// Now send all remaining transmit link requests to the command center

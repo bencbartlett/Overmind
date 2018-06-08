@@ -21,7 +21,7 @@ export class TraderJoe implements ITradeNetwork {
 			reserveCredits       : 10000,
 			requestResourceAmount: 1000,
 			maxPrice             : {
-				default: 50.0, // TODO: change back to 5
+				default: 5.0,
 			}
 		},
 	};

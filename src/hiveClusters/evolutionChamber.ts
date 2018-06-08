@@ -174,7 +174,7 @@ export class EvolutionChamber extends HiveCluster {
 				break;
 
 			case LabStatus.Synthesizing:
-				if (_.any(this.reagentLabs, lab => lab.mineralAmount == 0)) {
+				if (_.any(this.reagentLabs, lab => lab.mineralAmount < LAB_REACTION_AMOUNT)) {
 					this.memory.status = LabStatus.UnloadingLabs;
 					this.memory.statusTick = Game.time;
 				}
@@ -202,7 +202,7 @@ export class EvolutionChamber extends HiveCluster {
 			let [ing1, ing2] = REAGENTS[mineralType];
 			let [lab1, lab2] = this.reagentLabs;
 			// Empty out any incorrect minerals and request the correct reagents
-			if (lab1.mineralType != ing1 && lab1.mineralAmount > 0) {
+			if (this.memory.status == LabStatus.UnloadingLabs || (lab1.mineralType != ing1 && lab1.mineralAmount > 0)) {
 				this.transportRequests.provide(lab1, Priority.Normal, {resourceType: lab1.mineralType});
 			} else if (this.memory.status == LabStatus.LoadingLabs && lab1.mineralAmount < amount) {
 				this.transportRequests.request(lab1, Priority.Normal, {
@@ -210,7 +210,7 @@ export class EvolutionChamber extends HiveCluster {
 					amount      : amount - lab1.mineralAmount,
 				});
 			}
-			if (lab2.mineralType != ing2 && lab2.mineralAmount > 0) {
+			if (this.memory.status == LabStatus.UnloadingLabs || (lab2.mineralType != ing2 && lab2.mineralAmount > 0)) {
 				this.transportRequests.provide(lab2, Priority.Normal, {resourceType: lab2.mineralType});
 			} else if (this.memory.status == LabStatus.LoadingLabs && lab2.mineralAmount < amount) {
 				this.transportRequests.request(lab2, Priority.Normal, {

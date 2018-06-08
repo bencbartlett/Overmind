@@ -48,7 +48,8 @@ export class Hatchery extends HiveCluster {
 		this.spawns = colony.spawns;
 		this.availableSpawns = _.filter(this.spawns, (spawn: StructureSpawn) => !spawn.spawning);
 		this.extensions = colony.extensions;
-		this.link = this.pos.findClosestByLimitedRange(colony.links, 2);
+		this.link = this.pos.findClosestByLimitedRange(colony.availableLinks, 2);
+		this.colony.linkNetwork.claimLink(this.link);
 		this.battery = this.pos.findClosestByLimitedRange(this.room.containers, 2);
 		if (this.battery) {
 			this.pos = this.battery.pos;

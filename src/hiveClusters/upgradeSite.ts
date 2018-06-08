@@ -43,8 +43,9 @@ export class UpgradeSite extends HiveCluster {
 			container.pos.findInRange(FIND_SOURCES, 1).length == 0); // only count containers that aren't near sources
 		this.battery = this.pos.findClosestByLimitedRange(allowableContainers, 3);
 		// Register link
-		let allowableLinks = _.filter(this.room.links, link => link.pos.findInRange(FIND_SOURCES, 2).length == 0);
-		this.link = this.pos.findClosestByLimitedRange(colony.links, 4);
+		// let allowableLinks = _.filter(this.colony.links, link => link.pos.findInRange(FIND_SOURCES, 2).length == 0);
+		this.link = this.pos.findClosestByLimitedRange(colony.availableLinks, 4);
+		this.colony.linkNetwork.claimLink(this.link);
 		// Register input construction sites
 		let nearbyInputSites = this.pos.findInRange(this.room.constructionSites, 4, {
 			filter: (s: ConstructionSite) => s.structureType == STRUCTURE_CONTAINER ||

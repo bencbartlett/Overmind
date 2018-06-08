@@ -77,9 +77,9 @@ export class TransportRequestGroup {
 			resourceType: opts.resourceType!,
 			amount      : opts.amount!,
 		};
-		// if (opts.amount > 0) {
-		this.supply[priority].push(req);
-		// }
+		if (opts.amount > 0) {
+			this.supply[priority].push(req);
+		}
 	}
 
 	/* Request for resources to be withdrawn from this target */
@@ -96,9 +96,9 @@ export class TransportRequestGroup {
 			resourceType: opts.resourceType!,
 			amount      : opts.amount!,
 		};
-		// if (opts.amount > 0) {
-		this.withdraw[priority].push(req);
-		// }
+		if (opts.amount > 0) {
+			this.withdraw[priority].push(req);
+		}
 	}
 
 	/* Makes a provide for every resourceType in a requestor object */
