@@ -42,14 +42,14 @@ const _wantedStock: { [key: string]: number } = {
 	XGH2O: 12000 	// For upgraders
 };
 
-export interface Shortage {
+export interface Reaction {
 	mineralType: string;
 	amount: number;
 }
 
 // Compute priority and wanted stock
 let numColonies = 1; //_.keys(Overmind.colonies).length;
-let priorityStock: Shortage[] = [];
+let priorityStock: Reaction[] = [];
 for (let resourceType in _priorityStock) {
 	let stock = {
 		mineralType: resourceType,
@@ -58,7 +58,7 @@ for (let resourceType in _priorityStock) {
 	priorityStock.push(stock);
 }
 
-let wantedStock: Shortage[] = [];
+let wantedStock: Reaction[] = [];
 for (let resourceType in _wantedStock) {
 	let stock = {
 		mineralType: resourceType,
@@ -70,8 +70,8 @@ for (let resourceType in _wantedStock) {
 export class Abathur {
 
 	colony: Colony;
-	priorityStock: Shortage[];
-	wantedStock: Shortage[];
+	priorityStock: Reaction[];
+	wantedStock: Reaction[];
 	assets: { [resourceType: string]: number };
 
 	private _globalAssets: { [resourceType: string]: number };
@@ -104,59 +104,15 @@ export class Abathur {
 		return this._globalAssets;
 	}
 
-	/* Finds the next resource which needs to be produced */
-	private getShortage(): Shortage | undefined {
-		let stocksToCheck = [_priorityStock, _wantedStock];
-		for (let stocks of stocksToCheck) {
-			for (let resourceType in stocks) {
-				let amountOwned = this.assets[resourceType] || 0;
-				let amountNeeded = stocks[resourceType];
-				if (amountOwned < amountNeeded) { // if there is a shortage of this resource
-					let ret = this.recursivelyFindShortage({
-															   mineralType: resourceType,
-															   amount     : amountNeeded - amountOwned
-														   });
-					console.log(`${this.colony.name}: want ${resourceType}, produce ${ret ? ret.mineralType : 0}`);
-					return ret;
-				}
-			}
-		}
-	}
-
-	/* Recursively gets the next resource that needs to be produced */
-	private recursivelyFindShortage(shortage: Shortage, firstRecursionLevel = false): Shortage | undefined {
-		let amountOwned = this.assets[shortage.mineralType] || 0;
-		let amountNeeded = shortage.amount - Math.floor(amountOwned / 10) * 10;
-		if (firstRecursionLevel) {
-			amountNeeded = shortage.amount;
-		}
-		if (amountNeeded > 0) { // if you need more of this resource
-			let reagents = REAGENTS[shortage.mineralType];
-			if (reagents) {  // if the resource is not a base mineral
-				for (let reagent of reagents) {
-					let nextShortage = this.recursivelyFindShortage({
-																		mineralType: reagent,
-																		amount     : amountNeeded
-																	});
-					if (nextShortage) {
-						return nextShortage;
-					}
-				}
-			} else {
-				return {mineralType: shortage.mineralType, amount: amountNeeded};
-			}
-		}
-	}
-
 	/* Generate a queue of reactions to produce the most needed compound */
-	getReactionQueue(): Shortage[] {
+	getReactionQueue(verbose = false): Reaction[] {
 		let stocksToCheck = [_priorityStock, _wantedStock];
 		for (let stocks of stocksToCheck) {
 			for (let resourceType in stocks) {
 				let amountOwned = this.assets[resourceType] || 0;
 				let amountNeeded = stocks[resourceType];
 				if (amountOwned < amountNeeded) { // if there is a shortage of this resource
-					return this.buildReactionQueue(<ResourceConstant>resourceType, amountNeeded - amountOwned);
+					return this.buildReactionQueue(<ResourceConstant>resourceType, amountNeeded - amountOwned, verbose);
 				}
 			}
 		}
@@ -164,7 +120,7 @@ export class Abathur {
 	}
 
 	/* Figure out which basic minerals are missing and how much */
-	getMissingBasicMinerals(reactionQueue: Shortage[]): { [resourceType: string]: number } {
+	getMissingBasicMinerals(reactionQueue: Reaction[]): { [resourceType: string]: number } {
 		let requiredBasicMinerals = this.getRequiredBasicMinerals(reactionQueue);
 		let missingBasicMinerals: { [resourceType: string]: number } = {};
 		for (let mineralType in requiredBasicMinerals) {
@@ -177,7 +133,7 @@ export class Abathur {
 	}
 
 	/* Get the required amount of basic minerals for a reaction queue */
-	private getRequiredBasicMinerals(reactionQueue: Shortage[]): { [resourceType: string]: number } {
+	private getRequiredBasicMinerals(reactionQueue: Reaction[]): { [resourceType: string]: number } {
 		let requiredBasicMinerals: { [resourceType: string]: number } = {
 			[RESOURCE_HYDROGEN] : 0,
 			[RESOURCE_OXYGEN]   : 0,
@@ -187,11 +143,11 @@ export class Abathur {
 			[RESOURCE_ZYNTHIUM] : 0,
 			[RESOURCE_CATALYST] : 0,
 		};
-		for (let shortage of reactionQueue) {
-			let ingredients = REAGENTS[shortage.mineralType];
+		for (let reaction of reactionQueue) {
+			let ingredients = REAGENTS[reaction.mineralType];
 			for (let ingredient of ingredients) {
 				if (!REAGENTS[ingredient]) { // resource is base mineral
-					requiredBasicMinerals[ingredient] += shortage.amount;
+					requiredBasicMinerals[ingredient] += reaction.amount;
 				}
 			}
 		}
@@ -199,16 +155,9 @@ export class Abathur {
 	}
 
 	/* Build a reaction queue for a target compound */
-	private buildReactionQueue(mineral: ResourceConstant, amount: number): Shortage[] {
-		// Recipe iteration order is guaranteed to follow insertion order for non-integer keys in ES2015 and later
-		// let recipe: { [resourceType: string]: number } = {};
-		// for (let ingredient of this.ingredientsList(mineral)) {
-		// 	if (!recipe[ingredient]) {
-		// 		recipe[ingredient] = 0;
-		// 	}
-		// 	recipe[ingredient] += amount;
-		// }
-		let reactionQueue: Shortage[] = [];
+	private buildReactionQueue(mineral: ResourceConstant, amount: number, verbose = false): Reaction[] {
+		if (verbose) console.log(`Abathur@${this.colony.room.print}: building reaction queue for ${amount} ${mineral}`);
+		let reactionQueue: Reaction[] = [];
 		for (let ingredient of this.ingredientsList(mineral)) {
 			let productionAmount = amount;
 			if (ingredient != mineral) {
@@ -216,24 +165,25 @@ export class Abathur {
 			}
 			productionAmount = Math.min(productionAmount, Abathur.settings.maxBatchSize);
 			reactionQueue.push({mineralType: ingredient, amount: productionAmount});
-
 		}
-
+		if (verbose) console.log(`Pre-reduction queue: ${JSON.stringify(reactionQueue)}`);
 		// Scan backwards through the queue and reduce the production amount of subsequently baser resources as needed
-		if (reactionQueue.length == 0) {
-			return reactionQueue;
-		}
-		let minAmount = reactionQueue[0].amount;
 		reactionQueue.reverse();
-		for (let shortage of reactionQueue) {
-			if (shortage.amount < minAmount) {
-				minAmount = shortage.amount;
+		for (let reaction of reactionQueue) {
+			let [ing1, ing2] = REAGENTS[reaction.mineralType];
+			let precursor1 = _.findIndex(reactionQueue, rxn => rxn.mineralType == ing1);
+			let precursor2 = _.findIndex(reactionQueue, rxn => rxn.mineralType == ing2);
+			for (let index of [precursor1, precursor2]) {
+				if (index != -1) {
+					reactionQueue[index].amount = Math.min(reaction.amount, reactionQueue[index].amount);
+				}
 			}
-			shortage.amount = Math.min(shortage.amount, minAmount);
 		}
 		reactionQueue.reverse();
-		reactionQueue = _.filter(reactionQueue, shortage => shortage.amount > 0);
-		_.forEach(reactionQueue, shrtage => shrtage.amount = Math.max(shrtage.amount, Abathur.settings.minBatchSize));
+		if (verbose) console.log(`Post-reduction queue: ${JSON.stringify(reactionQueue)}`);
+		reactionQueue = _.filter(reactionQueue, rxn => rxn.amount > 0);
+		_.forEach(reactionQueue, rxn => rxn.amount = Math.max(rxn.amount, Abathur.settings.minBatchSize));
+		if (verbose) console.log(`Final queue: ${JSON.stringify(reactionQueue)}`);
 		return reactionQueue;
 	}
 

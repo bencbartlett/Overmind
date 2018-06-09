@@ -83,10 +83,10 @@ export class TraderJoe implements ITradeNetwork {
 	// }
 
 	buyMineral(terminal: StructureTerminal, mineralType: ResourceConstant, amount: number) {
-		if (terminal.store[RESOURCE_ENERGY] < 10000) {
+		amount += 10;
+		if (terminal.store[RESOURCE_ENERGY] < 10000 || terminal.storeCapacity - _.sum(terminal.store) < amount) {
 			return;
 		}
-		amount += 10;
 		let ordersForMineral = Game.market.getAllOrders(
 			order => order.type == ORDER_SELL && order.resourceType == mineralType && order.amount >= amount
 		);
@@ -99,11 +99,11 @@ export class TraderJoe implements ITradeNetwork {
 	}
 
 	private logTransaction(order: Order, destinationRoomName: string, amount: number, response: number): void {
-		let action = order.type == ORDER_SELL ? 'Bought' : 'Sold';
+		let action = order.type == ORDER_SELL ? 'bought' : 'sold';
 		let fee = order.roomName ? Game.market.calcTransactionCost(amount, order.roomName, destinationRoomName) : 0;
-		log.info(`${destinationRoomName}: ${action} ${amount} of ${order.resourceType} from ${order.roomName} ` +
-				 `for ${order.price * amount} credits and ${fee} energy. Response: ${response}`);
-
+		let roomName = Game.rooms[destinationRoomName] ? Game.rooms[destinationRoomName].print : destinationRoomName;
+		log.info(`${roomName}: ${action} ${amount} of ${order.resourceType} at ${order.roomName}.  ` +
+				 `Price: ${order.price * amount} credits  Fee: ${fee} energy  Response: ${response}`);
 	}
 
 

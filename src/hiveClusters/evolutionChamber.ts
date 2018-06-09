@@ -5,13 +5,12 @@ import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
 import {Mem} from '../memory';
 import {TerminalNetwork} from '../logistics/TerminalNetwork';
-import {Shortage} from '../resources/Abathur';
+import {Reaction} from '../resources/Abathur';
 import {Pathing} from '../pathing/pathing';
 import {log} from '../lib/logger/log';
 import {REAGENTS} from '../resources/map_resources';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {Priority} from '../settings/priorities';
-import {Visualizer} from '../visuals/Visualizer';
 
 const LabStatus = {
 	Idle             : 0,
@@ -24,7 +23,7 @@ const LabStatus = {
 const LabStageTimeouts = {
 	Idle             : Infinity,
 	AcquiringMinerals: 100,
-	LoadingLabs      : 100,
+	LoadingLabs      : 50,
 	Synthesizing     : 10000,
 	UnloadingLabs    : 1000
 };
@@ -32,8 +31,8 @@ const LabStageTimeouts = {
 interface EvolutionChamberMemory {
 	status: number;
 	statusTick: number;
-	activeReaction: Shortage | undefined;
-	reactionQueue: Shortage[];
+	activeReaction: Reaction | undefined;
+	reactionQueue: Reaction[];
 	labMineralTypes: {
 		[labID: string]: _ResourceConstantSansEnergy;
 	};
@@ -319,13 +318,13 @@ export class EvolutionChamber extends HiveCluster {
 	}
 
 	visuals() {
-		for (let lab of this.reagentLabs) {
-			Visualizer.circle(lab.pos, 'red');
-		}
-		for (let lab of this.productLabs) {
-			Visualizer.circle(lab.pos, 'blue');
-		}
-		Visualizer.circle(this.boostingLab.pos, 'green');
+		// for (let lab of this.reagentLabs) {
+		// 	Visualizer.circle(lab.pos, 'red');
+		// }
+		// for (let lab of this.productLabs) {
+		// 	Visualizer.circle(lab.pos, 'blue');
+		// }
+		// Visualizer.circle(this.boostingLab.pos, 'green');
 	}
 }
 
