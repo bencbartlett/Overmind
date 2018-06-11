@@ -1,24 +1,27 @@
 // Colony class - organizes all assets of an owned room into a colony
 
 import {profile} from './profiler/decorator';
-import {MiningSite} from './hiveClusters/hiveCluster_miningSite';
-//import {MineralSite} from './hiveClusters/hiveCluster_mineralSite';
-import {Hatchery} from './hiveClusters/hiveCluster_hatchery';
-import {CommandCenter} from './hiveClusters/hiveCluster_commandCenter';
-import {UpgradeSite} from './hiveClusters/hiveCluster_upgradeSite';
+import {MiningSite} from './hiveClusters/miningSite';
+import {Hatchery} from './hiveClusters/hatchery';
+import {CommandCenter} from './hiveClusters/commandCenter';
+import {UpgradeSite} from './hiveClusters/upgradeSite';
 import {Overseer} from './Overseer';
-import {WorkerOverlord} from './overlords/core/overlord_work';
+import {WorkerOverlord} from './overlords/core/worker';
 import {Zerg} from './Zerg';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
 import {HiveCluster} from './hiveClusters/HiveCluster';
 import {LinkNetwork} from './logistics/LinkNetwork';
 import {Stats} from './stats/stats';
-import {SporeCrawler} from './hiveClusters/hiveCluster_sporeCrawler';
+import {SporeCrawler} from './hiveClusters/sporeCrawler';
 import {RoadLogistics} from './logistics/RoadLogistics';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
-import {TransportOverlord} from './overlords/core/overlord_transport';
+import {TransportOverlord} from './overlords/core/transporter';
 import {Energetics} from './logistics/Energetics';
 import {StoreStructure} from './declarations/typeGuards';
+import {ManagerSetup} from './overlords/core/manager';
+import {mergeSum} from './utilities/utils';
+import {Abathur} from './resources/Abathur';
+import {EvolutionChamber} from './hiveClusters/evolutionChamber';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -32,6 +35,10 @@ export enum DEFCON {
 	boostedInvasionNPC = 2,
 	playerInvasion     = 2,
 	bigPlayerInvasion  = 3,
+}
+
+export function getAllColonies(): Colony[] {
+	return _.values(Overmind.colonies);
 }
 
 @profile
@@ -49,12 +56,14 @@ export class Colony {
 	outposts: Room[];									// Rooms for remote resource collection
 	rooms: Room[];										// All rooms including the primary room
 	pos: RoomPosition;
+	assets: { [resourceType: string]: number };
 	// Physical colony structures and roomObjects
 	controller: StructureController;					// These are all duplicated from room properties
 	spawns: StructureSpawn[];							// |
 	extensions: StructureExtension[];					// |
 	storage: StructureStorage | undefined;				// |
 	links: StructureLink[];								// |
+	availableLinks: StructureLink[];
 	claimedLinks: StructureLink[];						// | Links belonging to hive cluseters excluding mining groups
 	dropoffLinks: StructureLink[]; 						// | Links not belonging to a hiveCluster, used as dropoff
 	terminal: StructureTerminal | undefined;			// |
@@ -65,7 +74,6 @@ export class Colony {
 	observer: StructureObserver | undefined;			// |
 	tombstones: Tombstone[]; 							// | Tombstones in all colony rooms
 	sources: Source[];									// | Sources in all colony rooms
-	//mineral: Mineral;
 	flags: Flag[];										// | Flags across the colony
 	constructionSites: ConstructionSite[];				// | Construction sites in all colony rooms
 	repairables: Structure[];							// | Repairable structures, discounting barriers and roads
@@ -73,18 +81,20 @@ export class Colony {
 	// Hive clusters
 	hiveClusters: HiveCluster[];						// List of all hive clusters
 	commandCenter: CommandCenter | undefined;			// Component with logic for non-spawning structures
+	evolutionChamber: EvolutionChamber | undefined; 	// Component for mineral processing
 	hatchery: Hatchery | undefined;						// Component to encapsulate spawner logic
 	upgradeSite: UpgradeSite;							// Component to provide upgraders with uninterrupted energy
 	sporeCrawlers: SporeCrawler[];
 	miningSites: { [sourceID: string]: MiningSite };	// Component with logic for mining and hauling
-	//mineralSite: MineralSite;
 	// Operational mode
 	incubator: Colony | undefined; 						// The colony responsible for incubating this one, if any
 	isIncubating: boolean;								// If the colony is incubating
 	incubatingColonies: Colony[];						// List of colonies that this colony is incubating
-	level: number; 										// Level of the colony's main room
+	level: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; 				// Level of the colony's main room
 	stage: number;										// The stage of the colony "lifecycle"
 	defcon: number;
+	abandoning: boolean;
+	breached: boolean;
 	lowPowerMode: boolean; 								// Activate if RCL8 and full energy
 	// Creeps and subsets
 	creeps: Zerg[];										// Creeps bound to the colony
@@ -102,22 +112,20 @@ export class Colony {
 	roadLogistics: RoadLogistics;
 	// Room planner
 	roomPlanner: RoomPlanner;
+	abathur: Abathur;
 
-	constructor(id: number, roomName: string, outposts: string[], creeps: Zerg[]) {
+	constructor(id: number, roomName: string, outposts: string[], creeps: Zerg[] | undefined) {
 		// Primitive colony setup
 		this.id = id;
 		this.name = roomName;
 		this.colony = this;
 		if (!Memory.colonies[this.name]) {
-			Memory.colonies[this.name] = {
-				overseer     : <OverseerMemory>{},
-				hatchery     : <HatcheryMemory>{},
-				commandCenter: <CommandCenterMemory>{},
-			};
+			Memory.colonies[this.name] = {defcon: {level: DEFCON.safe, tick: Game.time}};
 		}
 		this.memory = Memory.colonies[this.name];
 		// Register creeps
-		this.registerCreeps(creeps);
+		this.creeps = creeps || [];
+		this.creepsByRole = _.groupBy(this.creeps, creep => creep.memory.role);
 		// Instantiate the colony overseer
 		this.overseer = new Overseer(this);
 		// Register colony capitol and outposts
@@ -136,30 +144,32 @@ export class Colony {
 		this.registerHiveClusters();
 		// Register colony overlords
 		this.spawnMoarOverlords();
-	}
-
-	private registerCreeps(creeps: Zerg[]): void {
-		this.creeps = creeps;
-		this.creepsByRole = _.groupBy(creeps, creep => creep.memory.role);
+		// Add an Abathur
+		this.assets = this.getAllAssets();
+		this.abathur = new Abathur(this);
+		// Register colony globally to allow 'W1N1' and 'w1n1' to refer to Overmind.colonies.W1N1
+		global[this.name] = this;
+		global[this.name.toLowerCase()] = this;
 	}
 
 	private registerRoomObjects(): void {
 		this.controller = this.room.controller!; // must be controller since colonies are based in owned rooms
 		this.pos = this.controller.pos; // This is used for overlord initialization but isn't actually useful
-		this.spawns = _.sortBy(_.filter(this.room.spawns, spawn => spawn.my), spawn => spawn.ref);
+		this.spawns = _.sortBy(_.filter(this.room.spawns, spawn => spawn.my && spawn.isActive()), spawn => spawn.ref);
 		this.extensions = this.room.extensions;
 		this.storage = this.room.storage;
 		this.links = this.room.links;
+		this.availableLinks = _.clone(this.room.links);
 		this.terminal = this.room.terminal;
 		this.towers = this.room.towers;
-		this.labs = this.room.labs;
+		this.labs = _.sortBy(_.filter(this.room.labs, lab => lab.my && lab.isActive()),
+							 lab => 50 * lab.pos.y + lab.pos.x); // Labs are sorted in reading order of positions
 		this.powerSpawn = this.room.getStructures(STRUCTURE_POWER_SPAWN)[0] as StructurePowerSpawn;
 		this.nuker = this.room.getStructures(STRUCTURE_NUKER)[0] as StructureNuker;
 		this.observer = this.room.getStructures(STRUCTURE_OBSERVER)[0] as StructureObserver;
 		// Register physical objects across all rooms in the colony
 		this.sources = _.sortBy(_.flatten(_.map(this.rooms, room => room.sources)),
-			source => source.pos.getMultiRoomRangeTo(this.pos)); // sort for roadnetwork determinism
-		//this.mineral = this.room.find(FIND_MINERALS)[0];
+								source => source.pos.getMultiRoomRangeTo(this.pos)); // sort for roadnetwork determinism
 		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites));
 		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
 		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
@@ -167,7 +177,7 @@ export class Colony {
 	}
 
 	private registerOperationalState(): void {
-		this.level = this.controller.level;
+		this.level = this.controller.level as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 		this.isIncubating = false;
 		if (this.storage && this.storage.isActive() &&
 			this.spawns[0] && this.spawns[0].pos.findClosestByLimitedRange(this.room.containers, 2)) {
@@ -184,17 +194,39 @@ export class Colony {
 		this.lowPowerMode = Energetics.lowPowerMode(this);
 		// Set DEFCON level
 		// TODO: finish this
+		let defcon = DEFCON.safe;
+		let defconDecayTime = 200;
 		if (this.room.dangerousHostiles.length > 0) {
 			let effectiveHostileCount = _.sum(_.map(this.room.dangerousHostiles,
 													hostile => hostile.boosts.length > 0 ? 2 : 1));
 			if (effectiveHostileCount >= 3) {
-				this.defcon = DEFCON.boostedInvasionNPC;
+				defcon = DEFCON.boostedInvasionNPC;
 			} else {
-				this.defcon = DEFCON.invasionNPC;
+				defcon = DEFCON.invasionNPC;
+			}
+		}
+		if (this.memory.defcon) {
+			if (defcon < this.memory.defcon.level) { // decay defcon level over time if defcon less than memory value
+				if (this.memory.defcon.tick + defconDecayTime < Game.time) {
+					this.memory.defcon.level = defcon;
+					this.memory.defcon.tick = Game.time;
+				}
+			} else if (defcon > this.memory.defcon.level) { // refresh defcon time if it increases by a level
+				this.memory.defcon.level = defcon;
+				this.memory.defcon.tick = Game.time;
 			}
 		} else {
-			this.defcon = DEFCON.safe;
+			this.memory.defcon = {
+				level: defcon,
+				tick : Game.time
+			};
 		}
+		this.defcon = this.memory.defcon.level;
+		this.breached = (this.room.dangerousHostiles.length > 0 &&
+						 this.creeps.length == 0 &&
+						 !this.controller.safeMode);
+		// Ininitialize abandon property to false; directives can change this
+		this.abandoning = false;
 	}
 
 	private registerUtilities(): void {
@@ -218,32 +250,22 @@ export class Colony {
 		if (this.spawns[0]) {
 			this.hatchery = new Hatchery(this, this.spawns[0]);
 		}
-		// Instantiate the upgradeSite
-		if (this.controller) {
-			this.upgradeSite = new UpgradeSite(this, this.controller);
+		// Instantiate evolution chamber
+		if (this.terminal && this.terminal.isActive() && this.labs.length >= 3) {
+			this.evolutionChamber = new EvolutionChamber(this, this.terminal);
 		}
+		// Instantiate the upgradeSite
+		this.upgradeSite = new UpgradeSite(this, this.controller);
 		// Instantiate spore crawlers to wrap towers
 		this.sporeCrawlers = _.map(this.towers, tower => new SporeCrawler(this, tower));
-		// Sort claimed and unclaimed links
-		let claimedPositions = _.map(_.compact([this.commandCenter, this.hatchery, this.upgradeSite]),
-									 hiveCluster => hiveCluster!.pos);
-		this.claimedLinks = _.filter(this.links, function (link) {
-			let nearbyClaimingThings = link.pos.findInRange(claimedPositions, 3);
-			if (nearbyClaimingThings) {
-				return nearbyClaimingThings.length > 0;
-			}
-			let nearbySources = link.pos.findInRange(FIND_SOURCES, 2);
-			if (nearbySources) {
-				return nearbySources.length > 0;
-			}
-			return false;
-		}) as StructureLink[];
-		this.dropoffLinks = _.filter(this.links, link => this.claimedLinks.includes(link) == false);
+		// Dropoff links are freestanding links or ones at mining sites
+		this.dropoffLinks = _.clone(this.availableLinks);
 		// Mining sites is an object of ID's and MiningSites
 		let sourceIDs = _.map(this.sources, source => source.ref);
 		let miningSites = _.map(this.sources, source => new MiningSite(this, source));
 		this.miningSites = _.zipObject(sourceIDs, miningSites) as { [sourceID: string]: MiningSite };
-		//this.mineralSite = new MineralSite(this, this.mineral);
+		// Reverse the hive clusters for correct order for init() and run()
+		this.hiveClusters.reverse();
 	}
 
 	private spawnMoarOverlords(): void {
@@ -263,20 +285,23 @@ export class Colony {
 		return this.creepsByRole[roleName] || [];
 	}
 
-	/* Summarizes the total of all resources currently in a colony store structure */
-	getAllAssets(): { [resourceType: string]: number } {
-		let allAssets: { [resourceType: string]: number } = {};
-		let storeStructures = _.compact([this.storage, this.terminal]) as StoreStructure[];
-		for (let structure of storeStructures) {
-			for (let resourceType in structure.store) {
-				let amount = structure.store[<ResourceConstant>resourceType] || 0;
-				if (!allAssets[resourceType]) {
-					allAssets[resourceType] = 0;
+	/* Summarizes the total of all resources in colony store structures, labs, and some creeps */
+	private getAllAssets(): { [resourceType: string]: number } {
+		// Include storage structures and manager carry
+		let stores = _.map(<StoreStructure[]>_.compact([this.storage, this.terminal]), s => s.store);
+		let creepCarriesToInclude = _.map(_.filter(this.creeps, creep => creep.roleName == ManagerSetup.role),
+										  creep => creep.carry) as { [resourceType: string]: number }[];
+		let allAssets: { [resourceType: string]: number } = mergeSum([...stores, ...creepCarriesToInclude]);
+		// Include lab amounts
+		for (let lab of this.labs) {
+			if (lab.mineralType) {
+				if (!allAssets[lab.mineralType]) {
+					allAssets[lab.mineralType] = 0;
 				}
-				allAssets[resourceType] += amount;
+				allAssets[lab.mineralType] += lab.mineralAmount;
 			}
 		}
-		return allAssets as StoreDefinition;
+		return allAssets;
 	}
 
 	init(): void {
@@ -293,7 +318,6 @@ export class Colony {
 		this.linkNetwork.run();												// Run the link network
 		this.roadLogistics.run();											// Run the road network
 		this.roomPlanner.run();												// Run the room planner
-		// _.forEach(this.creeps, creep => creep.run());						// Animate all creeps
 		this.stats();														// Log stats per tick
 	}
 
