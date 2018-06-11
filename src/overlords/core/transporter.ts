@@ -58,10 +58,15 @@ export class TransportOverlord extends Overlord {
 				}
 			}
 		}
+
 		if (this.colony.lowPowerMode) {
 			// Reduce needed transporters when colony is in low power mode
 			transportPower *= 0.5;
 		}
+
+		// TODO
+		// transportPower += this.colony.mineralSite.mineralPerTick * (scaling * Pathing.distance(this.colony.mineralSite.pos, dropoffLocation));
+
 		// Add transport power needed to move to upgradeSite
 		transportPower += this.colony.upgradeSite.upgradePowerNeeded * scaling *
 						  Pathing.distance(dropoffLocation, (this.colony.upgradeSite.battery ||
@@ -112,8 +117,9 @@ export class TransportOverlord extends Overlord {
 				}
 				if (task && bestChoice.targetRef != request.target.ref) {
 					// If we need to go to a buffer first to deposit stuff
-					let buffer = deref(bestChoice.targetRef) as BufferTarget | StructureLink;
-					task = task.fork(Tasks.transfer(buffer, request.resourceType));
+					let buffer = deref(bestChoice.targetRef) as BufferTarget;
+					//task = task.fork(Tasks.transfer(buffer, request.resourceType));
+					task = task.fork(Tasks.transferAll(buffer));
 				}
 			} else {
 				// console.log(`${transporter.name} chooses a store with 0 amount!`);
@@ -122,7 +128,7 @@ export class TransportOverlord extends Overlord {
 			// Assign the task to the transporter
 			transporter.task = task;
 		} else {
-			if (transporter.carry.energy > 0) {
+			if (_.sum(transporter.carry) > 0) {
 				let dropoffPoints: (StructureLink | StructureStorage)[] = _.compact([this.colony.storage!,
 																					 ...this.colony.dropoffLinks]);
 				// let bestDropoffPoint = minBy(dropoffPoints, function(dropoff: StructureLink | StructureStorage) {
@@ -133,8 +139,18 @@ export class TransportOverlord extends Overlord {
 				// 		return range;
 				// 	}
 				// });
-				let bestDropoffPoint = transporter.pos.findClosestByMultiRoomRange(dropoffPoints);
-				if (bestDropoffPoint) transporter.task = Tasks.transfer(bestDropoffPoint);
+				let nonzeroResources = _.filter(_.keys(transporter.carry),
+												(key: ResourceConstant) => (transporter.carry[key] || 0) > 0);
+				if (nonzeroResources.length > 1) {
+					if (this.colony.storage) {
+						transporter.task = Tasks.transferAll(this.colony.storage);
+					}
+				}
+				else {
+					let bestDropoffPoint = transporter.pos.findClosestByMultiRoomRange(dropoffPoints);
+
+					if (bestDropoffPoint) transporter.task = Tasks.transfer(bestDropoffPoint);
+				}
 			} else {
 				let parkingSpot = transporter.pos;
 				if (this.colony.storage) {
@@ -145,6 +161,7 @@ export class TransportOverlord extends Overlord {
 				transporter.park(parkingSpot);
 			}
 		}
+		//console.log(JSON.stringify(transporter.memory.task));
 	}
 
 	private handleBigTransporter(bigTransporter: Zerg) {
