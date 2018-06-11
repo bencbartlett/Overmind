@@ -1,12 +1,15 @@
 import {Overlord} from '../Overlord';
-import {DroneSetup} from '../../creepSetup/defaultSetups';
-import {MineralSite} from '../../hiveClusters/hiveCluster_mineralSite';
+import {MineralSite} from '../../hiveClusters/mineralSite';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
-import {OverlordPriority} from '../priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {Pathing} from '../../pathing/pathing';
 import {DEFCON} from '../../Colony';
+import {CreepSetup} from '../CreepSetup';
+
+const DroneSetup = new CreepSetup('drone', {
+	pattern  : [WORK, WORK, CARRY, MOVE],
+	sizeLimit: Infinity,
+});
 
 @profile
 export class MineralOverlord extends Overlord {
@@ -16,16 +19,16 @@ export class MineralOverlord extends Overlord {
 
 	constructor(mineralSite: MineralSite, priority: number) {
 		super(mineralSite, 'mineral', priority);
-		this.drones = this.creeps('drone');
+		this.drones = this.creeps(DroneSetup.role);
 		this.mineralSite = mineralSite;
 	}
 
 	init() {
-		let creepSetup = new DroneSetup();
+		let creepSetup = DroneSetup;
 		let filteredDrones = this.lifetimeFilter(this.drones);
 		//let miningPowerAssigned = _.sum(_.map(filteredMiners, creep => creep.getActiveBodyparts(WORK)));
 		//if (miningPowerAssigned < this.mineralSite.miningPowerNeeded &&
-			//filteredMiners.length < _.filter(this.mineralSite.pos.neighbors, pos => pos.isPassible()).length) {
+		//filteredMiners.length < _.filter(this.mineralSite.pos.neighbors, pos => pos.isPassible()).length) {
 		if (filteredDrones.length < this.mineralSite.pos.availableNeighbors().length &&
 			this.mineralSite.mineral.mineralAmount > 0) {
 			// Handles edge case at startup of <3 spots near mining site
@@ -49,7 +52,7 @@ export class MineralOverlord extends Overlord {
 				}
 			}
 		} else {
-			drone.task = Tasks.goTo(this.mineralSite);
+			drone.travelTo(this.mineralSite);
 		}
 	}
 

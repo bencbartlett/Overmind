@@ -6,10 +6,10 @@ import {MineralOverlord} from '../overlords/core/extractor';
 import {Colony, ColonyStage} from '../Colony';
 import {Mem} from '../memory';
 import {log} from '../lib/logger/log';
-import {OverlordPriority} from '../overlords/priorities_overlords';
 import {Visualizer} from '../visuals/Visualizer';
 import {LogisticsNetwork} from '../logistics/LogisticsNetwork';
 import {Pathing} from '../pathing/pathing';
+import {OverlordPriority} from '../priorities/priorities_overlords';
 
 interface MineralSiteMemory {
 	stats: {
@@ -63,7 +63,7 @@ export class MineralSite extends HiveCluster {
 	/* Return the approximate predicted energy if a transporter needed to come from storage.
 	 * If no storage, uses hatchery pos; if no hatchery, returns current energy */
 	get approximatePredictedResources(): number {
-		if (!(this.output && this.output instanceof StructureContainer)) {
+		if (!this.output) {
 			return 0;
 		}
 		let targetingTransporters = LogisticsNetwork.targetingTransporters(this.output);
@@ -78,7 +78,7 @@ export class MineralSite extends HiveCluster {
 	/* Register appropriate resource withdrawal requests when the output gets sufficiently full */
 	private registerOutputRequests(): void {
 		// Register logisticsNetwork requests if approximate predicted amount exceeds transporter capacity
-		if (this.output instanceof StructureContainer) {
+		if (this.output) {
 			let transportCapacity = 200 * this.colony.level;
 			let threshold = this.colony.stage > ColonyStage.Larva ? 0.8 : 0.5;
 			if (_.sum(this.output.store) > threshold * transportCapacity) {

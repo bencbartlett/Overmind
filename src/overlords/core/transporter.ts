@@ -58,13 +58,14 @@ export class TransportOverlord extends Overlord {
 				}
 			}
 		}
-		
+
 		if (this.colony.lowPowerMode) {
 			// Reduce needed transporters when colony is in low power mode
 			transportPower *= 0.5;
 		}
 
-		transportPower += this.colony.mineralSite.mineralPerTick * (scaling * Pathing.distance(this.colony.mineralSite.pos, dropoffLocation));
+		// TODO
+		// transportPower += this.colony.mineralSite.mineralPerTick * (scaling * Pathing.distance(this.colony.mineralSite.pos, dropoffLocation));
 
 		// Add transport power needed to move to upgradeSite
 		transportPower += this.colony.upgradeSite.upgradePowerNeeded * scaling *
@@ -138,8 +139,12 @@ export class TransportOverlord extends Overlord {
 				// 		return range;
 				// 	}
 				// });
-				if (Object.keys(transporter.carry).length > 1) {
-					transporter.task = Tasks.transferAll(this.colony.storage!);
+				let nonzeroResources = _.filter(_.keys(transporter.carry),
+												(key: ResourceConstant) => (transporter.carry[key] || 0) > 0);
+				if (nonzeroResources.length > 1) {
+					if (this.colony.storage) {
+						transporter.task = Tasks.transferAll(this.colony.storage);
+					}
 				}
 				else {
 					let bestDropoffPoint = transporter.pos.findClosestByMultiRoomRange(dropoffPoints);
