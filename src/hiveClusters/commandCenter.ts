@@ -9,10 +9,15 @@ import {Visualizer} from '../visuals/Visualizer';
 import {TerminalNetwork} from '../logistics/TerminalNetwork';
 import {Energetics} from '../logistics/Energetics';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
-import {Priority} from '../settings/priorities';
+import {Priority} from '../priorities/priorities';
+
+interface CommandCenterMemory {
+	idlePos?: protoPos
+}
 
 @profile
 export class CommandCenter extends HiveCluster {
+	memory: CommandCenterMemory;
 	storage: StructureStorage;								// The colony storage, also the instantiation object
 	link: StructureLink | undefined;						// Link closest to storage
 	terminal: StructureTerminal | undefined;				// The colony terminal
@@ -33,6 +38,7 @@ export class CommandCenter extends HiveCluster {
 
 	constructor(colony: Colony, storage: StructureStorage) {
 		super(colony, storage, 'commandCenter');
+		this.memory = Mem.wrap(this.colony.memory, 'commandCenter');
 		// Register physical components
 		this.storage = storage;
 		this.link = this.pos.findClosestByLimitedRange(colony.availableLinks, 2);
@@ -56,10 +62,6 @@ export class CommandCenter extends HiveCluster {
 		if (this.storage.isActive() && this.link && this.link.isActive()) {
 			this.overlord = new CommandCenterOverlord(this);
 		}
-	}
-
-	get memory(): CommandCenterMemory {
-		return Mem.wrap(this.colony.memory, 'commandCenter');
 	}
 
 	// Idle position

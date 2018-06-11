@@ -1,11 +1,11 @@
 import {Overlord} from '../Overlord';
-import {BuildPriorities} from '../../settings/priorities';
 import {Colony, ColonyStage, DEFCON} from '../../Colony';
 import {profile} from '../../profiler/decorator';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
-import {OverlordPriority} from '../priorities_overlords';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {CreepSetup} from '../CreepSetup';
+import {BuildPriorities} from '../../priorities/priorities_structures';
 
 export const WorkerSetup = new CreepSetup('worker', {
 	pattern  : [WORK, CARRY, MOVE],

@@ -1,6 +1,5 @@
 import {Traveler} from '../lib/traveler/Traveler';
 import {log} from '../lib/logger/log';
-import profiler from 'screeps-profiler';
 import {profile} from '../profiler/decorator';
 
 /* Module for pathing-related operations. Interfaces with Traveler. */
@@ -199,6 +198,4 @@ export class Pathing {
 		});
 	}
 }
-
-profiler.registerClass(Pathing, 'Pathing');
 

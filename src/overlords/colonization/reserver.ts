@@ -2,7 +2,7 @@ import {Overlord} from '../Overlord';
 import {Zerg} from '../../Zerg';
 import {DirectiveOutpost} from '../../directives/core/outpost';
 import {Tasks} from '../../tasks/Tasks';
-import {OverlordPriority} from '../priorities_overlords';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {CreepSetup} from '../CreepSetup';
 

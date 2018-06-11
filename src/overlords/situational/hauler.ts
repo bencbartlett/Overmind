@@ -1,5 +1,5 @@
 import {Overlord} from '../Overlord';
-import {OverlordPriority} from '../priorities_overlords';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {Zerg} from '../../Zerg';
 import {DirectiveHaul} from '../../directives/logistics/haul';
 import {Tasks} from '../../tasks/Tasks';

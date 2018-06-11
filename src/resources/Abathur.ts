@@ -104,6 +104,11 @@ export class Abathur {
 		return this._globalAssets;
 	}
 
+	private canBuyIngredientsForReaction(reactionQueue: Reaction[]): boolean {
+		// TODO
+		return false;
+	}
+
 	/* Generate a queue of reactions to produce the most needed compound */
 	getReactionQueue(verbose = false): Reaction[] {
 		let stocksToCheck = [_priorityStock, _wantedStock];
@@ -166,7 +171,16 @@ export class Abathur {
 			productionAmount = Math.min(productionAmount, Abathur.settings.maxBatchSize);
 			reactionQueue.push({mineralType: ingredient, amount: productionAmount});
 		}
-		if (verbose) console.log(`Pre-reduction queue: ${JSON.stringify(reactionQueue)}`);
+		if (verbose) console.log(`Pre-trim queue: ${JSON.stringify(reactionQueue)}`);
+		reactionQueue = this.trimReactionQueue(reactionQueue);
+		if (verbose) console.log(`Post-trim queue: ${JSON.stringify(reactionQueue)}`);
+		reactionQueue = _.filter(reactionQueue, rxn => rxn.amount > 0);
+		if (verbose) console.log(`Final queue: ${JSON.stringify(reactionQueue)}`);
+		return reactionQueue;
+	}
+
+	/* Trim a reaction queue, reducing the amounts of precursor compounds which need to be produced */
+	private trimReactionQueue(reactionQueue: Reaction[]): Reaction[] {
 		// Scan backwards through the queue and reduce the production amount of subsequently baser resources as needed
 		reactionQueue.reverse();
 		for (let reaction of reactionQueue) {
@@ -175,15 +189,16 @@ export class Abathur {
 			let precursor2 = _.findIndex(reactionQueue, rxn => rxn.mineralType == ing2);
 			for (let index of [precursor1, precursor2]) {
 				if (index != -1) {
-					reactionQueue[index].amount = Math.min(reaction.amount, reactionQueue[index].amount);
+					if (reaction.amount == 0) {
+						reactionQueue[index].amount = Math.min(reaction.amount, reactionQueue[index].amount);
+					} else {
+						reactionQueue[index].amount = Math.max(Math.min(reaction.amount, reactionQueue[index].amount),
+															   Abathur.settings.minBatchSize);
+					}
 				}
 			}
 		}
 		reactionQueue.reverse();
-		if (verbose) console.log(`Post-reduction queue: ${JSON.stringify(reactionQueue)}`);
-		reactionQueue = _.filter(reactionQueue, rxn => rxn.amount > 0);
-		_.forEach(reactionQueue, rxn => rxn.amount = Math.max(rxn.amount, Abathur.settings.minBatchSize));
-		if (verbose) console.log(`Final queue: ${JSON.stringify(reactionQueue)}`);
 		return reactionQueue;
 	}
 

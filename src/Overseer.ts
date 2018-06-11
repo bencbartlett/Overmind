@@ -13,6 +13,7 @@ import {DirectiveGuardSwarm} from './directives/defense/guardSwarm';
 import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
 import {Mem} from './memory';
 import {DirectiveNukeResponse} from './directives/defense/nukeResponse';
+import {DirectiveAbandon} from './directives/colonization/abandon';
 
 @profile
 export class Overseer {
@@ -100,10 +101,14 @@ export class Overseer {
 
 		// Place nuke response directive if there is a nuke present in colony room
 		if (this.colony.room && this.colony.level >= DirectiveNukeResponse.requiredRCL) {
-			let nuke = this.colony.room.find(FIND_NUKES)[0];
-			if (nuke) {
+			for (let nuke of this.colony.room.find(FIND_NUKES)) {
 				DirectiveNukeResponse.createIfNotPresent(nuke.pos, 'pos');
 			}
+		}
+
+		// Place an abandon directive in case room has been breached to prevent terminal robbing
+		if (this.colony.breached && this.colony.terminal) {
+			DirectiveAbandon.createIfNotPresent(this.colony.terminal.pos, 'room');
 		}
 	}
 

@@ -28,9 +28,10 @@ export class DirectiveNukeResponse extends Directive {
 			if (this.nuke) {
 				let rampartPositions = _.filter(this.nuke.pos.getPositionsInRange(2), function (pos) {
 					// Rampart should be built to protect all non-road, non-barrier structures in nuke range
-					return _.filter(pos.lookFor(LOOK_STRUCTURES), s => s.structureType != STRUCTURE_ROAD &&
-																	   s.structureType != STRUCTURE_RAMPART &&
-																	   s.structureType != STRUCTURE_WALL).length > 0;
+					return _.filter(pos.lookFor(LOOK_STRUCTURES),
+									s => s.structureType != STRUCTURE_ROAD &&
+										 s.structureType != STRUCTURE_RAMPART &&
+										 s.structureType != STRUCTURE_WALL).length > 0;
 				});
 				for (let pos of rampartPositions) {
 					// Build a rampart if there isn't one already

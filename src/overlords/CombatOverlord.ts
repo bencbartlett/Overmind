@@ -4,8 +4,8 @@ import {Zerg} from '../Zerg';
 import {Pathing} from '../pathing/pathing';
 import {Directive} from '../directives/Directive';
 import {WorldMap} from '../utilities/WorldMap';
-import {AttackStructurePriorities} from '../settings/priorities';
 import {log} from '../lib/logger/log';
+import {AttackStructurePriorities} from '../priorities/priorities_structures';
 
 export interface CombatOverlordMemory extends OverlordMemory {
 	fallback?: protoPos;

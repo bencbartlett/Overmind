@@ -6,7 +6,7 @@ import {MiningOverlord} from '../overlords/core/miner';
 import {Colony, ColonyStage} from '../Colony';
 import {Mem} from '../memory';
 import {log} from '../lib/logger/log';
-import {OverlordPriority} from '../overlords/priorities_overlords';
+import {OverlordPriority} from '../priorities/priorities_overlords';
 import {Visualizer} from '../visuals/Visualizer';
 import {LogisticsNetwork} from '../logistics/LogisticsNetwork';
 import {Pathing} from '../pathing/pathing';

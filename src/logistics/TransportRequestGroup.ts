@@ -1,7 +1,7 @@
 // A stripped-down version of the logistics network intended for local deliveries
 
 import {profile} from '../profiler/decorator';
-import {blankPriorityQueue, Priority} from '../settings/priorities';
+import {blankPriorityQueue, Priority} from '../priorities/priorities';
 import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../declarations/typeGuards';
 import {log} from '../lib/logger/log';
 

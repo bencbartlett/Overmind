@@ -3,7 +3,7 @@
 import {HiveCluster} from './HiveCluster';
 import {profile} from '../profiler/decorator';
 import {HatcheryOverlord} from '../overlords/core/queen';
-import {Priority} from '../settings/priorities';
+import {Priority} from '../priorities/priorities';
 import {Colony, ColonyStage} from '../Colony';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {bodyCost, CreepSetup} from '../overlords/CreepSetup';

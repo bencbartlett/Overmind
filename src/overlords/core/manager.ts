@@ -3,7 +3,7 @@ import {Overlord} from '../Overlord';
 import {CommandCenter} from '../../hiveClusters/commandCenter';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
-import {OverlordPriority} from '../priorities_overlords';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {CreepSetup} from '../CreepSetup';
 import {EvolutionChamber} from '../../hiveClusters/evolutionChamber';

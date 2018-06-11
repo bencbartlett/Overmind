@@ -3,7 +3,7 @@ import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {Colony, ColonyStage} from '../../Colony';
 import {BufferTarget, LogisticsNetwork, LogisticsRequest} from '../../logistics/LogisticsNetwork';
-import {OverlordPriority} from '../priorities_overlords';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {Pathing} from '../../pathing/pathing';
 import {DirectiveLogisticsRequest} from '../../directives/logistics/logisticsRequest';
 import {profile} from '../../profiler/decorator';

@@ -39,10 +39,6 @@ export class RoadLogistics {
 		};
 	}
 
-	// get memory(): RoadNetworkMemory {
-	// 	return Mem.wrap(this.colony.memory, 'roadLogistics');
-	// }
-
 	/* Whether a road in the network needs repair */
 	private workerShouldRepaveRoom(worker: Zerg, room: Room): boolean {
 		// Room should be repaved if there is a road with critical HP or if energy to repave >= worker carry capacity

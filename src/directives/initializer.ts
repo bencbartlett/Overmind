@@ -19,6 +19,7 @@ import {DirectiveLogisticsRequest} from './logistics/logisticsRequest';
 import {DirectiveHaul} from './logistics/haul';
 import {DirectiveDismantle} from './targeting/dismantle';
 import {DirectiveNukeResponse} from './defense/nukeResponse';
+import {DirectiveAbandon} from './colonization/abandon';
 
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 	switch (flag.color) {
@@ -32,6 +33,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveIncubate(flag);
 				case COLOR_GREY:
 					return new DirectiveColonize(flag);
+				case COLOR_RED:
+					return new DirectiveAbandon(flag);
 			}
 			break;
 

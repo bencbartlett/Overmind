@@ -5,7 +5,7 @@ import {MiningOverlord} from '../core/miner';
 import {ColonyStage} from '../../Colony';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
-import {OverlordPriority} from '../priorities_overlords';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 
 export class BoostrapMinerSetup extends CreepSetup {

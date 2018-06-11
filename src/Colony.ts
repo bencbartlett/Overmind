@@ -93,6 +93,8 @@ export class Colony {
 	level: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; 				// Level of the colony's main room
 	stage: number;										// The stage of the colony "lifecycle"
 	defcon: number;
+	abandoning: boolean;
+	breached: boolean;
 	lowPowerMode: boolean; 								// Activate if RCL8 and full energy
 	// Creeps and subsets
 	creeps: Zerg[];										// Creeps bound to the colony
@@ -112,22 +114,18 @@ export class Colony {
 	roomPlanner: RoomPlanner;
 	abathur: Abathur;
 
-	constructor(id: number, roomName: string, outposts: string[], creeps: Zerg[]) {
+	constructor(id: number, roomName: string, outposts: string[], creeps: Zerg[] | undefined) {
 		// Primitive colony setup
 		this.id = id;
 		this.name = roomName;
 		this.colony = this;
 		if (!Memory.colonies[this.name]) {
-			Memory.colonies[this.name] = {
-				defcon       : {level: DEFCON.safe, tick: Game.time},
-				overseer     : <OverseerMemory>{},
-				hatchery     : <HatcheryMemory>{},
-				commandCenter: <CommandCenterMemory>{},
-			};
+			Memory.colonies[this.name] = {defcon: {level: DEFCON.safe, tick: Game.time}};
 		}
 		this.memory = Memory.colonies[this.name];
 		// Register creeps
-		this.registerCreeps(creeps);
+		this.creeps = creeps || [];
+		this.creepsByRole = _.groupBy(this.creeps, creep => creep.memory.role);
 		// Instantiate the colony overseer
 		this.overseer = new Overseer(this);
 		// Register colony capitol and outposts
@@ -152,11 +150,6 @@ export class Colony {
 		// Register colony globally to allow 'W1N1' and 'w1n1' to refer to Overmind.colonies.W1N1
 		global[this.name] = this;
 		global[this.name.toLowerCase()] = this;
-	}
-
-	private registerCreeps(creeps: Zerg[]): void {
-		this.creeps = creeps;
-		this.creepsByRole = _.groupBy(creeps, creep => creep.memory.role);
 	}
 
 	private registerRoomObjects(): void {
@@ -229,6 +222,11 @@ export class Colony {
 			};
 		}
 		this.defcon = this.memory.defcon.level;
+		this.breached = (this.room.dangerousHostiles.length > 0 &&
+						 this.creeps.length == 0 &&
+						 !this.controller.safeMode);
+		// Ininitialize abandon property to false; directives can change this
+		this.abandoning = false;
 	}
 
 	private registerUtilities(): void {
@@ -260,21 +258,6 @@ export class Colony {
 		this.upgradeSite = new UpgradeSite(this, this.controller);
 		// Instantiate spore crawlers to wrap towers
 		this.sporeCrawlers = _.map(this.towers, tower => new SporeCrawler(this, tower));
-		// // Sort claimed and unclaimed links
-		// let claimedPositions = _.map(_.compact([this.commandCenter, this.hatchery, this.upgradeSite]),
-		// 							 hiveCluster => hiveCluster!.pos);
-		// this.claimedLinks = _.filter(this.links, function (link) {
-		// 	let nearbyClaimingThings = link.pos.findInRange(claimedPositions, 3);
-		// 	if (nearbyClaimingThings) {
-		// 		return nearbyClaimingThings.length > 0;
-		// 	}
-		// 	let nearbySources = link.pos.findInRange(FIND_SOURCES, 2);
-		// 	if (nearbySources) {
-		// 		return nearbySources.length > 0;
-		// 	}
-		// 	return false;
-		// }) as StructureLink[];
-
 		// Dropoff links are freestanding links or ones at mining sites
 		this.dropoffLinks = _.clone(this.availableLinks);
 		// Mining sites is an object of ID's and MiningSites

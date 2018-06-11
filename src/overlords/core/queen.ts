@@ -4,7 +4,7 @@ import {Hatchery} from '../../hiveClusters/hatchery';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {log} from '../../lib/logger/log';
-import {OverlordPriority} from '../priorities_overlords';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {CreepSetup} from '../CreepSetup';
 

@@ -1,7 +1,7 @@
 // Siege overlord - spawns sieger creeps to break down walls and structures
 
 import {Zerg} from '../../Zerg';
-import {OverlordPriority} from '../priorities_overlords';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/siegeTarget';
 import {DirectiveSiege} from '../../directives/offense/siege';
 import {CombatOverlord} from '../CombatOverlord';

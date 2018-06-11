@@ -10,7 +10,7 @@ import {Pathing} from '../pathing/pathing';
 import {log} from '../lib/logger/log';
 import {REAGENTS} from '../resources/map_resources';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
-import {Priority} from '../settings/priorities';
+import {Priority} from '../priorities/priorities';
 
 const LabStatus = {
 	Idle             : 0,
@@ -65,7 +65,7 @@ export class EvolutionChamber extends HiveCluster {
 	boostingLab: StructureLab;
 	transportRequests: TransportRequestGroup;				// Box for resource requests
 
-	// memory: EvolutionChamberMemory;
+	memory: EvolutionChamberMemory;
 
 	private labReservations: {
 		[labID: string]: { mineralType: string, amount: number }
@@ -75,7 +75,7 @@ export class EvolutionChamber extends HiveCluster {
 
 	constructor(colony: Colony, terminal: StructureTerminal) {
 		super(colony, terminal, 'evolutionChamber');
-		// this.memory = Mem.wrap(this.colony.memory, 'evolutionChamber', EvolutionChamberMemoryDefaults);
+		this.memory = Mem.wrap(this.colony.memory, 'evolutionChamber', EvolutionChamberMemoryDefaults);
 		// Register physical components
 		this.terminal = terminal;
 		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetwork;
@@ -96,10 +96,6 @@ export class EvolutionChamber extends HiveCluster {
 		} else {
 			this.transportRequests = new TransportRequestGroup();
 		}
-	}
-
-	get memory(): EvolutionChamberMemory {
-		return Mem.wrap(this.colony.memory, 'evolutionChamber', EvolutionChamberMemoryDefaults);
 	}
 
 	private statusTimeoutCheck(): void {

@@ -6,9 +6,9 @@ import {Visualizer} from '../visuals/Visualizer';
 import {profile} from '../profiler/decorator';
 import {Mem} from '../memory';
 import {Colony} from '../Colony';
-import {BuildPriorities} from '../settings/priorities';
 import {RoadPlanner} from './RoadPlanner';
 import {BarrierPlanner} from './BarrierPlanner';
+import {BuildPriorities} from '../priorities/priorities_structures';
 
 export interface BuildingPlannerOutput {
 	name: string;

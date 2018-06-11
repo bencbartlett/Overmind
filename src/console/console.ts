@@ -8,6 +8,7 @@ export class Console {
 
 	static init() {
 		global.help = this.help();
+		global.print = this.print;
 		global.openRoomPlanner = this.openRoomPlanner;
 		global.closeRoomPlanner = this.closeRoomPlanner;
 		global.cancelRoomPlanner = this.cancelRoomPlanner;
@@ -29,6 +30,7 @@ export class Console {
 
 		let descr: { [functionName: string]: string } = {};
 		descr['help'] = 'show this message';
+		descr['print(...args[])'] = 'log stringified objects to the console';
 		descr['log.level = [int]'] = 'set the logging level from 0 - 4';
 		descr['openRoomPlanner(roomName)'] = 'open the room planner for a room';
 		descr['closeRoomPlanner(roomName)'] = 'close the room planner and save changes';
@@ -47,6 +49,12 @@ export class Console {
 		msg += '\n\nRefer to the repository for more information\n';
 
 		return msg;
+	}
+
+	static print(...args: any[]): void {
+		for (let arg of args) {
+			console.log(JSON.stringify(arg, null, '\t'));
+		}
 	}
 
 	static openRoomPlanner(roomName: string): string {

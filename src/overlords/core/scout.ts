@@ -1,6 +1,6 @@
 import {Overlord} from '../Overlord';
 import {Zerg} from '../../Zerg';
-import {OverlordPriority} from '../priorities_overlords';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../../directives/Directive';
 import {CreepSetup} from '../CreepSetup';

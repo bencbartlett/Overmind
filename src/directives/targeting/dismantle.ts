@@ -1,7 +1,7 @@
 import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
-import {AttackStructurePriorities} from '../../settings/priorities';
 import {Visualizer} from '../../visuals/Visualizer';
+import {AttackStructurePriorities} from '../../priorities/priorities_structures';
 
 @profile
 export class DirectiveDismantle extends Directive {

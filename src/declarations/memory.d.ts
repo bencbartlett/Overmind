@@ -116,10 +116,8 @@ interface ColonyMemory {
 		level: number,
 		tick: number,
 	}
-	overseer: OverseerMemory;
-	hatchery: HatcheryMemory;
-	commandCenter: CommandCenterMemory;
-	persistent?: boolean;
+
+	[key: string]: any,
 }
 
 interface OverseerMemory {

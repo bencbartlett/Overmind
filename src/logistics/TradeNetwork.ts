@@ -3,20 +3,44 @@ import {Mem} from '../memory';
 import minBy from 'lodash.minby';
 import {profile} from '../profiler/decorator';
 
+// interface OrderCache {
+// 	id: string,
+// 	resourceType: ResourceConstant,
+// 	roomName: string,
+// 	amount: number,
+// 	price: number,
+// }
+
+interface MarketCache {
+	// sell: {[resourceType: string]: Order | undefined},
+	// buy: {[resourceType: string]: Order | undefined},
+	sell: { [resourceType: string]: { high: number, low: number } },
+	buy: { [resourceType: string]: { high: number, low: number } },
+	tick: number,
+}
+
 interface TraderMemory {
-	cache: {
-		sellPrice: { [resourceType: string]: number },
-	};
+	cache: MarketCache;
 	equalizeIndex: number;
 }
+
+const TraderMemoryDefaults: TraderMemory = {
+	cache        : {
+		sell: {},
+		buy : {},
+		tick: 0,
+	},
+	equalizeIndex: 0,
+};
+
 
 @profile
 export class TraderJoe implements ITradeNetwork {
 
-	private cache: {
-		sellPrice: { [resourceType: string]: number }
-	};
 	static settings = {
+		cache : {
+			timeout: 25,
+		},
 		market: {
 			reserveCredits       : 10000,
 			requestResourceAmount: 1000,
@@ -26,61 +50,76 @@ export class TraderJoe implements ITradeNetwork {
 		},
 	};
 
+	memory: TraderMemory;
+	stats: any;
+
 	constructor() {
-		this.cache = this.memory.cache;
+		this.memory = Mem.wrap(Memory.Overmind, 'trader', TraderMemoryDefaults, true);
+		this.stats = Mem.wrap(Memory.stats.persistent, 'trader');
 	}
 
-	get memory(): TraderMemory {
-		return Mem.wrap(Memory.Overmind, 'trader', {
-			cache        : {
-				sellPrice: {},
-			},
-			equalizeIndex: 0,
-		});
-	}
-
-	static get stats() {
-		return Mem.wrap(Memory.stats.persistent, 'trader');
-	}
-
-	private cacheBestSellPrices(): void {
-		// Recache best selling prices on the market
-		if (!this.memory.cache.sellPrice) {
-			this.memory.cache.sellPrice = {};
+	/* Builds a cache for market - this is very expensive; use infrequently */
+	private buildMarketCache(): void {
+		this.invalidateMarketCache();
+		let allOrders = Game.market.getAllOrders();
+		let groupedBuyOrders = _.groupBy(_.filter(allOrders, o => o.type == ORDER_BUY), o => o.resourceType);
+		let groupedSellOrders = _.groupBy(_.filter(allOrders, o => o.type == ORDER_SELL), o => o.resourceType);
+		for (let resourceType in groupedBuyOrders) {
+			// Store buy order with maximum price in cache
+			let prices = _.map(groupedBuyOrders[resourceType], o => o.price);
+			let high = _.max(prices);
+			let low = _.min(prices);
+			// this.memory.cache.buy[resourceType] = minBy(groupedBuyOrders[resourceType], (o:Order) => -1 * o.price);
+			this.memory.cache.buy[resourceType] = {high: high, low: low};
 		}
-		let allOrders = Game.market.getAllOrders({type: ORDER_SELL});
-		let groupedOrders = _.groupBy(allOrders, order => order.resourceType);
-		for (let resourceType in groupedOrders) {
-			this.memory.cache.sellPrice[resourceType] = _.min(_.map(groupedOrders[resourceType], order => order.price));
+		for (let resourceType in groupedSellOrders) {
+			// Store sell order with minimum price in cache
+			let prices = _.map(groupedSellOrders[resourceType], o => o.price);
+			let high = _.max(prices);
+			let low = _.min(prices);
+			// this.memory.cache.sell[resourceType] = minBy(groupedSellOrders[resourceType], (o:Order) => o.price);
+			this.memory.cache.sell[resourceType] = {high: high, low: low};
 		}
+		this.memory.cache.tick = Game.time;
+	}
+
+	private invalidateMarketCache(): void {
+		this.memory.cache = {
+			sell: {},
+			buy : {},
+			tick: 0,
+		};
 	}
 
 	/* Cost per unit including transfer price with energy converted to credits */
 	private effectivePricePerUnit(order: Order, terminal: StructureTerminal): number {
 		if (order.roomName) {
 			let transferCost = Game.market.calcTransactionCost(1000, order.roomName, terminal.room.name) / 1000;
-			let energyToCreditMultiplier = 0.01; //this.cache.sellPrice[RESOURCE_ENERGY] * 1.5;
+			let energyToCreditMultiplier = 0.01; //this.cache.sell[RESOURCE_ENERGY] * 1.5;
 			return order.price + transferCost * energyToCreditMultiplier;
 		} else {
 			return Infinity;
 		}
 	}
 
-	// private buyShortages(terminal: StructureTerminal): void {
-	// 	let shortages = this.calculateShortages(terminal);
-	// 	for (let resourceType in shortages) {
-	// 		let orders = Game.market.getAllOrders(order => order.type == ORDER_SELL &&
-	// 													   !!order.roomName &&
-	// 													   order.resourceType == resourceType &&
-	// 													   order.remainingAmount > 100);
-	// 		let bestOrder = minBy(orders, (order: Order) => this.effectivePricePerUnit(order, terminal));
-	// 		if (this.effectivePricePerUnit(bestOrder, terminal) <= this.settings.market.maxPrice[resourceType]) {
-	// 			let amount = Math.min(bestOrder.remainingAmount, shortages[resourceType]);
-	// 			let response = Game.market.deal(bestOrder.id, amount, terminal.room.name);
-	// 			this.logTransaction(bestOrder, terminal.room.name, amount, response);
+	// private getBestOrder(mineralType: ResourceConstant, type: 'buy' | 'sell'): Order | undefined {
+	// 	let cachedOrder = this.memory.cache[type][mineralType];
+	// 	if (cachedOrder) {
+	// 		let order = Game.market.getOrderById(cachedOrder.id);
+	// 		if (order) {
+	// 			// Update the order in memory
+	// 			this.memory.cache[type][mineralType] = order;
 	// 		}
 	// 	}
 	// }
+
+	priceOf(mineralType: ResourceConstant): number {
+		if (this.memory.cache.sell[mineralType]) {
+			return this.memory.cache.sell[mineralType].low;
+		} else {
+			return Infinity;
+		}
+	}
 
 	buyMineral(terminal: StructureTerminal, mineralType: ResourceConstant, amount: number) {
 		amount += 10;
@@ -90,7 +129,7 @@ export class TraderJoe implements ITradeNetwork {
 		let ordersForMineral = Game.market.getAllOrders(
 			order => order.type == ORDER_SELL && order.resourceType == mineralType && order.amount >= amount
 		);
-		let bestOrder = minBy(ordersForMineral, (order: Order) => this.effectivePricePerUnit(order, terminal)) as Order;
+		let bestOrder = minBy(ordersForMineral, (order: Order) => order.price) as Order;
 		let maxPrice = TraderJoe.settings.market.maxPrice.default;
 		if (bestOrder && bestOrder.price <= maxPrice) {
 			let response = Game.market.deal(bestOrder.id, amount, terminal.room.name);
@@ -108,7 +147,9 @@ export class TraderJoe implements ITradeNetwork {
 
 
 	init(): void {
-
+		if (Game.time - this.memory.cache.tick > TraderJoe.settings.cache.timeout) {
+			this.buildMarketCache();
+		}
 	}
 
 	run(): void {

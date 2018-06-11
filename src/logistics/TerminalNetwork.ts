@@ -4,13 +4,15 @@ import {profile} from '../profiler/decorator';
 import {Energetics} from './Energetics';
 import {Colony} from '../Colony';
 import {mergeSum} from '../utilities/utils';
+import {RESOURCE_IMPORTANCE} from '../resources/map_resources';
 
 interface TerminalNetworkMemory {
-	cache: {
-		sellPrice: { [resourceType: string]: number },
-	};
 	equalizeIndex: number;
 }
+
+const TerminalNetworkMemoryDefaults = {
+	equalizeIndex: 0
+};
 
 function colonyOf(terminal: StructureTerminal): Colony {
 	return Overmind.colonies[terminal.room.name];
@@ -20,26 +22,15 @@ function colonyOf(terminal: StructureTerminal): Colony {
 export class TerminalNetwork implements ITerminalNetwork {
 
 	terminals: StructureTerminal[];					// All terminals
+	abandonedTerminals: StructureTerminal[]; 		// Terminals in rooms being abandoned
 	assets: { [resourceType: string]: number };		// All assets
-	private manifests: {							// Resources that various terminals need
-		[terminalName: string]: {
-			[resourceType: string]: number
-		}
-	};
+	private averageFullness: number;
 	private alreadyReceived: StructureTerminal[];
 	private alreadySent: StructureTerminal[];
 	private cache: {
 		sellPrice: { [resourceType: string]: number }
 	};
 	settings: {
-		// market: {
-		// 	reserveCredits: number,
-		// 	requestResourceAmount: number,
-		// 	maxPrice: {
-		// 		default: number,
-		// 		[resourceType: string]: number,
-		// 	}
-		// },
 		equalize: {
 			frequency: number,
 			maxSendSize: number,
@@ -52,19 +43,15 @@ export class TerminalNetwork implements ITerminalNetwork {
 		}
 	};
 
+	memory: TerminalNetworkMemory;
+
 	constructor(terminals: StructureTerminal[]) {
 		this.terminals = terminals;
-		this.manifests = {};
+		this.memory = Mem.wrap(Memory.Overmind, 'terminalNetwork', TerminalNetworkMemoryDefaults);
+		this.abandonedTerminals = []; // populated in init()
 		this.alreadyReceived = [];
 		this.alreadySent = [];
 		this.settings = {
-			// market  : {
-			// 	reserveCredits       : 10000,
-			// 	requestResourceAmount: 1000,
-			// 	maxPrice             : {
-			// 		default: 5.0,
-			// 	}
-			// },
 			equalize: {
 				frequency  : 100,
 				maxSendSize: 25000,
@@ -75,7 +62,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 				}
 			}
 		};
-		this.cache = this.memory.cache;
+		this.averageFullness = _.sum(_.map(this.terminals,
+										   t => _.sum(t.store) / t.storeCapacity)) / this.terminals.length;
 	}
 
 	/* Summarizes the total of all resources currently in a colony store structure */
@@ -83,90 +71,9 @@ export class TerminalNetwork implements ITerminalNetwork {
 		return mergeSum(_.map(this.terminals, terminal => colonyOf(terminal).assets));
 	}
 
-	get memory(): TerminalNetworkMemory {
-		return Mem.wrap(Memory.Overmind, 'terminalNetwork', {
-			cache        : {
-				sellPrice: {},
-			},
-			equalizeIndex: 0,
-		});
-	}
-
 	static get stats() {
 		return Mem.wrap(Memory.stats.persistent, 'terminalNetwork');
 	}
-
-	// /* Request resources to be transferred from another terminal or bought on the market */
-	// requestResource(resourceType: ResourceConstant, terminal: StructureTerminal,
-	// 				amount = this.settings.market.requestResourceAmount) {
-	// 	if (!this.manifests[terminal.room.name]) {
-	// 		this.manifests[terminal.room.name] = {};
-	// 	}
-	// 	this.manifests[terminal.room.name][resourceType] = amount;
-	// }
-
-	private cacheBestSellPrices(): void {
-		// Recache best selling prices on the market
-		if (!this.memory.cache.sellPrice) {
-			this.memory.cache.sellPrice = {};
-		}
-		let allOrders = Game.market.getAllOrders({type: ORDER_SELL});
-		let groupedOrders = _.groupBy(allOrders, order => order.resourceType);
-		for (let resourceType in groupedOrders) {
-			this.memory.cache.sellPrice[resourceType] = _.min(_.map(groupedOrders[resourceType], order => order.price));
-		}
-	}
-
-	/* Cost per unit including transfer price with energy converted to credits */
-	private effectivePricePerUnit(order: Order, terminal: StructureTerminal): number {
-		if (order.roomName) {
-			let transferCost = Game.market.calcTransactionCost(1000, order.roomName, terminal.room.name) / 1000;
-			let energyToCreditMultiplier = 0.3; //this.cache.sellPrice[RESOURCE_ENERGY] * 1.5;
-			return order.price + transferCost * energyToCreditMultiplier;
-		} else {
-			return Infinity;
-		}
-	}
-
-	// /* Calculate what needs buying */
-	// private calculateShortages(terminal: StructureTerminal): { [mineralType: string]: number } {
-	// 	if (Game.market.credits < this.settings.market.reserveCredits) {
-	// 		return {};
-	// 	}
-	// 	let shortages: { [mineral: string]: number } = {};
-	// 	for (let resourceType in this.manifests[terminal.room.name]) {
-	// 		let amountInTerminal = terminal.store[<ResourceConstant>resourceType] || 0;
-	// 		let amountNeeded = this.manifests[terminal.room.name][resourceType];
-	// 		if (amountInTerminal < amountNeeded) {
-	// 			shortages[resourceType] = amountNeeded - amountInTerminal;
-	// 		}
-	// 	}
-	// 	return shortages;
-	// }
-
-	// private buyShortages(terminal: StructureTerminal): void {
-	// 	let shortages = this.calculateShortages(terminal);
-	// 	for (let resourceType in shortages) {
-	// 		let orders = Game.market.getAllOrders(order => order.type == ORDER_SELL &&
-	// 													   !!order.roomName &&
-	// 													   order.resourceType == resourceType &&
-	// 													   order.remainingAmount > 100);
-	// 		let bestOrder = minBy(orders, (order: Order) => this.effectivePricePerUnit(order, terminal));
-	// 		if (this.effectivePricePerUnit(bestOrder, terminal) <= this.settings.market.maxPrice[resourceType]) {
-	// 			let amount = Math.min(bestOrder.remainingAmount, shortages[resourceType]);
-	// 			let response = Game.market.deal(bestOrder.id, amount, terminal.room.name);
-	// 			this.logTransaction(bestOrder, terminal.room.name, amount, response);
-	// 		}
-	// 	}
-	// }
-
-	// private logTransaction(order: Order, destinationRoomName: string, amount: number, response: number): void {
-	// 	let action = order.type == ORDER_SELL ? 'Bought' : 'Sold';
-	// 	let fee = order.roomName ? Game.market.calcTransactionCost(amount, order.roomName, destinationRoomName) : 0;
-	// 	log.info(`${destinationRoomName}: ${action} ${amount} of ${order.resourceType} from ${order.roomName} ` +
-	// 			 `for ${order.price * amount} credits and ${fee} energy. Response: ${response}`);
-	//
-	// }
 
 	static logTransfer(resourceType: ResourceConstant, amount: number, origin: string, destination: string) {
 		if (!this.stats.transfers) this.stats.transfers = {};
@@ -234,6 +141,9 @@ export class TerminalNetwork implements ITerminalNetwork {
 	}
 
 	requestResource(receiver: StructureTerminal, resourceType: ResourceConstant, amount: number, allowBuy = true) {
+		if (this.abandonedTerminals.includes(receiver)) {
+			return; // don't send to abandoning terminals
+		}
 		amount += 100;
 		let sender: StructureTerminal | undefined = undefined;
 		let maxResourceAmount = 0;
@@ -312,10 +222,38 @@ export class TerminalNetwork implements ITerminalNetwork {
 		this.memory.equalizeIndex = _.findIndex(RESOURCES_ALL, resource => resource == nextResourceType);
 	}
 
+	private evacuateResources(sender: StructureTerminal): void {
+		let receiver = _.first(_.sortBy(this.terminals, t => _.sum(t.store)));
+		for (let resource of RESOURCE_IMPORTANCE) {
+			let amount = (sender.store[resource] || 0);
+			if (resource == RESOURCE_ENERGY) {
+				if (this.averageFullness > 0.9) {
+					return; // ignore sending energy if other terminals are already pretty full
+				}
+				amount -= Game.market.calcTransactionCost(amount, sender.room.name, receiver.room.name) + 100;
+			}
+			if (amount > TERMINAL_MIN_SEND) {
+				// Send to the emptiest terminal in the network
+				if (receiver && receiver.storeCapacity - _.sum(receiver.store) > amount) {
+					this.transfer(sender, receiver, resource, amount);
+					return;
+				}
+			}
+		}
+	}
+
+	private handleAbandonedTerminals(): void {
+		// Register (non-abandoned) terminal fullness
+		let terminalsByEmptiness = _.sortBy(this.terminals, t => _.sum(t.store));
+		// Send all resources to non-abandoned terminals
+		for (let terminal of _.filter(this.abandonedTerminals, t => t.cooldown == 0)) {
+			this.evacuateResources(terminal);
+		}
+	}
+
 	init(): void {
-		// if (Game.time % 500 == 2) {
-		// 	this.cacheBestSellPrices();
-		// }
+		// Remove any terminals from terminal network which are in abandoning colonies
+		this.abandonedTerminals = _.remove(this.terminals, terminal => colonyOf(terminal).abandoning == true);
 		this.assets = this.getAllAssets();
 	}
 
@@ -326,6 +264,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 			let powerTerminals = _.filter(this.terminals, t => colonyOf(t).powerSpawn != undefined);
 			this.equalize(RESOURCE_POWER, powerTerminals);
 		}
+		this.handleAbandonedTerminals();
 	}
 
 }

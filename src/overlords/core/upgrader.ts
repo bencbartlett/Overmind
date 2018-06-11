@@ -2,7 +2,7 @@ import {Overlord} from '../Overlord';
 import {UpgradeSite} from '../../hiveClusters/upgradeSite';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
-import {OverlordPriority} from '../priorities_overlords';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import minBy from 'lodash.minby';
 import {Pathing} from '../../pathing/pathing';

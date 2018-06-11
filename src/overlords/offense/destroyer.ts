@@ -1,7 +1,7 @@
 // Destroyer overlord - spawns attacker/healer pairs for sustained combat
 
 import {Zerg} from '../../Zerg';
-import {OverlordPriority} from '../priorities_overlords';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/siegeTarget';
 import {CombatOverlord} from '../CombatOverlord';
 import {DirectiveDestroy} from '../../directives/offense/destroy';

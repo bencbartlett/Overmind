@@ -4,11 +4,15 @@ import {profile} from './profiler/decorator';
 @profile
 export class Mem {
 
-	static wrap(memory: any, memName: string, defaults = {}) {
+	static wrap(memory: any, memName: string, defaults = {}, deep = false) {
 		if (!memory[memName]) {
 			memory[memName] = defaults;
 		}
-		_.defaults(memory[memName], defaults);
+		if (deep) {
+			_.defaultsDeep(memory[memName], defaults);
+		} else {
+			_.defaults(memory[memName], defaults);
+		}
 		return memory[memName];
 	}
 

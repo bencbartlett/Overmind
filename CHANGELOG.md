@@ -5,17 +5,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 ### Added
-- Preliminary support for mineral processing!
+- Added support for mineral processing (finally)!
     - New hiveCluter to manage boosting and mineral production: `EvolutionChamber`
     - Reaction cycles planned by the `Abathur` module, which makes decisions related to the global production of resources, guiding the evolution of the swarm
         - Module `Abathur` incompatible with pronouns
 - RoomPlanner now includes automatic barrier planning!
     - `roomPlanner.barrierPlanner` uses a modified min-cut algorithm to compute the best location to place ramparts
     - Opening and closing the roomPlanner for a colony which already has walls will create duplicate walls. Use `destroyAllBarriers(roomName)` if you wish to get rid of your old barriers.
-- Nuke reponse directive which will automatically build ramparts using workers to block incoming nuke damage
+- New directives, all placed automatically by colony overseer:
+    - `DirectiveNukeResponse` will automatically build ramparts using workers to block incoming nuke damage
+    - `DirectiveAbandon` will evacuate resources from a terminal if overseer detects that the colony has been breached (also prevents terminal from receiving resources)
 - Added flee response to miners in outpost rooms
     - Miners in colony rooms will also retreat to the safety of the controller if there is a large invasion happening
-- Preliminary DEFCON system to classify colony safety levels
+- Preliminary DEFCON system to classify colony safety levels; this will be expanded in the next (combat-focused) update
 - New RampartDefenders spawn in rooms with a sufficiently high rampart/walls ratio and defend against melee attacks
 - New `combatIntel` module, which contains an assortment of methods related to making combat-related decisions
 
@@ -23,16 +25,25 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - Lots of under-the-hood improvements to the logistics system!
     - You should see about a 60% reduction in CPU usage from `LogisticsNetwork` due to better internal caching
     - Tweaks to the predictive functions reduce the chance that transporters occasionally get stuck in an oscillatory pattern
-- Improved memory footprint of stats collection and shortened hiveCluster names in memory; you should see about a 30% reduction in memory usage
+- Refactored `TransportRequestGroup` to be more like `LogisticsNetwork`
+    - CommandCenter (and EvolutionChamber) now submit resource requests via a shared `transportRequest` object
+- Lots of under-the-hood memory tweaks:
+    - You should see about a 30% reduction in overall memory usage!
+    - Improved memory footprint of stats collection and shortened hiveCluster names in memory
+    - `Mem.wrap()` now initializes new properties to defaults within the target object (previously, would only initialize if target was undefined)
 - `TerminalNetwork` now uses an `equalize()` routine to distribute resources between colonies
 - `LogisticsGroup` renamed to `LogisticsNetwork`
 - CreepSetups moved to respective overlord; now are constant instances rather than extending classes
+- Lots of file renaming to be more concise
 - Colonies now register a shorthand reference on `global`: 'E4S41' and 'e4s41' both refer to `Overmind.colonies.E4S41`
 
 ### Fixed
 - Made link allocation less buggy; hiveClusters now claim their link, preventing others from registering the same link
 - Fixed a bug where the roadPlanner would plan roads for incomplete paths
 - Fixed a bug where workers will occasionally stop working if outpost mining site containers are under construction
+
+### Removed
+- Removed all contents from `src/deprecated`
 
 ## Overmind [0.3.1] - 2018.5.12
 ### Added

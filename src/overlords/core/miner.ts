@@ -2,7 +2,7 @@ import {Overlord} from '../Overlord';
 import {MiningSite} from '../../hiveClusters/miningSite';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
-import {OverlordPriority} from '../priorities_overlords';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Pathing} from '../../pathing/pathing';
 import {DEFCON} from '../../Colony';

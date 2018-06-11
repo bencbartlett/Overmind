@@ -1,7 +1,7 @@
 // archer overlord - spawns defender/healer pairs for sustained combat
 
 import {Zerg} from '../../Zerg';
-import {OverlordPriority} from '../priorities_overlords';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {CombatOverlord} from '../CombatOverlord';
 import {boostResources} from '../../resources/map_resources';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
