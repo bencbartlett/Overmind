@@ -25,7 +25,8 @@ export var OverlordPriority = {
 		firstTransport: 400,		// High priority to spawn the first transporter
 		mine          : 401,
 		work          : 402,
-		transport     : 403,		// Spawn the rest of the transporters
+		mineral       : 403,
+		transport     : 404,		// Spawn the rest of the transporters
 	},
 
 	offense: {					// Offensive operations like raids or sieges
