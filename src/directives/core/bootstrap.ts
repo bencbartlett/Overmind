@@ -5,6 +5,9 @@ import {log} from '../../lib/logger/log';
 import {profile} from '../../profiler/decorator';
 import {BootstrappingOverlord} from '../../overlords/situational/bootstrap';
 import {Colony} from '../../Colony';
+import {MinerSetup} from '../../overlords/core/miner';
+import {ManagerSetup} from '../../overlords/core/manager';
+import {QueenSetup} from '../../overlords/core/queen';
 
 
 export const EMERGENCY_ENERGY_THRESHOLD = 1300;
@@ -27,11 +30,11 @@ export class DirectiveBootstrap extends Directive {
 		super(flag);
 		this.needsEnergy = this.room.energyAvailable < _.min([EMERGENCY_ENERGY_THRESHOLD,
 															  this.room.energyCapacityAvailable]);
-		this.needsMiner = (this.colony.getCreepsByRole('miner').length == 0);
+		this.needsMiner = (this.colony.getCreepsByRole(MinerSetup.role).length == 0);
 		this.needsManager = (this.colony.commandCenter != undefined &&
 							 this.colony.commandCenter.overlord != undefined &&
-							 this.colony.getCreepsByRole('manager').length == 0);
-		this.needsQueen = (this.colony.getCreepsByRole('queen').length == 0);
+							 this.colony.getCreepsByRole(ManagerSetup.role).length == 0);
+		this.needsQueen = (this.colony.getCreepsByRole(QueenSetup.role).length == 0);
 		this.overlords.bootstrap = new BootstrappingOverlord(this);
 	}
 

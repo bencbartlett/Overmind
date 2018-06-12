@@ -1,30 +1,17 @@
 import {Overlord} from '../Overlord';
 import {DirectiveBootstrap} from '../../directives/core/bootstrap';
 import {CreepSetup} from '../CreepSetup';
-import {MiningOverlord} from '../core/miner';
+import {MinerSetup, MiningOverlord} from '../core/miner';
 import {ColonyStage} from '../../Colony';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 
-export class BoostrapMinerSetup extends CreepSetup {
-	constructor() {
-		super('miner', {
-			pattern  : [WORK, WORK, CARRY, MOVE],
-			sizeLimit: 1,
-		});
-	}
-}
-
-export class FillerSetup extends CreepSetup {
-	constructor() {
-		super('filler', {
-			pattern  : [CARRY, CARRY, MOVE],
-			sizeLimit: 2,
-		});
-	}
-}
+export const FillerSetup = new CreepSetup('filler', {
+	pattern  : [CARRY, CARRY, MOVE],
+	sizeLimit: 2,
+});
 
 // Bootstrapping overlord: spawns small miners and suppliers to recover from a catastrohpic colony crash
 @profile
@@ -35,13 +22,14 @@ export class BootstrappingOverlord extends Overlord {
 	withdrawStructures: (StructureStorage | StructureTerminal | StructureContainer | StructureLink |
 		StructureTower | StructureLab | StructurePowerSpawn | StructureNuker)[];
 	supplyStructures: (StructureSpawn | StructureExtension)[];
-	private settings: {
-		spawnBootstrapMinerThreshold: number;
+
+	static settings: {
+		spawnBootstrapMinerThreshold: 1000;
 	};
 
 	constructor(directive: DirectiveBootstrap, priority = OverlordPriority.emergency.bootstrap) {
 		super(directive, 'bootstrap', priority);
-		this.fillers = this.creeps('filler');
+		this.fillers = this.creeps(FillerSetup.role);
 		// Calculate structures fillers can supply / withdraw from
 		this.supplyStructures = _.filter([...this.colony.spawns, ...this.colony.extensions],
 										 structure => structure.energy < structure.energyCapacity);
@@ -53,9 +41,6 @@ export class BootstrappingOverlord extends Overlord {
 													  ...this.room.links,
 													  ...this.room.towers,
 													  ...this.room.labs]), structure => structure.energy > 0);
-		this.settings = {
-			spawnBootstrapMinerThreshold: 1000,
-		};
 	}
 
 	private spawnBootstrapMiners() {
@@ -73,7 +58,7 @@ export class BootstrappingOverlord extends Overlord {
 												  creep => creep.getActiveBodyparts(WORK)));
 			if (miningPowerAssigned < overlord.miningSite.miningPowerNeeded &&
 				filteredMiners.length < overlord.miningSite.pos.availableNeighbors().length) {
-				let protoCreep = this.generateProtoCreep(new BoostrapMinerSetup());
+				let protoCreep = this.generateProtoCreep(MinerSetup);
 				protoCreep.memory.overlord = overlord.ref; // Donate the miner to the miningSite
 				if (this.colony.hatchery) {
 					this.colony.hatchery.enqueue(protoCreep, this.priority);
@@ -85,15 +70,15 @@ export class BootstrappingOverlord extends Overlord {
 	init() {
 		// At early levels, spawn one miner, then a filler, then the rest of the miners
 		if (this.colony.stage == ColonyStage.Larva) {
-			if (this.colony.getCreepsByRole('miner').length == 0) {
+			if (this.colony.getCreepsByRole(MinerSetup.role).length == 0) {
 				this.spawnBootstrapMiners();
 			}
 		}
 		// Spawn fillers
-		this.wishlist(1, new FillerSetup());
+		this.wishlist(1, FillerSetup);
 		// Then spawn the rest of the needed miners
 		let energyInStructures = _.sum(_.map(this.withdrawStructures, structure => structure.energy));
-		if (energyInStructures < this.settings.spawnBootstrapMinerThreshold) {
+		if (energyInStructures < BootstrappingOverlord.settings.spawnBootstrapMinerThreshold) {
 			this.spawnBootstrapMiners();
 		}
 	}

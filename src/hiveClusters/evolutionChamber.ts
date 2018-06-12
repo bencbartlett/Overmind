@@ -1,6 +1,6 @@
 // Evolution chamber: manages lab boosting behavior
 
-import {HiveCluster} from './HiveCluster';
+import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
 import {Mem} from '../memory';

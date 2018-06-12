@@ -60,7 +60,7 @@ export class TraderJoe implements ITradeNetwork {
 	}
 
 	/* Builds a cache for market - this is very expensive; use infrequently */
-	private buildMarketCache(): void {
+	private buildMarketCache(verbose = false): void {
 		this.invalidateMarketCache();
 		let myActiveOrderIDs = _.map(_.filter(Game.market.orders, order => order.active), order => order.id);
 		let allOrders = Game.market.getAllOrders(order => !myActiveOrderIDs.includes(order.id) &&
@@ -72,6 +72,7 @@ export class TraderJoe implements ITradeNetwork {
 			let prices = _.map(groupedBuyOrders[resourceType], o => o.price);
 			let high = _.max(prices);
 			let low = _.min(prices);
+			if (verbose) console.log(`${resourceType} BUY: high: ${high}  low: ${low}`);
 			// this.memory.cache.buy[resourceType] = minBy(groupedBuyOrders[resourceType], (o:Order) => -1 * o.price);
 			this.memory.cache.buy[resourceType] = {high: high, low: low};
 		}
@@ -80,6 +81,7 @@ export class TraderJoe implements ITradeNetwork {
 			let prices = _.map(groupedSellOrders[resourceType], o => o.price);
 			let high = _.max(prices);
 			let low = _.min(prices);
+			if (verbose) console.log(`${resourceType} SELL: high: ${high}  low: ${low}`);
 			// this.memory.cache.sell[resourceType] = minBy(groupedSellOrders[resourceType], (o:Order) => o.price);
 			this.memory.cache.sell[resourceType] = {high: high, low: low};
 		}
@@ -211,7 +213,7 @@ export class TraderJoe implements ITradeNetwork {
 				}
 			}
 		} else {
-			let ret = Game.market.createOrder(ORDER_SELL, resource, marketLow, 10000, terminal.room.name);
+			let ret = Game.market.createOrder(ORDER_SELL, resource, marketLow, amount, terminal.room.name);
 			log.info(`${terminal.room.print}: creating sell order for ${resource} at price ${marketLow}. ` +
 					 `Response: ${ret}`);
 		}
@@ -262,7 +264,7 @@ export class TraderJoe implements ITradeNetwork {
 
 
 	init(): void {
-		if (Game.time - this.memory.cache.tick > TraderJoe.settings.cache.timeout) {
+		if (Game.time - (this.memory.cache.tick || 0) > TraderJoe.settings.cache.timeout) {
 			this.buildMarketCache();
 		}
 	}

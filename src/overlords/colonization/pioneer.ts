@@ -19,7 +19,7 @@ export class PioneerOverlord extends Overlord {
 
 	constructor(directive: Directive, priority = OverlordPriority.realTime.pioneer) {
 		super(directive, 'pioneer', priority);
-		this.pioneers = this.creeps('pioneer');
+		this.pioneers = this.creeps(PioneerSetup.role);
 		this.spawnSite = this.room ? _.filter(this.room.constructionSites,
 											  s => s.structureType == STRUCTURE_SPAWN)[0] : undefined;
 	}

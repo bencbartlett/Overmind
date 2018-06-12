@@ -1,6 +1,6 @@
 // Hatchery - groups all spawns and extensions in a colony
 
-import {HiveCluster} from './HiveCluster';
+import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
 import {HatcheryOverlord} from '../overlords/core/queen';
 import {Priority} from '../priorities/priorities';
@@ -38,7 +38,6 @@ export class Hatchery extends HiveCluster {
 	};
 	private productionPriorities: number[];
 	private productionQueue: { [priority: number]: protoCreep[] };  // Priority queue of protocreeps
-	// private _idlePos: RoomPosition; 								// Idling position for the supplier
 	private _energyStructures: (StructureSpawn | StructureExtension)[];
 	static restrictedRange = 6;								// Don't stand idly within this range of hatchery
 
@@ -51,9 +50,6 @@ export class Hatchery extends HiveCluster {
 		this.link = this.pos.findClosestByLimitedRange(colony.availableLinks, 2);
 		this.colony.linkNetwork.claimLink(this.link);
 		this.battery = this.pos.findClosestByLimitedRange(this.room.containers, 2);
-		if (this.battery) {
-			this.pos = this.battery.pos;
-		}
 		this.colony.obstacles.push(this.idlePos);
 		// Associate all towers that aren't part of the command center if there is one
 		if (colony.commandCenter) { // TODO: make this not order-dependent

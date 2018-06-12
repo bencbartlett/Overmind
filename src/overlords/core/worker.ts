@@ -45,7 +45,7 @@ export class WorkerOverlord extends Overlord {
 
 	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.work) {
 		super(colony, 'worker', priority);
-		this.workers = this.creeps('worker');
+		this.workers = this.creeps(WorkerSetup.role);
 		this.rechargeObjects = _.compact([this.colony.storage!,
 										  this.colony.terminal!,
 										  this.colony.upgradeSite.battery!,
@@ -73,7 +73,14 @@ export class WorkerOverlord extends Overlord {
 
 		let homeRoomName = this.colony.room.name;
 		let defcon = this.colony.defcon;
+		// Filter constructionSites to only build valid ones
+		let roomStructureAmounts = _.mapValues(this.colony.room.structures, s => s.length) as { [type: string]: number };
+		let level = this.colony.controller.level;
 		this.constructionSites = _.filter(this.colony.constructionSites, function (site) {
+			// If site will be more than max amount of a structure at current level, ignore (happens after downgrade)
+			if (roomStructureAmounts[site.structureType] + 1 > CONTROLLER_STRUCTURES[site.structureType][level]) {
+				return false;
+			}
 			if (defcon > DEFCON.safe) {
 				// Only build non-road, non-container sites in the home room if defcon is unsafe
 				return site.pos.roomName == homeRoomName &&

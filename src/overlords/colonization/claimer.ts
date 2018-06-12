@@ -18,7 +18,7 @@ export class ClaimingOverlord extends Overlord {
 
 	constructor(directive: Directive, priority = OverlordPriority.realTime.claim) {
 		super(directive, 'claim', priority);
-		this.claimers = this.creeps('claimer');
+		this.claimers = this.creeps(ClaimerSetup.role);
 	}
 
 	init() {

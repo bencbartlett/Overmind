@@ -9,7 +9,7 @@ import {Overseer} from './Overseer';
 import {WorkerOverlord} from './overlords/core/worker';
 import {Zerg} from './Zerg';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
-import {HiveCluster} from './hiveClusters/HiveCluster';
+import {HiveCluster} from './hiveClusters/_HiveCluster';
 import {LinkNetwork} from './logistics/LinkNetwork';
 import {Stats} from './stats/stats';
 import {SporeCrawler} from './hiveClusters/sporeCrawler';

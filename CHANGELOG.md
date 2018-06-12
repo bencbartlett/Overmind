@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - Added support for mineral processing (finally)!
     - New hiveCluter to manage boosting and mineral production: `EvolutionChamber`
         - `EvolutionChamber` is run by the colony manager and produces batches of resources as needed to meet a target amount
+        - You might not see mineral production for the first few days while your colonies sell resources to gain sufficient market credits
     - Reaction cycles planned by the `Abathur` module, which makes decisions related to the global production of resources, guiding the evolution of the swarm
         - Module `Abathur` incompatible with pronouns
     - New hiveCluster for mineral mining: `ExtractionSite` (based on @rooklion's pull request #12)
@@ -15,8 +16,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
     - `roomPlanner.barrierPlanner` uses a modified min-cut algorithm to compute the best location to place ramparts
     - Opening and closing the roomPlanner for a colony which already has walls will create duplicate walls. Use `destroyAllBarriers(roomName)` if you wish to get rid of your old barriers.
 - New `TraderJoe` module with lots of built in market functions
-    - Labs will attempt to buy resources they need if there are sufficient credits
-    - Sells excess resources
+    - Labs will attempt to buy resources they need if there are sufficient (>10k) credits
+    - Sells excess resources on the market
 - New directives, all placed automatically by colony overseer:
     - `DirectiveNukeResponse` will automatically build ramparts using workers to block incoming nuke damage
     - `DirectiveAbandon` will evacuate resources from a terminal if overseer detects that the colony has been breached (also prevents terminal from receiving resources)
@@ -39,16 +40,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
     - Improved memory footprint of stats collection and shortened hiveCluster names in memory
     - `Mem.wrap()` now initializes new properties to defaults within the target object (previously, would only initialize if target was undefined)
 - `TerminalNetwork` now uses an `equalize()` routine to distribute resources between colonies
-- `LogisticsGroup` renamed to `LogisticsNetwork`
 - CreepSetups moved to respective overlord; now are constant instances rather than extending classes
+- Construction sites now time out after 50000 ticks and are removed
+- `LogisticsGroup` renamed to `LogisticsNetwork`
 - Lots of file renaming to be more concise
-- Colonies now register a shorthand reference on `global`: 'E4S41' and 'e4s41' both refer to `Overmind.colonies.E4S41`
+- Colonies now register a shorthand reference on `global` for console use: 'E4S41' and 'e4s41' both refer to `Overmind.colonies.E4S41`
 
 ### Fixed
 - Made link allocation less buggy; hiveClusters now claim their link, preventing others from registering the same link
 - Fixed a bug where the roadPlanner would plan roads for incomplete paths
 - Fixed a bug where roadPlanner would incorrectly plan road networks if sources were not visible at the recalculation tick
 - Fixed a bug where workers will occasionally stop working if outpost mining site containers are under construction
+- Workers will no longer attempt to build sites for structures over the max amount for current room level (for example, after a controller downgrade)
 
 ### Removed
 - Removed all contents from `src/deprecated`

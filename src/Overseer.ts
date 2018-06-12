@@ -14,6 +14,8 @@ import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
 import {Mem} from './memory';
 import {DirectiveNukeResponse} from './directives/defense/nukeResponse';
 import {DirectiveAbandon} from './directives/colonization/abandon';
+import {MinerSetup} from './overlords/core/miner';
+import {QueenSetup} from './overlords/core/queen';
 
 @profile
 export class Overseer {
@@ -46,15 +48,11 @@ export class Overseer {
 		// Doesn't apply to incubating colonies.
 		if (!this.colony.isIncubating) {
 			let hasEnergy = this.colony.room.energyAvailable >= EMERGENCY_ENERGY_THRESHOLD; // Enough spawn energy?
-			let hasMiners = this.colony.getCreepsByRole('miner').length > 0;		// Has energy supply?
-			let hasQueen = this.colony.getCreepsByRole('queen').length > 0;		// Has a queen?
-			// let canSpawnSupplier = this.colony.room.energyAvailable >= this.colony.overlords.supply.generateProtoCreep()
-			let emergencyFlags = _.filter(this.colony.room.flags, flag => DirectiveBootstrap.filter(flag));
-			if (!hasEnergy && !hasMiners && !hasQueen && emergencyFlags.length == 0) {
-				if (this.colony.hatchery) {
-					DirectiveBootstrap.create(this.colony.hatchery.pos);
-					this.colony.hatchery.settings.suppressSpawning = true;
-				}
+			let hasMiners = this.colony.getCreepsByRole(MinerSetup.role).length > 0;		// Has energy supply?
+			let hasQueen = this.colony.getCreepsByRole(QueenSetup.role).length > 0;			// Has a queen?
+			if (!hasEnergy && !hasMiners && !hasQueen && this.colony.hatchery) {
+				DirectiveBootstrap.createIfNotPresent(this.colony.hatchery.pos, 'pos');
+				this.colony.hatchery.settings.suppressSpawning = true;
 			}
 		}
 

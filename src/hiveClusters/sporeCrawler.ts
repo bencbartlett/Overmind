@@ -1,5 +1,5 @@
 import {profile} from '../profiler/decorator';
-import {HiveCluster} from './HiveCluster';
+import {HiveCluster} from './_HiveCluster';
 import {Colony} from '../Colony';
 import {CombatIntel} from '../intel/combatIntel';
 
@@ -9,6 +9,11 @@ import {CombatIntel} from '../intel/combatIntel';
 export class SporeCrawler extends HiveCluster {
 
 	tower: StructureTower;
+
+	static settings = {
+		requestThreshold       : 500,
+		criticalEnergyThreshold: 250,
+	};
 
 	constructor(colony: Colony, tower: StructureTower) {
 		super(colony, tower, 'sporeCrawler');
@@ -20,8 +25,17 @@ export class SporeCrawler extends HiveCluster {
 		return undefined;
 	}
 
-	init() {
+	private registerEnergyRequests() {
+		// Request energy from transporters if below request threshold
+		if (this.tower.energy < SporeCrawler.settings.requestThreshold) {
+			let multiplier = this.tower.energy < SporeCrawler.settings.criticalEnergyThreshold ? 2 : 1;
+			let dAmountdt = this.room.hostiles.length > 0 ? 10 : 0;
+			this.colony.logisticsNetwork.request(this.tower, {multiplier: multiplier, dAmountdt: dAmountdt});
+		}
+	}
 
+	init() {
+		this.registerEnergyRequests();
 	}
 
 	private attackNearestEnemy(prioritizeHealers = false) {

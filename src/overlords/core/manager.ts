@@ -29,7 +29,7 @@ export class CommandCenterOverlord extends Overlord {
 		this.commandCenter = commandCenter;
 		this.transportRequests = this.commandCenter.transportRequests;
 		this.evolutionChamber = undefined; // This gets filled in during init()
-		this.managers = this.creeps('manager');
+		this.managers = this.creeps(ManagerSetup.role);
 	}
 
 	init() {

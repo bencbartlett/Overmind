@@ -24,7 +24,7 @@ export class GuardOverlord extends CombatOverlord {
 
 	constructor(directive: DirectiveGuard, priority = OverlordPriority.defense.guard) {
 		super(directive, 'guard', priority);
-		this.guards = this.creeps('guard');
+		this.guards = this.creeps(GuardSetup.role);
 	}
 
 	// private reassignIdleGuards(): void {

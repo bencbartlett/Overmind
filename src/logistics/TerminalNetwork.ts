@@ -173,7 +173,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 			}
 			if (resource == RESOURCE_ENERGY) {
 				if (energyOrders.length < 3 && terminal.store[RESOURCE_ENERGY] > energyThreshold) {
-					Overmind.tradeNetwork.sell(terminal, <ResourceConstant>resource, 100000);
+					Overmind.tradeNetwork.sell(terminal, RESOURCE_ENERGY, 100000);
 				}
 			} else {
 				if (terminal.store[<ResourceConstant>resource]! > threshold) {
@@ -286,11 +286,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 			this.equalize(RESOURCE_POWER, powerTerminals);
 		}
 		this.handleAbandonedTerminals();
-		if (Game.time % 10 == 0) {
-			for (let terminal of this.terminals) {
-				this.sellExcess(terminal);
-			}
-		}
+		let terminalToSellExcess = this.terminals[Game.time % this.terminals.length];
+		this.sellExcess(terminalToSellExcess);
 	}
 
 }

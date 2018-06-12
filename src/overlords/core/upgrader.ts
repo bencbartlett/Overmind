@@ -29,7 +29,7 @@ export class UpgradingOverlord extends Overlord {
 
 	constructor(upgradeSite: UpgradeSite, priority = OverlordPriority.upgrading.upgrade) {
 		super(upgradeSite, 'upgrade', priority);
-		this.upgraders = this.creeps('upgrader');
+		this.upgraders = this.creeps(UpgraderSetup.role);
 		this.upgradeSite = upgradeSite;
 	}
 

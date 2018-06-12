@@ -33,8 +33,8 @@ export class DestroyerOverlord extends CombatOverlord {
 
 	constructor(directive: DirectiveDestroy, priority = OverlordPriority.offense.destroy) {
 		super(directive, 'destroy', priority);
-		this.attackers = this.creeps('attacker');
-		this.healers = this.creeps('healer');
+		this.attackers = this.creeps(AttackerSetup.role);
+		this.healers = this.creeps(HealerSetup.role);
 		// Comment out boost lines if you don't want to spawn boosted attackers/healers
 		// this.boosts.attacker = [
 		// 	boostResources.attack[3],

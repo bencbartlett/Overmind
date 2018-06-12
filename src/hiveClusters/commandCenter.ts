@@ -1,6 +1,6 @@
 // Command center: groups many RCL8 components, storge, lab, terminal, and some towers
 
-import {HiveCluster} from './HiveCluster';
+import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
 import {CommandCenterOverlord} from '../overlords/core/manager';
 import {Colony} from '../Colony';

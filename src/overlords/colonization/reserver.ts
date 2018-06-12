@@ -21,7 +21,7 @@ export class ReservingOverlord extends Overlord {
 		super(directive, 'reserve', priority);
 		// Change priority to operate per-outpost
 		this.priority += this.outpostIndex * OverlordPriority.remoteRoom.roomIncrement;
-		this.reservers = this.creeps('reserver');
+		this.reservers = this.creeps(ReserverSetup.role);
 		this.reserveBuffer = 3000;
 	}
 

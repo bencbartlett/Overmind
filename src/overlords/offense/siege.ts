@@ -29,7 +29,7 @@ export class SiegeOverlord extends CombatOverlord {
 
 	constructor(directive: DirectiveSiege, priority = OverlordPriority.offense.siege) {
 		super(directive, 'siege', priority);
-		this.siegers = this.creeps('sieger');
+		this.siegers = this.creeps(SiegerSetup.role);
 		this.recoveryWaypoint = directive.recoveryWaypoint;
 		this.settings = {
 			retreatHitsPercent: 0.75,
