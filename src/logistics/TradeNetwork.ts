@@ -1,6 +1,5 @@
 import {log} from '../lib/logger/log';
 import {Mem} from '../memory';
-// import minBy from 'lodash.minby';
 import {profile} from '../profiler/decorator';
 import {maxBy, minBy} from '../utilities/utils';
 
@@ -170,7 +169,7 @@ export class TraderJoe implements ITradeNetwork {
 	}
 
 	/* Sell resources directly to a buyer rather than making a sell order */
-	private sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount = 1000): void {
+	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount = 1000): void {
 		let ordersForMineral = Game.market.getAllOrders(
 			o => o.type == ORDER_BUY && o.resourceType == resource && o.amount >= amount
 		);
@@ -179,10 +178,10 @@ export class TraderJoe implements ITradeNetwork {
 		}
 		let order = maxBy(ordersForMineral, order => this.effectiveBuyPrice(order, terminal));
 		if (order) {
-			let amount = Math.min(order.amount, 10000);
-			let cost = Game.market.calcTransactionCost(amount, terminal.room.name, order.roomName!);
+			let sellAmount = Math.min(order.amount, amount);
+			let cost = Game.market.calcTransactionCost(sellAmount, terminal.room.name, order.roomName!);
 			if (terminal.store[RESOURCE_ENERGY] > cost) {
-				let response = Game.market.deal(order.id, amount, terminal.room.name);
+				let response = Game.market.deal(order.id, sellAmount, terminal.room.name);
 				this.logTransaction(order, terminal.room.name, amount, response);
 			}
 		}

@@ -3,7 +3,7 @@ import {Mem} from '../memory';
 import {profile} from '../profiler/decorator';
 import {Energetics} from './Energetics';
 import {Colony} from '../Colony';
-import {mergeSum} from '../utilities/utils';
+import {maxBy, mergeSum} from '../utilities/utils';
 import {RESOURCE_IMPORTANCE} from '../resources/map_resources';
 
 interface TerminalNetworkMemory {
@@ -140,21 +140,16 @@ export class TerminalNetwork implements ITerminalNetwork {
 		return response;
 	}
 
-	requestResource(receiver: StructureTerminal, resourceType: ResourceConstant, amount: number, allowBuy = true) {
+	requestResource(receiver: StructureTerminal, resourceType: ResourceConstant, amount: number,
+					allowBuy = true, minDifference = 4000): void {
 		if (this.abandonedTerminals.includes(receiver)) {
 			return; // don't send to abandoning terminals
 		}
-		amount += 100;
-		let sender: StructureTerminal | undefined = undefined;
-		let maxResourceAmount = 0;
-		for (let terminal of this.terminals) {
-			let terminalAmount = (terminal.store[resourceType] || 0);
-			if (terminalAmount > amount + 4000 && terminalAmount > maxResourceAmount
-				&& terminal.cooldown == 0 && !this.alreadySent.includes(terminal)) {
-				sender = terminal;
-				maxResourceAmount = sender.store[resourceType]!;
-			}
-		}
+		amount += Math.max(amount, TERMINAL_MIN_SEND);
+		let possibleSenders = _.filter(this.terminals,
+									   terminal => (terminal.store[resourceType] || 0) > amount + minDifference &&
+												   terminal.cooldown == 0 && !this.alreadySent.includes(terminal));
+		let sender: StructureTerminal | undefined = maxBy(possibleSenders, (t => t.store[resourceType] || 0));
 		if (sender) {
 			this.transfer(sender, receiver, resourceType, amount);
 		} else if (allowBuy) {
@@ -164,20 +159,30 @@ export class TerminalNetwork implements ITerminalNetwork {
 
 	/* Sell excess minerals on the market */
 	private sellExcess(terminal: StructureTerminal, threshold = 25000): void {
+		let terminalNearCapacity = _.sum(terminal.store) > 0.9 * terminal.storeCapacity;
 		let energyOrders = _.filter(Game.market.orders, order => order.type == ORDER_SELL &&
 																 order.resourceType == RESOURCE_ENERGY);
-		let energyThreshold = Energetics.settings.terminal.energy.outThreshold + 50000;
+		let energyThreshold = Energetics.settings.terminal.energy.outThreshold
+							  + Energetics.settings.terminal.energy.sendSize;
 		for (let resource in terminal.store) {
 			if (resource == RESOURCE_POWER) {
 				continue;
 			}
 			if (resource == RESOURCE_ENERGY) {
-				if (energyOrders.length < 3 && terminal.store[RESOURCE_ENERGY] > energyThreshold) {
-					Overmind.tradeNetwork.sell(terminal, RESOURCE_ENERGY, 100000);
+				if (terminal.store[RESOURCE_ENERGY] > energyThreshold) {
+					if (terminalNearCapacity) { // just get rid of stuff at high capacities
+						Overmind.tradeNetwork.sellDirectly(terminal, RESOURCE_ENERGY, 25000);
+					} else if (energyOrders.length < 3) {
+						Overmind.tradeNetwork.sell(terminal, RESOURCE_ENERGY, 100000);
+					}
 				}
 			} else {
 				if (terminal.store[<ResourceConstant>resource]! > threshold) {
-					Overmind.tradeNetwork.sell(terminal, <ResourceConstant>resource, 10000);
+					if (terminalNearCapacity || terminal.store[<ResourceConstant>resource]! > 2 * threshold) {
+						Overmind.tradeNetwork.sellDirectly(terminal, <ResourceConstant>resource, 5000);
+					} else {
+						Overmind.tradeNetwork.sell(terminal, <ResourceConstant>resource, 10000);
+					}
 				}
 			}
 		}

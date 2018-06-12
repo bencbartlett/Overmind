@@ -298,17 +298,15 @@ export class EvolutionChamber extends HiveCluster {
 				}
 			}
 		}
-		if (this.terminal.cooldown == 0) {
-			let queue = this.memory.reactionQueue;
-			if (this.memory.activeReaction && this.memory.status == LabStatus.AcquiringMinerals) {
-				queue = [this.memory.activeReaction].concat(queue);
-			}
-			let missingBasicMinerals = this.colony.abathur.getMissingBasicMinerals(queue);
-			for (let resourceType in missingBasicMinerals) {
-				if (missingBasicMinerals[resourceType] > 0) {
-					this.terminalNetwork.requestResource(this.terminal, <ResourceConstant>resourceType,
-														 missingBasicMinerals[resourceType]);
-				}
+		let queue = this.memory.reactionQueue;
+		if (this.memory.activeReaction && this.memory.status == LabStatus.AcquiringMinerals) {
+			queue = [this.memory.activeReaction].concat(queue);
+		}
+		let missingBasicMinerals = this.colony.abathur.getMissingBasicMinerals(queue);
+		for (let resourceType in missingBasicMinerals) {
+			if (missingBasicMinerals[resourceType] > 0) {
+				this.terminalNetwork.requestResource(this.terminal, <ResourceConstant>resourceType,
+													 missingBasicMinerals[resourceType]);
 			}
 		}
 	}

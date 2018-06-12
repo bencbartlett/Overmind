@@ -2,7 +2,8 @@
 
 import {Colony, getAllColonies} from '../Colony';
 import {REAGENTS} from './map_resources';
-import {mergeSum} from '../utilities/utils';
+import {mergeSum, minMax} from '../utilities/utils';
+import {profile} from '../profiler/decorator';
 
 const _priorityStock: { [key: string]: number } = {
 	XGHO2: 1000,	// For toughness
@@ -67,6 +68,7 @@ for (let resourceType in _wantedStock) {
 	wantedStock.push(stock);
 }
 
+@profile
 export class Abathur {
 
 	colony: Colony;
@@ -108,6 +110,15 @@ export class Abathur {
 		// TODO
 		return false;
 	}
+
+	// hasExcess(mineralType: ResourceConstant): boolean {
+	// 	return this.assets[mineralType] > Math.max((_wantedStock[mineralType] || 0),
+	// 											   (_priorityStock[mineralType] || 0));
+	// }
+	//
+	// private someColonyHasExcess(mineralType: ResourceConstant): boolean {
+	// 	return _.any(getAllColonies(), colony => colony.abathur.hasExcess(mineralType));
+	// }
 
 	/* Generate a queue of reactions to produce the most needed compound */
 	getReactionQueue(verbose = false): Reaction[] {
@@ -164,11 +175,11 @@ export class Abathur {
 		if (verbose) console.log(`Abathur@${this.colony.room.print}: building reaction queue for ${amount} ${mineral}`);
 		let reactionQueue: Reaction[] = [];
 		for (let ingredient of this.ingredientsList(mineral)) {
-			let productionAmount = Math.max(Math.min(amount, Abathur.settings.maxBatchSize),
-											Abathur.settings.minBatchSize);
+			let productionAmount = amount;
 			if (ingredient != mineral) {
 				productionAmount = Math.max(productionAmount - (this.assets[ingredient] || 0), 0);
 			}
+			productionAmount = Math.min(productionAmount, Abathur.settings.maxBatchSize);
 			reactionQueue.push({mineralType: ingredient, amount: productionAmount});
 		}
 		if (verbose) console.log(`Pre-trim queue: ${JSON.stringify(reactionQueue)}`);
@@ -190,10 +201,10 @@ export class Abathur {
 			for (let index of [precursor1, precursor2]) {
 				if (index != -1) {
 					if (reaction.amount == 0) {
-						reactionQueue[index].amount = Math.min(reaction.amount, reactionQueue[index].amount);
+						reactionQueue[index].amount = 0;
 					} else {
-						reactionQueue[index].amount = Math.max(Math.min(reaction.amount, reactionQueue[index].amount),
-															   Abathur.settings.minBatchSize);
+						reactionQueue[index].amount = minMax(reaction.amount, Abathur.settings.minBatchSize,
+															 reactionQueue[index].amount);
 					}
 				}
 			}

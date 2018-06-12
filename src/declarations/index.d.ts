@@ -84,7 +84,7 @@ interface ITradeNetwork {
 
 	lookForGoodDeals(terminal: StructureTerminal, mineral: string, margin?: number): void;
 
-	// sellDirectly(terminal: StructureTerminal, resource: ResourceConstant): void;
+	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount?: number): void;
 
 	sell(terminal: StructureTerminal, resource: ResourceConstant, amount?: number): void;
 
