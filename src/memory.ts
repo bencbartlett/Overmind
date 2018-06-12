@@ -78,6 +78,9 @@ export class Mem {
 		if (!Memory.signature) {
 			Memory.signature = DEFAULT_OVERMIND_SIGNATURE;
 		}
+		if (!Memory.constructionSites) {
+			Memory.constructionSites = {};
+		}
 		// Changes to ensure backwards compatibility
 		this.backwardsCompatibility();
 	}
@@ -108,6 +111,27 @@ export class Mem {
 				// Delete only if "persistent" is not set - use case: praise rooms
 				if (!Memory.colonies[name].persistent) {
 					delete Memory.colonies[name];
+				}
+			}
+		}
+	}
+
+	private static cleanConstructionSites() {
+		// Remove ancient construction sites
+		if (Game.time % 10 == 0) {
+			const CONSTRUCTION_SITE_TIMEOUT = 50000;
+			// Add constructionSites to memory and remove really old ones
+			for (let id in Game.constructionSites) {
+				if (!Memory.constructionSites[id]) {
+					Memory.constructionSites[id] = Game.time;
+				} else if (Game.time - Memory.constructionSites[id] > CONSTRUCTION_SITE_TIMEOUT) {
+					Game.constructionSites[id].remove();
+				}
+			}
+			// Remove dead constructionSites from memory
+			for (let id in Memory.constructionSites) {
+				if (!Game.constructionSites[id]) {
+					delete Memory.constructionSites[id];
 				}
 			}
 		}
@@ -150,6 +174,7 @@ export class Mem {
 		this.cleanFlags();
 		this.cleanColonies();
 		this.cleanPathingMemory();
+		this.cleanConstructionSites();
 		Stats.clean();
 	}
 

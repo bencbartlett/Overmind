@@ -1,5 +1,4 @@
 interface Memory {
-	// [name: string]: any;
 	Overmind: {};
 	colonies: { [name: string]: ColonyMemory };
 	creeps: { [name: string]: CreepMemory; };
@@ -10,8 +9,9 @@ interface Memory {
 	pathing: PathingMemory;
 	log: LoggerMemory;
 	pathLengths: any;
-	// stats: StatsMemory;
-	// permastats: any;
+	stats: any;
+	constructionSites: { [id: string]: number };
+	signature: string;
 }
 
 interface StatsMemory {
