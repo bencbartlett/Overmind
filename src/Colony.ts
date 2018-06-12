@@ -91,6 +91,7 @@ export class Colony {
 	miningSites: { [sourceID: string]: MiningSite };	// Component with logic for mining and hauling
 	extractionSites: { [extractorID: string]: ExtractionSite };
 	// Operational mode
+	bootstrapping: boolean; 							// Whether colony is bootstrapping or recovering from crash
 	incubator: Colony | undefined; 						// The colony responsible for incubating this one, if any
 	isIncubating: boolean;								// If the colony is incubating
 	incubatingColonies: Colony[];						// List of colonies that this colony is incubating
@@ -185,6 +186,7 @@ export class Colony {
 
 	private registerOperationalState(): void {
 		this.level = this.controller.level as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+		this.bootstrapping = false;
 		this.isIncubating = false;
 		if (this.storage && this.storage.isActive() &&
 			this.spawns[0] && this.spawns[0].pos.findClosestByLimitedRange(this.room.containers, 2)) {

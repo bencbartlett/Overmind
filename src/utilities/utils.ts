@@ -1,5 +1,9 @@
 // Random utilities that don't belong anywhere else
 
+export function minMax(value: number, min: number, max: number): number {
+	return Math.max(Math.min(value, max), min);
+}
+
 export function getUsername(): string {
 	for (let i in Game.rooms) {
 		let room = Game.rooms[i];

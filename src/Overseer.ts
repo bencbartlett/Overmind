@@ -52,7 +52,7 @@ export class Overseer {
 			let hasQueen = this.colony.getCreepsByRole(QueenSetup.role).length > 0;			// Has a queen?
 			if (!hasEnergy && !hasMiners && !hasQueen && this.colony.hatchery) {
 				DirectiveBootstrap.createIfNotPresent(this.colony.hatchery.pos, 'pos');
-				this.colony.hatchery.settings.suppressSpawning = true;
+				// this.colony.hatchery.settings.suppressSpawning = true;
 			}
 		}
 

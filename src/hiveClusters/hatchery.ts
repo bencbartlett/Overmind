@@ -6,8 +6,7 @@ import {HatcheryOverlord} from '../overlords/core/queen';
 import {Priority} from '../priorities/priorities';
 import {Colony, ColonyStage} from '../Colony';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
-import {bodyCost, CreepSetup} from '../overlords/CreepSetup';
-import {Overlord} from '../overlords/Overlord';
+import {bodyCost} from '../overlords/CreepSetup';
 import {Mem} from '../memory';
 import {Visualizer} from '../visuals/Visualizer';
 import {Stats} from '../stats/stats';
@@ -138,34 +137,37 @@ export class Hatchery extends HiveCluster {
 		return (roleName + '_' + i);
 	};
 
-	/* Generate (but not spawn) the largest creep possible, returns the protoCreep as an object */
-	generateProtoCreep(setup: CreepSetup, overlord: Overlord): protoCreep {
-		// Generate the creep body
-		let creepBody: BodyPartConstant[];
-		if (this.colony.incubator) { // if you're being incubated, build as big a creep as you want
-			creepBody = setup.generateBody(this.colony.incubator.room.energyCapacityAvailable);
-		} else { // otherwise limit yourself to actual energy constraints
-			creepBody = setup.generateBody(this.colony.room.energyCapacityAvailable);
-		}
-		// Generate the creep memory
-		let creepMemory: CreepMemory = {
-			colony  : overlord.colony.name, 						// name of the colony the creep is assigned to
-			overlord: overlord.ref,								// name of the overseer running this creep
-			role    : setup.role,								// role of the creep
-			task    : null, 									// task the creep is performing
-			data    : { 										// rarely-changed data about the creep
-				origin: '',										// where it was spawned, filled in at spawn time
-			},
-			_trav   : null,
-		};
-		// Create the protocreep and return it
-		let protoCreep: protoCreep = { 							// object to add to spawner queue
-			body  : creepBody, 										// body array
-			name  : setup.role, 									// name of the creep - gets modified by hatchery
-			memory: creepMemory,									// memory to initialize with
-		};
-		return protoCreep;
-	}
+	// /* Generate (but not spawn) the largest creep possible, returns the protoCreep as an object */
+	// generateProtoCreep(setup: CreepSetup, overlord: Overlord, bootstrap = false): protoCreep {
+	// 	// Generate the creep body
+	// 	let creepBody: BodyPartConstant[];
+	// 	if (this.colony.incubator) { // if you're being incubated, build as big a creep as you want
+	// 		creepBody = setup.generateBody(this.colony.incubator.room.energyCapacityAvailable);
+	// 	} else { // otherwise limit yourself to actual energy constraints
+	// 		creepBody = setup.generateBody(this.colony.room.energyCapacityAvailable);
+	// 	}
+	// 	if (bootstrap) {
+	// 		creepBody = setup.generateBody(this.colony.room.energyAvailable);
+	// 	}
+	// 	// Generate the creep memory
+	// 	let creepMemory: CreepMemory = {
+	// 		colony  : overlord.colony.name, 						// name of the colony the creep is assigned to
+	// 		overlord: overlord.ref,								// name of the overseer running this creep
+	// 		role    : setup.role,								// role of the creep
+	// 		task    : null, 									// task the creep is performing
+	// 		data    : { 										// rarely-changed data about the creep
+	// 			origin: '',										// where it was spawned, filled in at spawn time
+	// 		},
+	// 		_trav   : null,
+	// 	};
+	// 	// Create the protocreep and return it
+	// 	let protoCreep: protoCreep = { 							// object to add to spawner queue
+	// 		body  : creepBody, 										// body array
+	// 		name  : setup.role, 									// name of the creep - gets modified by hatchery
+	// 		memory: creepMemory,									// memory to initialize with
+	// 	};
+	// 	return protoCreep;
+	// }
 
 	private get energyStructures(): (StructureSpawn | StructureExtension)[] {
 		if (!this._energyStructures) {

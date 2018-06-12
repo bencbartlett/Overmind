@@ -164,11 +164,11 @@ export class Abathur {
 		if (verbose) console.log(`Abathur@${this.colony.room.print}: building reaction queue for ${amount} ${mineral}`);
 		let reactionQueue: Reaction[] = [];
 		for (let ingredient of this.ingredientsList(mineral)) {
-			let productionAmount = amount;
+			let productionAmount = Math.max(Math.min(amount, Abathur.settings.maxBatchSize),
+											Abathur.settings.minBatchSize);
 			if (ingredient != mineral) {
 				productionAmount = Math.max(productionAmount - (this.assets[ingredient] || 0), 0);
 			}
-			productionAmount = Math.min(productionAmount, Abathur.settings.maxBatchSize);
 			reactionQueue.push({mineralType: ingredient, amount: productionAmount});
 		}
 		if (verbose) console.log(`Pre-trim queue: ${JSON.stringify(reactionQueue)}`);

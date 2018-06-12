@@ -10,7 +10,7 @@ import {profile} from '../../profiler/decorator';
 
 export const FillerSetup = new CreepSetup('filler', {
 	pattern  : [CARRY, CARRY, MOVE],
-	sizeLimit: 2,
+	sizeLimit: 1,
 });
 
 // Bootstrapping overlord: spawns small miners and suppliers to recover from a catastrohpic colony crash
@@ -23,8 +23,8 @@ export class BootstrappingOverlord extends Overlord {
 		StructureTower | StructureLab | StructurePowerSpawn | StructureNuker)[];
 	supplyStructures: (StructureSpawn | StructureExtension)[];
 
-	static settings: {
-		spawnBootstrapMinerThreshold: 1000;
+	static settings = {
+		spawnBootstrapMinerThreshold: 1000
 	};
 
 	constructor(directive: DirectiveBootstrap, priority = OverlordPriority.emergency.bootstrap) {
@@ -72,6 +72,7 @@ export class BootstrappingOverlord extends Overlord {
 		if (this.colony.stage == ColonyStage.Larva) {
 			if (this.colony.getCreepsByRole(MinerSetup.role).length == 0) {
 				this.spawnBootstrapMiners();
+				return;
 			}
 		}
 		// Spawn fillers

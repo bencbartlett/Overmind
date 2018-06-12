@@ -28,6 +28,7 @@ export class DirectiveBootstrap extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag);
+		this.colony.bootstrapping = true;
 		this.needsEnergy = this.room.energyAvailable < _.min([EMERGENCY_ENERGY_THRESHOLD,
 															  this.room.energyCapacityAvailable]);
 		this.needsMiner = (this.colony.getCreepsByRole(MinerSetup.role).length == 0);
