@@ -1,6 +1,8 @@
 import {profile} from '../../profiler/decorator';
 import {log} from '../logger/log';
 
+export const NO_ACTION = -20;
+
 @profile
 export class Traveler {
 
@@ -43,7 +45,7 @@ export class Traveler {
 		// manage case where creep is nearby destination
 		let rangeToDestination = creep.pos.getRangeTo(destination);
 		if (options.range && rangeToDestination <= options.range) {
-			return OK;
+			return NO_ACTION;
 		} else if (rangeToDestination <= 1) {
 			if (rangeToDestination === 1 && !options.range) {
 				let direction = creep.pos.getDirectionTo(destination);
@@ -53,7 +55,7 @@ export class Traveler {
 				}
 				return creep.move(direction);
 			}
-			return OK;
+			return NO_ACTION;
 		}
 
 		// initialize data object

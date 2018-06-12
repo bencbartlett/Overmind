@@ -92,16 +92,6 @@ export abstract class Overlord {
 		this.creepUsageReport[role] = [currentAmt, neededAmt];
 	}
 
-	// protected initMemory(initializer: IOverlordInitializer): void {
-	// 	if (!initializer.memory.overlords) {
-	// 		initializer.memory.overlords = {};
-	// 	}
-	// 	if (!initializer.memory.overlords[this.name]) {
-	// 		initializer.memory.overlords[this.name] = {};
-	// 	}
-	// 	this.memory = initializer.memory.overlords[this.name];
-	// }
-
 	/* Generate (but not spawn) the largest creep possible, returns the protoCreep as an object */
 	protected generateProtoCreep(setup: CreepSetup): protoCreep {
 		// Generate the creep body

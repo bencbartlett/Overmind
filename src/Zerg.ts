@@ -65,19 +65,19 @@ export class Zerg {
 
 	attack(target: Creep | Structure) {
 		let result = this.creep.attack(target);
-		this.actionLog.attack = (result == OK);
+		if (!this.actionLog.attack) this.actionLog.attack = (result == OK);
 		return result;
 	}
 
 	attackController(controller: StructureController) {
 		let result = this.creep.attackController(controller);
-		this.actionLog.attackController = (result == OK);
+		if (!this.actionLog.attackController) this.actionLog.attackController = (result == OK);
 		return result;
 	}
 
 	build(target: ConstructionSite) {
 		let result = this.creep.build(target);
-		this.actionLog.build = (result == OK);
+		if (!this.actionLog.build) this.actionLog.build = (result == OK);
 		return result;
 	}
 
@@ -88,19 +88,19 @@ export class Zerg {
 
 	claimController(controller: StructureController) {
 		let result = this.creep.claimController(controller);
-		this.actionLog.claimController = (result == OK);
+		if (!this.actionLog.claimController) this.actionLog.claimController = (result == OK);
 		return result;
 	}
 
 	dismantle(target: Structure): CreepActionReturnCode {
 		let result = this.creep.dismantle(target);
-		this.actionLog.dismantle = (result == OK);
+		if (!this.actionLog.dismantle) this.actionLog.dismantle = (result == OK);
 		return result;
 	}
 
 	drop(resourceType: ResourceConstant, amount?: number) {
 		let result = this.creep.drop(resourceType, amount);
-		this.actionLog.drop = (result == OK);
+		if (!this.actionLog.drop) this.actionLog.drop = (result == OK);
 		return result;
 	}
 
@@ -110,25 +110,25 @@ export class Zerg {
 
 	harvest(source: Source | Mineral) {
 		let result = this.creep.harvest(source);
-		this.actionLog.harvest = (result == OK);
+		if (!this.actionLog.harvest) this.actionLog.harvest = (result == OK);
 		return result;
 	}
 
 	move(direction: DirectionConstant) {
 		let result = this.creep.move(direction);
-		this.actionLog.move = (result == OK);
+		if (!this.actionLog.move) this.actionLog.move = (result == OK);
 		return result;
 	}
 
 	moveByPath(path: PathStep[] | RoomPosition[] | string) {
 		let result = this.creep.moveByPath(path);
-		this.actionLog.move = (result == OK);
+		if (!this.actionLog.move) this.actionLog.move = (result == OK);
 		return result;
 	}
 
 	moveTo(target: RoomPosition | { pos: RoomPosition }, opts?: MoveToOpts) {
 		let result = this.creep.moveTo(target, opts);
-		this.actionLog.move = (result == OK);
+		if (!this.actionLog.move) this.actionLog.move = (result == OK);
 		return result;
 	}
 
@@ -138,31 +138,31 @@ export class Zerg {
 
 	pickup(resource: Resource) {
 		let result = this.creep.pickup(resource);
-		this.actionLog.pickup = (result == OK);
+		if (!this.actionLog.pickup) this.actionLog.pickup = (result == OK);
 		return result;
 	}
 
 	rangedAttack(target: Creep | Structure) {
 		let result = this.creep.rangedAttack(target);
-		this.actionLog.rangedAttack = (result == OK);
+		if (!this.actionLog.rangedAttack) this.actionLog.rangedAttack = (result == OK);
 		return result;
 	}
 
 	rangedMassAttack() {
 		let result = this.creep.rangedMassAttack();
-		this.actionLog.rangedMassAttack = (result == OK);
+		if (!this.actionLog.rangedMassAttack) this.actionLog.rangedMassAttack = (result == OK);
 		return result;
 	}
 
 	repair(target: Structure) {
 		let result = this.creep.repair(target);
-		this.actionLog.repair = (result == OK);
+		if (!this.actionLog.repair) this.actionLog.repair = (result == OK);
 		return result;
 	}
 
 	reserveController(controller: StructureController) {
 		let result = this.creep.reserveController(controller);
-		this.actionLog.reserveController = (result == OK);
+		if (!this.actionLog.reserveController) this.actionLog.reserveController = (result == OK);
 		return result;
 	}
 
@@ -173,7 +173,7 @@ export class Zerg {
 
 	signController(target: StructureController, text: string) {
 		let result = this.creep.signController(target, text);
-		this.actionLog.signController = (result == OK);
+		if (!this.actionLog.signController) this.actionLog.signController = (result == OK);
 		return result;
 	}
 
@@ -183,7 +183,7 @@ export class Zerg {
 
 	upgradeController(controller: StructureController) {
 		let result = this.creep.upgradeController(controller);
-		this.actionLog.upgradeController = (result == OK);
+		if (!this.actionLog.upgradeController) this.actionLog.upgradeController = (result == OK);
 		// Determine amount of upgrade power
 		// let weightedUpgraderParts = _.map(this.boostCounts, )
 		// let upgradeAmount = this.getActiveBodyparts(WORK) * UPGRADE_CONTROLLER_POWER;
@@ -203,7 +203,7 @@ export class Zerg {
 		} else {
 			result = this.creep.heal(target);
 		}
-		this.actionLog.heal = (result == OK);
+		if (!this.actionLog.heal) this.actionLog.heal = (result == OK);
 		return result;
 	}
 
@@ -214,7 +214,7 @@ export class Zerg {
 		} else {
 			result = this.creep.rangedHeal(target);
 		}
-		this.actionLog.rangedHeal = (result == OK);
+		if (!this.actionLog.rangedHeal) this.actionLog.rangedHeal = (result == OK);
 		return result;
 	}
 
@@ -225,13 +225,13 @@ export class Zerg {
 		} else {
 			result = this.creep.transfer(target, resourceType, amount);
 		}
-		this.actionLog.transfer = (result == OK);
+		if (!this.actionLog.transfer) this.actionLog.transfer = (result == OK);
 		return result;
 	}
 
 	withdraw(target: Structure, resourceType: ResourceConstant, amount?: number) {
 		let result = this.creep.withdraw(target, resourceType, amount);
-		this.actionLog.withdraw = (result == OK);
+		if (!this.actionLog.withdraw) this.actionLog.withdraw = (result == OK);
 		return result;
 	}
 
@@ -427,7 +427,9 @@ export class Zerg {
 
 	travelTo(destination: RoomPosition | { pos: RoomPosition }, options: TravelToOptions = {}) {
 		// Add default obstacle avoidance
-		return this.creep.travelTo(destination, _.merge(options, {obstacles: this.getObstacles()}));
+		let result = this.creep.travelTo(destination, _.merge(options, {obstacles: this.getObstacles()}));
+		if (!this.actionLog.move) this.actionLog.move = (result == OK);
+		return result;
 	};
 
 	inSameRoomAs(target: HasPos): boolean {
