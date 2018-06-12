@@ -12,11 +12,11 @@ Object.defineProperty(Creep.prototype, 'task', {
 	},
 	set(task: ITask | null) {
 		// Unregister target from old task if applicable
-		let oldProtoTask = this.memory.task as protoTask;
+		let oldProtoTask = this.memory.task;
 		if (oldProtoTask) {
 			let oldRef = oldProtoTask._target.ref;
 			if (Overmind.cache.targets[oldRef]) {
-				Overmind.cache.targets[oldRef] = _.remove(Overmind.cache.targets[oldRef], name => name == this.name);
+				_.remove(Overmind.cache.targets[oldRef], name => name == this.name);
 			}
 		}
 		// Set the new task
@@ -33,7 +33,7 @@ Object.defineProperty(Creep.prototype, 'task', {
 			task.creep = this;
 		}
 		// Clear cache
-		this._task = task;
+		this._task = undefined;
 	},
 });
 

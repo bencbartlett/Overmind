@@ -85,7 +85,8 @@ export class TransportOverlord extends Overlord {
 	private handleTransporter(transporter: Zerg, request: LogisticsRequest | undefined) {
 		if (request) {
 			let choices = this.logisticsGroup.bufferChoices(transporter, request);
-			let bestChoice = _.last(_.sortBy(choices, choice => choice.dQ / choice.dt));
+			let bestChoice = _.last(_.sortBy(choices, choice => request.multiplier * choice.dQ
+																/ Math.max(choice.dt, 0.1)));
 			let task = null;
 			let amount = this.logisticsGroup.predictedRequestAmount(transporter, request);
 			if (amount > 0) { // store needs refilling
@@ -94,7 +95,6 @@ export class TransportOverlord extends Overlord {
 				} else {
 					task = Tasks.transfer(request.target, request.resourceType);
 				}
-				// TODO: buffer with parent system is causing bugs
 				if (bestChoice.targetRef != request.target.ref) {
 					// If we need to go to a buffer first to get more stuff
 					let buffer = deref(bestChoice.targetRef) as BufferTarget;
@@ -185,6 +185,6 @@ export class TransportOverlord extends Overlord {
 			}
 			transporter.run();
 		}
-		this.parkCreepsIfIdle(this.transporters);
+		// this.parkCreepsIfIdle(this.transporters);
 	}
 }

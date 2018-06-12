@@ -56,8 +56,12 @@ export class ExtractionSite extends HiveCluster {
 	/* Register appropriate resource withdrawal requests when the output gets sufficiently full */
 	private registerOutputRequests(): void {
 		// Register logisticsNetwork requests if approximate predicted amount exceeds transporter capacity
-		if (this.output && _.sum(this.output.store) > 0.5 * this.output.storeCapacity) {
-			this.colony.logisticsNetwork.provideAll(this.output);
+		if (this.output) {
+			if (_.sum(this.output.store) > 0.5 * this.output.storeCapacity) {
+				this.colony.logisticsNetwork.provideAll(this.output);
+			} else if (_.sum(this.output.store) > 0 && this.overlord.drones.length == 0) {
+				this.colony.logisticsNetwork.provideAll(this.output);
+			}
 		}
 	}
 

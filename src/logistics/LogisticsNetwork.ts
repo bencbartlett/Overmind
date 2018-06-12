@@ -473,7 +473,7 @@ export class LogisticsNetwork {
 
 	/* Compute the best possible value of |dResource / dt| */
 	private resourceChangeRate(transporter: Zerg, request: LogisticsRequest): number {
-		let key = transporter.name + '_' + request.id;
+		let key = transporter.name + ':' + request.id;
 		if (!this.cache.resourceChangeRate[key]) {
 			let choices = this.bufferChoices(transporter, request);
 			let dQ_dt = _.map(choices, choice => request.multiplier * choice.dQ / Math.max(choice.dt, 0.1));
@@ -526,10 +526,15 @@ export class LogisticsNetwork {
 		for (let request of this.requests) {
 			let targetType = request.target instanceof DirectiveLogisticsRequest ? 'flag' :
 							 request.target.structureType;
-			let energy = request.target instanceof StructureContainer ? request.target.energy : 0;
-			let targetingTransporters = LogisticsNetwork.targetingTransporters(request.target);
+			let energy = 0;
+			if (request.target instanceof DirectiveLogisticsRequest || isStoreStructure(request.target)) {
+				energy = request.target.store[RESOURCE_ENERGY];
+			} else if (isEnergyStructure(request.target)) {
+				energy = request.target.energy;
+			}
+			let targetingTprtrNames = _.map(LogisticsNetwork.targetingTransporters(request.target), c => c.name);
 			console.log(`    Target: ${targetType} ${request.target.pos.print} ${request.target.ref}    ` +
-						`Amount: ${request.amount}    Energy: ${energy}    Targeted by: ${targetingTransporters}`);
+						`Amount: ${request.amount}    Energy: ${energy}    Targeted by: ${targetingTprtrNames}`);
 		}
 		console.log('Transporters:');
 		for (let transporter of this.colony.getCreepsByRole(TransporterSetup.role)) {

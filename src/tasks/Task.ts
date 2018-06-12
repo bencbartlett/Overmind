@@ -106,8 +106,8 @@ export abstract class Task implements ITask {
 
 	set creep(creep: Creep) {
 		this._creep.name = creep.name;
-		if (this.parent) {
-			this.parent.creep = creep;
+		if (this._parent) {
+			this.parent!.creep = creep;
 		}
 	}
 
