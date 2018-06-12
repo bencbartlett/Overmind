@@ -6,10 +6,10 @@ import {CombatOverlord} from '../CombatOverlord';
 import {boostResources} from '../../resources/map_resources';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 import {profile} from '../../profiler/decorator';
-import minBy from 'lodash.minby';
 import {CombatIntel} from '../../intel/combatIntel';
 import {GuardPairOverlord} from './guardPair';
 import {CreepSetup} from '../CreepSetup';
+import {minBy} from '../../utilities/utils';
 
 const ZerglingSetup = new CreepSetup('zergling', {
 	pattern  : [ATTACK, MOVE],

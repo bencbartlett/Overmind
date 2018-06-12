@@ -162,6 +162,27 @@ export class TerminalNetwork implements ITerminalNetwork {
 		}
 	}
 
+	/* Sell excess minerals on the market */
+	private sellExcess(terminal: StructureTerminal, threshold = 25000): void {
+		let energyOrders = _.filter(Game.market.orders, order => order.type == ORDER_SELL &&
+																 order.resourceType == RESOURCE_ENERGY);
+		let energyThreshold = Energetics.settings.terminal.energy.outThreshold + 50000;
+		for (let resource in terminal.store) {
+			if (resource == RESOURCE_POWER) {
+				continue;
+			}
+			if (resource == RESOURCE_ENERGY) {
+				if (energyOrders.length < 3 && terminal.store[RESOURCE_ENERGY] > energyThreshold) {
+					Overmind.tradeNetwork.sell(terminal, <ResourceConstant>resource, 100000);
+				}
+			} else {
+				if (terminal.store[<ResourceConstant>resource]! > threshold) {
+					Overmind.tradeNetwork.sell(terminal, <ResourceConstant>resource, 10000);
+				}
+			}
+		}
+	}
+
 	// private sendExcessEnergy(terminal: StructureTerminal): void {
 	// 	let {sendSize, inThreshold, outThreshold, equilibrium} = Energetics.settings.terminal.energy;
 	// 	// See if there are any rooms actively needing energy first
@@ -265,6 +286,11 @@ export class TerminalNetwork implements ITerminalNetwork {
 			this.equalize(RESOURCE_POWER, powerTerminals);
 		}
 		this.handleAbandonedTerminals();
+		if (Game.time % 10 == 0) {
+			for (let terminal of this.terminals) {
+				this.sellExcess(terminal);
+			}
+		}
 	}
 
 }

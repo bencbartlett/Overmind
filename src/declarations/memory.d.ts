@@ -104,8 +104,50 @@ interface FlagMemory {
 	// [otherProperties: string]: any;
 }
 
+interface SavedRoomObject {
+	c: string; 	// coordinate name
+	// id: string;	// id of object
+}
+
+interface SavedSource extends SavedRoomObject {
+	contnr: string | undefined;
+}
+
+interface SavedController extends SavedRoomObject {
+	level: number;
+	owner: string | undefined;
+	res: {
+		username: string,
+		ticksToEnd: number,
+	} | undefined;
+	SM: number | undefined;
+	SMavail: number;
+	SMcd: number | undefined;
+	prog: number | undefined;
+	progTot: number | undefined;
+}
+
+interface SavedMineral extends SavedRoomObject {
+	mineralType: MineralConstant;
+	density: number;
+}
+
 interface RoomMemory {
 	avoid?: number;
+	tick?: number;
+	src?: SavedSource[];
+	ctrl?: SavedController | undefined;
+	mnrl: SavedMineral | undefined;
+	SKlairs?: SavedRoomObject[];
+	importantStructs?: {
+		// Positions of important structures relevant to sieges
+		towers: string[];
+		spawns: string[];
+		storage: string | undefined;
+		terminal: string | undefined;
+		walls: string[];
+		ramparts: string[];
+	} | undefined;
 }
 
 interface SpawnMemory {

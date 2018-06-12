@@ -49,6 +49,9 @@ export class MiningSite extends HiveCluster {
 			this.output = siteLink;
 			this.colony.linkNetwork.claimLink(this.output);
 		}
+		if (this.outputPos) {
+			this.colony.destinations.push(this.outputPos);
+		}
 		// Register output construction sites
 		let nearbyOutputSites = this.pos.findInRange(this.room.constructionSites, 2, {
 			filter: (s: ConstructionSite) => s.structureType == STRUCTURE_CONTAINER ||
@@ -85,8 +88,6 @@ export class MiningSite extends HiveCluster {
 		}
 		this.memory.stats.downtime = (this.memory.stats.downtime * (CREEP_LIFE_TIME - 1) +
 									  (this.output ? +this.output.isFull : 0)) / CREEP_LIFE_TIME;
-		// Stats.log(`colonies.${this.colony.name}.miningSites.${this.name}.usage`, this.memory.stats.usage);
-		// Stats.log(`colonies.${this.colony.name}.miningSites.${this.name}.downtime`, this.memory.stats.downtime);
 	}
 
 	/* Return the approximate predicted energy if a transporter needed to come from storage.

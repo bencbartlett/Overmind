@@ -13,7 +13,6 @@
 
 
 'use strict';
-// Import global settings and prototypes
 import './console/globals';
 import './prototypes/Creep';
 import './prototypes/Flag';
@@ -24,38 +23,30 @@ import './prototypes/Room';
 import './prototypes/Structures';
 import './prototypes/Miscellaneous';
 import './tasks/prototypes';
-import './settings/settings_user';
-// Configuration, logging, and profiling
-import {log} from './lib/logger/log';
+import {USE_PROFILER} from './~settings';
 import {sandbox} from './sandbox';
 import {Mem} from './memory';
-import {Console} from './console/console';
+import {OvermindConsole} from './console/console';
 import {Stats} from './stats/stats';
-// Profiling
-import {USE_PROFILER} from './settings/config';
 import profiler from 'screeps-profiler';
-// Version migration
-import {migrate_03X_04X} from './versionMigration/0.3.x to 0.4.x';
-// Importing overmind object
-// import {_Overmind} from 'Overmind'; // Option 1: only use this if you are me! (this should be commented out)
-import OM from 'Overmind_obfuscated'; // Option 2: Import overmind from obfuscated JS file in public repository
-var _Overmind = (<any>OM)._Overmind as (new() => IOvermind); // These two lines shouldn't be commented out
+import OM from 'Overmind_obfuscated';
+import {log} from './lib/logger/log';
+import {VersionMigration} from './versionMigration/migrator';
+
+var _Overmind = (<any>OM)._Overmind as (new() => IOvermind);
 
 if (USE_PROFILER) profiler.enable();
+log.alert(`Codebase updated or global reset. Current version: Overmind v${__VERSION__}`);
+
 
 // Execute this every global reset
-global.log = log;
 Mem.format();
-migrate_03X_04X();
-Console.init();
-log.alert(`Codebase updated (or global reset)`);
-
+OvermindConsole.init();
+VersionMigration.run();
 
 // Main loop
 function main(): void {
-	if (Game.cpu.bucket < 500) {	// Don't run anything at low bucket
-		return;
-	}
+	if (Game.cpu.bucket < 500) return;					// Don't run anything at low bucket
 	Mem.clean();										// Clean memory
 	global.Overmind = new _Overmind();					// Instantiate the Overmind
 	Overmind.build();									// Build phase: instantiate caches and colony components

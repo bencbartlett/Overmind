@@ -1,7 +1,46 @@
 import {SourceMapConsumer} from 'source-map';
-import * as Config from '../../settings/config';
 import {LogLevels} from './logLevels';
 import {profile} from '../../profiler/decorator';
+
+
+/**
+ * Debug level for log output
+ */
+export const LOG_LEVEL: number = LogLevels.DEBUG;
+
+/**
+ * Prepend log output with current tick number.
+ */
+export const LOG_PRINT_TICK: boolean = true;
+
+/**
+ * Prepend log output with source line.
+ */
+export const LOG_PRINT_LINES: boolean = false;
+
+/**
+ * Load source maps and resolve source lines back to typeascript.
+ */
+export const LOG_LOAD_SOURCE_MAP: boolean = false;
+
+/**
+ * Maximum padding for source links (for aligning log output).
+ */
+export const LOG_MAX_PAD: number = 100;
+
+/**
+ * VSC location, used to create links back to source.
+ * Repo and revision are filled in at build time for git repositories.
+ */
+export const LOG_VSC = {repo: '@@_repo_@@', revision: '@@_revision_@@', valid: false};
+// export const LOG_VSC = { repo: "@@_repo_@@", revision: __REVISION__, valid: false };
+
+/**
+ * URL template for VSC links, this one works for github and gitlab.
+ */
+export const LOG_VSC_URL_TEMPLATE = (path: string, line: string) => {
+	return `${LOG_VSC.repo}/blob/${LOG_VSC.revision}/${path}#${line}`;
+};
 
 // <caller> (<source>:<line>:<column>)
 const stackLineRe = /([^ ]*) \(([^:]*):([0-9]*):([0-9]*)\)/;
@@ -38,7 +77,7 @@ export function resolve(fileLine: string): SourcePos {
 }
 
 function makeVSCLink(pos: SourcePos): string {
-	if (!Config.LOG_VSC.valid || !pos.caller || !pos.path || !pos.line || !pos.original) {
+	if (!LOG_VSC.valid || !pos.caller || !pos.path || !pos.line || !pos.original) {
 		return pos.final;
 	}
 
@@ -54,7 +93,7 @@ function tooltip(str: string, tooltip: string): string {
 }
 
 function vscUrl(path: string, line: string): string {
-	return Config.LOG_VSC_URL_TEMPLATE(path, line);
+	return LOG_VSC_URL_TEMPLATE(path, line);
 }
 
 function link(href: string, title: string): string {
@@ -85,7 +124,7 @@ export class Log {
 		return Memory.log.level;
 	}
 
-	public set level(value: number) {
+	public setLogLevel(value: number) {
 		let changeValue = true;
 		switch (value) {
 			case LogLevels.ERROR:
@@ -135,9 +174,9 @@ export class Log {
 	constructor() {
 		_.defaultsDeep(Memory, {
 			log: {
-				level     : Config.LOG_LEVEL,
-				showSource: Config.LOG_PRINT_LINES,
-				showTick  : Config.LOG_PRINT_TICK,
+				level     : LOG_LEVEL,
+				showSource: LOG_PRINT_LINES,
+				showTick  : LOG_PRINT_TICK,
 			}
 		});
 	}
@@ -242,13 +281,13 @@ export class Log {
 
 	private adjustFileLine(visibleText: string, line: string): string {
 		const newPad = Math.max(visibleText.length, this._maxFileString);
-		this._maxFileString = Math.min(newPad, Config.LOG_MAX_PAD);
+		this._maxFileString = Math.min(newPad, LOG_MAX_PAD);
 
 		return `|${_.padRight(line, line.length + this._maxFileString - visibleText.length, ' ')}|`;
 	}
 }
 
-if (Config.LOG_LOAD_SOURCE_MAP) {
+if (LOG_LOAD_SOURCE_MAP) {
 	Log.loadSourceMap();
 }
 

@@ -8,12 +8,12 @@ import {Pathing} from '../../pathing/pathing';
 import {DEFCON} from '../../Colony';
 import {CreepSetup} from '../CreepSetup';
 
-const MinerSetup = new CreepSetup('miner', {
+const MinerSetup = new CreepSetup('drone', {
 	pattern  : [WORK, WORK, CARRY, MOVE],
 	sizeLimit: 3,
 });
 
-const MinerLongDistanceSetup = new CreepSetup('miner', {
+const MinerLongDistanceSetup = new CreepSetup('drone', {
 	pattern  : [WORK, WORK, CARRY, MOVE, MOVE, MOVE],
 	sizeLimit: 3,
 });
@@ -29,7 +29,7 @@ export class MiningOverlord extends Overlord {
 	constructor(miningSite: MiningSite, priority: number, allowDropMining = false) {
 		super(miningSite, 'mine', priority);
 		this.priority += this.outpostIndex * OverlordPriority.remoteRoom.roomIncrement;
-		this.miners = this.creeps('miner');
+		this.miners = this.creeps('drone');
 		this.miningSite = miningSite;
 		this.allowDropMining = allowDropMining;
 	}

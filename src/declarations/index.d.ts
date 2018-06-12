@@ -3,8 +3,10 @@ declare var global: any;
 
 declare namespace NodeJS {
 	interface Global {
+
+		__VERSION__: string;
+
 		Overmind: IOvermind;
-		log: any;
 
 		print(...args: any[]): void;
 
@@ -40,7 +42,7 @@ interface ICache {
 
 interface IOvermindMemory {
 	terminalNetwork: any;
-	versions: { [version: string]: any };
+	versionUpdater: any;
 }
 
 interface IOvermind {
@@ -79,6 +81,12 @@ interface ITradeNetwork {
 	memory: any;
 
 	priceOf(mineralType: ResourceConstant): number
+
+	lookForGoodDeals(terminal: StructureTerminal, mineral: string, margin?: number): void;
+
+	// sellDirectly(terminal: StructureTerminal, resource: ResourceConstant): void;
+
+	sell(terminal: StructureTerminal, resource: ResourceConstant, amount?: number): void;
 
 	buyMineral(terminal: StructureTerminal, mineralType: ResourceConstant, amount: number): void;
 }

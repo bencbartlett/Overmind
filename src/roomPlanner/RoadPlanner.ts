@@ -52,20 +52,12 @@ export class RoadPlanner {
 							 obstacles: RoomPosition[]): void {
 		this.costMatrices = {};
 		this.roadPositions = [];
-		let upgradePos = this.colony.upgradeSite.batteryPos;
-		let miningSitePositions = _.mapValues(this.colony.miningSites, site => site.outputPos);
-		if (!upgradePos || _.any(miningSitePositions, pos => pos == undefined)) {
-			log.warning(`RoadPlanner for ${this.colony.room.print}: cannot build road network! (missing pos)`);
-			return;
-		}
+		let destinations = _.sortBy(this.colony.destinations, pos => pos.getMultiRoomRangeTo(commandCenterPos));
 		// Connect commandCenter to hatchery
 		this.planRoad(commandCenterPos, hatcheryPos, obstacles);
-		// Connect commandCenter to upgradeSite and place container site as necessary
-		this.planRoad(commandCenterPos, upgradePos, obstacles);
-		// Connect commandCenter to each miningSite in the colony and place a container appropriately
-		for (let id in miningSitePositions) {
-			let outputPos = miningSitePositions[id] as RoomPosition;
-			this.planRoad(commandCenterPos, outputPos, obstacles);
+		// Connect commandCenter to each destination in colony
+		for (let pos of destinations) {
+			this.planRoad(commandCenterPos, pos, obstacles);
 		}
 		this.formatRoadPositions();
 	}

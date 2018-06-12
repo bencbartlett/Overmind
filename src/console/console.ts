@@ -3,12 +3,15 @@
 import {Colony} from '../Colony';
 import {toColumns} from '../utilities/utils';
 import {asciiLogoSmall} from '../visuals/logos';
+import {log} from '../lib/logger/log';
 
-export class Console {
+export class OvermindConsole {
 
 	static init() {
 		global.help = this.help();
+		global.setSignature = this.setSignature;
 		global.print = this.print;
+		global.setLogLevel = log.setLogLevel;
 		global.openRoomPlanner = this.openRoomPlanner;
 		global.closeRoomPlanner = this.closeRoomPlanner;
 		global.cancelRoomPlanner = this.cancelRoomPlanner;
@@ -30,8 +33,9 @@ export class Console {
 
 		let descr: { [functionName: string]: string } = {};
 		descr['help'] = 'show this message';
+		descr['setSignature(newSignature)'] = 'set your controller signature';
 		descr['print(...args[])'] = 'log stringified objects to the console';
-		descr['log.level = [int]'] = 'set the logging level from 0 - 4';
+		descr['setLogLevel(int)'] = 'set the logging level from 0 - 4';
 		descr['openRoomPlanner(roomName)'] = 'open the room planner for a room';
 		descr['closeRoomPlanner(roomName)'] = 'close the room planner and save changes';
 		descr['cancelRoomPlanner(roomName)'] = 'close the room planner and discard changes';
@@ -49,6 +53,15 @@ export class Console {
 		msg += '\n\nRefer to the repository for more information\n';
 
 		return msg;
+	}
+
+	static setSignature(signature: string): string | undefined {
+		if (signature.toLowerCase().includes('overmind')) {
+			Memory.signature = signature;
+			return `Controller signature set to ${signature}`;
+		} else {
+			throw new Error(`Invalid signature: ${signature}; must contain the string "Overmind"`);
+		}
 	}
 
 	static print(...args: any[]): void {

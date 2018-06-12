@@ -1,5 +1,6 @@
 import {Stats} from './stats/stats';
 import {profile} from './profiler/decorator';
+import {DEFAULT_OVERMIND_SIGNATURE} from './~settings';
 
 @profile
 export class Mem {
@@ -73,6 +74,9 @@ export class Mem {
 		}
 		if (!Memory.stats.persistent) {
 			Memory.stats.persistent = {};
+		}
+		if (!Memory.signature) {
+			Memory.signature = DEFAULT_OVERMIND_SIGNATURE;
 		}
 		// Changes to ensure backwards compatibility
 		this.backwardsCompatibility();

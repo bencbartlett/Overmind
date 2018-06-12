@@ -1,5 +1,18 @@
 // Random utilities that don't belong anywhere else
 
+export function getUsername(): string {
+	for (let i in Game.rooms) {
+		let room = Game.rooms[i];
+		if (room.controller && room.controller.my) {
+			return room.controller.owner.username;
+		}
+	}
+	console.log('ERROR: Could not determine username. You can set this manually in src/settings/settings_user');
+	return 'ERROR: Could not determine username.';
+}
+
+import lodashMinBy from 'lodash.minby';
+
 interface toColumnsOpts {
 	padChar: string,
 	justify: boolean
@@ -40,4 +53,18 @@ export function mergeSum(objects: { [key: string]: number | undefined }[]): { [k
 		}
 	}
 	return ret;
+}
+
+export function derefCoords(coordName: string, roomName: string): RoomPosition {
+	let [x, y] = coordName.split(':');
+	return new RoomPosition(parseInt(x, 10), parseInt(y, 10), roomName);
+}
+
+export function minBy<T>(objects: T[], iteratee: ((obj: T) => number)): T {
+	return lodashMinBy(objects, iteratee);
+}
+
+export function maxBy<T>(objects: T[], iteratee: ((obj: T) => number)): T {
+	let maxByIteratee: ((obj: T) => number) = (obj => -1 * iteratee(obj));
+	return lodashMinBy(objects, maxByIteratee);
 }

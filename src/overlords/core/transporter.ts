@@ -64,9 +64,6 @@ export class TransportOverlord extends Overlord {
 			transportPower *= 0.5;
 		}
 
-		// TODO
-		// transportPower += this.colony.mineralSite.mineralPerTick * (scaling * Pathing.distance(this.colony.mineralSite.pos, dropoffLocation));
-
 		// Add transport power needed to move to upgradeSite
 		transportPower += this.colony.upgradeSite.upgradePowerNeeded * scaling *
 						  Pathing.distance(dropoffLocation, (this.colony.upgradeSite.battery ||

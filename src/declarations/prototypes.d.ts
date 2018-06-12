@@ -39,12 +39,15 @@ interface Room {
 	structures: { [structureType: string]: Structure[] };
 	spawns: StructureSpawn[];
 	extensions: StructureExtension[];
+	extractor: StructureExtractor | undefined;
 	containers: StructureContainer[];
 	storageUnits: StorageUnit[];
 	towers: StructureTower[];
 	links: StructureLink[];
 	labs: StructureLab[];
 	sources: Source[];
+	mineral: Mineral | undefined;
+	keeperLairs: StructureKeeperLair[];
 	roads: StructureRoad[];
 	// sinks: Sink[];
 	repairables: Structure[];
@@ -53,6 +56,7 @@ interface Room {
 	// roadSites: ConstructionSite[];
 	barriers: (StructureWall | StructureRampart)[];
 	ramparts: StructureRampart[];
+	walls: StructureWall[];
 
 	getStructures(structureType: string): Structure[];
 

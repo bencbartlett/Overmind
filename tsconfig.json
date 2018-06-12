@@ -15,6 +15,7 @@
     "noImplicitThis": false,
     "skipLibCheck": true,
     "experimentalDecorators": true,
+    "allowUnusedLabels": true,
     "allowSyntheticDefaultImports": true,
     "allowUnreachableCode": false,
     "removeComments": false

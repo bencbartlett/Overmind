@@ -1,3 +1,5 @@
+<EDIT 6.11.18: Version migration code is now automated; disregard this message.>
+
 Since Overmind is not in a stable development cycle yet (v0.x), there will sometimes be non-backward
 compatible changes. This directory contains code to help you migrate an existing installation of Overmind
 to a more recent version. When a new version of Overmind is released, migration code will usually be

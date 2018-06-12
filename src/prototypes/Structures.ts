@@ -2,7 +2,7 @@
 
 // General structure prototypes ========================================================================================
 
-import {myUsername, signature} from '../settings/settings_user';
+import {MY_USERNAME} from '../~settings';
 import {DirectiveLabMineral} from '../directives/logistics/labMineralType';
 
 Object.defineProperty(Structure.prototype, 'blocksMovement', {
@@ -37,13 +37,13 @@ Object.defineProperty(StructureContainer.prototype, 'isEmpty', { // if this cont
 
 Object.defineProperty(StructureController.prototype, 'reservedByMe', {
 	get: function () {
-		return this.reservation && this.reservation.username == myUsername;
+		return this.reservation && this.reservation.username == MY_USERNAME;
 	},
 });
 
 Object.defineProperty(StructureController.prototype, 'signedByMe', {
 	get: function () {
-		return this.sign && this.sign.text == signature;
+		return this.sign && this.sign.text == Memory.signature && Game.time - this.sign.time < 250000;
 	},
 });
 

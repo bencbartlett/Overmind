@@ -22,6 +22,7 @@ import {ManagerSetup} from './overlords/core/manager';
 import {mergeSum} from './utilities/utils';
 import {Abathur} from './resources/Abathur';
 import {EvolutionChamber} from './hiveClusters/evolutionChamber';
+import {ExtractionSite} from './hiveClusters/extractionSite';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -74,18 +75,21 @@ export class Colony {
 	observer: StructureObserver | undefined;			// |
 	tombstones: Tombstone[]; 							// | Tombstones in all colony rooms
 	sources: Source[];									// | Sources in all colony rooms
-	flags: Flag[];										// | Flags across the colony
+	extractors: StructureExtractor[];					// | All extractors in owned and remote rooms
+	flags: Flag[];										// | Flags assigned to the colony
 	constructionSites: ConstructionSite[];				// | Construction sites in all colony rooms
 	repairables: Structure[];							// | Repairable structures, discounting barriers and roads
 	obstacles: RoomPosition[]; 							// | List of other obstacles, e.g. immobile creeps
+	destinations: RoomPosition[];
 	// Hive clusters
 	hiveClusters: HiveCluster[];						// List of all hive clusters
 	commandCenter: CommandCenter | undefined;			// Component with logic for non-spawning structures
-	evolutionChamber: EvolutionChamber | undefined; 	// Component for mineral processing
 	hatchery: Hatchery | undefined;						// Component to encapsulate spawner logic
+	evolutionChamber: EvolutionChamber | undefined; 	// Component for mineral processing
 	upgradeSite: UpgradeSite;							// Component to provide upgraders with uninterrupted energy
 	sporeCrawlers: SporeCrawler[];
 	miningSites: { [sourceID: string]: MiningSite };	// Component with logic for mining and hauling
+	extractionSites: { [extractorID: string]: ExtractionSite };
 	// Operational mode
 	incubator: Colony | undefined; 						// The colony responsible for incubating this one, if any
 	isIncubating: boolean;								// If the colony is incubating
@@ -138,7 +142,8 @@ export class Colony {
 		// Set the colony operational state
 		this.registerOperationalState();
 		// Create placeholder arrays for remaining properties to be filled in by the Overmind
-		this.flags = [];
+		this.flags = []; // filled in by directives
+		this.destinations = []; // filled in by various hive clusters and directives
 		this.registerUtilities();
 		// Build the hive clusters
 		this.registerHiveClusters();
@@ -169,7 +174,9 @@ export class Colony {
 		this.observer = this.room.getStructures(STRUCTURE_OBSERVER)[0] as StructureObserver;
 		// Register physical objects across all rooms in the colony
 		this.sources = _.sortBy(_.flatten(_.map(this.rooms, room => room.sources)),
-								source => source.pos.getMultiRoomRangeTo(this.pos)); // sort for roadnetwork determinism
+								source => source.pos.getMultiRoomRangeTo(this.pos));
+		this.extractors = _.sortBy(_.compact(_.map(this.rooms, room => room.extractor)),
+								   extractor => extractor!.pos.getMultiRoomRangeTo(this.pos)) as StructureExtractor[];
 		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites));
 		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
 		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
@@ -263,7 +270,11 @@ export class Colony {
 		// Mining sites is an object of ID's and MiningSites
 		let sourceIDs = _.map(this.sources, source => source.ref);
 		let miningSites = _.map(this.sources, source => new MiningSite(this, source));
-		this.miningSites = _.zipObject(sourceIDs, miningSites) as { [sourceID: string]: MiningSite };
+		this.miningSites = _.zipObject(sourceIDs, miningSites);
+		// ExtractionSites is an object of ID's and ExtractionSites
+		let extractorIDs = _.map(this.extractors, extractor => extractor.ref);
+		let extractionSites = _.map(this.extractors, extractor => new ExtractionSite(this, extractor));
+		this.extractionSites = _.zipObject(extractorIDs, extractionSites);
 		// Reverse the hive clusters for correct order for init() and run()
 		this.hiveClusters.reverse();
 	}

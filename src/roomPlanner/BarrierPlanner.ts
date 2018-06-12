@@ -3,6 +3,7 @@ import {RoomPlanner} from './RoomPlanner';
 import {Colony} from '../Colony';
 import {Mem} from '../memory';
 import {log} from '../lib/logger/log';
+import {derefCoords} from '../utilities/utils';
 
 export interface BarrierPlannerMemory {
 	barrierLookup: { [roadCoordName: string]: boolean };
@@ -93,8 +94,7 @@ export class BarrierPlanner {
 		// Build missing roads
 		let barrierPositions = [];
 		for (let coords of _.keys(this.memory.barrierLookup)) {
-			let [x, y] = coords.split(':');
-			barrierPositions.push(new RoomPosition(parseInt(x, 10), parseInt(y, 10), this.colony.name));
+			barrierPositions.push(derefCoords(coords, this.colony.name));
 		}
 		for (let pos of barrierPositions) {
 			if (count > 0 && RoomPlanner.shouldBuild(STRUCTURE_RAMPART, pos)) {

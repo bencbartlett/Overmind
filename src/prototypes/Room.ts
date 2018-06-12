@@ -1,6 +1,6 @@
 // Room prototypes - commonly used room properties and methods
 
-import {myUsername, signature} from '../settings/settings_user';
+import {MY_USERNAME} from '../~settings';
 
 // Logging =============================================================================================================
 Object.defineProperty(Room.prototype, 'print', {
@@ -19,13 +19,13 @@ Object.defineProperty(Room.prototype, 'my', {
 
 Object.defineProperty(Room.prototype, 'reservedByMe', {
 	get() {
-		return this.controller && this.controller.reservation && this.controller.reservation.username == myUsername;
+		return this.controller && this.controller.reservation && this.controller.reservation.username == MY_USERNAME;
 	},
 });
 
 Object.defineProperty(Room.prototype, 'signedByMe', {
 	get() {
-		return this.controller && this.controller.sign && this.controller.sign.text == signature;
+		return this.controller && this.controller.sign && this.controller.sign.text == Memory.signature;
 	},
 });
 
@@ -152,6 +152,13 @@ Object.defineProperties(Room.prototype, {
 		},
 	},
 
+	// The extractor in the room, if present
+	extractor: {
+		get() {
+			return (this.structures[STRUCTURE_EXTRACTOR] || [])[0] || undefined;
+		},
+	},
+
 	// All containers in the room
 	containers: {
 		get() {
@@ -197,6 +204,18 @@ Object.defineProperties(Room.prototype, {
 	sources: {
 		get() {
 			return this.find(FIND_SOURCES) || [];
+		},
+	},
+
+	mineral: {
+		get() {
+			return this.find(FIND_MINERALS)[0];
+		},
+	},
+
+	keeperLairs: {
+		get() {
+			return this.structures[STRUCTURE_KEEPER_LAIR] || [];
 		},
 	},
 
@@ -261,6 +280,12 @@ Object.defineProperties(Room.prototype, {
 	ramparts: {
 		get() {
 			return this.structures[STRUCTURE_RAMPART] || [];
+		},
+	},
+
+	walls: {
+		get() {
+			return this.structures[STRUCTURE_WALL] || [];
 		},
 	},
 });

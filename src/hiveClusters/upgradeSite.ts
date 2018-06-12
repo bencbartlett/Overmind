@@ -52,6 +52,9 @@ export class UpgradeSite extends HiveCluster {
 											 s.structureType == STRUCTURE_LINK,
 		});
 		this.inputConstructionSite = nearbyInputSites[0];
+		if (this.batteryPos) {
+			this.colony.destinations.push(this.batteryPos);
+		}
 		// Register overlord
 		this.overlord = new UpgradingOverlord(this);
 		// Energy per tick is sum of upgrader body parts and nearby worker body parts

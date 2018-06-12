@@ -11,6 +11,9 @@
 // Overmind repository: github.com/bencbartlett/overmind
 //
 
+declare const __VERSION__: string;
+global.__VERSION__ = '0.3.1';
+
 declare function deref(ref: string): RoomObject | null;
 
 global.deref = function (ref: string): RoomObject | null { // dereference any object from identifier; see ref in RoomObjects
