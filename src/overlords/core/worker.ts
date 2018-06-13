@@ -260,8 +260,8 @@ export class WorkerOverlord extends Overlord {
 			else if (this.fortifyStructures.length > 0) {
 				this.fortifyActions(worker);
 			}
-			// Upgrade controller if there's nothing left to do
-			else {
+			// Upgrade controller if less than RCL8 or no upgraders
+			else if (this.colony.level < 8 || this.colony.upgradeSite.overlord.upgraders.length == 0) {
 				this.upgradeActions(worker);
 			}
 		} else {

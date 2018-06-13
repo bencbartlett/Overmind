@@ -43,7 +43,8 @@ export class RangedDefenseOverlord extends CombatOverlord {
 			reengageHitsPercent: 0.95,
 		};
 		this.avoid = CombatIntel.getPositionsNearEnemies(this.room.dangerousHostiles, 2);
-
+		this.moveOpts.obstacles = this.avoid;
+		this.moveOpts.ignoreCreeps = false;
 	}
 
 	private findTarget(archer: Zerg): Creep | Structure | undefined {
@@ -56,7 +57,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 				return this.findClosestReachable(archer.pos, targetedStructures);
 			} else {
 				// Target nearby hostile creeps
-				let creepTarget = this.findClosestHostile(archer, false);
+				let creepTarget = this.findClosestHostile(archer, false, false);
 				if (creepTarget) return creepTarget;
 				// Target nearby hostile structures
 				let structureTarget = this.findClosestPrioritizedStructure(archer);
@@ -66,7 +67,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 	}
 
 	private retreatActions(archer: Zerg): void {
-		archer.travelTo(this.fallback, {obstacles: this.avoid, movingTarget: true});
+		archer.travelTo(this.fallback, this.moveOpts);
 		if (archer.hits > this.settings.reengageHitsPercent * archer.hits) {
 			archer.memory.retreating = false;
 		}
@@ -75,20 +76,18 @@ export class RangedDefenseOverlord extends CombatOverlord {
 	private attackActions(attacker: Zerg): void {
 		let target = this.findTarget(attacker);
 		if (target) {
+			// console.log(attacker.name, target.pos.print);
+
 			let range = attacker.pos.getRangeTo(target);
 			if (range <= 3) {
 				attacker.rangedAttack(target);
 			}
 			if (range < 3) { // retreat to controller if too close
-				attacker.travelTo(this.colony.controller, {obstacles: this.avoid, movingTarget: true});
+				attacker.travelTo(this.colony.controller, this.moveOpts);
 			} else if (range > 3) { // approach the target if too far
-				if (target.pos.rangeToEdge >= 2) {
-					attacker.travelTo(target, _.merge(this.moveOpts, {
-						range       : 3,
-						obstacles   : this.avoid,
-						movingTarget: true
-					}));
-				}
+				// if (target.pos.rangeToEdge >= 2) {
+				attacker.travelTo(target, _.merge(this.moveOpts, {range: 3}));
+				// }
 			}
 		}
 	}
@@ -103,10 +102,12 @@ export class RangedDefenseOverlord extends CombatOverlord {
 			defender.heal(defender);
 		} else {
 			// Try to heal whatever else is in range
-			let target = defender.pos.findClosestByRange(this.defenders);
-			if (target) {
+			let target = defender.pos.findClosestByRange(_.filter(this.defenders, creep => creep.hits < creep.hitsMax));
+			if (target && target.pos.isNearTo(defender)) {
 				defender.heal(target, false);
-				defender.travelTo(target, {obstacles: this.avoid, movingTarget: true});
+			}
+			if (target && !defender.actionLog.move) {
+				defender.travelTo(target, this.moveOpts);
 			}
 		}
 	}
@@ -121,7 +122,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 			this.retreatActions(defender);
 		}
 		// Move to room and then perform attacking actions
-		if (!defender.inSameRoomAs(this)) {
+		if (!defender.inSameRoomAs(this) || defender.pos.isEdge) {
 			defender.travelTo(this.pos);
 		} else {
 			this.attackActions(defender);
@@ -131,14 +132,17 @@ export class RangedDefenseOverlord extends CombatOverlord {
 
 	init() {
 		this.reassignIdleCreeps(HydraliskSetup.role);
-		let damagePotential = CombatIntel.maxDamageByCreeps(this.room.dangerousHostiles);
+		// let damagePotential = CombatIntel.maxDamageByCreeps(this.room.dangerousHostiles);
+		let healPotential = CombatIntel.maxHealingByCreeps(this.room.hostiles);
 		let hydraliskDamage = RANGED_ATTACK_POWER * HydraliskSetup.getBodyPotential(RANGED_ATTACK, this.colony);
+		let towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 0 : 0;
+		let worstDamageMultiplier = _.min(_.map(this.room.hostiles, creep => CombatIntel.damageTakenMultiplier(creep)));
 		let boosts = this.boosts[HydraliskSetup.role];
 		if (boosts && boosts.includes(boostResources.ranged_attack[3])) { // TODO: add boost damage computation function to Overlord
 			hydraliskDamage *= 4;
 		}
 		// Match the hostile damage times some multiplier
-		let amount = Math.ceil(0.5 * damagePotential / hydraliskDamage);
+		let amount = Math.ceil(1.5 * healPotential / (worstDamageMultiplier * (hydraliskDamage + towerDamage)));
 		this.wishlist(amount, HydraliskSetup);
 		this.requestBoosts();
 	}

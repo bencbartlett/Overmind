@@ -89,7 +89,7 @@ export class SporeCrawler extends HiveCluster {
 						   RANGED_ATTACK_POWER * _.sum(_.map(myRangedDefenders,
 															 creep => CombatIntel.getRangedAttackPotential(creep)));
 			let possibleTargets = _.filter(this.room.hostiles,
-										   hostile => CombatIntel.hostileHealPotential(hostile) <
+										   hostile => CombatIntel.maxHostileHealingTo(hostile) <
 													  CombatIntel.towerDamageAtPos(hostile.pos, true)! + myDamage);
 			let target = this.pos.findClosestByRange(possibleTargets);
 			if (target) {

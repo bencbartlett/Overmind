@@ -51,7 +51,9 @@ export class CommandCenterOverlord extends Overlord {
 				// Otherwise withdraw as much as you can hold
 				else {
 					let withdrawFrom: StoreStructure = this.commandCenter.storage;
-					if (request.resourceType != RESOURCE_ENERGY && this.commandCenter.terminal) {
+					if (this.commandCenter.terminal
+						&& (request.resourceType != RESOURCE_ENERGY
+							|| this.commandCenter.terminal.energy > Energetics.settings.terminal.energy.equilibrium)) {
 						withdrawFrom = this.commandCenter.terminal;
 					}
 					let withdrawAmount = amount - _.sum(manager.carry);

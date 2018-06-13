@@ -123,7 +123,7 @@ export class Hatchery extends HiveCluster {
 		_.forEach(refillExtensions, extension => this.transportRequests.request(extension, Priority.NormalHigh));
 		_.forEach(refillTowers, tower =>
 			this.transportRequests.request(tower, tower.energy < this.settings.refillTowersBelow ?
-												  Priority.High : Priority.Low));
+												  Priority.Low : Priority.Low)); // TODO: made change here
 	}
 
 	// Creep queueing and spawning =====================================================================================

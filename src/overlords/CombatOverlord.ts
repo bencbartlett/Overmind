@@ -23,8 +23,7 @@ export abstract class CombatOverlord extends Overlord {
 		this.directive = directive;
 		this.moveOpts = {
 			allowSK     : true,
-			// allowHostile: false,
-			ensurePath  : true,
+			// ensurePath  : true,
 		};
 	}
 

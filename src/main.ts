@@ -36,7 +36,8 @@ import {VersionMigration} from './versionMigration/migrator';
 var _Overmind = (<any>OM)._Overmind as (new() => IOvermind);
 
 if (USE_PROFILER) profiler.enable();
-log.alert(`Codebase updated or global reset. Current version: Overmind v${__VERSION__}`);
+log.alert(`Codebase updated or global reset. Current version: Overmind v${__VERSION__}. ` +
+		  `Type "help" for a list of console commands.`);
 
 
 // Execute this every global reset

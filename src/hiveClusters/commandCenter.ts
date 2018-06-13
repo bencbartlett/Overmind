@@ -105,10 +105,8 @@ export class CommandCenter extends HiveCluster {
 			}
 		}
 		// Refill towers as needed with variable priority
-		let refillTowers = _.filter(this.towers, tower => tower.energy < tower.energyCapacity);
-		_.forEach(refillTowers, tower =>
-			this.transportRequests.request(tower, tower.energy < this.settings.refillTowersBelow ?
-												  Priority.High : Priority.Low));
+		let refillTowers = _.filter(this.towers, tower => tower.energy < this.settings.refillTowersBelow);
+		_.forEach(refillTowers, tower => this.transportRequests.request(tower, Priority.High));
 		// Refill terminal if it is below threshold
 		if (this.terminal && this.terminal.energy < Energetics.settings.terminal.energy.inThreshold) {
 			this.transportRequests.request(this.terminal, Priority.NormalHigh);

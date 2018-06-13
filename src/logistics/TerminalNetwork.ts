@@ -292,8 +292,11 @@ export class TerminalNetwork implements ITerminalNetwork {
 			this.equalize(RESOURCE_POWER, powerTerminals);
 		}
 		this.handleAbandonedTerminals();
+		// Sell excess resources as needed
 		let terminalToSellExcess = this.terminals[Game.time % this.terminals.length];
-		this.sellExcess(terminalToSellExcess);
+		if (terminalToSellExcess) {
+			this.sellExcess(terminalToSellExcess);
+		}
 	}
 
 }

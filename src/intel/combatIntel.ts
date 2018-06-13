@@ -201,10 +201,31 @@ export class CombatIntel {
 		}));
 	}
 
+	// Minimum damage multiplier a creep has
+	static damageTakenMultiplier(creep: Creep): number {
+		return _.min(_.map(creep.body, function (part) {
+			if (part.type == TOUGH) {
+				if (part.boost == boostResources.tough[1]) {
+					return BOOSTS.tough.GO.damage;
+				} else if (part.boost == boostResources.tough[2]) {
+					return BOOSTS.tough.GHO2.damage;
+				} else if (part.boost == boostResources.tough[3]) {
+					return BOOSTS.tough.XGHO2.damage;
+				}
+			}
+			return 1;
+		}));
+	}
+
 	// Maximum damage that a group of creeps can dish out (doesn't count for simultaneity restrictions)
 	static maxDamageByCreeps(creeps: Creep[]): number {
 		return _.sum(_.map(creeps, creep => ATTACK_POWER * this.getAttackPotential(creep) +
 											RANGED_ATTACK_POWER * this.getRangedAttackPotential(creep)));
+	}
+
+	// Maximum healing that a group of creeps can dish out (doesn't count for simultaneity restrictions)
+	static maxHealingByCreeps(creeps: Creep[]): number {
+		return _.sum(_.map(creeps, creep => HEAL_POWER * this.getHealPotential(creep)));
 	}
 
 	// Maximum damage that is dealable at a given position by enemy forces
@@ -226,7 +247,7 @@ export class CombatIntel {
 	}
 
 	// Heal potential of self and possible healer neighbors
-	static hostileHealPotential(creep: Creep): number {
+	static maxHostileHealingTo(creep: Creep): number {
 		let selfHealing = HEAL_POWER * this.getHealPotential(creep);
 		let neighbors = _.filter(creep.room.hostiles, hostile => hostile.pos.isNearTo(creep));
 		let neighborHealing = HEAL_POWER * _.sum(_.map(neighbors, neighbor => this.getHealPotential(neighbor)));
