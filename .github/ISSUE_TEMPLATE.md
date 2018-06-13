@@ -1,3 +1,5 @@
+<!--- This is the bug reporting template. If you are trying to request a feature, go to github.com/bencbartlett/Overmind/issues/new?template=feature_request.md --->
+
 ## Issue summary
 
 ### Description of issue:

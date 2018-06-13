@@ -4,11 +4,13 @@
 
 ### Current release: [Overmind v0.3.x - "Back to Base-ics"](https://github.com/bencbartlett/Overmind/releases)
 
-- See the [changelog](https://github.com/bencbartlett/Overmind/blob/master/CHANGELOG.md) for patch notes.
-- Documentation is available in the [wiki](https://github.com/bencbartlett/Overmind/wiki).
+- See the [changelog](https://github.com/bencbartlett/Overmind/blob/master/CHANGELOG.md) for patch notes
+- Documentation is available in the [wiki](https://github.com/bencbartlett/Overmind/wiki)
 - Join the discussion in the [#overmind](https://screeps.slack.com/messages/overmind) Slack channel!
-- Development roadmap can be seen [here](https://github.com/bencbartlett/Overmind/projects/1).
-- Find me in game [here](https://screeps.com/a/#!/profile/Muon).
+- Submit an issue [here](https://github.com/bencbartlett/Overmind/issues/new)
+- Request a feature [here](https://github.com/bencbartlett/Overmind/issues/new?template=feature_request.md)
+- Development roadmap can be seen [here](https://github.com/bencbartlett/Overmind/projects/1)
+- Find me in game [here](https://screeps.com/a/#!/profile/Muon)
 
 ---
 

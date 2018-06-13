@@ -1,3 +1,5 @@
+<!--- This is the feature request template. If you are trying to report a bug, go to github.com/bencbartlett/Overmind/issues/new --->
+
 ## Feature request summary
 
 ### Motivation:
