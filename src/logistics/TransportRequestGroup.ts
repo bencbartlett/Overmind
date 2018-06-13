@@ -52,13 +52,21 @@ export class TransportRequestGroup {
 		return false;
 	}
 
-	getPrioritizedClosestRequest(pos: RoomPosition, type: 'supply' | 'withdraw'): TransportRequest | undefined {
+	getPrioritizedClosestRequest(pos: RoomPosition, type: 'supply' | 'withdraw',
+								 filter: ((requst: TransportRequest) => boolean) | undefined = undefined
+	): TransportRequest | undefined {
 		let requests = type == 'withdraw' ? this.withdraw : this.supply;
 		for (let priority in requests) {
 			let targets = _.map(requests[priority], request => request.target);
 			let target = pos.findClosestByRangeThenPath(targets);
 			if (target) {
-				return _.find(requests[priority], request => request.target.ref == target.ref);
+				let searchRequests;
+				if (filter) {
+					searchRequests = _.filter(requests[priority], req => filter(req));
+				} else {
+					searchRequests = requests[priority];
+				}
+				return _.find(searchRequests, request => request.target.ref == target.ref);
 			}
 		}
 	}

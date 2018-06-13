@@ -12,7 +12,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
     - Reaction cycles planned by the `Abathur` module, which makes decisions related to the global production of resources, guiding the evolution of the swarm
         - Module `Abathur` incompatible with pronouns
     - New hiveCluster for mineral mining: `ExtractionSite` (based on @rooklion's pull request #12)
-- RoomPlanner now includes automatic barrier planning!
+- Fully automatic support for creep boosting!
+    - Boosts are used when `Overlord.boosts[creepRoleName]` is set to a list of minerals
+    - Some overlords, like `RangedDefense`, will automatically boost creeps when needed
+    - Boosts will only be used if (1) you have the boosts already, (2) other colonies have a sufficient total amount, or (3) you have >15k credits with which to buy the compounds
+- RoomPlanner now includes automatic barrier planning
     - `roomPlanner.barrierPlanner` uses a modified min-cut algorithm to compute the best location to place ramparts
     - Opening and closing the roomPlanner for a colony which already has walls will create duplicate walls. Use `destroyAllBarriers(roomName)` if you wish to get rid of your old barriers.
 - New `TraderJoe` module with lots of built in market functions
@@ -47,6 +51,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - Colonies now register a shorthand reference on `global` for console use: 'E4S41' and 'e4s41' both refer to `Overmind.colonies.E4S41`
 
 ### Fixed
+- Fixed a longstanding bug with `RoomObject.targetedBy` returning incorrect results because of faulty cache updating when switching tasks
 - Made link allocation less buggy; hiveClusters now claim their link, preventing others from registering the same link
 - Fixed a bug where the roadPlanner would plan roads for incomplete paths
 - Fixed a bug where roadPlanner would incorrectly plan road networks if sources were not visible at the recalculation tick

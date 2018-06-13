@@ -4,6 +4,7 @@ import {RangedDefenseOverlord} from '../../overlords/defense/rangedDefense';
 import {ColonyStage} from '../../Colony';
 import {MeleeDefenseOverlord} from '../../overlords/defense/meleeDefense';
 import {log} from '../../lib/logger/log';
+import {CombatIntel} from '../../intel/combatIntel';
 
 interface DirectiveInvasionDefenseMemory extends FlagMemory {
 	persistent?: boolean;
@@ -29,17 +30,17 @@ export class DirectiveInvasionDefense extends Directive {
 		if (!this.room) {
 			return;
 		}
-		let bigInvaders = _.filter(this.room.hostiles, hostile => hostile.body.length >= 30);
-		let boostedInvasion = _.filter(bigInvaders, invader => invader.boosts.length > 0).length > 0;
+		let expectedDamage = CombatIntel.maxDamageByCreeps(this.room.dangerousHostiles);
+		let useBoosts = (expectedDamage > ATTACK_POWER * 75);
 		let percentWalls = _.filter(this.room.barriers, s => s.structureType == STRUCTURE_WALL).length /
 						   this.room.barriers.length;
 		let meleeHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(ATTACK) > 0 ||
 																	hostile.getActiveBodyparts(WORK) > 0);
 		let rangedHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0);
 		if (this.colony.stage > ColonyStage.Larva && percentWalls > 0.5) {
-			this.overlords.archer = new RangedDefenseOverlord(this, boostedInvasion);
+			this.overlords.archer = new RangedDefenseOverlord(this, useBoosts);
 		} else if (meleeHostiles.length > 0) {
-			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, boostedInvasion);
+			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
 		} else if (Game.time % 10 == 0) {
 			log.warning(`No invasion defense overlord!`);
 		}

@@ -147,7 +147,7 @@ export class CombatIntel {
 
 	// Creep potentials ================================================================================================
 
-	// Heal potential of a single creep
+	// Heal potential of a single creep in units of effective number of parts
 	static getHealPotential(creep: Creep): number {
 		return _.sum(_.map(creep.body, function (part) {
 			if (part.type == HEAL) {
@@ -165,7 +165,7 @@ export class CombatIntel {
 		}));
 	}
 
-	// Heal potential of a single creep
+	// Attack potential of a single creep in units of effective number of parts
 	static getAttackPotential(creep: Creep): number {
 		return _.sum(_.map(creep.body, function (part) {
 			if (part.type == ATTACK) {
@@ -183,7 +183,7 @@ export class CombatIntel {
 		}));
 	}
 
-	// Heal potential of a single creep
+	// Ranged attack potential of a single creep in units of effective number of parts
 	static getRangedAttackPotential(creep: Creep): number {
 		return _.sum(_.map(creep.body, function (part) {
 			if (part.type == RANGED_ATTACK) {
@@ -199,6 +199,12 @@ export class CombatIntel {
 			}
 			return 0;
 		}));
+	}
+
+	// Maximum damage that a group of creeps can dish out (doesn't count for simultaneity restrictions)
+	static maxDamageByCreeps(creeps: Creep[]): number {
+		return _.sum(_.map(creeps, creep => ATTACK_POWER * this.getAttackPotential(creep) +
+											RANGED_ATTACK_POWER * this.getRangedAttackPotential(creep)));
 	}
 
 	// Maximum damage that is dealable at a given position by enemy forces
@@ -228,6 +234,11 @@ export class CombatIntel {
 																	 !neighbors.includes(hostile));
 		let rangedHealing = RANGED_HEAL_POWER * _.sum(_.map(rangedHealers, healer => this.getHealPotential(healer)));
 		return selfHealing + neighborHealing + rangedHealing;
+	}
+
+	static getPositionsNearEnemies(hostiles: Creep[], range = 0): RoomPosition[] {
+		return _.unique(_.flatten(_.map(hostiles, hostile =>
+			hostile.pos.getPositionsInRange(range, false, true))));
 	}
 
 }

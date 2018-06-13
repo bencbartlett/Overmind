@@ -19,6 +19,7 @@ const HydraliskSetup = new CreepSetup('hydralisk', {
 export class RangedDefenseOverlord extends CombatOverlord {
 
 	defenders: Zerg[];
+	private avoid: RoomPosition[];
 	private retreatPos: RoomPosition;
 	room: Room;
 	settings: {
@@ -41,6 +42,8 @@ export class RangedDefenseOverlord extends CombatOverlord {
 			retreatHitsPercent : 0.85,
 			reengageHitsPercent: 0.95,
 		};
+		this.avoid = CombatIntel.getPositionsNearEnemies(this.room.dangerousHostiles, 2);
+
 	}
 
 	private findTarget(archer: Zerg): Creep | Structure | undefined {
@@ -63,7 +66,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 	}
 
 	private retreatActions(archer: Zerg): void {
-		archer.travelTo(this.fallback);
+		archer.travelTo(this.fallback, {obstacles: this.avoid, movingTarget: true});
 		if (archer.hits > this.settings.reengageHitsPercent * archer.hits) {
 			archer.memory.retreating = false;
 		}
@@ -72,14 +75,20 @@ export class RangedDefenseOverlord extends CombatOverlord {
 	private attackActions(attacker: Zerg): void {
 		let target = this.findTarget(attacker);
 		if (target) {
-			let range = Math.min(attacker.pos.getRangeTo(target), attacker.pos.rangeToEdge);
-			if (range < 3) { // retreat to controller if too close
-				attacker.travelTo(this.colony.controller);
-			}
-			if (range == 3) { // attack the target
+			let range = attacker.pos.getRangeTo(target);
+			if (range <= 3) {
 				attacker.rangedAttack(target);
-			} else { // approach the target if too far
-				attacker.travelTo(target, _.merge(this.moveOpts, {range: 3}));
+			}
+			if (range < 3) { // retreat to controller if too close
+				attacker.travelTo(this.colony.controller, {obstacles: this.avoid, movingTarget: true});
+			} else if (range > 3) { // approach the target if too far
+				if (target.pos.rangeToEdge >= 2) {
+					attacker.travelTo(target, _.merge(this.moveOpts, {
+						range       : 3,
+						obstacles   : this.avoid,
+						movingTarget: true
+					}));
+				}
 			}
 		}
 	}
@@ -97,7 +106,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 			let target = defender.pos.findClosestByRange(this.defenders);
 			if (target) {
 				defender.heal(target, false);
-				defender.travelTo(target);
+				defender.travelTo(target, {obstacles: this.avoid, movingTarget: true});
 			}
 		}
 	}
@@ -122,10 +131,14 @@ export class RangedDefenseOverlord extends CombatOverlord {
 
 	init() {
 		this.reassignIdleCreeps(HydraliskSetup.role);
-		let rangedPotential = _.sum(_.map(this.room.dangerousHostiles,
-										  hostile => CombatIntel.getRangedAttackPotential(hostile)));
-		// Match the hostile potential times some multiplier
-		let amount = 0.5 * rangedPotential / HydraliskSetup.getBodyPotential(RANGED_ATTACK, this.colony);
+		let damagePotential = CombatIntel.maxDamageByCreeps(this.room.dangerousHostiles);
+		let hydraliskDamage = RANGED_ATTACK_POWER * HydraliskSetup.getBodyPotential(RANGED_ATTACK, this.colony);
+		let boosts = this.boosts[HydraliskSetup.role];
+		if (boosts && boosts.includes(boostResources.ranged_attack[3])) { // TODO: add boost damage computation function to Overlord
+			hydraliskDamage *= 4;
+		}
+		// Match the hostile damage times some multiplier
+		let amount = Math.ceil(0.5 * damagePotential / hydraliskDamage);
 		this.wishlist(amount, HydraliskSetup);
 		this.requestBoosts();
 	}

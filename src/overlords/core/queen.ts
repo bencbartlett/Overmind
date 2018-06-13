@@ -32,7 +32,11 @@ export class HatcheryOverlord extends Overlord {
 	}
 
 	init() {
-		this.wishlist(1, QueenSetup);
+		let amount = 1;
+		// if (this.colony.defcon > DEFCON.invasionNPC) {
+		// 	amount = 2;
+		// }
+		this.wishlist(amount, QueenSetup);
 	}
 
 	private supplyActions(queen: Zerg) {
@@ -69,11 +73,6 @@ export class HatcheryOverlord extends Overlord {
 	}
 
 	private idleActions(queen: Zerg): void {
-		// if (this.hatchery.battery) { // is there a battery and a link?
-		// 	if (this.hatchery.battery.hits < this.hatchery.battery.hitsMax) {
-		// 		queen.task = Tasks.repair(this.hatchery.battery); // TODO: queen doesn't have work parts, dumbass...
-		// 	} else
-		// }
 		if (this.hatchery.link) {
 			// Can energy be moved from the link to the battery?
 			if (this.hatchery.battery && !this.hatchery.battery.isFull && !this.hatchery.link.isEmpty) {
@@ -85,8 +84,16 @@ export class HatcheryOverlord extends Overlord {
 				}
 			} else {
 				if (queen.carry.energy < queen.carryCapacity) { // make sure you're recharged
-					queen.task = Tasks.withdraw(this.hatchery.link);
+					if (!this.hatchery.link.isEmpty) {
+						queen.task = Tasks.withdraw(this.hatchery.link);
+					} else if (this.hatchery.battery && !this.hatchery.battery.isEmpty) {
+						queen.task = Tasks.withdraw(this.hatchery.battery);
+					}
 				}
+			}
+		} else {
+			if (this.hatchery.battery && queen.carry.energy < queen.carryCapacity) {
+				queen.task = Tasks.withdraw(this.hatchery.battery);
 			}
 		}
 	}
@@ -123,15 +130,19 @@ export class HatcheryOverlord extends Overlord {
 			if (queen.hasValidTask) {
 				queen.run();
 			} else {
-				queen.travelTo(this.hatchery.idlePos);
+				if (this.queens.length > 1) {
+					queen.travelTo(this.hatchery.idlePos, {range: 1});
+				} else {
+					queen.travelTo(this.hatchery.idlePos);
+				}
 			}
 		}
 		// Delete extraneous queens in the case there are multiple
-		if (this.queens.length > 1) {
-			let queenToSuicide = _.first(_.sortBy(this.queens, queen => queen.ticksToLive));
-			if (queenToSuicide) {
-				queenToSuicide.suicide();
-			}
-		}
+		// if (this.queens.length > 1) {
+		// 	let queenToSuicide = _.first(_.sortBy(this.queens, queen => queen.ticksToLive));
+		// 	if (queenToSuicide) {
+		// 		queenToSuicide.suicide();
+		// 	}
+		// }
 	}
 }

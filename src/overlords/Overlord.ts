@@ -59,6 +59,12 @@ export abstract class Overlord {
 								   creepsOfRole => _.map(creepsOfRole, creepName => Game.zerg[creepName]));
 	}
 
+	debug(creep: Zerg, targetCreepName: string, ...args: any[]) {
+		if (creep.name == targetCreepName) {
+			console.log(JSON.stringify(args));
+		}
+	}
+
 	/* Gets the "ID" of the outpost this overlord is operating in. 0 for owned rooms, >= 1 for outposts, -1 for other */
 	get outpostIndex(): number {
 		return _.findIndex(this.colony.roomNames, this.pos.roomName);

@@ -304,7 +304,7 @@ export class EvolutionChamber extends HiveCluster {
 		if (!this.boostQueue[lab.id]) {
 			this.boostQueue[lab.id] = [];
 		}
-		log.info(`Requesting boost ${mineralType} for ${creep.name}@${creep.pos.print}`);
+		// log.info(`Requesting boost ${mineralType} for ${creep.name}@${creep.pos.print}`);
 		// Boost requests are prioritized by which creep has least time to live
 		this.boostQueue[lab.id] = _.sortBy([...this.boostQueue[lab.id],
 											{mineralType: mineralType, creepName: creep.name}],

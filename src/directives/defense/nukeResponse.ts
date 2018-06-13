@@ -15,7 +15,7 @@ export class DirectiveNukeResponse extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag, DirectiveNukeResponse.requiredRCL);
-		this.nuke = this.pos.lookFor(LOOK_NUKES)[0];
+		this.nuke = this.pos.lookFor(LOOK_NUKES)[0]; // TODO: needs to handle multiple nukes on same pos
 	}
 
 	init(): void {
@@ -24,7 +24,7 @@ export class DirectiveNukeResponse extends Directive {
 
 	run(): void {
 		// Build ramparts at all positions affected by nukes with structures on them
-		if (Game.time % 25 == 0) {
+		if (Game.time % 50 == 0) {
 			if (this.nuke) {
 				let rampartPositions = _.filter(this.nuke.pos.getPositionsInRange(2), function (pos) {
 					// Rampart should be built to protect all non-road, non-barrier structures in nuke range

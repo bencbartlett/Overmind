@@ -17,6 +17,7 @@ export class DirectiveOutpost extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag);
+		if (!this.colony) return;
 		if (this.colony.level >= DirectiveOutpost.settings.canSpawnReserversAtRCL) {
 			this.overlords.reserve = new ReservingOverlord(this);
 		} else {
