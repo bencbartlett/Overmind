@@ -3,17 +3,7 @@ import {Mem} from '../memory';
 import {profile} from '../profiler/decorator';
 import {maxBy, minBy} from '../utilities/utils';
 
-// interface OrderCache {
-// 	id: string,
-// 	resourceType: ResourceConstant,
-// 	roomName: string,
-// 	amount: number,
-// 	price: number,
-// }
-
 interface MarketCache {
-	// sell: {[resourceType: string]: Order | undefined},
-	// buy: {[resourceType: string]: Order | undefined},
 	sell: { [resourceType: string]: { high: number, low: number } },
 	buy: { [resourceType: string]: { high: number, low: number } },
 	tick: number,
@@ -33,7 +23,6 @@ const TraderMemoryDefaults: TraderMemory = {
 	equalizeIndex: 0,
 };
 
-
 @profile
 export class TraderJoe implements ITradeNetwork {
 
@@ -46,6 +35,10 @@ export class TraderJoe implements ITradeNetwork {
 			boostCredits  : 15000,	// You can buy boosts directly off market while above this amount
 			maxPrice      : {		// Maximum price you're willing to pay for various resources
 				default: 5.0,
+			},
+			orders        : {
+				timeout      : 100000,	// Remove sell orders after this many ticks if remaining amount < cleanupAmount
+				cleanupAmount: 10,		// RemainingAmount threshold to remove expiring orders
 			}
 		},
 	};
@@ -130,9 +123,11 @@ export class TraderJoe implements ITradeNetwork {
 
 	private cleanUpInactiveOrders() {
 		// Clean up sell orders that have expired or orders belonging to rooms no longer owned
-		let ordersToClean = _.filter(Game.market.orders,
-									 o => (o.type == ORDER_SELL && o.active == false && o.remainingAmount == 0) ||
-										  (o.roomName && !Overmind.colonies[o.roomName]));
+		let ordersToClean = _.filter(Game.market.orders, o =>
+			(o.type == ORDER_SELL && o.active == false && o.remainingAmount == 0)		// if order is expired, or
+			|| (Game.time - o.created > TraderJoe.settings.market.orders.timeout		// order is old and almost done
+				&& o.remainingAmount < TraderJoe.settings.market.orders.cleanupAmount)
+			|| (o.roomName && !Overmind.colonies[o.roomName]));							// order placed from dead colony
 		for (let order of ordersToClean) {
 			Game.market.cancelOrder(order.id);
 		}

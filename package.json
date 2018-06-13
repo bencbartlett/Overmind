@@ -3,6 +3,7 @@
   "version": "0.3.1",
   "description": "Overmind Screeps AI",
   "author": "Ben Bartlett",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bencbartlett/Overmind.git"
@@ -24,7 +25,6 @@
     "watch-pserver": "rollup -cw --dest pserver",
     "watch-sim": "rollup -cw --dest sim"
   },
-  "license": "MIT",
   "devDependencies": {
     "@types/screeps": "^2.3.0",
     "@types/lodash": "^3.10.1",
