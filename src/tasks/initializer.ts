@@ -55,7 +55,8 @@ export function initializeTask(protoTask: protoTask): any {
 			task = new TaskFortify(target as fortifyTargetType);
 			break;
 		case getBoostedTaskName:
-			task = new TaskGetBoosted(target as getBoostedTargetType);
+			task = new TaskGetBoosted(target as getBoostedTargetType,
+									  protoTask.data.resourceType as _ResourceConstantSansEnergy);
 			break;
 		case getRenewedTaskName:
 			task = new TaskGetRenewed(target as getRenewedTargetType);

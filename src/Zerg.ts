@@ -33,6 +33,7 @@ export class Zerg {
 	saying: string;						// |
 	spawning: boolean;					// |
 	ticksToLive: number | undefined;	// |
+	lifetime: number;
 	actionLog: { [actionName: string]: boolean }; // Tracks the actions that a creep has completed this tick
 	// settings: any;					// Adjustable settings object, can vary across roles
 	private _task: Task | null; 		// Cached Task object that is instantiated once per tick and on change
@@ -57,6 +58,7 @@ export class Zerg {
 		this.saying = creep.saying;
 		this.spawning = creep.spawning;
 		this.ticksToLive = creep.ticksToLive;
+		this.lifetime = this.getBodyparts(CLAIM) > 0 ? CREEP_CLAIM_LIFE_TIME : CREEP_LIFE_TIME;
 		this.actionLog = {};
 		// this.settings = {};
 	}
@@ -285,10 +287,7 @@ export class Zerg {
 
 	get needsBoosts(): boolean {
 		if (this.overlord) {
-			let neededBoosts = this.overlord.boosts[this.roleName];
-			if (neededBoosts) {
-				return _.difference(neededBoosts, this.boosts).length > 0;
-			}
+			return this.overlord.shouldBoost(this);
 		}
 		return false;
 	}
@@ -393,15 +392,6 @@ export class Zerg {
 
 	set colony(newColony: Colony) {
 		this.memory.colony = newColony.name;
-	}
-
-	/* Return the maximum (not remaining) lifetime of the creep */
-	get lifetime(): number {
-		if (this.getBodyparts(CLAIM) > 0) {
-			return CREEP_CLAIM_LIFE_TIME;
-		} else {
-			return CREEP_LIFE_TIME;
-		}
 	}
 
 	// /* The average movespeed of the creep on blank terrain */

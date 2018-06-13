@@ -228,7 +228,7 @@ export class Hatchery extends HiveCluster {
 		}
 	}
 
-	private spawnHighestPriorityCreep(): number | void {
+	private spawnHighestPriorityCreep(): number | undefined {
 		let sortedKeys = _.sortBy(this.productionPriorities);
 		for (let priority of sortedKeys) {
 			let protoCreep = this.productionQueue[priority].shift();

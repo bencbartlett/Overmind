@@ -16,6 +16,11 @@ const ZerglingSetup = new CreepSetup('zergling', {
 	sizeLimit: Infinity,
 });
 
+const ArmoredZerglingSetup = new CreepSetup('zergling', {
+	pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE],
+	sizeLimit: Infinity,
+});
+
 @profile
 export class MeleeDefenseOverlord extends CombatOverlord {
 
@@ -32,7 +37,8 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 		super(directive, 'meleeDefense', priority);
 		this.defenders = this.creeps(ZerglingSetup.role);
 		if (boosted) {
-			this.boosts.defender = [
+			this.boosts[ZerglingSetup.role] = [
+				boostResources.tough[3],
 				boostResources.attack[3],
 			];
 		}
@@ -114,6 +120,7 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 		let amount = 0.5 * meleePotential / ZerglingSetup.getBodyPotential(ATTACK, this.colony);
 		amount = Math.max(amount, 3);
 		this.wishlist(amount, ZerglingSetup);
+		this.requestBoosts();
 	}
 
 	run() {
@@ -122,8 +129,8 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 			if (defender.hasValidTask) {
 				defender.run();
 			} else {
-				if (defender.needsBoosts && this.labsHaveBoosts()) {
-					this.handleBoosts(defender);
+				if (defender.needsBoosts) {
+					this.handleBoosting(defender);
 				} else {
 					this.handleDefender(defender);
 				}

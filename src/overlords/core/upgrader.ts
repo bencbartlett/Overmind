@@ -7,6 +7,7 @@ import {profile} from '../../profiler/decorator';
 import minBy from 'lodash.minby';
 import {Pathing} from '../../pathing/pathing';
 import {CreepSetup} from '../CreepSetup';
+import {boostResources} from '../../resources/map_resources';
 
 class UpgraderSetup extends CreepSetup {
 	static role = 'upgrader';
@@ -31,6 +32,11 @@ export class UpgradingOverlord extends Overlord {
 		super(upgradeSite, 'upgrade', priority);
 		this.upgraders = this.creeps(UpgraderSetup.role);
 		this.upgradeSite = upgradeSite;
+		if (this.room.name == 'E13S44') {
+			this.boosts[UpgraderSetup.role] = [
+				boostResources.upgrade[3]
+			];
+		}
 	}
 
 	init() {
@@ -41,6 +47,7 @@ export class UpgradingOverlord extends Overlord {
 			this.requestCreep(new UpgraderSetup(upgraderSize));
 		}
 		this.creepReport(UpgraderSetup.role, upgradePower, this.upgradeSite.upgradePowerNeeded);
+		this.requestBoosts();
 	}
 
 	private handleUpgrader(upgrader: Zerg): void {
@@ -90,7 +97,12 @@ export class UpgradingOverlord extends Overlord {
 	run() {
 		for (let upgrader of this.upgraders) {
 			if (upgrader.isIdle) {
-				this.handleUpgrader(upgrader);
+				if (upgrader.needsBoosts) {
+					this.handleBoosting(upgrader);
+				} else {
+					this.handleUpgrader(upgrader);
+
+				}
 			}
 			upgrader.run();
 		}

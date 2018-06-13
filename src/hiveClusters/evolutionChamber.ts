@@ -8,9 +8,11 @@ import {TerminalNetwork} from '../logistics/TerminalNetwork';
 import {Reaction} from '../resources/Abathur';
 import {Pathing} from '../pathing/pathing';
 import {log} from '../lib/logger/log';
-import {REAGENTS} from '../resources/map_resources';
+import {boostParts, REAGENTS} from '../resources/map_resources';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {Priority} from '../priorities/priorities';
+import {Zerg} from '../Zerg';
+import {TraderJoe} from '../logistics/TradeNetwork';
 
 const LabStatus = {
 	Idle             : 0,
@@ -70,6 +72,10 @@ export class EvolutionChamber extends HiveCluster {
 	private labReservations: {
 		[labID: string]: { mineralType: string, amount: number }
 	};
+	private boostQueue: {
+		[labID: string]: { mineralType: string, creepName: string }[]
+	};
+	private neededBoosts: { [boostType: string]: number };
 
 	static settings = {};
 
@@ -90,6 +96,8 @@ export class EvolutionChamber extends HiveCluster {
 		this.productLabs = _.difference(this.labs, this.reagentLabs);
 		// This keeps track of reservations for boosting
 		this.labReservations = {};
+		this.boostQueue = {};
+		this.neededBoosts = {};
 		// Evolution chamber shares a common request group with command center
 		if (this.colony.commandCenter) {
 			this.transportRequests = this.colony.commandCenter.transportRequests;
@@ -245,9 +253,9 @@ export class EvolutionChamber extends HiveCluster {
 		let {mineralType, amount} = this.labReservations[lab.id];
 		// Empty out incorrect minerals
 		if (lab.mineralType != mineralType && lab.mineralAmount > 0) {
-			this.transportRequests.provide(lab, Priority.NormalHigh, {resourceType: lab.mineralType});
+			this.transportRequests.provide(lab, Priority.High, {resourceType: lab.mineralType});
 		} else {
-			this.transportRequests.request(lab, Priority.NormalHigh, {
+			this.transportRequests.request(lab, Priority.High, {
 				resourceType: <ResourceConstant>mineralType,
 				amount      : amount - lab.mineralAmount
 			});
@@ -255,9 +263,13 @@ export class EvolutionChamber extends HiveCluster {
 	}
 
 	private registerRequests(): void {
-		// Refill labs needing energy
-		let refillLabs = _.filter(this.labs, lab => lab.energy < lab.energyCapacity);
+		// Refill labs needing energy with lower priority for all non-boosting labs
+		let refillLabs = _.filter(this.labs, lab => lab.energy < lab.energyCapacity && lab.id != this.boostingLab.id);
 		_.forEach(refillLabs, lab => this.transportRequests.request(lab, Priority.NormalLow));
+		// Request high priority energy to booster lab
+		if (this.boostingLab.energy < this.boostingLab.energyCapacity) {
+			this.transportRequests.request(this.boostingLab, Priority.NormalHigh);
+		}
 		// Request resources delivered to / withdrawn from each type of lab
 		this.reagentLabRequests();
 		this.productLabRequests();
@@ -267,9 +279,41 @@ export class EvolutionChamber extends HiveCluster {
 	// Lab mineral reservations ========================================================================================
 
 	/* Reserves a product lab for boosting with a compound unrelated to production */
-	reserveLab(mineralType: _ResourceConstantSansEnergy, amount: number, lab = this.boostingLab) {
+	private reserveLab(mineralType: _ResourceConstantSansEnergy, amount: number, lab = this.boostingLab) {
 		_.remove(this.productLabs, productLab => productLab.ref == lab.ref);
 		this.labReservations[lab.id] = {mineralType: mineralType, amount: amount};
+	}
+
+	canBoost(creep: Zerg, boostType: _ResourceConstantSansEnergy): boolean {
+		let boostAmount = LAB_BOOST_MINERAL * (creep.getActiveBodyparts(boostParts[boostType])
+											   - (creep.boostCounts[boostType] || 0));
+		if (this.colony.assets[boostType] >= boostAmount) {
+			// Does this colony have the needed resources already?
+			return true;
+		} else if (this.terminalNetwork.assets[boostType] >= 2 * boostAmount) {
+			// Is there enough of the resource in terminalNetwork?
+			return true;
+		} else {
+			// Can you buy the resources on the market?
+			return (Game.market.credits > TraderJoe.settings.market.boostCredits +
+					boostAmount * Overmind.tradeNetwork.priceOf(boostType));
+		}
+	}
+
+	requestBoost(mineralType: _ResourceConstantSansEnergy, creep: Zerg, lab = this.boostingLab) {
+		if (!this.boostQueue[lab.id]) {
+			this.boostQueue[lab.id] = [];
+		}
+		log.info(`Requesting boost ${mineralType} for ${creep.name}@${creep.pos.print}`);
+		// Boost requests are prioritized by which creep has least time to live
+		this.boostQueue[lab.id] = _.sortBy([...this.boostQueue[lab.id],
+											{mineralType: mineralType, creepName: creep.name}],
+										   request => (Game.zerg[request.creepName].ticksToLive || Infinity));
+	}
+
+	/* Zero-indexed position in the boosting queue of a given creep. Equals -1 if creep isn't queued. */
+	queuePosition(creep: Zerg, lab = this.boostingLab): number {
+		return _.findIndex(this.boostQueue[lab.id], request => request.creepName == creep.name);
 	}
 
 	// Initialization and operation ====================================================================================
@@ -283,21 +327,38 @@ export class EvolutionChamber extends HiveCluster {
 		if (this.memory.status == LabStatus.Idle) {
 			this.memory.activeReaction = this.memory.reactionQueue.shift();
 		}
-		// log.info('status: ' + this.memory.status + '  activeReaction: ' + JSON.stringify(this.memory.activeReaction));
-		// log.info('reactionQueue:' + JSON.stringify(this.memory.reactionQueue));
+		// Set boosting lab reservations and compute needed resources
+		for (let labID in this.boostQueue) {
+			let boostLab = deref(labID) as StructureLab;
+			let boostRequest = _.first(this.boostQueue[labID]);
+			let boostType = boostRequest.mineralType;
+			let creep = Game.zerg[boostRequest.creepName] as Zerg;
+			let boostAmount = LAB_BOOST_MINERAL * (creep.getActiveBodyparts(boostParts[boostType])
+												   - (creep.boostCounts[boostType] || 0));
+			// add to the needed amount of boosts
+			if (!this.neededBoosts[boostType]) {
+				this.neededBoosts[boostType] = 0;
+			}
+			this.neededBoosts[boostType] += boostAmount;
+			// reserve lab once creep is born
+			if (creep.ticksToLive != undefined) {
+				this.reserveLab(<_ResourceConstantSansEnergy>boostType, boostAmount, boostLab);
+			}
+		}
 		this.initLabStatus();
 		this.registerRequests();
 	}
 
 	run(): void {
-		if (this.memory.status == LabStatus.Synthesizing) {
-			let [lab1, lab2] = this.reagentLabs;
-			for (let lab of this.productLabs) {
-				if (lab.cooldown == 0) {
-					lab.runReaction(lab1, lab2);
-				}
+		// Obtain resources for boosting
+		for (let resourceType in this.neededBoosts) {
+			let needAmount = Math.max(this.neededBoosts[resourceType] - (this.colony.assets[resourceType] || 0), 0);
+			if (needAmount > 0) {
+				this.terminalNetwork.requestResource(this.terminal, <ResourceConstant>resourceType,
+													 needAmount, true, 0);
 			}
 		}
+		// Obtain resources for reaction queue
 		let queue = this.memory.reactionQueue;
 		if (this.memory.activeReaction && this.memory.status == LabStatus.AcquiringMinerals) {
 			queue = [this.memory.activeReaction].concat(queue);
@@ -307,6 +368,15 @@ export class EvolutionChamber extends HiveCluster {
 			if (missingBasicMinerals[resourceType] > 0) {
 				this.terminalNetwork.requestResource(this.terminal, <ResourceConstant>resourceType,
 													 missingBasicMinerals[resourceType]);
+			}
+		}
+		// Run the reactions
+		if (this.memory.status == LabStatus.Synthesizing) {
+			let [lab1, lab2] = this.reagentLabs;
+			for (let lab of this.productLabs) {
+				if (lab.cooldown == 0) {
+					lab.runReaction(lab1, lab2);
+				}
 			}
 		}
 	}

@@ -318,8 +318,9 @@ export class Colony {
 	}
 
 	init(): void {
-		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.init());	// Initialize each hive cluster
 		this.overseer.init();												// Initialize overseer AFTER hive clusters
+		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.init());	// Initialize each hive cluster
+		// this.overseer.init();												// Initialize overseer AFTER hive clusters
 		this.roadLogistics.init();											// Initialize the road network
 		this.linkNetwork.init();											// Initialize link network
 		this.roomPlanner.init();											// Initialize the room planner

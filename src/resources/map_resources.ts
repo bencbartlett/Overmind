@@ -91,7 +91,7 @@ export var REAGENTS: { [product: string]: [ResourceConstant, ResourceConstant] }
 	[RESOURCE_UTRIUM_LEMERGITE]            : [RESOURCE_UTRIUM, RESOURCE_LEMERGIUM]
 };
 
-export var boostParts = {
+export var boostParts: { [boostType: string]: BodyPartConstant } = {
 
 	'UH': ATTACK,
 	'UO': WORK,

@@ -163,6 +163,7 @@ export class DestroyerOverlord extends CombatOverlord {
 		}
 		this.wishlist(amount, AttackerSetup);
 		this.wishlist(amount, HealerSetup);
+		this.requestBoosts();
 	}
 
 	run() {
@@ -172,7 +173,7 @@ export class DestroyerOverlord extends CombatOverlord {
 				attacker.run();
 			} else {
 				if (attacker.needsBoosts) {
-					this.handleBoosts(attacker);
+					this.handleBoosting(attacker);
 				} else {
 					this.handleSquad(attacker);
 				}
@@ -184,7 +185,7 @@ export class DestroyerOverlord extends CombatOverlord {
 				healer.run();
 			} else {
 				if (healer.needsBoosts) {
-					this.handleBoosts(healer);
+					this.handleBoosting(healer);
 				} else {
 					this.handleHealer(healer);
 				}

@@ -57,9 +57,10 @@ export class Tasks {
 	}
 
 	static getBoosted(target: getBoostedTargetType,
+					  boostType: _ResourceConstantSansEnergy,
 					  amount: number | undefined = undefined,
 					  options                    = {} as TaskOptions): TaskGetBoosted {
-		return new TaskGetBoosted(target, amount, options);
+		return new TaskGetBoosted(target, boostType, amount, options);
 	}
 
 	static getRenewed(target: getRenewedTargetType, options = {} as TaskOptions): TaskGetRenewed {

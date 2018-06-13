@@ -48,9 +48,10 @@ export class TerminalNetwork implements ITerminalNetwork {
 	constructor(terminals: StructureTerminal[]) {
 		this.terminals = terminals;
 		this.memory = Mem.wrap(Memory.Overmind, 'terminalNetwork', TerminalNetworkMemoryDefaults);
-		this.abandonedTerminals = []; // populated in init()
 		this.alreadyReceived = [];
 		this.alreadySent = [];
+		this.abandonedTerminals = []; 		// populated in init()
+		this.assets = {}; 					// populated in init()
 		this.settings = {
 			equalize: {
 				frequency  : 100,
@@ -149,7 +150,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		let possibleSenders = _.filter(this.terminals,
 									   terminal => (terminal.store[resourceType] || 0) > amount + minDifference &&
 												   terminal.cooldown == 0 && !this.alreadySent.includes(terminal));
-		let sender: StructureTerminal | undefined = maxBy(possibleSenders, (t => t.store[resourceType] || 0));
+		let sender: StructureTerminal | undefined = maxBy(possibleSenders, t => (t.store[resourceType] || 0));
 		if (sender) {
 			this.transfer(sender, receiver, resourceType, amount);
 		} else if (allowBuy) {

@@ -143,7 +143,7 @@
 // 				defender.run();
 // 			} else {
 // 				if (defender.needsBoosts && this.labsHaveBoosts()) {
-// 					this.handleBoosts(defender);
+// 					this.handleBoosting(defender);
 // 				} else {
 // 					this.handleDefender(defender);
 // 				}

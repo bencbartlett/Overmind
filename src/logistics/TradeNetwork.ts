@@ -42,9 +42,9 @@ export class TraderJoe implements ITradeNetwork {
 			timeout: 25,
 		},
 		market: {
-			reserveCredits       : 10000,
-			requestResourceAmount: 1000,
-			maxPrice             : {
+			reserveCredits: 10000,	// Always try to stay above this amount
+			boostCredits  : 15000,	// You can buy boosts directly off market while above this amount
+			maxPrice      : {		// Maximum price you're willing to pay for various resources
 				default: 5.0,
 			}
 		},
@@ -235,7 +235,7 @@ export class TraderJoe implements ITradeNetwork {
 	}
 
 	buyMineral(terminal: StructureTerminal, mineralType: ResourceConstant, amount: number): void {
-		if (Game.market.credits < TraderJoe.settings.market.reserveCredits) {
+		if (Game.market.credits < TraderJoe.settings.market.reserveCredits || terminal.cooldown > 0) {
 			return;
 		}
 		amount += 10;

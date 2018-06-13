@@ -31,7 +31,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 		super(directive, 'rangedDefense', priority);
 		this.defenders = this.creeps(HydraliskSetup.role);
 		if (boosted) {
-			this.boosts.archer = [
+			this.boosts[HydraliskSetup.role] = [
 				boostResources.ranged_attack[3],
 				boostResources.heal[3],
 			];
@@ -84,20 +84,20 @@ export class RangedDefenseOverlord extends CombatOverlord {
 		}
 	}
 
-	private healActions(archer: Zerg): void {
+	private healActions(defender: Zerg): void {
 		if (this.room && this.room.hostiles.length == 0) { // No hostiles in the room
-			this.medicActions(archer);
+			this.medicActions(defender);
 			return;
 		}
 
-		if (archer.hitsMax - archer.hits > 0) {
-			archer.heal(archer);
+		if (defender.hits < defender.hitsMax) {
+			defender.heal(defender);
 		} else {
 			// Try to heal whatever else is in range
-			let target = archer.pos.findClosestByRange(this.defenders);
+			let target = defender.pos.findClosestByRange(this.defenders);
 			if (target) {
-				archer.heal(target, false);
-				archer.travelTo(target);
+				defender.heal(target, false);
+				defender.travelTo(target);
 			}
 		}
 	}
@@ -122,17 +122,12 @@ export class RangedDefenseOverlord extends CombatOverlord {
 
 	init() {
 		this.reassignIdleCreeps(HydraliskSetup.role);
-		// let amount;
-		// if (this.directive.memory.amount) {
-		// 	amount = this.directive.memory.amount;
-		// } else {
-		// 	amount = _.sum(_.map(this.room.hostiles, hostile => hostile.boosts.length > 0 ? 2 : 1));
-		// }
 		let rangedPotential = _.sum(_.map(this.room.dangerousHostiles,
 										  hostile => CombatIntel.getRangedAttackPotential(hostile)));
 		// Match the hostile potential times some multiplier
 		let amount = 0.5 * rangedPotential / HydraliskSetup.getBodyPotential(RANGED_ATTACK, this.colony);
 		this.wishlist(amount, HydraliskSetup);
+		this.requestBoosts();
 	}
 
 	run() {
@@ -141,8 +136,8 @@ export class RangedDefenseOverlord extends CombatOverlord {
 			if (defender.hasValidTask) {
 				defender.run();
 			} else {
-				if (defender.needsBoosts && this.labsHaveBoosts()) {
-					this.handleBoosts(defender);
+				if (defender.needsBoosts) {
+					this.handleBoosting(defender);
 				} else {
 					this.handleDefender(defender);
 				}

@@ -5,7 +5,9 @@ import {profile} from '../profiler/decorator';
 import {Pathing} from '../pathing/pathing';
 import {Colony} from '../Colony';
 import {Zerg} from '../Zerg';
-import {TaskGetBoosted} from '../tasks/instances/getBoosted';
+import {Tasks} from '../tasks/Tasks';
+import {boostParts} from '../resources/map_resources';
+import {MIN_LIFETIME_FOR_BOOST} from '../tasks/instances/getBoosted';
 import {log} from '../lib/logger/log';
 
 export interface IOverlordInitializer {
@@ -82,10 +84,10 @@ export abstract class Overlord {
 
 	protected allCreeps(): Zerg[] {
 		let allCreeps: Zerg[] = [];
-		for (let role in _.keys(this._creeps)) {
+		for (let role of _.keys(this._creeps)) {
 			allCreeps = allCreeps.concat(this._creeps[role]);
 		}
-		return allCreeps;
+		return _.compact(allCreeps);
 	}
 
 	protected creepReport(role: string, currentAmt: number, neededAmt: number) {
@@ -179,42 +181,60 @@ export abstract class Overlord {
 		this.creepReport(setup.role, creepQuantity, quantity);
 	}
 
-	protected handleBoosts(creep: Zerg): void {
-		let neededBoosts = this.boosts[creep.roleName];
-		if (neededBoosts) {
-			let remainingBoosts = _.difference(neededBoosts, creep.boosts);
-			let boost = _.first(remainingBoosts);
-			if (boost && this.colony.labs.length > 0) {
-				let labsContainingBoost = _.filter(this.colony.labs, lab => lab.mineralType == boost);
-				let lab = _.first(labsContainingBoost);
-				if (lab) {
-					creep.task = new TaskGetBoosted(lab);
-				} else {
-					log.info(`No labs containing ${boost} are in ${this.colony.name}!`);
-				}
+	shouldBoost(creep: Zerg): boolean {
+		if (!this.colony.evolutionChamber ||
+			(creep.ticksToLive && creep.ticksToLive < MIN_LIFETIME_FOR_BOOST * creep.lifetime)) {
+			return false;
+		}
+		if (this.boosts[creep.roleName]) {
+			let boosts = _.filter(this.boosts[creep.roleName]!,
+								  boost => (creep.boostCounts[boost] || 0)
+										   < creep.getActiveBodyparts(boostParts[boost]));
+			if (boosts.length > 0) {
+				return _.all(boosts, boost => this.colony.evolutionChamber!.canBoost(creep, boost));
+			}
+		}
+		return false;
+	}
+
+	/* Request a boost from the evolution chamber; should be called during init() */
+	protected requestBoostsForCreep(creep: Zerg): void {
+		if (this.colony.evolutionChamber && this.boosts[creep.roleName]) {
+			let boost = _.find(this.boosts[creep.roleName]!,
+							   boost => (creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost]));
+			if (boost) {
+				this.colony.evolutionChamber.requestBoost(boost, creep);
 			}
 		}
 	}
 
-	protected labsHaveBoosts(): boolean {
-		for (let role in this.boosts) {
-			if (this.boosts[role]) {
-				let boosts = this.boosts[role]!;
-				for (let boost of boosts) {
-					if (_.filter(this.colony.labs, lab => lab.getMineralType() == boost &&
-														  lab.mineralAmount > 0).length == 0) {
-						return false;
+	/* Handle boosting of a creep; should be called during run() */
+	protected handleBoosting(creep: Zerg): void {
+		if (this.colony.evolutionChamber && this.boosts[creep.roleName]) {
+			let boost = _.find(this.boosts[creep.roleName]!,
+							   boost => (creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost]));
+			if (boost) {
+				if (this.colony.evolutionChamber.queuePosition(creep) == 0) {
+					log.info(`${this.colony.room.print}: boosting ${creep.name}@${creep.pos.print} with ${boost}!`);
+					creep.task = Tasks.getBoosted(this.colony.evolutionChamber.boostingLab, boost);
+				} else {
+					// Approach the lab but don't attempt to get boosted
+					if (creep.pos.getRangeTo(this.colony.evolutionChamber.boostingLab) > 2) {
+						creep.travelTo(this.colony.evolutionChamber.boostingLab, {range: 2});
+					} else {
+						creep.park();
 					}
 				}
 			}
 		}
-		return true;
 	}
 
-	protected requestBoost(resourceType: _ResourceConstantSansEnergy): void {
-		if (this.colony.terminal) {
-			// TODO
-			// Overmind.terminalNetwork.requestResource(resourceType, this.colony.terminal);
+	/* Request any needed boosts from terminal network; should be called during init() */
+	protected requestBoosts(): void {
+		for (let creep of this.allCreeps()) {
+			if (this.shouldBoost(creep)) {
+				this.requestBoostsForCreep(creep);
+			}
 		}
 	}
 
