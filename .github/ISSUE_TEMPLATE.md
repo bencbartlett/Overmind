@@ -1,3 +1,5 @@
+## Issue summary
+
 ### Description of issue:
 <!--- Please describe the issue here --->
 
@@ -7,7 +9,7 @@
 
 
 ### Error message:
-<!--- If the issue throws an error, please include the full error traceback here; else write "N/A" --->
+<!--- If the issue throws an error, please include the full error traceback here --->
 ```
 // Console output:
 
@@ -15,7 +17,6 @@
 
 
 ### Other information:
-- Overmind version: {You can find this in package.json}
-    - Commit hash: {Please include the commit hash if known}
-- Issue is with dependency: {Yes if issue is with a dependency such as typings; no if issue is in codebase itself}
+- Overmind version: *{you can find this in package.json}*
+    - Commit hash: *{optional, but helpful: include the commit hash (if known)}*
 

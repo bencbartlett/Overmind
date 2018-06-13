@@ -1,31 +1,24 @@
 ## Pull request summary
 
-### Brief description:
-<!--- Include a brief description of the changes in this pull request here --->
+### Description:
+<!--- Include a description of the changes in this pull request here --->
 
-### At a glance:
-<!--- Please mark items with [x] as applicable. (This is informational, not a checklist!) --->
-
-<!--- Mark if this PR is small and doesn't change behavior, e.g. small bugfix, typo --->
-- [ ] This is a minor change      
-
-<!--- Leave this unchecked if this does something like change memory structure --->
-- [ ] Changes are backwards-compatible  
-
-<!--- Mark if this fixes a bug or behavioral vulnerability and should be reviewed quickly --->
-- [ ] Changes are urgent                
-
-### Added features:
+### Added:
 <!--- Include new features added with this pull request here --->
 
 - None
 
-### Changes to existing features:
+### Changed:
 <!--- Describe changes to existing features here --->
 
 - None
 
-### Bugfixes: 
+### Removed:
+<!--- List code or features that you have removed here --->
+
+- None
+
+### Fixed:
 <!--- If this fixes an open issue, please include it as "#issueNo" --->
 
 - None
@@ -34,5 +27,7 @@
 ## Testing checklist:
 <!--- Fill with [x] for items you have completed. If an item is not applicable or isn't checked, explain why --->
 
+- [ ] Changes are backward-compatible OR version migration code is included
 - [ ] Codebase compiles with current `tsconfig` configuration
-- [ ] Deployed and tested changes on public server 
+- [ ] Tested changes on *{choose PUBLIC/PRIVATE}* server OR changes are trivial (e.g. typos)
+
