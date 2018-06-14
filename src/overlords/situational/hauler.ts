@@ -5,7 +5,7 @@ import {DirectiveHaul} from '../../directives/logistics/haul';
 import {Tasks} from '../../tasks/Tasks';
 import {isStoreStructure} from '../../declarations/typeGuards';
 import {log} from '../../lib/logger/log';
-import {Pathing} from '../../pathing/pathing';
+import {Pathing} from '../../pathing/Pathing';
 import {Energetics} from '../../logistics/Energetics';
 import {CreepSetup} from '../CreepSetup';
 

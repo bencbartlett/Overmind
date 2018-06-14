@@ -4,12 +4,12 @@ import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
 import {MiningOverlord} from '../overlords/core/miner';
 import {Colony, ColonyStage} from '../Colony';
-import {Mem} from '../memory';
+import {Mem} from '../Memory';
 import {log} from '../lib/logger/log';
 import {OverlordPriority} from '../priorities/priorities_overlords';
 import {Visualizer} from '../visuals/Visualizer';
 import {LogisticsNetwork} from '../logistics/LogisticsNetwork';
-import {Pathing} from '../pathing/pathing';
+import {Pathing} from '../pathing/Pathing';
 import {ROOMTYPE_CORE, ROOMTYPE_SOURCEKEEPER, WorldMap} from '../utilities/WorldMap';
 
 interface MiningSiteMemory {
@@ -112,7 +112,7 @@ export class MiningSite extends HiveCluster {
 			let transportCapacity = 200 * this.colony.level;
 			let threshold = this.colony.stage > ColonyStage.Larva ? 0.8 : 0.5;
 			if (this.output.energy > threshold * transportCapacity) {
-				this.colony.logisticsNetwork.provide(this.output, {dAmountdt: this.energyPerTick});
+				this.colony.logisticsNetwork.requestOutputAll(this.output, {dAmountdt: this.energyPerTick});
 			}
 		} else if (this.output instanceof StructureLink) {
 			// If the link will be full with next deposit from the miner

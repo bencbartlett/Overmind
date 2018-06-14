@@ -30,7 +30,7 @@ export class SporeCrawler extends HiveCluster {
 		if (this.tower.energy < SporeCrawler.settings.requestThreshold) {
 			let multiplier = this.tower.energy < SporeCrawler.settings.criticalEnergyThreshold ? 2 : 1;
 			let dAmountdt = this.room.hostiles.length > 0 ? 10 : 0;
-			this.colony.logisticsNetwork.request(this.tower, {multiplier: multiplier, dAmountdt: dAmountdt});
+			this.colony.logisticsNetwork.requestInput(this.tower, {multiplier: multiplier, dAmountdt: dAmountdt});
 		}
 	}
 

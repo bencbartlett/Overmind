@@ -4,13 +4,14 @@ import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
 import {UpgradingOverlord} from '../overlords/core/upgrader';
 import {Colony, ColonyStage} from '../Colony';
-import {Mem} from '../memory';
+import {Mem} from '../Memory';
 import {Visualizer} from '../visuals/Visualizer';
 import {log} from '../lib/logger/log';
 import {Stats} from '../stats/stats';
-import {Pathing} from '../pathing/pathing';
+import {Pathing} from '../pathing/Pathing';
 import {MiningSite} from './miningSite';
 import {WorkerSetup} from '../overlords/core/worker';
+import {hasMinerals} from '../utilities/utils';
 
 interface UpgradeSiteMemory {
 	input?: { pos: protoPos, tick: number };
@@ -92,8 +93,13 @@ export class UpgradeSite extends HiveCluster {
 			this.colony.linkNetwork.requestReceive(this.link);
 		}
 		let inThreshold = this.colony.stage > ColonyStage.Larva ? 0.5 : 0.75;
-		if (this.battery && this.battery.energy < inThreshold * this.battery.storeCapacity) {
-			this.colony.logisticsNetwork.request(this.battery, {dAmountdt: this.energyPerTick});
+		if (this.battery) {
+			if (this.battery.energy < inThreshold * this.battery.storeCapacity) {
+				this.colony.logisticsNetwork.requestInput(this.battery, {dAmountdt: this.energyPerTick});
+			}
+			if (hasMinerals(this.battery.store)) { // get rid of any minerals in the container if present
+				this.colony.logisticsNetwork.requestOutputMinerals(this.battery);
+			}
 		}
 	}
 

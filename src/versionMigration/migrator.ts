@@ -1,6 +1,6 @@
-import {Mem} from '../memory';
+import {Mem} from '../Memory';
 import {log} from '../lib/logger/log';
-import {OvermindConsole} from '../console/console';
+import {OvermindConsole} from '../console/Console';
 
 interface VersionMigratorMemory {
 	versions: { [version: string]: boolean };

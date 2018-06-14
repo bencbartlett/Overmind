@@ -7,7 +7,7 @@ import {Priority} from '../priorities/priorities';
 import {Colony, ColonyStage} from '../Colony';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {bodyCost} from '../overlords/CreepSetup';
-import {Mem} from '../memory';
+import {Mem} from '../Memory';
 import {Visualizer} from '../visuals/Visualizer';
 import {Stats} from '../stats/stats';
 import {Zerg} from '../Zerg';
@@ -112,18 +112,18 @@ export class Hatchery extends HiveCluster {
 		if (this.battery) {
 			let threshold = this.colony.stage == ColonyStage.Larva ? 0.75 : 0.5;
 			if (this.battery.energy < threshold * this.battery.storeCapacity) {
-				this.colony.logisticsNetwork.request(this.battery, {multiplier: 1.5});
+				this.colony.logisticsNetwork.requestInput(this.battery, {multiplier: 1.5});
 			}
 		}
 		// Register energy transport requests (goes on hatchery store group, which can be colony store group)
 		let refillSpawns = _.filter(this.spawns, spawn => spawn.energy < spawn.energyCapacity);
 		let refillExtensions = _.filter(this.extensions, extension => extension.energy < extension.energyCapacity);
 		let refillTowers = _.filter(this.towers, tower => tower.energy < tower.energyCapacity);
-		_.forEach(refillSpawns, spawn => this.transportRequests.request(spawn, Priority.NormalHigh));
-		_.forEach(refillExtensions, extension => this.transportRequests.request(extension, Priority.NormalHigh));
+		_.forEach(refillSpawns, spawn => this.transportRequests.requestInput(spawn, Priority.NormalHigh));
+		_.forEach(refillExtensions, extension => this.transportRequests.requestInput(extension, Priority.NormalHigh));
 		_.forEach(refillTowers, tower =>
-			this.transportRequests.request(tower, tower.energy < this.settings.refillTowersBelow ?
-												  Priority.Low : Priority.Low)); // TODO: made change here
+			this.transportRequests.requestInput(tower, tower.energy < this.settings.refillTowersBelow ?
+													   Priority.Low : Priority.Low)); // TODO: made change here
 	}
 
 	// Creep queueing and spawning =====================================================================================

@@ -4,7 +4,7 @@ import {commandCenterLayout} from './layouts/commandCenter';
 import {log} from '../lib/logger/log';
 import {Visualizer} from '../visuals/Visualizer';
 import {profile} from '../profiler/decorator';
-import {Mem} from '../memory';
+import {Mem} from '../Memory';
 import {Colony} from '../Colony';
 import {RoadPlanner} from './RoadPlanner';
 import {BarrierPlanner} from './BarrierPlanner';

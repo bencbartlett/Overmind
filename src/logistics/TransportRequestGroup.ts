@@ -72,12 +72,12 @@ export class TransportRequestGroup {
 	}
 
 	/* Request for resources to be deposited into this target */
-	request(target: TransportRequestTarget, priority = Priority.Normal, opts = {} as TransportRequestOptions): void {
+	requestInput(target: TransportRequestTarget, priority = Priority.Normal, opts = {} as TransportRequestOptions): void {
 		_.defaults(opts, {
 			resourceType: RESOURCE_ENERGY,
 		});
 		if (!opts.amount) {
-			opts.amount = this.getRequestAmount(target, opts.resourceType!);
+			opts.amount = this.getInputAmount(target, opts.resourceType!);
 		}
 		// Register the request
 		let req: TransportRequest = {
@@ -91,12 +91,12 @@ export class TransportRequestGroup {
 	}
 
 	/* Request for resources to be withdrawn from this target */
-	provide(target: TransportRequestTarget, priority = Priority.Normal, opts = {} as TransportRequestOptions): void {
+	requestOutput(target: TransportRequestTarget, priority = Priority.Normal, opts = {} as TransportRequestOptions): void {
 		_.defaults(opts, {
 			resourceType: RESOURCE_ENERGY,
 		});
 		if (!opts.amount) {
-			opts.amount = this.getProvideAmount(target, opts.resourceType!);
+			opts.amount = this.getOutputAmount(target, opts.resourceType!);
 		}
 		// Register the request
 		let req: TransportRequest = {
@@ -110,17 +110,17 @@ export class TransportRequestGroup {
 	}
 
 	/* Makes a provide for every resourceType in a requestor object */
-	provideAll(target: StoreStructure, priority = Priority.Normal, opts = {} as TransportRequestOptions): void {
+	requestOutputAll(target: StoreStructure, priority = Priority.Normal, opts = {} as TransportRequestOptions): void {
 		for (let resourceType in target.store) {
 			let amount = target.store[<ResourceConstant>resourceType] || 0;
 			if (amount > 0) {
 				opts.resourceType = <ResourceConstant>resourceType;
-				this.provide(target, priority, opts);
+				this.requestOutput(target, priority, opts);
 			}
 		}
 	}
 
-	private getRequestAmount(target: TransportRequestTarget, resourceType: ResourceConstant): number {
+	private getInputAmount(target: TransportRequestTarget, resourceType: ResourceConstant): number {
 		if (isStoreStructure(target)) {
 			return target.storeCapacity - _.sum(target.store);
 		} else if (isEnergyStructure(target) && resourceType == RESOURCE_ENERGY) {
@@ -150,7 +150,7 @@ export class TransportRequestGroup {
 		return 0;
 	}
 
-	private getProvideAmount(target: TransportRequestTarget, resourceType: ResourceConstant): number {
+	private getOutputAmount(target: TransportRequestTarget, resourceType: ResourceConstant): number {
 		if (isStoreStructure(target)) {
 			return target.store[resourceType]!;
 		} else if (isEnergyStructure(target) && resourceType == RESOURCE_ENERGY) {

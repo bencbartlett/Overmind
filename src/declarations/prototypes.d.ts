@@ -4,6 +4,8 @@ interface Creep {
 	boostCounts: { [boostType: string]: number };
 
 	travelTo(destination: RoomPosition | { pos: RoomPosition }, options?: TravelToOptions): number;
+
+	goTo(destination: RoomPosition | { pos: RoomPosition }, options?: TravelToOptions): number;
 }
 
 interface Flag {

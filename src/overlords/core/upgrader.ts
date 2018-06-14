@@ -5,7 +5,7 @@ import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import minBy from 'lodash.minby';
-import {Pathing} from '../../pathing/pathing';
+import {Pathing} from '../../pathing/Pathing';
 import {CreepSetup} from '../CreepSetup';
 
 class UpgraderSetup extends CreepSetup {

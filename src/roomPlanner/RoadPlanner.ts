@@ -3,7 +3,7 @@
 import {Visualizer} from '../visuals/Visualizer';
 import {RoomPlanner} from './RoomPlanner';
 import {log} from '../lib/logger/log';
-import {Mem} from '../memory';
+import {Mem} from '../Memory';
 import {Colony} from '../Colony';
 import {Traveler} from '../lib/traveler/Traveler';
 

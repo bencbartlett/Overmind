@@ -3,10 +3,10 @@
 import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
-import {Mem} from '../memory';
+import {Mem} from '../Memory';
 import {TerminalNetwork} from '../logistics/TerminalNetwork';
 import {Reaction} from '../resources/Abathur';
-import {Pathing} from '../pathing/pathing';
+import {Pathing} from '../pathing/Pathing';
 import {log} from '../lib/logger/log';
 import {boostParts, REAGENTS} from '../resources/map_resources';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
@@ -206,17 +206,17 @@ export class EvolutionChamber extends HiveCluster {
 			let [lab1, lab2] = this.reagentLabs;
 			// Empty out any incorrect minerals and request the correct reagents
 			if (this.memory.status == LabStatus.UnloadingLabs || (lab1.mineralType != ing1 && lab1.mineralAmount > 0)) {
-				this.transportRequests.provide(lab1, Priority.Normal, {resourceType: lab1.mineralType});
+				this.transportRequests.requestOutput(lab1, Priority.Normal, {resourceType: lab1.mineralType});
 			} else if (this.memory.status == LabStatus.LoadingLabs && lab1.mineralAmount < amount) {
-				this.transportRequests.request(lab1, Priority.Normal, {
+				this.transportRequests.requestInput(lab1, Priority.Normal, {
 					resourceType: ing1,
 					amount      : amount - lab1.mineralAmount,
 				});
 			}
 			if (this.memory.status == LabStatus.UnloadingLabs || (lab2.mineralType != ing2 && lab2.mineralAmount > 0)) {
-				this.transportRequests.provide(lab2, Priority.Normal, {resourceType: lab2.mineralType});
+				this.transportRequests.requestOutput(lab2, Priority.Normal, {resourceType: lab2.mineralType});
 			} else if (this.memory.status == LabStatus.LoadingLabs && lab2.mineralAmount < amount) {
-				this.transportRequests.request(lab2, Priority.Normal, {
+				this.transportRequests.requestInput(lab2, Priority.Normal, {
 					resourceType: ing2,
 					amount      : amount - lab2.mineralAmount,
 				});
@@ -224,7 +224,7 @@ export class EvolutionChamber extends HiveCluster {
 		} else {
 			// Labs should be empty when no reaction process is currently happening
 			for (let lab of this.reagentLabs) {
-				this.transportRequests.provide(lab, Priority.Normal, {resourceType: lab.mineralType});
+				this.transportRequests.requestOutput(lab, Priority.Normal, {resourceType: lab.mineralType});
 			}
 		}
 	}
@@ -238,13 +238,13 @@ export class EvolutionChamber extends HiveCluster {
 				// Empty out incorrect minerals or if it's time to unload or if lab is full
 				if ((this.memory.status == LabStatus.UnloadingLabs && lab.mineralAmount > 0) ||
 					labHasWrongMineral || labIsFull) {
-					this.transportRequests.provide(lab, Priority.NormalLow, {resourceType: lab.mineralType});
+					this.transportRequests.requestOutput(lab, Priority.NormalLow, {resourceType: lab.mineralType});
 				}
 			}
 		} else {
 			// Labs should be empty when no reaction process is currently happening
 			for (let lab of this.productLabs) {
-				this.transportRequests.provide(lab, Priority.NormalLow, {resourceType: lab.mineralType});
+				this.transportRequests.requestOutput(lab, Priority.NormalLow, {resourceType: lab.mineralType});
 			}
 		}
 	}
@@ -253,9 +253,9 @@ export class EvolutionChamber extends HiveCluster {
 		let {mineralType, amount} = this.labReservations[lab.id];
 		// Empty out incorrect minerals
 		if (lab.mineralType != mineralType && lab.mineralAmount > 0) {
-			this.transportRequests.provide(lab, Priority.High, {resourceType: lab.mineralType});
+			this.transportRequests.requestOutput(lab, Priority.High, {resourceType: lab.mineralType});
 		} else {
-			this.transportRequests.request(lab, Priority.High, {
+			this.transportRequests.requestInput(lab, Priority.High, {
 				resourceType: <ResourceConstant>mineralType,
 				amount      : amount - lab.mineralAmount
 			});
@@ -265,10 +265,10 @@ export class EvolutionChamber extends HiveCluster {
 	private registerRequests(): void {
 		// Refill labs needing energy with lower priority for all non-boosting labs
 		let refillLabs = _.filter(this.labs, lab => lab.energy < lab.energyCapacity && lab.id != this.boostingLab.id);
-		_.forEach(refillLabs, lab => this.transportRequests.request(lab, Priority.NormalLow));
+		_.forEach(refillLabs, lab => this.transportRequests.requestInput(lab, Priority.NormalLow));
 		// Request high priority energy to booster lab
 		if (this.boostingLab.energy < this.boostingLab.energyCapacity) {
-			this.transportRequests.request(this.boostingLab, Priority.NormalHigh);
+			this.transportRequests.requestInput(this.boostingLab, Priority.NormalHigh);
 		}
 		// Request resources delivered to / withdrawn from each type of lab
 		this.reagentLabRequests();

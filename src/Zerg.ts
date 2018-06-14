@@ -274,6 +274,16 @@ export class Zerg {
 
 	// Custom creep methods ============================================================================================
 
+	// Carry methods
+
+	get hasMineralsInCarry(): boolean {
+		for (let resourceType in this.carry) {
+			if (resourceType != RESOURCE_ENERGY && (this.carry[<ResourceConstant>resourceType] || 0) > 0) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	// Boosting logic --------------------------------------------------------------------------------------------------
 

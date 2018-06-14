@@ -4,7 +4,7 @@ import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
 import {CommandCenterOverlord} from '../overlords/core/manager';
 import {Colony} from '../Colony';
-import {Mem} from '../memory';
+import {Mem} from '../Memory';
 import {Visualizer} from '../visuals/Visualizer';
 import {TerminalNetwork} from '../logistics/TerminalNetwork';
 import {Energetics} from '../logistics/Energetics';
@@ -101,23 +101,23 @@ export class CommandCenter extends HiveCluster {
 		// If the link is empty and can send energy and something needs energy, fill it up
 		if (this.link && this.link.energy < 0.9 * this.link.energyCapacity && this.link.cooldown <= 1) {
 			if (this.colony.linkNetwork.receive.length > 0) { 	// If something wants energy
-				this.transportRequests.request(this.link, Priority.Critical);
+				this.transportRequests.requestInput(this.link, Priority.Critical);
 			}
 		}
 		// Refill towers as needed with variable priority
 		let refillTowers = _.filter(this.towers, tower => tower.energy < this.settings.refillTowersBelow);
-		_.forEach(refillTowers, tower => this.transportRequests.request(tower, Priority.High));
+		_.forEach(refillTowers, tower => this.transportRequests.requestInput(tower, Priority.High));
 		// Refill terminal if it is below threshold
 		if (this.terminal && this.terminal.energy < Energetics.settings.terminal.energy.inThreshold) {
-			this.transportRequests.request(this.terminal, Priority.NormalHigh);
+			this.transportRequests.requestInput(this.terminal, Priority.NormalHigh);
 		}
 		// Refill power spawn
 		if (this.powerSpawn && this.powerSpawn.energy < this.powerSpawn.energyCapacity) {
-			this.transportRequests.request(this.powerSpawn, Priority.Normal);
+			this.transportRequests.requestInput(this.powerSpawn, Priority.Normal);
 		}
 		// Refill nuker with low priority
 		if (this.nuker && this.nuker.energy < this.nuker.energyCapacity && this.storage.energy > 100000) {
-			this.transportRequests.request(this.nuker, Priority.Low);
+			this.transportRequests.requestInput(this.nuker, Priority.Low);
 		}
 
 		// Withdraw requests:
@@ -125,7 +125,7 @@ export class CommandCenter extends HiveCluster {
 		// If the link has energy and nothing needs it, empty it
 		if (this.link && this.link.energy > 0) {
 			if (this.colony.linkNetwork.receive.length == 0 || this.link.cooldown > 3) {
-				this.transportRequests.provide(this.link, Priority.High);
+				this.transportRequests.requestOutput(this.link, Priority.High);
 			}
 		}
 	}

@@ -38,6 +38,30 @@ interface TravelToOptions {
     ensurePath?: boolean;
 }
 
+interface MoveOptions {
+	ignoreRoads?: boolean;
+	ignoreCreeps?: boolean;
+	preferHighway?: boolean;
+	highwayBias?: number;
+	allowHostile?: boolean;
+	range?: number;
+	obstacles?: RoomPosition[];
+	roomCallback?: (roomName: string, matrix: CostMatrix) => CostMatrix | boolean;
+	routeCallback?: (roomName: string) => number;
+	returnData?: TravelToReturnData;
+	restrictDistance?: number;
+	useFindRoute?: boolean;
+	maxOps?: number;
+	movingTarget?: boolean;
+	freshMatrix?: boolean;
+	offRoad?: boolean;
+	stuckValue?: number;
+	maxRooms?: number;
+	repath?: number;
+	route?: { [roomName: string]: boolean };
+	ensurePath?: boolean;
+}
+
 interface TravelData {
     state: any[];
     path: string;

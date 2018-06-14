@@ -4,7 +4,7 @@ import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {Pathing} from '../../pathing/pathing';
+import {Pathing} from '../../pathing/Pathing';
 import {DEFCON} from '../../Colony';
 import {CreepSetup} from '../CreepSetup';
 

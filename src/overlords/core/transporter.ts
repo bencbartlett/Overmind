@@ -4,7 +4,7 @@ import {Tasks} from '../../tasks/Tasks';
 import {Colony, ColonyStage} from '../../Colony';
 import {BufferTarget, LogisticsNetwork, LogisticsRequest} from '../../logistics/LogisticsNetwork';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {Pathing} from '../../pathing/pathing';
+import {Pathing} from '../../pathing/Pathing';
 import {DirectiveLogisticsRequest} from '../../directives/logistics/logisticsRequest';
 import {profile} from '../../profiler/decorator';
 import {CreepSetup} from '../CreepSetup';
@@ -89,7 +89,7 @@ export class TransportOverlord extends Overlord {
 																/ Math.max(choice.dt, 0.1)));
 			let task = null;
 			let amount = this.logisticsGroup.predictedRequestAmount(transporter, request);
-			if (amount > 0) { // store needs refilling
+			if (amount > 0) { // target needs refilling
 				if (request.target instanceof DirectiveLogisticsRequest) {
 					task = Tasks.drop(request.target);
 				} else {
@@ -101,8 +101,11 @@ export class TransportOverlord extends Overlord {
 					let withdrawAmount = Math.min(buffer.store[request.resourceType] || 0,
 						transporter.carryCapacity - _.sum(transporter.carry), amount);
 					task = task.fork(Tasks.withdraw(buffer, request.resourceType, withdrawAmount));
+					if (transporter.hasMineralsInCarry && request.resourceType == RESOURCE_ENERGY) {
+						task = task.fork(Tasks.transferAll(buffer));
+					}
 				}
-			} else if (amount < 0) { // store needs withdrawal
+			} else if (amount < 0) { // target needs withdrawal
 				if (request.target instanceof DirectiveLogisticsRequest) {
 					let drops = request.target.drops[request.resourceType] || [];
 					let resource = drops[0];
@@ -125,6 +128,7 @@ export class TransportOverlord extends Overlord {
 			// Assign the task to the transporter
 			transporter.task = task;
 		} else {
+			// If nothing to do, put everything in a store structure
 			if (_.sum(transporter.carry) > 0) {
 				let dropoffPoints: (StructureLink | StructureStorage)[] = _.compact([this.colony.storage!,
 																					 ...this.colony.dropoffLinks]);

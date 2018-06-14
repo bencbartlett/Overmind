@@ -2,7 +2,7 @@ import {log} from '../lib/logger/log';
 import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
-import {Pathing} from '../pathing/pathing';
+import {Pathing} from '../pathing/Pathing';
 
 interface DirectiveCreateOptions {
 	name?: string;

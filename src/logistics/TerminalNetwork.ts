@@ -1,5 +1,5 @@
 import {log} from '../lib/logger/log';
-import {Mem} from '../memory';
+import {Mem} from '../Memory';
 import {profile} from '../profiler/decorator';
 import {Energetics} from './Energetics';
 import {Colony} from '../Colony';

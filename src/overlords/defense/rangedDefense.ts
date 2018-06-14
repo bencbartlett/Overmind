@@ -37,7 +37,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 				boostResources.heal[3],
 			];
 		}
-		this.retreatPos = this.colony.controller.pos;
+		this.retreatPos = (this.colony.commandCenter || this.colony.hatchery || this.colony.controller).pos;
 		this.settings = {
 			retreatHitsPercent : 0.85,
 			reengageHitsPercent: 0.95,
@@ -67,7 +67,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 	}
 
 	private retreatActions(archer: Zerg): void {
-		archer.travelTo(this.fallback, this.moveOpts);
+		archer.travelTo(this.retreatPos, this.moveOpts);
 		if (archer.hits > this.settings.reengageHitsPercent * archer.hits) {
 			archer.memory.retreating = false;
 		}
@@ -83,7 +83,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 				attacker.rangedAttack(target);
 			}
 			if (range < 3) { // retreat to controller if too close
-				attacker.travelTo(this.colony.controller, this.moveOpts);
+				attacker.travelTo(this.retreatPos, this.moveOpts);
 			} else if (range > 3) { // approach the target if too far
 				// if (target.pos.rangeToEdge >= 2) {
 				attacker.travelTo(target, _.merge(this.moveOpts, {range: 3}));

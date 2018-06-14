@@ -2,7 +2,7 @@
 
 import {CreepSetup} from './CreepSetup';
 import {profile} from '../profiler/decorator';
-import {Pathing} from '../pathing/pathing';
+import {Pathing} from '../pathing/Pathing';
 import {Colony} from '../Colony';
 import {Zerg} from '../Zerg';
 import {Tasks} from '../tasks/Tasks';

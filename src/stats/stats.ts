@@ -1,5 +1,5 @@
 import {profile} from '../profiler/decorator';
-import {Mem} from '../memory';
+import {Mem} from '../Memory';
 
 export var COLLECT_STATS_FREQUENCY = 10; // Gather stats every N ticks
 

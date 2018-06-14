@@ -5,12 +5,12 @@
 import {profile} from '../profiler/decorator';
 import {Zerg} from '../Zerg';
 import {log} from '../lib/logger/log';
-import {Pathing} from '../pathing/pathing';
+import {Pathing} from '../pathing/Pathing';
 import {Colony} from '../Colony';
 import {Matcher} from '../algorithms/galeShapley';
 import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../declarations/typeGuards';
 import {DirectiveLogisticsRequest} from '../directives/logistics/logisticsRequest';
-import {Mem} from '../memory';
+import {Mem} from '../Memory';
 import {TransporterSetup} from '../overlords/core/transporter';
 
 export type LogisticsTarget =
@@ -97,7 +97,7 @@ export class LogisticsNetwork {
 	// Request and provide functions ===================================================================================
 
 	/* Request for resources to be deposited into this target */
-	request(target: LogisticsTarget, opts = {} as RequestOptions): void {
+	requestInput(target: LogisticsTarget, opts = {} as RequestOptions): void {
 		_.defaults(opts, {
 			resourceType: RESOURCE_ENERGY,
 			multiplier  : 1,
@@ -107,7 +107,7 @@ export class LogisticsNetwork {
 			log.warning(`${target.ref} at ${target.pos.print} is outside colony room; shouldn't request!`);
 		}
 		if (!opts.amount) {
-			opts.amount = this.getRequestAmount(target, opts.resourceType!);
+			opts.amount = this.getInputAmount(target, opts.resourceType!);
 		}
 		// Register the request
 		let requestID = this.requests.length;
@@ -124,14 +124,14 @@ export class LogisticsNetwork {
 	}
 
 	/* Request for resources to be withdrawn from this target */
-	provide(target: LogisticsTarget, opts = {} as RequestOptions): void {
+	requestOutput(target: LogisticsTarget, opts = {} as RequestOptions): void {
 		_.defaults(opts, {
 			resourceType: RESOURCE_ENERGY,
 			multiplier  : 1,
 			dAmountdt   : 0,
 		});
 		if (!opts.amount) {
-			opts.amount = this.getProvideAmount(target, opts.resourceType!);
+			opts.amount = this.getOutputAmount(target, opts.resourceType!);
 		}
 		opts.amount *= -1;
 		(opts.dAmountdt!) *= -1;
@@ -149,18 +149,30 @@ export class LogisticsNetwork {
 		this.targetToRequest[req.target.ref] = requestID;
 	}
 
-	/* Makes a provide for every resourceType in a requestor object */
-	provideAll(target: StoreStructure | DirectiveLogisticsRequest, opts = {} as RequestOptions): void {
+	/* Requests output for every resourceType in a requestor object */
+	requestOutputAll(target: StoreStructure | DirectiveLogisticsRequest, opts = {} as RequestOptions): void {
 		for (let resourceType in target.store) {
 			let amount = target.store[<ResourceConstant>resourceType] || 0;
 			if (amount > 0) {
 				opts.resourceType = <ResourceConstant>resourceType;
-				this.provide(target, opts);
+				this.requestOutput(target, opts);
 			}
 		}
 	}
 
-	private getRequestAmount(target: LogisticsTarget, resourceType: ResourceConstant): number {
+	/* Requests output for every mineral in a requestor object */
+	requestOutputMinerals(target: StoreStructure | DirectiveLogisticsRequest, opts = {} as RequestOptions): void {
+		for (let resourceType in target.store) {
+			if (resourceType == RESOURCE_ENERGY) continue;
+			let amount = target.store[<ResourceConstant>resourceType] || 0;
+			if (amount > 0) {
+				opts.resourceType = <ResourceConstant>resourceType;
+				this.requestOutput(target, opts);
+			}
+		}
+	}
+
+	private getInputAmount(target: LogisticsTarget, resourceType: ResourceConstant): number {
 		if (target instanceof DirectiveLogisticsRequest) {
 			return target.storeCapacity - _.sum(target.store);
 		} else if (isStoreStructure(target)) {
@@ -192,11 +204,11 @@ export class LogisticsNetwork {
 				}
 			}
 		}
-		log.warning('Could not determine requestor amount!');
+		log.warning('Could not determine input amount!');
 		return 0;
 	}
 
-	private getProvideAmount(target: LogisticsTarget, resourceType: ResourceConstant): number {
+	private getOutputAmount(target: LogisticsTarget, resourceType: ResourceConstant): number {
 		if (target instanceof DirectiveLogisticsRequest) {
 			return target.store[resourceType]!;
 		} else if (isStoreStructure(target)) {
@@ -228,7 +240,7 @@ export class LogisticsNetwork {
 				}
 			}
 		}
-		log.warning('Could not determine provider amount!');
+		log.warning('Could not determine output amount!');
 		return 0;
 	}
 
@@ -372,7 +384,7 @@ export class LogisticsNetwork {
 				predictedAmount = Math.min(predictedAmount, (<StoreStructure>request.target).storeCapacity);
 			}
 			return predictedAmount;
-		} else { // provide state, energy out
+		} else { // output state, energy out
 			let resourceOutflux = _.sum(_.map(otherTargetingTransporters,
 											  other => other.carryCapacity - _.sum(other.carry)));
 			let predictedAmount = Math.min(request.amount + predictedDifference + resourceOutflux, 0);
@@ -402,8 +414,8 @@ export class LogisticsNetwork {
 			// If you are targeting the requestor, use current carry for computations
 			carry = transporter.carry;
 		}
-		if (amount > 0) { // requestor instance, needs refilling
-			// Change in resources if transporter goes straight to the requestor
+		if (amount > 0) { // requestInput instance, needs refilling
+			// Change in resources if transporter goes straight to the input
 			let dQ_direct = Math.min(amount, carry[request.resourceType] || 0);
 			// let dt_direct = Pathing.distance(newPos, request.target.pos) + ticksUntilFree;
 			let dt_direct = ticksUntilFree + newPos.getMultiRoomRangeTo(request.target.pos) * LogisticsNetwork.settings.rangeToPathHeuristic;
@@ -426,8 +438,8 @@ export class LogisticsNetwork {
 								 targetRef: buffer.ref
 							 });
 			}
-		} else if (amount < 0) { // provider instance, needs pickup
-			// Change in resources if transporter goes straight to the provider
+		} else if (amount < 0) { // requestOutput instance, needs pickup
+			// Change in resources if transporter goes straight to the output
 			let remainingCarryCapacity = transporter.carryCapacity - _.sum(carry);
 			let dQ_direct = Math.min(Math.abs(amount), remainingCarryCapacity);
 			let dt_direct = newPos.getMultiRoomRangeTo(request.target.pos) * LogisticsNetwork.settings.rangeToPathHeuristic + //Pathing.distance(newPos, request.target.pos)

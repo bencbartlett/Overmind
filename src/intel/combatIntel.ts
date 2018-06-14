@@ -1,7 +1,7 @@
 // Combat Intel - provides information related to making combat-related decisions
 
 import {Directive} from '../directives/Directive';
-import {Mem} from '../memory';
+import {Mem} from '../Memory';
 import {Colony} from '../Colony';
 import {Traveler} from '../lib/traveler/Traveler';
 import {boostResources} from '../resources/map_resources';

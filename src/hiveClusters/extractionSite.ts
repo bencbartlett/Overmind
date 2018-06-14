@@ -5,7 +5,7 @@ import {profile} from '../profiler/decorator';
 import {ExtractorOverlord} from '../overlords/core/extractor';
 import {Colony} from '../Colony';
 import {log} from '../lib/logger/log';
-import {Pathing} from '../pathing/pathing';
+import {Pathing} from '../pathing/Pathing';
 import {OverlordPriority} from '../priorities/priorities_overlords';
 
 // interface MineralSiteMemory {
@@ -58,9 +58,9 @@ export class ExtractionSite extends HiveCluster {
 		// Register logisticsNetwork requests if approximate predicted amount exceeds transporter capacity
 		if (this.output) {
 			if (_.sum(this.output.store) > 0.5 * this.output.storeCapacity) {
-				this.colony.logisticsNetwork.provideAll(this.output);
+				this.colony.logisticsNetwork.requestOutputAll(this.output);
 			} else if (_.sum(this.output.store) > 0 && this.overlord.drones.length == 0) {
-				this.colony.logisticsNetwork.provideAll(this.output);
+				this.colony.logisticsNetwork.requestOutputAll(this.output);
 			}
 		}
 	}

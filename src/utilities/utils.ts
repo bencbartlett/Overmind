@@ -4,6 +4,15 @@ export function minMax(value: number, min: number, max: number): number {
 	return Math.max(Math.min(value, max), min);
 }
 
+export function hasMinerals(store: { [resourceType: string]: number }): boolean {
+	for (let resourceType in store) {
+		if (resourceType != RESOURCE_ENERGY && (store[<ResourceConstant>resourceType] || 0) > 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
 export function getUsername(): string {
 	for (let i in Game.rooms) {
 		let room = Game.rooms[i];

@@ -1,7 +1,7 @@
 import {getCutTiles} from '../algorithms/minCut';
 import {RoomPlanner} from './RoomPlanner';
 import {Colony} from '../Colony';
-import {Mem} from '../memory';
+import {Mem} from '../Memory';
 import {log} from '../lib/logger/log';
 import {derefCoords} from '../utilities/utils';
 
