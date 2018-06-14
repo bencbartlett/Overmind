@@ -1,8 +1,49 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_SCREEPSPLUS-GRAPHITE",
+      "label": "ScreepsPlus-Graphite",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "graphite",
+      "pluginName": "Graphite"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "5.0.1"
+    },
+    {
+      "type": "panel",
+      "id": "grafana-piechart-panel",
+      "name": "Pie Chart",
+      "version": "1.3.0"
+    },
+    {
+      "type": "panel",
+      "id": "graph",
+      "name": "Graph",
+      "version": "5.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "graphite",
+      "name": "Graphite",
+      "version": "5.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "singlestat",
+      "name": "Singlestat",
+      "version": "5.0.0"
+    }
+  ],
   "annotations": {
     "list": [
       {
-        "$$hashKey": "object:83",
         "builtIn": 1,
         "datasource": "-- Grafana --",
         "enable": true,
@@ -16,8 +57,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 1,
-  "id": 2135,
-  "iteration": 1525902105260,
+  "id": null,
+  "iteration": 1528941453852,
   "links": [],
   "panels": [
     {
@@ -43,7 +84,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(245, 54, 54, 0.9)"
       ],
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "editable": true,
       "error": false,
       "format": "percent",
@@ -132,7 +173,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(50, 172, 45, 0.97)"
       ],
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "editable": true,
       "error": false,
       "format": "none",
@@ -208,7 +249,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "editable": true,
       "error": false,
       "fill": 0,
@@ -332,7 +373,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(245, 54, 54, 0.9)"
       ],
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "editable": true,
       "error": false,
       "format": "decbytes",
@@ -428,7 +469,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(50, 172, 45, 0.97)"
       ],
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "decimals": 1,
       "editable": true,
       "error": false,
@@ -523,7 +564,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": null,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -597,7 +638,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "editable": true,
       "error": false,
       "fill": 1,
@@ -713,7 +754,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(245, 54, 54, 0.9)"
       ],
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "decimals": 1,
       "editable": true,
       "error": false,
@@ -832,7 +873,7 @@
         "label": "Others",
         "threshold": 0
       },
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "decimals": null,
       "fontSize": "70%",
       "format": "short",
@@ -873,7 +914,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "fill": 1,
       "gridPos": {
         "h": 9,
@@ -955,7 +996,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "fill": 0,
       "gridPos": {
         "h": 7,
@@ -1015,7 +1056,7 @@
       },
       "yaxes": [
         {
-          "format": "short",
+          "format": "percentunit",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -1038,7 +1079,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "fill": 0,
       "gridPos": {
         "h": 7,
@@ -1138,7 +1179,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": null,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "format": "short",
       "gauge": {
         "maxValue": 100,
@@ -1192,7 +1233,7 @@
         {
           "refId": "A",
           "target": "movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*))), 86400), 500)",
-          "textEditor": true
+          "textEditor": false
         }
       ],
       "thresholds": "",
@@ -1216,7 +1257,7 @@
         "label": "Others",
         "threshold": 0
       },
-      "datasource": null,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "fontSize": "80%",
       "format": "short",
       "gridPos": {
@@ -1242,7 +1283,7 @@
         {
           "refId": "A",
           "target": "aliasByNode(sortByTotal(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 7, 'sumSeries'))), 500), 86000)), 0)",
-          "textEditor": true
+          "textEditor": false
         }
       ],
       "title": "Incoming Energy Rate",
@@ -1254,7 +1295,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "fill": 1,
       "gridPos": {
         "h": 8,
@@ -1288,7 +1329,7 @@
         {
           "refId": "A",
           "target": "aliasByNode(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 7, 'sumSeries'))), 500), 86000), 0)",
-          "textEditor": true
+          "textEditor": false
         }
       ],
       "thresholds": [],
@@ -1337,7 +1378,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": null,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "format": "percentunit",
       "gauge": {
         "maxValue": 1,
@@ -1393,21 +1434,21 @@
           "refCount": -1,
           "refId": "A",
           "target": "movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.costs.*.*))), 86400), 200)",
-          "textEditor": true
+          "textEditor": false
         },
         {
           "hide": true,
           "refCount": -1,
           "refId": "B",
           "target": "movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*))), 86400), 200)",
-          "textEditor": true
+          "textEditor": false
         },
         {
           "refCount": 0,
           "refId": "C",
           "target": "divideSeries(#A, #B)",
           "targetFull": "divideSeries(movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.costs.*.*))), 86400), 200), movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*))), 86400), 200))",
-          "textEditor": true
+          "textEditor": false
         }
       ],
       "thresholds": "0.25, 0.5",
@@ -1431,7 +1472,7 @@
         "label": "Others",
         "threshold": 0
       },
-      "datasource": null,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "fontSize": "80%",
       "format": "short",
       "gridPos": {
@@ -1458,7 +1499,7 @@
         {
           "refId": "A",
           "target": "aliasByNode(sortByTotal(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 6, 'sumSeries'))), 500), 86000)), 0)",
-          "textEditor": true
+          "textEditor": false
         }
       ],
       "title": "Outgoing Energy Rate",
@@ -1470,7 +1511,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "fill": 1,
       "gridPos": {
         "h": 8,
@@ -1504,7 +1545,7 @@
         {
           "refId": "A",
           "target": "aliasByNode(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 6, 'sumSeries'))), 500), 86000), 0)",
-          "textEditor": true
+          "textEditor": false
         }
       ],
       "thresholds": [],
@@ -1554,11 +1595,8 @@
     "list": [
       {
         "allValue": null,
-        "current": {
-          "text": "muon",
-          "value": "muon"
-        },
-        "datasource": "ScreepsPlus-Graphite",
+        "current": {},
+        "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
         "hide": 0,
         "includeAll": false,
         "label": "",
@@ -1577,11 +1615,8 @@
       },
       {
         "allValue": null,
-        "current": {
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": "ScreepsPlus-Graphite",
+        "current": {},
+        "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
         "hide": 0,
         "includeAll": true,
         "label": "Colonies",
@@ -1640,5 +1675,5 @@
   "timezone": "browser",
   "title": "Overmind",
   "uid": "000002135",
-  "version": 39
+  "version": 4
 }
