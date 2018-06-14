@@ -2147,6 +2147,13 @@
           "alias": "Limit",
           "color": "#bf1b00",
           "linewidth": 1
+        },
+        {
+          "alias": "Average CPU",
+          "fill": 0,
+          "linewidth": 2,
+          "stack": false,
+          "zindex": 1
         }
       ],
       "spaceLength": 10,
@@ -2166,7 +2173,7 @@
           "target": "alias(screeps.$User.cpu.bucket, 'Bucket')"
         },
         {
-          "hide": true,
+          "hide": false,
           "refCount": 0,
           "refId": "C",
           "target": "alias(movingAverage(screeps.$User.cpu.getUsed, 100), 'Average CPU')"
