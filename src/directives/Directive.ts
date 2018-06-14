@@ -105,9 +105,11 @@ export abstract class Directive {
 	}
 
 	// Wrapped flag methods ============================================================================================
-	remove(): number {
-		delete this.memory;
-		return this.flag.remove();
+	remove(): number | undefined {
+		if (!this.memory.persistent) {
+			delete this.memory;
+			return this.flag.remove();
+		}
 	}
 
 	setColor(color: ColorConstant, secondaryColor?: ColorConstant): number {

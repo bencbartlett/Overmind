@@ -30,7 +30,7 @@ export class DirectiveGuardSwarm extends Directive {
 
 	run(): void {
 		// If there are no hostiles left in the room and everyone's healed, then remove the flag
-		if (!this.memory.persistent && Game.time - this.memory.created > 100 &&
+		if (Game.time - this.memory.created > 100 &&
 			this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
 			if (_.filter(this.room.creeps, creep => creep.hits < creep.hitsMax).length == 0) {
 				this.remove();

@@ -47,8 +47,8 @@ export class DirectiveGuard extends Directive {
 			if (_.filter(this.room.creeps, creep => creep.hits < creep.hitsMax).length == 0 && !this.memory.safeTick) {
 				this.memory.safeTick = Game.time;
 			}
-			// If not persistent and has been safe for more than 100 ticks, remove directive
-			if (!this.memory.persistent && this.memory.safeTick && Game.time - this.memory.safeTick > 100) {
+			// If has been safe for more than 100 ticks, remove directive
+			if (this.memory.safeTick && Game.time - this.memory.safeTick > 100) {
 				this.remove();
 			}
 		} else {
