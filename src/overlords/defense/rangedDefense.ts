@@ -132,7 +132,6 @@ export class RangedDefenseOverlord extends CombatOverlord {
 
 	init() {
 		this.reassignIdleCreeps(HydraliskSetup.role);
-		// let damagePotential = CombatIntel.maxDamageByCreeps(this.room.dangerousHostiles);
 		let healPotential = CombatIntel.maxHealingByCreeps(this.room.hostiles);
 		let hydraliskDamage = RANGED_ATTACK_POWER * HydraliskSetup.getBodyPotential(RANGED_ATTACK, this.colony);
 		let towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 0 : 0;

@@ -114,12 +114,21 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 
 	init() {
 		this.reassignIdleCreeps(ZerglingSetup.role);
-		let meleePotential = _.sum(_.map(this.room.dangerousHostiles,
-										 hostile => CombatIntel.getAttackPotential(hostile)));
-		// Match the hostile potential times some multiplier
-		let amount = 0.5 * meleePotential / ZerglingSetup.getBodyPotential(ATTACK, this.colony);
-		amount = Math.max(amount, 3);
-		this.wishlist(amount, ZerglingSetup);
+		let healPotential = CombatIntel.maxHealingByCreeps(this.room.hostiles);
+		let zerglingDamage = ATTACK_POWER * ZerglingSetup.getBodyPotential(ATTACK, this.colony);
+		let towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 0 : 0;
+		let worstDamageMultiplier = _.min(_.map(this.room.hostiles, creep => CombatIntel.damageTakenMultiplier(creep)));
+		let boosts = this.boosts[ZerglingSetup.role];
+		if (boosts && boosts.includes(boostResources.attack[3])) { // TODO: add boost damage computation function to Overlord
+			zerglingDamage *= 4;
+		}
+		// Match the hostile damage times some multiplier
+		let amount = Math.ceil(1.5 * healPotential / (worstDamageMultiplier * (zerglingDamage + towerDamage)));
+		if (this.colony.level >= 3) {
+			this.wishlist(amount, ArmoredZerglingSetup);
+		} else {
+			this.wishlist(amount, ZerglingSetup);
+		}
 		this.requestBoosts();
 	}
 

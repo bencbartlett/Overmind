@@ -1,9 +1,18 @@
 # Changelog
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## Overmind [0.4.0]: "`require('more-minerals')`" - 2018.6.14
+
+*"We require more minerals."* Well finally, we now have them! This long-overdue release (the largest update to date by additions/deletions) adds fully automatic mineral mining, processing, trading, and boosting capabilities to Overmind!
+
+Colonies now automatically start mining minerals once an extractor is built. Minerals are stored in the terminal and are transferred between colonies as needed for resource production. Excess minerals are sold on the market and once a player reaches a credit threshold (currently >10k credits), missing base minerals required for resource production are purchased from the market. Labs will automatically cycle through reaction queues to try to build up a stockpile of prioritized resources. When creeps request to get boosted, the necessary resources are transferred to the appropriate colony automatically, or, if the player has sufficient credits (>15k), they will be bought on the market if not present.
+
+Although most of the planned combat features will be implemented in v0.5, this release also introduces a number of (primarily defensive) military improvements. A CombatIntel module has been added, containing methods for combat-related calculations. Ranged and melee defenders (now hydralisks and zerglings, respectively) have been improved and will now request boosts when sufficiently large invasions occur. Additionally, directives (placed automatically) have been added to handle nuke responses, building ramparts over affected structures, and terminal evacuation, transmitting all resources in a terminal to remote colonies just before a room is lost.
+
+Finally, we now have a [feature request](https://github.com/bencbartlett/Overmind/issues/new?template=feature_request.md) template! If you have a suggestion for something you'd like added or changed to Overmind, feel free to submit a request there.
+
 ### Added
 - Added support for mineral mining and processing (finally)!
     - Reaction cycles planned by the `Abathur` module, which makes decisions related to the global production of resources, guiding the evolution of the swarm
@@ -56,7 +65,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - `LogisticsGroup` renamed to `LogisticsNetwork`
 - Lots of file renaming to be more concise
 - Colonies now register a shorthand reference on `global` for console use: 'E4S41' and 'e4s41' both refer to `Overmind.colonies.E4S41`
-- Updates to the Grafana dashboard to include several new logged statistics
+- Updates to the Grafana dashboard:
+    - Several new logged statistics, including expansion ranking, miningSite usage/downtime, and energy income per tick by colony
+    - Fixed several null datasource issues and made some tweaks to GCL graphs suggested by @coolfeather2
 
 ### Fixed
 - Fixed a longstanding bug with `RoomObject.targetedBy` returning incorrect results because of faulty cache updating when switching tasks
@@ -78,6 +89,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 
 ## Overmind [0.3.0]: "Back to base-ics" - 2018.5.9
+
+This release adds a ton of new automation features to base planning, partially overhauling the old RoomPlanner. Once a room plan is set at RCL1, the RoomPlanner never needs to be reopened. Road networks are now continuously re-computed by the new `RoadPlanner` module, allowing you to dynamically add and remove outposts. UpgradeSites now determine their own optimal placements, and UpgradeSites and MiningSites now automatically build links when appropriate.
+
+The terminal network has been improved as well, and now tracks transfers between locations within the network (Grafana support available in the [updated dashboard](https://github.com/bencbartlett/Overmind/blob/master/assets/Grafana%20Dashboards/Overmind.json).) Colonies now produce more upgraders while near full energy, and have a low-power mode that scales back transporters to save on CPU. Additional resource management assets, including directives for scavenging and for integrating with the logistics system, have been added but will be enabled in a future release.
+
 ### Added 
 - Lots of new content added to the [Wiki](https://github.com/bencbartlett/Overmind/wiki)!
 - TerminalNetwork stat collection, which accumulates all `send()` calls and transfer costs by resourceType between origin and destination
@@ -146,6 +162,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 
 ## Overmind [0.2.0]: "Logistics Logic" - 2018.3.15
+
+This release completely overhauls the logistics system in Overmind, replacing haulers, suppliers, and mineralSuppliers, which functioned on a rigid rules-based system, with a more flexible universal "transport" creep. `LogisticsGroup`s employ a stable matching algorithm to efficiently assign resource collection and supply tasks to transporters, seeking to maximize aggregate change in resources per tick.
+
 ### Added
 - Logistic groups, tranport overlords have now been enabled after being present in the previous few commits
 - `RoadLogistics` class more efficiently schedules road maintenance
@@ -173,7 +192,8 @@ This release was initially deployed on 2018.3.2 but was re-versioned on 2018.3.1
 - Initial pre-release of Overmind after 190 commits and about 80,000 additions.
 
 
-[Unreleased]: https://github.com/bencbartlett/Overmind/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/bencbartlett/Overmind/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/bencbartlett/Overmind/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/bencbartlett/Overmind/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/bencbartlett/Overmind/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/bencbartlett/Overmind/compare/v0.2.0...v0.2.1

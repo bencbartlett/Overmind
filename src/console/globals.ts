@@ -12,7 +12,7 @@
 //
 
 declare const __VERSION__: string;
-global.__VERSION__ = '0.3.1';
+global.__VERSION__ = '0.4.0';
 
 declare function deref(ref: string): RoomObject | null;
 
