@@ -2,7 +2,7 @@
   "annotations": {
     "list": [
       {
-        "$$hashKey": "object:1524",
+        "$$hashKey": "object:1371",
         "builtIn": 1,
         "datasource": "-- Grafana --",
         "enable": true,
@@ -17,7 +17,7 @@
   "gnetId": null,
   "graphTooltip": 1,
   "id": 2135,
-  "iteration": 1528940002453,
+  "iteration": 1528999192075,
   "links": [],
   "panels": [
     {
@@ -438,7 +438,7 @@
         "minValue": 0,
         "show": true,
         "thresholdLabels": false,
-        "thresholdMarkers": true
+        "thresholdMarkers": false
       },
       "gridPos": {
         "h": 8,
@@ -479,7 +479,7 @@
         "fillColor": "rgba(31, 118, 189, 0.18)",
         "full": false,
         "lineColor": "rgb(31, 120, 193)",
-        "show": true
+        "show": false
       },
       "tableColumn": "",
       "targets": [
@@ -523,7 +523,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": null,
+      "datasource": "ScreepsPlus-Graphite",
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -575,6 +575,7 @@
       "tableColumn": "",
       "targets": [
         {
+          "$$hashKey": "object:1555",
           "refId": "A",
           "target": "screeps.$User.leaderboard.rank"
         }
@@ -590,7 +591,7 @@
           "value": "null"
         }
       ],
-      "valueName": "avg"
+      "valueName": "current"
     },
     {
       "aliasColors": {},
@@ -1364,7 +1365,6 @@
       "tableColumn": "",
       "targets": [
         {
-          "$$hashKey": "object:1641",
           "refId": "A",
           "target": "movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*))), 86400), 500)",
           "textEditor": true
@@ -1815,5 +1815,5 @@
   "timezone": "browser",
   "title": "Overmind",
   "uid": "000002135",
-  "version": 52
+  "version": 58
 }
