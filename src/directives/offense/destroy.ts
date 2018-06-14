@@ -25,7 +25,7 @@ export class DirectiveDestroy extends Directive {
 
 	run(): void {
 		// If there are no hostiles left in the room then remove the flag and associated healpoint
-		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
+		if (!this.memory.persistent && this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
 			Game.notify(`Destroyer mission at ${this.pos.roomName} completed successfully.`);
 			this.remove();
 		}
