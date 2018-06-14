@@ -2,7 +2,7 @@
   "annotations": {
     "list": [
       {
-        "$$hashKey": "object:83",
+        "$$hashKey": "object:1524",
         "builtIn": 1,
         "datasource": "-- Grafana --",
         "enable": true,
@@ -17,7 +17,7 @@
   "gnetId": null,
   "graphTooltip": 1,
   "id": 2135,
-  "iteration": 1525902105260,
+  "iteration": 1528940002453,
   "links": [],
   "panels": [
     {
@@ -110,7 +110,7 @@
           "target": "screeps.$User.cpu.limit"
         }
       ],
-      "thresholds": "70,85",
+      "thresholds": "75,90",
       "title": "CPU Usage",
       "type": "singlestat",
       "valueFontSize": "100%",
@@ -389,7 +389,7 @@
           "hide": false,
           "refCount": 0,
           "refId": "A",
-          "target": "movingAverage(screeps.$User.memory.used, 5)"
+          "target": "screeps.$User.memory.used"
         }
       ],
       "thresholds": "1433600,1740800",
@@ -534,7 +534,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
+        "w": 3,
         "x": 6,
         "y": 10
       },
@@ -604,8 +604,8 @@
       "grid": {},
       "gridPos": {
         "h": 8,
-        "w": 14,
-        "x": 10,
+        "w": 15,
+        "x": 9,
         "y": 10
       },
       "id": 50,
@@ -727,7 +727,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
+        "w": 3,
         "x": 6,
         "y": 14
       },
@@ -920,7 +920,7 @@
       "title": "RCL Progress Rate",
       "tooltip": {
         "shared": true,
-        "sort": 0,
+        "sort": 2,
         "value_type": "individual"
       },
       "type": "graph",
@@ -978,7 +978,7 @@
         "values": false
       },
       "lines": true,
-      "linewidth": 2,
+      "linewidth": 1,
       "links": [],
       "nullPointMode": "null",
       "percentage": false,
@@ -1002,7 +1002,7 @@
       "title": "Hatchery Uptime",
       "tooltip": {
         "shared": true,
-        "sort": 0,
+        "sort": 2,
         "value_type": "individual"
       },
       "type": "graph",
@@ -1015,10 +1015,10 @@
       },
       "yaxes": [
         {
-          "format": "short",
+          "format": "percentunit",
           "label": null,
           "logBase": 1,
-          "max": null,
+          "max": "1",
           "min": "0",
           "show": true
         },
@@ -1061,7 +1061,7 @@
         "values": false
       },
       "lines": true,
-      "linewidth": 2,
+      "linewidth": 1,
       "links": [],
       "nullPointMode": "null",
       "percentage": false,
@@ -1085,7 +1085,7 @@
       "title": "Energy in Storage",
       "tooltip": {
         "shared": true,
-        "sort": 0,
+        "sort": 2,
         "value_type": "individual"
       },
       "type": "graph",
@@ -1117,12 +1117,186 @@
       ]
     },
     {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "ScreepsPlus-Graphite",
+      "fill": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 35
+      },
+      "id": 106,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "hideEmpty": true,
+        "hideZero": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "refCount": 0,
+          "refId": "A",
+          "target": "aliasSub(aliasByNode(movingAverage(keepLastValue(screeps.$User.colonies.$colonies.miningSites.avgUsage), '30min'), 3), \"(.*)\", \"Usage - \\1\")",
+          "textEditor": true
+        },
+        {
+          "refCount": 0,
+          "refId": "B",
+          "target": "aliasSub(aliasByNode(keepLastValue(screeps.$User.colonies.$colonies.miningSites.avgDowntime), 3), \"(.*)\", \"Downtime - \\1\")",
+          "textEditor": true
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Average MiningSite Usage/Downtime",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "percentunit",
+          "label": null,
+          "logBase": 1,
+          "max": "1",
+          "min": "0",
+          "show": true
+        },
+        {
+          "decimals": null,
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": false
+        }
+      ]
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "ScreepsPlus-Graphite",
+      "fill": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 35
+      },
+      "id": 107,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "hideEmpty": true,
+        "hideZero": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "refCount": 0,
+          "refId": "A",
+          "target": "aliasByNode(movingAverage(keepLastValue(screeps.$User.colonies.$colonies.miningSites.energyInPerTick), '30min'), 3)",
+          "textEditor": false
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Energy Income Per Tick",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "decimals": null,
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": false
+        }
+      ]
+    },
+    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 35
+        "y": 42
       },
       "id": 88,
       "panels": [],
@@ -1138,7 +1312,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": null,
+      "datasource": "ScreepsPlus-Graphite",
       "format": "short",
       "gauge": {
         "maxValue": 100,
@@ -1151,7 +1325,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 36
+        "y": 43
       },
       "id": 98,
       "interval": null,
@@ -1190,6 +1364,7 @@
       "tableColumn": "",
       "targets": [
         {
+          "$$hashKey": "object:1641",
           "refId": "A",
           "target": "movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*))), 86400), 500)",
           "textEditor": true
@@ -1216,14 +1391,14 @@
         "label": "Others",
         "threshold": 0
       },
-      "datasource": null,
+      "datasource": "ScreepsPlus-Graphite",
       "fontSize": "80%",
       "format": "short",
       "gridPos": {
         "h": 8,
         "w": 5,
         "x": 6,
-        "y": 36
+        "y": 43
       },
       "id": 102,
       "interval": null,
@@ -1241,8 +1416,8 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(sortByTotal(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 7, 'sumSeries'))), 500), 86000)), 0)",
-          "textEditor": true
+          "target": "aliasByNode(sortByTotal(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 7, 'sumSeries'))), '24hour'), 86000)), 0)",
+          "textEditor": false
         }
       ],
       "title": "Incoming Energy Rate",
@@ -1254,13 +1429,13 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "ScreepsPlus-Graphite",
       "fill": 1,
       "gridPos": {
         "h": 8,
         "w": 13,
         "x": 11,
-        "y": 36
+        "y": 43
       },
       "id": 90,
       "legend": {
@@ -1297,7 +1472,7 @@
       "title": "Incoming Energy per 24h",
       "tooltip": {
         "shared": true,
-        "sort": 0,
+        "sort": 2,
         "value_type": "individual"
       },
       "type": "graph",
@@ -1337,7 +1512,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": null,
+      "datasource": "ScreepsPlus-Graphite",
       "format": "percentunit",
       "gauge": {
         "maxValue": 1,
@@ -1350,7 +1525,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 44
+        "y": 51
       },
       "id": 94,
       "interval": null,
@@ -1431,14 +1606,14 @@
         "label": "Others",
         "threshold": 0
       },
-      "datasource": null,
+      "datasource": "ScreepsPlus-Graphite",
       "fontSize": "80%",
       "format": "short",
       "gridPos": {
         "h": 8,
         "w": 5,
         "x": 6,
-        "y": 44
+        "y": 51
       },
       "id": 100,
       "interval": null,
@@ -1457,8 +1632,8 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(sortByTotal(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 6, 'sumSeries'))), 500), 86000)), 0)",
-          "textEditor": true
+          "target": "aliasByNode(sortByTotal(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 6, 'sumSeries'))), '24hour'), 86000)), 0)",
+          "textEditor": false
         }
       ],
       "title": "Outgoing Energy Rate",
@@ -1470,13 +1645,13 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "ScreepsPlus-Graphite",
       "fill": 1,
       "gridPos": {
         "h": 8,
         "w": 13,
         "x": 11,
-        "y": 44
+        "y": 51
       },
       "id": 103,
       "legend": {
@@ -1513,7 +1688,7 @@
       "title": "Outgoing Energy per 24h",
       "tooltip": {
         "shared": true,
-        "sort": 0,
+        "sort": 2,
         "value_type": "individual"
       },
       "type": "graph",
@@ -1640,5 +1815,5 @@
   "timezone": "browser",
   "title": "Overmind",
   "uid": "000002135",
-  "version": 39
+  "version": 52
 }

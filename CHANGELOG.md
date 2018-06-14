@@ -5,12 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 ### Added
-- Added support for mineral processing (finally)!
+- Added support for mineral mining and processing (finally)!
+    - Reaction cycles planned by the `Abathur` module, which makes decisions related to the global production of resources, guiding the evolution of the swarm
+        - Module `Abathur` incompatible with pronouns
     - New hiveCluter to manage boosting and mineral production: `EvolutionChamber`
         - `EvolutionChamber` is run by the colony manager and produces batches of resources as needed to meet a target amount
         - You might not see mineral production for the first few days while your colonies sell resources to gain sufficient market credits
-    - Reaction cycles planned by the `Abathur` module, which makes decisions related to the global production of resources, guiding the evolution of the swarm
-        - Module `Abathur` incompatible with pronouns
     - New hiveCluster for mineral mining: `ExtractionSite` (based on @rooklion's pull request #12)
 - Fully automatic support for creep boosting!
     - Boosts are used when `Overlord.boosts[creepRoleName]` is set to a list of minerals
@@ -19,19 +19,24 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - RoomPlanner now includes automatic barrier planning
     - `roomPlanner.barrierPlanner` uses a modified min-cut algorithm to compute the best location to place ramparts
     - Opening and closing the roomPlanner for a colony which already has walls will create duplicate walls. Use `destroyAllBarriers(roomName)` if you wish to get rid of your old barriers.
-- New `TraderJoe` module with lots of built in market functions
+- New `TraderJoe` module with lots of built in market functions:
     - Labs will attempt to buy resources they need if there are sufficient (>10k) credits
     - Sells excess resources on the market
 - New directives, all placed automatically by colony overseer:
     - `DirectiveNukeResponse` will automatically build ramparts using workers to block incoming nuke damage
     - `DirectiveAbandon` will evacuate resources from a terminal if overseer detects that the colony has been breached (also prevents terminal from receiving resources)
-- Added flee response to miners in outpost rooms
+- Added flee response to miners in outpost rooms (EDIT: this functionality is still present, but has been disabled while I tune the sensitivity)
     - Miners in colony rooms will also retreat to the safety of the controller if there is a large invasion happening
     - Workers will no longer attempt to work in unsafe remote rooms
 - Preliminary DEFCON system to classify colony safety levels; this will be expanded in the next (combat-focused) update
-- New RampartDefenders spawn in rooms with a sufficiently high rampart/walls ratio and defend against melee attacks
-- New `combatIntel` module, which contains an assortment of methods related to making combat-related decisions
+- Room signatures can now be changed via the console command `setSignature('newSignature')`
+    - Added a behavioral lock in `Overmind.ts -> Overmind_obfuscated.js` which enforces that controller signatures must contain the string "overmind" (not case-sensitive)
+- New melee defense overlord spawns zerglings in rooms with a sufficiently high rampart/walls ratio and defend against melee attacks
+- Improvements to the ranged defense overlord, which now spawns hydralisks which have better pathing
+- New `combatIntel` module, which contains an assortment of methods related to making combat-related decisions and calculations
 - Preliminary `roomIntel` module containing methods for serializing notable room features into memory
+- New `VersionMigration` system will automatically perform one-time changes to resolve backward-incompatible changes with new releases (does not work when migrating from versions prior to 0.3.0)
+- Added a [feature request template](https://github.com/bencbartlett/Overmind/issues/new?template=feature_request.md) and streamlined the existing issue and pull request templates
 
 ### Changed
 - Lots of under-the-hood improvements to the logistics system!
@@ -43,12 +48,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
     - You should see about a 30% reduction in overall memory usage!
     - Improved memory footprint of stats collection and shortened hiveCluster names in memory
     - `Mem.wrap()` now initializes new properties to defaults within the target object (previously, would only initialize if target was undefined)
+- Rewrote most of the manager overlord to account for the new resource production features
 - `TerminalNetwork` now uses an `equalize()` routine to distribute resources between colonies
+- Several creep role names have been renamed, resulting in a reduction of the number of unique names. For example, miners and the new mineral miners are now both called "drone"s
 - CreepSetups moved to respective overlord; now are constant instances rather than extending classes
 - Construction sites now time out after 50000 ticks and are removed
 - `LogisticsGroup` renamed to `LogisticsNetwork`
 - Lots of file renaming to be more concise
 - Colonies now register a shorthand reference on `global` for console use: 'E4S41' and 'e4s41' both refer to `Overmind.colonies.E4S41`
+- Updates to the Grafana dashboard to include several new logged statistics
 
 ### Fixed
 - Fixed a longstanding bug with `RoomObject.targetedBy` returning incorrect results because of faulty cache updating when switching tasks
@@ -68,7 +76,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 ### Fixed
 - Bugfix with workers being idle due to being unable to find a valid paving target
 
-## Overmind [0.3.0] - 2018.5.9
+
+## Overmind [0.3.0]: "Back to base-ics" - 2018.5.9
 ### Added 
 - Lots of new content added to the [Wiki](https://github.com/bencbartlett/Overmind/wiki)!
 - TerminalNetwork stat collection, which accumulates all `send()` calls and transfer costs by resourceType between origin and destination
@@ -120,6 +129,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - Fixed bugs where claimers and reservers would get stuck trying to sign a room that was perma-signed by Screeps as a future newbie zone
 - Fixed a bug where upgradeSites could misidentify their input in some pathological room layouts
 
+
 ## Overmind [0.2.1] - 2018.3.22
 ### Added
 - Memory stat collection and `User` variable (#3 - thanks CoolFeather2!)
@@ -133,6 +143,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 ### Fixed 
 - Bugfixes with rollup and screeps-profiler
 - Moved changelog to root
+
 
 ## Overmind [0.2.0]: "Logistics Logic" - 2018.3.15
 ### Added
@@ -155,10 +166,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - Tasks now exist on `Creep` prototype, mirrored in `Zerg` properties (in preparation for a future stand-alone 
 release of the Task system)
 
+
 ## Overmind [0.1.0]: "GL HF" - 2018.3.2
 This release was initially deployed on 2018.3.2 but was re-versioned on 2018.3.15.
 ### Added
 - Initial pre-release of Overmind after 190 commits and about 80,000 additions.
+
 
 [Unreleased]: https://github.com/bencbartlett/Overmind/compare/v0.3.1...HEAD
 [0.3.1]: https://github.com/bencbartlett/Overmind/compare/v0.3.0...v0.3.1

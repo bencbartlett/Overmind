@@ -146,7 +146,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		if (this.abandonedTerminals.includes(receiver)) {
 			return; // don't send to abandoning terminals
 		}
-		amount += Math.max(amount, TERMINAL_MIN_SEND);
+		amount = Math.max(amount, TERMINAL_MIN_SEND);
 		let possibleSenders = _.filter(this.terminals,
 									   terminal => (terminal.store[resourceType] || 0) > amount + minDifference &&
 												   terminal.cooldown == 0 && !this.alreadySent.includes(terminal));
@@ -172,15 +172,15 @@ export class TerminalNetwork implements ITerminalNetwork {
 			if (resource == RESOURCE_ENERGY) {
 				if (terminal.store[RESOURCE_ENERGY] > energyThreshold) {
 					if (terminalNearCapacity) { // just get rid of stuff at high capacities
-						Overmind.tradeNetwork.sellDirectly(terminal, RESOURCE_ENERGY, 25000);
+						Overmind.tradeNetwork.sellDirectly(terminal, RESOURCE_ENERGY, 10000);
 					} else if (energyOrders.length < 3) {
-						Overmind.tradeNetwork.sell(terminal, RESOURCE_ENERGY, 100000);
+						Overmind.tradeNetwork.sell(terminal, RESOURCE_ENERGY, 50000);
 					}
 				}
 			} else {
 				if (terminal.store[<ResourceConstant>resource]! > threshold) {
 					if (terminalNearCapacity || terminal.store[<ResourceConstant>resource]! > 2 * threshold) {
-						Overmind.tradeNetwork.sellDirectly(terminal, <ResourceConstant>resource, 5000);
+						Overmind.tradeNetwork.sellDirectly(terminal, <ResourceConstant>resource, 1000);
 					} else {
 						Overmind.tradeNetwork.sell(terminal, <ResourceConstant>resource, 10000);
 					}
@@ -294,7 +294,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		this.handleAbandonedTerminals();
 		// Sell excess resources as needed
 		let terminalToSellExcess = this.terminals[Game.time % this.terminals.length];
-		if (terminalToSellExcess) {
+		if (terminalToSellExcess && terminalToSellExcess.cooldown == 0) {
 			this.sellExcess(terminalToSellExcess);
 		}
 	}

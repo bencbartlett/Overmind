@@ -135,6 +135,51 @@ export class Abathur {
 		return [];
 	}
 
+	/* Build a reaction queue for a target compound */
+	private buildReactionQueue(mineral: ResourceConstant, amount: number, verbose = false): Reaction[] {
+		amount = minMax(amount, Abathur.settings.minBatchSize, Abathur.settings.maxBatchSize);
+		if (verbose) console.log(`Abathur@${this.colony.room.print}: building reaction queue for ${amount} ${mineral}`);
+		let reactionQueue: Reaction[] = [];
+		for (let ingredient of this.ingredientsList(mineral)) {
+			let productionAmount = amount;
+			if (ingredient != mineral) {
+				if (verbose) console.log(`productionAmount: ${productionAmount}, assets: ${this.assets[ingredient]}`);
+				productionAmount = Math.max(productionAmount - (this.assets[ingredient] || 0), 0);
+			}
+			productionAmount = Math.min(productionAmount, Abathur.settings.maxBatchSize);
+			reactionQueue.push({mineralType: ingredient, amount: productionAmount});
+		}
+		if (verbose) console.log(`Pre-trim queue: ${JSON.stringify(reactionQueue)}`);
+		reactionQueue = this.trimReactionQueue(reactionQueue);
+		if (verbose) console.log(`Post-trim queue: ${JSON.stringify(reactionQueue)}`);
+		reactionQueue = _.filter(reactionQueue, rxn => rxn.amount > 0);
+		if (verbose) console.log(`Final queue: ${JSON.stringify(reactionQueue)}`);
+		return reactionQueue;
+	}
+
+	/* Trim a reaction queue, reducing the amounts of precursor compounds which need to be produced */
+	private trimReactionQueue(reactionQueue: Reaction[]): Reaction[] {
+		// Scan backwards through the queue and reduce the production amount of subsequently baser resources as needed
+		reactionQueue.reverse();
+		for (let reaction of reactionQueue) {
+			let [ing1, ing2] = REAGENTS[reaction.mineralType];
+			let precursor1 = _.findIndex(reactionQueue, rxn => rxn.mineralType == ing1);
+			let precursor2 = _.findIndex(reactionQueue, rxn => rxn.mineralType == ing2);
+			for (let index of [precursor1, precursor2]) {
+				if (index != -1) {
+					if (reactionQueue[index].amount == 0) {
+						reactionQueue[index].amount = 0;
+					} else {
+						reactionQueue[index].amount = minMax(reaction.amount, Abathur.settings.minBatchSize,
+															 reactionQueue[index].amount);
+					}
+				}
+			}
+		}
+		reactionQueue.reverse();
+		return reactionQueue;
+	}
+
 	/* Figure out which basic minerals are missing and how much */
 	getMissingBasicMinerals(reactionQueue: Reaction[]): { [resourceType: string]: number } {
 		let requiredBasicMinerals = this.getRequiredBasicMinerals(reactionQueue);
@@ -170,50 +215,7 @@ export class Abathur {
 		return requiredBasicMinerals;
 	}
 
-	/* Build a reaction queue for a target compound */
-	private buildReactionQueue(mineral: ResourceConstant, amount: number, verbose = false): Reaction[] {
-		if (verbose) console.log(`Abathur@${this.colony.room.print}: building reaction queue for ${amount} ${mineral}`);
-		let reactionQueue: Reaction[] = [];
-		for (let ingredient of this.ingredientsList(mineral)) {
-			let productionAmount = amount;
-			if (ingredient != mineral) {
-				productionAmount = Math.max(productionAmount - (this.assets[ingredient] || 0), 0);
-			}
-			productionAmount = Math.min(productionAmount, Abathur.settings.maxBatchSize);
-			reactionQueue.push({mineralType: ingredient, amount: productionAmount});
-		}
-		if (verbose) console.log(`Pre-trim queue: ${JSON.stringify(reactionQueue)}`);
-		reactionQueue = this.trimReactionQueue(reactionQueue);
-		if (verbose) console.log(`Post-trim queue: ${JSON.stringify(reactionQueue)}`);
-		reactionQueue = _.filter(reactionQueue, rxn => rxn.amount > 0);
-		if (verbose) console.log(`Final queue: ${JSON.stringify(reactionQueue)}`);
-		return reactionQueue;
-	}
-
-	/* Trim a reaction queue, reducing the amounts of precursor compounds which need to be produced */
-	private trimReactionQueue(reactionQueue: Reaction[]): Reaction[] {
-		// Scan backwards through the queue and reduce the production amount of subsequently baser resources as needed
-		reactionQueue.reverse();
-		for (let reaction of reactionQueue) {
-			let [ing1, ing2] = REAGENTS[reaction.mineralType];
-			let precursor1 = _.findIndex(reactionQueue, rxn => rxn.mineralType == ing1);
-			let precursor2 = _.findIndex(reactionQueue, rxn => rxn.mineralType == ing2);
-			for (let index of [precursor1, precursor2]) {
-				if (index != -1) {
-					if (reaction.amount == 0) {
-						reactionQueue[index].amount = 0;
-					} else {
-						reactionQueue[index].amount = minMax(reaction.amount, Abathur.settings.minBatchSize,
-															 reactionQueue[index].amount);
-					}
-				}
-			}
-		}
-		reactionQueue.reverse();
-		return reactionQueue;
-	}
-
-	/* Return a list of ingredients required to produce a compound */
+	/* Recursively generate a list of ingredients required to produce a compound */
 	private ingredientsList(mineral: ResourceConstant): ResourceConstant[] {
 		if (!REAGENTS[mineral] || _.isEmpty(mineral)) {
 			return [];
