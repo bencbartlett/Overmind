@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
-## Overmind [0.4.0]: "`require('more-minerals')`" - 2018.6.14
+## Overmind [0.4.0]: "require('more-minerals')" - 2018.6.14
 
 *"We require more minerals."* Well finally, we now have them! This long-overdue release (the largest update to date by additions/deletions) adds fully automatic mineral mining, processing, trading, and boosting capabilities to Overmind!
 
