@@ -79,7 +79,7 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 		let adjacentHostiles = _.filter(this.room.hostiles, creep => defender.pos.getRangeTo(creep.pos) == 1);
 		let target: Creep | undefined;
 		if (adjacentHostiles.length > 1) {
-			target = minBy(adjacentHostiles, (hostile: Creep) => CombatIntel.hostileHealPotential(hostile));
+			target = minBy(adjacentHostiles, (hostile: Creep) => CombatIntel.maxHostileHealingTo(hostile));
 		} else {
 			target = this.findClosestHostile(defender, false, false);
 		}
