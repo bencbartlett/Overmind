@@ -219,6 +219,7 @@ export class RoomPlanner {
 			if (layout) {
 				let anchor: Coord = layout.data.anchor;
 				let pos = this.placements[<'hatchery' | 'commandCenter' | 'bunker'>name];
+				if (!pos) continue;
 				let rotation: number = pos!.lookFor(LOOK_FLAGS)[0]!.memory.rotation || 0;
 				let componentMap = this.parseLayout(layout, level);
 				this.translateComponent(componentMap, anchor, pos!);
