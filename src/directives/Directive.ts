@@ -54,6 +54,7 @@ export abstract class Directive {
 			let colonyNames = _.keys(Overmind.colonies);
 			for (let name of colonyNames) {
 				if (flag.name.includes(name)) {
+					if (flag.name.split(name)[1] != '') continue; // in case of other substring, e.g. E11S12 and E11S1
 					flag.memory.colony = name;
 					return Overmind.colonies[name];
 				}

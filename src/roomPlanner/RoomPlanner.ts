@@ -1,4 +1,6 @@
-/* Layout: plans future buildings for rooms */
+// The room planner allows you to plan the location of all structures in the room semi-automatically by placing
+// components with flags. This code is a little messy, sorry.
+
 import {hatcheryLayout} from './layouts/hatchery';
 import {commandCenterLayout} from './layouts/commandCenter';
 import {log} from '../lib/logger/log';
@@ -9,6 +11,7 @@ import {Colony} from '../Colony';
 import {RoadPlanner} from './RoadPlanner';
 import {BarrierPlanner} from './BarrierPlanner';
 import {BuildPriorities} from '../priorities/priorities_structures';
+import {bunkerLayout} from './layouts/bunker';
 
 export interface BuildingPlannerOutput {
 	name: string;
@@ -42,8 +45,11 @@ export interface RoomPlan {
 
 export interface PlannerMemory {
 	active: boolean;
+	bunkerData?: {
+		anchor: protoPos,
+	};
 	lastGenerated?: number;
-	mapsByLevel: { [rcl: number]: { [structureType: string]: protoPos[] } };
+	mapsByLevel?: { [rcl: number]: { [structureType: string]: protoPos[] } };
 	savedFlags: { secondaryColor: ColorConstant, pos: protoPos, memory: FlagMemory }[];
 }
 
@@ -58,7 +64,9 @@ export class RoomPlanner {
 	colony: Colony;							// The colony this is for
 	map: StructureMap;						// Flattened {structureType: RoomPositions[]} for final structure placements
 	placements: { 							// Used for generating the plan
-		[name: string]: RoomPosition
+		hatchery: RoomPosition | undefined;
+		commandCenter: RoomPosition | undefined;
+		bunker: RoomPosition | undefined;
 	};
 	plan: RoomPlan;							// Contains maps, positions, and rotations of each hivecluster component
 	barrierPlanner: BarrierPlanner;
@@ -71,7 +79,11 @@ export class RoomPlanner {
 
 	constructor(colony: Colony) {
 		this.colony = colony;
-		this.placements = {};
+		this.placements = {
+			hatchery     : undefined,
+			commandCenter: undefined,
+			bunker       : undefined,
+		};
 		this.plan = {};
 		this.map = {};
 		this.barrierPlanner = new BarrierPlanner(this);
@@ -101,6 +113,9 @@ export class RoomPlanner {
 		if (this.map[structureType]) {
 			return this.map[structureType];
 		}
+		if (this.memory.bunkerData && this.memory.bunkerData.anchor) {
+			return this.getBunkerStructurePlacement(structureType, this.memory.bunkerData.anchor);
+		}
 		let roomMap = this.memory.mapsByLevel ? this.memory.mapsByLevel[8] : undefined;
 		if (roomMap && roomMap[structureType]) {
 			return _.map(roomMap[structureType], protoPos => derefRoomPosition(protoPos));
@@ -126,6 +141,15 @@ export class RoomPlanner {
 		let positions = this.plannedStructurePositions(STRUCTURE_SPAWN);
 		if (positions) {
 			return positions[0];
+		}
+	}
+
+	get bunkerPos(): RoomPosition | undefined {
+		if (this.placements.bunker) {
+			return this.placements.bunker;
+		}
+		if (this.memory.bunkerData && this.memory.bunkerData.anchor) {
+			return new RoomPosition(this.memory.bunkerData.anchor.x, this.memory.bunkerData.anchor.y, this.colony.name);
 		}
 	}
 
@@ -171,7 +195,7 @@ export class RoomPlanner {
 		this.map[type].push(pos);
 	}
 
-	addComponent(componentName: string, pos: RoomPosition, rotation = 0): void {
+	addComponent(componentName: 'hatchery' | 'commandCenter' | 'bunker', pos: RoomPosition, rotation = 0): void {
 		this.placements[componentName] = pos;
 	}
 
@@ -182,6 +206,8 @@ export class RoomPlanner {
 				return hatcheryLayout;
 			case 'commandCenter':
 				return commandCenterLayout;
+			case 'bunker':
+				return bunkerLayout;
 		}
 	}
 
@@ -192,11 +218,11 @@ export class RoomPlanner {
 			let layout = this.getLayout(name);
 			if (layout) {
 				let anchor: Coord = layout.data.anchor;
-				let pos = this.placements[name];
-				let rotation: number = pos.lookFor(LOOK_FLAGS)[0]!.memory.rotation || 0;
+				let pos = this.placements[<'hatchery' | 'commandCenter' | 'bunker'>name];
+				let rotation: number = pos!.lookFor(LOOK_FLAGS)[0]!.memory.rotation || 0;
 				let componentMap = this.parseLayout(layout, level);
-				this.translateComponent(componentMap, anchor, pos);
-				if (rotation != 0) this.rotateComponent(componentMap, pos, rotation);
+				this.translateComponent(componentMap, anchor, pos!);
+				if (rotation != 0) this.rotateComponent(componentMap, pos!, rotation);
 				plan[name] = {
 					map     : componentMap,
 					pos     : new RoomPosition(anchor.x, anchor.y, this.colony.name),
@@ -268,6 +294,24 @@ export class RoomPlanner {
 		}
 	}
 
+	/* Get bunker building placements as a StructureMap */
+	getStructureMapForBunkerAt(anchor: { x: number, y: number }, level = 8): StructureMap {
+		let dx = anchor.x - bunkerLayout.data.anchor.x;
+		let dy = anchor.y - bunkerLayout.data.anchor.y;
+		let structureLayout = _.mapValues(bunkerLayout[level]!.buildings, obj => obj.pos) as { [s: string]: Coord[] };
+		return _.mapValues(structureLayout, coordArr =>
+			_.map(coordArr, coord => new RoomPosition(coord.x + dx, coord.y + dy, this.colony.name)));
+	}
+
+	/* Get the placement for a single type of structure for bunker layout */
+	getBunkerStructurePlacement(structureType: string, anchor: { x: number, y: number },
+								level = 8): RoomPosition[] {
+		let dx = anchor.x - bunkerLayout.data.anchor.x;
+		let dy = anchor.y - bunkerLayout.data.anchor.y;
+		let structureLayout = _.mapValues(bunkerLayout[level]!.buildings, obj => obj.pos) as { [s: string]: Coord[] };
+		return _.map(bunkerLayout[level]!.buildings[structureType].pos,
+					 coord => new RoomPosition(coord.x + dx, coord.y + dy, this.colony.name));
+	}
 
 	/* Generates a list of impassible obstacles from this.map or from this.memory.map */
 	getObstacles(): RoomPosition[] {
@@ -280,10 +324,19 @@ export class RoomPlanner {
 				}
 			}
 		} else { // else, serialize from memory
-			for (let structureType in this.memory.mapsByLevel[8]) {
-				if (!passableStructureTypes.includes(structureType)) {
-					obstacles = obstacles.concat(_.map(this.memory.mapsByLevel[8][structureType],
-													   protoPos => derefRoomPosition(protoPos)));
+			if (this.memory.bunkerData && this.memory.bunkerData.anchor) {
+				let structureMap = this.getStructureMapForBunkerAt(this.memory.bunkerData.anchor);
+				for (let structureType in structureMap) {
+					if (!passableStructureTypes.includes(structureType)) {
+						obstacles = obstacles.concat(structureMap[structureType]);
+					}
+				}
+			} else if (this.memory.mapsByLevel) {
+				for (let structureType in this.memory.mapsByLevel[8]) {
+					if (!passableStructureTypes.includes(structureType)) {
+						obstacles = obstacles.concat(_.map(this.memory.mapsByLevel[8][structureType],
+														   protoPos => derefRoomPosition(protoPos)));
+					}
 				}
 			}
 		}
@@ -315,10 +368,15 @@ export class RoomPlanner {
 		let layoutIsValid: boolean = !!this.placements.commandCenter && !!this.placements.hatchery;
 		if (layoutIsValid) { // Write everything to memory
 			// Generate maps for each rcl
-			this.memory.mapsByLevel = {};
-			for (let rcl = 1; rcl <= 8; rcl++) {
-				this.make(rcl);
-				this.memory.mapsByLevel[rcl] = this.map;
+			delete this.memory.bunkerData;
+			if (this.placements.bunker) {
+
+			} else {
+				this.memory.mapsByLevel = {};
+				for (let rcl = 1; rcl <= 8; rcl++) {
+					this.make(rcl);
+					this.memory.mapsByLevel[rcl] = this.map;
+				}
 			}
 			// Finalize the barrier planner
 			this.barrierPlanner.finalize();
@@ -367,8 +425,12 @@ export class RoomPlanner {
 		// Max buildings that can be placed each tick
 		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
 		// Recall the appropriate map
-		this.map = _.mapValues(this.memory.mapsByLevel[this.colony.controller.level], posArr =>
-			_.map(posArr, protoPos => derefRoomPosition(protoPos)));
+		if (this.memory.bunkerData && this.memory.bunkerData.anchor) {
+			this.map = this.getStructureMapForBunkerAt(this.memory.bunkerData.anchor);
+		} else if (this.memory.mapsByLevel) {
+			this.map = _.mapValues(this.memory.mapsByLevel[this.colony.controller.level], posArr =>
+				_.map(posArr, protoPos => derefRoomPosition(protoPos)));
+		}
 		if (!this.map) { // in case a map hasn't been generated yet
 			log.info(this.colony.name + ' does not have a room plan yet! Unable to build missing structures.');
 		}

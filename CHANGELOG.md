@@ -3,6 +3,25 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+
+## Overmind [0.4.1] - 2018.6.15
+
+This patch makes Abathur a little smarter in which reactions he chooses and fixes some bugs accidentally introduced by changes in the last release.
+
+### Added
+- Initial (incomplete) room planner support for bunkers; this will be finished in a later release
+- UpgradeSite inputs now actively request that minerals be removed from them in case they get in there somehow (such as a transporter dying on top of the container)
+
+### Changed
+- Abathur now checks to see if a colony can acquire the necessary base ingredients for a reaction queue through terminal transfers or via trading before assigning it to the evolutionChamber
+- Renamed `LogisticsNetwork.request()` and `LogisticsNetwork.provide()` to `LogisticsNetwork.requestInput()` and `LogisticsNetwork.requestOutput()` to be less confusing
+
+### Fixed
+- Fixed a bug where colony substrings in a flag name could cause a directive to reference the wrong colony, e.g. "E11S12" directs to "E11S1"
+- Fixed a bug introduced when CreepSetups were refactored in the last release that could cause bootstrapping directives to fail to run
+- Fixed a bug in LogisticsNetwork where predicted carry amounts could exceed carry capacity
+
+
 ## Overmind [0.4.0]: "require('more-minerals')" - 2018.6.14
 
 *"We require more minerals."* Well finally, we now have them! This long-overdue release (the largest update to date by additions/deletions) adds fully automatic mineral mining, processing, trading, and boosting capabilities to Overmind!
@@ -192,7 +211,8 @@ This release was initially deployed on 2018.3.2 but was re-versioned on 2018.3.1
 - Initial pre-release of Overmind after 190 commits and about 80,000 additions.
 
 
-[Unreleased]: https://github.com/bencbartlett/Overmind/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/bencbartlett/Overmind/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/bencbartlett/Overmind/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/bencbartlett/Overmind/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/bencbartlett/Overmind/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/bencbartlett/Overmind/compare/v0.2.1...v0.3.0

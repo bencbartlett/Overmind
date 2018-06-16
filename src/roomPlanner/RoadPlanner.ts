@@ -182,8 +182,16 @@ export class RoadPlanner {
 		if (this.roomPlanner.map != {}) { // use active map
 			roomPlannerRoads = this.roomPlanner.map[STRUCTURE_ROAD];
 		} else { // retrieve from memory
-			roomPlannerRoads = _.map(this.roomPlanner.memory.mapsByLevel[8][STRUCTURE_ROAD],
-									 protoPos => derefRoomPosition(protoPos));
+			if (this.roomPlanner.memory.bunkerData && this.roomPlanner.memory.bunkerData.anchor) {
+				let layout = this.roomPlanner.getStructureMapForBunkerAt(this.roomPlanner.memory.bunkerData.anchor);
+				roomPlannerRoads = layout[STRUCTURE_ROAD] || [];
+			} else if (this.roomPlanner.memory.mapsByLevel) {
+				roomPlannerRoads = _.map(this.roomPlanner.memory.mapsByLevel[8][STRUCTURE_ROAD],
+										 protoPos => derefRoomPosition(protoPos));
+			} else {
+				log.error(`RoadPlanner@${this.colony.room.print}: could not get road positions from room planner!`);
+				roomPlannerRoads = [];
+			}
 		}
 		let allRoadPos: RoomPosition[] = _.compact(this.roadPositions.concat(roomPlannerRoads));
 		// Encode the coordinates of the road as keys in a truthy hash table for fast lookup
