@@ -38,7 +38,7 @@ export class DirectiveInvasionDefense extends Directive {
 																	hostile.getActiveBodyparts(WORK) > 0);
 		let rangedHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0);
 		if (this.colony.stage > ColonyStage.Larva && percentWalls > 0.5) {
-			this.overlords.archer = new RangedDefenseOverlord(this, useBoosts);
+			this.overlords.rangedDefense = new RangedDefenseOverlord(this, useBoosts);
 		} else if (meleeHostiles.length > 0) {
 			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
 		} else if (Game.time % 10 == 0) {

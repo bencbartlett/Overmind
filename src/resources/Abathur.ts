@@ -4,6 +4,8 @@ import {Colony, getAllColonies} from '../Colony';
 import {REAGENTS} from './map_resources';
 import {mergeSum, minMax} from '../utilities/utils';
 import {profile} from '../profiler/decorator';
+import {maxMarketPrices, TraderJoe} from '../logistics/TradeNetwork';
+import {Mem} from '../Memory';
 
 const _priorityStock: { [key: string]: number } = {
 	XGHO2: 1000,	// For toughness
@@ -68,10 +70,19 @@ for (let resourceType in _wantedStock) {
 	wantedStock.push(stock);
 }
 
+interface AbathurMemory {
+	sleepUntil: number;
+}
+
+const AbathurMemoryDefaults = {
+	sleepUntil: 0
+};
+
 @profile
 export class Abathur {
 
 	colony: Colony;
+	memory: AbathurMemory;
 	priorityStock: Reaction[];
 	wantedStock: Reaction[];
 	assets: { [resourceType: string]: number };
@@ -81,10 +92,12 @@ export class Abathur {
 	static settings = {
 		minBatchSize: 100,	// anything less than this wastes time
 		maxBatchSize: 1000, // manager carry capacity
+		sleepTime   : 100,  // sleep for this many ticks once you can't make anything
 	};
 
 	constructor(colony: Colony) {
 		this.colony = colony;
+		this.memory = Mem.wrap(this.colony.memory, 'abathur', AbathurMemoryDefaults);
 		this.priorityStock = priorityStock;
 		this.wantedStock = wantedStock;
 		this.assets = colony.assets;
@@ -106,32 +119,69 @@ export class Abathur {
 		return this._globalAssets;
 	}
 
-	private canBuyIngredientsForReaction(reactionQueue: Reaction[]): boolean {
-		// TODO
-		return false;
+	private canReceiveBasicMineralsForReaction(mineralQuantities: { [resourceType: string]: number },
+											   amount: number): boolean {
+		for (let mineral in mineralQuantities) {
+			if (!this.someColonyHasExcess(<ResourceConstant>mineral, mineralQuantities[mineral])) {
+				return false;
+			}
+		}
+		return true;
 	}
 
-	// hasExcess(mineralType: ResourceConstant): boolean {
-	// 	return this.assets[mineralType] > Math.max((_wantedStock[mineralType] || 0),
-	// 											   (_priorityStock[mineralType] || 0));
-	// }
-	//
-	// private someColonyHasExcess(mineralType: ResourceConstant): boolean {
-	// 	return _.any(getAllColonies(), colony => colony.abathur.hasExcess(mineralType));
-	// }
+
+	private canBuyBasicMineralsForReaction(mineralQuantities: { [resourceType: string]: number },
+										   priceSensitive = true): boolean {
+		if (Game.market.credits < TraderJoe.settings.market.reserveCredits) {
+			return false;
+		}
+		for (let mineral in mineralQuantities) {
+			let maxPrice = maxMarketPrices.default;
+			if (priceSensitive && maxMarketPrices[mineral]) {
+				maxPrice = maxMarketPrices[mineral];
+			}
+			if (Overmind.tradeNetwork.priceOf(<ResourceConstant>mineral) > maxPrice) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	hasExcess(mineralType: ResourceConstant, excessAmount = 0): boolean {
+		return this.assets[mineralType] - excessAmount > Math.max((_wantedStock[mineralType] || 0),
+																  (_priorityStock[mineralType] || 0));
+	}
+
+	private someColonyHasExcess(mineralType: ResourceConstant, excessAmount = 0): boolean {
+		return _.any(getAllColonies(), colony => colony.abathur.hasExcess(mineralType, excessAmount));
+	}
 
 	/* Generate a queue of reactions to produce the most needed compound */
 	getReactionQueue(verbose = false): Reaction[] {
+		// Return nothing if you are sleeping; prevents wasteful reaction queue calculations
+		if (Game.time < this.memory.sleepUntil) {
+			return [];
+		}
+		// Compute the reaction queue for the highest priority item that you should be and can be making
 		let stocksToCheck = [_priorityStock, _wantedStock];
 		for (let stocks of stocksToCheck) {
 			for (let resourceType in stocks) {
 				let amountOwned = this.assets[resourceType] || 0;
 				let amountNeeded = stocks[resourceType];
 				if (amountOwned < amountNeeded) { // if there is a shortage of this resource
-					return this.buildReactionQueue(<ResourceConstant>resourceType, amountNeeded - amountOwned, verbose);
+					let reactionQueue = this.buildReactionQueue(<ResourceConstant>resourceType,
+						amountNeeded - amountOwned, verbose);
+					let missingBaseMinerals = this.getMissingBasicMinerals(reactionQueue);
+					if (!_.any(missingBaseMinerals)
+						|| this.canReceiveBasicMineralsForReaction(missingBaseMinerals, amountNeeded + 1000)
+						|| this.canBuyBasicMineralsForReaction(missingBaseMinerals)) {
+						return reactionQueue;
+					}
 				}
 			}
 		}
+		// If there's nothing you can make, sleep for 100 ticks
+		this.memory.sleepUntil = Game.time + Abathur.settings.sleepTime;
 		return [];
 	}
 

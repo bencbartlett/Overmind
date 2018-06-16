@@ -23,6 +23,19 @@ const TraderMemoryDefaults: TraderMemory = {
 	equalizeIndex: 0,
 };
 
+// Maximum prices I'm willing to pay to buy various resources - based on shard2 market data in June 2018
+// (might not always be up to date)
+export const maxMarketPrices: { [resourceType: string]: number } = {
+	default             : 5.0,
+	[RESOURCE_HYDROGEN] : 0.3,
+	[RESOURCE_OXYGEN]   : 0.25,
+	[RESOURCE_UTRIUM]   : 0.3,
+	[RESOURCE_LEMERGIUM]: 0.25,
+	[RESOURCE_KEANIUM]  : 0.25,
+	[RESOURCE_ZYNTHIUM] : 0.25,
+	[RESOURCE_CATALYST] : 0.4,
+};
+
 @profile
 export class TraderJoe implements ITradeNetwork {
 
@@ -33,9 +46,6 @@ export class TraderJoe implements ITradeNetwork {
 		market: {
 			reserveCredits: 10000,	// Always try to stay above this amount
 			boostCredits  : 15000,	// You can buy boosts directly off market while above this amount
-			maxPrice      : {		// Maximum price you're willing to pay for various resources
-				default: 5.0,
-			},
 			orders        : {
 				timeout      : 100000,	// Remove sell orders after this many ticks if remaining amount < cleanupAmount
 				cleanupAmount: 10,		// RemainingAmount threshold to remove expiring orders
@@ -241,7 +251,7 @@ export class TraderJoe implements ITradeNetwork {
 			order => order.type == ORDER_SELL && order.resourceType == mineralType && order.amount >= amount
 		);
 		let bestOrder = minBy(ordersForMineral, (order: Order) => order.price);
-		let maxPrice = TraderJoe.settings.market.maxPrice.default;
+		let maxPrice = maxMarketPrices[mineralType] || maxMarketPrices.default;
 		if (bestOrder && bestOrder.price <= maxPrice) {
 			let response = Game.market.deal(bestOrder.id, amount, terminal.room.name);
 			this.logTransaction(bestOrder, terminal.room.name, amount, response);
@@ -250,10 +260,11 @@ export class TraderJoe implements ITradeNetwork {
 
 	private logTransaction(order: Order, destinationRoomName: string, amount: number, response: number): void {
 		let action = order.type == ORDER_SELL ? 'bought' : 'sold';
+		let cost = (order.price * amount).toFixed(2);
 		let fee = order.roomName ? Game.market.calcTransactionCost(amount, order.roomName, destinationRoomName) : 0;
 		let roomName = Game.rooms[destinationRoomName] ? Game.rooms[destinationRoomName].print : destinationRoomName;
 		log.info(`${roomName}: ${action} ${amount} of ${order.resourceType} at ${order.roomName}.  ` +
-				 `Price: ${order.price * amount} credits  Fee: ${fee} energy  Response: ${response}`);
+				 `Price: ${cost} credits  Fee: ${fee} energy  Response: ${response}`);
 	}
 
 

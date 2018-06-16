@@ -47,15 +47,18 @@ VersionMigration.run();
 
 // Main loop
 function main(): void {
-	if (Game.cpu.bucket < 500) return;					// Don't run anything at low bucket
-	Mem.clean();										// Clean memory
-	global.Overmind = new _Overmind();					// Instantiate the Overmind
-	Overmind.build();									// Build phase: instantiate caches and colony components
-	Overmind.init();									// Init phase: spawning and energy requests
-	Overmind.run();										// Run phase: execute state-changing actions
-	Overmind.visuals(); 								// Draw visuals
-	Stats.run(); 										// Record statistics
-	sandbox();											// Sandbox: run any testing code
+	if (Game.cpu.bucket > 500) {
+		Mem.clean();										// Clean memory
+		global.Overmind = new _Overmind();					// Instantiate the Overmind
+		Overmind.build();									// Build phase: instantiate caches and colony components
+		Overmind.init();									// Init phase: spawning and energy requests
+		Overmind.run();										// Run phase: execute state-changing actions
+		Overmind.visuals(); 								// Draw visuals
+		Stats.run(); 										// Record statistics
+		sandbox();											// Sandbox: run any testing code
+	} else {
+		log.warning(`CPU bucket is critically low (${Game.cpu.bucket}) - skipping this tick!`);
+	}
 }
 
 export function loop(): void {

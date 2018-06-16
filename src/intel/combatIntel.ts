@@ -54,6 +54,8 @@ export class CombatIntel {
 		}
 	}
 
+	// Cost matrix calculations
+
 	private computeCostMatrix(): CostMatrix | undefined {
 		if (this.room) {
 			let matrix = new PathFinder.CostMatrix();
@@ -256,6 +258,13 @@ export class CombatIntel {
 		let rangedHealing = RANGED_HEAL_POWER * _.sum(_.map(rangedHealers, healer => this.getHealPotential(healer)));
 		return selfHealing + neighborHealing + rangedHealing;
 	}
+
+	// Creep position calculations =====================================================================================
+
+	// // Distance from a given creep to the nearest rampart or wall; Infinity if no barriers in room
+	// static distanceToBarrier(creep: Creep): number {
+	//
+	// }
 
 	static getPositionsNearEnemies(hostiles: Creep[], range = 0): RoomPosition[] {
 		return _.unique(_.flatten(_.map(hostiles, hostile =>

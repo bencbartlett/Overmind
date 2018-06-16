@@ -89,6 +89,10 @@ interface ITradeNetwork {
 	sell(terminal: StructureTerminal, resource: ResourceConstant, amount?: number): void;
 
 	buyMineral(terminal: StructureTerminal, mineralType: ResourceConstant, amount: number): void;
+
+	init(): void;
+
+	run(): void;
 }
 
 declare var Overmind: IOvermind;

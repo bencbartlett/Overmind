@@ -12,6 +12,7 @@ import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} fr
 import {DirectiveLogisticsRequest} from '../directives/logistics/logisticsRequest';
 import {Mem} from '../Memory';
 import {TransporterSetup} from '../overlords/core/transporter';
+import {minMax} from '../utilities/utils';
 
 export type LogisticsTarget =
 	EnergyStructure
@@ -325,12 +326,14 @@ export class LogisticsNetwork {
 				let request = this.requests[requestID];
 				if (request) {
 					let carry = transporter.carry;
+					let remainingCapacity = transporter.carryCapacity - _.sum(carry);
 					let resourceAmount = -1 * this.predictedRequestAmount(transporter, request, nextAvailability);
 					// ^ need to multiply amount by -1 since transporter is doing complement of what request needs
 					if (carry[request.resourceType]) {
 						carry[request.resourceType]! += resourceAmount;
+						carry[request.resourceType] = minMax(carry[request.resourceType]!, 0, remainingCapacity);
 					} else {
-						carry[request.resourceType] = Math.max(resourceAmount, 0);
+						carry[request.resourceType] = minMax(resourceAmount, 0, remainingCapacity);
 					}
 					return carry;
 				}

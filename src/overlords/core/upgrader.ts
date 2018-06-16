@@ -67,9 +67,9 @@ export class UpgradingOverlord extends Overlord {
 				return;
 			}
 			// Sign controller if needed
-			if (!this.upgradeSite.controller.signedByMe && 							// <DO-NOT-MODIFY>: see license
-				!this.upgradeSite.controller.signedByScreeps) {						// <DO-NOT-MODIFY>
-				upgrader.task = Tasks.signController(this.upgradeSite.controller); 	// <DO-NOT-MODIFY>
+			if (!this.upgradeSite.controller.signedByMe &&
+				!this.upgradeSite.controller.signedByScreeps) {
+				upgrader.task = Tasks.signController(this.upgradeSite.controller);
 				return;
 			}
 			upgrader.task = Tasks.upgrade(this.upgradeSite.controller);

@@ -2,7 +2,6 @@
 
 import {Zerg} from '../../Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {DirectiveTargetSiege} from '../../directives/targeting/siegeTarget';
 import {CombatOverlord} from '../CombatOverlord';
 import {CreepSetup} from '../CreepSetup';
 import {boostResources} from '../../resources/map_resources';
@@ -11,7 +10,12 @@ import {profile} from '../../profiler/decorator';
 import {CombatIntel} from '../../intel/combatIntel';
 
 const HydraliskSetup = new CreepSetup('hydralisk', {
-	pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, HEAL, MOVE, MOVE],
+	pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, HEAL, MOVE, MOVE, MOVE, MOVE],
+	sizeLimit: Infinity,
+});
+
+const BoostedHydraliskSetup = new CreepSetup('hydralisk', {
+	pattern  : [TOUGH, TOUGH, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, HEAL, MOVE],
 	sizeLimit: Infinity,
 });
 
@@ -49,20 +53,12 @@ export class RangedDefenseOverlord extends CombatOverlord {
 
 	private findTarget(archer: Zerg): Creep | Structure | undefined {
 		if (this.room) {
-			// Prioritize specifically targeted structures first
-			let targetingDirectives = DirectiveTargetSiege.find(this.room.flags) as DirectiveTargetSiege[];
-			let targetedStructures = _.compact(_.map(targetingDirectives,
-													 directive => directive.getTarget())) as Structure[];
-			if (targetedStructures.length > 0) {
-				return this.findClosestReachable(archer.pos, targetedStructures);
-			} else {
-				// Target nearby hostile creeps
-				let creepTarget = this.findClosestHostile(archer, false, false);
-				if (creepTarget) return creepTarget;
-				// Target nearby hostile structures
-				let structureTarget = this.findClosestPrioritizedStructure(archer);
-				if (structureTarget) return structureTarget;
-			}
+			// Target nearby hostile creeps
+			let creepTarget = this.findClosestHostile(archer, false, false);
+			if (creepTarget) return creepTarget;
+			// Target nearby hostile structures
+			let structureTarget = this.findClosestPrioritizedStructure(archer);
+			if (structureTarget) return structureTarget;
 		}
 	}
 

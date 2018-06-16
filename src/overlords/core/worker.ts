@@ -122,7 +122,7 @@ export class WorkerOverlord extends Overlord {
 		let workPartsPerWorker = _.filter(this.generateProtoCreep(setup).body, part => part == WORK).length;
 		if (this.colony.stage == ColonyStage.Larva) {
 			// At lower levels, try to saturate the energy throughput of the colony
-			let MAX_WORKERS = 7; // Maximum number of workers to spawn
+			const MAX_WORKERS = 7; // Maximum number of workers to spawn
 			let energyPerTick = _.sum(_.map(this.colony.miningSites, site => site.energyPerTick));
 			let energyPerTickPerWorker = 1.1 * workPartsPerWorker; // Average energy per tick when workers are working
 			let workerUptime = 0.8;
@@ -130,7 +130,7 @@ export class WorkerOverlord extends Overlord {
 			this.wishlist(Math.min(numWorkers, MAX_WORKERS), setup);
 		} else {
 			// At higher levels, spawn workers based on construction and repair that needs to be done
-			let MAX_WORKERS = 3; // Maximum number of workers to spawn
+			const MAX_WORKERS = 4; // Maximum number of workers to spawn
 			let constructionTicks = _.sum(_.map(this.colony.constructionSites,
 												site => Math.max(site.progressTotal - site.progress, 0)))
 									/ BUILD_POWER; // Math.max for if you manually set progress on private server

@@ -13,6 +13,7 @@ import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {Priority} from '../priorities/priorities';
 import {Zerg} from '../Zerg';
 import {TraderJoe} from '../logistics/TradeNetwork';
+import {rightArrow} from '../utilities/stringConstants';
 
 const LabStatus = {
 	Idle             : 0,
@@ -151,7 +152,7 @@ export class EvolutionChamber extends HiveCluster {
 			case LabStatus.Idle:
 				if (this.memory.activeReaction) {
 					let [ing1, ing2] = REAGENTS[this.memory.activeReaction.mineralType];
-					log.info(`${this.room.print}: starting synthesis of ${ing1} + ${ing2} -> ` +
+					log.info(`${this.room.print}: starting synthesis of ${ing1} + ${ing2} ${rightArrow} ` +
 							 this.memory.activeReaction.mineralType);
 					this.memory.status = LabStatus.AcquiringMinerals;
 					this.memory.statusTick = Game.time;
