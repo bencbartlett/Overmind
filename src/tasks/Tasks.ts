@@ -1,4 +1,5 @@
-import {attackTargetType, TaskAttack} from './instances/attack';
+import { attackTargetType, TaskAttack } from './instances/attack';
+import { attackControllerTargetType, TaskAttackController } from './instances/attackController';
 import {buildTargetType, TaskBuild} from './instances/build';
 import {claimTargetType, TaskClaim} from './instances/claim';
 import {dismantleTargetType, TaskDismantle} from './instances/dismantle';
@@ -27,6 +28,10 @@ export class Tasks {
 
 	static attack(target: attackTargetType, options = {} as TaskOptions): TaskAttack {
 		return new TaskAttack(target, options);
+	}
+
+	static attackController(target: attackControllerTargetType, options = {} as TaskOptions): TaskAttackController {
+		return new TaskAttackController(target, options);
 	}
 
 	static build(target: buildTargetType, options = {} as TaskOptions): TaskBuild {
