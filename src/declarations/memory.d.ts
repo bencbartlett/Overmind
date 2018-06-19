@@ -63,7 +63,7 @@ interface CreepMemory {
 	};
 	// Traveler components
 	_trav: TravelData | null;
-	// _go: MoveData | null;
+	_go?: MoveData;
 	// Combat
 	partner?: string;
 	retreating?: boolean;
@@ -165,7 +165,6 @@ interface OverseerMemory {
 interface OverlordMemory {
 
 }
-
 
 interface HatcheryMemory {
 	// idlePos?: protoPos;

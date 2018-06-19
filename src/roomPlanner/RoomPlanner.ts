@@ -363,15 +363,18 @@ export class RoomPlanner {
 	finalize(ignoreRoads = false): void {
 		let collision = this.findCollision(ignoreRoads);
 		if (collision) {
-			console.log(`Invalid layout: collision detected at ${collision.print}!`);
+			log.warning(`Invalid layout: collision detected at ${collision.print}!`);
 			return;
 		}
-		let layoutIsValid: boolean = !!this.placements.commandCenter && !!this.placements.hatchery;
+		let layoutIsValid: boolean = (!!this.placements.commandCenter && !!this.placements.hatchery)
+									 || !!this.placements.bunker;
 		if (layoutIsValid) { // Write everything to memory
 			// Generate maps for each rcl
 			delete this.memory.bunkerData;
 			if (this.placements.bunker) {
-
+				this.memory.bunkerData = {
+					anchor: this.placements.bunker,
+				};
 			} else {
 				this.memory.mapsByLevel = {};
 				for (let rcl = 1; rcl <= 8; rcl++) {
@@ -399,7 +402,8 @@ export class RoomPlanner {
 			this.buildMissing();
 			// Finalize the road planner layout
 		} else {
-			console.log('Not a valid room layout! Must have hatchery and commandCenter placements.');
+			log.warning('Not a valid room layout! Must have both hatchery and commandCenter placements ' +
+						'or bunker placement.');
 		}
 	}
 

@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+### Added
+- Added the `Movement` library, which will replace Traveler as the default method of moving creeps around in Overmind
+
+### Fixed
+- Fixed a bug where mining sites could get clogged if invaders died on the container outputs and dropped minerals which would not get withdrawn
 
 ## Overmind [0.4.1] - 2018.6.15
 
@@ -105,6 +110,9 @@ Finally, we now have a [feature request](https://github.com/bencbartlett/Overmin
 
 ### Fixed
 - Bugfix with workers being idle due to being unable to find a valid paving target
+
+### Removed
+- Removed `LabMineralType` directive as it is no longer relevant
 
 
 ## Overmind [0.3.0]: "Back to base-ics" - 2018.5.9

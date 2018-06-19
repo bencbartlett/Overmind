@@ -115,18 +115,9 @@ export class UpgradeSite extends HiveCluster {
 		}
 		// Find all positions at range 2 from controller
 		let inputLocations: RoomPosition[] = [];
-		for (let dx of [-2, -1, 0, 1, 2]) {
-			for (let dy of [-2, -1, 0, 1, 2]) {
-				if ((dx == -2 || dx == 2) || (dy == -2 || dy == 2)) {
-					let x = this.pos.x + dx;
-					let y = this.pos.y + dy;
-					if (1 <= x && x <= 49 && 1 <= y && y <= 49) { // Don't use edges or invalid room positions
-						let pos = new RoomPosition(x, y, this.pos.roomName);
-						if (pos.isPassible(true)) {
-							inputLocations.push(pos);
-						}
-					}
-				}
+		for (let pos of this.pos.getPositionsAtRange(2)) {
+			if (pos.isPassible(true)) {
+				inputLocations.push(pos);
 			}
 		}
 		// Try to find locations where there is maximal standing room

@@ -12,14 +12,14 @@ import {DirectiveTargetSiege} from './targeting/siegeTarget';
 import {DirectiveSiege} from './offense/siege';
 import {DirectiveHealPoint} from './offense/healPoint';
 import {DirectiveGuardSwarm} from './defense/guardSwarm';
-import {DirectiveLabMineral} from './logistics/labMineralType';
 import {DirectiveDestroy} from './offense/destroy';
 import {DirectiveInvasionDefense} from './defense/invasionDefense';
-import {DirectiveLogisticsRequest} from './logistics/logisticsRequest';
+import {DirectivePickup} from './logistics/logisticsRequest';
 import {DirectiveHaul} from './logistics/haul';
 import {DirectiveDismantle} from './targeting/dismantle';
 import {DirectiveNukeResponse} from './defense/nukeResponse';
-import {DirectiveAbandon} from './colonization/abandon';
+import {DirectiveEvacuateTerminal} from './logistics/evacuateTerminal';
+import {DirectiveRPBunker} from './roomPlanner/roomPlanner_bunker';
 
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 	switch (flag.color) {
@@ -33,8 +33,6 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveIncubate(flag);
 				case COLOR_GREY:
 					return new DirectiveColonize(flag);
-				case COLOR_RED:
-					return new DirectiveAbandon(flag);
 			}
 			break;
 
@@ -72,17 +70,11 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 		case COLOR_YELLOW:
 			switch (flag.secondaryColor) {
 				case COLOR_YELLOW:
-					return new DirectiveLogisticsRequest(flag);
+					return new DirectivePickup(flag);
 				case COLOR_BLUE:
 					return new DirectiveHaul(flag);
-			}
-			break;
-
-		// Lab directives ==============================================================================================
-		case COLOR_CYAN:
-			switch (flag.secondaryColor) {
-				case COLOR_CYAN:
-					return new DirectiveLabMineral(flag);
+				case COLOR_RED:
+					return new DirectiveEvacuateTerminal(flag);
 			}
 			break;
 
@@ -103,6 +95,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveRPHatchery(flag);
 				case COLOR_BLUE:
 					return new DirectiveRPCommandCenter(flag);
+				case COLOR_RED:
+					return new DirectiveRPBunker(flag);
 			}
 			break;
 	}

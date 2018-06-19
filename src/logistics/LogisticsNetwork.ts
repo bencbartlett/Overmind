@@ -9,7 +9,7 @@ import {Pathing} from '../pathing/Pathing';
 import {Colony} from '../Colony';
 import {Matcher} from '../algorithms/galeShapley';
 import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../declarations/typeGuards';
-import {DirectiveLogisticsRequest} from '../directives/logistics/logisticsRequest';
+import {DirectivePickup} from '../directives/logistics/logisticsRequest';
 import {Mem} from '../Memory';
 import {TransporterSetup} from '../overlords/core/transporter';
 import {minMax} from '../utilities/utils';
@@ -20,7 +20,7 @@ export type LogisticsTarget =
 	| StructureLab
 	| StructureNuker
 	| StructurePowerSpawn
-	| DirectiveLogisticsRequest// | Zerg;
+	| DirectivePickup// | Zerg;
 export type BufferTarget = StructureStorage | StructureTerminal;
 
 export interface LogisticsRequest {
@@ -151,7 +151,7 @@ export class LogisticsNetwork {
 	}
 
 	/* Requests output for every resourceType in a requestor object */
-	requestOutputAll(target: StoreStructure | DirectiveLogisticsRequest, opts = {} as RequestOptions): void {
+	requestOutputAll(target: StoreStructure | DirectivePickup, opts = {} as RequestOptions): void {
 		for (let resourceType in target.store) {
 			let amount = target.store[<ResourceConstant>resourceType] || 0;
 			if (amount > 0) {
@@ -162,7 +162,7 @@ export class LogisticsNetwork {
 	}
 
 	/* Requests output for every mineral in a requestor object */
-	requestOutputMinerals(target: StoreStructure | DirectiveLogisticsRequest, opts = {} as RequestOptions): void {
+	requestOutputMinerals(target: StoreStructure | DirectivePickup, opts = {} as RequestOptions): void {
 		for (let resourceType in target.store) {
 			if (resourceType == RESOURCE_ENERGY) continue;
 			let amount = target.store[<ResourceConstant>resourceType] || 0;
@@ -174,7 +174,7 @@ export class LogisticsNetwork {
 	}
 
 	private getInputAmount(target: LogisticsTarget, resourceType: ResourceConstant): number {
-		if (target instanceof DirectiveLogisticsRequest) {
+		if (target instanceof DirectivePickup) {
 			return target.storeCapacity - _.sum(target.store);
 		} else if (isStoreStructure(target)) {
 			return target.storeCapacity - _.sum(target.store);
@@ -210,7 +210,7 @@ export class LogisticsNetwork {
 	}
 
 	private getOutputAmount(target: LogisticsTarget, resourceType: ResourceConstant): number {
-		if (target instanceof DirectiveLogisticsRequest) {
+		if (target instanceof DirectivePickup) {
 			return target.store[resourceType]!;
 		} else if (isStoreStructure(target)) {
 			return target.store[resourceType]!;
@@ -247,18 +247,6 @@ export class LogisticsNetwork {
 
 	// Transporter availability and predictive functions ===============================================================
 
-	// private cacheTransporterData(transporter: Zerg) {
-	// 	if (transporter.task) {
-	// 		let nextAvailability = this.computeNextAvailability(transporter);
-	// 		let predictedTransporterCarry = this.computePredictedTransporterCarry(transporter, nextAvailability);
-	// 		this.memory.transporterCache[transporter.name] = {
-	// 			nextAvailability         : nextAvailability,
-	// 			predictedTransporterCarry: predictedTransporterCarry,
-	// 			tick                     : transporter.task.tick,
-	// 		};
-	// 	}
-	// }
-
 	private computeNextAvailability(transporter: Zerg): [number, RoomPosition] {
 		if (transporter.task) {
 			let approximateDistance = transporter.task.eta;
@@ -293,16 +281,6 @@ export class LogisticsNetwork {
 
 	/* Number of ticks until the transporter is available and where it will be */
 	private nextAvailability(transporter: Zerg): [number, RoomPosition] {
-		// if (transporter.task) {
-		// 	// Recalculate the transporter data if it doesn't exist or if it is invalid
-		// 	if (!this.memory.transporterCache[transporter.name] ||
-		// 		transporter.task.tick != this.memory.transporterCache[transporter.name].tick) {
-		// 		this.cacheTransporterData(transporter);
-		// 	}
-		// 	return this.memory.transporterCache[transporter.name].nextAvailability;
-		// } else {
-		// 	return [0, transporter.pos];
-		// }
 		if (!this.cache.nextAvailability[transporter.name]) {
 			this.cache.nextAvailability[transporter.name] = this.computeNextAvailability(transporter);
 		}
@@ -344,16 +322,6 @@ export class LogisticsNetwork {
 
 	/* Returns the predicted state of the transporter's carry after completing its task */
 	private predictedTransporterCarry(transporter: Zerg): StoreDefinition {
-		// if (transporter.task) {
-		// 	// Recalculate the transporter data if it doesn't exist or if it is invalid
-		// 	if (!this.memory.transporterCache[transporter.name] ||
-		// 		transporter.task.tick != this.memory.transporterCache[transporter.name].tick) {
-		// 		this.cacheTransporterData(transporter);
-		// 	}
-		// 	return this.memory.transporterCache[transporter.name].predictedTransporterCarry;
-		// } else {
-		// 	return transporter.carry;
-		// }
 		if (!this.cache.predictedTransporterCarry[transporter.name]) {
 			this.cache.predictedTransporterCarry[transporter.name] = this.computePredictedTransporterCarry(transporter);
 		}
@@ -539,10 +507,10 @@ export class LogisticsNetwork {
 		// console.log(`Summary of logistics group for ${this.colony.name} at time ${Game.time}`);
 		console.log('Requests:');
 		for (let request of this.requests) {
-			let targetType = request.target instanceof DirectiveLogisticsRequest ? 'flag' :
+			let targetType = request.target instanceof DirectivePickup ? 'flag' :
 							 request.target.structureType;
 			let energy = 0;
-			if (request.target instanceof DirectiveLogisticsRequest || isStoreStructure(request.target)) {
+			if (request.target instanceof DirectivePickup || isStoreStructure(request.target)) {
 				energy = request.target.store[RESOURCE_ENERGY];
 			} else if (isEnergyStructure(request.target)) {
 				energy = request.target.energy;

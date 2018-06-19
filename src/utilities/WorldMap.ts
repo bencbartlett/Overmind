@@ -91,7 +91,6 @@ export class WorldMap {
 					return 6;
 				}
 			} else {
-				// must be the same missionRoom, no direction
 				return 0;
 			}
 		} else {

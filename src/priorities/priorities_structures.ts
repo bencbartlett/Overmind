@@ -35,3 +35,5 @@ export const AttackStructurePriorities: BuildableStructureConstant[] = [
 	STRUCTURE_RAMPART,
 	STRUCTURE_WALL,
 ];
+
+

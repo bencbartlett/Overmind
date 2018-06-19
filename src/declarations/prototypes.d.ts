@@ -150,7 +150,7 @@ interface StructureExtension {
 }
 
 interface StructureLab {
-	getMineralType(): _ResourceConstantSansEnergy | undefined;
+
 }
 
 interface StructureLink {

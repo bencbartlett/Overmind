@@ -1,8 +1,8 @@
 interface PathfinderReturn {
-    path: RoomPosition[];
-    ops: number;
-    cost: number;
-    incomplete: boolean;
+	path: RoomPosition[];
+	ops: number;
+	cost: number;
+	incomplete: boolean;
 }
 
 interface TravelToReturnData {

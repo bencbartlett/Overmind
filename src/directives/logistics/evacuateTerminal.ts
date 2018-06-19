@@ -3,10 +3,10 @@ import {Directive} from '../Directive';
 import {log} from '../../lib/logger/log';
 
 @profile
-export class DirectiveAbandon extends Directive {
+export class DirectiveEvacuateTerminal extends Directive {
 
-	static directiveName = 'abandon';
-	static color = COLOR_PURPLE;
+	static directiveName = 'evacuateTerminal';
+	static color = COLOR_YELLOW;
 	static secondaryColor = COLOR_RED;
 
 	// colony: Colony | undefined; // this is technically unallowable, but at end of life, colony can be undefined
@@ -23,7 +23,7 @@ export class DirectiveAbandon extends Directive {
 		// Register abandon status
 		this.colony.abandoning = true;
 		if (Game.time % 25 == 0) {
-			log.alert(`abandon@${this.pos.print}: terminal evacuation in progress!`);
+			log.alert(`${this.pos.print}: terminal evacuation in progress!`);
 		}
 	}
 

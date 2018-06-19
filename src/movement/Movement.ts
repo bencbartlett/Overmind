@@ -1,19 +1,18 @@
-// This is my custom movement library for use in Overmind. It was originally based on BonzAI's traveler module, but has
-// been modified to integrate more tightly with my AI.
+// This is the movement library for Overmind. It was originally based on BonzAI's Traveler library, but it has been
+// extensively modified to integrate more tightly with the Overmind framework and add additional functionality.
 
 import {profile} from '../profiler/decorator';
 import {log} from '../lib/logger/log';
 import {isExit, normalizePos, sameCoord} from './helpers';
 import {ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER, WorldMap} from '../utilities/WorldMap';
+import {Zerg} from '../Zerg';
 
 export const NO_ACTION = -20;
 
-// this might be higher than you wish, setting it lower is a great way to diagnose creep behavior issues. When creeps
-// need to repath to often or they aren't finding valid paths, it can sometimes point to problems elsewhere in your code
-const REPORT_CPU_THRESHOLD = 1000;
+const REPORT_CPU_THRESHOLD = 1000; 	// Report when creep uses more than this amount of CPU over lifetime
 
-const DEFAULT_MAXOPS = 20000;
-const DEFAULT_STUCK_VALUE = 2;
+const DEFAULT_MAXOPS = 20000;		// Default timeout for pathfinding
+const DEFAULT_STUCK_VALUE = 2;		// Marked as stuck after this many ticks
 
 const STATE_PREV_X = 0;
 const STATE_PREV_Y = 1;
@@ -23,9 +22,10 @@ const STATE_DEST_X = 4;
 const STATE_DEST_Y = 5;
 const STATE_DEST_ROOMNAME = 6;
 
-
 @profile
 export class Movement {
+
+	// Core creep movement functions ===================================================================================
 
 	/* Move a creep to a destination */
 	static goTo(creep: Creep, destination: HasPos | RoomPosition, options: MoveOptions = {}): number {
@@ -60,15 +60,15 @@ export class Movement {
 		}
 
 		// initialize data object
-		if (!creep.memory._trav) {
-			creep.memory._trav = {} as TravelData;
+		if (!creep.memory._go) {
+			creep.memory._go = {} as MoveData;
 		}
-		let travelData = creep.memory._trav as TravelData;
+		let moveData = creep.memory._go as MoveData;
 
-		let state = this.deserializeState(travelData, destination);
+		let state = this.deserializeState(moveData, destination);
 
 		// uncomment to visualize destination
-		// this.circle(destination.pos, "orange");
+		// this.circle(destination, "orange");
 
 		// check if creep is stuck
 		if (this.isStuck(creep, state)) {
@@ -85,27 +85,26 @@ export class Movement {
 		if (state.stuckCount >= options.stuckValue && Math.random() > .5) {
 			options.ignoreCreeps = false;
 			options.freshMatrix = true;
-			delete travelData.path;
+			delete moveData.path;
 		}
 
 		// delete path cache if destination is different
 		if (!destination.isEqualTo(state.destination)) {
 			if (options.movingTarget && state.destination.isNearTo(destination)) {
-				travelData.path += state.destination.getDirectionTo(destination);
+				moveData.path += state.destination.getDirectionTo(destination);
 				state.destination = destination;
 			} else {
-				delete travelData.path;
+				delete moveData.path;
 			}
 		}
 
-		if (options.repath && Math.random() < options.repath) {
-			// add some chance that you will find a new path randomly
-			delete travelData.path;
+		if (options.repath && Math.random() < options.repath) {	// randomly repath with specified probability
+			delete moveData.path;
 		}
 
 		// pathfinding
 		let newPath = false;
-		if (!travelData.path) {
+		if (!moveData.path) {
 			newPath = true;
 			if (creep.spawning) {
 				return ERR_BUSY;
@@ -114,20 +113,19 @@ export class Movement {
 			state.destination = destination;
 
 			let cpu = Game.cpu.getUsed();
-			let ret = this.findTravelPath(creep.pos, destination, options);
+			let ret = this.findPath(creep.pos, destination, options);
 
 			let cpuUsed = Game.cpu.getUsed() - cpu;
 			state.cpu = _.round(cpuUsed + state.cpu);
 			if (Game.time % 10 == 0 && state.cpu > REPORT_CPU_THRESHOLD) {
-				// see note at end of file for more info on this
-				log.alert(`TRAVELER: heavy cpu use: ${creep.name}, cpu: ${state.cpu} origin: ${
+				log.alert(`Movement: heavy cpu use: ${creep.name}, cpu: ${state.cpu} origin: ${
 							  creep.pos.print}, dest: ${destination.print}`);
 			}
 
 			let color = 'orange';
 			if (ret.incomplete) {
 				// uncommenting this is a great way to diagnose creep behavior issues
-				// console.log(`TRAVELER: incomplete path for ${creep.name}`);
+				// console.log(`Movement: incomplete path for ${creep.name}`);
 				color = 'red';
 			}
 
@@ -135,22 +133,22 @@ export class Movement {
 				options.returnData.pathfinderReturn = ret;
 			}
 
-			travelData.path = Movement.serializePath(creep.pos, ret.path, color);
+			moveData.path = Movement.serializePath(creep.pos, ret.path, color);
 			state.stuckCount = 0;
 		}
 
-		this.serializeState(creep, destination, state, travelData);
+		this.serializeState(creep, destination, state, moveData);
 
-		if (!travelData.path || travelData.path.length == 0) {
+		if (!moveData.path || moveData.path.length == 0) {
 			return ERR_NO_PATH;
 		}
 
 		// consume path
 		if (state.stuckCount == 0 && !newPath) {
-			travelData.path = travelData.path.substr(1);
+			moveData.path = moveData.path.substr(1);
 		}
 
-		let nextDirection = parseInt(travelData.path[0], 10);
+		let nextDirection = parseInt(moveData.path[0], 10);
 		if (options.returnData) {
 			if (nextDirection) {
 				let nextPos = Movement.positionAtDirection(creep.pos, nextDirection);
@@ -159,11 +157,99 @@ export class Movement {
 				}
 			}
 			options.returnData.state = state;
-			options.returnData.path = travelData.path;
+			options.returnData.path = moveData.path;
 		}
 		return creep.move(<DirectionConstant>nextDirection);
 	}
 
+	/* Park a creep off-roads */
+	static park(creep: Creep, pos: RoomPosition = creep.pos, maintainDistance = false): number {
+		let road = creep.pos.lookForStructure(STRUCTURE_ROAD);
+		if (!road) return OK;
+
+		let positions = _.sortBy(creep.pos.availableNeighbors(), (p: RoomPosition) => p.getRangeTo(pos));
+		if (maintainDistance) {
+			let currentRange = creep.pos.getRangeTo(pos);
+			positions = _.filter(positions, (p: RoomPosition) => p.getRangeTo(pos) <= currentRange);
+		}
+
+		let swampPosition;
+		for (let position of positions) {
+			if (position.lookForStructure(STRUCTURE_ROAD)) continue;
+			let terrain = position.lookFor(LOOK_TERRAIN)[0];
+			if (terrain === 'swamp') {
+				swampPosition = position;
+			} else {
+				return creep.move(creep.pos.getDirectionTo(position));
+			}
+		}
+
+		if (swampPosition) {
+			return creep.move(creep.pos.getDirectionTo(swampPosition));
+		}
+
+		return this.goTo(creep, pos);
+	}
+
+	/* Moves a creep off of the current tile to the first available neighbor */
+	static moveOffCurrentPos(creep: Creep): ScreepsReturnCode | undefined {
+		let destinationPos = _.first(_.filter(creep.pos.availableNeighbors(), pos => !pos.isEdge));
+		if (destinationPos) {
+			return creep.move(creep.pos.getDirectionTo(destinationPos));
+		}
+	}
+
+	/* Moves onto an exit tile */
+	static moveOnExit(creep: Creep): ScreepsReturnCode | undefined {
+		if (creep.pos.rangeToEdge > 0 && creep.fatigue == 0) {
+			let directions = [1, 3, 5, 7, 2, 4, 6, 8] as DirectionConstant[];
+			for (let direction of directions) {
+				let position = creep.pos.getPositionAtDirection(direction);
+				let terrain = position.lookFor(LOOK_TERRAIN)[0];
+				if (terrain != 'wall' && position.rangeToEdge == 0) {
+					let outcome = creep.move(direction);
+					return outcome;
+				}
+			}
+			log.warning(`moveOnExit() assumes nearby exit tile, position: ${creep.pos}`);
+			return ERR_NO_PATH;
+		}
+	}
+
+	/* Moves off of an exit tile */
+	static moveOffExit(creep: Creep, avoidSwamp = true): ScreepsReturnCode {
+		let swampDirection;
+		let directions = [1, 3, 5, 7, 2, 4, 6, 8] as DirectionConstant[];
+		for (let direction of directions) {
+			let position = creep.pos.getPositionAtDirection(direction);
+			if (position.rangeToEdge > 0 && position.isPassible()) {
+				let terrain = position.lookFor(LOOK_TERRAIN)[0];
+				if (avoidSwamp && terrain == 'swamp') {
+					swampDirection = direction;
+					continue;
+				}
+				return creep.move(direction);
+			}
+		}
+		if (swampDirection) {
+			return creep.move(swampDirection as DirectionConstant);
+		}
+		return ERR_NO_PATH;
+	}
+
+	/* Moves off of an exit tile toward a given direction */
+	static moveOffExitToward(creep: Creep, pos: RoomPosition, detour = true): number | undefined {
+		for (let position of creep.pos.availableNeighbors()) {
+			if (position.getRangeTo(pos) == 1) {
+				return this.goTo(creep, position);
+			}
+		}
+		if (detour) {
+			this.goTo(creep, pos, {ignoreCreeps: false});
+		}
+	}
+
+	/* Push a blocking creep out of the way, switching positions */
 	static pushCreep(creep: Creep, insist = true): boolean {
 		let nextDir = this.nextDirectionInPath(creep);
 		if (!nextDir) return false;
@@ -174,7 +260,7 @@ export class Movement {
 		let otherCreep = nextPos.lookFor(LOOK_CREEPS)[0];
 		if (!otherCreep) return false;
 
-		let otherData = otherCreep.memory._trav as TravelData;
+		let otherData = otherCreep.memory._go as MoveData;
 		if (!insist && otherData && otherData.path && otherData.path.length > 1) {
 			return false;
 		}
@@ -190,36 +276,45 @@ export class Movement {
 		return true;
 	}
 
-	public static nextDirectionInPath(creep: Creep): number | undefined {
-		let travelData = creep.memory._trav as TravelData;
-		if (!travelData || !travelData.path || travelData.path.length == 0) {
-			return;
+	static pairwiseMove(leader: Zerg, follower: Zerg, target: HasPos | RoomPosition,
+						opts = {} as MoveOptions, allowedRange = 1): number | undefined {
+		let outcome;
+		if (leader.room != follower.room) {
+			if (leader.pos.rangeToEdge == 0) {
+				// Leader should move off of exit tiles while waiting for follower
+				outcome = leader.travelTo(target, opts);
+			}
+			follower.travelTo(leader);
+			return outcome;
 		}
-		return Number.parseInt(travelData.path[0]);
-	}
 
-	public static nextPositionInPath(creep: Creep): RoomPosition | undefined {
-		let nextDir = this.nextDirectionInPath(creep);
-		if (!nextDir) {
-			return;
+		let range = leader.pos.getRangeTo(follower);
+		if (range > allowedRange) {
+			// If leader is farther than max allowed range, allow follower to catch up
+			if (follower.pos.rangeToEdge == 0 && follower.room == leader.room) {
+				follower.moveOffExitToward(leader.pos);
+			} else {
+				follower.travelTo(leader, {stuckValue: 1});
+			}
+		} else if (follower.fatigue == 0) {
+			// Leader should move if follower can also move this tick
+			outcome = leader.travelTo(target, opts);
+			if (range == 1) {
+				follower.move(follower.pos.getDirectionTo(leader));
+			} else {
+				follower.travelTo(leader, {stuckValue: 1});
+			}
 		}
-		return this.positionAtDirection(creep.pos, nextDir);
+		return outcome;
 	}
 
 	/* Check if the room should be avoiding when calculating routes */
-	public static shouldAvoid(roomName: string) {
+	static shouldAvoid(roomName: string) {
 		return Memory.rooms && Memory.rooms[roomName] && Memory.rooms[roomName].avoid;
 	}
 
-	/* Draw a circle */
-	public static circle(pos: RoomPosition, color: string, opacity?: number) {
-		new RoomVisual(pos.roomName).circle(pos, {
-			radius: .45, fill: 'transparent', stroke: color, strokeWidth: .15, opacity: opacity
-		});
-	}
-
 	/* Update memory on whether a room should be avoided based on controller owner */
-	public static updateRoomStatus(room: Room) {
+	static updateRoomStatus(room: Room) {
 		if (!room) {
 			return;
 		}
@@ -233,9 +328,7 @@ export class Movement {
 	}
 
 	/* Find a path from origin to destination */
-	public static findTravelPath(origin: RoomPosition, destination: RoomPosition,
-								 options: MoveOptions = {}): PathfinderReturn {
-
+	static findPath(origin: RoomPosition, destination: RoomPosition, options: MoveOptions = {}): PathFinderPath {
 		_.defaults(options, {
 			ignoreCreeps: true,
 			maxOps      : DEFAULT_MAXOPS,
@@ -268,11 +361,11 @@ export class Movement {
 				// can happen for situations where the creep would have to take an uncommonly indirect path
 				// options.allowedRooms and options.routeCallback can also be used to handle this situation
 				if (roomDistance <= 2) {
-					log.warning(`TRAVELER: path failed without findroute. Origin: ${origin.print}, ` +
+					log.warning(`Movement: path failed without findroute. Origin: ${origin.print}, ` +
 								`destination: ${destination.print}. Trying again with options.useFindRoute = true...`);
 					options.useFindRoute = true;
-					ret = this.findTravelPath(origin, destination, options);
-					log.warning(`TRAVELER: second attempt was ${ret.incomplete ? 'not ' : ''}successful`);
+					ret = this.findPath(origin, destination, options);
+					log.warning(`Movement: second attempt was ${ret.incomplete ? 'not ' : ''}successful`);
 					return ret;
 				}
 			} else {
@@ -441,14 +534,14 @@ export class Movement {
 		return new RoomPosition(x, y, origin.roomName);
 	}
 
-	private static deserializeState(travelData: TravelData, destination: RoomPosition): TravelState {
-		let state = {} as TravelState;
-		if (travelData.state) {
-			state.lastCoord = {x: travelData.state[STATE_PREV_X], y: travelData.state[STATE_PREV_Y]};
-			state.cpu = travelData.state[STATE_CPU];
-			state.stuckCount = travelData.state[STATE_STUCK];
-			state.destination = new RoomPosition(travelData.state[STATE_DEST_X], travelData.state[STATE_DEST_Y],
-												 travelData.state[STATE_DEST_ROOMNAME]);
+	private static deserializeState(moveData: MoveData, destination: RoomPosition): MoveState {
+		let state = {} as MoveState;
+		if (moveData.state) {
+			state.lastCoord = {x: moveData.state[STATE_PREV_X], y: moveData.state[STATE_PREV_Y]};
+			state.cpu = moveData.state[STATE_CPU];
+			state.stuckCount = moveData.state[STATE_STUCK];
+			state.destination = new RoomPosition(moveData.state[STATE_DEST_X], moveData.state[STATE_DEST_Y],
+												 moveData.state[STATE_DEST_ROOMNAME]);
 		} else {
 			state.cpu = 0;
 			state.destination = destination;
@@ -456,12 +549,28 @@ export class Movement {
 		return state;
 	}
 
-	private static serializeState(creep: Creep, destination: RoomPosition, state: TravelState, travelData: TravelData) {
-		travelData.state = [creep.pos.x, creep.pos.y, state.stuckCount, state.cpu, destination.x, destination.y,
+	private static serializeState(creep: Creep, destination: RoomPosition, state: MoveState, moveData: MoveData) {
+		moveData.state = [creep.pos.x, creep.pos.y, state.stuckCount, state.cpu, destination.x, destination.y,
 							destination.roomName];
 	}
 
-	private static isStuck(creep: Creep, state: TravelState): boolean {
+	private static nextDirectionInPath(creep: Creep): number | undefined {
+		let moveData = creep.memory._go as MoveData;
+		if (!moveData || !moveData.path || moveData.path.length == 0) {
+			return;
+		}
+		return Number.parseInt(moveData.path[0]);
+	}
+
+	private static nextPositionInPath(creep: Creep): RoomPosition | undefined {
+		let nextDir = this.nextDirectionInPath(creep);
+		if (!nextDir) {
+			return;
+		}
+		return this.positionAtDirection(creep.pos, nextDir);
+	}
+
+	private static isStuck(creep: Creep, state: MoveState): boolean {
 		let stuck = false;
 		if (state.lastCoord !== undefined) {
 			if (sameCoord(creep.pos, state.lastCoord)) { // didn't move
@@ -471,6 +580,13 @@ export class Movement {
 			}
 		}
 		return stuck;
+	}
+
+	/* Draw a circle */
+	private static circle(pos: RoomPosition, color: string, opacity?: number): RoomVisual {
+		return new RoomVisual(pos.roomName).circle(pos, {
+			radius: .45, fill: 'transparent', stroke: color, strokeWidth: .15, opacity: opacity
+		});
 	}
 }
 

@@ -3,7 +3,6 @@
 // General structure prototypes ========================================================================================
 
 import {MY_USERNAME} from '../~settings';
-import {DirectiveLabMineral} from '../directives/logistics/labMineralType';
 
 Object.defineProperty(Structure.prototype, 'blocksMovement', {
 	get() {
@@ -71,19 +70,6 @@ Object.defineProperty(StructureExtension.prototype, 'isEmpty', { // if this cont
 		return this.energy == 0;
 	},
 });
-
-// Lab prototypes ======================================================================================================
-StructureLab.prototype.getMineralType = function (): _ResourceConstantSansEnergy | undefined {
-	if (this.mineralType) {
-		return this.mineralType;
-	} else {
-		let flags = this.pos.lookFor(LOOK_FLAGS);
-		let dir = _.first(DirectiveLabMineral.find(flags) as DirectiveLabMineral[]);
-		if (dir && dir.mineralType) {
-			return dir.mineralType;
-		}
-	}
-};
 
 // Link prototypes =====================================================================================================
 

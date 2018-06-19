@@ -2,16 +2,15 @@ import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 
 
-interface DirectiveLogisticsReqeustMemory extends FlagMemory {
+interface DirectivePickupMemory extends FlagMemory {
 	store?: StoreDefinition;
 	storeCapacity?: number;
-	provider: boolean;
 }
 
 @profile
-export class DirectiveLogisticsRequest extends Directive {
+export class DirectivePickup extends Directive {
 
-	static directiveName = 'logisticsRequest';
+	static directiveName = 'pickup';
 	static color = COLOR_YELLOW;
 	static secondaryColor = COLOR_YELLOW;
 
@@ -20,7 +19,7 @@ export class DirectiveLogisticsRequest extends Directive {
 	private _store: StoreDefinition;
 	private _drops: { [resourceType: string]: Resource[] };
 
-	memory: DirectiveLogisticsReqeustMemory;
+	memory: DirectivePickupMemory;
 
 	constructor(flag: Flag) {
 		super(flag);
@@ -41,26 +40,6 @@ export class DirectiveLogisticsRequest extends Directive {
 		}
 		return this._drops;
 	}
-
-	get provider(): boolean {
-		if (this.memory.provider === undefined) { // strict comparison; this can be true or false or undefined
-			if (!this.pos.isVisible) { // assume this is a provider flag if you don't have vision
-				this.memory.provider = true;
-			} else { // is provider if there is some resource already there
-				this.memory.provider = (_.sum(this.store) > 0);
-			}
-		}
-		return this.memory.provider;
-	}
-
-	// get store(): StoreDefinition {
-	// 	if (!this._store) {
-	// 		let store = _.mapValues(this.drops, drops => _.sum(_.map(drops, drop => drop.amount)));
-	// 		if (!store.energy) store.energy = 0;
-	// 		this._store = store as StoreDefinition;
-	// 	}
-	// 	return this._store;
-	// }
 
 	get hasDrops(): boolean {
 		return _.keys(this.drops).length > 0;
@@ -123,16 +102,12 @@ export class DirectiveLogisticsRequest extends Directive {
 			// Refresh the state of the store in flag memory
 			this.memory.store = this.store;
 		}
-		if (this.provider) {
-			this.colony.logisticsNetwork.requestOutputAll(this);
-		} else {
-			this.colony.logisticsNetwork.requestInput(this);
-		}
+		this.colony.logisticsNetwork.requestOutputAll(this);
 	}
 
 	run(): void {
 		// Remove flag if you are a provider and out of resources
-		if (this.provider && _.sum(this.store) == 0) {
+		if (_.sum(this.store) == 0) {
 			this.remove();
 		}
 	}

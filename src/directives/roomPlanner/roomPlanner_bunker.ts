@@ -6,7 +6,7 @@ export class DirectiveRPBunker extends Directive {
 
 	static directiveName = 'roomPlanner:CommandCenter';
 	static color = COLOR_WHITE;
-	static secondaryColor = COLOR_PURPLE;
+	static secondaryColor = COLOR_RED;
 
 	constructor(flag: Flag) {
 		super(flag);

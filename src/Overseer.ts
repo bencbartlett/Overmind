@@ -13,7 +13,7 @@ import {DirectiveGuardSwarm} from './directives/defense/guardSwarm';
 import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
 import {Mem} from './Memory';
 import {DirectiveNukeResponse} from './directives/defense/nukeResponse';
-import {DirectiveAbandon} from './directives/colonization/abandon';
+import {DirectiveEvacuateTerminal} from './directives/logistics/evacuateTerminal';
 import {MinerSetup} from './overlords/core/miner';
 import {QueenSetup} from './overlords/core/queen';
 
@@ -63,7 +63,7 @@ export class Overseer {
 		// 	for (let resourceType in room.drops) {
 		// 		for (let drop of room.drops[resourceType]) {
 		// 			if (drop.amount > 200 || drop.resourceType != RESOURCE_ENERGY) {
-		// 				DirectiveLogisticsRequest.createIfNotPresent(drop.pos, 'pos', {quiet: true});
+		// 				DirectivePickup.createIfNotPresent(drop.pos, 'pos', {quiet: true});
 		// 			}
 		// 		}
 		// 	}
@@ -71,7 +71,7 @@ export class Overseer {
 		// // Place a logistics request directive for every tombstone with non-empty store that isn't on a container
 		// for (let tombstone of this.colony.tombstones) {
 		// 	if (_.sum(tombstone.store) > 0 && !tombstone.pos.lookForStructure(STRUCTURE_CONTAINER)) {
-		// 		DirectiveLogisticsRequest.createIfNotPresent(tombstone.pos, 'pos', {quiet: true});
+		// 		DirectivePickup.createIfNotPresent(tombstone.pos, 'pos', {quiet: true});
 		// 	}
 		// }
 
@@ -106,7 +106,7 @@ export class Overseer {
 
 		// Place an abandon directive in case room has been breached to prevent terminal robbing
 		// if (this.colony.breached && this.colony.terminal) {
-		// 	DirectiveAbandon.createIfNotPresent(this.colony.terminal.pos, 'room');
+		// 	DirectiveEvacuateTerminal.createIfNotPresent(this.colony.terminal.pos, 'room');
 		// }
 	}
 
@@ -124,7 +124,7 @@ export class Overseer {
 				let ret = this.colony.controller.activateSafeMode();
 				if (ret != OK && !this.colony.controller.safeMode) {
 					if (this.colony.terminal) {
-						DirectiveAbandon.createIfNotPresent(this.colony.terminal.pos, 'room');
+						DirectiveEvacuateTerminal.createIfNotPresent(this.colony.terminal.pos, 'room');
 					}
 				}
 				return;
@@ -138,7 +138,7 @@ export class Overseer {
 				let ret = this.colony.controller.activateSafeMode();
 				if (ret != OK && !this.colony.controller.safeMode) {
 					if (this.colony.terminal) {
-						DirectiveAbandon.createIfNotPresent(this.colony.terminal.pos, 'room');
+						DirectiveEvacuateTerminal.createIfNotPresent(this.colony.terminal.pos, 'room');
 					}
 				}
 				return;

@@ -111,7 +111,7 @@ export class MiningSite extends HiveCluster {
 		if (this.output instanceof StructureContainer) {
 			let transportCapacity = 200 * this.colony.level;
 			let threshold = this.colony.stage > ColonyStage.Larva ? 0.8 : 0.5;
-			if (this.output.energy > threshold * transportCapacity) {
+			if (_.sum(this.output.store) > threshold * transportCapacity) {
 				this.colony.logisticsNetwork.requestOutputAll(this.output, {dAmountdt: this.energyPerTick});
 			}
 		} else if (this.output instanceof StructureLink) {
