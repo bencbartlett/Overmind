@@ -157,11 +157,10 @@ export class RoomPlanner {
 		// Reinstantiate flags
 		for (let protoFlag of this.memory.savedFlags) {
 			let pos = derefRoomPosition(protoFlag.pos);
-			let result = pos.createFlag(undefined, COLOR_WHITE, protoFlag.secondaryColor);
-			// if (typeof result == 'string') {
-			// 	_.remove(this.memory.savedFlags, protoFlag);
-			// }
-			// TODO: add memory back on flag
+			let result = pos.createFlag(undefined, COLOR_WHITE, protoFlag.secondaryColor) as number | string;
+			if (typeof result == 'string') {
+				Memory.flags[result] = protoFlag.memory; // restore old memory
+			}
 		}
 		this.memory.savedFlags = [];
 
@@ -392,7 +391,7 @@ export class RoomPlanner {
 				this.memory.savedFlags.push({
 												secondaryColor: flag.secondaryColor,
 												pos           : flag.pos,
-												memory        : {} as FlagMemory
+												memory        : flag.memory,
 											});
 				flag.remove();
 			}

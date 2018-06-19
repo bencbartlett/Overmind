@@ -92,7 +92,7 @@ interface FlagMemory {
 	amount?: number;
 	created?: number;
 	persistent?: boolean;
-	setPosition: RoomPosition;
+	// setPosition: RoomPosition;
 	rotation?: number;
 	colony?: string;
 	parent?: string;

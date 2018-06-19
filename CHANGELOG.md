@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Fixed
 - Fixed a bug where mining sites could get clogged if invaders died on the container outputs and dropped minerals which would not get withdrawn
+- Room planner now correctly restores flag memories when reopening a session
+
+### Removed
+- Removed dependencies for `Traveler`, replacing with in-house `Movement` and `Pathing` libraries
 
 ## Overmind [0.4.1] - 2018.6.15
 
