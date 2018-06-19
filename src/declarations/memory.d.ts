@@ -60,13 +60,10 @@ interface CreepMemory {
 	colony: string;
 	data: {
 		origin: string;
-		// replaceAt: number;
-		// boosts: { [resourceName: string]: boolean };
-		// moveSpeed?: number;
 	};
 	// Traveler components
-	// _travel: any;
 	_trav: TravelData | null;
+	// _go: MoveData | null;
 	// Combat
 	partner?: string;
 	retreating?: boolean;

@@ -105,9 +105,9 @@ export class Overseer {
 		}
 
 		// Place an abandon directive in case room has been breached to prevent terminal robbing
-		if (this.colony.breached && this.colony.terminal) {
-			DirectiveAbandon.createIfNotPresent(this.colony.terminal.pos, 'room');
-		}
+		// if (this.colony.breached && this.colony.terminal) {
+		// 	DirectiveAbandon.createIfNotPresent(this.colony.terminal.pos, 'room');
+		// }
 	}
 
 
@@ -121,7 +121,12 @@ export class Overseer {
 		for (let structure of criticalStructures) {
 			if (structure.hits < structure.hitsMax &&
 				structure.pos.findInRange(this.colony.room.dangerousHostiles, 1).length > 0) {
-				this.colony.controller.activateSafeMode();
+				let ret = this.colony.controller.activateSafeMode();
+				if (ret != OK && !this.colony.controller.safeMode) {
+					if (this.colony.terminal) {
+						DirectiveAbandon.createIfNotPresent(this.colony.terminal.pos, 'room');
+					}
+				}
 				return;
 			}
 		}
@@ -130,7 +135,12 @@ export class Overseer {
 			let firstHostile = _.first(this.colony.room.dangerousHostiles);
 			if (firstHostile && this.colony.spawns[0] &&
 				Pathing.isReachable(firstHostile.pos, this.colony.spawns[0].pos, {obstacles: barriers})) {
-				this.colony.controller.activateSafeMode();
+				let ret = this.colony.controller.activateSafeMode();
+				if (ret != OK && !this.colony.controller.safeMode) {
+					if (this.colony.terminal) {
+						DirectiveAbandon.createIfNotPresent(this.colony.terminal.pos, 'room');
+					}
+				}
 				return;
 			}
 		}

@@ -18,6 +18,6 @@ export function isStoreStructure(structure: Structure): structure is StoreStruct
 	return (<StoreStructure>structure).store != undefined;
 }
 
-// export function isResourceStructure(structure: Structure): structure is MineralStructure {
-//
-// }
+export function hasPos(obj: HasPos | RoomPosition): obj is HasPos {
+	return (<HasPos>obj).pos != undefined;
+}

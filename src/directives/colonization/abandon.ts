@@ -22,6 +22,9 @@ export class DirectiveAbandon extends Directive {
 		}
 		// Register abandon status
 		this.colony.abandoning = true;
+		if (Game.time % 25 == 0) {
+			log.alert(`abandon@${this.pos.print}: terminal evacuation in progress!`);
+		}
 	}
 
 	init() {

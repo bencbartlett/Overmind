@@ -32,7 +32,7 @@ interface Room {
 	dangerousPlayerHostiles: Creep[];
 	hostileStructures: Structure[];
 	flags: Flag[];
-	// Preprocessed structures
+	// Cached structures
 	tombstones: Tombstone[];
 	drops: { [resourceType: string]: Resource[] };
 	droppedEnergy: Resource[];
@@ -51,14 +51,15 @@ interface Room {
 	mineral: Mineral | undefined;
 	keeperLairs: StructureKeeperLair[];
 	roads: StructureRoad[];
-	// sinks: Sink[];
 	repairables: Structure[];
 	constructionSites: ConstructionSite[];
-	// structureSites: ConstructionSite[];
-	// roadSites: ConstructionSite[];
 	barriers: (StructureWall | StructureRampart)[];
 	ramparts: StructureRampart[];
 	walls: StructureWall[];
+	// Used by movement library
+	_defaultMatrix: CostMatrix;
+	_creepMatrix: CostMatrix;
+	_skMatrix: CostMatrix;
 
 	getStructures(structureType: string): Structure[];
 

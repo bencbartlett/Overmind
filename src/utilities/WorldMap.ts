@@ -5,7 +5,7 @@ import {profile} from '../profiler/decorator';
 
 export const ROOMTYPE_SOURCEKEEPER = 'SK';
 export const ROOMTYPE_CORE = 'CORE';
-export const ROOMTYPE_CONTROLLER = 'CTRLR';
+export const ROOMTYPE_CONTROLLER = 'CTRL';
 export const ROOMTYPE_ALLEY = 'ALLEY';
 
 @profile
@@ -128,7 +128,6 @@ export class WorldMap {
 	}
 
 	public static getRoomCoordinates(roomName: string): RoomCoord {
-
 		let coordinateRegex = /(E|W)(\d+)(N|S)(\d+)/g;
 		let match = coordinateRegex.exec(roomName)!;
 
