@@ -23,6 +23,6 @@ export class TaskGetRenewed extends Task {
 	}
 
 	work() {
-		return this.target.renewCreep(this.creep);
+		return this.target.renewCreep(this.creep.creep);
 	}
 }

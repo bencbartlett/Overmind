@@ -1,9 +1,10 @@
 import {profile} from './profiler/decorator';
 import {Colony} from './Colony';
 import {Overlord} from './overlords/Overlord';
-import {Task} from './tasks/Task';
 import {ManagerSetup} from './overlords/core/manager';
 import {QueenSetup} from './overlords/core/queen';
+import {initializeTask} from './tasks/initializer';
+import {Task} from './tasks/Task';
 
 
 interface ParkingOptions {
@@ -231,7 +232,7 @@ export class Zerg {
 		return result;
 	}
 
-	withdraw(target: Structure, resourceType: ResourceConstant, amount?: number) {
+	withdraw(target: Structure | Tombstone, resourceType: ResourceConstant, amount?: number) {
 		let result = this.creep.withdraw(target, resourceType, amount);
 		if (!this.actionLog.withdraw) this.actionLog.withdraw = (result == OK);
 		return result;
@@ -342,55 +343,56 @@ export class Zerg {
 	// Task logic ------------------------------------------------------------------------------------------------------
 
 	/* Wrapper for _task */
-	get task(): ITask | null {
-		// if (!this._task) {
-		// 	let protoTask = this.memory.task;
-		// 	this._task = protoTask ? initializeTask(protoTask) : null;
-		// }
-		// return this._task;
-		return this.creep.task;
+	get task(): Task | null {
+		if (!this._task) {
+			let protoTask = this.memory.task;
+			this._task = protoTask ? initializeTask(protoTask) : null;
+		}
+		return this._task;
 	}
 
 	/* Assign the creep a task with the setter, replacing creep.assign(Task) */
-	set task(task: ITask | null) {
-		// // Unregister target from old task if applicable
-		// let oldProtoTask = this.memory.task as protoTask;
-		// if (oldProtoTask) {
-		// 	let oldRef = oldProtoTask._target.ref;
-		// 	if (Overmind.cache.targets[oldRef]) {
-		// 		Overmind.cache.targets[oldRef] = _.remove(Overmind.cache.targets[oldRef], name => name == this.name);
-		// 	}
-		// }
-		// // Set the new task
-		// this.memory.task = task ? task.proto : null;
-		// if (task) {
-		// 	if (task.target) {
-		// 		// Register task target in cache if it is actively targeting something (excludes goTo and similar)
-		// 		if (!Overmind.cache.targets[task.target.ref]) {
-		// 			Overmind.cache.targets[task.target.ref] = [];
-		// 		}
-		// 		Overmind.cache.targets[task.target.ref].push(this.name);
-		// 	}
-		// 	// Register references to creep
-		// 	task.creep = this;
-		// 	this._task = task;
-		// }
-		this.creep.task = task;
+	set task(task: Task | null) {
+		// Unregister target from old task if applicable
+		let oldProtoTask = this.memory.task;
+		if (oldProtoTask) {
+			let oldRef = oldProtoTask._target.ref;
+			if (Overmind.cache.targets[oldRef]) {
+				_.remove(Overmind.cache.targets[oldRef], name => name == this.name);
+			}
+		}
+		// Set the new task
+		this.memory.task = task ? task.proto : null;
+		if (task) {
+			if (task.target) {
+				// Register task target in cache if it is actively targeting something (excludes goTo and similar)
+				if (!Overmind.cache.targets[task.target.ref]) {
+					Overmind.cache.targets[task.target.ref] = [];
+				}
+				Overmind.cache.targets[task.target.ref].push(this.name);
+			}
+			// Register references to creep
+			task.creep = this;
+		}
+		// Clear cache
+		this._task = null;
 	}
 
 	/* Does the creep have a valid task at the moment? */
 	get hasValidTask(): boolean {
-		return this.creep.hasValidTask;
+		return !!this.task && this.task.isValid();
 	}
 
 	/* Creeps are idle if they don't have a task. */
 	get isIdle(): boolean {
-		return this.creep.isIdle;
+		return !this.hasValidTask;
 	}
 
 	/* Execute the task you currently have. */
-	run(): number | void {
-		return this.creep.run();
+	run(): number | undefined {
+		if (this.task) {
+			return this.task.run();
+		}
 	}
 
 	// Colony association ----------------------------------------------------------------------------------------------

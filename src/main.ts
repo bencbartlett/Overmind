@@ -22,7 +22,7 @@ import './prototypes/RoomVisual';
 import './prototypes/Room';
 import './prototypes/Structures';
 import './prototypes/Miscellaneous';
-import './tasks/prototypes';
+import './tasks/initializer'; // this line is necessary to ensure proper compilation ordering
 import {USE_PROFILER} from './~settings';
 import {sandbox} from './sandbox';
 import {Mem} from './Memory';

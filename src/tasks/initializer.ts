@@ -1,5 +1,5 @@
 // Reinstantiation of a task object from protoTask data
-
+import {Task} from './Task';
 import {attackTargetType, attackTaskName, TaskAttack} from './instances/attack';
 import {buildTargetType, buildTaskName, TaskBuild} from './instances/build';
 import {claimTargetType, claimTaskName, TaskClaim} from './instances/claim';
@@ -26,7 +26,7 @@ import {fleeTargetType, fleeTaskName, TaskFlee} from './instances/flee';
 import {TaskTransferAll, transferAllTargetType, transferAllTaskName} from './instances/transferAll';
 import {log} from '../lib/logger/log';
 
-export function initializeTask(protoTask: protoTask): any {
+export function initializeTask(protoTask: protoTask): Task {
 	// Retrieve name and target data from the protoTask
 	let taskName = protoTask.name;
 	let target = deref(protoTask._target.ref);
