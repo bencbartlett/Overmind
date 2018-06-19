@@ -1,5 +1,5 @@
 import {Mem} from '../Memory';
-import {log} from '../lib/logger/log';
+import {log} from '../console/log';
 import {OvermindConsole} from '../console/Console';
 
 interface VersionMigratorMemory {

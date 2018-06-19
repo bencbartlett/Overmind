@@ -48,7 +48,7 @@ export class ReservingOverlord extends Overlord {
 			}
 		} else {
 			// reserver.task = Tasks.goTo(this.pos);
-			reserver.travelTo(this.pos);
+			reserver.goTo(this.pos);
 		}
 	}
 

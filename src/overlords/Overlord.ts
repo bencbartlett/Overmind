@@ -2,13 +2,13 @@
 
 import {CreepSetup} from './CreepSetup';
 import {profile} from '../profiler/decorator';
-import {Pathing} from '../pathing/Pathing';
+import {Pathing} from '../movement/Pathing';
 import {Colony} from '../Colony';
 import {Zerg} from '../Zerg';
 import {Tasks} from '../tasks/Tasks';
 import {boostParts} from '../resources/map_resources';
 import {MIN_LIFETIME_FOR_BOOST} from '../tasks/instances/getBoosted';
-import {log} from '../lib/logger/log';
+import {log} from '../console/log';
 
 export interface IOverlordInitializer {
 	name: string;
@@ -160,7 +160,7 @@ export abstract class Overlord {
 					if (creep.pos.getRangeTo(this.colony.hatchery.pos) < hatcheryRestrictedRange) {
 						let hatcheryBorder = this.colony.hatchery.pos.getPositionsAtRange(hatcheryRestrictedRange);
 						let moveToPos = creep.pos.findClosestByRange(hatcheryBorder);
-						creep.travelTo(moveToPos);
+						creep.goTo(moveToPos);
 					} else {
 						creep.park();
 					}
@@ -226,7 +226,7 @@ export abstract class Overlord {
 				} else {
 					// Approach the lab but don't attempt to get boosted
 					if (creep.pos.getRangeTo(this.colony.evolutionChamber.boostingLab) > 2) {
-						creep.travelTo(this.colony.evolutionChamber.boostingLab, {range: 2});
+						creep.goTo(this.colony.evolutionChamber.boostingLab, {range: 2});
 					} else {
 						creep.park();
 					}

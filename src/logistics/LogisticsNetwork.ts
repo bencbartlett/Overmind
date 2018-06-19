@@ -4,8 +4,8 @@
 
 import {profile} from '../profiler/decorator';
 import {Zerg} from '../Zerg';
-import {log} from '../lib/logger/log';
-import {Pathing} from '../pathing/Pathing';
+import {log} from '../console/log';
+import {Pathing} from '../movement/Pathing';
 import {Colony} from '../Colony';
 import {Matcher} from '../algorithms/galeShapley';
 import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../declarations/typeGuards';

@@ -1,8 +1,8 @@
-import {log} from '../lib/logger/log';
+import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
-import {Pathing} from '../pathing/Pathing';
+import {Pathing} from '../movement/Pathing';
 
 interface DirectiveCreateOptions {
 	name?: string;

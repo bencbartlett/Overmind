@@ -1,7 +1,7 @@
 import {Task} from '../Task';
 import {profile} from '../../profiler/decorator';
 import {boostParts} from '../../resources/map_resources';
-import {log} from '../../lib/logger/log';
+import {log} from '../../console/log';
 
 export type getBoostedTargetType = StructureLab;
 export const getBoostedTaskName = 'getBoosted';

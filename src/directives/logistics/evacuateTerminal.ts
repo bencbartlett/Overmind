@@ -1,6 +1,6 @@
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
-import {log} from '../../lib/logger/log';
+import {log} from '../../console/log';
 
 @profile
 export class DirectiveEvacuateTerminal extends Directive {

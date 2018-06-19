@@ -55,7 +55,7 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 		// Find a safe position and retreat
 		let retreatRampart = defender.pos.findClosestByRange(_.filter(this.room.ramparts,
 																	  rampart => rampart.pos.isPassible()));
-		defender.travelTo(retreatRampart);
+		defender.goTo(retreatRampart);
 	}
 
 	private handleDefender(defender: Zerg): void {
@@ -66,7 +66,7 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 		// 	let target = defender.pos.findClosestByRange(availablePositions);
 		// 	if (target) {
 		// 		let enemyPositions = _.map(this.room.hostiles, hostile => hostile.pos);
-		// 		defender.travelTo(target, {obstacles: enemyPositions, movingTarget: true});
+		// 		defender.goTo(target, {obstacles: enemyPositions, movingTarget: true});
 		// 	}
 		// }
 		// // Attack something
@@ -94,7 +94,7 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 			let moveToDefensePos = defender.pos.findClosestByRange(availablePositions);
 			if (moveToDefensePos) {
 				let enemyPositions = _.map(this.room.hostiles, hostile => hostile.pos);
-				defender.travelTo(moveToDefensePos, {obstacles: enemyPositions, movingTarget: true});
+				defender.goTo(moveToDefensePos, {obstacles: enemyPositions, movingTarget: true});
 			} else {
 				// Activate retreat condition if necessary
 				if (defender.hits < GuardPairOverlord.settings.retreatHitsPercent * defender.hitsMax) {
@@ -105,7 +105,7 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 					this.retreatActions(defender); // Retreat to fallback position
 				} else {
 					if (target) {
-						defender.travelTo(target);
+						defender.goTo(target);
 					}
 				}
 			}

@@ -3,7 +3,7 @@ import {Overlord} from '../Overlord';
 import {Hatchery} from '../../hiveClusters/hatchery';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
-import {log} from '../../lib/logger/log';
+import {log} from '../../console/log';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {CreepSetup} from '../CreepSetup';
@@ -117,7 +117,7 @@ export class HatcheryOverlord extends Overlord {
 		// 		}
 		// 	} else {
 		// 		// Otherwise, travel back to idle position
-		// 		queen.travelTo(this.idlePos);
+		// 		queen.goTo(this.idlePos);
 		// 	}
 		// }
 	}
@@ -131,9 +131,9 @@ export class HatcheryOverlord extends Overlord {
 				queen.run();
 			} else {
 				if (this.queens.length > 1) {
-					queen.travelTo(this.hatchery.idlePos, {range: 1});
+					queen.goTo(this.hatchery.idlePos, {range: 1});
 				} else {
-					queen.travelTo(this.hatchery.idlePos);
+					queen.goTo(this.hatchery.idlePos);
 				}
 			}
 		}

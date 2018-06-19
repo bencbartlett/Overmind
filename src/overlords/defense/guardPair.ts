@@ -7,6 +7,7 @@ import {CombatOverlord} from '../CombatOverlord';
 import {CreepSetup} from '../CreepSetup';
 import {profile} from '../../profiler/decorator';
 import {DirectiveGuard} from '../../directives/defense/guard';
+import {Movement} from '../../movement/Movement';
 
 export class AttackerSetup extends CreepSetup {
 	static role = 'attacker';
@@ -83,7 +84,7 @@ export class GuardPairOverlord extends CombatOverlord {
 			attacker.memory.retreating = false;
 		}
 		// Healer leads retreat to fallback position
-		this.pairwiseMove(healer, attacker, this.colony.controller);
+		Movement.pairwiseMove(healer, attacker, this.colony.controller);
 	}
 
 	private attackActions(attacker: Zerg, healer: Zerg): void {
@@ -92,7 +93,7 @@ export class GuardPairOverlord extends CombatOverlord {
 			if (attacker.pos.isNearTo(target)) {
 				attacker.attack(target);
 			} else {
-				this.pairwiseMove(attacker, healer, target);
+				Movement.pairwiseMove(attacker, healer, target);
 			}
 		}
 	}
@@ -103,7 +104,7 @@ export class GuardPairOverlord extends CombatOverlord {
 		if (!healer || healer.spawning || healer.needsBoosts) {
 			// Wait near the colony controller if you don't have a healer
 			if (attacker.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 5) {
-				attacker.travelTo(this.colony.controller);
+				attacker.goTo(this.colony.controller);
 			} else {
 				attacker.park();
 			}
@@ -121,7 +122,7 @@ export class GuardPairOverlord extends CombatOverlord {
 			} else {
 				// Move to room and then perform attacking actions
 				if (!attacker.inSameRoomAs(this)) {
-					this.pairwiseMove(attacker, healer, this.pos);
+					Movement.pairwiseMove(attacker, healer, this.pos);
 				} else {
 					this.attackActions(attacker, healer);
 				}
@@ -143,7 +144,7 @@ export class GuardPairOverlord extends CombatOverlord {
 			}
 			// Wait near the colony controller if you don't have an attacker
 			if (healer.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 10) {
-				healer.travelTo(this.colony.controller);
+				healer.goTo(this.colony.controller);
 			} else {
 				healer.park();
 			}

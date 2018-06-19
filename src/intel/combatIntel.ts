@@ -3,8 +3,8 @@
 import {Directive} from '../directives/Directive';
 import {Mem} from '../Memory';
 import {Colony} from '../Colony';
-import {Traveler} from '../lib/traveler/Traveler';
 import {boostResources} from '../resources/map_resources';
+import {Pathing} from '../movement/Pathing';
 
 interface CombatIntelMemory {
 	cache: {
@@ -80,15 +80,7 @@ export class CombatIntel {
 		if (!destination) {
 			return;
 		}
-		let ret = PathFinder.search(this.colony.pos, {pos: destination.pos, range: 1}, {
-			roomCallback: (roomName: string): CostMatrix | boolean => {
-				if (roomName != this.room!.name && Traveler.checkAvoid(roomName)) {
-					return false;
-				} else {
-					return Traveler.getStructureMatrix(Game.rooms[roomName]);
-				}
-			},
-		});
+		let ret = Pathing.findPath(this.colony.pos, destination.pos, {range: 1});
 		if (!ret.incomplete) {
 			bestExit = _.find(ret.path, p => p.roomName == this.room!.name);
 		}
@@ -100,7 +92,7 @@ export class CombatIntel {
 			let exitData = Game.map.describeExits(this.room.name);
 			for (let direction in exitData) {
 				let roomName = exitData[<'1' | '3' | '5' | '7'>direction] as string;
-				let allowedRooms = Traveler.findRoute(this.colony.name, roomName);
+				let allowedRooms = Pathing.findRoute(this.colony.name, roomName);
 				if (allowedRooms && Object.keys(allowedRooms).length <= maxRoomDistance) {
 					allowedExits[direction] = true;
 				}

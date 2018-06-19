@@ -4,8 +4,8 @@ import {Zerg} from '../../Zerg';
 import {DirectiveHaul} from '../../directives/logistics/haul';
 import {Tasks} from '../../tasks/Tasks';
 import {isStoreStructure} from '../../declarations/typeGuards';
-import {log} from '../../lib/logger/log';
-import {Pathing} from '../../pathing/Pathing';
+import {log} from '../../console/log';
+import {Pathing} from '../../movement/Pathing';
 import {Energetics} from '../../logistics/Energetics';
 import {CreepSetup} from '../CreepSetup';
 
@@ -81,7 +81,7 @@ export class HaulingOverlord extends Overlord {
 				log.warning(`${hauler.name} in ${hauler.room.print}: nothing to collect!`);
 			} else {
 				// hauler.task = Tasks.goTo(this.directive);
-				hauler.travelTo(this.directive);
+				hauler.goTo(this.directive);
 			}
 		} else {
 			// Travel to colony room and deposit resources

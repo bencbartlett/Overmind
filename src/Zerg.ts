@@ -5,6 +5,7 @@ import {ManagerSetup} from './overlords/core/manager';
 import {QueenSetup} from './overlords/core/queen';
 import {initializeTask} from './tasks/initializer';
 import {Task} from './tasks/Task';
+import {Movement} from './movement/Movement';
 
 
 interface ParkingOptions {
@@ -119,18 +120,6 @@ export class Zerg {
 
 	move(direction: DirectionConstant) {
 		let result = this.creep.move(direction);
-		if (!this.actionLog.move) this.actionLog.move = (result == OK);
-		return result;
-	}
-
-	moveByPath(path: PathStep[] | RoomPosition[] | string) {
-		let result = this.creep.moveByPath(path);
-		if (!this.actionLog.move) this.actionLog.move = (result == OK);
-		return result;
-	}
-
-	moveTo(target: RoomPosition | { pos: RoomPosition }, opts?: MoveToOpts) {
-		let result = this.creep.moveTo(target, opts);
 		if (!this.actionLog.move) this.actionLog.move = (result == OK);
 		return result;
 	}
@@ -427,11 +416,9 @@ export class Zerg {
 
 	// Movement and location -------------------------------------------------------------------------------------------
 
-	travelTo(destination: RoomPosition | { pos: RoomPosition }, options: TravelToOptions = {}) {
+	goTo(destination: RoomPosition | { pos: RoomPosition }, options: MoveOptions = {}) {
 		// Add default obstacle avoidance
-		let result = this.creep.travelTo(destination, _.merge(options, {obstacles: this.getObstacles()}));
-		if (!this.actionLog.move) this.actionLog.move = (result == OK);
-		return result;
+		return Movement.goTo(this, destination, _.merge(options, {obstacles: this.getObstacles()}));
 	};
 
 	inSameRoomAs(target: HasPos): boolean {
@@ -471,7 +458,7 @@ export class Zerg {
 			return this.move(this.pos.getDirectionTo(swampPosition));
 		}
 
-		return this.travelTo(pos);
+		return this.goTo(pos);
 	}
 
 	/* Moves a creep off of the current tile to the first available neighbor */
@@ -523,11 +510,11 @@ export class Zerg {
 	moveOffExitToward(pos: RoomPosition, detour = true): number | undefined {
 		for (let position of this.pos.availableNeighbors()) {
 			if (position.getRangeTo(pos) == 1) {
-				return this.travelTo(position);
+				return this.goTo(position);
 			}
 		}
 		if (detour) {
-			this.travelTo(pos, {ignoreCreeps: false});
+			this.goTo(pos, {ignoreCreeps: false});
 		}
 	}
 

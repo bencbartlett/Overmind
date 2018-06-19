@@ -5,11 +5,11 @@ import {profile} from '../profiler/decorator';
 import {MiningOverlord} from '../overlords/core/miner';
 import {Colony, ColonyStage} from '../Colony';
 import {Mem} from '../Memory';
-import {log} from '../lib/logger/log';
+import {log} from '../console/log';
 import {OverlordPriority} from '../priorities/priorities_overlords';
 import {Visualizer} from '../visuals/Visualizer';
 import {LogisticsNetwork} from '../logistics/LogisticsNetwork';
-import {Pathing} from '../pathing/Pathing';
+import {Pathing} from '../movement/Pathing';
 import {ROOMTYPE_CORE, ROOMTYPE_SOURCEKEEPER, WorldMap} from '../utilities/WorldMap';
 
 interface MiningSiteMemory {

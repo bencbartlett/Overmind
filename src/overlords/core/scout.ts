@@ -29,7 +29,7 @@ export class ScoutOverlord extends Overlord {
 	private handleScout(scout: Zerg): void {
 		if (!scout.pos.inRangeTo(this.pos, 3)) {
 			// scout.task = Tasks.goTo(this.pos, {travelToOptions: {range: 3}});
-			scout.travelTo(this.pos, {range: 3});
+			scout.goTo(this.pos, {range: 3});
 		}
 	}
 

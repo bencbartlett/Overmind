@@ -45,7 +45,7 @@ export class GuardSwarmOverlord extends CombatOverlord {
 
 		if (guard.pos.roomName != this.pos.roomName) { // TODO: make edge-safe
 			// Move into the assigned room if there is a guard flag present
-			guard.travelTo(this.pos);
+			guard.goTo(this.pos);
 		} else { // If you're in the assigned room or if there is no assignment, try to attack or heal
 			let attackTarget = this.findAttackTarget(guard);
 			if (attackTarget) {

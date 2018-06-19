@@ -143,7 +143,7 @@ export class CommandCenterOverlord extends Overlord {
 				manager.run();
 			} else {
 				if (!manager.pos.isEqualTo(this.commandCenter.idlePos)) {
-					manager.travelTo(this.commandCenter.idlePos);
+					manager.goTo(this.commandCenter.idlePos);
 				}
 			}
 		}

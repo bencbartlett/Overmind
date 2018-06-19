@@ -3,7 +3,7 @@
  * adapted for Typescript and flexible room subsets by Chobobobo,
  * modified and debugged by Muon.
  */
-import {log} from '../lib/logger/log';
+import {log} from '../console/log';
 
 const UNWALKABLE = -10;
 const RANGE_MODIFIER = 1; // this parameter sets the scaling of weights to prefer walls closer protection bounds

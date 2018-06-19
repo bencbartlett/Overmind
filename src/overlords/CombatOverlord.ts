@@ -1,10 +1,10 @@
 import {profile} from '../profiler/decorator';
 import {Overlord} from './Overlord';
 import {Zerg} from '../Zerg';
-import {Pathing} from '../pathing/Pathing';
+import {Pathing} from '../movement/Pathing';
 import {Directive} from '../directives/Directive';
 import {WorldMap} from '../utilities/WorldMap';
-import {log} from '../lib/logger/log';
+import {log} from '../console/log';
 import {AttackStructurePriorities} from '../priorities/priorities_structures';
 
 export interface CombatOverlordMemory extends OverlordMemory {
@@ -16,47 +16,14 @@ export abstract class CombatOverlord extends Overlord {
 
 	memory: CombatOverlordMemory;
 	directive: Directive;
-	moveOpts: TravelToOptions;
+	moveOpts: MoveOptions;
 
 	constructor(directive: Directive, name: string, priority: number) {
 		super(directive, name, priority);
 		this.directive = directive;
 		this.moveOpts = {
-			allowSK     : true,
-			// ensurePath  : true,
+
 		};
-	}
-
-	pairwiseMove(leader: Zerg, follower: Zerg, target: HasPos | RoomPosition,
-				 opts: TravelToOptions = this.moveOpts, allowedRange = 1): number | undefined {
-		let outcome;
-		if (leader.room != follower.room) {
-			if (leader.pos.rangeToEdge == 0) {
-				// Leader should move off of exit tiles while waiting for follower
-				outcome = leader.travelTo(target, opts);
-			}
-			follower.travelTo(leader);
-			return outcome;
-		}
-
-		let range = leader.pos.getRangeTo(follower);
-		if (range > allowedRange) {
-			// If leader is farther than max allowed range, allow follower to catch up
-			if (follower.pos.rangeToEdge == 0 && follower.room == leader.room) {
-				follower.moveOffExitToward(leader.pos);
-			} else {
-				follower.travelTo(leader, {stuckValue: 1});
-			}
-		} else if (follower.fatigue == 0) {
-			// Leader should move if follower can also move this tick
-			outcome = leader.travelTo(target, opts);
-			if (range == 1) {
-				follower.move(follower.pos.getDirectionTo(leader));
-			} else {
-				follower.travelTo(leader, {stuckValue: 1});
-			}
-		}
-		return outcome;
 	}
 
 	findPartner(zerg: Zerg, partners: Zerg[], tickDifference = 600): Zerg | undefined {
@@ -131,7 +98,7 @@ export abstract class CombatOverlord extends Overlord {
 			// Approach the target
 			let range = healer.pos.getRangeTo(target);
 			if (range > 1) {
-				healer.travelTo(target, {movingTarget: true});
+				healer.goTo(target, {movingTarget: true});
 			}
 
 			// Heal or ranged-heal the target
@@ -163,9 +130,9 @@ export abstract class CombatOverlord extends Overlord {
 			return ret;
 		} else {
 			if (target instanceof Creep) {
-				zerg.travelTo(target, _.merge(this.moveOpts, {movingTarget: true}));
+				zerg.goTo(target, _.merge(this.moveOpts, {movingTarget: true}));
 			} else {
-				zerg.travelTo(target, this.moveOpts);
+				zerg.goTo(target, this.moveOpts);
 			}
 			return ERR_NOT_IN_RANGE;
 		}

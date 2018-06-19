@@ -1,4 +1,4 @@
-import {log} from '../lib/logger/log';
+import {log} from '../console/log';
 import {Mem} from '../Memory';
 import {profile} from '../profiler/decorator';
 import {maxBy, minBy} from '../utilities/utils';

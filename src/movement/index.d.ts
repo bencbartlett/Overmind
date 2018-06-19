@@ -31,7 +31,3 @@ interface MoveState {
 	destination: RoomPosition;
 	cpu: number;
 }
-
-interface Creep {
-	goTo(destination: HasPos | RoomPosition, opts?: MoveOptions): number;
-}

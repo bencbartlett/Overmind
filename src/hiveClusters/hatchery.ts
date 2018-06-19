@@ -11,7 +11,7 @@ import {Mem} from '../Memory';
 import {Visualizer} from '../visuals/Visualizer';
 import {Stats} from '../stats/stats';
 import {Zerg} from '../Zerg';
-import {log} from '../lib/logger/log';
+import {log} from '../console/log';
 
 const ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH = -10;
 

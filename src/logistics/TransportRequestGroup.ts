@@ -3,7 +3,7 @@
 import {profile} from '../profiler/decorator';
 import {blankPriorityQueue, Priority} from '../priorities/priorities';
 import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../declarations/typeGuards';
-import {log} from '../lib/logger/log';
+import {log} from '../console/log';
 
 export type TransportRequestTarget =
 	EnergyStructure

@@ -63,7 +63,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 	}
 
 	private retreatActions(archer: Zerg): void {
-		archer.travelTo(this.retreatPos, this.moveOpts);
+		archer.goTo(this.retreatPos, this.moveOpts);
 		if (archer.hits > this.settings.reengageHitsPercent * archer.hits) {
 			archer.memory.retreating = false;
 		}
@@ -79,10 +79,10 @@ export class RangedDefenseOverlord extends CombatOverlord {
 				attacker.rangedAttack(target);
 			}
 			if (range < 3) { // retreat to controller if too close
-				attacker.travelTo(this.retreatPos, this.moveOpts);
+				attacker.goTo(this.retreatPos, this.moveOpts);
 			} else if (range > 3) { // approach the target if too far
 				// if (target.pos.rangeToEdge >= 2) {
-				attacker.travelTo(target, _.merge(this.moveOpts, {range: 3}));
+				attacker.goTo(target, _.merge(this.moveOpts, {range: 3}));
 				// }
 			}
 		}
@@ -103,7 +103,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 				defender.heal(target, false);
 			}
 			if (target && !defender.actionLog.move) {
-				defender.travelTo(target, this.moveOpts);
+				defender.goTo(target, this.moveOpts);
 			}
 		}
 	}
@@ -119,7 +119,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 		}
 		// Move to room and then perform attacking actions
 		if (!defender.inSameRoomAs(this) || defender.pos.isEdge) {
-			defender.travelTo(this.pos);
+			defender.goTo(this.pos);
 		} else {
 			this.attackActions(defender);
 			this.healActions(defender);

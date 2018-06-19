@@ -3,7 +3,7 @@ import {profile} from '../../profiler/decorator';
 import {RangedDefenseOverlord} from '../../overlords/defense/rangedDefense';
 import {ColonyStage} from '../../Colony';
 import {MeleeDefenseOverlord} from '../../overlords/defense/meleeDefense';
-import {log} from '../../lib/logger/log';
+import {log} from '../../console/log';
 import {CombatIntel} from '../../intel/combatIntel';
 
 interface DirectiveInvasionDefenseMemory extends FlagMemory {

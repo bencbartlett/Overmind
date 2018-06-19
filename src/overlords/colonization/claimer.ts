@@ -40,7 +40,7 @@ export class ClaimingOverlord extends Overlord {
 			}
 		} else {
 			// claimer.task = Tasks.goTo(this.pos, {travelToOptions: {ensurePath: true}});
-			claimer.travelTo(this.pos, {ensurePath: true, preferHighway: true});
+			claimer.goTo(this.pos, {ensurePath: true, preferHighway: true});
 		}
 	}
 

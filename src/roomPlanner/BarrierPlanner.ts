@@ -2,7 +2,7 @@ import {getCutTiles} from '../algorithms/minCut';
 import {RoomPlanner} from './RoomPlanner';
 import {Colony} from '../Colony';
 import {Mem} from '../Memory';
-import {log} from '../lib/logger/log';
+import {log} from '../console/log';
 import {derefCoords} from '../utilities/utils';
 
 export interface BarrierPlannerMemory {

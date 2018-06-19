@@ -3,7 +3,7 @@
 
 import {hatcheryLayout} from './layouts/hatchery';
 import {commandCenterLayout} from './layouts/commandCenter';
-import {log} from '../lib/logger/log';
+import {log} from '../console/log';
 import {Visualizer} from '../visuals/Visualizer';
 import {profile} from '../profiler/decorator';
 import {Mem} from '../Memory';

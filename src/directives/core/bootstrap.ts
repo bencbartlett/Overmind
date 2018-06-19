@@ -1,7 +1,7 @@
 // Emergency directive: recover from a catastrophic room crash
 
 import {Directive} from '../Directive';
-import {log} from '../../lib/logger/log';
+import {log} from '../../console/log';
 import {profile} from '../../profiler/decorator';
 import {BootstrappingOverlord} from '../../overlords/situational/bootstrap';
 import {Colony} from '../../Colony';

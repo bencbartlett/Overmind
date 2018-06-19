@@ -39,11 +39,11 @@ export class ExtractorOverlord extends Overlord {
 				drone.task = Tasks.transferAll(this.extractionSite.output);
 				// Move onto the output container if you're the only drone
 				if (!drone.pos.isEqualTo(this.extractionSite.output.pos) && this.drones.length == 1) {
-					drone.travelTo(this.extractionSite.output, {range: 0});
+					drone.goTo(this.extractionSite.output, {range: 0});
 				}
 			}
 		} else {
-			drone.travelTo(this.extractionSite);
+			drone.goTo(this.extractionSite);
 		}
 	}
 

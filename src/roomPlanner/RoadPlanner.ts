@@ -2,10 +2,10 @@
 
 import {Visualizer} from '../visuals/Visualizer';
 import {RoomPlanner} from './RoomPlanner';
-import {log} from '../lib/logger/log';
+import {log} from '../console/log';
 import {Mem} from '../Memory';
 import {Colony} from '../Colony';
-import {Traveler} from '../lib/traveler/Traveler';
+import {Pathing} from '../movement/Pathing';
 
 export interface RoadPlannerMemory {
 	roadLookup: { [roomName: string]: { [roadCoordName: string]: boolean } };
@@ -72,67 +72,40 @@ export class RoadPlanner {
 		}
 	}
 
-	private initCostMatrix(roomName: string, options: TravelToOptions) {
-		let matrix: CostMatrix | undefined = undefined;
+	private initCostMatrix(roomName: string, options: MoveOptions) {
 		let room = Game.rooms[roomName];
 		if (room) {
-			matrix = Traveler.getStructureMatrix(room, options.freshMatrix);
-			if (options.obstacles) {
-				matrix = matrix.clone();
-				for (let obstacle of options.obstacles) {
-					if (obstacle.roomName !== roomName) {
-						continue;
-					}
-					matrix.set(obstacle.x, obstacle.y, 0xff);
-				}
-			}
-		}
-		if (matrix) {
-			this.costMatrices[roomName] = matrix;
+			this.costMatrices[roomName] = Pathing.getCostMatrix(room, options);
+		} else {
+			this.costMatrices[roomName] = new PathFinder.CostMatrix();
 		}
 	}
 
 	/* Generates a road path and modifies cost matrices to encourage merging with future roads */
 	private generateRoadPath(origin: RoomPosition, destination: RoomPosition,
-							 options: TravelToOptions = {}): RoomPosition[] | undefined {
+							 options: MoveOptions = {}): RoomPosition[] | undefined {
 		_.defaults(options, {
 			ignoreCreeps: true,
 			ensurePath  : true,
 			range       : 1,
 			offRoad     : true,
-			allowSK     : true,
+			avoidSK     : false,
 		});
-		let originRoomName = origin.roomName;
-		let destRoomName = destination.roomName;
 
-		let roomDistance = Game.map.getRoomLinearDistance(origin.roomName, destination.roomName);
-		let allowedRooms = options.route;
-		if (!allowedRooms && (options.useFindRoute || (options.useFindRoute === undefined && roomDistance > 2))) {
-			let route = Traveler.findRoute(origin.roomName, destination.roomName, options);
-			if (route) {
-				allowedRooms = route;
-			}
-		}
-
+		let allowedRooms = Pathing.findRoute(origin.roomName, destination.roomName, options);
 		let callback = (roomName: string): CostMatrix | boolean => {
-			if (allowedRooms) {
-				if (!allowedRooms[roomName]) {
-					return false;
-				}
-			} else if (!options.allowHostile && Traveler.checkAvoid(roomName)
-					   && roomName !== destRoomName && roomName !== originRoomName) {
+			if (allowedRooms && !allowedRooms[roomName]) {
+				return false;
+			}
+			if (!options.allowHostile && Pathing.shouldAvoid(roomName)
+				&& roomName != origin.roomName && roomName != destination.roomName) {
 				return false;
 			}
 			// Initialize cost matrix
 			if (!this.costMatrices[roomName]) {
 				this.initCostMatrix(roomName, options);
 			}
-			// See if initialization was successful
-			if (this.costMatrices[roomName]) {
-				return this.costMatrices[roomName];
-			} else {
-				return false;
-			}
+			return this.costMatrices[roomName];
 		};
 
 		let ret = PathFinder.search(origin, {pos: destination, range: options.range!}, {
@@ -143,9 +116,8 @@ export class RoadPlanner {
 			roomCallback: callback,
 		});
 
-		if (ret.incomplete) {
-			return;
-		}
+		if (ret.incomplete) return;
+
 		// Set every n-th tile of a planned path to be cost 1 to encourage road overlap for future pathing
 		if (RoadPlanner.settings.encourageRoadMerging) {
 			let interval = RoadPlanner.settings.tileCostReductionInterval;

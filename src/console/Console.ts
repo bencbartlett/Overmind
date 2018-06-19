@@ -3,7 +3,7 @@
 import {Colony} from '../Colony';
 import {toColumns} from '../utilities/utils';
 import {asciiLogoSmall} from '../visuals/logos';
-import {log} from '../lib/logger/log';
+import {log} from './log';
 
 export class OvermindConsole {
 

@@ -24,7 +24,7 @@ import {dropTargetType, dropTaskName, TaskDrop} from './instances/drop';
 import {TaskInvalid} from './instances/invalid';
 import {fleeTargetType, fleeTaskName, TaskFlee} from './instances/flee';
 import {TaskTransferAll, transferAllTargetType, transferAllTaskName} from './instances/transferAll';
-import {log} from '../lib/logger/log';
+import {log} from '../console/log';
 
 export function initializeTask(protoTask: protoTask): Task {
 	// Retrieve name and target data from the protoTask

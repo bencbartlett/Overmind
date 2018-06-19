@@ -42,7 +42,7 @@ export class PioneerOverlord extends Overlord {
 			}
 		} else {
 			// pioneer.task = Tasks.goTo(this.pos);
-			pioneer.travelTo(this.pos, {ensurePath: true, preferHighway: true});
+			pioneer.goTo(this.pos, {ensurePath: true, preferHighway: true});
 		}
 	}
 

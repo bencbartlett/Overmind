@@ -59,7 +59,7 @@ export class SiegeOverlord extends CombatOverlord {
 				hasDismantled = true;
 			}
 		} else {
-			sieger.travelTo(target, {allowHostile: true});
+			sieger.goTo(target, {allowHostile: true});
 		}
 
 		// Heal yourself if it won't interfere with dismantling
@@ -72,7 +72,7 @@ export class SiegeOverlord extends CombatOverlord {
 	private retreatActions(sieger: Zerg, waypoint: RoomPosition): void {
 		// console.log(`retreating to ${waypoint}`);
 		if (sieger.getActiveBodyparts(HEAL) > 0) sieger.heal(sieger);
-		sieger.travelTo(waypoint, this.moveOpts);
+		sieger.goTo(waypoint, this.moveOpts);
 	}
 
 	private handleSieger(sieger: Zerg): void {
@@ -80,7 +80,7 @@ export class SiegeOverlord extends CombatOverlord {
 			sieger.pos.roomName != this.pos.roomName &&
 			sieger.pos.roomName != this.recoveryWaypoint.roomName) {
 			// Go to the recovery point first
-			sieger.travelTo(this.recoveryWaypoint, this.moveOpts);
+			sieger.goTo(this.recoveryWaypoint, this.moveOpts);
 		}
 		if (sieger.pos.roomName == this.pos.roomName) {
 			if (sieger.hits > this.settings.retreatHitsPercent * sieger.hitsMax) {
@@ -94,7 +94,7 @@ export class SiegeOverlord extends CombatOverlord {
 		} else {
 			if (sieger.hits == sieger.hitsMax) {
 				// If you're at full health and outside the room, go back in
-				sieger.travelTo(this.pos, _.merge({range: 50}, this.moveOpts));
+				sieger.goTo(this.pos, _.merge({range: 50}, this.moveOpts));
 			} else {
 				// If you're below full health and outside the room, heal up first
 				this.retreatActions(sieger, this.recoveryWaypoint);

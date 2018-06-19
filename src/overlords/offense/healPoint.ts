@@ -24,13 +24,12 @@ export class HealPointOverlord extends CombatOverlord {
 		super(directive, 'healPoint', priority);
 		this.healers = this.creeps(PointHealerSetup.role);
 		this.moveOpts = {
-			allowSK   : true,
 			ensurePath: true,
 		};
 	}
 
 	private handleHealer(healer: Zerg): void {
-		healer.travelTo(this.pos, this.moveOpts);
+		healer.goTo(this.pos, this.moveOpts);
 		let healTarget = this.findClosestHurtFriendly(healer);
 		if (healTarget) {
 			healer.heal(healTarget, true);

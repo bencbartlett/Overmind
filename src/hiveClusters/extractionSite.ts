@@ -4,8 +4,8 @@ import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
 import {ExtractorOverlord} from '../overlords/core/extractor';
 import {Colony} from '../Colony';
-import {log} from '../lib/logger/log';
-import {Pathing} from '../pathing/Pathing';
+import {log} from '../console/log';
+import {Pathing} from '../movement/Pathing';
 import {OverlordPriority} from '../priorities/priorities_overlords';
 
 // interface MineralSiteMemory {

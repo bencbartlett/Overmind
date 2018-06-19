@@ -30,7 +30,7 @@ import {OvermindConsole} from './console/Console';
 import {Stats} from './stats/stats';
 import profiler from 'screeps-profiler';
 import OM from 'Overmind_obfuscated';
-import {log} from './lib/logger/log';
+import {log} from './console/log';
 import {VersionMigration} from './versionMigration/migrator';
 
 var _Overmind = (<any>OM)._Overmind as (new() => IOvermind);

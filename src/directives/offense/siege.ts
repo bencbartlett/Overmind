@@ -1,9 +1,9 @@
 import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {SiegeOverlord} from '../../overlords/offense/siege';
-import {Pathing} from '../../pathing/Pathing';
+import {Pathing} from '../../movement/Pathing';
 import {DirectiveHealPoint} from './healPoint';
-import {log} from '../../lib/logger/log';
+import {log} from '../../console/log';
 import {Visualizer} from '../../visuals/Visualizer';
 
 interface DirectiveSiegeMemory extends FlagMemory {

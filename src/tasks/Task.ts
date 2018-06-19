@@ -9,7 +9,7 @@
  * 1. In main.ts:    import "./tasks/prototypes";
  * 2. As needed:    import {Tasks} from "<path to Tasks.ts>"
  *
- * If you use Travler, change all occurrences of creep.moveTo() to creep.travelTo()
+ * If you use Travler, change all occurrences of creep.moveTo() to creep.goTo()
  */
 
 import {initializeTask} from './initializer';
@@ -216,14 +216,14 @@ export abstract class Task {
 		if (!this.options.travelToOptions!.range) {
 			this.options.travelToOptions!.range = range;
 		}
-		return this.creep.travelTo(this.targetPos, this.options.travelToOptions);
+		return this.creep.goTo(this.targetPos, this.options.travelToOptions);
 	}
 
 	/* Moves to the next position on the agenda if specified - call this in some tasks after work() is completed */
 	moveToNextPos(): number | undefined {
 		if (this.options.nextPos) {
 			let nextPos = derefRoomPosition(this.options.nextPos);
-			return this.creep.travelTo(nextPos);
+			return this.creep.goTo(nextPos);
 		}
 	}
 
@@ -277,7 +277,7 @@ export abstract class Task {
 			return creep.move(creep.pos.getDirectionTo(swampPosition));
 		}
 
-		return creep.travelTo(pos);
+		return creep.goTo(pos);
 	}
 
 	// Task to perform when at the target

@@ -7,6 +7,7 @@ import {CombatOverlord} from '../CombatOverlord';
 import {DirectiveDestroy} from '../../directives/offense/destroy';
 import {CreepSetup} from '../CreepSetup';
 import {profile} from '../../profiler/decorator';
+import {Movement} from '../../movement/Movement';
 
 const AttackerSetup = new CreepSetup('attacker', {
 	pattern  : [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE],
@@ -71,7 +72,7 @@ export class DestroyerOverlord extends CombatOverlord {
 			attacker.memory.retreating = false;
 		}
 		// Healer leads retreat to fallback position
-		this.pairwiseMove(healer, attacker, this.fallback);
+		Movement.pairwiseMove(healer, attacker, this.fallback);
 	}
 
 	private attackActions(attacker: Zerg, healer: Zerg): void {
@@ -80,7 +81,7 @@ export class DestroyerOverlord extends CombatOverlord {
 			if (attacker.pos.isNearTo(target)) {
 				attacker.attack(target);
 			} else {
-				this.pairwiseMove(attacker, healer, target);
+				Movement.pairwiseMove(attacker, healer, target);
 			}
 		}
 	}
@@ -91,7 +92,7 @@ export class DestroyerOverlord extends CombatOverlord {
 		if (!healer || healer.spawning || healer.needsBoosts) {
 			// Wait near the colony controller if you don't have a healer
 			if (attacker.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 5) {
-				attacker.travelTo(this.colony.controller);
+				attacker.goTo(this.colony.controller);
 			} else {
 				attacker.park();
 			}
@@ -109,7 +110,7 @@ export class DestroyerOverlord extends CombatOverlord {
 			} else {
 				// Move to room and then perform attacking actions
 				if (!attacker.inSameRoomAs(this)) {
-					this.pairwiseMove(attacker, healer, this.pos);
+					Movement.pairwiseMove(attacker, healer, this.pos);
 				} else {
 					this.attackActions(attacker, healer);
 				}
@@ -131,7 +132,7 @@ export class DestroyerOverlord extends CombatOverlord {
 			}
 			// Wait near the colony controller if you don't have an attacker
 			if (healer.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 10) {
-				healer.travelTo(this.colony.controller);
+				healer.goTo(this.colony.controller);
 			} else {
 				healer.park();
 			}

@@ -1,6 +1,6 @@
 import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
-import {log} from '../../lib/logger/log';
+import {log} from '../../console/log';
 
 @profile
 export class DirectiveNukeResponse extends Directive {

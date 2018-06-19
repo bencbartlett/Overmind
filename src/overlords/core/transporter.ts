@@ -4,7 +4,7 @@ import {Tasks} from '../../tasks/Tasks';
 import {Colony, ColonyStage} from '../../Colony';
 import {BufferTarget, LogisticsNetwork, LogisticsRequest} from '../../logistics/LogisticsNetwork';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {Pathing} from '../../pathing/Pathing';
+import {Pathing} from '../../movement/Pathing';
 import {DirectivePickup} from '../../directives/logistics/logisticsRequest';
 import {profile} from '../../profiler/decorator';
 import {CreepSetup} from '../CreepSetup';
