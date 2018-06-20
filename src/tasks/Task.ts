@@ -65,9 +65,10 @@ export abstract class Task {
 		}
 		this._parent = null;
 		this.settings = {
-			targetRange: 1,		// range at which you can perform action
-			workOffRoad: false,	// whether work() should be performed off road
-			oneShot    : false, // remove this task once work() returns OK, regardless of validity
+			targetRange: 1,			// range at which you can perform action
+			workOffRoad: false,		// whether work() should be performed off road
+			oneShot    : false, 	// remove this task once work() returns OK, regardless of validity
+			timeout    : Infinity, 	// task becomes invalid after this long
 		};
 		_.defaults(options, {
 			travelToOptions: {},
@@ -191,7 +192,7 @@ export abstract class Task {
 	isValid(): boolean {
 		let validTask = false;
 		if (this.creep) {
-			validTask = this.isValidTask();
+			validTask = this.isValidTask() && Game.time - this.tick < this.settings.timeout;
 		}
 		let validTarget = false;
 		if (this.target) {

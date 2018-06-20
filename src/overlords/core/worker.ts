@@ -6,6 +6,8 @@ import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {CreepSetup} from '../CreepSetup';
 import {BuildPriorities} from '../../priorities/priorities_structures';
+import {maxBy, minMax} from '../../utilities/utils';
+import {isResource} from '../../declarations/typeGuards';
 
 export const WorkerSetup = new CreepSetup('worker', {
 	pattern  : [WORK, CARRY, MOVE],
@@ -17,6 +19,13 @@ const WorkerEarlySetup = new CreepSetup('worker', {
 	sizeLimit: Infinity,
 });
 
+type rechargeObjectType = StructureStorage
+	| StructureTerminal
+	| StructureContainer
+	| StructureLink
+	| Tombstone
+	| Resource;
+
 @profile
 export class WorkerOverlord extends Overlord {
 
@@ -24,7 +33,7 @@ export class WorkerOverlord extends Overlord {
 	room: Room;
 	repairStructures: Structure[];
 	dismantleStructures: Structure[];
-	rechargeObjects: (StructureStorage | StructureTerminal | StructureContainer | StructureLink | Tombstone)[];
+	rechargeObjects: rechargeObjectType[];
 	fortifyStructures: (StructureWall | StructureRampart)[];
 	constructionSites: ConstructionSite[];
 	nukeDefenseRamparts: StructureRampart[];
@@ -46,14 +55,7 @@ export class WorkerOverlord extends Overlord {
 	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.work) {
 		super(colony, 'worker', priority);
 		this.workers = this.creeps(WorkerSetup.role);
-		this.rechargeObjects = _.compact([this.colony.storage!,
-										  this.colony.terminal!,
-										  this.colony.upgradeSite.battery!,
-										  ..._.map(this.colony.miningSites, site => site.output!),
-										  ..._.filter(this.colony.tombstones, ts => ts.store.energy > 0)]);
-		if (this.colony.hatchery && this.colony.hatchery.battery) {
-			this.rechargeObjects.push(this.colony.hatchery.battery);
-		}
+		this.rechargeObjects = [];
 		// Fortification structures
 		this.fortifyStructures = _.sortBy(_.filter(this.room.barriers, s =>
 			s.hits < WorkerOverlord.settings.barrierHits[this.colony.level]), s => s.hits);
@@ -215,12 +217,38 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	private rechargeActions(worker: Zerg) {
-		let workerWithdrawLimit = this.colony.stage == ColonyStage.Larva ? 750 : 100;
-		let rechargeTargets = _.filter(this.rechargeObjects, s => s instanceof Tombstone ||
-																  s.energy > workerWithdrawLimit);
-		let target = worker.pos.findClosestByMultiRoomRange(rechargeTargets);
+		// Calculate recharge objects if needed (can't be placed in constructor because instantiation order
+		if (this.rechargeObjects.length == 0) {
+			let workerWithdrawLimit = this.colony.stage == ColonyStage.Larva ? 750 : 100;
+			let rechargeObjects = _.compact([this.colony.storage!,
+											 this.colony.terminal!,
+											 this.colony.hatchery ? this.colony.hatchery.battery : undefined,
+											 this.colony.upgradeSite.battery!,
+											 ...(this.colony.room.drops[RESOURCE_ENERGY] || []),
+											 ..._.map(this.colony.miningSites, site => site.output!),
+											 ...this.colony.tombstones]) as rechargeObjectType[];
+			this.rechargeObjects = _.filter(rechargeObjects, obj => isResource(obj) ? obj.amount > 0 : obj.energy > 0);
+		}
+		// Choose the target to maximize your energy gain subject to other targeting workers
+		let target = maxBy(this.rechargeObjects, function (obj) {
+			let amount: number;
+			if (isResource(obj)) {
+				amount = obj.amount;
+			} else {
+				amount = obj.energy;
+			}
+			let otherTargetingWorkers = _.map(obj.targetedBy, name => Game.zerg[name]);
+			let resourceOutflux = _.sum(_.map(otherTargetingWorkers,
+											  other => other.carryCapacity - _.sum(other.carry)));
+			amount = minMax(amount - resourceOutflux, 0, worker.carryCapacity);
+			return amount / (worker.pos.getMultiRoomRangeTo(obj.pos) + 1);
+		});
 		if (target) {
-			worker.task = Tasks.withdraw(target);
+			if (isResource(target)) {
+				worker.task = Tasks.pickup(target);
+			} else {
+				worker.task = Tasks.withdraw(target);
+			}
 		} else {
 			// Harvest from a source if there is no recharge target available
 			let availableSources = _.filter(this.room.sources,

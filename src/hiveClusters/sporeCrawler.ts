@@ -62,11 +62,10 @@ export class SporeCrawler extends HiveCluster {
 
 	private preventRampartDecay() {
 		let hp = 500; // TODO: hardwired
-		var closestDyingRampart = this.pos.findClosestByRange(FIND_STRUCTURES, {
-			filter: (s: Structure) => s.hits < hp && s.structureType == STRUCTURE_RAMPART,
-		});
-		if (closestDyingRampart) {
-			return this.tower.repair(closestDyingRampart);
+		let dyingRamparts = _.filter(this.room.ramparts, rampart =>
+			rampart.hits < hp && this.colony.roomPlanner.barrierPlanner.barrierShouldBeHere(rampart.pos));
+		if (dyingRamparts.length > 0) {
+			return this.tower.repair(this.tower.pos.findClosestByRange(dyingRamparts));
 		}
 	}
 

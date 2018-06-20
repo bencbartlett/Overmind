@@ -74,9 +74,10 @@ export class MiningOverlord extends Overlord {
 			else {
 				if (this.miningSite.outputConstructionSite) {
 					miner.task = Tasks.build(this.miningSite.outputConstructionSite);
-					if (miner.pos.isEqualTo(this.miningSite.outputConstructionSite.pos)) {
+					if (this.miningSite.outputConstructionSite.structureType == STRUCTURE_LINK &&
+						miner.pos.isEqualTo(this.miningSite.outputConstructionSite.pos)) {
 						// Move off of the contructionSite (link sites won't build)
-						miner.goTo(this.colony.controller);
+						miner.moveOffCurrentPos();
 					}
 				} else if (this.allowDropMining) {
 					// Dropmining at early levels

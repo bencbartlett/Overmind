@@ -2,6 +2,7 @@ interface TaskSettings {
 	targetRange: number;
 	workOffRoad: boolean;
 	oneShot: boolean;
+	timeout: number;
 }
 
 interface TaskOptions {

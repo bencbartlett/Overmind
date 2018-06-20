@@ -145,7 +145,8 @@ export class Pathing {
 		_.forEach(impassibleStructures, s => matrix.set(s.pos.x, s.pos.y, 0xff));
 		// Set passability of construction sites
 		_.forEach(room.find(FIND_CONSTRUCTION_SITES), (cs: ConstructionSite): void => {
-			if (cs.my && cs.structureType != STRUCTURE_RAMPART && cs.structureType != STRUCTURE_ROAD) {
+			if (cs.my && cs.structureType != STRUCTURE_RAMPART &&
+				cs.structureType != STRUCTURE_ROAD && cs.structureType != STRUCTURE_CONTAINER) {
 				matrix.set(cs.pos.x, cs.pos.y, 0xff);
 			}
 		});
@@ -369,18 +370,6 @@ export class Pathing {
 		});
 		let ret = this.findPath(startPos, endPos, options);
 		return !(ret.incomplete);
-	}
-
-	/* Returns the shortest path from start to end position */
-	static findTravelPath(startPos: RoomPosition, endPos: RoomPosition,
-						  options: MoveOptions = {}): PathFinderPath {
-		_.defaults(options, {
-			ignoreCreeps: true,
-			range       : 1,
-		});
-		let ret = this.findPath(startPos, endPos, options);
-		if (ret.incomplete) log.alert(`Incomplete travel path from ${startPos.print} to ${endPos.print}!`);
-		return ret;
 	}
 
 	// /* Find the shortest path, preferentially stepping on tiles with road routing flags */

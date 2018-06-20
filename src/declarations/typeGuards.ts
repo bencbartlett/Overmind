@@ -21,3 +21,7 @@ export function isStoreStructure(structure: Structure): structure is StoreStruct
 export function hasPos(obj: HasPos | RoomPosition): obj is HasPos {
 	return (<HasPos>obj).pos != undefined;
 }
+
+export function isResource(obj: RoomObject): obj is Resource {
+	return (<Resource>obj).amount != undefined;
+}

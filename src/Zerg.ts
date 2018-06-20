@@ -434,88 +434,26 @@ export class Zerg {
 	}
 
 	park(pos: RoomPosition = this.pos, maintainDistance = false): number {
-		let road = this.pos.lookForStructure(STRUCTURE_ROAD);
-		if (!road) return OK;
-
-		let positions = _.sortBy(this.pos.availableNeighbors(), (p: RoomPosition) => p.getRangeTo(pos));
-		if (maintainDistance) {
-			let currentRange = this.pos.getRangeTo(pos);
-			positions = _.filter(positions, (p: RoomPosition) => p.getRangeTo(pos) <= currentRange);
-		}
-
-		let swampPosition;
-		for (let position of positions) {
-			if (position.lookForStructure(STRUCTURE_ROAD)) continue;
-			let terrain = position.lookFor(LOOK_TERRAIN)[0];
-			if (terrain === 'swamp') {
-				swampPosition = position;
-			} else {
-				return this.move(this.pos.getDirectionTo(position));
-			}
-		}
-
-		if (swampPosition) {
-			return this.move(this.pos.getDirectionTo(swampPosition));
-		}
-
-		return this.goTo(pos);
+		return Movement.park(this, pos, maintainDistance);
 	}
 
 	/* Moves a creep off of the current tile to the first available neighbor */
 	moveOffCurrentPos(): ScreepsReturnCode | undefined {
-		let destinationPos = _.first(_.filter(this.pos.availableNeighbors(), pos => !pos.isEdge));
-		if (destinationPos) {
-			return this.move(this.pos.getDirectionTo(destinationPos));
-		}
+		return Movement.moveOffCurrentPos(this);
 	}
 
 	/* Moves onto an exit tile */
 	moveOnExit(): ScreepsReturnCode | undefined {
-		if (this.pos.rangeToEdge > 0 && this.fatigue == 0) {
-			let directions = [1, 3, 5, 7, 2, 4, 6, 8] as DirectionConstant[];
-			for (let direction of directions) {
-				let position = this.pos.getPositionAtDirection(direction);
-				let terrain = position.lookFor(LOOK_TERRAIN)[0];
-				if (terrain != 'wall' && position.rangeToEdge == 0) {
-					let outcome = this.move(direction);
-					return outcome;
-				}
-			}
-			console.log(`moveOnExit() assumes nearby exit tile, position: ${this.pos}`);
-			return ERR_NO_PATH;
-		}
+		return Movement.moveOnExit(this);
 	}
 
 	/* Moves off of an exit tile */
 	moveOffExit(avoidSwamp = true): ScreepsReturnCode {
-		let swampDirection;
-		let directions = [1, 3, 5, 7, 2, 4, 6, 8] as DirectionConstant[];
-		for (let direction of directions) {
-			let position = this.pos.getPositionAtDirection(direction);
-			if (position.rangeToEdge > 0 && position.isPassible()) {
-				let terrain = position.lookFor(LOOK_TERRAIN)[0];
-				if (avoidSwamp && terrain == 'swamp') {
-					swampDirection = direction;
-					continue;
-				}
-				return this.move(direction);
-			}
-		}
-		if (swampDirection) {
-			return this.move(swampDirection as DirectionConstant);
-		}
-		return ERR_NO_PATH;
+		return Movement.moveOffExit(this, avoidSwamp);
 	}
 
 	moveOffExitToward(pos: RoomPosition, detour = true): number | undefined {
-		for (let position of this.pos.availableNeighbors()) {
-			if (position.getRangeTo(pos) == 1) {
-				return this.goTo(position);
-			}
-		}
-		if (detour) {
-			this.goTo(pos, {ignoreCreeps: false});
-		}
+		return Movement.moveOffExitToward(this, pos, detour);
 	}
 
 	// Miscellaneous fun stuff -----------------------------------------------------------------------------------------

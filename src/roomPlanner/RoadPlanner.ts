@@ -205,10 +205,10 @@ export class RoadPlanner {
 		let origin = (this.colony.storage || this.colony.hatchery || this.colony).pos;
 		roadPositions = _.sortBy(roadPositions, pos => pos.getMultiRoomRangeTo(origin));
 		for (let pos of roadPositions) {
-			if (count > 0 && RoomPlanner.shouldBuild(STRUCTURE_ROAD, pos)) {
+			if (count > 0 && RoomPlanner.canBuild(STRUCTURE_ROAD, pos)) {
 				let ret = pos.createConstructionSite(STRUCTURE_ROAD);
 				if (ret != OK) {
-					log.error(`${this.colony.name}: couldn't create road site at ${pos.print}. Result: ${ret}`);
+					log.warning(`${this.colony.name}: couldn't create road site at ${pos.print}. Result: ${ret}`);
 				} else {
 					count--;
 				}

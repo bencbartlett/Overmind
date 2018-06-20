@@ -104,7 +104,7 @@ Object.defineProperty(Room.prototype, 'structures', {
 
 Object.defineProperty(Room.prototype, 'drops', {
 	get() {
-		return Overmind.cache.drops[this.name];
+		return Overmind.cache.drops[this.name] || {};
 	},
 });
 
@@ -120,17 +120,17 @@ Object.defineProperties(Room.prototype, {
 		},
 	},
 
-	droppedMinerals: {
-		get() {
-			let minerals: Resource[] = [];
-			for (let resourceType in this.drops) {
-				if (resourceType != RESOURCE_ENERGY && resourceType != RESOURCE_POWER) {
-					minerals = minerals.concat(this.drops[resourceType]);
-				}
-			}
-			return minerals;
-		},
-	},
+	// droppedMinerals: {
+	// 	get() {
+	// 		let minerals: Resource[] = [];
+	// 		for (let resourceType in this.drops) {
+	// 			if (resourceType != RESOURCE_ENERGY && resourceType != RESOURCE_POWER) {
+	// 				minerals = minerals.concat(this.drops[resourceType]);
+	// 			}
+	// 		}
+	// 		return minerals;
+	// 	},
+	// },
 
 	droppedPower: {
 		get() {

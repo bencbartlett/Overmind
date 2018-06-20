@@ -42,7 +42,7 @@ export class DirectiveSiege extends Directive {
 	calculateWaypoint(): RoomPosition | undefined {
 		// Calculate the recovery waypoint
 		let startPos = this.colony.hatchery ? this.colony.hatchery.pos : this.colony.pos;
-		let ret = Pathing.findTravelPath(startPos, this.pos, {range: 50});
+		let ret = Pathing.findPath(startPos, this.pos, {range: 50});
 		if (!ret.incomplete) {
 			let path = ret.path;
 			// Place the waypoint flag three squares before the last position in the previous room

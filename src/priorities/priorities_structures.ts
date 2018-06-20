@@ -36,4 +36,28 @@ export const AttackStructurePriorities: BuildableStructureConstant[] = [
 	STRUCTURE_WALL,
 ];
 
+// Prioritized list of what order owned structures should be demolished (and then moved) in
+export const DemolishStructurePriorities: {
+	structureType: BuildableStructureConstant,
+	maxRemoved?: number,
+	dismantle?: boolean
+}[] = [
+	{structureType: STRUCTURE_EXTENSION, maxRemoved: 5},
+	{structureType: STRUCTURE_SPAWN, maxRemoved: 1},
+	{structureType: STRUCTURE_CONTAINER},
+	{structureType: STRUCTURE_TOWER, maxRemoved: 1},
+	{structureType: STRUCTURE_LINK},
+	{structureType: STRUCTURE_LAB},
+	{structureType: STRUCTURE_NUKER},
+	{structureType: STRUCTURE_OBSERVER},
+	// {structureType: STRUCTURE_EXTRACTOR, maxRemoved: 1}, // skip extractor; doesn't need to be relocated
+	{structureType: STRUCTURE_POWER_SPAWN},
+	// {structureType: STRUCTURE_ROAD}, // just let roads decay
+	{structureType: STRUCTURE_CONTAINER},
+	{structureType: STRUCTURE_STORAGE},
+	{structureType: STRUCTURE_TERMINAL},
+	{structureType: STRUCTURE_WALL, dismantle: true},
+	{structureType: STRUCTURE_RAMPART, dismantle: true},
+];
+
 

@@ -154,7 +154,7 @@ export class MiningSite extends HiveCluster {
 		}
 		if (originPos) {
 			let path = Pathing.findShortestPath(this.pos, originPos).path;
-			return path[0];
+			return _.find(path, pos => this.source.pos.getRangeTo(pos) == 1);
 		}
 	}
 
@@ -168,11 +168,7 @@ export class MiningSite extends HiveCluster {
 		}
 		if (originPos) {
 			let path = Pathing.findShortestPath(this.pos, originPos).path;
-			for (let pos of path) {
-				if (this.source.pos.getRangeTo(pos) == 2) {
-					return pos;
-				}
-			}
+			return _.find(path, pos => this.source.pos.getRangeTo(pos) == 2);
 		}
 	}
 
@@ -202,7 +198,8 @@ export class MiningSite extends HiveCluster {
 				}
 				let result = buildHere.createConstructionSite(structureType);
 				if (result != OK) {
-					log.error(`Mining site at ${this.pos.print}: cannot build output! Result: ${result}`);
+					log.error(`Mining site in ${this.room.print}: cannot build output of type ${structureType} ` +
+							  `at ${buildHere.print}! Result: ${result}`);
 				}
 			}
 		}

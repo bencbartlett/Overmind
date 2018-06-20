@@ -12,6 +12,7 @@ export class TaskFortify extends Task {
 	constructor(target: fortifyTargetType, options = {} as TaskOptions) {
 		super(fortifyTaskName, target, options);
 		// Settings
+		this.settings.timeout = 100; // Don't want workers to fortify indefinitely
 		this.settings.targetRange = 3;
 		this.settings.workOffRoad = true;
 	}

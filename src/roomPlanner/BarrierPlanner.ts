@@ -50,7 +50,7 @@ export class BarrierPlanner {
 			rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
 		}
 		// Get Min cut
-		let barrierCoords = getCutTiles(this.colony.name, rectArray, true, 2, false);
+		let barrierCoords = getCutTiles(this.colony.name, rectArray, false, 2, false);
 		return _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
 	}
 
@@ -117,10 +117,10 @@ export class BarrierPlanner {
 			barrierPositions.push(derefCoords(coords, this.colony.name));
 		}
 		for (let pos of barrierPositions) {
-			if (count > 0 && RoomPlanner.shouldBuild(STRUCTURE_RAMPART, pos)) {
+			if (count > 0 && RoomPlanner.canBuild(STRUCTURE_RAMPART, pos)) {
 				let ret = pos.createConstructionSite(STRUCTURE_RAMPART);
 				if (ret != OK) {
-					log.error(`${this.colony.name}: couldn't create rampart site at ${pos.print}. Result: ${ret}`);
+					log.warning(`${this.colony.name}: couldn't create rampart site at ${pos.print}. Result: ${ret}`);
 				} else {
 					count--;
 				}

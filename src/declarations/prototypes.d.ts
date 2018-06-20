@@ -32,7 +32,7 @@ interface Room {
 	tombstones: Tombstone[];
 	drops: { [resourceType: string]: Resource[] };
 	droppedEnergy: Resource[];
-	droppedMinerals: Resource[];
+	// droppedMinerals: Resource[];
 	droppedPower: Resource[];
 	structures: { [structureType: string]: Structure[] };
 	spawns: StructureSpawn[];
