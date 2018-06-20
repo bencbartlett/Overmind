@@ -43,6 +43,7 @@ export class Hatchery extends HiveCluster {
 	constructor(colony: Colony, headSpawn: StructureSpawn) {
 		super(colony, headSpawn, 'hatchery');
 		// Register structure components
+		if (this.colony.layout == 'twoPart') this.colony.destinations.push(this.pos);
 		this.spawns = colony.spawns;
 		this.availableSpawns = _.filter(this.spawns, (spawn: StructureSpawn) => !spawn.spawning);
 		this.extensions = colony.extensions;

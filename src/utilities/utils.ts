@@ -68,6 +68,10 @@ export function mergeSum(objects: { [key: string]: number | undefined }[]): { [k
 	return ret;
 }
 
+export function coordName(coord: Coord): string {
+	return coord.x + ':' + coord.y;
+}
+
 export function derefCoords(coordName: string, roomName: string): RoomPosition {
 	let [x, y] = coordName.split(':');
 	return new RoomPosition(parseInt(x, 10), parseInt(y, 10), roomName);

@@ -41,23 +41,19 @@ export class RoadPlanner {
 		return Mem.wrap(this.colony.memory, 'roadPlanner', memoryDefaults);
 	}
 
-	private recalculateRoadNetwork(commandCenterPos: RoomPosition, hatcheryPos: RoomPosition,
-								   obstacles: RoomPosition[]): void {
-		this.buildRoadNetwork(commandCenterPos, hatcheryPos, obstacles);
+	private recalculateRoadNetwork(storagePos: RoomPosition, obstacles: RoomPosition[]): void {
+		this.buildRoadNetwork(storagePos, obstacles);
 		this.finalize();
 	}
 
 	// Connect commandCenter to hatchery, upgradeSites, and all miningSites, and place containers
-	private buildRoadNetwork(commandCenterPos: RoomPosition, hatcheryPos: RoomPosition,
-							 obstacles: RoomPosition[]): void {
+	private buildRoadNetwork(storagePos: RoomPosition, obstacles: RoomPosition[]): void {
 		this.costMatrices = {};
 		this.roadPositions = [];
-		let destinations = _.sortBy(this.colony.destinations, pos => pos.getMultiRoomRangeTo(commandCenterPos));
-		// Connect commandCenter to hatchery
-		this.planRoad(commandCenterPos, hatcheryPos, obstacles);
+		let destinations = _.sortBy(this.colony.destinations, pos => pos.getMultiRoomRangeTo(storagePos));
 		// Connect commandCenter to each destination in colony
 		for (let pos of destinations) {
-			this.planRoad(commandCenterPos, pos, obstacles);
+			this.planRoad(storagePos, pos, obstacles);
 		}
 		this.formatRoadPositions();
 	}
@@ -227,17 +223,15 @@ export class RoadPlanner {
 
 	run(): void {
 		if (this.roomPlanner.active) {
-			if (this.roomPlanner.storagePos && this.roomPlanner.hatcheryPos) {
-				this.buildRoadNetwork(this.roomPlanner.storagePos, this.roomPlanner.hatcheryPos,
-									  this.roomPlanner.getObstacles());
+			if (this.roomPlanner.storagePos) {
+				this.buildRoadNetwork(this.roomPlanner.storagePos, this.roomPlanner.getObstacles());
 			}
 			this.visuals();
 		} else {
 			// Once in a blue moon, recalculate the entire network and write to memory to keep it up to date
 			if (Game.time % RoadPlanner.settings.recalculateRoadNetworkInterval == this.colony.id) {
-				if (this.roomPlanner.storagePos && this.roomPlanner.hatcheryPos) {
-					this.recalculateRoadNetwork(this.roomPlanner.storagePos, this.roomPlanner.hatcheryPos,
-												this.roomPlanner.getObstacles());
+				if (this.roomPlanner.storagePos) {
+					this.recalculateRoadNetwork(this.roomPlanner.storagePos, this.roomPlanner.getObstacles());
 				}
 			}
 			if (this.colony.level >= RoadPlanner.settings.buildRoadsAtRCL &&

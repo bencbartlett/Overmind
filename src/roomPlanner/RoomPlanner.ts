@@ -101,6 +101,7 @@ export class RoomPlanner {
 		recheckAfter      : 50,
 		siteCheckFrequency: 250,
 		maxSitesPerColony : 10,
+		maxDismantleCount : 5,
 	};
 
 	constructor(colony: Colony) {
@@ -517,9 +518,11 @@ export class RoomPlanner {
 										+ removeCount + dismantleCount;
 					if (amountMissing < maxRemoved) {
 						if (priority.dismantle) {
-							DirectiveDismantle.createIfNotPresent(structure.pos, 'pos');
-							dismantleCount++;
-							this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
+							if (dismantleCount < RoomPlanner.settings.maxDismantleCount) {
+								DirectiveDismantle.createIfNotPresent(structure.pos, 'pos');
+								dismantleCount++;
+								this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
+							}
 						} else {
 							let result = structure.destroy();
 							if (result != OK) {

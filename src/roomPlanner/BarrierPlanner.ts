@@ -4,7 +4,7 @@ import {Colony} from '../Colony';
 import {Mem} from '../Memory';
 import {log} from '../console/log';
 import {derefCoords} from '../utilities/utils';
-import {bunkerLayout} from './layouts/bunker';
+import {bunkerLayout, insideBunkerBounds} from './layouts/bunker';
 
 export interface BarrierPlannerMemory {
 	barrierLookup: { [roadCoordName: string]: boolean };
@@ -21,8 +21,9 @@ export class BarrierPlanner {
 	barrierPositions: RoomPosition[];
 
 	static settings = {
-		buildBarriersAtRCL: 3,
-		padding           : 3, // allow this much space between structures and barriers
+		buildBarriersAtRCL      : 3,
+		padding                 : 3, // allow this much space between structures and barriers
+		switchToBunkerRampartsAt: 7
 	};
 
 	constructor(roomPlanner: RoomPlanner) {
@@ -105,17 +106,17 @@ export class BarrierPlanner {
 
 	/* Quick lookup for if a barrier should be in this position. Barriers returning false won't be maintained. */
 	barrierShouldBeHere(pos: RoomPosition): boolean {
-		return this.memory.barrierLookup[pos.coordName] || false;
+		return this.memory.barrierLookup[pos.coordName] || insideBunkerBounds(pos, this.colony);
 	}
 
 	/* Create construction sites for any buildings that need to be built */
 	private buildMissingRamparts(): void {
 		// Max buildings that can be placed each tick
 		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
-		// Build missing roads
+		// Build missing ramparts
 		let barrierPositions = [];
-		for (let coords of _.keys(this.memory.barrierLookup)) {
-			barrierPositions.push(derefCoords(coords, this.colony.name));
+		for (let coord of _.keys(this.memory.barrierLookup)) {
+			barrierPositions.push(derefCoords(coord, this.colony.name));
 		}
 		for (let pos of barrierPositions) {
 			if (count > 0 && RoomPlanner.canBuild(STRUCTURE_RAMPART, pos)) {

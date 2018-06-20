@@ -21,6 +21,7 @@ export class OvermindConsole {
 		global.listAllDirectives = this.listAllDirectives;
 		global.listPersistentDirectives = this.listPersistentDirectives;
 		global.removeAllLogisticsDirectives = this.removeAllLogisticsDirectives;
+		global.removeFlagsByColor = this.removeFlagsByColor;
 		global.deepCleanMemory = this.deepCleanMemory;
 	}
 
@@ -44,6 +45,7 @@ export class OvermindConsole {
 		descr['destroyAllBarriers(roomName)'] = 'destroys all ramparts and barriers in a room';
 		descr['listAllDirectives()'] = 'print type, name, pos of every directive';
 		descr['listPersistentDirectives()'] = 'print type, name, pos of every persistent directive';
+		descr['removeFlagsByColor(color, secondaryColor)'] = 'remove flags that match the specified colors';
 		descr['deepCleanMemory()'] = 'deletes all non-critical portions of memory (be careful!)';
 		// Console list
 		let descrMsg = toColumns(descr, {justify: true, padChar: '.'});
@@ -153,6 +155,14 @@ export class OvermindConsole {
 			}
 		}
 		return msg;
+	}
+
+	static removeFlagsByColor(color: ColorConstant, secondaryColor: ColorConstant): string {
+		let removeFlags = _.filter(Game.flags, flag => flag.color == color && flag.secondaryColor == secondaryColor);
+		for (let flag of removeFlags) {
+			flag.remove();
+		}
+		return `Removed ${removeFlags.length} flags.`;
 	}
 
 	static destroyAllHostlileStructures(roomName: string): string {
