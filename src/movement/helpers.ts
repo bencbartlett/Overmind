@@ -38,12 +38,12 @@ export function getCreepWeightInfo(creep: Creep, analyzeCarry = true): { move: n
 	return bodyParts as { move: number, weighted: number, [other: string]: number };
 }
 
-export function getTerrainCosts(creep: Creep): { plains: number, swamp: number } {
+export function getTerrainCosts(creep: Creep): { plainCost: number, swampCost: number } {
 	const data = getCreepWeightInfo(creep);
 	const ratio = data.weighted / data.move;
 	return {
-		plains: ratio <= 1 ? 1 : 2,
-		swamp : getSwampCost(ratio),
+		plainCost: ratio <= 1 ? 1 : 2,
+		swampCost: getSwampCost(ratio),
 	};
 }
 

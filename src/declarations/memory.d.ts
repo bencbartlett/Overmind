@@ -62,7 +62,6 @@ interface CreepMemory {
 		origin: string;
 	};
 	// Traveler components
-	_trav: TravelData | null;
 	_go?: MoveData;
 	// Combat
 	partner?: string;

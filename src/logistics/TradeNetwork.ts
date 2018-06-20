@@ -252,6 +252,10 @@ export class TraderJoe implements ITradeNetwork {
 		);
 		let bestOrder = minBy(ordersForMineral, (order: Order) => order.price);
 		let maxPrice = maxMarketPrices[mineralType] || maxMarketPrices.default;
+		let onMMO = Game.shard.name.includes('shard');
+		if (!onMMO) {
+			maxPrice = Infinity; // don't care about price limits if on private server
+		}
 		if (bestOrder && bestOrder.price <= maxPrice) {
 			let response = Game.market.deal(bestOrder.id, amount, terminal.room.name);
 			this.logTransaction(bestOrder, terminal.room.name, amount, response);

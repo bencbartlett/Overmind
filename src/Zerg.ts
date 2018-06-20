@@ -416,8 +416,9 @@ export class Zerg {
 
 	// Movement and location -------------------------------------------------------------------------------------------
 
-	goTo(destination: RoomPosition | { pos: RoomPosition }, options: MoveOptions = {}) {
+	goTo(destination: RoomPosition | HasPos, options: MoveOptions = {}) {
 		// Add default obstacle avoidance
+		// TODO: include default obstacles in costmatrix initial calculations
 		return Movement.goTo(this, destination, _.merge(options, {obstacles: this.getObstacles()}));
 	};
 

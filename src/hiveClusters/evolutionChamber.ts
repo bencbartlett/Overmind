@@ -14,6 +14,7 @@ import {Priority} from '../priorities/priorities';
 import {Zerg} from '../Zerg';
 import {TraderJoe} from '../logistics/TradeNetwork';
 import {rightArrow} from '../utilities/stringConstants';
+import {Visualizer} from '../visuals/Visualizer';
 
 const LabStatus = {
 	Idle             : 0,
@@ -383,13 +384,13 @@ export class EvolutionChamber extends HiveCluster {
 	}
 
 	visuals() {
-		// for (let lab of this.reagentLabs) {
-		// 	Visualizer.circle(lab.pos, 'red');
-		// }
-		// for (let lab of this.productLabs) {
-		// 	Visualizer.circle(lab.pos, 'blue');
-		// }
-		// Visualizer.circle(this.boostingLab.pos, 'green');
+		for (let lab of this.reagentLabs) {
+			Visualizer.circle(lab.pos, 'red');
+		}
+		for (let lab of this.productLabs) {
+			Visualizer.circle(lab.pos, 'blue');
+		}
+		Visualizer.circle(this.boostingLab.pos, 'green');
 	}
 }
 

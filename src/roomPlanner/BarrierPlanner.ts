@@ -1,9 +1,10 @@
 import {getCutTiles} from '../algorithms/minCut';
-import {RoomPlanner} from './RoomPlanner';
+import {getAllStructureCoordsFromLayout, RoomPlanner, translatePositions} from './RoomPlanner';
 import {Colony} from '../Colony';
 import {Mem} from '../Memory';
 import {log} from '../console/log';
 import {derefCoords} from '../utilities/utils';
+import {bunkerLayout} from './layouts/bunker';
 
 export interface BarrierPlannerMemory {
 	barrierLookup: { [roadCoordName: string]: boolean };
@@ -108,7 +109,7 @@ export class BarrierPlanner {
 	}
 
 	/* Create construction sites for any buildings that need to be built */
-	private buildMissing(): void {
+	private buildMissingRamparts(): void {
 		// Max buildings that can be placed each tick
 		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
 		// Build missing roads
@@ -121,6 +122,25 @@ export class BarrierPlanner {
 				let ret = pos.createConstructionSite(STRUCTURE_RAMPART);
 				if (ret != OK) {
 					log.warning(`${this.colony.name}: couldn't create rampart site at ${pos.print}. Result: ${ret}`);
+				} else {
+					count--;
+				}
+			}
+		}
+	}
+
+	private buildMissingBunkerRamparts(): void {
+		if (!this.roomPlanner.bunkerPos) return;
+		let bunkerCoords = getAllStructureCoordsFromLayout(bunkerLayout, this.colony.level);
+		let bunkerPositions = _.map(bunkerCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
+		bunkerPositions = translatePositions(bunkerPositions, bunkerLayout.data.anchor, this.roomPlanner.bunkerPos);
+		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
+		for (let pos of bunkerPositions) {
+			if (count > 0 && !pos.lookForStructure(STRUCTURE_RAMPART)
+				&& pos.lookFor(LOOK_CONSTRUCTION_SITES).length == 0) {
+				let ret = pos.createConstructionSite(STRUCTURE_RAMPART);
+				if (ret != OK) {
+					log.warning(`${this.colony.name}: couldn't create bunker rampart at ${pos.print}. Result: ${ret}`);
 				} else {
 					count--;
 				}
@@ -142,7 +162,10 @@ export class BarrierPlanner {
 		} else {
 			if (this.colony.level >= BarrierPlanner.settings.buildBarriersAtRCL &&
 				Game.time % RoomPlanner.settings.siteCheckFrequency == this.colony.id + 1) {
-				this.buildMissing();
+				this.buildMissingRamparts();
+				if (this.colony.layout == 'bunker' && this.colony.level >= 7) {
+					this.buildMissingBunkerRamparts();
+				}
 			}
 		}
 	}

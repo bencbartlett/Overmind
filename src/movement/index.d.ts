@@ -1,5 +1,4 @@
 interface MoveOptions {
-	ignoreRoads?: boolean;
 	ignoreCreeps?: boolean;
 	preferHighway?: boolean;
 	allowHostile?: boolean;
@@ -12,17 +11,20 @@ interface MoveOptions {
 	maxOps?: number;
 	movingTarget?: boolean;
 	freshMatrix?: boolean;
-	offRoad?: boolean;
+	direct?: boolean;
+	terrainCosts?: { plainCost: number, swampCost: number };
 	stuckValue?: number;
 	maxRooms?: number;
 	repath?: number;
 	route?: { [roomName: string]: boolean };
 	ensurePath?: boolean;
+	pushy?: boolean;
 }
 
 interface MoveData {
 	state: any[];
 	path: string;
+	delay?: number;
 }
 
 interface MoveState {

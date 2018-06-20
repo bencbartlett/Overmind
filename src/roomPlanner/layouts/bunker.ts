@@ -1,7 +1,7 @@
 import {StructureLayout} from '../RoomPlanner';
 
 
-export var bunkerLayout: StructureLayout = {
+export const bunkerLayout: StructureLayout = {
 	data: {anchor: {'x': 25, 'y': 25}},
 	1   : {
 		'name'     : 'bunkerCore',
@@ -458,3 +458,5 @@ export var bunkerLayout: StructureLayout = {
 		}
 	}
 };
+
+

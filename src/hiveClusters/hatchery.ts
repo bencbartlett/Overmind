@@ -84,7 +84,7 @@ export class Hatchery extends HiveCluster {
 		if (this.battery) {
 			return this.battery.pos;
 		} else {
-			return this.spawns[0].pos.availableNeighbors()[0];
+			return this.spawns[0].pos.availableNeighbors(true)[0];
 		}
 	}
 

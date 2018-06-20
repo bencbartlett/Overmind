@@ -39,6 +39,7 @@ export class Pathing {
 			ignoreCreeps: true,
 			maxOps      : DEFAULT_MAXOPS,
 			range       : 1,
+			terrainCosts: {plainCost: 1, swampCost: 5},
 		});
 
 		if (options.movingTarget) {
@@ -52,12 +53,16 @@ export class Pathing {
 			allowedRooms = this.findRoute(origin.roomName, destination.roomName, options);
 		}
 
+		if (options.direct) {
+			options.terrainCosts = {plainCost: 1, swampCost: 1};
+		}
+
 		let callback = (roomName: string) => this.roomCallback(roomName, origin, destination, allowedRooms, options);
 		let ret = PathFinder.search(origin, {pos: destination, range: options.range!}, {
 			maxOps      : options.maxOps,
 			maxRooms    : options.maxRooms,
-			plainCost   : options.offRoad ? 1 : options.ignoreRoads ? 1 : 2,
-			swampCost   : options.offRoad ? 1 : options.ignoreRoads ? 5 : 10,
+			plainCost   : options.terrainCosts!.plainCost,
+			swampCost   : options.terrainCosts!.swampCost,
 			roomCallback: callback,
 		});
 
@@ -372,69 +377,5 @@ export class Pathing {
 		return !(ret.incomplete);
 	}
 
-	// /* Find the shortest path, preferentially stepping on tiles with road routing flags */
-	// static routeRoadPath(origin: RoomPosition, destination: RoomPosition,
-	// 					 options: TravelToOptions = {}): PathfinderReturn {
-	// 	_.defaults(options, {
-	// 		ignoreCreeps: true,
-	// 		range       : 1,
-	// 		offRoad     : true,
-	// 		allowSK     : true,
-	// 	});
-	// 	let originRoomName = origin.roomName;
-	// 	let destRoomName = destination.roomName;
-	//
-	// 	let roomDistance = Game.map.getRoomLinearDistance(origin.roomName, destination.roomName);
-	// 	let allowedRooms = options.route;
-	// 	if (!allowedRooms && (options.useFindRoute || (options.useFindRoute === undefined && roomDistance > 2))) {
-	// 		let route = this.findRoute(origin.roomName, destination.roomName, options);
-	// 		if (route) {
-	// 			allowedRooms = route;
-	// 		}
-	// 	}
-	//
-	// 	let callback = (roomName: string) => this.roomCallback(roomName, origin, destination, allowedRooms, options);
-	//
-	// 	let callback = (roomName: string): CostMatrix | boolean => {
-	// 		if (allowedRooms) {
-	// 			if (!allowedRooms[roomName]) {
-	// 				return false;
-	// 			}
-	// 		} else if (!options.allowHostile && this.shouldAvoid(roomName)
-	// 				   && roomName !== destRoomName && roomName !== originRoomName) {
-	// 			return false;
-	// 		}
-	//
-	// 		let matrix;
-	// 		let room = Game.rooms[roomName];
-	// 		if (room) {
-	// 			matrix = Traveler.getStructureMatrix(room, options.freshMatrix);
-	// 			if (options.obstacles) {
-	// 				matrix = matrix.clone();
-	// 				for (let obstacle of options.obstacles) {
-	// 					if (obstacle.roomName !== roomName) {
-	// 						continue;
-	// 					}
-	// 					matrix.set(obstacle.x, obstacle.y, 0xff);
-	// 				}
-	// 			}
-	// 			// Prefer pathing through flags
-	// 			let pathingFlags = _.filter(room.flags, flag => flag.color == COLOR_WHITE &&
-	// 															flag.secondaryColor == COLOR_WHITE);
-	// 			for (let flag of pathingFlags) {
-	// 				matrix.set(flag.pos.x, flag.pos.y, 0x01);
-	// 			}
-	// 		}
-	// 		return matrix as CostMatrix;
-	// 	};
-	//
-	// 	return PathFinder.search(origin, {pos: destination, range: options.range!}, {
-	// 		maxOps      : options.maxOps,
-	// 		maxRooms    : options.maxRooms,
-	// 		plainCost   : 2,
-	// 		swampCost   : 2,
-	// 		roomCallback: callback,
-	// 	});
-	// }
 }
 

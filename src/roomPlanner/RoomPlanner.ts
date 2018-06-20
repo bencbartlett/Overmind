@@ -60,6 +60,30 @@ let memoryDefaults: PlannerMemory = {
 	savedFlags: [],
 };
 
+
+export function getAllStructureCoordsFromLayout(layout: StructureLayout, rcl: number): Coord[] {
+	if (!layout[rcl]) {
+		return [];
+	}
+	let positionsByType = layout[rcl]!.buildings;
+	let coords: Coord[] = [];
+	for (let structureType in positionsByType) {
+		coords = coords.concat(positionsByType[structureType].pos);
+	}
+	return _.unique(coords, coord => coord.x + 50 * coord.y);
+}
+
+export function translatePositions(positions: RoomPosition[], fromAnchor: Coord, toAnchor: Coord) {
+	let dx = toAnchor.x - fromAnchor.x;
+	let dy = toAnchor.y - fromAnchor.y;
+	let newPositions = [];
+	for (let pos of positions) {
+		newPositions.push(new RoomPosition(pos.x + dx, pos.y + dy, pos.roomName));
+	}
+	return newPositions;
+}
+
+
 @profile
 export class RoomPlanner {
 	colony: Colony;							// The colony this is for
@@ -487,6 +511,7 @@ export class RoomPlanner {
 														flag => DirectiveDismantle.filter(flag)).length > 0).length;
 			for (let structure of structures) {
 				if (!this.structureShouldBeHere(structureType, structure.pos)) {
+					log.info(`${this.colony.name}: demolishing ${structureType} at ${structure.pos.print}`);
 					shouldBreak = true;
 					let amountMissing = CONTROLLER_STRUCTURES[structureType][this.colony.level] - structures.length
 										+ removeCount + dismantleCount;
@@ -496,7 +521,11 @@ export class RoomPlanner {
 							dismantleCount++;
 							this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
 						} else {
-							structure.destroy();
+							let result = structure.destroy();
+							if (result != OK) {
+								log.warning(`${this.colony.name}: couldn't destroy structure of type ` +
+											`"${structureType}" at ${structure.pos.print}. Result: ${result}`);
+							}
 							removeCount++;
 							this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
 						}

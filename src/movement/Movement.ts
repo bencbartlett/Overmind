@@ -3,9 +3,12 @@
 
 import {profile} from '../profiler/decorator';
 import {log} from '../console/log';
-import {isExit, normalizePos, sameCoord} from './helpers';
+import {getTerrainCosts, isExit, normalizePos, sameCoord} from './helpers';
 import {Zerg} from '../Zerg';
 import {Pathing} from './Pathing';
+import {QueenSetup} from '../overlords/core/queen';
+import {TransporterSetup} from '../overlords/core/transporter';
+import {ManagerSetup} from '../overlords/core/manager';
 
 export const NO_ACTION = -20;
 
@@ -21,6 +24,8 @@ const STATE_DEST_X = 4;
 const STATE_DEST_Y = 5;
 const STATE_DEST_ROOMNAME = 6;
 
+const pushyRoles = _.map([ManagerSetup, QueenSetup, TransporterSetup], setup => setup.role);
+
 @profile
 export class Movement {
 
@@ -28,6 +33,11 @@ export class Movement {
 
 	/* Move a creep to a destination */
 	static goTo(creep: Zerg, destination: HasPos | RoomPosition, options: MoveOptions = {}): number {
+
+		_.defaults(options, {
+			pushy: pushyRoles.includes(creep.roleName),
+		});
+
 		destination = normalizePos(destination);
 		Pathing.updateRoomStatus(creep.room);
 
@@ -63,6 +73,14 @@ export class Movement {
 			creep.memory._go = {} as MoveData;
 		}
 		let moveData = creep.memory._go as MoveData;
+		if (moveData.delay != undefined) {
+			if (moveData.delay <= 0) {
+				delete moveData.delay;
+			} else {
+				moveData.delay--;
+				return OK;
+			}
+		}
 
 		let state = this.deserializeState(moveData, destination);
 
@@ -70,18 +88,21 @@ export class Movement {
 		// this.circle(destination, "orange");
 
 		// check if creep is stuck
+		let pushedCreep;
 		if (this.isStuck(creep, state)) {
 			state.stuckCount++;
-			Movement.circle(creep.pos, 'magenta', state.stuckCount * .2);
+			this.circle(creep.pos, 'magenta', state.stuckCount * .2);
+			if (options.pushy) {
+				pushedCreep = this.pushCreep(creep, state.stuckCount >= 1);
+			}
 		} else {
 			state.stuckCount = 0;
 		}
-
 		// handle case where creep is stuck
 		if (!options.stuckValue) {
 			options.stuckValue = DEFAULT_STUCK_VALUE;
 		}
-		if (state.stuckCount >= options.stuckValue && Math.random() > .5) {
+		if (state.stuckCount >= options.stuckValue && !pushedCreep && Math.random() > .5) {
 			options.ignoreCreeps = false;
 			options.freshMatrix = true;
 			delete moveData.path;
@@ -110,6 +131,11 @@ export class Movement {
 			}
 
 			state.destination = destination;
+
+			// Compute terrain costs
+			if (!options.direct && !options.terrainCosts) {
+				options.terrainCosts = getTerrainCosts(creep.creep);
+			}
 
 			let cpu = Game.cpu.getUsed();
 			let ret = Pathing.findPath(creep.pos, destination, options);
@@ -271,7 +297,7 @@ export class Movement {
 
 		if (otherData && otherData.path) {
 			otherData.path = nextDir + otherData.path;
-			// otherData.delay = 1;
+			otherData.delay = 1;
 		}
 		return true;
 	}
@@ -325,7 +351,7 @@ export class Movement {
 
 	private static serializeState(creep: Zerg, destination: RoomPosition, state: MoveState, moveData: MoveData) {
 		moveData.state = [creep.pos.x, creep.pos.y, state.stuckCount, state.cpu, destination.x, destination.y,
-							destination.roomName];
+						  destination.roomName];
 	}
 
 	private static isStuck(creep: Zerg, state: MoveState): boolean {

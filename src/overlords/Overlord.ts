@@ -118,7 +118,6 @@ export abstract class Overlord {
 			data    : { 										// rarely-changed data about the creep
 				origin: '',										// where it was spawned, filled in at spawn time
 			},
-			_trav   : null,
 		};
 		// Create the protocreep and return it
 		let protoCreep: protoCreep = { 							// object to add to spawner queue

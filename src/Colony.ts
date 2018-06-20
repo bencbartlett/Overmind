@@ -102,6 +102,7 @@ export class Colony {
 	abandoning: boolean;
 	breached: boolean;
 	lowPowerMode: boolean; 								// Activate if RCL8 and full energy
+	layout: 'twoPart' | 'bunker';						// Which room design colony uses
 	// Creeps and subsets
 	creeps: Zerg[];										// Creeps bound to the colony
 	creepsByRole: { [roleName: string]: Zerg[] };		// Creeps hashed by their role name
@@ -245,6 +246,8 @@ export class Colony {
 		this.logisticsNetwork = new LogisticsNetwork(this);
 		// Register a room planner
 		this.roomPlanner = new RoomPlanner(this);
+		this.layout = this.roomPlanner.memory.bunkerData && this.roomPlanner.memory.bunkerData.anchor ?
+					  'bunker' : 'twoPart';
 		// Register road network
 		this.roadLogistics = new RoadLogistics(this);
 	}
