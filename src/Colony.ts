@@ -178,6 +178,7 @@ export class Colony {
 								source => source.pos.getMultiRoomRangeTo(this.pos));
 		this.extractors = _.sortBy(_.compact(_.map(this.rooms, room => room.extractor)),
 								   extractor => extractor!.pos.getMultiRoomRangeTo(this.pos)) as StructureExtractor[];
+		_.remove(this.extractors, extractor => !extractor.my && !(extractor.owner.username == 'Public'));
 		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites));
 		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
 		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
