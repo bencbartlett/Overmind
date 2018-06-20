@@ -502,8 +502,8 @@ export class RoomPlanner {
 						}
 					}
 				}
-				if (shouldBreak) break;
 			}
+			if (shouldBreak) break;
 		}
 	}
 

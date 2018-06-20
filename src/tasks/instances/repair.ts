@@ -11,6 +11,7 @@ export class TaskRepair extends Task {
 	constructor(target: repairTargetType, options = {} as TaskOptions) {
 		super(repairTaskName, target, options);
 		// Settings
+		this.settings.timeout = 100;
 		this.settings.targetRange = 3;
 	}
 

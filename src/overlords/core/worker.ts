@@ -161,12 +161,6 @@ export class WorkerOverlord extends Overlord {
 			if (groupedSites[structureType]) {
 				let target = worker.pos.findClosestByMultiRoomRange(groupedSites[structureType]);
 				if (target) {
-					// Fixes issue #9 - workers freeze if creep sitting on square
-					if (target.pos.lookFor(LOOK_CREEPS).length > 0) {
-						let zerg = Game.zerg[_.first(target.pos.lookFor(LOOK_CREEPS)).name];
-						if (zerg) zerg.moveOffCurrentPos();
-						worker.say('move pls');
-					}
 					worker.task = Tasks.build(target);
 					return;
 				}
@@ -209,8 +203,8 @@ export class WorkerOverlord extends Overlord {
 
 	private upgradeActions(worker: Zerg) {
 		// Sign controller if needed
-		if ((!this.colony.controller.signedByMe && !this.colony.controller.signedByScreeps)) {	// <DO-NOT-MODIFY>
-			worker.task = Tasks.signController(this.colony.controller); 						// <DO-NOT-MODIFY>
+		if ((!this.colony.controller.signedByMe && !this.colony.controller.signedByScreeps)) {
+			worker.task = Tasks.signController(this.colony.controller);
 			return;
 		}
 		worker.task = Tasks.upgrade(this.room.controller!);

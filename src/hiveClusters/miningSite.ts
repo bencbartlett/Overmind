@@ -35,7 +35,7 @@ export class MiningSite extends HiveCluster {
 	};
 
 	constructor(colony: Colony, source: Source) {
-		super(colony, source, 'miningSite');
+		super(colony, source, 'miningSite', true);
 		this.source = source;
 		this.energyPerTick = source.energyCapacity / ENERGY_REGEN_TIME;
 		this.miningPowerNeeded = Math.ceil(this.energyPerTick / HARVEST_POWER) + 1;

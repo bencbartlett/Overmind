@@ -66,7 +66,7 @@ export class BootstrappingOverlord extends Overlord {
 				let protoCreep = this.generateProtoCreep(EmergencyMinerSetup);
 				protoCreep.memory.overlord = overlord.ref; // Donate the miner to the miningSite
 				if (this.colony.hatchery) {
-					this.colony.hatchery.enqueue(protoCreep, this.priority);
+					this.colony.hatchery.enqueue(protoCreep, this.priority + 1);
 				}
 			}
 		}
@@ -84,7 +84,8 @@ export class BootstrappingOverlord extends Overlord {
 		this.wishlist(1, FillerSetup);
 		// Then spawn the rest of the needed miners
 		let energyInStructures = _.sum(_.map(this.withdrawStructures, structure => structure.energy));
-		if (energyInStructures < BootstrappingOverlord.settings.spawnBootstrapMinerThreshold) {
+		let droppedEnergy = _.sum(this.room.droppedEnergy, drop => drop.amount);
+		if (energyInStructures + droppedEnergy < BootstrappingOverlord.settings.spawnBootstrapMinerThreshold) {
 			this.spawnBootstrapMiners();
 		}
 	}

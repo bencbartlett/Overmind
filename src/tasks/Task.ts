@@ -69,6 +69,7 @@ export abstract class Task {
 			workOffRoad: false,		// whether work() should be performed off road
 			oneShot    : false, 	// remove this task once work() returns OK, regardless of validity
 			timeout    : Infinity, 	// task becomes invalid after this long
+			blind      : true,  	// don't require vision of target unless in room
 		};
 		_.defaults(options, {
 			travelToOptions: {},
@@ -197,7 +198,7 @@ export abstract class Task {
 		let validTarget = false;
 		if (this.target) {
 			validTarget = this.isValidTarget();
-		} else if (this.options.blind && !Game.rooms[this.targetPos.roomName]) {
+		} else if ((this.settings.blind || this.options.blind) && !Game.rooms[this.targetPos.roomName]) {
 			// If you can't see the target's room but you have blind enabled, then that's okay
 			validTarget = true;
 		}

@@ -73,13 +73,9 @@ export class TransportOverlord extends Overlord {
 
 	init() {
 		let setup = this.colony.stage == ColonyStage.Larva ? TransporterEarlySetup : TransporterSetup;
-		let transportPower = _.sum(_.map(this.lifetimeFilter(this.transporters),
-										 creep => creep.getActiveBodyparts(CARRY)));
+		let transportPowerEach = setup.getBodyPotential(CARRY, this.colony);
 		let neededTransportPower = this.neededTransportPower();
-		if (transportPower < neededTransportPower) {
-			this.requestCreep(setup);
-		}
-		this.creepReport(setup.role, transportPower, neededTransportPower);
+		this.wishlist(Math.ceil(neededTransportPower / transportPowerEach), setup);
 	}
 
 	private handleTransporter(transporter: Zerg, request: LogisticsRequest | undefined) {

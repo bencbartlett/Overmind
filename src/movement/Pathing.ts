@@ -116,7 +116,7 @@ export class Pathing {
 		if (options.obstacles) {
 			matrix = matrix.clone();
 			for (let obstacle of options.obstacles) {
-				if (obstacle.roomName == room.name) {
+				if (obstacle && obstacle.roomName == room.name) {
 					matrix.set(obstacle.x, obstacle.y, 0xff);
 				}
 			}

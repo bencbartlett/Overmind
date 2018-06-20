@@ -3,6 +3,7 @@ interface TaskSettings {
 	workOffRoad: boolean;
 	oneShot: boolean;
 	timeout: number;
+	blind: boolean;
 }
 
 interface TaskOptions {

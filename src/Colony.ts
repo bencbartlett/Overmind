@@ -190,9 +190,8 @@ export class Colony {
 		this.level = this.controller.level as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 		this.bootstrapping = false;
 		this.isIncubating = false;
-		if (this.storage && this.storage.isActive() &&
-			this.spawns[0] && this.spawns[0].pos.findClosestByLimitedRange(this.room.containers, 2)) {
-			// If the colony has storage and a hatchery and a hatchery battery
+		if (this.storage && this.storage.isActive() && this.spawns[0]) {
+			// If the colony has storage and a hatchery
 			if (this.controller.level == 8) {
 				this.stage = ColonyStage.Adult;
 			} else {

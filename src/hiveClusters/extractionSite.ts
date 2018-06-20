@@ -26,7 +26,7 @@ export class ExtractionSite extends HiveCluster {
 	overlord: ExtractorOverlord;
 
 	constructor(colony: Colony, extractor: StructureExtractor) {
-		super(colony, extractor, 'extractionSite');
+		super(colony, extractor, 'extractionSite', true);
 		this.extractor = extractor;
 		this.mineral = extractor.pos.lookFor(LOOK_MINERALS)[0];
 		// Register output method
