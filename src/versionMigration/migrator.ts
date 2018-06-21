@@ -84,12 +84,14 @@ export class VersionMigration {
 	// }
 
 	static migrate_04X_05X() {
+		let migrateClusterNames = ['commandCenter', 'evolutionChamber', 'hatchery', 'upgradeSite'];
 		for (let i in Memory.creeps) {
 			if (Memory.creeps[i].overlord) {
 				let hcName = Memory.creeps[i].overlord!.split('@')[0];
-				if (hcName != 'miningSite' && hcName != 'extractionSite') {
+				if (migrateClusterNames.includes(hcName)) {
 					let overlordName = _.last(Memory.creeps[i].overlord!.split(':'));
-					Memory.creeps[i].overlord = hcName + ':' + overlordName;
+					let colonyName = Memory.creeps[i].colony;
+					Memory.creeps[i].overlord = hcName + '@' + colonyName + ':' + overlordName;
 				}
 			}
 		}

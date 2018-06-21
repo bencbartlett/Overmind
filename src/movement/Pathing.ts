@@ -118,7 +118,7 @@ export class Pathing {
 			matrix = this.getDefaultMatrix(room);
 		}
 		// Register other obstacles
-		if (options.obstacles) {
+		if (options.obstacles && options.obstacles.length > 0) {
 			matrix = matrix.clone();
 			for (let obstacle of options.obstacles) {
 				if (obstacle && obstacle.roomName == room.name) {
