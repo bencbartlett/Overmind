@@ -10,6 +10,9 @@ All notable changes to this project will be documented in this file. The format 
     - Finished support for bunkers
 
 ### Changed
+- Logistics network improvements:
+    - `LogisticsNetwork.requestOutputAll()` has been replaced by `requestOutput({resourceType: 'all'})` and now generates a single request for the sum amount of all resourceTypes in the target. This improves performance and CPU cost.
+    - Added cache invalidation methods to fix an issue where too many transporters could be assigned to the same logistics target during a single tick
 - Workers now include dropped energy in list of objects they can recharge from and pick their recharge target more intelligently, accounting for other targeting workers
 
 ### Fixed

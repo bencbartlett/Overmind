@@ -58,9 +58,9 @@ export class ExtractionSite extends HiveCluster {
 		// Register logisticsNetwork requests if approximate predicted amount exceeds transporter capacity
 		if (this.output) {
 			if (_.sum(this.output.store) > 0.5 * this.output.storeCapacity) {
-				this.colony.logisticsNetwork.requestOutputAll(this.output);
+				this.colony.logisticsNetwork.requestOutput(this.output, {resourceType: 'all'});
 			} else if (_.sum(this.output.store) > 0 && this.overlord.drones.length == 0) {
-				this.colony.logisticsNetwork.requestOutputAll(this.output);
+				this.colony.logisticsNetwork.requestOutput(this.output, {resourceType: 'all'});
 			}
 		}
 	}

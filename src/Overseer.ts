@@ -62,7 +62,7 @@ export class Overseer {
 		for (let tombstone of this.colony.tombstones) {
 			if (_.sum(tombstone.store) > Overseer.settings.minEnergyForRequest
 				|| _.sum(tombstone.store) > tombstone.store.energy) {
-				this.colony.logisticsNetwork.requestOutputAll(tombstone);
+				this.colony.logisticsNetwork.requestOutput(tombstone, {resourceType: 'all'});
 			}
 		}
 	}

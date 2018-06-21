@@ -169,17 +169,6 @@ export class LogisticsNetwork {
 		this.targetToRequest[req.target.ref] = requestID;
 	}
 
-	/* Requests output for every resourceType in a requestor object */
-	requestOutputAll(target: StoreStructure | Tombstone, opts = {} as RequestOptions): void {
-		for (let resourceType in target.store) {
-			let amount = target.store[<ResourceConstant>resourceType] || 0;
-			if (amount > 0) {
-				opts.resourceType = <ResourceConstant>resourceType;
-				this.requestOutput(target, opts);
-			}
-		}
-	}
-
 	/* Requests output for every mineral in a requestor object */
 	requestOutputMinerals(target: StoreStructure, opts = {} as RequestOptions): void {
 		for (let resourceType in target.store) {

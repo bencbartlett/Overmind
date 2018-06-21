@@ -107,14 +107,18 @@ export class MiningSite extends HiveCluster {
 
 	/* Register appropriate resource withdrawal requests when the output gets sufficiently full */
 	private registerOutputRequests(): void {
+		if (!this.output) return;
 		// Register logisticsNetwork requests if approximate predicted amount exceeds transporter capacity
 		if (this.output instanceof StructureContainer) {
 			let transportCapacity = 200 * this.colony.level;
 			let threshold = this.colony.stage > ColonyStage.Larva ? 0.8 : 0.5;
 			if (_.sum(this.output.store) > threshold * transportCapacity) {
-				this.colony.logisticsNetwork.requestOutputAll(this.output, {dAmountdt: this.energyPerTick});
+				this.colony.logisticsNetwork.requestOutput(this.output, {
+					resourceType: 'all',
+					dAmountdt   : this.energyPerTick
+				});
 			}
-		} else if (this.output instanceof StructureLink) {
+		} else {
 			// If the link will be full with next deposit from the miner
 			let minerCapacity = 150;
 			if (this.output.energy + minerCapacity > this.output.energyCapacity) {
