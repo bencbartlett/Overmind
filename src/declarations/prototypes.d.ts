@@ -74,6 +74,7 @@ interface RoomObject {
 
 interface RoomPosition {
 	print: string;
+	printPlain: string;
 	room: Room | undefined;
 	name: string;
 	coordName: string;

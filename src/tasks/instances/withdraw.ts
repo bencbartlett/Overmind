@@ -59,7 +59,6 @@ export class TaskWithdraw extends Task {
 	}
 
 	work() {
-		this.moveToNextPos();
 		return this.creep.withdraw(this.target, this.data.resourceType, this.data.amount);
 	}
 

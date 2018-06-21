@@ -10,18 +10,23 @@ export interface StoreStructure extends Structure {
 	storeCapacity: number;
 }
 
-export function isEnergyStructure(structure: Structure): structure is EnergyStructure {
-	return (<EnergyStructure>structure).energy != undefined && (<EnergyStructure>structure).energyCapacity != undefined;
+export function isEnergyStructure(obj: RoomObject): obj is EnergyStructure {
+	return (<EnergyStructure>obj).energy != undefined && (<EnergyStructure>obj).energyCapacity != undefined;
 }
 
-export function isStoreStructure(structure: Structure): structure is StoreStructure {
-	return (<StoreStructure>structure).store != undefined;
+export function isStoreStructure(obj: RoomObject): obj is StoreStructure {
+	return (<StoreStructure>obj).store != undefined && (<StoreStructure>obj).storeCapacity != undefined;
+}
+
+export function isTombstone(obj: RoomObject): obj is Tombstone {
+	return (<Tombstone>obj).deathTime != undefined;
+}
+
+export function isResource(obj: RoomObject): obj is Resource {
+	return (<Resource>obj).amount != undefined;
 }
 
 export function hasPos(obj: HasPos | RoomPosition): obj is HasPos {
 	return (<HasPos>obj).pos != undefined;
 }
 
-export function isResource(obj: RoomObject): obj is Resource {
-	return (<Resource>obj).amount != undefined;
-}

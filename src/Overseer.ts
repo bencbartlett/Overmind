@@ -25,6 +25,10 @@ export class Overseer {
 		[priority: number]: Overlord[]
 	};
 
+	static settings = {
+		minEnergyForRequest: 200,
+	};
+
 	constructor(colony: Colony) {
 		this.colony = colony;
 		this.directives = [];
@@ -42,6 +46,27 @@ export class Overseer {
 		this.overlords[overlord.priority].push(overlord);
 	}
 
+	private registerLogisticsRequests(): void {
+		// Register logistics requests for all dropped resources and tombstones
+		for (let room of this.colony.rooms) {
+			// Pick up all nontrivial dropped resources
+			for (let resourceType in room.drops) {
+				for (let drop of room.drops[resourceType]) {
+					if (drop.amount > Overseer.settings.minEnergyForRequest || drop.resourceType != RESOURCE_ENERGY) {
+						this.colony.logisticsNetwork.requestOutput(drop);
+					}
+				}
+			}
+		}
+		// Place a logistics request directive for every tombstone with non-empty store that isn't on a container
+		for (let tombstone of this.colony.tombstones) {
+			if (_.sum(tombstone.store) > Overseer.settings.minEnergyForRequest
+				|| _.sum(tombstone.store) > tombstone.store.energy) {
+				this.colony.logisticsNetwork.requestOutputAll(tombstone);
+			}
+		}
+	}
+
 	/* Place new event-driven flags where needed to be instantiated on the next tick */
 	private placeDirectives(): void {
 		// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
@@ -55,25 +80,6 @@ export class Overseer {
 				// this.colony.hatchery.settings.suppressSpawning = true;
 			}
 		}
-
-		// TODO: figure out what's causing these bugs
-		// // Register logistics requests for all dropped resources and tombstones
-		// for (let room of this.colony.rooms) {
-		// 	// Pick up all nontrivial dropped resources
-		// 	for (let resourceType in room.drops) {
-		// 		for (let drop of room.drops[resourceType]) {
-		// 			if (drop.amount > 200 || drop.resourceType != RESOURCE_ENERGY) {
-		// 				DirectivePickup.createIfNotPresent(drop.pos, 'pos', {quiet: true});
-		// 			}
-		// 		}
-		// 	}
-		// }
-		// // Place a logistics request directive for every tombstone with non-empty store that isn't on a container
-		// for (let tombstone of this.colony.tombstones) {
-		// 	if (_.sum(tombstone.store) > 0 && !tombstone.pos.lookForStructure(STRUCTURE_CONTAINER)) {
-		// 		DirectivePickup.createIfNotPresent(tombstone.pos, 'pos', {quiet: true});
-		// 	}
-		// }
 
 		// Guard directive: defend your outposts and all rooms of colonies that you are incubating
 		let roomsToCheck = _.flattenDeep([this.colony.outposts,
@@ -162,6 +168,8 @@ export class Overseer {
 				overlord.init();
 			}
 		}
+		// Register cleanup requests to logistics network
+		this.registerLogisticsRequests();
 	}
 
 	// Operation =======================================================================================================

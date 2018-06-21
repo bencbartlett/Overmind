@@ -345,7 +345,6 @@ export class RoomPlanner {
 								level = 8): RoomPosition[] {
 		let dx = anchor.x - bunkerLayout.data.anchor.x;
 		let dy = anchor.y - bunkerLayout.data.anchor.y;
-		let structureLayout = _.mapValues(bunkerLayout[level]!.buildings, obj => obj.pos) as { [s: string]: Coord[] };
 		return _.map(bunkerLayout[level]!.buildings[structureType].pos,
 					 coord => new RoomPosition(coord.x + dx, coord.y + dy, this.colony.name));
 	}
@@ -492,7 +491,7 @@ export class RoomPlanner {
 	}
 
 	/* Create construction sites for any buildings that need to be built */
-	private demolishMisplacedStructures(): void {
+	private demolishMisplacedStructures(skipBarriers = true): void {
 		// Max buildings that can be placed each tick
 		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
 		// Recall the appropriate map
@@ -503,6 +502,9 @@ export class RoomPlanner {
 		// Build missing structures from room plan
 		for (let priority of DemolishStructurePriorities) {
 			let structureType = priority.structureType;
+			if (skipBarriers && (structureType == STRUCTURE_RAMPART || structureType == STRUCTURE_WALL)) {
+				continue;
+			}
 			let maxRemoved = priority.maxRemoved || Infinity;
 			let shouldBreak = false;
 			let removeCount = 0;
@@ -512,13 +514,13 @@ export class RoomPlanner {
 														flag => DirectiveDismantle.filter(flag)).length > 0).length;
 			for (let structure of structures) {
 				if (!this.structureShouldBeHere(structureType, structure.pos)) {
-					log.info(`${this.colony.name}: demolishing ${structureType} at ${structure.pos.print}`);
 					shouldBreak = true;
 					let amountMissing = CONTROLLER_STRUCTURES[structureType][this.colony.level] - structures.length
 										+ removeCount + dismantleCount;
 					if (amountMissing < maxRemoved) {
 						if (priority.dismantle) {
 							if (dismantleCount < RoomPlanner.settings.maxDismantleCount) {
+								log.info(`${this.colony.name}: dismantling ${structureType} at ${structure.pos.print}`);
 								DirectiveDismantle.createIfNotPresent(structure.pos, 'pos');
 								dismantleCount++;
 								this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
@@ -528,6 +530,8 @@ export class RoomPlanner {
 							if (result != OK) {
 								log.warning(`${this.colony.name}: couldn't destroy structure of type ` +
 											`"${structureType}" at ${structure.pos.print}. Result: ${result}`);
+							} else {
+								log.info(`${this.colony.name}: destroyed ${structureType} at ${structure.pos.print}`);
 							}
 							removeCount++;
 							this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
@@ -587,7 +591,7 @@ export class RoomPlanner {
 		} else {
 			if (Game.time % RoomPlanner.settings.siteCheckFrequency == this.colony.id ||
 				Game.time == (this.memory.recheckStructuresAt || Infinity)) {
-				this.demolishMisplacedStructures();
+				this.demolishMisplacedStructures(this.colony.layout == 'twoPart');
 			} else if (Game.time % RoomPlanner.settings.siteCheckFrequency == this.colony.id + 1 ||
 					   Game.time == (this.memory.recheckStructuresAt || Infinity) + 1) {
 				delete this.memory.recheckStructuresAt;

@@ -21,6 +21,7 @@ import {TaskUpgrade, upgradeTargetType} from './instances/upgrade';
 import {TaskWithdraw, withdrawTargetType} from './instances/withdraw';
 import {dropTargetType, TaskDrop} from './instances/drop';
 import {profile} from '../profiler/decorator';
+import {TaskWithdrawAll, withdrawAllTargetType} from './instances/withdrawAll';
 
 @profile
 export class Tasks {
@@ -124,6 +125,10 @@ export class Tasks {
 					amount: number | undefined     = undefined,
 					options                        = {} as TaskOptions): TaskWithdraw {
 		return new TaskWithdraw(target, resourceType, amount, options);
+	}
+
+	static withdrawAll(target: withdrawAllTargetType, options = {} as TaskOptions): TaskWithdrawAll {
+		return new TaskWithdrawAll(target, options);
 	}
 
 }

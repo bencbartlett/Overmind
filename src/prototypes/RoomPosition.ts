@@ -6,6 +6,12 @@ Object.defineProperty(RoomPosition.prototype, 'print', {
 	}
 });
 
+Object.defineProperty(RoomPosition.prototype, 'printPlain', {
+	get() {
+		return `[${this.roomName}, ${this.x}, ${this.y}]`;
+	}
+});
+
 Object.defineProperty(RoomPosition.prototype, 'room', { // identifier for the pos, used in caching
 	get: function () {
 		return Game.rooms[this.roomName];

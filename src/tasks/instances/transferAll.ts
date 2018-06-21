@@ -26,7 +26,7 @@ export class TaskTransferAll extends Task {
 	}
 
 	isValidTarget() {
-		return this.target.storeCapacity - _.sum(this.target.store) >= _.sum(this.creep.carry);
+		return _.sum(this.target.store) < this.target.storeCapacity;
 	}
 
 	work() {

@@ -25,6 +25,7 @@ import {TaskInvalid} from './instances/invalid';
 import {fleeTargetType, fleeTaskName, TaskFlee} from './instances/flee';
 import {TaskTransferAll, transferAllTargetType, transferAllTaskName} from './instances/transferAll';
 import {log} from '../console/log';
+import {TaskWithdrawAll, withdrawAllTargetType, withdrawAllTaskName} from './instances/withdrawAll';
 
 export function initializeTask(protoTask: protoTask): Task {
 	// Retrieve name and target data from the protoTask
@@ -83,9 +84,6 @@ export function initializeTask(protoTask: protoTask): Task {
 		case rangedAttackTaskName:
 			task = new TaskRangedAttack(target as rangedAttackTargetType);
 			break;
-		case withdrawTaskName:
-			task = new TaskWithdraw(target as withdrawTargetType);
-			break;
 		case repairTaskName:
 			task = new TaskRepair(target as repairTargetType);
 			break;
@@ -103,6 +101,12 @@ export function initializeTask(protoTask: protoTask): Task {
 			break;
 		case upgradeTaskName:
 			task = new TaskUpgrade(target as upgradeTargetType);
+			break;
+		case withdrawTaskName:
+			task = new TaskWithdraw(target as withdrawTargetType);
+			break;
+		case withdrawAllTaskName:
+			task = new TaskWithdrawAll(target as withdrawAllTargetType);
 			break;
 		default:
 			log.error(`Invalid task name: ${taskName}! task.creep: ${protoTask._creep.name}. Deleting from memory!`);

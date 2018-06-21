@@ -64,7 +64,6 @@ export class TaskTransfer extends Task {
 	}
 
 	work() {
-		this.moveToNextPos();
 		return this.creep.transfer(this.target, this.data.resourceType, this.data.amount);
 	}
 }

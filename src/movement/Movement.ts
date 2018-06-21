@@ -278,13 +278,14 @@ export class Movement {
 	/* Push a blocking creep out of the way, switching positions */
 	static pushCreep(creep: Zerg, insist = true): boolean {
 		let nextDir = Pathing.nextDirectionInPath(creep);
-		if (!nextDir) return false;
+		if (nextDir == undefined) return false;
 
 		let nextPos = Pathing.positionAtDirection(creep.pos, nextDir);
 		if (!nextPos) return false;
 
 		let otherCreep = nextPos.lookFor(LOOK_CREEPS)[0];
 		if (!otherCreep) return false;
+		if (!otherCreep.memory) return false;
 
 		let otherData = otherCreep.memory._go as MoveData;
 		if (!insist && otherData && otherData.path && otherData.path.length > 1) {

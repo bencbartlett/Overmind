@@ -8,11 +8,19 @@ import {log} from '../console/log';
 import {Pathing} from '../movement/Pathing';
 import {Colony} from '../Colony';
 import {Matcher} from '../algorithms/galeShapley';
-import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../declarations/typeGuards';
-import {DirectivePickup} from '../directives/logistics/logisticsRequest';
+import {
+	EnergyStructure,
+	isEnergyStructure,
+	isResource,
+	isStoreStructure,
+	isTombstone,
+	StoreStructure
+} from '../declarations/typeGuards';
+// import {DirectivePickup} from '../directives/logistics/logisticsRequest';
 import {Mem} from '../Memory';
 import {TransporterSetup} from '../overlords/core/transporter';
 import {minMax} from '../utilities/utils';
+import columnify from 'columnify';
 
 export type LogisticsTarget =
 	EnergyStructure
@@ -20,7 +28,13 @@ export type LogisticsTarget =
 	| StructureLab
 	| StructureNuker
 	| StructurePowerSpawn
-	| DirectivePickup// | Zerg;
+	| Tombstone
+	| Resource;
+// | DirectivePickup// | Zerg;
+
+export const ALL_RESOURCE_TYPE_ERROR =
+				 `Improper logistics request: 'all' can only be used for store structure or tombstone!`;
+
 export type BufferTarget = StructureStorage | StructureTerminal;
 
 export interface LogisticsRequest {
@@ -28,14 +42,14 @@ export interface LogisticsRequest {
 	target: LogisticsTarget;			// Target making the request
 	amount: number;						// Amount to request
 	dAmountdt: number;					// Optional value showing how fast it fills up / empties (e.g. mining rates)
-	resourceType: ResourceConstant;		// Resource type being requested
+	resourceType: ResourceConstant | 'all';		// Resource type being requested
 	multiplier: number;					// Multiplier to prioritize important requests
 }
 
 interface RequestOptions {
 	amount?: number;
 	dAmountdt?: number;					// Always pass a positive value for this; sign is determined by function call
-	resourceType?: ResourceConstant;
+	resourceType?: ResourceConstant | 'all';
 	multiplier?: number;
 }
 
@@ -62,7 +76,7 @@ export class LogisticsNetwork {
 	private cache: {
 		nextAvailability: { [transporterName: string]: [number, RoomPosition] },
 		predictedTransporterCarry: { [transporterName: string]: StoreDefinition },
-		resourceChangeRate: { [transporterName_requestID: string]: number }
+		resourceChangeRate: { [requestID: string]: { [transporterName: string]: number } }
 	};
 	static settings = {
 		flagDropAmount      : 1000,
@@ -106,6 +120,11 @@ export class LogisticsNetwork {
 		});
 		if (target.room != this.colony.room) {
 			log.warning(`${target.ref} at ${target.pos.print} is outside colony room; shouldn't request!`);
+			return;
+		}
+		if (opts.resourceType == 'all') {
+			log.warning(`Logistics request error: 'all' can only be used for output requests`);
+			return;
 		}
 		if (!opts.amount) {
 			opts.amount = this.getInputAmount(target, opts.resourceType!);
@@ -151,7 +170,7 @@ export class LogisticsNetwork {
 	}
 
 	/* Requests output for every resourceType in a requestor object */
-	requestOutputAll(target: StoreStructure | DirectivePickup, opts = {} as RequestOptions): void {
+	requestOutputAll(target: StoreStructure | Tombstone, opts = {} as RequestOptions): void {
 		for (let resourceType in target.store) {
 			let amount = target.store[<ResourceConstant>resourceType] || 0;
 			if (amount > 0) {
@@ -162,7 +181,7 @@ export class LogisticsNetwork {
 	}
 
 	/* Requests output for every mineral in a requestor object */
-	requestOutputMinerals(target: StoreStructure | DirectivePickup, opts = {} as RequestOptions): void {
+	requestOutputMinerals(target: StoreStructure, opts = {} as RequestOptions): void {
 		for (let resourceType in target.store) {
 			if (resourceType == RESOURCE_ENERGY) continue;
 			let amount = target.store[<ResourceConstant>resourceType] || 0;
@@ -174,8 +193,12 @@ export class LogisticsNetwork {
 	}
 
 	private getInputAmount(target: LogisticsTarget, resourceType: ResourceConstant): number {
-		if (target instanceof DirectivePickup) {
-			return target.storeCapacity - _.sum(target.store);
+		// if (target instanceof DirectivePickup) {
+		// 	return target.storeCapacity - _.sum(target.store);
+		// } else
+		if (isResource(target) || isTombstone(target)) {
+			log.error(`Improper logistics request: should not request input for resource or tombstone!`);
+			return 0;
 		} else if (isStoreStructure(target)) {
 			return target.storeCapacity - _.sum(target.store);
 		} else if (isEnergyStructure(target) && resourceType == RESOURCE_ENERGY) {
@@ -209,35 +232,46 @@ export class LogisticsNetwork {
 		return 0;
 	}
 
-	private getOutputAmount(target: LogisticsTarget, resourceType: ResourceConstant): number {
-		if (target instanceof DirectivePickup) {
-			return target.store[resourceType]!;
-		} else if (isStoreStructure(target)) {
-			return target.store[resourceType]!;
-		} else if (isEnergyStructure(target) && resourceType == RESOURCE_ENERGY) {
-			return target.energy;
-		}
-		// else if (target instanceof Zerg) {
-		// 	return target.carry[resourceType]!;
-		// }
-		else {
-			if (target instanceof StructureLab) {
-				if (resourceType == target.mineralType) {
-					return target.mineralAmount;
-				} else if (resourceType == RESOURCE_ENERGY) {
-					return target.energy;
-				}
-			} else if (target instanceof StructureNuker) {
-				if (resourceType == RESOURCE_GHODIUM) {
-					return target.ghodium;
-				} else if (resourceType == RESOURCE_ENERGY) {
-					return target.energy;
-				}
-			} else if (target instanceof StructurePowerSpawn) {
-				if (resourceType == RESOURCE_POWER) {
-					return target.power;
-				} else if (resourceType == RESOURCE_ENERGY) {
-					return target.energy;
+	private getOutputAmount(target: LogisticsTarget, resourceType: ResourceConstant | 'all'): number {
+		if (resourceType == 'all') {
+			if (isTombstone(target) || isStoreStructure(target)) {
+				return _.sum(target.store);
+			} else {
+				log.error(ALL_RESOURCE_TYPE_ERROR);
+				return 0;
+			}
+		} else {
+			if (isResource(target)) {
+				return target.amount;
+			} else if (isTombstone(target)) {
+				return target.store[resourceType] || 0;
+			} else if (isStoreStructure(target)) {
+				return target.store[resourceType] || 0;
+			} else if (isEnergyStructure(target) && resourceType == RESOURCE_ENERGY) {
+				return target.energy;
+			}
+			// else if (target instanceof Zerg) {
+			// 	return target.carry[resourceType]!;
+			// }
+			else {
+				if (target instanceof StructureLab) {
+					if (resourceType == target.mineralType) {
+						return target.mineralAmount;
+					} else if (resourceType == RESOURCE_ENERGY) {
+						return target.energy;
+					}
+				} else if (target instanceof StructureNuker) {
+					if (resourceType == RESOURCE_GHODIUM) {
+						return target.ghodium;
+					} else if (resourceType == RESOURCE_ENERGY) {
+						return target.energy;
+					}
+				} else if (target instanceof StructurePowerSpawn) {
+					if (resourceType == RESOURCE_POWER) {
+						return target.power;
+					} else if (resourceType == RESOURCE_ENERGY) {
+						return target.energy;
+					}
 				}
 			}
 		}
@@ -256,8 +290,8 @@ export class LogisticsNetwork {
 			if (approximateDistance) {
 				for (let targetPos of targetPositions.slice(1)) {
 					// The path lengths between any two logistics targets should be well-memorized
-					approximateDistance += pos.getMultiRoomRangeTo(targetPos)
-										   * LogisticsNetwork.settings.rangeToPathHeuristic;
+					approximateDistance += Math.ceil(pos.getMultiRoomRangeTo(targetPos)
+													 * LogisticsNetwork.settings.rangeToPathHeuristic);
 					// approximateDistance += Pathing.distance(pos, targetPos);
 					pos = targetPos;
 				}
@@ -265,8 +299,8 @@ export class LogisticsNetwork {
 				// This probably shouldn't happen...
 				approximateDistance = 0;
 				for (let targetPos of targetPositions) {
-					approximateDistance += pos.getMultiRoomRangeTo(targetPos)
-										   * LogisticsNetwork.settings.rangeToPathHeuristic;
+					approximateDistance += Math.ceil(pos.getMultiRoomRangeTo(targetPos)
+													 * LogisticsNetwork.settings.rangeToPathHeuristic);
 					// approximateDistance += Pathing.distance(pos, targetPos);
 					pos = targetPos;
 				}
@@ -303,17 +337,34 @@ export class LogisticsNetwork {
 			if (requestID) {
 				let request = this.requests[requestID];
 				if (request) {
-					let carry = transporter.carry;
+					let carry = transporter.carry as { [resourceType: string]: number };
 					let remainingCapacity = transporter.carryCapacity - _.sum(carry);
 					let resourceAmount = -1 * this.predictedRequestAmount(transporter, request, nextAvailability);
 					// ^ need to multiply amount by -1 since transporter is doing complement of what request needs
-					if (carry[request.resourceType]) {
-						carry[request.resourceType]! += resourceAmount;
-						carry[request.resourceType] = minMax(carry[request.resourceType]!, 0, remainingCapacity);
+					if (request.resourceType == 'all') {
+						if (!isStoreStructure(request.target) && !isTombstone(request.target)) {
+							log.error(ALL_RESOURCE_TYPE_ERROR);
+							return {energy: 0};
+						}
+						for (let resourceType in request.target.store) {
+							let resourceFraction = (request.target.store[<ResourceConstant>resourceType] || 0)
+												   / _.sum(request.target.store);
+							if (carry[resourceType]) {
+								carry[resourceType]! += resourceAmount * resourceFraction;
+								carry[resourceType] = minMax(carry[resourceType]!, 0, remainingCapacity);
+							} else {
+								carry[resourceType] = minMax(resourceAmount, 0, remainingCapacity);
+							}
+						}
 					} else {
-						carry[request.resourceType] = minMax(resourceAmount, 0, remainingCapacity);
+						if (carry[request.resourceType]) {
+							carry[request.resourceType]! += resourceAmount;
+							carry[request.resourceType] = minMax(carry[request.resourceType]!, 0, remainingCapacity);
+						} else {
+							carry[request.resourceType] = minMax(resourceAmount, 0, remainingCapacity);
+						}
 					}
-					return carry;
+					return carry as StoreDefinition;
 				}
 			}
 		}
@@ -347,15 +398,15 @@ export class LogisticsNetwork {
 		let otherTargetingTransporters = LogisticsNetwork.targetingTransporters(request.target, transporter);
 		// let closerTargetingTransporters = _.filter(otherTargetingTransporters,
 		// 										   transporter => this.nextAvailability(transporter)[0] < eta);
-		if (request.amount > 0) { // requester state, energy in
+		if (request.amount > 0) { // input state, resources into target
 			let resourceInflux = _.sum(_.map(otherTargetingTransporters,
-											 other => (other.carry[request.resourceType] || 0)));
+											 other => (other.carry[<ResourceConstant>request.resourceType] || 0)));
 			let predictedAmount = Math.max(request.amount + predictedDifference - resourceInflux, 0);
 			if (isStoreStructure(<Structure>request.target)) { 	// cap predicted amount at storeCapacity
 				predictedAmount = Math.min(predictedAmount, (<StoreStructure>request.target).storeCapacity);
 			}
 			return predictedAmount;
-		} else { // output state, energy out
+		} else { // output state, resources withdrawn from target
 			let resourceOutflux = _.sum(_.map(otherTargetingTransporters,
 											  other => other.carryCapacity - _.sum(other.carry)));
 			let predictedAmount = Math.min(request.amount + predictedDifference + resourceOutflux, 0);
@@ -386,10 +437,15 @@ export class LogisticsNetwork {
 			carry = transporter.carry;
 		}
 		if (amount > 0) { // requestInput instance, needs refilling
+			if (request.resourceType == 'all') {
+				log.warning(`Improper resourceType in bufferChoices! Type 'all' is only allowable for outputs!`);
+				return [];
+			}
 			// Change in resources if transporter goes straight to the input
 			let dQ_direct = Math.min(amount, carry[request.resourceType] || 0);
 			// let dt_direct = Pathing.distance(newPos, request.target.pos) + ticksUntilFree;
-			let dt_direct = ticksUntilFree + newPos.getMultiRoomRangeTo(request.target.pos) * LogisticsNetwork.settings.rangeToPathHeuristic;
+			let dt_direct = ticksUntilFree + newPos.getMultiRoomRangeTo(request.target.pos)
+							* LogisticsNetwork.settings.rangeToPathHeuristic;
 			choices.push({
 							 dQ       : dQ_direct,
 							 dt       : dt_direct,
@@ -401,7 +457,8 @@ export class LogisticsNetwork {
 			// Change in resources if transporter picks up resources from a buffer first
 			for (let buffer of this.buffers) {
 				let dQ_buffer = Math.min(amount, transporter.carryCapacity, buffer.store[request.resourceType] || 0);
-				let dt_buffer = newPos.getMultiRoomRangeTo(request.target.pos) * LogisticsNetwork.settings.rangeToPathHeuristic + // Pathing.distance(newPos, buffer.pos) +
+				let dt_buffer = newPos.getMultiRoomRangeTo(request.target.pos)
+								* LogisticsNetwork.settings.rangeToPathHeuristic +
 								Pathing.distance(buffer.pos, request.target.pos) + ticksUntilFree;
 				choices.push({
 								 dQ       : dQ_buffer,
@@ -413,8 +470,8 @@ export class LogisticsNetwork {
 			// Change in resources if transporter goes straight to the output
 			let remainingCarryCapacity = transporter.carryCapacity - _.sum(carry);
 			let dQ_direct = Math.min(Math.abs(amount), remainingCarryCapacity);
-			let dt_direct = newPos.getMultiRoomRangeTo(request.target.pos) * LogisticsNetwork.settings.rangeToPathHeuristic + //Pathing.distance(newPos, request.target.pos)
-							+ticksUntilFree;
+			let dt_direct = newPos.getMultiRoomRangeTo(request.target.pos)
+							* LogisticsNetwork.settings.rangeToPathHeuristic + ticksUntilFree;
 			choices.push({
 							 dQ       : dQ_direct,
 							 dt       : dt_direct,
@@ -425,8 +482,10 @@ export class LogisticsNetwork {
 			}
 			// Change in resources if transporter drops off resources at a buffer first
 			for (let buffer of this.buffers) {
-				let dQ_buffer = Math.min(Math.abs(amount), transporter.carryCapacity, buffer.storeCapacity - _.sum(buffer.store));
-				let dt_buffer = newPos.getMultiRoomRangeTo(request.target.pos) * LogisticsNetwork.settings.rangeToPathHeuristic + //Pathing.distance(newPos, buffer.pos) +
+				let dQ_buffer = Math.min(Math.abs(amount), transporter.carryCapacity,
+					buffer.storeCapacity - _.sum(buffer.store));
+				let dt_buffer = newPos.getMultiRoomRangeTo(request.target.pos)
+								* LogisticsNetwork.settings.rangeToPathHeuristic +
 								Pathing.distance(buffer.pos, request.target.pos) + ticksUntilFree;
 				choices.push({
 								 dQ       : dQ_buffer,
@@ -456,13 +515,15 @@ export class LogisticsNetwork {
 
 	/* Compute the best possible value of |dResource / dt| */
 	private resourceChangeRate(transporter: Zerg, request: LogisticsRequest): number {
-		let key = transporter.name + ':' + request.id;
-		if (!this.cache.resourceChangeRate[key]) {
+		if (!this.cache.resourceChangeRate[request.id]) {
+			this.cache.resourceChangeRate[request.id] = {};
+		}
+		if (!this.cache.resourceChangeRate[request.id][transporter.name]) {
 			let choices = this.bufferChoices(transporter, request);
 			let dQ_dt = _.map(choices, choice => request.multiplier * choice.dQ / Math.max(choice.dt, 0.1));
-			this.cache.resourceChangeRate[key] = _.max(dQ_dt);
+			this.cache.resourceChangeRate[request.id][transporter.name] = _.max(dQ_dt);
 		}
-		return this.cache.resourceChangeRate[key];
+		return this.cache.resourceChangeRate[request.id][transporter.name];
 	}
 
 	/* Generate requestor preferences in terms of transporters */
@@ -475,6 +536,13 @@ export class LogisticsNetwork {
 	transporterPreferences(transporter: Zerg): LogisticsRequest[] {
 		// Transporters prioritize requestors by change in resources per tick until pickup/delivery
 		return _.sortBy(this.requests, request => -1 * this.resourceChangeRate(transporter, request)); // -1 -> desc
+	}
+
+	/* Invalidates relevant portions of the cache once a transporter is assigned to a task */
+	invalidateCache(transporter: Zerg, request: LogisticsRequest): void {
+		delete this.cache.nextAvailability[transporter.name];
+		delete this.cache.predictedTransporterCarry[transporter.name];
+		delete this.cache.resourceChangeRate[request.id][transporter.name];
 	}
 
 	/* Logs the output of the stable matching result */
@@ -505,31 +573,61 @@ export class LogisticsNetwork {
 	/* Logs the current state of the logistics group to the console; useful for debugging */
 	summarize(): void {
 		// console.log(`Summary of logistics group for ${this.colony.name} at time ${Game.time}`);
-		console.log('Requests:');
+		let info = [];
 		for (let request of this.requests) {
-			let targetType = request.target instanceof DirectivePickup ? 'flag' :
-							 request.target.structureType;
-			let energy = 0;
-			if (request.target instanceof DirectivePickup || isStoreStructure(request.target)) {
-				energy = request.target.store[RESOURCE_ENERGY];
-			} else if (isEnergyStructure(request.target)) {
-				energy = request.target.energy;
+			let targetType: string;
+			if (request.target instanceof Resource) {
+				targetType = 'resource';
+			} else if (request.target instanceof Tombstone) {
+				targetType = 'tombstone';
+			} else {
+				targetType = request.target.structureType;
+			}
+			let amount = 0;
+			if (isResource(request.target)) {
+				amount = request.target.amount;
+			} else {
+				if (request.resourceType == 'all') {
+					if (isTombstone(request.target) || isStoreStructure(request.target)) {
+						amount = _.sum(request.target.store);
+					} else if (isEnergyStructure(request.target)) {
+						amount = -0.001;
+					}
+				} else {
+					if (isTombstone(request.target) || isStoreStructure(request.target)) {
+						amount = request.target.store[request.resourceType] || 0;
+					} else if (isEnergyStructure(request.target)) {
+						amount = request.target.energy;
+					}
+				}
+
 			}
 			let targetingTprtrNames = _.map(LogisticsNetwork.targetingTransporters(request.target), c => c.name);
-			console.log(`    Target: ${targetType} ${request.target.pos.print} ${request.target.ref}    ` +
-						`Amount: ${request.amount}    Energy: ${energy}    Targeted by: ${targetingTprtrNames}`);
+			info.push({
+						  target       : targetType,
+						  resourceType : request.resourceType,
+						  requestAmount: request.amount,
+						  currentAmount: amount,
+						  targetedBy   : targetingTprtrNames,
+						  pos          : request.target.pos.print,
+					  });
 		}
-		console.log('Transporters:');
+		console.log('Requests: \n' + columnify(info) + '\n');
+		info = [];
 		for (let transporter of this.colony.getCreepsByRole(TransporterSetup.role)) {
 			let task = transporter.task ? transporter.task.name : 'none';
 			let target = transporter.task ?
-						 transporter.task.proto._target.ref + ' ' + transporter.task.targetPos.print : 'none';
+						 transporter.task.proto._target.ref + ' ' + transporter.task.targetPos.printPlain : 'none';
 			let nextAvailability = this.nextAvailability(transporter);
-			console.log(`    Creep: ${transporter.name}    Pos: ${transporter.pos.print}    ` +
-						`Task: ${task}    Target: ${target}    ` +
-						`Available in ${Math.floor(nextAvailability[0])} ticks at ${nextAvailability[1].print}`);
+			info.push({
+						  creep       : transporter.name,
+						  pos         : transporter.pos.printPlain,
+						  task        : task,
+						  target      : target,
+						  availability: `available in ${nextAvailability[0]} ticks at ${nextAvailability[1].print}`,
+					  });
 		}
-		console.log();
+		console.log('Transporters: \n' + columnify(info) + '\n');
 	}
 
 	get matching(): { [creepName: string]: LogisticsRequest | undefined } {

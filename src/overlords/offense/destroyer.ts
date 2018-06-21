@@ -12,13 +12,13 @@ import {Movement} from '../../movement/Movement';
 const AttackerSetup = new CreepSetup('attacker', {
 	pattern  : [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE],
 	sizeLimit: Infinity,
-	ordered  : false
+	ordered  : true
 });
 
 const HealerSetup = new CreepSetup('healer', {
 	pattern  : [TOUGH, HEAL, HEAL, MOVE, MOVE, MOVE],
 	sizeLimit: Infinity,
-	ordered  : false
+	ordered  : true
 });
 
 @profile

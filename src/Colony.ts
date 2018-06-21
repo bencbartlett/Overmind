@@ -153,7 +153,6 @@ export class Colony {
 		// Register colony overlords
 		this.spawnMoarOverlords();
 		// Add an Abathur
-		this.assets = this.getAllAssets();
 		this.abathur = new Abathur(this);
 		// Register colony globally to allow 'W1N1' and 'w1n1' to refer to Overmind.colonies.W1N1
 		global[this.name] = this;
@@ -238,6 +237,8 @@ export class Colony {
 						 !this.controller.safeMode);
 		// Ininitialize abandon property to false; directives can change this
 		this.abandoning = false;
+		// Register assets
+		this.assets = this.getAllAssets();
 	}
 
 	private registerUtilities(): void {

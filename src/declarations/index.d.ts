@@ -18,6 +18,8 @@ declare namespace NodeJS {
 
 declare module 'screeps-profiler'; // I stopped using the typings for this because it was fucking up the Game typings
 
+declare module 'columnify';
+
 // If TS2451 gets thrown, change "declare let Game: Game;" to "declare var Game: Game;"
 // in typed-screeps index.d.ts file. (See issue #61 until the package is updated)
 interface Game {

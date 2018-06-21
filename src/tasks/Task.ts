@@ -287,6 +287,7 @@ export abstract class Task {
 
 	// Finalize the task and switch to parent task (or null if there is none)
 	finish(): void {
+		this.moveToNextPos();
 		if (this.creep) {
 			this.creep.task = this.parent;
 		} else {

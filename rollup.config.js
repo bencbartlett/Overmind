@@ -39,7 +39,8 @@ export default {
         commonjs({
                      namedExports: {
                          'src/Overmind_obfuscated': ['_Overmind'],
-                         'screeps-profiler': ['profiler']
+                         'screeps-profiler': ['profiler'],
+                         'columnify': ['columnify']
                      }
                  }),
         typescript({tsconfig: "./tsconfig.json"}),

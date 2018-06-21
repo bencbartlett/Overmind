@@ -181,7 +181,16 @@ export class WorkerOverlord extends Overlord {
 		let roomToRepave = this.colony.roadLogistics.workerShouldRepave(worker)!;
 		this.colony.roadLogistics.registerWorkerAssignment(worker, roomToRepave);
 		let target = worker.pos.findClosestByMultiRoomRange(this.colony.roadLogistics.repairableRoads(roomToRepave));
-		if (target) worker.task = Tasks.repair(target);
+		if (target) {
+			let nextTarget = target.pos.findClosestByRange(this.colony.roadLogistics.repairableRoads(roomToRepave), {
+				filter: (nextTarg: StructureRoad) => nextTarg.ref != target.ref
+			}) as StructureRoad | undefined;
+			if (nextTarget) {
+				worker.task = Tasks.repair(target, {nextPos: nextTarget.pos});
+			} else {
+				worker.task = Tasks.repair(target);
+			}
+		}
 	}
 
 	private fortifyActions(worker: Zerg, fortifyStructures = this.fortifyStructures) {

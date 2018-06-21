@@ -24,10 +24,6 @@ export class TaskRepair extends Task {
 	}
 
 	work() {
-		if (this.target instanceof StructureRoad) {
-			// Move toward target if it's a road to prevent move-stop-repair-move-stop-repair
-			this.move(this.settings.targetRange - 1);
-		}
 		return this.creep.repair(this.target);
 	}
 }

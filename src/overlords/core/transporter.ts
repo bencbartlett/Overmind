@@ -2,12 +2,19 @@ import {Overlord} from '../Overlord';
 import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {Colony, ColonyStage} from '../../Colony';
-import {BufferTarget, LogisticsNetwork, LogisticsRequest} from '../../logistics/LogisticsNetwork';
+import {
+	ALL_RESOURCE_TYPE_ERROR,
+	BufferTarget,
+	LogisticsNetwork,
+	LogisticsRequest
+} from '../../logistics/LogisticsNetwork';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {Pathing} from '../../movement/Pathing';
-import {DirectivePickup} from '../../directives/logistics/logisticsRequest';
+// import {DirectivePickup} from '../../directives/logistics/logisticsRequest';
 import {profile} from '../../profiler/decorator';
 import {CreepSetup} from '../CreepSetup';
+import {isResource, isStoreStructure, isTombstone} from '../../declarations/typeGuards';
+import {log} from '../../console/log';
 
 
 export const TransporterSetup = new CreepSetup('transport', {
@@ -85,9 +92,14 @@ export class TransportOverlord extends Overlord {
 																/ Math.max(choice.dt, 0.1)));
 			let task = null;
 			let amount = this.logisticsGroup.predictedRequestAmount(transporter, request);
-			if (amount > 0) { // target needs refilling
-				if (request.target instanceof DirectivePickup) {
-					task = Tasks.drop(request.target);
+			// Target is requesting input
+			if (amount > 0) {
+				if (isResource(request.target) || isTombstone(request.target)) {
+					log.warning(`Improper logistics request: should not request input for resource or tombstone!`);
+					return;
+				} else if (request.resourceType == 'all') {
+					log.error(`TransportOverlord: ` + ALL_RESOURCE_TYPE_ERROR);
+					return;
 				} else {
 					task = Tasks.transfer(request.target, request.resourceType);
 				}
@@ -101,20 +113,25 @@ export class TransportOverlord extends Overlord {
 						task = task.fork(Tasks.transferAll(buffer));
 					}
 				}
-			} else if (amount < 0) { // target needs withdrawal
-				if (request.target instanceof DirectivePickup) {
-					let drops = request.target.drops[request.resourceType] || [];
-					let resource = drops[0];
-					if (resource) {
-						task = Tasks.pickup(resource);
-					}
+			}
+			// Target is requesting output
+			else if (amount < 0) {
+				if (isResource(request.target)) {
+					task = Tasks.pickup(request.target);
 				} else {
-					task = Tasks.withdraw(request.target, request.resourceType);
+					if (request.resourceType == 'all') {
+						if (!isStoreStructure(request.target) && !isTombstone(request.target)) {
+							log.error(`TransportOverlord: ` + ALL_RESOURCE_TYPE_ERROR);
+							return;
+						}
+						task = Tasks.withdrawAll(request.target);
+					} else {
+						task = Tasks.withdraw(request.target, request.resourceType);
+					}
 				}
 				if (task && bestChoice.targetRef != request.target.ref) {
 					// If we need to go to a buffer first to deposit stuff
 					let buffer = deref(bestChoice.targetRef) as BufferTarget;
-					//task = task.fork(Tasks.transfer(buffer, request.resourceType));
 					task = task.fork(Tasks.transferAll(buffer));
 				}
 			} else {
@@ -123,6 +140,7 @@ export class TransportOverlord extends Overlord {
 			}
 			// Assign the task to the transporter
 			transporter.task = task;
+			this.logisticsGroup.invalidateCache(transporter, request);
 		} else {
 			// If nothing to do, put everything in a store structure
 			if (_.sum(transporter.carry) > 0) {
@@ -191,7 +209,7 @@ export class TransportOverlord extends Overlord {
 				this.handleSmolTransporter(transporter);
 			}
 			transporter.run();
-			this.pickupDroppedResources(transporter);
+			// this.pickupDroppedResources(transporter);
 		}
 		// this.parkCreepsIfIdle(this.transporters);
 	}
