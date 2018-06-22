@@ -559,7 +559,7 @@ export class RoomPlanner {
 					}
 				}
 			}
-			if (isRelocating) {
+			if (isRelocating && structureType != STRUCTURE_WALL && structureType != STRUCTURE_RAMPART) {
 				this.memory.relocating = true;
 				return;
 			}

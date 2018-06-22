@@ -43,7 +43,7 @@ export const TerminalState_Emergency = {
 
 export const TerminalState_Rebuild = {
 	amounts  : {
-		[RESOURCE_ENERGY]: 50000,
+		[RESOURCE_ENERGY]: 25000,
 	},
 	tolerance: 500
 };
