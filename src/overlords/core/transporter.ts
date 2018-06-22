@@ -192,9 +192,16 @@ export class TransportOverlord extends Overlord {
 	}
 
 	private pickupDroppedResources(transporter: Zerg) {
-		let droppedResources = transporter.pos.lookFor(LOOK_RESOURCES);
-		if (droppedResources && droppedResources[0]) {
-			transporter.pickup(droppedResources[0]);
+		let droppedResource = transporter.pos.lookFor(LOOK_RESOURCES)[0];
+		if (droppedResource) {
+			transporter.pickup(droppedResource);
+			return;
+		}
+		let tombstone = transporter.pos.lookFor(LOOK_TOMBSTONES)[0];
+		if (tombstone) {
+			let resourceType = _.last(_.sortBy(_.keys(tombstone.store),
+											   resourceType => (tombstone.store[<ResourceConstant>resourceType] || 0)));
+			transporter.withdraw(tombstone, <ResourceConstant>resourceType);
 		}
 	}
 

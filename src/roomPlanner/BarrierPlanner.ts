@@ -21,9 +21,9 @@ export class BarrierPlanner {
 	barrierPositions: RoomPosition[];
 
 	static settings = {
-		buildBarriersAtRCL      : 3,
-		padding                 : 3, // allow this much space between structures and barriers
-		switchToBunkerRampartsAt: 7
+		buildBarriersAtRCL: 3,
+		padding           : 3, // allow this much space between structures and barriers
+		bunkerizeRCL      : 7
 	};
 
 	constructor(roomPlanner: RoomPlanner) {
@@ -106,7 +106,17 @@ export class BarrierPlanner {
 
 	/* Quick lookup for if a barrier should be in this position. Barriers returning false won't be maintained. */
 	barrierShouldBeHere(pos: RoomPosition): boolean {
-		return this.memory.barrierLookup[pos.coordName] || insideBunkerBounds(pos, this.colony);
+		if (this.colony.layout == 'bunker') {
+			if (this.colony.level >= BarrierPlanner.settings.bunkerizeRCL) {
+				// Once you are high level, only maintain ramparts at bunker or controller
+				return insideBunkerBounds(pos, this.colony) || pos.getRangeTo(this.colony.controller) <= 2;
+			} else {
+				// Otherwise keep the normal plan up
+				return this.memory.barrierLookup[pos.coordName];
+			}
+		} else {
+			return this.memory.barrierLookup[pos.coordName];
+		}
 	}
 
 	/* Create construction sites for any buildings that need to be built */

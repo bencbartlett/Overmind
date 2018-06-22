@@ -13,6 +13,7 @@ import {BarrierPlanner} from './BarrierPlanner';
 import {BuildPriorities, DemolishStructurePriorities} from '../priorities/priorities_structures';
 import {bunkerLayout} from './layouts/bunker';
 import {DirectiveDismantle} from '../directives/targeting/dismantle';
+import {DirectiveEvacuateTerminal} from '../directives/logistics/evacuateTerminal';
 
 export interface BuildingPlannerOutput {
 	name: string;
@@ -470,12 +471,12 @@ export class RoomPlanner {
 		} else if (structureType == STRUCTURE_EXTRACTOR) {
 			return pos.lookFor(LOOK_MINERALS).length > 0;
 		} else {
-			if (!this.map || this.map == {}) {
+			if (_.isEmpty(this.map)) {
 				this.recallMap();
 			}
 			let positions = this.map[structureType];
 			if (positions) {
-				let shouldBeHere = !!_.find(positions, p => p.isEqualTo(pos));
+				let shouldBeHere = (_.find(positions, p => p.isEqualTo(pos)) != undefined);
 				if (!shouldBeHere && (structureType == STRUCTURE_CONTAINER || structureType == STRUCTURE_LINK)) {
 					let thingsBuildingLinksAndContainers = _.compact([...this.colony.sources!,
 																	  this.colony.room.mineral!,
@@ -492,6 +493,13 @@ export class RoomPlanner {
 
 	/* Create construction sites for any buildings that need to be built */
 	private demolishMisplacedStructures(skipBarriers = true): void {
+		// Start terminal evacuation if it needs to be moved
+		if (this.colony.terminal) {
+			if (this.colony.storage && !this.structureShouldBeHere(STRUCTURE_STORAGE, this.colony.storage.pos)
+				|| !this.structureShouldBeHere(STRUCTURE_TERMINAL, this.colony.terminal.pos)) {
+				DirectiveEvacuateTerminal.createIfNotPresent(this.colony.terminal.pos, 'pos');
+			}
+		}
 		// Max buildings that can be placed each tick
 		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
 		// Recall the appropriate map
@@ -514,6 +522,17 @@ export class RoomPlanner {
 														flag => DirectiveDismantle.filter(flag)).length > 0).length;
 			for (let structure of structures) {
 				if (!this.structureShouldBeHere(structureType, structure.pos)) {
+					// Don't remove the terminal until you have rebuilt storage
+					if (this.colony.level >= 6 && structureType == STRUCTURE_TERMINAL) {
+						if (!this.colony.storage) {
+							log.info(`${this.colony.name}: waiting until storage is built to remove terminal`);
+							return;
+						} else if (this.colony.terminal &&
+								   _.sum(this.colony.terminal.store) - this.colony.terminal.energy > 1000) {
+							log.info(`${this.colony.name}: waiting on resources to evacuate before removing terminal`);
+							return;
+						}
+					}
 					shouldBreak = true;
 					let amountMissing = CONTROLLER_STRUCTURES[structureType][this.colony.level] - structures.length
 										+ removeCount + dismantleCount;
@@ -539,7 +558,7 @@ export class RoomPlanner {
 					}
 				}
 			}
-			if (shouldBreak) break;
+			if (shouldBreak) return;
 		}
 	}
 

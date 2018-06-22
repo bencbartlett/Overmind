@@ -7,7 +7,7 @@ import {profile} from '../profiler/decorator';
 import {maxMarketPrices, TraderJoe} from '../logistics/TradeNetwork';
 import {Mem} from '../Memory';
 
-const _priorityStock: { [key: string]: number } = {
+export const priorityStockAmounts: { [key: string]: number } = {
 	XGHO2: 1000,	// For toughness
 	XLHO2: 1000, 	// For healing
 	XZHO2: 1000, 	// For speed
@@ -28,7 +28,7 @@ const _priorityStock: { [key: string]: number } = {
 	KO   : 1000, 	// (+100 % ranged attack)
 };
 
-const _wantedStock: { [key: string]: number } = {
+export const wantedStockAmounts: { [key: string]: number } = {
 	UH   : 2000, 	// (+100 % attack)
 	KO   : 3000, 	// (+100 % ranged attack)
 	XGHO2: 10000, 	// For toughness
@@ -51,24 +51,26 @@ export interface Reaction {
 }
 
 // Compute priority and wanted stock
-let numColonies = 1; //_.keys(Overmind.colonies).length;
-let priorityStock: Reaction[] = [];
-for (let resourceType in _priorityStock) {
+let _priorityStock: Reaction[] = [];
+for (let resourceType in priorityStockAmounts) {
 	let stock = {
 		mineralType: resourceType,
-		amount     : numColonies * _priorityStock[resourceType]
+		amount     : priorityStockAmounts[resourceType]
 	};
-	priorityStock.push(stock);
+	_priorityStock.push(stock);
 }
 
-let wantedStock: Reaction[] = [];
-for (let resourceType in _wantedStock) {
+let _wantedStock: Reaction[] = [];
+for (let resourceType in wantedStockAmounts) {
 	let stock = {
 		mineralType: resourceType,
-		amount     : numColonies * _wantedStock[resourceType]
+		amount     : wantedStockAmounts[resourceType]
 	};
-	wantedStock.push(stock);
+	_wantedStock.push(stock);
 }
+
+export const priorityStock = _priorityStock;
+export const wantedStock = _wantedStock;
 
 interface AbathurMemory {
 	sleepUntil: number;
@@ -148,8 +150,8 @@ export class Abathur {
 	}
 
 	hasExcess(mineralType: ResourceConstant, excessAmount = 0): boolean {
-		return this.assets[mineralType] - excessAmount > Math.max((_wantedStock[mineralType] || 0),
-																  (_priorityStock[mineralType] || 0));
+		return this.assets[mineralType] - excessAmount > Math.max((wantedStockAmounts[mineralType] || 0),
+																  (priorityStockAmounts[mineralType] || 0));
 	}
 
 	private someColonyHasExcess(mineralType: ResourceConstant, excessAmount = 0): boolean {
@@ -163,7 +165,7 @@ export class Abathur {
 			return [];
 		}
 		// Compute the reaction queue for the highest priority item that you should be and can be making
-		let stocksToCheck = [_priorityStock, _wantedStock];
+		let stocksToCheck = [priorityStockAmounts, wantedStockAmounts];
 		for (let stocks of stocksToCheck) {
 			for (let resourceType in stocks) {
 				let amountOwned = this.assets[resourceType] || 0;

@@ -11,6 +11,8 @@ export class DirectiveEvacuateTerminal extends Directive {
 
 	// colony: Colony | undefined; // this is technically unallowable, but at end of life, colony can be undefined
 
+	terminal: StructureTerminal | undefined;
+
 	constructor(flag: Flag) {
 		super(flag);
 		if (!this.colony) {
@@ -21,8 +23,9 @@ export class DirectiveEvacuateTerminal extends Directive {
 			return;
 		}
 		// Register abandon status
+		this.terminal = this.pos.lookForStructure(STRUCTURE_TERMINAL) as StructureTerminal;
 		this.colony.abandoning = true;
-		if (Game.time % 25 == 0) {
+		if (Game.time % 10 == 0) {
 			log.alert(`${this.pos.print}: terminal evacuation in progress!`);
 		}
 	}
@@ -33,7 +36,7 @@ export class DirectiveEvacuateTerminal extends Directive {
 
 	run() {
 		// Incubation directive gets removed once the colony has a command center (storage)
-		if (!this.colony) {
+		if (!this.colony || !this.terminal) {
 			this.remove();
 		}
 	}

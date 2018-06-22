@@ -5,6 +5,7 @@ import {Energetics} from './Energetics';
 import {Colony} from '../Colony';
 import {maxBy, mergeSum} from '../utilities/utils';
 import {RESOURCE_IMPORTANCE} from '../resources/map_resources';
+import {wantedStockAmounts} from '../resources/Abathur';
 
 interface TerminalNetworkMemory {
 	equalizeIndex: number;
@@ -16,6 +17,10 @@ const TerminalNetworkMemoryDefaults = {
 
 function colonyOf(terminal: StructureTerminal): Colony {
 	return Overmind.colonies[terminal.room.name];
+}
+
+function wantedAmount(colony: Colony, resource: ResourceConstant): number {
+	return (wantedStockAmounts[resource] || 0) - (colony.assets[resource] || 0);
 }
 
 @profile
@@ -159,7 +164,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 	}
 
 	/* Sell excess minerals on the market */
-	private sellExcess(terminal: StructureTerminal, threshold = 25000): void {
+
+	private handleExcess(terminal: StructureTerminal, threshold = 25000): void {
 		let terminalNearCapacity = _.sum(terminal.store) > 0.9 * terminal.storeCapacity;
 		let energyOrders = _.filter(Game.market.orders, order => order.type == ORDER_SELL &&
 																 order.resourceType == RESOURCE_ENERGY);
@@ -179,10 +185,19 @@ export class TerminalNetwork implements ITerminalNetwork {
 				}
 			} else {
 				if (terminal.store[<ResourceConstant>resource]! > threshold) {
-					if (terminalNearCapacity || terminal.store[<ResourceConstant>resource]! > 2 * threshold) {
-						Overmind.tradeNetwork.sellDirectly(terminal, <ResourceConstant>resource, 1000);
+					let receiver = maxBy(this.terminals,
+										 terminal => wantedAmount(colonyOf(terminal),
+																  <ResourceConstant>resource));
+					if (receiver && wantedAmount(colonyOf(receiver), <ResourceConstant>resource) > TERMINAL_MIN_SEND) {
+						// Try to send internally first
+						this.transfer(terminal, receiver, <ResourceConstant>resource, 1000);
 					} else {
-						Overmind.tradeNetwork.sell(terminal, <ResourceConstant>resource, 10000);
+						// Sell excess
+						if (terminalNearCapacity || terminal.store[<ResourceConstant>resource]! > 2 * threshold) {
+							Overmind.tradeNetwork.sellDirectly(terminal, <ResourceConstant>resource, 1000);
+						} else {
+							Overmind.tradeNetwork.sell(terminal, <ResourceConstant>resource, 10000);
+						}
 					}
 				}
 			}
@@ -254,6 +269,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		for (let resource of RESOURCE_IMPORTANCE) {
 			let amount = (sender.store[resource] || 0);
 			if (resource == RESOURCE_ENERGY) {
+				amount -= Energetics.settings.terminal.energy.inThreshold; // leave this amount as reserve
 				if (this.averageFullness > 0.9) {
 					return; // ignore sending energy if other terminals are already pretty full
 				}
@@ -295,7 +311,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		// Sell excess resources as needed
 		let terminalToSellExcess = this.terminals[Game.time % this.terminals.length];
 		if (terminalToSellExcess && terminalToSellExcess.cooldown == 0) {
-			this.sellExcess(terminalToSellExcess);
+			this.handleExcess(terminalToSellExcess);
 		}
 	}
 

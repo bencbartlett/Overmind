@@ -5,6 +5,7 @@ import {Overlord} from '../overlords/Overlord';
 import {Pathing} from '../movement/Pathing';
 
 interface DirectiveCreateOptions {
+	memory?: FlagMemory;
 	name?: string;
 	quiet?: boolean;
 }
@@ -129,7 +130,7 @@ export abstract class Directive {
 	// Custom directive methods ========================================================================================
 
 	/* Create an appropriate flag to instantiate this directive in the next tick */
-	static create(pos: RoomPosition, opts: DirectiveCreateOptions = {}): number {
+	static create(pos: RoomPosition, opts: DirectiveCreateOptions = {}): number | string {
 		let name = opts.name;
 		if (!name) {
 			name = this.directiveName + ':' + pos.roomName;
@@ -144,12 +145,16 @@ export abstract class Directive {
 		if (!opts.quiet) {
 			log.alert(`Creating ${this.directiveName} directive at ${pos.print}!`);
 		}
-		return pos.createFlag(name, this.color, this.secondaryColor);
+		let result = pos.createFlag(name, this.color, this.secondaryColor) as string | number;
+		if (result == name && opts.memory) {
+			Memory.flags[name] = opts.memory;
+		}
+		return result;
 	}
 
 	/* Create a directive if one of the same type is not already present (in room | at position) */
 	static createIfNotPresent(pos: RoomPosition, scope: 'room' | 'pos',
-							  opts: DirectiveCreateOptions = {}): number | void {
+							  opts: DirectiveCreateOptions = {}): number | string | void {
 		let room = Game.rooms[pos.roomName];
 		if (!room) {
 			log.error(`No vision at ${pos.print}; can't create directive!`);
