@@ -13,14 +13,18 @@ All notable changes to this project will be documented in this file. The format 
 - Logistics network improvements:
     - `LogisticsNetwork.requestOutputAll()` has been replaced by `requestOutput({resourceType: 'all'})` and now generates a single request for the sum amount of all resourceTypes in the target. This improves performance and CPU cost.
     - Added cache invalidation methods to fix an issue where too many transporters could be assigned to the same logistics target during a single tick
+    - Dropped resources and tombstones now directly request collection from the logistics network rather than using a logistics directive
+    - Changed order of operations in `predictedRequestAmount` to yield more accurate results when near target store/energy capacity
 - Workers now include dropped energy in list of objects they can recharge from and pick their recharge target more intelligently, accounting for other targeting workers
 
 ### Fixed
 - Fixed a bug where mining sites could get clogged if invaders died on the container outputs and dropped minerals which would not get withdrawn
+- Fixed a bug in approximate path length caculations in `LogisticsNetwork.bufferChoices`
 - Room planner now correctly restores flag memories when reopening a session
 
 ### Removed
 - Removed dependencies for `Traveler`, replacing with in-house `Movement` and `Pathing` libraries
+- Deprecated `DirectiveLogisticsRequest`
 
 ## Overmind [0.4.1] - 2018.6.15
 

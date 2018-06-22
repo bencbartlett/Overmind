@@ -150,6 +150,11 @@ export class LogisticsNetwork {
 			multiplier  : 1,
 			dAmountdt   : 0,
 		});
+		if (opts.resourceType == 'all' && (isStoreStructure(target) || isTombstone(target))) {
+			if (_.sum(target.store) == target.store.energy) {
+				opts.resourceType = RESOURCE_ENERGY; // convert "all" requests to energy if that's all they have
+			}
+		}
 		if (!opts.amount) {
 			opts.amount = this.getOutputAmount(target, opts.resourceType!);
 		}
@@ -388,20 +393,26 @@ export class LogisticsNetwork {
 		// let closerTargetingTransporters = _.filter(otherTargetingTransporters,
 		// 										   transporter => this.nextAvailability(transporter)[0] < eta);
 		if (request.amount > 0) { // input state, resources into target
+			let predictedAmount = request.amount + predictedDifference;
+			if (isStoreStructure(request.target)) { 	// cap predicted amount at storeCapacity
+				predictedAmount = Math.min(predictedAmount, request.target.storeCapacity);
+			} else if (isEnergyStructure(request.target)) {
+				predictedAmount = Math.min(predictedAmount, request.target.energyCapacity);
+			}
 			let resourceInflux = _.sum(_.map(otherTargetingTransporters,
 											 other => (other.carry[<ResourceConstant>request.resourceType] || 0)));
-			let predictedAmount = Math.max(request.amount + predictedDifference - resourceInflux, 0);
-			if (isStoreStructure(<Structure>request.target)) { 	// cap predicted amount at storeCapacity
-				predictedAmount = Math.min(predictedAmount, (<StoreStructure>request.target).storeCapacity);
-			}
+			predictedAmount = Math.max(predictedAmount - resourceInflux, 0);
 			return predictedAmount;
 		} else { // output state, resources withdrawn from target
+			let predictedAmount = request.amount + predictedDifference;
+			if (isStoreStructure(request.target)) { 	// cap predicted amount at -1 * storeCapacity
+				predictedAmount = Math.max(predictedAmount, -1 * request.target.storeCapacity);
+			} else if (isEnergyStructure(request.target)) {
+				predictedAmount = Math.min(predictedAmount, -1 * request.target.energyCapacity);
+			}
 			let resourceOutflux = _.sum(_.map(otherTargetingTransporters,
 											  other => other.carryCapacity - _.sum(other.carry)));
-			let predictedAmount = Math.min(request.amount + predictedDifference + resourceOutflux, 0);
-			if (isStoreStructure(<Structure>request.target)) { 	// cap predicted amount at -1 * storeCapacity
-				predictedAmount = Math.max(predictedAmount, -1 * (<StoreStructure>request.target).storeCapacity);
-			}
+			predictedAmount = Math.min(predictedAmount + resourceOutflux, 0);
 			return predictedAmount;
 		}
 	}
@@ -446,9 +457,8 @@ export class LogisticsNetwork {
 			// Change in resources if transporter picks up resources from a buffer first
 			for (let buffer of this.buffers) {
 				let dQ_buffer = Math.min(amount, transporter.carryCapacity, buffer.store[request.resourceType] || 0);
-				let dt_buffer = newPos.getMultiRoomRangeTo(request.target.pos)
-								* LogisticsNetwork.settings.rangeToPathHeuristic +
-								Pathing.distance(buffer.pos, request.target.pos) + ticksUntilFree;
+				let dt_buffer = newPos.getMultiRoomRangeTo(buffer.pos) * LogisticsNetwork.settings.rangeToPathHeuristic
+								+ Pathing.distance(buffer.pos, request.target.pos) + ticksUntilFree;
 				choices.push({
 								 dQ       : dQ_buffer,
 								 dt       : dt_buffer,
@@ -473,9 +483,8 @@ export class LogisticsNetwork {
 			for (let buffer of this.buffers) {
 				let dQ_buffer = Math.min(Math.abs(amount), transporter.carryCapacity,
 					buffer.storeCapacity - _.sum(buffer.store));
-				let dt_buffer = newPos.getMultiRoomRangeTo(request.target.pos)
-								* LogisticsNetwork.settings.rangeToPathHeuristic +
-								Pathing.distance(buffer.pos, request.target.pos) + ticksUntilFree;
+				let dt_buffer = newPos.getMultiRoomRangeTo(buffer.pos) * LogisticsNetwork.settings.rangeToPathHeuristic
+								+ Pathing.distance(buffer.pos, request.target.pos) + ticksUntilFree;
 				choices.push({
 								 dQ       : dQ_buffer,
 								 dt       : dt_buffer,
