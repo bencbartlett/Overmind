@@ -68,11 +68,19 @@ interface IOvermind {
 	visuals(): void;
 }
 
+
+interface TerminalState {
+	amounts: { [resourceType: string]: number },
+	tolerance: number
+}
+
 interface ITerminalNetwork {
 	terminals: StructureTerminal[];
 	memory: any;
 
 	requestResource(terminal: StructureTerminal, resourceType: ResourceConstant, amount: number): void;
+
+	registerTerminalState(terminal: StructureTerminal, state: TerminalState): void
 
 	init(): void;
 

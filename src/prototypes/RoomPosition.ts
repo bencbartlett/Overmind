@@ -128,20 +128,20 @@ RoomPosition.prototype.getPositionsAtRange = function (range: number,
 // 	}
 // });
 
-RoomPosition.prototype.isPassible = function (ignoreCreeps = false): boolean {
+RoomPosition.prototype.isWalkable = function (ignoreCreeps = false): boolean {
 	// Is terrain passable?
 	if (Game.map.getTerrainAt(this) == 'wall') return false;
 	if (this.isVisible) {
 		// Are there creeps?
 		if (ignoreCreeps == false && this.lookFor(LOOK_CREEPS).length > 0) return false;
 		// Are there structures?
-		if (_.filter(this.lookFor(LOOK_STRUCTURES), (s: Structure) => s.blocksMovement).length > 0) return false;
+		if (_.filter(this.lookFor(LOOK_STRUCTURES), (s: Structure) => !s.isWalkable).length > 0) return false;
 	}
 	return true;
 };
 
 RoomPosition.prototype.availableNeighbors = function (ignoreCreeps = false): RoomPosition[] {
-	return _.filter(this.neighbors, pos => pos.isPassible(ignoreCreeps));
+	return _.filter(this.neighbors, pos => pos.isWalkable(ignoreCreeps));
 };
 
 RoomPosition.prototype.getPositionAtDirection = function (direction: DirectionConstant, range = 1): RoomPosition {

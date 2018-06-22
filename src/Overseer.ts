@@ -13,7 +13,7 @@ import {DirectiveGuardSwarm} from './directives/defense/guardSwarm';
 import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
 import {Mem} from './Memory';
 import {DirectiveNukeResponse} from './directives/defense/nukeResponse';
-import {DirectiveEvacuateTerminal} from './directives/logistics/evacuateTerminal';
+import {DirectiveTerminalEmergencyState} from './directives/logistics/terminalState_emergency';
 import {MinerSetup} from './overlords/core/miner';
 import {QueenSetup} from './overlords/core/queen';
 
@@ -112,7 +112,7 @@ export class Overseer {
 
 		// Place an abandon directive in case room has been breached to prevent terminal robbing
 		// if (this.colony.breached && this.colony.terminal) {
-		// 	DirectiveEvacuateTerminal.createIfNotPresent(this.colony.terminal.pos, 'room');
+		// 	DirectiveTerminalEmergencyState.createIfNotPresent(this.colony.terminal.pos, 'room');
 		// }
 	}
 
@@ -130,7 +130,7 @@ export class Overseer {
 				let ret = this.colony.controller.activateSafeMode();
 				if (ret != OK && !this.colony.controller.safeMode) {
 					if (this.colony.terminal) {
-						DirectiveEvacuateTerminal.createIfNotPresent(this.colony.terminal.pos, 'room');
+						DirectiveTerminalEmergencyState.createIfNotPresent(this.colony.terminal.pos, 'room');
 					}
 				}
 				return;
@@ -144,7 +144,7 @@ export class Overseer {
 				let ret = this.colony.controller.activateSafeMode();
 				if (ret != OK && !this.colony.controller.safeMode) {
 					if (this.colony.terminal) {
-						DirectiveEvacuateTerminal.createIfNotPresent(this.colony.terminal.pos, 'room');
+						DirectiveTerminalEmergencyState.createIfNotPresent(this.colony.terminal.pos, 'room');
 					}
 				}
 				return;

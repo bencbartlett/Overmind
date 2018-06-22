@@ -42,7 +42,7 @@ export const DemolishStructurePriorities: {
 	maxRemoved?: number,
 	dismantle?: boolean
 }[] = [
-	{structureType: STRUCTURE_EXTENSION, maxRemoved: 5},
+	{structureType: STRUCTURE_EXTENSION, maxRemoved: 15},
 	{structureType: STRUCTURE_SPAWN, maxRemoved: 1},
 	{structureType: STRUCTURE_CONTAINER},
 	{structureType: STRUCTURE_TOWER, maxRemoved: 1},

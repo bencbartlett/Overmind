@@ -116,7 +116,7 @@ export class UpgradeSite extends HiveCluster {
 		// Find all positions at range 2 from controller
 		let inputLocations: RoomPosition[] = [];
 		for (let pos of this.pos.getPositionsAtRange(2)) {
-			if (pos.isPassible(true)) {
+			if (pos.isWalkable(true)) {
 				inputLocations.push(pos);
 			}
 		}

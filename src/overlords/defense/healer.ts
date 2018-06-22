@@ -68,7 +68,7 @@
 // 		}
 // 		// Find a safe position and retreat
 // 		let retreatRampart = defender.pos.findClosestByRange(_.filter(this.room.ramparts,
-// 																	  rampart => rampart.pos.isPassible()));
+// 																	  rampart => rampart.pos.isWalkable()));
 // 		defender.goTo(retreatRampart);
 // 	}
 //

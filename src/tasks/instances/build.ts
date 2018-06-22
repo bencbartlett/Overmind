@@ -25,12 +25,14 @@ export class TaskBuild extends Task {
 
 	work() {
 		// Fixes issue #9 - workers freeze if creep sitting on square
-		let creepOnTarget = this.target.pos.lookFor(LOOK_CREEPS)[0];
-		if (creepOnTarget) {
-			let zerg = Game.zerg[creepOnTarget.name];
-			if (zerg) {
-				this.creep.say('move pls');
-				zerg.moveOffCurrentPos();
+		if (!this.target.isWalkable) {
+			let creepOnTarget = this.target.pos.lookFor(LOOK_CREEPS)[0];
+			if (creepOnTarget) {
+				let zerg = Game.zerg[creepOnTarget.name];
+				if (zerg) {
+					this.creep.say('move pls');
+					zerg.moveOffCurrentPos();
+				}
 			}
 		}
 		return this.creep.build(this.target);

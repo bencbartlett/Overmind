@@ -15,3 +15,11 @@ Number.prototype.truncate = function (decimals: number): number {
 		m  = this.toString().match(re);
 	return m ? parseFloat(m[1]) : this.valueOf();
 };
+
+Object.defineProperty(ConstructionSite.prototype, 'isWalkable', {
+	get() {
+		return this.structureType == STRUCTURE_ROAD ||
+			   this.structureType == STRUCTURE_CONTAINER ||
+			   this.structureType == STRUCTURE_RAMPART;
+	},
+});

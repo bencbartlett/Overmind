@@ -78,8 +78,9 @@ export class CommandCenterOverlord extends Overlord {
 		if (!storage || !terminal) {
 			return;
 		}
+		const tolerance = Energetics.settings.terminal.energy.tolerance;
 		// Move energy from terminal to storage if there is too much in terminal and there is space in storage
-		if (terminal.energy > Energetics.settings.terminal.energy.equilibrium) {
+		if (terminal.energy > Energetics.settings.terminal.energy.equilibrium + tolerance) {
 			if (_.sum(storage.store) < Energetics.settings.storage.total.cap) {
 				manager.task = Tasks.withdraw(terminal);
 				manager.task.parent = Tasks.transfer(storage);
@@ -87,10 +88,12 @@ export class CommandCenterOverlord extends Overlord {
 			}
 		}
 		// Move energy from storage to terminal if there is not enough in terminal
-		if (terminal.energy < Energetics.settings.terminal.energy.inThreshold) {
-			manager.task = Tasks.withdraw(storage);
-			manager.task.parent = Tasks.transfer(terminal);
-			return;
+		if (terminal.energy < Energetics.settings.terminal.energy.equilibrium - tolerance) {
+			if (!(this.colony.roomPlanner.memory.relocating && storage.energy < 300000)) {
+				manager.task = Tasks.withdraw(storage);
+				manager.task.parent = Tasks.transfer(terminal);
+				return;
+			}
 		}
 		// Move all non-energy resources from storage to terminal
 		for (let resourceType in storage.store) {

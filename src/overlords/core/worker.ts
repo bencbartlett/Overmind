@@ -58,7 +58,9 @@ export class WorkerOverlord extends Overlord {
 		this.rechargeObjects = [];
 		// Fortification structures
 		this.fortifyStructures = _.sortBy(_.filter(this.room.barriers, s =>
-			s.hits < WorkerOverlord.settings.barrierHits[this.colony.level]), s => s.hits);
+			s.hits < WorkerOverlord.settings.barrierHits[this.colony.level]
+			&& this.colony.roomPlanner.barrierPlanner.barrierShouldBeHere(s.pos)
+		), s => s.hits);
 		// Generate a list of structures needing repairing (different from fortifying except in critical case)
 		this.repairStructures = _.filter(this.colony.repairables, function (structure) {
 			if (structure.structureType == STRUCTURE_CONTAINER) {
@@ -132,6 +134,10 @@ export class WorkerOverlord extends Overlord {
 			this.wishlist(Math.min(numWorkers, MAX_WORKERS), setup);
 		} else {
 			// At higher levels, spawn workers based on construction and repair that needs to be done
+			if (this.colony.roomPlanner.memory.relocating) {
+				const RELOCATE_MAX_WORKERS = 6;
+				this.wishlist(RELOCATE_MAX_WORKERS, setup);
+			}
 			const MAX_WORKERS = 4; // Maximum number of workers to spawn
 			let constructionTicks = _.sum(_.map(this.colony.constructionSites,
 												site => Math.max(site.progressTotal - site.progress, 0)))

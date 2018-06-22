@@ -3,7 +3,7 @@ import {Mem} from '../Memory';
 import {profile} from '../profiler/decorator';
 import {Energetics} from './Energetics';
 import {Colony} from '../Colony';
-import {maxBy, mergeSum} from '../utilities/utils';
+import {maxBy, mergeSum, minBy, minMax} from '../utilities/utils';
 import {RESOURCE_IMPORTANCE} from '../resources/map_resources';
 import {wantedStockAmounts} from '../resources/Abathur';
 
@@ -23,11 +23,37 @@ function wantedAmount(colony: Colony, resource: ResourceConstant): number {
 	return (wantedStockAmounts[resource] || 0) - (colony.assets[resource] || 0);
 }
 
+
+export const TerminalState_Emergency = {
+	amounts  : {
+		[RESOURCE_ENERGY]                      : 50000,
+		[RESOURCE_CATALYZED_GHODIUM_ALKALIDE]  : 2000,
+		[RESOURCE_CATALYZED_GHODIUM_ACID]      : 2000,
+		[RESOURCE_CATALYZED_ZYNTHIUM_ACID]     : 2000,
+		[RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE] : 2000,
+		[RESOURCE_CATALYZED_LEMERGIUM_ALKALIDE]: 2000,
+		[RESOURCE_CATALYZED_LEMERGIUM_ACID]    : 2000,
+		[RESOURCE_CATALYZED_KEANIUM_ALKALIDE]  : 2000,
+		[RESOURCE_CATALYZED_KEANIUM_ACID]      : 2000,
+		[RESOURCE_CATALYZED_UTRIUM_ACID]       : 2000,
+		[RESOURCE_CATALYZED_UTRIUM_ALKALIDE]   : 2000,
+	},
+	tolerance: 500
+};
+
+export const TerminalState_Rebuild = {
+	amounts  : {
+		[RESOURCE_ENERGY]: 50000,
+	},
+	tolerance: 500
+};
+
 @profile
 export class TerminalNetwork implements ITerminalNetwork {
 
 	terminals: StructureTerminal[];					// All terminals
-	abandonedTerminals: StructureTerminal[]; 		// Terminals in rooms being abandoned
+	readyTerminals: StructureTerminal[];
+	exceptionTerminals: { [terminalID: string]: TerminalState }; 		// Terminals in a special operational state
 	assets: { [resourceType: string]: number };		// All assets
 	private averageFullness: number;
 	private alreadyReceived: StructureTerminal[];
@@ -52,10 +78,11 @@ export class TerminalNetwork implements ITerminalNetwork {
 
 	constructor(terminals: StructureTerminal[]) {
 		this.terminals = terminals;
+		this.readyTerminals = _.filter(terminals, t => t.cooldown == 0);
 		this.memory = Mem.wrap(Memory.Overmind, 'terminalNetwork', TerminalNetworkMemoryDefaults);
 		this.alreadyReceived = [];
 		this.alreadySent = [];
-		this.abandonedTerminals = []; 		// populated in init()
+		this.exceptionTerminals = {}; 		// populated in init()
 		this.assets = {}; 					// populated in init()
 		this.settings = {
 			equalize: {
@@ -140,15 +167,15 @@ export class TerminalNetwork implements ITerminalNetwork {
 			this.alreadySent.push(sender);
 			this.alreadyReceived.push(receiver);
 		} else {
-			log.error(`Could not send ${amount} ${resourceType} from ${sender.room.print} to ` +
-					  `${receiver.room.print}! Response: ${response}`);
+			log.warning(`Could not send ${amount} ${resourceType} from ${sender.room.print} to ` +
+						`${receiver.room.print}! Response: ${response}`);
 		}
 		return response;
 	}
 
 	requestResource(receiver: StructureTerminal, resourceType: ResourceConstant, amount: number,
 					allowBuy = true, minDifference = 4000): void {
-		if (this.abandonedTerminals.includes(receiver)) {
+		if (this.exceptionTerminals[receiver.ref]) {
 			return; // don't send to abandoning terminals
 		}
 		amount = Math.max(amount, TERMINAL_MIN_SEND);
@@ -264,51 +291,96 @@ export class TerminalNetwork implements ITerminalNetwork {
 		this.memory.equalizeIndex = _.findIndex(RESOURCES_ALL, resource => resource == nextResourceType);
 	}
 
-	private evacuateResources(sender: StructureTerminal): void {
-		let receiver = _.first(_.sortBy(this.terminals, t => _.sum(t.store)));
-		for (let resource of RESOURCE_IMPORTANCE) {
-			let amount = (sender.store[resource] || 0);
-			if (resource == RESOURCE_ENERGY) {
-				amount -= Energetics.settings.terminal.energy.inThreshold; // leave this amount as reserve
-				if (this.averageFullness > 0.9) {
-					return; // ignore sending energy if other terminals are already pretty full
+	// private evacuateResources(sender: StructureTerminal): void {
+	// 	let receiver = _.first(_.sortBy(this.terminals, t => _.sum(t.store)));
+	// 	for (let resource of RESOURCE_IMPORTANCE) {
+	// 		let amount = (sender.store[resource] || 0);
+	// 		if (resource == RESOURCE_ENERGY) {
+	// 			amount -= Energetics.settings.terminal.energy.inThreshold; // leave this amount as reserve
+	// 			if (this.averageFullness > 0.9) {
+	// 				return; // ignore sending energy if other terminals are already pretty full
+	// 			}
+	// 			amount -= Game.market.calcTransactionCost(amount, sender.room.name, receiver.room.name) + 100;
+	// 		}
+	// 		if (amount > TERMINAL_MIN_SEND) {
+	// 			// Send to the emptiest terminal in the network
+	// 			if (receiver && receiver.storeCapacity - _.sum(receiver.store) > amount) {
+	// 				this.transfer(sender, receiver, resource, amount);
+	// 				return;
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+	registerTerminalState(terminal: StructureTerminal, state: TerminalState): void {
+		this.exceptionTerminals[terminal.ref] = state;
+		_.remove(this.terminals, t => t.ref == terminal.ref);
+	}
+
+	/* Maintains a constant restricted store of resources */
+	private handleTerminalState(terminal: StructureTerminal, state: TerminalState): void {
+		for (let resourceType of RESOURCE_IMPORTANCE) {
+			let amount = (terminal.store[resourceType] || 0);
+			let targetAmount = state.amounts[resourceType] || 0;
+			// Send excess resources away to other colony
+			if (amount > targetAmount + state.tolerance) {
+				if (terminal.cooldown > 0) {
+					continue;
 				}
-				amount -= Game.market.calcTransactionCost(amount, sender.room.name, receiver.room.name) + 100;
+				let receiver = minBy(this.terminals, t => _.sum(t.store));
+				let sendAmount: number;
+				if (resourceType == RESOURCE_ENERGY) {
+					let cost = Game.market.calcTransactionCost(amount, terminal.room.name, receiver.room.name);
+					sendAmount = minMax(amount - targetAmount - cost, TERMINAL_MIN_SEND,
+																	  this.settings.equalize.maxSendSize);
+				} else {
+					sendAmount = minMax(amount - targetAmount, TERMINAL_MIN_SEND,
+															   this.settings.equalize.maxSendSize);
+				}
+				if (receiver && receiver.storeCapacity - _.sum(receiver.store) > sendAmount) {
+					this.transfer(terminal, receiver, resourceType, sendAmount);
+					return;
+				}
 			}
-			if (amount > TERMINAL_MIN_SEND) {
-				// Send to the emptiest terminal in the network
-				if (receiver && receiver.storeCapacity - _.sum(receiver.store) > amount) {
-					this.transfer(sender, receiver, resource, amount);
+			// Request needed resources from most plentiful colony
+			else if (amount < targetAmount - state.tolerance) {
+				let sender = maxBy(this.readyTerminals, t => _.sum(t.store));
+				let receiveAmount = minMax(targetAmount - amount, TERMINAL_MIN_SEND,
+																  this.settings.equalize.maxSendSize);
+				if (sender && (sender.store[resourceType] || 0) > TERMINAL_MIN_SEND) {
+					this.transfer(sender, terminal, resourceType, receiveAmount);
+					_.remove(this.readyTerminals, t => t.ref == sender.ref);
 					return;
 				}
 			}
 		}
 	}
 
-	private handleAbandonedTerminals(): void {
-		// Register (non-abandoned) terminal fullness
-		let terminalsByEmptiness = _.sortBy(this.terminals, t => _.sum(t.store));
-		// Send all resources to non-abandoned terminals
-		for (let terminal of _.filter(this.abandonedTerminals, t => t.cooldown == 0)) {
-			this.evacuateResources(terminal);
-		}
-	}
+	// private handleAbandonedTerminals(): void {
+	// 	// Send all resources to non-abandoned terminals
+	// 	for (let terminal of _.filter(this.exceptionTerminals, t => t.cooldown == 0)) {
+	// 		this.evacuateResources(terminal);
+	// 	}
+	// }
 
 	init(): void {
 		// Remove any terminals from terminal network which are in abandoning colonies
-		this.abandonedTerminals = _.remove(this.terminals, terminal => colonyOf(terminal).abandoning == true);
 		this.assets = this.getAllAssets();
 	}
 
 	run(): void {
+		// Handle terminals with special operational states
+		for (let terminalID in this.exceptionTerminals) {
+			this.handleTerminalState(deref(terminalID) as StructureTerminal, this.exceptionTerminals[terminalID]);
+		}
+		// Equalize resources
 		if (Game.time % this.settings.equalize.frequency == 0) {
 			this.equalize(RESOURCE_ENERGY);
 		} else if (Game.time % this.settings.equalize.frequency == 20) {
 			let powerTerminals = _.filter(this.terminals, t => colonyOf(t).powerSpawn != undefined);
 			this.equalize(RESOURCE_POWER, powerTerminals);
 		}
-		this.handleAbandonedTerminals();
-		// Sell excess resources as needed
+		// Get rid of excess resources as needed
 		let terminalToSellExcess = this.terminals[Game.time % this.terminals.length];
 		if (terminalToSellExcess && terminalToSellExcess.cooldown == 0) {
 			this.handleExcess(terminalToSellExcess);

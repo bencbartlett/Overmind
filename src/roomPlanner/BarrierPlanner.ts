@@ -129,7 +129,7 @@ export class BarrierPlanner {
 			barrierPositions.push(derefCoords(coord, this.colony.name));
 		}
 		for (let pos of barrierPositions) {
-			if (count > 0 && RoomPlanner.canBuild(STRUCTURE_RAMPART, pos)) {
+			if (count > 0 && RoomPlanner.canBuild(STRUCTURE_RAMPART, pos) && this.barrierShouldBeHere(pos)) {
 				let ret = pos.createConstructionSite(STRUCTURE_RAMPART);
 				if (ret != OK) {
 					log.warning(`${this.colony.name}: couldn't create rampart site at ${pos.print}. Result: ${ret}`);
@@ -171,8 +171,8 @@ export class BarrierPlanner {
 			}
 			this.visuals();
 		} else {
-			if (this.colony.level >= BarrierPlanner.settings.buildBarriersAtRCL &&
-				Game.time % RoomPlanner.settings.siteCheckFrequency == this.colony.id + 1) {
+			if (!this.roomPlanner.memory.relocating && this.colony.level >= BarrierPlanner.settings.buildBarriersAtRCL
+				&& Game.time % RoomPlanner.settings.siteCheckFrequency == this.colony.id + 1) {
 				this.buildMissingRamparts();
 				if (this.colony.layout == 'bunker' && this.colony.level >= 7) {
 					this.buildMissingBunkerRamparts();

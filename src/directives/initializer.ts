@@ -18,8 +18,9 @@ import {DirectiveInvasionDefense} from './defense/invasionDefense';
 import {DirectiveHaul} from './logistics/haul';
 import {DirectiveDismantle} from './targeting/dismantle';
 import {DirectiveNukeResponse} from './defense/nukeResponse';
-import {DirectiveEvacuateTerminal} from './logistics/evacuateTerminal';
+import {DirectiveTerminalEmergencyState} from './logistics/terminalState_emergency';
 import {DirectiveRPBunker} from './roomPlanner/roomPlanner_bunker';
+import {DirectiveTerminalRebuildState} from './logistics/terminalState_rebuild';
 
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 	switch (flag.color) {
@@ -74,7 +75,9 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 				case COLOR_BLUE:
 					return new DirectiveHaul(flag);
 				case COLOR_RED:
-					return new DirectiveEvacuateTerminal(flag);
+					return new DirectiveTerminalEmergencyState(flag);
+				case COLOR_ORANGE:
+					return new DirectiveTerminalRebuildState(flag);
 			}
 			break;
 

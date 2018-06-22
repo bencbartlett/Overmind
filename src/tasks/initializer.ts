@@ -26,6 +26,7 @@ import {fleeTargetType, fleeTaskName, TaskFlee} from './instances/flee';
 import {TaskTransferAll, transferAllTargetType, transferAllTaskName} from './instances/transferAll';
 import {log} from '../console/log';
 import {TaskWithdrawAll, withdrawAllTargetType, withdrawAllTaskName} from './instances/withdrawAll';
+import profiler from 'screeps-profiler';
 
 export function initializeTask(protoTask: protoTask): Task {
 	// Retrieve name and target data from the protoTask
@@ -118,4 +119,6 @@ export function initializeTask(protoTask: protoTask): Task {
 	// Return it
 	return task;
 }
+
+profiler.registerFN(initializeTask);
 

@@ -99,7 +99,6 @@ export class Colony {
 	level: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; 				// Level of the colony's main room
 	stage: number;										// The stage of the colony "lifecycle"
 	defcon: number;
-	abandoning: boolean;
 	breached: boolean;
 	lowPowerMode: boolean; 								// Activate if RCL8 and full energy
 	layout: 'twoPart' | 'bunker';						// Which room design colony uses
@@ -235,8 +234,6 @@ export class Colony {
 		this.breached = (this.room.dangerousHostiles.length > 0 &&
 						 this.creeps.length == 0 &&
 						 !this.controller.safeMode);
-		// Ininitialize abandon property to false; directives can change this
-		this.abandoning = false;
 		// Register assets
 		this.assets = this.getAllAssets();
 	}
@@ -264,8 +261,10 @@ export class Colony {
 		if (this.spawns[0]) {
 			this.hatchery = new Hatchery(this, this.spawns[0]);
 		}
-		// Instantiate evolution chamber
-		if (this.terminal && this.terminal.isActive() && this.labs.length >= 3) {
+		// Instantiate evolution chamber once there are three labs all in range 2 of each other
+		if (this.terminal && this.terminal.isActive() &&
+			_.filter(this.labs,
+					 lab => _.all(this.labs, otherLab => lab.pos.inRangeTo(otherLab, 2))).length >= 3) {
 			this.evolutionChamber = new EvolutionChamber(this, this.terminal);
 		}
 		// Instantiate the upgradeSite

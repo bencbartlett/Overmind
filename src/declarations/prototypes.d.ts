@@ -4,6 +4,10 @@ interface Creep {
 	boostCounts: { [boostType: string]: number };
 }
 
+interface ConstructionSite {
+	isWalkable: boolean;
+}
+
 interface Flag {
 	// recalculateColony(restrictDistance?: number): void;
 }
@@ -91,7 +95,7 @@ interface RoomPosition {
 
 	lookForStructure(structureType: StructureConstant): Structure | undefined;
 
-	isPassible(ignoreCreeps?: boolean): boolean;
+	isWalkable(ignoreCreeps?: boolean): boolean;
 
 	availableNeighbors(ignoreCreeps?: boolean): RoomPosition[];
 
@@ -124,7 +128,7 @@ interface RoomVisual {
 }
 
 interface Structure {
-	blocksMovement: boolean;
+	isWalkable: boolean;
 }
 
 interface StructureContainer {

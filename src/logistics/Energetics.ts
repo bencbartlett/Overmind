@@ -19,6 +19,7 @@ export class Energetics {
 				inThreshold : 50000, 	// Terminals with < this amount of energy in room actively store energy
 				outThreshold: 150000,	// Terminals with more than this amount of energy in store send elsewhere
 				equilibrium : 100000, 	// Try to maintain this amount; should be energyInThreshold + 2*energySendSize
+				tolerance   : 5000,		// Don't care about deviation by less than this amount
 			},
 		},
 	};

@@ -248,7 +248,7 @@ export class Movement {
 		let directions = [1, 3, 5, 7, 2, 4, 6, 8] as DirectionConstant[];
 		for (let direction of directions) {
 			let position = creep.pos.getPositionAtDirection(direction);
-			if (position.rangeToEdge > 0 && position.isPassible()) {
+			if (position.rangeToEdge > 0 && position.isWalkable()) {
 				let terrain = position.lookFor(LOOK_TERRAIN)[0];
 				if (avoidSwamp && terrain == 'swamp') {
 					swampDirection = direction;

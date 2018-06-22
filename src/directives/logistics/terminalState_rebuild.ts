@@ -1,13 +1,14 @@
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
 import {log} from '../../console/log';
+import {TerminalState_Rebuild} from '../../logistics/TerminalNetwork';
 
 @profile
-export class DirectiveEvacuateTerminal extends Directive {
+export class DirectiveTerminalRebuildState extends Directive {
 
-	static directiveName = 'evacuateTerminal';
+	static directiveName = 'rebuildState';
 	static color = COLOR_YELLOW;
-	static secondaryColor = COLOR_RED;
+	static secondaryColor = COLOR_ORANGE;
 
 	// colony: Colony | undefined; // this is technically unallowable, but at end of life, colony can be undefined
 
@@ -15,18 +16,13 @@ export class DirectiveEvacuateTerminal extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag);
-		if (!this.colony) {
-			log.warning(`${this.name}@${this.pos.print}: no colony!`);
-			return;
-		} else if (this.room != this.colony.room) {
-			log.warning(`${this.name}@${this.pos.print}: must be placed in colony room!`);
-			return;
-		}
 		// Register abandon status
 		this.terminal = this.pos.lookForStructure(STRUCTURE_TERMINAL) as StructureTerminal;
-		this.colony.abandoning = true;
-		if (Game.time % 10 == 0) {
-			log.alert(`${this.pos.print}: terminal evacuation in progress!`);
+		if (this.terminal) {
+			Overmind.terminalNetwork.registerTerminalState(this.terminal, TerminalState_Rebuild);
+		}
+		if (Game.time % 25 == 0) {
+			log.alert(`${this.pos.print}: rebuild terminal state active!`);
 		}
 	}
 

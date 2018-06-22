@@ -143,16 +143,15 @@ export class Pathing {
 		_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
 			if (s.structureType == STRUCTURE_ROAD) {
 				matrix.set(s.pos.x, s.pos.y, 1);
-			} else if (s.blocksMovement) {
+			} else if (!s.isWalkable) {
 				impassibleStructures.push(s);
 			}
 		});
 		_.forEach(impassibleStructures, s => matrix.set(s.pos.x, s.pos.y, 0xff));
 		// Set passability of construction sites
-		_.forEach(room.find(FIND_CONSTRUCTION_SITES), (cs: ConstructionSite): void => {
-			if (cs.my && cs.structureType != STRUCTURE_RAMPART &&
-				cs.structureType != STRUCTURE_ROAD && cs.structureType != STRUCTURE_CONTAINER) {
-				matrix.set(cs.pos.x, cs.pos.y, 0xff);
+		_.forEach(room.find(FIND_CONSTRUCTION_SITES), (site: ConstructionSite) => {
+			if (site.my && !site.isWalkable) {
+				matrix.set(site.pos.x, site.pos.y, 0xff);
 			}
 		});
 		room._defaultMatrix = matrix;

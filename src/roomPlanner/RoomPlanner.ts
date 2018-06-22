@@ -13,7 +13,7 @@ import {BarrierPlanner} from './BarrierPlanner';
 import {BuildPriorities, DemolishStructurePriorities} from '../priorities/priorities_structures';
 import {bunkerLayout} from './layouts/bunker';
 import {DirectiveDismantle} from '../directives/targeting/dismantle';
-import {DirectiveEvacuateTerminal} from '../directives/logistics/evacuateTerminal';
+import {DirectiveTerminalRebuildState} from '../directives/logistics/terminalState_rebuild';
 
 export interface BuildingPlannerOutput {
 	name: string;
@@ -47,6 +47,7 @@ export interface RoomPlan {
 
 export interface PlannerMemory {
 	active: boolean;
+	relocating?: boolean;
 	recheckStructuresAt?: number;
 	bunkerData?: {
 		anchor: protoPos,
@@ -497,7 +498,7 @@ export class RoomPlanner {
 		if (this.colony.terminal) {
 			if (this.colony.storage && !this.structureShouldBeHere(STRUCTURE_STORAGE, this.colony.storage.pos)
 				|| !this.structureShouldBeHere(STRUCTURE_TERMINAL, this.colony.terminal.pos)) {
-				DirectiveEvacuateTerminal.createIfNotPresent(this.colony.terminal.pos, 'pos');
+				DirectiveTerminalRebuildState.createIfNotPresent(this.colony.terminal.pos, 'pos');
 			}
 		}
 		// Max buildings that can be placed each tick
@@ -514,7 +515,7 @@ export class RoomPlanner {
 				continue;
 			}
 			let maxRemoved = priority.maxRemoved || Infinity;
-			let shouldBreak = false;
+			let isRelocating = false;
 			let removeCount = 0;
 			let structures = _.filter(this.colony.room.find(FIND_STRUCTURES), s => s.structureType == structureType);
 			let dismantleCount = _.filter(structures,
@@ -533,7 +534,7 @@ export class RoomPlanner {
 							return;
 						}
 					}
-					shouldBreak = true;
+					isRelocating = true;
 					let amountMissing = CONTROLLER_STRUCTURES[structureType][this.colony.level] - structures.length
 										+ removeCount + dismantleCount;
 					if (amountMissing < maxRemoved) {
@@ -558,8 +559,13 @@ export class RoomPlanner {
 					}
 				}
 			}
-			if (shouldBreak) return;
+			if (isRelocating) {
+				this.memory.relocating = true;
+				return;
+			}
 		}
+		// If you don't need to move anything, set relocating = false in memory
+		this.memory.relocating = false;
 	}
 
 	/* Create construction sites for any buildings that need to be built */

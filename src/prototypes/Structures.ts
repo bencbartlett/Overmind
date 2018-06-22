@@ -4,12 +4,12 @@
 
 import {MY_USERNAME} from '../~settings';
 
-Object.defineProperty(Structure.prototype, 'blocksMovement', {
+Object.defineProperty(Structure.prototype, 'isWalkable', {
 	get() {
-		return this.structureType != STRUCTURE_ROAD &&
-			   this.structureType != STRUCTURE_CONTAINER &&
-			   !(this.structureType == STRUCTURE_RAMPART && (<StructureRampart>this.my ||
-															 <StructureRampart>this.isPublic));
+		return this.structureType == STRUCTURE_ROAD ||
+			   this.structureType == STRUCTURE_CONTAINER ||
+			   (this.structureType == STRUCTURE_RAMPART && (<StructureRampart>this.my ||
+															<StructureRampart>this.isPublic));
 	},
 });
 
