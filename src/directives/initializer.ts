@@ -53,8 +53,6 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			}
 			break;
 
-		// Combat directives ===========================================================================================
-
 		// Situational directives ======================================================================================
 		case COLOR_ORANGE:
 			switch (flag.secondaryColor) {
