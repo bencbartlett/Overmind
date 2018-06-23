@@ -539,11 +539,11 @@ export class RoomPlanner {
 										+ removeCount + dismantleCount;
 					if (amountMissing < maxRemoved) {
 						if (priority.dismantle) {
-							if (dismantleCount < RoomPlanner.settings.maxDismantleCount) {
-								log.info(`${this.colony.name}: dismantling ${structureType} at ${structure.pos.print}`);
-								DirectiveDismantle.createIfNotPresent(structure.pos, 'pos');
-								dismantleCount++;
-								this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
+							if (dismantleCount < RoomPlanner.settings.maxDismantleCount) { // TODO: add back in
+								// log.info(`${this.colony.name}: dismantling ${structureType} at ${structure.pos.print}`);
+								// DirectiveDismantle.createIfNotPresent(structure.pos, 'pos');
+								// dismantleCount++;
+								// this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
 							}
 						} else {
 							let result = structure.destroy();

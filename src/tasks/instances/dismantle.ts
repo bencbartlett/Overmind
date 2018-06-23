@@ -11,6 +11,7 @@ export class TaskDismantle extends Task {
 
 	constructor(target: dismantleTargetType, options = {} as TaskOptions) {
 		super(dismantleTaskName, target, options);
+		this.settings.timeout = 100;
 	}
 
 	isValidTask() {
