@@ -38,7 +38,7 @@ export class GuardOverlord extends CombatOverlord {
 	// 	this.guards = this.creeps('guard');
 	// }
 
-	private findAttackTarget(guard: Zerg): Creep | Structure | undefined {
+	private findAttackTarget(guard: Zerg): Creep | Structure | undefined | null {
 		let targetingDirectives = DirectiveTargetSiege.find(guard.room.flags) as DirectiveTargetSiege[];
 		let targetedStructures = _.compact(_.map(targetingDirectives,
 												 directive => directive.getTarget())) as Structure[];

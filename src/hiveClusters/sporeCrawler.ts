@@ -42,7 +42,10 @@ export class SporeCrawler extends HiveCluster {
 		if (prioritizeHealers) {
 			let healers = _.filter(this.room.hostiles, creep => creep.getActiveBodyparts(HEAL) > 0);
 			if (healers.length > 0) {
-				return this.tower.attack(this.pos.findClosestByRange(healers));
+				let healer = this.pos.findClosestByRange(healers);
+				if (healer) {
+					return this.tower.attack(healer);
+				}
 			}
 		}
 		let closestHostile = this.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
@@ -65,7 +68,7 @@ export class SporeCrawler extends HiveCluster {
 		let dyingRamparts = _.filter(this.room.ramparts, rampart =>
 			rampart.hits < hp && this.colony.roomPlanner.barrierPlanner.barrierShouldBeHere(rampart.pos));
 		if (dyingRamparts.length > 0) {
-			return this.tower.repair(this.tower.pos.findClosestByRange(dyingRamparts));
+			return this.tower.repair(this.tower.pos.findClosestByRange(dyingRamparts)!);
 		}
 	}
 

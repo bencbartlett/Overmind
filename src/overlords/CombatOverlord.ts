@@ -63,7 +63,7 @@ export abstract class CombatOverlord extends Overlord {
 				let targetsByRange = _.sortBy(targets, target => zerg.pos.getRangeTo(target));
 				return _.find(targetsByRange, target => Pathing.isReachable(zerg.pos, target.pos));
 			} else {
-				return zerg.pos.findClosestByRange(targets);
+				return zerg.pos.findClosestByRange(targets) as Creep | undefined;
 			}
 		}
 	}
@@ -82,12 +82,12 @@ export abstract class CombatOverlord extends Overlord {
 				let closestReachable = this.findClosestReachable(zerg.pos, structures) as Structure | undefined;
 				if (closestReachable) return closestReachable;
 			} else {
-				return zerg.pos.findClosestByRange(structures);
+				return zerg.pos.findClosestByRange(structures) as Structure | undefined;
 			}
 		}
 	}
 
-	findClosestHurtFriendly(healer: Zerg): Creep | undefined {
+	findClosestHurtFriendly(healer: Zerg): Creep | null {
 		return healer.pos.findClosestByRange(_.filter(healer.room.creeps, creep => creep.hits < creep.hitsMax));
 	}
 

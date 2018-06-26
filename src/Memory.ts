@@ -1,6 +1,6 @@
 import {Stats} from './stats/stats';
 import {profile} from './profiler/decorator';
-import {DEFAULT_OVERMIND_SIGNATURE} from './~settings';
+import {DEFAULT_OVERMIND_SIGNATURE, USE_PROFILER} from './~settings';
 
 @profile
 export class Mem {
@@ -170,6 +170,9 @@ export class Mem {
 
 	static clean() {
 		// Clean the memory of non-existent objects every tick
+		if (!USE_PROFILER) {
+			delete Memory.profiler;
+		}
 		this.cleanCreeps();
 		this.cleanFlags();
 		this.cleanColonies();

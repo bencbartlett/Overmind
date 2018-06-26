@@ -208,7 +208,7 @@ export class EvolutionChamber extends HiveCluster {
 			let [lab1, lab2] = this.reagentLabs;
 			// Empty out any incorrect minerals and request the correct reagents
 			if (this.memory.status == LabStatus.UnloadingLabs || (lab1.mineralType != ing1 && lab1.mineralAmount > 0)) {
-				this.transportRequests.requestOutput(lab1, Priority.Normal, {resourceType: lab1.mineralType});
+				this.transportRequests.requestOutput(lab1, Priority.Normal, {resourceType: lab1.mineralType!});
 			} else if (this.memory.status == LabStatus.LoadingLabs && lab1.mineralAmount < amount) {
 				this.transportRequests.requestInput(lab1, Priority.Normal, {
 					resourceType: ing1,
@@ -216,7 +216,7 @@ export class EvolutionChamber extends HiveCluster {
 				});
 			}
 			if (this.memory.status == LabStatus.UnloadingLabs || (lab2.mineralType != ing2 && lab2.mineralAmount > 0)) {
-				this.transportRequests.requestOutput(lab2, Priority.Normal, {resourceType: lab2.mineralType});
+				this.transportRequests.requestOutput(lab2, Priority.Normal, {resourceType: lab2.mineralType!});
 			} else if (this.memory.status == LabStatus.LoadingLabs && lab2.mineralAmount < amount) {
 				this.transportRequests.requestInput(lab2, Priority.Normal, {
 					resourceType: ing2,
@@ -226,7 +226,9 @@ export class EvolutionChamber extends HiveCluster {
 		} else {
 			// Labs should be empty when no reaction process is currently happening
 			for (let lab of this.reagentLabs) {
-				this.transportRequests.requestOutput(lab, Priority.Normal, {resourceType: lab.mineralType});
+				if (lab.mineralType && lab.mineralAmount > 0) {
+					this.transportRequests.requestOutput(lab, Priority.Normal, {resourceType: lab.mineralType});
+				}
 			}
 		}
 	}
@@ -240,13 +242,15 @@ export class EvolutionChamber extends HiveCluster {
 				// Empty out incorrect minerals or if it's time to unload or if lab is full
 				if ((this.memory.status == LabStatus.UnloadingLabs && lab.mineralAmount > 0) ||
 					labHasWrongMineral || labIsFull) {
-					this.transportRequests.requestOutput(lab, Priority.NormalLow, {resourceType: lab.mineralType});
+					this.transportRequests.requestOutput(lab, Priority.NormalLow, {resourceType: lab.mineralType!});
 				}
 			}
 		} else {
 			// Labs should be empty when no reaction process is currently happening
 			for (let lab of this.productLabs) {
-				this.transportRequests.requestOutput(lab, Priority.NormalLow, {resourceType: lab.mineralType});
+				if (lab.mineralType && lab.mineralAmount > 0) {
+					this.transportRequests.requestOutput(lab, Priority.NormalLow, {resourceType: lab.mineralType});
+				}
 			}
 		}
 	}
@@ -255,7 +259,7 @@ export class EvolutionChamber extends HiveCluster {
 		let {mineralType, amount} = this.labReservations[lab.id];
 		// Empty out incorrect minerals
 		if (lab.mineralType != mineralType && lab.mineralAmount > 0) {
-			this.transportRequests.requestOutput(lab, Priority.High, {resourceType: lab.mineralType});
+			this.transportRequests.requestOutput(lab, Priority.High, {resourceType: lab.mineralType!});
 		} else {
 			this.transportRequests.requestInput(lab, Priority.High, {
 				resourceType: <ResourceConstant>mineralType,

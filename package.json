@@ -27,7 +27,7 @@
     "watch-sim": "rollup -cw --dest sim"
   },
   "devDependencies": {
-    "@types/screeps": "^2.3.0",
+    "@types/screeps": "^2.4.0",
     "@types/lodash": "^3.10.1",
     "rollup": "^0.55.3",
     "rollup-plugin-clean": "^1.0.0",

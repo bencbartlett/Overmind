@@ -10,6 +10,7 @@ import {CombatIntel} from '../../intel/combatIntel';
 import {GuardPairOverlord} from './guardPair';
 import {CreepSetup} from '../CreepSetup';
 import {minBy} from '../../utilities/utils';
+import {log} from '../../console/log';
 
 const ZerglingSetup = new CreepSetup('zergling', {
 	pattern  : [ATTACK, MOVE],
@@ -55,7 +56,11 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 		// Find a safe position and retreat
 		let retreatRampart = defender.pos.findClosestByRange(_.filter(this.room.ramparts,
 																	  rampart => rampart.pos.isWalkable()));
-		defender.goTo(retreatRampart);
+		if (retreatRampart) {
+			defender.goTo(retreatRampart);
+		} else {
+			log.error('No retreat ramparts!');
+		}
 	}
 
 	private handleDefender(defender: Zerg): void {

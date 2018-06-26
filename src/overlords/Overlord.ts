@@ -159,7 +159,7 @@ export abstract class Overlord {
 					if (creep.pos.getRangeTo(this.colony.hatchery.pos) < hatcheryRestrictedRange) {
 						let hatcheryBorder = this.colony.hatchery.pos.getPositionsAtRange(hatcheryRestrictedRange);
 						let moveToPos = creep.pos.findClosestByRange(hatcheryBorder);
-						creep.goTo(moveToPos);
+						if (moveToPos) creep.goTo(moveToPos);
 					} else {
 						creep.park();
 					}
