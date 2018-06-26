@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file. The format 
 ### Removed
 - Removed dependencies for `Traveler`, replacing with in-house `Movement` and `Pathing` libraries
 - Deprecated `DirectiveLogisticsRequest`
+- Removed `lodash.minBy` dependencies to reduce compiled codebase size
 
 ## Overmind [0.4.1] - 2018.6.15
 

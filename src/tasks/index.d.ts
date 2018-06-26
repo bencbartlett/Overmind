@@ -9,7 +9,7 @@ interface TaskSettings {
 interface TaskOptions {
 	blind?: boolean;
 	nextPos?: protoPos;
-	travelToOptions?: TravelToOptions;
+	// moveOptions?: MoveOptions;
 }
 
 interface TaskData {

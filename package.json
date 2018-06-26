@@ -39,9 +39,7 @@
     "typescript": "^2.8.3"
   },
   "dependencies": {
-    "@types/lodash.minby": "^4.6.3",
     "columnify": "^1.5.4",
-    "lodash.minby": "^4.6.0",
     "screeps-profiler": "^2.0.1",
     "source-map": "^0.6.1"
   }

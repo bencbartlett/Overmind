@@ -1,4 +1,4 @@
-import minBy from 'lodash.minby';
+import {minBy} from '../utilities/utils';
 
 Object.defineProperty(RoomPosition.prototype, 'print', {
 	get() {

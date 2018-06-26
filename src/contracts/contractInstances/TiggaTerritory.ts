@@ -6,9 +6,9 @@
 
 import {Contract} from '../contract';
 import {Colony} from '../../Colony';
-import minBy from 'lodash.minby';
 import {log} from '../../console/log';
 import {TerminalNetwork} from '../../logistics/TerminalNetwork';
+import {minBy} from '../../utilities/utils';
 
 export class Contract_TiggaTerritoryAgreement extends Contract {
 

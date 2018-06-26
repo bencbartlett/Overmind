@@ -4,10 +4,10 @@ import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import minBy from 'lodash.minby';
 import {Pathing} from '../../movement/Pathing';
 import {CreepSetup} from '../CreepSetup';
 import {boostResources} from '../../resources/map_resources';
+import {minBy} from '../../utilities/utils';
 
 class UpgraderSetup extends CreepSetup {
 	static role = 'upgrader';

@@ -25,8 +25,6 @@ const STATE_DEST_X = 4;
 const STATE_DEST_Y = 5;
 const STATE_DEST_ROOMNAME = 6;
 
-const pushyRoles = _.map([ManagerSetup, QueenSetup, TransporterSetup], setup => setup.role);
-
 export const MovePriorities = {
 	[ManagerSetup.role]    : 1,
 	[QueenSetup.role]      : 2,
@@ -295,7 +293,7 @@ export class Movement {
 		let otherCreep = nextPos.lookFor(LOOK_CREEPS)[0];
 		if (!otherCreep || !otherCreep.memory || !otherCreep.my) return false;
 
-		let otherData = otherCreep.memory._go as MoveData;
+		let otherData = otherCreep.memory._go as MoveData | undefined;
 		let otherCreepIsMoving = otherData && otherData.path && otherData.path.length > 1;
 		let priority;
 		if (creep.memory._go && creep.memory._go.priority) {

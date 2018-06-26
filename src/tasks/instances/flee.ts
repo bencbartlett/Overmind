@@ -24,10 +24,10 @@ export class TaskFlee extends Task {
 		// Settings
 		this.settings.targetRange = 4;
 		// Options
-		this.options.travelToOptions = {
-			// allowHostile: true,
-			allowSK     : true,
-		};
+		// this.options.moveOptions = {
+		// 	// allowHostile: true,
+		// 	allowSK     : true,
+		// };
 	}
 
 	isValidTask() {

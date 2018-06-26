@@ -71,9 +71,6 @@ export abstract class Task {
 			timeout    : Infinity, 	// task becomes invalid after this long
 			blind      : true,  	// don't require vision of target unless in room
 		};
-		_.defaults(options, {
-			travelToOptions: {},
-		});
 		this.tick = Game.time;
 		this.options = options;
 		this.data = {};
@@ -122,7 +119,7 @@ export abstract class Task {
 	// Dereferences the saved target position; useful for situations where you might lose vision
 	get targetPos(): RoomPosition {
 		// refresh if you have visibility of the target
-		if (this.options.travelToOptions!.movingTarget && this.target) {
+		if (this.target) {
 			this._target._pos = this.target.pos;
 		}
 		return derefRoomPosition(this._target._pos);
@@ -215,10 +212,7 @@ export abstract class Task {
 
 	/* Move to within range of the target */
 	move(range = this.settings.targetRange): number {
-		if (!this.options.travelToOptions!.range) {
-			this.options.travelToOptions!.range = range;
-		}
-		return this.creep.goTo(this.targetPos, this.options.travelToOptions);
+		return this.creep.goTo(this.targetPos, {range: range});
 	}
 
 	/* Moves to the next position on the agenda if specified - call this in some tasks after work() is completed */
@@ -239,6 +233,7 @@ export abstract class Task {
 	// Execute this task each tick. Returns nothing unless work is done.
 	run(): number | undefined {
 		if (this.creep.pos.inRangeTo(this.targetPos, this.settings.targetRange) && !this.creep.pos.isEdge) {
+			delete this.creep.memory._go;
 			if (this.settings.workOffRoad) {
 				// Move to somewhere nearby that isn't on a road
 				this.parkCreep(this.creep, this.targetPos, true);
