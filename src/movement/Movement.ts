@@ -304,7 +304,7 @@ export class Movement {
 			priority = MovePriorities[creep.roleName] || MovePriorities.default;
 		}
 		let otherPriority;
-		if (otherData.priority) {
+		if (otherData && otherData.priority) {
 			otherPriority = otherData.priority;
 		} else {
 			otherPriority = MovePriorities[otherCreep.memory.role] || MovePriorities.default;
