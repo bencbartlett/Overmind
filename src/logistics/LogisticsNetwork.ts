@@ -77,7 +77,7 @@ export class LogisticsNetwork {
 	colony: Colony;
 	private targetToRequest: { [targetRef: string]: number };
 	private _matching: { [creepName: string]: LogisticsRequest | undefined } | undefined;
-	private logisticPositions: { [roomName: string]: RoomPosition[] };
+	// private logisticPositions: { [roomName: string]: RoomPosition[] };
 	private cache: {
 		nextAvailability: { [transporterName: string]: [number, RoomPosition] },
 		predictedTransporterCarry: { [transporterName: string]: StoreDefinition },
@@ -103,10 +103,10 @@ export class LogisticsNetwork {
 			predictedTransporterCarry: {},
 			resourceChangeRate       : {}
 		};
-		this.logisticPositions = {};
-		for (let room of this.colony.rooms) {
-			this.logisticPositions[room.name] = _.map([...room.storageUnits, ...room.links], s => s.pos);
-		}
+		// this.logisticPositions = {};
+		// for (let room of this.colony.rooms) {
+		// 	this.logisticPositions[room.name] = _.map([...room.storageUnits, ...room.links], s => s.pos);
+		// }
 	}
 
 	// Request and provide functions ===================================================================================
@@ -302,8 +302,8 @@ export class LogisticsNetwork {
 			return [approximateDistance, pos];
 		} else {
 			// Report the transporter as being near a logistics target so that Pathing.distance() won't waste CPU
-			let nearbyLogisticPositions = transporter.pos.findInRange(this.logisticPositions[transporter.room.name], 2);
-			return [0, nearbyLogisticPositions[0] || transporter.pos];
+			// let nearbyLogisticPositions = transporter.pos.findInRange(this.logisticPositions[transporter.room.name], 2);
+			return [0, transporter.pos];
 		}
 	}
 

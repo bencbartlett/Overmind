@@ -20,6 +20,7 @@ import './prototypes/RoomObject';
 import './prototypes/RoomPosition';
 import './prototypes/RoomVisual';
 import './prototypes/Room';
+import './prototypes/RoomStructures';
 import './prototypes/Structures';
 import './prototypes/Miscellaneous';
 import './tasks/initializer'; // this line is necessary to ensure proper compilation ordering
@@ -30,8 +31,10 @@ import {OvermindConsole} from './console/Console';
 import {Stats} from './stats/stats';
 import profiler from 'screeps-profiler';
 import OM from 'Overmind_obfuscated';
+// import {_Overmind} from './Overmind';
 import {log} from './console/log';
 import {VersionMigration} from './versionMigration/migrator';
+import {isIVM} from './utilities/utils';
 
 var _Overmind = (<any>OM)._Overmind as (new() => IOvermind);
 
@@ -47,6 +50,11 @@ VersionMigration.run();
 
 // Main loop
 function main(): void {
+	if (!isIVM()) {
+		log.warning(`Overmind requires the use of isolated virtual machine. ` +
+					`Go to https://screeps.com/a/#!/account/runtime and select 'Isolated'.`);
+		return;
+	}
 	if (Game.cpu.bucket > 500) {
 		Mem.clean();										// Clean memory
 		global.Overmind = new _Overmind();					// Instantiate the Overmind

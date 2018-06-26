@@ -170,9 +170,9 @@ export class Colony {
 		this.towers = this.room.towers;
 		this.labs = _.sortBy(_.filter(this.room.labs, lab => lab.my && lab.isActive()),
 							 lab => 50 * lab.pos.y + lab.pos.x); // Labs are sorted in reading order of positions
-		this.powerSpawn = this.room.getStructures(STRUCTURE_POWER_SPAWN)[0] as StructurePowerSpawn;
-		this.nuker = this.room.getStructures(STRUCTURE_NUKER)[0] as StructureNuker;
-		this.observer = this.room.getStructures(STRUCTURE_OBSERVER)[0] as StructureObserver;
+		this.powerSpawn = this.room.powerSpawn;
+		this.nuker = this.room.nuker;
+		this.observer = this.room.observer;
 		// Register physical objects across all rooms in the colony
 		this.sources = _.sortBy(_.flatten(_.map(this.rooms, room => room.sources)),
 								source => source.pos.getMultiRoomRangeTo(this.pos));

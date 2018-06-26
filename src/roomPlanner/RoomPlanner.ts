@@ -101,7 +101,7 @@ export class RoomPlanner {
 
 	static settings = {
 		recheckAfter      : 50,
-		siteCheckFrequency: 250,
+		siteCheckFrequency: 1000,
 		maxSitesPerColony : 10,
 		maxDismantleCount : 5,
 	};

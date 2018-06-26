@@ -24,7 +24,7 @@ export abstract class HiveCluster {
 	}
 
 	// Logic to refresh the state of the hive cluster between ticks
-	// abstract rebuild(): void;
+	// abstract refresh(): void;
 
 	// Pre-run logic, such as registering energy requests
 	abstract init(): void;

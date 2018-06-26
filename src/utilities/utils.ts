@@ -98,3 +98,19 @@ export function maxBy<T>(objects: T[], iteratee: ((obj: T) => number)): T {
 	}
 	return maxObj!;
 }
+
+export function logHeapStats(): void {
+	if (typeof Game.cpu.getHeapStatistics === 'function') {
+		let heapStats = Game.cpu.getHeapStatistics();
+		let heapPercent = Math.round(100 * (heapStats.total_heap_size + heapStats.externally_allocated_size)
+									 / heapStats.heap_size_limit);
+		let heapSize = Math.round((heapStats.total_heap_size) / 1048576);
+		let externalHeapSize = Math.round((heapStats.externally_allocated_size) / 1048576);
+		let heapLimit = Math.round(heapStats.heap_size_limit / 1048576);
+		console.log(`Heap usage: ${heapSize} MB + ${externalHeapSize} MB of ${heapLimit} MB (${heapPercent}%).`);
+	}
+}
+
+export function isIVM(): boolean {
+	return typeof Game.cpu.getHeapStatistics === 'function';
+}

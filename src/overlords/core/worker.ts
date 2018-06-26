@@ -78,11 +78,13 @@ export class WorkerOverlord extends Overlord {
 		let homeRoomName = this.colony.room.name;
 		let defcon = this.colony.defcon;
 		// Filter constructionSites to only build valid ones
-		let roomStructureAmounts = _.mapValues(this.colony.room.structures, s => s.length) as { [type: string]: number };
+		let room = this.colony.room as any;
 		let level = this.colony.controller.level;
 		this.constructionSites = _.filter(this.colony.constructionSites, function (site) {
 			// If site will be more than max amount of a structure at current level, ignore (happens after downgrade)
-			if (roomStructureAmounts[site.structureType] + 1 > CONTROLLER_STRUCTURES[site.structureType][level]) {
+			let structureAmount = room[site.structureType + 's'] ? room[site.structureType + 's'].length :
+								  (room[site.structureType] ? 1 : 0);
+			if (structureAmount >= CONTROLLER_STRUCTURES[site.structureType][level]) {
 				return false;
 			}
 			if (defcon > DEFCON.safe) {
@@ -100,11 +102,6 @@ export class WorkerOverlord extends Overlord {
 				}
 			}
 		});
-		// Nuke defense response
-		// this.nukeDefenseSites = _.filter(this.colony.room.constructionSites,
-		// 								 site => site.pos.findInRange(FIND_NUKES, 3).length > 0);
-		// let nukeRamparts = _.filter(this.colony.room.ramparts,
-		// 							rampart => rampart.pos.findInRange(FIND_NUKES, 3).length > 0);
 		// Nuke defense ramparts needing fortification
 		this.nukeDefenseRamparts = _.filter(this.colony.room.ramparts, function (rampart) {
 			if (rampart.pos.lookFor(LOOK_NUKES).length > 0) {

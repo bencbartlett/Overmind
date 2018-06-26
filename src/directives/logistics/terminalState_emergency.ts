@@ -8,7 +8,7 @@ export class DirectiveTerminalEmergencyState extends Directive {
 
 	static directiveName = 'emergencyState';
 	static color = COLOR_YELLOW;
-	static secondaryColor = COLOR_RED;
+	static secondaryColor = COLOR_ORANGE;
 
 	// colony: Colony | undefined; // this is technically unallowable, but at end of life, colony can be undefined
 

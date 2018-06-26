@@ -7,16 +7,16 @@ export class GameCache implements ICache {
 
 	overlords: { [overlord: string]: { [roleName: string]: string[] } };
 	targets: { [ref: string]: string[] };
-	structures: { [roomName: string]: { [structureType: string]: Structure[] } };
-	constructionSites: { [roomName: string]: ConstructionSite[] };
-	drops: { [roomName: string]: { [resourceType: string]: Resource[] } };
+	// structures: { [roomName: string]: { [structureType: string]: Structure[] } };
+	// constructionSites: { [roomName: string]: ConstructionSite[] };
+	// drops: { [roomName: string]: { [resourceType: string]: Resource[] } };
 
 	constructor() {
 		this.overlords = {};
 		this.targets = {};
-		this.structures = {};
-		this.constructionSites = {};
-		this.drops = {};
+		// this.structures = {};
+		// this.constructionSites = {};
+		// this.drops = {};
 	}
 
 	/* Generates a hash table for creeps assigned to each object: key: OLref, val: (key: role, val: names[]) */
@@ -44,36 +44,36 @@ export class GameCache implements ICache {
 		}
 	}
 
-	/* Generates a nested hash table for structure lookup: {[roomName], {[structureType]: Structures[]} */
-	private cacheStructures() {
-		this.structures = {};
-		for (let name in Game.rooms) {
-			this.structures[name] = _.groupBy(Game.rooms[name].find(FIND_STRUCTURES), s => s.structureType);
-		}
-	}
-
-	/* Generates a nested hash table for structure lookup: {[roomName], {[structureType]: Structures[]} */
-	private cacheConstructionSites() {
-		this.constructionSites = {};
-		for (let name in Game.rooms) {
-			this.constructionSites[name] = Game.rooms[name].find(FIND_MY_CONSTRUCTION_SITES);
-		}
-	}
-
-	/* Generates a nested hash table for drop lookup: {[roomName], {[resourceType]: drops[]} */
-	private cacheDrops() {
-		this.drops = {};
-		for (let name in Game.rooms) {
-			this.drops[name] = _.groupBy(Game.rooms[name].find(FIND_DROPPED_RESOURCES), r => r.resourceType);
-		}
-	}
+	// /* Generates a nested hash table for structure lookup: {[roomName], {[structureType]: Structures[]} */
+	// private cacheStructures() {
+	// 	this.structures = {};
+	// 	for (let name in Game.rooms) {
+	// 		this.structures[name] = _.groupBy(Game.rooms[name].find(FIND_STRUCTURES), s => s.structureType);
+	// 	}
+	// }
+	//
+	// /* Generates a nested hash table for structure lookup: {[roomName], {[structureType]: Structures[]} */
+	// private cacheConstructionSites() {
+	// 	this.constructionSites = {};
+	// 	for (let name in Game.rooms) {
+	// 		this.constructionSites[name] = Game.rooms[name].find(FIND_MY_CONSTRUCTION_SITES);
+	// 	}
+	// }
+	//
+	// /* Generates a nested hash table for drop lookup: {[roomName], {[resourceType]: drops[]} */
+	// private cacheDrops() {
+	// 	this.drops = {};
+	// 	for (let name in Game.rooms) {
+	// 		this.drops[name] = _.groupBy(Game.rooms[name].find(FIND_DROPPED_RESOURCES), r => r.resourceType);
+	// 	}
+	// }
 
 	build() {
 		this.cacheOverlords();
 		this.cacheTargets();
-		this.cacheStructures();
-		this.cacheConstructionSites();
-		this.cacheDrops();
+		// this.cacheStructures();
+		// this.cacheConstructionSites();
+		// this.cacheDrops();
 	}
 
 	rebuild() {
