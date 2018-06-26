@@ -138,7 +138,7 @@ export class WorkerOverlord extends Overlord {
 				const RELOCATE_MAX_WORKERS = 6;
 				this.wishlist(RELOCATE_MAX_WORKERS, setup);
 			}
-			const MAX_WORKERS = 4; // Maximum number of workers to spawn
+			const MAX_WORKERS = 3; // Maximum number of workers to spawn
 			let constructionTicks = _.sum(_.map(this.colony.constructionSites,
 												site => Math.max(site.progressTotal - site.progress, 0)))
 									/ BUILD_POWER; // Math.max for if you manually set progress on private server

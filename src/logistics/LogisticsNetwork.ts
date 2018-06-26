@@ -63,9 +63,14 @@ interface LogisticsNetworkMemory {
 	}
 }
 
+const LogisticsNetworkMemoryDefaults: LogisticsNetworkMemory = {
+	transporterCache: {},
+};
+
 @profile
 export class LogisticsNetwork {
 
+	memory: LogisticsNetworkMemory;
 	requests: LogisticsRequest[];
 	transporters: Zerg[];
 	buffers: BufferTarget[];
@@ -85,6 +90,7 @@ export class LogisticsNetwork {
 	};
 
 	constructor(colony: Colony) {
+		this.memory = Mem.wrap(colony.memory, 'logisticsNetwork', LogisticsNetworkMemoryDefaults);
 		this.requests = [];
 		this.targetToRequest = {};
 		this.colony = colony;
@@ -101,12 +107,6 @@ export class LogisticsNetwork {
 		for (let room of this.colony.rooms) {
 			this.logisticPositions[room.name] = _.map([...room.storageUnits, ...room.links], s => s.pos);
 		}
-	}
-
-	get memory(): LogisticsNetworkMemory {
-		return Mem.wrap(this.colony.memory, 'logisticsNetwork', {
-			transporterCache: {},
-		});
 	}
 
 	// Request and provide functions ===================================================================================

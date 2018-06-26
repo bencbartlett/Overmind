@@ -176,9 +176,11 @@ export class Colony {
 		// Register physical objects across all rooms in the colony
 		this.sources = _.sortBy(_.flatten(_.map(this.rooms, room => room.sources)),
 								source => source.pos.getMultiRoomRangeTo(this.pos));
-		this.extractors = _.sortBy(_.compact(_.map(this.rooms, room => room.extractor)),
-								   extractor => extractor!.pos.getMultiRoomRangeTo(this.pos)) as StructureExtractor[];
-		_.remove(this.extractors, extractor => !extractor.my && !(extractor.owner.username == 'Public'));
+		this.extractors = _(this.rooms)
+			.map(room => room.extractor)
+			.compact()
+			.filter(extractor => extractor!.my || extractor!.owner.username == 'Public')
+			.sortBy(extractor => extractor!.pos.getMultiRoomRangeTo(this.pos)).value() as StructureExtractor[];
 		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites));
 		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
 		this.drops = _.merge(_.map(this.rooms, room => room.drops));
@@ -323,16 +325,15 @@ export class Colony {
 	}
 
 	init(): void {
-		this.overseer.init();												// Initialize overseer AFTER hive clusters
+		this.overseer.init();												// Initialize overseer before hive clusters
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.init());	// Initialize each hive cluster
-		// this.overseer.init();												// Initialize overseer AFTER hive clusters
 		this.roadLogistics.init();											// Initialize the road network
 		this.linkNetwork.init();											// Initialize link network
 		this.roomPlanner.init();											// Initialize the room planner
 	}
 
 	run(): void {
-		this.overseer.run();												// Run overseer BEFORE hive clusters
+		this.overseer.run();												// Run overseer before hive clusters
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.run());		// Run each hive cluster
 		this.linkNetwork.run();												// Run the link network
 		this.roadLogistics.run();											// Run the road network

@@ -18,13 +18,14 @@ interface MoveOptions {
 	repath?: number;
 	route?: { [roomName: string]: boolean };
 	ensurePath?: boolean;
-	pushy?: boolean;
+	// pushy?: boolean;
 }
 
 interface MoveData {
 	state: any[];
 	path: string;
 	delay?: number;
+	priority?: number;
 }
 
 interface MoveState {

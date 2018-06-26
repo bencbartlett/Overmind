@@ -21,7 +21,9 @@ interface UpgradeSiteMemory {
 @profile
 export class UpgradeSite extends HiveCluster {
 
+	memory: UpgradeSiteMemory;
 	controller: StructureController;						// The controller for the site
+	upgradePowerNeeded: number;
 	link: StructureLink | undefined;						// The primary object receiving energy for the site
 	battery: StructureContainer | undefined; 				// The container to provide an energy buffer
 	inputConstructionSite: ConstructionSite | undefined;	// The construction site for the input, if there is one
@@ -39,6 +41,8 @@ export class UpgradeSite extends HiveCluster {
 	constructor(colony: Colony, controller: StructureController) {
 		super(colony, controller, 'upgradeSite');
 		this.controller = controller;
+		this.memory = Mem.wrap(this.colony.memory, 'upgradeSite');
+		this.upgradePowerNeeded = this.getUpgradePowerNeeded();
 		// Register bettery
 		let allowableContainers = _.filter(this.room.containers, container =>
 			container.pos.findInRange(FIND_SOURCES, 1).length == 0); // only count containers that aren't near sources
@@ -67,11 +71,7 @@ export class UpgradeSite extends HiveCluster {
 		this.stats();
 	}
 
-	get memory(): UpgradeSiteMemory {
-		return Mem.wrap(this.colony.memory, 'upgradeSite');
-	}
-
-	get upgradePowerNeeded(): number {
+	private getUpgradePowerNeeded(): number {
 		if (this.room.storage) { // Workers perform upgrading until storage is set up
 			let amountOver = Math.max(this.room.storage.energy - UpgradeSite.settings.storageBuffer, 0);
 			let upgradePower = 1 + Math.floor(amountOver / UpgradeSite.settings.energyPerBodyUnit);

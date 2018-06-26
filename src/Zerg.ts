@@ -374,7 +374,7 @@ export class Zerg {
 
 	/* Creeps are idle if they don't have a task. */
 	get isIdle(): boolean {
-		return !this.hasValidTask;
+		return !this.spawning && (!this.task || !this.task.isValid());
 	}
 
 	/* Execute the task you currently have. */
@@ -419,11 +419,12 @@ export class Zerg {
 	goTo(destination: RoomPosition | HasPos, options: MoveOptions = {}) {
 		// Add default obstacle avoidance
 		// TODO: include default obstacles in costmatrix initial calculations
-		return Movement.goTo(this, destination, _.merge(options, {obstacles: this.getObstacles()}));
+		// return Movement.goTo(this, destination, _.merge(options, {obstacles: this.getObstacles()}));
+		return Movement.goTo(this, destination, options);
 	};
 
 	inSameRoomAs(target: HasPos): boolean {
-		return (this.pos.roomName == target.pos.roomName);
+		return this.pos.roomName == target.pos.roomName;
 	}
 
 	getObstacles(): RoomPosition[] {

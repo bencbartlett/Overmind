@@ -11,7 +11,7 @@ export class RoadLogistics {
 
 	private colony: Colony;
 	private rooms: Room[];
-	private _assignedWorkers: { [roomName: string]: Zerg[] };
+	private _assignedWorkers: { [roomName: string]: string[] };
 	private settings: {
 		allowedPaversPerRoom: number,
 		criticalThreshold: number,
@@ -42,9 +42,9 @@ export class RoadLogistics {
 	/* Whether a road in the network needs repair */
 	private workerShouldRepaveRoom(worker: Zerg, room: Room): boolean {
 		// Room should be repaved if there is a road with critical HP or if energy to repave >= worker carry capacity
-		let otherAssignedWorkers = _.filter(this.assignedWorkers(room), zerg => zerg.name != worker.name);
+		let otherAssignedWorkers = _.filter(this.assignedWorkers(room), name => name != worker.name);
 		if (otherAssignedWorkers.length < this.settings.allowedPaversPerRoom) {
-			if (this.assignedWorkers(room).includes(worker)) {
+			if (this.assignedWorkers(room).includes(worker.name)) {
 				// If worker is already working in the room, have it repair until all roads are at acceptable level
 				return this.repairableRoads(room).length > 0;
 			} else {
@@ -56,12 +56,13 @@ export class RoadLogistics {
 		}
 	}
 
-	/* Get the room the worker should repave if any */
+	/* Get the room the worker should repave, if any */
 	workerShouldRepave(worker: Zerg): Room | undefined {
 		// If the worker is already working in a room and should keep doing so, return that first
-		for (let roomName in this._assignedWorkers) {
-			let room = Game.rooms[roomName];
-			if (this.assignedWorkers(room).includes(worker) && this.workerShouldRepaveRoom(worker, room)) {
+		if (worker.task && worker.task.name == repairTaskName) {
+			let room = Game.rooms[worker.task.targetPos.roomName];
+			if (room && this.assignedWorkers(room).includes(worker.name)
+				&& this.workerShouldRepaveRoom(worker, room)) {
 				return room;
 			}
 		}
@@ -104,31 +105,27 @@ export class RoadLogistics {
 	 * on the same tick*/
 	registerWorkerAssignment(worker: Zerg, room: Room): void {
 		if (this._assignedWorkers[room.name]) {
-			if (!this._assignedWorkers[room.name].includes(worker)) {
-				this._assignedWorkers[room.name].push(worker);
+			if (!this._assignedWorkers[room.name].includes(worker.name)) {
+				this._assignedWorkers[room.name].push(worker.name);
 			}
 		} else {
-			this._assignedWorkers[room.name] = [worker];
+			this._assignedWorkers[room.name] = [worker.name];
 		}
 	}
 
-	assignedWorkers(room: Room): Zerg[] {
-		if (this._assignedWorkers[room.name]) {
-			return this._assignedWorkers[room.name];
-		} else {
-			return [];
-		}
+	assignedWorkers(room: Room): string[] {
+		return this._assignedWorkers[room.name] || [];
 	}
 
 	init(): void {
 		let workers = this.colony.getCreepsByRole('worker');
 		for (let worker of workers) {
-			if (worker.task && worker.task.name == repairTaskName && worker.task.target) {
-				let roomName = worker.task.target.pos.roomName;
+			if (worker.task && worker.task.name == repairTaskName) {
+				let roomName = worker.task.targetPos.roomName;
 				if (!this._assignedWorkers[roomName]) {
 					this._assignedWorkers[roomName] = [];
 				}
-				this._assignedWorkers[roomName].push(worker);
+				this._assignedWorkers[roomName].push(worker.name);
 			}
 		}
 	}
