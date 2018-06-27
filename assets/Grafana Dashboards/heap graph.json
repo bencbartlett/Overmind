@@ -28,7 +28,16 @@
   "pointradius": 5,
   "points": false,
   "renderer": "flot",
-  "seriesOverrides": [],
+  "seriesOverrides": [
+    {
+      "alias": "heap.externalSize",
+      "stack": true
+    },
+    {
+      "alias": "heap.size",
+      "stack": true
+    }
+  ],
   "spaceLength": 10,
   "stack": false,
   "steppedLine": false,
