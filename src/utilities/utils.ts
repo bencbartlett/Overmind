@@ -1,3 +1,5 @@
+import { Stats } from "stats/stats";
+
 // Random utilities that don't belong anywhere else
 
 export function minMax(value: number, min: number, max: number): number {
@@ -108,6 +110,10 @@ export function logHeapStats(): void {
 		let externalHeapSize = Math.round((heapStats.externally_allocated_size) / 1048576);
 		let heapLimit = Math.round(heapStats.heap_size_limit / 1048576);
 		console.log(`Heap usage: ${heapSize} MB + ${externalHeapSize} MB of ${heapLimit} MB (${heapPercent}%).`);
+		//log Heap
+		Stats.log('heap.size', heapSize);
+		Stats.log('heap.externalSize', externalHeapSize);
+		Stats.log('heap.limit', heapLimit);
 	}
 }
 
