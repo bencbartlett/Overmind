@@ -99,6 +99,8 @@ interface RoomPosition {
 
 	getPositionsInRange(range: number, includeWalls?: boolean, includeEdges?: boolean): RoomPosition[];
 
+	lookFor<T extends keyof AllLookAtTypes>(structureType: T): Array<AllLookAtTypes[T]>;
+
 	lookForStructure(structureType: StructureConstant): Structure | undefined;
 
 	isWalkable(ignoreCreeps?: boolean): boolean;
@@ -112,9 +114,9 @@ interface RoomPosition {
 	findClosestByLimitedRange<T>(objects: T[] | RoomPosition[], rangeLimit: number,
 								 opts?: { filter: any | string; }): T;
 
-	findClosestByMultiRoomRange<T extends _HasRoomPosition>(objects: T[]): T;
+	findClosestByMultiRoomRange<T extends _HasRoomPosition>(objects: T[]): T | undefined;
 
-	findClosestByRangeThenPath<T extends _HasRoomPosition>(objects: T[]): T;
+	findClosestByRangeThenPath<T extends _HasRoomPosition>(objects: T[]): T | undefined;
 }
 
 interface RoomVisual {

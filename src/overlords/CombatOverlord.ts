@@ -27,6 +27,9 @@ export abstract class CombatOverlord extends Overlord {
 	}
 
 	findPartner(zerg: Zerg, partners: Zerg[], tickDifference = 600): Zerg | undefined {
+		if (zerg.spawning || !zerg.ticksToLive) {
+			return;
+		}
 		if (zerg.memory.partner) {
 			let partner = _.find(partners, partner => partner.name == zerg.memory.partner);
 			if (partner) {
@@ -39,8 +42,8 @@ export abstract class CombatOverlord extends Overlord {
 			let partner = _.find(partners, partner => partner.memory.partner == zerg.name);
 			if (!partner) {
 				partner = _(partners)
-					.filter(partner => !partner.memory.partner && !partner.spawning &&
-									   Math.abs(zerg.ticksToLive! - partner.ticksToLive!) <= tickDifference)
+					.filter(partner => !partner.memory.partner && !partner.spawning && partner.ticksToLive &&
+									   Math.abs(zerg.ticksToLive! - partner.ticksToLive) <= tickDifference)
 					.min(partner => Math.abs(zerg.ticksToLive! - partner.ticksToLive!));
 			}
 			if (_.isObject(partner)) {

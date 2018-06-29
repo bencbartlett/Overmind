@@ -162,6 +162,8 @@ export class DestroyerOverlord extends CombatOverlord {
 		} else {
 			amount = 1;
 		}
+		let attackerPriority = this.attackers.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
+		let healerPriority = this.healers.length < this.attackers.length ? this.priority - 0.1 : this.priority + 0.1;
 		this.wishlist(amount, AttackerSetup);
 		this.wishlist(amount, HealerSetup);
 		this.requestBoosts();

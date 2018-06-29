@@ -11,7 +11,6 @@ import {Visualizer} from './visuals/Visualizer';
 import {Pathing} from './movement/Pathing';
 import {DirectiveGuardSwarm} from './directives/defense/guardSwarm';
 import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
-import {Mem} from './Memory';
 import {DirectiveNukeResponse} from './directives/defense/nukeResponse';
 import {MinerSetup} from './overlords/core/miner';
 import {QueenSetup} from './overlords/core/queen';
@@ -19,6 +18,7 @@ import {DirectiveTerminalEvacuateState} from './directives/logistics/terminalSta
 
 @profile
 export class Overseer {
+
 	colony: Colony; 							// Instantiated colony object
 	directives: Directive[];					// Directives across the colony
 	overlords: {
@@ -33,10 +33,6 @@ export class Overseer {
 		this.colony = colony;
 		this.directives = [];
 		this.overlords = {};
-	}
-
-	get memory(): OverseerMemory {
-		return Mem.wrap(this.colony.memory, 'overseer', {});
 	}
 
 	registerOverlord(overlord: Overlord): void {
@@ -82,9 +78,7 @@ export class Overseer {
 		}
 
 		// Guard directive: defend your outposts and all rooms of colonies that you are incubating
-		let roomsToCheck = _.flattenDeep([this.colony.outposts,
-										  _.map(this.colony.incubatingColonies, col => col.rooms)]) as Room[];
-		for (let room of roomsToCheck) {
+		for (let room of this.colony.outposts) {
 			let defenseFlags = _.filter(room.flags, flag => DirectiveGuard.filter(flag) ||
 															DirectiveInvasionDefense.filter(flag) ||
 															DirectiveGuardSwarm.filter(flag));
@@ -200,7 +194,7 @@ export class Overseer {
 					let report = overlord.creepUsageReport[role];
 					if (!report) {
 						if (Game.time % 100 == 0) {
-							log.info(`Role ${role} is not reported by ${overlord.name}!`);
+							log.info(`Role ${role} is not reported by ${overlord.ref}!`);
 						}
 					} else {
 						if (!roleOccupancy[role]) roleOccupancy[role] = [0, 0];

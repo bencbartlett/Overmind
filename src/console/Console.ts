@@ -68,7 +68,7 @@ export class OvermindConsole {
 
 	static print(...args: any[]): void {
 		for (let arg of args) {
-			console.log(JSON.stringify(arg, null, '\t'));
+			log.debug(JSON.stringify(arg, null, '\t'));
 		}
 	}
 

@@ -2,57 +2,120 @@
 
 import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
-import {HatcheryOverlord} from '../overlords/core/queen';
+import {QueenOverlord} from '../overlords/core/queen';
 import {Priority} from '../priorities/priorities';
 import {Colony, ColonyStage} from '../Colony';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
-import {bodyCost} from '../overlords/CreepSetup';
+import {bodyCost, CreepSetup} from '../overlords/CreepSetup';
 import {Mem} from '../Memory';
 import {Visualizer} from '../visuals/Visualizer';
 import {Stats} from '../stats/stats';
 import {Zerg} from '../Zerg';
 import {log} from '../console/log';
+import {GlobalCache} from '../caching';
+import {energyStructureOrder, getPosFromBunkerCoord, insideBunkerBounds} from '../roomPlanner/layouts/bunker';
+import {BunkerQueenOverlord} from '../overlords/core/queen_bunker';
+import {Overlord} from '../overlords/Overlord';
 
-const ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH = -10;
+const ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH = -20;
+const ERR_SPECIFIED_SPAWN_BUSY = -21;
+
+export interface SpawnRequest {
+	setup: CreepSetup;					// creep body generator to use
+	overlord: Overlord;					// overlord requesting the creep
+	priority: number;					// priority of the request // TODO: WIP
+	partners?: CreepSetup[];			// partners to spawn along with the creep
+	options?: SpawnRequestOptions;		// options
+}
+
+export interface SpawnRequestOptions {
+	spawn?: StructureSpawn;				// allows you to specify which spawn to use; only use for high priority
+	directions?: DirectionConstant[];	// StructureSpawn.spawning.directions
+}
+
+interface SpawnOrder {
+	protoCreep: protoCreep,
+	options: SpawnOptions | undefined,
+}
+
+function computeEnergyStructures(hatchery: Hatchery): (StructureSpawn | StructureExtension)[] {
+	if (hatchery.colony.layout == 'bunker') {
+		let positions = _.map(energyStructureOrder, coord => getPosFromBunkerCoord(coord, hatchery.colony));
+		let spawnsAndExtensions: (StructureSpawn | StructureExtension)[] = [];
+		spawnsAndExtensions = spawnsAndExtensions.concat(hatchery.spawns, hatchery.extensions);
+		let energyStructures: (StructureSpawn | StructureExtension)[] = [];
+		for (let pos of positions) {
+			let structure = _.find(pos.lookFor(LOOK_STRUCTURES), s =>
+				s.structureType == STRUCTURE_SPAWN
+				|| s.structureType == STRUCTURE_EXTENSION) as StructureSpawn | StructureExtension;
+			if (structure) {
+				energyStructures.push(_.remove(spawnsAndExtensions, s => s.id == structure.id)[0]);
+			}
+		}
+		return energyStructures.concat(spawnsAndExtensions);
+	} else {
+		// Ugly workaround to [].concat() throwing a temper tantrum
+		let spawnsAndExtensions: (StructureSpawn | StructureExtension)[] = [];
+		spawnsAndExtensions = spawnsAndExtensions.concat(hatchery.spawns, hatchery.extensions);
+		return _.sortBy(spawnsAndExtensions, structure => structure.pos.getRangeTo(hatchery.idlePos));
+	}
+}
+
+export interface HatcheryMemory {
+	stats: {
+		usage: number;
+		uptime: number;
+	};
+}
+
+const HatcheryMemoryDefaults: HatcheryMemory = {
+	stats: {
+		usage : 0,
+		uptime: 0
+	}
+};
 
 @profile
 export class Hatchery extends HiveCluster {
+
+	memory: HatcheryMemory;
 	spawns: StructureSpawn[]; 								// List of spawns in the hatchery
 	availableSpawns: StructureSpawn[]; 						// Spawns that are available to make stuff right now
 	extensions: StructureExtension[]; 						// List of extensions in the hatchery
 	link: StructureLink | undefined; 						// The input link
-	towers: StructureTower[]; 								// All towers that aren't in the command center
+	towers: StructureTower[]; 							// All towers that aren't in the command center
 	battery: StructureContainer | undefined;				// The container to provide an energy buffer
 	transportRequests: TransportRequestGroup;				// Box for energy requests
-	overlord: HatcheryOverlord | undefined;					// Hatchery overlord if past larva stage
+	overlord: QueenOverlord | BunkerQueenOverlord;			// Hatchery overlord if past larva stage
 	settings: {												// Settings for hatchery operation
 		refillTowersBelow: number,  							// What value to refill towers at?
 		linksRequestEnergyBelow: number, 						// What value will links store more energy at?
-		supplierSize: number,									// Size of supplier in body pattern units
-		numSuppliers: number,									// Number of suppliers to maintain
-		queenSize: number,										// Size of queen in body patern repetition units
-		numQueens: number,										// Number of queens the Hatchery needs
-		renewQueenAt: number,									// Renew idle queens below this ticksRemaining value
 		suppressSpawning: boolean,             					// Prevents the hatchery from spawning this tick
 	};
+	private _nextAvailability: number | undefined;
+	private _queuedSpawnTime: number | undefined;
 	private productionPriorities: number[];
-	private productionQueue: { [priority: number]: protoCreep[] };  // Priority queue of protocreeps
-	private _energyStructures: (StructureSpawn | StructureExtension)[];
+	private productionQueue: {								// Prioritized spawning queue
+		[priority: number]: SpawnOrder[]
+	};
 	static restrictedRange = 6;								// Don't stand idly within this range of hatchery
 
 	constructor(colony: Colony, headSpawn: StructureSpawn) {
 		super(colony, headSpawn, 'hatchery');
 		// Register structure components
+		this.memory = Mem.wrap(this.colony.memory, 'hatchery', HatcheryMemoryDefaults);
 		if (this.colony.layout == 'twoPart') this.colony.destinations.push(this.pos);
 		this.spawns = colony.spawns;
 		this.availableSpawns = _.filter(this.spawns, (spawn: StructureSpawn) => !spawn.spawning);
 		this.extensions = colony.extensions;
-		this.link = this.pos.findClosestByLimitedRange(colony.availableLinks, 2);
-		this.colony.linkNetwork.claimLink(this.link);
-		this.battery = this.pos.findClosestByLimitedRange(this.room.containers, 2);
-		this.colony.obstacles.push(this.idlePos);
-		// Associate all towers that aren't part of the command center if there is one
-		if (colony.commandCenter) { // TODO: make this not order-dependent
+		if (this.colony.layout == 'bunker') {
+			this.battery = _.first(_.filter(this.room.containers, cont => insideBunkerBounds(cont.pos, this.colony)));
+		} else {
+			this.link = this.pos.findClosestByLimitedRange(colony.availableLinks, 2);
+			this.colony.linkNetwork.claimLink(this.link);
+			this.battery = this.pos.findClosestByLimitedRange(this.room.containers, 2);
+		}
+		if (colony.commandCenter) {
 			this.towers = _.difference(colony.towers, colony.commandCenter.towers);
 		} else {
 			this.towers = colony.towers;
@@ -60,24 +123,17 @@ export class Hatchery extends HiveCluster {
 		this.productionPriorities = [];
 		this.productionQueue = {};
 		this.settings = {
-			refillTowersBelow      : 500,
+			refillTowersBelow      : 750,
 			linksRequestEnergyBelow: 0,
-			supplierSize           : _.min([_.ceil(2 * (this.extensions.length + 1) / 5), 8]),
-			numSuppliers           : 1,
-			queenSize              : _.min([_.ceil(2 * (this.extensions.length + 1) / 5), 8]),
-			numQueens              : 1,
-			renewQueenAt           : 1000,
 			suppressSpawning       : false,
 		};
-		// Register the hatchery overlord
-		this.overlord = new HatcheryOverlord(this);
-		// Assign a separate store group if hatchery has a dedicated attendant
-		this.transportRequests = new TransportRequestGroup();
+		this.transportRequests = colony.transportRequests; // hatchery always uses colony transport group
+		if (this.colony.layout == 'bunker' && (this.colony.storage || this.colony.terminal)) {
+			this.overlord = new BunkerQueenOverlord(this);
+		} else {
+			this.overlord = new QueenOverlord(this);
+		}
 		this.memory.stats = this.getStats();
-	}
-
-	get memory(): HatcheryMemory {
-		return Mem.wrap(this.colony.memory, 'hatchery');
 	}
 
 	// Idle position for queen
@@ -100,6 +156,7 @@ export class Hatchery extends HiveCluster {
 		}
 		Stats.log(`colonies.${this.colony.name}.hatchery.uptime`, uptime);
 		return {
+			usage : 0, // TODO
 			uptime: uptime,
 		};
 	}
@@ -119,12 +176,12 @@ export class Hatchery extends HiveCluster {
 		// Register energy transport requests (goes on hatchery store group, which can be colony store group)
 		let refillSpawns = _.filter(this.spawns, spawn => spawn.energy < spawn.energyCapacity);
 		let refillExtensions = _.filter(this.extensions, extension => extension.energy < extension.energyCapacity);
-		let refillTowers = _.filter(this.towers, tower => tower.energy < tower.energyCapacity);
+		let refillTowers = _.filter(this.towers, tower => tower.energy < this.settings.refillTowersBelow);
 		_.forEach(refillSpawns, spawn => this.transportRequests.requestInput(spawn, Priority.NormalHigh));
 		_.forEach(refillExtensions, extension => this.transportRequests.requestInput(extension, Priority.NormalHigh));
-		_.forEach(refillTowers, tower =>
-			this.transportRequests.requestInput(tower, tower.energy < this.settings.refillTowersBelow ?
-													   Priority.Low : Priority.Low)); // TODO: made change here
+		// _.forEach(refillTowers, tower =>
+		// 	this.transportRequests.requestInput(tower, tower.energy < this.settings.refillTowersBelow ?
+		// 											   Priority.Low : Priority.Low)); // TODO: made change here
 	}
 
 	// Creep queueing and spawning =====================================================================================
@@ -138,50 +195,23 @@ export class Hatchery extends HiveCluster {
 		return (roleName + '_' + i);
 	};
 
-	// /* Generate (but not spawn) the largest creep possible, returns the protoCreep as an object */
-	// generateProtoCreep(setup: CreepSetup, overlord: Overlord, bootstrap = false): protoCreep {
-	// 	// Generate the creep body
-	// 	let creepBody: BodyPartConstant[];
-	// 	if (this.colony.incubator) { // if you're being incubated, build as big a creep as you want
-	// 		creepBody = setup.generateBody(this.colony.incubator.room.energyCapacityAvailable);
-	// 	} else { // otherwise limit yourself to actual energy constraints
-	// 		creepBody = setup.generateBody(this.colony.room.energyCapacityAvailable);
-	// 	}
-	// 	if (bootstrap) {
-	// 		creepBody = setup.generateBody(this.colony.room.energyAvailable);
-	// 	}
-	// 	// Generate the creep memory
-	// 	let creepMemory: CreepMemory = {
-	// 		colony  : overlord.colony.name, 						// name of the colony the creep is assigned to
-	// 		overlord: overlord.ref,								// name of the overseer running this creep
-	// 		role    : setup.role,								// role of the creep
-	// 		task    : null, 									// task the creep is performing
-	// 		data    : { 										// rarely-changed data about the creep
-	// 			origin: '',										// where it was spawned, filled in at spawn time
-	// 		},
-	// 		_trav   : null,
-	// 	};
-	// 	// Create the protocreep and return it
-	// 	let protoCreep: protoCreep = { 							// object to add to spawner queue
-	// 		body  : creepBody, 										// body array
-	// 		name  : setup.role, 									// name of the creep - gets modified by hatchery
-	// 		memory: creepMemory,									// memory to initialize with
-	// 	};
-	// 	return protoCreep;
-	// }
-
-	private get energyStructures(): (StructureSpawn | StructureExtension)[] {
-		if (!this._energyStructures) {
-			// Ugly workaround to [].concat() throwing a temper tantrum
-			let spawnsAndExtensions: (StructureSpawn | StructureExtension)[] = [];
-			spawnsAndExtensions = spawnsAndExtensions.concat(this.spawns, this.extensions);
-			this._energyStructures = _.sortBy(spawnsAndExtensions, structure => structure.pos.getRangeTo(this.idlePos));
-		}
-		return this._energyStructures;
+	get energyStructures(): (StructureSpawn | StructureExtension)[] {
+		return GlobalCache.structures(this, 'energyStructures', () => computeEnergyStructures(this));
 	}
 
-	private spawnCreep(protoCreep: protoCreep): number {
-		let spawnToUse = this.availableSpawns.shift(); // get a spawn to use
+	private spawnCreep(protoCreep: protoCreep, options: SpawnRequestOptions = {}): number {
+		// get a spawn to use
+		let spawnToUse: StructureSpawn | undefined;
+		if (options.spawn) {
+			spawnToUse = options.spawn;
+			if (spawnToUse.spawning) {
+				return ERR_SPECIFIED_SPAWN_BUSY;
+			} else {
+				_.remove(this.availableSpawns, spawn => spawn.id == spawnToUse!.id); // mark as used
+			}
+		} else {
+			spawnToUse = this.availableSpawns.shift();
+		}
 		if (spawnToUse) { // if there is a spawn, create the creep
 			protoCreep.name = this.generateCreepName(protoCreep.name); // modify the creep name to make it unique
 			if (bodyCost(protoCreep.body) > this.room.energyCapacityAvailable) {
@@ -190,7 +220,8 @@ export class Hatchery extends HiveCluster {
 			protoCreep.memory.data.origin = spawnToUse.pos.roomName;
 			let result = spawnToUse.spawnCreep(protoCreep.body, protoCreep.name, {
 				memory          : protoCreep.memory,
-				energyStructures: this.energyStructures
+				energyStructures: this.energyStructures,
+				directions      : options.directions
 			});
 			if (result == OK) {
 				return result;
@@ -211,34 +242,91 @@ export class Hatchery extends HiveCluster {
 		return this.canSpawn(_.map(zerg.body, part => part.type));
 	}
 
-	enqueue(protoCreep: protoCreep, priority: number): void {
+	/* Generate (but not spawn) the largest creep possible, returns the protoCreep as an object */
+	private generateProtoCreep(setup: CreepSetup, overlord: Overlord): protoCreep {
+		// Generate the creep body
+		let creepBody: BodyPartConstant[];
+		// if (overlord.colony.incubator) { // if you're being incubated, build as big a creep as you want
+		// 	creepBody = setup.generateBody(overlord.colony.incubator.room.energyCapacityAvailable);
+		// } else { // otherwise limit yourself to actual energy constraints
+		creepBody = setup.generateBody(this.room.energyCapacityAvailable);
+		// }
+		// Generate the creep memory
+		let creepMemory: CreepMemory = {
+			colony  : overlord.colony.name, 						// name of the colony the creep is assigned to
+			overlord: overlord.ref,									// name of the Overlord running this creep
+			role    : setup.role,								// role of the creep
+			task    : null, 									// task the creep is performing
+			data    : { 										// rarely-changed data about the creep
+				origin: '',										// where it was spawned, filled in at spawn time
+			},
+		};
+		// Create the protocreep and return it
+		let protoCreep: protoCreep = { 							// object to add to spawner queue
+			body  : creepBody, 										// body array
+			name  : setup.role, 									// name of the creep - gets modified by hatchery
+			memory: creepMemory,									// memory to initialize with
+		};
+		return protoCreep;
+	}
+
+	/* Returns the approximate aggregated time at which the hatchery will next be available to spawn something */
+	get nextAvailability(): number {
+		if (!this._nextAvailability) {
+			let allQueued = _.flatten(_.values(this.productionQueue)) as SpawnOrder[];
+			let queuedSpawnTime = _.sum(allQueued, order => order.protoCreep.body.length) * CREEP_SPAWN_TIME;
+			let activeSpawnTime = _.sum(this.spawns, spawn => spawn.spawning ? spawn.spawning.remainingTime : 0);
+			this._nextAvailability = (activeSpawnTime + queuedSpawnTime) / this.spawns.length;
+		}
+		return this._nextAvailability;
+	}
+
+	/* Number of ticks required to make everything in spawn queue divided by number of spawns */
+	get queuedSpawnTime(): number {
+		if (!this._queuedSpawnTime) {
+			let allQueued = _.flatten(_.values(this.productionQueue)) as SpawnOrder[];
+			let queuedSpawnTime = _.sum(allQueued, order => order.protoCreep.body.length) * CREEP_SPAWN_TIME;
+			this._queuedSpawnTime = queuedSpawnTime / this.spawns.length;
+		}
+		return this._queuedSpawnTime;
+	}
+
+	/* Enqueues a request to the hatchery */
+	enqueue(request: SpawnRequest): void {
+		let protoCreep = this.generateProtoCreep(request.setup, request.overlord);
+		let priority = request.priority;
 		if (this.canSpawn(protoCreep.body)) {
 			// Spawn the creep yourself if you can
+			this._nextAvailability = undefined; // invalidate cache
+			this._queuedSpawnTime = undefined;
 			if (!this.productionQueue[priority]) {
 				this.productionQueue[priority] = [];
-				this.productionPriorities.push(priority);
+				this.productionPriorities.push(priority); // this is necessary because keys interpret number as string
 			}
-			this.productionQueue[priority].push(protoCreep);
+			this.productionQueue[priority].push({protoCreep: protoCreep, options: request.options});
 		} else {
-			// If you are incubating and can't build the requested creep, enqueue it to the incubation hatchery
-			if (this.colony.incubator && this.colony.incubator.hatchery) {
-				this.colony.incubator.hatchery.enqueue(protoCreep, priority);
-			} else {
-				log.warning(`${this.room.print} hatchery: cannot spawn creep ${protoCreep.name}!`);
-			}
+			// // If you are incubating and can't build the requested creep, enqueue it to the incubation hatchery
+			// if (this.colony.incubator && this.colony.incubator.hatchery) {
+			// 	this.colony.incubator.hatchery.enqueue(request);
+			// } else {
+			log.warning(`${this.room.print} hatchery: cannot spawn creep ${protoCreep.name}!`);
+			// }
 		}
 	}
 
 	private spawnHighestPriorityCreep(): number | undefined {
 		let sortedKeys = _.sortBy(this.productionPriorities);
 		for (let priority of sortedKeys) {
-			let protoCreep = this.productionQueue[priority].shift();
-			if (protoCreep) {
-				let result = this.spawnCreep(protoCreep);
+			let nextOrder = this.productionQueue[priority].shift();
+			if (nextOrder) {
+				let {protoCreep, options} = nextOrder;
+				let result = this.spawnCreep(protoCreep, options);
 				if (result == OK) {
 					return result;
+				} else if (result == ERR_SPECIFIED_SPAWN_BUSY) {
+					return result; // continue to spawn other things while waiting on specified spawn
 				} else if (result != ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH) {
-					this.productionQueue[priority].unshift(protoCreep);
+					this.productionQueue[priority].unshift(nextOrder);
 					return result;
 				}
 			}
@@ -248,7 +336,8 @@ export class Hatchery extends HiveCluster {
 	private handleSpawns(): void {
 		// Spawn all queued creeps that you can
 		while (this.availableSpawns.length > 0) {
-			if (this.spawnHighestPriorityCreep() != OK) {
+			let result = this.spawnHighestPriorityCreep();
+			if (result != OK && result != ERR_SPECIFIED_SPAWN_BUSY) {
 				break;
 			}
 		}

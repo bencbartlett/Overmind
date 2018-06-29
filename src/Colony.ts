@@ -19,10 +19,14 @@ import {TransportOverlord} from './overlords/core/transporter';
 import {Energetics} from './logistics/Energetics';
 import {StoreStructure} from './declarations/typeGuards';
 import {ManagerSetup} from './overlords/core/manager';
-import {mergeSum} from './utilities/utils';
+import {maxBy, mergeSum, minBy} from './utilities/utils';
 import {Abathur} from './resources/Abathur';
 import {EvolutionChamber} from './hiveClusters/evolutionChamber';
 import {ExtractionSite} from './hiveClusters/extractionSite';
+import {TransportRequestGroup} from './logistics/TransportRequestGroup';
+import {SpawnGroup} from './logistics/SpawnGroup';
+import {bunkerLayout, getPosFromBunkerCoord} from './roomPlanner/layouts/bunker';
+import {Mem} from './memory';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -42,6 +46,27 @@ export function getAllColonies(): Colony[] {
 	return _.values(Overmind.colonies);
 }
 
+export interface BunkerData {
+	anchor: RoomPosition;
+	topSpawn: StructureSpawn | undefined;
+	coreSpawn: StructureSpawn | undefined;
+	rightSpawn: StructureSpawn | undefined;
+}
+
+export interface ColonyMemory {
+	defcon: {
+		level: number,
+		tick: number,
+	}
+}
+
+const defaultColonyMemory: ColonyMemory = {
+	defcon: {
+		level: DEFCON.safe,
+		tick : -Infinity
+	}
+};
+
 @profile
 export class Colony {
 	// Colony memory
@@ -50,6 +75,7 @@ export class Colony {
 	overseer: Overseer;									// This runs the directives and overlords
 	// Room associations
 	name: string;										// Name of the primary colony room
+	ref: string;
 	id: number; 										// Order in which colony is instantiated from Overmind
 	colony: Colony;										// Reference to itself for simple overlord instantiation
 	roomNames: string[];								// The names of all rooms including the primary room
@@ -80,12 +106,13 @@ export class Colony {
 	flags: Flag[];										// | Flags assigned to the colony
 	constructionSites: ConstructionSite[];				// | Construction sites in all colony rooms
 	repairables: Structure[];							// | Repairable structures, discounting barriers and roads
-	obstacles: RoomPosition[]; 							// | List of other obstacles, e.g. immobile creeps
+	// obstacles: RoomPosition[]; 							// | List of other obstacles, e.g. immobile creeps
 	destinations: RoomPosition[];
 	// Hive clusters
 	hiveClusters: HiveCluster[];						// List of all hive clusters
 	commandCenter: CommandCenter | undefined;			// Component with logic for non-spawning structures
 	hatchery: Hatchery | undefined;						// Component to encapsulate spawner logic
+	spawnGroup: SpawnGroup | undefined;
 	evolutionChamber: EvolutionChamber | undefined; 	// Component for mineral processing
 	upgradeSite: UpgradeSite;							// Component to provide upgraders with uninterrupted energy
 	sporeCrawlers: SporeCrawler[];
@@ -93,24 +120,23 @@ export class Colony {
 	extractionSites: { [extractorID: string]: ExtractionSite };
 	// Operational mode
 	bootstrapping: boolean; 							// Whether colony is bootstrapping or recovering from crash
-	incubator: Colony | undefined; 						// The colony responsible for incubating this one, if any
 	isIncubating: boolean;								// If the colony is incubating
-	incubatingColonies: Colony[];						// List of colonies that this colony is incubating
 	level: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; 				// Level of the colony's main room
 	stage: number;										// The stage of the colony "lifecycle"
 	defcon: number;
 	breached: boolean;
 	lowPowerMode: boolean; 								// Activate if RCL8 and full energy
 	layout: 'twoPart' | 'bunker';						// Which room design colony uses
+	bunker: BunkerData | undefined;						// The center tile of the bunker, else undefined
 	// Creeps and subsets
 	creeps: Zerg[];										// Creeps bound to the colony
 	creepsByRole: { [roleName: string]: Zerg[] };		// Creeps hashed by their role name
 	// Resource requests
 	linkNetwork: LinkNetwork;
 	logisticsNetwork: LogisticsNetwork;
+	transportRequests: TransportRequestGroup;
 	// Overlords
 	overlords: {
-		// supply: SupplierOverlord;
 		work: WorkerOverlord;
 		logistics: TransportOverlord;
 	};
@@ -124,43 +150,36 @@ export class Colony {
 		// Primitive colony setup
 		this.id = id;
 		this.name = roomName;
+		this.ref = roomName;
 		this.colony = this;
-		if (!Memory.colonies[this.name]) {
-			Memory.colonies[this.name] = {defcon: {level: DEFCON.safe, tick: Game.time}};
-		}
-		this.memory = Memory.colonies[this.name];
-		// Register creeps
-		this.creeps = creeps || [];
-		this.creepsByRole = _.groupBy(this.creeps, creep => creep.memory.role);
-		// Instantiate the colony overseer
-		this.overseer = new Overseer(this);
-		// Register colony capitol and outposts
+		this.memory = Mem.wrap(Memory.colonies, this.name, defaultColonyMemory);
+		// Register rooms
 		this.roomNames = [roomName].concat(outposts);
 		this.room = Game.rooms[roomName];
 		this.outposts = _.compact(_.map(outposts, outpost => Game.rooms[outpost]));
 		this.rooms = [Game.rooms[roomName]].concat(this.outposts);
-		// Register real colony components
-		this.registerRoomObjects();
-		// Set the colony operational state
-		this.registerOperationalState();
-		// Create placeholder arrays for remaining properties to be filled in by the Overmind
-		this.flags = []; // filled in by directives
-		this.destinations = []; // filled in by various hive clusters and directives
-		this.registerUtilities();
-		// Build the hive clusters
-		this.registerHiveClusters();
-		// Register colony overlords
-		this.spawnMoarOverlords();
-		// Add an Abathur
-		this.abathur = new Abathur(this);
+		// Register creeps
+		this.creeps = creeps || [];
+		this.creepsByRole = _.groupBy(this.creeps, creep => creep.memory.role);
+		// Give the colony an Overseer
+		this.overseer = new Overseer(this);
+		// Register the rest of the colony components; the order in which these are called is important!
+		this.registerRoomObjects();			// Register real colony components
+		this.registerOperationalState();	// Set the colony operational state
+		this.registerUtilities(); 			// Register logistics utilities, room planners, and layout info
+		this.registerHiveClusters(); 		// Build the hive clusters
+		this.spawnMoarOverlords(); 			// Register colony overlords
 		// Register colony globally to allow 'W1N1' and 'w1n1' to refer to Overmind.colonies.W1N1
 		global[this.name] = this;
 		global[this.name.toLowerCase()] = this;
 	}
 
 	private registerRoomObjects(): void {
+		// Create placeholder arrays for remaining properties to be filled in by the Overmind
+		this.flags = []; // filled in by directives
+		this.destinations = []; // filled in by various hive clusters and directives
+		// Register room objects across colony rooms
 		this.controller = this.room.controller!; // must be controller since colonies are based in owned rooms
-		this.pos = this.controller.pos; // This is used for overlord initialization but isn't actually useful
 		this.spawns = _.sortBy(_.filter(this.room.spawns, spawn => spawn.my && spawn.isActive()), spawn => spawn.ref);
 		this.extensions = this.room.extensions;
 		this.storage = this.room.storage;
@@ -173,6 +192,7 @@ export class Colony {
 		this.powerSpawn = this.room.powerSpawn;
 		this.nuker = this.room.nuker;
 		this.observer = this.room.observer;
+		this.pos = (this.storage || this.terminal || this.spawns[0] || this.controller).pos;
 		// Register physical objects across all rooms in the colony
 		this.sources = _.sortBy(_.flatten(_.map(this.rooms, room => room.sources)),
 								source => source.pos.getMultiRoomRangeTo(this.pos));
@@ -185,7 +205,7 @@ export class Colony {
 		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
 		this.drops = _.merge(_.map(this.rooms, room => room.drops));
 		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
-		this.obstacles = [];
+		// this.obstacles = [];
 	}
 
 	private registerOperationalState(): void {
@@ -202,7 +222,7 @@ export class Colony {
 		} else {
 			this.stage = ColonyStage.Larva;
 		}
-		this.incubatingColonies = [];
+		// this.incubatingColonies = [];
 		this.lowPowerMode = Energetics.lowPowerMode(this);
 		// Set DEFCON level
 		// TODO: finish this
@@ -245,12 +265,29 @@ export class Colony {
 		// Resource requests
 		this.linkNetwork = new LinkNetwork(this);
 		this.logisticsNetwork = new LogisticsNetwork(this);
+		this.transportRequests = new TransportRequestGroup();
 		// Register a room planner
 		this.roomPlanner = new RoomPlanner(this);
-		this.layout = this.roomPlanner.memory.bunkerData && this.roomPlanner.memory.bunkerData.anchor ?
-					  'bunker' : 'twoPart';
+		if (this.roomPlanner.memory.bunkerData && this.roomPlanner.memory.bunkerData.anchor) {
+			this.layout = 'bunker';
+			let anchor = derefRoomPosition(this.roomPlanner.memory.bunkerData.anchor);
+			let spawnPositions = _.map(bunkerLayout[8]!.buildings.spawn.pos, c => getPosFromBunkerCoord(c, this));
+			let rightSpawnPos = maxBy(spawnPositions, pos => pos.x) as RoomPosition;
+			let topSpawnPos = minBy(spawnPositions, pos => pos.y) as RoomPosition;
+			let coreSpawnPos = anchor.findClosestByRange(spawnPositions) as RoomPosition;
+			this.bunker = {
+				anchor    : anchor,
+				topSpawn  : topSpawnPos.lookForStructure(STRUCTURE_SPAWN) as StructureSpawn | undefined,
+				coreSpawn : coreSpawnPos.lookForStructure(STRUCTURE_SPAWN) as StructureSpawn | undefined,
+				rightSpawn: rightSpawnPos.lookForStructure(STRUCTURE_SPAWN) as StructureSpawn | undefined,
+			};
+		} else {
+			this.layout = 'twoPart';
+		}
 		// Register road network
 		this.roadLogistics = new RoadLogistics(this);
+		// "Organism Abathur with you."
+		this.abathur = new Abathur(this);
 	}
 
 	/* Instantiate and associate virtual colony components to group similar structures together */
@@ -332,12 +369,21 @@ export class Colony {
 		this.roomPlanner.init();											// Initialize the room planner
 	}
 
+	postInit(): void {
+		if (this.spawnGroup) {
+			this.spawnGroup.init();											// Initialize the spawn group if present
+		}
+	}
+
 	run(): void {
 		this.overseer.run();												// Run overseer before hive clusters
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.run());		// Run each hive cluster
 		this.linkNetwork.run();												// Run the link network
 		this.roadLogistics.run();											// Run the road network
 		this.roomPlanner.run();												// Run the room planner
+	}
+
+	postRun(): void {
 		this.stats();														// Log stats per tick
 	}
 

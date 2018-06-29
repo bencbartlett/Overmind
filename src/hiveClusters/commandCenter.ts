@@ -28,12 +28,10 @@ export class CommandCenter extends HiveCluster {
 	observer: StructureObserver | undefined;				// Colony observer
 	transportRequests: TransportRequestGroup;				// Box for energy requests
 	private _idlePos: RoomPosition;							// Cached idle position
-	settings: {												// Settings for cluster operation
-		linksTransmitAt: number;
-		refillTowersBelow: number;  							// What value to refill towers at?
-		excessEnergyTransferSize: number; 						// How much excess energy does a terminal send at once
-		managerSize: number;									// Size of manager in body pattern repetition units
-		unloadStorageBuffer: number;							// Start sending energy to other rooms past this amount
+
+	static settings = {
+		linksTransmitAt  : LINK_CAPACITY - 100,
+		refillTowersBelow: 750,
 	};
 
 	constructor(colony: Colony, storage: StructureStorage) {
@@ -41,24 +39,21 @@ export class CommandCenter extends HiveCluster {
 		this.memory = Mem.wrap(this.colony.memory, 'commandCenter');
 		// Register physical components
 		this.storage = storage;
-		this.link = this.pos.findClosestByLimitedRange(colony.availableLinks, 2);
-		this.colony.linkNetwork.claimLink(this.link);
 		this.terminal = colony.terminal;
-		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetwork;
-		this.towers = this.pos.findInRange(colony.towers, 3);
-		// this.labs = colony.labs;
 		this.powerSpawn = colony.powerSpawn;
 		this.nuker = colony.nuker;
 		this.observer = colony.observer;
-		this.colony.obstacles.push(this.idlePos);
-		this.transportRequests = new TransportRequestGroup();
-		this.settings = {
-			linksTransmitAt         : LINK_CAPACITY - 100,
-			refillTowersBelow       : 500,
-			excessEnergyTransferSize: 100000,
-			managerSize             : 8,
-			unloadStorageBuffer     : 900000,
-		};
+		if (this.colony.bunker) {
+			this.link = this.colony.bunker.anchor.findClosestByLimitedRange(colony.availableLinks, 1);
+			this.colony.linkNetwork.claimLink(this.link);
+			this.towers = this.colony.bunker.anchor.findInRange(colony.towers, 1);
+		} else {
+			this.link = this.pos.findClosestByLimitedRange(colony.availableLinks, 2);
+			this.colony.linkNetwork.claimLink(this.link);
+			this.towers = this.pos.findInRange(colony.towers, 3);
+		}
+		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetwork;
+		this.transportRequests = new TransportRequestGroup(); // commandCenter always gets its own request group
 		if (this.storage.isActive() && this.link && this.link.isActive()) {
 			this.overlord = new CommandCenterOverlord(this);
 		}
@@ -66,6 +61,9 @@ export class CommandCenter extends HiveCluster {
 
 	// Idle position
 	get idlePos(): RoomPosition {
+		if (this.colony.bunker) {
+			return this.colony.bunker.anchor;
+		}
 		if (!this.memory.idlePos || Game.time % 25 == 0) {
 			this.memory.idlePos = this.findIdlePos();
 		}
@@ -88,7 +86,7 @@ export class CommandCenter extends HiveCluster {
 	/* Register a link transfer store if the link is sufficiently full */
 	private registerLinkTransferRequests(): void {
 		if (this.link) {
-			if (this.link.energy > this.settings.linksTransmitAt) {
+			if (this.link.energy > CommandCenter.settings.linksTransmitAt) {
 				this.colony.linkNetwork.requestTransmit(this.link);
 			}
 		}
@@ -105,7 +103,7 @@ export class CommandCenter extends HiveCluster {
 			}
 		}
 		// Refill towers as needed with variable priority
-		let refillTowers = _.filter(this.towers, tower => tower.energy < this.settings.refillTowersBelow);
+		let refillTowers = _.filter(this.towers, tower => tower.energy < CommandCenter.settings.refillTowersBelow);
 		_.forEach(refillTowers, tower => this.transportRequests.requestInput(tower, Priority.High));
 		// Refill terminal if it is below threshold
 		if (this.terminal && this.terminal.energy < Energetics.settings.terminal.energy.inThreshold) {

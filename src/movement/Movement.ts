@@ -10,6 +10,7 @@ import {QueenSetup} from '../overlords/core/queen';
 import {TransporterSetup} from '../overlords/core/transporter';
 import {ManagerSetup} from '../overlords/core/manager';
 import {WorkerSetup} from '../overlords/core/worker';
+import {insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 
 export const NO_ACTION = -20;
 
@@ -49,6 +50,11 @@ export class Movement {
 			return ERR_TIRED;
 		}
 
+		_.defaults(options, {
+			ignoreCreeps: true,
+			range       : 1,
+		});
+
 		destination = normalizePos(destination);
 		Pathing.updateRoomStatus(creep.room);
 
@@ -61,16 +67,16 @@ export class Movement {
 		// manage case where creep is nearby destination
 		let rangeToDestination = creep.pos.getRangeTo(destination);
 		if (options.range && rangeToDestination <= options.range) {
+			delete creep.memory._go;
 			return NO_ACTION;
 		} else if (rangeToDestination <= 1) {
 			if (rangeToDestination == 1 && !options.range) {
 				let direction = creep.pos.getDirectionTo(destination);
-				if (options.returnData) {
-					options.returnData.nextPos = destination;
-					options.returnData.path = direction.toString();
+				if (destination.isWalkable()) {
+					return creep.move(direction);
 				}
-				return creep.move(direction);
 			}
+			delete creep.memory._go;
 			return NO_ACTION;
 		}
 
@@ -161,10 +167,6 @@ export class Movement {
 				color = 'red';
 			}
 
-			if (options.returnData) {
-				options.returnData.pathfinderReturn = ret;
-			}
-
 			this.circle(creep.pos, color);
 			moveData.path = Pathing.serializePath(creep.pos, ret.path, color);
 			state.stuckCount = 0;
@@ -182,16 +184,6 @@ export class Movement {
 		}
 
 		let nextDirection = parseInt(moveData.path[0], 10);
-		if (options.returnData) {
-			if (nextDirection) {
-				let nextPos = Pathing.positionAtDirection(creep.pos, nextDirection);
-				if (nextPos) {
-					options.returnData.nextPos = nextPos;
-				}
-			}
-			options.returnData.state = state;
-			options.returnData.path = moveData.path;
-		}
 		return creep.move(<DirectionConstant>nextDirection);
 	}
 
@@ -199,6 +191,11 @@ export class Movement {
 	static park(creep: Zerg, pos: RoomPosition = creep.pos, maintainDistance = false): number {
 		let road = creep.pos.lookForStructure(STRUCTURE_ROAD);
 		if (!road) return OK;
+
+		// Move out of the bunker if you're in it
+		if (creep.colony.bunker && insideBunkerBounds(creep.pos, creep.colony)) {
+			return this.goTo(creep, creep.colony.controller.pos);
+		}
 
 		let positions = _.sortBy(creep.pos.availableNeighbors(), (p: RoomPosition) => p.getRangeTo(pos));
 		if (maintainDistance) {
@@ -226,7 +223,7 @@ export class Movement {
 
 	/* Moves a creep off of the current tile to the first available neighbor */
 	static moveOffCurrentPos(creep: Zerg): ScreepsReturnCode | undefined {
-		let destinationPos = _.first(_.filter(creep.pos.availableNeighbors(), pos => !pos.isEdge));
+		let destinationPos = _.first(creep.pos.availableNeighbors());
 		if (destinationPos) {
 			return creep.move(creep.pos.getDirectionTo(destinationPos));
 		}
@@ -292,6 +289,7 @@ export class Movement {
 
 		let otherCreep = nextPos.lookFor(LOOK_CREEPS)[0];
 		if (!otherCreep || !otherCreep.memory || !otherCreep.my) return false;
+		otherCreep = Game.zerg[otherCreep.name];
 
 		let otherData = otherCreep.memory._go as MoveData | undefined;
 		let otherCreepIsMoving = otherData && otherData.path && otherData.path.length > 1;

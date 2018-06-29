@@ -122,12 +122,6 @@ RoomPosition.prototype.getPositionsAtRange = function (range: number,
 	return adjPos;
 };
 
-// Object.defineProperty(RoomPosition.prototype, 'adjacentSpots', {
-// 	get: function () {
-// 		return spots;
-// 	}
-// });
-
 RoomPosition.prototype.isWalkable = function (ignoreCreeps = false): boolean {
 	// Is terrain passable?
 	if (Game.map.getTerrainAt(this) == 'wall') return false;
@@ -218,7 +212,7 @@ RoomPosition.prototype.findClosestByLimitedRange = function <T>(objects: T[] | R
 	return this.findClosestByRange(objectsInRange, opts);
 };
 
-RoomPosition.prototype.findClosestByMultiRoomRange = function <T extends _HasRoomPosition>(objects: T[]): T {
+RoomPosition.prototype.findClosestByMultiRoomRange = function <T extends _HasRoomPosition>(objects: T[]): T | undefined {
 	return minBy(objects, (obj: T) => this.getMultiRoomRangeTo(obj.pos));
 };
 

@@ -5,7 +5,6 @@ interface MoveOptions {
 	avoidSK?: boolean;
 	range?: number;
 	obstacles?: RoomPosition[];
-	returnData?: TravelToReturnData;
 	restrictDistance?: number;
 	useFindRoute?: boolean;
 	maxOps?: number;
@@ -18,7 +17,6 @@ interface MoveOptions {
 	repath?: number;
 	route?: { [roomName: string]: boolean };
 	ensurePath?: boolean;
-	// pushy?: boolean;
 }
 
 interface MoveData {

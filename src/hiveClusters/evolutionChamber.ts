@@ -100,11 +100,12 @@ export class EvolutionChamber extends HiveCluster {
 		this.labReservations = {};
 		this.boostQueue = {};
 		this.neededBoosts = {};
-		// Evolution chamber shares a common request group with command center
-		if (this.colony.commandCenter) {
+		if (this.colony.commandCenter && this.colony.layout == 'twoPart') {
+			// in two-part layout, evolution chamber shares a common request group with command center
 			this.transportRequests = this.colony.commandCenter.transportRequests;
 		} else {
-			this.transportRequests = new TransportRequestGroup();
+			// otherwise (in bunker layout), it uses colony/hatchery transport requests
+			this.transportRequests = this.colony.transportRequests;
 		}
 	}
 

@@ -1,8 +1,6 @@
 import {profile} from './profiler/decorator';
 import {Colony} from './Colony';
 import {Overlord} from './overlords/Overlord';
-import {ManagerSetup} from './overlords/core/manager';
-import {QueenSetup} from './overlords/core/queen';
 import {initializeTask} from './tasks/initializer';
 import {Task} from './tasks/Task';
 import {Movement} from './movement/Movement';
@@ -427,13 +425,13 @@ export class Zerg {
 		return this.pos.roomName == target.pos.roomName;
 	}
 
-	getObstacles(): RoomPosition[] {
-		if (this.roleName == ManagerSetup.role || this.roleName == QueenSetup.role) {
-			return [];
-		} else {
-			return this.colony.obstacles;
-		}
-	}
+	// getObstacles(): RoomPosition[] {
+	// 	if (this.roleName == ManagerSetup.role || this.roleName == QueenSetup.role) {
+	// 		return [];
+	// 	} else {
+	// 		return this.colony.obstacles;
+	// 	}
+	// }
 
 	park(pos: RoomPosition = this.pos, maintainDistance = false): number {
 		return Movement.park(this, pos, maintainDistance);

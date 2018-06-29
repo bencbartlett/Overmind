@@ -75,7 +75,7 @@ export function derefCoords(coordName: string, roomName: string): RoomPosition {
 	return new RoomPosition(parseInt(x, 10), parseInt(y, 10), roomName);
 }
 
-export function minBy<T>(objects: T[], iteratee: ((obj: T) => number)): T {
+export function minBy<T>(objects: T[], iteratee: ((obj: T) => number)): T | undefined {
 	let minObj: T;
 	let minVal = Infinity;
 	for (let i in objects) {
@@ -87,7 +87,7 @@ export function minBy<T>(objects: T[], iteratee: ((obj: T) => number)): T {
 	return minObj!;
 }
 
-export function maxBy<T>(objects: T[], iteratee: ((obj: T) => number)): T {
+export function maxBy<T>(objects: T[], iteratee: ((obj: T) => number)): T | undefined {
 	let maxObj: T;
 	let maxVal = -Infinity;
 	for (let i in objects) {
@@ -114,3 +114,8 @@ export function logHeapStats(): void {
 export function isIVM(): boolean {
 	return typeof Game.cpu.getHeapStatistics === 'function';
 }
+
+export function getCacheExpiration(timeout: number, offset = 5): number {
+	return timeout + Math.round((Math.random() * offset * 2) - offset);
+}
+

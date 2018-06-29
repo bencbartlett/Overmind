@@ -6,14 +6,19 @@ import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {CreepSetup} from '../CreepSetup';
-import {EvolutionChamber} from '../../hiveClusters/evolutionChamber';
 import {StoreStructure} from '../../declarations/typeGuards';
 import {TransportRequestGroup} from '../../logistics/TransportRequestGroup';
 import {Energetics} from '../../logistics/Energetics';
+import {SpawnRequestOptions} from '../../hiveClusters/hatchery';
 
 export const ManagerSetup = new CreepSetup('manager', {
 	pattern  : [CARRY, CARRY, MOVE],
-	sizeLimit: 10,
+	sizeLimit: 8,
+});
+
+export const ManagerStationarySetup = new CreepSetup('manager', {
+	pattern  : [CARRY, CARRY],
+	sizeLimit: 8,
 });
 
 @profile
@@ -21,20 +26,26 @@ export class CommandCenterOverlord extends Overlord {
 
 	managers: Zerg[];
 	commandCenter: CommandCenter;
-	evolutionChamber: EvolutionChamber | undefined;
 	transportRequests: TransportRequestGroup;
 
 	constructor(commandCenter: CommandCenter, priority = OverlordPriority.spawning.commandCenter) {
 		super(commandCenter, 'manager', priority);
 		this.commandCenter = commandCenter;
 		this.transportRequests = this.commandCenter.transportRequests;
-		this.evolutionChamber = undefined; // This gets filled in during init()
 		this.managers = this.creeps(ManagerSetup.role);
 	}
 
 	init() {
-		this.evolutionChamber = this.colony.evolutionChamber;
-		this.wishlist(1, ManagerSetup);
+		let setup = ManagerSetup;
+		let spawnRequestOptions: SpawnRequestOptions = {};
+		if (this.colony.bunker && this.colony.bunker.coreSpawn && this.colony.level == 8) {
+			setup = ManagerStationarySetup;
+			spawnRequestOptions = {
+				spawn     : this.colony.bunker.coreSpawn,
+				directions: [this.colony.bunker.coreSpawn.pos.getDirectionTo(this.colony.bunker.anchor)]
+			};
+		}
+		this.wishlist(1, setup, {options: spawnRequestOptions});
 	}
 
 	private supplyActions(manager: Zerg) {
@@ -121,6 +132,13 @@ export class CommandCenterOverlord extends Overlord {
 				this.handleManagerDeath(manager);
 				return;
 			}
+		}
+		// Pickup any resources that happen to be dropped where you are
+		let resources = manager.pos.lookFor(LOOK_RESOURCES);
+		if (resources.length > 0) {
+			manager.task = Tasks.transferAll(this.commandCenter.storage || this.commandCenter.terminal)
+								.fork(Tasks.pickup(resources[0]));
+			return;
 		}
 		if (this.transportRequests.needsWithdrawing) {
 			if (_.sum(manager.carry) < manager.carryCapacity) {

@@ -16,7 +16,7 @@ import {initializeTask} from './initializer';
 import {profile} from '../profiler/decorator';
 import {Zerg} from '../Zerg';
 
-type targetType = { ref: string, pos: RoomPosition }; // overwrite this variable in derived classes to specify more precise typing
+type targetType = { ref: string, pos: protoPos }; // overwrite this variable in derived classes to specify more precise typing
 
 /* An abstract class for encapsulating creep actions. This generalizes the concept of "do action X to thing Y until
  * condition Z is met" and saves a lot of convoluted and duplicated code in creep logic. A Task object contains

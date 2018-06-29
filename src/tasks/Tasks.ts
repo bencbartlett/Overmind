@@ -1,3 +1,4 @@
+import {Task} from './Task';
 import {attackTargetType, TaskAttack} from './instances/attack';
 import {buildTargetType, TaskBuild} from './instances/build';
 import {claimTargetType, TaskClaim} from './instances/claim';
@@ -22,9 +23,30 @@ import {TaskWithdraw, withdrawTargetType} from './instances/withdraw';
 import {dropTargetType, TaskDrop} from './instances/drop';
 import {profile} from '../profiler/decorator';
 import {TaskWithdrawAll, withdrawAllTargetType} from './instances/withdrawAll';
+import {log} from '../console/log';
+import {TaskInvalid} from './instances/invalid';
 
 @profile
 export class Tasks {
+
+	static chain(tasks: Task[], setNextPos = true): Task {
+		if (tasks.length == 0) {
+			log.error(`Tasks.chain was passed an empty array of tasks!`);
+			return new TaskInvalid();
+		}
+		if (setNextPos) {
+			for (let i = 0; i < tasks.length - 1; i++) {
+				tasks[i].options.nextPos = tasks[i + 1].targetPos;
+			}
+		}
+		// Make the accumulator task from the end and iteratively fork it
+		let task = _.last(tasks); // start with last task
+		tasks = _.dropRight(tasks); // remove it from the list
+		for (let i = (tasks.length - 1); i >= 0; i--) { // iterate over the remaining tasks
+			task = task.fork(tasks[i]);
+		}
+		return task;
+	}
 
 	static attack(target: attackTargetType, options = {} as TaskOptions): TaskAttack {
 		return new TaskAttack(target, options);
@@ -112,8 +134,10 @@ export class Tasks {
 		return new TaskTransfer(target, resourceType, amount, options);
 	}
 
-	static transferAll(target: transferAllTargetType, options = {} as TaskOptions): TaskTransferAll {
-		return new TaskTransferAll(target, options);
+	static transferAll(target: transferAllTargetType,
+					   skipEnergy = false,
+					   options    = {} as TaskOptions): TaskTransferAll {
+		return new TaskTransferAll(target, skipEnergy, options);
 	}
 
 	static upgrade(target: upgradeTargetType, options = {} as TaskOptions): TaskUpgrade {

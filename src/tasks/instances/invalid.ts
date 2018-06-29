@@ -3,12 +3,22 @@
 import {Task} from '../Task';
 import {profile} from '../../profiler/decorator';
 
+const invalidTarget = {
+	ref: '',
+	pos: {
+		x       : 25,
+		y       : 25,
+		roomName: 'W6N1',
+	}
+};
+
 @profile
 export class TaskInvalid extends Task {
 	target: any;
 
-	constructor(target: any, options = {} as TaskOptions) {
-		super('INVALID', target, options);
+	constructor() {
+		super('INVALID', invalidTarget);
+
 	}
 
 	isValidTask() {

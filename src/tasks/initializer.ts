@@ -65,7 +65,7 @@ export function initializeTask(protoTask: protoTask): Task {
 			break;
 		case goToTaskName:
 			// task = new TaskGoTo(derefRoomPosition(protoTask._target._pos) as goToTargetType);
-			task = new TaskInvalid(target as any);
+			task = new TaskInvalid();
 			break;
 		case goToRoomTaskName:
 			task = new TaskGoToRoom(protoTask._target._pos.roomName as goToRoomTargetType);
@@ -111,7 +111,7 @@ export function initializeTask(protoTask: protoTask): Task {
 			break;
 		default:
 			log.error(`Invalid task name: ${taskName}! task.creep: ${protoTask._creep.name}. Deleting from memory!`);
-			task = new TaskInvalid(target as any);
+			task = new TaskInvalid();
 			break;
 	}
 	// Modify the task object to reflect any changed properties

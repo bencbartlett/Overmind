@@ -4,6 +4,8 @@ declare var global: any;
 declare namespace NodeJS {
 	interface Global {
 
+		_cache: IGlobalCache;
+
 		__VERSION__: string;
 
 		Overmind: IOvermind;
@@ -28,14 +30,15 @@ interface Game {
 }
 
 
+interface IGlobalCache {
+	accessed: { [key: string]: number };
+	expiration: { [key: string]: number };
+	structures: { [key: string]: Structure[] };
+}
+
 interface ICache {
 	overlords: { [overlord: string]: { [roleName: string]: string[] } };
 	targets: { [ref: string]: string[] };
-	// structures: { [roomName: string]: { [structureType: string]: Structure[] } };
-	// constructionSites: { [roomName: string]: ConstructionSite[] };
-	// // structureSites: { [roomName: string]: ConstructionSite[] };
-	// // roadSites: { [roomName: string]: ConstructionSite[] };
-	// drops: { [roomName: string]: { [resourceType: string]: Resource[] } };
 
 	build(): void;
 
@@ -106,6 +109,10 @@ interface ITradeNetwork {
 }
 
 declare var Overmind: IOvermind;
+
+declare var _cache: IGlobalCache;
+
+declare function print(...args: any[]): void;
 
 interface Coord {
 	x: number;

@@ -1,10 +1,10 @@
 // Intra- and inter-tick structure caching, adapted from semperRabbit's IVM module
 
+
+import {getCacheExpiration} from '../utilities/utils';
+
 var roomStructureIDs: { [roomName: string]: { [structureType: string]: string[] } } = {};
 var roomStructuresExpiration: { [roomName: string]: number } = {};
-
-const CACHE_TIMEOUT = 50;
-const CACHE_OFFSET = 4;
 
 const multipleList = [
 	STRUCTURE_SPAWN, STRUCTURE_EXTENSION, STRUCTURE_ROAD, STRUCTURE_WALL,
@@ -19,16 +19,12 @@ const singleList = [
 
 const notRepairable: string[] = [STRUCTURE_KEEPER_LAIR, STRUCTURE_PORTAL, STRUCTURE_POWER_BANK];
 
-function getCacheExpiration() {
-	return CACHE_TIMEOUT + Math.round((Math.random() * CACHE_OFFSET * 2) - CACHE_OFFSET);
-}
-
 Room.prototype._refreshStructureCache = function () {
 	// if cache is expired or doesn't exist
 	if (!roomStructuresExpiration[this.name]
 		|| !roomStructureIDs[this.name]
 		|| roomStructuresExpiration[this.name] < Game.time) {
-		roomStructuresExpiration[this.name] = Game.time + getCacheExpiration();
+		roomStructuresExpiration[this.name] = Game.time + getCacheExpiration(50);
 		roomStructureIDs[this.name] = _.mapValues(_.groupBy(this.find(FIND_STRUCTURES),
 															(s: Structure) => s.structureType),
 												  (structures: Structure[]) => _.map(structures, s => s.id));

@@ -28,10 +28,14 @@ export class TransportRequestGroup {
 
 	supply: { [priority: number]: TransportRequest[] };
 	withdraw: { [priority: number]: TransportRequest[] };
+	supplyByID: { [id: string]: TransportRequest[] };
+	withdrawByID: { [id: string]: TransportRequest[] };
 
 	constructor() {
 		this.supply = blankPriorityQueue();
 		this.withdraw = blankPriorityQueue();
+		this.supplyByID = {};
+		this.withdrawByID = {};
 	}
 
 	get needsSupplying(): boolean {
@@ -66,7 +70,7 @@ export class TransportRequestGroup {
 				} else {
 					searchRequests = requests[priority];
 				}
-				return _.find(searchRequests, request => request.target.ref == target.ref);
+				return _.find(searchRequests, request => request.target.ref == target!.ref);
 			}
 		}
 	}
@@ -87,6 +91,8 @@ export class TransportRequestGroup {
 		};
 		if (opts.amount > 0) {
 			this.supply[priority].push(req);
+			if (!this.supplyByID[target.id]) this.supplyByID[target.id] = [];
+			this.supplyByID[target.id].push(req);
 		}
 	}
 
@@ -106,19 +112,21 @@ export class TransportRequestGroup {
 		};
 		if (opts.amount > 0) {
 			this.withdraw[priority].push(req);
+			if (!this.withdrawByID[target.id]) this.withdrawByID[target.id] = [];
+			this.withdrawByID[target.id].push(req);
 		}
 	}
 
-	/* Makes a provide for every resourceType in a requestor object */
-	requestOutputAll(target: StoreStructure, priority = Priority.Normal, opts = {} as TransportRequestOptions): void {
-		for (let resourceType in target.store) {
-			let amount = target.store[<ResourceConstant>resourceType] || 0;
-			if (amount > 0) {
-				opts.resourceType = <ResourceConstant>resourceType;
-				this.requestOutput(target, priority, opts);
-			}
-		}
-	}
+	// /* Makes a provide for every resourceType in a requestor object */
+	// requestOutputAll(target: StoreStructure, priority = Priority.Normal, opts = {} as TransportRequestOptions): void {
+	// 	for (let resourceType in target.store) {
+	// 		let amount = target.store[<ResourceConstant>resourceType] || 0;
+	// 		if (amount > 0) {
+	// 			opts.resourceType = <ResourceConstant>resourceType;
+	// 			this.requestOutput(target, priority, opts);
+	// 		}
+	// 	}
+	// }
 
 	private getInputAmount(target: TransportRequestTarget, resourceType: ResourceConstant): number {
 		if (isStoreStructure(target)) {

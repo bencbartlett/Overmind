@@ -48,6 +48,12 @@ Mem.format();
 OvermindConsole.init();
 VersionMigration.run();
 
+global._cache = {
+	accessed  : {},
+	expiration: {},
+	structures: {},
+};
+
 // Main loop
 function main(): void {
 	if (!isIVM()) {

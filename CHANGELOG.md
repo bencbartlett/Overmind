@@ -4,18 +4,28 @@ All notable changes to this project will be documented in this file. The format 
 ## [Unreleased]
 
 ### Added
-- Added the `Movement` library, which will replace Traveler as the default method of moving creeps around in Overmind
+- Added the `Movement` library, which replaces Traveler as the default method of moving creeps around in Overmind
+- Added `SpawnGroup`s, which allow for decentralized creep spawning distributed among nearby colonies
 - Room planner updates:
     - Room planner will now destroy or dismantle incorrectly-placed structures allowing you to change your room plan after it is built
     - Finished support for bunkers
+- New `BunkerQueen` overlord which has a lot of hard-coded optimizations built specifically for the bunker layout
+- Added terminal exception states to account for various abnormal conditions, such as rebuilding a room or evacuating a room which is about to be breached. Terminals that are in an exception state will maintain a small, tightly controlled set of resources in their store and will not engage in normal terminal activity.
 
 ### Changed
+- Managers are now stationary (CARRY only) at RCL8 in the bunker layout
+- Refactored Hatchery spawning code to allow for greater flexibility in spawning creeps, such as requesting a specific spawn (useful for spawning the now-stationary manager)
+- Refactored incubation logic to use the new `SpawnGroup` objects. Colonies no longer have `incubator` or `incubatingColonies` properties.
 - Logistics network improvements:
     - `LogisticsNetwork.requestOutputAll()` has been replaced by `requestOutput({resourceType: 'all'})` and now generates a single request for the sum amount of all resourceTypes in the target. This improves performance and CPU cost.
     - Added cache invalidation methods to fix an issue where too many transporters could be assigned to the same logistics target during a single tick
     - Dropped resources and tombstones now directly request collection from the logistics network rather than using a logistics directive
     - Changed order of operations in `predictedRequestAmount` to yield more accurate results when near target store/energy capacity
 - Workers now include dropped energy in list of objects they can recharge from and pick their recharge target more intelligently, accounting for other targeting workers
+- Improvements to room planner demolishing behavior:
+    - Added some safeguards on destroying misplaced spawns to ensure that there are enough workers to rebuild the spawns
+    - Room planner is now better at detecting gridlocked situations and will destroy structures as needed to make room for construction sites
+- Moved `generateProtoCreep` from `Overlord.ts` to `Hatchery.ts`
 
 ### Fixed
 - Fixed a bug where mining sites could get clogged if invaders died on the container outputs and dropped minerals which would not get withdrawn

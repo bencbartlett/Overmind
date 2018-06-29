@@ -12,7 +12,7 @@ import {isResource} from '../../declarations/typeGuards';
 
 export const QueenSetup = new CreepSetup('queen', {
 	pattern  : [CARRY, CARRY, MOVE],
-	sizeLimit: 8,
+	sizeLimit: Infinity,
 });
 
 type rechargeObjectType = StructureStorage
@@ -23,16 +23,14 @@ type rechargeObjectType = StructureStorage
 	| Resource;
 
 @profile
-export class HatcheryOverlord extends Overlord {
+export class QueenOverlord extends Overlord {
 
 	hatchery: Hatchery;
 	queens: Zerg[];
 	settings: any;
 
-	// private _prioritizedRefills: { [priority: number]: TransportRequest[] };
-
 	constructor(hatchery: Hatchery, priority = OverlordPriority.spawning.hatchery) {
-		super(hatchery, 'hatchery', priority);
+		super(hatchery, 'supply', priority);
 		this.hatchery = hatchery;
 		this.queens = this.creeps(QueenSetup.role);
 		this.settings = {
@@ -42,9 +40,6 @@ export class HatcheryOverlord extends Overlord {
 
 	init() {
 		let amount = 1;
-		// if (this.colony.defcon > DEFCON.invasionNPC) {
-		// 	amount = 2;
-		// }
 		this.wishlist(amount, QueenSetup);
 	}
 

@@ -28,7 +28,6 @@ export class Stats {
 		// 	gcl: {},
 		// 	colonies: {},
 		// }
-
 	}
 
 	static cpu() {

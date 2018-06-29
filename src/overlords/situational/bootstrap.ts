@@ -7,6 +7,7 @@ import {Zerg} from '../../Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
+import {SpawnRequest} from '../../hiveClusters/hatchery';
 
 export const EmergencyMinerSetup = new CreepSetup('drone', {
 	pattern  : [WORK, WORK, CARRY, MOVE],
@@ -63,10 +64,13 @@ export class BootstrappingOverlord extends Overlord {
 												  creep => creep.getActiveBodyparts(WORK)));
 			if (miningPowerAssigned < overlord.miningSite.miningPowerNeeded &&
 				filteredMiners.length < overlord.miningSite.pos.availableNeighbors().length) {
-				let protoCreep = this.generateProtoCreep(EmergencyMinerSetup);
-				protoCreep.memory.overlord = overlord.ref; // Donate the miner to the miningSite
 				if (this.colony.hatchery) {
-					this.colony.hatchery.enqueue(protoCreep, this.priority + 1);
+					let request: SpawnRequest = {
+						setup   : EmergencyMinerSetup,
+						overlord: overlord,
+						priority: this.priority + 1,
+					};
+					this.colony.hatchery.enqueue(request);
 				}
 			}
 		}

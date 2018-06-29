@@ -84,7 +84,7 @@ export class RoadPlanner {
 			ignoreCreeps: true,
 			ensurePath  : true,
 			range       : 1,
-			offRoad     : true,
+			direct      : true,
 			avoidSK     : false,
 		});
 

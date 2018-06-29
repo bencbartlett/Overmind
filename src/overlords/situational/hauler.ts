@@ -41,7 +41,7 @@ export class HaulingOverlord extends Overlord {
 		let haulingPowerNeeded = Math.min(this.directive.totalResources,
 			this.colony.storage.storeCapacity - _.sum(this.colony.storage.store)) * tripDistance;
 		// Calculate amount of hauling each hauler provides in a lifetime
-		let haulerCarryParts = _.filter(this.generateProtoCreep(HaulerSetup).body, part => part == CARRY).length;
+		let haulerCarryParts = HaulerSetup.getBodyPotential(CARRY, this.colony);
 		let haulingPowerPerLifetime = CREEP_LIFE_TIME * haulerCarryParts * CARRY_CAPACITY;
 		// Calculate number of haulers
 		let numHaulers = Math.min(Math.ceil(haulingPowerNeeded / haulingPowerPerLifetime), MAX_HAULERS);

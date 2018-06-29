@@ -72,7 +72,7 @@ export class MiningSite extends HiveCluster {
 	}
 
 	get memory(): MiningSiteMemory {
-		return Mem.wrap(this.colony.memory, this.name);
+		return Mem.wrap(this.colony.memory, this.ref);
 	}
 
 	private stats() {

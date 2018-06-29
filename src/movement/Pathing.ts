@@ -86,6 +86,28 @@ export class Pathing {
 		return ret;
 	}
 
+	/* Returns the shortest path from start to end position, regardless of (passable) terrain */
+	static findShortestPath(startPos: RoomPosition, endPos: RoomPosition,
+							options: MoveOptions = {}): PathFinderPath {
+		_.defaults(options, {
+			ignoreCreeps: true,
+			range       : 1,
+			direct      : true,
+			allowSK     : true,
+		});
+		let ret = this.findPath(startPos, endPos, options);
+		if (ret.incomplete) log.alert(`Pathing: incomplete path from ${startPos.print} to ${endPos.print}!`);
+		return ret;
+	}
+
+	/* Returns the shortest path from start to end position, regardless of (passable) terrain */
+	static findPathToRoom(startPos: RoomPosition, roomName: string, options: MoveOptions = {}): PathFinderPath {
+		options.range = 23;
+		let ret = this.findPath(startPos, new RoomPosition(25, 25, roomName), options);
+		if (ret.incomplete) log.alert(`Pathing: incomplete path from ${startPos.print} to ${roomName}!`);
+		return ret;
+	}
+
 	private static roomCallback(roomName: string, origin: RoomPosition, destination: RoomPosition,
 								allowedRooms: { [roomName: string]: boolean } | undefined,
 								options: MoveOptions): CostMatrix | boolean {
@@ -191,9 +213,26 @@ export class Pathing {
 	/* Find a viable sequence of rooms to narrow down Pathfinder algorithm */
 	static findRoute(origin: string, destination: string,
 					 options: MoveOptions = {}): { [roomName: string]: boolean } | undefined {
-		let restrictDistance = options.restrictDistance || Game.map.getRoomLinearDistance(origin, destination) + 10;
+		let linearDistance = Game.map.getRoomLinearDistance(origin, destination);
+		let restrictDistance = options.restrictDistance || linearDistance + 10;
 		let allowedRooms = {[origin]: true, [destination]: true};
-		let highwayBias = options.preferHighway ? 2.5 : 1;
+
+		// Determine whether to use highway bias
+		let highwayBias = 1;
+		if (options.preferHighway) {
+			highwayBias = 2.5;
+		} else if (options.preferHighway != false) {
+			if (linearDistance > 8) {
+				highwayBias = 2.5;
+			} else {
+				let oCoords = WorldMap.getRoomCoordinates(origin);
+				let dCoords = WorldMap.getRoomCoordinates(destination);
+				if (_.any([oCoords.x, oCoords.y, dCoords.x, dCoords.y], z => z % 10 <= 1 || z % 10 >= 9)) {
+					highwayBias = 2.5;
+				}
+			}
+
+		}
 
 		let ret = Game.map.findRoute(origin, destination, {
 			routeCallback: (roomName: string) => {
@@ -205,12 +244,9 @@ export class Pathing {
 					roomName !== destination && roomName !== origin) { // room is marked as "avoid" in room memory
 					return Number.POSITIVE_INFINITY;
 				}
-
-				let parsed;
 				if (options.preferHighway && WorldMap.roomType(roomName) == ROOMTYPE_ALLEY) {
 					return 1;
 				}
-
 				return highwayBias;
 			},
 		});
@@ -346,26 +382,12 @@ export class Pathing {
 		return Memory.pathing.weightedDistances[pos1.name][pos2.name];
 	}
 
-	/* Returns the shortest path from start to end position, regardless of (passable) terrain */
-	static findShortestPath(startPos: RoomPosition, endPos: RoomPosition,
-							options: MoveOptions = {}): PathFinderPath {
-		_.defaults(options, {
-			ignoreCreeps: true,
-			range       : 1,
-			offRoad     : true,
-			allowSK     : true,
-		});
-		let ret = this.findPath(startPos, endPos, options);
-		if (ret.incomplete) log.alert(`Pathing: incomplete path from ${startPos.print} to ${endPos.print}!`);
-		return ret;
-	}
-
 	/* Whether another object in the same room can be reached from the current position */
 	static isReachable(startPos: RoomPosition, endPos: RoomPosition, options: MoveOptions = {}): boolean {
 		_.defaults(options, {
 			ignoreCreeps: false,
 			range       : 1,
-			offRoad     : true,
+			direct      : true,
 			allowSK     : true,
 			allowHostile: true,
 			maxRooms    : 1,

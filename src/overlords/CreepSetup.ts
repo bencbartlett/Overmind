@@ -90,7 +90,10 @@ export class CreepSetup {
 	}
 
 	getBodyPotential(partType: BodyPartConstant, colony: Colony): number {
-		let body = this.generateBody(colony.room.energyCapacityAvailable);
+		// let energyCapacity = Math.max(colony.room.energyCapacityAvailable,
+		// 							  colony.incubator ? colony.incubator.room.energyCapacityAvailable : 0);
+		let energyCapacity = colony.room.energyCapacityAvailable;
+		let body = this.generateBody(energyCapacity);
 		return _.filter(body, (part: BodyPartConstant) => part == partType).length;
 	}
 

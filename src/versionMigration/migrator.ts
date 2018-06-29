@@ -90,6 +90,9 @@ export class VersionMigration {
 				let hcName = Memory.creeps[i].overlord!.split('@')[0];
 				if (migrateClusterNames.includes(hcName)) {
 					let overlordName = _.last(Memory.creeps[i].overlord!.split(':'));
+					if (overlordName == 'hatchery') {
+						overlordName = 'supply';
+					}
 					let colonyName = Memory.creeps[i].colony;
 					Memory.creeps[i].overlord = hcName + '@' + colonyName + ':' + overlordName;
 				}

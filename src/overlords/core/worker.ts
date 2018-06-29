@@ -8,6 +8,7 @@ import {CreepSetup} from '../CreepSetup';
 import {BuildPriorities} from '../../priorities/priorities_structures';
 import {maxBy, minMax} from '../../utilities/utils';
 import {isResource} from '../../declarations/typeGuards';
+import {GlobalCache} from '../../caching';
 
 export const WorkerSetup = new CreepSetup('worker', {
 	pattern  : [WORK, CARRY, MOVE],
@@ -57,10 +58,11 @@ export class WorkerOverlord extends Overlord {
 		this.workers = this.creeps(WorkerSetup.role);
 		this.rechargeObjects = [];
 		// Fortification structures
-		this.fortifyStructures = _.sortBy(_.filter(this.room.barriers, s =>
-			s.hits < WorkerOverlord.settings.barrierHits[this.colony.level]
-			&& this.colony.roomPlanner.barrierPlanner.barrierShouldBeHere(s.pos)
-		), s => s.hits);
+		this.fortifyStructures = GlobalCache.structures(this, 'fortifyStructures', () =>
+			_.sortBy(_.filter(this.room.barriers, s =>
+				s.hits < WorkerOverlord.settings.barrierHits[this.colony.level]
+				&& this.colony.roomPlanner.barrierPlanner.barrierShouldBeHere(s.pos)
+			), s => s.hits));
 		// Generate a list of structures needing repairing (different from fortifying except in critical case)
 		this.repairStructures = _.filter(this.colony.repairables, function (structure) {
 			if (structure.structureType == STRUCTURE_CONTAINER) {
@@ -120,7 +122,7 @@ export class WorkerOverlord extends Overlord {
 			return;
 		}
 		let setup = this.colony.stage == ColonyStage.Larva ? WorkerEarlySetup : WorkerSetup;
-		let workPartsPerWorker = _.filter(this.generateProtoCreep(setup).body, part => part == WORK).length;
+		let workPartsPerWorker = setup.getBodyPotential(WORK, this.colony);
 		if (this.colony.stage == ColonyStage.Larva) {
 			// At lower levels, try to saturate the energy throughput of the colony
 			const MAX_WORKERS = 7; // Maximum number of workers to spawn
@@ -132,7 +134,7 @@ export class WorkerOverlord extends Overlord {
 		} else {
 			// At higher levels, spawn workers based on construction and repair that needs to be done
 			if (this.colony.roomPlanner.memory.relocating) {
-				const RELOCATE_MAX_WORKERS = 6;
+				const RELOCATE_MAX_WORKERS = 5;
 				this.wishlist(RELOCATE_MAX_WORKERS, setup);
 			}
 			const MAX_WORKERS = 3; // Maximum number of workers to spawn
@@ -186,7 +188,7 @@ export class WorkerOverlord extends Overlord {
 		let target = worker.pos.findClosestByMultiRoomRange(this.colony.roadLogistics.repairableRoads(roomToRepave));
 		if (target) {
 			let nextTarget = target.pos.findClosestByRange(this.colony.roadLogistics.repairableRoads(roomToRepave), {
-				filter: (nextTarg: StructureRoad) => nextTarg.ref != target.ref
+				filter: (nextTarg: StructureRoad) => nextTarg.ref != target!.ref
 			}) as StructureRoad | undefined;
 			if (nextTarget) {
 				worker.task = Tasks.repair(target, {nextPos: nextTarget.pos});

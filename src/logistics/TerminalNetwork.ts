@@ -333,6 +333,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 					continue;
 				}
 				let receiver = minBy(this.terminals, t => _.sum(t.store));
+				if (!receiver) return;
 				let sendAmount: number;
 				if (resourceType == RESOURCE_ENERGY) {
 					let cost = Game.market.calcTransactionCost(amount, terminal.room.name, receiver.room.name);
@@ -350,11 +351,12 @@ export class TerminalNetwork implements ITerminalNetwork {
 			// Request needed resources from most plentiful colony
 			else if (amount < targetAmount - state.tolerance) {
 				let sender = maxBy(this.readyTerminals, t => _.sum(t.store));
+				if (!sender) return;
 				let receiveAmount = minMax(targetAmount - amount, TERMINAL_MIN_SEND,
 																  this.settings.equalize.maxSendSize);
 				if (sender && (sender.store[resourceType] || 0) > TERMINAL_MIN_SEND) {
 					this.transfer(sender, terminal, resourceType, receiveAmount);
-					_.remove(this.readyTerminals, t => t.ref == sender.ref);
+					_.remove(this.readyTerminals, t => t.ref == sender!.ref);
 					return;
 				}
 			}

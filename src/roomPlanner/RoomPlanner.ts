@@ -7,7 +7,7 @@ import {log} from '../console/log';
 import {Visualizer} from '../visuals/Visualizer';
 import {profile} from '../profiler/decorator';
 import {Mem} from '../Memory';
-import {Colony} from '../Colony';
+import {Colony, getAllColonies} from '../Colony';
 import {RoadPlanner} from './RoadPlanner';
 import {BarrierPlanner} from './BarrierPlanner';
 import {BuildPriorities, DemolishStructurePriorities} from '../priorities/priorities_structures';
@@ -494,6 +494,9 @@ export class RoomPlanner {
 
 	/* Create construction sites for any buildings that need to be built */
 	private demolishMisplacedStructures(skipBarriers = true): void {
+		if (getAllColonies().length <= 1 && !this.colony.storage) {
+			return; // Not safe to move structures until you have multiple colonies or a storage
+		}
 		// Start terminal evacuation if it needs to be moved
 		if (this.colony.terminal) {
 			if (this.colony.storage && !this.structureShouldBeHere(STRUCTURE_STORAGE, this.colony.storage.pos)
@@ -546,6 +549,22 @@ export class RoomPlanner {
 								// this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
 							}
 						} else {
+							if (structureType == STRUCTURE_SPAWN && this.colony.spawns.length == 1) {
+								let spawnCost = 15000;
+								if (this.colony.assets[RESOURCE_ENERGY] < spawnCost) {
+									log.warning(`Unsafe to destroy misplaced spawn: ` +
+												`${this.colony.assets[RESOURCE_ENERGY]}/${spawnCost} energy available`);
+									return;
+								}
+								let workTicksNeeded = 15000 / BUILD_POWER;
+								let workTicksAvailable = _.sum(this.colony.overlords.work.workers, worker =>
+									worker.getActiveBodyparts(WORK) * (worker.ticksToLive || 0));
+								if (workTicksAvailable < workTicksNeeded) {
+									log.warning(`Unsafe to destroy misplaced spawn: ` +
+												`${workTicksAvailable}/${workTicksNeeded} [WORK * ticks] available`);
+									return;
+								}
+							}
 							let result = structure.destroy();
 							if (result != OK) {
 								log.warning(`${this.colony.name}: couldn't destroy structure of type ` +
@@ -584,6 +603,26 @@ export class RoomPlanner {
 					if (count > 0 && RoomPlanner.canBuild(structureType, pos)) {
 						let result = pos.createConstructionSite(structureType);
 						if (result != OK) {
+							if (result == ERR_INVALID_TARGET) { // something is in the way
+								let structures = pos.lookFor(LOOK_STRUCTURES);
+								for (let structure of structures) {
+									let thisImportance = _.findIndex(BuildPriorities, type => type == structureType);
+									let existingImportance = _.findIndex(BuildPriorities,
+																		 type => type == structure.structureType);
+									let safeTypes: string[] = [STRUCTURE_SPAWN, STRUCTURE_STORAGE, STRUCTURE_TERMINAL];
+									// Destroy the structure if it is less important and not protected
+									if (thisImportance > existingImportance
+										&& !safeTypes.includes(structure.structureType)) {
+										let result = structure.destroy();
+										log.info(`${this.colony.name}: destroyed ${structure.structureType} at` +
+												 ` ${structure.pos.print}`);
+										if (result == OK) {
+											this.memory.recheckStructuresAt = Game.time +
+																			  RoomPlanner.settings.recheckAfter;
+										}
+									}
+								}
+							}
 							log.warning(`${this.colony.name}: couldn't create construction site of type ` +
 										`"${structureType}" at ${pos.print}. Result: ${result}`);
 						} else {
