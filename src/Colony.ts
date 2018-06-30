@@ -26,7 +26,7 @@ import {ExtractionSite} from './hiveClusters/extractionSite';
 import {TransportRequestGroup} from './logistics/TransportRequestGroup';
 import {SpawnGroup} from './logistics/SpawnGroup';
 import {bunkerLayout, getPosFromBunkerCoord} from './roomPlanner/layouts/bunker';
-import {Mem} from './memory';
+import {Mem} from './Memory';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator

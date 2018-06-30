@@ -2,7 +2,7 @@
 // incubation, spawning large combat groups, etc.
 
 import {Hatchery, SpawnRequest} from '../hiveClusters/hatchery';
-import {Mem} from '../memory';
+import {Mem} from '../Memory';
 import {getCacheExpiration, minBy} from '../utilities/utils';
 import {Colony, getAllColonies} from '../Colony';
 import {Pathing} from '../movement/Pathing';
