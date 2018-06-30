@@ -1,5 +1,5 @@
 import {Overlord} from '../Overlord';
-import {Zerg} from '../../Zerg';
+import {Zerg} from '../../zerg/_Zerg';
 import {DirectiveOutpost} from '../../directives/core/outpost';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -21,7 +21,7 @@ export class ReservingOverlord extends Overlord {
 		super(directive, 'reserve', priority);
 		// Change priority to operate per-outpost
 		this.priority += this.outpostIndex * OverlordPriority.remoteRoom.roomIncrement;
-		this.reservers = this.creeps(ReserverSetup.role);
+		this.reservers = this.zerg(ReserverSetup.role);
 		this.reserveBuffer = 3000;
 	}
 

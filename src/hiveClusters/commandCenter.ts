@@ -24,6 +24,7 @@ export class CommandCenter extends HiveCluster {
 	terminalNetwork: TerminalNetwork;						// Reference to Overmind.terminalNetwork
 	towers: StructureTower[];								// Towers within range 3 of storage are part of cmdCenter
 	powerSpawn: StructurePowerSpawn | undefined;			// Colony Power Spawn
+	coreSpawn: StructureSpawn | undefined;					// Central spawn
 	nuker: StructureNuker | undefined;						// Colony nuker
 	observer: StructureObserver | undefined;				// Colony observer
 	transportRequests: TransportRequestGroup;				// Box for energy requests
@@ -47,6 +48,7 @@ export class CommandCenter extends HiveCluster {
 			this.link = this.colony.bunker.anchor.findClosestByLimitedRange(colony.availableLinks, 1);
 			this.colony.linkNetwork.claimLink(this.link);
 			this.towers = this.colony.bunker.anchor.findInRange(colony.towers, 1);
+			this.coreSpawn = this.colony.bunker.coreSpawn;
 		} else {
 			this.link = this.pos.findClosestByLimitedRange(colony.availableLinks, 2);
 			this.colony.linkNetwork.claimLink(this.link);
@@ -110,8 +112,12 @@ export class CommandCenter extends HiveCluster {
 			this.transportRequests.requestInput(this.terminal, Priority.NormalHigh);
 		}
 		// Refill power spawn
+		if (this.coreSpawn && this.coreSpawn.energy < this.coreSpawn.energyCapacity) {
+			this.transportRequests.requestInput(this.coreSpawn, Priority.Normal);
+		}
+		// Refill power spawn
 		if (this.powerSpawn && this.powerSpawn.energy < this.powerSpawn.energyCapacity) {
-			this.transportRequests.requestInput(this.powerSpawn, Priority.Normal);
+			this.transportRequests.requestInput(this.powerSpawn, Priority.NormalLow);
 		}
 		// Refill nuker with low priority
 		if (this.nuker && this.nuker.energy < this.nuker.energyCapacity && this.storage.energy > 100000) {

@@ -1,13 +1,14 @@
 // Destroyer overlord - spawns attacker/healer pairs for sustained combat
 
-import {Zerg} from '../../Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/siegeTarget';
-import {CombatOverlord} from '../CombatOverlord';
 import {CreepSetup} from '../CreepSetup';
 import {profile} from '../../profiler/decorator';
 import {DirectiveGuard} from '../../directives/defense/guard';
 import {Movement} from '../../movement/Movement';
+import {Overlord} from '../Overlord';
+import {CombatZerg} from '../../zerg/CombatZerg';
+import {CombatTargeting} from '../../targeting/CombatTargeting';
 
 export class AttackerSetup extends CreepSetup {
 	static role = 'attacker';
@@ -34,10 +35,11 @@ export class HealerSetup extends CreepSetup {
 }
 
 @profile
-export class GuardPairOverlord extends CombatOverlord {
+export class GuardPairOverlord extends Overlord {
 
-	attackers: Zerg[];
-	healers: Zerg[];
+	directive: DirectiveGuard;
+	attackers: CombatZerg[];
+	healers: CombatZerg[];
 
 	static settings = {
 		retreatHitsPercent : 0.50,
@@ -46,8 +48,9 @@ export class GuardPairOverlord extends CombatOverlord {
 
 	constructor(directive: DirectiveGuard, priority = OverlordPriority.defense.guard) {
 		super(directive, 'guardPair', priority);
-		this.attackers = this.creeps(AttackerSetup.role);
-		this.healers = this.creeps(HealerSetup.role);
+		this.directive = directive;
+		this.attackers = _.map(this.creeps(AttackerSetup.role), creep => new CombatZerg(creep));
+		this.healers = _.map(this.creeps(HealerSetup.role), creep => new CombatZerg(creep));
 		// Comment out boost lines if you don't want to spawn boosted attackers/healers
 		// this.boosts.attacker = [
 		// 	boostResources.attack[3],
@@ -59,26 +62,26 @@ export class GuardPairOverlord extends CombatOverlord {
 		// ];
 	}
 
-	private findTarget(attacker: Zerg): Creep | Structure | undefined {
+	private findTarget(attacker: CombatZerg): Creep | Structure | undefined {
 		if (this.room) {
 			// Prioritize specifically targeted structures first
 			let targetingDirectives = DirectiveTargetSiege.find(this.room.flags) as DirectiveTargetSiege[];
 			let targetedStructures = _.compact(_.map(targetingDirectives,
 													 directive => directive.getTarget())) as Structure[];
 			if (targetedStructures.length > 0) {
-				return this.findClosestReachable(attacker.pos, targetedStructures);
+				return CombatTargeting.findClosestReachable(attacker.pos, targetedStructures);
 			} else {
 				// Target nearby hostile creeps
-				let creepTarget = this.findClosestHostile(attacker, true);
+				let creepTarget = CombatTargeting.findClosestHostile(attacker, true);
 				if (creepTarget) return creepTarget;
 				// Target nearby hostile structures
-				let structureTarget = this.findClosestPrioritizedStructure(attacker);
+				let structureTarget = CombatTargeting.findClosestPrioritizedStructure(attacker);
 				if (structureTarget) return structureTarget;
 			}
 		}
 	}
 
-	private retreatActions(attacker: Zerg, healer: Zerg): void {
+	private retreatActions(attacker: CombatZerg, healer: CombatZerg): void {
 		if (attacker.hits > GuardPairOverlord.settings.reengageHitsPercent * attacker.hits &&
 			healer.hits > GuardPairOverlord.settings.reengageHitsPercent * healer.hits) {
 			attacker.memory.retreating = false;
@@ -87,7 +90,7 @@ export class GuardPairOverlord extends CombatOverlord {
 		Movement.pairwiseMove(healer, attacker, this.colony.controller);
 	}
 
-	private attackActions(attacker: Zerg, healer: Zerg): void {
+	private attackActions(attacker: CombatZerg, healer: CombatZerg): void {
 		let target = this.findTarget(attacker);
 		if (target) {
 			if (attacker.pos.isNearTo(target)) {
@@ -98,8 +101,8 @@ export class GuardPairOverlord extends CombatOverlord {
 		}
 	}
 
-	private handleSquad(attacker: Zerg): void {
-		let healer = this.findPartner(attacker, this.healers);
+	private handleSquad(attacker: CombatZerg): void {
+		let healer = attacker.findPartner(this.healers);
 		// Case 1: you don't have an active healer
 		if (!healer || healer.spawning || healer.needsBoosts) {
 			// Wait near the colony controller if you don't have a healer
@@ -130,13 +133,13 @@ export class GuardPairOverlord extends CombatOverlord {
 		}
 	}
 
-	private handleHealer(healer: Zerg): void {
+	private handleHealer(healer: CombatZerg): void {
 		// If there are no hostiles in the designated room, run medic actions
 		if (this.room && this.room.hostiles.length == 0) {
-			this.medicActions(healer);
+			healer.doMedicActions();
 			return;
 		}
-		let attacker = this.findPartner(healer, this.attackers);
+		let attacker = healer.findPartner(this.attackers);
 		// Case 1: you don't have an attacker partner
 		if (!attacker || attacker.spawning || attacker.needsBoosts) {
 			if (healer.hits < healer.hitsMax) {
@@ -160,7 +163,7 @@ export class GuardPairOverlord extends CombatOverlord {
 					healer.heal(healer);
 				} else {
 					// Try to heal whatever else is in range
-					let target = this.findClosestHurtFriendly(healer);
+					let target = CombatTargeting.findClosestHurtFriendly(healer);
 					if (target) healer.heal(target, true);
 				}
 			}

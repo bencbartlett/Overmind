@@ -3,13 +3,50 @@
 import {CreepSetup} from './CreepSetup';
 import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
-import {Zerg} from '../Zerg';
+import {Zerg} from '../zerg/_Zerg';
 import {Tasks} from '../tasks/Tasks';
 import {boostParts} from '../resources/map_resources';
 import {MIN_LIFETIME_FOR_BOOST} from '../tasks/instances/getBoosted';
 import {log} from '../console/log';
 import {SpawnRequest, SpawnRequestOptions} from '../hiveClusters/hatchery';
 import {SpawnGroup} from '../logistics/SpawnGroup';
+
+export function getOverlord(creep: Zerg | Creep): Overlord | null {
+	if (creep.memory.overlord) {
+		return Overmind.overlords[creep.memory.overlord] || null;
+	} else {
+		return null;
+	}
+}
+
+export function setOverlord(creep: Zerg | Creep, newOverlord: Overlord | null) {
+	// Remove cache references to old assignments
+	let roleName = creep.memory.role;
+	let ref = creep.memory.overlord;
+	let oldOverlord: Overlord | null = ref ? Overmind.overlords[ref] : null;
+	if (ref && Overmind.cache.overlords[ref] && Overmind.cache.overlords[ref][roleName]) {
+		_.remove(Overmind.cache.overlords[ref][roleName], name => name == creep.name);
+	}
+	if (newOverlord) {
+		// Change to the new overlord's colony
+		creep.memory.colony = newOverlord.colony.name;
+		// Change assignments in memory
+		creep.memory.overlord = newOverlord.ref;
+		// Update the cache references
+		if (!Overmind.cache.overlords[newOverlord.ref]) {
+			Overmind.cache.overlords[newOverlord.ref] = {};
+		}
+		if (!Overmind.cache.overlords[newOverlord.ref][roleName]) {
+			Overmind.cache.overlords[newOverlord.ref][roleName] = [];
+		}
+		Overmind.cache.overlords[newOverlord.ref][roleName].push(creep.name);
+	} else {
+		creep.memory.overlord = null;
+	}
+	if (oldOverlord) oldOverlord.recalculateCreeps();
+	if (newOverlord) newOverlord.recalculateCreeps();
+}
+
 
 const DEFAULT_PRESPAWN = 50;
 
@@ -38,7 +75,7 @@ export abstract class Overlord {
 	pos: RoomPosition;
 	colony: Colony;
 	spawnGroup: SpawnGroup | undefined;
-	protected _creeps: { [roleName: string]: Zerg[] };
+	protected _creeps: { [roleName: string]: Creep[] };
 	creepUsageReport: { [role: string]: [number, number] | undefined };
 	// memory: OverlordMemory;
 	boosts: { [roleName: string]: _ResourceConstantSansEnergy[] | undefined };
@@ -68,7 +105,7 @@ export abstract class Overlord {
 
 	recalculateCreeps(): void {
 		this._creeps = _.mapValues(Overmind.cache.overlords[this.ref],
-								   creepsOfRole => _.map(creepsOfRole, creepName => Game.zerg[creepName]));
+								   creepsOfRole => _.map(creepsOfRole, creepName => Game.creeps[creepName]));
 	}
 
 	/* Gets the "ID" of the outpost this overlord is operating in. 0 for owned rooms, >= 1 for outposts, -1 for other */
@@ -77,16 +114,16 @@ export abstract class Overlord {
 	}
 
 	protected reassignIdleCreeps(role: string): void {
-		// Find all idle guards
-		let idleCreeps = _.filter(this.colony.getCreepsByRole(role), (zerg: Zerg) => !zerg.overlord);
+		// Find all creeps without an overlord
+		let idleCreeps = _.filter(this.colony.getCreepsByRole(role), creep => !getOverlord(creep));
 		// Reassign them all to this flag
 		for (let creep of idleCreeps) {
-			creep.overlord = this;
+			setOverlord(creep, this);
 		}
-		this.recalculateCreeps();
 	}
 
-	protected creeps(role: string): Zerg[] {
+	/* Returns all creeps of a specified role */
+	protected creeps(role: string): Creep[] {
 		if (this._creeps[role]) {
 			return this._creeps[role];
 		} else {
@@ -94,20 +131,25 @@ export abstract class Overlord {
 		}
 	}
 
-	protected allCreeps(): Zerg[] {
-		let allCreeps: Zerg[] = [];
-		for (let role of _.keys(this._creeps)) {
-			allCreeps = allCreeps.concat(this._creeps[role]);
-		}
-		return _.compact(allCreeps);
+	/* Default wrapping behavior -- maps all creeps to a base-level zerg */
+	protected zerg(role: string): Zerg[] {
+		return _.map(this.creeps(role), creep => new Zerg(creep));
 	}
+
+	// protected allCreeps(): Creep[] {
+	// 	let allCreeps: Zerg[] = [];
+	// 	for (let role of _.keys(this._creeps)) {
+	// 		allCreeps = allCreeps.concat(this._creeps[role]);
+	// 	}
+	// 	return _.compact(allCreeps);
+	// }
 
 	protected creepReport(role: string, currentAmt: number, neededAmt: number) {
 		this.creepUsageReport[role] = [currentAmt, neededAmt];
 	}
 
 	// TODO: include creep move speed
-	lifetimeFilter(creeps: Zerg[], prespawn = DEFAULT_PRESPAWN): Zerg[] {
+	lifetimeFilter(creeps: (Creep | Zerg)[], prespawn = DEFAULT_PRESPAWN): (Creep | Zerg)[] {
 		let spawnDistance = 10;
 		// TODO: account for creeps that can be spawned at incubatee's hatchery
 		// if (this.colony.incubator) {
@@ -257,8 +299,8 @@ export abstract class Overlord {
 	}
 
 	/* Request any needed boosts from terminal network; should be called during init() */
-	protected requestBoosts(): void {
-		for (let creep of this.allCreeps()) {
+	protected requestBoosts(creeps: Zerg[]): void {
+		for (let creep of creeps) {
 			if (this.shouldBoost(creep)) {
 				this.requestBoostsForCreep(creep);
 			}

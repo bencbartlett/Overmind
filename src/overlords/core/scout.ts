@@ -1,5 +1,5 @@
 import {Overlord} from '../Overlord';
-import {Zerg} from '../../Zerg';
+import {Zerg} from '../../zerg/_Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../../directives/Directive';
@@ -19,7 +19,7 @@ export class ScoutOverlord extends Overlord {
 		super(directive, 'scout', priority);
 		// Change priority to operate per-outpost
 		this.priority += this.outpostIndex * OverlordPriority.remoteRoom.roomIncrement;
-		this.scouts = this.creeps(ScoutSetup.role);
+		this.scouts = this.zerg(ScoutSetup.role);
 	}
 
 	init() {

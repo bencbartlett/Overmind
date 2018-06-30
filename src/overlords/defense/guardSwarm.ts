@@ -1,12 +1,13 @@
 // Guard swarm overlord: spawns lots of smaller guards to deal with swarm-like attacks or harassments
 
-import {Zerg} from '../../Zerg';
+import {Zerg} from '../../zerg/_Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {DirectiveGuardSwarm} from '../../directives/defense/guardSwarm';
 import {CreepSetup} from '../CreepSetup';
-import {CombatOverlord} from '../CombatOverlord';
 import {profile} from '../../profiler/decorator';
 import {DirectiveGuard} from '../../directives/defense/guard';
+import {Overlord} from '../Overlord';
+import {CombatZerg} from '../../zerg/CombatZerg';
 
 export class EarlyGuardSetup extends CreepSetup {
 	static role = 'smolGuard';
@@ -20,15 +21,15 @@ export class EarlyGuardSetup extends CreepSetup {
 }
 
 @profile
-export class GuardSwarmOverlord extends CombatOverlord {
+export class GuardSwarmOverlord extends Overlord {
 
 	directive: DirectiveGuardSwarm | DirectiveGuard;
-	guards: Zerg[];
+	guards: CombatZerg[];
 
 	constructor(directive: DirectiveGuardSwarm | DirectiveGuard, priority = OverlordPriority.defense.guard) {
 		super(directive, 'swarmGuard', priority);
 		this.directive = directive;
-		this.guards = this.creeps(EarlyGuardSetup.role);
+		this.guards = _.map(this.creeps(EarlyGuardSetup.role), creep => new CombatZerg(creep));
 	}
 
 	private findAttackTarget(guard: Zerg): Creep | Structure | undefined | null {
@@ -41,7 +42,7 @@ export class GuardSwarmOverlord extends CombatOverlord {
 		}
 	}
 
-	private handleGuard(guard: Zerg): void {
+	private handleGuard(guard: CombatZerg): void {
 
 		if (guard.pos.roomName != this.pos.roomName) { // TODO: make edge-safe
 			// Move into the assigned room if there is a guard flag present
@@ -49,7 +50,7 @@ export class GuardSwarmOverlord extends CombatOverlord {
 		} else { // If you're in the assigned room or if there is no assignment, try to attack or heal
 			let attackTarget = this.findAttackTarget(guard);
 			if (attackTarget) {
-				this.attackAndChase(guard, attackTarget);
+				guard.attackAndChase(attackTarget);
 			} else {
 				guard.park(this.pos); // Move off-road
 			}

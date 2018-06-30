@@ -1,5 +1,5 @@
 import {Overlord} from '../Overlord';
-import {Zerg} from '../../Zerg';
+import {Zerg} from '../../zerg/_Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {Colony, ColonyStage} from '../../Colony';
 import {
@@ -37,7 +37,7 @@ export class TransportOverlord extends Overlord {
 	constructor(colony: Colony, priority = colony.getCreepsByRole(TransporterSetup.role).length > 0 ?
 										   OverlordPriority.ownedRoom.transport : OverlordPriority.ownedRoom.firstTransport) {
 		super(colony, 'logistics', priority);
-		this.transporters = this.creeps(TransporterSetup.role);
+		this.transporters = this.zerg(TransporterSetup.role);
 		this.logisticsGroup = colony.logisticsNetwork;
 	}
 

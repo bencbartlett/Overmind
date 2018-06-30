@@ -1,8 +1,6 @@
 // archer overlord - spawns defender/healer pairs for sustained combat
 
-import {Zerg} from '../../Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {CombatOverlord} from '../CombatOverlord';
 import {boostResources} from '../../resources/map_resources';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 import {profile} from '../../profiler/decorator';
@@ -11,6 +9,9 @@ import {GuardPairOverlord} from './guardPair';
 import {CreepSetup} from '../CreepSetup';
 import {minBy} from '../../utilities/utils';
 import {log} from '../../console/log';
+import {Overlord} from '../Overlord';
+import {CombatZerg} from '../../zerg/CombatZerg';
+import {CombatTargeting} from '../../targeting/CombatTargeting';
 
 const ZerglingSetup = new CreepSetup('zergling', {
 	pattern  : [ATTACK, MOVE],
@@ -23,9 +24,9 @@ const ArmoredZerglingSetup = new CreepSetup('zergling', {
 });
 
 @profile
-export class MeleeDefenseOverlord extends CombatOverlord {
+export class MeleeDefenseOverlord extends Overlord {
 
-	defenders: Zerg[];
+	defenders: CombatZerg[];
 	private defendPositions: RoomPosition[];
 	room: Room;
 
@@ -36,7 +37,7 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 
 	constructor(directive: DirectiveInvasionDefense, boosted = false, priority = OverlordPriority.defense.meleeDefense) {
 		super(directive, 'meleeDefense', priority);
-		this.defenders = this.creeps(ZerglingSetup.role);
+		this.defenders = _.map(this.creeps(ZerglingSetup.role), creep => new CombatZerg(creep));
 		if (boosted) {
 			this.boosts[ZerglingSetup.role] = [
 				boostResources.tough[3],
@@ -49,7 +50,7 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 										pos => pos.findInRange(this.colony.room.hostiles, 1).length > 1);
 	}
 
-	private retreatActions(defender: Zerg): void {
+	private retreatActions(defender: CombatZerg): void {
 		if (defender.hits > MeleeDefenseOverlord.settings.reengageHitsPercent * defender.hits) {
 			defender.memory.retreating = false;
 		}
@@ -63,7 +64,7 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 		}
 	}
 
-	private handleDefender(defender: Zerg): void {
+	private handleDefender(defender: CombatZerg): void {
 		// // Move to a defensible position
 		// let isStandingInDefensePos = _.any(this.defendPositions, pos => pos.isEqualTo(defender.pos));
 		// if (!isStandingInDefensePos) {
@@ -86,7 +87,7 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 		if (adjacentHostiles.length > 1) {
 			target = minBy(adjacentHostiles, (hostile: Creep) => CombatIntel.maxHostileHealingTo(hostile));
 		} else {
-			target = this.findClosestHostile(defender, false, false);
+			target = CombatTargeting.findClosestHostile(defender, false, false);
 		}
 		// Attack something
 		if (target && defender.pos.isNearTo(target)) {
@@ -134,7 +135,7 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 		} else {
 			this.wishlist(amount, ZerglingSetup);
 		}
-		this.requestBoosts();
+		this.requestBoosts(this.defenders);
 	}
 
 	run() {

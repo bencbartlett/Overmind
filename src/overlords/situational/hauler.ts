@@ -1,6 +1,6 @@
 import {Overlord} from '../Overlord';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {Zerg} from '../../Zerg';
+import {Zerg} from '../../zerg/_Zerg';
 import {DirectiveHaul} from '../../directives/logistics/haul';
 import {Tasks} from '../../tasks/Tasks';
 import {isStoreStructure} from '../../declarations/typeGuards';
@@ -27,7 +27,7 @@ export class HaulingOverlord extends Overlord {
 													 OverlordPriority.collection.haul) {
 		super(directive, 'haul', priority);
 		this.directive = directive;
-		this.haulers = this.creeps(HaulerSetup.role);
+		this.haulers = this.zerg(HaulerSetup.role);
 	}
 
 	init() {

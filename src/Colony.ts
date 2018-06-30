@@ -7,7 +7,7 @@ import {CommandCenter} from './hiveClusters/commandCenter';
 import {UpgradeSite} from './hiveClusters/upgradeSite';
 import {Overseer} from './Overseer';
 import {WorkerOverlord} from './overlords/core/worker';
-import {Zerg} from './Zerg';
+import {Zerg} from './zerg/_Zerg';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
 import {HiveCluster} from './hiveClusters/_HiveCluster';
 import {LinkNetwork} from './logistics/LinkNetwork';
@@ -18,7 +18,6 @@ import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {TransportOverlord} from './overlords/core/transporter';
 import {Energetics} from './logistics/Energetics';
 import {StoreStructure} from './declarations/typeGuards';
-import {ManagerSetup} from './overlords/core/manager';
 import {maxBy, mergeSum, minBy} from './utilities/utils';
 import {Abathur} from './resources/Abathur';
 import {EvolutionChamber} from './hiveClusters/evolutionChamber';
@@ -129,8 +128,8 @@ export class Colony {
 	layout: 'twoPart' | 'bunker';						// Which room design colony uses
 	bunker: BunkerData | undefined;						// The center tile of the bunker, else undefined
 	// Creeps and subsets
-	creeps: Zerg[];										// Creeps bound to the colony
-	creepsByRole: { [roleName: string]: Zerg[] };		// Creeps hashed by their role name
+	creeps: Creep[];										// Creeps bound to the colony
+	creepsByRole: { [roleName: string]: Creep[] };		// Creeps hashed by their role name
 	// Resource requests
 	linkNetwork: LinkNetwork;
 	logisticsNetwork: LogisticsNetwork;
@@ -146,7 +145,7 @@ export class Colony {
 	roomPlanner: RoomPlanner;
 	abathur: Abathur;
 
-	constructor(id: number, roomName: string, outposts: string[], creeps: Zerg[] | undefined) {
+	constructor(id: number, roomName: string, outposts: string[], creeps: Creep[] | undefined) {
 		// Primitive colony setup
 		this.id = id;
 		this.name = roomName;
@@ -338,16 +337,19 @@ export class Colony {
 	// 	this.overseer.rebuild();	// Rebuild the overseer, which rebuilds overlords
 	// }
 
-	getCreepsByRole(roleName: string): Zerg[] {
+	getCreepsByRole(roleName: string): Creep[] {
 		return this.creepsByRole[roleName] || [];
+	}
+
+	getZergByRole(roleName: string): (Zerg | undefined)[] {
+		return _.map(this.getCreepsByRole(roleName), creep => Game.zerg[creep.name]);
 	}
 
 	/* Summarizes the total of all resources in colony store structures, labs, and some creeps */
 	private getAllAssets(): { [resourceType: string]: number } {
 		// Include storage structures and manager carry
 		let stores = _.map(<StoreStructure[]>_.compact([this.storage, this.terminal]), s => s.store);
-		let creepCarriesToInclude = _.map(_.filter(this.creeps, creep => creep.roleName == ManagerSetup.role),
-										  creep => creep.carry) as { [resourceType: string]: number }[];
+		let creepCarriesToInclude = _.map(this.creeps, creep => creep.carry) as { [resourceType: string]: number }[];
 		let allAssets: { [resourceType: string]: number } = mergeSum([...stores, ...creepCarriesToInclude]);
 		// Include lab amounts
 		for (let lab of this.labs) {

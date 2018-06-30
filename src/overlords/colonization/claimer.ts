@@ -1,5 +1,5 @@
 import {Overlord} from '../Overlord';
-import {Zerg} from '../../Zerg';
+import {Zerg} from '../../zerg/_Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {Directive} from '../../directives/Directive';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -18,7 +18,7 @@ export class ClaimingOverlord extends Overlord {
 
 	constructor(directive: Directive, priority = OverlordPriority.realTime.claim) {
 		super(directive, 'claim', priority);
-		this.claimers = this.creeps(ClaimerSetup.role);
+		this.claimers = this.zerg(ClaimerSetup.role);
 	}
 
 	init() {

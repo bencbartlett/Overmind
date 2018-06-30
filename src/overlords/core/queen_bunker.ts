@@ -1,6 +1,6 @@
 // Hatchery overlord: spawn and run a dedicated supplier-like hatchery attendant (called after colony has storage)
 import {Overlord} from '../Overlord';
-import {Zerg} from '../../Zerg';
+import {Zerg} from '../../zerg/_Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {log} from '../../console/log';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -60,10 +60,10 @@ export class BunkerQueenOverlord extends Overlord {
 	quadrants: { [quadrant: string]: SupplyStructure[] };
 	assignments: { [queenName: string]: SupplyStructure[] };
 
-	constructor(hatchery: Hatchery, priority = OverlordPriority.spawning.hatchery) {
+	constructor(hatchery: Hatchery, priority = OverlordPriority.core.queen) {
 		super(hatchery, 'supply', priority);
 		this.transportRequests = this.colony.transportRequests;
-		this.queens = _.sortBy(this.creeps(QueenSetup.role), creep => creep.name);
+		this.queens = _.sortBy(this.zerg(QueenSetup.role), creep => creep.name);
 		this.batteries = _.filter(this.room.containers, container => insideBunkerBounds(container.pos, this.colony));
 		this.storeStructures = _.compact([this.colony.terminal!, this.colony.storage!, ...this.batteries]);
 		this.quadrants = {
@@ -253,7 +253,7 @@ export class BunkerQueenOverlord extends Overlord {
 			queen.task = this.buildSupplyTaskManifest(queen);
 		}
 		// Otherwise do idle actions
-		else {
+		if (queen.isIdle) {
 			this.idleActions(queen);
 		}
 	}

@@ -4,7 +4,7 @@
 import {profile} from '../profiler/decorator';
 import {log} from '../console/log';
 import {getTerrainCosts, isExit, normalizePos, sameCoord} from './helpers';
-import {Zerg} from '../Zerg';
+import {Zerg} from '../zerg/_Zerg';
 import {Pathing} from './Pathing';
 import {QueenSetup} from '../overlords/core/queen';
 import {TransporterSetup} from '../overlords/core/transporter';
@@ -289,7 +289,9 @@ export class Movement {
 
 		let otherCreep = nextPos.lookFor(LOOK_CREEPS)[0];
 		if (!otherCreep || !otherCreep.memory || !otherCreep.my) return false;
-		otherCreep = Game.zerg[otherCreep.name];
+		if (Game.zerg[otherCreep.name]) {
+			otherCreep = Game.zerg[otherCreep.name];
+		}
 
 		let otherData = otherCreep.memory._go as MoveData | undefined;
 		let otherCreepIsMoving = otherData && otherData.path && otherData.path.length > 1;

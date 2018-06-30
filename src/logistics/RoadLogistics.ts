@@ -2,7 +2,7 @@
 
 import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
-import {Zerg} from '../Zerg';
+import {Zerg} from '../zerg/_Zerg';
 import {repairTaskName} from '../tasks/instances/repair';
 
 
@@ -118,7 +118,7 @@ export class RoadLogistics {
 	}
 
 	init(): void {
-		let workers = this.colony.getCreepsByRole('worker');
+		let workers = this.colony.overlords.work.workers;
 		for (let worker of workers) {
 			if (worker.task && worker.task.name == repairTaskName) {
 				let roomName = worker.task.targetPos.roomName;

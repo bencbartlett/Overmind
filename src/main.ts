@@ -24,6 +24,8 @@ import './prototypes/RoomStructures';
 import './prototypes/Structures';
 import './prototypes/Miscellaneous';
 import './tasks/initializer'; // this line is necessary to ensure proper compilation ordering
+import './zerg/_Zerg';
+import './zerg/CombatZerg';
 import {USE_PROFILER} from './~settings';
 import {sandbox} from './sandbox';
 import {Mem} from './Memory';

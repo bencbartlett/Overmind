@@ -5,6 +5,8 @@ import {Mem} from '../Memory';
 import {Colony} from '../Colony';
 import {boostResources} from '../resources/map_resources';
 import {Pathing} from '../movement/Pathing';
+import {WorldMap} from '../utilities/WorldMap';
+import {log} from '../console/log';
 
 interface CombatIntelMemory {
 	cache: {
@@ -198,7 +200,7 @@ export class CombatIntel {
 	// Minimum damage multiplier a creep has
 	static damageTakenMultiplier(creep: Creep): number {
 		return _.min(_.map(creep.body, function (part) {
-			if (part.type == TOUGH) {
+			if (part.type == TOUGH && part.hits) {
 				if (part.boost == boostResources.tough[1]) {
 					return BOOSTS.tough.GO.damage;
 				} else if (part.boost == boostResources.tough[2]) {
@@ -261,6 +263,35 @@ export class CombatIntel {
 	static getPositionsNearEnemies(hostiles: Creep[], range = 0): RoomPosition[] {
 		return _.unique(_.flatten(_.map(hostiles, hostile =>
 			hostile.pos.getPositionsInRange(range, false, true))));
+	}
+
+	/* Fallback is a location on the other side of the nearest exit the directive is placed at */
+	static getFallbackFrom(pos: RoomPosition): RoomPosition {
+		let {x, y, roomName} = pos;
+		let rangesToExit = [[x, 'left'], [49 - x, 'right'], [y, 'top'], [49 - y, 'bottom']];
+		let [range, direction] = _.first(_.sortBy(rangesToExit, pair => pair[0]));
+		switch (direction) {
+			case 'left':
+				x = 48;
+				roomName = WorldMap.findRelativeRoomName(roomName, -1, 0);
+				break;
+			case 'right':
+				x = 1;
+				roomName = WorldMap.findRelativeRoomName(roomName, 1, 0);
+				break;
+			case 'top':
+				y = 48;
+				roomName = WorldMap.findRelativeRoomName(roomName, 0, -1);
+				break;
+			case 'bottom':
+				y = 1;
+				roomName = WorldMap.findRelativeRoomName(roomName, 0, 1);
+				break;
+			default:
+				log.error('Error getting fallback position!');
+				break;
+		}
+		return new RoomPosition(x, y, roomName);
 	}
 
 }

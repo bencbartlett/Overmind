@@ -11,7 +11,8 @@ Object.defineProperty(Creep.prototype, 'boosts', {
 		return this._boosts;
 		// return _.compact(_.unique(_.map(this.body as BodyPartDefinition[],
 		// 								bodyPart => bodyPart.boost))) as _ResourceConstantSansEnergy[];
-	}
+	},
+	configurable: true,
 });
 
 Object.defineProperty(Creep.prototype, 'boostCounts', {

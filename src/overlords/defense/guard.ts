@@ -1,13 +1,13 @@
 // Guard overlord: spawns guards as needed to deal with an invasion
 
 import {DirectiveGuard} from '../../directives/defense/guard';
-import {Zerg} from '../../Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/siegeTarget';
-import {CombatOverlord} from '../CombatOverlord';
 import {profile} from '../../profiler/decorator';
 import {DirectiveHaul} from '../../directives/logistics/haul';
 import {CreepSetup} from '../CreepSetup';
+import {Overlord} from '../Overlord';
+import {CombatZerg} from '../../zerg/CombatZerg';
 
 const GuardSetup = new CreepSetup('guard', {
 	pattern  : [TOUGH, MOVE, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, HEAL],
@@ -16,15 +16,15 @@ const GuardSetup = new CreepSetup('guard', {
 
 
 @profile
-export class GuardOverlord extends CombatOverlord {
+export class GuardOverlord extends Overlord {
 
-	guards: Zerg[];
+	guards: CombatZerg[];
 
 	static requiredRCL = 3;
 
 	constructor(directive: DirectiveGuard, priority = OverlordPriority.defense.guard) {
 		super(directive, 'guard', priority);
-		this.guards = this.creeps(GuardSetup.role);
+		this.guards = _.map(this.creeps(GuardSetup.role), creep => new CombatZerg(creep));
 	}
 
 	// private reassignIdleGuards(): void {
@@ -38,7 +38,7 @@ export class GuardOverlord extends CombatOverlord {
 	// 	this.guards = this.creeps('guard');
 	// }
 
-	private findAttackTarget(guard: Zerg): Creep | Structure | undefined | null {
+	private findAttackTarget(guard: CombatZerg): Creep | Structure | undefined | null {
 		let targetingDirectives = DirectiveTargetSiege.find(guard.room.flags) as DirectiveTargetSiege[];
 		let targetedStructures = _.compact(_.map(targetingDirectives,
 												 directive => directive.getTarget())) as Structure[];
@@ -58,14 +58,14 @@ export class GuardOverlord extends CombatOverlord {
 	}
 
 	/* Attack and chase the specified target */
-	private combatActions(guard: Zerg, target: Creep | Structure): void {
+	private combatActions(guard: CombatZerg, target: Creep | Structure): void {
 		// Attack the target if you can, else move to get in range
-		this.attackAndChase(guard, target);
+		guard.attackAndChase(target);
 		// Heal yourself if it won't interfere with attacking
-		this.healSelfIfPossible(guard);
+		guard.healSelfIfPossible();
 	}
 
-	private handleGuard(guard: Zerg): void {
+	private handleGuard(guard: CombatZerg): void {
 		if (!guard.inSameRoomAs(this) || guard.pos.isEdge) {
 			// Move into the assigned room if there is a guard flag present
 			guard.goTo(this.pos);
@@ -74,7 +74,7 @@ export class GuardOverlord extends CombatOverlord {
 			if (attackTarget) {
 				this.combatActions(guard, attackTarget);
 			} else {
-				this.medicActions(guard);
+				guard.doMedicActions();
 			}
 		}
 	}

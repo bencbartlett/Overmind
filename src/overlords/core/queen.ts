@@ -1,7 +1,7 @@
 // Hatchery overlord: spawn and run a dedicated supplier-like hatchery attendant (called after colony has storage)
 import {Overlord} from '../Overlord';
 import {Hatchery} from '../../hiveClusters/hatchery';
-import {Zerg} from '../../Zerg';
+import {Zerg} from '../../zerg/_Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {log} from '../../console/log';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -29,10 +29,10 @@ export class QueenOverlord extends Overlord {
 	queens: Zerg[];
 	settings: any;
 
-	constructor(hatchery: Hatchery, priority = OverlordPriority.spawning.hatchery) {
+	constructor(hatchery: Hatchery, priority = OverlordPriority.core.queen) {
 		super(hatchery, 'supply', priority);
 		this.hatchery = hatchery;
-		this.queens = this.creeps(QueenSetup.role);
+		this.queens = this.zerg(QueenSetup.role);
 		this.settings = {
 			refillTowersBelow: 500,
 		};

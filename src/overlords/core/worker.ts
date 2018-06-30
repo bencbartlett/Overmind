@@ -1,7 +1,7 @@
 import {Overlord} from '../Overlord';
 import {Colony, ColonyStage, DEFCON} from '../../Colony';
 import {profile} from '../../profiler/decorator';
-import {Zerg} from '../../Zerg';
+import {Zerg} from '../../zerg/_Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {CreepSetup} from '../CreepSetup';
@@ -40,22 +40,23 @@ export class WorkerOverlord extends Overlord {
 	nukeDefenseRamparts: StructureRampart[];
 
 	static settings = {
-		barrierHits       : {
-			1: 3000,
-			2: 3000,
-			3: 3000,
-			4: 10000,
-			5: 100000,
-			6: 500000,
-			7: 5000000,
-			8: 30000000,
+		barrierHits : {			// What HP to fortify barriers to at each RCL
+			1: 3e+3,
+			2: 3e+3,
+			3: 1e+4,
+			4: 5e+4,
+			5: 1e+5,
+			6: 5e+5,
+			7: 2e+6,
+			8: 3e+7,
 		},
-		barrierLowHighHits: 100000,
+		criticalHits: 1000, 	// barriers below this health get priority treatment
+		hitTolerance: 100000, 	// allowable spread in HP
 	};
 
 	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.work) {
 		super(colony, 'worker', priority);
-		this.workers = this.creeps(WorkerSetup.role);
+		this.workers = this.zerg(WorkerSetup.role);
 		this.rechargeObjects = [];
 		// Fortification structures
 		this.fortifyStructures = GlobalCache.structures(this, 'fortifyStructures', () =>
@@ -71,8 +72,7 @@ export class WorkerOverlord extends Overlord {
 				return structure.hits < structure.hitsMax;
 			}
 		});
-		let criticalHits = 1000; // Fortifying changes to repair status at this point
-		let criticalBarriers = _.filter(this.fortifyStructures, s => s.hits <= criticalHits);
+		let criticalBarriers = _.filter(this.fortifyStructures, s => s.hits <= WorkerOverlord.settings.criticalHits);
 		this.repairStructures = this.repairStructures.concat(criticalBarriers);
 
 		this.dismantleStructures = [];
@@ -132,26 +132,28 @@ export class WorkerOverlord extends Overlord {
 			let numWorkers = Math.ceil(energyPerTick / (energyPerTickPerWorker * workerUptime));
 			this.wishlist(Math.min(numWorkers, MAX_WORKERS), setup);
 		} else {
-			// At higher levels, spawn workers based on construction and repair that needs to be done
 			if (this.colony.roomPlanner.memory.relocating) {
+				// If relocating, maintain a maximum of workers
 				const RELOCATE_MAX_WORKERS = 5;
 				this.wishlist(RELOCATE_MAX_WORKERS, setup);
+			} else {
+				// At higher levels, spawn workers based on construction and repair that needs to be done
+				const MAX_WORKERS = 3; // Maximum number of workers to spawn
+				let constructionTicks = _.sum(_.map(this.colony.constructionSites,
+													site => Math.max(site.progressTotal - site.progress, 0)))
+										/ BUILD_POWER; // Math.max for if you manually set progress on private server
+				let repairTicks = _.sum(_.map(this.repairStructures,
+											  structure => structure.hitsMax - structure.hits)) / REPAIR_POWER;
+				let fortifyTicks = 0.25 * _.sum(_.map(this.fortifyStructures,
+													  barrier => WorkerOverlord.settings.barrierHits[this.colony.level]
+																 - barrier.hits)) / REPAIR_POWER;
+				if (this.colony.storage!.energy < 500000) {
+					fortifyTicks = 0; // Ignore fortification duties below this energy level
+				}
+				let numWorkers = Math.ceil(2 * (constructionTicks + repairTicks + fortifyTicks) /
+										   (workPartsPerWorker * CREEP_LIFE_TIME));
+				this.wishlist(Math.min(numWorkers, MAX_WORKERS), setup);
 			}
-			const MAX_WORKERS = 3; // Maximum number of workers to spawn
-			let constructionTicks = _.sum(_.map(this.colony.constructionSites,
-												site => Math.max(site.progressTotal - site.progress, 0)))
-									/ BUILD_POWER; // Math.max for if you manually set progress on private server
-			let repairTicks = _.sum(_.map(this.repairStructures,
-										  structure => structure.hitsMax - structure.hits)) / REPAIR_POWER;
-			let fortifyTicks = 0.25 * _.sum(_.map(this.fortifyStructures,
-												  barrier => WorkerOverlord.settings.barrierHits[this.colony.level]
-															 - barrier.hits)) / REPAIR_POWER;
-			if (this.colony.storage!.energy < 500000) {
-				fortifyTicks = 0; // Ignore fortification duties below this energy level
-			}
-			let numWorkers = Math.ceil(2 * (constructionTicks + repairTicks + fortifyTicks) /
-									   (workPartsPerWorker * CREEP_LIFE_TIME));
-			this.wishlist(Math.min(numWorkers, MAX_WORKERS), setup);
 		}
 	}
 
@@ -201,11 +203,11 @@ export class WorkerOverlord extends Overlord {
 	private fortifyActions(worker: Zerg, fortifyStructures = this.fortifyStructures) {
 		let lowBarriers: (StructureWall | StructureRampart)[];
 		let highestBarrierHits = _.max(_.map(fortifyStructures, structure => structure.hits));
-		if (highestBarrierHits > WorkerOverlord.settings.barrierLowHighHits) {
+		if (highestBarrierHits > WorkerOverlord.settings.hitTolerance) {
 			// At high barrier HP, fortify only structures that are within a threshold of the lowest
 			let lowestBarrierHits = _.min(_.map(fortifyStructures, structure => structure.hits));
 			lowBarriers = _.filter(fortifyStructures, structure => structure.hits < lowestBarrierHits +
-																   WorkerOverlord.settings.barrierLowHighHits);
+																   WorkerOverlord.settings.hitTolerance);
 		} else {
 			// Otherwise fortify the lowest N structures
 			let numBarriersToConsider = 5; // Choose the closest barrier of the N barriers with lowest hits

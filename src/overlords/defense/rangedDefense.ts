@@ -1,13 +1,14 @@
 // archer overlord - spawns defender/healer pairs for sustained combat
 
-import {Zerg} from '../../Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {CombatOverlord} from '../CombatOverlord';
 import {CreepSetup} from '../CreepSetup';
 import {boostResources} from '../../resources/map_resources';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 import {profile} from '../../profiler/decorator';
 import {CombatIntel} from '../../intel/combatIntel';
+import {Overlord} from '../Overlord';
+import {CombatZerg} from '../../zerg/CombatZerg';
+import {CombatTargeting} from '../../targeting/CombatTargeting';
 
 const HydraliskSetup = new CreepSetup('hydralisk', {
 	pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, HEAL, MOVE, MOVE, MOVE, MOVE],
@@ -20,10 +21,11 @@ const BoostedHydraliskSetup = new CreepSetup('hydralisk', {
 });
 
 @profile
-export class RangedDefenseOverlord extends CombatOverlord {
+export class RangedDefenseOverlord extends Overlord {
 
-	defenders: Zerg[];
+	defenders: CombatZerg[];
 	private avoid: RoomPosition[];
+	private moveOpts: MoveOptions;
 	private retreatPos: RoomPosition;
 	room: Room;
 	settings: {
@@ -34,7 +36,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 	constructor(directive: DirectiveInvasionDefense, boosted = false,
 				priority                                     = OverlordPriority.defense.rangedDefense) {
 		super(directive, 'rangedDefense', priority);
-		this.defenders = this.creeps(HydraliskSetup.role);
+		this.defenders = _.map(this.creeps(HydraliskSetup.role), creep => new CombatZerg(creep));
 		if (boosted) {
 			this.boosts[HydraliskSetup.role] = [
 				boostResources.ranged_attack[3],
@@ -47,29 +49,31 @@ export class RangedDefenseOverlord extends CombatOverlord {
 			reengageHitsPercent: 0.95,
 		};
 		this.avoid = CombatIntel.getPositionsNearEnemies(this.room.dangerousHostiles, 2);
-		this.moveOpts.obstacles = this.avoid;
-		this.moveOpts.ignoreCreeps = false;
+		this.moveOpts = {
+			obstacles   : this.avoid,
+			ignoreCreeps: false,
+		};
 	}
 
-	private findTarget(archer: Zerg): Creep | Structure | undefined {
+	private findTarget(archer: CombatZerg): Creep | Structure | undefined {
 		if (this.room) {
 			// Target nearby hostile creeps
-			let creepTarget = this.findClosestHostile(archer, false, false);
+			let creepTarget = CombatTargeting.findClosestHostile(archer, false, false);
 			if (creepTarget) return creepTarget;
 			// Target nearby hostile structures
-			let structureTarget = this.findClosestPrioritizedStructure(archer);
+			let structureTarget = CombatTargeting.findClosestPrioritizedStructure(archer);
 			if (structureTarget) return structureTarget;
 		}
 	}
 
-	private retreatActions(archer: Zerg): void {
+	private retreatActions(archer: CombatZerg): void {
 		archer.goTo(this.retreatPos, this.moveOpts);
 		if (archer.hits > this.settings.reengageHitsPercent * archer.hits) {
 			archer.memory.retreating = false;
 		}
 	}
 
-	private attackActions(attacker: Zerg): void {
+	private attackActions(attacker: CombatZerg): void {
 		let target = this.findTarget(attacker);
 		if (target) {
 			// console.log(attacker.name, target.pos.print);
@@ -88,9 +92,9 @@ export class RangedDefenseOverlord extends CombatOverlord {
 		}
 	}
 
-	private healActions(defender: Zerg): void {
+	private healActions(defender: CombatZerg): void {
 		if (this.room && this.room.hostiles.length == 0) { // No hostiles in the room
-			this.medicActions(defender);
+			defender.doMedicActions();
 			return;
 		}
 
@@ -109,7 +113,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 	}
 
 
-	private handleDefender(defender: Zerg): void {
+	private handleDefender(defender: CombatZerg): void {
 		// Handle retreating actions
 		if (defender.hits < this.settings.retreatHitsPercent * defender.hitsMax) {
 			defender.memory.retreating = true;
@@ -139,7 +143,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 		// Match the hostile damage times some multiplier
 		let amount = Math.ceil(1.5 * healPotential / (worstDamageMultiplier * (hydraliskDamage + towerDamage)));
 		this.wishlist(amount, HydraliskSetup);
-		this.requestBoosts();
+		this.requestBoosts(this.defenders);
 	}
 
 	run() {

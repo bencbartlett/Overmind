@@ -1,6 +1,6 @@
 import {Overlord} from '../Overlord';
 import {MiningSite} from '../../hiveClusters/miningSite';
-import {Zerg} from '../../Zerg';
+import {Zerg} from '../../zerg/_Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
@@ -29,7 +29,7 @@ export class MiningOverlord extends Overlord {
 	constructor(miningSite: MiningSite, priority: number, allowDropMining = false) {
 		super(miningSite, 'mine', priority);
 		this.priority += this.outpostIndex * OverlordPriority.remoteRoom.roomIncrement;
-		this.miners = this.creeps(MinerSetup.role);
+		this.miners = this.zerg(MinerSetup.role);
 		this.miningSite = miningSite;
 		this.allowDropMining = allowDropMining;
 	}

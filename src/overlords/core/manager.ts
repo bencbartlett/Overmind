@@ -1,7 +1,7 @@
 // Command center overlord: spawn and run a dediated commandCenter attendant
 import {Overlord} from '../Overlord';
 import {CommandCenter} from '../../hiveClusters/commandCenter';
-import {Zerg} from '../../Zerg';
+import {Zerg} from '../../zerg/_Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
@@ -28,17 +28,18 @@ export class CommandCenterOverlord extends Overlord {
 	commandCenter: CommandCenter;
 	transportRequests: TransportRequestGroup;
 
-	constructor(commandCenter: CommandCenter, priority = OverlordPriority.spawning.commandCenter) {
+	constructor(commandCenter: CommandCenter, priority = OverlordPriority.core.manager) {
 		super(commandCenter, 'manager', priority);
 		this.commandCenter = commandCenter;
 		this.transportRequests = this.commandCenter.transportRequests;
-		this.managers = this.creeps(ManagerSetup.role);
+		this.managers = this.zerg(ManagerSetup.role);
 	}
 
 	init() {
 		let setup = ManagerSetup;
 		let spawnRequestOptions: SpawnRequestOptions = {};
-		if (this.colony.bunker && this.colony.bunker.coreSpawn && this.colony.level == 8) {
+		if (this.colony.bunker && this.colony.bunker.coreSpawn && this.colony.level == 8
+			&& !this.colony.roomPlanner.memory.relocating) {
 			setup = ManagerStationarySetup;
 			spawnRequestOptions = {
 				spawn     : this.colony.bunker.coreSpawn,

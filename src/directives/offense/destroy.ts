@@ -2,6 +2,7 @@ import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {Visualizer} from '../../visuals/Visualizer';
 import {DestroyerOverlord} from '../../overlords/offense/destroyer';
+import {CombatIntel} from '../../intel/combatIntel';
 
 @profile
 export class DirectiveDestroy extends Directive {
@@ -33,6 +34,7 @@ export class DirectiveDestroy extends Directive {
 
 	visuals(): void {
 		Visualizer.marker(this.pos, {color: 'red'});
-		Visualizer.marker(this.overlords.destroy.fallback, {color: 'green'});
+		let fallback = CombatIntel.getFallbackFrom(this.overlords.destroy.directive.pos);
+		Visualizer.marker(fallback, {color: 'green'});
 	}
 }

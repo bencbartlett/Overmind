@@ -1,7 +1,7 @@
 import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
 import {ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER, WorldMap} from '../utilities/WorldMap';
-import {Zerg} from '../Zerg';
+import {Zerg} from '../zerg/_Zerg';
 
 /* Module for pathing-related operations. */
 

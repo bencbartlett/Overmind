@@ -5,16 +5,19 @@ export var OverlordPriority = {
 		bootstrap: 0
 	},
 
-	spawning: {					// Functionality related to spawning more creeps
-		hatchery     : 100,
-		commandCenter: 101,
+	core: {						// Functionality related to spawning more creeps
+		queen  : 100,
+		manager: 101,
 	},
 
 	defense: {					// Defense of local and remote rooms
 		meleeDefense : 200,
 		rangedDefense: 201,
 		guard        : 202,
+		repair       : 203,
 	},
+
+	warSpawnCutoff: 299, 		// Everything past this is non-critical and won't be spawned in case of emergency
 
 	realTime: { 				// Requests that a user is typically actively waiting for in real life
 		claim  : 300,
@@ -52,4 +55,6 @@ export var OverlordPriority = {
 	collection: {				// Non-urgent collection of resources, like from a deserted storage
 		haul: 900
 	},
+
+	default: 999999				// Default overlord priority to ensure it gets run last
 };

@@ -14,7 +14,7 @@
 
 import {initializeTask} from './initializer';
 import {profile} from '../profiler/decorator';
-import {Zerg} from '../Zerg';
+import {Zerg} from '../zerg/_Zerg';
 
 type targetType = { ref: string, pos: protoPos }; // overwrite this variable in derived classes to specify more precise typing
 

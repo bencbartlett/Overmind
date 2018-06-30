@@ -42,7 +42,7 @@ export class DirectiveInvasionDefense extends Directive {
 		} else if (meleeHostiles.length > 0) {
 			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
 		} else if (Game.time % 10 == 0) {
-			log.warning(`No invasion defense overlord!`);
+			log.warning(`No invasion defense overlord at ${this.pos.print}!`);
 		}
 	}
 
@@ -62,4 +62,5 @@ export class DirectiveInvasionDefense extends Directive {
 			}
 		}
 	}
+
 }

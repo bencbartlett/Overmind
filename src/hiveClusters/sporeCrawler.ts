@@ -2,6 +2,7 @@ import {profile} from '../profiler/decorator';
 import {HiveCluster} from './_HiveCluster';
 import {Colony} from '../Colony';
 import {CombatIntel} from '../intel/combatIntel';
+import {WorkerOverlord} from '../overlords/core/worker';
 
 // Hive cluster for wrapping towers
 
@@ -64,9 +65,9 @@ export class SporeCrawler extends HiveCluster {
 	}
 
 	private preventRampartDecay() {
-		let hp = 500; // TODO: hardwired
 		let dyingRamparts = _.filter(this.room.ramparts, rampart =>
-			rampart.hits < hp && this.colony.roomPlanner.barrierPlanner.barrierShouldBeHere(rampart.pos));
+			rampart.hits < WorkerOverlord.settings.criticalHits
+			&& this.colony.roomPlanner.barrierPlanner.barrierShouldBeHere(rampart.pos));
 		if (dyingRamparts.length > 0) {
 			return this.tower.repair(this.tower.pos.findClosestByRange(dyingRamparts)!);
 		}

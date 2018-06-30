@@ -1,6 +1,6 @@
 import {Overlord} from '../Overlord';
 import {UpgradeSite} from '../../hiveClusters/upgradeSite';
-import {Zerg} from '../../Zerg';
+import {Zerg} from '../../zerg/_Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
@@ -30,7 +30,7 @@ export class UpgradingOverlord extends Overlord {
 
 	constructor(upgradeSite: UpgradeSite, priority = OverlordPriority.upgrading.upgrade) {
 		super(upgradeSite, 'upgrade', priority);
-		this.upgraders = this.creeps(UpgraderSetup.role);
+		this.upgraders = this.zerg(UpgraderSetup.role);
 		this.upgradeSite = upgradeSite;
 		if ((this.colony.assets[boostResources.upgrade[3]] || 0) > 3000) {
 			this.boosts[UpgraderSetup.role] = [boostResources.upgrade[3]];
@@ -45,7 +45,7 @@ export class UpgradingOverlord extends Overlord {
 			this.requestCreep(new UpgraderSetup(upgraderSize));
 		}
 		this.creepReport(UpgraderSetup.role, upgradePower, this.upgradeSite.upgradePowerNeeded);
-		this.requestBoosts();
+		this.requestBoosts(this.upgraders);
 	}
 
 	private handleUpgrader(upgrader: Zerg): void {

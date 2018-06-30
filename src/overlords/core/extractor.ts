@@ -1,6 +1,6 @@
 import {Overlord} from '../Overlord';
 import {ExtractionSite} from '../../hiveClusters/extractionSite';
-import {Zerg} from '../../Zerg';
+import {Zerg} from '../../zerg/_Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {profile} from '../../profiler/decorator';
 import {DEFCON} from '../../Colony';
@@ -19,7 +19,7 @@ export class ExtractorOverlord extends Overlord {
 
 	constructor(extractionSite: ExtractionSite, priority: number) {
 		super(extractionSite, 'mineral', priority);
-		this.drones = this.creeps(DroneSetup.role);
+		this.drones = this.zerg(DroneSetup.role);
 		this.extractionSite = extractionSite;
 	}
 

@@ -3,7 +3,7 @@
 // https://bencbartlett.wordpress.com/2018/03/28/screeps-4-hauling-is-np-hard/
 
 import {profile} from '../profiler/decorator';
-import {Zerg} from '../Zerg';
+import {Zerg} from '../zerg/_Zerg';
 import {log} from '../console/log';
 import {Pathing} from '../movement/Pathing';
 import {Colony} from '../Colony';
@@ -72,7 +72,7 @@ export class LogisticsNetwork {
 
 	memory: LogisticsNetworkMemory;
 	requests: LogisticsRequest[];
-	transporters: Zerg[];
+	// transporters: Zerg[];
 	buffers: BufferTarget[];
 	colony: Colony;
 	private targetToRequest: { [targetRef: string]: number };
@@ -94,9 +94,9 @@ export class LogisticsNetwork {
 		this.requests = [];
 		this.targetToRequest = {};
 		this.colony = colony;
-		this.transporters = _.filter(colony.getCreepsByRole(TransporterSetup.role),
-									 creep => !creep.spawning &&
-											  creep.carryCapacity >= LogisticsNetwork.settings.carryThreshold);
+		// this.transporters = _.filter(colony.getCreepsByRole(TransporterSetup.role),
+		// 							 creep => !creep.spawning &&
+		// 									  creep.carryCapacity >= LogisticsNetwork.settings.carryThreshold);
 		this.buffers = _.compact([colony.storage!, colony.terminal!]);
 		this.cache = {
 			nextAvailability         : {},
@@ -612,7 +612,7 @@ export class LogisticsNetwork {
 		}
 		console.log('Requests: \n' + columnify(info) + '\n');
 		info = [];
-		for (let transporter of this.colony.getCreepsByRole(TransporterSetup.role)) {
+		for (let transporter of this.colony.overlords.logistics.transporters) {
 			let task = transporter.task ? transporter.task.name : 'none';
 			let target = transporter.task ?
 						 transporter.task.proto._target.ref + ' ' + transporter.task.targetPos.printPlain : 'none';
@@ -630,7 +630,7 @@ export class LogisticsNetwork {
 
 	get matching(): { [creepName: string]: LogisticsRequest | undefined } {
 		if (!this._matching) {
-			this._matching = this.stableMatching(this.transporters);
+			this._matching = this.stableMatching(this.colony.overlords.logistics.transporters);
 		}
 		return this._matching;
 	}

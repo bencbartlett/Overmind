@@ -1,11 +1,12 @@
 // Siege overlord - spawns sieger creeps to break down walls and structures
 
-import {Zerg} from '../../Zerg';
+import {Zerg} from '../../zerg/_Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {DirectiveHealPoint} from '../../directives/offense/healPoint';
-import {CombatOverlord} from '../CombatOverlord';
 import {profile} from '../../profiler/decorator';
 import {CreepSetup} from '../CreepSetup';
+import {Overlord} from '../Overlord';
+import {CombatTargeting} from '../../targeting/CombatTargeting';
 
 
 const PointHealerSetup = new CreepSetup('pointHealer', {
@@ -15,22 +16,19 @@ const PointHealerSetup = new CreepSetup('pointHealer', {
 });
 
 @profile
-export class HealPointOverlord extends CombatOverlord {
+export class HealPointOverlord extends Overlord {
 
 	healers: Zerg[];
 	recoveryWaypoint: RoomPosition;
 
 	constructor(directive: DirectiveHealPoint, priority = OverlordPriority.offense.healPoint) {
 		super(directive, 'healPoint', priority);
-		this.healers = this.creeps(PointHealerSetup.role);
-		this.moveOpts = {
-			ensurePath: true,
-		};
+		this.healers = this.zerg(PointHealerSetup.role);
 	}
 
 	private handleHealer(healer: Zerg): void {
-		healer.goTo(this.pos, this.moveOpts);
-		let healTarget = this.findClosestHurtFriendly(healer);
+		healer.goTo(this.pos);
+		let healTarget = CombatTargeting.findClosestHurtFriendly(healer);
 		if (healTarget) {
 			healer.heal(healTarget, true);
 		}

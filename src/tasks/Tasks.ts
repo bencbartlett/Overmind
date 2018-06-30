@@ -23,16 +23,14 @@ import {TaskWithdraw, withdrawTargetType} from './instances/withdraw';
 import {dropTargetType, TaskDrop} from './instances/drop';
 import {profile} from '../profiler/decorator';
 import {TaskWithdrawAll, withdrawAllTargetType} from './instances/withdrawAll';
-import {log} from '../console/log';
-import {TaskInvalid} from './instances/invalid';
 
 @profile
 export class Tasks {
 
-	static chain(tasks: Task[], setNextPos = true): Task {
+	static chain(tasks: Task[], setNextPos = true): Task | null {
 		if (tasks.length == 0) {
-			log.error(`Tasks.chain was passed an empty array of tasks!`);
-			return new TaskInvalid();
+			// log.error(`Tasks.chain was passed an empty array of tasks!`);
+			return null;
 		}
 		if (setNextPos) {
 			for (let i = 0; i < tasks.length - 1; i++) {
