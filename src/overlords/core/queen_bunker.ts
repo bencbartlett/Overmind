@@ -112,7 +112,7 @@ export class BunkerQueenOverlord extends Overlord {
 				tasks.push(Tasks.transferAll(transferTarget));
 				queenPos = transferTarget.pos;
 			} else {
-				log.error(`No transfer targets for ${queen.name}@${queen.pos.print}!`);
+				log.warning(`No transfer targets for ${queen.name}@${queen.pos.print}!`);
 				return null;
 			}
 		}
@@ -143,7 +143,7 @@ export class BunkerQueenOverlord extends Overlord {
 		let neededResources = _.keys(queenCarry) as ResourceConstant[];
 		let targets = _.filter(this.storeStructures,
 							   s => _.all(neededResources,
-										  resource => (s.store[resource] || 0) > (queenCarry[resource] || 0)));
+										  resource => (s.store[resource] || 0) >= (queenCarry[resource] || 0)));
 		let withdrawTarget: StoreStructure | undefined;
 		if (targets.length > 1) {
 			withdrawTarget = minBy(targets, target => Pathing.distance(queenPos, target.pos));
@@ -151,7 +151,7 @@ export class BunkerQueenOverlord extends Overlord {
 			withdrawTarget = _.first(targets);
 		}
 		if (!withdrawTarget) {
-			log.error(`No withdraw target for ${queen.name}@${queen.pos.print}!`);
+			log.warning(`No withdraw target for ${queen.name}@${queen.pos.print}!`);
 			return null;
 		}
 		for (let resourceType of neededResources) {
@@ -171,7 +171,7 @@ export class BunkerQueenOverlord extends Overlord {
 			if (transferTarget) {
 				tasks.push(Tasks.transferAll(transferTarget));
 			} else {
-				log.error(`No transfer targets for ${queen.name}@${queen.pos.print}!`);
+				log.warning(`No transfer targets for ${queen.name}@${queen.pos.print}!`);
 				return null;
 			}
 		}
@@ -198,7 +198,7 @@ export class BunkerQueenOverlord extends Overlord {
 		if (transferTarget) {
 			tasks.push(Tasks.transferAll(transferTarget));
 		} else {
-			log.error(`No transfer targets for ${queen.name}@${queen.pos.print}!`);
+			log.warning(`No transfer targets for ${queen.name}@${queen.pos.print}!`);
 			return null;
 		}
 		// Step 4: return chained task manifest

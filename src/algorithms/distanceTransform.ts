@@ -142,7 +142,6 @@ function displayCostMatrix(costMatrix: CostMatrix, color = '#ff0000'): void {
 			var value = costMatrix.get(x, y);
 			if (value > 0) {
 				vis.circle(x, y, {radius: costMatrix.get(x, y) / max / 2, fill: color});
-				vis.text(costMatrix.get(x, y).toString(), x, y);
 			}
 		}
 	}
