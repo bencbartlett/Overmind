@@ -54,8 +54,8 @@ export const DemolishStructurePriorities: {
 	{structureType: STRUCTURE_POWER_SPAWN},
 	// {structureType: STRUCTURE_ROAD}, // just let roads decay
 	{structureType: STRUCTURE_CONTAINER},
-	{structureType: STRUCTURE_STORAGE},
-	{structureType: STRUCTURE_TERMINAL},
+	{structureType: STRUCTURE_STORAGE, maxRemoved: 1},
+	{structureType: STRUCTURE_TERMINAL, maxRemoved: 1},
 	{structureType: STRUCTURE_WALL, dismantle: true},
 	{structureType: STRUCTURE_RAMPART, dismantle: true},
 ];

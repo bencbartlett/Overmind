@@ -391,7 +391,7 @@ export function getCutTiles(roomName: string, toProtect: Rectangle[],
 							preferCloserBarriers     = true,
 							preferCloserBarrierLimit = Infinity,
 							visualize                = true,
-							bounds: Rectangle        = {x1: 0, y1: 0, x2: 49, y2: 49}) {
+							bounds: Rectangle        = {x1: 0, y1: 0, x2: 49, y2: 49}): Coord[] {
 	const graph = createGraph(roomName, toProtect, preferCloserBarriers, preferCloserBarrierLimit, visualize, bounds);
 	if (!graph) {
 		return [];

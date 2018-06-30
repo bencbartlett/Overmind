@@ -45,15 +45,11 @@ export class BarrierPlanner {
 			let [x2, y2] = [Math.min(x + 5 + padding, 49), Math.min(y + 5 + padding, 49)];
 			rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
 		}
-		if (upgradeSitePos) {
-			let {x, y} = upgradeSitePos;
-			let [x1, y1] = [Math.max(x - 1, 0), Math.max(y - 1, 0)];
-			let [x2, y2] = [Math.min(x + 1, 49), Math.min(y + 1, 49)];
-			rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
-		}
 		// Get Min cut
 		let barrierCoords = getCutTiles(this.colony.name, rectArray, false, 2, false);
-		return _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
+		let positions = _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
+		positions = positions.concat(upgradeSitePos.availableNeighbors(true));
+		return positions;
 	}
 
 	private computeBarrierPositions(hatcheryPos: RoomPosition, commandCenterPos: RoomPosition,
@@ -109,7 +105,7 @@ export class BarrierPlanner {
 		if (this.colony.layout == 'bunker') {
 			if (this.colony.level >= BarrierPlanner.settings.bunkerizeRCL) {
 				// Once you are high level, only maintain ramparts at bunker or controller
-				return insideBunkerBounds(pos, this.colony) || pos.getRangeTo(this.colony.controller) <= 2;
+				return insideBunkerBounds(pos, this.colony) || pos.getRangeTo(this.colony.controller) == 1;
 			} else {
 				// Otherwise keep the normal plan up
 				return this.memory.barrierLookup[pos.coordName];

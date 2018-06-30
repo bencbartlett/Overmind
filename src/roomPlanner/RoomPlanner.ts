@@ -609,7 +609,7 @@ export class RoomPlanner {
 									let thisImportance = _.findIndex(BuildPriorities, type => type == structureType);
 									let existingImportance = _.findIndex(BuildPriorities,
 																		 type => type == structure.structureType);
-									let safeTypes: string[] = [STRUCTURE_SPAWN, STRUCTURE_STORAGE, STRUCTURE_TERMINAL];
+									let safeTypes: string[] = [STRUCTURE_STORAGE, STRUCTURE_TERMINAL];
 									// Destroy the structure if it is less important and not protected
 									if (thisImportance > existingImportance
 										&& !safeTypes.includes(structure.structureType)) {

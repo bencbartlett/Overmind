@@ -8,7 +8,7 @@
  it to a high value (e.g., 255) for this. Set oob to 0 to treat out of bounds
  as background pixels.
  */
-function distanceTransform(foregroundPixels: CostMatrix, oob = 255): CostMatrix {
+function applyDistanceTransform(foregroundPixels: CostMatrix, oob = 255): CostMatrix {
 	let dist = foregroundPixels; // not a copy. We're modifying the input
 
 	// Variables to represent the 3x3 neighborhood of a pixel.
@@ -142,12 +142,17 @@ function displayCostMatrix(costMatrix: CostMatrix, color = '#ff0000'): void {
 			var value = costMatrix.get(x, y);
 			if (value > 0) {
 				vis.circle(x, y, {radius: costMatrix.get(x, y) / max / 2, fill: color});
+				vis.text(costMatrix.get(x, y).toString(), x, y);
 			}
 		}
 	}
 }
 
 export function testDistanceTransform(roomName = 'sim') {
-	let dt = distanceTransform(walkablePixelsForRoom(roomName));
+	let dt = applyDistanceTransform(walkablePixelsForRoom(roomName));
 	displayCostMatrix(dt);
+}
+
+export function distanceTransform(roomName: string): CostMatrix {
+	return applyDistanceTransform(walkablePixelsForRoom(roomName));
 }
