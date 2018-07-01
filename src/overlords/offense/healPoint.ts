@@ -8,7 +8,6 @@ import {CreepSetup} from '../CreepSetup';
 import {Overlord} from '../Overlord';
 import {CombatTargeting} from '../../targeting/CombatTargeting';
 
-
 const PointHealerSetup = new CreepSetup('pointHealer', {
 	pattern  : [HEAL, MOVE],
 	sizeLimit: Infinity,

@@ -11,21 +11,19 @@
 // Overmind repository: github.com/bencbartlett/overmind
 //
 
-
+// Import ALL the things! ==============================================================================================
 'use strict';
-import './console/globals';
-import './prototypes/Creep';
-import './prototypes/Flag';
-import './prototypes/RoomObject';
-import './prototypes/RoomPosition';
-import './prototypes/RoomVisual';
-import './prototypes/Room';
-import './prototypes/RoomStructures';
-import './prototypes/Structures';
-import './prototypes/Miscellaneous';
-import './tasks/initializer'; // this line is necessary to ensure proper compilation ordering
-import './zerg/_Zerg';
-import './zerg/CombatZerg';
+import './console/globals'; // Global functions accessible from CLI
+import './prototypes/Creep'; // Creep prototypes
+import './prototypes/RoomObject'; // RoomObject and targeting prototypes
+import './prototypes/RoomPosition'; // RoomPosition prototypes
+import './prototypes/RoomVisual'; // Prototypes used in Visualizer class
+import './prototypes/Room'; // Non-structure room prototypes
+import './prototypes/RoomStructures'; // IVM-cached structure prototypes
+import './prototypes/Structures'; // Prototypes for accessed structures
+import './prototypes/Miscellaneous'; // Everything else
+import './tasks/initializer'; // This line is necessary to ensure proper compilation ordering...
+import './zerg/CombatZerg'; // ...so is this one... rollup is dumb about generating reference errors
 import {USE_PROFILER} from './~settings';
 import {sandbox} from './sandbox';
 import {Mem} from './Memory';
@@ -37,6 +35,7 @@ import OM from 'Overmind_obfuscated';
 import {log} from './console/log';
 import {VersionMigration} from './versionMigration/migrator';
 import {isIVM} from './utilities/utils';
+// =====================================================================================================================
 
 var _Overmind = (<any>OM)._Overmind as (new() => IOvermind);
 
@@ -80,4 +79,3 @@ function main(): void {
 export function loop(): void {
 	profiler.wrap(main);
 }
-

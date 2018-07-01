@@ -6,7 +6,8 @@ import {MY_USERNAME} from '../~settings';
 Object.defineProperty(Room.prototype, 'print', {
 	get() {
 		return '<a href="#!/room/' + Game.shard.name + '/' + this.name + '">' + this.name + '</a>';
-	}
+	},
+	configurable: true,
 });
 
 // Room properties =====================================================================================================
@@ -15,18 +16,21 @@ Object.defineProperty(Room.prototype, 'my', {
 	get() {
 		return this.controller && this.controller.my;
 	},
+	configurable: true,
 });
 
 Object.defineProperty(Room.prototype, 'reservedByMe', {
 	get() {
 		return this.controller && this.controller.reservation && this.controller.reservation.username == MY_USERNAME;
 	},
+	configurable: true,
 });
 
 Object.defineProperty(Room.prototype, 'signedByMe', {
 	get() {
 		return this.controller && this.controller.sign && this.controller.sign.text == Memory.signature;
 	},
+	configurable: true,
 });
 
 // Room properties: creeps =============================================================================================
@@ -39,6 +43,7 @@ Object.defineProperty(Room.prototype, 'creeps', {
 		}
 		return this._creeps;
 	},
+	configurable: true,
 });
 
 // Room properties: hostiles ===========================================================================================
@@ -52,7 +57,8 @@ Object.defineProperty(Room.prototype, 'hostiles', {
 									  (creep: Creep) => creep.owner.username != 'Source Keeper');
 		}
 		return this._hostiles;
-	}
+	},
+	configurable: true,
 });
 
 Object.defineProperty(Room.prototype, 'dangerousHostiles', {
@@ -65,7 +71,8 @@ Object.defineProperty(Room.prototype, 'dangerousHostiles', {
 																 || creep.getActiveBodyparts(HEAL) > 0);
 		}
 		return this._dangerousHostiles;
-	}
+	},
+	configurable: true,
 });
 
 Object.defineProperty(Room.prototype, 'playerHostiles', {
@@ -74,7 +81,8 @@ Object.defineProperty(Room.prototype, 'playerHostiles', {
 			this._playerHostiles = _.filter(this.hostiles, (creep: Creep) => creep.owner.username != 'Invader');
 		}
 		return this._playerHostiles;
-	}
+	},
+	configurable: true,
 });
 
 Object.defineProperty(Room.prototype, 'dangerousPlayerHostiles', {
@@ -87,7 +95,8 @@ Object.defineProperty(Room.prototype, 'dangerousPlayerHostiles', {
 																   || c.getActiveBodyparts(HEAL) > 0);
 		}
 		return this._dangerousPlayerHOstiles;
-	}
+	},
+	configurable: true,
 });
 
 // Hostile structures currently in the room
@@ -98,6 +107,7 @@ Object.defineProperty(Room.prototype, 'hostileStructures', {
 		}
 		return this._hostileStructures;
 	},
+	configurable: true,
 });
 
 // Room properties: flags ==============================================================================================
@@ -110,6 +120,7 @@ Object.defineProperty(Room.prototype, 'flags', {
 		}
 		return this._flags;
 	},
+	configurable: true,
 });
 
 // Room properties: structures =========================================================================================
@@ -121,6 +132,7 @@ Object.defineProperty(Room.prototype, 'constructionSites', {
 		}
 		return this._constructionSites;
 	},
+	configurable: true,
 });
 
 Object.defineProperty(Room.prototype, 'tombstones', {
@@ -130,6 +142,7 @@ Object.defineProperty(Room.prototype, 'tombstones', {
 		}
 		return this._tombstones;
 	},
+	configurable: true,
 });
 
 Object.defineProperty(Room.prototype, 'drops', {
@@ -139,18 +152,21 @@ Object.defineProperty(Room.prototype, 'drops', {
 		}
 		return this._drops;
 	},
+	configurable: true,
 });
 
 Object.defineProperty(Room.prototype, 'droppedEnergy', {
 	get() {
 		return this.drops[RESOURCE_ENERGY] || [];
 	},
+	configurable: true,
 });
 
 Object.defineProperty(Room.prototype, 'droppedPower', {
 	get() {
 		return this.drops[RESOURCE_POWER] || [];
 	},
+	configurable: true,
 });
 
 // Object.defineProperties(Room.prototype, {

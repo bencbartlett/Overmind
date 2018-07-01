@@ -1,11 +1,10 @@
-import {getOverlord, Zerg} from './_Zerg';
+import {Zerg} from './_Zerg';
 import {CombatTargeting} from '../targeting/CombatTargeting';
 
 export class CombatZerg extends Zerg {
 
 	constructor(creep: Creep) {
 		super(creep);
-		getOverlord(creep);
 	}
 
 	findPartner(partners: CombatZerg[], tickDifference = 600): CombatZerg | undefined {

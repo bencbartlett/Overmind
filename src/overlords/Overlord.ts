@@ -10,6 +10,7 @@ import {MIN_LIFETIME_FOR_BOOST} from '../tasks/instances/getBoosted';
 import {log} from '../console/log';
 import {SpawnRequest, SpawnRequestOptions} from '../hiveClusters/hatchery';
 import {SpawnGroup} from '../logistics/SpawnGroup';
+import {CombatZerg} from '../zerg/CombatZerg';
 
 export function getOverlord(creep: Zerg | Creep): Overlord | null {
 	if (creep.memory.overlord) {
@@ -134,6 +135,11 @@ export abstract class Overlord {
 	/* Default wrapping behavior -- maps all creeps to a base-level zerg */
 	protected zerg(role: string): Zerg[] {
 		return _.map(this.creeps(role), creep => new Zerg(creep));
+	}
+
+	/* Default wrapping behavior -- maps all creeps to a base-level zerg */
+	protected combatZerg(role: string): CombatZerg[] {
+		return _.map(this.creeps(role), creep => new CombatZerg(creep));
 	}
 
 	// protected allCreeps(): Creep[] {

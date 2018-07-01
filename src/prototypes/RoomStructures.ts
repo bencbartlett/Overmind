@@ -45,7 +45,8 @@ multipleList.forEach(function (type) {
 					return this['_' + type + 's'] = [];
 				}
 			}
-		}
+		},
+		configurable: true,
 	});
 });
 
@@ -62,7 +63,8 @@ singleList.forEach(function (type) {
 					return this['_' + type] = undefined;
 				}
 			}
-		}
+		},
+		configurable: true,
 	});
 });
 
@@ -73,7 +75,8 @@ Object.defineProperty(Room.prototype, 'storageUnits', {
 			this._storageUnits = _.compact([this.storage, this.terminal]).concat(this.containers);
 		}
 		return this._storageUnits;
-	}
+	},
+	configurable: true,
 });
 
 Object.defineProperty(Room.prototype, 'sources', {
@@ -82,7 +85,8 @@ Object.defineProperty(Room.prototype, 'sources', {
 			this._sources = this.find(FIND_SOURCES);
 		}
 		return this.find(FIND_SOURCES);
-	}
+	},
+	configurable: true,
 });
 
 Object.defineProperty(Room.prototype, 'mineral', {
@@ -91,7 +95,8 @@ Object.defineProperty(Room.prototype, 'mineral', {
 			this._mineral = this.find(FIND_MINERALS)[0];
 		}
 		return this._mineral;
-	}
+	},
+	configurable: true,
 });
 
 Object.defineProperty(Room.prototype, 'repairables', {
@@ -113,7 +118,8 @@ Object.defineProperty(Room.prototype, 'repairables', {
 			}
 		}
 		return this._repairables;
-	}
+	},
+	configurable: true,
 });
 
 Object.defineProperty(Room.prototype, 'barriers', {
@@ -122,13 +128,15 @@ Object.defineProperty(Room.prototype, 'barriers', {
 			this._barriers = [].concat(this.ramparts, this.constructedWalls);
 		}
 		return this._barriers;
-	}
+	},
+	configurable: true,
 });
 
 Object.defineProperty(Room.prototype, 'walls', {
 	get() {
 		return this.constructedWalls;
-	}
+	},
+	configurable: true,
 });
 
 

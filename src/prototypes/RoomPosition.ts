@@ -3,31 +3,36 @@ import {minBy} from '../utilities/utils';
 Object.defineProperty(RoomPosition.prototype, 'print', {
 	get() {
 		return '<a href="#!/room/' + Game.shard.name + '/' + this.roomName + '">[' + this.roomName + ', ' + this.x + ', ' + this.y + ']</a>';
-	}
+	},
+	configurable: true,
 });
 
 Object.defineProperty(RoomPosition.prototype, 'printPlain', {
 	get() {
 		return `[${this.roomName}, ${this.x}, ${this.y}]`;
-	}
+	},
+	configurable: true,
 });
 
 Object.defineProperty(RoomPosition.prototype, 'room', { // identifier for the pos, used in caching
-	get: function () {
+	get         : function () {
 		return Game.rooms[this.roomName];
 	},
+	configurable: true,
 });
 
 Object.defineProperty(RoomPosition.prototype, 'name', { // identifier for the pos, used in caching
-	get: function () {
+	get         : function () {
 		return this.roomName + ':' + this.x + ':' + this.y;
 	},
+	configurable: true,
 });
 
 Object.defineProperty(RoomPosition.prototype, 'coordName', { // name, but without the roomName
-	get: function () {
+	get         : function () {
 		return this.x + ':' + this.y;
 	},
+	configurable: true,
 });
 
 RoomPosition.prototype.lookForStructure = function (structureType: StructureConstant): Structure | undefined {
@@ -35,25 +40,28 @@ RoomPosition.prototype.lookForStructure = function (structureType: StructureCons
 };
 
 Object.defineProperty(RoomPosition.prototype, 'isEdge', { // if the position is at the edge of a room
-	get: function () {
+	get         : function () {
 		return this.x == 0 || this.x == 49 || this.y == 0 || this.y == 49;
 	},
+	configurable: true,
 });
 
 Object.defineProperty(RoomPosition.prototype, 'isVisible', { // if the position is in a defined room
-	get: function () {
+	get         : function () {
 		return Game.rooms[this.roomName] != undefined;
 	},
+	configurable: true,
 });
 
 Object.defineProperty(RoomPosition.prototype, 'rangeToEdge', { // range to the nearest room edge
-	get: function () {
+	get         : function () {
 		return _.min([this.x, 49 - this.x, this.y, 49 - this.y]);
 	},
+	configurable: true,
 });
 
 Object.defineProperty(RoomPosition.prototype, 'roomCoords', {
-	get: function () {
+	get         : function () {
 		let parsed = /^[WE]([0-9]+)[NS]([0-9]+)$/.exec(this.roomName);
 		let x = parseInt(parsed![1], 10);
 		let y = parseInt(parsed![2], 10);
@@ -61,6 +69,7 @@ Object.defineProperty(RoomPosition.prototype, 'roomCoords', {
 		if (this.roomName.includes('N')) y = -y;
 		return {x: x, y: y} as Coord;
 	},
+	configurable: true,
 });
 
 Object.defineProperty(RoomPosition.prototype, 'neighbors', {
@@ -78,7 +87,8 @@ Object.defineProperty(RoomPosition.prototype, 'neighbors', {
 			}
 		}
 		return adjPos;
-	}
+	},
+	configurable: true,
 });
 
 RoomPosition.prototype.getPositionsInRange = function (range: number,
