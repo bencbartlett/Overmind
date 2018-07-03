@@ -10,8 +10,6 @@ import {ManagerSetup} from '../../overlords/core/manager';
 import {QueenSetup} from '../../overlords/core/queen';
 
 
-export const EMERGENCY_ENERGY_THRESHOLD = 1300;
-
 @profile
 export class DirectiveBootstrap extends Directive {
 
@@ -21,7 +19,6 @@ export class DirectiveBootstrap extends Directive {
 
 	colony: Colony; 					// Emergency flag definitely has a colony
 	room: Room;							// Definitely has a room
-	private needsEnergy: boolean; 		// Whether there is enough energy in the room
 	private needsMiner: boolean;		// Whether a miner needs to be spawned
 	private needsManager: boolean;		// Whether a manager needs to be spawned
 	private needsQueen: boolean;		// Whether a supplier needs to be spawned
@@ -29,8 +26,6 @@ export class DirectiveBootstrap extends Directive {
 	constructor(flag: Flag) {
 		super(flag);
 		this.colony.bootstrapping = true;
-		this.needsEnergy = this.room.energyAvailable < _.min([EMERGENCY_ENERGY_THRESHOLD,
-															  this.room.energyCapacityAvailable]);
 		this.needsMiner = (this.colony.getCreepsByRole(MinerSetup.role).length == 0);
 		this.needsManager = (this.colony.commandCenter != undefined &&
 							 this.colony.commandCenter.overlord != undefined &&
@@ -46,7 +41,7 @@ export class DirectiveBootstrap extends Directive {
 	}
 
 	run(): void {
-		if (!this.needsMiner && !this.needsManager && !this.needsQueen) {
+		if (!this.needsQueen && !this.needsMiner && !this.needsManager) {
 			log.alert(`Colony ${this.room.name} has recovered from crash; removing bootstrap directive.`);
 			// Suicide any fillers so they don't get in the way
 			let overlord = this.overlords.bootstrap as BootstrappingOverlord;

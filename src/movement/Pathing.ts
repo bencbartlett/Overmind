@@ -2,7 +2,6 @@ import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
 import {ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER, WorldMap} from '../utilities/WorldMap';
 import {Zerg} from '../zerg/_Zerg';
-import {Movement, MovePriorities} from './Movement';
 
 /* Module for pathing-related operations. */
 
@@ -192,24 +191,24 @@ export class Pathing {
 		return room._creepMatrix;
 	}
 
-	/* Avoids creeps that shouldn't be pushed in a room */ // TODO: plug in
-	private static getPrioritizedCreepMatrix(room: Room, priority: number): CostMatrix {
-		if (!room._priorityMatrices) {
-			room._priorityMatrices = {};
-		}
-		if (room._priorityMatrices[priority]) {
-			return room._priorityMatrices[priority];
-		}
-		const matrix = this.getDefaultMatrix(room).clone();
-		let otherPriority = MovePriorities.default;
-		for (let creep of room.creeps) {
-			if (!Movement.shouldPush(creep, priority)) {
-				matrix.set(creep.pos.x, creep.pos.y, 0xff);
-			}
-		}
-		room._priorityMatrices[priority] = matrix;
-		return room._priorityMatrices[priority];
-	}
+	// /* Avoids creeps that shouldn't be pushed in a room */ // TODO: plug in
+	// private static getPrioritizedCreepMatrix(room: Room, priority: number): CostMatrix {
+	// 	if (!room._priorityMatrices) {
+	// 		room._priorityMatrices = {};
+	// 	}
+	// 	if (room._priorityMatrices[priority]) {
+	// 		return room._priorityMatrices[priority];
+	// 	}
+	// 	const matrix = this.getDefaultMatrix(room).clone();
+	// 	let otherPriority = MovePriorities.default;
+	// 	for (let creep of room.creeps) {
+	// 		if (!Movement.shouldPush(creep, priority)) {
+	// 			matrix.set(creep.pos.x, creep.pos.y, 0xff);
+	// 		}
+	// 	}
+	// 	room._priorityMatrices[priority] = matrix;
+	// 	return room._priorityMatrices[priority];
+	// }
 
 	/* Avoids source keepers in a room */
 	private static getSkMatrix(room: Room): CostMatrix {

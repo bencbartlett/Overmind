@@ -195,22 +195,23 @@ export class Movement {
 
 		// push creeps out of the way if needed
 		let obstructingCreep = this.findBlockingCreep(creep);
-		if (obstructingCreep && this.shouldPush(obstructingCreep, priority)) {
+		if (obstructingCreep && this.shouldPush(creep, obstructingCreep)) {
 			this.pushCreep(creep, obstructingCreep);
 		}
 		return creep.move(<DirectionConstant>nextDirection);
 	}
 
 	static getPushPriority(creep: Creep | Zerg): number {
-		if (creep.memory._go && creep.memory._go.priority) {
+		creep = normalizeZerg(creep);
+		if (creep.memory && creep.memory._go && creep.memory._go.priority) {
 			return creep.memory._go.priority;
 		} else {
 			return MovePriorities[creep.memory.role] || MovePriorities.default;
 		}
 	}
 
-	static shouldPush(pushee: Creep | Zerg, pusherPriority: number): boolean {
-		if (pusherPriority < this.getPushPriority(pushee)) {
+	static shouldPush(pusher: Creep | Zerg, pushee: Creep | Zerg): boolean {
+		if (this.getPushPriority(pusher) < this.getPushPriority(pushee)) {
 			// pushee less important than pusher
 			return true;
 		} else {
@@ -221,7 +222,7 @@ export class Movement {
 					// If creep is doing a task, only push out of way if it can go somewhere else in range
 					let targetPos = pushee.task.targetPos;
 					let targetRange = pushee.task.settings.targetRange;
-					return _.filter(pushee.pos.availableNeighbors(),
+					return _.filter(pushee.pos.availableNeighbors().concat(pusher.pos),
 									pos => pos.getRangeTo(targetPos) <= targetRange).length > 0;
 				} else if (!pushee.isMoving) {
 					// push creeps out of the way if they're idling

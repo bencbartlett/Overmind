@@ -10,7 +10,6 @@ import {
 } from '../../logistics/LogisticsNetwork';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {Pathing} from '../../movement/Pathing';
-// import {DirectivePickup} from '../../directives/logistics/logisticsRequest';
 import {profile} from '../../profiler/decorator';
 import {CreepSetup} from '../CreepSetup';
 import {isResource, isStoreStructure, isTombstone} from '../../declarations/typeGuards';
@@ -34,47 +33,49 @@ export class TransportOverlord extends Overlord {
 	transporters: Zerg[];
 	logisticsGroup: LogisticsNetwork;
 
-	constructor(colony: Colony, priority = colony.getCreepsByRole(TransporterSetup.role).length > 0 ?
-										   OverlordPriority.ownedRoom.transport : OverlordPriority.ownedRoom.firstTransport) {
+	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.transport) {
 		super(colony, 'logistics', priority);
 		this.transporters = this.zerg(TransporterSetup.role);
 		this.logisticsGroup = colony.logisticsNetwork;
 	}
 
 	private neededTransportPower(): number {
-		let transportPower = 0;
-		let scaling = this.colony.stage == ColonyStage.Larva ? 1.5 : 1.75; // aggregate round-trip multiplier
-		// Add contributions to transport power from hauling energy from mining sites
-		let dropoffLocation: RoomPosition;
-		if (this.colony.commandCenter) {
-			dropoffLocation = this.colony.commandCenter.pos;
-		} else if (this.colony.hatchery && this.colony.hatchery.battery) {
-			dropoffLocation = this.colony.hatchery.battery.pos;
-		} else {
+
+		if (!this.colony.storage
+			&& !(this.colony.hatchery && this.colony.hatchery.battery)
+			&& !this.colony.upgradeSite.battery) {
 			return 0;
 		}
+
+		let transportPower = 0;
+		let scaling = this.colony.stage == ColonyStage.Larva ? 1.5 : 1.75; // aggregate round-trip multiplier
+
+		// Add contributions to transport power from hauling energy from mining sites
 		for (let siteID in this.colony.miningSites) {
 			let site = this.colony.miningSites[siteID];
 			if (site.overlord.miners.length > 0) {
 				// Only count sites which have a container output and which have at least one miner present
 				// (this helps in difficult "rebooting" situations)
 				if (site.output && site.output instanceof StructureContainer) {
-					transportPower += site.energyPerTick * (scaling * Pathing.distance(site.pos, dropoffLocation));
+					transportPower += site.energyPerTick * (scaling * Pathing.distance(site.pos, this.colony.pos));
 				} else if (site.shouldDropMine) {
-					transportPower += .75 * site.energyPerTick * (scaling * Pathing.distance(site.pos, dropoffLocation));
+					transportPower += .75 * site.energyPerTick * (scaling * Pathing.distance(site.pos, this.colony.pos));
 				}
 			}
 		}
+
+		// Add transport power needed to move to upgradeSite
+		if (this.colony.upgradeSite.battery) {
+			transportPower += this.colony.upgradeSite.upgradePowerNeeded * scaling *
+							  Pathing.distance(this.colony.pos, this.colony.upgradeSite.battery.pos);
+		}
+
 
 		if (this.colony.lowPowerMode) {
 			// Reduce needed transporters when colony is in low power mode
 			transportPower *= 0.5;
 		}
 
-		// Add transport power needed to move to upgradeSite
-		transportPower += this.colony.upgradeSite.upgradePowerNeeded * scaling *
-						  Pathing.distance(dropoffLocation, (this.colony.upgradeSite.battery ||
-															 this.colony.upgradeSite).pos);
 		return transportPower / CARRY_CAPACITY;
 	}
 
@@ -82,7 +83,12 @@ export class TransportOverlord extends Overlord {
 		let setup = this.colony.stage == ColonyStage.Larva ? TransporterEarlySetup : TransporterSetup;
 		let transportPowerEach = setup.getBodyPotential(CARRY, this.colony);
 		let neededTransportPower = this.neededTransportPower();
-		this.wishlist(Math.ceil(neededTransportPower / transportPowerEach), setup);
+		let numTransporters = Math.ceil(neededTransportPower / transportPowerEach);
+		if (this.transporters.length == 0) {
+			this.wishlist(numTransporters, setup, {priority: OverlordPriority.ownedRoom.firstTransport});
+		} else {
+			this.wishlist(numTransporters, setup);
+		}
 	}
 
 	private handleTransporter(transporter: Zerg, request: LogisticsRequest | undefined) {

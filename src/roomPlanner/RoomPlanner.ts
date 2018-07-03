@@ -436,7 +436,15 @@ export class RoomPlanner {
 			this.memory.lastGenerated = Game.time;
 			console.log('Room layout and flag positions have been saved.');
 			this.active = false;
-			this.demolishMisplacedStructures(false, true);
+			if (this.colony.level == 1) { // clear out room if setting in for first time
+				this.demolishMisplacedStructures(true, true);
+				// Demolish all barriers that aren't yours
+				for (let barrier of this.colony.room.barriers) {
+					if (barrier.structureType == STRUCTURE_WALL || !barrier.my) {
+						barrier.destroy();
+					}
+				}
+			}
 			this.memory.recheckStructuresAt = Game.time + 3;
 			// Finalize the road planner layout
 		} else {

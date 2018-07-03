@@ -1,7 +1,7 @@
 /* The Overlord object handles most of the task assignment and directs the spawning operations for each Colony. */
 
 import {DirectiveGuard} from './directives/defense/guard';
-import {DirectiveBootstrap, EMERGENCY_ENERGY_THRESHOLD} from './directives/core/bootstrap';
+import {DirectiveBootstrap} from './directives/core/bootstrap';
 import {profile} from './profiler/decorator';
 import {Colony, ColonyStage} from './Colony';
 import {Overlord} from './overlords/Overlord';
@@ -15,6 +15,7 @@ import {DirectiveNukeResponse} from './directives/defense/nukeResponse';
 import {MinerSetup} from './overlords/core/miner';
 import {QueenSetup} from './overlords/core/queen';
 import {DirectiveTerminalEvacuateState} from './directives/logistics/terminalState_evacuate';
+import {bodyCost} from './overlords/CreepSetup';
 
 @profile
 export class Overseer {
@@ -68,12 +69,13 @@ export class Overseer {
 		// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
 		// Doesn't apply to incubating colonies.
 		if (!this.colony.isIncubating) {
-			let hasEnergy = this.colony.room.energyAvailable >= EMERGENCY_ENERGY_THRESHOLD; // Enough spawn energy?
 			let hasMiners = this.colony.getCreepsByRole(MinerSetup.role).length > 0;		// Has energy supply?
 			let hasQueen = this.colony.getCreepsByRole(QueenSetup.role).length > 0;			// Has a queen?
-			if (!hasEnergy && !hasMiners && !hasQueen && this.colony.hatchery) {
-				DirectiveBootstrap.createIfNotPresent(this.colony.hatchery.pos, 'pos');
-				// this.colony.hatchery.settings.suppressSpawning = true;
+			if (!hasMiners && !hasQueen && this.colony.hatchery && !this.colony.spawnGroup) {
+				let energyToMakeQueen = bodyCost(QueenSetup.generateBody(this.colony.room.energyCapacityAvailable));
+				if (this.colony.room.energyAvailable < energyToMakeQueen) {
+					DirectiveBootstrap.createIfNotPresent(this.colony.hatchery.pos, 'pos');
+				}
 			}
 		}
 
