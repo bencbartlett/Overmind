@@ -9,7 +9,7 @@ interface MoveOptions {
 	useFindRoute?: boolean;
 	maxOps?: number;
 	movingTarget?: boolean;
-	freshMatrix?: boolean;
+	// freshMatrix?: boolean;
 	direct?: boolean;
 	terrainCosts?: { plainCost: number, swampCost: number };
 	stuckValue?: number;
@@ -17,6 +17,7 @@ interface MoveOptions {
 	repath?: number;
 	route?: { [roomName: string]: boolean };
 	ensurePath?: boolean;
+	priority?: number;
 }
 
 interface MoveData {

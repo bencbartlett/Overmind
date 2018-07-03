@@ -40,7 +40,7 @@ export const AttackStructurePriorities: BuildableStructureConstant[] = [
 export const DemolishStructurePriorities: {
 	structureType: BuildableStructureConstant,
 	maxRemoved?: number,
-	dismantle?: boolean
+	// dismantle?: boolean
 }[] = [
 	{structureType: STRUCTURE_EXTENSION, maxRemoved: 15},
 	{structureType: STRUCTURE_SPAWN, maxRemoved: 1},
@@ -56,8 +56,8 @@ export const DemolishStructurePriorities: {
 	{structureType: STRUCTURE_CONTAINER},
 	{structureType: STRUCTURE_STORAGE, maxRemoved: 1},
 	{structureType: STRUCTURE_TERMINAL, maxRemoved: 1},
-	{structureType: STRUCTURE_WALL, dismantle: true},
-	{structureType: STRUCTURE_RAMPART, dismantle: true},
+	{structureType: STRUCTURE_WALL},
+	{structureType: STRUCTURE_RAMPART},
 ];
 
 

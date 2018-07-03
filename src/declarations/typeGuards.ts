@@ -1,5 +1,7 @@
 // Type guard functions
 
+import {Zerg} from '../zerg/_Zerg';
+
 export interface EnergyStructure extends Structure {
 	energy: number;
 	energyCapacity: number;
@@ -30,3 +32,6 @@ export function hasPos(obj: HasPos | RoomPosition): obj is HasPos {
 	return (<HasPos>obj).pos != undefined;
 }
 
+export function isZerg(creep: Creep | Zerg): creep is Zerg {
+	return (<Zerg>creep).creep != undefined;
+}

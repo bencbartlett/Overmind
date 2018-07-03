@@ -232,7 +232,7 @@ export abstract class Task {
 
 	// Execute this task each tick. Returns nothing unless work is done.
 	run(): number | undefined {
-		if (this.creep.pos.inRangeTo(this.targetPos, this.settings.targetRange) && !this.creep.pos.isEdge) {
+		if (this.isWorking) {
 			delete this.creep.memory._go;
 			if (this.settings.workOffRoad) {
 				// Move to somewhere nearby that isn't on a road
@@ -246,6 +246,10 @@ export abstract class Task {
 		} else {
 			this.move();
 		}
+	}
+
+	get isWorking(): boolean {
+		return this.creep.pos.inRangeTo(this.targetPos, this.settings.targetRange) && !this.creep.pos.isEdge;
 	}
 
 	/* Bundled form of zerg.park(); adapted from BonzAI codebase*/

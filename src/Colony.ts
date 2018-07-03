@@ -181,10 +181,10 @@ export class Colony {
 		this.controller = this.room.controller!; // must be controller since colonies are based in owned rooms
 		this.spawns = _.sortBy(_.filter(this.room.spawns, spawn => spawn.my && spawn.isActive()), spawn => spawn.ref);
 		this.extensions = this.room.extensions;
-		this.storage = this.room.storage;
+		this.storage = this.room.storage && this.room.storage.isActive() ? this.room.storage : undefined;
 		this.links = this.room.links;
 		this.availableLinks = _.clone(this.room.links);
-		this.terminal = this.room.terminal;
+		this.terminal = this.room.terminal && this.room.terminal.isActive() ? this.room.terminal : undefined;
 		this.towers = this.room.towers;
 		this.labs = _.sortBy(_.filter(this.room.labs, lab => lab.my && lab.isActive()),
 							 lab => 50 * lab.pos.y + lab.pos.x); // Labs are sorted in reading order of positions
@@ -211,7 +211,7 @@ export class Colony {
 		this.level = this.controller.level as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 		this.bootstrapping = false;
 		this.isIncubating = false;
-		if (this.storage && this.storage.isActive() && this.spawns[0]) {
+		if (this.storage && this.spawns[0]) {
 			// If the colony has storage and a hatchery
 			if (this.controller.level == 8) {
 				this.stage = ColonyStage.Adult;
@@ -301,9 +301,8 @@ export class Colony {
 			this.hatchery = new Hatchery(this, this.spawns[0]);
 		}
 		// Instantiate evolution chamber once there are three labs all in range 2 of each other
-		if (this.terminal && this.terminal.isActive() &&
-			_.filter(this.labs,
-					 lab => _.all(this.labs, otherLab => lab.pos.inRangeTo(otherLab, 2))).length >= 3) {
+		if (this.terminal && _.filter(this.labs, lab =>
+			_.all(this.labs, otherLab => lab.pos.inRangeTo(otherLab, 2))).length >= 3) {
 			this.evolutionChamber = new EvolutionChamber(this, this.terminal);
 		}
 		// Instantiate the upgradeSite

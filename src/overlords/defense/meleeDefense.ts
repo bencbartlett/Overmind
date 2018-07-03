@@ -13,12 +13,12 @@ import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatTargeting} from '../../targeting/CombatTargeting';
 
-const ZerglingSetup = new CreepSetup('zergling', {
+export const ZerglingSetup = new CreepSetup('zergling', {
 	pattern  : [ATTACK, MOVE],
 	sizeLimit: Infinity,
 });
 
-const ArmoredZerglingSetup = new CreepSetup('zergling', {
+export const ArmoredZerglingSetup = new CreepSetup('zergling', {
 	pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE],
 	sizeLimit: Infinity,
 });

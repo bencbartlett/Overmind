@@ -66,7 +66,8 @@ export class EvolutionChamber extends HiveCluster {
 	labs: StructureLab[];									// Colony labs
 	reagentLabs: StructureLab[];
 	productLabs: StructureLab[];
-	boostingLab: StructureLab;
+	productLabsNonBoosting: StructureLab[];
+	boostingLabs: StructureLab[];
 	transportRequests: TransportRequestGroup;				// Box for resource requests
 
 	memory: EvolutionChamberMemory;
@@ -89,13 +90,23 @@ export class EvolutionChamber extends HiveCluster {
 		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetwork;
 		this.labs = colony.labs;
 		// Boosting lab is the closest by path to terminal (fastest to empty and refill)
-		this.boostingLab = _.first(_.sortBy(this.labs, lab => Pathing.distance(this.terminal.pos, lab.pos)));
-		// Reagent labs are range=2 from all other labs (there are two in my layout at RCL8)
-		let range2Labs = _.filter(this.labs, lab => _.all(this.labs, otherLab => lab.pos.inRangeTo(otherLab, 2)) &&
-													lab != this.boostingLab);
-		this.reagentLabs = _.take(_.sortBy(range2Labs, lab => -1 * neighboringLabs(lab.pos).length), 2); // most neighbr
+		if (this.colony.bunker) {
+			this.boostingLabs = _.filter(this.labs, lab => lab.pos.findInRange(this.colony.spawns, 1).length > 0);
+		} else {
+			this.boostingLabs = [_.first(_.sortBy(this.labs, lab => Pathing.distance(this.terminal.pos, lab.pos)))];
+		}
+		// Reagent labs are range=2 from all other labs and are not a boosting lab
+		let range2Labs = _.filter(this.labs, lab => _.all(this.labs, otherLab => lab.pos.inRangeTo(otherLab, 2)));
+		let reagentLabCandidates = _.filter(range2Labs, lab => !_.any(this.boostingLabs, bLab => bLab.id == lab.id));
+		if (this.colony.bunker && this.colony.labs.length == 10) {
+			this.reagentLabs = _.take(_.sortBy(reagentLabCandidates,
+											   lab => -1 * lab.pos.findInRange(this.boostingLabs, 1).length), 2);
+		} else {
+			this.reagentLabs = _.take(_.sortBy(reagentLabCandidates, lab => -1 * neighboringLabs(lab.pos).length), 2);
+		}
 		// Product labs are everything that isn't a reagent lab. (boostingLab can also be a productLab)
 		this.productLabs = _.difference(this.labs, this.reagentLabs);
+		this.productLabsNonBoosting = _.difference(this.productLabs, this.boostingLabs);
 		// This keeps track of reservations for boosting
 		this.labReservations = {};
 		this.boostQueue = {};
@@ -207,6 +218,7 @@ export class EvolutionChamber extends HiveCluster {
 			let {mineralType, amount} = this.memory.activeReaction;
 			let [ing1, ing2] = REAGENTS[mineralType];
 			let [lab1, lab2] = this.reagentLabs;
+			if (!lab1 || !lab2) return;
 			// Empty out any incorrect minerals and request the correct reagents
 			if (this.memory.status == LabStatus.UnloadingLabs || (lab1.mineralType != ing1 && lab1.mineralAmount > 0)) {
 				this.transportRequests.requestOutput(lab1, Priority.Normal, {resourceType: lab1.mineralType!});
@@ -271,12 +283,11 @@ export class EvolutionChamber extends HiveCluster {
 
 	private registerRequests(): void {
 		// Refill labs needing energy with lower priority for all non-boosting labs
-		let refillLabs = _.filter(this.labs, lab => lab.energy < lab.energyCapacity && lab.id != this.boostingLab.id);
+		let refillLabs = _.filter(this.productLabsNonBoosting, lab => lab.energy < lab.energyCapacity);
 		_.forEach(refillLabs, lab => this.transportRequests.requestInput(lab, Priority.NormalLow));
 		// Request high priority energy to booster lab
-		if (this.boostingLab.energy < this.boostingLab.energyCapacity) {
-			this.transportRequests.requestInput(this.boostingLab, Priority.NormalHigh);
-		}
+		let boostingRefillLabs = _.filter(this.boostingLabs, lab => lab.energy < lab.energyCapacity);
+		_.forEach(boostingRefillLabs, lab => this.transportRequests.requestInput(lab, Priority.NormalHigh));
 		// Request resources delivered to / withdrawn from each type of lab
 		this.reagentLabRequests();
 		this.productLabRequests();
@@ -286,7 +297,7 @@ export class EvolutionChamber extends HiveCluster {
 	// Lab mineral reservations ========================================================================================
 
 	/* Reserves a product lab for boosting with a compound unrelated to production */
-	private reserveLab(mineralType: _ResourceConstantSansEnergy, amount: number, lab = this.boostingLab) {
+	private reserveLab(mineralType: _ResourceConstantSansEnergy, amount: number, lab: StructureLab) {
 		_.remove(this.productLabs, productLab => productLab.ref == lab.ref);
 		this.labReservations[lab.id] = {mineralType: mineralType, amount: amount};
 	}
@@ -307,7 +318,7 @@ export class EvolutionChamber extends HiveCluster {
 		}
 	}
 
-	requestBoost(mineralType: _ResourceConstantSansEnergy, creep: Zerg, lab = this.boostingLab) {
+	requestBoost(mineralType: _ResourceConstantSansEnergy, creep: Zerg, lab: StructureLab) {
 		if (!this.boostQueue[lab.id]) {
 			this.boostQueue[lab.id] = [];
 		}
@@ -315,11 +326,11 @@ export class EvolutionChamber extends HiveCluster {
 		// Boost requests are prioritized by which creep has least time to live
 		this.boostQueue[lab.id] = _.sortBy([...this.boostQueue[lab.id],
 											{mineralType: mineralType, creepName: creep.name}],
-										   request => (Game.zerg[request.creepName].ticksToLive || Infinity));
+										   request => (Game.zerg[request.creepName].ticksToLive || 9999));
 	}
 
 	/* Zero-indexed position in the boosting queue of a given creep. Equals -1 if creep isn't queued. */
-	queuePosition(creep: Zerg, lab = this.boostingLab): number {
+	queuePosition(creep: Zerg, lab: StructureLab): number {
 		return _.findIndex(this.boostQueue[lab.id], request => request.creepName == creep.name);
 	}
 
@@ -389,13 +400,9 @@ export class EvolutionChamber extends HiveCluster {
 	}
 
 	visuals() {
-		for (let lab of this.reagentLabs) {
-			Visualizer.circle(lab.pos, 'red');
-		}
-		for (let lab of this.productLabs) {
-			Visualizer.circle(lab.pos, 'blue');
-		}
-		Visualizer.circle(this.boostingLab.pos, 'green');
+		_.forEach(this.reagentLabs, lab => Visualizer.circle(lab.pos, 'red'));
+		_.forEach(this.productLabs, lab => Visualizer.circle(lab.pos, 'blue'));
+		_.forEach(this.boostingLabs, lab => Visualizer.circle(lab.pos, 'purple'));
 	}
 }
 

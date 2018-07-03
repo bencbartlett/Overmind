@@ -2,7 +2,6 @@ import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {RangedDefenseOverlord} from '../../overlords/defense/rangedDefense';
 import {ColonyStage} from '../../Colony';
-import {MeleeDefenseOverlord} from '../../overlords/defense/meleeDefense';
 import {log} from '../../console/log';
 import {CombatIntel} from '../../intel/combatIntel';
 
@@ -37,10 +36,10 @@ export class DirectiveInvasionDefense extends Directive {
 		let meleeHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(ATTACK) > 0 ||
 																	hostile.getActiveBodyparts(WORK) > 0);
 		let rangedHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0);
-		if (this.colony.stage > ColonyStage.Larva && percentWalls > 0.5) {
+		if (this.colony.stage > ColonyStage.Larva) {
 			this.overlords.rangedDefense = new RangedDefenseOverlord(this, useBoosts);
-		} else if (meleeHostiles.length > 0) {
-			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
+			// } else if (meleeHostiles.length > 0) {
+			// 	this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
 		} else if (Game.time % 10 == 0) {
 			log.warning(`No invasion defense overlord at ${this.pos.print}!`);
 		}

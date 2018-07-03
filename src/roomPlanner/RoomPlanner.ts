@@ -12,7 +12,6 @@ import {RoadPlanner} from './RoadPlanner';
 import {BarrierPlanner} from './BarrierPlanner';
 import {BuildPriorities, DemolishStructurePriorities} from '../priorities/priorities_structures';
 import {bunkerLayout} from './layouts/bunker';
-import {DirectiveDismantle} from '../directives/targeting/dismantle';
 import {DirectiveTerminalRebuildState} from '../directives/logistics/terminalState_rebuild';
 
 export interface BuildingPlannerOutput {
@@ -437,7 +436,8 @@ export class RoomPlanner {
 			this.memory.lastGenerated = Game.time;
 			console.log('Room layout and flag positions have been saved.');
 			this.active = false;
-			this.buildMissingStructures();
+			this.demolishMisplacedStructures(false, true);
+			this.memory.recheckStructuresAt = Game.time + 3;
 			// Finalize the road planner layout
 		} else {
 			log.warning('Not a valid room layout! Must have both hatchery and commandCenter placements ' +
@@ -493,7 +493,7 @@ export class RoomPlanner {
 	}
 
 	/* Create construction sites for any buildings that need to be built */
-	private demolishMisplacedStructures(skipBarriers = true): void {
+	private demolishMisplacedStructures(skipBarriers = true, destroyAllStructureTypes = false): void {
 		if (getAllColonies().length <= 1 && !this.colony.storage) {
 			return; // Not safe to move structures until you have multiple colonies or a storage
 		}
@@ -512,20 +512,27 @@ export class RoomPlanner {
 			log.info(this.colony.name + ' does not have a room plan yet! Unable to demolish errant structures.');
 		}
 		// Build missing structures from room plan
+		this.memory.relocating = false;
 		for (let priority of DemolishStructurePriorities) {
 			let structureType = priority.structureType;
 			if (skipBarriers && (structureType == STRUCTURE_RAMPART || structureType == STRUCTURE_WALL)) {
 				continue;
 			}
 			let maxRemoved = priority.maxRemoved || Infinity;
-			let isRelocating = false;
 			let removeCount = 0;
 			let structures = _.filter(this.colony.room.find(FIND_STRUCTURES), s => s.structureType == structureType);
-			let dismantleCount = _.filter(structures,
-										  s => _.filter(s.pos.lookFor(LOOK_FLAGS),
-														flag => DirectiveDismantle.filter(flag)).length > 0).length;
+			// let dismantleCount = _.filter(structures,
+			// 							  s => _.filter(s.pos.lookFor(LOOK_FLAGS),
+			// 											flag => DirectiveDismantle.filter(flag)).length > 0).length;
 			for (let structure of structures) {
 				if (!this.structureShouldBeHere(structureType, structure.pos)) {
+					if (this.colony.level < 4
+						&& (structureType == STRUCTURE_STORAGE || structureType == STRUCTURE_TERMINAL)) {
+						break; // don't destroy terminal or storage when under RCL4 - can use energy inside
+					}
+					if (structureType != STRUCTURE_WALL && structureType != STRUCTURE_RAMPART) {
+						this.memory.relocating = true;
+					}
 					// Don't remove the terminal until you have rebuilt storage
 					if (this.colony.level >= 6 && structureType == STRUCTURE_TERMINAL) {
 						if (!this.colony.storage) {
@@ -537,54 +544,45 @@ export class RoomPlanner {
 							return;
 						}
 					}
-					isRelocating = true;
 					let amountMissing = CONTROLLER_STRUCTURES[structureType][this.colony.level] - structures.length
-										+ removeCount + dismantleCount;
+										+ removeCount; // + dismantleCount;
 					if (amountMissing < maxRemoved) {
-						if (priority.dismantle) {
-							if (dismantleCount < RoomPlanner.settings.maxDismantleCount) { // TODO: add back in
-								// log.info(`${this.colony.name}: dismantling ${structureType} at ${structure.pos.print}`);
-								// DirectiveDismantle.createIfNotPresent(structure.pos, 'pos');
-								// dismantleCount++;
-								// this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
-							}
-						} else {
-							if (structureType == STRUCTURE_SPAWN && this.colony.spawns.length == 1) {
-								let spawnCost = 15000;
-								if (this.colony.assets[RESOURCE_ENERGY] < spawnCost) {
-									log.warning(`Unsafe to destroy misplaced spawn: ` +
-												`${this.colony.assets[RESOURCE_ENERGY]}/${spawnCost} energy available`);
-									return;
-								}
-								let workTicksNeeded = 15000 / BUILD_POWER;
-								let workTicksAvailable = _.sum(this.colony.overlords.work.workers, worker =>
-									worker.getActiveBodyparts(WORK) * (worker.ticksToLive || 0));
-								if (workTicksAvailable < workTicksNeeded) {
-									log.warning(`Unsafe to destroy misplaced spawn: ` +
-												`${workTicksAvailable}/${workTicksNeeded} [WORK * ticks] available`);
+						if (structureType == STRUCTURE_SPAWN && this.colony.spawns.length == 1) {
+							let spawnCost = 15000;
+							if (this.colony.assets[RESOURCE_ENERGY] < spawnCost) {
+								log.warning(`Unsafe to destroy misplaced spawn: ` +
+											`${this.colony.assets[RESOURCE_ENERGY]}/${spawnCost} energy available`);
+								if (!destroyAllStructureTypes) {
 									return;
 								}
 							}
-							let result = structure.destroy();
-							if (result != OK) {
-								log.warning(`${this.colony.name}: couldn't destroy structure of type ` +
-											`"${structureType}" at ${structure.pos.print}. Result: ${result}`);
-							} else {
-								log.info(`${this.colony.name}: destroyed ${structureType} at ${structure.pos.print}`);
+							let workTicksNeeded = 15000 / BUILD_POWER;
+							let workTicksAvailable = _.sum(this.colony.overlords.work.workers, worker =>
+								worker.getActiveBodyparts(WORK) * (worker.ticksToLive || 0));
+							if (workTicksAvailable < workTicksNeeded) {
+								log.warning(`Unsafe to destroy misplaced spawn: ` +
+											`${workTicksAvailable}/${workTicksNeeded} [WORK * ticks] available`);
+								if (!destroyAllStructureTypes) {
+									return;
+								}
 							}
-							removeCount++;
-							this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
 						}
+						let result = structure.destroy();
+						if (result != OK) {
+							log.warning(`${this.colony.name}: couldn't destroy structure of type ` +
+										`"${structureType}" at ${structure.pos.print}. Result: ${result}`);
+						} else {
+							log.info(`${this.colony.name}: destroyed ${structureType} at ${structure.pos.print}`);
+						}
+						removeCount++;
+						this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
 					}
 				}
 			}
-			if (isRelocating && structureType != STRUCTURE_WALL && structureType != STRUCTURE_RAMPART) {
-				this.memory.relocating = true;
+			if (this.memory.relocating && !destroyAllStructureTypes) {
 				return;
 			}
 		}
-		// If you don't need to move anything, set relocating = false in memory
-		this.memory.relocating = false;
 	}
 
 	/* Create construction sites for any buildings that need to be built */

@@ -2,6 +2,7 @@ import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
 import {ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER, WorldMap} from '../utilities/WorldMap';
 import {Zerg} from '../zerg/_Zerg';
+import {Movement, MovePriorities} from './Movement';
 
 /* Module for pathing-related operations. */
 
@@ -191,6 +192,25 @@ export class Pathing {
 		return room._creepMatrix;
 	}
 
+	/* Avoids creeps that shouldn't be pushed in a room */ // TODO: plug in
+	private static getPrioritizedCreepMatrix(room: Room, priority: number): CostMatrix {
+		if (!room._priorityMatrices) {
+			room._priorityMatrices = {};
+		}
+		if (room._priorityMatrices[priority]) {
+			return room._priorityMatrices[priority];
+		}
+		const matrix = this.getDefaultMatrix(room).clone();
+		let otherPriority = MovePriorities.default;
+		for (let creep of room.creeps) {
+			if (!Movement.shouldPush(creep, priority)) {
+				matrix.set(creep.pos.x, creep.pos.y, 0xff);
+			}
+		}
+		room._priorityMatrices[priority] = matrix;
+		return room._priorityMatrices[priority];
+	}
+
 	/* Avoids source keepers in a room */
 	private static getSkMatrix(room: Room): CostMatrix {
 		if (room._skMatrix) {
@@ -222,15 +242,15 @@ export class Pathing {
 		if (options.preferHighway) {
 			highwayBias = 2.5;
 		} else if (options.preferHighway != false) {
-			if (linearDistance > 8) {
-				highwayBias = 2.5;
-			} else {
-				let oCoords = WorldMap.getRoomCoordinates(origin);
-				let dCoords = WorldMap.getRoomCoordinates(destination);
-				if (_.any([oCoords.x, oCoords.y, dCoords.x, dCoords.y], z => z % 10 <= 1 || z % 10 >= 9)) {
-					highwayBias = 2.5;
-				}
-			}
+			// if (linearDistance > 8) {
+			// 	highwayBias = 2.5;
+			// } else {
+			// 	let oCoords = WorldMap.getRoomCoordinates(origin);
+			// 	let dCoords = WorldMap.getRoomCoordinates(destination);
+			// 	if (_.any([oCoords.x, oCoords.y, dCoords.x, dCoords.y], z => z % 10 <= 1 || z % 10 >= 9)) {
+			// 		highwayBias = 2.5;
+			// 	}
+			// }
 
 		}
 
@@ -290,6 +310,27 @@ export class Pathing {
 			return;
 		}
 		return this.positionAtDirection(creep.pos, nextDir);
+	}
+
+	static oppositeDirection(direction: DirectionConstant): DirectionConstant {
+		switch (direction) {
+			case TOP:
+				return BOTTOM;
+			case TOP_LEFT:
+				return BOTTOM_RIGHT;
+			case LEFT:
+				return RIGHT;
+			case BOTTOM_LEFT:
+				return TOP_RIGHT;
+			case BOTTOM:
+				return TOP;
+			case BOTTOM_RIGHT:
+				return TOP_LEFT;
+			case RIGHT:
+				return LEFT;
+			case TOP_RIGHT:
+				return BOTTOM_LEFT;
+		}
 	}
 
 	/* Returns a position at a direction from origin */

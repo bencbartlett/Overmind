@@ -10,15 +10,16 @@ import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatTargeting} from '../../targeting/CombatTargeting';
 
-const HydraliskSetup = new CreepSetup('hydralisk', {
+export const HydraliskSetup = new CreepSetup('hydralisk', {
 	pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, HEAL, MOVE, MOVE, MOVE, MOVE],
 	sizeLimit: Infinity,
 });
 
-const BoostedHydraliskSetup = new CreepSetup('hydralisk', {
+export const BoostedHydraliskSetup = new CreepSetup('hydralisk', {
 	pattern  : [TOUGH, TOUGH, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, HEAL, MOVE],
 	sizeLimit: Infinity,
 });
+
 
 @profile
 export class RangedDefenseOverlord extends Overlord {
@@ -43,7 +44,7 @@ export class RangedDefenseOverlord extends Overlord {
 				boostResources.heal[3],
 			];
 		}
-		this.retreatPos = (this.colony.commandCenter || this.colony.hatchery || this.colony.controller).pos;
+		this.retreatPos = this.colony.pos;
 		this.settings = {
 			retreatHitsPercent : 0.85,
 			reengageHitsPercent: 0.95,

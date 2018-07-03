@@ -41,6 +41,10 @@ export function setOverlord(creep: Zerg | Creep, newOverlord: Overlord | null) {
 	if (newOverlord) newOverlord.recalculateCreeps();
 }
 
+export function normalizeZerg(creep: Zerg | Creep): Zerg | Creep {
+	return Game.zerg[creep.name] || creep;
+}
+
 
 interface ParkingOptions {
 	range: number;
@@ -382,7 +386,7 @@ export class Zerg {
 
 	/* Creeps are idle if they don't have a task. */
 	get isIdle(): boolean {
-		return !this.spawning && (!this.task || !this.task.isValid());
+		return !this.task || !this.task.isValid();
 	}
 
 	/* Execute the task you currently have. */
@@ -442,6 +446,11 @@ export class Zerg {
 	// 		return this.colony.obstacles;
 	// 	}
 	// }
+
+	get isMoving(): boolean {
+		let moveData = this.memory._go as MoveData | undefined;
+		return !!moveData && !!moveData.path && moveData.path.length > 1;
+	}
 
 	park(pos: RoomPosition = this.pos, maintainDistance = false): number {
 		return Movement.park(this, pos, maintainDistance);

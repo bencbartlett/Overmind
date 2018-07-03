@@ -66,6 +66,7 @@ interface CreepMemory {
 	// Combat
 	partner?: string;
 	retreating?: boolean;
+	boostLab?: string;
 }
 
 interface LoggerMemory {
@@ -95,6 +96,8 @@ interface FlagMemory {
 	rotation?: number;
 	colony?: string;
 	parent?: string;
+	maxPathLength?: number;
+	maxLinearRange?: number;
 	// overlords: { [overlordName: string]: OverlordMemory };
 
 	// [otherProperties: string]: any;

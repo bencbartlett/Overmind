@@ -1,6 +1,6 @@
 import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
-import {Colony} from '../Colony';
+import {Colony, getAllColonies} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
 import {Pathing} from '../movement/Pathing';
 
@@ -27,15 +27,15 @@ export abstract class Directive {
 	memory: FlagMemory;							// Flag memory
 	overlords: { [name: string]: Overlord };	// Overlords
 
-	constructor(flag: Flag, requiredRCL = 1) {
+	constructor(flag: Flag, requiredRCL = 1, maxPathLength = 550) {
 		this.flag = flag;
 		this.name = flag.name;
 		this.ref = flag.ref;
+		this.memory = flag.memory;
 		this.requiredRCL = requiredRCL;
 		this.colony = Directive.getFlagColony(flag, requiredRCL);
 		this.pos = flag.pos;
 		this.room = flag.room;
-		this.memory = flag.memory;
 		if (!this.memory.created) this.memory.created = Game.time;
 		this.overlords = {};
 		// Register to colony overseer or delete the directive if the colony is dead
@@ -46,7 +46,13 @@ export abstract class Directive {
 		}
 	}
 
-	static getFlagColony(flag: Flag, requiredRCL = 1): Colony {
+	static getFlagColony(flag: Flag, requiredRCL = 1, maxPathLength = 550, maxLinearRange = 10): Colony {
+		if (flag.memory.maxPathLength) {
+			maxPathLength = flag.memory.maxPathLength;
+		}
+		if (flag.memory.maxLinearRange) {
+			maxLinearRange = flag.memory.maxLinearRange;
+		}
 		// If something is written to flag.colony, use that as the colony
 		if (flag.memory.colony) {
 			return Overmind.colonies[flag.memory.colony];
@@ -66,43 +72,49 @@ export abstract class Directive {
 				return colony;
 			} else {
 				// Otherwise assign to closest colony
-				this.recalculateColony(flag, requiredRCL);
+				this.recalculateColony(flag, requiredRCL, maxPathLength, maxLinearRange);
 				return Overmind.colonies[flag.memory.colony!];
 			}
 		}
 	}
 
-	static recalculateColony(flag: Flag, requiredRCL = 1, restrictDistance = 10, verbose = false) {
+	private static recalculateColony(flag: Flag,
+									 requiredRCL    = 1,
+									 maxPathLength  = 550,
+									 maxLinearRange = 10,
+									 verbose        = false) {
 		if (verbose) log.info(`Recalculating colony association for ${flag.name} in ${flag.pos.roomName}`);
-		let nearestColonyName = '';
+		let nearestColony: Colony | undefined = undefined;
 		let minDistance = Infinity;
 		let colonyRooms = _.filter(Game.rooms, room => room.my);
-		for (let room of colonyRooms) {
-			if (room.controller!.level >= requiredRCL) {
-				let ret = Pathing.findShortestPath(flag.pos, room.controller!.pos,
-												   {restrictDistance: restrictDistance});
+		for (let colony of getAllColonies()) {
+			if (Game.map.getRoomLinearDistance(flag.pos.roomName, colony.name) > maxLinearRange) {
+				continue;
+			}
+			if (colony.level >= requiredRCL) {
+				let ret = Pathing.findPath((colony.hatchery || colony).pos, flag.pos);
 				if (!ret.incomplete) {
-					if (ret.path.length < minDistance) {
-						nearestColonyName = room.name;
+					if (ret.path.length < maxPathLength && ret.path.length < minDistance) {
+						nearestColony = colony;
 						minDistance = ret.path.length;
 					}
-					if (verbose) log.info(`Path length to ${room.name}: ${ret.path.length}`);
+					if (verbose) log.info(`Path length to ${colony.room.print}: ${ret.path.length}`);
 				} else {
-					if (verbose) log.info(`Incomplete path found to ${room.name}`);
+					if (verbose) log.info(`Incomplete path from ${colony.room.print}`);
 				}
 			} else {
 				if (verbose) {
-					log.info(`RCL for ${room.name} insufficient: ` +
-							 `needs ${requiredRCL}, is ${room.controller!.level}`);
+					log.info(`RCL for ${colony.room.print} insufficient: needs ${requiredRCL}, is ${colony.level}`);
 				}
 			}
 
 		}
-		if (nearestColonyName != '') {
-			log.info(`Colony ${nearestColonyName!} assigned to ${flag.name}.`);
-			flag.memory.colony = nearestColonyName;
+		if (nearestColony) {
+			log.info(`Colony ${nearestColony.room.print} assigned to ${flag.name}.`);
+			flag.memory.colony = nearestColony.room.name;
 		} else {
-			log.warning(`Could not find colony match for ${flag.name} in ${flag.pos.roomName}!`);
+			log.error(`Could not find colony match for ${flag.name} in ${flag.pos.roomName}!` +
+					  `Try setting memory.maxPathLength and memory.maxLinearRange.`);
 		}
 	}
 

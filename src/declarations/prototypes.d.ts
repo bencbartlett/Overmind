@@ -48,6 +48,7 @@ interface Room {
 	constructedWalls: StructureWall[];
 	ramparts: StructureRampart[];
 	barriers: (StructureWall | StructureRampart)[];
+	storageUnits: StorageUnit[];
 	keeperLairs: StructureKeeperLair[];
 	portals: StructurePortal[];
 	links: StructureLink[];
@@ -68,6 +69,7 @@ interface Room {
 	// Used by movement library
 	_defaultMatrix: CostMatrix;
 	_creepMatrix: CostMatrix;
+	_priorityMatrices: { [priority: number]: CostMatrix };
 	_skMatrix: CostMatrix;
 }
 

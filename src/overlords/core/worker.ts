@@ -20,7 +20,7 @@ const WorkerEarlySetup = new CreepSetup('worker', {
 	sizeLimit: Infinity,
 });
 
-type rechargeObjectType = StructureStorage
+export type rechargeObjectType = StructureStorage
 	| StructureTerminal
 	| StructureContainer
 	| StructureLink
@@ -230,23 +230,16 @@ export class WorkerOverlord extends Overlord {
 		// Calculate recharge objects if needed (can't be placed in constructor because instantiation order
 		if (this.rechargeObjects.length == 0) {
 			let workerWithdrawLimit = this.colony.stage == ColonyStage.Larva ? 750 : 100;
-			let rechargeObjects = _.compact([this.colony.storage!,
-											 this.colony.terminal!,
-											 this.colony.hatchery ? this.colony.hatchery.battery : undefined,
-											 this.colony.upgradeSite.battery!,
+			let rechargeObjects = _.compact([...this.colony.room.storageUnits,
 											 ...(this.colony.room.drops[RESOURCE_ENERGY] || []),
 											 ..._.map(this.colony.miningSites, site => site.output!),
 											 ...this.colony.tombstones]) as rechargeObjectType[];
-			this.rechargeObjects = _.filter(rechargeObjects, obj => isResource(obj) ? obj.amount > 0 : obj.energy > 0);
+			this.rechargeObjects = _.filter(rechargeObjects, obj => isResource(obj) ? obj.amount > 0 :
+																	obj.energy > workerWithdrawLimit);
 		}
 		// Choose the target to maximize your energy gain subject to other targeting workers
 		let target = maxBy(this.rechargeObjects, function (obj) {
-			let amount: number;
-			if (isResource(obj)) {
-				amount = obj.amount;
-			} else {
-				amount = obj.energy;
-			}
+			let amount = isResource(obj) ? obj.amount : obj.energy;
 			let otherTargetingWorkers = _.map(obj.targetedBy, name => Game.zerg[name]);
 			let resourceOutflux = _.sum(_.map(otherTargetingWorkers,
 											  other => other.carryCapacity - _.sum(other.carry)));

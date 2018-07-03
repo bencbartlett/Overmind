@@ -4,13 +4,16 @@
 import {profile} from '../profiler/decorator';
 import {log} from '../console/log';
 import {getTerrainCosts, isExit, normalizePos, sameCoord} from './helpers';
-import {Zerg} from '../zerg/_Zerg';
+import {normalizeZerg, Zerg} from '../zerg/_Zerg';
 import {Pathing} from './Pathing';
 import {QueenSetup} from '../overlords/core/queen';
 import {TransporterSetup} from '../overlords/core/transporter';
 import {ManagerSetup} from '../overlords/core/manager';
 import {WorkerSetup} from '../overlords/core/worker';
 import {insideBunkerBounds} from '../roomPlanner/layouts/bunker';
+import {HydraliskSetup} from '../overlords/defense/rangedDefense';
+import {ZerglingSetup} from '../overlords/defense/meleeDefense';
+import {isZerg} from '../declarations/typeGuards';
 
 export const NO_ACTION = -20;
 
@@ -30,7 +33,9 @@ export const MovePriorities = {
 	[ManagerSetup.role]    : 1,
 	[QueenSetup.role]      : 2,
 	[TransporterSetup.role]: 3,
-	[WorkerSetup.role]     : 4,
+	[ZerglingSetup.role]   : 4,
+	[HydraliskSetup.role]  : 5,
+	[WorkerSetup.role]     : 9,
 	default                : 10,
 };
 
@@ -50,9 +55,12 @@ export class Movement {
 			return ERR_TIRED;
 		}
 
+		let priority = this.getPushPriority(creep);
+
 		_.defaults(options, {
 			ignoreCreeps: true,
 			range       : 1,
+			priority    : priority,
 		});
 
 		destination = normalizePos(destination);
@@ -75,9 +83,10 @@ export class Movement {
 				if (destination.isWalkable()) {
 					return creep.move(direction);
 				}
+			} else { // at destination
+				delete creep.memory._go;
+				return NO_ACTION;
 			}
-			delete creep.memory._go;
-			return NO_ACTION;
 		}
 
 		// initialize data object
@@ -106,7 +115,7 @@ export class Movement {
 		if (this.isStuck(creep, state)) {
 			state.stuckCount++;
 			this.circle(creep.pos, 'magenta', state.stuckCount * .3);
-			pushedCreep = this.pushCreep(creep);
+			// pushedCreep = this.pushCreep(creep);
 		} else {
 			state.stuckCount = 0;
 		}
@@ -117,7 +126,6 @@ export class Movement {
 		}
 		if (state.stuckCount >= options.stuckValue && !pushedCreep && Math.random() > .5) {
 			options.ignoreCreeps = false;
-			options.freshMatrix = true;
 			delete moveData.path;
 		}
 
@@ -183,8 +191,119 @@ export class Movement {
 			moveData.path = moveData.path.substr(1);
 		}
 
-		let nextDirection = parseInt(moveData.path[0], 10);
+		let nextDirection = parseInt(moveData.path[0], 10) as DirectionConstant;
+
+		// push creeps out of the way if needed
+		let obstructingCreep = this.findBlockingCreep(creep);
+		if (obstructingCreep && this.shouldPush(obstructingCreep, priority)) {
+			this.pushCreep(creep, obstructingCreep);
+		}
 		return creep.move(<DirectionConstant>nextDirection);
+	}
+
+	static getPushPriority(creep: Creep | Zerg): number {
+		if (creep.memory._go && creep.memory._go.priority) {
+			return creep.memory._go.priority;
+		} else {
+			return MovePriorities[creep.memory.role] || MovePriorities.default;
+		}
+	}
+
+	static shouldPush(pushee: Creep | Zerg, pusherPriority: number): boolean {
+		if (pusherPriority < this.getPushPriority(pushee)) {
+			// pushee less important than pusher
+			return true;
+		} else {
+			pushee = normalizeZerg(pushee);
+			if (isZerg(pushee)) {
+				// pushee is equal or more important than pusher
+				if (pushee.task && pushee.task.isWorking) {
+					// If creep is doing a task, only push out of way if it can go somewhere else in range
+					let targetPos = pushee.task.targetPos;
+					let targetRange = pushee.task.settings.targetRange;
+					return _.filter(pushee.pos.availableNeighbors(),
+									pos => pos.getRangeTo(targetPos) <= targetRange).length > 0;
+				} else if (!pushee.isMoving) {
+					// push creeps out of the way if they're idling
+					return true;
+				}
+			} else {
+				return pushee.my;
+			}
+		}
+		return false;
+	}
+
+	private static getPushDirection(pusher: Zerg | Creep, pushee: Zerg | Creep): DirectionConstant {
+		let possiblePositions = pushee.pos.availableNeighbors();
+		let preferredPositions: RoomPosition[] = [];
+		pushee = normalizeZerg(pushee);
+		if (isZerg(pushee)) {
+			if (pushee.task && pushee.task.isWorking) { // push creeps out of the way when they're doing task
+				let targetPos = pushee.task.targetPos;
+				let targetRange = pushee.task.settings.targetRange;
+				preferredPositions = _.filter(possiblePositions, pos => pos.getRangeTo(targetPos) <= targetRange);
+			}
+			if (preferredPositions[0]) {
+				return pushee.pos.getDirectionTo(preferredPositions[0]);
+			}
+		}
+		return pushee.pos.getDirectionTo(pusher);
+	}
+
+	static findBlockingCreep(creep: Zerg): Creep | undefined {
+		let nextDir = Pathing.nextDirectionInPath(creep);
+		if (nextDir == undefined) return;
+
+		let nextPos = Pathing.positionAtDirection(creep.pos, nextDir);
+		if (!nextPos) return;
+
+		return nextPos.lookFor(LOOK_CREEPS)[0];
+	}
+
+	/* Push a blocking creep out of the way */
+	static pushCreep(creep: Zerg, otherCreep: Creep | Zerg): boolean {
+
+		// let otherCreep: Creep | Zerg | undefined = this.findBlockingCreep(creep);
+
+		if (!otherCreep.memory) return false;
+		otherCreep = normalizeZerg(otherCreep);
+
+		let otherData = otherCreep.memory._go as MoveData | undefined;
+
+		// let otherCreepIsMoving = otherData && otherData.path && otherData.path.length > 1;
+		// let priority;
+		// if (creep.memory._go && creep.memory._go.priority) {
+		// 	priority = creep.memory._go.priority;
+		// } else {
+		// 	priority = MovePriorities[creep.roleName] || MovePriorities.default;
+		// }
+		// let otherPriority;
+		// if (otherData && otherData.priority) {
+		// 	otherPriority = otherData.priority;
+		// } else {
+		// 	otherPriority = MovePriorities[otherCreep.memory.role] || MovePriorities.default;
+		// }
+
+		// // Do nothing if other creep has better or equal priority and is still moving
+		// if (otherCreepIsMoving && priority >= otherPriority) { // lower priority value is better
+		// 	return false;
+		// }
+
+		// if (!this.shouldPush(otherCreep, this.getPushPriority(creep))) {
+		// 	return false;
+		// }
+
+		// let pushDirection = otherCreep.pos.getDirectionTo(creep);
+		let pushDirection = this.getPushDirection(creep, otherCreep);
+		let outcome = otherCreep.move(pushDirection);
+		if (outcome != OK) return false;
+
+		if (otherData && otherData.path) {
+			otherData.path = Pathing.oppositeDirection(pushDirection) + otherData.path;
+			// otherData.delay = 1;
+		}
+		return true;
 	}
 
 	/* Park a creep off-roads */
@@ -277,51 +396,6 @@ export class Movement {
 		if (detour) {
 			this.goTo(creep, pos, {ignoreCreeps: false});
 		}
-	}
-
-	/* Push a blocking creep out of the way, switching positions */
-	static pushCreep(creep: Zerg): boolean {
-		let nextDir = Pathing.nextDirectionInPath(creep);
-		if (nextDir == undefined) return false;
-
-		let nextPos = Pathing.positionAtDirection(creep.pos, nextDir);
-		if (!nextPos) return false;
-
-		let otherCreep = nextPos.lookFor(LOOK_CREEPS)[0];
-		if (!otherCreep || !otherCreep.memory || !otherCreep.my) return false;
-		if (Game.zerg[otherCreep.name]) {
-			otherCreep = Game.zerg[otherCreep.name];
-		}
-
-		let otherData = otherCreep.memory._go as MoveData | undefined;
-		let otherCreepIsMoving = otherData && otherData.path && otherData.path.length > 1;
-		let priority;
-		if (creep.memory._go && creep.memory._go.priority) {
-			priority = creep.memory._go.priority;
-		} else {
-			priority = MovePriorities[creep.roleName] || MovePriorities.default;
-		}
-		let otherPriority;
-		if (otherData && otherData.priority) {
-			otherPriority = otherData.priority;
-		} else {
-			otherPriority = MovePriorities[otherCreep.memory.role] || MovePriorities.default;
-		}
-
-		// Do nothing if other creep has better or equal priority and is still moving
-		if (otherCreepIsMoving && priority >= otherPriority) { // lower priority value is better
-			return false;
-		}
-
-		let pushDirection = otherCreep.pos.getDirectionTo(creep);
-		let outcome = otherCreep.move(pushDirection);
-		if (outcome != OK) return false;
-
-		if (otherData && otherData.path) {
-			otherData.path = nextDir + otherData.path;
-			otherData.delay = 1;
-		}
-		return true;
 	}
 
 	static pairwiseMove(leader: Zerg, follower: Zerg, target: HasPos | RoomPosition,

@@ -22,15 +22,16 @@ All notable changes to this project will be documented in this file. The format 
     - Dropped resources and tombstones now directly request collection from the logistics network rather than using a logistics directive
     - Changed order of operations in `predictedRequestAmount` to yield more accurate results when near target store/energy capacity
 - Workers now include dropped energy in list of objects they can recharge from and pick their recharge target more intelligently, accounting for other targeting workers
+- Workers and pioneers now will use energy from available unowned storage structures if available
 - Improvements to room planner demolishing behavior:
     - Added some safeguards on destroying misplaced spawns to ensure that there are enough workers to rebuild the spawns
     - Room planner is now better at detecting gridlocked situations and will destroy structures as needed to make room for construction sites
-- Moved `generateProtoCreep` from `Overlord.ts` to `Hatchery.ts`
 
 ### Fixed
 - Fixed a bug where mining sites could get clogged if invaders died on the container outputs and dropped minerals which would not get withdrawn
 - Fixed a bug in approximate path length caculations in `LogisticsNetwork.bufferChoices`
 - Room planner now correctly restores flag memories when reopening a session
+- Fixed a bug introduced in the last patch that caused workers to ignore the withdraw limit
 
 ### Removed
 - Removed dependencies for `Traveler`, replacing with in-house `Movement` and `Pathing` libraries

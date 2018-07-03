@@ -59,21 +59,13 @@ export class QueenOverlord extends Overlord {
 		} else if (this.hatchery.battery && !this.hatchery.battery.isEmpty) {
 			queen.task = Tasks.withdraw(this.hatchery.battery);
 		} else {
-			let rechargeObjects = _.compact([this.colony.storage!,
-											 this.colony.terminal!,
-											 this.colony.upgradeSite.link!,
-											 this.colony.upgradeSite.battery!,
+			let rechargeObjects = _.compact([...this.colony.room.storageUnits,
 											 ...(this.colony.room.drops[RESOURCE_ENERGY] || []),
 											 ..._.map(this.colony.miningSites, site => site.output!),
 											 ...this.colony.tombstones]) as rechargeObjectType[];
 			rechargeObjects = _.filter(rechargeObjects, obj => isResource(obj) ? obj.amount > 0 : obj.energy > 0);
 			let target = maxBy(rechargeObjects, function (obj) {
-				let amount: number;
-				if (isResource(obj)) {
-					amount = obj.amount;
-				} else {
-					amount = obj.energy;
-				}
+				let amount = isResource(obj) ? obj.amount : obj.energy;
 				amount = minMax(amount, 0, queen.carryCapacity);
 				return amount / (queen.pos.getMultiRoomRangeTo(obj.pos) + 1);
 			});
