@@ -128,8 +128,9 @@ export class Hatchery extends HiveCluster {
 			suppressSpawning       : false,
 		};
 		this.transportRequests = colony.transportRequests; // hatchery always uses colony transport group
-		if (this.colony.layout == 'bunker' && (this.colony.storage || this.colony.terminal)) {
-			this.overlord = new BunkerQueenOverlord(this);
+		if (this.colony.layout == 'bunker' && (this.colony.storage || this.colony.terminal)
+			&& this.colony.assets[RESOURCE_ENERGY] > 50000) {
+			this.overlord = new BunkerQueenOverlord(this); // use bunker queen if has storage and enough energy
 		} else {
 			this.overlord = new QueenOverlord(this);
 		}

@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Added
 - Added the `Movement` library, which replaces Traveler as the default method of moving creeps around in Overmind
+    - Added (and improved multiple times) creep pushing behavior that moves idling creeps out of the way
+        - Creeps have move priorities, which characterize how important their assignment is. Creeps will yield to other creeps with more important priorities.
 - Added `SpawnGroup`s, which allow for decentralized creep spawning distributed among nearby colonies
 - Room planner updates:
     - Room planner will now destroy or dismantle incorrectly-placed structures allowing you to change your room plan after it is built
