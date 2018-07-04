@@ -147,6 +147,7 @@ interface RoomMemory {
 		walls: string[];
 		ramparts: string[];
 	} | undefined;
+	score?: number;
 }
 
 interface SpawnMemory {

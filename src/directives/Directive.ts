@@ -33,7 +33,7 @@ export abstract class Directive {
 		this.ref = flag.ref;
 		this.memory = flag.memory;
 		this.requiredRCL = requiredRCL;
-		this.colony = Directive.getFlagColony(flag, requiredRCL);
+		this.colony = Directive.getFlagColony(flag, requiredRCL) as Colony;
 		this.pos = flag.pos;
 		this.room = flag.room;
 		if (!this.memory.created) this.memory.created = Game.time;
@@ -46,7 +46,7 @@ export abstract class Directive {
 		}
 	}
 
-	static getFlagColony(flag: Flag, requiredRCL = 1, maxPathLength = 550, maxLinearRange = 10): Colony {
+	static getFlagColony(flag: Flag, requiredRCL = 1, maxPathLength = 550, maxLinearRange = 10): Colony | undefined {
 		if (flag.memory.maxPathLength) {
 			maxPathLength = flag.memory.maxPathLength;
 		}

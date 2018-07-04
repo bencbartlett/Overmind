@@ -136,6 +136,10 @@ export class Pathing {
 			matrix = this.getCreepMatrix(room);
 		} else if (options.avoidSK && WorldMap.roomType(room.name) == ROOMTYPE_SOURCEKEEPER) {
 			matrix = this.getSkMatrix(room);
+		} else if (options.ignoreStructures) {
+			matrix = new PathFinder.CostMatrix();
+		} else if (options.direct) {
+			matrix = this.getDirectMatrix(room);
 		} else {
 			matrix = this.getDefaultMatrix(room);
 		}
@@ -178,6 +182,30 @@ export class Pathing {
 		});
 		room._defaultMatrix = matrix;
 		return room._defaultMatrix;
+	}
+
+	/* Default matrix for a room, setting impassable structures and constructionSites to impassible, ignoring roads */
+	private static getDirectMatrix(room: Room): CostMatrix {
+		if (room._directMatrix) {
+			return room._directMatrix;
+		}
+		const matrix = new PathFinder.CostMatrix();
+		// Set passability of structure positions
+		let impassibleStructures: Structure[] = [];
+		_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
+			if (!s.isWalkable) {
+				impassibleStructures.push(s);
+			}
+		});
+		_.forEach(impassibleStructures, s => matrix.set(s.pos.x, s.pos.y, 0xff));
+		// Set passability of construction sites
+		_.forEach(room.find(FIND_CONSTRUCTION_SITES), (site: ConstructionSite) => {
+			if (site.my && !site.isWalkable) {
+				matrix.set(site.pos.x, site.pos.y, 0xff);
+			}
+		});
+		room._directMatrix = matrix;
+		return room._directMatrix;
 	}
 
 	/* Avoids creeps in a room */
@@ -436,6 +464,28 @@ export class Pathing {
 		});
 		let ret = this.findPath(startPos, endPos, options);
 		return !(ret.incomplete);
+	}
+
+	/* Find the first walkable position in the room, spiraling outward from the center */
+	static findPathablePosition(roomName: string): RoomPosition {
+		let x = 25;
+		let y = 25;
+		for (let radius = 0; radius < 23; radius++) {
+			for (let dx = -radius; dx <= radius; dx++) {
+				for (let dy = -radius; dy <= radius; dy++) {
+					if (Math.abs(dy) !== radius && Math.abs(dx) !== radius) {
+						continue;
+					}
+					x = 25 + dx;
+					y = 25 + dy;
+					if (Game.map.getTerrainAt(x, y, roomName) !== 'wall') {
+						return new RoomPosition(x, y, roomName);
+					}
+				}
+			}
+		}
+		// Should never reach here!
+		return new RoomPosition(-10, -10, 'cannotFindPathablePosition');
 	}
 
 }

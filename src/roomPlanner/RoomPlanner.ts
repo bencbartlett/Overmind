@@ -472,7 +472,7 @@ export class RoomPlanner {
 	}
 
 	/* Whether a structure (or constructionSite) of given type should be at location. */
-	structureShouldBeHere(structureType: BuildableStructureConstant, pos: RoomPosition): boolean {
+	structureShouldBeHere(structureType: StructureConstant, pos: RoomPosition): boolean {
 		if (structureType == STRUCTURE_ROAD) {
 			return this.roadShouldBeHere(pos);
 		} else if (structureType == STRUCTURE_RAMPART) {
@@ -484,17 +484,15 @@ export class RoomPlanner {
 				this.recallMap();
 			}
 			let positions = this.map[structureType];
-			if (positions) {
-				let shouldBeHere = (_.find(positions, p => p.isEqualTo(pos)) != undefined);
-				if (!shouldBeHere && (structureType == STRUCTURE_CONTAINER || structureType == STRUCTURE_LINK)) {
-					let thingsBuildingLinksAndContainers = _.compact([...this.colony.sources!,
-																	  this.colony.room.mineral!,
-																	  this.colony.controller!]);
-					let maxRange = 4;
-					return pos.findInRange(thingsBuildingLinksAndContainers, 4).length > 0;
-				} else {
-					return shouldBeHere;
-				}
+			if (positions && _.find(positions, p => p.isEqualTo(pos))) {
+				return true;
+			}
+			if (structureType == STRUCTURE_CONTAINER || structureType == STRUCTURE_LINK) {
+				let thingsBuildingLinksAndContainers = _.compact([...this.colony.sources!,
+																  this.colony.room.mineral!,
+																  this.colony.controller!]);
+				let maxRange = 4;
+				return pos.findInRange(thingsBuildingLinksAndContainers, 4).length > 0;
 			}
 		}
 		return false;
@@ -609,23 +607,21 @@ export class RoomPlanner {
 					if (count > 0 && RoomPlanner.canBuild(structureType, pos)) {
 						let result = pos.createConstructionSite(structureType);
 						if (result != OK) {
-							if (result == ERR_INVALID_TARGET) { // something is in the way
-								let structures = pos.lookFor(LOOK_STRUCTURES);
-								for (let structure of structures) {
-									let thisImportance = _.findIndex(BuildPriorities, type => type == structureType);
-									let existingImportance = _.findIndex(BuildPriorities,
-																		 type => type == structure.structureType);
-									let safeTypes: string[] = [STRUCTURE_STORAGE, STRUCTURE_TERMINAL];
-									// Destroy the structure if it is less important and not protected
-									if (thisImportance > existingImportance
-										&& !safeTypes.includes(structure.structureType)) {
-										let result = structure.destroy();
-										log.info(`${this.colony.name}: destroyed ${structure.structureType} at` +
-												 ` ${structure.pos.print}`);
-										if (result == OK) {
-											this.memory.recheckStructuresAt = Game.time +
-																			  RoomPlanner.settings.recheckAfter;
-										}
+							let structures = pos.lookFor(LOOK_STRUCTURES);
+							for (let structure of structures) {
+								// let thisImportance = _.findIndex(BuildPriorities, type => type == structureType);
+								// let existingImportance = _.findIndex(BuildPriorities,
+								// 									 type => type == structure.structureType);
+								let safeTypes: string[] = [STRUCTURE_STORAGE, STRUCTURE_TERMINAL, STRUCTURE_SPAWN];
+								// Destroy the structure if it is less important and not protected
+								if (!this.structureShouldBeHere(structure.structureType, pos)
+									&& !safeTypes.includes(structure.structureType)) {
+									let result = structure.destroy();
+									log.info(`${this.colony.name}: destroyed ${structure.structureType} at` +
+											 ` ${structure.pos.print}`);
+									if (result == OK) {
+										this.memory.recheckStructuresAt = Game.time +
+																		  RoomPlanner.settings.recheckAfter;
 									}
 								}
 							}

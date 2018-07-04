@@ -27,8 +27,7 @@ export class ScoutOverlord extends Overlord {
 	}
 
 	private handleScout(scout: Zerg): void {
-		if (!scout.pos.inRangeTo(this.pos, 3)) {
-			// scout.task = Tasks.goTo(this.pos, {moveOptions: {range: 3}});
+		if (!scout.pos.inRangeTo(this.pos, 3) && !scout.pos.isEdge) {
 			scout.goTo(this.pos, {range: 3});
 		}
 	}

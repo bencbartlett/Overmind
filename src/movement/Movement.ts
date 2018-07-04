@@ -203,7 +203,8 @@ export class Movement {
 
 	static getPushPriority(creep: Creep | Zerg): number {
 		creep = normalizeZerg(creep);
-		if (creep.memory && creep.memory._go && creep.memory._go.priority) {
+		if (!creep.memory) return MovePriorities.default;
+		if (creep.memory._go && creep.memory._go.priority) {
 			return creep.memory._go.priority;
 		} else {
 			return MovePriorities[creep.memory.role] || MovePriorities.default;

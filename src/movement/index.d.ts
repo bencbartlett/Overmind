@@ -1,5 +1,6 @@
 interface MoveOptions {
 	ignoreCreeps?: boolean;
+	ignoreStructures?: boolean;
 	preferHighway?: boolean;
 	allowHostile?: boolean;
 	avoidSK?: boolean;

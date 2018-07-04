@@ -1,14 +1,59 @@
 import {distanceTransform} from '../algorithms/distanceTransform';
-import {allBunkerCoords, bunkerLayout} from './layouts/bunker';
+import {allBunkerCoords, bunkerCoordLookup, bunkerLayout} from './layouts/bunker';
+import {coordName, minBy} from '../utilities/utils';
+import {Pathing} from '../movement/Pathing';
+
+const MAX_SAMPLE = 10;
+const MAX_TOTAL_PATH_LENGTH = 25 * 3;
 
 export class BasePlanner {
 
-	// static getBunkerLocation(roomName: string, visualize = true): RoomPosition | undefined {
-	// 	let possibleLocations = this.getPossibleBunkerLocations(roomName, visualize);
-	// 	// let obstacles =
-	// }
+	static getBunkerLocation(room: Room, visualize = true): RoomPosition | undefined {
+		let allowableLocations = this.getAllowableBunkerLocations(room, visualize);
+		if (allowableLocations.length > MAX_SAMPLE) {
+			allowableLocations = _.sample(allowableLocations, MAX_SAMPLE);
+		}
+		let minimizePathLengthTo: RoomPosition[] = _.map(_.compact([...room.sources, room.controller]),
+														 obj => obj!.pos);
+		let totalPathLength = function (anchor: RoomPosition) {
+			let totalDistance = 0;
+			for (let pos of minimizePathLengthTo) {
+				let ret = Pathing.findShortestPath(anchor, pos, {ignoreStructures: true});
+				if (!ret.incomplete) {
+					totalDistance += ret.path.length;
+				} else {
+					totalDistance += Infinity;
+				}
+			}
+			return totalDistance;
+		};
+		let bestAnchor = minBy(allowableLocations, pos => totalPathLength(pos));
+		if (bestAnchor && totalPathLength(bestAnchor) <= MAX_TOTAL_PATH_LENGTH) {
+			return bestAnchor;
+		}
+	}
 
-	static getPossibleBunkerLocations(roomName: string, visualize = true): RoomPosition[] {
+	private static getAllowableBunkerLocations(room: Room, visualize = true): RoomPosition[] {
+		let allowableLocations = this.getNonIntersectingBunkerLocations(room.name, visualize);
+		// Filter intersection with controller
+		if (!room.controller) return [];
+		allowableLocations = _.filter(allowableLocations,
+									  anchor => !this.bunkerIntersectsWith(anchor, room.controller!.pos, 3));
+		// Filter intersection with miningSites
+		let sitesAndMineral: RoomPosition[] = _.map(_.compact([...room.sources, room.mineral]), obj => obj!.pos);
+		allowableLocations = _.filter(allowableLocations,
+									  anchor => !_.any(sitesAndMineral,
+													   pos => this.bunkerIntersectsWith(anchor, pos, 1)));
+		if (visualize) {
+			let vis = room.visual;
+			for (let pos of allowableLocations) {
+				vis.circle(pos.x, pos.y, {fill: 'purple'});
+			}
+		}
+		return allowableLocations;
+	}
+
+	private static getNonIntersectingBunkerLocations(roomName: string, visualize = true): RoomPosition[] {
 		let dt = distanceTransform(roomName);
 		let coords: Coord[] = [];
 		let x, y, value: number;
@@ -22,7 +67,7 @@ export class BasePlanner {
 			}
 		}
 		if (visualize) {
-			let vis = new RoomVisual();
+			let vis = new RoomVisual(roomName);
 			for (let coord of coords) {
 				vis.text(dt.get(coord.x, coord.y).toString(), coord.x, coord.y);
 			}
@@ -39,9 +84,18 @@ export class BasePlanner {
 		return _.any(bunkerCoordsAtAnchor, coord => distanceMatrix.get(coord.x, coord.y) == 0);
 	}
 
-	// private static bunkerIntersectionFilter(anchor: Coord | RoomPosition, obstacles: (Coord | RoomPosition)[],
-	// 										padding = 1): boolean {
-	//
-	// }
+	private static bunkerIntersectsWith(anchor: Coord | RoomPosition, obstacle: Coord | RoomPosition,
+										padding = 1): boolean {
+		let dx = bunkerLayout.data.anchor.x - anchor.x;
+		let dy = bunkerLayout.data.anchor.y - anchor.y;
+		for (let x = obstacle.x + dx - padding; x <= obstacle.x + dx + padding; x++) {
+			for (let y = obstacle.y + dy - padding; x <= obstacle.y + dy + padding; y++) {
+				if (bunkerCoordLookup[8][coordName({x, y})]) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
 }

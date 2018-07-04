@@ -14,6 +14,10 @@
 // 	}
 // }
 
+import {ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER, WorldMap} from '../utilities/WorldMap';
+import {derefCoords} from '../utilities/utils';
+import {Pathing} from '../movement/Pathing';
+
 const RECACHE_TIME = 1000;
 const OWNED_RECACHE_TIME = 10;
 
@@ -71,6 +75,52 @@ export class RoomIntel {
 		}
 	}
 
+	static computeScore(room: Room): void {
+		if (room.memory.score != undefined) return;
+		if (!room.controller) return;
+
+		// find source positions
+		let map: { [roomName: string]: RoomPosition[] } = {};
+		for (let dx = -1; dx <= 1; dx++) {
+			for (let dy = -1; dy <= 1; dy++) {
+				let roomName = WorldMap.findRelativeRoomName(room.name, dx, dy);
+				if (WorldMap.roomType(roomName) == ROOMTYPE_ALLEY) continue;
+				let roomMemory = Memory.rooms[roomName];
+				if (!roomMemory || !roomMemory.src) return;
+				map[roomName] = _.map(roomMemory.src, obj => derefCoords(obj.c, roomName));
+			}
+		}
+
+		// evaluate energy contribution
+		let origin = Pathing.findPathablePosition(room.name);
+		let totalScore = 0;
+		for (let roomName in map) {
+			let positions = map[roomName];
+			let valid = true;
+			let roomType = WorldMap.roomType(roomName);
+			let energyPerSource: number = SOURCE_ENERGY_CAPACITY;
+			if (roomType == ROOMTYPE_SOURCEKEEPER) {
+				energyPerSource = SOURCE_ENERGY_KEEPER_CAPACITY;
+			}
+
+			let roomScore = 0;
+			for (let position of positions) {
+				let ret = Pathing.findShortestPath(origin, position, {allowHostile: true});
+				if (ret.incomplete || ret.path.length > 150) {
+					valid = false;
+					break;
+				}
+				roomScore += energyPerSource / ret.path.length;
+			}
+			if (valid) {
+				totalScore += roomScore;
+			}
+		}
+
+		// evaluate mineral contribution
+		room.memory.score = Math.floor(totalScore);
+	}
+
 	static run(): void {
 		for (let name in Game.rooms) {
 			let room = Game.rooms[name];
@@ -79,6 +129,9 @@ export class RoomIntel {
 				(isOwned && Game.time - room.memory.tick > OWNED_RECACHE_TIME)) {
 				this.recordPermanentObjects(room);
 				room.memory.tick = Game.time;
+			}
+			if (!room.memory.score) {
+				this.computeScore(room);
 			}
 		}
 	}

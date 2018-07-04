@@ -68,6 +68,7 @@ interface Room {
 	constructionSites: ConstructionSite[];
 	// Used by movement library
 	_defaultMatrix: CostMatrix;
+	_directMatrix: CostMatrix;
 	_creepMatrix: CostMatrix;
 	_priorityMatrices: { [priority: number]: CostMatrix };
 	_skMatrix: CostMatrix;
