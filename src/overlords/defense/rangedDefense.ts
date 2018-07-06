@@ -9,6 +9,7 @@ import {CombatIntel} from '../../intel/combatIntel';
 import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatTargeting} from '../../targeting/CombatTargeting';
+import {MoveOptions} from '../../movement/Movement';
 
 export const HydraliskSetup = new CreepSetup('hydralisk', {
 	pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, HEAL, MOVE, MOVE, MOVE, MOVE],

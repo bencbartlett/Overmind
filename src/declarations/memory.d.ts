@@ -69,6 +69,13 @@ interface CreepMemory {
 	boostLab?: string;
 }
 
+interface MoveData {
+	state: any[];
+	path: string;
+	delay?: number;
+	priority?: number;
+}
+
 interface LoggerMemory {
 	level: number;
 	showSource: boolean;

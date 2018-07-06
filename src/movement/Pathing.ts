@@ -2,6 +2,7 @@ import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
 import {ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER, WorldMap} from '../utilities/WorldMap';
 import {Zerg} from '../zerg/_Zerg';
+import {MoveOptions} from './Movement';
 
 /* Module for pathing-related operations. */
 
@@ -362,8 +363,8 @@ export class Pathing {
 
 	/* Returns a position at a direction from origin */
 	static positionAtDirection(origin: RoomPosition, direction: number): RoomPosition | undefined {
-		let offsetX = [0, 0, 1, 1, 1, 0, -1, -1, -1];
-		let offsetY = [0, -1, -1, 0, 1, 1, 1, 0, -1];
+		const offsetX = [0, 0, 1, 1, 1, 0, -1, -1, -1];
+		const offsetY = [0, -1, -1, 0, 1, 1, 1, 0, -1];
 		let x = origin.x + offsetX[direction];
 		let y = origin.y + offsetY[direction];
 		if (x > 49 || x < 0 || y > 49 || y < 0) {

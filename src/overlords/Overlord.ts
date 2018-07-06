@@ -156,7 +156,7 @@ export abstract class Overlord {
 
 	// TODO: include creep move speed
 	lifetimeFilter(creeps: (Creep | Zerg)[], prespawn = DEFAULT_PRESPAWN): (Creep | Zerg)[] {
-		let spawnDistance = 10;
+		let spawnDistance = 0;
 		// TODO: account for creeps that can be spawned at incubatee's hatchery
 		// if (this.colony.incubator) {
 		// 	spawnDistance = Pathing.distance(this.pos, this.colony.incubator.hatchery!.pos) || 0;

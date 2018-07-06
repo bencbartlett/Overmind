@@ -21,7 +21,7 @@ import {log} from '../console/log';
 
 const RECACHE_TIME = 2500;
 const OWNED_RECACHE_TIME = 1000;
-const SCORE_RECALC_PROB = 0.25;
+const SCORE_RECALC_PROB = 0.1;
 
 const RoomIntelMemoryDefaults = {};
 

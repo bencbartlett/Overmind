@@ -39,6 +39,41 @@ export const MovePriorities = {
 	default                : 10,
 };
 
+
+export interface MoveOptions {
+	priority?: number;							// movement priority to determine creep push order
+	direct?: boolean;							// ignore all terrain costs
+	terrainCosts?: {							// terrain costs, determined automatically for creep body if unspecified
+		plainCost: number,							// plain costs; typical: 2
+		swampCost: number							// swamp costs; typical: 10
+	};											//
+	force?: boolean;							// whether to ignore Zerg.blockMovement
+	ignoreCreeps?: boolean;						// ignore pathing around creeps
+	ignoreStructures?: boolean;					// ignore pathing around structures
+	preferHighway?: boolean;					// prefer alley-type rooms
+	allowHostile?: boolean;						// allow to path through hostile rooms; origin/destination room excluded
+	avoidSK?: boolean;							// avoid walking within range 4 of source keepers
+	range?: number;								// range to approach target
+	obstacles?: RoomPosition[];					// don't path through these room positions
+	restrictDistance?: number;					// restrict the distance of route to this number of rooms
+	useFindRoute?: boolean;						// whether to use the route finder; determined automatically otherwise
+	maxOps?: number;							// pathfinding times out after this many operations
+	movingTarget?: boolean;						// appends a direction to path in case creep moves
+	stuckValue?: number;						// creep is marked stuck after this many idle ticks
+	maxRooms?: number;							// maximum number of rooms to path through
+	repath?: number;							// probability of repathing on a given tick
+	route?: { [roomName: string]: boolean };	// lookup table for allowable pathing rooms
+	ensurePath?: boolean;						// can be useful if route keeps being found as incomplete
+}
+
+export interface MoveState {
+	stuckCount: number;
+	lastCoord: Coord;
+	destination: RoomPosition;
+	cpu: number;
+}
+
+
 @profile
 export class Movement {
 
@@ -47,6 +82,9 @@ export class Movement {
 	/* Move a creep to a destination */
 	static goTo(creep: Zerg, destination: HasPos | RoomPosition, options: MoveOptions = {}): number {
 
+		if (creep.blockMovement && !options.force) {
+			return ERR_BUSY;
+		}
 		if (creep.spawning) {
 			return NO_ACTION;
 		}
@@ -59,7 +97,6 @@ export class Movement {
 
 		_.defaults(options, {
 			ignoreCreeps: true,
-			range       : 1,
 			priority    : priority,
 		});
 
@@ -81,7 +118,7 @@ export class Movement {
 			if (rangeToDestination == 1 && !options.range) {
 				let direction = creep.pos.getDirectionTo(destination);
 				if (destination.isWalkable()) {
-					return creep.move(direction);
+					return creep.move(direction, !!options.force);
 				}
 			} else { // at destination
 				delete creep.memory._go;
@@ -198,7 +235,7 @@ export class Movement {
 		if (obstructingCreep && this.shouldPush(creep, obstructingCreep)) {
 			this.pushCreep(creep, obstructingCreep);
 		}
-		return creep.move(<DirectionConstant>nextDirection);
+		return creep.move(<DirectionConstant>nextDirection, !!options.force);
 	}
 
 	static getPushPriority(creep: Creep | Zerg): number {
@@ -282,6 +319,62 @@ export class Movement {
 		return true;
 	}
 
+	/* Recursively moves creeps out of the way of a position to make room for something, such as a spawning creep.
+	 * If suicide is specified and there is no series of move commands that can move a block of creeps out of the way,
+	 * the lead blocking creep will suicide. Returns whether the position has been vacated. */
+	static vacatePos(pos: RoomPosition, suicide = false): boolean {
+		// prevent creeps from moving onto pos
+		let nearbyCreeps = _.map(pos.findInRange(FIND_MY_CREEPS, 1), creep => Game.zerg[creep.name]);
+		_.forEach(nearbyCreeps, creep => creep.blockMovement = true);
+		// recurively move creeps off of the position
+		let creep = pos.lookFor(LOOK_CREEPS)[0];
+		if (!creep) return true;
+		let blockingCreep = Game.zerg[creep.name];
+		if (!blockingCreep) return true;
+		let moved = !!this.recursivePush(blockingCreep);
+		if (moved) {
+			log.info(`Moved creep ${blockingCreep.name} off of ${blockingCreep.pos.print}.`);
+			return true;
+		} else {
+			if (suicide) {
+				log.info(`Could not move creep ${blockingCreep.name} off of ${blockingCreep.pos.print}! ` +
+						 `Suiciding creep! (RIP)`);
+				blockingCreep.suicide();
+				return true;
+			} else {
+				log.info(`Could not move creep ${blockingCreep.name} off of ${blockingCreep.pos.print}!`);
+				return false;
+			}
+		}
+	}
+
+	/* Recursively pushes creeps out of the way of a root position. */
+	static recursivePush(creep: Zerg, excludePos: RoomPosition[] = []): RoomPosition | undefined {
+		let creepPos = creep.pos;
+		let movePos: RoomPosition | undefined = _.find(creepPos.availableNeighbors(),
+													   neighbor => !_.any(excludePos, pos => pos.isEqualTo(neighbor)));
+		if (movePos) {
+			this.goTo(creep, movePos, {range: 0, force: true});
+			creep.blockMovement = true;
+			return creepPos;
+		} else { // Every position is occupied by a creep
+			let availablePositions = _.filter(creepPos.availableNeighbors(true),
+											  neighbor => !_.any(excludePos, pos => pos.isEqualTo(neighbor)));
+			for (let otherPos of availablePositions) {
+				let otherCreep = otherPos.lookFor(LOOK_CREEPS)[0];
+				if (!otherCreep) continue;
+				let otherZerg = Game.zerg[otherCreep.name];
+				if (!otherZerg) continue;
+				movePos = this.recursivePush(otherZerg, excludePos.concat(creepPos));
+				if (movePos) {
+					this.goTo(creep, movePos, {range: 0, force: true});
+					creep.blockMovement = true;
+					return creepPos;
+				}
+			}
+		}
+	}
+
 	/* Park a creep off-roads */
 	static park(creep: Zerg, pos: RoomPosition = creep.pos, maintainDistance = false): number {
 		let road = creep.pos.lookForStructure(STRUCTURE_ROAD);
@@ -317,10 +410,10 @@ export class Movement {
 	}
 
 	/* Moves a creep off of the current tile to the first available neighbor */
-	static moveOffCurrentPos(creep: Zerg): ScreepsReturnCode | undefined {
+	static moveOffCurrentPos(creep: Zerg): number | undefined {
 		let destinationPos = _.first(creep.pos.availableNeighbors());
 		if (destinationPos) {
-			return creep.move(creep.pos.getDirectionTo(destinationPos));
+			return this.goTo(creep, destinationPos);
 		}
 	}
 

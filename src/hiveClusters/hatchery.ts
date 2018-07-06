@@ -16,6 +16,8 @@ import {GlobalCache} from '../caching';
 import {energyStructureOrder, getPosFromBunkerCoord, insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {BunkerQueenOverlord} from '../overlords/core/queen_bunker';
 import {Overlord} from '../overlords/Overlord';
+import {Movement} from '../movement/Movement';
+import {Pathing} from '../movement/Pathing';
 
 const ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH = -20;
 const ERR_SPECIFIED_SPAWN_BUSY = -21;
@@ -340,6 +342,20 @@ export class Hatchery extends HiveCluster {
 			let result = this.spawnHighestPriorityCreep();
 			if (result != OK && result != ERR_SPECIFIED_SPAWN_BUSY) {
 				break;
+			}
+		}
+		// Move creeps off of exit position to let the spawning creep out if necessary
+		for (let spawn of this.spawns) {
+			if (spawn.spawning && spawn.spawning.remainingTime <= 1
+				&& spawn.pos.findInRange(FIND_MY_CREEPS, 1).length > 0) {
+				let directions: DirectionConstant[];
+				if (spawn.spawning.directions) {
+					directions = spawn.spawning.directions;
+				} else {
+					directions = _.map(spawn.pos.availableNeighbors(true), pos => spawn.pos.getDirectionTo(pos));
+				}
+				let exitPos = Pathing.positionAtDirection(spawn.pos, _.first(directions)) as RoomPosition;
+				Movement.vacatePos(exitPos);
 			}
 		}
 	}

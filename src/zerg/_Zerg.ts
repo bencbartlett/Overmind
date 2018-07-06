@@ -3,7 +3,7 @@ import {Colony} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
 import {initializeTask} from '../tasks/initializer';
 import {Task} from '../tasks/Task';
-import {Movement} from '../movement/Movement';
+import {Movement, MoveOptions} from '../movement/Movement';
 
 export function getOverlord(creep: Zerg | Creep): Overlord | null {
 	if (creep.memory.overlord) {
@@ -75,6 +75,7 @@ export class Zerg {
 	ticksToLive: number | undefined;	// |
 	lifetime: number;
 	actionLog: { [actionName: string]: boolean }; // Tracks the actions that a creep has completed this tick
+	blockMovement: boolean; 			// Whether the zerg is allowed to move or not
 	// settings: any;					// Adjustable settings object, can vary across roles
 	private _task: Task | null; 		// Cached Task object that is instantiated once per tick and on change
 
@@ -100,6 +101,7 @@ export class Zerg {
 		this.ticksToLive = creep.ticksToLive;
 		this.lifetime = this.getBodyparts(CLAIM) > 0 ? CREEP_CLAIM_LIFE_TIME : CREEP_LIFE_TIME;
 		this.actionLog = {};
+		this.blockMovement = false;
 		// this.settings = {};
 		Game.zerg[this.name] = this; // register global reference
 	}
@@ -157,10 +159,14 @@ export class Zerg {
 		return result;
 	}
 
-	move(direction: DirectionConstant) {
-		let result = this.creep.move(direction);
-		if (!this.actionLog.move) this.actionLog.move = (result == OK);
-		return result;
+	move(direction: DirectionConstant, force = false) {
+		if (!this.blockMovement && !force) {
+			let result = this.creep.move(direction);
+			if (!this.actionLog.move) this.actionLog.move = (result == OK);
+			return result;
+		} else {
+			return ERR_BUSY;
+		}
 	}
 
 	notifyWhenAttacked(enabled: boolean) {
@@ -457,7 +463,7 @@ export class Zerg {
 	}
 
 	/* Moves a creep off of the current tile to the first available neighbor */
-	moveOffCurrentPos(): ScreepsReturnCode | undefined {
+	moveOffCurrentPos(): number | undefined {
 		return Movement.moveOffCurrentPos(this);
 	}
 

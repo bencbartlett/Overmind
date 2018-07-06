@@ -6,6 +6,7 @@ import {log} from '../console/log';
 import {Mem} from '../Memory';
 import {Colony} from '../Colony';
 import {Pathing} from '../movement/Pathing';
+import {MoveOptions} from '../movement/Movement';
 
 export interface RoadPlannerMemory {
 	roadLookup: { [roomName: string]: { [roadCoordName: string]: boolean } };
