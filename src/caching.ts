@@ -63,7 +63,7 @@ export class GlobalCache {
 		let cacheKey = saver.ref + ':' + key;
 		if (!_cache.structures[cacheKey] || Game.time > _cache.expiration[cacheKey]) {
 			_cache.structures[cacheKey] = callback();
-			_cache.expiration[cacheKey] = Game.time + getCacheExpiration(CACHE_TIMEOUT);
+			_cache.expiration[cacheKey] = getCacheExpiration(CACHE_TIMEOUT);
 		} else {
 			// Refresh structure list by ID if not already done on current tick
 			if (_cache.accessed[cacheKey] < Game.time) {

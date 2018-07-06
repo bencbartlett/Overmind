@@ -116,6 +116,6 @@ export function isIVM(): boolean {
 }
 
 export function getCacheExpiration(timeout: number, offset = 5): number {
-	return timeout + Math.round((Math.random() * offset * 2) - offset);
+	return Game.time + timeout + Math.round((Math.random() * offset * 2) - offset);
 }
 

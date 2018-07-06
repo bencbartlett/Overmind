@@ -133,7 +133,6 @@ interface SavedMineral extends SavedRoomObject {
 
 interface RoomMemory {
 	avoid?: number;
-	tick?: number;
 	src?: SavedSource[];
 	ctrl?: SavedController | undefined;
 	mnrl: SavedMineral | undefined;
@@ -148,6 +147,7 @@ interface RoomMemory {
 		ramparts: string[];
 	} | undefined;
 	score?: number;
+	expiration?: number;
 }
 
 interface SpawnMemory {

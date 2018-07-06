@@ -23,8 +23,8 @@ Room.prototype._refreshStructureCache = function () {
 	// if cache is expired or doesn't exist
 	if (!roomStructuresExpiration[this.name]
 		|| !roomStructureIDs[this.name]
-		|| roomStructuresExpiration[this.name] < Game.time) {
-		roomStructuresExpiration[this.name] = Game.time + getCacheExpiration(50);
+		|| Game.time > roomStructuresExpiration[this.name]) {
+		roomStructuresExpiration[this.name] = getCacheExpiration(50);
 		roomStructureIDs[this.name] = _.mapValues(_.groupBy(this.find(FIND_STRUCTURES),
 															(s: Structure) => s.structureType),
 												  (structures: Structure[]) => _.map(structures, s => s.id));

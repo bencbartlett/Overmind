@@ -14,15 +14,16 @@ interface SpawnGroupMemory {
 	distances: { [colonyName: string]: number };
 	routes: { [colonyName: string]: { [roomName: string]: boolean } };
 	// paths: { [colonyName: string]: { startPos: RoomPosition, path: string[] } }
-	tick: number;
+	// tick: number;
+	expiration: number,
 }
 
 const SpawnGroupMemoryDefaults: SpawnGroupMemory = {
-	colonies : [],
-	distances: {},
-	routes   : {},
+	colonies  : [],
+	distances : {},
+	routes    : {},
 	// paths    : {},
-	tick     : -Infinity,
+	expiration: 0,
 };
 
 const defaultSettings: SpawnGroupSettings = {
@@ -87,7 +88,7 @@ export class SpawnGroup {
 		this.memory.routes = routes;
 		// this.memory.paths = TODO
 		this.memory.distances = distances;
-		this.memory.tick = Game.time;
+		this.memory.expiration = getCacheExpiration(this.settings.recacheTime, 25);
 	}
 
 	enqueue(request: SpawnRequest): void {
@@ -97,7 +98,7 @@ export class SpawnGroup {
 	/* SpawnGroup.init() must be called AFTER all hatcheries have been initialized */
 	init(): void {
 		// Most initialization needs to be done at init phase because colonies are still being constructed earlier
-		if (Game.time > this.memory.tick + getCacheExpiration(this.settings.recacheTime, 25)) {
+		if (Game.time > this.memory.expiration) {
 			this.recalculateColonies();
 		}
 		let colonies = _.compact(_.map(this.memory.colonies, name => Overmind.colonies[name])) as Colony[];

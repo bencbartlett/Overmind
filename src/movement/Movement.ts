@@ -211,7 +211,7 @@ export class Movement {
 		}
 	}
 
-	static shouldPush(pusher: Creep | Zerg, pushee: Creep | Zerg): boolean {
+	private static shouldPush(pusher: Creep | Zerg, pushee: Creep | Zerg): boolean {
 		if (this.getPushPriority(pusher) < this.getPushPriority(pushee)) {
 			// pushee less important than pusher
 			return true;
@@ -253,7 +253,7 @@ export class Movement {
 		return pushee.pos.getDirectionTo(pusher);
 	}
 
-	static findBlockingCreep(creep: Zerg): Creep | undefined {
+	private static findBlockingCreep(creep: Zerg): Creep | undefined {
 		let nextDir = Pathing.nextDirectionInPath(creep);
 		if (nextDir == undefined) return;
 
@@ -266,37 +266,11 @@ export class Movement {
 	/* Push a blocking creep out of the way */
 	static pushCreep(creep: Zerg, otherCreep: Creep | Zerg): boolean {
 
-		// let otherCreep: Creep | Zerg | undefined = this.findBlockingCreep(creep);
-
 		if (!otherCreep.memory) return false;
 		otherCreep = normalizeZerg(otherCreep);
 
 		let otherData = otherCreep.memory._go as MoveData | undefined;
 
-		// let otherCreepIsMoving = otherData && otherData.path && otherData.path.length > 1;
-		// let priority;
-		// if (creep.memory._go && creep.memory._go.priority) {
-		// 	priority = creep.memory._go.priority;
-		// } else {
-		// 	priority = MovePriorities[creep.roleName] || MovePriorities.default;
-		// }
-		// let otherPriority;
-		// if (otherData && otherData.priority) {
-		// 	otherPriority = otherData.priority;
-		// } else {
-		// 	otherPriority = MovePriorities[otherCreep.memory.role] || MovePriorities.default;
-		// }
-
-		// // Do nothing if other creep has better or equal priority and is still moving
-		// if (otherCreepIsMoving && priority >= otherPriority) { // lower priority value is better
-		// 	return false;
-		// }
-
-		// if (!this.shouldPush(otherCreep, this.getPushPriority(creep))) {
-		// 	return false;
-		// }
-
-		// let pushDirection = otherCreep.pos.getDirectionTo(creep);
 		let pushDirection = this.getPushDirection(creep, otherCreep);
 		let outcome = otherCreep.move(pushDirection);
 		if (outcome != OK) return false;
