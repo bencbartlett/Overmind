@@ -2,13 +2,15 @@
 
 import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
-import {Zerg} from '../zerg/_Zerg';
+import {Zerg} from '../zerg/Zerg';
 import {repairTaskName} from '../tasks/instances/repair';
+import {GlobalCache} from '../caching';
 
 
 @profile
 export class RoadLogistics {
 
+	ref: string;
 	private colony: Colony;
 	private rooms: Room[];
 	private _assignedWorkers: { [roomName: string]: string[] };
@@ -18,13 +20,14 @@ export class RoadLogistics {
 		repairThreshold: number,
 	};
 	private cache: {
-		repairableRoads: { [roomName: string]: StructureRoad[] };
-		criticalRoads: { [roomName: string]: StructureRoad[] };
+		// repairableRoads: { [roomName: string]: StructureRoad[] };
+		// criticalRoads: { [roomName: string]: StructureRoad[] };
 		energyToRepave: { [roomName: string]: number }
 	};
 
 	constructor(colony: Colony) {
 		this.colony = colony;
+		this.ref = this.colony.name + ':roadLogistics';
 		this.rooms = colony.rooms;
 		this._assignedWorkers = {};
 		this.settings = {
@@ -33,8 +36,8 @@ export class RoadLogistics {
 			repairThreshold     : 0.9
 		};
 		this.cache = {
-			repairableRoads: {},
-			criticalRoads  : {},
+			// repairableRoads: {},
+			// criticalRoads  : {},
 			energyToRepave : {}
 		};
 	}
@@ -75,21 +78,19 @@ export class RoadLogistics {
 	}
 
 	criticalRoads(room: Room): StructureRoad[] {
-		if (!this.cache.criticalRoads[room.name]) {
-			this.cache.criticalRoads[room.name] = _.filter(room.roads, road =>
+		return GlobalCache.structures(this, 'criticalRoads:' + room.name, () =>
+			_.filter(room.roads, road =>
 				road.hits < road.hitsMax * this.settings.criticalThreshold &&
-				this.colony.roomPlanner.roadShouldBeHere(road.pos));
-		}
-		return this.cache.criticalRoads[room.name];
+				this.colony.roomPlanner.roadShouldBeHere(road.pos))
+		);
 	}
 
 	repairableRoads(room: Room): StructureRoad[] {
-		if (!this.cache.repairableRoads[room.name]) {
-			this.cache.repairableRoads[room.name] = _.filter(room.roads, road =>
+		return GlobalCache.structures(this, 'criticalRoads:' + room.name, () =>
+			_.filter(room.roads, road =>
 				road.hits < road.hitsMax * this.settings.repairThreshold &&
-				this.colony.roomPlanner.roadShouldBeHere(road.pos));
-		}
-		return this.cache.repairableRoads[room.name];
+				this.colony.roomPlanner.roadShouldBeHere(road.pos))
+		);
 	}
 
 	/* Total amount of energy needed to repair all roads in the room */

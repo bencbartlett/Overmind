@@ -59,11 +59,13 @@ const CACHE_TIMEOUT = 50;
 
 export class GlobalCache {
 
-	static structures<T extends Structure>(saver: { ref: string }, key: string, callback: () => T[]): T[] {
+	static structures<T extends Structure>(saver: { ref: string }, key: string, callback: () => T[],
+										   timeout = CACHE_TIMEOUT): T[] {
 		let cacheKey = saver.ref + ':' + key;
 		if (!_cache.structures[cacheKey] || Game.time > _cache.expiration[cacheKey]) {
+			// Recache if new entry or entry is expired
 			_cache.structures[cacheKey] = callback();
-			_cache.expiration[cacheKey] = getCacheExpiration(CACHE_TIMEOUT);
+			_cache.expiration[cacheKey] = getCacheExpiration(timeout);
 		} else {
 			// Refresh structure list by ID if not already done on current tick
 			if (_cache.accessed[cacheKey] < Game.time) {

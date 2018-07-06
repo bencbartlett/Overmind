@@ -1,7 +1,7 @@
 import {Overlord} from '../Overlord';
 import {Colony, ColonyStage, DEFCON} from '../../Colony';
 import {profile} from '../../profiler/decorator';
-import {Zerg} from '../../zerg/_Zerg';
+import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {CreepSetup} from '../CreepSetup';
@@ -65,15 +65,16 @@ export class WorkerOverlord extends Overlord {
 				&& this.colony.roomPlanner.barrierPlanner.barrierShouldBeHere(s.pos)
 			), s => s.hits));
 		// Generate a list of structures needing repairing (different from fortifying except in critical case)
-		this.repairStructures = _.filter(this.colony.repairables, function (structure) {
-			if (structure.structureType == STRUCTURE_CONTAINER) {
-				return structure.hits < 0.5 * structure.hitsMax;
-			} else {
-				return structure.hits < structure.hitsMax;
-			}
-		});
-		let criticalBarriers = _.filter(this.fortifyStructures, s => s.hits <= WorkerOverlord.settings.criticalHits);
-		this.repairStructures = this.repairStructures.concat(criticalBarriers);
+		this.repairStructures = GlobalCache.structures(this, 'repairStructures', () =>
+			_.filter(this.colony.repairables, function (structure) {
+				if (structure.structureType == STRUCTURE_CONTAINER) {
+					return structure.hits < 0.5 * structure.hitsMax;
+				} else {
+					return structure.hits < structure.hitsMax;
+				}
+			}));
+		// let criticalBarriers = _.filter(this.fortifyStructures, s => s.hits <= WorkerOverlord.settings.criticalHits);
+		// this.repairStructures = this.repairStructures.concat(criticalBarriers);
 
 		this.dismantleStructures = [];
 
@@ -105,15 +106,19 @@ export class WorkerOverlord extends Overlord {
 			}
 		});
 		// Nuke defense ramparts needing fortification
-		this.nukeDefenseRamparts = _.filter(this.colony.room.ramparts, function (rampart) {
-			if (rampart.pos.lookFor(LOOK_NUKES).length > 0) {
-				return rampart.hits < 10000000 + 10000;
-			} else if (rampart.pos.findInRange(FIND_NUKES, 3).length > 0) {
-				return rampart.hits < 5000000 + 10000;
-			} else {
-				return false;
-			}
-		});
+		if (this.room.find(FIND_NUKES).length > 0) {
+			this.nukeDefenseRamparts = _.filter(this.colony.room.ramparts, function (rampart) {
+				if (rampart.pos.lookFor(LOOK_NUKES).length > 0) {
+					return rampart.hits < 10000000 + 10000;
+				} else if (rampart.pos.findInRange(FIND_NUKES, 3).length > 0) {
+					return rampart.hits < 5000000 + 10000;
+				} else {
+					return false;
+				}
+			});
+		} else {
+			this.nukeDefenseRamparts = [];
+		}
 	}
 
 	init() {
@@ -139,18 +144,18 @@ export class WorkerOverlord extends Overlord {
 			} else {
 				// At higher levels, spawn workers based on construction and repair that needs to be done
 				const MAX_WORKERS = 3; // Maximum number of workers to spawn
-				let constructionTicks = _.sum(_.map(this.colony.constructionSites,
-													site => Math.max(site.progressTotal - site.progress, 0)))
-										/ BUILD_POWER; // Math.max for if you manually set progress on private server
-				let repairTicks = _.sum(_.map(this.repairStructures,
-											  structure => structure.hitsMax - structure.hits)) / REPAIR_POWER;
-				let fortifyTicks = 0.25 * _.sum(_.map(this.fortifyStructures,
-													  barrier => WorkerOverlord.settings.barrierHits[this.colony.level]
-																 - barrier.hits)) / REPAIR_POWER;
+				let constructionTicks = _.sum(this.constructionSites,
+											  site => site.progressTotal - site.progress) / BUILD_POWER;
+				let repairTicks = _.sum(this.repairStructures,
+										structure => structure.hitsMax - structure.hits) / REPAIR_POWER;
+				let fortifyTicks = 0.25 * _.sum(this.fortifyStructures,
+												barrier => WorkerOverlord.settings.barrierHits[this.colony.level]
+														   - barrier.hits) / REPAIR_POWER;
 				if (this.colony.storage!.energy < 500000) {
 					fortifyTicks = 0; // Ignore fortification duties below this energy level
 				}
-				let numWorkers = Math.ceil(2 * (constructionTicks + repairTicks + fortifyTicks) /
+				// max constructionTicks for private server manually setting progress
+				let numWorkers = Math.ceil(2 * (Math.max(constructionTicks, 0) + repairTicks + fortifyTicks) /
 										   (workPartsPerWorker * CREEP_LIFE_TIME));
 				this.wishlist(Math.min(numWorkers, MAX_WORKERS), setup);
 			}

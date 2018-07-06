@@ -1,7 +1,7 @@
 // Hatchery overlord: spawn and run a dedicated supplier-like hatchery attendant (called after colony has storage)
 import {Overlord} from '../Overlord';
 import {Hatchery} from '../../hiveClusters/hatchery';
-import {Zerg} from '../../zerg/_Zerg';
+import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {log} from '../../console/log';
 import {OverlordPriority} from '../../priorities/priorities_overlords';

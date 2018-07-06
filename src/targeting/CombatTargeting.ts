@@ -1,6 +1,6 @@
 import {AttackStructurePriorities} from '../priorities/priorities_structures';
 import {Pathing} from '../movement/Pathing';
-import {Zerg} from '../zerg/_Zerg';
+import {Zerg} from '../zerg/Zerg';
 
 export class CombatTargeting {
 

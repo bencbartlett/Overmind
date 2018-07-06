@@ -1,6 +1,6 @@
 // Siege overlord - spawns sieger creeps to break down walls and structures
 
-import {Zerg} from '../../zerg/_Zerg';
+import {Zerg} from '../../zerg/Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {DirectiveHealPoint} from '../../directives/offense/healPoint';
 import {profile} from '../../profiler/decorator';

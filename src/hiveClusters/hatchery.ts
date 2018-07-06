@@ -10,7 +10,7 @@ import {bodyCost, CreepSetup} from '../overlords/CreepSetup';
 import {Mem} from '../Memory';
 import {Visualizer} from '../visuals/Visualizer';
 import {Stats} from '../stats/stats';
-import {Zerg} from '../zerg/_Zerg';
+import {Zerg} from '../zerg/Zerg';
 import {log} from '../console/log';
 import {GlobalCache} from '../caching';
 import {energyStructureOrder, getPosFromBunkerCoord, insideBunkerBounds} from '../roomPlanner/layouts/bunker';

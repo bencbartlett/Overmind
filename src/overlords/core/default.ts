@@ -1,7 +1,7 @@
 import {getOverlord, Overlord} from '../Overlord';
 import {profile} from '../../profiler/decorator';
 import {Colony} from '../../Colony';
-import {Zerg} from '../../zerg/_Zerg';
+import {Zerg} from '../../zerg/Zerg';
 
 @profile
 export class DefaultOverlord extends Overlord {

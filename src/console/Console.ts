@@ -11,6 +11,7 @@ export class OvermindConsole {
 		global.help = this.help();
 		global.setSignature = this.setSignature;
 		global.print = this.print;
+		global.timeit = this.timeit;
 		global.setLogLevel = log.setLogLevel;
 		global.openRoomPlanner = this.openRoomPlanner;
 		global.closeRoomPlanner = this.closeRoomPlanner;
@@ -70,6 +71,16 @@ export class OvermindConsole {
 		for (let arg of args) {
 			log.debug(JSON.stringify(arg, null, '\t'));
 		}
+	}
+
+	static timeit(callback: () => any, repeat = 1): string {
+		let start, used, i: number;
+		start = Game.cpu.getUsed();
+		for (i = 0; i < repeat; i++) {
+			callback();
+		}
+		used = Game.cpu.getUsed() - start;
+		return `CPU used: ${used}. Repetitions: ${repeat} (${used / repeat} each).`;
 	}
 
 	static openRoomPlanner(roomName: string): string {

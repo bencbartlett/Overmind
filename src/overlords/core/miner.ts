@@ -1,6 +1,6 @@
 import {Overlord} from '../Overlord';
 import {MiningSite} from '../../hiveClusters/miningSite';
-import {Zerg} from '../../zerg/_Zerg';
+import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';

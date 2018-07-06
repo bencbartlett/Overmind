@@ -5,6 +5,7 @@ import {Mem} from '../Memory';
 import {log} from '../console/log';
 import {derefCoords} from '../utilities/utils';
 import {bunkerLayout, insideBunkerBounds} from './layouts/bunker';
+import {profile} from '../profiler/decorator';
 
 export interface BarrierPlannerMemory {
 	barrierLookup: { [roadCoordName: string]: boolean };
@@ -14,6 +15,7 @@ let memoryDefaults = {
 	barrierLookup: {},
 };
 
+@profile
 export class BarrierPlanner {
 
 	roomPlanner: RoomPlanner;

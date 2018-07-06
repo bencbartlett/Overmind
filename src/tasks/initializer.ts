@@ -120,5 +120,5 @@ export function initializeTask(protoTask: protoTask): Task {
 	return task;
 }
 
-profiler.registerFN(initializeTask);
+profiler.registerFN(initializeTask, 'initializeTask');
 

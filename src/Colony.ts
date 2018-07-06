@@ -7,7 +7,7 @@ import {CommandCenter} from './hiveClusters/commandCenter';
 import {UpgradeSite} from './hiveClusters/upgradeSite';
 import {Overseer} from './Overseer';
 import {WorkerOverlord} from './overlords/core/worker';
-import {Zerg} from './zerg/_Zerg';
+import {Zerg} from './zerg/Zerg';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
 import {HiveCluster} from './hiveClusters/_HiveCluster';
 import {LinkNetwork} from './logistics/LinkNetwork';

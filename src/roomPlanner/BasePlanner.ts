@@ -2,10 +2,12 @@ import {distanceTransform} from '../algorithms/distanceTransform';
 import {allBunkerCoords, bunkerCoordLookup, bunkerLayout} from './layouts/bunker';
 import {coordName, minBy} from '../utilities/utils';
 import {Pathing} from '../movement/Pathing';
+import {profile} from '../profiler/decorator';
 
 const MAX_SAMPLE = 10;
 const MAX_TOTAL_PATH_LENGTH = 25 * 3;
 
+@profile
 export class BasePlanner {
 
 	static getBunkerLocation(room: Room, visualize = true): RoomPosition | undefined {

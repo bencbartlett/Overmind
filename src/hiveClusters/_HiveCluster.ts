@@ -2,7 +2,9 @@
 
 import {Colony} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
+import {profile} from '../profiler/decorator';
 
+@profile
 export abstract class HiveCluster {
 
 	colony: Colony;					// Colony the cluster belongs to
