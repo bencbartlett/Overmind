@@ -14,14 +14,12 @@
 // 	}
 // }
 
-import {ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER, WorldMap} from '../utilities/WorldMap';
-import {derefCoords, getCacheExpiration} from '../utilities/utils';
-import {Pathing} from '../movement/Pathing';
-import {log} from '../console/log';
+import {getCacheExpiration} from '../utilities/utils';
+import {ExpansionPlanner} from '../strategy/ExpansionPlanner';
 
 const RECACHE_TIME = 2500;
 const OWNED_RECACHE_TIME = 1000;
-const SCORE_RECALC_PROB = 0.1;
+const SCORE_RECALC_PROB = 0.2;
 
 const RoomIntelMemoryDefaults = {};
 
@@ -77,72 +75,25 @@ export class RoomIntel {
 		}
 	}
 
-	static computeScore(room: Room, verbose = true): void {
-		if (verbose) log.info(`Computing score for ${room.print}...`);
-		if (room.memory.score != undefined) return;
-		if (!room.controller) return;
-
-		// find source positions
-		let map: { [roomName: string]: RoomPosition[] } = {};
-		for (let dx = -1; dx <= 1; dx++) {
-			for (let dy = -1; dy <= 1; dy++) {
-				let roomName = WorldMap.findRelativeRoomName(room.name, dx, dy);
-				if (WorldMap.roomType(roomName) == ROOMTYPE_ALLEY) continue;
-				let roomMemory = Memory.rooms[roomName];
-				if (!roomMemory || !roomMemory.src) {
-					if (verbose) log.info(`No visibility of neighbor: ${roomName}. Aborting score calculation!`);
-					return;
-				}
-				map[roomName] = _.map(roomMemory.src, obj => derefCoords(obj.c, roomName));
-			}
-		}
-
-		// evaluate energy contribution
-		let origin = Pathing.findPathablePosition(room.name);
-		let totalScore = 0;
-		if (verbose) log.info(`Origin: ${origin.print}`);
-		for (let roomName in map) {
-			if (verbose) log.info(`Analyzing neighbor ${roomName}`);
-			let positions = map[roomName];
-			let valid = true;
-			let roomType = WorldMap.roomType(roomName);
-			let energyPerSource: number = SOURCE_ENERGY_CAPACITY;
-			if (roomType == ROOMTYPE_SOURCEKEEPER) {
-				energyPerSource = SOURCE_ENERGY_KEEPER_CAPACITY;
-			}
-
-			let roomScore = 0;
-			for (let position of positions) {
-				let msg = verbose ? `Computing distance from ${origin.print} to ${position.print}... ` : '';
-				let ret = Pathing.findShortestPath(origin, position, {ignoreStructures: true, allowHostile: true});
-				if (ret.incomplete || ret.path.length > 150) {
-					if (verbose) log.info(msg + 'incomplete path!');
-					valid = false;
-					break;
-				}
-				if (verbose) log.info(msg + ret.path.length);
-				roomScore += energyPerSource / ret.path.length;
-			}
-			if (valid) {
-				totalScore += roomScore;
-			}
-		}
-		totalScore = Math.floor(totalScore);
-		if (verbose) log.info(`Score: ${totalScore}`);
-		room.memory.score = totalScore;
-	}
 
 	static run(): void {
+		let shouldReturn = false;
 		for (let name in Game.rooms) {
 			let room = Game.rooms[name];
 			let isOwned = room.controller && room.controller.owner != undefined;
 			if (!room.memory.expiration || Game.time > room.memory.expiration) {
 				this.recordPermanentObjects(room);
-				if (!room.memory.score || Math.random() < SCORE_RECALC_PROB) {
-					this.computeScore(room, true);
+				if (room.memory.expansionData != false) { // if the room is not uninhabitable
+					if (!room.memory.expansionData || Math.random() < SCORE_RECALC_PROB) {
+						// recompute some of the time
+						shouldReturn = ExpansionPlanner.computeExpansionData(room, true);
+					}
 				}
 				let recacheTime = isOwned ? OWNED_RECACHE_TIME : RECACHE_TIME;
 				room.memory.expiration = getCacheExpiration(recacheTime, 50);
+				if (shouldReturn) {
+					return; // only compute roomData for one room per tick
+				}
 			}
 		}
 	}

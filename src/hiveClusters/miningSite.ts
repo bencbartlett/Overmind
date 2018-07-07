@@ -10,7 +10,7 @@ import {OverlordPriority} from '../priorities/priorities_overlords';
 import {Visualizer} from '../visuals/Visualizer';
 import {LogisticsNetwork} from '../logistics/LogisticsNetwork';
 import {Pathing} from '../movement/Pathing';
-import {ROOMTYPE_CORE, ROOMTYPE_SOURCEKEEPER, WorldMap} from '../utilities/WorldMap';
+import {Cartographer, ROOMTYPE_CORE, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
 
 interface MiningSiteMemory {
 	stats: {
@@ -61,8 +61,8 @@ export class MiningSite extends HiveCluster {
 		// Create a mining overlord for this
 		let priority = this.room.my ? OverlordPriority.ownedRoom.mine : OverlordPriority.remoteRoom.mine;
 		this.shouldDropMine = !this.room.my && !this.room.reservedByMe &&
-							  WorldMap.roomType(this.room.name) != ROOMTYPE_SOURCEKEEPER &&
-							  WorldMap.roomType(this.room.name) != ROOMTYPE_CORE;
+							  Cartographer.roomType(this.room.name) != ROOMTYPE_SOURCEKEEPER &&
+							  Cartographer.roomType(this.room.name) != ROOMTYPE_CORE;
 		this.overlord = new MiningOverlord(this, priority, this.shouldDropMine);
 		if (!this.shouldDropMine && Game.time % 100 == 0 && !this.output && !this.outputConstructionSite) {
 			log.warning(`Mining site at ${this.pos.print} has no output!`);
