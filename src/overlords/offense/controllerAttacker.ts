@@ -6,7 +6,6 @@ import {Overlord} from '../Overlord';
 import {DirectiveControllerAttack} from '../../directives/offense/controllerAttack';
 import {CreepSetup} from '../CreepSetup';
 import {profile} from '../../profiler/decorator';
-import {Colony} from '../../Colony';
 import {log} from '../../console/log';
 import {SpawnGroup} from 'logistics/SpawnGroup';
 
