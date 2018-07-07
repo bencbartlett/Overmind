@@ -1,6 +1,6 @@
 // Controller attacker overlord.  Spawn CLAIM creeps to mass up on a controller and attack all at once
 
-import {Zerg} from '../../zerg/_Zerg';
+import {Zerg} from '../../zerg/Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {Overlord} from '../Overlord';
 import {DirectiveControllerAttack} from '../../directives/offense/controllerAttack';
