@@ -1,7 +1,7 @@
 // The Strategist makes high-level game decisions such as choosing when/where to expand and who to harass. It is located
 // on Overmind.strategist and is only instantiated if the AI is run in full-auto mode.
 
-import {Mem} from '../memory';
+import {Mem} from '../Memory';
 import {Colony, getAllColonies} from '../Colony';
 import {DirectiveColonize} from '../directives/colonization/colonize';
 import {DirectiveIncubate} from '../directives/colonization/incubate';
