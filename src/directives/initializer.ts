@@ -22,6 +22,7 @@ import {DirectiveTerminalEmergencyState} from './logistics/terminalState_emergen
 import {DirectiveRPBunker} from './roomPlanner/roomPlanner_bunker';
 import {DirectiveTerminalRebuildState} from './logistics/terminalState_rebuild';
 import {DirectiveTerminalEvacuateState} from './logistics/terminalState_evacuate';
+import {DirectiveControllerAttack} from './offense/controllerAttack';
 
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 	switch (flag.color) {
@@ -51,6 +52,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveHealPoint(flag);
 				case COLOR_CYAN:
 					return new DirectiveDestroy(flag);
+				case COLOR_YELLOW:
+					return new DirectiveControllerAttack(flag);
 			}
 			break;
 

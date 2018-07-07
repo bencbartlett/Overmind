@@ -52,7 +52,7 @@ export class SpawnGroup {
 		avgDistance: number;
 	};
 
-	constructor(roomName: string, settings = {} as SpawnGroupSettings) {
+	constructor(roomName: string, settings: Partial<SpawnGroupSettings> = {}) {
 		this.roomName = roomName;
 		this.room = Game.rooms[roomName];
 		this.memory = Mem.wrap(Memory.rooms[roomName], 'spawnGroup', SpawnGroupMemoryDefaults);
@@ -61,8 +61,7 @@ export class SpawnGroup {
 		};
 		this.requests = [];
 		// this.hatcheries = [];
-		this.settings = settings;
-		_.defaults(this.settings, defaultSettings);
+		this.settings = _.defaults(settings, defaultSettings) as SpawnGroupSettings;
 	}
 
 	private recalculateColonies() {
