@@ -1,7 +1,7 @@
 // Command center overlord: spawn and run a dediated commandCenter attendant
 import {Overlord} from '../Overlord';
 import {CommandCenter} from '../../hiveClusters/commandCenter';
-import {Zerg} from '../../zerg/_Zerg';
+import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';

@@ -153,7 +153,11 @@ interface RoomMemory {
 		walls: string[];
 		ramparts: string[];
 	} | undefined;
-	score?: number;
+	expansionData: {
+		score: number;
+		bunkerAnchor: string;
+		outposts: { [roomName: string]: number };
+	} | false;
 	expiration?: number;
 }
 

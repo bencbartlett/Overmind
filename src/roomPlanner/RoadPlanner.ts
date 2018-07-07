@@ -7,6 +7,7 @@ import {Mem} from '../Memory';
 import {Colony} from '../Colony';
 import {Pathing} from '../movement/Pathing';
 import {MoveOptions} from '../movement/Movement';
+import {profile} from '../profiler/decorator';
 
 export interface RoadPlannerMemory {
 	roadLookup: { [roomName: string]: { [roadCoordName: string]: boolean } };
@@ -17,6 +18,7 @@ let memoryDefaults = {
 	roadLookup: {},
 };
 
+@profile
 export class RoadPlanner {
 
 	roomPlanner: RoomPlanner;

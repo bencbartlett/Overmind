@@ -1,6 +1,6 @@
 import {Overlord} from '../Overlord';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {Zerg} from '../../zerg/_Zerg';
+import {Zerg} from '../../zerg/Zerg';
 import {DirectiveHaul} from '../../directives/logistics/haul';
 import {Tasks} from '../../tasks/Tasks';
 import {isStoreStructure} from '../../declarations/typeGuards';
@@ -8,6 +8,7 @@ import {log} from '../../console/log';
 import {Pathing} from '../../movement/Pathing';
 import {Energetics} from '../../logistics/Energetics';
 import {CreepSetup} from '../CreepSetup';
+import {profile} from '../../profiler/decorator';
 
 
 const HaulerSetup = new CreepSetup('hauler', {
@@ -16,6 +17,7 @@ const HaulerSetup = new CreepSetup('hauler', {
 
 });
 
+@profile
 export class HaulingOverlord extends Overlord {
 
 	haulers: Zerg[];

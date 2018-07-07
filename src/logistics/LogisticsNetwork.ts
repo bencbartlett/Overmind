@@ -3,7 +3,7 @@
 // https://bencbartlett.wordpress.com/2018/03/28/screeps-4-hauling-is-np-hard/
 
 import {profile} from '../profiler/decorator';
-import {Zerg} from '../zerg/_Zerg';
+import {Zerg} from '../zerg/Zerg';
 import {log} from '../console/log';
 import {Pathing} from '../movement/Pathing';
 import {Colony} from '../Colony';

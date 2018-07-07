@@ -8,6 +8,7 @@ import {Colony, getAllColonies} from '../Colony';
 import {Pathing} from '../movement/Pathing';
 import {bodyCost} from '../overlords/CreepSetup';
 import {log} from '../console/log';
+import {profile} from '../profiler/decorator';
 
 interface SpawnGroupMemory {
 	colonies: string[];
@@ -40,6 +41,7 @@ export interface SpawnGroupSettings {
 	requiredRCL: number,
 }
 
+@profile
 export class SpawnGroup {
 
 	memory: SpawnGroupMemory;

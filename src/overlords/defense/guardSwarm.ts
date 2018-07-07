@@ -1,6 +1,6 @@
 // Guard swarm overlord: spawns lots of smaller guards to deal with swarm-like attacks or harassments
 
-import {Zerg} from '../../zerg/_Zerg';
+import {Zerg} from '../../zerg/Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {DirectiveGuardSwarm} from '../../directives/defense/guardSwarm';
 import {CreepSetup} from '../CreepSetup';

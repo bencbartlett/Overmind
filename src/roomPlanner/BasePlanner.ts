@@ -2,13 +2,20 @@ import {distanceTransform} from '../algorithms/distanceTransform';
 import {allBunkerCoords, bunkerCoordLookup, bunkerLayout} from './layouts/bunker';
 import {coordName, minBy} from '../utilities/utils';
 import {Pathing} from '../movement/Pathing';
+import {profile} from '../profiler/decorator';
+import {Colony} from '../Colony';
 
 const MAX_SAMPLE = 10;
 const MAX_TOTAL_PATH_LENGTH = 25 * 3;
 
+@profile
 export class BasePlanner {
 
 	static getBunkerLocation(room: Room, visualize = true): RoomPosition | undefined {
+		let colony = Overmind.colonies[room.name] as Colony;
+		if (colony && colony.bunker && colony.bunker.anchor) {
+			return colony.bunker.anchor;
+		}
 		let allowableLocations = this.getAllowableBunkerLocations(room, visualize);
 		if (allowableLocations.length > MAX_SAMPLE) {
 			allowableLocations = _.sample(allowableLocations, MAX_SAMPLE);
@@ -35,6 +42,9 @@ export class BasePlanner {
 
 	private static getAllowableBunkerLocations(room: Room, visualize = true): RoomPosition[] {
 		let allowableLocations = this.getNonIntersectingBunkerLocations(room.name, visualize);
+		if (allowableLocations.length > MAX_SAMPLE) {
+			allowableLocations = _.sample(allowableLocations, MAX_SAMPLE);
+		}
 		// Filter intersection with controller
 		if (!room.controller) return [];
 		allowableLocations = _.filter(allowableLocations,
@@ -57,8 +67,8 @@ export class BasePlanner {
 		let dt = distanceTransform(roomName);
 		let coords: Coord[] = [];
 		let x, y, value: number;
-		for (y = 0 + 8; y < 50 - 8; ++y) {
-			for (x = 0 + 8; x < 50 - 8; ++x) {
+		for (y of _.range(8, 50 - 8)) {
+			for (x of _.range(8, 50 - 8)) {
 				if (dt.get(x, y) >= 7) {
 					coords.push({x, y});
 				} else if (dt.get(x, y) >= 5 && !this.terrainIntersectsWithBunker({x, y}, dt)) {
@@ -88,8 +98,9 @@ export class BasePlanner {
 										padding = 1): boolean {
 		let dx = bunkerLayout.data.anchor.x - anchor.x;
 		let dy = bunkerLayout.data.anchor.y - anchor.y;
-		for (let x = obstacle.x + dx - padding; x <= obstacle.x + dx + padding; x++) {
-			for (let y = obstacle.y + dy - padding; x <= obstacle.y + dy + padding; y++) {
+		let x, y: number;
+		for (x of _.range(obstacle.x + dx - padding, obstacle.x + dx + padding + 1)) {
+			for (y of _.range(obstacle.y + dy - padding, obstacle.y + dy + padding + 1)) {
 				if (bunkerCoordLookup[8][coordName({x, y})]) {
 					return true;
 				}

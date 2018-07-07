@@ -11,7 +11,7 @@ import {log} from '../console/log';
 import {boostParts, REAGENTS} from '../resources/map_resources';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {Priority} from '../priorities/priorities';
-import {Zerg} from '../zerg/_Zerg';
+import {Zerg} from '../zerg/Zerg';
 import {TraderJoe} from '../logistics/TradeNetwork';
 import {rightArrow} from '../utilities/stringConstants';
 import {Visualizer} from '../visuals/Visualizer';

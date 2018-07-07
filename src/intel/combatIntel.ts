@@ -5,7 +5,7 @@ import {Mem} from '../Memory';
 import {Colony} from '../Colony';
 import {boostResources} from '../resources/map_resources';
 import {Pathing} from '../movement/Pathing';
-import {WorldMap} from '../utilities/WorldMap';
+import {Cartographer} from '../utilities/Cartographer';
 import {log} from '../console/log';
 
 interface CombatIntelMemory {
@@ -273,19 +273,19 @@ export class CombatIntel {
 		switch (direction) {
 			case 'left':
 				x = 48;
-				roomName = WorldMap.findRelativeRoomName(roomName, -1, 0);
+				roomName = Cartographer.findRelativeRoomName(roomName, -1, 0);
 				break;
 			case 'right':
 				x = 1;
-				roomName = WorldMap.findRelativeRoomName(roomName, 1, 0);
+				roomName = Cartographer.findRelativeRoomName(roomName, 1, 0);
 				break;
 			case 'top':
 				y = 48;
-				roomName = WorldMap.findRelativeRoomName(roomName, 0, -1);
+				roomName = Cartographer.findRelativeRoomName(roomName, 0, -1);
 				break;
 			case 'bottom':
 				y = 1;
-				roomName = WorldMap.findRelativeRoomName(roomName, 0, 1);
+				roomName = Cartographer.findRelativeRoomName(roomName, 0, 1);
 				break;
 			default:
 				log.error('Error getting fallback position!');

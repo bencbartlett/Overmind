@@ -4,7 +4,7 @@
 import {profile} from '../profiler/decorator';
 import {log} from '../console/log';
 import {getTerrainCosts, isExit, normalizePos, sameCoord} from './helpers';
-import {normalizeZerg, Zerg} from '../zerg/_Zerg';
+import {normalizeZerg, Zerg} from '../zerg/Zerg';
 import {Pathing} from './Pathing';
 import {QueenSetup} from '../overlords/core/queen';
 import {TransporterSetup} from '../overlords/core/transporter';
@@ -324,7 +324,7 @@ export class Movement {
 	 * the lead blocking creep will suicide. Returns whether the position has been vacated. */
 	static vacatePos(pos: RoomPosition, suicide = false): boolean {
 		// prevent creeps from moving onto pos
-		let nearbyCreeps = _.map(pos.findInRange(FIND_MY_CREEPS, 1), creep => Game.zerg[creep.name]);
+		let nearbyCreeps = _.compact(_.map(pos.findInRange(FIND_MY_CREEPS, 2), creep => Game.zerg[creep.name]));
 		_.forEach(nearbyCreeps, creep => creep.blockMovement = true);
 		// recurively move creeps off of the position
 		let creep = pos.lookFor(LOOK_CREEPS)[0];

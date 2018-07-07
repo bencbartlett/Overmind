@@ -1,7 +1,7 @@
 import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
-import {ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER, WorldMap} from '../utilities/WorldMap';
-import {Zerg} from '../zerg/_Zerg';
+import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
+import {Zerg} from '../zerg/Zerg';
 import {MoveOptions} from './Movement';
 
 /* Module for pathing-related operations. */
@@ -135,7 +135,7 @@ export class Pathing {
 		let matrix: CostMatrix;
 		if (options.ignoreCreeps == false) {
 			matrix = this.getCreepMatrix(room);
-		} else if (options.avoidSK && WorldMap.roomType(room.name) == ROOMTYPE_SOURCEKEEPER) {
+		} else if (options.avoidSK && Cartographer.roomType(room.name) == ROOMTYPE_SOURCEKEEPER) {
 			matrix = this.getSkMatrix(room);
 		} else if (options.ignoreStructures) {
 			matrix = new PathFinder.CostMatrix();
@@ -273,8 +273,8 @@ export class Pathing {
 			// if (linearDistance > 8) {
 			// 	highwayBias = 2.5;
 			// } else {
-			// 	let oCoords = WorldMap.getRoomCoordinates(origin);
-			// 	let dCoords = WorldMap.getRoomCoordinates(destination);
+			// 	let oCoords = Cartographer.getRoomCoordinates(origin);
+			// 	let dCoords = Cartographer.getRoomCoordinates(destination);
 			// 	if (_.any([oCoords.x, oCoords.y, dCoords.x, dCoords.y], z => z % 10 <= 1 || z % 10 >= 9)) {
 			// 		highwayBias = 2.5;
 			// 	}
@@ -292,7 +292,7 @@ export class Pathing {
 					roomName !== destination && roomName !== origin) { // room is marked as "avoid" in room memory
 					return Number.POSITIVE_INFINITY;
 				}
-				if (options.preferHighway && WorldMap.roomType(roomName) == ROOMTYPE_ALLEY) {
+				if (options.preferHighway && Cartographer.roomType(roomName) == ROOMTYPE_ALLEY) {
 					return 1;
 				}
 				return highwayBias;

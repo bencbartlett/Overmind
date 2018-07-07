@@ -1,5 +1,5 @@
-// Helper methods for Game.map
-// Much of this code was taken with slight modification from BonzAI codebase
+// Cartographer: provides helper methods related to Game.map. A few of these methods have been modified from BonzAI
+// codebase, although I have introduced new methods of my own over time as well.
 
 import {profile} from '../profiler/decorator';
 
@@ -9,9 +9,43 @@ export const ROOMTYPE_CONTROLLER = 'CTRL';
 export const ROOMTYPE_ALLEY = 'ALLEY';
 
 @profile
-export class WorldMap {
+export class Cartographer {
 
-	public static roomType(roomName: string): string {
+	/* Recursively enumerate all rooms from a root node using depth first search to a maximum depth */
+	static recursiveRoomSearch(roomName: string, maxDepth: number): { [depth: number]: string[] } {
+		let visitedRooms = this._recursiveRoomSearch(roomName, 0, maxDepth, {});
+		let roomDepths: { [depth: number]: string[] } = {};
+		for (let room in visitedRooms) {
+			let depth = visitedRooms[room];
+			if (!roomDepths[depth]) {
+				roomDepths[depth] = [];
+			}
+			roomDepths[depth].push(room);
+		}
+		return roomDepths;
+	}
+
+	/* The recursive part of recursiveRoomSearch. Yields inverted results mapping roomName to depth. */
+	private static _recursiveRoomSearch(roomName: string, depth: number, maxDepth: number,
+										visited: { [roomName: string]: number }): { [roomName: string]: number } {
+		if (visited[roomName] == undefined) {
+			visited[roomName] = depth;
+		} else {
+			visited[roomName] = Math.min(depth, visited[roomName]);
+		}
+		let neighbors = _.values(Game.map.describeExits(roomName)) as string[];
+		if (depth < maxDepth) {
+			for (let neighbor of neighbors) {
+				// Visit the neighbor if not already done or if this would be a more direct route
+				if (visited[neighbor] == undefined || depth + 1 < visited[neighbor]) {
+					this._recursiveRoomSearch(neighbor, depth + 1, maxDepth, visited);
+				}
+			}
+		}
+		return visited;
+	}
+
+	static roomType(roomName: string): 'SK' | 'CORE' | 'CTRL' | 'ALLEY' {
 		let coords = this.getRoomCoordinates(roomName);
 		if (coords.x % 10 === 0 || coords.y % 10 === 0) {
 			return ROOMTYPE_ALLEY;
@@ -24,7 +58,7 @@ export class WorldMap {
 		}
 	}
 
-	public static findRelativeRoomName(roomName: string, xDelta: number, yDelta: number): string {
+	static findRelativeRoomName(roomName: string, xDelta: number, yDelta: number): string {
 		let coords = this.getRoomCoordinates(roomName);
 		let xDir = coords.xDir;
 		if (xDir === 'W') {
@@ -49,7 +83,7 @@ export class WorldMap {
 		return xDir + x + yDir + y;
 	}
 
-	public static findRoomCoordDeltas(origin: string, otherRoom: string): { x: number, y: number } {
+	static findRoomCoordDeltas(origin: string, otherRoom: string): { x: number, y: number } {
 		let originCoords = this.getRoomCoordinates(origin);
 		let otherCoords = this.getRoomCoordinates(otherRoom);
 
@@ -74,7 +108,7 @@ export class WorldMap {
 		return {x: xDelta, y: yDelta};
 	}
 
-	public static findRelativeRoomDir(origin: string, otherRoom: string): number {
+	static findRelativeRoomDir(origin: string, otherRoom: string): number {
 		let coordDeltas = this.findRoomCoordDeltas(origin, otherRoom);
 		// noinspection JSSuspiciousNameCombination
 		if (Math.abs(coordDeltas.x) == Math.abs(coordDeltas.y)) {
@@ -111,7 +145,7 @@ export class WorldMap {
 		}
 	}
 
-	public static oppositeDir(dir: string): string {
+	static oppositeDir(dir: string): string {
 		switch (dir) {
 			case 'W':
 				return 'E';
@@ -126,7 +160,7 @@ export class WorldMap {
 		}
 	}
 
-	public static getRoomCoordinates(roomName: string): RoomCoord {
+	static getRoomCoordinates(roomName: string): RoomCoord {
 		let coordinateRegex = /(E|W)(\d+)(N|S)(\d+)/g;
 		let match = coordinateRegex.exec(roomName)!;
 

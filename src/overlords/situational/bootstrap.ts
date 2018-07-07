@@ -3,7 +3,7 @@ import {DirectiveBootstrap} from '../../directives/core/bootstrap';
 import {CreepSetup} from '../CreepSetup';
 import {MinerSetup, MiningOverlord} from '../core/miner';
 import {ColonyStage} from '../../Colony';
-import {Zerg} from '../../zerg/_Zerg';
+import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';

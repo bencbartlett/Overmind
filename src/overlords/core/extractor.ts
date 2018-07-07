@@ -1,6 +1,6 @@
 import {Overlord} from '../Overlord';
 import {ExtractionSite} from '../../hiveClusters/extractionSite';
-import {Zerg} from '../../zerg/_Zerg';
+import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {profile} from '../../profiler/decorator';
 import {DEFCON} from '../../Colony';

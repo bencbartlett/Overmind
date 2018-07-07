@@ -1,5 +1,5 @@
 import {Overlord} from '../Overlord';
-import {Zerg} from '../../zerg/_Zerg';
+import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {Directive} from '../../directives/Directive';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -36,7 +36,7 @@ export class PioneerOverlord extends Overlord {
 	private rechargeActions(pioneer: Zerg) {
 		// Calculate recharge objects if needed (can't be placed in constructor because instantiation order
 		if (this.rechargeObjects.length == 0) {
-			let rechargeObjects = _.compact([pioneer.room.storageUnits,
+			let rechargeObjects = _.compact([...pioneer.room.storageUnits,
 											 ...(pioneer.room.drops[RESOURCE_ENERGY] || []),
 											 ...pioneer.room.tombstones]) as rechargeObjectType[];
 			this.rechargeObjects = _.filter(rechargeObjects, obj => isResource(obj) ? obj.amount > 0 : obj.energy > 0);

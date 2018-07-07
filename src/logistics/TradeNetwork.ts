@@ -33,7 +33,7 @@ export const maxMarketPrices: { [resourceType: string]: number } = {
 	[RESOURCE_LEMERGIUM]: 0.25,
 	[RESOURCE_KEANIUM]  : 0.25,
 	[RESOURCE_ZYNTHIUM] : 0.25,
-	[RESOURCE_CATALYST] : 0.4,
+	[RESOURCE_CATALYST] : 0.5,
 };
 
 @profile

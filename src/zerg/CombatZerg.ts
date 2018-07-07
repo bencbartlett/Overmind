@@ -1,6 +1,8 @@
-import {Zerg} from './_Zerg';
+import {Zerg} from './Zerg';
 import {CombatTargeting} from '../targeting/CombatTargeting';
+import {profile} from '../profiler/decorator';
 
+@profile
 export class CombatZerg extends Zerg {
 
 	constructor(creep: Creep) {

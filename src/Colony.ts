@@ -7,7 +7,7 @@ import {CommandCenter} from './hiveClusters/commandCenter';
 import {UpgradeSite} from './hiveClusters/upgradeSite';
 import {Overseer} from './Overseer';
 import {WorkerOverlord} from './overlords/core/worker';
-import {Zerg} from './zerg/_Zerg';
+import {Zerg} from './zerg/Zerg';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
 import {HiveCluster} from './hiveClusters/_HiveCluster';
 import {LinkNetwork} from './logistics/LinkNetwork';
@@ -56,6 +56,13 @@ export interface ColonyMemory {
 	defcon: {
 		level: number,
 		tick: number,
+	},
+	// nearbyRooms: {
+	// 	[depth: number]: string[],
+	// }
+	expansionData: {
+		possibleExpansions: { [roomName: string]: number | boolean },
+		expiration: number,
 	}
 }
 
@@ -63,7 +70,12 @@ const defaultColonyMemory: ColonyMemory = {
 	defcon: {
 		level: DEFCON.safe,
 		tick : -Infinity
-	}
+	},
+	// nearbyRooms: {},
+	expansionData: {
+		possibleExpansions: {},
+		expiration        : 0,
+	},
 };
 
 @profile
@@ -145,13 +157,17 @@ export class Colony {
 	roomPlanner: RoomPlanner;
 	abathur: Abathur;
 
+	static settings = {
+		maxSourcesPerColony: 8,
+	};
+
 	constructor(id: number, roomName: string, outposts: string[], creeps: Creep[] | undefined) {
 		// Primitive colony setup
 		this.id = id;
 		this.name = roomName;
 		this.ref = roomName;
 		this.colony = this;
-		this.memory = Mem.wrap(Memory.colonies, this.name, defaultColonyMemory);
+		this.memory = Mem.wrap(Memory.colonies, this.name, defaultColonyMemory, true);
 		// Register rooms
 		this.roomNames = [roomName].concat(outposts);
 		this.room = Game.rooms[roomName];
