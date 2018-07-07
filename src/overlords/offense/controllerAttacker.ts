@@ -6,11 +6,9 @@ import {Overlord} from '../Overlord';
 import {DirectiveControllerAttack} from '../../directives/offense/controllerAttack';
 import {CreepSetup} from '../CreepSetup';
 import {profile} from '../../profiler/decorator';
-import {Movement} from '../../movement/Movement';
-import {Pathing} from '../../movement/Pathing';
 import {Colony} from '../../Colony';
 import {log} from '../../console/log';
-import {SpawnGroup, SpawnGroupSettings} from 'logistics/SpawnGroup';
+import {SpawnGroup} from 'logistics/SpawnGroup';
 
 const ControllerAttacker = new CreepSetup('ctrlAttack', {
 	pattern: [CLAIM, MOVE],
