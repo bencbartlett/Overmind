@@ -5,20 +5,18 @@ import {profile} from '../../profiler/decorator';
 import {Directive} from '../../directives/Directive';
 import {CreepSetup} from '../CreepSetup';
 
-const ScoutSetup = new CreepSetup('scout', {
+export const ScoutSetup = new CreepSetup('scout', {
 	pattern  : [MOVE],
 	sizeLimit: 1,
 });
 
 @profile
-export class ScoutOverlord extends Overlord {
+export class StationaryScoutOverlord extends Overlord {
 
 	scouts: Zerg[];
 
-	constructor(directive: Directive, priority = OverlordPriority.remoteRoom.reserve) {
+	constructor(directive: Directive, priority = OverlordPriority.scouting.stationary) {
 		super(directive, 'scout', priority);
-		// Change priority to operate per-outpost
-		this.priority += this.outpostIndex * OverlordPriority.remoteRoom.roomIncrement;
 		this.scouts = this.zerg(ScoutSetup.role);
 	}
 
@@ -26,18 +24,11 @@ export class ScoutOverlord extends Overlord {
 		this.wishlist(1, ScoutSetup);
 	}
 
-	private handleScout(scout: Zerg): void {
-		if (!scout.pos.inRangeTo(this.pos, 3) && !scout.pos.isEdge) {
-			scout.goTo(this.pos, {range: 3});
-		}
-	}
-
 	run() {
 		for (let scout of this.scouts) {
-			if (scout.isIdle) {
-				this.handleScout(scout);
+			if (!scout.pos.inRangeTo(this.pos, 3) && !scout.pos.isEdge) {
+				scout.goTo(this.pos, {range: 3});
 			}
-			scout.run();
 		}
 	}
 }

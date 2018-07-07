@@ -1,5 +1,6 @@
 import {Task} from '../Task';
 import {profile} from '../../profiler/decorator';
+import {hasPos} from '../../declarations/typeGuards';
 
 export type goToTargetType = { pos: RoomPosition } | RoomPosition;
 export const goToTaskName = 'goTo';
@@ -9,21 +10,17 @@ export class TaskGoTo extends Task {
 	target: null;
 
 	constructor(target: goToTargetType, options = {} as TaskOptions) {
-		if (target instanceof RoomPosition) {
-			super(goToTaskName, {ref: '', pos: target}, options);
-		} else {
+		if (hasPos(target)) {
 			super(goToTaskName, {ref: '', pos: target.pos}, options);
+		} else {
+			super(goToTaskName, {ref: '', pos: target}, options);
 		}
 		// Settings
 		this.settings.targetRange = 1;
 	}
 
 	isValidTask() {
-		let range = this.settings.targetRange;
-		// if (this.options.moveOptions!.range != undefined) {
-		// 	range = this.options.moveOptions!.range!;
-		// }
-		return !this.creep.pos.inRangeTo(this.targetPos, range);
+		return !this.creep.pos.inRangeTo(this.targetPos, this.settings.targetRange);
 	}
 
 	isValidTarget() {

@@ -75,7 +75,6 @@ export class RoomIntel {
 		}
 	}
 
-
 	static run(): void {
 		let shouldReturn = false;
 		for (let name in Game.rooms) {

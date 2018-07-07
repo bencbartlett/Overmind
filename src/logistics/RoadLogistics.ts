@@ -6,6 +6,13 @@ import {Zerg} from '../zerg/Zerg';
 import {repairTaskName} from '../tasks/instances/repair';
 import {GlobalCache} from '../caching';
 
+const ROAD_CACHE_TIMEOUT = 25;
+
+// function sortRoadsByDFS(room: Room, colony: Colony) {
+// 	let roads: StructureRoad[] = [];
+// 	let rootNode = colony.pos.findClosestByMultiRoomRange(room.roads);
+//
+// }
 
 @profile
 export class RoadLogistics {
@@ -38,7 +45,7 @@ export class RoadLogistics {
 		this.cache = {
 			// repairableRoads: {},
 			// criticalRoads  : {},
-			energyToRepave : {}
+			energyToRepave: {}
 		};
 	}
 
@@ -77,20 +84,25 @@ export class RoadLogistics {
 		}
 	}
 
+	// /* Compute roads ordered by a depth-first search from a root node */
+	// roads(room: Room): StructureRoad[] {
+	//
+	// }
+
 	criticalRoads(room: Room): StructureRoad[] {
 		return GlobalCache.structures(this, 'criticalRoads:' + room.name, () =>
-			_.filter(room.roads, road =>
+			_.sortBy(_.filter(room.roads, road =>
 				road.hits < road.hitsMax * this.settings.criticalThreshold &&
-				this.colony.roomPlanner.roadShouldBeHere(road.pos))
-		);
+				this.colony.roomPlanner.roadShouldBeHere(road.pos)),
+					 road => road.pos.getMultiRoomRangeTo(this.colony.pos)), ROAD_CACHE_TIMEOUT);
 	}
 
 	repairableRoads(room: Room): StructureRoad[] {
-		return GlobalCache.structures(this, 'criticalRoads:' + room.name, () =>
-			_.filter(room.roads, road =>
+		return GlobalCache.structures(this, 'repairableRoads:' + room.name, () =>
+			_.sortBy(_.filter(room.roads, road =>
 				road.hits < road.hitsMax * this.settings.repairThreshold &&
-				this.colony.roomPlanner.roadShouldBeHere(road.pos))
-		);
+				this.colony.roomPlanner.roadShouldBeHere(road.pos)),
+					 road => road.pos.getMultiRoomRangeTo(this.colony.pos)), ROAD_CACHE_TIMEOUT);
 	}
 
 	/* Total amount of energy needed to repair all roads in the room */

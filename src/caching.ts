@@ -65,7 +65,7 @@ export class GlobalCache {
 		if (!_cache.structures[cacheKey] || Game.time > _cache.expiration[cacheKey]) {
 			// Recache if new entry or entry is expired
 			_cache.structures[cacheKey] = callback();
-			_cache.expiration[cacheKey] = getCacheExpiration(timeout);
+			_cache.expiration[cacheKey] = getCacheExpiration(timeout, Math.ceil(timeout / 10));
 		} else {
 			// Refresh structure list by ID if not already done on current tick
 			if (_cache.accessed[cacheKey] < Game.time) {

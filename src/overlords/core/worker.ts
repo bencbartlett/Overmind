@@ -9,6 +9,7 @@ import {BuildPriorities} from '../../priorities/priorities_structures';
 import {maxBy, minMax} from '../../utilities/utils';
 import {isResource} from '../../declarations/typeGuards';
 import {GlobalCache} from '../../caching';
+import {Task} from '../../tasks/Task';
 
 export const WorkerSetup = new CreepSetup('worker', {
 	pattern  : [WORK, CARRY, MOVE],
@@ -162,50 +163,85 @@ export class WorkerOverlord extends Overlord {
 		}
 	}
 
-	private repairActions(worker: Zerg) {
+	private repairActions(worker: Zerg): boolean {
 		let target = worker.pos.findClosestByMultiRoomRange(this.repairStructures);
-		if (target) worker.task = Tasks.repair(target);
+		if (target) {
+			worker.task = Tasks.repair(target);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
-	private buildActions(worker: Zerg) {
+	private buildActions(worker: Zerg): boolean {
 		let groupedSites = _.groupBy(this.constructionSites, site => site.structureType);
 		for (let structureType of BuildPriorities) {
 			if (groupedSites[structureType]) {
 				let target = worker.pos.findClosestByMultiRoomRange(groupedSites[structureType]);
 				if (target) {
 					worker.task = Tasks.build(target);
-					return;
+					return true;
 				}
 			}
 		}
+		return false;
 	}
 
-	private dismantleActions(worker: Zerg) {
+	private dismantleActions(worker: Zerg): boolean {
 		let targets = _.filter(this.dismantleStructures, s => (s.targetedBy || []).length < 3);
 		let target = worker.pos.findClosestByMultiRoomRange(targets);
 		if (target) {
 			_.remove(this.dismantleStructures, s => s == target);
 			worker.task = Tasks.dismantle(target);
+			return true;
+		} else {
+			return false;
 		}
 	}
 
-	private pavingActions(worker: Zerg) {
-		let roomToRepave = this.colony.roadLogistics.workerShouldRepave(worker)!;
-		this.colony.roadLogistics.registerWorkerAssignment(worker, roomToRepave);
-		let target = worker.pos.findClosestByMultiRoomRange(this.colony.roadLogistics.repairableRoads(roomToRepave));
-		if (target) {
-			let nextTarget = target.pos.findClosestByRange(this.colony.roadLogistics.repairableRoads(roomToRepave), {
-				filter: (nextTarg: StructureRoad) => nextTarg.ref != target!.ref
-			}) as StructureRoad | undefined;
-			if (nextTarget) {
-				worker.task = Tasks.repair(target, {nextPos: nextTarget.pos});
+	// Find a suitable repair ordering of roads with a depth first search
+	private buildPavingManifest(worker: Zerg, room: Room): Task | null {
+		let energy = worker.carry.energy;
+		let targetRefs: { [ref: string]: boolean } = {};
+		let tasks: Task[] = [];
+		let target: StructureRoad | undefined = undefined;
+		let previousPos: RoomPosition | undefined = undefined;
+		while (true) {
+			if (energy <= 0) break;
+			if (previousPos) {
+				target = _.find(this.colony.roadLogistics.repairableRoads(room),
+								road => road.hits < road.hitsMax && !targetRefs[road.id]
+										&& road.pos.getRangeTo(previousPos!) <= 1);
 			} else {
-				worker.task = Tasks.repair(target);
+				target = _.find(this.colony.roadLogistics.repairableRoads(room),
+								road => road.hits < road.hitsMax && !targetRefs[road.id]);
+			}
+			if (target) {
+				previousPos = target.pos;
+				targetRefs[target.id] = true;
+				energy -= (target.hitsMax - target.hits) / REPAIR_POWER;
+				tasks.push(Tasks.repair(target));
+			} else {
+				break;
 			}
 		}
+		return Tasks.chain(tasks);
 	}
 
-	private fortifyActions(worker: Zerg, fortifyStructures = this.fortifyStructures) {
+	private pavingActions(worker: Zerg): boolean {
+		let roomToRepave = this.colony.roadLogistics.workerShouldRepave(worker)!;
+		this.colony.roadLogistics.registerWorkerAssignment(worker, roomToRepave);
+		// Build a paving manifest
+		let task = this.buildPavingManifest(worker, roomToRepave);
+		if (task) {
+			worker.task = task;
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	private fortifyActions(worker: Zerg, fortifyStructures = this.fortifyStructures): boolean {
 		let lowBarriers: (StructureWall | StructureRampart)[];
 		let highestBarrierHits = _.max(_.map(fortifyStructures, structure => structure.hits));
 		if (highestBarrierHits > WorkerOverlord.settings.hitTolerance) {
@@ -219,19 +255,25 @@ export class WorkerOverlord extends Overlord {
 			lowBarriers = _.take(fortifyStructures, numBarriersToConsider);
 		}
 		let target = worker.pos.findClosestByMultiRoomRange(lowBarriers);
-		if (target) worker.task = Tasks.fortify(target);
+		if (target) {
+			worker.task = Tasks.fortify(target);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
-	private upgradeActions(worker: Zerg) {
+	private upgradeActions(worker: Zerg): boolean {
 		// Sign controller if needed
 		if ((!this.colony.controller.signedByMe && !this.colony.controller.signedByScreeps)) {
 			worker.task = Tasks.signController(this.colony.controller);
-			return;
+			return true;
 		}
 		worker.task = Tasks.upgrade(this.room.controller!);
+		return true;
 	}
 
-	private rechargeActions(worker: Zerg) {
+	private rechargeActions(worker: Zerg): void {
 		// Calculate recharge objects if needed (can't be placed in constructor because instantiation order
 		if (this.rechargeObjects.length == 0) {
 			let workerWithdrawLimit = this.colony.stage == ColonyStage.Larva ? 750 : 100;
@@ -270,35 +312,35 @@ export class WorkerOverlord extends Overlord {
 		if (worker.carry.energy > 0) {
 			// Upgrade controller if close to downgrade
 			if (this.colony.controller.ticksToDowngrade <= 1000) {
-				this.upgradeActions(worker);
+				if (this.upgradeActions(worker)) return;
 			}
 			// Repair damaged non-road non-barrier structures
-			else if (this.repairStructures.length > 0) {
-				this.repairActions(worker);
+			if (this.repairStructures.length > 0) {
+				if (this.repairActions(worker)) return;
 			}
 			// Build new structures
-			else if (this.constructionSites.length > 0) {
-				this.buildActions(worker);
+			if (this.constructionSites.length > 0) {
+				if (this.buildActions(worker)) return;
 			}
 			// Build ramparts to block incoming nuke
-			else if (this.nukeDefenseRamparts.length > 0) {
-				this.fortifyActions(worker, this.nukeDefenseRamparts);
+			if (this.nukeDefenseRamparts.length > 0) {
+				if (this.fortifyActions(worker, this.nukeDefenseRamparts)) return;
 			}
 			// Build and maintain roads
-			else if (this.colony.roadLogistics.workerShouldRepave(worker) && this.colony.defcon == DEFCON.safe) {
-				this.pavingActions(worker);
+			if (this.colony.roadLogistics.workerShouldRepave(worker) && this.colony.defcon == DEFCON.safe) {
+				if (this.pavingActions(worker)) return;
 			}
 			// Dismantle marked structures
-			else if (this.dismantleStructures.length > 0 && this.colony.defcon == DEFCON.safe) {
-				this.dismantleActions(worker);
+			if (this.dismantleStructures.length > 0 && this.colony.defcon == DEFCON.safe) {
+				if (this.dismantleActions(worker)) return;
 			}
 			// Fortify walls and ramparts
-			else if (this.fortifyStructures.length > 0) {
-				this.fortifyActions(worker);
+			if (this.fortifyStructures.length > 0) {
+				if (this.fortifyActions(worker)) return;
 			}
 			// Upgrade controller if less than RCL8 or no upgraders
-			else if (this.colony.level < 8 || this.colony.upgradeSite.overlord.upgraders.length == 0) {
-				this.upgradeActions(worker);
+			if (this.colony.level < 8 || this.colony.upgradeSite.overlord.upgraders.length == 0) {
+				if (this.upgradeActions(worker)) return;
 			}
 		} else {
 			// Acquire more energy

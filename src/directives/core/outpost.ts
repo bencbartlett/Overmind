@@ -1,7 +1,7 @@
 import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {ReservingOverlord} from '../../overlords/colonization/reserver';
-import {ScoutOverlord} from '../../overlords/core/scout';
+import {StationaryScoutOverlord} from '../../overlords/scouting/stationary';
 import {derefCoords} from '../../utilities/utils';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 
@@ -23,7 +23,7 @@ export class DirectiveOutpost extends Directive {
 			&& Cartographer.roomType(this.pos.roomName) == ROOMTYPE_CONTROLLER) {
 			this.overlords.reserve = new ReservingOverlord(this);
 		} else {
-			this.overlords.scout = new ScoutOverlord(this);
+			this.overlords.scout = new StationaryScoutOverlord(this);
 		}
 		if (!this.room) {
 			// Push source / output positions to colony.destinations if room is invisible for correct road routings

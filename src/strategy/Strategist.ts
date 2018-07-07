@@ -41,7 +41,6 @@ export class Strategist {
 		}
 	}
 
-
 	init(): void {
 
 	}
