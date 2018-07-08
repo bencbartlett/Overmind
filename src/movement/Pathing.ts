@@ -3,6 +3,7 @@ import {profile} from '../profiler/decorator';
 import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
 import {Zerg} from '../zerg/Zerg';
 import {MoveOptions} from './Movement';
+import {hasPos} from '../declarations/typeGuards';
 
 /* Module for pathing-related operations. */
 
@@ -25,9 +26,10 @@ export class Pathing {
 		}
 		if (room.controller) {
 			if (room.controller.owner && !room.controller.my && room.towers.length > 0) {
-				room.memory.avoid = 1;
+				room.memory.avoid = true;
 			} else {
 				delete room.memory.avoid;
+				if (room.memory.expansionData == false) delete room.memory.expansionData;
 			}
 		}
 	}
@@ -94,7 +96,6 @@ export class Pathing {
 			ignoreCreeps: true,
 			range       : 1,
 			direct      : true,
-			allowSK     : true,
 		});
 		let ret = this.findPath(startPos, endPos, options);
 		if (ret.incomplete) log.alert(`Pathing: incomplete path from ${startPos.print} to ${endPos.print}!`);
@@ -408,7 +409,6 @@ export class Pathing {
 	static calculatePathWeight(startPos: RoomPosition, endPos: RoomPosition, options: MoveOptions = {}): number {
 		_.defaults(options, {
 			range  : 1,
-			allowSK: true,
 		});
 		let ret = this.findPath(startPos, endPos, options);
 		let weight = 0;
@@ -452,19 +452,40 @@ export class Pathing {
 	}
 
 	/* Whether another object in the same room can be reached from the current position */
-	static isReachable(startPos: RoomPosition, endPos: RoomPosition, options: MoveOptions = {}): boolean {
+	static isReachable(startPos: RoomPosition, endPos: RoomPosition, obstacles: (RoomPosition | HasPos)[],
+					   options: MoveOptions = {}): boolean {
 		_.defaults(options, {
 			ignoreCreeps: false,
 			range       : 1,
-			direct      : true,
-			allowSK     : true,
-			allowHostile: true,
-			maxRooms    : 1,
 			maxOps      : 2000,
-			ensurePath  : false
+			ensurePath  : false,
 		});
-		let ret = this.findPath(startPos, endPos, options);
-		return !(ret.incomplete);
+		const matrix = new PathFinder.CostMatrix();
+		// Set passability of structure positions
+		let impassibleStructures: Structure[] = [];
+		_.forEach(obstacles, obstacle => {
+			if (hasPos(obstacle)) {
+				matrix.set(obstacle.pos.x, obstacle.pos.y, 0xfe);
+			} else {
+				matrix.set(obstacle.x, obstacle.y, 0xfe);
+			}
+		});
+		let ret = PathFinder.search(startPos, {pos: endPos, range: options.range!}, {
+			maxOps   : options.maxOps,
+			maxRooms : 1,
+			plainCost: 1,
+			swampCost: 5,
+		});
+		if (ret.incomplete) {
+			return false;
+		} else {
+			for (let pos of ret.path) {
+				if (matrix.get(pos.x, pos.y) > 100) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	/* Find the first walkable position in the room, spiraling outward from the center */

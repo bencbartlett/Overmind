@@ -7,12 +7,13 @@ export const goToRoomTaskName = 'goToRoom';
 
 @profile
 export class TaskGoToRoom extends Task {
+
 	target: null;
 
 	constructor(roomName: goToRoomTargetType, options = {} as TaskOptions) {
 		super(goToRoomTaskName, {ref: '', pos: new RoomPosition(25, 25, roomName)}, options);
 		// Settings
-		this.settings.targetRange = 23; // Target is almost always controller flag, so range of 2 is acceptable
+		this.settings.targetRange = 24; // Target is almost always controller flag, so range of 2 is acceptable
 	}
 
 	isValidTask() {

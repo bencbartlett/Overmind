@@ -11,6 +11,7 @@ import {log} from '../console/log';
 import {SpawnRequest, SpawnRequestOptions} from '../hiveClusters/hatchery';
 import {SpawnGroup} from '../logistics/SpawnGroup';
 import {CombatZerg} from '../zerg/CombatZerg';
+import {Pathing} from '../movement/Pathing';
 
 export function getOverlord(creep: Zerg | Creep): Overlord | null {
 	if (creep.memory.overlord) {
@@ -161,10 +162,13 @@ export abstract class Overlord {
 		// if (this.colony.incubator) {
 		// 	spawnDistance = Pathing.distance(this.pos, this.colony.incubator.hatchery!.pos) || 0;
 		// } else
-		// if (this.colony.hatchery) {
-		// 	// Use distance or 0 (in case distance returns something undefined due to incomplete pathfinding)
-		// 	spawnDistance = Pathing.distance(this.pos, this.colony.hatchery.pos) || 0;
-		// }
+		if (this.spawnGroup) {
+			let distances = _.take(_.sortBy(this.spawnGroup.memory.distances), 2);
+			spawnDistance = _.sum(distances) / distances.length || 0;
+		} else if (this.colony.hatchery) {
+			// Use distance or 0 (in case distance returns something undefined due to incomplete pathfinding)
+			spawnDistance = Pathing.distance(this.pos, this.colony.hatchery.pos) || 0;
+		}
 		if (this.colony.isIncubating && this.colony.spawnGroup) {
 			spawnDistance += this.colony.spawnGroup.stats.avgDistance;
 		}

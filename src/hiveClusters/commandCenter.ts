@@ -10,6 +10,9 @@ import {TerminalNetwork} from '../logistics/TerminalNetwork';
 import {Energetics} from '../logistics/Energetics';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {Priority} from '../priorities/priorities';
+import {Cartographer} from '../utilities/Cartographer';
+
+export const MAX_OBSERVE_DISTANCE = 7;
 
 interface CommandCenterMemory {
 	idlePos?: protoPos
@@ -134,6 +137,15 @@ export class CommandCenter extends HiveCluster {
 		}
 	}
 
+	private runObserver(): void {
+		if (this.observer) {
+			let dx = Game.time % MAX_OBSERVE_DISTANCE;
+			let dy = Game.time % (MAX_OBSERVE_DISTANCE ** 2);
+			let roomToObserve = Cartographer.findRelativeRoomName(this.room.name, dx, dy);
+			this.observer.observeRoom(roomToObserve);
+		}
+	}
+
 	// Initialization and operation ====================================================================================
 
 	init(): void {
@@ -142,7 +154,7 @@ export class CommandCenter extends HiveCluster {
 	}
 
 	run(): void {
-
+		this.runObserver();
 	}
 
 	visuals() {

@@ -217,7 +217,7 @@ RoomPosition.prototype.getMultiRoomRangeTo = function (pos: RoomPosition): numbe
 };
 
 RoomPosition.prototype.findClosestByLimitedRange = function <T>(objects: T[] | RoomPosition[], rangeLimit: number,
-																opts?: { filter: any | string; }): T {
+																opts?: { filter: any | string; }): T | undefined {
 	let objectsInRange = this.findInRange(objects, rangeLimit, opts);
 	return this.findClosestByRange(objectsInRange, opts);
 };

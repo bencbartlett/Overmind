@@ -16,6 +16,13 @@ import {MinerSetup} from './overlords/core/miner';
 import {QueenSetup} from './overlords/core/queen';
 import {DirectiveTerminalEvacuateState} from './directives/logistics/terminalState_evacuate';
 import {bodyCost} from './overlords/CreepSetup';
+import {LogisticsNetwork} from './logistics/LogisticsNetwork';
+import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
+import {derefCoords, minBy} from './utilities/utils';
+import {DirectiveOutpost} from './directives/core/outpost';
+
+
+// export const DIRECTIVE_CHECK_FREQUENCY = 2;
 
 @profile
 export class Overseer {
@@ -24,10 +31,6 @@ export class Overseer {
 	directives: Directive[];					// Directives across the colony
 	overlords: {
 		[priority: number]: Overlord[]
-	};
-
-	static settings = {
-		minEnergyForRequest: 200,
 	};
 
 	constructor(colony: Colony) {
@@ -49,7 +52,8 @@ export class Overseer {
 			// Pick up all nontrivial dropped resources
 			for (let resourceType in room.drops) {
 				for (let drop of room.drops[resourceType]) {
-					if (drop.amount > Overseer.settings.minEnergyForRequest || drop.resourceType != RESOURCE_ENERGY) {
+					if (drop.amount > LogisticsNetwork.settings.droppedEnergyThreshold
+						|| drop.resourceType != RESOURCE_ENERGY) {
 						this.colony.logisticsNetwork.requestOutput(drop);
 					}
 				}
@@ -57,7 +61,7 @@ export class Overseer {
 		}
 		// Place a logistics request directive for every tombstone with non-empty store that isn't on a container
 		for (let tombstone of this.colony.tombstones) {
-			if (_.sum(tombstone.store) > Overseer.settings.minEnergyForRequest
+			if (_.sum(tombstone.store) > LogisticsNetwork.settings.droppedEnergyThreshold
 				|| _.sum(tombstone.store) > tombstone.store.energy) {
 				this.colony.logisticsNetwork.requestOutput(tombstone, {resourceType: 'all'});
 			}
@@ -106,6 +110,47 @@ export class Overseer {
 			}
 		}
 
+		// Place reserving/harvesting directives if needed
+		if (Memory.bot && Game.time % 100 == this.colony.id) {
+			let numSources = _.sum(this.colony.roomNames, roomName => (Memory.rooms[roomName].src || []).length);
+			let numRemotes = numSources - this.colony.room.sources.length;
+			if (numRemotes < Colony.settings.remoteSourcesByLevel[this.colony.level]) {
+				// Possible outposts are controller rooms not already reserved or owned
+				log.debug(`Calculating colonies for ${this.colony.room.print}...`);
+				log.debug(`Rooms in range 2: ${Cartographer.findRoomsInRange(this.colony.room.name, 2)}`);
+				let possibleOutposts = _.filter(Cartographer.findRoomsInRange(this.colony.room.name, 2), roomName =>
+					Cartographer.roomType(roomName) == ROOMTYPE_CONTROLLER
+					&& !_.any(Overmind.cache.outpostFlags,
+							  function (flag) {
+								  if (flag.memory.setPosition) {
+									  return flag.memory.setPosition.roomName == roomName;
+								  } else {
+									  return flag.pos.roomName == roomName;
+								  }
+							  })
+					&& !Overmind.colonies[roomName]
+					&& Game.map.isRoomAvailable(roomName));
+				log.debug(`Possible outposts: ${possibleOutposts}`);
+				let origin = this.colony.pos;
+				let bestOutpost = minBy(possibleOutposts, function (roomName) {
+					if (!Memory.rooms[roomName]) return false;
+					let sourceCoords = Memory.rooms[roomName].src as SavedSource[] | undefined;
+					if (!sourceCoords) return false;
+					let sourcePositions = _.map(sourceCoords, src => derefCoords(src.c, roomName));
+					let sourceDistances = _.map(sourcePositions, pos => Pathing.distance(origin, pos));
+					if (_.any(sourceDistances, dist => dist == undefined
+													   || dist > Colony.settings.maxSourceDistance)) return false;
+					return _.sum(sourceDistances) / sourceDistances.length;
+				});
+				if (bestOutpost) {
+					let pos = Pathing.findPathablePosition(bestOutpost);
+					log.info(`Colony ${this.colony.room.print} now remote mining from ${pos.print}`);
+					DirectiveOutpost.createIfNotPresent(pos, 'room', {memory: {colony: this.colony.name}});
+				}
+			}
+		}
+
+
 		// Place an abandon directive in case room has been breached to prevent terminal robbing
 		// if (this.colony.breached && this.colony.terminal) {
 		// 	DirectiveTerminalEmergencyState.createIfNotPresent(this.colony.terminal.pos, 'room');
@@ -136,7 +181,7 @@ export class Overseer {
 			let barriers = _.map(this.colony.room.barriers, barrier => barrier.pos);
 			let firstHostile = _.first(this.colony.room.dangerousHostiles);
 			if (firstHostile && this.colony.spawns[0] &&
-				Pathing.isReachable(firstHostile.pos, this.colony.spawns[0].pos, {obstacles: barriers})) {
+				Pathing.isReachable(firstHostile.pos, this.colony.spawns[0].pos, barriers)) {
 				let ret = this.colony.controller.activateSafeMode();
 				if (ret != OK && !this.colony.controller.safeMode) {
 					if (this.colony.terminal) {
@@ -180,7 +225,9 @@ export class Overseer {
 			}
 		}
 		this.handleSafeMode();
+		// if (Game.time % DIRECTIVE_CHECK_FREQUENCY == this.colony.id % DIRECTIVE_CHECK_FREQUENCY) {
 		this.placeDirectives();
+		// }
 		// Draw visuals
 		_.forEach(this.directives, directive => directive.visuals());
 	}

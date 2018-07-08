@@ -14,7 +14,7 @@ export class CombatTargeting {
 			}
 			if (checkReachable) {
 				let targetsByRange = _.sortBy(targets, target => zerg.pos.getRangeTo(target));
-				return _.find(targetsByRange, target => Pathing.isReachable(zerg.pos, target.pos));
+				return _.find(targetsByRange, target => Pathing.isReachable(zerg.pos, target.pos, zerg.room.barriers));
 			} else {
 				return zerg.pos.findClosestByRange(targets) as Creep | undefined;
 			}
@@ -24,7 +24,7 @@ export class CombatTargeting {
 	/* This method is expensive */
 	static findClosestReachable(pos: RoomPosition, targets: (Creep | Structure)[]): Creep | Structure | undefined {
 		let targetsByRange = _.sortBy(targets, target => pos.getRangeTo(target));
-		return _.find(targetsByRange, target => Pathing.isReachable(pos, target.pos));
+		return _.find(targetsByRange, target => Pathing.isReachable(pos, target.pos, target.room.barriers));
 	}
 
 	static findClosestPrioritizedStructure(zerg: Zerg, checkReachable = false): Structure | undefined {

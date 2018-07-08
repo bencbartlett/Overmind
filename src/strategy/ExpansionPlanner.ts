@@ -5,17 +5,20 @@ import {log} from '../console/log';
 import {Pathing} from '../movement/Pathing';
 import {derefCoords} from '../utilities/utils';
 
+export const EXPANSION_EVALUATION_FREQ = 500;
+export const MIN_EXPANSION_DISTANCE = 2;
 
 export class ExpansionPlanner {
 
-	private evaluateExpansions(colony: Colony): void {
+	static refreshExpansionData(colony: Colony): void {
+		// This only gets run once per colony
 		if (_.keys(colony.memory.expansionData.possibleExpansions).length == 0
 			|| Game.time > colony.memory.expansionData.expiration) {
 			// Generate a list of rooms which can possibly be settled in
 			let nearbyRooms = Cartographer.recursiveRoomSearch(colony.room.name, 5);
 			let possibleExpansions: string[] = [];
 			for (let depth in nearbyRooms) {
-				if (parseInt(depth) <= 2) continue;
+				if (parseInt(depth) <= MIN_EXPANSION_DISTANCE) continue;
 				possibleExpansions = possibleExpansions.concat(nearbyRooms[depth]);
 			}
 			for (let roomName of possibleExpansions) {
@@ -24,6 +27,7 @@ export class ExpansionPlanner {
 				}
 			}
 		}
+		// This gets run whenever function is called
 		for (let roomName in colony.memory.expansionData.possibleExpansions) {
 			if (colony.memory.expansionData.possibleExpansions[roomName] == true) {
 				if (Memory.rooms[roomName]) {
@@ -39,7 +43,7 @@ export class ExpansionPlanner {
 	}
 
 	// Compute the total score for a room
-	static computeExpansionData(room: Room, verbose = true): boolean {
+	static computeExpansionData(room: Room, verbose = false): boolean {
 		if (verbose) log.info(`Computing score for ${room.print}...`);
 		if (!room.controller) {
 			room.memory.expansionData = false;
@@ -47,10 +51,10 @@ export class ExpansionPlanner {
 		}
 
 		// compute possible outposts
-		let possibleOutposts = _.flatten(_.values(Cartographer.recursiveRoomSearch(room.name, 2))) as string[];
+		let possibleOutposts = Cartographer.findRoomsInRange(room.name, 2);
 
 		// find source positions
-		let sourcePositions: { [roomName: string]: RoomPosition[] } = {};
+		let outpostSourcePositions: { [roomName: string]: RoomPosition[] } = {};
 		for (let roomName of possibleOutposts) {
 			if (Cartographer.roomType(roomName) == ROOMTYPE_ALLEY) continue;
 			let roomMemory = Memory.rooms[roomName];
@@ -58,7 +62,7 @@ export class ExpansionPlanner {
 				if (verbose) log.info(`No memory of neighbor: ${roomName}. Aborting score calculation!`);
 				return false;
 			}
-			sourcePositions[roomName] = _.map(roomMemory.src, obj => derefCoords(obj.c, roomName));
+			outpostSourcePositions[roomName] = _.map(roomMemory.src, obj => derefCoords(obj.c, roomName));
 		}
 
 		// compute a possible bunker position
@@ -74,9 +78,9 @@ export class ExpansionPlanner {
 
 		let outpostScores: { [roomName: string]: number } = {};
 
-		for (let roomName in sourcePositions) {
+		for (let roomName in outpostSourcePositions) {
 			if (verbose) log.info(`Analyzing neighbor ${roomName}`);
-			let positions = sourcePositions[roomName];
+			let sourcePositions = outpostSourcePositions[roomName];
 			let valid = true;
 			let roomType = Cartographer.roomType(roomName);
 			let energyPerSource: number = SOURCE_ENERGY_CAPACITY;
@@ -86,11 +90,11 @@ export class ExpansionPlanner {
 			}
 
 			let roomScore = 0;
-			for (let position of positions) {
+			for (let position of sourcePositions) {
 				let msg = verbose ? `Computing distance from ${bunkerLocation.print} to ${position.print}... ` : '';
 				let ret = Pathing.findShortestPath(bunkerLocation, position,
 												   {ignoreStructures: true, allowHostile: true});
-				if (ret.incomplete || ret.path.length > 150) {
+				if (ret.incomplete || ret.path.length > Colony.settings.maxSourceDistance) {
 					if (verbose) log.info(msg + 'incomplete path!');
 					valid = false;
 					break;
@@ -108,9 +112,9 @@ export class ExpansionPlanner {
 		let sourceCount = 0;
 		let roomsByScore = _.sortBy(_.keys(outpostScores), roomName => -1 * outpostScores[roomName]);
 		for (let roomName of roomsByScore) {
-			if (sourceCount > Colony.settings.maxSourcesPerColony) break;
+			if (sourceCount > Colony.settings.remoteSourcesByLevel[8]) break;
 			totalScore += outpostScores[roomName];
-			sourceCount += sourcePositions[roomName].length;
+			sourceCount += outpostSourcePositions[roomName].length;
 		}
 		totalScore = Math.floor(totalScore);
 

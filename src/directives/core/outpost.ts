@@ -21,7 +21,9 @@ export class DirectiveOutpost extends Directive {
 		if (!this.colony) return;
 		if (this.colony.level >= DirectiveOutpost.settings.canSpawnReserversAtRCL
 			&& Cartographer.roomType(this.pos.roomName) == ROOMTYPE_CONTROLLER) {
-			this.overlords.reserve = new ReservingOverlord(this);
+			if (!(this.room && this.room.my)) {
+				this.overlords.reserve = new ReservingOverlord(this);
+			}
 		} else {
 			this.overlords.scout = new StationaryScoutOverlord(this);
 		}
@@ -46,7 +48,10 @@ export class DirectiveOutpost extends Directive {
 	}
 
 	run(): void {
-
+		if (Game.time % 10 == 3 && this.room && this.room.controller
+			&& !this.pos.isEqualTo(this.room.controller.pos) && !this.memory.setPosition) {
+			this.setPosition(this.room.controller.pos);
+		}
 	}
 }
 

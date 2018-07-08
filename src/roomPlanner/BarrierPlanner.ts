@@ -170,7 +170,7 @@ export class BarrierPlanner {
 			this.visuals();
 		} else {
 			if (!this.roomPlanner.memory.relocating && this.colony.level >= BarrierPlanner.settings.buildBarriersAtRCL
-				&& Game.time % RoomPlanner.settings.siteCheckFrequency == this.colony.id + 1) {
+				&& this.roomPlanner.shouldRecheck(this.colony.id + 1)) {
 				this.buildMissingRamparts();
 				if (this.colony.layout == 'bunker' && this.colony.level >= 7) {
 					this.buildMissingBunkerRamparts();

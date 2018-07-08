@@ -211,7 +211,7 @@ export abstract class Task {
 	}
 
 	/* Move to within range of the target */
-	move(range = this.settings.targetRange): number {
+	moveToTarget(range = this.settings.targetRange): number {
 		return this.creep.goTo(this.targetPos, {range: range});
 	}
 
@@ -236,7 +236,7 @@ export abstract class Task {
 			delete this.creep.memory._go;
 			if (this.settings.workOffRoad) {
 				// Move to somewhere nearby that isn't on a road
-				this.parkCreep(this.creep, this.targetPos, true);
+				this.creep.park(this.targetPos, true);
 			}
 			let result = this.work();
 			if (this.settings.oneShot && result == OK) {
@@ -244,41 +244,12 @@ export abstract class Task {
 			}
 			return result;
 		} else {
-			this.move();
+			this.moveToTarget();
 		}
 	}
 
 	get isWorking(): boolean {
 		return this.creep.pos.inRangeTo(this.targetPos, this.settings.targetRange) && !this.creep.pos.isEdge;
-	}
-
-	/* Bundled form of zerg.park(); adapted from BonzAI codebase*/
-	protected parkCreep(creep: Zerg, pos: RoomPosition = creep.pos, maintainDistance = false): number {
-		let road = _.find(creep.pos.lookFor(LOOK_STRUCTURES), s => s.structureType == STRUCTURE_ROAD);
-		if (!road) return OK;
-
-		let positions = _.sortBy(creep.pos.availableNeighbors(), (p: RoomPosition) => p.getRangeTo(pos));
-		if (maintainDistance) {
-			let currentRange = creep.pos.getRangeTo(pos);
-			positions = _.filter(positions, p => p.getRangeTo(pos) <= currentRange);
-		}
-
-		let swampPosition;
-		for (let position of positions) {
-			if (_.find(position.lookFor(LOOK_STRUCTURES), s => s.structureType == STRUCTURE_ROAD)) continue;
-			let terrain = position.lookFor(LOOK_TERRAIN)[0];
-			if (terrain === 'swamp') {
-				swampPosition = position;
-			} else {
-				return creep.move(creep.pos.getDirectionTo(position));
-			}
-		}
-
-		if (swampPosition) {
-			return creep.move(creep.pos.getDirectionTo(swampPosition));
-		}
-
-		return creep.goTo(pos);
 	}
 
 	// Task to perform when at the target

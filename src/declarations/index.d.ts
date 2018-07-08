@@ -39,10 +39,19 @@ interface IGlobalCache {
 interface ICache {
 	overlords: { [overlord: string]: { [roleName: string]: string[] } };
 	targets: { [ref: string]: string[] };
+	outpostFlags: Flag[];
 
 	build(): void;
 
 	rebuild(): void;
+}
+
+interface IStrategist {
+
+	init(): void;
+
+	run(): void;
+
 }
 
 interface IOvermindMemory {
@@ -51,14 +60,14 @@ interface IOvermindMemory {
 }
 
 interface IOvermind {
-	cache: ICache;
-	colonies: { [roomName: string]: any };
-	overlords: { [overlordName: string]: any };
+	cache: ICache;								// is actually GameCache
+	colonies: { [roomName: string]: any }; 		// is actually { [roomName: string]: Colony }
+	overlords: { [overlordName: string]: any }; // is actually { [overlordName: string]: Overlord }
 	colonyMap: { [roomName: string]: string };
-	invisibleRooms: string[];
 	memory: IOvermindMemory;
-	terminalNetwork: ITerminalNetwork;
-	tradeNetwork: ITradeNetwork;
+	terminalNetwork: ITerminalNetwork;			// is actually TerminalNetwork
+	tradeNetwork: ITradeNetwork;				// is actually TradeNetwork
+	strategist: IStrategist | undefined;		// Strategist | undefined, only defined if Memory.bot == true
 
 	build(): void;
 

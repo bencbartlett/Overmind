@@ -75,28 +75,40 @@ export function derefCoords(coordName: string, roomName: string): RoomPosition {
 	return new RoomPosition(parseInt(x, 10), parseInt(y, 10), roomName);
 }
 
-export function minBy<T>(objects: T[], iteratee: ((obj: T) => number)): T | undefined {
-	let minObj: T;
+export function averageBy<T>(objects: T[], iteratee: ((obj: T) => number)): number | undefined {
+	if (objects.length == 0) {
+		return undefined;
+	} else {
+		return _.sum(objects, obj => iteratee(obj)) / objects.length;
+	}
+}
+
+export function minBy<T>(objects: T[], iteratee: ((obj: T) => number | false)): T | undefined {
+	let minObj: T | undefined = undefined;
 	let minVal = Infinity;
+	let val: number | false;
 	for (let i in objects) {
-		if (iteratee(objects[i]) < minVal) {
-			minVal = iteratee(objects[i]);
+		val = iteratee(objects[i]);
+		if (val != false && val < minVal) {
+			minVal = val;
 			minObj = objects[i];
 		}
 	}
-	return minObj!;
+	return minObj;
 }
 
-export function maxBy<T>(objects: T[], iteratee: ((obj: T) => number)): T | undefined {
-	let maxObj: T;
+export function maxBy<T>(objects: T[], iteratee: ((obj: T) => number | false)): T | undefined {
+	let maxObj: T | undefined = undefined;
 	let maxVal = -Infinity;
+	let val: number | false;
 	for (let i in objects) {
-		if (iteratee(objects[i]) > maxVal) {
-			maxVal = iteratee(objects[i]);
+		val = iteratee(objects[i]);
+		if (val != false && val > maxVal) {
+			maxVal = val;
 			maxObj = objects[i];
 		}
 	}
-	return maxObj!;
+	return maxObj;
 }
 
 export function logHeapStats(): void {
@@ -119,3 +131,12 @@ export function getCacheExpiration(timeout: number, offset = 5): number {
 	return Game.time + timeout + Math.round((Math.random() * offset * 2) - offset);
 }
 
+const hexChars = '0123456789abcdef';
+
+export function randomHex(length: number): string {
+	let result = '';
+	for (let i = 0; i < length; i++) {
+		result += hexChars[Math.floor(Math.random() * hexChars.length)];
+	}
+	return result;
+}

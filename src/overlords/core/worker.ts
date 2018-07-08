@@ -301,10 +301,10 @@ export class WorkerOverlord extends Overlord {
 			}
 		} else {
 			// Harvest from a source if there is no recharge target available
-			let availableSources = _.filter(this.room.sources,
-											s => s.energy > 0 && s.pos.availableNeighbors().length > 0);
-			let target = worker.pos.findClosestByMultiRoomRange(availableSources);
-			if (target) worker.task = Tasks.harvest(target);
+			let emptyMiningSites = _.filter(this.colony.miningSites, site =>
+				site.overlord.miners.length < site.source.pos.availableNeighbors(true).length);
+			let target = worker.pos.findClosestByMultiRoomRange(emptyMiningSites);
+			if (target) worker.task = Tasks.harvest(target.source);
 		}
 	}
 

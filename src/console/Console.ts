@@ -9,6 +9,8 @@ export class OvermindConsole {
 
 	static init() {
 		global.help = this.help();
+		global.setMode = this.setMode;
+		global.setAutoClaim = this.setAutoClaim;
 		global.setSignature = this.setSignature;
 		global.print = this.print;
 		global.timeit = this.timeit;
@@ -35,6 +37,8 @@ export class OvermindConsole {
 
 		let descr: { [functionName: string]: string } = {};
 		descr['help'] = 'show this message';
+		descr['setMode(mode)'] = 'set the operational mode -- possible modes: "manual", "automatic"';
+		descr['setAutoClaim(true|false)'] = 'set whether Overmind can choose which rooms to claim for you';
 		descr['setSignature(newSignature)'] = 'set your controller signature';
 		descr['print(...args[])'] = 'log stringified objects to the console';
 		descr['setLogLevel(int)'] = 'set the logging level from 0 - 4';
@@ -57,6 +61,32 @@ export class OvermindConsole {
 
 		return msg;
 	}
+
+	static setMode(mode: string): string {
+		if (mode == 'manual') {
+			Memory.bot = false;
+			return `Operational mode set to manual.`;
+		} else if (mode == 'automatic') {
+			Memory.bot = true;
+			return `Operational mode set to automatic.`;
+		} else {
+			return `Invalid mode: please specify 'manual' or 'automatic'.`;
+		}
+	}
+
+	static setAutoClaim(autoClaim: boolean): string {
+		if (autoClaim) {
+			if (!Memory.bot) {
+				return `Autoclaiming requires operational mode to be set to automatic! ` +
+					   `Use setMode('automatic') to enable.`;
+			}
+			Memory.autoclaim = true;
+			return `Autoclaiming enabled.`;
+		} else {
+			return `Autoclaiming disabled`;
+		}
+	}
+
 
 	static setSignature(signature: string): string | undefined {
 		if (signature.toLowerCase().includes('overmind')) {

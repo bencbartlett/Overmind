@@ -115,7 +115,7 @@ interface RoomPosition {
 	getMultiRoomRangeTo(pos: RoomPosition): number;
 
 	findClosestByLimitedRange<T>(objects: T[] | RoomPosition[], rangeLimit: number,
-								 opts?: { filter: any | string; }): T;
+								 opts?: { filter: any | string; }): T | undefined;
 
 	findClosestByMultiRoomRange<T extends _HasRoomPosition>(objects: T[]): T | undefined;
 

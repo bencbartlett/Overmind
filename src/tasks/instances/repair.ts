@@ -24,6 +24,14 @@ export class TaskRepair extends Task {
 	}
 
 	work() {
-		return this.creep.repair(this.target);
+		let result = this.creep.repair(this.target);
+		if (this.target.structureType == STRUCTURE_ROAD) {
+			// prevents workers from idling for a tick before moving to next target
+			let newHits = this.target.hits + this.creep.getActiveBodyparts(WORK) * REPAIR_POWER;
+			if (newHits > this.target.hitsMax) {
+				this.finish();
+			}
+		}
+		return result;
 	}
 }

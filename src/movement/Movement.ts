@@ -239,7 +239,6 @@ export class Movement {
 	}
 
 	static getPushPriority(creep: Creep | Zerg): number {
-		creep = normalizeZerg(creep);
 		if (!creep.memory) return MovePriorities.default;
 		if (creep.memory._go && creep.memory._go.priority) {
 			return creep.memory._go.priority;
@@ -286,6 +285,8 @@ export class Movement {
 			if (preferredPositions[0]) {
 				return pushee.pos.getDirectionTo(preferredPositions[0]);
 			}
+		} else {
+			log.debug(`${pushee.name}@${pushee.pos.print} is not Zerg! (Why?)`);
 		}
 		return pushee.pos.getDirectionTo(pusher);
 	}
@@ -305,7 +306,9 @@ export class Movement {
 
 		if (!otherCreep.memory) return false;
 		otherCreep = normalizeZerg(otherCreep);
-
+		if (!isZerg(otherCreep)) {
+			log.debug(`${otherCreep.name}@${otherCreep.pos.print} is not Zerg! (Why?)`);
+		}
 		let otherData = otherCreep.memory._go as MoveData | undefined;
 
 		let pushDirection = this.getPushDirection(creep, otherCreep);
@@ -313,8 +316,13 @@ export class Movement {
 		if (outcome != OK) return false;
 
 		if (otherData && otherData.path) {
+			// TODO: I think there's a bug here if creep starts traveling somewhere on same tick as being pushed
 			otherData.path = Pathing.oppositeDirection(pushDirection) + otherData.path;
 			// otherData.delay = 1;
+		} else {
+			if (isZerg(otherCreep)) {
+				otherCreep.blockMovement = true;
+			}
 		}
 		return true;
 	}
@@ -381,14 +389,14 @@ export class Movement {
 		if (!road) return OK;
 
 		// Move out of the bunker if you're in it
-		if (creep.colony.bunker && insideBunkerBounds(creep.pos, creep.colony)) {
+		if (!maintainDistance && creep.colony.bunker && insideBunkerBounds(creep.pos, creep.colony)) {
 			return this.goTo(creep, creep.colony.controller.pos);
 		}
 
-		let positions = _.sortBy(creep.pos.availableNeighbors(), (p: RoomPosition) => p.getRangeTo(pos));
+		let positions = _.sortBy(creep.pos.availableNeighbors(), p => p.getRangeTo(pos));
 		if (maintainDistance) {
 			let currentRange = creep.pos.getRangeTo(pos);
-			positions = _.filter(positions, (p: RoomPosition) => p.getRangeTo(pos) <= currentRange);
+			positions = _.filter(positions, p => p.getRangeTo(pos) <= currentRange);
 		}
 
 		let swampPosition;
