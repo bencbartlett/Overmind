@@ -123,10 +123,6 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	init() {
-		// In case colony just started up, don't spawn workers until colony has something you can withdraw from
-		if (_.compact(_.map(this.colony.miningSites, site => site.output)).length == 0) {
-			return;
-		}
 		let setup = this.colony.stage == ColonyStage.Larva ? WorkerEarlySetup : WorkerSetup;
 		let workPartsPerWorker = setup.getBodyPotential(WORK, this.colony);
 		if (this.colony.stage == ColonyStage.Larva) {

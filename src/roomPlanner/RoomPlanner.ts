@@ -670,10 +670,12 @@ export class RoomPlanner {
 	}
 
 	shouldRecheck(offset = 0): boolean {
-		if (this.colony.level == 8) {
-			return Game.time % (2 * RoomPlanner.settings.siteCheckFrequency) == offset;
+		if (Game.time == (this.memory.recheckStructuresAt || Infinity) + offset) {
+			return true;
+		} else if (this.colony.level == 8) {
+			return Game.time % (2 * RoomPlanner.settings.siteCheckFrequency) == this.colony.id + offset;
 		} else {
-			return Game.time % RoomPlanner.settings.siteCheckFrequency == offset;
+			return Game.time % RoomPlanner.settings.siteCheckFrequency == this.colony.id + offset;
 		}
 	}
 
@@ -682,12 +684,9 @@ export class RoomPlanner {
 			this.make();
 			this.visuals();
 		} else {
-			if (this.shouldRecheck(this.colony.id) ||
-				Game.time == (this.memory.recheckStructuresAt || Infinity)) {
+			if (this.shouldRecheck()) {
 				this.demolishMisplacedStructures(this.colony.layout == 'twoPart');
-			} else if (this.shouldRecheck(this.colony.id + 1) ||
-					   Game.time == (this.memory.recheckStructuresAt || Infinity) + 1) {
-				delete this.memory.recheckStructuresAt;
+			} else if (this.shouldRecheck(1)) {
 				this.buildMissingStructures();
 			}
 		}

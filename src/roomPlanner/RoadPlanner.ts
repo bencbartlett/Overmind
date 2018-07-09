@@ -238,7 +238,7 @@ export class RoadPlanner {
 				}
 			}
 			if (this.colony.level >= RoadPlanner.settings.buildRoadsAtRCL &&
-				this.roomPlanner.shouldRecheck(this.colony.id + 2)) {
+				this.roomPlanner.shouldRecheck(3)) {
 				this.buildMissing();
 			}
 		}
