@@ -1,5 +1,5 @@
 import {profile} from '../profiler/decorator';
-import {StructureMap} from '../roomPlanner/RoomPlanner';
+import {StructureLayout, StructureMap} from '../roomPlanner/RoomPlanner';
 import {asciiLogo} from './logos';
 
 @profile
@@ -22,7 +22,7 @@ export class Visualizer {
 		return new RoomVisual(pos.roomName).animatedPosition(pos.x, pos.y, opts);
 	}
 
-	static drawLayout(structureMap: StructureMap): void {
+	static drawStructureMap(structureMap: StructureMap): void {
 		if (!this.enabled) return;
 		let vis: { [roomName: string]: RoomVisual } = {};
 		for (let structureType in structureMap) {
@@ -36,6 +36,19 @@ export class Visualizer {
 		for (let roomName in vis) {
 			vis[roomName].connectRoads();
 		}
+	}
+
+	static drawLayout(layout: StructureLayout, anchor: RoomPosition): void {
+		if (!this.enabled) return;
+		let vis = new RoomVisual(anchor.roomName);
+		for (let structureType in layout[8]!.buildings) {
+			for (let pos of layout[8]!.buildings[structureType].pos) {
+				let dx = pos.x - layout.data.anchor.x;
+				let dy = pos.y - layout.data.anchor.y;
+				vis.structure(anchor.x + dx, anchor.y + dy, structureType);
+			}
+		}
+		vis.connectRoads();
 	}
 
 	static drawRoads(positoins: RoomPosition[]): void {

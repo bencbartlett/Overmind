@@ -706,7 +706,7 @@ export class RoomPlanner {
 
 	visuals(): void {
 		// Draw the map
-		Visualizer.drawLayout(this.map);
+		Visualizer.drawStructureMap(this.map);
 	}
 
 }
