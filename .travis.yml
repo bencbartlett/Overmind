@@ -5,5 +5,4 @@ node_js:
 
 install:
 - rm -rf node_modules/
-- npm install -g node-pre-gyp
-- npm install 
+- npm install
