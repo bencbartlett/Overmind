@@ -1,16 +1,3 @@
-//
-// ___________________________________________________________
-//
-//  _____  _    _ _______  ______ _______ _____ __   _ ______
-// |     |  \  /  |______ |_____/ |  |  |   |   | \  | |     \
-// |_____|   \/   |______ |    \_ |  |  | __|__ |  \_| |_____/
-//
-// _______________________ Screeps AI ________________________
-//
-//
-// Overmind repository: github.com/bencbartlett/overmind
-//
-
 declare const __VERSION__: string;
 global.__VERSION__ = '0.4.1';
 
@@ -25,4 +12,3 @@ declare function derefRoomPosition(protoPos: protoPos): RoomPosition;
 global.derefRoomPosition = function (protoPos: protoPos): RoomPosition {
 	return new RoomPosition(protoPos.x, protoPos.y, protoPos.roomName);
 };
-

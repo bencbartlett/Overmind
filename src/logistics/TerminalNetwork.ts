@@ -6,6 +6,7 @@ import {Colony} from '../Colony';
 import {maxBy, mergeSum, minBy, minMax} from '../utilities/utils';
 import {RESOURCE_IMPORTANCE} from '../resources/map_resources';
 import {wantedStockAmounts} from '../resources/Abathur';
+import {assimilationLocked} from '../assimilation/decorator';
 
 interface TerminalNetworkMemory {
 	equalizeIndex: number;
@@ -54,6 +55,7 @@ export const TerminalState_Rebuild = {
 };
 
 @profile
+@assimilationLocked
 export class TerminalNetwork implements ITerminalNetwork {
 
 	terminals: StructureTerminal[];					// All terminals

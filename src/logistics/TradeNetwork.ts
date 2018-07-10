@@ -2,6 +2,7 @@ import {log} from '../console/log';
 import {Mem} from '../Memory';
 import {profile} from '../profiler/decorator';
 import {maxBy, minBy} from '../utilities/utils';
+import {assimilationLocked} from '../assimilation/decorator';
 
 interface MarketCache {
 	sell: { [resourceType: string]: { high: number, low: number } },
@@ -37,6 +38,7 @@ export const maxMarketPrices: { [resourceType: string]: number } = {
 };
 
 @profile
+@assimilationLocked
 export class TraderJoe implements ITradeNetwork {
 
 	static settings = {

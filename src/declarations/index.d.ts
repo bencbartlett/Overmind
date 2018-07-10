@@ -10,6 +10,8 @@ declare namespace NodeJS {
 
 		Overmind: IOvermind;
 
+		Assimilator: IAssimilator;
+
 		print(...args: any[]): void;
 
 		deref(ref: string): RoomObject | null;
@@ -57,6 +59,16 @@ interface IStrategist {
 interface IOvermindMemory {
 	terminalNetwork: any;
 	versionUpdater: any;
+}
+
+declare const Assimilator: IAssimilator;
+
+interface IAssimilator {
+
+	registerClass(code: any): void;
+
+	generateChecksum(): string;
+
 }
 
 interface IOvermind {

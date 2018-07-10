@@ -11,6 +11,9 @@ screeps.json
 # Ignore Overmind.ts
 /src/Overmind.ts
 
+# Ignore Assimilator.ts
+/src/assimilation/Assimilator.ts
+
 # yarn lock file
 /yarn.lock
 

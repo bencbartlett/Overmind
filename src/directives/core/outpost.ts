@@ -19,9 +19,8 @@ export class DirectiveOutpost extends Directive {
 	constructor(flag: Flag) {
 		super(flag);
 		if (!this.colony) return;
-		if (this.colony.level >= DirectiveOutpost.settings.canSpawnReserversAtRCL
-			&& Cartographer.roomType(this.pos.roomName) == ROOMTYPE_CONTROLLER) {
-			if (!(this.room && this.room.my)) {
+		if (this.colony.level >= DirectiveOutpost.settings.canSpawnReserversAtRCL) {
+			if (Cartographer.roomType(this.pos.roomName) == ROOMTYPE_CONTROLLER) {
 				this.overlords.reserve = new ReservingOverlord(this);
 			}
 		} else {
@@ -30,8 +29,7 @@ export class DirectiveOutpost extends Directive {
 		if (!this.room) {
 			// Push source / output positions to colony.destinations if room is invisible for correct road routings
 			let savedSources = Memory.rooms[this.pos.roomName] ? Memory.rooms[this.pos.roomName].src || [] : [];
-			for (let i in savedSources) {
-				let src = Memory.rooms[this.pos.roomName].src![i];
+			for (let src of savedSources) {
 				let pos: RoomPosition;
 				if (src.contnr) {
 					pos = derefCoords(src.contnr, this.pos.roomName);
