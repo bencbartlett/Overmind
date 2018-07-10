@@ -1,3 +1,10 @@
 language: node_js
+
 node_js:
 - "8"
+
+install:
+- npm cache clean
+- rm -rf node_modules/
+- npm install -g node-pre-gyp
+- npm install --no-bin-links

@@ -11,6 +11,7 @@ Note: as of this patch, Overmind no longer supports shared-vm. Isolated-vm is no
     - Added the `ExpansionPlanner` module to generate numerical scores for rooms to determine outpost/expansion preferences
     - Added several methods to the `Cartographer` module (formerly `WorldMap`)
 - Added the `Assimilator` module, which verifies the integrity of an Overmind codebase. This will be used for the upcoming assimilation patch. The source code for this module is obfuscated; see the obfuscated file comments for details.
+    - Added an implementation of sha256 hashing for use by this module
 - Added the `Movement` library, which replaces Traveler as the default method of moving creeps around in Overmind
     - Added (and improved multiple times) creep pushing behavior that moves idling creeps out of the way
         - Creeps have move priorities, which characterize how important their assignment is. Creeps will yield to other creeps with more important priorities.
