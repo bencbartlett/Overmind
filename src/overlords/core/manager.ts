@@ -28,11 +28,18 @@ export class CommandCenterOverlord extends Overlord {
 	commandCenter: CommandCenter;
 	transportRequests: TransportRequestGroup;
 
+	private depositTarget: StructureTerminal | StructureStorage;
+
 	constructor(commandCenter: CommandCenter, priority = OverlordPriority.core.manager) {
 		super(commandCenter, 'manager', priority);
 		this.commandCenter = commandCenter;
 		this.transportRequests = this.commandCenter.transportRequests;
 		this.managers = this.zerg(ManagerSetup.role);
+		if (this.commandCenter.terminal && _.sum(this.commandCenter.terminal.store) < TERMINAL_CAPACITY + 1000) {
+			this.depositTarget = this.commandCenter.terminal;
+		} else {
+			this.depositTarget = this.commandCenter.storage;
+		}
 	}
 
 	init() {
@@ -58,7 +65,7 @@ export class CommandCenterOverlord extends Overlord {
 			if ((manager.carry[request.resourceType] || 0) < amount) {
 				// If you are currently carrying other crap, overwrite current task and put junk in terminal/storage
 				if (_.sum(manager.carry) > (manager.carry[request.resourceType] || 0)) {
-					manager.task = Tasks.transferAll(this.commandCenter.terminal || this.commandCenter.storage);
+					manager.task = Tasks.transferAll(this.depositTarget);
 				}
 				// Otherwise withdraw as much as you can hold
 				else {
@@ -122,7 +129,7 @@ export class CommandCenterOverlord extends Overlord {
 		if (_.sum(manager.carry) == 0 && this.managers.length > 0) {
 			manager.suicide();
 		} else {
-			manager.task = Tasks.transferAll(this.commandCenter.terminal || this.commandCenter.storage);
+			manager.task = Tasks.transferAll(this.depositTarget);
 		}
 	}
 
@@ -137,7 +144,7 @@ export class CommandCenterOverlord extends Overlord {
 		// Pickup any resources that happen to be dropped where you are
 		let resources = manager.pos.lookFor(LOOK_RESOURCES);
 		if (resources.length > 0) {
-			manager.task = Tasks.transferAll(this.commandCenter.storage || this.commandCenter.terminal)
+			manager.task = Tasks.transferAll(this.depositTarget)
 								.fork(Tasks.pickup(resources[0]));
 			return;
 		}
@@ -145,7 +152,7 @@ export class CommandCenterOverlord extends Overlord {
 			if (_.sum(manager.carry) < manager.carryCapacity) {
 				this.withdrawActions(manager);
 			} else {
-				manager.task = Tasks.transferAll(this.commandCenter.terminal || this.commandCenter.storage);
+				manager.task = Tasks.transferAll(this.depositTarget);
 			}
 		} else if (this.transportRequests.needsSupplying) {
 			this.supplyActions(manager);
