@@ -31,11 +31,11 @@
     "@types/screeps": "^2.4.0",
     "rollup": "^0.55.3",
     "rollup-plugin-clean": "^1.0.0",
-    "rollup-plugin-commonjs": "^8.2.6",
-    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-commonjs": "^8.4.1",
+    "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-screeps": "0.1.2",
     "rollup-plugin-typescript2": "^0.11.0",
-    "tslint": "^5.8.0",
+    "tslint": "^5.10.0",
     "typescript": "^2.9.2"
   },
   "dependencies": {
