@@ -118,9 +118,9 @@ interface ITradeNetwork {
 
 	lookForGoodDeals(terminal: StructureTerminal, mineral: string, margin?: number): void;
 
-	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount?: number): void;
+	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount?: number): number | undefined;
 
-	sell(terminal: StructureTerminal, resource: ResourceConstant, amount?: number): void;
+	sell(terminal: StructureTerminal, resource: ResourceConstant, amount?: number): number | undefined;
 
 	buyMineral(terminal: StructureTerminal, mineralType: ResourceConstant, amount: number): void;
 

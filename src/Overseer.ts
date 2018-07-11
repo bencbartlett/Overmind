@@ -20,13 +20,11 @@ import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
 import {derefCoords, minBy} from './utilities/utils';
 import {DirectiveOutpost} from './directives/core/outpost';
-import {assimilationLocked} from './assimilation/decorator';
 
 
 // export const DIRECTIVE_CHECK_FREQUENCY = 2;
 
 @profile
-@assimilationLocked
 export class Overseer {
 
 	colony: Colony; 							// Instantiated colony object

@@ -28,6 +28,7 @@ import {bunkerLayout, getPosFromBunkerCoord} from './roomPlanner/layouts/bunker'
 import {Mem} from './Memory';
 import {RandomWalkerScoutOverlord} from './overlords/scouting/randomWalker';
 import {EXPANSION_EVALUATION_FREQ, ExpansionPlanner} from './strategy/ExpansionPlanner';
+import {log} from './console/log';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -377,7 +378,8 @@ export class Colony {
 	}
 
 	/* Summarizes the total of all resources in colony store structures, labs, and some creeps */
-	private getAllAssets(): { [resourceType: string]: number } {
+	private getAllAssets(verbose = false): { [resourceType: string]: number } {
+		// if (this.name == 'E8S45') verbose = true; // 18863
 		// Include storage structures and manager carry
 		let stores = _.map(<StoreStructure[]>_.compact([this.storage, this.terminal]), s => s.store);
 		let creepCarriesToInclude = _.map(this.creeps, creep => creep.carry) as { [resourceType: string]: number }[];
@@ -391,6 +393,7 @@ export class Colony {
 				allAssets[lab.mineralType] += lab.mineralAmount;
 			}
 		}
+		if (verbose) log.debug(`${this.room.print} assets: ` + JSON.stringify(allAssets));
 		return allAssets;
 	}
 

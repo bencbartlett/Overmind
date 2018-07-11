@@ -1,8 +1,8 @@
-import {log} from '../console/log';
 import {Mem} from '../Memory';
 import {profile} from '../profiler/decorator';
 import {maxBy, minBy} from '../utilities/utils';
-import {assimilationLocked} from '../assimilation/decorator';
+import {alignedNewline, bullet, leftArrow, rightArrow} from '../utilities/stringConstants';
+import {log} from '../console/log';
 
 interface MarketCache {
 	sell: { [resourceType: string]: { high: number, low: number } },
@@ -38,7 +38,6 @@ export const maxMarketPrices: { [resourceType: string]: number } = {
 };
 
 @profile
-@assimilationLocked
 export class TraderJoe implements ITradeNetwork {
 
 	static settings = {
@@ -57,10 +56,16 @@ export class TraderJoe implements ITradeNetwork {
 
 	memory: TraderMemory;
 	stats: any;
+	private notifications: string[];
 
 	constructor() {
 		this.memory = Mem.wrap(Memory.Overmind, 'trader', TraderMemoryDefaults, true);
 		this.stats = Mem.wrap(Memory.stats.persistent, 'trader');
+		this.notifications = [];
+	}
+
+	private notify(msg: string): void {
+		this.notifications.push(bullet + msg);
 	}
 
 	/* Builds a cache for market - this is very expensive; use infrequently */
@@ -176,7 +181,7 @@ export class TraderJoe implements ITradeNetwork {
 	}
 
 	/* Sell resources directly to a buyer rather than making a sell order */
-	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount = 1000): void {
+	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount = 1000): number | undefined {
 		let ordersForMineral = Game.market.getAllOrders(
 			o => o.type == ORDER_BUY && o.resourceType == resource && o.amount >= amount
 		);
@@ -190,6 +195,7 @@ export class TraderJoe implements ITradeNetwork {
 			if (terminal.store[RESOURCE_ENERGY] > cost) {
 				let response = Game.market.deal(order.id, sellAmount, terminal.room.name);
 				this.logTransaction(order, terminal.room.name, amount, response);
+				return response;
 			}
 		}
 	}
@@ -208,26 +214,26 @@ export class TraderJoe implements ITradeNetwork {
 			for (let order of mySellOrders) {
 				if (order.price > marketLow || (order.price < marketLow && order.remainingAmount == 0)) {
 					let ret = Game.market.changeOrderPrice(order.id, marketLow);
-					log.info(`${terminal.room.print}: updating sell order price for ${resource} from ${order.price} ` +
-							 `to ${marketLow}. Response: ${ret}`);
+					this.notify(`${terminal.room.print}: updating sell order price for ${resource} from ` +
+								`${order.price} to ${marketLow}. Response: ${ret}`);
 				}
 				if (order.remainingAmount < 2000) {
 					let addAmount = (amount - order.remainingAmount);
 					let ret = Game.market.extendOrder(order.id, addAmount);
-					log.info(`${terminal.room.print}: extending sell order for ${resource} by ${addAmount}.` +
-							 ` Response: ${ret}`);
+					this.notify(`${terminal.room.print}: extending sell order for ${resource} by ${addAmount}.` +
+								` Response: ${ret}`);
 				}
 			}
 		} else {
 			let ret = Game.market.createOrder(ORDER_SELL, resource, marketLow, amount, terminal.room.name);
-			log.info(`${terminal.room.print}: creating sell order for ${resource} at price ${marketLow}. ` +
-					 `Response: ${ret}`);
+			this.notify(`${terminal.room.print}: creating sell order for ${resource} at price ${marketLow}. ` +
+						`Response: ${ret}`);
 		}
 	}
 
-	sell(terminal: StructureTerminal, resource: ResourceConstant, amount = 10000): void {
+	sell(terminal: StructureTerminal, resource: ResourceConstant, amount = 10000): number | undefined {
 		if (Game.market.credits < TraderJoe.settings.market.reserveCredits) {
-			this.sellDirectly(terminal, resource, amount);
+			return this.sellDirectly(terminal, resource, amount);
 		} else {
 			this.maintainSellOrder(terminal, resource, amount);
 		}
@@ -265,12 +271,19 @@ export class TraderJoe implements ITradeNetwork {
 	}
 
 	private logTransaction(order: Order, destinationRoomName: string, amount: number, response: number): void {
-		let action = order.type == ORDER_SELL ? 'bought' : 'sold';
+		let action = order.type == ORDER_SELL ? 'BOUGHT ' : 'SOLD   ';
 		let cost = (order.price * amount).toFixed(2);
 		let fee = order.roomName ? Game.market.calcTransactionCost(amount, order.roomName, destinationRoomName) : 0;
 		let roomName = Game.rooms[destinationRoomName] ? Game.rooms[destinationRoomName].print : destinationRoomName;
-		log.info(`${roomName}: ${action} ${amount} of ${order.resourceType} at ${order.roomName}.  ` +
-				 `Price: ${cost} credits  Fee: ${fee} energy  Response: ${response}`);
+		let msg: string;
+		if (order.type == ORDER_SELL) {
+			msg = `BOUGHT ${amount} of ${order.resourceType} ${leftArrow} ${order.roomName} (result: ${response})`;
+		} else {
+			msg = `SOLD   ${amount} of ${order.resourceType} ${rightArrow} ${order.roomName} (result: ${response})`;
+		}
+		// log.info(`${roomName}: ${action} ${amount} of ${order.resourceType} at ${order.roomName}.  ` +
+		// 		 `Price: ${cost} credits  Fee: ${fee} energy  Response: ${response}`);
+		this.notify(msg);
 	}
 
 
@@ -283,6 +296,9 @@ export class TraderJoe implements ITradeNetwork {
 	run(): void {
 		if (Game.time % 10 == 0) {
 			this.cleanUpInactiveOrders();
+		}
+		if (this.notifications.length > 0) {
+			log.info(`Trade network activity: ` + alignedNewline + this.notifications.join(alignedNewline));
 		}
 	}
 

@@ -41,7 +41,7 @@ import {VersionMigration} from './versionMigration/migrator';
 import {isIVM} from './utilities/utils';
 // =====================================================================================================================
 
-const _Overmind = (<any>OM)._Overmind as (new() => IOvermind);
+var _Overmind = (<any>OM)._Overmind as (new() => IOvermind);
 
 if (USE_PROFILER) profiler.enable();
 log.alert(`Codebase updated or global reset. Current version: Overmind v${__VERSION__}, ` +
