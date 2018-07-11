@@ -190,7 +190,7 @@ export class MiningSite extends HiveCluster {
 											site => site.structureType == STRUCTURE_LINK).length;
 					let numLinksAllowed = CONTROLLER_STRUCTURES.link[this.colony.level];
 					if (numLinksAllowed > numLinks &&
-						this.colony.hatchery && this.colony.hatchery.link &&
+						(this.colony.bunker || (this.colony.hatchery && this.colony.hatchery.link)) &&
 						this.colony.commandCenter && this.colony.commandCenter.link &&
 						Pathing.distance(this.pos,
 										 this.colony.commandCenter.pos) > MiningSite.settings.minLinkDistance) {
@@ -222,7 +222,7 @@ export class MiningSite extends HiveCluster {
 			// Destroy the output if 1) more links can be built, 2) every farther site has a link and
 			// 3) hatchery and commandCenter both have links
 			if (numLinksAllowed > numLinks && everyFartherSiteHasLink &&
-				this.colony.hatchery && this.colony.hatchery.link &&
+				(this.colony.bunker || (this.colony.hatchery && this.colony.hatchery.link)) &&
 				this.colony.commandCenter && this.colony.commandCenter.link) {
 				this.output.destroy();
 			}

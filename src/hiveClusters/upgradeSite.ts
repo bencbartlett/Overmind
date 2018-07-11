@@ -196,7 +196,8 @@ export class UpgradeSite extends HiveCluster {
 		let numLinksAllowed = CONTROLLER_STRUCTURES.link[this.colony.level];
 		// Proceed if you don't have a link or one being built and there are extra links that can be built
 		if (!this.link && !this.inputConstructionSite && numLinksAllowed > numLinks) {
-			let clustersHaveLinks: boolean = (!!this.colony.hatchery && !!this.colony.hatchery.link &&
+			let clustersHaveLinks: boolean = ((this.colony.bunker ||
+											   !!this.colony.hatchery && !!this.colony.hatchery.link) &&
 											  !!this.colony.commandCenter && !!this.colony.commandCenter.link);
 			let miningSitesInRoom = _.map(this.room.sources, s => this.colony.miningSites[s.id]) as MiningSite[];
 			let farSites = _.filter(miningSitesInRoom, site =>
