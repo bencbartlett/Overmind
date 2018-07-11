@@ -326,7 +326,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		let tolerance = this.settings.equalize.tolerance.default;
 		let nextResourceType = _.find(resourceEqualizeOrder, function (resource) {
 			for (let col of allColonies) {
-				if (wantedAmount(col, resource) < tolerance) {
+				if (wantedAmount(col, resource) < -1 * tolerance) { // colony has too much
 					return true;
 				}
 			}
