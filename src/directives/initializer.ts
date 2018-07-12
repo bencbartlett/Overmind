@@ -45,15 +45,16 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 				case COLOR_BLUE:
 					return new DirectiveGuard(flag);
 				case COLOR_PURPLE:
-					return new DirectiveGuardSwarm(flag);
+					return new DirectiveControllerAttack(flag);
+				//Changed to RED/PURPLE as requested.  GuardSwarm needs a new color
+				//case COLOR_PURPLE:
+					//return new DirectiveGuardSwarm(flag);
 				case COLOR_ORANGE:
 					return new DirectiveSiege(flag);
 				case COLOR_GREEN:
 					return new DirectiveHealPoint(flag);
 				case COLOR_CYAN:
 					return new DirectiveDestroy(flag);
-				case COLOR_YELLOW:
-					return new DirectiveControllerAttack(flag);
 			}
 			break;
 
