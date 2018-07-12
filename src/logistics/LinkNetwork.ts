@@ -24,7 +24,9 @@ export class LinkNetwork {
 	}
 
 	claimLink(link: StructureLink | undefined): void {
-		_.remove(this.colony.availableLinks, l => l == link);
+		if (link) {
+			_.remove(this.colony.availableLinks, l => l.id == link.id);
+		}
 	}
 
 	requestReceive(link: StructureLink): void {

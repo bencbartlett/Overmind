@@ -4,8 +4,7 @@ import {log} from './console/log';
 
 export function sandbox() {
 	try {
-		// testDistanceTransform('W8N3')
-		// determineBunkerLocation('W8N3')
+
 	} catch (e) {
 		log.error(e);
 	}

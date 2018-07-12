@@ -7,6 +7,7 @@ export const goToRoomTaskName = 'goToRoom';
 
 @profile
 export class TaskGoToRoom extends Task {
+
 	target: null;
 
 	constructor(roomName: goToRoomTargetType, options = {} as TaskOptions) {

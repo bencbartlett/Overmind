@@ -1,3 +1,5 @@
+// @formatter:off
+
 //
 // ___________________________________________________________
 //
@@ -11,8 +13,10 @@
 // Overmind repository: github.com/bencbartlett/overmind
 //
 
-// Import ALL the things! ==============================================================================================
+// Assimilator must be instantiated before any other imports
 'use strict';
+// Import ALL the things! ==============================================================================================
+import './assimilation/initializer'; // This must always be imported first
 import './console/globals'; // Global functions accessible from CLI
 import './prototypes/Creep'; // Creep prototypes
 import './prototypes/RoomObject'; // RoomObject and targeting prototypes
@@ -40,9 +44,9 @@ import {isIVM} from './utilities/utils';
 var _Overmind = (<any>OM)._Overmind as (new() => IOvermind);
 
 if (USE_PROFILER) profiler.enable();
-log.alert(`Codebase updated or global reset. Current version: Overmind v${__VERSION__}. ` +
-		  `Type "help" for a list of console commands.`);
-
+log.alert(`Codebase updated or global reset. Current version: Overmind v${__VERSION__}, ` +
+		  `checksum: ${Assimilator.generateChecksum()}`);
+log.alert(`Type "help" for a list of console commands.`);
 
 // Execute this every global reset
 Mem.format();

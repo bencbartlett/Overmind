@@ -81,12 +81,13 @@ export class LogisticsNetwork {
 	private cache: {
 		nextAvailability: { [transporterName: string]: [number, RoomPosition] },
 		predictedTransporterCarry: { [transporterName: string]: StoreDefinition },
-		resourceChangeRate: { [requestID: string]: { [transporterName: string]: number } }
+		resourceChangeRate: { [requestID: string]: { [transporterName: string]: number } },
 	};
 	static settings = {
-		flagDropAmount      : 1000,
-		rangeToPathHeuristic: 1.1, 	// findClosestByRange * this ~= findClosestByPos except in pathological cases
-		carryThreshold      : 800, 	// only do stable matching on transporters at least this big (RCL4+)
+		flagDropAmount        : 1000,
+		rangeToPathHeuristic  : 1.1, 	// findClosestByRange * this ~= findClosestByPos except in pathological cases
+		carryThreshold        : 800, 	// only do stable matching on transporters at least this big (RCL4+)
+		droppedEnergyThreshold: 200,	// ignore dropped energy below this amount
 	};
 
 	constructor(colony: Colony) {

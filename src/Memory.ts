@@ -1,6 +1,6 @@
 import {Stats} from './stats/stats';
 import {profile} from './profiler/decorator';
-import {DEFAULT_OVERMIND_SIGNATURE, USE_PROFILER} from './~settings';
+import {AUTOMATIC_CLAIMING, AUTOMATIC_MODE, DEFAULT_OVERMIND_SIGNATURE, USE_PROFILER} from './~settings';
 
 @profile
 export class Mem {
@@ -81,8 +81,12 @@ export class Mem {
 		if (!Memory.constructionSites) {
 			Memory.constructionSites = {};
 		}
-		// Changes to ensure backwards compatibility
-		this.backwardsCompatibility();
+		if (Memory.bot == undefined) {
+			Memory.bot = AUTOMATIC_MODE;
+		}
+		if (Memory.autoclaim == undefined) {
+			Memory.autoclaim = AUTOMATIC_CLAIMING;
+		}
 	}
 
 	private static cleanCreeps() {
@@ -181,7 +185,4 @@ export class Mem {
 		Stats.clean();
 	}
 
-	static backwardsCompatibility() {
-
-	}
 }

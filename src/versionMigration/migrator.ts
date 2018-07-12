@@ -1,5 +1,6 @@
 import {Mem} from '../Memory';
 import {log} from '../console/log';
+import {DEFAULT_OVERMIND_SIGNATURE} from '../~settings';
 
 interface VersionMigratorMemory {
 	versions: { [version: string]: boolean };
@@ -100,6 +101,12 @@ export class VersionMigration {
 		}
 		for (let i in Memory.rooms) {
 			delete (<any>Memory.rooms[i]).tick;
+			delete (<any>Memory.rooms[i]).score;
+		}
+		// Change to new signature
+		let oldSignature = '[Overmind]';
+		if (Memory.signature.includes(oldSignature)) {
+			Memory.signature = Memory.signature.replace(oldSignature, DEFAULT_OVERMIND_SIGNATURE);
 		}
 		this.memory.versions['04Xto05X'] = true;
 		log.alert(`Version migration from 0.4.x -> 0.5.x completed successfully.`);

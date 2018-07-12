@@ -71,18 +71,18 @@ export class TaskFlee extends Task {
 		if (this.creep.room.hostiles) {
 			// If you're within range of the fallback position, park
 			if (this.creep.pos.inRangeTo(this.targetPos, this.settings.targetRange) && !this.creep.pos.isEdge) {
-				return this.parkCreep(this.creep, this.targetPos);
+				return this.creep.park(this.targetPos);
 			} else {
-				return this.move();
+				return this.moveToTarget();
 			}
 		}
 		// If creep is in a safe room, retreat until you are sufficiently far from edge
 		else {
 			// Park if far away from edge
 			if (this.creep.pos.rangeToEdge > 3) {
-				return this.parkCreep(this.creep, this.targetPos);
+				return this.creep.park(this.targetPos);
 			} else {
-				return this.move();
+				return this.moveToTarget();
 			}
 		}
 	}

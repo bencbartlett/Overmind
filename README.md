@@ -41,9 +41,9 @@ If you just want to run Overmind without modification, you can copy the compiled
 ### Compiling from source
 To install the full codebase, download or clone the repository. (Please note that while the latest release of Overmind should always be stable, the latest commit may contain unstable features.) Navigate to the Overmind root directory and run ```npm install```. To compile and deploy the codebase, create a `screeps.json` file from the [example file](https://github.com/bencbartlett/Overmind/blob/master/screeps.example.json), then do one of the following actions:
 
-- Compile and deploy to public server: `rollup -c --dest main`
-- Compile and deploy to private server: `rollup -c --dest pserver`
-- Compile without deploying: `rollup -c`
+- Compile and deploy to public server: `npm run push-main`
+- Compile and deploy to private server: `npm run push-pserver`
+- Compile without deploying: `npm run compile`
 
 The deployment scripts are based on [`screeps-typescript-starter`](https://github.com/screepers/screeps-typescript-starter); for additional help, refer to their [GitBook](https://screepers.gitbooks.io/screeps-typescript-starter/getting-started/deploying.html).
 

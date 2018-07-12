@@ -10,6 +10,8 @@ declare namespace NodeJS {
 
 		Overmind: IOvermind;
 
+		Assimilator: IAssimilator;
+
 		print(...args: any[]): void;
 
 		deref(ref: string): RoomObject | null;
@@ -39,10 +41,19 @@ interface IGlobalCache {
 interface ICache {
 	overlords: { [overlord: string]: { [roleName: string]: string[] } };
 	targets: { [ref: string]: string[] };
+	outpostFlags: Flag[];
 
 	build(): void;
 
 	rebuild(): void;
+}
+
+interface IStrategist {
+
+	init(): void;
+
+	run(): void;
+
 }
 
 interface IOvermindMemory {
@@ -50,15 +61,25 @@ interface IOvermindMemory {
 	versionUpdater: any;
 }
 
+declare const Assimilator: IAssimilator;
+
+interface IAssimilator {
+
+	registerClass(code: any): void;
+
+	generateChecksum(): string;
+
+}
+
 interface IOvermind {
-	cache: ICache;
-	colonies: { [roomName: string]: any };
-	overlords: { [overlordName: string]: any };
+	cache: ICache;								// is actually GameCache
+	colonies: { [roomName: string]: any }; 		// is actually { [roomName: string]: Colony }
+	overlords: { [overlordName: string]: any }; // is actually { [overlordName: string]: Overlord }
 	colonyMap: { [roomName: string]: string };
-	invisibleRooms: string[];
 	memory: IOvermindMemory;
-	terminalNetwork: ITerminalNetwork;
-	tradeNetwork: ITradeNetwork;
+	terminalNetwork: ITerminalNetwork;			// is actually TerminalNetwork
+	tradeNetwork: ITradeNetwork;				// is actually TradeNetwork
+	strategist: IStrategist | undefined;		// Strategist | undefined, only defined if Memory.bot == true
 
 	build(): void;
 
@@ -97,9 +118,9 @@ interface ITradeNetwork {
 
 	lookForGoodDeals(terminal: StructureTerminal, mineral: string, margin?: number): void;
 
-	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount?: number): void;
+	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount?: number): number | undefined;
 
-	sell(terminal: StructureTerminal, resource: ResourceConstant, amount?: number): void;
+	sell(terminal: StructureTerminal, resource: ResourceConstant, amount?: number): number | undefined;
 
 	buyMineral(terminal: StructureTerminal, mineralType: ResourceConstant, amount: number): void;
 

@@ -11,6 +11,16 @@ export const ROOMTYPE_ALLEY = 'ALLEY';
 @profile
 export class Cartographer {
 
+	/* Lists all rooms up to a given distance away, including roomName */
+	static findRoomsInRange(roomName: string, depth: number): string[] {
+		return _.flatten(_.values(this.recursiveRoomSearch(roomName, depth)));
+	}
+
+	/* Lists all rooms up at a given distance away, including roomName */
+	static findRoomsAtRange(roomName: string, depth: number): string[] {
+		return this.recursiveRoomSearch(roomName, depth)[depth];
+	}
+
 	/* Recursively enumerate all rooms from a root node using depth first search to a maximum depth */
 	static recursiveRoomSearch(roomName: string, maxDepth: number): { [depth: number]: string[] } {
 		let visitedRooms = this._recursiveRoomSearch(roomName, 0, maxDepth, {});

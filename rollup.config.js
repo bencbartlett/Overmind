@@ -23,7 +23,19 @@ export default {
     output: {
         file: "dist/main.js",
         format: "cjs",
-        sourcemap: false
+        sourcemap: false,
+        banner: '//\n' +
+                '// ___________________________________________________________\n' +
+                '//\n' +
+                '//  _____  _    _ _______  ______ _______ _____ __   _ ______\n' +
+                '// |     |  \\  /  |______ |_____/ |  |  |   |   | \\  | |     \\\n' +
+                '// |_____|   \\/   |______ |    \\_ |  |  | __|__ |  \\_| |_____/\n' +
+                '//\n' +
+                '// _______________________ Screeps AI ________________________\n' +
+                '//\n' +
+                '//\n' +
+                '// Overmind repository: github.com/bencbartlett/overmind\n' +
+                '//\n'
     },
     onwarn: function (warning) {
         // Skip default export warnings from using obfuscated overmind file in main

@@ -55,6 +55,7 @@ export class GuardSwarmOverlord extends Overlord {
 				guard.park(this.pos); // Move off-road
 			}
 		}
+
 	}
 
 	init() {
@@ -62,12 +63,13 @@ export class GuardSwarmOverlord extends Overlord {
 			this.wishlist(this.directive.memory.amount, new EarlyGuardSetup());
 		}
 		else {
-			this.wishlist(1, new EarlyGuardSetup());
 			if (this.room) {
-				let smallHostiles = _.filter(this.room.hostiles, creep => creep.body.length < 10);
+				let smallHostiles = _.filter(this.room.dangerousHostiles, creep => creep.body.length < 10);
 				if (smallHostiles.length > 2) {
 					this.wishlist(Math.round(smallHostiles.length), new EarlyGuardSetup());
 				}
+			} else {
+				this.wishlist(2, new EarlyGuardSetup());
 			}
 		}
 	}

@@ -49,14 +49,19 @@ export var OverlordPriority = {
 		haul: 700
 	},
 
+	scouting: {
+		stationary  : 800,
+		randomWalker: 801
+	},
+
 	remoteRoom: { 				// Operation of a remote room. Allows colonies to restart one room at a time.
-		reserve      : 800,
-		mine         : 801,
+		reserve      : 900,
+		mine         : 901,
 		roomIncrement: 5, 			// remote room priorities are incremented by this for each outpost
 	},
 
 	collection: {				// Non-urgent collection of resources, like from a deserted storage
-		haul: 900
+		haul: 1000
 	},
 
 	default: 999999				// Default overlord priority to ensure it gets run last

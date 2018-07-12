@@ -13,6 +13,7 @@ import {BarrierPlanner} from './BarrierPlanner';
 import {BuildPriorities, DemolishStructurePriorities} from '../priorities/priorities_structures';
 import {bunkerLayout} from './layouts/bunker';
 import {DirectiveTerminalRebuildState} from '../directives/logistics/terminalState_rebuild';
+import {derefCoords, maxBy} from '../utilities/utils';
 
 export interface BuildingPlannerOutput {
 	name: string;
@@ -100,7 +101,7 @@ export class RoomPlanner {
 
 	static settings = {
 		recheckAfter      : 50,
-		siteCheckFrequency: 1000,
+		siteCheckFrequency: 300,			// how often to recheck for structures; doubled at RCL8
 		maxSitesPerColony : 10,
 		maxDismantleCount : 5,
 	};
@@ -257,14 +258,14 @@ export class RoomPlanner {
 				let anchor: Coord = layout.data.anchor;
 				let pos = this.placements[<'hatchery' | 'commandCenter' | 'bunker'>name];
 				if (!pos) continue;
-				let rotation: number = pos!.lookFor(LOOK_FLAGS)[0]!.memory.rotation || 0;
+				// let rotation: number = pos!.lookFor(LOOK_FLAGS)[0]!.memory.rotation || 0;
 				let componentMap = this.parseLayout(layout, level);
 				this.translateComponent(componentMap, anchor, pos!);
-				if (rotation != 0) this.rotateComponent(componentMap, pos!, rotation);
+				// if (rotation != 0) this.rotateComponent(componentMap, pos!, rotation);
 				plan[name] = {
 					map     : componentMap,
 					pos     : new RoomPosition(anchor.x, anchor.y, this.colony.name),
-					rotation: rotation,
+					rotation: 0,
 				};
 			}
 		}
@@ -435,7 +436,7 @@ export class RoomPlanner {
 			}
 			this.memory.lastGenerated = Game.time;
 			console.log('Room layout and flag positions have been saved.');
-			this.active = false;
+			// Destroy needed buildings
 			if (this.colony.level == 1) { // clear out room if setting in for first time
 				this.demolishMisplacedStructures(true, true);
 				// Demolish all barriers that aren't yours
@@ -446,16 +447,11 @@ export class RoomPlanner {
 				}
 			}
 			this.memory.recheckStructuresAt = Game.time + 3;
-			// Finalize the road planner layout
+			this.active = false;
 		} else {
 			log.warning('Not a valid room layout! Must have both hatchery and commandCenter placements ' +
 						'or bunker placement.');
 		}
-	}
-
-	init(): void {
-		this.barrierPlanner.init();
-		this.roadPlanner.init();
 	}
 
 	/* Whether a constructionSite should be placed at a position */
@@ -488,9 +484,9 @@ export class RoomPlanner {
 				return true;
 			}
 			if (structureType == STRUCTURE_CONTAINER || structureType == STRUCTURE_LINK) {
-				let thingsBuildingLinksAndContainers = _.compact([...this.colony.sources!,
-																  this.colony.room.mineral!,
-																  this.colony.controller!]);
+				let thingsBuildingLinksAndContainers = _.map([...this.colony.room.sources,
+															  this.colony.room.mineral!,
+															  this.colony.controller], thing => thing.pos);
 				let maxRange = 4;
 				return pos.findInRange(thingsBuildingLinksAndContainers, 4).length > 0;
 			}
@@ -516,6 +512,10 @@ export class RoomPlanner {
 		this.recallMap();
 		if (!this.map || this.map == {}) { // in case a map hasn't been generated yet
 			log.info(this.colony.name + ' does not have a room plan yet! Unable to demolish errant structures.');
+		}
+		// Destroy extractor if needed
+		if (this.colony.room.extractor && !this.colony.room.extractor.my) {
+			this.colony.room.extractor.destroy();
 		}
 		// Build missing structures from room plan
 		this.memory.relocating = false;
@@ -650,17 +650,43 @@ export class RoomPlanner {
 		return this.roadPlanner.roadShouldBeHere(pos);
 	}
 
+	init(): void {
+		if (Memory.bot) {
+			let bunkerAnchor: RoomPosition;
+			if (this.colony.spawns.length > 0) { // in case of very first spawn
+				let lowerRightSpawn = maxBy(this.colony.spawns, s => 50 * s.pos.y + s.pos.x)!;
+				let spawnPos = lowerRightSpawn.pos;
+				bunkerAnchor = new RoomPosition(spawnPos.x - 4, spawnPos.y, spawnPos.roomName);
+			} else if (this.colony.room.memory.expansionData) {
+				bunkerAnchor = derefCoords(this.colony.room.memory.expansionData.bunkerAnchor, this.colony.room.name);
+			} else {
+				log.error(`Cannot determine anchor! No spawns or expansionData.bunkerAnchor!`);
+				return;
+			}
+			this.addComponent('bunker', bunkerAnchor);
+		}
+		this.barrierPlanner.init();
+		this.roadPlanner.init();
+	}
+
+	shouldRecheck(offset = 0): boolean {
+		if (Game.time == (this.memory.recheckStructuresAt || Infinity) + offset) {
+			return true;
+		} else if (this.colony.level == 8) {
+			return Game.time % (2 * RoomPlanner.settings.siteCheckFrequency) == this.colony.id + offset;
+		} else {
+			return Game.time % RoomPlanner.settings.siteCheckFrequency == this.colony.id + offset;
+		}
+	}
+
 	run(): void {
 		if (this.active) {
 			this.make();
 			this.visuals();
 		} else {
-			if (Game.time % RoomPlanner.settings.siteCheckFrequency == this.colony.id ||
-				Game.time == (this.memory.recheckStructuresAt || Infinity)) {
+			if (this.shouldRecheck()) {
 				this.demolishMisplacedStructures(this.colony.layout == 'twoPart');
-			} else if (Game.time % RoomPlanner.settings.siteCheckFrequency == this.colony.id + 1 ||
-					   Game.time == (this.memory.recheckStructuresAt || Infinity) + 1) {
-				delete this.memory.recheckStructuresAt;
+			} else if (this.shouldRecheck(1)) {
 				this.buildMissingStructures();
 			}
 		}
@@ -668,11 +694,18 @@ export class RoomPlanner {
 		this.barrierPlanner.run();
 		// Run the road planner
 		this.roadPlanner.run();
+		if (this.active && Memory.bot) {
+			if (this.placements.bunker) {
+				this.finalize();
+			} else {
+				log.warning(`No bunker placement!`);
+			}
+		}
 	}
 
 	visuals(): void {
 		// Draw the map
-		Visualizer.drawLayout(this.map);
+		Visualizer.drawStructureMap(this.map);
 	}
 
 }

@@ -27,7 +27,7 @@ export class TaskHeal extends Task {
 		if (this.creep.pos.isNearTo(this.target)) {
 			return this.creep.heal(this.target);
 		} else {
-			this.move(1);
+			this.moveToTarget(1);
 		}
 		return this.creep.rangedHeal(this.target);
 	}

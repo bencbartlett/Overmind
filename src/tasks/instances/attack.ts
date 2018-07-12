@@ -35,7 +35,7 @@ export class TaskAttack extends Task {
 			if (creep.pos.isNearTo(target)) {
 				attackReturn = creep.attack(target);
 			} else {
-				attackReturn = this.move(1); // approach target if you also have attack parts
+				attackReturn = this.moveToTarget(1); // approach target if you also have attack parts
 			}
 		}
 		if (creep.pos.inRangeTo(target, 3) && creep.getActiveBodyparts(RANGED_ATTACK) > 0) {

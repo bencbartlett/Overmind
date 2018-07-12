@@ -20,6 +20,7 @@ import {ExpansionPlanner} from '../strategy/ExpansionPlanner';
 const RECACHE_TIME = 2500;
 const OWNED_RECACHE_TIME = 1000;
 const SCORE_RECALC_PROB = 0.2;
+const FALSE_SCORE_RECALC_PROB = 0.05;
 
 const RoomIntelMemoryDefaults = {};
 
@@ -75,7 +76,6 @@ export class RoomIntel {
 		}
 	}
 
-
 	static run(): void {
 		let shouldReturn = false;
 		for (let name in Game.rooms) {
@@ -83,10 +83,15 @@ export class RoomIntel {
 			let isOwned = room.controller && room.controller.owner != undefined;
 			if (!room.memory.expiration || Game.time > room.memory.expiration) {
 				this.recordPermanentObjects(room);
-				if (room.memory.expansionData != false) { // if the room is not uninhabitable
+				if (room.memory.expansionData == false) { // room is uninhabitable or owned
+					if (Math.random() < FALSE_SCORE_RECALC_PROB) {
+						// false scores get evaluated very occasionally
+						shouldReturn = ExpansionPlanner.computeExpansionData(room);
+					}
+				} else { // if the room is not uninhabitable
 					if (!room.memory.expansionData || Math.random() < SCORE_RECALC_PROB) {
 						// recompute some of the time
-						shouldReturn = ExpansionPlanner.computeExpansionData(room, true);
+						shouldReturn = ExpansionPlanner.computeExpansionData(room);
 					}
 				}
 				let recacheTime = isOwned ? OWNED_RECACHE_TIME : RECACHE_TIME;

@@ -1,6 +1,6 @@
 interface Memory {
 	Overmind: {};
-	colonies: { [name: string]: ColonyMemory };
+	colonies: { [name: string]: any };
 	creeps: { [name: string]: CreepMemory; };
 	flags: { [name: string]: FlagMemory; };
 	rooms: { [name: string]: RoomMemory; };
@@ -12,6 +12,8 @@ interface Memory {
 	stats: any;
 	constructionSites: { [id: string]: number };
 	signature: string;
+	bot: boolean;
+	autoclaim: boolean;
 }
 
 interface StatsMemory {
@@ -99,15 +101,12 @@ interface FlagMemory {
 	amount?: number;
 	created?: number;
 	persistent?: boolean;
-	// setPosition: RoomPosition;
+	setPosition?: protoPos;
 	rotation?: number;
 	colony?: string;
 	parent?: string;
 	maxPathLength?: number;
 	maxLinearRange?: number;
-	// overlords: { [overlordName: string]: OverlordMemory };
-
-	// [otherProperties: string]: any;
 }
 
 interface SavedRoomObject {
@@ -139,7 +138,7 @@ interface SavedMineral extends SavedRoomObject {
 }
 
 interface RoomMemory {
-	avoid?: number;
+	avoid?: boolean;
 	src?: SavedSource[];
 	ctrl?: SavedController | undefined;
 	mnrl: SavedMineral | undefined;

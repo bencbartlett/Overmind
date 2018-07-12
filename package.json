@@ -16,7 +16,7 @@
     "build": "tsc -p .",
     "lint": "tslint \"src/**/*.ts\"",
     "clean": "rm -rf tsc-out && rm -rf dist",
-    "build-obfuscated-overmind": "tsc && javascript-obfuscator tsc-out/Overmind.js --output src/Overmind_obfuscated.js --compact false --self-defending true --string-array true --string-array-threshold 1 --string-array-encoding true",
+    "build-obfuscate": "tsc && javascript-obfuscator tsc-out/Overmind.js --output src/Overmind_obfuscated.js --compact false --self-defending true --string-array true --string-array-threshold 1 --string-array-encoding true && javascript-obfuscator tsc-out/assimilation/Assimilator.js --output src/assimilation/Assimilator_obfuscated.js --compact false --self-defending true --string-array true --string-array-threshold 1 --string-array-encoding true",
     "compile": "rollup -c && rm -rf .rpt2_cache",
     "push-main": "rollup -c --dest main",
     "push-pserver": "rollup -c --dest pserver",
@@ -27,16 +27,16 @@
     "watch-sim": "rollup -cw --dest sim"
   },
   "devDependencies": {
-    "@types/screeps": "^2.4.0",
     "@types/lodash": "^3.10.1",
-    "rollup": "^0.55.3",
+    "@types/screeps": "^2.4.0",
+    "rollup": "0.62.0",
     "rollup-plugin-clean": "^1.0.0",
-    "rollup-plugin-commonjs": "^8.2.6",
-    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-commonjs": "^8.4.1",
+    "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-screeps": "0.1.2",
     "rollup-plugin-typescript2": "^0.11.0",
-    "tslint": "^5.8.0",
-    "typescript": "^2.8.3"
+    "tslint": "^5.10.0",
+    "typescript": "2.9.2"
   },
   "dependencies": {
     "columnify": "^1.5.4",

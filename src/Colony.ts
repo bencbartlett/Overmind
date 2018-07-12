@@ -26,6 +26,9 @@ import {TransportRequestGroup} from './logistics/TransportRequestGroup';
 import {SpawnGroup} from './logistics/SpawnGroup';
 import {bunkerLayout, getPosFromBunkerCoord} from './roomPlanner/layouts/bunker';
 import {Mem} from './Memory';
+import {RandomWalkerScoutOverlord} from './overlords/scouting/randomWalker';
+import {EXPANSION_EVALUATION_FREQ, ExpansionPlanner} from './strategy/ExpansionPlanner';
+import {log} from './console/log';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -67,7 +70,7 @@ export interface ColonyMemory {
 }
 
 const defaultColonyMemory: ColonyMemory = {
-	defcon: {
+	defcon       : {
 		level: DEFCON.safe,
 		tick : -Infinity
 	},
@@ -150,6 +153,7 @@ export class Colony {
 	overlords: {
 		work: WorkerOverlord;
 		logistics: TransportOverlord;
+		scout?: RandomWalkerScoutOverlord;
 	};
 	// Road network
 	roadLogistics: RoadLogistics;
@@ -158,7 +162,17 @@ export class Colony {
 	abathur: Abathur;
 
 	static settings = {
-		maxSourcesPerColony: 8,
+		remoteSourcesByLevel: {
+			1: 1,
+			2: 2,
+			3: 3,
+			4: 4,
+			5: 5,
+			6: 6,
+			7: 7,
+			8: 9,
+		},
+		maxSourceDistance   : 100
 	};
 
 	constructor(id: number, roomName: string, outposts: string[], creeps: Creep[] | undefined) {
@@ -172,7 +186,7 @@ export class Colony {
 		this.roomNames = [roomName].concat(outposts);
 		this.room = Game.rooms[roomName];
 		this.outposts = _.compact(_.map(outposts, outpost => Game.rooms[outpost]));
-		this.rooms = [Game.rooms[roomName]].concat(this.outposts);
+		this.rooms = [this.room].concat(this.outposts);
 		// Register creeps
 		this.creeps = creeps || [];
 		this.creepsByRole = _.groupBy(this.creeps, creep => creep.memory.role);
@@ -344,6 +358,9 @@ export class Colony {
 			work     : new WorkerOverlord(this),
 			logistics: new TransportOverlord(this),
 		};
+		if (!this.observer) {
+			this.overlords.scout = new RandomWalkerScoutOverlord(this);
+		}
 	}
 
 	// /* Refreshes portions of the colony state between ticks without rebuilding the entire object */
@@ -361,7 +378,8 @@ export class Colony {
 	}
 
 	/* Summarizes the total of all resources in colony store structures, labs, and some creeps */
-	private getAllAssets(): { [resourceType: string]: number } {
+	private getAllAssets(verbose = false): { [resourceType: string]: number } {
+		// if (this.name == 'E8S45') verbose = true; // 18863
 		// Include storage structures and manager carry
 		let stores = _.map(<StoreStructure[]>_.compact([this.storage, this.terminal]), s => s.store);
 		let creepCarriesToInclude = _.map(this.creeps, creep => creep.carry) as { [resourceType: string]: number }[];
@@ -375,6 +393,7 @@ export class Colony {
 				allAssets[lab.mineralType] += lab.mineralAmount;
 			}
 		}
+		if (verbose) log.debug(`${this.room.print} assets: ` + JSON.stringify(allAssets));
 		return allAssets;
 	}
 
@@ -389,6 +408,9 @@ export class Colony {
 	postInit(): void {
 		if (this.spawnGroup) {
 			this.spawnGroup.init();											// Initialize the spawn group if present
+		}
+		if (Game.time % EXPANSION_EVALUATION_FREQ == 5 * this.colony.id) {	// Re-evaluate expansion data if needed
+			ExpansionPlanner.refreshExpansionData(this);
 		}
 	}
 

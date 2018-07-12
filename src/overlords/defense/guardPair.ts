@@ -10,8 +10,8 @@ import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatTargeting} from '../../targeting/CombatTargeting';
 
-export class AttackerSetup extends CreepSetup {
-	static role = 'attacker';
+class AttackerSetup extends CreepSetup {
+	static role = 'zergling';
 
 	constructor() {
 		super(AttackerSetup.role, {
@@ -22,7 +22,7 @@ export class AttackerSetup extends CreepSetup {
 	}
 }
 
-export class HealerSetup extends CreepSetup {
+class HealerSetup extends CreepSetup {
 	static role = 'healer';
 
 	constructor() {
@@ -45,6 +45,8 @@ export class GuardPairOverlord extends Overlord {
 		retreatHitsPercent : 0.50,
 		reengageHitsPercent: 0.95,
 	};
+
+	static requiredRCL = 1;
 
 	constructor(directive: DirectiveGuard, priority = OverlordPriority.defense.guard) {
 		super(directive, 'guardPair', priority);

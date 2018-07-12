@@ -10,7 +10,6 @@ import {OverlordPriority} from '../priorities/priorities_overlords';
 import {Visualizer} from '../visuals/Visualizer';
 import {LogisticsNetwork} from '../logistics/LogisticsNetwork';
 import {Pathing} from '../movement/Pathing';
-import {Cartographer, ROOMTYPE_CORE, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
 
 interface MiningSiteMemory {
 	stats: {
@@ -31,7 +30,8 @@ export class MiningSite extends HiveCluster {
 	overlord: MiningOverlord;
 
 	static settings = {
-		minLinkDistance: 10
+		minLinkDistance : 10,
+		dropMineUntilRCL: 3,
 	};
 
 	constructor(colony: Colony, source: Source) {
@@ -47,7 +47,7 @@ export class MiningSite extends HiveCluster {
 		let siteLink = this.pos.findClosestByLimitedRange(this.colony.availableLinks, 2);
 		if (siteLink) {
 			this.output = siteLink;
-			this.colony.linkNetwork.claimLink(this.output);
+			this.colony.linkNetwork.claimLink(siteLink);
 		}
 		if (this.outputPos) {
 			this.colony.destinations.push(this.outputPos);
@@ -60,9 +60,7 @@ export class MiningSite extends HiveCluster {
 		this.outputConstructionSite = nearbyOutputSites[0];
 		// Create a mining overlord for this
 		let priority = this.room.my ? OverlordPriority.ownedRoom.mine : OverlordPriority.remoteRoom.mine;
-		this.shouldDropMine = !this.room.my && !this.room.reservedByMe &&
-							  Cartographer.roomType(this.room.name) != ROOMTYPE_SOURCEKEEPER &&
-							  Cartographer.roomType(this.room.name) != ROOMTYPE_CORE;
+		this.shouldDropMine = this.colony.level < MiningSite.settings.dropMineUntilRCL;
 		this.overlord = new MiningOverlord(this, priority, this.shouldDropMine);
 		if (!this.shouldDropMine && Game.time % 100 == 0 && !this.output && !this.outputConstructionSite) {
 			log.warning(`Mining site at ${this.pos.print} has no output!`);
@@ -192,7 +190,7 @@ export class MiningSite extends HiveCluster {
 											site => site.structureType == STRUCTURE_LINK).length;
 					let numLinksAllowed = CONTROLLER_STRUCTURES.link[this.colony.level];
 					if (numLinksAllowed > numLinks &&
-						this.colony.hatchery && this.colony.hatchery.link &&
+						(this.colony.bunker || (this.colony.hatchery && this.colony.hatchery.link)) &&
 						this.colony.commandCenter && this.colony.commandCenter.link &&
 						Pathing.distance(this.pos,
 										 this.colony.commandCenter.pos) > MiningSite.settings.minLinkDistance) {
@@ -224,14 +222,14 @@ export class MiningSite extends HiveCluster {
 			// Destroy the output if 1) more links can be built, 2) every farther site has a link and
 			// 3) hatchery and commandCenter both have links
 			if (numLinksAllowed > numLinks && everyFartherSiteHasLink &&
-				this.colony.hatchery && this.colony.hatchery.link &&
+				(this.colony.bunker || (this.colony.hatchery && this.colony.hatchery.link)) &&
 				this.colony.commandCenter && this.colony.commandCenter.link) {
 				this.output.destroy();
 			}
 		}
 		// Destroy container if you already have a link output and it's not being used by anything else
 		if (this.output && this.output instanceof StructureLink) {
-			let containerOutput = this.source.pos.findClosestByLimitedRange(this.room.containers, 2);
+			let containerOutput = this.source.pos.findClosestByLimitedRange(this.room.containers, 1);
 			if (containerOutput && this.colony.hatchery && containerOutput.pos.getRangeTo(this.colony.hatchery) > 2 &&
 				containerOutput.pos.getRangeTo(this.colony.upgradeSite) > 3) {
 				containerOutput.destroy();
