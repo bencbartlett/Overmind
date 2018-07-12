@@ -48,7 +48,7 @@ export class ControllerAttackerOverlord extends Overlord {
 			}
 		}
 
-		if (this.attackPositions.length > 0 && this.infestors.length > 0 && _.some(this.infestors, infestor => !infestor.memory.attackPosition) {
+		if (this.attackPositions.length > 0 && this.infestors.length > 0 && _.some(this.infestors, infestor => !infestor.memory.attackPosition)) {
 			let i = 0;
 			for (let position of this.attackPositions) {
 				let infestor = this.infestors[i % this.infestors.length];
