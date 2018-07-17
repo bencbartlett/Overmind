@@ -278,7 +278,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 	// }
 
 	private equalize(resourceType: ResourceConstant, terminals = this.terminals, verbose = false): void {
-		log.info(`Equalizing ${resourceType} within terminal network`);
+		log.debug(`Equalizing ${resourceType} within terminal network`);
 		let maxSendSize = resourceType == RESOURCE_ENERGY ? TerminalNetwork.settings.equalize.maxEnergySendSize
 														  : TerminalNetwork.settings.equalize.maxMineralSendSize;
 		let averageAmount = _.sum(_.map(terminals,

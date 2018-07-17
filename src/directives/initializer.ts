@@ -11,10 +11,8 @@ import {DirectiveColonize} from './colonization/colonize';
 import {DirectiveTargetSiege} from './targeting/siegeTarget';
 import {DirectiveSiege} from './offense/siege';
 import {DirectiveHealPoint} from './offense/healPoint';
-import {DirectiveGuardSwarm} from './defense/guardSwarm';
 import {DirectiveDestroy} from './offense/destroy';
 import {DirectiveInvasionDefense} from './defense/invasionDefense';
-// import {DirectivePickup} from './logistics/logisticsRequest';
 import {DirectiveHaul} from './logistics/haul';
 import {DirectiveDismantle} from './targeting/dismantle';
 import {DirectiveNukeResponse} from './defense/nukeResponse';
@@ -46,9 +44,6 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveGuard(flag);
 				case COLOR_PURPLE:
 					return new DirectiveControllerAttack(flag);
-				//Changed to RED/PURPLE as requested.  GuardSwarm needs a new color
-				//case COLOR_PURPLE:
-					//return new DirectiveGuardSwarm(flag);
 				case COLOR_ORANGE:
 					return new DirectiveSiege(flag);
 				case COLOR_GREEN:

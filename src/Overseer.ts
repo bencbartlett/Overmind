@@ -9,7 +9,6 @@ import {Directive} from './directives/Directive';
 import {log} from './console/log';
 import {Visualizer} from './visuals/Visualizer';
 import {Pathing} from './movement/Pathing';
-import {DirectiveGuardSwarm} from './directives/defense/guardSwarm';
 import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
 import {DirectiveNukeResponse} from './directives/defense/nukeResponse';
 import {MinerSetup} from './overlords/core/miner';
@@ -86,8 +85,7 @@ export class Overseer {
 		// Guard directive: defend your outposts and all rooms of colonies that you are incubating
 		for (let room of this.colony.outposts) {
 			let defenseFlags = _.filter(room.flags, flag => DirectiveGuard.filter(flag) ||
-															DirectiveInvasionDefense.filter(flag) ||
-															DirectiveGuardSwarm.filter(flag));
+															DirectiveInvasionDefense.filter(flag));
 			// let bigHostiles = _.filter(room.hostiles, creep => creep.body.length >= 10);
 			if (room.dangerousHostiles.length > 0 && defenseFlags.length == 0) {
 				DirectiveGuard.create(room.dangerousHostiles[0].pos);

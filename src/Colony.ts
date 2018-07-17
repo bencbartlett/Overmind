@@ -405,12 +405,6 @@ export class Colony {
 		this.roadLogistics.init();											// Initialize the road network
 		this.linkNetwork.init();											// Initialize link network
 		this.roomPlanner.init();											// Initialize the room planner
-	}
-
-	postInit(): void {
-		if (this.spawnGroup) {
-			this.spawnGroup.init();											// Initialize the spawn group if present
-		}
 		if (Game.time % EXPANSION_EVALUATION_FREQ == 5 * this.colony.id) {	// Re-evaluate expansion data if needed
 			ExpansionPlanner.refreshExpansionData(this);
 		}
@@ -422,9 +416,6 @@ export class Colony {
 		this.linkNetwork.run();												// Run the link network
 		this.roadLogistics.run();											// Run the road network
 		this.roomPlanner.run();												// Run the room planner
-	}
-
-	postRun(): void {
 		this.stats();														// Log stats per tick
 	}
 

@@ -2,7 +2,6 @@
 
 import {Zerg} from '../../zerg/Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {DirectiveGuardSwarm} from '../../directives/defense/guardSwarm';
 import {CreepSetup} from '../CreepSetup';
 import {profile} from '../../profiler/decorator';
 import {DirectiveGuard} from '../../directives/defense/guard';
@@ -23,10 +22,10 @@ export class EarlyGuardSetup extends CreepSetup {
 @profile
 export class GuardSwarmOverlord extends Overlord {
 
-	directive: DirectiveGuardSwarm | DirectiveGuard;
+	directive: DirectiveGuard;
 	guards: CombatZerg[];
 
-	constructor(directive: DirectiveGuardSwarm | DirectiveGuard, priority = OverlordPriority.defense.guard) {
+	constructor(directive: DirectiveGuard, priority = OverlordPriority.defense.guard) {
 		super(directive, 'swarmGuard', priority);
 		this.directive = directive;
 		this.guards = _.map(this.creeps(EarlyGuardSetup.role), creep => new CombatZerg(creep));

@@ -41,6 +41,12 @@ export interface SpawnGroupSettings {
 	requiredRCL: number,
 }
 
+export interface SpawnGroupInitializer {
+	ref: string;
+	room: Room | undefined;
+	pos: RoomPosition;
+}
+
 @profile
 export class SpawnGroup {
 
@@ -49,21 +55,24 @@ export class SpawnGroup {
 	hatcheries: Hatchery[];
 	room: Room | undefined;
 	roomName: string;
+	ref: string;
 	settings: SpawnGroupSettings;
 	stats: {
 		avgDistance: number;
 	};
 
-	constructor(roomName: string, settings: Partial<SpawnGroupSettings> = {}) {
-		this.roomName = roomName;
-		this.room = Game.rooms[roomName];
-		this.memory = Mem.wrap(Memory.rooms[roomName], 'spawnGroup', SpawnGroupMemoryDefaults);
+	constructor(initializer: SpawnGroupInitializer, settings: Partial<SpawnGroupSettings> = {}) {
+		this.roomName = initializer.pos.roomName;
+		this.room = initializer.room;
+		this.memory = Mem.wrap(Memory.rooms[this.roomName], 'spawnGroup', SpawnGroupMemoryDefaults);
+		this.ref = initializer.ref + ':SG';
 		this.stats = {
 			avgDistance: (_.sum(this.memory.distances) / _.keys(this.memory.distances).length) || 100,
 		};
 		this.requests = [];
 		// this.hatcheries = [];
 		this.settings = _.defaults(settings, defaultSettings) as SpawnGroupSettings;
+		Overmind.spawnGroups[this.ref] = this;
 	}
 
 	private recalculateColonies() {

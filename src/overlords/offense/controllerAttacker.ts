@@ -1,138 +1,83 @@
 // Controller attacker overlord.  Spawn CLAIM creeps to mass up on a controller and attack all at once
+// This module was contributed by @sarrick and has since been modified
 
 import {Zerg} from '../../zerg/Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {Overlord} from '../Overlord';
-import {DirectiveControllerAttack, DirectiveControllerAttackMemory} from '../../directives/offense/controllerAttack';
+import {DirectiveControllerAttack} from '../../directives/offense/controllerAttack';
 import {CreepSetup} from '../CreepSetup';
 import {profile} from '../../profiler/decorator';
-import {log} from '../../console/log';
 import {SpawnGroup} from 'logistics/SpawnGroup';
+import {log} from '../../console/log';
 
 const InfestorSetup = new CreepSetup('infestor', {
-	pattern: [CLAIM, MOVE],
+	pattern  : [CLAIM, MOVE],
 	sizeLimit: Infinity,
-	ordered: true
+	ordered  : true
 });
-
-interface ControllerAttackerMemory extends CreepMemory {
-	attackPosition: protoPos;
-}
 
 @profile
 export class ControllerAttackerOverlord extends Overlord {
 
-	infestors: ControllerAttackerZerg[];
-	scouts: Zerg[];
+	controllerAttackers: Zerg[];
 	attackPositions: RoomPosition[];
+	assignments: { [attackerName: string]: RoomPosition };
 	readyTick: number;
-	directiveMemory: DirectiveControllerAttackMemory;
 
-	constructor(directive: DirectiveControllerAttack, priority = OverlordPriority.offense.controllerAttack) {
+	constructor(directive: DirectiveControllerAttack, priority = OverlordPriority.realTime.controllerAttack) {
 		super(directive, 'controllerAttack', priority);
+		this.controllerAttackers = _.sortBy(this.zerg(InfestorSetup.role), zerg => zerg.name);
+		if (this.room && this.room.controller) {
+			this.attackPositions = this.room.controller.pos.availableNeighbors(true);
+			this.readyTick = Game.time + (this.room.controller.upgradeBlocked || 0);
+		} else {
+			this.attackPositions = [];
+			this.readyTick = Game.time;
+		}
+		this.assignments = this.getPositionAssignments();
+		this.spawnGroup = new SpawnGroup(this, {requiredRCL: 4});
+	}
 
-		this.infestors = _.map(this.creeps(InfestorSetup.role), creep => new ControllerAttackerZerg(creep));
-		this.attackPositions = this.getAttackPositions();
-		this.readyTick = this.getReadyTick();
-		this.spawnGroup = new SpawnGroup(directive.pos.roomName, { requiredRCL: 4 });
-		this.directiveMemory = directive.memory;
+	private getPositionAssignments(): { [attackerName: string]: RoomPosition } {
+		let assignments: { [attackerName: string]: RoomPosition } = {};
+		let maxLoops = Math.min(this.attackPositions.length, this.controllerAttackers.length);
+		for (let i = 0; i < maxLoops; i++) {
+			assignments[this.controllerAttackers[i].name] = this.attackPositions[i];
+		}
+		return assignments;
 	}
 
 	init() {
 		// TODO: Prespawn attackers to arrive as cooldown disappears
 		if (this.attackPositions.length > 0 && Game.time >= this.readyTick) {
 			this.wishlist(this.attackPositions.length, InfestorSetup);
-			// TODO: hack to get the SpawnGroup to initialize until it's fixed in Overmind.ts
-			if (this.spawnGroup) {
-				this.spawnGroup.init();
-			}
-		}
-
-		if (this.attackPositions.length > 0 && this.infestors.length > 0 && _.some(this.infestors, infestor => !infestor.memory.attackPosition)) {
-			let i = 0;
-			for (let position of this.attackPositions) {
-				let infestor = this.infestors[i % this.infestors.length];
-				infestor.memory.attackPosition = position;
-				i++;
-			}	
 		}
 	}
 
 	run() {
-		for (let infestor of this.infestors) {
-			//if (!infestor.memory.attackPosition) {
-			//	infestor.memory.attackPosition = _.filter(this.attackPositions, pos => !_.find(this.infestors, otherInfestor => otherInfestor.memory.attackPosition ? derefRoomPosition(otherInfestor.memory.attackPosition).isEqualTo(pos) : false))[0];
-			//	if (!infestor.memory.attackPosition) {
-			//		log.error("Could not find attackPosition for controller attacker!")
-			//	}
-			//}
-			this.handleInfestor(infestor);
-			if (this.room && this.room.controller) {
-				if (!this.room.controller.upgradeBlocked) {
-					if (infestor.ticksToLive && infestor.ticksToLive <= 2 && infestor.pos.isNearTo(this.room.controller)) {
-						this.launchAttack();
-					} else if (this.attackPositions.length > 0 && _.filter(this.infestors, infestor => infestor.pos.isNearTo(this.room!.controller!)).length == this.attackPositions.length) {
-						this.launchAttack();
-					}
-				} else {
-					//if (this.room.controller.upgradeBlocked && infestor.ticksToLive && infestor.ticksToLive <= this.room.controller.upgradeBlocked + 2) {
-					//	delete infestor.memory;
-					//	infestor.suicide();
-					//}
-				}
+		for (let controllerAttacker of this.controllerAttackers) {
+			let attackPos = this.assignments[controllerAttacker.name];
+			if (attackPos) {
+				controllerAttacker.goTo(attackPos);
+			} else {
+				log.debug(`No attack position for ${controllerAttacker.name}@${controllerAttacker.pos.print}!`);
 			}
 		}
-	}
-
-	private handleInfestor(infestor: ControllerAttackerZerg): void {
-		// TODO: handle if room has hostiles
-		infestor.goTo(derefRoomPosition(infestor.memory.attackPosition));
+		if (this.room && this.room.controller && !this.room.controller.upgradeBlocked) {
+			if (_.all(this.controllerAttackers, creep => creep.pos.isEqualTo(this.assignments[creep.name]))
+				|| _.any(this.controllerAttackers, creep => creep.pos.isNearTo(this.room!.controller!)
+															&& (creep.ticksToLive || 10) <= 2)) {
+				this.launchAttack();
+			}
+		}
 	}
 
 	private launchAttack(): void {
 		if (this.room && this.room.controller) {
-			for (let infestor of this.infestors) {
-				if (infestor.pos.isNearTo(this.room.controller)) {
-					infestor.attackController(this.room.controller);
-				}
+			for (let infestor of this.controllerAttackers) {
+				infestor.attackController(this.room.controller);
 			}
 		}
 	}
 
-	private getReadyTick(): number {
-		if (!this.directiveMemory.readyTick || this.directiveMemory.readyTick < Game.time) {
-			if (this.room && this.room.controller && this.room.controller.upgradeBlocked) {
-				this.directiveMemory.readyTick = Game.time + this.room.controller.upgradeBlocked;
-				return this.directiveMemory.readyTick;
-			} else {
-				if (this.directiveMemory.readyTick) delete this.directiveMemory.readyTick;
-				return Game.time;
-			}
-		} else {
-			return this.directiveMemory.readyTick;
-		}
-	}
-
-	private getAttackPositions(): RoomPosition[]{
-		if (this.directiveMemory.attackPositions) {
-			let attackPositions = _.map(this.directiveMemory.attackPositions, protoPos => derefRoomPosition(protoPos));
-			if (_.some(attackPositions, pos => !pos.isWalkable(true))) {
-				delete this.directiveMemory.attackPositions;
-			} else {
-				return attackPositions;
-			}
-		} else {
-			if (this && this.room && this.room.controller) {
-				let attackPositions = this.room.controller.pos.availableNeighbors(true);
-				this.directiveMemory.attackPositions = attackPositions;
-				return attackPositions;
-			}
-		}
-		return [];
-		//log.error("No attack positions reported for controller attack.");
-	}
-}
-
-export class ControllerAttackerZerg extends Zerg {
-	memory: ControllerAttackerMemory;
 }

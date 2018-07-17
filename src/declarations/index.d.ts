@@ -74,7 +74,8 @@ interface IAssimilator {
 interface IOvermind {
 	cache: ICache;								// is actually GameCache
 	colonies: { [roomName: string]: any }; 		// is actually { [roomName: string]: Colony }
-	overlords: { [overlordName: string]: any }; // is actually { [overlordName: string]: Overlord }
+	overlords: { [ref: string]: any }; 			// is actually { [ref: string]: Overlord }
+	spawnGroups: { [ref: string]: any };		// is actually { [ref: string]: SpawnGroup }
 	colonyMap: { [roomName: string]: string };
 	memory: IOvermindMemory;
 	terminalNetwork: ITerminalNetwork;			// is actually TerminalNetwork
