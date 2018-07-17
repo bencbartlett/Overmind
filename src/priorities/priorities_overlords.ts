@@ -22,6 +22,8 @@ export var OverlordPriority = {
 	realTime: { 				// Requests that a user is typically actively waiting for in real life
 		claim  : 300,
 		pioneer: 301,
+
+		//controllerAttack: 399   // Reserved to give controller attacks a high priority
 	},
 
 	ownedRoom: { 				// Operation of an owned room
@@ -36,6 +38,7 @@ export var OverlordPriority = {
 		destroy  : 500,
 		healPoint: 501,
 		siege    : 502,
+		controllerAttack: 399,  // Reserved above to have a high priority
 	},
 
 	upgrading: {				// Spawning upgraders

@@ -22,6 +22,7 @@ import {DirectiveTerminalEmergencyState} from './logistics/terminalState_emergen
 import {DirectiveRPBunker} from './roomPlanner/roomPlanner_bunker';
 import {DirectiveTerminalRebuildState} from './logistics/terminalState_rebuild';
 import {DirectiveTerminalEvacuateState} from './logistics/terminalState_evacuate';
+import {DirectiveControllerAttack} from './offense/controllerAttack';
 
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 	switch (flag.color) {
@@ -44,7 +45,10 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 				case COLOR_BLUE:
 					return new DirectiveGuard(flag);
 				case COLOR_PURPLE:
-					return new DirectiveGuardSwarm(flag);
+					return new DirectiveControllerAttack(flag);
+				//Changed to RED/PURPLE as requested.  GuardSwarm needs a new color
+				//case COLOR_PURPLE:
+					//return new DirectiveGuardSwarm(flag);
 				case COLOR_ORANGE:
 					return new DirectiveSiege(flag);
 				case COLOR_GREEN:
