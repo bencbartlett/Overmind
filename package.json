@@ -18,13 +18,9 @@
     "clean": "rm -rf tsc-out && rm -rf dist",
     "build-obfuscate": "tsc && javascript-obfuscator tsc-out/Overmind.js --output src/Overmind_obfuscated.js --compact false --self-defending true --string-array true --string-array-threshold 1 --string-array-encoding true && javascript-obfuscator tsc-out/assimilation/Assimilator.js --output src/assimilation/Assimilator_obfuscated.js --compact false --self-defending true --string-array true --string-array-threshold 1 --string-array-encoding true",
     "compile": "rollup -c && rm -rf .rpt2_cache",
-    "push-main": "rollup -c --dest main",
-    "push-pserver": "rollup -c --dest pserver",
-    "push-sim": "rollup -c --dest sim",
-    "test": "npm run clean && npm run build",
-    "watch-main": "rollup -cw --dest main",
-    "watch-pserver": "rollup -cw --dest pserver",
-    "watch-sim": "rollup -cw --dest sim"
+    "push-main": "rollup -c --environment DEST:main",
+    "push-pserver": "rollup -c --environment DEST:pserver",
+    "test": "npm run clean && npm run build"
   },
   "devDependencies": {
     "@types/lodash": "^3.10.1",

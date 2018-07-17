@@ -87,6 +87,16 @@ export class Mem {
 		if (Memory.autoclaim == undefined) {
 			Memory.autoclaim = AUTOMATIC_CLAIMING;
 		}
+		// Make global memory
+		this.initGlobalMemory();
+	}
+
+	private static initGlobalMemory() {
+		global._cache = {
+			accessed  : {},
+			expiration: {},
+			structures: {},
+		};
 	}
 
 	private static cleanCreeps() {

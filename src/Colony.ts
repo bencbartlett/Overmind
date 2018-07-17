@@ -29,6 +29,7 @@ import {Mem} from './Memory';
 import {RandomWalkerScoutOverlord} from './overlords/scouting/randomWalker';
 import {EXPANSION_EVALUATION_FREQ, ExpansionPlanner} from './strategy/ExpansionPlanner';
 import {log} from './console/log';
+import {assimilationLocked} from './assimilation/decorator';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -82,6 +83,7 @@ const defaultColonyMemory: ColonyMemory = {
 };
 
 @profile
+@assimilationLocked
 export class Colony {
 	// Colony memory
 	memory: ColonyMemory;								// Memory.colonies[name]

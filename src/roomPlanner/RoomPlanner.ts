@@ -651,7 +651,7 @@ export class RoomPlanner {
 	}
 
 	init(): void {
-		if (Memory.bot) {
+		if (this.active && Memory.bot) {
 			let bunkerAnchor: RoomPosition;
 			if (this.colony.spawns.length > 0) { // in case of very first spawn
 				let lowerRightSpawn = maxBy(this.colony.spawns, s => 50 * s.pos.y + s.pos.x)!;

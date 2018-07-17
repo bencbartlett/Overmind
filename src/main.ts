@@ -39,31 +39,27 @@ import OM from 'Overmind_obfuscated';
 import {log} from './console/log';
 import {VersionMigration} from './versionMigration/migrator';
 import {isIVM} from './utilities/utils';
+import {alignedNewline, bullet} from './utilities/stringConstants';
 // =====================================================================================================================
 
-var _Overmind = (<any>OM)._Overmind as (new() => IOvermind);
+const _Overmind = (<any>OM)._Overmind as (new() => IOvermind);
+
+// @formatter:on
 
 if (USE_PROFILER) profiler.enable();
-log.alert(`Codebase updated or global reset. Current version: Overmind v${__VERSION__}, ` +
-		  `checksum: ${Assimilator.generateChecksum()}`);
-log.alert(`Type "help" for a list of console commands.`);
 
-// Execute this every global reset
 Mem.format();
 OvermindConsole.init();
 VersionMigration.run();
 
-global._cache = {
-	accessed  : {},
-	expiration: {},
-	structures: {},
-};
+log.alert(`Codebase updated or global reset. Type "help" for a list of console commands.` + alignedNewline +
+		  bullet + `Version:  Overmind v${__VERSION__}` + alignedNewline +
+		  bullet + `Checksum: ${Assimilator.generateChecksum()}`);
 
 // Main loop
 function main(): void {
 	if (!isIVM()) {
-		log.warning(`Overmind requires the use of isolated virtual machine. ` +
-					`Go to https://screeps.com/a/#!/account/runtime and select 'Isolated'.`);
+		log.warning(`Overmind requires isolated-VM to run. Change settings at screeps.com/a/#!/account/runtime`);
 		return;
 	}
 	if (Game.cpu.bucket > 500) {
@@ -80,6 +76,10 @@ function main(): void {
 	}
 }
 
+Assimilator.validate(main);
+
 export function loop(): void {
 	profiler.wrap(main);
 }
+
+Assimilator.validate(loop);

@@ -341,16 +341,16 @@ export class Movement {
 		if (!blockingCreep) return true;
 		let moved = !!this.recursivePush(blockingCreep);
 		if (moved) {
-			log.info(`Moved creep ${blockingCreep.name} off of ${blockingCreep.pos.print}.`);
+			log.debug(`Moved creep ${blockingCreep.name} off of ${blockingCreep.pos.print}.`);
 			return true;
 		} else {
 			if (suicide) {
-				log.info(`Could not move creep ${blockingCreep.name} off of ${blockingCreep.pos.print}! ` +
-						 `Suiciding creep! (RIP)`);
+				log.debug(`Could not move creep ${blockingCreep.name} off of ${blockingCreep.pos.print}! ` +
+						  `Suiciding creep! (RIP)`);
 				blockingCreep.suicide();
 				return true;
 			} else {
-				log.info(`Could not move creep ${blockingCreep.name} off of ${blockingCreep.pos.print}!`);
+				log.debug(`Could not move creep ${blockingCreep.name} off of ${blockingCreep.pos.print}!`);
 				return false;
 			}
 		}

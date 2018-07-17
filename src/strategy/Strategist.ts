@@ -9,6 +9,7 @@ import {MIN_EXPANSION_DISTANCE} from './ExpansionPlanner';
 import {maxBy} from '../utilities/utils';
 import {log} from '../console/log';
 import {Pathing} from '../movement/Pathing';
+import {assimilationLocked} from '../assimilation/decorator';
 
 
 const CHECK_EXPANSION_FREQUENCY = 1000;
@@ -25,6 +26,7 @@ interface StrategistMemory {
 
 const defaultStrategistMemory: StrategistMemory = {};
 
+@assimilationLocked
 export class Strategist implements IStrategist {
 
 	memory: StrategistMemory;

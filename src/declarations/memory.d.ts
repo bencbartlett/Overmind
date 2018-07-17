@@ -1,4 +1,5 @@
 interface Memory {
+	assimilator: any;
 	Overmind: {};
 	colonies: { [name: string]: any };
 	creeps: { [name: string]: CreepMemory; };

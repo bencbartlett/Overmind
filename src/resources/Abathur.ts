@@ -45,6 +45,16 @@ export const wantedStockAmounts: { [key: string]: number } = {
 	XGH2O: 12000 	// For upgraders
 };
 
+export const baseStockAmounts: { [key: string]: number } = {
+	[RESOURCE_CATALYST] : 5000,
+	[RESOURCE_ZYNTHIUM] : 5000,
+	[RESOURCE_LEMERGIUM]: 5000,
+	[RESOURCE_KEANIUM]  : 5000,
+	[RESOURCE_UTRIUM]   : 5000,
+	[RESOURCE_OXYGEN]   : 5000,
+	[RESOURCE_HYDROGEN] : 5000
+};
+
 export interface Reaction {
 	mineralType: string;
 	amount: number;
@@ -93,7 +103,7 @@ export class Abathur {
 
 	static settings = {
 		minBatchSize: 100,	// anything less than this wastes time
-		maxBatchSize: 1000, // manager carry capacity
+		maxBatchSize: 800, 	// manager/queen carry capacity
 		sleepTime   : 100,  // sleep for this many ticks once you can't make anything
 	};
 

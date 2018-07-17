@@ -50,6 +50,8 @@ export const LOG_VSC_URL_TEMPLATE = (path: string, line: string) => {
 
 // <caller> (<source>:<line>:<column>)
 const stackLineRe = /([^ ]*) \(([^:]*):([0-9]*):([0-9]*)\)/;
+const FATAL = -1;
+const fatalColor = '#d65156';
 
 interface SourcePos {
 	compiled: string;
@@ -195,6 +197,10 @@ export class Log {
 		return this;
 	}
 
+	public throw(e: Error) {
+		console.log.apply(this, this.buildArguments(FATAL).concat([color(e.toString(), fatalColor)]));
+	}
+
 	public error(...args: any[]) {
 		if (this.level >= LogLevels.ERROR) {
 			console.log.apply(this, this.buildArguments(LogLevels.ERROR).concat([].slice.call(args)));
@@ -264,6 +270,9 @@ export class Log {
 				break;
 			case LogLevels.DEBUG:
 				out.push(color('DEBUG  ', 'gray'));
+				break;
+			case FATAL:
+				out.push(color('FATAL  ', fatalColor));
 				break;
 			default:
 				break;

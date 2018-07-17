@@ -19,8 +19,8 @@ import {ExpansionPlanner} from '../strategy/ExpansionPlanner';
 
 const RECACHE_TIME = 2500;
 const OWNED_RECACHE_TIME = 1000;
-const SCORE_RECALC_PROB = 0.2;
-const FALSE_SCORE_RECALC_PROB = 0.05;
+const SCORE_RECALC_PROB = 0.05;
+const FALSE_SCORE_RECALC_PROB = 0.01;
 
 const RoomIntelMemoryDefaults = {};
 
@@ -95,7 +95,7 @@ export class RoomIntel {
 					}
 				}
 				let recacheTime = isOwned ? OWNED_RECACHE_TIME : RECACHE_TIME;
-				room.memory.expiration = getCacheExpiration(recacheTime, 50);
+				room.memory.expiration = getCacheExpiration(recacheTime, 250);
 				if (shouldReturn) {
 					return; // only compute roomData for one room per tick
 				}

@@ -5,8 +5,9 @@ import {Energetics} from './Energetics';
 import {Colony, getAllColonies} from '../Colony';
 import {maxBy, mergeSum, minBy, minMax} from '../utilities/utils';
 import {RESOURCE_IMPORTANCE} from '../resources/map_resources';
-import {priorityStockAmounts, wantedStockAmounts} from '../resources/Abathur';
+import {baseStockAmounts, priorityStockAmounts, wantedStockAmounts} from '../resources/Abathur';
 import {alignedNewline, bullet, rightArrow} from '../utilities/stringConstants';
+import {assimilationLocked} from '../assimilation/decorator';
 
 interface TerminalNetworkMemory {
 	equalizeIndex: number;
@@ -21,7 +22,8 @@ function colonyOf(terminal: StructureTerminal): Colony {
 }
 
 function wantedAmount(colony: Colony, resource: ResourceConstant): number {
-	return (wantedStockAmounts[resource] || priorityStockAmounts[resource] || 0) - (colony.assets[resource] || 0);
+	return (wantedStockAmounts[resource] || priorityStockAmounts[resource] || baseStockAmounts[resource] || 0)
+		   - (colony.assets[resource] || 0);
 }
 
 
@@ -55,6 +57,7 @@ export const TerminalState_Rebuild = {
 };
 
 @profile
+@assimilationLocked
 export class TerminalNetwork implements ITerminalNetwork {
 
 	terminals: StructureTerminal[];					// All terminals
@@ -68,17 +71,28 @@ export class TerminalNetwork implements ITerminalNetwork {
 	private cache: {
 		sellPrice: { [resourceType: string]: number }
 	};
-	settings: {
+
+	static settings = {
 		equalize: {
-			frequency: number,
-			maxEnergySendSize: number,
-			maxMineralSendSize: number,
-			tolerance: {
-				energy: number,
-				power: number,
-				default: number,
-				[resourceType: string]: number,
-			}
+			frequency         : 2 * (TERMINAL_COOLDOWN + 1),
+			maxEnergySendSize : 25000,
+			maxMineralSendSize: 5000,
+			tolerance         : {
+				[RESOURCE_ENERGY]: 50000,
+				[RESOURCE_POWER] : 5000,
+				default          : 2000
+			} as { [resourceType: string]: number },
+			resources         : [
+				RESOURCE_ENERGY,
+				RESOURCE_POWER,
+				RESOURCE_CATALYST,
+				RESOURCE_ZYNTHIUM,
+				RESOURCE_LEMERGIUM,
+				RESOURCE_KEANIUM,
+				RESOURCE_UTRIUM,
+				RESOURCE_OXYGEN,
+				RESOURCE_HYDROGEN,
+			],
 		}
 	};
 
@@ -92,18 +106,6 @@ export class TerminalNetwork implements ITerminalNetwork {
 		this.alreadySent = [];
 		this.exceptionTerminals = {}; 		// populated in init()
 		this.assets = {}; 					// populated in init()
-		this.settings = {
-			equalize: {
-				frequency         : 2 * (TERMINAL_COOLDOWN + 1),
-				maxEnergySendSize : 25000,
-				maxMineralSendSize: 5000,
-				tolerance         : {
-					energy : 50000,
-					power  : 5000,
-					default: 1000
-				}
-			}
-		};
 		this.notifications = [];
 		this.averageFullness = _.sum(_.map(this.terminals,
 										   t => _.sum(t.store) / t.storeCapacity)) / this.terminals.length;
@@ -277,8 +279,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 
 	private equalize(resourceType: ResourceConstant, terminals = this.terminals, verbose = false): void {
 		log.info(`Equalizing ${resourceType} within terminal network`);
-		let maxSendSize = resourceType == RESOURCE_ENERGY ? this.settings.equalize.maxEnergySendSize :
-						  this.settings.equalize.maxMineralSendSize;
+		let maxSendSize = resourceType == RESOURCE_ENERGY ? TerminalNetwork.settings.equalize.maxEnergySendSize
+														  : TerminalNetwork.settings.equalize.maxMineralSendSize;
 		let averageAmount = _.sum(_.map(terminals,
 										terminal => (colonyOf(terminal).assets[resourceType] || 0))) / terminals.length;
 		let terminalsByResource = _.sortBy(terminals, terminal => (colonyOf(terminal).assets[resourceType] || 0));
@@ -293,11 +295,12 @@ export class TerminalNetwork implements ITerminalNetwork {
 			if (verbose) log.debug(` > ${sender.room.print} to ${receiver.room.print}...`);
 			let senderAmount = colonyOf(sender).assets[resourceType] || 0;
 			let receiverAmount = colonyOf(receiver).assets[resourceType] || 0;
-			let tolerance = this.settings.equalize.tolerance[resourceType] || this.settings.equalize.tolerance.default;
+			let tolerance = TerminalNetwork.settings.equalize.tolerance[resourceType]
+							|| TerminalNetwork.settings.equalize.tolerance.default;
 			if (verbose) log.debug(`    sender amt: ${senderAmount}  ` +
 								   `receiver amt: ${receiverAmount}  tolerance: ${tolerance}`);
 			if (senderAmount - receiverAmount < tolerance) {
-				log.debug(`   Low tolerance`);
+				if (verbose) log.debug(`   Low tolerance`);
 				continue; // skip if colonies are close to equilibrium
 			}
 			let senderSurplus = senderAmount - averageAmount;
@@ -317,13 +320,20 @@ export class TerminalNetwork implements ITerminalNetwork {
 	}
 
 	private equalizeCycle(): void {
+		const equalizeResources = TerminalNetwork.settings.equalize.resources;
+		if (this.memory.equalizeIndex >= equalizeResources.length) {
+			this.memory.equalizeIndex = 0;
+		}
 		// Equalize current resource type
-		this.equalize(RESOURCES_ALL[this.memory.equalizeIndex]);
+		let resource = equalizeResources[this.memory.equalizeIndex];
+		let terminals = resource == RESOURCE_POWER ? _.filter(this.terminals, t => colonyOf(t).powerSpawn != undefined)
+												   : this.terminals;
+		this.equalize(resource, terminals);
 		// Determine next resource type to equalize; most recent resourceType gets cycled to end
-		let resourceEqualizeOrder = RESOURCES_ALL.slice(this.memory.equalizeIndex + 1)
-												 .concat(RESOURCES_ALL.slice(0, this.memory.equalizeIndex + 1));
+		let resourceEqualizeOrder = equalizeResources.slice(this.memory.equalizeIndex + 1)
+													 .concat(equalizeResources.slice(0, this.memory.equalizeIndex + 1));
 		let allColonies = getAllColonies();
-		let tolerance = this.settings.equalize.tolerance.default;
+		let tolerance = TerminalNetwork.settings.equalize.tolerance.default;
 		let nextResourceType = _.find(resourceEqualizeOrder, function (resource) {
 			for (let col of allColonies) {
 				if (wantedAmount(col, resource) < -1 * tolerance) { // colony has too much
@@ -332,7 +342,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 			}
 		});
 		// Set next equalize resource index
-		this.memory.equalizeIndex = _.findIndex(RESOURCES_ALL, resource => resource == nextResourceType);
+		this.memory.equalizeIndex = _.findIndex(equalizeResources, resource => resource == nextResourceType);
 	}
 
 	registerTerminalState(terminal: StructureTerminal, state: TerminalState): void {
@@ -343,8 +353,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 	/* Maintains a constant restricted store of resources */
 	private handleTerminalState(terminal: StructureTerminal, state: TerminalState): void {
 		for (let resourceType of RESOURCE_IMPORTANCE) {
-			let maxSendSize = resourceType == RESOURCE_ENERGY ? this.settings.equalize.maxEnergySendSize :
-							  this.settings.equalize.maxMineralSendSize;
+			let maxSendSize = resourceType == RESOURCE_ENERGY ? TerminalNetwork.settings.equalize.maxEnergySendSize
+															  : TerminalNetwork.settings.equalize.maxMineralSendSize;
 			let amount = (terminal.store[resourceType] || 0);
 			let targetAmount = state.amounts[resourceType] || 0;
 			// Send excess resources away to other colony
@@ -390,7 +400,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 			this.handleTerminalState(deref(terminalID) as StructureTerminal, this.exceptionTerminals[terminalID]);
 		}
 		// Equalize resources
-		if (Game.time % this.settings.equalize.frequency == 0) {
+		if (Game.time % TerminalNetwork.settings.equalize.frequency == 0) {
 			this.equalizeCycle();
 		}
 		// else if (Game.time % this.settings.equalize.frequency == 20) {

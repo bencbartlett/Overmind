@@ -65,7 +65,7 @@ declare const Assimilator: IAssimilator;
 
 interface IAssimilator {
 
-	registerClass(code: any): void;
+	validate(code: any): void;
 
 	generateChecksum(): string;
 

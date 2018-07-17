@@ -111,7 +111,7 @@ export class Overseer {
 		}
 
 		// Place reserving/harvesting directives if needed
-		if (Memory.bot && Game.time % 100 == this.colony.id) {
+		if (Memory.bot && Game.time % 250 == 2 * this.colony.id) {
 			let numSources = _.sum(this.colony.roomNames, roomName => (Memory.rooms[roomName].src || []).length);
 			let numRemotes = numSources - this.colony.room.sources.length;
 			if (numRemotes < Colony.settings.remoteSourcesByLevel[this.colony.level]) {

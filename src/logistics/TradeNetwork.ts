@@ -3,6 +3,7 @@ import {profile} from '../profiler/decorator';
 import {maxBy, minBy} from '../utilities/utils';
 import {alignedNewline, bullet, leftArrow, rightArrow} from '../utilities/stringConstants';
 import {log} from '../console/log';
+import {assimilationLocked} from '../assimilation/decorator';
 
 interface MarketCache {
 	sell: { [resourceType: string]: { high: number, low: number } },
@@ -38,6 +39,7 @@ export const maxMarketPrices: { [resourceType: string]: number } = {
 };
 
 @profile
+@assimilationLocked
 export class TraderJoe implements ITradeNetwork {
 
 	static settings = {
@@ -270,19 +272,19 @@ export class TraderJoe implements ITradeNetwork {
 		}
 	}
 
-	private logTransaction(order: Order, destinationRoomName: string, amount: number, response: number): void {
+	private logTransaction(order: Order, terminalRoomName: string, amount: number, response: number): void {
 		let action = order.type == ORDER_SELL ? 'BOUGHT ' : 'SOLD   ';
 		let cost = (order.price * amount).toFixed(2);
-		let fee = order.roomName ? Game.market.calcTransactionCost(amount, order.roomName, destinationRoomName) : 0;
-		let roomName = Game.rooms[destinationRoomName] ? Game.rooms[destinationRoomName].print : destinationRoomName;
+		let fee = order.roomName ? Game.market.calcTransactionCost(amount, order.roomName, terminalRoomName) : 0;
+		let roomName = Game.rooms[terminalRoomName] ? Game.rooms[terminalRoomName].print : terminalRoomName;
 		let msg: string;
 		if (order.type == ORDER_SELL) {
-			msg = `BOUGHT ${amount} of ${order.resourceType} ${leftArrow} ${order.roomName} (result: ${response})`;
+			msg = `${roomName} ${leftArrow} ${amount} ${order.resourceType} ${leftArrow} ` +
+				  `${order.roomName} (result: ${response})`;
 		} else {
-			msg = `SOLD   ${amount} of ${order.resourceType} ${rightArrow} ${order.roomName} (result: ${response})`;
+			msg = `${roomName} ${rightArrow} ${amount} ${order.resourceType} ${rightArrow} ` +
+				  `${order.roomName} (result: ${response})`;
 		}
-		// log.info(`${roomName}: ${action} ${amount} of ${order.resourceType} at ${order.roomName}.  ` +
-		// 		 `Price: ${cost} credits  Fee: ${fee} energy  Response: ${response}`);
 		this.notify(msg);
 	}
 

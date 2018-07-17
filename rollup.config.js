@@ -11,10 +11,10 @@ import typescript from "rollup-plugin-typescript2";
 import screeps from "rollup-plugin-screeps";
 
 let cfg;
-const i = process.argv.indexOf("--dest") + 1;
-if (i === 0) {
+const dest = process.env.DEST;
+if (!dest) {
     console.log("No destination specified - code will be compiled but not uploaded");
-} else if (i >= process.argv.length || (cfg = require("./screeps")[process.argv[i]]) == null) {
+} else if ((cfg = require("./screeps")[dest]) == null) {
     throw new Error("Invalid upload destination");
 }
 
@@ -40,6 +40,9 @@ export default {
     onwarn: function (warning) {
         // Skip default export warnings from using obfuscated overmind file in main
         if (warning.toString().includes('commonjs-proxy')) {
+            return;
+        }
+        if (warning.toString().includes('Circular dependency')) {
             return;
         }
         // console.warn everything else

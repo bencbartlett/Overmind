@@ -3,15 +3,18 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
-Note: as of this patch, Overmind no longer supports shared-vm. Isolated-vm is now required; you can set this in your account runtime settings.
+Important notes as of this patch:
+- Overmind no longer supports shared-vm. Isolated-vm is now required; you can set this in your account runtime settings.
+- The codebase can no longer be deployed using `rollup -c --dest main` or `rollup -c --dest pserver`. Use `npm run push-main` or `npm run push-pserver` instead.
 
 ### Added
 - Overmind is now capable of fully automatic operation! This patch added functionality to automatically reserve and claim rooms without any user input required. These are turned on by default; you can use the `setMode()` and `setAutoClaim()` console commands to toggle automatic operation and (separately) automatic room claiming.
     - Added the `Strategist` module, instantiated as `Overmind.strategist` is bot mode is enabled. Strategist is currently responsible for choosing the next room to colonize, but will contain more high-level decision making functionality in the future.
     - Added the `ExpansionPlanner` module to generate numerical scores for rooms to determine outpost/expansion preferences
     - Added several methods to the `Cartographer` module (formerly `WorldMap`)
-- Added the `Assimilator` module, which verifies the integrity of an Overmind codebase. This will be used for the upcoming assimilation patch. The source code for this module is obfuscated; see the obfuscated file comments for details.
+- Added the `Assimilator` module, which verifies the integrity of an Overmind codebase. This will be used for the upcoming assimilation patch. The source code for this module is obfuscated; see the obfuscated file comments in `/src/assimilation/Assimilator_obfuscated.js` for details.
     - Added an implementation of sha256 hashing for use by this module
+    - Anything marked with `@assimilationLocked` or registered with `Assimilator.validate()` cannot be modified without invalidating assimilated status
 - Added the `Movement` library, which replaces Traveler as the default method of moving creeps around in Overmind
     - Added (and improved multiple times) creep pushing behavior that moves idling creeps out of the way
         - Creeps have move priorities, which characterize how important their assignment is. Creeps will yield to other creeps with more important priorities.
@@ -35,6 +38,7 @@ Note: as of this patch, Overmind no longer supports shared-vm. Isolated-vm is no
     - Dropped resources and tombstones now directly request collection from the logistics network rather than using a logistics directive
     - Changed order of operations in `predictedRequestAmount` to yield more accurate results when near target store/energy capacity
 - RoadLogistics now uses about 80% less CPU. Workers now get a chained task object to work more efficiently when repairing remote roads.
+- TerminalNetwork now equalizes all base resources (energy, power, all base minerals)
 - Workers now include dropped energy in list of objects they can recharge from and pick their recharge target more intelligently, accounting for other targeting workers
 - Workers and pioneers now will use energy from available unowned storage structures if available
 - Improvements to room planner demolishing behavior:
@@ -47,6 +51,7 @@ Note: as of this patch, Overmind no longer supports shared-vm. Isolated-vm is no
 - Room planner now correctly restores flag memories when reopening a session
 - Fixed a bug introduced in the last patch that caused workers to ignore the withdraw limit
 - Fixed a rare bug in bootstrapping that could prevent a colony from correctly recovering from a crash
+- Fixed (?) a really weird bug where Colonies would sometimes incorrectly compute assets. The bug was fixed by adding print statements and I have no idea why.
 
 ### Removed
 - Removed dependencies for `Traveler`, replacing with in-house `Movement` and `Pathing` libraries
