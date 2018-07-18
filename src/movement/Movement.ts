@@ -306,25 +306,32 @@ export class Movement {
 
 		if (!otherCreep.memory) return false;
 		otherCreep = normalizeZerg(otherCreep);
-		if (!isZerg(otherCreep)) {
-			log.debug(`${otherCreep.name}@${otherCreep.pos.print} is not Zerg! (Why?)`);
-		}
-		let otherData = otherCreep.memory._go as MoveData | undefined;
-
 		let pushDirection = this.getPushDirection(creep, otherCreep);
+		let otherData = otherCreep.memory._go as MoveData | undefined;
 		let outcome = otherCreep.move(pushDirection);
-		if (outcome != OK) return false;
-
-		if (otherData && otherData.path) {
-			// TODO: I think there's a bug here if creep starts traveling somewhere on same tick as being pushed
-			otherData.path = Pathing.oppositeDirection(pushDirection) + otherData.path;
-			// otherData.delay = 1;
-		} else {
-			if (isZerg(otherCreep)) {
+		if (isZerg(otherCreep)) {
+			if (outcome == OK) {
+				if (otherData && otherData.path && !otherCreep.blockMovement) { // don't add to path unless you moved
+					otherData.path = Pathing.oppositeDirection(pushDirection) + otherData.path;
+					// otherData.delay = 1;
+				}
 				otherCreep.blockMovement = true;
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			log.debug(`${otherCreep.name}@${otherCreep.pos.print} is not Zerg! (Why?)`);
+			if (outcome == OK) {
+				if (otherData && otherData.path) {
+					otherData.path = Pathing.oppositeDirection(pushDirection) + otherData.path;
+					// otherData.delay = 1;
+				}
+				return true;
+			} else {
+				return false;
 			}
 		}
-		return true;
 	}
 
 	/* Recursively moves creeps out of the way of a position to make room for something, such as a spawning creep.

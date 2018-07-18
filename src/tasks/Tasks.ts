@@ -23,6 +23,7 @@ import {TaskWithdraw, withdrawTargetType} from './instances/withdraw';
 import {dropTargetType, TaskDrop} from './instances/drop';
 import {profile} from '../profiler/decorator';
 import {TaskWithdrawAll, withdrawAllTargetType} from './instances/withdrawAll';
+import {TaskRecharge} from './instances/recharge';
 
 @profile
 export class Tasks {
@@ -110,6 +111,10 @@ export class Tasks {
 
 	static rangedAttack(target: rangedAttackTargetType, options = {} as TaskOptions): TaskRangedAttack {
 		return new TaskRangedAttack(target, options);
+	}
+
+	static recharge(minEnergy = 0, options = {} as TaskOptions): TaskRecharge {
+		return new TaskRecharge(null, minEnergy, options);
 	}
 
 	static repair(target: repairTargetType, options = {} as TaskOptions): TaskRepair {

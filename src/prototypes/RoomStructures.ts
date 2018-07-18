@@ -33,7 +33,7 @@ Room.prototype._refreshStructureCache = function () {
 
 multipleList.forEach(function (type) {
 	Object.defineProperty(Room.prototype, type + 's', {
-		get: function () {
+		get         : function () {
 			if (this['_' + type + 's']) {
 				return this['_' + type + 's'];
 			} else {
@@ -52,7 +52,7 @@ multipleList.forEach(function (type) {
 
 singleList.forEach(function (type) {
 	Object.defineProperty(Room.prototype, type, {
-		get: function () {
+		get         : function () {
 			if (this['_' + type]) {
 				return this['_' + type];
 			} else {
@@ -120,6 +120,17 @@ Object.defineProperty(Room.prototype, 'repairables', {
 		return this._repairables;
 	},
 	configurable: true,
+});
+
+Object.defineProperty(Room.prototype, 'rechargeables', {
+	get() {
+		if (!this._rechargeables) {
+			this._rechargeables = [...this.storageUnits,
+								   ...this.droppedEnergy,
+								   ...this.tombstones];
+		}
+		return this._rechargeables;
+	}
 });
 
 Object.defineProperty(Room.prototype, 'barriers', {

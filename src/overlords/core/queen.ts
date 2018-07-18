@@ -3,12 +3,9 @@ import {Overlord} from '../Overlord';
 import {Hatchery} from '../../hiveClusters/hatchery';
 import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
-import {log} from '../../console/log';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {CreepSetup} from '../CreepSetup';
-import {maxBy, minMax} from '../../utilities/utils';
-import {isResource} from '../../declarations/typeGuards';
 
 export const QueenSetup = new CreepSetup('queen', {
 	pattern  : [CARRY, CARRY, MOVE],
@@ -59,25 +56,26 @@ export class QueenOverlord extends Overlord {
 		} else if (this.hatchery.battery && !this.hatchery.battery.isEmpty) {
 			queen.task = Tasks.withdraw(this.hatchery.battery);
 		} else {
-			let rechargeObjects = _.compact([...this.colony.room.storageUnits,
-											 ...(this.colony.room.drops[RESOURCE_ENERGY] || []),
-											 ..._.map(this.colony.miningSites, site => site.output!),
-											 ...this.colony.tombstones]) as rechargeObjectType[];
-			rechargeObjects = _.filter(rechargeObjects, obj => isResource(obj) ? obj.amount > 0 : obj.energy > 0);
-			let target = maxBy(rechargeObjects, function (obj) {
-				let amount = isResource(obj) ? obj.amount : obj.energy;
-				amount = minMax(amount, 0, queen.carryCapacity);
-				return amount / (queen.pos.getMultiRoomRangeTo(obj.pos) + 1);
-			});
-			if (target) {
-				if (target instanceof Resource) {
-					queen.task = Tasks.pickup(target);
-				} else {
-					queen.task = Tasks.withdraw(target);
-				}
-			} else {
-				log.warning(`No valid withdraw target for queen at ${queen.pos.print}!`);
-			}
+			// let rechargeObjects = _.compact([...this.colony.room.storageUnits,
+			// 								 ...(this.colony.room.drops[RESOURCE_ENERGY] || []),
+			// 								 ..._.map(this.colony.miningSites, site => site.output!),
+			// 								 ...this.colony.tombstones]) as rechargeObjectType[];
+			// rechargeObjects = _.filter(rechargeObjects, obj => isResource(obj) ? obj.amount > 0 : obj.energy > 0);
+			// let target = maxBy(rechargeObjects, function (obj) {
+			// 	let amount = isResource(obj) ? obj.amount : obj.energy;
+			// 	amount = minMax(amount, 0, queen.carryCapacity);
+			// 	return amount / (queen.pos.getMultiRoomRangeTo(obj.pos) + 1);
+			// });
+			// if (target) {
+			// 	if (target instanceof Resource) {
+			// 		queen.task = Tasks.pickup(target);
+			// 	} else {
+			// 		queen.task = Tasks.withdraw(target);
+			// 	}
+			// } else {
+			// 	log.warning(`No valid withdraw target for queen at ${queen.pos.print}!`);
+			// }
+			queen.task = Tasks.recharge();
 		}
 	}
 

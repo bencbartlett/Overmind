@@ -27,6 +27,7 @@ import {TaskTransferAll, transferAllTargetType, transferAllTaskName} from './ins
 import {log} from '../console/log';
 import {TaskWithdrawAll, withdrawAllTargetType, withdrawAllTaskName} from './instances/withdrawAll';
 import profiler from 'screeps-profiler';
+import {rechargeTaskName, TaskRecharge} from './instances/recharge';
 
 export function initializeTask(protoTask: protoTask): Task {
 	// Retrieve name and target data from the protoTask
@@ -84,6 +85,9 @@ export function initializeTask(protoTask: protoTask): Task {
 			break;
 		case rangedAttackTaskName:
 			task = new TaskRangedAttack(target as rangedAttackTargetType);
+			break;
+		case rechargeTaskName:
+			task = new TaskRecharge(null);
 			break;
 		case repairTaskName:
 			task = new TaskRepair(target as repairTargetType);

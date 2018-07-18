@@ -122,6 +122,7 @@ export class Colony {
 	flags: Flag[];										// | Flags assigned to the colony
 	constructionSites: ConstructionSite[];				// | Construction sites in all colony rooms
 	repairables: Structure[];							// | Repairable structures, discounting barriers and roads
+	rechargeables: rechargeObjectType[];				// | Things that can be recharged from
 	// obstacles: RoomPosition[]; 							// | List of other obstacles, e.g. immobile creeps
 	destinations: RoomPosition[];
 	// Hive clusters
@@ -236,6 +237,7 @@ export class Colony {
 		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
 		this.drops = _.merge(_.map(this.rooms, room => room.drops));
 		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
+		this.rechargeables = _.flatten(_.map(this.rooms, room => room.rechargeables));
 		// this.obstacles = [];
 	}
 

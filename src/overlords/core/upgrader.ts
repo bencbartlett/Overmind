@@ -4,10 +4,8 @@ import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {Pathing} from '../../movement/Pathing';
 import {CreepSetup} from '../CreepSetup';
 import {boostResources} from '../../resources/map_resources';
-import {minBy} from '../../utilities/utils';
 
 class UpgraderSetup extends CreepSetup {
 	static role = 'upgrader';
@@ -81,13 +79,16 @@ export class UpgradingOverlord extends Overlord {
 			}
 			// Find somewhere else to recharge from
 			else {
-				let rechargeTargets = _.filter(_.compact([this.colony.storage!,
-														  this.colony.terminal!,
-														  ..._.map(this.colony.miningSites, site => site.output!),
-														  ...this.colony.tombstones]),
-											   s => s.energy > 0);
-				let target = minBy(rechargeTargets, (s: RoomObject) => Pathing.distance(this.upgradeSite.pos, s.pos));
-				if (target) upgrader.task = Tasks.withdraw(target);
+				// let rechargeTargets = _.filter(_.compact([this.colony.storage!,
+				// 										  this.colony.terminal!,
+				// 										  ..._.map(this.colony.miningSites, site => site.output!),
+				// 										  ...this.colony.tombstones]),
+				// 							   s => s.energy > 0);
+				// let target = minBy(rechargeTargets, (s: RoomObject) => Pathing.distance(this.upgradeSite.pos, s.pos));
+				// if (target) upgrader.task = Tasks.withdraw(target);
+				if (this.upgradeSite.battery && this.upgradeSite.battery.targetedBy.length == 0) {
+					upgrader.task = Tasks.recharge();
+				}
 			}
 		}
 	}

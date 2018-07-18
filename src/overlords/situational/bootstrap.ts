@@ -105,7 +105,11 @@ export class BootstrappingOverlord extends Overlord {
 
 	private rechargeActions(filler: Zerg) {
 		let target = filler.pos.findClosestByRange(this.withdrawStructures);
-		if (target) filler.task = Tasks.withdraw(target);
+		if (target) {
+			filler.task = Tasks.withdraw(target);
+		} else {
+			filler.task = Tasks.recharge();
+		}
 	}
 
 	private handleFiller(filler: Zerg) {

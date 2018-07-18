@@ -6,8 +6,6 @@ import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {CreepSetup} from '../CreepSetup';
 import {BuildPriorities} from '../../priorities/priorities_structures';
-import {maxBy, minMax} from '../../utilities/utils';
-import {isResource} from '../../declarations/typeGuards';
 import {GlobalCache} from '../../caching';
 import {Task} from '../../tasks/Task';
 
@@ -21,13 +19,6 @@ const WorkerEarlySetup = new CreepSetup('worker', {
 	sizeLimit: Infinity,
 });
 
-export type rechargeObjectType = StructureStorage
-	| StructureTerminal
-	| StructureContainer
-	| StructureLink
-	| Tombstone
-	| Resource;
-
 @profile
 export class WorkerOverlord extends Overlord {
 
@@ -35,7 +26,7 @@ export class WorkerOverlord extends Overlord {
 	room: Room;
 	repairStructures: Structure[];
 	dismantleStructures: Structure[];
-	rechargeObjects: rechargeObjectType[];
+	// rechargeObjects: rechargeObjectType[];
 	fortifyStructures: (StructureWall | StructureRampart)[];
 	constructionSites: ConstructionSite[];
 	nukeDefenseRamparts: StructureRampart[];
@@ -58,7 +49,7 @@ export class WorkerOverlord extends Overlord {
 	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.work) {
 		super(colony, 'worker', priority);
 		this.workers = this.zerg(WorkerSetup.role);
-		this.rechargeObjects = [];
+		// this.rechargeObjects = [];
 		// Fortification structures
 		this.fortifyStructures = GlobalCache.structures(this, 'fortifyStructures', () =>
 			_.sortBy(_.filter(this.room.barriers, s =>
@@ -269,40 +260,40 @@ export class WorkerOverlord extends Overlord {
 		return true;
 	}
 
-	private rechargeActions(worker: Zerg): void {
-		// Calculate recharge objects if needed (can't be placed in constructor because instantiation order
-		if (this.rechargeObjects.length == 0) {
-			let workerWithdrawLimit = this.colony.stage == ColonyStage.Larva ? 750 : 100;
-			let rechargeObjects = _.compact([...this.colony.room.storageUnits,
-											 ...(this.colony.room.drops[RESOURCE_ENERGY] || []),
-											 ..._.map(this.colony.miningSites, site => site.output!),
-											 ...this.colony.tombstones]) as rechargeObjectType[];
-			this.rechargeObjects = _.filter(rechargeObjects, obj => isResource(obj) ? obj.amount > 0 :
-																	obj.energy > workerWithdrawLimit);
-		}
-		// Choose the target to maximize your energy gain subject to other targeting workers
-		let target = maxBy(this.rechargeObjects, function (obj) {
-			let amount = isResource(obj) ? obj.amount : obj.energy;
-			let otherTargetingWorkers = _.map(obj.targetedBy, name => Game.zerg[name]);
-			let resourceOutflux = _.sum(_.map(otherTargetingWorkers,
-											  other => other.carryCapacity - _.sum(other.carry)));
-			amount = minMax(amount - resourceOutflux, 0, worker.carryCapacity);
-			return amount / (worker.pos.getMultiRoomRangeTo(obj.pos) + 1);
-		});
-		if (target) {
-			if (isResource(target)) {
-				worker.task = Tasks.pickup(target);
-			} else {
-				worker.task = Tasks.withdraw(target);
-			}
-		} else {
-			// Harvest from a source if there is no recharge target available
-			let emptyMiningSites = _.filter(this.colony.miningSites, site =>
-				site.overlord.miners.length < site.source.pos.availableNeighbors(true).length);
-			let target = worker.pos.findClosestByMultiRoomRange(emptyMiningSites);
-			if (target) worker.task = Tasks.harvest(target.source);
-		}
-	}
+	// private rechargeActions(worker: Zerg): void {
+	// 	// Calculate recharge objects if needed (can't be placed in constructor because instantiation order
+	// 	if (this.rechargeObjects.length == 0) {
+	// 		let workerWithdrawLimit = this.colony.stage == ColonyStage.Larva ? 750 : 100;
+	// 		let rechargeObjects = _.compact([...this.colony.room.storageUnits,
+	// 										 ...(this.colony.room.drops[RESOURCE_ENERGY] || []),
+	// 										 ..._.map(this.colony.miningSites, site => site.output!),
+	// 										 ...this.colony.tombstones]) as rechargeObjectType[];
+	// 		this.rechargeObjects = _.filter(rechargeObjects, obj => isResource(obj) ? obj.amount > 0 :
+	// 																obj.energy > workerWithdrawLimit);
+	// 	}
+	// 	// Choose the target to maximize your energy gain subject to other targeting workers
+	// 	let target = maxBy(this.rechargeObjects, function (obj) {
+	// 		let amount = isResource(obj) ? obj.amount : obj.energy;
+	// 		let otherTargetingWorkers = _.map(obj.targetedBy, name => Game.zerg[name]);
+	// 		let resourceOutflux = _.sum(_.map(otherTargetingWorkers,
+	// 										  other => other.carryCapacity - _.sum(other.carry)));
+	// 		amount = minMax(amount - resourceOutflux, 0, worker.carryCapacity);
+	// 		return amount / (worker.pos.getMultiRoomRangeTo(obj.pos) + 1);
+	// 	});
+	// 	if (target) {
+	// 		if (isResource(target)) {
+	// 			worker.task = Tasks.pickup(target);
+	// 		} else {
+	// 			worker.task = Tasks.withdraw(target);
+	// 		}
+	// 	} else {
+	// 		// Harvest from a source if there is no recharge target available
+	// 		let emptyMiningSites = _.filter(this.colony.miningSites, site =>
+	// 			site.overlord.miners.length < site.source.pos.availableNeighbors(true).length);
+	// 		let target = worker.pos.findClosestByMultiRoomRange(emptyMiningSites);
+	// 		if (target) worker.task = Tasks.harvest(target.source);
+	// 	}
+	// }
 
 	private handleWorker(worker: Zerg) {
 		if (worker.carry.energy > 0) {
@@ -340,7 +331,8 @@ export class WorkerOverlord extends Overlord {
 			}
 		} else {
 			// Acquire more energy
-			this.rechargeActions(worker);
+			let workerWithdrawLimit = this.colony.stage == ColonyStage.Larva ? 750 : 100;
+			worker.task = Tasks.recharge(workerWithdrawLimit);
 		}
 	}
 

@@ -2,7 +2,7 @@ import {Task} from '../Task';
 import {profile} from '../../profiler/decorator';
 
 export type fleeTargetType = { pos: RoomPosition } | RoomPosition;
-export const fleeTaskName = 'goTo';
+export const fleeTaskName = 'flee';
 
 // Flee task makes creep move to a fallback position and wait until a specified room is safe
 

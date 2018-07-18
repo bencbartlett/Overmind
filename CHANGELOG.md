@@ -28,6 +28,7 @@ Important notes as of this patch:
 - Added a `GlobalCache` module to store expensive calculations yielding RoomObjects on global; this has been integrated in various points in the codebase to improve CPU usage.
 
 ### Changed
+- The Overmind object now `try...catch` evaluates `init` and `run` methods for each colony / network. If an exceptions are caught, they are added to a queue and thrown at the end of the tick, preventing a global deadlock from occurring due to a problem in a single colony.
 - Zerg are now instantiated in constructor phase by their overlords rather than by the Overmind object.
 - Managers are now stationary (CARRY only) at RCL8 in the bunker layout
 - Refactored Hatchery spawning code to allow for greater flexibility in spawning creeps, such as requesting a specific spawn (useful for spawning the now-stationary manager)

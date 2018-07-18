@@ -9,7 +9,7 @@ Object.defineProperty(RoomObject.prototype, 'ref', { // reference object; see gl
 
 Object.defineProperty(RoomObject.prototype, 'targetedBy', { // List of creep names with tasks targeting this object
 	get         : function () {
-		return Overmind.cache.targets[this.ref];
+		return Overmind.cache.targets[this.ref] || [];
 	},
 	configurable: true,
 });

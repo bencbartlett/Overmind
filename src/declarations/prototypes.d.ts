@@ -18,7 +18,15 @@ type Sink = StructureSpawn |
 	StructurePowerSpawn |
 	StructureNuker |
 	StructureTower;
+
 type StorageUnit = StructureContainer | StructureTerminal | StructureStorage;
+
+type rechargeObjectType = StructureStorage
+	| StructureTerminal
+	| StructureContainer
+	| StructureLink
+	| Tombstone
+	| Resource;
 
 interface Room {
 	print: string;
@@ -62,7 +70,7 @@ interface Room {
 	extractor: StructureExtractor | undefined;
 	nuker: StructureNuker | undefined;
 	repairables: Structure[];
-
+	rechargeables: rechargeObjectType[];
 	sources: Source[];
 	mineral: Mineral | undefined;
 	constructionSites: ConstructionSite[];
