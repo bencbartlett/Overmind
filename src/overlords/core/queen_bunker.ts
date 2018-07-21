@@ -8,7 +8,7 @@ import {profile} from '../../profiler/decorator';
 import {mergeSum, minBy} from '../../utilities/utils';
 import {StoreStructure} from '../../declarations/typeGuards';
 import {Colony} from '../../Colony';
-import {GlobalCache} from '../../caching';
+import {$} from '../../caching';
 import {
 	bunkerChargingSpots,
 	getPosFromBunkerCoord,
@@ -67,14 +67,14 @@ export class BunkerQueenOverlord extends Overlord {
 		this.batteries = _.filter(this.room.containers, container => insideBunkerBounds(container.pos, this.colony));
 		this.storeStructures = _.compact([this.colony.terminal!, this.colony.storage!, ...this.batteries]);
 		this.quadrants = {
-			lowerRight: GlobalCache.structures(this, 'LR',
-											   () => computeQuadrant(this.colony, quadrantFillOrder.lowerRight)),
-			upperLeft : GlobalCache.structures(this, 'UL',
-											   () => computeQuadrant(this.colony, quadrantFillOrder.upperLeft)),
-			lowerLeft : GlobalCache.structures(this, 'LL',
-											   () => computeQuadrant(this.colony, quadrantFillOrder.lowerLeft)),
-			upperRight: GlobalCache.structures(this, 'UR',
-											   () => computeQuadrant(this.colony, quadrantFillOrder.upperRight)),
+			lowerRight: $.structures(this, 'LR',
+									 () => computeQuadrant(this.colony, quadrantFillOrder.lowerRight)),
+			upperLeft : $.structures(this, 'UL',
+									 () => computeQuadrant(this.colony, quadrantFillOrder.upperLeft)),
+			lowerLeft : $.structures(this, 'LL',
+									 () => computeQuadrant(this.colony, quadrantFillOrder.lowerLeft)),
+			upperRight: $.structures(this, 'UR',
+									 () => computeQuadrant(this.colony, quadrantFillOrder.upperRight)),
 		};
 		// Assign quadrants to queens
 		this.assignments = _.zipObject(_.map(this.queens, queen => [queen.name, []]));

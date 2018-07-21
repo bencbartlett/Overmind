@@ -59,7 +59,7 @@ export class CommandCenter extends HiveCluster {
 		}
 		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetwork;
 		this.transportRequests = new TransportRequestGroup(); // commandCenter always gets its own request group
-		if (this.storage.isActive() && this.link && this.link.isActive()) {
+		if (this.link) {
 			this.overlord = new CommandCenterOverlord(this);
 		}
 	}

@@ -41,7 +41,7 @@ export class MiningOverlord extends Overlord {
 			// todo: this.colony.hatchery is normal hatcher for incubating once spawns[0] != undefined
 		}
 		let filteredMiners = this.lifetimeFilter(this.miners);
-		let miningPowerAssigned = _.sum(_.map(filteredMiners, creep => creep.getActiveBodyparts(WORK)));
+		let miningPowerAssigned = _.sum(filteredMiners, creep => creep.getActiveBodyparts(WORK));
 		if (miningPowerAssigned < this.miningSite.miningPowerNeeded &&
 			filteredMiners.length < _.filter(this.miningSite.pos.neighbors, pos => pos.isWalkable()).length) {
 			// Handles edge case at startup of <3 spots near mining site

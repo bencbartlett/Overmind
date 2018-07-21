@@ -36,7 +36,7 @@ export class UpgradingOverlord extends Overlord {
 	}
 
 	init() {
-		let upgradePower = _.sum(_.map(this.lifetimeFilter(this.upgraders), creep => creep.getActiveBodyparts(WORK)));
+		let upgradePower = _.sum(this.lifetimeFilter(this.upgraders), creep => creep.getActiveBodyparts(WORK));
 		if (upgradePower < this.upgradeSite.upgradePowerNeeded) {
 			let workPartsPerUpgraderUnit = 3; // TODO: Hard-coded
 			let upgraderSize = Math.ceil(this.upgradeSite.upgradePowerNeeded / workPartsPerUpgraderUnit);
@@ -79,13 +79,6 @@ export class UpgradingOverlord extends Overlord {
 			}
 			// Find somewhere else to recharge from
 			else {
-				// let rechargeTargets = _.filter(_.compact([this.colony.storage!,
-				// 										  this.colony.terminal!,
-				// 										  ..._.map(this.colony.miningSites, site => site.output!),
-				// 										  ...this.colony.tombstones]),
-				// 							   s => s.energy > 0);
-				// let target = minBy(rechargeTargets, (s: RoomObject) => Pathing.distance(this.upgradeSite.pos, s.pos));
-				// if (target) upgrader.task = Tasks.withdraw(target);
 				if (this.upgradeSite.battery && this.upgradeSite.battery.targetedBy.length == 0) {
 					upgrader.task = Tasks.recharge();
 				}

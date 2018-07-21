@@ -36,6 +36,9 @@ interface IGlobalCache {
 	accessed: { [key: string]: number };
 	expiration: { [key: string]: number };
 	structures: { [key: string]: Structure[] };
+	numbers: { [key: string]: number };
+	lists: { [key: string]: any[] };
+	// objects: { [key: string]: Object };
 }
 
 interface ICache {

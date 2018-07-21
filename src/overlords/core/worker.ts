@@ -6,7 +6,7 @@ import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {CreepSetup} from '../CreepSetup';
 import {BuildPriorities} from '../../priorities/priorities_structures';
-import {GlobalCache} from '../../caching';
+import {$} from '../../caching';
 import {Task} from '../../tasks/Task';
 
 export const WorkerSetup = new CreepSetup('worker', {
@@ -51,13 +51,13 @@ export class WorkerOverlord extends Overlord {
 		this.workers = this.zerg(WorkerSetup.role);
 		// this.rechargeObjects = [];
 		// Fortification structures
-		this.fortifyStructures = GlobalCache.structures(this, 'fortifyStructures', () =>
+		this.fortifyStructures = $.structures(this, 'fortifyStructures', () =>
 			_.sortBy(_.filter(this.room.barriers, s =>
 				s.hits < WorkerOverlord.settings.barrierHits[this.colony.level]
 				&& this.colony.roomPlanner.barrierPlanner.barrierShouldBeHere(s.pos)
 			), s => s.hits));
 		// Generate a list of structures needing repairing (different from fortifying except in critical case)
-		this.repairStructures = GlobalCache.structures(this, 'repairStructures', () =>
+		this.repairStructures = $.structures(this, 'repairStructures', () =>
 			_.filter(this.colony.repairables, function (structure) {
 				if (structure.structureType == STRUCTURE_CONTAINER) {
 					return structure.hits < 0.5 * structure.hitsMax;
@@ -114,40 +114,46 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	init() {
-		let setup = this.colony.stage == ColonyStage.Larva ? WorkerEarlySetup : WorkerSetup;
-		let workPartsPerWorker = setup.getBodyPotential(WORK, this.colony);
+		const setup = this.colony.stage == ColonyStage.Larva ? WorkerEarlySetup : WorkerSetup;
+		const workPartsPerWorker = setup.getBodyPotential(WORK, this.colony);
+		let numWorkers: number;
 		if (this.colony.stage == ColonyStage.Larva) {
-			// At lower levels, try to saturate the energy throughput of the colony
-			const MAX_WORKERS = 10; // Maximum number of workers to spawn
-			let energyPerTick = _.sum(_.map(this.colony.miningSites, site => site.energyPerTick));
-			let energyPerTickPerWorker = 1.1 * workPartsPerWorker; // Average energy per tick when workers are working
-			let workerUptime = 0.8;
-			let numWorkers = Math.ceil(energyPerTick / (energyPerTickPerWorker * workerUptime));
-			this.wishlist(Math.min(numWorkers, MAX_WORKERS), setup);
+			numWorkers = $.number(this, 'numWorkers', () => {
+				// At lower levels, try to saturate the energy throughput of the colony
+				const MAX_WORKERS = 10; // Maximum number of workers to spawn
+				let energyPerTick = _.sum(_.map(this.colony.miningSites, site => site.energyPerTick));
+				let energyPerTickPerWorker = 1.1 * workPartsPerWorker; // Average energy per tick when workers are working
+				let workerUptime = 0.8;
+				let numWorkers = Math.ceil(energyPerTick / (energyPerTickPerWorker * workerUptime));
+				return Math.min(numWorkers, MAX_WORKERS);
+			});
 		} else {
 			if (this.colony.roomPlanner.memory.relocating) {
 				// If relocating, maintain a maximum of workers
-				const RELOCATE_MAX_WORKERS = 5;
-				this.wishlist(RELOCATE_MAX_WORKERS, setup);
+				numWorkers = 5;
 			} else {
-				// At higher levels, spawn workers based on construction and repair that needs to be done
-				const MAX_WORKERS = 3; // Maximum number of workers to spawn
-				let constructionTicks = _.sum(this.constructionSites,
-											  site => site.progressTotal - site.progress) / BUILD_POWER;
-				let repairTicks = _.sum(this.repairStructures,
-										structure => structure.hitsMax - structure.hits) / REPAIR_POWER;
-				let fortifyTicks = 0.25 * _.sum(this.fortifyStructures,
-												barrier => WorkerOverlord.settings.barrierHits[this.colony.level]
-														   - barrier.hits) / REPAIR_POWER;
-				if (this.colony.storage!.energy < 500000) {
-					fortifyTicks = 0; // Ignore fortification duties below this energy level
-				}
-				// max constructionTicks for private server manually setting progress
-				let numWorkers = Math.ceil(2 * (Math.max(constructionTicks, 0) + repairTicks + fortifyTicks) /
-										   (workPartsPerWorker * CREEP_LIFE_TIME));
-				this.wishlist(Math.min(numWorkers, MAX_WORKERS), setup);
+				numWorkers = $.number(this, 'numWorkers', () => {
+					// At higher levels, spawn workers based on construction and repair that needs to be done
+					const MAX_WORKERS = 3; // Maximum number of workers to spawn
+					let constructionTicks = _.sum(this.constructionSites,
+												  site => site.progressTotal - site.progress) / BUILD_POWER;
+					let repairTicks = _.sum(this.repairStructures,
+											structure => structure.hitsMax - structure.hits) / REPAIR_POWER;
+					let paveTicks = _.sum(this.colony.rooms, room => this.colony.roadLogistics.energyToRepave(room));
+					let fortifyTicks = 0.25 * _.sum(this.fortifyStructures,
+													barrier => WorkerOverlord.settings.barrierHits[this.colony.level]
+															   - barrier.hits) / REPAIR_POWER;
+					if (this.colony.storage!.energy < 500000) {
+						fortifyTicks = 0; // Ignore fortification duties below this energy level
+					}
+					// max constructionTicks for private server manually setting progress
+					let numWorkers = Math.ceil(2 * (Math.max(constructionTicks, 0) + repairTicks + fortifyTicks) /
+											   (workPartsPerWorker * CREEP_LIFE_TIME));
+					return Math.min(numWorkers, MAX_WORKERS);
+				});
 			}
 		}
+		this.wishlist(numWorkers, setup);
 	}
 
 	private repairActions(worker: Zerg): boolean {

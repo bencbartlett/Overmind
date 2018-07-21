@@ -26,6 +26,7 @@ Important notes as of this patch:
 - New `BunkerQueen` overlord which has a lot of hard-coded optimizations built specifically for the bunker layout
 - Added terminal exception states to account for various abnormal conditions, such as rebuilding a room or evacuating a room which is about to be breached. Terminals that are in an exception state will maintain a small, tightly controlled set of resources in their store and will not engage in normal terminal activity.
 - Added a `GlobalCache` module to store expensive calculations yielding RoomObjects on global; this has been integrated in various points in the codebase to improve CPU usage.
+    - Renamed `GlobalCache` to `$` ($ -> cash -> cache) for maximum brevity and punnyness
 
 ### Changed
 - The Overmind object now `try...catch` evaluates `init` and `run` methods for each colony / network. If an exceptions are caught, they are added to a queue and thrown at the end of the tick, preventing a global deadlock from occurring due to a problem in a single colony.

@@ -96,6 +96,8 @@ export class Mem {
 			accessed  : {},
 			expiration: {},
 			structures: {},
+			numbers   : {},
+			lists     : {},
 		};
 	}
 

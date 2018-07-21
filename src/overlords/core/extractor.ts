@@ -24,7 +24,8 @@ export class ExtractorOverlord extends Overlord {
 	}
 
 	init() {
-		let amount = this.extractionSite.mineral.mineralAmount > 0 ? 1 : 0;
+		let amount = this.extractionSite.mineral.mineralAmount > 0 ?
+					 this.extractionSite.mineral.pos.availableNeighbors().length : 0;
 		this.wishlist(amount, DroneSetup);
 	}
 

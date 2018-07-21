@@ -12,6 +12,7 @@ import {Pathing} from '../movement/Pathing';
 import {MiningSite} from './miningSite';
 import {WorkerSetup} from '../overlords/core/worker';
 import {hasMinerals} from '../utilities/utils';
+import {$} from '../caching';
 
 interface UpgradeSiteMemory {
 	input?: { pos: protoPos, tick: number };
@@ -63,28 +64,31 @@ export class UpgradeSite extends HiveCluster {
 		// Register overlord
 		this.overlord = new UpgradingOverlord(this);
 		// Energy per tick is sum of upgrader body parts and nearby worker body parts
-		this.energyPerTick = (_.sum(_.map(this.overlord.upgraders, upgrader => upgrader.getActiveBodyparts(WORK))) +
-							  _.sum(_.map(_.filter(this.colony.getCreepsByRole(WorkerSetup.role), worker =>
-											  worker.pos.inRangeTo((this.link || this.battery || this).pos, 2)),
-										  worker => worker.getActiveBodyparts(WORK))));
+		this.energyPerTick = $.number(this, 'energyPerTick', () =>
+			_.sum(this.overlord.upgraders, upgrader => upgrader.getActiveBodyparts(WORK)) +
+			_.sum(_.filter(this.colony.getCreepsByRole(WorkerSetup.role), worker =>
+					  worker.pos.inRangeTo((this.link || this.battery || this).pos, 2)),
+				  worker => worker.getActiveBodyparts(WORK)));
 		// Compute stats
 		this.stats();
 	}
 
 	private getUpgradePowerNeeded(): number {
-		if (this.room.storage) { // Workers perform upgrading until storage is set up
-			let amountOver = Math.max(this.room.storage.energy - UpgradeSite.settings.storageBuffer, 0);
-			let upgradePower = 1 + Math.floor(amountOver / UpgradeSite.settings.energyPerBodyUnit);
-			if (amountOver > 500000) {
-				upgradePower *= 2; // double upgrade power if we have lots of surplus energy
+		return $.number(this, 'upgradePowerNeeded', () => {
+			if (this.room.storage) { // Workers perform upgrading until storage is set up
+				let amountOver = Math.max(this.room.storage.energy - UpgradeSite.settings.storageBuffer, 0);
+				let upgradePower = 1 + Math.floor(amountOver / UpgradeSite.settings.energyPerBodyUnit);
+				if (amountOver > 500000) {
+					upgradePower *= 2; // double upgrade power if we have lots of surplus energy
+				}
+				if (this.controller.level == 8) {
+					upgradePower = Math.min(upgradePower, 15); // don't go above 15 work parts at RCL 8
+				}
+				return upgradePower;
+			} else {
+				return 0;
 			}
-			if (this.controller.level == 8) {
-				upgradePower = Math.min(upgradePower, 15); // don't go above 15 work parts at RCL 8
-			}
-			return upgradePower;
-		} else {
-			return 0;
-		}
+		});
 	}
 
 	init(): void {

@@ -12,7 +12,7 @@ import {Visualizer} from '../visuals/Visualizer';
 import {Stats} from '../stats/stats';
 import {Zerg} from '../zerg/Zerg';
 import {log} from '../console/log';
-import {GlobalCache} from '../caching';
+import {$} from '../caching';
 import {energyStructureOrder, getPosFromBunkerCoord, insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {BunkerQueenOverlord} from '../overlords/core/queen_bunker';
 import {Overlord} from '../overlords/Overlord';
@@ -199,7 +199,7 @@ export class Hatchery extends HiveCluster {
 	};
 
 	get energyStructures(): (StructureSpawn | StructureExtension)[] {
-		return GlobalCache.structures(this, 'energyStructures', () => computeEnergyStructures(this));
+		return $.structures(this, 'energyStructures', () => computeEnergyStructures(this));
 	}
 
 	private spawnCreep(protoCreep: protoCreep, options: SpawnRequestOptions = {}): number {

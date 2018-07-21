@@ -4,7 +4,7 @@ import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
 import {Zerg} from '../zerg/Zerg';
 import {repairTaskName} from '../tasks/instances/repair';
-import {GlobalCache} from '../caching';
+import {$} from '../caching';
 
 const ROAD_CACHE_TIMEOUT = 25;
 
@@ -26,11 +26,6 @@ export class RoadLogistics {
 		criticalThreshold: number,
 		repairThreshold: number,
 	};
-	private cache: {
-		// repairableRoads: { [roomName: string]: StructureRoad[] };
-		// criticalRoads: { [roomName: string]: StructureRoad[] };
-		energyToRepave: { [roomName: string]: number }
-	};
 
 	constructor(colony: Colony) {
 		this.colony = colony;
@@ -41,11 +36,6 @@ export class RoadLogistics {
 			allowedPaversPerRoom: 1,
 			criticalThreshold   : 0.25, // When the roadnetwork forces a repair store
 			repairThreshold     : 0.9
-		};
-		this.cache = {
-			// repairableRoads: {},
-			// criticalRoads  : {},
-			energyToRepave: {}
 		};
 	}
 
@@ -90,7 +80,7 @@ export class RoadLogistics {
 	// }
 
 	criticalRoads(room: Room): StructureRoad[] {
-		return GlobalCache.structures(this, 'criticalRoads:' + room.name, () =>
+		return $.structures(this, 'criticalRoads:' + room.name, () =>
 			_.sortBy(_.filter(room.roads, road =>
 				road.hits < road.hitsMax * this.settings.criticalThreshold &&
 				this.colony.roomPlanner.roadShouldBeHere(road.pos)),
@@ -98,7 +88,7 @@ export class RoadLogistics {
 	}
 
 	repairableRoads(room: Room): StructureRoad[] {
-		return GlobalCache.structures(this, 'repairableRoads:' + room.name, () =>
+		return $.structures(this, 'repairableRoads:' + room.name, () =>
 			_.sortBy(_.filter(room.roads, road =>
 				road.hits < road.hitsMax * this.settings.repairThreshold &&
 				this.colony.roomPlanner.roadShouldBeHere(road.pos)),
@@ -107,11 +97,8 @@ export class RoadLogistics {
 
 	/* Total amount of energy needed to repair all roads in the room */
 	energyToRepave(room: Room): number {
-		if (!this.cache.energyToRepave[room.name]) {
-			this.cache.energyToRepave[room.name] = _.sum(_.map(this.repairableRoads(room),
-															   road => (road.hitsMax - road.hits) / REPAIR_POWER));
-		}
-		return this.cache.energyToRepave[room.name];
+		return $.number(this, 'energyToRepave:' + room.name, () =>
+			_.sum(this.repairableRoads(room), road => (road.hitsMax - road.hits) / REPAIR_POWER));
 	}
 
 	/* Check that the worker is in the assignedWorker cache; avoids bugs where duplicate workers get assigned

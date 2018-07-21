@@ -56,8 +56,9 @@ export class GameCache implements ICache {
 
 
 const CACHE_TIMEOUT = 50;
+const SHORT_CACHE_TIMEOUT = 10;
 
-export class GlobalCache {
+export class $ { // $ = cash = cache... get it? :D
 
 	static structures<T extends Structure>(saver: { ref: string }, key: string, callback: () => T[],
 										   timeout = CACHE_TIMEOUT): T[] {
@@ -75,6 +76,26 @@ export class GlobalCache {
 			}
 		}
 		return _cache.structures[cacheKey] as T[];
+	}
+
+	static number(saver: { ref: string }, key: string, callback: () => number, timeout = SHORT_CACHE_TIMEOUT): number {
+		let cacheKey = saver.ref + ':' + key;
+		if (_cache.numbers[cacheKey] == undefined || Game.time > _cache.expiration[cacheKey]) {
+			// Recache if new entry or entry is expired
+			_cache.numbers[cacheKey] = callback();
+			_cache.expiration[cacheKey] = getCacheExpiration(timeout, Math.ceil(timeout / 10));
+		}
+		return _cache.numbers[cacheKey];
+	}
+
+	static list<T>(saver: { ref: string }, key: string, callback: () => T[], timeout = CACHE_TIMEOUT): T[] {
+		let cacheKey = saver.ref + ':' + key;
+		if (_cache.lists[cacheKey] == undefined || Game.time > _cache.expiration[cacheKey]) {
+			// Recache if new entry or entry is expired
+			_cache.lists[cacheKey] = callback();
+			_cache.expiration[cacheKey] = getCacheExpiration(timeout, Math.ceil(timeout / 10));
+		}
+		return _cache.lists[cacheKey];
 	}
 
 }
