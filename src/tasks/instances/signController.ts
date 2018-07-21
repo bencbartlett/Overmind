@@ -18,11 +18,11 @@ export class TaskSignController extends Task {
 
 	isValidTarget() {
 		let controller = this.target;
-		return (!controller.sign || controller.sign.text != Memory.signature) && !controller.signedByScreeps;
+		return (!controller.sign || controller.sign.text != Memory.settings.signature) && !controller.signedByScreeps;
 	}
 
 	work() {
-		return this.creep.signController(this.target, Memory.signature);
+		return this.creep.signController(this.target, Memory.settings.signature);
 	}
 }
 

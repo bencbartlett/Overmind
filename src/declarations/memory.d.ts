@@ -1,20 +1,24 @@
+type operationMode = 'manual' | 'semiautomatic' | 'automatic';
+
 interface Memory {
 	assimilator: any;
 	Overmind: {};
+	strategist?: any;
 	colonies: { [name: string]: any };
 	creeps: { [name: string]: CreepMemory; };
 	flags: { [name: string]: FlagMemory; };
 	rooms: { [name: string]: RoomMemory; };
 	spawns: { [name: string]: SpawnMemory; };
-	empire: any;
 	pathing: PathingMemory;
-	log: LoggerMemory;
-	pathLengths: any;
+	settings: {
+		signature: string;
+		operationMode: operationMode;
+		log: LoggerMemory;
+		enableVisuals: boolean;
+	}
+	profiler?: any;
 	stats: any;
 	constructionSites: { [id: string]: number };
-	signature: string;
-	bot: boolean;
-	autoclaim: boolean;
 }
 
 interface StatsMemory {

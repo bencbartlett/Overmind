@@ -93,6 +93,7 @@ export class Visualizer {
 	}
 
 	static colonyReport(colonyName: string, text: string[]) {
+		if (!this.enabled) return;
 		new RoomVisual(colonyName).multitext(text, 0, 4, {textfont: 'monospace', textsize: 0.75});
 	}
 

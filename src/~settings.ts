@@ -22,9 +22,4 @@ export const DEFAULT_OVERMIND_SIGNATURE = leftAngleQuote + 'Overmind' + rightAng
 /**
  * If this is enabled, Memory.bot will default to true
  */
-export const AUTOMATIC_MODE = true;
-
-/**
- * If this is enabled, Memory.autoclaim will default to true (only used if Memory.bot is enabled)
- */
-export const AUTOMATIC_CLAIMING = false;
+export const DEFAULT_OPERATION_MODE: operationMode = 'automatic';

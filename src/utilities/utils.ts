@@ -1,5 +1,7 @@
 // Random utilities that don't belong anywhere else
 
+import {alignedNewline, bullet} from './stringConstants';
+
 export function minMax(value: number, min: number, max: number): number {
 	return Math.max(Math.min(value, max), min);
 }
@@ -27,6 +29,18 @@ export function getUsername(): string {
 interface toColumnsOpts {
 	padChar: string,
 	justify: boolean
+}
+
+export function bulleted(text: string[], aligned = true, startWithNewLine = true): string {
+	if (text.length == 0) {
+		return '';
+	}
+	let prefix = (startWithNewLine ? (aligned ? alignedNewline : '\n') : '') + bullet;
+	if (aligned) {
+		return prefix + text.join(alignedNewline + bullet);
+	} else {
+		return prefix + text.join('\n' + bullet);
+	}
 }
 
 /* Create column-aligned text array from object with string key/values */

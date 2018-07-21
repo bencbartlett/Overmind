@@ -19,6 +19,7 @@ import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
 import {derefCoords, minBy} from './utilities/utils';
 import {DirectiveOutpost} from './directives/core/outpost';
+import {Autonomy, getAutonomyLevel} from './Memory';
 
 
 // export const DIRECTIVE_CHECK_FREQUENCY = 2;
@@ -109,7 +110,7 @@ export class Overseer {
 		}
 
 		// Place reserving/harvesting directives if needed
-		if (Memory.bot && Game.time % 250 == 2 * this.colony.id) {
+		if (Game.time % 250 == 2 * this.colony.id && getAutonomyLevel() > Autonomy.Manual) {
 			let numSources = _.sum(this.colony.roomNames, roomName => (Memory.rooms[roomName].src || []).length);
 			let numRemotes = numSources - this.colony.room.sources.length;
 			if (numRemotes < Colony.settings.remoteSourcesByLevel[this.colony.level]) {
@@ -176,17 +177,18 @@ export class Overseer {
 			}
 		}
 		if (this.colony.stage > ColonyStage.Larva) {
-			let barriers = _.map(this.colony.room.barriers, barrier => barrier.pos);
 			let firstHostile = _.first(this.colony.room.dangerousHostiles);
-			if (firstHostile && this.colony.spawns[0] &&
-				Pathing.isReachable(firstHostile.pos, this.colony.spawns[0].pos, barriers)) {
-				let ret = this.colony.controller.activateSafeMode();
-				if (ret != OK && !this.colony.controller.safeMode) {
-					if (this.colony.terminal) {
-						DirectiveTerminalEvacuateState.createIfNotPresent(this.colony.terminal.pos, 'room');
+			if (firstHostile && this.colony.spawns[0]) {
+				let barriers = _.map(this.colony.room.barriers, barrier => barrier.pos);
+				if (Pathing.isReachable(firstHostile.pos, this.colony.spawns[0].pos, barriers)) {
+					let ret = this.colony.controller.activateSafeMode();
+					if (ret != OK && !this.colony.controller.safeMode) {
+						if (this.colony.terminal) {
+							DirectiveTerminalEvacuateState.createIfNotPresent(this.colony.terminal.pos, 'room');
+						}
 					}
+					return;
 				}
-				return;
 			}
 		}
 	}

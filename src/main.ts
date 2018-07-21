@@ -35,7 +35,7 @@ import {OvermindConsole} from './console/Console';
 import {Stats} from './stats/stats';
 import profiler from 'screeps-profiler';
 import OM from 'Overmind_obfuscated';
-// import {_Overmind} from './Overmind';
+// import {_Overmind} from './Overmind'; // don't enable this unless you're me
 import {log} from './console/log';
 import {VersionMigration} from './versionMigration/migrator';
 import {isIVM} from './utilities/utils';

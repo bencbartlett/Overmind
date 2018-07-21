@@ -9,7 +9,7 @@ interface ConstructionSite {
 }
 
 interface Flag {
-	// recalculateColony(restrictDistance?: number): void;
+
 }
 
 type Sink = StructureSpawn |
@@ -44,7 +44,6 @@ interface Room {
 	tombstones: Tombstone[];
 	drops: { [resourceType: string]: Resource[] };
 	droppedEnergy: Resource[];
-	// droppedMinerals: Resource[];
 	droppedPower: Resource[];
 	// Room structures
 	_refreshStructureCache
@@ -85,10 +84,6 @@ interface Room {
 interface RoomObject {
 	ref: string;
 	targetedBy: string[];
-	linked: boolean;
-	nearbyLinks: StructureLink[];
-
-	// isTargetFor(taskName?: string): ITask[];
 
 	serialize(): protoRoomObject;
 }
@@ -104,8 +99,7 @@ interface RoomPosition {
 	rangeToEdge: number;
 	roomCoords: Coord;
 	neighbors: RoomPosition[];
-	// adjacentSpots: RoomPosition[];
-	// availableAdjacentSpots: RoomPosition[];
+
 	getPositionsAtRange(range: number, includeWalls?: boolean, includeEdges?: boolean): RoomPosition[];
 
 	getPositionsInRange(range: number, includeWalls?: boolean, includeEdges?: boolean): RoomPosition[];
@@ -190,7 +184,6 @@ interface StructureSpawn {
 	isEmpty: boolean;
 
 	cost(bodyArray: string[]): number;
-
 }
 
 interface StructureTerminal {

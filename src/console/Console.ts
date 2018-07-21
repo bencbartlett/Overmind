@@ -4,13 +4,15 @@ import {Colony} from '../Colony';
 import {toColumns} from '../utilities/utils';
 import {asciiLogoSmall} from '../visuals/logos';
 import {log} from './log';
+import {bullet} from '../utilities/stringConstants';
 
 export class OvermindConsole {
 
 	static init() {
 		global.help = this.help();
+		global.info = this.info;
 		global.setMode = this.setMode;
-		global.setAutoClaim = this.setAutoClaim;
+		// global.setAutoClaim = this.setAutoClaim;
 		global.setSignature = this.setSignature;
 		global.print = this.print;
 		global.timeit = this.timeit;
@@ -37,8 +39,9 @@ export class OvermindConsole {
 
 		let descr: { [functionName: string]: string } = {};
 		descr['help'] = 'show this message';
-		descr['setMode(mode)'] = 'set the operational mode -- possible modes: "manual", "automatic"';
-		descr['setAutoClaim(true|false)'] = 'set whether Overmind can choose which rooms to claim for you';
+		descr['info()'] = 'display version and operation information';
+		descr['setMode(mode)'] = 'set the operational mode to "manual", "semiautomatic", or "automatic"';
+		// descr['setAutoClaim(true|false)'] = 'set whether Overmind can choose which rooms to claim for you';
 		descr['setSignature(newSignature)'] = 'set your controller signature';
 		descr['print(...args[])'] = 'log stringified objects to the console';
 		descr['setLogLevel(int)'] = 'set the logging level from 0 - 4';
@@ -62,35 +65,57 @@ export class OvermindConsole {
 		return msg;
 	}
 
-	static setMode(mode: string): string {
-		if (mode == 'manual') {
-			Memory.bot = false;
-			return `Operational mode set to manual.`;
-		} else if (mode == 'automatic') {
-			Memory.bot = true;
-			return `Operational mode set to automatic.`;
-		} else {
-			return `Invalid mode: please specify 'manual' or 'automatic'.`;
+	static info(): string {
+		const b = bullet;
+		let baseInfo = [
+			`${b}Version:        Overmind v${__VERSION__}`,
+			`${b}Checksum:       ${Assimilator.generateChecksum()}`,
+			`${b}Assimilated:    ${'(not yet implemented)'}`,
+			`${b}Operating mode: ${Memory.settings.signature}`,
+			// `${b}CPU bucket:     ${Game.cpu.bucket}`
+		];
+		// let colonyInfo = [
+		// 	`${b}Colonies:`,
+		// ]
+		// for (let colony of getAllColonies()) {
+		// 	colonyInfo.push(`    ${b}`)
+		// }
+		return baseInfo.join('\n');
+	}
+
+	static setMode(mode: operationMode): string {
+		switch (mode) {
+			case 'manual':
+				Memory.settings.operationMode = 'manual';
+				return `Operational mode set to manual. Only defensive directives will be placed automatically`;
+			case 'semiautomatic':
+				Memory.settings.operationMode = 'semiautomatic';
+				return `Operational mode set to semiautomatic.`;
+			case 'automatic':
+				Memory.settings.operationMode = 'automatic';
+				return `Operational mode set to manual.`;
+			default:
+				return `Invalid mode: please specify 'manual', 'semiautomatic', or 'automatic'.`;
 		}
 	}
 
-	static setAutoClaim(autoClaim: boolean): string {
-		if (autoClaim) {
-			if (!Memory.bot) {
-				return `Autoclaiming requires operational mode to be set to automatic! ` +
-					   `Use setMode('automatic') to enable.`;
-			}
-			Memory.autoclaim = true;
-			return `Autoclaiming enabled.`;
-		} else {
-			return `Autoclaiming disabled`;
-		}
-	}
+	// static setAutoClaim(autoClaim: boolean): string {
+	// 	if (autoClaim) {
+	// 		if (!Memory.bot) {
+	// 			return `Autoclaiming requires operational mode to be set to automatic! ` +
+	// 				   `Use setMode('automatic') to enable.`;
+	// 		}
+	// 		Memory.autoclaim = true;
+	// 		return `Autoclaiming enabled.`;
+	// 	} else {
+	// 		return `Autoclaiming disabled`;
+	// 	}
+	// }
 
 
 	static setSignature(signature: string): string | undefined {
 		if (signature.toLowerCase().includes('overmind')) {
-			Memory.signature = signature;
+			Memory.settings.signature = signature;
 			return `Controller signature set to ${signature}`;
 		} else {
 			throw new Error(`Invalid signature: ${signature}; must contain the string "Overmind"`);

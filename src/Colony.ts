@@ -301,13 +301,22 @@ export class Colony {
 		this.transportRequests = new TransportRequestGroup();
 		// Register a room planner
 		this.roomPlanner = new RoomPlanner(this);
+		if (this.roomPlanner.memory.bunkerData && this.roomPlanner.memory.bunkerData.anchor
+			&& this.roomPlanner.memory.bunkerData.anchor.roomName != this.room.name) {
+			log.debug(`Invalid bunker placement in different room! (wtf...) deleting...`);
+			log.debug(`Placement: ${JSON.stringify(this.roomPlanner.memory.bunkerData.anchor)}`);
+			delete this.roomPlanner.memory.bunkerData;
+		}
 		if (this.roomPlanner.memory.bunkerData && this.roomPlanner.memory.bunkerData.anchor) {
 			this.layout = 'bunker';
 			let anchor = derefRoomPosition(this.roomPlanner.memory.bunkerData.anchor);
+			// log.debug(JSON.stringify(`anchor for ${this.name}: ${anchor}`));
 			let spawnPositions = _.map(bunkerLayout[8]!.buildings.spawn.pos, c => getPosFromBunkerCoord(c, this));
+			// log.debug(JSON.stringify(`spawnPositions for ${this.name}: ${spawnPositions}`));
 			let rightSpawnPos = maxBy(spawnPositions, pos => pos.x) as RoomPosition;
 			let topSpawnPos = minBy(spawnPositions, pos => pos.y) as RoomPosition;
 			let coreSpawnPos = anchor.findClosestByRange(spawnPositions) as RoomPosition;
+			// log.debug(JSON.stringify(`spawnPoses: ${rightSpawnPos}, ${topSpawnPos}, ${coreSpawnPos}`));
 			this.bunker = {
 				anchor    : anchor,
 				topSpawn  : topSpawnPos.lookForStructure(STRUCTURE_SPAWN) as StructureSpawn | undefined,

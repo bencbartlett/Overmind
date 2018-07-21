@@ -6,7 +6,7 @@ import {commandCenterLayout} from './layouts/commandCenter';
 import {log} from '../console/log';
 import {Visualizer} from '../visuals/Visualizer';
 import {profile} from '../profiler/decorator';
-import {Mem} from '../Memory';
+import {Autonomy, getAutonomyLevel, Mem} from '../Memory';
 import {Colony, getAllColonies} from '../Colony';
 import {RoadPlanner} from './RoadPlanner';
 import {BarrierPlanner} from './BarrierPlanner';
@@ -89,6 +89,7 @@ export function translatePositions(positions: RoomPosition[], fromAnchor: Coord,
 @profile
 export class RoomPlanner {
 	colony: Colony;							// The colony this is for
+	memory: PlannerMemory;
 	map: StructureMap;						// Flattened {structureType: RoomPositions[]} for final structure placements
 	placements: { 							// Used for generating the plan
 		hatchery: RoomPosition | undefined;
@@ -108,6 +109,7 @@ export class RoomPlanner {
 
 	constructor(colony: Colony) {
 		this.colony = colony;
+		this.memory = Mem.wrap(this.colony.memory, 'roomPlanner', memoryDefaults);
 		this.placements = {
 			hatchery     : undefined,
 			commandCenter: undefined,
@@ -120,10 +122,6 @@ export class RoomPlanner {
 		if (this.active && Game.time % 25 == 0) {
 			log.alert(`RoomPlanner for ${this.colony.room.print} is still active! Close to save CPU.`);
 		}
-	}
-
-	get memory(): PlannerMemory {
-		return Mem.wrap(this.colony.memory, 'roomPlanner', memoryDefaults);
 	}
 
 	get active(): boolean {
@@ -651,7 +649,7 @@ export class RoomPlanner {
 	}
 
 	init(): void {
-		if (this.active && Memory.bot) {
+		if (this.active && getAutonomyLevel() > Autonomy.Manual) {
 			let bunkerAnchor: RoomPosition;
 			if (this.colony.spawns.length > 0) { // in case of very first spawn
 				let lowerRightSpawn = maxBy(this.colony.spawns, s => 50 * s.pos.y + s.pos.x)!;
@@ -694,7 +692,7 @@ export class RoomPlanner {
 		this.barrierPlanner.run();
 		// Run the road planner
 		this.roadPlanner.run();
-		if (this.active && Memory.bot) {
+		if (this.active && getAutonomyLevel() > Autonomy.Manual) {
 			if (this.placements.bunker) {
 				this.finalize();
 			} else {

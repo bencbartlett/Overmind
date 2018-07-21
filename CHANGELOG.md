@@ -24,6 +24,7 @@ Important notes as of this patch:
     - Room planner will now destroy or dismantle incorrectly-placed structures allowing you to change your room plan after it is built
     - Finished support for bunkers
 - New `BunkerQueen` overlord which has a lot of hard-coded optimizations built specifically for the bunker layout
+- New `ControllerAttacker` overlord which spawns groups of controller attackers ("infestors") distributed across nearby colonies to attack a room controller. (Thanks @rooklion/@Sarrick for this contribution!)
 - Added terminal exception states to account for various abnormal conditions, such as rebuilding a room or evacuating a room which is about to be breached. Terminals that are in an exception state will maintain a small, tightly controlled set of resources in their store and will not engage in normal terminal activity.
 - Added a `GlobalCache` module to store expensive calculations yielding RoomObjects on global; this has been integrated in various points in the codebase to improve CPU usage.
     - Renamed `GlobalCache` to `$` ($ -> cash -> cache) for maximum brevity and punnyness
@@ -46,6 +47,7 @@ Important notes as of this patch:
 - Improvements to room planner demolishing behavior:
     - Added some safeguards on destroying misplaced spawns to ensure that there are enough workers to rebuild the spawns
     - Room planner is now better at detecting gridlocked situations and will destroy structures as needed to make room for construction sites
+- Reorganized some memory structures, consolidating things into `Memory.settings`
 
 ### Fixed
 - Fixed a bug where mining sites could get clogged if invaders died on the container outputs and dropped minerals which would not get withdrawn

@@ -18,6 +18,9 @@ export class VersionMigration {
 		if (!this.memory.versions['04Xto05X']) {
 			this.migrate_04X_05X();
 		}
+		if (!this.memory.versions['04Xto05X_part2']) {
+			this.migrate_04X_05X_part2();
+		}
 	}
 
 	static get memory(): VersionMigratorMemory {
@@ -105,11 +108,22 @@ export class VersionMigration {
 		}
 		// Change to new signature
 		let oldSignature = '[Overmind]';
-		if (Memory.signature.includes(oldSignature)) {
-			Memory.signature = Memory.signature.replace(oldSignature, DEFAULT_OVERMIND_SIGNATURE);
+		if ((<any>Memory).signature && (<any>Memory).signature.includes(oldSignature)) {
+			(<any>Memory).signature = (<any>Memory).signature.replace(oldSignature, DEFAULT_OVERMIND_SIGNATURE);
 		}
 		this.memory.versions['04Xto05X'] = true;
-		log.alert(`Version migration from 0.4.x -> 0.5.x completed successfully.`);
+		log.alert(`Version migration from 0.4.x -> 0.5.x (part 1) completed successfully.`);
+	}
+
+	static migrate_04X_05X_part2() {
+		// Copy old memory to new memory locations
+		Memory.settings.signature = (<any>Memory).signature;
+		delete (<any>Memory).signature;
+		delete (<any>Memory).bot;
+		delete (<any>Memory).log;
+		delete (<any>Memory).autoclaim;
+		this.memory.versions['04Xto05X_part2'] = true;
+		log.alert(`Version migration from 0.4.x -> 0.5.x (part 2) completed successfully.`);
 	}
 
 }

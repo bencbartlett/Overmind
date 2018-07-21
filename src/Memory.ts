@@ -1,6 +1,29 @@
 import {Stats} from './stats/stats';
 import {profile} from './profiler/decorator';
-import {AUTOMATIC_CLAIMING, AUTOMATIC_MODE, DEFAULT_OVERMIND_SIGNATURE, USE_PROFILER} from './~settings';
+import {DEFAULT_OPERATION_MODE, DEFAULT_OVERMIND_SIGNATURE, USE_PROFILER} from './~settings';
+
+export enum Autonomy {
+	Manual        = 0,
+	SemiAutomatic = 1,
+	Automatic     = 2,
+}
+
+export function getAutonomyLevel(): number {
+	switch (Memory.settings.operationMode) {
+		case ('manual'):
+			return Autonomy.Manual;
+		case ('semiautomatic'):
+			return Autonomy.SemiAutomatic;
+		case ('automatic'):
+			return Autonomy.Automatic;
+		default:
+			console.log(`ERROR: ${Memory.settings.operationMode} is not a valid operation mode! ` +
+						`Defaulting to ${DEFAULT_OPERATION_MODE}; use setMode() to change.`);
+			Memory.settings.operationMode = DEFAULT_OPERATION_MODE;
+			return getAutonomyLevel();
+	}
+}
+
 
 @profile
 export class Mem {
@@ -64,9 +87,12 @@ export class Mem {
 		this.formatPathingMemory();
 		// Rest of memory formatting
 		if (!Memory.settings) {
-			Memory.settings = {};
+			Memory.settings = {} as any;
 		}
 		_.defaults(Memory.settings, {
+			signature    : DEFAULT_OVERMIND_SIGNATURE,
+			operationMode: DEFAULT_OPERATION_MODE,
+			log          : {},
 			enableVisuals: true,
 		});
 		if (!Memory.stats) {
@@ -75,17 +101,8 @@ export class Mem {
 		if (!Memory.stats.persistent) {
 			Memory.stats.persistent = {};
 		}
-		if (!Memory.signature) {
-			Memory.signature = DEFAULT_OVERMIND_SIGNATURE;
-		}
 		if (!Memory.constructionSites) {
 			Memory.constructionSites = {};
-		}
-		if (Memory.bot == undefined) {
-			Memory.bot = AUTOMATIC_MODE;
-		}
-		if (Memory.autoclaim == undefined) {
-			Memory.autoclaim = AUTOMATIC_CLAIMING;
 		}
 		// Make global memory
 		this.initGlobalMemory();
@@ -154,7 +171,7 @@ export class Mem {
 	}
 
 	private static cleanPathingMemory() {
-		let distanceCleanProbability = 1 / 1000;
+		let distanceCleanProbability = 0.001;
 		let weightedDistanceCleanProbability = 0.01;
 
 		// Randomly clear some cached path lengths

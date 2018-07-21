@@ -28,7 +28,7 @@ Object.defineProperty(Room.prototype, 'reservedByMe', {
 
 Object.defineProperty(Room.prototype, 'signedByMe', {
 	get() {
-		return this.controller && this.controller.sign && this.controller.sign.text == Memory.signature;
+		return this.controller && this.controller.sign && this.controller.sign.text == Memory.settings.signature;
 	},
 	configurable: true,
 });

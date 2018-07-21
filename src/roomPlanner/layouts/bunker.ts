@@ -488,7 +488,7 @@ export function getPosFromBunkerCoord(coord: Coord, colony: Colony): RoomPositio
 	if (colony.roomPlanner.memory.bunkerData && colony.roomPlanner.memory.bunkerData.anchor) {
 		let dx = colony.roomPlanner.memory.bunkerData.anchor.x - bunkerLayout.data.anchor.x;
 		let dy = colony.roomPlanner.memory.bunkerData.anchor.y - bunkerLayout.data.anchor.y;
-		return new RoomPosition(coord.x + dx, coord.y + dy, colony.name);
+		return new RoomPosition(coord.x + dx, coord.y + dy, colony.room.name);
 	}
 	console.log('getPosFromBunkerCoord: shouldn\'t reach here! Unprotected call from non-bunker?');
 	return new RoomPosition(-1, -1, 'invalid');

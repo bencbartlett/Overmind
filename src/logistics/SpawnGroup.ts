@@ -77,7 +77,7 @@ export class SpawnGroup {
 
 	private recalculateColonies() {
 		let coloniesInRange = _.filter(getAllColonies(), col =>
-			Game.map.getRoomLinearDistance(col.pos.roomName, this.roomName) < this.settings.maxLinearDistance
+			Game.map.getRoomLinearDistance(col.pos.roomName, this.roomName) <= this.settings.maxLinearDistance
 			&& (col.level >= this.settings.requiredRCL || col.pos.roomName == this.roomName));
 		let colonies = [] as string[];
 		let routes = {} as { [colonyName: string]: { [roomName: string]: boolean } };
