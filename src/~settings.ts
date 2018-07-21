@@ -11,7 +11,7 @@ export const MY_USERNAME: string = getUsername();
 /**
  * Enable this to build from source including screeps profiler.
  */
-export const USE_PROFILER: boolean = true;
+export const USE_PROFILER: boolean = false;
 
 /**
  * Default controller signature; don't change this.
