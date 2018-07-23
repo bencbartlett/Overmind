@@ -649,7 +649,7 @@ export class RoomPlanner {
 	}
 
 	init(): void {
-		if (this.active && getAutonomyLevel() > Autonomy.Manual) {
+		if (this.active && getAutonomyLevel() == Autonomy.Automatic) {
 			let bunkerAnchor: RoomPosition;
 			if (this.colony.spawns.length > 0) { // in case of very first spawn
 				let lowerRightSpawn = maxBy(this.colony.spawns, s => 50 * s.pos.y + s.pos.x)!;
@@ -671,9 +671,9 @@ export class RoomPlanner {
 		if (Game.time == (this.memory.recheckStructuresAt || Infinity) + offset) {
 			return true;
 		} else if (this.colony.level == 8) {
-			return Game.time % (2 * RoomPlanner.settings.siteCheckFrequency) == this.colony.id + offset;
+			return Game.time % (2 * RoomPlanner.settings.siteCheckFrequency) == 2 * this.colony.id + offset;
 		} else {
-			return Game.time % RoomPlanner.settings.siteCheckFrequency == this.colony.id + offset;
+			return Game.time % RoomPlanner.settings.siteCheckFrequency == 2 * this.colony.id + offset;
 		}
 	}
 
@@ -692,7 +692,7 @@ export class RoomPlanner {
 		this.barrierPlanner.run();
 		// Run the road planner
 		this.roadPlanner.run();
-		if (this.active && getAutonomyLevel() > Autonomy.Manual) {
+		if (this.active && getAutonomyLevel() == Autonomy.Automatic) {
 			if (this.placements.bunker) {
 				this.finalize();
 			} else {
@@ -703,6 +703,12 @@ export class RoomPlanner {
 
 	visuals(): void {
 		// Draw the map
+		if (getAutonomyLevel() < Autonomy.Automatic && this.colony.room.memory.expansionData) {
+			let bunkerPos = derefCoords(this.colony.room.memory.expansionData.bunkerAnchor, this.colony.room.name);
+			if (bunkerPos) {
+				Visualizer.drawLayout(bunkerLayout, bunkerPos, {opacity: 0.2});
+			}
+		}
 		Visualizer.drawStructureMap(this.map);
 	}
 

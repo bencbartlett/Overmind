@@ -38,17 +38,18 @@ export class Visualizer {
 		}
 	}
 
-	static drawLayout(layout: StructureLayout, anchor: RoomPosition): void {
+	static drawLayout(layout: StructureLayout, anchor: RoomPosition, opts = {}): void {
+		_.defaults(opts, {opacity: 0.5});
 		if (!this.enabled) return;
 		let vis = new RoomVisual(anchor.roomName);
 		for (let structureType in layout[8]!.buildings) {
 			for (let pos of layout[8]!.buildings[structureType].pos) {
 				let dx = pos.x - layout.data.anchor.x;
 				let dy = pos.y - layout.data.anchor.y;
-				vis.structure(anchor.x + dx, anchor.y + dy, structureType);
+				vis.structure(anchor.x + dx, anchor.y + dy, structureType, opts);
 			}
 		}
-		vis.connectRoads();
+		vis.connectRoads(opts);
 	}
 
 	static drawRoads(positoins: RoomPosition[]): void {

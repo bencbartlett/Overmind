@@ -17,7 +17,10 @@ export const USE_PROFILER: boolean = false;
  * Default controller signature; don't change this.
  * You can set your controller signature with the console command "setSignature()"
  */
-export const DEFAULT_OVERMIND_SIGNATURE = leftAngleQuote + 'Overmind' + rightAngleQuote;
+const overmindPlain = 'Overmind';
+const overmindSmallCaps = '\u1D0F\u1D20\u1D07\u0280\u1D0D\u026A\u0274\u1D05';
+export const DEFAULT_OVERMIND_SIGNATURE = leftAngleQuote + overmindSmallCaps + rightAngleQuote;
+global.__DEFAULT_OVERMIND_SIGNATURE__ = DEFAULT_OVERMIND_SIGNATURE;
 
 /**
  * If this is enabled, Memory.bot will default to true

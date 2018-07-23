@@ -61,13 +61,10 @@ export interface ColonyMemory {
 		level: number,
 		tick: number,
 	},
-	// nearbyRooms: {
-	// 	[depth: number]: string[],
-	// }
 	expansionData: {
 		possibleExpansions: { [roomName: string]: number | boolean },
 		expiration: number,
-	}
+	},
 }
 
 const defaultColonyMemory: ColonyMemory = {
@@ -75,7 +72,6 @@ const defaultColonyMemory: ColonyMemory = {
 		level: DEFCON.safe,
 		tick : -Infinity
 	},
-	// nearbyRooms: {},
 	expansionData: {
 		possibleExpansions: {},
 		expiration        : 0,
@@ -183,18 +179,18 @@ export class Colony {
 		this.id = id;
 		this.name = roomName;
 		this.ref = roomName;
+		this.memory = Mem.wrap(Memory.colonies, roomName, defaultColonyMemory, true);
 		this.colony = this;
-		this.memory = Mem.wrap(Memory.colonies, this.name, defaultColonyMemory, true);
 		// Register rooms
 		this.roomNames = [roomName].concat(outposts);
 		this.room = Game.rooms[roomName];
 		this.outposts = _.compact(_.map(outposts, outpost => Game.rooms[outpost]));
 		this.rooms = [this.room].concat(this.outposts);
+		// Give the colony an Overseer
+		this.overseer = new Overseer(this);
 		// Register creeps
 		this.creeps = creeps || [];
 		this.creepsByRole = _.groupBy(this.creeps, creep => creep.memory.role);
-		// Give the colony an Overseer
-		this.overseer = new Overseer(this);
 		// Register the rest of the colony components; the order in which these are called is important!
 		this.registerRoomObjects();			// Register real colony components
 		this.registerOperationalState();	// Set the colony operational state
@@ -301,12 +297,6 @@ export class Colony {
 		this.transportRequests = new TransportRequestGroup();
 		// Register a room planner
 		this.roomPlanner = new RoomPlanner(this);
-		if (this.roomPlanner.memory.bunkerData && this.roomPlanner.memory.bunkerData.anchor
-			&& this.roomPlanner.memory.bunkerData.anchor.roomName != this.room.name) {
-			log.debug(`Invalid bunker placement in different room! (wtf...) deleting...`);
-			log.debug(`Placement: ${JSON.stringify(this.roomPlanner.memory.bunkerData.anchor)}`);
-			delete this.roomPlanner.memory.bunkerData;
-		}
 		if (this.roomPlanner.memory.bunkerData && this.roomPlanner.memory.bunkerData.anchor) {
 			this.layout = 'bunker';
 			let anchor = derefRoomPosition(this.roomPlanner.memory.bunkerData.anchor);

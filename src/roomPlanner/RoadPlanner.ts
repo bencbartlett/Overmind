@@ -23,6 +23,7 @@ export class RoadPlanner {
 
 	roomPlanner: RoomPlanner;
 	colony: Colony;
+	memory: RoadPlannerMemory;
 	roadPositions: RoomPosition[];
 	costMatrices: { [roomName: string]: CostMatrix };
 
@@ -36,12 +37,9 @@ export class RoadPlanner {
 	constructor(roomPlanner: RoomPlanner) {
 		this.roomPlanner = roomPlanner;
 		this.colony = roomPlanner.colony;
+		this.memory = Mem.wrap(this.colony.memory, 'roadPlanner', memoryDefaults);
 		this.costMatrices = {};
 		this.roadPositions = [];
-	}
-
-	get memory(): RoadPlannerMemory {
-		return Mem.wrap(this.colony.memory, 'roadPlanner', memoryDefaults);
 	}
 
 	private recalculateRoadNetwork(storagePos: RoomPosition, obstacles: RoomPosition[]): void {

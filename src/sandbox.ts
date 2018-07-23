@@ -4,7 +4,7 @@ import {log} from './console/log';
 
 export function sandbox() {
 	try {
-
+		
 	} catch (e) {
 		log.error(e);
 	}

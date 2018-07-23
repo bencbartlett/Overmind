@@ -5,6 +5,7 @@ import {toColumns} from '../utilities/utils';
 import {asciiLogoSmall} from '../visuals/logos';
 import {log} from './log';
 import {bullet} from '../utilities/stringConstants';
+import {DEFAULT_OVERMIND_SIGNATURE} from '../~settings';
 
 export class OvermindConsole {
 
@@ -12,7 +13,6 @@ export class OvermindConsole {
 		global.help = this.help();
 		global.info = this.info;
 		global.setMode = this.setMode;
-		// global.setAutoClaim = this.setAutoClaim;
 		global.setSignature = this.setSignature;
 		global.print = this.print;
 		global.timeit = this.timeit;
@@ -21,6 +21,7 @@ export class OvermindConsole {
 		global.closeRoomPlanner = this.closeRoomPlanner;
 		global.cancelRoomPlanner = this.cancelRoomPlanner;
 		global.listActiveRoomPlanners = this.listActiveRoomPlanners;
+		global.destroyErrantStructures = this.destroyErrantStructures;
 		global.destroyAllHostileStructures = this.destroyAllHostlileStructures;
 		global.destroyAllBarriers = this.destroyAllBarriers;
 		global.listAllDirectives = this.listAllDirectives;
@@ -41,14 +42,14 @@ export class OvermindConsole {
 		descr['help'] = 'show this message';
 		descr['info()'] = 'display version and operation information';
 		descr['setMode(mode)'] = 'set the operational mode to "manual", "semiautomatic", or "automatic"';
-		// descr['setAutoClaim(true|false)'] = 'set whether Overmind can choose which rooms to claim for you';
-		descr['setSignature(newSignature)'] = 'set your controller signature';
+		descr['setSignature(newSignature)'] = 'set your controller signature; no argument sets to default';
 		descr['print(...args[])'] = 'log stringified objects to the console';
 		descr['setLogLevel(int)'] = 'set the logging level from 0 - 4';
 		descr['openRoomPlanner(roomName)'] = 'open the room planner for a room';
 		descr['closeRoomPlanner(roomName)'] = 'close the room planner and save changes';
 		descr['cancelRoomPlanner(roomName)'] = 'close the room planner and discard changes';
 		descr['listActiveRoomPlanners()'] = 'display a list of colonies with open room planners';
+		descr['destroyErrantStructures(roomName)'] = 'destroys all misplaced structures within an owned room';
 		descr['destroyAllHostileStructures(roomName)'] = 'destroys all hostile structures in an owned room';
 		descr['destroyAllBarriers(roomName)'] = 'destroys all ramparts and barriers in a room';
 		descr['listAllDirectives()'] = 'print type, name, pos of every directive';
@@ -87,38 +88,30 @@ export class OvermindConsole {
 		switch (mode) {
 			case 'manual':
 				Memory.settings.operationMode = 'manual';
-				return `Operational mode set to manual. Only defensive directives will be placed automatically`;
+				return `Operational mode set to manual. Only defensive directives will be placed automatically; ` +
+					   `remove harvesting, claiming, room planning, and raiding must be done manually.`;
 			case 'semiautomatic':
 				Memory.settings.operationMode = 'semiautomatic';
-				return `Operational mode set to semiautomatic.`;
+				return `Operational mode set to semiautomatic. Claiming, room planning, and raiding must be done ` +
+					   `manually; everything else is automatic.`;
 			case 'automatic':
 				Memory.settings.operationMode = 'automatic';
-				return `Operational mode set to manual.`;
+				return `Operational mode set to automatic. All actions are done automatically, but manually placed ` +
+					   `directives will still be responded to.`;
 			default:
 				return `Invalid mode: please specify 'manual', 'semiautomatic', or 'automatic'.`;
 		}
 	}
 
-	// static setAutoClaim(autoClaim: boolean): string {
-	// 	if (autoClaim) {
-	// 		if (!Memory.bot) {
-	// 			return `Autoclaiming requires operational mode to be set to automatic! ` +
-	// 				   `Use setMode('automatic') to enable.`;
-	// 		}
-	// 		Memory.autoclaim = true;
-	// 		return `Autoclaiming enabled.`;
-	// 	} else {
-	// 		return `Autoclaiming disabled`;
-	// 	}
-	// }
 
-
-	static setSignature(signature: string): string | undefined {
-		if (signature.toLowerCase().includes('overmind')) {
-			Memory.settings.signature = signature;
-			return `Controller signature set to ${signature}`;
+	static setSignature(signature: string | undefined): string | undefined {
+		let sig = signature ? signature : DEFAULT_OVERMIND_SIGNATURE;
+		if (sig.toLowerCase().includes('overmind') || sig.includes(DEFAULT_OVERMIND_SIGNATURE)) {
+			Memory.settings.signature = sig;
+			return `Controller signature set to ${sig}`;
 		} else {
-			throw new Error(`Invalid signature: ${signature}; must contain the string "Overmind"`);
+			throw new Error(`Invalid signature: ${signature}; must contain the string "Overmind" or ` +
+							`${DEFAULT_OVERMIND_SIGNATURE} (accessible on global with __DEFAULT_OVERMIND_SIGNATURE__)`);
 		}
 	}
 
@@ -229,6 +222,23 @@ export class OvermindConsole {
 			flag.remove();
 		}
 		return `Removed ${removeFlags.length} flags.`;
+	}
+
+	static destroyErrantStructures(roomName: string): string {
+		let colony = Overmind.colonies[roomName] as Colony;
+		if (!colony) return `${roomName} is not a valid colony!`;
+		let room = colony.room;
+		let allStructures = room.find(FIND_STRUCTURES);
+		let i = 0;
+		for (let s of allStructures) {
+			if (!colony.roomPlanner.structureShouldBeHere(s.structureType, s.pos)) {
+				let result = s.destroy();
+				if (result == OK) {
+					i++;
+				}
+			}
+		}
+		return `Destroyed ${i} misplaced structures in ${roomName}.`;
 	}
 
 	static destroyAllHostlileStructures(roomName: string): string {

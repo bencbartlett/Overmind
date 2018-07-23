@@ -8,7 +8,7 @@ import {bunkerLayout, insideBunkerBounds} from './layouts/bunker';
 import {profile} from '../profiler/decorator';
 
 export interface BarrierPlannerMemory {
-	barrierLookup: { [roadCoordName: string]: boolean };
+	barrierLookup: { [roadCoordName: string]: boolean | undefined };
 }
 
 let memoryDefaults = {
@@ -20,6 +20,7 @@ export class BarrierPlanner {
 
 	roomPlanner: RoomPlanner;
 	colony: Colony;
+	memory: BarrierPlannerMemory;
 	barrierPositions: RoomPosition[];
 
 	static settings = {
@@ -31,11 +32,8 @@ export class BarrierPlanner {
 	constructor(roomPlanner: RoomPlanner) {
 		this.roomPlanner = roomPlanner;
 		this.colony = roomPlanner.colony;
+		this.memory = Mem.wrap(this.colony.memory, 'barrierPlanner', memoryDefaults);
 		this.barrierPositions = [];
-	}
-
-	get memory(): BarrierPlannerMemory {
-		return Mem.wrap(this.colony.memory, 'barrierPlanner', memoryDefaults);
 	}
 
 	private computeBunkerBarrierPositions(bunkerPos: RoomPosition, upgradeSitePos: RoomPosition): RoomPosition[] {
@@ -89,7 +87,10 @@ export class BarrierPlanner {
 	finalize(): void {
 		this.memory.barrierLookup = {};
 		if (this.barrierPositions.length == 0) {
-			if (this.roomPlanner.storagePos && this.roomPlanner.hatcheryPos) {
+			if (this.roomPlanner.bunkerPos) {
+				this.barrierPositions = this.computeBunkerBarrierPositions(this.roomPlanner.bunkerPos,
+																		   this.colony.controller.pos);
+			} else if (this.roomPlanner.storagePos && this.roomPlanner.hatcheryPos) {
 				this.barrierPositions = this.computeBarrierPositions(this.roomPlanner.hatcheryPos,
 																	 this.roomPlanner.storagePos,
 																	 this.colony.controller.pos);
@@ -110,10 +111,10 @@ export class BarrierPlanner {
 				return insideBunkerBounds(pos, this.colony) || pos.getRangeTo(this.colony.controller) == 1;
 			} else {
 				// Otherwise keep the normal plan up
-				return this.memory.barrierLookup[pos.coordName];
+				return !!this.memory.barrierLookup[pos.coordName];
 			}
 		} else {
-			return this.memory.barrierLookup[pos.coordName];
+			return !!this.memory.barrierLookup[pos.coordName];
 		}
 	}
 
