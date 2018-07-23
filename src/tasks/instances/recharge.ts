@@ -36,8 +36,9 @@ export class TaskRecharge extends Task {
 				return false;
 			}
 			let otherTargeters = _.filter(_.map(obj.targetedBy, name => Game.zerg[name]),
-										  zerg => zerg.memory._task && (zerg.memory._task.name == withdrawTaskName
-																		|| zerg.memory._task.name == pickupTaskName));
+										  zerg => !!zerg && zerg.memory._task
+												  && (zerg.memory._task.name == withdrawTaskName
+													  || zerg.memory._task.name == pickupTaskName));
 			let resourceOutflux = _.sum(_.map(otherTargeters,
 											  other => other.carryCapacity - _.sum(other.carry)));
 			amount = minMax(amount - resourceOutflux, 0, creep.carryCapacity);
