@@ -73,12 +73,21 @@ export class Overseer {
 		// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
 		// Doesn't apply to incubating colonies.
 		if (!this.colony.isIncubating) {
-			let hasMiners = this.colony.getCreepsByRole(MinerSetup.role).length > 0;		// Has energy supply?
-			let hasQueen = this.colony.getCreepsByRole(QueenSetup.role).length > 0;			// Has a queen?
+			const hasMiners = this.colony.getCreepsByRole(MinerSetup.role).length > 0;		// Has energy supply?
+			const hasQueen = this.colony.getCreepsByRole(QueenSetup.role).length > 0;			// Has a queen?
 			if (!hasMiners && !hasQueen && this.colony.hatchery && !this.colony.spawnGroup) {
-				let energyToMakeQueen = bodyCost(QueenSetup.generateBody(this.colony.room.energyCapacityAvailable));
-				if (this.colony.room.energyAvailable < energyToMakeQueen) {
-					DirectiveBootstrap.createIfNotPresent(this.colony.hatchery.pos, 'pos');
+				const energyToMakeQueen = bodyCost(QueenSetup.generateBody(this.colony.room.energyCapacityAvailable));
+				const totalSpawns = Object.keys(Game.spawns).length;
+				const totalColonies = Object.keys(Overmind.colonies).length;
+				log.info("Spawns: " + totalSpawns + "; Colonies: " + totalColonies);
+				if ((totalSpawns === 1 && totalColonies === 1)
+					|| this.colony.room.energyAvailable < energyToMakeQueen) {
+					const result = DirectiveBootstrap.createIfNotPresent(this.colony.hatchery.pos, 'pos');
+					let success = (result !== undefined);
+					success = success || (result === OK);
+					if (success) {
+						this.colony.hatchery.settings.suppressSpawning = true;
+					}
 				}
 			}
 		}
