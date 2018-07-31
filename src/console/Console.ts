@@ -4,7 +4,7 @@ import {Colony} from '../Colony';
 import {toColumns} from '../utilities/utils';
 import {asciiLogoSmall} from '../visuals/logos';
 import {log} from './log';
-import {bullet} from '../utilities/stringConstants';
+import {alignedNewline, bullet} from '../utilities/stringConstants';
 import {DEFAULT_OVERMIND_SIGNATURE} from '../~settings';
 
 export class OvermindConsole {
@@ -66,13 +66,13 @@ export class OvermindConsole {
 		return msg;
 	}
 
-	static info(): string {
+	static info(aligned = false): string {
 		const b = bullet;
 		let baseInfo = [
 			`${b}Version:        Overmind v${__VERSION__}`,
 			`${b}Checksum:       ${Assimilator.generateChecksum()}`,
 			`${b}Assimilated:    ${'(not yet implemented)'}`,
-			`${b}Operating mode: ${Memory.settings.signature}`,
+			`${b}Operating mode: ${Memory.settings.operationMode}`,
 			// `${b}CPU bucket:     ${Game.cpu.bucket}`
 		];
 		// let colonyInfo = [
@@ -81,7 +81,8 @@ export class OvermindConsole {
 		// for (let colony of getAllColonies()) {
 		// 	colonyInfo.push(`    ${b}`)
 		// }
-		return baseInfo.join('\n');
+		const joinChar = aligned ? alignedNewline : '\n';
+		return baseInfo.join(joinChar);
 	}
 
 	static setMode(mode: operationMode): string {

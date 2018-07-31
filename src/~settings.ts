@@ -18,8 +18,8 @@ export const USE_PROFILER: boolean = false;
  * You can set your controller signature with the console command "setSignature()"
  */
 const overmindPlain = 'Overmind';
-const overmindSmallCaps = '\u1D0F\u1D20\u1D07\u0280\u1D0D\u026A\u0274\u1D05';
-export const DEFAULT_OVERMIND_SIGNATURE = leftAngleQuote + overmindSmallCaps + rightAngleQuote;
+export const OVERMIND_SMALL_CAPS = '\u1D0F\u1D20\u1D07\u0280\u1D0D\u026A\u0274\u1D05';
+export const DEFAULT_OVERMIND_SIGNATURE = '  ' + leftAngleQuote + OVERMIND_SMALL_CAPS + rightAngleQuote + '  ';
 global.__DEFAULT_OVERMIND_SIGNATURE__ = DEFAULT_OVERMIND_SIGNATURE;
 
 /**

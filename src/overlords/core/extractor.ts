@@ -17,6 +17,10 @@ export class ExtractorOverlord extends Overlord {
 	drones: Zerg[];
 	extractionSite: ExtractionSite;
 
+	static settings = {
+		maxDrones: 3,
+	};
+
 	constructor(extractionSite: ExtractionSite, priority: number) {
 		super(extractionSite, 'mineral', priority);
 		this.drones = this.zerg(DroneSetup.role);
@@ -26,7 +30,7 @@ export class ExtractorOverlord extends Overlord {
 	init() {
 		let amount = this.extractionSite.mineral.mineralAmount > 0 ?
 					 this.extractionSite.mineral.pos.availableNeighbors().length : 0;
-		this.wishlist(amount, DroneSetup);
+		this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), DroneSetup);
 	}
 
 	private handleDrone(drone: Zerg): void {

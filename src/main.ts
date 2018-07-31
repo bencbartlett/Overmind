@@ -39,7 +39,7 @@ import OM from 'Overmind_obfuscated';
 import {log} from './console/log';
 import {VersionMigration} from './versionMigration/migrator';
 import {isIVM} from './utilities/utils';
-import {alignedNewline, bullet} from './utilities/stringConstants';
+import {alignedNewline} from './utilities/stringConstants';
 // =====================================================================================================================
 
 const _Overmind = (<any>OM)._Overmind as (new() => IOvermind);
@@ -53,8 +53,7 @@ OvermindConsole.init();
 VersionMigration.run();
 
 log.alert(`Codebase updated or global reset. Type "help" for a list of console commands.` + alignedNewline +
-		  bullet + `Version:  Overmind v${__VERSION__}` + alignedNewline +
-		  bullet + `Checksum: ${Assimilator.generateChecksum()}`);
+		  OvermindConsole.info(true));
 
 // Main loop
 function main(): void {

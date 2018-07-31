@@ -83,19 +83,26 @@ export class CommandCenterOverlord extends Overlord {
 		}
 	}
 
-	private withdrawActions(manager: Zerg) {
-		let request = this.transportRequests.getPrioritizedClosestRequest(manager.pos, 'withdraw');
-		if (request) {
-			let amount = Math.min(request.amount, manager.carryCapacity - _.sum(manager.carry));
-			manager.task = Tasks.withdraw(request.target, request.resourceType, amount);
+	private withdrawActions(manager: Zerg): boolean {
+		if (_.sum(manager.carry) < manager.carryCapacity) {
+			let request = this.transportRequests.getPrioritizedClosestRequest(manager.pos, 'withdraw');
+			if (request) {
+				let amount = Math.min(request.amount, manager.carryCapacity - _.sum(manager.carry));
+				manager.task = Tasks.withdraw(request.target, request.resourceType, amount);
+				return true;
+			}
+		} else {
+			manager.task = Tasks.transferAll(this.depositTarget);
+			return true;
 		}
+		return false;
 	}
 
-	private equalizeStorageAndTerminal(manager: Zerg) {
-		let storage = this.commandCenter.storage;
-		let terminal = this.commandCenter.terminal;
+	private equalizeStorageAndTerminal(manager: Zerg): boolean {
+		const storage = this.commandCenter.storage;
+		const terminal = this.commandCenter.terminal;
 		if (!storage || !terminal) {
-			return;
+			return false;
 		}
 		const tolerance = Energetics.settings.terminal.energy.tolerance;
 		// Move energy from terminal to storage if there is too much in terminal and there is space in storage
@@ -103,7 +110,7 @@ export class CommandCenterOverlord extends Overlord {
 			if (_.sum(storage.store) < Energetics.settings.storage.total.cap) {
 				manager.task = Tasks.withdraw(terminal);
 				manager.task.parent = Tasks.transfer(storage);
-				return;
+				return true;
 			}
 		}
 		// Move energy from storage to terminal if there is not enough in terminal
@@ -111,17 +118,37 @@ export class CommandCenterOverlord extends Overlord {
 			if (!(this.colony.roomPlanner.memory.relocating && storage.energy < 300000)) {
 				manager.task = Tasks.withdraw(storage);
 				manager.task.parent = Tasks.transfer(terminal);
-				return;
+				return true;
 			}
+		}
+		return false;
+	}
+
+	private moveMineralsToTerminal(manager: Zerg): boolean {
+		const storage = this.commandCenter.storage;
+		const terminal = this.commandCenter.terminal;
+		if (!storage || !terminal) {
+			return false;
 		}
 		// Move all non-energy resources from storage to terminal
 		for (let resourceType in storage.store) {
 			if (resourceType != RESOURCE_ENERGY && storage.store[<ResourceConstant>resourceType]! > 0) {
 				manager.task = Tasks.withdraw(storage, <ResourceConstant>resourceType);
 				manager.task.parent = Tasks.transfer(terminal, <ResourceConstant>resourceType);
-				return;
+				return true;
 			}
 		}
+		return false;
+	}
+
+	private pickupResources(manager: Zerg): boolean {
+		// Pickup any resources that happen to be dropped where you are
+		let resources = manager.pos.lookFor(LOOK_RESOURCES);
+		if (resources.length > 0) {
+			manager.task = Tasks.transferAll(this.depositTarget).fork(Tasks.pickup(resources[0]));
+			return true;
+		}
+		return false;
 	}
 
 	// Suicide once you get old and make sure you don't drop and waste any resources
@@ -141,19 +168,14 @@ export class CommandCenterOverlord extends Overlord {
 				return;
 			}
 		}
-		// Pickup any resources that happen to be dropped where you are
-		let resources = manager.pos.lookFor(LOOK_RESOURCES);
-		if (resources.length > 0) {
-			manager.task = Tasks.transferAll(this.depositTarget)
-								.fork(Tasks.pickup(resources[0]));
+		if (this.pickupResources(manager)) {
+			return;
+		}
+		if (this.moveMineralsToTerminal(manager)) {
 			return;
 		}
 		if (this.transportRequests.needsWithdrawing) {
-			if (_.sum(manager.carry) < manager.carryCapacity) {
-				this.withdrawActions(manager);
-			} else {
-				manager.task = Tasks.transferAll(this.depositTarget);
-			}
+			this.withdrawActions(manager);
 		} else if (this.transportRequests.needsSupplying) {
 			this.supplyActions(manager);
 		} else {

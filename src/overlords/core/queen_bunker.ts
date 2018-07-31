@@ -142,7 +142,7 @@ export class BunkerQueenOverlord extends Overlord {
 		let withdrawTasks: Task[] = [];
 		let neededResources = _.keys(queenCarry) as ResourceConstant[];
 		let targets = _.filter(this.storeStructures,
-							   s => _.all(neededResources,
+							   s => _.all(neededResources, // todo: doesn't need to have all resources; causes jam if labs need supply but no minerals
 										  resource => (s.store[resource] || 0) >= (queenCarry[resource] || 0)));
 		let withdrawTarget: StoreStructure | undefined;
 		if (targets.length > 1) {

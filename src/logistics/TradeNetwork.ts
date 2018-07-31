@@ -253,7 +253,7 @@ export class TraderJoe implements ITradeNetwork {
 		if (Game.market.credits < TraderJoe.settings.market.reserveCredits || terminal.cooldown > 0) {
 			return;
 		}
-		amount += 10;
+		amount = Math.max(amount, TERMINAL_MIN_SEND);
 		if (terminal.store[RESOURCE_ENERGY] < 10000 || terminal.storeCapacity - _.sum(terminal.store) < amount) {
 			return;
 		}
