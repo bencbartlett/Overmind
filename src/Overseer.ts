@@ -76,8 +76,10 @@ export class Overseer {
 			let hasMiners = this.colony.getCreepsByRole(MinerSetup.role).length > 0;		// Has energy supply?
 			let hasQueen = this.colony.getCreepsByRole(QueenSetup.role).length > 0;			// Has a queen?
 			if (!hasMiners && !hasQueen && this.colony.hatchery && !this.colony.spawnGroup) {
-				let energyToMakeQueen = bodyCost(QueenSetup.generateBody(this.colony.room.energyCapacityAvailable));
-				if (this.colony.room.energyAvailable < energyToMakeQueen) {
+				const energyToMakeQueen = bodyCost(QueenSetup.generateBody(this.colony.room.energyCapacityAvailable));
+				const totalStructures = this.colony.room.find(FIND_MY_STRUCTURES).length;
+				if ((totalStructures === 1 && Overmind.colonies.length === 1)
+					|| this.colony.room.energyAvailable < energyToMakeQueen) {
 					DirectiveBootstrap.createIfNotPresent(this.colony.hatchery.pos, 'pos');
 				}
 			}
