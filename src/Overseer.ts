@@ -17,7 +17,7 @@ import {DirectiveTerminalEvacuateState} from './directives/logistics/terminalSta
 import {bodyCost} from './overlords/CreepSetup';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
-import {derefCoords, minBy} from './utilities/utils';
+import {derefCoords, hasJustSpawned, minBy} from './utilities/utils';
 import {DirectiveOutpost} from './directives/core/outpost';
 import {Autonomy, getAutonomyLevel} from './Memory';
 
@@ -77,8 +77,11 @@ export class Overseer {
 			let hasQueen = this.colony.getCreepsByRole(QueenSetup.role).length > 0;			// Has a queen?
 			if (!hasMiners && !hasQueen && this.colony.hatchery && !this.colony.spawnGroup) {
 				let energyToMakeQueen = bodyCost(QueenSetup.generateBody(this.colony.room.energyCapacityAvailable));
-				if (this.colony.room.energyAvailable < energyToMakeQueen) {
-					DirectiveBootstrap.createIfNotPresent(this.colony.hatchery.pos, 'pos');
+				if (this.colony.room.energyAvailable < energyToMakeQueen || hasJustSpawned()) {
+					let result = DirectiveBootstrap.createIfNotPresent(this.colony.hatchery.pos, 'pos');
+					if (typeof result == 'string' || result == OK) { // successfully made flag
+						this.colony.hatchery.settings.suppressSpawning = true;
+					}
 				}
 			}
 		}

@@ -186,7 +186,7 @@ export abstract class Directive {
 	/* Create a directive if one of the same type is not already present (in room | at position).
 	 * Calling this method on positions in invisible rooms can be expensive and should be used sparingly. */
 	static createIfNotPresent(pos: RoomPosition, scope: 'room' | 'pos',
-							  opts: DirectiveCreateOptions = {}): number | string | void {
+							  opts: DirectiveCreateOptions = {}): number | string | undefined {
 		let room = Game.rooms[pos.roomName] as Room | undefined;
 		if (!room) {
 			if (!opts.memory) {
