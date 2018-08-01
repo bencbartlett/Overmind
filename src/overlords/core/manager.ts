@@ -10,6 +10,7 @@ import {StoreStructure} from '../../declarations/typeGuards';
 import {TransportRequestGroup} from '../../logistics/TransportRequestGroup';
 import {Energetics} from '../../logistics/Energetics';
 import {SpawnRequestOptions} from '../../hiveClusters/hatchery';
+import {hasMinerals} from '../../utilities/utils';
 
 export const ManagerSetup = new CreepSetup('manager', {
 	pattern  : [CARRY, CARRY, MOVE],
@@ -101,26 +102,30 @@ export class CommandCenterOverlord extends Overlord {
 	private equalizeStorageAndTerminal(manager: Zerg): boolean {
 		const storage = this.commandCenter.storage;
 		const terminal = this.commandCenter.terminal;
-		if (!storage || !terminal) {
-			return false;
-		}
+		if (!storage || !terminal) return false;
+
 		const tolerance = Energetics.settings.terminal.energy.tolerance;
+		let storageEnergyCap = Energetics.settings.storage.total.cap;
+		let terminalState = this.colony.terminalState;
+		// Adjust max energy allowable in storage if there's an exception state happening
+		if (terminalState && terminalState.type == 'out') {
+			storageEnergyCap = terminalState.amounts[RESOURCE_ENERGY] || 0;
+		}
+		// Move energy from storage to terminal if there is not enough in terminal or if there's terminal evacuation
+		if (terminal.energy < Energetics.settings.terminal.energy.equilibrium - tolerance
+			|| storage.energy > storageEnergyCap) {
+			manager.task = Tasks.withdraw(storage);
+			manager.task.parent = Tasks.transfer(terminal);
+			return true;
+		}
 		// Move energy from terminal to storage if there is too much in terminal and there is space in storage
-		if (terminal.energy > Energetics.settings.terminal.energy.equilibrium + tolerance) {
-			if (_.sum(storage.store) < Energetics.settings.storage.total.cap) {
-				manager.task = Tasks.withdraw(terminal);
-				manager.task.parent = Tasks.transfer(storage);
-				return true;
-			}
+		if (terminal.energy > Energetics.settings.terminal.energy.equilibrium + tolerance
+			&& _.sum(storage.store) < storageEnergyCap) {
+			manager.task = Tasks.withdraw(terminal);
+			manager.task.parent = Tasks.transfer(storage);
+			return true;
 		}
-		// Move energy from storage to terminal if there is not enough in terminal
-		if (terminal.energy < Energetics.settings.terminal.energy.equilibrium - tolerance) {
-			if (!(this.colony.roomPlanner.memory.relocating && storage.energy < 300000)) {
-				manager.task = Tasks.withdraw(storage);
-				manager.task.parent = Tasks.transfer(terminal);
-				return true;
-			}
-		}
+		// Nothing has happened
 		return false;
 	}
 
@@ -141,7 +146,7 @@ export class CommandCenterOverlord extends Overlord {
 		return false;
 	}
 
-	private pickupResources(manager: Zerg): boolean {
+	private pickupActions(manager: Zerg): boolean {
 		// Pickup any resources that happen to be dropped where you are
 		let resources = manager.pos.lookFor(LOOK_RESOURCES);
 		if (resources.length > 0) {
@@ -152,35 +157,46 @@ export class CommandCenterOverlord extends Overlord {
 	}
 
 	// Suicide once you get old and make sure you don't drop and waste any resources
-	private handleManagerDeath(manager: Zerg) {
-		if (_.sum(manager.carry) == 0 && this.managers.length > 0) {
-			manager.suicide();
-		} else {
-			manager.task = Tasks.transferAll(this.depositTarget);
+	private deathActions(manager: Zerg): boolean {
+		let nearbyManagers = _.filter(this.managers, manager => manager.pos.inRangeTo(this.commandCenter.pos, 3));
+		if (nearbyManagers.length > 1) {
+			if (_.sum(manager.carry) == 0 && this.managers.length > 0) {
+				manager.suicide();
+			} else {
+				manager.task = Tasks.transferAll(this.depositTarget);
+			}
+			return true;
 		}
+		return false;
 	}
 
 	private handleManager(manager: Zerg): void {
+		// Handle switching to next manager
 		if (manager.ticksToLive! < 50) {
-			let nearbyManagers = _.filter(this.managers, manager => manager.pos.inRangeTo(this.commandCenter.pos, 3));
-			if (nearbyManagers.length > 1) {
-				this.handleManagerDeath(manager);
-				return;
-			}
+			if (this.deathActions(manager)) return;
 		}
-		if (this.pickupResources(manager)) {
-			return;
+		// Pick up any dropped resources on ground
+		if (manager.pos.lookFor(LOOK_RESOURCES).length > 0) {
+			if (this.pickupActions(manager)) return;
 		}
-		if (this.moveMineralsToTerminal(manager)) {
-			return;
+		// Move minerals from storage to terminal if needed
+		if (hasMinerals(this.commandCenter.storage.store)) {
+			if (this.moveMineralsToTerminal(manager)) return;
 		}
+		// Moving energy to terminal gets priority if evacuating room
+		if (this.colony.terminalState && this.colony.terminalState.type == 'out') {
+			if (this.equalizeStorageAndTerminal(manager)) return;
+		}
+		// Fulfill withdraw requests
 		if (this.transportRequests.needsWithdrawing) {
-			this.withdrawActions(manager);
-		} else if (this.transportRequests.needsSupplying) {
-			this.supplyActions(manager);
-		} else {
-			this.equalizeStorageAndTerminal(manager);
+			if (this.withdrawActions(manager)) return;
 		}
+		// Fulfill supply requests
+		if (this.transportRequests.needsSupplying) {
+			if (this.supplyActions(manager)) return;
+		}
+		// Move energy between storage and terminal if needed
+		this.equalizeStorageAndTerminal(manager);
 	}
 
 	run() {

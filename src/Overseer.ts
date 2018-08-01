@@ -163,33 +163,36 @@ export class Overseer {
 	// Safe mode condition =============================================================================================
 
 	private handleSafeMode(): void {
+		if (this.colony.stage == ColonyStage.Larva) {
+			return;
+		}
 		// Safe mode activates when there are dangerous player hostiles that can reach the spawn
 		let criticalStructures = _.compact([...this.colony.spawns,
 											this.colony.storage,
 											this.colony.terminal]) as Structure[];
 		for (let structure of criticalStructures) {
 			if (structure.hits < structure.hitsMax &&
-				structure.pos.findInRange(this.colony.room.dangerousHostiles, 1).length > 0) {
+				structure.pos.findInRange(this.colony.room.dangerousHostiles, 2).length > 0) {
 				let ret = this.colony.controller.activateSafeMode();
 				if (ret != OK && !this.colony.controller.safeMode) {
 					if (this.colony.terminal) {
 						DirectiveTerminalEvacuateState.createIfNotPresent(this.colony.terminal.pos, 'room');
 					}
+				} else {
+					return;
 				}
-				return;
 			}
 		}
-		if (this.colony.stage > ColonyStage.Larva) {
-			let firstHostile = _.first(this.colony.room.dangerousHostiles);
-			if (firstHostile && this.colony.spawns[0]) {
-				let barriers = _.map(this.colony.room.barriers, barrier => barrier.pos);
-				if (Pathing.isReachable(firstHostile.pos, this.colony.spawns[0].pos, barriers)) {
-					let ret = this.colony.controller.activateSafeMode();
-					if (ret != OK && !this.colony.controller.safeMode) {
-						if (this.colony.terminal) {
-							DirectiveTerminalEvacuateState.createIfNotPresent(this.colony.terminal.pos, 'room');
-						}
+		let firstHostile = _.first(this.colony.room.dangerousHostiles);
+		if (firstHostile && this.colony.spawns[0]) {
+			let barriers = _.map(this.colony.room.barriers, barrier => barrier.pos);
+			if (Pathing.isReachable(firstHostile.pos, this.colony.spawns[0].pos, barriers)) {
+				let ret = this.colony.controller.activateSafeMode();
+				if (ret != OK && !this.colony.controller.safeMode) {
+					if (this.colony.terminal) {
+						DirectiveTerminalEvacuateState.createIfNotPresent(this.colony.terminal.pos, 'room');
 					}
+				} else {
 					return;
 				}
 			}

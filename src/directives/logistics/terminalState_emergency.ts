@@ -1,7 +1,25 @@
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
 import {log} from '../../console/log';
-import {TerminalState_Emergency} from '../../logistics/TerminalNetwork';
+
+export const TerminalState_Emergency: TerminalState = {
+	name     : 'emergency',
+	type     : 'in',
+	amounts  : {
+		[RESOURCE_ENERGY]                      : 25000,
+		[RESOURCE_CATALYZED_GHODIUM_ALKALIDE]  : 2000,
+		// [RESOURCE_CATALYZED_GHODIUM_ACID]      : 2000,
+		[RESOURCE_CATALYZED_ZYNTHIUM_ACID]     : 2000,
+		[RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE] : 2000,
+		[RESOURCE_CATALYZED_LEMERGIUM_ALKALIDE]: 2000,
+		[RESOURCE_CATALYZED_LEMERGIUM_ACID]    : 2000,
+		[RESOURCE_CATALYZED_KEANIUM_ALKALIDE]  : 2000,
+		// [RESOURCE_CATALYZED_KEANIUM_ACID]      : 2000,
+		[RESOURCE_CATALYZED_UTRIUM_ACID]       : 2000,
+		// [RESOURCE_CATALYZED_UTRIUM_ALKALIDE]   : 2000,
+	},
+	tolerance: 500
+};
 
 @profile
 export class DirectiveTerminalEmergencyState extends Directive {

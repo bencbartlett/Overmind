@@ -478,7 +478,7 @@ export class Movement {
 			}
 		}
 		if (detour) {
-			this.goTo(creep, pos, {ignoreCreeps: false});
+			return this.goTo(creep, pos, {ignoreCreeps: false});
 		}
 	}
 
@@ -512,6 +512,13 @@ export class Movement {
 			}
 		}
 		return outcome;
+	}
+
+	static fleeFrom(creep: Zerg, fleeFromPos: RoomPosition): number | undefined {
+		let fleeDirection = Pathing.getFleeDirection(creep, fleeFromPos);
+		if (fleeDirection) {
+			return creep.move(fleeDirection);
+		}
 	}
 
 	private static deserializeState(moveData: MoveData, destination: RoomPosition): MoveState {

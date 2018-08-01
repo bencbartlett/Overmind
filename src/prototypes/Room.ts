@@ -48,13 +48,20 @@ Object.defineProperty(Room.prototype, 'creeps', {
 
 // Room properties: hostiles ===========================================================================================
 
-// Hostile creeps currently in the room
+Object.defineProperty(Room.prototype, 'allHostiles', {
+	get() {
+		if (!this._allHostiles) {
+			this._allHostiles = this.find(FIND_HOSTILE_CREEPS);
+		}
+		return this._allHostiles;
+	},
+	configurable: true,
+});
 
 Object.defineProperty(Room.prototype, 'hostiles', {
 	get() {
 		if (!this._hostiles) {
-			this._hostiles = _.filter(this.find(FIND_HOSTILE_CREEPS),
-									  (creep: Creep) => creep.owner.username != 'Source Keeper');
+			this._hostiles = _.filter(this.allHostiles, (creep: Creep) => creep.owner.username != 'Source Keeper');
 		}
 		return this._hostiles;
 	},
@@ -106,6 +113,16 @@ Object.defineProperty(Room.prototype, 'hostileStructures', {
 			this._hostileStructures = this.find(FIND_HOSTILE_STRUCTURES, {filter: (s: Structure) => s.hitsMax});
 		}
 		return this._hostileStructures;
+	},
+	configurable: true,
+});
+
+Object.defineProperty(Room.prototype, 'sourceKeepers', {
+	get() {
+		if (!this._sourceKeepers) {
+			this._sourceKeepers = _.filter(this.allHostiles, (creep: Creep) => creep.owner.username == 'Source Keeper');
+		}
+		return this._sourceKeepers;
 	},
 	configurable: true,
 });
@@ -180,7 +197,7 @@ Object.defineProperty(Room.prototype, 'droppedPower', {
 //
 // // All extensions in room
 // extensions: {
-	// 	get() {
+// 	get() {
 // 		return this.structures[STRUCTURE_EXTENSION] || [];
 // 	},
 // },
@@ -194,14 +211,14 @@ Object.defineProperty(Room.prototype, 'droppedPower', {
 //
 // // All containers in the room
 // containers: {
-	// 	get() {
+// 	get() {
 // 		return this.structures[STRUCTURE_CONTAINER] || [];
-	// 	},
-	// },
-	//
+// 	},
+// },
+//
 // // All container-like objects in the room
 // storageUnits: {
-	// 	get() {
+// 	get() {
 // 		if (!this.structures['storageUnits']) {
 // 			let storageUnits = [].concat(this.structures[STRUCTURE_CONTAINER],
 // 										 this.structures[STRUCTURE_STORAGE],
@@ -313,8 +330,8 @@ Object.defineProperty(Room.prototype, 'droppedPower', {
 // ramparts: {
 // 	get() {
 // 		return this.structures[STRUCTURE_RAMPART] || [];
-	// 	},
-	// },
+// 	},
+// },
 //
 // walls: {
 // 	get() {

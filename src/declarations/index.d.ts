@@ -98,8 +98,10 @@ interface IOvermind {
 
 
 interface TerminalState {
+	name: string,
+	type: 'in' | 'out',
 	amounts: { [resourceType: string]: number },
-	tolerance: number
+	tolerance: number,
 }
 
 interface ITerminalNetwork {

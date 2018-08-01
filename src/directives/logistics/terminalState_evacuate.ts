@@ -1,7 +1,13 @@
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
 import {log} from '../../console/log';
-import {TerminalState_Evacuate} from '../../logistics/TerminalNetwork';
+
+export const TerminalState_Evacuate: TerminalState = {
+	name     : 'evacuate',
+	type     : 'out',
+	amounts  : {},
+	tolerance: 500
+};
 
 @profile
 export class DirectiveTerminalEvacuateState extends Directive {

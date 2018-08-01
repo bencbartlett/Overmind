@@ -1,7 +1,15 @@
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
 import {log} from '../../console/log';
-import {TerminalState_Rebuild} from '../../logistics/TerminalNetwork';
+
+export const TerminalState_Rebuild: TerminalState = {
+	name     : 'rebuild',
+	type     : 'out',
+	amounts  : {
+		[RESOURCE_ENERGY]: 25000,
+	},
+	tolerance: 500
+};
 
 @profile
 export class DirectiveTerminalRebuildState extends Directive {

@@ -34,6 +34,8 @@ interface Room {
 	reservedByMe: boolean;
 	signedByMe: boolean;
 	creeps: Creep[];
+	sourceKeepers: Creep[];
+	allHostiles: Creep[];
 	hostiles: Creep[];
 	dangerousHostiles: Creep[];
 	playerHostiles: Creep[];
@@ -79,6 +81,7 @@ interface Room {
 	_creepMatrix: CostMatrix;
 	_priorityMatrices: { [priority: number]: CostMatrix };
 	_skMatrix: CostMatrix;
+	_kitingMatrix: CostMatrix;
 }
 
 interface RoomObject {

@@ -22,7 +22,7 @@ export class OvermindConsole {
 		global.cancelRoomPlanner = this.cancelRoomPlanner;
 		global.listActiveRoomPlanners = this.listActiveRoomPlanners;
 		global.destroyErrantStructures = this.destroyErrantStructures;
-		global.destroyAllHostileStructures = this.destroyAllHostlileStructures;
+		global.destroyAllHostileStructures = this.destroyAllHostileStructures;
 		global.destroyAllBarriers = this.destroyAllBarriers;
 		global.listAllDirectives = this.listAllDirectives;
 		global.listPersistentDirectives = this.listPersistentDirectives;
@@ -242,7 +242,7 @@ export class OvermindConsole {
 		return `Destroyed ${i} misplaced structures in ${roomName}.`;
 	}
 
-	static destroyAllHostlileStructures(roomName: string): string {
+	static destroyAllHostileStructures(roomName: string): string {
 		let room = Game.rooms[roomName];
 		if (!room) return `${roomName} is undefined! (No vision?)`;
 		if (!room.my) return `${roomName} is not owned by you!`;

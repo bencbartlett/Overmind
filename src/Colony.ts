@@ -137,6 +137,7 @@ export class Colony {
 	level: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; 				// Level of the colony's main room
 	stage: number;										// The stage of the colony "lifecycle"
 	defcon: number;
+	terminalState: TerminalState | undefined;
 	breached: boolean;
 	lowPowerMode: boolean; 								// Activate if RCL8 and full energy
 	layout: 'twoPart' | 'bunker';						// Which room design colony uses
@@ -286,6 +287,7 @@ export class Colony {
 		this.breached = (this.room.dangerousHostiles.length > 0 &&
 						 this.creeps.length == 0 &&
 						 !this.controller.safeMode);
+		this.terminalState = undefined;
 		// Register assets
 		this.assets = this.getAllAssets();
 	}

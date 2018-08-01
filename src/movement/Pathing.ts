@@ -16,7 +16,7 @@ export class Pathing {
 
 	/* Check if the room should be avoiding when calculating routes */
 	static shouldAvoid(roomName: string) {
-		return Memory.rooms && Memory.rooms[roomName] && Memory.rooms[roomName].avoid;
+		return Memory.rooms[roomName] && Memory.rooms[roomName].avoid;
 	}
 
 	/* Update memory on whether a room should be avoided based on controller owner */
@@ -110,9 +110,9 @@ export class Pathing {
 		return ret;
 	}
 
-	private static roomCallback(roomName: string, origin: RoomPosition, destination: RoomPosition,
-								allowedRooms: { [roomName: string]: boolean } | undefined,
-								options: MoveOptions): CostMatrix | boolean {
+	static roomCallback(roomName: string, origin: RoomPosition, destination: RoomPosition,
+						allowedRooms: { [roomName: string]: boolean } | undefined,
+						options: MoveOptions): CostMatrix | boolean {
 		if (allowedRooms && !allowedRooms[roomName]) {
 			return false;
 		}
@@ -126,6 +126,29 @@ export class Pathing {
 			return this.getCostMatrix(room, options, false);
 		} else { // have no vision
 			return true;
+		}
+	}
+
+	static kitingRoomCallback(roomName: string): CostMatrix | boolean {
+		const room = Game.rooms[roomName];
+		if (room) {
+			return this.getKitingMatrix(room);
+		} else { // have no vision
+			return true;
+		}
+	}
+
+	static getFleeDirection(creep: Creep | Zerg, fleeFromPos: RoomPosition, range = 5): DirectionConstant | undefined {
+		let nextPos = PathFinder.search(creep.pos, {pos: fleeFromPos, range: range},
+										{
+											plainCost   : 1,
+											swampCost   : 10,
+											flee        : true,
+											roomCallback: Pathing.kitingRoomCallback,
+											maxRooms    : 1
+										}).path[0];
+		if (nextPos) {
+			return creep.pos.getDirectionTo(nextPos);
 		}
 	}
 
@@ -221,6 +244,28 @@ export class Pathing {
 		return room._creepMatrix;
 	}
 
+	/* Kites around hostile creeps in a room */
+	static getKitingMatrix(room: Room): CostMatrix {
+		if (room._kitingMatrix) {
+			return room._kitingMatrix;
+		}
+		let matrix = this.getCreepMatrix(room);
+		let avoidCreeps = _.filter(room.allHostiles,
+								   c => c.getActiveBodyparts(ATTACK) > 0 || c.getActiveBodyparts(RANGED_ATTACK) > 0); // || c.getActiveBodyparts(HEAL) > 0);
+		_.forEach(avoidCreeps, avoidCreep => {
+			let cost: number;
+			for (let dx = -3; dx <= 3; dx++) {
+				for (let dy = -3; dy <= 3; dy++) {
+					cost = 40 - (10 * Math.max(Math.abs(dx), Math.abs(dy)));
+					cost = Math.max(cost, matrix.get(avoidCreep.pos.x + dx, avoidCreep.pos.y + dy));
+					matrix.set(avoidCreep.pos.x + dx, avoidCreep.pos.y + dy, cost);
+				}
+			}
+		});
+		room._kitingMatrix = matrix;
+		return room._kitingMatrix;
+	}
+
 	// /* Avoids creeps that shouldn't be pushed in a room */ // TODO: plug in
 	// private static getPrioritizedCreepMatrix(room: Room, priority: number): CostMatrix {
 	// 	if (!room._priorityMatrices) {
@@ -246,12 +291,11 @@ export class Pathing {
 			return room._skMatrix;
 		}
 		const matrix = this.getDefaultMatrix(room).clone();
-		const toAvoid = _.compact([...room.sources, room.mineral]);
-		const range = 4;
-		_.forEach(toAvoid, (center: RoomObject) => {
-			for (let dx = -range; dx <= range; dx++) {
-				for (let dy = -range; dy <= range; dy++) {
-					matrix.set(center.pos.x + dx, center.pos.y + dy, 0xff);
+		const avoidRange = 4;
+		_.forEach(room.keeperLairs, lair => {
+			for (let dx = -avoidRange; dx <= avoidRange; dx++) {
+				for (let dy = -avoidRange; dy <= avoidRange; dy++) {
+					matrix.set(lair.pos.x + dx, lair.pos.y + dy, 0xff);
 				}
 			}
 		});
@@ -408,7 +452,7 @@ export class Pathing {
 
 	static calculatePathWeight(startPos: RoomPosition, endPos: RoomPosition, options: MoveOptions = {}): number {
 		_.defaults(options, {
-			range  : 1,
+			range: 1,
 		});
 		let ret = this.findPath(startPos, endPos, options);
 		let weight = 0;
@@ -455,14 +499,16 @@ export class Pathing {
 	static isReachable(startPos: RoomPosition, endPos: RoomPosition, obstacles: (RoomPosition | HasPos)[],
 					   options: MoveOptions = {}): boolean {
 		_.defaults(options, {
-			ignoreCreeps: false,
+			ignoreCreeps: true,
 			range       : 1,
 			maxOps      : 2000,
 			ensurePath  : false,
 		});
+		if (startPos.roomName != endPos.roomName) {
+			log.error(`isReachable() should only be used within a single room!`);
+			return false;
+		}
 		const matrix = new PathFinder.CostMatrix();
-		// Set passability of structure positions
-		let impassibleStructures: Structure[] = [];
 		_.forEach(obstacles, obstacle => {
 			if (hasPos(obstacle)) {
 				matrix.set(obstacle.pos.x, obstacle.pos.y, 0xfe);
@@ -470,11 +516,13 @@ export class Pathing {
 				matrix.set(obstacle.x, obstacle.y, 0xfe);
 			}
 		});
+		let callback = (roomName: string) => roomName == endPos.roomName ? matrix : false;
 		let ret = PathFinder.search(startPos, {pos: endPos, range: options.range!}, {
-			maxOps   : options.maxOps,
-			maxRooms : 1,
-			plainCost: 1,
-			swampCost: 5,
+			maxOps      : options.maxOps,
+			plainCost   : 1,
+			swampCost   : 5,
+			maxRooms    : 1,
+			roomCallback: callback,
 		});
 		if (ret.incomplete) {
 			return false;

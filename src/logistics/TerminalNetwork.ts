@@ -46,36 +46,6 @@ function wantedAmount(colony: Colony, resource: ResourceConstant): number {
 		   - (colony.assets[resource] || 0);
 }
 
-
-export const TerminalState_Evacuate = {
-	amounts  : {},
-	tolerance: 500
-};
-
-export const TerminalState_Emergency = {
-	amounts  : {
-		[RESOURCE_ENERGY]                      : 25000,
-		[RESOURCE_CATALYZED_GHODIUM_ALKALIDE]  : 2000,
-		// [RESOURCE_CATALYZED_GHODIUM_ACID]      : 2000,
-		[RESOURCE_CATALYZED_ZYNTHIUM_ACID]     : 2000,
-		[RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE] : 2000,
-		[RESOURCE_CATALYZED_LEMERGIUM_ALKALIDE]: 2000,
-		[RESOURCE_CATALYZED_LEMERGIUM_ACID]    : 2000,
-		[RESOURCE_CATALYZED_KEANIUM_ALKALIDE]  : 2000,
-		// [RESOURCE_CATALYZED_KEANIUM_ACID]      : 2000,
-		[RESOURCE_CATALYZED_UTRIUM_ACID]       : 2000,
-		// [RESOURCE_CATALYZED_UTRIUM_ALKALIDE]   : 2000,
-	},
-	tolerance: 500
-};
-
-export const TerminalState_Rebuild = {
-	amounts  : {
-		[RESOURCE_ENERGY]: 25000,
-	},
-	tolerance: 500
-};
-
 @profile
 @assimilationLocked
 export class TerminalNetwork implements ITerminalNetwork {
@@ -361,6 +331,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 
 	registerTerminalState(terminal: StructureTerminal, state: TerminalState): void {
 		this.exceptionTerminals[terminal.ref] = state;
+		colonyOf(terminal).terminalState = state;
 		_.remove(this.terminals, t => t.ref == terminal.ref);
 	}
 
@@ -371,34 +342,39 @@ export class TerminalNetwork implements ITerminalNetwork {
 															  : TerminalNetwork.settings.equalize.maxMineralSendSize;
 			let amount = (terminal.store[resourceType] || 0);
 			let targetAmount = state.amounts[resourceType] || 0;
-			// Send excess resources away to other colony
-			if (amount > targetAmount + state.tolerance) {
-				if (terminal.cooldown > 0) {
-					continue;
-				}
-				let receiver = minBy(this.terminals, t => _.sum(t.store));
-				if (!receiver) return;
-				let sendAmount: number;
-				if (resourceType == RESOURCE_ENERGY) {
-					let cost = Game.market.calcTransactionCost(amount, terminal.room.name, receiver.room.name);
-					sendAmount = minMax(amount - targetAmount - cost, TERMINAL_MIN_SEND, maxSendSize);
-				} else {
-					sendAmount = minMax(amount - targetAmount, TERMINAL_MIN_SEND, maxSendSize);
-				}
-				if (receiver && receiver.storeCapacity - _.sum(receiver.store) > sendAmount) {
-					this.transfer(terminal, receiver, resourceType, sendAmount, 'exception state');
-					return;
+			// Terminal output state - push resources away from this colony
+			if (state.type == 'out') {
+				if (amount > targetAmount + state.tolerance) {
+					if (terminal.cooldown > 0) {
+						continue;
+					}
+					let receiver = minBy(this.terminals, t => _.sum(t.store));
+					if (!receiver) return;
+					let sendAmount: number;
+					if (resourceType == RESOURCE_ENERGY) {
+						let cost = Game.market.calcTransactionCost(amount, terminal.room.name, receiver.room.name);
+						sendAmount = minMax(amount - targetAmount - cost, TERMINAL_MIN_SEND, maxSendSize);
+					} else {
+						sendAmount = minMax(amount - targetAmount, TERMINAL_MIN_SEND, maxSendSize);
+					}
+					if (receiver && receiver.storeCapacity - _.sum(receiver.store) > sendAmount) {
+						this.transfer(terminal, receiver, resourceType, sendAmount, 'exception state');
+						return;
+					}
 				}
 			}
-			// Request needed resources from most plentiful colony
-			else if (amount < targetAmount - state.tolerance) {
-				let sender = maxBy(this.readyTerminals, t => _.sum(t.store));
-				if (!sender) return;
-				let receiveAmount = minMax(targetAmount - amount, TERMINAL_MIN_SEND, maxSendSize);
-				if (sender && (sender.store[resourceType] || 0) > TERMINAL_MIN_SEND) {
-					this.transfer(sender, terminal, resourceType, receiveAmount, 'exception state');
-					_.remove(this.readyTerminals, t => t.ref == sender!.ref);
-					return;
+			// Terminal input state - request resources be sent to this colony
+			if (state.type == 'in') {
+				if (amount < targetAmount - state.tolerance) {
+					// Request needed resources from most plentiful colony
+					let sender = maxBy(this.readyTerminals, t => _.sum(t.store));
+					if (!sender) return;
+					let receiveAmount = minMax(targetAmount - amount, TERMINAL_MIN_SEND, maxSendSize);
+					if (sender && (sender.store[resourceType] || 0) > TERMINAL_MIN_SEND) {
+						this.transfer(sender, terminal, resourceType, receiveAmount, 'exception state');
+						_.remove(this.readyTerminals, t => t.ref == sender!.ref);
+						return;
+					}
 				}
 			}
 		}
