@@ -13,8 +13,28 @@ interface TerminalNetworkMemory {
 	equalizeIndex: number;
 }
 
-const TerminalNetworkMemoryDefaults = {
+interface TerminalNetworkStats {
+	transfers: {
+		[resourceType: string]: {
+			[origin: string]: {
+				[destination: string]: number
+			}
+		}
+	},
+	costs: {
+		[origin: string]: {
+			[destination: string]: number
+		}
+	}
+}
+
+const TerminalNetworkMemoryDefaults: TerminalNetworkMemory = {
 	equalizeIndex: 0
+};
+
+const TerminalNetworkStatsDefaults: TerminalNetworkStats = {
+	transfers: {},
+	costs    : {},
 };
 
 function colonyOf(terminal: StructureTerminal): Colony {
@@ -59,9 +79,10 @@ export const TerminalState_Rebuild = {
 @profile
 @assimilationLocked
 export class TerminalNetwork implements ITerminalNetwork {
-
 	terminals: StructureTerminal[];					// All terminals
 	readyTerminals: StructureTerminal[];
+	memory: TerminalNetworkMemory;
+	stats: TerminalNetworkStats;
 	exceptionTerminals: { [terminalID: string]: TerminalState }; 		// Terminals in a special operational state
 	assets: { [resourceType: string]: number };		// All assets
 	private notifications: string[];
@@ -96,12 +117,11 @@ export class TerminalNetwork implements ITerminalNetwork {
 		}
 	};
 
-	memory: TerminalNetworkMemory;
-
 	constructor(terminals: StructureTerminal[]) {
 		this.terminals = terminals;
 		this.readyTerminals = _.filter(terminals, t => t.cooldown == 0);
 		this.memory = Mem.wrap(Memory.Overmind, 'terminalNetwork', TerminalNetworkMemoryDefaults);
+		this.stats = Mem.wrap(Memory.stats.persistent, 'terminalNetwork', TerminalNetworkStatsDefaults);
 		this.alreadyReceived = [];
 		this.alreadySent = [];
 		this.exceptionTerminals = {}; 		// populated in init()
@@ -116,12 +136,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		return mergeSum(_.map(this.terminals, terminal => colonyOf(terminal).assets));
 	}
 
-	static get stats() {
-		return Mem.wrap(Memory.stats.persistent, 'terminalNetwork');
-	}
-
-	static logTransfer(resourceType: ResourceConstant, amount: number, origin: string, destination: string) {
-		if (!this.stats.transfers) this.stats.transfers = {};
+	private logTransfer(resourceType: ResourceConstant, amount: number, origin: string, destination: string) {
 		if (!this.stats.transfers[resourceType]) this.stats.transfers[resourceType] = {};
 		if (!this.stats.transfers[resourceType][origin]) this.stats.transfers[resourceType][origin] = {};
 		if (!this.stats.transfers[resourceType][origin][destination]) {
@@ -131,8 +146,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		this.logTransferCosts(amount, origin, destination);
 	}
 
-	private static logTransferCosts(amount: number, origin: string, destination: string) {
-		if (!this.stats.transfers.costs) this.stats.transfers.costs = {};
+	private logTransferCosts(amount: number, origin: string, destination: string) {
 		if (!this.stats.transfers.costs[origin]) this.stats.transfers.costs[origin] = {};
 		if (!this.stats.transfers.costs[origin][destination]) this.stats.transfers.costs[origin][destination] = 0;
 		let transactionCost = Game.market.calcTransactionCost(amount, origin, destination);
@@ -185,7 +199,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 			this.notify(msg);
 			// log.info(`Sent ${amount} ${resourceType} from ${sender.room.print} to ` +
 			// 		 `${receiver.room.print}. Fee: ${cost}.`);
-			TerminalNetwork.logTransfer(resourceType, amount, sender.room.name, receiver.room.name);
+			this.logTransfer(resourceType, amount, sender.room.name, receiver.room.name);
 			this.alreadySent.push(sender);
 			this.alreadyReceived.push(receiver);
 		} else {

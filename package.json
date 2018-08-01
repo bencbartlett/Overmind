@@ -23,20 +23,20 @@
     "test": "npm run clean && npm run build"
   },
   "devDependencies": {
-    "@types/lodash": "^3.10.1",
-    "@types/screeps": "^2.4.0",
+    "@types/lodash": "3.10.1",
+    "@types/screeps": "2.4.0",
     "rollup": "0.62.0",
-    "rollup-plugin-clean": "^1.0.0",
-    "rollup-plugin-commonjs": "^8.4.1",
-    "rollup-plugin-node-resolve": "^3.3.0",
+    "rollup-plugin-clear": "2.0.7",
+    "rollup-plugin-commonjs": "8.4.1",
+    "rollup-plugin-node-resolve": "3.3.0",
     "rollup-plugin-screeps": "0.1.2",
-    "rollup-plugin-typescript2": "^0.11.0",
-    "tslint": "^5.10.0",
+    "rollup-plugin-typescript2": "0.16.1",
+    "tslint": "5.11.0",
     "typescript": "2.9.2"
   },
   "dependencies": {
-    "columnify": "^1.5.4",
-    "screeps-profiler": "^2.0.1",
-    "source-map": "^0.6.1"
+    "columnify": "1.5.4",
+    "screeps-profiler": "2.0.1",
+    "source-map": "0.7.3"
   }
 }

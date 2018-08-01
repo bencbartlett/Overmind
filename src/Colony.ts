@@ -435,6 +435,7 @@ export class Colony {
 		Stats.log(`colonies.${this.name}.miningSites.avgDowntime`, avgDowntime);
 		Stats.log(`colonies.${this.name}.miningSites.avgUsage`, avgUsage);
 		Stats.log(`colonies.${this.name}.miningSites.energyInPerTick`, energyInPerTick);
+		Stats.log(`colonies.${this.name}.assets`, this.assets);
 	}
 
 	visuals(): void {

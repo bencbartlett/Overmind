@@ -46,10 +46,16 @@ export class Stats {
 		Memory.stats['memory.used'] = RawMemory.get().length;
 	}
 
-	static log(key: string, value: number | undefined, truncateNumbers = true): void {
-		if (truncateNumbers && typeof value == 'number') {
-			let decimals = 5;
-			value = value.truncate(decimals);
+	static log(key: string, value: number | { [key: string]: number } | undefined, truncateNumbers = true): void {
+		if (truncateNumbers && value != undefined) {
+			const decimals = 5;
+			if (typeof value == 'number') {
+				value = value.truncate(decimals);
+			} else {
+				for (let i in value) {
+					value[i] = value[i].truncate(decimals);
+				}
+			}
 		}
 		Mem.setDeep(Memory.stats, key, value);
 	}

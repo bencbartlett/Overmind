@@ -1,7 +1,7 @@
 "use strict";
 
 // noinspection NpmUsedModulesInstalled
-import clean from "rollup-plugin-clean";
+import clear from "rollup-plugin-clear";
 // noinspection NpmUsedModulesInstalled
 import resolve from "rollup-plugin-node-resolve";
 // noinspection NpmUsedModulesInstalled
@@ -49,7 +49,7 @@ export default {
         console.warn(warning.message);
     },
     plugins: [
-        clean(),
+        clear({targets: ["dist"]}),
         resolve(),
         commonjs({
                      namedExports: {

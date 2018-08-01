@@ -1,4 +1,3 @@
-import {SourceMapConsumer} from 'source-map';
 import {profile} from '../profiler/decorator';
 
 export enum LogLevels {
@@ -117,15 +116,15 @@ export class Log {
 	public static sourceMap: any;
 
 	public static loadSourceMap() {
-		try {
-			// tslint:disable-next-line
-			const map = require('main.js.map');
-			if (map) {
-				Log.sourceMap = new SourceMapConsumer(map);
-			}
-		} catch (err) {
-			console.log('failed to load source map', err);
-		}
+		// try {
+		// 	// tslint:disable-next-line
+		// 	const map = require('main.js.map');
+		// 	if (map) {
+		// 		Log.sourceMap = new SourceMapConsumer(map);
+		// 	}
+		// } catch (err) {
+		console.log('Source mapping deprecated.');
+		// }
 	}
 
 	public get level(): number {

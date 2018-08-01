@@ -16,13 +16,33 @@ interface TraderMemory {
 	equalizeIndex: number;
 }
 
+interface TraderStats {
+	bought: {
+		[resourceType: string]: {
+			amount: number,
+			credits: number,
+		}
+	}
+	sold: {
+		[resourceType: string]: {
+			amount: number,
+			credits: number,
+		}
+	}
+}
+
 const TraderMemoryDefaults: TraderMemory = {
 	cache        : {
 		sell: {},
 		buy : {},
 		tick: 0,
 	},
-	equalizeIndex: 0,
+	equalizeIndex: 0
+};
+
+const TraderStatsDefaults: TraderStats = {
+	bought: {},
+	sold  : {},
 };
 
 // Maximum prices I'm willing to pay to buy various resources - based on shard2 market data in June 2018
@@ -57,12 +77,12 @@ export class TraderJoe implements ITradeNetwork {
 	};
 
 	memory: TraderMemory;
-	stats: any;
+	stats: TraderStats;
 	private notifications: string[];
 
 	constructor() {
 		this.memory = Mem.wrap(Memory.Overmind, 'trader', TraderMemoryDefaults, true);
-		this.stats = Mem.wrap(Memory.stats.persistent, 'trader');
+		this.stats = Mem.wrap(Memory.stats.persistent, 'trader', TraderStatsDefaults);
 		this.notifications = [];
 	}
 
@@ -288,6 +308,45 @@ export class TraderJoe implements ITradeNetwork {
 		this.notify(msg);
 	}
 
+	// Look through transactions happening on the previous tick and record stats
+	private analyzeTransactions(): void {
+		const time = Game.time - 1;
+		// Incoming transactions
+		for (let transaction of Game.market.incomingTransactions) {
+			if (transaction.time < time) {
+				break; // only look at things from last tick
+			} else {
+				if (transaction.order) {
+					const resourceType = transaction.resourceType;
+					const amount = transaction.amount;
+					const price = transaction.order.price;
+					if (!this.stats.bought[resourceType]) {
+						this.stats.bought[resourceType] = {amount: 0, credits: 0};
+					}
+					this.stats.bought[resourceType].amount += amount;
+					this.stats.bought[resourceType].credits += amount * price;
+				}
+			}
+		}
+		// Outgoing transactions
+		for (let transaction of Game.market.outgoingTransactions) {
+			if (transaction.time < time) {
+				break; // only look at things from last tick
+			} else {
+				if (transaction.order) {
+					const resourceType = transaction.resourceType;
+					const amount = transaction.amount;
+					const price = transaction.order.price;
+					if (!this.stats.sold[resourceType]) {
+						this.stats.sold[resourceType] = {amount: 0, credits: 0};
+					}
+					this.stats.sold[resourceType].amount += amount;
+					this.stats.sold[resourceType].credits += amount * price;
+				}
+			}
+		}
+	}
+
 
 	init(): void {
 		if (Game.time - (this.memory.cache.tick || 0) > TraderJoe.settings.cache.timeout) {
@@ -302,6 +361,7 @@ export class TraderJoe implements ITradeNetwork {
 		if (this.notifications.length > 0) {
 			log.info(`Trade network activity: ` + alignedNewline + this.notifications.join(alignedNewline));
 		}
+		this.analyzeTransactions();
 	}
 
 }

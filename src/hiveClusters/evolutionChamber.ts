@@ -15,6 +15,7 @@ import {Zerg} from '../zerg/Zerg';
 import {TraderJoe} from '../logistics/TradeNetwork';
 import {rightArrow} from '../utilities/stringConstants';
 import {Visualizer} from '../visuals/Visualizer';
+import {Stats} from '../stats/stats';
 
 const LabStatus = {
 	Idle             : 0,
@@ -40,6 +41,9 @@ interface EvolutionChamberMemory {
 	labMineralTypes: {
 		[labID: string]: _ResourceConstantSansEnergy;
 	};
+	stats: {
+		totalProduction: { [resourceType: string]: number }
+	}
 }
 
 const EvolutionChamberMemoryDefaults: EvolutionChamberMemory = {
@@ -48,6 +52,9 @@ const EvolutionChamberMemoryDefaults: EvolutionChamberMemory = {
 	activeReaction : undefined,
 	reactionQueue  : [],
 	labMineralTypes: {},
+	stats          : {
+		totalProduction: {}
+	}
 };
 
 export function neighboringLabs(pos: RoomPosition): StructureLab[] {
@@ -393,10 +400,21 @@ export class EvolutionChamber extends HiveCluster {
 			let [lab1, lab2] = this.reagentLabs;
 			for (let lab of this.productLabs) {
 				if (lab.cooldown == 0) {
-					lab.runReaction(lab1, lab2);
+					let result = lab.runReaction(lab1, lab2);
+					if (result == OK) { // update total production amount in memory
+						const product = this.memory.activeReaction ? this.memory.activeReaction.mineralType : 'ERROR';
+						if (!this.memory.stats.totalProduction[product]) {
+							this.memory.stats.totalProduction[product] = 0;
+						}
+						this.memory.stats.totalProduction[product] += LAB_REACTION_AMOUNT;
+					} else {
+						log.debug(`Couldn't run reaction for lab @ ${lab.pos.print}! Result: ${result}`);
+					}
 				}
 			}
 		}
+		// Record stats
+		this.stats();
 	}
 
 	visuals() {
@@ -404,5 +422,10 @@ export class EvolutionChamber extends HiveCluster {
 		_.forEach(this.productLabs, lab => Visualizer.circle(lab.pos, 'blue'));
 		_.forEach(this.boostingLabs, lab => Visualizer.circle(lab.pos, 'purple'));
 	}
+
+	private stats(): void {
+		Stats.log(`colonies.${this.colony.name}.evolutionChamber.totalProduction`, this.memory.stats.totalProduction);
+	}
+
 }
 
