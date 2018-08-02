@@ -1,21 +1,19 @@
 "use strict";
 
-// noinspection NpmUsedModulesInstalled
-import clear from "rollup-plugin-clear";
-// noinspection NpmUsedModulesInstalled
 import resolve from "rollup-plugin-node-resolve";
-// noinspection NpmUsedModulesInstalled
 import commonjs from "rollup-plugin-commonjs";
+import progress from "rollup-plugin-progress";
 import typescript from "rollup-plugin-typescript2";
-// noinspection NpmUsedModulesInstalled
 import screeps from "rollup-plugin-screeps";
 
 let cfg;
 const dest = process.env.DEST;
 if (!dest) {
-    console.log("No destination specified - code will be compiled but not uploaded");
+    console.log('\x1b[45m%s\x1b[0m \x1b[35m%s\x1b[0m', 'Compiling Overmind...', '(deploy destination: none)');
 } else if ((cfg = require("./screeps")[dest]) == null) {
     throw new Error("Invalid upload destination");
+} else {
+    console.log('\x1b[45m%s\x1b[0m \x1b[35m%s\x1b[0m', 'Compiling Overmind...', `(deploy destination: ${dest})`);
 }
 
 export default {
@@ -49,7 +47,7 @@ export default {
         console.warn(warning.message);
     },
     plugins: [
-        clear({targets: ["dist"]}),
+        progress({clearLine: true}),
         resolve(),
         commonjs({
                      namedExports: {

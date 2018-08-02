@@ -6,7 +6,7 @@ import {profile} from '../../profiler/decorator';
 import {DEFCON} from '../../Colony';
 import {CreepSetup} from '../CreepSetup';
 
-const DroneSetup = new CreepSetup('drone', {
+export const DroneSetup = new CreepSetup('drone', {
 	pattern  : [WORK, WORK, CARRY, MOVE],
 	sizeLimit: Infinity,
 });

@@ -2,6 +2,13 @@ import {getOverlord, Overlord} from '../Overlord';
 import {profile} from '../../profiler/decorator';
 import {Colony} from '../../Colony';
 import {Zerg} from '../../zerg/Zerg';
+import {MinerSetup} from './miner';
+import {DroneSetup} from './extractor';
+import {getPosFromString} from '../../utilities/utils';
+
+
+// This overlord contains the default actions for any creeps which lack an overlord (for example, miners whose \
+// miningSite is no longer visible, or guards with no directive)
 
 @profile
 export class DefaultOverlord extends Overlord {
@@ -20,6 +27,14 @@ export class DefaultOverlord extends Overlord {
 	}
 
 	run() {
-
+		for (let zerg of this.idleZerg) {
+			// Miners and extractors go to their respective sources/extractors if they lack vision
+			if (zerg.roleName == MinerSetup.role || zerg.roleName == DroneSetup.role) {
+				let destination = getPosFromString(zerg.memory.overlord);
+				if (destination) {
+					zerg.goTo(destination);
+				}
+			}
+		}
 	}
 }

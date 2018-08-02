@@ -93,6 +93,15 @@ export function derefCoords(coordName: string, roomName: string): RoomPosition {
 	return new RoomPosition(parseInt(x, 10), parseInt(y, 10), roomName);
 }
 
+export function getPosFromString(str: string | undefined | null): RoomPosition | undefined {
+	if (!str) return;
+	let posName = _.first(str.match(/(E|W)\d+(N|S)\d+:\d+:\d+/g) || []);
+	if (posName) {
+		let [roomName, x, y] = posName.split(':');
+		return new RoomPosition(parseInt(x, 10), parseInt(y, 10), roomName);
+	}
+}
+
 export function averageBy<T>(objects: T[], iteratee: ((obj: T) => number)): number | undefined {
 	if (objects.length == 0) {
 		return undefined;

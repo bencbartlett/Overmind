@@ -30,6 +30,7 @@ import {RandomWalkerScoutOverlord} from './overlords/scouting/randomWalker';
 import {EXPANSION_EVALUATION_FREQ, ExpansionPlanner} from './strategy/ExpansionPlanner';
 import {log} from './console/log';
 import {assimilationLocked} from './assimilation/decorator';
+import {DefaultOverlord} from './overlords/core/default';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -151,6 +152,7 @@ export class Colony {
 	transportRequests: TransportRequestGroup;
 	// Overlords
 	overlords: {
+		default: DefaultOverlord;
 		work: WorkerOverlord;
 		logistics: TransportOverlord;
 		scout?: RandomWalkerScoutOverlord;
@@ -360,6 +362,7 @@ export class Colony {
 
 	private spawnMoarOverlords(): void {
 		this.overlords = {
+			default  : new DefaultOverlord(this),
 			work     : new WorkerOverlord(this),
 			logistics: new TransportOverlord(this),
 		};

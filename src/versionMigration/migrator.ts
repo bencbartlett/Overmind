@@ -21,6 +21,9 @@ export class VersionMigration {
 		if (!this.memory.versions['04Xto05X_part2']) {
 			this.migrate_04X_05X_part2();
 		}
+		if (!this.memory.versions['04Xto05X_part3']) {
+			this.migrate_04X_05X_part3();
+		}
 	}
 
 	static get memory(): VersionMigratorMemory {
@@ -124,6 +127,19 @@ export class VersionMigration {
 		delete (<any>Memory).autoclaim;
 		this.memory.versions['04Xto05X_part2'] = true;
 		log.alert(`Version migration from 0.4.x -> 0.5.x (part 2) completed successfully.`);
+	}
+
+	static migrate_04X_05X_part3() {
+		for (let i in Memory.creeps) {
+			if (Memory.creeps[i].overlord) {
+				let ref = Memory.creeps[i].overlord as string;
+				let n = ref.lastIndexOf(':');
+				ref = ref.slice(0, n) + ref.slice(n).replace(':', '>');
+				Memory.creeps[i].overlord = ref;
+			}
+		}
+		this.memory.versions['04Xto05X_part3'] = true;
+		log.alert(`Version migration from 0.4.x -> 0.5.x (part 3) completed successfully.`);
 	}
 
 }

@@ -87,7 +87,7 @@ export abstract class Overlord {
 		// this.name = name;
 		this.room = initializer.room;
 		this.priority = priority;
-		this.ref = initializer.ref + ':' + name;
+		this.ref = initializer.ref + '>' + name;
 		this.pos = initializer.pos;
 		this.colony = initializer.colony;
 		this.spawnGroup = undefined;
