@@ -2,7 +2,7 @@
 
 import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
-import {ExtractorOverlord} from '../overlords/core/extractor';
+import {ExtractorOverlord} from '../overlords/mining/extractor';
 import {Colony} from '../Colony';
 import {log} from '../console/log';
 import {Pathing} from '../movement/Pathing';

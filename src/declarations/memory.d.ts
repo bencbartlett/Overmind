@@ -157,12 +157,16 @@ interface RoomMemory {
 		walls: string[];
 		ramparts: string[];
 	} | undefined;
-	expansionData: {
+	expansionData?: {
 		score: number;
 		bunkerAnchor: string;
 		outposts: { [roomName: string]: number };
 	} | false;
 	expiration?: number;
+	invasionData?: {
+		harvested: number;
+		lastSeen: number;
+	}
 }
 
 interface SpawnMemory {

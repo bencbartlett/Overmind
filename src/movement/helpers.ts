@@ -27,7 +27,7 @@ export function getCreepWeightInfo(creep: Creep, analyzeCarry = true): { move: n
 	bodyParts.move = bodyParts.move || 0;
 	bodyParts.weighted = bodyParts.weighted || 0;
 	if (bodyParts[CARRY]) {
-		bodyParts.weighted = Math.ceil(_.sum(creep.carry) / CARRY_CAPACITY) + bodyParts.weighted;
+		bodyParts.weighted += Math.ceil(_.sum(creep.carry) / CARRY_CAPACITY);
 	}
 	// Account for boosts
 	for (let part of creep.body) {
@@ -42,12 +42,8 @@ export function getTerrainCosts(creep: Creep): { plainCost: number, swampCost: n
 	const data = getCreepWeightInfo(creep);
 	const ratio = data.weighted / data.move;
 	return {
-		plainCost: ratio <= 1 ? 1 : 2,
-		swampCost: getSwampCost(ratio),
+		plainCost: Math.ceil(ratio),
+		swampCost: 5 * Math.ceil(ratio),
 	};
 }
 
-function getSwampCost(ratio: number): number {
-	const clamped = ratio < 0.2 ? 0.2 : ratio > 1 ? 1 : ratio;
-	return Math.ceil(clamped * 5);
-}

@@ -11,7 +11,7 @@ import {Visualizer} from './visuals/Visualizer';
 import {Pathing} from './movement/Pathing';
 import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
 import {DirectiveNukeResponse} from './directives/defense/nukeResponse';
-import {MinerSetup} from './overlords/core/miner';
+import {MinerSetup} from './overlords/mining/miner';
 import {QueenSetup} from './overlords/core/queen';
 import {DirectiveTerminalEvacuateState} from './directives/logistics/terminalState_evacuate';
 import {bodyCost} from './overlords/CreepSetup';

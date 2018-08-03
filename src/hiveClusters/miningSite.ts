@@ -2,7 +2,7 @@
 
 import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
-import {MiningOverlord} from '../overlords/core/miner';
+import {MiningOverlord} from '../overlords/mining/miner';
 import {Colony, ColonyStage} from '../Colony';
 import {Mem} from '../Memory';
 import {log} from '../console/log';

@@ -4,10 +4,16 @@ import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER} from '../utilities/
 import {Zerg} from '../zerg/Zerg';
 import {MoveOptions} from './Movement';
 import {hasPos} from '../declarations/typeGuards';
+import {normalizePos} from './helpers';
 
 /* Module for pathing-related operations. */
 
 const DEFAULT_MAXOPS = 20000;		// Default timeout for pathfinding
+
+export interface TerrainCosts {
+	plainCost: number,
+	swampCost: number
+};
 
 @profile
 export class Pathing {
@@ -123,7 +129,13 @@ export class Pathing {
 
 		const room = Game.rooms[roomName];
 		if (room) {
-			return this.getCostMatrix(room, options, false);
+			let matrix = this.getCostMatrix(room, options, false);
+			// Modify cost matrix if needed
+			if (options.modifyRoomCallback) {
+				return options.modifyRoomCallback(room, matrix.clone());
+			} else {
+				return matrix;
+			}
 		} else { // have no vision
 			return true;
 		}
@@ -138,21 +150,63 @@ export class Pathing {
 		}
 	}
 
-	static getFleeDirection(creep: Creep | Zerg, fleeFromPos: RoomPosition, range = 5): DirectionConstant | undefined {
-		let nextPos = PathFinder.search(creep.pos, {pos: fleeFromPos, range: range},
-										{
-											plainCost   : 1,
-											swampCost   : 10,
-											flee        : true,
-											roomCallback: Pathing.kitingRoomCallback,
-											maxRooms    : 1
-										}).path[0];
-		if (nextPos) {
-			return creep.pos.getDirectionTo(nextPos);
-		}
+	/* Get a kiting path within a room */
+	static getKitingPath(creepPos: RoomPosition, fleeFrom: (RoomPosition | HasPos)[],
+						 range = 5, terrainCosts: TerrainCosts = {plainCost: 1, swampCost: 10}): RoomPosition[] {
+		let fleeFromPos = _.map(fleeFrom, flee => normalizePos(flee));
+		let avoidGoals = _.map(fleeFromPos, pos => {
+			return {pos: pos, range: range};
+		});
+		return PathFinder.search(creepPos, avoidGoals,
+								 {
+									 plainCost   : terrainCosts.plainCost,
+									 swampCost   : terrainCosts.swampCost,
+									 flee        : true,
+									 roomCallback: Pathing.kitingRoomCallback,
+									 maxRooms    : 1
+								 }).path;
 	}
 
 	// Cost matrix computations ========================================================================================
+
+	static setCostsInRange(matrix: CostMatrix, pos: RoomPosition | HasPos, range: number, cost = 30, add = false) {
+		pos = normalizePos(pos);
+		for (let dx = -range; dx <= range; dx++) {
+			let x = pos.x + dx;
+			if (x < 0 || x > 49) continue;
+			for (let dy = -range; dy <= range; dy++) {
+				let y = pos.y + dy;
+				if (y < 0 || y > 49) continue;
+				let terrain = Game.map.getTerrainAt(x, y, pos.roomName);
+				if (terrain === 'wall') {
+					continue;
+				}
+				let currentCost = matrix.get(x, y);
+				if (currentCost === 0) {
+					if (terrain === 'plain') {
+						currentCost += 2;
+					} else {
+						currentCost += 10;
+					}
+				}
+				if (currentCost >= 0xff || currentCost > cost) continue;
+				matrix.set(x, y, add ? Math.min(cost + currentCost, 200) : cost);
+			}
+		}
+	}
+
+	static blockExits(matrix: CostMatrix, rangeToEdge = 0, roomName?: string): void {
+		for (let x = rangeToEdge; x < 50 - rangeToEdge; x += 49 - rangeToEdge * 2) {
+			for (let y = rangeToEdge; y < 50 - rangeToEdge; y++) {
+				matrix.set(x, y, 0xff);
+			}
+		}
+		for (let x = rangeToEdge; x < 50 - rangeToEdge; x++) {
+			for (let y = rangeToEdge; y < 50 - rangeToEdge; y += 49 - rangeToEdge * 2) {
+				matrix.set(x, y, 0xff);
+			}
+		}
+	}
 
 	/* Get a cloned copy of the cost matrix for a room with specified options */
 	static getCostMatrix(room: Room, options = {} as MoveOptions, clone = true): CostMatrix {
@@ -249,15 +303,15 @@ export class Pathing {
 		if (room._kitingMatrix) {
 			return room._kitingMatrix;
 		}
-		let matrix = this.getCreepMatrix(room);
-		let avoidCreeps = _.filter(room.allHostiles,
+		let matrix = _.clone(this.getCreepMatrix(room));
+		let avoidCreeps = _.filter(room.hostiles,
 								   c => c.getActiveBodyparts(ATTACK) > 0 || c.getActiveBodyparts(RANGED_ATTACK) > 0); // || c.getActiveBodyparts(HEAL) > 0);
 		_.forEach(avoidCreeps, avoidCreep => {
 			let cost: number;
 			for (let dx = -3; dx <= 3; dx++) {
 				for (let dy = -3; dy <= 3; dy++) {
-					cost = 40 - (10 * Math.max(Math.abs(dx), Math.abs(dy)));
-					cost = Math.max(cost, matrix.get(avoidCreep.pos.x + dx, avoidCreep.pos.y + dy));
+					cost = matrix.get(avoidCreep.pos.x + dx, avoidCreep.pos.y + dy);
+					cost += 40 - (10 * Math.max(Math.abs(dx), Math.abs(dy)));
 					matrix.set(avoidCreep.pos.x + dx, avoidCreep.pos.y + dy, cost);
 				}
 			}
@@ -501,7 +555,7 @@ export class Pathing {
 		_.defaults(options, {
 			ignoreCreeps: true,
 			range       : 1,
-			maxOps      : 2000,
+			maxOps      : 1000,
 			ensurePath  : false,
 		});
 		if (startPos.roomName != endPos.roomName) {

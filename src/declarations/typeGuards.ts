@@ -20,6 +20,14 @@ export function isStoreStructure(obj: RoomObject): obj is StoreStructure {
 	return (<StoreStructure>obj).store != undefined && (<StoreStructure>obj).storeCapacity != undefined;
 }
 
+export function isStructure(obj: RoomObject): obj is Structure {
+	return (<Structure>obj).structureType != undefined;
+}
+
+export function isOwnedStructure(structure: Structure): structure is OwnedStructure {
+	return (<OwnedStructure>structure).owner != undefined;
+}
+
 export function isSource(obj: Source | Mineral): obj is Source {
 	return (<Source>obj).energy != undefined;
 }
@@ -38,4 +46,8 @@ export function hasPos(obj: HasPos | RoomPosition): obj is HasPos {
 
 export function isZerg(creep: Creep | Zerg): creep is Zerg {
 	return (<Zerg>creep).creep != undefined;
+}
+
+export function isCreep(obj: RoomObject): obj is Creep {
+	return (<Creep>obj).fatigue != undefined;
 }

@@ -3,7 +3,7 @@ import {Directive} from '../Directive';
 import {ClaimingOverlord} from '../../overlords/colonization/claimer';
 import {Colony} from '../../Colony';
 import {PioneerOverlord} from '../../overlords/colonization/pioneer';
-import {MinerSetup, MiningOverlord} from '../../overlords/core/miner';
+import {MinerSetup, MiningOverlord} from '../../overlords/mining/miner';
 import {WorkerSetup} from '../../overlords/core/worker';
 
 // Claims a new room and builds a spawn but does not incubate. Removes when spawn is constructed.

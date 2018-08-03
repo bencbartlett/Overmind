@@ -17,9 +17,9 @@
     "lint": "tslint \"src/**/*.ts\"",
     "clean": "rm -rf tsc-out && rm -rf dist",
     "build-obfuscate": "tsc && javascript-obfuscator tsc-out/Overmind.js --output src/Overmind_obfuscated.js --compact false --self-defending true --string-array true --string-array-threshold 1 --string-array-encoding true && javascript-obfuscator tsc-out/assimilation/Assimilator.js --output src/assimilation/Assimilator_obfuscated.js --compact false --self-defending true --string-array true --string-array-threshold 1 --string-array-encoding true",
-    "compile": "node_modules/rollup/bin/rollup -c && rm -rf .rpt2_cache",
-    "push-main": "node_modules/rollup/bin/rollup -c --environment DEST:main",
-    "push-pserver": "node_modules/rollup/bin/rollup -c --environment DEST:pserver",
+    "compile": "rollup -c && rm -rf .rpt2_cache",
+    "push-main": "rollup -c --environment DEST:main",
+    "push-pserver": "rollup -c --environment DEST:pserver",
     "test": "npm run clean && npm run build"
   },
   "devDependencies": {

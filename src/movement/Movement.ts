@@ -64,6 +64,7 @@ export interface MoveOptions {
 	repath?: number;							// probability of repathing on a given tick
 	route?: { [roomName: string]: boolean };	// lookup table for allowable pathing rooms
 	ensurePath?: boolean;						// can be useful if route keeps being found as incomplete
+	modifyRoomCallback?: (r: Room, m: CostMatrix) => CostMatrix // modifications to default cost matrix calculations
 }
 
 export interface MoveState {
@@ -187,15 +188,15 @@ export class Movement {
 			if (creep.spawning) {
 				return ERR_BUSY;
 			}
-
 			state.destination = destination;
 
 			// Compute terrain costs
 			if (!options.direct && !options.terrainCosts) {
 				options.terrainCosts = getTerrainCosts(creep.creep);
 			}
-
 			let cpu = Game.cpu.getUsed();
+
+			// (!) Pathfinding is done here
 			let ret = Pathing.findPath(creep.pos, destination, options);
 
 			let cpuUsed = Game.cpu.getUsed() - cpu;
@@ -204,11 +205,10 @@ export class Movement {
 				log.alert(`Movement: heavy cpu use: ${creep.name}, cpu: ${state.cpu} origin: ${
 							  creep.pos.print}, dest: ${destination.print}`);
 			}
-
 			let color = 'orange';
 			if (ret.incomplete) {
 				// uncommenting this is a great way to diagnose creep behavior issues
-				// console.log(`Movement: incomplete path for ${creep.name}`);
+				log.debug(`Movement: incomplete path for ${creep.name} @ ${creep.pos.print}`);
 				color = 'red';
 			}
 
@@ -514,10 +514,45 @@ export class Movement {
 		return outcome;
 	}
 
-	static fleeFrom(creep: Zerg, fleeFromPos: RoomPosition): number | undefined {
-		let fleeDirection = Pathing.getFleeDirection(creep, fleeFromPos);
-		if (fleeDirection) {
-			return creep.move(fleeDirection);
+	// Moving routine for guards or sourceReapers in a room with NPC invaders
+	static invasionMove(creep: Zerg, destination: RoomPosition | HasPos, options: MoveOptions = {}): number {
+		_.defaults(options, {
+			ignoreRoads: true
+		});
+		const dest = normalizePos(destination);
+		const roomCallbackModifier = (room: Room, matrix: CostMatrix) => {
+			// This is only applied once creep is in the target room
+			Pathing.blockExits(matrix);
+			for (let hostile of room.invaders) {
+				if (hostile.getActiveBodyparts(RANGED_ATTACK) > 1) {
+					Pathing.setCostsInRange(matrix, hostile, 3, 1, true);
+				}
+			}
+			for (let keeper of room.sourceKeepers) {
+				Pathing.setCostsInRange(matrix, keeper, 3, 10, true);
+			}
+			for (let lair of room.keeperLairs) {
+				if ((lair.ticksToSpawn || Infinity) < 25) {
+					Pathing.setCostsInRange(matrix, lair, 5, 5, true);
+				}
+			}
+			return matrix;
+		};
+		if (creep.pos.getRangeTo(dest) > 8) {
+			options.repath = .1;
+			options.movingTarget = true;
+		}
+		if (creep.room.name == dest.roomName) {
+			options.maxRooms = 1;
+			options.modifyRoomCallback = roomCallbackModifier;
+		}
+		return creep.goTo(dest, options);
+	}
+
+	static kite(creep: Zerg, avoidGoals: (RoomPosition | HasPos)[], range = 5): number | undefined {
+		let nextPos = _.first(Pathing.getKitingPath(creep.pos, avoidGoals, range, getTerrainCosts(creep.creep)));
+		if (nextPos) {
+			return creep.move(creep.pos.getDirectionTo(nextPos));
 		}
 	}
 

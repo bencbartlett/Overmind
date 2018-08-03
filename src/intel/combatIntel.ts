@@ -7,6 +7,8 @@ import {boostResources} from '../resources/map_resources';
 import {Pathing} from '../movement/Pathing';
 import {Cartographer} from '../utilities/Cartographer';
 import {log} from '../console/log';
+import {toCreep, Zerg} from '../zerg/Zerg';
+import {isOwnedStructure, isStructure, isZerg} from '../declarations/typeGuards';
 
 interface CombatIntelMemory {
 	cache: {
@@ -143,85 +145,147 @@ export class CombatIntel {
 
 	// Creep potentials ================================================================================================
 
+	// Cache the result of a computation for a tick
+	static cache(creep: Creep, key: string, callback: () => number): number {
+		if (!creep.intel) creep.intel = {};
+		if (creep.intel[key] == undefined) {
+			creep.intel[key] = callback();
+		}
+		return creep.intel[key];
+	}
+
 	// Heal potential of a single creep in units of effective number of parts
 	static getHealPotential(creep: Creep): number {
-		return _.sum(_.map(creep.body, function (part) {
-			if (part.type == HEAL) {
-				if (!part.boost) {
-					return 1;
-				} else if (part.boost == boostResources.heal[1]) {
-					return BOOSTS.heal.LO.heal;
-				} else if (part.boost == boostResources.heal[2]) {
-					return BOOSTS.heal.LHO2.heal;
-				} else if (part.boost == boostResources.heal[3]) {
-					return BOOSTS.heal.XLHO2.heal;
+		return this.cache(creep, 'healPotential', () =>
+			_.sum(creep.body, function (part) {
+				let potential = 0;
+				if (part.type == HEAL) {
+					if (!part.boost) {
+						potential = 1;
+					} else if (part.boost == boostResources.heal[1]) {
+						potential = BOOSTS.heal.LO.heal;
+					} else if (part.boost == boostResources.heal[2]) {
+						potential = BOOSTS.heal.LHO2.heal;
+					} else if (part.boost == boostResources.heal[3]) {
+						potential = BOOSTS.heal.XLHO2.heal;
+					}
 				}
-			}
-			return 0;
-		}));
+				return potential * part.hits / 100;
+			})
+		);
+	}
+
+	static getHealAmount(creep: Creep | Zerg): number {
+		return HEAL_POWER * this.getHealPotential(toCreep(creep));
+	}
+
+	static getRangedHealAmount(creep: Creep | Zerg): number {
+		return RANGED_HEAL_POWER * this.getHealPotential(toCreep(creep));
 	}
 
 	// Attack potential of a single creep in units of effective number of parts
 	static getAttackPotential(creep: Creep): number {
-		return _.sum(_.map(creep.body, function (part) {
+		return this.cache(creep, 'attackPotential', () => _.sum(creep.body, function (part) {
+			let potential = 0;
 			if (part.type == ATTACK) {
 				if (!part.boost) {
-					return 1;
+					potential = 1;
 				} else if (part.boost == boostResources.attack[1]) {
-					return BOOSTS.attack.UH.attack;
+					potential = BOOSTS.attack.UH.attack;
 				} else if (part.boost == boostResources.attack[2]) {
-					return BOOSTS.attack.UH2O.attack;
+					potential = BOOSTS.attack.UH2O.attack;
 				} else if (part.boost == boostResources.attack[3]) {
-					return BOOSTS.attack.XUH2O.attack;
+					potential = BOOSTS.attack.XUH2O.attack;
 				}
 			}
-			return 0;
+			return potential * part.hits / 100;
 		}));
+	}
+
+	static getAttackDamage(creep: Creep | Zerg): number {
+		return ATTACK_POWER * this.getAttackPotential(toCreep(creep));
 	}
 
 	// Ranged attack potential of a single creep in units of effective number of parts
 	static getRangedAttackPotential(creep: Creep): number {
-		return _.sum(_.map(creep.body, function (part) {
-			if (part.type == RANGED_ATTACK) {
-				if (!part.boost) {
-					return 1;
-				} else if (part.boost == boostResources.ranged_attack[1]) {
-					return BOOSTS.ranged_attack.KO.rangedAttack;
-				} else if (part.boost == boostResources.ranged_attack[2]) {
-					return BOOSTS.ranged_attack.KHO2.rangedAttack;
-				} else if (part.boost == boostResources.ranged_attack[3]) {
-					return BOOSTS.ranged_attack.XKHO2.rangedAttack;
+		return this.cache(creep, 'rangedAttackPotential', () =>
+			_.sum(creep.body, function (part) {
+				let potential = 0;
+				if (part.type == RANGED_ATTACK) {
+					if (!part.boost) {
+						potential = 1;
+					} else if (part.boost == boostResources.ranged_attack[1]) {
+						potential = BOOSTS.ranged_attack.KO.rangedAttack;
+					} else if (part.boost == boostResources.ranged_attack[2]) {
+						potential = BOOSTS.ranged_attack.KHO2.rangedAttack;
+					} else if (part.boost == boostResources.ranged_attack[3]) {
+						potential = BOOSTS.ranged_attack.XKHO2.rangedAttack;
+					}
 				}
-			}
-			return 0;
-		}));
+				return potential * part.hits / 100;
+			})
+		);
+	}
+
+	static getRangedAttackDamage(creep: Creep | Zerg): number {
+		return RANGED_ATTACK_POWER * this.getRangedAttackPotential(toCreep(creep));
 	}
 
 	// Minimum damage multiplier a creep has
-	static damageTakenMultiplier(creep: Creep): number {
-		return _.min(_.map(creep.body, function (part) {
-			if (part.type == TOUGH && part.hits) {
-				if (part.boost == boostResources.tough[1]) {
-					return BOOSTS.tough.GO.damage;
-				} else if (part.boost == boostResources.tough[2]) {
-					return BOOSTS.tough.GHO2.damage;
-				} else if (part.boost == boostResources.tough[3]) {
-					return BOOSTS.tough.XGHO2.damage;
+	static minimumDamageTakenMultiplier(creep: Creep): number {
+		return this.cache(creep, 'minDamageMultiplier', () =>
+			_.min(_.map(creep.body, function (part) {
+				if (part.type == TOUGH && part.hits > 0) {
+					if (part.boost == boostResources.tough[1]) {
+						return BOOSTS.tough.GO.damage;
+					} else if (part.boost == boostResources.tough[2]) {
+						return BOOSTS.tough.GHO2.damage;
+					} else if (part.boost == boostResources.tough[3]) {
+						return BOOSTS.tough.XGHO2.damage;
+					}
 				}
+				return 1;
+			}))
+		);
+	}
+
+	static getMassAttackDamageTo(attacker: Creep | Zerg, target: Creep | Structure): number {
+		if (isStructure(target) && (!isOwnedStructure(target) || target.my)) {
+			return 0;
+		}
+		let range = attacker.pos.getRangeTo(target.pos);
+		let rangedMassAttackPower = 0;
+		if (range <= 1) {
+			rangedMassAttackPower = 10;
+		} else if (range == 2) {
+			rangedMassAttackPower = 4;
+		} else if (range == 3) {
+			rangedMassAttackPower = 1;
+		}
+		return rangedMassAttackPower * this.getRangedAttackPotential(isZerg(attacker) ? attacker.creep : attacker);
+	}
+
+	// Total damage to enemy creeps done by attacker.rangedMassAttack()
+	static getMassAttackDamage(attacker: Creep | Zerg, targets = attacker.room.hostiles, ignoreRampart = false): number {
+		let hostiles = attacker.pos.findInRange(targets, 3);
+		return _.sum(hostiles, function (hostile) {
+			if (!ignoreRampart && hostile.pos.lookForStructure(STRUCTURE_RAMPART)) {
+				return 0; // Creep inside rampart
+			} else {
+				return CombatIntel.getMassAttackDamageTo(attacker, hostile);
 			}
-			return 1;
-		}));
+		});
 	}
 
 	// Maximum damage that a group of creeps can dish out (doesn't count for simultaneity restrictions)
 	static maxDamageByCreeps(creeps: Creep[]): number {
-		return _.sum(_.map(creeps, creep => ATTACK_POWER * this.getAttackPotential(creep) +
-											RANGED_ATTACK_POWER * this.getRangedAttackPotential(creep)));
+		return _.sum(creeps, creep => ATTACK_POWER * this.getAttackPotential(creep) +
+									  RANGED_ATTACK_POWER * this.getRangedAttackPotential(creep));
 	}
 
 	// Maximum healing that a group of creeps can dish out (doesn't count for simultaneity restrictions)
 	static maxHealingByCreeps(creeps: Creep[]): number {
-		return _.sum(_.map(creeps, creep => HEAL_POWER * this.getHealPotential(creep)));
+		return _.sum(creeps, creep => HEAL_POWER * this.getHealPotential(creep));
 	}
 
 	// Maximum damage that is dealable at a given position by enemy forces
@@ -229,12 +293,10 @@ export class CombatIntel {
 		if (!pos.room) {
 			return 0;
 		}
-		let hostilesInMeleeRange = _.filter(pos.room.dangerousHostiles, creep => pos.getRangeTo(creep) <= 3);
-		let meleeDamage = _.sum(_.map(hostilesInMeleeRange,
-									  hostile => ATTACK_POWER * this.getAttackPotential(hostile)));
+		let hostilesInMeleeRange = _.filter(pos.room.dangerousHostiles, creep => pos.getRangeTo(creep) <= 1);
+		let meleeDamage = _.sum(hostilesInMeleeRange, hostile => this.getAttackDamage(hostile));
 		let hostilesInRange = _.filter(pos.room.dangerousHostiles, creep => pos.getRangeTo(creep) <= 3);
-		let rangedDamage = _.sum(_.map(hostilesInRange,
-									   hostile => RANGED_ATTACK_POWER * this.getRangedAttackPotential(hostile)));
+		let rangedDamage = _.sum(hostilesInRange, hostile => this.getRangedAttackDamage(hostile));
 		let totalDamage = meleeDamage + rangedDamage;
 		if (!pos.room.my) {
 			totalDamage += this.towerDamageAtPos(pos) || 0;
@@ -246,11 +308,42 @@ export class CombatIntel {
 	static maxHostileHealingTo(creep: Creep): number {
 		let selfHealing = HEAL_POWER * this.getHealPotential(creep);
 		let neighbors = _.filter(creep.room.hostiles, hostile => hostile.pos.isNearTo(creep));
-		let neighborHealing = HEAL_POWER * _.sum(_.map(neighbors, neighbor => this.getHealPotential(neighbor)));
+		let neighborHealing = HEAL_POWER * _.sum(neighbors, neighbor => this.getHealPotential(neighbor));
 		let rangedHealers = _.filter(creep.room.hostiles, hostile => hostile.pos.getRangeTo(creep) <= 3 &&
 																	 !neighbors.includes(hostile));
-		let rangedHealing = RANGED_HEAL_POWER * _.sum(_.map(rangedHealers, healer => this.getHealPotential(healer)));
+		let rangedHealing = RANGED_HEAL_POWER * _.sum(rangedHealers, healer => this.getHealPotential(healer));
 		return selfHealing + neighborHealing + rangedHealing;
+	}
+
+	// Determine the predicted damage amount of a certain type of attack. Can specify if you should use predicted or
+	// current hits amount and whether to include predicted healing. Does not update predicted hits.
+	static predictedDamageAmount(attacker: Creep | Zerg, target: Creep, attackType: 'attack' | 'rangedAttack',
+								 useHitsPredicted = true): number {
+		// Compute initial (gross) damage amount
+		let grossDamage: number;
+		if (attackType == 'attack') {
+			grossDamage = this.getAttackDamage(attacker);
+		} else if (attackType == 'rangedAttack') {
+			grossDamage = this.getRangedAttackDamage(attacker);
+		} else { // rangedMassAttack; not currently used
+			grossDamage = this.getMassAttackDamageTo(attacker, target);
+		}
+		// Adjust for remaining tough parts
+		let toughHits: number;
+		if (useHitsPredicted) {
+			if (target.hitsPredicted == undefined) target.hitsPredicted = target.hits;
+			let nonToughHits = _.sum(target.body, part => part.type == TOUGH ? 0 : part.hits);
+			toughHits = Math.min(target.hitsPredicted - nonToughHits, 0); // predicted amount of TOUGH
+		} else {
+			toughHits = 100 * target.getActiveBodyparts(TOUGH);
+		}
+		let damageMultiplier = this.minimumDamageTakenMultiplier(target); // assumes only 1 tier of boosts
+		if (grossDamage * damageMultiplier < toughHits) { // if you can't eat through armor
+			return grossDamage * damageMultiplier;
+		} else { // if you break tough shield
+			grossDamage -= toughHits / damageMultiplier;
+			return toughHits + grossDamage;
+		}
 	}
 
 	// Creep position calculations =====================================================================================

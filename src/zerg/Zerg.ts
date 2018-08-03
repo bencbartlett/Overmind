@@ -4,6 +4,8 @@ import {Overlord} from '../overlords/Overlord';
 import {initializeTask} from '../tasks/initializer';
 import {Task} from '../tasks/Task';
 import {Movement, MoveOptions} from '../movement/Movement';
+import {isCreep, isZerg} from '../declarations/typeGuards';
+import {CombatIntel} from '../intel/combatIntel';
 
 export function getOverlord(creep: Zerg | Creep): Overlord | null {
 	if (creep.memory.overlord) {
@@ -45,6 +47,16 @@ export function normalizeZerg(creep: Zerg | Creep): Zerg | Creep {
 	return Game.zerg[creep.name] || creep;
 }
 
+export function toCreep(creep: Zerg | Creep): Creep {
+	return isZerg(creep) ? creep.creep : creep;
+}
+
+// Last pipeline is more complex because it depends on the energy a creep has; sidelining this for now
+const actionPipelines: string[][] = [
+	['harvest', 'attack', 'build', 'repair', 'dismantle', 'attackController', 'rangedHeal', 'heal'],
+	['rangedAttack', 'rangedMassAttack', 'build', 'repair', 'rangedHeal'],
+	// ['upgradeController', 'build', 'repair', 'withdraw', 'transfer', 'drop'],
+];
 
 interface ParkingOptions {
 	range: number;
@@ -110,7 +122,13 @@ export class Zerg {
 
 	attack(target: Creep | Structure) {
 		let result = this.creep.attack(target);
-		if (!this.actionLog.attack) this.actionLog.attack = (result == OK);
+		if (result == OK) {
+			this.actionLog.attack = true;
+			if (isCreep(target)) {
+				if (target.hitsPredicted == undefined) target.hitsPredicted = target.hits;
+				target.hitsPredicted -= CombatIntel.predictedDamageAmount(this.creep, target, 'attack');
+			}
+		}
 		return result;
 	}
 
@@ -127,8 +145,9 @@ export class Zerg {
 	}
 
 	cancelOrder(methodName: string): OK | ERR_NOT_FOUND {
-		console.log('NOT IMPLEMENTED');
-		return ERR_NOT_FOUND;
+		let result = this.creep.cancelOrder(methodName);
+		if (result == OK) this.actionLog[methodName] = false;
+		return result;
 	}
 
 	claimController(controller: StructureController) {
@@ -181,7 +200,13 @@ export class Zerg {
 
 	rangedAttack(target: Creep | Structure) {
 		let result = this.creep.rangedAttack(target);
-		if (!this.actionLog.rangedAttack) this.actionLog.rangedAttack = (result == OK);
+		if (result == OK) {
+			this.actionLog.rangedAttack = true;
+			if (isCreep(target)) {
+				if (target.hitsPredicted == undefined) target.hitsPredicted = target.hits;
+				target.hitsPredicted -= CombatIntel.predictedDamageAmount(this, target, 'rangedAttack');
+			}
+		}
 		return result;
 	}
 
@@ -230,28 +255,28 @@ export class Zerg {
 		return result;
 	}
 
-	heal(target: Creep | Zerg, rangedHealInstead = true) {
-		let result: CreepActionReturnCode;
+	heal(target: Creep | Zerg, rangedHealInstead = false) {
 		if (rangedHealInstead && !this.pos.isNearTo(target)) {
 			return this.rangedHeal(target);
 		}
-		if (target instanceof Zerg) {
-			result = this.creep.heal(target.creep);
-		} else {
-			result = this.creep.heal(target);
+		const creep = toCreep(target);
+		let result = this.creep.heal(creep);
+		if (result == OK) {
+			this.actionLog.heal = true;
+			if (creep.hitsPredicted == undefined) creep.hitsPredicted = creep.hits;
+			creep.hitsPredicted += CombatIntel.getHealAmount(this);
 		}
-		if (!this.actionLog.heal) this.actionLog.heal = (result == OK);
 		return result;
 	}
 
 	rangedHeal(target: Creep | Zerg) {
-		let result: CreepActionReturnCode;
-		if (target instanceof Zerg) {
-			result = this.creep.rangedHeal(target.creep);
-		} else {
-			result = this.creep.rangedHeal(target);
+		const creep = toCreep(target);
+		let result = this.creep.rangedHeal(creep);
+		if (result == OK) {
+			this.actionLog.rangedHeal = true;
+			if (creep.hitsPredicted == undefined) creep.hitsPredicted = creep.hits;
+			creep.hitsPredicted += CombatIntel.getRangedHealAmount(this);
 		}
-		if (!this.actionLog.rangedHeal) this.actionLog.rangedHeal = (result == OK);
 		return result;
 	}
 
@@ -278,14 +303,8 @@ export class Zerg {
 	 * See http://docs.screeps.com/simultaneous-actions.html for more details. */
 	canExecute(actionName: string): boolean {
 		// Only one action can be executed from within a single pipeline
-		// Last pipeline is more complex because it depends on the energy a creep has; sidelining this for now
-		let pipelines: string[][] = [
-			['harvest', 'attack', 'build', 'repair', 'dismantle', 'attackController', 'rangedHeal', 'heal'],
-			['rangedAttack', 'rangedMassAttack', 'build', 'repair', 'rangedHeal'],
-			// ['upgradeController', 'build', 'repair', 'withdraw', 'transfer', 'drop'],
-		];
 		let conflictingActions: string[] = [actionName];
-		for (let pipeline of pipelines) {
+		for (let pipeline of actionPipelines) {
 			if (pipeline.includes(actionName)) conflictingActions = conflictingActions.concat(pipeline);
 		}
 		for (let action of conflictingActions) {
@@ -445,17 +464,13 @@ export class Zerg {
 		return this.pos.roomName == target.pos.roomName;
 	}
 
-	// getObstacles(): RoomPosition[] {
-	// 	if (this.roleName == ManagerSetup.role || this.roleName == QueenSetup.role) {
-	// 		return [];
-	// 	} else {
-	// 		return this.colony.obstacles;
-	// 	}
-	// }
-
 	get isMoving(): boolean {
 		let moveData = this.memory._go as MoveData | undefined;
 		return !!moveData && !!moveData.path && moveData.path.length > 1;
+	}
+
+	kite(avoidGoals: (RoomPosition | HasPos)[], range = 5): number | undefined {
+		return Movement.kite(this, avoidGoals, range);
 	}
 
 	park(pos: RoomPosition = this.pos, maintainDistance = false): number {

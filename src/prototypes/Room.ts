@@ -19,6 +19,13 @@ Object.defineProperty(Room.prototype, 'my', {
 	configurable: true,
 });
 
+Object.defineProperty(Room.prototype, 'owner', {
+	get() {
+		return this.controller && this.controller.owner ? this.controller.owner.username : undefined;
+	},
+	configurable: true,
+});
+
 Object.defineProperty(Room.prototype, 'reservedByMe', {
 	get() {
 		return this.controller && this.controller.reservation && this.controller.reservation.username == MY_USERNAME;
@@ -48,22 +55,44 @@ Object.defineProperty(Room.prototype, 'creeps', {
 
 // Room properties: hostiles ===========================================================================================
 
-Object.defineProperty(Room.prototype, 'allHostiles', {
+Object.defineProperty(Room.prototype, 'hostiles', {
 	get() {
-		if (!this._allHostiles) {
-			this._allHostiles = this.find(FIND_HOSTILE_CREEPS);
+		if (!this._hostiles) {
+			this._hostiles = this.find(FIND_HOSTILE_CREEPS);
 		}
-		return this._allHostiles;
+		return this._hostiles;
 	},
 	configurable: true,
 });
 
-Object.defineProperty(Room.prototype, 'hostiles', {
+Object.defineProperty(Room.prototype, 'invaders', {
 	get() {
-		if (!this._hostiles) {
-			this._hostiles = _.filter(this.allHostiles, (creep: Creep) => creep.owner.username != 'Source Keeper');
+		if (!this._invaders) {
+			this._invaders = _.filter(this.hostiles, (creep: Creep) => creep.owner.username == 'Invader');
 		}
-		return this._hostiles;
+		return this._invaders;
+	},
+	configurable: true,
+});
+
+Object.defineProperty(Room.prototype, 'sourceKeepers', {
+	get() {
+		if (!this._sourceKeepers) {
+			this._sourceKeepers = _.filter(this.allHostiles, (creep: Creep) => creep.owner.username == 'Source Keeper');
+		}
+		return this._sourceKeepers;
+	},
+	configurable: true,
+});
+
+Object.defineProperty(Room.prototype, 'playerHostiles', {
+	get() {
+		if (!this._playerHostiles) {
+			this._playerHostiles = _.filter(this.hostiles,
+											(creep: Creep) => creep.owner.username != 'Invader'
+															  && creep.owner.username != 'Source Keeper');
+		}
+		return this._playerHostiles;
 	},
 	configurable: true,
 });
@@ -78,16 +107,6 @@ Object.defineProperty(Room.prototype, 'dangerousHostiles', {
 																 || creep.getActiveBodyparts(HEAL) > 0);
 		}
 		return this._dangerousHostiles;
-	},
-	configurable: true,
-});
-
-Object.defineProperty(Room.prototype, 'playerHostiles', {
-	get() {
-		if (!this._playerHostiles) {
-			this._playerHostiles = _.filter(this.hostiles, (creep: Creep) => creep.owner.username != 'Invader');
-		}
-		return this._playerHostiles;
 	},
 	configurable: true,
 });
@@ -113,16 +132,6 @@ Object.defineProperty(Room.prototype, 'hostileStructures', {
 			this._hostileStructures = this.find(FIND_HOSTILE_STRUCTURES, {filter: (s: Structure) => s.hitsMax});
 		}
 		return this._hostileStructures;
-	},
-	configurable: true,
-});
-
-Object.defineProperty(Room.prototype, 'sourceKeepers', {
-	get() {
-		if (!this._sourceKeepers) {
-			this._sourceKeepers = _.filter(this.allHostiles, (creep: Creep) => creep.owner.username == 'Source Keeper');
-		}
-		return this._sourceKeepers;
 	},
 	configurable: true,
 });

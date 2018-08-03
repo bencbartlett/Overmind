@@ -137,7 +137,7 @@ export class RangedDefenseOverlord extends Overlord {
 		let healPotential = CombatIntel.maxHealingByCreeps(this.room.hostiles);
 		let hydraliskDamage = RANGED_ATTACK_POWER * HydraliskSetup.getBodyPotential(RANGED_ATTACK, this.colony);
 		let towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 0 : 0;
-		let worstDamageMultiplier = _.min(_.map(this.room.hostiles, creep => CombatIntel.damageTakenMultiplier(creep)));
+		let worstDamageMultiplier = _.min(_.map(this.room.hostiles, creep => CombatIntel.minimumDamageTakenMultiplier(creep)));
 		let boosts = this.boosts[HydraliskSetup.role];
 		if (boosts && boosts.includes(boostResources.ranged_attack[3])) { // TODO: add boost damage computation function to Overlord
 			hydraliskDamage *= 4;

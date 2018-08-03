@@ -9,11 +9,11 @@ import screeps from "rollup-plugin-screeps";
 let cfg;
 const dest = process.env.DEST;
 if (!dest) {
-    console.log('\x1b[45m%s\x1b[0m \x1b[35m%s\x1b[0m', 'Compiling Overmind...', '(deploy destination: none)');
+    console.log('\x1b[46m%s\x1b[0m \x1b[36m%s\x1b[0m', 'Compiling Overmind...', '(deploy destination: none)');
 } else if ((cfg = require("./screeps")[dest]) == null) {
     throw new Error("Invalid upload destination");
 } else {
-    console.log('\x1b[45m%s\x1b[0m \x1b[35m%s\x1b[0m', 'Compiling Overmind...', `(deploy destination: ${dest})`);
+    console.log('\x1b[46m%s\x1b[0m \x1b[36m%s\x1b[0m', 'Compiling Overmind...', `(deploy destination: ${dest})`);
 }
 
 export default {

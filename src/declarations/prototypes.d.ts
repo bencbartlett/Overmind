@@ -1,4 +1,6 @@
 interface Creep {
+	hitsPredicted?: number;
+	intel?: { [property: string]: number };
 	memory: CreepMemory;
 	boosts: _ResourceConstantSansEnergy[];
 	boostCounts: { [boostType: string]: number };
@@ -31,14 +33,15 @@ type rechargeObjectType = StructureStorage
 interface Room {
 	print: string;
 	my: boolean;
+	owner: string | undefined;
 	reservedByMe: boolean;
 	signedByMe: boolean;
 	creeps: Creep[];
 	sourceKeepers: Creep[];
-	allHostiles: Creep[];
 	hostiles: Creep[];
 	dangerousHostiles: Creep[];
 	playerHostiles: Creep[];
+	invaders: Creep[];
 	dangerousPlayerHostiles: Creep[];
 	hostileStructures: Structure[];
 	flags: Flag[];
