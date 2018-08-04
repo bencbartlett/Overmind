@@ -195,6 +195,7 @@ export class Pathing {
 		}
 	}
 
+
 	static blockExits(matrix: CostMatrix, rangeToEdge = 0, roomName?: string): void {
 		for (let x = rangeToEdge; x < 50 - rangeToEdge; x += 49 - rangeToEdge * 2) {
 			for (let y = rangeToEdge; y < 50 - rangeToEdge; y++) {
@@ -207,6 +208,7 @@ export class Pathing {
 			}
 		}
 	}
+
 
 	/* Get a cloned copy of the cost matrix for a room with specified options */
 	static getCostMatrix(room: Room, options = {} as MoveOptions, clone = true): CostMatrix {
@@ -237,8 +239,9 @@ export class Pathing {
 		return matrix;
 	}
 
+
 	/* Default matrix for a room, setting impassable structures and constructionSites to impassible */
-	private static getDefaultMatrix(room: Room): CostMatrix {
+	static getDefaultMatrix(room: Room): CostMatrix {
 		if (room._defaultMatrix) {
 			return room._defaultMatrix;
 		}
@@ -263,8 +266,9 @@ export class Pathing {
 		return room._defaultMatrix;
 	}
 
+
 	/* Default matrix for a room, setting impassable structures and constructionSites to impassible, ignoring roads */
-	private static getDirectMatrix(room: Room): CostMatrix {
+	static getDirectMatrix(room: Room): CostMatrix {
 		if (room._directMatrix) {
 			return room._directMatrix;
 		}
@@ -287,8 +291,9 @@ export class Pathing {
 		return room._directMatrix;
 	}
 
+
 	/* Avoids creeps in a room */
-	private static getCreepMatrix(room: Room): CostMatrix {
+	static getCreepMatrix(room: Room): CostMatrix {
 		if (room._creepMatrix) {
 			return room._creepMatrix;
 		}
@@ -298,12 +303,13 @@ export class Pathing {
 		return room._creepMatrix;
 	}
 
+
 	/* Kites around hostile creeps in a room */
 	static getKitingMatrix(room: Room): CostMatrix {
 		if (room._kitingMatrix) {
 			return room._kitingMatrix;
 		}
-		let matrix = _.clone(this.getCreepMatrix(room));
+		let matrix = this.getCreepMatrix(room).clone();
 		let avoidCreeps = _.filter(room.hostiles,
 								   c => c.getActiveBodyparts(ATTACK) > 0 || c.getActiveBodyparts(RANGED_ATTACK) > 0); // || c.getActiveBodyparts(HEAL) > 0);
 		_.forEach(avoidCreeps, avoidCreep => {
@@ -319,6 +325,7 @@ export class Pathing {
 		room._kitingMatrix = matrix;
 		return room._kitingMatrix;
 	}
+
 
 	// /* Avoids creeps that shouldn't be pushed in a room */ // TODO: plug in
 	// private static getPrioritizedCreepMatrix(room: Room, priority: number): CostMatrix {
@@ -338,6 +345,7 @@ export class Pathing {
 	// 	room._priorityMatrices[priority] = matrix;
 	// 	return room._priorityMatrices[priority];
 	// }
+
 
 	/* Avoids source keepers in a room */
 	private static getSkMatrix(room: Room): CostMatrix {

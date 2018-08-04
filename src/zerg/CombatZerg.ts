@@ -1,13 +1,27 @@
 import {Zerg} from './Zerg';
 import {CombatTargeting} from '../targeting/CombatTargeting';
 import {profile} from '../profiler/decorator';
-import {CombatIntel} from '../intel/combatIntel';
+import {CombatIntel} from '../intel/CombatIntel';
+import {GoalFinder} from '../targeting/GoalFinder';
+import {Movement, NO_ACTION} from '../movement/Movement';
+
+interface CombatZergMemory extends CreepMemory {
+	recovering: boolean;
+	lastInDanger: number;
+}
 
 @profile
 export class CombatZerg extends Zerg {
 
+	memory: CombatZergMemory;
+
 	constructor(creep: Creep) {
 		super(creep);
+		_.defaults(this.memory, {
+			recovering  : false,
+			lastInDanger: 0,
+			targets     : {}
+		});
 	}
 
 	findPartner(partners: CombatZerg[], tickDifference = 600): CombatZerg | undefined {
@@ -86,6 +100,8 @@ export class CombatZerg extends Zerg {
 		}
 	}
 
+	// Standard action sequences for engaging small numbers of enemies in a neutral room ===============================
+
 	autoMelee(possibleTargets = this.room.hostiles) {
 		let target = CombatTargeting.findBestTargetInRange(this, 1, possibleTargets);
 		if (target) {
@@ -93,13 +109,15 @@ export class CombatZerg extends Zerg {
 		}
 	}
 
-	autoRanged(possibleTargets = this.room.hostiles) {
+	autoRanged(possibleTargets = this.room.hostiles, allowMassAttack = true) {
 		let target = CombatTargeting.findBestTargetInRange(this, 3, possibleTargets);
 		if (target) {
-			if (CombatIntel.getMassAttackDamage(this, possibleTargets) > CombatIntel.getRangedAttackDamage(this)) {
-
+			if (allowMassAttack
+				&& CombatIntel.getMassAttackDamage(this, possibleTargets) > CombatIntel.getRangedAttackDamage(this)) {
+				return this.rangedMassAttack();
+			} else {
+				return this.rangedAttack(target);
 			}
-			return this.attack(target);
 		}
 	}
 
@@ -113,5 +131,59 @@ export class CombatZerg extends Zerg {
 			}
 		}
 	}
+
+	/* Navigate to a room, then engage hostile creeps there, perform medic actions, etc. */
+	autoCombat(roomName: string) {
+
+		// Do standard melee, ranged, and heal actions
+		if (this.getActiveBodyparts(ATTACK) > 0) {
+			this.autoMelee(); // Melee should be performed first
+		}
+		if (this.getActiveBodyparts(RANGED_ATTACK) > 0) {
+			this.autoRanged();
+		}
+		if (this.canExecute('heal')) {
+			this.autoHeal();
+		}
+
+		// Handle recovery if low on HP
+		if (this.needsToRecover()) {
+			return this.recover();
+		}
+
+		// Travel to the target room
+		if (!this.safelyInRoom(roomName)) {
+			return this.goToRoom(roomName, {ensurePath: true});
+		}
+
+		// Skirmish within the room
+		let goals = GoalFinder.skirmishGoals(this);
+		return Movement.combatMove(this, goals.approach, goals.avoid);
+
+	}
+
+	needsToRecover(hitsThreshold = 0.75): boolean {
+		if (this.memory.recovering) {
+			return this.hits < this.hitsMax;
+		} else {
+			return this.hits < this.hitsMax * hitsThreshold;
+		}
+	}
+
+	recover() {
+		if (this.pos.findInRange(this.room.hostiles, 5).length > 0 || this.room.towers.length > 0) {
+			this.memory.lastInDanger = Game.time;
+		}
+		let goals = GoalFinder.retreatGoals(this);
+		let result = Movement.combatMove(this, goals.approach, goals.avoid);
+
+		if (result == NO_ACTION && this.pos.isEdge) {
+			if (Game.time < this.memory.lastInDanger + 3) {
+				return this.moveOffExit();
+			}
+		}
+		return result;
+	}
+
 
 }

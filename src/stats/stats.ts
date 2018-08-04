@@ -78,5 +78,7 @@ export class Stats {
 		this.log('cpu.getUsed', Game.cpu.getUsed());
 		this.log('cpu.limit', Game.cpu.limit);
 		this.log('cpu.bucket', Game.cpu.bucket);
+		// Record IVM heap statistics
+		Memory.stats['cpu.heapStatistics'] = (<any>Game.cpu).getHeapStatistics();
 	}
 }

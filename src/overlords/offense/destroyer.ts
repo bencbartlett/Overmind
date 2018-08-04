@@ -9,7 +9,7 @@ import {Movement} from '../../movement/Movement';
 import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatTargeting} from '../../targeting/CombatTargeting';
-import {CombatIntel} from '../../intel/combatIntel';
+import {CombatIntel} from '../../intel/CombatIntel';
 
 const AttackerSetup = new CreepSetup('attacker', {
 	pattern  : [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE],

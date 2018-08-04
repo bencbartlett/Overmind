@@ -390,6 +390,12 @@ export class Movement {
 		}
 	}
 
+	/* Travel to a room */
+	static goToRoom(creep: Zerg, roomName: string, options: MoveOptions = {}): number {
+		options.range = 23;
+		return this.goTo(creep, new RoomPosition(25, 25, roomName), options);
+	}
+
 	/* Park a creep off-roads */
 	static park(creep: Zerg, pos: RoomPosition = creep.pos, maintainDistance = false): number {
 		let road = creep.pos.lookForStructure(STRUCTURE_ROAD);
@@ -514,40 +520,129 @@ export class Movement {
 		return outcome;
 	}
 
+	private static combatMoveCallbackModifier(room: Room, matrix: CostMatrix,
+											  approach: PathFinderGoal[], avoid: PathFinderGoal[],
+											  allowExit = false, avoidPenalty = 10, approachBonus = 5) {
+		// This is only applied once creep is in the target room
+		if (!allowExit) {
+			Pathing.blockExits(matrix);
+		}
+		_.forEach(avoid, avoidThis => {
+			let x, y: number;
+			for (let dx = -avoidThis.range; dx <= avoidThis.range; dx++) {
+				for (let dy = -avoidThis.range; dy <= avoidThis.range; dy++) {
+					x = avoidThis.pos.x + dx;
+					y = avoidThis.pos.y + dy;
+					matrix.set(x, y, matrix.get(x, y) + avoidPenalty);
+				}
+			}
+		});
+		_.forEach(approach, approachThis => {
+			let cost: number;
+			let x, y: number;
+			for (let dx = -approachThis.range; dx <= approachThis.range; dx++) {
+				for (let dy = -approachThis.range; dy <= approachThis.range; dy++) {
+					x = approachThis.pos.x + dx;
+					y = approachThis.pos.y + dy;
+					let cost = matrix.get(x, y);
+					if (cost < 0xff) { // is walkable
+						cost = Math.max(cost - approachBonus, 0);
+					}
+					matrix.set(x, y, cost);
+				}
+			}
+		});
+		return matrix;
+	};
+
+	static combatMove(creep: Zerg, approach: PathFinderGoal[], avoid: PathFinderGoal[],
+					  options: MoveOptions = {}, allowExit = false): number {
+
+		const debug = false;
+		const callback = (roomName: string) => {
+			if (roomName == creep.room.name) {
+				let matrix = Pathing.getCreepMatrix(creep.room).clone();
+				return Movement.combatMoveCallbackModifier(creep.room, matrix, approach, avoid, allowExit);
+			} else {
+				return !(Memory.rooms[roomName] && Memory.rooms[roomName].avoid);
+			}
+		};
+
+		let outcome = NO_ACTION;
+
+		// Flee from bad things that that you're too close to
+		if (avoid.length > 0) {
+			let avoidRet = PathFinder.search(creep.pos, avoid, {
+				roomCallback: callback,
+				flee        : true,
+				maxRooms    : allowExit ? 5 : 1,
+			});
+			if (avoidRet.path.length > 0) {
+				if (debug) Pathing.serializePath(creep.pos, avoidRet.path, 'magenta');
+				outcome = creep.move(creep.pos.getDirectionTo(avoidRet.path[0]));
+				if (outcome == OK) {
+					return outcome;
+				}
+			}
+		}
+
+		// Approach things you want to go to if you're out of range of all the baddies
+		if (approach.length > 0) {
+			let approachRet = PathFinder.search(creep.pos, approach, {
+				roomCallback: callback,
+				maxRooms    : 1,
+			});
+			if (approachRet.path.length > 0) {
+				if (debug) Pathing.serializePath(creep.pos, approachRet.path, 'cyan');
+				outcome = creep.move(creep.pos.getDirectionTo(approachRet.path[0]));
+				if (outcome == OK) {
+					return outcome;
+				}
+			}
+		}
+
+		return outcome;
+	}
+
+
+	private static invasionMoveCallbackModifier(room: Room, matrix: CostMatrix) {
+		// This is only applied once creep is in the target room
+		Pathing.blockExits(matrix);
+		for (let hostile of room.invaders) {
+			if (hostile.getActiveBodyparts(RANGED_ATTACK) > 1) {
+				Pathing.setCostsInRange(matrix, hostile, 3, 1, true);
+			} else if (hostile.getActiveBodyparts(ATTACK) > 1) {
+				Pathing.setCostsInRange(matrix, hostile, 1, 1, true);
+			}
+		}
+		for (let keeper of room.sourceKeepers) {
+			Pathing.setCostsInRange(matrix, keeper, 3, 10, true);
+		}
+		for (let lair of room.keeperLairs) {
+			if ((lair.ticksToSpawn || Infinity) < 25) {
+				Pathing.setCostsInRange(matrix, lair, 5, 5, true);
+			}
+		}
+		return matrix;
+	};
+
 	// Moving routine for guards or sourceReapers in a room with NPC invaders
 	static invasionMove(creep: Zerg, destination: RoomPosition | HasPos, options: MoveOptions = {}): number {
 		_.defaults(options, {
 			ignoreRoads: true
 		});
 		const dest = normalizePos(destination);
-		const roomCallbackModifier = (room: Room, matrix: CostMatrix) => {
-			// This is only applied once creep is in the target room
-			Pathing.blockExits(matrix);
-			for (let hostile of room.invaders) {
-				if (hostile.getActiveBodyparts(RANGED_ATTACK) > 1) {
-					Pathing.setCostsInRange(matrix, hostile, 3, 1, true);
-				}
-			}
-			for (let keeper of room.sourceKeepers) {
-				Pathing.setCostsInRange(matrix, keeper, 3, 10, true);
-			}
-			for (let lair of room.keeperLairs) {
-				if ((lair.ticksToSpawn || Infinity) < 25) {
-					Pathing.setCostsInRange(matrix, lair, 5, 5, true);
-				}
-			}
-			return matrix;
-		};
 		if (creep.pos.getRangeTo(dest) > 8) {
 			options.repath = .1;
 			options.movingTarget = true;
 		}
 		if (creep.room.name == dest.roomName) {
 			options.maxRooms = 1;
-			options.modifyRoomCallback = roomCallbackModifier;
+			options.modifyRoomCallback = this.invasionMoveCallbackModifier;
 		}
 		return creep.goTo(dest, options);
 	}
+
 
 	static kite(creep: Zerg, avoidGoals: (RoomPosition | HasPos)[], range = 5): number | undefined {
 		let nextPos = _.first(Pathing.getKitingPath(creep.pos, avoidGoals, range, getTerrainCosts(creep.creep)));
@@ -555,6 +650,7 @@ export class Movement {
 			return creep.move(creep.pos.getDirectionTo(nextPos));
 		}
 	}
+
 
 	private static deserializeState(moveData: MoveData, destination: RoomPosition): MoveState {
 		let state = {} as MoveState;

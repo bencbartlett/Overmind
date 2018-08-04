@@ -1,7 +1,7 @@
 import {profile} from '../profiler/decorator';
 import {HiveCluster} from './_HiveCluster';
 import {Colony} from '../Colony';
-import {CombatIntel} from '../intel/combatIntel';
+import {CombatIntel} from '../intel/CombatIntel';
 import {WorkerOverlord} from '../overlords/core/worker';
 
 // Hive cluster for wrapping towers

@@ -2,7 +2,7 @@ import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {Visualizer} from '../../visuals/Visualizer';
 import {DestroyerOverlord} from '../../overlords/offense/destroyer';
-import {CombatIntel} from '../../intel/combatIntel';
+import {CombatIntel} from '../../intel/CombatIntel';
 
 @profile
 export class DirectiveDestroy extends Directive {

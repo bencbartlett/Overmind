@@ -5,7 +5,7 @@ import {initializeTask} from '../tasks/initializer';
 import {Task} from '../tasks/Task';
 import {Movement, MoveOptions} from '../movement/Movement';
 import {isCreep, isZerg} from '../declarations/typeGuards';
-import {CombatIntel} from '../intel/combatIntel';
+import {CombatIntel} from '../intel/CombatIntel';
 
 export function getOverlord(creep: Zerg | Creep): Overlord | null {
 	if (creep.memory.overlord) {
@@ -212,7 +212,13 @@ export class Zerg {
 
 	rangedMassAttack() {
 		let result = this.creep.rangedMassAttack();
-		if (!this.actionLog.rangedMassAttack) this.actionLog.rangedMassAttack = (result == OK);
+		if (result == OK) {
+			this.actionLog.rangedMassAttack = true;
+			for (let target of this.pos.findInRange(this.room.hostiles, 3)) {
+				if (target.hitsPredicted == undefined) target.hitsPredicted = target.hits;
+				target.hitsPredicted -= CombatIntel.getMassAttackDamageTo(this, target);
+			}
+		}
 		return result;
 	}
 
@@ -317,7 +323,7 @@ export class Zerg {
 
 	// Body configuration and related data -----------------------------------------------------------------------------
 
-	getActiveBodyparts(type: BodyPartConstant) {
+	getActiveBodyparts(type: BodyPartConstant): number {
 		return this.creep.getActiveBodyparts(type);
 	}
 
@@ -454,14 +460,19 @@ export class Zerg {
 	// Movement and location -------------------------------------------------------------------------------------------
 
 	goTo(destination: RoomPosition | HasPos, options: MoveOptions = {}) {
-		// Add default obstacle avoidance
-		// TODO: include default obstacles in costmatrix initial calculations
-		// return Movement.goTo(this, destination, _.merge(options, {obstacles: this.getObstacles()}));
 		return Movement.goTo(this, destination, options);
+	};
+
+	goToRoom(roomName: string, options: MoveOptions = {}) {
+		return Movement.goToRoom(this, roomName, options);
 	};
 
 	inSameRoomAs(target: HasPos): boolean {
 		return this.pos.roomName == target.pos.roomName;
+	}
+
+	safelyInRoom(roomName: string): boolean {
+		return this.room.name == roomName && !this.pos.isEdge;
 	}
 
 	get isMoving(): boolean {
@@ -469,7 +480,7 @@ export class Zerg {
 		return !!moveData && !!moveData.path && moveData.path.length > 1;
 	}
 
-	kite(avoidGoals: (RoomPosition | HasPos)[], range = 5): number | undefined {
+	kite(avoidGoals: (RoomPosition | HasPos)[] = this.room.hostiles, range = 5): number | undefined {
 		return Movement.kite(this, avoidGoals, range);
 	}
 

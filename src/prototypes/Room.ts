@@ -78,7 +78,7 @@ Object.defineProperty(Room.prototype, 'invaders', {
 Object.defineProperty(Room.prototype, 'sourceKeepers', {
 	get() {
 		if (!this._sourceKeepers) {
-			this._sourceKeepers = _.filter(this.allHostiles, (creep: Creep) => creep.owner.username == 'Source Keeper');
+			this._sourceKeepers = _.filter(this.hostiles, (creep: Creep) => creep.owner.username == 'Source Keeper');
 		}
 		return this._sourceKeepers;
 	},

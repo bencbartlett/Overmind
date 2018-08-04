@@ -5,7 +5,7 @@ import {CreepSetup} from '../CreepSetup';
 import {boostResources} from '../../resources/map_resources';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 import {profile} from '../../profiler/decorator';
-import {CombatIntel} from '../../intel/combatIntel';
+import {CombatIntel} from '../../intel/CombatIntel';
 import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatTargeting} from '../../targeting/CombatTargeting';

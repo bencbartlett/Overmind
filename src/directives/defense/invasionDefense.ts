@@ -3,7 +3,7 @@ import {profile} from '../../profiler/decorator';
 import {RangedDefenseOverlord} from '../../overlords/defense/rangedDefense';
 import {ColonyStage} from '../../Colony';
 import {log} from '../../console/log';
-import {CombatIntel} from '../../intel/combatIntel';
+import {CombatIntel} from '../../intel/CombatIntel';
 
 interface DirectiveInvasionDefenseMemory extends FlagMemory {
 	persistent?: boolean;

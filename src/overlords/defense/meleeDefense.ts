@@ -4,7 +4,7 @@ import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {boostResources} from '../../resources/map_resources';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 import {profile} from '../../profiler/decorator';
-import {CombatIntel} from '../../intel/combatIntel';
+import {CombatIntel} from '../../intel/CombatIntel';
 import {GuardPairOverlord} from './guardPair';
 import {CreepSetup} from '../CreepSetup';
 import {minBy} from '../../utilities/utils';

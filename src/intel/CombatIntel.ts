@@ -9,6 +9,7 @@ import {Cartographer} from '../utilities/Cartographer';
 import {log} from '../console/log';
 import {toCreep, Zerg} from '../zerg/Zerg';
 import {isOwnedStructure, isStructure, isZerg} from '../declarations/typeGuards';
+import {RoomIntel} from './RoomIntel';
 
 interface CombatIntelMemory {
 	cache: {
@@ -231,6 +232,29 @@ export class CombatIntel {
 		return RANGED_ATTACK_POWER * this.getRangedAttackPotential(toCreep(creep));
 	}
 
+	// Attack potential of a single creep in units of effective number of parts
+	static getDismantlePotential(creep: Creep): number {
+		return this.cache(creep, 'dismantlePotential', () => _.sum(creep.body, function (part) {
+			let potential = 0;
+			if (part.type == WORK) {
+				if (!part.boost) {
+					potential = 1;
+				} else if (part.boost == boostResources.dismantle[1]) {
+					potential = BOOSTS.work.ZH.dismantle;
+				} else if (part.boost == boostResources.dismantle[2]) {
+					potential = BOOSTS.work.ZH2O.dismantle;
+				} else if (part.boost == boostResources.dismantle[3]) {
+					potential = BOOSTS.work.XZH2O.dismantle;
+				}
+			}
+			return potential * part.hits / 100;
+		}));
+	}
+
+	static getDismantleDamage(creep: Creep | Zerg): number {
+		return DISMANTLE_POWER * this.getDismantlePotential(toCreep(creep));
+	}
+
 	// Minimum damage multiplier a creep has
 	static minimumDamageTakenMultiplier(creep: Creep): number {
 		return this.cache(creep, 'minDamageMultiplier', () =>
@@ -266,16 +290,28 @@ export class CombatIntel {
 	}
 
 	// Total damage to enemy creeps done by attacker.rangedMassAttack()
-	static getMassAttackDamage(attacker: Creep | Zerg, targets = attacker.room.hostiles, ignoreRampart = false): number {
+	static getMassAttackDamage(attacker: Creep | Zerg, targets = attacker.room.hostiles, checkRampart = true): number {
 		let hostiles = attacker.pos.findInRange(targets, 3);
 		return _.sum(hostiles, function (hostile) {
-			if (!ignoreRampart && hostile.pos.lookForStructure(STRUCTURE_RAMPART)) {
+			if (checkRampart && hostile.pos.lookForStructure(STRUCTURE_RAMPART)) {
 				return 0; // Creep inside rampart
 			} else {
 				return CombatIntel.getMassAttackDamageTo(attacker, hostile);
 			}
 		});
 	}
+
+	static rating(creep: Creep | Zerg): number {
+		const c = toCreep(creep);
+		return this.cache(c, 'rating', () => {
+			let rating = this.getRangedAttackPotential(c) + this.getAttackPotential(c) / 2;
+			let healMultiplier = 1 / this.minimumDamageTakenMultiplier(c);
+			rating += healMultiplier * this.getHealPotential(c);
+			return rating;
+		});
+	}
+
+	// Group creep calculations ========================================================================================
 
 	// Maximum damage that a group of creeps can dish out (doesn't count for simultaneity restrictions)
 	static maxDamageByCreeps(creeps: Creep[]): number {
@@ -285,7 +321,7 @@ export class CombatIntel {
 
 	// Maximum healing that a group of creeps can dish out (doesn't count for simultaneity restrictions)
 	static maxHealingByCreeps(creeps: Creep[]): number {
-		return _.sum(creeps, creep => HEAL_POWER * this.getHealPotential(creep));
+		return _.sum(creeps, creep => this.getHealAmount(creep));
 	}
 
 	// Maximum damage that is dealable at a given position by enemy forces
@@ -306,13 +342,29 @@ export class CombatIntel {
 
 	// Heal potential of self and possible healer neighbors
 	static maxHostileHealingTo(creep: Creep): number {
-		let selfHealing = HEAL_POWER * this.getHealPotential(creep);
-		let neighbors = _.filter(creep.room.hostiles, hostile => hostile.pos.isNearTo(creep));
-		let neighborHealing = HEAL_POWER * _.sum(neighbors, neighbor => this.getHealPotential(neighbor));
-		let rangedHealers = _.filter(creep.room.hostiles, hostile => hostile.pos.getRangeTo(creep) <= 3 &&
-																	 !neighbors.includes(hostile));
-		let rangedHealing = RANGED_HEAL_POWER * _.sum(rangedHealers, healer => this.getHealPotential(healer));
-		return selfHealing + neighborHealing + rangedHealing;
+		return this.cache(creep, 'maxHostileHealing', () => {
+			let selfHealing = this.getHealAmount(creep);
+			let neighbors = _.filter(creep.room.hostiles, hostile => hostile.pos.isNearTo(creep));
+			let neighborHealing = HEAL_POWER * _.sum(neighbors, neighbor => this.getHealPotential(neighbor));
+			let rangedHealers = _.filter(creep.room.hostiles, hostile => hostile.pos.getRangeTo(creep) <= 3 &&
+																		 !neighbors.includes(hostile));
+			let rangedHealing = RANGED_HEAL_POWER * _.sum(rangedHealers, healer => this.getHealPotential(healer));
+			return selfHealing + neighborHealing + rangedHealing;
+		});
+	}
+
+	// Heal potential of self and possible healer neighbors
+	static maxFriendlyHealingTo(friendly: Creep | Zerg): number {
+		const creep = toCreep(friendly);
+		return this.cache(creep, 'maxFriendlyHealing', () => {
+			let selfHealing = this.getHealAmount(creep);
+			let neighbors = _.filter(creep.room.creeps, hostile => hostile.pos.isNearTo(creep));
+			let neighborHealing = HEAL_POWER * _.sum(neighbors, neighbor => this.getHealPotential(neighbor));
+			let rangedHealers = _.filter(creep.room.creeps, hostile => hostile.pos.getRangeTo(creep) <= 3 &&
+																	   !neighbors.includes(hostile));
+			let rangedHealing = RANGED_HEAL_POWER * _.sum(rangedHealers, healer => this.getHealPotential(healer));
+			return selfHealing + neighborHealing + rangedHealing;
+		});
 	}
 
 	// Determine the predicted damage amount of a certain type of attack. Can specify if you should use predicted or
@@ -352,6 +404,20 @@ export class CombatIntel {
 	// static distanceToBarrier(creep: Creep): number {
 	//
 	// }
+
+	static isApproaching(approacher: Creep, toPos: RoomPosition): boolean {
+		let previousPos = RoomIntel.getPreviousPos(approacher);
+		let previousRange = toPos.getRangeTo(previousPos);
+		let currentRange = toPos.getRangeTo(approacher.pos);
+		return currentRange < previousRange;
+	}
+
+	static isRetreating(retreater: Creep, fromPos: RoomPosition): boolean {
+		let previousPos = RoomIntel.getPreviousPos(retreater);
+		let previousRange = fromPos.getRangeTo(previousPos);
+		let currentRange = fromPos.getRangeTo(retreater.pos);
+		return currentRange > previousRange;
+	}
 
 	static getPositionsNearEnemies(hostiles: Creep[], range = 0): RoomPosition[] {
 		return _.unique(_.flatten(_.map(hostiles, hostile =>

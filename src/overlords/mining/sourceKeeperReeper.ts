@@ -4,7 +4,7 @@ import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {DirectiveSKOutpost} from '../../directives/core/outpostSK';
 import {CreepSetup} from '../CreepSetup';
-import {RoomIntel} from '../../intel/roomIntel';
+import {RoomIntel} from '../../intel/RoomIntel';
 import {minBy} from '../../utilities/utils';
 import {Mem} from '../../Memory';
 import {log} from '../../console/log';
@@ -83,7 +83,7 @@ export class SourceReaperOverlord extends Overlord {
 			}
 			// Kite around ranged invaders until a defender arrives
 			if (this.room.invaders.length > 2 && _.filter(this.defenders, def => def.room == this.room).length == 0) {
-				reaper.kite(this.room.hostiles);
+				reaper.kite(_.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0));
 				reaper.healSelfIfPossible();
 			}
 			// If defender is already here or a small invasion
@@ -97,8 +97,6 @@ export class SourceReaperOverlord extends Overlord {
 			}
 		} else {
 			// Standard keeperReaper actions
-			let isAttacking = false;
-			let range;
 			let nearestHostile = reaper.pos.findClosestByRange(this.room.hostiles) as Creep;
 			if (nearestHostile && reaper.pos.isNearTo(nearestHostile)) {
 				reaper.attack(nearestHostile);
@@ -106,14 +104,58 @@ export class SourceReaperOverlord extends Overlord {
 			} else {
 				let keeper = this.targetLair.pos.findClosestByLimitedRange(this.room.sourceKeepers, 7);
 				if (keeper) { // attack the source keeper
-					if (reaper.hits == reaper.hitsMax || reaper.pos.getRangeTo(keeper) == 4) {
-						reaper.goTo(keeper); // stop and heal at range 4 if needed
-					}
+					// stop and heal at range 4 if needed
+					let approachRange = (reaper.hits == reaper.hitsMax || reaper.pos.getRangeTo(keeper) <= 3) ? 1 : 4;
+					reaper.goTo(keeper, {range: approachRange});
 				} else { // travel to next lair
 					reaper.goTo(this.targetLair, {range: 1});
 				}
 			}
 			reaper.healSelfIfPossible();
+		}
+
+	}
+
+	private handleDefender(defender: CombatZerg) {
+
+		// Go to keeper room
+		if (!this.targetLair || !this.room || defender.room != this.room || defender.pos.isEdge) {
+			defender.healSelfIfPossible();
+			defender.goTo(this.pos);
+			return;
+		}
+
+		if (this.room.invaders.length > 0) {
+			// Handle invader actions
+			defender.autoCombat(this.room.name);
+		} else {
+			let minKeepersToHelp = this.reapers.length == 0 ? 1 : 2;
+			if (this.room.sourceKeepers.length >= minKeepersToHelp) {
+				// Help out with keeper reaping
+				defender.autoRanged();
+				defender.autoHeal(false);
+
+				let reaper = defender.pos.findClosestByRange(this.reapers);
+				if (reaper) {
+					defender.goTo(reaper, {movingTarget: defender.pos.getRangeTo(reaper) > 8, maxRooms: 1});
+				} else {
+					let keeper = this.targetLair.pos.findClosestByLimitedRange(this.room.sourceKeepers, 7);
+					if (keeper) { // attack the source keeper
+						let range = defender.pos.getRangeTo(keeper);
+						let keepAtRange = defender.hits < defender.hitsMax * .9 ? 4 : 3;
+						if (range < keepAtRange) {
+							defender.kite(this.room.hostiles, 4);
+						} else if (range > keepAtRange) {
+							defender.goTo(keeper, {maxRooms: 1, range: keepAtRange});
+						}
+					} else { // travel to next lair
+						defender.goTo(this.targetLair, {range: 5});
+					}
+				}
+			} else {
+				// Do medic actions
+				defender.doMedicActions();
+			}
 		}
 
 	}

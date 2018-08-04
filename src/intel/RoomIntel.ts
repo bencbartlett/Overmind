@@ -16,7 +16,7 @@
 
 import {getCacheExpiration} from '../utilities/utils';
 import {ExpansionPlanner} from '../strategy/ExpansionPlanner';
-import {getAllColonies} from '../Colony';
+import {Zerg} from '../zerg/Zerg';
 
 const RECACHE_TIME = 2500;
 const OWNED_RECACHE_TIME = 1000;
@@ -107,6 +107,22 @@ export class RoomIntel {
 		}
 	}
 
+	// Get the pos a creep was in on the previous tick
+	static getPreviousPos(creep: Creep | Zerg): RoomPosition {
+		if (creep.room.memory.prevPositions && creep.room.memory.prevPositions[creep.id]) {
+			return derefRoomPosition(creep.room.memory.prevPositions[creep.id]);
+		} else {
+			return creep.pos; // no data
+		}
+	}
+
+	private static recordCreepPositions(room: Room): void {
+		room.memory.prevPositions = {};
+		for (let creep of room.find(FIND_CREEPS)) {
+			room.memory.prevPositions[creep.id] = creep.pos;
+		}
+	}
+
 	static isInvasionLikely(room: Room): boolean {
 		const data = room.memory.invasionData;
 		if (!data) return false;
@@ -128,9 +144,23 @@ export class RoomIntel {
 	static run(): void {
 		let alreadyComputedScore = false;
 		for (let name in Game.rooms) {
+
 			const room = Game.rooms[name];
+
+			// Track invasion data for all colony rooms and outposts
+			if (Overmind.colonyMap[room.name]) { // if it is an owned or outpost room
+				this.updateInvasionData(room);
+			}
+
+			// Record previous creep positions if needed (RoomIntel.run() is executed at end of each tick)
+			if (room.creeps.length > 0 && room.hostiles.length > 0) {
+				this.recordCreepPositions(room);
+			} else {
+				delete room.memory.prevPositions;
+			}
+
+			// Record location of permanent objects in room and recompute score as needed
 			if (!room.memory.expiration || Game.time > room.memory.expiration) {
-				// Record location of permanent objects in room and recompute score
 				this.recordPermanentObjects(room);
 				if (!alreadyComputedScore) {
 					alreadyComputedScore = this.recomputeScoreIfNecessary(room);
@@ -139,12 +169,7 @@ export class RoomIntel {
 				let recacheTime = room.owner ? OWNED_RECACHE_TIME : RECACHE_TIME;
 				room.memory.expiration = getCacheExpiration(recacheTime, 250);
 			}
-		}
-		// Track invasion data for all colony rooms and outposts
-		for (let colony of getAllColonies()) {
-			for (let room of colony.rooms) {
-				this.updateInvasionData(room);
-			}
+
 		}
 	}
 

@@ -153,6 +153,12 @@ interface RoomCoord {
 	yDir: string;
 }
 
+interface PathFinderGoal {
+	pos: RoomPosition;
+	range: number;
+	cost?: number;
+}
+
 interface protoCreep {
 	body: BodyPartConstant[];
 	name: string;
