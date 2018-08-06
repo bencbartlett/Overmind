@@ -303,7 +303,7 @@ export class Zerg {
 		return result;
 	}
 
-	// Simultaneous creep actions ==------------------------------------------------------------------------------------
+	// Simultaneous creep actions --------------------------------------------------------------------------------------
 
 	/* Determine whether the given action will conflict with an action the creep has already taken.
 	 * See http://docs.screeps.com/simultaneous-actions.html for more details. */
@@ -438,25 +438,6 @@ export class Zerg {
 		this.memory.colony = newColony.name;
 	}
 
-	// /* The average movespeed of the creep on blank terrain */
-	// get moveSpeed(): number {
-	// 	if (!this.memory.data.moveSpeed) {
-	// 		let massiveParts = [WORK, ATTACK, RANGED_ATTACK, HEAL, TOUGH];
-	// 		let mass = 0;
-	// 		for (let part of massiveParts) {
-	// 			mass += this.getActiveBodyparts(part);
-	// 		}
-	// 		let moveParts = this.getActiveBodyparts(MOVE);
-	// 		let fatiguePerTick = 2 * mass;
-	// 		if (fatiguePerTick == 0) {
-	// 			this.memory.data.moveSpeed = 1;
-	// 		} else {
-	// 			this.memory.data.moveSpeed = Math.min(2 * moveParts / fatiguePerTick, 1);
-	// 		}
-	// 	}
-	// 	return this.memory.data.moveSpeed;
-	// }
-
 	// Movement and location -------------------------------------------------------------------------------------------
 
 	goTo(destination: RoomPosition | HasPos, options: MoveOptions = {}) {
@@ -480,10 +461,32 @@ export class Zerg {
 		return !!moveData && !!moveData.path && moveData.path.length > 1;
 	}
 
-	kite(avoidGoals: (RoomPosition | HasPos)[] = this.room.hostiles, range = 5): number | undefined {
-		return Movement.kite(this, avoidGoals, range);
+	/* Kite around hostiles in the room */
+	kite(avoidGoals: (RoomPosition | HasPos)[] = this.room.hostiles, options: MoveOptions = {}): number | undefined {
+		_.defaults(options, {
+			range: 5
+		});
+		return Movement.kite(this, avoidGoals, options);
 	}
 
+	private defaultFleeGoals() {
+		let fleeGoals: (RoomPosition | HasPos)[] = [];
+		fleeGoals = fleeGoals.concat(this.room.hostiles)
+							 .concat(_.filter(this.room.keeperLairs, lair => (lair.ticksToSpawn || Infinity) < 10));
+		return fleeGoals;
+	}
+
+	/* Flee from hostiles in the room, while not repathing every tick */
+	flee(avoidGoals: (RoomPosition | HasPos)[]    = this.room.fleeDefaults,
+		 dropEnergy = false, options: MoveOptions = {}): boolean {
+		if (this.room.controller && this.room.controller.my && this.room.controller.safeMode) {
+			return false;
+		} else {
+			return Movement.flee(this, avoidGoals, dropEnergy, options) != undefined;
+		}
+	}
+
+	/* Park the creep off-roads */
 	park(pos: RoomPosition = this.pos, maintainDistance = false): number {
 		return Movement.park(this, pos, maintainDistance);
 	}

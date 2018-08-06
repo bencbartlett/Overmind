@@ -14,6 +14,11 @@ export const MY_USERNAME: string = getUsername();
 export const USE_PROFILER: boolean = false;
 
 /**
+ * Enable this to wrap evaluations of constructor, init, and run phase for each colony in try...catch statemenets.
+ */
+export const USE_TRY_CATCH: boolean = true;
+
+/**
  * Default controller signature; don't change this.
  * You can set your controller signature with the console command "setSignature()"
  */

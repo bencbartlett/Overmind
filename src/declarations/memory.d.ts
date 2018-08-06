@@ -68,11 +68,7 @@ interface CreepMemory {
 	data: {
 		origin: string;
 	};
-	// Traveler components
 	_go?: MoveData;
-	// Combat
-	partner?: string;
-	retreating?: boolean;
 	boostLab?: string;
 }
 
@@ -80,6 +76,8 @@ interface MoveData {
 	state: any[];
 	path: string;
 	delay?: number;
+	fleeWait?: number;
+	destination?: protoPos;
 	priority?: number;
 }
 

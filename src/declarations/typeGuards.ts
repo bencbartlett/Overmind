@@ -1,4 +1,5 @@
-// Type guard functions
+// Type guards library: this allows for instanceof - like behavior for much lower CPU cost. Each type guard
+// differentiates an ambiguous input by recognizing one or more unique properties.
 
 import {Zerg} from '../zerg/Zerg';
 
@@ -44,10 +45,14 @@ export function hasPos(obj: HasPos | RoomPosition): obj is HasPos {
 	return (<HasPos>obj).pos != undefined;
 }
 
+export function isCreep(obj: RoomObject): obj is Creep {
+	return (<Creep>obj).fatigue != undefined;
+}
+
 export function isZerg(creep: Creep | Zerg): creep is Zerg {
 	return (<Zerg>creep).creep != undefined;
 }
 
-export function isCreep(obj: RoomObject): obj is Creep {
-	return (<Creep>obj).fatigue != undefined;
-}
+// export function isCombatZerg(zerg: Zerg | CombatZerg): zerg is CombatZerg {
+// 	return (<CombatZerg>zerg).isCombatZerg != undefined;
+// }

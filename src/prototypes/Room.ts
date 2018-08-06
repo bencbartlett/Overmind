@@ -125,6 +125,22 @@ Object.defineProperty(Room.prototype, 'dangerousPlayerHostiles', {
 	configurable: true,
 });
 
+Object.defineProperty(Room.prototype, 'fleeDefaults', {
+	get() {
+		if (!this._fleeDefaults) {
+			this._fleeDefaults = (<HasPos[]>[])
+				.concat(_.filter(this.hostiles,
+								 (c: Creep) => c.getActiveBodyparts(ATTACK) > 0
+											   || c.getActiveBodyparts(RANGED_ATTACK) > 0))
+				.concat(_.filter(this.keeperLairs,
+								 (l: StructureKeeperLair) => (l.ticksToSpawn || Infinity) < 10));
+		}
+		return this._fleeDefaults;
+	},
+	configurable: true,
+});
+
+
 // Hostile structures currently in the room
 Object.defineProperty(Room.prototype, 'hostileStructures', {
 	get() {

@@ -21,6 +21,7 @@ import {DirectiveRPBunker} from './roomPlanner/roomPlanner_bunker';
 import {DirectiveTerminalRebuildState} from './logistics/terminalState_rebuild';
 import {DirectiveTerminalEvacuateState} from './logistics/terminalState_evacuate';
 import {DirectiveControllerAttack} from './offense/controllerAttack';
+import {DirectiveSKOutpost} from './core/outpostSK';
 
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 	switch (flag.color) {
@@ -30,6 +31,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			switch (flag.secondaryColor) {
 				case COLOR_PURPLE:
 					return new DirectiveOutpost(flag);
+				case COLOR_YELLOW:
+					return new DirectiveSKOutpost(flag);
 				case COLOR_WHITE:
 					return new DirectiveIncubate(flag);
 				case COLOR_GREY:

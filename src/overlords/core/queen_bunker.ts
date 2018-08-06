@@ -259,11 +259,6 @@ export class BunkerQueenOverlord extends Overlord {
 	}
 
 	run() {
-		for (let queen of this.queens) {
-			if (queen.isIdle) {
-				this.handleQueen(queen);
-			}
-			queen.run();
-		}
+		this.standardRun(this.queens, queen => this.handleQueen(queen));
 	}
 }

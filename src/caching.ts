@@ -3,6 +3,7 @@
 import {profile} from './profiler/decorator';
 import {getCacheExpiration} from './utilities/utils';
 import {DirectiveOutpost} from './directives/core/outpost';
+import {DirectiveSKOutpost} from './directives/core/outpostSK';
 
 @profile
 export class GameCache implements ICache {
@@ -14,7 +15,8 @@ export class GameCache implements ICache {
 	constructor() {
 		this.overlords = {};
 		this.targets = {};
-		this.outpostFlags = _.filter(Game.flags, flag => DirectiveOutpost.filter(flag));
+		this.outpostFlags = _.filter(Game.flags, flag => DirectiveOutpost.filter(flag)
+														 || DirectiveSKOutpost.filter(flag));
 	}
 
 	/* Generates a hash table for creeps assigned to each object: key: OLref, val: (key: role, val: names[]) */

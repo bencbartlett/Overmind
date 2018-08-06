@@ -87,16 +87,6 @@ export class UpgradingOverlord extends Overlord {
 	}
 
 	run() {
-		for (let upgrader of this.upgraders) {
-			if (upgrader.isIdle) {
-				if (upgrader.needsBoosts) {
-					this.handleBoosting(upgrader);
-				} else {
-					this.handleUpgrader(upgrader);
-
-				}
-			}
-			upgrader.run();
-		}
+		this.standardRun(this.upgraders, upgrader => this.handleUpgrader(upgrader));
 	}
 }

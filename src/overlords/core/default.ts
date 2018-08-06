@@ -5,6 +5,7 @@ import {Zerg} from '../../zerg/Zerg';
 import {MinerSetup} from '../mining/miner';
 import {DroneSetup} from '../mining/extractor';
 import {getPosFromString} from '../../utilities/utils';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
 
 
 // This overlord contains the default actions for any creeps which lack an overlord (for example, miners whose
@@ -16,7 +17,7 @@ export class DefaultOverlord extends Overlord {
 	idleZerg: Zerg[];
 
 	constructor(colony: Colony) {
-		super(colony, 'default', Infinity);
+		super(colony, 'default', OverlordPriority.default);
 		this.idleZerg = [];
 	}
 

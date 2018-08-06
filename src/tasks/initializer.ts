@@ -22,7 +22,7 @@ import {TaskTransfer, transferTargetType, transferTaskName} from './instances/tr
 import {TaskUpgrade, upgradeTargetType, upgradeTaskName} from './instances/upgrade';
 import {dropTargetType, dropTaskName, TaskDrop} from './instances/drop';
 import {TaskInvalid} from './instances/invalid';
-import {fleeTargetType, fleeTaskName, TaskFlee} from './instances/flee';
+// import {fleeTargetType, fleeTaskName, TaskFlee} from './instances/flee';
 import {TaskTransferAll, transferAllTargetType, transferAllTaskName} from './instances/transferAll';
 import {log} from '../console/log';
 import {TaskWithdrawAll, withdrawAllTargetType, withdrawAllTaskName} from './instances/withdrawAll';
@@ -51,9 +51,9 @@ export function initializeTask(protoTask: protoTask): Task {
 		case dropTaskName:
 			task = new TaskDrop(derefRoomPosition(protoTask._target._pos) as dropTargetType);
 			break;
-		case fleeTaskName:
-			task = new TaskFlee(derefRoomPosition(protoTask._target._pos) as fleeTargetType);
-			break;
+		// case fleeTaskName:
+		// 	task = new TaskFlee(derefRoomPosition(protoTask._target._pos) as fleeTargetType);
+		// 	break;
 		case fortifyTaskName:
 			task = new TaskFortify(target as fortifyTargetType);
 			break;

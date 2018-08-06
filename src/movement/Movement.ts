@@ -96,6 +96,7 @@ export class Movement {
 
 		let priority = this.getPushPriority(creep);
 
+		// Set default options
 		_.defaults(options, {
 			ignoreCreeps: true,
 			priority    : priority,
@@ -110,6 +111,12 @@ export class Movement {
 			options.range = Math.min(Math.abs(distanceToEdge - 1), 0);
 		}
 
+		// initialize data object
+		if (!creep.memory._go) {
+			creep.memory._go = {} as MoveData;
+		}
+		let moveData = creep.memory._go as MoveData;
+
 		// manage case where creep is nearby destination
 		let rangeToDestination = creep.pos.getRangeTo(destination);
 		if (options.range && rangeToDestination <= options.range) {
@@ -122,16 +129,12 @@ export class Movement {
 					return creep.move(direction, !!options.force);
 				}
 			} else { // at destination
-				delete creep.memory._go;
+				if (!moveData.fleeWait) {
+					delete creep.memory._go;
+				}
 				return NO_ACTION;
 			}
 		}
-
-		// initialize data object
-		if (!creep.memory._go) {
-			creep.memory._go = {} as MoveData;
-		}
-		let moveData = creep.memory._go as MoveData;
 
 		// handle delay
 		if (moveData.delay != undefined) {
@@ -189,6 +192,11 @@ export class Movement {
 				return ERR_BUSY;
 			}
 			state.destination = destination;
+
+			// // Configure whether to avoid source keepers // TODO
+			// if (options.avoidSK == undefined) {
+			// 	options.avoidSK = !isCombatZerg(creep);
+			// }
 
 			// Compute terrain costs
 			if (!options.direct && !options.terrainCosts) {
@@ -605,7 +613,7 @@ export class Movement {
 	}
 
 
-	private static invasionMoveCallbackModifier(room: Room, matrix: CostMatrix) {
+	private static invasionMoveCallbackModifier(room: Room, matrix: CostMatrix): CostMatrix {
 		// This is only applied once creep is in the target room
 		Pathing.blockExits(matrix);
 		for (let hostile of room.invaders) {
@@ -643,11 +651,105 @@ export class Movement {
 		return creep.goTo(dest, options);
 	}
 
-
-	static kite(creep: Zerg, avoidGoals: (RoomPosition | HasPos)[], range = 5): number | undefined {
-		let nextPos = _.first(Pathing.getKitingPath(creep.pos, avoidGoals, range, getTerrainCosts(creep.creep)));
+	/* Kite around enemies in a single room, repathing every tick. More expensive than flee(). */
+	static kite(creep: Zerg, avoidGoals: (RoomPosition | HasPos)[], options: MoveOptions = {}): number | undefined {
+		_.defaults(options, {
+			range       : 5,
+			terrainCosts: getTerrainCosts(creep.creep),
+		});
+		let nextPos = _.first(Pathing.findKitingPath(creep.pos, avoidGoals, options).path);
 		if (nextPos) {
 			return creep.move(creep.pos.getDirectionTo(nextPos));
+		}
+	}
+
+	/* Flee from avoid goals in the room while not re-pathing every tick like kite() does. Returns  */
+	static flee(creep: Zerg, avoidGoals: (RoomPosition | HasPos)[],
+				dropEnergy = false, options: MoveOptions = {}): number | undefined {
+
+		if (avoidGoals.length == 0) {
+			return; // nothing to flee from
+		}
+		_.defaults(options, {
+			terrainCosts: getTerrainCosts(creep.creep),
+		});
+		if (options.range == undefined) options.range = options.terrainCosts!.plainCost > 1 ? 8 : 16;
+
+		let closest = creep.pos.findClosestByRange(avoidGoals);
+		let rangeToClosest = closest ? creep.pos.getRangeTo(closest) : 50;
+
+		if (rangeToClosest > options.range) { // Out of range of baddies
+
+			if (!creep.memory._go) {
+				return;
+			}
+
+			if (creep.pos.isEdge) {
+				return creep.moveOffExit();
+			}
+
+			// wait until safe
+			let moveData = creep.memory._go as MoveData;
+			if (moveData.fleeWait != undefined) {
+				if (moveData.fleeWait <= 0) {
+					// you're safe now
+					delete creep.memory._go;
+					return;
+				} else {
+					moveData.fleeWait--;
+					return NO_ACTION;
+				}
+			} else {
+				return undefined;
+			}
+
+		} else { // Still need to run away
+
+			// initialize data object
+			if (!creep.memory._go) {
+				creep.memory._go = {} as MoveData;
+			}
+			let moveData = creep.memory._go as MoveData;
+
+			moveData.fleeWait = 2;
+
+			// Drop energy if needed
+			if (dropEnergy && creep.carry.energy > 0) {
+				let nearbyContainers = creep.pos.findInRange(creep.room.storageUnits, 1);
+				if (nearbyContainers.length > 0) {
+					creep.transfer(_.first(nearbyContainers), RESOURCE_ENERGY);
+				} else {
+					creep.drop(RESOURCE_ENERGY);
+				}
+			}
+
+			// Invalidate path if needed
+			if (moveData.path) {
+				if (moveData.path.length > 0) {
+					let nextDirection = parseInt(moveData.path[0], 10) as DirectionConstant;
+					let pos = creep.pos.getPositionAtDirection(nextDirection);
+					if (!pos.isEdge) {
+						let newClosest = pos.findClosestByRange(avoidGoals);
+						if (newClosest && normalizePos(newClosest).getRangeTo(pos) < rangeToClosest)
+							delete moveData.path;
+					}
+				} else {
+					delete moveData.path;
+				}
+			}
+
+			// Re-calculate path if needed
+			if (!moveData.path || !moveData.destination) {
+				let ret = Pathing.findFleePath(creep.pos, avoidGoals, options);
+				if (ret.path.length == 0) {
+					return NO_ACTION;
+				}
+				moveData.destination = _.last(ret.path);
+				moveData.path = Pathing.serializePath(creep.pos, ret.path, 'purple');
+			}
+
+			// Call goTo to the final position in path
+			return Movement.goTo(creep, derefRoomPosition(moveData.destination), options);
 		}
 	}
 

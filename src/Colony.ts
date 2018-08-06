@@ -31,6 +31,7 @@ import {EXPANSION_EVALUATION_FREQ, ExpansionPlanner} from './strategy/ExpansionP
 import {log} from './console/log';
 import {assimilationLocked} from './assimilation/decorator';
 import {DefaultOverlord} from './overlords/core/default';
+import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -230,7 +231,8 @@ export class Colony {
 		this.extractors = _(this.rooms)
 			.map(room => room.extractor)
 			.compact()
-			.filter(extractor => (extractor!.my && extractor!.room.my) || extractor!.owner.username == 'Public')
+			.filter(extractor => (extractor!.my && extractor!.room.my)
+								 || Cartographer.roomType(extractor!.room.name) != ROOMTYPE_CONTROLLER)
 			.sortBy(extractor => extractor!.pos.getMultiRoomRangeTo(this.pos)).value() as StructureExtractor[];
 		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites));
 		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));

@@ -43,6 +43,9 @@ export default {
         if (warning.toString().includes('Circular dependency')) {
             return;
         }
+        if (warning.toString().includes("The 'this' keyword is equivalent to 'undefined'")) {
+            return;
+        }
         // console.warn everything else
         console.warn(warning.message);
     },

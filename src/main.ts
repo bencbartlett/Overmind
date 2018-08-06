@@ -34,15 +34,12 @@ import {Mem} from './Memory';
 import {OvermindConsole} from './console/Console';
 import {Stats} from './stats/stats';
 import profiler from 'screeps-profiler';
-import OM from 'Overmind_obfuscated';
-// import {_Overmind} from './Overmind'; // don't enable this unless you're me
+import _Overmind from './Overmind_obfuscated'; // don't enable this unless you're me
 import {log} from './console/log';
 import {VersionMigration} from './versionMigration/migrator';
 import {isIVM} from './utilities/utils';
 import {alignedNewline} from './utilities/stringConstants';
 // =====================================================================================================================
-
-const _Overmind = (<any>OM)._Overmind as (new() => IOvermind);
 
 // @formatter:on
 
@@ -70,6 +67,7 @@ function main(): void {
 		Overmind.visuals(); 								// Draw visuals
 		Stats.run(); 										// Record statistics
 		sandbox();											// Sandbox: run any testing code
+		Overmind.postRun();									// Error catching; should be run at end of every tick
 	} else {
 		log.warning(`CPU bucket is critically low (${Game.cpu.bucket}) - skipping this tick!`);
 	}

@@ -5,12 +5,17 @@ import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Pathing} from '../../movement/Pathing';
-import {DEFCON} from '../../Colony';
 import {CreepSetup} from '../CreepSetup';
+import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../../utilities/Cartographer';
 
 export const MinerSetup = new CreepSetup('drone', {
 	pattern  : [WORK, WORK, CARRY, MOVE],
 	sizeLimit: 3,
+});
+
+export const SKMinerSetup = new CreepSetup('drone', {
+	pattern  : [WORK, WORK, CARRY, MOVE],
+	sizeLimit: 4,
 });
 
 export const MinerLongDistanceSetup = new CreepSetup('drone', {
@@ -39,6 +44,9 @@ export class MiningOverlord extends Overlord {
 		if (this.colony.hatchery && Pathing.distance(this.colony.hatchery.pos, this.pos) > 50 * 3) {
 			creepSetup = MinerLongDistanceSetup; // long distance miners
 			// todo: this.colony.hatchery is normal hatcher for incubating once spawns[0] != undefined
+		}
+		if (Cartographer.roomType(this.pos.roomName) == ROOMTYPE_SOURCEKEEPER) {
+			creepSetup = SKMinerSetup;
 		}
 		let filteredMiners = this.lifetimeFilter(this.miners);
 		let miningPowerAssigned = _.sum(filteredMiners, creep => creep.getActiveBodyparts(WORK));
@@ -87,32 +95,12 @@ export class MiningOverlord extends Overlord {
 				}
 			}
 		} else {
-			// miner.task = Tasks.goTo(this.miningSite);
 			miner.goTo(this.miningSite);
 		}
 	}
 
-	private fleeResponse(miner: Zerg): void {
-		if (miner.room == this.colony.room) {
-			// If there is a large invasion happening in the colony room, flee
-			if (this.colony.defcon > DEFCON.invasionNPC) {
-				miner.task = Tasks.flee(this.colony.controller);
-			}
-		} else {
-			// If there are baddies in the room, flee
-			if (miner.room.dangerousHostiles.length > 0) {
-				miner.task = Tasks.flee(this.colony.controller);
-			}
-		}
-	}
-
 	run() {
-		for (let miner of this.miners) {
-			if (miner.isIdle) {
-				this.handleMiner(miner);
-			}
-			// this.fleeResponse(miner);
-			miner.run();
-		}
+		this.standardRun(this.miners, miner => this.handleMiner(miner),
+						 miner => miner.flee(miner.room.fleeDefaults, true));
 	}
 }

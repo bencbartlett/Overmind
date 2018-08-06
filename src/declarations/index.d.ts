@@ -84,6 +84,7 @@ interface IOvermind {
 	terminalNetwork: ITerminalNetwork;			// is actually TerminalNetwork
 	tradeNetwork: ITradeNetwork;				// is actually TradeNetwork
 	strategist: IStrategist | undefined;		// Strategist | undefined, only defined if Memory.bot == true
+	exceptions: Error[];
 
 	build(): void;
 
@@ -92,6 +93,8 @@ interface IOvermind {
 	init(): void;
 
 	run(): void;
+
+	postRun(): void;
 
 	visuals(): void;
 }

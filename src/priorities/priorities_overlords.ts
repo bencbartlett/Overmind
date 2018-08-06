@@ -58,9 +58,16 @@ export var OverlordPriority = {
 		roomIncrement: 5, 			// remote room priorities are incremented by this for each outpost
 	},
 
-	collection: {				// Non-urgent collection of resources, like from a deserted storage
-		haul: 1000
+	remoteSKRoom: {
+		sourceReaper : 1000,
+		mineral      : 1001,
+		mine         : 1002,
+		roomIncrement: 5,
 	},
 
-	default: 999999				// Default overlord priority to ensure it gets run last
+	collection: {				// Non-urgent collection of resources, like from a deserted storage
+		haul: 1100
+	},
+
+	default: 99999				// Default overlord priority to ensure it gets run last
 };

@@ -26,52 +26,55 @@ export class TaskRecharge extends Task {
 		this.data.minEnergy = minEnergy;
 	}
 
+	private rechargeRateForCreep(creep: Zerg, obj: rechargeObjectType): number | false {
+		let amount = isResource(obj) ? obj.amount : obj.energy;
+		if (amount < this.data.minEnergy) {
+			return false;
+		}
+		let otherTargeters = _.filter(_.map(obj.targetedBy, name => Game.zerg[name]),
+									  zerg => !!zerg && zerg.memory._task
+											  && (zerg.memory._task.name == withdrawTaskName
+												  || zerg.memory._task.name == pickupTaskName));
+		let resourceOutflux = _.sum(_.map(otherTargeters,
+										  other => other.carryCapacity - _.sum(other.carry)));
+		amount = minMax(amount - resourceOutflux, 0, creep.carryCapacity);
+		let effectiveAmount = amount / (creep.pos.getMultiRoomRangeTo(obj.pos) + 1);
+		if (effectiveAmount <= 0) {
+			return false;
+		} else {
+			return effectiveAmount;
+		}
+	}
+
 	// Override creep setter to dispense a valid recharge task
 	set creep(creep: Zerg) {
 		// Choose the target to maximize your energy gain subject to other targeting workers
-		let minEnergy = this.data.minEnergy;
-		let target = maxBy(creep.colony.rechargeables, function (obj) {
-			let amount = isResource(obj) ? obj.amount : obj.energy;
-			if (amount < minEnergy) {
-				return false;
+		let target = maxBy(creep.colony.rechargeables, obj => this.rechargeRateForCreep(creep, obj));
+		if (!target || creep.pos.getMultiRoomRangeTo(target.pos) > 40) {
+			if (creep.getActiveBodyparts(WORK) > 0) {
+				// Harvest from a source if there is no recharge target available
+				let availableSources = _.filter(creep.room.sources,
+												source => source.pos.availableNeighbors(false).length > 0);
+				let availableSource = creep.pos.findClosestByMultiRoomRange(availableSources);
+				if (availableSource) {
+					creep.task = new TaskHarvest(availableSource);
+					return;
+				}
 			}
-			let otherTargeters = _.filter(_.map(obj.targetedBy, name => Game.zerg[name]),
-										  zerg => !!zerg && zerg.memory._task
-												  && (zerg.memory._task.name == withdrawTaskName
-													  || zerg.memory._task.name == pickupTaskName));
-			let resourceOutflux = _.sum(_.map(otherTargeters,
-											  other => other.carryCapacity - _.sum(other.carry)));
-			amount = minMax(amount - resourceOutflux, 0, creep.carryCapacity);
-			let effectiveAmount = amount / (creep.pos.getMultiRoomRangeTo(obj.pos) + 1);
-			if (effectiveAmount <= 0) {
-				return false;
-			} else {
-				return effectiveAmount;
-			}
-		});
+		}
 		if (target) {
 			if (isResource(target)) {
 				creep.task = new TaskPickup(target);
+				return;
 			} else {
 				creep.task = new TaskWithdraw(target);
+				return;
 			}
 		} else {
-			if (creep.getActiveBodyparts(WORK) > 0) {
-				// Harvest from a source if there is no recharge target available
-				let emptyMiningSites = _.filter(creep.colony.miningSites, site =>
-					site.overlord.miners.length < site.source.pos.availableNeighbors(true).length);
-				let target = creep.pos.findClosestByMultiRoomRange(emptyMiningSites);
-				if (target) {
-					creep.task = new TaskHarvest(target.source);
-				} else {
-					creep.task = null;
-				}
-			} else {
-				if (creep.roleName == 'queen') {
-					log.debug(`No valid withdraw target for ${creep.name}@${creep.pos.print}!`);
-				}
-				creep.task = null;
+			if (creep.roleName == 'queen') {
+				log.debug(`No valid withdraw target for ${creep.name}@${creep.pos.print}!`);
 			}
+			creep.task = null;
 		}
 	}
 

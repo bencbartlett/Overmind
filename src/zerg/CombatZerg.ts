@@ -8,6 +8,8 @@ import {Movement, NO_ACTION} from '../movement/Movement';
 interface CombatZergMemory extends CreepMemory {
 	recovering: boolean;
 	lastInDanger: number;
+	partner?: string;
+	retreating?: boolean;
 }
 
 @profile

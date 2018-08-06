@@ -10,6 +10,7 @@ import {OverlordPriority} from '../priorities/priorities_overlords';
 import {Visualizer} from '../visuals/Visualizer';
 import {LogisticsNetwork} from '../logistics/LogisticsNetwork';
 import {Pathing} from '../movement/Pathing';
+import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
 
 interface MiningSiteMemory {
 	stats: {
@@ -59,7 +60,11 @@ export class MiningSite extends HiveCluster {
 		}) as ConstructionSite[];
 		this.outputConstructionSite = nearbyOutputSites[0];
 		// Create a mining overlord for this
-		let priority = this.room.my ? OverlordPriority.ownedRoom.mine : OverlordPriority.remoteRoom.mine;
+		let priority = OverlordPriority.ownedRoom.mine;
+		if (!this.room.my) {
+			priority = Cartographer.roomType(this.room.name) == ROOMTYPE_SOURCEKEEPER ?
+					   OverlordPriority.remoteSKRoom.mine : OverlordPriority.remoteRoom.mine;
+		}
 		this.shouldDropMine = this.colony.level < MiningSite.settings.dropMineUntilRCL;
 		this.overlord = new MiningOverlord(this, priority, this.shouldDropMine);
 		if (!this.shouldDropMine && Game.time % 100 == 0 && !this.output && !this.outputConstructionSite) {

@@ -3,7 +3,7 @@ import {attackTargetType, TaskAttack} from './instances/attack';
 import {buildTargetType, TaskBuild} from './instances/build';
 import {claimTargetType, TaskClaim} from './instances/claim';
 import {dismantleTargetType, TaskDismantle} from './instances/dismantle';
-import {fleeTargetType, TaskFlee} from './instances/flee';
+// import {fleeTargetType, TaskFlee} from './instances/flee';
 import {fortifyTargetType, TaskFortify} from './instances/fortify';
 import {getBoostedTargetType, TaskGetBoosted} from './instances/getBoosted';
 import {getRenewedTargetType, TaskGetRenewed} from './instances/getRenewed';
@@ -70,9 +70,9 @@ export class Tasks {
 		return new TaskDrop(target, resourceType, amount, options);
 	}
 
-	static flee(target: fleeTargetType, options = {} as TaskOptions) {
-		return new TaskFlee(target, options);
-	}
+	// static flee(target: fleeTargetType, options = {} as TaskOptions) {
+	// 	return new TaskFlee(target, options);
+	// }
 
 	static fortify(target: fortifyTargetType, options = {} as TaskOptions): TaskFortify {
 		return new TaskFortify(target, options);

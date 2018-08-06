@@ -57,8 +57,13 @@ export abstract class Directive {
 		let colony = this.getColony(requiredRCL);
 		// Delete the directive if the colony is dead
 		if (!colony) {
-			log.alert(`Could not get colony for directive ${this.name}; removing flag!`);
-			flag.remove();
+			if (Overmind.exceptions.length == 0) {
+				log.alert(`Could not get colony for directive ${this.name}; removing flag!`);
+				flag.remove();
+			} else {
+				log.alert(`Could not get colony for directive ${this.name}; ` +
+						  `exceptions present this tick, so won't remove`);
+			}
 			return;
 		}
 		this.colony = colony;

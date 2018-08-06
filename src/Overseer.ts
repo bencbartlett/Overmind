@@ -16,7 +16,7 @@ import {QueenSetup} from './overlords/core/queen';
 import {DirectiveTerminalEvacuateState} from './directives/logistics/terminalState_evacuate';
 import {bodyCost} from './overlords/CreepSetup';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
-import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
+import {Cartographer, ROOMTYPE_CONTROLLER, ROOMTYPE_SOURCEKEEPER} from './utilities/Cartographer';
 import {derefCoords, hasJustSpawned, minBy} from './utilities/utils';
 import {DirectiveOutpost} from './directives/core/outpost';
 import {Autonomy, getAutonomyLevel} from './Memory';
@@ -32,18 +32,21 @@ export class Overseer {
 	overlords: {
 		[priority: number]: Overlord[]
 	};
+	private overlordRequests: Overlord[];
 
 	constructor(colony: Colony) {
 		this.colony = colony;
 		this.directives = [];
 		this.overlords = {};
+		this.overlordRequests = [];
 	}
 
 	registerOverlord(overlord: Overlord): void {
-		if (!this.overlords[overlord.priority]) {
-			this.overlords[overlord.priority] = [];
-		}
-		this.overlords[overlord.priority].push(overlord);
+		this.overlordRequests.push(overlord);
+		// if (!this.overlords[overlord.priority]) {
+		// 	this.overlords[overlord.priority] = [];
+		// }
+		// this.overlords[overlord.priority].push(overlord);
 	}
 
 	private registerLogisticsRequests(): void {
@@ -88,11 +91,12 @@ export class Overseer {
 
 		// Guard directive: defend your outposts and all rooms of colonies that you are incubating
 		for (let room of this.colony.outposts) {
-			let defenseFlags = _.filter(room.flags, flag => DirectiveGuard.filter(flag) ||
-															DirectiveInvasionDefense.filter(flag));
-			// let bigHostiles = _.filter(room.hostiles, creep => creep.body.length >= 10);
-			if (room.dangerousHostiles.length > 0 && defenseFlags.length == 0) {
-				DirectiveGuard.create(room.dangerousHostiles[0].pos);
+			if (Cartographer.roomType(room.name) != ROOMTYPE_SOURCEKEEPER) { // SK rooms can fend for themselves
+				let defenseFlags = _.filter(room.flags, flag => DirectiveGuard.filter(flag) ||
+																DirectiveInvasionDefense.filter(flag));
+				if (room.dangerousHostiles.length > 0 && defenseFlags.length == 0) {
+					DirectiveGuard.create(room.dangerousHostiles[0].pos);
+				}
 			}
 		}
 
@@ -205,10 +209,20 @@ export class Overseer {
 
 	// Initialization ==================================================================================================
 
+	private buildOverlordPriorityQueue(): void {
+		for (let overlord of this.overlordRequests) {
+			if (!this.overlords[overlord.priority]) {
+				this.overlords[overlord.priority] = [];
+			}
+			this.overlords[overlord.priority].push(overlord);
+		}
+	}
+
 	init(): void {
+		this.buildOverlordPriorityQueue();
 		// Handle directives - should be done first
 		_.forEach(this.directives, directive => directive.init());
-		// Handle overlords in decreasing priority {
+		// Handle overlords in decreasing priority
 		for (let priority in this.overlords) {
 			if (!this.overlords[priority]) continue;
 			for (let overlord of this.overlords[priority]) {

@@ -93,10 +93,10 @@ export abstract class Overlord {
 		this.spawnGroup = undefined;
 		this.recalculateCreeps();
 		this.creepUsageReport = _.mapValues(this._creeps, creep => undefined);
-		// Register the overlord on the colony overseer and on the overmind
-		this.colony.overseer.registerOverlord(this);
 		this.boosts = _.mapValues(this._creeps, creep => undefined);
+		// Register the overlord on the colony overseer and on the overmind
 		Overmind.overlords[this.ref] = this;
+		this.colony.overseer.registerOverlord(this);
 	}
 
 	/* Refreshes portions of the overlord state */
@@ -318,7 +318,7 @@ export abstract class Overlord {
 
 	/* Handle boosting of a creep; should be called during run() */
 	protected handleBoosting(creep: Zerg): void {
-		if (this.colony.evolutionChamber && this.boosts[creep.roleName]) {
+		if (this.boosts[creep.roleName] && this.colony.evolutionChamber) {
 			let boost = _.find(this.boosts[creep.roleName]!,
 							   boost => (creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost]));
 			if (boost) {
@@ -350,6 +350,38 @@ export abstract class Overlord {
 	}
 
 	abstract init(): void;
+
+	// Standard sequence of actions for running task-based creeps
+	standardRun(roleCreeps: Zerg[], taskHandler: (creep: Zerg) => void, fleeCallback?: (creep: Zerg) => boolean) {
+		for (let creep of roleCreeps) {
+			if (fleeCallback) {
+				if (fleeCallback(creep)) continue;
+			}
+			if (creep.isIdle) {
+				if (creep.needsBoosts) {
+					this.handleBoosting(creep);
+				} else {
+					taskHandler(creep);
+				}
+			}
+			creep.run();
+		}
+	}
+
+	// Standard sequence of actions for running combat creeps
+	standardRunCombat(roleCreeps: CombatZerg[], creepHandler: (creep: CombatZerg) => void) {
+		for (let creep of roleCreeps) {
+			if (creep.hasValidTask) {
+				creep.run();
+			} else {
+				if (creep.needsBoosts) {
+					this.handleBoosting(creep);
+				} else {
+					creepHandler(creep);
+				}
+			}
+		}
+	}
 
 	abstract run(): void;
 

@@ -232,6 +232,10 @@ export class Log {
 		}
 	}
 
+	public debugCreep(creep: { name: string, pos: RoomPosition }, ...args: any[]) {
+		this.debug(`${creep.name} @ ${creep.pos.print}: `, args);
+	}
+
 	public printObject(obj: any) {
 		console.log.apply(this, this.buildArguments(LogLevels.DEBUG).concat(JSON.stringify(obj)));
 	}

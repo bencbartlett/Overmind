@@ -10,6 +10,8 @@ import {Mem} from '../../Memory';
 import {log} from '../../console/log';
 import {CombatTargeting} from '../../targeting/CombatTargeting';
 import {Movement} from '../../movement/Movement';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
+import {Visualizer} from '../../visuals/Visualizer';
 
 export const ReaperSetup = new CreepSetup('zergling', {
 	pattern  : [MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK, HEAL, MOVE],
@@ -35,13 +37,16 @@ export class SourceReaperOverlord extends Overlord {
 	reapers: CombatZerg[];
 	defenders: CombatZerg[];
 
-	constructor(directive: DirectiveSKOutpost, priority = 500 /* TODO */) {
+	constructor(directive: DirectiveSKOutpost, priority = OverlordPriority.remoteSKRoom.sourceReaper) {
 		super(directive, 'sourceReaper', priority);
+		this.priority += this.outpostIndex * OverlordPriority.remoteSKRoom.roomIncrement;
 		this.memory = Mem.wrap(directive.memory, 'sourceReaper');
 		this.targetLair = this.memory.targetLairID ? <StructureKeeperLair>deref(this.memory.targetLairID) : undefined;
 		if (!this.targetLair || (this.targetLair.ticksToSpawn || Infinity) >= 299) {
 			this.targetLair = this.getNextTargetLair();
 		}
+		this.reapers = _.map(this.creeps(ReaperSetup.role), reaper => new CombatZerg(reaper));
+		this.defenders = _.map(this.creeps(DefenderSetup.role), defender => new CombatZerg(defender));
 	}
 
 	init() {
@@ -66,6 +71,7 @@ export class SourceReaperOverlord extends Overlord {
 
 		// Go to keeper room
 		if (!this.targetLair || !this.room || reaper.room != this.room || reaper.pos.isEdge) {
+			log.debugCreep(reaper, `Going to room!`);
 			reaper.healSelfIfPossible();
 			reaper.goTo(this.pos);
 			return;
@@ -73,6 +79,7 @@ export class SourceReaperOverlord extends Overlord {
 
 		if (this.room.invaders.length > 0) {
 			// Handle invader actions
+			log.debugCreep(reaper, `Handling invader actions!`);
 			if (reaper.hits >= reaper.hitsMax * .5) {
 				let result = reaper.autoMelee(this.room.invaders);
 				if (result == undefined) { // didn't attack
@@ -96,6 +103,7 @@ export class SourceReaperOverlord extends Overlord {
 				}
 			}
 		} else {
+			log.debugCreep(reaper, `Standard keeperReaper actions`);
 			// Standard keeperReaper actions
 			let nearestHostile = reaper.pos.findClosestByRange(this.room.hostiles) as Creep;
 			if (nearestHostile && reaper.pos.isNearTo(nearestHostile)) {
@@ -120,6 +128,7 @@ export class SourceReaperOverlord extends Overlord {
 
 		// Go to keeper room
 		if (!this.targetLair || !this.room || defender.room != this.room || defender.pos.isEdge) {
+			log.debugCreep(defender, `Going to room!`);
 			defender.healSelfIfPossible();
 			defender.goTo(this.pos);
 			return;
@@ -127,8 +136,11 @@ export class SourceReaperOverlord extends Overlord {
 
 		if (this.room.invaders.length > 0) {
 			// Handle invader actions
+			log.debugCreep(defender, `AutoCombat`);
 			defender.autoCombat(this.room.name);
+
 		} else {
+			log.debugCreep(defender, `Standard duty`);
 			let minKeepersToHelp = this.reapers.length == 0 ? 1 : 2;
 			if (this.room.sourceKeepers.length >= minKeepersToHelp) {
 				// Help out with keeper reaping
@@ -144,7 +156,7 @@ export class SourceReaperOverlord extends Overlord {
 						let range = defender.pos.getRangeTo(keeper);
 						let keepAtRange = defender.hits < defender.hitsMax * .9 ? 4 : 3;
 						if (range < keepAtRange) {
-							defender.kite(this.room.hostiles, 4);
+							defender.kite(this.room.hostiles, {range: keepAtRange});
 						} else if (range > keepAtRange) {
 							defender.goTo(keeper, {maxRooms: 1, range: keepAtRange});
 						}
@@ -154,6 +166,7 @@ export class SourceReaperOverlord extends Overlord {
 				}
 			} else {
 				// Do medic actions
+				log.debugCreep(defender, `Medic actions`);
 				defender.doMedicActions();
 			}
 		}
@@ -161,7 +174,14 @@ export class SourceReaperOverlord extends Overlord {
 	}
 
 	run() {
+		this.standardRunCombat(this.reapers, reaper => this.handleReaper(reaper));
+		this.standardRunCombat(this.defenders, defender => this.handleDefender(defender));
+	}
 
+	visuals() {
+		if (this.room && this.targetLair) {
+			Visualizer.marker(this.targetLair.pos);
+		}
 	}
 
 }

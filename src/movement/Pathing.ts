@@ -5,6 +5,7 @@ import {Zerg} from '../zerg/Zerg';
 import {MoveOptions} from './Movement';
 import {hasPos} from '../declarations/typeGuards';
 import {normalizePos} from './helpers';
+import {derefCoords} from '../utilities/utils';
 
 /* Module for pathing-related operations. */
 
@@ -13,7 +14,7 @@ const DEFAULT_MAXOPS = 20000;		// Default timeout for pathfinding
 export interface TerrainCosts {
 	plainCost: number,
 	swampCost: number
-};
+}
 
 @profile
 export class Pathing {
@@ -141,7 +142,7 @@ export class Pathing {
 		}
 	}
 
-	static kitingRoomCallback(roomName: string): CostMatrix | boolean {
+	private static kitingRoomCallback(roomName: string): CostMatrix | boolean {
 		const room = Game.rooms[roomName];
 		if (room) {
 			return this.getKitingMatrix(room);
@@ -151,20 +152,61 @@ export class Pathing {
 	}
 
 	/* Get a kiting path within a room */
-	static getKitingPath(creepPos: RoomPosition, fleeFrom: (RoomPosition | HasPos)[],
-						 range = 5, terrainCosts: TerrainCosts = {plainCost: 1, swampCost: 10}): RoomPosition[] {
+	static findKitingPath(creepPos: RoomPosition, fleeFrom: (RoomPosition | HasPos)[],
+						  options: MoveOptions = {}): PathFinderPath {
+		_.defaults(options, {
+			range       : 5,
+			terrainCosts: {plainCost: 1, swampCost: 5},
+		});
 		let fleeFromPos = _.map(fleeFrom, flee => normalizePos(flee));
 		let avoidGoals = _.map(fleeFromPos, pos => {
-			return {pos: pos, range: range};
+			return {pos: pos, range: options.range!};
 		});
 		return PathFinder.search(creepPos, avoidGoals,
 								 {
-									 plainCost   : terrainCosts.plainCost,
-									 swampCost   : terrainCosts.swampCost,
+									 plainCost   : options.terrainCosts!.plainCost,
+									 swampCost   : options.terrainCosts!.swampCost,
 									 flee        : true,
 									 roomCallback: Pathing.kitingRoomCallback,
 									 maxRooms    : 1
-								 }).path;
+								 });
+	}
+
+	/* Get a flee path possibly leaving the room; generally called further in advance of kitingPath */
+	static findFleePath(creepPos: RoomPosition, fleeFrom: (RoomPosition | HasPos)[],
+						options: MoveOptions = {}): PathFinderPath {
+		_.defaults(options, {
+			terrainCosts: {plainCost: 1, swampCost: 5},
+		});
+		if (options.range == undefined) options.range = options.terrainCosts!.plainCost > 1 ? 20 : 10;
+		let fleeFromPos = _.map(fleeFrom, flee => normalizePos(flee));
+		let avoidGoals = _.map(fleeFromPos, pos => {
+			return {pos: pos, range: options.range!};
+		});
+		const callback = (roomName: string) => {
+			if (!options.allowHostile && this.shouldAvoid(roomName) && roomName != creepPos.roomName) {
+				return false;
+			}
+			const room = Game.rooms[roomName];
+			if (room) {
+				let matrix = this.getCostMatrix(room, options, false);
+				// Modify cost matrix if needed
+				if (options.modifyRoomCallback) {
+					return options.modifyRoomCallback(room, matrix.clone());
+				} else {
+					return matrix;
+				}
+			} else { // have no vision
+				return true;
+			}
+		};
+		return PathFinder.search(creepPos, avoidGoals,
+								 {
+									 plainCost   : options.terrainCosts!.plainCost,
+									 swampCost   : options.terrainCosts!.swampCost,
+									 flee        : true,
+									 roomCallback: callback,
+								 });
 	}
 
 	// Cost matrix computations ========================================================================================
@@ -215,7 +257,7 @@ export class Pathing {
 		let matrix: CostMatrix;
 		if (options.ignoreCreeps == false) {
 			matrix = this.getCreepMatrix(room);
-		} else if (options.avoidSK && Cartographer.roomType(room.name) == ROOMTYPE_SOURCEKEEPER) {
+		} else if (options.avoidSK) {
 			matrix = this.getSkMatrix(room);
 		} else if (options.ignoreStructures) {
 			matrix = new PathFinder.CostMatrix();
@@ -239,13 +281,37 @@ export class Pathing {
 		return matrix;
 	}
 
+	/* Get a cloned copy of the cost matrix for a room with specified options */
+	private static getCostMatrixForInvisibleRoom(roomName: string, options = {} as MoveOptions,
+												 clone                     = true): CostMatrix | boolean {
+		let matrix: CostMatrix;
+		if (options.avoidSK) {
+			matrix = this.getInvisibleSkMatrix(roomName);
+		} else {
+			matrix = new PathFinder.CostMatrix();
+		}
+		// Register other obstacles
+		if (options.obstacles && options.obstacles.length > 0) {
+			matrix = matrix.clone();
+			for (let obstacle of options.obstacles) {
+				if (obstacle && obstacle.roomName == roomName) {
+					matrix.set(obstacle.x, obstacle.y, 0xff);
+				}
+			}
+		}
+		if (clone) {
+			matrix = matrix.clone();
+		}
+		return matrix;
+	}
+
 
 	/* Default matrix for a room, setting impassable structures and constructionSites to impassible */
 	static getDefaultMatrix(room: Room): CostMatrix {
 		if (room._defaultMatrix) {
 			return room._defaultMatrix;
 		}
-		const matrix = new PathFinder.CostMatrix();
+		let matrix = new PathFinder.CostMatrix();
 		// Set passability of structure positions
 		let impassibleStructures: Structure[] = [];
 		_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
@@ -272,7 +338,7 @@ export class Pathing {
 		if (room._directMatrix) {
 			return room._directMatrix;
 		}
-		const matrix = new PathFinder.CostMatrix();
+		let matrix = new PathFinder.CostMatrix();
 		// Set passability of structure positions
 		let impassibleStructures: Structure[] = [];
 		_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
@@ -293,11 +359,11 @@ export class Pathing {
 
 
 	/* Avoids creeps in a room */
-	static getCreepMatrix(room: Room): CostMatrix {
+	static getCreepMatrix(room: Room, fromMatrix?: CostMatrix): CostMatrix {
 		if (room._creepMatrix) {
 			return room._creepMatrix;
 		}
-		const matrix = this.getDefaultMatrix(room).clone();
+		let matrix = this.getDefaultMatrix(room).clone();
 		_.forEach(room.find(FIND_CREEPS), c => matrix.set(c.pos.x, c.pos.y, 0xff));
 		room._creepMatrix = matrix;
 		return room._creepMatrix;
@@ -349,11 +415,14 @@ export class Pathing {
 
 	/* Avoids source keepers in a room */
 	private static getSkMatrix(room: Room): CostMatrix {
+		if (Cartographer.roomType(room.name) != ROOMTYPE_SOURCEKEEPER) {
+			return this.getDefaultMatrix(room);
+		}
 		if (room._skMatrix) {
 			return room._skMatrix;
 		}
-		const matrix = this.getDefaultMatrix(room).clone();
-		const avoidRange = 4;
+		let matrix = this.getDefaultMatrix(room).clone();
+		const avoidRange = 5;
 		_.forEach(room.keeperLairs, lair => {
 			for (let dx = -avoidRange; dx <= avoidRange; dx++) {
 				for (let dy = -avoidRange; dy <= avoidRange; dy++) {
@@ -363,6 +432,27 @@ export class Pathing {
 		});
 		room._skMatrix = matrix;
 		return room._skMatrix;
+	}
+
+	/* Avoids source keepers in a room */
+	private static getInvisibleSkMatrix(roomName: string): CostMatrix {
+		let matrix = new PathFinder.CostMatrix();
+		if (Cartographer.roomType(roomName) == ROOMTYPE_SOURCEKEEPER) {
+			if (Memory.rooms[roomName] && Memory.rooms[roomName].SKlairs != undefined) {
+
+				const avoidRange = 5;
+				const lairs: RoomPosition[] = _.map(Memory.rooms[roomName].SKlairs!,
+													saved => derefCoords(saved.c, roomName));
+				_.forEach(lairs, lair => {
+					for (let dx = -avoidRange; dx <= avoidRange; dx++) {
+						for (let dy = -avoidRange; dy <= avoidRange; dy++) {
+							matrix.set(lair.x + dx, lair.y + dy, 0xff);
+						}
+					}
+				});
+			}
+		}
+		return matrix;
 	}
 
 	/* Find a viable sequence of rooms to narrow down Pathfinder algorithm */

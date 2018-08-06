@@ -8,6 +8,7 @@ import {CreepSetup} from '../CreepSetup';
 import {BuildPriorities} from '../../priorities/priorities_structures';
 import {$} from '../../caching';
 import {Task} from '../../tasks/Task';
+import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 
 export const WorkerSetup = new CreepSetup('worker', {
 	pattern  : [WORK, CARRY, MOVE],
@@ -89,7 +90,8 @@ export class WorkerOverlord extends Overlord {
 					   site.structureType != STRUCTURE_ROAD;
 			} else {
 				// Build all non-container sites in outpost and all sites in room if defcon is safe
-				if (site.pos.roomName != homeRoomName) {
+				if (site.pos.roomName != homeRoomName
+					&& Cartographer.roomType(site.pos.roomName) == ROOMTYPE_CONTROLLER) {
 					return site.structureType != STRUCTURE_CONTAINER &&
 						   !(site.room && site.room.dangerousHostiles.length > 0);
 				} else {
@@ -308,7 +310,7 @@ export class WorkerOverlord extends Overlord {
 				if (this.upgradeActions(worker)) return;
 			}
 			// Repair damaged non-road non-barrier structures
-			if (this.repairStructures.length > 0) {
+			if (this.repairStructures.length > 0 && this.colony.defcon == DEFCON.safe) {
 				if (this.repairActions(worker)) return;
 			}
 			// Build new structures
@@ -332,7 +334,8 @@ export class WorkerOverlord extends Overlord {
 				if (this.fortifyActions(worker)) return;
 			}
 			// Upgrade controller if less than RCL8 or no upgraders
-			if (this.colony.level < 8 || this.colony.upgradeSite.overlord.upgraders.length == 0) {
+			if ((this.colony.level < 8 || this.colony.upgradeSite.overlord.upgraders.length == 0)
+				&& this.colony.defcon == DEFCON.safe) {
 				if (this.upgradeActions(worker)) return;
 			}
 		} else {
@@ -344,6 +347,10 @@ export class WorkerOverlord extends Overlord {
 
 	run() {
 		for (let worker of this.workers) {
+			if (worker.flee()) {
+				worker.task = null; // invalidate task
+				continue;
+			}
 			if (worker.isIdle) {
 				this.handleWorker(worker);
 			}
