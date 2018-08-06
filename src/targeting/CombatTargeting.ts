@@ -10,13 +10,11 @@ export class CombatTargeting {
 	/* Finds the best target within a given range that a zerg can currently attack */
 	static findBestTargetInRange(zerg: Zerg, range: number, possibleTargets = zerg.room.hostiles): Creep | undefined {
 		let nearbyHostiles = zerg.pos.findInRange(possibleTargets, range);
-		let ret = maxBy(nearbyHostiles, function (hostile) {
+		return maxBy(nearbyHostiles, function (hostile) {
 			if (hostile.hitsPredicted == undefined) hostile.hitsPredicted = hostile.hits;
 			if (hostile.pos.lookForStructure(STRUCTURE_RAMPART)) return false;
-			let score = hostile.hitsMax - hostile.hitsPredicted + CombatIntel.getHealPotential(hostile); // compute score
-			return score;
+			return hostile.hitsMax - hostile.hitsPredicted + CombatIntel.getHealPotential(hostile); // compute score
 		});
-		return ret;
 	}
 
 	/* Standard target-finding logic */

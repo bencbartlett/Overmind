@@ -153,7 +153,7 @@ export class CombatZerg extends Zerg {
 			this.autoRanged();
 		}
 		if (this.canExecute('heal')) {
-			this.autoHeal();
+			this.autoHeal(this.canExecute('rangedHeal'));
 		}
 
 		// Handle recovery if low on HP
