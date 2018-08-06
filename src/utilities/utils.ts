@@ -116,7 +116,7 @@ export function minBy<T>(objects: T[], iteratee: ((obj: T) => number | false)): 
 	let val: number | false;
 	for (let i in objects) {
 		val = iteratee(objects[i]);
-		if (val != false && val < minVal) {
+		if (val !== false && val < minVal) {
 			minVal = val;
 			minObj = objects[i];
 		}
@@ -130,7 +130,7 @@ export function maxBy<T>(objects: T[], iteratee: ((obj: T) => number | false)): 
 	let val: number | false;
 	for (let i in objects) {
 		val = iteratee(objects[i]);
-		if (val != false && val > maxVal) {
+		if (val !== false && val > maxVal) {
 			maxVal = val;
 			maxObj = objects[i];
 		}

@@ -435,14 +435,16 @@ export class Colony {
 		Stats.log(`colonies.${this.name}.rcl.progressTotal`, this.controller.progressTotal);
 		// Log average miningSite usage and uptime and estimated colony energy income
 		let numSites = _.keys(this.miningSites).length;
-		let avgDowntime = _.sum(_.map(this.miningSites, (site: MiningSite) => site.memory.stats.downtime)) / numSites;
-		let avgUsage = _.sum(_.map(this.miningSites, (site: MiningSite) => site.memory.stats.usage)) / numSites;
-		let energyInPerTick = _.sum(_.map(this.miningSites, (site: MiningSite) =>
-			site.source.energyCapacity * site.memory.stats.usage)) / ENERGY_REGEN_TIME;
+		let avgDowntime = _.sum(this.miningSites, site => site.memory.stats.downtime) / numSites;
+		let avgUsage = _.sum(this.miningSites, site => site.memory.stats.usage) / numSites;
+		let energyInPerTick = _.sum(this.miningSites,
+									site => site.source.energyCapacity * site.memory.stats.usage) / ENERGY_REGEN_TIME;
 		Stats.log(`colonies.${this.name}.miningSites.avgDowntime`, avgDowntime);
 		Stats.log(`colonies.${this.name}.miningSites.avgUsage`, avgUsage);
 		Stats.log(`colonies.${this.name}.miningSites.energyInPerTick`, energyInPerTick);
 		Stats.log(`colonies.${this.name}.assets`, this.assets);
+		let avgBarrierHits = _.sum(this.room.barriers, barrier => barrier.hits) / this.room.barriers.length;
+		Stats.log(`colonies.${this.name}.avgBarrierHits`, avgBarrierHits);
 	}
 
 	visuals(): void {

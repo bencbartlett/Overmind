@@ -10,11 +10,13 @@ export class CombatTargeting {
 	/* Finds the best target within a given range that a zerg can currently attack */
 	static findBestTargetInRange(zerg: Zerg, range: number, possibleTargets = zerg.room.hostiles): Creep | undefined {
 		let nearbyHostiles = zerg.pos.findInRange(possibleTargets, range);
-		return maxBy(nearbyHostiles, function (hostile) {
+		let ret = maxBy(nearbyHostiles, function (hostile) {
 			if (hostile.hitsPredicted == undefined) hostile.hitsPredicted = hostile.hits;
 			if (hostile.pos.lookForStructure(STRUCTURE_RAMPART)) return false;
-			return hostile.hitsMax - hostile.hitsPredicted + CombatIntel.getHealPotential(hostile); // compute score
+			let score = hostile.hitsMax - hostile.hitsPredicted + CombatIntel.getHealPotential(hostile); // compute score
+			return score;
 		});
+		return ret;
 	}
 
 	/* Standard target-finding logic */
@@ -57,7 +59,7 @@ export class CombatTargeting {
 	/* Finds the best (friendly) target in range that a zerg can currently heal */
 	static findBestHealingTargetInRange(healer: Zerg, range = 3, friendlies = healer.room.creeps): Creep | undefined {
 		return maxBy(_.filter(friendlies, f => healer.pos.getRangeTo(f) <= range), friend => {
-			if (!friend.hitsPredicted) friend.hitsPredicted = friend.hits;
+			if (friend.hitsPredicted == undefined) friend.hitsPredicted = friend.hits;
 			let healScore = friend.hitsMax - friend.hitsPredicted;
 			if (healer.pos.getRangeTo(friend) > 1) {
 				return healScore + CombatIntel.getRangedHealAmount(healer.creep);

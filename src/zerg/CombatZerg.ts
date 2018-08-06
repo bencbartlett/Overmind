@@ -4,6 +4,7 @@ import {profile} from '../profiler/decorator';
 import {CombatIntel} from '../intel/CombatIntel';
 import {GoalFinder} from '../targeting/GoalFinder';
 import {Movement, NO_ACTION} from '../movement/Movement';
+import {log} from '../console/log';
 
 interface CombatZergMemory extends CreepMemory {
 	recovering: boolean;
@@ -106,18 +107,23 @@ export class CombatZerg extends Zerg {
 
 	autoMelee(possibleTargets = this.room.hostiles) {
 		let target = CombatTargeting.findBestTargetInRange(this, 1, possibleTargets);
+		log.debug(`melee target: `, JSON.stringify(target));
 		if (target) {
+			log.debugCreep(this, `Attack`);
 			return this.attack(target);
 		}
 	}
 
 	autoRanged(possibleTargets = this.room.hostiles, allowMassAttack = true) {
 		let target = CombatTargeting.findBestTargetInRange(this, 3, possibleTargets);
+		log.debug(`ranged target: `, JSON.stringify(target));
 		if (target) {
 			if (allowMassAttack
 				&& CombatIntel.getMassAttackDamage(this, possibleTargets) > CombatIntel.getRangedAttackDamage(this)) {
+				log.debugCreep(this, `RMA`);
 				return this.rangedMassAttack();
 			} else {
+				log.debugCreep(this, `RangedAttack`);
 				return this.rangedAttack(target);
 			}
 		}
@@ -127,8 +133,10 @@ export class CombatZerg extends Zerg {
 		let target = CombatTargeting.findBestHealingTargetInRange(this, 3, friendlies);
 		if (target) {
 			if (this.pos.getRangeTo(target) <= 1) {
+				log.debugCreep(this, `Healing`);
 				return this.heal(target);
 			} else if (allowRangedHeal && this.pos.getRangeTo(target) <= 3) {
+				log.debugCreep(this, `RangedHealing`);
 				return this.rangedHeal(target);
 			}
 		}

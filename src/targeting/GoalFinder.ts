@@ -5,6 +5,15 @@ import {log} from '../console/log';
 import {RoomIntel} from '../intel/RoomIntel';
 
 
+interface SkirmishAnalysis {
+	attack: number,
+	rangedAttack: number,
+	heal: number,
+	advantage: boolean,
+	isRetreating: boolean,
+	isApproaching: boolean,
+}
+
 export class GoalFinder {
 
 	// Standard set of goals for fighting small groups of hostiles (not optimal for larger fights)
@@ -15,16 +24,7 @@ export class GoalFinder {
 
 		const room = creep.room;
 
-		let analysis = {} as {
-			[id: string]: {
-				attack: number,
-				rangedAttack: number,
-				heal: number,
-				advantage: boolean,
-				isRetreating: boolean,
-				isApproaching: boolean,
-			}
-		};
+		let analysis = {} as { [id: string]: SkirmishAnalysis | undefined };
 
 		let myAttack = CombatIntel.getAttackDamage(creep);
 		let myRangedAttack = CombatIntel.getRangedAttackDamage(creep);
@@ -66,7 +66,7 @@ export class GoalFinder {
 		let approachTargets = hostileHealers.length > 0 ? hostileHealers : room.hostiles;
 		for (let target of approachTargets) {
 			let data = analysis[target.id];
-			if (data.advantage || braveMode) {
+			if (data && (data.advantage || braveMode)) {
 				let range = 0;
 				if (!preferCloseCombat && (data.attack > 0 || data.rangedAttack > myAttack)) {
 					range = creep.pos.getRangeTo(target) == 3 && data.isRetreating ? 2 : 3;
@@ -86,7 +86,7 @@ export class GoalFinder {
 		// Avoid hostiles that are significantly better than you
 		for (let target of room.hostiles) {
 			let data = analysis[target.id];
-			if (!data.advantage && !braveMode) {
+			if (data && (!data.advantage && !braveMode)) {
 				let range = data.isApproaching ? 3 : 2;
 				if (data.rangedAttack > 0) {
 					range = 8;
