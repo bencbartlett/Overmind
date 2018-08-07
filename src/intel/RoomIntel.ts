@@ -17,6 +17,7 @@
 import {getCacheExpiration} from '../utilities/utils';
 import {ExpansionPlanner} from '../strategy/ExpansionPlanner';
 import {Zerg} from '../zerg/Zerg';
+import {profile} from '../profiler/decorator';
 
 const RECACHE_TIME = 2500;
 const OWNED_RECACHE_TIME = 1000;
@@ -25,6 +26,7 @@ const FALSE_SCORE_RECALC_PROB = 0.01;
 
 const RoomIntelMemoryDefaults = {};
 
+@profile
 export class RoomIntel {
 
 	/* Records all info for permanent room objects, e.g. sources, controllers, etc. */

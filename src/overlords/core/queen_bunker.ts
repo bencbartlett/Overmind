@@ -5,10 +5,10 @@ import {Tasks} from '../../tasks/Tasks';
 import {log} from '../../console/log';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {mergeSum, minBy} from '../../utilities/utils';
+import {hasMinerals, mergeSum, minBy} from '../../utilities/utils';
 import {StoreStructure} from '../../declarations/typeGuards';
 import {Colony} from '../../Colony';
-import {$} from '../../caching';
+import {$} from '../../caching/GlobalCache';
 import {
 	bunkerChargingSpots,
 	getPosFromBunkerCoord,
@@ -94,6 +94,11 @@ export class BunkerQueenOverlord extends Overlord {
 	}
 
 	init() {
+		for (let battery of this.batteries) {
+			if (hasMinerals(battery.store)) { // get rid of any minerals in the container if present
+				this.colony.logisticsNetwork.requestOutputMinerals(battery);
+			}
+		}
 		let amount = 1;
 		if (this.colony.spawns.length > 1) {
 			amount = 2;
@@ -259,6 +264,12 @@ export class BunkerQueenOverlord extends Overlord {
 	}
 
 	run() {
+		// for (let queen of this.queens) {
+		// 	if (queen.isIdle) {
+		// 		this.handleQueen(queen);
+		// 	}
+		// 	queen.run();
+		// }
 		this.standardRun(this.queens, queen => this.handleQueen(queen));
 	}
 }

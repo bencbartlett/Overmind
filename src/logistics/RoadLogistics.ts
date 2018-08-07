@@ -4,7 +4,7 @@ import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
 import {Zerg} from '../zerg/Zerg';
 import {repairTaskName} from '../tasks/instances/repair';
-import {$} from '../caching';
+import {$} from '../caching/GlobalCache';
 
 const ROAD_CACHE_TIMEOUT = 25;
 

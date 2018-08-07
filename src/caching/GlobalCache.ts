@@ -1,65 +1,10 @@
-// Preprocessing code to be run before animation of anything
-
-import {profile} from './profiler/decorator';
-import {getCacheExpiration} from './utilities/utils';
-import {DirectiveOutpost} from './directives/core/outpost';
-import {DirectiveSKOutpost} from './directives/core/outpostSK';
-
-@profile
-export class GameCache implements ICache {
-
-	overlords: { [overlord: string]: { [roleName: string]: string[] } };
-	targets: { [ref: string]: string[] };
-	outpostFlags: Flag[];
-
-	constructor() {
-		this.overlords = {};
-		this.targets = {};
-		this.outpostFlags = _.filter(Game.flags, flag => DirectiveOutpost.filter(flag)
-														 || DirectiveSKOutpost.filter(flag));
-	}
-
-	/* Generates a hash table for creeps assigned to each object: key: OLref, val: (key: role, val: names[]) */
-	private cacheOverlords() {
-		this.overlords = {};
-		// keys: overlordRef, value: creepNames[]
-		let creepNamesByOverlord = _.groupBy(_.keys(Game.creeps), name => Game.creeps[name].memory.overlord);
-		for (let ref in creepNamesByOverlord) {
-			// keys: roleName, value: creepNames[]
-			this.overlords[ref] = _.groupBy(creepNamesByOverlord[ref], name => Game.creeps[name].memory.role);
-		}
-	}
-
-	/* Generates a hash table for targets: key: TargetRef, val: targeting creep names*/
-	private cacheTargets() {
-		this.targets = {};
-		for (let i in Game.creeps) {
-			let creep = Game.creeps[i];
-			let task = creep.memory.task;
-			while (task) {
-				if (!this.targets[task._target.ref]) this.targets[task._target.ref] = [];
-				this.targets[task._target.ref].push(creep.name);
-				task = task._parent;
-			}
-		}
-	}
-
-	build() {
-		this.cacheOverlords();
-		this.cacheTargets();
-	}
-
-	rebuild() {
-		// Recache the cheap or critical stuff: Overlords, constructionSites, drops
-		this.cacheOverlords();
-
-	}
-}
-
+import {profile} from '../profiler/decorator';
+import {getCacheExpiration} from '../utilities/utils';
 
 const CACHE_TIMEOUT = 50;
 const SHORT_CACHE_TIMEOUT = 10;
 
+@profile
 export class $ { // $ = cash = cache... get it? :D
 
 	static structures<T extends Structure>(saver: { ref: string }, key: string, callback: () => T[],
@@ -100,5 +45,43 @@ export class $ { // $ = cash = cache... get it? :D
 		return _cache.lists[cacheKey];
 	}
 
-}
+	static costMatrix(roomName: string, key: string, callback: () => CostMatrix,
+					  timeout = SHORT_CACHE_TIMEOUT): CostMatrix {
+		let cacheKey = roomName + ':' + key;
+		if (_cache.costMatrices[cacheKey] == undefined || Game.time > _cache.expiration[cacheKey]) {
+			// Recache if new entry or entry is expired
+			_cache.costMatrices[cacheKey] = callback();
+			_cache.expiration[cacheKey] = getCacheExpiration(timeout, Math.ceil(timeout / 10));
+		}
+		return _cache.costMatrices[cacheKey];
+	}
 
+	static costMatrixRecall(roomName: string, key: string): CostMatrix | undefined {
+		let cacheKey = roomName + ':' + key;
+		return _cache.costMatrices[cacheKey];
+	}
+
+	static assign<T extends { id: string }>(saver: { ref: string }, key: T | undefined, callback: () => T): void {
+
+	}
+
+	// static set<T extends HasRef, K extends keyof T>(thing: T, key: K, callback: () => T[K],
+	// 												timeout = SHORT_CACHE_TIMEOUT) {
+	// 	let cacheKey = thing.ref + '$' + key;
+	// 	if (!_cache.things[cacheKey] || Game.time > _cache.expiration[cacheKey]) {
+	// 		// Recache if new entry or entry is expired
+	// 		_cache.things[cacheKey] = callback();
+	// 		_cache.expiration[cacheKey] = getCacheExpiration(timeout, Math.ceil(timeout / 10));
+	// 	} else {
+	// 		// Refresh structure list by ID if not already done on current tick
+	// 		if (_cache.accessed[cacheKey] < Game.time) {
+	// 			_cache.things[cacheKey] = _.compact(_.map(_cache.structures[cacheKey],
+	// 														  s => Game.getObjectById(s.id))) as Structure[];
+	// 			_cache.accessed[cacheKey] = Game.time;
+	// 		}
+	// 	}
+	// 	thing[key] = _cache.things[cacheKey];
+	// }
+
+
+}

@@ -12,7 +12,7 @@ import {Pathing} from '../movement/Pathing';
 import {MiningSite} from './miningSite';
 import {WorkerSetup} from '../overlords/core/worker';
 import {hasMinerals} from '../utilities/utils';
-import {$} from '../caching';
+import {$} from '../caching/GlobalCache';
 
 interface UpgradeSiteMemory {
 	input?: { pos: protoPos, tick: number };

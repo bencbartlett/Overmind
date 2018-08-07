@@ -110,11 +110,13 @@ export class Mem {
 
 	private static initGlobalMemory() {
 		global._cache = {
-			accessed  : {},
-			expiration: {},
-			structures: {},
-			numbers   : {},
-			lists     : {},
+			accessed    : {},
+			expiration  : {},
+			structures  : {},
+			numbers     : {},
+			lists       : {},
+			costMatrices: {},
+			things      : {},
 		};
 	}
 

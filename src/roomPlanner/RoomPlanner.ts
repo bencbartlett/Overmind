@@ -353,7 +353,7 @@ export class RoomPlanner {
 	getObstacles(): RoomPosition[] {
 		let obstacles: RoomPosition[] = [];
 		let passableStructureTypes: string[] = [STRUCTURE_ROAD, STRUCTURE_CONTAINER, STRUCTURE_RAMPART];
-		if (this.map != {}) { // if room planner has made the map, use that
+		if (_.keys(this.map).length > 0) { // if room planner has made the map, use that
 			for (let structureType in this.map) {
 				if (!passableStructureTypes.includes(structureType)) {
 					obstacles = obstacles.concat(this.map[structureType]);

@@ -10,6 +10,7 @@ import {log} from '../console/log';
 import {toCreep, Zerg} from '../zerg/Zerg';
 import {isOwnedStructure, isStructure, isZerg} from '../declarations/typeGuards';
 import {RoomIntel} from './RoomIntel';
+import {profile} from '../profiler/decorator';
 
 interface CombatIntelMemory {
 	cache: {
@@ -18,6 +19,7 @@ interface CombatIntelMemory {
 	}
 }
 
+@profile
 export class CombatIntel {
 
 	directive: Directive;

@@ -80,11 +80,11 @@ interface Room {
 	mineral: Mineral | undefined;
 	constructionSites: ConstructionSite[];
 	// Used by movement library
-	_defaultMatrix: CostMatrix;
-	_directMatrix: CostMatrix;
+	// _defaultMatrix: CostMatrix;
+	// _directMatrix: CostMatrix;
 	_creepMatrix: CostMatrix;
-	_priorityMatrices: { [priority: number]: CostMatrix };
-	_skMatrix: CostMatrix;
+	// _priorityMatrices: { [priority: number]: CostMatrix };
+	// _skMatrix: CostMatrix;
 	_kitingMatrix: CostMatrix;
 }
 

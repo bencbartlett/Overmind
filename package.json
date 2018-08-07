@@ -36,7 +36,6 @@
   },
   "dependencies": {
     "columnify": "1.5.4",
-    "screeps-profiler": "2.0.1",
     "source-map": "0.7.3"
   }
 }

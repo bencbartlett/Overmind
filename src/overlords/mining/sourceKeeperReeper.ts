@@ -12,6 +12,7 @@ import {CombatTargeting} from '../../targeting/CombatTargeting';
 import {Movement} from '../../movement/Movement';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {Visualizer} from '../../visuals/Visualizer';
+import {profile} from '../../profiler/decorator';
 
 export const ReaperSetup = new CreepSetup('zergling', {
 	pattern  : [MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK, HEAL, MOVE],
@@ -27,6 +28,7 @@ interface SourceReaperOverlordMemory {
 	targetLairID?: string;
 }
 
+@profile
 export class SourceReaperOverlord extends Overlord {
 
 	static requiredRCL = 7;
@@ -71,7 +73,7 @@ export class SourceReaperOverlord extends Overlord {
 
 		// Go to keeper room
 		if (!this.targetLair || !this.room || reaper.room != this.room || reaper.pos.isEdge) {
-			log.debugCreep(reaper, `Going to room!`);
+			// log.debugCreep(reaper, `Going to room!`);
 			reaper.healSelfIfPossible();
 			reaper.goTo(this.pos);
 			return;
@@ -79,7 +81,7 @@ export class SourceReaperOverlord extends Overlord {
 
 		if (this.room.invaders.length > 0) {
 			// Handle invader actions
-			log.debugCreep(reaper, `Handling invader actions!`);
+			// log.debugCreep(reaper, `Handling invader actions!`);
 			if (reaper.hits >= reaper.hitsMax * .5) {
 				let result = reaper.autoMelee(this.room.invaders);
 				if (result == undefined) { // didn't attack
@@ -103,7 +105,7 @@ export class SourceReaperOverlord extends Overlord {
 				}
 			}
 		} else {
-			log.debugCreep(reaper, `Standard keeperReaper actions`);
+			// log.debugCreep(reaper, `Standard keeperReaper actions`);
 			// Standard keeperReaper actions
 			let nearestHostile = reaper.pos.findClosestByRange(this.room.hostiles) as Creep;
 			if (nearestHostile && reaper.pos.isNearTo(nearestHostile)) {
@@ -128,7 +130,7 @@ export class SourceReaperOverlord extends Overlord {
 
 		// Go to keeper room
 		if (!this.targetLair || !this.room || defender.room != this.room || defender.pos.isEdge) {
-			log.debugCreep(defender, `Going to room!`);
+			// log.debugCreep(defender, `Going to room!`);
 			defender.healSelfIfPossible();
 			defender.goTo(this.pos);
 			return;
@@ -136,11 +138,11 @@ export class SourceReaperOverlord extends Overlord {
 
 		if (this.room.invaders.length > 0) {
 			// Handle invader actions
-			log.debugCreep(defender, `AutoCombat`);
+			// log.debugCreep(defender, `AutoCombat`);
 			defender.autoCombat(this.room.name);
 
 		} else {
-			log.debugCreep(defender, `Standard duty`);
+			// log.debugCreep(defender, `Standard duty`);
 			let minKeepersToHelp = this.reapers.length == 0 ? 1 : 2;
 			if (this.room.sourceKeepers.length >= minKeepersToHelp) {
 				// Help out with keeper reaping
@@ -166,7 +168,7 @@ export class SourceReaperOverlord extends Overlord {
 				}
 			} else {
 				// Do medic actions
-				log.debugCreep(defender, `Medic actions`);
+				// log.debugCreep(defender, `Medic actions`);
 				defender.doMedicActions();
 			}
 		}

@@ -185,6 +185,14 @@ export class Colony {
 		this.ref = roomName;
 		this.memory = Mem.wrap(Memory.colonies, roomName, defaultColonyMemory, true);
 		this.colony = this;
+		// Register colony globally to allow 'W1N1' and 'w1n1' to refer to Overmind.colonies.W1N1
+		global[this.name] = this;
+		global[this.name.toLowerCase()] = this;
+		// Build the colony
+		this.build(id, roomName, outposts, creeps);
+	}
+
+	build(id: number, roomName: string, outposts: string[], creeps: Creep[] | undefined): void {
 		// Register rooms
 		this.roomNames = [roomName].concat(outposts);
 		this.room = Game.rooms[roomName];
@@ -201,9 +209,25 @@ export class Colony {
 		this.registerUtilities(); 			// Register logistics utilities, room planners, and layout info
 		this.registerHiveClusters(); 		// Build the hive clusters
 		this.spawnMoarOverlords(); 			// Register colony overlords
-		// Register colony globally to allow 'W1N1' and 'w1n1' to refer to Overmind.colonies.W1N1
-		global[this.name] = this;
-		global[this.name.toLowerCase()] = this;
+	}
+
+	refresh(): void {
+		// // TODO
+		// // Register rooms
+		// this.room = Game.rooms[roomName];
+		// this.outposts = _.compact(_.map(outposts, outpost => Game.rooms[outpost]));
+		// this.rooms = [this.room].concat(this.outposts);
+		// // Give the colony an Overseer
+		// this.overseer = new Overseer(this);
+		// // Register creeps
+		// this.creeps = creeps || [];
+		// this.creepsByRole = _.groupBy(this.creeps, creep => creep.memory.role);
+		// // Register the rest of the colony components; the order in which these are called is important!
+		// this.registerRoomObjects();			// Register real colony components
+		// this.registerOperationalState();	// Set the colony operational state
+		// this.registerUtilities(); 			// Register logistics utilities, room planners, and layout info
+		// this.registerHiveClusters(); 		// Build the hive clusters
+		// this.spawnMoarOverlords(); 			// Register colony overlords
 	}
 
 	private registerRoomObjects(): void {

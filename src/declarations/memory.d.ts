@@ -19,6 +19,7 @@ interface Memory {
 	profiler?: any;
 	stats: any;
 	constructionSites: { [id: string]: number };
+	suspend?: number;
 }
 
 interface StatsMemory {

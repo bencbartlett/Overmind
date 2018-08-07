@@ -12,7 +12,7 @@ import {Visualizer} from '../visuals/Visualizer';
 import {Stats} from '../stats/stats';
 import {Zerg} from '../zerg/Zerg';
 import {log} from '../console/log';
-import {$} from '../caching';
+import {$} from '../caching/GlobalCache';
 import {energyStructureOrder, getPosFromBunkerCoord, insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {BunkerQueenOverlord} from '../overlords/core/queen_bunker';
 import {Overlord} from '../overlords/Overlord';

@@ -100,6 +100,16 @@ export class MiningOverlord extends Overlord {
 	}
 
 	run() {
+		// for (let miner of this.miners) {
+		// 	if (miner.flee()) {
+		// 		miner.task = null; // invalidate task
+		// 		continue;
+		// 	}
+		// 	if (miner.isIdle) {
+		// 		this.handleMiner(miner);
+		// 	}
+		// 	miner.run();
+		// }
 		this.standardRun(this.miners, miner => this.handleMiner(miner),
 						 miner => miner.flee(miner.room.fleeDefaults, true));
 	}

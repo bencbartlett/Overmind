@@ -38,6 +38,8 @@ interface IGlobalCache {
 	structures: { [key: string]: Structure[] };
 	numbers: { [key: string]: number };
 	lists: { [key: string]: any[] };
+	costMatrices: { [key: string]: CostMatrix };
+	things: { [key: string]: any };
 	// objects: { [key: string]: Object };
 }
 
@@ -186,6 +188,10 @@ interface protoPos {
 
 interface HasPos {
 	pos: RoomPosition
+}
+
+interface HasRef {
+	ref: string
 }
 
 // interface StoreLike {

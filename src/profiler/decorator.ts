@@ -1,4 +1,4 @@
-import profiler from 'screeps-profiler';
+import profiler from './screeps-profiler';
 import {USE_PROFILER} from '../~settings';
 
 // export {profile} from './profiler';

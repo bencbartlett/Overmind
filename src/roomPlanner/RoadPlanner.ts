@@ -148,7 +148,7 @@ export class RoadPlanner {
 	finalize(): void {
 		// Collect all roads from this and from room planner
 		let roomPlannerRoads: RoomPosition[];
-		if (this.roomPlanner.map != {}) { // use active map
+		if (_.keys(this.roomPlanner.map).length > 0) { // use active map
 			roomPlannerRoads = this.roomPlanner.map[STRUCTURE_ROAD];
 		} else { // retrieve from memory
 			if (this.roomPlanner.memory.bunkerData && this.roomPlanner.memory.bunkerData.anchor) {

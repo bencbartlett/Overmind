@@ -5,7 +5,7 @@ import {Zerg} from '../zerg/Zerg';
 import {MoveOptions} from './Movement';
 import {hasPos} from '../declarations/typeGuards';
 import {normalizePos} from './helpers';
-import {derefCoords} from '../utilities/utils';
+import {$} from '../caching/GlobalCache';
 
 /* Module for pathing-related operations. */
 
@@ -15,6 +15,12 @@ export interface TerrainCosts {
 	plainCost: number,
 	swampCost: number
 }
+
+const MatrixTypes = {
+	direct : 'dir',
+	default: 'def',
+	sk     : 'sk',
+};
 
 @profile
 export class Pathing {
@@ -138,7 +144,7 @@ export class Pathing {
 				return matrix;
 			}
 		} else { // have no vision
-			return true;
+			return this.getCostMatrixForInvisibleRoom(roomName, options);
 		}
 	}
 
@@ -253,7 +259,7 @@ export class Pathing {
 
 
 	/* Get a cloned copy of the cost matrix for a room with specified options */
-	static getCostMatrix(room: Room, options = {} as MoveOptions, clone = true): CostMatrix {
+	static getCostMatrix(room: Room, options: MoveOptions, clone = true): CostMatrix {
 		let matrix: CostMatrix;
 		if (options.ignoreCreeps == false) {
 			matrix = this.getCreepMatrix(room);
@@ -282,16 +288,18 @@ export class Pathing {
 	}
 
 	/* Get a cloned copy of the cost matrix for a room with specified options */
-	private static getCostMatrixForInvisibleRoom(roomName: string, options = {} as MoveOptions,
-												 clone                     = true): CostMatrix | boolean {
-		let matrix: CostMatrix;
+	private static getCostMatrixForInvisibleRoom(roomName: string, options: MoveOptions,
+												 clone = true): CostMatrix | boolean {
+		let matrix: CostMatrix | undefined;
 		if (options.avoidSK) {
-			matrix = this.getInvisibleSkMatrix(roomName);
+			matrix = $.costMatrixRecall(roomName, MatrixTypes.sk);
+		} else if (options.direct) {
+			matrix = $.costMatrixRecall(roomName, MatrixTypes.direct);
 		} else {
-			matrix = new PathFinder.CostMatrix();
+			matrix = $.costMatrixRecall(roomName, MatrixTypes.default);
 		}
 		// Register other obstacles
-		if (options.obstacles && options.obstacles.length > 0) {
+		if (matrix && options.obstacles && options.obstacles.length > 0) {
 			matrix = matrix.clone();
 			for (let obstacle of options.obstacles) {
 				if (obstacle && obstacle.roomName == roomName) {
@@ -299,62 +307,58 @@ export class Pathing {
 				}
 			}
 		}
-		if (clone) {
+		if (matrix && clone) {
 			matrix = matrix.clone();
 		}
-		return matrix;
+		return matrix || true;
 	}
 
 
 	/* Default matrix for a room, setting impassable structures and constructionSites to impassible */
 	static getDefaultMatrix(room: Room): CostMatrix {
-		if (room._defaultMatrix) {
-			return room._defaultMatrix;
-		}
-		let matrix = new PathFinder.CostMatrix();
-		// Set passability of structure positions
-		let impassibleStructures: Structure[] = [];
-		_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
-			if (s.structureType == STRUCTURE_ROAD) {
-				matrix.set(s.pos.x, s.pos.y, 1);
-			} else if (!s.isWalkable) {
-				impassibleStructures.push(s);
-			}
+		return $.costMatrix(room.name, MatrixTypes.default, () => {
+			let matrix = new PathFinder.CostMatrix();
+			// Set passability of structure positions
+			let impassibleStructures: Structure[] = [];
+			_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
+				if (s.structureType == STRUCTURE_ROAD) {
+					matrix.set(s.pos.x, s.pos.y, 1);
+				} else if (!s.isWalkable) {
+					impassibleStructures.push(s);
+				}
+			});
+			_.forEach(impassibleStructures, s => matrix.set(s.pos.x, s.pos.y, 0xff));
+			// Set passability of construction sites
+			_.forEach(room.find(FIND_CONSTRUCTION_SITES), (site: ConstructionSite) => {
+				if (site.my && !site.isWalkable) {
+					matrix.set(site.pos.x, site.pos.y, 0xff);
+				}
+			});
+			return matrix;
 		});
-		_.forEach(impassibleStructures, s => matrix.set(s.pos.x, s.pos.y, 0xff));
-		// Set passability of construction sites
-		_.forEach(room.find(FIND_CONSTRUCTION_SITES), (site: ConstructionSite) => {
-			if (site.my && !site.isWalkable) {
-				matrix.set(site.pos.x, site.pos.y, 0xff);
-			}
-		});
-		room._defaultMatrix = matrix;
-		return room._defaultMatrix;
 	}
 
 
 	/* Default matrix for a room, setting impassable structures and constructionSites to impassible, ignoring roads */
 	static getDirectMatrix(room: Room): CostMatrix {
-		if (room._directMatrix) {
-			return room._directMatrix;
-		}
-		let matrix = new PathFinder.CostMatrix();
-		// Set passability of structure positions
-		let impassibleStructures: Structure[] = [];
-		_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
-			if (!s.isWalkable) {
-				impassibleStructures.push(s);
-			}
+		return $.costMatrix(room.name, MatrixTypes.direct, () => {
+			let matrix = new PathFinder.CostMatrix();
+			// Set passability of structure positions
+			let impassibleStructures: Structure[] = [];
+			_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
+				if (!s.isWalkable) {
+					impassibleStructures.push(s);
+				}
+			});
+			_.forEach(impassibleStructures, s => matrix.set(s.pos.x, s.pos.y, 0xff));
+			// Set passability of construction sites
+			_.forEach(room.find(FIND_CONSTRUCTION_SITES), (site: ConstructionSite) => {
+				if (site.my && !site.isWalkable) {
+					matrix.set(site.pos.x, site.pos.y, 0xff);
+				}
+			});
+			return matrix;
 		});
-		_.forEach(impassibleStructures, s => matrix.set(s.pos.x, s.pos.y, 0xff));
-		// Set passability of construction sites
-		_.forEach(room.find(FIND_CONSTRUCTION_SITES), (site: ConstructionSite) => {
-			if (site.my && !site.isWalkable) {
-				matrix.set(site.pos.x, site.pos.y, 0xff);
-			}
-		});
-		room._directMatrix = matrix;
-		return room._directMatrix;
 	}
 
 
@@ -418,42 +422,40 @@ export class Pathing {
 		if (Cartographer.roomType(room.name) != ROOMTYPE_SOURCEKEEPER) {
 			return this.getDefaultMatrix(room);
 		}
-		if (room._skMatrix) {
-			return room._skMatrix;
-		}
-		let matrix = this.getDefaultMatrix(room).clone();
-		const avoidRange = 5;
-		_.forEach(room.keeperLairs, lair => {
-			for (let dx = -avoidRange; dx <= avoidRange; dx++) {
-				for (let dy = -avoidRange; dy <= avoidRange; dy++) {
-					matrix.set(lair.pos.x + dx, lair.pos.y + dy, 0xff);
-				}
-			}
-		});
-		room._skMatrix = matrix;
-		return room._skMatrix;
-	}
-
-	/* Avoids source keepers in a room */
-	private static getInvisibleSkMatrix(roomName: string): CostMatrix {
-		let matrix = new PathFinder.CostMatrix();
-		if (Cartographer.roomType(roomName) == ROOMTYPE_SOURCEKEEPER) {
-			if (Memory.rooms[roomName] && Memory.rooms[roomName].SKlairs != undefined) {
-
-				const avoidRange = 5;
-				const lairs: RoomPosition[] = _.map(Memory.rooms[roomName].SKlairs!,
-													saved => derefCoords(saved.c, roomName));
-				_.forEach(lairs, lair => {
-					for (let dx = -avoidRange; dx <= avoidRange; dx++) {
-						for (let dy = -avoidRange; dy <= avoidRange; dy++) {
-							matrix.set(lair.x + dx, lair.y + dy, 0xff);
-						}
+		return $.costMatrix(room.name, MatrixTypes.sk, () => {
+			let matrix = this.getDefaultMatrix(room).clone();
+			const avoidRange = 5;
+			_.forEach(room.keeperLairs, lair => {
+				for (let dx = -avoidRange; dx <= avoidRange; dx++) {
+					for (let dy = -avoidRange; dy <= avoidRange; dy++) {
+						matrix.set(lair.pos.x + dx, lair.pos.y + dy, 0xff);
 					}
-				});
-			}
-		}
-		return matrix;
+				}
+			});
+			return matrix;
+		});
 	}
+
+	// /* Avoids source keepers in a room */
+	// private static getInvisibleSkMatrix(roomName: string): CostMatrix {
+	// 	let matrix = new PathFinder.CostMatrix();
+	// 	if (Cartographer.roomType(roomName) == ROOMTYPE_SOURCEKEEPER) {
+	// 		if (Memory.rooms[roomName] && Memory.rooms[roomName].SKlairs != undefined) {
+	//
+	// 			const avoidRange = 5;
+	// 			const lairs: RoomPosition[] = _.map(Memory.rooms[roomName].SKlairs!,
+	// 												saved => derefCoords(saved.c, roomName));
+	// 			_.forEach(lairs, lair => {
+	// 				for (let dx = -avoidRange; dx <= avoidRange; dx++) {
+	// 					for (let dy = -avoidRange; dy <= avoidRange; dy++) {
+	// 						matrix.set(lair.x + dx, lair.y + dy, 0xff);
+	// 					}
+	// 				}
+	// 			});
+	// 		}
+	// 	}
+	// 	return matrix;
+	// }
 
 	/* Find a viable sequence of rooms to narrow down Pathfinder algorithm */
 	static findRoute(origin: string, destination: string,

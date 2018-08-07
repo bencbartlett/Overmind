@@ -33,7 +33,7 @@ import {sandbox} from './sandbox';
 import {Mem} from './Memory';
 import {OvermindConsole} from './console/Console';
 import {Stats} from './stats/stats';
-import profiler from 'screeps-profiler';
+import profiler from './profiler/screeps-profiler';
 import _Overmind from './Overmind_obfuscated'; // don't enable this unless you're me
 import {log} from './console/log';
 import {VersionMigration} from './versionMigration/migrator';
@@ -52,31 +52,50 @@ VersionMigration.run();
 log.alert(`Codebase updated or global reset. Type "help" for a list of console commands.` + alignedNewline +
 		  OvermindConsole.info(true));
 
-// Main loop
-function main(): void {
+// Decide whether to run this tick
+function handler(): void {
 	if (!isIVM()) {
 		log.warning(`Overmind requires isolated-VM to run. Change settings at screeps.com/a/#!/account/runtime`);
 		return;
 	}
-	if (Game.cpu.bucket > 500) {
-		Mem.clean();										// Clean memory
-		global.Overmind = new _Overmind();					// Instantiate the Overmind
-		Overmind.build();									// Build phase: instantiate caches and colony components
-		Overmind.init();									// Init phase: spawning and energy requests
-		Overmind.run();										// Run phase: execute state-changing actions
-		Overmind.visuals(); 								// Draw visuals
-		Stats.run(); 										// Record statistics
-		sandbox();											// Sandbox: run any testing code
-		Overmind.postRun();									// Error catching; should be run at end of every tick
+	if (Game.cpu.bucket < 500) {
+		log.warning(`CPU bucket is critically low (${Game.cpu.bucket}) - suspending for 5 ticks!`);
+		Memory.suspend = 4;
+		return;
 	} else {
-		log.warning(`CPU bucket is critically low (${Game.cpu.bucket}) - skipping this tick!`);
+		if (Memory.suspend != undefined) {
+			if (Memory.suspend > 0) {
+				log.info(`Operation suspended for ${Memory.suspend} more ticks.`);
+				Memory.suspend -= 1;
+				return;
+			} else {
+				delete Memory.suspend;
+			}
+		}
+		main();
 	}
+}
+
+
+// Main loop
+function main(): void {
+	Mem.clean();										// Clean memory
+	global.Overmind = new _Overmind();					// Instantiate the Overmind
+	Overmind.build();									// Build phase: instantiate caches and colony components
+	Overmind.init();									// Init phase: spawning and energy requests
+	Overmind.run();										// Run phase: execute state-changing actions
+	Overmind.visuals(); 								// Draw visuals
+	Stats.run(); 										// Record statistics
+	sandbox();											// Sandbox: run any testing code
+	Overmind.postRun();									// Error catching; should be run at end of every tick
+
 }
 
 Assimilator.validate(main);
 
+
 export function loop(): void {
-	profiler.wrap(main);
+	profiler.wrap(handler);
 }
 
 Assimilator.validate(loop);

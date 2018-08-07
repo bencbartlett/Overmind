@@ -102,19 +102,27 @@ Object.defineProperty(Room.prototype, 'mineral', {
 Object.defineProperty(Room.prototype, 'repairables', {
 	get() {
 		if (!this._repairables) {
-			this._repairables = [];
-			for (let structureType of singleList) {
-				if (this[structureType]) {
-					this._repairables.push(this[structureType]);
+			this._refreshStructureCache();
+			if (roomStructureIDs[this.name]['repairables']) {
+				return this._repairables = _.compact(_.map(roomStructureIDs[this.name]['repairables'],
+														   Game.getObjectById));
+			} else {
+				let repairables: Structure[] = [];
+				for (let structureType of singleList) {
+					if (this[structureType]) {
+						repairables.push(this[structureType]);
+					}
 				}
-			}
-			for (let structureType of multipleList) {
-				if (structureType != STRUCTURE_WALL &&
-					structureType != STRUCTURE_RAMPART &&
-					structureType != STRUCTURE_ROAD &&
-					!notRepairable.includes(structureType)) {
-					this._repairables = this._repairables.concat(this[structureType + 's']);
+				for (let structureType of multipleList) {
+					if (structureType != STRUCTURE_WALL &&
+						structureType != STRUCTURE_RAMPART &&
+						structureType != STRUCTURE_ROAD &&
+						!notRepairable.includes(structureType)) {
+						repairables = repairables.concat(this[structureType + 's']);
+					}
 				}
+				roomStructureIDs[this.name]['repairables'] = _.map(repairables, s => s.id);
+				return this._repairables = repairables;
 			}
 		}
 		return this._repairables;

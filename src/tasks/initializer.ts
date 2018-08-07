@@ -26,7 +26,7 @@ import {TaskInvalid} from './instances/invalid';
 import {TaskTransferAll, transferAllTargetType, transferAllTaskName} from './instances/transferAll';
 import {log} from '../console/log';
 import {TaskWithdrawAll, withdrawAllTargetType, withdrawAllTaskName} from './instances/withdrawAll';
-import profiler from 'screeps-profiler';
+import profiler from '../profiler/screeps-profiler';
 import {rechargeTaskName, TaskRecharge} from './instances/recharge';
 
 export function initializeTask(protoTask: protoTask): Task {

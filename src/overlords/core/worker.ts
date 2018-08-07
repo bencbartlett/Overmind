@@ -6,7 +6,7 @@ import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {CreepSetup} from '../CreepSetup';
 import {BuildPriorities} from '../../priorities/priorities_structures';
-import {$} from '../../caching';
+import {$} from '../../caching/GlobalCache';
 import {Task} from '../../tasks/Task';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 
