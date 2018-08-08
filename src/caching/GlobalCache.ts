@@ -61,27 +61,27 @@ export class $ { // $ = cash = cache... get it? :D
 		return _cache.costMatrices[cacheKey];
 	}
 
-	static assign<T extends { id: string }>(saver: { ref: string }, key: T | undefined, callback: () => T): void {
-
+	static set<T extends HasRef, K extends keyof T>(thing: T, key: K,
+													callback: () => (T[K] & (undefined | HasID | HasID[])),
+													timeout = SHORT_CACHE_TIMEOUT) {
+		let cacheKey = thing.ref + '$' + key;
+		if (!_cache.things[cacheKey] || Game.time > _cache.expiration[cacheKey]) {
+			// Recache if new entry or entry is expired
+			_cache.things[cacheKey] = callback();
+			_cache.expiration[cacheKey] = getCacheExpiration(timeout, Math.ceil(timeout / 10));
+		} else {
+			// Refresh structure list by ID if not already done on current tick
+			if (_cache.accessed[cacheKey] < Game.time) {
+				if (_.isArray(_cache.things[cacheKey])) {
+					_cache.things[cacheKey] = _.compact(_.map(_cache.things[cacheKey] as HasID[],
+															  s => Game.getObjectById(s.id))) as HasID[];
+				} else {
+					_cache.things[cacheKey] = Game.getObjectById((<HasID>_cache.things[cacheKey]).id) as HasID;
+				}
+				_cache.accessed[cacheKey] = Game.time;
+			}
+		}
+		thing[key] = _cache.things[cacheKey] as T[K] & (undefined | HasID | HasID[]);
 	}
-
-	// static set<T extends HasRef, K extends keyof T>(thing: T, key: K, callback: () => T[K],
-	// 												timeout = SHORT_CACHE_TIMEOUT) {
-	// 	let cacheKey = thing.ref + '$' + key;
-	// 	if (!_cache.things[cacheKey] || Game.time > _cache.expiration[cacheKey]) {
-	// 		// Recache if new entry or entry is expired
-	// 		_cache.things[cacheKey] = callback();
-	// 		_cache.expiration[cacheKey] = getCacheExpiration(timeout, Math.ceil(timeout / 10));
-	// 	} else {
-	// 		// Refresh structure list by ID if not already done on current tick
-	// 		if (_cache.accessed[cacheKey] < Game.time) {
-	// 			_cache.things[cacheKey] = _.compact(_.map(_cache.structures[cacheKey],
-	// 														  s => Game.getObjectById(s.id))) as Structure[];
-	// 			_cache.accessed[cacheKey] = Game.time;
-	// 		}
-	// 	}
-	// 	thing[key] = _cache.things[cacheKey];
-	// }
-
 
 }

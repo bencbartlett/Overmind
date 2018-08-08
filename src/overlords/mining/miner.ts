@@ -15,7 +15,7 @@ export const MinerSetup = new CreepSetup('drone', {
 
 export const SKMinerSetup = new CreepSetup('drone', {
 	pattern  : [WORK, WORK, CARRY, MOVE],
-	sizeLimit: 4,
+	sizeLimit: 5,
 });
 
 export const MinerLongDistanceSetup = new CreepSetup('drone', {

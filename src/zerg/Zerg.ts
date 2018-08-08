@@ -91,7 +91,7 @@ export class Zerg {
 	// settings: any;					// Adjustable settings object, can vary across roles
 	private _task: Task | null; 		// Cached Task object that is instantiated once per tick and on change
 
-	constructor(creep: Creep) {
+	constructor(creep: Creep, notifyWhenAttacked = true) {
 		this.creep = creep;
 		this.body = creep.body;
 		this.carry = creep.carry;
@@ -116,6 +116,11 @@ export class Zerg {
 		this.blockMovement = false;
 		// this.settings = {};
 		Game.zerg[this.name] = this; // register global reference
+		global[this.name] = this;
+		// Handle attack notification when at lifetime - 1
+		if (this.ticksToLive == this.lifetime - 1 && !notifyWhenAttacked) {
+			this.notifyWhenAttacked(notifyWhenAttacked);
+		}
 	}
 
 	// Wrapped creep methods ===========================================================================================

@@ -70,6 +70,7 @@ interface CreepMemory {
 		origin: string;
 	};
 	_go?: MoveData;
+	debug?: boolean;
 	boostLab?: string;
 }
 

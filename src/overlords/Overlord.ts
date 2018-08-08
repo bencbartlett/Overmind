@@ -134,13 +134,13 @@ export abstract class Overlord {
 	}
 
 	/* Default wrapping behavior -- maps all creeps to a base-level zerg */
-	protected zerg(role: string): Zerg[] {
-		return _.map(this.creeps(role), creep => new Zerg(creep));
+	protected zerg(role: string, notifyWhenAttacked?: boolean): Zerg[] {
+		return _.map(this.creeps(role), creep => new Zerg(creep, notifyWhenAttacked));
 	}
 
 	/* Default wrapping behavior -- maps all creeps to a base-level zerg */
-	protected combatZerg(role: string): CombatZerg[] {
-		return _.map(this.creeps(role), creep => new CombatZerg(creep));
+	protected combatZerg(role: string, notifyWhenAttacked?: boolean): CombatZerg[] {
+		return _.map(this.creeps(role), creep => new CombatZerg(creep, notifyWhenAttacked));
 	}
 
 	// protected allCreeps(): Creep[] {

@@ -257,10 +257,10 @@ export class BunkerQueenOverlord extends Overlord {
 		else if (_.any(this.assignments[queen.name], struc => this.transportRequests.supplyByID[struc.id])) {
 			queen.task = this.buildSupplyTaskManifest(queen);
 		}
-		// Otherwise do idle actions
-		if (queen.isIdle) {
-			this.idleActions(queen);
-		}
+		// // Otherwise do idle actions
+		// if (queen.isIdle) {
+		// 	this.idleActions(queen);
+		// }
 	}
 
 	run() {

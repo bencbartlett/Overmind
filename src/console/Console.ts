@@ -12,6 +12,8 @@ export class OvermindConsole {
 	static init() {
 		global.help = this.help();
 		global.info = this.info;
+		global.debug = this.debug;
+		global.stopDebug = this.stopDebug;
 		global.setMode = this.setMode;
 		global.setSignature = this.setSignature;
 		global.print = this.print;
@@ -40,6 +42,8 @@ export class OvermindConsole {
 
 		let descr: { [functionName: string]: string } = {};
 		descr['help'] = 'show this message';
+		descr['debug(thing)'] = 'enable debug logging for a game object or process';
+		descr['stopDebug(thing)'] = 'disable debug logging for a game object or process';
 		descr['info()'] = 'display version and operation information';
 		descr['setMode(mode)'] = 'set the operational mode to "manual", "semiautomatic", or "automatic"';
 		descr['setSignature(newSignature)'] = 'set your controller signature; no argument sets to default';
@@ -83,6 +87,16 @@ export class OvermindConsole {
 		// }
 		const joinChar = aligned ? alignedNewline : '\n';
 		return baseInfo.join(joinChar);
+	}
+
+	static debug(thing: { name: string, memory: any }): string {
+		thing.memory.debug = true;
+		return `Enabled debugging for ${thing.name}.`;
+	}
+
+	static stopDebug(thing: { name: string, memory: any }): string {
+		delete thing.memory.debug;
+		return `Disabled debugging for ${thing.name}.`;
 	}
 
 	static setMode(mode: operationMode): string {

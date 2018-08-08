@@ -4,6 +4,7 @@ import {profile} from '../profiler/decorator';
 import {CombatIntel} from '../intel/CombatIntel';
 import {GoalFinder} from '../targeting/GoalFinder';
 import {Movement, NO_ACTION} from '../movement/Movement';
+import {debug} from '../console/log';
 
 interface CombatZergMemory extends CreepMemory {
 	recovering: boolean;
@@ -12,13 +13,14 @@ interface CombatZergMemory extends CreepMemory {
 	retreating?: boolean;
 }
 
+
 @profile
 export class CombatZerg extends Zerg {
 
 	memory: CombatZergMemory;
 
-	constructor(creep: Creep) {
-		super(creep);
+	constructor(creep: Creep, notifyWhenAttacked = true) {
+		super(creep, notifyWhenAttacked);
 		_.defaults(this.memory, {
 			recovering  : false,
 			lastInDanger: 0,
@@ -106,6 +108,7 @@ export class CombatZerg extends Zerg {
 
 	autoMelee(possibleTargets = this.room.hostiles) {
 		let target = CombatTargeting.findBestTargetInRange(this, 1, possibleTargets);
+		debug(this, `Melee target: ${target}`);
 		if (target) {
 			return this.attack(target);
 		}
@@ -113,6 +116,7 @@ export class CombatZerg extends Zerg {
 
 	autoRanged(possibleTargets = this.room.hostiles, allowMassAttack = true) {
 		let target = CombatTargeting.findBestTargetInRange(this, 3, possibleTargets);
+		debug(this, `Ranged target: ${target}`);
 		if (target) {
 			if (allowMassAttack
 				&& CombatIntel.getMassAttackDamage(this, possibleTargets) > CombatIntel.getRangedAttackDamage(this)) {
@@ -125,6 +129,7 @@ export class CombatZerg extends Zerg {
 
 	autoHeal(allowRangedHeal = true, friendlies = this.room.creeps) {
 		let target = CombatTargeting.findBestHealingTargetInRange(this, 3, friendlies);
+		debug(this, `Heal taget: ${target}`);
 		if (target) {
 			if (this.pos.getRangeTo(target) <= 1) {
 				return this.heal(target);
@@ -135,7 +140,7 @@ export class CombatZerg extends Zerg {
 	}
 
 	/* Navigate to a room, then engage hostile creeps there, perform medic actions, etc. */
-	autoCombat(roomName: string) {
+	autoCombat(roomName: string, verbose = false) {
 
 		// Do standard melee, ranged, and heal actions
 		if (this.getActiveBodyparts(ATTACK) > 0) {
@@ -150,16 +155,19 @@ export class CombatZerg extends Zerg {
 
 		// Handle recovery if low on HP
 		if (this.needsToRecover()) {
+			debug(this, `Recovering!`);
 			return this.recover();
 		}
 
 		// Travel to the target room
 		if (!this.safelyInRoom(roomName)) {
+			debug(this, `Going to room!`);
 			return this.goToRoom(roomName, {ensurePath: true});
 		}
 
 		// Skirmish within the room
 		let goals = GoalFinder.skirmishGoals(this);
+		debug(this, JSON.stringify(goals));
 		return Movement.combatMove(this, goals.approach, goals.avoid);
 
 	}

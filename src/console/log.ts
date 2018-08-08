@@ -111,6 +111,12 @@ function time(): string {
 	return color(Game.time.toString(), 'gray');
 }
 
+export function debug(thing: { name: string, memory: any, pos: RoomPosition }, ...args: any[]) {
+	if (thing.memory && thing.memory.debug) {
+		this.debug(`${thing.name} @ ${thing.pos.print}: `, args);
+	}
+}
+
 @profile
 export class Log {
 	public static sourceMap: any;
@@ -232,8 +238,10 @@ export class Log {
 		}
 	}
 
-	public debugCreep(creep: { name: string, pos: RoomPosition }, ...args: any[]) {
-		this.debug(`${creep.name} @ ${creep.pos.print}: `, args);
+	public debugCreep(creep: { name: string, memory: any, pos: RoomPosition }, ...args: any[]) {
+		if (creep.memory && creep.memory.debug) {
+			this.debug(`${creep.name} @ ${creep.pos.print}: `, args);
+		}
 	}
 
 	public printObject(obj: any) {

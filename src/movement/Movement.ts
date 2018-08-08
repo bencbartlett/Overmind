@@ -16,6 +16,7 @@ import {ZerglingSetup} from '../overlords/defense/meleeDefense';
 import {isZerg} from '../declarations/typeGuards';
 
 export const NO_ACTION = -20;
+export const ERR_CANNOT_PUSH_CREEP = -30;
 
 const REPORT_CPU_THRESHOLD = 1000; 	// Report when creep uses more than this amount of CPU over lifetime
 
@@ -152,7 +153,6 @@ export class Movement {
 		// this.circle(destination, "orange");
 
 		// check if creep is stuck
-		let pushedCreep: boolean | undefined;
 		if (this.isStuck(creep, state)) {
 			state.stuckCount++;
 			this.circle(creep.pos, 'magenta', state.stuckCount * .3);
@@ -165,7 +165,7 @@ export class Movement {
 		if (!options.stuckValue) {
 			options.stuckValue = DEFAULT_STUCK_VALUE;
 		}
-		if (state.stuckCount >= options.stuckValue && !pushedCreep && Math.random() > .5) {
+		if (state.stuckCount >= options.stuckValue && Math.random() > .5) {
 			options.ignoreCreeps = false;
 			delete moveData.path;
 		}
@@ -192,21 +192,13 @@ export class Movement {
 				return ERR_BUSY;
 			}
 			state.destination = destination;
-
-			// // Configure whether to avoid source keepers // TODO
-			// if (options.avoidSK == undefined) {
-			// 	options.avoidSK = !isCombatZerg(creep);
-			// }
-
 			// Compute terrain costs
 			if (!options.direct && !options.terrainCosts) {
 				options.terrainCosts = getTerrainCosts(creep.creep);
 			}
 			let cpu = Game.cpu.getUsed();
-
 			// (!) Pathfinding is done here
 			let ret = Pathing.findPath(creep.pos, destination, options);
-
 			let cpuUsed = Game.cpu.getUsed() - cpu;
 			state.cpu = _.round(cpuUsed + state.cpu);
 			if (Game.time % 10 == 0 && state.cpu > REPORT_CPU_THRESHOLD) {
@@ -219,7 +211,6 @@ export class Movement {
 				log.debug(`Movement: incomplete path for ${creep.name} @ ${creep.pos.print}`);
 				color = 'red';
 			}
-
 			this.circle(creep.pos, color);
 			moveData.path = Pathing.serializePath(creep.pos, ret.path, color);
 			state.stuckCount = 0;
@@ -231,18 +222,19 @@ export class Movement {
 			return ERR_NO_PATH;
 		}
 
+		// push creeps out of the way if needed
+		let obstructingCreep = this.findBlockingCreep(creep);
+		if (obstructingCreep && this.shouldPush(creep, obstructingCreep)) {
+			let pushedCreep = this.pushCreep(creep, obstructingCreep);
+			if (!pushedCreep) return ERR_CANNOT_PUSH_CREEP;
+		}
+
 		// consume path
 		if (state.stuckCount == 0 && !newPath) {
 			moveData.path = moveData.path.substr(1);
 		}
-
 		let nextDirection = parseInt(moveData.path[0], 10) as DirectionConstant;
 
-		// push creeps out of the way if needed
-		let obstructingCreep = this.findBlockingCreep(creep);
-		if (obstructingCreep && this.shouldPush(creep, obstructingCreep)) {
-			this.pushCreep(creep, obstructingCreep);
-		}
 		return creep.move(<DirectionConstant>nextDirection, !!options.force);
 	}
 

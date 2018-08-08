@@ -15,7 +15,7 @@ export class RandomWalkerScoutOverlord extends Overlord {
 
 	constructor(colony: Colony, priority = OverlordPriority.scouting.randomWalker) {
 		super(colony, 'scout', priority);
-		this.scouts = this.zerg(ScoutSetup.role);
+		this.scouts = this.zerg(ScoutSetup.role, false);
 	}
 
 	init() {

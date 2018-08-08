@@ -235,6 +235,7 @@ export class Colony {
 		this.flags = []; // filled in by directives
 		this.destinations = []; // filled in by various hive clusters and directives
 		// Register room objects across colony rooms
+		// $.set(this, 'controller', () => this.room.controller!);
 		this.controller = this.room.controller!; // must be controller since colonies are based in owned rooms
 		this.spawns = _.sortBy(_.filter(this.room.spawns, spawn => spawn.my && spawn.isActive()), spawn => spawn.ref);
 		this.extensions = this.room.extensions;

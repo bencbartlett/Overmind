@@ -7,7 +7,7 @@ import {CreepSetup} from '../CreepSetup';
 import {RoomIntel} from '../../intel/RoomIntel';
 import {minBy} from '../../utilities/utils';
 import {Mem} from '../../Memory';
-import {log} from '../../console/log';
+import {debug, log} from '../../console/log';
 import {CombatTargeting} from '../../targeting/CombatTargeting';
 import {Movement} from '../../movement/Movement';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -130,7 +130,7 @@ export class SourceReaperOverlord extends Overlord {
 
 		// Go to keeper room
 		if (!this.targetLair || !this.room || defender.room != this.room || defender.pos.isEdge) {
-			// log.debugCreep(defender, `Going to room!`);
+			debug(defender, `Going to room!`);
 			defender.healSelfIfPossible();
 			defender.goTo(this.pos);
 			return;
@@ -138,11 +138,11 @@ export class SourceReaperOverlord extends Overlord {
 
 		if (this.room.invaders.length > 0) {
 			// Handle invader actions
-			// log.debugCreep(defender, `AutoCombat`);
+			debug(defender, `AutoCombat`);
 			defender.autoCombat(this.room.name);
 
 		} else {
-			// log.debugCreep(defender, `Standard duty`);
+			debug(defender, `Standard duty`);
 			let minKeepersToHelp = this.reapers.length == 0 ? 1 : 2;
 			if (this.room.sourceKeepers.length >= minKeepersToHelp) {
 				// Help out with keeper reaping
@@ -151,7 +151,11 @@ export class SourceReaperOverlord extends Overlord {
 
 				let reaper = defender.pos.findClosestByRange(this.reapers);
 				if (reaper) {
-					defender.goTo(reaper, {movingTarget: defender.pos.getRangeTo(reaper) > 8, maxRooms: 1});
+					defender.goTo(reaper, {
+						movingTarget: defender.pos.getRangeTo(reaper) > 8,
+						maxRooms    : 1,
+						repath      : 0.1
+					});
 				} else {
 					let keeper = this.targetLair.pos.findClosestByLimitedRange(this.room.sourceKeepers, 7);
 					if (keeper) { // attack the source keeper
@@ -168,7 +172,7 @@ export class SourceReaperOverlord extends Overlord {
 				}
 			} else {
 				// Do medic actions
-				// log.debugCreep(defender, `Medic actions`);
+				debug(defender, `Medic actions`);
 				defender.doMedicActions();
 			}
 		}

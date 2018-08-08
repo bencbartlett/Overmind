@@ -12,7 +12,7 @@ export interface bodySetup {
 
 /* Return the cost of an entire array of body parts */
 export function bodyCost(bodyparts: BodyPartConstant[]): number {
-	return _.sum(_.map(bodyparts, part => BODYPART_COST[part]));
+	return _.sum(bodyparts, part => BODYPART_COST[part]);
 }
 
 @profile

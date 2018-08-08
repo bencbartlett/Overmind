@@ -216,6 +216,10 @@ export class Hatchery extends HiveCluster {
 			spawnToUse = this.availableSpawns.shift();
 		}
 		if (spawnToUse) { // if there is a spawn, create the creep
+			if (this.colony.bunker && this.colony.bunker.coreSpawn
+				&& spawnToUse.id == this.colony.bunker.coreSpawn.id && !options.directions) {
+				options.directions = [TOP, RIGHT]; // don't spawn into the manager spot
+			}
 			protoCreep.name = this.generateCreepName(protoCreep.name); // modify the creep name to make it unique
 			if (bodyCost(protoCreep.body) > this.room.energyCapacityAvailable) {
 				return ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH;
@@ -298,7 +302,7 @@ export class Hatchery extends HiveCluster {
 	enqueue(request: SpawnRequest): void {
 		let protoCreep = this.generateProtoCreep(request.setup, request.overlord);
 		let priority = request.priority;
-		if (this.canSpawn(protoCreep.body)) {
+		if (this.canSpawn(protoCreep.body) && protoCreep.body.length > 0) {
 			// Spawn the creep yourself if you can
 			this._nextAvailability = undefined; // invalidate cache
 			this._queuedSpawnTime = undefined;
@@ -312,7 +316,7 @@ export class Hatchery extends HiveCluster {
 			// if (this.colony.incubator && this.colony.incubator.hatchery) {
 			// 	this.colony.incubator.hatchery.enqueue(request);
 			// } else {
-			log.warning(`${this.room.print} hatchery: cannot spawn creep ${protoCreep.name}!`);
+			log.warning(`${this.room.print}: cannot spawn creep ${protoCreep.name} with body ${protoCreep.body}!`);
 			// }
 		}
 	}

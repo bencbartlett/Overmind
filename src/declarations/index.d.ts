@@ -39,7 +39,7 @@ interface IGlobalCache {
 	numbers: { [key: string]: number };
 	lists: { [key: string]: any[] };
 	costMatrices: { [key: string]: CostMatrix };
-	things: { [key: string]: any };
+	things: { [key: string]: undefined | HasID | HasID[] };
 	// objects: { [key: string]: Object };
 }
 
@@ -192,6 +192,10 @@ interface HasPos {
 
 interface HasRef {
 	ref: string
+}
+
+interface HasID {
+	id: string
 }
 
 // interface StoreLike {

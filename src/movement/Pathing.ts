@@ -151,7 +151,7 @@ export class Pathing {
 	private static kitingRoomCallback(roomName: string): CostMatrix | boolean {
 		const room = Game.rooms[roomName];
 		if (room) {
-			return this.getKitingMatrix(room);
+			return Pathing.getKitingMatrix(room);
 		} else { // have no vision
 			return true;
 		}
