@@ -107,6 +107,8 @@ interface RoomPosition {
 	roomCoords: Coord;
 	neighbors: RoomPosition[];
 
+	inRangeToPos(pos: RoomPosition, range: number): boolean;
+
 	getPositionsAtRange(range: number, includeWalls?: boolean, includeEdges?: boolean): RoomPosition[];
 
 	getPositionsInRange(range: number, includeWalls?: boolean, includeEdges?: boolean): RoomPosition[];

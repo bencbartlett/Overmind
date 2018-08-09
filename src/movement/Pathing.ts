@@ -161,12 +161,12 @@ export class Pathing {
 	static findKitingPath(creepPos: RoomPosition, fleeFrom: (RoomPosition | HasPos)[],
 						  options: MoveOptions = {}): PathFinderPath {
 		_.defaults(options, {
-			range       : 5,
+			fleeRange   : 5,
 			terrainCosts: {plainCost: 1, swampCost: 5},
 		});
 		let fleeFromPos = _.map(fleeFrom, flee => normalizePos(flee));
 		let avoidGoals = _.map(fleeFromPos, pos => {
-			return {pos: pos, range: options.range!};
+			return {pos: pos, range: options.fleeRange!};
 		});
 		return PathFinder.search(creepPos, avoidGoals,
 								 {
@@ -184,10 +184,10 @@ export class Pathing {
 		_.defaults(options, {
 			terrainCosts: {plainCost: 1, swampCost: 5},
 		});
-		if (options.range == undefined) options.range = options.terrainCosts!.plainCost > 1 ? 20 : 10;
+		if (options.fleeRange == undefined) options.fleeRange = options.terrainCosts!.plainCost > 1 ? 20 : 10;
 		let fleeFromPos = _.map(fleeFrom, flee => normalizePos(flee));
 		let avoidGoals = _.map(fleeFromPos, pos => {
-			return {pos: pos, range: options.range!};
+			return {pos: pos, range: options.fleeRange!};
 		});
 		const callback = (roomName: string) => {
 			if (!options.allowHostile && this.shouldAvoid(roomName) && roomName != creepPos.roomName) {

@@ -469,7 +469,7 @@ export class Zerg {
 	/* Kite around hostiles in the room */
 	kite(avoidGoals: (RoomPosition | HasPos)[] = this.room.hostiles, options: MoveOptions = {}): number | undefined {
 		_.defaults(options, {
-			range: 5
+			fleeRange: 5
 		});
 		return Movement.kite(this, avoidGoals, options);
 	}

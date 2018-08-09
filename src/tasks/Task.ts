@@ -42,6 +42,8 @@ export abstract class Task {
 	options: TaskOptions;		// Options for a specific instance of a task
 	data: TaskData; 			// Data pertaining to a given instance of a task
 
+	private _targetPos: RoomPosition;
+
 	constructor(taskName: string, target: targetType, options = {} as TaskOptions) {
 		// Parameters for the task
 		this.name = taskName;
@@ -119,10 +121,13 @@ export abstract class Task {
 	// Dereferences the saved target position; useful for situations where you might lose vision
 	get targetPos(): RoomPosition {
 		// refresh if you have visibility of the target
-		if (this.target) {
-			this._target._pos = this.target.pos;
+		if (!this._targetPos) {
+			if (this.target) {
+				this._target._pos = this.target.pos;
+			}
+			this._targetPos = derefRoomPosition(this._target._pos);
 		}
-		return derefRoomPosition(this._target._pos);
+		return this._targetPos;
 	}
 
 	// Getter/setter for task parent
@@ -234,12 +239,12 @@ export abstract class Task {
 	run(): number | undefined {
 		if (this.isWorking) {
 			delete this.creep.memory._go;
-			if (this.settings.workOffRoad) {
-				// Move to somewhere nearby that isn't on a road
-				this.creep.park(this.targetPos, true);
-			}
+			// if (this.settings.workOffRoad) { // this is disabled as movement priorities makes it unnecessary
+			// 	// Move to somewhere nearby that isn't on a road
+			// 	this.creep.park(this.targetPos, true);
+			// }
 			let result = this.work();
-			if (this.settings.oneShot && result == OK) {
+			if (this.settings.oneShot && result === OK) {
 				this.finish();
 			}
 			return result;
@@ -249,7 +254,7 @@ export abstract class Task {
 	}
 
 	get isWorking(): boolean {
-		return this.creep.pos.inRangeTo(this.targetPos, this.settings.targetRange) && !this.creep.pos.isEdge;
+		return this.creep.pos.inRangeToPos(this.targetPos, this.settings.targetRange) && !this.creep.pos.isEdge;
 	}
 
 	// Task to perform when at the target

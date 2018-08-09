@@ -55,6 +55,7 @@ export interface MoveOptions {
 	allowHostile?: boolean;						// allow to path through hostile rooms; origin/destination room excluded
 	avoidSK?: boolean;							// avoid walking within range 4 of source keepers
 	range?: number;								// range to approach target
+	fleeRange?: number;							// range to flee from targets
 	obstacles?: RoomPosition[];					// don't path through these room positions
 	restrictDistance?: number;					// restrict the distance of route to this number of rooms
 	useFindRoute?: boolean;						// whether to use the route finder; determined automatically otherwise
@@ -646,7 +647,7 @@ export class Movement {
 	/* Kite around enemies in a single room, repathing every tick. More expensive than flee(). */
 	static kite(creep: Zerg, avoidGoals: (RoomPosition | HasPos)[], options: MoveOptions = {}): number | undefined {
 		_.defaults(options, {
-			range       : 5,
+			fleeRange   : 5,
 			terrainCosts: getTerrainCosts(creep.creep),
 		});
 		let nextPos = _.first(Pathing.findKitingPath(creep.pos, avoidGoals, options).path);
@@ -665,12 +666,12 @@ export class Movement {
 		_.defaults(options, {
 			terrainCosts: getTerrainCosts(creep.creep),
 		});
-		if (options.range == undefined) options.range = options.terrainCosts!.plainCost > 1 ? 8 : 16;
+		if (options.fleeRange == undefined) options.fleeRange = options.terrainCosts!.plainCost > 1 ? 8 : 16;
 
 		let closest = creep.pos.findClosestByRange(avoidGoals);
 		let rangeToClosest = closest ? creep.pos.getRangeTo(closest) : 50;
 
-		if (rangeToClosest > options.range) { // Out of range of baddies
+		if (rangeToClosest > options.fleeRange) { // Out of range of baddies
 
 			if (!creep.memory._go) {
 				return;

@@ -133,7 +133,7 @@ Object.defineProperty(Room.prototype, 'fleeDefaults', {
 								 (c: Creep) => c.getActiveBodyparts(ATTACK) > 0
 											   || c.getActiveBodyparts(RANGED_ATTACK) > 0))
 				.concat(_.filter(this.keeperLairs,
-								 (l: StructureKeeperLair) => (l.ticksToSpawn || Infinity) < 10));
+								 (l: StructureKeeperLair) => (l.ticksToSpawn || Infinity) <= 10));
 		}
 		return this._fleeDefaults;
 	},

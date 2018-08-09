@@ -51,6 +51,7 @@ VersionMigration.run();
 
 log.alert(`Codebase updated or global reset. Type "help" for a list of console commands.` + alignedNewline +
 		  OvermindConsole.info(true));
+Stats.log(`lastGlobalReset`, Game.time);
 
 // Decide whether to run this tick
 function handler(): void {
@@ -88,7 +89,6 @@ function main(): void {
 	Stats.run(); 										// Record statistics
 	sandbox();											// Sandbox: run any testing code
 	Overmind.postRun();									// Error catching; should be run at end of every tick
-
 }
 
 Assimilator.validate(main);

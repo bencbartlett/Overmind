@@ -41,7 +41,7 @@ RoomPosition.prototype.lookForStructure = function (structureType: StructureCons
 
 Object.defineProperty(RoomPosition.prototype, 'isEdge', { // if the position is at the edge of a room
 	get         : function () {
-		return this.x == 0 || this.x == 49 || this.y == 0 || this.y == 49;
+		return this.x === 0 || this.x === 49 || this.y === 0 || this.y === 49;
 	},
 	configurable: true,
 });
@@ -73,7 +73,7 @@ Object.defineProperty(RoomPosition.prototype, 'roomCoords', {
 });
 
 Object.defineProperty(RoomPosition.prototype, 'neighbors', {
-	get: function () {
+	get         : function () {
 		let adjPos: RoomPosition[] = [];
 		for (let dx of [-1, 0, 1]) {
 			for (let dy of [-1, 0, 1]) {
@@ -90,6 +90,12 @@ Object.defineProperty(RoomPosition.prototype, 'neighbors', {
 	},
 	configurable: true,
 });
+
+RoomPosition.prototype.inRangeToPos = function (pos: RoomPosition, range: number): boolean {
+	return this.roomName === pos.roomName &&
+		   ((pos.x - this.x) < 0 ? (this.x - pos.x) : (pos.x - this.x)) <= range &&
+		   ((pos.y - this.y) < 0 ? (this.y - pos.y) : (pos.y - this.y)) <= range;
+};
 
 RoomPosition.prototype.getPositionsInRange = function (range: number,
 													   includeWalls = false, includeEdges = false): RoomPosition[] {
