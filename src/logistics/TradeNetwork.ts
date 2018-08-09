@@ -17,6 +17,7 @@ interface TraderMemory {
 }
 
 interface TraderStats {
+	credits: number,
 	bought: {
 		[resourceType: string]: {
 			amount: number,
@@ -41,8 +42,9 @@ const TraderMemoryDefaults: TraderMemory = {
 };
 
 const TraderStatsDefaults: TraderStats = {
-	bought: {},
-	sold  : {},
+	credits: 0,
+	bought : {},
+	sold   : {},
 };
 
 // Maximum prices I'm willing to pay to buy various resources - based on shard2 market data in June 2018
@@ -309,7 +311,8 @@ export class TraderJoe implements ITradeNetwork {
 	}
 
 	// Look through transactions happening on the previous tick and record stats
-	private analyzeTransactions(): void {
+	private recordStats(): void {
+		this.stats.credits = Game.market.credits;
 		const time = Game.time - 1;
 		// Incoming transactions
 		for (let transaction of Game.market.incomingTransactions) {
@@ -361,7 +364,7 @@ export class TraderJoe implements ITradeNetwork {
 		if (this.notifications.length > 0) {
 			log.info(`Trade network activity: ` + alignedNewline + this.notifications.join(alignedNewline));
 		}
-		this.analyzeTransactions();
+		this.recordStats();
 	}
 
 }

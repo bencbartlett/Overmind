@@ -468,6 +468,8 @@ export class Colony {
 		Stats.log(`colonies.${this.name}.miningSites.avgUsage`, avgUsage);
 		Stats.log(`colonies.${this.name}.miningSites.energyInPerTick`, energyInPerTick);
 		Stats.log(`colonies.${this.name}.assets`, this.assets);
+		// Log defensive properties
+		Stats.log(`colonies.${this.name}.defcon`, this.defcon);
 		let avgBarrierHits = _.sum(this.room.barriers, barrier => barrier.hits) / this.room.barriers.length;
 		Stats.log(`colonies.${this.name}.avgBarrierHits`, avgBarrierHits);
 	}

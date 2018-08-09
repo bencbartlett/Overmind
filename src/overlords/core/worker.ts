@@ -40,7 +40,7 @@ export class WorkerOverlord extends Overlord {
 			4: 5e+4,
 			5: 1e+5,
 			6: 5e+5,
-			7: 2e+6,
+			7: 1e+6,
 			8: 3e+7,
 		},
 		criticalHits: 1000, 	// barriers below this health get priority treatment
