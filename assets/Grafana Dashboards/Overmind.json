@@ -2,7 +2,6 @@
   "annotations": {
     "list": [
       {
-        "$$hashKey": "object:1371",
         "builtIn": 1,
         "datasource": "-- Grafana --",
         "enable": true,
@@ -17,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 1,
   "id": 2135,
-  "iteration": 1528999192075,
+  "iteration": 1533748023765,
   "links": [],
   "panels": [
     {
@@ -55,7 +54,7 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 6,
         "x": 0,
         "y": 1
@@ -110,7 +109,7 @@
           "target": "screeps.$User.cpu.limit"
         }
       ],
-      "thresholds": "75,90",
+      "thresholds": "80,90",
       "title": "CPU Usage",
       "type": "singlestat",
       "valueFontSize": "100%",
@@ -122,6 +121,131 @@
         }
       ],
       "valueName": "current"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "ScreepsPlus-Graphite",
+      "editable": true,
+      "error": false,
+      "fill": 0,
+      "grid": {},
+      "gridPos": {
+        "h": 7,
+        "w": 18,
+        "x": 6,
+        "y": 1
+      },
+      "height": "",
+      "id": 41,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "sideWidth": null,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 2,
+      "links": [],
+      "nullPointMode": "connected",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "alias": "Bucket",
+          "linewidth": 1,
+          "yaxis": 2
+        },
+        {
+          "alias": "CPU",
+          "fill": 2,
+          "linewidth": 1
+        },
+        {
+          "alias": "Limit",
+          "color": "#bf1b00",
+          "linewidth": 1
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "hide": false,
+          "refCount": 0,
+          "refId": "B",
+          "target": "alias(screeps.$User.cpu.getUsed, 'CPU')"
+        },
+        {
+          "hide": false,
+          "refCount": 0,
+          "refId": "A",
+          "target": "alias(screeps.$User.cpu.bucket, 'Bucket')"
+        },
+        {
+          "hide": false,
+          "refCount": 0,
+          "refId": "C",
+          "target": "alias(movingAverage(screeps.$User.cpu.getUsed, 100), 'Average CPU')"
+        },
+        {
+          "refCount": 0,
+          "refId": "D",
+          "target": "alias(screeps.$User.cpu.limit, 'Limit')",
+          "textEditor": false
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "CPU/Bucket",
+      "tooltip": {
+        "msResolution": true,
+        "shared": true,
+        "sort": 0,
+        "value_type": "cumulative"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": 0,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": 0,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     },
     {
       "cacheTimeout": null,
@@ -144,10 +268,10 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 4,
+        "h": 5,
         "w": 3,
-        "x": 6,
-        "y": 1
+        "x": 0,
+        "y": 8
       },
       "id": 25,
       "interval": null,
@@ -204,126 +328,6 @@
       "valueName": "current"
     },
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
-      "editable": true,
-      "error": false,
-      "fill": 0,
-      "grid": {},
-      "gridPos": {
-        "h": 8,
-        "w": 15,
-        "x": 9,
-        "y": 1
-      },
-      "height": "",
-      "id": 41,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": false,
-        "sideWidth": null,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 2,
-      "links": [],
-      "nullPointMode": "connected",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "Bucket",
-          "yaxis": 2
-        },
-        {
-          "alias": "CPU",
-          "fill": 2,
-          "linewidth": 1
-        },
-        {
-          "alias": "Limit",
-          "color": "#bf1b00",
-          "linewidth": 1
-        }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "hide": false,
-          "refCount": 0,
-          "refId": "B",
-          "target": "alias(screeps.$User.cpu.getUsed, 'CPU')"
-        },
-        {
-          "hide": true,
-          "refCount": 0,
-          "refId": "A",
-          "target": "alias(screeps.$User.cpu.bucket, 'Bucket')"
-        },
-        {
-          "hide": false,
-          "refCount": 0,
-          "refId": "C",
-          "target": "alias(movingAverage(screeps.$User.cpu.getUsed, 100), 'Average CPU')"
-        },
-        {
-          "refCount": 0,
-          "refId": "D",
-          "target": "alias(screeps.$User.cpu.limit, 'Limit')",
-          "textEditor": false
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "CPU/Bucket",
-      "tooltip": {
-        "msResolution": true,
-        "shared": true,
-        "sort": 0,
-        "value_type": "cumulative"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": 0,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": 0,
-          "show": true
-        }
-      ]
-    },
-    {
       "cacheTimeout": null,
       "colorBackground": false,
       "colorValue": false,
@@ -333,6 +337,7 @@
         "rgba(245, 54, 54, 0.9)"
       ],
       "datasource": "ScreepsPlus-Graphite",
+      "decimals": 1,
       "editable": true,
       "error": false,
       "format": "decbytes",
@@ -344,10 +349,10 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 4,
+        "h": 5,
         "w": 3,
-        "x": 6,
-        "y": 5
+        "x": 3,
+        "y": 8
       },
       "id": 84,
       "interval": null,
@@ -395,7 +400,7 @@
       "thresholds": "1433600,1740800",
       "title": "Memory Usage",
       "type": "singlestat",
-      "valueFontSize": "100%",
+      "valueFontSize": "80%",
       "valueMaps": [
         {
           "op": "=",
@@ -406,12 +411,110 @@
       "valueName": "current"
     },
     {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fill": 0,
+      "gridPos": {
+        "h": 5,
+        "w": 18,
+        "x": 6,
+        "y": 8
+      },
+      "id": 115,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "hide": true,
+          "refCount": 0,
+          "refId": "A",
+          "target": "keepLastValue(screeps.$User.cpu.heapStatistics.total_heap_size, 500)",
+          "textEditor": false
+        },
+        {
+          "hide": true,
+          "refCount": 0,
+          "refId": "B",
+          "target": "keepLastValue(screeps.$User.cpu.heapStatistics.heap_size_limit, 500)"
+        },
+        {
+          "refCount": 0,
+          "refId": "C",
+          "target": "aliasByNode(exclude(keepLastValue(screeps.$User.cpu.heapStatistics.*, 500), 'does_zap_garbage'), 4)"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "IVM Heap Statistics",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transparent": false,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "decbytes",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 13
       },
       "id": 82,
       "panels": [],
@@ -441,10 +544,10 @@
         "thresholdMarkers": false
       },
       "gridPos": {
-        "h": 8,
-        "w": 6,
+        "h": 7,
+        "w": 5,
         "x": 0,
-        "y": 10
+        "y": 14
       },
       "height": "",
       "id": 59,
@@ -533,10 +636,10 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 4,
+        "h": 3,
         "w": 3,
-        "x": 6,
-        "y": 10
+        "x": 5,
+        "y": 14
       },
       "id": 92,
       "interval": null,
@@ -575,7 +678,6 @@
       "tableColumn": "",
       "targets": [
         {
-          "$$hashKey": "object:1555",
           "refId": "A",
           "target": "screeps.$User.leaderboard.rank"
         }
@@ -604,10 +706,10 @@
       "fill": 1,
       "grid": {},
       "gridPos": {
-        "h": 8,
-        "w": 15,
-        "x": 9,
-        "y": 10
+        "h": 7,
+        "w": 12,
+        "x": 8,
+        "y": 14
       },
       "id": 50,
       "legend": {
@@ -703,7 +805,55 @@
           "min": 0,
           "show": true
         }
-      ]
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "breakPoint": "50%",
+      "cacheTimeout": null,
+      "combine": {
+        "label": "Others",
+        "threshold": 0
+      },
+      "datasource": "ScreepsPlus-Graphite",
+      "decimals": null,
+      "fontSize": "70%",
+      "format": "short",
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 20,
+        "y": 14
+      },
+      "id": 63,
+      "interval": null,
+      "legend": {
+        "percentage": true,
+        "percentageDecimals": 1,
+        "show": true,
+        "values": true
+      },
+      "legendType": "On graph",
+      "links": [],
+      "maxDataPoints": 3,
+      "nullPointMode": "connected",
+      "pieType": "pie",
+      "strokeWidth": 1,
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(sortByTotal(scale(movingAverage(perSecond(keepLastValue(screeps.$User.colonies.$colonies.rcl.progress, 100)), 3600), 86400)), 3)",
+          "textEditor": false
+        }
+      ],
+      "title": "GCL by Colony",
+      "transparent": false,
+      "type": "grafana-piechart-panel",
+      "valueName": "current"
     },
     {
       "cacheTimeout": null,
@@ -729,8 +879,8 @@
       "gridPos": {
         "h": 4,
         "w": 3,
-        "x": 6,
-        "y": 14
+        "x": 5,
+        "y": 17
       },
       "id": 60,
       "interval": null,
@@ -817,7 +967,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 21
       },
       "id": 83,
       "panels": [],
@@ -826,48 +976,81 @@
       "type": "row"
     },
     {
-      "aliasColors": {},
-      "breakPoint": "50%",
-      "cacheTimeout": null,
-      "combine": {
-        "label": "Others",
-        "threshold": 0
-      },
-      "datasource": "ScreepsPlus-Graphite",
-      "decimals": null,
-      "fontSize": "70%",
-      "format": "short",
+      "columns": [
+        {
+          "text": "Current",
+          "value": "current"
+        }
+      ],
+      "datasource": null,
+      "fontSize": "100%",
       "gridPos": {
-        "h": 9,
-        "w": 6,
+        "h": 23,
+        "w": 3,
         "x": 0,
-        "y": 19
+        "y": 22
       },
-      "id": 63,
-      "interval": null,
-      "legend": {
-        "percentage": true,
-        "percentageDecimals": 1,
-        "show": true,
-        "values": true
-      },
-      "legendType": "On graph",
+      "id": 119,
       "links": [],
-      "maxDataPoints": 3,
-      "nullPointMode": "connected",
-      "pieType": "pie",
-      "strokeWidth": 1,
+      "pageSize": null,
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": 1,
+        "desc": true
+      },
+      "styles": [
+        {
+          "alias": "Time",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "Time",
+          "type": "date"
+        },
+        {
+          "alias": "Colony",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "Metric",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        },
+        {
+          "alias": "DEFCON",
+          "colorMode": "row",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 0,
+          "link": false,
+          "mappingType": 1,
+          "pattern": "Current",
+          "thresholds": [
+            "1",
+            "2"
+          ],
+          "type": "number",
+          "unit": "none"
+        }
+      ],
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(sortByTotal(scale(movingAverage(perSecond(keepLastValue(screeps.$User.colonies.$colonies.rcl.progress, 100)), 3600), 86400)), 3)",
-          "textEditor": false
+          "target": "aliasByNode(screeps.$User.colonies.*.defcon, 3)"
         }
       ],
-      "title": "GCL by Colony",
+      "title": "DEFCON Levels",
+      "transform": "timeseries_aggregations",
       "transparent": false,
-      "type": "grafana-piechart-panel",
-      "valueName": "current"
+      "type": "table"
     },
     {
       "aliasColors": {},
@@ -878,9 +1061,105 @@
       "fill": 1,
       "gridPos": {
         "h": 9,
-        "w": 18,
-        "x": 6,
-        "y": 19
+        "w": 9,
+        "x": 3,
+        "y": 22
+      },
+      "id": 111,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "hideEmpty": true,
+        "hideZero": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "hide": true,
+          "refCount": -1,
+          "refId": "A",
+          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5)",
+          "textEditor": true
+        },
+        {
+          "hide": false,
+          "refCount": 0,
+          "refId": "B",
+          "target": "exclude(aliasByNode(#A, 0), \"energy\")",
+          "targetFull": "exclude(aliasByNode(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5), 0), \"energy\")",
+          "textEditor": true
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Global Mineral Assets",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "ScreepsPlus-Graphite",
+      "fill": 1,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 22
       },
       "id": 61,
       "legend": {
@@ -949,7 +1228,11 @@
           "min": "0",
           "show": true
         }
-      ]
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     },
     {
       "aliasColors": {},
@@ -960,9 +1243,9 @@
       "fill": 0,
       "gridPos": {
         "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 28
+        "w": 9,
+        "x": 3,
+        "y": 31
       },
       "id": 64,
       "legend": {
@@ -1032,7 +1315,102 @@
           "min": "0",
           "show": false
         }
-      ]
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fill": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 12,
+        "y": 31
+      },
+      "id": 117,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "hide": true,
+          "refCount": 0,
+          "refId": "A",
+          "target": "aliasByNode(movingAverage(perSecond(keepLastValue(screeps.$User.colonies.*.avgBarrierHits, 100)), '30min'), 3)",
+          "textEditor": true
+        },
+        {
+          "refCount": 0,
+          "refId": "B",
+          "target": "aliasByNode(keepLastValue(screeps.$User.colonies.*.avgBarrierHits, 100), 3)",
+          "textEditor": true
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Average Barrier Hits",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     },
     {
       "aliasColors": {},
@@ -1043,9 +1421,9 @@
       "fill": 0,
       "gridPos": {
         "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 28
+        "w": 6,
+        "x": 18,
+        "y": 31
       },
       "id": 62,
       "legend": {
@@ -1076,7 +1454,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(keepLastValue(screeps.$User.colonies.$colonies.storage.energy), 3)",
+          "target": "aliasByNode(keepLastValue(screeps.$User.colonies.$colonies.storage.energy, 100), 3)",
           "textEditor": false
         }
       ],
@@ -1115,7 +1493,11 @@
           "min": "0",
           "show": false
         }
-      ]
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     },
     {
       "aliasColors": {},
@@ -1126,9 +1508,9 @@
       "fill": 0,
       "gridPos": {
         "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 35
+        "w": 9,
+        "x": 3,
+        "y": 38
       },
       "id": 106,
       "legend": {
@@ -1147,7 +1529,7 @@
       "lines": true,
       "linewidth": 1,
       "links": [],
-      "nullPointMode": "null",
+      "nullPointMode": "null as zero",
       "percentage": false,
       "pointradius": 5,
       "points": false,
@@ -1160,13 +1542,13 @@
         {
           "refCount": 0,
           "refId": "A",
-          "target": "aliasSub(aliasByNode(movingAverage(keepLastValue(screeps.$User.colonies.$colonies.miningSites.avgUsage), '30min'), 3), \"(.*)\", \"Usage - \\1\")",
+          "target": "aliasSub(aliasByNode(movingAverage(keepLastValue(screeps.$User.colonies.$colonies.miningSites.avgUsage, 100), '30min'), 3), \"(.*)\", \"Usage - \\1\")",
           "textEditor": true
         },
         {
           "refCount": 0,
           "refId": "B",
-          "target": "aliasSub(aliasByNode(keepLastValue(screeps.$User.colonies.$colonies.miningSites.avgDowntime), 3), \"(.*)\", \"Downtime - \\1\")",
+          "target": "aliasSub(aliasByNode(keepLastValue(screeps.$User.colonies.$colonies.miningSites.avgDowntime, 100), 3), \"(.*)\", \"Downtime - \\1\")",
           "textEditor": true
         }
       ],
@@ -1205,7 +1587,11 @@
           "min": "0",
           "show": false
         }
-      ]
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     },
     {
       "aliasColors": {},
@@ -1218,7 +1604,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 35
+        "y": 38
       },
       "id": 107,
       "legend": {
@@ -1250,7 +1636,7 @@
         {
           "refCount": 0,
           "refId": "A",
-          "target": "aliasByNode(movingAverage(keepLastValue(screeps.$User.colonies.$colonies.miningSites.energyInPerTick), '30min'), 3)",
+          "target": "aliasByNode(movingAverage(keepLastValue(screeps.$User.colonies.$colonies.miningSites.energyInPerTick, 500), '30min'), 3)",
           "textEditor": false
         }
       ],
@@ -1289,7 +1675,11 @@
           "min": "0",
           "show": false
         }
-      ]
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     },
     {
       "collapsed": false,
@@ -1297,7 +1687,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 42
+        "y": 45
       },
       "id": 88,
       "panels": [],
@@ -1323,10 +1713,10 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 8,
-        "w": 6,
+        "h": 7,
+        "w": 5,
         "x": 0,
-        "y": 43
+        "y": 46
       },
       "id": 98,
       "interval": null,
@@ -1395,10 +1785,10 @@
       "fontSize": "80%",
       "format": "short",
       "gridPos": {
-        "h": 8,
-        "w": 5,
-        "x": 6,
-        "y": 43
+        "h": 7,
+        "w": 4,
+        "x": 5,
+        "y": 46
       },
       "id": 102,
       "interval": null,
@@ -1432,10 +1822,10 @@
       "datasource": "ScreepsPlus-Graphite",
       "fill": 1,
       "gridPos": {
-        "h": 8,
-        "w": 13,
-        "x": 11,
-        "y": 43
+        "h": 7,
+        "w": 15,
+        "x": 9,
+        "y": 46
       },
       "id": 90,
       "legend": {
@@ -1501,7 +1891,11 @@
           "min": "0",
           "show": true
         }
-      ]
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     },
     {
       "cacheTimeout": null,
@@ -1522,10 +1916,10 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 8,
-        "w": 6,
+        "h": 7,
+        "w": 5,
         "x": 0,
-        "y": 51
+        "y": 53
       },
       "id": 94,
       "interval": null,
@@ -1610,10 +2004,10 @@
       "fontSize": "80%",
       "format": "short",
       "gridPos": {
-        "h": 8,
-        "w": 5,
-        "x": 6,
-        "y": 51
+        "h": 7,
+        "w": 4,
+        "x": 5,
+        "y": 53
       },
       "id": 100,
       "interval": null,
@@ -1648,10 +2042,10 @@
       "datasource": "ScreepsPlus-Graphite",
       "fill": 1,
       "gridPos": {
-        "h": 8,
-        "w": 13,
-        "x": 11,
-        "y": 51
+        "h": 7,
+        "w": 15,
+        "x": 9,
+        "y": 53
       },
       "id": 103,
       "legend": {
@@ -1716,7 +2110,358 @@
           "min": null,
           "show": true
         }
-      ]
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 60
+      },
+      "id": 109,
+      "panels": [],
+      "title": "Trade Network",
+      "type": "row"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": null,
+      "format": "short",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 61
+      },
+      "id": 121,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "refId": "A",
+          "target": "screeps.$User.persistent.trader.credits"
+        }
+      ],
+      "thresholds": "",
+      "title": "Credits",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "ScreepsPlus-Graphite",
+      "fill": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 11,
+        "x": 3,
+        "y": 61
+      },
+      "id": 110,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "refCount": 0,
+          "refId": "B",
+          "target": "aliasByNode(scaleToSeconds(perSecond(movingAverage(keepLastValue(screeps.$User.persistent.trader.bought.*.amount), 100)), 86000),5)",
+          "textEditor": true
+        },
+        {
+          "refCount": 0,
+          "refId": "A",
+          "target": "aliasByNode(scaleToSeconds(perSecond(movingAverage(keepLastValue(screeps.$User.persistent.trader.sold.*.amount), 100)), -86000),5)",
+          "textEditor": true
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Resource Transactions per 24h (Amounts)",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "ScreepsPlus-Graphite",
+      "fill": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 10,
+        "x": 14,
+        "y": 61
+      },
+      "id": 113,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "refCount": 0,
+          "refId": "B",
+          "target": "aliasByNode(scaleToSeconds(perSecond(movingAverage(keepLastValue(screeps.$User.persistent.trader.bought.*.credits), 100)), 86000),5)",
+          "textEditor": true
+        },
+        {
+          "refCount": 0,
+          "refId": "A",
+          "target": "aliasByNode(scaleToSeconds(perSecond(movingAverage(keepLastValue(screeps.$User.persistent.trader.sold.*.credits), 100)), -86000),5)",
+          "textEditor": true
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Resource Transactions per 24h (Credits)",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": null,
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 65
+      },
+      "id": 123,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "refId": "A",
+          "target": "scaleToSeconds(perSecond(keepLastValue(screeps.$User.persistent.trader.credits, 500)), 86400)"
+        }
+      ],
+      "thresholds": "",
+      "title": "ΔCredits / 24h",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
     }
   ],
   "refresh": "15s",
@@ -1815,5 +2560,5 @@
   "timezone": "browser",
   "title": "Overmind",
   "uid": "000002135",
-  "version": 58
+  "version": 67
 }
