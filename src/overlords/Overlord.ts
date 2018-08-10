@@ -60,6 +60,10 @@ export interface OverlordInitializer {
 	memory: any;
 }
 
+export function isColony(initializer: OverlordInitializer | Colony): initializer is Colony {
+	return (<Colony>initializer).overseer != undefined;
+}
+
 export interface CreepRequestOptions {
 	prespawn?: number;
 	priority?: number;
@@ -82,14 +86,14 @@ export abstract class Overlord {
 	// memory: OverlordMemory;
 	boosts: { [roleName: string]: _ResourceConstantSansEnergy[] | undefined };
 
-	constructor(initializer: OverlordInitializer, name: string, priority: number) {
+	constructor(initializer: OverlordInitializer | Colony, name: string, priority: number) {
 		// this.initMemory(initializer);
 		// this.name = name;
 		this.room = initializer.room;
 		this.priority = priority;
 		this.ref = initializer.ref + '>' + name;
 		this.pos = initializer.pos;
-		this.colony = initializer.colony;
+		this.colony = isColony(initializer) ? initializer : initializer.colony;
 		this.spawnGroup = undefined;
 		this.recalculateCreeps();
 		this.creepUsageReport = _.mapValues(this._creeps, creep => undefined);
@@ -264,25 +268,45 @@ export abstract class Overlord {
 		this.creepReport(setup.role, creepQuantity, quantity);
 	}
 
-	shouldBoost(creep: Zerg): boolean {
+	// TODO: finish this; currently requires host colony to have evolution chamber
+	canBoostSetup(setup: CreepSetup): boolean {
+		if (this.colony.evolutionChamber && this.boosts[setup.role] && this.boosts[setup.role]!.length > 0) {
+			let energyCapacityAvailable: number;
+			if (this.spawnGroup) {
+				energyCapacityAvailable = this.spawnGroup.energyCapacityAvailable;
+			} else if (this.colony.spawnGroup) {
+				energyCapacityAvailable = this.colony.spawnGroup.energyCapacityAvailable;
+			} else if (this.colony.hatchery) {
+				energyCapacityAvailable = this.colony.hatchery.room.energyCapacityAvailable;
+			} else {
+				return false;
+			}
+			let body = _.map(setup.generateBody(energyCapacityAvailable), part => ({type: part, hits: 100}));
+			return _.all(this.boosts[setup.role]!,
+						 boost => this.colony.evolutionChamber!.canBoost(body, boost));
+		}
+		return false;
+	}
+
+	shouldBoost(creep: Zerg, onlyBoostInSpawn = false): boolean {
 		// Can't boost if there's no evolution chamber or TTL is less than 90%
 		if (!this.colony.evolutionChamber ||
 			(creep.ticksToLive && creep.ticksToLive < MIN_LIFETIME_FOR_BOOST * creep.lifetime)) {
 			return false;
 		}
-		// // If you're in a bunker layout at level 8 with max labs, only boost while spawning
-		// if (this.colony.bunker && this.colony.level == 8 && this.colony.labs.length == 10) {
-		// 	if (!creep.spawning) {
-		// 		return false;
-		// 	}
-		// }
+		// If you're in a bunker layout at level 8 with max labs, only boost while spawning
+		if (onlyBoostInSpawn && this.colony.bunker && this.colony.level == 8 && this.colony.labs.length == 10) {
+			if (!creep.spawning) {
+				return false;
+			}
+		}
 		// Otherwise just boost if you need it and can get the resources
 		if (this.boosts[creep.roleName]) {
 			let boosts = _.filter(this.boosts[creep.roleName]!,
 								  boost => (creep.boostCounts[boost] || 0)
 										   < creep.getActiveBodyparts(boostParts[boost]));
 			if (boosts.length > 0) {
-				return _.all(boosts, boost => this.colony.evolutionChamber!.canBoost(creep, boost));
+				return _.all(boosts, boost => this.colony.evolutionChamber!.canBoost(creep.body, boost));
 			}
 		}
 		return false;
@@ -303,7 +327,7 @@ export abstract class Overlord {
 	}
 
 	/* Request a boost from the evolution chamber; should be called during init() */
-	protected requestBoostsForCreep(creep: Zerg): void {
+	private requestBoostsForCreep(creep: Zerg): void {
 		if (this.colony.evolutionChamber && this.boosts[creep.roleName]) {
 			let boost = _.find(this.boosts[creep.roleName]!,
 							   boost => (creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost]));
@@ -325,7 +349,7 @@ export abstract class Overlord {
 				let boostLab = this.getBoostLabFor(creep);
 				if (boostLab) {
 					if (this.colony.evolutionChamber.queuePosition(creep, boostLab) == 0) {
-						log.info(`${this.colony.room.print}: boosting ${creep.name}@${creep.pos.print} with ${boost}!`);
+						log.info(`${this.colony.room.print}: boosting ${creep.print} with ${boost}!`);
 						creep.task = Tasks.getBoosted(boostLab, boost);
 					} else {
 						// Approach the lab but don't attempt to get boosted
@@ -352,13 +376,14 @@ export abstract class Overlord {
 	abstract init(): void;
 
 	// Standard sequence of actions for running task-based creeps
-	standardRun(roleCreeps: Zerg[], taskHandler: (creep: Zerg) => void, fleeCallback?: (creep: Zerg) => boolean) {
+	autoRun(roleCreeps: Zerg[], taskHandler: (creep: Zerg) => void, fleeCallback?: (creep: Zerg) => boolean) {
 		for (let creep of roleCreeps) {
-			if (fleeCallback) {
+			if (!!fleeCallback) {
 				if (fleeCallback(creep)) continue;
 			}
 			if (creep.isIdle) {
-				if (creep.needsBoosts) {
+				if (this.shouldBoost(creep)) {
+					this.requestBoostsForCreep(creep);
 					this.handleBoosting(creep);
 				} else {
 					taskHandler(creep);
@@ -369,12 +394,13 @@ export abstract class Overlord {
 	}
 
 	// Standard sequence of actions for running combat creeps
-	standardRunCombat(roleCreeps: CombatZerg[], creepHandler: (creep: CombatZerg) => void) {
+	autoRunCombat(roleCreeps: CombatZerg[], creepHandler: (creep: CombatZerg) => void) {
 		for (let creep of roleCreeps) {
 			if (creep.hasValidTask) {
 				creep.run();
 			} else {
-				if (creep.needsBoosts) {
+				if (this.shouldBoost(creep)) {
+					this.requestBoostsForCreep(creep);
 					this.handleBoosting(creep);
 				} else {
 					creepHandler(creep);

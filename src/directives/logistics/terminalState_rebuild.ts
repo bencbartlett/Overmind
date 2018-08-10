@@ -34,6 +34,10 @@ export class DirectiveTerminalRebuildState extends Directive {
 		}
 	}
 
+	spawnMoarOverlords() {
+
+	}
+
 	init() {
 
 	}

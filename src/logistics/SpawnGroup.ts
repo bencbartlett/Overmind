@@ -53,6 +53,7 @@ export class SpawnGroup {
 	memory: SpawnGroupMemory;
 	requests: SpawnRequest[];
 	hatcheries: Hatchery[];
+	energyCapacityAvailable: number;
 	room: Room | undefined;
 	roomName: string;
 	ref: string;
@@ -66,6 +67,9 @@ export class SpawnGroup {
 		this.room = initializer.room;
 		this.memory = Mem.wrap(Memory.rooms[this.roomName], 'spawnGroup', SpawnGroupMemoryDefaults);
 		this.ref = initializer.ref + ':SG';
+		// Calculate max energy capacity available to spawn group
+		let colonyRooms = _.compact(_.map(this.memory.colonies, name => Game.rooms[name]));
+		this.energyCapacityAvailable = _.max(_.map(colonyRooms, room => room.energyCapacityAvailable));
 		this.stats = {
 			avgDistance: (_.sum(this.memory.distances) / _.keys(this.memory.distances).length) || 100,
 		};
@@ -113,11 +117,10 @@ export class SpawnGroup {
 		}
 		let colonies = _.compact(_.map(this.memory.colonies, name => Overmind.colonies[name])) as Colony[];
 		this.hatcheries = _.compact(_.map(colonies, colony => colony.hatchery)) as Hatchery[];
-		let maxEnergyCapacity = _.max(_.map(this.hatcheries, hatchery => hatchery.room.energyCapacityAvailable));
 		let distanceTo = (hatchery: Hatchery) => this.memory.distances[hatchery.pos.roomName] + 25;
 		// Enqueue all requests to the hatchery with least expected wait time that can spawn full-size creep
 		for (let request of this.requests) {
-			let cost = bodyCost(request.setup.generateBody(maxEnergyCapacity));
+			let cost = bodyCost(request.setup.generateBody(this.energyCapacityAvailable));
 			let hatcheries = _.filter(this.hatcheries, hatchery => hatchery.room.energyCapacityAvailable >= cost);
 			let bestHatchery = minBy(hatcheries, hatchery => hatchery.nextAvailability + distanceTo(hatchery));
 			if (bestHatchery) {

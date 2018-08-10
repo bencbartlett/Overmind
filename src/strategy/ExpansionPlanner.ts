@@ -1,13 +1,21 @@
 import {Colony} from '../Colony';
-import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_CONTROLLER, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
+import {
+	Cartographer,
+	ROOMTYPE_ALLEY,
+	ROOMTYPE_CONTROLLER,
+	ROOMTYPE_CORE,
+	ROOMTYPE_SOURCEKEEPER
+} from '../utilities/Cartographer';
 import {BasePlanner} from '../roomPlanner/BasePlanner';
 import {log} from '../console/log';
 import {Pathing} from '../movement/Pathing';
 import {derefCoords} from '../utilities/utils';
+import {profile} from '../profiler/decorator';
 
 export const EXPANSION_EVALUATION_FREQ = 500;
 export const MIN_EXPANSION_DISTANCE = 2;
 
+@profile
 export class ExpansionPlanner {
 
 	static refreshExpansionData(colony: Colony): void {
@@ -85,8 +93,9 @@ export class ExpansionPlanner {
 			let roomType = Cartographer.roomType(roomName);
 			let energyPerSource: number = SOURCE_ENERGY_CAPACITY;
 			if (roomType == ROOMTYPE_SOURCEKEEPER) {
-				continue; // TODO: add SK harvesting
-				// energyPerSource = SOURCE_ENERGY_KEEPER_CAPACITY;
+				energyPerSource = 0.6 * SOURCE_ENERGY_KEEPER_CAPACITY; // don't favor SK rooms too heavily -- more CPU
+			} else if (roomType == ROOMTYPE_CORE) {
+				energyPerSource = SOURCE_ENERGY_KEEPER_CAPACITY;
 			}
 
 			let roomScore = 0;

@@ -66,7 +66,7 @@ export class TransportOverlord extends Overlord {
 
 		// Add transport power needed to move to upgradeSite
 		if (this.colony.upgradeSite.battery) {
-			transportPower += this.colony.upgradeSite.upgradePowerNeeded * scaling *
+			transportPower += UPGRADE_CONTROLLER_POWER * this.colony.upgradeSite.upgradePowerNeeded * scaling *
 							  Pathing.distance(this.colony.pos, this.colony.upgradeSite.battery.pos);
 		}
 
@@ -212,18 +212,19 @@ export class TransportOverlord extends Overlord {
 	}
 
 	run() {
-		for (let transporter of this.transporters) {
-			if (transporter.isIdle) {
-				// if (transporter.carryCapacity >= LogisticsNetwork.settings.carryThreshold) {
-				// 	this.handleBigTransporter(transporter);
-				// } else {
-				// 	this.handleSmolTransporter(transporter);
-				// }
-				this.handleSmolTransporter(transporter);
-			}
-			transporter.run();
-			// this.pickupDroppedResources(transporter);
-		}
-		// this.parkCreepsIfIdle(this.transporters);
+		// for (let transporter of this.transporters) {
+		// 	if (transporter.isIdle) {
+		// 		// if (transporter.carryCapacity >= LogisticsNetwork.settings.carryThreshold) {
+		// 		// 	this.handleBigTransporter(transporter);
+		// 		// } else {
+		// 		// 	this.handleSmolTransporter(transporter);
+		// 		// }
+		// 		this.handleSmolTransporter(transporter);
+		// 	}
+		// 	transporter.run();
+		// 	// this.pickupDroppedResources(transporter);
+		// }
+		// // this.parkCreepsIfIdle(this.transporters);
+		this.autoRun(this.transporters, transporter => this.handleSmolTransporter(transporter));
 	}
 }

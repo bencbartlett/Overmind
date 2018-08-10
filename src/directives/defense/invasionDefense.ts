@@ -26,6 +26,9 @@ export class DirectiveInvasionDefense extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag, DirectiveInvasionDefense.requiredRCL);
+	}
+
+	spawnMoarOverlords() {
 		if (!this.room) {
 			return;
 		}

@@ -346,15 +346,7 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	run() {
-		for (let worker of this.workers) {
-			if (worker.flee()) {
-				worker.task = null; // invalidate task
-				continue;
-			}
-			if (worker.isIdle) {
-				this.handleWorker(worker);
-			}
-			worker.run();
-		}
+		this.autoRun(this.workers, worker => this.handleWorker(worker),
+					 worker => worker.flee(worker.room.fleeDefaults, {invalidateTask: true}));
 	}
 }

@@ -14,6 +14,10 @@ export class DirectiveRPBunker extends Directive {
 		super(flag);
 	}
 
+	spawnMoarOverlords() {
+
+	}
+
 	init(): void {
 		this.colony.roomPlanner.addComponent('bunker', this.pos, this.memory.rotation);
 	}

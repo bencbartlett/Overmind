@@ -29,6 +29,9 @@ export abstract class HiveCluster {
 	// Logic to refresh the state of the hive cluster between ticks
 	// abstract refresh(): void;
 
+	// Instantiate overlord(s) for the hiveCluster
+	abstract spawnMoarOverlords(): void;
+
 	// Pre-run logic, such as registering energy requests
 	abstract init(): void;
 

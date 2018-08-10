@@ -24,6 +24,9 @@ export class DirectiveHaul extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag);
+	}
+
+	spawnMoarOverlords() {
 		this.overlords.haul = new HaulingOverlord(this);
 	}
 

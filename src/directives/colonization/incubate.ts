@@ -23,7 +23,11 @@ export class DirectiveIncubate extends Directive {
 		if (this.incubatee) {
 			this.incubatee.isIncubating = true;
 			this.incubatee.spawnGroup = new SpawnGroup(this.incubatee);
-		} else {
+		}
+	}
+
+	spawnMoarOverlords() {
+		if (!this.incubatee) { // colony isn't claimed yet
 			this.overlords.claim = new ClaimingOverlord(this);
 		}
 	}

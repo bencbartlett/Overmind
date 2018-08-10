@@ -45,7 +45,7 @@ export class PioneerOverlord extends Overlord {
 	}
 
 	run() {
-		this.standardRun(this.pioneers, pioneer => this.handlePioneer(pioneer));
+		this.autoRun(this.pioneers, pioneer => this.handlePioneer(pioneer));
 	}
 }
 

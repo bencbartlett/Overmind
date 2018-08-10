@@ -12,6 +12,10 @@ export class DirectiveRPHatchery extends Directive {
 		super(flag);
 	}
 
+	spawnMoarOverlords() {
+
+	}
+
 	init(): void {
 		this.colony.roomPlanner.addComponent('hatchery', this.pos, this.memory.rotation);
 	}

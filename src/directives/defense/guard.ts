@@ -22,6 +22,10 @@ export class DirectiveGuard extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag);
+		this.relocateFrequency = 10; // Relocate the flag to follow enemy movement every n ticks
+	}
+
+	spawnMoarOverlords() {
 		if (this.colony.level >= GuardOverlord.requiredRCL) {
 			if (this.memory.enhanced || this.name.includes('enhanced')) {
 				this.overlords.guardPair = new GuardPairOverlord(this);
@@ -31,8 +35,6 @@ export class DirectiveGuard extends Directive {
 		} else {
 			this.overlords.swarmGuard = new GuardSwarmOverlord(this);
 		}
-
-		this.relocateFrequency = 10; // Relocate the flag to follow enemy movement every n ticks
 	}
 
 	init(): void {

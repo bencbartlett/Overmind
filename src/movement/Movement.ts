@@ -14,6 +14,7 @@ import {insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {HydraliskSetup} from '../overlords/defense/rangedDefense';
 import {ZerglingSetup} from '../overlords/defense/meleeDefense';
 import {isZerg} from '../declarations/typeGuards';
+import {rightArrow} from '../utilities/stringConstants';
 
 export const NO_ACTION = -20;
 export const ERR_CANNOT_PUSH_CREEP = -30;
@@ -203,13 +204,14 @@ export class Movement {
 			let cpuUsed = Game.cpu.getUsed() - cpu;
 			state.cpu = _.round(cpuUsed + state.cpu);
 			if (Game.time % 10 == 0 && state.cpu > REPORT_CPU_THRESHOLD) {
-				log.alert(`Movement: heavy cpu use: ${creep.name}, cpu: ${state.cpu} origin: ${
-							  creep.pos.print}, dest: ${destination.print}`);
+				log.alert(`Movement: heavy cpu use: ${creep.name}, cpu: ${state.cpu}. ` +
+						  `(${creep.pos.print} ${rightArrow} ${destination.print})`);
 			}
 			let color = 'orange';
 			if (ret.incomplete) {
 				// uncommenting this is a great way to diagnose creep behavior issues
-				log.debug(`Movement: incomplete path for ${creep.name} @ ${creep.pos.print}`);
+				log.debug(`Movement: incomplete path for ${creep.print}! ` +
+						  `(${creep.pos.print} ${rightArrow} ${destination.print})`);
 				color = 'red';
 			}
 			this.circle(creep.pos, color);
@@ -693,7 +695,8 @@ export class Movement {
 					return NO_ACTION;
 				}
 			} else {
-				return undefined;
+				// you're safe
+				return;
 			}
 
 		} else { // Still need to run away
@@ -705,16 +708,6 @@ export class Movement {
 			let moveData = creep.memory._go as MoveData;
 
 			moveData.fleeWait = 2;
-
-			// Drop energy if needed
-			if (dropEnergy && creep.carry.energy > 0) {
-				let nearbyContainers = creep.pos.findInRange(creep.room.storageUnits, 1);
-				if (nearbyContainers.length > 0) {
-					creep.transfer(_.first(nearbyContainers), RESOURCE_ENERGY);
-				} else {
-					creep.drop(RESOURCE_ENERGY);
-				}
-			}
 
 			// Invalidate path if needed
 			if (moveData.path) {

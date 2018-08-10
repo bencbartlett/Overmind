@@ -14,6 +14,10 @@ export class DirectiveDismantle extends Directive {
 		super(flag);
 	}
 
+	spawnMoarOverlords() {
+
+	}
+
 	getTarget(): Structure | undefined {
 		if (!this.pos.isVisible) {
 			return;

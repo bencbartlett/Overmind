@@ -24,6 +24,9 @@ export class DirectiveSiege extends Directive {
 	constructor(flag: Flag) {
 		super(flag);
 		this.recoveryFlag = Game.flags[this.name + ':healPoint'];
+	}
+
+	spawnMoarOverlords() {
 		this.overlords.siege = new SiegeOverlord(this);
 	}
 

@@ -14,6 +14,10 @@ export class DirectiveTargetSiege extends Directive {
 		super(flag);
 	}
 
+	spawnMoarOverlords() {
+
+	}
+
 	getTarget(): Structure | undefined {
 		let targetedStructures = this.pos.lookFor(LOOK_STRUCTURES) as Structure[];
 		for (let structure of targetedStructures) {

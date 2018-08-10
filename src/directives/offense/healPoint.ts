@@ -12,6 +12,9 @@ export class DirectiveHealPoint extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag);
+	}
+
+	spawnMoarOverlords() {
 		this.overlords.healer = new HealPointOverlord(this);
 	}
 

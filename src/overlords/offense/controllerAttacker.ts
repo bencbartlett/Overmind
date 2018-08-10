@@ -60,7 +60,7 @@ export class ControllerAttackerOverlord extends Overlord {
 			if (attackPos) {
 				controllerAttacker.goTo(attackPos);
 			} else {
-				log.debug(`No attack position for ${controllerAttacker.name}@${controllerAttacker.pos.print}!`);
+				log.debug(`No attack position for ${controllerAttacker.print}!`);
 			}
 		}
 		if (this.room && this.room.controller && !this.room.controller.upgradeBlocked) {

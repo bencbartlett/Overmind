@@ -56,25 +56,6 @@ export class QueenOverlord extends Overlord {
 		} else if (this.hatchery.battery && !this.hatchery.battery.isEmpty) {
 			queen.task = Tasks.withdraw(this.hatchery.battery);
 		} else {
-			// let rechargeObjects = _.compact([...this.colony.room.storageUnits,
-			// 								 ...(this.colony.room.drops[RESOURCE_ENERGY] || []),
-			// 								 ..._.map(this.colony.miningSites, site => site.output!),
-			// 								 ...this.colony.tombstones]) as rechargeObjectType[];
-			// rechargeObjects = _.filter(rechargeObjects, obj => isResource(obj) ? obj.amount > 0 : obj.energy > 0);
-			// let target = maxBy(rechargeObjects, function (obj) {
-			// 	let amount = isResource(obj) ? obj.amount : obj.energy;
-			// 	amount = minMax(amount, 0, queen.carryCapacity);
-			// 	return amount / (queen.pos.getMultiRoomRangeTo(obj.pos) + 1);
-			// });
-			// if (target) {
-			// 	if (target instanceof Resource) {
-			// 		queen.task = Tasks.pickup(target);
-			// 	} else {
-			// 		queen.task = Tasks.withdraw(target);
-			// 	}
-			// } else {
-			// 	log.warning(`No valid withdraw target for queen at ${queen.pos.print}!`);
-			// }
 			queen.task = Tasks.recharge();
 		}
 	}
@@ -144,12 +125,5 @@ export class QueenOverlord extends Overlord {
 				}
 			}
 		}
-		// Delete extraneous queens in the case there are multiple
-		// if (this.queens.length > 1) {
-		// 	let queenToSuicide = _.first(_.sortBy(this.queens, queen => queen.ticksToLive));
-		// 	if (queenToSuicide) {
-		// 		queenToSuicide.suicide();
-		// 	}
-		// }
 	}
 }

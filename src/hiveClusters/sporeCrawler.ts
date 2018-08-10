@@ -22,6 +22,10 @@ export class SporeCrawler extends HiveCluster {
 		this.tower = tower;
 	}
 
+	spawnMoarOverlords() {
+
+	}
+
 	get memory(): undefined {
 		return undefined;
 	}

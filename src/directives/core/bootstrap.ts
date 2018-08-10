@@ -31,6 +31,9 @@ export class DirectiveBootstrap extends Directive {
 							 this.colony.commandCenter.overlord != undefined &&
 							 this.colony.getCreepsByRole(ManagerSetup.role).length == 0);
 		this.needsQueen = (this.colony.getCreepsByRole(QueenSetup.role).length == 0);
+	}
+
+	spawnMoarOverlords() {
 		this.overlords.bootstrap = new BootstrappingOverlord(this);
 	}
 

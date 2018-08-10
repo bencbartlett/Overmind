@@ -64,6 +64,11 @@ interface ParkingOptions {
 	offroad: boolean;
 }
 
+interface FleeOptions {
+	dropEnergy?: boolean;
+	invalidateTask?: boolean;
+}
+
 @profile
 export class Zerg {
 	creep: Creep; 						// The creep that this wrapper class will control
@@ -121,6 +126,22 @@ export class Zerg {
 		if (this.ticksToLive == this.lifetime - 1 && !notifyWhenAttacked) {
 			this.notifyWhenAttacked(notifyWhenAttacked);
 		}
+	}
+
+	get ticksUntilSpawned(): number | undefined {
+		if (this.spawning) {
+			let spawner = this.pos.lookForStructure(STRUCTURE_SPAWN) as StructureSpawn;
+			if (spawner && spawner.spawning) {
+				return spawner.spawning.remainingTime;
+			} else {
+				// Shouldn't ever get here
+				console.log(`Error determining ticks to spawn for ${this.name} @ ${this.pos.print}!`);
+			}
+		}
+	}
+
+	get print(): string {
+		return '<a href="#!/room/' + Game.shard.name + '/' + this.pos.roomName + '">[' + this.name + ']</a>';
 	}
 
 	// Wrapped creep methods ===========================================================================================
@@ -482,12 +503,29 @@ export class Zerg {
 	}
 
 	/* Flee from hostiles in the room, while not repathing every tick */
-	flee(avoidGoals: (RoomPosition | HasPos)[]    = this.room.fleeDefaults,
-		 dropEnergy = false, options: MoveOptions = {}): boolean {
+	flee(avoidGoals: (RoomPosition | HasPos)[] = this.room.fleeDefaults,
+		 fleeOptions: FleeOptions              = {},
+		 moveOptions: MoveOptions              = {}): boolean {
 		if (this.room.controller && this.room.controller.my && this.room.controller.safeMode) {
 			return false;
 		} else {
-			return Movement.flee(this, avoidGoals, dropEnergy, options) != undefined;
+			let fleeing = Movement.flee(this, avoidGoals, fleeOptions.dropEnergy, moveOptions) != undefined;
+			if (fleeing) {
+				// Drop energy if needed
+				if (fleeOptions.dropEnergy && this.carry.energy > 0) {
+					let nearbyContainers = this.pos.findInRange(this.room.storageUnits, 1);
+					if (nearbyContainers.length > 0) {
+						this.transfer(_.first(nearbyContainers), RESOURCE_ENERGY);
+					} else {
+						this.drop(RESOURCE_ENERGY);
+					}
+				}
+				// Invalidate task
+				if (fleeOptions.invalidateTask) {
+					this.task = null;
+				}
+			}
+			return fleeing;
 		}
 	}
 

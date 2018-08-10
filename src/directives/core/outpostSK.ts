@@ -30,6 +30,9 @@ export class DirectiveSKOutpost extends Directive {
 			let mineralPos = Memory.rooms[this.pos.roomName] ? Memory.rooms[this.pos.roomName].mnrl : undefined;
 			if (mineralPos) this.colony.destinations.push(derefCoords(mineralPos.c, this.pos.roomName));
 		}
+	}
+
+	spawnMoarOverlords() {
 		this.overlords.sourceReaper = new SourceReaperOverlord(this);
 	}
 

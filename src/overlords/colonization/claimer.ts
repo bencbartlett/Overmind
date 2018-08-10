@@ -45,11 +45,6 @@ export class ClaimingOverlord extends Overlord {
 	}
 
 	run() {
-		for (let claimer of this.claimers) {
-			if (claimer.isIdle) {
-				this.handleClaimer(claimer);
-			}
-			claimer.run();
-		}
+		this.autoRun(this.claimers, claimer => this.handleClaimer(claimer));
 	}
 }

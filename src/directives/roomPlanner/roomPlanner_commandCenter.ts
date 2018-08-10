@@ -12,6 +12,10 @@ export class DirectiveRPCommandCenter extends Directive {
 		super(flag);
 	}
 
+	spawnMoarOverlords() {
+
+	}
+
 	init(): void {
 		this.colony.roomPlanner.addComponent('commandCenter', this.pos, this.memory.rotation);
 	}

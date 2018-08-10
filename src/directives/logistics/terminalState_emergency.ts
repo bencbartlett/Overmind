@@ -44,6 +44,10 @@ export class DirectiveTerminalEmergencyState extends Directive {
 		}
 	}
 
+	spawnMoarOverlords() {
+
+	}
+
 	init() {
 
 	}

@@ -85,7 +85,7 @@ export class Hatchery extends HiveCluster {
 	availableSpawns: StructureSpawn[]; 						// Spawns that are available to make stuff right now
 	extensions: StructureExtension[]; 						// List of extensions in the hatchery
 	link: StructureLink | undefined; 						// The input link
-	towers: StructureTower[]; 							// All towers that aren't in the command center
+	towers: StructureTower[]; 								// All towers that aren't in the command center
 	battery: StructureContainer | undefined;				// The container to provide an energy buffer
 	transportRequests: TransportRequestGroup;				// Box for energy requests
 	overlord: QueenOverlord | BunkerQueenOverlord;			// Hatchery overlord if past larva stage
@@ -130,13 +130,16 @@ export class Hatchery extends HiveCluster {
 			suppressSpawning       : false,
 		};
 		this.transportRequests = colony.transportRequests; // hatchery always uses colony transport group
+		this.memory.stats = this.getStats();
+	}
+
+	spawnMoarOverlords() {
 		if (this.colony.layout == 'bunker' && (this.colony.storage || this.colony.terminal)
 			&& this.colony.assets[RESOURCE_ENERGY] > 50000) {
 			this.overlord = new BunkerQueenOverlord(this); // use bunker queen if has storage and enough energy
 		} else {
 			this.overlord = new QueenOverlord(this);
 		}
-		this.memory.stats = this.getStats();
 	}
 
 	// Idle position for queen
@@ -180,8 +183,8 @@ export class Hatchery extends HiveCluster {
 		let refillSpawns = _.filter(this.spawns, spawn => spawn.energy < spawn.energyCapacity);
 		let refillExtensions = _.filter(this.extensions, extension => extension.energy < extension.energyCapacity);
 		let refillTowers = _.filter(this.towers, tower => tower.energy < this.settings.refillTowersBelow);
-		_.forEach(refillSpawns, spawn => this.transportRequests.requestInput(spawn, Priority.NormalHigh));
-		_.forEach(refillExtensions, extension => this.transportRequests.requestInput(extension, Priority.NormalHigh));
+		_.forEach(refillSpawns, spawn => this.transportRequests.requestInput(spawn, Priority.NormalLow));
+		_.forEach(refillExtensions, extension => this.transportRequests.requestInput(extension, Priority.NormalLow));
 		// _.forEach(refillTowers, tower =>
 		// 	this.transportRequests.requestInput(tower, tower.energy < this.settings.refillTowersBelow ?
 		// 											   Priority.Low : Priority.Low)); // TODO: made change here

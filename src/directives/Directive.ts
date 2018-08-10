@@ -277,11 +277,13 @@ export abstract class Directive {
 		return _.compact(_.map(flags, flag => Game.directives[flag.name]));
 	}
 
+	abstract spawnMoarOverlords(): void;
+
 	/* Initialization logic goes here, called in overseer.init() */
-	abstract init(): void
+	abstract init(): void;
 
 	/* Runtime logic goes here, called in overseer.run() */
-	abstract run(): void
+	abstract run(): void;
 
 	// Overwrite this in child classes to display relevant information
 	visuals(): void {

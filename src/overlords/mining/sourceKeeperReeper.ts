@@ -180,8 +180,8 @@ export class SourceReaperOverlord extends Overlord {
 	}
 
 	run() {
-		this.standardRunCombat(this.reapers, reaper => this.handleReaper(reaper));
-		this.standardRunCombat(this.defenders, defender => this.handleDefender(defender));
+		this.autoRunCombat(this.reapers, reaper => this.handleReaper(reaper));
+		this.autoRunCombat(this.defenders, defender => this.handleDefender(defender));
 	}
 
 	visuals() {

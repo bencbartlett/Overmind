@@ -18,6 +18,10 @@ export class DirectiveNukeResponse extends Directive {
 		this.nuke = this.pos.lookFor(LOOK_NUKES)[0]; // TODO: needs to handle multiple nukes on same pos
 	}
 
+	spawnMoarOverlords() {
+
+	}
+
 	init(): void {
 
 	}

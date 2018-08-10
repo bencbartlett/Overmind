@@ -26,7 +26,6 @@ export class TaskGetBoosted extends Task {
 		// Settings
 		this.data.resourceType = boostType;
 		this.data.amount = partCount;
-
 	}
 
 	isValidTask() {
@@ -48,7 +47,7 @@ export class TaskGetBoosted extends Task {
 			this.target.mineralAmount >= LAB_BOOST_MINERAL * partCount &&
 			this.target.energy >= LAB_BOOST_ENERGY * partCount) {
 			let result = this.target.boostCreep(deref(this._creep.name) as Creep, this.data.amount);
-			log.info(`Lab@${this.target.pos.print}: boosting creep ${this.creep.name} with ${this.target.mineralType}!`
+			log.info(`Lab@${this.target.pos.print}: boosting creep ${this.creep.print} with ${this.target.mineralType}!`
 					 + ` Response: ${result}`);
 			return result;
 		} else {

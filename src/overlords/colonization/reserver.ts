@@ -53,11 +53,6 @@ export class ReservingOverlord extends Overlord {
 	}
 
 	run() {
-		for (let reserver of this.reservers) {
-			if (reserver.isIdle) {
-				this.handleReserver(reserver);
-			}
-			reserver.run();
-		}
+		this.autoRun(this.reservers, reserver => this.handleReserver(reserver));
 	}
 }

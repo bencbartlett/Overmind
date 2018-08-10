@@ -42,17 +42,15 @@ export class ExtractionSite extends HiveCluster {
 			filter: (s: ConstructionSite) => s.structureType == STRUCTURE_CONTAINER
 		}) as ConstructionSite[];
 		this.outputConstructionSite = nearbyOutputSites[0];
-		// Create a mining overlord for this
-		let priority = this.room.my ? OverlordPriority.ownedRoom.mineral : OverlordPriority.remoteSKRoom.mineral;
-		this.overlord = new ExtractorOverlord(this, priority);
 		if (Game.time % 100 == 0 && !this.output && !this.outputConstructionSite) {
 			log.warning(`Mineral site at ${this.pos.print} has no output!`);
 		}
 	}
 
-	// get memory(): MineralSiteMemory {
-	// 	return Mem.wrap(this.colony.memory, this.name);
-	// }
+	spawnMoarOverlords() {
+		let priority = this.room.my ? OverlordPriority.ownedRoom.mineral : OverlordPriority.remoteSKRoom.mineral;
+		this.overlord = new ExtractorOverlord(this, priority);
+	}
 
 	/* Register appropriate resource withdrawal requests when the output gets sufficiently full */
 	private registerOutputRequests(): void {

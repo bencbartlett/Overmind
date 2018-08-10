@@ -32,6 +32,10 @@ export class DirectiveTerminalEvacuateState extends Directive {
 		}
 	}
 
+	spawnMoarOverlords() {
+
+	}
+
 	init() {
 
 	}

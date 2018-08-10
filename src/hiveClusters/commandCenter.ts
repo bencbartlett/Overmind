@@ -59,6 +59,9 @@ export class CommandCenter extends HiveCluster {
 		}
 		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetwork;
 		this.transportRequests = new TransportRequestGroup(); // commandCenter always gets its own request group
+	}
+
+	spawnMoarOverlords() {
 		if (this.link || this.terminal) {
 			this.overlord = new CommandCenterOverlord(this);
 		}
@@ -114,7 +117,7 @@ export class CommandCenter extends HiveCluster {
 		if (this.terminal && this.terminal.energy < Energetics.settings.terminal.energy.inThreshold) {
 			this.transportRequests.requestInput(this.terminal, Priority.NormalHigh);
 		}
-		// Refill power spawn
+		// Refill core spawn (only applicable to bunker layouts)
 		if (this.coreSpawn && this.coreSpawn.energy < this.coreSpawn.energyCapacity) {
 			this.transportRequests.requestInput(this.coreSpawn, Priority.Normal);
 		}

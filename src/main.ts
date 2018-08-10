@@ -28,13 +28,13 @@ import './prototypes/Structures'; // Prototypes for accessed structures
 import './prototypes/Miscellaneous'; // Everything else
 import './tasks/initializer'; // This line is necessary to ensure proper compilation ordering...
 import './zerg/CombatZerg'; // ...so is this one... rollup is dumb about generating reference errors
-import {USE_PROFILER} from './~settings';
+import {PROFILE_COLONY_LIMIT, USE_PROFILER} from './~settings';
 import {sandbox} from './sandbox';
 import {Mem} from './Memory';
 import {OvermindConsole} from './console/Console';
 import {Stats} from './stats/stats';
 import profiler from './profiler/screeps-profiler';
-import _Overmind from './Overmind_obfuscated'; // don't enable this unless you're me
+import _Overmind from './Overmind_obfuscated'; // this should be './Overmind_obfuscated' unless you are me
 import {log} from './console/log';
 import {VersionMigration} from './versionMigration/migrator';
 import {isIVM} from './utilities/utils';
@@ -49,15 +49,19 @@ Mem.format();
 OvermindConsole.init();
 VersionMigration.run();
 
+Memory.stats.persistent.lastGlobalReset = Game.time;
 log.alert(`Codebase updated or global reset. Type "help" for a list of console commands.` + alignedNewline +
 		  OvermindConsole.info(true));
-Stats.log(`lastGlobalReset`, Game.time);
+
 
 // Decide whether to run this tick
 function handler(): void {
 	if (!isIVM()) {
 		log.warning(`Overmind requires isolated-VM to run. Change settings at screeps.com/a/#!/account/runtime`);
 		return;
+	}
+	if (USE_PROFILER && Game.time % 10 == 0) {
+		log.warning(`Profiling is currently enabled; only ${PROFILE_COLONY_LIMIT} colonies will be run!`);
 	}
 	if (Game.cpu.bucket < 500) {
 		log.warning(`CPU bucket is critically low (${Game.cpu.bucket}) - suspending for 5 ticks!`);
@@ -77,6 +81,8 @@ function handler(): void {
 	}
 }
 
+Assimilator.validate(handler);
+
 
 // Main loop
 function main(): void {
@@ -90,12 +96,11 @@ function main(): void {
 	sandbox();											// Sandbox: run any testing code
 	Overmind.postRun();									// Error catching; should be run at end of every tick
 }
-
 Assimilator.validate(main);
 
 
+// Profiler-wrapped main loop
 export function loop(): void {
 	profiler.wrap(handler);
 }
-
 Assimilator.validate(loop);

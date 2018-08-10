@@ -54,12 +54,6 @@ export class ExtractorOverlord extends Overlord {
 	}
 
 	run() {
-		for (let drone of this.drones) {
-			if (drone.flee()) continue;
-			if (drone.isIdle) {
-				this.handleDrone(drone);
-			}
-			drone.run();
-		}
+		this.autoRun(this.drones, drone => this.handleDrone(drone), drone => drone.flee());
 	}
 }

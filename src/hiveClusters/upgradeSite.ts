@@ -10,7 +10,6 @@ import {log} from '../console/log';
 import {Stats} from '../stats/stats';
 import {Pathing} from '../movement/Pathing';
 import {MiningSite} from './miningSite';
-import {WorkerSetup} from '../overlords/core/worker';
 import {hasMinerals} from '../utilities/utils';
 import {$} from '../caching/GlobalCache';
 
@@ -30,7 +29,7 @@ export class UpgradeSite extends HiveCluster {
 	inputConstructionSite: ConstructionSite | undefined;	// The construction site for the input, if there is one
 	private _batteryPos: RoomPosition | undefined;
 	overlord: UpgradingOverlord;
-	energyPerTick: number;
+	// energyPerTick: number;
 
 	static settings = {
 		storageBuffer    : 100000,	// Number of upgrader parts scales with energy - this value
@@ -61,16 +60,19 @@ export class UpgradeSite extends HiveCluster {
 		if (this.batteryPos) {
 			this.colony.destinations.push(this.batteryPos);
 		}
-		// Register overlord
-		this.overlord = new UpgradingOverlord(this);
-		// Energy per tick is sum of upgrader body parts and nearby worker body parts
-		this.energyPerTick = $.number(this, 'energyPerTick', () =>
-			_.sum(this.overlord.upgraders, upgrader => upgrader.getActiveBodyparts(WORK)) +
-			_.sum(_.filter(this.colony.getCreepsByRole(WorkerSetup.role), worker =>
-					  worker.pos.inRangeTo((this.link || this.battery || this).pos, 2)),
-				  worker => worker.getActiveBodyparts(WORK)));
+		// // Energy per tick is sum of upgrader body parts and nearby worker body parts
+		// this.energyPerTick = $.number(this, 'energyPerTick', () =>
+		// 	_.sum(this.overlord.upgraders, upgrader => upgrader.getActiveBodyparts(WORK)) +
+		// 	_.sum(_.filter(this.colony.getCreepsByRole(WorkerSetup.role), worker =>
+		// 			  worker.pos.inRangeTo((this.link || this.battery || this).pos, 2)),
+		// 		  worker => worker.getActiveBodyparts(WORK)));
 		// Compute stats
 		this.stats();
+	}
+
+	spawnMoarOverlords() {
+		// Register overlord
+		this.overlord = new UpgradingOverlord(this);
 	}
 
 	private getUpgradePowerNeeded(): number {
@@ -99,7 +101,8 @@ export class UpgradeSite extends HiveCluster {
 		let inThreshold = this.colony.stage > ColonyStage.Larva ? 0.5 : 0.75;
 		if (this.battery) {
 			if (this.battery.energy < inThreshold * this.battery.storeCapacity) {
-				this.colony.logisticsNetwork.requestInput(this.battery, {dAmountdt: this.energyPerTick});
+				let energyPerTick = UPGRADE_CONTROLLER_POWER * this.upgradePowerNeeded;
+				this.colony.logisticsNetwork.requestInput(this.battery, {dAmountdt: energyPerTick});
 			}
 			if (hasMinerals(this.battery.store)) { // get rid of any minerals in the container if present
 				this.colony.logisticsNetwork.requestOutputMinerals(this.battery);

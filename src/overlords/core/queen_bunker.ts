@@ -9,13 +9,8 @@ import {hasMinerals, mergeSum, minBy} from '../../utilities/utils';
 import {StoreStructure} from '../../declarations/typeGuards';
 import {Colony} from '../../Colony';
 import {$} from '../../caching/GlobalCache';
-import {
-	bunkerChargingSpots,
-	getPosFromBunkerCoord,
-	insideBunkerBounds,
-	quadrantFillOrder
-} from '../../roomPlanner/layouts/bunker';
-import {TransportRequestGroup} from '../../logistics/TransportRequestGroup';
+import {getPosFromBunkerCoord, insideBunkerBounds, quadrantFillOrder} from '../../roomPlanner/layouts/bunker';
+import {TransportRequest, TransportRequestGroup} from '../../logistics/TransportRequestGroup';
 import {Task} from '../../tasks/Task';
 import {Hatchery} from '../../hiveClusters/hatchery';
 import {QueenSetup} from './queen';
@@ -58,7 +53,7 @@ export class BunkerQueenOverlord extends Overlord {
 	storeStructures: StoreStructure[];
 	batteries: StructureContainer[];
 	quadrants: { [quadrant: string]: SupplyStructure[] };
-	assignments: { [queenName: string]: SupplyStructure[] };
+	assignments: { [queenName: string]: { [id: string]: SupplyStructure } };
 
 	constructor(hatchery: Hatchery, priority = OverlordPriority.core.queen) {
 		super(hatchery, 'supply', priority);
@@ -77,9 +72,9 @@ export class BunkerQueenOverlord extends Overlord {
 									 () => computeQuadrant(this.colony, quadrantFillOrder.upperRight)),
 		};
 		// Assign quadrants to queens
-		this.assignments = _.zipObject(_.map(this.queens, queen => [queen.name, []]));
+		this.assignments = _.zipObject(_.map(this.queens, queen => [queen.name, {}]));
 		let activeQueens = _.filter(this.queens, queen => !queen.spawning);
-		if (activeQueens.length >= 1) {
+		if (activeQueens.length > 0) {
 			let quadrantAssignmentOrder = [this.quadrants.lowerRight,
 										   this.quadrants.upperLeft,
 										   this.quadrants.lowerLeft,
@@ -87,7 +82,7 @@ export class BunkerQueenOverlord extends Overlord {
 			let i = 0;
 			for (let quadrant of quadrantAssignmentOrder) {
 				let queen = activeQueens[i % activeQueens.length];
-				this.assignments[queen.name] = this.assignments[queen.name].concat(quadrant);
+				_.extend(this.assignments[queen.name], _.zipObject(_.map(quadrant, s => [s.id, s])));
 				i++;
 			}
 		}
@@ -117,17 +112,25 @@ export class BunkerQueenOverlord extends Overlord {
 				tasks.push(Tasks.transferAll(transferTarget));
 				queenPos = transferTarget.pos;
 			} else {
-				log.warning(`No transfer targets for ${queen.name}@${queen.pos.print}!`);
+				log.warning(`No transfer targets for ${queen.print}!`);
 				return null;
 			}
 		}
 		// Step 2: figure out what you need to supply for and calculate the needed resources
 		let queenCarry = {} as { [resourceType: string]: number };
 		let allStore = mergeSum(_.map(this.storeStructures, s => s.store));
-		let allSupplyRequests = _.compact(_.flatten(_.map(this.assignments[queen.name],
-														  struc => this.transportRequests.supplyByID[struc.id])));
+		// let allSupplyRequests = _.compact(_.flatten(_.map(this.assignments[queen.name],
+		// 												  struc => this.transportRequests.supplyByID[struc.id])));
+		let supplyRequests: TransportRequest[] = [];
+		for (let priority in this.transportRequests.supply) {
+			for (let request of this.transportRequests.supply[priority]) {
+				if (this.assignments[queen.name][request.target.id]) {
+					supplyRequests.push(request);
+				}
+			}
+		}
 		let supplyTasks: Task[] = [];
-		for (let request of allSupplyRequests) {
+		for (let request of supplyRequests) {
 			// stop when carry will be full
 			let remainingAmount = queen.carryCapacity - _.sum(queenCarry);
 			if (remainingAmount == 0) break;
@@ -146,8 +149,9 @@ export class BunkerQueenOverlord extends Overlord {
 		// Step 3: make withdraw tasks to get the needed resources
 		let withdrawTasks: Task[] = [];
 		let neededResources = _.keys(queenCarry) as ResourceConstant[];
+		// TODO: a single structure doesn't need to have all resources; causes jam if labs need supply but no minerals
 		let targets = _.filter(this.storeStructures,
-							   s => _.all(neededResources, // todo: doesn't need to have all resources; causes jam if labs need supply but no minerals
+							   s => _.all(neededResources,
 										  resource => (s.store[resource] || 0) >= (queenCarry[resource] || 0)));
 		let withdrawTarget: StoreStructure | undefined;
 		if (targets.length > 1) {
@@ -156,7 +160,7 @@ export class BunkerQueenOverlord extends Overlord {
 			withdrawTarget = _.first(targets);
 		}
 		if (!withdrawTarget) {
-			log.warning(`No withdraw target for ${queen.name}@${queen.pos.print}!`);
+			log.warning(`Could not get adequate withdraw structure for ${queen.name}@${queen.pos.print}!`);
 			return null;
 		}
 		for (let resourceType of neededResources) {
@@ -176,15 +180,23 @@ export class BunkerQueenOverlord extends Overlord {
 			if (transferTarget) {
 				tasks.push(Tasks.transferAll(transferTarget));
 			} else {
-				log.warning(`No transfer targets for ${queen.name}@${queen.pos.print}!`);
+				log.warning(`No transfer targets for ${queen.print}!`);
 				return null;
 			}
 		}
 		// Step 2: figure out what you need to withdraw from
 		let queenCarry = {energy: 0} as { [resourceType: string]: number };
-		let allWithdrawRequests = _.compact(_.flatten(_.map(this.assignments[queen.name],
-															struc => this.transportRequests.withdrawByID[struc.id])));
-		for (let request of allWithdrawRequests) {
+		// let allWithdrawRequests = _.compact(_.flatten(_.map(this.assignments[queen.name],
+		// 													struc => this.transportRequests.withdrawByID[struc.id])));
+		let withdrawRequests: TransportRequest[] = [];
+		for (let priority in this.transportRequests.withdraw) {
+			for (let request of this.transportRequests.withdraw[priority]) {
+				if (this.assignments[queen.name][request.target.id]) {
+					withdrawRequests.push(request);
+				}
+			}
+		}
+		for (let request of withdrawRequests) {
 			// stop when carry will be full
 			let remainingAmount = queen.carryCapacity - _.sum(queenCarry);
 			if (remainingAmount == 0) break;
@@ -203,73 +215,70 @@ export class BunkerQueenOverlord extends Overlord {
 		if (transferTarget) {
 			tasks.push(Tasks.transferAll(transferTarget));
 		} else {
-			log.warning(`No transfer targets for ${queen.name}@${queen.pos.print}!`);
+			log.warning(`No transfer targets for ${queen.print}!`);
 			return null;
 		}
 		// Step 4: return chained task manifest
 		return Tasks.chain(tasks);
 	}
 
-	private getChargingSpot(queen: Zerg): RoomPosition {
-		let chargeSpots = _.map(bunkerChargingSpots, coord => getPosFromBunkerCoord(coord, this.colony));
-		let chargeSpot = (_.first(this.assignments[queen.name]) || queen).pos.findClosestByRange(chargeSpots);
-		if (chargeSpot) {
-			return chargeSpot;
-		} else {
-			log.warning(`Could not determine charging spot for queen at ${queen.pos.print}!`);
-			return queen.pos;
-		}
-	}
-
-	private idleActions(queen: Zerg): void {
-
-		// // Refill any empty batteries
-		// for (let battery of this.batteries) {
-		// 	if (!battery.isFull) {
-		// 		let amount = Math.min(battery.storeCapacity - _.sum(battery.store), queen.carryCapacity);
-		// 		let target = this.colony.storage || this.colony.storage;
-		// 		if (target) {
-		// 			queen.task = Tasks.transfer(battery, RESOURCE_ENERGY, amount)
-		// 							  .fork(Tasks.withdraw(target, RESOURCE_ENERGY, amount))
-		// 			return;
-		// 		}
-		// 	}
-		// }
-
-		// Go to recharging spot and get recharged
-		let chargingSpot = this.getChargingSpot(queen);
-		queen.goTo(chargingSpot, {range: 0});
-		// // TODO: this will cause oscillating behavior where recharge drains some energy and queen leaves to supply it
-		// if (queen.pos.getRangeTo(chargingSpot) == 0) {
-		// 	let chargingSpawn = _.first(queen.pos.findInRange(this.colony.spawns, 1));
-		// 	if (chargingSpawn && !chargingSpawn.spawning) {
-		// 		chargingSpawn.renewCreep(queen.creep);
-		// 	}
-		// }
-	}
+	// private getChargingSpot(queen: Zerg): RoomPosition {
+	// 	let chargeSpots = _.map(bunkerChargingSpots, coord => getPosFromBunkerCoord(coord, this.colony));
+	// 	let chargeSpot = (_.first(this.assignments[queen.name]) || queen).pos.findClosestByRange(chargeSpots);
+	// 	if (chargeSpot) {
+	// 		return chargeSpot;
+	// 	} else {
+	// 		log.warning(`Could not determine charging spot for queen at ${queen.pos.print}!`);
+	// 		return queen.pos;
+	// 	}
+	// }
+	//
+	// private idleActions(queen: Zerg): void {
+	//
+	// 	// // Refill any empty batteries
+	// 	// for (let battery of this.batteries) {
+	// 	// 	if (!battery.isFull) {
+	// 	// 		let amount = Math.min(battery.storeCapacity - _.sum(battery.store), queen.carryCapacity);
+	// 	// 		let target = this.colony.storage || this.colony.storage;
+	// 	// 		if (target) {
+	// 	// 			queen.task = Tasks.transfer(battery, RESOURCE_ENERGY, amount)
+	// 	// 							  .fork(Tasks.withdraw(target, RESOURCE_ENERGY, amount))
+	// 	// 			return;
+	// 	// 		}
+	// 	// 	}
+	// 	// }
+	//
+	// 	// Go to recharging spot and get recharged
+	// 	let chargingSpot = this.getChargingSpot(queen);
+	// 	queen.goTo(chargingSpot, {range: 0});
+	// 	// // TODO: this will cause oscillating behavior where recharge drains some energy and queen leaves to supply it
+	// 	// if (queen.pos.getRangeTo(chargingSpot) == 0) {
+	// 	// 	let chargingSpawn = _.first(queen.pos.findInRange(this.colony.spawns, 1));
+	// 	// 	if (chargingSpawn && !chargingSpawn.spawning) {
+	// 	// 		chargingSpawn.renewCreep(queen.creep);
+	// 	// 	}
+	// 	// }
+	// }
 
 	private handleQueen(queen: Zerg): void {
 		// Does something need withdrawing?
-		if (_.any(this.assignments[queen.name], struc => this.transportRequests.withdrawByID[struc.id])) {
+		if (this.transportRequests.needsWithdrawing &&
+			_.any(this.assignments[queen.name], struc => this.transportRequests.withdrawByID[struc.id])) {
 			queen.task = this.buildWithdrawTaskManifest(queen);
 		}
 		// Does something need supplying?
-		else if (_.any(this.assignments[queen.name], struc => this.transportRequests.supplyByID[struc.id])) {
+		else if (this.transportRequests.needsSupplying &&
+				 _.any(this.assignments[queen.name], struc => this.transportRequests.supplyByID[struc.id])) {
 			queen.task = this.buildSupplyTaskManifest(queen);
 		}
-		// // Otherwise do idle actions
-		// if (queen.isIdle) {
-		// 	this.idleActions(queen);
-		// }
+		// Otherwise do idle actions
+		if (queen.isIdle) {
+			// this.idleActions(queen);
+			delete queen.memory._go;
+		}
 	}
 
 	run() {
-		// for (let queen of this.queens) {
-		// 	if (queen.isIdle) {
-		// 		this.handleQueen(queen);
-		// 	}
-		// 	queen.run();
-		// }
-		this.standardRun(this.queens, queen => this.handleQueen(queen));
+		this.autoRun(this.queens, queen => this.handleQueen(queen));
 	}
 }

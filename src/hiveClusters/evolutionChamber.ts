@@ -33,6 +33,8 @@ const LabStageTimeouts = {
 	UnloadingLabs    : 1000
 };
 
+const LAB_USAGE_WINDOW = 100;
+
 interface EvolutionChamberMemory {
 	status: number;
 	statusTick: number;
@@ -43,6 +45,7 @@ interface EvolutionChamberMemory {
 	};
 	stats: {
 		totalProduction: { [resourceType: string]: number }
+		avgUsage: number;
 	}
 }
 
@@ -53,7 +56,8 @@ const EvolutionChamberMemoryDefaults: EvolutionChamberMemory = {
 	reactionQueue  : [],
 	labMineralTypes: {},
 	stats          : {
-		totalProduction: {}
+		totalProduction: {},
+		avgUsage       : 1,
 	}
 };
 
@@ -125,6 +129,10 @@ export class EvolutionChamber extends HiveCluster {
 			// otherwise (in bunker layout), it uses colony/hatchery transport requests
 			this.transportRequests = this.colony.transportRequests;
 		}
+	}
+
+	spawnMoarOverlords() {
+		// Evolution chamber is attended to by queens; overlord spawned at Hatchery
 	}
 
 	private statusTimeoutCheck(): void {
@@ -279,9 +287,9 @@ export class EvolutionChamber extends HiveCluster {
 		let {mineralType, amount} = this.labReservations[lab.id];
 		// Empty out incorrect minerals
 		if (lab.mineralType != mineralType && lab.mineralAmount > 0) {
-			this.transportRequests.requestOutput(lab, Priority.High, {resourceType: lab.mineralType!});
+			this.transportRequests.requestOutput(lab, Priority.NormalHigh, {resourceType: lab.mineralType!});
 		} else {
-			this.transportRequests.requestInput(lab, Priority.High, {
+			this.transportRequests.requestInput(lab, Priority.NormalHigh, {
 				resourceType: <ResourceConstant>mineralType,
 				amount      : amount - lab.mineralAmount
 			});
@@ -294,7 +302,7 @@ export class EvolutionChamber extends HiveCluster {
 		_.forEach(refillLabs, lab => this.transportRequests.requestInput(lab, Priority.NormalLow));
 		// Request high priority energy to booster lab
 		let boostingRefillLabs = _.filter(this.boostingLabs, lab => lab.energy < lab.energyCapacity);
-		_.forEach(boostingRefillLabs, lab => this.transportRequests.requestInput(lab, Priority.NormalHigh));
+		_.forEach(boostingRefillLabs, lab => this.transportRequests.requestInput(lab, Priority.High));
 		// Request resources delivered to / withdrawn from each type of lab
 		this.reagentLabRequests();
 		this.productLabRequests();
@@ -305,13 +313,14 @@ export class EvolutionChamber extends HiveCluster {
 
 	/* Reserves a product lab for boosting with a compound unrelated to production */
 	private reserveLab(mineralType: _ResourceConstantSansEnergy, amount: number, lab: StructureLab) {
-		_.remove(this.productLabs, productLab => productLab.ref == lab.ref);
+		_.remove(this.productLabs, productLab => productLab.id == lab.id);
 		this.labReservations[lab.id] = {mineralType: mineralType, amount: amount};
 	}
 
-	canBoost(creep: Zerg, boostType: _ResourceConstantSansEnergy): boolean {
-		let boostAmount = LAB_BOOST_MINERAL * (creep.getActiveBodyparts(boostParts[boostType])
-											   - (creep.boostCounts[boostType] || 0));
+	canBoost(body: BodyPartDefinition[], boostType: _ResourceConstantSansEnergy): boolean {
+		let boostCounts = _.countBy(body as BodyPartDefinition[], bodyPart => bodyPart.boost);
+		let numBoostParts = _.filter(body, part => part.type == boostParts[boostType]).length;
+		let boostAmount = LAB_BOOST_MINERAL * (numBoostParts - (boostCounts[boostType] || 0));
 		if (this.colony.assets[boostType] >= boostAmount) {
 			// Does this colony have the needed resources already?
 			return true;
@@ -333,7 +342,9 @@ export class EvolutionChamber extends HiveCluster {
 		// Boost requests are prioritized by which creep has least time to live
 		this.boostQueue[lab.id] = _.sortBy([...this.boostQueue[lab.id],
 											{mineralType: mineralType, creepName: creep.name}],
-										   request => (Game.zerg[request.creepName].ticksToLive || 9999));
+										   request => (Game.zerg[request.creepName].ticksToLive
+													   || 5000 + Game.zerg[request.creepName].ticksUntilSpawned
+													   || 9999));
 	}
 
 	/* Zero-indexed position in the boosting queue of a given creep. Equals -1 if creep isn't queued. */
@@ -365,8 +376,8 @@ export class EvolutionChamber extends HiveCluster {
 				this.neededBoosts[boostType] = 0;
 			}
 			this.neededBoosts[boostType] += boostAmount;
-			// reserve lab once creep is born
-			if (creep.ticksToLive != undefined) {
+			// reserve lab once creep is born or if creep is spawning adjacent to lab
+			if (creep.pos.isNearTo(boostLab) || creep.ticksToLive != undefined) {
 				this.reserveLab(<_ResourceConstantSansEnergy>boostType, boostAmount, boostLab);
 			}
 		}
@@ -425,6 +436,10 @@ export class EvolutionChamber extends HiveCluster {
 
 	private stats(): void {
 		Stats.log(`colonies.${this.colony.name}.evolutionChamber.totalProduction`, this.memory.stats.totalProduction);
+		let labUsage = _.sum(this.productLabs, lab => lab.cooldown > 0 ? 1 : 0) / this.productLabs.length;
+		this.memory.stats.avgUsage = (labUsage + this.memory.stats.avgUsage * (LAB_USAGE_WINDOW - 1))
+									 / LAB_USAGE_WINDOW;
+		Stats.log(`colonies.${this.colony.name}.evolutionChamber.avgUsage`, this.memory.stats.avgUsage);
 	}
 
 }

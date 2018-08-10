@@ -91,7 +91,6 @@ export class Colony {
 	name: string;										// Name of the primary colony room
 	ref: string;
 	id: number; 										// Order in which colony is instantiated from Overmind
-	colony: Colony;										// Reference to itself for simple overlord instantiation
 	roomNames: string[];								// The names of all rooms including the primary room
 	room: Room;											// Primary (owned) room of the colony
 	outposts: Room[];									// Rooms for remote resource collection
@@ -184,7 +183,6 @@ export class Colony {
 		this.name = roomName;
 		this.ref = roomName;
 		this.memory = Mem.wrap(Memory.colonies, roomName, defaultColonyMemory, true);
-		this.colony = this;
 		// Register colony globally to allow 'W1N1' and 'w1n1' to refer to Overmind.colonies.W1N1
 		global[this.name] = this;
 		global[this.name.toLowerCase()] = this;
@@ -208,7 +206,7 @@ export class Colony {
 		this.registerOperationalState();	// Set the colony operational state
 		this.registerUtilities(); 			// Register logistics utilities, room planners, and layout info
 		this.registerHiveClusters(); 		// Build the hive clusters
-		this.spawnMoarOverlords(); 			// Register colony overlords
+		// Colony.spawnMoarOverlords() gets called from Overmind.ts, along with Directive.spawnMoarOverlords()
 	}
 
 	refresh(): void {
@@ -387,7 +385,8 @@ export class Colony {
 		this.hiveClusters.reverse();
 	}
 
-	private spawnMoarOverlords(): void {
+	/* Spawn all overlords for the colony */
+	spawnMoarOverlords(): void {
 		this.overlords = {
 			default  : new DefaultOverlord(this),
 			work     : new WorkerOverlord(this),
@@ -395,6 +394,9 @@ export class Colony {
 		};
 		if (!this.observer) {
 			this.overlords.scout = new RandomWalkerScoutOverlord(this);
+		}
+		for (let hiveCluster of this.hiveClusters) {
+			hiveCluster.spawnMoarOverlords();
 		}
 	}
 
@@ -438,7 +440,7 @@ export class Colony {
 		this.roadLogistics.init();											// Initialize the road network
 		this.linkNetwork.init();											// Initialize link network
 		this.roomPlanner.init();											// Initialize the room planner
-		if (Game.time % EXPANSION_EVALUATION_FREQ == 5 * this.colony.id) {	// Re-evaluate expansion data if needed
+		if (Game.time % EXPANSION_EVALUATION_FREQ == 5 * this.id) {			// Re-evaluate expansion data if needed
 			ExpansionPlanner.refreshExpansionData(this);
 		}
 	}

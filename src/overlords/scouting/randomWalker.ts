@@ -37,11 +37,6 @@ export class RandomWalkerScoutOverlord extends Overlord {
 	}
 
 	run() {
-		for (let scout of this.scouts) {
-			if (scout.isIdle) {
-				this.handleScout(scout);
-			}
-			scout.run();
-		}
+		this.autoRun(this.scouts, scout => this.handleScout(scout));
 	}
 }

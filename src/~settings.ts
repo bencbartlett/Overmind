@@ -9,9 +9,14 @@ import {leftAngleQuote, rightAngleQuote} from './utilities/stringConstants';
 export const MY_USERNAME: string = getUsername();
 
 /**
- * Enable this to build from source including screeps profiler.
+ * Enable this to build from source including screeps-profiler. (This is separate from Overmind-Profiler.)
  */
 export const USE_PROFILER: boolean = false;
+
+/**
+ * Profiling is incredibly expensive and can cause the script to time out. By setting this option, you can limit the
+ * number of colonies that will be handled while profiling. Colonies above this limit do not get run. */
+export const PROFILE_COLONY_LIMIT = Math.ceil(Game.gcl.level / 2);
 
 /**
  * Enable this to wrap evaluations of constructor, init, and run phase for each colony in try...catch statemenets.

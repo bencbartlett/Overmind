@@ -22,6 +22,7 @@ interface MiningSiteMemory {
 @profile
 export class MiningSite extends HiveCluster {
 	source: Source;
+	memory: MiningSiteMemory;
 	energyPerTick: number;
 	miningPowerNeeded: number;
 	output: StructureContainer | StructureLink | undefined;
@@ -38,6 +39,7 @@ export class MiningSite extends HiveCluster {
 	constructor(colony: Colony, source: Source) {
 		super(colony, source, 'miningSite', true);
 		this.source = source;
+		this.memory = Mem.wrap(this.colony.memory, this.ref);
 		this.energyPerTick = source.energyCapacity / ENERGY_REGEN_TIME;
 		this.miningPowerNeeded = Math.ceil(this.energyPerTick / HARVEST_POWER) + 1;
 		// Register output method
@@ -59,14 +61,7 @@ export class MiningSite extends HiveCluster {
 											 s.structureType == STRUCTURE_LINK,
 		}) as ConstructionSite[];
 		this.outputConstructionSite = nearbyOutputSites[0];
-		// Create a mining overlord for this
-		let priority = OverlordPriority.ownedRoom.mine;
-		if (!this.room.my) {
-			priority = Cartographer.roomType(this.room.name) == ROOMTYPE_SOURCEKEEPER ?
-					   OverlordPriority.remoteSKRoom.mine : OverlordPriority.remoteRoom.mine;
-		}
 		this.shouldDropMine = this.colony.level < MiningSite.settings.dropMineUntilRCL;
-		this.overlord = new MiningOverlord(this, priority, this.shouldDropMine);
 		if (!this.shouldDropMine && Game.time % 100 == 0 && !this.output && !this.outputConstructionSite) {
 			log.warning(`Mining site at ${this.pos.print} has no output!`);
 		}
@@ -74,8 +69,14 @@ export class MiningSite extends HiveCluster {
 		this.stats();
 	}
 
-	get memory(): MiningSiteMemory {
-		return Mem.wrap(this.colony.memory, this.ref);
+	spawnMoarOverlords() {
+		// Create a mining overlord for this
+		let priority = OverlordPriority.ownedRoom.mine;
+		if (!this.room.my) {
+			priority = Cartographer.roomType(this.room.name) == ROOMTYPE_SOURCEKEEPER ?
+					   OverlordPriority.remoteSKRoom.mine : OverlordPriority.remoteRoom.mine;
+		}
+		this.overlord = new MiningOverlord(this, priority, this.shouldDropMine);
 	}
 
 	private stats() {
