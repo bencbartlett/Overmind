@@ -1,6 +1,6 @@
 import {Mem} from '../Memory';
 import {profile} from '../profiler/decorator';
-import {maxBy, minBy} from '../utilities/utils';
+import {maxBy, minBy, printRoomName} from '../utilities/utils';
 import {alignedNewline, bullet, leftArrow, rightArrow} from '../utilities/stringConstants';
 import {log} from '../console/log';
 import {assimilationLocked} from '../assimilation/decorator';
@@ -302,10 +302,10 @@ export class TraderJoe implements ITradeNetwork {
 		let msg: string;
 		if (order.type == ORDER_SELL) {
 			msg = `${roomName} ${leftArrow} ${amount} ${order.resourceType} ${leftArrow} ` +
-				  `${order.roomName} (result: ${response})`;
+				  `${printRoomName(order.roomName!)} (result: ${response})`;
 		} else {
 			msg = `${roomName} ${rightArrow} ${amount} ${order.resourceType} ${rightArrow} ` +
-				  `${order.roomName} (result: ${response})`;
+				  `${printRoomName(order.roomName!)} (result: ${response})`;
 		}
 		this.notify(msg);
 	}

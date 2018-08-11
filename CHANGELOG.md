@@ -3,12 +3,18 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
-Important notes as of this patch:
+## Overmind [0.5.0]: "Evolution" - 2018.8.10
+
+This release adds a huge set of new features to Overmind, described in more detail in [this blog post](https://bencbartlett.wordpress.com/2018/08/11/screeps-5-evolution/). The most notable change is the shift in base layout from the classic "box and flower" design to a much more compact circular bunker. Although this layout is more expensive to maintain, it is much more defensible and features a number of hard-coded optimizations.
+
+This is also the first release capable of fully automatic operation! By default, the operational mode is set to fully automatic; you can change the level of autonomy with the `setMode()` console command. Other added features include a new `Movement` library which allows creeps to fluidly glide past each other even in confined bunker alleys, support for Source Keeper mining, more advanced terminal logic, distributed spawning structures, and a lot of improvements to caching methods.
+
+Important notes as of this release:
 - Overmind no longer supports shared-vm. Isolated-vm is now required; you can set this in your account runtime settings.
 - The codebase can no longer be deployed using `rollup -c --dest main` or `rollup -c --dest pserver`. Use `npm run push-main` or `npm run push-pserver` instead.
 
 ### Added
-- Overmind is now capable of fully automatic operation! This patch added functionality to automatically reserve and claim rooms without any user input required. These are turned on by default; you can use the `setMode()` and `setAutoClaim()` console commands to toggle automatic operation and (separately) automatic room claiming.
+- Overmind is now capable of fully automatic operation! This patch added functionality to automatically reserve and claim rooms without any user input required. These are turned on by default; you can use the `setMode()` console commands to change the degree of autonomy.
     - Added the `Strategist` module, instantiated as `Overmind.strategist` is bot mode is enabled. Strategist is currently responsible for choosing the next room to colonize, but will contain more high-level decision making functionality in the future.
     - Added the `ExpansionPlanner` module to generate numerical scores for rooms to determine outpost/expansion preferences
     - Added several methods to the `Cartographer` module (formerly `WorldMap`)
@@ -37,6 +43,7 @@ Important notes as of this patch:
 ### Changed
 - The Overmind object now `try...catch` evaluates `init` and `run` methods for each colony / network. If an exceptions are caught, they are added to a queue and thrown at the end of the tick, preventing a global deadlock from occurring due to a problem in a single colony.
 - Zerg are now instantiated in constructor phase by their overlords rather than by the Overmind object.
+- All Overlords are now instantiated in a `spawnMoarOverlords()` method, which all `Colonies`, `HiveClusters`, and `Directives` now have. This is primarily in preparation for future restructuring to improve CPU usage.
 - Managers are now stationary (CARRY only) at RCL8 in the bunker layout
 - Refactored Hatchery spawning code to allow for greater flexibility in spawning creeps, such as requesting a specific spawn (useful for spawning the now-stationary manager)
 - Refactored incubation logic to use the new `SpawnGroup` objects. Colonies no longer have `incubator` or `incubatingColonies` properties.
@@ -53,6 +60,7 @@ Important notes as of this patch:
     - Added some safeguards on destroying misplaced spawns to ensure that there are enough workers to rebuild the spawns
     - Room planner is now better at detecting gridlocked situations and will destroy structures as needed to make room for construction sites
 - Reorganized some memory structures, consolidating things into `Memory.settings`
+- Various CPU improvements
 
 ### Fixed
 - Fixed a bug where mining sites could get clogged if invaders died on the container outputs and dropped minerals which would not get withdrawn
@@ -277,7 +285,8 @@ This release was initially deployed on 2018.3.2 but was re-versioned on 2018.3.1
 - Initial pre-release of Overmind after 190 commits and about 80,000 additions.
 
 
-[Unreleased]: https://github.com/bencbartlett/Overmind/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/bencbartlett/Overmind/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/bencbartlett/Overmind/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/bencbartlett/Overmind/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/bencbartlett/Overmind/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/bencbartlett/Overmind/compare/v0.3.0...v0.3.1

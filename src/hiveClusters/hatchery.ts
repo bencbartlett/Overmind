@@ -12,12 +12,12 @@ import {Visualizer} from '../visuals/Visualizer';
 import {Stats} from '../stats/stats';
 import {Zerg} from '../zerg/Zerg';
 import {log} from '../console/log';
-import {$} from '../caching/GlobalCache';
 import {energyStructureOrder, getPosFromBunkerCoord, insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {BunkerQueenOverlord} from '../overlords/core/queen_bunker';
 import {Overlord} from '../overlords/Overlord';
 import {Movement} from '../movement/Movement';
 import {Pathing} from '../movement/Pathing';
+import {$} from '../caching/GlobalCache';
 
 const ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH = -20;
 const ERR_SPECIFIED_SPAWN_BUSY = -21;
@@ -38,29 +38,6 @@ export interface SpawnRequestOptions {
 interface SpawnOrder {
 	protoCreep: protoCreep,
 	options: SpawnOptions | undefined,
-}
-
-function computeEnergyStructures(hatchery: Hatchery): (StructureSpawn | StructureExtension)[] {
-	if (hatchery.colony.layout == 'bunker') {
-		let positions = _.map(energyStructureOrder, coord => getPosFromBunkerCoord(coord, hatchery.colony));
-		let spawnsAndExtensions: (StructureSpawn | StructureExtension)[] = [];
-		spawnsAndExtensions = spawnsAndExtensions.concat(hatchery.spawns, hatchery.extensions);
-		let energyStructures: (StructureSpawn | StructureExtension)[] = [];
-		for (let pos of positions) {
-			let structure = _.find(pos.lookFor(LOOK_STRUCTURES), s =>
-				s.structureType == STRUCTURE_SPAWN
-				|| s.structureType == STRUCTURE_EXTENSION) as StructureSpawn | StructureExtension;
-			if (structure) {
-				energyStructures.push(_.remove(spawnsAndExtensions, s => s.id == structure.id)[0]);
-			}
-		}
-		return energyStructures.concat(spawnsAndExtensions);
-	} else {
-		// Ugly workaround to [].concat() throwing a temper tantrum
-		let spawnsAndExtensions: (StructureSpawn | StructureExtension)[] = [];
-		spawnsAndExtensions = spawnsAndExtensions.concat(hatchery.spawns, hatchery.extensions);
-		return _.sortBy(spawnsAndExtensions, structure => structure.pos.getRangeTo(hatchery.idlePos));
-	}
 }
 
 export interface HatcheryMemory {
@@ -84,6 +61,7 @@ export class Hatchery extends HiveCluster {
 	spawns: StructureSpawn[]; 								// List of spawns in the hatchery
 	availableSpawns: StructureSpawn[]; 						// Spawns that are available to make stuff right now
 	extensions: StructureExtension[]; 						// List of extensions in the hatchery
+	energyStructures: (StructureSpawn | StructureExtension)[]; 	// All spawns and extensions
 	link: StructureLink | undefined; 						// The input link
 	towers: StructureTower[]; 								// All towers that aren't in the command center
 	battery: StructureContainer | undefined;				// The container to provide an energy buffer
@@ -112,10 +90,12 @@ export class Hatchery extends HiveCluster {
 		this.extensions = colony.extensions;
 		if (this.colony.layout == 'bunker') {
 			this.battery = _.first(_.filter(this.room.containers, cont => insideBunkerBounds(cont.pos, this.colony)));
+			this.energyStructures = $.structures(this, 'energyStructures', () => this.computeEnergyStructures());
 		} else {
 			this.link = this.pos.findClosestByLimitedRange(colony.availableLinks, 2);
 			this.colony.linkNetwork.claimLink(this.link);
 			this.battery = this.pos.findClosestByLimitedRange(this.room.containers, 2);
+			this.energyStructures = (<(StructureSpawn | StructureExtension)[]>[]).concat(this.spawns, this.extensions);
 		}
 		if (colony.commandCenter) {
 			this.towers = _.difference(colony.towers, colony.commandCenter.towers);
@@ -167,6 +147,29 @@ export class Hatchery extends HiveCluster {
 		};
 	}
 
+	private computeEnergyStructures(): (StructureSpawn | StructureExtension)[] {
+		if (this.colony.layout == 'bunker') {
+			let positions = _.map(energyStructureOrder, coord => getPosFromBunkerCoord(coord, this.colony));
+			let spawnsAndExtensions: (StructureSpawn | StructureExtension)[] = [];
+			spawnsAndExtensions = spawnsAndExtensions.concat(this.spawns, this.extensions);
+			let energyStructures: (StructureSpawn | StructureExtension)[] = [];
+			for (let pos of positions) {
+				let structure = _.find(pos.lookFor(LOOK_STRUCTURES), s =>
+					s.structureType == STRUCTURE_SPAWN
+					|| s.structureType == STRUCTURE_EXTENSION) as StructureSpawn | StructureExtension;
+				if (structure) {
+					energyStructures.push(_.remove(spawnsAndExtensions, s => s.id == structure.id)[0]);
+				}
+			}
+			return energyStructures.concat(spawnsAndExtensions);
+		} else {
+			// Ugly workaround to [].concat() throwing a temper tantrum
+			let spawnsAndExtensions: (StructureSpawn | StructureExtension)[] = [];
+			spawnsAndExtensions = spawnsAndExtensions.concat(this.spawns, this.extensions);
+			return _.sortBy(spawnsAndExtensions, structure => structure.pos.getRangeTo(this.idlePos));
+		}
+	}
+
 	/* Request more energy when appropriate either via link or hauler */
 	private registerEnergyRequests(): void {
 		// Register requests for input into the hatchery (goes on colony store group)
@@ -183,8 +186,9 @@ export class Hatchery extends HiveCluster {
 		let refillSpawns = _.filter(this.spawns, spawn => spawn.energy < spawn.energyCapacity);
 		let refillExtensions = _.filter(this.extensions, extension => extension.energy < extension.energyCapacity);
 		let refillTowers = _.filter(this.towers, tower => tower.energy < this.settings.refillTowersBelow);
-		_.forEach(refillSpawns, spawn => this.transportRequests.requestInput(spawn, Priority.NormalLow));
-		_.forEach(refillExtensions, extension => this.transportRequests.requestInput(extension, Priority.NormalLow));
+		_.forEach(this.energyStructures, struct => this.transportRequests.requestInput(struct, Priority.NormalLow));
+		// _.forEach(refillSpawns, spawn => this.transportRequests.requestInput(spawn, Priority.NormalLow));
+		// _.forEach(refillExtensions, extension => this.transportRequests.requestInput(extension, Priority.NormalLow));
 		// _.forEach(refillTowers, tower =>
 		// 	this.transportRequests.requestInput(tower, tower.energy < this.settings.refillTowersBelow ?
 		// 											   Priority.Low : Priority.Low)); // TODO: made change here
@@ -200,10 +204,6 @@ export class Hatchery extends HiveCluster {
 		}
 		return (roleName + '_' + i);
 	};
-
-	get energyStructures(): (StructureSpawn | StructureExtension)[] {
-		return $.structures(this, 'energyStructures', () => computeEnergyStructures(this));
-	}
 
 	private spawnCreep(protoCreep: protoCreep, options: SpawnRequestOptions = {}): number {
 		// get a spawn to use

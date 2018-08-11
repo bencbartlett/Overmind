@@ -66,6 +66,7 @@ export class Overseer {
 		for (let tombstone of this.colony.tombstones) {
 			if (_.sum(tombstone.store) > LogisticsNetwork.settings.droppedEnergyThreshold
 				|| _.sum(tombstone.store) > tombstone.store.energy) {
+				if (this.colony.bunker && tombstone.pos.isEqualTo(this.colony.bunker.anchor)) continue;
 				this.colony.logisticsNetwork.requestOutput(tombstone, {resourceType: 'all'});
 			}
 		}

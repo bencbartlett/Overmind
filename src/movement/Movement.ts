@@ -277,9 +277,9 @@ export class Movement {
 
 	private static getPushDirection(pusher: Zerg | Creep, pushee: Zerg | Creep): DirectionConstant {
 		let possiblePositions = pushee.pos.availableNeighbors();
-		let preferredPositions: RoomPosition[] = [];
 		pushee = normalizeZerg(pushee);
 		if (isZerg(pushee)) {
+			let preferredPositions: RoomPosition[] = [];
 			if (pushee.task && pushee.task.isWorking) { // push creeps out of the way when they're doing task
 				let targetPos = pushee.task.targetPos;
 				let targetRange = pushee.task.settings.targetRange;

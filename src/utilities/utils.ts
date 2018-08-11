@@ -2,6 +2,10 @@
 
 import {alignedNewline, bullet} from './stringConstants';
 
+export function printRoomName(roomName: string): string {
+	return '<a href="#!/room/' + Game.shard.name + '/' + roomName + '">' + roomName + '</a>';
+}
+
 export function minMax(value: number, min: number, max: number): number {
 	return Math.max(Math.min(value, max), min);
 }

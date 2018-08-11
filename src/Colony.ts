@@ -385,7 +385,7 @@ export class Colony {
 		this.hiveClusters.reverse();
 	}
 
-	/* Spawn all overlords for the colony */
+	/* Instantiate all overlords for the colony */
 	spawnMoarOverlords(): void {
 		this.overlords = {
 			default  : new DefaultOverlord(this),

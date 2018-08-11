@@ -63,7 +63,7 @@ export class $ { // $ = cash = cache... get it? :D
 
 	static set<T extends HasRef, K extends keyof T>(thing: T, key: K,
 													callback: () => (T[K] & (undefined | HasID | HasID[])),
-													timeout = SHORT_CACHE_TIMEOUT) {
+													timeout = CACHE_TIMEOUT) {
 		let cacheKey = thing.ref + '$' + key;
 		if (!_cache.things[cacheKey] || Game.time > _cache.expiration[cacheKey]) {
 			// Recache if new entry or entry is expired

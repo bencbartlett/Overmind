@@ -10,7 +10,9 @@ import {StoreStructure} from '../../declarations/typeGuards';
 import {TransportRequestGroup} from '../../logistics/TransportRequestGroup';
 import {Energetics} from '../../logistics/Energetics';
 import {SpawnRequestOptions} from '../../hiveClusters/hatchery';
-import {hasMinerals} from '../../utilities/utils';
+import {hasMinerals, minBy} from '../../utilities/utils';
+import {$} from '../../caching/GlobalCache';
+import {WorkerOverlord} from './worker';
 
 export const ManagerSetup = new CreepSetup('manager', {
 	pattern  : [CARRY, CARRY, MOVE],
@@ -22,12 +24,19 @@ export const ManagerStationarySetup = new CreepSetup('manager', {
 	sizeLimit: 8,
 });
 
+export const ManagerWorkerStationarySetup = new CreepSetup('manager', {
+	pattern  : [WORK, WORK, WORK, WORK, CARRY, CARRY],
+	sizeLimit: 8,
+});
+
 @profile
 export class CommandCenterOverlord extends Overlord {
 
+	mode: 'twoPart' | 'bunker';
 	managers: Zerg[];
 	commandCenter: CommandCenter;
 	transportRequests: TransportRequestGroup;
+	managerRepairTarget: StructureRampart | StructureWall | undefined;
 
 	private depositTarget: StructureTerminal | StructureStorage;
 
@@ -35,11 +44,19 @@ export class CommandCenterOverlord extends Overlord {
 		super(commandCenter, 'manager', priority);
 		this.commandCenter = commandCenter;
 		this.transportRequests = this.commandCenter.transportRequests;
+		this.mode = this.colony.layout;
 		this.managers = this.zerg(ManagerSetup.role);
-		if (this.commandCenter.terminal && _.sum(this.commandCenter.terminal.store) < TERMINAL_CAPACITY + 1000) {
+		if (this.commandCenter.terminal && _.sum(this.commandCenter.terminal.store) < TERMINAL_CAPACITY - 1000) {
 			this.depositTarget = this.commandCenter.terminal;
 		} else {
 			this.depositTarget = this.commandCenter.storage;
+		}
+		if (this.colony.bunker) {
+			let anchor = this.colony.bunker.anchor;
+			$.set(this, 'managerRepairTarget',
+				  () => minBy(_.filter(anchor.findInRange(anchor.room!.barriers, 3),
+									   b => b.hits < WorkerOverlord.settings.barrierHits[this.colony.level]),
+							  b => b.hits));
 		}
 	}
 
@@ -49,12 +66,25 @@ export class CommandCenterOverlord extends Overlord {
 		if (this.colony.bunker && this.colony.bunker.coreSpawn && this.colony.level == 8
 			&& !this.colony.roomPlanner.memory.relocating) {
 			setup = ManagerStationarySetup;
+			if (this.managerRepairTarget && this.colony.assets.energy > WorkerOverlord.settings.fortifyDutyThreshold) {
+				setup = ManagerWorkerStationarySetup; // use working manager body if you have something to repair
+			}
 			spawnRequestOptions = {
 				spawn     : this.colony.bunker.coreSpawn,
 				directions: [this.colony.bunker.coreSpawn.pos.getDirectionTo(this.colony.bunker.anchor)]
 			};
 		}
 		this.wishlist(1, setup, {options: spawnRequestOptions});
+	}
+
+	private unloadCarry(manager: Zerg): boolean {
+		// Move anything you are currently holding to deposit location
+		if (_.sum(manager.carry) > 0) {
+			manager.task = Tasks.transferAll(this.depositTarget);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	private supplyActions(manager: Zerg) {
@@ -114,6 +144,7 @@ export class CommandCenterOverlord extends Overlord {
 		// Move energy from storage to terminal if there is not enough in terminal or if there's terminal evacuation
 		if (terminal.energy < Energetics.settings.terminal.energy.equilibrium - tolerance
 			|| storage.energy > storageEnergyCap) {
+			if (this.unloadCarry(manager)) return true;
 			manager.task = Tasks.withdraw(storage);
 			manager.task.parent = Tasks.transfer(terminal);
 			return true;
@@ -121,6 +152,7 @@ export class CommandCenterOverlord extends Overlord {
 		// Move energy from terminal to storage if there is too much in terminal and there is space in storage
 		if (terminal.energy > Energetics.settings.terminal.energy.equilibrium + tolerance
 			&& _.sum(storage.store) < storageEnergyCap) {
+			if (this.unloadCarry(manager)) return true;
 			manager.task = Tasks.withdraw(terminal);
 			manager.task.parent = Tasks.transfer(storage);
 			return true;
@@ -138,6 +170,7 @@ export class CommandCenterOverlord extends Overlord {
 		// Move all non-energy resources from storage to terminal
 		for (let resourceType in storage.store) {
 			if (resourceType != RESOURCE_ENERGY && storage.store[<ResourceConstant>resourceType]! > 0) {
+				if (this.unloadCarry(manager)) return true;
 				manager.task = Tasks.withdraw(storage, <ResourceConstant>resourceType);
 				manager.task.parent = Tasks.transfer(terminal, <ResourceConstant>resourceType);
 				return true;
@@ -151,6 +184,12 @@ export class CommandCenterOverlord extends Overlord {
 		let resources = manager.pos.lookFor(LOOK_RESOURCES);
 		if (resources.length > 0) {
 			manager.task = Tasks.transferAll(this.depositTarget).fork(Tasks.pickup(resources[0]));
+			return true;
+		}
+		// Look for tombstones at position
+		let tombstones = manager.pos.lookFor(LOOK_TOMBSTONES);
+		if (tombstones.length > 0) {
+			manager.task = Tasks.transferAll(this.depositTarget).fork(Tasks.withdrawAll(tombstones[0]));
 			return true;
 		}
 		return false;
@@ -176,9 +215,7 @@ export class CommandCenterOverlord extends Overlord {
 			if (this.deathActions(manager)) return;
 		}
 		// Pick up any dropped resources on ground
-		if (manager.pos.lookFor(LOOK_RESOURCES).length > 0) {
-			if (this.pickupActions(manager)) return;
-		}
+		if (this.pickupActions(manager)) return;
 		// Move minerals from storage to terminal if needed
 		if (hasMinerals(this.commandCenter.storage.store)) {
 			if (this.moveMineralsToTerminal(manager)) return;
@@ -199,6 +236,20 @@ export class CommandCenterOverlord extends Overlord {
 		this.equalizeStorageAndTerminal(manager);
 	}
 
+	private idleActions(manager: Zerg): void {
+		if (this.mode == 'bunker' && this.managerRepairTarget && manager.getActiveBodyparts(WORK) > 0) {
+			// Repair ramparts when idle
+			if (manager.carry.energy > 0) {
+				manager.repair(this.managerRepairTarget);
+			} else {
+				manager.withdraw(this.depositTarget);
+			}
+		}
+		if (!manager.pos.isEqualTo(this.commandCenter.idlePos)) {
+			manager.goTo(this.commandCenter.idlePos);
+		}
+	}
+
 	run() {
 		for (let manager of this.managers) {
 			// Get a task if needed
@@ -209,9 +260,7 @@ export class CommandCenterOverlord extends Overlord {
 			if (manager.hasValidTask) {
 				manager.run();
 			} else {
-				if (!manager.pos.isEqualTo(this.commandCenter.idlePos)) {
-					manager.goTo(this.commandCenter.idlePos);
-				}
+				this.idleActions(manager);
 			}
 		}
 	}
