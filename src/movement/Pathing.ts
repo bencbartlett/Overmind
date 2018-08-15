@@ -10,6 +10,7 @@ import {$} from '../caching/GlobalCache';
 /* Module for pathing-related operations. */
 
 const DEFAULT_MAXOPS = 20000;		// Default timeout for pathfinding
+const CREEP_COST = 0xfe;
 
 export interface TerrainCosts {
 	plainCost: number,
@@ -17,9 +18,11 @@ export interface TerrainCosts {
 }
 
 const MatrixTypes = {
-	direct : 'dir',
-	default: 'def',
-	sk     : 'sk',
+	direct       : 'dir',
+	default      : 'def',
+	sk           : 'sk',
+	obstacle     : 'obst',
+	preferRampart: 'preframp'
 };
 
 @profile
@@ -368,11 +371,49 @@ export class Pathing {
 			return room._creepMatrix;
 		}
 		let matrix = this.getDefaultMatrix(room).clone();
-		_.forEach(room.find(FIND_CREEPS), c => matrix.set(c.pos.x, c.pos.y, 0xff));
+		_.forEach(room.find(FIND_CREEPS), c => matrix.set(c.pos.x, c.pos.y, CREEP_COST)); // don't block off entirely
 		room._creepMatrix = matrix;
 		return room._creepMatrix;
 	}
 
+	/* Sets impassible structure positions to 0xff */
+	static blockImpassibleStructures(matrix: CostMatrix, room: Room): void {
+		_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
+			if (!s.isWalkable) {
+				matrix.set(s.pos.x, s.pos.y, 0xff);
+			}
+		});
+	}
+
+	/* Sets hostile creep positions to impassible */
+	static blockHostileCreeps(matrix: CostMatrix, room: Room): void {
+		_.forEach(room.hostiles, hostile => {
+			matrix.set(hostile.pos.x, hostile.pos.y, CREEP_COST);
+		});
+	}
+
+	/* Sets all creep positions to impassible */
+	static blockAllCreeps(matrix: CostMatrix, room: Room): void {
+		_.forEach(room.find(FIND_CREEPS), hostile => {
+			matrix.set(hostile.pos.x, hostile.pos.y, CREEP_COST);
+		});
+	}
+
+	/* Sets road positions to 1 if cost is less than 0xfe */
+	static preferRoads(matrix: CostMatrix, room: Room): void {
+		_.forEach(room.roads, road => {
+			if (matrix.get(road.pos.x, road.pos.y) < 0xfe) {
+				matrix.set(road.pos.x, road.pos.y, 1);
+			}
+		});
+	}
+
+	/* Sets road positions to 1 if cost is less than 0xfe */
+	static preferRamparts(matrix: CostMatrix, room: Room): void {
+		_.forEach(room.walkableRamparts, rampart => {
+			matrix.set(rampart.pos.x, rampart.pos.y, 1);
+		});
+	}
 
 	/* Kites around hostile creeps in a room */
 	static getKitingMatrix(room: Room): CostMatrix {

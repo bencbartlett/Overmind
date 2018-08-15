@@ -8,8 +8,6 @@ import {profile} from '../../profiler/decorator';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
-import {CombatTargeting} from '../../targeting/CombatTargeting';
-import {MoveOptions} from '../../movement/Movement';
 
 export const HydraliskSetup = new CreepSetup('hydralisk', {
 	pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, HEAL, MOVE, MOVE, MOVE, MOVE],
@@ -26,17 +24,19 @@ export const BoostedHydraliskSetup = new CreepSetup('hydralisk', {
 export class RangedDefenseOverlord extends Overlord {
 
 	defenders: CombatZerg[];
-	private avoid: RoomPosition[];
-	private moveOpts: MoveOptions;
-	private retreatPos: RoomPosition;
+	// private avoid: RoomPosition[];
+	// private moveOpts: MoveOptions;
+	// private retreatPos: RoomPosition;
 	room: Room;
-	settings: {
-		retreatHitsPercent: number,
-		reengageHitsPercent: number,
+
+	static settings = {
+		retreatHitsPercent : 0.85,
+		reengageHitsPercent: 0.95,
 	};
 
-	constructor(directive: DirectiveInvasionDefense, boosted = false,
-				priority                                     = OverlordPriority.defense.rangedDefense) {
+	constructor(directive: DirectiveInvasionDefense,
+				boosted  = false,
+				priority = OverlordPriority.defense.rangedDefense) {
 		super(directive, 'rangedDefense', priority);
 		this.defenders = _.map(this.creeps(HydraliskSetup.role), creep => new CombatZerg(creep));
 		if (boosted) {
@@ -45,90 +45,91 @@ export class RangedDefenseOverlord extends Overlord {
 				boostResources.heal[3],
 			];
 		}
-		this.retreatPos = this.colony.pos;
-		this.settings = {
-			retreatHitsPercent : 0.85,
-			reengageHitsPercent: 0.95,
-		};
-		this.avoid = CombatIntel.getPositionsNearEnemies(this.room.dangerousHostiles, 2);
-		this.moveOpts = {
-			obstacles   : this.avoid,
-			ignoreCreeps: false,
-		};
+		// this.retreatPos = this.colony.pos;
+		// this.avoid = CombatIntel.getPositionsNearEnemies(this.room.dangerousHostiles, 2);
+		// this.moveOpts = {
+		// 	obstacles   : this.avoid,
+		// 	ignoreCreeps: false,
+		// };
 	}
 
-	private findTarget(archer: CombatZerg): Creep | Structure | undefined {
-		if (this.room) {
-			// Target nearby hostile creeps
-			let creepTarget = CombatTargeting.findClosestHostile(archer, false, false);
-			if (creepTarget) return creepTarget;
-			// Target nearby hostile structures
-			let structureTarget = CombatTargeting.findClosestPrioritizedStructure(archer);
-			if (structureTarget) return structureTarget;
-		}
-	}
-
-	private retreatActions(archer: CombatZerg): void {
-		archer.goTo(this.retreatPos, this.moveOpts);
-		if (archer.hits > this.settings.reengageHitsPercent * archer.hits) {
-			archer.memory.retreating = false;
-		}
-	}
-
-	private attackActions(attacker: CombatZerg): void {
-		let target = this.findTarget(attacker);
-		if (target) {
-			// console.log(attacker.name, target.pos.print);
-
-			let range = attacker.pos.getRangeTo(target);
-			if (range <= 3) {
-				attacker.rangedAttack(target);
-			}
-			if (range < 3) { // retreat to controller if too close
-				attacker.goTo(this.retreatPos, this.moveOpts);
-			} else if (range > 3) { // approach the target if too far
-				// if (target.pos.rangeToEdge >= 2) {
-				attacker.goTo(target, _.merge(this.moveOpts, {range: 3}));
-				// }
-			}
-		}
-	}
-
-	private healActions(defender: CombatZerg): void {
-		if (this.room && this.room.hostiles.length == 0) { // No hostiles in the room
-			defender.doMedicActions();
-			return;
-		}
-
-		if (defender.hits < defender.hitsMax) {
-			defender.heal(defender);
-		} else {
-			// Try to heal whatever else is in range
-			let target = defender.pos.findClosestByRange(_.filter(this.defenders, creep => creep.hits < creep.hitsMax));
-			if (target && target.pos.isNearTo(defender)) {
-				defender.heal(target, false);
-			}
-			if (target && !defender.actionLog.move) {
-				defender.goTo(target, this.moveOpts);
-			}
-		}
-	}
+	// private findTarget(archer: CombatZerg): Creep | Structure | undefined {
+	// 	if (this.room) {
+	// 		// Target nearby hostile creeps
+	// 		let creepTarget = CombatTargeting.findClosestHostile(archer, false, false);
+	// 		if (creepTarget) return creepTarget;
+	// 		// Target nearby hostile structures
+	// 		let structureTarget = CombatTargeting.findClosestPrioritizedStructure(archer);
+	// 		if (structureTarget) return structureTarget;
+	// 	}
+	// }
+	//
+	// private retreatActions(archer: CombatZerg): void {
+	// 	archer.goTo(this.retreatPos, this.moveOpts);
+	// 	if (archer.hits > RangedDefenseOverlord.settings.reengageHitsPercent * archer.hits) {
+	// 		archer.memory.retreating = false;
+	// 	}
+	// }
+	//
+	// private attackActions(attacker: CombatZerg): void {
+	// 	let target = this.findTarget(attacker);
+	// 	if (target) {
+	// 		// console.log(attacker.name, target.pos.print);
+	//
+	// 		let range = attacker.pos.getRangeTo(target);
+	// 		if (range <= 3) {
+	// 			attacker.rangedAttack(target);
+	// 		}
+	// 		if (range < 3) { // retreat to controller if too close
+	// 			attacker.goTo(this.retreatPos, this.moveOpts);
+	// 		} else if (range > 3) { // approach the target if too far
+	// 			// if (target.pos.rangeToEdge >= 2) {
+	// 			attacker.goTo(target, _.merge(this.moveOpts, {range: 3}));
+	// 			// }
+	// 		}
+	// 	}
+	// }
+	//
+	// private healActions(defender: CombatZerg): void {
+	// 	if (this.room.hostiles.length == 0) { // No hostiles in the room
+	// 		defender.doMedicActions();
+	// 		return;
+	// 	}
+	//
+	// 	if (defender.hits < defender.hitsMax) {
+	// 		defender.heal(defender);
+	// 	} else {
+	// 		// Try to heal whatever else is in range
+	// 		let target = defender.pos.findClosestByRange(_.filter(this.defenders, creep => creep.hits < creep.hitsMax));
+	// 		if (target && target.pos.isNearTo(defender)) {
+	// 			defender.heal(target, false);
+	// 		}
+	// 		if (target && !defender.actionLog.move) {
+	// 			defender.goTo(target, this.moveOpts);
+	// 		}
+	// 	}
+	// }
 
 
 	private handleDefender(defender: CombatZerg): void {
-		// Handle retreating actions
-		if (defender.hits < this.settings.retreatHitsPercent * defender.hitsMax) {
-			defender.memory.retreating = true;
-		}
-		if (defender.memory.retreating) {
-			this.retreatActions(defender);
-		}
-		// Move to room and then perform attacking actions
-		if (!defender.inSameRoomAs(this) || defender.pos.isEdge) {
-			defender.goTo(this.pos);
+		// // Handle retreating actions
+		// if (defender.hits < RangedDefenseOverlord.settings.retreatHitsPercent * defender.hitsMax) {
+		// 	defender.memory.retreating = true;
+		// }
+		// if (defender.memory.retreating) {
+		// 	this.retreatActions(defender);
+		// }
+		// // Move to room and then perform attacking actions
+		// if (!defender.inSameRoomAs(this) || defender.pos.isEdge) {
+		// 	defender.goTo(this.pos);
+		// } else {
+		// 	this.attackActions(defender);
+		// 	this.healActions(defender);
+		// }
+		if (defender.room.hostiles.length > 0) {
+			defender.autoCombat(defender.room.name);
 		} else {
-			this.attackActions(defender);
-			this.healActions(defender);
+			defender.doMedicActions();
 		}
 	}
 
@@ -149,20 +150,6 @@ export class RangedDefenseOverlord extends Overlord {
 	}
 
 	run() {
-		for (let defender of this.defenders) {
-			// Run the creep if it has a task given to it by something else; otherwise, proceed with non-task actions
-			if (defender.hasValidTask) {
-				defender.run();
-			} else {
-				if (defender.needsBoosts) {
-					this.handleBoosting(defender);
-				} else {
-					this.handleDefender(defender);
-				}
-			}
-		}
-		if (this.room.hostiles.length == 0) {
-			this.parkCreepsIfIdle(this.defenders);
-		}
+		this.autoRunCombat(this.defenders, defender => this.handleDefender(defender));
 	}
 }

@@ -4,7 +4,6 @@ import {profile} from '../profiler/decorator';
 import {CombatIntel} from '../intel/CombatIntel';
 import {GoalFinder} from '../targeting/GoalFinder';
 import {Movement, NO_ACTION} from '../movement/Movement';
-import {debug} from '../console/log';
 
 interface CombatZergMemory extends CreepMemory {
 	recovering: boolean;
@@ -108,7 +107,7 @@ export class CombatZerg extends Zerg {
 
 	autoMelee(possibleTargets = this.room.hostiles) {
 		let target = CombatTargeting.findBestTargetInRange(this, 1, possibleTargets);
-		debug(this, `Melee target: ${target}`);
+		this.debug(`Melee target: ${target}`);
 		if (target) {
 			return this.attack(target);
 		}
@@ -116,7 +115,7 @@ export class CombatZerg extends Zerg {
 
 	autoRanged(possibleTargets = this.room.hostiles, allowMassAttack = true) {
 		let target = CombatTargeting.findBestTargetInRange(this, 3, possibleTargets);
-		debug(this, `Ranged target: ${target}`);
+		this.debug(`Ranged target: ${target}`);
 		if (target) {
 			if (allowMassAttack
 				&& CombatIntel.getMassAttackDamage(this, possibleTargets) > CombatIntel.getRangedAttackDamage(this)) {
@@ -129,7 +128,7 @@ export class CombatZerg extends Zerg {
 
 	autoHeal(allowRangedHeal = true, friendlies = this.room.creeps) {
 		let target = CombatTargeting.findBestHealingTargetInRange(this, 3, friendlies);
-		debug(this, `Heal taget: ${target}`);
+		this.debug(`Heal taget: ${target}`);
 		if (target) {
 			if (this.pos.getRangeTo(target) <= 1) {
 				return this.heal(target);
@@ -137,6 +136,39 @@ export class CombatZerg extends Zerg {
 				return this.rangedHeal(target);
 			}
 		}
+	}
+
+	/* Navigate to a room, then engage hostile creeps there, perform medic actions, etc. */
+	autoSkirmish(roomName: string, verbose = false) {
+
+		// Do standard melee, ranged, and heal actions
+		if (this.getActiveBodyparts(ATTACK) > 0) {
+			this.autoMelee(); // Melee should be performed first
+		}
+		if (this.getActiveBodyparts(RANGED_ATTACK) > 0) {
+			this.autoRanged();
+		}
+		if (this.canExecute('heal')) {
+			this.autoHeal(this.canExecute('rangedHeal'));
+		}
+
+		// Handle recovery if low on HP
+		if (this.needsToRecover()) {
+			this.debug(`Recovering!`);
+			return this.recover();
+		}
+
+		// Travel to the target room
+		if (!this.safelyInRoom(roomName)) {
+			this.debug(`Going to room!`);
+			return this.goToRoom(roomName, {ensurePath: true});
+		}
+
+		// Skirmish within the room
+		let goals = GoalFinder.skirmishGoals(this);
+		this.debug(JSON.stringify(goals));
+		return Movement.combatMove(this, goals.approach, goals.avoid);
+
 	}
 
 	/* Navigate to a room, then engage hostile creeps there, perform medic actions, etc. */
@@ -155,20 +187,23 @@ export class CombatZerg extends Zerg {
 
 		// Handle recovery if low on HP
 		if (this.needsToRecover()) {
-			debug(this, `Recovering!`);
+			this.debug(`Recovering!`);
 			return this.recover();
 		}
 
 		// Travel to the target room
 		if (!this.safelyInRoom(roomName)) {
-			debug(this, `Going to room!`);
+			this.debug(`Going to room!`);
 			return this.goToRoom(roomName, {ensurePath: true});
 		}
 
-		// Skirmish within the room
-		let goals = GoalFinder.skirmishGoals(this);
-		debug(this, JSON.stringify(goals));
-		return Movement.combatMove(this, goals.approach, goals.avoid);
+		// Fight within the room
+		const target = CombatTargeting.findTarget(this);
+		const targetRange = this.getActiveBodyparts(RANGED_ATTACK) > this.getActiveBodyparts(ATTACK) ? 3 : 1;
+		this.debug(target, targetRange);
+		if (target) {
+			return Movement.combatMove(this, [{pos: target.pos, range: targetRange}], []);
+		}
 
 	}
 

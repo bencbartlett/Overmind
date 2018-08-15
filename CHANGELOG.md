@@ -27,7 +27,7 @@ Important notes as of this release:
     - Added recursive pushing to allow spawns to shove blocking creeps out of the way to make room for a spawning creep.
     - Added methods for pathing around a room while kiting enemies and a `Movement.combatMove()` method which will be used more in the upcoming combat update
 - Lots of additions to `CombatIntel` and `CombatTargeting` modules, including predictive damage calculations and automatic siege target calculations. These will be used in the upcoming combat update.
-- New `CombatZerg` methods `autoMelee`, `autoHeal`, `autoRanged`, and `autoCombat` which provide general-purpose combat routines for small skirmishes
+- New `CombatZerg` methods `autoMelee`, `autoHeal`, `autoRanged`, and `autoSkirmish` which provide general-purpose combat routines for small skirmishes
     - Added a `GoalFinder` module to generate lists of `PathFinderGoal`s representing positions and ranges that creeps should approach and avoid
 - Added a `SourceKeeperReaper` overlord to facilitate source keeper mining (finally!)
 - Added `SpawnGroup`s, which allow for decentralized creep spawning distributed among nearby colonies (work in progress)

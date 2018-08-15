@@ -130,6 +130,25 @@ Object.defineProperty(Room.prototype, 'repairables', {
 	configurable: true,
 });
 
+Object.defineProperty(Room.prototype, 'walkableRamparts', {
+	get() {
+		if (!this._walkableRamparts) {
+			this._refreshStructureCache();
+			if (roomStructureIDs[this.name]['walkableRamparts']) {
+				return this._walkableRamparts = _.compact(_.map(roomStructureIDs[this.name]['walkableRamparts'],
+																Game.getObjectById));
+			} else {
+				let walkableRamparts = _.filter(this.ramparts,
+												(r: StructureRampart) => r.pos.isWalkable(true));
+				roomStructureIDs[this.name]['walkableRamparts'] = _.map(walkableRamparts, r => r.id);
+				return this._walkableRamparts = walkableRamparts;
+			}
+		}
+		return this._walkableRamparts;
+	},
+	configurable: true,
+});
+
 Object.defineProperty(Room.prototype, 'rechargeables', {
 	get() {
 		if (!this._rechargeables) {

@@ -70,6 +70,13 @@ export interface MoveOptions {
 	modifyRoomCallback?: (r: Room, m: CostMatrix) => CostMatrix // modifications to default cost matrix calculations
 }
 
+export interface CombatMoveOptions {
+	allowExit?: boolean,
+	avoidPenalty?: number,
+	approachBonus?: number,
+	preferRamparts?: boolean,
+}
+
 export interface MoveState {
 	stuckCount: number;
 	lastCoord: Coord;
@@ -525,21 +532,23 @@ export class Movement {
 
 	private static combatMoveCallbackModifier(room: Room, matrix: CostMatrix,
 											  approach: PathFinderGoal[], avoid: PathFinderGoal[],
-											  allowExit = false, avoidPenalty = 10, approachBonus = 5) {
+											  options: CombatMoveOptions) {
 		// This is only applied once creep is in the target room
-		if (!allowExit) {
+		if (!options.allowExit) {
 			Pathing.blockExits(matrix);
 		}
+		// Add penalties for things you want to avoid
 		_.forEach(avoid, avoidThis => {
 			let x, y: number;
 			for (let dx = -avoidThis.range; dx <= avoidThis.range; dx++) {
 				for (let dy = -avoidThis.range; dy <= avoidThis.range; dy++) {
 					x = avoidThis.pos.x + dx;
 					y = avoidThis.pos.y + dy;
-					matrix.set(x, y, matrix.get(x, y) + avoidPenalty);
+					matrix.set(x, y, matrix.get(x, y) + options.avoidPenalty!);
 				}
 			}
 		});
+		// Add bonuses for things you want to approach
 		_.forEach(approach, approachThis => {
 			let cost: number;
 			let x, y: number;
@@ -549,23 +558,33 @@ export class Movement {
 					y = approachThis.pos.y + dy;
 					let cost = matrix.get(x, y);
 					if (cost < 0xff) { // is walkable
-						cost = Math.max(cost - approachBonus, 0);
+						cost = Math.max(cost - options.approachBonus!, 1);
 					}
 					matrix.set(x, y, cost);
 				}
 			}
 		});
+		// Prefer to path into open ramparts
+		if (options.preferRamparts) {
+			Pathing.preferRamparts(matrix, room);
+		}
 		return matrix;
 	};
 
 	static combatMove(creep: Zerg, approach: PathFinderGoal[], avoid: PathFinderGoal[],
-					  options: MoveOptions = {}, allowExit = false): number {
+					  options: CombatMoveOptions = {}): number {
+		_.defaults(options, {
+			allowExit     : false,
+			avoidPenalty  : 10,
+			approachBonus : 5,
+			preferRamparts: true,
+		});
 
 		const debug = false;
 		const callback = (roomName: string) => {
 			if (roomName == creep.room.name) {
 				let matrix = Pathing.getCreepMatrix(creep.room).clone();
-				return Movement.combatMoveCallbackModifier(creep.room, matrix, approach, avoid, allowExit);
+				return Movement.combatMoveCallbackModifier(creep.room, matrix, approach, avoid, options);
 			} else {
 				return !(Memory.rooms[roomName] && Memory.rooms[roomName].avoid);
 			}
@@ -575,31 +594,63 @@ export class Movement {
 
 		// Flee from bad things that that you're too close to
 		if (avoid.length > 0) {
-			let avoidRet = PathFinder.search(creep.pos, avoid, {
-				roomCallback: callback,
-				flee        : true,
-				maxRooms    : allowExit ? 5 : 1,
-			});
-			if (avoidRet.path.length > 0) {
-				if (debug) Pathing.serializePath(creep.pos, avoidRet.path, 'magenta');
-				outcome = creep.move(creep.pos.getDirectionTo(avoidRet.path[0]));
-				if (outcome == OK) {
-					return outcome;
+			if (_.any(avoid, goal => creep.pos.inRangeToXY(goal.pos.x, goal.pos.y, goal.range))
+				&& !creep.inRampart) {
+				let avoidRet = PathFinder.search(creep.pos, avoid, {
+					roomCallback: callback,
+					flee        : true,
+					maxRooms    : options.allowExit ? 5 : 1,
+					plainCost   : 2,
+					swampCost   : 10,
+				});
+				if (avoidRet.path.length > 0) {
+					if (debug) Pathing.serializePath(creep.pos, avoidRet.path, 'magenta');
+					outcome = creep.move(creep.pos.getDirectionTo(avoidRet.path[0]));
+					if (outcome == OK) {
+						return outcome;
+					}
 				}
 			}
 		}
 
 		// Approach things you want to go to if you're out of range of all the baddies
 		if (approach.length > 0) {
-			let approachRet = PathFinder.search(creep.pos, approach, {
-				roomCallback: callback,
-				maxRooms    : 1,
-			});
-			if (approachRet.path.length > 0) {
-				if (debug) Pathing.serializePath(creep.pos, approachRet.path, 'cyan');
-				outcome = creep.move(creep.pos.getDirectionTo(approachRet.path[0]));
-				if (outcome == OK) {
-					return outcome;
+			if (!_.any(approach, goal => creep.pos.inRangeToXY(goal.pos.x, goal.pos.y, goal.range))) {
+				let approachRet = PathFinder.search(creep.pos, approach, {
+					roomCallback: callback,
+					maxRooms    : 1,
+					plainCost   : 2,
+					swampCost   : 10,
+				});
+				if (approachRet.path.length > 0) {
+					if (debug) Pathing.serializePath(creep.pos, approachRet.path, 'cyan');
+					outcome = creep.move(creep.pos.getDirectionTo(approachRet.path[0]));
+					if (outcome == OK) {
+						return outcome;
+					}
+				}
+			}
+		}
+
+		// Try to maneuver under ramparts if possible
+		if (options.preferRamparts && !creep.inRampart && approach.length > 0) {
+			let openRamparts = _.filter(creep.room.walkableRamparts,
+										rampart => _.any(approach,
+														 g => rampart.pos.inRangeToXY(g.pos.x, g.pos.y, g.range))
+												   && rampart.pos.isWalkable());
+			if (openRamparts.length > 0) {
+				let ret = PathFinder.search(creep.pos, _.map(openRamparts, r => ({pos: r.pos, range: 0})), {
+					roomCallback: callback,
+					maxRooms    : 1,
+					plainCost   : 2,
+					swampCost   : 10,
+				});
+				if (ret.path.length > 0) {
+					if (debug) Pathing.serializePath(creep.pos, ret.path, 'green');
+					outcome = creep.move(creep.pos.getDirectionTo(ret.path[0]));
+					if (outcome == OK) {
+						return outcome;
+					}
 				}
 			}
 		}

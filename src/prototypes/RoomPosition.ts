@@ -36,7 +36,7 @@ Object.defineProperty(RoomPosition.prototype, 'coordName', { // name, but withou
 });
 
 RoomPosition.prototype.lookForStructure = function (structureType: StructureConstant): Structure | undefined {
-	return _.find(this.lookFor(LOOK_STRUCTURES), s => s.structureType == structureType);
+	return _.find(this.lookFor(LOOK_STRUCTURES), s => s.structureType === structureType);
 };
 
 Object.defineProperty(RoomPosition.prototype, 'isEdge', { // if the position is at the edge of a room
@@ -95,6 +95,15 @@ RoomPosition.prototype.inRangeToPos = function (pos: RoomPosition, range: number
 	return this.roomName === pos.roomName &&
 		   ((pos.x - this.x) < 0 ? (this.x - pos.x) : (pos.x - this.x)) <= range &&
 		   ((pos.y - this.y) < 0 ? (this.y - pos.y) : (pos.y - this.y)) <= range;
+};
+
+RoomPosition.prototype.inRangeToXY = function (x: number, y: number, range: number) {
+	return ((x - this.x) < 0 ? (this.x - x) : (x - this.x)) <= range
+		   && ((y - this.y) < 0 ? (this.y - y) : (y - this.y)) <= range;
+};
+
+RoomPosition.prototype.getRangeToXY = function (x: number, y: number) {
+	return Math.max((x - this.x) < 0 ? (this.x - x) : (x - this.x), ((y - this.y) < 0 ? (this.y - y) : (y - this.y)));
 };
 
 RoomPosition.prototype.getPositionsInRange = function (range: number,

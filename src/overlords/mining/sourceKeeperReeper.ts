@@ -139,7 +139,7 @@ export class SourceReaperOverlord extends Overlord {
 		if (this.room.invaders.length > 0) {
 			// Handle invader actions
 			debug(defender, `AutoCombat`);
-			defender.autoCombat(this.room.name);
+			defender.autoSkirmish(this.room.name);
 
 		} else {
 			debug(defender, `Standard duty`);

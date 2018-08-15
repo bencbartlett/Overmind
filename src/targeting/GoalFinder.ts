@@ -67,7 +67,7 @@ export class GoalFinder {
 		for (let target of approachTargets) {
 			let data = analysis[target.id];
 			if (data && (data.advantage || braveMode)) {
-				let range = 0;
+				let range = 1;
 				if (!preferCloseCombat && (data.attack > 0 || data.rangedAttack > myAttack)) {
 					range = creep.pos.getRangeTo(target) == 3 && data.isRetreating ? 2 : 3;
 					avoid.push({pos: target.pos, range: range});

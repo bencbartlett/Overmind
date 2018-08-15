@@ -4,7 +4,7 @@ import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
 import {QueenOverlord} from '../overlords/core/queen';
 import {Priority} from '../priorities/priorities';
-import {Colony, ColonyStage} from '../Colony';
+import {Colony, ColonyStage, DEFCON} from '../Colony';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {bodyCost, CreepSetup} from '../overlords/CreepSetup';
 import {Mem} from '../Memory';
@@ -18,6 +18,7 @@ import {Overlord} from '../overlords/Overlord';
 import {Movement} from '../movement/Movement';
 import {Pathing} from '../movement/Pathing';
 import {$} from '../caching/GlobalCache';
+import {OverlordPriority} from '../priorities/priorities_overlords';
 
 const ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH = -20;
 const ERR_SPECIFIED_SPAWN_BUSY = -21;
@@ -183,15 +184,21 @@ export class Hatchery extends HiveCluster {
 			}
 		}
 		// Register energy transport requests (goes on hatchery store group, which can be colony store group)
-		let refillSpawns = _.filter(this.spawns, spawn => spawn.energy < spawn.energyCapacity);
-		let refillExtensions = _.filter(this.extensions, extension => extension.energy < extension.energyCapacity);
-		let refillTowers = _.filter(this.towers, tower => tower.energy < this.settings.refillTowersBelow);
+		// let refillStructures = this.energyStructures;
+		// if (this.colony.defcon > DEFCON.safe) {
+		// 	for (let hostile of this.room.dangerousHostiles) {
+		// 		// TODO: remove tranport requests if blocked by enemies
+		// 	}
+		// }
+		// if (this.room.defcon > 0) {refillStructures = _.filter()}
 		_.forEach(this.energyStructures, struct => this.transportRequests.requestInput(struct, Priority.NormalLow));
+
+		// let refillSpawns = _.filter(this.spawns, spawn => spawn.energy < spawn.energyCapacity);
+		// let refillExtensions = _.filter(this.extensions, extension => extension.energy < extension.energyCapacity);
+		let refillTowers = _.filter(this.towers, tower => tower.energy < this.settings.refillTowersBelow);
 		// _.forEach(refillSpawns, spawn => this.transportRequests.requestInput(spawn, Priority.NormalLow));
 		// _.forEach(refillExtensions, extension => this.transportRequests.requestInput(extension, Priority.NormalLow));
-		// _.forEach(refillTowers, tower =>
-		// 	this.transportRequests.requestInput(tower, tower.energy < this.settings.refillTowersBelow ?
-		// 											   Priority.Low : Priority.Low)); // TODO: made change here
+		_.forEach(refillTowers, tower => this.transportRequests.requestInput(tower, Priority.NormalLow));
 	}
 
 	// Creep queueing and spawning =====================================================================================
@@ -327,6 +334,9 @@ export class Hatchery extends HiveCluster {
 	private spawnHighestPriorityCreep(): number | undefined {
 		let sortedKeys = _.sortBy(this.productionPriorities);
 		for (let priority of sortedKeys) {
+			if (this.colony.defcon >= DEFCON.playerInvasion && priority > OverlordPriority.warSpawnCutoff) {
+				continue; // don't spawn non-critical creeps during wartime
+			}
 			let nextOrder = this.productionQueue[priority].shift();
 			if (nextOrder) {
 				let {protoCreep, options} = nextOrder;

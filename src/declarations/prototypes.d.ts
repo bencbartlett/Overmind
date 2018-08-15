@@ -4,6 +4,7 @@ interface Creep {
 	memory: CreepMemory;
 	boosts: _ResourceConstantSansEnergy[];
 	boostCounts: { [boostType: string]: number };
+	inRampart: boolean;
 }
 
 interface ConstructionSite {
@@ -60,6 +61,7 @@ interface Room {
 	walls: StructureWall[];
 	constructedWalls: StructureWall[];
 	ramparts: StructureRampart[];
+	walkableRamparts: StructureRampart[];
 	barriers: (StructureWall | StructureRampart)[];
 	storageUnits: StorageUnit[];
 	keeperLairs: StructureKeeperLair[];
@@ -108,6 +110,10 @@ interface RoomPosition {
 	neighbors: RoomPosition[];
 
 	inRangeToPos(pos: RoomPosition, range: number): boolean;
+
+	inRangeToXY(x: number, y: number, range: number): boolean;
+
+	getRangeToXY(x: number, y: number): number
 
 	getPositionsAtRange(range: number, includeWalls?: boolean, includeEdges?: boolean): RoomPosition[];
 

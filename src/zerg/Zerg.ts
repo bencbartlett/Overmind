@@ -6,6 +6,7 @@ import {Task} from '../tasks/Task';
 import {Movement, MoveOptions} from '../movement/Movement';
 import {isCreep, isZerg} from '../declarations/typeGuards';
 import {CombatIntel} from '../intel/CombatIntel';
+import {log} from '../console/log';
 
 export function getOverlord(creep: Zerg | Creep): Overlord | null {
 	if (creep.memory.overlord) {
@@ -125,6 +126,12 @@ export class Zerg {
 		// Handle attack notification when at lifetime - 1
 		if (this.ticksToLive == this.lifetime - 1 && !notifyWhenAttacked) {
 			this.notifyWhenAttacked(notifyWhenAttacked);
+		}
+	}
+
+	debug(...args: any[]) {
+		if (this.memory.debug) {
+			log.debug(this.print, args);
 		}
 	}
 
@@ -480,6 +487,10 @@ export class Zerg {
 
 	safelyInRoom(roomName: string): boolean {
 		return this.room.name == roomName && !this.pos.isEdge;
+	}
+
+	get inRampart(): boolean {
+		return this.creep.inRampart;
 	}
 
 	get isMoving(): boolean {
