@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+### Added
+- Added a `$.set()` method for cached object assignment
+
+### Changed
+- `Colony.registerRoomObjects` now uses more caching and is less expensive
+- Improvements to `MiningSite`, `ExtractionSite`, and `UpgradeSite` to make them more CPU friendly
+
 ## Overmind [0.5.0]: "Evolution" - 2018.8.10
 
 This release adds a huge set of new features to Overmind, described in more detail in [this blog post](https://bencbartlett.wordpress.com/2018/08/11/screeps-5-evolution/). The most notable change is the shift in base layout from the classic "box and flower" design to a much more compact circular bunker. Although this layout is more expensive to maintain, it is much more defensible and features a number of hard-coded optimizations.

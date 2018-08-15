@@ -109,14 +109,15 @@ export class Mem {
 	}
 
 	private static initGlobalMemory() {
-		global._cache = {
-			accessed    : {},
-			expiration  : {},
-			structures  : {},
-			numbers     : {},
-			lists       : {},
-			costMatrices: {},
-			things      : {},
+		global._cache = <IGlobalCache>{
+			accessed     : {},
+			expiration   : {},
+			structures   : {},
+			numbers      : {},
+			lists        : {},
+			costMatrices : {},
+			roomPositions: {},
+			things       : {},
 		};
 	}
 
@@ -158,10 +159,15 @@ export class Mem {
 			const CONSTRUCTION_SITE_TIMEOUT = 50000;
 			// Add constructionSites to memory and remove really old ones
 			for (let id in Game.constructionSites) {
+				const site = Game.constructionSites[id];
 				if (!Memory.constructionSites[id]) {
 					Memory.constructionSites[id] = Game.time;
 				} else if (Game.time - Memory.constructionSites[id] > CONSTRUCTION_SITE_TIMEOUT) {
-					Game.constructionSites[id].remove();
+					site.remove();
+				}
+				// Remove duplicate construction sites that get placed on top of existing structures due to caching
+				if (site && site.pos.isVisible && site.pos.lookForStructure(site.structureType)) {
+					site.remove();
 				}
 			}
 			// Remove dead constructionSites from memory
@@ -174,8 +180,8 @@ export class Mem {
 	}
 
 	private static cleanPathingMemory() {
-		let distanceCleanProbability = 0.001;
-		let weightedDistanceCleanProbability = 0.01;
+		const distanceCleanProbability = 0.001;
+		const weightedDistanceCleanProbability = 0.01;
 
 		// Randomly clear some cached path lengths
 		for (let pos1Name in Memory.pathing.distances) {

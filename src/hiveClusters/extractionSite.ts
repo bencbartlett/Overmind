@@ -7,6 +7,7 @@ import {Colony} from '../Colony';
 import {log} from '../console/log';
 import {Pathing} from '../movement/Pathing';
 import {OverlordPriority} from '../priorities/priorities_overlords';
+import {$} from '../caching/GlobalCache';
 
 // interface MineralSiteMemory {
 // 	stats: {
@@ -21,8 +22,7 @@ export class ExtractionSite extends HiveCluster {
 	mineral: Mineral;
 	initialCapacity: number;
 	output: StructureContainer | undefined;
-	outputConstructionSite: ConstructionSite | undefined;
-	private _outputPos: RoomPosition | undefined;
+	outputPos: RoomPosition | undefined;
 	overlord: ExtractorOverlord;
 
 	constructor(colony: Colony, extractor: StructureExtractor) {
@@ -30,19 +30,28 @@ export class ExtractionSite extends HiveCluster {
 		this.extractor = extractor;
 		this.mineral = extractor.pos.lookFor(LOOK_MINERALS)[0];
 		// Register output method
-		let siteContainer = this.pos.findClosestByLimitedRange(this.room.containers, 2);
-		if (siteContainer) {
-			this.output = siteContainer;
-		}
-		if (this.outputPos) {
-			this.colony.destinations.push(this.outputPos);
-		}
-		// Register output construction sites
-		let nearbyOutputSites = this.pos.findInRange(this.room.constructionSites, 2, {
-			filter: (s: ConstructionSite) => s.structureType == STRUCTURE_CONTAINER
-		}) as ConstructionSite[];
-		this.outputConstructionSite = nearbyOutputSites[0];
-		if (Game.time % 100 == 0 && !this.output && !this.outputConstructionSite) {
+		$.set(this, 'output', () => {
+			const siteContainer = this.pos.findClosestByLimitedRange(this.room.containers, 2);
+			if (siteContainer) {
+				return siteContainer;
+			}
+		}, 10);
+		this.outputPos = $.pos(this, 'outputPos', () => {
+			if (this.output) {
+				return this.output.pos;
+			}
+			let outputSite = this.findOutputConstructionSite();
+			if (outputSite) {
+				return outputSite.pos;
+			}
+			let containerPos = this.calculateContainerPos();
+			if (containerPos) {
+				return containerPos;
+			}
+			log.alert(`Mining site at ${this.pos.print}: no room plan set; cannot determine outputPos!`);
+		}, 10);
+		if (this.outputPos) this.colony.destinations.push(this.outputPos);
+		if (Game.time % 100 == 0 && !this.output) {
 			log.warning(`Mineral site at ${this.pos.print} has no output!`);
 		}
 	}
@@ -50,6 +59,13 @@ export class ExtractionSite extends HiveCluster {
 	spawnMoarOverlords() {
 		let priority = this.room.my ? OverlordPriority.ownedRoom.mineral : OverlordPriority.remoteSKRoom.mineral;
 		this.overlord = new ExtractorOverlord(this, priority);
+	}
+
+	findOutputConstructionSite(): ConstructionSite | undefined {
+		let nearbyOutputSites = this.pos.findInRange(this.room.constructionSites, 2, {
+			filter: (s: ConstructionSite) => s.structureType == STRUCTURE_CONTAINER
+		}) as ConstructionSite[];
+		return _.first(nearbyOutputSites);
 	}
 
 	/* Register appropriate resource withdrawal requests when the output gets sufficiently full */
@@ -69,22 +85,6 @@ export class ExtractionSite extends HiveCluster {
 		this.registerOutputRequests();
 	}
 
-	get outputPos(): RoomPosition | undefined {
-		if (this.output) {
-			return this.output.pos;
-		} else if (this.outputConstructionSite) {
-			return this.outputConstructionSite.pos;
-		} else {
-			if (!this._outputPos) {
-				this._outputPos = this.calculateContainerPos();
-				if (!this._outputPos && Game.time % 25 == 0) {
-					log.alert(`Mining site at ${this.pos.print}: no room plan set; cannot determine outputPos!`);
-				}
-			}
-			return this._outputPos;
-		}
-	}
-
 	/* Calculate where the container output will be built for this site */
 	private calculateContainerPos(): RoomPosition | undefined {
 		let originPos: RoomPosition | undefined = undefined;
@@ -101,7 +101,7 @@ export class ExtractionSite extends HiveCluster {
 
 	/* Build a container output at the optimal location */
 	private buildOutputIfNeeded(): void {
-		if (!this.output && !this.outputConstructionSite) {
+		if (!this.output && !this.findOutputConstructionSite()) {
 			let buildHere = this.outputPos;
 			if (buildHere) {
 				// Build a link if one is available

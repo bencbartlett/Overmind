@@ -203,7 +203,7 @@ export class Colony {
 		this.creeps = creeps || [];
 		this.creepsByRole = _.groupBy(this.creeps, creep => creep.memory.role);
 		// Register the rest of the colony components; the order in which these are called is important!
-		this.registerRoomObjects();			// Register real colony components
+		this.registerRoomObjects_cached();			// Register real colony components
 		this.registerOperationalState();	// Set the colony operational state
 		this.registerUtilities(); 			// Register logistics utilities, room planners, and layout info
 		this.registerHiveClusters(); 		// Build the hive clusters

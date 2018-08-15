@@ -59,8 +59,9 @@ export class UpgradingOverlord extends Overlord {
 				return;
 			}
 			// Build construction site
-			if (this.upgradeSite.inputConstructionSite) {
-				upgrader.task = Tasks.build(this.upgradeSite.inputConstructionSite);
+			const inputSite = this.upgradeSite.findInputConstructionSite();
+			if (inputSite) {
+				upgrader.task = Tasks.build(inputSite);
 				return;
 			}
 			// Sign controller if needed

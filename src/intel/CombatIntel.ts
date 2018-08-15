@@ -421,6 +421,12 @@ export class CombatIntel {
 		return currentRange > previousRange;
 	}
 
+	static isEdgeDancing(creep: Creep, threshold = 5): boolean {
+		// TODO
+		console.log('NOT IMPLEMENTED');
+		return false;
+	}
+
 	static getPositionsNearEnemies(hostiles: Creep[], range = 0): RoomPosition[] {
 		return _.unique(_.flatten(_.map(hostiles, hostile =>
 			hostile.pos.getPositionsInRange(range, false, true))));

@@ -80,10 +80,11 @@ export class MiningOverlord extends Overlord {
 			}
 			// Else build the output if there is a constructionSite (placement handled by miningSite)
 			else {
-				if (this.miningSite.outputConstructionSite) {
-					miner.task = Tasks.build(this.miningSite.outputConstructionSite);
-					if (this.miningSite.outputConstructionSite.structureType == STRUCTURE_LINK &&
-						miner.pos.isEqualTo(this.miningSite.outputConstructionSite.pos)) {
+				const outputConstructionSite = this.miningSite.findOutputConstructionSite();
+				if (outputConstructionSite) {
+					miner.task = Tasks.build(outputConstructionSite);
+					if (outputConstructionSite.structureType == STRUCTURE_LINK &&
+						miner.pos.isEqualTo(outputConstructionSite.pos)) {
 						// Move off of the contructionSite (link sites won't build)
 						miner.moveOffCurrentPos();
 					}

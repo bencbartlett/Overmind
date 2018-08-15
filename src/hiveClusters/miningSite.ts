@@ -11,6 +11,7 @@ import {Visualizer} from '../visuals/Visualizer';
 import {LogisticsNetwork} from '../logistics/LogisticsNetwork';
 import {Pathing} from '../movement/Pathing';
 import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
+import {$} from '../caching/GlobalCache';
 
 interface MiningSiteMemory {
 	stats: {
@@ -26,8 +27,7 @@ export class MiningSite extends HiveCluster {
 	energyPerTick: number;
 	miningPowerNeeded: number;
 	output: StructureContainer | StructureLink | undefined;
-	outputConstructionSite: ConstructionSite | undefined;
-	private _outputPos: RoomPosition | undefined;
+	outputPos: RoomPosition | undefined;
 	shouldDropMine: boolean;
 	overlord: MiningOverlord;
 
@@ -43,26 +43,34 @@ export class MiningSite extends HiveCluster {
 		this.energyPerTick = source.energyCapacity / ENERGY_REGEN_TIME;
 		this.miningPowerNeeded = Math.ceil(this.energyPerTick / HARVEST_POWER) + 1;
 		// Register output method
-		let siteContainer = this.pos.findClosestByLimitedRange(this.room.containers, 2);
-		if (siteContainer) {
-			this.output = siteContainer;
-		}
-		let siteLink = this.pos.findClosestByLimitedRange(this.colony.availableLinks, 2);
-		if (siteLink) {
-			this.output = siteLink;
-			this.colony.linkNetwork.claimLink(siteLink);
-		}
-		if (this.outputPos) {
-			this.colony.destinations.push(this.outputPos);
-		}
-		// Register output construction sites
-		let nearbyOutputSites = this.pos.findInRange(this.room.constructionSites, 2, {
-			filter: (s: ConstructionSite) => s.structureType == STRUCTURE_CONTAINER ||
-											 s.structureType == STRUCTURE_LINK,
-		}) as ConstructionSite[];
-		this.outputConstructionSite = nearbyOutputSites[0];
+		$.set(this, 'output', () => {
+			const siteLink = this.pos.findClosestByLimitedRange(this.colony.availableLinks, 2);
+			if (siteLink) {
+				this.colony.linkNetwork.claimLink(siteLink);
+				return siteLink;
+			}
+			const siteContainer = this.pos.findClosestByLimitedRange(this.room.containers, 2);
+			if (siteContainer) {
+				return siteContainer;
+			}
+		}, 10);
+		this.outputPos = $.pos(this, 'outputPos', () => {
+			if (this.output) {
+				return this.output.pos;
+			}
+			let outputSite = this.findOutputConstructionSite();
+			if (outputSite) {
+				return outputSite.pos;
+			}
+			let containerPos = this.calculateContainerPos();
+			if (containerPos) {
+				return containerPos;
+			}
+			log.alert(`Mining site at ${this.pos.print}: no room plan set; cannot determine outputPos!`);
+		}, 10);
+		if (this.outputPos) this.colony.destinations.push(this.outputPos);
 		this.shouldDropMine = this.colony.level < MiningSite.settings.dropMineUntilRCL;
-		if (!this.shouldDropMine && Game.time % 100 == 0 && !this.output && !this.outputConstructionSite) {
+		if (!this.shouldDropMine && Game.time % 100 == 0 && !this.output) {
 			log.warning(`Mining site at ${this.pos.print} has no output!`);
 		}
 		// Calculate statistics
@@ -109,6 +117,14 @@ export class MiningSite extends HiveCluster {
 		return Math.min(_.sum(this.output.store) + predictedSurplus - outflux, 0);
 	}
 
+	findOutputConstructionSite(): ConstructionSite | undefined {
+		const nearbyOutputSites = this.pos.findInRange(this.room.constructionSites, 2, {
+			filter: (s: ConstructionSite) => s.structureType == STRUCTURE_CONTAINER ||
+											 s.structureType == STRUCTURE_LINK,
+		}) as ConstructionSite[];
+		return _.first(nearbyOutputSites);
+	}
+
 	/* Register appropriate resource withdrawal requests when the output gets sufficiently full */
 	private registerOutputRequests(): void {
 		if (!this.output) return;
@@ -136,21 +152,6 @@ export class MiningSite extends HiveCluster {
 		this.registerOutputRequests();
 	}
 
-	get outputPos(): RoomPosition | undefined {
-		if (this.output) {
-			return this.output.pos;
-		} else if (this.outputConstructionSite) {
-			return this.outputConstructionSite.pos;
-		} else {
-			if (!this._outputPos) {
-				this._outputPos = this.calculateContainerPos();
-				if (!this._outputPos && Game.time % 25 == 0) {
-					log.alert(`Mining site at ${this.pos.print}: no room plan set; cannot determine outputPos!`);
-				}
-			}
-			return this._outputPos;
-		}
-	}
 
 	/* Calculate where the container output will be built for this site */
 	private calculateContainerPos(): RoomPosition | undefined {
@@ -185,7 +186,7 @@ export class MiningSite extends HiveCluster {
 		if (this.shouldDropMine) {
 			return; // only build containers in reserved, owned, or SK rooms
 		}
-		if (!this.output && !this.outputConstructionSite) {
+		if (!this.output && !this.findOutputConstructionSite()) {
 			let buildHere = this.outputPos;
 			if (buildHere) {
 				// Build a link if one is available
@@ -245,8 +246,8 @@ export class MiningSite extends HiveCluster {
 
 	/* Run tasks: make output construciton site if needed; build and maintain the output structure */
 	run(): void {
-		let rebuildOnTick = 5;
-		let rebuildFrequency = 10;
+		const rebuildOnTick = 5;
+		const rebuildFrequency = 10;
 		if (Game.time % rebuildFrequency == rebuildOnTick - 1) {
 			this.destroyContainerIfNeeded();
 		}

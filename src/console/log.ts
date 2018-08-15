@@ -208,28 +208,32 @@ export class Log {
 		console.log.apply(this, this.buildArguments(FATAL).concat([color(e.toString(), fatalColor)]));
 	}
 
-	public error(...args: any[]) {
+	public error(...args: any[]): undefined {
 		if (this.level >= LogLevels.ERROR) {
 			console.log.apply(this, this.buildArguments(LogLevels.ERROR).concat([].slice.call(args)));
 		}
+		return undefined;
 	}
 
-	public warning(...args: any[]) {
+	public warning(...args: any[]): undefined {
 		if (this.level >= LogLevels.WARNING) {
 			console.log.apply(this, this.buildArguments(LogLevels.WARNING).concat([].slice.call(args)));
 		}
+		return undefined;
 	}
 
-	public alert(...args: any[]) {
+	public alert(...args: any[]): undefined {
 		if (this.level >= LogLevels.ALERT) {
 			console.log.apply(this, this.buildArguments(LogLevels.ALERT).concat([].slice.call(args)));
 		}
+		return undefined;
 	}
 
-	public info(...args: any[]) {
+	public info(...args: any[]): undefined {
 		if (this.level >= LogLevels.INFO) {
 			console.log.apply(this, this.buildArguments(LogLevels.INFO).concat([].slice.call(args)));
 		}
+		return undefined;
 	}
 
 	public debug(...args: any[]) {
