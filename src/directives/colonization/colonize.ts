@@ -44,11 +44,9 @@ export class DirectiveColonize extends Directive {
 			for (let pioneer of this.overlords.pioneer.pioneers) {
 				let miningOverlord = miningOverlords.shift();
 				if (miningOverlord) {
-					pioneer.memory.role = MinerSetup.role;
-					pioneer.overlord = miningOverlord;
+					pioneer.reassign(miningOverlord, MinerSetup.role);
 				} else {
-					pioneer.memory.role = WorkerSetup.role;
-					pioneer.overlord = this.toColonize.overlords.work;
+					pioneer.reassign(this.toColonize.overlords.work, WorkerSetup.role);
 				}
 			}
 			// Remove the directive

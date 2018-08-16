@@ -322,12 +322,7 @@ export class Hatchery extends HiveCluster {
 			}
 			this.productionQueue[priority].push({protoCreep: protoCreep, options: request.options});
 		} else {
-			// // If you are incubating and can't build the requested creep, enqueue it to the incubation hatchery
-			// if (this.colony.incubator && this.colony.incubator.hatchery) {
-			// 	this.colony.incubator.hatchery.enqueue(request);
-			// } else {
-			log.warning(`${this.room.print}: cannot spawn creep ${protoCreep.name} with body ${protoCreep.body}!`);
-			// }
+			log.debug(`${this.room.print}: cannot spawn creep ${protoCreep.name} with body ${protoCreep.body}!`);
 		}
 	}
 

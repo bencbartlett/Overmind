@@ -8,6 +8,8 @@ import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {SpawnRequest} from '../../hiveClusters/hatchery';
+import {QueenSetup} from '../core/queen';
+import {TransporterSetup} from '../core/transporter';
 
 export const EmergencyMinerSetup = new CreepSetup('drone', {
 	pattern  : [WORK, WORK, CARRY, MOVE],
@@ -30,7 +32,7 @@ export class BootstrappingOverlord extends Overlord {
 	supplyStructures: (StructureSpawn | StructureExtension)[];
 
 	static settings = {
-		spawnBootstrapMinerThreshold: 1000
+		spawnBootstrapMinerThreshold: 2500
 	};
 
 	constructor(directive: DirectiveBootstrap, priority = OverlordPriority.emergency.bootstrap) {
@@ -85,7 +87,16 @@ export class BootstrappingOverlord extends Overlord {
 			}
 		}
 		// Spawn fillers
-		this.wishlist(1, FillerSetup);
+		if (this.colony.getCreepsByRole(QueenSetup.role).length == 0 && this.colony.hatchery) { // no queen
+			let transporter = _.first(this.colony.getZergByRole(TransporterSetup.role));
+			if (transporter) {
+				// reassign transporter to be queen
+				transporter.reassign(this.colony.hatchery.overlord, QueenSetup.role);
+			} else {
+				// wish for a filler
+				this.wishlist(1, FillerSetup);
+			}
+		}
 		// Then spawn the rest of the needed miners
 		let energyInStructures = _.sum(_.map(this.withdrawStructures, structure => structure.energy));
 		let droppedEnergy = _.sum(this.room.droppedEnergy, drop => drop.amount);

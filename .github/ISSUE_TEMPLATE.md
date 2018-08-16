@@ -17,8 +17,17 @@
 
 ```
 
+<!--- Please copy the line from main.js causing the error. This will be in the second line of the traceback --->
+```
+// Offending line:
+
+```
+
+### Suggested fix (optional):
+<!--- If you think you know how to fix the bug, please include your suggestion here --->
+
 
 ### Other information:
-- Overmind version: *{you can find this in package.json}*
+- Overmind version: *{found in package.json or by typing `info()` into console}*
     - Commit hash: *{optional, but helpful: include the commit hash (if known)}*
 

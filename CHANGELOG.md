@@ -7,8 +7,18 @@ All notable changes to this project will be documented in this file. The format 
 - Added a `$.set()` method for cached object assignment
 
 ### Changed
-- `Colony.registerRoomObjects` now uses more caching and is less expensive
-- Improvements to `MiningSite`, `ExtractionSite`, and `UpgradeSite` to make them more CPU friendly
+- Improvements to `RangedDefenseOverlord` which utilize some of the new combat logic developed for SK mining
+- Queens now are prespawned 100 ticks in advance of when they are needed (up from 50) until there are multiple spawns in the room
+- Tweaks to bootstrapping
+    - Triggers if there is no queen and not enough energy to spawn a new one, regardless of presence of miners
+    - Will now reassign a transporter to become a queen if one is available
+- CPU improvements
+    - `Colony.registerRoomObjects` now uses more caching and is less expensive
+    - Improvements to `MiningSite`, `ExtractionSite`, and `UpgradeSite` to make them more CPU friendly
+
+### Fixed
+- Bugfix with pioneer recharging behavior to include dropped resources in recharging options
+
 
 ## Overmind [0.5.0]: "Evolution" - 2018.8.10
 

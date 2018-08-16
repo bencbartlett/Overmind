@@ -14,6 +14,7 @@ import {BuildPriorities, DemolishStructurePriorities} from '../priorities/priori
 import {bunkerLayout, insideBunkerBounds} from './layouts/bunker';
 import {DirectiveTerminalRebuildState} from '../directives/logistics/terminalState_rebuild';
 import {derefCoords, maxBy} from '../utilities/utils';
+import {bullet} from '../utilities/stringConstants';
 
 export interface BuildingPlannerOutput {
 	name: string;
@@ -205,8 +206,9 @@ export class RoomPlanner {
 		let msg = [
 			`Room planner activated for ${this.colony.name}. Reinstantiating flags from previous session on next tick.`,
 			'Place colony components with room planner flags:',
-			'    Place hatchery:        white/green',
-			'    Place command center:  white/blue',
+			bullet + 'Place bunker (recommended)  white/red',
+			bullet + 'Place hatchery:             white/green',
+			bullet + 'Place command center:       white/blue',
 			// 'Set component rotation by writing an angle (0,90,180,270 or 0,1,2,3) to flag.memory.rotation.',
 			'Finalize layout '
 		];

@@ -49,7 +49,8 @@ export class TaskRecharge extends Task {
 	// Override creep setter to dispense a valid recharge task
 	set creep(creep: Zerg) {
 		// Choose the target to maximize your energy gain subject to other targeting workers
-		let target = maxBy(creep.colony.rechargeables, obj => this.rechargeRateForCreep(creep, obj));
+		let target = creep.inColonyRoom ? maxBy(creep.colony.rechargeables, o => this.rechargeRateForCreep(creep, o))
+										: maxBy(creep.room.rechargeables, o => this.rechargeRateForCreep(creep, o));
 		if (!target || creep.pos.getMultiRoomRangeTo(target.pos) > 40) {
 			if (creep.getActiveBodyparts(WORK) > 0) {
 				// Harvest from a source if there is no recharge target available

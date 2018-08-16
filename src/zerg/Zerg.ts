@@ -405,6 +405,16 @@ export class Zerg {
 		setOverlord(this, newOverlord);
 	}
 
+	/* Reassigns the creep to work under a new overlord and as a new role. */
+	reassign(newOverlord: Overlord | null, newRole: string, invalidateTask = true) {
+		this.overlord = newOverlord;
+		this.roleName = newRole;
+		this.memory.role = newRole;
+		if (invalidateTask) {
+			this.task = null;
+		}
+	}
+
 	// Task logic ------------------------------------------------------------------------------------------------------
 
 	/* Wrapper for _task */
@@ -469,6 +479,11 @@ export class Zerg {
 
 	set colony(newColony: Colony) {
 		this.memory.colony = newColony.name;
+	}
+
+	/* If the creep is in a colony room or outpost */
+	get inColonyRoom(): boolean {
+		return Overmind.colonyMap[this.room.name] == this.memory.colony;
 	}
 
 	// Movement and location -------------------------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 // Hatchery overlord: spawn and run a dedicated supplier-like hatchery attendant (called after colony has storage)
-import {Overlord} from '../Overlord';
+import {DEFAULT_PRESPAWN, Overlord} from '../Overlord';
 import {Hatchery} from '../../hiveClusters/hatchery';
 import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
@@ -36,8 +36,9 @@ export class QueenOverlord extends Overlord {
 	}
 
 	init() {
-		let amount = 1;
-		this.wishlist(amount, QueenSetup);
+		const amount = 1;
+		const prespawn = this.hatchery.spawns.length <= 1 ? 100 : DEFAULT_PRESPAWN;
+		this.wishlist(amount, QueenSetup, {prespawn: prespawn});
 	}
 
 	private supplyActions(queen: Zerg) {

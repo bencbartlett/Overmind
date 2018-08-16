@@ -1,4 +1,4 @@
-// Overseer: coordinates creep actions and spawn requests related to a common objective
+// Overlord: this class represents a "process" that gets executed by one or more creeps
 
 import {CreepSetup} from './CreepSetup';
 import {profile} from '../profiler/decorator';
@@ -13,45 +13,6 @@ import {SpawnGroup} from '../logistics/SpawnGroup';
 import {CombatZerg} from '../zerg/CombatZerg';
 import {Pathing} from '../movement/Pathing';
 
-export function getOverlord(creep: Zerg | Creep): Overlord | null {
-	if (creep.memory.overlord) {
-		return Overmind.overlords[creep.memory.overlord] || null;
-	} else {
-		return null;
-	}
-}
-
-export function setOverlord(creep: Zerg | Creep, newOverlord: Overlord | null) {
-	// Remove cache references to old assignments
-	let roleName = creep.memory.role;
-	let ref = creep.memory.overlord;
-	let oldOverlord: Overlord | null = ref ? Overmind.overlords[ref] : null;
-	if (ref && Overmind.cache.overlords[ref] && Overmind.cache.overlords[ref][roleName]) {
-		_.remove(Overmind.cache.overlords[ref][roleName], name => name == creep.name);
-	}
-	if (newOverlord) {
-		// Change to the new overlord's colony
-		creep.memory.colony = newOverlord.colony.name;
-		// Change assignments in memory
-		creep.memory.overlord = newOverlord.ref;
-		// Update the cache references
-		if (!Overmind.cache.overlords[newOverlord.ref]) {
-			Overmind.cache.overlords[newOverlord.ref] = {};
-		}
-		if (!Overmind.cache.overlords[newOverlord.ref][roleName]) {
-			Overmind.cache.overlords[newOverlord.ref][roleName] = [];
-		}
-		Overmind.cache.overlords[newOverlord.ref][roleName].push(creep.name);
-	} else {
-		creep.memory.overlord = null;
-	}
-	if (oldOverlord) oldOverlord.recalculateCreeps();
-	if (newOverlord) newOverlord.recalculateCreeps();
-}
-
-
-const DEFAULT_PRESPAWN = 50;
-
 export interface OverlordInitializer {
 	ref: string;
 	room: Room | undefined;
@@ -64,6 +25,8 @@ export function isColony(initializer: OverlordInitializer | Colony): initializer
 	return (<Colony>initializer).overseer != undefined;
 }
 
+export const DEFAULT_PRESPAWN = 50;
+
 export interface CreepRequestOptions {
 	prespawn?: number;
 	priority?: number;
@@ -75,7 +38,6 @@ export interface CreepRequestOptions {
 export abstract class Overlord {
 
 	room: Room | undefined;
-	// name: string;
 	priority: number;
 	ref: string;
 	pos: RoomPosition;
@@ -83,12 +45,9 @@ export abstract class Overlord {
 	spawnGroup: SpawnGroup | undefined;
 	protected _creeps: { [roleName: string]: Creep[] };
 	creepUsageReport: { [role: string]: [number, number] | undefined };
-	// memory: OverlordMemory;
 	boosts: { [roleName: string]: _ResourceConstantSansEnergy[] | undefined };
 
 	constructor(initializer: OverlordInitializer | Colony, name: string, priority: number) {
-		// this.initMemory(initializer);
-		// this.name = name;
 		this.room = initializer.room;
 		this.priority = priority;
 		this.ref = initializer.ref + '>' + name;
@@ -162,13 +121,9 @@ export abstract class Overlord {
 	// TODO: include creep move speed
 	lifetimeFilter(creeps: (Creep | Zerg)[], prespawn = DEFAULT_PRESPAWN): (Creep | Zerg)[] {
 		let spawnDistance = 0;
-		// TODO: account for creeps that can be spawned at incubatee's hatchery
-		// if (this.colony.incubator) {
-		// 	spawnDistance = Pathing.distance(this.pos, this.colony.incubator.hatchery!.pos) || 0;
-		// } else
 		if (this.spawnGroup) {
 			let distances = _.take(_.sortBy(this.spawnGroup.memory.distances), 2);
-			spawnDistance = _.sum(distances) / distances.length || 0;
+			spawnDistance = (_.sum(distances) / distances.length) || 0;
 		} else if (this.colony.hatchery) {
 			// Use distance or 0 (in case distance returns something undefined due to incomplete pathfinding)
 			spawnDistance = Pathing.distance(this.pos, this.colony.hatchery.pos) || 0;
@@ -176,9 +131,9 @@ export abstract class Overlord {
 		if (this.colony.isIncubating && this.colony.spawnGroup) {
 			spawnDistance += this.colony.spawnGroup.stats.avgDistance;
 		}
-		// The last condition fixes a bug only present on private servers that took me a fucking week to isolate.
-		// At the tick of birth, creep.spawning = false and creep.ticksTolive = undefined
-		// See: https://screeps.com/forum/topic/443/creep-spawning-is-not-updated-correctly-after-spawn-process
+		/* The last condition fixes a bug only present on private servers that took me a fucking week to isolate.
+		 * At the tick of birth, creep.spawning = false and creep.ticksTolive = undefined
+		 * See: https://screeps.com/forum/topic/443/creep-spawning-is-not-updated-correctly-after-spawn-process */
 		return _.filter(creeps, creep =>
 			creep.ticksToLive! > CREEP_SPAWN_TIME * creep.body.length + spawnDistance + prespawn ||
 			creep.spawning || (!creep.spawning && !creep.ticksToLive));
@@ -375,6 +330,8 @@ export abstract class Overlord {
 
 	abstract init(): void;
 
+	abstract run(): void;
+
 	// Standard sequence of actions for running task-based creeps
 	autoRun(roleCreeps: Zerg[], taskHandler: (creep: Zerg) => void, fleeCallback?: (creep: Zerg) => boolean) {
 		for (let creep of roleCreeps) {
@@ -409,10 +366,44 @@ export abstract class Overlord {
 		}
 	}
 
-	abstract run(): void;
-
 	visuals(): void {
 
 	}
 
+}
+
+export function getOverlord(creep: Zerg | Creep): Overlord | null {
+	if (creep.memory.overlord) {
+		return Overmind.overlords[creep.memory.overlord] || null;
+	} else {
+		return null;
+	}
+}
+
+export function setOverlord(creep: Zerg | Creep, newOverlord: Overlord | null) {
+	// Remove cache references to old assignments
+	let roleName = creep.memory.role;
+	let ref = creep.memory.overlord;
+	let oldOverlord: Overlord | null = ref ? Overmind.overlords[ref] : null;
+	if (ref && Overmind.cache.overlords[ref] && Overmind.cache.overlords[ref][roleName]) {
+		_.remove(Overmind.cache.overlords[ref][roleName], name => name == creep.name);
+	}
+	if (newOverlord) {
+		// Change to the new overlord's colony
+		creep.memory.colony = newOverlord.colony.name;
+		// Change assignments in memory
+		creep.memory.overlord = newOverlord.ref;
+		// Update the cache references
+		if (!Overmind.cache.overlords[newOverlord.ref]) {
+			Overmind.cache.overlords[newOverlord.ref] = {};
+		}
+		if (!Overmind.cache.overlords[newOverlord.ref][roleName]) {
+			Overmind.cache.overlords[newOverlord.ref][roleName] = [];
+		}
+		Overmind.cache.overlords[newOverlord.ref][roleName].push(creep.name);
+	} else {
+		creep.memory.overlord = null;
+	}
+	if (oldOverlord) oldOverlord.recalculateCreeps();
+	if (newOverlord) newOverlord.recalculateCreeps();
 }

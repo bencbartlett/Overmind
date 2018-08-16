@@ -11,7 +11,6 @@ import {Visualizer} from './visuals/Visualizer';
 import {Pathing} from './movement/Pathing';
 import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
 import {DirectiveNukeResponse} from './directives/defense/nukeResponse';
-import {MinerSetup} from './overlords/mining/miner';
 import {QueenSetup} from './overlords/core/queen';
 import {DirectiveTerminalEvacuateState} from './directives/logistics/terminalState_evacuate';
 import {bodyCost} from './overlords/CreepSetup';
@@ -43,10 +42,6 @@ export class Overseer {
 
 	registerOverlord(overlord: Overlord): void {
 		this.overlordRequests.push(overlord);
-		// if (!this.overlords[overlord.priority]) {
-		// 	this.overlords[overlord.priority] = [];
-		// }
-		// this.overlords[overlord.priority].push(overlord);
 	}
 
 	private registerLogisticsRequests(): void {
@@ -77,9 +72,8 @@ export class Overseer {
 		// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
 		// Doesn't apply to incubating colonies.
 		if (!this.colony.isIncubating) {
-			let hasMiners = this.colony.getCreepsByRole(MinerSetup.role).length > 0;		// Has energy supply?
-			let hasQueen = this.colony.getCreepsByRole(QueenSetup.role).length > 0;			// Has a queen?
-			if (!hasMiners && !hasQueen && this.colony.hatchery && !this.colony.spawnGroup) {
+			let noQueen = this.colony.getCreepsByRole(QueenSetup.role).length == 0;
+			if (noQueen && this.colony.hatchery && !this.colony.spawnGroup) {
 				let energyToMakeQueen = bodyCost(QueenSetup.generateBody(this.colony.room.energyCapacityAvailable));
 				if (this.colony.room.energyAvailable < energyToMakeQueen || hasJustSpawned()) {
 					let result = DirectiveBootstrap.createIfNotPresent(this.colony.hatchery.pos, 'pos');
