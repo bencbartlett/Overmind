@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Added
 - Added a `$.set()` method for cached object assignment
+- Lots of new content added to the `Visualizer`!
+    - Overmind logo now gets drawn in upper left corner
+        - This was a fun little project to do in Mathematica; I made a curve simplification algorithm to look at an image and give the minimum number of points to describe its perimeter within a given tolerance (those are all the hard-coded arrays in `logos.ts`)
+    - CPU, bucket, and GCL meters drawn
+    - Updates to colony creep count visuals
 
 ### Changed
 - Improvements to `RangedDefenseOverlord` which utilize some of the new combat logic developed for SK mining

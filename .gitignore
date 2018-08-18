@@ -8,6 +8,9 @@ screeps.json
 /.rpt2_cache
 /tsc-out
 
+# Ignore Mathematica notebooks so they don't add 50 billion lines to contribution count
+/assets/Mathematica
+
 # Ignore Overmind.ts
 /src/Overmind.ts
 
