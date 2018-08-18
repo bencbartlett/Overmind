@@ -5,7 +5,6 @@ import {profile} from '../profiler/decorator';
 import {CommandCenterOverlord} from '../overlords/core/manager';
 import {Colony} from '../Colony';
 import {Mem} from '../Memory';
-import {Visualizer} from '../visuals/Visualizer';
 import {TerminalNetwork} from '../logistics/TerminalNetwork';
 import {Energetics} from '../logistics/Energetics';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
@@ -161,10 +160,10 @@ export class CommandCenter extends HiveCluster {
 	}
 
 	visuals() {
-		let info = [
-			`Energy: ${Math.floor(this.storage.store[RESOURCE_ENERGY] / 1000)} K`,
-		];
-		Visualizer.showInfo(info, this);
+		// let info = [
+		// 	`Energy: ${Math.floor(this.storage.store[RESOURCE_ENERGY] / 1000)} K`,
+		// ];
+		// Visualizer.showInfo(info, this);
 	}
 }
 

@@ -434,7 +434,7 @@ export class Colony {
 			logistics: new TransportOverlord(this),
 		};
 		if (!this.observer) {
-			this.overlords.scout = new RandomWalkerScoutOverlord(this);
+			// this.overlords.scout = new RandomWalkerScoutOverlord(this);
 		}
 		for (let hiveCluster of this.hiveClusters) {
 			hiveCluster.spawnMoarOverlords();
@@ -519,6 +519,13 @@ export class Colony {
 
 	visuals(): void {
 		this.overseer.visuals();											// Display overlord creep information
-		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.visuals()); // Display hiveCluster visuals
+		// let report: string[] = [];
+		// report.push(`Hatchery:`)
+		// for (let spawn of this.spawns) {
+		// 	if (spawn.spawning) {
+		// 		report.push(`${bullet}Spawning`)
+		// 	}
+		// }
+		// _.forEach(this.hiveClusters, hiveCluster => hiveCluster.visuals()); // Display hiveCluster visuals
 	}
 }

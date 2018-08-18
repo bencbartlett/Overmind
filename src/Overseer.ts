@@ -271,14 +271,19 @@ export class Overseer {
 		let stringReport: string[] = [
 			`DEFCON: ${this.colony.defcon}  Safe outposts: ${safeOutposts.length}/${this.colony.outposts.length}`,
 			`Creep usage for ${this.colony.name}:`];
-		let padLength = _.max(_.map(_.keys(roleOccupancy), str => str.length)) + 2;
+
+
+		// let padLength = _.max(_.map(_.keys(roleOccupancy), str => str.length)) + 2;
+		let roledata: string[][] = [];
 		for (let role in roleOccupancy) {
 			let [current, needed] = roleOccupancy[role];
-			if (needed > 0) {
-				stringReport.push('| ' + `${role}:`.padRight(padLength) +
-								  `${Math.floor(100 * current / needed)}%`.padLeft(4));
-			}
+			// if (needed > 0) {
+			// 	stringReport.push('| ' + `${role}:`.padRight(padLength) +
+			// 					  `${Math.floor(100 * current / needed)}%`.padLeft(4));
+			// }
+			roledata.push([role, `${current}/${needed}`]);
 		}
-		Visualizer.colonyReport(this.colony.name, stringReport);
+		const tablePos = new RoomPosition(1, 11.5, this.colony.room.name);
+		Visualizer.infoBox(`${this.colony.name} Creeps`, roledata, tablePos, 7);
 	}
 }

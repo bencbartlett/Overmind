@@ -140,6 +140,8 @@ interface RoomPosition {
 }
 
 interface RoomVisual {
+	box(x: number, y: number, w: number, h: number, style?: LineStyle): RoomVisual;
+
 	infoBox(info: string[], x: number, y: number, opts?: { [option: string]: any }): RoomVisual;
 
 	multitext(textLines: string[], x: number, y: number, opts?: { [option: string]: any }): RoomVisual;

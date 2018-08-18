@@ -5,7 +5,6 @@ import {profile} from '../profiler/decorator';
 import {UpgradingOverlord} from '../overlords/core/upgrader';
 import {Colony, ColonyStage} from '../Colony';
 import {Mem} from '../Memory';
-import {Visualizer} from '../visuals/Visualizer';
 import {log} from '../console/log';
 import {Stats} from '../stats/stats';
 import {Pathing} from '../movement/Pathing';
@@ -230,15 +229,15 @@ export class UpgradeSite extends HiveCluster {
 	}
 
 	visuals() {
-		let info = [];
-		if (this.controller.level != 8) {
-			let progress = `${Math.floor(this.controller.progress / 1000)}K`;
-			let progressTotal = `${Math.floor(this.controller.progressTotal / 1000)}K`;
-			let percent = `${Math.floor(100 * this.controller.progress / this.controller.progressTotal)}`;
-			info.push(`Progress: ${progress}/${progressTotal} (${percent}%)`);
-
-		}
-		info.push(`Downtime: ${this.memory.stats.downtime.toPercent()}`);
-		Visualizer.showInfo(info, this);
+		// let info = [];
+		// if (this.controller.level != 8) {
+		// 	let progress = `${Math.floor(this.controller.progress / 1000)}K`;
+		// 	let progressTotal = `${Math.floor(this.controller.progressTotal / 1000)}K`;
+		// 	let percent = `${Math.floor(100 * this.controller.progress / this.controller.progressTotal)}`;
+		// 	info.push(`Progress: ${progress}/${progressTotal} (${percent}%)`);
+		//
+		// }
+		// info.push(`Downtime: ${this.memory.stats.downtime.toPercent()}`);
+		// Visualizer.showInfo(info, this);
 	}
 }

@@ -14,8 +14,8 @@ import {Priority} from '../priorities/priorities';
 import {Zerg} from '../zerg/Zerg';
 import {TraderJoe} from '../logistics/TradeNetwork';
 import {rightArrow} from '../utilities/stringConstants';
-import {Visualizer} from '../visuals/Visualizer';
 import {Stats} from '../stats/stats';
+import {rollingAverage} from '../utilities/utils';
 
 const LabStatus = {
 	Idle             : 0,
@@ -429,16 +429,15 @@ export class EvolutionChamber extends HiveCluster {
 	}
 
 	visuals() {
-		_.forEach(this.reagentLabs, lab => Visualizer.circle(lab.pos, 'red'));
-		_.forEach(this.productLabs, lab => Visualizer.circle(lab.pos, 'blue'));
-		_.forEach(this.boostingLabs, lab => Visualizer.circle(lab.pos, 'purple'));
+		// _.forEach(this.reagentLabs, lab => Visualizer.circle(lab.pos, 'red'));
+		// _.forEach(this.productLabs, lab => Visualizer.circle(lab.pos, 'blue'));
+		// _.forEach(this.boostingLabs, lab => Visualizer.circle(lab.pos, 'purple'));
 	}
 
 	private stats(): void {
 		Stats.log(`colonies.${this.colony.name}.evolutionChamber.totalProduction`, this.memory.stats.totalProduction);
 		let labUsage = _.sum(this.productLabs, lab => lab.cooldown > 0 ? 1 : 0) / this.productLabs.length;
-		this.memory.stats.avgUsage = (labUsage + this.memory.stats.avgUsage * (LAB_USAGE_WINDOW - 1))
-									 / LAB_USAGE_WINDOW;
+		this.memory.stats.avgUsage = rollingAverage(labUsage, this.memory.stats.avgUsage, LAB_USAGE_WINDOW);
 		Stats.log(`colonies.${this.colony.name}.evolutionChamber.avgUsage`, this.memory.stats.avgUsage);
 	}
 

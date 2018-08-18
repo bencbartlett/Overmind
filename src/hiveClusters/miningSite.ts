@@ -7,11 +7,11 @@ import {Colony, ColonyStage} from '../Colony';
 import {Mem} from '../Memory';
 import {log} from '../console/log';
 import {OverlordPriority} from '../priorities/priorities_overlords';
-import {Visualizer} from '../visuals/Visualizer';
 import {LogisticsNetwork} from '../logistics/LogisticsNetwork';
 import {Pathing} from '../movement/Pathing';
 import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
 import {$} from '../caching/GlobalCache';
+import {rollingAverage} from '../utilities/utils';
 
 interface MiningSiteMemory {
 	stats: {
@@ -98,8 +98,8 @@ export class MiningSite extends HiveCluster {
 		if (this.source.ticksToRegeneration == 1) {
 			this.memory.stats.usage = (this.source.energyCapacity - this.source.energy) / this.source.energyCapacity;
 		}
-		this.memory.stats.downtime = (this.memory.stats.downtime * (CREEP_LIFE_TIME - 1) +
-									  (this.output ? +this.output.isFull : 0)) / CREEP_LIFE_TIME;
+		this.memory.stats.downtime = rollingAverage(this.output ? +this.output.isFull : 0,
+													this.memory.stats.downtime, CREEP_LIFE_TIME);
 	}
 
 	/* Return the approximate predicted energy if a transporter needed to come from storage.
@@ -257,7 +257,7 @@ export class MiningSite extends HiveCluster {
 	}
 
 	visuals() {
-		Visualizer.showInfo([`Usage:  ${this.memory.stats.usage.toPercent()}`,
-							 `Downtime: ${this.memory.stats.downtime.toPercent()}`], this);
+		// Visualizer.showInfo([`Usage:  ${this.memory.stats.usage.toPercent()}`,
+		// 					 `Downtime: ${this.memory.stats.downtime.toPercent()}`], this);
 	}
 }

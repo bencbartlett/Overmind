@@ -171,3 +171,7 @@ export function randomHex(length: number): string {
 	}
 	return result;
 }
+
+export function rollingAverage(current: number, avg: number | undefined, window: number): number {
+	return (current + (avg || 0) * (window - 1)) / window;
+}

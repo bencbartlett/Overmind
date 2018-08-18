@@ -53,7 +53,6 @@ Memory.stats.persistent.lastGlobalReset = Game.time;
 log.alert(`Codebase updated or global reset. Type "help" for a list of console commands.` + alignedNewline +
 		  OvermindConsole.info(true));
 
-
 // Decide whether to run this tick
 function handler(): void {
 	if (!isIVM()) {
@@ -96,6 +95,7 @@ function main(): void {
 	sandbox();											// Sandbox: run any testing code
 	Overmind.postRun();									// Error catching; should be run at end of every tick
 }
+
 Assimilator.validate(main);
 
 
@@ -103,4 +103,5 @@ Assimilator.validate(main);
 export function loop(): void {
 	profiler.wrap(handler);
 }
+
 Assimilator.validate(loop);

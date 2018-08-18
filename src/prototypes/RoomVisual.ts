@@ -100,6 +100,12 @@ RoomVisual.prototype.multitext = function (textLines: string[], x: number, y: nu
 	return this;
 };
 
+RoomVisual.prototype.box = function (x: number, y: number, w: number, h: number, style?: LineStyle): RoomVisual {
+	return this.line(x, y, x + w, y, style)
+			   .line(x + w, y, x + w, y + h, style)
+			   .line(x + w, y + h, x, y + h, style)
+			   .line(x, y + h, x, y, style);
+};
 
 
 // Taken from https://github.com/screepers/RoomVisual with slight modification: ========================================
@@ -549,7 +555,7 @@ RoomVisual.prototype.test = function (): RoomVisual {
 
 	this.speech('This is a test!', demopos[0] + 10, demopos[1], {opacity: 0.7});
 
-	this.infoBox(['This is', 'a test', 'mmmmmmmmmmmmm'], demopos[0] + 15, demopos[1]);
+	// this.infoBox(['This is', 'a test', 'mmmmmmmmmmmmm'], demopos[0] + 15, demopos[1]);
 
 	return this;
 };

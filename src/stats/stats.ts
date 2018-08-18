@@ -1,5 +1,6 @@
 import {profile} from '../profiler/decorator';
 import {Mem} from '../Memory';
+import {rollingAverage} from '../utilities/utils';
 
 export var COLLECT_STATS_FREQUENCY = 10; // Gather stats every N ticks
 
@@ -68,6 +69,9 @@ export class Stats {
 	}
 
 	static run() {
+		// Record IVM heap statistics
+		Memory.stats['cpu.heapStatistics'] = (<any>Game.cpu).getHeapStatistics();
+
 		// Log GCL
 		this.log('gcl.progress', Game.gcl.progress);
 		this.log('gcl.progressTotal', Game.gcl.progressTotal);
@@ -75,10 +79,11 @@ export class Stats {
 		// Log memory usage
 		this.log('memory.used', RawMemory.get().length);
 		// Log CPU
-		this.log('cpu.getUsed', Game.cpu.getUsed());
+
 		this.log('cpu.limit', Game.cpu.limit);
 		this.log('cpu.bucket', Game.cpu.bucket);
-		// Record IVM heap statistics
-		Memory.stats['cpu.heapStatistics'] = (<any>Game.cpu).getHeapStatistics();
+		const used = Game.cpu.getUsed();
+		this.log('cpu.getUsed', used);
+		Memory.stats.persistent.avgCPU = rollingAverage(used, Memory.stats.persistent.avgCPU, 100);
 	}
 }
