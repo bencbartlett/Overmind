@@ -434,7 +434,7 @@ export class Colony {
 			logistics: new TransportOverlord(this),
 		};
 		if (!this.observer) {
-			// this.overlords.scout = new RandomWalkerScoutOverlord(this);
+			this.overlords.scout = new RandomWalkerScoutOverlord(this);
 		}
 		for (let hiveCluster of this.hiveClusters) {
 			hiveCluster.spawnMoarOverlords();

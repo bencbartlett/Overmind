@@ -4,6 +4,8 @@ import {ReservingOverlord} from '../../overlords/colonization/reserver';
 import {StationaryScoutOverlord} from '../../overlords/scouting/stationary';
 import {derefCoords} from '../../utilities/utils';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
+import {RoomIntel} from '../../intel/RoomIntel';
+import {log} from '../../console/log';
 
 @profile
 export class DirectiveOutpost extends Directive {
@@ -49,6 +51,10 @@ export class DirectiveOutpost extends Directive {
 	}
 
 	run(): void {
+		if (RoomIntel.roomOwnedBy(this.pos.roomName)) {
+			log.warning(`Removing ${this.print} since room is owned!`);
+			this.remove();
+		}
 		if (Game.time % 10 == 3 && this.room && this.room.controller
 			&& !this.pos.isEqualTo(this.room.controller.pos) && !this.memory.setPosition) {
 			this.setPosition(this.room.controller.pos);

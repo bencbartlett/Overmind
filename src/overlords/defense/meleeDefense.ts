@@ -23,7 +23,6 @@ export const ArmoredZerglingSetup = new CreepSetup('zergling', {
 export class MeleeDefenseOverlord extends Overlord {
 
 	zerglings: CombatZerg[];
-	// private defendPositions: RoomPosition[];
 	room: Room;
 
 	static settings = {
@@ -40,79 +39,7 @@ export class MeleeDefenseOverlord extends Overlord {
 				boostResources.attack[3],
 			];
 		}
-		// let rampartPositions = _.map(_.filter(this.colony.room.barriers, s => s.structureType == STRUCTURE_RAMPART),
-		// 							 barrier => barrier.pos);
-		// this.defendPositions = _.filter(rampartPositions,
-		// 								pos => pos.findInRange(this.colony.room.hostiles, 1).length > 1);
 	}
-
-	// private retreatActions(defender: CombatZerg): void {
-	// 	if (defender.hits > MeleeDefenseOverlord.settings.reengageHitsPercent * defender.hits) {
-	// 		defender.memory.retreating = false;
-	// 	}
-	// 	// Find a safe position and retreat
-	// 	let retreatRampart = defender.pos.findClosestByRange(_.filter(this.room.ramparts,
-	// 																  rampart => rampart.pos.isWalkable()));
-	// 	if (retreatRampart) {
-	// 		defender.goTo(retreatRampart);
-	// 	} else {
-	// 		log.error('No retreat ramparts!');
-	// 	}
-	// }
-
-	// private handleDefender(defender: CombatZerg): void {
-	// 	// // Move to a defensible position
-	// 	// let isStandingInDefensePos = _.any(this.defendPositions, pos => pos.isEqualTo(defender.pos));
-	// 	// if (!isStandingInDefensePos) {
-	// 	// 	let availablePositions = _.filter(this.defendPositions, pos => pos.lookFor(LOOK_CREEPS).length == 0);
-	// 	// 	let target = defender.pos.findClosestByRange(availablePositions);
-	// 	// 	if (target) {
-	// 	// 		let enemyPositions = _.map(this.room.hostiles, hostile => hostile.pos);
-	// 	// 		defender.goTo(target, {obstacles: enemyPositions, movingTarget: true});
-	// 	// 	}
-	// 	// }
-	// 	// // Attack something
-	// 	// let target = this.findClosestHostile(defender, false, false);
-	// 	// if (target && defender.pos.isNearTo(target)) {
-	// 	// 	defender.attack(target);
-	// 	// }
-	//
-	// 	// Get a target
-	// 	let adjacentHostiles = _.filter(this.room.hostiles, creep => defender.pos.getRangeTo(creep.pos) == 1);
-	// 	let target: Creep | undefined;
-	// 	if (adjacentHostiles.length > 1) {
-	// 		target = minBy(adjacentHostiles, (hostile: Creep) => CombatIntel.maxHostileHealingTo(hostile));
-	// 	} else {
-	// 		target = CombatTargeting.findClosestHostile(defender, false, false);
-	// 	}
-	// 	// Attack something
-	// 	if (target && defender.pos.isNearTo(target)) {
-	// 		defender.attack(target);
-	// 	}
-	// 	// Move to a defensible position if there is one; else, engage target directly
-	// 	let isStandingInDefensePos = _.any(this.defendPositions, pos => pos.isEqualTo(defender.pos));
-	// 	if (!isStandingInDefensePos) {
-	// 		let availablePositions = _.filter(this.defendPositions, pos => pos.lookFor(LOOK_CREEPS).length == 0);
-	// 		let moveToDefensePos = defender.pos.findClosestByRange(availablePositions);
-	// 		if (moveToDefensePos) {
-	// 			let enemyPositions = _.map(this.room.hostiles, hostile => hostile.pos);
-	// 			defender.goTo(moveToDefensePos, {obstacles: enemyPositions, movingTarget: true});
-	// 		} else {
-	// 			// Activate retreat condition if necessary
-	// 			if (defender.hits < GuardPairOverlord.settings.retreatHitsPercent * defender.hitsMax) {
-	// 				defender.memory.retreating = true;
-	// 			}
-	// 			// Either retreat to healing position or engage target
-	// 			if (defender.memory.retreating) {
-	// 				this.retreatActions(defender); // Retreat to fallback position
-	// 			} else {
-	// 				if (target) {
-	// 					defender.goTo(target);
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
 
 	private handleDefender(zergling: CombatZerg): void {
 		if (zergling.room.hostiles.length > 0) {

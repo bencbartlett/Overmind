@@ -71,6 +71,7 @@ export class RoomIntel {
 		} else {
 			room.memory.importantStructs = undefined;
 		}
+		room.memory.tick = Game.time;
 	}
 
 	private static recomputeScoreIfNecessary(room: Room): boolean {
@@ -140,6 +141,22 @@ export class RoomIntel {
 				return data.harvested > 65000;
 			default: // shouldn't ever get here
 				return false;
+		}
+	}
+
+	static roomOwnedBy(roomName: string): string | undefined {
+		if (Memory.rooms[roomName].ctrl && Memory.rooms[roomName].ctrl!.owner) {
+			if (Game.time - (Memory.rooms[roomName].tick || 0) < 25000) { // ownership expires after 25k ticks
+				return Memory.rooms[roomName].ctrl!.owner;
+			}
+		}
+	}
+
+	static roomReservedBy(roomName: string): string | undefined {
+		if (Memory.rooms[roomName].ctrl && Memory.rooms[roomName].ctrl!.res) {
+			if (Game.time - (Memory.rooms[roomName].tick || 0) < 10000) { // reservation expires after 10k ticks
+				return Memory.rooms[roomName].ctrl!.res!.username;
+			}
 		}
 	}
 

@@ -19,6 +19,7 @@ import {Cartographer, ROOMTYPE_CONTROLLER, ROOMTYPE_SOURCEKEEPER} from './utilit
 import {derefCoords, hasJustSpawned, minBy} from './utilities/utils';
 import {DirectiveOutpost} from './directives/core/outpost';
 import {Autonomy, getAutonomyLevel} from './Memory';
+import {RoomIntel} from './intel/RoomIntel';
 
 
 // export const DIRECTIVE_CHECK_FREQUENCY = 2;
@@ -130,6 +131,8 @@ export class Overseer {
 								  }
 							  })
 					&& !Overmind.colonies[roomName]
+					&& !RoomIntel.roomOwnedBy(roomName)
+					&& !RoomIntel.roomReservedBy(roomName)
 					&& Game.map.isRoomAvailable(roomName));
 				log.debug(`Possible outposts: ${possibleOutposts}`);
 				let origin = this.colony.pos;

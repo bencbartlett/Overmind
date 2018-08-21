@@ -71,6 +71,10 @@ export abstract class Directive {
 		this.overlords = {};
 	}
 
+	get print(): string {
+		return '<a href="#!/room/' + Game.shard.name + '/' + this.pos.roomName + '">[' + this.name + ']</a>';
+	}
+
 	getColony(requiredRCL = 1): Colony | undefined {
 		// If something is written to flag.colony, use that as the colony
 		if (this.memory.colony) {

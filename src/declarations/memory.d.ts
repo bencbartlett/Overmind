@@ -168,6 +168,7 @@ interface RoomMemory {
 		lastSeen: number;
 	}
 	prevPositions?: { [creepID: string]: protoPos };
+	tick?: number;
 }
 
 interface SpawnMemory {
