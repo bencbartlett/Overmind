@@ -144,7 +144,7 @@ export class RangedDefenseOverlord extends Overlord {
 			hydraliskDamage *= 4;
 		}
 		// Match the hostile damage times some multiplier
-		let amount = Math.ceil(1.5 * healPotential / (worstDamageMultiplier * (hydraliskDamage + towerDamage)));
+		let amount = Math.ceil(.5 + 1.5 * healPotential / (worstDamageMultiplier * (hydraliskDamage + towerDamage)));
 		this.wishlist(amount, HydraliskSetup);
 		this.requestBoosts(this.defenders);
 	}

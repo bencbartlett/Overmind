@@ -655,6 +655,13 @@ export class Movement {
 			}
 		}
 
+		// // push creeps out of the way if needed
+		// let obstructingCreep = this.findBlockingCreep(creep);
+		// if (pushy && obstructingCreep && this.shouldPush(creep, obstructingCreep)) {
+		// 	let pushedCreep = this.pushCreep(creep, obstructingCreep);
+		// 	if (!pushedCreep) return ERR_CANNOT_PUSH_CREEP;
+		// }
+
 		return outcome;
 	}
 

@@ -99,7 +99,7 @@ export class Overseer {
 		if (this.colony.room && this.colony.level >= DirectiveInvasionDefense.requiredRCL) {
 			let effectiveInvaderCount = _.sum(_.map(this.colony.room.hostiles,
 													invader => invader.boosts.length > 0 ? 2 : 1));
-			if (effectiveInvaderCount >= 3) {
+			if (effectiveInvaderCount >= 3 || this.colony.room.dangerousPlayerHostiles.length > 0) {
 				DirectiveInvasionDefense.createIfNotPresent(this.colony.controller.pos, 'room');
 			}
 		}

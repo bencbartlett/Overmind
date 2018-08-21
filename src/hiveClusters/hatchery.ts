@@ -329,7 +329,9 @@ export class Hatchery extends HiveCluster {
 	private spawnHighestPriorityCreep(): number | undefined {
 		let sortedKeys = _.sortBy(this.productionPriorities);
 		for (let priority of sortedKeys) {
-			if (this.colony.defcon >= DEFCON.playerInvasion && priority > OverlordPriority.warSpawnCutoff) {
+			if (this.colony.defcon >= DEFCON.playerInvasion
+				&& !this.colony.controller.safeMode
+				&& priority > OverlordPriority.warSpawnCutoff) {
 				continue; // don't spawn non-critical creeps during wartime
 			}
 			let nextOrder = this.productionQueue[priority].shift();

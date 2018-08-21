@@ -120,7 +120,7 @@ Object.defineProperty(Room.prototype, 'dangerousPlayerHostiles', {
 																   || c.getActiveBodyparts(RANGED_ATTACK) > 0
 																   || c.getActiveBodyparts(HEAL) > 0);
 		}
-		return this._dangerousPlayerHOstiles;
+		return this._dangerousPlayerHostiles;
 	},
 	configurable: true,
 });

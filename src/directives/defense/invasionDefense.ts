@@ -2,8 +2,8 @@ import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {RangedDefenseOverlord} from '../../overlords/defense/rangedDefense';
 import {ColonyStage} from '../../Colony';
-import {log} from '../../console/log';
 import {CombatIntel} from '../../intel/CombatIntel';
+import {MeleeDefenseOverlord} from '../../overlords/defense/meleeDefense';
 
 interface DirectiveInvasionDefenseMemory extends FlagMemory {
 	persistent?: boolean;
@@ -17,7 +17,7 @@ export class DirectiveInvasionDefense extends Directive {
 	static directiveName = 'invasionDefense';
 	static color = COLOR_ORANGE;
 	static secondaryColor = COLOR_RED;
-	static requiredRCL = 3;
+	static requiredRCL = 1;
 
 	memory: DirectiveInvasionDefenseMemory;
 	room: Room | undefined;
@@ -33,7 +33,9 @@ export class DirectiveInvasionDefense extends Directive {
 			return;
 		}
 		let expectedDamage = CombatIntel.maxDamageByCreeps(this.room.dangerousHostiles);
-		let useBoosts = (expectedDamage > ATTACK_POWER * 75);
+		let useBoosts = (expectedDamage > ATTACK_POWER * 75)
+						&& !!this.colony.terminal
+						&& !!this.colony.evolutionChamber;
 		let percentWalls = _.filter(this.room.barriers, s => s.structureType == STRUCTURE_WALL).length /
 						   this.room.barriers.length;
 		let meleeHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(ATTACK) > 0 ||
@@ -41,10 +43,8 @@ export class DirectiveInvasionDefense extends Directive {
 		let rangedHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0);
 		if (this.colony.stage > ColonyStage.Larva) {
 			this.overlords.rangedDefense = new RangedDefenseOverlord(this, useBoosts);
-			// } else if (meleeHostiles.length > 0) {
-			// 	this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
-		} else if (Game.time % 10 == 0) {
-			log.warning(`No invasion defense overlord at ${this.pos.print}!`);
+		} else {
+			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
 		}
 	}
 

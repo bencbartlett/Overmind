@@ -20,6 +20,7 @@
     "compile": "rollup -c && rm -rf .rpt2_cache",
     "push-main": "rollup -c --environment DEST:main",
     "push-pserver": "rollup -c --environment DEST:pserver",
+    "push-screepsplus": "rollup -c --environment DEST:screepsplus",
     "test": "npm run clean && npm run build"
   },
   "devDependencies": {
