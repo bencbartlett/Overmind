@@ -145,7 +145,7 @@ export class RoomIntel {
 	}
 
 	static roomOwnedBy(roomName: string): string | undefined {
-		if (Memory.rooms[roomName].ctrl && Memory.rooms[roomName].ctrl!.owner) {
+		if (Memory.rooms[roomName] && Memory.rooms[roomName].ctrl && Memory.rooms[roomName].ctrl!.owner) {
 			if (Game.time - (Memory.rooms[roomName].tick || 0) < 25000) { // ownership expires after 25k ticks
 				return Memory.rooms[roomName].ctrl!.owner;
 			}
@@ -153,7 +153,7 @@ export class RoomIntel {
 	}
 
 	static roomReservedBy(roomName: string): string | undefined {
-		if (Memory.rooms[roomName].ctrl && Memory.rooms[roomName].ctrl!.res) {
+		if (Memory.rooms[roomName] && Memory.rooms[roomName].ctrl && Memory.rooms[roomName].ctrl!.res) {
 			if (Game.time - (Memory.rooms[roomName].tick || 0) < 10000) { // reservation expires after 10k ticks
 				return Memory.rooms[roomName].ctrl!.res!.username;
 			}
