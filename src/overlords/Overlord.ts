@@ -10,7 +10,6 @@ import {MIN_LIFETIME_FOR_BOOST} from '../tasks/instances/getBoosted';
 import {log} from '../console/log';
 import {SpawnRequest, SpawnRequestOptions} from '../hiveClusters/hatchery';
 import {SpawnGroup} from '../logistics/SpawnGroup';
-import {CombatZerg} from '../zerg/CombatZerg';
 import {Pathing} from '../movement/Pathing';
 
 export interface OverlordInitializer {
@@ -62,15 +61,15 @@ export abstract class Overlord {
 		this.colony.overseer.registerOverlord(this);
 	}
 
+	recalculateCreeps(): void {
+		this._creeps = _.mapValues(Overmind.cache.overlords[this.ref],
+								   creepsOfRole => _.map(creepsOfRole, creepName => Game.creeps[creepName]));
+	}
+
 	/* Refreshes portions of the overlord state */
 	rebuild(): void {
 		this.recalculateCreeps();
 		this.creepUsageReport = _.mapValues(this._creeps, creep => undefined);
-	}
-
-	recalculateCreeps(): void {
-		this._creeps = _.mapValues(Overmind.cache.overlords[this.ref],
-								   creepsOfRole => _.map(creepsOfRole, creepName => Game.creeps[creepName]));
 	}
 
 	/* Gets the "ID" of the outpost this overlord is operating in. 0 for owned rooms, >= 1 for outposts, -1 for other */
@@ -99,11 +98,6 @@ export abstract class Overlord {
 	/* Default wrapping behavior -- maps all creeps to a base-level zerg */
 	protected zerg(role: string, notifyWhenAttacked?: boolean): Zerg[] {
 		return _.map(this.creeps(role), creep => new Zerg(creep, notifyWhenAttacked));
-	}
-
-	/* Default wrapping behavior -- maps all creeps to a base-level zerg */
-	protected combatZerg(role: string, notifyWhenAttacked?: boolean): CombatZerg[] {
-		return _.map(this.creeps(role), creep => new CombatZerg(creep, notifyWhenAttacked));
 	}
 
 	// protected allCreeps(): Creep[] {
@@ -282,7 +276,7 @@ export abstract class Overlord {
 	}
 
 	/* Request a boost from the evolution chamber; should be called during init() */
-	private requestBoostsForCreep(creep: Zerg): void {
+	protected requestBoostsForCreep(creep: Zerg): void {
 		if (this.colony.evolutionChamber && this.boosts[creep.roleName]) {
 			let boost = _.find(this.boosts[creep.roleName]!,
 							   boost => (creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost]));
@@ -347,22 +341,6 @@ export abstract class Overlord {
 				}
 			}
 			creep.run();
-		}
-	}
-
-	// Standard sequence of actions for running combat creeps
-	autoRunCombat(roleCreeps: CombatZerg[], creepHandler: (creep: CombatZerg) => void) {
-		for (let creep of roleCreeps) {
-			if (creep.hasValidTask) {
-				creep.run();
-			} else {
-				if (this.shouldBoost(creep)) {
-					this.requestBoostsForCreep(creep);
-					this.handleBoosting(creep);
-				} else {
-					creepHandler(creep);
-				}
-			}
 		}
 	}
 

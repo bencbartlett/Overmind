@@ -6,8 +6,8 @@ import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense
 import {profile} from '../../profiler/decorator';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {CreepSetup} from '../CreepSetup';
-import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
+import {CombatOverlord} from '../CombatOverlord';
 
 export const ZerglingSetup = new CreepSetup('zergling', {
 	pattern  : [ATTACK, MOVE],
@@ -20,7 +20,7 @@ export const ArmoredZerglingSetup = new CreepSetup('zergling', {
 });
 
 @profile
-export class MeleeDefenseOverlord extends Overlord {
+export class MeleeDefenseOverlord extends CombatOverlord {
 
 	zerglings: CombatZerg[];
 	room: Room;
@@ -31,8 +31,8 @@ export class MeleeDefenseOverlord extends Overlord {
 	};
 
 	constructor(directive: DirectiveInvasionDefense, boosted = false, priority = OverlordPriority.defense.meleeDefense) {
-		super(directive, 'meleeDefense', priority);
-		this.zerglings = _.map(this.creeps(ZerglingSetup.role), creep => new CombatZerg(creep));
+		super(directive, 'meleeDefense', priority, 1);
+		this.zerglings = this.combatZerg(ZerglingSetup.role);
 		if (boosted) {
 			this.boosts[ZerglingSetup.role] = [
 				boostResources.tough[3],
@@ -68,6 +68,6 @@ export class MeleeDefenseOverlord extends Overlord {
 	}
 
 	run() {
-		this.autoRunCombat(this.zerglings, zergling => this.handleDefender(zergling));
+		this.autoRun(this.zerglings, zergling => this.handleDefender(zergling));
 	}
 }

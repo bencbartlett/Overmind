@@ -74,7 +74,7 @@ export class Hatchery extends HiveCluster {
 		suppressSpawning: boolean,             					// Prevents the hatchery from spawning this tick
 	};
 	private _nextAvailability: number | undefined;
-	private _queuedSpawnTime: number | undefined;
+	// private _queuedSpawnTime: number | undefined;
 	private productionPriorities: number[];
 	private productionQueue: {								// Prioritized spawning queue
 		[priority: number]: SpawnOrder[]
@@ -298,15 +298,15 @@ export class Hatchery extends HiveCluster {
 		return this._nextAvailability;
 	}
 
-	/* Number of ticks required to make everything in spawn queue divided by number of spawns */
-	get queuedSpawnTime(): number {
-		if (!this._queuedSpawnTime) {
-			let allQueued = _.flatten(_.values(this.productionQueue)) as SpawnOrder[];
-			let queuedSpawnTime = _.sum(allQueued, order => order.protoCreep.body.length) * CREEP_SPAWN_TIME;
-			this._queuedSpawnTime = queuedSpawnTime / this.spawns.length;
-		}
-		return this._queuedSpawnTime;
-	}
+	// /* Number of ticks required to make everything in spawn queue divided by number of spawns */
+	// get queuedSpawnTime(): number {
+	// 	if (!this._queuedSpawnTime) {
+	// 		let allQueued = _.flatten(_.values(this.productionQueue)) as SpawnOrder[];
+	// 		let queuedSpawnTime = _.sum(allQueued, order => order.protoCreep.body.length) * CREEP_SPAWN_TIME;
+	// 		this._queuedSpawnTime = queuedSpawnTime / this.spawns.length;
+	// 	}
+	// 	return this._queuedSpawnTime;
+	// }
 
 	/* Enqueues a request to the hatchery */
 	enqueue(request: SpawnRequest): void {
@@ -315,7 +315,7 @@ export class Hatchery extends HiveCluster {
 		if (this.canSpawn(protoCreep.body) && protoCreep.body.length > 0) {
 			// Spawn the creep yourself if you can
 			this._nextAvailability = undefined; // invalidate cache
-			this._queuedSpawnTime = undefined;
+			// this._queuedSpawnTime = undefined;
 			if (!this.productionQueue[priority]) {
 				this.productionQueue[priority] = [];
 				this.productionPriorities.push(priority); // this is necessary because keys interpret number as string

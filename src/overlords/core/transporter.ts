@@ -48,7 +48,7 @@ export class TransportOverlord extends Overlord {
 		}
 
 		let transportPower = 0;
-		let scaling = this.colony.stage == ColonyStage.Larva ? 1.5 : 1.75; // aggregate round-trip multiplier
+		const scaling = this.colony.stage == ColonyStage.Larva ? 1.5 : 2.5; // aggregate round-trip multiplier
 
 		// Add contributions to transport power from hauling energy from mining sites
 		for (let siteID in this.colony.miningSites) {
@@ -59,7 +59,7 @@ export class TransportOverlord extends Overlord {
 				if (site.output && site.output instanceof StructureContainer) {
 					transportPower += site.energyPerTick * (scaling * Pathing.distance(site.pos, this.colony.pos));
 				} else if (site.shouldDropMine) {
-					transportPower += .75 * site.energyPerTick * (scaling * Pathing.distance(site.pos, this.colony.pos));
+					transportPower += site.energyPerTick * (scaling * Pathing.distance(site.pos, this.colony.pos));
 				}
 			}
 		}
@@ -212,19 +212,6 @@ export class TransportOverlord extends Overlord {
 	}
 
 	run() {
-		// for (let transporter of this.transporters) {
-		// 	if (transporter.isIdle) {
-		// 		// if (transporter.carryCapacity >= LogisticsNetwork.settings.carryThreshold) {
-		// 		// 	this.handleBigTransporter(transporter);
-		// 		// } else {
-		// 		// 	this.handleSmolTransporter(transporter);
-		// 		// }
-		// 		this.handleSmolTransporter(transporter);
-		// 	}
-		// 	transporter.run();
-		// 	// this.pickupDroppedResources(transporter);
-		// }
-		// // this.parkCreepsIfIdle(this.transporters);
 		this.autoRun(this.transporters, transporter => this.handleSmolTransporter(transporter));
 	}
 }

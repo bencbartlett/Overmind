@@ -27,15 +27,17 @@ const SpawnGroupMemoryDefaults: SpawnGroupMemory = {
 	expiration: 0,
 };
 
+
+const MAX_LINEAR_DISTANCE = 10; // maximum linear distance to search for any spawn group
+const MAX_PATH_DISTANCE = 600;	// maximum path distance for any spawn group
+
 const defaultSettings: SpawnGroupSettings = {
-	maxLinearDistance: 5,
-	maxPathDistance  : 250,
-	recacheTime      : 2500,
-	requiredRCL      : 7,
+	maxPathDistance: 250,		// override default path distance
+	recacheTime    : 2500,
+	requiredRCL    : 7,
 };
 
 export interface SpawnGroupSettings {
-	maxLinearDistance: number,
 	maxPathDistance: number,
 	recacheTime: number,
 	requiredRCL: number,
@@ -81,8 +83,7 @@ export class SpawnGroup {
 
 	private recalculateColonies() {
 		let coloniesInRange = _.filter(getAllColonies(), col =>
-			Game.map.getRoomLinearDistance(col.pos.roomName, this.roomName) <= this.settings.maxLinearDistance
-			&& (col.level >= this.settings.requiredRCL || col.pos.roomName == this.roomName));
+			Game.map.getRoomLinearDistance(col.pos.roomName, this.roomName) <= MAX_LINEAR_DISTANCE);
 		let colonies = [] as string[];
 		let routes = {} as { [colonyName: string]: { [roomName: string]: boolean } };
 		// let paths = {} as { [colonyName: string]: { startPos: RoomPosition, path: string[] } };
@@ -91,7 +92,7 @@ export class SpawnGroup {
 			if (!colony.hatchery) continue;
 			let route = Pathing.findRoute(colony.pos.roomName, this.roomName);
 			let path = Pathing.findPathToRoom(colony.pos, this.roomName, {route: route});
-			if (route && !path.incomplete && path.path.length <= this.settings.maxPathDistance) {
+			if (route && !path.incomplete && path.path.length <= MAX_PATH_DISTANCE) {
 				colonies.push(colony.name);
 				routes[colony.name] = route;
 				// paths[colony.name] = path.path;
@@ -115,9 +116,12 @@ export class SpawnGroup {
 		if (Game.time > this.memory.expiration) {
 			this.recalculateColonies();
 		}
-		let colonies = _.compact(_.map(this.memory.colonies, name => Overmind.colonies[name])) as Colony[];
+		let colonies = _.filter(_.map(_.filter(this.memory.colonies,
+											   name => this.memory.distances[name] <= this.settings.maxPathDistance),
+									  name => Overmind.colonies[name]) as Colony[],
+								col => !!col && col.level >= this.settings.requiredRCL);
 		this.hatcheries = _.compact(_.map(colonies, colony => colony.hatchery)) as Hatchery[];
-		let distanceTo = (hatchery: Hatchery) => this.memory.distances[hatchery.pos.roomName] + 25;
+		const distanceTo = (hatchery: Hatchery) => this.memory.distances[hatchery.pos.roomName] + 25;
 		// Enqueue all requests to the hatchery with least expected wait time that can spawn full-size creep
 		for (let request of this.requests) {
 			let cost = bodyCost(request.setup.generateBody(this.energyCapacityAvailable));

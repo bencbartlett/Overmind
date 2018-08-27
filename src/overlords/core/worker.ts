@@ -15,10 +15,10 @@ export const WorkerSetup = new CreepSetup('worker', {
 	sizeLimit: Infinity,
 });
 
-const WorkerEarlySetup = new CreepSetup('worker', {
-	pattern  : [WORK, CARRY, MOVE, MOVE],
-	sizeLimit: Infinity,
-});
+// const WorkerEarlySetup = new CreepSetup('worker', {
+// 	pattern  : [WORK, CARRY, MOVE, MOVE],
+// 	sizeLimit: Infinity,
+// });
 
 @profile
 export class WorkerOverlord extends Overlord {
@@ -117,7 +117,8 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	init() {
-		const setup = this.colony.stage == ColonyStage.Larva ? WorkerEarlySetup : WorkerSetup;
+		// const setup = this.colony.stage == ColonyStage.Larva ? WorkerEarlySetup : WorkerSetup;
+		const setup = WorkerSetup;
 		const workPartsPerWorker = setup.getBodyPotential(WORK, this.colony);
 		let numWorkers: number;
 		if (this.colony.stage == ColonyStage.Larva) {

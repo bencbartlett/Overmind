@@ -6,8 +6,8 @@ import {boostResources} from '../../resources/map_resources';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 import {profile} from '../../profiler/decorator';
 import {CombatIntel} from '../../intel/CombatIntel';
-import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
+import {CombatOverlord} from '../CombatOverlord';
 
 export const HydraliskSetup = new CreepSetup('hydralisk', {
 	pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, HEAL, MOVE, MOVE, MOVE, MOVE],
@@ -21,7 +21,7 @@ export const BoostedHydraliskSetup = new CreepSetup('hydralisk', {
 
 
 @profile
-export class RangedDefenseOverlord extends Overlord {
+export class RangedDefenseOverlord extends CombatOverlord {
 
 	hydralisks: CombatZerg[];
 	room: Room;
@@ -34,8 +34,8 @@ export class RangedDefenseOverlord extends Overlord {
 	constructor(directive: DirectiveInvasionDefense,
 				boosted  = false,
 				priority = OverlordPriority.defense.rangedDefense) {
-		super(directive, 'rangedDefense', priority);
-		this.hydralisks = _.map(this.creeps(HydraliskSetup.role), creep => new CombatZerg(creep));
+		super(directive, 'rangedDefense', priority, 1);
+		this.hydralisks = this.combatZerg(HydraliskSetup.role);
 		if (boosted) {
 			this.boosts[HydraliskSetup.role] = [
 				boostResources.ranged_attack[3],
@@ -69,6 +69,6 @@ export class RangedDefenseOverlord extends Overlord {
 	}
 
 	run() {
-		this.autoRunCombat(this.hydralisks, hydralisk => this.handleDefender(hydralisk));
+		this.autoRun(this.hydralisks, hydralisk => this.handleDefender(hydralisk));
 	}
 }

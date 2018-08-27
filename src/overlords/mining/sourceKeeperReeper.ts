@@ -1,6 +1,5 @@
 // SourceReaperOverlord -- spawns offensive creeps to allow source keeper mining
 
-import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {DirectiveSKOutpost} from '../../directives/core/outpostSK';
 import {CreepSetup} from '../CreepSetup';
@@ -13,6 +12,7 @@ import {Movement} from '../../movement/Movement';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {Visualizer} from '../../visuals/Visualizer';
 import {profile} from '../../profiler/decorator';
+import {CombatOverlord} from '../CombatOverlord';
 
 export const ReaperSetup = new CreepSetup('zergling', {
 	pattern  : [MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK, HEAL, MOVE],
@@ -29,7 +29,7 @@ interface SourceReaperOverlordMemory {
 }
 
 @profile
-export class SourceReaperOverlord extends Overlord {
+export class SourceReaperOverlord extends CombatOverlord {
 
 	static requiredRCL = 7;
 
@@ -40,7 +40,7 @@ export class SourceReaperOverlord extends Overlord {
 	defenders: CombatZerg[];
 
 	constructor(directive: DirectiveSKOutpost, priority = OverlordPriority.remoteSKRoom.sourceReaper) {
-		super(directive, 'sourceReaper', priority);
+		super(directive, 'sourceReaper', priority, SourceReaperOverlord.requiredRCL);
 		this.priority += this.outpostIndex * OverlordPriority.remoteSKRoom.roomIncrement;
 		this.memory = Mem.wrap(directive.memory, 'sourceReaper');
 		this.targetLair = this.memory.targetLairID ? <StructureKeeperLair>deref(this.memory.targetLairID) : undefined;
@@ -180,8 +180,8 @@ export class SourceReaperOverlord extends Overlord {
 	}
 
 	run() {
-		this.autoRunCombat(this.reapers, reaper => this.handleReaper(reaper));
-		this.autoRunCombat(this.defenders, defender => this.handleDefender(defender));
+		this.autoRun(this.reapers, reaper => this.handleReaper(reaper));
+		this.autoRun(this.defenders, defender => this.handleDefender(defender));
 	}
 
 	visuals() {
