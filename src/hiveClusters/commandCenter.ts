@@ -10,6 +10,7 @@ import {Energetics} from '../logistics/Energetics';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {Priority} from '../priorities/priorities';
 import {Cartographer} from '../utilities/Cartographer';
+import {$} from '../caching/GlobalCache';
 
 export const MAX_OBSERVE_DISTANCE = 7;
 
@@ -26,7 +27,6 @@ export class CommandCenter extends HiveCluster {
 	terminalNetwork: TerminalNetwork;						// Reference to Overmind.terminalNetwork
 	towers: StructureTower[];								// Towers within range 3 of storage are part of cmdCenter
 	powerSpawn: StructurePowerSpawn | undefined;			// Colony Power Spawn
-	coreSpawn: StructureSpawn | undefined;					// Central spawn
 	nuker: StructureNuker | undefined;						// Colony nuker
 	observer: StructureObserver | undefined;				// Colony observer
 	transportRequests: TransportRequestGroup;				// Box for energy requests
@@ -50,13 +50,19 @@ export class CommandCenter extends HiveCluster {
 			this.link = this.colony.bunker.anchor.findClosestByLimitedRange(colony.availableLinks, 1);
 			this.colony.linkNetwork.claimLink(this.link);
 			this.towers = this.colony.bunker.anchor.findInRange(colony.towers, 1);
-			this.coreSpawn = this.colony.bunker.coreSpawn;
 		} else {
 			this.link = this.pos.findClosestByLimitedRange(colony.availableLinks, 2);
 			this.colony.linkNetwork.claimLink(this.link);
 			this.towers = this.pos.findInRange(colony.towers, 3);
 		}
 		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetwork;
+		this.transportRequests = new TransportRequestGroup(); // commandCenter always gets its own request group
+	}
+
+	refresh() {
+		this.memory = Mem.wrap(this.colony.memory, 'commandCenter');
+		$.refreshRoom(this);
+		$.refresh(this, 'storage', 'terminal', 'powerSpawn', 'nuker', 'observer', 'link', 'towers');
 		this.transportRequests = new TransportRequestGroup(); // commandCenter always gets its own request group
 	}
 
@@ -117,8 +123,10 @@ export class CommandCenter extends HiveCluster {
 			this.transportRequests.requestInput(this.terminal, Priority.NormalHigh);
 		}
 		// Refill core spawn (only applicable to bunker layouts)
-		if (this.coreSpawn && this.coreSpawn.energy < this.coreSpawn.energyCapacity) {
-			this.transportRequests.requestInput(this.coreSpawn, Priority.Normal);
+		if (this.colony.bunker && this.colony.bunker.coreSpawn) {
+			if (this.colony.bunker.coreSpawn.energy < this.colony.bunker.coreSpawn.energyCapacity) {
+				this.transportRequests.requestInput(this.colony.bunker.coreSpawn, Priority.Normal);
+			}
 		}
 		// Refill power spawn
 		if (this.powerSpawn && this.powerSpawn.energy < this.powerSpawn.energyCapacity) {
@@ -143,7 +151,7 @@ export class CommandCenter extends HiveCluster {
 		if (this.observer) {
 			let dx = Game.time % MAX_OBSERVE_DISTANCE;
 			let dy = Game.time % (MAX_OBSERVE_DISTANCE ** 2);
-			let roomToObserve = Cartographer.findRelativeRoomName(this.room.name, dx, dy);
+			let roomToObserve = Cartographer.findRelativeRoomName(this.pos.roomName, dx, dy);
 			this.observer.observeRoom(roomToObserve);
 		}
 	}

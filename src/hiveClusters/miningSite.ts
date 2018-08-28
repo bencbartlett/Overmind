@@ -22,6 +22,7 @@ interface MiningSiteMemory {
 
 @profile
 export class MiningSite extends HiveCluster {
+	// room: Room | undefined;
 	source: Source;
 	memory: MiningSiteMemory;
 	energyPerTick: number;
@@ -74,6 +75,21 @@ export class MiningSite extends HiveCluster {
 			log.warning(`Mining site at ${this.pos.print} has no output!`);
 		}
 		// Calculate statistics
+		this.stats();
+	}
+
+	refresh() {
+		this.memory = Mem.wrap(this.colony.memory, this.ref);
+		$.refreshRoom(this);
+		if (!this.room) {
+			delete this.colony.miningSites[this.source.id];
+			_.remove(this.colony.hiveClusters, hc => hc.ref == this.ref);
+			return;
+		}
+		$.refresh(this, 'source', 'output');
+		if (!this.shouldDropMine && Game.time % 100 == 0 && !this.output) {
+			log.warning(`Mining site at ${this.pos.print} has no output!`);
+		}
 		this.stats();
 	}
 

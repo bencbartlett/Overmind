@@ -41,6 +41,12 @@ export class Overseer {
 		this.overlordRequests = [];
 	}
 
+	refresh() {
+		this.directives = [];
+		this.overlords = {};
+		this.overlordRequests = [];
+	}
+
 	registerOverlord(overlord: Overlord): void {
 		this.overlordRequests.push(overlord);
 	}

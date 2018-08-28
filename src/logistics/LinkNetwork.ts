@@ -49,11 +49,11 @@ export class LinkNetwork {
 	}
 
 	init(): void {
-		for (let link of this.colony.dropoffLinks) {
-			if (link.energy > this.settings.linksTrasmitAt) {
-				this.requestTransmit(link);
-			}
-		}
+		// for (let link of this.colony.dropoffLinks) {
+		// 	if (link.energy > this.settings.linksTrasmitAt) {
+		// 		this.requestTransmit(link);
+		// 	}
+		// }
 	}
 
 	/* Examine the link resource requests and try to efficiently (but greedily) match links that need energy in and

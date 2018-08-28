@@ -70,6 +70,11 @@ export class UpgradeSite extends HiveCluster {
 		this.stats();
 	}
 
+	refresh() {
+		this.memory = Mem.wrap(this.colony.memory, 'upgradeSite');
+		$.refresh(this, 'controller', 'battery', 'link');
+	}
+
 	spawnMoarOverlords() {
 		// Register overlord
 		this.overlord = new UpgradingOverlord(this);

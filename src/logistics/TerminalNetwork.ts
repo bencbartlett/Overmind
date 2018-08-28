@@ -8,6 +8,7 @@ import {RESOURCE_IMPORTANCE} from '../resources/map_resources';
 import {baseStockAmounts, priorityStockAmounts, wantedStockAmounts} from '../resources/Abathur';
 import {alignedNewline, bullet, rightArrow} from '../utilities/stringConstants';
 import {assimilationLocked} from '../assimilation/decorator';
+import {$} from '../caching/GlobalCache';
 
 interface TerminalNetworkMemory {
 	equalizeIndex: number;
@@ -97,8 +98,20 @@ export class TerminalNetwork implements ITerminalNetwork {
 		this.exceptionTerminals = {}; 		// populated in init()
 		this.assets = {}; 					// populated in init()
 		this.notifications = [];
-		this.averageFullness = _.sum(_.map(this.terminals,
-										   t => _.sum(t.store) / t.storeCapacity)) / this.terminals.length;
+		this.averageFullness = _.sum(this.terminals, t => _.sum(t.store) / t.storeCapacity) / this.terminals.length;
+	}
+
+	refresh(): void {
+		$.refresh(this, 'terminals');
+		this.readyTerminals = _.filter(this.terminals, t => t.cooldown == 0);
+		this.memory = Mem.wrap(Memory.Overmind, 'terminalNetwork', TerminalNetworkMemoryDefaults);
+		this.stats = Mem.wrap(Memory.stats.persistent, 'terminalNetwork', TerminalNetworkStatsDefaults);
+		this.alreadyReceived = [];
+		this.alreadySent = [];
+		this.exceptionTerminals = {}; 		// populated in init()
+		this.assets = {}; 					// populated in init()
+		this.notifications = [];
+		this.averageFullness = _.sum(this.terminals, t => _.sum(t.store) / t.storeCapacity) / this.terminals.length;
 	}
 
 	/* Summarizes the total of all resources currently in a colony store structure */

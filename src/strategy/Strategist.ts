@@ -35,6 +35,10 @@ export class Strategist implements IStrategist {
 		this.memory = Mem.wrap(Memory, 'strategist', defaultStrategistMemory);
 	}
 
+	refresh() {
+		this.memory = Mem.wrap(Memory, 'strategist', defaultStrategistMemory);
+	}
+
 	private handleExpansion(): void {
 		let roomName = this.chooseNextColonyRoom();
 		if (roomName) {

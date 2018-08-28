@@ -76,7 +76,7 @@ export class $ { // $ = cash = cache... get it? :D
 
 	static set<T extends HasRef, K extends keyof T>(thing: T, key: K,
 													callback: () => (T[K] & (undefined | HasID | HasID[])),
-													timeout = CACHE_TIMEOUT) {
+													timeout = CACHE_TIMEOUT): void {
 		const cacheKey = thing.ref + '$' + key;
 		if (!_cache.things[cacheKey] || Game.time > _cache.expiration[cacheKey]) {
 			// Recache if new entry or entry is expired
@@ -95,6 +95,32 @@ export class $ { // $ = cash = cache... get it? :D
 			}
 		}
 		thing[key] = _cache.things[cacheKey] as T[K] & (undefined | HasID | HasID[]);
+	}
+
+	// static refresh<T extends HasID>(thing: T): T;
+	// static refresh<T extends HasID>(thing: T[]): T[];
+	// static refresh<T extends HasID>(thing: T | T[]): T | T[] {
+	// 	if (_.isArray(thing)) {
+	// 		return _.compact(_.map(thing as HasID[], s => Game.getObjectById(s.id))) as T[];
+	// 	} else {
+	// 		return Game.getObjectById(thing.id) as T;
+	// 	}
+	// }
+
+	static refresh<T extends Record<K, undefined | HasID | HasID[]>, K extends string>(thing: T, ...keys: K[]): void {
+		_.forEach(keys, function (key) {
+			if (thing[key]) {
+				if (_.isArray(thing[key])) {
+					thing[key] = _.compact(_.map(thing[key] as HasID[], s => Game.getObjectById(s.id))) as T[K];
+				} else {
+					thing[key] = Game.getObjectById((<HasID>thing[key]).id) as T[K];
+				}
+			}
+		});
+	}
+
+	static refreshRoom<T extends { room: Room }>(thing: T): void {
+		thing.room = Game.rooms[thing.room.name];
 	}
 
 }

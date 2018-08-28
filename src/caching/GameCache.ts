@@ -8,14 +8,20 @@ import {DirectiveSKOutpost} from '../directives/core/outpostSK';
 export class GameCache implements ICache {
 
 	overlords: { [overlord: string]: { [roleName: string]: string[] } };
+	creepsByColony: { [colonyName: string]: Creep[] };
 	targets: { [ref: string]: string[] };
 	outpostFlags: Flag[];
 
 	constructor() {
 		this.overlords = {};
+		this.creepsByColony = {};
 		this.targets = {};
 		this.outpostFlags = _.filter(Game.flags, flag => DirectiveOutpost.filter(flag)
 														 || DirectiveSKOutpost.filter(flag));
+	}
+
+	private cacheCreepsByColony() {
+		this.creepsByColony = _.groupBy(Game.creeps, creep => creep.memory.colony) as { [colName: string]: Creep[] };
 	}
 
 	/* Generates a hash table for creeps assigned to each object: key: OLref, val: (key: role, val: names[]) */
@@ -44,14 +50,15 @@ export class GameCache implements ICache {
 	}
 
 	build() {
+		this.cacheCreepsByColony();
 		this.cacheOverlords();
 		this.cacheTargets();
 	}
 
-	rebuild() {
-		// Recache the cheap or critical stuff: Overlords, constructionSites, drops
+	refresh() {
+		this.cacheCreepsByColony();
 		this.cacheOverlords();
-
+		this.cacheTargets();
 	}
 }
 

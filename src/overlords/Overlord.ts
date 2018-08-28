@@ -66,12 +66,6 @@ export abstract class Overlord {
 								   creepsOfRole => _.map(creepsOfRole, creepName => Game.creeps[creepName]));
 	}
 
-	/* Refreshes portions of the overlord state */
-	rebuild(): void {
-		this.recalculateCreeps();
-		this.creepUsageReport = _.mapValues(this._creeps, creep => undefined);
-	}
-
 	/* Gets the "ID" of the outpost this overlord is operating in. 0 for owned rooms, >= 1 for outposts, -1 for other */
 	get outpostIndex(): number {
 		return _.findIndex(this.colony.roomNames, this.pos.roomName);

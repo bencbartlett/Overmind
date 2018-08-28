@@ -105,8 +105,8 @@ export class Colony {
 	storage: StructureStorage | undefined;				// |
 	links: StructureLink[];								// |
 	availableLinks: StructureLink[];
-	claimedLinks: StructureLink[];						// | Links belonging to hive cluseters excluding mining groups
-	dropoffLinks: StructureLink[]; 						// | Links not belonging to a hiveCluster, used as dropoff
+	// claimedLinks: StructureLink[];						// | Links belonging to hive cluseters excluding mining groups
+	// dropoffLinks: StructureLink[]; 						// | Links not belonging to a hiveCluster, used as dropoff
 	terminal: StructureTerminal | undefined;			// |
 	towers: StructureTower[];							// |
 	labs: StructureLab[];								// |
@@ -178,7 +178,7 @@ export class Colony {
 		maxSourceDistance   : 100
 	};
 
-	constructor(id: number, roomName: string, outposts: string[], creeps: Creep[] | undefined) {
+	constructor(id: number, roomName: string, outposts: string[]) {
 		// Primitive colony setup
 		this.id = id;
 		this.name = roomName;
@@ -188,10 +188,10 @@ export class Colony {
 		global[this.name] = this;
 		global[this.name.toLowerCase()] = this;
 		// Build the colony
-		this.build(id, roomName, outposts, creeps);
+		this.build(roomName, outposts);
 	}
 
-	build(id: number, roomName: string, outposts: string[], creeps: Creep[] | undefined): void {
+	build(roomName: string, outposts: string[]): void {
 		// Register rooms
 		this.roomNames = [roomName].concat(outposts);
 		this.room = Game.rooms[roomName];
@@ -200,7 +200,7 @@ export class Colony {
 		// Give the colony an Overseer
 		this.overseer = new Overseer(this);
 		// Register creeps
-		this.creeps = creeps || [];
+		this.creeps = Overmind.cache.creepsByColony[this.name] || [];
 		this.creepsByRole = _.groupBy(this.creeps, creep => creep.memory.role);
 		// Register the rest of the colony components; the order in which these are called is important!
 		this.registerRoomObjects_cached();			// Register real colony components
@@ -210,31 +210,29 @@ export class Colony {
 		// Colony.spawnMoarOverlords() gets called from Overmind.ts, along with Directive.spawnMoarOverlords()
 	}
 
-	// refresh(): void {
-	// 	// TODO
-	// 	// Register rooms
-	// 	this.room = Game.rooms[roomName];
-	// 	this.outposts = _.compact(_.map(outposts, outpost => Game.rooms[outpost]));
-	// 	this.rooms = [this.room].concat(this.outposts);
-	// 	// Give the colony an Overseer
-	// 	this.overseer = new Overseer(this);
-	// 	// Register creeps
-	// 	this.creeps = creeps || [];
-	// 	this.creepsByRole = _.groupBy(this.creeps, creep => creep.memory.role);
-	// 	// Register the rest of the colony components; the order in which these are called is important!
-	// 	this.registerRoomObjects();			// Register real colony components
-	// 	this.registerOperationalState();	// Set the colony operational state
-	// 	this.registerUtilities(); 			// Register logistics utilities, room planners, and layout info
-	// 	this.registerHiveClusters(); 		// Build the hive clusters
-	// 	this.spawnMoarOverlords(); 			// Register colony overlords
-	// }
+	refresh(): void {
+		this.memory = Mem.wrap(Memory.colonies, this.room.name, defaultColonyMemory, true);
+		// Refresh rooms
+		this.room = Game.rooms[this.room.name];
+		this.outposts = _.compact(_.map(this.outposts, outpost => Game.rooms[outpost.name]));
+		this.rooms = [this.room].concat(this.outposts);
+		// refresh the Overseer
+		this.overseer.refresh();
+		// refresh creeps
+		this.creeps = Overmind.cache.creepsByColony[this.name] || [];
+		this.creepsByRole = _.groupBy(this.creeps, creep => creep.memory.role);
+		// Register the rest of the colony components; the order in which these are called is important!
+		this.refreshRoomObjects();			// Register real colony components
+		this.registerOperationalState();	// Set the colony operational state
+		this.registerUtilities(); 			// Register logistics utilities, room planners, and layout info
+		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.refresh());	// refresh each hive cluster
+	}
 
 	private registerRoomObjects(): void {
 		// Create placeholder arrays for remaining properties to be filled in by the Overmind
 		this.flags = []; // filled in by directives
 		this.destinations = []; // filled in by various hive clusters and directives
 		// Register room objects across colony rooms
-		// $.set(this, 'controller', () => this.room.controller!);
 		this.controller = this.room.controller!; // must be controller since colonies are based in owned rooms
 		this.spawns = _.sortBy(_.filter(this.room.spawns, spawn => spawn.my && spawn.isActive()), spawn => spawn.ref);
 		this.extensions = this.room.extensions;
@@ -298,13 +296,24 @@ export class Colony {
 				.filter(e => (e!.my && e!.room.my)
 							 || Cartographer.roomType(e!.room.name) != ROOMTYPE_CONTROLLER)
 				.sortBy(e => e!.pos.getMultiRoomRangeTo(this.pos)).value() as StructureExtractor[]);
-		$.set(this, 'constructionSites', () =>
-			_.flatten(_.map(this.rooms, room => room.constructionSites)));
-		$.set(this, 'tombstones', () => _.flatten(_.map(this.rooms, room => room.tombstones)), 5);
-		this.drops = _.merge(_.map(this.rooms, room => room.drops));
 		$.set(this, 'repairables', () => _.flatten(_.map(this.rooms, room => room.repairables)));
 		$.set(this, 'rechargeables', () => _.flatten(_.map(this.rooms, room => room.rechargeables)));
+		$.set(this, 'constructionSites', () => _.flatten(_.map(this.rooms, room => room.constructionSites)), 10);
+		$.set(this, 'tombstones', () => _.flatten(_.map(this.rooms, room => room.tombstones)), 5);
+		this.drops = _.merge(_.map(this.rooms, room => room.drops));
 		// Register assets
+		this.assets = this.getAllAssets();
+	}
+
+	private refreshRoomObjects(): void {
+		this.flags = []; // filled in by directives TODO: remove this
+		$.refresh(this, 'controller', 'extensions', 'links', 'towers', 'powerSpawn', 'nuker', 'observer', 'spawns',
+				  'storage', 'terminal', 'labs', 'sources', 'extractors', 'constructionSites', 'repairables',
+				  'rechargeables');
+		$.set(this, 'constructionSites', () => _.flatten(_.map(this.rooms, room => room.constructionSites)), 10);
+		$.set(this, 'tombstones', () => _.flatten(_.map(this.rooms, room => room.tombstones)), 5);
+		this.drops = _.merge(_.map(this.rooms, room => room.drops));
+		// Re-compute assets
 		this.assets = this.getAllAssets();
 	}
 
@@ -413,7 +422,7 @@ export class Colony {
 		// Instantiate spore crawlers to wrap towers
 		this.sporeCrawlers = _.map(this.towers, tower => new SporeCrawler(this, tower));
 		// Dropoff links are freestanding links or ones at mining sites
-		this.dropoffLinks = _.clone(this.availableLinks);
+		// this.dropoffLinks = _.clone(this.availableLinks);
 		// Mining sites is an object of ID's and MiningSites
 		let sourceIDs = _.map(this.sources, source => source.ref);
 		let miningSites = _.map(this.sources, source => new MiningSite(this, source));

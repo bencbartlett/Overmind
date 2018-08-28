@@ -150,8 +150,7 @@ export class TransportOverlord extends Overlord {
 		} else {
 			// If nothing to do, put everything in a store structure
 			if (_.sum(transporter.carry) > 0) {
-				let dropoffPoints: (StructureLink | StructureStorage)[] = _.compact([this.colony.storage!,
-																					 ...this.colony.dropoffLinks]);
+				let dropoffPoints: (StructureLink | StructureStorage)[] = _.compact([this.colony.storage!]);//, ...this.colony.dropoffLinks]);
 				// let bestDropoffPoint = minBy(dropoffPoints, function(dropoff: StructureLink | StructureStorage) {
 				// 	let range = transporter.pos.getMultiRoomRangeTo(dropoff.pos);
 				// 	if (dropoff instanceof StructureLink) {

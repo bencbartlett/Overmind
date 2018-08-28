@@ -87,7 +87,7 @@ export class Hatchery extends HiveCluster {
 		this.memory = Mem.wrap(this.colony.memory, 'hatchery', HatcheryMemoryDefaults);
 		if (this.colony.layout == 'twoPart') this.colony.destinations.push(this.pos);
 		this.spawns = colony.spawns;
-		this.availableSpawns = _.filter(this.spawns, (spawn: StructureSpawn) => !spawn.spawning);
+		this.availableSpawns = _.filter(this.spawns, spawn => !spawn.spawning);
 		this.extensions = colony.extensions;
 		if (this.colony.layout == 'bunker') {
 			this.battery = _.first(_.filter(this.room.containers, cont => insideBunkerBounds(cont.pos, this.colony)));
@@ -111,6 +111,17 @@ export class Hatchery extends HiveCluster {
 			suppressSpawning       : false,
 		};
 		this.transportRequests = colony.transportRequests; // hatchery always uses colony transport group
+		this.memory.stats = this.getStats();
+	}
+
+	refresh() {
+		this.memory = Mem.wrap(this.colony.memory, 'hatchery', HatcheryMemoryDefaults);
+		$.refreshRoom(this);
+		$.refresh(this, 'spawns', 'extensions', 'energyStructures', 'link', 'towers', 'battery');
+		this.availableSpawns = _.filter(this.spawns, spawn => !spawn.spawning);
+		this.productionPriorities = [];
+		this.productionQueue = {};
+		this.transportRequests = this.colony.transportRequests;
 		this.memory.stats = this.getStats();
 	}
 

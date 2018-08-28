@@ -46,15 +46,18 @@ interface IGlobalCache {
 
 interface ICache {
 	overlords: { [overlord: string]: { [roleName: string]: string[] } };
+	creepsByColony: { [colonyName: string]: Creep[] };
 	targets: { [ref: string]: string[] };
 	outpostFlags: Flag[];
 
 	build(): void;
 
-	rebuild(): void;
+	refresh(): void;
 }
 
 interface IStrategist {
+
+	refresh(): void;
 
 	init(): void;
 
@@ -78,6 +81,8 @@ interface IAssimilator {
 }
 
 interface IOvermind {
+	shouldBuild: boolean
+	expiration: number;
 	cache: ICache;								// is actually GameCache
 	colonies: { [roomName: string]: any }; 		// is actually { [roomName: string]: Colony }
 	overlords: { [ref: string]: any }; 			// is actually { [ref: string]: Overlord }
@@ -91,7 +96,7 @@ interface IOvermind {
 
 	build(): void;
 
-	// rebuild(): void;
+	refresh(): void;
 
 	init(): void;
 
@@ -114,6 +119,8 @@ interface ITerminalNetwork {
 	terminals: StructureTerminal[];
 	memory: any;
 
+	refresh(): void;
+
 	requestResource(terminal: StructureTerminal, resourceType: ResourceConstant, amount: number): void;
 
 	registerTerminalState(terminal: StructureTerminal, state: TerminalState): void
@@ -125,6 +132,8 @@ interface ITerminalNetwork {
 
 interface ITradeNetwork {
 	memory: any;
+
+	refresh(): void;
 
 	priceOf(mineralType: ResourceConstant): number
 

@@ -88,6 +88,12 @@ export class TraderJoe implements ITradeNetwork {
 		this.notifications = [];
 	}
 
+	refresh() {
+		this.memory = Mem.wrap(Memory.Overmind, 'trader', TraderMemoryDefaults, true);
+		this.stats = Mem.wrap(Memory.stats.persistent, 'trader', TraderStatsDefaults);
+		this.notifications = [];
+	}
+
 	private notify(msg: string): void {
 		this.notifications.push(bullet + msg);
 	}

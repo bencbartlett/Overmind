@@ -3,6 +3,7 @@ import {HiveCluster} from './_HiveCluster';
 import {Colony} from '../Colony';
 import {CombatIntel} from '../intel/CombatIntel';
 import {WorkerOverlord} from '../overlords/core/worker';
+import {$} from '../caching/GlobalCache';
 
 // Hive cluster for wrapping towers
 
@@ -20,6 +21,10 @@ export class SporeCrawler extends HiveCluster {
 		super(colony, tower, 'sporeCrawler');
 		// Register structure components
 		this.tower = tower;
+	}
+
+	refresh() {
+		$.refresh(this, 'tower');
 	}
 
 	spawnMoarOverlords() {

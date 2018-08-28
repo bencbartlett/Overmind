@@ -56,6 +56,16 @@ export class ExtractionSite extends HiveCluster {
 		}
 	}
 
+	refresh() {
+		$.refreshRoom(this);
+		if (!this.room) {
+			delete this.colony.extractionSites[this.extractor.id];
+			_.remove(this.colony.hiveClusters, hc => hc.ref == this.ref);
+			return;
+		}
+		$.refresh(this, 'extractor', 'mineral', 'output');
+	}
+
 	spawnMoarOverlords() {
 		let priority = this.room.my ? OverlordPriority.ownedRoom.mineral : OverlordPriority.remoteSKRoom.mineral;
 		this.overlord = new ExtractorOverlord(this, priority);

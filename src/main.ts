@@ -81,13 +81,18 @@ function handler(): void {
 }
 
 Assimilator.validate(handler);
-
+global.Overmind = new _Overmind();
 
 // Main loop
 function main(): void {
 	Mem.clean();										// Clean memory
-	global.Overmind = new _Overmind();					// Instantiate the Overmind
-	Overmind.build();									// Build phase: instantiate caches and colony components
+	if (Overmind.shouldBuild || Game.time >= Overmind.expiration) {
+		log.debug(`Rebuilding Overmind object!`);
+		global.Overmind = new _Overmind();				// Instantiate the Overmind
+		Overmind.build();								// Build phase: instantiate caches and colony components
+	} else {
+		Overmind.refresh();
+	}
 	Overmind.init();									// Init phase: spawning and energy requests
 	Overmind.run();										// Run phase: execute state-changing actions
 	Overmind.visuals(); 								// Draw visuals

@@ -26,8 +26,12 @@ export abstract class HiveCluster {
 		this.colony.hiveClusters.push(this);
 	}
 
+	get print(): string {
+		return '<a href="#!/room/' + Game.shard.name + '/' + this.pos.roomName + '">[' + this.ref + ']</a>';
+	}
+
 	// Logic to refresh the state of the hive cluster between ticks
-	// abstract refresh(): void;
+	abstract refresh(): void;
 
 	// Instantiate overlord(s) for the hiveCluster
 	abstract spawnMoarOverlords(): void;

@@ -16,6 +16,7 @@ import {TraderJoe} from '../logistics/TradeNetwork';
 import {rightArrow} from '../utilities/stringConstants';
 import {Stats} from '../stats/stats';
 import {rollingAverage} from '../utilities/utils';
+import {$} from '../caching/GlobalCache';
 
 const LabStatus = {
 	Idle             : 0,
@@ -131,6 +132,20 @@ export class EvolutionChamber extends HiveCluster {
 		}
 	}
 
+	refresh() {
+		this.memory = Mem.wrap(this.colony.memory, 'evolutionChamber', EvolutionChamberMemoryDefaults);
+		$.refreshRoom(this);
+		$.refresh(this, 'terminal', 'labs', 'boostingLabs', 'reagentLabs', 'productLabs', 'productLabsNonBoosting');
+		this.labReservations = {};
+		this.boostQueue = {};
+		this.neededBoosts = {};
+		if (this.colony.commandCenter && this.colony.layout == 'twoPart') {
+			this.transportRequests = this.colony.commandCenter.transportRequests;
+		} else {
+			this.transportRequests = this.colony.transportRequests;
+		}
+	}
+
 	spawnMoarOverlords() {
 		// Evolution chamber is attended to by queens; overlord spawned at Hatchery
 	}
@@ -155,13 +170,13 @@ export class EvolutionChamber extends HiveCluster {
 				timeout = ticksInStatus > LabStageTimeouts.UnloadingLabs;
 				break;
 			default:
-				log.warning(`Bad lab state at ${this.room.print}!`);
+				log.warning(`Bad lab state at ${this.print}!`);
 				this.memory.status = LabStatus.Idle;
 				this.memory.statusTick = Game.time;
 				break;
 		}
 		if (timeout) {
-			log.warning(`${this.room.print}: stuck in state ${this.memory.status} for ${ticksInStatus} ticks, ` +
+			log.warning(`${this.print}: stuck in state ${this.memory.status} for ${ticksInStatus} ticks, ` +
 						`rebuilding reaction queue and reverting to idle state!`);
 			this.memory.status = LabStatus.Idle;
 			this.memory.statusTick = Game.time;
@@ -172,7 +187,7 @@ export class EvolutionChamber extends HiveCluster {
 
 	private initLabStatus(): void {
 		if (!this.memory.activeReaction && this.memory.status != LabStatus.Idle) {
-			log.warning(`No active reaction at ${this.room.print}!`);
+			log.warning(`No active reaction at ${this.print}!`);
 			this.memory.status = LabStatus.Idle;
 		}
 
@@ -180,7 +195,7 @@ export class EvolutionChamber extends HiveCluster {
 			case LabStatus.Idle:
 				if (this.memory.activeReaction) {
 					let [ing1, ing2] = REAGENTS[this.memory.activeReaction.mineralType];
-					log.info(`${this.room.print}: starting synthesis of ${ing1} + ${ing2} ${rightArrow} ` +
+					log.info(`${this.colony.room.print}: starting synthesis of ${ing1} + ${ing2} ${rightArrow} ` +
 							 this.memory.activeReaction.mineralType);
 					this.memory.status = LabStatus.AcquiringMinerals;
 					this.memory.statusTick = Game.time;
@@ -220,7 +235,7 @@ export class EvolutionChamber extends HiveCluster {
 				break;
 
 			default:
-				log.warning(`Bad lab state at ${this.room.print}!`);
+				log.warning(`Bad lab state at ${this.print}!`);
 				this.memory.status = LabStatus.Idle;
 				this.memory.statusTick = Game.time;
 				break;
