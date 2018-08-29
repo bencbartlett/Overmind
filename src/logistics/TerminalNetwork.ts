@@ -20,13 +20,14 @@ interface TerminalNetworkStats {
 			[origin: string]: {
 				[destination: string]: number
 			}
+		},
+		costs: {
+			[origin: string]: {
+				[destination: string]: number
+			}
 		}
 	},
-	costs: {
-		[origin: string]: {
-			[destination: string]: number
-		}
-	}
+
 }
 
 const TerminalNetworkMemoryDefaults: TerminalNetworkMemory = {
@@ -34,8 +35,9 @@ const TerminalNetworkMemoryDefaults: TerminalNetworkMemory = {
 };
 
 const TerminalNetworkStatsDefaults: TerminalNetworkStats = {
-	transfers: {},
-	costs    : {},
+	transfers: {
+		costs: {},
+	},
 };
 
 function colonyOf(terminal: StructureTerminal): Colony {
@@ -92,7 +94,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		this.terminals = terminals;
 		this.readyTerminals = _.filter(terminals, t => t.cooldown == 0);
 		this.memory = Mem.wrap(Memory.Overmind, 'terminalNetwork', TerminalNetworkMemoryDefaults);
-		this.stats = Mem.wrap(Memory.stats.persistent, 'terminalNetwork', TerminalNetworkStatsDefaults);
+		this.stats = Mem.wrap(Memory.stats.persistent, 'terminalNetwork', TerminalNetworkStatsDefaults, true);
 		this.alreadyReceived = [];
 		this.alreadySent = [];
 		this.exceptionTerminals = {}; 		// populated in init()

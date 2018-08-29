@@ -221,9 +221,6 @@ export class Visualizer {
 		const y = 7;
 		const width = 11;
 		this.infoBox('Notifications', [`${bullet}No notifications`], {x, y}, width);
-		// vis.rect(x, y - .9 * charHeight, width, 1 * charHeight, {opacity: 0.1});
-		// vis.box(x, y - .9 * charHeight, width, 3 * charHeight, {color: textColor});
-		// vis.text('Notifications:', x + .25, y - .05, {align: 'left', opacity: 0.5});
 	}
 
 	// static colonyReport(colonyName: string, text: string[]) {
@@ -251,7 +248,7 @@ export class Visualizer {
 	static visuals(): void {
 		this.drawLogo();
 		this.drawGraphs();
-		this.drawNotifications();
+		// this.drawNotifications();
 		this.summary();
 	}
 }

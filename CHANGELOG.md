@@ -4,7 +4,10 @@ All notable changes to this project will be documented in this file. The format 
 ## [Unreleased]
 
 ### Added
-- Added a `$.set()` method for cached object assignment
+- Added caching methods `$.set()` and `$.refresh()`
+- Persistence updates: much of the Overmind architecture now persists on global between ticks
+    - The global `Overmind` object is now rebuilt every 20 ticks; in the meantime, `refresh()` is called
+    - Colonies, HiveClusters are also persistent
 - Lots of new content added to the `Visualizer`!
     - Overmind logo now gets drawn in upper left corner
         - This was a fun little project to do in Mathematica; I made a curve simplification algorithm to look at an image and give the minimum number of points to describe its perimeter within a given tolerance (those are all the hard-coded arrays in `logos.ts`)
@@ -20,10 +23,11 @@ All notable changes to this project will be documented in this file. The format 
 - CPU improvements
     - `Colony.registerRoomObjects` now uses more caching and is less expensive
     - Improvements to `MiningSite`, `ExtractionSite`, and `UpgradeSite` to make them more CPU friendly
+- Separated `Overlord` abstract class into `Overlord` and `CombatOverlord` classes
 
 ### Fixed
 - Bugfix with pioneer recharging behavior to include dropped resources in recharging options
-
+- Bugfix for incorrectly initialized terminalNetwork memory not logging transfer costs correctly (#38, thanks @MaggNorway!)
 
 ## Overmind [0.5.0]: "Evolution" - 2018.8.10
 
