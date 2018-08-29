@@ -25,6 +25,11 @@ export class DirectiveBootstrap extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag);
+		this.refresh(); // data needs to be recomputed each tick
+	}
+
+	refresh() {
+		super.refresh();
 		this.colony.bootstrapping = true;
 		this.needsMiner = (this.colony.getCreepsByRole(MinerSetup.role).length == 0);
 		this.needsManager = (this.colony.commandCenter != undefined &&

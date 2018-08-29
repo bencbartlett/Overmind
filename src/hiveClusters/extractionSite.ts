@@ -58,11 +58,11 @@ export class ExtractionSite extends HiveCluster {
 
 	refresh() {
 		$.refreshRoom(this);
-		if (!this.room) {
-			_.remove(this.colony.hiveClusters, hc => hc.ref == this.ref);
-			delete this.colony.extractionSites[this.extractor.id];
-			return;
-		}
+		// if (!this.room) {
+		// 	_.remove(this.colony.hiveClusters, hc => hc.ref == this.ref);
+		// 	delete this.colony.extractionSites[this.extractor.id];
+		// 	return;
+		// }
 		$.refresh(this, 'extractor', 'mineral', 'output');
 	}
 

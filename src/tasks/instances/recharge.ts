@@ -31,12 +31,12 @@ export class TaskRecharge extends Task {
 		if (amount < this.data.minEnergy) {
 			return false;
 		}
-		let otherTargeters = _.filter(_.map(obj.targetedBy, name => Game.zerg[name]),
-									  zerg => !!zerg && zerg.memory._task
-											  && (zerg.memory._task.name == withdrawTaskName
-												  || zerg.memory._task.name == pickupTaskName));
-		let resourceOutflux = _.sum(_.map(otherTargeters,
-										  other => other.carryCapacity - _.sum(other.carry)));
+		const otherTargeters = _.filter(_.map(obj.targetedBy, name => Overmind.zerg[name]),
+										zerg => !!zerg && zerg.memory._task
+												&& (zerg.memory._task.name == withdrawTaskName
+													|| zerg.memory._task.name == pickupTaskName));
+		const resourceOutflux = _.sum(_.map(otherTargeters,
+											other => other.carryCapacity - _.sum(other.carry)));
 		amount = minMax(amount - resourceOutflux, 0, creep.carryCapacity);
 		let effectiveAmount = amount / (creep.pos.getMultiRoomRangeTo(obj.pos) + 1);
 		if (effectiveAmount <= 0) {

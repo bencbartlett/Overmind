@@ -72,6 +72,7 @@ export class UpgradeSite extends HiveCluster {
 
 	refresh() {
 		this.memory = Mem.wrap(this.colony.memory, 'upgradeSite');
+		$.refreshRoom(this);
 		$.refresh(this, 'controller', 'battery', 'link');
 	}
 

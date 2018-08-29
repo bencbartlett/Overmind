@@ -45,6 +45,7 @@ export abstract class Overlord {
 	protected _creeps: { [roleName: string]: Creep[] };
 	creepUsageReport: { [role: string]: [number, number] | undefined };
 	boosts: { [roleName: string]: _ResourceConstantSansEnergy[] | undefined };
+	suspendFor: number;
 
 	constructor(initializer: OverlordInitializer | Colony, name: string, priority: number) {
 		this.room = initializer.room;
@@ -56,9 +57,29 @@ export abstract class Overlord {
 		this.recalculateCreeps();
 		this.creepUsageReport = _.mapValues(this._creeps, creep => undefined);
 		this.boosts = _.mapValues(this._creeps, creep => undefined);
+		this.suspendFor = 0;
 		// Register the overlord on the colony overseer and on the overmind
 		Overmind.overlords[this.ref] = this;
 		this.colony.overseer.registerOverlord(this);
+	}
+
+	refresh(): void {
+		if (this.suspendFor > 0) {
+			this.suspendFor--;
+			return;
+		} else {
+			this.room = Game.rooms[this.pos.roomName];
+			// Refresh zerg
+			for (let role in this._creeps) {
+				for (let creep of this._creeps[role]) {
+					if (Overmind.zerg[creep.name]) {
+						Overmind.zerg[creep.name].refresh();
+					} else {
+						log.debug(`Could not find zerg with name ${creep.name}!`);
+					}
+				}
+			}
+		}
 	}
 
 	recalculateCreeps(): void {
@@ -93,14 +114,6 @@ export abstract class Overlord {
 	protected zerg(role: string, notifyWhenAttacked?: boolean): Zerg[] {
 		return _.map(this.creeps(role), creep => new Zerg(creep, notifyWhenAttacked));
 	}
-
-	// protected allCreeps(): Creep[] {
-	// 	let allCreeps: Zerg[] = [];
-	// 	for (let role of _.keys(this._creeps)) {
-	// 		allCreeps = allCreeps.concat(this._creeps[role]);
-	// 	}
-	// 	return _.compact(allCreeps);
-	// }
 
 	protected creepReport(role: string, currentAmt: number, neededAmt: number) {
 		this.creepUsageReport[role] = [currentAmt, neededAmt];
@@ -336,6 +349,10 @@ export abstract class Overlord {
 			}
 			creep.run();
 		}
+	}
+
+	suspend(ticks: number) {
+		this.suspendFor = ticks;
 	}
 
 	visuals(): void {

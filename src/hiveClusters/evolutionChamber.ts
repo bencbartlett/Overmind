@@ -357,8 +357,8 @@ export class EvolutionChamber extends HiveCluster {
 		// Boost requests are prioritized by which creep has least time to live
 		this.boostQueue[lab.id] = _.sortBy([...this.boostQueue[lab.id],
 											{mineralType: mineralType, creepName: creep.name}],
-										   request => (Game.zerg[request.creepName].ticksToLive
-													   || 5000 + Game.zerg[request.creepName].ticksUntilSpawned
+										   request => (Overmind.zerg[request.creepName].ticksToLive
+													   || 5000 + Overmind.zerg[request.creepName].ticksUntilSpawned
 													   || 9999));
 	}
 
@@ -383,7 +383,7 @@ export class EvolutionChamber extends HiveCluster {
 			let boostLab = deref(labID) as StructureLab;
 			let boostRequest = _.first(this.boostQueue[labID]);
 			let boostType = boostRequest.mineralType;
-			let creep = Game.zerg[boostRequest.creepName] as Zerg;
+			let creep = Overmind.zerg[boostRequest.creepName] as Zerg;
 			let boostAmount = LAB_BOOST_MINERAL * (creep.getActiveBodyparts(boostParts[boostType])
 												   - (creep.boostCounts[boostType] || 0));
 			// add to the needed amount of boosts

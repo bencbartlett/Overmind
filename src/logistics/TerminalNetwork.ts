@@ -52,7 +52,8 @@ function wantedAmount(colony: Colony, resource: ResourceConstant): number {
 @profile
 @assimilationLocked
 export class TerminalNetwork implements ITerminalNetwork {
-	terminals: StructureTerminal[];					// All terminals
+	allTerminals: StructureTerminal[];				// All terminals
+	terminals: StructureTerminal[];					// Terminals in standard state
 	readyTerminals: StructureTerminal[];
 	memory: TerminalNetworkMemory;
 	stats: TerminalNetworkStats;
@@ -91,7 +92,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 	};
 
 	constructor(terminals: StructureTerminal[]) {
-		this.terminals = terminals;
+		this.allTerminals = terminals;
+		this.terminals = _.clone(terminals);
 		this.readyTerminals = _.filter(terminals, t => t.cooldown == 0);
 		this.memory = Mem.wrap(Memory.Overmind, 'terminalNetwork', TerminalNetworkMemoryDefaults);
 		this.stats = Mem.wrap(Memory.stats.persistent, 'terminalNetwork', TerminalNetworkStatsDefaults, true);
@@ -104,7 +106,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 	}
 
 	refresh(): void {
-		$.refresh(this, 'terminals');
+		$.refresh(this, 'allTerminals');
+		this.terminals = _.clone(this.allTerminals);
 		this.readyTerminals = _.filter(this.terminals, t => t.cooldown == 0);
 		this.memory = Mem.wrap(Memory.Overmind, 'terminalNetwork', TerminalNetworkMemoryDefaults);
 		this.stats = Mem.wrap(Memory.stats.persistent, 'terminalNetwork', TerminalNetworkStatsDefaults);

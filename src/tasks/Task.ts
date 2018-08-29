@@ -103,7 +103,7 @@ export abstract class Task {
 	// Getter/setter for task.creep
 	get creep(): Zerg { // Get task's own creep by its name
 		// Returns zerg wrapper instead of creep to use monkey-patched functions
-		return Game.zerg[this._creep.name];
+		return Overmind.zerg[this._creep.name];
 	}
 
 	set creep(creep: Zerg) {

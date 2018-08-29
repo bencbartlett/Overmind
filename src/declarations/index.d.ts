@@ -27,8 +27,8 @@ declare module 'columnify';
 // If TS2451 gets thrown, change "declare let Game: Game;" to "declare var Game: Game;"
 // in typed-screeps index.d.ts file. (See issue #61 until the package is updated)
 interface Game {
-	zerg: { [name: string]: any };
-	directives: { [name: string]: any };
+	// zerg: { [name: string]: any };
+	// directives: { [name: string]: any };
 }
 
 
@@ -84,6 +84,8 @@ interface IOvermind {
 	shouldBuild: boolean
 	expiration: number;
 	cache: ICache;								// is actually GameCache
+	directives: { [flagName: string]: any }; 	// is actually { [flagName: string]: Directive }
+	zerg: { [creepName: string]: any };			// is actually { [creepName: string]: Zerg }
 	colonies: { [roomName: string]: any }; 		// is actually { [roomName: string]: Colony }
 	overlords: { [ref: string]: any }; 			// is actually { [ref: string]: Overlord }
 	spawnGroups: { [ref: string]: any };		// is actually { [ref: string]: SpawnGroup }
@@ -116,7 +118,8 @@ interface TerminalState {
 }
 
 interface ITerminalNetwork {
-	terminals: StructureTerminal[];
+	allTerminals: StructureTerminal[];
+	// terminals: StructureTerminal[];
 	memory: any;
 
 	refresh(): void;

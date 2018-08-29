@@ -89,6 +89,9 @@ export class Mem {
 		if (!Memory.settings) {
 			Memory.settings = {} as any;
 		}
+		if (!USE_PROFILER) {
+			delete Memory.profiler;
+		}
 		_.defaults(Memory.settings, {
 			signature    : DEFAULT_OVERMIND_SIGNATURE,
 			operationMode: DEFAULT_OPERATION_MODE,
@@ -180,30 +183,33 @@ export class Mem {
 	}
 
 	private static cleanPathingMemory() {
-		const distanceCleanProbability = 0.001;
-		const weightedDistanceCleanProbability = 0.01;
+		const CLEAN_FREQUENCY = 5;
+		if (Game.time % CLEAN_FREQUENCY == 0) {
+			const distanceCleanProbability = 0.001 * CLEAN_FREQUENCY;
+			const weightedDistanceCleanProbability = 0.01 * CLEAN_FREQUENCY;
 
-		// Randomly clear some cached path lengths
-		for (let pos1Name in Memory.pathing.distances) {
-			if (_.isEmpty(Memory.pathing.distances[pos1Name])) {
-				delete Memory.pathing.distances[pos1Name];
-			} else {
-				for (let pos2Name in Memory.pathing.distances[pos1Name]) {
-					if (Math.random() < distanceCleanProbability) {
-						delete Memory.pathing.distances[pos1Name][pos2Name];
+			// Randomly clear some cached path lengths
+			for (let pos1Name in Memory.pathing.distances) {
+				if (_.isEmpty(Memory.pathing.distances[pos1Name])) {
+					delete Memory.pathing.distances[pos1Name];
+				} else {
+					for (let pos2Name in Memory.pathing.distances[pos1Name]) {
+						if (Math.random() < distanceCleanProbability) {
+							delete Memory.pathing.distances[pos1Name][pos2Name];
+						}
 					}
 				}
 			}
-		}
 
-		// Randomly clear weighted distances
-		for (let pos1Name in Memory.pathing.weightedDistances) {
-			if (_.isEmpty(Memory.pathing.weightedDistances[pos1Name])) {
-				delete Memory.pathing.weightedDistances[pos1Name];
-			} else {
-				for (let pos2Name in Memory.pathing.weightedDistances[pos1Name]) {
-					if (Math.random() < weightedDistanceCleanProbability) {
-						delete Memory.pathing.weightedDistances[pos1Name][pos2Name];
+			// Randomly clear weighted distances
+			for (let pos1Name in Memory.pathing.weightedDistances) {
+				if (_.isEmpty(Memory.pathing.weightedDistances[pos1Name])) {
+					delete Memory.pathing.weightedDistances[pos1Name];
+				} else {
+					for (let pos2Name in Memory.pathing.weightedDistances[pos1Name]) {
+						if (Math.random() < weightedDistanceCleanProbability) {
+							delete Memory.pathing.weightedDistances[pos1Name][pos2Name];
+						}
 					}
 				}
 			}
@@ -212,9 +218,6 @@ export class Mem {
 
 	static clean() {
 		// Clean the memory of non-existent objects every tick
-		if (!USE_PROFILER) {
-			delete Memory.profiler;
-		}
 		this.cleanCreeps();
 		this.cleanFlags();
 		this.cleanColonies();

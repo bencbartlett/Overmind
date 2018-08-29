@@ -14,7 +14,6 @@ export class DirectiveSKOutpost extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag, DirectiveSKOutpost.requiredRCL);
-		if (!this.colony) return;
 		if (!this.room) {
 			// Push source / output positions to colony.destinations if room is invisible for correct road routings
 			let savedSources = Memory.rooms[this.pos.roomName] ? Memory.rooms[this.pos.roomName].src || [] : [];

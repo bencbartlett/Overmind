@@ -45,7 +45,7 @@ export function setOverlord(creep: Zerg | Creep, newOverlord: Overlord | null) {
 }
 
 export function normalizeZerg(creep: Zerg | Creep): Zerg | Creep {
-	return Game.zerg[creep.name] || creep;
+	return Overmind.zerg[creep.name] || creep;
 }
 
 export function toCreep(creep: Zerg | Creep): Creep {
@@ -121,7 +121,7 @@ export class Zerg {
 		this.actionLog = {};
 		this.blockMovement = false;
 		// this.settings = {};
-		Game.zerg[this.name] = this; // register global reference
+		Overmind.zerg[this.name] = this; // register global reference
 		global[this.name] = this;
 		// Handle attack notification when at lifetime - 1
 		if (this.ticksToLive == this.lifetime - 1 && !notifyWhenAttacked) {

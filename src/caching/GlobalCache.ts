@@ -97,16 +97,6 @@ export class $ { // $ = cash = cache... get it? :D
 		thing[key] = _cache.things[cacheKey] as T[K] & (undefined | HasID | HasID[]);
 	}
 
-	// static refresh<T extends HasID>(thing: T): T;
-	// static refresh<T extends HasID>(thing: T[]): T[];
-	// static refresh<T extends HasID>(thing: T | T[]): T | T[] {
-	// 	if (_.isArray(thing)) {
-	// 		return _.compact(_.map(thing as HasID[], s => Game.getObjectById(s.id))) as T[];
-	// 	} else {
-	// 		return Game.getObjectById(thing.id) as T;
-	// 	}
-	// }
-
 	static refresh<T extends Record<K, undefined | HasID | HasID[]>, K extends string>(thing: T, ...keys: K[]): void {
 		_.forEach(keys, function (key) {
 			if (thing[key]) {

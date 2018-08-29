@@ -28,7 +28,7 @@ export class TaskBuild extends Task {
 		if (!this.target.isWalkable) {
 			let creepOnTarget = this.target.pos.lookFor(LOOK_CREEPS)[0];
 			if (creepOnTarget) {
-				let zerg = Game.zerg[creepOnTarget.name];
+				const zerg = Overmind.zerg[creepOnTarget.name];
 				if (zerg) {
 					this.creep.say('move pls');
 					zerg.moveOffCurrentPos();

@@ -219,8 +219,8 @@ export class OvermindConsole {
 
 	static listAllDirectives(): string {
 		let msg = '';
-		for (let i in Game.directives) {
-			let dir = Game.directives[i];
+		for (let i in Overmind.directives) {
+			let dir = Overmind.directives[i];
 			msg += `Type: ${dir.directiveName}`.padRight(20) +
 				   `Name: ${dir.name}`.padRight(15) +
 				   `Pos: ${dir.pos.print}\n`;
@@ -239,8 +239,8 @@ export class OvermindConsole {
 
 	static listPersistentDirectives(): string {
 		let msg = '';
-		for (let i in Game.directives) {
-			let dir = Game.directives[i];
+		for (let i in Overmind.directives) {
+			let dir = Overmind.directives[i];
 			if (dir.memory.persistent) {
 				msg += `Type: ${dir.directiveName}`.padRight(20) +
 					   `Name: ${dir.name}`.padRight(15) +

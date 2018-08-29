@@ -56,7 +56,7 @@ export class SpawnGroup {
 	requests: SpawnRequest[];
 	hatcheries: Hatchery[];
 	energyCapacityAvailable: number;
-	room: Room | undefined;
+	// room: Room | undefined;
 	roomName: string;
 	ref: string;
 	settings: SpawnGroupSettings;
@@ -66,7 +66,7 @@ export class SpawnGroup {
 
 	constructor(initializer: SpawnGroupInitializer, settings: Partial<SpawnGroupSettings> = {}) {
 		this.roomName = initializer.pos.roomName;
-		this.room = initializer.room;
+		// this.room = initializer.room;
 		this.memory = Mem.wrap(Memory.rooms[this.roomName], 'spawnGroup', SpawnGroupMemoryDefaults);
 		this.ref = initializer.ref + ':SG';
 		// Calculate max energy capacity available to spawn group
@@ -79,6 +79,10 @@ export class SpawnGroup {
 		// this.hatcheries = [];
 		this.settings = _.defaults(settings, defaultSettings) as SpawnGroupSettings;
 		Overmind.spawnGroups[this.ref] = this;
+	}
+
+	refresh() {
+		this.memory = Mem.wrap(Memory.rooms[this.roomName], 'spawnGroup', SpawnGroupMemoryDefaults);
 	}
 
 	private recalculateColonies() {

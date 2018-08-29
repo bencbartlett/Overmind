@@ -24,6 +24,7 @@ export class SporeCrawler extends HiveCluster {
 	}
 
 	refresh() {
+		$.refreshRoom(this);
 		$.refresh(this, 'tower');
 	}
 

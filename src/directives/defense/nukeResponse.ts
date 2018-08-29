@@ -15,6 +15,11 @@ export class DirectiveNukeResponse extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag, DirectiveNukeResponse.requiredRCL);
+		this.refresh();
+	}
+
+	refresh() {
+		super.refresh();
 		this.nuke = this.pos.lookFor(LOOK_NUKES)[0]; // TODO: needs to handle multiple nukes on same pos
 	}
 

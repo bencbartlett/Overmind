@@ -349,12 +349,13 @@ export class Movement {
 	 * the lead blocking creep will suicide. Returns whether the position has been vacated. */
 	static vacatePos(pos: RoomPosition, suicide = false): boolean {
 		// prevent creeps from moving onto pos
-		let nearbyCreeps = _.compact(_.map(pos.findInRange(FIND_MY_CREEPS, 2), creep => Game.zerg[creep.name]));
+		let nearbyCreeps = _.compact(_.map(pos.findInRange(FIND_MY_CREEPS, 2),
+										   creep => Overmind.zerg[creep.name]));
 		_.forEach(nearbyCreeps, creep => creep.blockMovement = true);
 		// recurively move creeps off of the position
 		let creep = pos.lookFor(LOOK_CREEPS)[0];
 		if (!creep) return true;
-		let blockingCreep = Game.zerg[creep.name];
+		let blockingCreep = Overmind.zerg[creep.name];
 		if (!blockingCreep) return true;
 		let moved = !!this.recursivePush(blockingCreep);
 		if (moved) {
@@ -388,7 +389,7 @@ export class Movement {
 			for (let otherPos of availablePositions) {
 				let otherCreep = otherPos.lookFor(LOOK_CREEPS)[0];
 				if (!otherCreep) continue;
-				let otherZerg = Game.zerg[otherCreep.name];
+				let otherZerg = Overmind.zerg[otherCreep.name];
 				if (!otherZerg) continue;
 				movePos = this.recursivePush(otherZerg, excludePos.concat(creepPos));
 				if (movePos) {

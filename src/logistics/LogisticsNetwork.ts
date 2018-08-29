@@ -317,8 +317,8 @@ export class LogisticsNetwork {
 	}
 
 	static targetingTransporters(target: LogisticsTarget, excludedTransporter?: Zerg): Zerg[] {
-		let targetingZerg = _.map(target.targetedBy, name => Game.zerg[name]);
-		let targetingTransporters = _.filter(targetingZerg, zerg => zerg.roleName == TransporterSetup.role);
+		const targetingZerg = _.map(target.targetedBy, name => Overmind.zerg[name]);
+		const targetingTransporters = _.filter(targetingZerg, zerg => zerg.roleName == TransporterSetup.role);
 		if (excludedTransporter) _.remove(targetingTransporters,
 										  transporter => transporter.name == excludedTransporter.name);
 		return targetingTransporters;

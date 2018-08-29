@@ -11,7 +11,7 @@ import {Zerg} from './zerg/Zerg';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
 import {HiveCluster} from './hiveClusters/_HiveCluster';
 import {LinkNetwork} from './logistics/LinkNetwork';
-import {Stats} from './stats/stats';
+import {LOG_STATS_INTERVAL, Stats} from './stats/stats';
 import {SporeCrawler} from './hiveClusters/sporeCrawler';
 import {RoadLogistics} from './logistics/RoadLogistics';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
@@ -225,7 +225,7 @@ export class Colony {
 		this.refreshRoomObjects();			// Register real colony components
 		this.registerOperationalState();	// Set the colony operational state
 		this.registerUtilities(); 			// Register logistics utilities, room planners, and layout info
-		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.refresh());	// refresh each hive cluster
+		this.refreshHiveClusters();
 	}
 
 	private registerRoomObjects(): void {
@@ -424,15 +424,31 @@ export class Colony {
 		// Dropoff links are freestanding links or ones at mining sites
 		// this.dropoffLinks = _.clone(this.availableLinks);
 		// Mining sites is an object of ID's and MiningSites
-		let sourceIDs = _.map(this.sources, source => source.ref);
+		let sourceIDs = _.map(this.sources, source => source.id);
 		let miningSites = _.map(this.sources, source => new MiningSite(this, source));
 		this.miningSites = _.zipObject(sourceIDs, miningSites);
 		// ExtractionSites is an object of ID's and ExtractionSites
-		let extractorIDs = _.map(this.extractors, extractor => extractor.ref);
+		let extractorIDs = _.map(this.extractors, extractor => extractor.id);
 		let extractionSites = _.map(this.extractors, extractor => new ExtractionSite(this, extractor));
 		this.extractionSites = _.zipObject(extractorIDs, extractionSites);
 		// Reverse the hive clusters for correct order for init() and run()
 		this.hiveClusters.reverse();
+	}
+
+	private refreshHiveClusters(): void {
+		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.refresh());	// refresh each hive cluster
+		_.forEach(this.miningSites, site => {
+			if (!Game.rooms[site.pos.roomName]) {
+				delete this.miningSites[site.source.id];
+				_.remove(this.hiveClusters, hc => hc.ref == site.ref);
+			}
+		});
+		_.forEach(this.extractionSites, site => {
+			if (!Game.rooms[site.pos.roomName]) {
+				delete this.extractionSites[site.extractor.id];
+				_.remove(this.hiveClusters, hc => hc.ref == site.ref);
+			}
+		});
 	}
 
 	/* Instantiate all overlords for the colony */
@@ -450,18 +466,12 @@ export class Colony {
 		}
 	}
 
-	// /* Refreshes portions of the colony state between ticks without rebuilding the entire object */
-	// rebuild(): void {
-	// 	this.flags = []; 			// Reset flags list since Overmind will re-instantiate directives
-	// 	this.overseer.rebuild();	// Rebuild the overseer, which rebuilds overlords
-	// }
-
 	getCreepsByRole(roleName: string): Creep[] {
 		return this.creepsByRole[roleName] || [];
 	}
 
 	getZergByRole(roleName: string): (Zerg | undefined)[] {
-		return _.map(this.getCreepsByRole(roleName), creep => Game.zerg[creep.name]);
+		return _.map(this.getCreepsByRole(roleName), creep => Overmind.zerg[creep.name]);
 	}
 
 	/* Summarizes the total of all resources in colony store structures, labs, and some creeps */
@@ -505,25 +515,27 @@ export class Colony {
 	}
 
 	stats(): void {
-		// Log energy and rcl
-		Stats.log(`colonies.${this.name}.storage.energy`, this.storage ? this.storage.energy : undefined);
-		Stats.log(`colonies.${this.name}.rcl.level`, this.controller.level);
-		Stats.log(`colonies.${this.name}.rcl.progress`, this.controller.progress);
-		Stats.log(`colonies.${this.name}.rcl.progressTotal`, this.controller.progressTotal);
-		// Log average miningSite usage and uptime and estimated colony energy income
-		let numSites = _.keys(this.miningSites).length;
-		let avgDowntime = _.sum(this.miningSites, site => site.memory.stats.downtime) / numSites;
-		let avgUsage = _.sum(this.miningSites, site => site.memory.stats.usage) / numSites;
-		let energyInPerTick = _.sum(this.miningSites,
-									site => site.source.energyCapacity * site.memory.stats.usage) / ENERGY_REGEN_TIME;
-		Stats.log(`colonies.${this.name}.miningSites.avgDowntime`, avgDowntime);
-		Stats.log(`colonies.${this.name}.miningSites.avgUsage`, avgUsage);
-		Stats.log(`colonies.${this.name}.miningSites.energyInPerTick`, energyInPerTick);
-		Stats.log(`colonies.${this.name}.assets`, this.assets);
-		// Log defensive properties
-		Stats.log(`colonies.${this.name}.defcon`, this.defcon);
-		let avgBarrierHits = _.sum(this.room.barriers, barrier => barrier.hits) / this.room.barriers.length;
-		Stats.log(`colonies.${this.name}.avgBarrierHits`, avgBarrierHits);
+		if (Game.time % LOG_STATS_INTERVAL == 0) {
+			// Log energy and rcl
+			Stats.log(`colonies.${this.name}.storage.energy`, this.storage ? this.storage.energy : undefined);
+			Stats.log(`colonies.${this.name}.rcl.level`, this.controller.level);
+			Stats.log(`colonies.${this.name}.rcl.progress`, this.controller.progress);
+			Stats.log(`colonies.${this.name}.rcl.progressTotal`, this.controller.progressTotal);
+			// Log average miningSite usage and uptime and estimated colony energy income
+			let numSites = _.keys(this.miningSites).length;
+			let avgDowntime = _.sum(this.miningSites, site => site.memory.stats.downtime) / numSites;
+			let avgUsage = _.sum(this.miningSites, site => site.memory.stats.usage) / numSites;
+			let energyInPerTick = _.sum(this.miningSites, site =>
+				site.source.energyCapacity * site.memory.stats.usage) / ENERGY_REGEN_TIME;
+			Stats.log(`colonies.${this.name}.miningSites.avgDowntime`, avgDowntime);
+			Stats.log(`colonies.${this.name}.miningSites.avgUsage`, avgUsage);
+			Stats.log(`colonies.${this.name}.miningSites.energyInPerTick`, energyInPerTick);
+			Stats.log(`colonies.${this.name}.assets`, this.assets);
+			// Log defensive properties
+			Stats.log(`colonies.${this.name}.defcon`, this.defcon);
+			let avgBarrierHits = _.sum(this.room.barriers, barrier => barrier.hits) / this.room.barriers.length;
+			Stats.log(`colonies.${this.name}.avgBarrierHits`, avgBarrierHits);
+		}
 	}
 
 	visuals(): void {

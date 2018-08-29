@@ -24,6 +24,11 @@ export class DirectiveTerminalRebuildState extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag);
+		this.refresh();
+	}
+
+	refresh() {
+		super.refresh();
 		// Register abandon status
 		this.terminal = this.pos.lookForStructure(STRUCTURE_TERMINAL) as StructureTerminal;
 		if (this.terminal) {

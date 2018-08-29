@@ -18,7 +18,7 @@ export abstract class Directive {
 	static color: ColorConstant; 				// Flag color
 	static secondaryColor: ColorConstant;		// Flag secondaryColor
 
-	flag: Flag;									// The flag instantiating this directive
+	// flag: Flag;									// The flag instantiating this directive
 	name: string;								// The name of the flag
 	ref: string;								// Also the name of the flag; used for task targeting
 	requiredRCL: number; 						// Required RCL for a colony to handle this directive
@@ -29,32 +29,19 @@ export abstract class Directive {
 	overlords: { [name: string]: Overlord };	// Overlords
 
 	constructor(flag: Flag, requiredRCL = 1, maxPathLength = 550) {
-		this.flag = flag;
+		// this.flag = flag;
 		this.name = flag.name;
 		this.ref = flag.ref;
 		this.memory = flag.memory;
 		this.requiredRCL = requiredRCL;
 		if (!this.memory.created) this.memory.created = Game.time;
 		// Relocate flag if needed; this must be called before the colony calculations
-		if (this.memory.setPosition) {
-			let pos = derefRoomPosition(this.memory.setPosition);
-			if (!flag.pos.isEqualTo(pos)) {
-				let result = flag.setPosition(pos);
-				if (result == OK) {
-					log.debug(`Moving ${this.name} from ${flag.pos.print} to ${pos.print}.`);
-				} else {
-					log.warning(`Could not set room position to ${JSON.stringify(this.memory.setPosition)}!`);
-				}
-			} else {
-				delete this.memory.setPosition;
-			}
-			this.pos = pos;
-			this.room = Game.rooms[pos.roomName];
-		} else {
+		const needsRelocating = this.handleRelocation();
+		if (!needsRelocating) {
 			this.pos = flag.pos;
 			this.room = flag.room;
 		}
-		let colony = this.getColony(requiredRCL);
+		const colony = this.getColony(requiredRCL);
 		// Delete the directive if the colony is dead
 		if (!colony) {
 			if (Overmind.exceptions.length == 0) {
@@ -67,15 +54,58 @@ export abstract class Directive {
 			return;
 		}
 		this.colony = colony;
+		this.colony.flags.push(flag);
 		this.colony.overseer.directives.push(this);
 		this.overlords = {};
+		// Register directive on Overmind
+		Overmind.directives[this.name] = this;
+	}
+
+	get flag(): Flag {
+		return Game.flags[this.name];
+	}
+
+	// get memory(): FlagMemory {
+	// 	return Memory.flags[this.name];
+	// }
+
+	refresh(): void {
+		const flag = this.flag;
+		if (!flag) {
+			log.warning(`Missing flag for directive ${this.print}! Removing directive.`);
+			this.remove();
+			return;
+		}
+		this.memory = flag.memory;
+		this.pos = flag.pos;
+		this.room = flag.room;
 	}
 
 	get print(): string {
 		return '<a href="#!/room/' + Game.shard.name + '/' + this.pos.roomName + '">[' + this.name + ']</a>';
 	}
 
-	getColony(requiredRCL = 1): Colony | undefined {
+	private handleRelocation(): boolean {
+		if (this.memory.setPosition) {
+			let pos = derefRoomPosition(this.memory.setPosition);
+			if (!this.flag.pos.isEqualTo(pos)) {
+				let result = this.flag.setPosition(pos);
+				if (result == OK) {
+					log.debug(`Moving ${this.name} from ${this.flag.pos.print} to ${pos.print}.`);
+				} else {
+					log.warning(`Could not set room position to ${JSON.stringify(this.memory.setPosition)}!`);
+				}
+			} else {
+				delete this.memory.setPosition;
+			}
+			this.pos = pos;
+			this.room = Game.rooms[pos.roomName];
+			return true;
+		}
+		return false;
+	}
+
+	private getColony(requiredRCL = 1): Colony | undefined {
 		// If something is written to flag.colony, use that as the colony
 		if (this.memory.colony) {
 			return Overmind.colonies[this.memory.colony];
@@ -151,9 +181,16 @@ export abstract class Directive {
 	}
 
 	// Wrapped flag methods ============================================================================================
-	remove(): number | undefined {
-		if (!this.memory.persistent) {
-			return this.flag.remove();
+	remove(force = false): number | undefined {
+		if (!this.memory.persistent || force) {
+			delete Overmind.directives[this.name];
+			if (this.colony) {
+				_.remove(this.colony.flags, flag => flag.name == this.name);
+				_.remove(this.colony.overseer.directives, dir => dir.name == this.name);
+			}
+			if (this.flag) { // check in case flag was removed manually in last build cycle
+				return this.flag.remove();
+			}
 		}
 	}
 
@@ -278,7 +315,7 @@ export abstract class Directive {
 	/* Map a list of flags to directives, accepting a filter */
 	static find(flags: Flag[]): Directive[] {
 		flags = _.filter(flags, flag => this.filter(flag));
-		return _.compact(_.map(flags, flag => Game.directives[flag.name]));
+		return _.compact(_.map(flags, flag => Overmind.directives[flag.name]));
 	}
 
 	abstract spawnMoarOverlords(): void;

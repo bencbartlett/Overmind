@@ -43,3 +43,4 @@ export const DEFAULT_OPERATION_MODE: operationMode = 'automatic';
  * The global Overmind object will be re-instantiated after this many ticks. In the meantime, refresh() is used.
  */
 export const NEW_OVERMIND_INTERVAL = 20;
+
