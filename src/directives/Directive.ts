@@ -3,7 +3,7 @@ import {profile} from '../profiler/decorator';
 import {Colony, getAllColonies} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
 import {Pathing} from '../movement/Pathing';
-import {randomHex} from '../utilities/utils';
+import {equalXYR, randomHex} from '../utilities/utils';
 
 interface DirectiveCreateOptions {
 	memory?: FlagMemory;
@@ -229,10 +229,53 @@ export abstract class Directive {
 		return result;
 	}
 
+
+	/* Whether a directive of the same type is already present (in room | at position) */
+	static isPresent(pos: RoomPosition, scope: 'room' | 'pos'): boolean {
+		const room = Game.rooms[pos.roomName] as Room | undefined;
+		switch (scope) {
+			case 'room':
+				if (room) {
+					return _.filter(room.flags,
+									flag => this.filter(flag) &&
+											!(flag.memory.setPosition
+											&& flag.memory.setPosition.roomName != pos.roomName)).length > 0;
+				} else {
+					let flagsInRoom = _.filter(Game.flags, function (flag) {
+						if (flag.memory.setPosition) { // does it need to be relocated?
+							return flag.memory.setPosition.roomName == pos.roomName;
+						} else { // properly located
+							return flag.pos.roomName == pos.roomName;
+						}
+					});
+					return _.filter(flagsInRoom, flag => this.filter(flag)).length > 0;
+				}
+			case 'pos':
+				if (room) {
+					return _.filter(pos.lookFor(LOOK_FLAGS),
+									flag => this.filter(flag) &&
+											!(flag.memory.setPosition
+											&& !equalXYR(pos, flag.memory.setPosition))).length > 0;
+				} else {
+					let flagsAtPos = _.filter(Game.flags, function (flag) {
+						if (flag.memory.setPosition) { // does it need to be relocated?
+							return equalXYR(flag.memory.setPosition, pos);
+						} else { // properly located
+							return equalXYR(flag.pos, pos);
+						}
+					});
+					return _.filter(flagsAtPos, flag => this.filter(flag)).length > 0;
+				}
+		}
+	}
+
 	/* Create a directive if one of the same type is not already present (in room | at position).
 	 * Calling this method on positions in invisible rooms can be expensive and should be used sparingly. */
 	static createIfNotPresent(pos: RoomPosition, scope: 'room' | 'pos',
 							  opts: DirectiveCreateOptions = {}): number | string | undefined {
+		if (this.isPresent(pos, scope)) {
+			return; // do nothing if flag is already here
+		}
 		let room = Game.rooms[pos.roomName] as Room | undefined;
 		if (!room) {
 			if (!opts.memory) {
@@ -244,66 +287,32 @@ export abstract class Directive {
 		switch (scope) {
 			case 'room':
 				if (room) {
-					flagsOfThisType = _.filter(room.flags, flag => this.filter(flag));
-					if (flagsOfThisType.length == 0) {
-						return this.create(pos, opts);
-					}
+					return this.create(pos, opts);
 				} else {
-					let flagsInRoom = _.filter(Game.flags, function (flag) {
-						if (flag.pos.roomName == pos.roomName) {
-							return true;
-						} else if (flag.memory.setPosition && flag.memory.setPosition.roomName == pos.roomName) {
-							return true;
-						}
-						return false;
-					});
-					flagsOfThisType = _.filter(flagsInRoom, flag => this.filter(flag));
-					if (flagsOfThisType.length == 0) {
-						log.info(`Creating directive at ${pos.print}... ` +
-								 `No visibility in room; directive will be relocated on next tick.`);
-						let createAtPos: RoomPosition;
-						if (opts.memory && opts.memory.colony) {
-							createAtPos = Pathing.findPathablePosition(opts.memory.colony);
-						} else {
-							createAtPos = Pathing.findPathablePosition(_.first(getAllColonies()).room.name);
-						}
-						return this.create(createAtPos, opts);
+					log.info(`Creating directive at ${pos.print}... ` +
+							 `No visibility in room; directive will be relocated on next tick.`);
+					let createAtPos: RoomPosition;
+					if (opts.memory && opts.memory.colony) {
+						createAtPos = Pathing.findPathablePosition(opts.memory.colony);
+					} else {
+						createAtPos = Pathing.findPathablePosition(_.first(getAllColonies()).room.name);
 					}
+					return this.create(createAtPos, opts);
 				}
-				break;
 			case 'pos':
 				if (room) {
-					flagsOfThisType = _.filter(pos.lookFor(LOOK_FLAGS), flag => this.filter(flag));
-					if (flagsOfThisType.length == 0) {
-						return this.create(pos, opts);
-					}
+					return this.create(pos, opts);
 				} else {
-					let flagsAtPos = _.filter(Game.flags, function (flag) {
-						if (flag.pos.isEqualTo(pos)) {
-							return true;
-						} else if (flag.memory.setPosition
-								   && derefRoomPosition(flag.memory.setPosition).isEqualTo(pos)) {
-							return true;
-						}
-						return false;
-					});
-					flagsOfThisType = _.filter(flagsAtPos, flag => this.filter(flag));
-					if (flagsOfThisType.length == 0) {
-						log.info(`Creating directive at ${pos.print}... ` +
-								 `No visibility in room; directive will be relocated on next tick.`);
-						let createAtPos: RoomPosition;
-						if (opts.memory && opts.memory.colony) {
-							createAtPos = Pathing.findPathablePosition(opts.memory.colony);
-						} else {
-							createAtPos = Pathing.findPathablePosition(_.first(getAllColonies()).room.name);
-						}
-						return this.create(createAtPos, opts);
+					log.info(`Creating directive at ${pos.print}... ` +
+							 `No visibility in room; directive will be relocated on next tick.`);
+					let createAtPos: RoomPosition;
+					if (opts.memory && opts.memory.colony) {
+						createAtPos = Pathing.findPathablePosition(opts.memory.colony);
+					} else {
+						createAtPos = Pathing.findPathablePosition(_.first(getAllColonies()).room.name);
 					}
+					return this.create(createAtPos, opts);
 				}
-				break;
-			default:
-				log.error(`Directive.createIfNotPresent: scope must be "room" or "pos"!`);
-				break;
 		}
 	}
 

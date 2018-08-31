@@ -36,9 +36,8 @@ export class CommandCenterOverlord extends Overlord {
 	managers: Zerg[];
 	commandCenter: CommandCenter;
 	transportRequests: TransportRequestGroup;
+	depositTarget: StructureTerminal | StructureStorage;
 	managerRepairTarget: StructureRampart | StructureWall | undefined;
-
-	private depositTarget: StructureTerminal | StructureStorage;
 
 	constructor(commandCenter: CommandCenter, priority = OverlordPriority.core.manager) {
 		super(commandCenter, 'manager', priority);
@@ -58,6 +57,12 @@ export class CommandCenterOverlord extends Overlord {
 									   b => b.hits < WorkerOverlord.settings.barrierHits[this.colony.level]),
 							  b => b.hits));
 		}
+	}
+
+	refresh() {
+		super.refresh();
+		this.transportRequests = this.commandCenter.transportRequests;
+		$.refresh(this, 'depositTarget', 'managerRepairTarget');
 	}
 
 	init() {

@@ -11,6 +11,7 @@ import {log} from '../console/log';
 import {SpawnRequest, SpawnRequestOptions} from '../hiveClusters/hatchery';
 import {SpawnGroup} from '../logistics/SpawnGroup';
 import {Pathing} from '../movement/Pathing';
+import {CombatZerg} from '../zerg/CombatZerg';
 
 export interface OverlordInitializer {
 	ref: string;
@@ -42,9 +43,12 @@ export abstract class Overlord {
 	pos: RoomPosition;
 	colony: Colony;
 	spawnGroup: SpawnGroup | undefined;
-	protected _creeps: { [roleName: string]: Creep[] };
+	private _creeps: { [roleName: string]: Creep[] };
+	private _zerg: { [roleName: string]: Zerg[] };
+	private _combatZerg: { [roleName: string]: CombatZerg[] };
 	creepUsageReport: { [role: string]: [number, number] | undefined };
 	boosts: { [roleName: string]: _ResourceConstantSansEnergy[] | undefined };
+	notifyWhenAttacked: boolean;
 	suspendFor: number;
 
 	constructor(initializer: OverlordInitializer | Colony, name: string, priority: number) {
@@ -54,37 +58,100 @@ export abstract class Overlord {
 		this.pos = initializer.pos;
 		this.colony = isColony(initializer) ? initializer : initializer.colony;
 		this.spawnGroup = undefined;
+		this._zerg = {};
+		this._combatZerg = {};
 		this.recalculateCreeps();
 		this.creepUsageReport = _.mapValues(this._creeps, creep => undefined);
 		this.boosts = _.mapValues(this._creeps, creep => undefined);
+		this.notifyWhenAttacked = true;
 		this.suspendFor = 0;
 		// Register the overlord on the colony overseer and on the overmind
 		Overmind.overlords[this.ref] = this;
 		this.colony.overseer.registerOverlord(this);
 	}
 
+	/* Refreshes overlord, recalculating creeps and refreshing existing Zerg. New creeps are automatically added,
+	 * and the corresponding role groups (e.g. 'queens') are automatically updated. Child methods do not need to
+	 * refresh their zerg properties, only other room objects stored on the Overlord. */
 	refresh(): void {
 		if (this.suspendFor > 0) {
 			this.suspendFor--;
 			return;
 		} else {
+			// Refresh room
 			this.room = Game.rooms[this.pos.roomName];
 			// Refresh zerg
+			this.recalculateCreeps();
 			for (let role in this._creeps) {
 				for (let creep of this._creeps[role]) {
 					if (Overmind.zerg[creep.name]) {
+						// log.debug(`Refreshing creep ${creep.name}`)
 						Overmind.zerg[creep.name].refresh();
 					} else {
-						log.debug(`Could not find zerg with name ${creep.name}!`);
+						log.warning(`${this.print}: could not find and refresh zerg with name ${creep.name}!`);
 					}
 				}
 			}
 		}
 	}
 
+	get print(): string {
+		return '<a href="#!/room/' + Game.shard.name + '/' + this.pos.roomName + '">[' + this.ref + ']</a>';
+	}
+
 	recalculateCreeps(): void {
+		// Recalculate the sets of creeps for each role in this overlord
 		this._creeps = _.mapValues(Overmind.cache.overlords[this.ref],
 								   creepsOfRole => _.map(creepsOfRole, creepName => Game.creeps[creepName]));
+		// Update zerg and combatZerg records
+		for (let role in this._zerg) {
+			this.synchronizeZerg(role);
+		}
+		for (let role in this._combatZerg) {
+			this.synchronizeCombatZerg(role);
+		}
+	}
+
+	private synchronizeZerg(role: string): void {
+		// Synchronize the corresponding sets of Zerg
+		let zergNames = _.zipObject(_.map(this._zerg[role] || [],
+			zerg => [zerg.name, true])) as { [name: string]: boolean };
+		let creepNames = _.zipObject(_.map(this._creeps[role] || [],
+			creep => [creep.name, true])) as { [name: string]: boolean };
+		// Add new creeps which aren't in the _zerg record
+		for (let creep of this._creeps[role] || []) {
+			if (!zergNames[creep.name]) {
+				this._zerg[role].push(Overmind.zerg[creep.name]
+									  || new Zerg(creep, this.notifyWhenAttacked));
+			}
+		}
+		// Remove dead/reassigned creeps from the _zerg record
+		for (let zerg of this._zerg[role]) {
+			if (!creepNames[zerg.name]) {
+				_.remove(this._zerg[role], z => z.name == zerg.name);
+			}
+		}
+	}
+
+	private synchronizeCombatZerg(role: string): void {
+		// Synchronize the corresponding sets of CombatZerg
+		let zergNames = _.zipObject(_.map(this._combatZerg[role] || [],
+			zerg => [zerg.name, true])) as { [name: string]: boolean };
+		let creepNames = _.zipObject(_.map(this._creeps[role] || [],
+			creep => [creep.name, true])) as { [name: string]: boolean };
+		// Add new creeps which aren't in the _combatZerg record
+		for (let creep of this._creeps[role] || []) {
+			if (!zergNames[creep.name]) {
+				this._combatZerg[role].push(Overmind.zerg[creep.name]
+											|| new CombatZerg(creep, this.notifyWhenAttacked));
+			}
+		}
+		// Remove dead/reassigned creeps from the _combatZerg record
+		for (let zerg of this._combatZerg[role]) {
+			if (!creepNames[zerg.name]) {
+				_.remove(this._combatZerg[role], z => z.name == zerg.name);
+			}
+		}
 	}
 
 	/* Gets the "ID" of the outpost this overlord is operating in. 0 for owned rooms, >= 1 for outposts, -1 for other */
@@ -101,18 +168,30 @@ export abstract class Overlord {
 		}
 	}
 
-	/* Returns all creeps of a specified role */
-	protected creeps(role: string): Creep[] {
-		if (this._creeps[role]) {
-			return this._creeps[role];
-		} else {
-			return [];
+	// /* Returns all creeps of a specified role */
+	// protected creeps(role: string): Creep[] {
+	// 	if (this._creeps[role]) {
+	// 		return this._creeps[role];
+	// 	} else {
+	// 		return [];
+	// 	}
+	// }
+
+	/* Wraps all creeps of a given role to Zerg objects and updates the contents in future ticks to avoid having to
+	 * explicitly refresh groups of Zerg */
+	protected zerg(role: string, notifyWhenAttacked?: boolean): Zerg[] {
+		if (!this._zerg[role]) {
+			this._zerg[role] = [];
 		}
+		return this._zerg[role];
 	}
 
-	/* Default wrapping behavior -- maps all creeps to a base-level zerg */
-	protected zerg(role: string, notifyWhenAttacked?: boolean): Zerg[] {
-		return _.map(this.creeps(role), creep => new Zerg(creep, notifyWhenAttacked));
+	/* Wraps all creeps of a given role to CombatZerg objects and updates the contents in future ticks */
+	protected combatZerg(role: string, notifyWhenAttacked?: boolean): CombatZerg[] {
+		if (!this._combatZerg[role]) {
+			this._combatZerg[role] = [];
+		}
+		return this._combatZerg[role];
 	}
 
 	protected creepReport(role: string, currentAmt: number, neededAmt: number) {
@@ -191,7 +270,7 @@ export abstract class Overlord {
 	}
 
 	/* Create a creep setup and enqueue it to the Hatchery; does not include automatic reporting */
-	protected requestCreep(setup: CreepSetup, opts = {} as CreepRequestOptions) {
+	private requestCreep(setup: CreepSetup, opts = {} as CreepRequestOptions) {
 		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN});
 		let spawner = this.spawnGroup || this.colony.spawnGroup || this.colony.hatchery;
 		if (spawner) {
@@ -217,7 +296,7 @@ export abstract class Overlord {
 	/* Wishlist of creeps to simplify spawning logic; includes automatic reporting */
 	protected wishlist(quantity: number, setup: CreepSetup, opts = {} as CreepRequestOptions) {
 		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN});
-		let creepQuantity = this.lifetimeFilter(this.creeps(setup.role), opts.prespawn).length;
+		let creepQuantity = this.lifetimeFilter(this._creeps[setup.role] || [], opts.prespawn).length;
 		if (creepQuantity < quantity) {
 			this.requestCreep(setup, opts);
 		}

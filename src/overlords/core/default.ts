@@ -2,7 +2,7 @@ import {getOverlord, Overlord} from '../Overlord';
 import {profile} from '../../profiler/decorator';
 import {Colony} from '../../Colony';
 import {Zerg} from '../../zerg/Zerg';
-import {MinerSetup} from '../mining/miner';
+import {MinerSetup} from '../mining/miner_new';
 import {DroneSetup} from '../mining/extractor';
 import {getPosFromString} from '../../utilities/utils';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -24,7 +24,10 @@ export class DefaultOverlord extends Overlord {
 	init() {
 		// Zergs are collected at end of init phase; by now anything needing to be claimed already has been
 		let idleCreeps = _.filter(this.colony.creeps, creep => !getOverlord(creep));
-		this.idleZerg = _.map(idleCreeps, creep => new Zerg(creep));
+		this.idleZerg = _.map(idleCreeps, creep => Overmind.zerg[creep.name] || new Zerg(creep));
+		for (let zerg of this.idleZerg) {
+			zerg.refresh();
+		}
 	}
 
 	run() {

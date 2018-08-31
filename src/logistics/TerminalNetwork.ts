@@ -327,10 +327,12 @@ export class TerminalNetwork implements ITerminalNetwork {
 			this.memory.equalizeIndex = 0;
 		}
 		// Equalize current resource type
-		let resource = equalizeResources[this.memory.equalizeIndex];
+		let resource = equalizeResources[this.memory.equalizeIndex] as ResourceConstant | undefined;
 		let terminals = resource == RESOURCE_POWER ? _.filter(this.terminals, t => colonyOf(t).powerSpawn != undefined)
 												   : this.terminals;
-		this.equalize(resource, terminals);
+		if (resource) { // resource is undefined if there is nothing to equalize
+			this.equalize(resource, terminals);
+		}
 		// Determine next resource type to equalize; most recent resourceType gets cycled to end
 		let resourceEqualizeOrder = equalizeResources.slice(this.memory.equalizeIndex + 1)
 													 .concat(equalizeResources.slice(0, this.memory.equalizeIndex + 1));

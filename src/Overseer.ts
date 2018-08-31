@@ -29,26 +29,31 @@ export class Overseer {
 
 	colony: Colony; 							// Instantiated colony object
 	directives: Directive[];					// Directives across the colony
-	overlords: {
-		[priority: number]: Overlord[]
-	};
+	// overlords: {
+	// 	[priority: number]: Overlord[]
+	// };
+	overlords: Overlord[];
 	private overlordRequests: Overlord[];
+
+	static settings = {
+		outpostCheckFrequency: 250
+	};
 
 	constructor(colony: Colony) {
 		this.colony = colony;
 		this.directives = [];
-		this.overlords = {};
+		this.overlords = [];
 		this.overlordRequests = [];
 	}
 
 	refresh() {
-		this.directives = [];
-		this.overlords = {};
-		this.overlordRequests = [];
+		// this.directives = [];
+		// this.overlords = {};
+		// this.overlordRequests = [];
 	}
 
 	registerOverlord(overlord: Overlord): void {
-		this.overlordRequests.push(overlord);
+		this.overlords.push(overlord);
 	}
 
 	private registerLogisticsRequests(): void {
@@ -74,8 +79,7 @@ export class Overseer {
 		}
 	}
 
-	/* Place new event-driven flags where needed to be instantiated on the next tick */
-	private placeDirectives(): void {
+	private handleBootstrapping() {
 		// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
 		// Doesn't apply to incubating colonies.
 		if (!this.colony.isIncubating) {
@@ -90,7 +94,9 @@ export class Overseer {
 				}
 			}
 		}
+	}
 
+	private handleOutpostGuards() {
 		// Guard directive: defend your outposts and all rooms of colonies that you are incubating
 		for (let room of this.colony.outposts) {
 			if (Cartographer.roomType(room.name) != ROOMTYPE_SOURCEKEEPER) { // SK rooms can fend for themselves
@@ -101,7 +107,9 @@ export class Overseer {
 				}
 			}
 		}
+	}
 
+	private handleColonyInvasions() {
 		// Defend against invasions in owned rooms
 		if (this.colony.room && this.colony.level >= DirectiveInvasionDefense.requiredRCL) {
 			let effectiveInvaderCount = _.sum(_.map(this.colony.room.hostiles,
@@ -110,61 +118,68 @@ export class Overseer {
 				DirectiveInvasionDefense.createIfNotPresent(this.colony.controller.pos, 'room');
 			}
 		}
+	}
 
+	private handleNukeResponse() {
 		// Place nuke response directive if there is a nuke present in colony room
 		if (this.colony.room && this.colony.level >= DirectiveNukeResponse.requiredRCL) {
 			for (let nuke of this.colony.room.find(FIND_NUKES)) {
 				DirectiveNukeResponse.createIfNotPresent(nuke.pos, 'pos');
 			}
 		}
+	}
 
-		// Place reserving/harvesting directives if needed
-		if (Game.time % 250 == 2 * this.colony.id && getAutonomyLevel() > Autonomy.Manual) {
-			let numSources = _.sum(this.colony.roomNames, roomName => (Memory.rooms[roomName].src || []).length);
-			let numRemotes = numSources - this.colony.room.sources.length;
-			if (numRemotes < Colony.settings.remoteSourcesByLevel[this.colony.level]) {
-				// Possible outposts are controller rooms not already reserved or owned
-				log.debug(`Calculating colonies for ${this.colony.room.print}...`);
-				log.debug(`Rooms in range 2: ${Cartographer.findRoomsInRange(this.colony.room.name, 2)}`);
-				let possibleOutposts = _.filter(Cartographer.findRoomsInRange(this.colony.room.name, 2), roomName =>
-					Cartographer.roomType(roomName) == ROOMTYPE_CONTROLLER
-					&& !_.any(Overmind.cache.outpostFlags,
-							  function (flag) {
-								  if (flag.memory.setPosition) {
-									  return flag.memory.setPosition.roomName == roomName;
-								  } else {
-									  return flag.pos.roomName == roomName;
-								  }
-							  })
-					&& !Overmind.colonies[roomName]
-					&& !RoomIntel.roomOwnedBy(roomName)
-					&& !RoomIntel.roomReservedBy(roomName)
-					&& Game.map.isRoomAvailable(roomName));
-				log.debug(`Possible outposts: ${possibleOutposts}`);
-				let origin = this.colony.pos;
-				let bestOutpost = minBy(possibleOutposts, function (roomName) {
-					if (!Memory.rooms[roomName]) return false;
-					let sourceCoords = Memory.rooms[roomName].src as SavedSource[] | undefined;
-					if (!sourceCoords) return false;
-					let sourcePositions = _.map(sourceCoords, src => derefCoords(src.c, roomName));
-					let sourceDistances = _.map(sourcePositions, pos => Pathing.distance(origin, pos));
-					if (_.any(sourceDistances, dist => dist == undefined
-													   || dist > Colony.settings.maxSourceDistance)) return false;
-					return _.sum(sourceDistances) / sourceDistances.length;
-				});
-				if (bestOutpost) {
-					let pos = Pathing.findPathablePosition(bestOutpost);
-					log.info(`Colony ${this.colony.room.print} now remote mining from ${pos.print}`);
-					DirectiveOutpost.createIfNotPresent(pos, 'room', {memory: {colony: this.colony.name}});
-				}
+	private handleNewOutposts() {
+		let numSources = _.sum(this.colony.roomNames, roomName => (Memory.rooms[roomName].src || []).length);
+		let numRemotes = numSources - this.colony.room.sources.length;
+		if (numRemotes < Colony.settings.remoteSourcesByLevel[this.colony.level]) {
+			// Possible outposts are controller rooms not already reserved or owned
+			log.debug(`Calculating colonies for ${this.colony.room.print}...`);
+			log.debug(`Rooms in range 2: ${Cartographer.findRoomsInRange(this.colony.room.name, 2)}`);
+			let possibleOutposts = _.filter(Cartographer.findRoomsInRange(this.colony.room.name, 2), roomName =>
+				Cartographer.roomType(roomName) == ROOMTYPE_CONTROLLER
+				&& !_.any(Overmind.cache.outpostFlags,
+						  function (flag) {
+							  if (flag.memory.setPosition) {
+								  return flag.memory.setPosition.roomName == roomName;
+							  } else {
+								  return flag.pos.roomName == roomName;
+							  }
+						  })
+				&& !Overmind.colonies[roomName]
+				&& !RoomIntel.roomOwnedBy(roomName)
+				&& !RoomIntel.roomReservedBy(roomName)
+				&& Game.map.isRoomAvailable(roomName));
+			log.debug(`Possible outposts: ${possibleOutposts}`);
+			let origin = this.colony.pos;
+			let bestOutpost = minBy(possibleOutposts, function (roomName) {
+				if (!Memory.rooms[roomName]) return false;
+				let sourceCoords = Memory.rooms[roomName].src as SavedSource[] | undefined;
+				if (!sourceCoords) return false;
+				let sourcePositions = _.map(sourceCoords, src => derefCoords(src.c, roomName));
+				let sourceDistances = _.map(sourcePositions, pos => Pathing.distance(origin, pos));
+				if (_.any(sourceDistances, dist => dist == undefined
+												   || dist > Colony.settings.maxSourceDistance)) return false;
+				return _.sum(sourceDistances) / sourceDistances.length;
+			});
+			if (bestOutpost) {
+				let pos = Pathing.findPathablePosition(bestOutpost);
+				log.info(`Colony ${this.colony.room.print} now remote mining from ${pos.print}`);
+				DirectiveOutpost.createIfNotPresent(pos, 'room', {memory: {colony: this.colony.name}});
 			}
 		}
+	}
 
-
-		// Place an abandon directive in case room has been breached to prevent terminal robbing
-		// if (this.colony.breached && this.colony.terminal) {
-		// 	DirectiveTerminalEmergencyState.createIfNotPresent(this.colony.terminal.pos, 'room');
-		// }
+	/* Place new event-driven flags where needed to be instantiated on the next tick */
+	private placeDirectives(): void {
+		this.handleBootstrapping();
+		this.handleOutpostGuards();
+		this.handleColonyInvasions();
+		this.handleNukeResponse();
+		if (Game.time % Overseer.settings.outpostCheckFrequency == 2 * this.colony.id
+			&& getAutonomyLevel() > Autonomy.Manual) {
+			this.handleNewOutposts();
+		}
 	}
 
 
@@ -213,25 +228,31 @@ export class Overseer {
 
 	// Initialization ==================================================================================================
 
-	private buildOverlordPriorityQueue(): void {
-		for (let overlord of this.overlordRequests) {
-			if (!this.overlords[overlord.priority]) {
-				this.overlords[overlord.priority] = [];
-			}
-			this.overlords[overlord.priority].push(overlord);
-		}
-	}
+	// private buildOverlordPriorityQueue(): void {
+	// 	for (let overlord of this.overlordRequests) {
+	// 		if (!this.overlords[overlord.priority]) {
+	// 			this.overlords[overlord.priority] = [];
+	// 		}
+	// 		this.overlords[overlord.priority].push(overlord);
+	// 	}
+	// }
 
 	init(): void {
-		this.buildOverlordPriorityQueue();
+		// this.buildOverlordPriorityQueue();
 		// Handle directives - should be done first
-		_.forEach(this.directives, directive => directive.init());
+		// _.forEach(this.directives, directive => directive.init());
 		// Handle overlords in decreasing priority
-		for (let priority in this.overlords) {
-			if (!this.overlords[priority]) continue;
-			for (let overlord of this.overlords[priority]) {
-				overlord.init();
-			}
+		// for (let priority in this.overlords) {
+		// 	if (!this.overlords[priority]) continue;
+		// 	for (let overlord of this.overlords[priority]) {
+		// 		overlord.init();
+		// 	}
+		// }
+		for (let directive of this.directives) {
+			directive.init();
+		}
+		for (let overlord of this.overlords) {
+			overlord.init();
 		}
 		// Register cleanup requests to logistics network
 		this.registerLogisticsRequests();
@@ -241,12 +262,19 @@ export class Overseer {
 
 	run(): void {
 		// Handle directives
-		_.forEach(this.directives, directive => directive.run());
+		// _.forEach(this.directives, directive => directive.run());
 		// Handle overlords in decreasing priority
-		for (let priority in this.overlords) {
-			for (let overlord of this.overlords[priority]) {
-				overlord.run();
-			}
+		// for (let priority in this.overlords) {
+		// 	overlord.run();
+		// 	for (let overlord of this.overlords[priority]) {
+		// 		overlord.run();
+		// 	}
+		// }
+		for (let directive of this.directives) {
+			directive.run();
+		}
+		for (let overlord of this.overlords) {
+			overlord.run();
 		}
 		this.handleSafeMode();
 		// if (Game.time % DIRECTIVE_CHECK_FREQUENCY == this.colony.id % DIRECTIVE_CHECK_FREQUENCY) {
@@ -257,25 +285,37 @@ export class Overseer {
 	}
 
 	visuals(): void {
+		const spoopyBugFix = false;
 		let roleOccupancy: { [role: string]: [number, number] } = {};
 		// Handle overlords in decreasing priority
-		for (let priority in this.overlords) {
-			if (!this.overlords[priority]) continue;
-			for (let overlord of this.overlords[priority]) {
-				for (let role in overlord.creepUsageReport) {
-					let report = overlord.creepUsageReport[role];
-					if (!report) {
-						if (Game.time % 100 == 0) {
-							log.info(`Role ${role} is not reported by ${overlord.ref}!`);
-						}
-					} else {
-						if (!roleOccupancy[role]) roleOccupancy[role] = [0, 0];
-						roleOccupancy[role][0] += report[0];
-						roleOccupancy[role][1] += report[1];
+		// for (let priority in this.overlords) {
+		// 	if (!this.overlords[priority]) continue;
+		// 	for (let overlord of this.overlords[priority]) {
+		//
+		// 	}
+		// }
+
+		for (let overlord of this.overlords) {
+			for (let role in overlord.creepUsageReport) {
+				let report = overlord.creepUsageReport[role];
+				if (report == undefined) {
+					if (Game.time % 100 == 0) {
+						log.info(`Role ${role} is not reported by ${overlord.ref}!`);
+					}
+				} else {
+					if (roleOccupancy[role] == undefined) {
+						roleOccupancy[role] = [0, 0];
+					}
+					roleOccupancy[role][0] += report[0];
+					roleOccupancy[role][1] += report[1];
+					if (spoopyBugFix) { // bizzarely, if you comment these lines out, the creep report is incorrect
+						log.debug(`report: ${JSON.stringify(report)}`);
+						log.debug(`occupancy: ${JSON.stringify(roleOccupancy)}`);
 					}
 				}
 			}
 		}
+
 		let safeOutposts = _.filter(this.colony.outposts, room => !!room && room.dangerousHostiles.length == 0);
 		let stringReport: string[] = [
 			`DEFCON: ${this.colony.defcon}  Safe outposts: ${safeOutposts.length}/${this.colony.outposts.length}`,

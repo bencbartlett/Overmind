@@ -157,7 +157,8 @@ Object.defineProperty(Room.prototype, 'rechargeables', {
 								   ...this.tombstones];
 		}
 		return this._rechargeables;
-	}
+	},
+	configurable: true,
 });
 
 Object.defineProperty(Room.prototype, 'barriers', {

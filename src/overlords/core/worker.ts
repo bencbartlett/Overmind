@@ -27,7 +27,6 @@ export class WorkerOverlord extends Overlord {
 	room: Room;
 	repairStructures: Structure[];
 	dismantleStructures: Structure[];
-	// rechargeObjects: rechargeObjectType[];
 	fortifyStructures: (StructureWall | StructureRampart)[];
 	constructionSites: ConstructionSite[];
 	nukeDefenseRamparts: StructureRampart[];
@@ -51,7 +50,6 @@ export class WorkerOverlord extends Overlord {
 	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.work) {
 		super(colony, 'worker', priority);
 		this.workers = this.zerg(WorkerSetup.role);
-		// this.rechargeObjects = [];
 		// Fortification structures
 		this.fortifyStructures = $.structures(this, 'fortifyStructures', () =>
 			_.sortBy(_.filter(this.room.barriers, s =>
@@ -67,9 +65,6 @@ export class WorkerOverlord extends Overlord {
 					return structure.hits < structure.hitsMax;
 				}
 			}));
-		// let criticalBarriers = _.filter(this.fortifyStructures, s => s.hits <= WorkerOverlord.settings.criticalHits);
-		// this.repairStructures = this.repairStructures.concat(criticalBarriers);
-
 		this.dismantleStructures = [];
 
 		let homeRoomName = this.colony.room.name;
@@ -116,6 +111,12 @@ export class WorkerOverlord extends Overlord {
 		}
 	}
 
+	refresh() {
+		super.refresh();
+		$.refresh(this, 'repairStructures', 'dismantleStructures', 'fortifyStructures', 'constructionSites',
+				  'nukeDefenseRamparts');
+	}
+
 	init() {
 		// const setup = this.colony.stage == ColonyStage.Larva ? WorkerEarlySetup : WorkerSetup;
 		const setup = WorkerSetup;
@@ -125,7 +126,7 @@ export class WorkerOverlord extends Overlord {
 			numWorkers = $.number(this, 'numWorkers', () => {
 				// At lower levels, try to saturate the energy throughput of the colony
 				const MAX_WORKERS = 10; // Maximum number of workers to spawn
-				let energyPerTick = _.sum(_.map(this.colony.miningSites, site => site.energyPerTick));
+				let energyPerTick = _.sum(_.map(this.colony.miningSites, site => site.overlords.mine.energyPerTick));
 				let energyPerTickPerWorker = 1.1 * workPartsPerWorker; // Average energy per tick when workers are working
 				let workerUptime = 0.8;
 				let numWorkers = Math.ceil(energyPerTick / (energyPerTickPerWorker * workerUptime));

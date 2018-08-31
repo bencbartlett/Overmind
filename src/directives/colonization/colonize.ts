@@ -3,8 +3,8 @@ import {Directive} from '../Directive';
 import {ClaimingOverlord} from '../../overlords/colonization/claimer';
 import {Colony} from '../../Colony';
 import {PioneerOverlord} from '../../overlords/colonization/pioneer';
-import {MinerSetup, MiningOverlord} from '../../overlords/mining/miner';
 import {WorkerSetup} from '../../overlords/core/worker';
+import {MinerSetup} from '../../overlords/mining/miner_new';
 
 // Claims a new room and builds a spawn but does not incubate. Removes when spawn is constructed.
 
@@ -40,7 +40,7 @@ export class DirectiveColonize extends Directive {
 	run() {
 		if (this.toColonize && this.toColonize.spawns.length > 0) {
 			// Reassign all pioneers to be miners and workers
-			let miningOverlords = _.map(this.toColonize.miningSites, site => site.overlord) as MiningOverlord[];
+			let miningOverlords = _.map(this.toColonize.miningSites, site => site.overlords.mine);
 			for (let pioneer of this.overlords.pioneer.pioneers) {
 				let miningOverlord = miningOverlords.shift();
 				if (miningOverlord) {

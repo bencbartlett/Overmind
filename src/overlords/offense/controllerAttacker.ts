@@ -27,6 +27,12 @@ export class ControllerAttackerOverlord extends Overlord {
 	constructor(directive: DirectiveControllerAttack, priority = OverlordPriority.realTime.controllerAttack) {
 		super(directive, 'controllerAttack', priority);
 		this.controllerAttackers = _.sortBy(this.zerg(InfestorSetup.role), zerg => zerg.name);
+		this.spawnGroup = new SpawnGroup(this, {requiredRCL: 4});
+		this.refresh();
+	}
+
+	refresh() {
+		super.refresh();
 		if (this.room && this.room.controller) {
 			this.attackPositions = this.room.controller.pos.availableNeighbors(true);
 			this.readyTick = Game.time + (this.room.controller.upgradeBlocked || 0);
@@ -35,7 +41,6 @@ export class ControllerAttackerOverlord extends Overlord {
 			this.readyTick = Game.time;
 		}
 		this.assignments = this.getPositionAssignments();
-		this.spawnGroup = new SpawnGroup(this, {requiredRCL: 4});
 	}
 
 	private getPositionAssignments(): { [attackerName: string]: RoomPosition } {

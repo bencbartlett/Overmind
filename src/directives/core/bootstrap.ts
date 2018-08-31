@@ -5,9 +5,9 @@ import {log} from '../../console/log';
 import {profile} from '../../profiler/decorator';
 import {BootstrappingOverlord} from '../../overlords/situational/bootstrap';
 import {Colony} from '../../Colony';
-import {MinerSetup} from '../../overlords/mining/miner';
 import {ManagerSetup} from '../../overlords/core/manager';
 import {QueenSetup} from '../../overlords/core/queen';
+import {MinerSetup} from '../../overlords/mining/miner_new';
 
 
 @profile

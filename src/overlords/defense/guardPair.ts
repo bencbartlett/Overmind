@@ -51,8 +51,8 @@ export class GuardPairOverlord extends Overlord {
 	constructor(directive: DirectiveGuard, priority = OverlordPriority.defense.guard) {
 		super(directive, 'guardPair', priority);
 		this.directive = directive;
-		this.attackers = _.map(this.creeps(AttackerSetup.role), creep => new CombatZerg(creep));
-		this.healers = _.map(this.creeps(HealerSetup.role), creep => new CombatZerg(creep));
+		this.attackers = this.combatZerg(AttackerSetup.role);
+		this.healers = this.combatZerg(HealerSetup.role);
 		// Comment out boost lines if you don't want to spawn boosted attackers/healers
 		// this.boosts.attacker = [
 		// 	boostResources.attack[3],

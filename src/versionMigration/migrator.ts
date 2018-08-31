@@ -24,6 +24,9 @@ export class VersionMigration {
 		if (!this.memory.versions['04Xto05X_part3']) {
 			this.migrate_04X_05X_part3();
 		}
+		if (!this.memory.versions['05Xto051']) {
+			this.migrate_050_051();
+		}
 	}
 
 	static get memory(): VersionMigratorMemory {
@@ -140,6 +143,33 @@ export class VersionMigration {
 		}
 		this.memory.versions['04Xto05X_part3'] = true;
 		log.alert(`Version migration from 0.4.x -> 0.5.x (part 3) completed successfully.`);
+	}
+
+	static migrate_050_051() {
+		// Destroy all links that aren't hatchery or commandCenter links
+		for (let id in Game.structures) {
+			const s = Game.structures[id];
+			if (s.structureType == STRUCTURE_LINK) {
+				const isCommandCenterLink = s.pos.findInRange(_.compact([s.room.storage!,
+																		 s.room.terminal!]), 2).length > 0;
+				const isHatcheryLink = s.pos.findInRange(s.room.spawns, 2).length > 0;
+				if (!isCommandCenterLink && !isHatcheryLink) {
+					s.destroy();
+				}
+			}
+		}
+		let count = 0;
+		for (let name in Game.creeps) {
+			const creep = Game.creeps[name];
+			if (creep.memory.role == 'drone' &&
+				creep.memory.overlord && creep.memory.overlord.includes('miningSite')) {
+				creep.suicide();
+				count++;
+			}
+		}
+		this.memory.versions['05Xto051'] = true;
+		log.alert(`Genocide complete: suicided ${count} innocent drones.`);
+		log.alert(`Version migration from 0.5.0 -> 0.5.1 completed successfully.`);
 	}
 
 }

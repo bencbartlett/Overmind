@@ -16,13 +16,6 @@ import {Hatchery} from '../../hiveClusters/hatchery';
 import {QueenSetup} from './queen';
 import {Pathing} from '../../movement/Pathing';
 
-type rechargeObjectType = StructureStorage
-	| StructureTerminal
-	| StructureContainer
-	| StructureLink
-	| Tombstone
-	| Resource;
-
 type SupplyStructure = StructureExtension | StructureSpawn | StructureTower | StructureLab;
 
 function isSupplyStructure(structure: Structure): structure is SupplyStructure {
@@ -53,12 +46,13 @@ export class BunkerQueenOverlord extends Overlord {
 	storeStructures: StoreStructure[];
 	batteries: StructureContainer[];
 	quadrants: { [quadrant: string]: SupplyStructure[] };
-	assignments: { [queenName: string]: { [id: string]: SupplyStructure } };
+	private numActiveQueens: number;
+	assignments: { [queenName: string]: { [id: string]: boolean } };
 
 	constructor(hatchery: Hatchery, priority = OverlordPriority.core.queen) {
 		super(hatchery, 'supply', priority);
 		this.transportRequests = this.colony.transportRequests;
-		this.queens = _.sortBy(this.zerg(QueenSetup.role), creep => creep.name);
+		this.queens = this.zerg(QueenSetup.role);
 		this.batteries = _.filter(this.room.containers, container => insideBunkerBounds(container.pos, this.colony));
 		this.storeStructures = _.compact([this.colony.terminal!, this.colony.storage!, ...this.batteries]);
 		this.quadrants = {
@@ -71,10 +65,15 @@ export class BunkerQueenOverlord extends Overlord {
 			upperRight: $.structures(this, 'UR',
 									 () => computeQuadrant(this.colony, quadrantFillOrder.upperRight)),
 		};
+		this.computeQueenAssignments();
+	}
+
+	private computeQueenAssignments() {
 		// Assign quadrants to queens
 		this.assignments = _.zipObject(_.map(this.queens, queen => [queen.name, {}]));
-		let activeQueens = _.filter(this.queens, queen => !queen.spawning);
-		if (activeQueens.length > 0) {
+		const activeQueens = _.filter(this.queens, queen => !queen.spawning);
+		this.numActiveQueens = activeQueens.length;
+		if (this.numActiveQueens > 0) {
 			let quadrantAssignmentOrder = [this.quadrants.lowerRight,
 										   this.quadrants.upperLeft,
 										   this.quadrants.lowerLeft,
@@ -82,9 +81,20 @@ export class BunkerQueenOverlord extends Overlord {
 			let i = 0;
 			for (let quadrant of quadrantAssignmentOrder) {
 				let queen = activeQueens[i % activeQueens.length];
-				_.extend(this.assignments[queen.name], _.zipObject(_.map(quadrant, s => [s.id, s])));
+				_.extend(this.assignments[queen.name], _.zipObject(_.map(quadrant, s => [s.id, true])));
 				i++;
 			}
+		}
+	}
+
+	refresh() {
+		super.refresh();
+		this.transportRequests = this.colony.transportRequests;
+		$.refresh(this, 'batteries', 'storeStructures');
+		$.refreshObject(this, 'quadrants');
+		// Re-compute queen assignments if the number of queens has changed
+		if (_.filter(this.queens, queen => !queen.spawning).length != this.numActiveQueens) {
+			this.computeQueenAssignments();
 		}
 	}
 
@@ -263,12 +273,12 @@ export class BunkerQueenOverlord extends Overlord {
 	private handleQueen(queen: Zerg): void {
 		// Does something need withdrawing?
 		if (this.transportRequests.needsWithdrawing &&
-			_.any(this.assignments[queen.name], struc => this.transportRequests.withdrawByID[struc.id])) {
+			_.any(_.keys(this.assignments[queen.name]), id => this.transportRequests.withdrawByID[id])) {
 			queen.task = this.buildWithdrawTaskManifest(queen);
 		}
 		// Does something need supplying?
 		else if (this.transportRequests.needsSupplying &&
-				 _.any(this.assignments[queen.name], struc => this.transportRequests.supplyByID[struc.id])) {
+				 _.any(_.keys(this.assignments[queen.name]), id => this.transportRequests.supplyByID[id])) {
 			queen.task = this.buildSupplyTaskManifest(queen);
 		}
 		// Otherwise do idle actions

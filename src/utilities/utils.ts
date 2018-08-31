@@ -106,6 +106,10 @@ export function getPosFromString(str: string | undefined | null): RoomPosition |
 	}
 }
 
+export function equalXYR(pos1: protoPos, pos2: protoPos): boolean {
+	return pos1.x == pos2.x && pos1.y == pos2.y && pos1.roomName == pos2.roomName;
+}
+
 export function averageBy<T>(objects: T[], iteratee: ((obj: T) => number)): number | undefined {
 	if (objects.length == 0) {
 		return undefined;

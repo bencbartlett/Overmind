@@ -28,7 +28,7 @@ export class GuardSwarmOverlord extends Overlord {
 	constructor(directive: DirectiveGuard, priority = OverlordPriority.defense.guard) {
 		super(directive, 'swarmGuard', priority);
 		this.directive = directive;
-		this.guards = _.map(this.creeps(EarlyGuardSetup.role), creep => new CombatZerg(creep));
+		this.guards = this.combatZerg(EarlyGuardSetup.role);
 	}
 
 	private findAttackTarget(guard: Zerg): Creep | Structure | undefined | null {

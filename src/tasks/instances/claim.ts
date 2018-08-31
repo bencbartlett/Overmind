@@ -22,6 +22,10 @@ export class TaskClaim extends Task {
 	}
 
 	work() {
-		return this.creep.claimController(this.target);
+		const result = this.creep.claimController(this.target);
+		if (result == OK) {
+			Overmind.shouldBuild = true; // rebuild the overmind object on the next tick to account for new room
+		}
+		return result;
 	}
 }

@@ -27,6 +27,10 @@ export class TaskRecharge extends Task {
 	}
 
 	private rechargeRateForCreep(creep: Zerg, obj: rechargeObjectType): number | false {
+		if (creep.colony.hatchery && creep.colony.hatchery.battery
+			&& obj.id == creep.colony.hatchery.battery.id && creep.roleName != 'queen') {
+			return false; // only queens can use the hatchery battery
+		}
 		let amount = isResource(obj) ? obj.amount : obj.energy;
 		if (amount < this.data.minEnergy) {
 			return false;
@@ -48,6 +52,10 @@ export class TaskRecharge extends Task {
 
 	// Override creep setter to dispense a valid recharge task
 	set creep(creep: Zerg) {
+		this._creep.name = creep.name;
+		if (this._parent) {
+			this.parent!.creep = creep;
+		}
 		// Choose the target to maximize your energy gain subject to other targeting workers
 		let target = creep.inColonyRoom ? maxBy(creep.colony.rechargeables, o => this.rechargeRateForCreep(creep, o))
 										: maxBy(creep.room.rechargeables, o => this.rechargeRateForCreep(creep, o));
@@ -74,9 +82,9 @@ export class TaskRecharge extends Task {
 				return;
 			}
 		} else {
-			if (creep.roleName == 'queen') {
-				log.debug(`No valid withdraw target for ${creep.print}!`);
-			}
+			// if (creep.roleName == 'queen') {
+			log.debug(`No valid withdraw target for ${creep.print}!`);
+			// }
 			creep.task = null;
 		}
 	}
@@ -90,6 +98,7 @@ export class TaskRecharge extends Task {
 	}
 
 	work() {
+		log.warning(`BAD RESULT: Should not get here...`);
 		return ERR_INVALID_TARGET;
 	}
 }

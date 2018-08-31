@@ -33,6 +33,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 
 	static requiredRCL = 7;
 
+	directive: DirectiveSKOutpost;
 	memory: SourceReaperOverlordMemory;
 	targetLair: StructureKeeperLair | undefined;
 
@@ -41,14 +42,25 @@ export class SourceReaperOverlord extends CombatOverlord {
 
 	constructor(directive: DirectiveSKOutpost, priority = OverlordPriority.remoteSKRoom.sourceReaper) {
 		super(directive, 'sourceReaper', priority, SourceReaperOverlord.requiredRCL);
+		this.directive = directive;
 		this.priority += this.outpostIndex * OverlordPriority.remoteSKRoom.roomIncrement;
-		this.memory = Mem.wrap(directive.memory, 'sourceReaper');
+		this.reapers = this.combatZerg(ReaperSetup.role);
+		this.defenders = this.combatZerg(DefenderSetup.role);
+		this.memory = Mem.wrap(this.directive.memory, 'sourceReaper');
+		this.computeTargetLair();
+	}
+
+	private computeTargetLair() {
 		this.targetLair = this.memory.targetLairID ? <StructureKeeperLair>deref(this.memory.targetLairID) : undefined;
 		if (!this.targetLair || (this.targetLair.ticksToSpawn || Infinity) >= 299) {
 			this.targetLair = this.getNextTargetLair();
 		}
-		this.reapers = _.map(this.creeps(ReaperSetup.role), reaper => new CombatZerg(reaper));
-		this.defenders = _.map(this.creeps(DefenderSetup.role), defender => new CombatZerg(defender));
+	}
+
+	refresh() {
+		super.refresh();
+		this.memory = Mem.wrap(this.directive.memory, 'sourceReaper');
+		this.computeTargetLair();
 	}
 
 	init() {

@@ -8,6 +8,7 @@ import {DirectiveHaul} from '../../directives/logistics/haul';
 import {CreepSetup} from '../CreepSetup';
 import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
+import {RoomIntel} from '../../intel/RoomIntel';
 
 const GuardSetup = new CreepSetup('guard', {
 	pattern  : [TOUGH, MOVE, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, HEAL],
@@ -24,7 +25,7 @@ export class GuardOverlord extends Overlord {
 
 	constructor(directive: DirectiveGuard, priority = OverlordPriority.defense.guard) {
 		super(directive, 'guard', priority);
-		this.guards = _.map(this.creeps(GuardSetup.role), creep => new CombatZerg(creep));
+		this.guards = this.combatZerg(GuardSetup.role);
 	}
 
 	// private reassignIdleGuards(): void {
@@ -80,9 +81,9 @@ export class GuardOverlord extends Overlord {
 	}
 
 	init() {
+		let amount = this.room && (this.room.invaders.length > 0 || RoomIntel.isInvasionLikely(this.room)) ? 1 : 0;
 		this.reassignIdleCreeps(GuardSetup.role);
-		// TODO: figure out how many guards are needed
-		this.wishlist(1, GuardSetup);
+		this.wishlist(amount, GuardSetup);
 	}
 
 	run() {

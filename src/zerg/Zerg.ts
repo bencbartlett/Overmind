@@ -72,6 +72,7 @@ interface FleeOptions {
 
 @profile
 export class Zerg {
+
 	creep: Creep; 						// The creep that this wrapper class will control
 	body: BodyPartDefinition[];    	 	// These properties are all wrapped from this.creep.* to this.*
 	carry: StoreDefinition;				// |
@@ -107,9 +108,7 @@ export class Zerg {
 		this.hitsMax = creep.hitsMax;
 		this.id = creep.id;
 		this.memory = creep.memory;
-		// this.my = creep.my;
 		this.name = creep.name;
-		// this.owner = creep.owner;
 		this.pos = creep.pos;
 		this.ref = creep.ref;
 		this.roleName = creep.memory.role;
@@ -126,6 +125,33 @@ export class Zerg {
 		// Handle attack notification when at lifetime - 1
 		if (this.ticksToLive == this.lifetime - 1 && !notifyWhenAttacked) {
 			this.notifyWhenAttacked(notifyWhenAttacked);
+		}
+	}
+
+	/* Refresh all changeable properties of the creep or delete from Overmind and global when dead */
+	refresh(): void {
+		const creep = Game.creeps[this.name];
+		if (creep) {
+			this.creep = creep;
+			this.pos = creep.pos;
+			this.body = creep.body;
+			this.carry = creep.carry;
+			this.carryCapacity = creep.carryCapacity;
+			this.fatigue = creep.fatigue;
+			this.hits = creep.hits;
+			this.memory = creep.memory;
+			this.roleName = creep.memory.role;
+			this.room = creep.room;
+			this.saying = creep.saying;
+			this.spawning = creep.spawning;
+			this.ticksToLive = creep.ticksToLive;
+			this.actionLog = {};
+			this.blockMovement = false;
+			this._task = null; // todo
+		} else {
+			log.debug(`Deleting from global`);
+			delete Overmind.zerg[this.name];
+			delete global[this.name];
 		}
 	}
 
@@ -420,8 +446,7 @@ export class Zerg {
 	/* Wrapper for _task */
 	get task(): Task | null {
 		if (!this._task) {
-			let protoTask = this.memory.task;
-			this._task = protoTask ? initializeTask(protoTask) : null;
+			this._task = this.memory.task ? initializeTask(this.memory.task) : null;
 		}
 		return this._task;
 	}
@@ -532,7 +557,9 @@ export class Zerg {
 	flee(avoidGoals: (RoomPosition | HasPos)[] = this.room.fleeDefaults,
 		 fleeOptions: FleeOptions              = {},
 		 moveOptions: MoveOptions              = {}): boolean {
-		if (this.room.controller && this.room.controller.my && this.room.controller.safeMode) {
+		if (avoidGoals.length == 0) {
+			return false;
+		} else if (this.room.controller && this.room.controller.my && this.room.controller.safeMode) {
 			return false;
 		} else {
 			let fleeing = Movement.flee(this, avoidGoals, fleeOptions.dropEnergy, moveOptions) != undefined;

@@ -15,6 +15,7 @@
 import {initializeTask} from './initializer';
 import {profile} from '../profiler/decorator';
 import {Zerg} from '../zerg/Zerg';
+import {log} from '../console/log';
 
 type targetType = { ref: string, pos: protoPos }; // overwrite this variable in derived classes to specify more precise typing
 
@@ -266,7 +267,7 @@ export abstract class Task {
 		if (this.creep) {
 			this.creep.task = this.parent;
 		} else {
-			console.log(`No creep executing ${this.name}!`);
+			log.debug(`No creep executing ${this.name}! Proto: ${JSON.stringify(this.proto)}`);
 		}
 	}
 }

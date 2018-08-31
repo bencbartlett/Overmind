@@ -22,6 +22,8 @@ import {DirectiveTerminalRebuildState} from './logistics/terminalState_rebuild';
 import {DirectiveTerminalEvacuateState} from './logistics/terminalState_evacuate';
 import {DirectiveControllerAttack} from './offense/controllerAttack';
 import {DirectiveSKOutpost} from './core/outpostSK';
+import {DirectiveHarvest} from './core/harvest';
+import {DirectiveExtract} from './core/extract';
 
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 	switch (flag.color) {
@@ -71,6 +73,10 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 		// Logistics directives ========================================================================================
 		case COLOR_YELLOW:
 			switch (flag.secondaryColor) {
+				case COLOR_YELLOW:
+					return new DirectiveHarvest(flag);
+				case COLOR_CYAN:
+					return new DirectiveExtract(flag);
 				case COLOR_BLUE:
 					return new DirectiveHaul(flag);
 				case COLOR_ORANGE:

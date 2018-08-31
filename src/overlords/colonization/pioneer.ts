@@ -14,14 +14,18 @@ const PioneerSetup = new CreepSetup('pioneer', {
 @profile
 export class PioneerOverlord extends Overlord {
 
-	rechargeObjects: rechargeObjectType[];
 	pioneers: Zerg[];
 	spawnSite: ConstructionSite | undefined;
 
 	constructor(directive: Directive, priority = OverlordPriority.realTime.pioneer) {
 		super(directive, 'pioneer', priority);
-		this.rechargeObjects = [];
 		this.pioneers = this.zerg(PioneerSetup.role);
+		this.spawnSite = this.room ? _.filter(this.room.constructionSites,
+											  s => s.structureType == STRUCTURE_SPAWN)[0] : undefined;
+	}
+
+	refresh() {
+		super.refresh();
 		this.spawnSite = this.room ? _.filter(this.room.constructionSites,
 											  s => s.structureType == STRUCTURE_SPAWN)[0] : undefined;
 	}

@@ -1,7 +1,6 @@
 import {Overlord} from '../Overlord';
 import {DirectiveBootstrap} from '../../directives/core/bootstrap';
 import {CreepSetup} from '../CreepSetup';
-import {MinerSetup, MiningOverlord} from '../mining/miner';
 import {ColonyStage} from '../../Colony';
 import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
@@ -10,6 +9,8 @@ import {profile} from '../../profiler/decorator';
 import {SpawnRequest} from '../../hiveClusters/hatchery';
 import {QueenSetup} from '../core/queen';
 import {TransporterSetup} from '../core/transporter';
+import {MinerSetup} from '../mining/miner_new';
+import {DirectiveHarvest} from '../../directives/core/harvest';
 
 export const EmergencyMinerSetup = new CreepSetup('drone', {
 	pattern  : [WORK, WORK, CARRY, MOVE],
@@ -53,19 +54,20 @@ export class BootstrappingOverlord extends Overlord {
 
 	private spawnBootstrapMiners() {
 		// Isolate mining site overlords in the room
-		let miningSites = _.map(this.room.sources, source => this.colony.miningSites[source.id]);
+		let miningSites = _.filter(_.values(this.colony.miningSites),
+								   (site: DirectiveHarvest) => site.room == this.colony.room) as DirectiveHarvest[];
 		if (this.colony.spawns[0]) {
 			miningSites = _.sortBy(miningSites, site => site.pos.getRangeTo(this.colony.spawns[0]));
 		}
-		let miningOverlords = _.map(miningSites, site => site.overlord) as MiningOverlord[];
+		let miningOverlords = _.map(miningSites, site => site.overlords.mine);
 
 		// Create a bootstrapMiners and donate them to the miningSite overlords as needed
 		for (let overlord of miningOverlords) {
 			let filteredMiners = this.lifetimeFilter(overlord.miners);
 			let miningPowerAssigned = _.sum(_.map(this.lifetimeFilter(overlord.miners),
 												  creep => creep.getActiveBodyparts(WORK)));
-			if (miningPowerAssigned < overlord.miningSite.miningPowerNeeded &&
-				filteredMiners.length < overlord.miningSite.pos.availableNeighbors().length) {
+			if (miningPowerAssigned < overlord.miningPowerNeeded &&
+				filteredMiners.length < overlord.pos.availableNeighbors().length) {
 				if (this.colony.hatchery) {
 					let request: SpawnRequest = {
 						setup   : EmergencyMinerSetup,

@@ -38,8 +38,8 @@ export class DestroyerOverlord extends Overlord {
 	constructor(directive: DirectiveDestroy, priority = OverlordPriority.offense.destroy) {
 		super(directive, 'destroy', priority);
 		this.directive = directive;
-		this.attackers = _.map(this.creeps(AttackerSetup.role), creep => new CombatZerg(creep));
-		this.healers = _.map(this.creeps(HealerSetup.role), creep => new CombatZerg(creep));
+		this.attackers = this.combatZerg(AttackerSetup.role);
+		this.healers = this.combatZerg(HealerSetup.role);
 		// Comment out boost lines if you don't want to spawn boosted attackers/healers
 		// this.boosts.attacker = [
 		// 	boostResources.attack[3],
@@ -96,7 +96,7 @@ export class DestroyerOverlord extends Overlord {
 		if (!healer || healer.spawning || healer.needsBoosts) {
 			// Wait near the colony controller if you don't have a healer
 			if (attacker.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 5) {
-				attacker.goTo(this.colony.controller);
+				attacker.goTo(this.colony.controller, {range: 5});
 			} else {
 				attacker.park();
 			}
@@ -135,8 +135,8 @@ export class DestroyerOverlord extends Overlord {
 				healer.heal(healer);
 			}
 			// Wait near the colony controller if you don't have an attacker
-			if (healer.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 10) {
-				healer.goTo(this.colony.controller);
+			if (healer.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 5) {
+				healer.goTo(this.colony.controller, {range: 5});
 			} else {
 				healer.park();
 			}

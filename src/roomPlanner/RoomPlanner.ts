@@ -15,6 +15,7 @@ import {bunkerLayout, insideBunkerBounds} from './layouts/bunker';
 import {DirectiveTerminalRebuildState} from '../directives/logistics/terminalState_rebuild';
 import {derefCoords, maxBy} from '../utilities/utils';
 import {bullet} from '../utilities/stringConstants';
+import {Pathing} from '../movement/Pathing';
 
 export interface BuildingPlannerOutput {
 	name: string;
@@ -104,6 +105,7 @@ export class RoomPlanner {
 	static settings = {
 		recheckAfter      : 50,
 		siteCheckFrequency: 300,			// how often to recheck for structures; doubled at RCL8
+		linkCheckFrequency: 100,
 		maxSitesPerColony : 10,
 		maxDismantleCount : 5,
 	};
@@ -651,6 +653,76 @@ export class RoomPlanner {
 		}
 	}
 
+	/* Calculate where the link will be built */
+	private calculateLinkPos(anchor: RoomPosition): RoomPosition | undefined {
+		if (anchor.isEqualTo(this.colony.controller.pos)) {
+			return this.calculateUpgradeSiteLinkPos();
+		}
+		let originPos: RoomPosition | undefined = undefined;
+		if (this.colony.storage) {
+			originPos = this.colony.storage.pos;
+		} else if (this.storagePos) {
+			originPos = this.storagePos;
+		}
+		if (originPos) {
+			let path = Pathing.findShortestPath(anchor, originPos).path;
+			return _.find(path, pos => anchor.getRangeTo(pos) == 2);
+		}
+	}
+
+	/* Calculate where the link will be built for this site */
+	private calculateUpgradeSiteLinkPos(): RoomPosition | undefined {
+		let originPos: RoomPosition | undefined = undefined;
+		if (this.colony.storage) {
+			originPos = this.colony.storage.pos;
+		} else if (this.storagePos) {
+			originPos = this.storagePos;
+		}
+		if (originPos && this.colony.upgradeSite.batteryPos) {
+			// Build link at last location on path from origin to battery
+			let path = Pathing.findShortestPath(this.colony.upgradeSite.batteryPos, originPos).path;
+			return path[0];
+		}
+	}
+
+	private nextNeededLinkAnchor(): RoomPosition | undefined {
+		const linksEtAl = _.map((<(StructureLink | ConstructionSite)[]>[])
+									.concat(this.colony.links, _.filter(this.colony.constructionSites,
+																		site => site.structureType == STRUCTURE_LINK)),
+								s => s.pos);
+		// UpgradeSite goes first
+		let upgradeLink = this.colony.controller.pos.findClosestByLimitedRange(linksEtAl, 3);
+		if (!upgradeLink) return this.colony.controller.pos;
+		// MiningSites by decreasing distance
+		const origin = (this.colony.storage || this.colony.terminal || _.first(this.colony.spawns) || this.colony).pos;
+		const farthestSources = _.sortBy(this.colony.room.sources, source => -1 * Pathing.distance(origin, source.pos));
+		for (let source of farthestSources) {
+			let sourceLink = source.pos.findClosestByLimitedRange(linksEtAl, 2);
+			if (!sourceLink) return source.pos;
+		}
+	}
+
+	/* Builds links as they become available. UpgradeSite gets link first, then miningSites by distance. */
+	private buildNeededLinks() {
+		let numLinks = this.colony.links.length +
+					   _.filter(this.colony.constructionSites, site => site.structureType == STRUCTURE_LINK).length;
+		let numLinksAllowed = CONTROLLER_STRUCTURES.link[this.colony.level];
+		if (numLinksAllowed > numLinks &&
+			(this.colony.bunker || (this.colony.hatchery && this.colony.hatchery.link)) &&
+			this.colony.commandCenter && this.colony.commandCenter.link) {
+			let anchor = this.nextNeededLinkAnchor();
+			if (!anchor) {
+				return;
+			}
+			let linkPos = this.calculateLinkPos(anchor);
+			if (!linkPos) {
+				log.warning(`Could not calculate link position for anchor at ${anchor.print}!`);
+				return;
+			}
+			linkPos.createConstructionSite(STRUCTURE_LINK);
+		}
+	}
+
 	/* Quick lookup for if a road should be in this position. Roads returning false won't be maintained. */
 	roadShouldBeHere(pos: RoomPosition): boolean {
 		return this.roadPlanner.roadShouldBeHere(pos);
@@ -690,10 +762,15 @@ export class RoomPlanner {
 			this.make();
 			this.visuals();
 		} else {
+			// Build missing structures from the layout
 			if (this.shouldRecheck()) {
 				this.demolishMisplacedStructures(this.colony.layout == 'twoPart');
 			} else if (this.shouldRecheck(1)) {
 				this.buildMissingStructures();
+			}
+			// Build missing links as needed
+			if (Game.time % RoomPlanner.settings.linkCheckFrequency == 3) {
+				this.buildNeededLinks();
 			}
 		}
 		// Run the barrier planner

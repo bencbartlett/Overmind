@@ -18,7 +18,6 @@ const PointHealerSetup = new CreepSetup('pointHealer', {
 export class HealPointOverlord extends Overlord {
 
 	healers: Zerg[];
-	recoveryWaypoint: RoomPosition;
 
 	constructor(directive: DirectiveHealPoint, priority = OverlordPriority.offense.healPoint) {
 		super(directive, 'healPoint', priority);

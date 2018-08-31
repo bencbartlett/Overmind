@@ -109,6 +109,22 @@ export class $ { // $ = cash = cache... get it? :D
 		});
 	}
 
+	static refreshObject<T extends Record<K, { [prop: string]: undefined | HasID | HasID[] }>,
+		K extends string>(thing: T, ...keys: K[]): void {
+		_.forEach(keys, function (key) {
+			if (_.isObject(thing[key])) {
+				for (let prop in thing[key]) {
+					if (_.isArray(thing[key][prop])) {
+						thing[key][prop] = _.compact(_.map(thing[key][prop] as HasID[],
+														   s => Game.getObjectById(s.id))) as HasID[];
+					} else {
+						thing[key][prop] = Game.getObjectById((<HasID>thing[key][prop]).id) as undefined | HasID;
+					}
+				}
+			}
+		});
+	}
+
 	static refreshRoom<T extends { room: Room }>(thing: T): void {
 		thing.room = Game.rooms[thing.room.name];
 	}

@@ -2,7 +2,6 @@ import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {ReservingOverlord} from '../../overlords/colonization/reserver';
 import {StationaryScoutOverlord} from '../../overlords/scouting/stationary';
-import {derefCoords} from '../../utilities/utils';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {RoomIntel} from '../../intel/RoomIntel';
 import {log} from '../../console/log';
@@ -20,19 +19,19 @@ export class DirectiveOutpost extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag);
-		if (!this.room) {
-			// Push source / output positions to colony.destinations if room is invisible for correct road routings
-			let savedSources = Memory.rooms[this.pos.roomName] ? Memory.rooms[this.pos.roomName].src || [] : [];
-			for (let src of savedSources) {
-				let pos: RoomPosition;
-				if (src.contnr) {
-					pos = derefCoords(src.contnr, this.pos.roomName);
-				} else {
-					pos = derefCoords(src.c, this.pos.roomName);
-				}
-				this.colony.destinations.push(pos);
-			}
-		}
+		// if (!this.room) {
+		// 	// Push source / output positions to colony.destinations if room is invisible for correct road routings
+		// 	let savedSources = Memory.rooms[this.pos.roomName] ? Memory.rooms[this.pos.roomName].src || [] : [];
+		// 	for (let src of savedSources) {
+		// 		let pos: RoomPosition;
+		// 		if (src.contnr) {
+		// 			pos = derefCoords(src.contnr, this.pos.roomName);
+		// 		} else {
+		// 			pos = derefCoords(src.c, this.pos.roomName);
+		// 		}
+		// 		this.colony.destinations.push(pos);
+		// 	}
+		// }
 	}
 
 	spawnMoarOverlords() {

@@ -1,7 +1,6 @@
 // Colony class - organizes all assets of an owned room into a colony
 
 import {profile} from './profiler/decorator';
-import {MiningSite} from './hiveClusters/miningSite';
 import {Hatchery} from './hiveClusters/hatchery';
 import {CommandCenter} from './hiveClusters/commandCenter';
 import {UpgradeSite} from './hiveClusters/upgradeSite';
@@ -21,7 +20,6 @@ import {StoreStructure} from './declarations/typeGuards';
 import {maxBy, mergeSum, minBy} from './utilities/utils';
 import {Abathur} from './resources/Abathur';
 import {EvolutionChamber} from './hiveClusters/evolutionChamber';
-import {ExtractionSite} from './hiveClusters/extractionSite';
 import {TransportRequestGroup} from './logistics/TransportRequestGroup';
 import {SpawnGroup} from './logistics/SpawnGroup';
 import {bunkerLayout, getPosFromBunkerCoord} from './roomPlanner/layouts/bunker';
@@ -31,8 +29,10 @@ import {EXPANSION_EVALUATION_FREQ, ExpansionPlanner} from './strategy/ExpansionP
 import {log} from './console/log';
 import {assimilationLocked} from './assimilation/decorator';
 import {DefaultOverlord} from './overlords/core/default';
-import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
 import {$} from './caching/GlobalCache';
+import {DirectiveHarvest} from './directives/core/harvest';
+import {DirectiveExtract} from './directives/core/extract';
+import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -131,8 +131,10 @@ export class Colony {
 	evolutionChamber: EvolutionChamber | undefined; 	// Component for mineral processing
 	upgradeSite: UpgradeSite;							// Component to provide upgraders with uninterrupted energy
 	sporeCrawlers: SporeCrawler[];
-	miningSites: { [sourceID: string]: MiningSite };	// Component with logic for mining and hauling
-	extractionSites: { [extractorID: string]: ExtractionSite };
+	// miningSites: { [sourceID: string]: MiningSite };	// Component with logic for mining and hauling
+	// extractionSites: { [extractorID: string]: ExtractionSite };
+	miningSites: { [flagName: string]: DirectiveHarvest };	// Component with logic for mining and hauling
+	extractionSites: { [flagName: string]: DirectiveExtract };
 	// Operational mode
 	bootstrapping: boolean; 							// Whether colony is bootstrapping or recovering from crash
 	isIncubating: boolean;								// If the colony is incubating
@@ -197,17 +199,19 @@ export class Colony {
 		this.room = Game.rooms[roomName];
 		this.outposts = _.compact(_.map(outposts, outpost => Game.rooms[outpost]));
 		this.rooms = [this.room].concat(this.outposts);
+		this.miningSites = {}; 				// filled in by harvest directives
+		this.extractionSites = {};			// filled in by extract directives
 		// Give the colony an Overseer
 		this.overseer = new Overseer(this);
 		// Register creeps
 		this.creeps = Overmind.cache.creepsByColony[this.name] || [];
 		this.creepsByRole = _.groupBy(this.creeps, creep => creep.memory.role);
 		// Register the rest of the colony components; the order in which these are called is important!
-		this.registerRoomObjects_cached();			// Register real colony components
+		this.registerRoomObjects_cached();	// Register real colony components
 		this.registerOperationalState();	// Set the colony operational state
 		this.registerUtilities(); 			// Register logistics utilities, room planners, and layout info
 		this.registerHiveClusters(); 		// Build the hive clusters
-		// Colony.spawnMoarOverlords() gets called from Overmind.ts, along with Directive.spawnMoarOverlords()
+		/* Colony.spawnMoarOverlords() gets called from Overmind.ts, along with Directive.spawnMoarOverlords() */
 	}
 
 	refresh(): void {
@@ -289,6 +293,9 @@ export class Colony {
 		// Register physical objects across all rooms in the colony
 		$.set(this, 'sources', () => _.sortBy(_.flatten(_.map(this.rooms, room => room.sources)),
 											  source => source.pos.getMultiRoomRangeTo(this.pos)));
+		for (let source of this.sources) {
+			DirectiveHarvest.createIfNotPresent(source.pos, 'pos');
+		}
 		$.set(this, 'extractors', () =>
 			_(this.rooms)
 				.map(room => room.extractor)
@@ -296,6 +303,9 @@ export class Colony {
 				.filter(e => (e!.my && e!.room.my)
 							 || Cartographer.roomType(e!.room.name) != ROOMTYPE_CONTROLLER)
 				.sortBy(e => e!.pos.getMultiRoomRangeTo(this.pos)).value() as StructureExtractor[]);
+		for (let extractor of this.extractors) {
+			DirectiveExtract.createIfNotPresent(extractor.pos, 'pos');
+		}
 		$.set(this, 'repairables', () => _.flatten(_.map(this.rooms, room => room.repairables)));
 		$.set(this, 'rechargeables', () => _.flatten(_.map(this.rooms, room => room.rechargeables)));
 		$.set(this, 'constructionSites', () => _.flatten(_.map(this.rooms, room => room.constructionSites)), 10);
@@ -306,7 +316,6 @@ export class Colony {
 	}
 
 	private refreshRoomObjects(): void {
-		this.flags = []; // filled in by directives TODO: remove this
 		$.refresh(this, 'controller', 'extensions', 'links', 'towers', 'powerSpawn', 'nuker', 'observer', 'spawns',
 				  'storage', 'terminal', 'labs', 'sources', 'extractors', 'constructionSites', 'repairables',
 				  'rechargeables');
@@ -423,32 +432,34 @@ export class Colony {
 		this.sporeCrawlers = _.map(this.towers, tower => new SporeCrawler(this, tower));
 		// Dropoff links are freestanding links or ones at mining sites
 		// this.dropoffLinks = _.clone(this.availableLinks);
-		// Mining sites is an object of ID's and MiningSites
-		let sourceIDs = _.map(this.sources, source => source.id);
-		let miningSites = _.map(this.sources, source => new MiningSite(this, source));
-		this.miningSites = _.zipObject(sourceIDs, miningSites);
-		// ExtractionSites is an object of ID's and ExtractionSites
-		let extractorIDs = _.map(this.extractors, extractor => extractor.id);
-		let extractionSites = _.map(this.extractors, extractor => new ExtractionSite(this, extractor));
-		this.extractionSites = _.zipObject(extractorIDs, extractionSites);
+
+		// // Mining sites is an object of ID's and MiningSites
+		// let sourceIDs = _.map(this.sources, source => source.id);
+		// let miningSites = _.map(this.sources, source => new MiningSite(this, source));
+		// this.miningSites = _.zipObject(sourceIDs, miningSites);
+		// // ExtractionSites is an object of ID's and ExtractionSites
+		// let extractorIDs = _.map(this.extractors, extractor => extractor.id);
+		// let extractionSites = _.map(this.extractors, extractor => new ExtractionSite(this, extractor));
+		// this.extractionSites = _.zipObject(extractorIDs, extractionSites);
+
 		// Reverse the hive clusters for correct order for init() and run()
 		this.hiveClusters.reverse();
 	}
 
 	private refreshHiveClusters(): void {
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.refresh());	// refresh each hive cluster
-		_.forEach(this.miningSites, site => {
-			if (!Game.rooms[site.pos.roomName]) {
-				delete this.miningSites[site.source.id];
-				_.remove(this.hiveClusters, hc => hc.ref == site.ref);
-			}
-		});
-		_.forEach(this.extractionSites, site => {
-			if (!Game.rooms[site.pos.roomName]) {
-				delete this.extractionSites[site.extractor.id];
-				_.remove(this.hiveClusters, hc => hc.ref == site.ref);
-			}
-		});
+		// _.forEach(this.miningSites, site => {
+		// 	if (!Game.rooms[site.pos.roomName]) {
+		// 		delete this.miningSites[site.source.id];
+		// 		_.remove(this.hiveClusters, hc => hc.ref == site.ref);
+		// 	}
+		// });
+		// _.forEach(this.extractionSites, site => {
+		// 	if (!Game.rooms[site.pos.roomName]) {
+		// 		delete this.extractionSites[site.extractor.id];
+		// 		_.remove(this.hiveClusters, hc => hc.ref == site.ref);
+		// 	}
+		// });
 	}
 
 	/* Instantiate all overlords for the colony */
@@ -525,8 +536,8 @@ export class Colony {
 			let numSites = _.keys(this.miningSites).length;
 			let avgDowntime = _.sum(this.miningSites, site => site.memory.stats.downtime) / numSites;
 			let avgUsage = _.sum(this.miningSites, site => site.memory.stats.usage) / numSites;
-			let energyInPerTick = _.sum(this.miningSites, site =>
-				site.source.energyCapacity * site.memory.stats.usage) / ENERGY_REGEN_TIME;
+			let energyInPerTick = _.sum(this.miningSites,
+										site => site.overlords.mine.energyPerTick * site.memory.stats.usage);
 			Stats.log(`colonies.${this.name}.miningSites.avgDowntime`, avgDowntime);
 			Stats.log(`colonies.${this.name}.miningSites.avgUsage`, avgUsage);
 			Stats.log(`colonies.${this.name}.miningSites.energyInPerTick`, energyInPerTick);
