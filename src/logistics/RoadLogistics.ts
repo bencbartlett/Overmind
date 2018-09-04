@@ -6,7 +6,7 @@ import {Zerg} from '../zerg/Zerg';
 import {repairTaskName} from '../tasks/instances/repair';
 import {$} from '../caching/GlobalCache';
 
-const ROAD_CACHE_TIMEOUT = 25;
+const ROAD_CACHE_TIMEOUT = 15;
 
 // function sortRoadsByDFS(room: Room, colony: Colony) {
 // 	let roads: StructureRoad[] = [];
@@ -21,10 +21,11 @@ export class RoadLogistics {
 	private colony: Colony;
 	private rooms: Room[];
 	private _assignedWorkers: { [roomName: string]: string[] };
-	private settings: {
-		allowedPaversPerRoom: number,
-		criticalThreshold: number,
-		repairThreshold: number,
+
+	static settings = {
+		allowedPaversPerRoom: 1,
+		criticalThreshold   : 0.25, // When the roadnetwork forces a repair store
+		repairThreshold     : 0.9
 	};
 
 	constructor(colony: Colony) {
@@ -32,18 +33,17 @@ export class RoadLogistics {
 		this.ref = this.colony.name + ':roadLogistics';
 		this.rooms = colony.rooms;
 		this._assignedWorkers = {};
-		this.settings = {
-			allowedPaversPerRoom: 1,
-			criticalThreshold   : 0.25, // When the roadnetwork forces a repair store
-			repairThreshold     : 0.9
-		};
+	}
+
+	refresh() {
+		this._assignedWorkers = {};
 	}
 
 	/* Whether a road in the network needs repair */
 	private workerShouldRepaveRoom(worker: Zerg, room: Room): boolean {
 		// Room should be repaved if there is a road with critical HP or if energy to repave >= worker carry capacity
 		let otherAssignedWorkers = _.filter(this.assignedWorkers(room), name => name != worker.name);
-		if (otherAssignedWorkers.length < this.settings.allowedPaversPerRoom) {
+		if (otherAssignedWorkers.length < RoadLogistics.settings.allowedPaversPerRoom) {
 			if (this.assignedWorkers(room).includes(worker.name)) {
 				// If worker is already working in the room, have it repair until all roads are at acceptable level
 				return this.repairableRoads(room).length > 0;
@@ -82,7 +82,7 @@ export class RoadLogistics {
 	criticalRoads(room: Room): StructureRoad[] {
 		return $.structures(this, 'criticalRoads:' + room.name, () =>
 			_.sortBy(_.filter(room.roads, road =>
-				road.hits < road.hitsMax * this.settings.criticalThreshold &&
+				road.hits < road.hitsMax * RoadLogistics.settings.criticalThreshold &&
 				this.colony.roomPlanner.roadShouldBeHere(road.pos)),
 					 road => road.pos.getMultiRoomRangeTo(this.colony.pos)), ROAD_CACHE_TIMEOUT);
 	}
@@ -90,7 +90,7 @@ export class RoadLogistics {
 	repairableRoads(room: Room): StructureRoad[] {
 		return $.structures(this, 'repairableRoads:' + room.name, () =>
 			_.sortBy(_.filter(room.roads, road =>
-				road.hits < road.hitsMax * this.settings.repairThreshold &&
+				road.hits < road.hitsMax * RoadLogistics.settings.repairThreshold &&
 				this.colony.roomPlanner.roadShouldBeHere(road.pos)),
 					 road => road.pos.getMultiRoomRangeTo(this.colony.pos)), ROAD_CACHE_TIMEOUT);
 	}

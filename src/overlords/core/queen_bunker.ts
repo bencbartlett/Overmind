@@ -10,7 +10,7 @@ import {StoreStructure} from '../../declarations/typeGuards';
 import {Colony} from '../../Colony';
 import {$} from '../../caching/GlobalCache';
 import {getPosFromBunkerCoord, insideBunkerBounds, quadrantFillOrder} from '../../roomPlanner/layouts/bunker';
-import {TransportRequest, TransportRequestGroup} from '../../logistics/TransportRequestGroup';
+import {TransportRequest} from '../../logistics/TransportRequestGroup';
 import {Task} from '../../tasks/Task';
 import {Hatchery} from '../../hiveClusters/hatchery';
 import {QueenSetup} from './queen';
@@ -41,7 +41,6 @@ function computeQuadrant(colony: Colony, quadrant: Coord[]): SupplyStructure[] {
 export class BunkerQueenOverlord extends Overlord {
 
 	room: Room;
-	transportRequests: TransportRequestGroup;
 	queens: Zerg[];
 	storeStructures: StoreStructure[];
 	batteries: StructureContainer[];
@@ -51,7 +50,6 @@ export class BunkerQueenOverlord extends Overlord {
 
 	constructor(hatchery: Hatchery, priority = OverlordPriority.core.queen) {
 		super(hatchery, 'supply', priority);
-		this.transportRequests = this.colony.transportRequests;
 		this.queens = this.zerg(QueenSetup.role);
 		this.batteries = _.filter(this.room.containers, container => insideBunkerBounds(container.pos, this.colony));
 		this.storeStructures = _.compact([this.colony.terminal!, this.colony.storage!, ...this.batteries]);
@@ -89,7 +87,6 @@ export class BunkerQueenOverlord extends Overlord {
 
 	refresh() {
 		super.refresh();
-		this.transportRequests = this.colony.transportRequests;
 		$.refresh(this, 'batteries', 'storeStructures');
 		$.refreshObject(this, 'quadrants');
 		// Re-compute queen assignments if the number of queens has changed
@@ -132,8 +129,8 @@ export class BunkerQueenOverlord extends Overlord {
 		// let allSupplyRequests = _.compact(_.flatten(_.map(this.assignments[queen.name],
 		// 												  struc => this.transportRequests.supplyByID[struc.id])));
 		let supplyRequests: TransportRequest[] = [];
-		for (let priority in this.transportRequests.supply) {
-			for (let request of this.transportRequests.supply[priority]) {
+		for (let priority in this.colony.transportRequests.supply) {
+			for (let request of this.colony.transportRequests.supply[priority]) {
 				if (this.assignments[queen.name][request.target.id]) {
 					supplyRequests.push(request);
 				}
@@ -199,8 +196,8 @@ export class BunkerQueenOverlord extends Overlord {
 		// let allWithdrawRequests = _.compact(_.flatten(_.map(this.assignments[queen.name],
 		// 													struc => this.transportRequests.withdrawByID[struc.id])));
 		let withdrawRequests: TransportRequest[] = [];
-		for (let priority in this.transportRequests.withdraw) {
-			for (let request of this.transportRequests.withdraw[priority]) {
+		for (let priority in this.colony.transportRequests.withdraw) {
+			for (let request of this.colony.transportRequests.withdraw[priority]) {
 				if (this.assignments[queen.name][request.target.id]) {
 					withdrawRequests.push(request);
 				}
@@ -272,13 +269,13 @@ export class BunkerQueenOverlord extends Overlord {
 
 	private handleQueen(queen: Zerg): void {
 		// Does something need withdrawing?
-		if (this.transportRequests.needsWithdrawing &&
-			_.any(_.keys(this.assignments[queen.name]), id => this.transportRequests.withdrawByID[id])) {
+		if (this.colony.transportRequests.needsWithdrawing &&
+			_.any(_.keys(this.assignments[queen.name]), id => this.colony.transportRequests.withdrawByID[id])) {
 			queen.task = this.buildWithdrawTaskManifest(queen);
 		}
 		// Does something need supplying?
-		else if (this.transportRequests.needsSupplying &&
-				 _.any(_.keys(this.assignments[queen.name]), id => this.transportRequests.supplyByID[id])) {
+		else if (this.colony.transportRequests.needsSupplying &&
+				 _.any(_.keys(this.assignments[queen.name]), id => this.colony.transportRequests.supplyByID[id])) {
 			queen.task = this.buildSupplyTaskManifest(queen);
 		}
 		// Otherwise do idle actions

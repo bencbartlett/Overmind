@@ -4,7 +4,7 @@ import {ClaimingOverlord} from '../../overlords/colonization/claimer';
 import {Colony} from '../../Colony';
 import {PioneerOverlord} from '../../overlords/colonization/pioneer';
 import {WorkerSetup} from '../../overlords/core/worker';
-import {MinerSetup} from '../../overlords/mining/miner_new';
+import {MinerSetup} from '../../overlords/mining/miner';
 
 // Claims a new room and builds a spawn but does not incubate. Removes when spawn is constructed.
 

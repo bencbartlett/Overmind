@@ -2,7 +2,7 @@ import {getOverlord, Overlord} from '../Overlord';
 import {profile} from '../../profiler/decorator';
 import {Colony} from '../../Colony';
 import {Zerg} from '../../zerg/Zerg';
-import {MinerSetup} from '../mining/miner_new';
+import {MinerSetup} from '../mining/miner';
 import {DroneSetup} from '../mining/extractor';
 import {getPosFromString} from '../../utilities/utils';
 import {OverlordPriority} from '../../priorities/priorities_overlords';

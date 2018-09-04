@@ -7,7 +7,6 @@ import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {CreepSetup} from '../CreepSetup';
 import {StoreStructure} from '../../declarations/typeGuards';
-import {TransportRequestGroup} from '../../logistics/TransportRequestGroup';
 import {Energetics} from '../../logistics/Energetics';
 import {SpawnRequestOptions} from '../../hiveClusters/hatchery';
 import {hasMinerals, minBy} from '../../utilities/utils';
@@ -35,14 +34,12 @@ export class CommandCenterOverlord extends Overlord {
 	mode: 'twoPart' | 'bunker';
 	managers: Zerg[];
 	commandCenter: CommandCenter;
-	transportRequests: TransportRequestGroup;
 	depositTarget: StructureTerminal | StructureStorage;
 	managerRepairTarget: StructureRampart | StructureWall | undefined;
 
 	constructor(commandCenter: CommandCenter, priority = OverlordPriority.core.manager) {
 		super(commandCenter, 'manager', priority);
 		this.commandCenter = commandCenter;
-		this.transportRequests = this.commandCenter.transportRequests;
 		this.mode = this.colony.layout;
 		this.managers = this.zerg(ManagerSetup.role);
 		if (this.commandCenter.terminal && _.sum(this.commandCenter.terminal.store) < TERMINAL_CAPACITY - 1000) {
@@ -61,7 +58,6 @@ export class CommandCenterOverlord extends Overlord {
 
 	refresh() {
 		super.refresh();
-		this.transportRequests = this.commandCenter.transportRequests;
 		$.refresh(this, 'depositTarget', 'managerRepairTarget');
 	}
 
@@ -93,7 +89,7 @@ export class CommandCenterOverlord extends Overlord {
 	}
 
 	private supplyActions(manager: Zerg) {
-		let request = this.transportRequests.getPrioritizedClosestRequest(manager.pos, 'supply');
+		let request = this.commandCenter.transportRequests.getPrioritizedClosestRequest(manager.pos, 'supply');
 		if (request) {
 			let amount = Math.min(request.amount, manager.carryCapacity);
 			manager.task = Tasks.transfer(request.target, request.resourceType, amount,
@@ -121,7 +117,7 @@ export class CommandCenterOverlord extends Overlord {
 
 	private withdrawActions(manager: Zerg): boolean {
 		if (_.sum(manager.carry) < manager.carryCapacity) {
-			let request = this.transportRequests.getPrioritizedClosestRequest(manager.pos, 'withdraw');
+			let request = this.commandCenter.transportRequests.getPrioritizedClosestRequest(manager.pos, 'withdraw');
 			if (request) {
 				let amount = Math.min(request.amount, manager.carryCapacity - _.sum(manager.carry));
 				manager.task = Tasks.withdraw(request.target, request.resourceType, amount);
@@ -230,11 +226,11 @@ export class CommandCenterOverlord extends Overlord {
 			if (this.equalizeStorageAndTerminal(manager)) return;
 		}
 		// Fulfill withdraw requests
-		if (this.transportRequests.needsWithdrawing) {
+		if (this.commandCenter.transportRequests.needsWithdrawing) {
 			if (this.withdrawActions(manager)) return;
 		}
 		// Fulfill supply requests
-		if (this.transportRequests.needsSupplying) {
+		if (this.commandCenter.transportRequests.needsSupplying) {
 			if (this.supplyActions(manager)) return;
 		}
 		// Move energy between storage and terminal if needed

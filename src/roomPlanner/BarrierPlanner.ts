@@ -36,6 +36,11 @@ export class BarrierPlanner {
 		this.barrierPositions = [];
 	}
 
+	refresh(): void {
+		this.memory = Mem.wrap(this.colony.memory, 'barrierPlanner', memoryDefaults);
+		this.barrierPositions = [];
+	}
+
 	private computeBunkerBarrierPositions(bunkerPos: RoomPosition, upgradeSitePos: RoomPosition): RoomPosition[] {
 		let rectArray = [];
 		let padding = BarrierPlanner.settings.padding;

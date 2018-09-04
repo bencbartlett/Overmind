@@ -81,8 +81,10 @@ export class SpawnGroup {
 		Overmind.spawnGroups[this.ref] = this;
 	}
 
+	/* Refresh the state of the spawnGroup; called by the Overmind object. */
 	refresh() {
 		this.memory = Mem.wrap(Memory.rooms[this.roomName], 'spawnGroup', SpawnGroupMemoryDefaults);
+		this.requests = [];
 	}
 
 	private recalculateColonies() {

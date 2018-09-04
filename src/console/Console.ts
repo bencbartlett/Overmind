@@ -265,6 +265,7 @@ export class OvermindConsole {
 		let allStructures = room.find(FIND_STRUCTURES);
 		let i = 0;
 		for (let s of allStructures) {
+			if (s.structureType == STRUCTURE_CONTROLLER) continue;
 			if (!colony.roomPlanner.structureShouldBeHere(s.structureType, s.pos)) {
 				let result = s.destroy();
 				if (result == OK) {

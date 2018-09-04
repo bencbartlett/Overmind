@@ -226,9 +226,9 @@ export class Colony {
 		this.creeps = Overmind.cache.creepsByColony[this.name] || [];
 		this.creepsByRole = _.groupBy(this.creeps, creep => creep.memory.role);
 		// Register the rest of the colony components; the order in which these are called is important!
-		this.refreshRoomObjects();			// Register real colony components
-		this.registerOperationalState();	// Set the colony operational state
-		this.registerUtilities(); 			// Register logistics utilities, room planners, and layout info
+		this.refreshRoomObjects();
+		this.registerOperationalState();
+		this.refreshUtilities();
 		this.refreshHiveClusters();
 	}
 
@@ -410,6 +410,26 @@ export class Colony {
 		this.abathur = new Abathur(this);
 	}
 
+	private refreshUtilities(): void {
+		this.linkNetwork.refresh();
+		this.logisticsNetwork.refresh();
+		this.transportRequests.refresh();
+		this.roomPlanner.refresh();
+		if (this.bunker) {
+			if (this.bunker.topSpawn) {
+				this.bunker.topSpawn = Game.getObjectById(this.bunker.topSpawn.id) as StructureSpawn | undefined;
+			}
+			if (this.bunker.coreSpawn) {
+				this.bunker.coreSpawn = Game.getObjectById(this.bunker.coreSpawn.id) as StructureSpawn | undefined;
+			}
+			if (this.bunker.rightSpawn) {
+				this.bunker.rightSpawn = Game.getObjectById(this.bunker.rightSpawn.id) as StructureSpawn | undefined;
+			}
+		}
+		this.roadLogistics.refresh();
+		this.abathur.refresh();
+	}
+
 	/* Instantiate and associate virtual colony components to group similar structures together */
 	private registerHiveClusters(): void {
 		this.hiveClusters = [];
@@ -430,36 +450,14 @@ export class Colony {
 		this.upgradeSite = new UpgradeSite(this, this.controller);
 		// Instantiate spore crawlers to wrap towers
 		this.sporeCrawlers = _.map(this.towers, tower => new SporeCrawler(this, tower));
-		// Dropoff links are freestanding links or ones at mining sites
-		// this.dropoffLinks = _.clone(this.availableLinks);
-
-		// // Mining sites is an object of ID's and MiningSites
-		// let sourceIDs = _.map(this.sources, source => source.id);
-		// let miningSites = _.map(this.sources, source => new MiningSite(this, source));
-		// this.miningSites = _.zipObject(sourceIDs, miningSites);
-		// // ExtractionSites is an object of ID's and ExtractionSites
-		// let extractorIDs = _.map(this.extractors, extractor => extractor.id);
-		// let extractionSites = _.map(this.extractors, extractor => new ExtractionSite(this, extractor));
-		// this.extractionSites = _.zipObject(extractorIDs, extractionSites);
-
 		// Reverse the hive clusters for correct order for init() and run()
 		this.hiveClusters.reverse();
 	}
 
 	private refreshHiveClusters(): void {
-		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.refresh());	// refresh each hive cluster
-		// _.forEach(this.miningSites, site => {
-		// 	if (!Game.rooms[site.pos.roomName]) {
-		// 		delete this.miningSites[site.source.id];
-		// 		_.remove(this.hiveClusters, hc => hc.ref == site.ref);
-		// 	}
-		// });
-		// _.forEach(this.extractionSites, site => {
-		// 	if (!Game.rooms[site.pos.roomName]) {
-		// 		delete this.extractionSites[site.extractor.id];
-		// 		_.remove(this.hiveClusters, hc => hc.ref == site.ref);
-		// 	}
-		// });
+		for (let i = this.hiveClusters.length - 1; i >= 0; i--) {
+			this.hiveClusters[i].refresh();
+		}
 	}
 
 	/* Instantiate all overlords for the colony */

@@ -63,7 +63,7 @@ export class CommandCenter extends HiveCluster {
 		this.memory = Mem.wrap(this.colony.memory, 'commandCenter');
 		$.refreshRoom(this);
 		$.refresh(this, 'storage', 'terminal', 'powerSpawn', 'nuker', 'observer', 'link', 'towers');
-		this.transportRequests = new TransportRequestGroup(); // commandCenter always gets its own request group
+		this.transportRequests.refresh();
 	}
 
 	spawnMoarOverlords() {

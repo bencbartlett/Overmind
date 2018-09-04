@@ -113,6 +113,13 @@ export class RoomPlanner {
 	constructor(colony: Colony) {
 		this.colony = colony;
 		this.memory = Mem.wrap(this.colony.memory, 'roomPlanner', memoryDefaults);
+		this.barrierPlanner = new BarrierPlanner(this);
+		this.roadPlanner = new RoadPlanner(this);
+		this.refresh();
+	}
+
+	refresh(): void {
+		this.memory = Mem.wrap(this.colony.memory, 'roomPlanner', memoryDefaults);
 		this.placements = {
 			hatchery     : undefined,
 			commandCenter: undefined,
@@ -120,8 +127,8 @@ export class RoomPlanner {
 		};
 		this.plan = {};
 		this.map = {};
-		this.barrierPlanner = new BarrierPlanner(this);
-		this.roadPlanner = new RoadPlanner(this);
+		this.barrierPlanner.refresh();
+		this.roadPlanner.refresh();
 		if (this.active && Game.time % 25 == 0) {
 			log.alert(`RoomPlanner for ${this.colony.room.print} is still active! Close to save CPU.`);
 		}

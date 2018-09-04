@@ -1,5 +1,5 @@
 import {Directive} from '../Directive';
-import {MiningOverlord} from '../../overlords/mining/miner_new';
+import {MiningOverlord} from '../../overlords/mining/miner';
 import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../../utilities/Cartographer';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {rollingAverage} from '../../utilities/utils';

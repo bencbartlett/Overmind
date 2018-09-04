@@ -115,6 +115,11 @@ export class Abathur {
 		this.assets = colony.assets;
 	}
 
+	refresh() {
+		this.memory = Mem.wrap(this.colony.memory, 'abathur', AbathurMemoryDefaults);
+		this.assets = this.colony.assets;
+	}
+
 	/* Summarizes the total of all resources currently in a colony store structure */
 	private computeGlobalAssets(): { [resourceType: string]: number } {
 		let colonyAssets: { [resourceType: string]: number }[] = [];

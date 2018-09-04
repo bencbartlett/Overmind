@@ -9,7 +9,7 @@ import {profile} from '../../profiler/decorator';
 import {SpawnRequest} from '../../hiveClusters/hatchery';
 import {QueenSetup} from '../core/queen';
 import {TransporterSetup} from '../core/transporter';
-import {MinerSetup} from '../mining/miner_new';
+import {MinerSetup} from '../mining/miner';
 import {DirectiveHarvest} from '../../directives/core/harvest';
 
 export const EmergencyMinerSetup = new CreepSetup('drone', {

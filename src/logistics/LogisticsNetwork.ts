@@ -110,6 +110,18 @@ export class LogisticsNetwork {
 		// }
 	}
 
+	refresh(): void {
+		this.memory = Mem.wrap(this.colony.memory, 'logisticsNetwork', LogisticsNetworkMemoryDefaults);
+		this.requests = [];
+		this.targetToRequest = {};
+		this._matching = undefined;
+		this.cache = {
+			nextAvailability         : {},
+			predictedTransporterCarry: {},
+			resourceChangeRate       : {}
+		};
+	}
+
 	// Request and provide functions ===================================================================================
 
 	/* Request for resources to be deposited into this target */

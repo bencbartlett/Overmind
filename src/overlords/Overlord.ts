@@ -115,9 +115,9 @@ export abstract class Overlord {
 	private synchronizeZerg(role: string): void {
 		// Synchronize the corresponding sets of Zerg
 		let zergNames = _.zipObject(_.map(this._zerg[role] || [],
-			zerg => [zerg.name, true])) as { [name: string]: boolean };
+										  zerg => [zerg.name, true])) as { [name: string]: boolean };
 		let creepNames = _.zipObject(_.map(this._creeps[role] || [],
-			creep => [creep.name, true])) as { [name: string]: boolean };
+										   creep => [creep.name, true])) as { [name: string]: boolean };
 		// Add new creeps which aren't in the _zerg record
 		for (let creep of this._creeps[role] || []) {
 			if (!zergNames[creep.name]) {
@@ -136,9 +136,9 @@ export abstract class Overlord {
 	private synchronizeCombatZerg(role: string): void {
 		// Synchronize the corresponding sets of CombatZerg
 		let zergNames = _.zipObject(_.map(this._combatZerg[role] || [],
-			zerg => [zerg.name, true])) as { [name: string]: boolean };
+										  zerg => [zerg.name, true])) as { [name: string]: boolean };
 		let creepNames = _.zipObject(_.map(this._creeps[role] || [],
-			creep => [creep.name, true])) as { [name: string]: boolean };
+										   creep => [creep.name, true])) as { [name: string]: boolean };
 		// Add new creeps which aren't in the _combatZerg record
 		for (let creep of this._creeps[role] || []) {
 			if (!zergNames[creep.name]) {
@@ -182,6 +182,7 @@ export abstract class Overlord {
 	protected zerg(role: string, notifyWhenAttacked?: boolean): Zerg[] {
 		if (!this._zerg[role]) {
 			this._zerg[role] = [];
+			this.synchronizeZerg(role);
 		}
 		return this._zerg[role];
 	}
@@ -190,6 +191,7 @@ export abstract class Overlord {
 	protected combatZerg(role: string, notifyWhenAttacked?: boolean): CombatZerg[] {
 		if (!this._combatZerg[role]) {
 			this._combatZerg[role] = [];
+			this.synchronizeCombatZerg(role);
 		}
 		return this._combatZerg[role];
 	}

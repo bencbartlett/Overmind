@@ -121,7 +121,6 @@ export class Hatchery extends HiveCluster {
 		this.availableSpawns = _.filter(this.spawns, spawn => !spawn.spawning);
 		this.productionPriorities = [];
 		this.productionQueue = {};
-		this.transportRequests = this.colony.transportRequests;
 		this.memory.stats = this.getStats();
 	}
 

@@ -23,6 +23,11 @@ export class LinkNetwork {
 		};
 	}
 
+	refresh(): void {
+		this.receive = [];
+		this.transmit = [];
+	}
+
 	claimLink(link: StructureLink | undefined): void {
 		if (link) {
 			_.remove(this.colony.availableLinks, l => l.id == link.id);

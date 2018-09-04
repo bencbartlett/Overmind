@@ -150,21 +150,6 @@ export class UpgradeSite extends HiveCluster {
 		}
 	}
 
-	// /* Calculate where the link will be built for this site */
-	// private calculateLinkPos(): RoomPosition | undefined {
-	// 	let originPos: RoomPosition | undefined = undefined;
-	// 	if (this.colony.storage) {
-	// 		originPos = this.colony.storage.pos;
-	// 	} else if (this.colony.roomPlanner.storagePos) {
-	// 		originPos = this.colony.roomPlanner.storagePos;
-	// 	}
-	// 	if (originPos && this.batteryPos) {
-	// 		// Build link at last location on path from origin to battery
-	// 		let path = Pathing.findShortestPath(this.batteryPos, originPos).path;
-	// 		return path[0];
-	// 	}
-	// }
-
 	/* Build a container output at the optimal location */
 	private buildBatteryIfMissing(): void {
 		if (!this.battery && !this.findInputConstructionSite()) {
@@ -179,38 +164,6 @@ export class UpgradeSite extends HiveCluster {
 			}
 		}
 	}
-
-	// /* Build an input link at the optimal location */
-	// private buildLinkIfMissing(): void {
-	// 	if (!this.colony.storage ||
-	// 		Pathing.distance(this.pos, this.colony.storage.pos) < UpgradeSite.settings.minLinkDistance) {
-	// 		return;
-	// 	}
-	// 	let numLinks = this.colony.links.length +
-	// 				   _.filter(this.colony.constructionSites,
-	// 							site => site.structureType == STRUCTURE_LINK).length;
-	// 	let numLinksAllowed = CONTROLLER_STRUCTURES.link[this.colony.level];
-	// 	// Proceed if you don't have a link or one being built and there are extra links that can be built
-	// 	if (!this.link && !this.findInputConstructionSite() && numLinksAllowed > numLinks) {
-	// 		let clustersHaveLinks: boolean = ((this.colony.bunker ||
-	// 										   !!this.colony.hatchery && !!this.colony.hatchery.link) &&
-	// 										  !!this.colony.commandCenter && !!this.colony.commandCenter.link);
-	// 		let miningSitesInRoom = _.map(this.room.sources, s => this.colony.miningSites[s.id]) as MiningSite[];
-	// 		let farSites = _.filter(miningSitesInRoom, site =>
-	// 			Pathing.distance(this.colony.storage!.pos, site.pos) > MiningSite.settings.minLinkDistance);
-	// 		let sitesHaveLinks = _.every(farSites, site => site.output instanceof StructureLink);
-	// 		// Proceed if all mining sites have links if needed and all clusters have links
-	// 		if (clustersHaveLinks && sitesHaveLinks) {
-	// 			let buildHere = this.calculateLinkPos();
-	// 			if (buildHere) {
-	// 				let result = buildHere.createConstructionSite(STRUCTURE_LINK);
-	// 				if (result != OK) {
-	// 					log.warning(`Upgrade site at ${this.pos.print}: cannot build link! Result: ${result}`);
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
 
 	private stats() {
 		let defaults = {

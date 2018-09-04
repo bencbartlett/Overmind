@@ -139,11 +139,6 @@ export class EvolutionChamber extends HiveCluster {
 		this.labReservations = {};
 		this.boostQueue = {};
 		this.neededBoosts = {};
-		if (this.colony.commandCenter && this.colony.layout == 'twoPart') {
-			this.transportRequests = this.colony.commandCenter.transportRequests;
-		} else {
-			this.transportRequests = this.colony.transportRequests;
-		}
 	}
 
 	spawnMoarOverlords() {

@@ -42,6 +42,12 @@ export class RoadPlanner {
 		this.roadPositions = [];
 	}
 
+	refresh(): void {
+		this.memory = Mem.wrap(this.colony.memory, 'roadPlanner', memoryDefaults);
+		this.costMatrices = {};
+		this.roadPositions = [];
+	}
+
 	private recalculateRoadNetwork(storagePos: RoomPosition, obstacles: RoomPosition[]): void {
 		this.buildRoadNetwork(storagePos, obstacles);
 		this.finalize();

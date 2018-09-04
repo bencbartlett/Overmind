@@ -32,6 +32,10 @@ export class TransportRequestGroup {
 	withdrawByID: { [id: string]: TransportRequest[] };
 
 	constructor() {
+		this.refresh();
+	}
+
+	refresh(): void {
 		this.supply = blankPriorityQueue();
 		this.withdraw = blankPriorityQueue();
 		this.supplyByID = {};
