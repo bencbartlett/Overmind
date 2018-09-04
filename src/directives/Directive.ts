@@ -65,10 +65,6 @@ export abstract class Directive {
 		return Game.flags[this.name];
 	}
 
-	// get memory(): FlagMemory {
-	// 	return Memory.flags[this.name];
-	// }
-
 	refresh(): void {
 		const flag = this.flag;
 		if (!flag) {

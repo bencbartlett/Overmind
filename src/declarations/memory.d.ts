@@ -3,6 +3,7 @@ type operationMode = 'manual' | 'semiautomatic' | 'automatic';
 interface Memory {
 	assimilator: any;
 	Overmind: {};
+	segmenter: any;
 	strategist?: any;
 	colonies: { [name: string]: any };
 	creeps: { [name: string]: CreepMemory; };
@@ -59,6 +60,10 @@ interface StatsMemory {
 			}
 		}
 	}
+}
+
+interface PublicSegment {
+
 }
 
 interface CreepMemory {

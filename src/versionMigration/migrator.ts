@@ -1,4 +1,4 @@
-import {Mem} from '../Memory';
+import {Mem} from '../memory/Memory';
 import {log} from '../console/log';
 import {DEFAULT_OVERMIND_SIGNATURE} from '../~settings';
 

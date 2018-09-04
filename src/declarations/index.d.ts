@@ -119,6 +119,7 @@ interface TerminalState {
 
 interface ITerminalNetwork {
 	allTerminals: StructureTerminal[];
+	readyTerminals: StructureTerminal[];
 	// terminals: StructureTerminal[];
 	memory: any;
 

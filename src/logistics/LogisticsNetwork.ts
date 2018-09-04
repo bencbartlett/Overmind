@@ -19,7 +19,7 @@ import {
 import {TransporterSetup} from '../overlords/core/transporter';
 import {minMax} from '../utilities/utils';
 import columnify from 'columnify';
-import {Mem} from '../Memory';
+import {Mem} from '../memory/Memory';
 // import {DirectivePickup} from '../directives/logistics/logisticsRequest';
 
 export type LogisticsTarget =

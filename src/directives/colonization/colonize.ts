@@ -5,6 +5,8 @@ import {Colony} from '../../Colony';
 import {PioneerOverlord} from '../../overlords/colonization/pioneer';
 import {WorkerSetup} from '../../overlords/core/worker';
 import {MinerSetup} from '../../overlords/mining/miner';
+import {MY_USERNAME} from '../../~settings';
+import {log} from '../../console/log';
 
 // Claims a new room and builds a spawn but does not incubate. Removes when spawn is constructed.
 
@@ -50,6 +52,12 @@ export class DirectiveColonize extends Directive {
 				}
 			}
 			// Remove the directive
+			this.remove();
+		}
+		if (Game.time % 10 == 2 && this.room && this.room.owner != MY_USERNAME) {
+			let msg = `Removing Colonize directive in ${this.pos.roomName}: room already owned by another player.`;
+			log.alert(msg);
+			Game.notify(msg);
 			this.remove();
 		}
 	}

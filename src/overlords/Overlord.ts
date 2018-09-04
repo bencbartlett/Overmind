@@ -48,7 +48,6 @@ export abstract class Overlord {
 	private _combatZerg: { [roleName: string]: CombatZerg[] };
 	creepUsageReport: { [role: string]: [number, number] | undefined };
 	boosts: { [roleName: string]: _ResourceConstantSansEnergy[] | undefined };
-	notifyWhenAttacked: boolean;
 	suspendFor: number;
 
 	constructor(initializer: OverlordInitializer | Colony, name: string, priority: number) {
@@ -63,7 +62,6 @@ export abstract class Overlord {
 		this.recalculateCreeps();
 		this.creepUsageReport = _.mapValues(this._creeps, creep => undefined);
 		this.boosts = _.mapValues(this._creeps, creep => undefined);
-		this.notifyWhenAttacked = true;
 		this.suspendFor = 0;
 		// Register the overlord on the colony overseer and on the overmind
 		Overmind.overlords[this.ref] = this;
@@ -112,7 +110,7 @@ export abstract class Overlord {
 		}
 	}
 
-	private synchronizeZerg(role: string): void {
+	private synchronizeZerg(role: string, notifyWhenAttacked?: boolean): void {
 		// Synchronize the corresponding sets of Zerg
 		let zergNames = _.zipObject(_.map(this._zerg[role] || [],
 										  zerg => [zerg.name, true])) as { [name: string]: boolean };
@@ -121,8 +119,7 @@ export abstract class Overlord {
 		// Add new creeps which aren't in the _zerg record
 		for (let creep of this._creeps[role] || []) {
 			if (!zergNames[creep.name]) {
-				this._zerg[role].push(Overmind.zerg[creep.name]
-									  || new Zerg(creep, this.notifyWhenAttacked));
+				this._zerg[role].push(Overmind.zerg[creep.name] || new Zerg(creep, notifyWhenAttacked));
 			}
 		}
 		// Remove dead/reassigned creeps from the _zerg record
@@ -133,7 +130,7 @@ export abstract class Overlord {
 		}
 	}
 
-	private synchronizeCombatZerg(role: string): void {
+	private synchronizeCombatZerg(role: string, notifyWhenAttacked?: boolean): void {
 		// Synchronize the corresponding sets of CombatZerg
 		let zergNames = _.zipObject(_.map(this._combatZerg[role] || [],
 										  zerg => [zerg.name, true])) as { [name: string]: boolean };
@@ -142,8 +139,7 @@ export abstract class Overlord {
 		// Add new creeps which aren't in the _combatZerg record
 		for (let creep of this._creeps[role] || []) {
 			if (!zergNames[creep.name]) {
-				this._combatZerg[role].push(Overmind.zerg[creep.name]
-											|| new CombatZerg(creep, this.notifyWhenAttacked));
+				this._combatZerg[role].push(Overmind.zerg[creep.name] || new CombatZerg(creep, notifyWhenAttacked));
 			}
 		}
 		// Remove dead/reassigned creeps from the _combatZerg record
@@ -182,7 +178,7 @@ export abstract class Overlord {
 	protected zerg(role: string, notifyWhenAttacked?: boolean): Zerg[] {
 		if (!this._zerg[role]) {
 			this._zerg[role] = [];
-			this.synchronizeZerg(role);
+			this.synchronizeZerg(role, notifyWhenAttacked);
 		}
 		return this._zerg[role];
 	}
@@ -191,7 +187,7 @@ export abstract class Overlord {
 	protected combatZerg(role: string, notifyWhenAttacked?: boolean): CombatZerg[] {
 		if (!this._combatZerg[role]) {
 			this._combatZerg[role] = [];
-			this.synchronizeCombatZerg(role);
+			this.synchronizeCombatZerg(role, notifyWhenAttacked);
 		}
 		return this._combatZerg[role];
 	}

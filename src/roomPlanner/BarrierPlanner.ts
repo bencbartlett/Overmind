@@ -1,7 +1,7 @@
 import {getCutTiles} from '../algorithms/minCut';
 import {getAllStructureCoordsFromLayout, RoomPlanner, translatePositions} from './RoomPlanner';
 import {Colony} from '../Colony';
-import {Mem} from '../Memory';
+import {Mem} from '../memory/Memory';
 import {log} from '../console/log';
 import {derefCoords} from '../utilities/utils';
 import {bunkerLayout, insideBunkerBounds} from './layouts/bunker';

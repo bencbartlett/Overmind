@@ -30,7 +30,7 @@ import './tasks/initializer'; // This line is necessary to ensure proper compila
 import './zerg/CombatZerg'; // ...so is this one... rollup is dumb about generating reference errors
 import {PROFILE_COLONY_LIMIT, USE_PROFILER} from './~settings';
 import {sandbox} from './sandbox';
-import {Mem} from './Memory';
+import {Mem} from './memory/Memory';
 import {OvermindConsole} from './console/Console';
 import {Stats} from './stats/stats';
 import profiler from './profiler/screeps-profiler';

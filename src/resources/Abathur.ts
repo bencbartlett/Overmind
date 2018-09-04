@@ -5,7 +5,7 @@ import {REAGENTS} from './map_resources';
 import {mergeSum, minMax} from '../utilities/utils';
 import {profile} from '../profiler/decorator';
 import {maxMarketPrices, TraderJoe} from '../logistics/TradeNetwork';
-import {Mem} from '../Memory';
+import {Mem} from '../memory/Memory';
 
 export const priorityStockAmounts: { [key: string]: number } = {
 	XGHO2: 1000,	// For toughness

@@ -4,7 +4,7 @@ import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
 import {CommandCenterOverlord} from '../overlords/core/manager';
 import {Colony} from '../Colony';
-import {Mem} from '../Memory';
+import {Mem} from '../memory/Memory';
 import {TerminalNetwork} from '../logistics/TerminalNetwork';
 import {Energetics} from '../logistics/Energetics';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';

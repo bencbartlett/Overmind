@@ -18,7 +18,7 @@ import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {Cartographer, ROOMTYPE_CONTROLLER, ROOMTYPE_SOURCEKEEPER} from './utilities/Cartographer';
 import {derefCoords, hasJustSpawned, minBy} from './utilities/utils';
 import {DirectiveOutpost} from './directives/core/outpost';
-import {Autonomy, getAutonomyLevel} from './Memory';
+import {Autonomy, getAutonomyLevel} from './memory/Memory';
 import {RoomIntel} from './intel/RoomIntel';
 
 

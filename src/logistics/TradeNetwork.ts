@@ -1,4 +1,4 @@
-import {Mem} from '../Memory';
+import {Mem} from '../memory/Memory';
 import {profile} from '../profiler/decorator';
 import {maxBy, minBy, printRoomName} from '../utilities/utils';
 import {alignedNewline, bullet, leftArrow, rightArrow} from '../utilities/stringConstants';

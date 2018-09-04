@@ -1,6 +1,6 @@
-import {Stats} from './stats/stats';
-import {profile} from './profiler/decorator';
-import {DEFAULT_OPERATION_MODE, DEFAULT_OVERMIND_SIGNATURE, USE_PROFILER} from './~settings';
+import {Stats} from '../stats/stats';
+import {profile} from '../profiler/decorator';
+import {DEFAULT_OPERATION_MODE, DEFAULT_OVERMIND_SIGNATURE, USE_PROFILER} from '../~settings';
 
 export enum Autonomy {
 	Manual        = 0,

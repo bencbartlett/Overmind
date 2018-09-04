@@ -179,7 +179,8 @@ export class RoomIntel {
 			}
 
 			// Record location of permanent objects in room and recompute score as needed
-			if (!room.memory.expiration || Game.time > room.memory.expiration) {
+			if (!room.memory.expiration || Game.time > room.memory.expiration ||
+				(room.owner != this.roomOwnedBy(room.name))) {
 				this.recordPermanentObjects(room);
 				if (!alreadyComputedScore) {
 					alreadyComputedScore = this.recomputeScoreIfNecessary(room);

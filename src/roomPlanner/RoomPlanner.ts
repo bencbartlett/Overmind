@@ -6,7 +6,7 @@ import {commandCenterLayout} from './layouts/commandCenter';
 import {log} from '../console/log';
 import {Visualizer} from '../visuals/Visualizer';
 import {profile} from '../profiler/decorator';
-import {Autonomy, getAutonomyLevel, Mem} from '../Memory';
+import {Autonomy, getAutonomyLevel, Mem} from '../memory/Memory';
 import {Colony, getAllColonies} from '../Colony';
 import {RoadPlanner} from './RoadPlanner';
 import {BarrierPlanner} from './BarrierPlanner';

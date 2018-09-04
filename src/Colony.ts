@@ -23,7 +23,7 @@ import {EvolutionChamber} from './hiveClusters/evolutionChamber';
 import {TransportRequestGroup} from './logistics/TransportRequestGroup';
 import {SpawnGroup} from './logistics/SpawnGroup';
 import {bunkerLayout, getPosFromBunkerCoord} from './roomPlanner/layouts/bunker';
-import {Mem} from './Memory';
+import {Mem} from './memory/Memory';
 import {RandomWalkerScoutOverlord} from './overlords/scouting/randomWalker';
 import {EXPANSION_EVALUATION_FREQ, ExpansionPlanner} from './strategy/ExpansionPlanner';
 import {log} from './console/log';

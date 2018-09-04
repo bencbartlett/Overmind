@@ -5,7 +5,7 @@ import {DirectiveSKOutpost} from '../../directives/core/outpostSK';
 import {CreepSetup} from '../CreepSetup';
 import {RoomIntel} from '../../intel/RoomIntel';
 import {minBy} from '../../utilities/utils';
-import {Mem} from '../../Memory';
+import {Mem} from '../../memory/Memory';
 import {debug, log} from '../../console/log';
 import {CombatTargeting} from '../../targeting/CombatTargeting';
 import {Movement} from '../../movement/Movement';

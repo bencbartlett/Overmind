@@ -4,7 +4,7 @@ import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
 import {UpgradingOverlord} from '../overlords/core/upgrader';
 import {Colony, ColonyStage} from '../Colony';
-import {Mem} from '../Memory';
+import {Mem} from '../memory/Memory';
 import {log} from '../console/log';
 import {Stats} from '../stats/stats';
 import {hasMinerals} from '../utilities/utils';
@@ -181,9 +181,6 @@ export class UpgradeSite extends HiveCluster {
 		if (Game.time % 25 == 7) {
 			this.buildBatteryIfMissing();
 		}
-		// else if (Game.time % 25 == 8) {
-		// 	this.buildLinkIfMissing();
-		// }
 	}
 
 	visuals() {

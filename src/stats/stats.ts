@@ -1,5 +1,5 @@
 import {profile} from '../profiler/decorator';
-import {Mem} from '../Memory';
+import {Mem} from '../memory/Memory';
 import {rollingAverage} from '../utilities/utils';
 
 /**

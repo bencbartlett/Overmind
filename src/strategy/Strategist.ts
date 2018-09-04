@@ -1,7 +1,7 @@
 // The Strategist makes high-level game decisions such as choosing when/where to expand and who to harass. It is located
 // on Overmind.strategist and is only instantiated if the AI is run in full-auto mode.
 
-import {Autonomy, getAutonomyLevel, Mem} from '../Memory';
+import {Autonomy, getAutonomyLevel, Mem} from '../memory/Memory';
 import {Colony, getAllColonies} from '../Colony';
 import {DirectiveColonize} from '../directives/colonization/colonize';
 import {Cartographer} from '../utilities/Cartographer';
@@ -44,6 +44,9 @@ export class Strategist implements IStrategist {
 		if (roomName) {
 			let pos = Pathing.findPathablePosition(roomName);
 			DirectiveColonize.createIfNotPresent(pos, 'room');
+			let msg = `Room ${roomName} selected as next colony! Creating colonization directive.`;
+			log.alert(msg);
+			Game.notify(msg);
 		}
 	}
 

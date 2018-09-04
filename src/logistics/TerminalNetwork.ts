@@ -1,5 +1,5 @@
 import {log} from '../console/log';
-import {Mem} from '../Memory';
+import {Mem} from '../memory/Memory';
 import {profile} from '../profiler/decorator';
 import {Energetics} from './Energetics';
 import {Colony, getAllColonies} from '../Colony';
@@ -190,6 +190,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 			this.logTransfer(resourceType, amount, sender.room.name, receiver.room.name);
 			this.alreadySent.push(sender);
 			this.alreadyReceived.push(receiver);
+			_.remove(this.readyTerminals, terminal => terminal.id == sender.id);
 		} else {
 			log.warning(`Could not send ${amount} ${resourceType} from ${sender.room.print} to ` +
 						`${receiver.room.print}! Response: ${response}`);
