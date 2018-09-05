@@ -3,10 +3,9 @@ import {Directive} from '../Directive';
 import {ClaimingOverlord} from '../../overlords/colonization/claimer';
 import {Colony} from '../../Colony';
 import {PioneerOverlord} from '../../overlords/colonization/pioneer';
-import {WorkerSetup} from '../../overlords/core/worker';
-import {MinerSetup} from '../../overlords/mining/miner';
 import {MY_USERNAME} from '../../~settings';
 import {log} from '../../console/log';
+import {Roles} from '../../creepSetups/setups';
 
 // Claims a new room and builds a spawn but does not incubate. Removes when spawn is constructed.
 
@@ -46,9 +45,9 @@ export class DirectiveColonize extends Directive {
 			for (let pioneer of this.overlords.pioneer.pioneers) {
 				let miningOverlord = miningOverlords.shift();
 				if (miningOverlord) {
-					pioneer.reassign(miningOverlord, MinerSetup.role);
+					pioneer.reassign(miningOverlord, Roles.drone);
 				} else {
-					pioneer.reassign(this.toColonize.overlords.work, WorkerSetup.role);
+					pioneer.reassign(this.toColonize.overlords.work, Roles.worker);
 				}
 			}
 			// Remove the directive

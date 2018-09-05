@@ -6,7 +6,7 @@ import {QueenOverlord} from '../overlords/core/queen';
 import {Priority} from '../priorities/priorities';
 import {Colony, ColonyStage, DEFCON} from '../Colony';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
-import {bodyCost, CreepSetup} from '../overlords/CreepSetup';
+import {bodyCost, CreepSetup} from '../creepSetups/CreepSetup';
 import {Mem} from '../memory/Memory';
 import {Visualizer} from '../visuals/Visualizer';
 import {Stats} from '../stats/stats';

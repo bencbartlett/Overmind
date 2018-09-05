@@ -5,16 +5,10 @@ import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/siegeTarget';
 import {profile} from '../../profiler/decorator';
 import {DirectiveHaul} from '../../directives/logistics/haul';
-import {CreepSetup} from '../CreepSetup';
 import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {RoomIntel} from '../../intel/RoomIntel';
-
-const GuardSetup = new CreepSetup('guard', {
-	pattern  : [TOUGH, MOVE, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, HEAL],
-	sizeLimit: 3,
-});
-
+import {CombatSetups, Roles} from '../../creepSetups/setups';
 
 @profile
 export class GuardOverlord extends Overlord {
@@ -25,7 +19,7 @@ export class GuardOverlord extends Overlord {
 
 	constructor(directive: DirectiveGuard, priority = OverlordPriority.defense.guard) {
 		super(directive, 'guard', priority);
-		this.guards = this.combatZerg(GuardSetup.role);
+		this.guards = this.combatZerg(Roles.guardMelee);
 	}
 
 	// private reassignIdleGuards(): void {
@@ -82,8 +76,8 @@ export class GuardOverlord extends Overlord {
 
 	init() {
 		let amount = this.room && (this.room.invaders.length > 0 || RoomIntel.isInvasionLikely(this.room)) ? 1 : 0;
-		this.reassignIdleCreeps(GuardSetup.role);
-		this.wishlist(amount, GuardSetup);
+		this.reassignIdleCreeps(Roles.guardMelee);
+		this.wishlist(amount, CombatSetups.guards.melee);
 	}
 
 	run() {

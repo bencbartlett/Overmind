@@ -4,15 +4,9 @@ import {Zerg} from '../../zerg/Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {DirectiveHealPoint} from '../../directives/offense/healPoint';
 import {profile} from '../../profiler/decorator';
-import {CreepSetup} from '../CreepSetup';
 import {Overlord} from '../Overlord';
 import {CombatTargeting} from '../../targeting/CombatTargeting';
-
-const PointHealerSetup = new CreepSetup('pointHealer', {
-	pattern  : [HEAL, MOVE],
-	sizeLimit: Infinity,
-	ordered  : false
-});
+import {CombatSetups, Roles} from '../../creepSetups/setups';
 
 @profile
 export class HealPointOverlord extends Overlord {
@@ -21,7 +15,7 @@ export class HealPointOverlord extends Overlord {
 
 	constructor(directive: DirectiveHealPoint, priority = OverlordPriority.offense.healPoint) {
 		super(directive, 'healPoint', priority);
-		this.healers = this.zerg(PointHealerSetup.role);
+		this.healers = this.zerg(Roles.healer);
 	}
 
 	private handleHealer(healer: Zerg): void {
@@ -33,7 +27,7 @@ export class HealPointOverlord extends Overlord {
 	}
 
 	init() {
-		this.wishlist(1, PointHealerSetup);
+		this.wishlist(1, CombatSetups.healers.default);
 	}
 
 	run() {

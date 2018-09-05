@@ -4,12 +4,7 @@ import {Tasks} from '../../tasks/Tasks';
 import {Directive} from '../../directives/Directive';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {CreepSetup} from '../CreepSetup';
-
-const ClaimerSetup = new CreepSetup('claimer', {
-	pattern  : [CLAIM, MOVE],
-	sizeLimit: 1
-});
+import {Roles, Setups} from '../../creepSetups/setups';
 
 @profile
 export class ClaimingOverlord extends Overlord {
@@ -18,12 +13,12 @@ export class ClaimingOverlord extends Overlord {
 
 	constructor(directive: Directive, priority = OverlordPriority.realTime.claim) {
 		super(directive, 'claim', priority);
-		this.claimers = this.zerg(ClaimerSetup.role);
+		this.claimers = this.zerg(Roles.claim);
 	}
 
 	init() {
 		let amount = (this.room && this.room.controller && this.room.controller.my) ? 0 : 1;
-		this.wishlist(amount, ClaimerSetup);
+		this.wishlist(amount, Setups.infestors.claim);
 	}
 
 	private handleClaimer(claimer: Zerg): void {

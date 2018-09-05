@@ -6,15 +6,10 @@ import {log} from '../console/log';
 import {getTerrainCosts, isExit, normalizePos, sameCoord} from './helpers';
 import {normalizeZerg, Zerg} from '../zerg/Zerg';
 import {Pathing} from './Pathing';
-import {QueenSetup} from '../overlords/core/queen';
-import {TransporterSetup} from '../overlords/core/transporter';
-import {ManagerSetup} from '../overlords/core/manager';
-import {WorkerSetup} from '../overlords/core/worker';
 import {insideBunkerBounds} from '../roomPlanner/layouts/bunker';
-import {HydraliskSetup} from '../overlords/defense/rangedDefense';
-import {ZerglingSetup} from '../overlords/defense/meleeDefense';
 import {isZerg} from '../declarations/typeGuards';
 import {rightArrow} from '../utilities/stringConstants';
+import {Roles} from '../creepSetups/setups';
 
 export const NO_ACTION = -20;
 export const ERR_CANNOT_PUSH_CREEP = -30;
@@ -32,13 +27,13 @@ const STATE_DEST_Y = 5;
 const STATE_DEST_ROOMNAME = 6;
 
 export const MovePriorities = {
-	[ManagerSetup.role]    : 1,
-	[QueenSetup.role]      : 2,
-	[TransporterSetup.role]: 3,
-	[ZerglingSetup.role]   : 4,
-	[HydraliskSetup.role]  : 5,
-	[WorkerSetup.role]     : 9,
-	default                : 10,
+	[Roles.manager]  : 1,
+	[Roles.queen]    : 2,
+	[Roles.transport]: 3,
+	[Roles.melee]    : 4,
+	[Roles.ranged]   : 5,
+	[Roles.worker]   : 9,
+	default          : 10,
 };
 
 

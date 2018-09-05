@@ -2,15 +2,10 @@ import {Overlord} from '../Overlord';
 import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {profile} from '../../profiler/decorator';
-import {CreepSetup} from '../CreepSetup';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {DirectiveExtract} from '../../directives/core/extract';
 import {$} from '../../caching/GlobalCache';
-
-export const DroneSetup = new CreepSetup('drone', {
-	pattern  : [WORK, WORK, CARRY, MOVE],
-	sizeLimit: Infinity,
-});
+import {Roles, Setups} from '../../creepSetups/setups';
 
 @profile
 export class ExtractorOverlord extends Overlord {
@@ -30,7 +25,7 @@ export class ExtractorOverlord extends Overlord {
 		super(directive, 'mineral', priority);
 		this.directive = directive;
 		this.priority += this.outpostIndex * OverlordPriority.remoteSKRoom.roomIncrement;
-		this.drones = this.zerg(DroneSetup.role);
+		this.drones = this.zerg(Roles.drone);
 		// Populate structures
 		this.populateStructures();
 	}
@@ -62,7 +57,7 @@ export class ExtractorOverlord extends Overlord {
 
 	init() {
 		let amount = this.mineral && this.mineral.mineralAmount > 0 ? this.mineral.pos.availableNeighbors().length : 0;
-		this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), DroneSetup);
+		this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), Setups.drones.extractor);
 		this.registerOutputRequests();
 	}
 

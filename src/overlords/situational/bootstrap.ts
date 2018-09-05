@@ -1,26 +1,13 @@
 import {Overlord} from '../Overlord';
 import {DirectiveBootstrap} from '../../directives/core/bootstrap';
-import {CreepSetup} from '../CreepSetup';
 import {ColonyStage} from '../../Colony';
 import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {SpawnRequest} from '../../hiveClusters/hatchery';
-import {QueenSetup} from '../core/queen';
-import {TransporterSetup} from '../core/transporter';
-import {MinerSetup} from '../mining/miner';
 import {DirectiveHarvest} from '../../directives/core/harvest';
-
-export const EmergencyMinerSetup = new CreepSetup('drone', {
-	pattern  : [WORK, WORK, CARRY, MOVE],
-	sizeLimit: 1,
-});
-
-export const FillerSetup = new CreepSetup('filler', {
-	pattern  : [CARRY, CARRY, MOVE],
-	sizeLimit: 1,
-});
+import {Roles, Setups} from '../../creepSetups/setups';
 
 // Bootstrapping overlord: spawns small miners and suppliers to recover from a catastrohpic colony crash
 @profile
@@ -38,7 +25,7 @@ export class BootstrappingOverlord extends Overlord {
 
 	constructor(directive: DirectiveBootstrap, priority = OverlordPriority.emergency.bootstrap) {
 		super(directive, 'bootstrap', priority);
-		this.fillers = this.zerg(FillerSetup.role);
+		this.fillers = this.zerg(Roles.filler);
 		// Calculate structures fillers can supply / withdraw from
 		this.supplyStructures = _.filter([...this.colony.spawns, ...this.colony.extensions],
 										 structure => structure.energy < structure.energyCapacity);
@@ -70,7 +57,7 @@ export class BootstrappingOverlord extends Overlord {
 				filteredMiners.length < overlord.pos.availableNeighbors().length) {
 				if (this.colony.hatchery) {
 					let request: SpawnRequest = {
-						setup   : EmergencyMinerSetup,
+						setup   : Setups.drones.miners.emergency,
 						overlord: overlord,
 						priority: this.priority + 1,
 					};
@@ -83,20 +70,20 @@ export class BootstrappingOverlord extends Overlord {
 	init() {
 		// At early levels, spawn one miner, then a filler, then the rest of the miners
 		if (this.colony.stage == ColonyStage.Larva) {
-			if (this.colony.getCreepsByRole(MinerSetup.role).length == 0) {
+			if (this.colony.getCreepsByRole(Roles.drone).length == 0) {
 				this.spawnBootstrapMiners();
 				return;
 			}
 		}
 		// Spawn fillers
-		if (this.colony.getCreepsByRole(QueenSetup.role).length == 0 && this.colony.hatchery) { // no queen
-			let transporter = _.first(this.colony.getZergByRole(TransporterSetup.role));
+		if (this.colony.getCreepsByRole(Roles.queen).length == 0 && this.colony.hatchery) { // no queen
+			let transporter = _.first(this.colony.getZergByRole(Roles.transport));
 			if (transporter) {
 				// reassign transporter to be queen
-				transporter.reassign(this.colony.hatchery.overlord, QueenSetup.role);
+				transporter.reassign(this.colony.hatchery.overlord, Roles.queen);
 			} else {
 				// wish for a filler
-				this.wishlist(1, FillerSetup);
+				this.wishlist(1, Setups.filler);
 			}
 		}
 		// Then spawn the rest of the needed miners

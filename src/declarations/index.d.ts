@@ -78,6 +78,8 @@ interface IAssimilator {
 
 	generateChecksum(): string;
 
+	run(): void;
+
 }
 
 interface IOvermind {

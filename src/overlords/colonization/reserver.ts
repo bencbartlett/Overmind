@@ -4,12 +4,7 @@ import {DirectiveOutpost} from '../../directives/core/outpost';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {CreepSetup} from '../CreepSetup';
-
-const ReserverSetup = new CreepSetup('reserver', {
-	pattern  : [CLAIM, MOVE],
-	sizeLimit: 4,
-});
+import {Roles, Setups} from '../../creepSetups/setups';
 
 @profile
 export class ReservingOverlord extends Overlord {
@@ -22,14 +17,14 @@ export class ReservingOverlord extends Overlord {
 		// Change priority to operate per-outpost
 		this.priority += this.outpostIndex * OverlordPriority.remoteRoom.roomIncrement;
 		this.reserveBuffer = 3000;
-		this.reservers = this.zerg(ReserverSetup.role);
+		this.reservers = this.zerg(Roles.claim);
 	}
 
 	init() {
 		if (!this.room || this.room.controller!.needsReserving(this.reserveBuffer)) {
-			this.wishlist(1, ReserverSetup);
+			this.wishlist(1, Setups.infestors.reserve);
 		} else {
-			this.wishlist(0, ReserverSetup);
+			this.wishlist(0, Setups.infestors.reserve);
 		}
 	}
 

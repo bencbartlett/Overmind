@@ -16,10 +16,10 @@ import {
 	isTombstone,
 	StoreStructure
 } from '../declarations/typeGuards';
-import {TransporterSetup} from '../overlords/core/transporter';
 import {minMax} from '../utilities/utils';
 import columnify from 'columnify';
 import {Mem} from '../memory/Memory';
+import {Roles} from '../creepSetups/setups';
 // import {DirectivePickup} from '../directives/logistics/logisticsRequest';
 
 export type LogisticsTarget =
@@ -330,7 +330,7 @@ export class LogisticsNetwork {
 
 	static targetingTransporters(target: LogisticsTarget, excludedTransporter?: Zerg): Zerg[] {
 		const targetingZerg = _.map(target.targetedBy, name => Overmind.zerg[name]);
-		const targetingTransporters = _.filter(targetingZerg, zerg => zerg.roleName == TransporterSetup.role);
+		const targetingTransporters = _.filter(targetingZerg, zerg => zerg.roleName == Roles.transport);
 		if (excludedTransporter) _.remove(targetingTransporters,
 										  transporter => transporter.name == excludedTransporter.name);
 		return targetingTransporters;
@@ -559,7 +559,7 @@ export class LogisticsNetwork {
 	/* Logs the output of the stable matching result */
 	summarizeMatching(): void {
 		let requests = this.requests.slice();
-		let transporters = _.filter(this.colony.getCreepsByRole(TransporterSetup.role), creep => !creep.spawning);
+		let transporters = _.filter(this.colony.getCreepsByRole(Roles.transport), creep => !creep.spawning);
 		let unmatchedTransporters = _.remove(transporters,
 											 transporter => !_.keys(this._matching).includes(transporter.name));
 		let unmatchedRequests = _.remove(requests, request => !_.values(this._matching).includes(request));

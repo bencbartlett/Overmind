@@ -2,7 +2,6 @@ import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {GuardOverlord} from '../../overlords/defense/guard';
 import {GuardSwarmOverlord} from '../../overlords/defense/guardSwarm';
-import {GuardPairOverlord} from '../../overlords/defense/guardPair';
 
 interface DirectiveGuardMemory extends FlagMemory {
 	safeTick?: number;
@@ -27,11 +26,11 @@ export class DirectiveGuard extends Directive {
 
 	spawnMoarOverlords() {
 		if (this.colony.level >= GuardOverlord.requiredRCL) {
-			if (this.memory.enhanced || this.name.includes('enhanced')) {
-				this.overlords.guardPair = new GuardPairOverlord(this);
-			} else {
-				this.overlords.guard = new GuardOverlord(this);
-			}
+			// if (this.memory.enhanced || this.name.includes('enhanced')) {
+			// 	this.overlords.guardPair = new GuardPairOverlord(this);
+			// } else {
+			this.overlords.guard = new GuardOverlord(this);
+			// }
 		} else {
 			this.overlords.swarmGuard = new GuardSwarmOverlord(this);
 		}

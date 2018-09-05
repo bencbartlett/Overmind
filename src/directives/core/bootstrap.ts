@@ -5,9 +5,7 @@ import {log} from '../../console/log';
 import {profile} from '../../profiler/decorator';
 import {BootstrappingOverlord} from '../../overlords/situational/bootstrap';
 import {Colony} from '../../Colony';
-import {ManagerSetup} from '../../overlords/core/manager';
-import {QueenSetup} from '../../overlords/core/queen';
-import {MinerSetup} from '../../overlords/mining/miner';
+import {Roles} from '../../creepSetups/setups';
 
 
 @profile
@@ -31,11 +29,11 @@ export class DirectiveBootstrap extends Directive {
 	refresh() {
 		super.refresh();
 		this.colony.bootstrapping = true;
-		this.needsMiner = (this.colony.getCreepsByRole(MinerSetup.role).length == 0);
+		this.needsMiner = (this.colony.getCreepsByRole(Roles.drone).length == 0);
 		this.needsManager = (this.colony.commandCenter != undefined &&
 							 this.colony.commandCenter.overlord != undefined &&
-							 this.colony.getCreepsByRole(ManagerSetup.role).length == 0);
-		this.needsQueen = (this.colony.getCreepsByRole(QueenSetup.role).length == 0);
+							 this.colony.getCreepsByRole(Roles.manager).length == 0);
+		this.needsQueen = (this.colony.getCreepsByRole(Roles.queen).length == 0);
 	}
 
 	spawnMoarOverlords() {

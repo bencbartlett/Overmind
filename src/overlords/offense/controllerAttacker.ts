@@ -5,16 +5,10 @@ import {Zerg} from '../../zerg/Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {Overlord} from '../Overlord';
 import {DirectiveControllerAttack} from '../../directives/offense/controllerAttack';
-import {CreepSetup} from '../CreepSetup';
 import {profile} from '../../profiler/decorator';
 import {SpawnGroup} from 'logistics/SpawnGroup';
 import {log} from '../../console/log';
-
-const InfestorSetup = new CreepSetup('infestor', {
-	pattern  : [CLAIM, MOVE],
-	sizeLimit: Infinity,
-	ordered  : true
-});
+import {Roles, Setups} from '../../creepSetups/setups';
 
 @profile
 export class ControllerAttackerOverlord extends Overlord {
@@ -26,7 +20,7 @@ export class ControllerAttackerOverlord extends Overlord {
 
 	constructor(directive: DirectiveControllerAttack, priority = OverlordPriority.realTime.controllerAttack) {
 		super(directive, 'controllerAttack', priority);
-		this.controllerAttackers = _.sortBy(this.zerg(InfestorSetup.role), zerg => zerg.name);
+		this.controllerAttackers = this.zerg(Roles.claim);
 		this.spawnGroup = new SpawnGroup(this, {requiredRCL: 4});
 		this.refresh();
 	}
@@ -46,8 +40,9 @@ export class ControllerAttackerOverlord extends Overlord {
 	private getPositionAssignments(): { [attackerName: string]: RoomPosition } {
 		let assignments: { [attackerName: string]: RoomPosition } = {};
 		let maxLoops = Math.min(this.attackPositions.length, this.controllerAttackers.length);
+		let controllerAttackers = _.sortBy(this.controllerAttackers, zerg => zerg.name);
 		for (let i = 0; i < maxLoops; i++) {
-			assignments[this.controllerAttackers[i].name] = this.attackPositions[i];
+			assignments[controllerAttackers[i].name] = this.attackPositions[i];
 		}
 		return assignments;
 	}
@@ -55,7 +50,7 @@ export class ControllerAttackerOverlord extends Overlord {
 	init() {
 		// TODO: Prespawn attackers to arrive as cooldown disappears
 		if (this.attackPositions.length > 0 && Game.time >= this.readyTick) {
-			this.wishlist(this.attackPositions.length, InfestorSetup);
+			this.wishlist(this.attackPositions.length, Setups.infestors.controllerAttacker);
 		}
 	}
 

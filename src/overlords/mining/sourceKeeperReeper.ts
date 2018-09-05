@@ -2,7 +2,6 @@
 
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {DirectiveSKOutpost} from '../../directives/core/outpostSK';
-import {CreepSetup} from '../CreepSetup';
 import {RoomIntel} from '../../intel/RoomIntel';
 import {minBy} from '../../utilities/utils';
 import {Mem} from '../../memory/Memory';
@@ -13,16 +12,7 @@ import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {Visualizer} from '../../visuals/Visualizer';
 import {profile} from '../../profiler/decorator';
 import {CombatOverlord} from '../CombatOverlord';
-
-export const ReaperSetup = new CreepSetup('zergling', {
-	pattern  : [MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK, HEAL, MOVE],
-	sizeLimit: Infinity,
-});
-
-export const DefenderSetup = new CreepSetup('hydralisk', {
-	pattern  : [MOVE, MOVE, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, HEAL, HEAL, MOVE],
-	sizeLimit: Infinity,
-});
+import {CombatSetups, Roles} from '../../creepSetups/setups';
 
 interface SourceReaperOverlordMemory {
 	targetLairID?: string;
@@ -44,8 +34,8 @@ export class SourceReaperOverlord extends CombatOverlord {
 		super(directive, 'sourceReaper', priority, SourceReaperOverlord.requiredRCL);
 		this.directive = directive;
 		this.priority += this.outpostIndex * OverlordPriority.remoteSKRoom.roomIncrement;
-		this.reapers = this.combatZerg(ReaperSetup.role);
-		this.defenders = this.combatZerg(DefenderSetup.role);
+		this.reapers = this.combatZerg(Roles.melee);
+		this.defenders = this.combatZerg(Roles.ranged);
 		this.memory = Mem.wrap(this.directive.memory, 'sourceReaper');
 		this.computeTargetLair();
 	}
@@ -66,8 +56,8 @@ export class SourceReaperOverlord extends CombatOverlord {
 	init() {
 		let defenderAmount = this.room && (this.room.invaders.length > 0
 										   || RoomIntel.isInvasionLikely(this.room)) ? 1 : 0;
-		this.wishlist(1, ReaperSetup);
-		this.wishlist(defenderAmount, DefenderSetup);
+		this.wishlist(1, CombatSetups.zerglings.sourceKeeper);
+		this.wishlist(defenderAmount, CombatSetups.hydralisks.sourceKeeper);
 	}
 
 	private getNextTargetLair(): StructureKeeperLair | undefined {

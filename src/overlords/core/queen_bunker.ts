@@ -13,8 +13,8 @@ import {getPosFromBunkerCoord, insideBunkerBounds, quadrantFillOrder} from '../.
 import {TransportRequest} from '../../logistics/TransportRequestGroup';
 import {Task} from '../../tasks/Task';
 import {Hatchery} from '../../hiveClusters/hatchery';
-import {QueenSetup} from './queen';
 import {Pathing} from '../../movement/Pathing';
+import {Roles, Setups} from '../../creepSetups/setups';
 
 type SupplyStructure = StructureExtension | StructureSpawn | StructureTower | StructureLab;
 
@@ -50,7 +50,7 @@ export class BunkerQueenOverlord extends Overlord {
 
 	constructor(hatchery: Hatchery, priority = OverlordPriority.core.queen) {
 		super(hatchery, 'supply', priority);
-		this.queens = this.zerg(QueenSetup.role);
+		this.queens = this.zerg(Roles.queen);
 		this.batteries = _.filter(this.room.containers, container => insideBunkerBounds(container.pos, this.colony));
 		this.storeStructures = _.compact([this.colony.terminal!, this.colony.storage!, ...this.batteries]);
 		this.quadrants = {
@@ -105,7 +105,7 @@ export class BunkerQueenOverlord extends Overlord {
 		if (this.colony.spawns.length > 1) {
 			amount = 2;
 		}
-		this.wishlist(amount, QueenSetup);
+		this.wishlist(amount, Setups.queen);
 	}
 
 	// Builds a series of tasks to empty unnecessary carry contents, withdraw required resources, and supply structures

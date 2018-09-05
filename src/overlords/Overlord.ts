@@ -1,6 +1,6 @@
 // Overlord: this class represents a "process" that gets executed by one or more creeps
 
-import {CreepSetup} from './CreepSetup';
+import {CreepSetup} from '../creepSetups/CreepSetup';
 import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
 import {Zerg} from '../zerg/Zerg';
@@ -34,6 +34,11 @@ export interface CreepRequestOptions {
 	options?: SpawnRequestOptions;
 }
 
+interface ZergOptions {
+	notifyWhenAttacked?: boolean;
+	boostWishlist?: _ResourceConstantSansEnergy[] | undefined;
+}
+
 @profile
 export abstract class Overlord {
 
@@ -46,8 +51,8 @@ export abstract class Overlord {
 	private _creeps: { [roleName: string]: Creep[] };
 	private _zerg: { [roleName: string]: Zerg[] };
 	private _combatZerg: { [roleName: string]: CombatZerg[] };
-	creepUsageReport: { [role: string]: [number, number] | undefined };
-	boosts: { [roleName: string]: _ResourceConstantSansEnergy[] | undefined };
+	private boosts: { [roleName: string]: _ResourceConstantSansEnergy[] | undefined };
+	creepUsageReport: { [roleName: string]: [number, number] | undefined };
 	suspendFor: number;
 
 	constructor(initializer: OverlordInitializer | Colony, name: string, priority: number) {
@@ -110,6 +115,19 @@ export abstract class Overlord {
 		}
 	}
 
+	/* Wraps all creeps of a given role to Zerg objects and updates the contents in future ticks to avoid having to
+	 * explicitly refresh groups of Zerg */
+	protected zerg(role: string, opts: ZergOptions = {}): Zerg[] {
+		if (!this._zerg[role]) {
+			this._zerg[role] = [];
+			this.synchronizeZerg(role, opts.notifyWhenAttacked);
+		}
+		if (opts.boostWishlist) {
+			this.boosts[role] = opts.boostWishlist;
+		}
+		return this._zerg[role];
+	}
+
 	private synchronizeZerg(role: string, notifyWhenAttacked?: boolean): void {
 		// Synchronize the corresponding sets of Zerg
 		let zergNames = _.zipObject(_.map(this._zerg[role] || [],
@@ -128,6 +146,18 @@ export abstract class Overlord {
 				_.remove(this._zerg[role], z => z.name == zerg.name);
 			}
 		}
+	}
+
+	/* Wraps all creeps of a given role to CombatZerg objects and updates the contents in future ticks */
+	protected combatZerg(role: string, opts: ZergOptions = {}): CombatZerg[] {
+		if (!this._combatZerg[role]) {
+			this._combatZerg[role] = [];
+			this.synchronizeCombatZerg(role, opts.notifyWhenAttacked);
+		}
+		if (opts.boostWishlist) {
+			this.boosts[role] = opts.boostWishlist;
+		}
+		return this._combatZerg[role];
 	}
 
 	private synchronizeCombatZerg(role: string, notifyWhenAttacked?: boolean): void {
@@ -172,25 +202,6 @@ export abstract class Overlord {
 	// 		return [];
 	// 	}
 	// }
-
-	/* Wraps all creeps of a given role to Zerg objects and updates the contents in future ticks to avoid having to
-	 * explicitly refresh groups of Zerg */
-	protected zerg(role: string, notifyWhenAttacked?: boolean): Zerg[] {
-		if (!this._zerg[role]) {
-			this._zerg[role] = [];
-			this.synchronizeZerg(role, notifyWhenAttacked);
-		}
-		return this._zerg[role];
-	}
-
-	/* Wraps all creeps of a given role to CombatZerg objects and updates the contents in future ticks */
-	protected combatZerg(role: string, notifyWhenAttacked?: boolean): CombatZerg[] {
-		if (!this._combatZerg[role]) {
-			this._combatZerg[role] = [];
-			this.synchronizeCombatZerg(role, notifyWhenAttacked);
-		}
-		return this._combatZerg[role];
-	}
 
 	protected creepReport(role: string, currentAmt: number, neededAmt: number) {
 		this.creepUsageReport[role] = [currentAmt, neededAmt];
@@ -315,6 +326,7 @@ export abstract class Overlord {
 				return false;
 			}
 			let body = _.map(setup.generateBody(energyCapacityAvailable), part => ({type: part, hits: 100}));
+			if (body.length == 0) return false;
 			return _.all(this.boosts[setup.role]!,
 						 boost => this.colony.evolutionChamber!.canBoost(body, boost));
 		}
@@ -397,11 +409,21 @@ export abstract class Overlord {
 		}
 	}
 
-	/* Request any needed boosts from terminal network; should be called during init() */
-	protected requestBoosts(creeps: Zerg[]): void {
+	/* Request any needed boosting resources from terminal network */
+	private requestBoosts(creeps: Zerg[]): void {
 		for (let creep of creeps) {
 			if (this.shouldBoost(creep)) {
 				this.requestBoostsForCreep(creep);
+			}
+		}
+	}
+
+	/* Requests that should be handled for all overlords prior to the init() phase */
+	preInit(): void {
+		// Handle resource requests for boosts
+		for (let role in this.boosts) {
+			if (this.boosts[role] && this._creeps[role]) {
+				this.requestBoosts(_.compact(_.map(this._creeps[role], creep => Overmind.zerg[creep.name])));
 			}
 		}
 	}

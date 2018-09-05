@@ -4,21 +4,11 @@ import {profile} from '../../profiler/decorator';
 import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {CreepSetup} from '../CreepSetup';
 import {BuildPriorities} from '../../priorities/priorities_structures';
 import {$} from '../../caching/GlobalCache';
 import {Task} from '../../tasks/Task';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
-
-export const WorkerSetup = new CreepSetup('worker', {
-	pattern  : [WORK, CARRY, MOVE],
-	sizeLimit: Infinity,
-});
-
-// const WorkerEarlySetup = new CreepSetup('worker', {
-// 	pattern  : [WORK, CARRY, MOVE, MOVE],
-// 	sizeLimit: Infinity,
-// });
+import {Roles, Setups} from '../../creepSetups/setups';
 
 @profile
 export class WorkerOverlord extends Overlord {
@@ -49,7 +39,7 @@ export class WorkerOverlord extends Overlord {
 
 	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.work) {
 		super(colony, 'worker', priority);
-		this.workers = this.zerg(WorkerSetup.role);
+		this.workers = this.zerg(Roles.worker);
 		// Fortification structures
 		this.fortifyStructures = $.structures(this, 'fortifyStructures', () =>
 			_.sortBy(_.filter(this.room.barriers, s =>
@@ -119,7 +109,7 @@ export class WorkerOverlord extends Overlord {
 
 	init() {
 		// const setup = this.colony.stage == ColonyStage.Larva ? WorkerEarlySetup : WorkerSetup;
-		const setup = WorkerSetup;
+		const setup = Setups.worker;
 		const workPartsPerWorker = setup.getBodyPotential(WORK, this.colony);
 		let numWorkers: number;
 		if (this.colony.stage == ColonyStage.Larva) {

@@ -6,7 +6,7 @@ import {Mem} from '../memory/Memory';
 import {getCacheExpiration, minBy} from '../utilities/utils';
 import {Colony, getAllColonies} from '../Colony';
 import {Pathing} from '../movement/Pathing';
-import {bodyCost} from '../overlords/CreepSetup';
+import {bodyCost} from '../creepSetups/CreepSetup';
 import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
 

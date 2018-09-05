@@ -1,4 +1,4 @@
-export var RESOURCE_IMPORTANCE = [
+export const RESOURCE_IMPORTANCE = [
 	RESOURCE_CATALYZED_GHODIUM_ALKALIDE,
 	RESOURCE_CATALYZED_GHODIUM_ACID,
 	RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE,
@@ -50,7 +50,7 @@ export var RESOURCE_IMPORTANCE = [
 	RESOURCE_ENERGY,
 ];
 
-export var REAGENTS: { [product: string]: [ResourceConstant, ResourceConstant] } = {
+export const REAGENTS: { [product: string]: [ResourceConstant, ResourceConstant] } = {
 	// Tier 3
 	[RESOURCE_CATALYZED_GHODIUM_ALKALIDE]  : [RESOURCE_GHODIUM_ALKALIDE, RESOURCE_CATALYST],
 	[RESOURCE_CATALYZED_GHODIUM_ACID]      : [RESOURCE_GHODIUM_ACID, RESOURCE_CATALYST],
@@ -91,7 +91,7 @@ export var REAGENTS: { [product: string]: [ResourceConstant, ResourceConstant] }
 	[RESOURCE_UTRIUM_LEMERGITE]            : [RESOURCE_UTRIUM, RESOURCE_LEMERGIUM]
 };
 
-export var boostParts: { [boostType: string]: BodyPartConstant } = {
+export const boostParts: { [boostType: string]: BodyPartConstant } = {
 
 	'UH': ATTACK,
 	'UO': WORK,
@@ -128,7 +128,7 @@ export var boostParts: { [boostType: string]: BodyPartConstant } = {
 
 };
 
-export var boostResources: { [actionName: string]: { [boostLevel: number]: _ResourceConstantSansEnergy } } = {
+export const boostResources: { [actionName: string]: { [boostLevel: number]: _ResourceConstantSansEnergy } } = {
 	'attack'       : {
 		1: 'UH',
 		2: 'UH2O',

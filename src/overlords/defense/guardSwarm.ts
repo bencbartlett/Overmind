@@ -2,22 +2,11 @@
 
 import {Zerg} from '../../zerg/Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {CreepSetup} from '../CreepSetup';
 import {profile} from '../../profiler/decorator';
 import {DirectiveGuard} from '../../directives/defense/guard';
 import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
-
-export class EarlyGuardSetup extends CreepSetup {
-	static role = 'smolGuard';
-
-	constructor() {
-		super(EarlyGuardSetup.role, {
-			pattern  : [MOVE, ATTACK],
-			sizeLimit: 2,
-		});
-	}
-}
+import {CombatSetups, Roles} from '../../creepSetups/setups';
 
 @profile
 export class GuardSwarmOverlord extends Overlord {
@@ -28,7 +17,7 @@ export class GuardSwarmOverlord extends Overlord {
 	constructor(directive: DirectiveGuard, priority = OverlordPriority.defense.guard) {
 		super(directive, 'swarmGuard', priority);
 		this.directive = directive;
-		this.guards = this.combatZerg(EarlyGuardSetup.role);
+		this.guards = this.combatZerg(Roles.guardMelee);
 	}
 
 	private findAttackTarget(guard: Zerg): Creep | Structure | undefined | null {
@@ -59,16 +48,16 @@ export class GuardSwarmOverlord extends Overlord {
 
 	init() {
 		if (this.directive.memory.amount) {
-			this.wishlist(this.directive.memory.amount, new EarlyGuardSetup());
+			this.wishlist(this.directive.memory.amount, CombatSetups.guards.melee_early);
 		}
 		else {
 			if (this.room) {
 				let smallHostiles = _.filter(this.room.dangerousHostiles, creep => creep.body.length < 10);
 				if (smallHostiles.length > 2) {
-					this.wishlist(Math.round(smallHostiles.length), new EarlyGuardSetup());
+					this.wishlist(Math.round(smallHostiles.length), CombatSetups.guards.melee_early);
 				}
 			} else {
-				this.wishlist(2, new EarlyGuardSetup());
+				this.wishlist(2, CombatSetups.guards.melee_early);
 			}
 		}
 	}

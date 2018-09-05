@@ -3,12 +3,7 @@ import {Zerg} from '../../zerg/Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../../directives/Directive';
-import {CreepSetup} from '../CreepSetup';
-
-export const ScoutSetup = new CreepSetup('scout', {
-	pattern  : [MOVE],
-	sizeLimit: 1,
-});
+import {Roles, Setups} from '../../creepSetups/setups';
 
 @profile
 export class StationaryScoutOverlord extends Overlord {
@@ -17,11 +12,13 @@ export class StationaryScoutOverlord extends Overlord {
 
 	constructor(directive: Directive, priority = OverlordPriority.scouting.stationary) {
 		super(directive, 'scout', priority);
-		this.scouts = this.zerg(ScoutSetup.role, false);
+		this.scouts = this.zerg(Roles.scout, {
+			notifyWhenAttacked: false
+		});
 	}
 
 	init() {
-		this.wishlist(1, ScoutSetup);
+		this.wishlist(1, Setups.scout);
 	}
 
 	run() {

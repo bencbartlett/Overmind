@@ -2,9 +2,9 @@ import {Overlord} from '../Overlord';
 import {Zerg} from '../../zerg/Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {ScoutSetup} from './stationary';
 import {Colony} from '../../Colony';
 import {Tasks} from '../../tasks/Tasks';
+import {Roles, Setups} from '../../creepSetups/setups';
 
 const DEFAULT_NUM_SCOUTS = 3;
 
@@ -15,11 +15,11 @@ export class RandomWalkerScoutOverlord extends Overlord {
 
 	constructor(colony: Colony, priority = OverlordPriority.scouting.randomWalker) {
 		super(colony, 'scout', priority);
-		this.scouts = this.zerg(ScoutSetup.role, false);
+		this.scouts = this.zerg(Roles.scout, {notifyWhenAttacked: false});
 	}
 
 	init() {
-		this.wishlist(DEFAULT_NUM_SCOUTS, ScoutSetup);
+		this.wishlist(DEFAULT_NUM_SCOUTS, Setups.scout);
 	}
 
 	private handleScout(scout: Zerg) {

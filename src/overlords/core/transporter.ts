@@ -6,20 +6,9 @@ import {ALL_RESOURCE_TYPE_ERROR, BufferTarget, LogisticsRequest} from '../../log
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {Pathing} from '../../movement/Pathing';
 import {profile} from '../../profiler/decorator';
-import {CreepSetup} from '../CreepSetup';
 import {isResource, isStoreStructure, isTombstone} from '../../declarations/typeGuards';
 import {log} from '../../console/log';
-
-
-export const TransporterSetup = new CreepSetup('transport', {
-	pattern  : [CARRY, CARRY, MOVE],
-	sizeLimit: Infinity,
-});
-
-export const TransporterEarlySetup = new CreepSetup('transport', {
-	pattern  : [CARRY, MOVE],
-	sizeLimit: Infinity,
-});
+import {Roles, Setups} from '../../creepSetups/setups';
 
 
 @profile
@@ -29,7 +18,7 @@ export class TransportOverlord extends Overlord {
 
 	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.transport) {
 		super(colony, 'logistics', priority);
-		this.transporters = this.zerg(TransporterSetup.role);
+		this.transporters = this.zerg(Roles.transport);
 	}
 
 	private neededTransportPower(): number {
@@ -73,7 +62,7 @@ export class TransportOverlord extends Overlord {
 	}
 
 	init() {
-		let setup = this.colony.stage == ColonyStage.Larva ? TransporterEarlySetup : TransporterSetup;
+		let setup = this.colony.stage == ColonyStage.Larva ? Setups.transporters.early : Setups.transporters.default;
 		let transportPowerEach = setup.getBodyPotential(CARRY, this.colony);
 		let neededTransportPower = this.neededTransportPower();
 		let numTransporters = Math.ceil(neededTransportPower / transportPowerEach);
@@ -106,7 +95,7 @@ export class TransportOverlord extends Overlord {
 					// If we need to go to a buffer first to get more stuff
 					let buffer = deref(bestChoice.targetRef) as BufferTarget;
 					let withdrawAmount = Math.min(buffer.store[request.resourceType] || 0,
-						transporter.carryCapacity - _.sum(transporter.carry), amount);
+												  transporter.carryCapacity - _.sum(transporter.carry), amount);
 					task = task.fork(Tasks.withdraw(buffer, request.resourceType, withdrawAmount));
 					if (transporter.hasMineralsInCarry && request.resourceType == RESOURCE_ENERGY) {
 						task = task.fork(Tasks.transferAll(buffer));

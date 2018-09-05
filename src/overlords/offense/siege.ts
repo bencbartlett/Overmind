@@ -4,19 +4,11 @@ import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/siegeTarget';
 import {DirectiveSiege} from '../../directives/offense/siege';
 import {profile} from '../../profiler/decorator';
-import {CreepSetup} from '../CreepSetup';
 import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
+import {CombatSetups, Roles} from '../../creepSetups/setups';
 
-const SiegerSetup = new CreepSetup('sieger', {
-	pattern  : [WORK, MOVE],
-	sizeLimit: Infinity,
-});
-
-const SiegerSetupWithHeals = new CreepSetup('sieger', {
-	pattern  : [WORK, HEAL, MOVE, MOVE],
-	sizeLimit: Infinity,
-});
+// TODO: this overlord is deprecated and should be updated
 
 @profile
 export class SiegeOverlord extends Overlord {
@@ -29,7 +21,7 @@ export class SiegeOverlord extends Overlord {
 
 	constructor(directive: DirectiveSiege, priority = OverlordPriority.offense.siege) {
 		super(directive, 'siege', priority);
-		this.siegers = this.combatZerg(SiegerSetup.role);
+		this.siegers = this.combatZerg(Roles.dismantler);
 		this.recoveryWaypoint = directive.recoveryWaypoint;
 		this.settings = {
 			retreatHitsPercent: 0.75,
@@ -103,7 +95,7 @@ export class SiegeOverlord extends Overlord {
 	}
 
 	init() {
-		this.wishlist(3, SiegerSetup);
+		this.wishlist(3, CombatSetups.dismantlers.default);
 	}
 
 	run() {

@@ -2,7 +2,7 @@ import {Overlord} from '../Overlord';
 import {Zerg} from '../../zerg/Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {bodyCost, CreepSetup} from '../CreepSetup';
+import {bodyCost, CreepSetup} from '../../creepSetups/CreepSetup';
 import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../../utilities/Cartographer';
 import {DirectiveOutpost} from '../../directives/core/outpost';
 import {DirectiveHarvest} from '../../directives/core/harvest';
@@ -11,28 +11,11 @@ import {$} from '../../caching/GlobalCache';
 import {Pathing} from '../../movement/Pathing';
 import {ColonyStage} from '../../Colony';
 import {maxBy} from '../../utilities/utils';
+import {Roles, Setups} from '../../creepSetups/setups';
 
-export const MinerSetup = new CreepSetup('drone', {
-	pattern  : [WORK, WORK, CARRY, MOVE],
-	sizeLimit: 3,
-});
+export const StandardMinerSetupCost = bodyCost(Setups.drones.miners.standard.generateBody(Infinity));
 
-export const StandardMinerSetup = new CreepSetup('drone', {
-	pattern  : [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE],
-	sizeLimit: 1,
-});
-export const StandardMinerSetupCost = bodyCost(StandardMinerSetup.generateBody(Infinity));
-
-export const DoubleMinerSetup = new CreepSetup('drone', {
-	pattern  : [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE],
-	sizeLimit: 2,
-});
-export const DoubleMinerSetupCost = bodyCost(StandardMinerSetup.generateBody(Infinity));
-
-export const SKMinerSetup = new CreepSetup('drone', {
-	pattern  : [WORK, WORK, CARRY, MOVE],
-	sizeLimit: 5,
-});
+export const DoubleMinerSetupCost = bodyCost(Setups.drones.miners.double.generateBody(Infinity));
 
 
 const BUILD_OUTPUT_FREQUENCY = 15;
@@ -64,7 +47,7 @@ export class MiningOverlord extends Overlord {
 		super(directive, 'mine', priority);
 		this.directive = directive;
 		this.priority += this.outpostIndex * OverlordPriority.remoteRoom.roomIncrement;
-		this.miners = this.zerg(MinerSetup.role);
+		this.miners = this.zerg(Roles.drone);
 		// Populate structures
 		this.populateStructures();
 		// Compute energy output
@@ -79,16 +62,16 @@ export class MiningOverlord extends Overlord {
 		// Decide operating mode
 		if (Cartographer.roomType(this.pos.roomName) == ROOMTYPE_SOURCEKEEPER) {
 			this.mode = 'SK';
-			this.setup = SKMinerSetup;
+			this.setup = Setups.drones.miners.sourceKeeper;
 		} else if (this.colony.room.energyCapacityAvailable < StandardMinerSetupCost) {
 			this.mode = 'early';
-			this.setup = MinerSetup;
+			this.setup = Setups.drones.miners.default;
 		} else if (this.link) {
 			this.mode = 'link';
-			this.setup = MinerSetup;
+			this.setup = Setups.drones.miners.default;
 		} else {
 			this.mode = 'standard';
-			this.setup = StandardMinerSetup;
+			this.setup = Setups.drones.miners.standard;
 			// todo: double miner condition
 		}
 		const miningPowerEach = this.setup.getBodyPotential(WORK, this.colony);

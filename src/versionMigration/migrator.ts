@@ -27,6 +27,9 @@ export class VersionMigration {
 		if (!this.memory.versions['05Xto051']) {
 			this.migrate_050_051();
 		}
+		if (!this.memory.versions['05Xto051_part2']) {
+			this.migrate_050_051_part2();
+		}
 	}
 
 	static get memory(): VersionMigratorMemory {
@@ -169,7 +172,21 @@ export class VersionMigration {
 		}
 		this.memory.versions['05Xto051'] = true;
 		log.alert(`Genocide complete: suicided ${count} innocent drones.`);
-		log.alert(`Version migration from 0.5.0 -> 0.5.1 completed successfully.`);
+		log.alert(`Version migration from 0.5.0 -> 0.5.1 (part 1) completed successfully.`);
+	}
+
+	static migrate_050_051_part2() {
+		// Destroy all links that aren't hatchery or commandCenter links
+		for (let name in Game.creeps) {
+			const creep = Game.creeps[name];
+			if (creep.memory.role == 'reserver') {
+				creep.memory.role = 'infestor';
+			} else if (creep.memory.role == 'guard') {
+				creep.memory.role = 'broodling';
+			}
+		}
+		this.memory.versions['05Xto051_part2'] = true;
+		log.alert(`Version migration from 0.5.0 -> 0.5.1 (part 2) completed successfully.`);
 	}
 
 }

@@ -5,12 +5,7 @@ import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {CreepSetup} from '../CreepSetup';
-
-export const QueenSetup = new CreepSetup('queen', {
-	pattern  : [CARRY, CARRY, MOVE],
-	sizeLimit: Infinity,
-});
+import {Roles, Setups} from '../../creepSetups/setups';
 
 type rechargeObjectType = StructureStorage
 	| StructureTerminal
@@ -29,7 +24,7 @@ export class QueenOverlord extends Overlord {
 	constructor(hatchery: Hatchery, priority = OverlordPriority.core.queen) {
 		super(hatchery, 'supply', priority);
 		this.hatchery = hatchery;
-		this.queens = this.zerg(QueenSetup.role);
+		this.queens = this.zerg(Roles.queen);
 		this.settings = {
 			refillTowersBelow: 500,
 		};
@@ -38,7 +33,7 @@ export class QueenOverlord extends Overlord {
 	init() {
 		const amount = 1;
 		const prespawn = this.hatchery.spawns.length <= 1 ? 100 : DEFAULT_PRESPAWN;
-		this.wishlist(amount, QueenSetup, {prespawn: prespawn});
+		this.wishlist(amount, Setups.queen, {prespawn: prespawn});
 	}
 
 	private supplyActions(queen: Zerg) {

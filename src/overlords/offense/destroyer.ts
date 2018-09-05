@@ -3,7 +3,6 @@
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/siegeTarget';
 import {DirectiveDestroy} from '../../directives/offense/destroy';
-import {CreepSetup} from '../CreepSetup';
 import {profile} from '../../profiler/decorator';
 import {Movement} from '../../movement/Movement';
 import {Overlord} from '../Overlord';
@@ -11,30 +10,7 @@ import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatTargeting} from '../../targeting/CombatTargeting';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {boostResources} from '../../resources/map_resources';
-
-const AttackerSetup = new CreepSetup('zergling', {
-	pattern  : [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE],
-	sizeLimit: Infinity,
-	ordered  : true
-});
-
-const HealerSetup = new CreepSetup('transfuser', {
-	pattern  : [TOUGH, HEAL, HEAL, MOVE, MOVE, MOVE],
-	sizeLimit: Infinity,
-	ordered  : true
-});
-
-const AttackerSetup_boosted = new CreepSetup('zergling', {
-	pattern  : [TOUGH, TOUGH, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE],
-	sizeLimit: Infinity,
-	ordered  : true
-});
-
-const HealerSetup_boosted = new CreepSetup('transfuser', {
-	pattern  : [TOUGH, TOUGH, HEAL, HEAL, HEAL, HEAL, HEAL, MOVE],
-	sizeLimit: Infinity,
-	ordered  : true
-});
+import {CombatSetups, Roles} from '../../creepSetups/setups';
 
 @profile
 export class DestroyerOverlord extends Overlord {
@@ -51,19 +27,14 @@ export class DestroyerOverlord extends Overlord {
 	constructor(directive: DirectiveDestroy, priority = OverlordPriority.offense.destroy) {
 		super(directive, 'destroy', priority);
 		this.directive = directive;
-		this.attackers = this.combatZerg(AttackerSetup.role);
-		this.healers = this.combatZerg(HealerSetup.role);
-		// Comment out boost lines if you don't want to spawn boosted attackers/healers
-		this.boosts.attacker = [
-			boostResources.attack[3],
-			boostResources.tough[3],
-			boostResources.move[3],
-		];
-		this.boosts.healer = [
-			boostResources.heal[3],
-			boostResources.tough[3],
-			boostResources.move[3],
-		];
+		this.attackers = this.combatZerg(Roles.melee, {
+			notifyWhenAttacked: false,
+			boostWishlist     : [boostResources.attack[3], boostResources.tough[3], boostResources.move[3]]
+		});
+		this.healers = this.combatZerg(Roles.healer, {
+			notifyWhenAttacked: false,
+			boostWishlist     : [boostResources.heal[3], boostResources.tough[3], boostResources.move[3],]
+		});
 	}
 
 	private findTarget(attacker: CombatZerg): Creep | Structure | undefined {
@@ -181,14 +152,16 @@ export class DestroyerOverlord extends Overlord {
 		} else {
 			amount = 1;
 		}
+
 		let attackerPriority = this.attackers.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
+		let attackerSetup = this.canBoostSetup(CombatSetups.zerglings.boosted_T3) ? CombatSetups.zerglings.boosted_T3
+																				  : CombatSetups.zerglings.default;
+		this.wishlist(amount, attackerSetup, {priority: attackerPriority});
+
 		let healerPriority = this.healers.length < this.attackers.length ? this.priority - 0.1 : this.priority + 0.1;
-		this.wishlist(amount, this.boosts.attacker && this.boosts.attacker.includes(boostResources.move[3])
-							  ? AttackerSetup_boosted : AttackerSetup);
-		this.wishlist(amount, this.boosts.healer && this.boosts.healer.includes(boostResources.move[3])
-							  ? HealerSetup_boosted : HealerSetup);
-		this.requestBoosts(this.attackers);
-		this.requestBoosts(this.healers);
+		let healerSetup = this.canBoostSetup(CombatSetups.healers.boosted_T3) ? CombatSetups.healers.boosted_T3
+																			  : CombatSetups.healers.default;
+		this.wishlist(amount, healerSetup, {priority: healerPriority});
 	}
 
 	run() {
