@@ -229,6 +229,12 @@ export class Log {
 		return undefined;
 	}
 
+	public notify(message: string): undefined {
+		this.alert(message);
+		Game.notify(message);
+		return undefined;
+	}
+
 	public info(...args: any[]): undefined {
 		if (this.level >= LogLevels.INFO) {
 			console.log.apply(this, this.buildArguments(LogLevels.INFO).concat([].slice.call(args)));

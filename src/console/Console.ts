@@ -130,7 +130,7 @@ export class OvermindConsole {
 		}
 	}
 
-	static print(...args: any[]): void {
+	static print(...args: any[]): string {
 		for (let arg of args) {
 			let cache: any = [];
 			let msg = JSON.stringify(arg, function (key, value) {
@@ -153,6 +153,7 @@ export class OvermindConsole {
 			cache = null;
 			log.debug(msg);
 		}
+		return 'Done.';
 	}
 
 	static timeit(callback: () => any, repeat = 1): string {

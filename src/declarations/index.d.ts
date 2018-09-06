@@ -12,7 +12,7 @@ declare namespace NodeJS {
 
 		Assimilator: IAssimilator;
 
-		print(...args: any[]): void;
+		print(...args: any[]): string;
 
 		deref(ref: string): RoomObject | null;
 

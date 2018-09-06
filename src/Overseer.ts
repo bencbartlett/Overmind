@@ -281,20 +281,11 @@ export class Overseer {
 		// if (Game.time % DIRECTIVE_CHECK_FREQUENCY == this.colony.id % DIRECTIVE_CHECK_FREQUENCY) {
 		this.placeDirectives();
 		// }
-		// Draw visuals
-		_.forEach(this.directives, directive => directive.visuals());
 	}
 
-	visuals(): void {
+	private drawCreepReport() {
 		const spoopyBugFix = false;
 		let roleOccupancy: { [role: string]: [number, number] } = {};
-		// Handle overlords in decreasing priority
-		// for (let priority in this.overlords) {
-		// 	if (!this.overlords[priority]) continue;
-		// 	for (let overlord of this.overlords[priority]) {
-		//
-		// 	}
-		// }
 
 		for (let overlord of this.overlords) {
 			for (let role in overlord.creepUsageReport) {
@@ -335,5 +326,15 @@ export class Overseer {
 		}
 		const tablePos = new RoomPosition(1, 11.5, this.colony.room.name);
 		Visualizer.infoBox(`${this.colony.name} Creeps`, roledata, tablePos, 7);
+	}
+
+	visuals(): void {
+		for (let directive of this.directives) {
+			directive.visuals();
+		}
+		for (let overlord of this.overlords) {
+			overlord.visuals();
+		}
+		this.drawCreepReport();
 	}
 }

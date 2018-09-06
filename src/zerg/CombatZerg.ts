@@ -9,7 +9,6 @@ interface CombatZergMemory extends CreepMemory {
 	recovering: boolean;
 	lastInDanger: number;
 	partner?: string;
-	retreating?: boolean;
 }
 
 
@@ -27,7 +26,7 @@ export class CombatZerg extends Zerg {
 		});
 	}
 
-	findPartner(partners: CombatZerg[], tickDifference = 600): CombatZerg | undefined {
+	findPartner(partners: CombatZerg[], tickDifference = 750): CombatZerg | undefined {
 		if (this.spawning || !this.ticksToLive) {
 			return;
 		}
@@ -110,6 +109,11 @@ export class CombatZerg extends Zerg {
 		this.debug(`Melee target: ${target}`);
 		if (target) {
 			return this.attack(target);
+		}
+		let structureTarget = CombatTargeting.findBestStructureTargetInRange(this, 1);
+		this.debug(`Melee structure target: ${target}`);
+		if (structureTarget) {
+			return this.attack(structureTarget);
 		}
 	}
 
@@ -207,12 +211,15 @@ export class CombatZerg extends Zerg {
 
 	}
 
-	needsToRecover(hitsThreshold = 0.75): boolean {
+	needsToRecover(hitsThreshold = 0.75, reengageThreshold = 1.0): boolean {
+		let recovering: boolean;
 		if (this.memory.recovering) {
-			return this.hits < this.hitsMax;
+			recovering = this.hits < this.hitsMax * reengageThreshold;
 		} else {
-			return this.hits < this.hitsMax * hitsThreshold;
+			recovering = this.hits < this.hitsMax * hitsThreshold;
 		}
+		this.memory.recovering = recovering;
+		return recovering;
 	}
 
 	recover() {

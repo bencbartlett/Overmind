@@ -2,6 +2,7 @@ import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {StationaryScoutOverlord} from '../../overlords/scouting/stationary';
 import {ControllerAttackerOverlord} from '../../overlords/offense/controllerAttacker';
+import {log} from '../../console/log';
 
 @profile
 export class DirectiveControllerAttack extends Directive {
@@ -24,7 +25,10 @@ export class DirectiveControllerAttack extends Directive {
 	}
 
 	run(): void {
-
+		if (this.room && this.room.controller && this.room.controller.level == 0) {
+			log.notify(`Removing ${this.name} since controller has reached level 0.`);
+			this.remove();
+		}
 	}
 }
 

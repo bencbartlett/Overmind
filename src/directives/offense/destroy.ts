@@ -3,6 +3,7 @@ import {profile} from '../../profiler/decorator';
 import {Visualizer} from '../../visuals/Visualizer';
 import {DestroyerOverlord} from '../../overlords/offense/destroyer';
 import {CombatIntel} from '../../intel/CombatIntel';
+import {log} from '../../console/log';
 
 @profile
 export class DirectiveDestroy extends Directive {
@@ -30,7 +31,7 @@ export class DirectiveDestroy extends Directive {
 	run(): void {
 		// If there are no hostiles left in the room then remove the flag and associated healpoint
 		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
-			Game.notify(`Destroyer mission at ${this.pos.roomName} completed successfully.`);
+			log.notify(`Destroyer mission at ${this.pos.roomName} completed successfully.`);
 			this.remove();
 		}
 	}

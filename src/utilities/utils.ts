@@ -2,6 +2,10 @@
 
 import {alignedNewline, bullet} from './stringConstants';
 
+export function getAllColonyRooms(): Room[] {
+	return _.filter(_.values(Game.rooms), room => room.my);
+}
+
 export function printRoomName(roomName: string): string {
 	return '<a href="#!/room/' + Game.shard.name + '/' + roomName + '">' + roomName + '</a>';
 }

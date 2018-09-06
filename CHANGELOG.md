@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file. The format 
         - This was a fun little project to do in Mathematica; I made a curve simplification algorithm to look at an image and give the minimum number of points to describe its perimeter within a given tolerance (those are all the hard-coded arrays in `logos.ts`)
     - CPU, bucket, and GCL meters drawn
     - Updates to colony creep count visuals
+- New `Segmenter` module manages asynchronous memory segments
+- Added some under-the-hood content for assimilation
 
 ### Changed
 - Improvements to `RangedDefenseOverlord` which utilize some of the new combat logic developed for SK mining
@@ -25,10 +27,14 @@ All notable changes to this project will be documented in this file. The format 
     - `Colony.registerRoomObjects` now uses more caching and is less expensive
     - Improvements to `MiningSite`, `ExtractionSite`, and `UpgradeSite` to make them more CPU friendly
 - Separated `Overlord` abstract class into `Overlord` and `CombatOverlord` classes
+- Standardized creep setups and role names into a single library for greater consistency and exchangeability
+- Boosts are now assigned by overlords in the constructor phase by passing a `boostWishlist` option in the `zerg()` and `combatZerg()` methods
+- Improvements to destroyer pairs
 
 ### Fixed
 - Bugfix with pioneer recharging behavior to include dropped resources in recharging options
 - Bugfix for incorrectly initialized terminalNetwork memory not logging transfer costs correctly (#38, thanks @MaggNorway!)
+- Various SpawnGroup bugfixes
 
 ### Removed
 - `MiningSite`s and `ExtractionSite`s have been removed; their functionalities have been split among the mining/extraction directives and overlords

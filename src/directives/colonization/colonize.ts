@@ -54,9 +54,7 @@ export class DirectiveColonize extends Directive {
 			this.remove();
 		}
 		if (Game.time % 10 == 2 && this.room && this.room.owner != MY_USERNAME) {
-			let msg = `Removing Colonize directive in ${this.pos.roomName}: room already owned by another player.`;
-			log.alert(msg);
-			Game.notify(msg);
+			log.notify(`Removing Colonize directive in ${this.pos.roomName}: room already owned by another player.`);
 			this.remove();
 		}
 	}

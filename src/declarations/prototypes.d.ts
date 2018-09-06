@@ -46,6 +46,7 @@ interface Room {
 	dangerousPlayerHostiles: Creep[];
 	fleeDefaults: HasPos[];
 	hostileStructures: Structure[];
+	structures: Structure[];
 	flags: Flag[];
 	// Cached structures
 	tombstones: Tombstone[];

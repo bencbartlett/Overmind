@@ -185,8 +185,13 @@ export class CommandCenterOverlord extends Overlord {
 	private deathActions(manager: Zerg): boolean {
 		let nearbyManagers = _.filter(this.managers, manager => manager.pos.inRangeTo(this.commandCenter.pos, 3));
 		if (nearbyManagers.length > 1) {
-			if (_.sum(manager.carry) == 0 && this.managers.length > 0) {
-				manager.suicide();
+			if (_.sum(manager.carry) == 0) {
+				let nearbySpawn = _.first(manager.pos.findInRange(manager.room.spawns, 1));
+				if (nearbySpawn) {
+					nearbySpawn.recycleCreep(manager.creep);
+				} else {
+					manager.suicide();
+				}
 			} else {
 				manager.task = Tasks.transferAll(this.depositTarget);
 			}
@@ -197,7 +202,7 @@ export class CommandCenterOverlord extends Overlord {
 
 	private handleManager(manager: Zerg): void {
 		// Handle switching to next manager
-		if (manager.ticksToLive! < 50) {
+		if (manager.ticksToLive! < 150) {
 			if (this.deathActions(manager)) return;
 		}
 		// Pick up any dropped resources on ground

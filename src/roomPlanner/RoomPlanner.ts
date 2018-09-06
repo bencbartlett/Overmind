@@ -542,6 +542,9 @@ export class RoomPlanner {
 			let maxRemoved = priority.maxRemoved || Infinity;
 			let removeCount = 0;
 			let structures = _.filter(this.colony.room.find(FIND_STRUCTURES), s => s.structureType == structureType);
+			if (structureType == STRUCTURE_WALL) {
+				structures = _.filter(structures, wall => wall.hits != undefined); // can't destroy newbie walls
+			}
 			// let dismantleCount = _.filter(structures,
 			// 							  s => _.filter(s.pos.lookFor(LOOK_FLAGS),
 			// 											flag => DirectiveDismantle.filter(flag)).length > 0).length;

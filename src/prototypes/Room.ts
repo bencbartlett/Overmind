@@ -140,6 +140,17 @@ Object.defineProperty(Room.prototype, 'fleeDefaults', {
 	configurable: true,
 });
 
+// Hostile structures currently in the room
+Object.defineProperty(Room.prototype, 'structures', {
+	get() {
+		if (!this._allStructures) {
+			this._allStructures = this.find(FIND_STRUCTURES);
+		}
+		return this._allStructures;
+	},
+	configurable: true,
+});
+
 
 // Hostile structures currently in the room
 Object.defineProperty(Room.prototype, 'hostileStructures', {

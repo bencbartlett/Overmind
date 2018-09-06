@@ -44,9 +44,7 @@ export class Strategist implements IStrategist {
 		if (roomName) {
 			let pos = Pathing.findPathablePosition(roomName);
 			DirectiveColonize.createIfNotPresent(pos, 'room');
-			let msg = `Room ${roomName} selected as next colony! Creating colonization directive.`;
-			log.alert(msg);
-			Game.notify(msg);
+			log.notify(`Room ${roomName} selected as next colony! Creating colonization directive.`);
 		}
 	}
 

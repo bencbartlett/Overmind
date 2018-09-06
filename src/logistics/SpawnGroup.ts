@@ -3,8 +3,7 @@
 
 import {Hatchery, SpawnRequest} from '../hiveClusters/hatchery';
 import {Mem} from '../memory/Memory';
-import {getCacheExpiration, minBy} from '../utilities/utils';
-import {Colony, getAllColonies} from '../Colony';
+import {getAllColonyRooms, getCacheExpiration, minBy} from '../utilities/utils';
 import {Pathing} from '../movement/Pathing';
 import {bodyCost} from '../creepSetups/CreepSetup';
 import {log} from '../console/log';
@@ -30,16 +29,15 @@ const SpawnGroupMemoryDefaults: SpawnGroupMemory = {
 
 const MAX_LINEAR_DISTANCE = 10; // maximum linear distance to search for any spawn group
 const MAX_PATH_DISTANCE = 600;	// maximum path distance for any spawn group
+const DEFAULT_RECACHE_TIME = 2000;
 
 const defaultSettings: SpawnGroupSettings = {
 	maxPathDistance: 250,		// override default path distance
-	recacheTime    : 2500,
 	requiredRCL    : 7,
 };
 
 export interface SpawnGroupSettings {
 	maxPathDistance: number,
-	recacheTime: number,
 	requiredRCL: number,
 }
 
@@ -54,10 +52,9 @@ export class SpawnGroup {
 
 	memory: SpawnGroupMemory;
 	requests: SpawnRequest[];
-	hatcheries: Hatchery[];
-	energyCapacityAvailable: number;
-	// room: Room | undefined;
 	roomName: string;
+	colonyNames: string[];
+	energyCapacityAvailable: number;
 	ref: string;
 	settings: SpawnGroupSettings;
 	stats: {
@@ -69,15 +66,21 @@ export class SpawnGroup {
 		// this.room = initializer.room;
 		this.memory = Mem.wrap(Memory.rooms[this.roomName], 'spawnGroup', SpawnGroupMemoryDefaults);
 		this.ref = initializer.ref + ':SG';
-		// Calculate max energy capacity available to spawn group
-		let colonyRooms = _.compact(_.map(this.memory.colonies, name => Game.rooms[name]));
-		this.energyCapacityAvailable = _.max(_.map(colonyRooms, room => room.energyCapacityAvailable));
 		this.stats = {
 			avgDistance: (_.sum(this.memory.distances) / _.keys(this.memory.distances).length) || 100,
 		};
 		this.requests = [];
-		// this.hatcheries = [];
 		this.settings = _.defaults(settings, defaultSettings) as SpawnGroupSettings;
+		if (Game.time > this.memory.expiration) {
+			this.recalculateColonies();
+		}
+		// Compute stats
+		this.colonyNames = _.filter(this.memory.colonies,
+									roomName => this.memory.distances[roomName] <= this.settings.maxPathDistance &&
+												Game.rooms[roomName] && Game.rooms[roomName].my &&
+												Game.rooms[roomName].controller!.level >= this.settings.requiredRCL);
+		this.energyCapacityAvailable = _.max(_.map(this.colonyNames,
+												   roomName => Game.rooms[roomName].energyCapacityAvailable));
 		Overmind.spawnGroups[this.ref] = this;
 	}
 
@@ -87,29 +90,30 @@ export class SpawnGroup {
 		this.requests = [];
 	}
 
-	private recalculateColonies() {
-		let coloniesInRange = _.filter(getAllColonies(), col =>
-			Game.map.getRoomLinearDistance(col.pos.roomName, this.roomName) <= MAX_LINEAR_DISTANCE);
+	private recalculateColonies() { // don't use settings when recalculating colonies as spawnGroups share memory
+		let roomsInRange = _.filter(getAllColonyRooms(), room =>
+			Game.map.getRoomLinearDistance(room.name, this.roomName) <= MAX_LINEAR_DISTANCE);
 		let colonies = [] as string[];
 		let routes = {} as { [colonyName: string]: { [roomName: string]: boolean } };
 		// let paths = {} as { [colonyName: string]: { startPos: RoomPosition, path: string[] } };
 		let distances = {} as  { [colonyName: string]: number };
-		for (let colony of coloniesInRange) {
-			if (!colony.hatchery) continue;
-			let route = Pathing.findRoute(colony.pos.roomName, this.roomName);
-			let path = Pathing.findPathToRoom(colony.pos, this.roomName, {route: route});
+		for (let room of roomsInRange) {
+			if (room.spawns.length == 0) continue;
+			let route = Pathing.findRoute(room.name, this.roomName);
+			let path = Pathing.findPathToRoom((room.spawns[0] || room.storage || room.controller!).pos,
+											  this.roomName, {route: route});
 			if (route && !path.incomplete && path.path.length <= MAX_PATH_DISTANCE) {
-				colonies.push(colony.name);
-				routes[colony.name] = route;
-				// paths[colony.name] = path.path;
-				distances[colony.name] = path.path.length;
+				colonies.push(room.name);
+				routes[room.name] = route;
+				// paths[room.name] = path.path;
+				distances[room.name] = path.path.length;
 			}
 		}
 		this.memory.colonies = colonies;
 		this.memory.routes = routes;
 		// this.memory.paths = TODO
 		this.memory.distances = distances;
-		this.memory.expiration = getCacheExpiration(this.settings.recacheTime, 25);
+		this.memory.expiration = getCacheExpiration(DEFAULT_RECACHE_TIME, 25);
 	}
 
 	enqueue(request: SpawnRequest): void {
@@ -119,20 +123,13 @@ export class SpawnGroup {
 	/* SpawnGroup.init() must be called AFTER all hatcheries have been initialized */
 	init(): void {
 		// Most initialization needs to be done at init phase because colonies are still being constructed earlier
-		if (Game.time > this.memory.expiration) {
-			this.recalculateColonies();
-		}
-		let colonies = _.filter(_.map(_.filter(this.memory.colonies,
-											   name => this.memory.distances[name] <= this.settings.maxPathDistance),
-									  name => Overmind.colonies[name]) as Colony[],
-								col => !!col && col.level >= this.settings.requiredRCL);
-		this.hatcheries = _.compact(_.map(colonies, colony => colony.hatchery)) as Hatchery[];
+		const hatcheries = _.compact(_.map(this.colonyNames, name => Overmind.colonies[name].hatchery)) as Hatchery[];
 		const distanceTo = (hatchery: Hatchery) => this.memory.distances[hatchery.pos.roomName] + 25;
 		// Enqueue all requests to the hatchery with least expected wait time that can spawn full-size creep
 		for (let request of this.requests) {
 			let cost = bodyCost(request.setup.generateBody(this.energyCapacityAvailable));
-			let hatcheries = _.filter(this.hatcheries, hatchery => hatchery.room.energyCapacityAvailable >= cost);
-			let bestHatchery = minBy(hatcheries, hatchery => hatchery.nextAvailability + distanceTo(hatchery));
+			let okHatcheries = _.filter(hatcheries, hatchery => hatchery.room.energyCapacityAvailable >= cost);
+			let bestHatchery = minBy(okHatcheries, hatchery => hatchery.nextAvailability + distanceTo(hatchery));
 			if (bestHatchery) {
 				bestHatchery.enqueue(request);
 			} else {
@@ -142,7 +139,7 @@ export class SpawnGroup {
 	}
 
 	run(): void {
-
+		// Nothing goes here
 	}
 
 }

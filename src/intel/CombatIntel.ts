@@ -439,19 +439,19 @@ export class CombatIntel {
 		let [range, direction] = _.first(_.sortBy(rangesToExit, pair => pair[0]));
 		switch (direction) {
 			case 'left':
-				x = 48;
+				x = 47;
 				roomName = Cartographer.findRelativeRoomName(roomName, -1, 0);
 				break;
 			case 'right':
-				x = 1;
+				x = 2;
 				roomName = Cartographer.findRelativeRoomName(roomName, 1, 0);
 				break;
 			case 'top':
-				y = 48;
+				y = 47;
 				roomName = Cartographer.findRelativeRoomName(roomName, 0, -1);
 				break;
 			case 'bottom':
-				y = 1;
+				y = 2;
 				roomName = Cartographer.findRelativeRoomName(roomName, 0, 1);
 				break;
 			default:

@@ -1,4 +1,4 @@
-import {AttackStructurePriorities} from '../priorities/priorities_structures';
+import {AttackStructurePriorities, AttackStructureScores} from '../priorities/priorities_structures';
 import {Pathing} from '../movement/Pathing';
 import {Zerg} from '../zerg/Zerg';
 import {maxBy} from '../utilities/utils';
@@ -14,6 +14,17 @@ export class CombatTargeting {
 			if (hostile.hitsPredicted == undefined) hostile.hitsPredicted = hostile.hits;
 			if (hostile.pos.lookForStructure(STRUCTURE_RAMPART)) return false;
 			return hostile.hitsMax - hostile.hitsPredicted + CombatIntel.getHealPotential(hostile); // compute score
+		});
+	}
+
+	/* Finds the best target within a given range that a zerg can currently attack */
+	static findBestStructureTargetInRange(zerg: Zerg, range: number,
+										  possibleTargets = zerg.room.hostileStructures): Structure | undefined {
+		let nearbyStructures = zerg.pos.findInRange(possibleTargets, range);
+		return maxBy(nearbyStructures, function (structure) {
+			let score = 10 * AttackStructureScores[structure.structureType];
+			if (structure.pos.lookForStructure(STRUCTURE_RAMPART)) score *= .1;
+			return score;
 		});
 	}
 
