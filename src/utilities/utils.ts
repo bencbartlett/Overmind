@@ -10,6 +10,11 @@ export function printRoomName(roomName: string): string {
 	return '<a href="#!/room/' + Game.shard.name + '/' + roomName + '">' + roomName + '</a>';
 }
 
+// Correct generalization of the modulo operator to negative numbers
+export function mod(n: number, m: number): number {
+	return ((n % m) + m) % m;
+}
+
 export function minMax(value: number, min: number, max: number): number {
 	return Math.max(Math.min(value, max), min);
 }

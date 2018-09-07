@@ -73,9 +73,9 @@ export class TerminalNetwork implements ITerminalNetwork {
 			maxEnergySendSize : 25000,
 			maxMineralSendSize: 5000,
 			tolerance         : {
-				[RESOURCE_ENERGY]: 50000,
-				[RESOURCE_POWER] : 5000,
-				default          : 2000
+				[RESOURCE_ENERGY]: 150000,
+				[RESOURCE_POWER] : 2000,
+				default          : 5000
 			} as { [resourceType: string]: number },
 			resources         : [
 				RESOURCE_ENERGY,

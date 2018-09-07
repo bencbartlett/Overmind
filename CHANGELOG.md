@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. The format 
 - Huge persistence update: much of the Overmind architecture now persists on global between ticks! This saves a ton of CPU that was previously used toward garbage collection.
     - The global `Overmind` object is now rebuilt every 20 ticks; in the meantime, `refresh()` is called
     - Colonies, HiveClusters, Directives, Overlords, and Zerg are also persistent
+    - Parsed memory is saved each tick and restored the following tick to avoid `JSON.parse()` costs
     - You can expect massive CPU savings, along with decreased CPU variabiity from this update
 - Added caching methods `$.set()` and `$.refresh()`
 - Lots of new content added to the `Visualizer`!
@@ -16,6 +17,7 @@ All notable changes to this project will be documented in this file. The format 
     - Updates to colony creep count visuals
 - New `Segmenter` module manages asynchronous memory segments
 - Added some under-the-hood content for assimilation
+- Preliminary support for formation-based movement and pathfinding using `Swarm`s
 
 ### Changed
 - Improvements to `RangedDefenseOverlord` which utilize some of the new combat logic developed for SK mining

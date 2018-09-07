@@ -2,7 +2,7 @@ import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
 import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
 import {Zerg} from '../zerg/Zerg';
-import {MoveOptions} from './Movement';
+import {MoveOptions, SwarmMoveOptions} from './Movement';
 import {hasPos} from '../declarations/typeGuards';
 import {normalizePos} from './helpers';
 import {$} from '../caching/GlobalCache';
@@ -45,7 +45,7 @@ export class Pathing {
 				room.memory.avoid = true;
 			} else {
 				delete room.memory.avoid;
-				if (room.memory.expansionData == false) delete room.memory.expansionData;
+				// if (room.memory.expansionData == false) delete room.memory.expansionData;
 			}
 		}
 	}
@@ -105,6 +105,24 @@ export class Pathing {
 		return ret;
 	}
 
+	/* Find a path from origin to destination */
+	static findSwarmPath(origin: RoomPosition, destination: RoomPosition, width: number, height: number,
+						 options: SwarmMoveOptions = {}): PathFinderPath {
+		_.defaults(options, {
+			ignoreCreeps: true,
+			maxOps      : 2 * DEFAULT_MAXOPS,
+			range       : 2,
+		});
+		let cback = (roomName: string) => this.swarmRoomCallback(roomName, origin, destination, width, height, options);
+		return PathFinder.search(origin, {pos: destination, range: options.range!}, {
+			maxOps      : options.maxOps,
+			maxRooms    : options.maxRooms,
+			plainCost   : 1,
+			swampCost   : 5,
+			roomCallback: cback,
+		});
+	}
+
 	/* Returns the shortest path from start to end position, regardless of (passable) terrain */
 	static findShortestPath(startPos: RoomPosition, endPos: RoomPosition,
 							options: MoveOptions = {}): PathFinderPath {
@@ -148,6 +166,16 @@ export class Pathing {
 			}
 		} else { // have no vision
 			return this.getCostMatrixForInvisibleRoom(roomName, options);
+		}
+	}
+
+	static swarmRoomCallback(roomName: string, origin: RoomPosition, destination: RoomPosition,
+							 width: number, height: number, options: SwarmMoveOptions): CostMatrix | boolean {
+		const room = Game.rooms[roomName];
+		if (room) {
+			return this.getSwarmCostMatrix(room, width, height, options, false);
+		} else {
+			return this.getTerrainMatrix(roomName);
 		}
 	}
 
@@ -218,48 +246,7 @@ export class Pathing {
 								 });
 	}
 
-	// Cost matrix computations ========================================================================================
-
-	static setCostsInRange(matrix: CostMatrix, pos: RoomPosition | HasPos, range: number, cost = 30, add = false) {
-		pos = normalizePos(pos);
-		for (let dx = -range; dx <= range; dx++) {
-			let x = pos.x + dx;
-			if (x < 0 || x > 49) continue;
-			for (let dy = -range; dy <= range; dy++) {
-				let y = pos.y + dy;
-				if (y < 0 || y > 49) continue;
-				let terrain = Game.map.getTerrainAt(x, y, pos.roomName);
-				if (terrain === 'wall') {
-					continue;
-				}
-				let currentCost = matrix.get(x, y);
-				if (currentCost === 0) {
-					if (terrain === 'plain') {
-						currentCost += 2;
-					} else {
-						currentCost += 10;
-					}
-				}
-				if (currentCost >= 0xff || currentCost > cost) continue;
-				matrix.set(x, y, add ? Math.min(cost + currentCost, 200) : cost);
-			}
-		}
-	}
-
-
-	static blockExits(matrix: CostMatrix, rangeToEdge = 0, roomName?: string): void {
-		for (let x = rangeToEdge; x < 50 - rangeToEdge; x += 49 - rangeToEdge * 2) {
-			for (let y = rangeToEdge; y < 50 - rangeToEdge; y++) {
-				matrix.set(x, y, 0xff);
-			}
-		}
-		for (let x = rangeToEdge; x < 50 - rangeToEdge; x++) {
-			for (let y = rangeToEdge; y < 50 - rangeToEdge; y += 49 - rangeToEdge * 2) {
-				matrix.set(x, y, 0xff);
-			}
-		}
-	}
-
+	// Cost matrix retrieval functions =================================================================================
 
 	/* Get a cloned copy of the cost matrix for a room with specified options */
 	static getCostMatrix(room: Room, options: MoveOptions, clone = true): CostMatrix {
@@ -283,6 +270,26 @@ export class Pathing {
 					matrix.set(obstacle.x, obstacle.y, 0xff);
 				}
 			}
+		}
+		if (clone) {
+			matrix = matrix.clone();
+		}
+		return matrix;
+	}
+
+	/* Get a cloned copy of the cost matrix for a room with specified options */
+	static getSwarmCostMatrix(room: Room, width: number, height: number,
+							  options: SwarmMoveOptions, clone = true): CostMatrix {
+		let matrix = $.costMatrix(room.name, `swarm${width}x${height}`, () => {
+			let mat = this.getTerrainMatrix(room.name).clone();
+			this.blockImpassibleStructures(mat, room);
+			this.setExitCosts(mat, room.name, options.exitCost || 10);
+			this.applyMovingMaximum(mat, width, height);
+			return mat;
+		}, 25);
+		if (options.ignoreCreeps == false) {
+			matrix = matrix.clone();
+			this.blockHostileCreeps(matrix, room); // todo: need to smear again?
 		}
 		if (clone) {
 			matrix = matrix.clone();
@@ -316,6 +323,30 @@ export class Pathing {
 		return matrix || true;
 	}
 
+	// Cost matrix generation functions ================================================================================
+
+	/* Get a matrix of explicit terrain values for a room */
+	static getTerrainMatrix(roomName: string, costs: TerrainCosts = {plainCost: 1, swampCost: 5}): CostMatrix {
+		return $.costMatrix(roomName, `terrain:${costs.plainCost}:${costs.swampCost}`, () => {
+			let matrix = new PathFinder.CostMatrix();
+			for (let y = 0; y < 50; ++y) {
+				for (let x = 0; x < 50; ++x) {
+					switch (Game.map.getTerrainAt(x, y, roomName)) {
+						case 'plain':
+							matrix.set(x, y, costs.plainCost);
+							break;
+						case 'swamp':
+							matrix.set(x, y, costs.swampCost);
+							break;
+						case 'wall':
+							matrix.set(x, y, 0xff);
+							break;
+					}
+				}
+			}
+			return matrix;
+		}, 10000);
+	}
 
 	/* Default matrix for a room, setting impassable structures and constructionSites to impassible */
 	static getDefaultMatrix(room: Room): CostMatrix {
@@ -364,7 +395,6 @@ export class Pathing {
 		});
 	}
 
-
 	/* Avoids creeps in a room */
 	static getCreepMatrix(room: Room, fromMatrix?: CostMatrix): CostMatrix {
 		if (room._creepMatrix) {
@@ -374,45 +404,6 @@ export class Pathing {
 		_.forEach(room.find(FIND_CREEPS), c => matrix.set(c.pos.x, c.pos.y, CREEP_COST)); // don't block off entirely
 		room._creepMatrix = matrix;
 		return room._creepMatrix;
-	}
-
-	/* Sets impassible structure positions to 0xff */
-	static blockImpassibleStructures(matrix: CostMatrix, room: Room): void {
-		_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
-			if (!s.isWalkable) {
-				matrix.set(s.pos.x, s.pos.y, 0xff);
-			}
-		});
-	}
-
-	/* Sets hostile creep positions to impassible */
-	static blockHostileCreeps(matrix: CostMatrix, room: Room): void {
-		_.forEach(room.hostiles, hostile => {
-			matrix.set(hostile.pos.x, hostile.pos.y, CREEP_COST);
-		});
-	}
-
-	/* Sets all creep positions to impassible */
-	static blockAllCreeps(matrix: CostMatrix, room: Room): void {
-		_.forEach(room.find(FIND_CREEPS), hostile => {
-			matrix.set(hostile.pos.x, hostile.pos.y, CREEP_COST);
-		});
-	}
-
-	/* Sets road positions to 1 if cost is less than 0xfe */
-	static preferRoads(matrix: CostMatrix, room: Room): void {
-		_.forEach(room.roads, road => {
-			if (matrix.get(road.pos.x, road.pos.y) < 0xfe) {
-				matrix.set(road.pos.x, road.pos.y, 1);
-			}
-		});
-	}
-
-	/* Sets road positions to 1 if cost is less than 0xfe */
-	static preferRamparts(matrix: CostMatrix, room: Room): void {
-		_.forEach(room.walkableRamparts, rampart => {
-			matrix.set(rampart.pos.x, rampart.pos.y, 1);
-		});
 	}
 
 	/* Kites around hostile creeps in a room */
@@ -436,27 +427,6 @@ export class Pathing {
 		room._kitingMatrix = matrix;
 		return room._kitingMatrix;
 	}
-
-
-	// /* Avoids creeps that shouldn't be pushed in a room */ // TODO: plug in
-	// private static getPrioritizedCreepMatrix(room: Room, priority: number): CostMatrix {
-	// 	if (!room._priorityMatrices) {
-	// 		room._priorityMatrices = {};
-	// 	}
-	// 	if (room._priorityMatrices[priority]) {
-	// 		return room._priorityMatrices[priority];
-	// 	}
-	// 	const matrix = this.getDefaultMatrix(room).clone();
-	// 	let otherPriority = MovePriorities.default;
-	// 	for (let creep of room.creeps) {
-	// 		if (!Movement.shouldPush(creep, priority)) {
-	// 			matrix.set(creep.pos.x, creep.pos.y, 0xff);
-	// 		}
-	// 	}
-	// 	room._priorityMatrices[priority] = matrix;
-	// 	return room._priorityMatrices[priority];
-	// }
-
 
 	/* Avoids source keepers in a room */
 	private static getSkMatrix(room: Room): CostMatrix {
@@ -498,6 +468,139 @@ export class Pathing {
 	// 	return matrix;
 	// }
 
+	// In-place CostMatrix manipulation routines =======================================================================
+
+	/* Sets impassible structure positions to 0xff */
+	static blockImpassibleStructures(matrix: CostMatrix, room: Room) {
+		_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
+			if (!s.isWalkable) {
+				matrix.set(s.pos.x, s.pos.y, 0xff);
+			}
+		});
+	}
+
+	/* Sets hostile creep positions to impassible */
+	static blockHostileCreeps(matrix: CostMatrix, room: Room) {
+		_.forEach(room.hostiles, hostile => {
+			matrix.set(hostile.pos.x, hostile.pos.y, CREEP_COST);
+		});
+	}
+
+	/* Sets all creep positions to impassible */
+	static blockAllCreeps(matrix: CostMatrix, room: Room) {
+		_.forEach(room.find(FIND_CREEPS), hostile => {
+			matrix.set(hostile.pos.x, hostile.pos.y, CREEP_COST);
+		});
+	}
+
+	/* Sets road positions to 1 if cost is less than 0xfe */
+	static preferRoads(matrix: CostMatrix, room: Room) {
+		_.forEach(room.roads, road => {
+			if (matrix.get(road.pos.x, road.pos.y) < 0xfe) {
+				matrix.set(road.pos.x, road.pos.y, 1);
+			}
+		});
+	}
+
+	/* Sets walkable rampart positions to 1 if cost is less than 0xfe */
+	static preferRamparts(matrix: CostMatrix, room: Room) {
+		_.forEach(room.walkableRamparts, rampart => {
+			if (matrix.get(rampart.pos.x, rampart.pos.y) < 0xfe) {
+				matrix.set(rampart.pos.x, rampart.pos.y, 1);
+			}
+		});
+	}
+
+	/* Explicitly blocks off walls for a room */
+	static blockImpassibleTerrain(matrix: CostMatrix, roomName: string) {
+		for (let y = 0; y < 50; ++y) {
+			for (let x = 0; x < 50; ++x) {
+				if (Game.map.getTerrainAt(x, y, roomName) == 'wall') {
+					matrix.set(x, y, 0xff);
+				}
+			}
+		}
+	}
+
+	/* Transform a CostMatrix such that the cost at each point is transformed to the max of costs in a width x height
+	 * window (indexed from upper left corner). This requires that terrain be explicitly specified in the matrix! */
+	static applyMovingMaximum(matrix: CostMatrix, width: number, height: number) {
+		// Since we're moving in increasing order of x, y, we don't need to clone the matrix
+		var x, y, dx, dy: number;
+		var maxCost, cost: number;
+		for (x = 0; x < 50 - width; x++) {
+			for (y = 0; y < 50 - height; y++) {
+				maxCost = matrix.get(x, y);
+				for (dx = 0; dx <= width - 1; dx++) {
+					for (dy = 0; dy <= height - 1; dy++) {
+						cost = matrix.get(x + dx, y + dy);
+						if (cost > maxCost) {
+							maxCost = cost;
+						}
+					}
+				}
+				matrix.set(x, y, maxCost);
+			}
+		}
+	}
+
+	static setCostsInRange(matrix: CostMatrix, pos: RoomPosition | HasPos, range: number, cost = 30, add = false) {
+		pos = normalizePos(pos);
+		for (let dx = -range; dx <= range; dx++) {
+			let x = pos.x + dx;
+			if (x < 0 || x > 49) continue;
+			for (let dy = -range; dy <= range; dy++) {
+				let y = pos.y + dy;
+				if (y < 0 || y > 49) continue;
+				let terrain = Game.map.getTerrainAt(x, y, pos.roomName);
+				if (terrain === 'wall') {
+					continue;
+				}
+				let currentCost = matrix.get(x, y);
+				if (currentCost === 0) {
+					if (terrain === 'plain') {
+						currentCost += 2;
+					} else {
+						currentCost += 10;
+					}
+				}
+				if (currentCost >= 0xff || currentCost > cost) continue;
+				matrix.set(x, y, add ? Math.min(cost + currentCost, 200) : cost);
+			}
+		}
+	}
+
+	static blockExits(matrix: CostMatrix, rangeToEdge = 0) {
+		for (let x = rangeToEdge; x < 50 - rangeToEdge; x += 49 - rangeToEdge * 2) {
+			for (let y = rangeToEdge; y < 50 - rangeToEdge; y++) {
+				matrix.set(x, y, 0xff);
+			}
+		}
+		for (let x = rangeToEdge; x < 50 - rangeToEdge; x++) {
+			for (let y = rangeToEdge; y < 50 - rangeToEdge; y += 49 - rangeToEdge * 2) {
+				matrix.set(x, y, 0xff);
+			}
+		}
+	}
+
+	static setExitCosts(matrix: CostMatrix, roomName: string, cost: number, rangeToEdge = 0) {
+		for (let x = rangeToEdge; x < 50 - rangeToEdge; x += 49 - rangeToEdge * 2) {
+			for (let y = rangeToEdge; y < 50 - rangeToEdge; y++) {
+				if (Game.map.getTerrainAt(x, y, roomName) != 'wall') {
+					matrix.set(x, y, cost);
+				}
+			}
+		}
+		for (let x = rangeToEdge; x < 50 - rangeToEdge; x++) {
+			for (let y = rangeToEdge; y < 50 - rangeToEdge; y += 49 - rangeToEdge * 2) {
+				if (Game.map.getTerrainAt(x, y, roomName) != 'wall') {
+					matrix.set(x, y, cost);
+				}
+			}
+		}
+	}
+
+
 	/* Find a viable sequence of rooms to narrow down Pathfinder algorithm */
 	static findRoute(origin: string, destination: string,
 					 options: MoveOptions = {}): { [roomName: string]: boolean } | undefined {
@@ -519,7 +622,6 @@ export class Pathing {
 			// 		highwayBias = 2.5;
 			// 	}
 			// }
-
 		}
 
 		let ret = Game.map.findRoute(origin, destination, {

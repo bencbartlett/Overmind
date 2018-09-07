@@ -1,5 +1,9 @@
 type operationMode = 'manual' | 'semiautomatic' | 'automatic';
 
+interface RawMemory {
+	_parsed: any;
+}
+
 interface Memory {
 	assimilator: any;
 	Overmind: {};

@@ -14,29 +14,28 @@ export var OverlordPriority = {
 		meleeDefense : 200,
 		rangedDefense: 201,
 		guard        : 202,
-		repair       : 203,
 	},
 
 	warSpawnCutoff: 299, 		// Everything past this is non-critical and won't be spawned in case of emergency
 
-	realTime: { 				// Requests that a user is typically actively waiting for in real life
-		claim           : 300,
-		pioneer         : 301,
-		controllerAttack: 399   // Reserved to give controller attacks a high priority
+	offense: {					// Offensive operations like raids or sieges
+		destroy         : 300,
+		healPoint       : 301,
+		siege           : 302,
+		controllerAttack: 399
+	},
+
+	colonization: { 			// Colonizing new rooms
+		claim  : 400,
+		pioneer: 401,
 	},
 
 	ownedRoom: { 				// Operation of an owned room
-		firstTransport: 400,		// High priority to spawn the first transporter
-		mine          : 401,
-		work          : 402,
-		mineral       : 403,
-		transport     : 404,		// Spawn the rest of the transporters
-	},
-
-	offense: {					// Offensive operations like raids or sieges
-		destroy  : 500,
-		healPoint: 501,
-		siege    : 502,
+		firstTransport: 500,		// High priority to spawn the first transporter
+		mine          : 501,
+		work          : 502,
+		mineral       : 503,
+		transport     : 504,		// Spawn the rest of the transporters
 	},
 
 	upgrading: {				// Spawning upgraders

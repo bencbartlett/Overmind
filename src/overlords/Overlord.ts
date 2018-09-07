@@ -28,6 +28,7 @@ export function isColony(initializer: OverlordInitializer | Colony): initializer
 export const DEFAULT_PRESPAWN = 50;
 
 export interface CreepRequestOptions {
+	noLifetimeFilter?: boolean;
 	prespawn?: number;
 	priority?: number;
 	partners?: CreepSetup[];
@@ -37,6 +38,10 @@ export interface CreepRequestOptions {
 interface ZergOptions {
 	notifyWhenAttacked?: boolean;
 	boostWishlist?: _ResourceConstantSansEnergy[] | undefined;
+}
+
+interface OverlordMemory {
+	suspendFor?: number;
 }
 
 @profile
@@ -305,7 +310,12 @@ export abstract class Overlord {
 	/* Wishlist of creeps to simplify spawning logic; includes automatic reporting */
 	protected wishlist(quantity: number, setup: CreepSetup, opts = {} as CreepRequestOptions) {
 		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN});
-		let creepQuantity = this.lifetimeFilter(this._creeps[setup.role] || [], opts.prespawn).length;
+		let creepQuantity: number;
+		if (opts.noLifetimeFilter) {
+			creepQuantity = (this._creeps[setup.role] || []).length;
+		} else {
+			creepQuantity = this.lifetimeFilter(this._creeps[setup.role] || [], opts.prespawn).length;
+		}
 		if (creepQuantity < quantity) {
 			this.requestCreep(setup, opts);
 		}

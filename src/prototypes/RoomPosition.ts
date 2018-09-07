@@ -1,4 +1,5 @@
-import {minBy} from '../utilities/utils';
+import {minBy, mod} from '../utilities/utils';
+import {Cartographer} from '../utilities/Cartographer';
 
 Object.defineProperty(RoomPosition.prototype, 'print', {
 	get() {
@@ -38,6 +39,27 @@ Object.defineProperty(RoomPosition.prototype, 'coordName', { // name, but withou
 RoomPosition.prototype.lookForStructure = function (structureType: StructureConstant): Structure | undefined {
 	return _.find(this.lookFor(LOOK_STRUCTURES), s => s.structureType === structureType);
 };
+
+RoomPosition.prototype.getOffsetPos = function (dx: number, dy: number): RoomPosition {
+	let roomName = this.roomName;
+	let x = this.x + dx;
+	if (x < 0 || x > 49) {
+		let dxRoom = Math.floor(x / 50);
+		x = mod(x, 50);
+		roomName = Cartographer.findRelativeRoomName(roomName, dxRoom, 0);
+	}
+	let y = this.y + dy;
+	if (y < 0 || y > 49) {
+		let dyRoom = Math.floor(y / 50);
+		y = mod(y, 50);
+		roomName = Cartographer.findRelativeRoomName(roomName, 0, dyRoom);
+	}
+	return new RoomPosition(x, y, roomName);
+};
+
+// RoomPosition.prototype.findInRange_fast = function<T extends HasPos>(objects: T[], range: number): T[] {
+// 	return _.filter(objects, o => this.inRangeToXY(o.pos.x, o.pos.y, range));
+// }
 
 Object.defineProperty(RoomPosition.prototype, 'isEdge', { // if the position is at the edge of a room
 	get         : function () {

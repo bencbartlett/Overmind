@@ -79,28 +79,27 @@ function handler(): void {
 		main();
 	}
 }
-
 Assimilator.validate(handler);
+
 global.Overmind = new _Overmind();
 
 // Main loop
 function main(): void {
-	Mem.clean();										// Clean memory
+	Mem.load();														// Load previous parsed memory if present
+	Mem.clean();													// Clean memory contents
 	if (Overmind.shouldBuild || Game.time >= Overmind.expiration) {
-		log.debug(`Rebuilding Overmind object!`);
-		global.Overmind = new _Overmind();				// Instantiate the Overmind
-		Overmind.build();								// Build phase: instantiate caches and colony components
+		global.Overmind = new _Overmind();							// Instantiate the Overmind object
+		Overmind.build();											// Build phase: instantiate all game components
 	} else {
-		Overmind.refresh();
+		Overmind.refresh();											// Refresh phase: update the Overmind state
 	}
-	Overmind.init();									// Init phase: spawning and energy requests
-	Overmind.run();										// Run phase: execute state-changing actions
-	Overmind.visuals(); 								// Draw visuals
-	Stats.run(); 										// Record statistics
-	sandbox();											// Sandbox: run any testing code
-	Overmind.postRun();									// Error catching; should be run at end of every tick
+	Overmind.init();												// Init phase: spawning and energy requests
+	Overmind.run();													// Run phase: execute state-changing actions
+	Overmind.visuals(); 											// Draw visuals
+	Stats.run(); 													// Record statistics
+	sandbox();														// Sandbox: run any testing code
+	Overmind.postRun();												// Error catching is run at end of every tick
 }
-
 Assimilator.validate(main);
 
 
@@ -108,5 +107,4 @@ Assimilator.validate(main);
 export function loop(): void {
 	profiler.wrap(handler);
 }
-
 Assimilator.validate(loop);

@@ -24,9 +24,25 @@ export function getAutonomyLevel(): number {
 	}
 }
 
+let lastMemory: any;
+let lastTime: number = 0;
 
 @profile
 export class Mem {
+
+	/* Attempt to load the parsed memory from a previous tick to avoid parsing costs */
+	static load() {
+		if (lastTime && lastMemory && Game.time == lastTime + 1) {
+			delete global.Memory;
+			global.Memory = lastMemory;
+			RawMemory._parsed = lastMemory;
+		} else {
+			// noinspection TsLint
+			Memory.rooms;
+			lastMemory = RawMemory._parsed;
+		}
+		lastTime = Game.time;
+	}
 
 	static wrap(memory: any, memName: string, defaults = {}, deep = false) {
 		if (!memory[memName]) {

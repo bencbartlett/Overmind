@@ -332,7 +332,8 @@ export class Hatchery extends HiveCluster {
 			}
 			this.productionQueue[priority].push({protoCreep: protoCreep, options: request.options});
 		} else {
-			log.debug(`${this.room.print}: cannot spawn creep ${protoCreep.name} with body ${protoCreep.body}!`);
+			log.debug(`${this.room.print}: cannot spawn creep ${protoCreep.name} with body ` +
+					  `${JSON.stringify(protoCreep.body)}!`);
 		}
 	}
 

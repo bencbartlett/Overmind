@@ -10,11 +10,13 @@ import {insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {isZerg} from '../declarations/typeGuards';
 import {rightArrow} from '../utilities/stringConstants';
 import {Roles} from '../creepSetups/setups';
+import {Swarm} from '../zerg/Swarm';
 
 export const NO_ACTION = -20;
 export const ERR_CANNOT_PUSH_CREEP = -30;
 
 const REPORT_CPU_THRESHOLD = 1000; 	// Report when creep uses more than this amount of CPU over lifetime
+const REPORT_SWARM_CPU_THRESHOLD = 1500;
 
 const DEFAULT_STUCK_VALUE = 2;		// Marked as stuck after this many ticks
 
@@ -38,7 +40,6 @@ export const MovePriorities = {
 
 
 export interface MoveOptions {
-	priority?: number;							// movement priority to determine creep push order
 	direct?: boolean;							// ignore all terrain costs
 	terrainCosts?: {							// terrain costs, determined automatically for creep body if unspecified
 		plainCost: number,							// plain costs; typical: 2
@@ -62,7 +63,22 @@ export interface MoveOptions {
 	repath?: number;							// probability of repathing on a given tick
 	route?: { [roomName: string]: boolean };	// lookup table for allowable pathing rooms
 	ensurePath?: boolean;						// can be useful if route keeps being found as incomplete
+	// noPush?: boolean;							// whether to ignore pushing behavior
 	modifyRoomCallback?: (r: Room, m: CostMatrix) => CostMatrix // modifications to default cost matrix calculations
+}
+
+export interface SwarmMoveOptions {
+	range?: number;
+	ignoreCreeps?: boolean;						// ignore pathing around creeps
+	// restrictDistance?: number;					// restrict the distance of route to this number of rooms
+	exitCost?: number;
+	// useFindRoute?: boolean;						// whether to use the route finder; determined automatically otherwise
+	maxOps?: number;							// pathfinding times out after this many operations
+	stuckValue?: number;						// creep is marked stuck after this many idle ticks
+	maxRooms?: number;							// maximum number of rooms to path through
+	repath?: number;							// probability of repathing on a given tick
+	// route?: { [roomName: string]: boolean };	// lookup table for allowable pathing rooms
+	// ensurePath?: boolean;						// can be useful if route keeps being found as incomplete
 }
 
 export interface CombatMoveOptions {
@@ -99,12 +115,9 @@ export class Movement {
 			return ERR_TIRED;
 		}
 
-		let priority = this.getPushPriority(creep);
-
 		// Set default options
 		_.defaults(options, {
 			ignoreCreeps: true,
-			priority    : priority,
 		});
 
 		destination = normalizePos(destination);
@@ -228,11 +241,13 @@ export class Movement {
 		}
 
 		// push creeps out of the way if needed
+		// if (!options.noPush) {
 		let obstructingCreep = this.findBlockingCreep(creep);
 		if (obstructingCreep && this.shouldPush(creep, obstructingCreep)) {
 			let pushedCreep = this.pushCreep(creep, obstructingCreep);
 			if (!pushedCreep) return ERR_CANNOT_PUSH_CREEP;
 		}
+		// }
 
 		// consume path
 		if (state.stuckCount == 0 && !newPath) {
@@ -240,7 +255,7 @@ export class Movement {
 		}
 		let nextDirection = parseInt(moveData.path[0], 10) as DirectionConstant;
 
-		return creep.move(<DirectionConstant>nextDirection, !!options.force);
+		return creep.move(nextDirection, !!options.force);
 	}
 
 	static getPushPriority(creep: Creep | Zerg): number {
@@ -494,6 +509,7 @@ export class Movement {
 		}
 	}
 
+	/* Moves a pair of creeps; the follower will always attempt to be in the last position of the leader */
 	static pairwiseMove(leader: Zerg, follower: Zerg, target: HasPos | RoomPosition,
 						opts = {} as MoveOptions, allowedRange = 1): number | undefined {
 		let outcome;
@@ -524,6 +540,120 @@ export class Movement {
 			}
 		}
 		return outcome;
+	}
+
+	static swarmMove(swarm: Swarm, destination: HasPos | RoomPosition, options: SwarmMoveOptions = {}): number {
+
+		if (swarm.fatigue > 0) {
+			Movement.circle(swarm.anchor, 'aqua', .3);
+			return ERR_TIRED;
+		}
+
+		// Set default options
+		_.defaults(options, {
+			range       : 2,
+			ignoreCreeps: true,
+			exitCost    : 10,
+		});
+
+		if (options.range! < Math.max(swarm.width, swarm.height)) {
+			log.warning(`Range specified is ${options.range}; not allowable for ${swarm.width}x${swarm.height} swarm!`);
+		}
+
+		destination = normalizePos(destination);
+
+		// initialize data object
+		if (!swarm.memory._go) {
+			swarm.memory._go = {} as MoveData;
+		}
+		let moveData = swarm.memory._go as MoveData;
+
+		// manage case where creep is nearby destination
+		let rangeToDestination = swarm.anchor.getRangeTo(destination);
+		if (rangeToDestination <= options.range!) {
+			delete swarm.memory._go;
+			return NO_ACTION;
+		}
+
+		let state = this.deserializeState(moveData, destination);
+
+		// uncomment to visualize destination
+		// this.circle(destination, "orange");
+
+		// check if swarm is stuck
+		let stuck = false;
+		if (state.lastCoord !== undefined) {
+			if (sameCoord(swarm.anchor, state.lastCoord)) { // didn't move
+				stuck = true;
+			} else if (isExit(swarm.anchor) && isExit(state.lastCoord)) { // moved against exit
+				stuck = true;
+			}
+		}
+		if (stuck) {
+			state.stuckCount++;
+			this.circle(swarm.anchor, 'magenta', state.stuckCount * .3);
+		} else {
+			state.stuckCount = 0;
+		}
+
+		// handle case where creep is stuck
+		if (!options.stuckValue) {
+			options.stuckValue = DEFAULT_STUCK_VALUE;
+		}
+		if (state.stuckCount >= options.stuckValue && Math.random() > .5) {
+			options.ignoreCreeps = false;
+			delete moveData.path;
+		}
+
+		// delete path cache if destination is different
+		if (!destination.isEqualTo(state.destination)) {
+			delete moveData.path;
+		}
+
+		if (options.repath && Math.random() < options.repath) {	// randomly repath with specified probability
+			delete moveData.path;
+		}
+
+		// pathfinding
+		let newPath = false;
+		if (!moveData.path) {
+			newPath = true;
+			state.destination = destination;
+			let cpu = Game.cpu.getUsed();
+			// (!) Pathfinding is done here
+			let ret = Pathing.findSwarmPath(swarm.anchor, destination, swarm.width, swarm.height, options);
+			let cpuUsed = Game.cpu.getUsed() - cpu;
+			state.cpu = _.round(cpuUsed + state.cpu);
+			if (Game.time % 10 == 0 && state.cpu > REPORT_SWARM_CPU_THRESHOLD) {
+				log.alert(`Movement: heavy cpu use for swarm with ${_.first(swarm.creeps).print}, cpu: ${state.cpu}. ` +
+						  `(${swarm.anchor.print} ${rightArrow} ${destination.print})`);
+			}
+			let color = 'orange';
+			if (ret.incomplete) {
+				log.debug(`Movement: incomplete path for swarm with ${_.first(swarm.creeps).print}! ` +
+						  `(${swarm.anchor.print} ${rightArrow} ${destination.print})`);
+				color = 'red';
+			}
+			this.circle(swarm.anchor, color);
+			moveData.path = Pathing.serializePath(swarm.anchor, ret.path, color);
+			state.stuckCount = 0;
+		}
+
+		// Serialize state for swarm
+		moveData.state = [swarm.anchor.x, swarm.anchor.y, state.stuckCount, state.cpu, destination.x, destination.y,
+						  destination.roomName];
+
+		if (!moveData.path || moveData.path.length == 0) {
+			return ERR_NO_PATH;
+		}
+
+		// consume path
+		if (state.stuckCount == 0 && !newPath) {
+			moveData.path = moveData.path.substr(1);
+		}
+		let nextDirection = parseInt(moveData.path[0], 10) as DirectionConstant;
+
+		return swarm.move(nextDirection);
 	}
 
 	private static combatMoveCallbackModifier(room: Room, matrix: CostMatrix,
@@ -650,13 +780,6 @@ export class Movement {
 				}
 			}
 		}
-
-		// // push creeps out of the way if needed
-		// let obstructingCreep = this.findBlockingCreep(creep);
-		// if (pushy && obstructingCreep && this.shouldPush(creep, obstructingCreep)) {
-		// 	let pushedCreep = this.pushCreep(creep, obstructingCreep);
-		// 	if (!pushedCreep) return ERR_CANNOT_PUSH_CREEP;
-		// }
 
 		return outcome;
 	}

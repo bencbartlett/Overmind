@@ -11,7 +11,7 @@ export class ClaimingOverlord extends Overlord {
 
 	claimers: Zerg[];
 
-	constructor(directive: Directive, priority = OverlordPriority.realTime.claim) {
+	constructor(directive: Directive, priority = OverlordPriority.colonization.claim) {
 		super(directive, 'claim', priority);
 		this.claimers = this.zerg(Roles.claim);
 	}

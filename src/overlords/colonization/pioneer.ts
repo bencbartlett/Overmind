@@ -12,7 +12,7 @@ export class PioneerOverlord extends Overlord {
 	pioneers: Zerg[];
 	spawnSite: ConstructionSite | undefined;
 
-	constructor(directive: Directive, priority = OverlordPriority.realTime.pioneer) {
+	constructor(directive: Directive, priority = OverlordPriority.colonization.pioneer) {
 		super(directive, 'pioneer', priority);
 		this.pioneers = this.zerg(Roles.pioneer);
 		this.spawnSite = this.room ? _.filter(this.room.constructionSites,

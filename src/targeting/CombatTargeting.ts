@@ -8,8 +8,8 @@ import {log} from '../console/log';
 export class CombatTargeting {
 
 	/* Finds the best target within a given range that a zerg can currently attack */
-	static findBestTargetInRange(zerg: Zerg, range: number, possibleTargets = zerg.room.hostiles): Creep | undefined {
-		let nearbyHostiles = zerg.pos.findInRange(possibleTargets, range);
+	static findBestCreepTargetInRange(zerg: Zerg, range: number, targets = zerg.room.hostiles): Creep | undefined {
+		let nearbyHostiles = _.filter(targets, c => zerg.pos.inRangeToXY(c.pos.x, c.pos.y, range));
 		return maxBy(nearbyHostiles, function (hostile) {
 			if (hostile.hitsPredicted == undefined) hostile.hitsPredicted = hostile.hits;
 			if (hostile.pos.lookForStructure(STRUCTURE_RAMPART)) return false;
@@ -18,9 +18,14 @@ export class CombatTargeting {
 	}
 
 	/* Finds the best target within a given range that a zerg can currently attack */
-	static findBestStructureTargetInRange(zerg: Zerg, range: number,
-										  possibleTargets = zerg.room.hostileStructures): Structure | undefined {
-		let nearbyStructures = zerg.pos.findInRange(possibleTargets, range);
+	static findBestStructureTargetInRange(zerg: Zerg, range: number, allowUnowned = true): Structure | undefined {
+		let nearbyStructures = _.filter(zerg.room.hostileStructures,
+										s => zerg.pos.inRangeToXY(s.pos.x, s.pos.y, range));
+		// If no owned structures to attack and not in colony room or outpost, target unowned structures
+		if (allowUnowned && nearbyStructures.length == 0 && !Overmind.colonyMap[zerg.room.name]) {
+			nearbyStructures = _.filter(zerg.room.structures,
+										s => zerg.pos.inRangeToXY(s.pos.x, s.pos.y, range));
+		}
 		return maxBy(nearbyStructures, function (structure) {
 			let score = 10 * AttackStructureScores[structure.structureType];
 			if (structure.pos.lookForStructure(STRUCTURE_RAMPART)) score *= .1;
@@ -29,8 +34,8 @@ export class CombatTargeting {
 	}
 
 	/* Standard target-finding logic */
-	static findTarget(zerg: Zerg, possibleTargets = zerg.room.hostiles): Creep | undefined {
-		return maxBy(possibleTargets, function (hostile) {
+	static findTarget(zerg: Zerg, targets = zerg.room.hostiles): Creep | undefined {
+		return maxBy(targets, function (hostile) {
 			if (hostile.hitsPredicted == undefined) hostile.hitsPredicted = hostile.hits;
 			if (hostile.pos.lookForStructure(STRUCTURE_RAMPART)) return false;
 			return hostile.hitsMax - hostile.hitsPredicted + CombatIntel.getHealPotential(hostile)
@@ -132,7 +137,7 @@ export class CombatTargeting {
 		let targets: Structure[] = zerg.room.spawns;
 		if (targets.length == 0) targets = zerg.room.repairables;
 		if (targets.length == 0) targets = zerg.room.barriers;
-		if (targets.length == 0) targets = zerg.room.find(FIND_STRUCTURES);
+		if (targets.length == 0) targets = zerg.room.structures;
 		if (targets.length == 0) return;
 
 		// Recalculate approach targets

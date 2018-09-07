@@ -18,7 +18,7 @@ export class ControllerAttackerOverlord extends Overlord {
 	assignments: { [attackerName: string]: RoomPosition };
 	readyTick: number;
 
-	constructor(directive: DirectiveControllerAttack, priority = OverlordPriority.realTime.controllerAttack) {
+	constructor(directive: DirectiveControllerAttack, priority = OverlordPriority.offense.controllerAttack) {
 		super(directive, 'controllerAttack', priority);
 		this.controllerAttackers = this.zerg(Roles.claim);
 		this.spawnGroup = new SpawnGroup(this, {requiredRCL: 4});
@@ -50,7 +50,7 @@ export class ControllerAttackerOverlord extends Overlord {
 	init() {
 		// TODO: Prespawn attackers to arrive as cooldown disappears
 		if (this.attackPositions.length > 0 && Game.time >= this.readyTick) {
-			this.wishlist(this.attackPositions.length, Setups.infestors.controllerAttacker);
+			this.wishlist(this.attackPositions.length, Setups.infestors.controllerAttacker, {noLifetimeFilter: true});
 		}
 	}
 
@@ -73,9 +73,13 @@ export class ControllerAttackerOverlord extends Overlord {
 	}
 
 	private launchAttack(): void {
+		let signed = false;
 		if (this.room && this.room.controller) {
 			for (let infestor of this.controllerAttackers) {
 				infestor.attackController(this.room.controller);
+				if (!signed) {
+					signed = (infestor.signController(this.room.controller, 'For the swarm') == OK);
+				}
 			}
 		}
 	}

@@ -120,6 +120,8 @@ interface RoomPosition {
 
 	getPositionsInRange(range: number, includeWalls?: boolean, includeEdges?: boolean): RoomPosition[];
 
+	getOffsetPos(dx: number, dy: number): RoomPosition;
+
 	lookFor<T extends keyof AllLookAtTypes>(structureType: T): Array<AllLookAtTypes[T]>;
 
 	lookForStructure(structureType: StructureConstant): Structure | undefined;

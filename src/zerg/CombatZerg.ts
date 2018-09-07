@@ -105,20 +105,17 @@ export class CombatZerg extends Zerg {
 	// Standard action sequences for engaging small numbers of enemies in a neutral room ===============================
 
 	autoMelee(possibleTargets = this.room.hostiles) {
-		let target = CombatTargeting.findBestTargetInRange(this, 1, possibleTargets);
+		let target = CombatTargeting.findBestCreepTargetInRange(this, 1, possibleTargets)
+					 || CombatTargeting.findBestStructureTargetInRange(this, 1);
 		this.debug(`Melee target: ${target}`);
 		if (target) {
 			return this.attack(target);
 		}
-		let structureTarget = CombatTargeting.findBestStructureTargetInRange(this, 1);
-		this.debug(`Melee structure target: ${target}`);
-		if (structureTarget) {
-			return this.attack(structureTarget);
-		}
 	}
 
 	autoRanged(possibleTargets = this.room.hostiles, allowMassAttack = true) {
-		let target = CombatTargeting.findBestTargetInRange(this, 3, possibleTargets);
+		let target = CombatTargeting.findBestCreepTargetInRange(this, 3, possibleTargets)
+					 || CombatTargeting.findBestStructureTargetInRange(this, 3);
 		this.debug(`Ranged target: ${target}`);
 		if (target) {
 			if (allowMassAttack
