@@ -1,4 +1,52 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_SCREEPSPLUS-GRAPHITE",
+      "label": "ScreepsPlus-Graphite",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "graphite",
+      "pluginName": "Graphite"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "5.2.1"
+    },
+    {
+      "type": "panel",
+      "id": "grafana-piechart-panel",
+      "name": "Pie Chart",
+      "version": "1.3.3"
+    },
+    {
+      "type": "panel",
+      "id": "graph",
+      "name": "Graph",
+      "version": "5.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "graphite",
+      "name": "Graphite",
+      "version": "5.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "singlestat",
+      "name": "Singlestat",
+      "version": "5.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": "5.0.0"
+    }
+  ],
   "annotations": {
     "list": [
       {
@@ -15,8 +63,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 1,
-  "id": 2135,
-  "iteration": 1533748023765,
+  "id": null,
+  "iteration": 1536194732400,
   "links": [],
   "panels": [
     {
@@ -42,7 +90,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(245, 54, 54, 0.9)"
       ],
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "editable": true,
       "error": false,
       "format": "percent",
@@ -127,7 +175,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "editable": true,
       "error": false,
       "fill": 0,
@@ -144,6 +192,7 @@
         "alignAsTable": true,
         "avg": false,
         "current": false,
+        "hideZero": false,
         "max": false,
         "min": false,
         "rightSide": true,
@@ -175,6 +224,11 @@
           "alias": "Limit",
           "color": "#bf1b00",
           "linewidth": 1
+        },
+        {
+          "alias": "Global Reset",
+          "fill": 6,
+          "yaxis": 2
         }
       ],
       "spaceLength": 10,
@@ -183,26 +237,40 @@
       "targets": [
         {
           "hide": false,
-          "refCount": 0,
+          "refCount": 1,
           "refId": "B",
           "target": "alias(screeps.$User.cpu.getUsed, 'CPU')"
         },
         {
           "hide": false,
-          "refCount": 0,
+          "refCount": 1,
           "refId": "A",
           "target": "alias(screeps.$User.cpu.bucket, 'Bucket')"
         },
         {
           "hide": false,
-          "refCount": 0,
+          "refCount": 1,
           "refId": "C",
-          "target": "alias(movingAverage(screeps.$User.cpu.getUsed, 100), 'Average CPU')"
+          "target": "alias(movingAverage(screeps.$User.cpu.getUsed, '5min'), 'Average CPU')"
+        },
+        {
+          "refCount": 1,
+          "refId": "D",
+          "target": "alias(screeps.$User.cpu.limit, 'Limit')",
+          "textEditor": false
+        },
+        {
+          "hide": true,
+          "refCount": 1,
+          "refId": "E",
+          "target": "screeps.$User.persistent.lastGlobalReset",
+          "textEditor": false
         },
         {
           "refCount": 0,
-          "refId": "D",
-          "target": "alias(screeps.$User.cpu.limit, 'Limit')",
+          "refId": "F",
+          "target": "alias(scale(derivative(#E), 10000), 'Global Reset')",
+          "targetFull": "alias(scale(derivative(screeps.$User.persistent.lastGlobalReset), 10000), 'Global Reset')",
           "textEditor": false
         }
       ],
@@ -226,7 +294,7 @@
       },
       "yaxes": [
         {
-          "format": "short",
+          "format": "none",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -234,11 +302,11 @@
           "show": true
         },
         {
-          "format": "short",
+          "format": "none",
           "label": null,
           "logBase": 1,
-          "max": null,
-          "min": 0,
+          "max": "10000",
+          "min": "1",
           "show": true
         }
       ],
@@ -256,7 +324,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(50, 172, 45, 0.97)"
       ],
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "editable": true,
       "error": false,
       "format": "none",
@@ -336,7 +404,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(245, 54, 54, 0.9)"
       ],
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "decimals": 1,
       "editable": true,
       "error": false,
@@ -415,7 +483,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "fill": 0,
       "gridPos": {
         "h": 5,
@@ -473,7 +541,7 @@
       "title": "IVM Heap Statistics",
       "tooltip": {
         "shared": true,
-        "sort": 0,
+        "sort": 2,
         "value_type": "individual"
       },
       "transparent": false,
@@ -531,7 +599,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(50, 172, 45, 0.97)"
       ],
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "decimals": 1,
       "editable": true,
       "error": false,
@@ -626,7 +694,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -700,7 +768,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "editable": true,
       "error": false,
       "fill": 1,
@@ -819,7 +887,7 @@
         "label": "Others",
         "threshold": 0
       },
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "decimals": null,
       "fontSize": "70%",
       "format": "short",
@@ -864,7 +932,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(245, 54, 54, 0.9)"
       ],
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "decimals": 1,
       "editable": true,
       "error": false,
@@ -982,10 +1050,10 @@
           "value": "current"
         }
       ],
-      "datasource": null,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "fontSize": "100%",
       "gridPos": {
-        "h": 23,
+        "h": 21,
         "w": 3,
         "x": 0,
         "y": 22
@@ -1044,7 +1112,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(screeps.$User.colonies.*.defcon, 3)"
+          "target": "aliasByNode(removeEmptySeries(screeps.$User.colonies.*.defcon), 3)"
         }
       ],
       "title": "DEFCON Levels",
@@ -1057,13 +1125,1069 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
-      "fill": 1,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
+      "fill": 0,
       "gridPos": {
-        "h": 9,
+        "h": 7,
         "w": 9,
         "x": 3,
         "y": 22
+      },
+      "id": 64,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "hideEmpty": true,
+        "hideZero": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(keepLastValue(screeps.$User.colonies.$colonies.hatchery.uptime), 3)",
+          "textEditor": false
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Hatchery Uptime",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "percentunit",
+          "label": null,
+          "logBase": 1,
+          "max": "1",
+          "min": "0",
+          "show": true
+        },
+        {
+          "decimals": null,
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
+      "fill": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 22
+      },
+      "id": 61,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "hideEmpty": true,
+        "hideZero": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(scale(movingAverage(perSecond(keepLastValue(screeps.$User.colonies.$colonies.rcl.progress)), 200), 86400), 3)",
+          "textEditor": false
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "RCL Progress Rate",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
+      "fill": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 9,
+        "x": 3,
+        "y": 29
+      },
+      "id": 107,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "hideEmpty": true,
+        "hideZero": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "refCount": 0,
+          "refId": "A",
+          "target": "aliasByNode(movingAverage(keepLastValue(screeps.$User.colonies.$colonies.evolutionChamber.avgUsage, 500), '1hour'), 3)",
+          "textEditor": false
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Lab uptime",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": "1",
+          "min": "0",
+          "show": true
+        },
+        {
+          "decimals": null,
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
+      "fill": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 12,
+        "y": 29
+      },
+      "id": 117,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "hide": true,
+          "refCount": 0,
+          "refId": "A",
+          "target": "aliasByNode(movingAverage(perSecond(keepLastValue(screeps.$User.colonies.*.avgBarrierHits, 100)), '30min'), 3)",
+          "textEditor": true
+        },
+        {
+          "refCount": 0,
+          "refId": "B",
+          "target": "aliasByNode(keepLastValue(screeps.$User.colonies.*.avgBarrierHits, 100), 3)",
+          "textEditor": true
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Average Barrier Hits",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
+      "fill": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 18,
+        "y": 29
+      },
+      "id": 62,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "hideEmpty": true,
+        "hideZero": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(keepLastValue(screeps.$User.colonies.$colonies.storage.energy, 100), 3)",
+          "textEditor": false
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Energy in Storage",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": "1000000",
+          "min": "0",
+          "show": true
+        },
+        {
+          "decimals": null,
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
+      "fill": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 9,
+        "x": 3,
+        "y": 36
+      },
+      "id": 106,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "hideEmpty": true,
+        "hideZero": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null as zero",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "refCount": 0,
+          "refId": "A",
+          "target": "aliasSub(aliasByNode(movingAverage(keepLastValue(screeps.$User.colonies.$colonies.miningSites.avgUsage, 100), '30min'), 3), \"(.*)\", \"Usage - \\1\")",
+          "textEditor": true
+        },
+        {
+          "refCount": 0,
+          "refId": "B",
+          "target": "aliasSub(aliasByNode(keepLastValue(screeps.$User.colonies.$colonies.miningSites.avgDowntime, 100), 3), \"(.*)\", \"Downtime - \\1\")",
+          "textEditor": true
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Average MiningSite Usage/Downtime",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "percentunit",
+          "label": null,
+          "logBase": 1,
+          "max": "1",
+          "min": "0",
+          "show": true
+        },
+        {
+          "decimals": null,
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
+      "fill": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 36
+      },
+      "id": 124,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "hideEmpty": true,
+        "hideZero": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "refCount": 0,
+          "refId": "A",
+          "target": "aliasByNode(movingAverage(keepLastValue(screeps.$User.colonies.$colonies.miningSites.energyInPerTick, 500), '30min'), 3)",
+          "textEditor": false
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Energy Income Per Tick",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "decimals": null,
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 43
+      },
+      "id": 88,
+      "panels": [],
+      "title": "Terminal Network",
+      "type": "row"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
+      "format": "short",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 5,
+        "x": 0,
+        "y": 44
+      },
+      "id": 98,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "refId": "A",
+          "target": "movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*))), 86400), 500)",
+          "textEditor": true
+        }
+      ],
+      "thresholds": "",
+      "title": "Energy Transfer Rate",
+      "type": "singlestat",
+      "valueFontSize": "200%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
+    },
+    {
+      "aliasColors": {},
+      "breakPoint": "50%",
+      "cacheTimeout": null,
+      "combine": {
+        "label": "Others",
+        "threshold": 0
+      },
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
+      "fontSize": "80%",
+      "format": "short",
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 5,
+        "y": 44
+      },
+      "id": 102,
+      "interval": null,
+      "legend": {
+        "percentage": false,
+        "show": true,
+        "values": true
+      },
+      "legendType": "On graph",
+      "links": [],
+      "maxDataPoints": 3,
+      "nullPointMode": "connected",
+      "pieType": "pie",
+      "strokeWidth": 1,
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(sortByTotal(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 7, 'sumSeries'))), '24hour'), 86000)), 0)",
+          "textEditor": false
+        }
+      ],
+      "title": "Incoming Energy Rate",
+      "type": "grafana-piechart-panel",
+      "valueName": "current"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
+      "fill": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 15,
+        "x": 9,
+        "y": 44
+      },
+      "id": 90,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 7, 'sumSeries'))), 500), 86000), 0)",
+          "textEditor": true
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Incoming Energy per 24h",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "decimals": null,
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
+      "format": "percentunit",
+      "gauge": {
+        "maxValue": 1,
+        "minValue": 0,
+        "show": true,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 5,
+        "x": 0,
+        "y": 51
+      },
+      "id": 94,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "hide": true,
+          "refCount": -1,
+          "refId": "A",
+          "target": "movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.costs.*.*))), 86400), 200)",
+          "textEditor": true
+        },
+        {
+          "hide": true,
+          "refCount": -1,
+          "refId": "B",
+          "target": "movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*))), 86400), 200)",
+          "textEditor": true
+        },
+        {
+          "refCount": 0,
+          "refId": "C",
+          "target": "divideSeries(#A, #B)",
+          "targetFull": "divideSeries(movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.costs.*.*))), 86400), 200), movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*))), 86400), 200))",
+          "textEditor": true
+        }
+      ],
+      "thresholds": "0.25, 0.5",
+      "title": "Fractional Energy Transfer Cost",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "avg"
+    },
+    {
+      "aliasColors": {},
+      "breakPoint": "50%",
+      "cacheTimeout": null,
+      "combine": {
+        "label": "Others",
+        "threshold": 0
+      },
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
+      "fontSize": "80%",
+      "format": "short",
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 5,
+        "y": 51
+      },
+      "id": 100,
+      "interval": null,
+      "legend": {
+        "show": true,
+        "sort": "current",
+        "sortDesc": false,
+        "values": true
+      },
+      "legendType": "On graph",
+      "links": [],
+      "maxDataPoints": 3,
+      "nullPointMode": "connected",
+      "pieType": "pie",
+      "strokeWidth": 1,
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(sortByTotal(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 6, 'sumSeries'))), '24hour'), 86000)), 0)",
+          "textEditor": false
+        }
+      ],
+      "title": "Outgoing Energy Rate",
+      "type": "grafana-piechart-panel",
+      "valueName": "current"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
+      "fill": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 15,
+        "x": 9,
+        "y": 51
+      },
+      "id": 103,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 6, 'sumSeries'))), 500), 86000), 0)",
+          "textEditor": true
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Outgoing Energy per 24h",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
+      "fill": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 58
       },
       "id": 111,
       "legend": {
@@ -1153,460 +2277,15 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "fill": 1,
-      "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 12,
-        "y": 22
-      },
-      "id": 61,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": false,
-        "hideEmpty": true,
-        "hideZero": true,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": true,
-      "steppedLine": false,
-      "targets": [
-        {
-          "refId": "A",
-          "target": "aliasByNode(scale(movingAverage(perSecond(keepLastValue(screeps.$User.colonies.$colonies.rcl.progress)), 200), 86400), 3)",
-          "textEditor": false
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "RCL Progress Rate",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
-      "fill": 0,
-      "gridPos": {
-        "h": 7,
-        "w": 9,
-        "x": 3,
-        "y": 31
-      },
-      "id": 64,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": false,
-        "hideEmpty": true,
-        "hideZero": true,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": false,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "refId": "A",
-          "target": "aliasByNode(keepLastValue(screeps.$User.colonies.$colonies.hatchery.uptime), 3)",
-          "textEditor": false
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Hatchery Uptime",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "percentunit",
-          "label": null,
-          "logBase": 1,
-          "max": "1",
-          "min": "0",
-          "show": true
-        },
-        {
-          "decimals": null,
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
-      "fill": 0,
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 12,
-        "y": 31
-      },
-      "id": 117,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": false,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "hide": true,
-          "refCount": 0,
-          "refId": "A",
-          "target": "aliasByNode(movingAverage(perSecond(keepLastValue(screeps.$User.colonies.*.avgBarrierHits, 100)), '30min'), 3)",
-          "textEditor": true
-        },
-        {
-          "refCount": 0,
-          "refId": "B",
-          "target": "aliasByNode(keepLastValue(screeps.$User.colonies.*.avgBarrierHits, 100), 3)",
-          "textEditor": true
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Average Barrier Hits",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
-      "fill": 0,
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 18,
-        "y": 31
-      },
-      "id": 62,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": false,
-        "hideEmpty": true,
-        "hideZero": true,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": false,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "refId": "A",
-          "target": "aliasByNode(keepLastValue(screeps.$User.colonies.$colonies.storage.energy, 100), 3)",
-          "textEditor": false
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Energy in Storage",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": "1000000",
-          "min": "0",
-          "show": true
-        },
-        {
-          "decimals": null,
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
-      "fill": 0,
-      "gridPos": {
-        "h": 7,
-        "w": 9,
-        "x": 3,
-        "y": 38
-      },
-      "id": 106,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": false,
-        "hideEmpty": true,
-        "hideZero": true,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": false,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null as zero",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "refCount": 0,
-          "refId": "A",
-          "target": "aliasSub(aliasByNode(movingAverage(keepLastValue(screeps.$User.colonies.$colonies.miningSites.avgUsage, 100), '30min'), 3), \"(.*)\", \"Usage - \\1\")",
-          "textEditor": true
-        },
-        {
-          "refCount": 0,
-          "refId": "B",
-          "target": "aliasSub(aliasByNode(keepLastValue(screeps.$User.colonies.$colonies.miningSites.avgDowntime, 100), 3), \"(.*)\", \"Downtime - \\1\")",
-          "textEditor": true
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Average MiningSite Usage/Downtime",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "percentunit",
-          "label": null,
-          "logBase": 1,
-          "max": "1",
-          "min": "0",
-          "show": true
-        },
-        {
-          "decimals": null,
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
-      "fill": 0,
       "gridPos": {
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 38
+        "y": 58
       },
-      "id": 107,
+      "id": 125,
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -1616,223 +2295,6 @@
         "max": false,
         "min": false,
         "rightSide": true,
-        "show": false,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "refCount": 0,
-          "refId": "A",
-          "target": "aliasByNode(movingAverage(keepLastValue(screeps.$User.colonies.$colonies.miningSites.energyInPerTick, 500), '30min'), 3)",
-          "textEditor": false
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Energy Income Per Tick",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "decimals": null,
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 45
-      },
-      "id": 88,
-      "panels": [],
-      "title": "Terminal Network",
-      "type": "row"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": false,
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
-      ],
-      "datasource": "ScreepsPlus-Graphite",
-      "format": "short",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 5,
-        "x": 0,
-        "y": 46
-      },
-      "id": 98,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": true
-      },
-      "tableColumn": "",
-      "targets": [
-        {
-          "refId": "A",
-          "target": "movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*))), 86400), 500)",
-          "textEditor": true
-        }
-      ],
-      "thresholds": "",
-      "title": "Energy Transfer Rate",
-      "type": "singlestat",
-      "valueFontSize": "200%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "current"
-    },
-    {
-      "aliasColors": {},
-      "breakPoint": "50%",
-      "cacheTimeout": null,
-      "combine": {
-        "label": "Others",
-        "threshold": 0
-      },
-      "datasource": "ScreepsPlus-Graphite",
-      "fontSize": "80%",
-      "format": "short",
-      "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 5,
-        "y": 46
-      },
-      "id": 102,
-      "interval": null,
-      "legend": {
-        "percentage": false,
-        "show": true,
-        "values": true
-      },
-      "legendType": "On graph",
-      "links": [],
-      "maxDataPoints": 3,
-      "nullPointMode": "connected",
-      "pieType": "pie",
-      "strokeWidth": 1,
-      "targets": [
-        {
-          "refId": "A",
-          "target": "aliasByNode(sortByTotal(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 7, 'sumSeries'))), '24hour'), 86000)), 0)",
-          "textEditor": false
-        }
-      ],
-      "title": "Incoming Energy Rate",
-      "type": "grafana-piechart-panel",
-      "valueName": "current"
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
-      "fill": 1,
-      "gridPos": {
-        "h": 7,
-        "w": 15,
-        "x": 9,
-        "y": 46
-      },
-      "id": 90,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
         "show": false,
         "total": false,
         "values": false
@@ -1849,237 +2311,27 @@
       "spaceLength": 10,
       "stack": true,
       "steppedLine": false,
-      "targets": [
-        {
-          "refId": "A",
-          "target": "aliasByNode(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 7, 'sumSeries'))), 500), 86000), 0)",
-          "textEditor": true
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Incoming Energy per 24h",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "decimals": null,
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": false,
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
-      ],
-      "datasource": "ScreepsPlus-Graphite",
-      "format": "percentunit",
-      "gauge": {
-        "maxValue": 1,
-        "minValue": 0,
-        "show": true,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 5,
-        "x": 0,
-        "y": 53
-      },
-      "id": 94,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": true
-      },
-      "tableColumn": "",
       "targets": [
         {
           "hide": true,
           "refCount": -1,
           "refId": "A",
-          "target": "movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.costs.*.*))), 86400), 200)",
-          "textEditor": true
-        },
-        {
-          "hide": true,
-          "refCount": -1,
-          "refId": "B",
-          "target": "movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*))), 86400), 200)",
-          "textEditor": true
-        },
-        {
-          "refCount": 0,
-          "refId": "C",
-          "target": "divideSeries(#A, #B)",
-          "targetFull": "divideSeries(movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.costs.*.*))), 86400), 200), movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*))), 86400), 200))",
-          "textEditor": true
-        }
-      ],
-      "thresholds": "0.25, 0.5",
-      "title": "Fractional Energy Transfer Cost",
-      "type": "singlestat",
-      "valueFontSize": "80%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "avg"
-    },
-    {
-      "aliasColors": {},
-      "breakPoint": "50%",
-      "cacheTimeout": null,
-      "combine": {
-        "label": "Others",
-        "threshold": 0
-      },
-      "datasource": "ScreepsPlus-Graphite",
-      "fontSize": "80%",
-      "format": "short",
-      "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 5,
-        "y": 53
-      },
-      "id": 100,
-      "interval": null,
-      "legend": {
-        "show": true,
-        "sort": "current",
-        "sortDesc": false,
-        "values": true
-      },
-      "legendType": "On graph",
-      "links": [],
-      "maxDataPoints": 3,
-      "nullPointMode": "connected",
-      "pieType": "pie",
-      "strokeWidth": 1,
-      "targets": [
-        {
-          "refId": "A",
-          "target": "aliasByNode(sortByTotal(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 6, 'sumSeries'))), '24hour'), 86000)), 0)",
+          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5)",
           "textEditor": false
-        }
-      ],
-      "title": "Outgoing Energy Rate",
-      "type": "grafana-piechart-panel",
-      "valueName": "current"
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
-      "fill": 1,
-      "gridPos": {
-        "h": 7,
-        "w": 15,
-        "x": 9,
-        "y": 53
-      },
-      "id": 103,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": false,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": true,
-      "steppedLine": false,
-      "targets": [
+        },
         {
-          "refId": "A",
-          "target": "aliasByNode(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 6, 'sumSeries'))), 500), 86000), 0)",
+          "hide": false,
+          "refCount": 0,
+          "refId": "B",
+          "target": "aliasByNode(movingAverage(derivative(exclude(#A, '^(energy|H|O|U|K|L|Z|X)$')), '2hour'), 0)",
+          "targetFull": "aliasByNode(movingAverage(derivative(exclude(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5), '^(energy|H|O|U|K|L|Z|X)$')), '2hour'), 0)",
           "textEditor": true
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Outgoing Energy per 24h",
+      "title": "Compound Production/Consumption",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -2099,7 +2351,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": "0",
+          "min": null,
           "show": true
         },
         {
@@ -2107,7 +2359,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": "0",
           "show": true
         }
       ],
@@ -2122,7 +2374,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 60
+        "y": 65
       },
       "id": 109,
       "panels": [],
@@ -2138,7 +2390,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": null,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "format": "short",
       "gauge": {
         "maxValue": 100,
@@ -2151,7 +2403,7 @@
         "h": 4,
         "w": 3,
         "x": 0,
-        "y": 61
+        "y": 66
       },
       "id": 121,
       "interval": null,
@@ -2212,13 +2464,13 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "fill": 1,
       "gridPos": {
         "h": 8,
         "w": 11,
         "x": 3,
-        "y": 61
+        "y": 66
       },
       "id": 110,
       "legend": {
@@ -2301,13 +2553,13 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "ScreepsPlus-Graphite",
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "fill": 1,
       "gridPos": {
         "h": 8,
         "w": 10,
         "x": 14,
-        "y": 61
+        "y": 66
       },
       "id": 113,
       "legend": {
@@ -2394,7 +2646,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": null,
+      "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -2407,7 +2659,7 @@
         "h": 4,
         "w": 3,
         "x": 0,
-        "y": 65
+        "y": 70
       },
       "id": 123,
       "interval": null,
@@ -2474,11 +2726,8 @@
     "list": [
       {
         "allValue": null,
-        "current": {
-          "text": "muon",
-          "value": "muon"
-        },
-        "datasource": "ScreepsPlus-Graphite",
+        "current": {},
+        "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
         "hide": 0,
         "includeAll": false,
         "label": "",
@@ -2497,11 +2746,8 @@
       },
       {
         "allValue": null,
-        "current": {
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": "ScreepsPlus-Graphite",
+        "current": {},
+        "datasource": "${DS_SCREEPSPLUS-GRAPHITE}",
         "hide": 0,
         "includeAll": true,
         "label": "Colonies",
@@ -2560,5 +2806,5 @@
   "timezone": "browser",
   "title": "Overmind",
   "uid": "000002135",
-  "version": 67
+  "version": 72
 }
