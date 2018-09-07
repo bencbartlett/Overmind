@@ -1,4 +1,5 @@
 import {profile} from '../profiler/decorator';
+import {color} from '../utilities/utils';
 
 export enum LogLevels {
 	ERROR,		// log.level = 0
@@ -89,10 +90,6 @@ function makeVSCLink(pos: SourcePos): string {
 	}
 
 	return link(vscUrl(pos.path, `L${pos.line.toString()}`), pos.original);
-}
-
-function color(str: string, color: string): string {
-	return `<font color='${color}'>${str}</font>`;
 }
 
 function tooltip(str: string, tooltip: string): string {

@@ -5,7 +5,7 @@ import {toColumns} from '../utilities/utils';
 import {asciiLogoSmall} from '../visuals/logos';
 import {log} from './log';
 import {alignedNewline, bullet} from '../utilities/stringConstants';
-import {DEFAULT_OVERMIND_SIGNATURE} from '../~settings';
+import {DEFAULT_OVERMIND_SIGNATURE, MY_USERNAME} from '../~settings';
 
 export class OvermindConsole {
 
@@ -72,10 +72,12 @@ export class OvermindConsole {
 
 	static info(aligned = false): string {
 		const b = bullet;
+		const checksum = Assimilator.generateChecksum();
+		const clearanceCode = Assimilator.getClearanceCode(MY_USERNAME);
 		let baseInfo = [
 			`${b}Version:        Overmind v${__VERSION__}`,
-			`${b}Checksum:       ${Assimilator.generateChecksum()}`,
-			`${b}Assimilated:    ${'(not yet implemented)'}`,
+			`${b}Checksum:       ${checksum}`,
+			`${b}Assimilated:    ${clearanceCode ? 'Yes' : 'No'} (clearance code: ${clearanceCode}) [WIP]`,
 			`${b}Operating mode: ${Memory.settings.operationMode}`,
 			// `${b}CPU bucket:     ${Game.cpu.bucket}`
 		];

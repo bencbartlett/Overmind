@@ -26,7 +26,7 @@ export const USE_TRY_CATCH: boolean = true;
 /**
  * Default controller signature; don't change this.
  * You can set your controller signature with the console command "setSignature()"
- * Operation will be penalized by skipping every 5th tick for using a signature that does not contain the substring
+ * Operation will be penalized by skipping every 3rd tick for using a signature that does not contain the substring
  * "overmind" or the small-caps variant.
  */
 const overmindPlain = 'Overmind';

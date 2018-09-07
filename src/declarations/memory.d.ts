@@ -112,6 +112,7 @@ interface PathingMemory {
 }
 
 interface FlagMemory {
+	suspendUntil?: number;
 	amount?: number;
 	created?: number;
 	persistent?: boolean;

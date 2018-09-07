@@ -30,9 +30,12 @@ export abstract class Directive {
 
 	constructor(flag: Flag, requiredRCL = 1, maxPathLength = 550) {
 		// this.flag = flag;
+		this.memory = flag.memory;
+		if (this.memory.suspendUntil && Game.time < this.memory.suspendUntil) {
+			return;
+		}
 		this.name = flag.name;
 		this.ref = flag.ref;
-		this.memory = flag.memory;
 		this.requiredRCL = requiredRCL;
 		if (!this.memory.created) this.memory.created = Game.time;
 		// Relocate flag if needed; this must be called before the colony calculations

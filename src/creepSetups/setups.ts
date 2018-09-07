@@ -14,7 +14,7 @@ export const Roles = {
 	upgrader   : 'upgrader',
 	// Combat roles
 	guardMelee : 'broodling',
-	guardRanged: 'locust',
+	guardRanged: 'mutalisk',
 	melee      : 'zergling',
 	ranged     : 'hydralisk',
 	healer     : 'transfuser',

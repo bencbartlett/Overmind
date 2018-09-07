@@ -78,6 +78,10 @@ interface IAssimilator {
 
 	generateChecksum(): string;
 
+	isAssimilated(username: string): boolean;
+
+	getClearanceCode(username: string): string | null;
+
 	run(): void;
 
 }

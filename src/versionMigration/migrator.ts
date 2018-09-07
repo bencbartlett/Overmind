@@ -30,6 +30,9 @@ export class VersionMigration {
 		if (!this.memory.versions['05Xto051_part2']) {
 			this.migrate_050_051_part2();
 		}
+		if (!this.memory.versions['05Xto051_part3']) {
+			this.migrate_050_051_part3();
+		}
 	}
 
 	static get memory(): VersionMigratorMemory {
@@ -187,6 +190,14 @@ export class VersionMigration {
 		}
 		this.memory.versions['05Xto051_part2'] = true;
 		log.alert(`Version migration from 0.5.0 -> 0.5.1 (part 2) completed successfully.`);
+	}
+
+	static migrate_050_051_part3() {
+		if (Memory.assimilator && Memory.assimilator.users) {
+			delete Memory.assimilator.users;
+		}
+		this.memory.versions['05Xto051_part3'] = true;
+		log.alert(`Version migration from 0.5.0 -> 0.5.1 (part 3) completed successfully.`);
 	}
 
 }
