@@ -102,3 +102,4 @@ applicationhost.config
 *.suo
 *.njsproj
 *.sln
+*.bat
