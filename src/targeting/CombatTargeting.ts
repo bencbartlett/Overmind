@@ -43,6 +43,16 @@ export class CombatTargeting {
 		});
 	}
 
+	/* Finds the best target within a given range that a zerg can currently attack */
+	static findBestCreepTargetForTowers(room: Room, targets = room.hostiles): Creep | undefined {
+		return maxBy(targets, function (hostile) {
+			if (hostile.hitsPredicted == undefined) hostile.hitsPredicted = hostile.hits;
+			if (hostile.pos.lookForStructure(STRUCTURE_RAMPART)) return false;
+			return hostile.hitsMax - hostile.hitsPredicted
+				   + CombatIntel.getHealPotential(hostile) + (CombatIntel.towerDamageAtPos(hostile.pos) || 0);
+		});
+	}
+
 	static findClosestHostile(zerg: Zerg, checkReachable = false, ignoreCreepsAtEdge = true): Creep | undefined {
 		if (zerg.room.hostiles.length > 0) {
 			let targets: Creep[];

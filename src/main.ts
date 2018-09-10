@@ -13,10 +13,9 @@
 // Overmind repository: github.com/bencbartlett/overmind
 //
 
-// Assimilator must be instantiated before any other imports
 'use strict';
 // Import ALL the things! ==============================================================================================
-import './assimilation/initializer'; // This must always be imported first
+import './assimilation/initializer'; // This must always be imported before anything else
 import './console/globals'; // Global functions accessible from CLI
 import './prototypes/Creep'; // Creep prototypes
 import './prototypes/RoomObject'; // RoomObject and targeting prototypes
@@ -28,7 +27,7 @@ import './prototypes/Structures'; // Prototypes for accessed structures
 import './prototypes/Miscellaneous'; // Everything else
 import './tasks/initializer'; // This line is necessary to ensure proper compilation ordering...
 import './zerg/CombatZerg'; // ...so is this one... rollup is dumb about generating reference errors
-import {PROFILE_COLONY_LIMIT, USE_PROFILER} from './~settings';
+import {MUON, MY_USERNAME, PROFILE_COLONY_LIMIT, USE_PROFILER} from './~settings';
 import {sandbox} from './sandbox';
 import {Mem} from './memory/Memory';
 import {OvermindConsole} from './console/Console';
@@ -43,15 +42,24 @@ import {alignedNewline} from './utilities/stringConstants';
 
 // @formatter:on
 
-if (USE_PROFILER) profiler.enable();
+// Main loop
+function main(): void {
+	Mem.load();														// Load previous parsed memory if present
+	Mem.clean();													// Clean memory contents
+	if (Overmind.shouldBuild || Game.time >= Overmind.expiration) {
+		global.Overmind = new _Overmind();							// Instantiate the Overmind object
+		Overmind.build();											// Build phase: instantiate all game components
+	} else {
+		Overmind.refresh();											// Refresh phase: update the Overmind state
+	}
+	Overmind.init();												// Init phase: spawning and energy requests
+	Overmind.run();													// Run phase: execute state-changing actions
+	Overmind.visuals(); 											// Draw visuals
+	Stats.run(); 													// Record statistics
+	sandbox();														// Sandbox: run any testing code
+	Overmind.postRun();												// Error catching is run at end of every tick
+}
 
-Mem.format();
-OvermindConsole.init();
-VersionMigration.run();
-
-Memory.stats.persistent.lastGlobalReset = Game.time;
-log.alert(`Codebase updated or global reset. Type "help" for a list of console commands.` + alignedNewline +
-		  OvermindConsole.info(true));
 
 // Decide whether to run this tick
 function handler(): void {
@@ -79,32 +87,38 @@ function handler(): void {
 		main();
 	}
 }
-Assimilator.validate(handler);
-
-global.Overmind = new _Overmind();
-
-// Main loop
-function main(): void {
-	Mem.load();														// Load previous parsed memory if present
-	Mem.clean();													// Clean memory contents
-	if (Overmind.shouldBuild || Game.time >= Overmind.expiration) {
-		global.Overmind = new _Overmind();							// Instantiate the Overmind object
-		Overmind.build();											// Build phase: instantiate all game components
-	} else {
-		Overmind.refresh();											// Refresh phase: update the Overmind state
-	}
-	Overmind.init();												// Init phase: spawning and energy requests
-	Overmind.run();													// Run phase: execute state-changing actions
-	Overmind.visuals(); 											// Draw visuals
-	Stats.run(); 													// Record statistics
-	sandbox();														// Sandbox: run any testing code
-	Overmind.postRun();												// Error catching is run at end of every tick
-}
-Assimilator.validate(main);
 
 
 // Profiler-wrapped main loop
 export function loop(): void {
 	profiler.wrap(handler);
 }
+
+
+// Register these functions for checksum computations with the Assimilator
+Assimilator.validate(handler);
+Assimilator.validate(main);
 Assimilator.validate(loop);
+
+
+// This gets run on each global reset
+function onGlobalReset(): void {
+	if (USE_PROFILER) profiler.enable();
+	Mem.format();
+	OvermindConsole.init();
+	VersionMigration.run();
+	Memory.stats.persistent.lastGlobalReset = Game.time;
+
+	log.alert(`Codebase updated or global reset. Type "help" for a list of console commands.` + alignedNewline +
+			  OvermindConsole.info(true));
+	// Update the master ledger of valid checksums
+	if (MY_USERNAME == MUON) {
+		Assimilator.updateValidChecksumLedger();
+	}
+	// Make a new Overmind object
+	global.Overmind = new _Overmind();
+}
+
+
+// Run the global reset code
+onGlobalReset();

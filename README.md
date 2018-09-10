@@ -45,7 +45,7 @@ To install the full codebase, download or clone the repository. (Please note tha
 - Compile and deploy to private server: `npm run push-pserver`
 - Compile without deploying: `npm run compile`
 
-The deployment scripts are based on [`screeps-typescript-starter`](https://github.com/screepers/screeps-typescript-starter); for additional help, refer to their [GitBook](https://screepers.gitbooks.io/screeps-typescript-starter/getting-started/deploying.html).
+Overmind uses `rollup` to bundle the compiled TypeScript into a single `main.js` file. The codebase includes functionality to compute checksums for internal validation - if you have a different version of `rollup` installed globally, different checksums may be computed and some functionality will be disabled. Please ensure the local installation of `rollup` found in `node_modules` is used.
 
 ### Setting up the Grafana dashboard
 

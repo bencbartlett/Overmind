@@ -63,7 +63,7 @@ export interface MoveOptions {
 	repath?: number;							// probability of repathing on a given tick
 	route?: { [roomName: string]: boolean };	// lookup table for allowable pathing rooms
 	ensurePath?: boolean;						// can be useful if route keeps being found as incomplete
-	// noPush?: boolean;							// whether to ignore pushing behavior
+	noPush?: boolean;							// whether to ignore pushing behavior
 	modifyRoomCallback?: (r: Room, m: CostMatrix) => CostMatrix // modifications to default cost matrix calculations
 }
 
@@ -241,13 +241,13 @@ export class Movement {
 		}
 
 		// push creeps out of the way if needed
-		// if (!options.noPush) {
-		let obstructingCreep = this.findBlockingCreep(creep);
-		if (obstructingCreep && this.shouldPush(creep, obstructingCreep)) {
-			let pushedCreep = this.pushCreep(creep, obstructingCreep);
-			if (!pushedCreep) return ERR_CANNOT_PUSH_CREEP;
+		if (!options.noPush) {
+			let obstructingCreep = this.findBlockingCreep(creep);
+			if (obstructingCreep && this.shouldPush(creep, obstructingCreep)) {
+				let pushedCreep = this.pushCreep(creep, obstructingCreep);
+				if (!pushedCreep) return ERR_CANNOT_PUSH_CREEP;
+			}
 		}
-		// }
 
 		// consume path
 		if (state.stuckCount == 0 && !newPath) {
@@ -551,7 +551,7 @@ export class Movement {
 
 		// Set default options
 		_.defaults(options, {
-			range       : 2,
+			range       : Math.max(swarm.width, swarm.height),
 			ignoreCreeps: true,
 			exitCost    : 10,
 		});
@@ -696,6 +696,75 @@ export class Movement {
 		}
 		return matrix;
 	};
+
+
+	static swarmCombatMove(swarm: Swarm, approach: PathFinderGoal[], avoid: PathFinderGoal[],
+						   options: CombatMoveOptions = {}): number {
+		_.defaults(options, {
+			allowExit     : false,
+			avoidPenalty  : 10,
+			approachBonus : 5,
+			preferRamparts: true,
+		});
+
+		const debug = false;
+		const callback = (roomName: string) => {
+			if (swarm.rooms[roomName]) {
+				let matrix = Pathing.getSwarmDefaultMatrix(swarm.rooms[roomName], swarm.width, swarm.height); // already cloned
+				return Movement.combatMoveCallbackModifier(swarm.rooms[roomName], matrix, approach, avoid, options);
+			} else {
+				return Pathing.getSwarmTerrainMatrix(roomName, swarm.width, swarm.height);
+			}
+		};
+
+		let outcome = NO_ACTION;
+
+		// Flee from bad things that that you're too close to
+		if (avoid.length > 0) {
+			if (_.any(avoid, goal => swarm.minRangeTo(goal) <= goal.range)) {
+				// Increase avoidance ranges by swarm dimensions
+				let avoidGoals = _.map(avoid, goal => ({
+					pos  : goal.pos,
+					range: goal.range + Math.max(swarm.width, swarm.height) - 1
+				}));
+				let avoidRet = PathFinder.search(swarm.anchor, avoid, {
+					roomCallback: callback,
+					flee        : true,
+					maxRooms    : options.allowExit ? 5 : 1,
+					plainCost   : 2,
+					swampCost   : 10,
+				});
+				if (avoidRet.path.length > 0) {
+					if (debug) Pathing.serializePath(swarm.anchor, avoidRet.path, 'magenta');
+					outcome = swarm.move(swarm.anchor.getDirectionTo(avoidRet.path[0]));
+					if (outcome == OK) {
+						return outcome;
+					}
+				}
+			}
+		}
+
+		// Approach things you want to go to if you're out of range of all the baddies
+		if (approach.length > 0) {
+			if (!_.any(approach, goal => swarm.minRangeTo(goal) <= goal.range)) {
+				let approachRet = PathFinder.search(swarm.anchor, approach, {
+					roomCallback: callback,
+					maxRooms    : 1,
+					plainCost   : 2,
+					swampCost   : 10,
+				});
+				if (approachRet.path.length > 0) {
+					if (debug) Pathing.serializePath(swarm.anchor, approachRet.path, 'cyan');
+					outcome = swarm.move(swarm.anchor.getDirectionTo(approachRet.path[0]));
+					if (outcome == OK) {
+						return outcome;
+					}
+				}
+			}
+		}
+
+		return outcome;
+	}
 
 	static combatMove(creep: Zerg, approach: PathFinderGoal[], avoid: PathFinderGoal[],
 					  options: CombatMoveOptions = {}): number {

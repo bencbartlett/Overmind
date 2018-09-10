@@ -30,7 +30,7 @@ export class WorkerOverlord extends Overlord {
 			5: 1e+5,
 			6: 5e+5,
 			7: 1e+6,
-			8: 3e+7,
+			8: 2e+7,
 		},
 		criticalHits        : 1000, 	// barriers below this health get priority treatment
 		hitTolerance        : 100000, 	// allowable spread in HP

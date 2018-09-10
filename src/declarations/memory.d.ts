@@ -78,6 +78,7 @@ interface CreepMemory {
 	data: {
 		origin: string;
 	};
+	noNotifications?: boolean;
 	_go?: MoveData;
 	debug?: boolean;
 	boostLab?: string;

@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file. The format 
     - Updates to colony creep count visuals
 - New `Segmenter` module manages asynchronous memory segments
 - Added some under-the-hood content for assimilation
+    - Completed the "key exchange protocol" that the assimilator uses to periodically validate codebases
 - Preliminary support for formation-based movement and pathfinding using `Swarm`s
 
 ### Changed

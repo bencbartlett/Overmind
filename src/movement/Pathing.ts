@@ -173,9 +173,9 @@ export class Pathing {
 							 width: number, height: number, options: SwarmMoveOptions): CostMatrix | boolean {
 		const room = Game.rooms[roomName];
 		if (room) {
-			return this.getSwarmCostMatrix(room, width, height, options, false);
+			return this.getSwarmDefaultMatrix(room, width, height, options, false);
 		} else {
-			return this.getTerrainMatrix(roomName);
+			return this.getSwarmTerrainMatrix(roomName, width, height, options.exitCost);
 		}
 	}
 
@@ -278,8 +278,8 @@ export class Pathing {
 	}
 
 	/* Get a cloned copy of the cost matrix for a room with specified options */
-	static getSwarmCostMatrix(room: Room, width: number, height: number,
-							  options: SwarmMoveOptions, clone = true): CostMatrix {
+	static getSwarmDefaultMatrix(room: Room, width: number, height: number,
+								 options: SwarmMoveOptions = {}, clone = true): CostMatrix {
 		let matrix = $.costMatrix(room.name, `swarm${width}x${height}`, () => {
 			let mat = this.getTerrainMatrix(room.name).clone();
 			this.blockImpassibleStructures(mat, room);
@@ -346,6 +346,17 @@ export class Pathing {
 			}
 			return matrix;
 		}, 10000);
+	}
+
+	/* Get a cloned copy of the cost matrix for a room with specified options */
+	static getSwarmTerrainMatrix(roomName: string, width: number, height: number, exitCost = 10): CostMatrix {
+		let matrix = $.costMatrix(roomName, `swarmTerrain${width}x${height}EC${exitCost}`, () => {
+			let mat = this.getTerrainMatrix(roomName).clone();
+			this.setExitCosts(mat, roomName, exitCost);
+			this.applyMovingMaximum(mat, width, height);
+			return mat;
+		}, 10000);
+		return matrix;
 	}
 
 	/* Default matrix for a room, setting impassable structures and constructionSites to impassible */
@@ -835,8 +846,7 @@ export class Pathing {
 
 	/* Find the first walkable position in the room, spiraling outward from the center */
 	static findPathablePosition(roomName: string): RoomPosition {
-		let x = 25;
-		let y = 25;
+		let x, y: number;
 		for (let radius = 0; radius < 23; radius++) {
 			for (let dx = -radius; dx <= radius; dx++) {
 				for (let dy = -radius; dy <= radius; dy++) {

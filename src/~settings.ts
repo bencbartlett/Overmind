@@ -4,6 +4,11 @@ import {getUsername} from './utilities/utils';
 import {leftAngleQuote, rightAngleQuote} from './utilities/stringConstants';
 
 /**
+ * My Screeps username; used for a variety of updating and communications purposes
+ */
+export const MUON = 'Muon';
+
+/**
  * Your username - you shouldn't need to change this.
  */
 export const MY_USERNAME: string = getUsername();

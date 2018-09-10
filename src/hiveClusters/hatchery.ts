@@ -19,6 +19,7 @@ import {Movement} from '../movement/Movement';
 import {Pathing} from '../movement/Pathing';
 import {$} from '../caching/GlobalCache';
 import {OverlordPriority} from '../priorities/priorities_overlords';
+import {rollingAverage} from '../utilities/utils';
 
 const ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH = -20;
 const ERR_SPECIFIED_SPAWN_BUSY = -21;
@@ -45,13 +46,15 @@ export interface HatcheryMemory {
 	stats: {
 		usage: number;
 		uptime: number;
+		longUptime: number;
 	};
 }
 
 const HatcheryMemoryDefaults: HatcheryMemory = {
 	stats: {
-		usage : 0,
-		uptime: 0
+		usage     : 0,
+		uptime    : 0,
+		longUptime: 0,
 	}
 };
 
@@ -84,7 +87,7 @@ export class Hatchery extends HiveCluster {
 	constructor(colony: Colony, headSpawn: StructureSpawn) {
 		super(colony, headSpawn, 'hatchery');
 		// Register structure components
-		this.memory = Mem.wrap(this.colony.memory, 'hatchery', HatcheryMemoryDefaults);
+		this.memory = Mem.wrap(this.colony.memory, 'hatchery', HatcheryMemoryDefaults, true);
 		if (this.colony.layout == 'twoPart') this.colony.destinations.push(this.pos);
 		this.spawns = colony.spawns;
 		this.availableSpawns = _.filter(this.spawns, spawn => !spawn.spawning);
@@ -115,7 +118,7 @@ export class Hatchery extends HiveCluster {
 	}
 
 	refresh() {
-		this.memory = Mem.wrap(this.colony.memory, 'hatchery', HatcheryMemoryDefaults);
+		this.memory = Mem.wrap(this.colony.memory, 'hatchery', HatcheryMemoryDefaults, true);
 		$.refreshRoom(this);
 		$.refresh(this, 'spawns', 'extensions', 'energyStructures', 'link', 'towers', 'battery');
 		this.availableSpawns = _.filter(this.spawns, spawn => !spawn.spawning);
@@ -145,16 +148,13 @@ export class Hatchery extends HiveCluster {
 	private getStats() {
 		// Compute uptime
 		let spawnUsageThisTick = _.filter(this.spawns, spawn => spawn.spawning).length / this.spawns.length;
-		let uptime: number;
-		if (this.memory.stats && this.memory.stats.uptime) {
-			uptime = (this.memory.stats.uptime * (CREEP_LIFE_TIME - 1) + spawnUsageThisTick) / CREEP_LIFE_TIME;
-		} else {
-			uptime = spawnUsageThisTick;
-		}
+		let uptime = rollingAverage(spawnUsageThisTick, this.memory.stats.uptime, CREEP_LIFE_TIME);
+		let longUptime = rollingAverage(spawnUsageThisTick, this.memory.stats.longUptime, 5 * CREEP_LIFE_TIME);
 		Stats.log(`colonies.${this.colony.name}.hatchery.uptime`, uptime);
 		return {
-			usage : 0, // TODO
-			uptime: uptime,
+			usage     : 0,
+			uptime    : uptime,
+			longUptime: longUptime
 		};
 	}
 

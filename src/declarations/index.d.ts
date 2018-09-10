@@ -78,6 +78,8 @@ interface IAssimilator {
 
 	generateChecksum(): string;
 
+	updateValidChecksumLedger(): void
+
 	isAssimilated(username: string): boolean;
 
 	getClearanceCode(username: string): string | null;

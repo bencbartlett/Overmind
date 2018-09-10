@@ -130,7 +130,7 @@ export class Colony {
 	spawnGroup: SpawnGroup | undefined;
 	evolutionChamber: EvolutionChamber | undefined; 	// Component for mineral processing
 	upgradeSite: UpgradeSite;							// Component to provide upgraders with uninterrupted energy
-	sporeCrawlers: SporeCrawler[];
+	sporeCrawler: SporeCrawler;
 	// miningSites: { [sourceID: string]: MiningSite };	// Component with logic for mining and hauling
 	// extractionSites: { [extractorID: string]: ExtractionSite };
 	miningSites: { [flagName: string]: DirectiveHarvest };	// Component with logic for mining and hauling
@@ -449,7 +449,9 @@ export class Colony {
 		// Instantiate the upgradeSite
 		this.upgradeSite = new UpgradeSite(this, this.controller);
 		// Instantiate spore crawlers to wrap towers
-		this.sporeCrawlers = _.map(this.towers, tower => new SporeCrawler(this, tower));
+		if (this.towers[0]) {
+			this.sporeCrawler = new SporeCrawler(this, this.towers[0]);
+		}
 		// Reverse the hive clusters for correct order for init() and run()
 		this.hiveClusters.reverse();
 	}

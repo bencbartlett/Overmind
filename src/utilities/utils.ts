@@ -192,3 +192,26 @@ export function randomHex(length: number): string {
 export function rollingAverage(current: number, avg: number | undefined, window: number): number {
 	return (current + (avg || 0) * (window - 1)) / window;
 }
+
+// Rotate a matrix in place clockwise by 90 degrees
+function rotateMatrix<T>(matrix: T[][]): void {
+	// reverse the rows
+	matrix.reverse();
+	// swap the symmetric elements
+	for (let i = 0; i < matrix.length; i++) {
+		for (let j = 0; j < i; j++) {
+			let temp = matrix[i][j];
+			matrix[i][j] = matrix[j][i];
+			matrix[j][i] = temp;
+		}
+	}
+}
+
+// Return a copy of a 2D array rotated by specified number of clockwise 90 turns
+export function rotatedMatrix<T>(matrix: T[][], clockwiseTurns: 0 | 1 | 2 | 3): T[][] {
+	let mat = _.cloneDeep(matrix);
+	for (let i = 0; i < clockwiseTurns; i++) {
+		rotateMatrix(mat);
+	}
+	return mat;
+}

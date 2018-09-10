@@ -201,7 +201,7 @@ export class CombatZerg extends Zerg {
 		// Fight within the room
 		const target = CombatTargeting.findTarget(this);
 		const targetRange = this.getActiveBodyparts(RANGED_ATTACK) > this.getActiveBodyparts(ATTACK) ? 3 : 1;
-		this.debug(target, targetRange);
+		this.debug(`${target}, ${targetRange}`);
 		if (target) {
 			return Movement.combatMove(this, [{pos: target.pos, range: targetRange}], []);
 		}
