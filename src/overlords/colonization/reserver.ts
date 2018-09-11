@@ -1,6 +1,6 @@
 import {Overlord} from '../Overlord';
 import {Zerg} from '../../zerg/Zerg';
-import {DirectiveOutpost} from '../../directives/core/outpost';
+import {DirectiveOutpost} from '../../directives/colony/outpost';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';

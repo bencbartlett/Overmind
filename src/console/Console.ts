@@ -5,7 +5,7 @@ import {toColumns} from '../utilities/utils';
 import {asciiLogoSmall} from '../visuals/logos';
 import {log} from './log';
 import {alignedNewline, bullet} from '../utilities/stringConstants';
-import {DEFAULT_OVERMIND_SIGNATURE, MY_USERNAME} from '../~settings';
+import {DEFAULT_OVERMIND_SIGNATURE, MY_USERNAME, USE_PROFILER} from '../~settings';
 
 export class OvermindConsole {
 
@@ -30,8 +30,12 @@ export class OvermindConsole {
 		global.listPersistentDirectives = this.listPersistentDirectives;
 		global.removeAllLogisticsDirectives = this.removeAllLogisticsDirectives;
 		global.removeFlagsByColor = this.removeFlagsByColor;
+		global.removeErrantFlags = this.removeErrantFlags;
 		global.deepCleanMemory = this.deepCleanMemory;
 	}
+
+
+	// Help, information, and operational changes ======================================================================
 
 	static help() {
 		let msg = '\n<font color="#ff00ff">';
@@ -42,12 +46,13 @@ export class OvermindConsole {
 
 		let descr: { [functionName: string]: string } = {};
 		descr['help'] = 'show this message';
-		descr['debug(thing)'] = 'enable debug logging for a game object or process';
-		descr['stopDebug(thing)'] = 'disable debug logging for a game object or process';
 		descr['info()'] = 'display version and operation information';
 		descr['setMode(mode)'] = 'set the operational mode to "manual", "semiautomatic", or "automatic"';
 		descr['setSignature(newSignature)'] = 'set your controller signature; no argument sets to default';
 		descr['print(...args[])'] = 'log stringified objects to the console';
+		descr['debug(thing)'] = 'enable debug logging for a game object or process';
+		descr['stopDebug(thing)'] = 'disable debug logging for a game object or process';
+		descr['timeit(function, repeat=1)'] = 'time the execution of a snippet of code';
 		descr['setLogLevel(int)'] = 'set the logging level from 0 - 4';
 		descr['openRoomPlanner(roomName)'] = 'open the room planner for a room';
 		descr['closeRoomPlanner(roomName)'] = 'close the room planner and save changes';
@@ -59,6 +64,7 @@ export class OvermindConsole {
 		descr['listAllDirectives()'] = 'print type, name, pos of every directive';
 		descr['listPersistentDirectives()'] = 'print type, name, pos of every persistent directive';
 		descr['removeFlagsByColor(color, secondaryColor)'] = 'remove flags that match the specified colors';
+		descr['removeErrantFlags()'] = 'remove all flags which don\'t match a directive';
 		descr['deepCleanMemory()'] = 'deletes all non-critical portions of memory (be careful!)';
 		// Console list
 		let descrMsg = toColumns(descr, {justify: true, padChar: '.'});
@@ -91,16 +97,6 @@ export class OvermindConsole {
 		return baseInfo.join(joinChar);
 	}
 
-	static debug(thing: { name: string, memory: any }): string {
-		thing.memory.debug = true;
-		return `Enabled debugging for ${thing.name}.`;
-	}
-
-	static stopDebug(thing: { name: string, memory: any }): string {
-		delete thing.memory.debug;
-		return `Disabled debugging for ${thing.name}.`;
-	}
-
 	static setMode(mode: operationMode): string {
 		switch (mode) {
 			case 'manual':
@@ -130,6 +126,19 @@ export class OvermindConsole {
 			throw new Error(`Invalid signature: ${signature}; must contain the string "Overmind" or ` +
 							`${DEFAULT_OVERMIND_SIGNATURE} (accessible on global with __DEFAULT_OVERMIND_SIGNATURE__)`);
 		}
+	}
+
+
+	// Debugging methods ===============================================================================================
+
+	static debug(thing: { name: string, memory: any }): string {
+		thing.memory.debug = true;
+		return `Enabled debugging for ${thing.name}.`;
+	}
+
+	static stopDebug(thing: { name: string, memory: any }): string {
+		delete thing.memory.debug;
+		return `Disabled debugging for ${thing.name}.`;
 	}
 
 	static print(...args: any[]): string {
@@ -167,6 +176,9 @@ export class OvermindConsole {
 		used = Game.cpu.getUsed() - start;
 		return `CPU used: ${used}. Repetitions: ${repeat} (${used / repeat} each).`;
 	}
+
+
+	// Room planner control ============================================================================================
 
 	static openRoomPlanner(roomName: string): string {
 		if (Overmind.colonies[roomName]) {
@@ -220,6 +232,9 @@ export class OvermindConsole {
 		}
 	}
 
+
+	// Directive management ============================================================================================
+
 	static listAllDirectives(): string {
 		let msg = '';
 		for (let i in Overmind.directives) {
@@ -261,6 +276,24 @@ export class OvermindConsole {
 		return `Removed ${removeFlags.length} flags.`;
 	}
 
+	static removeErrantFlags(): string {
+		// This may need to be be run several times depending on visibility
+		if (USE_PROFILER) {
+			return `ERROR: should not be run while profiling is enabled!`;
+		}
+		let count = 0;
+		for (let name in Game.flags) {
+			if (!Overmind.directives[name]) {
+				Game.flags[name].remove();
+				count += 1;
+			}
+		}
+		return `Removed ${count} flags.`;
+	}
+
+
+	// Structure management ============================================================================================
+
 	static destroyErrantStructures(roomName: string): string {
 		let colony = Overmind.colonies[roomName] as Colony;
 		if (!colony) return `${roomName} is not a valid colony!`;
@@ -299,6 +332,9 @@ export class OvermindConsole {
 		}
 		return `Destroyed ${room.barriers.length} barriers.`;
 	}
+
+
+	// Memory management ===============================================================================================
 
 	static deepCleanMemory(): string {
 		// Clean colony memory

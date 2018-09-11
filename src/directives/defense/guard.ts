@@ -12,7 +12,7 @@ interface DirectiveGuardMemory extends FlagMemory {
 export class DirectiveGuard extends Directive {
 
 	static directiveName = 'guard';
-	static color = COLOR_RED;
+	static color = COLOR_BLUE;
 	static secondaryColor = COLOR_BLUE;
 
 	memory: DirectiveGuardMemory;

@@ -1,8 +1,8 @@
 // Preprocessing code to be run before animation of anything
 
 import {profile} from '../profiler/decorator';
-import {DirectiveOutpost} from '../directives/core/outpost';
-import {DirectiveSKOutpost} from '../directives/core/outpostSK';
+import {DirectiveOutpost} from '../directives/colony/outpost';
+import {DirectiveSKOutpost} from '../directives/colony/outpostSK';
 
 @profile
 export class GameCache implements ICache {

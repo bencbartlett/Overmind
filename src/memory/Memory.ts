@@ -40,6 +40,7 @@ export class Mem {
 			// noinspection TsLint
 			Memory.rooms;
 			lastMemory = RawMemory._parsed;
+			Memory.stats.persistent.lastMemoryReset = Game.time;
 		}
 		lastTime = Game.time;
 	}

@@ -1,31 +1,32 @@
 // Jump table to instantiate flags based on type
 
 import {DirectiveGuard} from './defense/guard';
-import {DirectiveIncubate} from './colonization/incubate';
-import {DirectiveOutpost} from './core/outpost';
-import {DirectiveBootstrap} from './core/bootstrap';
+import {DirectiveIncubate} from './colony/incubate';
+import {DirectiveOutpost} from './colony/outpost';
+import {DirectiveBootstrap} from './situational/bootstrap';
 import {Directive} from './Directive';
 import {DirectiveRPHatchery} from './roomPlanner/roomPlanner_hatchery';
 import {DirectiveRPCommandCenter} from './roomPlanner/roomPlanner_commandCenter';
-import {DirectiveColonize} from './colonization/colonize';
+import {DirectiveColonize} from './colony/colonize';
 import {DirectiveTargetSiege} from './targeting/siegeTarget';
 import {DirectiveSiege} from './offense/siege';
 import {DirectiveHealPoint} from './offense/healPoint';
 import {DirectiveDestroy} from './offense/destroy';
 import {DirectiveInvasionDefense} from './defense/invasionDefense';
-import {DirectiveHaul} from './logistics/haul';
+import {DirectiveHaul} from './resource/haul';
 import {DirectiveDismantle} from './targeting/dismantle';
-import {DirectiveNukeResponse} from './defense/nukeResponse';
-import {DirectiveTerminalEmergencyState} from './logistics/terminalState_emergency';
+import {DirectiveNukeResponse} from './situational/nukeResponse';
+import {DirectiveTerminalEmergencyState} from './terminalState/terminalState_emergency';
 import {DirectiveRPBunker} from './roomPlanner/roomPlanner_bunker';
-import {DirectiveTerminalRebuildState} from './logistics/terminalState_rebuild';
-import {DirectiveTerminalEvacuateState} from './logistics/terminalState_evacuate';
+import {DirectiveTerminalRebuildState} from './terminalState/terminalState_rebuild';
+import {DirectiveTerminalEvacuateState} from './terminalState/terminalState_evacuate';
 import {DirectiveControllerAttack} from './offense/controllerAttack';
-import {DirectiveSKOutpost} from './core/outpostSK';
-import {DirectiveHarvest} from './core/harvest';
-import {DirectiveExtract} from './core/extract';
+import {DirectiveSKOutpost} from './colony/outpostSK';
+import {DirectiveHarvest} from './resource/harvest';
+import {DirectiveExtract} from './resource/extract';
 
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
+
 	switch (flag.color) {
 
 		// Colony directives ===========================================================================================
@@ -42,11 +43,9 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			}
 			break;
 
-		// Combat directives ===========================================================================================
+		// Offensive combat directives =================================================================================
 		case COLOR_RED:
 			switch (flag.secondaryColor) {
-				case COLOR_BLUE:
-					return new DirectiveGuard(flag);
 				case COLOR_PURPLE:
 					return new DirectiveControllerAttack(flag);
 				case COLOR_ORANGE:
@@ -58,19 +57,27 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			}
 			break;
 
+		// Defensive combat directives =================================================================================
+		case COLOR_BLUE:
+			switch (flag.secondaryColor) {
+				case COLOR_BLUE:
+					return new DirectiveGuard(flag);
+				case COLOR_PURPLE:
+					return new DirectiveInvasionDefense(flag);
+			}
+			break;
+
 		// Situational directives ======================================================================================
 		case COLOR_ORANGE:
 			switch (flag.secondaryColor) {
 				case COLOR_ORANGE:
 					return new DirectiveBootstrap(flag);
-				case COLOR_RED:
-					return new DirectiveInvasionDefense(flag);
 				case COLOR_BLUE:
 					return new DirectiveNukeResponse(flag);
 			}
 			break;
 
-		// Logistics directives ========================================================================================
+		// Resource directives =========================================================================================
 		case COLOR_YELLOW:
 			switch (flag.secondaryColor) {
 				case COLOR_YELLOW:
@@ -79,11 +86,17 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveExtract(flag);
 				case COLOR_BLUE:
 					return new DirectiveHaul(flag);
-				case COLOR_ORANGE:
-					return new DirectiveTerminalEmergencyState(flag);
+			}
+			break;
+
+		// Terminal state directives ===================================================================================
+		case COLOR_BROWN:
+			switch (flag.secondaryColor) {
 				case COLOR_RED:
 					return new DirectiveTerminalEvacuateState(flag);
-				case COLOR_BROWN:
+				case COLOR_ORANGE:
+					return new DirectiveTerminalEmergencyState(flag);
+				case COLOR_YELLOW:
 					return new DirectiveTerminalRebuildState(flag);
 			}
 			break;
@@ -110,4 +123,5 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			}
 			break;
 	}
+
 }

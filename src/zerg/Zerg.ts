@@ -7,6 +7,7 @@ import {Movement, MoveOptions} from '../movement/Movement';
 import {isCreep, isZerg} from '../declarations/typeGuards';
 import {CombatIntel} from '../intel/CombatIntel';
 import {log} from '../console/log';
+import {NEW_OVERMIND_INTERVAL} from '../~settings';
 
 export function getOverlord(creep: Zerg | Creep): Overlord | null {
 	if (creep.memory.overlord) {
@@ -123,7 +124,8 @@ export class Zerg {
 		Overmind.zerg[this.name] = this; // register global reference
 		global[this.name] = this;
 		// Handle attack notification when at lifetime - 1
-		if (this.ticksToLive == this.lifetime - 1 && !notifyWhenAttacked) {
+		if (!notifyWhenAttacked && (this.ticksToLive || 0) >= this.lifetime - (NEW_OVERMIND_INTERVAL + 1)) {
+			// creep.notifyWhenAttacked only uses the 0.2CPU intent cost if it changes the intent value
 			this.notifyWhenAttacked(notifyWhenAttacked);
 		}
 	}

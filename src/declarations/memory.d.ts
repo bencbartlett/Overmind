@@ -181,17 +181,3 @@ interface RoomMemory {
 	prevPositions?: { [creepID: string]: protoPos };
 	tick?: number;
 }
-
-interface SpawnMemory {
-}
-
-interface OverseerMemory {
-}
-
-interface OverlordMemory {
-
-}
-
-interface CommandCenterMemory {
-	idlePos?: protoPos;
-}

@@ -3,7 +3,7 @@
 
 import {Autonomy, getAutonomyLevel, Mem} from '../memory/Memory';
 import {Colony, getAllColonies} from '../Colony';
-import {DirectiveColonize} from '../directives/colonization/colonize';
+import {DirectiveColonize} from '../directives/colony/colonize';
 import {Cartographer} from '../utilities/Cartographer';
 import {MIN_EXPANSION_DISTANCE} from './ExpansionPlanner';
 import {maxBy} from '../utilities/utils';

@@ -1,7 +1,7 @@
 // SourceReaperOverlord -- spawns offensive creeps to allow source keeper mining
 
 import {CombatZerg} from '../../zerg/CombatZerg';
-import {DirectiveSKOutpost} from '../../directives/core/outpostSK';
+import {DirectiveSKOutpost} from '../../directives/colony/outpostSK';
 import {RoomIntel} from '../../intel/RoomIntel';
 import {minBy} from '../../utilities/utils';
 import {Mem} from '../../memory/Memory';
@@ -13,8 +13,9 @@ import {Visualizer} from '../../visuals/Visualizer';
 import {profile} from '../../profiler/decorator';
 import {CombatOverlord} from '../CombatOverlord';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
+import {OverlordMemory} from '../Overlord';
 
-interface SourceReaperOverlordMemory {
+interface SourceReaperOverlordMemory extends OverlordMemory {
 	targetLairID?: string;
 }
 

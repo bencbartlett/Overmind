@@ -21,11 +21,13 @@ export const TerminalState_Emergency: TerminalState = {
 	tolerance: 500
 };
 
+const EMERGENCY_STATE_TIMEOUT = 10000;
+
 @profile
 export class DirectiveTerminalEmergencyState extends Directive {
 
 	static directiveName = 'emergencyState';
-	static color = COLOR_YELLOW;
+	static color = COLOR_BROWN;
 	static secondaryColor = COLOR_ORANGE;
 
 	// colony: Colony | undefined; // this is technically unallowable, but at end of life, colony can be undefined
@@ -59,7 +61,7 @@ export class DirectiveTerminalEmergencyState extends Directive {
 
 	run() {
 		// Incubation directive gets removed once the colony has a command center (storage)
-		if (!this.colony || !this.terminal) {
+		if (!this.colony || !this.terminal || Game.time > (this.memory.created || 0) + EMERGENCY_STATE_TIMEOUT) {
 			this.remove();
 		}
 	}

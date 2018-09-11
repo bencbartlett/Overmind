@@ -1,5 +1,6 @@
 import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
+import {log} from '../../console/log';
 
 @profile
 export class DirectiveRPHatchery extends Directive {
@@ -17,6 +18,7 @@ export class DirectiveRPHatchery extends Directive {
 	}
 
 	init(): void {
+		log.info(`Classic overmind layout is deprecated; bunker layout is recommended.`);
 		this.colony.roomPlanner.addComponent('hatchery', this.pos, this.memory.rotation);
 	}
 

@@ -12,9 +12,7 @@ export class StationaryScoutOverlord extends Overlord {
 
 	constructor(directive: Directive, priority = OverlordPriority.scouting.stationary) {
 		super(directive, 'scout', priority);
-		this.scouts = this.zerg(Roles.scout, {
-			notifyWhenAttacked: false
-		});
+		this.scouts = this.zerg(Roles.scout, {notifyWhenAttacked: false});
 	}
 
 	init() {

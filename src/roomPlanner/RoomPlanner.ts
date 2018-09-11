@@ -12,7 +12,7 @@ import {RoadPlanner} from './RoadPlanner';
 import {BarrierPlanner} from './BarrierPlanner';
 import {BuildPriorities, DemolishStructurePriorities} from '../priorities/priorities_structures';
 import {bunkerLayout, insideBunkerBounds} from './layouts/bunker';
-import {DirectiveTerminalRebuildState} from '../directives/logistics/terminalState_rebuild';
+import {DirectiveTerminalRebuildState} from '../directives/terminalState/terminalState_rebuild';
 import {derefCoords, maxBy} from '../utilities/utils';
 import {bullet} from '../utilities/stringConstants';
 import {Pathing} from '../movement/Pathing';
@@ -536,7 +536,7 @@ export class RoomPlanner {
 			// don't demolish bunker baby ramparts until the new ones are sufficiently big
 			if (structureType == STRUCTURE_RAMPART && this.colony.layout == 'bunker') {
 				let bunkerBarriers = _.filter(this.colony.room.barriers, b => insideBunkerBounds(b.pos, this.colony));
-				let avgBarrierHits = _.sum(bunkerBarriers, barrier => barrier.hits) / bunkerBarriers.length;
+				let avgBarrierHits = (_.sum(bunkerBarriers, barrier => barrier.hits) / bunkerBarriers.length) || 0;
 				if (avgBarrierHits < 1e+6) continue;
 			}
 			let maxRemoved = priority.maxRemoved || Infinity;

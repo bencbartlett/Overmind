@@ -4,7 +4,7 @@ import {DirectiveGuard} from '../../directives/defense/guard';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/siegeTarget';
 import {profile} from '../../profiler/decorator';
-import {DirectiveHaul} from '../../directives/logistics/haul';
+import {DirectiveHaul} from '../../directives/resource/haul';
 import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {RoomIntel} from '../../intel/RoomIntel';

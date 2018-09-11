@@ -116,10 +116,10 @@ export class BarrierPlanner {
 				return insideBunkerBounds(pos, this.colony) || pos.getRangeTo(this.colony.controller) == 1;
 			} else {
 				// Otherwise keep the normal plan up
-				return !!this.memory.barrierLookup[pos.coordName];
+				return !!this.memory.barrierLookup[pos.coordName] || pos.getRangeTo(this.colony.controller) == 1;
 			}
 		} else {
-			return !!this.memory.barrierLookup[pos.coordName];
+			return !!this.memory.barrierLookup[pos.coordName] || pos.getRangeTo(this.colony.controller) == 1;
 		}
 	}
 

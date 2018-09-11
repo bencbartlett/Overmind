@@ -1,12 +1,12 @@
 import {Overlord} from '../Overlord';
-import {DirectiveBootstrap} from '../../directives/core/bootstrap';
+import {DirectiveBootstrap} from '../../directives/situational/bootstrap';
 import {ColonyStage} from '../../Colony';
 import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {SpawnRequest} from '../../hiveClusters/hatchery';
-import {DirectiveHarvest} from '../../directives/core/harvest';
+import {DirectiveHarvest} from '../../directives/resource/harvest';
 import {Roles, Setups} from '../../creepSetups/setups';
 
 // Bootstrapping overlord: spawns small miners and suppliers to recover from a catastrohpic colony crash

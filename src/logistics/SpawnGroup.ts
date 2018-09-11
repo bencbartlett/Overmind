@@ -8,6 +8,7 @@ import {Pathing} from '../movement/Pathing';
 import {bodyCost} from '../creepSetups/CreepSetup';
 import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
+import {Colony} from '../Colony';
 
 interface SpawnGroupMemory {
 	colonies: string[];
@@ -123,7 +124,8 @@ export class SpawnGroup {
 	/* SpawnGroup.init() must be called AFTER all hatcheries have been initialized */
 	init(): void {
 		// Most initialization needs to be done at init phase because colonies are still being constructed earlier
-		const hatcheries = _.compact(_.map(this.colonyNames, name => Overmind.colonies[name].hatchery)) as Hatchery[];
+		const colonies = _.compact(_.map(this.colonyNames, name => Overmind.colonies[name])) as Colony[];
+		const hatcheries = _.compact(_.map(colonies, colony => colony.hatchery)) as Hatchery[];
 		const distanceTo = (hatchery: Hatchery) => this.memory.distances[hatchery.pos.roomName] + 25;
 		// Enqueue all requests to the hatchery with least expected wait time that can spawn full-size creep
 		for (let request of this.requests) {

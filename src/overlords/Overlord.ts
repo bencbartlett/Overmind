@@ -12,6 +12,7 @@ import {SpawnRequest, SpawnRequestOptions} from '../hiveClusters/hatchery';
 import {SpawnGroup} from '../logistics/SpawnGroup';
 import {Pathing} from '../movement/Pathing';
 import {CombatZerg} from '../zerg/CombatZerg';
+import {Mem} from '../memory/Memory';
 
 export interface OverlordInitializer {
 	ref: string;
@@ -40,15 +41,20 @@ interface ZergOptions {
 	boostWishlist?: _ResourceConstantSansEnergy[] | undefined;
 }
 
-interface OverlordMemory {
-	suspendFor?: number;
+export interface OverlordMemory {
+	suspendUntil?: number;
 }
+
+const OverlordMemoryDefaults: OverlordMemory = {};
 
 @profile
 export abstract class Overlord {
 
+	private initializer: OverlordInitializer | Colony;
+	memory: OverlordMemory;
 	room: Room | undefined;
 	priority: number;
+	name: string;
 	ref: string;
 	pos: RoomPosition;
 	colony: Colony;
@@ -58,11 +64,13 @@ export abstract class Overlord {
 	private _combatZerg: { [roleName: string]: CombatZerg[] };
 	private boosts: { [roleName: string]: _ResourceConstantSansEnergy[] | undefined };
 	creepUsageReport: { [roleName: string]: [number, number] | undefined };
-	suspendFor: number;
 
 	constructor(initializer: OverlordInitializer | Colony, name: string, priority: number) {
+		this.initializer = initializer;
+		this.memory = Mem.wrap(initializer.memory, name, OverlordMemoryDefaults);
 		this.room = initializer.room;
 		this.priority = priority;
+		this.name = name;
 		this.ref = initializer.ref + '>' + name;
 		this.pos = initializer.pos;
 		this.colony = isColony(initializer) ? initializer : initializer.colony;
@@ -72,32 +80,47 @@ export abstract class Overlord {
 		this.recalculateCreeps();
 		this.creepUsageReport = _.mapValues(this._creeps, creep => undefined);
 		this.boosts = _.mapValues(this._creeps, creep => undefined);
-		this.suspendFor = 0;
 		// Register the overlord on the colony overseer and on the overmind
 		Overmind.overlords[this.ref] = this;
 		this.colony.overseer.registerOverlord(this);
+	}
+
+	get isSuspended(): boolean {
+		return !!this.memory.suspendUntil && Game.time < this.memory.suspendUntil;
+	}
+
+	suspend(ticks: number) {
+		this.memory.suspendUntil = Game.time + ticks;
+	}
+
+	suspendUntil(tick: number) {
+		this.memory.suspendUntil = tick;
 	}
 
 	/* Refreshes overlord, recalculating creeps and refreshing existing Zerg. New creeps are automatically added,
 	 * and the corresponding role groups (e.g. 'queens') are automatically updated. Child methods do not need to
 	 * refresh their zerg properties, only other room objects stored on the Overlord. */
 	refresh(): void {
-		if (this.suspendFor > 0) {
-			this.suspendFor--;
-			return;
-		} else {
-			// Refresh room
-			this.room = Game.rooms[this.pos.roomName];
-			// Refresh zerg
-			this.recalculateCreeps();
-			for (let role in this._creeps) {
-				for (let creep of this._creeps[role]) {
-					if (Overmind.zerg[creep.name]) {
-						// log.debug(`Refreshing creep ${creep.name}`)
-						Overmind.zerg[creep.name].refresh();
-					} else {
-						log.warning(`${this.print}: could not find and refresh zerg with name ${creep.name}!`);
-					}
+		this.memory = this.initializer.memory[this.name];
+		// Handle suspension
+		if (this.memory.suspendUntil) {
+			if (Game.time < this.memory.suspendUntil) {
+				return;
+			} else {
+				delete this.memory.suspendUntil;
+			}
+		}
+		// Refresh room
+		this.room = Game.rooms[this.pos.roomName];
+		// Refresh zerg
+		this.recalculateCreeps();
+		for (let role in this._creeps) {
+			for (let creep of this._creeps[role]) {
+				if (Overmind.zerg[creep.name]) {
+					// log.debug(`Refreshing creep ${creep.name}`)
+					Overmind.zerg[creep.name].refresh();
+				} else {
+					log.warning(`${this.print}: could not find and refresh zerg with name ${creep.name}!`);
 				}
 			}
 		}
@@ -458,10 +481,6 @@ export abstract class Overlord {
 			}
 			creep.run();
 		}
-	}
-
-	suspend(ticks: number) {
-		this.suspendFor = ticks;
 	}
 
 	visuals(): void {

@@ -30,8 +30,8 @@ import {log} from './console/log';
 import {assimilationLocked} from './assimilation/decorator';
 import {DefaultOverlord} from './overlords/core/default';
 import {$} from './caching/GlobalCache';
-import {DirectiveHarvest} from './directives/core/harvest';
-import {DirectiveExtract} from './directives/core/extract';
+import {DirectiveHarvest} from './directives/resource/harvest';
+import {DirectiveExtract} from './directives/resource/extract';
 import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
 
 export enum ColonyStage {

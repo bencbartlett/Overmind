@@ -31,8 +31,12 @@ export abstract class Directive {
 	constructor(flag: Flag, requiredRCL = 1, maxPathLength = 550) {
 		// this.flag = flag;
 		this.memory = flag.memory;
-		if (this.memory.suspendUntil && Game.time < this.memory.suspendUntil) {
-			return;
+		if (this.memory.suspendUntil) {
+			if (Game.time < this.memory.suspendUntil) {
+				return;
+			} else {
+				delete this.memory.suspendUntil;
+			}
 		}
 		this.name = flag.name;
 		this.ref = flag.ref;
@@ -66,6 +70,18 @@ export abstract class Directive {
 
 	get flag(): Flag {
 		return Game.flags[this.name];
+	}
+
+	get isSuspended(): boolean {
+		return !!this.memory.suspendUntil && Game.time < this.memory.suspendUntil;
+	}
+
+	suspend(ticks: number) {
+		this.memory.suspendUntil = Game.time + ticks;
+	}
+
+	suspendUntil(tick: number) {
+		this.memory.suspendUntil = tick;
 	}
 
 	refresh(): void {

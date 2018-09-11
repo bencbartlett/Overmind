@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file. The format 
 - Added some under-the-hood content for assimilation
     - Completed the "key exchange protocol" that the assimilator uses to periodically validate codebases
 - Preliminary support for formation-based movement and pathfinding using `Swarm`s
+    - Added behavioral locks to prevent usage of this feature for non-assimilated codebases
 
 ### Changed
 - Improvements to `RangedDefenseOverlord` which utilize some of the new combat logic developed for SK mining
@@ -33,11 +34,29 @@ All notable changes to this project will be documented in this file. The format 
 - Standardized creep setups and role names into a single library for greater consistency and exchangeability
 - Boosts are now assigned by overlords in the constructor phase by passing a `boostWishlist` option in the `zerg()` and `combatZerg()` methods
 - Improvements to destroyer pairs
+- Better timeout functions for terminal state directives
+- Changes to flag color codes and directory structure to make directive types more consistent:
+    - Changed primary color classifications:
+        - Red: offsensive combat (previously all combat)
+        - Blue: defensive combat (new)
+        - Yellow: resource collection and transport (previously logistics)
+        - Brown: terminal state directives (new)
+    - Specific color code changes:
+        - Guard: red/blue -> blue/blue
+        - Invasion defense: orange/red -> blue/purple
+        - Evacuate terminal state: yellow/red -> brown/red
+        - Emergency terminal state: yellow/orange -> brown/orange
+        - Rebuild terminal state: yellow/brown -> brown/yellow
+    - New console method will assist in this migration: `removeErrantFlags()` removes all flags which do not match a directive color code
+
 
 ### Fixed
 - Bugfix with pioneer recharging behavior to include dropped resources in recharging options
 - Bugfix for incorrectly initialized terminalNetwork memory not logging transfer costs correctly (#38, thanks @MaggNorway!)
 - Various SpawnGroup bugfixes
+- Fixed a bug which caused RoomPlanner to still demolish baby ramparts prematurely
+- Fixed a bug where I forgot to add container-building capabilities to the new extraction overlords (derp)
+- Fixed a bug which broke notification disabling for scouts (#48)
 
 ### Removed
 - `MiningSite`s and `ExtractionSite`s have been removed; their functionalities have been split among the mining/extraction directives and overlords

@@ -3,9 +3,13 @@ import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {profile} from '../../profiler/decorator';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {DirectiveExtract} from '../../directives/core/extract';
+import {DirectiveExtract} from '../../directives/resource/extract';
 import {$} from '../../caching/GlobalCache';
 import {Roles, Setups} from '../../creepSetups/setups';
+import {log} from '../../console/log';
+import {Pathing} from '../../movement/Pathing';
+
+const BUILD_OUTPUT_FREQUENCY = 15;
 
 @profile
 export class ExtractorOverlord extends Overlord {
@@ -55,6 +59,42 @@ export class ExtractorOverlord extends Overlord {
 		}
 	}
 
+	/* Calculate where the container output will be built for this site */
+	private calculateContainerPos(): RoomPosition {
+		// log.debug(`Computing container position for mining overlord at ${this.pos.print}...`);
+		let originPos: RoomPosition | undefined = undefined;
+		if (this.colony.storage) {
+			originPos = this.colony.storage.pos;
+		} else if (this.colony.roomPlanner.storagePos) {
+			originPos = this.colony.roomPlanner.storagePos;
+		}
+		if (originPos) {
+			let path = Pathing.findShortestPath(this.pos, originPos).path;
+			let pos = _.find(path, pos => pos.getRangeTo(this) == 1);
+			if (pos) return pos;
+		}
+		// Shouldn't ever get here
+		log.warning(`Last resort container position calculation for ${this.print}!`);
+		return _.first(this.pos.availableNeighbors(true));
+	}
+
+	private buildOutputIfNeeded(): void {
+		// Create container if there is not already one being built and no link
+		if (!this.container) {
+			let containerSite = _.first(_.filter(this.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 2),
+												 site => site.structureType == STRUCTURE_CONTAINER));
+			if (!containerSite) {
+				let containerPos = this.calculateContainerPos();
+				log.info(`${this.print}: building container at ${containerPos.print}`);
+				let result = containerPos.createConstructionSite(STRUCTURE_CONTAINER);
+				if (result != OK) {
+					log.error(`${this.print}: cannot build container at ${containerPos.print}! Result: ${result}`);
+				}
+				return;
+			}
+		}
+	}
+
 	init() {
 		let amount = this.mineral && this.mineral.mineralAmount > 0 ? this.mineral.pos.availableNeighbors().length : 0;
 		this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), Setups.drones.extractor);
@@ -82,5 +122,8 @@ export class ExtractorOverlord extends Overlord {
 
 	run() {
 		this.autoRun(this.drones, drone => this.handleDrone(drone), drone => drone.flee());
+		if (this.room && Game.time % BUILD_OUTPUT_FREQUENCY == 2) {
+			this.buildOutputIfNeeded();
+		}
 	}
 }

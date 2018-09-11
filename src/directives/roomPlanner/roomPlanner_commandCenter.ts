@@ -1,5 +1,6 @@
 import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
+import {log} from '../../console/log';
 
 @profile
 export class DirectiveRPCommandCenter extends Directive {
@@ -17,6 +18,7 @@ export class DirectiveRPCommandCenter extends Directive {
 	}
 
 	init(): void {
+		log.info(`Classic overmind layout is deprecated; bunker layout is recommended.`);
 		this.colony.roomPlanner.addComponent('commandCenter', this.pos, this.memory.rotation);
 	}
 

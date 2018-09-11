@@ -1,7 +1,7 @@
 /* The Overlord object handles most of the task assignment and directs the spawning operations for each Colony. */
 
 import {DirectiveGuard} from './directives/defense/guard';
-import {DirectiveBootstrap} from './directives/core/bootstrap';
+import {DirectiveBootstrap} from './directives/situational/bootstrap';
 import {profile} from './profiler/decorator';
 import {Colony, ColonyStage} from './Colony';
 import {Overlord} from './overlords/Overlord';
@@ -10,13 +10,13 @@ import {log} from './console/log';
 import {Visualizer} from './visuals/Visualizer';
 import {Pathing} from './movement/Pathing';
 import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
-import {DirectiveNukeResponse} from './directives/defense/nukeResponse';
-import {DirectiveTerminalEvacuateState} from './directives/logistics/terminalState_evacuate';
+import {DirectiveNukeResponse} from './directives/situational/nukeResponse';
+import {DirectiveTerminalEvacuateState} from './directives/terminalState/terminalState_evacuate';
 import {bodyCost} from './creepSetups/CreepSetup';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {Cartographer, ROOMTYPE_CONTROLLER, ROOMTYPE_SOURCEKEEPER} from './utilities/Cartographer';
 import {derefCoords, hasJustSpawned, minBy} from './utilities/utils';
-import {DirectiveOutpost} from './directives/core/outpost';
+import {DirectiveOutpost} from './directives/colony/outpost';
 import {Autonomy, getAutonomyLevel} from './memory/Memory';
 import {RoomIntel} from './intel/RoomIntel';
 import {Roles, Setups} from './creepSetups/setups';
@@ -28,11 +28,9 @@ import {Roles, Setups} from './creepSetups/setups';
 export class Overseer {
 
 	colony: Colony; 							// Instantiated colony object
+	overlords: Overlord[];						// Overlords sorted by priority
 	directives: Directive[];					// Directives across the colony
-	// overlords: {
-	// 	[priority: number]: Overlord[]
-	// };
-	overlords: Overlord[];
+
 	private overlordRequests: Overlord[];
 
 	static settings = {
@@ -44,6 +42,10 @@ export class Overseer {
 		this.directives = [];
 		this.overlords = [];
 		this.overlordRequests = [];
+	}
+
+	build(): void {
+
 	}
 
 	refresh() {
@@ -222,35 +224,14 @@ export class Overseer {
 		}
 	}
 
-	build(): void {
-
-	}
-
 	// Initialization ==================================================================================================
 
-	// private buildOverlordPriorityQueue(): void {
-	// 	for (let overlord of this.overlordRequests) {
-	// 		if (!this.overlords[overlord.priority]) {
-	// 			this.overlords[overlord.priority] = [];
-	// 		}
-	// 		this.overlords[overlord.priority].push(overlord);
-	// 	}
-	// }
-
 	init(): void {
-		// this.buildOverlordPriorityQueue();
-		// Handle directives - should be done first
-		// _.forEach(this.directives, directive => directive.init());
-		// Handle overlords in decreasing priority
-		// for (let priority in this.overlords) {
-		// 	if (!this.overlords[priority]) continue;
-		// 	for (let overlord of this.overlords[priority]) {
-		// 		overlord.init();
-		// 	}
-		// }
+		// Handle directives
 		for (let directive of this.directives) {
 			directive.init();
 		}
+		// Handle overlords
 		for (let overlord of this.overlords) {
 			overlord.preInit();
 			overlord.init();

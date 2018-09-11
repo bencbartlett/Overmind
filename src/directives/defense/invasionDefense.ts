@@ -15,8 +15,8 @@ interface DirectiveInvasionDefenseMemory extends FlagMemory {
 export class DirectiveInvasionDefense extends Directive {
 
 	static directiveName = 'invasionDefense';
-	static color = COLOR_ORANGE;
-	static secondaryColor = COLOR_RED;
+	static color = COLOR_BLUE;
+	static secondaryColor = COLOR_PURPLE;
 	static requiredRCL = 1;
 
 	memory: DirectiveInvasionDefenseMemory;
