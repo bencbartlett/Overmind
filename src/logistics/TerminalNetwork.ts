@@ -388,7 +388,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 			if (state.type == 'in') {
 				if (amount < targetAmount - state.tolerance) {
 					// Request needed resources from most plentiful colony
-					let sender = maxBy(this.readyTerminals, t => _.sum(t.store));
+					let sender = maxBy(this.readyTerminals, t => t.store[resourceType] || 0);
 					if (!sender) return;
 					let receiveAmount = minMax(targetAmount - amount, TERMINAL_MIN_SEND, maxSendSize);
 					if (sender && (sender.store[resourceType] || 0) > TERMINAL_MIN_SEND) {

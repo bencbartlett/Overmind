@@ -4,7 +4,6 @@ import {profile} from './profiler/decorator';
 import {Hatchery} from './hiveClusters/hatchery';
 import {CommandCenter} from './hiveClusters/commandCenter';
 import {UpgradeSite} from './hiveClusters/upgradeSite';
-import {Overseer} from './Overseer';
 import {WorkerOverlord} from './overlords/core/worker';
 import {Zerg} from './zerg/Zerg';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
@@ -86,8 +85,6 @@ const defaultColonyMemory: ColonyMemory = {
 export class Colony {
 	// Colony memory
 	memory: ColonyMemory;								// Memory.colonies[name]
-	// Colony overseer
-	overseer: Overseer;									// This runs the directives and overlords
 	// Room associations
 	name: string;										// Name of the primary colony room
 	ref: string;
@@ -201,8 +198,6 @@ export class Colony {
 		this.rooms = [this.room].concat(this.outposts);
 		this.miningSites = {}; 				// filled in by harvest directives
 		this.extractionSites = {};			// filled in by extract directives
-		// Give the colony an Overseer
-		this.overseer = new Overseer(this);
 		// Register creeps
 		this.creeps = Overmind.cache.creepsByColony[this.name] || [];
 		this.creepsByRole = _.groupBy(this.creeps, creep => creep.memory.role);
@@ -220,8 +215,6 @@ export class Colony {
 		this.room = Game.rooms[this.room.name];
 		this.outposts = _.compact(_.map(this.outposts, outpost => Game.rooms[outpost.name]));
 		this.rooms = [this.room].concat(this.outposts);
-		// refresh the Overseer
-		this.overseer.refresh();
 		// refresh creeps
 		this.creeps = Overmind.cache.creepsByColony[this.name] || [];
 		this.creepsByRole = _.groupBy(this.creeps, creep => creep.memory.role);
@@ -506,7 +499,6 @@ export class Colony {
 	}
 
 	init(): void {
-		this.overseer.init();												// Initialize overseer before hive clusters
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.init());	// Initialize each hive cluster
 		this.roadLogistics.init();											// Initialize the road network
 		this.linkNetwork.init();											// Initialize link network
@@ -517,7 +509,6 @@ export class Colony {
 	}
 
 	run(): void {
-		this.overseer.run();												// Run overseer before hive clusters
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.run());		// Run each hive cluster
 		this.linkNetwork.run();												// Run the link network
 		this.roadLogistics.run();											// Run the road network
@@ -550,7 +541,6 @@ export class Colony {
 	}
 
 	visuals(): void {
-		this.overseer.visuals();											// Display overlord creep information
 		// let report: string[] = [];
 		// report.push(`Hatchery:`)
 		// for (let spawn of this.spawns) {

@@ -33,6 +33,9 @@ export class VersionMigration {
 		if (!this.memory.versions['05Xto051_part3']) {
 			this.migrate_050_051_part3();
 		}
+		if (!this.memory.versions['05Xto051_part4']) {
+			this.migrate_050_051_part4();
+		}
 	}
 
 	static get memory(): VersionMigratorMemory {
@@ -129,7 +132,9 @@ export class VersionMigration {
 
 	static migrate_04X_05X_part2() {
 		// Copy old memory to new memory locations
-		Memory.settings.signature = (<any>Memory).signature;
+		if (Memory.signature) {
+			Memory.settings.signature = (<any>Memory).signature;
+		}
 		delete (<any>Memory).signature;
 		delete (<any>Memory).bot;
 		delete (<any>Memory).log;
@@ -198,6 +203,21 @@ export class VersionMigration {
 		}
 		this.memory.versions['05Xto051_part3'] = true;
 		log.alert(`Version migration from 0.5.0 -> 0.5.1 (part 3) completed successfully.`);
+	}
+
+	static migrate_050_051_part4() {
+		const protectedKeywords = ['suspendUntil', 'amount', 'created', 'persistent', 'setPosition', 'rotation',
+								   'colony', 'parent', 'pathing', 'stats', 'safeTick', 'enhanced', 'persistent',
+								   'recoveryWaypoint', 'totalResources', 'maxPathLength', 'maxLinearRange'];
+		for (let name in Memory.flags) {
+			for (let prop in Memory.flags[name]) {
+				if (!protectedKeywords.includes(prop)) {
+					delete (<any>Memory.flags[name])[prop];
+				}
+			}
+		}
+		this.memory.versions['05Xto051_part4'] = true;
+		log.alert(`Version migration from 0.5.0 -> 0.5.1 (part 4) completed successfully.`);
 	}
 
 }

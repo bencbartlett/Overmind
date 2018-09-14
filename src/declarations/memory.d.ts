@@ -24,7 +24,8 @@ interface Memory {
 	profiler?: any;
 	stats: any;
 	constructionSites: { [id: string]: number };
-	suspend?: number;
+	// suspend?: number;
+	resetBucket?: boolean;
 }
 
 interface StatsMemory {

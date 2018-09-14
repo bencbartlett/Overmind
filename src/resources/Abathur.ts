@@ -29,7 +29,7 @@ export const priorityStockAmounts: { [key: string]: number } = {
 };
 
 export const wantedStockAmounts: { [key: string]: number } = {
-	UH   : 2000, 	// (+100 % attack)
+	UH   : 3000, 	// (+100 % attack)
 	KO   : 3000, 	// (+100 % ranged attack)
 	XGHO2: 10000, 	// For toughness
 	XLHO2: 10000, 	// For healing
@@ -38,10 +38,10 @@ export const wantedStockAmounts: { [key: string]: number } = {
 	XKHO2: 8000, 	// For ranged attackers
 	XUH2O: 8000, 	// For attacking
 	G    : 4000, 	// For nukes
-	XLH2O: 2000, 	// For repair (or build)
-	LH   : 2000, 	// (+50 % build and repair)
-	XUHO2: 2000, 	// For harvest
-	XKH2O: 2000, 	// For carry
+	XLH2O: 3000, 	// For repair (or build)
+	LH   : 3000, 	// (+50 % build and repair)
+	XUHO2: 3000, 	// For harvest
+	XKH2O: 3000, 	// For carry
 	XGH2O: 12000 	// For upgraders
 };
 

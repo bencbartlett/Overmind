@@ -1,6 +1,8 @@
 import {Stats} from '../stats/stats';
 import {profile} from '../profiler/decorator';
-import {DEFAULT_OPERATION_MODE, DEFAULT_OVERMIND_SIGNATURE, USE_PROFILER} from '../~settings';
+import {DEFAULT_OPERATION_MODE, DEFAULT_OVERMIND_SIGNATURE, PROFILE_COLONY_LIMIT, USE_PROFILER} from '../~settings';
+import {isIVM} from '../utilities/utils';
+import {log} from '../console/log';
 
 export enum Autonomy {
 	Manual        = 0,
@@ -17,7 +19,7 @@ export function getAutonomyLevel(): number {
 		case ('automatic'):
 			return Autonomy.Automatic;
 		default:
-			console.log(`ERROR: ${Memory.settings.operationMode} is not a valid operation mode! ` +
+			log.warning(`ERROR: ${Memory.settings.operationMode} is not a valid operation mode! ` +
 						`Defaulting to ${DEFAULT_OPERATION_MODE}; use setMode() to change.`);
 			Memory.settings.operationMode = DEFAULT_OPERATION_MODE;
 			return getAutonomyLevel();
@@ -27,8 +29,39 @@ export function getAutonomyLevel(): number {
 let lastMemory: any;
 let lastTime: number = 0;
 
+const MAX_BUCKET = 10000;
+
 @profile
 export class Mem {
+
+	static shouldRun(): boolean {
+		if (!isIVM()) {
+			log.warning(`Overmind requires isolated-VM to run. Change settings at screeps.com/a/#!/account/runtime`);
+			return false;
+		}
+		if (USE_PROFILER && Game.time % 10 == 0) {
+			log.warning(`Profiling is currently enabled; only ${PROFILE_COLONY_LIMIT} colonies will be run!`);
+		}
+		if (Game.cpu.bucket < 500) {
+			if (_.keys(Game.spawns).length > 1) { // don't run CPU reset routine at very beginning
+				log.warning(`CPU bucket is critically low (${Game.cpu.bucket})! Starting CPU reset routine.`);
+				Memory.resetBucket = true;
+				this.garbageCollect();
+			} else {
+				log.info(`CPU bucket is too low (${Game.cpu.bucket}). Postponing operation until bucket reaches 500.`);
+			}
+			return false;
+		}
+		if (Memory.resetBucket) {
+			if (Game.cpu.bucket < MAX_BUCKET - Game.cpu.limit) {
+				log.info(`Operation suspended until bucket recovery. Bucket: ${Game.cpu.bucket}/${MAX_BUCKET}`);
+				return false;
+			} else {
+				delete Memory.resetBucket;
+			}
+		}
+		return true;
+	}
 
 	/* Attempt to load the parsed memory from a previous tick to avoid parsing costs */
 	static load() {
@@ -43,6 +76,18 @@ export class Mem {
 			Memory.stats.persistent.lastMemoryReset = Game.time;
 		}
 		lastTime = Game.time;
+		// Handle global time
+		if (!global.age) {
+			global.age = 0;
+		}
+		global.age++;
+		Memory.stats.persistent.globalAge = global.age;
+	}
+
+	static garbageCollect(quick?: boolean) {
+		let start = Game.cpu.getUsed();
+		global.gc(quick);
+		log.debug(`Running ${quick ? 'quick' : 'FULL'} garbage collection. Elapsed time: ${Game.cpu.getUsed() - start}.`);
 	}
 
 	static wrap(memory: any, memName: string, defaults = {}, deep = false) {

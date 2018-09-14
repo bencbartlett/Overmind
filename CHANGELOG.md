@@ -48,6 +48,10 @@ All notable changes to this project will be documented in this file. The format 
         - Emergency terminal state: yellow/orange -> brown/orange
         - Rebuild terminal state: yellow/brown -> brown/yellow
     - New console method will assist in this migration: `removeErrantFlags()` removes all flags which do not match a directive color code
+- Colonies now no longer have an `Overseer` property. The Overseer has been moved to the Overmind and now handles all directives and overlords for all colonies
+    - Overlords are now initialized and run in order of their priority
+- Changed routine to deal with critically low CPU bucket. Reaching the critical bucket threshold suspends operation until the entire bucket has replenished. This avoids entering a bucket "limbo state" where extra memory parsing costs are ever-present, increasing the total cost of operations.
+- Quick garbage collection is now explicitly called when the Overmind is re-instantiated
 
 
 ### Fixed
@@ -57,6 +61,8 @@ All notable changes to this project will be documented in this file. The format 
 - Fixed a bug which caused RoomPlanner to still demolish baby ramparts prematurely
 - Fixed a bug where I forgot to add container-building capabilities to the new extraction overlords (derp)
 - Fixed a bug which broke notification disabling for scouts (#48)
+- Fixed a bug where 0.4.x -> 0.5.x version migration could overwrite the default signature on a fresh installation of Overmind, breaking worker behavior
+
 
 ### Removed
 - `MiningSite`s and `ExtractionSite`s have been removed; their functionalities have been split among the mining/extraction directives and overlords

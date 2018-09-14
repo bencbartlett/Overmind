@@ -62,27 +62,27 @@ export abstract class Directive {
 		}
 		this.colony = colony;
 		this.colony.flags.push(flag);
-		this.colony.overseer.directives.push(this);
 		this.overlords = {};
 		// Register directive on Overmind
 		Overmind.directives[this.name] = this;
+		Overmind.overseer.registerDirective(this);
 	}
 
 	get flag(): Flag {
 		return Game.flags[this.name];
 	}
 
-	get isSuspended(): boolean {
-		return !!this.memory.suspendUntil && Game.time < this.memory.suspendUntil;
-	}
-
-	suspend(ticks: number) {
-		this.memory.suspendUntil = Game.time + ticks;
-	}
-
-	suspendUntil(tick: number) {
-		this.memory.suspendUntil = tick;
-	}
+	// get isSuspended(): boolean {
+	// 	return !!this.memory.suspendUntil && Game.time < this.memory.suspendUntil;
+	// }
+	//
+	// suspend(ticks: number) {
+	// 	this.memory.suspendUntil = Game.time + ticks;
+	// }
+	//
+	// suspendUntil(tick: number) {
+	// 	this.memory.suspendUntil = tick;
+	// }
 
 	refresh(): void {
 		const flag = this.flag;
@@ -199,9 +199,9 @@ export abstract class Directive {
 	remove(force = false): number | undefined {
 		if (!this.memory.persistent || force) {
 			delete Overmind.directives[this.name];
+			Overmind.overseer.removeDirective(this);
 			if (this.colony) {
 				_.remove(this.colony.flags, flag => flag.name == this.name);
-				_.remove(this.colony.overseer.directives, dir => dir.name == this.name);
 			}
 			if (this.flag) { // check in case flag was removed manually in last build cycle
 				return this.flag.remove();

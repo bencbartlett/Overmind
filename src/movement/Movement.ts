@@ -69,7 +69,9 @@ export interface MoveOptions {
 
 export interface SwarmMoveOptions {
 	range?: number;
+	ensureSingleRoom?: boolean;
 	ignoreCreeps?: boolean;						// ignore pathing around creeps
+	ignoreStructures?: boolean;					// ignore pathing around structures
 	// restrictDistance?: number;					// restrict the distance of route to this number of rooms
 	exitCost?: number;
 	// useFindRoute?: boolean;						// whether to use the route finder; determined automatically otherwise
@@ -125,7 +127,7 @@ export class Movement {
 
 		// Fixes bug that causes creeps to idle on the other side of a room
 		let distanceToEdge = _.min([destination.x, 49 - destination.x, destination.y, 49 - destination.y]);
-		if (options.range && distanceToEdge <= options.range) {
+		if (options.range != undefined && distanceToEdge <= options.range) {
 			options.range = Math.min(Math.abs(distanceToEdge - 1), 0);
 		}
 
@@ -137,7 +139,7 @@ export class Movement {
 
 		// manage case where creep is nearby destination
 		let rangeToDestination = creep.pos.getRangeTo(destination);
-		if (options.range && rangeToDestination <= options.range) {
+		if (options.range != undefined && rangeToDestination <= options.range) {
 			delete creep.memory._go;
 			return NO_ACTION;
 		} else if (rangeToDestination <= 1) {
@@ -354,13 +356,15 @@ export class Movement {
 		}
 	}
 
+
+	// TODO: this is bugged somewhere
 	/* Recursively moves creeps out of the way of a position to make room for something, such as a spawning creep.
 	 * If suicide is specified and there is no series of move commands that can move a block of creeps out of the way,
 	 * the lead blocking creep will suicide. Returns whether the position has been vacated. */
 	static vacatePos(pos: RoomPosition, suicide = false): boolean {
 		// prevent creeps from moving onto pos
 		let nearbyCreeps = _.compact(_.map(pos.findInRange(FIND_MY_CREEPS, 2),
-										   creep => Overmind.zerg[creep.name]));
+										   creep => Overmind.zerg[creep.name])) as Zerg[];
 		_.forEach(nearbyCreeps, creep => creep.blockMovement = true);
 		// recurively move creeps off of the position
 		let creep = pos.lookFor(LOOK_CREEPS)[0];
@@ -390,7 +394,8 @@ export class Movement {
 		let movePos: RoomPosition | undefined = _.find(creepPos.availableNeighbors(),
 													   neighbor => !_.any(excludePos, pos => pos.isEqualTo(neighbor)));
 		if (movePos) {
-			this.goTo(creep, movePos, {range: 0, force: true});
+			log.debug(`Moving ${creep.name} to ${JSON.stringify(movePos)}`);
+			this.goTo(creep, movePos, {force: true});
 			creep.blockMovement = true;
 			return creepPos;
 		} else { // Every position is occupied by a creep
@@ -415,6 +420,12 @@ export class Movement {
 	static goToRoom(creep: Zerg, roomName: string, options: MoveOptions = {}): number {
 		options.range = 23;
 		return this.goTo(creep, new RoomPosition(25, 25, roomName), options);
+	}
+
+	/* Travel to a room */
+	static goToRoom_swarm(swarm: Swarm, roomName: string, options: SwarmMoveOptions = {}): number {
+		options.range = 24 - Math.max(swarm.width, swarm.height);
+		return this.swarmMove(swarm, new RoomPosition(25, 25, roomName), options);
 	}
 
 	/* Park a creep off-roads */
@@ -551,14 +562,14 @@ export class Movement {
 
 		// Set default options
 		_.defaults(options, {
-			range       : Math.max(swarm.width, swarm.height),
+			range       : 1, //Math.max(swarm.width, swarm.height),
 			ignoreCreeps: true,
 			exitCost    : 10,
 		});
 
-		if (options.range! < Math.max(swarm.width, swarm.height)) {
-			log.warning(`Range specified is ${options.range}; not allowable for ${swarm.width}x${swarm.height} swarm!`);
-		}
+		// if (options.range! < Math.max(swarm.width, swarm.height)) {
+		// 	log.warning(`Range specified is ${options.range}; not allowable for ${swarm.width}x${swarm.height} swarm!`);
+		// }
 
 		destination = normalizePos(destination);
 
@@ -569,16 +580,13 @@ export class Movement {
 		let moveData = swarm.memory._go as MoveData;
 
 		// manage case where creep is nearby destination
-		let rangeToDestination = swarm.anchor.getRangeTo(destination);
-		if (rangeToDestination <= options.range!) {
+		let rangeToDestination = swarm.minRangeTo(destination);
+		if (options.range != undefined && rangeToDestination <= options.range) {
 			delete swarm.memory._go;
 			return NO_ACTION;
 		}
 
 		let state = this.deserializeState(moveData, destination);
-
-		// uncomment to visualize destination
-		// this.circle(destination, "orange");
 
 		// check if swarm is stuck
 		let stuck = false;
@@ -638,6 +646,9 @@ export class Movement {
 			moveData.path = Pathing.serializePath(swarm.anchor, ret.path, color);
 			state.stuckCount = 0;
 		}
+
+		// uncomment to visualize destination
+		this.circle(destination, 'orange');
 
 		// Serialize state for swarm
 		moveData.state = [swarm.anchor.x, swarm.anchor.y, state.stuckCount, state.cpu, destination.x, destination.y,
@@ -709,9 +720,9 @@ export class Movement {
 
 		const debug = false;
 		const callback = (roomName: string) => {
-			if (swarm.rooms[roomName]) {
-				let matrix = Pathing.getSwarmDefaultMatrix(swarm.rooms[roomName], swarm.width, swarm.height); // already cloned
-				return Movement.combatMoveCallbackModifier(swarm.rooms[roomName], matrix, approach, avoid, options);
+			if (swarm.roomsByName[roomName]) {
+				let matrix = Pathing.getSwarmDefaultMatrix(swarm.roomsByName[roomName], swarm.width, swarm.height); // already cloned
+				return Movement.combatMoveCallbackModifier(swarm.roomsByName[roomName], matrix, approach, avoid, options);
 			} else {
 				return Pathing.getSwarmTerrainMatrix(roomName, swarm.width, swarm.height);
 			}
@@ -722,12 +733,12 @@ export class Movement {
 		// Flee from bad things that that you're too close to
 		if (avoid.length > 0) {
 			if (_.any(avoid, goal => swarm.minRangeTo(goal) <= goal.range)) {
-				// Increase avoidance ranges by swarm dimensions
-				let avoidGoals = _.map(avoid, goal => ({
-					pos  : goal.pos,
-					range: goal.range + Math.max(swarm.width, swarm.height) - 1
-				}));
-				let avoidRet = PathFinder.search(swarm.anchor, avoid, {
+				let allAvoid = _.flatten(_.map(avoid, goal =>
+					_.map(Pathing.getPosWindow(goal.pos, -swarm.width, -swarm.height), pos => ({
+						pos  : pos,
+						range: goal.range
+					})))) as PathFinderGoal[];
+				let avoidRet = PathFinder.search(swarm.anchor, allAvoid, {
 					roomCallback: callback,
 					flee        : true,
 					maxRooms    : options.allowExit ? 5 : 1,
@@ -747,7 +758,12 @@ export class Movement {
 		// Approach things you want to go to if you're out of range of all the baddies
 		if (approach.length > 0) {
 			if (!_.any(approach, goal => swarm.minRangeTo(goal) <= goal.range)) {
-				let approachRet = PathFinder.search(swarm.anchor, approach, {
+				let allApproach = _.flatten(_.map(approach, goal =>
+					_.map(Pathing.getPosWindow(goal.pos, -swarm.width, -swarm.height), pos => ({
+						pos  : pos,
+						range: goal.range
+					})))) as PathFinderGoal[];
+				let approachRet = PathFinder.search(swarm.anchor, allApproach, {
 					roomCallback: callback,
 					maxRooms    : 1,
 					plainCost   : 2,

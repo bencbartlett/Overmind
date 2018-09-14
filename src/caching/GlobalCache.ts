@@ -17,7 +17,7 @@ export class $ { // $ = cash = cache... get it? :D
 		} else {
 			// Refresh structure list by ID if not already done on current tick
 			if ((_cache.accessed[cacheKey] || 0) < Game.time) {
-				_cache.structures[cacheKey] = _.compact(_.map(_cache.structures[cacheKey],
+				_cache.structures[cacheKey] = _.compact(_.map(_cache.structures[cacheKey] || [],
 															  s => Game.getObjectById(s.id))) as Structure[];
 				_cache.accessed[cacheKey] = Game.time;
 			}
@@ -35,6 +35,7 @@ export class $ { // $ = cash = cache... get it? :D
 		return _cache.numbers[cacheKey];
 	}
 
+	// TODO: for some reason overloading isn't working here...
 	// static pos(saver: { ref: string }, key: string, callback: () => RoomPosition, timeout ?: number): RoomPosition;
 	static pos(saver: { ref: string }, key: string, callback: () => RoomPosition | undefined, timeout?: number):
 		RoomPosition | undefined {

@@ -12,7 +12,6 @@ import {SpawnRequest, SpawnRequestOptions} from '../hiveClusters/hatchery';
 import {SpawnGroup} from '../logistics/SpawnGroup';
 import {Pathing} from '../movement/Pathing';
 import {CombatZerg} from '../zerg/CombatZerg';
-import {Mem} from '../memory/Memory';
 
 export interface OverlordInitializer {
 	ref: string;
@@ -22,8 +21,8 @@ export interface OverlordInitializer {
 	memory: any;
 }
 
-export function isColony(initializer: OverlordInitializer | Colony): initializer is Colony {
-	return (<Colony>initializer).overseer != undefined;
+export function hasColony(initializer: OverlordInitializer | Colony): initializer is OverlordInitializer {
+	return (<OverlordInitializer>initializer).colony != undefined;
 }
 
 export const DEFAULT_PRESPAWN = 50;
@@ -50,10 +49,10 @@ const OverlordMemoryDefaults: OverlordMemory = {};
 @profile
 export abstract class Overlord {
 
-	private initializer: OverlordInitializer | Colony;
-	memory: OverlordMemory;
+	protected initializer: OverlordInitializer | Colony;
+	// memory: OverlordMemory;
 	room: Room | undefined;
-	priority: number;
+	priority: number; 			// priority can be changed in constructor phase but not after
 	name: string;
 	ref: string;
 	pos: RoomPosition;
@@ -67,13 +66,13 @@ export abstract class Overlord {
 
 	constructor(initializer: OverlordInitializer | Colony, name: string, priority: number) {
 		this.initializer = initializer;
-		this.memory = Mem.wrap(initializer.memory, name, OverlordMemoryDefaults);
+		// this.memory = Mem.wrap(initializer.memory, name, OverlordMemoryDefaults);
 		this.room = initializer.room;
 		this.priority = priority;
 		this.name = name;
 		this.ref = initializer.ref + '>' + name;
 		this.pos = initializer.pos;
-		this.colony = isColony(initializer) ? initializer : initializer.colony;
+		this.colony = hasColony(initializer) ? initializer.colony : initializer;
 		this.spawnGroup = undefined;
 		this._zerg = {};
 		this._combatZerg = {};
@@ -82,34 +81,36 @@ export abstract class Overlord {
 		this.boosts = _.mapValues(this._creeps, creep => undefined);
 		// Register the overlord on the colony overseer and on the overmind
 		Overmind.overlords[this.ref] = this;
-		this.colony.overseer.registerOverlord(this);
+		Overmind.overseer.registerOverlord(this);
 	}
 
 	get isSuspended(): boolean {
-		return !!this.memory.suspendUntil && Game.time < this.memory.suspendUntil;
+		return false;
+		// return !!this.memory.suspendUntil && Game.time < this.memory.suspendUntil;
 	}
 
-	suspend(ticks: number) {
-		this.memory.suspendUntil = Game.time + ticks;
-	}
-
-	suspendUntil(tick: number) {
-		this.memory.suspendUntil = tick;
-	}
+	//
+	// suspend(ticks: number) {
+	// 	this.memory.suspendUntil = Game.time + ticks;
+	// }
+	//
+	// suspendUntil(tick: number) {
+	// 	this.memory.suspendUntil = tick;
+	// }
 
 	/* Refreshes overlord, recalculating creeps and refreshing existing Zerg. New creeps are automatically added,
 	 * and the corresponding role groups (e.g. 'queens') are automatically updated. Child methods do not need to
 	 * refresh their zerg properties, only other room objects stored on the Overlord. */
 	refresh(): void {
-		this.memory = this.initializer.memory[this.name];
-		// Handle suspension
-		if (this.memory.suspendUntil) {
-			if (Game.time < this.memory.suspendUntil) {
-				return;
-			} else {
-				delete this.memory.suspendUntil;
-			}
-		}
+		// this.memory = this.initializer.memory[this.name];
+		// // Handle suspension
+		// if (this.memory.suspendUntil) {
+		// 	if (Game.time < this.memory.suspendUntil) {
+		// 		return;
+		// 	} else {
+		// 		delete this.memory.suspendUntil;
+		// 	}
+		// }
 		// Refresh room
 		this.room = Game.rooms[this.pos.roomName];
 		// Refresh zerg
@@ -339,7 +340,8 @@ export abstract class Overlord {
 		} else {
 			creepQuantity = this.lifetimeFilter(this._creeps[setup.role] || [], opts.prespawn).length;
 		}
-		if (creepQuantity < quantity) {
+		let spawnQuantity = quantity - creepQuantity;
+		for (let i = 0; i < spawnQuantity; i++) {
 			this.requestCreep(setup, opts);
 		}
 		this.creepReport(setup.role, creepQuantity, quantity);

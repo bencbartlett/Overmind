@@ -30,18 +30,16 @@ export class TransportOverlord extends Overlord {
 		}
 
 		let transportPower = 0;
-		const scaling = this.colony.stage == ColonyStage.Larva ? 1.5 : 2.5; // aggregate round-trip multiplier
+		const scaling = this.colony.stage == ColonyStage.Larva ? 1.5 : 2.0; // aggregate round-trip multiplier
 
 		// Add contributions to transport power from hauling energy from mining sites
 		for (let flagName in this.colony.miningSites) {
 			const o = this.colony.miningSites[flagName].overlords.mine;
-			if (o.miners.length > 0) {
+			if (!o.isSuspended && o.miners.length > 0) {
 				// Only count sites which have a container output and which have at least one miner present
 				// (this helps in difficult "rebooting" situations)
-				if (o.container && !o.link) {
-					transportPower += o.energyPerTick * (scaling * Pathing.distance(o.pos, this.colony.pos));
-				} else if (o.allowDropMining) {
-					transportPower += o.energyPerTick * (scaling * Pathing.distance(o.pos, this.colony.pos));
+				if ((o.container && !o.link) || o.allowDropMining) {
+					transportPower += o.energyPerTick * scaling * o.distance;
 				}
 			}
 		}

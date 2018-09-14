@@ -193,7 +193,12 @@ export function rollingAverage(current: number, avg: number | undefined, window:
 	return (current + (avg || 0) * (window - 1)) / window;
 }
 
-// Rotate a matrix in place clockwise by 90 degrees
+// Create a shallow copy of a 2D array
+export function clone2DArray<T>(a: T[][]): T[][] {
+	return _.map(a, e => e.slice());
+}
+
+// Rotate a square matrix in place clockwise by 90 degrees
 function rotateMatrix<T>(matrix: T[][]): void {
 	// reverse the rows
 	matrix.reverse();
@@ -209,7 +214,7 @@ function rotateMatrix<T>(matrix: T[][]): void {
 
 // Return a copy of a 2D array rotated by specified number of clockwise 90 turns
 export function rotatedMatrix<T>(matrix: T[][], clockwiseTurns: 0 | 1 | 2 | 3): T[][] {
-	let mat = _.cloneDeep(matrix);
+	let mat = clone2DArray(matrix);
 	for (let i = 0; i < clockwiseTurns; i++) {
 		rotateMatrix(mat);
 	}

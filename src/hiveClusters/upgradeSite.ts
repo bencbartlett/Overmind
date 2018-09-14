@@ -90,10 +90,12 @@ export class UpgradeSite extends HiveCluster {
 	private getUpgradePowerNeeded(): number {
 		return $.number(this, 'upgradePowerNeeded', () => {
 			if (this.room.storage) { // Workers perform upgrading until storage is set up
-				let amountOver = Math.max(this.room.storage.energy - UpgradeSite.settings.storageBuffer, 0);
+				let amountOver = Math.max(this.colony.assets.energy - UpgradeSite.settings.storageBuffer, 0);
 				let upgradePower = 1 + Math.floor(amountOver / UpgradeSite.settings.energyPerBodyUnit);
-				if (amountOver > 500000) {
-					upgradePower *= 2; // double upgrade power if we have lots of surplus energy
+				if (amountOver > 800000) {
+					upgradePower *= 4; // double upgrade power if we have lots of surplus energy
+				} else if (amountOver > 500000) {
+					upgradePower *= 2;
 				}
 				if (this.controller.level == 8) {
 					upgradePower = Math.min(upgradePower, 15); // don't go above 15 work parts at RCL 8

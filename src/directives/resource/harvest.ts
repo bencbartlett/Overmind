@@ -2,10 +2,15 @@ import {Directive} from '../Directive';
 import {MiningOverlord} from '../../overlords/mining/miner';
 import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../../utilities/Cartographer';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {rollingAverage} from '../../utilities/utils';
+import {getCacheExpiration, rollingAverage} from '../../utilities/utils';
+import {Pathing} from '../../movement/Pathing';
 
 
 interface DirectiveHarvestMemory extends FlagMemory {
+	pathing?: {
+		distance: number,
+		expiration: number
+	};
 	stats: {
 		usage: number;
 		downtime: number;
@@ -30,13 +35,6 @@ export class DirectiveHarvest extends Directive {
 		mine: MiningOverlord;
 	};
 
-	// source: Source | undefined;
-	// mineral: Mineral | undefined;
-	// extractor: StructureExtractor | undefined;
-	// container: StructureContainer | undefined;
-	// link: StructureLink | undefined;
-	// constructionSite: ConstructionSite | undefined;
-
 	constructor(flag: Flag) {
 		super(flag);
 		if (this.colony) {
@@ -44,30 +42,17 @@ export class DirectiveHarvest extends Directive {
 			this.colony.destinations.push(this.pos);
 		}
 		_.defaultsDeep(this.memory, defaultDirectiveHarvestMemory);
-		// this.populateData();
 	}
 
-	// private populateData() {
-	// 	if (Game.rooms[this.pos.roomName]) {
-	// 		this.source = _.first(this.pos.lookFor(LOOK_SOURCES));
-	// 		this.mineral = _.first(this.pos.lookFor(LOOK_MINERALS));
-	// 		this.extractor = this.pos.lookForStructure(STRUCTURE_EXTRACTOR) as StructureExtractor | undefined;
-	// 		this.constructionSite = _.first(this.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 2));
-	// 		this.container = this.pos.findClosestByLimitedRange(Game.rooms[this.pos.roomName].containers, 2);
-	// 		this.link = this.pos.findClosestByLimitedRange(this.colony.availableLinks, 2);
-	// 		if (this.link) {
-	// 			this.colony.linkNetwork.claimLink(this.link);
-	// 		}
-	// 	}
-	// }
-
-	// refresh() {
-	// 	if (!this.room && Game.rooms[this.pos.roomName]) { // if you just gained vision of this room
-	// 		this.populateData();
-	// 	}
-	// 	super.refresh();
-	// 	$.refresh(this, 'source', 'mineral', 'extractor', 'container', 'link', 'constructionSite');
-	// }
+	// Hauling distance
+	get distance(): number {
+		if (!this.memory.pathing || Game.time >= this.memory.pathing.expiration) {
+			let distance = Pathing.distance(this.colony.pos, this.pos);
+			let expiration = getCacheExpiration(this.colony.storage ? 5000 : 1000);
+			this.memory.pathing = {distance, expiration};
+		}
+		return this.memory.pathing.distance;
+	}
 
 	spawnMoarOverlords() {
 		// Create a mining overlord for this

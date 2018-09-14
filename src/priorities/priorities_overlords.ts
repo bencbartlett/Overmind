@@ -42,6 +42,8 @@ export var OverlordPriority = {
 		upgrade: 600,
 	},
 
+	throttleThreshold: 699,  	// Everything past this may be throttled in the event of low CPU
+
 	collectionUrgent: { 		// Collecting resources that are time sensitive, like decaying resources on ground
 		haul: 700
 	},

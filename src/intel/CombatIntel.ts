@@ -23,17 +23,21 @@ interface CombatIntelMemory {
 export class CombatIntel {
 
 	directive: Directive;
-	room: Room | undefined;
-	colony: Colony;
 
 	constructor(directive: Directive) {
 		this.directive = directive;
-		this.room = directive.room;
-		this.colony = directive.colony;
 	}
 
 	get memory(): CombatIntelMemory {
 		return Mem.wrap(this.directive.memory, 'combatIntel', {});
+	}
+
+	get room(): Room | undefined {
+		return this.directive.room;
+	}
+
+	get colony(): Colony {
+		return this.directive.colony;
 	}
 
 	// Tower damage ====================================================================================================
@@ -77,6 +81,9 @@ export class CombatIntel {
 		}
 	}
 
+
+	// Fallback and exit calculations ==================================================================================
+
 	private findBestExit(matrix: CostMatrix, towers: StructureTower[],
 						 spawns: StructureSpawn[]): RoomPosition | undefined {
 		if (!this.room) {
@@ -111,7 +118,7 @@ export class CombatIntel {
 
 		// TODO
 		let exitPositions: RoomPosition[] = [];
-		for (let x = 0; x < 50; x++) {
+		for (let x = 0; x < 50; x += 49) {
 			for (let y = 0; y < 50; y++) {
 				if (x !== 0 && y !== 0 && x !== 49 && y !== 49) {
 					continue;
@@ -143,6 +150,62 @@ export class CombatIntel {
 		matrix.set(bestExit.x, bestExit.y, 1);
 
 		return bestExit;
+	}
+
+	// static findBestSiegeExit(roomName: string, matrix?: CostMatrix): RoomPosition | undefined  {
+	// 	let edgeCoords: [number, number][] = [];
+	// 	for (let x = 0; x < 50; x += 49) {
+	// 		for (let y = 0; y < 50; y++) {
+	// 			edgeCoords.push([x,y])
+	// 		}
+	// 	}
+	// 	for (let x = 0; x < 50; x++) {
+	// 		for (let y = 0; y < 50; y += 49) {
+	// 			edgeCoords.push([x,y])
+	// 		}
+	// 	}
+	//
+	// 	const room = Game.rooms[roomName];
+	// 	let siegeTarget = CombatTargeting.findBestStructureTarget()
+	// }
+
+	findSimpleSiegeFallback(): RoomPosition {
+		let ret = Pathing.findPath(this.colony.pos, this.directive.pos, {range: 23});
+		let firstPosInRoom = _.find(ret.path, pos => pos.roomName == this.directive.pos.roomName);
+		if (firstPosInRoom) {
+			return CombatIntel.getFallbackFrom(firstPosInRoom);
+		} else {
+			return CombatIntel.getFallbackFrom(this.directive.pos);
+		}
+	}
+
+	/* Fallback is a location on the other side of the nearest exit the directive is placed at */
+	static getFallbackFrom(pos: RoomPosition, fallbackDistance = 2): RoomPosition {
+		let {x, y, roomName} = pos;
+		let rangesToExit = [[x, 'left'], [49 - x, 'right'], [y, 'top'], [49 - y, 'bottom']];
+		let [range, direction] = _.first(_.sortBy(rangesToExit, pair => pair[0]));
+		switch (direction) {
+			case 'left':
+				x = 49 - fallbackDistance;
+				roomName = Cartographer.findRelativeRoomName(roomName, -1, 0);
+				break;
+			case 'right':
+				x = fallbackDistance;
+				roomName = Cartographer.findRelativeRoomName(roomName, 1, 0);
+				break;
+			case 'top':
+				y = 49 - fallbackDistance;
+				roomName = Cartographer.findRelativeRoomName(roomName, 0, -1);
+				break;
+			case 'bottom':
+				y = fallbackDistance;
+				roomName = Cartographer.findRelativeRoomName(roomName, 0, 1);
+				break;
+			default:
+				log.error('Error getting fallback position!');
+				break;
+		}
+		return new RoomPosition(x, y, roomName);
 	}
 
 
@@ -430,35 +493,6 @@ export class CombatIntel {
 	static getPositionsNearEnemies(hostiles: Creep[], range = 0): RoomPosition[] {
 		return _.unique(_.flatten(_.map(hostiles, hostile =>
 			hostile.pos.getPositionsInRange(range, false, true))));
-	}
-
-	/* Fallback is a location on the other side of the nearest exit the directive is placed at */
-	static getFallbackFrom(pos: RoomPosition): RoomPosition {
-		let {x, y, roomName} = pos;
-		let rangesToExit = [[x, 'left'], [49 - x, 'right'], [y, 'top'], [49 - y, 'bottom']];
-		let [range, direction] = _.first(_.sortBy(rangesToExit, pair => pair[0]));
-		switch (direction) {
-			case 'left':
-				x = 47;
-				roomName = Cartographer.findRelativeRoomName(roomName, -1, 0);
-				break;
-			case 'right':
-				x = 2;
-				roomName = Cartographer.findRelativeRoomName(roomName, 1, 0);
-				break;
-			case 'top':
-				y = 47;
-				roomName = Cartographer.findRelativeRoomName(roomName, 0, -1);
-				break;
-			case 'bottom':
-				y = 2;
-				roomName = Cartographer.findRelativeRoomName(roomName, 0, 1);
-				break;
-			default:
-				log.error('Error getting fallback position!');
-				break;
-		}
-		return new RoomPosition(x, y, roomName);
 	}
 
 }

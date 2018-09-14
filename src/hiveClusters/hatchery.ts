@@ -172,7 +172,7 @@ export class Hatchery extends HiveCluster {
 					energyStructures.push(_.remove(spawnsAndExtensions, s => s.id == structure.id)[0]);
 				}
 			}
-			return energyStructures.concat(spawnsAndExtensions);
+			return _.compact(energyStructures.concat(spawnsAndExtensions));
 		} else {
 			// Ugly workaround to [].concat() throwing a temper tantrum
 			let spawnsAndExtensions: (StructureSpawn | StructureExtension)[] = [];

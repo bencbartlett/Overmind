@@ -194,3 +194,7 @@ export class RoomIntel {
 	}
 
 }
+
+// For debugging purposes
+global.RoomIntel = RoomIntel;
+

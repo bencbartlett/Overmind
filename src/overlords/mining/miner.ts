@@ -91,6 +91,10 @@ export class MiningOverlord extends Overlord {
 		}
 	}
 
+	get distance(): number {
+		return this.directive.distance;
+	}
+
 	private populateStructures() {
 		if (Game.rooms[this.pos.roomName]) {
 			this.source = _.first(this.pos.lookFor(LOOK_SOURCES));

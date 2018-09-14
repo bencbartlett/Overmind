@@ -4,6 +4,8 @@ declare var global: any;
 declare namespace NodeJS {
 	interface Global {
 
+		age?: number;
+
 		_cache: IGlobalCache;
 
 		__VERSION__: string;
@@ -17,6 +19,8 @@ declare namespace NodeJS {
 		deref(ref: string): RoomObject | null;
 
 		derefRoomPosition(protoPos: protoPos): RoomPosition;
+
+		gc(quick?: boolean): void;
 	}
 }
 
@@ -92,6 +96,7 @@ interface IOvermind {
 	shouldBuild: boolean
 	expiration: number;
 	cache: ICache;								// is actually GameCache
+	overseer: IOverseer;						// is actually Overseer
 	directives: { [flagName: string]: any }; 	// is actually { [flagName: string]: Directive }
 	zerg: { [creepName: string]: any };			// is actually { [creepName: string]: Zerg }
 	colonies: { [roomName: string]: any }; 		// is actually { [roomName: string]: Colony }
@@ -113,6 +118,20 @@ interface IOvermind {
 	run(): void;
 
 	postRun(): void;
+
+	visuals(): void;
+}
+
+interface IOverseer {
+	registerDirective(directive: any): void;
+
+	removeDirective(directive: any): void;
+
+	registerOverlord(overlord: any): void;
+
+	init(): void;
+
+	run(): void;
 
 	visuals(): void;
 }

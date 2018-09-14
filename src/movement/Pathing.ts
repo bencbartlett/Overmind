@@ -76,7 +76,7 @@ export class Pathing {
 			options.terrainCosts = {plainCost: 1, swampCost: 1};
 		}
 
-		let callback = (roomName: string) => this.roomCallback(roomName, origin, destination, allowedRooms, options);
+		const callback = (roomName: string) => this.roomCallback(roomName, origin, destination, allowedRooms, options);
 		let ret = PathFinder.search(origin, {pos: destination, range: options.range!}, {
 			maxOps      : options.maxOps,
 			maxRooms    : options.maxRooms,
@@ -111,16 +111,29 @@ export class Pathing {
 		_.defaults(options, {
 			ignoreCreeps: true,
 			maxOps      : 2 * DEFAULT_MAXOPS,
-			range       : 2,
+			range       : 1,
 		});
-		let cback = (roomName: string) => this.swarmRoomCallback(roomName, origin, destination, width, height, options);
-		return PathFinder.search(origin, {pos: destination, range: options.range!}, {
+		// Make copies of the destination offset for where anchor could be
+		let destinations = this.getPosWindow(destination, -width, -height);
+		const callback = (roomName: string) => this.swarmRoomCallback(roomName, width, height, options);
+		return PathFinder.search(origin, _.map(destinations, pos => ({pos: pos, range: options.range!})), {
 			maxOps      : options.maxOps,
 			maxRooms    : options.maxRooms,
 			plainCost   : 1,
 			swampCost   : 5,
-			roomCallback: cback,
+			roomCallback: callback,
 		});
+	}
+
+	/* Get a window of offset RoomPositions from an anchor position and a window width and height */
+	static getPosWindow(anchor: RoomPosition, width: number, height: number): RoomPosition[] {
+		let positions: RoomPosition[] = [];
+		for (let i of _.range(0, width, width < 0 ? -1 : 1)) {
+			for (let j of _.range(0, height, height < 0 ? -1 : 1)) {
+				positions.push(anchor.getOffsetPos(i, j));
+			}
+		}
+		return positions;
 	}
 
 	/* Returns the shortest path from start to end position, regardless of (passable) terrain */
@@ -169,10 +182,10 @@ export class Pathing {
 		}
 	}
 
-	static swarmRoomCallback(roomName: string, origin: RoomPosition, destination: RoomPosition,
-							 width: number, height: number, options: SwarmMoveOptions): CostMatrix | boolean {
+	static swarmRoomCallback(roomName: string, width: number, height: number,
+							 options: SwarmMoveOptions): CostMatrix | boolean {
 		const room = Game.rooms[roomName];
-		if (room) {
+		if (room && !options.ignoreStructures) {
 			return this.getSwarmDefaultMatrix(room, width, height, options, false);
 		} else {
 			return this.getSwarmTerrainMatrix(roomName, width, height, options.exitCost);

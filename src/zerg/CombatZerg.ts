@@ -4,11 +4,13 @@ import {profile} from '../profiler/decorator';
 import {CombatIntel} from '../intel/CombatIntel';
 import {GoalFinder} from '../targeting/GoalFinder';
 import {Movement, NO_ACTION} from '../movement/Movement';
+import {randomHex} from '../utilities/utils';
 
 interface CombatZergMemory extends CreepMemory {
 	recovering: boolean;
 	lastInDanger: number;
 	partner?: string;
+	swarm?: string;
 }
 
 
@@ -51,6 +53,33 @@ export class CombatZerg extends Zerg {
 				partner.memory.partner = this.name;
 				return partner;
 			}
+		}
+	}
+
+	findSwarm(partners: CombatZerg[], maxByRole: { [role: string]: number }, tickDifference = 750): string | undefined {
+		if (this.spawning || !this.ticksToLive) {
+			return;
+		}
+		if (this.memory.swarm) {
+			return this.memory.swarm;
+		} else {
+			// Find a swarm that isn't too old and that has space for the creep's role
+			let partnersBySwarm = _.groupBy(partners, partner => partner.memory.swarm);
+			for (let swarmRef in partnersBySwarm) {
+				if (swarmRef == undefined) continue;
+				if (_.all(partnersBySwarm[swarmRef],
+						  c => Math.abs(this.ticksToLive! - (c.ticksToLive || Infinity)) <= tickDifference)) {
+					let swarmCreepsByRole = _.groupBy(partnersBySwarm[swarmRef], c => c.memory.role);
+					if ((swarmCreepsByRole[this.memory.role] || []).length + 1 <= maxByRole[this.memory.role]) {
+						this.memory.swarm = swarmRef;
+						return swarmRef;
+					}
+				}
+			}
+			// Otherwise just make a new swarm ref
+			let newSwarmRef = randomHex(6);
+			this.memory.swarm = newSwarmRef;
+			return newSwarmRef;
 		}
 	}
 
@@ -128,7 +157,7 @@ export class CombatZerg extends Zerg {
 	}
 
 	autoHeal(allowRangedHeal = true, friendlies = this.room.creeps) {
-		let target = CombatTargeting.findBestHealingTargetInRange(this, 3, friendlies);
+		let target = CombatTargeting.findBestHealingTargetInRange(this, allowRangedHeal ? 3 : 1, friendlies);
 		this.debug(`Heal taget: ${target}`);
 		if (target) {
 			if (this.pos.getRangeTo(target) <= 1) {
@@ -208,12 +237,12 @@ export class CombatZerg extends Zerg {
 
 	}
 
-	needsToRecover(hitsThreshold = 0.75, reengageThreshold = 1.0): boolean {
+	needsToRecover(recoverThreshold = 0.85, reengageThreshold = 1.0): boolean {
 		let recovering: boolean;
 		if (this.memory.recovering) {
 			recovering = this.hits < this.hitsMax * reengageThreshold;
 		} else {
-			recovering = this.hits < this.hitsMax * hitsThreshold;
+			recovering = this.hits < this.hitsMax * recoverThreshold;
 		}
 		this.memory.recovering = recovering;
 		return recovering;
@@ -223,7 +252,7 @@ export class CombatZerg extends Zerg {
 		if (this.pos.findInRange(this.room.hostiles, 5).length > 0 || this.room.towers.length > 0) {
 			this.memory.lastInDanger = Game.time;
 		}
-		let goals = GoalFinder.retreatGoals(this);
+		let goals = GoalFinder.retreatGoals(this.room);
 		let result = Movement.combatMove(this, goals.approach, goals.avoid);
 
 		if (result == NO_ACTION && this.pos.isEdge) {

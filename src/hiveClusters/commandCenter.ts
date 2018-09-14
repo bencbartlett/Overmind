@@ -164,7 +164,7 @@ export class CommandCenter extends HiveCluster {
 	}
 
 	run(): void {
-		this.runObserver();
+		// this.runObserver();
 	}
 
 	visuals() {
