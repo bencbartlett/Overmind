@@ -18,17 +18,27 @@ import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {Cartographer, ROOMTYPE_CONTROLLER, ROOMTYPE_SOURCEKEEPER} from './utilities/Cartographer';
 import {derefCoords, hasJustSpawned, minBy} from './utilities/utils';
 import {DirectiveOutpost} from './directives/colony/outpost';
-import {Autonomy, getAutonomyLevel} from './memory/Memory';
+import {Autonomy, getAutonomyLevel, Mem} from './memory/Memory';
 import {RoomIntel} from './intel/RoomIntel';
-import {Roles, Setups} from './creepSetups/setups';
+import {Roles} from './creepSetups/setups';
 import {USE_TRY_CATCH} from './~settings';
+import {DirectiveOutpostDefense} from './directives/defense/outpostDefense';
 
 
 // export const DIRECTIVE_CHECK_FREQUENCY = 2;
 
+interface OverseerMemory {
+	suspendUntil: { [overlordRef: string]: number } // overlords are suspended until tick
+}
+
+const defaultOverseerMemory: OverseerMemory = {
+	suspendUntil: {},
+};
+
 @profile
 export class Overseer implements IOverseer {
 
+	private memory: OverseerMemory;
 	private overlords: Overlord[];								// Overlords sorted by priority
 	private sorted: boolean;
 	private overlordsByColony: { [col: string]: Overlord[] };	// Overlords grouped by colony
@@ -39,10 +49,15 @@ export class Overseer implements IOverseer {
 	};
 
 	constructor() {
+		this.memory = Mem.wrap(Memory, 'overseer', defaultOverseerMemory);
 		this.directives = [];
 		this.overlords = [];
 		this.overlordsByColony = {};
 		this.sorted = false;
+	}
+
+	refresh() {
+		this.memory = Mem.wrap(Memory, 'overseer', defaultOverseerMemory);
 	}
 
 	private try(callback: () => any, identifier?: string): void {
@@ -93,6 +108,26 @@ export class Overseer implements IOverseer {
 		}
 	}
 
+	isOverlordSuspended(overlord: Overlord): boolean {
+		if (this.memory.suspendUntil[overlord.ref]) {
+			if (Game.time < this.memory.suspendUntil[overlord.ref]) {
+				return true;
+			} else {
+				delete this.memory.suspendUntil[overlord.ref];
+				return false;
+			}
+		}
+		return false;
+	}
+
+	suspendOverlordFor(overlord: Overlord, ticks: number): void {
+		this.memory.suspendUntil[overlord.ref] = Game.time + ticks;
+	}
+
+	suspendOverlordUntil(overlord: Overlord, untilTick: number): void {
+		this.memory.suspendUntil[overlord.ref] = untilTick;
+	}
+
 	private registerLogisticsRequests(colony: Colony): void {
 		// Register logistics requests for all dropped resources and tombstones
 		for (let room of colony.rooms) {
@@ -122,7 +157,8 @@ export class Overseer implements IOverseer {
 		if (!colony.isIncubating) {
 			let noQueen = colony.getCreepsByRole(Roles.queen).length == 0;
 			if (noQueen && colony.hatchery && !colony.spawnGroup) {
-				let energyToMakeQueen = bodyCost(Setups.queen.generateBody(colony.room.energyCapacityAvailable));
+				const setup = colony.hatchery.overlord.queenSetup;
+				const energyToMakeQueen = bodyCost(setup.generateBody(colony.room.energyCapacityAvailable));
 				if (colony.room.energyAvailable < energyToMakeQueen || hasJustSpawned()) {
 					let result = DirectiveBootstrap.createIfNotPresent(colony.hatchery.pos, 'pos');
 					if (typeof result == 'string' || result == OK) { // successfully made flag
@@ -133,12 +169,18 @@ export class Overseer implements IOverseer {
 		}
 	}
 
-	private handleOutpostGuards(colony: Colony) {
+	private handleOutpostDefense(colony: Colony) {
 		// Guard directive: defend your outposts and all rooms of colonies that you are incubating
 		for (let room of colony.outposts) {
+			// Handle player defense
+			if (room.dangerousPlayerHostiles.length > 0) {
+				DirectiveOutpostDefense.createIfNotPresent(Pathing.findPathablePosition(room.name), 'room');
+				return;
+			}
+			// Handle NPC invasion directives
 			if (Cartographer.roomType(room.name) != ROOMTYPE_SOURCEKEEPER) { // SK rooms can fend for themselves
 				let defenseFlags = _.filter(room.flags, flag => DirectiveGuard.filter(flag) ||
-																DirectiveInvasionDefense.filter(flag));
+																DirectiveOutpostDefense.filter(flag));
 				if (room.dangerousHostiles.length > 0 && defenseFlags.length == 0) {
 					DirectiveGuard.create(room.dangerousHostiles[0].pos);
 				}
@@ -170,18 +212,18 @@ export class Overseer implements IOverseer {
 		let numSources = _.sum(colony.roomNames, roomName => (Memory.rooms[roomName].src || []).length);
 		let numRemotes = numSources - colony.room.sources.length;
 		if (numRemotes < Colony.settings.remoteSourcesByLevel[colony.level]) {
-			// Possible outposts are controller rooms not already reserved or owned
-			log.debug(`Calculating colonies for ${colony.room.print}...`);
-			log.debug(`Rooms in range 2: ${Cartographer.findRoomsInRange(colony.room.name, 2)}`);
+			// Possible outposts are controller rooms not already owned
+			// log.debug(`Calculating colonies for ${colony.room.print}...`);
+			// log.debug(`Rooms in range 2: ${Cartographer.findRoomsInRange(colony.room.name, 2)}`);
 			let possibleOutposts = _.filter(Cartographer.findRoomsInRange(colony.room.name, 2), roomName =>
 				Cartographer.roomType(roomName) == ROOMTYPE_CONTROLLER
 				&& !_.any(Overmind.cache.outpostFlags,
 						  flag => (flag.memory.setPosition || flag.pos).roomName == roomName)
 				&& !Overmind.colonies[roomName]
 				&& !RoomIntel.roomOwnedBy(roomName)
-				&& !RoomIntel.roomReservedBy(roomName)
+				// && !RoomIntel.roomReservedBy(roomName)
 				&& Game.map.isRoomAvailable(roomName));
-			log.debug(`Possible outposts: ${possibleOutposts}`);
+			// log.debug(`Possible outposts: ${possibleOutposts}`);
 			let origin = colony.pos;
 			let bestOutpost = minBy(possibleOutposts, function (roomName) {
 				if (!Memory.rooms[roomName]) return false;
@@ -204,7 +246,7 @@ export class Overseer implements IOverseer {
 	/* Place new event-driven flags where needed to be instantiated on the next tick */
 	private placeDirectives(colony: Colony): void {
 		this.handleBootstrapping(colony);
-		this.handleOutpostGuards(colony);
+		this.handleOutpostDefense(colony);
 		this.handleColonyInvasions(colony);
 		this.handleNukeResponse(colony);
 		if (Game.time % Overseer.settings.outpostCheckFrequency == 2 * colony.id
@@ -263,12 +305,17 @@ export class Overseer implements IOverseer {
 		// Sort overlords by priority if needed (assumes priority does not change after constructor phase
 		if (!this.sorted) {
 			this.overlords.sort((o1, o2) => o1.priority - o2.priority);
+			for (let colName in this.overlordsByColony) {
+				this.overlordsByColony[colName].sort((o1, o2) => o1.priority - o2.priority);
+			}
 			this.sorted = true;
 		}
 		// Initialize overlords
 		for (let overlord of this.overlords) {
-			overlord.preInit();
-			this.try(() => overlord.init());
+			if (!this.isOverlordSuspended(overlord)) {
+				overlord.preInit();
+				this.try(() => overlord.init());
+			}
 		}
 		// Register cleanup requests to logistics network
 		for (let colony of this.colonies) {
@@ -283,7 +330,9 @@ export class Overseer implements IOverseer {
 			directive.run();
 		}
 		for (let overlord of this.overlords) {
-			this.try(() => overlord.run());
+			if (!this.isOverlordSuspended(overlord)) {
+				this.try(() => overlord.run());
+			}
 		}
 		for (let colony of this.colonies) {
 			this.handleSafeMode(colony);

@@ -108,8 +108,7 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	init() {
-		// const setup = this.colony.stage == ColonyStage.Larva ? WorkerEarlySetup : WorkerSetup;
-		const setup = Setups.worker;
+		const setup = this.colony.level == 1 ? Setups.workers.early : Setups.workers.default;
 		const workPartsPerWorker = setup.getBodyPotential(WORK, this.colony);
 		let numWorkers: number;
 		if (this.colony.stage == ColonyStage.Larva) {

@@ -47,6 +47,10 @@ export function hasJustSpawned(): boolean {
 	return _.keys(Overmind.colonies).length == 1 && _.keys(Game.creeps).length == 0 && _.keys(Game.spawns).length == 1;
 }
 
+export function onPublicServer(): boolean {
+	return Game.shard.name.includes('shard');
+}
+
 interface toColumnsOpts {
 	padChar: string,
 	justify: boolean

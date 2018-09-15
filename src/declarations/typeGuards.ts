@@ -2,6 +2,7 @@
 // differentiates an ambiguous input by recognizing one or more unique properties.
 
 import {Zerg} from '../zerg/Zerg';
+import {CombatZerg} from '../zerg/CombatZerg';
 
 export interface EnergyStructure extends Structure {
 	energy: number;
@@ -53,6 +54,6 @@ export function isZerg(creep: Creep | Zerg): creep is Zerg {
 	return (<Zerg>creep).creep != undefined;
 }
 
-// export function isCombatZerg(zerg: Zerg | CombatZerg): zerg is CombatZerg {
-// 	return (<CombatZerg>zerg).isCombatZerg != undefined;
-// }
+export function isCombatZerg(zerg: Creep | Zerg | CombatZerg): zerg is CombatZerg {
+	return (<CombatZerg>zerg).isCombatZerg != undefined;
+}

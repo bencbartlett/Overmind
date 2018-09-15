@@ -129,6 +129,12 @@ interface IOverseer {
 
 	registerOverlord(overlord: any): void;
 
+	isOverlordSuspended(overlord: any): boolean;
+
+	suspendOverlordFor(overlord: any, ticks: number): void;
+
+	suspendOverlordUntil(overlord: any, untilTick: number): void;
+
 	init(): void;
 
 	run(): void;

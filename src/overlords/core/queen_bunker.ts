@@ -15,6 +15,7 @@ import {Task} from '../../tasks/Task';
 import {Hatchery} from '../../hiveClusters/hatchery';
 import {Pathing} from '../../movement/Pathing';
 import {Roles, Setups} from '../../creepSetups/setups';
+import {CreepSetup} from '../../creepSetups/CreepSetup';
 
 type SupplyStructure = StructureExtension | StructureSpawn | StructureTower | StructureLab;
 
@@ -42,6 +43,7 @@ export class BunkerQueenOverlord extends Overlord {
 
 	room: Room;
 	queens: Zerg[];
+	queenSetup: CreepSetup;
 	storeStructures: StoreStructure[];
 	batteries: StructureContainer[];
 	quadrants: { [quadrant: string]: SupplyStructure[] };
@@ -50,6 +52,7 @@ export class BunkerQueenOverlord extends Overlord {
 
 	constructor(hatchery: Hatchery, priority = OverlordPriority.core.queen) {
 		super(hatchery, 'supply', priority);
+		this.queenSetup = Setups.queens.default;
 		this.queens = this.zerg(Roles.queen);
 		this.batteries = _.filter(this.room.containers, container => insideBunkerBounds(container.pos, this.colony));
 		this.storeStructures = _.compact([this.colony.terminal!, this.colony.storage!, ...this.batteries]);
@@ -101,11 +104,8 @@ export class BunkerQueenOverlord extends Overlord {
 				this.colony.logisticsNetwork.requestOutputMinerals(battery);
 			}
 		}
-		let amount = 1;
-		if (this.colony.spawns.length > 1) {
-			amount = 2;
-		}
-		this.wishlist(amount, Setups.queen);
+		const amount = this.colony.spawns.length > 1 ? 2 : 1;
+		this.wishlist(amount, this.queenSetup);
 	}
 
 	// Builds a series of tasks to empty unnecessary carry contents, withdraw required resources, and supply structures

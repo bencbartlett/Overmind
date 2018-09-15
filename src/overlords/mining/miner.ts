@@ -188,31 +188,68 @@ export class MiningOverlord extends Overlord {
 		this.registerEnergyRequests();
 	}
 
-	private handleMiner(miner: Zerg) {
-		// Flee hostiles
-		if (miner.flee(miner.room.fleeDefaults, {dropEnergy: true})) {
-			return;
+	private earlyMiningActions(miner: Zerg) {
+
+		if (miner.room != this.room) {
+			return miner.goToRoom(this.pos.roomName);
 		}
 
-		// Move onto harvesting position or near to source (depending on early/standard mode)
-		if (this.mode == 'early' || !this.harvestPos) {
-			if (!miner.pos.inRangeToPos(this.pos, 1)) {
-				return miner.goTo(this);
-			}
-		} else {
-			if (!miner.pos.inRangeToPos(this.harvestPos, 0)) {
-				return miner.goTo(this.harvestPos, {range: 0});
+		// Container mining
+		if (this.container) {
+			if (this.container.hits < this.container.hitsMax && miner.carry.energy > 0) {
+				return miner.goRepair(this.container);
+			} else {
+				if (_.sum(miner.carry) < miner.carryCapacity) {
+					return miner.goHarvest(this.source!);
+				} else {
+					return miner.goTransfer(this.container);
+				}
 			}
 		}
+
+		// Build output site
+		if (this.constructionSite) {
+			if (miner.carry.energy > 0) {
+				return miner.goBuild(this.constructionSite);
+			} else {
+				return miner.goHarvest(this.source!);
+			}
+		}
+
+		// Drop mining
+		if (this.allowDropMining) {
+			miner.goHarvest(this.source!);
+			if (miner.carry.energy > 0.8 * miner.carryCapacity) { // try to drop on top of largest drop if full
+				let biggestDrop = maxBy(miner.pos.findInRange(miner.room.droppedEnergy, 1), drop => drop.amount);
+				if (biggestDrop) {
+					miner.goDrop(biggestDrop.pos, RESOURCE_ENERGY);
+				}
+			}
+			return;
+		}
+	}
+
+	private linkMiningActions(miner: Zerg) {
+
+		// Approach mining site
+		if (this.goToMiningSite(miner)) return;
 
 		// Link mining
 		if (this.link) {
 			miner.harvest(this.source!);
-			if (miner.carry.energy == miner.carryCapacity) {
+			if (miner.carry.energy > 0.9 * miner.carryCapacity) {
 				miner.transfer(this.link, RESOURCE_ENERGY);
 			}
 			return;
+		} else {
+			log.warning(`Link miner ${miner.print} has no link!`);
 		}
+	}
+
+	private standardMiningActions(miner: Zerg) {
+
+		// Approach mining site
+		if (this.goToMiningSite(miner)) return;
 
 		// Container mining
 		if (this.container) {
@@ -246,8 +283,56 @@ export class MiningOverlord extends Overlord {
 			}
 			return;
 		}
+	}
 
-		// log.warning(`${miner.print}: nothing to do!`);
+	private goToMiningSite(miner: Zerg): boolean {
+		// Move onto harvesting position or near to source (depending on early/standard mode)
+		if (this.harvestPos) {
+			if (!miner.pos.inRangeToPos(this.harvestPos, 0)) {
+				miner.goTo(this.harvestPos);
+				return true;
+			}
+		} else {
+			if (!miner.pos.inRangeToPos(this.pos, 1)) {
+				miner.goTo(this);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private handleMiner(miner: Zerg) {
+		// Flee hostiles
+		if (miner.flee(miner.room.fleeDefaults, {dropEnergy: true})) {
+			return;
+		}
+
+		// Move onto harvesting position or near to source (depending on early/standard mode)
+		if (this.mode == 'early' || !this.harvestPos) {
+			if (!miner.pos.inRangeToPos(this.pos, 1)) {
+				return miner.goTo(this);
+			}
+		} else {
+			if (!miner.pos.inRangeToPos(this.harvestPos, 0)) {
+				return miner.goTo(this.harvestPos, {range: 0});
+			}
+		}
+
+		switch (this.mode) {
+			case 'early':
+				return this.earlyMiningActions(miner);
+			case 'link':
+				return this.linkMiningActions(miner);
+			case 'standard':
+				return this.standardMiningActions(miner);
+			case 'SK':
+				return this.standardMiningActions(miner);
+			case 'double':
+				return this.standardMiningActions(miner);
+			default:
+				log.error(`UNHANDLED MINER STATE FOR ${miner.print} (MODE: ${this.mode})`);
+		}
+
 	}
 
 	run() {

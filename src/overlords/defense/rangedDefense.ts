@@ -30,10 +30,10 @@ export class RangedDefenseOverlord extends CombatOverlord {
 	}
 
 	private handleDefender(hydralisk: CombatZerg): void {
-		if (hydralisk.room.hostiles.length > 0) {
-			hydralisk.autoCombat(hydralisk.room.name);
+		if (this.room.hostiles.length > 0) {
+			hydralisk.autoCombat(this.room.name);
 		} else {
-			hydralisk.doMedicActions();
+			hydralisk.doMedicActions(this.room.name);
 		}
 	}
 

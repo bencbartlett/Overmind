@@ -339,7 +339,7 @@ export class Colony {
 		// TODO: finish this
 		let defcon = DEFCON.safe;
 		let defconDecayTime = 200;
-		if (this.room.dangerousHostiles.length > 0) {
+		if (this.room.dangerousHostiles.length > 0 && !this.controller.safeMode) {
 			let effectiveHostileCount = _.sum(_.map(this.room.dangerousHostiles,
 													hostile => hostile.boosts.length > 0 ? 2 : 1));
 			if (effectiveHostileCount >= 3) {

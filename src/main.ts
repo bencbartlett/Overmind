@@ -46,7 +46,7 @@ function main(): void {
 	Mem.load();														// Load previous parsed memory if present
 	if (!Mem.shouldRun()) return;									// Suspend operation if necessary
 	Mem.clean();													// Clean memory contents
-	if (Overmind.shouldBuild || Game.time >= Overmind.expiration) {
+	if (!Overmind || Overmind.shouldBuild || Game.time >= Overmind.expiration) {
 		delete global.Overmind;										// Explicitly delete the old Overmind object
 		Mem.garbageCollect(true);								// Run quick garbage collection
 		global.Overmind = new _Overmind();							// Instantiate the Overmind object

@@ -18,9 +18,11 @@ interface CombatZergMemory extends CreepMemory {
 export class CombatZerg extends Zerg {
 
 	memory: CombatZergMemory;
+	isCombatZerg: boolean;
 
 	constructor(creep: Creep, notifyWhenAttacked = true) {
 		super(creep, notifyWhenAttacked);
+		this.isCombatZerg = true;
 		_.defaults(this.memory, {
 			recovering  : false,
 			lastInDanger: 0,
@@ -84,7 +86,13 @@ export class CombatZerg extends Zerg {
 	}
 
 	/* Move to and heal/rangedHeal the specified target */
-	doMedicActions(): void {
+	doMedicActions(roomName: string): void {
+		// Travel to the target room
+		if (!this.safelyInRoom(roomName)) {
+			this.goToRoom(roomName, {ensurePath: true});
+			return;
+		}
+		// Heal friendlies
 		let target = CombatTargeting.findClosestHurtFriendly(this);
 		if (target) {
 			// Approach the target
@@ -237,7 +245,8 @@ export class CombatZerg extends Zerg {
 
 	}
 
-	needsToRecover(recoverThreshold = 0.85, reengageThreshold = 1.0): boolean {
+	needsToRecover(recoverThreshold  = CombatIntel.minimumDamageTakenMultiplier(this.creep) < 1 ? 0.85 : 0.75,
+				   reengageThreshold = 1.0): boolean {
 		let recovering: boolean;
 		if (this.memory.recovering) {
 			recovering = this.hits < this.hitsMax * reengageThreshold;
@@ -252,8 +261,8 @@ export class CombatZerg extends Zerg {
 		if (this.pos.findInRange(this.room.hostiles, 5).length > 0 || this.room.towers.length > 0) {
 			this.memory.lastInDanger = Game.time;
 		}
-		let goals = GoalFinder.retreatGoals(this.room);
-		let result = Movement.combatMove(this, goals.approach, goals.avoid);
+		let goals = GoalFinder.retreatGoals(this);
+		let result = Movement.combatMove(this, goals.approach, goals.avoid, {allowExit: true});
 
 		if (result == NO_ACTION && this.pos.isEdge) {
 			if (Game.time < this.memory.lastInDanger + 3) {

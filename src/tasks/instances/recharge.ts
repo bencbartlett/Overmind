@@ -60,8 +60,8 @@ export class TaskRecharge extends Task {
 		let target = creep.inColonyRoom ? maxBy(creep.colony.rechargeables, o => this.rechargeRateForCreep(creep, o))
 										: maxBy(creep.room.rechargeables, o => this.rechargeRateForCreep(creep, o));
 		if (!target || creep.pos.getMultiRoomRangeTo(target.pos) > 40) {
-			let canHarvest = creep.getActiveBodyparts(WORK) > 0
-							 && creep.roleName != 'worker'; // workers shouldn't harvest; let drones do it
+			// workers shouldn't harvest; let drones do it (disabling this check can destabilize early economy)
+			let canHarvest = creep.getActiveBodyparts(WORK) > 0 && creep.roleName != 'worker';
 			if (canHarvest) {
 				// Harvest from a source if there is no recharge target available
 				let availableSources = _.filter(creep.room.sources,

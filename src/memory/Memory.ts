@@ -85,9 +85,14 @@ export class Mem {
 	}
 
 	static garbageCollect(quick?: boolean) {
-		let start = Game.cpu.getUsed();
-		global.gc(quick);
-		log.debug(`Running ${quick ? 'quick' : 'FULL'} garbage collection. Elapsed time: ${Game.cpu.getUsed() - start}.`);
+		if (global.gc) { // sometimes garbage collection isn't available
+			let start = Game.cpu.getUsed();
+			global.gc(quick);
+			log.debug(`Running ${quick ? 'quick' : 'FULL'} garbage collection. ` +
+					  `Elapsed time: ${Game.cpu.getUsed() - start}.`);
+		} else {
+			log.debug(`Manual garbage collection is unavailable on this server.`);
+		}
 	}
 
 	static wrap(memory: any, memName: string, defaults = {}, deep = false) {

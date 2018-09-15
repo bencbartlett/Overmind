@@ -249,6 +249,15 @@ export class CombatIntel {
 		return RANGED_HEAL_POWER * this.getHealPotential(toCreep(creep));
 	}
 
+	// If a creep appears to primarily be a healer
+	static isHealer(zerg: Creep | Zerg): boolean {
+		const creep = toCreep(zerg);
+		const healParts = _.filter(zerg.body, part => part.type == HEAL).length;
+		const attackParts = _.filter(zerg.body, part => part.type == ATTACK).length;
+		const rangedAttackParts = _.filter(zerg.body, part => part.type == RANGED_ATTACK).length;
+		return healParts > attackParts + rangedAttackParts;
+	}
+
 	// Attack potential of a single creep in units of effective number of parts
 	static getAttackPotential(creep: Creep): number {
 		return this.cache(creep, 'attackPotential', () => _.sum(creep.body, function (part) {
@@ -338,6 +347,10 @@ export class CombatIntel {
 		);
 	}
 
+	static minimumDamageMultiplierForGroup(creeps: Creep[]): number {
+		return _.min(_.map(creeps, creep => this.minimumDamageTakenMultiplier(creep)));
+	}
+
 	static getMassAttackDamageTo(attacker: Creep | Zerg, target: Creep | Structure): number {
 		if (isStructure(target) && (!isOwnedStructure(target) || target.my)) {
 			return 0;
@@ -387,6 +400,14 @@ export class CombatIntel {
 	// Maximum healing that a group of creeps can dish out (doesn't count for simultaneity restrictions)
 	static maxHealingByCreeps(creeps: Creep[]): number {
 		return _.sum(creeps, creep => this.getHealAmount(creep));
+	}
+
+	// Total attack/rangedAttack/heal potentials for a group of creeps
+	static combatPotentials(creeps: Creep[]): { attack: number, rangedAttack: number, heal: number } {
+		let attack = _.sum(creeps, creep => this.getAttackPotential(creep));
+		let rangedAttack = _.sum(creeps, creep => this.getRangedAttackPotential(creep));
+		let heal = _.sum(creeps, creep => this.getHealPotential(creep));
+		return {attack, rangedAttack, heal};
 	}
 
 	// Maximum damage that is dealable at a given position by enemy forces

@@ -18,6 +18,38 @@ if (!dest) {
 
 export default {
     input: "src/main.ts",
+
+    plugins: [
+        progress({clearLine: true}),
+        resolve(),
+        commonjs({
+                     namedExports: {
+                         'src/Overmind_obfuscated': ['_Overmind'],
+                         'screeps-profiler': ['profiler'],
+                         'columnify': ['columnify']
+                     }
+                 }),
+        typescript({tsconfig: "./tsconfig.json"}),
+        screeps({config: cfg, dryRun: cfg == null})
+    ],
+
+    onwarn: function (warning) {
+        // Skip default export warnings from using obfuscated overmind file in main
+        if (warning.toString().includes('commonjs-proxy')) {
+            return;
+        }
+        if (warning.toString().includes('Circular dependency')) {
+            return;
+        }
+        if (warning.toString().includes("The 'this' keyword is equivalent to 'undefined'")) {
+            return;
+        }
+        // console.warn everything else
+        console.warn(warning.message);
+    },
+
+    treeshake: false,
+
     output: {
         file: "dist/main.js",
         format: "cjs",
@@ -35,31 +67,5 @@ export default {
                 '// Overmind repository: github.com/bencbartlett/overmind\n' +
                 '//\n'
     },
-    onwarn: function (warning) {
-        // Skip default export warnings from using obfuscated overmind file in main
-        if (warning.toString().includes('commonjs-proxy')) {
-            return;
-        }
-        if (warning.toString().includes('Circular dependency')) {
-            return;
-        }
-        if (warning.toString().includes("The 'this' keyword is equivalent to 'undefined'")) {
-            return;
-        }
-        // console.warn everything else
-        console.warn(warning.message);
-    },
-    plugins: [
-        progress({clearLine: true}),
-        resolve(),
-        commonjs({
-                     namedExports: {
-                         'src/Overmind_obfuscated': ['_Overmind'],
-                         'screeps-profiler': ['profiler'],
-                         'columnify': ['columnify']
-                     }
-                 }),
-        typescript({tsconfig: "./tsconfig.json"}),
-        screeps({config: cfg, dryRun: cfg == null})
-    ]
+
 }

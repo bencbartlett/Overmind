@@ -116,7 +116,7 @@ export class CombatTargeting {
 		// Look for any unprotected structures
 		let unprotectedRepairables = _.filter(room.repairables, s => {
 			let rampart = s.pos.lookForStructure(STRUCTURE_RAMPART);
-			return rampart && rampart.hits > 10000;
+			return !rampart || rampart.hits < 10000;
 		});
 		let approach = _.map(unprotectedRepairables, structure => {
 			return {pos: structure.pos, range: 0};
@@ -200,41 +200,45 @@ export class CombatTargeting {
 			log.warning(`Swarm is not in target room!`);
 			return;
 		}
-		// Look for any unprotected structures
-		let unprotectedRepairables = _.filter(room.repairables, s => {
-			let rampart = s.pos.lookForStructure(STRUCTURE_RAMPART);
-			return rampart && rampart.hits > 10000;
-		});
-		let approach = _.map(unprotectedRepairables, structure => {
-			return {pos: structure.pos, range: 0};
-		}) as PathFinderGoal[];
-		if (room.barriers.length == 0 && unprotectedRepairables.length == 0) return; // if there's nothing in the room
 
-		// Try to find a reachable unprotected structure
-		if (approach.length > 0) {
-			let ret = PathFinder.search(swarm.anchor, approach, {
-				maxRooms    : 1,
-				maxOps      : 2000,
-				roomCallback: roomName => {
-					if (roomName != room.name) return false;
-					let matrix = new PathFinder.CostMatrix();
-					for (let barrier of room.barriers) {
-						matrix.set(barrier.pos.x, barrier.pos.y, 0xff);
-					}
-					return matrix;
-				},
-			});
-			let targetPos = _.last(ret.path);
-			if (!ret.incomplete && targetPos) {
-				let targetStructure = _.first(_.filter(targetPos.lookFor(LOOK_STRUCTURES), s => {
-					return s.structureType != STRUCTURE_ROAD && s.structureType != STRUCTURE_CONTAINER;
-				}));
-				if (targetStructure) {
-					log.debug(`Found unprotected structure target @ ${targetPos.print}`);
-					return targetStructure;
-				}
-			}
-		}
+		// // Look for any unprotected structures
+		// let unprotectedRepairables = _.filter(room.repairables, s => {
+		// 	let rampart = s.pos.lookForStructure(STRUCTURE_RAMPART);
+		// 	return !rampart || rampart.hits < 10000;
+		// });
+		// let approach = _.map(unprotectedRepairables, structure => {
+		// 	return {pos: structure.pos, range: 0};
+		// }) as PathFinderGoal[];
+		// if (room.barriers.length == 0 && unprotectedRepairables.length == 0) return; // if there's nothing in the room
+		//
+		// // Try to find a reachable unprotected structure
+		// if (approach.length > 0) {
+		// 	let ret = PathFinder.search(swarm.anchor, approach, {
+		// 		maxRooms    : 1,
+		// 		maxOps      : 2000,
+		// 		roomCallback: roomName => {
+		// 			if (roomName != room.name) return false;
+		// 			let matrix = Pathing.getSwarmTerrainMatrix(roomName, swarm.width, swarm.height).clone();
+		// 			for (let barrier of room.barriers) {
+		// 				let setPositions = Pathing.getPosWindow(barrier.pos, -swarm.width, -swarm.height);
+		// 				for (let pos of setPositions) {
+		// 					matrix.set(pos.x, pos.y, 0xff);
+		// 				}
+		// 			}
+		// 			return matrix;
+		// 		},
+		// 	});
+		// 	let targetPos = _.last(ret.path);
+		// 	if (!ret.incomplete && targetPos) {
+		// 		let targetStructure = _.first(_.filter(targetPos.lookFor(LOOK_STRUCTURES), s => {
+		// 			return s.structureType != STRUCTURE_ROAD && s.structureType != STRUCTURE_CONTAINER;
+		// 		}));
+		// 		if (targetStructure) {
+		// 			log.debug(`Found unprotected structure target @ ${targetPos.print}`);
+		// 			return targetStructure;
+		// 		}
+		// 	}
+		// }
 
 		// Determine a "siege anchor" for what you eventually want to destroy
 		let targets: Structure[] = room.spawns;
@@ -244,7 +248,7 @@ export class CombatTargeting {
 		if (targets.length == 0) return;
 
 		// Recalculate approach targets
-		approach = _.map(targets, s => { // TODO: might need to Pathing.getPosWindow() this
+		let approach = _.map(targets, s => { // TODO: might need to Pathing.getPosWindow() this
 			return {pos: s.pos, range: 0};
 		});
 
@@ -258,10 +262,12 @@ export class CombatTargeting {
 				if (roomName != roomName) return false;
 				let matrix = Pathing.getSwarmTerrainMatrix(roomName, swarm.width, swarm.height).clone();
 				for (let barrier of room.barriers) {
-					let currentCost = matrix.get(barrier.pos.x, barrier.pos.y);
 					let randomFactor = Math.min(Math.round(randomness * Math.random()), 100);
 					let cost = 100 + Math.round((barrier.hits / maxWallHits) * 100) + randomFactor;
-					matrix.set(barrier.pos.x, barrier.pos.y, Math.max(currentCost, cost));
+					let setPositions = Pathing.getPosWindow(barrier.pos, -swarm.width, -swarm.height);
+					for (let pos of setPositions) {
+						matrix.set(pos.x, pos.y, Math.max(cost, matrix.get(pos.x, pos.y)));
+					}
 				}
 				return matrix;
 			},
@@ -269,6 +275,7 @@ export class CombatTargeting {
 
 		// Target the first non-road, non-container structure you find along the path or neighboring positions
 		for (let pos of ret.path) {
+			log.debug(`Searcing path ${pos.print}...`);
 			let searchPositions = Pathing.getPosWindow(pos, swarm.width, swarm.height); // not -1*width
 			for (let searchPos of searchPositions) {
 				let targetStructure = _.first(_.filter(pos.lookFor(LOOK_STRUCTURES), s => {

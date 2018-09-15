@@ -28,6 +28,7 @@ export function hasColony(initializer: OverlordInitializer | Colony): initialize
 export const DEFAULT_PRESPAWN = 50;
 
 export interface CreepRequestOptions {
+	reassignIdle?: boolean;
 	noLifetimeFilter?: boolean;
 	prespawn?: number;
 	priority?: number;
@@ -85,18 +86,16 @@ export abstract class Overlord {
 	}
 
 	get isSuspended(): boolean {
-		return false;
-		// return !!this.memory.suspendUntil && Game.time < this.memory.suspendUntil;
+		return Overmind.overseer.isOverlordSuspended(this);
 	}
 
-	//
-	// suspend(ticks: number) {
-	// 	this.memory.suspendUntil = Game.time + ticks;
-	// }
-	//
-	// suspendUntil(tick: number) {
-	// 	this.memory.suspendUntil = tick;
-	// }
+	suspendFor(ticks: number) {
+		return Overmind.overseer.suspendOverlordFor(this, ticks);
+	}
+
+	suspendUntil(untilTick: number) {
+		return Overmind.overseer.suspendOverlordUntil(this, untilTick);
+	}
 
 	/* Refreshes overlord, recalculating creeps and refreshing existing Zerg. New creeps are automatically added,
 	 * and the corresponding role groups (e.g. 'queens') are automatically updated. Child methods do not need to
@@ -333,7 +332,7 @@ export abstract class Overlord {
 
 	/* Wishlist of creeps to simplify spawning logic; includes automatic reporting */
 	protected wishlist(quantity: number, setup: CreepSetup, opts = {} as CreepRequestOptions) {
-		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN});
+		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN, reassignIdle: false});
 		let creepQuantity: number;
 		if (opts.noLifetimeFilter) {
 			creepQuantity = (this._creeps[setup.role] || []).length;
@@ -341,6 +340,13 @@ export abstract class Overlord {
 			creepQuantity = this.lifetimeFilter(this._creeps[setup.role] || [], opts.prespawn).length;
 		}
 		let spawnQuantity = quantity - creepQuantity;
+		if (opts.reassignIdle && spawnQuantity > 0) {
+			let idleCreeps = _.filter(this.colony.getCreepsByRole(setup.role), creep => !getOverlord(creep));
+			for (let i = 0; i < Math.min(idleCreeps.length, spawnQuantity); i++) {
+				setOverlord(idleCreeps[i], this);
+				spawnQuantity--;
+			}
+		}
 		for (let i = 0; i < spawnQuantity; i++) {
 			this.requestCreep(setup, opts);
 		}
@@ -525,4 +531,6 @@ export function setOverlord(creep: Zerg | Creep, newOverlord: Overlord | null) {
 	}
 	if (oldOverlord) oldOverlord.recalculateCreeps();
 	if (newOverlord) newOverlord.recalculateCreeps();
+	log.info(`${creep.name} has been reassigned from ${oldOverlord ? oldOverlord.print : 'IDLE'} ` +
+			 `to ${newOverlord ? newOverlord.print : 'IDLE'}`);
 }

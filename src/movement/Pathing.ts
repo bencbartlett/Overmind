@@ -128,9 +128,9 @@ export class Pathing {
 	/* Get a window of offset RoomPositions from an anchor position and a window width and height */
 	static getPosWindow(anchor: RoomPosition, width: number, height: number): RoomPosition[] {
 		let positions: RoomPosition[] = [];
-		for (let i of _.range(0, width, width < 0 ? -1 : 1)) {
-			for (let j of _.range(0, height, height < 0 ? -1 : 1)) {
-				positions.push(anchor.getOffsetPos(i, j));
+		for (let dx of _.range(0, width, width < 0 ? -1 : 1)) {
+			for (let dy of _.range(0, height, height < 0 ? -1 : 1)) {
+				positions.push(anchor.getOffsetPos(dx, dy));
 			}
 		}
 		return positions;

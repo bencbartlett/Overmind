@@ -7,6 +7,7 @@ interface RawMemory {
 interface Memory {
 	assimilator: any;
 	Overmind: {};
+	overseer: any;
 	segmenter: any;
 	strategist?: any;
 	colonies: { [name: string]: any };

@@ -1,6 +1,6 @@
 // Global settings file containing player information
 
-import {getUsername} from './utilities/utils';
+import {getUsername, onPublicServer} from './utilities/utils';
 import {leftAngleQuote, rightAngleQuote} from './utilities/stringConstants';
 
 /**
@@ -47,5 +47,5 @@ export const DEFAULT_OPERATION_MODE: operationMode = 'automatic';
 /**
  * The global Overmind object will be re-instantiated after this many ticks. In the meantime, refresh() is used.
  */
-export const NEW_OVERMIND_INTERVAL = 20;
+export const NEW_OVERMIND_INTERVAL = onPublicServer() ? 20 : 5;
 

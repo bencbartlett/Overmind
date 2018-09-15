@@ -14,6 +14,8 @@ import {log} from '../../console/log';
 import {Visualizer} from '../../visuals/Visualizer';
 import {Mem} from '../../memory/Memory';
 
+const DEBUG = false;
+
 @profile
 export class SwarmDestroyerOverlord extends CombatOverlord {
 
@@ -56,16 +58,13 @@ export class SwarmDestroyerOverlord extends CombatOverlord {
 	}
 
 	private makeSwarms(): void {
-		log.debug(`Making swarms`);
 		this.swarms = {};
 		let allZerg: CombatZerg[] = [...this.zerglings, ...this.healers];
-		log.debug(`allZerg: ${_.map(allZerg, zerg => zerg.name)}`);
 		let maxPerSwarm = {[Roles.melee]: 2, [Roles.healer]: 2};
 		let zergBySwarm = _.groupBy(allZerg, zerg => zerg.findSwarm(allZerg, maxPerSwarm));
 		for (let ref in zergBySwarm) {
-			log.debug(`Swarm ref: ${ref}`);
 			if (ref != undefined) {
-				log.debug(`Making swarm for ${_.map(zergBySwarm[ref], z => z.name)}`);
+				if (DEBUG) log.debug(`Making swarm for ${_.map(zergBySwarm[ref], z => z.name)}`);
 				this.swarms[ref] = new Swarm(this, ref, zergBySwarm[ref]);
 			}
 		}

@@ -1,4 +1,4 @@
-// Guard overlord: spawns guards as needed to deal with an invasion
+// Guard overlord: spawns guards as needed to deal with standard NPC invasions
 
 import {DirectiveGuard} from '../../directives/defense/guard';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -11,13 +11,13 @@ import {RoomIntel} from '../../intel/RoomIntel';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 
 @profile
-export class GuardOverlord extends Overlord {
+export class DefenseNPCOverlord extends Overlord {
 
 	guards: CombatZerg[];
 
 	static requiredRCL = 3;
 
-	constructor(directive: DirectiveGuard, priority = OverlordPriority.defense.guard) {
+	constructor(directive: DirectiveGuard, priority = OverlordPriority.outpostDefense.guard) {
 		super(directive, 'guard', priority);
 		this.guards = this.combatZerg(Roles.guardMelee);
 	}
@@ -63,21 +63,20 @@ export class GuardOverlord extends Overlord {
 	private handleGuard(guard: CombatZerg): void {
 		if (!guard.inSameRoomAs(this) || guard.pos.isEdge) {
 			// Move into the assigned room if there is a guard flag present
-			guard.goTo(this.pos);
+			guard.goToRoom(this.pos.roomName);
 		} else { // If you're in the assigned room or if there is no assignment, try to attack or heal
 			let attackTarget = this.findAttackTarget(guard);
 			if (attackTarget) {
 				this.combatActions(guard, attackTarget);
 			} else {
-				guard.doMedicActions();
+				guard.doMedicActions(this.pos.roomName);
 			}
 		}
 	}
 
 	init() {
 		let amount = this.room && (this.room.invaders.length > 0 || RoomIntel.isInvasionLikely(this.room)) ? 1 : 0;
-		this.reassignIdleCreeps(Roles.guardMelee);
-		this.wishlist(amount, CombatSetups.guards.melee);
+		this.wishlist(amount, CombatSetups.guards.melee, {reassignIdle: true});
 	}
 
 	run() {

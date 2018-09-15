@@ -14,7 +14,7 @@ export class GuardSwarmOverlord extends Overlord {
 	directive: DirectiveGuard;
 	guards: CombatZerg[];
 
-	constructor(directive: DirectiveGuard, priority = OverlordPriority.defense.guard) {
+	constructor(directive: DirectiveGuard, priority = OverlordPriority.outpostDefense.guard) {
 		super(directive, 'swarmGuard', priority);
 		this.directive = directive;
 		this.guards = this.combatZerg(Roles.guardMelee);
@@ -34,7 +34,7 @@ export class GuardSwarmOverlord extends Overlord {
 
 		if (guard.pos.roomName != this.pos.roomName) { // TODO: make edge-safe
 			// Move into the assigned room if there is a guard flag present
-			guard.goTo(this.pos);
+			guard.goToRoom(this.pos.roomName);
 		} else { // If you're in the assigned room or if there is no assignment, try to attack or heal
 			let attackTarget = this.findAttackTarget(guard);
 			if (attackTarget) {

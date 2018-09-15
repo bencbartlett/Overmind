@@ -107,10 +107,19 @@ export const Setups = {
 
 	},
 
-	queen: new CreepSetup(Roles.queen, {
-		pattern  : [CARRY, CARRY, MOVE],
-		sizeLimit: Infinity,
-	}),
+	queens: {
+
+		default: new CreepSetup(Roles.queen, {
+			pattern  : [CARRY, CARRY, MOVE],
+			sizeLimit: Infinity,
+		}),
+
+		early: new CreepSetup(Roles.queen, {
+			pattern  : [CARRY, MOVE],
+			sizeLimit: Infinity,
+		}),
+
+	},
 
 	scout: new CreepSetup(Roles.scout, {
 		pattern  : [MOVE],
@@ -131,10 +140,19 @@ export const Setups = {
 
 	},
 
-	worker: new CreepSetup(Roles.worker, {
-		pattern  : [WORK, CARRY, MOVE],
-		sizeLimit: Infinity,
-	}),
+	workers: {
+
+		default: new CreepSetup(Roles.worker, {
+			pattern  : [WORK, CARRY, MOVE],
+			sizeLimit: Infinity,
+		}),
+
+		early: new CreepSetup(Roles.worker, {
+			pattern  : [WORK, CARRY, MOVE, MOVE],
+			sizeLimit: Infinity,
+		}),
+
+	},
 
 	upgraders: {
 
@@ -153,20 +171,6 @@ export const Setups = {
 };
 
 export const CombatSetups = {
-
-	guards: {
-
-		melee: new CreepSetup(Roles.guardMelee, {
-			pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE, MOVE, HEAL],
-			sizeLimit: 3,
-		}),
-
-		melee_early: new CreepSetup(Roles.guardMelee, {
-			pattern  : [ATTACK, MOVE],
-			sizeLimit: Infinity,
-		}),
-
-	},
 
 	zerglings: {
 
@@ -230,6 +234,48 @@ export const CombatSetups = {
 
 		boosted_T3: new CreepSetup(Roles.healer, {
 			pattern  : [TOUGH, TOUGH, HEAL, HEAL, HEAL, HEAL, MOVE, MOVE],
+			sizeLimit: Infinity,
+		}),
+
+	},
+
+	broodlings: {
+
+		default: new CreepSetup(Roles.guardMelee, {
+			pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE, MOVE, HEAL],
+			sizeLimit: Infinity,
+		}),
+
+		early: new CreepSetup(Roles.guardMelee, {
+			pattern  : [ATTACK, MOVE],
+			sizeLimit: Infinity,
+		}),
+
+	},
+
+	mutalisks: {
+
+		default: new CreepSetup(Roles.guardRanged, {
+			pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, MOVE, MOVE, MOVE, MOVE, HEAL],
+			sizeLimit: Infinity,
+		}),
+
+		early: new CreepSetup(Roles.guardRanged, {
+			pattern  : [RANGED_ATTACK, MOVE],
+			sizeLimit: Infinity,
+		}),
+
+	},
+
+	guards: {
+
+		melee: new CreepSetup(Roles.guardMelee, {
+			pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE, MOVE, HEAL],
+			sizeLimit: 3,
+		}),
+
+		melee_early: new CreepSetup(Roles.guardMelee, {
+			pattern  : [ATTACK, MOVE],
 			sizeLimit: Infinity,
 		}),
 

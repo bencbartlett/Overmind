@@ -30,7 +30,7 @@ export class TransportOverlord extends Overlord {
 		}
 
 		let transportPower = 0;
-		const scaling = this.colony.stage == ColonyStage.Larva ? 1.5 : 2.0; // aggregate round-trip multiplier
+		const scaling = 2; // this.colony.stage == ColonyStage.Larva ? 1.5 : 2.0; // aggregate round-trip multiplier
 
 		// Add contributions to transport power from hauling energy from mining sites
 		for (let flagName in this.colony.miningSites) {

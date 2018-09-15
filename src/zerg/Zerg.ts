@@ -71,6 +71,15 @@ interface FleeOptions {
 	invalidateTask?: boolean;
 }
 
+const RANGES = {
+	BUILD   : 3,
+	REPAIR  : 3,
+	TRANSFER: 1,
+	WITHDRAW: 1,
+	HARVEST : 1,
+	DROP    : 0,
+};
+
 @profile
 export class Zerg {
 
@@ -205,6 +214,14 @@ export class Zerg {
 		return result;
 	}
 
+	goBuild(target: ConstructionSite) {
+		if (this.pos.inRangeToPos(target.pos, RANGES.BUILD)) {
+			return this.build(target);
+		} else {
+			return this.goTo(target);
+		}
+	}
+
 	cancelOrder(methodName: string): OK | ERR_NOT_FOUND {
 		let result = this.creep.cancelOrder(methodName);
 		if (result == OK) this.actionLog[methodName] = false;
@@ -229,6 +246,14 @@ export class Zerg {
 		return result;
 	}
 
+	goDrop(pos: RoomPosition, resourceType: ResourceConstant, amount?: number) {
+		if (this.pos.inRangeToPos(pos, RANGES.DROP)) {
+			return this.drop(resourceType, amount);
+		} else {
+			return this.goTo(pos);
+		}
+	}
+
 	generateSafeMode(target: StructureController) {
 		return this.creep.generateSafeMode(target);
 	}
@@ -237,6 +262,14 @@ export class Zerg {
 		let result = this.creep.harvest(source);
 		if (!this.actionLog.harvest) this.actionLog.harvest = (result == OK);
 		return result;
+	}
+
+	goHarvest(source: Source | Mineral) {
+		if (this.pos.inRangeToPos(source.pos, RANGES.HARVEST)) {
+			return this.harvest(source);
+		} else {
+			return this.goTo(source);
+		}
 	}
 
 	move(direction: DirectionConstant, force = false) {
@@ -287,6 +320,14 @@ export class Zerg {
 		let result = this.creep.repair(target);
 		if (!this.actionLog.repair) this.actionLog.repair = (result == OK);
 		return result;
+	}
+
+	goRepair(target: Structure) {
+		if (this.pos.inRangeToPos(target.pos, RANGES.REPAIR)) {
+			return this.repair(target);
+		} else {
+			return this.goTo(target);
+		}
 	}
 
 	reserveController(controller: StructureController) {
@@ -347,7 +388,7 @@ export class Zerg {
 		return result;
 	}
 
-	transfer(target: Creep | Zerg | Structure, resourceType: ResourceConstant, amount?: number) {
+	transfer(target: Creep | Zerg | Structure, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
 		let result: ScreepsReturnCode;
 		if (target instanceof Zerg) {
 			result = this.creep.transfer(target.creep, resourceType, amount);
@@ -358,10 +399,26 @@ export class Zerg {
 		return result;
 	}
 
+	goTransfer(target: Creep | Zerg | Structure, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
+		if (this.pos.inRangeToPos(target.pos, RANGES.TRANSFER)) {
+			return this.transfer(target, resourceType, amount);
+		} else {
+			return this.goTo(target);
+		}
+	}
+
 	withdraw(target: Structure | Tombstone, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
 		let result = this.creep.withdraw(target, resourceType, amount);
 		if (!this.actionLog.withdraw) this.actionLog.withdraw = (result == OK);
 		return result;
+	}
+
+	goWithdraw(target: Structure | Tombstone, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
+		if (this.pos.inRangeToPos(target.pos, RANGES.WITHDRAW)) {
+			return this.withdraw(target, resourceType, amount);
+		} else {
+			return this.goTo(target);
+		}
 	}
 
 	// Simultaneous creep actions --------------------------------------------------------------------------------------

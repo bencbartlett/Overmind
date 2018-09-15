@@ -1,7 +1,7 @@
 import {CombatZerg} from './CombatZerg';
 import {CombatMoveOptions, Movement, NO_ACTION, SwarmMoveOptions} from '../movement/Movement';
 import {hasPos} from '../declarations/typeGuards';
-import {rotatedMatrix} from '../utilities/utils';
+import {getCacheExpiration, rotatedMatrix} from '../utilities/utils';
 import {Mem} from '../memory/Memory';
 import {CombatOverlord} from '../overlords/CombatOverlord';
 import {CombatIntel} from '../intel/CombatIntel';
@@ -19,7 +19,10 @@ interface SwarmMemory {
 	_go?: MoveData;
 	creeps: string[];
 	orientation: TOP | BOTTOM | LEFT | RIGHT;
-	targetID?: string;
+	target?: {
+		id: string;
+		exp: number;
+	};
 	numRetreats: number;
 	initialAssembly?: boolean;
 	recovering?: boolean;
@@ -38,6 +41,8 @@ interface SwarmOverlord extends CombatOverlord {
 	memory: any;
 }
 
+const DEBUG = false;
+
 // Represents a coordinated group of creeps moving as a single unit
 export class Swarm implements ProtoSwarm { // TODO: incomplete
 
@@ -55,6 +60,8 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 	fatigue: number;								// Maximum fatigue of all creeps in the swarm
 
 	constructor(overlord: SwarmOverlord, ref: string, creeps: CombatZerg[], width = 2, height = 2) {
+		log.debug(`START ===============================================================`);
+
 		this.overlord = overlord;
 		this.ref = ref;
 		this.memory = Mem.wrap(overlord.memory, `swarm:${ref}`, SwarmMemoryDefaults);
@@ -104,24 +111,33 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 		this.rooms = _.unique(_.map(this.creeps, creep => creep.room), room => room.name);
 		this.roomsByName = _.zipObject(_.map(this.rooms, room => [room.name, room]));
 		this.fatigue = _.max(_.map(this.creeps, creep => creep.fatigue));
-		log.debug(`Anchor: ${this.anchor.print}`);
+		log.debug(`Orientation: ${this.orientation}`);
 		log.debug(`Formation: ${_.map(this.formation, creeps => _.map(creeps, creep => creep ? creep.name : 'none'))}`);
 		log.debug(`StaticFormation: ${_.map(this.staticFormation, creeps => _.map(creeps, creep => creep ? creep.name : 'none'))}`);
 
 	}
 
+	// This should occasionally be executed at run() phase
+	static cleanMemory(overlord: { swarms: { [ref: string]: Swarm }, memory: any }) {
+		for (let ref in overlord.swarms) {
+			// TODO
+		}
+	}
+
 	get target(): Creep | Structure | undefined {
-		let target = Game.getObjectById(this.memory.targetID);
-		if (target) {
-			return target as Creep | Structure;
+		if (this.memory.target) {
+			let target = Game.getObjectById(this.memory.target.id);
+			if (target) {
+				return target as Creep | Structure;
+			}
 		}
 	}
 
 	set target(targ: Creep | Structure | undefined) {
 		if (targ) {
-			this.memory.targetID = targ.id;
+			this.memory.target = {id: targ.id, exp: getCacheExpiration(100)};
 		} else {
-			delete this.memory.targetID;
+			delete this.memory.target;
 		}
 	}
 
@@ -200,7 +216,7 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 				}
 			}
 		}
-		log.debug(`Formation positions: `, JSON.stringify(formationPositions));
+		// log.debug(`Formation positions: `, JSON.stringify(formationPositions));
 		return formationPositions;
 	}
 
@@ -299,9 +315,7 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 				creep.cancelOrder('move');
 			}
 		}
-		let result = allMoved ? OK : ERR_NOT_ALL_OK;
-		log.debug(`MOVE result: ${result}`);
-		return result;
+		return allMoved ? OK : ERR_NOT_ALL_OK;
 	}
 
 	goTo(destination: RoomPosition | HasPos, options: SwarmMoveOptions = {}): number {
@@ -389,10 +403,10 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 		}
 
 		// Find a target if needed
-		if (!this.target) {
-			this.target = CombatTargeting.findBestSwarmStructureTarget(this, roomName, 10 * this.memory.numRetreats);
-			log.debug(this.target);
-		}
+		// if (!this.target) {
+		this.target = CombatTargeting.findBestSwarmStructureTarget(this, roomName, 10 * this.memory.numRetreats);
+		log.debug(this.target);
+		// }
 
 		// Approach the siege target
 		if (this.target) {
@@ -400,7 +414,7 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 								 pos => ({pos: pos, range: 1}));
 			let result = this.combatMove(approach, []);
 			if (result != NO_ACTION) {
-				log.debug(`Moving to target: ${result}`);
+				log.debug(`Moving to target ${this.target}: ${result}`);
 				return result;
 			}
 		} else {
@@ -417,7 +431,7 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 			}
 		}
 
-		log.debug(`No further action needed`);
+		log.debug(`END =================================================================`);
 	}
 
 	needsToRecover(recoverThreshold = 0.75, reengageThreshold = 1.0): boolean {
@@ -440,7 +454,7 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 		if (_.filter(allHostiles, h => this.minRangeTo(h)).length > 0 || allTowers.length > 0) {
 			this.memory.lastInDanger = Game.time;
 		}
-		let allAvoidGoals = _.flatten(_.map(this.rooms, room => GoalFinder.retreatGoals(room).avoid));
+		let allAvoidGoals = _.flatten(_.map(this.rooms, room => GoalFinder.retreatGoalsForRoom(room).avoid));
 		let result = Movement.swarmCombatMove(this, [], allAvoidGoals);
 
 		let safeRoom = _.first(_.filter(this.rooms, room => !room.owner || room.my));

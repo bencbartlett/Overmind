@@ -101,7 +101,7 @@ export class DestroyerOverlord extends Overlord {
 	private handleHealer(healer: CombatZerg): void {
 		// If there are no hostiles in the designated room, run medic actions
 		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
-			healer.doMedicActions();
+			healer.doMedicActions(this.room.name);
 			return;
 		}
 		let attacker = healer.findPartner(this.attackers);

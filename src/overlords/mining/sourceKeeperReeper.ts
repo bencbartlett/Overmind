@@ -135,7 +135,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 		if (!this.targetLair || !this.room || defender.room != this.room || defender.pos.isEdge) {
 			debug(defender, `Going to room!`);
 			defender.healSelfIfPossible();
-			defender.goTo(this.pos);
+			defender.goToRoom(this.pos.roomName);
 			return;
 		}
 
@@ -176,7 +176,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 			} else {
 				// Do medic actions
 				debug(defender, `Medic actions`);
-				defender.doMedicActions();
+				defender.doMedicActions(this.room.name);
 			}
 		}
 
