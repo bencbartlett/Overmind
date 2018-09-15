@@ -1,7 +1,6 @@
 import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {Visualizer} from '../../visuals/Visualizer';
-import {CombatIntel} from '../../intel/CombatIntel';
 import {log} from '../../console/log';
 import {SwarmDestroyerOverlord} from '../../overlords/offense/swarmDestroyer';
 
@@ -38,7 +37,5 @@ export class DirectiveSwarmDestroy extends Directive {
 
 	visuals(): void {
 		Visualizer.marker(this.pos, {color: 'red'});
-		let fallback = CombatIntel.getFallbackFrom(this.overlords.destroy.directive.pos);
-		Visualizer.marker(fallback, {color: 'green'});
 	}
 }

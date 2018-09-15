@@ -100,11 +100,18 @@ Object.defineProperty(Room.prototype, 'playerHostiles', {
 Object.defineProperty(Room.prototype, 'dangerousHostiles', {
 	get() {
 		if (!this._dangerousHostiles) {
-			this._dangerousHostiles = _.filter(this.hostiles,
-											   (creep: Creep) => creep.getActiveBodyparts(ATTACK) > 0
-																 || creep.getActiveBodyparts(WORK) > 0
-																 || creep.getActiveBodyparts(RANGED_ATTACK) > 0
-																 || creep.getActiveBodyparts(HEAL) > 0);
+			if (this.my) {
+				this._dangerousHostiles = _.filter(this.hostiles,
+												   (creep: Creep) => creep.getActiveBodyparts(ATTACK) > 0
+																	 || creep.getActiveBodyparts(WORK) > 0
+																	 || creep.getActiveBodyparts(RANGED_ATTACK) > 0
+																	 || creep.getActiveBodyparts(HEAL) > 0);
+			} else {
+				this._dangerousHostiles = _.filter(this.hostiles,
+												   (creep: Creep) => creep.getActiveBodyparts(ATTACK) > 0
+																	 || creep.getActiveBodyparts(RANGED_ATTACK) > 0
+																	 || creep.getActiveBodyparts(HEAL) > 0);
+			}
 		}
 		return this._dangerousHostiles;
 	},

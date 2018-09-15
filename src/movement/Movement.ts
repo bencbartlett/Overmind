@@ -29,13 +29,15 @@ const STATE_DEST_Y = 5;
 const STATE_DEST_ROOMNAME = 6;
 
 export const MovePriorities = {
-	[Roles.manager]  : 1,
-	[Roles.queen]    : 2,
-	[Roles.transport]: 3,
-	[Roles.melee]    : 4,
-	[Roles.ranged]   : 5,
-	[Roles.worker]   : 9,
-	default          : 10,
+	[Roles.manager]    : 1,
+	[Roles.queen]      : 2,
+	[Roles.melee]      : 3,
+	[Roles.ranged]     : 4,
+	[Roles.guardMelee] : 5,
+	[Roles.guardRanged]: 6,
+	[Roles.transport]  : 8,
+	[Roles.worker]     : 9,
+	default            : 10,
 };
 
 

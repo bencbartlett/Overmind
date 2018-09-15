@@ -14,6 +14,8 @@ interface SkirmishAnalysis {
 	isApproaching: boolean,
 }
 
+const DEBUG = false;
+
 export class GoalFinder {
 
 	// Standard set of goals for fighting small groups of hostiles (not optimal for larger fights)
@@ -93,6 +95,12 @@ export class GoalFinder {
 				}
 				avoid.push({pos: target.pos, range: range});
 			}
+		}
+
+		if (DEBUG) {
+			log.debug(`Report for ${creep.name}:`, JSON.stringify(analysis));
+			log.debug(`Approach for ${creep.name}:`, JSON.stringify(approach));
+			log.debug(`Avoid for ${creep.name}:`, JSON.stringify(avoid));
 		}
 
 		return {approach, avoid};
