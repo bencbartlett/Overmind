@@ -392,12 +392,13 @@ export class RoomPlanner {
 
 	/* Check to see if there are any structures that can't be built */
 	private findCollision(ignoreRoads = false): RoomPosition | undefined {
+		const terrain = Game.map.getRoomTerrain(this.colony.room.name);
 		for (let structureType in this.map) {
 			if (ignoreRoads && structureType == STRUCTURE_ROAD) {
 				continue;
 			}
 			for (let pos of this.map[structureType]) {
-				if (Game.map.getTerrainAt(pos) == 'wall') {
+				if (terrain.get(pos.x, pos.y) == TERRAIN_MASK_WALL) {
 					return pos;
 				}
 			}

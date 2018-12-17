@@ -130,6 +130,8 @@ RoomPosition.prototype.getRangeToXY = function (x: number, y: number) {
 
 RoomPosition.prototype.getPositionsInRange = function (range: number,
 													   includeWalls = false, includeEdges = false): RoomPosition[] {
+	const terrain = Game.map.getRoomTerrain(this.roomName);
+
 	let adjPos: RoomPosition[] = [];
 	let [xmin, xmax] = includeEdges ? [0, 49] : [1, 48];
 	let [ymin, ymax] = includeEdges ? [0, 49] : [1, 48];
@@ -138,7 +140,7 @@ RoomPosition.prototype.getPositionsInRange = function (range: number,
 			let x = this.x + dx;
 			let y = this.y + dy;
 			if (xmin <= x && x <= xmax && xmin <= y && y <= xmax) {
-				if (includeWalls || Game.map.getTerrainAt(x, y, this.roomName) != 'wall') {
+				if (includeWalls || terrain.get(x, y) !== TERRAIN_MASK_WALL) {
 					adjPos.push(new RoomPosition(x, y, this.roomName));
 				}
 			}
@@ -149,6 +151,7 @@ RoomPosition.prototype.getPositionsInRange = function (range: number,
 
 RoomPosition.prototype.getPositionsAtRange = function (range: number,
 													   includeWalls = false, includeEdges = false): RoomPosition[] {
+	const terrain = Game.map.getRoomTerrain(this.roomName);
 	let adjPos: RoomPosition[] = [];
 	let [xmin, xmax] = includeEdges ? [0, 49] : [1, 48];
 	let [ymin, ymax] = includeEdges ? [0, 49] : [1, 48];
@@ -160,7 +163,7 @@ RoomPosition.prototype.getPositionsAtRange = function (range: number,
 			let x = this.x + dx;
 			let y = this.y + dy;
 			if (xmin <= x && x <= xmax && xmin <= y && y <= xmax) {
-				if (includeWalls || Game.map.getTerrainAt(x, y, this.roomName) != 'wall') {
+				if (includeWalls || terrain.get(x, y) !== TERRAIN_MASK_WALL) {
 					adjPos.push(new RoomPosition(x, y, this.roomName));
 				}
 			}
@@ -171,7 +174,7 @@ RoomPosition.prototype.getPositionsAtRange = function (range: number,
 
 RoomPosition.prototype.isWalkable = function (ignoreCreeps = false): boolean {
 	// Is terrain passable?
-	if (Game.map.getTerrainAt(this) == 'wall') return false;
+	if (Game.map.getRoomTerrain(this.roomName).get(this.x, this.y) == TERRAIN_MASK_WALL) return false;
 	if (this.isVisible) {
 		// Are there creeps?
 		if (ignoreCreeps == false && this.lookFor(LOOK_CREEPS).length > 0) return false;

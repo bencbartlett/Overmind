@@ -118,12 +118,14 @@ export class CombatIntel {
 
 		// TODO
 		let exitPositions: RoomPosition[] = [];
+		const terrain = Game.map.getRoomTerrain(this.room.name);
+
 		for (let x = 0; x < 50; x += 49) {
 			for (let y = 0; y < 50; y++) {
 				if (x !== 0 && y !== 0 && x !== 49 && y !== 49) {
 					continue;
 				}
-				if (Game.map.getTerrainAt(x, y, this.room.name) === 'wall') {
+				if (terrain.get(x, y) === TERRAIN_MASK_WALL) {
 					continue;
 				}
 				matrix.set(x, y, 0xff);

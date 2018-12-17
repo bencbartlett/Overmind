@@ -342,17 +342,18 @@ export class Pathing {
 	static getTerrainMatrix(roomName: string, costs: TerrainCosts = {plainCost: 1, swampCost: 5}): CostMatrix {
 		return $.costMatrix(roomName, `terrain:${costs.plainCost}:${costs.swampCost}`, () => {
 			let matrix = new PathFinder.CostMatrix();
+			const terrain = Game.map.getRoomTerrain(roomName);
 			for (let y = 0; y < 50; ++y) {
 				for (let x = 0; x < 50; ++x) {
-					switch (Game.map.getTerrainAt(x, y, roomName)) {
-						case 'plain':
-							matrix.set(x, y, costs.plainCost);
-							break;
-						case 'swamp':
+					switch (terrain.get(x, y)) {
+						case TERRAIN_MASK_SWAMP:
 							matrix.set(x, y, costs.swampCost);
 							break;
-						case 'wall':
+						case TERRAIN_MASK_WALL:
 							matrix.set(x, y, 0xff);
+							break;
+						default: // plain
+							matrix.set(x, y, costs.plainCost);
 							break;
 					}
 				}
@@ -537,9 +538,10 @@ export class Pathing {
 
 	/* Explicitly blocks off walls for a room */
 	static blockImpassibleTerrain(matrix: CostMatrix, roomName: string) {
+		const terrain = Game.map.getRoomTerrain(roomName);
 		for (let y = 0; y < 50; ++y) {
 			for (let x = 0; x < 50; ++x) {
-				if (Game.map.getTerrainAt(x, y, roomName) == 'wall') {
+				if (terrain.get(x, y) === TERRAIN_MASK_WALL) {
 					matrix.set(x, y, 0xff);
 				}
 			}
@@ -570,22 +572,24 @@ export class Pathing {
 
 	static setCostsInRange(matrix: CostMatrix, pos: RoomPosition | HasPos, range: number, cost = 30, add = false) {
 		pos = normalizePos(pos);
+		const terrain = Game.map.getRoomTerrain(pos.roomName);
+
 		for (let dx = -range; dx <= range; dx++) {
 			let x = pos.x + dx;
 			if (x < 0 || x > 49) continue;
 			for (let dy = -range; dy <= range; dy++) {
 				let y = pos.y + dy;
 				if (y < 0 || y > 49) continue;
-				let terrain = Game.map.getTerrainAt(x, y, pos.roomName);
-				if (terrain === 'wall') {
+				let posTerrain = terrain.get(x, y);
+				if (posTerrain === TERRAIN_MASK_WALL) {
 					continue;
 				}
 				let currentCost = matrix.get(x, y);
 				if (currentCost === 0) {
-					if (terrain === 'plain') {
-						currentCost += 2;
-					} else {
+					if (posTerrain === TERRAIN_MASK_SWAMP) {
 						currentCost += 10;
+					} else {
+						currentCost += 2;
 					}
 				}
 				if (currentCost >= 0xff || currentCost > cost) continue;
@@ -608,16 +612,18 @@ export class Pathing {
 	}
 
 	static setExitCosts(matrix: CostMatrix, roomName: string, cost: number, rangeToEdge = 0) {
+		const terrain = Game.map.getRoomTerrain(roomName);
+
 		for (let x = rangeToEdge; x < 50 - rangeToEdge; x += 49 - rangeToEdge * 2) {
 			for (let y = rangeToEdge; y < 50 - rangeToEdge; y++) {
-				if (Game.map.getTerrainAt(x, y, roomName) != 'wall') {
+				if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
 					matrix.set(x, y, cost);
 				}
 			}
 		}
 		for (let x = rangeToEdge; x < 50 - rangeToEdge; x++) {
 			for (let y = rangeToEdge; y < 50 - rangeToEdge; y += 49 - rangeToEdge * 2) {
-				if (Game.map.getTerrainAt(x, y, roomName) != 'wall') {
+				if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
 					matrix.set(x, y, cost);
 				}
 			}
@@ -859,6 +865,8 @@ export class Pathing {
 
 	/* Find the first walkable position in the room, spiraling outward from the center */
 	static findPathablePosition(roomName: string): RoomPosition {
+		const terrain = Game.map.getRoomTerrain(roomName);
+
 		let x, y: number;
 		for (let radius = 0; radius < 23; radius++) {
 			for (let dx = -radius; dx <= radius; dx++) {
@@ -868,7 +876,7 @@ export class Pathing {
 					}
 					x = 25 + dx;
 					y = 25 + dy;
-					if (Game.map.getTerrainAt(x, y, roomName) !== 'wall') {
+					if (terrain.get(x, y) !== TERRAIN_MASK_WALL) {
 						return new RoomPosition(x, y, roomName);
 					}
 				}
