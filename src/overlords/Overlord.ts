@@ -380,12 +380,15 @@ export abstract class Overlord {
 			(creep.ticksToLive && creep.ticksToLive < MIN_LIFETIME_FOR_BOOST * creep.lifetime)) {
 			return false;
 		}
-		// If you're in a bunker layout at level 8 with max labs, only boost while spawning
-		if (onlyBoostInSpawn && this.colony.bunker && this.colony.level == 8 && this.colony.labs.length == 10) {
-			if (!creep.spawning) {
-				return false;
-			}
-		}
+
+		// EDIT: they removed in-spawn boosting... RIP :(
+		// // If you're in a bunker layout at level 8 with max labs, only boost while spawning
+		// if (onlyBoostInSpawn && this.colony.bunker && this.colony.level == 8 && this.colony.labs.length == 10) {
+		// 	if (!creep.spawning) {
+		// 		return false;
+		// 	}
+		// }
+
 		// Otherwise just boost if you need it and can get the resources
 		if (this.boosts[creep.roleName]) {
 			let boosts = _.filter(this.boosts[creep.roleName]!,
