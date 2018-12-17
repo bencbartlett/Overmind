@@ -139,6 +139,8 @@ interface IOverseer {
 
 	run(): void;
 
+	getCreepReport(colony: any): string[][];
+
 	visuals(): void;
 }
 

@@ -8,7 +8,6 @@ import {Colony, ColonyStage} from './Colony';
 import {Overlord} from './overlords/Overlord';
 import {Directive} from './directives/Directive';
 import {log} from './console/log';
-import {Visualizer} from './visuals/Visualizer';
 import {Pathing} from './movement/Pathing';
 import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
 import {DirectiveNukeResponse} from './directives/situational/nukeResponse';
@@ -340,7 +339,7 @@ export class Overseer implements IOverseer {
 		}
 	}
 
-	private drawCreepReport(colony: Colony) {
+	getCreepReport(colony: Colony): string[][] {
 		const spoopyBugFix = false;
 		let roleOccupancy: { [role: string]: [number, number] } = {};
 
@@ -365,11 +364,6 @@ export class Overseer implements IOverseer {
 			}
 		}
 
-		let safeOutposts = _.filter(colony.outposts, room => !!room && room.dangerousHostiles.length == 0);
-		let stringReport: string[] = [
-			`DEFCON: ${colony.defcon}  Safe outposts: ${safeOutposts.length}/${colony.outposts.length}`,
-			`Creep usage for ${colony.name}:`];
-
 
 		// let padLength = _.max(_.map(_.keys(roleOccupancy), str => str.length)) + 2;
 		let roledata: string[][] = [];
@@ -381,8 +375,7 @@ export class Overseer implements IOverseer {
 			// }
 			roledata.push([role, `${current}/${needed}`]);
 		}
-		const tablePos = new RoomPosition(1, 11.5, colony.room.name);
-		Visualizer.infoBox(`${colony.name} Creeps`, roledata, tablePos, 7);
+		return roledata;
 	}
 
 	visuals(): void {
@@ -392,8 +385,8 @@ export class Overseer implements IOverseer {
 		for (let overlord of this.overlords) {
 			overlord.visuals();
 		}
-		for (let colony of this.colonies) {
-			this.drawCreepReport(colony);
-		}
+		// for (let colony of this.colonies) {
+		// 	this.drawCreepReport(colony);
+		// }
 	}
 }

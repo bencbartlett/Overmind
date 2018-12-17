@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file. The format 
         - This was a fun little project to do in Mathematica; I made a curve simplification algorithm to look at an image and give the minimum number of points to describe its perimeter within a given tolerance (those are all the hard-coded arrays in `logos.ts`)
     - CPU, bucket, and GCL meters drawn
     - Updates to colony creep count visuals
+    - Displays bar graphs for command center and hatchery statistics
 - New `Segmenter` module manages asynchronous memory segments
 - Added some under-the-hood content for assimilation
     - Completed the "key exchange protocol" that the assimilator uses to periodically validate codebases

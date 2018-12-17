@@ -94,29 +94,42 @@ export class Visualizer {
 		}
 	}
 
-	static infoBox(header: string, content: string[] | string[][], pos: { x: number, y: number, roomName?: string },
-				   width: number): number {
+	static section(title: string, pos: { x: number, y: number, roomName?: string }, width: number,
+				   height: number): { x: number, y: number } {
 		const vis = new RoomVisual(pos.roomName);
 		vis.rect(pos.x, pos.y - charHeight, width, 1.1 * charHeight, {opacity: 0.15});
-		vis.box(pos.x, pos.y - charHeight, width, ((content.length || 1) + 1.1 + .25) * charHeight,
-				{color: textColor});
-		vis.text(header, pos.x + .25, pos.y - .05, this.textStyle());
+		vis.box(pos.x, pos.y - charHeight, width, height + (1.1 + .25) * charHeight, {color: textColor});
+		vis.text(title, pos.x + .25, pos.y - .05, this.textStyle());
+		return {x: pos.x + 0.25, y: pos.y + 1.1 * charHeight};
+	}
+
+	static infoBox(header: string, content: string[] | string[][], pos: { x: number, y: number, roomName?: string },
+				   width: number): number {
+		// const vis = new RoomVisual(pos.roomName);
+		// vis.rect(pos.x, pos.y - charHeight, width, 1.1 * charHeight, {opacity: 0.15});
+		// vis.box(pos.x, pos.y - charHeight, width, ((content.length || 1) + 1.1 + .25) * charHeight,
+		// 		{color: textColor});
+		// vis.text(header, pos.x + .25, pos.y - .05, this.textStyle());
+		let height = charHeight * (content.length || 1);
+		let {x, y} = this.section(header, pos, width, height);
 		if (content.length > 0) {
 			if (_.isArray(content[0])) {
 				this.table(<string[][]>content, {
-					x       : pos.x + .25,
-					y       : pos.y + 1.1 * charHeight,
+					x       : x,
+					y       : y,
 					roomName: pos.roomName
 				});
 			} else {
 				this.multitext(<string[]>content, {
-					x       : pos.x + .25,
-					y       : pos.y + 1.1 * charHeight,
+					x       : x,
+					y       : y,
 					roomName: pos.roomName
 				});
 			}
 		}
-		return pos.y - charHeight + ((content.length || 1) + 1.1 + .25) * charHeight + 0.1;
+		// return pos.y - charHeight + ((content.length || 1) + 1.1 + .25) * charHeight + 0.1;
+		const spaceBuffer = 0.5;
+		return y + height + spaceBuffer;
 	}
 
 	static text(text: string, pos: { x: number, y: number, roomName?: string }, size = 1, style: TextStyle = {}): void {
