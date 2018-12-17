@@ -62,6 +62,8 @@ All notable changes to this project will be documented in this file. The format 
 - Fixed a bug where I forgot to add container-building capabilities to the new extraction overlords (derp)
 - Fixed a bug which broke notification disabling for scouts (#48)
 - Fixed a bug where 0.4.x -> 0.5.x version migration could overwrite the default signature on a fresh installation of Overmind, breaking worker behavior
+- Replaced all uses of deprecated `Game.map.getTerrainAt` to use new `Game.map.getRoomTerrain` method
+- Barriers now placed on center tile in bunkers (#59)
 
 
 ### Removed

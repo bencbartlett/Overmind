@@ -463,6 +463,9 @@ for (let rcl of [1, 2, 3, 4, 5, 6, 7, 8]) {
 	if (bunkerLayout[rcl]!.buildings) {
 		_allBunkerCoords[rcl] = getAllStructureCoordsFromLayout(bunkerLayout, rcl);
 	}
+	if (rcl == 7 || rcl == 8) { // add center tile for advanced bunkers
+		_allBunkerCoords[rcl].push(bunkerLayout.data.anchor);
+	}
 }
 export const allBunkerCoords = _allBunkerCoords;
 
