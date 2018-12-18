@@ -147,6 +147,7 @@ export class BarrierPlanner {
 	private buildMissingBunkerRamparts(): void {
 		if (!this.roomPlanner.bunkerPos) return;
 		let bunkerCoords = getAllStructureCoordsFromLayout(bunkerLayout, this.colony.level);
+		bunkerCoords.push(bunkerLayout.data.anchor); // add center bunker tile
 		let bunkerPositions = _.map(bunkerCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
 		bunkerPositions = translatePositions(bunkerPositions, bunkerLayout.data.anchor, this.roomPlanner.bunkerPos);
 		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;

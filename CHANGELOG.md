@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file. The format 
 - Preliminary support for formation-based movement and pathfinding using `Swarm`s
     - Added behavioral locks to prevent usage of this feature for non-assimilated codebases
 
+
 ### Changed
 - Improvements to `RangedDefenseOverlord` which utilize some of the new combat logic developed for SK mining
 - Queens now are prespawned 100 ticks in advance of when they are needed (up from 50) until there are multiple spawns in the room
@@ -49,10 +50,12 @@ All notable changes to this project will be documented in this file. The format 
         - Emergency terminal state: yellow/orange -> brown/orange
         - Rebuild terminal state: yellow/brown -> brown/yellow
     - New console method will assist in this migration: `removeErrantFlags()` removes all flags which do not match a directive color code
-- Colonies now no longer have an `Overseer` property. The Overseer has been moved to the Overmind and now handles all directives and overlords for all colonies
+- Colonies now no longer have an `Overseer` property. The Overseer has been moved to the `Overmind` and now handles all directives and overlords for all colonies
     - Overlords are now initialized and run in order of their priority
 - Changed routine to deal with critically low CPU bucket. Reaching the critical bucket threshold suspends operation until the entire bucket has replenished. This avoids entering a bucket "limbo state" where extra memory parsing costs are ever-present, increasing the total cost of operations.
 - Quick garbage collection is now explicitly called when the Overmind is re-instantiated
+- Limits the number of owned rooms you can own on CPU-limited `shard3` to three
+    - Adjustable value in `~settings.ts`; will implement a more sophisticated CPU-based limiter in future
 
 
 ### Fixed
@@ -65,10 +68,13 @@ All notable changes to this project will be documented in this file. The format 
 - Fixed a bug where 0.4.x -> 0.5.x version migration could overwrite the default signature on a fresh installation of Overmind, breaking worker behavior
 - Replaced all uses of deprecated `Game.map.getTerrainAt` to use new `Game.map.getRoomTerrain` method
 - Barriers now placed on center tile in bunkers (#59)
+- Fixed an issue in testing assimilation status outside `shard2` (#57)
+- Fixed a bug where queens could get idle indefinitely at early RCL if minerals ended up in Hatchery battery
 
 
 ### Removed
 - `MiningSite`s and `ExtractionSite`s have been removed; their functionalities have been split among the mining/extraction directives and overlords
+
 
 ## Overmind [0.5.0]: "Evolution" - 2018.8.10
 

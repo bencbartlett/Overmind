@@ -19,7 +19,7 @@ import {Movement} from '../movement/Movement';
 import {Pathing} from '../movement/Pathing';
 import {$} from '../caching/GlobalCache';
 import {OverlordPriority} from '../priorities/priorities_overlords';
-import {rollingAverage} from '../utilities/utils';
+import {hasMinerals, rollingAverage} from '../utilities/utils';
 
 const ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH = -20;
 const ERR_SPECIFIED_SPAWN_BUSY = -21;
@@ -191,6 +191,10 @@ export class Hatchery extends HiveCluster {
 			let threshold = this.colony.stage == ColonyStage.Larva ? 0.75 : 0.5;
 			if (this.battery.energy < threshold * this.battery.storeCapacity) {
 				this.colony.logisticsNetwork.requestInput(this.battery, {multiplier: 1.5});
+			}
+			// get rid of any minerals in the container if present
+			if (hasMinerals(this.battery.store)) {
+				this.colony.logisticsNetwork.requestOutputMinerals(this.battery);
 			}
 		}
 		// Register energy transport requests (goes on hatchery store group, which can be colony store group)

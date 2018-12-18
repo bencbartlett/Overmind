@@ -52,7 +52,7 @@ export class QueenOverlord extends Overlord {
 	private rechargeActions(queen: Zerg): void {
 		if (this.hatchery.link && !this.hatchery.link.isEmpty) {
 			queen.task = Tasks.withdraw(this.hatchery.link);
-		} else if (this.hatchery.battery && !this.hatchery.battery.isEmpty) {
+		} else if (this.hatchery.battery && this.hatchery.battery.energy > 0) {
 			queen.task = Tasks.withdraw(this.hatchery.battery);
 		} else {
 			queen.task = Tasks.recharge();

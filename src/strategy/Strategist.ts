@@ -10,6 +10,7 @@ import {maxBy} from '../utilities/utils';
 import {log} from '../console/log';
 import {Pathing} from '../movement/Pathing';
 import {assimilationLocked} from '../assimilation/decorator';
+import {SHARD3_MAX_OWNED_ROOMS} from '../~settings';
 
 
 const CHECK_EXPANSION_FREQUENCY = 1000;
@@ -40,6 +41,18 @@ export class Strategist implements IStrategist {
 	}
 
 	private handleExpansion(): void {
+		let allColonies = getAllColonies();
+		// If you already have max number of oclonies, ignore
+		if (allColonies.length == Game.gcl.level) {
+			return;
+		}
+		// If you are on shard3, limit to 3 owned rooms // TODO: use CPU-based limiting metric
+		if (Game.shard.name == 'shard3') {
+			if (allColonies.length >= SHARD3_MAX_OWNED_ROOMS) {
+				return;
+			}
+		}
+
 		let roomName = this.chooseNextColonyRoom();
 		if (roomName) {
 			let pos = Pathing.findPathablePosition(roomName);
@@ -49,15 +62,10 @@ export class Strategist implements IStrategist {
 	}
 
 	private chooseNextColonyRoom(): string | undefined {
-		let allColonies = getAllColonies();
-		// Make sure GCL is sufficient
-		if (allColonies.length == Game.gcl.level) {
-			return;
-		}
 		// Generate a list of possible colonies to expand from based on level and whether they are already expanding
 		// let possibleIncubators: Colony[] = []; // TODO: support incubation
 		let possibleColonizers: Colony[] = [];
-		for (let colony of allColonies) {
+		for (let colony of getAllColonies()) {
 			// if (colony.level >= DirectiveIncubate.requiredRCL
 			// 	&& _.filter(colony.flags, flag => DirectiveIncubate.filter(flag)).length == 0) {
 			// 	possibleIncubators.push(colony);

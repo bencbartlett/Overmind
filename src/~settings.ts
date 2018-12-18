@@ -4,7 +4,7 @@ import {getUsername, onPublicServer} from './utilities/utils';
 import {leftAngleQuote, rightAngleQuote} from './utilities/stringConstants';
 
 /**
- * My Screeps username; used for a variety of updating and communications purposes
+ * My Screeps username; used for a variety of updating and communications purposes. (Changing this might break things.)
  */
 export const MUON = 'Muon';
 
@@ -43,6 +43,11 @@ global.__DEFAULT_OVERMIND_SIGNATURE__ = DEFAULT_OVERMIND_SIGNATURE;
  * If this is enabled, Memory.bot will default to true
  */
 export const DEFAULT_OPERATION_MODE: operationMode = 'automatic';
+
+/**
+ * If you are running on shard3 (CPU limit 20), only claim this many rooms
+ */
+export const SHARD3_MAX_OWNED_ROOMS = 3;
 
 /**
  * The global Overmind object will be re-instantiated after this many ticks. In the meantime, refresh() is used.
