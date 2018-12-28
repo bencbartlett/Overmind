@@ -92,19 +92,15 @@ export class Hatchery extends HiveCluster {
 		this.spawns = colony.spawns;
 		this.availableSpawns = _.filter(this.spawns, spawn => !spawn.spawning);
 		this.extensions = colony.extensions;
+		this.towers = colony.commandCenter ? _.difference(colony.towers, colony.commandCenter.towers) : colony.towers;
 		if (this.colony.layout == 'bunker') {
 			this.battery = _.first(_.filter(this.room.containers, cont => insideBunkerBounds(cont.pos, this.colony)));
-			this.energyStructures = $.structures(this, 'energyStructures', () => this.computeEnergyStructures());
+			$.set(this, 'energyStructures', () => this.computeEnergyStructures());
 		} else {
 			this.link = this.pos.findClosestByLimitedRange(colony.availableLinks, 2);
 			this.colony.linkNetwork.claimLink(this.link);
 			this.battery = this.pos.findClosestByLimitedRange(this.room.containers, 2);
 			this.energyStructures = (<(StructureSpawn | StructureExtension)[]>[]).concat(this.spawns, this.extensions);
-		}
-		if (colony.commandCenter) {
-			this.towers = _.difference(colony.towers, colony.commandCenter.towers);
-		} else {
-			this.towers = colony.towers;
 		}
 		this.productionPriorities = [];
 		this.productionQueue = {};

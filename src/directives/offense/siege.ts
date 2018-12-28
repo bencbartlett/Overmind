@@ -72,6 +72,7 @@ export class DirectiveSiege extends Directive {
 		if (!this.recoveryFlag) {
 			this.placeRecoveryFlag(this.recoveryWaypoint);
 		}
+		this.alert(`Siege directive active`);
 	}
 
 	run(): void {

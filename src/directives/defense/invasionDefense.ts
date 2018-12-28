@@ -4,6 +4,7 @@ import {RangedDefenseOverlord} from '../../overlords/defense/rangedDefense';
 import {ColonyStage} from '../../Colony';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {MeleeDefenseOverlord} from '../../overlords/defense/meleeDefense';
+import {NotifierPriority} from '../Notifier';
 
 interface DirectiveInvasionDefenseMemory extends FlagMemory {
 	persistent?: boolean;
@@ -49,7 +50,8 @@ export class DirectiveInvasionDefense extends Directive {
 	}
 
 	init(): void {
-
+		let numHostiles: string = this.room ? this.room.hostiles.length.toString() : '???';
+		this.alert(`Invasion (hostiles: ${numHostiles})`, NotifierPriority.Critical);
 	}
 
 	run(): void {

@@ -1,6 +1,7 @@
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
 import {log} from '../../console/log';
+import {NotifierPriority} from '../Notifier';
 
 export const TerminalState_Evacuate: TerminalState = {
 	name     : 'evacuate',
@@ -44,7 +45,7 @@ export class DirectiveTerminalEvacuateState extends Directive {
 	}
 
 	init() {
-
+		this.alert('Evacuation terminal state active!', NotifierPriority.High);
 	}
 
 	run() {

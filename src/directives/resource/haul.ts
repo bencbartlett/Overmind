@@ -98,7 +98,7 @@ export class DirectiveHaul extends Directive {
 	}
 
 	init(): void {
-
+		this.alert(`Haul directive active`);
 	}
 
 	run(): void {

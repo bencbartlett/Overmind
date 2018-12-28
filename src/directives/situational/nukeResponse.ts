@@ -1,6 +1,7 @@
 import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {log} from '../../console/log';
+import {NotifierPriority} from '../Notifier';
 
 @profile
 export class DirectiveNukeResponse extends Directive {
@@ -28,7 +29,11 @@ export class DirectiveNukeResponse extends Directive {
 	}
 
 	init(): void {
-
+		if (this.nuke) {
+			this.alert(`Nuclear impact in ${this.nuke.timeToLand}`, NotifierPriority.Critical);
+		} else {
+			this.alert(`Nuke response directive active!`, NotifierPriority.Critical);
+		}
 	}
 
 	run(): void {

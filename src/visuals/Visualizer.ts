@@ -1,7 +1,6 @@
 import {profile} from '../profiler/decorator';
 import {StructureLayout, StructureMap} from '../roomPlanner/RoomPlanner';
 import {asciiLogo, logoComponents, logoText} from './logos';
-import {bullet} from '../utilities/stringConstants';
 
 
 const textColor = '#c9c9c9';
@@ -228,12 +227,16 @@ export class Visualizer {
 						.poly(logoText.D.points, logoText.D.style);
 	}
 
-	static drawNotifications(): void {
+	static drawNotifications(notificationMessages: string[]): void {
 		// const vis = new RoomVisual();
 		const x = 10.5;
 		const y = 7;
-		const width = 11;
-		this.infoBox('Notifications', [`${bullet}No notifications`], {x, y}, width);
+		if (notificationMessages.length == 0) {
+			notificationMessages = ['No notifications'];
+		}
+		const maxStringLength = _.max(_.map(notificationMessages, msg => msg.length));
+		const width = Math.max(11, 1.2 * charWidth * maxStringLength);
+		this.infoBox('Notifications', notificationMessages, {x, y}, width);
 	}
 
 	// static colonyReport(colonyName: string, text: string[]) {

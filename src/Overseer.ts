@@ -22,6 +22,7 @@ import {RoomIntel} from './intel/RoomIntel';
 import {Roles} from './creepSetups/setups';
 import {USE_TRY_CATCH} from './~settings';
 import {DirectiveOutpostDefense} from './directives/defense/outpostDefense';
+import {Notifier} from './directives/Notifier';
 
 
 // export const DIRECTIVE_CHECK_FREQUENCY = 2;
@@ -43,6 +44,8 @@ export class Overseer implements IOverseer {
 	private overlordsByColony: { [col: string]: Overlord[] };	// Overlords grouped by colony
 	private directives: Directive[];							// Directives across the colony
 
+	notifier: Notifier;
+
 	static settings = {
 		outpostCheckFrequency: 250
 	};
@@ -53,10 +56,12 @@ export class Overseer implements IOverseer {
 		this.overlords = [];
 		this.overlordsByColony = {};
 		this.sorted = false;
+		this.notifier = new Notifier();
 	}
 
 	refresh() {
 		this.memory = Mem.wrap(Memory, 'overseer', defaultOverseerMemory);
+		this.notifier.clear();
 	}
 
 	private try(callback: () => any, identifier?: string): void {
@@ -385,6 +390,7 @@ export class Overseer implements IOverseer {
 		for (let overlord of this.overlords) {
 			overlord.visuals();
 		}
+		this.notifier.visuals();
 		// for (let colony of this.colonies) {
 		// 	this.drawCreepReport(colony);
 		// }

@@ -122,7 +122,14 @@ interface IOvermind {
 	visuals(): void;
 }
 
+interface INotifier {
+	alert(message: string, roomName: string, priority?: number): void;
+}
+
 interface IOverseer {
+
+	notifier: INotifier;
+
 	registerDirective(directive: any): void;
 
 	removeDirective(directive: any): void;

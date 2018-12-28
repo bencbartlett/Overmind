@@ -4,6 +4,7 @@ import {Colony, getAllColonies} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
 import {Pathing} from '../movement/Pathing';
 import {equalXYR, randomHex} from '../utilities/utils';
+import {NotifierPriority} from './Notifier';
 
 interface DirectiveCreateOptions {
 	memory?: FlagMemory;
@@ -94,6 +95,10 @@ export abstract class Directive {
 		this.memory = flag.memory;
 		this.pos = flag.pos;
 		this.room = flag.room;
+	}
+
+	alert(message: string, priority = NotifierPriority.Normal): void {
+		Overmind.overseer.notifier.alert(message, this.pos.roomName, priority);
 	}
 
 	get print(): string {

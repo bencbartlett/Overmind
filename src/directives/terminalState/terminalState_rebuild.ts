@@ -1,6 +1,7 @@
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
 import {log} from '../../console/log';
+import {NotifierPriority} from '../Notifier';
 
 export const TerminalState_Rebuild: TerminalState = {
 	name     : 'rebuild',
@@ -46,7 +47,7 @@ export class DirectiveTerminalRebuildState extends Directive {
 	}
 
 	init() {
-
+		this.alert('Rebuild terminal state active!', NotifierPriority.High);
 	}
 
 	run() {

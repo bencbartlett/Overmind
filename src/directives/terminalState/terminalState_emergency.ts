@@ -1,6 +1,7 @@
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
 import {log} from '../../console/log';
+import {NotifierPriority} from '../Notifier';
 
 export const TerminalState_Emergency: TerminalState = {
 	name     : 'emergency',
@@ -44,7 +45,7 @@ export class DirectiveTerminalEmergencyState extends Directive {
 			Overmind.terminalNetwork.registerTerminalState(this.terminal, TerminalState_Emergency);
 		}
 		if (Game.time % 25 == 0) {
-			log.alert(`${this.pos.print}: emergency terminal state active!`);
+			log.alert(`${this.pos.print}: emergency terminal state active!`, NotifierPriority.High);
 		}
 	}
 
@@ -53,7 +54,7 @@ export class DirectiveTerminalEmergencyState extends Directive {
 	}
 
 	init() {
-
+		this.alert('Emergency terminal state active!');
 	}
 
 	run() {

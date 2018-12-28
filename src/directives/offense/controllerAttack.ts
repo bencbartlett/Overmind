@@ -21,7 +21,8 @@ export class DirectiveControllerAttack extends Directive {
 	}
 
 	init(): void {
-
+		let level: string = this.room && this.room.controller ? this.room.controller.level.toString() : '???';
+		this.alert(`Downgrading controller (RCL${level})`);
 	}
 
 	run(): void {

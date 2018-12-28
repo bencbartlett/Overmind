@@ -25,7 +25,7 @@ export class DirectiveDestroy extends Directive {
 	}
 
 	init(): void {
-
+		this.alert(`Destroyer directive active`);
 	}
 
 	run(): void {

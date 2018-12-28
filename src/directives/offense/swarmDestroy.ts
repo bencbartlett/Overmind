@@ -24,7 +24,7 @@ export class DirectiveSwarmDestroy extends Directive {
 	}
 
 	init(): void {
-
+		this.alert(`Swarm destroyer directive active`);
 	}
 
 	run(): void {
