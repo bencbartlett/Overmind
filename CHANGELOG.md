@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+## Overmind [0.5.1] - 2019.1.2
+
+This patch changes the architecture of Overmind to be much more CPU efficient by introducing a cache-friendly `refresh()` phase to the main loop. See [this blog post](https://bencbartlett.wordpress.com/2019/01/02/screeps-6-verifiably-refreshed/) for more details. Additionally, the `Visualizer` system has been rewritten, and prelimiary support for assimilation and swarms has been added.
+
 ### Added
 - Huge persistence update: much of the Overmind architecture now persists on global between ticks! This saves a ton of CPU that was previously used toward garbage collection.
     - The global `Overmind` object is now rebuilt every 20 ticks; in the meantime, `refresh()` is called
@@ -358,7 +362,8 @@ This release was initially deployed on 2018.3.2 but was re-versioned on 2018.3.1
 - Initial pre-release of Overmind after 190 commits and about 80,000 additions.
 
 
-[Unreleased]: https://github.com/bencbartlett/Overmind/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/bencbartlett/Overmind/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/bencbartlett/Overmind/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/bencbartlett/Overmind/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/bencbartlett/Overmind/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/bencbartlett/Overmind/compare/v0.3.1...v0.4.0
