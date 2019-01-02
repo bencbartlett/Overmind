@@ -7,9 +7,8 @@
 - See the [changelog](https://github.com/bencbartlett/Overmind/blob/master/CHANGELOG.md) for patch notes
 - Documentation is available in the [wiki](https://github.com/bencbartlett/Overmind/wiki)
 - Join the discussion in the [#overmind](https://screeps.slack.com/messages/overmind) Slack channel!
-- Submit an issue [here](https://github.com/bencbartlett/Overmind/issues/new)
-- Request a feature [here](https://github.com/bencbartlett/Overmind/issues/new?template=feature_request.md)
-- Development roadmap can be seen [here](https://github.com/bencbartlett/Overmind/projects/1)
+- Read [blog posts](https://bencbartlett.wordpress.com/category/screeps/) about development
+- Submit an issue [here](https://github.com/bencbartlett/Overmind/issues/new) and request a feature [here](https://github.com/bencbartlett/Overmind/issues/new?template=feature_request.md)
 - Find me in game [here](https://screeps.com/a/#!/profile/Muon)
 
 ---
@@ -24,7 +23,7 @@ Screeps is an [MMO strategy game for programmers](https://screeps.com/). The cor
 
 ### What is Overmind?
 
-Overmind is my personal codebase that I run on the public server. The structure of the AI is themed loosely around the [Zerg's swarm intelligence](http://starcraft.wikia.com/wiki/Overlord) from Starcraft. [Overlords](https://github.com/bencbartlett/Overmind/blob/master/src/overlords/Overlord.ts) orchestrate Creep actions within each [Colony](https://github.com/bencbartlett/Overmind/blob/master/src/Colony.ts), and the colony [Overseer](https://github.com/bencbartlett/Overmind/blob/master/src/Overseer.ts) places [Directives](https://github.com/bencbartlett/Overmind/blob/master/src/directives/Directive.ts) to adapt to stimuli.
+Overmind is my personal codebase that I run on the public server. The structure of the AI is themed loosely around the [Zerg's swarm intelligence](http://starcraft.wikia.com/wiki/Overlord) from Starcraft. [Overlords](https://github.com/bencbartlett/Overmind/blob/master/src/overlords/Overlord.ts) orchestrate Creep actions within each [Colony](https://github.com/bencbartlett/Overmind/blob/master/src/Colony.ts), and the colony [Overseer](https://github.com/bencbartlett/Overmind/blob/master/src/Overseer.ts) places [Directives](https://github.com/bencbartlett/Overmind/blob/master/src/directives/Directive.ts) to adapt to stimuli. Finally, the [Assimilator](https://github.com/bencbartlett/Overmind/blob/master/src/assimilation/Assimilator_obfuscated.js) allows all players running Overmind to act as a collective hivemind, sharing creeps and resources and responding jointly to a master ledger of all directives shared by all players.
 
 The AI is entirely automated, although it can also run in manual or semiautomatic mode. The [latest release](https://github.com/bencbartlett/Overmind/releases) should work right out of the box; however, if you find something broken, please [submit an issue](https://github.com/bencbartlett/Overmind/issues/new) and I'll try to fix it.
 
@@ -53,7 +52,7 @@ Overmind includes a [Grafana dashboard](https://github.com/bencbartlett/Overmind
 
 1. Register for grafana service at [screepspl.us](https://screepspl.us/services/grafana)
 2. Setup the Grafana agent. I would suggest [running it on a free micro instance of Google Compute](https://github.com/bonzaiferroni/bonzAI/wiki/Screepspl.us-agent-with-Compute-Engine).
-3. Import the dashboard from [Overmind.json](https://github.com/bencbartlett/Overmind/blob/master/assets/Grafana%20Dashboards/Overmind.json) and change `$User` to your username. (Make sure to use Grafana 5! screepspl.us/grafana5)
+3. Import the dashboard from [Overmind.json](https://github.com/bencbartlett/Overmind/blob/master/assets/Grafana%20Dashboards/Overmind.json) and change `$User` to your username.
 
 ![](/assets/img/dashboard_compacted_2.png)
 
