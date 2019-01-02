@@ -15,7 +15,7 @@
 
 # About Overmind
 
-<img align="right" src="/assets/img/exampleRoomBanner2.png" width=250>
+<img align="right" src="/assets/img/exampleRoomBanner2.png" width=325>
 
 ### What is Screeps?
 
