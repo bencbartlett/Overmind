@@ -12,7 +12,8 @@ export class Energetics {
 		},
 		terminal: {
 			total : {
-				cap: TERMINAL_CAPACITY - 50000
+				cap: TERMINAL_CAPACITY - 50000,
+				removeCap: TERMINAL_CAPACITY - 40000
 			},
 			energy: {
 				sendSize    : 25000,	// Send energy in chunks of this size
