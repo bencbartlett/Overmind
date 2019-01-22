@@ -14,6 +14,7 @@ export const priorityStockAmounts: { [key: string]: number } = {
 	XZH2O: 1000, 	// For dismantling
 	XKHO2: 1000, 	// For ranged attackers
 	XUH2O: 1000, 	// For attacking
+	G    : 2000, 	// For nukes
 	GHO2 : 1000, 	// (-50 % dmg taken)
 	LHO2 : 1000, 	// (+200 % heal)
 	ZHO2 : 1000, 	// (+200 % fat decr - speed)
@@ -26,6 +27,10 @@ export const priorityStockAmounts: { [key: string]: number } = {
 	ZH   : 1000, 	// (+100 % dismantle)
 	UH   : 1000, 	// (+100 % attack)
 	KO   : 1000, 	// (+100 % ranged attack)
+	OH   : 2000, 	// For basic compound
+	GH   : 2000, 	// For another basic compound
+	GH2O : 1000, 	// (+80 % upgrade)
+	XGH2O: 2000,	// For upgrades
 };
 
 export const wantedStockAmounts: { [key: string]: number } = {
