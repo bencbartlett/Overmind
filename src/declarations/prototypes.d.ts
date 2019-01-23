@@ -157,6 +157,14 @@ interface RoomVisual {
 
 	animatedPosition(x: number, y: number, opts?: { [option: string]: any }): RoomVisual;
 
+	resource(type: string, x: number, y: number, size?: number, opacity?: number): number;
+
+	_fluid(type: string, x: number, y: number, size?: number, opacity?: number): void;
+
+	_mineral(type: string, x: number, y: number, size?: number, opacity?: number): void;
+
+	_compound(type: string, x: number, y: number, size?: number, opacity?: number): void;
+
 	test(): RoomVisual;
 }
 

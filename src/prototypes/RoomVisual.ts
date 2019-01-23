@@ -559,3 +559,126 @@ RoomVisual.prototype.test = function (): RoomVisual {
 
 	return this;
 };
+
+const ColorSets: { [color: string]: [string, string] } = {
+	white : ['#ffffff', '#4c4c4c'],
+	grey  : ['#b4b4b4', '#4c4c4c'],
+	red   : ['#ff7b7b', '#592121'],
+	yellow: ['#fdd388', '#5d4c2e'],
+	green : ['#00f4a2', '#236144'],
+	blue  : ['#50d7f9', '#006181'],
+	purple: ['#a071ff', '#371383'],
+};
+
+const ResourceColors: { [color: string]: [string, string] } = {
+	[RESOURCE_ENERGY]: ColorSets.yellow,
+	[RESOURCE_POWER] : ColorSets.red,
+
+	[RESOURCE_HYDROGEN] : ColorSets.grey,
+	[RESOURCE_OXYGEN]   : ColorSets.grey,
+	[RESOURCE_UTRIUM]   : ColorSets.blue,
+	[RESOURCE_LEMERGIUM]: ColorSets.green,
+	[RESOURCE_KEANIUM]  : ColorSets.purple,
+	[RESOURCE_ZYNTHIUM] : ColorSets.yellow,
+	[RESOURCE_CATALYST] : ColorSets.red,
+	[RESOURCE_GHODIUM]  : ColorSets.white,
+
+	[RESOURCE_HYDROXIDE]       : ColorSets.grey,
+	[RESOURCE_ZYNTHIUM_KEANITE]: ColorSets.grey,
+	[RESOURCE_UTRIUM_LEMERGITE]: ColorSets.grey,
+
+	[RESOURCE_UTRIUM_HYDRIDE]   : ColorSets.blue,
+	[RESOURCE_UTRIUM_OXIDE]     : ColorSets.blue,
+	[RESOURCE_KEANIUM_HYDRIDE]  : ColorSets.purple,
+	[RESOURCE_KEANIUM_OXIDE]    : ColorSets.purple,
+	[RESOURCE_LEMERGIUM_HYDRIDE]: ColorSets.green,
+	[RESOURCE_LEMERGIUM_OXIDE]  : ColorSets.green,
+	[RESOURCE_ZYNTHIUM_HYDRIDE] : ColorSets.yellow,
+	[RESOURCE_ZYNTHIUM_OXIDE]   : ColorSets.yellow,
+	[RESOURCE_GHODIUM_HYDRIDE]  : ColorSets.white,
+	[RESOURCE_GHODIUM_OXIDE]    : ColorSets.white,
+
+	[RESOURCE_UTRIUM_ACID]       : ColorSets.blue,
+	[RESOURCE_UTRIUM_ALKALIDE]   : ColorSets.blue,
+	[RESOURCE_KEANIUM_ACID]      : ColorSets.purple,
+	[RESOURCE_KEANIUM_ALKALIDE]  : ColorSets.purple,
+	[RESOURCE_LEMERGIUM_ACID]    : ColorSets.green,
+	[RESOURCE_LEMERGIUM_ALKALIDE]: ColorSets.green,
+	[RESOURCE_ZYNTHIUM_ACID]     : ColorSets.yellow,
+	[RESOURCE_ZYNTHIUM_ALKALIDE] : ColorSets.yellow,
+	[RESOURCE_GHODIUM_ACID]      : ColorSets.white,
+	[RESOURCE_GHODIUM_ALKALIDE]  : ColorSets.white,
+
+	[RESOURCE_CATALYZED_UTRIUM_ACID]       : ColorSets.blue,
+	[RESOURCE_CATALYZED_UTRIUM_ALKALIDE]   : ColorSets.blue,
+	[RESOURCE_CATALYZED_KEANIUM_ACID]      : ColorSets.purple,
+	[RESOURCE_CATALYZED_KEANIUM_ALKALIDE]  : ColorSets.purple,
+	[RESOURCE_CATALYZED_LEMERGIUM_ACID]    : ColorSets.green,
+	[RESOURCE_CATALYZED_LEMERGIUM_ALKALIDE]: ColorSets.green,
+	[RESOURCE_CATALYZED_ZYNTHIUM_ACID]     : ColorSets.yellow,
+	[RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE] : ColorSets.yellow,
+	[RESOURCE_CATALYZED_GHODIUM_ACID]      : ColorSets.white,
+	[RESOURCE_CATALYZED_GHODIUM_ALKALIDE]  : ColorSets.white,
+};
+
+
+RoomVisual.prototype.resource = function (type, x, y, size = 0.25, opacity = 1) {
+	if (type == RESOURCE_ENERGY || type == RESOURCE_POWER)
+		this._fluid(type, x, y, size, opacity);
+	else if ((<string[]>[RESOURCE_CATALYST, RESOURCE_HYDROGEN, RESOURCE_OXYGEN, RESOURCE_LEMERGIUM, RESOURCE_UTRIUM,
+						 RESOURCE_ZYNTHIUM, RESOURCE_KEANIUM])
+		.includes(type))
+		this._mineral(type, x, y, size, opacity);
+	else if (ResourceColors[type] != undefined)
+		this._compound(type, x, y, size, opacity);
+	else
+		return ERR_INVALID_ARGS;
+	return OK;
+};
+
+RoomVisual.prototype._fluid = function (type, x, y, size = 0.25, opacity = 1) {
+	this.circle(x, y, {
+		radius : size,
+		fill   : ResourceColors[type][0],
+		opacity: opacity,
+	});
+	this.text(type[0], x, y - (size * 0.1), {
+		font             : (size * 1.5),
+		color            : ResourceColors[type][1],
+		backgroundColor  : ResourceColors[type][0],
+		backgroundPadding: 0,
+		opacity          : opacity
+	});
+};
+
+RoomVisual.prototype._mineral = function (type, x, y, size = 0.25, opacity = 1) {
+	this.circle(x, y, {
+		radius : size,
+		fill   : ResourceColors[type][0],
+		opacity: opacity,
+	});
+	this.circle(x, y, {
+		radius : size * 0.8,
+		fill   : ResourceColors[type][1],
+		opacity: opacity,
+	});
+	this.text(type, x, y + (size * 0.03), {
+		font             : 'bold ' + (size * 1.25) + ' arial',
+		color            : ResourceColors[type][0],
+		backgroundColor  : ResourceColors[type][1],
+		backgroundPadding: 0,
+		opacity          : opacity
+	});
+};
+
+RoomVisual.prototype._compound = function (type, x, y, size = 0.25, opacity = 1) {
+	let label = type.replace('2', '₂');
+
+	this.text(label, x, y, {
+		font             : 'bold ' + (size * 1) + ' arial',
+		color            : ResourceColors[type][1],
+		backgroundColor  : ResourceColors[type][0],
+		backgroundPadding: 0.3 * size,
+		opacity          : opacity
+	});
+};
