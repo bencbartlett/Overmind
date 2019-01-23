@@ -21,7 +21,6 @@ export abstract class CombatOverlord extends Overlord {
 				creep.run();
 			} else {
 				if (this.shouldBoost(creep)) {
-					this.requestBoostsForCreep(creep);
 					this.handleBoosting(creep);
 				} else {
 					creepHandler(creep);

@@ -87,7 +87,7 @@ export class SwarmDestroyerOverlord extends CombatOverlord {
 
 	init() {
 		const numSwarms = 1;
-		let zerglingPriority = this.zerglings.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
+		let zerglingPriority = this.zerglings.length <= this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
 		let zerglingSetup = this.canBoostSetup(CombatSetups.zerglings.boosted_T3) ? CombatSetups.zerglings.boosted_T3
 																				  : CombatSetups.zerglings.default;
 		this.wishlist(2 * numSwarms, zerglingSetup, {priority: zerglingPriority});

@@ -374,9 +374,12 @@ export abstract class Overlord {
 		return false;
 	}
 
+	/* Return whether you are capable of boosting a creep to the desired specifications */
 	shouldBoost(creep: Zerg, onlyBoostInSpawn = false): boolean {
-		// Can't boost if there's no evolution chamber or TTL is less than 90%
-		if (!this.colony.evolutionChamber ||
+		// Can't boost if there's no evolution chamber or TTL is less than threshold
+		let colony = Overmind.colonies[creep.room.name] as Colony | undefined;
+		let evolutionChamber = colony ? colony.evolutionChamber : undefined;
+		if (!evolutionChamber ||
 			(creep.ticksToLive && creep.ticksToLive < MIN_LIFETIME_FOR_BOOST * creep.lifetime)) {
 			return false;
 		}
@@ -391,65 +394,82 @@ export abstract class Overlord {
 
 		// Otherwise just boost if you need it and can get the resources
 		if (this.boosts[creep.roleName]) {
-			let boosts = _.filter(this.boosts[creep.roleName]!,
-								  boost => (creep.boostCounts[boost] || 0)
-										   < creep.getActiveBodyparts(boostParts[boost]));
+			let boosts = _.filter(this.boosts[creep.roleName]!, boost =>
+				(creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost]));
 			if (boosts.length > 0) {
-				return _.all(boosts, boost => this.colony.evolutionChamber!.canBoost(creep.body, boost));
+				return _.all(boosts, boost => evolutionChamber!.canBoost(creep.body, boost));
 			}
 		}
 		return false;
 	}
 
-	private getBoostLabFor(creep: Zerg): StructureLab | undefined {
-		if (!creep.memory.boostLab) {
-			let closestLab = creep.pos.findClosestByRange(this.colony.labs);
-			if (closestLab) {
-				creep.memory.boostLab = closestLab.id;
-				return closestLab;
-			} else {
-				log.warning(`No boosting lab available for ${creep.name}!`);
-			}
-		} else {
-			return Game.getObjectById(creep.memory.boostLab) as StructureLab | undefined;
-		}
-	}
+	// private getBoostLabFor(creep: Zerg): StructureLab | undefined {
+	// 	if (!creep.memory.boostLab) {
+	// 		let colony = Overmind.colonies[creep.room.name] as Colony | undefined;
+	// 		let evolutionChamber = colony ? colony.evolutionChamber : undefined;
+	// 		let labs = evolutionChamber ? evolutionChamber.labs : [] as StructureLab[];
+	// 		let closestLab = creep.pos.findClosestByRange(labs);
+	// 		if (closestLab) {
+	// 			creep.memory.boostLab = closestLab.id;
+	// 			return closestLab;
+	// 		} else {
+	// 			log.warning(`No boosting lab available for ${creep.name}!`);
+	// 		}
+	// 	} else {
+	// 		return Game.getObjectById(creep.memory.boostLab) as StructureLab | undefined;
+	// 	}
+	// }
+
 
 	/* Request a boost from the evolution chamber; should be called during init() */
-	protected requestBoostsForCreep(creep: Zerg): void {
-		if (this.colony.evolutionChamber && this.boosts[creep.roleName]) {
-			let boost = _.find(this.boosts[creep.roleName]!,
-							   boost => (creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost]));
-			if (boost) {
-				let boostLab = this.getBoostLabFor(creep);
-				if (boostLab) {
-					this.colony.evolutionChamber.requestBoost(boost, creep, boostLab);
-				}
+	private requestBoostsForCreep(creep: Zerg): void {
+		let colony = Overmind.colonies[creep.room.name] as Colony | undefined;
+		let evolutionChamber = colony ? colony.evolutionChamber : undefined;
+		if (evolutionChamber && this.boosts[creep.roleName]) {
+			let boosts = _.filter(this.boosts[creep.roleName]!, boost =>
+				(creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost]));
+			for (let boost of boosts) {
+				evolutionChamber.requestBoost(creep, boost);
 			}
+			// if (boost) {
+			// 	let boostLab = this.getBoostLabFor(creep);
+			// 	if (boostLab) {
+			// 		evolutionChamber.requestBoost(boost, creep, boostLab);
+			// 	}
+			// }
 		}
 	}
 
 	/* Handle boosting of a creep; should be called during run() */
 	protected handleBoosting(creep: Zerg): void {
-		if (this.boosts[creep.roleName] && this.colony.evolutionChamber) {
-			let boost = _.find(this.boosts[creep.roleName]!,
-							   boost => (creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost]));
-			if (boost) {
-				let boostLab = this.getBoostLabFor(creep);
+		let colony = Overmind.colonies[creep.room.name] as Colony | undefined;
+		let evolutionChamber = colony ? colony.evolutionChamber : undefined;
+
+		if (this.boosts[creep.roleName] && evolutionChamber) {
+			let boosts = _.filter(this.boosts[creep.roleName]!, boost =>
+				(creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost]));
+			for (let boost of boosts) {
+				let boostLab = _.find(evolutionChamber.boostingLabs, lab => lab.mineralType == boost);
 				if (boostLab) {
-					if (this.colony.evolutionChamber.queuePosition(creep, boostLab) == 0) {
-						log.info(`${this.colony.room.print}: boosting ${creep.print} with ${boost}!`);
-						creep.task = Tasks.getBoosted(boostLab, boost);
-					} else {
-						// Approach the lab but don't attempt to get boosted
-						if (creep.pos.getRangeTo(boostLab) > 2) {
-							creep.goTo(boostLab, {range: 2});
-						} else {
-							creep.park();
-						}
-					}
+					creep.task = Tasks.getBoosted(boostLab, boost);
 				}
 			}
+			// if (boost) {
+			// 	let boostLab = this.getBoostLabFor(creep);
+			// 	if (boostLab) {
+			// 		if (evolutionChamber.queuePosition(creep, boostLab) == 0) {
+			// 			log.info(`${this.colony.room.print}: boosting ${creep.print} with ${boost}!`);
+			// 			creep.task = Tasks.getBoosted(boostLab, boost);
+			// 		} else {
+			// 			// Approach the lab but don't attempt to get boosted
+			// 			if (creep.pos.getRangeTo(boostLab) > 2) {
+			// 				creep.goTo(boostLab, {range: 2});
+			// 			} else {
+			// 				creep.park();
+			// 			}
+			// 		}
+			// 	}
+			// }
 		}
 	}
 
@@ -484,7 +504,6 @@ export abstract class Overlord {
 			}
 			if (creep.isIdle) {
 				if (this.shouldBoost(creep)) {
-					this.requestBoostsForCreep(creep);
 					this.handleBoosting(creep);
 				} else {
 					taskHandler(creep);

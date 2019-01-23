@@ -38,7 +38,7 @@ export class DirectiveDestroy extends Directive {
 
 	visuals(): void {
 		Visualizer.marker(this.pos, {color: 'red'});
-		let fallback = CombatIntel.getFallbackFrom(this.overlords.destroy.directive.pos);
+		let fallback = CombatIntel.getFallbackFrom(this.pos);
 		Visualizer.marker(fallback, {color: 'green'});
 	}
 }

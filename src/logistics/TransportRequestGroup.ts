@@ -84,7 +84,7 @@ export class TransportRequestGroup {
 		_.defaults(opts, {
 			resourceType: RESOURCE_ENERGY,
 		});
-		if (!opts.amount) {
+		if (opts.amount == undefined) {
 			opts.amount = this.getInputAmount(target, opts.resourceType!);
 		}
 		// Register the request
@@ -105,7 +105,7 @@ export class TransportRequestGroup {
 		_.defaults(opts, {
 			resourceType: RESOURCE_ENERGY,
 		});
-		if (!opts.amount) {
+		if (opts.amount == undefined) {
 			opts.amount = this.getOutputAmount(target, opts.resourceType!);
 		}
 		// Register the request

@@ -242,7 +242,7 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 			// Creeps travel to their relative formation positions
 			const formationPositions = this.getFormationPositionsFromAnchor(assemblyPoint);
 			for (let creep of this.creeps) {
-				if (allowIdleCombat && creep.room.dangerousPlayerHostiles.length > 0) {
+				if (allowIdleCombat && creep.room.dangerousPlayerHostiles.length > 0 && !this.hasMaxCreeps) {
 					creep.autoSkirmish(creep.room.name);
 				} else {
 					const destination = formationPositions[creep.name];
