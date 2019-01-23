@@ -13,7 +13,7 @@ import {BarrierPlanner} from './BarrierPlanner';
 import {BuildPriorities, DemolishStructurePriorities} from '../priorities/priorities_structures';
 import {bunkerLayout, insideBunkerBounds} from './layouts/bunker';
 import {DirectiveTerminalRebuildState} from '../directives/terminalState/terminalState_rebuild';
-import {derefCoords, maxBy} from '../utilities/utils';
+import {derefCoords, maxBy, onPublicServer} from '../utilities/utils';
 import {bullet} from '../utilities/stringConstants';
 import {Pathing} from '../movement/Pathing';
 
@@ -104,9 +104,9 @@ export class RoomPlanner {
 
 	static settings = {
 		recheckAfter      : 50,
-		siteCheckFrequency: 300,			// how often to recheck for structures; doubled at RCL8
+		siteCheckFrequency: onPublicServer() ? 300 : 100,	// how often to recheck for structures; doubled at RCL8
 		linkCheckFrequency: 100,
-		maxSitesPerColony : 10,
+		maxSitesPerColony : onPublicServer() ? 10 : 25,
 		maxDismantleCount : 5,
 	};
 

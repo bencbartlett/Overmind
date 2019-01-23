@@ -6,18 +6,18 @@ import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {boostResources} from '../../resources/map_resources';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
-import {CombatOverlord} from '../CombatOverlord';
 import {DirectiveSwarmDestroy} from '../../directives/offense/swarmDestroy';
 import {Swarm} from '../../zerg/Swarm';
 import {$} from '../../caching/GlobalCache';
 import {log} from '../../console/log';
 import {Visualizer} from '../../visuals/Visualizer';
 import {Mem} from '../../memory/Memory';
+import {SwarmOverlord} from '../SwarmOverlord';
 
 const DEBUG = false;
 
 @profile
-export class SwarmDestroyerOverlord extends CombatOverlord {
+export class SwarmDestroyerOverlord extends SwarmOverlord {
 
 	memory: any;
 	directive: DirectiveSwarmDestroy;
@@ -57,7 +57,7 @@ export class SwarmDestroyerOverlord extends CombatOverlord {
 		return $.pos(this, 'fallback', () => this.intel.findSimpleSiegeFallback())!;
 	}
 
-	private makeSwarms(): void {
+	makeSwarms(): void {
 		this.swarms = {};
 		let allZerg: CombatZerg[] = [...this.zerglings, ...this.healers];
 		let maxPerSwarm = {[Roles.melee]: 2, [Roles.healer]: 2};

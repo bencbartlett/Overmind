@@ -307,7 +307,7 @@ export abstract class Overlord {
 	}
 
 	/* Create a creep setup and enqueue it to the Hatchery; does not include automatic reporting */
-	private requestCreep(setup: CreepSetup, opts = {} as CreepRequestOptions) {
+	protected requestCreep(setup: CreepSetup, opts = {} as CreepRequestOptions) {
 		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN});
 		let spawner = this.spawnGroup || this.colony.spawnGroup || this.colony.hatchery;
 		if (spawner) {

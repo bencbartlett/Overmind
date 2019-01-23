@@ -6,7 +6,7 @@ import {SpawnGroup} from '../logistics/SpawnGroup';
 export abstract class CombatOverlord extends Overlord {
 
 	spawnGroup: SpawnGroup;
-	private requiredRCL: number; // default required RCL
+	requiredRCL: number; // default required RCL
 
 	constructor(initializer: OverlordInitializer, name: string, priority: number, requiredRCL: number) {
 		super(initializer, name, priority);

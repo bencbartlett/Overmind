@@ -1,4 +1,4 @@
-import {CombatZerg} from './CombatZerg';
+import {CombatZerg, DEFAULT_SWARM_TICK_DIFFERENCE} from './CombatZerg';
 import {CombatMoveOptions, Movement, NO_ACTION, SwarmMoveOptions} from '../movement/Movement';
 import {hasPos} from '../declarations/typeGuards';
 import {getCacheExpiration, rotatedMatrix} from '../utilities/utils';
@@ -230,6 +230,18 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 		return this.creeps.length == this.width * this.height;
 	}
 
+	// Returns true if the swarm has lost a creep and the oldest living creep is too old to partner with a new one
+	get isExpired(): boolean {
+		if (!this.hasMaxCreeps) {
+			let minTicksToLive = _.min(_.map(this.creeps, creep => creep.ticksToLive || 9999)) || 0;
+			const spawnBuffer = 150 + 25;
+			let newCreepTicksToLive = CREEP_LIFE_TIME + spawnBuffer; // TTL of a creep spawned right now
+			return newCreepTicksToLive - minTicksToLive >= DEFAULT_SWARM_TICK_DIFFERENCE;
+		} else {
+			return false;
+		}
+	}
+
 	get inMultipleRooms(): boolean {
 		return _.keys(this.roomsByName).length > 1;
 	}
@@ -237,6 +249,7 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 	// Assemble the swarm at the target location
 	assemble(assemblyPoint: RoomPosition, allowIdleCombat = true): boolean {
 		if (this.isInFormation(assemblyPoint) && this.hasMaxCreeps) {
+			this.memory.initialAssembly = true;
 			return true;
 		} else {
 			// Creeps travel to their relative formation positions

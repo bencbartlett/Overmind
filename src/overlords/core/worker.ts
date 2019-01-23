@@ -17,22 +17,23 @@ export class WorkerOverlord extends Overlord {
 	room: Room;
 	repairStructures: Structure[];
 	dismantleStructures: Structure[];
-	fortifyStructures: (StructureWall | StructureRampart)[];
+	fortifyBarriers: (StructureWall | StructureRampart)[];
+	criticalBarriers: (StructureWall | StructureRampart)[];
 	constructionSites: ConstructionSite[];
 	nukeDefenseRamparts: StructureRampart[];
 
 	static settings = {
 		barrierHits         : {			// What HP to fortify barriers to at each RCL
-			1: 3e+3,
-			2: 3e+3,
-			3: 1e+4,
-			4: 5e+4,
-			5: 1e+5,
-			6: 5e+5,
-			7: 1e+6,
-			8: 2e+7,
+			critical: 2500,
+			1       : 3e+3,
+			2       : 3e+3,
+			3       : 1e+4,
+			4       : 5e+4,
+			5       : 1e+5,
+			6       : 5e+5,
+			7       : 1e+6,
+			8       : 2e+7,
 		},
-		criticalHits        : 1000, 	// barriers below this health get priority treatment
 		hitTolerance        : 100000, 	// allowable spread in HP
 		fortifyDutyThreshold: 500000,	// ignore fortify duties until this amount of energy is present in the room
 	};
@@ -40,12 +41,15 @@ export class WorkerOverlord extends Overlord {
 	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.work) {
 		super(colony, 'worker', priority);
 		this.workers = this.zerg(Roles.worker);
-		// Fortification structures
-		this.fortifyStructures = $.structures(this, 'fortifyStructures', () =>
+		// Compute barriers needing fortification or critical attention
+		this.fortifyBarriers = $.structures(this, 'fortifyBarriers', () =>
 			_.sortBy(_.filter(this.room.barriers, s =>
 				s.hits < WorkerOverlord.settings.barrierHits[this.colony.level]
 				&& this.colony.roomPlanner.barrierPlanner.barrierShouldBeHere(s.pos)
-			), s => s.hits));
+			), s => s.hits), 25);
+		this.criticalBarriers = $.structures(this, 'criticalBarriers', () =>
+			_.filter(this.fortifyBarriers,
+					 barrier => barrier.hits < WorkerOverlord.settings.barrierHits.critical), 10);
 		// Generate a list of structures needing repairing (different from fortifying except in critical case)
 		this.repairStructures = $.structures(this, 'repairStructures', () =>
 			_.filter(this.colony.repairables, function (structure) {
@@ -103,8 +107,8 @@ export class WorkerOverlord extends Overlord {
 
 	refresh() {
 		super.refresh();
-		$.refresh(this, 'repairStructures', 'dismantleStructures', 'fortifyStructures', 'constructionSites',
-				  'nukeDefenseRamparts');
+		$.refresh(this, 'repairStructures', 'dismantleStructures', 'fortifyBarriers', 'criticalBarriers',
+				  'constructionSites', 'nukeDefenseRamparts');
 	}
 
 	init() {
@@ -115,10 +119,15 @@ export class WorkerOverlord extends Overlord {
 			numWorkers = $.number(this, 'numWorkers', () => {
 				// At lower levels, try to saturate the energy throughput of the colony
 				const MAX_WORKERS = 10; // Maximum number of workers to spawn
-				let energyPerTick = _.sum(_.map(this.colony.miningSites, site => site.overlords.mine.energyPerTick));
-				let energyPerTickPerWorker = 1.1 * workPartsPerWorker; // Average energy per tick when workers are working
+				let energyMinedPerTick = _.sum(_.map(this.colony.miningSites, function (site) {
+					const overlord = site.overlords.mine;
+					const miningPowerAssigned = _.sum(overlord.miners, miner => miner.getActiveBodyparts(WORK));
+					const saturation = Math.min(miningPowerAssigned / overlord.miningPowerNeeded, 1);
+					return overlord.energyPerTick * saturation;
+				}));
+				let energyPerTickPerWorker = 1.1 * workPartsPerWorker; // Average energy per tick when working
 				let workerUptime = 0.8;
-				let numWorkers = Math.ceil(energyPerTick / (energyPerTickPerWorker * workerUptime));
+				let numWorkers = Math.ceil(energyMinedPerTick / (energyPerTickPerWorker * workerUptime));
 				return Math.min(numWorkers, MAX_WORKERS);
 			});
 		} else {
@@ -136,7 +145,7 @@ export class WorkerOverlord extends Overlord {
 					let paveTicks = _.sum(this.colony.rooms, room => this.colony.roadLogistics.energyToRepave(room));
 					let fortifyTicks = 0;
 					if (this.colony.assets.energy > WorkerOverlord.settings.fortifyDutyThreshold) {
-						fortifyTicks = 0.25 * _.sum(this.fortifyStructures,
+						fortifyTicks = 0.25 * _.sum(this.fortifyBarriers,
 													barrier => WorkerOverlord.settings.barrierHits[this.colony.level]
 															   - barrier.hits) / REPAIR_POWER;
 					}
@@ -228,13 +237,13 @@ export class WorkerOverlord extends Overlord {
 		}
 	}
 
-	private fortifyActions(worker: Zerg, fortifyStructures = this.fortifyStructures): boolean {
+	private fortifyActions(worker: Zerg, fortifyStructures = this.fortifyBarriers): boolean {
 		let lowBarriers: (StructureWall | StructureRampart)[];
 		let highestBarrierHits = _.max(_.map(fortifyStructures, structure => structure.hits));
 		if (highestBarrierHits > WorkerOverlord.settings.hitTolerance) {
 			// At high barrier HP, fortify only structures that are within a threshold of the lowest
 			let lowestBarrierHits = _.min(_.map(fortifyStructures, structure => structure.hits));
-			lowBarriers = _.filter(fortifyStructures, structure => structure.hits < lowestBarrierHits +
+			lowBarriers = _.filter(fortifyStructures, structure => structure.hits <= lowestBarrierHits +
 																   WorkerOverlord.settings.hitTolerance);
 		} else {
 			// Otherwise fortify the lowest N structures
@@ -270,6 +279,10 @@ export class WorkerOverlord extends Overlord {
 			if (this.repairStructures.length > 0 && this.colony.defcon == DEFCON.safe) {
 				if (this.repairActions(worker)) return;
 			}
+			// Fortify critical barriers
+			if (this.criticalBarriers.length > 0) {
+				if (this.fortifyActions(worker, this.criticalBarriers)) return;
+			}
 			// Build new structures
 			if (this.constructionSites.length > 0) {
 				if (this.buildActions(worker)) return;
@@ -287,8 +300,8 @@ export class WorkerOverlord extends Overlord {
 				if (this.dismantleActions(worker)) return;
 			}
 			// Fortify walls and ramparts
-			if (this.fortifyStructures.length > 0) {
-				if (this.fortifyActions(worker)) return;
+			if (this.fortifyBarriers.length > 0) {
+				if (this.fortifyActions(worker, this.fortifyBarriers)) return;
 			}
 			// Upgrade controller if less than RCL8 or no upgraders
 			if ((this.colony.level < 8 || this.colony.upgradeSite.overlord.upgraders.length == 0)

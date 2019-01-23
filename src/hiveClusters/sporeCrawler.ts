@@ -4,6 +4,7 @@ import {Colony} from '../Colony';
 import {CombatIntel} from '../intel/CombatIntel';
 import {$} from '../caching/GlobalCache';
 import {CombatTargeting} from '../targeting/CombatTargeting';
+import {WorkerOverlord} from '../overlords/core/worker';
 
 // Hive cluster for wrapping towers
 
@@ -86,14 +87,19 @@ export class SporeCrawler extends HiveCluster {
 	// 	}
 	// }
 
-	// private preventRampartDecay() {
-	// 	let dyingRamparts = _.filter(this.room.ramparts, rampart =>
-	// 		rampart.hits < WorkerOverlord.settings.criticalHits
-	// 		&& this.colony.roomPlanner.barrierPlanner.barrierShouldBeHere(rampart.pos));
-	// 	if (dyingRamparts.length > 0) {
-	// 		return this.tower.repair(this.tower.pos.findClosestByRange(dyingRamparts)!);
-	// 	}
-	// }
+	private preventRampartDecay() {
+		if (this.colony.level <= 4 && this.towers.length > 0) {
+			// expensive to check all rampart hits; only run in intermediate RCL
+			let dyingRamparts = _.filter(this.room.ramparts, rampart =>
+				rampart.hits < WorkerOverlord.settings.barrierHits.critical
+				&& this.colony.roomPlanner.barrierPlanner.barrierShouldBeHere(rampart.pos));
+			if (dyingRamparts.length > 0) {
+				for (let tower of this.towers) {
+					tower.repair(tower.pos.findClosestByRange(dyingRamparts)!);
+				}
+			}
+		}
+	}
 
 	// private repairNearestStructure() {
 	// 	var closestDamagedStructure = this.pos.findClosestByRange(FIND_STRUCTURES, {
@@ -142,7 +148,8 @@ export class SporeCrawler extends HiveCluster {
 			return;
 		}
 
-		// this.preventRampartDecay();
+		// Prevent rampart decay at early RCL
+		this.preventRampartDecay();
 	}
 
 	visuals() {

@@ -13,6 +13,8 @@ interface CombatZergMemory extends CreepMemory {
 	swarm?: string;
 }
 
+export const DEFAULT_PARTNER_TICK_DIFFERENCE = 650;
+export const DEFAULT_SWARM_TICK_DIFFERENCE = 650;
 
 @profile
 export class CombatZerg extends Zerg {
@@ -30,10 +32,7 @@ export class CombatZerg extends Zerg {
 		});
 	}
 
-	findPartner(partners: CombatZerg[], tickDifference = 750): CombatZerg | undefined {
-		if (this.spawning || !this.ticksToLive) {
-			return;
-		}
+	findPartner(partners: CombatZerg[], tickDifference = DEFAULT_PARTNER_TICK_DIFFERENCE): CombatZerg | undefined {
 		if (this.memory.partner) {
 			let partner = _.find(partners, partner => partner.name == this.memory.partner);
 			if (partner) {
@@ -46,9 +45,11 @@ export class CombatZerg extends Zerg {
 			let partner = _.find(partners, partner => partner.memory.partner == this.name);
 			if (!partner) {
 				partner = _(partners)
-					.filter(partner => !partner.memory.partner && !partner.spawning && partner.ticksToLive &&
-									   Math.abs(this.ticksToLive! - partner.ticksToLive) <= tickDifference)
-					.min(partner => Math.abs(this.ticksToLive! - partner.ticksToLive!));
+					.filter(partner => !partner.memory.partner &&
+									   Math.abs((this.ticksToLive || CREEP_LIFE_TIME)
+												- (partner.ticksToLive || CREEP_LIFE_TIME)) <= tickDifference)
+					.min(partner => Math.abs((this.ticksToLive || CREEP_LIFE_TIME)
+											 - (partner.ticksToLive || CREEP_LIFE_TIME)));
 			}
 			if (_.isObject(partner)) {
 				this.memory.partner = partner.name;
@@ -58,10 +59,8 @@ export class CombatZerg extends Zerg {
 		}
 	}
 
-	findSwarm(partners: CombatZerg[], maxByRole: { [role: string]: number }, tickDifference = 750): string | undefined {
-		if (this.spawning || !this.ticksToLive) {
-			return;
-		}
+	findSwarm(partners: CombatZerg[], maxByRole: { [role: string]: number },
+			  tickDifference = DEFAULT_SWARM_TICK_DIFFERENCE): string | undefined {
 		if (this.memory.swarm) {
 			return this.memory.swarm;
 		} else {
@@ -70,7 +69,8 @@ export class CombatZerg extends Zerg {
 			for (let swarmRef in partnersBySwarm) {
 				if (swarmRef == undefined) continue;
 				if (_.all(partnersBySwarm[swarmRef],
-						  c => Math.abs(this.ticksToLive! - (c.ticksToLive || Infinity)) <= tickDifference)) {
+						  c => Math.abs((this.ticksToLive || CREEP_LIFE_TIME)
+										- (c.ticksToLive || CREEP_LIFE_TIME)) <= tickDifference)) {
 					let swarmCreepsByRole = _.groupBy(partnersBySwarm[swarmRef], c => c.memory.role);
 					if ((swarmCreepsByRole[this.memory.role] || []).length + 1 <= maxByRole[this.memory.role]) {
 						this.memory.swarm = swarmRef;

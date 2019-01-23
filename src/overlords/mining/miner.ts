@@ -111,9 +111,9 @@ export class MiningOverlord extends Overlord {
 		if (!this.room && Game.rooms[this.pos.roomName]) { // if you just gained vision of this room
 			this.populateStructures();
 		}
-		if (!this.allowDropMining && Game.time % 100 == 0 && !this.container && !this.link) {
-			log.warning(`Mining site at ${this.pos.print} has no output!`);
-		}
+		// if (!this.allowDropMining && Game.time % 100 == 0 && !this.container && !this.link) {
+		// 	log.warning(`Mining site at ${this.pos.print} has no output!`);
+		// }
 		super.refresh();
 		$.refresh(this, 'source', 'container', 'link', 'constructionSite');
 	}
