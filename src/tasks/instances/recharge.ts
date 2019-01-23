@@ -64,8 +64,11 @@ export class TaskRecharge extends Task {
 			let canHarvest = creep.getActiveBodyparts(WORK) > 0 && creep.roleName != 'worker';
 			if (canHarvest) {
 				// Harvest from a source if there is no recharge target available
-				let availableSources = _.filter(creep.room.sources,
-												source => source.pos.availableNeighbors(false).length > 0);
+				let availableSources = _.filter(creep.room.sources, function (source) {
+					// Only harvest from sources which aren't surrounded by creeps excluding yourself
+					let isSurrounded = source.pos.availableNeighbors(false).length == 0;
+					return !isSurrounded || creep.pos.isNearTo(source);
+				});
 				let availableSource = creep.pos.findClosestByMultiRoomRange(availableSources);
 				if (availableSource) {
 					creep.task = new TaskHarvest(availableSource);
