@@ -158,8 +158,8 @@ export class BunkerQueenOverlord extends Overlord {
 		let neededResources = _.keys(queenCarry) as ResourceConstant[];
 		// TODO: a single structure doesn't need to have all resources; causes jam if labs need supply but no minerals
 		let targets = _.filter(this.storeStructures,
-							   s => _.all(neededResources,
-										  resource => (s.store[resource] || 0) >= (queenCarry[resource] || 0)));
+								s => _.any(neededResources,
+											resource => (s.store[resource] || 0) > 0));
 		let withdrawTarget: StoreStructure | undefined;
 		if (targets.length > 1) {
 			withdrawTarget = minBy(targets, target => Pathing.distance(queenPos, target.pos));
@@ -171,7 +171,11 @@ export class BunkerQueenOverlord extends Overlord {
 			return null;
 		}
 		for (let resourceType of neededResources) {
-			withdrawTasks.push(Tasks.withdraw(withdrawTarget!, resourceType, queenCarry[resourceType]));
+			let amount = withdrawTarget.store[resourceType];
+			if(amount! >= queenCarry[resourceType]) {
+				amount = queenCarry[resourceType];
+			}
+			withdrawTasks.push(Tasks.withdraw(withdrawTarget!, resourceType, amount))
 		}
 		// Step 4: put all the tasks in the correct order, set nextPos for each, and chain them together
 		tasks = tasks.concat(withdrawTasks, supplyTasks);
