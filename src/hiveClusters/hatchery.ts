@@ -396,19 +396,31 @@ export class Hatchery extends HiveCluster {
 		}
 	}
 
-	visuals() {
-		let spawnInfo = '';
+	visuals(coord: Coord): Coord {
+		let {x, y} = coord;
+		let spawning: string[] = [];
+		let spawnProgress: [number, number][] = [];
 		_.forEach(this.spawns, function (spawn) {
 			if (spawn.spawning) {
-				spawnInfo += ' ' + spawn.spawning.name.split('_')[0];
+				spawning.push(spawn.spawning.name.split('_')[0]);
+				let timeElapsed = spawn.spawning.needTime - spawn.spawning.remainingTime;
+				spawnProgress.push([timeElapsed, spawn.spawning.needTime]);
 			}
 		});
-		let info = [
-			`Energy: ${this.room.energyAvailable} / ${this.room.energyCapacityAvailable}`,
-			`Status: ${spawnInfo != '' ? 'spawning' + ' ' + spawnInfo : 'idle' }`,
-			`Uptime: ${Number(this.memory.stats.uptime).toFixed(2)}`
-		];
-		Visualizer.showInfo(info, this);
+		let boxCoords = Visualizer.section(`${this.colony.name} Hatchery`, {x, y, roomName: this.room.name},
+										   9.5, 1 + spawning.length + .1);
+		let boxX = boxCoords.x;
+		y = boxCoords.y + 0.25;
+		let uptime = this.memory.stats.uptime;
+		Visualizer.text('Uptime', {x: boxX, y: y, roomName: this.room.name});
+		Visualizer.barGraph(uptime, {x: boxX + 4, y: y, roomName: this.room.name}, 5);
+		y += 1;
+		for (let i in spawning) {
+			Visualizer.text(spawning[i], {x: boxX, y: y, roomName: this.room.name});
+			Visualizer.barGraph(spawnProgress[i], {x: boxX + 4, y: y, roomName: this.room.name}, 5);
+			y += 1;
+		}
+		return {x: x, y: y + .25};
 	}
 }
 

@@ -42,9 +42,5 @@ export abstract class HiveCluster {
 	// Runtime logic, such as controlling creep actions
 	abstract run(): void;
 
-	// Overwrite this to display relevant information
-	visuals(): void {
-
-	};
 }
 

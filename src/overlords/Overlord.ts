@@ -26,6 +26,7 @@ export function hasColony(initializer: OverlordInitializer | Colony): initialize
 }
 
 export const DEFAULT_PRESPAWN = 50;
+export const MAX_SPAWN_REQUESTS = 100; // this stops division by zero or related errors from sending infinite requests
 
 export interface CreepRequestOptions {
 	reassignIdle?: boolean;
@@ -346,8 +347,13 @@ export abstract class Overlord {
 				spawnQuantity--;
 			}
 		}
-		for (let i = 0; i < spawnQuantity; i++) {
-			this.requestCreep(setup, opts);
+		// A bug in outpostDefenseOverlord caused infinite requests and cost me two botarena rounds before I found it...
+		if (spawnQuantity > MAX_SPAWN_REQUESTS) {
+			log.warning(`Too many requests for ${setup.role}s submitted by ${this.print}! (Check for errors.)`);
+		} else {
+			for (let i = 0; i < spawnQuantity; i++) {
+				this.requestCreep(setup, opts);
+			}
 		}
 		this.creepReport(setup.role, creepQuantity, quantity);
 	}

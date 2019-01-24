@@ -135,8 +135,18 @@ export class Visualizer {
 		new RoomVisual(pos.roomName).text(text, pos.x, pos.y, this.textStyle(size, style));
 	}
 
-	static barGraph(percent: number, pos: { x: number, y: number, roomName?: string }, width = 7, scale = 1): void {
+	static barGraph(progress: number | [number, number], pos: { x: number, y: number, roomName?: string },
+					width = 7, scale = 1): void {
 		const vis = new RoomVisual(pos.roomName);
+		let percent: number;
+		let mode: 'percent' | 'fraction';
+		if (typeof progress === 'number') {
+			percent = progress;
+			mode = 'percent';
+		} else {
+			percent = progress[0] / progress[1];
+			mode = 'fraction';
+		}
 		// Draw frame
 		vis.box(pos.x, pos.y - charHeight * scale, width, 1.1 * scale * charHeight, {color: textColor});
 		vis.rect(pos.x, pos.y - charHeight * scale, percent * width, 1.1 * scale * charHeight, {
@@ -145,8 +155,15 @@ export class Visualizer {
 			strokeWidth: 0
 		});
 		// Draw text
-		vis.text(`${Math.round(100 * percent)}%`, pos.x + width / 2, pos.y - .1 * charHeight,
-				 this.textStyle(1, {align: 'center'}));
+		if (mode == 'percent') {
+			vis.text(`${Math.round(100 * percent)}%`, pos.x + width / 2, pos.y - .1 * charHeight,
+					 this.textStyle(1, {align: 'center'}));
+		} else {
+			let [num, den] = <[number, number]>progress;
+			vis.text(`${num}/${den}`, pos.x + width / 2, pos.y - .1 * charHeight,
+					 this.textStyle(1, {align: 'center'}));
+		}
+
 	}
 
 	static table(data: string[][], pos: { x: number, y: number, roomName?: string }): void {

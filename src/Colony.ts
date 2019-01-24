@@ -548,75 +548,26 @@ export class Colony {
 		// 	`Creep usage for ${colony.name}:`];
 	}
 
-	private drawStorageReport(y = 11.5): number {
-		if (!this.commandCenter) return y;
-		let height = this.commandCenter.storage && this.commandCenter.terminal ? 2 : 1;
-		let boxCoords = Visualizer.section(`${this.name} Command Center`, {x: 1, y: y, roomName: this.room.name},
-										   9.5, height + .1);
-		let boxX = boxCoords.x;
-		y = boxCoords.y + 0.25;
-		if (this.commandCenter.storage) {
-			Visualizer.text('Storage', {x: boxX, y: y, roomName: this.room.name});
-			Visualizer.barGraph(_.sum(this.commandCenter.storage.store) / this.commandCenter.storage.storeCapacity,
-				{x: boxX + 4, y: y, roomName: this.room.name}, 5);
-			y += 1;
-		}
-		if (this.commandCenter.terminal) {
-			Visualizer.text('Terminal', {x: boxX, y: y, roomName: this.room.name});
-			Visualizer.barGraph(_.sum(this.commandCenter.terminal.store) / this.commandCenter.terminal.storeCapacity,
-				{x: boxX + 4, y: y, roomName: this.room.name}, 5);
-			y += 1;
-		}
-		return y + .25;
-	}
-
-	private drawCreepReport(y = 11.5): number {
+	private drawCreepReport(coord: Coord): Coord {
+		let {x, y} = coord;
 		const roledata = Overmind.overseer.getCreepReport(this);
-		const tablePos = new RoomPosition(1, y, this.room.name);
-		return Visualizer.infoBox(`${this.name} Creeps`, roledata, tablePos, 7);
-	}
-
-	private drawSpawnReport(y = 11.5): number {
-		if (!this.hatchery) return y;
-		let spawning: string[] = [];
-		let spawnPercents: number[] = [];
-		_.forEach(this.hatchery.spawns, function (spawn) {
-			if (spawn.spawning) {
-				spawning.push(spawn.spawning.name.split('_')[0]);
-				spawnPercents.push(1 - spawn.spawning.remainingTime / spawn.spawning.needTime);
-			}
-		});
-		let boxCoords = Visualizer.section(`${this.name} Hatchery`, {x: 1, y: y, roomName: this.room.name},
-										   9.5, 1 + spawning.length + .1);
-		let boxX = boxCoords.x;
-		y = boxCoords.y + 0.25;
-		let uptime = this.hatchery.memory.stats.uptime;
-		Visualizer.text('Uptime', {x: boxX, y: y, roomName: this.room.name});
-		Visualizer.barGraph(uptime, {x: boxX + 4, y: y, roomName: this.room.name}, 5);
-		y += 1;
-		for (let i in spawning) {
-			Visualizer.text(spawning[i], {x: boxX, y: y, roomName: this.room.name});
-			Visualizer.barGraph(spawnPercents[i], {x: boxX + 4, y: y, roomName: this.room.name}, 5);
-			y += 1;
-		}
-		return y + .25;
+		const tablePos = new RoomPosition(x, y, this.room.name);
+		y = Visualizer.infoBox(`${this.name} Creeps`, roledata, tablePos, 7);
+		return {x, y};
 	}
 
 	visuals(): void {
+		let x = 1;
 		let y = 11.5;
-		y = this.drawCreepReport(y);
-		y = this.drawSpawnReport(y);
-		y = this.drawStorageReport(y);
-		// Draw creep report
+		let coord: Coord;
+		coord = this.drawCreepReport({x, y});
+		x = coord.x;
+		y = coord.y;
 
-
-		// let report: string[] = [];
-		// report.push(`Hatchery:`)
-		// for (let spawn of this.spawns) {
-		// 	if (spawn.spawning) {
-		// 		report.push(`${bullet}Spawning`)
-		// 	}
-		// }
-		// _.forEach(this.hiveClusters, hiveCluster => hiveCluster.visuals()); // Display hiveCluster visuals
+		for (let hiveCluster of _.compact([this.hatchery, this.commandCenter, this.evolutionChamber])) {
+			coord = hiveCluster!.visuals({x, y});
+			x = coord.x;
+			y = coord.y;
+		}
 	}
 }

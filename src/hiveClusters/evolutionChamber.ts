@@ -17,6 +17,7 @@ import {rightArrow} from '../utilities/stringConstants';
 import {Stats} from '../stats/stats';
 import {rollingAverage} from '../utilities/utils';
 import {$} from '../caching/GlobalCache';
+import {Visualizer} from '../visuals/Visualizer';
 
 const LabStatus = {
 	Idle             : 0,
@@ -481,10 +482,65 @@ export class EvolutionChamber extends HiveCluster {
 		this.stats();
 	}
 
-	visuals() {
-		// _.forEach(this.reagentLabs, lab => Visualizer.circle(lab.pos, 'red'));
-		// _.forEach(this.productLabs, lab => Visualizer.circle(lab.pos, 'blue'));
-		// _.forEach(this.boostingLabs, lab => Visualizer.circle(lab.pos, 'purple'));
+	private drawLabReport(coord: Coord): Coord {
+		let {x, y} = coord;
+		let height = 2;
+		let titleCoords = Visualizer.section(`${this.colony.name} Evolution Chamber`,
+											 {x, y, roomName: this.room.name}, 9.5, height + .1);
+		let boxX = titleCoords.x;
+		y = titleCoords.y + 0.25;
+
+		let status: string;
+		switch (this.memory.status) {
+			case LabStatus.Idle:
+				status = 'IDLE';
+				break;
+			case LabStatus.AcquiringMinerals:
+				status = 'acquire minerals';
+				break;
+			case LabStatus.LoadingLabs:
+				status = 'loading labs';
+				break;
+			case LabStatus.Synthesizing:
+				status = 'synthesizing';
+				break;
+			case LabStatus.UnloadingLabs:
+				status = 'unloading labs';
+				break;
+			default:
+				status = 'INVALID';
+				break;
+		}
+
+		let activeReaction = this.memory.activeReaction;
+		let mineral = activeReaction ? activeReaction.mineralType : 'NONE';
+
+		Visualizer.text(`Status: ${status}`, {x: boxX, y: y, roomName: this.room.name});
+		y += 1;
+		if (this.memory.status == LabStatus.Synthesizing && activeReaction) {
+			let amountDone = _.sum(_.map(this.productLabs,
+										 lab => lab.mineralType == activeReaction!.mineralType ? lab.mineralAmount : 0));
+			Visualizer.text(`RXN: ${activeReaction.mineralType}`, {x: boxX, y: y, roomName: this.room.name});
+			Visualizer.barGraph([amountDone, activeReaction.amount],
+								{x: boxX + 4, y: y, roomName: this.room.name}, 5);
+			y += 1;
+		} else {
+			Visualizer.text(`Active reaction: ${mineral}`, {x: boxX, y: y, roomName: this.room.name});
+			y += 1;
+		}
+		return {x: x, y: y + .25};
+	}
+
+	visuals(coord: Coord): Coord {
+		const vis = this.room.visual;
+		// Lab visuals
+		for (let lab of this.labs) {
+			if (lab.mineralType) {
+				vis.resource(lab.mineralType, lab.pos.x, lab.pos.y, 0.25, 0.5);
+			}
+		}
+		// Draw lab report
+		return this.drawLabReport(coord);
 	}
 
 	private stats(): void {

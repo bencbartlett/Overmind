@@ -11,6 +11,7 @@ import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {Priority} from '../priorities/priorities';
 import {Cartographer} from '../utilities/Cartographer';
 import {$} from '../caching/GlobalCache';
+import {Visualizer} from '../visuals/Visualizer';
 
 export const MAX_OBSERVE_DISTANCE = 7;
 
@@ -167,11 +168,26 @@ export class CommandCenter extends HiveCluster {
 		// this.runObserver();
 	}
 
-	visuals() {
-		// let info = [
-		// 	`Energy: ${Math.floor(this.storage.store[RESOURCE_ENERGY] / 1000)} K`,
-		// ];
-		// Visualizer.showInfo(info, this);
+	visuals(coord: Coord): Coord {
+		let {x, y} = coord;
+		let height = this.storage && this.terminal ? 2 : 1;
+		let titleCoords = Visualizer.section(`${this.colony.name} Command Center`,
+											 {x, y, roomName: this.room.name}, 9.5, height + .1);
+		let boxX = titleCoords.x;
+		y = titleCoords.y + 0.25;
+		if (this.storage) {
+			Visualizer.text('Storage', {x: boxX, y: y, roomName: this.room.name});
+			Visualizer.barGraph(_.sum(this.storage.store) / this.storage.storeCapacity,
+								{x: boxX + 4, y: y, roomName: this.room.name}, 5);
+			y += 1;
+		}
+		if (this.terminal) {
+			Visualizer.text('Terminal', {x: boxX, y: y, roomName: this.room.name});
+			Visualizer.barGraph(_.sum(this.terminal.store) / this.terminal.storeCapacity,
+								{x: boxX + 4, y: y, roomName: this.room.name}, 5);
+			y += 1;
+		}
+		return {x: x, y: y + .25};
 	}
 }
 
