@@ -16,7 +16,7 @@ export abstract class SwarmOverlord extends CombatOverlord {
 	/* Wishlist of creeps to simplify spawning logic; includes automatic reporting */
 
 	// TODO: at the moment, this assumes that every swarm within an overlord is the same configuration
-	protected swarmWishlist(swarmQuantity: number, config: { setup: CreepSetup, amount: number }[]) {
+	protected swarmWishlist(swarmQuantity: number, config: { setup: CreepSetup, amount: number, priority?: number }[]) {
 		// Make tables to log current and needed creep quantities
 		let creepQuantities: { [role: string]: number } = {};
 		let neededQuantities: { [role: string]: number } = {};
@@ -26,6 +26,7 @@ export abstract class SwarmOverlord extends CombatOverlord {
 		for (let swarm of validSwarms) {
 			for (let creepType of config) {
 				let {setup, amount} = creepType;
+				let priority = creepType.priority || this.priority;
 				let existingCreepsOfRole = _.filter(swarm.creeps, creep => creep.roleName == setup.role);
 				// Log current and needed amounts for reporting
 				if (!creepQuantities[setup.role]) creepQuantities[setup.role] = 0;
@@ -35,7 +36,7 @@ export abstract class SwarmOverlord extends CombatOverlord {
 				// Spawn the neede quantity of creeps
 				let spawnQuantity = amount - existingCreepsOfRole.length;
 				for (let i = 0; i < spawnQuantity; i++) {
-					this.requestCreep(setup);
+					this.requestCreep(setup, {priority: priority});
 				}
 			}
 		}
@@ -45,10 +46,11 @@ export abstract class SwarmOverlord extends CombatOverlord {
 		for (let n = 0; n < numRemainingSwarms; n++) {
 			for (let creepType of config) {
 				let {setup, amount} = creepType;
+				let priority = creepType.priority || this.priority;
 				if (!neededQuantities[setup.role]) neededQuantities[setup.role] = 0;
 				neededQuantities[setup.role] += amount;
 				for (let i = 0; i < amount; i++) {
-					this.requestCreep(setup, {priority: this.priority + 0.5});
+					this.requestCreep(setup, {priority: priority + 0.5});
 				}
 			}
 		}

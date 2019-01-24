@@ -28,8 +28,8 @@ const SpawnGroupMemoryDefaults: SpawnGroupMemory = {
 };
 
 
-const MAX_LINEAR_DISTANCE = 10; // maximum linear distance to search for any spawn group
-const MAX_PATH_DISTANCE = 600;	// maximum path distance for any spawn group
+const MAX_LINEAR_DISTANCE = 10; // maximum linear distance to search for ANY spawn group
+const MAX_PATH_DISTANCE = 600;	// maximum path distance to consider for ANY spawn group
 const DEFAULT_RECACHE_TIME = onPublicServer() ? 2000 : 1000;
 
 const defaultSettings: SpawnGroupSettings = {

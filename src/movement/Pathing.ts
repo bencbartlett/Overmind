@@ -864,10 +864,12 @@ export class Pathing {
 	}
 
 	/* Find the first walkable position in the room, spiraling outward from the center */
-	static findPathablePosition(roomName: string): RoomPosition {
+	static findPathablePosition(roomName: string,
+								clearance: { width: number, height: number } = {width: 1, height: 1}): RoomPosition {
 		const terrain = Game.map.getRoomTerrain(roomName);
 
 		let x, y: number;
+		let allClear: boolean;
 		for (let radius = 0; radius < 23; radius++) {
 			for (let dx = -radius; dx <= radius; dx++) {
 				for (let dy = -radius; dy <= radius; dy++) {
@@ -876,7 +878,15 @@ export class Pathing {
 					}
 					x = 25 + dx;
 					y = 25 + dy;
-					if (terrain.get(x, y) !== TERRAIN_MASK_WALL) {
+					allClear = true;
+					for (let w = 0; w < clearance.width; w++) {
+						for (let h = 0; h < clearance.height; h++) {
+							if (terrain.get(x + w, y + h) === TERRAIN_MASK_WALL) {
+								allClear = false;
+							}
+						}
+					}
+					if (allClear) {
 						return new RoomPosition(x, y, roomName);
 					}
 				}

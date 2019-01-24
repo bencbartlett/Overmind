@@ -275,7 +275,7 @@ export class CombatTargeting {
 
 		// Target the first non-road, non-container structure you find along the path or neighboring positions
 		for (let pos of ret.path) {
-			log.debug(`Searcing path ${pos.print}...`);
+			log.debug(`Searching path ${pos.print}...`);
 			let searchPositions = Pathing.getPosWindow(pos, swarm.width, swarm.height); // not -1*width
 			for (let searchPos of searchPositions) {
 				let targetStructure = _.first(_.filter(pos.lookFor(LOOK_STRUCTURES), s => {

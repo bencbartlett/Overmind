@@ -21,6 +21,8 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 
 	memory: any;
 	directive: DirectiveSwarmDestroy;
+	fallback: RoomPosition;
+	assemblyPoints: RoomPosition[];
 	intel: CombatIntel;
 	zerglings: CombatZerg[];
 	healers: CombatZerg[];
@@ -44,17 +46,22 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 			notifyWhenAttacked: false,
 			boostWishlist     : [boostResources.heal[3], boostResources.tough[3], boostResources.move[3],]
 		});
+		// Make swarms
 		this.makeSwarms();
+		// Compute fallback positions and assembly points
+		this.fallback = $.pos(this, 'fallback', () =>
+			this.intel.findSwarmAssemblyPoint({width: 2, height: 2}), 200)!;
+		this.assemblyPoints = [];
+		for (let i = 0; i < _.keys(this.swarms).length + 1; i++) {
+			this.assemblyPoints.push($.pos(this, `assemble_${i}`, () =>
+				this.intel.findSwarmAssemblyPoint({width: 2, height: 2}, i + 1), 200)!);
+		}
 	}
 
 	refresh() {
 		super.refresh();
 		this.memory = Mem.wrap(this.directive.memory, this.name);
 		this.makeSwarms();
-	}
-
-	get fallback(): RoomPosition {
-		return $.pos(this, 'fallback', () => this.intel.findSimpleSiegeFallback())!;
 	}
 
 	makeSwarms(): void {
@@ -70,11 +77,12 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 		}
 	}
 
-	private handleSwarm(swarm: Swarm) {
+	private handleSwarm(swarm: Swarm, index: number) {
 		// Swarm initially groups up at fallback location
 		if (!swarm.memory.initialAssembly) {
-			log.debug(`Assmbling at ${this.fallback.print}`);
-			swarm.memory.initialAssembly = swarm.assemble(this.fallback);
+			let assemblyPoint = this.assemblyPoints[index] || this.fallback;
+			log.debug(`Assmbling at ${assemblyPoint.print}`);
+			swarm.memory.initialAssembly = swarm.assemble(assemblyPoint);
 			return;
 		}
 
@@ -90,19 +98,27 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 		let zerglingPriority = this.zerglings.length <= this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
 		let zerglingSetup = this.canBoostSetup(CombatSetups.zerglings.boosted_T3) ? CombatSetups.zerglings.boosted_T3
 																				  : CombatSetups.zerglings.default;
-		this.wishlist(2 * numSwarms, zerglingSetup, {priority: zerglingPriority});
+		// this.wishlist(2 * numSwarms, zerglingSetup, {priority: zerglingPriority});
 
 		let healerPriority = this.healers.length < this.zerglings.length ? this.priority - 0.1 : this.priority + 0.1;
 		let healerSetup = this.canBoostSetup(CombatSetups.healers.boosted_T3) ? CombatSetups.healers.boosted_T3
 																			  : CombatSetups.healers.default;
-		this.wishlist(2 * numSwarms, healerSetup, {priority: healerPriority});
+		// this.wishlist(2 * numSwarms, healerSetup, {priority: healerPriority});
+
+		let swarmConfig = [{setup: zerglingSetup, amount: 2, priority: zerglingPriority},
+						   {setup: healerSetup, amount: 2, priority: healerPriority}];
+		this.swarmWishlist(numSwarms, swarmConfig);
 	}
 
 	run() {
-		this.autoRun(this.zerglings, zergling => undefined); // handle boosting
+		this.autoRun(this.zerglings, zergling => undefined); // zergling => undefined is to handle boosting
 		this.autoRun(this.healers, healer => undefined);
-		for (let ref in this.swarms) {
-			this.handleSwarm(this.swarms[ref]);
+		// Run swarms in order
+		let refs = _.keys(this.swarms).sort();
+		let i = 0;
+		for (let ref of refs) {
+			this.handleSwarm(this.swarms[ref], i);
+			i++;
 		}
 	}
 

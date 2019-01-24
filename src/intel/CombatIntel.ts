@@ -171,14 +171,32 @@ export class CombatIntel {
 	// 	let siegeTarget = CombatTargeting.findBestStructureTarget()
 	// }
 
+	/* Simple routine to find an assembly point outside of the target room */
 	findSimpleSiegeFallback(): RoomPosition {
 		let ret = Pathing.findPath(this.colony.pos, this.directive.pos, {range: 23});
+		if (ret.incomplete) {
+			log.warning(`Incomplete path while finding fallback! Destination: ${this.directive.pos.print}`);
+		}
 		let firstPosInRoom = _.find(ret.path, pos => pos.roomName == this.directive.pos.roomName);
 		if (firstPosInRoom) {
 			return CombatIntel.getFallbackFrom(firstPosInRoom);
 		} else {
 			return CombatIntel.getFallbackFrom(this.directive.pos);
 		}
+	}
+
+	/* Finds a location for a swarm to assemble outside of the target room */
+	findSwarmAssemblyPoint(clearance: { width: number, height: number }, swarmIndex = 0): RoomPosition {
+		let simpleFallback = this.findSimpleSiegeFallback();
+		let startPos = Pathing.findPathablePosition(simpleFallback.roomName, clearance);
+		let ret = Pathing.findSwarmPath(startPos, this.directive.pos, clearance.width, clearance.height,
+										{ignoreCreeps: true});
+		let path = ret.path.reverse();
+		let acceptablePositions = _.filter(path, pos => pos.roomName == simpleFallback.roomName &&
+														pos.rangeToEdge > 1);
+		let swarmSize = Math.max(clearance.width, clearance.height);
+		let posIndex = (swarmSize + 1) * swarmIndex;
+		return acceptablePositions[posIndex] || acceptablePositions[0] || simpleFallback;
 	}
 
 	/* Fallback is a location on the other side of the nearest exit the directive is placed at */
