@@ -46,6 +46,7 @@ export class Mem {
 			if (_.keys(Game.spawns).length > 1) { // don't run CPU reset routine at very beginning
 				log.warning(`CPU bucket is critically low (${Game.cpu.bucket})! Starting CPU reset routine.`);
 				Memory.resetBucket = true;
+				Memory.haltTick = Game.time + 1; // reset global next tick
 				this.garbageCollect();
 			} else {
 				log.info(`CPU bucket is too low (${Game.cpu.bucket}). Postponing operation until bucket reaches 500.`);
@@ -58,6 +59,13 @@ export class Mem {
 				return false;
 			} else {
 				delete Memory.resetBucket;
+			}
+		}
+		if (Memory.haltTick) {
+			if (Memory.haltTick == Game.time) {
+				(<any>Game.cpu).halt(); // TODO: remove any typing when typed-screeps updates to include this method
+			} else if (Memory.haltTick < Game.time) {
+				delete Memory.haltTick;
 			}
 		}
 		return true;

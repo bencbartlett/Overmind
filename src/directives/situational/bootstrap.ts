@@ -50,7 +50,7 @@ export class DirectiveBootstrap extends Directive {
 
 	run(): void {
 		if (!this.needsQueen && !this.needsMiner && !this.needsManager) {
-			log.alert(`Colony ${this.room.name} has recovered from crash; removing bootstrap directive.`);
+			log.alert(`Colony ${this.room.print} has recovered from crash; removing bootstrap directive.`);
 			// Suicide any fillers so they don't get in the way
 			let overlord = this.overlords.bootstrap as BootstrappingOverlord;
 			for (let filler of overlord.fillers) {

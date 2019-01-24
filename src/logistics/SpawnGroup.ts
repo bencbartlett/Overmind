@@ -3,7 +3,7 @@
 
 import {Hatchery, SpawnRequest} from '../hiveClusters/hatchery';
 import {Mem} from '../memory/Memory';
-import {getAllColonyRooms, getCacheExpiration, minBy} from '../utilities/utils';
+import {getAllColonyRooms, getCacheExpiration, minBy, onPublicServer} from '../utilities/utils';
 import {Pathing} from '../movement/Pathing';
 import {bodyCost} from '../creepSetups/CreepSetup';
 import {log} from '../console/log';
@@ -30,7 +30,7 @@ const SpawnGroupMemoryDefaults: SpawnGroupMemory = {
 
 const MAX_LINEAR_DISTANCE = 10; // maximum linear distance to search for any spawn group
 const MAX_PATH_DISTANCE = 600;	// maximum path distance for any spawn group
-const DEFAULT_RECACHE_TIME = 2000;
+const DEFAULT_RECACHE_TIME = onPublicServer() ? 2000 : 1000;
 
 const defaultSettings: SpawnGroupSettings = {
 	maxPathDistance: 250,		// override default path distance
@@ -72,7 +72,7 @@ export class SpawnGroup {
 		};
 		this.requests = [];
 		this.settings = _.defaults(settings, defaultSettings) as SpawnGroupSettings;
-		if (Game.time > this.memory.expiration) {
+		if (Game.time >= this.memory.expiration) {
 			this.recalculateColonies();
 		}
 		// Compute stats
@@ -92,22 +92,23 @@ export class SpawnGroup {
 	}
 
 	private recalculateColonies() { // don't use settings when recalculating colonies as spawnGroups share memory
-		let roomsInRange = _.filter(getAllColonyRooms(), room =>
+		let colonyRoomsInRange = _.filter(getAllColonyRooms(), room =>
 			Game.map.getRoomLinearDistance(room.name, this.roomName) <= MAX_LINEAR_DISTANCE);
 		let colonies = [] as string[];
 		let routes = {} as { [colonyName: string]: { [roomName: string]: boolean } };
 		// let paths = {} as { [colonyName: string]: { startPos: RoomPosition, path: string[] } };
-		let distances = {} as  { [colonyName: string]: number };
-		for (let room of roomsInRange) {
-			if (room.spawns.length == 0) continue;
-			let route = Pathing.findRoute(room.name, this.roomName);
-			let path = Pathing.findPathToRoom((room.spawns[0] || room.storage || room.controller!).pos,
-											  this.roomName, {route: route});
-			if (route && !path.incomplete && path.path.length <= MAX_PATH_DISTANCE) {
-				colonies.push(room.name);
-				routes[room.name] = route;
-				// paths[room.name] = path.path;
-				distances[room.name] = path.path.length;
+		let distances = {} as { [colonyName: string]: number };
+		for (let colonyRoom of colonyRoomsInRange) {
+			let spawn = colonyRoom.spawns[0];
+			if (spawn) {
+				let route = Pathing.findRoute(colonyRoom.name, this.roomName);
+				let path = Pathing.findPathToRoom(spawn.pos, this.roomName, {route: route});
+				if (route && !path.incomplete && path.path.length <= MAX_PATH_DISTANCE) {
+					colonies.push(colonyRoom.name);
+					routes[colonyRoom.name] = route;
+					// paths[room.name] = path.path;
+					distances[colonyRoom.name] = path.path.length;
+				}
 			}
 		}
 		this.memory.colonies = colonies;

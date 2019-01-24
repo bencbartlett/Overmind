@@ -53,10 +53,10 @@ export abstract class Directive {
 		// Delete the directive if the colony is dead
 		if (!colony) {
 			if (Overmind.exceptions.length == 0) {
-				log.alert(`Could not get colony for directive ${this.name}; removing flag!`);
+				log.alert(`Could not get colony for directive ${this.print}; removing flag!`);
 				flag.remove();
 			} else {
-				log.alert(`Could not get colony for directive ${this.name}; ` +
+				log.alert(`Could not get colony for directive ${this.print}; ` +
 						  `exceptions present this tick, so won't remove`);
 			}
 			return;
@@ -160,7 +160,7 @@ export abstract class Directive {
 	}
 
 	private findNearestColony(requiredRCL    = 1,
-							  maxPathLength  = 550,
+							  maxPathLength  = 600,
 							  maxLinearRange = 10,
 							  verbose        = false): Colony | undefined {
 		if (this.memory.maxPathLength) {

@@ -27,6 +27,7 @@ interface Memory {
 	constructionSites: { [id: string]: number };
 	// suspend?: number;
 	resetBucket?: boolean;
+	haltTick?: number;
 }
 
 interface StatsMemory {

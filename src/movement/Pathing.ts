@@ -460,11 +460,11 @@ export class Pathing {
 		}
 		return $.costMatrix(room.name, MatrixTypes.sk, () => {
 			let matrix = this.getDefaultMatrix(room).clone();
-			const avoidRange = 5;
+			const avoidRange = 4;
 			_.forEach(room.keeperLairs, lair => {
 				for (let dx = -avoidRange; dx <= avoidRange; dx++) {
 					for (let dy = -avoidRange; dy <= avoidRange; dy++) {
-						matrix.set(lair.pos.x + dx, lair.pos.y + dy, 0xff);
+						matrix.set(lair.pos.x + dx, lair.pos.y + dy, 0xfe);
 					}
 				}
 			});

@@ -15,7 +15,7 @@ import {DirectiveTerminalEvacuateState} from './directives/terminalState/termina
 import {bodyCost} from './creepSetups/CreepSetup';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {Cartographer, ROOMTYPE_CONTROLLER, ROOMTYPE_SOURCEKEEPER} from './utilities/Cartographer';
-import {derefCoords, hasJustSpawned, minBy} from './utilities/utils';
+import {derefCoords, hasJustSpawned, minBy, onPublicServer} from './utilities/utils';
 import {DirectiveOutpost} from './directives/colony/outpost';
 import {Autonomy, getAutonomyLevel, Mem} from './memory/Memory';
 import {RoomIntel} from './intel/RoomIntel';
@@ -23,6 +23,7 @@ import {Roles} from './creepSetups/setups';
 import {USE_TRY_CATCH} from './~settings';
 import {DirectiveOutpostDefense} from './directives/defense/outpostDefense';
 import {Notifier} from './directives/Notifier';
+import {DirectiveColonize} from './directives/colony/colonize';
 
 
 // export const DIRECTIVE_CHECK_FREQUENCY = 2;
@@ -47,7 +48,7 @@ export class Overseer implements IOverseer {
 	notifier: Notifier;
 
 	static settings = {
-		outpostCheckFrequency: 250
+		outpostCheckFrequency: onPublicServer() ? 250 : 100
 	};
 
 	constructor() {
@@ -253,9 +254,19 @@ export class Overseer implements IOverseer {
 		this.handleOutpostDefense(colony);
 		this.handleColonyInvasions(colony);
 		this.handleNukeResponse(colony);
-		if (Game.time % Overseer.settings.outpostCheckFrequency == 2 * colony.id
-			&& getAutonomyLevel() > Autonomy.Manual) {
-			this.handleNewOutposts(colony);
+		if (getAutonomyLevel() > Autonomy.Manual) {
+			if (Game.time % Overseer.settings.outpostCheckFrequency == 2 * colony.id) {
+				this.handleNewOutposts(colony);
+			}
+			// Place pioneer directives in case the colony doesn't have a spawn for some reason
+			if (Game.time % 25 == 0 && colony.spawns.length == 0) {
+				// verify that there are no spawns (not just a caching glitch)
+				let spawns = Game.rooms[colony.name]!.find(FIND_MY_SPAWNS);
+				if (spawns.length == 0) {
+					let pos = Pathing.findPathablePosition(colony.room.name);
+					DirectiveColonize.createIfNotPresent(pos, 'room');
+				}
+			}
 		}
 	}
 

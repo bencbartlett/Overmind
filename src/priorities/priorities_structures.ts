@@ -1,11 +1,11 @@
 // Prioritized list of what order structures should be built in
 export const BuildPriorities: BuildableStructureConstant[] = [
 	STRUCTURE_SPAWN,
-	STRUCTURE_CONTAINER,
 	STRUCTURE_TOWER,
 	STRUCTURE_EXTENSION,
 	STRUCTURE_STORAGE,
 	STRUCTURE_TERMINAL,
+	STRUCTURE_CONTAINER,
 	STRUCTURE_LINK,
 	STRUCTURE_EXTRACTOR,
 	STRUCTURE_LAB,

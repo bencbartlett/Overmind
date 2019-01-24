@@ -3,6 +3,10 @@ import {CombatZerg} from '../zerg/CombatZerg';
 import {SpawnGroup} from '../logistics/SpawnGroup';
 
 
+export interface CombatOverlordOptions {
+
+}
+
 export abstract class CombatOverlord extends Overlord {
 
 	spawnGroup: SpawnGroup;

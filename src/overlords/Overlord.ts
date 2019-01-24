@@ -101,8 +101,7 @@ export abstract class Overlord {
 	 * and the corresponding role groups (e.g. 'queens') are automatically updated. Child methods do not need to
 	 * refresh their zerg properties, only other room objects stored on the Overlord. */
 	refresh(): void {
-		// this.memory = this.initializer.memory[this.name];
-		// // Handle suspension
+		// // Handle suspension // TODO: finish this
 		// if (this.memory.suspendUntil) {
 		// 	if (Game.time < this.memory.suspendUntil) {
 		// 		return;
@@ -300,7 +299,7 @@ export abstract class Overlord {
 			}
 			spawner.enqueue(request);
 		} else {
-			if (Game.time % 25 == 0) {
+			if (Game.time % 100 == 0) {
 				log.warning(`Overlord ${this.ref} @ ${this.pos.print}: no spawner object!`);
 			}
 		}
@@ -324,7 +323,7 @@ export abstract class Overlord {
 			}
 			spawner.enqueue(request);
 		} else {
-			if (Game.time % 25 == 0) {
+			if (Game.time % 100 == 0) {
 				log.warning(`Overlord ${this.ref} @ ${this.pos.print}: no spawner object!`);
 			}
 		}

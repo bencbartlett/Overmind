@@ -1,10 +1,10 @@
 import {Overlord} from '../Overlord';
 import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
-import {Directive} from '../../directives/Directive';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Roles, Setups} from '../../creepSetups/setups';
+import {DirectiveColonize} from '../../directives/colony/colonize';
 
 @profile
 export class PioneerOverlord extends Overlord {
@@ -12,7 +12,7 @@ export class PioneerOverlord extends Overlord {
 	pioneers: Zerg[];
 	spawnSite: ConstructionSite | undefined;
 
-	constructor(directive: Directive, priority = OverlordPriority.colonization.pioneer) {
+	constructor(directive: DirectiveColonize, priority = OverlordPriority.colonization.pioneer) {
 		super(directive, 'pioneer', priority);
 		this.pioneers = this.zerg(Roles.pioneer);
 		this.spawnSite = this.room ? _.filter(this.room.constructionSites,
