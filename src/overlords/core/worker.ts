@@ -263,7 +263,11 @@ export class WorkerOverlord extends Overlord {
 	private handleWorker(worker: Zerg) {
 		if (worker.carry.energy > 0) {
 			// Upgrade controller if close to downgrade
-			if (this.colony.controller.ticksToDowngrade <= 1000) {
+			let ticksToDowngrade = 1000;
+			if(this.colony.level >= 4) {
+				ticksToDowngrade = 10000;
+			}
+			if (this.colony.controller.ticksToDowngrade <= ticksToDowngrade) {
 				if (this.upgradeActions(worker)) return;
 			}
 			// Repair damaged non-road non-barrier structures
