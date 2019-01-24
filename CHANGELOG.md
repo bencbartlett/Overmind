@@ -3,6 +3,29 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+### Added
+- Visualizer improvements:
+    - Added a dashboard section for the evolution chamber
+    - Labs now display their mineralTypes overlaid as a room visual
+- Improvements to swarms:
+    - All overlords controlling swarms are now extended from the `SwarmOverlord <- CombatOverlord <- Overlord` class
+        - New `swarmWishlist` method prevents swarms from spawning "out of sync"
+    - Improvements to swarm assembly point calculations; supports multiple swarms now
+
+
+### Changed
+- Rewrote the boosting protocol to account for the removal of [pre-boosting capabilities](https://blog.screeps.com/2018/12/changelog-2018-12-14/#Other-changes). RIP in-spawn boosting, you will be missed... :'(
+    - Instead of three booster labs (one adjacent to each spawn), each applying every boost to their respective creeps, the new system allows up to 8 boosting labs, which will contain the total current amount of each distinct resource needed by all creeps currently being spawned by the colony.
+- Improvements to keeping newly-constructed ramparts alive at low RCL: towers will repair critical ramparts below RCL5, and workers will prioritize fortifying critical ramparts above repairs
+
+
+### Fixed
+- Security patches and bugfixes for the `Assimilator`
+- Pioneers and claimers should no longer navigate through dangerous source keeper territory
+- Fixed an issue in `TaskRecharge` which could cause some creeps, like pioneers, to not harvest from a fully-surrounded source that they were adjacent to, causing gridlock situations
+- Added a check to prevent `Overlord.wishlist()` from requesting too many creeps; this was prompted due to a subtle division by zero error in `outpostDefenseOverlord` causing Overmind to crash in the last two BotArena rounds
+
+
 ## Overmind [0.5.1] - 2019.1.2
 
 This patch changes the architecture of Overmind to be much more CPU efficient by introducing a cache-friendly `refresh()` phase to the main loop. See [this blog post](https://bencbartlett.wordpress.com/2019/01/02/screeps-6-verifiably-refreshed/) for more details. Additionally, the `Visualizer` system has been rewritten, and prelimiary support for assimilation and swarms has been added.
