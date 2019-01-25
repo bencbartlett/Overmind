@@ -9,6 +9,7 @@ import {baseStockAmounts, priorityStockAmounts, wantedStockAmounts} from '../res
 import {alignedNewline, bullet, rightArrow} from '../utilities/stringConstants';
 import {assimilationLocked} from '../assimilation/decorator';
 import {$} from '../caching/GlobalCache';
+import {MAX_ENERGY_SELL_ORDERS} from './TradeNetwork';
 
 interface TerminalNetworkMemory {
 	equalizeIndex: number;
@@ -211,33 +212,40 @@ export class TerminalNetwork implements ITerminalNetwork {
 		if (sender) {
 			this.transfer(sender, receiver, resourceType, amount, 'resource request');
 		} else if (allowBuy) {
-			Overmind.tradeNetwork.buyMineral(receiver, resourceType, amount);
+			Overmind.tradeNetwork.buy(receiver, resourceType, amount);
 		}
 	}
 
 	/* Sell excess minerals on the market */
 
 	private handleExcess(terminal: StructureTerminal, threshold = 25000): void {
+
 		let terminalNearCapacity = _.sum(terminal.store) > 0.9 * terminal.storeCapacity;
 		let energyOrders = _.filter(Game.market.orders, order => order.type == ORDER_SELL &&
 																 order.resourceType == RESOURCE_ENERGY);
-		let energyThreshold = Energetics.settings.terminal.energy.outThreshold
-							  + Energetics.settings.terminal.energy.sendSize;
+
 		for (let resource in terminal.store) {
 			if (resource == RESOURCE_POWER) {
 				continue;
 			}
 			if (resource == RESOURCE_ENERGY) {
+
+				let energyThreshold = Energetics.settings.terminal.energy.outThreshold;
+				if (terminalNearCapacity) { // if you're close to full, be more agressive with selling energy
+					energyThreshold = Energetics.settings.terminal.energy.equilibrium;
+				}
 				if (terminal.store[RESOURCE_ENERGY] > energyThreshold) {
 					if (terminalNearCapacity) { // just get rid of stuff at high capacities
-						let response = Overmind.tradeNetwork.sellDirectly(terminal, RESOURCE_ENERGY, 10000);
+						let response = Overmind.tradeNetwork.sellDirectly(terminal, RESOURCE_ENERGY, 10000, true);
 						if (response == OK) return;
-					} else if (energyOrders.length < 3) {
+					} else if (energyOrders.length < MAX_ENERGY_SELL_ORDERS) {
 						let response = Overmind.tradeNetwork.sell(terminal, RESOURCE_ENERGY, 50000);
 						if (response == OK) return;
 					}
 				}
+
 			} else {
+
 				if (terminal.store[<ResourceConstant>resource]! > threshold) {
 					let receiver = maxBy(this.terminals,
 										 terminal => wantedAmount(colonyOf(terminal),
@@ -257,6 +265,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 						}
 					}
 				}
+
 			}
 		}
 	}

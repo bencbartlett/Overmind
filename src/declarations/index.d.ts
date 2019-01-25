@@ -185,11 +185,12 @@ interface ITradeNetwork {
 
 	lookForGoodDeals(terminal: StructureTerminal, mineral: string, margin?: number): void;
 
-	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount?: number): number | undefined;
+	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount?: number,
+				 flexibleAmount?: boolean): number | undefined;
 
 	sell(terminal: StructureTerminal, resource: ResourceConstant, amount?: number): number | undefined;
 
-	buyMineral(terminal: StructureTerminal, mineralType: ResourceConstant, amount: number): void;
+	buy(terminal: StructureTerminal, mineralType: ResourceConstant, amount: number): void;
 
 	init(): void;
 

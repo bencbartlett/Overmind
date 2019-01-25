@@ -60,6 +60,8 @@ export const maxMarketPrices: { [resourceType: string]: number } = {
 	[RESOURCE_CATALYST] : 0.5,
 };
 
+export const MAX_ENERGY_SELL_ORDERS = 5;
+
 @profile
 @assimilationLocked
 export class TraderJoe implements ITradeNetwork {
@@ -181,21 +183,20 @@ export class TraderJoe implements ITradeNetwork {
 	}
 
 	/* Opportunistically sells resources when the buy price is higher than current market sell low price*/
-	lookForGoodDeals(terminal: StructureTerminal, mineral: string, margin = 1.25): void {
+	lookForGoodDeals(terminal: StructureTerminal, resource: ResourceConstant, margin = 1.25): void {
 		if (Game.market.credits < TraderJoe.settings.market.reserveCredits) {
 			return;
 		}
 		let amount = 5000;
-		if (mineral === RESOURCE_POWER) {
+		if (resource === RESOURCE_POWER) {
 			amount = 100;
 		}
-		let ordersForMineral = Game.market.getAllOrders(function (o: Order) {
-			return o.type === ORDER_BUY && o.resourceType === mineral && o.amount >= amount;
-		}) as Order[];
+		let ordersForMineral = Game.market.getAllOrders({resourceType: resource, type: ORDER_BUY});
+		ordersForMineral = _.filter(ordersForMineral, order => order.amount >= amount);
 		if (ordersForMineral === undefined) {
 			return;
 		}
-		let marketLow = this.memory.cache.sell[mineral] ? this.memory.cache.sell[mineral].low : undefined;
+		let marketLow = this.memory.cache.sell[resource] ? this.memory.cache.sell[resource].low : undefined;
 		if (marketLow == undefined) {
 			return;
 		}
@@ -210,14 +211,43 @@ export class TraderJoe implements ITradeNetwork {
 		}
 	}
 
-	/* Sell resources directly to a buyer rather than making a sell order */
-	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount = 1000): number | undefined {
-		let ordersForMineral = Game.market.getAllOrders(
-			o => o.type == ORDER_BUY && o.resourceType == resource && o.amount >= amount
-		);
-		if (!ordersForMineral) {
+	buy(terminal: StructureTerminal, resource: ResourceConstant, amount: number): void {
+		if (Game.market.credits < TraderJoe.settings.market.reserveCredits || terminal.cooldown > 0) {
 			return;
 		}
+		amount = Math.max(amount, TERMINAL_MIN_SEND);
+		if (terminal.store[RESOURCE_ENERGY] < 10000 || terminal.storeCapacity - _.sum(terminal.store) < amount) {
+			return;
+		}
+		let ordersForMineral = Game.market.getAllOrders({resourceType: resource, type: ORDER_SELL});
+		ordersForMineral = _.filter(ordersForMineral, order => order.amount >= amount);
+		let bestOrder = minBy(ordersForMineral, (order: Order) => order.price);
+		let maxPrice = maxMarketPrices[resource] || maxMarketPrices.default;
+		let onMMO = Game.shard.name.includes('shard');
+		if (!onMMO) {
+			maxPrice = Infinity; // don't care about price limits if on private server
+		}
+		if (bestOrder && bestOrder.price <= maxPrice) {
+			let response = Game.market.deal(bestOrder.id, amount, terminal.room.name);
+			this.logTransaction(bestOrder, terminal.room.name, amount, response);
+		}
+	}
+
+	sell(terminal: StructureTerminal, resource: ResourceConstant, amount = 10000): number | undefined {
+		if (Game.market.credits < TraderJoe.settings.market.reserveCredits) {
+			return this.sellDirectly(terminal, resource, amount);
+		} else {
+			this.maintainSellOrder(terminal, resource, amount);
+		}
+	}
+
+	/* Sell resources directly to a buyer rather than making a sell order */
+	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant,
+				 amount = 1000, flexibleAmount = true): number | undefined {
+		// If flexibleAmount is allowed, consider selling to orders which don't need the full amount
+		let minAmount = flexibleAmount ? TERMINAL_MIN_SEND : amount;
+		let ordersForMineral = Game.market.getAllOrders({resourceType: resource, type: ORDER_BUY});
+		ordersForMineral = _.filter(ordersForMineral, order => order.amount >= minAmount);
 		let order = maxBy(ordersForMineral, order => this.effectiveBuyPrice(order, terminal));
 		if (order) {
 			let sellAmount = Math.min(order.amount, amount);
@@ -261,14 +291,6 @@ export class TraderJoe implements ITradeNetwork {
 		}
 	}
 
-	sell(terminal: StructureTerminal, resource: ResourceConstant, amount = 10000): number | undefined {
-		if (Game.market.credits < TraderJoe.settings.market.reserveCredits) {
-			return this.sellDirectly(terminal, resource, amount);
-		} else {
-			this.maintainSellOrder(terminal, resource, amount);
-		}
-	}
-
 	priceOf(mineralType: ResourceConstant): number {
 		if (this.memory.cache.sell[mineralType]) {
 			return this.memory.cache.sell[mineralType].low;
@@ -277,28 +299,6 @@ export class TraderJoe implements ITradeNetwork {
 		}
 	}
 
-	buyMineral(terminal: StructureTerminal, mineralType: ResourceConstant, amount: number): void {
-		if (Game.market.credits < TraderJoe.settings.market.reserveCredits || terminal.cooldown > 0) {
-			return;
-		}
-		amount = Math.max(amount, TERMINAL_MIN_SEND);
-		if (terminal.store[RESOURCE_ENERGY] < 10000 || terminal.storeCapacity - _.sum(terminal.store) < amount) {
-			return;
-		}
-		let ordersForMineral = Game.market.getAllOrders(
-			order => order.type == ORDER_SELL && order.resourceType == mineralType && order.amount >= amount
-		);
-		let bestOrder = minBy(ordersForMineral, (order: Order) => order.price);
-		let maxPrice = maxMarketPrices[mineralType] || maxMarketPrices.default;
-		let onMMO = Game.shard.name.includes('shard');
-		if (!onMMO) {
-			maxPrice = Infinity; // don't care about price limits if on private server
-		}
-		if (bestOrder && bestOrder.price <= maxPrice) {
-			let response = Game.market.deal(bestOrder.id, amount, terminal.room.name);
-			this.logTransaction(bestOrder, terminal.room.name, amount, response);
-		}
-	}
 
 	private logTransaction(order: Order, terminalRoomName: string, amount: number, response: number): void {
 		let action = order.type == ORDER_SELL ? 'BOUGHT ' : 'SOLD   ';

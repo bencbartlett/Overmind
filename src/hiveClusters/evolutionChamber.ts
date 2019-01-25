@@ -536,7 +536,7 @@ export class EvolutionChamber extends HiveCluster {
 		// Lab visuals
 		for (let lab of this.labs) {
 			if (lab.mineralType) {
-				vis.resource(lab.mineralType, lab.pos.x, lab.pos.y, 0.25, 0.5);
+				vis.resource(lab.mineralType, lab.pos.x, lab.pos.y);
 			}
 		}
 		// Draw lab report
