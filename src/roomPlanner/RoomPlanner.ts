@@ -16,6 +16,7 @@ import {DirectiveTerminalRebuildState} from '../directives/terminalState/termina
 import {derefCoords, maxBy, onPublicServer} from '../utilities/utils';
 import {bullet} from '../utilities/stringConstants';
 import {Pathing} from '../movement/Pathing';
+import {isOwnedStructure} from '../declarations/typeGuards';
 
 export interface BuildingPlannerOutput {
 	name: string;
@@ -146,11 +147,11 @@ export class RoomPlanner {
 	}
 
 	/* Recall or reconstruct the appropriate map from memory */
-	private recallMap(): void {
+	private recallMap(level = this.colony.controller.level): void {
 		if (this.memory.bunkerData && this.memory.bunkerData.anchor) {
-			this.map = this.getStructureMapForBunkerAt(this.memory.bunkerData.anchor, this.colony.controller.level);
+			this.map = this.getStructureMapForBunkerAt(this.memory.bunkerData.anchor, level);
 		} else if (this.memory.mapsByLevel) {
-			this.map = _.mapValues(this.memory.mapsByLevel[this.colony.controller.level], posArr =>
+			this.map = _.mapValues(this.memory.mapsByLevel[level], posArr =>
 				_.map(posArr, protoPos => derefRoomPosition(protoPos)));
 		}
 	}
@@ -478,7 +479,8 @@ export class RoomPlanner {
 	}
 
 	/* Whether a structure (or constructionSite) of given type should be at location. */
-	structureShouldBeHere(structureType: StructureConstant, pos: RoomPosition): boolean {
+	structureShouldBeHere(structureType: StructureConstant, pos: RoomPosition,
+						  level = this.colony.controller.level): boolean {
 		if (structureType == STRUCTURE_ROAD) {
 			return this.roadShouldBeHere(pos);
 		} else if (structureType == STRUCTURE_RAMPART) {
@@ -487,7 +489,7 @@ export class RoomPlanner {
 			return pos.lookFor(LOOK_MINERALS).length > 0;
 		} else {
 			if (_.isEmpty(this.map)) {
-				this.recallMap();
+				this.recallMap(level);
 			}
 			let positions = this.map[structureType];
 			if (positions && _.find(positions, p => p.isEqualTo(pos))) {
@@ -516,17 +518,21 @@ export class RoomPlanner {
 				DirectiveTerminalRebuildState.createIfNotPresent(this.colony.terminal.pos, 'pos');
 			}
 		}
+
 		// Max buildings that can be placed each tick
 		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
+
 		// Recall the appropriate map
 		this.recallMap();
 		if (!this.map || this.map == {}) { // in case a map hasn't been generated yet
 			log.info(this.colony.name + ' does not have a room plan yet! Unable to demolish errant structures.');
 		}
+
 		// Destroy extractor if needed
 		if (this.colony.room.extractor && !this.colony.room.extractor.my) {
 			this.colony.room.extractor.destroy();
 		}
+
 		// Build missing structures from room plan
 		this.memory.relocating = false;
 		for (let priority of DemolishStructurePriorities) {
@@ -542,15 +548,17 @@ export class RoomPlanner {
 			}
 			let maxRemoved = priority.maxRemoved || Infinity;
 			let removeCount = 0;
-			let structures = _.filter(this.colony.room.find(FIND_STRUCTURES), s => s.structureType == structureType);
+			let structures: Structure[] = _.filter(this.colony.room.find(FIND_STRUCTURES),
+												   s => s.structureType == structureType);
 			if (structureType == STRUCTURE_WALL) {
 				structures = _.filter(structures, wall => wall.hits != undefined); // can't destroy newbie walls
 			}
-			// let dismantleCount = _.filter(structures,
-			// 							  s => _.filter(s.pos.lookFor(LOOK_FLAGS),
-			// 											flag => DirectiveDismantle.filter(flag)).length > 0).length;
+
+			// Loop through all structures and conditionally remove ones which are misplaced
 			for (let structure of structures) {
-				if (!this.structureShouldBeHere(structureType, structure.pos)) {
+				if (!this.structureShouldBeHere(structureType, structure.pos) ||
+					(isOwnedStructure(structure) && !structure.my)) {
+					// remove misplaced structures or hostile owned structures, with exceptions below
 					if (this.colony.level < 4
 						&& (structureType == STRUCTURE_STORAGE || structureType == STRUCTURE_TERMINAL)) {
 						break; // don't destroy terminal or storage when under RCL4 - can use energy inside
@@ -558,6 +566,7 @@ export class RoomPlanner {
 					if (structureType != STRUCTURE_WALL && structureType != STRUCTURE_RAMPART) {
 						this.memory.relocating = true;
 					}
+
 					// Don't remove the terminal until you have rebuilt storage
 					if (this.colony.level >= 6 && structureType == STRUCTURE_TERMINAL) {
 						if (!this.colony.storage) {
@@ -569,8 +578,10 @@ export class RoomPlanner {
 							return;
 						}
 					}
+
+					// Only remove a maximum number of structures at a time
 					let amountMissing = CONTROLLER_STRUCTURES[structureType][this.colony.level] - structures.length
-										+ removeCount; // + dismantleCount;
+										+ removeCount;
 					if (amountMissing < maxRemoved) {
 						if (structureType == STRUCTURE_SPAWN && this.colony.spawns.length == 1) {
 							let spawnCost = 15000;
@@ -602,8 +613,10 @@ export class RoomPlanner {
 						removeCount++;
 						this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
 					}
+
 				}
 			}
+
 			if (this.memory.relocating && !destroyAllStructureTypes) {
 				return;
 			}

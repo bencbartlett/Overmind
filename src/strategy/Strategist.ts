@@ -10,7 +10,7 @@ import {maxBy} from '../utilities/utils';
 import {log} from '../console/log';
 import {Pathing} from '../movement/Pathing';
 import {assimilationLocked} from '../assimilation/decorator';
-import {SHARD3_MAX_OWNED_ROOMS} from '../~settings';
+import {MAX_OWNED_ROOMS, SHARD3_MAX_OWNED_ROOMS} from '../~settings';
 
 
 const CHECK_EXPANSION_FREQUENCY = 1000;
@@ -42,8 +42,8 @@ export class Strategist implements IStrategist {
 
 	private handleExpansion(): void {
 		let allColonies = getAllColonies();
-		// If you already have max number of oclonies, ignore
-		if (allColonies.length == Game.gcl.level) {
+		// If you already have max number of colonies, ignore
+		if (allColonies.length >= Math.min(Game.gcl.level, MAX_OWNED_ROOMS)) {
 			return;
 		}
 		// If you are on shard3, limit to 3 owned rooms // TODO: use CPU-based limiting metric

@@ -226,7 +226,7 @@ export class Overseer implements IOverseer {
 						  flag => (flag.memory.setPosition || flag.pos).roomName == roomName)
 				&& !Overmind.colonies[roomName]
 				&& !RoomIntel.roomOwnedBy(roomName)
-				// && !RoomIntel.roomReservedBy(roomName)
+				// && !RoomIntel.roomReservedBy(roomName) // TODO: why did I comment this out?
 				&& Game.map.isRoomAvailable(roomName));
 			// log.debug(`Possible outposts: ${possibleOutposts}`);
 			let origin = colony.pos;

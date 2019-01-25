@@ -191,6 +191,10 @@ export class Colony {
 		this.build(roomName, outposts);
 	}
 
+	get print(): string {
+		return '<a href="#!/room/' + Game.shard.name + '/' + this.room.name + '">[' + this.name + ']</a>';
+	}
+
 	build(roomName: string, outposts: string[]): void {
 		// Register rooms
 		this.roomNames = [roomName].concat(outposts);
