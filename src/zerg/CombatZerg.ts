@@ -67,7 +67,7 @@ export class CombatZerg extends Zerg {
 			// Find a swarm that isn't too old and that has space for the creep's role
 			let partnersBySwarm = _.groupBy(partners, partner => partner.memory.swarm);
 			for (let swarmRef in partnersBySwarm) {
-				if (swarmRef == undefined) continue;
+				if (swarmRef == undefined || swarmRef == 'undefined') continue;
 				if (_.all(partnersBySwarm[swarmRef],
 						  c => Math.abs((this.ticksToLive || CREEP_LIFE_TIME)
 										- (c.ticksToLive || CREEP_LIFE_TIME)) <= tickDifference)) {

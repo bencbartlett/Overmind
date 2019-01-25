@@ -104,7 +104,8 @@ export class BunkerQueenOverlord extends Overlord {
 				this.colony.logisticsNetwork.requestOutputMinerals(battery);
 			}
 		}
-		const amount = this.colony.spawns.length > 1 ? 2 : 1;
+		// const amount = this.colony.spawns.length > 1 ? 2 : 1;
+		const amount = this.colony.room.energyCapacityAvailable > 2000 ? 2 : 1;
 		this.wishlist(amount, this.queenSetup);
 	}
 
@@ -126,8 +127,7 @@ export class BunkerQueenOverlord extends Overlord {
 		// Step 2: figure out what you need to supply for and calculate the needed resources
 		let queenCarry = {} as { [resourceType: string]: number };
 		let allStore = mergeSum(_.map(this.storeStructures, s => s.store));
-		// let allSupplyRequests = _.compact(_.flatten(_.map(this.assignments[queen.name],
-		// 												  struc => this.transportRequests.supplyByID[struc.id])));
+
 		let supplyRequests: TransportRequest[] = [];
 		for (let priority in this.colony.transportRequests.supply) {
 			for (let request of this.colony.transportRequests.supply[priority]) {
@@ -157,21 +157,15 @@ export class BunkerQueenOverlord extends Overlord {
 		let withdrawTasks: Task[] = [];
 		let neededResources = _.keys(queenCarry) as ResourceConstant[];
 		// TODO: a single structure doesn't need to have all resources; causes jam if labs need supply but no minerals
-		let targets = _.filter(this.storeStructures,
-							   s => _.all(neededResources,
-										  resource => (s.store[resource] || 0) >= (queenCarry[resource] || 0)));
-		let withdrawTarget: StoreStructure | undefined;
-		if (targets.length > 1) {
-			withdrawTarget = minBy(targets, target => Pathing.distance(queenPos, target.pos));
-		} else {
-			withdrawTarget = _.first(targets);
-		}
+		let targets: StoreStructure[] = _.filter(this.storeStructures, s =>
+			_.all(neededResources, resource => (s.store[resource] || 0) >= (queenCarry[resource] || 0)));
+		let withdrawTarget = minBy(targets, target => Pathing.distance(queenPos, target.pos));
 		if (!withdrawTarget) {
-			log.warning(`Could not get adequate withdraw structure for ${queen.name}@${queen.pos.print}!`);
+			log.warning(`Could not find adequate withdraw structure for ${queen.print}!`);
 			return null;
 		}
 		for (let resourceType of neededResources) {
-			withdrawTasks.push(Tasks.withdraw(withdrawTarget!, resourceType, queenCarry[resourceType]));
+			withdrawTasks.push(Tasks.withdraw(withdrawTarget, resourceType, queenCarry[resourceType]));
 		}
 		// Step 4: put all the tasks in the correct order, set nextPos for each, and chain them together
 		tasks = tasks.concat(withdrawTasks, supplyTasks);

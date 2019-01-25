@@ -162,7 +162,7 @@ export class OvermindConsole {
 				return value;
 			}, '\t');
 			cache = null;
-			log.debug(msg);
+			console.log(msg);
 		}
 		return 'Done.';
 	}

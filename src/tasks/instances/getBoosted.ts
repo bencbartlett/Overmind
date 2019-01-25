@@ -42,6 +42,9 @@ export class TaskGetBoosted extends Task {
 	}
 
 	work() {
+		if (this.creep.spawning) {
+			return ERR_INVALID_TARGET;
+		}
 		let partCount = (this.data.amount || this.creep.getActiveBodyparts(boostParts[this.data.resourceType]));
 		if (this.target.mineralType == this.data.resourceType &&
 			this.target.mineralAmount >= LAB_BOOST_MINERAL * partCount &&

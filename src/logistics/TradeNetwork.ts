@@ -1,6 +1,6 @@
 import {Mem} from '../memory/Memory';
 import {profile} from '../profiler/decorator';
-import {maxBy, minBy, printRoomName} from '../utilities/utils';
+import {maxBy, minBy, onPublicServer, printRoomName} from '../utilities/utils';
 import {alignedNewline, bullet, leftArrow, rightArrow} from '../utilities/stringConstants';
 import {log} from '../console/log';
 import {assimilationLocked} from '../assimilation/decorator';
@@ -223,8 +223,7 @@ export class TraderJoe implements ITradeNetwork {
 		ordersForMineral = _.filter(ordersForMineral, order => order.amount >= amount);
 		let bestOrder = minBy(ordersForMineral, (order: Order) => order.price);
 		let maxPrice = maxMarketPrices[resource] || maxMarketPrices.default;
-		let onMMO = Game.shard.name.includes('shard');
-		if (!onMMO) {
+		if (!onPublicServer()) {
 			maxPrice = Infinity; // don't care about price limits if on private server
 		}
 		if (bestOrder && bestOrder.price <= maxPrice) {

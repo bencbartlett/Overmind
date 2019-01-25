@@ -2,7 +2,7 @@
 
 import {Colony, getAllColonies} from '../Colony';
 import {REAGENTS} from './map_resources';
-import {mergeSum, minMax} from '../utilities/utils';
+import {mergeSum, minMax, onPublicServer} from '../utilities/utils';
 import {profile} from '../profiler/decorator';
 import {maxMarketPrices, TraderJoe} from '../logistics/TradeNetwork';
 import {Mem} from '../memory/Memory';
@@ -147,15 +147,14 @@ export class Abathur {
 	}
 
 
-	private canBuyBasicMineralsForReaction(mineralQuantities: { [resourceType: string]: number },
-										   priceSensitive = true): boolean {
+	private canBuyBasicMineralsForReaction(mineralQuantities: { [resourceType: string]: number }): boolean {
 		if (Game.market.credits < TraderJoe.settings.market.reserveCredits) {
 			return false;
 		}
 		for (let mineral in mineralQuantities) {
-			let maxPrice = maxMarketPrices.default;
-			if (priceSensitive && maxMarketPrices[mineral]) {
-				maxPrice = maxMarketPrices[mineral];
+			let maxPrice = maxMarketPrices[mineral] || maxMarketPrices.default;
+			if (!onPublicServer()) {
+				maxPrice = Infinity;
 			}
 			if (Overmind.tradeNetwork.priceOf(<ResourceConstant>mineral) > maxPrice) {
 				return false;
@@ -187,7 +186,7 @@ export class Abathur {
 				let amountNeeded = stocks[resourceType];
 				if (amountOwned < amountNeeded) { // if there is a shortage of this resource
 					let reactionQueue = this.buildReactionQueue(<ResourceConstant>resourceType,
-						amountNeeded - amountOwned, verbose);
+																amountNeeded - amountOwned, verbose);
 					let missingBaseMinerals = this.getMissingBasicMinerals(reactionQueue);
 					if (!_.any(missingBaseMinerals)
 						|| this.canReceiveBasicMineralsForReaction(missingBaseMinerals, amountNeeded + 1000)

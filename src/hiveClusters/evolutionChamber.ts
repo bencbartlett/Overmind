@@ -305,6 +305,7 @@ export class EvolutionChamber extends HiveCluster {
 			let {mineralType, amount} = this.labReservations[lab.id];
 			// Empty out incorrect minerals
 			if (lab.mineralType != mineralType && lab.mineralAmount > 0) {
+				console.log(`${this.room.print}: Lab mineral ${lab.mineralType} does not match ${mineralType}`);
 				this.transportRequests.requestOutput(lab, Priority.NormalHigh, {resourceType: lab.mineralType!});
 			} else {
 				this.transportRequests.requestInput(lab, Priority.NormalHigh, {
@@ -319,12 +320,15 @@ export class EvolutionChamber extends HiveCluster {
 		// Separate product labs into actively boosting or ready for reaction
 		let boostingProductLabs = _.filter(this.productLabs, lab => this.labReservations[lab.id]);
 		let reactionProductLabs = _.filter(this.productLabs, lab => !this.labReservations[lab.id]);
-		// Request high priority energy to booster lab
+
+		// Handle energy requests for labs with different priorities
 		let boostingRefillLabs = _.filter(boostingProductLabs, lab => lab.energy < lab.energyCapacity);
 		_.forEach(boostingRefillLabs, lab => this.transportRequests.requestInput(lab, Priority.High));
-		// Refill labs needing energy with lower priority for all non-boosting labs
-		let refillLabs = _.filter(reactionProductLabs, lab => lab.energy < lab.energyCapacity);
-		_.forEach(refillLabs, lab => this.transportRequests.requestInput(lab, Priority.NormalLow));
+		let reactionRefillLabs = _.filter(reactionProductLabs, lab => lab.energy < lab.energyCapacity);
+		_.forEach(reactionRefillLabs, lab => this.transportRequests.requestInput(lab, Priority.NormalLow));
+		let reagentRefillLabs = _.filter(this.reagentLabs, lab => lab.energy < lab.energyCapacity);
+		_.forEach(reagentRefillLabs, lab => this.transportRequests.requestInput(lab, Priority.NormalLow));
+
 		// Request resources delivered to / withdrawn from each type of lab
 		this.reagentLabRequests(this.reagentLabs as [StructureLab, StructureLab]);
 		this.productLabRequests(reactionProductLabs);
@@ -399,6 +403,7 @@ export class EvolutionChamber extends HiveCluster {
 		if (this.memory.status == LabStatus.Idle) {
 			this.memory.activeReaction = this.memory.reactionQueue.shift();
 		}
+
 		// // Set boosting lab reservations and compute needed resources
 		// for (let labID in this.boostQueue) {
 		// 	let boostLab = deref(labID) as StructureLab;
@@ -417,6 +422,7 @@ export class EvolutionChamber extends HiveCluster {
 		// 		this.reserveLab(<_ResourceConstantSansEnergy>boostType, boostAmount, boostLab);
 		// 	}
 		// }
+
 		// Set boosting lab reservations and compute needed resources
 		for (let mineralType in this.neededBoosts) {
 
@@ -435,6 +441,7 @@ export class EvolutionChamber extends HiveCluster {
 				this.reserveLab(<_ResourceConstantSansEnergy>mineralType, this.neededBoosts[mineralType], boostLab);
 			}
 		}
+
 		this.initLabStatus();
 		this.registerRequests();
 	}
@@ -457,7 +464,7 @@ export class EvolutionChamber extends HiveCluster {
 		for (let resourceType in missingBasicMinerals) {
 			if (missingBasicMinerals[resourceType] > 0) {
 				this.terminalNetwork.requestResource(this.terminal, <ResourceConstant>resourceType,
-													 missingBasicMinerals[resourceType]);
+													 missingBasicMinerals[resourceType], true);
 			}
 		}
 		// Run the reactions
@@ -520,7 +527,7 @@ export class EvolutionChamber extends HiveCluster {
 		if (this.memory.status == LabStatus.Synthesizing && activeReaction) {
 			let amountDone = _.sum(_.map(this.productLabs,
 										 lab => lab.mineralType == activeReaction!.mineralType ? lab.mineralAmount : 0));
-			Visualizer.text(`RXN: ${activeReaction.mineralType}`, {x: boxX, y: y, roomName: this.room.name});
+			Visualizer.text(activeReaction.mineralType, {x: boxX, y: y, roomName: this.room.name});
 			Visualizer.barGraph([amountDone, activeReaction.amount],
 								{x: boxX + 4, y: y, roomName: this.room.name}, 5);
 			y += 1;

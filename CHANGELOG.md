@@ -24,6 +24,9 @@ All notable changes to this project will be documented in this file. The format 
 - Pioneers and claimers should no longer navigate through dangerous source keeper territory
 - Fixed an issue in `TaskRecharge` which could cause some creeps, like pioneers, to not harvest from a fully-surrounded source that they were adjacent to, causing gridlock situations
 - Added a check to prevent `Overlord.wishlist()` from requesting too many creeps; this was prompted due to a subtle division by zero error in `outpostDefenseOverlord` causing Overmind to crash in the last two BotArena rounds
+- Fixed a bug causing excess energy to accumulate in terminals rather than be sold on the market as much as it should
+- Fixed an issue causing `CombatZerg` to occasionally load as `Zerg`
+- Fixed a bug in `Abathur.getReactionQueue()` which could cause it to ignore market resources on private servers
 
 
 ## Overmind [0.5.1] - 2019.1.2

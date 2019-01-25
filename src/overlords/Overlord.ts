@@ -197,7 +197,11 @@ export abstract class Overlord {
 		// Add new creeps which aren't in the _combatZerg record
 		for (let creep of this._creeps[role] || []) {
 			if (!zergNames[creep.name]) {
-				this._combatZerg[role].push(Overmind.zerg[creep.name] || new CombatZerg(creep, notifyWhenAttacked));
+				if (Overmind.zerg[creep.name] && (<CombatZerg>Overmind.zerg[creep.name]).isCombatZerg) {
+					this._combatZerg[role].push(Overmind.zerg[creep.name]);
+				} else {
+					this._combatZerg[role].push(new CombatZerg(creep, notifyWhenAttacked));
+				}
 			}
 		}
 		// Remove dead/reassigned creeps from the _combatZerg record

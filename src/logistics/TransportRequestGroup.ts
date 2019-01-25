@@ -193,7 +193,7 @@ export class TransportRequestGroup {
 	}
 
 	summarize(): void {
-		console.log(`Supply requests:`);
+		console.log(`Supply requests ==========================`);
 		for (let priority in this.supply) {
 			console.log(`Priority: ${priority}`);
 			for (let request of this.supply[priority]) {
@@ -201,7 +201,7 @@ export class TransportRequestGroup {
 							`resourceType: ${request.resourceType}`);
 			}
 		}
-		console.log(`Withdraw requests:`);
+		console.log(`Withdraw requests ========================`);
 		for (let priority in this.withdraw) {
 			console.log(`Priority: ${priority}`);
 			for (let request of this.withdraw[priority]) {

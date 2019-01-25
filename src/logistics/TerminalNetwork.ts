@@ -207,7 +207,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 		amount = Math.max(amount, TERMINAL_MIN_SEND);
 		let possibleSenders = _.filter(this.terminals,
 									   terminal => (terminal.store[resourceType] || 0) > amount + minDifference &&
-												   terminal.cooldown == 0 && !this.alreadySent.includes(terminal));
+												   terminal.cooldown == 0 && !this.alreadySent.includes(terminal) &&
+												   terminal.id != receiver.id);
 		let sender: StructureTerminal | undefined = maxBy(possibleSenders, t => (t.store[resourceType] || 0));
 		if (sender) {
 			this.transfer(sender, receiver, resourceType, amount, 'resource request');

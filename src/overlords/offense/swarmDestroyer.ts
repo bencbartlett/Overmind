@@ -94,7 +94,6 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 	}
 
 	init() {
-		const numSwarms = 1;
 		let zerglingPriority = this.zerglings.length <= this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
 		let zerglingSetup = this.canBoostSetup(CombatSetups.zerglings.boosted_T3) ? CombatSetups.zerglings.boosted_T3
 																				  : CombatSetups.zerglings.default;
@@ -105,8 +104,9 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 																			  : CombatSetups.healers.default;
 		// this.wishlist(2 * numSwarms, healerSetup, {priority: healerPriority});
 
-		let swarmConfig = [{setup: zerglingSetup, amount: 2, priority: zerglingPriority},
-						   {setup: healerSetup, amount: 2, priority: healerPriority}];
+		const numSwarms = 1;
+		const swarmConfig = [{setup: zerglingSetup, amount: 2, priority: zerglingPriority},
+							 {setup: healerSetup, amount: 2, priority: healerPriority}];
 		this.swarmWishlist(numSwarms, swarmConfig);
 	}
 

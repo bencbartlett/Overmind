@@ -56,7 +56,7 @@ export abstract class SwarmOverlord extends CombatOverlord {
 		}
 
 		// Report creep amounts
-		for (let role in _.keys(neededQuantities)) {
+		for (let role of _.keys(neededQuantities)) {
 			this.creepReport(role, creepQuantities[role] || 0, neededQuantities[role]);
 		}
 	}
