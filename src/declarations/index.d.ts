@@ -124,6 +124,10 @@ interface IOvermind {
 
 interface INotifier {
 	alert(message: string, roomName: string, priority?: number): void;
+
+	generateNotificationsList(links: boolean): string[];
+
+	visuals(): void;
 }
 
 interface IOverseer {

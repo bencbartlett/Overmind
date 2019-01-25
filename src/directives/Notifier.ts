@@ -64,9 +64,14 @@ export class Notifier {
 	//
 	// }
 
-	visuals() {
+	generateNotificationsList(links = false): string[] {
 		let sortedAlerts = _.sortBy(this.alerts, alert => alert.priority);
-		let notificationMessages = _.map(sortedAlerts, alert => alert.roomName + ': ' + alert.message);
+		return _.map(sortedAlerts, alert => (links ? printRoomName(alert.roomName) : alert.roomName)
+											+ ': ' + alert.message);
+	}
+
+	visuals(): void {
+		let notificationMessages = this.generateNotificationsList();
 		Visualizer.drawNotifications(notificationMessages);
 	}
 

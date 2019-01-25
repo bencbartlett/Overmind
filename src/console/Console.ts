@@ -12,6 +12,7 @@ export class OvermindConsole {
 	static init() {
 		global.help = this.help();
 		global.info = this.info;
+		global.notifications = this.notifications;
 		global.debug = this.debug;
 		global.stopDebug = this.stopDebug;
 		global.setMode = this.setMode;
@@ -47,6 +48,7 @@ export class OvermindConsole {
 		let descr: { [functionName: string]: string } = {};
 		descr['help'] = 'show this message';
 		descr['info()'] = 'display version and operation information';
+		descr['notifications()'] = 'print a list of notifications with hyperlinks to the console';
 		descr['setMode(mode)'] = 'set the operational mode to "manual", "semiautomatic", or "automatic"';
 		descr['setSignature(newSignature)'] = 'set your controller signature; no argument sets to default';
 		descr['print(...args[])'] = 'log stringified objects to the console';
@@ -95,6 +97,11 @@ export class OvermindConsole {
 		// }
 		const joinChar = aligned ? alignedNewline : '\n';
 		return baseInfo.join(joinChar);
+	}
+
+	static notifications(): string {
+		let notifications = Overmind.overseer.notifier.generateNotificationsList(true);
+		return _.map(notifications, msg => bullet + msg).join('\n');
 	}
 
 	static setMode(mode: operationMode): string {
@@ -239,8 +246,8 @@ export class OvermindConsole {
 		let msg = '';
 		for (let i in Overmind.directives) {
 			let dir = Overmind.directives[i];
-			msg += `Type: ${dir.directiveName}`.padRight(20) +
-				   `Name: ${dir.name}`.padRight(15) +
+			msg += `${bullet}Name: ${dir.print}`.padRight(20) +
+				   `Colony: ${dir.colony.print}`.padRight(20) +
 				   `Pos: ${dir.pos.print}\n`;
 		}
 		return msg;
