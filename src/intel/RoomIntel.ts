@@ -1,19 +1,5 @@
 // Room intel - provides information related to room structure and occupation
 
-// interface SavedRoomObject {
-// 	c: string; 	// coordinate name
-// 	// id: string;	// id of object
-// }
-
-// interface RoomIntelMemory {
-// 	[roomName: string]: {
-// 		sources?: SavedRoomObject[];
-// 		controller?: SavedRoomObject | undefined;
-// 		mineral: SavedRoomObject | undefined;
-// 		sourceKeepers?: SavedRoomObject;
-// 	}
-// }
-
 import {getCacheExpiration, irregularExponentialMovingAverage} from '../utilities/utils';
 import {ExpansionPlanner} from '../strategy/ExpansionPlanner';
 import {Zerg} from '../zerg/Zerg';

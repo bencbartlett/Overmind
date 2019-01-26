@@ -46,7 +46,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 	}
 
 	private computeNeededMutaliskAmount(setup: CreepSetup, enemyRangedPotential: number): number {
-		let mutaliskPotential = setup.getBodyPotential(RANGED_ATTACK, this.colony);
+		let mutaliskPotential = setup.getBodyPotential(RANGED_ATTACK, this.colony); // TODO: body potential from spawnGroup energy?
 		// let worstDamageMultiplier = CombatIntel.minimumDamageMultiplierForGroup(this.room.hostiles);
 		return Math.ceil(1.5 * enemyRangedPotential / mutaliskPotential);
 	}

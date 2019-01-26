@@ -281,7 +281,7 @@ export class EvolutionChamber extends HiveCluster {
 	private productLabRequests(labs: StructureLab[]): void {
 		if (this.memory.activeReaction) {
 			let {mineralType, amount} = this.memory.activeReaction;
-			for (let lab of this.productLabs) {
+			for (let lab of labs) {
 				let labHasWrongMineral = lab.mineralType != mineralType && lab.mineralAmount > 0;
 				let labIsFull = lab.mineralAmount == lab.mineralCapacity;
 				// Empty out incorrect minerals or if it's time to unload or if lab is full
@@ -292,7 +292,7 @@ export class EvolutionChamber extends HiveCluster {
 			}
 		} else {
 			// Labs should be empty when no reaction process is currently happening
-			for (let lab of this.productLabs) {
+			for (let lab of labs) {
 				if (lab.mineralType && lab.mineralAmount > 0) {
 					this.transportRequests.requestOutput(lab, Priority.NormalLow, {resourceType: lab.mineralType});
 				}
@@ -305,7 +305,6 @@ export class EvolutionChamber extends HiveCluster {
 			let {mineralType, amount} = this.labReservations[lab.id];
 			// Empty out incorrect minerals
 			if (lab.mineralType != mineralType && lab.mineralAmount > 0) {
-				console.log(`${this.room.print}: Lab mineral ${lab.mineralType} does not match ${mineralType}`);
 				this.transportRequests.requestOutput(lab, Priority.NormalHigh, {resourceType: lab.mineralType!});
 			} else {
 				this.transportRequests.requestInput(lab, Priority.NormalHigh, {
@@ -471,7 +470,7 @@ export class EvolutionChamber extends HiveCluster {
 		if (this.memory.status == LabStatus.Synthesizing) {
 			let [lab1, lab2] = this.reagentLabs;
 			for (let lab of this.productLabs) {
-				if (lab.cooldown == 0) {
+				if (lab.cooldown == 0 && !this.labReservations[lab.id]) {
 					let result = lab.runReaction(lab1, lab2);
 					if (result == OK) { // update total production amount in memory
 						const product = this.memory.activeReaction ? this.memory.activeReaction.mineralType : 'ERROR';

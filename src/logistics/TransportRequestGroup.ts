@@ -192,19 +192,25 @@ export class TransportRequestGroup {
 		return 0;
 	}
 
-	summarize(): void {
+	summarize(ignoreEnergy = false): void {
 		console.log(`Supply requests ==========================`);
 		for (let priority in this.supply) {
-			console.log(`Priority: ${priority}`);
+			if (this.supply[priority].length > 0) {
+				console.log(`Priority: ${priority}`);
+			}
 			for (let request of this.supply[priority]) {
+				if (ignoreEnergy && request.resourceType == RESOURCE_ENERGY) continue;
 				console.log(`    targetID: ${request.target.ref}  amount: ${request.amount}  ` +
 							`resourceType: ${request.resourceType}`);
 			}
 		}
 		console.log(`Withdraw requests ========================`);
 		for (let priority in this.withdraw) {
-			console.log(`Priority: ${priority}`);
+			if (this.withdraw[priority].length > 0) {
+				console.log(`Priority: ${priority}`);
+			}
 			for (let request of this.withdraw[priority]) {
+				if (ignoreEnergy && request.resourceType == RESOURCE_ENERGY) continue;
 				console.log(`    targetID: ${request.target.ref}  amount: ${request.amount}  ` +
 							`resourceType: ${request.resourceType}`);
 			}
