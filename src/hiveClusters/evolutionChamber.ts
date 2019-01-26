@@ -367,15 +367,6 @@ export class EvolutionChamber extends HiveCluster {
 
 	/* Request boosts sufficient to fully boost a given creep to be added to the boosting queue */
 	requestBoost(creep: Zerg, boostType: _ResourceConstantSansEnergy): void {
-		// if (!this.boostQueue[lab.id]) {
-		// 	this.boostQueue[lab.id] = [];
-		// }
-		// // Boost requests are prioritized by which creep has least time to live
-		// this.boostQueue[lab.id] = _.sortBy([...this.boostQueue[lab.id],
-		// 									{mineralType: mineralType, creepName: creep.name}],
-		// 								   request => (Overmind.zerg[request.creepName].ticksToLive
-		// 											   || 5000 + Overmind.zerg[request.creepName].ticksUntilSpawned
-		// 											   || 9999));
 
 		// Add the required amount to the neededBoosts
 		let boostAmount = EvolutionChamber.requiredBoostAmount(creep.body, boostType);
@@ -385,11 +376,6 @@ export class EvolutionChamber extends HiveCluster {
 		this.neededBoosts[boostType] = Math.min(this.neededBoosts[boostType] + boostAmount, LAB_MINERAL_CAPACITY);
 
 	}
-
-	// /* Zero-indexed position in the boosting queue of a given creep. Equals -1 if creep isn't queued. */
-	// queuePosition(creep: Zerg, lab: StructureLab): number {
-	// 	return _.findIndex(this.boostQueue[lab.id], request => request.creepName == creep.name);
-	// }
 
 	// Initialization and operation ====================================================================================
 
@@ -402,25 +388,6 @@ export class EvolutionChamber extends HiveCluster {
 		if (this.memory.status == LabStatus.Idle) {
 			this.memory.activeReaction = this.memory.reactionQueue.shift();
 		}
-
-		// // Set boosting lab reservations and compute needed resources
-		// for (let labID in this.boostQueue) {
-		// 	let boostLab = deref(labID) as StructureLab;
-		// 	let boostRequest = _.first(this.boostQueue[labID]);
-		// 	let boostType = boostRequest.mineralType;
-		// 	let creep = Overmind.zerg[boostRequest.creepName] as Zerg;
-		// 	let boostAmount = LAB_BOOST_MINERAL * (creep.getActiveBodyparts(boostParts[boostType])
-		// 										   - (creep.boostCounts[boostType] || 0));
-		// 	// add to the needed amount of boosts
-		// 	if (!this.neededBoosts[boostType]) {
-		// 		this.neededBoosts[boostType] = 0;
-		// 	}
-		// 	this.neededBoosts[boostType] += boostAmount;
-		// 	// reserve lab once creep is born or if creep is spawning adjacent to lab
-		// 	if (creep.pos.isNearTo(boostLab) || creep.ticksToLive != undefined) {
-		// 		this.reserveLab(<_ResourceConstantSansEnergy>boostType, boostAmount, boostLab);
-		// 	}
-		// }
 
 		// Set boosting lab reservations and compute needed resources
 		for (let mineralType in this.neededBoosts) {
