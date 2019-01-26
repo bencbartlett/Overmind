@@ -6,6 +6,7 @@ import {asciiLogoSmall} from '../visuals/logos';
 import {log} from './log';
 import {alignedNewline, bullet} from '../utilities/stringConstants';
 import {DEFAULT_OVERMIND_SIGNATURE, MY_USERNAME, USE_PROFILER} from '../~settings';
+import {Directive} from '../directives/Directive';
 
 export class OvermindConsole {
 
@@ -27,7 +28,7 @@ export class OvermindConsole {
 		global.destroyErrantStructures = this.destroyErrantStructures;
 		global.destroyAllHostileStructures = this.destroyAllHostileStructures;
 		global.destroyAllBarriers = this.destroyAllBarriers;
-		global.listAllDirectives = this.listAllDirectives;
+		global.listDirectives = this.listDirectives;
 		global.listPersistentDirectives = this.listPersistentDirectives;
 		global.removeAllLogisticsDirectives = this.removeAllLogisticsDirectives;
 		global.removeFlagsByColor = this.removeFlagsByColor;
@@ -63,7 +64,7 @@ export class OvermindConsole {
 		descr['destroyErrantStructures(roomName)'] = 'destroys all misplaced structures within an owned room';
 		descr['destroyAllHostileStructures(roomName)'] = 'destroys all hostile structures in an owned room';
 		descr['destroyAllBarriers(roomName)'] = 'destroys all ramparts and barriers in a room';
-		descr['listAllDirectives()'] = 'print type, name, pos of every directive';
+		descr['listDirectives(filter?)'] = 'list directives, matching a filter if specified';
 		descr['listPersistentDirectives()'] = 'print type, name, pos of every persistent directive';
 		descr['removeFlagsByColor(color, secondaryColor)'] = 'remove flags that match the specified colors';
 		descr['removeErrantFlags()'] = 'remove all flags which don\'t match a directive';
@@ -242,13 +243,15 @@ export class OvermindConsole {
 
 	// Directive management ============================================================================================
 
-	static listAllDirectives(): string {
+	static listDirectives(filter?: (dir: Directive) => any): string {
 		let msg = '';
 		for (let i in Overmind.directives) {
 			let dir = Overmind.directives[i];
-			msg += `${bullet}Name: ${dir.print}`.padRight(70) +
-				   `Colony: ${dir.colony.print}`.padRight(55) +
-				   `Pos: ${dir.pos.print}\n`;
+			if (!filter || filter(dir)) {
+				msg += `${bullet}Name: ${dir.print}`.padRight(70) +
+					   `Colony: ${dir.colony.print}`.padRight(55) +
+					   `Pos: ${dir.pos.print}\n`;
+			}
 		}
 		return msg;
 	}

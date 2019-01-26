@@ -35,7 +35,7 @@ export class DirectiveColonize extends Directive {
 	}
 
 	init() {
-
+		this.alert(`Colonization in progress`);
 	}
 
 	run() {
