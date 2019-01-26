@@ -246,8 +246,8 @@ export class OvermindConsole {
 		let msg = '';
 		for (let i in Overmind.directives) {
 			let dir = Overmind.directives[i];
-			msg += `${bullet}Name: ${dir.print}`.padRight(20) +
-				   `Colony: ${dir.colony.print}`.padRight(20) +
+			msg += `${bullet}Name: ${dir.print}`.padRight(70) +
+				   `Colony: ${dir.colony.print}`.padRight(55) +
 				   `Pos: ${dir.pos.print}\n`;
 		}
 		return msg;

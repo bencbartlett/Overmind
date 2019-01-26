@@ -181,6 +181,22 @@ interface RoomMemory {
 		harvested: number;
 		lastSeen: number;
 	}
+	harvest?: {
+		amt: number;
+		avg10k: number;
+		avg100k: number;
+		avg1M: number;
+		tick: number;
+	}
+	casualties?: {
+		cost: {
+			amt: number;
+			avg10k: number;
+			avg100k: number;
+			avg1M: number;
+			tick: number;
+		}
+	}
 	prevPositions?: { [creepID: string]: protoPos };
 	tick?: number;
 }

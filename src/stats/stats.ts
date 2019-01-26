@@ -1,6 +1,6 @@
 import {profile} from '../profiler/decorator';
 import {Mem} from '../memory/Memory';
-import {rollingAverage} from '../utilities/utils';
+import {exponentialMovingAverage} from '../utilities/utils';
 
 /**
  * Operational statistics, stored in Memory.stats, will be updated every (this many) ticks
@@ -62,6 +62,6 @@ export class Stats {
 		}
 		const used = Game.cpu.getUsed();
 		this.log('cpu.getUsed', used);
-		Memory.stats.persistent.avgCPU = rollingAverage(used, Memory.stats.persistent.avgCPU, 100);
+		Memory.stats.persistent.avgCPU = exponentialMovingAverage(used, Memory.stats.persistent.avgCPU, 100);
 	}
 }

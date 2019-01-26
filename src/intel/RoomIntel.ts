@@ -14,10 +14,12 @@
 // 	}
 // }
 
-import {getCacheExpiration} from '../utilities/utils';
+import {getCacheExpiration, irregularExponentialMovingAverage} from '../utilities/utils';
 import {ExpansionPlanner} from '../strategy/ExpansionPlanner';
 import {Zerg} from '../zerg/Zerg';
 import {profile} from '../profiler/decorator';
+import {MY_USERNAME} from '../~settings';
+import {bodyCost} from '../creepSetups/CreepSetup';
 
 const RECACHE_TIME = 2500;
 const OWNED_RECACHE_TIME = 1000;
@@ -110,6 +112,65 @@ export class RoomIntel {
 		}
 	}
 
+	private static updateHarvestData(room: Room): void {
+		if (!room.memory.harvest) {
+			room.memory.harvest = {
+				amt    : 0,
+				avg10k : _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
+				avg100k: _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
+				avg1M  : _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
+				tick   : Game.time,
+			};
+		}
+		for (let source of room.sources) {
+			if (source.ticksToRegeneration == 1) {
+				const dEnergy = source.energyCapacity - source.energy;
+				const dTime = Game.time - room.memory.harvest.tick + 1; // +1 to avoid division by zero errors
+				room.memory.harvest.amt += dEnergy;
+				room.memory.harvest.avg10k = irregularExponentialMovingAverage(
+					dEnergy / dTime, room.memory.harvest.avg10k, dTime, 10000);
+				room.memory.harvest.avg100k = irregularExponentialMovingAverage(
+					dEnergy / dTime, room.memory.harvest.avg100k, dTime, 100000);
+				room.memory.harvest.avg1M = irregularExponentialMovingAverage(
+					dEnergy / dTime, room.memory.harvest.avg1M, dTime, 1000000);
+				room.memory.harvest.tick = Game.time;
+			}
+		}
+	}
+
+	private static updateCasualtyData(room: Room): void {
+		if (!room.memory.casualties) {
+			room.memory.casualties = {
+				cost: {
+					amt    : 0,
+					avg10k : 0,
+					avg100k: 0,
+					avg1M  : 0,
+					tick   : Game.time,
+				}
+			};
+		}
+		for (let tombstone of room.tombstones) {
+			if (tombstone.ticksToDecay == 1) {
+				// record any casualties, which are my creeps which died prematurely
+				if ((tombstone.creep.ticksToLive || 0) > 1 && tombstone.creep.owner.username == MY_USERNAME) {
+					const body = _.map(tombstone.creep.body, part => part.type);
+					const lifetime = body.includes(CLAIM) ? CREEP_CLAIM_LIFE_TIME : CREEP_LIFE_TIME;
+					const dCost = bodyCost(body) * (tombstone.creep.ticksToLive || 0) / lifetime;
+					const dTime = Game.time - room.memory.casualties.cost.tick + 1;
+					room.memory.casualties.cost.amt += dCost;
+					room.memory.casualties.cost.avg10k = irregularExponentialMovingAverage(
+						dCost / dTime, room.memory.casualties.cost.avg10k, dTime, 10000);
+					room.memory.casualties.cost.avg100k = irregularExponentialMovingAverage(
+						dCost / dTime, room.memory.casualties.cost.avg100k, dTime, 100000);
+					room.memory.casualties.cost.avg1M = irregularExponentialMovingAverage(
+						dCost / dTime, room.memory.casualties.cost.avg1M, dTime, 1000000);
+					room.memory.casualties.cost.tick = Game.time;
+				}
+			}
+		}
+	}
+
 	// Get the pos a creep was in on the previous tick
 	static getPreviousPos(creep: Creep | Zerg): RoomPosition {
 		if (creep.room.memory.prevPositions && creep.room.memory.prevPositions[creep.id]) {
@@ -166,9 +227,11 @@ export class RoomIntel {
 
 			const room = Game.rooms[name];
 
-			// Track invasion data for all colony rooms and outposts
+			// Track invasion data, harvesting, and casualties for all colony rooms and outposts
 			if (Overmind.colonyMap[room.name]) { // if it is an owned or outpost room
 				this.updateInvasionData(room);
+				this.updateHarvestData(room);
+				this.updateCasualtyData(room);
 			}
 
 			// Record previous creep positions if needed (RoomIntel.run() is executed at end of each tick)

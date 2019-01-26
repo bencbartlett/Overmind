@@ -19,7 +19,7 @@ import {Movement} from '../movement/Movement';
 import {Pathing} from '../movement/Pathing';
 import {$} from '../caching/GlobalCache';
 import {OverlordPriority} from '../priorities/priorities_overlords';
-import {hasMinerals, rollingAverage} from '../utilities/utils';
+import {exponentialMovingAverage, hasMinerals} from '../utilities/utils';
 
 const ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH = -20;
 const ERR_SPECIFIED_SPAWN_BUSY = -21;
@@ -144,8 +144,8 @@ export class Hatchery extends HiveCluster {
 	private getStats() {
 		// Compute uptime
 		let spawnUsageThisTick = _.filter(this.spawns, spawn => spawn.spawning).length / this.spawns.length;
-		let uptime = rollingAverage(spawnUsageThisTick, this.memory.stats.uptime, CREEP_LIFE_TIME);
-		let longUptime = rollingAverage(spawnUsageThisTick, this.memory.stats.longUptime, 5 * CREEP_LIFE_TIME);
+		let uptime = exponentialMovingAverage(spawnUsageThisTick, this.memory.stats.uptime, CREEP_LIFE_TIME);
+		let longUptime = exponentialMovingAverage(spawnUsageThisTick, this.memory.stats.longUptime, 5 * CREEP_LIFE_TIME);
 		Stats.log(`colonies.${this.colony.name}.hatchery.uptime`, uptime);
 		return {
 			usage     : 0,

@@ -15,7 +15,7 @@ import {Zerg} from '../zerg/Zerg';
 import {TraderJoe} from '../logistics/TradeNetwork';
 import {rightArrow} from '../utilities/stringConstants';
 import {Stats} from '../stats/stats';
-import {rollingAverage} from '../utilities/utils';
+import {exponentialMovingAverage} from '../utilities/utils';
 import {$} from '../caching/GlobalCache';
 import {Visualizer} from '../visuals/Visualizer';
 
@@ -553,7 +553,7 @@ export class EvolutionChamber extends HiveCluster {
 	private stats(): void {
 		Stats.log(`colonies.${this.colony.name}.evolutionChamber.totalProduction`, this.memory.stats.totalProduction);
 		let labUsage = _.sum(this.productLabs, lab => lab.cooldown > 0 ? 1 : 0) / this.productLabs.length;
-		this.memory.stats.avgUsage = rollingAverage(labUsage, this.memory.stats.avgUsage, LAB_USAGE_WINDOW);
+		this.memory.stats.avgUsage = exponentialMovingAverage(labUsage, this.memory.stats.avgUsage, LAB_USAGE_WINDOW);
 		Stats.log(`colonies.${this.colony.name}.evolutionChamber.avgUsage`, this.memory.stats.avgUsage);
 	}
 

@@ -2,7 +2,7 @@ import {Directive} from '../Directive';
 import {MiningOverlord} from '../../overlords/mining/miner';
 import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../../utilities/Cartographer';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {getCacheExpiration, rollingAverage} from '../../utilities/utils';
+import {exponentialMovingAverage, getCacheExpiration} from '../../utilities/utils';
 import {Pathing} from '../../movement/Pathing';
 
 
@@ -78,8 +78,8 @@ export class DirectiveHarvest extends Directive {
 			this.memory.stats.usage = (source.energyCapacity - source.energy) / source.energyCapacity;
 		}
 		const container = this.overlords.mine.container;
-		this.memory.stats.downtime = rollingAverage(container ? +container.isFull : 0,
-													this.memory.stats.downtime, CREEP_LIFE_TIME);
+		this.memory.stats.downtime = exponentialMovingAverage(container ? +container.isFull : 0,
+															  this.memory.stats.downtime, CREEP_LIFE_TIME);
 	}
 
 }

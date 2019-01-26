@@ -193,8 +193,13 @@ export function randomHex(length: number): string {
 	return result;
 }
 
-export function rollingAverage(current: number, avg: number | undefined, window: number): number {
+export function exponentialMovingAverage(current: number, avg: number | undefined, window: number): number {
 	return (current + (avg || 0) * (window - 1)) / window;
+}
+
+// Compute an exponential moving average for unevenly spaced samples
+export function irregularExponentialMovingAverage(current: number, avg: number, dt: number, window: number): number {
+	return (current * dt + avg * (window - dt)) / window;
 }
 
 // Create a shallow copy of a 2D array
