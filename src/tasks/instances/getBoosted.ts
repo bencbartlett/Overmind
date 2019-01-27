@@ -38,7 +38,10 @@ export class TaskGetBoosted extends Task {
 	}
 
 	isValidTarget() {
-		return true; // Warning: this will block creep actions if the lab is left unsupplied of energy or minerals
+		let partCount = (this.data.amount || this.creep.getActiveBodyparts(boostParts[this.data.resourceType]));
+		return this.target && this.target.mineralType == this.data.resourceType &&
+			   this.target.mineralAmount >= LAB_BOOST_MINERAL * partCount &&
+			   this.target.energy >= LAB_BOOST_ENERGY * partCount;
 	}
 
 	work() {

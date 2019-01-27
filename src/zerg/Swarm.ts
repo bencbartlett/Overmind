@@ -41,7 +41,7 @@ interface SwarmOverlord extends CombatOverlord {
 	memory: any;
 }
 
-const DEBUG = false;
+const DEBUG = true;
 
 // Represents a coordinated group of creeps moving as a single unit
 export class Swarm implements ProtoSwarm { // TODO: incomplete
@@ -60,7 +60,7 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 	fatigue: number;								// Maximum fatigue of all creeps in the swarm
 
 	constructor(overlord: SwarmOverlord, ref: string, creeps: CombatZerg[], width = 2, height = 2) {
-		log.debug(`START ===============================================================`);
+		if (DEBUG) log.debug(`\nSwarm ${ref} tick ${Game.time} =========================================`);
 
 		this.overlord = overlord;
 		this.ref = ref;
@@ -106,14 +106,14 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 				this.anchor = leadPos.getOffsetPos(0, -1 * (width - 1));
 				break;
 		}
-		this.formation = rotatedMatrix(this.staticFormation, this.rotationsFromOrientation());
+		this.formation = rotatedMatrix(this.staticFormation, this.rotationsFromOrientation(this.orientation));
 		this.creeps = creeps;
 		this.rooms = _.unique(_.map(this.creeps, creep => creep.room), room => room.name);
 		this.roomsByName = _.zipObject(_.map(this.rooms, room => [room.name, room]));
 		this.fatigue = _.max(_.map(this.creeps, creep => creep.fatigue));
 		log.debug(`Orientation: ${this.orientation}`);
-		log.debug(`Formation: ${_.map(this.formation, creeps => _.map(creeps, creep => creep ? creep.name : 'none'))}`);
-		log.debug(`StaticFormation: ${_.map(this.staticFormation, creeps => _.map(creeps, creep => creep ? creep.name : 'none'))}`);
+		log.debug(`Formation: ${_.map(this.formation, creeps => _.map(creeps, creep => creep ? creep.print : 'none'))}`);
+		// log.debug(`StaticFormation: ${_.map(this.staticFormation, creeps => _.map(creeps, creep => creep ? creep.name : 'none'))}`);
 
 	}
 
@@ -147,12 +147,33 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 
 	set orientation(direction: TOP | BOTTOM | LEFT | RIGHT) {
 		this.memory.orientation = direction;
-		this.formation = rotatedMatrix(this.staticFormation, this.rotationsFromOrientation());
+		this.formation = rotatedMatrix(this.staticFormation, this.rotationsFromOrientation(direction));
+	}
+
+	rotate(direction: TOP | BOTTOM | LEFT | RIGHT): number {
+		if (!(this.width == 2 && this.height == 2)) {
+			console.log('NOT IMPLEMENTED FOR LARGER SWARMS YET');
+			return -100;
+		}
+		if (this.fatigue > 0) {
+			return ERR_TIRED;
+		} else {
+			let prevDirection = this.orientation;
+			let prevFormation = this.formation;
+			this.orientation = direction;
+			let prevAngle = this.rotationsFromOrientation(prevDirection);
+			let newAngle = this.rotationsFromOrientation(this.orientation);
+			let rotateAngle = newAngle - prevAngle;
+			switch (rotateAngle) {
+				// TODO: FINISH
+			}
+			return 0; // todo:remove
+		}
 	}
 
 	// Number of clockwise 90 degree turns corresponding to an orientation
-	private rotationsFromOrientation(): 0 | 1 | 2 | 3 {
-		switch (this.memory.orientation) {
+	private rotationsFromOrientation(direction: TOP | BOTTOM | LEFT | RIGHT): 0 | 1 | 2 | 3 {
+		switch (direction) {
 			case TOP:
 				return 0;
 			case RIGHT:
@@ -264,8 +285,8 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 				} else {
 					const destination = formationPositions[creep.name];
 					creep.goTo(destination, {
-						noPush: creep.pos.inRangeToPos(destination, 5),
-						// ignoreCreeps: !creep.pos.inRangeToPos(destination, Math.max(this.width, this.height))
+						noPush      : creep.pos.inRangeToPos(destination, 5),
+						ignoreCreeps: !creep.pos.inRangeToPos(destination, Math.max(this.width, this.height))
 					});
 				}
 			}
@@ -291,7 +312,30 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 					let pos = new RoomPosition(x, y, this.anchor.roomName);
 					for (let i = 0; i < this.formation.length; i++) {
 						for (let j = 0; j < this.formation[i].length; j++) {
-							if (!pos.getOffsetPos(i, j).isWalkable(true)) {
+							let i_ = i;
+							let j_ = j;
+							// switch (this.orientation) {
+							// 	case TOP:
+							// 		i_ = i;
+							// 		j_ = j;
+							// 		break;
+							// 	case RIGHT:
+							// 		i_ = -j;
+							// 		j_ = i;
+							// 		break;
+							// 	case BOTTOM:
+							// 		i_ = -i;
+							// 		j_ = -j;
+							// 		break;
+							// 	case LEFT:
+							// 		i_ = j;
+							// 		j_ = -i;
+							// 		break;
+							// 	default:
+							// 		i_ = i;
+							// 		j_ = j;
+							// }
+							if (!pos.getOffsetPos(i_, j_).isWalkable(true)) {
 								allPathable = false;
 							}
 						}
@@ -323,6 +367,7 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 		let allMoved = true;
 		for (let creep of this.creeps) {
 			let result = creep.move(direction);
+			log.debug(`${creep.print} move ${direction}, result: ${result}`);
 			if (result != OK) {
 				allMoved = false;
 			}
@@ -402,7 +447,7 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 		this.autoRanged();
 		this.autoHeal();
 
-		if (!this.isInFormation()) {
+		if (!this.isInFormation() && !_.any(this.creeps, creep => creep.pos.isEdge)) {
 			return this.regroup();
 		}
 
@@ -441,6 +486,10 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 		// Orient yourself to face structure targets
 		let targetRoom = _.find(this.rooms, room => room.owner && !room.my);
 		if (targetRoom) {
+			// let orientation = this.getBestOrientation(targetRoom); // TODO
+			// if (orientation != this.orientation && this.fatigue == 0) {
+			// 	this.rotate(orientation);
+			// }
 			this.orientation = this.getBestOrientation(targetRoom);
 			if (!this.isInFormation()) {
 				log.debug(`Reorienting!`);

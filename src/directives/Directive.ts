@@ -67,6 +67,7 @@ export abstract class Directive {
 		this.overlords = {};
 		// Register directive on Overmind
 		Overmind.directives[this.name] = this;
+		global[this.name] = this;
 		Overmind.overseer.registerDirective(this);
 	}
 
@@ -200,6 +201,7 @@ export abstract class Directive {
 	remove(force = false): number | undefined {
 		if (!this.memory.persistent || force) {
 			delete Overmind.directives[this.name];
+			delete global[this];
 			Overmind.overseer.removeDirective(this);
 			if (this.colony) {
 				_.remove(this.colony.flags, flag => flag.name == this.name);
