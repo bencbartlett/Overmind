@@ -32,7 +32,6 @@ export class BootstrappingOverlord extends Overlord {
 		this.withdrawStructures = _.filter(_.compact([this.colony.storage!,
 													  this.colony.terminal!,
 													  this.colony.powerSpawn!,
-													  this.colony.nuker!,
 													  ...this.room.containers,
 													  ...this.room.links,
 													  ...this.room.towers,

@@ -11,7 +11,7 @@ import {Colony, getAllColonies} from '../Colony';
 import {RoadPlanner} from './RoadPlanner';
 import {BarrierPlanner} from './BarrierPlanner';
 import {BuildPriorities, DemolishStructurePriorities} from '../priorities/priorities_structures';
-import {bunkerLayout, insideBunkerBounds} from './layouts/bunker';
+import {bunkerLayout} from './layouts/bunker';
 import {DirectiveTerminalRebuildState} from '../directives/terminalState/terminalState_rebuild';
 import {derefCoords, maxBy, onPublicServer} from '../utilities/utils';
 import {bullet} from '../utilities/stringConstants';
@@ -507,7 +507,7 @@ export class RoomPlanner {
 	}
 
 	/* Create construction sites for any buildings that need to be built */
-	private demolishMisplacedStructures(skipBarriers = true, destroyAllStructureTypes = false): void {
+	private demolishMisplacedStructures(skipRamparts = true, destroyAllStructureTypes = false): void {
 		if (getAllColonies().length <= 1 && !this.colony.storage) {
 			return; // Not safe to move structures until you have multiple colonies or a storage
 		}
@@ -537,15 +537,14 @@ export class RoomPlanner {
 		this.memory.relocating = false;
 		for (let priority of DemolishStructurePriorities) {
 			let structureType = priority.structureType;
-			if (skipBarriers && (structureType == STRUCTURE_RAMPART || structureType == STRUCTURE_WALL)) {
-				continue;
-			}
-			// don't demolish bunker baby ramparts until the new ones are sufficiently big
-			if (structureType == STRUCTURE_RAMPART && this.colony.layout == 'bunker') {
-				let bunkerBarriers = _.filter(this.colony.room.barriers, b => insideBunkerBounds(b.pos, this.colony));
-				let avgBarrierHits = (_.sum(bunkerBarriers, barrier => barrier.hits) / bunkerBarriers.length) || 0;
-				if (avgBarrierHits < 1e+6) continue;
-			}
+
+			// // don't demolish bunker baby ramparts until the new ones are sufficiently big
+			// if (structureType == STRUCTURE_RAMPART && this.colony.layout == 'bunker') {
+			// 	let bunkerBarriers = _.filter(this.colony.room.barriers, b => insideBunkerBounds(b.pos, this.colony));
+			// 	let avgBarrierHits = (_.sum(bunkerBarriers, barrier => barrier.hits) / bunkerBarriers.length) || 0;
+			// 	if (avgBarrierHits < 1e+6) continue;
+			// }
+
 			let maxRemoved = priority.maxRemoved || Infinity;
 			let removeCount = 0;
 			let structures: Structure[] = _.filter(this.colony.room.find(FIND_STRUCTURES),
@@ -556,8 +555,15 @@ export class RoomPlanner {
 
 			// Loop through all structures and conditionally remove ones which are misplaced
 			for (let structure of structures) {
+
 				if (!this.structureShouldBeHere(structureType, structure.pos) ||
 					(isOwnedStructure(structure) && !structure.my)) {
+
+					// Don't demolish your own ramparts, just let them decay
+					if (skipRamparts && !destroyAllStructureTypes && (<StructureRampart>structure).my) {
+						continue;
+					}
+
 					// remove misplaced structures or hostile owned structures, with exceptions below
 					if (this.colony.level < 4
 						&& (structureType == STRUCTURE_STORAGE || structureType == STRUCTURE_TERMINAL)) {
@@ -788,7 +794,7 @@ export class RoomPlanner {
 		} else {
 			// Build missing structures from the layout
 			if (this.shouldRecheck()) {
-				this.demolishMisplacedStructures(this.colony.layout == 'twoPart');
+				this.demolishMisplacedStructures();
 			} else if (this.shouldRecheck(1)) {
 				this.buildMissingStructures();
 			}

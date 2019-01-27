@@ -8,7 +8,6 @@ export type withdrawTargetType =
 	EnergyStructure
 	| StoreStructure
 	| StructureLab
-	| StructureNuker
 	| StructurePowerSpawn
 	| Tombstone;
 
@@ -49,8 +48,6 @@ export class TaskWithdraw extends Task {
 		} else {
 			if (target instanceof StructureLab) {
 				return this.data.resourceType == target.mineralType && target.mineralAmount >= amount;
-			} else if (target instanceof StructureNuker) {
-				return this.data.resourceType == RESOURCE_GHODIUM && target.ghodium >= amount;
 			} else if (target instanceof StructurePowerSpawn) {
 				return this.data.resourceType == RESOURCE_POWER && target.power >= amount;
 			}
