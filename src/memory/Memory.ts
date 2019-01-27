@@ -35,9 +35,10 @@ const MAX_BUCKET = 10000;
 export class Mem {
 
 	static shouldRun(): boolean {
+		let shouldRun: boolean = true;
 		if (!isIVM()) {
 			log.warning(`Overmind requires isolated-VM to run. Change settings at screeps.com/a/#!/account/runtime`);
-			return false;
+			shouldRun = false;
 		}
 		if (USE_PROFILER && Game.time % 10 == 0) {
 			log.warning(`Profiling is currently enabled; only ${PROFILE_COLONY_LIMIT} colonies will be run!`);
@@ -47,16 +48,15 @@ export class Mem {
 				log.warning(`CPU bucket is critically low (${Game.cpu.bucket})! Starting CPU reset routine.`);
 				Memory.resetBucket = true;
 				Memory.haltTick = Game.time + 1; // reset global next tick
-				this.garbageCollect();
 			} else {
 				log.info(`CPU bucket is too low (${Game.cpu.bucket}). Postponing operation until bucket reaches 500.`);
 			}
-			return false;
+			shouldRun = false;
 		}
 		if (Memory.resetBucket) {
 			if (Game.cpu.bucket < MAX_BUCKET - Game.cpu.limit) {
 				log.info(`Operation suspended until bucket recovery. Bucket: ${Game.cpu.bucket}/${MAX_BUCKET}`);
-				return false;
+				shouldRun = false;
 			} else {
 				delete Memory.resetBucket;
 			}
@@ -64,11 +64,12 @@ export class Mem {
 		if (Memory.haltTick) {
 			if (Memory.haltTick == Game.time) {
 				(<any>Game.cpu).halt(); // TODO: remove any typing when typed-screeps updates to include this method
+				shouldRun = false;
 			} else if (Memory.haltTick < Game.time) {
 				delete Memory.haltTick;
 			}
 		}
-		return true;
+		return shouldRun;
 	}
 
 	/* Attempt to load the parsed memory from a previous tick to avoid parsing costs */
@@ -79,7 +80,7 @@ export class Mem {
 			RawMemory._parsed = lastMemory;
 		} else {
 			// noinspection TsLint
-			Memory.rooms;
+			Memory.rooms; // forces parsing
 			lastMemory = RawMemory._parsed;
 			Memory.stats.persistent.lastMemoryReset = Game.time;
 		}
