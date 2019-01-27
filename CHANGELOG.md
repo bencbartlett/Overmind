@@ -11,15 +11,20 @@ All notable changes to this project will be documented in this file. The format 
     - All overlords controlling swarms are now extended from the `SwarmOverlord <- CombatOverlord <- Overlord` class
         - New `swarmWishlist` method prevents swarms from spawning "out of sync"
     - Improvements to swarm assembly point calculations; supports multiple swarms now
+- New console methods:
+    - `notifications()` will print out a list of notifications shown in the GUI with links to rooms
+    - `listDirectives()` now takes an optional functional-style filter, such as `listDirectives(dir => dir.color == COLOR_PURPLE && !!dir.overlords.colonize)`
 
 
 ### Changed
 - Rewrote the boosting protocol to account for the removal of [pre-boosting capabilities](https://blog.screeps.com/2018/12/changelog-2018-12-14/#Other-changes). RIP in-spawn boosting, you will be missed... :'(
     - Instead of three booster labs (one adjacent to each spawn), each applying every boost to their respective creeps, the new system allows up to 8 boosting labs, which will contain the total current amount of each distinct resource needed by all creeps currently being spawned by the colony.
 - Improvements to keeping newly-constructed ramparts alive at low RCL: towers will repair critical ramparts below RCL5, and workers will prioritize fortifying critical ramparts above repairs
+- Overlords are now instantiated immeditely after a directive is placed rather than having to wait for the next full `rebuild()`
 
 
 ### Fixed
+- MAJOR: Fixed a bug with the CPU reset routine which would cause indefinite looping and garbage collection (#65)
 - Security patches and bugfixes for the `Assimilator`
 - Pioneers and claimers should no longer navigate through dangerous source keeper territory
 - Fixed an issue in `TaskRecharge` which could cause some creeps, like pioneers, to not harvest from a fully-surrounded source that they were adjacent to, causing gridlock situations
@@ -27,6 +32,9 @@ All notable changes to this project will be documented in this file. The format 
 - Fixed a bug causing excess energy to accumulate in terminals rather than be sold on the market as much as it should
 - Fixed an issue causing `CombatZerg` to occasionally load as `Zerg`
 - Fixed a bug in `Abathur.getReactionQueue()` which could cause it to ignore market resources on private servers
+- Fixed a bug where fillers would try to withdraw from nukes
+- Improved drone constructionSite build time 
+
 
 
 ## Overmind [0.5.1] - 2019.1.2
