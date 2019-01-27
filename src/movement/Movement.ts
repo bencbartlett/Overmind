@@ -49,6 +49,7 @@ export interface MoveOptions {
 	};											//
 	force?: boolean;							// whether to ignore Zerg.blockMovement
 	ignoreCreeps?: boolean;						// ignore pathing around creeps
+	ignoreCreepsOnDestination?: boolean; 		// ignore creeps currently standing on the destination
 	ignoreStructures?: boolean;					// ignore pathing around structures
 	preferHighway?: boolean;					// prefer alley-type rooms
 	allowHostile?: boolean;						// allow to path through hostile rooms; origin/destination room excluded
@@ -147,7 +148,7 @@ export class Movement {
 		} else if (rangeToDestination <= 1) {
 			if (rangeToDestination == 1 && !options.range) {
 				let direction = creep.pos.getDirectionTo(destination);
-				if (destination.isWalkable()) {
+				if (destination.isWalkable(options.ignoreCreepsOnDestination)) {
 					return creep.move(direction, !!options.force);
 				}
 			} else { // at destination

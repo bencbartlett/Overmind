@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file. The format 
     - Instead of three booster labs (one adjacent to each spawn), each applying every boost to their respective creeps, the new system allows up to 8 boosting labs, which will contain the total current amount of each distinct resource needed by all creeps currently being spawned by the colony.
 - Improvements to keeping newly-constructed ramparts alive at low RCL: towers will repair critical ramparts below RCL5, and workers will prioritize fortifying critical ramparts above repairs
 - Overlords are now instantiated immeditely after a directive is placed rather than having to wait for the next full `rebuild()`
+- Pioneers will remove structures blocking a controller from being claimed
 
 
 ### Fixed

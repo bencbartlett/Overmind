@@ -5,6 +5,8 @@ import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {DirectiveColonize} from '../../directives/colony/colonize';
+import {Pathing} from '../../movement/Pathing';
+import {log} from '../../console/log';
 
 @profile
 export class PioneerOverlord extends Overlord {
@@ -29,9 +31,30 @@ export class PioneerOverlord extends Overlord {
 		this.wishlist(4, Setups.pioneer);
 	}
 
+	private findStructureBlockingController(pioneer: Zerg): Structure | undefined {
+		let blockingPos = Pathing.findBlockingPos(pioneer.pos, pioneer.room.controller!.pos,
+												  _.filter(pioneer.room.structures, s => !s.isWalkable));
+		if (blockingPos) {
+			let structure = blockingPos.lookFor(LOOK_STRUCTURES)[0];
+			if (structure) {
+				return structure;
+			} else {
+				log.error(`${this.print}: no structure at blocking pos ${blockingPos.print}! (Why?)`);
+			}
+		}
+	}
+
 	private handlePioneer(pioneer: Zerg): void {
 		// Ensure you are in the assigned room
 		if (pioneer.room == this.room && !pioneer.pos.isEdge) {
+			// Remove any blocking structures preventing claimer from reaching controller
+			if (!this.room.my && this.room.structures.length > 0) {
+				let dismantleTarget = this.findStructureBlockingController(pioneer);
+				if (dismantleTarget) {
+					pioneer.task = Tasks.dismantle(dismantleTarget);
+				}
+			}
+			// Build and recharge
 			if (pioneer.carry.energy == 0) {
 				pioneer.task = Tasks.recharge();
 			} else if (this.spawnSite) {

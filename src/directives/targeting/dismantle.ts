@@ -35,7 +35,7 @@ export class DirectiveDismantle extends Directive {
 	init(): void {
 		// Add this structure to worker overlord's dismantle list
 		let target = this.getTarget();
-		if (target) {
+		if (target && !this.colony.overlords.work.dismantleStructures.includes(target)) {
 			this.colony.overlords.work.dismantleStructures.push(target);
 		}
 	}

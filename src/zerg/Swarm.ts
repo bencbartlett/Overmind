@@ -111,7 +111,7 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 		this.rooms = _.unique(_.map(this.creeps, creep => creep.room), room => room.name);
 		this.roomsByName = _.zipObject(_.map(this.rooms, room => [room.name, room]));
 		this.fatigue = _.max(_.map(this.creeps, creep => creep.fatigue));
-		log.debug(`Orientation: ${this.orientation}`);
+		log.debug(`Orientation: ${this.orientation}, anchor: ${this.anchor.print}, leadPos: ${leadPos.print}`);
 		log.debug(`Formation: ${_.map(this.formation, creeps => _.map(creeps, creep => creep ? creep.print : 'none'))}`);
 		// log.debug(`StaticFormation: ${_.map(this.staticFormation, creeps => _.map(creeps, creep => creep ? creep.name : 'none'))}`);
 
@@ -275,6 +275,7 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 		} else {
 			// Creeps travel to their relative formation positions
 			const formationPositions = this.getFormationPositionsFromAnchor(assemblyPoint);
+			console.log(JSON.stringify(formationPositions));
 			for (let creep of this.creeps) {
 				if (creep.hasValidTask) {
 					// Ignore creeps which have tasks (usually getting boosted)
@@ -284,10 +285,12 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 					creep.autoSkirmish(creep.room.name);
 				} else {
 					const destination = formationPositions[creep.name];
-					creep.goTo(destination, {
-						noPush      : creep.pos.inRangeToPos(destination, 5),
-						ignoreCreeps: !creep.pos.inRangeToPos(destination, Math.max(this.width, this.height))
+					let ret = creep.goTo(destination, {
+						noPush                   : creep.pos.inRangeToPos(destination, 5),
+						ignoreCreepsOnDestination: true,
+						// ignoreCreeps: !creep.pos.inRangeToPos(destination, Math.max(this.width, this.height))
 					});
+					console.log(`${creep.print} moves to ${destination.print}, response: ${ret}`);
 				}
 			}
 			return false;
@@ -312,30 +315,7 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 					let pos = new RoomPosition(x, y, this.anchor.roomName);
 					for (let i = 0; i < this.formation.length; i++) {
 						for (let j = 0; j < this.formation[i].length; j++) {
-							let i_ = i;
-							let j_ = j;
-							// switch (this.orientation) {
-							// 	case TOP:
-							// 		i_ = i;
-							// 		j_ = j;
-							// 		break;
-							// 	case RIGHT:
-							// 		i_ = -j;
-							// 		j_ = i;
-							// 		break;
-							// 	case BOTTOM:
-							// 		i_ = -i;
-							// 		j_ = -j;
-							// 		break;
-							// 	case LEFT:
-							// 		i_ = j;
-							// 		j_ = -i;
-							// 		break;
-							// 	default:
-							// 		i_ = i;
-							// 		j_ = j;
-							// }
-							if (!pos.getOffsetPos(i_, j_).isWalkable(true)) {
+							if (!pos.getOffsetPos(i, j).isWalkable(true)) {
 								allPathable = false;
 							}
 						}

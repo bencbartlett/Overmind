@@ -863,6 +863,42 @@ export class Pathing {
 		return true;
 	}
 
+	/* Like isReachable(), but returns the first position which should be cleared to find a path to destination */
+	static findBlockingPos(startPos: RoomPosition, endPos: RoomPosition, obstacles: (RoomPosition | HasPos)[],
+						   options: MoveOptions = {}): RoomPosition | undefined {
+		_.defaults(options, {
+			ignoreCreeps: true,
+			range       : 1,
+			maxOps      : 1000,
+			ensurePath  : false,
+		});
+		if (startPos.roomName != endPos.roomName) {
+			log.error(`findBlockingPos() should only be used within a single room!`);
+			return undefined;
+		}
+		const matrix = new PathFinder.CostMatrix();
+		_.forEach(obstacles, obstacle => {
+			if (hasPos(obstacle)) {
+				matrix.set(obstacle.pos.x, obstacle.pos.y, 0xfe);
+			} else {
+				matrix.set(obstacle.x, obstacle.y, 0xfe);
+			}
+		});
+		let callback = (roomName: string) => roomName == endPos.roomName ? matrix : false;
+		let ret = PathFinder.search(startPos, {pos: endPos, range: options.range!}, {
+			maxOps      : options.maxOps,
+			plainCost   : 1,
+			swampCost   : 5,
+			maxRooms    : 1,
+			roomCallback: callback,
+		});
+		for (let pos of ret.path) {
+			if (matrix.get(pos.x, pos.y) > 100) {
+				return pos;
+			}
+		}
+	}
+
 	/* Find the first walkable position in the room, spiraling outward from the center */
 	static findPathablePosition(roomName: string,
 								clearance: { width: number, height: number } = {width: 1, height: 1}): RoomPosition {
