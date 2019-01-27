@@ -828,14 +828,14 @@ export class Pathing {
 		_.defaults(options, {
 			ignoreCreeps: true,
 			range       : 1,
-			maxOps      : 1000,
+			maxOps      : 2000,
 			ensurePath  : false,
 		});
 		if (startPos.roomName != endPos.roomName) {
 			log.error(`isReachable() should only be used within a single room!`);
 			return false;
 		}
-		const matrix = new PathFinder.CostMatrix();
+		let matrix = new PathFinder.CostMatrix();
 		_.forEach(obstacles, obstacle => {
 			if (hasPos(obstacle)) {
 				matrix.set(obstacle.pos.x, obstacle.pos.y, 0xfe);
@@ -869,14 +869,14 @@ export class Pathing {
 		_.defaults(options, {
 			ignoreCreeps: true,
 			range       : 1,
-			maxOps      : 1000,
+			maxOps      : 2000,
 			ensurePath  : false,
 		});
 		if (startPos.roomName != endPos.roomName) {
 			log.error(`findBlockingPos() should only be used within a single room!`);
 			return undefined;
 		}
-		const matrix = new PathFinder.CostMatrix();
+		let matrix = new PathFinder.CostMatrix();
 		_.forEach(obstacles, obstacle => {
 			if (hasPos(obstacle)) {
 				matrix.set(obstacle.pos.x, obstacle.pos.y, 0xfe);

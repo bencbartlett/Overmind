@@ -52,6 +52,7 @@ export class PioneerOverlord extends Overlord {
 				let dismantleTarget = this.findStructureBlockingController(pioneer);
 				if (dismantleTarget) {
 					pioneer.task = Tasks.dismantle(dismantleTarget);
+					return;
 				}
 			}
 			// Build and recharge

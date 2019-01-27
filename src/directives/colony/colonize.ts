@@ -6,6 +6,8 @@ import {PioneerOverlord} from '../../overlords/colonization/pioneer';
 import {MY_USERNAME} from '../../~settings';
 import {log} from '../../console/log';
 import {Roles} from '../../creepSetups/setups';
+import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
+import {printRoomName} from '../../utilities/utils';
 
 // Claims a new room and builds a spawn but does not incubate. Removes when spawn is constructed.
 
@@ -27,6 +29,12 @@ export class DirectiveColonize extends Directive {
 		super(flag, DirectiveColonize.requiredRCL);
 		// Register incubation status
 		this.toColonize = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
+		// Remove if misplaced
+		if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
+			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
+						`removing directive!`);
+			this.remove(true);
+		}
 	}
 
 	spawnMoarOverlords() {
