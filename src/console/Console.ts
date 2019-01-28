@@ -28,6 +28,7 @@ export class OvermindConsole {
 		global.destroyErrantStructures = this.destroyErrantStructures;
 		global.destroyAllHostileStructures = this.destroyAllHostileStructures;
 		global.destroyAllBarriers = this.destroyAllBarriers;
+		global.listConstructionSites = this.listConstructionSites;
 		global.listDirectives = this.listDirectives;
 		global.listPersistentDirectives = this.listPersistentDirectives;
 		global.removeAllLogisticsDirectives = this.removeAllLogisticsDirectives;
@@ -35,7 +36,6 @@ export class OvermindConsole {
 		global.removeErrantFlags = this.removeErrantFlags;
 		global.deepCleanMemory = this.deepCleanMemory;
 	}
-
 
 	// Help, information, and operational changes ======================================================================
 
@@ -64,6 +64,7 @@ export class OvermindConsole {
 		descr['destroyErrantStructures(roomName)'] = 'destroys all misplaced structures within an owned room';
 		descr['destroyAllHostileStructures(roomName)'] = 'destroys all hostile structures in an owned room';
 		descr['destroyAllBarriers(roomName)'] = 'destroys all ramparts and barriers in a room';
+		descr['listConstructionSites(filter?)'] = 'list all construction sites matching an optional filter';
 		descr['listDirectives(filter?)'] = 'list directives, matching a filter if specified';
 		descr['listPersistentDirectives()'] = 'print type, name, pos of every persistent directive';
 		descr['removeFlagsByColor(color, secondaryColor)'] = 'remove flags that match the specified colors';
@@ -240,6 +241,18 @@ export class OvermindConsole {
 		}
 	}
 
+	static listConstructionSites(filter?: (site: ConstructionSite) => any): string {
+		let msg = '';
+		for (let id in Game.constructionSites) {
+			let site = Game.constructionSites[id];
+			if (!filter || filter(site)) {
+				msg += `${bullet}Type: ${site.structureType}`.padRight(20) +
+					   `Pos: ${site.pos.print}`.padRight(55) +
+					   `Progress: ${site.progress} / ${site.progressTotal} \n`;
+			}
+		}
+		return msg;
+	}
 
 	// Directive management ============================================================================================
 
