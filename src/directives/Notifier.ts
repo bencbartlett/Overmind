@@ -15,7 +15,7 @@ export enum NotifierPriority {
 interface Alert {
 	message: string;
 	priority: number;
-	roomName: string;
+	roomName?: string;
 }
 
 // A notification lasts for a specified length of time and does not need to be refreshed, e.g. colony levels up
@@ -44,7 +44,7 @@ export class Notifier {
 		this.alerts = [];
 	}
 
-	alert(message: string, roomName: string, priority = NotifierPriority.Normal) {
+	alert(message: string, roomName?: string | undefined, priority = NotifierPriority.Normal) {
 		// Register an alert to be displayed this in the notifications visual box
 		const alert: Alert = {message, roomName, priority};
 		this.alerts.push(alert);
@@ -66,8 +66,13 @@ export class Notifier {
 
 	generateNotificationsList(links = false): string[] {
 		let sortedAlerts = _.sortBy(this.alerts, alert => alert.priority);
-		return _.map(sortedAlerts, alert => (links ? printRoomName(alert.roomName) : alert.roomName)
-											+ ': ' + alert.message);
+		return _.map(sortedAlerts, alert => {
+			if (alert.roomName) {
+				return (links ? printRoomName(alert.roomName) : alert.roomName) + ': ' + alert.message;
+			} else {
+				return alert.message;
+			}
+		});
 	}
 
 	visuals(): void {
