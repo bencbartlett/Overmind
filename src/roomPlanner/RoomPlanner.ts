@@ -592,7 +592,7 @@ export class RoomPlanner {
 						if (structureType == STRUCTURE_SPAWN && this.colony.spawns.length == 1) {
 							let spawnCost = 15000;
 							if (this.colony.assets[RESOURCE_ENERGY] < spawnCost) {
-								log.warning(`Unsafe to destroy misplaced spawn: ` +
+								log.warning(`${this.colony.print}: Unsafe to destroy misplaced spawn: ` +
 											`${this.colony.assets[RESOURCE_ENERGY]}/${spawnCost} energy available`);
 								if (!destroyAllStructureTypes) {
 									return;
@@ -602,7 +602,7 @@ export class RoomPlanner {
 							let workTicksAvailable = _.sum(this.colony.overlords.work.workers, worker =>
 								worker.getActiveBodyparts(WORK) * (worker.ticksToLive || 0));
 							if (workTicksAvailable < workTicksNeeded) {
-								log.warning(`Unsafe to destroy misplaced spawn: ` +
+								log.warning(`${this.colony.print}: Unsafe to destroy misplaced spawn: ` +
 											`${workTicksAvailable}/${workTicksNeeded} [WORK * ticks] available`);
 								if (!destroyAllStructureTypes) {
 									return;

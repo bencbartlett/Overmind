@@ -27,6 +27,8 @@ const STATE_CPU = 3;
 const STATE_DEST_X = 4;
 const STATE_DEST_Y = 5;
 const STATE_DEST_ROOMNAME = 6;
+const STATE_CURRENT_X = 7;
+const STATE_CURRENT_Y = 8;
 
 export const MovePriorities = {
 	[Roles.manager]    : 1,
@@ -98,6 +100,7 @@ export interface MoveState {
 	lastCoord: Coord;
 	destination: RoomPosition;
 	cpu: number;
+	currentXY?: Coord;
 }
 
 
@@ -171,6 +174,15 @@ export class Movement {
 
 		let state = this.deserializeState(moveData, destination);
 
+		// // verify creep is in the location it thinks it should be in
+		// if (state.currentXY) {
+		// 	let {x, y} = state.currentXY;
+		// 	if (!(creep.pos.x == x && creep.pos.y == y)) { // creep thought it would move last tick but didn't
+		// 		log.debug(`${creep.print} has gotten off track; deleting path!`);
+		// 		delete moveData.path;
+		// 	}
+		// }
+
 		// uncomment to visualize destination
 		// this.circle(destination, "orange");
 
@@ -208,7 +220,7 @@ export class Movement {
 
 		// pathfinding
 		let newPath = false;
-		if (!moveData.path) {
+		if (!moveData.path || moveData.path.length == 0) {
 			newPath = true;
 			if (creep.spawning) {
 				return ERR_BUSY;
@@ -237,11 +249,11 @@ export class Movement {
 			this.circle(creep.pos, color);
 			moveData.path = Pathing.serializePath(creep.pos, ret.path, color);
 			state.stuckCount = 0;
+
 		}
 
-		this.serializeState(creep, destination, state, moveData);
-
 		if (!moveData.path || moveData.path.length == 0) {
+			this.serializeState(creep, destination, state, moveData);
 			return ERR_NO_PATH;
 		}
 
@@ -250,7 +262,10 @@ export class Movement {
 			let obstructingCreep = this.findBlockingCreep(creep);
 			if (obstructingCreep && this.shouldPush(creep, obstructingCreep)) {
 				let pushedCreep = this.pushCreep(creep, obstructingCreep);
-				if (!pushedCreep) return ERR_CANNOT_PUSH_CREEP;
+				if (!pushedCreep) {
+					this.serializeState(creep, destination, state, moveData);
+					return ERR_CANNOT_PUSH_CREEP;
+				}
 			}
 		}
 
@@ -260,10 +275,15 @@ export class Movement {
 		}
 		let nextDirection = parseInt(moveData.path[0], 10) as DirectionConstant;
 
+		// predict next coordinate (for verification)
+		let nextPos = creep.pos.getPositionAtDirection(nextDirection);
+
+		this.serializeState(creep, destination, state, moveData, {x: nextPos.x, y: nextPos.y});
+
 		return creep.move(nextDirection, !!options.force);
 	}
 
-	static getPushPriority(creep: Creep | Zerg): number {
+	private static getPushPriority(creep: Creep | Zerg): number {
 		if (!creep.memory) return MovePriorities.default;
 		if (creep.memory._go && creep.memory._go.priority) {
 			return creep.memory._go.priority;
@@ -328,17 +348,19 @@ export class Movement {
 
 	/* Push a blocking creep out of the way */
 	static pushCreep(creep: Zerg, otherCreep: Creep | Zerg): boolean {
-
 		if (!otherCreep.memory) return false;
 		otherCreep = normalizeZerg(otherCreep);
 		let pushDirection = this.getPushDirection(creep, otherCreep);
 		let otherData = otherCreep.memory._go as MoveData | undefined;
+
+		// Push the creep and update the state
 		let outcome = otherCreep.move(pushDirection);
+		let otherNextPos = otherCreep.pos.getPositionAtDirection(pushDirection);
 		if (isZerg(otherCreep)) {
 			if (outcome == OK) {
 				if (otherData && otherData.path && !otherCreep.blockMovement) { // don't add to path unless you moved
 					otherData.path = Pathing.oppositeDirection(pushDirection) + otherData.path;
-					// otherData.delay = 1;
+					this.updateStateNextCoord(otherData, otherNextPos);
 				}
 				otherCreep.blockMovement = true;
 				return true;
@@ -346,11 +368,12 @@ export class Movement {
 				return false;
 			}
 		} else {
+			// Shouldn't reach here ideally
 			log.debug(`${otherCreep.name}@${otherCreep.pos.print} is not Zerg! (Why?)`);
 			if (outcome == OK) {
 				if (otherData && otherData.path) {
 					otherData.path = Pathing.oppositeDirection(pushDirection) + otherData.path;
-					// otherData.delay = 1;
+					this.updateStateNextCoord(otherData, otherNextPos);
 				}
 				return true;
 			} else {
@@ -560,6 +583,7 @@ export class Movement {
 
 		if (swarm.fatigue > 0) {
 			Movement.circle(swarm.anchor, 'aqua', .3);
+			console.log('tired');
 			return ERR_TIRED;
 		}
 
@@ -583,9 +607,10 @@ export class Movement {
 		let moveData = swarm.memory._go as MoveData;
 
 		// manage case where creep is nearby destination
-		let rangeToDestination = swarm.minRangeTo(destination);
-		if (options.range != undefined && rangeToDestination <= options.range) {
+		if (options.range != undefined && swarm.minRangeTo(destination) <= options.range &&
+			swarm.maxRangeTo(destination) <= options.range + Math.max(swarm.width, swarm.height)) {
 			delete swarm.memory._go;
+			console.log('no action');
 			return NO_ACTION;
 		}
 
@@ -658,6 +683,7 @@ export class Movement {
 						  destination.roomName];
 
 		if (!moveData.path || moveData.path.length == 0) {
+			console.log('no path');
 			return ERR_NO_PATH;
 		}
 
@@ -1013,6 +1039,9 @@ export class Movement {
 			state.stuckCount = moveData.state[STATE_STUCK];
 			state.destination = new RoomPosition(moveData.state[STATE_DEST_X], moveData.state[STATE_DEST_Y],
 												 moveData.state[STATE_DEST_ROOMNAME]);
+			if (moveData.state[STATE_CURRENT_X] && moveData.state[STATE_CURRENT_Y]) {
+				state.currentXY = {x: moveData.state[STATE_CURRENT_X], y: moveData.state[STATE_CURRENT_Y]};
+			}
 		} else {
 			state.cpu = 0;
 			state.destination = destination;
@@ -1020,9 +1049,31 @@ export class Movement {
 		return state;
 	}
 
-	private static serializeState(creep: Zerg, destination: RoomPosition, state: MoveState, moveData: MoveData) {
-		moveData.state = [creep.pos.x, creep.pos.y, state.stuckCount, state.cpu, destination.x, destination.y,
-						  destination.roomName];
+	private static serializeState(creep: Zerg, destination: RoomPosition, state: MoveState, moveData: MoveData,
+								  nextCoord?: Coord | RoomPosition | undefined) {
+		if (nextCoord) {
+			moveData.state = [creep.pos.x, creep.pos.y, state.stuckCount, state.cpu, destination.x, destination.y,
+							  destination.roomName, nextCoord.x, nextCoord.y];
+		} else {
+			moveData.state = [creep.pos.x, creep.pos.y, state.stuckCount, state.cpu, destination.x, destination.y,
+							  destination.roomName];
+		}
+	}
+
+	// Update the currentXY property for a move state
+	private static updateStateNextCoord(moveData: MoveData, nextCoord: Coord | RoomPosition) {
+		if (moveData.state) {
+			if (moveData.state[STATE_CURRENT_X] != undefined && moveData.state[STATE_CURRENT_Y] != undefined) {
+				moveData.state[STATE_CURRENT_X] = nextCoord.x;
+				moveData.state[STATE_CURRENT_Y] = nextCoord.y;
+			} else if (moveData.state.length == STATE_CURRENT_X) {
+				moveData.state.push(nextCoord.x);
+				moveData.state.push(nextCoord.y);
+			} else {
+				// Shouldn't ever reach here
+				log.warning(`Invalid moveData.state length!`);
+			}
+		}
 	}
 
 	private static isStuck(creep: Zerg, state: MoveState): boolean {

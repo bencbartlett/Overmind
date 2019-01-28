@@ -189,39 +189,39 @@ RoomPosition.prototype.availableNeighbors = function (ignoreCreeps = false): Roo
 };
 
 RoomPosition.prototype.getPositionAtDirection = function (direction: DirectionConstant, range = 1): RoomPosition {
-	let x = this.x;
-	let y = this.y;
+	let dx = 0;
+	let dy = 0;
 	switch (direction) {
 		case 1:
-			y -= range;
+			dy = -range;
 			break;
 		case 2:
-			y -= range;
-			x += range;
+			dy = -range;
+			dx = range;
 			break;
 		case 3:
-			x += range;
+			dx = range;
 			break;
 		case 4:
-			x += range;
-			y += range;
+			dx = range;
+			dy = range;
 			break;
 		case 5:
-			y += range;
+			dy = range;
 			break;
 		case 6:
-			y += range;
-			x -= range;
+			dy = range;
+			dx = -range;
 			break;
 		case 7:
-			x -= range;
+			dx = -range;
 			break;
 		case 8:
-			x -= range;
-			y -= range;
+			dx = -range;
+			dy = -range;
 			break;
 	}
-	return new RoomPosition(x, y, this.roomName);
+	return this.getOffsetPos(dx, dy);
 };
 
 

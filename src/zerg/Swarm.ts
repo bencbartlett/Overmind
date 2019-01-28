@@ -125,12 +125,14 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 	}
 
 	get target(): Creep | Structure | undefined {
-		if (this.memory.target) {
+		if (this.memory.target && this.memory.target.exp > Game.time) {
 			let target = Game.getObjectById(this.memory.target.id);
 			if (target) {
 				return target as Creep | Structure;
 			}
 		}
+		// If nothing found
+		delete this.memory.target;
 	}
 
 	set target(targ: Creep | Structure | undefined) {
@@ -150,6 +152,56 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 		this.formation = rotatedMatrix(this.staticFormation, this.rotationsFromOrientation(direction));
 	}
 
+	private pivot(direction: 'clockwise' | 'counterclockwise'): number {
+		if (this.fatigue > 0) {
+			return ERR_TIRED;
+		}
+		const [[c1, c2],
+				  [c3, c4]] = this.staticFormation;
+		let r1, r2, r3, r4 = -999;
+		if (direction == 'clockwise') {
+			if (c1) r1 = c1.move(RIGHT);
+			if (c2) r2 = c2.move(BOTTOM);
+			if (c3) r3 = c3.move(TOP);
+			if (c4) r4 = c4.move(LEFT);
+		} else {
+			if (c1) r1 = c1.move(BOTTOM);
+			if (c2) r2 = c2.move(LEFT);
+			if (c3) r3 = c3.move(RIGHT);
+			if (c4) r4 = c4.move(TOP);
+		}
+		if (_.all([r1, r2, r3, r4], r => r == OK)) {
+			return OK;
+		} else {
+			return _.find([r1, r2, r3, r4], r => r != OK) || -999;
+		}
+	}
+
+	private swap(direction: 'horizontal' | 'vertical'): number {
+		if (this.fatigue > 0) {
+			return ERR_TIRED;
+		}
+		const [[c1, c2],
+				  [c3, c4]] = this.staticFormation;
+		let r1, r2, r3, r4 = -999;
+		if (direction == 'horizontal') {
+			if (c1) r1 = c1.move(RIGHT);
+			if (c2) r2 = c2.move(LEFT);
+			if (c3) r3 = c3.move(RIGHT);
+			if (c4) r4 = c4.move(LEFT);
+		} else {
+			if (c1) r1 = c1.move(BOTTOM);
+			if (c2) r2 = c2.move(BOTTOM);
+			if (c3) r3 = c3.move(TOP);
+			if (c4) r4 = c4.move(TOP);
+		}
+		if (_.all([r1, r2, r3, r4], r => r == OK)) {
+			return OK;
+		} else {
+			return _.find([r1, r2, r3, r4], r => r != OK) || -999;
+		}
+	}
+
 	rotate(direction: TOP | BOTTOM | LEFT | RIGHT): number {
 		if (!(this.width == 2 && this.height == 2)) {
 			console.log('NOT IMPLEMENTED FOR LARGER SWARMS YET');
@@ -164,10 +216,20 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 			let prevAngle = this.rotationsFromOrientation(prevDirection);
 			let newAngle = this.rotationsFromOrientation(this.orientation);
 			let rotateAngle = newAngle - prevAngle;
-			switch (rotateAngle) {
-				// TODO: FINISH
+
+			if (rotateAngle == 3 || rotateAngle == -1) {
+				return this.pivot('counterclockwise');
+			} else if (rotateAngle == 1 || rotateAngle == -3) {
+				return this.pivot('clockwise');
+			} else if (rotateAngle == 2 || rotateAngle == -2) {
+				if (newAngle % 2 == 0) {
+					return this.swap('vertical');
+				} else {
+					return this.swap('horizontal');
+				}
 			}
-			return 0; // todo:remove
+
+			return OK;
 		}
 	}
 
@@ -184,6 +246,13 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 				return 3;
 		}
 	}
+
+	// // Number of clockwise 90 degree turns corresponding to an orientation
+	// private rotationsFromFormation(): 0 | 1 | 2 | 3 {
+	// 	const rotations = _.map([0,1,2,3], n => rotatedMatrix(this.staticFormation, <0 | 1 | 2 | 3>n));
+	// 	const
+	// 	return _.findIndex(rotations, formation => formation == this.formation)
+	// }
 
 	// Swarm assignment ================================================================================================
 
@@ -427,8 +496,11 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 		this.autoRanged();
 		this.autoHeal();
 
-		if (!this.isInFormation() && !_.any(this.creeps, creep => creep.pos.isEdge)) {
-			return this.regroup();
+		if (!this.isInFormation()) {
+			if (!_.any(this.creeps, creep => creep.pos.isEdge)) {
+				return this.regroup();
+
+			}
 		}
 
 		// Handle recovery if low on HP
@@ -445,10 +517,10 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 		}
 
 		// Find a target if needed
-		// if (!this.target) {
-		this.target = CombatTargeting.findBestSwarmStructureTarget(this, roomName, 10 * this.memory.numRetreats);
-		log.debug(this.target);
-		// }
+		if (!this.target) {
+			this.target = CombatTargeting.findBestSwarmStructureTarget(this, roomName, 10 * this.memory.numRetreats);
+			log.debug(this.target);
+		}
 
 		// Approach the siege target
 		if (this.target) {
@@ -466,15 +538,16 @@ export class Swarm implements ProtoSwarm { // TODO: incomplete
 		// Orient yourself to face structure targets
 		let targetRoom = _.find(this.rooms, room => room.owner && !room.my);
 		if (targetRoom) {
-			// let orientation = this.getBestOrientation(targetRoom); // TODO
-			// if (orientation != this.orientation && this.fatigue == 0) {
-			// 	this.rotate(orientation);
-			// }
-			this.orientation = this.getBestOrientation(targetRoom);
-			if (!this.isInFormation()) {
-				log.debug(`Reorienting!`);
-				return this.regroup();
+			let orientation = this.getBestOrientation(targetRoom);
+			if (orientation != this.orientation && this.fatigue == 0) {
+				log.debug(`Reorienting to ${orientation}!`);
+				this.rotate(orientation);
 			}
+			// this.orientation = this.getBestOrientation(targetRoom);
+			// if (!this.isInFormation()) {
+			// 	log.debug(`Reorienting!`);
+			// 	return this.regroup();
+			// }
 		}
 
 		log.debug(`END =================================================================`);

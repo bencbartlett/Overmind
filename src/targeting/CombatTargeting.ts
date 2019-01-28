@@ -242,6 +242,7 @@ export class CombatTargeting {
 
 		// Determine a "siege anchor" for what you eventually want to destroy
 		let targets: Structure[] = room.spawns;
+		if (targets.length == 0) targets = room.towers;
 		if (targets.length == 0) targets = room.repairables;
 		if (targets.length == 0) targets = room.barriers;
 		if (targets.length == 0) targets = room.structures;
@@ -278,7 +279,7 @@ export class CombatTargeting {
 			log.debug(`Searching path ${pos.print}...`);
 			let searchPositions = Pathing.getPosWindow(pos, swarm.width, swarm.height); // not -1*width
 			for (let searchPos of searchPositions) {
-				let targetStructure = _.first(_.filter(pos.lookFor(LOOK_STRUCTURES), s => {
+				let targetStructure = _.first(_.filter(searchPos.lookFor(LOOK_STRUCTURES), s => {
 					return s.structureType != STRUCTURE_ROAD && s.structureType != STRUCTURE_CONTAINER;
 				}));
 				if (targetStructure) {

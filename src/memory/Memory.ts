@@ -1,6 +1,6 @@
 import {Stats} from '../stats/stats';
 import {profile} from '../profiler/decorator';
-import {DEFAULT_OPERATION_MODE, DEFAULT_OVERMIND_SIGNATURE, PROFILE_COLONY_LIMIT, USE_PROFILER} from '../~settings';
+import {DEFAULT_OPERATION_MODE, DEFAULT_OVERMIND_SIGNATURE, PROFILER_COLONY_LIMIT, USE_PROFILER} from '../~settings';
 import {isIVM} from '../utilities/utils';
 import {log} from '../console/log';
 
@@ -41,7 +41,7 @@ export class Mem {
 			shouldRun = false;
 		}
 		if (USE_PROFILER && Game.time % 10 == 0) {
-			log.warning(`Profiling is currently enabled; only ${PROFILE_COLONY_LIMIT} colonies will be run!`);
+			log.warning(`Profiling is currently enabled; only ${PROFILER_COLONY_LIMIT} colonies will be run!`);
 		}
 		if (Game.cpu.bucket < 500) {
 			if (_.keys(Game.spawns).length > 1) { // don't run CPU reset routine at very beginning
