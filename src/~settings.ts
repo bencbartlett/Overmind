@@ -27,7 +27,7 @@ export const PROFILER_COLONY_LIMIT = Math.ceil(Game.gcl.level / 2);
 /**
  * While profiling, ensure these colonies are included in the randomly chosen ones specified by PROFILER_COLONY_LIMIT.
  */
-export const PROFILER_INCLUDE_COLONIES: string[] = [/*E15S49*/];
+export const PROFILER_INCLUDE_COLONIES: string[] = [/*'E15S49'*/];
 
 /**
  * Enable this to wrap evaluations of constructor, init, and run phase for each colony in try...catch statemenets.

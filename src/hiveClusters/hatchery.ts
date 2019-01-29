@@ -4,7 +4,7 @@ import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
 import {QueenOverlord} from '../overlords/core/queen';
 import {Priority} from '../priorities/priorities';
-import {Colony, ColonyStage, DEFCON} from '../Colony';
+import {Colony, ColonyStage} from '../Colony';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {bodyCost, CreepSetup} from '../creepSetups/CreepSetup';
 import {Mem} from '../memory/Memory';
@@ -18,7 +18,6 @@ import {Overlord} from '../overlords/Overlord';
 import {Movement} from '../movement/Movement';
 import {Pathing} from '../movement/Pathing';
 import {$} from '../caching/GlobalCache';
-import {OverlordPriority} from '../priorities/priorities_overlords';
 import {exponentialMovingAverage, hasMinerals} from '../utilities/utils';
 
 const ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH = -20;
@@ -44,7 +43,7 @@ interface SpawnOrder {
 
 export interface HatcheryMemory {
 	stats: {
-		usage: number;
+		overload: number;
 		uptime: number;
 		longUptime: number;
 	};
@@ -52,7 +51,7 @@ export interface HatcheryMemory {
 
 const HatcheryMemoryDefaults: HatcheryMemory = {
 	stats: {
-		usage     : 0,
+		overload  : 0,
 		uptime    : 0,
 		longUptime: 0,
 	}
@@ -82,6 +81,8 @@ export class Hatchery extends HiveCluster {
 	private productionQueue: {								// Prioritized spawning queue
 		[priority: number]: SpawnOrder[]
 	};
+	private isOverloaded: boolean;
+
 	static restrictedRange = 6;								// Don't stand idly within this range of hatchery
 
 	constructor(colony: Colony, headSpawn: StructureSpawn) {
@@ -104,13 +105,13 @@ export class Hatchery extends HiveCluster {
 		}
 		this.productionPriorities = [];
 		this.productionQueue = {};
+		this.isOverloaded = false;
 		this.settings = {
 			refillTowersBelow      : 750,
 			linksRequestEnergyBelow: 0,
 			suppressSpawning       : false,
 		};
 		this.transportRequests = colony.transportRequests; // hatchery always uses colony transport group
-		this.memory.stats = this.getStats();
 	}
 
 	refresh() {
@@ -118,9 +119,9 @@ export class Hatchery extends HiveCluster {
 		$.refreshRoom(this);
 		$.refresh(this, 'spawns', 'extensions', 'energyStructures', 'link', 'towers', 'battery');
 		this.availableSpawns = _.filter(this.spawns, spawn => !spawn.spawning);
+		this.isOverloaded = false;
 		this.productionPriorities = [];
 		this.productionQueue = {};
-		this.memory.stats = this.getStats();
 	}
 
 	spawnMoarOverlords() {
@@ -139,19 +140,6 @@ export class Hatchery extends HiveCluster {
 		} else {
 			return this.spawns[0].pos.availableNeighbors(true)[0];
 		}
-	}
-
-	private getStats() {
-		// Compute uptime
-		let spawnUsageThisTick = _.filter(this.spawns, spawn => spawn.spawning).length / this.spawns.length;
-		let uptime = exponentialMovingAverage(spawnUsageThisTick, this.memory.stats.uptime, CREEP_LIFE_TIME);
-		let longUptime = exponentialMovingAverage(spawnUsageThisTick, this.memory.stats.longUptime, 5 * CREEP_LIFE_TIME);
-		Stats.log(`colonies.${this.colony.name}.hatchery.uptime`, uptime);
-		return {
-			usage     : 0,
-			uptime    : uptime,
-			longUptime: longUptime
-		};
 	}
 
 	private computeEnergyStructures(): (StructureSpawn | StructureExtension)[] {
@@ -340,11 +328,13 @@ export class Hatchery extends HiveCluster {
 	private spawnHighestPriorityCreep(): number | undefined {
 		let sortedKeys = _.sortBy(this.productionPriorities);
 		for (let priority of sortedKeys) {
-			if (this.colony.defcon >= DEFCON.playerInvasion
-				&& !this.colony.controller.safeMode
-				&& priority > OverlordPriority.warSpawnCutoff) {
-				continue; // don't spawn non-critical creeps during wartime
-			}
+
+			// if (this.colony.defcon >= DEFCON.playerInvasion
+			// 	&& !this.colony.controller.safeMode
+			// 	&& priority > OverlordPriority.warSpawnCutoff) {
+			// 	continue; // don't spawn non-critical creeps during wartime
+			// }
+
 			let nextOrder = this.productionQueue[priority].shift();
 			if (nextOrder) {
 				let {protoCreep, options} = nextOrder;
@@ -353,9 +343,12 @@ export class Hatchery extends HiveCluster {
 					return result;
 				} else if (result == ERR_SPECIFIED_SPAWN_BUSY) {
 					return result; // continue to spawn other things while waiting on specified spawn
-				} else if (result != ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH) {
-					this.productionQueue[priority].unshift(nextOrder);
-					return result;
+				} else {
+					// If there's not enough energyCapacity to spawn, ignore it and move on, otherwise block and wait
+					if (result != ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH) {
+						this.productionQueue[priority].unshift(nextOrder);
+						return result;
+					}
 				}
 			}
 		}
@@ -366,6 +359,8 @@ export class Hatchery extends HiveCluster {
 		while (this.availableSpawns.length > 0) {
 			let result = this.spawnHighestPriorityCreep();
 			if (result != OK && result != ERR_SPECIFIED_SPAWN_BUSY) {
+				// Can't spawn creep right now
+				this.isOverloaded = true;
 				break;
 			}
 		}
@@ -394,6 +389,20 @@ export class Hatchery extends HiveCluster {
 		if (!this.settings.suppressSpawning) {
 			this.handleSpawns();
 		}
+		this.recordStats();
+	}
+
+	private recordStats() {
+		// Compute uptime and overload status
+		let spawnUsageThisTick = _.filter(this.spawns, spawn => spawn.spawning).length / this.spawns.length;
+		let uptime = exponentialMovingAverage(spawnUsageThisTick, this.memory.stats.uptime, CREEP_LIFE_TIME);
+		let longUptime = exponentialMovingAverage(spawnUsageThisTick, this.memory.stats.longUptime, 5 * CREEP_LIFE_TIME);
+		let overload = exponentialMovingAverage(this.isOverloaded ? 1 : 0, this.memory.stats.overload, CREEP_LIFE_TIME);
+
+		Stats.log(`colonies.${this.colony.name}.hatchery.uptime`, uptime);
+		Stats.log(`colonies.${this.colony.name}.hatchery.overload`, overload);
+
+		this.memory.stats = {overload, uptime, longUptime};
 	}
 
 	visuals(coord: Coord): Coord {
@@ -408,13 +417,22 @@ export class Hatchery extends HiveCluster {
 			}
 		});
 		let boxCoords = Visualizer.section(`${this.colony.name} Hatchery`, {x, y, roomName: this.room.name},
-										   9.5, 1 + spawning.length + .1);
+										   9.5, 2 + spawning.length + .1);
 		let boxX = boxCoords.x;
 		y = boxCoords.y + 0.25;
+
+		// Log uptime
 		let uptime = this.memory.stats.uptime;
 		Visualizer.text('Uptime', {x: boxX, y: y, roomName: this.room.name});
 		Visualizer.barGraph(uptime, {x: boxX + 4, y: y, roomName: this.room.name}, 5);
 		y += 1;
+
+		// Log overload status
+		let overload = this.memory.stats.overload;
+		Visualizer.text('Overload', {x: boxX, y: y, roomName: this.room.name});
+		Visualizer.barGraph(overload, {x: boxX + 4, y: y, roomName: this.room.name}, 5);
+		y += 1;
+
 		for (let i in spawning) {
 			Visualizer.text(spawning[i], {x: boxX, y: y, roomName: this.room.name});
 			Visualizer.barGraph(spawnProgress[i], {x: boxX + 4, y: y, roomName: this.room.name}, 5);

@@ -19,6 +19,13 @@ interface CombatIntelMemory {
 	}
 }
 
+export interface CombatPotentials {
+	attack: number,
+	rangedAttack: number,
+	heal: number
+}
+
+
 @profile
 export class CombatIntel {
 
@@ -423,7 +430,7 @@ export class CombatIntel {
 	}
 
 	// Total attack/rangedAttack/heal potentials for a group of creeps
-	static combatPotentials(creeps: Creep[]): { attack: number, rangedAttack: number, heal: number } {
+	static combatPotentials(creeps: Creep[]): CombatPotentials {
 		let attack = _.sum(creeps, creep => this.getAttackPotential(creep));
 		let rangedAttack = _.sum(creeps, creep => this.getRangedAttackPotential(creep));
 		let heal = _.sum(creeps, creep => this.getHealPotential(creep));
