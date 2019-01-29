@@ -80,8 +80,8 @@ export class RoadPlanner {
 
 		const ROAD_PLANNER_WALL_COST = 50;
 
-		for (let y = 0; y < 50; ++y) {
-			for (let x = 0; x < 50; ++x) {
+		for (let y = 0 + 1; y < 50 - 1; ++y) {
+			for (let x = 0 + 1; x < 50 - 1; ++x) {
 				switch (terrain.get(x, y)) {
 					case TERRAIN_MASK_SWAMP:
 						matrix.set(x, y, 1);

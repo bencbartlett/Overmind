@@ -506,8 +506,21 @@ export class RoomPlanner {
 		return false;
 	}
 
+	private demolishHostileStructures(destroyStorageUnits = false) {
+		_.forEach(this.colony.room.walls, wall => wall.destroy()); // overmind never uses walls
+		for (let structure of _.filter(this.colony.room.hostileStructures)) {
+			if ((structure.structureType != STRUCTURE_STORAGE && structure.structureType != STRUCTURE_TERMINAL)
+				|| destroyStorageUnits) {
+				structure.destroy();
+			}
+		}
+	}
+
 	/* Create construction sites for any buildings that need to be built */
 	private demolishMisplacedStructures(skipRamparts = true, destroyAllStructureTypes = false): void {
+
+		this.demolishHostileStructures();
+
 		if (getAllColonies().length <= 1 && !this.colony.storage) {
 			return; // Not safe to move structures until you have multiple colonies or a storage
 		}
