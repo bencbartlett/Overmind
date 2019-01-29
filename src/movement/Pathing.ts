@@ -17,7 +17,7 @@ export interface TerrainCosts {
 	swampCost: number
 }
 
-const MatrixTypes = {
+export const MatrixTypes = {
 	direct       : 'dir',
 	default      : 'def',
 	sk           : 'sk',

@@ -1,7 +1,7 @@
 import {Overlord} from '../Overlord';
 import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
-import {Colony, ColonyStage} from '../../Colony';
+import {Colony} from '../../Colony';
 import {ALL_RESOURCE_TYPE_ERROR, BufferTarget, LogisticsRequest} from '../../logistics/LogisticsNetwork';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {Pathing} from '../../movement/Pathing';
@@ -60,10 +60,14 @@ export class TransportOverlord extends Overlord {
 	}
 
 	init() {
-		let setup = this.colony.stage == ColonyStage.Larva ? Setups.transporters.early : Setups.transporters.default;
+		const ROAD_COVERAGE_THRESHOLD = 0.75; // switch from 1:1 to 2:1 transporters above this coverage threshold
+		let setup = this.colony.roomPlanner.roadPlanner.roadCoverage < ROAD_COVERAGE_THRESHOLD
+					? Setups.transporters.early : Setups.transporters.default;
+
 		let transportPowerEach = setup.getBodyPotential(CARRY, this.colony);
 		let neededTransportPower = this.neededTransportPower();
 		let numTransporters = Math.ceil(neededTransportPower / transportPowerEach);
+
 		if (this.transporters.length == 0) {
 			this.wishlist(numTransporters, setup, {priority: OverlordPriority.ownedRoom.firstTransport});
 		} else {
