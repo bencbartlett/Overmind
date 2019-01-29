@@ -301,8 +301,8 @@ export class Colony {
 				.filter(e => (e!.my && e!.room.my)
 							 || Cartographer.roomType(e!.room.name) != ROOMTYPE_CONTROLLER)
 				.sortBy(e => e!.pos.getMultiRoomRangeTo(this.pos)).value() as StructureExtractor[]);
-		for (let extractor of this.extractors) {
-			DirectiveExtract.createIfNotPresent(extractor.pos, 'pos');
+		if (this.controller.level >= 6) {
+			_.forEach(this.extractors, extractor => DirectiveExtract.createIfNotPresent(extractor.pos, 'pos'));
 		}
 		$.set(this, 'repairables', () => _.flatten(_.map(this.rooms, room => room.repairables)));
 		$.set(this, 'rechargeables', () => _.flatten(_.map(this.rooms, room => room.rechargeables)));

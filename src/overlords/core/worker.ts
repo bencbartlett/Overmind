@@ -152,7 +152,11 @@ export class WorkerOverlord extends Overlord {
 					// max constructionTicks for private server manually setting progress
 					let numWorkers = Math.ceil(2 * (Math.max(constructionTicks, 0) + repairTicks + fortifyTicks) /
 											   (workPartsPerWorker * CREEP_LIFE_TIME));
-					return Math.min(numWorkers, MAX_WORKERS);
+					numWorkers = Math.min(numWorkers, MAX_WORKERS);
+					if (this.colony.controller.ticksToDowngrade <= (this.colony.level >= 4 ? 10000 : 2000)) {
+						numWorkers = Math.max(numWorkers, 1);
+					}
+					return numWorkers;
 				});
 			}
 		}

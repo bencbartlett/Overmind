@@ -9,6 +9,7 @@ import {bodyCost} from '../creepSetups/CreepSetup';
 
 const RECACHE_TIME = 2500;
 const OWNED_RECACHE_TIME = 1000;
+const ROOM_CREEP_HISTORY_TICKS = 25;
 const SCORE_RECALC_PROB = 0.05;
 const FALSE_SCORE_RECALC_PROB = 0.01;
 
@@ -108,7 +109,7 @@ export class RoomIntel {
 				tick   : Game.time,
 			};
 		}
-		for (let source of room.sources) {
+		for (let source of room.sources) { // TODO: this implicitly assumes all energy is harvested by me
 			if (source.ticksToRegeneration == 1) {
 				const dEnergy = source.energyCapacity - source.energy;
 				const dTime = Game.time - room.memory.harvest.tick + 1; // +1 to avoid division by zero errors
@@ -173,6 +174,18 @@ export class RoomIntel {
 		}
 	}
 
+	private static recordCreepOccupancies(room: Room): void {
+		if (!room.memory.creepsInRoom) {
+			room.memory.creepsInRoom = {};
+		}
+		for (let tick in room.memory.creepsInRoom) {
+			if (parseInt(tick, 10) < Game.time - ROOM_CREEP_HISTORY_TICKS) {
+				delete room.memory.creepsInRoom[tick];
+			}
+		}
+		room.memory.creepsInRoom[Game.time] = _.map(room.hostiles, creep => creep.name);
+	}
+
 	static isInvasionLikely(room: Room): boolean {
 		const data = room.memory.invasionData;
 		if (!data) return false;
@@ -207,6 +220,15 @@ export class RoomIntel {
 		}
 	}
 
+	static roomReservationRemaining(roomName: string): number {
+		if (Memory.rooms[roomName] && Memory.rooms[roomName].ctrl && Memory.rooms[roomName].ctrl!.res) {
+			const reservation = Memory.rooms[roomName].ctrl!.res as ReservationDefinition;
+			let timeSinceLastSeen = Game.time - (Memory.rooms[roomName].tick || 0);
+			return reservation.ticksToEnd - timeSinceLastSeen;
+		}
+		return 0;
+	}
+
 	static run(): void {
 		let alreadyComputedScore = false;
 		for (let name in Game.rooms) {
@@ -221,10 +243,11 @@ export class RoomIntel {
 			}
 
 			// Record previous creep positions if needed (RoomIntel.run() is executed at end of each tick)
-			if (room.creeps.length > 0 && room.hostiles.length > 0) {
+			if (room.hostiles.length > 0) {
 				this.recordCreepPositions(room);
-			} else {
-				delete room.memory.prevPositions;
+				if (room.my) {
+					this.recordCreepOccupancies(room);
+				}
 			}
 
 			// Record location of permanent objects in room and recompute score as needed

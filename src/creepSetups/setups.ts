@@ -91,6 +91,11 @@ export const Setups = {
 	managers: {
 
 		default: new CreepSetup(Roles.manager, {
+			pattern  : [CARRY, CARRY, CARRY, CARRY, MOVE],
+			sizeLimit: 3,
+		}),
+
+		twoPart: new CreepSetup(Roles.manager, {
 			pattern  : [CARRY, CARRY, MOVE],
 			sizeLimit: 8,
 		}),

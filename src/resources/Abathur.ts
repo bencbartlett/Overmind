@@ -37,7 +37,7 @@ export const wantedStockAmounts: { [key: string]: number } = {
 	XZH2O: 6000, 	// For dismantling
 	XKHO2: 8000, 	// For ranged attackers
 	XUH2O: 8000, 	// For attacking
-	G    : 4000, 	// For nukes
+	G    : 5000, 	// For nukes
 	XLH2O: 3000, 	// For repair (or build)
 	LH   : 3000, 	// (+50 % build and repair)
 	XUHO2: 3000, 	// For harvest

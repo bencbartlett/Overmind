@@ -34,7 +34,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 			if (this.colony.towers.length > 0) {
 				healer.goToRoom(this.colony.room.name); // go get healed
 			} else {
-				healer.suicide(); // you're useless at this point
+				healer.suicide(); // you're useless at this point // TODO: this isn't smart
 			}
 		} else {
 			if (this.room && _.any([...this.broodlings, ...this.mutalisks], creep => creep.room == this.room)) {

@@ -6,7 +6,6 @@ import {log} from '../console/log';
 import {Mem} from '../memory/Memory';
 import {Colony} from '../Colony';
 import {Pathing} from '../movement/Pathing';
-import {MoveOptions} from '../movement/Movement';
 import {profile} from '../profiler/decorator';
 
 export interface RoadPlannerMemory {
@@ -67,59 +66,82 @@ export class RoadPlanner {
 
 	// Plan a road between two locations avoiding a list of planned obstacles; pos1 should be storage for best results
 	private planRoad(pos1: RoomPosition, pos2: RoomPosition, obstacles: RoomPosition[]): void {
-		let opts = {obstacles: obstacles, ensurePath: true, range: 1};
 		// Find the shortest path, preferentially stepping on tiles with road routing flags on them
-		let roadPath = this.generateRoadPath(pos1, pos2, opts);
+		let roadPath = this.generateRoadPath(pos1, pos2, obstacles);
 		if (roadPath) {
 			this.roadPositions = this.roadPositions.concat(roadPath);
 		}
 	}
 
-	private initCostMatrix(roomName: string, options: MoveOptions) {
-		let room = Game.rooms[roomName];
-		if (room) {
-			this.costMatrices[roomName] = Pathing.getCostMatrix(room, options);
-		} else {
-			this.costMatrices[roomName] = new PathFinder.CostMatrix();
+	private generateRoadPlanningCostMatrix(roomName: string, obstacles: RoomPosition[]): CostMatrix {
+
+		let matrix = new PathFinder.CostMatrix();
+		const terrain = Game.map.getRoomTerrain(roomName);
+
+		const ROAD_PLANNER_WALL_COST = 50;
+
+		for (let y = 0; y < 50; ++y) {
+			for (let x = 0; x < 50; ++x) {
+				switch (terrain.get(x, y)) {
+					case TERRAIN_MASK_SWAMP:
+						matrix.set(x, y, 1);
+						break;
+					case TERRAIN_MASK_WALL:
+						matrix.set(x, y, ROAD_PLANNER_WALL_COST);
+						break;
+					default: // plain
+						matrix.set(x, y, 1);
+						break;
+				}
+			}
 		}
+
+		for (let pos of obstacles) {
+			if (pos.roomName == roomName) {
+				matrix.set(pos.x, pos.y, 0xff);
+			}
+		}
+
+		const room = Game.rooms[roomName];
+		if (room) {
+			let impassibleStructures: Structure[] = [];
+			_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
+				if (!s.isWalkable) {
+					impassibleStructures.push(s);
+				}
+			});
+			_.forEach(impassibleStructures, s => matrix.set(s.pos.x, s.pos.y, 0xff));
+			// Set passability of construction sites
+			_.forEach(room.find(FIND_MY_CONSTRUCTION_SITES), (site: ConstructionSite) => {
+				if (!site.isWalkable) {
+					matrix.set(site.pos.x, site.pos.y, 0xff);
+				}
+			});
+		}
+
+		return matrix;
 	}
 
 	/* Generates a road path and modifies cost matrices to encourage merging with future roads */
 	private generateRoadPath(origin: RoomPosition, destination: RoomPosition,
-							 options: MoveOptions = {}): RoomPosition[] | undefined {
-		_.defaults(options, {
-			ignoreCreeps: true,
-			ensurePath  : true,
-			range       : 1,
-			direct      : true,
-			avoidSK     : false,
-		});
+							 obstacles: RoomPosition[]): RoomPosition[] | undefined {
 
-		let allowedRooms = Pathing.findRoute(origin.roomName, destination.roomName, options);
 		let callback = (roomName: string): CostMatrix | boolean => {
-			if (allowedRooms && !allowedRooms[roomName]) {
+			if (!this.colony.roomNames.includes(roomName)) { // only route through colony rooms
 				return false;
 			}
-			if (!options.allowHostile && Pathing.shouldAvoid(roomName)
-				&& roomName != origin.roomName && roomName != destination.roomName) {
+			if (Pathing.shouldAvoid(roomName) && roomName != origin.roomName && roomName != destination.roomName) {
 				return false;
 			}
-			// Initialize cost matrix
-			if (!this.costMatrices[roomName]) {
-				this.initCostMatrix(roomName, options);
-			}
-			return this.costMatrices[roomName];
+			return this.generateRoadPlanningCostMatrix(roomName, obstacles);
 		};
 
-		let ret = PathFinder.search(origin, {pos: destination, range: options.range!}, {
-			maxOps      : options.maxOps,
-			maxRooms    : options.maxRooms,
-			plainCost   : 2,
-			swampCost   : 2,
-			roomCallback: callback,
-		});
+		let ret = PathFinder.search(origin, {pos: destination, range: 1}, {roomCallback: callback});
 
-		if (ret.incomplete) return;
+		if (ret.incomplete) {
+			log.warning(`Roadplanner for ${this.colony.print}: could not plan road path!`);
+			return;
+		}
 
 		// Set every n-th tile of a planned path to be cost 1 to encourage road overlap for future pathing
 		if (RoadPlanner.settings.encourageRoadMerging) {

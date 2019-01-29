@@ -49,6 +49,9 @@ export class CommandCenterOverlord extends Overlord {
 	init() {
 		let setup = Setups.managers.default;
 		let spawnRequestOptions: SpawnRequestOptions = {};
+		if (this.colony.layout == 'twoPart') {
+			setup = Setups.managers.twoPart;
+		}
 		if (this.colony.bunker && this.colony.bunker.coreSpawn && this.colony.level == 8
 			&& !this.colony.roomPlanner.memory.relocating) {
 			setup = Setups.managers.stationary;

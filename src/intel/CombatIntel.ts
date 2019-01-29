@@ -532,10 +532,33 @@ export class CombatIntel {
 		return currentRange > previousRange;
 	}
 
-	static isEdgeDancing(creep: Creep, threshold = 5): boolean {
-		// TODO
-		console.log('NOT IMPLEMENTED');
-		return false;
+	// This method is expensive; use sparingly
+	static isEdgeDancing(creep: Creep, reentryThreshold = 3): boolean {
+		if (!creep.room.my) {
+			log.warning(`isEdgeDancing should only be called in owned rooms!`);
+		}
+		const creepOccupancies = creep.room.memory.creepsInRoom;
+		if (creepOccupancies) {
+			// Look to see if the creep has exited and re-entered the room a given number of times
+			let creepInRoomTicks = [];
+			for (let tick in creepOccupancies) {
+				if (creepOccupancies[tick].includes(creep.name)) {
+					creepInRoomTicks.push(parseInt(tick, 10));
+				}
+			}
+			let reentries = 1;
+			if (creepInRoomTicks.length > 0) {
+				for (let i of _.range(creepInRoomTicks.length - 1)) {
+					if (creepInRoomTicks[i + 1] != creepInRoomTicks[i] + 1) {
+						// There was a gap between the creep's presence in the room so it must have reentered
+						reentries++;
+					}
+				}
+			}
+			return reentries >= reentryThreshold;
+		} else {
+			return false;
+		}
 	}
 
 	static getPositionsNearEnemies(hostiles: Creep[], range = 0): RoomPosition[] {

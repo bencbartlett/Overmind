@@ -20,7 +20,7 @@ import {DirectiveOutpost} from './directives/colony/outpost';
 import {Autonomy, getAutonomyLevel, Mem} from './memory/Memory';
 import {RoomIntel} from './intel/RoomIntel';
 import {Roles} from './creepSetups/setups';
-import {USE_TRY_CATCH} from './~settings';
+import {MUON, MY_USERNAME, USE_TRY_CATCH} from './~settings';
 import {DirectiveOutpostDefense} from './directives/defense/outpostDefense';
 import {Notifier} from './directives/Notifier';
 import {DirectiveColonize} from './directives/colony/colonize';
@@ -213,22 +213,36 @@ export class Overseer implements IOverseer {
 		}
 	}
 
+	private computePossibleOutposts(colony: Colony, depth = 3): string[] {
+		return _.filter(Cartographer.findRoomsInRange(colony.room.name, depth), roomName => {
+			if (Cartographer.roomType(roomName) != ROOMTYPE_CONTROLLER) {
+				return false;
+			}
+			let alreadyAnOutpost = _.any(Overmind.cache.outpostFlags,
+										 flag => (flag.memory.setPosition || flag.pos).roomName == roomName);
+			let alreadyAColony = !!Overmind.colonies[roomName];
+			if (alreadyAColony || alreadyAnOutpost) {
+				return false;
+			}
+			let alreadyOwned = RoomIntel.roomOwnedBy(roomName);
+			let alreadyReserved = RoomIntel.roomReservedBy(roomName);
+			let disregardReservations = !onPublicServer() || MY_USERNAME == MUON;
+			if (alreadyOwned || (alreadyReserved && !disregardReservations)) {
+				return false;
+			}
+			let neighboringRooms = _.values(Game.map.describeExits(roomName)) as string[];
+			let isReachableFromColony = _.any(neighboringRooms, r => colony.roomNames.includes(r));
+			return isReachableFromColony && Game.map.isRoomAvailable(roomName);
+		});
+	}
+
 	private handleNewOutposts(colony: Colony) {
 		let numSources = _.sum(colony.roomNames, roomName => (Memory.rooms[roomName].src || []).length);
 		let numRemotes = numSources - colony.room.sources.length;
 		if (numRemotes < Colony.settings.remoteSourcesByLevel[colony.level]) {
-			// Possible outposts are controller rooms not already owned
-			// log.debug(`Calculating colonies for ${colony.room.print}...`);
-			// log.debug(`Rooms in range 2: ${Cartographer.findRoomsInRange(colony.room.name, 2)}`);
-			let possibleOutposts = _.filter(Cartographer.findRoomsInRange(colony.room.name, 2), roomName =>
-				Cartographer.roomType(roomName) == ROOMTYPE_CONTROLLER
-				&& !_.any(Overmind.cache.outpostFlags,
-						  flag => (flag.memory.setPosition || flag.pos).roomName == roomName)
-				&& !Overmind.colonies[roomName]
-				&& !RoomIntel.roomOwnedBy(roomName)
-				// && !RoomIntel.roomReservedBy(roomName) // TODO: why did I comment this out?
-				&& Game.map.isRoomAvailable(roomName));
-			// log.debug(`Possible outposts: ${possibleOutposts}`);
+
+			let possibleOutposts = this.computePossibleOutposts(colony);
+
 			let origin = colony.pos;
 			let bestOutpost = minBy(possibleOutposts, function (roomName) {
 				if (!Memory.rooms[roomName]) return false;
@@ -240,6 +254,7 @@ export class Overseer implements IOverseer {
 												   || dist > Colony.settings.maxSourceDistance)) return false;
 				return _.sum(sourceDistances) / sourceDistances.length;
 			});
+
 			if (bestOutpost) {
 				let pos = Pathing.findPathablePosition(bestOutpost);
 				log.info(`Colony ${colony.room.print} now remote mining from ${pos.print}`);

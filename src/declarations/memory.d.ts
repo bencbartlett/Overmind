@@ -198,5 +198,6 @@ interface RoomMemory {
 		}
 	}
 	prevPositions?: { [creepID: string]: protoPos };
+	creepsInRoom?: { [tick: number]: string[] };
 	tick?: number;
 }

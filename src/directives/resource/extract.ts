@@ -1,6 +1,7 @@
 import {Directive} from '../Directive';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {ExtractorOverlord} from '../../overlords/mining/extractor';
+import {log} from '../../console/log';
 
 export class DirectiveExtract extends Directive {
 
@@ -28,7 +29,10 @@ export class DirectiveExtract extends Directive {
 	}
 
 	run() {
-
+		if (this.colony.level < 6) {
+			log.notify(`Removing extraction directive in ${this.pos.roomName}: room RCL insufficient.`);
+			this.remove();
+		}
 	}
 
 }
