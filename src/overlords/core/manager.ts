@@ -76,7 +76,7 @@ export class CommandCenterOverlord extends Overlord {
 		}
 	}
 
-	private supplyActions(manager: Zerg) {
+	private supplyActions(manager: Zerg): boolean {
 		let request = this.commandCenter.transportRequests.getPrioritizedClosestRequest(manager.pos, 'supply');
 		if (request) {
 			let amount = Math.min(request.amount, manager.carryCapacity);
@@ -101,7 +101,9 @@ export class CommandCenterOverlord extends Overlord {
 													 {nextPos: request.target.pos}));
 				}
 			}
+			return true;
 		}
+		return false;
 	}
 
 	private withdrawActions(manager: Zerg): boolean {
@@ -124,6 +126,7 @@ export class CommandCenterOverlord extends Overlord {
 		const terminal = this.commandCenter.terminal;
 		if (!storage || !terminal) return false;
 
+		const equilibrium = Energetics.settings.terminal.energy.equilibrium;
 		const tolerance = Energetics.settings.terminal.energy.tolerance;
 		let storageEnergyCap = Energetics.settings.storage.total.cap;
 		let terminalState = this.colony.terminalState;
@@ -132,16 +135,14 @@ export class CommandCenterOverlord extends Overlord {
 			storageEnergyCap = terminalState.amounts[RESOURCE_ENERGY] || 0;
 		}
 		// Move energy from storage to terminal if there is not enough in terminal or if there's terminal evacuation
-		if (terminal.energy < Energetics.settings.terminal.energy.equilibrium - tolerance
-			|| storage.energy > storageEnergyCap) {
+		if ((terminal.energy < equilibrium - tolerance || storage.energy > storageEnergyCap) && storage.energy > 0) {
 			if (this.unloadCarry(manager)) return true;
 			manager.task = Tasks.withdraw(storage);
 			manager.task.parent = Tasks.transfer(terminal);
 			return true;
 		}
 		// Move energy from terminal to storage if there is too much in terminal and there is space in storage
-		if (terminal.energy > Energetics.settings.terminal.energy.equilibrium + tolerance
-			&& _.sum(storage.store) < storageEnergyCap) {
+		if (terminal.energy > equilibrium + tolerance && _.sum(storage.store) < storageEnergyCap) {
 			if (this.unloadCarry(manager)) return true;
 			manager.task = Tasks.withdraw(terminal);
 			manager.task.parent = Tasks.transfer(storage);
