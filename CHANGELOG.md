@@ -7,13 +7,22 @@ All notable changes to this project will be documented in this file. The format 
 - Visualizer improvements:
     - Added a dashboard section for the evolution chamber
     - Labs now display their mineralTypes overlaid as a room visual
+    - Added version update messages to the notifications board when available
 - Improvements to swarms:
     - All overlords controlling swarms are now extended from the `SwarmOverlord <- CombatOverlord <- Overlord` class
         - New `swarmWishlist` method prevents swarms from spawning "out of sync"
     - Improvements to swarm assembly point calculations; supports multiple swarms now
+    - `Swarm.pivot()` provides more reliable in-place rotation without breaking formation
 - New console methods:
     - `notifications()` will print out a list of notifications shown in the GUI with links to rooms
     - `listDirectives()` now takes an optional functional-style filter, such as `listDirectives(dir => dir.color == COLOR_PURPLE && !!dir.overlords.colonize)`
+    - `listConstructionSites()`, which takes an optional functional filter
+- Smarter behavior when dealing with over-stressed hatcheries
+    - New `overload` stat tracks the rolling average of ticks where the hatchery is idle, wants to spawn something, but is unable to because it is being loaded
+- RoadPlanner improvements:
+    - New routing algorithm allows for tunnel placement, although this will be relatively rare due to very high maintenance costs
+    - `RoadPlanner.roadCoverage` property tracks paving completion throughout a colony; transporter bodies will now use this stat rather than colony level to determine when to switch between setups with 1:1 and 2:1 carry:move ratios
+- `CombatIntel.isEdgeDancing` uses new info tracked in `RoomIntel` to determine if a likely tower drain attack is occurring; towers will adjust their firing patterns accordingly.
 
 
 ### Changed
@@ -22,6 +31,9 @@ All notable changes to this project will be documented in this file. The format 
 - Improvements to keeping newly-constructed ramparts alive at low RCL: towers will repair critical ramparts below RCL5, and workers will prioritize fortifying critical ramparts above repairs
 - Overlords are now instantiated immeditely after a directive is placed rather than having to wait for the next full `rebuild()`
 - Pioneers will remove structures blocking a controller from being claimed, and claimers won't spawn until controller is reachable
+- Workers will upgrade controllers sooner at higher levels and will spawn when a downgrade is imminent
+- Non-stationary managers have fewer move parts in bunker-type colonies
+- Reservers allow for a lower reservation buffer and will use the cached reservation info from `RoomIntel` if vision is unavailable
 
 
 ### Fixed
@@ -34,7 +46,9 @@ All notable changes to this project will be documented in this file. The format 
 - Fixed an issue causing `CombatZerg` to occasionally load as `Zerg`
 - Fixed a bug in `Abathur.getReactionQueue()` which could cause it to ignore market resources on private servers
 - Fixed a bug where fillers would try to withdraw from nukes
-- Improved drone constructionSite build time 
+- Improved drone constructionSite build time
+- Fixed a bug where `RoomPlanner` would not properly demolish hostile structures in a newly claimed room
+- Extraction directives now remove themselves if colony downgrades below RCL6
 
 
 

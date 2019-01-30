@@ -128,7 +128,16 @@ export class SporeCrawler extends HiveCluster {
 				if (CombatIntel.isEdgeDancing(hostile)) {
 					let netDPS = CombatIntel.towerDamageAtPos(hostile.pos)! + myCreepDamage
 								 - (HEAL_FUDGE_FACTOR * CombatIntel.maxHostileHealingTo(hostile));
-					return netDPS * hostile.pos.rangeToEdge > hostile.hits;
+					let isKillable = netDPS * hostile.pos.rangeToEdge > hostile.hits;
+					if (isKillable) {
+						return true;
+					} else {
+						// Shoot if they get close enough
+						if (this.colony.bunker && this.colony.bunker.anchor &&
+							hostile.pos.getRangeTo(this.colony.bunker.anchor) <= 6 + 2) {
+							return true;
+						}
+					}
 				} else {
 					return true;
 				}

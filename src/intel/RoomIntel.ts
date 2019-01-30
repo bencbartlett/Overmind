@@ -63,6 +63,15 @@ export class RoomIntel {
 		room.memory.tick = Game.time;
 	}
 
+	// Update time-sensitive reservation and safemode info
+	private static recordControllerInfo(controller: StructureController): void {
+		if (controller.room.memory.ctrl) {
+			controller.room.memory.ctrl.res = controller.reservation;
+			controller.room.memory.ctrl.SM = controller.safeMode;
+			controller.room.memory.ctrl.SMcd = controller.safeModeCooldown;
+		}
+	}
+
 	private static recomputeScoreIfNecessary(room: Room): boolean {
 		if (room.memory.expansionData == false) { // room is uninhabitable or owned
 			if (Math.random() < FALSE_SCORE_RECALC_PROB) {
@@ -260,6 +269,10 @@ export class RoomIntel {
 				// Refresh cache
 				let recacheTime = room.owner ? OWNED_RECACHE_TIME : RECACHE_TIME;
 				room.memory.expiration = getCacheExpiration(recacheTime, 250);
+			}
+
+			if (room.controller && Game.time % 5 == 0) {
+				this.recordControllerInfo(room.controller);
 			}
 
 		}
