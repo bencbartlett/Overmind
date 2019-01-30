@@ -417,9 +417,15 @@ export class Hatchery extends HiveCluster {
 			}
 		});
 		let boxCoords = Visualizer.section(`${this.colony.name} Hatchery`, {x, y, roomName: this.room.name},
-										   9.5, 2 + spawning.length + .1);
+										   9.5, 3 + spawning.length + .1);
 		let boxX = boxCoords.x;
 		y = boxCoords.y + 0.25;
+
+		// Log energy
+		Visualizer.text('Energy', {x: boxX, y: y, roomName: this.room.name});
+		Visualizer.barGraph([this.room.energyAvailable, this.room.energyCapacityAvailable],
+							{x: boxX + 4, y: y, roomName: this.room.name}, 5);
+		y += 1;
 
 		// Log uptime
 		let uptime = this.memory.stats.uptime;

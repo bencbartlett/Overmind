@@ -88,7 +88,7 @@ export class TransportOverlord extends Overlord {
 					log.warning(`Improper logistics request: should not request input for resource or tombstone!`);
 					return;
 				} else if (request.resourceType == 'all') {
-					log.error(`TransportOverlord: ` + ALL_RESOURCE_TYPE_ERROR);
+					log.error(`${this.print}: cannot request 'all' as input!`);
 					return;
 				} else {
 					task = Tasks.transfer(request.target, request.resourceType);
@@ -134,23 +134,21 @@ export class TransportOverlord extends Overlord {
 		} else {
 			// If nothing to do, put everything in a store structure
 			if (_.sum(transporter.carry) > 0) {
-				let dropoffPoints: (StructureLink | StructureStorage)[] = _.compact([this.colony.storage!]);//, ...this.colony.dropoffLinks]);
-				// let bestDropoffPoint = minBy(dropoffPoints, function(dropoff: StructureLink | StructureStorage) {
-				// 	let range = transporter.pos.getMultiRoomRangeTo(dropoff.pos);
-				// 	if (dropoff instanceof StructureLink) {
-				// 		return Math.max(range, this.colony.linkNetwork.getDropoffAvailability(dropoff));
-				// 	} else {
-				// 		return range;
-				// 	}
-				// });
-				let nonzeroResources = _.filter(_.keys(transporter.carry),
-												(key: ResourceConstant) => (transporter.carry[key] || 0) > 0);
-				if (nonzeroResources.length > 1) {
-					if (this.colony.storage) {
-						transporter.task = Tasks.transferAll(this.colony.storage);
+				if (transporter.hasMineralsInCarry) {
+					let target = this.colony.terminal || this.colony.storage;
+					if (target) {
+						transporter.task = Tasks.transferAll(target);
 					}
-				}
-				else {
+				} else {
+					let dropoffPoints: (StructureLink | StructureStorage)[] = _.compact([this.colony.storage!]);//, ...this.colony.dropoffLinks]);
+					// let bestDropoffPoint = minBy(dropoffPoints, function(dropoff: StructureLink | StructureStorage) {
+					// 	let range = transporter.pos.getMultiRoomRangeTo(dropoff.pos);
+					// 	if (dropoff instanceof StructureLink) {
+					// 		return Math.max(range, this.colony.linkNetwork.getDropoffAvailability(dropoff));
+					// 	} else {
+					// 		return range;
+					// 	}
+					// });
 					let bestDropoffPoint = transporter.pos.findClosestByMultiRoomRange(dropoffPoints);
 
 					if (bestDropoffPoint) transporter.task = Tasks.transfer(bestDropoffPoint);
