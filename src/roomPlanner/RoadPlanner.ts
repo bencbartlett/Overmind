@@ -77,6 +77,7 @@ export class RoadPlanner {
 						length   : roadCoverage.length,
 						exp      : getCacheExpiration(RoadPlanner.settings.recomputeCoverageInterval)
 					};
+					log.debug(`Coverage: ${JSON.stringify(roadCoverage)}`);
 				}
 			}
 		}

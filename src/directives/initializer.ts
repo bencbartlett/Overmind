@@ -9,8 +9,6 @@ import {DirectiveRPHatchery} from './roomPlanner/roomPlanner_hatchery';
 import {DirectiveRPCommandCenter} from './roomPlanner/roomPlanner_commandCenter';
 import {DirectiveColonize} from './colony/colonize';
 import {DirectiveTargetSiege} from './targeting/siegeTarget';
-import {DirectiveSiege} from './offense/siege';
-import {DirectiveHealPoint} from './offense/healPoint';
 import {DirectiveDestroy} from './offense/destroy';
 import {DirectiveInvasionDefense} from './defense/invasionDefense';
 import {DirectiveHaul} from './resource/haul';
@@ -50,14 +48,10 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			switch (flag.secondaryColor) {
 				case COLOR_RED:
 					return new DirectiveSwarmDestroy(flag);
-				case COLOR_PURPLE:
-					return new DirectiveControllerAttack(flag);
-				case COLOR_ORANGE:
-					return new DirectiveSiege(flag);
-				case COLOR_GREEN:
-					return new DirectiveHealPoint(flag);
 				case COLOR_CYAN:
 					return new DirectiveDestroy(flag);
+				case COLOR_PURPLE:
+					return new DirectiveControllerAttack(flag);
 			}
 			break;
 
