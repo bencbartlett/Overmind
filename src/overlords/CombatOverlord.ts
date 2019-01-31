@@ -1,12 +1,14 @@
 import {Overlord, OverlordInitializer} from './Overlord';
 import {CombatZerg} from '../zerg/CombatZerg';
 import {SpawnGroup} from '../logistics/SpawnGroup';
+import {profile} from '../profiler/decorator';
 
 
 export interface CombatOverlordOptions {
 
 }
 
+@profile
 export abstract class CombatOverlord extends Overlord {
 
 	spawnGroup: SpawnGroup;

@@ -4,6 +4,7 @@ import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../../utilities/Cartographer'
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {exponentialMovingAverage, getCacheExpiration} from '../../utilities/utils';
 import {Pathing} from '../../movement/Pathing';
+import {profile} from '../../profiler/decorator';
 
 
 interface DirectiveHarvestMemory extends FlagMemory {
@@ -24,6 +25,7 @@ const defaultDirectiveHarvestMemory: DirectiveHarvestMemory = {
 	}
 };
 
+@profile
 export class DirectiveHarvest extends Directive {
 
 	static directiveName = 'harvest';

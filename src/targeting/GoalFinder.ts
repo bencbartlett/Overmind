@@ -4,6 +4,7 @@ import {CombatZerg} from '../zerg/CombatZerg';
 import {log} from '../console/log';
 import {RoomIntel} from '../intel/RoomIntel';
 import {isCombatZerg} from '../declarations/typeGuards';
+import {profile} from '../profiler/decorator';
 
 
 interface SkirmishAnalysis {
@@ -17,6 +18,7 @@ interface SkirmishAnalysis {
 
 const DEBUG = false;
 
+@profile
 export class GoalFinder {
 
 	// Standard set of goals for fighting small groups of hostiles (not optimal for larger fights)

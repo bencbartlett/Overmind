@@ -2,8 +2,9 @@ import {CombatOverlord} from './CombatOverlord';
 import {Swarm} from '../zerg/Swarm';
 import {CreepSetup} from '../creepSetups/CreepSetup';
 import {Directive} from '../directives/Directive';
+import {profile} from '../profiler/decorator';
 
-
+@profile
 export abstract class SwarmOverlord extends CombatOverlord {
 
 	memory: any; 						// swarm overlords must have a memory property

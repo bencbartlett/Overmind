@@ -3,8 +3,8 @@ import {getAllStructureCoordsFromLayout, RoomPlanner, translatePositions} from '
 import {Colony} from '../Colony';
 import {Mem} from '../memory/Memory';
 import {log} from '../console/log';
-import {derefCoords} from '../utilities/utils';
-import {bunkerLayout, insideBunkerBounds} from './layouts/bunker';
+import {derefCoords, minMax} from '../utilities/utils';
+import {BUNKER_RADIUS, bunkerLayout, insideBunkerBounds} from './layouts/bunker';
 import {profile} from '../profiler/decorator';
 
 export interface BarrierPlannerMemory {
@@ -25,7 +25,7 @@ export class BarrierPlanner {
 
 	static settings = {
 		buildBarriersAtRCL: 3,
-		padding           : 3, // allow this much space between structures and barriers
+		padding           : 3, // allow this much space between structures and barriers (if possible)
 		bunkerizeRCL      : 7
 	};
 
@@ -46,8 +46,14 @@ export class BarrierPlanner {
 		let padding = BarrierPlanner.settings.padding;
 		if (bunkerPos) {
 			let {x, y} = bunkerPos;
-			let [x1, y1] = [Math.max(x - 5 - padding, 0), Math.max(y - 5 - padding, 0)];
-			let [x2, y2] = [Math.min(x + 5 + padding, 49), Math.min(y + 5 + padding, 49)];
+			const r = BUNKER_RADIUS - 1;
+			let [x1, y1] = [Math.max(x - r - padding, 0), Math.max(y - r - padding, 0)];
+			let [x2, y2] = [Math.min(x + r + padding, 49), Math.min(y + r + padding, 49)];
+			// Make sure you don't leave open walls
+			x1 = minMax(x1, 3, 50 - 3);
+			x2 = minMax(x2, 3, 50 - 3);
+			y1 = minMax(y1, 3, 50 - 3);
+			y2 = minMax(y2, 3, 50 - 3);
 			rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
 		}
 		// Get Min cut

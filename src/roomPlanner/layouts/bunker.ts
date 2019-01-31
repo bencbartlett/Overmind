@@ -3,8 +3,12 @@ import {Colony} from '../../Colony';
 import {coordName} from '../../utilities/utils';
 
 
+export const BUNKER_RADIUS = 6;
+
 export const bunkerLayout: StructureLayout = {
-	data: {anchor: {'x': 25, 'y': 25}},
+	data: {
+		anchor: {'x': 25, 'y': 25}
+	},
 	1   : {
 		'name'     : 'bunkerCore',
 		'shard'    : 'shard2',

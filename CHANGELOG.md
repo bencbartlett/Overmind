@@ -37,7 +37,6 @@ All notable changes to this project will be documented in this file. The format 
 
 
 ### Fixed
-- MAJOR: Fixed a bug with the CPU reset routine which would cause indefinite looping and garbage collection (#65)
 - Security patches and bugfixes for the `Assimilator`
 - Pioneers and claimers should no longer navigate through dangerous source keeper territory
 - Fixed an issue in `TaskRecharge` which could cause some creeps, like pioneers, to not harvest from a fully-surrounded source that they were adjacent to, causing gridlock situations
@@ -49,6 +48,8 @@ All notable changes to this project will be documented in this file. The format 
 - Improved drone constructionSite build time
 - Fixed a bug where `RoomPlanner` would not properly demolish hostile structures in a newly claimed room
 - Extraction directives now remove themselves if colony downgrades below RCL6
+- Fixed a bug where low-level min-cut barriers for a bunker placed too close to the edge would not fully enclose the base (#43)
+    - This bug has not been fixed for the older two-part base style, which will soon be deprecated
 
 
 

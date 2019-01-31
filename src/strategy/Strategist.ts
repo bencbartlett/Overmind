@@ -11,6 +11,7 @@ import {log} from '../console/log';
 import {Pathing} from '../movement/Pathing';
 import {assimilationLocked} from '../assimilation/decorator';
 import {MAX_OWNED_ROOMS, SHARD3_MAX_OWNED_ROOMS} from '../~settings';
+import {profile} from '../profiler/decorator';
 
 
 const CHECK_EXPANSION_FREQUENCY = 1000;
@@ -28,6 +29,7 @@ interface StrategistMemory {
 const defaultStrategistMemory: StrategistMemory = {};
 
 @assimilationLocked
+@profile
 export class Strategist implements IStrategist {
 
 	memory: StrategistMemory;

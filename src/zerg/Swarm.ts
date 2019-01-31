@@ -10,6 +10,7 @@ import {GoalFinder} from '../targeting/GoalFinder';
 import {CombatTargeting} from '../targeting/CombatTargeting';
 import {Pathing} from '../movement/Pathing';
 import {normalizePos} from '../movement/helpers';
+import {profile} from '../profiler/decorator';
 
 export interface ProtoSwarm {
 	creeps: Creep[] | CombatZerg[]
@@ -44,7 +45,8 @@ interface SwarmOverlord extends CombatOverlord {
 const DEBUG = true;
 
 // Represents a coordinated group of creeps moving as a single unit
-export class Swarm implements ProtoSwarm { // TODO: incomplete
+@profile
+export class Swarm implements ProtoSwarm {
 
 	private overlord: SwarmOverlord;
 	memory: SwarmMemory;

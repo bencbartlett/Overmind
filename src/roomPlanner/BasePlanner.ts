@@ -1,5 +1,5 @@
 import {distanceTransform} from '../algorithms/distanceTransform';
-import {allBunkerCoords, bunkerCoordLookup, bunkerLayout} from './layouts/bunker';
+import {allBunkerCoords, BUNKER_RADIUS, bunkerCoordLookup, bunkerLayout} from './layouts/bunker';
 import {coordName, minBy} from '../utilities/utils';
 import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
@@ -67,11 +67,13 @@ export class BasePlanner {
 		let dt = distanceTransform(roomName);
 		let coords: Coord[] = [];
 		let x, y, value: number;
-		for (y of _.range(8, 50 - 8)) {
-			for (x of _.range(8, 50 - 8)) {
-				if (dt.get(x, y) >= 7) {
+		for (y of _.range(BUNKER_RADIUS + 2, 50 - (BUNKER_RADIUS + 2))) {
+			for (x of _.range(BUNKER_RADIUS + 2, 50 - (BUNKER_RADIUS + 2))) {
+				if (dt.get(x, y) >= BUNKER_RADIUS + 1) {
+					// If it fits, I sits
 					coords.push({x, y});
-				} else if (dt.get(x, y) >= 5 && !this.terrainIntersectsWithBunker({x, y}, dt)) {
+				} else if (dt.get(x, y) >= (BUNKER_RADIUS - 1) && !this.terrainIntersectsWithBunker({x, y}, dt)) {
+					// If it might not fits, check that it fits before I sits
 					coords.push({x, y});
 				}
 			}

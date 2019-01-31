@@ -2,7 +2,9 @@ import {Directive} from '../Directive';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {ExtractorOverlord} from '../../overlords/mining/extractor';
 import {log} from '../../console/log';
+import {profile} from '../../profiler/decorator';
 
+@profile
 export class DirectiveExtract extends Directive {
 
 	static directiveName = 'extract';
@@ -15,7 +17,9 @@ export class DirectiveExtract extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag);
-		this.colony.destinations.push(this.pos);
+		if (this.colony) {
+			this.colony.destinations.push(this.pos);
+		}
 	}
 
 	spawnMoarOverlords() {

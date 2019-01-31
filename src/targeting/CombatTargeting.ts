@@ -5,7 +5,9 @@ import {maxBy} from '../utilities/utils';
 import {CombatIntel} from '../intel/CombatIntel';
 import {log} from '../console/log';
 import {Swarm} from '../zerg/Swarm';
+import {profile} from '../profiler/decorator';
 
+@profile
 export class CombatTargeting {
 
 	/* Finds the best target within a given range that a zerg can currently attack */

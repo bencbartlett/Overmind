@@ -1,3 +1,5 @@
+import {profile} from '../profiler/decorator';
+
 const MUON = 'Muon'; // My Screeps username; used for a variety of communications for players running my bot
 const MAX_ACTIVE_SEGMENTS = 10;
 
@@ -27,6 +29,7 @@ if (!Memory.segmenter) {
 }
 _.defaultsDeep(Memory.segmenter, DefaultSegmenterMemory);
 
+@profile
 export class Segmenter {
 
 	private static cache: SegmenterCache = {
