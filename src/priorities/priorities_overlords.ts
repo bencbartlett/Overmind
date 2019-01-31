@@ -33,8 +33,9 @@ export var OverlordPriority = {
 		firstTransport: 500,		// High priority to spawn the first transporter
 		mine          : 501,
 		work          : 502,
-		mineral       : 503,
-		transport     : 599,		// Spawn the rest of the transporters
+		mineralRCL8   : 503,
+		transport     : 510,		// Spawn the rest of the transporters
+		mineral       : 520
 	},
 
 	outpostDefense: {

@@ -19,8 +19,16 @@ export class DirectiveExtract extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		let priority = this.room && this.room.my ? OverlordPriority.ownedRoom.mineral
-												 : OverlordPriority.remoteSKRoom.mineral;
+		let priority: number;
+		if (this.room && this.room.my) {
+			if (this.colony.level == 8) {
+				priority = OverlordPriority.ownedRoom.mineralRCL8;
+			} else {
+				priority = OverlordPriority.ownedRoom.mineral;
+			}
+		} else {
+			priority = OverlordPriority.remoteSKRoom.mineral;
+		}
 		this.overlords.extract = new ExtractorOverlord(this, priority);
 	}
 

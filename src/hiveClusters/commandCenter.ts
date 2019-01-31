@@ -6,7 +6,6 @@ import {CommandCenterOverlord} from '../overlords/core/manager';
 import {Colony} from '../Colony';
 import {Mem} from '../memory/Memory';
 import {TerminalNetwork} from '../logistics/TerminalNetwork';
-import {Energetics} from '../logistics/Energetics';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {Priority} from '../priorities/priorities';
 import {Cartographer} from '../utilities/Cartographer';
@@ -119,10 +118,12 @@ export class CommandCenter extends HiveCluster {
 		// Refill towers as needed with variable priority
 		let refillTowers = _.filter(this.towers, tower => tower.energy < CommandCenter.settings.refillTowersBelow);
 		_.forEach(refillTowers, tower => this.transportRequests.requestInput(tower, Priority.High));
-		// Refill terminal if it is below threshold
-		if (this.terminal && this.terminal.energy < Energetics.settings.terminal.energy.inThreshold) {
-			this.transportRequests.requestInput(this.terminal, Priority.NormalHigh);
-		}
+
+		// // Refill terminal if it is below threshold
+		// if (this.terminal && this.terminal.energy < Energetics.settings.terminal.energy.inThreshold) {
+		// 	this.transportRequests.requestInput(this.terminal, Priority.NormalHigh);
+		// }
+
 		// Refill core spawn (only applicable to bunker layouts)
 		if (this.colony.bunker && this.colony.bunker.coreSpawn) {
 			if (this.colony.bunker.coreSpawn.energy < this.colony.bunker.coreSpawn.energyCapacity) {
