@@ -26,7 +26,7 @@ export class QueenOverlord extends Overlord {
 	constructor(hatchery: Hatchery, priority = OverlordPriority.core.queen) {
 		super(hatchery, 'supply', priority);
 		this.hatchery = hatchery;
-		this.queenSetup = this.hatchery.battery || this.colony.storage ? Setups.queens.default : Setups.queens.early;
+		this.queenSetup = this.colony.storage ? Setups.queens.default : Setups.queens.early;
 		this.queens = this.zerg(Roles.queen);
 		this.settings = {
 			refillTowersBelow: 500,

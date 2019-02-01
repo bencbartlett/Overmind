@@ -1,7 +1,6 @@
 import {CombatOverlord} from './CombatOverlord';
 import {Swarm} from '../zerg/Swarm';
 import {CreepSetup} from '../creepSetups/CreepSetup';
-import {Directive} from '../directives/Directive';
 import {profile} from '../profiler/decorator';
 
 @profile
@@ -9,10 +8,6 @@ export abstract class SwarmOverlord extends CombatOverlord {
 
 	memory: any; 						// swarm overlords must have a memory property
 	swarms: { [ref: string]: Swarm };
-
-	constructor(directive: Directive, name: string, priority: number, requiredRCL: number) {
-		super(directive, name, priority, requiredRCL);
-	}
 
 	/* Wishlist of creeps to simplify spawning logic; includes automatic reporting */
 

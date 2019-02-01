@@ -358,9 +358,11 @@ export class Hatchery extends HiveCluster {
 		// Spawn all queued creeps that you can
 		while (this.availableSpawns.length > 0) {
 			let result = this.spawnHighestPriorityCreep();
+			if (result == ERR_NOT_ENOUGH_ENERGY) { // if you can't spawn something you want to
+				this.isOverloaded = true;
+			}
 			if (result != OK && result != ERR_SPECIFIED_SPAWN_BUSY) {
 				// Can't spawn creep right now
-				this.isOverloaded = true;
 				break;
 			}
 		}

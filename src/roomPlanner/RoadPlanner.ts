@@ -72,10 +72,14 @@ export class RoadPlanner {
 				log.debug(`Recomputing road coverage from ${storagePos.print} to ${destination.print}...`);
 				let roadCoverage = this.computeRoadCoverage(storagePos, destination);
 				if (roadCoverage != undefined) {
+					// Set expiration to be longer if road is nearly complete
+					let expiration = roadCoverage.roadCount / roadCoverage.length >= 0.75
+									 ? getCacheExpiration(RoadPlanner.settings.recomputeCoverageInterval)
+									 : getCacheExpiration(3 * RoadPlanner.settings.recomputeCoverageInterval);
 					this.memory.roadCoverages[destName] = {
 						roadCount: roadCoverage.roadCount,
 						length   : roadCoverage.length,
-						exp      : getCacheExpiration(RoadPlanner.settings.recomputeCoverageInterval)
+						exp      : expiration
 					};
 					log.debug(`Coverage: ${JSON.stringify(roadCoverage)}`);
 				}

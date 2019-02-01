@@ -195,6 +195,35 @@ export class RoomIntel {
 		room.memory.creepsInRoom[Game.time] = _.map(room.hostiles, creep => creep.name);
 	}
 
+	private static recordSafety(room: Room): void {
+		if (!room.memory.safety) {
+			room.memory.safety = {
+				safeFor  : 0,
+				unsafeFor: 0,
+				safety1k : 1,
+				safety10k: 1,
+				tick     : Game.time
+			};
+		}
+		let safety: number;
+		if (room.dangerousHostiles.length > 0) {
+			room.memory.safety.safeFor = 0;
+			room.memory.safety.unsafeFor += 1;
+			safety = 0;
+		} else {
+			room.memory.safety.safeFor += 1;
+			room.memory.safety.unsafeFor = 0;
+			safety = 1;
+		}
+		// Compute rolling averages
+		let dTime = Game.time - room.memory.safety.tick;
+		room.memory.safety.safety1k = irregularExponentialMovingAverage(
+			safety, room.memory.safety.safety1k, dTime, 1000);
+		room.memory.safety.safety10k = irregularExponentialMovingAverage(
+			safety, room.memory.safety.safety10k, dTime, 10000);
+		room.memory.safety.tick = Game.time;
+	}
+
 	static isInvasionLikely(room: Room): boolean {
 		const data = room.memory.invasionData;
 		if (!data) return false;
@@ -238,11 +267,14 @@ export class RoomIntel {
 		return 0;
 	}
 
+
 	static run(): void {
 		let alreadyComputedScore = false;
 		for (let name in Game.rooms) {
 
-			const room = Game.rooms[name];
+			const room: Room = Game.rooms[name];
+
+			this.recordSafety(room);
 
 			// Track invasion data, harvesting, and casualties for all colony rooms and outposts
 			if (Overmind.colonyMap[room.name]) { // if it is an owned or outpost room

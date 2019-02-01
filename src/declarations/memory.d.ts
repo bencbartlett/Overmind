@@ -28,6 +28,7 @@ interface Memory {
 	// suspend?: number;
 	resetBucket?: boolean;
 	haltTick?: number;
+	combatPlanner: any;
 }
 
 interface StatsMemory {
@@ -196,6 +197,13 @@ interface RoomMemory {
 			avg1M: number;
 			tick: number;
 		}
+	}
+	safety?: {
+		safeFor: number;
+		unsafeFor: number;
+		safety1k: number;
+		safety10k: number;
+		tick: number;
 	}
 	prevPositions?: { [creepID: string]: protoPos };
 	creepsInRoom?: { [tick: number]: string[] };

@@ -60,7 +60,7 @@ export class CombatIntel {
 	}
 
 	/* Total tower tamage from all towers in room at a given position */
-	static towerDamageAtPos(pos: RoomPosition, ignoreEnergy = false): number | undefined {
+	static towerDamageAtPos(pos: RoomPosition, ignoreEnergy = false): number {
 		if (pos.room) {
 			let expectedDamage = 0;
 			for (let tower of pos.room.towers) {
@@ -69,6 +69,9 @@ export class CombatIntel {
 				}
 			}
 			return expectedDamage;
+		} else {
+			log.warning(`CombatIntel.towerDamageAtPos: room visibility at ${pos.print}!`);
+			return 0;
 		}
 	}
 
@@ -532,7 +535,7 @@ export class CombatIntel {
 		return currentRange > previousRange;
 	}
 
-	// This method is expensive; use sparingly
+	// This method is probably expensive; use sparingly
 	static isEdgeDancing(creep: Creep, reentryThreshold = 3): boolean {
 		if (!creep.room.my) {
 			log.warning(`isEdgeDancing should only be called in owned rooms!`);
