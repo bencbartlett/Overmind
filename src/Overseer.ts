@@ -196,9 +196,17 @@ export class Overseer implements IOverseer {
 	private handleColonyInvasions(colony: Colony) {
 		// Defend against invasions in owned rooms
 		if (colony.room && colony.level >= DirectiveInvasionDefense.requiredRCL) {
+
+			// See if invasion is big enough to warrant creep defenses
 			let effectiveInvaderCount = _.sum(_.map(colony.room.hostiles,
 													invader => invader.boosts.length > 0 ? 2 : 1));
-			if (effectiveInvaderCount >= 3 || colony.room.dangerousPlayerHostiles.length > 0) {
+			let needsDefending = effectiveInvaderCount >= 3 || colony.room.dangerousPlayerHostiles.length > 0;
+
+			// Place defensive directive after hostiles have been present for a long enough time
+			let safetyData = colony.room.memory.safety;
+			let invasionIsPersistent = safetyData && safetyData.unsafeFor > 20;
+
+			if (needsDefending && invasionIsPersistent) {
 				DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
 			}
 		}

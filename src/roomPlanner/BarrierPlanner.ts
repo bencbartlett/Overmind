@@ -133,11 +133,22 @@ export class BarrierPlanner {
 	private buildMissingRamparts(): void {
 		// Max buildings that can be placed each tick
 		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
+
 		// Build missing ramparts
-		let barrierPositions = [];
+		let barrierPositions: RoomPosition[] = [];
 		for (let coord of _.keys(this.memory.barrierLookup)) {
 			barrierPositions.push(derefCoords(coord, this.colony.name));
 		}
+
+		// Add critical structures to barrier lookup
+		let criticalStructures: Structure[] = _.compact([...this.colony.towers,
+														 ...this.colony.spawns,
+														 this.colony.storage!,
+														 this.colony.terminal!]);
+		for (let structure of criticalStructures) {
+			barrierPositions.push(structure.pos);
+		}
+
 		for (let pos of barrierPositions) {
 			if (count > 0 && RoomPlanner.canBuild(STRUCTURE_RAMPART, pos) && this.barrierShouldBeHere(pos)) {
 				let ret = pos.createConstructionSite(STRUCTURE_RAMPART);
