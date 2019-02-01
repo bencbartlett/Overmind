@@ -21,8 +21,14 @@ All notable changes to this project will be documented in this file. The format 
     - New `overload` stat tracks the rolling average of ticks where the hatchery is idle, wants to spawn something, but is unable to because it is being loaded
 - RoadPlanner improvements:
     - New routing algorithm allows for tunnel placement, although this will be relatively rare due to very high maintenance costs
+    - Changes to `Colony.destinations` ensures more determinism when recomputing road networks; you should notice a decrease in roads which become deprecated as levels grow or outposts are added
     - `RoadPlanner.roadCoverage` property tracks paving completion throughout a colony; transporter bodies will now use this stat rather than colony level to determine when to switch between setups with 1:1 and 2:1 carry:move ratios
-- `CombatIntel.isEdgeDancing` uses new info tracked in `RoomIntel` to determine if a likely tower drain attack is occurring; towers will adjust their firing patterns accordingly.
+- New information tracked with `RoomIntel`:
+    - (Approximate) harvesting data and rolling averages of energy/tick over 10k, 100k, and 1M ticks
+    - Casualty data, with effective energy costs and rolling average of cost/tick over 10k, 100k, 1M ticks
+    - Creep occupancy data over the last 25 ticks (computed only in owned rooms)
+    - Safety data, tracking consecutive safe, unsafe ticks and rolling average of safety over last 1k and 10k ticks
+- `CombatIntel.isEdgeDancing` uses creep occupancy data tracked in `RoomIntel` to determine if a likely tower drain attack is occurring; towers will adjust their firing patterns accordingly.
 
 
 ### Changed
@@ -34,6 +40,7 @@ All notable changes to this project will be documented in this file. The format 
 - Workers will upgrade controllers sooner at higher levels and will spawn when a downgrade is imminent
 - Non-stationary managers have fewer move parts in bunker-type colonies
 - Reservers allow for a lower reservation buffer and will use the cached reservation info from `RoomIntel` if vision is unavailable
+- Queens now spawn with 1:1 move:carry ratios until a storage is built
 
 
 ### Fixed
@@ -202,6 +209,8 @@ Important notes as of this release:
 - Deprecated `DirectiveLogisticsRequest`
 - Removed `lodash.minBy` dependencies to reduce compiled codebase size
 
+
+
 ## Overmind [0.4.1] - 2018.6.15
 
 This patch makes Abathur a little smarter in which reactions he chooses and fixes some bugs accidentally introduced by changes in the last release.
@@ -218,6 +227,7 @@ This patch makes Abathur a little smarter in which reactions he chooses and fixe
 - Fixed a bug where colony substrings in a flag name could cause a directive to reference the wrong colony, e.g. "E11S12" directs to "E11S1"
 - Fixed a bug introduced when CreepSetups were refactored in the last release that could cause bootstrapping directives to fail to run
 - Fixed a bug in LogisticsNetwork where predicted carry amounts could exceed carry capacity
+
 
 
 ## Overmind [0.4.0]: "require('more-minerals')" - 2018.6.14
@@ -297,7 +307,10 @@ Finally, we now have a [feature request](https://github.com/bencbartlett/Overmin
 ### Removed
 - Removed all contents from `src/deprecated`
 
+
+
 ## Overmind [0.3.1] - 2018.5.12
+
 ### Added
 - Workers sign controllers at low RCL
 
@@ -306,6 +319,7 @@ Finally, we now have a [feature request](https://github.com/bencbartlett/Overmin
 
 ### Removed
 - Removed `LabMineralType` directive as it is no longer relevant
+
 
 
 ## Overmind [0.3.0]: "Back to base-ics" - 2018.5.9
@@ -366,7 +380,9 @@ The terminal network has been improved as well, and now tracks transfers between
 - Fixed a bug where upgradeSites could misidentify their input in some pathological room layouts
 
 
+
 ## Overmind [0.2.1] - 2018.3.22
+
 ### Added
 - Memory stat collection and `User` variable (#3 - thanks CoolFeather2!)
 - Brief setup instructions for dashboard
@@ -379,6 +395,7 @@ The terminal network has been improved as well, and now tracks transfers between
 ### Fixed 
 - Bugfixes with rollup and screeps-profiler
 - Moved changelog to root
+
 
 
 ## Overmind [0.2.0]: "Logistics Logic" - 2018.3.15
@@ -406,8 +423,11 @@ This release completely overhauls the logistics system in Overmind, replacing ha
 release of the Task system)
 
 
+
 ## Overmind [0.1.0]: "GL HF" - 2018.3.2
-This release was initially deployed on 2018.3.2 but was re-versioned on 2018.3.15.
+
+(This release was initially deployed on 2018.3.2 but was re-versioned on 2018.3.15.)
+
 ### Added
 - Initial pre-release of Overmind after 190 commits and about 80,000 additions.
 

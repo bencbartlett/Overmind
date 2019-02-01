@@ -52,9 +52,14 @@ export class WorkerOverlord extends Overlord {
 					 barrier => barrier.hits < WorkerOverlord.settings.barrierHits.critical), 10);
 		// Generate a list of structures needing repairing (different from fortifying except in critical case)
 		this.repairStructures = $.structures(this, 'repairStructures', () =>
-			_.filter(this.colony.repairables, function (structure) {
+			_.filter(this.colony.repairables, structure => {
 				if (structure.structureType == STRUCTURE_CONTAINER) {
-					return structure.hits < 0.5 * structure.hitsMax;
+					// only repair containers in owned room
+					if (structure.pos.roomName == this.colony.name) {
+						return structure.hits < 0.5 * structure.hitsMax;
+					} else {
+						return false;
+					}
 				} else {
 					return structure.hits < structure.hitsMax;
 				}
@@ -137,20 +142,21 @@ export class WorkerOverlord extends Overlord {
 			} else {
 				numWorkers = $.number(this, 'numWorkers', () => {
 					// At higher levels, spawn workers based on construction and repair that needs to be done
-					const MAX_WORKERS = 3; // Maximum number of workers to spawn
-					let constructionTicks = _.sum(this.constructionSites,
-												  site => site.progressTotal - site.progress) / BUILD_POWER;
+					const MAX_WORKERS = 5; // Maximum number of workers to spawn
+					let buildTicks = _.sum(this.constructionSites,
+										   site => Math.max(site.progressTotal - site.progress, 0)) / BUILD_POWER;
 					let repairTicks = _.sum(this.repairStructures,
 											structure => structure.hitsMax - structure.hits) / REPAIR_POWER;
-					let paveTicks = _.sum(this.colony.rooms, room => this.colony.roadLogistics.energyToRepave(room));
+					let paveTicks = _.sum(this.colony.rooms,
+										  room => this.colony.roadLogistics.energyToRepave(room)) / 1; // repairCost=1
 					let fortifyTicks = 0;
 					if (this.colony.assets.energy > WorkerOverlord.settings.fortifyDutyThreshold) {
-						fortifyTicks = 0.25 * _.sum(this.fortifyBarriers,
-													barrier => WorkerOverlord.settings.barrierHits[this.colony.level]
-															   - barrier.hits) / REPAIR_POWER;
+						fortifyTicks = 0.25 * _.sum(this.fortifyBarriers, barrier =>
+							Math.max(0, WorkerOverlord.settings.barrierHits[this.colony.level]
+										- barrier.hits)) / REPAIR_POWER;
 					}
 					// max constructionTicks for private server manually setting progress
-					let numWorkers = Math.ceil(2 * (Math.max(constructionTicks, 0) + repairTicks + fortifyTicks) /
+					let numWorkers = Math.ceil(2 * (5 * buildTicks + repairTicks + paveTicks + fortifyTicks) /
 											   (workPartsPerWorker * CREEP_LIFE_TIME));
 					numWorkers = Math.min(numWorkers, MAX_WORKERS);
 					if (this.colony.controller.ticksToDowngrade <= (this.colony.level >= 4 ? 10000 : 2000)) {

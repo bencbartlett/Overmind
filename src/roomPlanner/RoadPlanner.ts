@@ -8,7 +8,7 @@ import {Colony, getAllColonies} from '../Colony';
 import {MatrixTypes, Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
 import {$} from '../caching/GlobalCache';
-import {getCacheExpiration} from '../utilities/utils';
+import {getCacheExpiration, onPublicServer} from '../utilities/utils';
 
 export interface RoadPlannerMemory {
 	roadLookup: { [roomName: string]: { [roadCoordName: string]: boolean } };
@@ -21,6 +21,11 @@ export interface RoadPlannerMemory {
 		}
 	}
 }
+
+const PLAIN_COST = 3;
+const SWAMP_COST = 4;
+const WALL_COST = 15 * PLAIN_COST;
+const EXISTING_PATH_COST = PLAIN_COST - 1;
 
 let memoryDefaults: RoadPlannerMemory = {
 	roadLookup   : {},
@@ -38,10 +43,9 @@ export class RoadPlanner {
 	costMatrices: { [roomName: string]: CostMatrix };
 
 	static settings = {
-		encourageRoadMerging          : true,		// will reduce cost of some tiles in existing paths to encourage merging
-		tileCostReductionInterval     : 10,			// spatial frequency of tile cost reduction
-		recalculateRoadNetworkInterval: 1000, 		// recalculate road networks every (this many) ticks
-		recomputeCoverageInterval     : 500,		// recompute coverage to each destination this often
+		encourageRoadMerging          : true,
+		recalculateRoadNetworkInterval: onPublicServer() ? 3000 : 1000, // recalculate road networks this often
+		recomputeCoverageInterval     : onPublicServer() ? 1000 : 500,	// recompute coverage to each destination this often
 		buildRoadsAtRCL               : 4,
 	};
 
@@ -65,12 +69,11 @@ export class RoadPlanner {
 
 	private recomputeRoadCoverages(storagePos: RoomPosition) {
 		// Compute coverage for each path
-		let destinations = _.sortBy(this.colony.destinations, pos => pos.getMultiRoomRangeTo(storagePos));
-		for (let destination of destinations) {
-			let destName = destination.name;
+		for (let destination of this.colony.destinations) {
+			let destName = destination.pos.name;
 			if (!this.memory.roadCoverages[destName] || Game.time > this.memory.roadCoverages[destName].exp) {
-				log.debug(`Recomputing road coverage from ${storagePos.print} to ${destination.print}...`);
-				let roadCoverage = this.computeRoadCoverage(storagePos, destination);
+				log.debug(`Recomputing road coverage from ${storagePos.print} to ${destination.pos.print}...`);
+				let roadCoverage = this.computeRoadCoverage(storagePos, destination.pos);
 				if (roadCoverage != undefined) {
 					// Set expiration to be longer if road is nearly complete
 					let expiration = roadCoverage.roadCount / roadCoverage.length >= 0.75
@@ -82,6 +85,18 @@ export class RoadPlanner {
 						exp      : expiration
 					};
 					log.debug(`Coverage: ${JSON.stringify(roadCoverage)}`);
+				} else {
+					if (this.memory.roadCoverages[destName]) {
+						// if you already have some data, use it for a little while
+						this.memory.roadCoverages[destName].exp += 200;
+					} else {
+						// otherwise put in a placeholder
+						this.memory.roadCoverages[destName] = {
+							roadCount: 0,
+							length   : 1,
+							exp      : Game.time + 100
+						};
+					}
 				}
 			}
 		}
@@ -133,10 +148,10 @@ export class RoadPlanner {
 	private buildRoadNetwork(storagePos: RoomPosition, obstacles: RoomPosition[]): void {
 		this.costMatrices = {};
 		this.roadPositions = [];
-		let destinations = _.sortBy(this.colony.destinations, pos => pos.getMultiRoomRangeTo(storagePos));
+		let destinations = _.sortBy(this.colony.destinations, destination => destination.order);
 		// Connect commandCenter to each destination in colony
-		for (let pos of destinations) {
-			this.planRoad(storagePos, pos, obstacles);
+		for (let destination of destinations) {
+			this.planRoad(storagePos, destination.pos, obstacles);
 		}
 		this.formatRoadPositions();
 	}
@@ -155,19 +170,17 @@ export class RoadPlanner {
 		let matrix = new PathFinder.CostMatrix();
 		const terrain = Game.map.getRoomTerrain(roomName);
 
-		const ROAD_PLANNER_WALL_COST = 50;
-
 		for (let y = 0 + 1; y < 50 - 1; ++y) {
 			for (let x = 0 + 1; x < 50 - 1; ++x) {
 				switch (terrain.get(x, y)) {
 					case TERRAIN_MASK_SWAMP:
-						matrix.set(x, y, 1);
+						matrix.set(x, y, SWAMP_COST);
 						break;
 					case TERRAIN_MASK_WALL:
-						matrix.set(x, y, ROAD_PLANNER_WALL_COST);
+						matrix.set(x, y, WALL_COST);
 						break;
 					default: // plain
-						matrix.set(x, y, 1);
+						matrix.set(x, y, PLAIN_COST);
 						break;
 				}
 			}
@@ -210,25 +223,25 @@ export class RoadPlanner {
 			if (Pathing.shouldAvoid(roomName) && roomName != origin.roomName && roomName != destination.roomName) {
 				return false;
 			}
-			return this.generateRoadPlanningCostMatrix(roomName, obstacles);
+			if (!this.costMatrices[roomName]) {
+				this.costMatrices[roomName] = this.generateRoadPlanningCostMatrix(roomName, obstacles);
+			}
+			return this.costMatrices[roomName];
 		};
 
-		let ret = PathFinder.search(origin, {pos: destination, range: 1}, {roomCallback: callback});
+		let ret = PathFinder.search(origin, {pos: destination, range: 1}, {roomCallback: callback, maxOps: 40000});
 
 		if (ret.incomplete) {
 			log.warning(`Roadplanner for ${this.colony.print}: could not plan road path!`);
 			return;
 		}
 
-		// Set every n-th tile of a planned path to be cost 1 to encourage road overlap for future pathing
+		// Reduce the cost of planned paths to encourage road overlap for future pathing
 		if (RoadPlanner.settings.encourageRoadMerging) {
-			let interval = RoadPlanner.settings.tileCostReductionInterval;
 			for (let i of _.range(ret.path.length)) {
-				if (i % interval == interval - 1) {
-					let pos = ret.path[i];
-					if (this.costMatrices[pos.roomName] && !pos.isEdge) {
-						this.costMatrices[pos.roomName].set(pos.x, pos.y, 0x01);
-					}
+				let pos = ret.path[i];
+				if (i % 2 == 0 && this.costMatrices[pos.roomName] && !pos.isEdge) {
+					this.costMatrices[pos.roomName].set(pos.x, pos.y, EXISTING_PATH_COST);
 				}
 			}
 		}

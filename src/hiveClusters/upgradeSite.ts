@@ -54,7 +54,7 @@ export class UpgradeSite extends HiveCluster {
 			}
 			return this.calculateBatteryPos() || log.alert(`Upgrade site at ${this.pos.print}: no batteryPos!`);
 		});
-		if (this.batteryPos) this.colony.destinations.push(this.batteryPos);
+		if (this.batteryPos) this.colony.destinations.push({pos: this.batteryPos, order: 0});
 		// Register link
 		$.set(this, 'link', () => this.pos.findClosestByLimitedRange(colony.availableLinks, 3));
 		this.colony.linkNetwork.claimLink(this.link);

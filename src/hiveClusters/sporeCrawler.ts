@@ -88,7 +88,7 @@ export class SporeCrawler extends HiveCluster {
 	// }
 
 	private preventRampartDecay() {
-		if (this.colony.level <= 4 && this.towers.length > 0) {
+		if (this.colony.level < 7 && this.towers.length > 0) {
 			// expensive to check all rampart hits; only run in intermediate RCL
 			let dyingRamparts = _.filter(this.room.ramparts, rampart =>
 				rampart.hits < WorkerOverlord.settings.barrierHits.critical

@@ -120,7 +120,7 @@ export class Colony {
 	repairables: Structure[];							// | Repairable structures, discounting barriers and roads
 	rechargeables: rechargeObjectType[];				// | Things that can be recharged from
 	// obstacles: RoomPosition[]; 							// | List of other obstacles, e.g. immobile creeps
-	destinations: RoomPosition[];
+	destinations: { pos: RoomPosition, order: number }[];
 	// Hive clusters
 	hiveClusters: HiveCluster[];						// List of all hive clusters
 	commandCenter: CommandCenter | undefined;			// Component with logic for non-spawning structures

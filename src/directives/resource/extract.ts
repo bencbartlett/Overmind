@@ -18,7 +18,7 @@ export class DirectiveExtract extends Directive {
 	constructor(flag: Flag) {
 		super(flag);
 		if (this.colony) {
-			this.colony.destinations.push(this.pos);
+			this.colony.destinations.push({pos: this.pos, order: this.memory.created || Game.time});
 		}
 	}
 

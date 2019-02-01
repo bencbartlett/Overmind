@@ -58,7 +58,7 @@ export class ExpansionPlanner {
 			return false;
 		}
 
-		// compute possible outposts
+		// compute possible outposts (includes host room)
 		let possibleOutposts = Cartographer.findRoomsInRange(room.name, 2);
 
 		// find source positions
@@ -109,10 +109,11 @@ export class ExpansionPlanner {
 					break;
 				}
 				if (verbose) log.info(msg + ret.path.length);
-				roomScore += energyPerSource / ret.path.length;
+				let offset = 25; // prevents over-sensitivity to very close sources
+				roomScore += energyPerSource / (ret.path.length + offset);
 			}
 			if (valid) {
-				outpostScores[roomName] = roomScore;
+				outpostScores[roomName] = Math.floor(roomScore);
 			}
 		}
 
@@ -122,6 +123,7 @@ export class ExpansionPlanner {
 		let roomsByScore = _.sortBy(_.keys(outpostScores), roomName => -1 * outpostScores[roomName]);
 		for (let roomName of roomsByScore) {
 			if (sourceCount > Colony.settings.remoteSourcesByLevel[8]) break;
+			let factor = roomName == room.name ? 2 : 1; // weight owned room scores more heavily
 			totalScore += outpostScores[roomName];
 			sourceCount += outpostSourcePositions[roomName].length;
 		}
@@ -136,6 +138,7 @@ export class ExpansionPlanner {
 				outposts    : outpostScores,
 			};
 		}
+
 		return true;
 	}
 

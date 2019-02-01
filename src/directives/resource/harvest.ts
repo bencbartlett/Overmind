@@ -41,7 +41,7 @@ export class DirectiveHarvest extends Directive {
 		super(flag);
 		if (this.colony) {
 			this.colony.miningSites[this.name] = this;
-			this.colony.destinations.push(this.pos);
+			this.colony.destinations.push({pos: this.pos, order: this.memory.created || Game.time});
 		}
 		_.defaultsDeep(this.memory, defaultDirectiveHarvestMemory);
 	}
