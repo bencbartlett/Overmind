@@ -224,6 +224,19 @@ export class RoomIntel {
 		room.memory.safety.tick = Game.time;
 	}
 
+	static getSafetyData(roomName: string): SafetyData {
+		if (!Memory.rooms[roomName].safety) {
+			Memory.rooms[roomName].safety = {
+				safeFor  : 0,
+				unsafeFor: 0,
+				safety1k : 1,
+				safety10k: 1,
+				tick     : Game.time
+			};
+		}
+		return Memory.rooms[roomName].safety!;
+	}
+
 	static isInvasionLikely(room: Room): boolean {
 		const data = room.memory.invasionData;
 		if (!data) return false;

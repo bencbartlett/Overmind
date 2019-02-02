@@ -36,6 +36,9 @@ export class VersionMigration {
 		if (!this.memory.versions['05Xto051_part4']) {
 			this.migrate_050_051_part4();
 		}
+		if (!this.memory.versions['051to052']) {
+			this.migrate_051_052();
+		}
 	}
 
 	static get memory(): VersionMigratorMemory {
@@ -218,6 +221,18 @@ export class VersionMigration {
 		}
 		this.memory.versions['05Xto051_part4'] = true;
 		log.alert(`Version migration from 0.5.0 -> 0.5.1 (part 4) completed successfully.`);
+	}
+
+	static migrate_051_052() {
+		if (__VERSION__ == '0.5.2') {
+			for (let name in Game.creeps) {
+				if (name.includes('mutalisk')) {
+					Game.creeps[name].suicide();
+				}
+			}
+		}
+		this.memory.versions['051to052'] = true;
+		log.alert(`Version migration from 0.5.1 -> 0.5.2 completed successfully.`);
 	}
 
 }

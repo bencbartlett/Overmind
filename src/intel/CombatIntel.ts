@@ -433,7 +433,7 @@ export class CombatIntel {
 	}
 
 	// Total attack/rangedAttack/heal potentials for a group of creeps
-	static combatPotentials(creeps: Creep[]): CombatPotentials {
+	static getCombatPotentials(creeps: Creep[]): CombatPotentials {
 		let attack = _.sum(creeps, creep => this.getAttackPotential(creep));
 		let rangedAttack = _.sum(creeps, creep => this.getRangedAttackPotential(creep));
 		let heal = _.sum(creeps, creep => this.getHealPotential(creep));

@@ -19,6 +19,13 @@ Object.defineProperty(Room.prototype, 'my', {
 	configurable: true,
 });
 
+Object.defineProperty(Room.prototype, 'isOutpost', {
+	get() {
+		return Overmind.colonyMap[this.name] != undefined;
+	},
+	configurable: true,
+});
+
 Object.defineProperty(Room.prototype, 'owner', {
 	get() {
 		return this.controller && this.controller.owner ? this.controller.owner.username : undefined;

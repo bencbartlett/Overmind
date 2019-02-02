@@ -48,16 +48,16 @@ export class GuardSwarmOverlord extends Overlord {
 
 	init() {
 		if (this.directive.memory.amount) {
-			this.wishlist(this.directive.memory.amount, CombatSetups.guards.melee_early);
+			this.wishlist(this.directive.memory.amount, CombatSetups.broodlings.early);
 		}
 		else {
 			if (this.room) {
 				let smallHostiles = _.filter(this.room.dangerousHostiles, creep => creep.body.length < 10);
 				if (smallHostiles.length > 2) {
-					this.wishlist(Math.round(smallHostiles.length), CombatSetups.guards.melee_early);
+					this.wishlist(Math.round(smallHostiles.length), CombatSetups.broodlings.early);
 				}
 			} else {
-				this.wishlist(2, CombatSetups.guards.melee_early);
+				this.wishlist(2, CombatSetups.broodlings.early);
 			}
 		}
 	}

@@ -180,7 +180,7 @@ export class UpgradeSite extends HiveCluster {
 	}
 
 	run(): void {
-		if (Game.time % 25 == 7) {
+		if (Game.time % 25 == 7 && this.colony.level >= 2) {
 			this.buildBatteryIfMissing();
 		}
 	}

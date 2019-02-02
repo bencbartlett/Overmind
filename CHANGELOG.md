@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+## Overmind [0.5.2] - 2019.2.1
+
+This patch adds improvements to Overmind's performance at lower RCL, fixes boosting logic to account for the removal of pre-boosting, and improves road planning, room intel, and swarms. This release is the version running in botarena 202.
+
 ### Added
 - Visualizer improvements:
     - Added a dashboard section for the evolution chamber
@@ -29,7 +33,7 @@ All notable changes to this project will be documented in this file. The format 
     - Creep occupancy data over the last 25 ticks (computed only in owned rooms)
     - Safety data, tracking consecutive safe, unsafe ticks and rolling average of safety over last 1k and 10k ticks
 - `CombatIntel.isEdgeDancing` uses creep occupancy data tracked in `RoomIntel` to determine if a likely tower drain attack is occurring; towers will adjust their firing patterns accordingly.
-
+- Initial (incomplete) implementation of `CombatPlanner`, which will coordinate automatic offensive and defensive actions betweeen colonies.
 
 ### Changed
 - Rewrote the boosting protocol to account for the removal of [pre-boosting capabilities](https://blog.screeps.com/2018/12/changelog-2018-12-14/#Other-changes). RIP in-spawn boosting, you will be missed... :'(
@@ -41,7 +45,13 @@ All notable changes to this project will be documented in this file. The format 
 - Non-stationary managers have fewer move parts in bunker-type colonies
 - Reservers allow for a lower reservation buffer and will use the cached reservation info from `RoomIntel` if vision is unavailable
 - Queens now spawn with 1:1 move:carry ratios until a storage is built
+- Changes to overlord priorities at lower RCL
+- Tweaks to safemode and invasionDefense triggers
+- UpgradeSites won't place containers until RCL 2
+- Consolidated mutalisk and hydralisk body plans
 
+### Removed
+- Deprecated directives and overlords for old siege and healpoint logic
 
 ### Fixed
 - Security patches and bugfixes for the `Assimilator`
@@ -83,7 +93,6 @@ This patch changes the architecture of Overmind to be much more CPU efficient by
 - Preliminary support for formation-based movement and pathfinding using `Swarm`s
     - Added behavioral locks to prevent usage of this feature for non-assimilated codebases
 
-
 ### Changed
 - Improvements to `RangedDefenseOverlord` which utilize some of the new combat logic developed for SK mining
 - Queens now are prespawned 100 ticks in advance of when they are needed (up from 50) until there are multiple spawns in the room
@@ -118,7 +127,6 @@ This patch changes the architecture of Overmind to be much more CPU efficient by
 - Limits the number of owned rooms you can own on CPU-limited `shard3` to three
     - Adjustable value in `~settings.ts`; will implement a more sophisticated CPU-based limiter in future
 
-
 ### Fixed
 - Bugfix with pioneer recharging behavior to include dropped resources in recharging options
 - Bugfix for incorrectly initialized terminalNetwork memory not logging transfer costs correctly (#38, thanks @MaggNorway!)
@@ -132,9 +140,9 @@ This patch changes the architecture of Overmind to be much more CPU efficient by
 - Fixed an issue in testing assimilation status outside `shard2` (#57)
 - Fixed a bug where queens could get idle indefinitely at early RCL if minerals ended up in Hatchery battery
 
-
 ### Removed
 - `MiningSite`s and `ExtractionSite`s have been removed; their functionalities have been split among the mining/extraction directives and overlords
+
 
 
 ## Overmind [0.5.0]: "Evolution" - 2018.8.10
@@ -432,7 +440,8 @@ release of the Task system)
 - Initial pre-release of Overmind after 190 commits and about 80,000 additions.
 
 
-[Unreleased]: https://github.com/bencbartlett/Overmind/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/bencbartlett/Overmind/compare/v0.5.2...HEAD
+[0.5.1]: https://github.com/bencbartlett/Overmind/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/bencbartlett/Overmind/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/bencbartlett/Overmind/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/bencbartlett/Overmind/compare/v0.4.0...v0.4.1

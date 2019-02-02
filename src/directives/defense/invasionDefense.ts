@@ -30,6 +30,7 @@ export class DirectiveInvasionDefense extends Directive {
 	}
 
 	spawnMoarOverlords() {
+
 		if (!this.room) {
 			return;
 		}
@@ -47,6 +48,7 @@ export class DirectiveInvasionDefense extends Directive {
 		} else {
 			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
 		}
+
 	}
 
 	init(): void {

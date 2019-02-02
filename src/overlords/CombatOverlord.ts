@@ -1,7 +1,8 @@
-import {Overlord, OverlordInitializer} from './Overlord';
+import {Overlord} from './Overlord';
 import {CombatZerg} from '../zerg/CombatZerg';
 import {SpawnGroup} from '../logistics/SpawnGroup';
 import {profile} from '../profiler/decorator';
+import {Directive} from '../directives/Directive';
 
 
 export interface CombatOverlordOptions {
@@ -11,11 +12,13 @@ export interface CombatOverlordOptions {
 @profile
 export abstract class CombatOverlord extends Overlord {
 
+	directive: Directive;
 	spawnGroup: SpawnGroup;
 	requiredRCL: number; // default required RCL
 
-	constructor(initializer: OverlordInitializer, name: string, priority: number, requiredRCL: number) {
-		super(initializer, name, priority);
+	constructor(directive: Directive, name: string, priority: number, requiredRCL: number) {
+		super(directive, name, priority);
+		this.directive = directive;
 		this.requiredRCL = requiredRCL;
 		this.spawnGroup = new SpawnGroup(this, {requiredRCL: this.requiredRCL});
 	}

@@ -36,7 +36,7 @@ export const MovePriorities = {
 	[Roles.melee]      : 3,
 	[Roles.ranged]     : 4,
 	[Roles.guardMelee] : 5,
-	[Roles.guardRanged]: 6,
+	// [Roles.ranged]: 6,
 	[Roles.transport]  : 8,
 	[Roles.worker]     : 9,
 	default            : 10,

@@ -35,11 +35,13 @@ const DEFAULT_RECACHE_TIME = onPublicServer() ? 2000 : 1000;
 const defaultSettings: SpawnGroupSettings = {
 	maxPathDistance: 250,		// override default path distance
 	requiredRCL    : 7,
+	flexibleEnergy : true,
 };
 
 export interface SpawnGroupSettings {
-	maxPathDistance: number,
-	requiredRCL: number,
+	maxPathDistance: number,	// maximum path distance colonies can spawn creeps to
+	requiredRCL: number,		// required RCL of colonies to contribute
+	flexibleEnergy: boolean,	// whether to enforce that only the largest possible creeps are spawned
 }
 
 export interface SpawnGroupInitializer {
@@ -130,8 +132,10 @@ export class SpawnGroup {
 		const distanceTo = (hatchery: Hatchery) => this.memory.distances[hatchery.pos.roomName] + 25;
 		// Enqueue all requests to the hatchery with least expected wait time that can spawn full-size creep
 		for (let request of this.requests) {
-			let cost = bodyCost(request.setup.generateBody(this.energyCapacityAvailable));
-			let okHatcheries = _.filter(hatcheries, hatchery => hatchery.room.energyCapacityAvailable >= cost);
+			let maxCost = bodyCost(request.setup.generateBody(this.energyCapacityAvailable));
+			let okHatcheries = _.filter(hatcheries,
+										hatchery => hatchery.room.energyCapacityAvailable >= maxCost);
+			// || this.settings.flexibleEnergy);
 			let bestHatchery = minBy(okHatcheries, hatchery => hatchery.nextAvailability + distanceTo(hatchery));
 			if (bestHatchery) {
 				bestHatchery.enqueue(request);

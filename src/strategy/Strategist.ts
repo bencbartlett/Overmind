@@ -108,7 +108,7 @@ export class Strategist implements IStrategist {
 				if (_.any(range3Rooms, roomName => allColonyRooms[roomName])) {
 					score -= TOO_CLOSE_PENALTY;
 				}
-				// Are there hostile rooms nearby?
+				// Are there powerful hostile rooms nearby?
 				let adjacentRooms = Cartographer.findRoomsInRange(roomName, 1);
 				if (_.any(adjacentRooms, roomName => Memory.rooms[roomName].avoid)) {
 					continue;

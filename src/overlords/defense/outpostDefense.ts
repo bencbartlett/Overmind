@@ -11,13 +11,14 @@ import {DirectiveOutpostDefense} from '../../directives/defense/outpostDefense';
 export class OutpostDefenseOverlord extends CombatOverlord {
 
 	broodlings: CombatZerg[];
-	mutalisks: CombatZerg[];
+	hydralisks: CombatZerg[];
 	healers: CombatZerg[];
 
 	constructor(directive: DirectiveOutpostDefense, priority = OverlordPriority.outpostDefense.outpostDefense) {
 		super(directive, 'outpostDefense', priority, 1);
+		this.spawnGroup.settings.flexibleEnergy = true;
 		this.broodlings = this.combatZerg(Roles.guardMelee);
-		this.mutalisks = this.combatZerg(Roles.guardRanged);
+		this.hydralisks = this.combatZerg(Roles.ranged);
 		this.healers = this.combatZerg(Roles.healer);
 	}
 
@@ -37,7 +38,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 				healer.suicide(); // you're useless at this point // TODO: this isn't smart
 			}
 		} else {
-			if (this.room && _.any([...this.broodlings, ...this.mutalisks], creep => creep.room == this.room)) {
+			if (this.room && _.any([...this.broodlings, ...this.hydralisks], creep => creep.room == this.room)) {
 				this.handleCombat(healer); // go to room if there are any fighters in there
 			} else {
 				healer.autoSkirmish(healer.room.name);
@@ -45,10 +46,10 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		}
 	}
 
-	private computeNeededMutaliskAmount(setup: CreepSetup, enemyRangedPotential: number): number {
-		let mutaliskPotential = setup.getBodyPotential(RANGED_ATTACK, this.colony); // TODO: body potential from spawnGroup energy?
+	private computeNeededHydraliskAmount(setup: CreepSetup, enemyRangedPotential: number): number {
+		let hydraliskPotential = setup.getBodyPotential(RANGED_ATTACK, this.colony); // TODO: body potential from spawnGroup energy?
 		// let worstDamageMultiplier = CombatIntel.minimumDamageMultiplierForGroup(this.room.hostiles);
-		return Math.ceil(1.5 * enemyRangedPotential / mutaliskPotential);
+		return Math.ceil(1.5 * enemyRangedPotential / hydraliskPotential);
 	}
 
 	// TODO: division by 0 error!
@@ -65,7 +66,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 
 	private getEnemyPotentials(): { attack: number, rangedAttack: number, heal: number } {
 		if (this.room) {
-			return CombatIntel.combatPotentials(this.room.hostiles);
+			return CombatIntel.getCombatPotentials(this.room.hostiles);
 		} else {
 			return {attack: 1, rangedAttack: 0, heal: 0,};
 		}
@@ -73,15 +74,15 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 
 	init() {
 
-		const maxCost = Math.max(patternCost(CombatSetups.mutalisks.default),
+		const maxCost = Math.max(patternCost(CombatSetups.hydralisks.default),
 								 patternCost(CombatSetups.broodlings.default));
 		const mode = this.colony.room.energyCapacityAvailable >= maxCost ? 'NORMAL' : 'EARLY';
 
 		const {attack, rangedAttack, heal} = this.getEnemyPotentials();
 
-		const mutaliskSetup = mode == 'NORMAL' ? CombatSetups.mutalisks.default : CombatSetups.mutalisks.early;
-		const mutaliskAmount = this.computeNeededMutaliskAmount(mutaliskSetup, rangedAttack);
-		this.wishlist(mutaliskAmount, mutaliskSetup, {priority: this.priority - .2, reassignIdle: true});
+		const hydraliskSetup = mode == 'NORMAL' ? CombatSetups.hydralisks.default : CombatSetups.hydralisks.early;
+		const hydraliskAmount = this.computeNeededHydraliskAmount(hydraliskSetup, rangedAttack);
+		this.wishlist(hydraliskAmount, hydraliskSetup, {priority: this.priority - .2, reassignIdle: true});
 
 		const broodlingSetup = mode == 'NORMAL' ? CombatSetups.broodlings.default : CombatSetups.broodlings.early;
 		const broodlingAmount = this.computeNeededBroodlingAmount(broodlingSetup, attack);
@@ -99,7 +100,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 
 	run() {
 		this.autoRun(this.broodlings, broodling => this.handleCombat(broodling));
-		this.autoRun(this.mutalisks, mutalisk => this.handleCombat(mutalisk));
+		this.autoRun(this.hydralisks, mutalisk => this.handleCombat(mutalisk));
 		this.autoRun(this.healers, healer => this.handleHealer(healer));
 	}
 }

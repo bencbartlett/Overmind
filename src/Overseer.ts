@@ -24,6 +24,7 @@ import {MUON, MY_USERNAME, USE_TRY_CATCH} from './~settings';
 import {DirectiveOutpostDefense} from './directives/defense/outpostDefense';
 import {Notifier} from './directives/Notifier';
 import {DirectiveColonize} from './directives/colony/colonize';
+import {CombatPlanner} from './strategy/CombatPlanner';
 
 
 // export const DIRECTIVE_CHECK_FREQUENCY = 2;
@@ -45,6 +46,7 @@ export class Overseer implements IOverseer {
 	private overlordsByColony: { [col: string]: Overlord[] };	// Overlords grouped by colony
 	private directives: Directive[];							// Directives across the colony
 
+	combatPlanner: CombatPlanner;
 	notifier: Notifier;
 
 	static settings = {
@@ -58,6 +60,7 @@ export class Overseer implements IOverseer {
 		this.overlordsByColony = {};
 		this.sorted = false;
 		this.notifier = new Notifier();
+		this.combatPlanner = new CombatPlanner();
 	}
 
 	refresh() {
@@ -203,8 +206,8 @@ export class Overseer implements IOverseer {
 			let needsDefending = effectiveInvaderCount >= 3 || colony.room.dangerousPlayerHostiles.length > 0;
 
 			// Place defensive directive after hostiles have been present for a long enough time
-			let safetyData = colony.room.memory.safety;
-			let invasionIsPersistent = safetyData && safetyData.unsafeFor > 20;
+			let safetyData = RoomIntel.getSafetyData(colony.room.name);
+			let invasionIsPersistent = safetyData.unsafeFor > 20;
 
 			if (needsDefending && invasionIsPersistent) {
 				DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
@@ -297,7 +300,7 @@ export class Overseer implements IOverseer {
 	// Safe mode condition =============================================================================================
 
 	private handleSafeMode(colony: Colony): void {
-		if (colony.stage == ColonyStage.Larva) {
+		if (colony.stage == ColonyStage.Larva && onPublicServer()) {
 			return;
 		}
 		// Safe mode activates when there are dangerous player hostiles that can reach the spawn

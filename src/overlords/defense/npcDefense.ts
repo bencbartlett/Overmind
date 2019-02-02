@@ -76,7 +76,7 @@ export class DefenseNPCOverlord extends Overlord {
 
 	init() {
 		let amount = this.room && (this.room.invaders.length > 0 || RoomIntel.isInvasionLikely(this.room)) ? 1 : 0;
-		this.wishlist(amount, CombatSetups.guards.melee, {reassignIdle: true});
+		this.wishlist(amount, CombatSetups.broodlings.default, {reassignIdle: true});
 	}
 
 	run() {

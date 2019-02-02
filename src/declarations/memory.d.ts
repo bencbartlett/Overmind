@@ -157,6 +157,14 @@ interface SavedMineral extends SavedRoomObject {
 	density: number;
 }
 
+interface SafetyData {
+	safeFor: number;
+	unsafeFor: number;
+	safety1k: number;
+	safety10k: number;
+	tick: number;
+}
+
 interface RoomMemory {
 	avoid?: boolean;
 	src?: SavedSource[];
@@ -198,13 +206,7 @@ interface RoomMemory {
 			tick: number;
 		}
 	}
-	safety?: {
-		safeFor: number;
-		unsafeFor: number;
-		safety1k: number;
-		safety10k: number;
-		tick: number;
-	}
+	safety?: SafetyData;
 	prevPositions?: { [creepID: string]: protoPos };
 	creepsInRoom?: { [tick: number]: string[] };
 	tick?: number;

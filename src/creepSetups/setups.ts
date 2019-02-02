@@ -14,7 +14,7 @@ export const Roles = {
 	upgrader   : 'upgrader',
 	// Combat roles
 	guardMelee : 'broodling',
-	guardRanged: 'mutalisk',
+	// guardRanged: 'mutalisk',
 	melee      : 'zergling',
 	ranged     : 'hydralisk',
 	healer     : 'transfuser',
@@ -177,6 +177,7 @@ export const Setups = {
 
 export const CombatSetups = {
 
+	// Zerglings are melee-only creeps (with exception of sourceKeeper setup)
 	zerglings: {
 
 		default: new CreepSetup(Roles.melee, {
@@ -206,16 +207,22 @@ export const CombatSetups = {
 
 	},
 
+	// Hydralisks are ranged creeps which may have a small amount of healing
 	hydralisks: {
 
+		early: new CreepSetup(Roles.ranged, {
+			pattern  : [RANGED_ATTACK, MOVE],
+			sizeLimit: Infinity,
+		}),
+
 		default: new CreepSetup(Roles.ranged, {
-			pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, HEAL, MOVE, MOVE, MOVE, MOVE],
+			pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, MOVE, MOVE, MOVE, MOVE, HEAL],
 			sizeLimit: Infinity,
 		}),
 
 		boosted_T3: new CreepSetup(Roles.ranged, {
-			pattern  : [TOUGH, TOUGH, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, HEAL,
-						MOVE, MOVE],
+			pattern  : [TOUGH, TOUGH, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+						MOVE, MOVE, HEAL],
 			sizeLimit: Infinity,
 		}),
 
@@ -226,6 +233,7 @@ export const CombatSetups = {
 
 	},
 
+	// Healers (transfusers) are creeps which only do healing
 	healers: {
 
 		default: new CreepSetup(Roles.healer, {
@@ -245,48 +253,50 @@ export const CombatSetups = {
 
 	},
 
+	// Broodlings are primarily melee creeps which may have a small amount of healing
 	broodlings: {
-
-		default: new CreepSetup(Roles.guardMelee, {
-			pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE, MOVE, HEAL],
-			sizeLimit: Infinity,
-		}),
 
 		early: new CreepSetup(Roles.guardMelee, {
 			pattern  : [ATTACK, MOVE],
 			sizeLimit: Infinity,
 		}),
 
-	},
-
-	mutalisks: {
-
-		default: new CreepSetup(Roles.guardRanged, {
-			pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, MOVE, MOVE, MOVE, MOVE, HEAL],
-			sizeLimit: Infinity,
-		}),
-
-		early: new CreepSetup(Roles.guardRanged, {
-			pattern  : [RANGED_ATTACK, MOVE],
-			sizeLimit: Infinity,
-		}),
-
-	},
-
-	guards: {
-
-		melee: new CreepSetup(Roles.guardMelee, {
+		default: new CreepSetup(Roles.guardMelee, {
 			pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE, MOVE, HEAL],
-			sizeLimit: 3,
-		}),
-
-		melee_early: new CreepSetup(Roles.guardMelee, {
-			pattern  : [ATTACK, MOVE],
 			sizeLimit: Infinity,
 		}),
 
 	},
 
+	// mutalisks: {
+	//
+	// 	default: new CreepSetup(Roles.guardRanged, {
+	// 		pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, MOVE, MOVE, MOVE, MOVE, HEAL],
+	// 		sizeLimit: Infinity,
+	// 	}),
+	//
+	// 	early: new CreepSetup(Roles.guardRanged, {
+	// 		pattern  : [RANGED_ATTACK, MOVE],
+	// 		sizeLimit: Infinity,
+	// 	}),
+	//
+	// },
+
+	// guards: {
+	//
+	// 	melee: new CreepSetup(Roles.guardMelee, {
+	// 		pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE, MOVE, HEAL],
+	// 		sizeLimit: 3,
+	// 	}),
+	//
+	// 	melee_early: new CreepSetup(Roles.guardMelee, {
+	// 		pattern  : [ATTACK, MOVE],
+	// 		sizeLimit: Infinity,
+	// 	}),
+	//
+	// },
+
+	// Dismantlers (lurkers) are creeps with work parts for dismantle sieges
 	dismantlers: {
 
 		default: new CreepSetup(Roles.dismantler, {

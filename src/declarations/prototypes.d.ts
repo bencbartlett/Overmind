@@ -34,6 +34,7 @@ type rechargeObjectType = StructureStorage
 interface Room {
 	print: string;
 	my: boolean;
+	isOutpost: boolean;
 	owner: string | undefined;
 	reservedByMe: boolean;
 	signedByMe: boolean;
