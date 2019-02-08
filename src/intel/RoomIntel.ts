@@ -225,6 +225,9 @@ export class RoomIntel {
 	}
 
 	static getSafetyData(roomName: string): SafetyData {
+		if (!Memory.rooms[roomName]) {
+			Memory.rooms[roomName] = {};
+		}
 		if (!Memory.rooms[roomName].safety) {
 			Memory.rooms[roomName].safety = {
 				safeFor  : 0,

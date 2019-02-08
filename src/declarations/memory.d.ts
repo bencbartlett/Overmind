@@ -169,7 +169,7 @@ interface RoomMemory {
 	avoid?: boolean;
 	src?: SavedSource[];
 	ctrl?: SavedController | undefined;
-	mnrl: SavedMineral | undefined;
+	mnrl?: SavedMineral | undefined;
 	SKlairs?: SavedRoomObject[];
 	importantStructs?: {
 		// Positions of important structures relevant to sieges
