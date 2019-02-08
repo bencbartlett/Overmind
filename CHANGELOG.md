@@ -3,9 +3,20 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+
+
+## Overmind [0.5.2.1] - 2019.2.8
+
+This patch fixes a critical bug with the `RoomIntel` module.
+
+### Fixed
+- Fixed an unprotected access error with `RoomIntel.getSafetyData()`
+
+
+
 ## Overmind [0.5.2] - 2019.2.1
 
-This patch adds improvements to Overmind's performance at lower RCL, fixes boosting logic to account for the removal of pre-boosting, and improves road planning, room intel, and swarms. This release is the version running in botarena 202.
+This release adds improvements to Overmind's performance at lower RCL, fixes boosting logic to account for the removal of pre-boosting, and improves road planning, room intel, and swarms. This release is the version running in botarena 202.
 
 ### Added
 - Visualizer improvements:
@@ -440,7 +451,8 @@ release of the Task system)
 - Initial pre-release of Overmind after 190 commits and about 80,000 additions.
 
 
-[Unreleased]: https://github.com/bencbartlett/Overmind/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/bencbartlett/Overmind/compare/v0.5.2.1...HEAD
+[0.5.2.1]: https://github.com/bencbartlett/Overmind/compare/v0.5.2...v0.5.2.1
 [0.5.1]: https://github.com/bencbartlett/Overmind/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/bencbartlett/Overmind/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/bencbartlett/Overmind/compare/v0.4.1...v0.5.0
