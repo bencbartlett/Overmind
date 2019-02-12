@@ -170,14 +170,17 @@ export class RoadPlanner {
 		let matrix = new PathFinder.CostMatrix();
 		const terrain = Game.map.getRoomTerrain(roomName);
 
-		for (let y = 0 + 1; y < 50 - 1; ++y) {
-			for (let x = 0 + 1; x < 50 - 1; ++x) {
+		for (let y = 0; y < 50; ++y) {
+			for (let x = 0; x < 50; ++x) {
 				switch (terrain.get(x, y)) {
 					case TERRAIN_MASK_SWAMP:
 						matrix.set(x, y, SWAMP_COST);
 						break;
 					case TERRAIN_MASK_WALL:
-						matrix.set(x, y, WALL_COST);
+						if (x != 0 && y != 0 && x != 49 && y != 49) {
+							// Can't tunnel through walls on edge tiles
+							matrix.set(x, y, WALL_COST);
+						}
 						break;
 					default: // plain
 						matrix.set(x, y, PLAIN_COST);

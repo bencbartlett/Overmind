@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+### Fixed
+- Fixed a bug in `WorkerOverlord` where workers would not fortify ramparts to the needed hits to withstand multiple stacked nuclear strikes
+- Fixed a `RoadPlanner` bug which caused it to prever pathing roads along edge tiles between rooms
 
 
 ## Overmind [0.5.2.1] - 2019.2.8
