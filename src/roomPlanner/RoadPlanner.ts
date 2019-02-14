@@ -98,7 +98,7 @@ export class RoadPlanner {
 						};
 					}
 				}
-				log.debug(`Recomputing road coverage from ${storagePos.print} to ${destination.pos.print}...` +
+				log.debug(`Recomputing road coverage from ${storagePos.print} to ${destination.pos.print}... ` +
 						  `Coverage: ${JSON.stringify(roadCoverage)}`);
 			}
 		}

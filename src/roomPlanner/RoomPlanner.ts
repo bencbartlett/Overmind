@@ -17,6 +17,7 @@ import {derefCoords, maxBy, onPublicServer} from '../utilities/utils';
 import {bullet} from '../utilities/stringConstants';
 import {Pathing} from '../movement/Pathing';
 import {isOwnedStructure} from '../declarations/typeGuards';
+import {MY_USERNAME} from '../~settings';
 
 export interface BuildingPlannerOutput {
 	name: string;
@@ -506,6 +507,7 @@ export class RoomPlanner {
 		return false;
 	}
 
+	/* Demolish all hostile structures in the room */
 	private demolishHostileStructures(destroyStorageUnits = false) {
 		_.forEach(this.colony.room.walls, wall => wall.destroy()); // overmind never uses walls
 		for (let structure of _.filter(this.colony.room.hostileStructures)) {
@@ -516,10 +518,22 @@ export class RoomPlanner {
 		}
 	}
 
+	/* Remove all hostile constructionSites and ones which are misplaced */
+	private removeMisplacedConstructionSites() {
+		for (let site of this.colony.room.find(FIND_CONSTRUCTION_SITES)) {
+			if (site.owner.username != MY_USERNAME) {
+				site.remove();
+			} else if (!this.structureShouldBeHere(site.structureType, site.pos)) {
+				site.remove();
+			}
+		}
+	}
+
 	/* Create construction sites for any buildings that need to be built */
 	private demolishMisplacedStructures(skipRamparts = true, destroyAllStructureTypes = false): void {
 
 		this.demolishHostileStructures();
+		this.removeMisplacedConstructionSites();
 
 		if (getAllColonies().length <= 1 && !this.colony.storage) {
 			return; // Not safe to move structures until you have multiple colonies or a storage
