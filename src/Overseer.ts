@@ -25,6 +25,7 @@ import {DirectiveOutpostDefense} from './directives/defense/outpostDefense';
 import {Notifier} from './directives/Notifier';
 import {DirectiveColonize} from './directives/colony/colonize';
 import {CombatPlanner} from './strategy/CombatPlanner';
+import {DirectiveClearRoom} from './directives/colony/clearRoom';
 
 
 // export const DIRECTIVE_CHECK_FREQUENCY = 2;
@@ -286,7 +287,8 @@ export class Overseer implements IOverseer {
 				this.handleNewOutposts(colony);
 			}
 			// Place pioneer directives in case the colony doesn't have a spawn for some reason
-			if (Game.time % 25 == 0 && colony.spawns.length == 0) {
+			if (Game.time % 25 == 0 && colony.spawns.length == 0 &&
+				!DirectiveClearRoom.isPresent(colony.pos, 'room')) {
 				// verify that there are no spawns (not just a caching glitch)
 				let spawns = Game.rooms[colony.name]!.find(FIND_MY_SPAWNS);
 				if (spawns.length == 0) {
