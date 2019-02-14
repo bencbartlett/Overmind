@@ -30,6 +30,9 @@ let lastMemory: any;
 let lastTime: number = 0;
 
 const MAX_BUCKET = 10000;
+const HEAP_CLEAN_FREQUENCY = 200;
+const BUCKET_CLEAR_CACHE = 7000;
+const BUCKET_CPU_HALT = 4000;
 
 @profile
 export class Mem {
@@ -79,7 +82,7 @@ export class Mem {
 			global.Memory = lastMemory;
 			RawMemory._parsed = lastMemory;
 		} else {
-			// noinspection TsLint
+			// noinspection BadExpressionStatementJS
 			Memory.rooms; // forces parsing
 			lastMemory = RawMemory._parsed;
 			Memory.stats.persistent.lastMemoryReset = Game.time;
@@ -200,6 +203,29 @@ export class Mem {
 		};
 	}
 
+	static clean() {
+		// Clean the memory of non-existent objects every tick
+		this.cleanHeap();
+		this.cleanCreeps();
+		this.cleanFlags();
+		this.cleanColonies();
+		this.cleanPathingMemory();
+		this.cleanConstructionSites();
+		Stats.clean();
+	}
+
+	// Attempt to clear some things out of the global heap to prevent increasing CPU usage
+	private static cleanHeap(): void {
+		if (Game.time % HEAP_CLEAN_FREQUENCY == HEAP_CLEAN_FREQUENCY - 3) {
+			if (Game.cpu.bucket < BUCKET_CPU_HALT) {
+				(<any>Game.cpu).halt();
+			} else if (Game.cpu.bucket < BUCKET_CLEAR_CACHE) {
+				delete global._cache;
+				this.initGlobalMemory();
+			}
+		}
+	}
+
 	private static cleanCreeps() {
 		// Clear memory for non-existent creeps
 		for (let name in Memory.creeps) {
@@ -290,16 +316,6 @@ export class Mem {
 				}
 			}
 		}
-	}
-
-	static clean() {
-		// Clean the memory of non-existent objects every tick
-		this.cleanCreeps();
-		this.cleanFlags();
-		this.cleanColonies();
-		this.cleanPathingMemory();
-		this.cleanConstructionSites();
-		Stats.clean();
 	}
 
 }

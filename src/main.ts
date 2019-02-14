@@ -43,9 +43,13 @@ import {alignedNewline} from './utilities/stringConstants';
 
 // Main loop
 function main(): void {
+
+	// Memory operations: load and clean memory, suspend operation as needed
 	Mem.load();														// Load previous parsed memory if present
 	if (!Mem.shouldRun()) return;									// Suspend operation if necessary
 	Mem.clean();													// Clean memory contents
+
+	// Instantiation operations: build or refresh the game state
 	if (!Overmind || Overmind.shouldBuild || Game.time >= Overmind.expiration) {
 		delete global.Overmind;										// Explicitly delete the old Overmind object
 		Mem.garbageCollect(true);								// Run quick garbage collection
@@ -54,12 +58,17 @@ function main(): void {
 	} else {
 		Overmind.refresh();											// Refresh phase: update the Overmind state
 	}
+
+	// Tick loop cycle: initialize and run each component
 	Overmind.init();												// Init phase: spawning and energy requests
 	Overmind.run();													// Run phase: execute state-changing actions
 	Overmind.visuals(); 											// Draw visuals
 	Stats.run(); 													// Record statistics
+
+	// Post-run code: handle sandbox code and error catching
 	sandbox();														// Sandbox: run any testing code
 	Overmind.postRun();												// Error catching is run at end of every tick
+
 }
 
 

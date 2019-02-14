@@ -72,7 +72,6 @@ export class RoadPlanner {
 		for (let destination of this.colony.destinations) {
 			let destName = destination.pos.name;
 			if (!this.memory.roadCoverages[destName] || Game.time > this.memory.roadCoverages[destName].exp) {
-				log.debug(`Recomputing road coverage from ${storagePos.print} to ${destination.pos.print}...`);
 				let roadCoverage = this.computeRoadCoverage(storagePos, destination.pos);
 				if (roadCoverage != undefined) {
 					// Set expiration to be longer if road is nearly complete
@@ -84,20 +83,23 @@ export class RoadPlanner {
 						length   : roadCoverage.length,
 						exp      : expiration
 					};
-					log.debug(`Coverage: ${JSON.stringify(roadCoverage)}`);
 				} else {
 					if (this.memory.roadCoverages[destName]) {
 						// if you already have some data, use it for a little while
-						this.memory.roadCoverages[destName].exp += 200;
+						let waitTime = onPublicServer() ? 500 : 200;
+						this.memory.roadCoverages[destName].exp += waitTime;
 					} else {
 						// otherwise put in a placeholder
+						let waitTime = onPublicServer() ? 300 : 100;
 						this.memory.roadCoverages[destName] = {
 							roadCount: 0,
 							length   : 1,
-							exp      : Game.time + 100
+							exp      : Game.time + waitTime
 						};
 					}
 				}
+				log.debug(`Recomputing road coverage from ${storagePos.print} to ${destination.pos.print}...` +
+						  `Coverage: ${JSON.stringify(roadCoverage)}`);
 			}
 		}
 		// Store the aggregate roadCoverage score
