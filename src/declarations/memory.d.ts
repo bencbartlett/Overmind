@@ -117,6 +117,7 @@ interface PathingMemory {
 }
 
 interface FlagMemory {
+	expiration?: number;
 	suspendUntil?: number;
 	amount?: number;
 	created?: number;
@@ -127,6 +128,9 @@ interface FlagMemory {
 	parent?: string;
 	maxPathLength?: number;
 	maxLinearRange?: number;
+	keepStorageStructures?: boolean;
+	keepRoads?: boolean;
+	keepContainers?: boolean;
 }
 
 interface SavedRoomObject {

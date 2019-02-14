@@ -62,6 +62,13 @@ export abstract class Directive {
 			}
 			return;
 		}
+		// Delete the directive if expired
+		if (this.memory.expiration && Game.time > this.memory.expiration) {
+			log.alert(`Removing expired directive ${this.print}!`);
+			flag.remove();
+			return;
+		}
+		// Register colony and add flags to colony.flags
 		this.colony = colony;
 		this.colony.flags.push(flag);
 		this.overlords = {};

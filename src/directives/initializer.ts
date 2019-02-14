@@ -24,6 +24,7 @@ import {DirectiveHarvest} from './resource/harvest';
 import {DirectiveExtract} from './resource/extract';
 import {DirectiveSwarmDestroy} from './offense/swarmDestroy';
 import {DirectiveOutpostDefense} from './defense/outpostDefense';
+import {DirectiveClearRoom} from './colony/clearRoom';
 
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 
@@ -40,6 +41,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveIncubate(flag);
 				case COLOR_GREY:
 					return new DirectiveColonize(flag);
+				case COLOR_ORANGE:
+					return new DirectiveClearRoom(flag);
 			}
 			break;
 
