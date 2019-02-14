@@ -197,7 +197,7 @@ export class MiningOverlord extends Overlord {
 		// Container mining
 		if (this.container) {
 			if (this.container.hits < this.container.hitsMax
-				&& miner.carry.energy >= REPAIR_POWER * miner.getActiveBodyparts(WORK)) {
+				&& miner.carry.energy >= Math.min(miner.carryCapacity, REPAIR_POWER * miner.getActiveBodyparts(WORK))) {
 				return miner.goRepair(this.container);
 			} else {
 				if (_.sum(miner.carry) < miner.carryCapacity) {
@@ -210,7 +210,7 @@ export class MiningOverlord extends Overlord {
 
 		// Build output site
 		if (this.constructionSite) {
-			if (miner.carry.energy >= BUILD_POWER * miner.getActiveBodyparts(WORK)) {
+			if (miner.carry.energy >= Math.min(miner.carryCapacity, BUILD_POWER * miner.getActiveBodyparts(WORK))) {
 				return miner.goBuild(this.constructionSite);
 			} else {
 				return miner.goHarvest(this.source!);
@@ -255,7 +255,7 @@ export class MiningOverlord extends Overlord {
 		// Container mining
 		if (this.container) {
 			if (this.container.hits < this.container.hitsMax
-				&& miner.carry.energy >= REPAIR_POWER * miner.getActiveBodyparts(WORK)) {
+				&& miner.carry.energy >= Math.min(miner.carryCapacity, REPAIR_POWER * miner.getActiveBodyparts(WORK))) {
 				return miner.repair(this.container);
 			} else {
 				return miner.harvest(this.source!);
@@ -264,7 +264,7 @@ export class MiningOverlord extends Overlord {
 
 		// Build output site
 		if (this.constructionSite) {
-			if (miner.carry.energy >= BUILD_POWER * miner.getActiveBodyparts(WORK)) {
+			if (miner.carry.energy >= Math.min(miner.carryCapacity, BUILD_POWER * miner.getActiveBodyparts(WORK))) {
 				return miner.build(this.constructionSite);
 			} else {
 				return miner.harvest(this.source!);
