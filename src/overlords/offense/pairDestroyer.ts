@@ -2,7 +2,7 @@
 
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/siegeTarget';
-import {DirectiveDestroy} from '../../directives/offense/destroy';
+import {DirectivePairDestroy} from '../../directives/offense/pairDestroy';
 import {profile} from '../../profiler/decorator';
 import {Movement} from '../../movement/Movement';
 import {Overlord} from '../Overlord';
@@ -13,9 +13,9 @@ import {boostResources} from '../../resources/map_resources';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 
 @profile
-export class DestroyerOverlord extends Overlord {
+export class PairDestroyerOverlord extends Overlord {
 
-	directive: DirectiveDestroy;
+	directive: DirectivePairDestroy;
 	attackers: CombatZerg[];
 	healers: CombatZerg[];
 
@@ -24,7 +24,7 @@ export class DestroyerOverlord extends Overlord {
 		reengageHitsPercent: 0.95,
 	};
 
-	constructor(directive: DirectiveDestroy, priority = OverlordPriority.offense.destroy) {
+	constructor(directive: DirectivePairDestroy, priority = OverlordPriority.offense.destroy) {
 		super(directive, 'destroy', priority);
 		this.directive = directive;
 		this.attackers = this.combatZerg(Roles.melee, {
@@ -83,8 +83,8 @@ export class DestroyerOverlord extends Overlord {
 		else {
 			// Activate retreat condition if necessary
 			// Handle recovery if low on HP
-			if (attacker.needsToRecover(DestroyerOverlord.settings.retreatHitsPercent) ||
-				healer.needsToRecover(DestroyerOverlord.settings.retreatHitsPercent)) {
+			if (attacker.needsToRecover(PairDestroyerOverlord.settings.retreatHitsPercent) ||
+				healer.needsToRecover(PairDestroyerOverlord.settings.retreatHitsPercent)) {
 				// Healer leads retreat to fallback position
 				Movement.pairwiseMove(healer, attacker, CombatIntel.getFallbackFrom(this.directive.pos));
 			} else {

@@ -630,6 +630,28 @@ export class Pathing {
 		}
 	}
 
+	static getExitPositions(roomName: string): RoomPosition[] {
+		const terrain = Game.map.getRoomTerrain(roomName);
+		let exitPositions: RoomPosition[] = [];
+
+		for (let x = 0; x < 50; x += 49) {
+			for (let y = 0; y < 50; y++) {
+				if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
+					exitPositions.push(new RoomPosition(x, y, roomName));
+				}
+			}
+		}
+		for (let x = 0; x < 50; x++) {
+			for (let y = 0; y < 50; y += 49) {
+				if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
+					exitPositions.push(new RoomPosition(x, y, roomName));
+				}
+			}
+		}
+
+		return exitPositions;
+	}
+
 
 	/* Find a viable sequence of rooms to narrow down Pathfinder algorithm */
 	static findRoute(origin: string, destination: string,

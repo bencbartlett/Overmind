@@ -9,7 +9,7 @@ import {DirectiveRPHatchery} from './roomPlanner/roomPlanner_hatchery';
 import {DirectiveRPCommandCenter} from './roomPlanner/roomPlanner_commandCenter';
 import {DirectiveColonize} from './colony/colonize';
 import {DirectiveTargetSiege} from './targeting/siegeTarget';
-import {DirectiveDestroy} from './offense/destroy';
+import {DirectivePairDestroy} from './offense/pairDestroy';
 import {DirectiveInvasionDefense} from './defense/invasionDefense';
 import {DirectiveHaul} from './resource/haul';
 import {DirectiveDismantle} from './targeting/dismantle';
@@ -52,7 +52,7 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 				case COLOR_RED:
 					return new DirectiveSwarmDestroy(flag);
 				case COLOR_CYAN:
-					return new DirectiveDestroy(flag);
+					return new DirectivePairDestroy(flag);
 				case COLOR_PURPLE:
 					return new DirectiveControllerAttack(flag);
 			}

@@ -241,6 +241,7 @@ export class Mem {
 		for (let name in Memory.flags) {
 			if (!Game.flags[name]) {
 				delete Memory.flags[name];
+				delete global[name];
 			}
 		}
 	}
@@ -253,6 +254,7 @@ export class Mem {
 				// Delete only if "persistent" is not set - use case: praise rooms
 				if (!Memory.colonies[name].persistent) {
 					delete Memory.colonies[name];
+					delete global[name];
 				}
 			}
 		}
