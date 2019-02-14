@@ -242,12 +242,12 @@ export class OvermindConsole {
 	}
 
 	static listConstructionSites(filter?: (site: ConstructionSite) => any): string {
-		let msg = '';
+		let msg = `${_.keys(Game.constructionSites).length} construction sites currently present: \n`;
 		for (let id in Game.constructionSites) {
 			let site = Game.constructionSites[id];
 			if (!filter || filter(site)) {
 				msg += `${bullet}Type: ${site.structureType}`.padRight(20) +
-					   `Pos: ${site.pos.print}`.padRight(55) +
+					   `Pos: ${site.pos.print}`.padRight(65) +
 					   `Progress: ${site.progress} / ${site.progressTotal} \n`;
 			}
 		}
