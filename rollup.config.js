@@ -16,6 +16,11 @@ if (!dest) {
     console.log('\x1b[46m%s\x1b[0m \x1b[36m%s\x1b[0m', 'Compiling Overmind...', `(deploy destination: ${dest})`);
 }
 
+const ignoreWarnings = ['commonjs-proxy',
+                        'Circular dependency',
+                        "The 'this' keyword is equivalent to 'undefined'",
+                        "Use of eval is strongly discouraged"];
+
 export default {
     input: "src/main.ts",
 
@@ -35,14 +40,10 @@ export default {
 
     onwarn: function (warning) {
         // Skip default export warnings from using obfuscated overmind file in main
-        if (warning.toString().includes('commonjs-proxy')) {
-            return;
-        }
-        if (warning.toString().includes('Circular dependency')) {
-            return;
-        }
-        if (warning.toString().includes("The 'this' keyword is equivalent to 'undefined'")) {
-            return;
+        for (let ignoreWarning of ignoreWarnings) {
+            if (warning.toString().includes(ignoreWarning)) {
+                return;
+            }
         }
         // console.warn everything else
         console.warn(warning.message);

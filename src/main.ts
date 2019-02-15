@@ -34,9 +34,8 @@ import {OvermindConsole} from './console/Console';
 import {Stats} from './stats/stats';
 import profiler from './profiler/screeps-profiler';
 import _Overmind from './Overmind_obfuscated'; // this should be './Overmind_obfuscated' unless you are me
-import {log} from './console/log';
 import {VersionMigration} from './versionMigration/migrator';
-import {alignedNewline} from './utilities/stringConstants';
+import {RemoteDebugger} from './console/remoteDebugger';
 // =====================================================================================================================
 
 // @formatter:on
@@ -67,6 +66,7 @@ function main(): void {
 
 	// Post-run code: handle sandbox code and error catching
 	sandbox();														// Sandbox: run any testing code
+	global.remoteDebugger.run();									// Run remote debugger code if enabled
 	Overmind.postRun();												// Error catching is run at end of every tick
 
 }
@@ -91,14 +91,19 @@ function onGlobalReset(): void {
 	VersionMigration.run();
 	Memory.stats.persistent.lastGlobalReset = Game.time;
 
-	log.alert(`Codebase updated or global reset. Type "help" for a list of console commands.` + alignedNewline +
-			  OvermindConsole.info(true));
+	// log.alert(`Codebase updated or global reset. Type "help" for a list of console commands.` + alignedNewline +
+	// 		  OvermindConsole.info(true));
+
+	OvermindConsole.printUpdateMessage();
+
 	// Update the master ledger of valid checksums
 	if (MY_USERNAME == MUON) {
 		Assimilator.updateValidChecksumLedger();
 	}
 	// Make a new Overmind object
 	global.Overmind = new _Overmind();
+	// Make a remote debugger
+	global.remoteDebugger = new RemoteDebugger();
 }
 
 

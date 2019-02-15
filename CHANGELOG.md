@@ -3,9 +3,26 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+### Added
+- Added the `RemoteDebugger` module, which lets me remotely debug other Overmind players' code by communicating through public memory segments. 
+    - You can start and end a debug session with the `startRemoteDebugSession()` and `endRemoteDebugSession()` commands
+    - Debug sessions automatically time out after 1000 ticks unless extended
+    - Ping me on Slack #overmind if you want me to debug something for you
+        - I can only remotely debug players on a shard that I have a presence in (currently only `shard2`)
+    - This allows for me to remotely execute arbitrary code, but I promise not to be evil! <3 
+- `DirectiveRoomClear`, which claims a room, destroys all hostile structures in the room (by default, keeping store structures and roads intact), then unclaims the room. This is useful for cleaning out remote outposts which were previously claimed rooms
+- Added room layout analysis to `CombatPlanner`, which classifies rooms to one of the four most common types of rooms:
+    - Bunkers: most structures in the rooms are covered by ramparts
+    - EdgeWall: barriers placed as close as possible to all room exits
+    - InnerWall: barriers placed to enclose structures but are recessed from the room exits
+    - Exposed: key structures are pathable to from some room exit
+- Added additional heap cleaning routines to prevent periodic bucket crashes. At low bucket, the global cache will periodically be cleared, and at even lower buckets, `Game.cpu.halt()` will occasionally be called.
+
 ### Fixed
+- Security patch for `Assimilator`
 - Fixed a bug in `WorkerOverlord` where workers would not fortify ramparts to the needed hits to withstand multiple stacked nuclear strikes
 - Fixed a `RoadPlanner` bug which caused it to prever pathing roads along edge tiles between rooms
+- Fixed a recently-introduced bug which prevented drones from repairing their containers
 
 
 ## Overmind [0.5.2.1] - 2019.2.8

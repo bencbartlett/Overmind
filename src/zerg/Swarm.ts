@@ -183,8 +183,7 @@ export class Swarm implements ProtoSwarm {
 		if (this.fatigue > 0) {
 			return ERR_TIRED;
 		}
-		const [[c1, c2],
-				  [c3, c4]] = this.staticFormation;
+		const [[c1, c2], [c3, c4]] = this.staticFormation;
 		let r1, r2, r3, r4 = -999;
 		if (direction == 'horizontal') {
 			if (c1) r1 = c1.move(RIGHT);
@@ -532,6 +531,13 @@ export class Swarm implements ProtoSwarm {
 			if (result != NO_ACTION) {
 				log.debug(`Moving to target ${this.target}: ${result}`);
 				return result;
+			} else {
+				// Move to best damage spot
+
+
+				// TODO
+
+
 			}
 		} else {
 			log.warning(`No target for swarm ${this.ref}!`);

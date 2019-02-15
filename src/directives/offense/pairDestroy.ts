@@ -25,13 +25,13 @@ export class DirectivePairDestroy extends Directive {
 	}
 
 	init(): void {
-		this.alert(`Destroyer directive active`);
+		this.alert(`Pair detroyer directive active`);
 	}
 
 	run(): void {
 		// If there are no hostiles left in the room then remove the flag and associated healpoint
 		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
-			log.notify(`Destroyer mission at ${this.pos.roomName} completed successfully.`);
+			log.notify(`Pair destroyer mission at ${this.pos.roomName} completed successfully.`);
 			this.remove();
 		}
 	}

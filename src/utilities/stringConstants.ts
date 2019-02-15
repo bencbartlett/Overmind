@@ -4,4 +4,4 @@ export const rightArrow = '\u27f6';
 export const leftArrow = '\u27f5';
 export const leftAngleQuote = '\u00ab';
 export const rightAngleQuote = '\u00bb';
-export const alignedNewline = '\n' + ' '.repeat('INFO    7801280 '.length);
+export const alignedNewline = '\n' + ' '.repeat('INFO    '.length + Game.time.toString().length + ' '.length);

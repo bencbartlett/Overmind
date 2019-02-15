@@ -252,7 +252,9 @@ export class CombatPlanner {
 			}
 
 		});
-		isEdgeWall = walledOffExitTiles.length == walledOffExitTiles.length;
+		if (walledOffExitTiles.length == walledOffExitTiles.length) {
+			isEdgeWall = true;
+		}
 
 		// Room is inner wall if not bunker or edgewall and there is no path to spawn, otherwise exposed
 		if (!isBunker && !isEdgeWall) {

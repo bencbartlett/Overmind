@@ -1,7 +1,7 @@
 // Command line
 
 import {Colony} from '../Colony';
-import {toColumns} from '../utilities/utils';
+import {color, toColumns} from '../utilities/utils';
 import {asciiLogoSmall} from '../visuals/logos';
 import {log} from './log';
 import {alignedNewline, bullet} from '../utilities/stringConstants';
@@ -35,6 +35,8 @@ export class OvermindConsole {
 		global.removeFlagsByColor = this.removeFlagsByColor;
 		global.removeErrantFlags = this.removeErrantFlags;
 		global.deepCleanMemory = this.deepCleanMemory;
+		global.startRemoteDebugSession = this.startRemoteDebugSession;
+		global.endRemoteDebugSession = this.endRemoteDebugSession;
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -70,6 +72,7 @@ export class OvermindConsole {
 		descr['removeFlagsByColor(color, secondaryColor)'] = 'remove flags that match the specified colors';
 		descr['removeErrantFlags()'] = 'remove all flags which don\'t match a directive';
 		descr['deepCleanMemory()'] = 'deletes all non-critical portions of memory (be careful!)';
+		descr['startRemoteDebugSession()'] = 'enables the remote debugger so Muon can debug your code';
 		// Console list
 		let descrMsg = toColumns(descr, {justify: true, padChar: '.'});
 		let maxLineLength = _.max(_.map(descrMsg, line => line.length)) + 2;
@@ -78,6 +81,14 @@ export class OvermindConsole {
 		msg += '\n\nRefer to the repository for more information\n';
 
 		return msg;
+	}
+
+	static printUpdateMessage(aligned = false): void {
+		const joinChar = aligned ? alignedNewline : '\n';
+		let msg = `Codebase updated or global reset. Type "help" for a list of console commands.` + joinChar +
+				  color(asciiLogoSmall.join(joinChar), '#ff00ff') + joinChar +
+				  OvermindConsole.info(aligned);
+		log.alert(msg);
 	}
 
 	static info(aligned = false): string {
@@ -89,14 +100,7 @@ export class OvermindConsole {
 			`${b}Checksum:       ${checksum}`,
 			`${b}Assimilated:    ${clearanceCode ? 'Yes' : 'No'} (clearance code: ${clearanceCode}) [WIP]`,
 			`${b}Operating mode: ${Memory.settings.operationMode}`,
-			// `${b}CPU bucket:     ${Game.cpu.bucket}`
 		];
-		// let colonyInfo = [
-		// 	`${b}Colonies:`,
-		// ]
-		// for (let colony of getAllColonies()) {
-		// 	colonyInfo.push(`    ${b}`)
-		// }
 		const joinChar = aligned ? alignedNewline : '\n';
 		return baseInfo.join(joinChar);
 	}
@@ -148,6 +152,16 @@ export class OvermindConsole {
 	static stopDebug(thing: { name: string, memory: any }): string {
 		delete thing.memory.debug;
 		return `Disabled debugging for ${thing.name}.`;
+	}
+
+	static startRemoteDebugSession(): string {
+		global.remoteDebugger.enable();
+		return `Started remote debug session.`;
+	}
+
+	static endRemoteDebugSession(): string {
+		global.remoteDebugger.disable();
+		return `Ended remote debug session.`;
 	}
 
 	static print(...args: any[]): string {

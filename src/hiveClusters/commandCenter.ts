@@ -20,6 +20,7 @@ interface CommandCenterMemory {
 
 @profile
 export class CommandCenter extends HiveCluster {
+
 	memory: CommandCenterMemory;
 	storage: StructureStorage;								// The colony storage, also the instantiation object
 	link: StructureLink | undefined;						// Link closest to storage
@@ -30,11 +31,14 @@ export class CommandCenter extends HiveCluster {
 	nuker: StructureNuker | undefined;						// Colony nuker
 	observer: StructureObserver | undefined;				// Colony observer
 	transportRequests: TransportRequestGroup;				// Box for energy requests
+
+	private observeRoom: string | undefined;
 	private _idlePos: RoomPosition;							// Cached idle position
 
 	static settings = {
-		linksTransmitAt  : LINK_CAPACITY - 100,
-		refillTowersBelow: 750,
+		enableIdleObservation: true,
+		linksTransmitAt      : LINK_CAPACITY - 100,
+		refillTowersBelow    : 750,
 	};
 
 	constructor(colony: Colony, storage: StructureStorage) {
@@ -57,6 +61,7 @@ export class CommandCenter extends HiveCluster {
 		}
 		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetwork;
 		this.transportRequests = new TransportRequestGroup(); // commandCenter always gets its own request group
+		this.observeRoom = undefined;
 	}
 
 	refresh() {
@@ -64,6 +69,7 @@ export class CommandCenter extends HiveCluster {
 		$.refreshRoom(this);
 		$.refresh(this, 'storage', 'terminal', 'powerSpawn', 'nuker', 'observer', 'link', 'towers');
 		this.transportRequests.refresh();
+		this.observeRoom = undefined;
 	}
 
 	spawnMoarOverlords() {
@@ -149,12 +155,20 @@ export class CommandCenter extends HiveCluster {
 		}
 	}
 
+	requestRoomObservation(roomName: string) {
+		this.observeRoom = roomName;
+	}
+
 	private runObserver(): void {
 		if (this.observer) {
-			let dx = Game.time % MAX_OBSERVE_DISTANCE;
-			let dy = Game.time % (MAX_OBSERVE_DISTANCE ** 2);
-			let roomToObserve = Cartographer.findRelativeRoomName(this.pos.roomName, dx, dy);
-			this.observer.observeRoom(roomToObserve);
+			if (this.observeRoom) {
+				this.observer.observeRoom(this.observeRoom);
+			} else if (CommandCenter.settings.enableIdleObservation) {
+				let dx = Game.time % MAX_OBSERVE_DISTANCE;
+				let dy = Game.time % (MAX_OBSERVE_DISTANCE ** 2);
+				let roomToObserve = Cartographer.findRelativeRoomName(this.pos.roomName, dx, dy);
+				this.observer.observeRoom(roomToObserve);
+			}
 		}
 	}
 
@@ -166,7 +180,7 @@ export class CommandCenter extends HiveCluster {
 	}
 
 	run(): void {
-		// this.runObserver();
+		this.runObserver();
 	}
 
 	visuals(coord: Coord): Coord {
