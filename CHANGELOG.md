@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file. The format 
 - Fixed a bug in `WorkerOverlord` where workers would not fortify ramparts to the needed hits to withstand multiple stacked nuclear strikes
 - Fixed a `RoadPlanner` bug which caused it to prever pathing roads along edge tiles between rooms
 - Fixed a recently-introduced bug which prevented drones from repairing their containers
+- Fixed an issue which caused the CPU reset routine to repeat indefinitely in low-CPU environments like shard3 (#65)
 
 
 
