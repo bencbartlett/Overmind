@@ -1,5 +1,3 @@
-// Hatchery - groups all spawns and extensions in a colony
-
 import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
 import {QueenOverlord} from '../overlords/core/queen';
@@ -57,6 +55,11 @@ const HatcheryMemoryDefaults: HatcheryMemory = {
 	}
 };
 
+
+/**
+ * The hatchery encompasses all spawning-related structures, like spawns, extensions, and some energy buffer containers,
+ * and contains logic for spawning the creeps requested by overlords
+ */
 @profile
 export class Hatchery extends HiveCluster {
 

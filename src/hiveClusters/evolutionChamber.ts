@@ -1,5 +1,3 @@
-// Evolution chamber: manages lab boosting behavior
-
 import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
@@ -63,14 +61,17 @@ const EvolutionChamberMemoryDefaults: EvolutionChamberMemory = {
 	}
 };
 
-export function neighboringLabs(pos: RoomPosition): StructureLab[] {
+function neighboringLabs(pos: RoomPosition): StructureLab[] {
 	return _.compact(_.map(pos.neighbors, neighbor => neighbor.lookForStructure(STRUCTURE_LAB))) as StructureLab[];
 }
 
-export function labsAreEmpty(labs: StructureLab[]): boolean {
+function labsAreEmpty(labs: StructureLab[]): boolean {
 	return _.all(labs, lab => lab.mineralAmount == 0);
 }
 
+/**
+ * The evolution chamber handles mineral production and boosting logic, handling resource supply for labs
+ */
 @profile
 export class EvolutionChamber extends HiveCluster {
 
@@ -88,9 +89,6 @@ export class EvolutionChamber extends HiveCluster {
 	private labReservations: {
 		[labID: string]: { mineralType: string, amount: number }
 	};
-	// private boostQueue: {
-	// 	[labID: string]: { mineralType: string, creepName: string }[]
-	// };
 	private neededBoosts: { [boostType: string]: number };
 
 	static settings = {};
@@ -106,11 +104,6 @@ export class EvolutionChamber extends HiveCluster {
 		let restrictedLabs = this.colony.bunker ?
 							 _.filter(this.labs, lab => lab.pos.findInRange(this.colony.spawns, 1).length > 0) :
 							 _.take(_.sortBy(this.labs, lab => Pathing.distance(this.terminal.pos, lab.pos)), 1);
-		// if (this.colony.bunker) {
-		// 	this.boostingLabs = _.filter(this.labs, lab => lab.pos.findInRange(this.colony.spawns, 1).length > 0);
-		// } else {
-		// 	this.boostingLabs = [_.first(_.sortBy(this.labs, lab => Pathing.distance(this.terminal.pos, lab.pos)))];
-		// }
 		// Reagent labs are range=2 from all other labs and are not a boosting lab
 		let range2Labs = _.filter(this.labs, lab => _.all(this.labs, otherLab => lab.pos.inRangeTo(otherLab, 2)));
 		let reagentLabCandidates = _.filter(range2Labs, lab => !_.any(restrictedLabs, l => l.id == lab.id));
@@ -144,7 +137,6 @@ export class EvolutionChamber extends HiveCluster {
 		$.refreshRoom(this);
 		$.refresh(this, 'terminal', 'labs', 'boostingLabs', 'reagentLabs', 'productLabs');
 		this.labReservations = {};
-		// this.boostQueue = {};
 		this.neededBoosts = {};
 	}
 

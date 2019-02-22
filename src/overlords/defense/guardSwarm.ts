@@ -1,5 +1,3 @@
-// Guard swarm overlord: spawns lots of smaller guards to deal with swarm-like attacks or harassments
-
 import {Zerg} from '../../zerg/Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
@@ -8,6 +6,9 @@ import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 
+/**
+ * Guard swarm overlord: spawns lots of smaller guards to deal with swarm-like attacks or harassments
+ */
 @profile
 export class GuardSwarmOverlord extends Overlord {
 
@@ -49,8 +50,7 @@ export class GuardSwarmOverlord extends Overlord {
 	init() {
 		if (this.directive.memory.amount) {
 			this.wishlist(this.directive.memory.amount, CombatSetups.broodlings.early);
-		}
-		else {
+		} else {
 			if (this.room) {
 				let smallHostiles = _.filter(this.room.dangerousHostiles, creep => creep.body.length < 10);
 				if (smallHostiles.length > 2) {

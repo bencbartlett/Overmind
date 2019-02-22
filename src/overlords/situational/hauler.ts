@@ -10,7 +10,9 @@ import {Energetics} from '../../logistics/Energetics';
 import {profile} from '../../profiler/decorator';
 import {Roles, Setups} from '../../creepSetups/setups';
 
-
+/**
+ * Spawns special-purpose haulers for transporting resources to/from a specified target
+ */
 @profile
 export class HaulingOverlord extends Overlord {
 

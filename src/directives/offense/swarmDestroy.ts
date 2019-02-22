@@ -4,6 +4,9 @@ import {Visualizer} from '../../visuals/Visualizer';
 import {log} from '../../console/log';
 import {SwarmDestroyerOverlord} from '../../overlords/offense/swarmDestroyer';
 
+/**
+ * Spawns a 2x2 squad of coordinated creeps to destroy a room
+ */
 @profile
 export class DirectiveSwarmDestroy extends Directive {
 

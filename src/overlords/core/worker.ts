@@ -11,6 +11,10 @@ import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {maxBy} from '../../utilities/utils';
 
+/**
+ * Spawns general-purpose workers, which maintain a colony, performing actions such as building, repairing, fortifying,
+ * paving, and upgrading, when needed
+ */
 @profile
 export class WorkerOverlord extends Overlord {
 

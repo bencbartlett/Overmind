@@ -34,6 +34,9 @@ const HEAP_CLEAN_FREQUENCY = 200;
 const BUCKET_CLEAR_CACHE = 7000;
 const BUCKET_CPU_HALT = 4000;
 
+/**
+ * This module contains a number of low-level memory clearing and caching functions
+ */
 @profile
 export class Mem {
 

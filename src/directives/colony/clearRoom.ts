@@ -6,8 +6,10 @@ import {log} from '../../console/log';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {printRoomName} from '../../utilities/utils';
 
-// Claims a new room, destroys all structures in the room, then unclaims it
 
+/**
+ * Claims a new room, destroys all structures in the room, then unclaims it
+ */
 @profile
 export class DirectiveClearRoom extends Directive {
 

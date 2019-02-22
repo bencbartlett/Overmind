@@ -12,6 +12,9 @@ interface DirectiveInvasionDefenseMemory extends FlagMemory {
 	safeSince: number;
 }
 
+/**
+ * Defend an owned room against an incoming player invasion
+ */
 @profile
 export class DirectiveInvasionDefense extends Directive {
 

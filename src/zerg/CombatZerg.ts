@@ -16,6 +16,9 @@ interface CombatZergMemory extends CreepMemory {
 export const DEFAULT_PARTNER_TICK_DIFFERENCE = 650;
 export const DEFAULT_SWARM_TICK_DIFFERENCE = 650;
 
+/**
+ * CombatZerg is an extension of the Zerg class which contains additional combat-related methods
+ */
 @profile
 export class CombatZerg extends Zerg {
 
@@ -85,7 +88,6 @@ export class CombatZerg extends Zerg {
 		}
 	}
 
-	/* Move to and heal/rangedHeal the specified target */
 	doMedicActions(roomName: string): void {
 		// Travel to the target room
 		if (!this.safelyInRoom(roomName)) {
@@ -120,7 +122,9 @@ export class CombatZerg extends Zerg {
 		}
 	}
 
-	/* Attack and chase the specified target */
+	/**
+	 * Attack and chase the specified target
+	 */
 	attackAndChase(target: Creep | Structure): CreepActionReturnCode {
 		let ret: CreepActionReturnCode;
 		// Attack the target if you can, else move to get in range
@@ -176,7 +180,9 @@ export class CombatZerg extends Zerg {
 		}
 	}
 
-	/* Navigate to a room, then engage hostile creeps there, perform medic actions, etc. */
+	/**
+	 * Navigate to a room, then engage hostile creeps there, perform medic actions, etc.
+	 */
 	autoSkirmish(roomName: string, verbose = false) {
 
 		// Do standard melee, ranged, and heal actions
@@ -209,7 +215,9 @@ export class CombatZerg extends Zerg {
 
 	}
 
-	/* Navigate to a room, then engage hostile creeps there, perform medic actions, etc. */
+	/**
+	 * Navigate to a room, then engage hostile creeps there, perform medic actions, etc.
+	 */
 	autoCombat(roomName: string, verbose = false) {
 
 		// Do standard melee, ranged, and heal actions

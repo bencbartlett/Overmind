@@ -1,9 +1,10 @@
-// Preprocessing code to be run before animation of anything
-
 import {profile} from '../profiler/decorator';
 import {DirectiveOutpost} from '../directives/colony/outpost';
 import {DirectiveSKOutpost} from '../directives/colony/outpostSK';
 
+/**
+ * GameCache does initial low-level preprocessing before each tick is run
+ */
 @profile
 export class GameCache implements ICache {
 
@@ -24,7 +25,9 @@ export class GameCache implements ICache {
 		this.creepsByColony = _.groupBy(Game.creeps, creep => creep.memory.colony) as { [colName: string]: Creep[] };
 	}
 
-	/* Generates a hash table for creeps assigned to each object: key: OLref, val: (key: role, val: names[]) */
+	/**
+	 * Generates a hash table for creeps assigned to each object: key: OLref, val: (key: role, val: names[])
+	 */
 	private cacheOverlords() {
 		this.overlords = {};
 		// keys: overlordRef, value: creepNames[]
@@ -35,7 +38,9 @@ export class GameCache implements ICache {
 		}
 	}
 
-	/* Generates a hash table for targets: key: TargetRef, val: targeting creep names*/
+	/**
+	 * Generates a hash table for targets: key: TargetRef, val: targeting creep names
+	 */
 	private cacheTargets() {
 		this.targets = {};
 		for (let i in Game.creeps) {

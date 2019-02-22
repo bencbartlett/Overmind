@@ -26,6 +26,14 @@
   ],
   "exclude": [
     "node_modules"
-  ]
+  ],
+  "typedocOptions": {
+    "mode": "file",
+    "out": "docs",
+    "ignoreCompilerErrors": true,
+    "excludeNotExported": true,
+    "exclude": "**/*+(Assimilator|Overmind).ts",
+    "readme": "none"
+  }
 }
 

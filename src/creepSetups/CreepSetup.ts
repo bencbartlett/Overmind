@@ -19,6 +19,9 @@ export function patternCost(setup: CreepSetup): number {
 	return bodyCost(setup.bodySetup.pattern);
 }
 
+/**
+ * The CreepSetup class contains methods for flexibly generating creep body arrays when needed for spawning
+ */
 @profile
 export class CreepSetup {
 

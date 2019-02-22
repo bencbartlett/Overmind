@@ -9,6 +9,9 @@ interface DirectiveInvasionDefenseMemory extends FlagMemory {
 	safeSince: number;
 }
 
+/**
+ * Defend an outpost against an incoming player invasion
+ */
 @profile
 export class DirectiveOutpostDefense extends Directive {
 

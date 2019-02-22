@@ -4,9 +4,10 @@ import {Colony} from '../../Colony';
 import {Zerg} from '../../zerg/Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 
-// This overlord contains the default actions for any creeps which lack an overlord (for example, miners whose
-// miningSite is no longer visible, or guards with no directive)
-
+/**
+ * This overlord contains the default actions for any creeps which lack an overlord (for example, miners whose
+ * miningSite is no longer visible, or guards with no directive)
+ */
 @profile
 export class DefaultOverlord extends Overlord {
 

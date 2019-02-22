@@ -26,6 +26,9 @@ import {DirectiveSwarmDestroy} from './offense/swarmDestroy';
 import {DirectiveOutpostDefense} from './defense/outpostDefense';
 import {DirectiveClearRoom} from './colony/clearRoom';
 
+/**
+ * This is the initializer for directives, which maps flags by their color code to the corresponding directive
+ */
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 
 	switch (flag.color) {

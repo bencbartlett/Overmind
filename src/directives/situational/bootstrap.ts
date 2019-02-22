@@ -1,5 +1,3 @@
-// Emergency directive: recover from a catastrophic room crash
-
 import {Directive} from '../Directive';
 import {log} from '../../console/log';
 import {profile} from '../../profiler/decorator';
@@ -8,7 +6,9 @@ import {Colony} from '../../Colony';
 import {Roles} from '../../creepSetups/setups';
 import {NotifierPriority} from '../Notifier';
 
-
+/**
+ * Bootstrapping directive: recover from a colony-wide crash or bootstrap from initial spawn-in
+ */
 @profile
 export class DirectiveBootstrap extends Directive {
 

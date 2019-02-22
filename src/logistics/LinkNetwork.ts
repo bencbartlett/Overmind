@@ -1,8 +1,10 @@
-// A grouping for objectives that allows colony components to have their own objectives instead of all being on Overlord
-
 import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
 
+/**
+ * The link network controls the flow of energy through various links in a room and uses a greedy matching algorithm
+ * to determine where to send energy to
+ */
 @profile
 export class LinkNetwork {
 
@@ -42,7 +44,9 @@ export class LinkNetwork {
 		this.transmit.push(link);
 	}
 
-	/* Number of ticks until a dropoff link is available again to deposit energy to */
+	/**
+	 * Number of ticks until a dropoff link is available again to deposit energy to
+	 */
 	getDropoffAvailability(link: StructureLink): number {
 		let dest = this.colony.commandCenter ? this.colony.commandCenter.pos : this.colony.pos;
 		let usualCooldown = link.pos.getRangeTo(dest);

@@ -3,6 +3,9 @@ import {Swarm} from '../zerg/Swarm';
 import {CreepSetup} from '../creepSetups/CreepSetup';
 import {profile} from '../profiler/decorator';
 
+/**
+ * SwarmOverlords extend the base CombatOverlord class, providing additional methods for spawning and controlling swarms
+ */
 @profile
 export abstract class SwarmOverlord extends CombatOverlord {
 

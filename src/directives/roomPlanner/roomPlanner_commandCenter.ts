@@ -2,6 +2,9 @@ import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {log} from '../../console/log';
 
+/**
+ * [DEPRECATED] Place a command center at the target location
+ */
 @profile
 export class DirectiveRPCommandCenter extends Directive {
 

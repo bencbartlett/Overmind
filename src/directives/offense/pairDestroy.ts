@@ -5,6 +5,9 @@ import {PairDestroyerOverlord} from '../../overlords/offense/pairDestroyer';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {log} from '../../console/log';
 
+/**
+ * Spawns a pair of attacker/healer creeps to siege a room
+ */
 @profile
 export class DirectivePairDestroy extends Directive {
 

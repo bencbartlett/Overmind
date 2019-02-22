@@ -1,5 +1,3 @@
-// Command center: groups many RCL8 components, storge, lab, terminal, and some towers
-
 import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
 import {CommandCenterOverlord} from '../overlords/core/manager';
@@ -19,6 +17,10 @@ interface CommandCenterMemory {
 	idlePos?: protoPos
 }
 
+/**
+ * The command center groups the high-level structures at the core of the bunker together, including storage, terminal,
+ * link, power spawn, observer, and nuker.
+ */
 @profile
 export class CommandCenter extends HiveCluster {
 

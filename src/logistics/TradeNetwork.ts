@@ -62,6 +62,10 @@ export const maxMarketPrices: { [resourceType: string]: number } = {
 
 export const MAX_ENERGY_SELL_ORDERS = 5;
 
+
+/**
+ * The trade network controls resource acquisition and disposal on the player market.
+ */
 @profile
 @assimilationLocked
 export class TraderJoe implements ITradeNetwork {
@@ -137,7 +141,9 @@ export class TraderJoe implements ITradeNetwork {
 		};
 	}
 
-	/* Cost per unit including transfer price with energy converted to credits */
+	/**
+	 * Cost per unit including transfer price with energy converted to credits
+	 */
 	private effectivePrice(order: Order, terminal: StructureTerminal): number {
 		if (order.roomName) {
 			let transferCost = Game.market.calcTransactionCost(1000, order.roomName, terminal.room.name) / 1000;

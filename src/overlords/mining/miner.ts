@@ -20,6 +20,10 @@ export const DoubleMinerSetupCost = bodyCost(Setups.drones.miners.double.generat
 
 const BUILD_OUTPUT_FREQUENCY = 15;
 
+/**
+ * Spawns miners to harvest from remote, owned, or sourcekeeper energy deposits. Standard mining actions have been
+ * heavily CPU-optimized
+ */
 @profile
 export class MiningOverlord extends Overlord {
 

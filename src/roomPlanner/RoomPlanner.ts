@@ -1,6 +1,3 @@
-// The room planner allows you to plan the location of all structures in the room semi-automatically by placing
-// components with flags. This code is a little messy, sorry.
-
 import {hatcheryLayout} from './layouts/hatchery';
 import {commandCenterLayout} from './layouts/commandCenter';
 import {log} from '../console/log';
@@ -89,7 +86,10 @@ export function translatePositions(positions: RoomPosition[], fromAnchor: Coord,
 	return newPositions;
 }
 
-
+/**
+ * The room planner handles structure placement within a room automatically or (in manual or semiautomatic mode) with
+ * manual guidance from room planner flags.
+ */
 @profile
 export class RoomPlanner {
 	colony: Colony;							// The colony this is for

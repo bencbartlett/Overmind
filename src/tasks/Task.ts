@@ -19,11 +19,12 @@ import {log} from '../console/log';
 
 type targetType = { ref: string, pos: protoPos }; // overwrite this variable in derived classes to specify more precise typing
 
-/* An abstract class for encapsulating creep actions. This generalizes the concept of "do action X to thing Y until
+/**
+ * An abstract class for encapsulating creep actions. This generalizes the concept of "do action X to thing Y until
  * condition Z is met" and saves a lot of convoluted and duplicated code in creep logic. A Task object contains
  * the necessary logic for traveling to a target, performing a task, and realizing when a task is no longer sensible
- * to continue.*/
-
+ * to continue.
+ */
 @profile
 export abstract class Task {
 

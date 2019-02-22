@@ -3,6 +3,9 @@ import {profile} from '../../profiler/decorator';
 import {log} from '../../console/log';
 import {NotifierPriority} from '../Notifier';
 
+/**
+ * Nuke response: automatically over-fortify ramparts to withstand an incoming nuclear strike
+ */
 @profile
 export class DirectiveNukeResponse extends Directive {
 

@@ -4,8 +4,10 @@ import {ClaimingOverlord} from '../../overlords/colonization/claimer';
 import {Colony} from '../../Colony';
 import {SpawnGroup} from '../../logistics/SpawnGroup';
 
-// Claims a new room and incubates it from the nearest (or specified) colony
 
+/**
+ * Claims a new room and incubates it from the nearest (or specified) colony
+ */
 @profile
 export class DirectiveIncubate extends Directive {
 

@@ -44,7 +44,10 @@ interface SwarmOverlord extends CombatOverlord {
 
 const DEBUG = true;
 
-// Represents a coordinated group of creeps moving as a single unit
+/**
+ * Swarms represent a coordinated group of creeps moving as a single unit and use special-purpose pathing and movement
+ * functions to ensure they don't get separated
+ */
 @profile
 export class Swarm implements ProtoSwarm {
 

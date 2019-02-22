@@ -1,7 +1,8 @@
-// Energetics manager; makes high-level decisions based on energy amounts
-
 import {Colony, ColonyStage} from '../Colony';
 
+/**
+ * Energetics manager; makes high-level decisions based on energy amounts
+ */
 export class Energetics {
 
 	static settings = {

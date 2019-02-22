@@ -10,7 +10,9 @@ import {profile} from '../profiler/decorator';
 @profile
 export class CombatTargeting {
 
-	/* Finds the best target within a given range that a zerg can currently attack */
+	/**
+	 * Finds the best target within a given range that a zerg can currently attack
+	 */
 	static findBestCreepTargetInRange(zerg: Zerg, range: number, targets = zerg.room.hostiles): Creep | undefined {
 		let nearbyHostiles = _.filter(targets, c => zerg.pos.inRangeToXY(c.pos.x, c.pos.y, range));
 		return maxBy(nearbyHostiles, function (hostile) {
@@ -20,7 +22,9 @@ export class CombatTargeting {
 		});
 	}
 
-	/* Finds the best target within a given range that a zerg can currently attack */
+	/**
+	 * Finds the best target within a given range that a zerg can currently attack
+	 */
 	static findBestStructureTargetInRange(zerg: Zerg, range: number, allowUnowned = true): Structure | undefined {
 		let nearbyStructures = _.filter(zerg.room.hostileStructures,
 										s => zerg.pos.inRangeToXY(s.pos.x, s.pos.y, range));
@@ -36,7 +40,9 @@ export class CombatTargeting {
 		});
 	}
 
-	/* Standard target-finding logic */
+	/**
+	 * Standard target-finding logic
+	 */
 	static findTarget(zerg: Zerg, targets = zerg.room.hostiles): Creep | undefined {
 		return maxBy(targets, function (hostile) {
 			if (hostile.hitsPredicted == undefined) hostile.hitsPredicted = hostile.hits;
@@ -46,7 +52,9 @@ export class CombatTargeting {
 		});
 	}
 
-	/* Finds the best target within a given range that a zerg can currently attack */
+	/**
+	 * Finds the best target within a given range that a zerg can currently attack
+	 */
 	static findBestCreepTargetForTowers(room: Room, targets = room.hostiles): Creep | undefined {
 		return maxBy(targets, function (hostile) {
 			if (hostile.hitsPredicted == undefined) hostile.hitsPredicted = hostile.hits;
@@ -73,7 +81,7 @@ export class CombatTargeting {
 		}
 	}
 
-	/* This method is expensive */
+	// This method is expensive
 	static findClosestReachable(pos: RoomPosition, targets: (Creep | Structure)[]): Creep | Structure | undefined {
 		let targetsByRange = _.sortBy(targets, target => pos.getRangeTo(target));
 		return _.find(targetsByRange, target => Pathing.isReachable(pos, target.pos, target.room.barriers));
@@ -83,7 +91,9 @@ export class CombatTargeting {
 		return healer.pos.findClosestByRange(_.filter(healer.room.creeps, creep => creep.hits < creep.hitsMax));
 	}
 
-	/* Finds the best (friendly) target in range that a zerg can currently heal */
+	/**
+	 * Finds the best (friendly) target in range that a zerg can currently heal
+	 */
 	static findBestHealingTargetInRange(healer: Zerg, range = 3, friendlies = healer.room.creeps): Creep | undefined {
 		return maxBy(_.filter(friendlies, f => healer.pos.getRangeTo(f) <= range), friend => {
 			if (friend.hitsPredicted == undefined) friend.hitsPredicted = friend.hits;

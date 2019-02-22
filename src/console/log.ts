@@ -10,7 +10,7 @@ export enum LogLevels {
 }
 
 /**
- * Debug level for log output
+ * Default debug level for log output
  */
 export const LOG_LEVEL: number = LogLevels.INFO;
 
@@ -114,6 +114,9 @@ export function debug(thing: { name: string, memory: any, pos: RoomPosition }, .
 	}
 }
 
+/**
+ * Log provides methods for displaying pretty-printed text into the Screeps console
+ */
 @profile
 export class Log {
 	public static sourceMap: any;

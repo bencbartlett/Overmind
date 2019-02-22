@@ -1,5 +1,3 @@
-// Upgrade site for grouping relevant components for an upgrader station
-
 import {HiveCluster} from './_HiveCluster';
 import {profile} from '../profiler/decorator';
 import {UpgradingOverlord} from '../overlords/core/upgrader';
@@ -14,6 +12,10 @@ interface UpgradeSiteMemory {
 	stats: { downtime: number };
 }
 
+
+/**
+ * Upgrade sites group upgrade-related structures around a controller, such as an input link and energy container
+ */
 @profile
 export class UpgradeSite extends HiveCluster {
 

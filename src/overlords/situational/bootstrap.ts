@@ -9,7 +9,9 @@ import {SpawnRequest} from '../../hiveClusters/hatchery';
 import {DirectiveHarvest} from '../../directives/resource/harvest';
 import {Roles, Setups} from '../../creepSetups/setups';
 
-// Bootstrapping overlord: spawns small miners and suppliers to recover from a catastrohpic colony crash
+/**
+ * Bootstrapping overlord: spawns small miners and suppliers to recover from a catastrohpic colony crash
+ */
 @profile
 export class BootstrappingOverlord extends Overlord {
 

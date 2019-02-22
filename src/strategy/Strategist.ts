@@ -1,6 +1,3 @@
-// The Strategist makes high-level game decisions such as choosing when/where to expand and who to harass. It is located
-// on Overmind.strategist and is only instantiated if the AI is run in full-auto mode.
-
 import {Autonomy, getAutonomyLevel, Mem} from '../memory/Memory';
 import {Colony, getAllColonies} from '../Colony';
 import {DirectiveColonize} from '../directives/colony/colonize';
@@ -28,6 +25,10 @@ interface StrategistMemory {
 
 const defaultStrategistMemory: StrategistMemory = {};
 
+/**
+ * The Strategist makes high-level game decisions such as choosing when/where to expand and who to harass. It is located
+ * on Overmind.strategist and is only instantiated if the AI is run in full-auto mode.
+ */
 @assimilationLocked
 @profile
 export class Strategist implements IStrategist {

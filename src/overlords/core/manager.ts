@@ -1,4 +1,3 @@
-// Command center overlord: spawn and run a dediated commandCenter attendant
 import {Overlord} from '../Overlord';
 import {CommandCenter} from '../../hiveClusters/commandCenter';
 import {Zerg} from '../../zerg/Zerg';
@@ -13,6 +12,9 @@ import {$} from '../../caching/GlobalCache';
 import {WorkerOverlord} from './worker';
 import {Roles, Setups} from '../../creepSetups/setups';
 
+/**
+ * Command center overlord: spawn and run a dediated commandCenter attendant
+ */
 @profile
 export class CommandCenterOverlord extends Overlord {
 

@@ -1,5 +1,3 @@
-// Road network: groups roads in a single object for more intelligent repair requests
-
 import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
 import {Zerg} from '../zerg/Zerg';
@@ -8,12 +6,10 @@ import {$} from '../caching/GlobalCache';
 
 const ROAD_CACHE_TIMEOUT = 15;
 
-// function sortRoadsByDFS(room: Room, colony: Colony) {
-// 	let roads: StructureRoad[] = [];
-// 	let rootNode = colony.pos.findClosestByMultiRoomRange(room.roads);
-//
-// }
 
+/**
+ * RoadLogistics: groups roads in a single object for more intelligent repair requests
+ */
 @profile
 export class RoadLogistics {
 

@@ -6,8 +6,10 @@ import {$} from '../caching/GlobalCache';
 import {CombatTargeting} from '../targeting/CombatTargeting';
 import {WorkerOverlord} from '../overlords/core/worker';
 
-// Hive cluster for wrapping towers
 
+/**
+ * The spore crawler is the hive cluster for controlling towers within a room
+ */
 @profile
 export class SporeCrawler extends HiveCluster {
 

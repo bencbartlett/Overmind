@@ -1,5 +1,3 @@
-// Hauling directive: spawns hauler creeps to move large amounts of resourecs from a location (e.g. draining a storage)
-
 import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {isStoreStructure} from '../../declarations/typeGuards';
@@ -10,6 +8,10 @@ interface DirectiveHaulMemory extends FlagMemory {
 	totalResources?: number;
 }
 
+
+/**
+ * Hauling directive: spawns hauler creeps to move large amounts of resourecs from a location (e.g. draining a storage)
+ */
 @profile
 export class DirectiveHaul extends Directive {
 
@@ -85,7 +87,9 @@ export class DirectiveHaul extends Directive {
 		return this._store;
 	}
 
-	/* Total amount of resources remaining to be transported; cached into memory in case room loses visibility */
+	/**
+	 * Total amount of resources remaining to be transported; cached into memory in case room loses visibility
+	 */
 	get totalResources(): number {
 		if (this.pos.isVisible) {
 			this.memory.totalResources = _.sum(this.store); // update total amount remaining
@@ -106,7 +110,6 @@ export class DirectiveHaul extends Directive {
 			this.remove();
 		}
 	}
-
 
 }
 

@@ -1,5 +1,3 @@
-// SourceReaperOverlord -- spawns offensive creeps to allow source keeper mining
-
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {DirectiveSKOutpost} from '../../directives/colony/outpostSK';
 import {RoomIntel} from '../../intel/RoomIntel';
@@ -19,6 +17,9 @@ interface SourceReaperOverlordMemory extends OverlordMemory {
 	targetLairID?: string;
 }
 
+/**
+ * SourceReaperOverlord -- spawns offensive creeps to allow source keeper mining
+ */
 @profile
 export class SourceReaperOverlord extends CombatOverlord {
 

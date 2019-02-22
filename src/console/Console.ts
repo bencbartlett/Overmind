@@ -1,5 +1,3 @@
-// Command line
-
 import {Colony} from '../Colony';
 import {color, toColumns} from '../utilities/utils';
 import {asciiLogoSmall} from '../visuals/logos';
@@ -8,6 +6,9 @@ import {alignedNewline, bullet} from '../utilities/stringConstants';
 import {DEFAULT_OVERMIND_SIGNATURE, MY_USERNAME, USE_PROFILER} from '../~settings';
 import {Directive} from '../directives/Directive';
 
+/**
+ * OvermindConsole registers a number of global methods for direct use in the Screeps console
+ */
 export class OvermindConsole {
 
 	static init() {

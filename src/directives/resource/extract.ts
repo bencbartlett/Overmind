@@ -4,6 +4,9 @@ import {ExtractorOverlord} from '../../overlords/mining/extractor';
 import {log} from '../../console/log';
 import {profile} from '../../profiler/decorator';
 
+/**
+ * Mineral extraction directive. Spawns extraction creeps to operate extractors in owned or source keeper rooms
+ */
 @profile
 export class DirectiveExtract extends Directive {
 

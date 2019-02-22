@@ -15,6 +15,10 @@ interface DirectiveCreationOptions {
 const DEFAULT_MAX_PATH_LENGTH = 600;
 const DEFAULT_MAX_LINEAR_RANGE = 10;
 
+/**
+ * Directives are contextual wrappers for flags and serve as attachment points for Overlords, acting as a sort of
+ * "process table" for the bot, with individual processes (Overlords) run by the scheulder (Overseer)
+ */
 @profile
 export abstract class Directive {
 

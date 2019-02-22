@@ -1,5 +1,3 @@
-// Abathur is responsible for the evolution of the swarm and directs global production of minerals
-
 import {Colony, getAllColonies} from '../Colony';
 import {REAGENTS} from './map_resources';
 import {mergeSum, minMax, onPublicServer} from '../utilities/utils';
@@ -91,6 +89,10 @@ const AbathurMemoryDefaults = {
 	sleepUntil: 0
 };
 
+/**
+ * Abathur is responsible for the evolution of the swarm and directs global production of minerals. Abathur likes
+ * efficiency, XGHO2, and high lab uptime, and dislikes pronouns.
+ */
 @profile
 export class Abathur {
 

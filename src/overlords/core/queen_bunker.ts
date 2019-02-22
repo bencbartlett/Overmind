@@ -37,6 +37,10 @@ function computeQuadrant(colony: Colony, quadrant: Coord[]): SupplyStructure[] {
 	return structures;
 }
 
+/**
+ * A modified version of the queen overlord which contains a number of hard-coded optimization for bunker-type rooms.
+ * This overlord supercedes the default queen overlord once the colony has a storage with a minimum amount of energy.
+ */
 @profile
 export class BunkerQueenOverlord extends Overlord {
 

@@ -1,5 +1,3 @@
-// Colony class - organizes all assets of an owned room into a colony
-
 import {profile} from './profiler/decorator';
 import {Hatchery} from './hiveClusters/hatchery';
 import {CommandCenter} from './hiveClusters/commandCenter';
@@ -81,6 +79,11 @@ const defaultColonyMemory: ColonyMemory = {
 	},
 };
 
+
+/**
+ * Colonies are the highest-level object other than the global Overmind. A colony groups together all rooms, structures,
+ * creeps, utilities, etc. which are run from a single owned room.
+ */
 @profile
 @assimilationLocked
 export class Colony {
@@ -428,7 +431,6 @@ export class Colony {
 		this.abathur.refresh();
 	}
 
-	/* Instantiate and associate virtual colony components to group similar structures together */
 	private registerHiveClusters(): void {
 		this.hiveClusters = [];
 		// Instantiate the command center if there is storage in the room - this must be done first!

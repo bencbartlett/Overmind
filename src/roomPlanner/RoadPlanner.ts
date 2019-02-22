@@ -1,5 +1,3 @@
-/* Road planner: sensibly builds road networks around colonies */
-
 import {Visualizer} from '../visuals/Visualizer';
 import {RoomPlanner} from './RoomPlanner';
 import {log} from '../console/log';

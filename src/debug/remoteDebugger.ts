@@ -1,7 +1,3 @@
-/* Debugging tool which lets me remotely debug other Overmind players' code by communicating through public memory
- * segments. Can be toggled on and off with console commands startRemoteDebugSession() and endRemoteDebugSession().
- */
-
 import {MUON, MY_USERNAME} from '../~settings';
 import {Segmenter} from '../memory/Segmenter';
 import {log} from '../console/log';
@@ -30,6 +26,10 @@ const defaultDebuggerMemory: DebuggerMemory = {
 
 const DEBUGGER = color('[DEBUGGER]', '#ff00ff');
 
+/**
+ * Debugging tool which lets me remotely debug other Overmind players' code by communicating through public memory
+ * segments. Can be toggled on and off with console commands startRemoteDebugSession() and endRemoteDebugSession().
+ */
 export class RemoteDebugger {
 
 	constructor() {

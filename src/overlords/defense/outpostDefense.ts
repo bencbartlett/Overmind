@@ -7,6 +7,9 @@ import {CombatOverlord} from '../CombatOverlord';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveOutpostDefense} from '../../directives/defense/outpostDefense';
 
+/**
+ * General purpose skirmishing overlord for dealing with player combat in an outpost
+ */
 @profile
 export class OutpostDefenseOverlord extends CombatOverlord {
 

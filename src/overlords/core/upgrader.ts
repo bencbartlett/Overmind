@@ -7,6 +7,9 @@ import {profile} from '../../profiler/decorator';
 import {boostResources} from '../../resources/map_resources';
 import {Roles, Setups} from '../../creepSetups/setups';
 
+/**
+ * Spawns an upgrader to upgrade the room controller
+ */
 @profile
 export class UpgradingOverlord extends Overlord {
 

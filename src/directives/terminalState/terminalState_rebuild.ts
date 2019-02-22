@@ -14,6 +14,9 @@ export const TerminalState_Rebuild: TerminalState = {
 
 const REBUILD_STATE_TIMEOUT = 25000;
 
+/**
+ * Put the colony's terminal in a rebuild state, which pushes resources out of a room which is undergoing reconstruction
+ */
 @profile
 export class DirectiveTerminalRebuildState extends Directive {
 

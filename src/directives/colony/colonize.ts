@@ -9,8 +9,10 @@ import {Roles} from '../../creepSetups/setups';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {printRoomName} from '../../utilities/utils';
 
-// Claims a new room and builds a spawn but does not incubate. Removes when spawn is constructed.
 
+/**
+ * Claims a new room and builds a spawn but does not incubate. Removes when spawn is constructed.
+ */
 @profile
 export class DirectiveColonize extends Directive {
 

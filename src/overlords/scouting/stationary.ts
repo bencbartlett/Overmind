@@ -5,6 +5,9 @@ import {profile} from '../../profiler/decorator';
 import {Directive} from '../../directives/Directive';
 import {Roles, Setups} from '../../creepSetups/setups';
 
+/**
+ * Sends out a stationary scout, which travels to a waypoint and remains there indefinitely
+ */
 @profile
 export class StationaryScoutOverlord extends Overlord {
 

@@ -8,6 +8,9 @@ import {Roles, Setups} from '../../creepSetups/setups';
 import {RoomIntel} from '../../intel/RoomIntel';
 import {MY_USERNAME} from '../../~settings';
 
+/**
+ * Spawns reservers to reserve an outpost room
+ */
 @profile
 export class ReservingOverlord extends Overlord {
 

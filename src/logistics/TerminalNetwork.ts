@@ -50,6 +50,11 @@ function wantedAmount(colony: Colony, resource: ResourceConstant): number {
 		   - (colony.assets[resource] || 0);
 }
 
+
+/**
+ * The terminal network controls inter-colony resource transfers and requests, equalizing resources between rooms and
+ * responding to on-demand resource requests
+ */
 @profile
 @assimilationLocked
 export class TerminalNetwork implements ITerminalNetwork {

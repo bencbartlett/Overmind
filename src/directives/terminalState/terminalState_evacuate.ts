@@ -12,6 +12,9 @@ export const TerminalState_Evacuate: TerminalState = {
 
 const EVACUATE_STATE_TIMEOUT = 25000;
 
+/**
+ * Put the colony's terminal in an evacuation state, which pushes resources out of a room which is about to be breached
+ */
 @profile
 export class DirectiveTerminalEvacuateState extends Directive {
 

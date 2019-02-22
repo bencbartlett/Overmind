@@ -8,6 +8,9 @@ import {DirectiveColonize} from '../../directives/colony/colonize';
 import {Pathing} from '../../movement/Pathing';
 import {log} from '../../console/log';
 
+/**
+ * Spawn pioneers - early workers which help to build a spawn in a new colony, then get converted to workers or drones
+ */
 @profile
 export class PioneerOverlord extends Overlord {
 

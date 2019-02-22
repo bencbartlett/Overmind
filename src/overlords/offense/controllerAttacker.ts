@@ -1,6 +1,3 @@
-// Controller attacker overlord.  Spawn CLAIM creeps to mass up on a controller and attack all at once
-// This module was contributed by @sarrick and has since been modified
-
 import {Zerg} from '../../zerg/Zerg';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {Overlord} from '../Overlord';
@@ -10,6 +7,10 @@ import {SpawnGroup} from 'logistics/SpawnGroup';
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
 
+/**
+ * Controller attacker overlord.  Spawn CLAIM creeps to mass up on a controller and attack all at once
+ * This module was contributed by @sarrick and has since been modified
+ */
 @profile
 export class ControllerAttackerOverlord extends Overlord {
 

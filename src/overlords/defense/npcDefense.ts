@@ -1,5 +1,3 @@
-// Guard overlord: spawns guards as needed to deal with standard NPC invasions
-
 import {DirectiveGuard} from '../../directives/defense/guard';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/siegeTarget';
@@ -10,6 +8,9 @@ import {CombatZerg} from '../../zerg/CombatZerg';
 import {RoomIntel} from '../../intel/RoomIntel';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 
+/**
+ * NPC defense overlord: spawns specially-optimized guards as needed to deal with standard NPC invasions
+ */
 @profile
 export class DefenseNPCOverlord extends Overlord {
 

@@ -1,5 +1,3 @@
-// Destroyer overlord - spawns attacker/healer pairs for sustained combat
-
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {CombatZerg} from '../../zerg/CombatZerg';
@@ -16,6 +14,9 @@ import {SwarmOverlord} from '../SwarmOverlord';
 
 const DEBUG = false;
 
+/**
+ * Spawns squads of attackers and healers to siege a hostile room, moving with swarm logic in a coordinated fashion
+ */
 @profile
 export class SwarmDestroyerOverlord extends SwarmOverlord {
 
@@ -106,7 +107,7 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 
 		const numSwarms = 1;
 		const swarmConfig = [{setup: zerglingSetup, amount: 2, priority: zerglingPriority},
-							 {setup: healerSetup, amount: 2, priority: healerPriority}];
+			{setup: healerSetup, amount: 2, priority: healerPriority}];
 		this.swarmWishlist(numSwarms, swarmConfig);
 	}
 

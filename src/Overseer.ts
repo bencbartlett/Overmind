@@ -1,6 +1,3 @@
-/* The Overseer object acts as a scheduler, running directives and overlords for all colonies each tick. It is also
- * in charge of starting new "processes" (directives) to respond to various situations. */
-
 import {DirectiveGuard} from './directives/defense/guard';
 import {DirectiveBootstrap} from './directives/situational/bootstrap';
 import {profile} from './profiler/decorator';
@@ -38,6 +35,10 @@ const defaultOverseerMemory: OverseerMemory = {
 	suspendUntil: {},
 };
 
+/**
+ * The Overseer object acts as a scheduler, running directives and overlords for all colonies each tick. It is also
+ * in charge of starting new "processes" (directives) to respond to various situations.
+ */
 @profile
 export class Overseer implements IOverseer {
 

@@ -8,6 +8,9 @@ import {Roles, Setups} from '../../creepSetups/setups';
 import {$} from '../../caching/GlobalCache';
 import {Pathing} from '../../movement/Pathing';
 
+/**
+ * Claim an unowned room
+ */
 @profile
 export class ClaimingOverlord extends Overlord {
 

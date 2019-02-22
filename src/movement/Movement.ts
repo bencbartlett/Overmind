@@ -1,6 +1,3 @@
-// This is the movement library for Overmind. It was originally based on BonzAI's Traveler library, but it has been
-// extensively modified to integrate more tightly with the Overmind framework and add additional functionality.
-
 import {profile} from '../profiler/decorator';
 import {log} from '../console/log';
 import {getTerrainCosts, isExit, normalizePos, sameCoord} from './helpers';
@@ -104,12 +101,18 @@ export interface MoveState {
 }
 
 
+/**
+ * This is the movement library for Overmind. It was originally based on BonzAI's Traveler library, but it has been
+ * extensively modified to integrate more tightly with the Overmind framework and add additional functionality.
+ */
 @profile
 export class Movement {
 
 	// Core creep movement functions ===================================================================================
 
-	/* Move a creep to a destination */
+	/**
+	 * Move a creep to a destination
+	 */
 	static goTo(creep: Zerg, destination: HasPos | RoomPosition, options: MoveOptions = {}): number {
 
 		if (creep.blockMovement && !options.force) {
@@ -384,9 +387,11 @@ export class Movement {
 
 
 	// TODO: this is bugged somewhere
-	/* Recursively moves creeps out of the way of a position to make room for something, such as a spawning creep.
+	/**
+	 * Recursively moves creeps out of the way of a position to make room for something, such as a spawning creep.
 	 * If suicide is specified and there is no series of move commands that can move a block of creeps out of the way,
-	 * the lead blocking creep will suicide. Returns whether the position has been vacated. */
+	 * the lead blocking creep will suicide. Returns whether the position has been vacated.
+	 */
 	static vacatePos(pos: RoomPosition, suicide = false): boolean {
 		// prevent creeps from moving onto pos
 		let nearbyCreeps = _.compact(_.map(pos.findInRange(FIND_MY_CREEPS, 2),
@@ -414,7 +419,9 @@ export class Movement {
 		}
 	}
 
-	/* Recursively pushes creeps out of the way of a root position. */
+	/**
+	 * Recursively pushes creeps out of the way of a root position.
+	 */
 	static recursivePush(creep: Zerg, excludePos: RoomPosition[] = []): RoomPosition | undefined {
 		let creepPos = creep.pos;
 		let movePos: RoomPosition | undefined = _.find(creepPos.availableNeighbors(),
@@ -442,19 +449,25 @@ export class Movement {
 		}
 	}
 
-	/* Travel to a room */
+	/**
+	 * Travel to a room
+	 */
 	static goToRoom(creep: Zerg, roomName: string, options: MoveOptions = {}): number {
 		options.range = 23;
 		return this.goTo(creep, new RoomPosition(25, 25, roomName), options);
 	}
 
-	/* Travel to a room */
+	/**
+	 * Travel to a room
+	 */
 	static goToRoom_swarm(swarm: Swarm, roomName: string, options: SwarmMoveOptions = {}): number {
 		options.range = 24 - Math.max(swarm.width, swarm.height);
 		return this.swarmMove(swarm, new RoomPosition(25, 25, roomName), options);
 	}
 
-	/* Park a creep off-roads */
+	/**
+	 * Park a creep off-roads
+	 */
 	static park(creep: Zerg, pos: RoomPosition = creep.pos, maintainDistance = false): number {
 		let road = creep.pos.lookForStructure(STRUCTURE_ROAD);
 		if (!road) return OK;
@@ -488,7 +501,9 @@ export class Movement {
 		return this.goTo(creep, pos);
 	}
 
-	/* Moves a creep off of the current tile to the first available neighbor */
+	/**
+	 * Moves a creep off of the current tile to the first available neighbor
+	 */
 	static moveOffCurrentPos(creep: Zerg): number | undefined {
 		let destinationPos = _.first(creep.pos.availableNeighbors());
 		if (destinationPos) {
@@ -496,7 +511,9 @@ export class Movement {
 		}
 	}
 
-	/* Moves onto an exit tile */
+	/**
+	 * Moves onto an exit tile
+	 */
 	static moveOnExit(creep: Zerg): ScreepsReturnCode | undefined {
 		if (creep.pos.rangeToEdge > 0 && creep.fatigue == 0) {
 			let directions = [1, 3, 5, 7, 2, 4, 6, 8] as DirectionConstant[];
@@ -513,7 +530,9 @@ export class Movement {
 		}
 	}
 
-	/* Moves off of an exit tile */
+	/**
+	 * Moves off of an exit tile
+	 */
 	static moveOffExit(creep: Zerg, avoidSwamp = true): ScreepsReturnCode {
 		let swampDirection;
 		let directions = [1, 3, 5, 7, 2, 4, 6, 8] as DirectionConstant[];
@@ -534,7 +553,9 @@ export class Movement {
 		return ERR_NO_PATH;
 	}
 
-	/* Moves off of an exit tile toward a given direction */
+	/**
+	 * Moves off of an exit tile toward a given direction
+	 */
 	static moveOffExitToward(creep: Zerg, pos: RoomPosition, detour = true): number | undefined {
 		for (let position of creep.pos.availableNeighbors()) {
 			if (position.getRangeTo(pos) == 1) {
@@ -546,7 +567,9 @@ export class Movement {
 		}
 	}
 
-	/* Moves a pair of creeps; the follower will always attempt to be in the last position of the leader */
+	/**
+	 * Moves a pair of creeps; the follower will always attempt to be in the last position of the leader
+	 */
 	static pairwiseMove(leader: Zerg, follower: Zerg, target: HasPos | RoomPosition,
 						opts = {} as MoveOptions, allowedRange = 1): number | undefined {
 		let outcome;
@@ -579,6 +602,9 @@ export class Movement {
 		return outcome;
 	}
 
+	/**
+	 * Moves a swarm to a destination, accounting for group pathfinding
+	 */
 	static swarmMove(swarm: Swarm, destination: HasPos | RoomPosition, options: SwarmMoveOptions = {}): number {
 
 		if (swarm.fatigue > 0) {
@@ -920,7 +946,9 @@ export class Movement {
 		return matrix;
 	};
 
-	// Moving routine for guards or sourceReapers in a room with NPC invaders
+	/**
+	 * Moving routine for guards or sourceReapers in a room with NPC invaders
+	 */
 	static invasionMove(creep: Zerg, destination: RoomPosition | HasPos, options: MoveOptions = {}): number {
 		_.defaults(options, {
 			ignoreRoads: true
@@ -937,7 +965,9 @@ export class Movement {
 		return creep.goTo(dest, options);
 	}
 
-	/* Kite around enemies in a single room, repathing every tick. More expensive than flee(). */
+	/**
+	 * Kite around enemies in a single room, repathing every tick. More expensive than flee().
+	 */
 	static kite(creep: Zerg, avoidGoals: (RoomPosition | HasPos)[], options: MoveOptions = {}): number | undefined {
 		_.defaults(options, {
 			fleeRange   : 5,
@@ -949,7 +979,9 @@ export class Movement {
 		}
 	}
 
-	/* Flee from avoid goals in the room while not re-pathing every tick like kite() does. Returns  */
+	/**
+	 * Flee from avoid goals in the room while not re-pathing every tick like kite() does.
+	 */
 	static flee(creep: Zerg, avoidGoals: (RoomPosition | HasPos)[],
 				dropEnergy = false, options: MoveOptions = {}): number | undefined {
 
@@ -1060,7 +1092,9 @@ export class Movement {
 		}
 	}
 
-	// Update the currentXY property for a move state
+	/**
+	 * Update the currentXY property for a move state
+	 */
 	private static updateStateNextCoord(moveData: MoveData, nextCoord: Coord | RoomPosition) {
 		if (moveData.state) {
 			if (moveData.state[STATE_CURRENT_X] != undefined && moveData.state[STATE_CURRENT_Y] != undefined) {
@@ -1088,7 +1122,9 @@ export class Movement {
 		return stuck;
 	}
 
-	/* Draw a circle */
+	/**
+	 * Draw a circle
+	 */
 	private static circle(pos: RoomPosition, color: string, opacity?: number): RoomVisual {
 		return new RoomVisual(pos.roomName).circle(pos, {
 			radius: .45, fill: 'transparent', stroke: color, strokeWidth: .15, opacity: opacity

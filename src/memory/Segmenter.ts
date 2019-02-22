@@ -29,6 +29,9 @@ if (!Memory.segmenter) {
 }
 _.defaultsDeep(Memory.segmenter, DefaultSegmenterMemory);
 
+/**
+ * The segmenter module controls public and private segment memory access
+ */
 @profile
 export class Segmenter {
 

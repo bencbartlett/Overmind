@@ -4,6 +4,9 @@ import {StationaryScoutOverlord} from '../../overlords/scouting/stationary';
 import {ControllerAttackerOverlord} from '../../overlords/offense/controllerAttacker';
 import {log} from '../../console/log';
 
+/**
+ * Attack a controller, downgrading it to level 0
+ */
 @profile
 export class DirectiveControllerAttack extends Directive {
 

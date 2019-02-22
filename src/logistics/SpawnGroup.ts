@@ -1,6 +1,3 @@
-// SpawnGroup provides a decentralized method of spawning creeps from multiple nearby colonies. Use cases include
-// incubation, spawning large combat groups, etc.
-
 import {Hatchery, SpawnRequest} from '../hiveClusters/hatchery';
 import {Mem} from '../memory/Memory';
 import {getAllColonyRooms, getCacheExpiration, minBy, onPublicServer} from '../utilities/utils';
@@ -50,6 +47,11 @@ export interface SpawnGroupInitializer {
 	pos: RoomPosition;
 }
 
+
+/**
+ * SpawnGroup provides a decentralized method of spawning creeps from multiple nearby colonies. Use cases include
+ * incubation, spawning large combat groups, etc.
+ */
 @profile
 export class SpawnGroup {
 

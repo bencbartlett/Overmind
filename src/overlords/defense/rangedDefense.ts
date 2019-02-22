@@ -8,6 +8,9 @@ import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 
+/**
+ * Spawns ranged defenders to defend against incoming player invasions in an owned room
+ */
 @profile
 export class RangedDefenseOverlord extends CombatOverlord {
 

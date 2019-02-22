@@ -4,6 +4,9 @@ import {getCacheExpiration} from '../utilities/utils';
 const CACHE_TIMEOUT = 50;
 const SHORT_CACHE_TIMEOUT = 10;
 
+/**
+ * The GlobalCache ($) module saves frequently accessed deserialized objects in temporary, volatile global memory
+ */
 @profile
 export class $ { // $ = cash = cache... get it? :D
 

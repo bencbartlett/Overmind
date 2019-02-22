@@ -10,7 +10,9 @@ import {isResource, isStoreStructure, isTombstone} from '../../declarations/type
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
 
-
+/**
+ * The transport overlord handles energy transport throughout a colony
+ */
 @profile
 export class TransportOverlord extends Overlord {
 

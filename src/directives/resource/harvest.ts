@@ -25,6 +25,9 @@ const defaultDirectiveHarvestMemory: DirectiveHarvestMemory = {
 	}
 };
 
+/**
+ * Standard mining directive. Mines from an owned, remote, or source keeper room
+ */
 @profile
 export class DirectiveHarvest extends Directive {
 

@@ -80,6 +80,10 @@ const RANGES = {
 	DROP    : 0,
 };
 
+/**
+ * The Zerg class is a wrapper for owned creeps and contains all wrapped creep methods and many additional methods for
+ * direct control of a creep.
+ */
 @profile
 export class Zerg {
 
@@ -139,7 +143,9 @@ export class Zerg {
 		}
 	}
 
-	/* Refresh all changeable properties of the creep or delete from Overmind and global when dead */
+	/**
+	 * Refresh all changeable properties of the creep or delete from Overmind and global when dead
+	 */
 	refresh(): void {
 		const creep = Game.creeps[this.name];
 		if (creep) {
@@ -423,8 +429,10 @@ export class Zerg {
 
 	// Simultaneous creep actions --------------------------------------------------------------------------------------
 
-	/* Determine whether the given action will conflict with an action the creep has already taken.
-	 * See http://docs.screeps.com/simultaneous-actions.html for more details. */
+	/**
+	 * Determine whether the given action will conflict with an action the creep has already taken.
+	 * See http://docs.screeps.com/simultaneous-actions.html for more details.
+	 */
 	canExecute(actionName: string): boolean {
 		// Only one action can be executed from within a single pipeline
 		let conflictingActions: string[] = [actionName];
@@ -502,7 +510,9 @@ export class Zerg {
 
 	// Task logic ------------------------------------------------------------------------------------------------------
 
-	/* Wrapper for _task */
+	/**
+	 * Wrapper for _task
+	 */
 	get task(): Task | null {
 		if (!this._task) {
 			this._task = this.memory.task ? initializeTask(this.memory.task) : null;
@@ -510,7 +520,9 @@ export class Zerg {
 		return this._task;
 	}
 
-	/* Assign the creep a task with the setter, replacing creep.assign(Task) */
+	/**
+	 * Assign the creep a task with the setter, replacing creep.assign(Task)
+	 */
 	set task(task: Task | null) {
 		// Unregister target from old task if applicable
 		let oldProtoTask = this.memory.task;
@@ -537,17 +549,23 @@ export class Zerg {
 		this._task = null;
 	}
 
-	/* Does the creep have a valid task at the moment? */
+	/**
+	 * Does the creep have a valid task at the moment?
+	 */
 	get hasValidTask(): boolean {
 		return !!this.task && this.task.isValid();
 	}
 
-	/* Creeps are idle if they don't have a task. */
+	/**
+	 * Creeps are idle if they don't have a task.
+	 */
 	get isIdle(): boolean {
 		return !this.task || !this.task.isValid();
 	}
 
-	/* Execute the task you currently have. */
+	/**
+	 * Execute the task you currently have.
+	 */
 	run(): number | undefined {
 		if (this.task) {
 			return this.task.run();
@@ -556,7 +574,9 @@ export class Zerg {
 
 	// Colony association ----------------------------------------------------------------------------------------------
 
-	/* Colony that the creep belongs to. */
+	/**
+	 * Colony that the creep belongs to.
+	 */
 	get colony(): Colony {
 		return Overmind.colonies[this.memory.colony];
 	}
@@ -565,7 +585,9 @@ export class Zerg {
 		this.memory.colony = newColony.name;
 	}
 
-	/* If the creep is in a colony room or outpost */
+	/**
+	 * If the creep is in a colony room or outpost
+	 */
 	get inColonyRoom(): boolean {
 		return Overmind.colonyMap[this.room.name] == this.memory.colony;
 	}
@@ -597,7 +619,9 @@ export class Zerg {
 		return !!moveData && !!moveData.path && moveData.path.length > 1;
 	}
 
-	/* Kite around hostiles in the room */
+	/**
+	 * Kite around hostiles in the room
+	 */
 	kite(avoidGoals: (RoomPosition | HasPos)[] = this.room.hostiles, options: MoveOptions = {}): number | undefined {
 		_.defaults(options, {
 			fleeRange: 5
@@ -612,7 +636,9 @@ export class Zerg {
 		return fleeGoals;
 	}
 
-	/* Flee from hostiles in the room, while not repathing every tick */
+	/**
+	 * Flee from hostiles in the room, while not repathing every tick
+	 */
 	flee(avoidGoals: (RoomPosition | HasPos)[] = this.room.fleeDefaults,
 		 fleeOptions: FleeOptions              = {},
 		 moveOptions: MoveOptions              = {}): boolean {
@@ -641,22 +667,30 @@ export class Zerg {
 		}
 	}
 
-	/* Park the creep off-roads */
+	/**
+	 * Park the creep off-roads
+	 */
 	park(pos: RoomPosition = this.pos, maintainDistance = false): number {
 		return Movement.park(this, pos, maintainDistance);
 	}
 
-	/* Moves a creep off of the current tile to the first available neighbor */
+	/**
+	 * Moves a creep off of the current tile to the first available neighbor
+	 */
 	moveOffCurrentPos(): number | undefined {
 		return Movement.moveOffCurrentPos(this);
 	}
 
-	/* Moves onto an exit tile */
+	/**
+	 * Moves onto an exit tile
+	 */
 	moveOnExit(): ScreepsReturnCode | undefined {
 		return Movement.moveOnExit(this);
 	}
 
-	/* Moves off of an exit tile */
+	/**
+	 * Moves off of an exit tile
+	 */
 	moveOffExit(avoidSwamp = true): ScreepsReturnCode {
 		return Movement.moveOffExit(this, avoidSwamp);
 	}

@@ -1,6 +1,3 @@
-// Cartographer: provides helper methods related to Game.map. A few of these methods have been modified from BonzAI
-// codebase, although I have introduced new methods of my own over time as well.
-
 import {profile} from '../profiler/decorator';
 
 export const ROOMTYPE_SOURCEKEEPER = 'SK';
@@ -8,20 +5,30 @@ export const ROOMTYPE_CORE = 'CORE';
 export const ROOMTYPE_CONTROLLER = 'CTRL';
 export const ROOMTYPE_ALLEY = 'ALLEY';
 
+/**
+ * Cartographer: provides helper methods related to Game.map. A few of these methods have been modified from BonzAI
+ * codebase, although I have introduced new methods of my own over time as well.
+ */
 @profile
 export class Cartographer {
 
-	/* Lists all rooms up to a given distance away, including roomName */
+	/**
+	 * Lists all rooms up to a given distance away, including roomName
+	 */
 	static findRoomsInRange(roomName: string, depth: number): string[] {
 		return _.flatten(_.values(this.recursiveRoomSearch(roomName, depth)));
 	}
 
-	/* Lists all rooms up at a given distance away, including roomName */
+	/**
+	 * Lists all rooms up at a given distance away, including roomName
+	 */
 	static findRoomsAtRange(roomName: string, depth: number): string[] {
 		return this.recursiveRoomSearch(roomName, depth)[depth];
 	}
 
-	/* Recursively enumerate all rooms from a root node using depth first search to a maximum depth */
+	/**
+	 * Recursively enumerate all rooms from a root node using depth first search to a maximum depth
+	 */
 	static recursiveRoomSearch(roomName: string, maxDepth: number): { [depth: number]: string[] } {
 		let visitedRooms = this._recursiveRoomSearch(roomName, 0, maxDepth, {});
 		let roomDepths: { [depth: number]: string[] } = {};
@@ -35,7 +42,9 @@ export class Cartographer {
 		return roomDepths;
 	}
 
-	/* The recursive part of recursiveRoomSearch. Yields inverted results mapping roomName to depth. */
+	/**
+	 * The recursive part of recursiveRoomSearch. Yields inverted results mapping roomName to depth.
+	 */
 	private static _recursiveRoomSearch(roomName: string, depth: number, maxDepth: number,
 										visited: { [roomName: string]: number }): { [roomName: string]: number } {
 		if (visited[roomName] == undefined) {
@@ -55,6 +64,9 @@ export class Cartographer {
 		return visited;
 	}
 
+	/**
+	 * Get the type of the room
+	 */
 	static roomType(roomName: string): 'SK' | 'CORE' | 'CTRL' | 'ALLEY' {
 		let coords = this.getRoomCoordinates(roomName);
 		if (coords.x % 10 === 0 || coords.y % 10 === 0) {
@@ -68,6 +80,9 @@ export class Cartographer {
 		}
 	}
 
+	/**
+	 * Get the name of a room offset from the anchor room
+	 */
 	static findRelativeRoomName(roomName: string, xDelta: number, yDelta: number): string {
 		let coords = this.getRoomCoordinates(roomName);
 		let xDir = coords.xDir;

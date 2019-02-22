@@ -11,6 +11,9 @@ import {Pathing} from '../../movement/Pathing';
 
 const BUILD_OUTPUT_FREQUENCY = 15;
 
+/**
+ * Spawns extractors to harvest minerals in an owned or sourcekeeper room
+ */
 @profile
 export class ExtractorOverlord extends Overlord {
 

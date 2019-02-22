@@ -8,6 +8,9 @@ import {Roles, Setups} from '../../creepSetups/setups';
 
 const DEFAULT_NUM_SCOUTS = 3;
 
+/**
+ * Sends out scouts which randomly traverse rooms to uncover possible expansion locations and gather intel
+ */
 @profile
 export class RandomWalkerScoutOverlord extends Overlord {
 

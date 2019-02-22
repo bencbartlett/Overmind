@@ -9,6 +9,9 @@ export interface CombatOverlordOptions {
 
 }
 
+/**
+ * CombatOverlords extend the base Overlord class to provide additional combat-specific behavior
+ */
 @profile
 export abstract class CombatOverlord extends Overlord {
 

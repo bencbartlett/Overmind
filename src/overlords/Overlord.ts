@@ -1,5 +1,3 @@
-// Overlord: this class represents a "process" that gets executed by one or more creeps
-
 import {CreepSetup} from '../creepSetups/CreepSetup';
 import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
@@ -48,6 +46,12 @@ export interface OverlordMemory {
 
 const OverlordMemoryDefaults: OverlordMemory = {};
 
+/**
+ * An Overlord is roughly analogous to a process in an OS: it is a generalization of a set of related things that need
+ * to be done in a colony, like mining from a site, bootstrapping a new colony, guarding against invaders, or building
+ * construction sites. Overlords handle spawning or obtaining suitable creeps to do these things and contain the actual
+ * implementation of doing them.
+ */
 @profile
 export abstract class Overlord {
 

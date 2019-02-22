@@ -2,6 +2,9 @@ import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {log} from '../../console/log';
 
+/**
+ * [DEPRECATED] Place a hatchery at the target location
+ */
 @profile
 export class DirectiveRPHatchery extends Directive {
 

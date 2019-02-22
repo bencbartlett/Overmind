@@ -1,4 +1,3 @@
-// Hatchery overlord: spawn and run a dedicated supplier-like hatchery attendant (called after colony has storage)
 import {DEFAULT_PRESPAWN, Overlord} from '../Overlord';
 import {Hatchery} from '../../hiveClusters/hatchery';
 import {Zerg} from '../../zerg/Zerg';
@@ -15,6 +14,9 @@ type rechargeObjectType = StructureStorage
 	| Tombstone
 	| Resource;
 
+/**
+ * Spawns a dedicated hatchery attendant to refill spawns and extensions
+ */
 @profile
 export class QueenOverlord extends Overlord {
 

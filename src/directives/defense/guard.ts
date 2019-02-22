@@ -8,6 +8,9 @@ interface DirectiveGuardMemory extends FlagMemory {
 	enhanced?: boolean;
 }
 
+/**
+ * NPC defense directive for outpost rooms with invaders
+ */
 @profile
 export class DirectiveGuard extends Directive {
 

@@ -1,7 +1,3 @@
-// Logistics Group: efficiently partners resource requests with transporters using a stable matching algorithm to
-// provide general-purpose resource transport. For a better explanation of how this system works, see my blog post:
-// https://bencbartlett.wordpress.com/2018/03/28/screeps-4-hauling-is-np-hard/
-
 import {profile} from '../profiler/decorator';
 import {Zerg} from '../zerg/Zerg';
 import {log} from '../console/log';
@@ -20,7 +16,6 @@ import {minMax} from '../utilities/utils';
 import columnify from 'columnify';
 import {Mem} from '../memory/Memory';
 import {Roles} from '../creepSetups/setups';
-// import {DirectivePickup} from '../directives/logistics/logisticsRequest';
 
 export type LogisticsTarget =
 	EnergyStructure
@@ -30,7 +25,6 @@ export type LogisticsTarget =
 	| StructurePowerSpawn
 	| Tombstone
 	| Resource;
-// | DirectivePickup// | Zerg;
 
 export const ALL_RESOURCE_TYPE_ERROR =
 				 `Improper logistics request: 'all' can only be used for store structure or tombstone!`;
@@ -67,6 +61,11 @@ const LogisticsNetworkMemoryDefaults: LogisticsNetworkMemory = {
 	transporterCache: {},
 };
 
+/**
+ * Logistics Group: efficiently partners resource requests with transporters using a stable matching algorithm to
+ * provide general-purpose resource transport. For a better explanation of how this system works, see my blog post:
+ * https://bencbartlett.wordpress.com/2018/03/28/screeps-4-hauling-is-np-hard/
+ */
 @profile
 export class LogisticsNetwork {
 
@@ -495,7 +494,7 @@ export class LogisticsNetwork {
 			// Change in resources if transporter drops off resources at a buffer first
 			for (let buffer of this.buffers) {
 				let dQ_buffer = Math.min(Math.abs(amount), transporter.carryCapacity,
-					buffer.storeCapacity - _.sum(buffer.store));
+										 buffer.storeCapacity - _.sum(buffer.store));
 				let dt_buffer = newPos.getMultiRoomRangeTo(buffer.pos) * LogisticsNetwork.settings.rangeToPathHeuristic
 								+ Pathing.distance(buffer.pos, request.target.pos) + ticksUntilFree;
 				choices.push({

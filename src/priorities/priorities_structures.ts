@@ -1,4 +1,6 @@
-// Prioritized list of what order structures should be built in
+/**
+ * Prioritized list of what order structures should be built in
+ */
 export const BuildPriorities: BuildableStructureConstant[] = [
 	STRUCTURE_SPAWN,
 	STRUCTURE_TOWER,
@@ -17,7 +19,9 @@ export const BuildPriorities: BuildableStructureConstant[] = [
 	STRUCTURE_ROAD,
 ];
 
-// Prioritized list of what order enemy structures should be attacked in
+/**
+ * Prioritized list of what order enemy structures should be attacked in
+ */
 export const AttackStructurePriorities: BuildableStructureConstant[] = [
 	STRUCTURE_SPAWN,
 	STRUCTURE_TOWER,
@@ -39,7 +43,9 @@ export const AttackStructurePriorities: BuildableStructureConstant[] = [
 export const AttackStructureScores = _.zipObject(_.map(AttackStructurePriorities, type =>
 	[type, AttackStructurePriorities.length - _.indexOf(AttackStructurePriorities, type)])) as { [t: string]: number };
 
-// Prioritized list of what order owned structures should be demolished (and then moved) in
+/**
+ * Prioritized list of what order owned structures should be demolished (and then moved) in
+ */
 export const DemolishStructurePriorities: {
 	structureType: BuildableStructureConstant,
 	maxRemoved?: number,

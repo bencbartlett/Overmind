@@ -1,5 +1,3 @@
-// archer overlord - spawns defender/healer pairs for sustained combat
-
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {boostResources} from '../../resources/map_resources';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
@@ -10,6 +8,9 @@ import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 
+/**
+ * Spawns melee defenders to defend against incoming player invasions in an owned room
+ */
 @profile
 export class MeleeDefenseOverlord extends CombatOverlord {
 

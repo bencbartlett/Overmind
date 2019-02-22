@@ -21,6 +21,10 @@ export const TerminalState_Emergency: TerminalState = {
 
 const EMERGENCY_STATE_TIMEOUT = 10000;
 
+
+/**
+ * Put the colony's terminal in an emergency state, which maintains supplies of T3 boots during defensive operations
+ */
 @profile
 export class DirectiveTerminalEmergencyState extends Directive {
 

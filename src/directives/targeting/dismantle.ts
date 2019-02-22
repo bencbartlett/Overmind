@@ -3,6 +3,10 @@ import {profile} from '../../profiler/decorator';
 import {Visualizer} from '../../visuals/Visualizer';
 import {AttackStructurePriorities} from '../../priorities/priorities_structures';
 
+/**
+ * Register a target to be dismantled by workers. This is not a siege directive, and clearing rooms should
+ * be done with the DirectiveRoomClear
+ */
 @profile
 export class DirectiveDismantle extends Directive {
 

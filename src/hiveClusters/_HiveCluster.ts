@@ -1,9 +1,11 @@
-/* Generalized class for a base component */
-
 import {Colony} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
 import {profile} from '../profiler/decorator';
 
+/**
+ * Abstract class for a hive cluster. Hive clusters group structures with related functionalities together in a
+ * single cohesive object
+ */
 @profile
 export abstract class HiveCluster {
 

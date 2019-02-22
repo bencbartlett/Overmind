@@ -23,6 +23,11 @@ interface TransportRequestOptions {
 	resourceType?: ResourceConstant;
 }
 
+
+/**
+ * Transport request groups handle close-range prioritized resource requests, in contrast to the logistics network,
+ * which handles longer-ranged requests
+ */
 @profile
 export class TransportRequestGroup {
 

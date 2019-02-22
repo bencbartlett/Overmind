@@ -1,5 +1,3 @@
-// Destroyer overlord - spawns attacker/healer pairs for sustained combat
-
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {DirectiveTargetSiege} from '../../directives/targeting/siegeTarget';
 import {DirectivePairDestroy} from '../../directives/offense/pairDestroy';
@@ -12,6 +10,9 @@ import {CombatIntel} from '../../intel/CombatIntel';
 import {boostResources} from '../../resources/map_resources';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 
+/**
+ *  Destroyer overlord - spawns attacker/healer pairs for combat within a hostile room
+ */
 @profile
 export class PairDestroyerOverlord extends Overlord {
 

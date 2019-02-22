@@ -1,5 +1,3 @@
-// Records one-time and persistent notifications from various in-game events
-
 import {log} from '../console/log';
 import {printRoomName} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
@@ -29,6 +27,9 @@ interface NotifierMemory {
 	notifications: Notification[];
 }
 
+/**
+ * Records one-time and persistent notifications from various in-game events
+ */
 export class Notifier {
 
 	memory: NotifierMemory;
