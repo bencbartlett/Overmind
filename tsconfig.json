@@ -29,7 +29,7 @@
   ],
   "typedocOptions": {
     "mode": "file",
-    "out": "docs",
+    "out": "../overmind-docs/docs",
     "ignoreCompilerErrors": true,
     "excludeNotExported": true,
     "exclude": "**/*+(Assimilator|Overmind).ts",

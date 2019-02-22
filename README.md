@@ -1,13 +1,13 @@
 <img src="/assets/img/OvermindLogo.png" width=760>
 
-[<img src="/assets/img/buttons/download.png" height=22>](https://github.com/bencbartlett/Overmind/releases)   [<img src="/assets/img/buttons/patchNotes.png" height=22>](https://github.com/bencbartlett/Overmind/blob/master/CHANGELOG.md)   [<img src="/assets/img/buttons/documentation.png" height=22>](https://github.com/bencbartlett/Overmind/wiki)   [<img src="/assets/img/buttons/slack.png" height=22>](https://screeps.slack.com/messages/overmind)   [<img src="/assets/img/buttons/issue.png" height=22>](https://github.com/bencbartlett/Overmind/issues/new)   [<img src="/assets/img/buttons/featureRequest.png" height=22>](https://github.com/bencbartlett/Overmind/issues/new?template=feature_request.md)
+[<img src="/assets/img/buttons/download.png" height=22>](https://github.com/bencbartlett/Overmind/releases)   [<img src="/assets/img/buttons/patchNotes.png" height=22>](https://github.com/bencbartlett/Overmind/blob/master/CHANGELOG.md)   [<img src="/assets/img/buttons/docs.png" height=22>](https://bencbartlett.github.io/overmind-docs/)   [<img src="/assets/img/buttons/wiki.png" height=22>](https://github.com/bencbartlett/Overmind/wiki)   [<img src="/assets/img/buttons/slack.png" height=22>](https://screeps.slack.com/messages/overmind)   [<img src="/assets/img/buttons/issue.png" height=22>](https://github.com/bencbartlett/Overmind/issues/new)   [<img src="/assets/img/buttons/featureRequest.png" height=22>](https://github.com/bencbartlett/Overmind/issues/new?template=feature_request.md)
  
 # Overmind Screeps AI    [![Build Status](https://travis-ci.org/bencbartlett/Overmind.svg?branch=master)](https://travis-ci.org/bencbartlett/Overmind)
 
 ### Current release: [Overmind v0.5.2 - Evolution](https://github.com/bencbartlett/Overmind/releases)
 
 - See the [changelog](https://github.com/bencbartlett/Overmind/blob/master/CHANGELOG.md) for patch notes
-- Documentation is available in the [wiki](https://github.com/bencbartlett/Overmind/wiki)
+- Documentation is available at the [documentation site](https://bencbartlett.github.io/overmind-docs/) and the [wiki](https://github.com/bencbartlett/Overmind/wiki)
 - Join the discussion in the [#overmind](https://screeps.slack.com/messages/overmind) Slack channel!
 - Read [blog posts](https://bencbartlett.wordpress.com/category/screeps/) about development
 - Submit an issue [here](https://github.com/bencbartlett/Overmind/issues/new) or request a feature [here](https://github.com/bencbartlett/Overmind/issues/new?template=feature_request.md)
@@ -53,8 +53,9 @@ Overmind uses `rollup` to bundle the compiled TypeScript into a single `main.js`
 Overmind includes a [Grafana dashboard](https://github.com/bencbartlett/Overmind/tree/master/assets/Grafana%20Dashboards) (shown below) which tracks detailed operating statistics. To set up the dashboard:
 
 1. Register for grafana service at [screepspl.us](https://screepspl.us/services/grafana)
-2. Setup the Grafana agent. I would suggest [running it on a free micro instance of Google Compute](https://github.com/bonzaiferroni/bonzAI/wiki/Screepspl.us-agent-with-Compute-Engine).
+2. Setup the [ScreepsPlus hosted agent](https://screepspl.us/services/hosted-agent/) (simpler) or use the NodeJS agent [on a free micro instance of Google Compute](https://github.com/bonzaiferroni/bonzAI/wiki/Screepspl.us-agent-with-Compute-Engine).
 3. Import the dashboard from [Overmind.json](https://github.com/bencbartlett/Overmind/blob/master/assets/Grafana%20Dashboards/Overmind.json) and change `$User` to your username.
+4. Enjoy your pretty graphs!
 
 ![](/assets/img/dashboard_compacted_2.png)
 
