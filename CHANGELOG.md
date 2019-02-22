@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file. The format 
 ## [Unreleased]
 
 ### Added
+- Created a [documentation site](https://bencbartlett.github.io/overmind-docs/) using TypeDoc!
 - Added the `RemoteDebugger` module, which lets me remotely debug other Overmind players' code in real-time by communicating through public memory segments. 
     - You can start and end a debug session with the `startRemoteDebugSession()` and `endRemoteDebugSession()` commands
     - Debug sessions automatically time out after 1000 ticks unless extended
