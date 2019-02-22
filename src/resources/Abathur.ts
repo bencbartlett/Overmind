@@ -26,6 +26,7 @@ export const priorityStockAmounts: { [key: string]: number } = {
 	ZH   : 1000, 	// (+100 % dismantle)
 	UH   : 1000, 	// (+100 % attack)
 	KO   : 1000, 	// (+100 % ranged attack)
+	G    : 2000, 	// For nukes and common compounds
 };
 
 export const wantedStockAmounts: { [key: string]: number } = {

@@ -4,8 +4,9 @@
 
 import {MUON, MY_USERNAME} from '../~settings';
 import {Segmenter} from '../memory/Segmenter';
-import {log} from './log';
+import {log} from '../console/log';
 import {alignedNewline} from '../utilities/stringConstants';
+import {color} from '../utilities/utils';
 
 const DEBUG_SEGMENT = 97;
 const DEBUG_TIMEOUT = 1000;
@@ -26,6 +27,8 @@ const defaultDebuggerMemory: DebuggerMemory = {
 	command   : undefined,
 	response  : undefined,
 };
+
+const DEBUGGER = color('[DEBUGGER]', '#ff00ff');
 
 export class RemoteDebugger {
 
@@ -92,7 +95,7 @@ export class RemoteDebugger {
 	}
 
 
-	startDebugSession(username: string) {
+	connect(username: string) {
 		this.memory.username = username;
 		this.memory.enabled = true;
 		this.memory.expiration = Game.time + DEBUG_TIMEOUT;

@@ -11,6 +11,7 @@ import {Priority} from '../priorities/priorities';
 import {Cartographer} from '../utilities/Cartographer';
 import {$} from '../caching/GlobalCache';
 import {Visualizer} from '../visuals/Visualizer';
+import {Abathur} from '../resources/Abathur';
 
 export const MAX_OBSERVE_DISTANCE = 7;
 
@@ -141,8 +142,14 @@ export class CommandCenter extends HiveCluster {
 			this.transportRequests.requestInput(this.powerSpawn, Priority.NormalLow);
 		}
 		// Refill nuker with low priority
-		if (this.nuker && this.nuker.energy < this.nuker.energyCapacity && this.storage.energy > 100000) {
-			this.transportRequests.requestInput(this.nuker, Priority.Low);
+		if (this.nuker) {
+			if (this.nuker.energy < this.nuker.energyCapacity && this.storage.energy > 100000) {
+				this.transportRequests.requestInput(this.nuker, Priority.Low);
+			}
+			if (this.nuker.ghodium < this.nuker.ghodiumCapacity
+				&& (this.colony.assets[RESOURCE_GHODIUM] || 0) >= 2 * Abathur.settings.maxBatchSize) {
+				this.transportRequests.requestInput(this.nuker, Priority.Low, {resourceType: RESOURCE_GHODIUM});
+			}
 		}
 
 		// Withdraw requests:
