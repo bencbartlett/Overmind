@@ -123,7 +123,9 @@ export class Abathur {
 		this.assets = this.colony.assets;
 	}
 
-	/* Summarizes the total of all resources currently in a colony store structure */
+	/**
+	 * Summarizes the total of all resources currently in a colony store structure
+	 */
 	private computeGlobalAssets(): { [resourceType: string]: number } {
 		let colonyAssets: { [resourceType: string]: number }[] = [];
 		for (let colony of getAllColonies()) {
@@ -175,7 +177,9 @@ export class Abathur {
 		return _.any(getAllColonies(), colony => colony.abathur.hasExcess(mineralType, excessAmount));
 	}
 
-	/* Generate a queue of reactions to produce the most needed compound */
+	/**
+	 * Generate a queue of reactions to produce the most needed compound
+	 */
 	getReactionQueue(verbose = false): Reaction[] {
 		// Return nothing if you are sleeping; prevents wasteful reaction queue calculations
 		if (Game.time < this.memory.sleepUntil) {
@@ -204,7 +208,9 @@ export class Abathur {
 		return [];
 	}
 
-	/* Build a reaction queue for a target compound */
+	/**
+	 * Build a reaction queue for a target compound
+	 */
 	private buildReactionQueue(mineral: ResourceConstant, amount: number, verbose = false): Reaction[] {
 		amount = minMax(amount, Abathur.settings.minBatchSize, Abathur.settings.maxBatchSize);
 		if (verbose) console.log(`Abathur@${this.colony.room.print}: building reaction queue for ${amount} ${mineral}`);
@@ -226,7 +232,9 @@ export class Abathur {
 		return reactionQueue;
 	}
 
-	/* Trim a reaction queue, reducing the amounts of precursor compounds which need to be produced */
+	/**
+	 * Trim a reaction queue, reducing the amounts of precursor compounds which need to be produced
+	 */
 	private trimReactionQueue(reactionQueue: Reaction[]): Reaction[] {
 		// Scan backwards through the queue and reduce the production amount of subsequently baser resources as needed
 		reactionQueue.reverse();
@@ -249,7 +257,9 @@ export class Abathur {
 		return reactionQueue;
 	}
 
-	/* Figure out which basic minerals are missing and how much */
+	/**
+	 * Figure out which basic minerals are missing and how much
+	 */
 	getMissingBasicMinerals(reactionQueue: Reaction[]): { [resourceType: string]: number } {
 		let requiredBasicMinerals = this.getRequiredBasicMinerals(reactionQueue);
 		let missingBasicMinerals: { [resourceType: string]: number } = {};
@@ -262,7 +272,9 @@ export class Abathur {
 		return missingBasicMinerals;
 	}
 
-	/* Get the required amount of basic minerals for a reaction queue */
+	/**
+	 * Get the required amount of basic minerals for a reaction queue
+	 */
 	private getRequiredBasicMinerals(reactionQueue: Reaction[]): { [resourceType: string]: number } {
 		let requiredBasicMinerals: { [resourceType: string]: number } = {
 			[RESOURCE_HYDROGEN] : 0,
@@ -284,7 +296,9 @@ export class Abathur {
 		return requiredBasicMinerals;
 	}
 
-	/* Recursively generate a list of ingredients required to produce a compound */
+	/**
+	 * Recursively generate a list of ingredients required to produce a compound
+	 */
 	private ingredientsList(mineral: ResourceConstant): ResourceConstant[] {
 		if (!REAGENTS[mineral] || _.isEmpty(mineral)) {
 			return [];
