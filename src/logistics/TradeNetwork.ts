@@ -104,7 +104,9 @@ export class TraderJoe implements ITradeNetwork {
 		this.notifications.push(bullet + msg);
 	}
 
-	/* Builds a cache for market - this is very expensive; use infrequently */
+	/**
+	 * Builds a cache for market - this is very expensive; use infrequently
+	 */
 	private buildMarketCache(verbose = false): void {
 		this.invalidateMarketCache();
 		let myActiveOrderIDs = _.map(_.filter(Game.market.orders, order => order.active), order => order.id);
@@ -154,7 +156,9 @@ export class TraderJoe implements ITradeNetwork {
 		}
 	}
 
-	/* Cost per unit for a buy order including transfer price with energy converted to credits */
+	/**
+	 * Cost per unit for a buy order including transfer price with energy converted to credits
+	 */
 	private effectiveBuyPrice(order: Order, terminal: StructureTerminal): number {
 		if (order.roomName) {
 			let transferCost = Game.market.calcTransactionCost(1000, order.roomName, terminal.room.name) / 1000;
@@ -188,7 +192,9 @@ export class TraderJoe implements ITradeNetwork {
 		}
 	}
 
-	/* Opportunistically sells resources when the buy price is higher than current market sell low price*/
+	/**
+	 * Opportunistically sells resources when the buy price is higher than current market sell low price
+	 */
 	lookForGoodDeals(terminal: StructureTerminal, resource: ResourceConstant, margin = 1.25): void {
 		if (Game.market.credits < TraderJoe.settings.market.reserveCredits) {
 			return;
@@ -217,6 +223,9 @@ export class TraderJoe implements ITradeNetwork {
 		}
 	}
 
+	/**
+	 * Buy a resource on the market
+	 */
 	buy(terminal: StructureTerminal, resource: ResourceConstant, amount: number): void {
 		if (Game.market.credits < TraderJoe.settings.market.reserveCredits || terminal.cooldown > 0) {
 			return;
@@ -238,6 +247,9 @@ export class TraderJoe implements ITradeNetwork {
 		}
 	}
 
+	/**
+	 * Sell a resource on the market, either through a sell order or directly
+	 */
 	sell(terminal: StructureTerminal, resource: ResourceConstant, amount = 10000): number | undefined {
 		if (Game.market.credits < TraderJoe.settings.market.reserveCredits) {
 			return this.sellDirectly(terminal, resource, amount);
@@ -246,7 +258,9 @@ export class TraderJoe implements ITradeNetwork {
 		}
 	}
 
-	/* Sell resources directly to a buyer rather than making a sell order */
+	/**
+	 * Sell resources directly to a buyer rather than making a sell order
+	 */
 	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant,
 				 amount = 1000, flexibleAmount = true): number | undefined {
 		// If flexibleAmount is allowed, consider selling to orders which don't need the full amount
@@ -265,7 +279,9 @@ export class TraderJoe implements ITradeNetwork {
 		}
 	}
 
-	/* Create or maintain a sell order */
+	/**
+	 * Create or maintain a sell order
+	 */
 	private maintainSellOrder(terminal: StructureTerminal, resource: ResourceConstant, amount = 10000): void {
 		let marketLow = this.memory.cache.sell[resource] ? this.memory.cache.sell[resource].low : undefined;
 		if (!marketLow) {
@@ -304,7 +320,9 @@ export class TraderJoe implements ITradeNetwork {
 		}
 	}
 
-
+	/**
+	 * Pretty-prints transaction information in the console
+	 */
 	private logTransaction(order: Order, terminalRoomName: string, amount: number, response: number): void {
 		let action = order.type == ORDER_SELL ? 'BOUGHT ' : 'SOLD   ';
 		let cost = (order.price * amount).toFixed(2);
@@ -321,7 +339,9 @@ export class TraderJoe implements ITradeNetwork {
 		this.notify(msg);
 	}
 
-	// Look through transactions happening on the previous tick and record stats
+	/**
+	 * Look through transactions happening on the previous tick and record stats
+	 */
 	private recordStats(): void {
 		this.stats.credits = Game.market.credits;
 		const time = Game.time - 1;

@@ -65,8 +65,10 @@ export class LinkNetwork {
 		// }
 	}
 
-	/* Examine the link resource requests and try to efficiently (but greedily) match links that need energy in and
-	 * out, then send the remaining resourceOut link requests to the command center link */
+	/**
+	 * Examine the link resource requests and try to efficiently (but greedily) match links that need energy in and
+	 * out, then send the remaining resourceOut link requests to the command center link
+	 */
 	run(): void {
 		// For each receiving link, greedily get energy from the closest transmitting link - at most 9 operations
 		for (let receiveLink of this.receive) {

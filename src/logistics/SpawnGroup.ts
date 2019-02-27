@@ -89,7 +89,9 @@ export class SpawnGroup {
 		Overmind.spawnGroups[this.ref] = this;
 	}
 
-	/* Refresh the state of the spawnGroup; called by the Overmind object. */
+	/**
+	 * Refresh the state of the spawnGroup; called by the Overmind object.
+	 */
 	refresh() {
 		this.memory = Mem.wrap(Memory.rooms[this.roomName], 'spawnGroup', SpawnGroupMemoryDefaults);
 		this.requests = [];
@@ -126,7 +128,9 @@ export class SpawnGroup {
 		this.requests.push(request);
 	}
 
-	/* SpawnGroup.init() must be called AFTER all hatcheries have been initialized */
+	/**
+	 * SpawnGroup.init() must be called AFTER all hatcheries have been initialized
+	 */
 	init(): void {
 		// Most initialization needs to be done at init phase because colonies are still being constructed earlier
 		const colonies = _.compact(_.map(this.colonyNames, name => Overmind.colonies[name])) as Colony[];

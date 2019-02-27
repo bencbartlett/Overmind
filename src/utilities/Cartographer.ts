@@ -108,6 +108,9 @@ export class Cartographer {
 		return xDir + x + yDir + y;
 	}
 
+	/**
+	 * Find the relative x and y offsets of two rooms
+	 */
 	static findRoomCoordDeltas(origin: string, otherRoom: string): { x: number, y: number } {
 		let originCoords = this.getRoomCoordinates(origin);
 		let otherCoords = this.getRoomCoordinates(otherRoom);
@@ -133,6 +136,9 @@ export class Cartographer {
 		return {x: xDelta, y: yDelta};
 	}
 
+	/**
+	 * Returns the direction (not magnitude) of a room from an origin room
+	 */
 	static findRelativeRoomDir(origin: string, otherRoom: string): number {
 		let coordDeltas = this.findRoomCoordDeltas(origin, otherRoom);
 		// noinspection JSSuspiciousNameCombination
@@ -170,6 +176,9 @@ export class Cartographer {
 		}
 	}
 
+	/**
+	 * Return the opposite direction, e.g. "W" => "E"
+	 */
 	static oppositeDir(dir: string): string {
 		switch (dir) {
 			case 'W':
@@ -185,6 +194,9 @@ export class Cartographer {
 		}
 	}
 
+	/**
+	 * Get the coordinates from a room name
+	 */
 	static getRoomCoordinates(roomName: string): RoomCoord {
 		let coordinateRegex = /(E|W)(\d+)(N|S)(\d+)/g;
 		let match = coordinateRegex.exec(roomName)!;

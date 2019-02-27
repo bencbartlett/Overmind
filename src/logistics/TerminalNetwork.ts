@@ -151,12 +151,16 @@ export class TerminalNetwork implements ITerminalNetwork {
 		this.notifications.push(bullet + msg);
 	}
 
-	/* Whether the terminal is actively requesting energy */
+	/**
+	 * Whether the terminal is actively requesting energy
+	 */
 	private terminalNeedsEnergy(terminal: StructureTerminal): boolean {
 		return terminal.energy < Energetics.settings.terminal.energy.inThreshold;
 	}
 
-	/* Amount of space available in storage and terminal */
+	/**
+	 * Amount of space available in storage and terminal
+	 */
 	private remainingRoomCapacity(room: Room): number {
 		let remainingCapacity = 0;
 		if (room.storage) {
@@ -168,7 +172,9 @@ export class TerminalNetwork implements ITerminalNetwork {
 		return remainingCapacity;
 	}
 
-	/* Amount of energy in storage and terminal */
+	/**
+	 * Amount of energy in storage and terminal
+	 */
 	private energyInRoom(room: Room): number {
 		let energyInRoom = 0;
 		if (room.storage) {
@@ -222,8 +228,9 @@ export class TerminalNetwork implements ITerminalNetwork {
 		}
 	}
 
-	/* Sell excess minerals on the market */
-
+	/**
+	 * Sell excess minerals on the market
+	 */
 	private handleExcess(terminal: StructureTerminal, threshold = 25000): void {
 
 		let terminalNearCapacity = _.sum(terminal.store) > 0.9 * terminal.storeCapacity;
@@ -295,6 +302,9 @@ export class TerminalNetwork implements ITerminalNetwork {
 	// 	}
 	// }
 
+	/**
+	 * Equalize resource amounts of each type through all non-exceptional terminals in the network
+	 */
 	private equalize(resourceType: ResourceConstant, terminals = this.terminals, verbose = false): void {
 		log.debug(`Equalizing ${resourceType} within terminal network`);
 		let maxSendSize = resourceType == RESOURCE_ENERGY ? TerminalNetwork.settings.equalize.maxEnergySendSize
@@ -365,13 +375,18 @@ export class TerminalNetwork implements ITerminalNetwork {
 		this.memory.equalizeIndex = _.findIndex(equalizeResources, resource => resource == nextResourceType);
 	}
 
+	/**
+	 * Register a terminal to be placed in an exceptional state
+	 */
 	registerTerminalState(terminal: StructureTerminal, state: TerminalState): void {
 		this.exceptionTerminals[terminal.ref] = state;
 		colonyOf(terminal).terminalState = state;
 		_.remove(this.terminals, t => t.ref == terminal.ref);
 	}
 
-	/* Maintains a constant restricted store of resources */
+	/**
+	 * Handles exceptional terminal states
+	 */
 	private handleTerminalState(terminal: StructureTerminal, state: TerminalState): void {
 		for (let resourceType of RESOURCE_IMPORTANCE) {
 			let maxSendSize = resourceType == RESOURCE_ENERGY ? TerminalNetwork.settings.equalize.maxEnergySendSize

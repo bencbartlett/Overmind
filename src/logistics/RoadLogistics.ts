@@ -35,7 +35,9 @@ export class RoadLogistics {
 		this._assignedWorkers = {};
 	}
 
-	/* Whether a road in the network needs repair */
+	/**
+	 * Whether a road in the network needs repair
+	 */
 	private workerShouldRepaveRoom(worker: Zerg, room: Room): boolean {
 		// Room should be repaved if there is a road with critical HP or if energy to repave >= worker carry capacity
 		let otherAssignedWorkers = _.filter(this.assignedWorkers(room), name => name != worker.name);
@@ -52,7 +54,9 @@ export class RoadLogistics {
 		}
 	}
 
-	/* Get the room the worker should repave, if any */
+	/**
+	 * Get the room the worker should repave, if any
+	 */
 	workerShouldRepave(worker: Zerg): Room | undefined {
 		// If the worker is already working in a room and should keep doing so, return that first
 		if (worker.task && worker.task.name == repairTaskName) {
@@ -91,14 +95,18 @@ export class RoadLogistics {
 					 road => road.pos.getMultiRoomRangeTo(this.colony.pos)), ROAD_CACHE_TIMEOUT);
 	}
 
-	/* Total amount of energy needed to repair all roads in the room */
+	/**
+	 * Total amount of energy needed to repair all roads in the room
+	 */
 	energyToRepave(room: Room): number {
 		return $.number(this, 'energyToRepave:' + room.name, () =>
 			_.sum(this.repairableRoads(room), road => (road.hitsMax - road.hits) / REPAIR_POWER));
 	}
 
-	/* Check that the worker is in the assignedWorker cache; avoids bugs where duplicate workers get assigned
-	 * on the same tick*/
+	/**
+	 * Check that the worker is in the assignedWorker cache; avoids bugs where duplicate workers get assigned
+	 * on the same tick
+	 */
 	registerWorkerAssignment(worker: Zerg, room: Room): void {
 		if (this._assignedWorkers[room.name]) {
 			if (!this._assignedWorkers[room.name].includes(worker.name)) {

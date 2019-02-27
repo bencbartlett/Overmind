@@ -8,6 +8,9 @@ const textSize = .8;
 const charWidth = textSize * 0.4;
 const charHeight = textSize * 0.9;
 
+/**
+ * The Visualizer contains many static methods for drawing room visuals and displaying information through a GUI
+ */
 @profile
 export class Visualizer {
 

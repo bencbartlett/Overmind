@@ -18,7 +18,9 @@ const RoomIntelMemoryDefaults = {};
 @profile
 export class RoomIntel {
 
-	/* Records all info for permanent room objects, e.g. sources, controllers, etc. */
+	/**
+	 * Records all info for permanent room objects, e.g. sources, controllers, etc.
+	 */
 	private static recordPermanentObjects(room: Room): void {
 		let savedSources: SavedSource[] = [];
 		for (let source of room.sources) {
@@ -63,7 +65,9 @@ export class RoomIntel {
 		room.memory.tick = Game.time;
 	}
 
-	// Update time-sensitive reservation and safemode info
+	/**
+	 * Update time-sensitive reservation and safemode info
+	 */
 	private static recordControllerInfo(controller: StructureController): void {
 		if (controller.room.memory.ctrl) {
 			controller.room.memory.ctrl.res = controller.reservation;
@@ -167,7 +171,9 @@ export class RoomIntel {
 		}
 	}
 
-	// Get the pos a creep was in on the previous tick
+	/**
+	 * Get the pos a creep was in on the previous tick
+	 */
 	static getPreviousPos(creep: Creep | Zerg): RoomPosition {
 		if (creep.room.memory.prevPositions && creep.room.memory.prevPositions[creep.id]) {
 			return derefRoomPosition(creep.room.memory.prevPositions[creep.id]);

@@ -194,10 +194,16 @@ export class Colony {
 		this.build(roomName, outposts);
 	}
 
+	/**
+	 * Pretty-print the colony name in the console
+	 */
 	get print(): string {
 		return '<a href="#!/room/' + Game.shard.name + '/' + this.room.name + '">[' + this.name + ']</a>';
 	}
 
+	/**
+	 * Builds the colony object
+	 */
 	build(roomName: string, outposts: string[]): void {
 		// Register rooms
 		this.roomNames = [roomName].concat(outposts);
@@ -217,6 +223,9 @@ export class Colony {
 		/* Colony.spawnMoarOverlords() gets called from Overmind.ts, along with Directive.spawnMoarOverlords() */
 	}
 
+	/**
+	 * Refreshes the state of the colony object
+	 */
 	refresh(): void {
 		this.memory = Mem.wrap(Memory.colonies, this.room.name, defaultColonyMemory, true);
 		// Refresh rooms
@@ -233,6 +242,9 @@ export class Colony {
 		this.refreshHiveClusters();
 	}
 
+	/**
+	 * Registers physical game objects to the colony
+	 */
 	private registerRoomObjects(): void {
 		// Create placeholder arrays for remaining properties to be filled in by the Overmind
 		this.flags = []; // filled in by directives
@@ -270,6 +282,9 @@ export class Colony {
 		this.assets = this.getAllAssets();
 	}
 
+	/**
+	 * Version of Colony.registerRoomObjects with additional caching functionality
+	 */
 	private registerRoomObjects_cached(): void {
 		// Create placeholder arrays for remaining properties to be filled in by the Overmind
 		this.flags = []; // filled in by directives
@@ -316,6 +331,9 @@ export class Colony {
 		this.assets = this.getAllAssets();
 	}
 
+	/**
+	 * Refresh the state of all physical game objects in the colony
+	 */
 	private refreshRoomObjects(): void {
 		$.refresh(this, 'controller', 'extensions', 'links', 'towers', 'powerSpawn', 'nuker', 'observer', 'spawns',
 				  'storage', 'terminal', 'labs', 'sources', 'extractors', 'constructionSites', 'repairables',
@@ -327,6 +345,9 @@ export class Colony {
 		this.assets = this.getAllAssets();
 	}
 
+	/**
+	 * Registers the operational state of the colony, computing things like colony maturity, DEFCON level, etc.
+	 */
 	private registerOperationalState(): void {
 		this.level = this.controller.level as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 		this.bootstrapping = false;
@@ -379,6 +400,9 @@ export class Colony {
 		this.terminalState = undefined;
 	}
 
+	/**
+	 * Registers utility classes such as logistics networks
+	 */
 	private registerUtilities(): void {
 		// Resource requests
 		this.linkNetwork = new LinkNetwork(this);
@@ -411,6 +435,9 @@ export class Colony {
 		this.abathur = new Abathur(this);
 	}
 
+	/**
+	 * Calls utility.refresh() for each registered utility
+	 */
 	private refreshUtilities(): void {
 		this.linkNetwork.refresh();
 		this.logisticsNetwork.refresh();
@@ -431,6 +458,9 @@ export class Colony {
 		this.abathur.refresh();
 	}
 
+	/**
+	 * Builds hive clusters for each structural group in a colony
+	 */
 	private registerHiveClusters(): void {
 		this.hiveClusters = [];
 		// Instantiate the command center if there is storage in the room - this must be done first!
@@ -456,13 +486,18 @@ export class Colony {
 		this.hiveClusters.reverse();
 	}
 
+	/**
+	 * Refreshes the state of each hive cluster
+	 */
 	private refreshHiveClusters(): void {
 		for (let i = this.hiveClusters.length - 1; i >= 0; i--) {
 			this.hiveClusters[i].refresh();
 		}
 	}
 
-	/* Instantiate all overlords for the colony */
+	/**
+	 * Instantiate all overlords for the colony
+	 */
 	spawnMoarOverlords(): void {
 		this.overlords = {
 			default  : new DefaultOverlord(this),
@@ -477,15 +512,23 @@ export class Colony {
 		}
 	}
 
+	/**
+	 * Get a list of creeps in the colony which have a specified role name
+	 */
 	getCreepsByRole(roleName: string): Creep[] {
 		return this.creepsByRole[roleName] || [];
 	}
 
+	/**
+	 * Get a list of zerg in the colony which have a specified role name
+	 */
 	getZergByRole(roleName: string): (Zerg | undefined)[] {
 		return _.map(this.getCreepsByRole(roleName), creep => Overmind.zerg[creep.name]);
 	}
 
-	/* Summarizes the total of all resources in colony store structures, labs, and some creeps */
+	/**
+	 * Summarizes the total of all resources in colony store structures, labs, and some creeps
+	 */
 	private getAllAssets(verbose = false): { [resourceType: string]: number } {
 		// if (this.name == 'E8S45') verbose = true; // 18863
 		// Include storage structures and manager carry
@@ -505,6 +548,9 @@ export class Colony {
 		return allAssets;
 	}
 
+	/**
+	 * Initializes the state of the colony each tick
+	 */
 	init(): void {
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.init());	// Initialize each hive cluster
 		this.roadLogistics.init();											// Initialize the road network
@@ -515,6 +561,9 @@ export class Colony {
 		}
 	}
 
+	/**
+	 * Runs the colony, performing state-changing actions each tick
+	 */
 	run(): void {
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.run());		// Run each hive cluster
 		this.linkNetwork.run();												// Run the link network
@@ -523,6 +572,9 @@ export class Colony {
 		this.stats();														// Log stats per tick
 	}
 
+	/**
+	 * Register colony-wide statistics
+	 */
 	stats(): void {
 		if (Game.time % LOG_STATS_INTERVAL == 0) {
 			// Log energy and rcl
@@ -545,13 +597,6 @@ export class Colony {
 			let avgBarrierHits = _.sum(this.room.barriers, barrier => barrier.hits) / this.room.barriers.length;
 			Stats.log(`colonies.${this.name}.avgBarrierHits`, avgBarrierHits);
 		}
-	}
-
-	private defconReport(): void {
-		// let safeOutposts = _.filter(this.outposts, room => !!room && room.dangerousHostiles.length == 0);
-		// let stringReport: string[] = [
-		// 	`DEFCON: ${this.defcon}  Safe outposts: ${safeOutposts.length}/${this.outposts.length}`,
-		// 	`Creep usage for ${colony.name}:`];
 	}
 
 	private drawCreepReport(coord: Coord): Coord {

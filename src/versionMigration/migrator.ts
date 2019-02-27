@@ -6,6 +6,9 @@ interface VersionMigratorMemory {
 	versions: { [version: string]: boolean };
 }
 
+/**
+ * The VersionMigration class contains ad-hoc methods for migrating older versions of Overmind to newer versions
+ */
 export class VersionMigration {
 
 	static run(): void {

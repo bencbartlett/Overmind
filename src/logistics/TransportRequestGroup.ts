@@ -84,7 +84,9 @@ export class TransportRequestGroup {
 		}
 	}
 
-	/* Request for resources to be deposited into this target */
+	/**
+	 * Request for resources to be deposited into this target
+	 */
 	requestInput(target: TransportRequestTarget, priority = Priority.Normal, opts = {} as TransportRequestOptions): void {
 		_.defaults(opts, {
 			resourceType: RESOURCE_ENERGY,
@@ -105,7 +107,9 @@ export class TransportRequestGroup {
 		}
 	}
 
-	/* Request for resources to be withdrawn from this target */
+	/**
+	 * Request for resources to be withdrawn from this target
+	 */
 	requestOutput(target: TransportRequestTarget, priority = Priority.Normal, opts = {} as TransportRequestOptions): void {
 		_.defaults(opts, {
 			resourceType: RESOURCE_ENERGY,
@@ -197,6 +201,9 @@ export class TransportRequestGroup {
 		return 0;
 	}
 
+	/**
+	 * Summarize the state of the transport request group to the console; useful for debugging.
+	 */
 	summarize(ignoreEnergy = false): void {
 		console.log(`Supply requests ==========================`);
 		for (let priority in this.supply) {

@@ -14,7 +14,9 @@ export function color(str: string, color: string): string {
 	return `<font color='${color}'>${str}</font>`;
 }
 
-// Correct generalization of the modulo operator to negative numbers
+/**
+ * Correct generalization of the modulo operator to negative numbers
+ */
 export function mod(n: number, m: number): number {
 	return ((n % m) + m) % m;
 }
@@ -32,6 +34,9 @@ export function hasMinerals(store: { [resourceType: string]: number }): boolean 
 	return false;
 }
 
+/**
+ * Obtain the username of the player
+ */
 export function getUsername(): string {
 	for (let i in Game.rooms) {
 		let room = Game.rooms[i];
@@ -68,7 +73,9 @@ export function bulleted(text: string[], aligned = true, startWithNewLine = true
 	}
 }
 
-/* Create column-aligned text array from object with string key/values */
+/**
+ * Create column-aligned text array from object with string key/values
+ */
 export function toColumns(obj: { [key: string]: string }, opts = {} as toColumnsOpts): string[] {
 	_.defaults(opts, {
 		padChar: ' ',	// Character to pad with, e.g. "." would be key........val
@@ -90,7 +97,9 @@ export function toColumns(obj: { [key: string]: string }, opts = {} as toColumns
 	return ret;
 }
 
-/* Merges a list of store-like objects, summing overlapping keys. Useful for calculating assets from multiple sources */
+/**
+ * Merges a list of store-like objects, summing overlapping keys. Useful for calculating assets from multiple sources
+ */
 export function mergeSum(objects: { [key: string]: number | undefined }[]): { [key: string]: number } {
 	let ret: { [key: string]: number } = {};
 	for (let object of objects) {
@@ -127,6 +136,9 @@ export function equalXYR(pos1: protoPos, pos2: protoPos): boolean {
 	return pos1.x == pos2.x && pos1.y == pos2.y && pos1.roomName == pos2.roomName;
 }
 
+/**
+ * Averages a list of objects by mapping object=>iteratee(object)
+ */
 export function averageBy<T>(objects: T[], iteratee: ((obj: T) => number)): number | undefined {
 	if (objects.length == 0) {
 		return undefined;
@@ -135,6 +147,9 @@ export function averageBy<T>(objects: T[], iteratee: ((obj: T) => number)): numb
 	}
 }
 
+/**
+ * Equivalent to lodash.minBy() method
+ */
 export function minBy<T>(objects: T[], iteratee: ((obj: T) => number | false)): T | undefined {
 	let minObj: T | undefined = undefined;
 	let minVal = Infinity;
@@ -149,6 +164,9 @@ export function minBy<T>(objects: T[], iteratee: ((obj: T) => number | false)): 
 	return minObj;
 }
 
+/**
+ * Equivalent to lodash.maxBy() method
+ */
 export function maxBy<T>(objects: T[], iteratee: ((obj: T) => number | false)): T | undefined {
 	let maxObj: T | undefined = undefined;
 	let maxVal = -Infinity;
@@ -175,16 +193,25 @@ export function logHeapStats(): void {
 	}
 }
 
+/**
+ * Return whether the IVM is enabled
+ */
 export function isIVM(): boolean {
 	return typeof Game.cpu.getHeapStatistics === 'function';
 }
 
+/**
+ * Generate a randomly-offset cache expiration time
+ */
 export function getCacheExpiration(timeout: number, offset = 5): number {
 	return Game.time + timeout + Math.round((Math.random() * offset * 2) - offset);
 }
 
 const hexChars = '0123456789abcdef';
 
+/**
+ * Generate a random hex string of specified length
+ */
 export function randomHex(length: number): string {
 	let result = '';
 	for (let i = 0; i < length; i++) {
@@ -193,21 +220,30 @@ export function randomHex(length: number): string {
 	return result;
 }
 
+/**
+ * Compute an exponential moving average
+ */
 export function exponentialMovingAverage(current: number, avg: number | undefined, window: number): number {
 	return (current + (avg || 0) * (window - 1)) / window;
 }
 
-// Compute an exponential moving average for unevenly spaced samples
+/**
+ * Compute an exponential moving average for unevenly spaced samples
+ */
 export function irregularExponentialMovingAverage(current: number, avg: number, dt: number, window: number): number {
 	return (current * dt + avg * (window - dt)) / window;
 }
 
-// Create a shallow copy of a 2D array
+/**
+ * Create a shallow copy of a 2D array
+ */
 export function clone2DArray<T>(a: T[][]): T[][] {
 	return _.map(a, e => e.slice());
 }
 
-// Rotate a square matrix in place clockwise by 90 degrees
+/**
+ * Rotate a square matrix in place clockwise by 90 degrees
+ */
 function rotateMatrix<T>(matrix: T[][]): void {
 	// reverse the rows
 	matrix.reverse();
@@ -221,7 +257,9 @@ function rotateMatrix<T>(matrix: T[][]): void {
 	}
 }
 
-// Return a copy of a 2D array rotated by specified number of clockwise 90 turns
+/**
+ * Return a copy of a 2D array rotated by specified number of clockwise 90 turns
+ */
 export function rotatedMatrix<T>(matrix: T[][], clockwiseTurns: 0 | 1 | 2 | 3): T[][] {
 	let mat = clone2DArray(matrix);
 	for (let i = 0; i < clockwiseTurns; i++) {

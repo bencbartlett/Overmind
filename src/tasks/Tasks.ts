@@ -25,6 +25,9 @@ import {profile} from '../profiler/decorator';
 import {TaskWithdrawAll, withdrawAllTargetType} from './instances/withdrawAll';
 import {TaskRecharge} from './instances/recharge';
 
+/**
+ * Tasks class provides conveient wrappers for dispensing new Task instances
+ */
 @profile
 export class Tasks {
 

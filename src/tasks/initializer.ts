@@ -29,6 +29,9 @@ import {TaskWithdrawAll, withdrawAllTargetType, withdrawAllTaskName} from './ins
 import profiler from '../profiler/screeps-profiler';
 import {rechargeTaskName, TaskRecharge} from './instances/recharge';
 
+/**
+ * The task initializer maps serialized prototasks to Task instances
+ */
 export function initializeTask(protoTask: protoTask): Task {
 	// Retrieve name and target data from the protoTask
 	let taskName = protoTask.name;
