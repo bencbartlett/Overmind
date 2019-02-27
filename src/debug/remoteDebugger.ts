@@ -43,7 +43,9 @@ export class RemoteDebugger {
 		return Memory.remoteDebugger;
 	}
 
-	/* Push all commands from secret memory to public memory and clear secret memory commands */
+	/**
+	 * Push all commands from secret memory to public memory and clear secret memory commands
+	 */
 	private pushCommands_master(): void {
 		Segmenter.setSegmentProperty(DEBUG_SEGMENT, 'command', this.memory.command);
 		if (this.memory.command) {
@@ -52,13 +54,17 @@ export class RemoteDebugger {
 		this.memory.command = undefined;
 	}
 
-	/* Fetch the response from the debugee */
+	/**
+	 * Fetch the response from the debugee
+	 */
 	private fetchResponse_master(): string | undefined {
 		let response = Segmenter.getForeignSegmentProperty('response');
 		return response;
 	}
 
-	/* Execute the commands you are given */
+	/**
+	 * Execute the commands you are given
+	 */
 	private fetchCommands_slave(): void {
 		let cmd = Segmenter.getForeignSegmentProperty('command');
 		if (cmd) {
@@ -71,7 +77,9 @@ export class RemoteDebugger {
 		}
 	}
 
-	/* Push the response from the last run command */
+	/**
+	 * Push the response from the last run command
+	 */
 	private pushResponse_slave(): void {
 		Segmenter.setSegmentProperty(DEBUG_SEGMENT, 'response', this.memory.response);
 		this.memory.response = undefined;
