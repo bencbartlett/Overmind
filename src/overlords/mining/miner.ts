@@ -10,7 +10,7 @@ import {log} from '../../console/log';
 import {$} from '../../caching/GlobalCache';
 import {Pathing} from '../../movement/Pathing';
 import {ColonyStage} from '../../Colony';
-import {maxBy} from '../../utilities/utils';
+import {maxBy, minBy} from '../../utilities/utils';
 import {Roles, Setups} from '../../creepSetups/setups';
 
 export const StandardMinerSetupCost = bodyCost(Setups.drones.miners.standard.generateBody(Infinity));
@@ -19,6 +19,8 @@ export const DoubleMinerSetupCost = bodyCost(Setups.drones.miners.double.generat
 
 
 const BUILD_OUTPUT_FREQUENCY = 15;
+const SUICIDE_CHECK_FREQUENCY = 3;
+const MINER_SUICIDE_THRESHOLD = 200;
 
 /**
  * Spawns miners to harvest from remote, owned, or sourcekeeper energy deposits. Standard mining actions have been
@@ -122,7 +124,9 @@ export class MiningOverlord extends Overlord {
 		$.refresh(this, 'source', 'container', 'link', 'constructionSite');
 	}
 
-	/* Calculate where the container output will be built for this site */
+	/**
+	 * Calculate where the container output will be built for this site
+	 */
 	private calculateContainerPos(): RoomPosition {
 		// log.debug(`Computing container position for mining overlord at ${this.pos.print}...`);
 		let originPos: RoomPosition | undefined = undefined;
@@ -141,7 +145,9 @@ export class MiningOverlord extends Overlord {
 		return _.first(this.pos.availableNeighbors(true));
 	}
 
-	/* Add or remove containers as needed to keep exactly one of contaner | link */
+	/**
+	 * Add or remove containers as needed to keep exactly one of contaner | link
+	 */
 	private addRemoveContainer(): void {
 		if (this.allowDropMining) {
 			return; // only build containers in reserved, owned, or SK rooms
@@ -192,6 +198,9 @@ export class MiningOverlord extends Overlord {
 		this.registerEnergyRequests();
 	}
 
+	/**
+	 * Actions for handling mining at early RCL, when multiple miners and drop mining are used
+	 */
 	private earlyMiningActions(miner: Zerg) {
 
 		if (miner.room != this.room) {
@@ -234,6 +243,31 @@ export class MiningOverlord extends Overlord {
 		}
 	}
 
+	/**
+	 * Suicide outdated miners when their replacements arrive
+	 */
+	private suicideOldMiners(): boolean {
+		if (this.miners.length > this.minersNeeded && this.source) {
+			// if you have multiple miners and the source is visible
+			let targetPos = this.harvestPos || this.source.pos;
+			let minersNearSource = _.filter(this.miners,
+											miner => miner.pos.getRangeTo(targetPos) <= SUICIDE_CHECK_FREQUENCY);
+			if (minersNearSource.length > this.minersNeeded) {
+				// if you have more miners by the source than you need
+				let oldestMiner = minBy(minersNearSource, miner => miner.ticksToLive || 9999);
+				if (oldestMiner && (oldestMiner.ticksToLive || 9999) < MINER_SUICIDE_THRESHOLD) {
+					// if the oldest miner will die sufficiently soon
+					oldestMiner.suicide();
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Actions for handling link mining
+	 */
 	private linkMiningActions(miner: Zerg) {
 
 		// Approach mining site
@@ -251,6 +285,9 @@ export class MiningOverlord extends Overlord {
 		}
 	}
 
+	/**
+	 * Actions for handling mining at RCL high enough to spawn ideal miner body to saturate source
+	 */
 	private standardMiningActions(miner: Zerg) {
 
 		// Approach mining site
@@ -291,8 +328,10 @@ export class MiningOverlord extends Overlord {
 		}
 	}
 
+	/**
+	 * Move onto harvesting position or near to source (depending on early/standard mode)
+	 */
 	private goToMiningSite(miner: Zerg): boolean {
-		// Move onto harvesting position or near to source (depending on early/standard mode)
 		if (this.harvestPos) {
 			if (!miner.pos.inRangeToPos(this.harvestPos, 0)) {
 				miner.goTo(this.harvestPos);
@@ -347,6 +386,9 @@ export class MiningOverlord extends Overlord {
 		}
 		if (this.room && Game.time % BUILD_OUTPUT_FREQUENCY == 1) {
 			this.addRemoveContainer();
+		}
+		if (Game.time % SUICIDE_CHECK_FREQUENCY == 0) {
+			this.suicideOldMiners();
 		}
 	}
 }

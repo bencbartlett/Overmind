@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Added
 - Created a [documentation site](https://bencbartlett.github.io/overmind-docs/) using TypeDoc!
+    - Added/reformatted docstring-comments throughout the codebase
 - Added the `RemoteDebugger` module, which lets me remotely debug other Overmind players' code in real-time by communicating through public memory segments. 
     - You can start and end a debug session with the `startRemoteDebugSession()` and `endRemoteDebugSession()` commands
     - Debug sessions automatically time out after 1000 ticks unless extended
@@ -19,12 +20,15 @@ All notable changes to this project will be documented in this file. The format 
     - Exposed: key structures are pathable to from some room exit
 - Added additional heap cleaning routines to prevent periodic bucket crashes. At low bucket, the global cache will periodically be cleared, and at even lower buckets, `Game.cpu.halt()` will occasionally be called.
 
+### Changed
+- `MiningOverlord` will now suicide old miners when their replacements arrive, preventing excess CPU use
+
 ### Fixed
+- Fixed a critical issue which caused the CPU reset routine to repeat indefinitely in low-CPU environments like shard3 (#65)
 - Security patch for `Assimilator`
 - Fixed a bug in `WorkerOverlord` where workers would not fortify ramparts to the needed hits to withstand multiple stacked nuclear strikes
 - Fixed a `RoadPlanner` bug which caused it to prever pathing roads along edge tiles between rooms
 - Fixed a recently-introduced bug which prevented drones from repairing their containers
-- Fixed an issue which caused the CPU reset routine to repeat indefinitely in low-CPU environments like shard3 (#65)
 
 
 
