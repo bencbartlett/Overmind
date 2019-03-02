@@ -85,7 +85,7 @@ interface CreepMemory {
 	noNotifications?: boolean;
 	_go?: MoveData;
 	debug?: boolean;
-	boostLab?: string;
+	talkative?: boolean;
 }
 
 interface MoveData {

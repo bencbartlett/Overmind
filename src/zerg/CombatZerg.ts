@@ -14,7 +14,7 @@ interface CombatZergMemory extends CreepMemory {
 }
 
 export const DEFAULT_PARTNER_TICK_DIFFERENCE = 650;
-export const DEFAULT_SWARM_TICK_DIFFERENCE = 650;
+export const DEFAULT_SWARM_TICK_DIFFERENCE = 500;
 
 /**
  * CombatZerg is an extension of the Zerg class which contains additional combat-related methods

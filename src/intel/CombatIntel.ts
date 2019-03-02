@@ -218,6 +218,20 @@ export class CombatIntel {
 	}
 
 	/**
+	 * Finds a location for a swarm to assemble within an owned room
+	 */
+	findSwarmAssemblyPointInColony(clearance: { width: number, height: number }, swarmIndex = 0): RoomPosition {
+		// let ret = Pathing.findSwarmPath(this.colony.pos, this.directive.pos, clearance.width, clearance.height,
+		// 								{ignoreCreeps: true});
+		let ret = Pathing.findPath(this.colony.pos, this.directive.pos, {ignoreCreeps: true});
+		let path = ret.path.reverse();
+		let acceptablePositions = _.filter(path, pos => pos.roomName == this.colony.name && pos.rangeToEdge > 1);
+		let swarmSize = Math.max(clearance.width, clearance.height);
+		let posIndex = (swarmSize + 1) * swarmIndex;
+		return acceptablePositions[posIndex] || acceptablePositions[0];
+	}
+
+	/**
 	 * Fallback is a location on the other side of the nearest exit the directive is placed at
 	 */
 	static getFallbackFrom(pos: RoomPosition, fallbackDistance = 2): RoomPosition {

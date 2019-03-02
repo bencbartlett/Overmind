@@ -775,9 +775,14 @@ export class Movement {
 		const debug = false;
 		const callback = (roomName: string) => {
 			let matrix: CostMatrix;
-			if (swarm.roomsByName[roomName]) {
-				matrix = Pathing.getSwarmDefaultMatrix(swarm.roomsByName[roomName], swarm.width, swarm.height); // already cloned
-				Movement.combatMoveCallbackModifier(swarm.roomsByName[roomName], matrix, approach, avoid, options);
+			const room = swarm.roomsByName[roomName];
+			if (room) {
+				matrix = Pathing.getSwarmDefaultMatrix(room, swarm.width, swarm.height); // already cloned
+				// Block positions from other swarms in the room
+				let otherCreeps = _.filter(room.creeps, creep => !_.any(swarm.creeps, c => c.name == creep.name));
+				Pathing.blockMyCreeps(matrix, room, otherCreeps);
+				// Pathing.blockHostileCreeps(matrix, creep.room);
+				Movement.combatMoveCallbackModifier(room, matrix, approach, avoid, options);
 			} else {
 				matrix = Pathing.getSwarmTerrainMatrix(roomName, swarm.width, swarm.height);
 			}
@@ -791,12 +796,20 @@ export class Movement {
 
 		// Flee from bad things that that you're too close to
 		if (avoid.length > 0) {
+			const size = Math.max(swarm.width, swarm.height);
 			if (_.any(avoid, goal => swarm.minRangeTo(goal) <= goal.range)) {
 				let allAvoid = _.flatten(_.map(avoid, goal =>
 					_.map(Pathing.getPosWindow(goal.pos, -swarm.width, -swarm.height), pos => ({
 						pos  : pos,
 						range: goal.range
 					})))) as PathFinderGoal[];
+				if (options.displayCostMatrix) {
+					const room = swarm.rooms[0];
+					for (let avoid of allAvoid) {
+						let {x, y} = avoid.pos;
+						room.visual.text(avoid.range.toString(), x, y, {color: 'ff0099'});
+					}
+				}
 				let avoidRet = PathFinder.search(swarm.anchor, allAvoid, {
 					roomCallback: callback,
 					flee        : true,
@@ -853,7 +866,9 @@ export class Movement {
 		const debug = false;
 		const callback = (roomName: string) => {
 			if (roomName == creep.room.name) {
-				let matrix = Pathing.getCreepMatrix(creep.room).clone();
+				let matrix = Pathing.getDefaultMatrix(creep.room).clone();
+				Pathing.blockMyCreeps(matrix, creep.room);
+				Pathing.blockHostileCreeps(matrix, creep.room);
 				Movement.combatMoveCallbackModifier(creep.room, matrix, approach, avoid, options);
 				if (options.displayCostMatrix) {
 					Visualizer.displayCostMatrix(matrix, roomName);

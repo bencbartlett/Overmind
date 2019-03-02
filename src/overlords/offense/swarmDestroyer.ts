@@ -51,11 +51,11 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 		this.makeSwarms();
 		// Compute fallback positions and assembly points
 		this.fallback = $.pos(this, 'fallback', () =>
-			this.intel.findSwarmAssemblyPoint({width: 2, height: 2}), 200)!;
+			this.intel.findSwarmAssemblyPointInColony({width: 2, height: 2}), 200)!;
 		this.assemblyPoints = [];
 		for (let i = 0; i < _.keys(this.swarms).length + 1; i++) {
 			this.assemblyPoints.push($.pos(this, `assemble_${i}`, () =>
-				this.intel.findSwarmAssemblyPoint({width: 2, height: 2}, i + 1), 200)!);
+				this.intel.findSwarmAssemblyPointInColony({width: 2, height: 2}, i + 1), 200)!);
 		}
 	}
 
@@ -90,9 +90,24 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 		// Swarm has now initially assembled with all members present
 		// log.debug(`Done assmbling`);
 
+		const room = swarm.rooms[0];
+		if (!room) {
+			log.warning(`${this.print} No room! (Why?)`);
+		}
 		// Siege the room
-		// swarm.autoSiege(this.pos.roomName); // TODO
-		swarm.autoCombat(this.pos.roomName);
+		let nearbyHostiles = _.filter(room.hostiles, creep => swarm.minRangeTo(creep) <= 3 + 1);
+		let attack = _.sum(nearbyHostiles, creep => CombatIntel.getAttackDamage(creep));
+		let rangedAttack = _.sum(nearbyHostiles, creep => CombatIntel.getRangedAttackDamage(creep));
+		let myDamageMultiplier = CombatIntel.minimumDamageMultiplierForGroup(_.map(swarm.creeps, c => c.creep));
+
+		let canPopShield = (attack + rangedAttack + CombatIntel.towerDamageAtPos(swarm.anchor)) * myDamageMultiplier
+						   > _.min(_.map(swarm.creeps, creep => 100 * creep.getActiveBodyparts(TOUGH)));
+
+		if (canPopShield || room.hostileStructures.length == 0) {
+			swarm.autoCombat(this.pos.roomName);
+		} else {
+			swarm.autoSiege(this.pos.roomName);
+		}
 	}
 
 	init() {

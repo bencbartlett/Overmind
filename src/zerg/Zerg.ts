@@ -96,10 +96,9 @@ export class Zerg {
 	hitsMax: number;					// |
 	id: string;							// |
 	memory: CreepMemory;				// | See the ICreepMemory interface for structure
-	// my: boolean;						// |
 	name: string;						// |
-	// owner: Owner; 						// |
 	pos: RoomPosition;					// |
+	nextPos: RoomPosition;				// | The next position the creep will be in after registering a move intent
 	ref: string;						// |
 	roleName: string;					// |
 	room: Room;							// |
@@ -109,10 +108,10 @@ export class Zerg {
 	lifetime: number;
 	actionLog: { [actionName: string]: boolean }; // Tracks the actions that a creep has completed this tick
 	blockMovement: boolean; 			// Whether the zerg is allowed to move or not
-	// settings: any;					// Adjustable settings object, can vary across roles
 	private _task: Task | null; 		// Cached Task object that is instantiated once per tick and on change
 
 	constructor(creep: Creep, notifyWhenAttacked = true) {
+		// Copy over creep references
 		this.creep = creep;
 		this.body = creep.body;
 		this.carry = creep.carry;
@@ -124,17 +123,19 @@ export class Zerg {
 		this.memory = creep.memory;
 		this.name = creep.name;
 		this.pos = creep.pos;
+		this.nextPos = creep.pos;
 		this.ref = creep.ref;
 		this.roleName = creep.memory.role;
 		this.room = creep.room;
 		this.saying = creep.saying;
 		this.spawning = creep.spawning;
 		this.ticksToLive = creep.ticksToLive;
+		// Extra properties
 		this.lifetime = this.getBodyparts(CLAIM) > 0 ? CREEP_CLAIM_LIFE_TIME : CREEP_LIFE_TIME;
 		this.actionLog = {};
 		this.blockMovement = false;
-		// this.settings = {};
-		Overmind.zerg[this.name] = this; // register global reference
+		// Register global references
+		Overmind.zerg[this.name] = this;
 		global[this.name] = this;
 		// Handle attack notification when at lifetime - 1
 		if (!notifyWhenAttacked && (this.ticksToLive || 0) >= this.lifetime - (NEW_OVERMIND_INTERVAL + 1)) {
@@ -151,6 +152,7 @@ export class Zerg {
 		if (creep) {
 			this.creep = creep;
 			this.pos = creep.pos;
+			this.nextPos = creep.pos;
 			this.body = creep.body;
 			this.carry = creep.carry;
 			this.carryCapacity = creep.carryCapacity;
@@ -204,6 +206,7 @@ export class Zerg {
 				if (target.hitsPredicted == undefined) target.hitsPredicted = target.hits;
 				target.hitsPredicted -= CombatIntel.predictedDamageAmount(this.creep, target, 'attack');
 			}
+			if (this.memory.talkative) this.say(`💥`);
 		}
 		return result;
 	}
@@ -281,7 +284,10 @@ export class Zerg {
 	move(direction: DirectionConstant, force = false) {
 		if (!this.blockMovement && !force) {
 			let result = this.creep.move(direction);
-			if (!this.actionLog.move) this.actionLog.move = (result == OK);
+			if (result == OK) {
+				if (!this.actionLog.move) this.actionLog.move = true;
+				this.nextPos = this.pos.getPositionAtDirection(direction);
+			}
 			return result;
 		} else {
 			return ERR_BUSY;
@@ -306,6 +312,7 @@ export class Zerg {
 				if (target.hitsPredicted == undefined) target.hitsPredicted = target.hits;
 				target.hitsPredicted -= CombatIntel.predictedDamageAmount(this, target, 'rangedAttack');
 			}
+			if (this.memory.talkative) this.say(`🔫`);
 		}
 		return result;
 	}
@@ -318,6 +325,7 @@ export class Zerg {
 				if (target.hitsPredicted == undefined) target.hitsPredicted = target.hits;
 				target.hitsPredicted -= CombatIntel.getMassAttackDamageTo(this, target);
 			}
+			if (this.memory.talkative) this.say(`💣`);
 		}
 		return result;
 	}
@@ -379,6 +387,7 @@ export class Zerg {
 			this.actionLog.heal = true;
 			if (creep.hitsPredicted == undefined) creep.hitsPredicted = creep.hits;
 			creep.hitsPredicted += CombatIntel.getHealAmount(this);
+			if (this.memory.talkative) this.say('🚑');
 		}
 		return result;
 	}
@@ -390,6 +399,7 @@ export class Zerg {
 			this.actionLog.rangedHeal = true;
 			if (creep.hitsPredicted == undefined) creep.hitsPredicted = creep.hits;
 			creep.hitsPredicted += CombatIntel.getRangedHealAmount(this);
+			if (this.memory.talkative) this.say(`💉`);
 		}
 		return result;
 	}

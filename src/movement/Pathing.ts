@@ -550,6 +550,21 @@ export class Pathing {
 	}
 
 	/**
+	 * Sets all creep positions to impassible
+	 */
+	static blockMyCreeps(matrix: CostMatrix, room: Room, creeps?: (Creep | Zerg)[]) {
+
+		let blockCreeps = creeps || room.creeps as (Creep | Zerg)[];
+		let blockPositions = _.map(blockCreeps,
+								   creep => Overmind.zerg[creep.name] ? Overmind.zerg[creep.name].nextPos
+																	  : creep.pos);
+
+		_.forEach(blockPositions, pos => {
+			matrix.set(pos.x, pos.y, CREEP_COST);
+		});
+	}
+
+	/**
 	 * Sets hostile creep positions to impassible
 	 */
 	static blockHostileCreeps(matrix: CostMatrix, room: Room) {
@@ -562,8 +577,8 @@ export class Pathing {
 	 * Sets all creep positions to impassible
 	 */
 	static blockAllCreeps(matrix: CostMatrix, room: Room) {
-		_.forEach(room.find(FIND_CREEPS), hostile => {
-			matrix.set(hostile.pos.x, hostile.pos.y, CREEP_COST);
+		_.forEach(room.find(FIND_CREEPS), creep => {
+			matrix.set(creep.pos.x, creep.pos.y, CREEP_COST);
 		});
 	}
 
@@ -611,8 +626,8 @@ export class Pathing {
 		// Since we're moving in increasing order of x, y, we don't need to clone the matrix
 		var x, y, dx, dy: number;
 		var maxCost, cost: number;
-		for (x = 0; x < 50 - width; x++) {
-			for (y = 0; y < 50 - height; y++) {
+		for (x = 0; x <= 50 - width; x++) {
+			for (y = 0; y <= 50 - height; y++) {
 				maxCost = matrix.get(x, y);
 				for (dx = 0; dx <= width - 1; dx++) {
 					for (dy = 0; dy <= height - 1; dy++) {

@@ -147,13 +147,13 @@ export class GoalFinder {
 			let damageMultiplier = CombatIntel.minimumDamageMultiplierForGroup(hostiles);
 
 			let canPopShield = (attack + rangedAttack + CombatIntel.towerDamageAtPos(swarm.anchor)) * myDamageMultiplier
-							   > _.min(_.map(swarm.creeps, creep => creep.getActiveBodyparts(TOUGH)));
+							   > _.min(_.map(swarm.creeps, creep => 100 * creep.getActiveBodyparts(TOUGH)));
 
 			let isRetreating = _.sum(hostiles, creep => +CombatIntel.isRetreating(creep, swarm.anchor))
-							   / hostiles.length > 0.5;
+							   / hostiles.length >= 0.5;
 
 			let isApproaching = _.sum(hostiles, creep => +CombatIntel.isApproaching(creep, swarm.anchor))
-								/ hostiles.length > 0.5;
+								/ hostiles.length >= 0.5;
 
 			let advantage = healing == 0 || attack + rangedAttack == 0 ||
 							myAttack + myRangedAttack + myHealing / myDamageMultiplier
@@ -162,7 +162,11 @@ export class GoalFinder {
 
 			for (let hostile of hostiles) {
 				if (canPopShield) {
-					avoid.push({pos: hostile.pos, range: rangedAttack > attack ? 3 : 1});
+					let range = (rangedAttack > attack ? 3 : 1) + 1;
+					if (CombatIntel.isApproaching(hostile, swarm.anchor)) {
+						range += 1;
+					}
+					avoid.push({pos: hostile.pos, range: range});
 				} else {
 					if (advantage) {
 						let range = 1;

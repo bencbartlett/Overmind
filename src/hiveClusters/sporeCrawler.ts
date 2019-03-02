@@ -121,7 +121,7 @@ export class SporeCrawler extends HiveCluster {
 			let myCreepDamage = ATTACK_POWER * _.sum(myDefenders, creep => CombatIntel.getAttackPotential(creep)) +
 								RANGED_ATTACK_POWER * _.sum(myRangedDefenders,
 															creep => CombatIntel.getRangedAttackPotential(creep));
-			const HEAL_FUDGE_FACTOR = 0.5;
+			const HEAL_FUDGE_FACTOR = 1.0;
 			let possibleTargets = _.filter(this.room.hostiles,
 										   hostile => HEAL_FUDGE_FACTOR * CombatIntel.maxHostileHealingTo(hostile) <
 													  CombatIntel.towerDamageAtPos(hostile.pos)! + myCreepDamage);
