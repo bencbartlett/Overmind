@@ -6,6 +6,7 @@ import {MoveOptions, SwarmMoveOptions} from './Movement';
 import {hasPos} from '../declarations/typeGuards';
 import {normalizePos} from './helpers';
 import {$} from '../caching/GlobalCache';
+import {Visualizer} from '../visuals/Visualizer';
 
 
 const DEFAULT_MAXOPS = 20000;		// Default timeout for pathfinding
@@ -204,11 +205,16 @@ export class Pathing {
 	static swarmRoomCallback(roomName: string, width: number, height: number,
 							 options: SwarmMoveOptions): CostMatrix | boolean {
 		const room = Game.rooms[roomName];
+		let matrix: CostMatrix;
 		if (room && !options.ignoreStructures) {
-			return this.getSwarmDefaultMatrix(room, width, height, options, false);
+			matrix = this.getSwarmDefaultMatrix(room, width, height, options, false);
 		} else {
-			return this.getSwarmTerrainMatrix(roomName, width, height, options.exitCost);
+			matrix = this.getSwarmTerrainMatrix(roomName, width, height, options.exitCost);
 		}
+		if (options.displayCostMatrix) {
+			Visualizer.displayCostMatrix(matrix, roomName);
+		}
+		return matrix;
 	}
 
 	private static kitingRoomCallback(roomName: string): CostMatrix | boolean {

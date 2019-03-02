@@ -88,6 +88,38 @@ export class Visualizer {
 		}
 	}
 
+	static displayCostMatrix(costMatrix: CostMatrix, roomName?: string, dots = true, color = '#ff0000'): void {
+
+		const vis = new RoomVisual(roomName);
+		let x, y: number;
+
+		if (dots) {
+			let cost: number;
+			let max = 1;
+			for (y = 0; y < 50; ++y) {
+				for (x = 0; x < 50; ++x) {
+					max = Math.max(max, costMatrix.get(x, y));
+				}
+			}
+
+			for (y = 0; y < 50; ++y) {
+				for (x = 0; x < 50; ++x) {
+					cost = costMatrix.get(x, y);
+					if (cost > 0) {
+						vis.circle(x, y, {radius: costMatrix.get(x, y) / max / 2, fill: color});
+					}
+				}
+			}
+		} else {
+			for (y = 0; y < 50; ++y) {
+				for (x = 0; x < 50; ++x) {
+					vis.text(costMatrix.get(x, y).toString(), x, y, {color: color});
+				}
+			}
+		}
+
+	}
+
 	static showInfo(info: string[], calledFrom: { room: Room | undefined, pos: RoomPosition }, opts = {}): RoomVisual {
 		if (calledFrom.room) {
 			return calledFrom.room.visual.infoBox(info, calledFrom.pos.x, calledFrom.pos.y, opts);

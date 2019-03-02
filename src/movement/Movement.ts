@@ -8,6 +8,7 @@ import {isZerg} from '../declarations/typeGuards';
 import {rightArrow} from '../utilities/stringConstants';
 import {Roles} from '../creepSetups/setups';
 import {Swarm} from '../zerg/Swarm';
+import {Visualizer} from '../visuals/Visualizer';
 
 export const NO_ACTION = -20;
 export const ERR_CANNOT_PUSH_CREEP = -30;
@@ -28,15 +29,15 @@ const STATE_CURRENT_X = 7;
 const STATE_CURRENT_Y = 8;
 
 export const MovePriorities = {
-	[Roles.manager]    : 1,
-	[Roles.queen]      : 2,
-	[Roles.melee]      : 3,
-	[Roles.ranged]     : 4,
-	[Roles.guardMelee] : 5,
+	[Roles.manager]   : 1,
+	[Roles.queen]     : 2,
+	[Roles.melee]     : 3,
+	[Roles.ranged]    : 4,
+	[Roles.guardMelee]: 5,
 	// [Roles.ranged]: 6,
-	[Roles.transport]  : 8,
-	[Roles.worker]     : 9,
-	default            : 10,
+	[Roles.transport] : 8,
+	[Roles.worker]    : 9,
+	default           : 10,
 };
 
 
@@ -74,15 +75,12 @@ export interface SwarmMoveOptions {
 	ensureSingleRoom?: boolean;
 	ignoreCreeps?: boolean;						// ignore pathing around creeps
 	ignoreStructures?: boolean;					// ignore pathing around structures
-	// restrictDistance?: number;					// restrict the distance of route to this number of rooms
 	exitCost?: number;
-	// useFindRoute?: boolean;						// whether to use the route finder; determined automatically otherwise
 	maxOps?: number;							// pathfinding times out after this many operations
 	stuckValue?: number;						// creep is marked stuck after this many idle ticks
 	maxRooms?: number;							// maximum number of rooms to path through
 	repath?: number;							// probability of repathing on a given tick
-	// route?: { [roomName: string]: boolean };	// lookup table for allowable pathing rooms
-	// ensurePath?: boolean;						// can be useful if route keeps being found as incomplete
+	displayCostMatrix?: boolean,
 }
 
 export interface CombatMoveOptions {
@@ -90,6 +88,7 @@ export interface CombatMoveOptions {
 	avoidPenalty?: number,
 	approachBonus?: number,
 	preferRamparts?: boolean,
+	displayCostMatrix?: boolean,
 }
 
 export interface MoveState {
@@ -709,7 +708,7 @@ export class Movement {
 						  destination.roomName];
 
 		if (!moveData.path || moveData.path.length == 0) {
-			console.log('no path');
+			console.log(`No path from ${swarm.anchor.print} to ${destination.print}!`);
 			return ERR_NO_PATH;
 		}
 
@@ -775,12 +774,17 @@ export class Movement {
 
 		const debug = false;
 		const callback = (roomName: string) => {
+			let matrix: CostMatrix;
 			if (swarm.roomsByName[roomName]) {
-				let matrix = Pathing.getSwarmDefaultMatrix(swarm.roomsByName[roomName], swarm.width, swarm.height); // already cloned
-				return Movement.combatMoveCallbackModifier(swarm.roomsByName[roomName], matrix, approach, avoid, options);
+				matrix = Pathing.getSwarmDefaultMatrix(swarm.roomsByName[roomName], swarm.width, swarm.height); // already cloned
+				Movement.combatMoveCallbackModifier(swarm.roomsByName[roomName], matrix, approach, avoid, options);
 			} else {
-				return Pathing.getSwarmTerrainMatrix(roomName, swarm.width, swarm.height);
+				matrix = Pathing.getSwarmTerrainMatrix(roomName, swarm.width, swarm.height);
 			}
+			if (options.displayCostMatrix) {
+				Visualizer.displayCostMatrix(matrix, roomName);
+			}
+			return matrix;
 		};
 
 		let outcome = NO_ACTION;
@@ -850,7 +854,11 @@ export class Movement {
 		const callback = (roomName: string) => {
 			if (roomName == creep.room.name) {
 				let matrix = Pathing.getCreepMatrix(creep.room).clone();
-				return Movement.combatMoveCallbackModifier(creep.room, matrix, approach, avoid, options);
+				Movement.combatMoveCallbackModifier(creep.room, matrix, approach, avoid, options);
+				if (options.displayCostMatrix) {
+					Visualizer.displayCostMatrix(matrix, roomName);
+				}
+				return matrix;
 			} else {
 				return !(Memory.rooms[roomName] && Memory.rooms[roomName].avoid);
 			}

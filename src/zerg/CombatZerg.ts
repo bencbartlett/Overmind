@@ -145,6 +145,9 @@ export class CombatZerg extends Zerg {
 
 	// Standard action sequences for engaging small numbers of enemies in a neutral room ===============================
 
+	/**
+	 * Automatically melee-attack the best creep in range
+	 */
 	autoMelee(possibleTargets = this.room.hostiles) {
 		let target = CombatTargeting.findBestCreepTargetInRange(this, 1, possibleTargets)
 					 || CombatTargeting.findBestStructureTargetInRange(this, 1);
@@ -154,6 +157,9 @@ export class CombatZerg extends Zerg {
 		}
 	}
 
+	/**
+	 * Automatically ranged-attack the best creep in range
+	 */
 	autoRanged(possibleTargets = this.room.hostiles, allowMassAttack = true) {
 		let target = CombatTargeting.findBestCreepTargetInRange(this, 3, possibleTargets)
 					 || CombatTargeting.findBestStructureTargetInRange(this, 3);
@@ -168,6 +174,9 @@ export class CombatZerg extends Zerg {
 		}
 	}
 
+	/**
+	 * Automatically heal the best creep in range
+	 */
 	autoHeal(allowRangedHeal = true, friendlies = this.room.creeps) {
 		let target = CombatTargeting.findBestHealingTargetInRange(this, allowRangedHeal ? 3 : 1, friendlies);
 		this.debug(`Heal taget: ${target}`);
@@ -265,6 +274,9 @@ export class CombatZerg extends Zerg {
 		return recovering;
 	}
 
+	/**
+	 * Retreat and get healed
+	 */
 	recover() {
 		if (this.pos.findInRange(this.room.hostiles, 5).length > 0 || this.room.towers.length > 0) {
 			this.memory.lastInDanger = Game.time;

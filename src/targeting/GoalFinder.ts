@@ -1,10 +1,11 @@
 import {CombatIntel} from '../intel/CombatIntel';
-import {minBy} from '../utilities/utils';
+import {maxBy, minBy} from '../utilities/utils';
 import {CombatZerg} from '../zerg/CombatZerg';
 import {log} from '../console/log';
 import {RoomIntel} from '../intel/RoomIntel';
 import {isCombatZerg} from '../declarations/typeGuards';
 import {profile} from '../profiler/decorator';
+import {Swarm} from '../zerg/Swarm';
 
 
 interface SkirmishAnalysis {
@@ -46,6 +47,7 @@ export class GoalFinder {
 		let braveMode = creep.hits * (nearbyRating / myRating) * .5 > creep.hitsMax;
 
 		let hostileHealers: Creep[] = [];
+
 		// Analyze capabilities of hostile creeps in the room
 		for (let hostile of room.hostiles) {
 			if (hostile.owner.username == 'Source Keeper') continue;
@@ -61,7 +63,8 @@ export class GoalFinder {
 				rangedAttack : rangedAttack,
 				heal         : healing,
 				advantage    : healing == 0 || attack + rangedAttack == 0 ||
-							   myAttack + myRangedAttack - healing > attack + rangedAttack - myHealing,
+							   myAttack + myRangedAttack + myHealing / CombatIntel.minimumDamageTakenMultiplier(creep.creep)
+							   > attack + rangedAttack + healing / CombatIntel.minimumDamageTakenMultiplier(hostile),
 				isRetreating : CombatIntel.isRetreating(hostile, RoomIntel.getPreviousPos(creep)),
 				isApproaching: CombatIntel.isApproaching(hostile, RoomIntel.getPreviousPos(creep)),
 			};
@@ -73,7 +76,7 @@ export class GoalFinder {
 			let data = analysis[target.id];
 			if (data && (data.advantage || braveMode)) {
 				let range = 1;
-				if (!preferCloseCombat && (data.attack > 0 || data.rangedAttack > myAttack)) {
+				if (!preferCloseCombat && (data.attack > 0 || data.rangedAttack > myRangedAttack)) {
 					range = creep.pos.getRangeTo(target) == 3 && data.isRetreating ? 2 : 3;
 					avoid.push({pos: target.pos, range: range});
 				}
@@ -104,6 +107,98 @@ export class GoalFinder {
 			log.debug(`Report for ${creep.name}:`, JSON.stringify(analysis));
 			log.debug(`Approach for ${creep.name}:`, JSON.stringify(approach));
 			log.debug(`Avoid for ${creep.name}:`, JSON.stringify(avoid));
+		}
+
+		return {approach, avoid};
+	}
+
+
+	static swarmCombatGoals(swarm: Swarm,
+							includeStructures = true): { approach: PathFinderGoal[], avoid: PathFinderGoal[] } {
+
+		let approach: PathFinderGoal[] = [];
+		let avoid: PathFinderGoal[] = [];
+
+		if (swarm.rooms.length > 1) {
+			log.warning(`Swarm in more than 1 room!`);
+		}
+		// If in more than 1 room, pick the room with more hostile stuff in it
+		const room = maxBy(swarm.rooms, room => room.hostiles.length + room.hostileStructures.length) as Room;
+
+		let myAttack = _.sum(swarm.creeps, creep => CombatIntel.getAttackDamage(creep));
+		let myRangedAttack = _.sum(swarm.creeps, creep => CombatIntel.getRangedAttackDamage(creep));
+		let myHealing = _.sum(swarm.creeps, creep => CombatIntel.getHealAmount(creep));
+		let myDamageMultiplier = CombatIntel.minimumDamageMultiplierForGroup(_.map(swarm.creeps, c => c.creep));
+
+		let preferCloseCombat = myAttack > myRangedAttack;
+
+		let myRating = _.sum(swarm.creeps, creep => CombatIntel.rating(creep));
+
+		let hostileSwarms = Swarm.findEnemySwarms(room, {pos: swarm.anchor});
+
+		// Analyze capabilities of hostile creeps in the room
+		for (let i in hostileSwarms) {
+
+			const hostiles = hostileSwarms[i].creeps as Creep[];
+
+			let attack = _.sum(hostiles, creep => CombatIntel.getAttackDamage(creep));
+			let rangedAttack = _.sum(hostiles, creep => CombatIntel.getRangedAttackDamage(creep));
+			let healing = _.sum(hostiles, creep => CombatIntel.getHealAmount(creep));
+			let damageMultiplier = CombatIntel.minimumDamageMultiplierForGroup(hostiles);
+
+			let canPopShield = (attack + rangedAttack + CombatIntel.towerDamageAtPos(swarm.anchor)) * myDamageMultiplier
+							   > _.min(_.map(swarm.creeps, creep => creep.getActiveBodyparts(TOUGH)));
+
+			let isRetreating = _.sum(hostiles, creep => +CombatIntel.isRetreating(creep, swarm.anchor))
+							   / hostiles.length > 0.5;
+
+			let isApproaching = _.sum(hostiles, creep => +CombatIntel.isApproaching(creep, swarm.anchor))
+								/ hostiles.length > 0.5;
+
+			let advantage = healing == 0 || attack + rangedAttack == 0 ||
+							myAttack + myRangedAttack + myHealing / myDamageMultiplier
+							> attack + rangedAttack + healing / damageMultiplier;
+
+
+			for (let hostile of hostiles) {
+				if (canPopShield) {
+					avoid.push({pos: hostile.pos, range: rangedAttack > attack ? 3 : 1});
+				} else {
+					if (advantage) {
+						let range = 1;
+						if (!preferCloseCombat && (attack > 0 || rangedAttack > myAttack)) {
+							range = swarm.minRangeTo(hostile) == 3 && isRetreating ? 2 : 3;
+							avoid.push({pos: hostile.pos, range: range});
+						}
+						approach.push({pos: hostile.pos, range: range});
+					} else {
+						let range = isApproaching ? 3 : 2;
+						if (rangedAttack > attack) {
+							range = 5;
+						}
+						avoid.push({pos: hostile.pos, range: range});
+					}
+				}
+			}
+
+		}
+
+		if (includeStructures) {
+			let approachStructures: Structure[] = [];
+			for (let structure of room.hostileStructures) {
+				approachStructures.push(structure);
+			}
+			for (let wall of room.walls) {
+				approachStructures.push(wall);
+			}
+			for (let approachStructure of approachStructures) {
+				approach.push({pos: approachStructure.pos, range: 1});
+			}
+		}
+
+		if (DEBUG) {
+			log.debug(`Approach for ${swarm.print}:`, JSON.stringify(approach));
+			log.debug(`Avoid for ${swarm.print}:`, JSON.stringify(avoid));
 		}
 
 		return {approach, avoid};

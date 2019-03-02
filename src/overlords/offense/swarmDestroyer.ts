@@ -91,7 +91,8 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 		// log.debug(`Done assmbling`);
 
 		// Siege the room
-		swarm.autoSiege(this.pos.roomName);
+		// swarm.autoSiege(this.pos.roomName); // TODO
+		swarm.autoCombat(this.pos.roomName);
 	}
 
 	init() {
@@ -105,9 +106,9 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 																			  : CombatSetups.healers.default;
 		// this.wishlist(2 * numSwarms, healerSetup, {priority: healerPriority});
 
-		const numSwarms = 1;
+		const numSwarms = this.directive.memory.amount || 1;
 		const swarmConfig = [{setup: zerglingSetup, amount: 2, priority: zerglingPriority},
-			{setup: healerSetup, amount: 2, priority: healerPriority}];
+							 {setup: healerSetup, amount: 2, priority: healerPriority}];
 		this.swarmWishlist(numSwarms, swarmConfig);
 	}
 

@@ -19,9 +19,13 @@ All notable changes to this project will be documented in this file. The format 
     - InnerWall: barriers placed to enclose structures but are recessed from the room exits
     - Exposed: key structures are pathable to from some room exit
 - Added additional heap cleaning routines to prevent periodic bucket crashes. At low bucket, the global cache will periodically be cleared, and at even lower buckets, `Game.cpu.halt()` will occasionally be called.
+- `Visualizer` content:
+    - Added `displayCostMatrix` method, which is useful for debugging pathfinding operations
+        - Added `displayCostMatrix` option to combat and swarm `MoveOptions`
 
 ### Changed
 - `MiningOverlord` will now suicide old miners when their replacements arrive, preventing excess CPU use
+- Improvements to swarm target finding/avoiding logic
 
 ### Fixed
 - Fixed a critical issue which caused the CPU reset routine to repeat indefinitely in low-CPU environments like shard3 (#65)
@@ -29,6 +33,7 @@ All notable changes to this project will be documented in this file. The format 
 - Fixed a bug in `WorkerOverlord` where workers would not fortify ramparts to the needed hits to withstand multiple stacked nuclear strikes
 - Fixed a `RoadPlanner` bug which caused it to prever pathing roads along edge tiles between rooms
 - Fixed a recently-introduced bug which prevented drones from repairing their containers
+- `Swarm` bugfixes -- swarms should now pivot and swap orientations correctly, preserving the reflexive parity of the formation
 
 
 

@@ -6,6 +6,7 @@ import {CombatIntel} from '../intel/CombatIntel';
 import {log} from '../console/log';
 import {Swarm} from '../zerg/Swarm';
 import {profile} from '../profiler/decorator';
+import {Visualizer} from '../visuals/Visualizer';
 
 @profile
 export class CombatTargeting {
@@ -202,7 +203,8 @@ export class CombatTargeting {
 		}
 	}
 
-	static findBestSwarmStructureTarget(swarm: Swarm, roomName: string, randomness = 0): Structure | undefined {
+	static findBestSwarmStructureTarget(swarm: Swarm, roomName: string,
+										randomness = 0, displayCostMatrix = false): Structure | undefined {
 		const room = Game.rooms[roomName];
 		// Don't accidentally destroy your own shit
 		if (!room || room.my || room.reservedByMe) {
@@ -271,8 +273,8 @@ export class CombatTargeting {
 			maxRooms    : 1,
 			plainCost   : 1,
 			swampCost   : 2,
-			roomCallback: roomName => {
-				if (roomName != roomName) return false;
+			roomCallback: rn => {
+				if (rn != roomName) return false;
 				let matrix = Pathing.getSwarmTerrainMatrix(roomName, swarm.width, swarm.height).clone();
 				for (let barrier of room.barriers) {
 					let randomFactor = Math.min(Math.round(randomness * Math.random()), 100);
@@ -281,6 +283,9 @@ export class CombatTargeting {
 					for (let pos of setPositions) {
 						matrix.set(pos.x, pos.y, Math.max(cost, matrix.get(pos.x, pos.y)));
 					}
+				}
+				if (displayCostMatrix) {
+					Visualizer.displayCostMatrix(matrix, roomName);
 				}
 				return matrix;
 			},
