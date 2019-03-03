@@ -512,7 +512,7 @@ export class Swarm implements ProtoSwarm {
 
 	combatMove(approach: PathFinderGoal[], avoid: PathFinderGoal[], options: CombatMoveOptions = {}): number {
 		if (DEBUG) {
-			options.displayCostMatrix = true;
+			options.displayAvoid = true;
 		}
 		return Movement.swarmCombatMove(this, approach, avoid, options);
 	}
@@ -720,7 +720,8 @@ export class Swarm implements ProtoSwarm {
 		let goals = GoalFinder.swarmCombatGoals(this, true);
 		this.debug(`Goals: ${JSON.stringify(goals)}`);
 		let result = this.combatMove(goals.approach, goals.avoid);
-		if (result == NO_ACTION) {
+		this.debug(`Move result: ${result}`);
+		if (result != OK) {
 			// Orient yourself to face toward targets
 			let targetRoom = _.find(this.rooms, room => room.owner && !room.my);
 			if (targetRoom) {
@@ -774,7 +775,7 @@ export class Swarm implements ProtoSwarm {
 	/**
 	 * Groups enemies into proto-swarms based on proximity to each other
 	 */
-	static findEnemySwarms(room: Room, anchor?: HasPos, maxClumpSize = 4): ProtoSwarm[] {
+	static findEnemySwarms(room: Room, anchor?: HasPos, maxClumpSize = 3): ProtoSwarm[] {
 		let enemySwarms: ProtoSwarm[] = [];
 		let origin = anchor || _.first(room.spawns) || room.controller || {pos: new RoomPosition(25, 25, room.name)};
 		let attackers = _.sortBy(room.dangerousHostiles, creep => origin.pos.getRangeTo(creep));

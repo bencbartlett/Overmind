@@ -161,7 +161,7 @@ export class GoalFinder {
 
 
 			for (let hostile of hostiles) {
-				if (canPopShield) {
+				if (canPopShield && hostile.pos.lookForStructure(STRUCTURE_RAMPART)) {
 					let range = (rangedAttack > attack ? 3 : 1) + 1;
 					if (CombatIntel.isApproaching(hostile, swarm.anchor)) {
 						range += 1;

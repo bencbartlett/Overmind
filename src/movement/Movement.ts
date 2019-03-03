@@ -89,6 +89,7 @@ export interface CombatMoveOptions {
 	approachBonus?: number,
 	preferRamparts?: boolean,
 	displayCostMatrix?: boolean,
+	displayAvoid?: boolean,
 }
 
 export interface MoveState {
@@ -803,7 +804,7 @@ export class Movement {
 						pos  : pos,
 						range: goal.range
 					})))) as PathFinderGoal[];
-				if (options.displayCostMatrix) {
+				if (options.displayAvoid) {
 					const room = swarm.rooms[0];
 					for (let avoid of allAvoid) {
 						let {x, y} = avoid.pos;

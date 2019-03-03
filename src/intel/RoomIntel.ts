@@ -76,6 +76,16 @@ export class RoomIntel {
 		}
 	}
 
+	static inSafeMode(roomName: string): boolean {
+		return !!Memory.rooms[roomName] && !!Memory.rooms[roomName].ctrl && (Memory.rooms[roomName].ctrl!.SM || 0) > 0;
+	}
+
+	static safeModeCooldown(roomName: string): number | undefined {
+		if (Memory.rooms[roomName] && Memory.rooms[roomName].ctrl && Memory.rooms[roomName].ctrl!.SMcd) {
+			return Memory.rooms[roomName].ctrl!.SMcd;
+		}
+	}
+
 	private static recomputeScoreIfNecessary(room: Room): boolean {
 		if (room.memory.expansionData == false) { // room is uninhabitable or owned
 			if (Math.random() < FALSE_SCORE_RECALC_PROB) {

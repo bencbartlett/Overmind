@@ -11,6 +11,7 @@ import {log} from '../../console/log';
 import {Visualizer} from '../../visuals/Visualizer';
 import {Mem} from '../../memory/Memory';
 import {SwarmOverlord} from '../SwarmOverlord';
+import {RoomIntel} from '../../intel/RoomIntel';
 
 const DEBUG = false;
 
@@ -111,17 +112,19 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 	}
 
 	init() {
+		let numSwarms = this.directive.memory.amount || 1;
+		if (RoomIntel.inSafeMode(this.pos.roomName)) {
+			numSwarms = 0;
+		}
+
 		let zerglingPriority = this.zerglings.length <= this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
 		let zerglingSetup = this.canBoostSetup(CombatSetups.zerglings.boosted_T3) ? CombatSetups.zerglings.boosted_T3
 																				  : CombatSetups.zerglings.default;
-		// this.wishlist(2 * numSwarms, zerglingSetup, {priority: zerglingPriority});
 
 		let healerPriority = this.healers.length < this.zerglings.length ? this.priority - 0.1 : this.priority + 0.1;
 		let healerSetup = this.canBoostSetup(CombatSetups.healers.boosted_T3) ? CombatSetups.healers.boosted_T3
 																			  : CombatSetups.healers.default;
-		// this.wishlist(2 * numSwarms, healerSetup, {priority: healerPriority});
 
-		const numSwarms = this.directive.memory.amount || 1;
 		const swarmConfig = [{setup: zerglingSetup, amount: 2, priority: zerglingPriority},
 							 {setup: healerSetup, amount: 2, priority: healerPriority}];
 		this.swarmWishlist(numSwarms, swarmConfig);

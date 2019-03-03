@@ -9,6 +9,7 @@ import {CombatTargeting} from '../../targeting/CombatTargeting';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {boostResources} from '../../resources/map_resources';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
+import {RoomIntel} from '../../intel/RoomIntel';
 
 /**
  *  Destroyer overlord - spawns attacker/healer pairs for combat within a hostile room
@@ -134,6 +135,10 @@ export class PairDestroyerOverlord extends Overlord {
 			amount = this.directive.memory.amount;
 		} else {
 			amount = 1;
+		}
+
+		if (RoomIntel.inSafeMode(this.pos.roomName)) {
+			amount = 0;
 		}
 
 		let attackerPriority = this.attackers.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
