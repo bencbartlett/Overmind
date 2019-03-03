@@ -254,9 +254,18 @@ export class CombatZerg extends Zerg {
 
 		// Fight within the room
 		const target = CombatTargeting.findTarget(this);
-		const targetRange = this.getActiveBodyparts(RANGED_ATTACK) > this.getActiveBodyparts(ATTACK) ? 3 : 1;
+		const preferRanged = this.getActiveBodyparts(RANGED_ATTACK) > this.getActiveBodyparts(ATTACK);
+		const targetRange = preferRanged ? 3 : 1;
 		this.debug(`${target}, ${targetRange}`);
 		if (target) {
+			let avoid = [];
+			// Avoid melee hostiles if you are a ranged creep
+			if (preferRanged) {
+				let meleeHostiles = _.filter(this.room.hostiles, h => CombatIntel.getAttackDamage(h) > 0);
+				for (let hostile of meleeHostiles) {
+					avoid.push({pos: hostile.pos, range: 2});
+				}
+			}
 			return Movement.combatMove(this, [{pos: target.pos, range: targetRange}], []);
 		}
 

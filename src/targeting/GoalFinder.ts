@@ -162,14 +162,14 @@ export class GoalFinder {
 
 			for (let hostile of hostiles) {
 				if (canPopShield && hostile.pos.lookForStructure(STRUCTURE_RAMPART)) {
-					let range = (rangedAttack > attack ? 3 : 1) + 1;
+					let range = (rangedAttack > attack || !preferCloseCombat ? 3 : 1) + 1;
 					if (CombatIntel.isApproaching(hostile, swarm.anchor)) {
 						range += 1;
 					}
 					avoid.push({pos: hostile.pos, range: range});
 				} else {
 					if (advantage) {
-						let range = 1;
+						let range = preferCloseCombat ? 3 : 1;
 						if (!preferCloseCombat && (attack > 0 || rangedAttack > myAttack)) {
 							range = swarm.minRangeTo(hostile) == 3 && isRetreating ? 2 : 3;
 							avoid.push({pos: hostile.pos, range: range});

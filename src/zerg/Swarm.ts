@@ -54,6 +54,7 @@ export class Swarm implements ProtoSwarm {
 	memory: SwarmMemory;
 	ref: string;
 	creeps: CombatZerg[];							// All creeps involved in the swarm
+	uniformCreepType: boolean;						// Whether the swarm is composed of all one type of creep
 	formation: (CombatZerg | undefined)[][]; 		// Relative ordering of the creeps accounting for orientation
 	staticFormation: (CombatZerg | undefined)[][];	// Relative ordering of the creeps assuming a TOP orientation
 	width: number;									// Width of the formation
@@ -72,15 +73,10 @@ export class Swarm implements ProtoSwarm {
 		for (let i = paddedCreeps.length; i < width * height; i++) {
 			paddedCreeps.push(undefined); // fill in remaining positions with undefined
 		}
-		let sortedCreeps = _.sortBy(paddedCreeps, function (z) {
-			if (z == undefined) {
-				return 0;
-			} else {
-				let score = CombatIntel.getAttackPotential(z.creep) + CombatIntel.getRangedAttackPotential(z.creep)
-							+ CombatIntel.getDismantlePotential(z.creep) - CombatIntel.getHealPotential(z.creep);
-				return (-1 * score) || 1;
-			}
-		});
+		let creepScores = this.getCreepScores(paddedCreeps);
+		let sortedCreeps = _.sortBy(paddedCreeps,
+									creep => creepScores[creep != undefined ? creep.name : 'undefined']);
+		this.uniformCreepType = (_.unique(_.filter(_.values(creepScores), score => score != 0)).length <= 1);
 		this.staticFormation = _.chunk(sortedCreeps, width);
 		this.width = width;
 		this.height = height;
@@ -118,6 +114,20 @@ export class Swarm implements ProtoSwarm {
 		// this.debug(`Formation: ${this.printFormation(this.formation)}`);
 		// this.debug(`StaticFormation: ${this.printFormation(this.staticFormation)}`);
 
+	}
+
+	private getCreepScores(creeps: (CombatZerg | undefined)[]): { [name: string]: number } {
+		let keys = _.map(creeps, c => c != undefined ? c.name : 'undefined');
+		let values = _.map(creeps, z => {
+			if (z == undefined) {
+				return 0;
+			} else {
+				let score = CombatIntel.getAttackPotential(z.creep) + CombatIntel.getRangedAttackPotential(z.creep)
+							+ CombatIntel.getDismantlePotential(z.creep) - CombatIntel.getHealPotential(z.creep);
+				return (-1 * score) || 1;
+			}
+		});
+		return _.zipObject(keys, values);
 	}
 
 	private printFormation(formation: (CombatZerg | undefined)[][]): string {
@@ -547,6 +557,21 @@ export class Swarm implements ProtoSwarm {
 	// 	}
 	// }
 
+	reorient(includeStructures = true, includeCreeps = false): number {
+		if (this.uniformCreepType) {
+			return NO_ACTION;
+		}
+		let targetRoom = _.find(this.rooms, room => room.owner && !room.my);
+		if (targetRoom) {
+			let orientation = this.getBestOrientation(targetRoom, includeStructures, includeCreeps);
+			if (orientation != this.orientation && this.fatigue == 0) {
+				this.debug(`Reorienting to ${orientation}!`);
+				return this.rotate(orientation);
+			}
+		}
+		return NO_ACTION;
+	}
+
 	private getBestOrientation(room: Room, includeStructures = true, includeCreeps = false): TOP | RIGHT | BOTTOM | LEFT {
 		let targets: HasPos[] = [];
 		if (includeStructures) {
@@ -556,7 +581,7 @@ export class Swarm implements ProtoSwarm {
 			}
 		}
 		if (includeCreeps) {
-			let creepTargets = this.findInMinRange(room.hostiles, 1);
+			let creepTargets = this.findInMinRange(room.dangerousHostiles, 2);
 			for (let creep of creepTargets) {
 				targets.push(creep);
 			}
@@ -673,16 +698,7 @@ export class Swarm implements ProtoSwarm {
 		}
 
 		// Orient yourself to face structure targets
-		let targetRoom = _.find(this.rooms, room => room.owner && !room.my);
-		if (targetRoom) {
-			let orientation = this.getBestOrientation(targetRoom, true, false);
-			if (orientation != this.orientation && this.fatigue == 0) {
-				this.debug(`Reorienting to ${orientation}!`);
-				this.rotate(orientation);
-			}
-		}
-
-		this.debug(`END =================================================================`);
+		this.reorient(true, false);
 	}
 
 
@@ -713,27 +729,36 @@ export class Swarm implements ProtoSwarm {
 		// Travel to the target room
 		if (!this.safelyInRoom(roomName)) {
 			this.debug(`Going to room!`);
+			// if (this.rooms[0].dangerousHostiles.length > 0) {
+			//
+			// } else {
+			//
+			// }
 			return this.goToRoom(roomName);
 		}
 
 		// Maneuver around the room
 		let goals = GoalFinder.swarmCombatGoals(this, true);
 		this.debug(`Goals: ${JSON.stringify(goals)}`);
-		let result = this.combatMove(goals.approach, goals.avoid);
-		this.debug(`Move result: ${result}`);
-		if (result != OK) {
-			// Orient yourself to face toward targets
-			let targetRoom = _.find(this.rooms, room => room.owner && !room.my);
-			if (targetRoom) {
-				let orientation = this.getBestOrientation(targetRoom, true, true);
-				if (orientation != this.orientation && this.fatigue == 0) {
-					this.debug(`Reorienting to ${orientation}!`);
-					this.rotate(orientation);
-				}
+
+		if (_.any(goals.avoid, goal => this.minRangeTo(goal) <= goal.range)) {
+			// If creeps nearby, try to flee first, then reorient
+			let result = this.combatMove(goals.approach, goals.avoid);
+			this.debug(`Move result: ${result}`);
+			if (result != OK) {
+				result = this.reorient(true, true);
 			}
+			return result;
+		} else {
+			// Otherwise try to reorient first then move
+			let result = this.reorient(true, true);
+			if (result != OK) {
+				result = this.combatMove(goals.approach, goals.avoid);
+				this.debug(`Move result: ${result}`);
+			}
+			return result;
 		}
 
-		this.debug(`END =================================================================`);
 	}
 
 	needsToRecover(recoverThreshold = 0.75, reengageThreshold = 1.0): boolean {

@@ -514,10 +514,10 @@ export class CombatIntel {
 		return this.cache(creep, 'maxHostileHealing', () => {
 			let selfHealing = this.getHealAmount(creep);
 			let neighbors = _.filter(creep.room.hostiles, hostile => hostile.pos.isNearTo(creep));
-			let neighborHealing = HEAL_POWER * _.sum(neighbors, neighbor => this.getHealPotential(neighbor));
+			let neighborHealing = _.sum(neighbors, neighbor => this.getHealAmount(neighbor));
 			let rangedHealers = _.filter(creep.room.hostiles, hostile => hostile.pos.getRangeTo(creep) <= 3 &&
 																		 !neighbors.includes(hostile));
-			let rangedHealing = RANGED_HEAL_POWER * _.sum(rangedHealers, healer => this.getHealPotential(healer));
+			let rangedHealing = _.sum(rangedHealers, healer => this.getRangedHealAmount(healer));
 			return selfHealing + neighborHealing + rangedHealing;
 		});
 	}
@@ -530,10 +530,10 @@ export class CombatIntel {
 		return this.cache(creep, 'maxFriendlyHealing', () => {
 			let selfHealing = this.getHealAmount(creep);
 			let neighbors = _.filter(creep.room.creeps, hostile => hostile.pos.isNearTo(creep));
-			let neighborHealing = HEAL_POWER * _.sum(neighbors, neighbor => this.getHealPotential(neighbor));
+			let neighborHealing = _.sum(neighbors, neighbor => this.getHealAmount(neighbor));
 			let rangedHealers = _.filter(creep.room.creeps, hostile => hostile.pos.getRangeTo(creep) <= 3 &&
 																	   !neighbors.includes(hostile));
-			let rangedHealing = RANGED_HEAL_POWER * _.sum(rangedHealers, healer => this.getHealPotential(healer));
+			let rangedHealing = _.sum(rangedHealers, healer => this.getHealAmount(healer));
 			return selfHealing + neighborHealing + rangedHealing;
 		});
 	}

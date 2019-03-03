@@ -25,7 +25,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Changed
 - `MiningOverlord` will now suicide old miners when their replacements arrive, preventing excess CPU use
-- Improvements to swarm target finding/avoiding logic
+- Major improvements to swarm target finding/avoiding logic
 
 ### Fixed
 - Fixed a critical issue which caused the CPU reset routine to repeat indefinitely in low-CPU environments like shard3 (#65)
@@ -34,6 +34,7 @@ All notable changes to this project will be documented in this file. The format 
 - Fixed a `RoadPlanner` bug which caused it to prever pathing roads along edge tiles between rooms
 - Fixed a recently-introduced bug which prevented drones from repairing their containers
 - `Swarm` bugfixes -- swarms should now pivot and swap orientations correctly, preserving the reflexive parity of the formation
+- Fixed a bug which caused towers to fire too readily on hostiles
 
 
 
