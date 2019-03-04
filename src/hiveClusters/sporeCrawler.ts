@@ -122,11 +122,12 @@ export class SporeCrawler extends HiveCluster {
 								RANGED_ATTACK_POWER * _.sum(myRangedDefenders,
 															creep => CombatIntel.getRangedAttackPotential(creep));
 			const HEAL_FUDGE_FACTOR = 1.0;
+			let avgHealing = HEAL_FUDGE_FACTOR * CombatIntel.avgHostileHealingTo(this.room.hostiles);
 			let possibleTargets = _.filter(this.room.hostiles, hostile => {
-				let healing = HEAL_FUDGE_FACTOR * CombatIntel.maxHostileHealingTo(hostile);
+				// let healing = HEAL_FUDGE_FACTOR * CombatIntel.maxHostileHealingTo(hostile);
 				let damageTaken = CombatIntel.towerDamageAtPos(hostile.pos)! + myCreepDamage;
 				let damageMultiplier = CombatIntel.minimumDamageTakenMultiplier(hostile);
-				return damageTaken * damageMultiplier > healing;
+				return damageTaken * damageMultiplier > avgHealing;
 			});
 			// Only attack dancing targets (drain attack) which are far enough in rooms to be killed off by towers
 			possibleTargets = _.filter(possibleTargets, hostile => {

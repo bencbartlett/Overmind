@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 1,
   "id": 2135,
-  "iteration": 1551583411537,
+  "iteration": 1551661272815,
   "links": [],
   "panels": [
     {
@@ -1042,6 +1042,9 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "decimals": 2,
+          "link": true,
+          "linkTooltip": "",
+          "linkUrl": "https://screeps.com/a/#!/room/shard2/${__cell}",
           "pattern": "Metric",
           "thresholds": [],
           "type": "number",
@@ -1058,6 +1061,8 @@
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 0,
           "link": false,
+          "linkTargetBlank": true,
+          "linkUrl": "https://screeps.com/a/#!/room/shard2/${__cell}",
           "mappingType": 1,
           "pattern": "Current",
           "thresholds": [
@@ -2944,5 +2949,5 @@
   "timezone": "browser",
   "title": "Overmind",
   "uid": "000002135",
-  "version": 80
+  "version": 82
 }

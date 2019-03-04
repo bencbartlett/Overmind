@@ -525,6 +525,13 @@ export class CombatIntel {
 	/**
 	 * Heal potential of self and possible healer neighbors
 	 */
+	static avgHostileHealingTo(creeps: Creep[]): number {
+		return _.max(_.map(creeps, creep => CombatIntel.maxHostileHealingTo(creep))) / creeps.length;
+	}
+
+	/**
+	 * Heal potential of self and possible healer neighbors
+	 */
 	static maxFriendlyHealingTo(friendly: Creep | Zerg): number {
 		const creep = toCreep(friendly);
 		return this.cache(creep, 'maxFriendlyHealing', () => {

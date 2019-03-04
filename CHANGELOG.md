@@ -35,6 +35,7 @@ All notable changes to this project will be documented in this file. The format 
 - Fixed a recently-introduced bug which prevented drones from repairing their containers
 - `Swarm` bugfixes -- swarms should now pivot and swap orientations correctly, preserving the reflexive parity of the formation
 - Fixed a bug which caused towers to fire too readily on hostiles
+- Fixed a bug which caused towers to not fire readily enough on hostiles
 
 
 
