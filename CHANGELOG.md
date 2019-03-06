@@ -24,6 +24,8 @@ All notable changes to this project will be documented in this file. The format 
         - Added `displayCostMatrix` option to combat and swarm `MoveOptions`
 
 ### Changed
+- MASSIVE memory size reduction: many common memory keys have been aliased to single-character names using a set of constant enums in `memory.d.ts`. For example, `memory.colony` is now `memory.C` and is referenced in code as `memory[_MEM.COLONY]`.
+    - You can expect your memory usage to drop by about half(!) after applying this change.
 - `MiningOverlord` will now suicide old miners when their replacements arrive, preventing excess CPU use
 - Major improvements to swarm target finding/avoiding logic
 

@@ -6,6 +6,8 @@ import {alignedNewline, bullet} from '../utilities/stringConstants';
 import {DEFAULT_OVERMIND_SIGNATURE, MY_USERNAME, USE_PROFILER} from '../~settings';
 import {Directive} from '../directives/Directive';
 
+type RecursiveObject = { [key: string]: number | RecursiveObject }
+
 /**
  * OvermindConsole registers a number of global methods for direct use in the Screeps console
  */
@@ -38,6 +40,7 @@ export class OvermindConsole {
 		global.deepCleanMemory = this.deepCleanMemory;
 		global.startRemoteDebugSession = this.startRemoteDebugSession;
 		global.endRemoteDebugSession = this.endRemoteDebugSession;
+		global.profileMemory = this.profileMemory;
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -73,6 +76,7 @@ export class OvermindConsole {
 		descr['removeFlagsByColor(color, secondaryColor)'] = 'remove flags that match the specified colors';
 		descr['removeErrantFlags()'] = 'remove all flags which don\'t match a directive';
 		descr['deepCleanMemory()'] = 'deletes all non-critical portions of memory (be careful!)';
+		descr['profileMemory(depth=1)'] = 'scan through memory to get the size of various objects';
 		descr['startRemoteDebugSession()'] = 'enables the remote debugger so Muon can debug your code';
 		// Console list
 		let descrMsg = toColumns(descr, {justify: true, padChar: '.'});
@@ -407,4 +411,27 @@ export class OvermindConsole {
 		}
 		return `Memory has been cleaned.`;
 	}
+
+
+	private static recursiveMemoryProfile(memoryObject: any, sizes: RecursiveObject, currentDepth: number): void {
+		for (let key in memoryObject) {
+			if (currentDepth == 0 || !_.keys(memoryObject[key]) || _.keys(memoryObject[key]).length == 0) {
+				sizes[key] = JSON.stringify(memoryObject[key]).length;
+			} else {
+				sizes[key] = {};
+				OvermindConsole.recursiveMemoryProfile(memoryObject[key], sizes[key] as RecursiveObject,
+													   currentDepth - 1);
+			}
+		}
+	}
+
+	static profileMemory(depth = 1): string {
+		let sizes: RecursiveObject = {};
+		console.log(`Profiling memory...`);
+		let start = Game.cpu.getUsed();
+		OvermindConsole.recursiveMemoryProfile(Memory, sizes, depth);
+		console.log(`Time elapsed: ${Game.cpu.getUsed() - start}`);
+		return JSON.stringify(sizes, undefined, '\t');
+	}
+
 }

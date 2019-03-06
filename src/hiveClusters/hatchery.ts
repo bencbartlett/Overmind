@@ -271,11 +271,11 @@ export class Hatchery extends HiveCluster {
 		// }
 		// Generate the creep memory
 		let creepMemory: CreepMemory = {
-			colony  : overlord.colony.name, 						// name of the colony the creep is assigned to
-			overlord: overlord.ref,									// name of the Overlord running this creep
-			role    : setup.role,								// role of the creep
-			task    : null, 									// task the creep is performing
-			data    : { 										// rarely-changed data about the creep
+			[_MEM.COLONY]  : overlord.colony.name, 				// name of the colony the creep is assigned to
+			[_MEM.OVERLORD]: overlord.ref,						// name of the Overlord running this creep
+			role           : setup.role,						// role of the creep
+			task           : null, 								// task the creep is performing
+			data           : { 									// rarely-changed data about the creep
 				origin: '',										// where it was spawned, filled in at spawn time
 			},
 		};

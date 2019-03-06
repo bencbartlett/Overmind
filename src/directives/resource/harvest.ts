@@ -7,22 +7,23 @@ import {Pathing} from '../../movement/Pathing';
 import {profile} from '../../profiler/decorator';
 
 
+// Because harvest directives are the most common, they have special shortened memory keys to minimize memory impact
+export const _HARVEST_MEM_PATHING = 'P';
+export const _HARVEST_MEM_USAGE = 'u';
+export const _HARVEST_MEM_DOWNTIME = 'd';
+
 interface DirectiveHarvestMemory extends FlagMemory {
-	pathing?: {
-		distance: number,
-		expiration: number
+	[_HARVEST_MEM_PATHING]?: {
+		[_MEM.DISTANCE]: number,
+		[_MEM.EXPIRATION]: number
 	};
-	stats: {
-		usage: number;
-		downtime: number;
-	};
+	[_HARVEST_MEM_USAGE]: number;
+	[_HARVEST_MEM_DOWNTIME]: number;
 }
 
 const defaultDirectiveHarvestMemory: DirectiveHarvestMemory = {
-	stats: {
-		usage   : 1,
-		downtime: 0,
-	}
+	[_HARVEST_MEM_USAGE]   : 1,
+	[_HARVEST_MEM_DOWNTIME]: 0,
 };
 
 /**
@@ -44,19 +45,22 @@ export class DirectiveHarvest extends Directive {
 		super(flag);
 		if (this.colony) {
 			this.colony.miningSites[this.name] = this;
-			this.colony.destinations.push({pos: this.pos, order: this.memory.created || Game.time});
+			this.colony.destinations.push({pos: this.pos, order: this.memory[_MEM.TICK] || Game.time});
 		}
 		_.defaultsDeep(this.memory, defaultDirectiveHarvestMemory);
 	}
 
 	// Hauling distance
 	get distance(): number {
-		if (!this.memory.pathing || Game.time >= this.memory.pathing.expiration) {
+		if (!this.memory[_HARVEST_MEM_PATHING] || Game.time >= this.memory[_HARVEST_MEM_PATHING]![_MEM.EXPIRATION]) {
 			let distance = Pathing.distance(this.colony.pos, this.pos);
 			let expiration = getCacheExpiration(this.colony.storage ? 5000 : 1000);
-			this.memory.pathing = {distance, expiration};
+			this.memory[_HARVEST_MEM_PATHING] = {
+				[_MEM.DISTANCE]  : distance,
+				[_MEM.EXPIRATION]: expiration
+			};
 		}
-		return this.memory.pathing.distance;
+		return this.memory[_HARVEST_MEM_PATHING]![_MEM.DISTANCE];
 	}
 
 	spawnMoarOverlords() {
@@ -80,11 +84,12 @@ export class DirectiveHarvest extends Directive {
 	private computeStats() {
 		const source = this.overlords.mine.source;
 		if (source && source.ticksToRegeneration == 1) {
-			this.memory.stats.usage = (source.energyCapacity - source.energy) / source.energyCapacity;
+			this.memory[_HARVEST_MEM_USAGE] = (source.energyCapacity - source.energy) / source.energyCapacity;
 		}
 		const container = this.overlords.mine.container;
-		this.memory.stats.downtime = exponentialMovingAverage(container ? +container.isFull : 0,
-															  this.memory.stats.downtime, CREEP_LIFE_TIME);
+		this.memory[_HARVEST_MEM_DOWNTIME] = +(exponentialMovingAverage(container ? +container.isFull : 0,
+																		this.memory[_HARVEST_MEM_DOWNTIME],
+																		CREEP_LIFE_TIME)).toFixed(5);
 	}
 
 }

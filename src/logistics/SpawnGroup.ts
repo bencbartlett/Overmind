@@ -69,6 +69,9 @@ export class SpawnGroup {
 	constructor(initializer: SpawnGroupInitializer, settings: Partial<SpawnGroupSettings> = {}) {
 		this.roomName = initializer.pos.roomName;
 		// this.room = initializer.room;
+		if (!Memory.rooms[this.roomName]) {
+			Memory.rooms[this.roomName] = {};
+		}
 		this.memory = Mem.wrap(Memory.rooms[this.roomName], 'spawnGroup', SpawnGroupMemoryDefaults);
 		this.ref = initializer.ref + ':SG';
 		this.stats = {

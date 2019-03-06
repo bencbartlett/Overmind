@@ -111,11 +111,13 @@ export class Strategist implements IStrategist {
 				}
 				// Are there powerful hostile rooms nearby?
 				let adjacentRooms = Cartographer.findRoomsInRange(roomName, 1);
-				if (_.any(adjacentRooms, roomName => Memory.rooms[roomName].avoid)) {
+				if (_.any(adjacentRooms, roomName => Memory.rooms[roomName][_RM.AVOID])) {
 					continue;
 				}
 				// Reward new minerals and catalyst rooms
-				let mineralType = Memory.rooms[roomName].mnrl ? Memory.rooms[roomName].mnrl!.mineralType : undefined;
+				let mineralType = Memory.rooms[roomName][_RM.MINERAL]
+								  ? Memory.rooms[roomName][_RM.MINERAL]![_RM_MNRL.MINERALTYPE]
+								  : undefined;
 				if (mineralType) {
 					if (!allOwnedMinerals.includes(mineralType)) {
 						score += UNOWNED_MINERAL_BONUS;

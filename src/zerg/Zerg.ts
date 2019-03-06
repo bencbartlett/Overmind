@@ -10,8 +10,8 @@ import {log} from '../console/log';
 import {NEW_OVERMIND_INTERVAL} from '../~settings';
 
 export function getOverlord(creep: Zerg | Creep): Overlord | null {
-	if (creep.memory.overlord) {
-		return Overmind.overlords[creep.memory.overlord] || null;
+	if (creep.memory[_MEM.OVERLORD]) {
+		return Overmind.overlords[creep.memory[_MEM.OVERLORD]!] || null;
 	} else {
 		return null;
 	}
@@ -20,16 +20,16 @@ export function getOverlord(creep: Zerg | Creep): Overlord | null {
 export function setOverlord(creep: Zerg | Creep, newOverlord: Overlord | null) {
 	// Remove cache references to old assignments
 	let roleName = creep.memory.role;
-	let ref = creep.memory.overlord;
+	let ref = creep.memory[_MEM.OVERLORD];
 	let oldOverlord: Overlord | null = ref ? Overmind.overlords[ref] : null;
 	if (ref && Overmind.cache.overlords[ref] && Overmind.cache.overlords[ref][roleName]) {
 		_.remove(Overmind.cache.overlords[ref][roleName], name => name == creep.name);
 	}
 	if (newOverlord) {
 		// Change to the new overlord's colony
-		creep.memory.colony = newOverlord.colony.name;
+		creep.memory[_MEM.COLONY] = newOverlord.colony.name;
 		// Change assignments in memory
-		creep.memory.overlord = newOverlord.ref;
+		creep.memory[_MEM.OVERLORD] = newOverlord.ref;
 		// Update the cache references
 		if (!Overmind.cache.overlords[newOverlord.ref]) {
 			Overmind.cache.overlords[newOverlord.ref] = {};
@@ -39,7 +39,7 @@ export function setOverlord(creep: Zerg | Creep, newOverlord: Overlord | null) {
 		}
 		Overmind.cache.overlords[newOverlord.ref][roleName].push(creep.name);
 	} else {
-		creep.memory.overlord = null;
+		creep.memory[_MEM.OVERLORD] = null;
 	}
 	if (oldOverlord) oldOverlord.recalculateCreeps();
 	if (newOverlord) newOverlord.recalculateCreeps();
@@ -588,18 +588,18 @@ export class Zerg {
 	 * Colony that the creep belongs to.
 	 */
 	get colony(): Colony {
-		return Overmind.colonies[this.memory.colony];
+		return Overmind.colonies[this.memory[_MEM.COLONY]];
 	}
 
 	set colony(newColony: Colony) {
-		this.memory.colony = newColony.name;
+		this.memory[_MEM.COLONY] = newColony.name;
 	}
 
 	/**
 	 * If the creep is in a colony room or outpost
 	 */
 	get inColonyRoom(): boolean {
-		return Overmind.colonyMap[this.room.name] == this.memory.colony;
+		return Overmind.colonyMap[this.room.name] == this.memory[_MEM.COLONY];
 	}
 
 	// Movement and location -------------------------------------------------------------------------------------------

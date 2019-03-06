@@ -118,6 +118,15 @@ export function coordName(coord: Coord): string {
 	return coord.x + ':' + coord.y;
 }
 
+const CHARCODE_A = 65;
+
+/**
+ * Returns a compact two-character encoding of the coordinate
+ */
+export function compactCoordName(coord: Coord): string {
+	return String.fromCharCode(CHARCODE_A + coord.x, CHARCODE_A + coord.y);
+}
+
 export function derefCoords(coordName: string, roomName: string): RoomPosition {
 	let [x, y] = coordName.split(':');
 	return new RoomPosition(parseInt(x, 10), parseInt(y, 10), roomName);

@@ -251,7 +251,7 @@ export class Overseer implements IOverseer {
 	}
 
 	private handleNewOutposts(colony: Colony) {
-		let numSources = _.sum(colony.roomNames, roomName => (Memory.rooms[roomName].src || []).length);
+		let numSources = _.sum(colony.roomNames, roomName => (Memory.rooms[roomName][_RM.SOURCES] || []).length);
 		let numRemotes = numSources - colony.room.sources.length;
 		if (numRemotes < Colony.settings.remoteSourcesByLevel[colony.level]) {
 
@@ -260,7 +260,7 @@ export class Overseer implements IOverseer {
 			let origin = colony.pos;
 			let bestOutpost = minBy(possibleOutposts, function (roomName) {
 				if (!Memory.rooms[roomName]) return false;
-				let sourceCoords = Memory.rooms[roomName].src as SavedSource[] | undefined;
+				let sourceCoords = Memory.rooms[roomName][_RM.SOURCES] as SavedSource[] | undefined;
 				if (!sourceCoords) return false;
 				let sourcePositions = _.map(sourceCoords, src => derefCoords(src.c, roomName));
 				let sourceDistances = _.map(sourcePositions, pos => Pathing.distance(origin, pos));
@@ -272,7 +272,7 @@ export class Overseer implements IOverseer {
 			if (bestOutpost) {
 				let pos = Pathing.findPathablePosition(bestOutpost);
 				log.info(`Colony ${colony.room.print} now remote mining from ${pos.print}`);
-				DirectiveOutpost.createIfNotPresent(pos, 'room', {memory: {colony: colony.name}});
+				DirectiveOutpost.createIfNotPresent(pos, 'room', {memory: {[_MEM.COLONY]: colony.name}});
 			}
 		}
 	}

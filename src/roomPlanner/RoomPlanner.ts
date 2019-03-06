@@ -792,11 +792,14 @@ export class RoomPlanner {
 				let lowerRightSpawn = maxBy(this.colony.spawns, s => 50 * s.pos.y + s.pos.x)!;
 				let spawnPos = lowerRightSpawn.pos;
 				bunkerAnchor = new RoomPosition(spawnPos.x - 4, spawnPos.y, spawnPos.roomName);
-			} else if (this.colony.room.memory.expansionData) {
-				bunkerAnchor = derefCoords(this.colony.room.memory.expansionData.bunkerAnchor, this.colony.room.name);
 			} else {
-				log.error(`Cannot determine anchor! No spawns or expansionData.bunkerAnchor!`);
-				return;
+				let expansionData = this.colony.room.memory[_RM.EXPANSION_DATA];
+				if (expansionData) {
+					bunkerAnchor = derefCoords(expansionData.bunkerAnchor, this.colony.room.name);
+				} else {
+					log.error(`Cannot determine anchor! No spawns or expansionData.bunkerAnchor!`);
+					return;
+				}
 			}
 			this.addComponent('bunker', bunkerAnchor);
 		}
@@ -845,10 +848,13 @@ export class RoomPlanner {
 
 	visuals(): void {
 		// Draw the map
-		if (getAutonomyLevel() < Autonomy.Automatic && this.colony.room.memory.expansionData) {
-			let bunkerPos = derefCoords(this.colony.room.memory.expansionData.bunkerAnchor, this.colony.room.name);
-			if (bunkerPos) {
-				Visualizer.drawLayout(bunkerLayout, bunkerPos, {opacity: 0.2});
+		if (getAutonomyLevel() < Autonomy.Automatic) {
+			let expansionData = this.colony.room.memory[_RM.EXPANSION_DATA];
+			if (expansionData) {
+				let bunkerPos = derefCoords(expansionData.bunkerAnchor, this.colony.room.name);
+				if (bunkerPos) {
+					Visualizer.drawLayout(bunkerLayout, bunkerPos, {opacity: 0.2});
+				}
 			}
 		}
 		Visualizer.drawStructureMap(this.map);

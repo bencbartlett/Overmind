@@ -27,7 +27,7 @@ import {log} from './console/log';
 import {assimilationLocked} from './assimilation/decorator';
 import {DefaultOverlord} from './overlords/core/default';
 import {$} from './caching/GlobalCache';
-import {DirectiveHarvest} from './directives/resource/harvest';
+import {_HARVEST_MEM_DOWNTIME, _HARVEST_MEM_USAGE, DirectiveHarvest} from './directives/resource/harvest';
 import {DirectiveExtract} from './directives/resource/extract';
 import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
 import {Visualizer} from './visuals/Visualizer';
@@ -584,10 +584,10 @@ export class Colony {
 			Stats.log(`colonies.${this.name}.rcl.progressTotal`, this.controller.progressTotal);
 			// Log average miningSite usage and uptime and estimated colony energy income
 			let numSites = _.keys(this.miningSites).length;
-			let avgDowntime = _.sum(this.miningSites, site => site.memory.stats.downtime) / numSites;
-			let avgUsage = _.sum(this.miningSites, site => site.memory.stats.usage) / numSites;
+			let avgDowntime = _.sum(this.miningSites, site => site.memory[_HARVEST_MEM_DOWNTIME]) / numSites;
+			let avgUsage = _.sum(this.miningSites, site => site.memory[_HARVEST_MEM_USAGE]) / numSites;
 			let energyInPerTick = _.sum(this.miningSites,
-										site => site.overlords.mine.energyPerTick * site.memory.stats.usage);
+										site => site.overlords.mine.energyPerTick * site.memory[_HARVEST_MEM_USAGE]);
 			Stats.log(`colonies.${this.name}.miningSites.avgDowntime`, avgDowntime);
 			Stats.log(`colonies.${this.name}.miningSites.avgUsage`, avgUsage);
 			Stats.log(`colonies.${this.name}.miningSites.energyInPerTick`, energyInPerTick);

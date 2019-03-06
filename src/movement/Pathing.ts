@@ -37,7 +37,7 @@ export class Pathing {
 	 * Check if the room should be avoiding when calculating routes
 	 */
 	static shouldAvoid(roomName: string) {
-		return Memory.rooms[roomName] && Memory.rooms[roomName].avoid;
+		return Memory.rooms[roomName] && Memory.rooms[roomName][_RM.AVOID];
 	}
 
 	/**
@@ -49,9 +49,9 @@ export class Pathing {
 		}
 		if (room.controller) {
 			if (room.controller.owner && !room.controller.my && room.towers.length > 0) {
-				room.memory.avoid = true;
+				room.memory[_RM.AVOID] = true;
 			} else {
-				delete room.memory.avoid;
+				delete room.memory[_RM.AVOID];
 				// if (room.memory.expansionData == false) delete room.memory.expansionData;
 			}
 		}

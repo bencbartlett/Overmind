@@ -30,70 +30,80 @@ export class RoomIntel {
 								  contnr: container ? container.pos.coordName : undefined
 							  });
 		}
-		room.memory.src = savedSources;
-		room.memory.ctrl = room.controller ? {
-			c      : room.controller.pos.coordName,
-			level  : room.controller.level,
-			owner  : room.controller.owner ? room.controller.owner.username : undefined,
-			res    : room.controller.reservation,
-			SM     : room.controller.safeMode,
-			SMavail: room.controller.safeModeAvailable,
-			SMcd   : room.controller.safeModeCooldown,
-			prog   : room.controller.progress,
-			progTot: room.controller.progressTotal
+		room.memory[_RM.SOURCES] = savedSources;
+		room.memory[_RM.CONTROLLER] = room.controller ? {
+			c                            : room.controller.pos.coordName,
+			[_RM_CTRL.LEVEL]             : room.controller.level,
+			[_RM_CTRL.OWNER]             : room.controller.owner ? room.controller.owner.username : undefined,
+			[_RM_CTRL.RESERVATION]       : room.controller.reservation ?
+										   {
+											   [_RM_CTRL.RES_USERNAME]  : room.controller.reservation.username,
+											   [_RM_CTRL.RES_TICKSTOEND]: room.controller.reservation.ticksToEnd,
+										   } : undefined,
+			[_RM_CTRL.SAFEMODE]          : room.controller.safeMode,
+			[_RM_CTRL.SAFEMODE_AVAILABLE]: room.controller.safeModeAvailable,
+			[_RM_CTRL.SAFEMODE_COOLDOWN] : room.controller.safeModeCooldown,
+			[_RM_CTRL.PROGRESS]          : room.controller.progress,
+			[_RM_CTRL.PROGRESS_TOTAL]    : room.controller.progressTotal
 		} : undefined;
-		room.memory.mnrl = room.mineral ? {
-			c          : room.mineral.pos.coordName,
-			density    : room.mineral.density,
-			mineralType: room.mineral.mineralType
+		room.memory[_RM.MINERAL] = room.mineral ? {
+			c                     : room.mineral.pos.coordName,
+			[_RM_MNRL.DENSITY]    : room.mineral.density,
+			[_RM_MNRL.MINERALTYPE]: room.mineral.mineralType
 		} : undefined;
-		room.memory.SKlairs = _.map(room.keeperLairs, lair => {
+		room.memory[_RM.SKLAIRS] = _.map(room.keeperLairs, lair => {
 			return {c: lair.pos.coordName};
 		});
 		if (room.controller && room.controller.owner) {
-			room.memory.importantStructs = {
-				towers  : _.map(room.towers, t => t.pos.coordName),
-				spawns  : _.map(room.spawns, s => s.pos.coordName),
-				storage : room.storage ? room.storage.pos.coordName : undefined,
-				terminal: room.terminal ? room.terminal.pos.coordName : undefined,
-				walls   : _.map(room.walls, w => w.pos.coordName),
-				ramparts: _.map(room.ramparts, r => r.pos.coordName),
+			room.memory[_RM.IMPORTANT_STRUCTURES] = {
+				[_RM_IS.TOWERS]  : _.map(room.towers, t => t.pos.coordName),
+				[_RM_IS.SPAWNS]  : _.map(room.spawns, s => s.pos.coordName),
+				[_RM_IS.STORAGE] : room.storage ? room.storage.pos.coordName : undefined,
+				[_RM_IS.TERMINAL]: room.terminal ? room.terminal.pos.coordName : undefined,
+				[_RM_IS.WALLS]   : _.map(room.walls, w => w.pos.coordName),
+				[_RM_IS.RAMPARTS]: _.map(room.ramparts, r => r.pos.coordName),
 			};
 		} else {
-			room.memory.importantStructs = undefined;
+			room.memory[_RM.IMPORTANT_STRUCTURES] = undefined;
 		}
-		room.memory.tick = Game.time;
+		room.memory[_MEM.TICK] = Game.time;
 	}
 
 	/**
 	 * Update time-sensitive reservation and safemode info
 	 */
 	private static recordControllerInfo(controller: StructureController): void {
-		if (controller.room.memory.ctrl) {
-			controller.room.memory.ctrl.res = controller.reservation;
-			controller.room.memory.ctrl.SM = controller.safeMode;
-			controller.room.memory.ctrl.SMcd = controller.safeModeCooldown;
+		const savedController = controller.room.memory[_RM.CONTROLLER];
+		if (savedController) {
+			savedController[_RM_CTRL.RESERVATION] = controller.reservation ? {
+				[_RM_CTRL.RES_USERNAME]  : controller.reservation.username,
+				[_RM_CTRL.RES_TICKSTOEND]: controller.reservation.ticksToEnd,
+			} : undefined;
+			savedController[_RM_CTRL.SAFEMODE] = controller.safeMode;
+			savedController[_RM_CTRL.SAFEMODE_COOLDOWN] = controller.safeModeCooldown;
 		}
 	}
 
 	static inSafeMode(roomName: string): boolean {
-		return !!Memory.rooms[roomName] && !!Memory.rooms[roomName].ctrl && (Memory.rooms[roomName].ctrl!.SM || 0) > 0;
+		return !!Memory.rooms[roomName] && !!Memory.rooms[roomName][_RM.CONTROLLER] &&
+			   (Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.SAFEMODE] || 0) > 0;
 	}
 
 	static safeModeCooldown(roomName: string): number | undefined {
-		if (Memory.rooms[roomName] && Memory.rooms[roomName].ctrl && Memory.rooms[roomName].ctrl!.SMcd) {
-			return Memory.rooms[roomName].ctrl!.SMcd;
+		if (Memory.rooms[roomName] && Memory.rooms[roomName][_RM.CONTROLLER] &&
+			Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.SAFEMODE_COOLDOWN]) {
+			return Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.SAFEMODE_COOLDOWN];
 		}
 	}
 
 	private static recomputeScoreIfNecessary(room: Room): boolean {
-		if (room.memory.expansionData == false) { // room is uninhabitable or owned
+		if (room.memory[_RM.EXPANSION_DATA] == false) { // room is uninhabitable or owned
 			if (Math.random() < FALSE_SCORE_RECALC_PROB) {
 				// false scores get evaluated very occasionally
 				return ExpansionPlanner.computeExpansionData(room);
 			}
 		} else { // if the room is not uninhabitable
-			if (!room.memory.expansionData || Math.random() < SCORE_RECALC_PROB) {
+			if (!room.memory[_RM.EXPANSION_DATA] || Math.random() < SCORE_RECALC_PROB) {
 				// recompute some of the time
 				return ExpansionPlanner.computeExpansionData(room);
 			}
@@ -102,64 +112,65 @@ export class RoomIntel {
 	}
 
 	private static updateInvasionData(room: Room): void {
-		if (!room.memory.invasionData) {
-			room.memory.invasionData = {
+		if (!room.memory[_RM.INVASION_DATA]) {
+			room.memory[_RM.INVASION_DATA] = {
 				harvested: 0,
 				lastSeen : 0,
 			};
 		}
 		const sources = room.sources;
+		let invasionData = room.memory[_RM.INVASION_DATA]!;
 		for (let source of sources) {
 			if (source.ticksToRegeneration == 1) {
-				room.memory.invasionData.harvested += source.energyCapacity - source.energy;
+				invasionData.harvested += source.energyCapacity - source.energy;
 			}
 		}
 		if (room.invaders.length > 0) {
-			room.memory.invasionData = {
-				harvested: 0,
-				lastSeen : Game.time,
-			};
+			invasionData.harvested = 0;
+			invasionData.lastSeen = Game.time;
 		}
 	}
 
 	private static updateHarvestData(room: Room): void {
-		if (!room.memory.harvest) {
-			room.memory.harvest = {
-				amt    : 0,
-				avg10k : _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
-				avg100k: _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
-				avg1M  : _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
-				tick   : Game.time,
+		if (!room.memory[_RM.HARVEST]) {
+			room.memory[_RM.HARVEST] = {
+				[_ROLLING_STATS.AMOUNT] : 0,
+				[_ROLLING_STATS.AVG10K] : _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
+				[_ROLLING_STATS.AVG100K]: _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
+				[_ROLLING_STATS.AVG1M]  : _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
+				[_MEM.TICK]             : Game.time,
 			};
 		}
+		let harvest = room.memory[_RM.HARVEST] as RollingStats;
 		for (let source of room.sources) { // TODO: this implicitly assumes all energy is harvested by me
 			if (source.ticksToRegeneration == 1) {
 				const dEnergy = source.energyCapacity - source.energy;
-				const dTime = Game.time - room.memory.harvest.tick + 1; // +1 to avoid division by zero errors
-				room.memory.harvest.amt += dEnergy;
-				room.memory.harvest.avg10k = irregularExponentialMovingAverage(
-					dEnergy / dTime, room.memory.harvest.avg10k, dTime, 10000);
-				room.memory.harvest.avg100k = irregularExponentialMovingAverage(
-					dEnergy / dTime, room.memory.harvest.avg100k, dTime, 100000);
-				room.memory.harvest.avg1M = irregularExponentialMovingAverage(
-					dEnergy / dTime, room.memory.harvest.avg1M, dTime, 1000000);
-				room.memory.harvest.tick = Game.time;
+				const dTime = Game.time - harvest[_MEM.TICK] + 1; // +1 to avoid division by zero errors
+				harvest[_ROLLING_STATS.AMOUNT] += dEnergy;
+				harvest[_ROLLING_STATS.AVG10K] = +(irregularExponentialMovingAverage(
+					dEnergy / dTime, harvest[_ROLLING_STATS.AVG10K], dTime, 10000)).toFixed(7);
+				harvest[_ROLLING_STATS.AVG100K] = +(irregularExponentialMovingAverage(
+					dEnergy / dTime, harvest[_ROLLING_STATS.AVG10K], dTime, 100000)).toFixed(7);
+				harvest[_ROLLING_STATS.AVG1M] = +(irregularExponentialMovingAverage(
+					dEnergy / dTime, harvest[_ROLLING_STATS.AVG10K], dTime, 1000000)).toFixed(7);
+				harvest[_MEM.TICK] = Game.time;
 			}
 		}
 	}
 
 	private static updateCasualtyData(room: Room): void {
-		if (!room.memory.casualties) {
-			room.memory.casualties = {
+		if (!room.memory[_RM.CASUALTIES]) {
+			room.memory[_RM.CASUALTIES] = {
 				cost: {
-					amt    : 0,
-					avg10k : 0,
-					avg100k: 0,
-					avg1M  : 0,
-					tick   : Game.time,
+					[_ROLLING_STATS.AMOUNT] : 0,
+					[_ROLLING_STATS.AVG10K] : 0,
+					[_ROLLING_STATS.AVG100K]: 0,
+					[_ROLLING_STATS.AVG1M]  : 0,
+					[_MEM.TICK]             : Game.time,
 				}
 			};
 		}
+		let casualtiesCost = room.memory[_RM.CASUALTIES]!.cost as RollingStats;
 		for (let tombstone of room.tombstones) {
 			if (tombstone.ticksToDecay == 1) {
 				// record any casualties, which are my creeps which died prematurely
@@ -167,15 +178,15 @@ export class RoomIntel {
 					const body = _.map(tombstone.creep.body, part => part.type);
 					const lifetime = body.includes(CLAIM) ? CREEP_CLAIM_LIFE_TIME : CREEP_LIFE_TIME;
 					const dCost = bodyCost(body) * (tombstone.creep.ticksToLive || 0) / lifetime;
-					const dTime = Game.time - room.memory.casualties.cost.tick + 1;
-					room.memory.casualties.cost.amt += dCost;
-					room.memory.casualties.cost.avg10k = irregularExponentialMovingAverage(
-						dCost / dTime, room.memory.casualties.cost.avg10k, dTime, 10000);
-					room.memory.casualties.cost.avg100k = irregularExponentialMovingAverage(
-						dCost / dTime, room.memory.casualties.cost.avg100k, dTime, 100000);
-					room.memory.casualties.cost.avg1M = irregularExponentialMovingAverage(
-						dCost / dTime, room.memory.casualties.cost.avg1M, dTime, 1000000);
-					room.memory.casualties.cost.tick = Game.time;
+					const dTime = Game.time - casualtiesCost[_MEM.TICK] + 1;
+					casualtiesCost[_ROLLING_STATS.AMOUNT] += dCost;
+					casualtiesCost[_ROLLING_STATS.AVG10K] = +(irregularExponentialMovingAverage(
+						dCost / dTime, casualtiesCost[_ROLLING_STATS.AVG10K], dTime, 10000)).toFixed(7);
+					casualtiesCost[_ROLLING_STATS.AVG100K] = +(irregularExponentialMovingAverage(
+						dCost / dTime, casualtiesCost[_ROLLING_STATS.AVG100K], dTime, 100000)).toFixed(7);
+					casualtiesCost[_ROLLING_STATS.AVG1M] = +(irregularExponentialMovingAverage(
+						dCost / dTime, casualtiesCost[_ROLLING_STATS.AVG1M], dTime, 1000000)).toFixed(7);
+					casualtiesCost[_MEM.TICK] = Game.time;
 				}
 			}
 		}
@@ -185,35 +196,36 @@ export class RoomIntel {
 	 * Get the pos a creep was in on the previous tick
 	 */
 	static getPreviousPos(creep: Creep | Zerg): RoomPosition {
-		if (creep.room.memory.prevPositions && creep.room.memory.prevPositions[creep.id]) {
-			return derefRoomPosition(creep.room.memory.prevPositions[creep.id]);
+		if (creep.room.memory[_RM.PREV_POSITIONS] && creep.room.memory[_RM.PREV_POSITIONS]![creep.id]) {
+			return derefRoomPosition(creep.room.memory[_RM.PREV_POSITIONS]![creep.id]);
 		} else {
 			return creep.pos; // no data
 		}
 	}
 
 	private static recordCreepPositions(room: Room): void {
-		room.memory.prevPositions = {};
+		room.memory[_RM.PREV_POSITIONS] = {};
 		for (let creep of room.find(FIND_CREEPS)) {
-			room.memory.prevPositions[creep.id] = creep.pos;
+			room.memory[_RM.PREV_POSITIONS]![creep.id] = creep.pos;
 		}
 	}
 
 	private static recordCreepOccupancies(room: Room): void {
-		if (!room.memory.creepsInRoom) {
-			room.memory.creepsInRoom = {};
+		if (!room.memory[_RM.CREEPS_IN_ROOM]) {
+			room.memory[_RM.CREEPS_IN_ROOM] = {};
 		}
-		for (let tick in room.memory.creepsInRoom) {
+		let creepsInRoom = room.memory[_RM.CREEPS_IN_ROOM]!;
+		for (let tick in creepsInRoom) {
 			if (parseInt(tick, 10) < Game.time - ROOM_CREEP_HISTORY_TICKS) {
-				delete room.memory.creepsInRoom[tick];
+				delete creepsInRoom[tick];
 			}
 		}
-		room.memory.creepsInRoom[Game.time] = _.map(room.hostiles, creep => creep.name);
+		creepsInRoom[Game.time] = _.map(room.hostiles, creep => creep.name);
 	}
 
 	private static recordSafety(room: Room): void {
-		if (!room.memory.safety) {
-			room.memory.safety = {
+		if (!room.memory[_RM.SAFETY]) {
+			room.memory[_RM.SAFETY] = {
 				safeFor  : 0,
 				unsafeFor: 0,
 				safety1k : 1,
@@ -222,30 +234,31 @@ export class RoomIntel {
 			};
 		}
 		let safety: number;
+		let safetyData = room.memory[_RM.SAFETY] as SafetyData;
 		if (room.dangerousHostiles.length > 0) {
-			room.memory.safety.safeFor = 0;
-			room.memory.safety.unsafeFor += 1;
+			safetyData.safeFor = 0;
+			safetyData.unsafeFor += 1;
 			safety = 0;
 		} else {
-			room.memory.safety.safeFor += 1;
-			room.memory.safety.unsafeFor = 0;
+			safetyData.safeFor += 1;
+			safetyData.unsafeFor = 0;
 			safety = 1;
 		}
 		// Compute rolling averages
-		let dTime = Game.time - room.memory.safety.tick;
-		room.memory.safety.safety1k = irregularExponentialMovingAverage(
-			safety, room.memory.safety.safety1k, dTime, 1000);
-		room.memory.safety.safety10k = irregularExponentialMovingAverage(
-			safety, room.memory.safety.safety10k, dTime, 10000);
-		room.memory.safety.tick = Game.time;
+		let dTime = Game.time - safetyData.tick;
+		safetyData.safety1k = +(irregularExponentialMovingAverage(
+			safety, safetyData.safety1k, dTime, 1000)).toFixed(5);
+		safetyData.safety10k = +(irregularExponentialMovingAverage(
+			safety, safetyData.safety10k, dTime, 10000)).toFixed(5);
+		safetyData.tick = Game.time;
 	}
 
 	static getSafetyData(roomName: string): SafetyData {
 		if (!Memory.rooms[roomName]) {
 			Memory.rooms[roomName] = {};
 		}
-		if (!Memory.rooms[roomName].safety) {
-			Memory.rooms[roomName].safety = {
+		if (!Memory.rooms[roomName][_RM.SAFETY]) {
+			Memory.rooms[roomName][_RM.SAFETY] = {
 				safeFor  : 0,
 				unsafeFor: 0,
 				safety1k : 1,
@@ -253,11 +266,11 @@ export class RoomIntel {
 				tick     : Game.time
 			};
 		}
-		return Memory.rooms[roomName].safety!;
+		return Memory.rooms[roomName][_RM.SAFETY]!;
 	}
 
 	static isInvasionLikely(room: Room): boolean {
-		const data = room.memory.invasionData;
+		const data = room.memory[_RM.INVASION_DATA];
 		if (!data) return false;
 		if (data.lastSeen > 20000) { // maybe room is surrounded by owned/reserved rooms and invasions aren't possible
 			return false;
@@ -275,26 +288,29 @@ export class RoomIntel {
 	}
 
 	static roomOwnedBy(roomName: string): string | undefined {
-		if (Memory.rooms[roomName] && Memory.rooms[roomName].ctrl && Memory.rooms[roomName].ctrl!.owner) {
-			if (Game.time - (Memory.rooms[roomName].tick || 0) < 25000) { // ownership expires after 25k ticks
-				return Memory.rooms[roomName].ctrl!.owner;
+		if (Memory.rooms[roomName] && Memory.rooms[roomName][_RM.CONTROLLER] &&
+			Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.OWNER]) {
+			if (Game.time - (Memory.rooms[roomName][_MEM.TICK] || 0) < 25000) { // ownership expires after 25k ticks
+				return Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.OWNER];
 			}
 		}
 	}
 
 	static roomReservedBy(roomName: string): string | undefined {
-		if (Memory.rooms[roomName] && Memory.rooms[roomName].ctrl && Memory.rooms[roomName].ctrl!.res) {
-			if (Game.time - (Memory.rooms[roomName].tick || 0) < 10000) { // reservation expires after 10k ticks
-				return Memory.rooms[roomName].ctrl!.res!.username;
+		if (Memory.rooms[roomName] && Memory.rooms[roomName][_RM.CONTROLLER] &&
+			Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.RESERVATION]) {
+			if (Game.time - (Memory.rooms[roomName][_MEM.TICK] || 0) < 10000) { // reservation expires after 10k ticks
+				return Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.RESERVATION]![_RM_CTRL.RES_USERNAME];
 			}
 		}
 	}
 
 	static roomReservationRemaining(roomName: string): number {
-		if (Memory.rooms[roomName] && Memory.rooms[roomName].ctrl && Memory.rooms[roomName].ctrl!.res) {
-			const reservation = Memory.rooms[roomName].ctrl!.res as ReservationDefinition;
-			let timeSinceLastSeen = Game.time - (Memory.rooms[roomName].tick || 0);
-			return reservation.ticksToEnd - timeSinceLastSeen;
+		if (Memory.rooms[roomName] && Memory.rooms[roomName][_RM.CONTROLLER] &&
+			Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.RESERVATION]) {
+			const ticksToEnd = Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.RESERVATION]![_RM_CTRL.RES_TICKSTOEND];
+			let timeSinceLastSeen = Game.time - (Memory.rooms[roomName][_MEM.TICK] || 0);
+			return ticksToEnd - timeSinceLastSeen;
 		}
 		return 0;
 	}
@@ -324,15 +340,14 @@ export class RoomIntel {
 			}
 
 			// Record location of permanent objects in room and recompute score as needed
-			if (!room.memory.expiration || Game.time > room.memory.expiration ||
-				(room.owner != this.roomOwnedBy(room.name))) {
+			if (Game.time >= (room.memory[_MEM.EXPIRATION] || 0)) {
 				this.recordPermanentObjects(room);
 				if (!alreadyComputedScore) {
 					alreadyComputedScore = this.recomputeScoreIfNecessary(room);
 				}
 				// Refresh cache
 				let recacheTime = room.owner ? OWNED_RECACHE_TIME : RECACHE_TIME;
-				room.memory.expiration = getCacheExpiration(recacheTime, 250);
+				room.memory[_MEM.EXPIRATION] = getCacheExpiration(recacheTime, 250);
 			}
 
 			if (room.controller && Game.time % 5 == 0) {

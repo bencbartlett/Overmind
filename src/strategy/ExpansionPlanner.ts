@@ -39,7 +39,7 @@ export class ExpansionPlanner {
 		for (let roomName in colony.memory.expansionData.possibleExpansions) {
 			if (colony.memory.expansionData.possibleExpansions[roomName] == true) {
 				if (Memory.rooms[roomName]) {
-					let expansionData = Memory.rooms[roomName].expansionData;
+					let expansionData = Memory.rooms[roomName][_RM.EXPANSION_DATA];
 					if (expansionData == false) {
 						colony.memory.expansionData.possibleExpansions[roomName] = false;
 					} else if (expansionData && expansionData.score) {
@@ -54,7 +54,7 @@ export class ExpansionPlanner {
 	static computeExpansionData(room: Room, verbose = false): boolean {
 		if (verbose) log.info(`Computing score for ${room.print}...`);
 		if (!room.controller) {
-			room.memory.expansionData = false;
+			room.memory[_RM.EXPANSION_DATA] = false;
 			return false;
 		}
 
@@ -66,17 +66,17 @@ export class ExpansionPlanner {
 		for (let roomName of possibleOutposts) {
 			if (Cartographer.roomType(roomName) == ROOMTYPE_ALLEY) continue;
 			let roomMemory = Memory.rooms[roomName];
-			if (!roomMemory || !roomMemory.src) {
+			if (!roomMemory || !roomMemory[_RM.SOURCES]) {
 				if (verbose) log.info(`No memory of neighbor: ${roomName}. Aborting score calculation!`);
 				return false;
 			}
-			outpostSourcePositions[roomName] = _.map(roomMemory.src, obj => derefCoords(obj.c, roomName));
+			outpostSourcePositions[roomName] = _.map(roomMemory[_RM.SOURCES]!, obj => derefCoords(obj.c, roomName));
 		}
 
 		// compute a possible bunker position
 		let bunkerLocation = BasePlanner.getBunkerLocation(room, false);
 		if (!bunkerLocation) {
-			room.memory.expansionData = false;
+			room.memory[_RM.EXPANSION_DATA] = false;
 			log.info(`Room ${room.name} is uninhabitable because a bunker can't be built here!`);
 			return false;
 		}
@@ -131,8 +131,9 @@ export class ExpansionPlanner {
 
 		if (verbose) log.info(`Score: ${totalScore}`);
 
-		if (!room.memory.expansionData || totalScore > room.memory.expansionData.score) {
-			room.memory.expansionData = {
+		if (!room.memory[_RM.EXPANSION_DATA] ||
+			totalScore > (<ExpansionData>room.memory[_RM.EXPANSION_DATA]).score) {
+			room.memory[_RM.EXPANSION_DATA] = {
 				score       : totalScore,
 				bunkerAnchor: bunkerLocation.coordName,
 				outposts    : outpostScores,

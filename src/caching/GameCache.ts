@@ -22,7 +22,7 @@ export class GameCache implements ICache {
 	}
 
 	private cacheCreepsByColony() {
-		this.creepsByColony = _.groupBy(Game.creeps, creep => creep.memory.colony) as { [colName: string]: Creep[] };
+		this.creepsByColony = _.groupBy(Game.creeps, creep => creep.memory[_MEM.COLONY]) as { [colName: string]: Creep[] };
 	}
 
 	/**
@@ -31,7 +31,7 @@ export class GameCache implements ICache {
 	private cacheOverlords() {
 		this.overlords = {};
 		// keys: overlordRef, value: creepNames[]
-		let creepNamesByOverlord = _.groupBy(_.keys(Game.creeps), name => Game.creeps[name].memory.overlord);
+		let creepNamesByOverlord = _.groupBy(_.keys(Game.creeps), name => Game.creeps[name].memory[_MEM.OVERLORD]);
 		for (let ref in creepNamesByOverlord) {
 			// keys: roleName, value: creepNames[]
 			this.overlords[ref] = _.groupBy(creepNamesByOverlord[ref], name => Game.creeps[name].memory.role);

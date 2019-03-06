@@ -79,7 +79,9 @@ export class Mem {
 		return shouldRun;
 	}
 
-	/* Attempt to load the parsed memory from a previous tick to avoid parsing costs */
+	/**
+	 * Attempt to load the parsed memory from a previous tick to avoid parsing costs
+	 */
 	static load() {
 		if (lastTime && lastMemory && Game.time == lastTime + 1) {
 			delete global.Memory;
@@ -137,8 +139,10 @@ export class Mem {
 		}
 	}
 
-	/* Recursively set a value of an object given a dot-separated key, adding intermediate properties as necessary
-	 * Ex: Mem.setDeep(Memory.colonies, 'E1S1.miningSites.siteID.stats.uptime', 0.5) */
+	/**
+	 * Recursively set a value of an object given a dot-separated key, adding intermediate properties as necessary
+	 * Ex: Mem.setDeep(Memory.colonies, 'E1S1.miningSites.siteID.stats.uptime', 0.5)
+	 */
 	static setDeep(object: any, keyString: string, value: any): void {
 		let keys = keyString.split('.');
 		return Mem._setDeep(object, keys, value);
@@ -218,7 +222,9 @@ export class Mem {
 		Stats.clean();
 	}
 
-	// Attempt to clear some things out of the global heap to prevent increasing CPU usage
+	/**
+	 * Attempt to clear some things out of the global heap to prevent increasing CPU usage
+	 */
 	private static cleanHeap(): void {
 		if (Game.time % HEAP_CLEAN_FREQUENCY == HEAP_CLEAN_FREQUENCY - 3) {
 			if (Game.cpu.bucket < BUCKET_CPU_HALT) {
