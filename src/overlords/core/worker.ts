@@ -108,7 +108,7 @@ export class WorkerOverlord extends Overlord {
 				}
 				for (let nuke of rampart.pos.findInRange(FIND_NUKES, 3)) {
 					if (nuke.pos != rampart.pos) {
-						neededHits += 5e5;
+						neededHits += 5e6;
 					}
 				}
 				return rampart.hits < neededHits;
