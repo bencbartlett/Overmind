@@ -140,6 +140,8 @@ interface IOverseer {
 
 	registerOverlord(overlord: any): void;
 
+	getOverlordsForColony(colony: any): any[];
+
 	isOverlordSuspended(overlord: any): boolean;
 
 	suspendOverlordFor(overlord: any, ticks: number): void;

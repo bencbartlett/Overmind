@@ -218,7 +218,7 @@ export abstract class Overlord {
 
 	/* Gets the "ID" of the outpost this overlord is operating in. 0 for owned rooms, >= 1 for outposts, -1 for other */
 	get outpostIndex(): number {
-		return _.findIndex(this.colony.roomNames, this.pos.roomName);
+		return _.findIndex(this.colony.roomNames, roomName => roomName == this.pos.roomName);
 	}
 
 	protected reassignIdleCreeps(role: string): void {

@@ -394,36 +394,38 @@ export class TerminalNetwork implements ITerminalNetwork {
 			let amount = (terminal.store[resourceType] || 0);
 			let targetAmount = state.amounts[resourceType] || 0;
 			let tolerance = targetAmount == 0 ? 0 : state.tolerance;
-			// Terminal output state - push resources away from this colony
-			if (state.type == 'out' || state.type == 'in/out') {
-				if (terminal.cooldown == 0 && amount > targetAmount + tolerance) {
-					let receiver = minBy(this.terminals, t => _.sum(t.store));
-					if (!receiver) return;
-					let sendAmount: number;
-					if (resourceType == RESOURCE_ENERGY) {
-						let cost = Game.market.calcTransactionCost(amount, terminal.room.name, receiver.room.name);
-						sendAmount = minMax(amount - targetAmount - cost, TERMINAL_MIN_SEND, maxSendSize);
-					} else {
-						sendAmount = minMax(amount - targetAmount, TERMINAL_MIN_SEND, maxSendSize);
-					}
-					if (receiver && receiver.storeCapacity - _.sum(receiver.store) > sendAmount) {
-						this.transfer(terminal, receiver, resourceType, sendAmount, 'exception state out');
-						return;
-					}
-				}
-			}
 			// Terminal input state - request resources be sent to this colony
 			if (state.type == 'in' || state.type == 'in/out') {
 				if (amount < targetAmount - tolerance) {
 					// Request needed resources from most plentiful colony
 					let sender = maxBy(this.readyTerminals, t => t.store[resourceType] || 0);
-					if (!sender) return;
-					let receiveAmount = minMax(targetAmount - amount, TERMINAL_MIN_SEND, maxSendSize);
-					if (sender && (sender.store[resourceType] || 0) > TERMINAL_MIN_SEND) {
-						this.transfer(sender, terminal, resourceType, receiveAmount, 'exception state in');
-						_.remove(this.readyTerminals, t => t.ref == sender!.ref);
-						return;
+					if (sender) {
+						let receiveAmount = minMax(targetAmount - amount, TERMINAL_MIN_SEND, maxSendSize);
+						if ((sender.store[resourceType] || 0) > TERMINAL_MIN_SEND) {
+							this.transfer(sender, terminal, resourceType, receiveAmount, 'exception state in');
+							_.remove(this.readyTerminals, t => t.ref == sender!.ref);
+						}
 					}
+				}
+			}
+			// Terminal output state - push resources away from this colony
+			if (state.type == 'out' || state.type == 'in/out') {
+				if (terminal.cooldown == 0 && amount > targetAmount + tolerance) {
+					let receiver = minBy(this.terminals, t => _.sum(t.store));
+					if (receiver) {
+						let sendAmount: number;
+						if (resourceType == RESOURCE_ENERGY) {
+							let cost = Game.market.calcTransactionCost(amount, terminal.room.name, receiver.room.name);
+							sendAmount = minMax(amount - targetAmount - cost, TERMINAL_MIN_SEND, maxSendSize);
+						} else {
+							sendAmount = minMax(amount - targetAmount, TERMINAL_MIN_SEND, maxSendSize);
+						}
+						if (receiver.storeCapacity - _.sum(receiver.store) > sendAmount) {
+							this.transfer(terminal, receiver, resourceType, sendAmount, 'exception state out');
+							return;
+						}
+					}
+
 				}
 			}
 		}

@@ -111,6 +111,10 @@ export class Overseer implements IOverseer {
 		this.overlordsByColony[overlord.colony.name].push(overlord);
 	}
 
+	getOverlordsForColony(colony: Colony): Overlord[] {
+		return this.overlordsByColony[colony.name];
+	}
+
 	private removeOverlord(overlord: Overlord): void {
 		_.remove(this.overlords, o => o.ref == overlord.ref);
 		if (this.overlordsByColony[overlord.colony.name]) {

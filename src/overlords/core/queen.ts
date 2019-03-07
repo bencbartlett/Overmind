@@ -6,6 +6,7 @@ import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {CreepSetup} from '../../creepSetups/CreepSetup';
+import {TerminalState_Rebuild} from '../../directives/terminalState/terminalState_rebuild';
 
 type rechargeObjectType = StructureStorage
 	| StructureTerminal
@@ -29,6 +30,9 @@ export class QueenOverlord extends Overlord {
 		super(hatchery, 'supply', priority);
 		this.hatchery = hatchery;
 		this.queenSetup = this.colony.storage ? Setups.queens.default : Setups.queens.early;
+		if (this.colony.terminalState == TerminalState_Rebuild) {
+			this.queenSetup = Setups.queens.early;
+		}
 		this.queens = this.zerg(Roles.queen);
 		this.settings = {
 			refillTowersBelow: 500,
