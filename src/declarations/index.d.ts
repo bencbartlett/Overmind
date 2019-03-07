@@ -158,7 +158,7 @@ interface IOverseer {
 
 interface TerminalState {
 	name: string,
-	type: 'in' | 'out',
+	type: 'in' | 'out' | 'in/out',
 	amounts: { [resourceType: string]: number },
 	tolerance: number,
 }

@@ -5,11 +5,11 @@ import {NotifierPriority} from '../Notifier';
 
 export const TerminalState_Rebuild: TerminalState = {
 	name     : 'rebuild',
-	type     : 'out',
+	type     : 'in/out',
 	amounts  : {
 		[RESOURCE_ENERGY]: 25000,
 	},
-	tolerance: 500
+	tolerance: 1000
 };
 
 const REBUILD_STATE_TIMEOUT = 25000;
