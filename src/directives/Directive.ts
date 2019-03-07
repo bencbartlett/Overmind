@@ -28,14 +28,14 @@ export abstract class Directive {
 
 	name: string;								// The name of the flag
 	ref: string;								// Also the name of the flag; used for task targeting
-	requiredRCL: number; 						// Required RCL for a colony to handle this directive
 	colony: Colony; 							// The colony of the directive (directive is removed if undefined)
+	colonyFilter?: (colony: Colony) => boolean; // Requirements to assign to a colony
 	pos: RoomPosition; 							// Flag position
 	room: Room | undefined;						// Flag room
 	memory: FlagMemory;							// Flag memory
 	overlords: { [name: string]: Overlord };	// Overlords
 
-	constructor(flag: Flag, requiredRCL = 1) {
+	constructor(flag: Flag, colonyFilter?: (colony: Colony) => boolean) {
 		this.memory = flag.memory;
 		if (this.memory.suspendUntil) {
 			if (Game.time < this.memory.suspendUntil) {
@@ -46,7 +46,6 @@ export abstract class Directive {
 		}
 		this.name = flag.name;
 		this.ref = flag.ref;
-		this.requiredRCL = requiredRCL;
 		if (!this.memory[_MEM.TICK]) {
 			this.memory[_MEM.TICK] = Game.time;
 		}
@@ -56,7 +55,7 @@ export abstract class Directive {
 			this.pos = flag.pos;
 			this.room = flag.room;
 		}
-		const colony = this.getColony();
+		const colony = this.getColony(colonyFilter);
 		// Delete the directive if the colony is dead
 		if (!colony) {
 			if (Overmind.exceptions.length == 0) {
@@ -141,7 +140,7 @@ export abstract class Directive {
 		return false;
 	}
 
-	private getColony(): Colony | undefined {
+	private getColony(colonyFilter?: (colony: Colony) => boolean): Colony | undefined {
 		// If something is written to flag.colony, use that as the colony
 		if (this.memory[_MEM.COLONY]) {
 			return Overmind.colonies[this.memory[_MEM.COLONY]!];
@@ -157,12 +156,14 @@ export abstract class Directive {
 			}
 			// If flag is in a room belonging to a colony and the colony has sufficient RCL, assign to there
 			let colony = Overmind.colonies[Overmind.colonyMap[this.pos.roomName]] as Colony | undefined;
-			if (colony && colony.level >= this.requiredRCL) {
-				this.memory[_MEM.COLONY] = colony.name;
-				return colony;
+			if (colony) {
+				if (!colonyFilter || colonyFilter(colony)) {
+					this.memory[_MEM.COLONY] = colony.name;
+					return colony;
+				}
 			} else {
 				// Otherwise assign to closest colony
-				let nearestColony = this.findNearestColony();
+				let nearestColony = this.findNearestColony(colonyFilter);
 				if (nearestColony) {
 					log.info(`Colony ${nearestColony.room.print} assigned to ${this.name}.`);
 					this.memory[_MEM.COLONY] = nearestColony.room.name;
@@ -175,7 +176,7 @@ export abstract class Directive {
 		}
 	}
 
-	private findNearestColony(verbose = false): Colony | undefined {
+	private findNearestColony(colonyFilter?: (colony: Colony) => boolean, verbose = false): Colony | undefined {
 		const maxPathLength = this.memory.maxPathLength || DEFAULT_MAX_PATH_LENGTH;
 		const maxLinearRange = this.memory.maxLinearRange || DEFAULT_MAX_LINEAR_RANGE;
 		if (verbose) log.info(`Recalculating colony association for ${this.name} in ${this.pos.roomName}`);
@@ -186,7 +187,7 @@ export abstract class Directive {
 			if (Game.map.getRoomLinearDistance(this.pos.roomName, colony.name) > maxLinearRange) {
 				continue;
 			}
-			if (colony.level >= this.requiredRCL) {
+			if (!colonyFilter || colonyFilter(colony)) {
 				let ret = Pathing.findPath((colony.hatchery || colony).pos, this.pos);
 				if (!ret.incomplete) {
 					if (ret.path.length < maxPathLength && ret.path.length < minDistance) {
@@ -197,13 +198,7 @@ export abstract class Directive {
 				} else {
 					if (verbose) log.info(`Incomplete path from ${colony.room.print}`);
 				}
-			} else {
-				if (verbose) {
-					log.info(`RCL for ${colony.room.print} insufficient: ` +
-							 `needs ${this.requiredRCL}, is ${colony.level}`);
-				}
 			}
-
 		}
 		if (nearestColony) {
 			return nearestColony;

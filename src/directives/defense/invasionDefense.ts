@@ -21,7 +21,6 @@ export class DirectiveInvasionDefense extends Directive {
 	static directiveName = 'invasionDefense';
 	static color = COLOR_BLUE;
 	static secondaryColor = COLOR_PURPLE;
-	static requiredRCL = 1;
 
 	memory: DirectiveInvasionDefenseMemory;
 	room: Room | undefined;
@@ -29,7 +28,7 @@ export class DirectiveInvasionDefense extends Directive {
 	private relocateFrequency: number;
 
 	constructor(flag: Flag) {
-		super(flag, DirectiveInvasionDefense.requiredRCL);
+		super(flag, colony => colony.level >= 1 && colony.spawns.length > 0);
 	}
 
 	spawnMoarOverlords() {

@@ -19,6 +19,7 @@ export class DirectiveColonize extends Directive {
 	static directiveName = 'colonize';
 	static color = COLOR_PURPLE;
 	static secondaryColor = COLOR_GREY;
+
 	static requiredRCL = 3;
 
 	toColonize: Colony | undefined;
@@ -28,7 +29,7 @@ export class DirectiveColonize extends Directive {
 	};
 
 	constructor(flag: Flag) {
-		super(flag, DirectiveColonize.requiredRCL);
+		super(flag, colony => colony.level >= DirectiveColonize.requiredRCL);
 		// Register incubation status
 		this.toColonize = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
 		// Remove if misplaced

@@ -18,13 +18,12 @@ export class DirectiveOutpostDefense extends Directive {
 	static directiveName = 'outpostDefense';
 	static color = COLOR_BLUE;
 	static secondaryColor = COLOR_RED;
-	static requiredRCL = 1;
 
 	memory: DirectiveInvasionDefenseMemory;
 	room: Room | undefined;
 
 	constructor(flag: Flag) {
-		super(flag, DirectiveOutpostDefense.requiredRCL);
+		super(flag);
 	}
 
 	spawnMoarOverlords() {

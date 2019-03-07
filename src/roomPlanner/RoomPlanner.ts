@@ -587,7 +587,8 @@ export class RoomPlanner {
 					(isOwnedStructure(structure) && !structure.my)) {
 
 					// Don't demolish your own ramparts, just let them decay
-					if (skipRamparts && !destroyAllStructureTypes && (<StructureRampart>structure).my) {
+					if (skipRamparts && !destroyAllStructureTypes && structure.structureType == STRUCTURE_RAMPART
+						&& (<StructureRampart>structure).my) {
 						continue;
 					}
 

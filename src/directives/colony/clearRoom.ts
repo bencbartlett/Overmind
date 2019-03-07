@@ -16,14 +16,13 @@ export class DirectiveClearRoom extends Directive {
 	static directiveName = 'clearRoom';
 	static color = COLOR_PURPLE;
 	static secondaryColor = COLOR_ORANGE;
-	static requiredRCL = 3;
 
 	overlords: {
 		claim: ClaimingOverlord;
 	};
 
 	constructor(flag: Flag) {
-		super(flag, DirectiveClearRoom.requiredRCL);
+		super(flag, colony => colony.level >= 3);
 		// Remove if misplaced
 		if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
 			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +

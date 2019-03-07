@@ -13,10 +13,8 @@ export class DirectiveSKOutpost extends Directive {
 	static color = COLOR_PURPLE;
 	static secondaryColor = COLOR_YELLOW;
 
-	static requiredRCL = 7;
-
 	constructor(flag: Flag) {
-		super(flag, DirectiveSKOutpost.requiredRCL);
+		super(flag, colony => colony.level >= 7);
 	}
 
 	spawnMoarOverlords() {

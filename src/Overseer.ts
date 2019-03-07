@@ -200,7 +200,7 @@ export class Overseer implements IOverseer {
 
 	private handleColonyInvasions(colony: Colony) {
 		// Defend against invasions in owned rooms
-		if (colony.room && colony.level >= DirectiveInvasionDefense.requiredRCL) {
+		if (colony.room) {
 
 			// See if invasion is big enough to warrant creep defenses
 			let effectiveInvaderCount = _.sum(_.map(colony.room.hostiles,

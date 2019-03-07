@@ -14,12 +14,11 @@ export class DirectiveIncubate extends Directive {
 	static directiveName = 'incubate';
 	static color = COLOR_PURPLE;
 	static secondaryColor = COLOR_WHITE;
-	static requiredRCL = 7;
 
 	incubatee: Colony | undefined;
 
 	constructor(flag: Flag) {
-		super(flag, DirectiveIncubate.requiredRCL);
+		super(flag, colony => colony.level >= 7);
 		// Register incubation status
 		this.incubatee = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
 		if (this.incubatee) {
