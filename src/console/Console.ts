@@ -1,4 +1,4 @@
-import {Colony} from '../Colony';
+import {Colony, ColonyMemory} from '../Colony';
 import {color, toColumns} from '../utilities/utils';
 import {asciiLogoSmall} from '../visuals/logos';
 import {log} from './log';
@@ -24,6 +24,8 @@ export class OvermindConsole {
 		global.print = this.print;
 		global.timeit = this.timeit;
 		global.setLogLevel = log.setLogLevel;
+		global.suspendColony = this.suspendColony;
+		global.unsuspendColony = this.unsuspendColony;
 		global.openRoomPlanner = this.openRoomPlanner;
 		global.closeRoomPlanner = this.closeRoomPlanner;
 		global.cancelRoomPlanner = this.cancelRoomPlanner;
@@ -63,6 +65,8 @@ export class OvermindConsole {
 		descr['stopDebug(thing)'] = 'disable debug logging for a game object or process';
 		descr['timeit(function, repeat=1)'] = 'time the execution of a snippet of code';
 		descr['setLogLevel(int)'] = 'set the logging level from 0 - 4';
+		descr['suspendColony(roomName)'] = 'suspend operations within a colony';
+		descr['unsuspendColony(roomName)'] = 'resume operations within a suspended colony';
 		descr['openRoomPlanner(roomName)'] = 'open the room planner for a room';
 		descr['closeRoomPlanner(roomName)'] = 'close the room planner and save changes';
 		descr['cancelRoomPlanner(roomName)'] = 'close the room planner and discard changes';
@@ -205,6 +209,38 @@ export class OvermindConsole {
 		return `CPU used: ${used}. Repetitions: ${repeat} (${used / repeat} each).`;
 	}
 
+
+	// Colony suspension ===============================================================================================
+
+	static suspendColony(roomName: string): string {
+		if (Overmind.colonies[roomName]) {
+			let colonyMemory = Memory.colonies[roomName] as ColonyMemory | undefined;
+			if (colonyMemory) {
+				colonyMemory.suspend = true;
+				Overmind.shouldBuild = true;
+				return `Colony ${roomName} suspended.`;
+			} else {
+				return `No colony memory for ${roomName}!`;
+			}
+		} else {
+			return `Colony ${roomName} is not a valid colony!`;
+		}
+	}
+
+	static unsuspendColony(roomName: string): string {
+		let colonyMemory = Memory.colonies[roomName] as ColonyMemory | undefined;
+		if (colonyMemory) {
+			if (!colonyMemory.suspend) {
+				return `Colony ${roomName} is not suspended!`;
+			} else {
+				delete colonyMemory.suspend;
+				Overmind.shouldBuild = true;
+				return `Colony ${roomName} unsuspended.`;
+			}
+		} else {
+			return `No colony memory for ${roomName}!`;
+		}
+	}
 
 	// Room planner control ============================================================================================
 

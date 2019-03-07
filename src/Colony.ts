@@ -66,6 +66,7 @@ export interface ColonyMemory {
 		possibleExpansions: { [roomName: string]: number | boolean },
 		expiration: number,
 	},
+	suspend?: boolean;
 }
 
 const defaultColonyMemory: ColonyMemory = {
