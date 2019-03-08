@@ -83,6 +83,18 @@ export abstract class Directive {
 		Overmind.overseer.registerDirective(this);
 	}
 
+	/**
+	 * Gets an effective room position for a directive; allows you to reference this.pos in constructor super() without
+	 * throwing an error
+	 */
+	static getPos(flag: Flag): RoomPosition {
+		if (flag.memory && flag.memory.setPosition) {
+			let pos = derefRoomPosition(flag.memory.setPosition);
+			return pos;
+		}
+		return flag.pos;
+	}
+
 	// Flag must be a getter to avoid caching issues
 	get flag(): Flag {
 		return Game.flags[this.name];
@@ -161,17 +173,16 @@ export abstract class Directive {
 					this.memory[_MEM.COLONY] = colony.name;
 					return colony;
 				}
+			}
+			// Otherwise assign to closest colony
+			let nearestColony = this.findNearestColony(colonyFilter);
+			if (nearestColony) {
+				log.info(`Colony ${nearestColony.room.print} assigned to ${this.name}.`);
+				this.memory[_MEM.COLONY] = nearestColony.room.name;
+				return nearestColony;
 			} else {
-				// Otherwise assign to closest colony
-				let nearestColony = this.findNearestColony(colonyFilter);
-				if (nearestColony) {
-					log.info(`Colony ${nearestColony.room.print} assigned to ${this.name}.`);
-					this.memory[_MEM.COLONY] = nearestColony.room.name;
-					return nearestColony;
-				} else {
-					log.error(`Could not find colony match for ${this.name} in ${this.pos.roomName}!` +
-							  `Try setting memory.maxPathLength and memory.maxLinearRange.`);
-				}
+				log.error(`Could not find colony match for ${this.name} in ${this.pos.roomName}!` +
+						  `Try setting memory.maxPathLength and memory.maxLinearRange.`);
 			}
 		}
 	}

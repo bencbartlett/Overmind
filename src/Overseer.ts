@@ -255,7 +255,10 @@ export class Overseer implements IOverseer {
 	}
 
 	private handleNewOutposts(colony: Colony) {
-		let numSources = _.sum(colony.roomNames, roomName => (Memory.rooms[roomName][_RM.SOURCES] || []).length);
+		let numSources = _.sum(colony.roomNames,
+							   roomName => Memory.rooms[roomName] && Memory.rooms[roomName][_RM.SOURCES]
+										   ? Memory.rooms[roomName][_RM.SOURCES]!.length
+										   : 0);
 		let numRemotes = numSources - colony.room.sources.length;
 		if (numRemotes < Colony.settings.remoteSourcesByLevel[colony.level]) {
 

@@ -19,7 +19,8 @@ export class DirectiveNukeResponse extends Directive {
 	room: Room;
 
 	constructor(flag: Flag) {
-		super(flag, colony => colony.name == this.pos.roomName && colony.level >= DirectiveNukeResponse.requiredRCL);
+		super(flag, colony => colony.name == Directive.getPos(flag).roomName
+							  && colony.level >= DirectiveNukeResponse.requiredRCL);
 		this.refresh();
 	}
 
