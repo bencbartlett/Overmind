@@ -22,12 +22,23 @@ All notable changes to this project will be documented in this file. The format 
 - `Visualizer` content:
     - Added `displayCostMatrix` method, which is useful for debugging pathfinding operations
         - Added `displayCostMatrix` option to combat and swarm `MoveOptions`
+- Added logic to suspend and unsuspend a colony. Suspended colonies will not be run, and their associated directives/overlords will not be handled either.
+    - Use `suspendColony(roomName)` and `unsuspendColony(roomName)` in the console to do this.
+- Added `in/out` terminal exception states, which seek to set the terminal contents to exactly the specified amounts, pushing everything else from the terminal to the network
+    - Changed `TerminalState_Rebuild` to an `in/out` state
+- Nuke defense behavioral improvements:
+    - Boosted workers will be spawned to fortify ramparts with incoming nukes
+    - Towers will not repair nuked ramparts unless they calculate that fortifications will not finish in time
+    - Workers now prioritize fortifying ramparts covering important structures first
 
 ### Changed
 - MASSIVE memory size reduction: many common memory keys have been aliased to single-character names using a set of constant enums in `memory.d.ts`. For example, `memory.colony` is now `memory.C` and is referenced in code as `memory[_MEM.COLONY]`.
     - You can expect your memory usage to drop by about half(!) after applying this change.
 - `MiningOverlord` will now suicide old miners when their replacements arrive, preventing excess CPU use
 - Major improvements to swarm target finding/avoiding logic
+- `Directive`s no longer have a `requiredRCL` property and now take more general `colonyFilter` optional arguments in their constructor
+- Managers will transfer 200000 energy from terminal to storage before it gets destroyed in the event of a rebuild state
+- Updated the Grafana dashboard to reflect lots of accumulated changes
 
 ### Fixed
 - Fixed a critical issue which caused the CPU reset routine to repeat indefinitely in low-CPU environments like shard3 (#65)
@@ -38,7 +49,9 @@ All notable changes to this project will be documented in this file. The format 
 - `Swarm` bugfixes -- swarms should now pivot and swap orientations correctly, preserving the reflexive parity of the formation
 - Fixed a bug which caused towers to fire too readily on hostiles
 - Fixed a bug which caused towers to not fire readily enough on hostiles
-
+- Fixed a bug which could calculate `outpostIndex` to be negative, messing up creep spawning priorities
+- Fixed a typo which miscalculated needed fortification hits for ramparts with incoming nukes
+- Fixed unhandled memory access when spawning in for the very first time on a new account (#75)
 
 
 ## Overmind [0.5.2.1] - 2019.2.8
