@@ -128,11 +128,6 @@ export class CommandCenter extends HiveCluster {
 		let refillTowers = _.filter(this.towers, tower => tower.energy < CommandCenter.settings.refillTowersBelow);
 		_.forEach(refillTowers, tower => this.transportRequests.requestInput(tower, Priority.High));
 
-		// // Refill terminal if it is below threshold
-		// if (this.terminal && this.terminal.energy < Energetics.settings.terminal.energy.inThreshold) {
-		// 	this.transportRequests.requestInput(this.terminal, Priority.NormalHigh);
-		// }
-
 		// Refill core spawn (only applicable to bunker layouts)
 		if (this.colony.bunker && this.colony.bunker.coreSpawn) {
 			if (this.colony.bunker.coreSpawn.energy < this.colony.bunker.coreSpawn.energyCapacity) {
@@ -145,7 +140,7 @@ export class CommandCenter extends HiveCluster {
 		}
 		// Refill nuker with low priority
 		if (this.nuker) {
-			if (this.nuker.energy < this.nuker.energyCapacity && this.storage.energy > 100000) {
+			if (this.nuker.energy < this.nuker.energyCapacity && this.storage.energy > 200000) {
 				this.transportRequests.requestInput(this.nuker, Priority.Low);
 			}
 			if (this.nuker.ghodium < this.nuker.ghodiumCapacity
