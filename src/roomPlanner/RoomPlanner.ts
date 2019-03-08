@@ -15,6 +15,7 @@ import {bullet} from '../utilities/stringConstants';
 import {Pathing} from '../movement/Pathing';
 import {isOwnedStructure} from '../declarations/typeGuards';
 import {MY_USERNAME} from '../~settings';
+import {Energetics} from '../logistics/Energetics';
 
 export interface BuildingPlannerOutput {
 	name: string;
@@ -609,6 +610,12 @@ export class RoomPlanner {
 						} else if (this.colony.terminal &&
 								   _.sum(this.colony.terminal.store) - this.colony.terminal.energy > 1000) {
 							log.info(`${this.colony.name}: waiting on resources to evacuate before removing terminal`);
+							return;
+						} else if (this.colony.storage &&
+								   this.structureShouldBeHere(STRUCTURE_STORAGE, this.colony.storage.pos) &&
+								   this.colony.storage.energy
+								   < Energetics.settings.storage.energy.destroyTerminalThreshold) {
+							log.info(`${this.colony.name}: waiting to move energy to storage before removing terminal`);
 							return;
 						}
 					}

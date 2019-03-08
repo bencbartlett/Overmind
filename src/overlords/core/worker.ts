@@ -4,14 +4,14 @@ import {profile} from '../../profiler/decorator';
 import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {BuildPriorities} from '../../priorities/priorities_structures';
+import {BuildPriorities, FortifyPriorities} from '../../priorities/priorities_structures';
 import {$} from '../../caching/GlobalCache';
 import {Task} from '../../tasks/Task';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {maxBy} from '../../utilities/utils';
 import {boostResources} from '../../resources/map_resources';
 import {TerminalState_Rebuild} from '../../directives/terminalState/terminalState_rebuild';
+import {minBy} from '../../utilities/utils';
 
 /**
  * Spawns general-purpose workers, which maintain a colony, performing actions such as building, repairing, fortifying,
@@ -303,7 +303,17 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	private nukeFortifyActions(worker: Zerg, fortifyStructures = this.nukeDefenseRamparts): boolean {
-		let target = maxBy(fortifyStructures, rampart => this.neededRampartHits(rampart) - rampart.hits);
+		let target = minBy(fortifyStructures, rampart => {
+			let structuresUnderRampart = rampart.pos.lookFor(LOOK_STRUCTURES);
+			return _.min(_.map(structuresUnderRampart, structure => {
+				let priority = _.findIndex(FortifyPriorities, sType => sType == structure.structureType);
+				if (priority >= 0) { // if found
+					return priority;
+				} else { // not found
+					return 999;
+				}
+			}));
+		});
 		if (target) {
 			worker.task = Tasks.fortify(target);
 			return true;

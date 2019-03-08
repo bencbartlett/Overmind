@@ -11,6 +11,7 @@ import {hasMinerals, minBy} from '../../utilities/utils';
 import {$} from '../../caching/GlobalCache';
 import {WorkerOverlord} from './worker';
 import {Roles, Setups} from '../../creepSetups/setups';
+import {TerminalState_Rebuild} from '../../directives/terminalState/terminalState_rebuild';
 
 /**
  * Command center overlord: spawn and run a dediated commandCenter attendant
@@ -68,8 +69,10 @@ export class CommandCenterOverlord extends Overlord {
 		this.wishlist(1, setup, {options: spawnRequestOptions});
 	}
 
+	/**
+	 * Move anything you are currently holding to deposit location
+	 */
 	private unloadCarry(manager: Zerg): boolean {
-		// Move anything you are currently holding to deposit location
 		if (_.sum(manager.carry) > 0) {
 			manager.task = Tasks.transferAll(this.depositTarget);
 			return true;
@@ -78,6 +81,9 @@ export class CommandCenterOverlord extends Overlord {
 		}
 	}
 
+	/**
+	 * Handle any supply requests from your transport request group
+	 */
 	private supplyActions(manager: Zerg): boolean {
 		let request = this.commandCenter.transportRequests.getPrioritizedClosestRequest(manager.pos, 'supply');
 		if (request) {
@@ -108,6 +114,9 @@ export class CommandCenterOverlord extends Overlord {
 		return false;
 	}
 
+	/**
+	 * Handle any withdrawal requests from your transport request group
+	 */
 	private withdrawActions(manager: Zerg): boolean {
 		if (_.sum(manager.carry) < manager.carryCapacity) {
 			let request = this.commandCenter.transportRequests.getPrioritizedClosestRequest(manager.pos, 'withdraw');
@@ -123,6 +132,9 @@ export class CommandCenterOverlord extends Overlord {
 		return false;
 	}
 
+	/**
+	 * Move energy into terminal if storage is too full and into storage if storage is too empty
+	 */
 	private equalizeStorageAndTerminal(manager: Zerg): boolean {
 		const storage = this.commandCenter.storage;
 		const terminal = this.commandCenter.terminal;
@@ -154,6 +166,24 @@ export class CommandCenterOverlord extends Overlord {
 		return false;
 	}
 
+	/**
+	 * Move enough energy from a terminal which needs to be moved into storage to allow you to rebuild the terminal
+	 */
+	private moveEnergyFromRebuildingTerminal(manager: Zerg): boolean {
+		const storage = this.commandCenter.storage;
+		const terminal = this.commandCenter.terminal;
+		if (!storage || !terminal) {
+			return false;
+		}
+		if (storage.energy < Energetics.settings.storage.energy.destroyTerminalThreshold) {
+			if (this.unloadCarry(manager)) return true;
+			manager.task = Tasks.withdraw(terminal);
+			manager.task.parent = Tasks.transfer(storage);
+			return true;
+		}
+		return false;
+	}
+
 	private moveMineralsToTerminal(manager: Zerg): boolean {
 		const storage = this.commandCenter.storage;
 		const terminal = this.commandCenter.terminal;
@@ -172,6 +202,9 @@ export class CommandCenterOverlord extends Overlord {
 		return false;
 	}
 
+	/**
+	 * Pickup resources dropped on manager position or in tombstones from last manager
+	 */
 	private pickupActions(manager: Zerg): boolean {
 		// Pickup any resources that happen to be dropped where you are
 		let resources = manager.pos.lookFor(LOOK_RESOURCES);
@@ -188,7 +221,9 @@ export class CommandCenterOverlord extends Overlord {
 		return false;
 	}
 
-	// Suicide once you get old and make sure you don't drop and waste any resources
+	/**
+	 * Suicide once you get old and make sure you don't drop and waste any resources
+	 */
 	private deathActions(manager: Zerg): boolean {
 		let nearbyManagers = _.filter(this.managers, manager => manager.pos.inRangeTo(this.commandCenter.pos, 3));
 		if (nearbyManagers.length > 1) {
@@ -218,6 +253,10 @@ export class CommandCenterOverlord extends Overlord {
 		if (hasMinerals(this.commandCenter.storage.store)) {
 			if (this.moveMineralsToTerminal(manager)) return;
 		}
+		// Fill up storage before you destroy terminal if rebuilding room
+		if (this.colony.terminalState == TerminalState_Rebuild) {
+			if (this.moveEnergyFromRebuildingTerminal(manager)) return;
+		}
 		// Moving energy to terminal gets priority if evacuating room
 		if (this.colony.terminalState && this.colony.terminalState.type == 'out') {
 			if (this.equalizeStorageAndTerminal(manager)) return;
@@ -234,6 +273,9 @@ export class CommandCenterOverlord extends Overlord {
 		this.equalizeStorageAndTerminal(manager);
 	}
 
+	/**
+	 * Handle idle actions if the manager has nothing to do
+	 */
 	private idleActions(manager: Zerg): void {
 		if (this.mode == 'bunker' && this.managerRepairTarget && manager.getActiveBodyparts(WORK) > 0) {
 			// Repair ramparts when idle

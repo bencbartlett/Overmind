@@ -393,7 +393,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 															  : TerminalNetwork.settings.equalize.maxMineralSendSize;
 			let amount = (terminal.store[resourceType] || 0);
 			let targetAmount = state.amounts[resourceType] || 0;
-			let tolerance = targetAmount == 0 ? 0 : state.tolerance;
+			let tolerance = targetAmount == 0 ? TERMINAL_MIN_SEND : state.tolerance;
 			// Terminal input state - request resources be sent to this colony
 			if (state.type == 'in' || state.type == 'in/out') {
 				if (amount < targetAmount - tolerance) {

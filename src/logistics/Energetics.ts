@@ -7,8 +7,11 @@ export class Energetics {
 
 	static settings = {
 		storage : {
-			total: {
+			total : {
 				cap: STORAGE_CAPACITY - 100000
+			},
+			energy: {
+				destroyTerminalThreshold: 200000	// won't rebuild terminal until you have this much energy in storage
 			}
 		},
 		terminal: {
