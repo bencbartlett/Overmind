@@ -168,8 +168,21 @@ export class Mem {
 		});
 	}
 
+	private static formatDefaultMemory() {
+		if (!Memory.rooms) {
+			Memory.rooms = {};
+		}
+		if (!Memory.creeps) {
+			Memory.creeps = {};
+		}
+		if (!Memory.flags) {
+			Memory.flags = {};
+		}
+	}
+
 	static format() {
 		// Format the memory as needed, done once every global reset
+		this.formatDefaultMemory();
 		this.formatOvermindMemory();
 		this.formatPathingMemory();
 		// Rest of memory formatting
