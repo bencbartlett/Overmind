@@ -1,4 +1,4 @@
-import {Overlord} from '../Overlord';
+import {Overlord, ZergOptions} from '../Overlord';
 import {Colony, ColonyStage, DEFCON} from '../../Colony';
 import {profile} from '../../profiler/decorator';
 import {Zerg} from '../../zerg/Zerg';
@@ -10,6 +10,7 @@ import {Task} from '../../tasks/Task';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {maxBy} from '../../utilities/utils';
+import {boostResources} from '../../resources/map_resources';
 
 /**
  * Spawns general-purpose workers, which maintain a colony, performing actions such as building, repairing, fortifying,
@@ -26,6 +27,7 @@ export class WorkerOverlord extends Overlord {
 	criticalBarriers: (StructureWall | StructureRampart)[];
 	constructionSites: ConstructionSite[];
 	nukeDefenseRamparts: StructureRampart[];
+	nukeDefenseHitsRemaining: { [id: string]: number };
 
 	static settings = {
 		barrierHits         : {			// What HP to fortify barriers to at each RCL
@@ -45,7 +47,6 @@ export class WorkerOverlord extends Overlord {
 
 	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.work) {
 		super(colony, 'worker', priority);
-		this.workers = this.zerg(Roles.worker);
 		// Compute barriers needing fortification or critical attention
 		this.fortifyBarriers = $.structures(this, 'fortifyBarriers', () =>
 			_.sortBy(_.filter(this.room.barriers, s =>
@@ -99,9 +100,12 @@ export class WorkerOverlord extends Overlord {
 				}
 			}
 		});
+
 		// Nuke defense ramparts needing fortification
+		this.nukeDefenseRamparts = [];
+		this.nukeDefenseHitsRemaining = {};
 		if (this.room.find(FIND_NUKES).length > 0) {
-			this.nukeDefenseRamparts = _.filter(this.colony.room.ramparts, rampart => {
+			for (let rampart of this.colony.room.ramparts) {
 				let neededHits = WorkerOverlord.settings.barrierHits[this.colony.level];
 				for (let nuke of rampart.pos.lookFor(LOOK_NUKES)) {
 					neededHits += 10e6;
@@ -111,11 +115,23 @@ export class WorkerOverlord extends Overlord {
 						neededHits += 5e6;
 					}
 				}
-				return rampart.hits < neededHits;
-			});
-		} else {
-			this.nukeDefenseRamparts = [];
+				if (rampart.hits < neededHits) {
+					this.nukeDefenseRamparts.push(rampart);
+					this.nukeDefenseHitsRemaining[rampart.id] = neededHits - rampart.hits;
+				}
+			}
 		}
+
+		// Spawn boosted workers if there is significant fortifying which needs to be done
+		let opts: ZergOptions = {};
+		let totalNukeDefenseHitsRemaining = _.sum(_.values(this.nukeDefenseHitsRemaining));
+		let approximateRepairPowerPerLifetime = REPAIR_POWER * 50 / 3 * CREEP_LIFE_TIME;
+		if (totalNukeDefenseHitsRemaining > 3 * approximateRepairPowerPerLifetime) {
+			opts.boostWishlist = [boostResources.construct[3]];
+		}
+
+		// Register workers
+		this.workers = this.zerg(Roles.worker, opts);
 	}
 
 	refresh() {

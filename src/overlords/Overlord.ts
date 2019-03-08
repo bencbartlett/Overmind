@@ -35,7 +35,7 @@ export interface CreepRequestOptions {
 	options?: SpawnRequestOptions;
 }
 
-interface ZergOptions {
+export interface ZergOptions {
 	notifyWhenAttacked?: boolean;
 	boostWishlist?: _ResourceConstantSansEnergy[] | undefined;
 }
