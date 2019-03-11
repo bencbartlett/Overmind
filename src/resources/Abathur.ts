@@ -6,12 +6,12 @@ import {maxMarketPrices, TraderJoe} from '../logistics/TradeNetwork';
 import {Mem} from '../memory/Memory';
 
 export const priorityStockAmounts: { [key: string]: number } = {
-	XGHO2: 1000,	// For toughness
-	XLHO2: 1000, 	// For healing
-	XZHO2: 1000, 	// For speed
-	XZH2O: 1000, 	// For dismantling
-	XKHO2: 1000, 	// For ranged attackers
-	XUH2O: 1000, 	// For attacking
+	XGHO2: 1000,	// (-70 % dmg taken)
+	XLHO2: 1000, 	// (+300 % heal)
+	XZHO2: 1000, 	// (+300 % fat decr - speed)
+	XZH2O: 1000, 	// (+300 % dismantle)
+	XKHO2: 1000, 	// (+300 % ranged attack)
+	XUH2O: 1000, 	// (+300 % attack)
 	GHO2 : 1000, 	// (-50 % dmg taken)
 	LHO2 : 1000, 	// (+200 % heal)
 	ZHO2 : 1000, 	// (+200 % fat decr - speed)
@@ -30,18 +30,26 @@ export const priorityStockAmounts: { [key: string]: number } = {
 export const wantedStockAmounts: { [key: string]: number } = {
 	UH   : 3000, 	// (+100 % attack)
 	KO   : 3000, 	// (+100 % ranged attack)
-	XGHO2: 10000, 	// For toughness
-	XLHO2: 10000, 	// For healing
-	XZHO2: 6000, 	// For speed
-	XZH2O: 6000, 	// For dismantling
-	XKHO2: 8000, 	// For ranged attackers
-	XUH2O: 8000, 	// For attacking
+	XGHO2: 10000, 	// (-70 % dmg taken)
+	XLHO2: 10000, 	// (+300 % heal)
+	XZHO2: 6000, 	// (+300 % fat decr - speed)
+	XZH2O: 6000, 	// (+300 % dismantle)
+	XKHO2: 8000, 	// (+300 % ranged attack)
+	XUH2O: 8000, 	// (+300 % attack)
 	G    : 5000, 	// For nukes
-	XLH2O: 3000, 	// For repair (or build)
+	XLH2O: 3000, 	// (+100 % build and repair)
 	LH   : 3000, 	// (+50 % build and repair)
-	XUHO2: 3000, 	// For harvest
-	XKH2O: 3000, 	// For carry
-	XGH2O: 12000 	// For upgraders
+	XUHO2: 3000, 	// (+600 % harvest)
+	XKH2O: 3000, 	// (+300 % carry)
+	XGH2O: 12000,	// (+100 % upgrade)
+	ZK   : 800,	// intermediate
+	UL   : 800,	// intermediate
+	GH   : 800,	// (+50 % upgrade)
+	KH   : 800,	// (+100 % carry)
+	OH   : 800,	// intermediate
+	GH2O : 800,	// (+80 % upgrade)
+	LH2O : 800,	// (+80 % build and repair)
+	KH2O : 800,	// (+200 % carry)
 };
 
 export const baseStockAmounts: { [key: string]: number } = {
@@ -199,6 +207,8 @@ export class Abathur {
 						|| this.canReceiveBasicMineralsForReaction(missingBaseMinerals, amountNeeded + 1000)
 						|| this.canBuyBasicMineralsForReaction(missingBaseMinerals)) {
 						return reactionQueue;
+					} else {
+						if (verbose) console.log(`Missing minerals for ${resourceType}: ${JSON.stringify(missingBaseMinerals)}`);
 					}
 				}
 			}
