@@ -87,6 +87,9 @@ export class SpawnGroup {
 									roomName => this.memory.distances[roomName] <= this.settings.maxPathDistance &&
 												Game.rooms[roomName] && Game.rooms[roomName].my &&
 												Game.rooms[roomName].controller!.level >= this.settings.requiredRCL);
+		if (this.colonyNames.length == 0) {
+			log.warning(`No colonies meet the requirements for SwarmGroup: ${this.ref}`);
+		}
 		this.energyCapacityAvailable = _.max(_.map(this.colonyNames,
 												   roomName => Game.rooms[roomName].energyCapacityAvailable));
 		Overmind.spawnGroups[this.ref] = this;
@@ -141,15 +144,15 @@ export class SpawnGroup {
 		const distanceTo = (hatchery: Hatchery) => this.memory.distances[hatchery.pos.roomName] + 25;
 		// Enqueue all requests to the hatchery with least expected wait time that can spawn full-size creep
 		for (let request of this.requests) {
-			let maxCost = bodyCost(request.setup.generateBody(this.energyCapacityAvailable));
-			let okHatcheries = _.filter(hatcheries,
+			const maxCost = bodyCost(request.setup.generateBody(this.energyCapacityAvailable));
+			const okHatcheries = _.filter(hatcheries,
 										hatchery => hatchery.room.energyCapacityAvailable >= maxCost);
 			// || this.settings.flexibleEnergy);
-			let bestHatchery = minBy(okHatcheries, hatchery => hatchery.nextAvailability + distanceTo(hatchery));
+			const bestHatchery = minBy(okHatcheries, hatchery => hatchery.nextAvailability + distanceTo(hatchery));
 			if (bestHatchery) {
 				bestHatchery.enqueue(request);
 			} else {
-				log.warning(`Could not enqueue creep ${request.setup.role} from spawnGroup in ${this.roomName}`);
+				log.warning(`Could not enqueue creep ${request.setup.role} in ${this.roomName}, no hatchery with ${maxCost} energy capacity`);
 			}
 		}
 	}
