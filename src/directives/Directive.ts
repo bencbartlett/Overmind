@@ -37,6 +37,7 @@ export abstract class Directive {
 
 	constructor(flag: Flag, colonyFilter?: (colony: Colony) => boolean) {
 		this.memory = flag.memory;
+		this.overlords = {};
 		if (this.memory.suspendUntil) {
 			if (Game.time < this.memory.suspendUntil) {
 				return;
@@ -76,7 +77,6 @@ export abstract class Directive {
 		// Register colony and add flags to colony.flags
 		this.colony = colony;
 		this.colony.flags.push(flag);
-		this.overlords = {};
 		// Register directive on Overmind
 		Overmind.directives[this.name] = this;
 		global[this.name] = this;
@@ -152,7 +152,7 @@ export abstract class Directive {
 		return false;
 	}
 
-	private getColony(colonyFilter?: (colony: Colony) => boolean): Colony | undefined {
+	private getColony(colonyFilter?: (colony: Colony) => boolean, verbose = false): Colony | undefined {
 		// If something is written to flag.colony, use that as the colony
 		if (this.memory[_MEM.COLONY]) {
 			return Overmind.colonies[this.memory[_MEM.COLONY]!];
@@ -175,13 +175,13 @@ export abstract class Directive {
 				}
 			}
 			// Otherwise assign to closest colony
-			let nearestColony = this.findNearestColony(colonyFilter);
+			let nearestColony = this.findNearestColony(colonyFilter, verbose);
 			if (nearestColony) {
 				log.info(`Colony ${nearestColony.room.print} assigned to ${this.name}.`);
 				this.memory[_MEM.COLONY] = nearestColony.room.name;
 				return nearestColony;
 			} else {
-				log.error(`Could not find colony match for ${this.name} in ${this.pos.roomName}!` +
+				log.error(`Could not find colony match for ${this.name} in ${this.pos.roomName}! ` +
 						  `Try setting memory.maxPathLength and memory.maxLinearRange.`);
 			}
 		}
