@@ -157,7 +157,7 @@ RoomPosition.prototype.getPositionsAtRange = function (range: number,
 	let [ymin, ymax] = includeEdges ? [0, 49] : [1, 48];
 	for (let dx = -1 * range; dx <= range; dx++) {
 		for (let dy = -1 * range; dy <= range; dy++) {
-			if (Math.max(dx, dy) < range) {
+			if (Math.max(Math.abs(dx), Math.abs(dy)) < range) {
 				continue;
 			}
 			let x = this.x + dx;
