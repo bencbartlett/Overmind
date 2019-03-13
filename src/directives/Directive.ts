@@ -199,7 +199,7 @@ export abstract class Directive {
 				continue;
 			}
 			if (!colonyFilter || colonyFilter(colony)) {
-				let ret = Pathing.findPath((colony.hatchery || colony).pos, this.pos);
+				let ret = Pathing.findPath((colony.hatchery || colony).pos, this.pos, {useFindRoute: true});
 				if (!ret.incomplete) {
 					if (ret.path.length < maxPathLength && ret.path.length < minDistance) {
 						nearestColony = colony;
