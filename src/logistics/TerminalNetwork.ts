@@ -246,12 +246,14 @@ export class TerminalNetwork implements ITerminalNetwork {
 				if (terminalNearCapacity) { // if you're close to full, be more agressive with selling energy
 					energyThreshold = Energetics.settings.terminal.energy.equilibrium;
 				}
+				let amount = Energetics.settings.terminal.energy.tradeAmount;
 				if (terminal.store[RESOURCE_ENERGY] > energyThreshold) {
 					if (terminalNearCapacity) { // just get rid of stuff at high capacities
-						let response = Overmind.tradeNetwork.sellDirectly(terminal, RESOURCE_ENERGY, 10000, true);
+						let response = Overmind.tradeNetwork.sellDirectly(terminal, RESOURCE_ENERGY, amount, true);
 						if (response == OK) return;
 					} else {
-						let response = Overmind.tradeNetwork.sell(terminal, RESOURCE_ENERGY, 50000, MAX_ENERGY_SELL_ORDERS);
+						let response = Overmind.tradeNetwork.sell(terminal, RESOURCE_ENERGY, amount,
+																  MAX_ENERGY_SELL_ORDERS);
 						if (response == OK) return;
 					}
 				}
@@ -459,8 +461,9 @@ export class TerminalNetwork implements ITerminalNetwork {
 					let poorestTerminal = minBy(this.terminals,
 												terminal => colonyOf(terminal).assets[RESOURCE_ENERGY] || 0);
 					if (poorestTerminal) {
-						Overmind.tradeNetwork.maintainBuyOrder(poorestTerminal, RESOURCE_ENERGY,
-															   50000, MAX_ENERGY_BUY_ORDERS);
+						let amount = Energetics.settings.terminal.energy.tradeAmount;
+						Overmind.tradeNetwork.maintainBuyOrder(poorestTerminal, RESOURCE_ENERGY, amount,
+															   MAX_ENERGY_BUY_ORDERS);
 					}
 				}
 			}

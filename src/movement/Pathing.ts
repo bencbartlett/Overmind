@@ -77,7 +77,7 @@ export class Pathing {
 		// check to see whether findRoute should be used
 		let roomDistance = Game.map.getRoomLinearDistance(origin.roomName, destination.roomName);
 		let allowedRooms = options.route;
-		if (!allowedRooms && (options.useFindRoute || (options.useFindRoute == undefined && roomDistance > 2))) {
+		if (!allowedRooms && (options.useFindRoute || (options.useFindRoute === undefined && roomDistance > 2))) {
 			allowedRooms = this.findRoute(origin.roomName, destination.roomName, options);
 		}
 
@@ -750,7 +750,7 @@ export class Pathing {
 			// }
 		}
 
-		let ret = Game.map.findRoute(origin, destination, {
+		let ret = (<GameMap>Game.map).findRoute(origin, destination, {
 			routeCallback: (roomName: string) => {
 				let rangeToRoom = Game.map.getRoomLinearDistance(origin, roomName);
 				if (rangeToRoom > restrictDistance) { // room is too far out of the way
