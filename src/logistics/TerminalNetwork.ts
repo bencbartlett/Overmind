@@ -9,7 +9,7 @@ import {baseStockAmounts, priorityStockAmounts, wantedStockAmounts} from '../res
 import {alignedNewline, bullet, rightArrow} from '../utilities/stringConstants';
 import {assimilationLocked} from '../assimilation/decorator';
 import {$} from '../caching/GlobalCache';
-import {MAX_ENERGY_SELL_ORDERS} from './TradeNetwork';
+import {MAX_ENERGY_BUY_ORDERS, MAX_ENERGY_SELL_ORDERS, TraderJoe} from './TradeNetwork';
 
 interface TerminalNetworkMemory {
 	equalizeIndex: number;
@@ -74,12 +74,12 @@ export class TerminalNetwork implements ITerminalNetwork {
 	};
 
 	static settings = {
-		equalize: {
+		equalize          : {
 			frequency         : 2 * (TERMINAL_COOLDOWN + 1),
 			maxEnergySendSize : 25000,
 			maxMineralSendSize: 5000,
 			tolerance         : {
-				[RESOURCE_ENERGY]: 150000,
+				[RESOURCE_ENERGY]: 100000,
 				[RESOURCE_POWER] : 2000,
 				default          : 5000
 			} as { [resourceType: string]: number },
@@ -94,7 +94,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 				RESOURCE_OXYGEN,
 				RESOURCE_HYDROGEN,
 			],
-		}
+		},
+		buyEnergyThreshold: 200000, // buy energy off market if average amount is less than this
 	};
 
 	constructor(terminals: StructureTerminal[]) {
@@ -233,9 +234,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 	 */
 	private handleExcess(terminal: StructureTerminal, threshold = 25000): void {
 
-		let terminalNearCapacity = _.sum(terminal.store) > 0.9 * terminal.storeCapacity;
-		let energyOrders = _.filter(Game.market.orders, order => order.type == ORDER_SELL &&
-																 order.resourceType == RESOURCE_ENERGY);
+		let terminalNearCapacity = _.sum(terminal.store) > 0.95 * terminal.storeCapacity;
 
 		for (let resource in terminal.store) {
 			if (resource == RESOURCE_POWER) {
@@ -251,8 +250,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 					if (terminalNearCapacity) { // just get rid of stuff at high capacities
 						let response = Overmind.tradeNetwork.sellDirectly(terminal, RESOURCE_ENERGY, 10000, true);
 						if (response == OK) return;
-					} else if (energyOrders.length < MAX_ENERGY_SELL_ORDERS) {
-						let response = Overmind.tradeNetwork.sell(terminal, RESOURCE_ENERGY, 50000);
+					} else {
+						let response = Overmind.tradeNetwork.sell(terminal, RESOURCE_ENERGY, 50000, MAX_ENERGY_SELL_ORDERS);
 						if (response == OK) return;
 					}
 				}
@@ -363,13 +362,11 @@ export class TerminalNetwork implements ITerminalNetwork {
 		let resourceEqualizeOrder = equalizeResources.slice(this.memory.equalizeIndex + 1)
 													 .concat(equalizeResources.slice(0, this.memory.equalizeIndex + 1));
 		let allColonies = getAllColonies();
-		let tolerance = TerminalNetwork.settings.equalize.tolerance.default;
-		let nextResourceType = _.find(resourceEqualizeOrder, function (resource) {
-			for (let col of allColonies) {
-				if (wantedAmount(col, resource) < -1 * tolerance) { // colony has too much
-					return true;
-				}
-			}
+		let nextResourceType = _.find(resourceEqualizeOrder, resource => {
+			const amounts = _.map(this.terminals, terminal => colonyOf(terminal).assets[resource] || 0);
+			const tolerance = TerminalNetwork.settings.equalize.tolerance[resource]
+							  || TerminalNetwork.settings.equalize.tolerance.default;
+			return _.max(amounts) - _.min(amounts) > tolerance;
 		});
 		// Set next equalize resource index
 		this.memory.equalizeIndex = _.findIndex(equalizeResources, resource => resource == nextResourceType);
@@ -381,7 +378,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 	registerTerminalState(terminal: StructureTerminal, state: TerminalState): void {
 		this.exceptionTerminals[terminal.ref] = state;
 		colonyOf(terminal).terminalState = state;
-		_.remove(this.terminals, t => t.ref == terminal.ref);
+		_.remove(this.terminals, t => t.id == terminal.id);
 	}
 
 	/**
@@ -454,6 +451,20 @@ export class TerminalNetwork implements ITerminalNetwork {
 			if (terminalToSellExcess && terminalToSellExcess.cooldown == 0) {
 				this.handleExcess(terminalToSellExcess);
 			}
+			// Order more energy if needed
+			if (Game.market.credits > TraderJoe.settings.market.energyCredits) {
+				let averageEnergy = _.sum(this.terminals, terminal => colonyOf(terminal).assets[RESOURCE_ENERGY] || 0)
+									/ this.terminals.length;
+				if (averageEnergy < TerminalNetwork.settings.buyEnergyThreshold) {
+					let poorestTerminal = minBy(this.terminals,
+												terminal => colonyOf(terminal).assets[RESOURCE_ENERGY] || 0);
+					if (poorestTerminal) {
+						Overmind.tradeNetwork.maintainBuyOrder(poorestTerminal, RESOURCE_ENERGY,
+															   50000, MAX_ENERGY_BUY_ORDERS);
+					}
+				}
+			}
+
 		}
 		// Do notifications
 		if (this.notifications.length > 0) {

@@ -30,6 +30,10 @@ All notable changes to this project will be documented in this file. The format 
     - Boosted workers will be spawned to fortify ramparts with incoming nukes
     - Towers will not repair nuked ramparts unless they calculate that fortifications will not finish in time
     - Workers now prioritize fortifying ramparts covering important structures first
+- Market improvements:
+    - New console method: `cancelmMarketOrders(filter?)`: cancels all market orders matching filter (if provided)
+    - Will now place and maintain buy orders for energy if average colony energy is too low and player has sufficient credits
+    - Reduced terminal equilibrium energy from 100k to 50k
 
 ### Changed
 - MASSIVE memory size reduction: many common memory keys have been aliased to single-character names using a set of constant enums in `memory.d.ts`. For example, `memory.colony` is now `memory.C` and is referenced in code as `memory[_MEM.COLONY]`.

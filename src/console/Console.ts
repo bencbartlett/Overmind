@@ -43,6 +43,7 @@ export class OvermindConsole {
 		global.startRemoteDebugSession = this.startRemoteDebugSession;
 		global.endRemoteDebugSession = this.endRemoteDebugSession;
 		global.profileMemory = this.profileMemory;
+		global.cancelMarketOrders = this.cancelMarketOrders;
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -82,6 +83,7 @@ export class OvermindConsole {
 		descr['deepCleanMemory()'] = 'deletes all non-critical portions of memory (be careful!)';
 		descr['profileMemory(depth=1)'] = 'scan through memory to get the size of various objects';
 		descr['startRemoteDebugSession()'] = 'enables the remote debugger so Muon can debug your code';
+		descr['cancelMarketOrders(filter?)'] = 'cancels all market orders matching filter (if provided)';
 		// Console list
 		let descrMsg = toColumns(descr, {justify: true, padChar: '.'});
 		let maxLineLength = _.max(_.map(descrMsg, line => line.length)) + 2;
@@ -468,6 +470,12 @@ export class OvermindConsole {
 		OvermindConsole.recursiveMemoryProfile(Memory, sizes, depth);
 		console.log(`Time elapsed: ${Game.cpu.getUsed() - start}`);
 		return JSON.stringify(sizes, undefined, '\t');
+	}
+
+	static cancelMarketOrders(filter?: (order: Order) => any): string {
+		let ordersToCancel = !!filter ? _.filter(Game.market.orders, order => filter(order)) : Game.market.orders;
+		_.forEach(_.values(ordersToCancel), (order: Order) => Game.market.cancelOrder(order.id));
+		return `Canceled ${_.values(ordersToCancel).length} orders.`;
 	}
 
 }

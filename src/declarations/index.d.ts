@@ -194,9 +194,11 @@ interface ITradeNetwork {
 	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount?: number,
 				 flexibleAmount?: boolean): number | undefined;
 
-	sell(terminal: StructureTerminal, resource: ResourceConstant, amount?: number): number | undefined;
+	sell(terminal: StructureTerminal, resource: ResourceConstant, amount: number, maxOrdersOfType?: number): number | undefined;
 
 	buy(terminal: StructureTerminal, mineralType: ResourceConstant, amount: number): void;
+
+	maintainBuyOrder(terminal: StructureTerminal, resource: ResourceConstant, amount: number, maxOrdersOfType?: number): void;
 
 	init(): void;
 
