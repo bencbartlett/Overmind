@@ -155,10 +155,10 @@ export class MiningOverlord extends Overlord {
 		// Create container if there is not already one being built and no link
 		if (!this.container && !this.constructionSite && !this.link) {
 			const containerPos = this.calculateContainerPos();
-			const look = _.filter(containerPos.lookFor(LOOK_STRUCTURES), s => s.structureType === STRUCTURE_CONTAINER);
-			if (look.length === 1) {
+			const container = containerPos.lookForStructure(STRUCTURE_CONTAINER) as StructureContainer | undefined;
+			if (container) {
 				log.warning(`${this.print}: this.container out of sync at ${containerPos.print}`);
-				this.container = _.first(look) as StructureContainer;
+				this.container = container;
 				return;
 			}
 			log.info(`${this.print}: building container at ${containerPos.print}`);
