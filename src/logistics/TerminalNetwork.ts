@@ -187,6 +187,9 @@ export class TerminalNetwork implements ITerminalNetwork {
 		return energyInRoom;
 	}
 
+	/**
+	 * Transfer resources from one terminal to another, logging the results
+	 */
 	private transfer(sender: StructureTerminal, receiver: StructureTerminal, resourceType: ResourceConstant,
 					 amount: number, description: string): number {
 		let cost = Game.market.calcTransactionCost(amount, sender.room.name, receiver.room.name);
@@ -211,6 +214,9 @@ export class TerminalNetwork implements ITerminalNetwork {
 		return response;
 	}
 
+	/**
+	 * Request resources from the terminal network, purchasing from market if unavailable and allowable
+	 */
 	requestResource(receiver: StructureTerminal, resourceType: ResourceConstant, amount: number,
 					allowBuy = true, minDifference = 4000): void {
 		if (this.exceptionTerminals[receiver.ref]) {
@@ -244,17 +250,25 @@ export class TerminalNetwork implements ITerminalNetwork {
 
 				let energyThreshold = Energetics.settings.terminal.energy.outThreshold;
 				if (terminalNearCapacity) { // if you're close to full, be more agressive with selling energy
-					energyThreshold = Energetics.settings.terminal.energy.equilibrium;
+					energyThreshold = Energetics.settings.terminal.energy.equilibrium
+									  + Energetics.settings.terminal.energy.tolerance;
 				}
 				let amount = Energetics.settings.terminal.energy.tradeAmount;
 				if (terminal.store[RESOURCE_ENERGY] > energyThreshold) {
-					if (terminalNearCapacity) { // just get rid of stuff at high capacities
-						let response = Overmind.tradeNetwork.sellDirectly(terminal, RESOURCE_ENERGY, amount, true);
-						if (response == OK) return;
-					} else {
-						let response = Overmind.tradeNetwork.sell(terminal, RESOURCE_ENERGY, amount,
-																  MAX_ENERGY_SELL_ORDERS);
-						if (response == OK) return;
+					// don't do anything if you have storage that is below energy cap and energy can be moved there
+					const storage = colonyOf(terminal).storage;
+					const storageEnergyCap = Energetics.settings.storage.total.cap;
+					if (!storage || storage.energy >= storageEnergyCap) {
+
+						if (terminalNearCapacity) { // just get rid of stuff at high capacities
+							let response = Overmind.tradeNetwork.sellDirectly(terminal, RESOURCE_ENERGY, amount, true);
+							if (response == OK) return;
+						} else {
+							let response = Overmind.tradeNetwork.sell(terminal, RESOURCE_ENERGY, amount,
+																	  MAX_ENERGY_SELL_ORDERS);
+							if (response == OK) return;
+						}
+
 					}
 				}
 

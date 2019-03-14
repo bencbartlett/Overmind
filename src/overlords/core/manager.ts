@@ -142,26 +142,31 @@ export class CommandCenterOverlord extends Overlord {
 
 		const equilibrium = Energetics.settings.terminal.energy.equilibrium;
 		const tolerance = Energetics.settings.terminal.energy.tolerance;
+		const storageTolerance = Energetics.settings.storage.total.tolerance;
 		let storageEnergyCap = Energetics.settings.storage.total.cap;
 		let terminalState = this.colony.terminalState;
 		// Adjust max energy allowable in storage if there's an exception state happening
 		if (terminalState && terminalState.type == 'out') {
 			storageEnergyCap = terminalState.amounts[RESOURCE_ENERGY] || 0;
 		}
+
 		// Move energy from storage to terminal if there is not enough in terminal or if there's terminal evacuation
-		if ((terminal.energy < equilibrium - tolerance || storage.energy > storageEnergyCap) && storage.energy > 0) {
+		if ((terminal.energy < equilibrium - tolerance || storage.energy > storageEnergyCap + storageTolerance)
+			&& storage.energy > 0) {
 			if (this.unloadCarry(manager)) return true;
 			manager.task = Tasks.withdraw(storage);
 			manager.task.parent = Tasks.transfer(terminal);
 			return true;
 		}
+
 		// Move energy from terminal to storage if there is too much in terminal and there is space in storage
-		if (terminal.energy > equilibrium + tolerance && _.sum(storage.store) < storageEnergyCap) {
+		if (terminal.energy > equilibrium + tolerance && storage.energy < storageEnergyCap) {
 			if (this.unloadCarry(manager)) return true;
 			manager.task = Tasks.withdraw(terminal);
 			manager.task.parent = Tasks.transfer(storage);
 			return true;
 		}
+
 		// Nothing has happened
 		return false;
 	}

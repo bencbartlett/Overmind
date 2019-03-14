@@ -288,10 +288,15 @@ export class TraderJoe implements ITradeNetwork {
 	 */
 	maintainBuyOrder(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
 					 maxOrdersOfType = Infinity): void {
-		let marketHigh = this.memory.cache.buy[resource] ? this.memory.cache.buy[resource].high : undefined;
+		const marketHigh = this.memory.cache.buy[resource] ? this.memory.cache.buy[resource].high : undefined;
 		if (!marketHigh) {
 			return;
 		}
+		const maxPrice = maxMarketPrices[resource] || maxMarketPrices.default;
+		if (marketHigh > maxPrice) {
+			return;
+		}
+
 		let order = _.find(Game.market.orders,
 						   o => o.type == ORDER_BUY &&
 								o.resourceType == resource &&
