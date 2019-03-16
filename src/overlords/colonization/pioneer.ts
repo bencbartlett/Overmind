@@ -49,7 +49,7 @@ export class PioneerOverlord extends Overlord {
 
 	private handlePioneer(pioneer: Zerg): void {
 		// Ensure you are in the assigned room
-		if (pioneer.room == this.room && !pioneer.pos.isEdge) {
+		if (pioneer.room === this.room && !pioneer.pos.isEdge) {
 			// Remove any blocking structures preventing claimer from reaching controller
 			if (!this.room.my && this.room.structures.length > 0) {
 				let dismantleTarget = this.findStructureBlockingController(pioneer);
@@ -59,14 +59,18 @@ export class PioneerOverlord extends Overlord {
 				}
 			}
 			// Build and recharge
-			if (pioneer.carry.energy == 0) {
+			if (pioneer.carry.energy === 0) {
 				pioneer.task = Tasks.recharge();
 			} else if (this.spawnSite) {
 				pioneer.task = Tasks.build(this.spawnSite);
 			}
 		} else {
-			// pioneer.task = Tasks.goTo(this.pos);
-			pioneer.goTo(this.pos, {ensurePath: true, avoidSK: true});
+			// Recharge before leaving the existing colony.
+			if (pioneer.carry.energy === 0) {
+				pioneer.task = Tasks.recharge();
+			} else {
+				pioneer.goTo(this.pos, {ensurePath: true, avoidSK: true});
+			}
 		}
 	}
 
