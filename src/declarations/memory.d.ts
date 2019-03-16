@@ -66,6 +66,7 @@ interface Memory {
 			maxRange: number;
 			maxConcurrent: number;
 		},
+		intelVisualsUntil?: number;
 	};
 
 	[otherProperty: string]: any;

@@ -55,6 +55,8 @@ export class OvermindConsole {
 		global.setRoomUpgradeRate = this.setRoomUpgradeRate;
 		global.getEmpireMineralDistribution = this.getEmpireMineralDistribution;
 		global.listPortals = this.listPortals;
+		global.visuals = this.visuals;
+		global.showIntelVisuals = this.showIntelVisuals;
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -103,6 +105,8 @@ export class OvermindConsole {
 		descr['setRoomUpgradeRate(room, upgradeRate)'] = 'changes the rate which a room upgrades at, default is 1';
 		descr['getEmpireMineralDistribution()'] = 'returns current census of colonies and mined sk room minerals';
 		descr['getPortals(rangeFromColonies)'] = 'returns active portals within colony range';
+		descr['visuals(enable?)'] = 'enable/disable showing visuals';
+		descr['showIntelVisuals(ticks?)'] = 'show intel using visuals (ticks defaults to 100)';
 
 		// Console list
 		const descrMsg = toColumns(descr, {justify: true, padChar: '.'});
@@ -572,7 +576,7 @@ export class OvermindConsole {
 		}
 	}
 
-	static profileMemory(root = Memory, depth = 1): string {
+	static profileMemory(root = Memory, depth: number = 1): string {
 		const sizes: RecursiveObject = {};
 		console.log(`Profiling memory...`);
 		const start = Game.cpu.getUsed();
@@ -587,4 +591,13 @@ export class OvermindConsole {
 		return `Canceled ${_.values(ordersToCancel).length} orders.`;
 	}
 
+	static visuals(enable: boolean = true): string {
+		Memory.settings.enableVisuals = enable;
+		return `Visuals ${enable ? 'enabled' : 'disabled'}.`;
+	}
+
+	static showIntelVisuals(ticks: number = 100): string {
+		Memory.settings.intelVisualsUntil = Game.time + ticks;
+		return `Intel visuals enabled for the next ${ticks} ticks (until ${Memory.settings.intelVisualsUntil}).`;
+	}
 }

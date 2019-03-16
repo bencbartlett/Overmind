@@ -67,8 +67,8 @@ export class Visualizer {
 	}
 
 	static drawLayout(layout: StructureLayout, anchor: RoomPosition, opts = {}): void {
-		_.defaults(opts, {opacity: 0.5});
 		if (!this.enabled) return;
+		_.defaults(opts, {opacity: 0.5});
 		const vis = new RoomVisual(anchor.roomName);
 		for (const structureType in layout[8]!.buildings) {
 			for (const pos of layout[8]!.buildings[structureType].pos) {

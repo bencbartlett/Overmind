@@ -14,6 +14,7 @@ import {
 } from '../utilities/packrat';
 import {ema, getCacheExpiration} from '../utilities/utils';
 import {CombatIntel} from './CombatIntel';
+import {Visualizer} from '../visuals/Visualizer';
 
 const RECACHE_TIME = 5000;
 const OWNED_RECACHE_TIME = 1000;
@@ -914,6 +915,40 @@ export class RoomIntel {
 
 	}
 
+	static visuals(): void {
+		const until = Memory.settings.intelVisualsUntil;
+		if (!Visualizer.enabled || until === undefined || Game.time > until) {
+			return;
+		}
+		for (const name in Memory.rooms) {
+			const x = 40;
+			let y = 7;
+			const mem = Memory.rooms[name];
+			const exp = mem[_RM.EXPANSION_DATA];
+			if (exp === undefined) {
+				continue;
+			}
+			Visualizer.text(`Intel`, {x: x, y: y, roomName: name});
+			y++;
+			if (exp === false) {
+				Visualizer.text(`Uninhabitable`, {x: x, y: y, roomName: name});
+				y++;
+			} else {
+				Visualizer.text(`Score ${exp.score}`, {x: x, y: y, roomName: name});
+				y++;
+				Visualizer.text(`Bunker Anchor ${exp.bunkerAnchor}`, {x: x, y: y, roomName: name});
+				y++;
+				if (_.keys(exp.outposts).length !== 0) {
+					Visualizer.text(`Outposts:`, {x: x, y: y, roomName: name});
+					y++;
+					for (const outpost in exp.outposts) {
+						Visualizer.text(`${outpost}: ${exp.outposts[outpost]}`, {x: x, y: y, roomName: name});
+						y++;
+					}
+				}
+			}
+		}
+	}
 }
 
 // For debugging purposes
