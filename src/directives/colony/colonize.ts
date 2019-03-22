@@ -32,8 +32,13 @@ export class DirectiveColonize extends Directive {
 		flag.memory.allowPortals = true;
 		super(flag, colony => colony.level >= DirectiveColonize.requiredRCL
 							  && colony.name != Directive.getPos(flag).roomName && colony.spawns.length > 0);
-		// Register incubation status
-		this.toColonize = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
+		if (this.room) {
+			// Register incubation status
+			this.toColonize = Overmind.colonies[Overmind.colonyMap[this.room.name]];
+			if (this.room.memory[_RM.EXPANSION_DATA] === false) {
+				this.room.memory[_RM.EXPANSION_DATA] = undefined;
+			}
+		}
 		// Remove if misplaced
 		if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
 			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
