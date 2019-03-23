@@ -48,7 +48,7 @@ global.__DEFAULT_OVERMIND_SIGNATURE__ = DEFAULT_OVERMIND_SIGNATURE;
 /**
  * If this is enabled, Memory.bot will default to true. This will not change the mode if already set - use setMode().
  */
-export const DEFAULT_OPERATION_MODE: operationMode = 'automatic';
+export const DEFAULT_OPERATION_MODE: operationMode = onPublicServer() ? 'manual' : 'automatic';
 
 /**
  * Limit how many rooms you can claim (for any shard)
