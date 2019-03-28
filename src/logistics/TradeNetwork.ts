@@ -372,7 +372,7 @@ export class TraderJoe implements ITradeNetwork {
 		}
 	}
 
-	priceOf(mineralType: ResourceConstant): number {
+	public priceOf(mineralType: ResourceConstant): number {
 		if (this.memory.cache.sell[mineralType]) {
 			return this.memory.cache.sell[mineralType].low;
 		} else {

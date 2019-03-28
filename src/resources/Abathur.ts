@@ -176,7 +176,7 @@ export class Abathur {
 		return true;
 	}
 
-	hasExcess(mineralType: ResourceConstant, excessAmount = 0): boolean {
+	private hasExcess(mineralType: ResourceConstant, excessAmount = 0): boolean {
 		return this.assets[mineralType] - excessAmount > Math.max((wantedStockAmounts[mineralType] || 0),
 																  (priorityStockAmounts[mineralType] || 0));
 	}
@@ -202,7 +202,7 @@ export class Abathur {
 				if (amountOwned < amountNeeded) { // if there is a shortage of this resource
 					let reactionQueue = this.buildReactionQueue(<ResourceConstant>resourceType,
 																amountNeeded - amountOwned, verbose);
-					let missingBaseMinerals = this.getMissingBasicMinerals(reactionQueue);
+					let missingBaseMinerals = this.getMissingBasicMinerals(reactionQueue, verbose);
 					if (!_.any(missingBaseMinerals)
 						|| this.canReceiveBasicMineralsForReaction(missingBaseMinerals, amountNeeded + 1000)
 						|| this.canBuyBasicMineralsForReaction(missingBaseMinerals)) {
@@ -270,8 +270,10 @@ export class Abathur {
 	/**
 	 * Figure out which basic minerals are missing and how much
 	 */
-	getMissingBasicMinerals(reactionQueue: Reaction[]): { [resourceType: string]: number } {
+	getMissingBasicMinerals(reactionQueue: Reaction[], verbose = false): { [resourceType: string]: number } {
 		let requiredBasicMinerals = this.getRequiredBasicMinerals(reactionQueue);
+		if (verbose) console.log(`Required basic minerals: ${JSON.stringify(requiredBasicMinerals)}`);
+		if (verbose) console.log(`assets: ${JSON.stringify(this.assets)}`);
 		let missingBasicMinerals: { [resourceType: string]: number } = {};
 		for (let mineralType in requiredBasicMinerals) {
 			let amountMissing = requiredBasicMinerals[mineralType] - (this.assets[mineralType] || 0);
@@ -279,6 +281,7 @@ export class Abathur {
 				missingBasicMinerals[mineralType] = amountMissing;
 			}
 		}
+		if (verbose) console.log(`Missing basic minerals: ${JSON.stringify(missingBasicMinerals)}`);
 		return missingBasicMinerals;
 	}
 
