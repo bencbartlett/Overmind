@@ -8,6 +8,7 @@ import {log} from '../../console/log';
 import {Roles} from '../../creepSetups/setups';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {printRoomName} from '../../utilities/utils';
+import { isString } from 'lodash';
 
 
 /**
@@ -65,6 +66,12 @@ export class DirectiveColonize extends Directive {
 			// Remove the directive
 			this.remove();
 		}
+		// if reserved or owned by Overmind user - throw warning but don't remove? Included code to remove, just commented out.
+		if (isString(Game.rooms[this.pos.roomName].owner) && Game.rooms[this.pos.roomName].owner != MY_USERNAME && Assimilator.isAssimilated(Game.rooms[this.pos.roomName].owner!)) {
+			log.warning(`${this.print} is in a room controlled by another Overmind user!`)
+			//this.remove();
+		}
+
 		if (Game.time % 10 == 2 && this.room && !!this.room.owner && this.room.owner != MY_USERNAME) {
 			log.notify(`Removing Colonize directive in ${this.pos.roomName}: room already owned by another player.`);
 			this.remove();

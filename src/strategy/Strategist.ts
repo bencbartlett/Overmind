@@ -7,8 +7,9 @@ import {maxBy} from '../utilities/utils';
 import {log} from '../console/log';
 import {Pathing} from '../movement/Pathing';
 import {assimilationLocked} from '../assimilation/decorator';
-import {MAX_OWNED_ROOMS, SHARD3_MAX_OWNED_ROOMS} from '../~settings';
+import {MAX_OWNED_ROOMS, SHARD3_MAX_OWNED_ROOMS, MY_USERNAME} from '../~settings';
 import {profile} from '../profiler/decorator';
+import { isString } from 'lodash';
 
 
 const CHECK_EXPANSION_FREQUENCY = 1000;
@@ -114,6 +115,12 @@ export class Strategist implements IStrategist {
 				if (_.any(adjacentRooms, roomName => Memory.rooms[roomName][_RM.AVOID])) {
 					continue;
 				}
+
+				// Are there other Overmind users nearby?
+				if (_.any(adjacentRooms, roomName => isString(Game.rooms[roomName].owner) && Game.rooms[roomName].owner != MY_USERNAME && Assimilator.isAssimilated(Game.rooms[roomName].owner!))) {
+					score -= TOO_CLOSE_PENALTY;
+				}
+
 				// Reward new minerals and catalyst rooms
 				let mineralType = Memory.rooms[roomName][_RM.MINERAL]
 								  ? Memory.rooms[roomName][_RM.MINERAL]![_RM_MNRL.MINERALTYPE]

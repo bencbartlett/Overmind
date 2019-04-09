@@ -23,6 +23,7 @@ import {Notifier} from './directives/Notifier';
 import {DirectiveColonize} from './directives/colony/colonize';
 import {CombatPlanner} from './strategy/CombatPlanner';
 import {DirectiveClearRoom} from './directives/colony/clearRoom';
+import { isString } from 'lodash';
 
 
 // export const DIRECTIVE_CHECK_FREQUENCY = 2;
@@ -272,7 +273,11 @@ export class Overseer implements IOverseer {
 				let sourcePositions = _.map(sourceCoords, src => derefCoords(src.c, roomName));
 				let sourceDistances = _.map(sourcePositions, pos => Pathing.distance(origin, pos));
 				if (_.any(sourceDistances, dist => dist == undefined
-												   || dist > Colony.settings.maxSourceDistance)) return false;
+					|| dist > Colony.settings.maxSourceDistance)) return false;
+				// Don't create outpost on-top of another Overmind user
+				if (isString(Game.rooms[roomName].owner) && Assimilator.isAssimilated(Game.rooms[roomName].owner!)) {
+					return false;
+				}
 				return _.sum(sourceDistances) / sourceDistances.length;
 			});
 
