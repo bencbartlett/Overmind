@@ -5,6 +5,7 @@ import { SpawnGroup } from '../../logistics/SpawnGroup';
 import { ClaimingOverlord } from '../../overlords/colonization/claimer';
 import { profile } from '../../profiler/decorator';
 import { Directive } from '../Directive';
+import { MY_USERNAME } from '../../~settings';
 
 
 /**
@@ -45,9 +46,17 @@ export class DirectiveIncubate extends Directive {
 				this.remove();
 			}
 		}
+
 		// if reserved or owned by Overmind user - throw warning but don't remove? Included code to remove, just commented out.
-		if (typeof RoomIntel.roomOwnedBy(this.pos.roomName) === 'string' && Assimilator.isAssimilated(RoomIntel.roomOwnedBy(this.pos.roomName)!) || RoomIntel.roomReservedBy(this.pos.roomName) === 'string' && Assimilator.isAssimilated(RoomIntel.roomOwnedBy(this.pos.roomName)!)) {
-			log.warning(`${this.print} is in a room controlled by another Overmind user!`)
+		let AssimilatedRoomOwner = (typeof RoomIntel.roomOwnedBy(this.pos.roomName) === 'string' && RoomIntel.roomOwnedBy(this.pos.roomName) != MY_USERNAME && Assimilator.isAssimilated(RoomIntel.roomOwnedBy(this.pos.roomName)!))
+		let AssimilatedRoomReserved = (typeof RoomIntel.roomReservedBy(this.pos.roomName) === 'string' && RoomIntel.roomReservedBy(this.pos.roomName) != MY_USERNAME && Assimilator.isAssimilated(RoomIntel.roomReservedBy(this.pos.roomName)!))
+		//log.debug(`${this.print} Owned by: ${RoomIntel.roomOwnedBy(this.pos.roomName)}, who is ${AssimilatedRoomOwner} Assimilated. Reserved by: ${RoomIntel.roomReservedBy(this.pos.roomName)}, who is ${AssimilatedRoomReserved} Assimilated`)
+		if (Game.time % 10 == 2 && AssimilatedRoomOwner) {
+			log.warning(`${this.print} is in a room controlled by another Overmind user ${RoomIntel.roomOwnedBy(this.pos.roomName)}!`)
+			//this.remove();
+		}
+		else if (Game.time % 10 == 2 && AssimilatedRoomReserved) {
+			log.warning(`${this.print} is in a room controlled by another Overmind user ${RoomIntel.roomReservedBy(this.pos.roomName)}!`)
 			//this.remove();
 		}
 	}
