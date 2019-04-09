@@ -41,7 +41,7 @@ export class DirectiveOutpost extends Directive {
 			this.remove();
 		}
 		// if reserved or owned by Overmind user - throw warning but don't remove? Included code to remove, just commented out.
-		if (typeof Game.rooms[this.pos.roomName].owner === 'string' && Game.rooms[this.pos.roomName].owner != MY_USERNAME && Assimilator.isAssimilated(Game.rooms[this.pos.roomName].owner!)) {
+		if (typeof RoomIntel.roomOwnedBy(this.pos.roomName) === 'string' && Assimilator.isAssimilated(RoomIntel.roomOwnedBy(this.pos.roomName)!) || RoomIntel.roomReservedBy(this.pos.roomName) === 'string' && Assimilator.isAssimilated(RoomIntel.roomOwnedBy(this.pos.roomName)!)) {
 			log.warning(`${this.print} is in a room controlled by another Overmind user!`)
 			//this.remove();
 		}
