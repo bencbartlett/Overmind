@@ -1,29 +1,28 @@
-import {DirectiveGuard} from './directives/defense/guard';
-import {DirectiveBootstrap} from './directives/situational/bootstrap';
-import {profile} from './profiler/decorator';
-import {Colony, ColonyStage} from './Colony';
-import {Overlord} from './overlords/Overlord';
-import {Directive} from './directives/Directive';
-import {log} from './console/log';
-import {Pathing} from './movement/Pathing';
-import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
-import {DirectiveNukeResponse} from './directives/situational/nukeResponse';
-import {DirectiveTerminalEvacuateState} from './directives/terminalState/terminalState_evacuate';
-import {bodyCost} from './creepSetups/CreepSetup';
-import {LogisticsNetwork} from './logistics/LogisticsNetwork';
-import {Cartographer, ROOMTYPE_CONTROLLER, ROOMTYPE_SOURCEKEEPER} from './utilities/Cartographer';
-import {derefCoords, hasJustSpawned, minBy, onPublicServer} from './utilities/utils';
-import {DirectiveOutpost} from './directives/colony/outpost';
-import {Autonomy, getAutonomyLevel, Mem} from './memory/Memory';
-import {RoomIntel} from './intel/RoomIntel';
-import {Roles} from './creepSetups/setups';
-import {MUON, MY_USERNAME, USE_TRY_CATCH} from './~settings';
-import {DirectiveOutpostDefense} from './directives/defense/outpostDefense';
-import {Notifier} from './directives/Notifier';
-import {DirectiveColonize} from './directives/colony/colonize';
-import {CombatPlanner} from './strategy/CombatPlanner';
-import {DirectiveClearRoom} from './directives/colony/clearRoom';
-import { isString } from 'lodash';
+import { Colony, ColonyStage } from './Colony';
+import { log } from './console/log';
+import { bodyCost } from './creepSetups/CreepSetup';
+import { Roles } from './creepSetups/setups';
+import { Directive } from './directives/Directive';
+import { Notifier } from './directives/Notifier';
+import { DirectiveClearRoom } from './directives/colony/clearRoom';
+import { DirectiveColonize } from './directives/colony/colonize';
+import { DirectiveOutpost } from './directives/colony/outpost';
+import { DirectiveGuard } from './directives/defense/guard';
+import { DirectiveInvasionDefense } from './directives/defense/invasionDefense';
+import { DirectiveOutpostDefense } from './directives/defense/outpostDefense';
+import { DirectiveBootstrap } from './directives/situational/bootstrap';
+import { DirectiveNukeResponse } from './directives/situational/nukeResponse';
+import { DirectiveTerminalEvacuateState } from './directives/terminalState/terminalState_evacuate';
+import { RoomIntel } from './intel/RoomIntel';
+import { LogisticsNetwork } from './logistics/LogisticsNetwork';
+import { Autonomy, Mem, getAutonomyLevel } from './memory/Memory';
+import { Pathing } from './movement/Pathing';
+import { Overlord } from './overlords/Overlord';
+import { profile } from './profiler/decorator';
+import { CombatPlanner } from './strategy/CombatPlanner';
+import { Cartographer, ROOMTYPE_CONTROLLER, ROOMTYPE_SOURCEKEEPER } from './utilities/Cartographer';
+import { derefCoords, hasJustSpawned, minBy, onPublicServer } from './utilities/utils';
+import { MUON, MY_USERNAME, USE_TRY_CATCH } from './~settings';
 
 
 // export const DIRECTIVE_CHECK_FREQUENCY = 2;
@@ -275,7 +274,8 @@ export class Overseer implements IOverseer {
 				if (_.any(sourceDistances, dist => dist == undefined
 					|| dist > Colony.settings.maxSourceDistance)) return false;
 				// Don't create outpost on-top of another Overmind user
-				if (isString(Game.rooms[roomName].owner) && Assimilator.isAssimilated(Game.rooms[roomName].owner!)) {
+				if (typeof Game.rooms[this.pos.roomName].owner === 'string' && Assimilator.isAssimilated(Game.rooms[roomName].owner!)) {
+					log.debug(`Strategist triggered no outpost on overmind user ${Game.rooms[roomName].owner} for ${roomName}`)
 					return false;
 				}
 				return _.sum(sourceDistances) / sourceDistances.length;

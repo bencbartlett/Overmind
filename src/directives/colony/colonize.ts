@@ -1,14 +1,13 @@
-import {profile} from '../../profiler/decorator';
-import {Directive} from '../Directive';
-import {ClaimingOverlord} from '../../overlords/colonization/claimer';
-import {Colony} from '../../Colony';
-import {PioneerOverlord} from '../../overlords/colonization/pioneer';
-import {MY_USERNAME} from '../../~settings';
-import {log} from '../../console/log';
-import {Roles} from '../../creepSetups/setups';
-import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
-import {printRoomName} from '../../utilities/utils';
-import { isString } from 'lodash';
+import { Colony } from '../../Colony';
+import { log } from '../../console/log';
+import { Roles } from '../../creepSetups/setups';
+import { ClaimingOverlord } from '../../overlords/colonization/claimer';
+import { PioneerOverlord } from '../../overlords/colonization/pioneer';
+import { profile } from '../../profiler/decorator';
+import { Cartographer, ROOMTYPE_CONTROLLER } from '../../utilities/Cartographer';
+import { printRoomName } from '../../utilities/utils';
+import { MY_USERNAME } from '../../~settings';
+import { Directive } from '../Directive';
 
 
 /**
@@ -67,7 +66,7 @@ export class DirectiveColonize extends Directive {
 			this.remove();
 		}
 		// if reserved or owned by Overmind user - throw warning but don't remove? Included code to remove, just commented out.
-		if (isString(Game.rooms[this.pos.roomName].owner) && Game.rooms[this.pos.roomName].owner != MY_USERNAME && Assimilator.isAssimilated(Game.rooms[this.pos.roomName].owner!)) {
+		if (typeof Game.rooms[this.pos.roomName].owner === 'string' && Game.rooms[this.pos.roomName].owner != MY_USERNAME && Assimilator.isAssimilated(Game.rooms[this.pos.roomName].owner!)) {
 			log.warning(`${this.print} is in a room controlled by another Overmind user!`)
 			//this.remove();
 		}

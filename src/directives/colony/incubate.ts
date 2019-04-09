@@ -1,11 +1,10 @@
-import {profile} from '../../profiler/decorator';
-import {Directive} from '../Directive';
-import {ClaimingOverlord} from '../../overlords/colonization/claimer';
-import {Colony} from '../../Colony';
-import {SpawnGroup} from '../../logistics/SpawnGroup';
-import { isString } from 'lodash';
-import { MY_USERNAME } from '../../~settings';
+import { Colony } from '../../Colony';
 import { log } from '../../console/log';
+import { SpawnGroup } from '../../logistics/SpawnGroup';
+import { ClaimingOverlord } from '../../overlords/colonization/claimer';
+import { profile } from '../../profiler/decorator';
+import { MY_USERNAME } from '../../~settings';
+import { Directive } from '../Directive';
 
 
 /**
@@ -47,7 +46,7 @@ export class DirectiveIncubate extends Directive {
 			}
 		}
 		// if reserved or owned by Overmind user - throw warning but don't remove? Included code to remove, just commented out.
-		if (isString(Game.rooms[this.pos.roomName].owner) && Game.rooms[this.pos.roomName].owner != MY_USERNAME && Assimilator.isAssimilated(Game.rooms[this.pos.roomName].owner!)) {
+		if (typeof Game.rooms[this.pos.roomName].owner === 'string' && Game.rooms[this.pos.roomName].owner != MY_USERNAME && Assimilator.isAssimilated(Game.rooms[this.pos.roomName].owner!)) {
 			log.warning(`${this.print} is in a room controlled by another Overmind user!`)
 			//this.remove();
 		}

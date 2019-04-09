@@ -1,12 +1,11 @@
-import {Directive} from '../Directive';
-import {profile} from '../../profiler/decorator';
-import {ReservingOverlord} from '../../overlords/colonization/reserver';
-import {StationaryScoutOverlord} from '../../overlords/scouting/stationary';
-import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
-import {RoomIntel} from '../../intel/RoomIntel';
-import {log} from '../../console/log';
-import { isString } from 'lodash'
 import { MY_USERNAME } from '~settings';
+import { log } from '../../console/log';
+import { RoomIntel } from '../../intel/RoomIntel';
+import { ReservingOverlord } from '../../overlords/colonization/reserver';
+import { StationaryScoutOverlord } from '../../overlords/scouting/stationary';
+import { profile } from '../../profiler/decorator';
+import { Cartographer, ROOMTYPE_CONTROLLER } from '../../utilities/Cartographer';
+import { Directive } from '../Directive';
 
 /**
  * Claims a new room and incubates it from the nearest (or specified) colony
@@ -42,7 +41,7 @@ export class DirectiveOutpost extends Directive {
 			this.remove();
 		}
 		// if reserved or owned by Overmind user - throw warning but don't remove? Included code to remove, just commented out.
-		if (isString(Game.rooms[this.pos.roomName].owner) && Game.rooms[this.pos.roomName].owner != MY_USERNAME && Assimilator.isAssimilated(Game.rooms[this.pos.roomName].owner!)) {
+		if (typeof Game.rooms[this.pos.roomName].owner === 'string' && Game.rooms[this.pos.roomName].owner != MY_USERNAME && Assimilator.isAssimilated(Game.rooms[this.pos.roomName].owner!)) {
 			log.warning(`${this.print} is in a room controlled by another Overmind user!`)
 			//this.remove();
 		}

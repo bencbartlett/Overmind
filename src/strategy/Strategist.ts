@@ -1,15 +1,14 @@
-import {Autonomy, getAutonomyLevel, Mem} from '../memory/Memory';
-import {Colony, getAllColonies} from '../Colony';
-import {DirectiveColonize} from '../directives/colony/colonize';
-import {Cartographer} from '../utilities/Cartographer';
-import {MIN_EXPANSION_DISTANCE} from './ExpansionPlanner';
-import {maxBy} from '../utilities/utils';
-import {log} from '../console/log';
-import {Pathing} from '../movement/Pathing';
-import {assimilationLocked} from '../assimilation/decorator';
-import {MAX_OWNED_ROOMS, SHARD3_MAX_OWNED_ROOMS, MY_USERNAME} from '../~settings';
-import {profile} from '../profiler/decorator';
-import { isString } from 'lodash';
+import { Colony, getAllColonies } from '../Colony';
+import { assimilationLocked } from '../assimilation/decorator';
+import { log } from '../console/log';
+import { DirectiveColonize } from '../directives/colony/colonize';
+import { Autonomy, Mem, getAutonomyLevel } from '../memory/Memory';
+import { Pathing } from '../movement/Pathing';
+import { profile } from '../profiler/decorator';
+import { Cartographer } from '../utilities/Cartographer';
+import { maxBy } from '../utilities/utils';
+import { MAX_OWNED_ROOMS, MY_USERNAME, SHARD3_MAX_OWNED_ROOMS } from '../~settings';
+import { MIN_EXPANSION_DISTANCE } from './ExpansionPlanner';
 
 
 const CHECK_EXPANSION_FREQUENCY = 1000;
@@ -117,8 +116,9 @@ export class Strategist implements IStrategist {
 				}
 
 				// Are there other Overmind users nearby?
-				if (_.any(adjacentRooms, roomName => isString(Game.rooms[roomName].owner) && Game.rooms[roomName].owner != MY_USERNAME && Assimilator.isAssimilated(Game.rooms[roomName].owner!))) {
+				if (_.any(adjacentRooms, roomName => typeof Game.rooms[roomName].owner === 'string' && Game.rooms[roomName].owner != MY_USERNAME && Assimilator.isAssimilated(Game.rooms[roomName].owner!))) {
 					score -= TOO_CLOSE_PENALTY;
+					log.debug(`Strategist triggered too close to overmind user ${Game.rooms[roomName].owner} for ${roomName}`)
 				}
 
 				// Reward new minerals and catalyst rooms
