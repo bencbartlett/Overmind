@@ -244,8 +244,12 @@ export class Overseer implements IOverseer {
 			}
 			let alreadyOwned = RoomIntel.roomOwnedBy(roomName);
 			let alreadyReserved = RoomIntel.roomReservedBy(roomName);
+			let isBlocked = Game.flags[roomName+"-Blocked"] != null;
+			if (isBlocked) {
+				Game.notify("Room " + roomName + " is blocked, not expanding there.");
+			}
 			let disregardReservations = !onPublicServer() || MY_USERNAME == MUON;
-			if (alreadyOwned || (alreadyReserved && !disregardReservations)) {
+			if (alreadyOwned || (alreadyReserved && !disregardReservations) || isBlocked) {
 				return false;
 			}
 			let neighboringRooms = _.values(Game.map.describeExits(roomName)) as string[];
