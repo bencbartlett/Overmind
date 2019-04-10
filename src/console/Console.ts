@@ -26,6 +26,7 @@ export class OvermindConsole {
 		global.setLogLevel = log.setLogLevel;
 		global.suspendColony = this.suspendColony;
 		global.unsuspendColony = this.unsuspendColony;
+		global.listSuspendedColonies = this.listSuspendedColonies;
 		global.openRoomPlanner = this.openRoomPlanner;
 		global.closeRoomPlanner = this.closeRoomPlanner;
 		global.cancelRoomPlanner = this.cancelRoomPlanner;
@@ -242,6 +243,17 @@ export class OvermindConsole {
 		} else {
 			return `No colony memory for ${roomName}!`;
 		}
+	}
+
+	static listSuspendedColonies(): string {
+		let msg = 'Colonies currently suspended: \n';
+		for (let i in Memory.colonies) {
+			let colonyMemory = Memory.colonies[i] as ColonyMemory | undefined;
+			if (colonyMemory && colonyMemory.suspend == true) {
+				msg += 'Colony ' + i + ' \n';
+			}
+		}
+		return msg;
 	}
 
 	// Room planner control ============================================================================================
