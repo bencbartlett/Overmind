@@ -6,6 +6,10 @@ import {log} from '../../console/log';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {hasContents, printRoomName} from '../../utilities/utils';
 import {DirectiveHaul} from "../resource/haul";
+import {WorkerOverlord} from "../../overlords/core/worker";
+import {Zerg} from "../../zerg/Zerg";
+import {Pathing} from "../../movement/Pathing";
+import {DirectiveDismantle} from "../targeting/dismantle";
 
 
 /**
@@ -29,6 +33,9 @@ export class DirectiveClearRoom extends Directive {
 			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
 						`removing directive!`);
 			this.remove(true);
+		}
+		if (Memory.settings.resourceCollectionMode && Memory.settings.resourceCollectionMode >= 1) {
+			this.memory.keepStorageStructures = true;
 		}
 	}
 
@@ -77,6 +84,19 @@ export class DirectiveClearRoom extends Directive {
 
 	}
 
+	private findStructureBlockingController(pioneer: Zerg): Structure | undefined {
+		let blockingPos = Pathing.findBlockingPos(pioneer.pos, pioneer.room.controller!.pos,
+			_.filter(pioneer.room.structures, s => !s.isWalkable));
+		if (blockingPos) {
+			let structure = blockingPos.lookFor(LOOK_STRUCTURES)[0];
+			if (structure) {
+				return structure;
+			} else {
+				log.error(`${this.print}: no structure at blocking pos ${blockingPos.print}! (Why?)`);
+			}
+		}
+	}
+
 	run() {
 		// Remove if structures are done
 		if (this.room && this.room.my) {
@@ -85,6 +105,22 @@ export class DirectiveClearRoom extends Directive {
 				this.room.controller!.unclaim();
 				log.notify(`Removing clearRoom directive in ${this.pos.roomName}: operation completed.`);
 				this.remove();
+			}
+		// Clear path if controller is not reachable
+		} else if (this.room && this.room.creeps.length > 1) {
+			let currentlyDismantling = _.find(this.room.flags, function(flag) {
+				return (flag.color == DirectiveDismantle.color && flag.secondaryColor == DirectiveDismantle.secondaryColor)
+			});
+
+			if (!currentlyDismantling) {
+				let pathablePos = this.room.creeps[0] ? this.room.creeps[0].pos
+					: Pathing.findPathablePosition(this.room.name);
+				let blockingLocation = Pathing.findBlockingPos(pathablePos, this.room.controller!.pos,
+					_.filter(this.room.structures, s => !s.isWalkable));
+				if (blockingLocation && blockingLocation.lookFor(LOOK_FLAGS).length <= 0) {
+					log.notify(`Adding dismantle directive for ${this.pos.roomName} to reach controller.`);
+					blockingLocation!.createFlag(undefined, DirectiveDismantle.color, DirectiveDismantle.secondaryColor);
+				}
 			}
 		}
 
