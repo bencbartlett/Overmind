@@ -4,7 +4,8 @@ import {ClaimingOverlord} from '../../overlords/colonization/claimer';
 import {MY_USERNAME} from '../../~settings';
 import {log} from '../../console/log';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
-import {printRoomName} from '../../utilities/utils';
+import {hasContents, printRoomName} from '../../utilities/utils';
+import {DirectiveHaul} from "../resource/haul";
 
 
 /**
@@ -52,7 +53,9 @@ export class DirectiveClearRoom extends Directive {
 			for (let s of allStructures) {
 				if (s.structureType == STRUCTURE_CONTROLLER) continue;
 				if (keepStorageStructures &&
-					(s.structureType == STRUCTURE_STORAGE || s.structureType == STRUCTURE_TERMINAL)) {
+					(s.structureType == STRUCTURE_STORAGE || s.structureType == STRUCTURE_TERMINAL) && hasContents(s.store)) {
+					// Create a collection flag
+					let result = s.pos.createFlag(undefined, DirectiveHaul.color, DirectiveHaul.secondaryColor);
 					continue;
 				}
 				if (keepRoads && s.structureType == STRUCTURE_ROAD) {
