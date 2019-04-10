@@ -197,6 +197,7 @@ export class Mem {
 			operationMode: DEFAULT_OPERATION_MODE,
 			log          : {},
 			enableVisuals: true,
+			resourceCollectionMode: 0,
 		});
 		if (!Memory.stats) {
 			Memory.stats = {};
