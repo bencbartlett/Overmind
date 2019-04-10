@@ -44,6 +44,7 @@ export class OvermindConsole {
 		global.endRemoteDebugSession = this.endRemoteDebugSession;
 		global.profileMemory = this.profileMemory;
 		global.cancelMarketOrders = this.cancelMarketOrders;
+		global.setRoomUpgradeRate = this.setRoomUpgradeRate;
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -411,6 +412,15 @@ export class OvermindConsole {
 			barrier.destroy();
 		}
 		return `Destroyed ${room.barriers.length} barriers.`;
+	}
+
+	// Colony Management =================================================================================================
+
+	static setRoomUpgradeRate(roomName: string, rate: number): string {
+		let colony: Colony = Overmind.colonies[roomName];
+		colony.upgradeSite.memory.speedFactor = rate;
+
+		return `Colony ${roomName} is now upgrading at a rate of ${rate}x speed.`;
 	}
 
 
