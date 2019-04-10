@@ -51,15 +51,17 @@ export class DirectiveColonize extends Directive {
 		this.alert(`Colonization in progress`);
 	}
 
-	run() {
+	public run(verbose = false) {
 		if (this.toColonize && this.toColonize.spawns.length > 0) {
 			// Reassign all pioneers to be miners and workers
-			let miningOverlords = _.map(this.toColonize.miningSites, site => site.overlords.mine);
-			for (let pioneer of this.overlords.pioneer.pioneers) {
-				let miningOverlord = miningOverlords.shift();
+			const miningOverlords = _.map(this.toColonize.miningSites, site => site.overlords.mine);
+			for (const pioneer of this.overlords.pioneer.pioneers) {
+				const miningOverlord = miningOverlords.shift();
 				if (miningOverlord) {
+					if (verbose) { log.debug(`Reassigning: ${pioneer.print} to mine: ${miningOverlord.print}`); }
 					pioneer.reassign(miningOverlord, Roles.drone);
 				} else {
+					if (verbose) { log.debug(`Reassigning: ${pioneer.print} to work: ${this.toColonize.overlords.work.print}`); }
 					pioneer.reassign(this.toColonize.overlords.work, Roles.worker);
 				}
 			}
