@@ -34,6 +34,15 @@ export function hasMinerals(store: { [resourceType: string]: number }): boolean 
 	return false;
 }
 
+export function hasContents(store: { [resourceType: string]: number }): boolean {
+	for (let resourceType in store) {
+		if ((store[<ResourceConstant>resourceType] || 0) > 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
 /**
  * Obtain the username of the player
  */
