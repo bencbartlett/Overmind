@@ -1,7 +1,7 @@
 import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {isStoreStructure} from '../../declarations/typeGuards';
-import {PowerMiningOverlord} from '../../overlords/situational/powerMiner';
+import {PowerDrillOverlord} from '../../overlords/powerMining/PowerDrill';
 
 
 interface DirectivePowerMineMemory extends FlagMemory {
@@ -19,6 +19,8 @@ export class DirectivePowerMine extends Directive {
 	static color = COLOR_YELLOW;
 	static secondaryColor = COLOR_RED;
 
+	private _powerBank: StructurePowerBank | undefined;
+
 	private _store: StoreDefinition;
 	private _drops: { [resourceType: string]: Resource[] };
 
@@ -29,7 +31,7 @@ export class DirectivePowerMine extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		this.overlords.powerMine = new PowerMiningOverlord(this);
+		this.overlords.powerMine = new PowerDrillOverlord(this);
 	}
 
 	get targetedBy(): string[] {
@@ -51,50 +53,42 @@ export class DirectivePowerMine extends Directive {
 		return _.keys(this.drops).length > 0;
 	}
 
-	get storeStructure(): StructurePowerBank | undefined {
-		if (this.pos.isVisible) {
-			return <StructurePowerBank>this.pos.lookForStructure(StructurePowerBank);
-		}
-		return undefined;
-	}
-
-	get store(): StoreDefinition {
-		if (!this._store) {
-			// Merge the "storage" of drops with the store of structure
-			let store: { [resourceType: string]: number } = {};
-			if (this.storeStructure) {
-				if (isStoreStructure(this.storeStructure)) {
-					store = this.storeStructure.store;
-				} else {
-					store = {'energy': this.storeStructure.energy};
-				}
-			} else {
-				store = {'energy': 0};
-			}
-			// Merge with drops
-			for (let resourceType of _.keys(this.drops)) {
-				let totalResourceAmount = _.sum(this.drops[resourceType], drop => drop.amount);
-				if (store[resourceType]) {
-					store[resourceType] += totalResourceAmount;
-				} else {
-					store[resourceType] = totalResourceAmount;
-				}
-			}
-			this._store = store as StoreDefinition;
-		}
-		return this._store;
-	}
+	// get store(): StoreDefinition {
+	// 	if (!this._store) {
+	// 		// Merge the "storage" of drops with the store of structure
+	// 		let store: { [resourceType: string]: number } = {};
+	// 		if (this.storeStructure) {
+	// 			if (isStoreStructure(this.storeStructure)) {
+	// 				store = this.storeStructure.store;
+	// 			} else {
+	// 				store = {'energy': this.storeStructure.energy};
+	// 			}
+	// 		} else {
+	// 			store = {'energy': 0};
+	// 		}
+	// 		// Merge with drops
+	// 		for (let resourceType of _.keys(this.drops)) {
+	// 			let totalResourceAmount = _.sum(this.drops[resourceType], drop => drop.amount);
+	// 			if (store[resourceType]) {
+	// 				store[resourceType] += totalResourceAmount;
+	// 			} else {
+	// 				store[resourceType] = totalResourceAmount;
+	// 			}
+	// 		}
+	// 		this._store = store as StoreDefinition;
+	// 	}
+	// 	return this._store;
+	// }
 
 	/**
 	 * Total amount of resources remaining to be transported; cached into memory in case room loses visibility
 	 */
 	get totalResources(): number {
+		if (this.memory.totalResources == undefined) {
+			return 5000; // pick some non-zero number so that powerMiners will spawn
+		}
 		if (this.pos.isVisible) {
-			this.memory.totalResources = _.sum(this.store); // update total amount remaining
-		} else {
-			if (this.memory.totalResources == undefined) {
-				return 1000; // pick some non-zero number so that powerMiners will spawn
-			}
+			this.memory.totalResources = this._powerBank ? this._powerBank.power : this.memory.totalResources; // update total amount remaining
 		}
 		return this.memory.totalResources;
 	}
@@ -104,9 +98,9 @@ export class DirectivePowerMine extends Directive {
 	}
 
 	run(): void {
-		if (_.sum(this.store) == 0 && this.pos.isVisible) {
-			this.remove();
-		}
+		// if (_.sum(this.store) == 0 && this.pos.isVisible) {
+		// 	//this.remove();
+		// }
 	}
 
 }
