@@ -25,6 +25,7 @@ import {DirectiveExtract} from './resource/extract';
 import {DirectiveSwarmDestroy} from './offense/swarmDestroy';
 import {DirectiveOutpostDefense} from './defense/outpostDefense';
 import {DirectiveClearRoom} from './colony/clearRoom';
+import {DirectivePowerMine} from "./resource/powerMine";
 
 /**
  * This is the initializer for directives, which maps flags by their color code to the corresponding directive
@@ -92,6 +93,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveExtract(flag);
 				case COLOR_BLUE:
 					return new DirectiveHaul(flag);
+				case COLOR_RED:
+					return new DirectivePowerMine(flag);
 			}
 			break;
 
