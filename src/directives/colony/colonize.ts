@@ -1,13 +1,14 @@
-import {profile} from '../../profiler/decorator';
-import {Directive} from '../Directive';
-import {ClaimingOverlord} from '../../overlords/colonization/claimer';
-import {Colony} from '../../Colony';
-import {PioneerOverlord} from '../../overlords/colonization/pioneer';
-import {MY_USERNAME} from '../../~settings';
-import {log} from '../../console/log';
-import {Roles} from '../../creepSetups/setups';
-import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
-import {printRoomName} from '../../utilities/utils';
+import { Colony } from '../../Colony';
+import { log } from '../../console/log';
+import { Roles } from '../../creepSetups/setups';
+import { RoomIntel } from '../../intel/RoomIntel';
+import { ClaimingOverlord } from '../../overlords/colonization/claimer';
+import { PioneerOverlord } from '../../overlords/colonization/pioneer';
+import { profile } from '../../profiler/decorator';
+import { Cartographer, ROOMTYPE_CONTROLLER } from '../../utilities/Cartographer';
+import { printRoomName } from '../../utilities/utils';
+import { MY_USERNAME } from '../../~settings';
+import { Directive } from '../Directive';
 
 
 /**
@@ -67,6 +68,20 @@ export class DirectiveColonize extends Directive {
 			// Remove the directive
 			this.remove();
 		}
+
+		// if reserved or owned by Overmind user - throw warning but don't remove? Included code to remove, just commented out.
+		let AssimilatedRoomOwner = (typeof RoomIntel.roomOwnedBy(this.pos.roomName) === 'string' && RoomIntel.roomOwnedBy(this.pos.roomName) != MY_USERNAME && Assimilator.isAssimilated(RoomIntel.roomOwnedBy(this.pos.roomName)!))
+		let AssimilatedRoomReserved = (typeof RoomIntel.roomReservedBy(this.pos.roomName) === 'string' && RoomIntel.roomReservedBy(this.pos.roomName) != MY_USERNAME && Assimilator.isAssimilated(RoomIntel.roomReservedBy(this.pos.roomName)!))
+		//log.debug(`${this.print} Owned by: ${RoomIntel.roomOwnedBy(this.pos.roomName)}, who is ${AssimilatedRoomOwner} Assimilated. Reserved by: ${RoomIntel.roomReservedBy(this.pos.roomName)}, who is ${AssimilatedRoomReserved} Assimilated`)
+		if (Game.time % 10 == 2 && AssimilatedRoomOwner) {
+			log.warning(`${this.print} is in a room controlled by another Overmind user ${RoomIntel.roomOwnedBy(this.pos.roomName)}!`)
+			//this.remove();
+		}
+		else if (Game.time % 10 == 2 && AssimilatedRoomReserved) {
+			log.warning(`${this.print} is in a room controlled by another Overmind user ${RoomIntel.roomReservedBy(this.pos.roomName)}!`)
+			//this.remove();
+		}
+
 		if (Game.time % 10 == 2 && this.room && !!this.room.owner && this.room.owner != MY_USERNAME) {
 			log.notify(`Removing Colonize directive in ${this.pos.roomName}: room already owned by another player.`);
 			this.remove();
