@@ -311,15 +311,15 @@ export const CombatSetups = {
 
 	drill: {
 		default: new CreepSetup(Roles.drill, {
-			pattern  : [MOVE, ATTACK, ATTACK, ATTACK, ATTACK, MOVE],
+			pattern  : [MOVE, ATTACK, ATTACK, MOVE],
 			sizeLimit: Infinity,
 		}),
 	},
 
 	coolant: {
 		default: new CreepSetup(Roles.coolant, {
-			pattern  : [HEAL, HEAL, MOVE],
-			sizeLimit: 11,
+			pattern  : [HEAL, MOVE],
+			sizeLimit: Infinity,
 		}),
 	}
 

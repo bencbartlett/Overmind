@@ -11,6 +11,7 @@ import {CombatOverlord} from '../CombatOverlord';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {OverlordMemory} from '../Overlord';
 import {DirectivePowerMine} from "../../directives/resource/powerMine";
+import {DirectiveHaul} from "../../directives/resource/haul";
 
 interface PowerDrillOverlordMemory extends OverlordMemory {
 	targetPBID?: string;
@@ -43,25 +44,38 @@ export class PowerDrillOverlord extends CombatOverlord {
 	refresh() {
 		super.refresh();
 		this.memory = Mem.wrap(this.directive.memory, 'powerDrill');
+
 	}
 
 	init() {
-		this.wishlist(2, CombatSetups.coolant.default);
-		this.wishlist(1, CombatSetups.drill.default);
+		this.wishlist(3, CombatSetups.drill.default);
+		this.wishlist(4, CombatSetups.coolant.default);
 	}
 
 	private handleDrill(drill: CombatZerg) {
+		if (!this.targetPowerBank) {
+			if (!this.room) {
+				// We are not there yet
+			} else {
+				var bank = this.pos.lookForStructure(STRUCTURE_POWER_BANK) as StructurePowerBank;
+				this.targetPowerBank = bank;
+				// If power bank is dead
+				if (bank == undefined) {
+					Game.notify("Power bank in " + this.room + " is dead.");
+					DirectiveHaul.create(this.pos);
+					this.directive.remove();
+					Game.notify("FINISHED POWER MININING IN " + this.room + " DELETING CREEP at time: " + Game.time.toString());
+					drill.suicide();
+					return;
+				}
+			}
+		}
 
 		// Go to keeper room
-		if (!this.room || drill.room != this.room || drill.pos.isEdge) {
-			// log.debugCreep(reaper, `Going to room!`);
-			//drill.healSelfIfPossible();
+		if (!this.room || drill.room != this.room || drill.pos.isEdge || !this.targetPowerBank) {
+			// log.debugCreep(drill, `Going to room!`);
 			Game.notify("Drill is moving to power site in " + this.room + ".");
 			drill.goTo(this.pos);
-			return;
-		} else if (!this.targetPowerBank) {
-			// If power bank is dead
-			Game.notify("Power bank in " + this.room + " is dead.");
 			return;
 		} else if (this.targetPowerBank.hits < 50000) {
 			Game.notify("Power bank in " + this.room + " is almost dead");
@@ -71,13 +85,13 @@ export class PowerDrillOverlord extends CombatOverlord {
 
 		//  Handle killing bank
 		if (drill.hits > 100) {
+			drill.goTo(this.targetPowerBank);
 			drill.attack(this.targetPowerBank);
 		}
 	}
 
 	private handleCoolant(coolant: CombatZerg) {
-
-		// Go to keeper room
+		// Go to powerbank room
 		if (!this.room || coolant.room != this.room || coolant.pos.isEdge) {
 			// log.debugCreep(reaper, `Going to room!`);
 			coolant.healSelfIfPossible();
@@ -86,12 +100,18 @@ export class PowerDrillOverlord extends CombatOverlord {
 		} else if (!this.targetPowerBank) {
 			// If power bank is dead
 			Game.notify("Power bank in " + this.room + " is dead.");
+			coolant.suicide();
 			return;
 		} else if (this.targetPowerBank.hits < 50000) {
 			Game.notify("Power bank in " + this.room + " is almost dead");
+			Game.notify("Power bank in " + this.room + ", beginning haul operation.");
+			//DirectiveHaul.create(this.pos);
+		}
+		if (coolant.pos.getRangeTo(_.first(this.drills)) > 1) {
+			coolant.goTo(_.first(this.drills));
 		}
 
-		coolant.autoHeal();
+		coolant.autoHeal(false);
 	}
 
 	run() {
