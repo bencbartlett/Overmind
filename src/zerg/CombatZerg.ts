@@ -179,7 +179,7 @@ export class CombatZerg extends Zerg {
 	 */
 	autoHeal(allowRangedHeal = true, friendlies = this.room.creeps) {
 		let target = CombatTargeting.findBestHealingTargetInRange(this, allowRangedHeal ? 3 : 1, friendlies);
-		this.debug(`Heal taget: ${target}`);
+		this.debug(`Heal target: ${target}`);
 		if (target) {
 			if (this.pos.getRangeTo(target) <= 1) {
 				return this.heal(target);
