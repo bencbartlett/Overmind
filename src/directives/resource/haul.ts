@@ -30,7 +30,7 @@ export class DirectiveHaul extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		if (this.pos.lookForStructure(STRUCTURE_POWER_BANK)) {
+		if (this.room && this.pos.lookForStructure(STRUCTURE_POWER_BANK)) {
 			this.overlords.haul = new PowerHaulingOverlord(this);
 		} else {
 			this.overlords.haul = new HaulingOverlord(this);
