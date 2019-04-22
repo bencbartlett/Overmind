@@ -12,6 +12,7 @@ import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {OverlordMemory} from '../Overlord';
 import {DirectivePowerMine} from "../../directives/resource/powerMine";
 import {DirectiveHaul} from "../../directives/resource/haul";
+import {calculateFormationStrength} from "../../utilities/creepUtils";
 
 interface PowerDrillOverlordMemory extends OverlordMemory {
 	targetPBID?: string;
@@ -24,6 +25,7 @@ interface PowerDrillOverlordMemory extends OverlordMemory {
 export class PowerDrillOverlord extends CombatOverlord {
 
 	static requiredRCL = 7;
+	static haulerPrespawn = 600;
 
 	directive: DirectiveSKOutpost;
 	memory: PowerDrillOverlordMemory;
@@ -62,9 +64,8 @@ export class PowerDrillOverlord extends CombatOverlord {
 				// If power bank is dead
 				if (bank == undefined) {
 					Game.notify("Power bank in " + this.room + " is dead.");
-					DirectiveHaul.create(this.pos);
 					this.directive.remove();
-					Game.notify("FINISHED POWER MININING IN " + this.room + " DELETING CREEP at time: " + Game.time.toString());
+					Game.notify("FINISHED POWER MINING IN " + this.room + " DELETING CREEP at time: " + Game.time.toString());
 					drill.suicide();
 					return;
 				}
@@ -77,11 +78,12 @@ export class PowerDrillOverlord extends CombatOverlord {
 			Game.notify("Drill is moving to power site in " + this.room + ".");
 			drill.goTo(this.pos);
 			return;
-		} else if (this.targetPowerBank.hits < 50000) {
+		} else if (this.targetPowerBank.hits < 800000) {
 			Game.notify("Power bank in " + this.room + " is almost dead");
-			// Spawn a hauler for this location
-			// Should make a 49 carry 1 move creep to hold some, and a bunch of creeps to pick up ground first then container creep
+			DirectiveHaul.create(this.pos);
 		}
+		// Spawn a hauler for this location
+		// Should make a 49 carry 1 move creep to hold some, and a bunch of creeps to pick up ground first then container creep
 
 		//  Handle killing bank
 		if (drill.hits > 100) {

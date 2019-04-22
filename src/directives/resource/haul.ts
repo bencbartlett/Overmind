@@ -2,6 +2,7 @@ import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {isStoreStructure} from '../../declarations/typeGuards';
 import {HaulingOverlord} from '../../overlords/situational/hauler';
+import {PowerHaulingOverlord} from "../../overlords/powerMining/PowerHauler";
 
 
 interface DirectiveHaulMemory extends FlagMemory {
@@ -10,7 +11,7 @@ interface DirectiveHaulMemory extends FlagMemory {
 
 
 /**
- * Hauling directive: spawns hauler creeps to move large amounts of resourecs from a location (e.g. draining a storage)
+ * Hauling directive: spawns hauler creeps to move large amounts of resources from a location (e.g. draining a storage)
  */
 @profile
 export class DirectiveHaul extends Directive {
@@ -29,7 +30,11 @@ export class DirectiveHaul extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		this.overlords.haul = new HaulingOverlord(this);
+		if (this.pos.lookForStructure(STRUCTURE_POWER_BANK)) {
+			this.overlords.haul = new PowerHaulingOverlord(this);
+		} else {
+			this.overlords.haul = new HaulingOverlord(this);
+		}
 	}
 
 	get targetedBy(): string[] {
@@ -106,9 +111,9 @@ export class DirectiveHaul extends Directive {
 	}
 
 	run(): void {
-		// if (_.sum(this.store) == 0 && this.pos.isVisible) {
-		// 	this.remove();
-		// }
+		if (_.sum(this.store) == 0 && this.pos.isVisible) {
+			this.remove();
+		}
 	}
 
 }
