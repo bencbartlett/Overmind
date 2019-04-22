@@ -54,6 +54,15 @@ export class PowerDrillOverlord extends CombatOverlord {
 		this.wishlist(4, CombatSetups.coolant.default);
 	}
 
+	private getHostileDrill(powerBank: StructurePowerBank) {
+		return powerBank.hits < powerBank.hitsMax && powerBank.pos.findInRange(FIND_HOSTILE_CREEPS, 2)[0];
+	}
+
+	private handleHostileDrill(hostileDrill: Creep, powerBank: StructurePowerBank) {
+		Game.notify(`${hostileDrill.owner.username} power harvesting ${powerBank.room.name}, competing for same power bank.`);
+		// this.directive.remove();
+	}
+
 	private handleDrill(drill: CombatZerg) {
 		if (!this.targetPowerBank) {
 			if (!this.room) {
@@ -86,9 +95,10 @@ export class PowerDrillOverlord extends CombatOverlord {
 		// Should make a 49 carry 1 move creep to hold some, and a bunch of creeps to pick up ground first then container creep
 
 		//  Handle killing bank
-		if (drill.hits > 100) {
-			drill.goTo(this.targetPowerBank);
+		if (drill.pos.isNearTo(this.targetPowerBank)) {
 			drill.attack(this.targetPowerBank);
+		} else {
+			drill.goTo(this.targetPowerBank);
 		}
 	}
 
@@ -109,11 +119,26 @@ export class PowerDrillOverlord extends CombatOverlord {
 			Game.notify("Power bank in " + this.room + ", beginning haul operation.");
 			//DirectiveHaul.create(this.pos);
 		}
-		if (coolant.pos.getRangeTo(_.first(this.drills)) > 1) {
-			coolant.goTo(_.first(this.drills));
+
+		if (coolant.memory.partner) {
+			let drill = Game.creeps[coolant.memory.partner];
+			if (!drill) {
+				coolant.memory.partner = undefined;
+			} else if (!coolant.pos.isNearTo(drill)) {
+				coolant.goTo(drill);
+			} else {
+				coolant.heal(drill);
+			}
+		}
+		if (coolant.pos.getRangeTo(this.targetPowerBank) > 2) {
+			coolant.goTo(this.targetPowerBank);
 		}
 
 		coolant.autoHeal(false);
+	}
+
+	private findDrillToPartner(coolant: CombatZerg) {
+
 	}
 
 	run() {
