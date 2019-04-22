@@ -9,21 +9,27 @@ import {Pathing} from '../../movement/Pathing';
 import {Energetics} from '../../logistics/Energetics';
 import {profile} from '../../profiler/decorator';
 import {Roles, Setups} from '../../creepSetups/setups';
+import {HaulingOverlord} from "../situational/hauler";
+import {calculateFormationStrength} from "../../utilities/creepUtils";
 
 /**
  * Spawns special-purpose haulers for transporting resources to/from a specified target
  */
 @profile
-export class HaulingOverlord extends Overlord {
+export class PowerHaulingOverlord extends HaulingOverlord {
 
 	haulers: Zerg[];
 	directive: DirectiveHaul;
+	powerBank: StructurePowerBank | undefined;
+	tickToSpawnOn: number;
+	numHaulers: number;
 
-	requiredRCL: number = 4;
+	requiredRCL = 6;
+	// Allow time for body to spawn
+	prespawnAmount = 200;
 
-	constructor(directive: DirectiveHaul, priority = directive.hasDrops ? OverlordPriority.collectionUrgent.haul :
-													 OverlordPriority.collection.haul) {
-		super(directive, 'haul', priority);
+	constructor(directive: DirectiveHaul, priority = OverlordPriority.collectionUrgent.haul) {
+		super(directive, priority); // Removed 'haul' string
 		this.directive = directive;
 		this.haulers = this.zerg(Roles.transport);
 	}
@@ -43,9 +49,26 @@ export class HaulingOverlord extends Overlord {
 		let haulerCarryParts = Setups.transporters.early.getBodyPotential(CARRY, this.colony);
 		let haulingPowerPerLifetime = CREEP_LIFE_TIME * haulerCarryParts * CARRY_CAPACITY;
 		// Calculate number of haulers
-		let numHaulers = Math.min(Math.ceil(haulingPowerNeeded / haulingPowerPerLifetime), MAX_HAULERS);
+		this.numHaulers = Math.min(Math.ceil(haulingPowerNeeded / haulingPowerPerLifetime), MAX_HAULERS);
 		// Request the haulers
-		this.wishlist(numHaulers, Setups.transporters.early);
+		this.tickToSpawnOn = Game.time + (this.calculateRemainingLifespan() || 0) - this.prespawnAmount;
+	}
+
+
+	calculateRemainingLifespan() {
+		if (!this.room) {
+			return undefined;
+		} else if (this.powerBank == undefined) {
+			// Power Bank is gone
+			return 0;
+		} else {
+			let tally = calculateFormationStrength(this.powerBank.pos.findInRange(FIND_MY_CREEPS, 4));
+			let healStrength: number = tally.heal * HEAL_POWER || 0;
+			let attackStrength: number = tally.attack * ATTACK_POWER || 0;
+			// PB have 50% hitback, avg damage is attack strength if its enough healing, otherwise healing
+			let avgDamagePerTick = Math.min(attackStrength, healStrength*2);
+			return this.powerBank.hits / avgDamagePerTick;
+		}
 	}
 
 	protected handleHauler(hauler: Zerg) {
@@ -115,6 +138,9 @@ export class HaulingOverlord extends Overlord {
 	}
 
 	run() {
+		if (Game.time >= this.tickToSpawnOn && this.haulers.length == 0) {
+			this.wishlist(this.numHaulers, Setups.transporters.early);
+		}
 		for (let hauler of this.haulers) {
 			if (hauler.isIdle) {
 				this.handleHauler(hauler);

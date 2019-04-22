@@ -22,6 +22,8 @@ export const Roles = {
 	ranged    : 'hydralisk',
 	healer    : 'transfuser',
 	dismantler: 'lurker',
+	drill : 'drill',
+	coolant : 'coolant',
 };
 
 /**
@@ -306,5 +308,20 @@ export const CombatSetups = {
 		}),
 
 	},
+
+	drill: {
+		default: new CreepSetup(Roles.drill, {
+			pattern  : [MOVE, ATTACK, ATTACK, MOVE],
+			sizeLimit: Infinity,
+		}),
+	},
+
+	coolant: {
+		default: new CreepSetup(Roles.coolant, {
+			pattern  : [HEAL, MOVE],
+			sizeLimit: Infinity,
+		}),
+	}
+
 
 };
