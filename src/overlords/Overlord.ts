@@ -44,6 +44,13 @@ export interface OverlordMemory {
 	suspendUntil?: number;
 }
 
+enum overlordLifecyleState {
+	preparing,
+	active,
+	paused,
+	finishing
+}
+
 const OverlordMemoryDefaults: OverlordMemory = {};
 
 /**
@@ -69,6 +76,7 @@ export abstract class Overlord {
 	private _combatZerg: { [roleName: string]: CombatZerg[] };
 	private boosts: { [roleName: string]: _ResourceConstantSansEnergy[] | undefined };
 	creepUsageReport: { [roleName: string]: [number, number] | undefined };
+	lifeCycle: overlordLifecyleState;
 
 	constructor(initializer: OverlordInitializer | Colony, name: string, priority: number) {
 		this.initializer = initializer;

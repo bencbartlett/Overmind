@@ -11,15 +11,16 @@ import {profile} from '../../profiler/decorator';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {HaulingOverlord} from "../situational/hauler";
 import {calculateFormationStrength} from "../../utilities/creepUtils";
+import {DirectivePowerMine} from "../../directives/resource/powerMine";
 
 /**
  * Spawns special-purpose haulers for transporting resources to/from a specified target
  */
 @profile
-export class PowerHaulingOverlord extends HaulingOverlord {
+export class PowerHaulingOverlord extends Overlord {
 
 	haulers: Zerg[];
-	directive: DirectiveHaul;
+	directive: DirectivePowerMine;
 	powerBank: StructurePowerBank | undefined;
 	tickToSpawnOn: number;
 	numHaulers: number;
@@ -28,8 +29,8 @@ export class PowerHaulingOverlord extends HaulingOverlord {
 	// Allow time for body to spawn
 	prespawnAmount = 200;
 
-	constructor(directive: DirectiveHaul, priority = OverlordPriority.collectionUrgent.haul) {
-		super(directive, priority); // Removed 'haul' string
+	constructor(directive: DirectivePowerMine, priority = OverlordPriority.collectionUrgent.haul) {
+		super(directive, 'powerHaul', priority);
 		this.directive = directive;
 		this.haulers = this.zerg(Roles.transport);
 	}
@@ -85,20 +86,19 @@ export class PowerHaulingOverlord extends HaulingOverlord {
 					}
 				}
 				// Withdraw from store structure
-				if (this.directive.storeStructure) {
-					let store: { [resourceType: string]: number } = {};
-					if (isStoreStructure(this.directive.storeStructure)) {
-						store = this.directive.storeStructure.store;
-					} else {
-						store = {'energy': this.directive.storeStructure.energy};
-					}
-					for (let resourceType in store) {
-						if (store[resourceType] > 0) {
-							hauler.task = Tasks.withdraw(this.directive.storeStructure, <ResourceConstant>resourceType);
-							return;
-						}
-					}
-				}
+				// if (this.directive.storeStructure) {
+				// 	let store: { [resourceType: string]: number } = {};
+				// 	if (this.directive.storeStructure instanceof StructurePowerBank) {
+				// 		store = {'power': this.directive.storeStructure.power};
+				// 	}
+				// 	for (let resourceType in store) {
+				// 		if (store[resourceType] > 0) {
+				// 			//hauler.task = Tasks.withdraw(this.directive.storeStructure, <ResourceConstant>resourceType);
+				// 			// Wait for it to die
+				// 			return;
+				// 		}
+				// 	}
+				// }
 				// Shouldn't reach here
 				log.warning(`${hauler.name} in ${hauler.room.print}: nothing to collect!`);
 			} else {
