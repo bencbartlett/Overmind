@@ -2,6 +2,9 @@ import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
 import {isStoreStructure} from '../../declarations/typeGuards';
 import {PowerDrillOverlord} from '../../overlords/powerMining/PowerDrill';
+import {Pathing} from "../../movement/Pathing";
+import {calculateFormationStrength} from "../../utilities/creepUtils";
+import {PowerHaulingOverlord} from "../../overlords/powerMining/PowerHauler";
 
 
 interface DirectivePowerMineMemory extends FlagMemory {
@@ -19,9 +22,8 @@ export class DirectivePowerMine extends Directive {
 	static color = COLOR_YELLOW;
 	static secondaryColor = COLOR_RED;
 
+	expectedSpawnTime = 200;
 	private _powerBank: StructurePowerBank | undefined;
-
-	private _store: StoreDefinition;
 	private _drops: { [resourceType: string]: Resource[] };
 
 	memory: DirectivePowerMineMemory;
@@ -53,33 +55,6 @@ export class DirectivePowerMine extends Directive {
 		return _.keys(this.drops).length > 0;
 	}
 
-	// get store(): StoreDefinition {
-	// 	if (!this._store) {
-	// 		// Merge the "storage" of drops with the store of structure
-	// 		let store: { [resourceType: string]: number } = {};
-	// 		if (this.storeStructure) {
-	// 			if (isStoreStructure(this.storeStructure)) {
-	// 				store = this.storeStructure.store;
-	// 			} else {
-	// 				store = {'energy': this.storeStructure.energy};
-	// 			}
-	// 		} else {
-	// 			store = {'energy': 0};
-	// 		}
-	// 		// Merge with drops
-	// 		for (let resourceType of _.keys(this.drops)) {
-	// 			let totalResourceAmount = _.sum(this.drops[resourceType], drop => drop.amount);
-	// 			if (store[resourceType]) {
-	// 				store[resourceType] += totalResourceAmount;
-	// 			} else {
-	// 				store[resourceType] = totalResourceAmount;
-	// 			}
-	// 		}
-	// 		this._store = store as StoreDefinition;
-	// 	}
-	// 	return this._store;
-	// }
-
 	/**
 	 * Total amount of resources remaining to be transported; cached into memory in case room loses visibility
 	 */
@@ -93,14 +68,39 @@ export class DirectivePowerMine extends Directive {
 		return this.memory.totalResources;
 	}
 
+	calculateRemainingLifespan() {
+		if (!this.room) {
+			return undefined;
+		} else if (this._powerBank == undefined) {
+			// Power Bank is gone
+			return 0;
+		} else {
+			let tally = calculateFormationStrength(this._powerBank.pos.findInRange(FIND_MY_CREEPS, 4));
+			let healStrength: number = tally.heal * HEAL_POWER || 0;
+			let attackStrength: number = tally.attack * ATTACK_POWER || 0;
+			// PB have 50% hitback, avg damage is attack strength if its enough healing, otherwise healing
+			let avgDamagePerTick = Math.min(attackStrength, healStrength*2);
+			return this._powerBank.hits / avgDamagePerTick;
+		}
+	}
+
+	spawnHaulers() {
+
+		if (this.room && (!this._powerBank || (this.calculateRemainingLifespan()! < Pathing.distance(this.colony.pos, this.flag.pos) + this.expectedSpawnTime))) {
+			this.overlords.powerHaul = new PowerHaulingOverlord(this);
+		}
+	}
+
+
+
 	init(): void {
 		this.alert(`PowerMine directive active`);
 	}
 
+
+
 	run(): void {
-		// if (_.sum(this.store) == 0 && this.pos.isVisible) {
-		// 	//this.remove();
-		// }
+
 	}
 
 }

@@ -25,11 +25,11 @@ interface PowerDrillOverlordMemory extends OverlordMemory {
 export class PowerDrillOverlord extends CombatOverlord {
 
 	static requiredRCL = 7;
-	static haulerPrespawn = 600;
 
-	directive: DirectiveSKOutpost;
+	directive: DirectivePowerMine;
 	memory: PowerDrillOverlordMemory;
 	targetPowerBank: StructurePowerBank | undefined;
+	haulDirectiveCreated: boolean;
 
 	drills: CombatZerg[];
 	coolant: CombatZerg[];
@@ -41,6 +41,7 @@ export class PowerDrillOverlord extends CombatOverlord {
 		this.drills = this.combatZerg(Roles.drill);
 		this.coolant = this.combatZerg(Roles.coolant);
 		this.memory = Mem.wrap(this.directive.memory, 'powerDrill');
+		this.haulDirectiveCreated = false;
 	}
 
 	refresh() {
@@ -87,9 +88,10 @@ export class PowerDrillOverlord extends CombatOverlord {
 			Game.notify("Drill is moving to power site in " + this.room + ".");
 			drill.goTo(this.pos);
 			return;
-		} else if (this.targetPowerBank.hits < 800000) {
+		} else if (this.targetPowerBank.hits < 800000 && !this.haulDirectiveCreated) {
 			Game.notify("Power bank in " + this.room + " is almost dead");
-			DirectiveHaul.create(this.pos);
+			Game.notify("Power bank in " + this.room + ", beginning haul operation.");
+			//this.haulDirectiveCreated = typeof DirectiveHaul.create(this.pos) == "string";
 		}
 		// Spawn a hauler for this location
 		// Should make a 49 carry 1 move creep to hold some, and a bunch of creeps to pick up ground first then container creep
@@ -114,10 +116,6 @@ export class PowerDrillOverlord extends CombatOverlord {
 			Game.notify("Power bank in " + this.room + " is dead.");
 			coolant.suicide();
 			return;
-		} else if (this.targetPowerBank.hits < 50000) {
-			Game.notify("Power bank in " + this.room + " is almost dead");
-			Game.notify("Power bank in " + this.room + ", beginning haul operation.");
-			//DirectiveHaul.create(this.pos);
 		}
 
 		if (coolant.memory.partner) {
