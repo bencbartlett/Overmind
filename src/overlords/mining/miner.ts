@@ -84,7 +84,7 @@ export class MiningOverlord extends Overlord {
 		this.minersNeeded = Math.min(Math.ceil(this.miningPowerNeeded / miningPowerEach),
 									 this.pos.availableNeighbors(true).length);
 		// Allow drop mining at low levels
-		this.allowDropMining = this.colony.level < MiningOverlord.settings.dropMineUntilRCL;
+		this.allowDropMining = this.colony.level < MiningOverlord.settings.dropMineUntilRCL || (this.colony.level > MiningOverlord.settings.dropMineUntilRCL && this.colony.extensions.length < 10); ;
 		if (this.mode != 'early' && !this.allowDropMining) {
 			if (this.container) {
 				this.harvestPos = this.container.pos;
