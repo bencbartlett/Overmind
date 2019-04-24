@@ -23,6 +23,7 @@ export class DirectivePowerMine extends Directive {
 	static secondaryColor = COLOR_RED;
 
 	expectedSpawnTime = 200;
+	haulDirectiveCreated: boolean;
 	private _powerBank: StructurePowerBank | undefined;
 	private _drops: { [resourceType: string]: Resource[] };
 
@@ -85,8 +86,9 @@ export class DirectivePowerMine extends Directive {
 	}
 
 	spawnHaulers() {
-
 		if (this.room && (!this._powerBank || (this.calculateRemainingLifespan()! < Pathing.distance(this.colony.pos, this.flag.pos) + this.expectedSpawnTime))) {
+			Game.notify('Spawning haulers for power mining in room ' + this.room.name);
+			this.haulDirectiveCreated = true;
 			this.overlords.powerHaul = new PowerHaulingOverlord(this);
 		}
 	}
@@ -100,8 +102,10 @@ export class DirectivePowerMine extends Directive {
 
 
 	run(): void {
-
+		if (Game.time % 100 == 0 && !this.haulDirectiveCreated) {
+			Game.notify('Checking if should spawn haulers');
+			this.spawnHaulers();
+		}
 	}
-
 }
 
