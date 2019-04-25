@@ -22,10 +22,10 @@ export class DirectivePowerMine extends Directive {
 	static color = COLOR_YELLOW;
 	static secondaryColor = COLOR_RED;
 
-	expectedSpawnTime = 200;
+	expectedSpawnTime = 150;
 	miningDone:  boolean;
 	haulDirectiveCreated: boolean;
-	private _powerBank: StructurePowerBank | undefined;
+	powerBank: StructurePowerBank | undefined;
 	private _drops: { [resourceType: string]: Resource[] };
 
 	memory: DirectivePowerMineMemory;
@@ -37,6 +37,8 @@ export class DirectivePowerMine extends Directive {
 	spawnMoarOverlords() {
 		if (!this.miningDone) {
 			this.overlords.powerMine = new PowerDrillOverlord(this);
+		} else {
+			console.log('Mining is done!');
 		}
 		this.spawnHaulers();
 	}
@@ -68,7 +70,7 @@ export class DirectivePowerMine extends Directive {
 			return 5000; // pick some non-zero number so that powerMiners will spawn
 		}
 		if (this.pos.isVisible) {
-			this.memory.totalResources = this._powerBank ? this._powerBank.power : this.memory.totalResources; // update total amount remaining
+			this.memory.totalResources = this.powerBank ? this.powerBank.power : this.memory.totalResources; // update total amount remaining
 		}
 		return this.memory.totalResources;
 	}
@@ -76,21 +78,21 @@ export class DirectivePowerMine extends Directive {
 	calculateRemainingLifespan() {
 		if (!this.room) {
 			return undefined;
-		} else if (this._powerBank == undefined) {
+		} else if (this.powerBank == undefined) {
 			// Power Bank is gone
 			return 0;
 		} else {
-			let tally = calculateFormationStrength(this._powerBank.pos.findInRange(FIND_MY_CREEPS, 4));
+			let tally = calculateFormationStrength(this.powerBank.pos.findInRange(FIND_MY_CREEPS, 4));
 			let healStrength: number = tally.heal * HEAL_POWER || 0;
 			let attackStrength: number = tally.attack * ATTACK_POWER || 0;
 			// PB have 50% hitback, avg damage is attack strength if its enough healing, otherwise healing
 			let avgDamagePerTick = Math.min(attackStrength, healStrength*2);
-			return this._powerBank.hits / avgDamagePerTick;
+			return this.powerBank.hits / avgDamagePerTick;
 		}
 	}
 
 	spawnHaulers() {
-		if (this.room && (!this._powerBank || (this.calculateRemainingLifespan()! < Pathing.distance(this.colony.pos, this.flag.pos) + this.expectedSpawnTime))) {
+		if (this.room && (!this.powerBank || (this.calculateRemainingLifespan()! < (Pathing.distance(this.colony.pos, this.flag.pos) + this.expectedSpawnTime)))) {
 			Game.notify('Spawning haulers for power mining in room ' + this.room.name);
 			this.haulDirectiveCreated = true;
 			this.overlords.powerHaul = new PowerHaulingOverlord(this);
