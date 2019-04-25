@@ -21,7 +21,6 @@ export class PowerHaulingOverlord extends Overlord {
 
 	haulers: Zerg[];
 	directive: DirectivePowerMine;
-	powerBank: StructurePowerBank | undefined;
 	tickToSpawnOn: number;
 	numHaulers: number;
 
@@ -59,16 +58,16 @@ export class PowerHaulingOverlord extends Overlord {
 	calculateRemainingLifespan() {
 		if (!this.room) {
 			return undefined;
-		} else if (this.powerBank == undefined) {
+		} else if (this.directive.powerBank == undefined) {
 			// Power Bank is gone
 			return 0;
 		} else {
-			let tally = calculateFormationStrength(this.powerBank.pos.findInRange(FIND_MY_CREEPS, 4));
+			let tally = calculateFormationStrength(this.directive.powerBank.pos.findInRange(FIND_MY_CREEPS, 4));
 			let healStrength: number = tally.heal * HEAL_POWER || 0;
 			let attackStrength: number = tally.attack * ATTACK_POWER || 0;
 			// PB have 50% hitback, avg damage is attack strength if its enough healing, otherwise healing
 			let avgDamagePerTick = Math.min(attackStrength, healStrength*2);
-			return this.powerBank.hits / avgDamagePerTick;
+			return this.directive.powerBank.hits / avgDamagePerTick;
 		}
 	}
 
@@ -82,6 +81,24 @@ export class PowerHaulingOverlord extends Overlord {
 					let drop = allDrops[0];
 					if (drop) {
 						hauler.task = Tasks.pickup(drop);
+						return;
+					}
+				} else if (this.directive.powerBank) {
+					if (hauler.pos.getRangeTo(this.directive.powerBank) > 4) {
+						hauler.goTo(this.directive.powerBank);
+					} else {
+						hauler.say('🚬');
+					}
+					return;
+				} else if (this.room &&  this.room.drops) {
+					let allDrops: Resource[] = _.flatten(_.values(this.room.drops));
+					let drop = allDrops[0];
+					if (drop) {
+						hauler.task = Tasks.pickup(drop);
+						return;
+					} else {
+						hauler.say('💀 RIP 💀');
+						hauler.suicide();
 						return;
 					}
 				}
