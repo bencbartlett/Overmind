@@ -109,9 +109,8 @@ export class DirectiveHaul extends Directive {
 
 	run(): void {
 		if (_.sum(this.store) == 0 && this.pos.isVisible) {
-			//this.remove();
-			this.finishAtTime = Game.time + 1000;
-			//this.overlords
+			// If everything is picked up, crudely give enough time to bring it back
+			this.finishAtTime = Game.time + 800;
 		}
 		if (Game.time >= this.finishAtTime) {
 			this.remove();

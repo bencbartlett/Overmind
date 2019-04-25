@@ -22,7 +22,7 @@ export class DirectivePowerMine extends Directive {
 	static color = COLOR_YELLOW;
 	static secondaryColor = COLOR_RED;
 
-	expectedSpawnTime = 200;
+	expectedSpawnTime = 150;
 	miningDone:  boolean;
 	haulDirectiveCreated: boolean;
 	powerBank: StructurePowerBank | undefined;
