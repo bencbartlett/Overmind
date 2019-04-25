@@ -13,6 +13,7 @@ import {OverlordMemory} from '../Overlord';
 import {DirectivePowerMine} from "../../directives/resource/powerMine";
 import {DirectiveHaul} from "../../directives/resource/haul";
 import {calculateFormationStrength} from "../../utilities/creepUtils";
+import {Zerg} from "../../zerg/Zerg";
 
 interface PowerDrillOverlordMemory extends OverlordMemory {
 	targetPBID?: string;
@@ -31,6 +32,9 @@ export class PowerDrillOverlord extends CombatOverlord {
 	targetPowerBank: StructurePowerBank | undefined;
 	haulDirectiveCreated: boolean;
 
+	partnerMap: Map<string, string[]>;
+	isDone: boolean;
+
 	drills: CombatZerg[];
 	coolant: CombatZerg[];
 
@@ -42,6 +46,7 @@ export class PowerDrillOverlord extends CombatOverlord {
 		this.coolant = this.combatZerg(Roles.coolant);
 		this.memory = Mem.wrap(this.directive.memory, 'powerDrill');
 		this.haulDirectiveCreated = false;
+		this.partnerMap = new Map();
 	}
 
 	refresh() {
@@ -51,7 +56,7 @@ export class PowerDrillOverlord extends CombatOverlord {
 	}
 
 	init() {
-		this.wishlist(3, CombatSetups.drill.default);
+		this.wishlist(2, CombatSetups.drill.default);
 		this.wishlist(4, CombatSetups.coolant.default);
 	}
 
@@ -73,9 +78,16 @@ export class PowerDrillOverlord extends CombatOverlord {
 				this.targetPowerBank = bank;
 				// If power bank is dead
 				if (bank == undefined) {
-					Game.notify("Power bank in " + this.room + " is dead.");
+					if (this.pos.lookFor(LOOK_RESOURCES).length == 0) {
+					// Well shit, we didn't finish mining
+					Game.notify("WE FUCKING FAILED. SORRY CHIEF, COULDN'T FINISHED POWER MINING IN " + this.room + " DELETING CREEP at time: " + Game.time.toString());
 					this.directive.remove();
+					return;
+				}
+					Game.notify("Power bank in " + this.room + " is dead.");
+					//this.directive.remove();
 					Game.notify("FINISHED POWER MINING IN " + this.room + " DELETING CREEP at time: " + Game.time.toString());
+					drill.say('💀 RIP 💀');
 					drill.suicide();
 					return;
 				}
@@ -98,8 +110,10 @@ export class PowerDrillOverlord extends CombatOverlord {
 
 		//  Handle killing bank
 		if (drill.pos.isNearTo(this.targetPowerBank)) {
+			PowerDrillOverlord.periodicSay(drill,'Drilling⚒️');
 			drill.attack(this.targetPowerBank);
 		} else {
+			PowerDrillOverlord.periodicSay(drill,'🚗Traveling🚗');
 			drill.goTo(this.targetPowerBank);
 		}
 	}
@@ -107,13 +121,15 @@ export class PowerDrillOverlord extends CombatOverlord {
 	private handleCoolant(coolant: CombatZerg) {
 		// Go to powerbank room
 		if (!this.room || coolant.room != this.room || coolant.pos.isEdge) {
-			// log.debugCreep(reaper, `Going to room!`);
+			// log.debugCreep(coolant, `Going to room!`);
 			coolant.healSelfIfPossible();
 			coolant.goTo(this.pos);
 			return;
 		} else if (!this.targetPowerBank) {
 			// If power bank is dead
 			Game.notify("Power bank in " + this.room + " is dead.");
+			coolant.say('💀 RIP 💀');
+			this.isDone = true;
 			coolant.suicide();
 			return;
 		}
@@ -121,27 +137,61 @@ export class PowerDrillOverlord extends CombatOverlord {
 		if (coolant.memory.partner) {
 			let drill = Game.creeps[coolant.memory.partner];
 			if (!drill) {
+				// Partner is dead
 				coolant.memory.partner = undefined;
+				this.findDrillToPartner(coolant)
 			} else if (!coolant.pos.isNearTo(drill)) {
+				PowerDrillOverlord.periodicSay(coolant,'🚗Traveling️');
 				coolant.goTo(drill);
 			} else {
+				PowerDrillOverlord.periodicSay(coolant,'❄️Cooling❄️');
 				coolant.heal(drill);
 			}
+			if (Game.time % 10 == PowerDrillOverlord.getCreepNameOffset(coolant)) {
+				this.findDrillToPartner(coolant);
+			}
+			return;
+		} else {
+			this.findDrillToPartner(coolant);
 		}
 		if (coolant.pos.getRangeTo(this.targetPowerBank) > 2) {
 			coolant.goTo(this.targetPowerBank);
+		} else if (coolant.pos.getRangeTo(this.targetPowerBank) == 1) {
+			coolant.flee([this.targetPowerBank.pos]);
+		} else {
+			coolant.goTo(_.sample(_.filter(this.drills, drill => drill.hits < drill.hitsMax)));
 		}
 
-		coolant.autoHeal(false);
+		coolant.autoHeal();
 	}
 
 	private findDrillToPartner(coolant: CombatZerg) {
+		let needsHealing = _.min(Array.from(this.partnerMap.keys()), key => this.partnerMap.get(key)!.length);
+		if (this.partnerMap.get(needsHealing)) {
+			this.partnerMap.get(needsHealing)!.concat(coolant.name);
+			coolant.memory.partner = needsHealing;
+		}
+		// let newPartner = _.sample(_.filter(this.drills, drill => this.room == drill.room));
+		// coolant.memory.partner = newPartner != undefined ? newPartner.name : undefined;
+		coolant.say('Partnering!');
+	}
 
+	static periodicSay(zerg: CombatZerg, text: string) {
+		if (Game.time % 10 == PowerDrillOverlord.getCreepNameOffset(zerg)) {
+			zerg.say(text, true);
+		}
+	}
+
+	static getCreepNameOffset(creep: Zerg) {
+		return parseInt(creep.name.charAt(creep.name.length-1)) || 0;
 	}
 
 	run() {
 		this.autoRun(this.drills, drill => this.handleDrill(drill));
 		this.autoRun(this.coolant, coolant => this.handleCoolant(coolant));
+		if (this.isDone) {
+			this.directive.setMiningDone(this.name);
+		}
 	}
 
 	visuals() {

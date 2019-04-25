@@ -31,11 +31,7 @@ export class DirectiveHaul extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		if (this.room && this.pos.lookForStructure(STRUCTURE_POWER_BANK)) {
-			this.overlords.haul = new PowerHaulingOverlord(this);
-		} else {
-			this.overlords.haul = new HaulingOverlord(this);
-		}
+		this.overlords.haul = new HaulingOverlord(this);
 	}
 
 	get targetedBy(): string[] {
@@ -57,12 +53,11 @@ export class DirectiveHaul extends Directive {
 		return _.keys(this.drops).length > 0;
 	}
 
-	get storeStructure(): StructureStorage | StructureTerminal | StructureNuker | StructurePowerBank | undefined {
+	get storeStructure(): StructureStorage | StructureTerminal | StructureNuker | undefined {
 		if (this.pos.isVisible) {
 			return <StructureStorage>this.pos.lookForStructure(STRUCTURE_STORAGE) ||
 				   <StructureTerminal>this.pos.lookForStructure(STRUCTURE_TERMINAL) ||
-				   <StructureNuker>this.pos.lookForStructure(STRUCTURE_NUKER) ||
-					<StructurePowerBank>this.pos.lookForStructure(STRUCTURE_POWER_BANK);
+				   <StructureNuker>this.pos.lookForStructure(STRUCTURE_NUKER);
 		}
 		return undefined;
 	}
@@ -74,8 +69,6 @@ export class DirectiveHaul extends Directive {
 			if (this.storeStructure) {
 				if (isStoreStructure(this.storeStructure)) {
 					store = this.storeStructure.store;
-				} else if (this.storeStructure instanceof StructurePowerBank) {
-					store = {'power': this.storeStructure.power};
 				} else {
 					store = {'energy': this.storeStructure.energy};
 				}
@@ -118,7 +111,7 @@ export class DirectiveHaul extends Directive {
 		if (_.sum(this.store) == 0 && this.pos.isVisible) {
 			//this.remove();
 			this.finishAtTime = Game.time + 1000;
-			this.overlords
+			//this.overlords
 		}
 		if (Game.time >= this.finishAtTime) {
 			this.remove();

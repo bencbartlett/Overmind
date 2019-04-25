@@ -48,7 +48,7 @@ export class HaulingOverlord extends Overlord {
 		this.wishlist(numHaulers, Setups.transporters.early);
 	}
 
-	protected handleHauler(hauler: Zerg) {
+	private handleHauler(hauler: Zerg) {
 		if (_.sum(hauler.carry) == 0) {
 			// Travel to directive and collect resources
 			if (hauler.inSameRoomAs(this.directive)) {
