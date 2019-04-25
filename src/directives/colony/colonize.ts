@@ -30,7 +30,7 @@ export class DirectiveColonize extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag, colony => colony.level >= DirectiveColonize.requiredRCL
-							  && colony.name != Directive.getPos(flag).roomName && colony.spawns.length > 0);
+							  && colony.name != Directive.getPos(flag).roomName);
 		// Register incubation status
 		this.toColonize = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
 		// Remove if misplaced
