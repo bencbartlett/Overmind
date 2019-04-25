@@ -33,6 +33,7 @@ export class PowerDrillOverlord extends CombatOverlord {
 	haulDirectiveCreated: boolean;
 
 	partnerMap: Map<string, string[]>;
+	isDone: boolean;
 
 	drills: CombatZerg[];
 	coolant: CombatZerg[];
@@ -128,6 +129,7 @@ export class PowerDrillOverlord extends CombatOverlord {
 			// If power bank is dead
 			Game.notify("Power bank in " + this.room + " is dead.");
 			coolant.say('💀 RIP 💀');
+			this.isDone = true;
 			coolant.suicide();
 			return;
 		}
@@ -187,6 +189,9 @@ export class PowerDrillOverlord extends CombatOverlord {
 	run() {
 		this.autoRun(this.drills, drill => this.handleDrill(drill));
 		this.autoRun(this.coolant, coolant => this.handleCoolant(coolant));
+		if (this.isDone) {
+			this.directive.setMiningDone(this.name);
+		}
 	}
 
 	visuals() {

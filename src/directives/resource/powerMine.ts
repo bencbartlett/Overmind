@@ -23,6 +23,7 @@ export class DirectivePowerMine extends Directive {
 	static secondaryColor = COLOR_RED;
 
 	expectedSpawnTime = 200;
+	miningDone:  boolean;
 	haulDirectiveCreated: boolean;
 	private _powerBank: StructurePowerBank | undefined;
 	private _drops: { [resourceType: string]: Resource[] };
@@ -34,7 +35,10 @@ export class DirectivePowerMine extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		this.overlords.powerMine = new PowerDrillOverlord(this);
+		if (!this.miningDone) {
+			this.overlords.powerMine = new PowerDrillOverlord(this);
+		}
+		this.spawnHaulers();
 	}
 
 	get targetedBy(): string[] {
@@ -93,7 +97,10 @@ export class DirectivePowerMine extends Directive {
 		}
 	}
 
-
+	setMiningDone(name: string) {
+		delete this.overlords[name];
+		this.miningDone = true;
+	}
 
 	init(): void {
 		this.alert(`PowerMine directive active`);
@@ -102,10 +109,10 @@ export class DirectivePowerMine extends Directive {
 
 
 	run(): void {
-		if (Game.time % 100 == 0 && !this.haulDirectiveCreated) {
-			Game.notify('Checking if should spawn haulers');
-			this.spawnHaulers();
-		}
+		// if (Game.time % 100 == 0 && !this.haulDirectiveCreated) {
+		// 	Game.notify('Checking if should spawn haulers');
+		// 	this.spawnHaulers();
+		// }
 	}
 }
 
