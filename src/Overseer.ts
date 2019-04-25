@@ -246,7 +246,7 @@ export class Overseer implements IOverseer {
 			let alreadyReserved = RoomIntel.roomReservedBy(roomName);
 			let isBlocked = Game.flags[roomName+"-Block"] != null;
 			if (isBlocked) {
-				Game.notify("Room " + roomName + " is blocked, not expanding there.");
+				//Game.notify("Room " + roomName + " is blocked, not expanding there.");
 			}
 			let disregardReservations = !onPublicServer() || MY_USERNAME == MUON;
 			if (alreadyOwned || (alreadyReserved && !disregardReservations) || isBlocked) {
