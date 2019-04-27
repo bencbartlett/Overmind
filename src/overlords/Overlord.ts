@@ -44,13 +44,6 @@ export interface OverlordMemory {
 	suspendUntil?: number;
 }
 
-enum overlordLifecyleState {
-	preparing,	// Waiting to begin at correct time
-	active,		// Currently running
-	paused,		// Temporarily paused
-	finishing	// Spawning is now disabled, run overlord until all creeps are dead
-}
-
 const OverlordMemoryDefaults: OverlordMemory = {};
 
 /**
@@ -76,7 +69,6 @@ export abstract class Overlord {
 	private _combatZerg: { [roleName: string]: CombatZerg[] };
 	private boosts: { [roleName: string]: _ResourceConstantSansEnergy[] | undefined };
 	creepUsageReport: { [roleName: string]: [number, number] | undefined };
-	lifeCycle: overlordLifecyleState;
 
 	constructor(initializer: OverlordInitializer | Colony, name: string, priority: number) {
 		this.initializer = initializer;
@@ -326,11 +318,6 @@ export abstract class Overlord {
 	protected requestCreep(setup: CreepSetup, opts = {} as CreepRequestOptions) {
 		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN});
 		let spawner = this.spawnGroup || this.colony.spawnGroup || this.colony.hatchery;
-		if (this.lifeCycle == overlordLifecyleState.paused || this.lifeCycle == overlordLifecyleState.finishing) {
-			// Don't
-			log.warning(`Overlord ${this.ref} @ ${this.pos.print}: State is ${this.lifeCycle}, not spawning!`);
-			return;
-		}
 		if (spawner) {
 			let request: SpawnRequest = {
 				setup   : setup,

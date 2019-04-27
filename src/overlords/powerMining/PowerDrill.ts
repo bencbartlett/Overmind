@@ -54,9 +54,7 @@ export class PowerDrillOverlord extends CombatOverlord {
 
 	init() {
 		this.wishlist(1, CombatSetups.drill.default);
-		this.wishlist(2, CombatSetups.coolant.default);
-		this.wishlist(1, CombatSetups.drill.default);
-		this.wishlist(2, CombatSetups.coolant.default);
+		this.wishlist(2, CombatSetups.coolant.small);
 	}
 
 	private getHostileDrill(powerBank: StructurePowerBank) {
@@ -77,13 +75,13 @@ export class PowerDrillOverlord extends CombatOverlord {
 				// We are not there yet
 			} else {
 				// If power bank is dead
-				if (this.directive.powerBank == undefined) {
+				if (this.directive.powerBank == undefined && !this.directive.haulDirectiveCreated) {
 					if (this.pos.lookFor(LOOK_RESOURCES).length == 0) {
-					// Well shit, we didn't finish mining
-					Game.notify("WE FUCKING FAILED. SORRY CHIEF, COULDN'T FINISHED POWER MINING IN " + this.room + " DELETING CREEP at time: " + Game.time.toString());
-					this.directive.remove();
-					return;
-				}
+						// Well shit, we didn't finish mining
+						Game.notify(`WE FAILED. SORRY CHIEF, COULDN'T FINISHED POWER MINING IN ${this.room} DELETING CREEP at time: ${Game.time}`);
+						this.directive.remove();
+						return;
+					}
 					Game.notify("Power bank in " + this.room + " is dead.");
 					drill.say('💀 RIP 💀');
 					this.directive.setMiningDone(this.name);

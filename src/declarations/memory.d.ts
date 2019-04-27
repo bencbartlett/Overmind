@@ -26,7 +26,6 @@ interface Memory {
 			maxRange: number;
 			minPower: number;
 		};
-		resourceCollectionMode: resourceCollectionMode;
 	}
 	profiler?: any;
 	stats: any;

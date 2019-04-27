@@ -321,6 +321,10 @@ export const CombatSetups = {
 			pattern  : [HEAL, MOVE],
 			sizeLimit: Infinity,
 		}),
+		small: new CreepSetup(Roles.coolant, {
+			pattern  : [HEAL, MOVE],
+			sizeLimit: 16,
+		}),
 	}
 
 

@@ -202,7 +202,6 @@ export class Mem {
 				maxRange: 5,
 				minPower: 5000,
 			},
-			resourceCollectionMode: 0,
 		});
 		if (!Memory.stats) {
 			Memory.stats = {};
