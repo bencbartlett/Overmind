@@ -197,6 +197,12 @@ export class Mem {
 			operationMode: DEFAULT_OPERATION_MODE,
 			log          : {},
 			enableVisuals: true,
+			powerCollection: {
+				enabled: false,
+				maxRange: 5,
+				minPower: 5000,
+			},
+			resourceCollectionMode: 0,
 		});
 		if (!Memory.stats) {
 			Memory.stats = {};
