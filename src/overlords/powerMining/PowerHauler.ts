@@ -1,15 +1,12 @@
 import {Overlord} from '../Overlord';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {Zerg} from '../../zerg/Zerg';
-import {DirectiveHaul} from '../../directives/resource/haul';
 import {Tasks} from '../../tasks/Tasks';
-import {isStoreStructure} from '../../declarations/typeGuards';
 import {log} from '../../console/log';
 import {Pathing} from '../../movement/Pathing';
 import {Energetics} from '../../logistics/Energetics';
 import {profile} from '../../profiler/decorator';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {HaulingOverlord} from "../situational/hauler";
 import {calculateFormationStrength} from "../../utilities/creepUtils";
 import {DirectivePowerMine} from "../../directives/resource/powerMine";
 
@@ -49,7 +46,7 @@ export class PowerHaulingOverlord extends Overlord {
 		let haulerCarryParts = Setups.transporters.early.getBodyPotential(CARRY, this.colony);
 		let haulingPowerPerLifetime = CREEP_LIFE_TIME * haulerCarryParts * CARRY_CAPACITY;
 		// Calculate number of haulers
-		this.numHaulers = Math.min(Math.ceil(haulingPowerNeeded / haulingPowerPerLifetime), MAX_HAULERS);
+		this.numHaulers = Math.min(Math.ceil(haulingPowerNeeded / haulingPowerPerLifetime), MAX_HAULERS) * 2;
 		// Request the haulers
 		this.tickToSpawnOn = Game.time + (this.calculateRemainingLifespan() || 0) - this.prespawnAmount;
 	}
@@ -74,6 +71,12 @@ export class PowerHaulingOverlord extends Overlord {
 	protected handleHauler(hauler: Zerg) {
 		if (_.sum(hauler.carry) == 0) {
 			// Travel to directive and collect resources
+			if (this.directive.haulingDone) {
+				hauler.say('💀 RIP 💀',true);
+				log.warning(`${hauler.name} is committing suicide as directive is done!`);
+				this.numHaulers = 0;
+				hauler.suicide();
+			}
 			if (hauler.inSameRoomAs(this.directive)) {
 				// Pick up drops first
 				if (this.directive.hasDrops) {
@@ -87,7 +90,7 @@ export class PowerHaulingOverlord extends Overlord {
 					if (hauler.pos.getRangeTo(this.directive.powerBank) > 4) {
 						hauler.goTo(this.directive.powerBank);
 					} else {
-						hauler.say('🚬');
+						hauler.say('🚬', true);
 					}
 					return;
 				} else if (this.room &&  this.room.drops) {
@@ -97,7 +100,8 @@ export class PowerHaulingOverlord extends Overlord {
 						hauler.task = Tasks.pickup(drop);
 						return;
 					} else {
-						hauler.say('💀 RIP 💀');
+						hauler.say('💀 RIP 💀',true);
+						log.warning(`${hauler.name} is committing suicide!`);
 						hauler.suicide();
 						return;
 					}
@@ -105,13 +109,11 @@ export class PowerHaulingOverlord extends Overlord {
 				// Shouldn't reach here
 				log.warning(`${hauler.name} in ${hauler.room.print}: nothing to collect!`);
 			} else {
-				// hauler.task = Tasks.goTo(this.directive);
 				hauler.goTo(this.directive);
 			}
 		} else {
 			// Travel to colony room and deposit resources
 			if (hauler.inSameRoomAs(this.colony)) {
-				// Put energy in storage and minerals in terminal if there is one
 				for (let resourceType in hauler.carry) {
 					if (hauler.carry[<ResourceConstant>resourceType] == 0) continue;
 					if (resourceType == RESOURCE_ENERGY) { // prefer to put energy in storage
@@ -141,7 +143,7 @@ export class PowerHaulingOverlord extends Overlord {
 	}
 
 	run() {
-		if (Game.time >= this.tickToSpawnOn && this.haulers.length == 0) {
+		if (Game.time >= this.tickToSpawnOn) {
 			this.wishlist(this.numHaulers, Setups.transporters.early);
 		}
 		for (let hauler of this.haulers) {

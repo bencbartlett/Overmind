@@ -29,6 +29,11 @@ interface Memory {
 		log: LoggerMemory;
 		enableVisuals: boolean;
 		resourceCollectionMode: resourceCollectionMode;
+		powerCollection: {
+			enabled: boolean;
+			maxRange: number;
+			minPower: number;
+		};
 	}
 	profiler?: any;
 	stats: any;

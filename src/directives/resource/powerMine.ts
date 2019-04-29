@@ -1,10 +1,10 @@
 import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
-import {isStoreStructure} from '../../declarations/typeGuards';
 import {PowerDrillOverlord} from '../../overlords/powerMining/PowerDrill';
 import {Pathing} from "../../movement/Pathing";
 import {calculateFormationStrength} from "../../utilities/creepUtils";
 import {PowerHaulingOverlord} from "../../overlords/powerMining/PowerHauler";
+import {log} from "../../console/log";
 
 
 interface DirectivePowerMineMemory extends FlagMemory {
@@ -24,14 +24,16 @@ export class DirectivePowerMine extends Directive {
 
 	expectedSpawnTime = 150;
 	miningDone:  boolean;
+	haulingDone: boolean;
 	haulDirectiveCreated: boolean;
-	powerBank: StructurePowerBank | undefined;
+	private _powerBank: StructurePowerBank | undefined;
 	private _drops: { [resourceType: string]: Resource[] };
 
 	memory: DirectivePowerMineMemory;
 
 	constructor(flag: Flag) {
 		super(flag);
+		this._powerBank = this.room != undefined ? this.pos.lookForStructure(STRUCTURE_POWER_BANK) as StructurePowerBank : undefined;
 	}
 
 	spawnMoarOverlords() {
@@ -62,6 +64,11 @@ export class DirectivePowerMine extends Directive {
 		return _.keys(this.drops).length > 0;
 	}
 
+	get powerBank(): StructurePowerBank | undefined {
+		this._powerBank = this._powerBank || this.room != undefined ? this.pos.lookForStructure(STRUCTURE_POWER_BANK) as StructurePowerBank : undefined;
+		return this._powerBank;
+	}
+
 	/**
 	 * Total amount of resources remaining to be transported; cached into memory in case room loses visibility
 	 */
@@ -72,49 +79,51 @@ export class DirectivePowerMine extends Directive {
 		if (this.pos.isVisible) {
 			this.memory.totalResources = this.powerBank ? this.powerBank.power : this.memory.totalResources; // update total amount remaining
 		}
+		console.log("Directive total resources = " + this.totalResources);
 		return this.memory.totalResources;
 	}
 
 	calculateRemainingLifespan() {
+		console.log(this._powerBank);
 		if (!this.room) {
 			return undefined;
 		} else if (this.powerBank == undefined) {
-			// Power Bank is gone
-			return 0;
+			if (this.miningDone) {
+				// Power Bank is gone
+				return 0;
+			}
 		} else {
 			let tally = calculateFormationStrength(this.powerBank.pos.findInRange(FIND_MY_CREEPS, 4));
 			let healStrength: number = tally.heal * HEAL_POWER || 0;
 			let attackStrength: number = tally.attack * ATTACK_POWER || 0;
 			// PB have 50% hitback, avg damage is attack strength if its enough healing, otherwise healing
 			let avgDamagePerTick = Math.min(attackStrength, healStrength*2);
+			console.log("Calculating PB remaining lifespan: " + this.powerBank.hits / avgDamagePerTick);
 			return this.powerBank.hits / avgDamagePerTick;
 		}
 	}
 
 	spawnHaulers() {
-		if (this.room && (!this.powerBank || (this.calculateRemainingLifespan()! < (Pathing.distance(this.colony.pos, this.flag.pos) + this.expectedSpawnTime)))) {
-			Game.notify('Spawning haulers for power mining in room ' + this.room.name);
+		log.info("Checking spawning haulers");
+		if (this.haulDirectiveCreated || this.room && (!this.powerBank || (this.calculateRemainingLifespan()! < (Pathing.distance(this.colony.pos, this.flag.pos) + this.expectedSpawnTime)))) {
+			Game.notify('Spawning haulers for power mining in room ' + this.pos.roomName);
 			this.haulDirectiveCreated = true;
 			this.overlords.powerHaul = new PowerHaulingOverlord(this);
 		}
 	}
 
 	setMiningDone(name: string) {
+		Game.notify("Setting mining done and removing overlord for power mine in room " + this.room + " at time " + Game.time);
 		delete this.overlords[name];
 		this.miningDone = true;
+		this._powerBank = undefined;
 	}
 
 	init(): void {
 		this.alert(`PowerMine directive active`);
 	}
 
-
-
 	run(): void {
-		// if (Game.time % 100 == 0 && !this.haulDirectiveCreated) {
-		// 	Game.notify('Checking if should spawn haulers');
-		// 	this.spawnHaulers();
-		// }
 	}
 }
 
