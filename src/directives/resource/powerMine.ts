@@ -23,6 +23,13 @@ export class DirectivePowerMine extends Directive {
 	static secondaryColor = COLOR_RED;
 
 	expectedSpawnTime = 150;
+	const DrillStatus = {
+		drilling         : 0,
+		AcquiringMinerals: 1,
+		LoadingLabs      : 2,
+		Synthesizing     : 3,
+		UnloadingLabs    : 4,
+	};
 	miningDone:  boolean;
 	haulingDone: boolean;
 	haulDirectiveCreated: boolean;
@@ -106,7 +113,7 @@ export class DirectivePowerMine extends Directive {
 	spawnHaulers() {
 		log.info("Checking spawning haulers");
 		if (this.haulDirectiveCreated || this.room && (!this.powerBank || (this.calculateRemainingLifespan()! < (Pathing.distance(this.colony.pos, this.flag.pos) + this.expectedSpawnTime)))) {
-			Game.notify('Spawning haulers for power mining in room ' + this.pos.roomName);
+			Game.notify('Activating spawning haulers for power mining in room ' + this.pos.roomName);
 			this.haulDirectiveCreated = true;
 			this.overlords.powerHaul = new PowerHaulingOverlord(this);
 		}

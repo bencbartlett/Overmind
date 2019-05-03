@@ -23,7 +23,7 @@ export class PowerHaulingOverlord extends Overlord {
 
 	requiredRCL = 6;
 	// Allow time for body to spawn
-	prespawnAmount = 200;
+	prespawnAmount = 250;
 
 	constructor(directive: DirectivePowerMine, priority = OverlordPriority.collectionUrgent.haul) {
 		super(directive, 'powerHaul', priority);
@@ -35,23 +35,19 @@ export class PowerHaulingOverlord extends Overlord {
 		if (!this.colony.storage || _.sum(this.colony.storage.store) > Energetics.settings.storage.total.cap) {
 			return;
 		}
-		// Spawn a number of haulers sufficient to move all resources within a lifetime, up to a max
-		let MAX_HAULERS = 5;
-		// Calculate total needed amount of hauling power as (resource amount * trip distance)
-		let tripDistance = 2 * Pathing.distance((this.colony.storage || this.colony).pos, this.directive.pos);
-		let haulingPowerNeeded = Math.min(this.directive.totalResources,
-										  this.colony.storage.storeCapacity
-										  - _.sum(this.colony.storage.store)) * tripDistance;
+		// Spawn haulers to collect ALL the power at the same time.
+		let haulingPartsNeeded = this.directive.totalResources/50;
 		// Calculate amount of hauling each hauler provides in a lifetime
-		let haulerCarryParts = Setups.transporters.early.getBodyPotential(CARRY, this.colony);
-		let haulingPowerPerLifetime = CREEP_LIFE_TIME * haulerCarryParts * CARRY_CAPACITY;
+		let haulerCarryParts = Setups.transporters.default.getBodyPotential(CARRY, this.colony);
 		// Calculate number of haulers
-		this.numHaulers = Math.min(Math.ceil(haulingPowerNeeded / haulingPowerPerLifetime), MAX_HAULERS) * 2;
-		// Request the haulers
+		this.numHaulers = Math.round(haulingPartsNeeded/haulerCarryParts);
+		// setup time to request the haulers
 		this.tickToSpawnOn = Game.time + (this.calculateRemainingLifespan() || 0) - this.prespawnAmount;
 	}
 
-
+	/**
+	 * Calculates how many remaining ticks the power bank has left at current kill rate
+	 */
 	calculateRemainingLifespan() {
 		if (!this.room) {
 			return undefined;
@@ -144,7 +140,8 @@ export class PowerHaulingOverlord extends Overlord {
 
 	run() {
 		if (Game.time >= this.tickToSpawnOn) {
-			this.wishlist(this.numHaulers, Setups.transporters.early);
+			Game.notify('Time to spawn haulers ' + this.pos.roomName);
+			this.wishlist(this.numHaulers, Setups.transporters.default);
 		}
 		for (let hauler of this.haulers) {
 			if (hauler.isIdle) {
