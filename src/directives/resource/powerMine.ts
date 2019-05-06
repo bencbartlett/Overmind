@@ -22,14 +22,8 @@ export class DirectivePowerMine extends Directive {
 	static color = COLOR_YELLOW;
 	static secondaryColor = COLOR_RED;
 
-	expectedSpawnTime = 150;
-	const DrillStatus = {
-		drilling         : 0,
-		AcquiringMinerals: 1,
-		LoadingLabs      : 2,
-		Synthesizing     : 3,
-		UnloadingLabs    : 4,
-	};
+	expectedSpawnTime = 250;
+	_pathingDistance: number;
 	miningDone:  boolean;
 	haulingDone: boolean;
 	haulDirectiveCreated: boolean;
@@ -46,14 +40,10 @@ export class DirectivePowerMine extends Directive {
 	spawnMoarOverlords() {
 		if (!this.miningDone) {
 			this.overlords.powerMine = new PowerDrillOverlord(this);
-		} else {
-			console.log('Mining is done!');
 		}
-		this.spawnHaulers();
-	}
-
-	get targetedBy(): string[] {
-		return Overmind.cache.targets[this.ref];
+		if (!this.haulingDone) {
+			this.spawnHaulers();
+		}
 	}
 
 	get drops(): { [resourceType: string]: Resource[] } {
@@ -110,9 +100,15 @@ export class DirectivePowerMine extends Directive {
 		}
 	}
 
+	get pathingDistance(): number {
+		this._pathingDistance = this._pathingDistance || Pathing.distance(this.colony.pos, this.flag.pos);
+		return this._pathingDistance;
+	}
+
 	spawnHaulers() {
 		log.info("Checking spawning haulers");
-		if (this.haulDirectiveCreated || this.room && (!this.powerBank || (this.calculateRemainingLifespan()! < (Pathing.distance(this.colony.pos, this.flag.pos) + this.expectedSpawnTime)))) {
+		// Begin checking for spawn haulers at 666 estimated ticks before PB destruction
+		if (this.haulDirectiveCreated || this.room && (!this.powerBank || this.powerBank.hits < 500000)) {
 			Game.notify('Activating spawning haulers for power mining in room ' + this.pos.roomName);
 			this.haulDirectiveCreated = true;
 			this.overlords.powerHaul = new PowerHaulingOverlord(this);

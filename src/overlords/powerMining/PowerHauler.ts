@@ -42,7 +42,7 @@ export class PowerHaulingOverlord extends Overlord {
 		// Calculate number of haulers
 		this.numHaulers = Math.round(haulingPartsNeeded/haulerCarryParts);
 		// setup time to request the haulers
-		this.tickToSpawnOn = Game.time + (this.calculateRemainingLifespan() || 0) - this.prespawnAmount;
+		this.tickToSpawnOn = Game.time + (this.directive.calculateRemainingLifespan() || 0) - this.prespawnAmount;
 	}
 
 	/**
@@ -65,13 +65,15 @@ export class PowerHaulingOverlord extends Overlord {
 	}
 
 	protected handleHauler(hauler: Zerg) {
-		if (_.sum(hauler.carry) == 0) {
+		if (_.sum(hauler.carry) == 0 && this.directive.haulingDone) {
+			hauler.retire();
+		} else if (_.sum(hauler.carry) == 0) {
 			// Travel to directive and collect resources
 			if (this.directive.haulingDone) {
 				hauler.say('💀 RIP 💀',true);
 				log.warning(`${hauler.name} is committing suicide as directive is done!`);
 				this.numHaulers = 0;
-				hauler.suicide();
+				hauler.retire();
 			}
 			if (hauler.inSameRoomAs(this.directive)) {
 				// Pick up drops first
@@ -98,7 +100,7 @@ export class PowerHaulingOverlord extends Overlord {
 					} else {
 						hauler.say('💀 RIP 💀',true);
 						log.warning(`${hauler.name} is committing suicide!`);
-						hauler.suicide();
+						hauler.retire();
 						return;
 					}
 				}
@@ -139,9 +141,11 @@ export class PowerHaulingOverlord extends Overlord {
 	}
 
 	run() {
-		if (Game.time >= this.tickToSpawnOn) {
+		if (Game.time >= this.tickToSpawnOn && !this.directive.haulingDone) {
 			Game.notify('Time to spawn haulers ' + this.pos.roomName);
 			this.wishlist(this.numHaulers, Setups.transporters.default);
+		} else if (this.directive.haulingDone && this.haulers.length == 0) {
+			this.directive.remove();
 		}
 		for (let hauler of this.haulers) {
 			if (hauler.isIdle) {

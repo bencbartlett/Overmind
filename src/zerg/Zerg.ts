@@ -508,6 +508,17 @@ export class Zerg {
 		setOverlord(this, newOverlord);
 	}
 
+	// TODO add retire/reassignment logic
+	// Eg. creep get repurposed, it gets recycled, etc
+	/**
+	 * When a zerg has no more use for it's current overlord, it will be retired.
+	 * For now, that means RIP
+	 */
+	retire() {
+		this.say('💀 RIP 💀', true);
+		return this.suicide();
+	}
+
 	/* Reassigns the creep to work under a new overlord and as a new role. */
 	reassign(newOverlord: Overlord | null, newRole: string, invalidateTask = true) {
 		this.overlord = newOverlord;
