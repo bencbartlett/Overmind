@@ -319,7 +319,7 @@ export class RoomIntel {
 	}
 
 	/**
-	 * Find powerbanks within range of maxRange and power above minPower to mine
+	 * Find PowerBanks within range of maxRange and power above minPower to mine
 	 * Creates directive to mine it
 	 * TODO refactor when factory resources come out to be more generic
 	 */

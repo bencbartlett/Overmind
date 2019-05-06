@@ -85,7 +85,7 @@ export class PowerDrillOverlord extends CombatOverlord {
 					Game.notify("Power bank in " + this.room + " is dead.");
 					drill.say('💀 RIP 💀');
 					this.directive.setMiningDone(this.name);
-					let result = drill.suicide();
+					let result = drill.retire();
 					if (result == ERR_BUSY) {
 						drill.spawning
 					}
@@ -203,6 +203,9 @@ export class PowerDrillOverlord extends CombatOverlord {
 		this.autoRun(this.drills, drill => this.handleDrill(drill));
 		this.autoRun(this.coolant, coolant => this.handleCoolant(coolant));
 		if (this.isDone && !this.directive.miningDone) {
+			this.drills.forEach(drill => drill.retire());
+			this.coolant.forEach(coolant => coolant.retire());
+			delete this.directive.overlords[this.name];
 			this.directive.setMiningDone(this.name);
 		}
 	}
