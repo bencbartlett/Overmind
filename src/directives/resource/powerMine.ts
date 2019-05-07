@@ -22,8 +22,6 @@ export class DirectivePowerMine extends Directive {
 	static color = COLOR_YELLOW;
 	static secondaryColor = COLOR_RED;
 
-	expectedSpawnTime = 250;
-	_pathingDistance: number;
 	miningDone:  boolean;
 	haulingDone: boolean;
 	haulDirectiveCreated: boolean;
@@ -100,11 +98,6 @@ export class DirectivePowerMine extends Directive {
 		}
 	}
 
-	get pathingDistance(): number {
-		this._pathingDistance = this._pathingDistance || Pathing.distance(this.colony.pos, this.flag.pos);
-		return this._pathingDistance;
-	}
-
 	spawnHaulers() {
 		log.info("Checking spawning haulers");
 		// Begin checking for spawn haulers at 666 estimated ticks before PB destruction
@@ -120,6 +113,16 @@ export class DirectivePowerMine extends Directive {
 		delete this.overlords[name];
 		this.miningDone = true;
 		this._powerBank = undefined;
+	}
+
+	/**
+	 * This states when all the power has been picked up. Once all power has been picked up and delivered remove the directive
+	 */
+	isHaulingDone(): boolean {
+		if (!this.haulingDone && this.miningDone && this.pos.isVisible && this.hasDrops) {
+			this.haulingDone = true;
+		}
+		return this.haulingDone;
 	}
 
 	init(): void {
