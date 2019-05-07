@@ -5,6 +5,7 @@ import {log} from './log';
 import {alignedNewline, bullet} from '../utilities/stringConstants';
 import {DEFAULT_OVERMIND_SIGNATURE, MY_USERNAME, USE_PROFILER} from '../~settings';
 import {Directive} from '../directives/Directive';
+import {Overlord} from "../overlords/Overlord";
 
 type RecursiveObject = { [key: string]: number | RecursiveObject }
 
@@ -37,6 +38,7 @@ export class OvermindConsole {
 		global.listConstructionSites = this.listConstructionSites;
 		global.listDirectives = this.listDirectives;
 		global.listPersistentDirectives = this.listPersistentDirectives;
+		global.directiveInfo = this.directiveInfo;
 		global.removeAllLogisticsDirectives = this.removeAllLogisticsDirectives;
 		global.removeFlagsByColor = this.removeFlagsByColor;
 		global.removeErrantFlags = this.removeErrantFlags;
@@ -80,6 +82,7 @@ export class OvermindConsole {
 		descr['listConstructionSites(filter?)'] = 'list all construction sites matching an optional filter';
 		descr['listDirectives(filter?)'] = 'list directives, matching a filter if specified';
 		descr['listPersistentDirectives()'] = 'print type, name, pos of every persistent directive';
+		descr['directiveInfo(directiveFlag)'] = 'print type, name, pos of every creep in directive';
 		descr['removeFlagsByColor(color, secondaryColor)'] = 'remove flags that match the specified colors';
 		descr['removeErrantFlags()'] = 'remove all flags which don\'t match a directive';
 		descr['deepCleanMemory()'] = 'deletes all non-critical portions of memory (be careful!)';
@@ -385,6 +388,31 @@ export class OvermindConsole {
 		}
 		return `Removed ${count} flags.`;
 	}
+
+	static directiveInfo(flagName: string): string {
+		let msg = '';
+		let directive = Overmind.directives[flagName];
+		if (!directive) {
+			return `ERROR: Name is not a current directive`
+		}
+		msg += `Type: ${directive.directiveName}`.padRight(20) +
+			`Name: ${directive.name}`.padRight(25) +
+			`Pos: ${directive.pos.print}\n`;
+		for (let overlordName of Object.keys(directive.overlords)) {
+			let overlord = directive.overlords[overlordName] as Overlord;
+			msg += JSON.stringify(overlord.creepUsageReport) + `\n`;
+			for (let [roleName, zergArray] of Object.entries(overlord.getZerg())) {
+				msg += `Role: ${roleName} \n`;
+				for (let zerg of zergArray) {
+					msg += `Name: ${zerg.name}   Room: ${zerg.pos.print}   TTL/Spawning: ${zerg.ticksToLive || zerg.spawning} \n`;
+				}
+			}
+		}
+
+		return msg;
+	}
+
+
 
 
 	// Structure management ============================================================================================

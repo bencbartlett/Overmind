@@ -447,6 +447,10 @@ export abstract class Overlord {
 		}
 	}
 
+	getZerg() {
+		return this._zerg;
+	}
+
 	/* Request any needed boosting resources from terminal network */
 	private requestBoosts(creeps: Zerg[]): void {
 		for (let creep of creeps) {
