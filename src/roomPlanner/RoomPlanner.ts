@@ -601,7 +601,7 @@ export class RoomPlanner {
 					}
 					if (this.colony.level < 6
 						&& structureType == STRUCTURE_TERMINAL && hasMinerals((<StructureTerminal> structure).store)) {
-						log.notify(`Creating directive to collect resources from terminal in ${structure.pos.roomName} before demolition.`);
+						log.notify(`Creating directive to collect resources from terminal in ${structure.pos.print} before demolition.`);
 						DirectiveHaul.create(structure.pos);
 						break; // don't destroy terminal when under RCL6 if there are resources available.
 					}
