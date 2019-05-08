@@ -79,7 +79,6 @@ export class DirectivePowerMine extends Directive {
 	}
 
 	calculateRemainingLifespan() {
-		console.log(this._powerBank);
 		if (!this.room) {
 			return undefined;
 		} else if (this.powerBank == undefined) {
@@ -119,7 +118,7 @@ export class DirectivePowerMine extends Directive {
 	 * This states when all the power has been picked up. Once all power has been picked up and delivered remove the directive
 	 */
 	isHaulingDone(): boolean {
-		if (!this.haulingDone && this.miningDone && this.pos.isVisible && this.hasDrops) {
+		if (!this.haulingDone && this.miningDone && this.pos.isVisible && !this.hasDrops) {
 			this.haulingDone = true;
 		}
 		return this.haulingDone;
