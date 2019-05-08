@@ -28,12 +28,6 @@ export class PowerHaulingOverlord extends Overlord {
 		super(directive, 'powerHaul', priority);
 		this.directive = directive;
 		this.haulers = this.zerg(Roles.transport);
-	}
-
-	init() {
-		if (!this.colony.storage || _.sum(this.colony.storage.store) > Energetics.settings.storage.total.cap) {
-			return;
-		}
 		// Spawn haulers to collect ALL the power at the same time.
 		let haulingPartsNeeded = this.directive.totalResources/CARRY_CAPACITY;
 		// Calculate amount of hauling each hauler provides in a lifetime
@@ -42,6 +36,12 @@ export class PowerHaulingOverlord extends Overlord {
 		this.numHaulers = Math.round(haulingPartsNeeded/haulerCarryParts);
 		// setup time to request the haulers
 		this.tickToSpawnOn = Game.time + (this.directive.calculateRemainingLifespan() || 0) - this.prespawnAmount;
+	}
+
+	init() {
+		if (!this.colony.storage || _.sum(this.colony.storage.store) > Energetics.settings.storage.total.cap) {
+			return;
+		}
 	}
 
 	protected handleHauler(hauler: Zerg) {
@@ -125,6 +125,7 @@ export class PowerHaulingOverlord extends Overlord {
 			Game.notify('Time to spawn haulers ' + this.pos.roomName);
 			this.wishlist(this.numHaulers, Setups.transporters.default);
 		} else if (this.directive.haulingDone && this.haulers.length == 0) {
+			Game.notify('Deleting Power Mining Directive at ' + this.pos.print);
 			this.directive.remove();
 		}
 		for (let hauler of this.haulers) {

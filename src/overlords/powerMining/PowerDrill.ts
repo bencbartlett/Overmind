@@ -191,14 +191,14 @@ export class PowerDrillOverlord extends CombatOverlord {
 	// 	}
 	// }
 
-	static periodicSay(zerg: CombatZerg, text: string) {
+	static periodicSay(zerg: Zerg, text: string) {
 		if (Game.time % 10 == PowerDrillOverlord.getCreepNameOffset(zerg)) {
 			zerg.say(text, true);
 		}
 	}
 
-	static getCreepNameOffset(creep: Zerg) {
-		return parseInt(creep.name.charAt(creep.name.length-1)) || 0;
+	static getCreepNameOffset(zerg: Zerg) {
+		return parseInt(zerg.name.charAt(zerg.name.length-1)) || 0;
 	}
 
 	run() {
