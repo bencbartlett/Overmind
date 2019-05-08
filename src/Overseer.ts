@@ -324,7 +324,7 @@ export class Overseer implements IOverseer {
 											colony.terminal]) as Structure[];
 		for (let structure of criticalStructures) {
 			if (structure.hits < structure.hitsMax &&
-				structure.pos.findInRange(colony.room.dangerousHostiles, 2).length > 0) {
+				structure.pos.findInRange(colony.room.dangerousPlayerHostiles, 2).length > 0) {
 				let ret = colony.controller.activateSafeMode();
 				if (ret != OK && !colony.controller.safeMode) {
 					if (colony.terminal) {
@@ -335,7 +335,7 @@ export class Overseer implements IOverseer {
 				}
 			}
 		}
-		let firstHostile = _.first(colony.room.dangerousHostiles);
+		let firstHostile = _.first(colony.room.dangerousPlayerHostiles);
 		if (firstHostile && colony.spawns[0]) {
 			let barriers = _.map(colony.room.barriers, barrier => barrier.pos);
 			if (Pathing.isReachable(firstHostile.pos, colony.spawns[0].pos, barriers)) {
