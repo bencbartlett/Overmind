@@ -147,7 +147,8 @@ export class PowerDrillOverlord extends CombatOverlord {
 		// 	coolant.move(Math.round(Math.random()*7) as DirectionConstant);
 		// }
 		else {
-			coolant.goTo(_.sample(_.filter(this.drills, drill => drill.hits < drill.hitsMax)));
+			let drill = _.sample(_.filter(this.drills, drill => drill.hits < drill.hitsMax));
+			if (drill) { coolant.goTo(drill); }
 		}
 
 		coolant.autoHeal();
