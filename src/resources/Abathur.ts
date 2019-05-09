@@ -272,10 +272,10 @@ export class Abathur {
 	 * Figure out which basic minerals are missing and how much
 	 */
 	getMissingBasicMinerals(reactionQueue: Reaction[], verbose = false): { [resourceType: string]: number } {
-		let requiredBasicMinerals = this.getRequiredBasicMinerals(reactionQueue);
+		const requiredBasicMinerals = this.getRequiredBasicMinerals(reactionQueue);
 		if (verbose) console.log(`Required basic minerals: ${JSON.stringify(requiredBasicMinerals)}`);
 		if (verbose) console.log(`assets: ${JSON.stringify(this.assets)}`);
-		let missingBasicMinerals: { [resourceType: string]: number } = {};
+		const missingBasicMinerals: { [resourceType: string]: number } = {};
 		for (let mineralType in requiredBasicMinerals) {
 			const amountMissing = requiredBasicMinerals[mineralType] - (this.assets[mineralType] || 0);
 			if (amountMissing > 0) {
