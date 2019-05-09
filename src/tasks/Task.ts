@@ -2,11 +2,11 @@
  * Creep tasks setup instructions
  *
  * Javascript:
- * 1. In main.js:    require("tasks/prototypes.js");
+ * 1. In main.js:   require("tasks/prototypes.js");
  * 2. As needed:    var Tasks = require("<path to Tasks.js>");
  *
  * Typescript:
- * 1. In main.ts:    import "./tasks/prototypes";
+ * 1. In main.ts:   import "./tasks/prototypes";
  * 2. As needed:    import {Tasks} from "<path to Tasks.ts>"
  *
  * If you use Travler, change all occurrences of creep.moveTo() to creep.goTo()

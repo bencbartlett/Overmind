@@ -40,6 +40,10 @@
     "one-variable-per-declaration": false,
     "only-arrow-functions": false,
     "max-classes-per-file": false,
+    "max-line-length": [
+      true,
+      120
+    ],
     "member-access": [
       true,
       "no-public"
