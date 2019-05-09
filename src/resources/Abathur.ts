@@ -276,7 +276,7 @@ export class Abathur {
 		if (verbose) console.log(`Required basic minerals: ${JSON.stringify(requiredBasicMinerals)}`);
 		if (verbose) console.log(`assets: ${JSON.stringify(this.assets)}`);
 		const missingBasicMinerals: { [resourceType: string]: number } = {};
-		for (let mineralType in requiredBasicMinerals) {
+		for (const mineralType in requiredBasicMinerals) {
 			const amountMissing = requiredBasicMinerals[mineralType] - (this.assets[mineralType] || 0);
 			if (amountMissing > 0) {
 				missingBasicMinerals[mineralType] = amountMissing;
