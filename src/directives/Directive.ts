@@ -78,9 +78,9 @@ export abstract class Directive {
 		this.colony.flags.push(flag);
 		this.overlords = {};
 		// Register directive on Overmind
-		Overmind.directives[this.name] = this;
 		global[this.name] = this;
 		Overmind.overseer.registerDirective(this);
+		Overmind.directives[this.name] = this;
 	}
 
 	/**

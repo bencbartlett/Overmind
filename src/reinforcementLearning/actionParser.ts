@@ -26,4 +26,6 @@ export class ActionParser {
 		RawMemory.setActiveSegments([RL_ACTION_SEGMENT]); // keep this segment requested during training
 
 	}
+
 }
+

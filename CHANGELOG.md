@@ -60,7 +60,8 @@ All notable changes to this project will be documented in this file. The format 
 - Fixed unhandled memory access when spawning in for the very first time on a new account (#75)
 - Fixed a bug in `RoomPosition.getPositionsAtRange` (thanks, Conventia!)
 - Account for hitback when computing `hitsPredicted`
-- `CombatIntel` and `RoomIntel` bugfixes
+- Various `CombatIntel` and `RoomIntel` bugfixes
+- No longer calls `Directive.spawnMoarOverlords()` if directive instantiation is aborted (in lieu of #82)
 
 
 ## Overmind [0.5.2.1] - 2019.2.8
