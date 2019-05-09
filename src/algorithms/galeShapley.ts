@@ -50,7 +50,7 @@ export class Matcher {
 	}
 
 	match(): { [man: string]: string } {
-		let MAX_ITERATIONS = 1000;
+		const MAX_ITERATIONS = 1000;
 		let count = 0;
 		let man = this.nextMan();
 		while (man) { // While there exists a free man who still has someone to propose to
@@ -58,11 +58,11 @@ export class Matcher {
 				console.log('Stable matching timed out!');
 				return this.couples;
 			}
-			let woman = _.first(this.menPrefs[man]); 		// Get first woman on man's list
+			const woman = _.first(this.menPrefs[man]); 		// Get first woman on man's list
 			if (this.womenFree[woman]) {					// If woman is free, get engaged
 				this.engage(man, woman);
 			} else {										// Else if woman prefers this man to her current, swap men
-				let currentMan = _.findKey(this.couples, w => w == woman);
+				const currentMan = _.findKey(this.couples, w => w == woman);
 				if (this.prefers(woman, man, currentMan)) {
 					this.breakup(currentMan, woman);
 					this.engage(man, woman);

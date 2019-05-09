@@ -1,5 +1,5 @@
-import {Task} from '../Task';
 import {profile} from '../../profiler/decorator';
+import {Task} from '../Task';
 
 export type buildTargetType = ConstructionSite;
 export const buildTaskName = 'build';
@@ -26,7 +26,7 @@ export class TaskBuild extends Task {
 	work() {
 		// Fixes issue #9 - workers freeze if creep sitting on square
 		if (!this.target.isWalkable) {
-			let creepOnTarget = this.target.pos.lookFor(LOOK_CREEPS)[0];
+			const creepOnTarget = this.target.pos.lookFor(LOOK_CREEPS)[0];
 			if (creepOnTarget) {
 				const zerg = Overmind.zerg[creepOnTarget.name];
 				if (zerg) {

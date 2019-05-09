@@ -45,6 +45,7 @@ All notable changes to this project will be documented in this file. The format 
 - Updated the Grafana dashboard to reflect lots of accumulated changes
 - `Abathur` now tries to synthesize a number of intermediate compounds if some minerals are unavailable (thanks, Conventia!)
 - Increased the scaling of number of upgraders to 1 upgrade part per 10k energy above threshold, down from 25k. This should make the bot spawn more upgraders below RCL8 and operate with less excess energy in storage.
+- Project now complies with tslint standards specified in the configuration file; lint checks have been added to the CI scripts
 
 ### Fixed
 - Fixed a critical issue which caused the CPU reset routine to repeat indefinitely in low-CPU environments like shard3 (#65)

@@ -1,12 +1,12 @@
-import {Overlord} from '../Overlord';
-import {Zerg} from '../../zerg/Zerg';
+import {Roles, Setups} from '../../creepSetups/setups';
 import {DirectiveOutpost} from '../../directives/colony/outpost';
-import {Tasks} from '../../tasks/Tasks';
+import {RoomIntel} from '../../intel/RoomIntel';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {Roles, Setups} from '../../creepSetups/setups';
-import {RoomIntel} from '../../intel/RoomIntel';
+import {Tasks} from '../../tasks/Tasks';
+import {Zerg} from '../../zerg/Zerg';
 import {MY_USERNAME} from '../../~settings';
+import {Overlord} from '../Overlord';
 
 /**
  * Spawns reservers to reserve an outpost room

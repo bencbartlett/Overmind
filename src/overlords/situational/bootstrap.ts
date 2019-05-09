@@ -1,13 +1,13 @@
-import {Overlord} from '../Overlord';
-import {DirectiveBootstrap} from '../../directives/situational/bootstrap';
 import {ColonyStage} from '../../Colony';
-import {Zerg} from '../../zerg/Zerg';
-import {Tasks} from '../../tasks/Tasks';
+import {Roles, Setups} from '../../creepSetups/setups';
+import {DirectiveHarvest} from '../../directives/resource/harvest';
+import {DirectiveBootstrap} from '../../directives/situational/bootstrap';
+import {SpawnRequest} from '../../hiveClusters/hatchery';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {SpawnRequest} from '../../hiveClusters/hatchery';
-import {DirectiveHarvest} from '../../directives/resource/harvest';
-import {Roles, Setups} from '../../creepSetups/setups';
+import {Tasks} from '../../tasks/Tasks';
+import {Zerg} from '../../zerg/Zerg';
+import {Overlord} from '../Overlord';
 
 /**
  * Bootstrapping overlord: spawns small miners and suppliers to recover from a catastrohpic colony crash
@@ -47,17 +47,17 @@ export class BootstrappingOverlord extends Overlord {
 		if (this.colony.spawns[0]) {
 			miningSites = _.sortBy(miningSites, site => site.pos.getRangeTo(this.colony.spawns[0]));
 		}
-		let miningOverlords = _.map(miningSites, site => site.overlords.mine);
+		const miningOverlords = _.map(miningSites, site => site.overlords.mine);
 
 		// Create a bootstrapMiners and donate them to the miningSite overlords as needed
-		for (let overlord of miningOverlords) {
-			let filteredMiners = this.lifetimeFilter(overlord.miners);
-			let miningPowerAssigned = _.sum(_.map(this.lifetimeFilter(overlord.miners),
+		for (const overlord of miningOverlords) {
+			const filteredMiners = this.lifetimeFilter(overlord.miners);
+			const miningPowerAssigned = _.sum(_.map(this.lifetimeFilter(overlord.miners),
 												  creep => creep.getActiveBodyparts(WORK)));
 			if (miningPowerAssigned < overlord.miningPowerNeeded &&
 				filteredMiners.length < overlord.pos.availableNeighbors().length) {
 				if (this.colony.hatchery) {
-					let request: SpawnRequest = {
+					const request: SpawnRequest = {
 						setup   : Setups.drones.miners.emergency,
 						overlord: overlord,
 						priority: this.priority + 1,
@@ -78,7 +78,7 @@ export class BootstrappingOverlord extends Overlord {
 		}
 		// Spawn fillers
 		if (this.colony.getCreepsByRole(Roles.queen).length == 0 && this.colony.hatchery) { // no queen
-			let transporter = _.first(this.colony.getZergByRole(Roles.transport));
+			const transporter = _.first(this.colony.getZergByRole(Roles.transport));
 			if (transporter) {
 				// reassign transporter to be queen
 				transporter.reassign(this.colony.hatchery.overlord, Roles.queen);
@@ -88,15 +88,15 @@ export class BootstrappingOverlord extends Overlord {
 			}
 		}
 		// Then spawn the rest of the needed miners
-		let energyInStructures = _.sum(_.map(this.withdrawStructures, structure => structure.energy));
-		let droppedEnergy = _.sum(this.room.droppedEnergy, drop => drop.amount);
+		const energyInStructures = _.sum(_.map(this.withdrawStructures, structure => structure.energy));
+		const droppedEnergy = _.sum(this.room.droppedEnergy, drop => drop.amount);
 		if (energyInStructures + droppedEnergy < BootstrappingOverlord.settings.spawnBootstrapMinerThreshold) {
 			this.spawnBootstrapMiners();
 		}
 	}
 
 	private supplyActions(filler: Zerg) {
-		let target = filler.pos.findClosestByRange(this.supplyStructures);
+		const target = filler.pos.findClosestByRange(this.supplyStructures);
 		if (target) {
 			filler.task = Tasks.transfer(target);
 		} else {
@@ -105,7 +105,7 @@ export class BootstrappingOverlord extends Overlord {
 	}
 
 	private rechargeActions(filler: Zerg) {
-		let target = filler.pos.findClosestByRange(this.withdrawStructures);
+		const target = filler.pos.findClosestByRange(this.withdrawStructures);
 		if (target) {
 			filler.task = Tasks.withdraw(target);
 		} else {
@@ -122,7 +122,7 @@ export class BootstrappingOverlord extends Overlord {
 	}
 
 	run() {
-		for (let filler of this.fillers) {
+		for (const filler of this.fillers) {
 			if (filler.isIdle) {
 				this.handleFiller(filler);
 			}

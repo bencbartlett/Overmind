@@ -1,9 +1,9 @@
+import {log} from '../../console/log';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
-import {log} from '../../console/log';
 import {NotifierPriority} from '../Notifier';
 
-export const TerminalState_Evacuate: TerminalState = {
+export const TERMINAL_STATE_EVACUATE: TerminalState = {
 	name     : 'evacuate',
 	type     : 'out',
 	amounts  : {},
@@ -36,7 +36,7 @@ export class DirectiveTerminalEvacuateState extends Directive {
 		// Register abandon status
 		this.terminal = this.pos.lookForStructure(STRUCTURE_TERMINAL) as StructureTerminal;
 		if (this.terminal) {
-			Overmind.terminalNetwork.registerTerminalState(this.terminal, TerminalState_Evacuate);
+			Overmind.terminalNetwork.registerTerminalState(this.terminal, TERMINAL_STATE_EVACUATE);
 		}
 		if (Game.time % 25 == 0) {
 			log.alert(`${this.pos.print}: evacuation terminal state active!`);

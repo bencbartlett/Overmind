@@ -26,7 +26,7 @@ export function minMax(value: number, min: number, max: number): number {
 }
 
 export function hasMinerals(store: { [resourceType: string]: number }): boolean {
-	for (let resourceType in store) {
+	for (const resourceType in store) {
 		if (resourceType != RESOURCE_ENERGY && (store[<ResourceConstant>resourceType] || 0) > 0) {
 			return true;
 		}
@@ -38,8 +38,8 @@ export function hasMinerals(store: { [resourceType: string]: number }): boolean 
  * Obtain the username of the player
  */
 export function getUsername(): string {
-	for (let i in Game.rooms) {
-		let room = Game.rooms[i];
+	for (const i in Game.rooms) {
+		const room = Game.rooms[i];
 		if (room.controller && room.controller.my) {
 			return room.controller.owner.username;
 		}
@@ -56,16 +56,16 @@ export function onPublicServer(): boolean {
 	return Game.shard.name.includes('shard');
 }
 
-interface toColumnsOpts {
-	padChar: string,
-	justify: boolean
+interface ToColumnOpts {
+	padChar: string;
+	justify: boolean;
 }
 
 export function bulleted(text: string[], aligned = true, startWithNewLine = true): string {
 	if (text.length == 0) {
 		return '';
 	}
-	let prefix = (startWithNewLine ? (aligned ? alignedNewline : '\n') : '') + bullet;
+	const prefix = (startWithNewLine ? (aligned ? alignedNewline : '\n') : '') + bullet;
 	if (aligned) {
 		return prefix + text.join(alignedNewline + bullet);
 	} else {
@@ -76,17 +76,17 @@ export function bulleted(text: string[], aligned = true, startWithNewLine = true
 /**
  * Create column-aligned text array from object with string key/values
  */
-export function toColumns(obj: { [key: string]: string }, opts = {} as toColumnsOpts): string[] {
+export function toColumns(obj: { [key: string]: string }, opts = {} as ToColumnOpts): string[] {
 	_.defaults(opts, {
 		padChar: ' ',	// Character to pad with, e.g. "." would be key........val
 		justify: false 	// Right align values column?
 	});
 
-	let ret = [];
-	let keyPadding = _.max(_.map(_.keys(obj), str => str.length)) + 1;
-	let valPadding = _.max(_.mapValues(obj, str => str.length));
+	const ret = [];
+	const keyPadding = _.max(_.map(_.keys(obj), str => str.length)) + 1;
+	const valPadding = _.max(_.mapValues(obj, str => str.length));
 
-	for (let key in obj) {
+	for (const key in obj) {
 		if (opts.justify) {
 			ret.push(key.padRight(keyPadding, opts.padChar) + obj[key].padLeft(valPadding, opts.padChar));
 		} else {
@@ -101,10 +101,10 @@ export function toColumns(obj: { [key: string]: string }, opts = {} as toColumns
  * Merges a list of store-like objects, summing overlapping keys. Useful for calculating assets from multiple sources
  */
 export function mergeSum(objects: { [key: string]: number | undefined }[]): { [key: string]: number } {
-	let ret: { [key: string]: number } = {};
-	for (let object of objects) {
-		for (let key in object) {
-			let amount = object[key] || 0;
+	const ret: { [key: string]: number } = {};
+	for (const object of objects) {
+		for (const key in object) {
+			const amount = object[key] || 0;
 			if (!ret[key]) {
 				ret[key] = 0;
 			}
@@ -128,20 +128,20 @@ export function compactCoordName(coord: Coord): string {
 }
 
 export function derefCoords(coordName: string, roomName: string): RoomPosition {
-	let [x, y] = coordName.split(':');
+	const [x, y] = coordName.split(':');
 	return new RoomPosition(parseInt(x, 10), parseInt(y, 10), roomName);
 }
 
 export function getPosFromString(str: string | undefined | null): RoomPosition | undefined {
 	if (!str) return;
-	let posName = _.first(str.match(/(E|W)\d+(N|S)\d+:\d+:\d+/g) || []);
+	const posName = _.first(str.match(/(E|W)\d+(N|S)\d+:\d+:\d+/g) || []);
 	if (posName) {
-		let [roomName, x, y] = posName.split(':');
+		const [roomName, x, y] = posName.split(':');
 		return new RoomPosition(parseInt(x, 10), parseInt(y, 10), roomName);
 	}
 }
 
-export function equalXYR(pos1: protoPos, pos2: protoPos): boolean {
+export function equalXYR(pos1: ProtoPos, pos2: ProtoPos): boolean {
 	return pos1.x == pos2.x && pos1.y == pos2.y && pos1.roomName == pos2.roomName;
 }
 
@@ -160,10 +160,10 @@ export function averageBy<T>(objects: T[], iteratee: ((obj: T) => number)): numb
  * Equivalent to lodash.minBy() method
  */
 export function minBy<T>(objects: T[], iteratee: ((obj: T) => number | false)): T | undefined {
-	let minObj: T | undefined = undefined;
+	let minObj: T | undefined;
 	let minVal = Infinity;
 	let val: number | false;
-	for (let i in objects) {
+	for (const i in objects) {
 		val = iteratee(objects[i]);
 		if (val !== false && val < minVal) {
 			minVal = val;
@@ -177,10 +177,10 @@ export function minBy<T>(objects: T[], iteratee: ((obj: T) => number | false)): 
  * Equivalent to lodash.maxBy() method
  */
 export function maxBy<T>(objects: T[], iteratee: ((obj: T) => number | false)): T | undefined {
-	let maxObj: T | undefined = undefined;
+	let maxObj: T | undefined;
 	let maxVal = -Infinity;
 	let val: number | false;
-	for (let i in objects) {
+	for (const i in objects) {
 		val = iteratee(objects[i]);
 		if (val !== false && val > maxVal) {
 			maxVal = val;
@@ -192,12 +192,12 @@ export function maxBy<T>(objects: T[], iteratee: ((obj: T) => number | false)): 
 
 export function logHeapStats(): void {
 	if (typeof Game.cpu.getHeapStatistics === 'function') {
-		let heapStats = Game.cpu.getHeapStatistics();
-		let heapPercent = Math.round(100 * (heapStats.total_heap_size + heapStats.externally_allocated_size)
+		const heapStats = Game.cpu.getHeapStatistics();
+		const heapPercent = Math.round(100 * (heapStats.total_heap_size + heapStats.externally_allocated_size)
 									 / heapStats.heap_size_limit);
-		let heapSize = Math.round((heapStats.total_heap_size) / 1048576);
-		let externalHeapSize = Math.round((heapStats.externally_allocated_size) / 1048576);
-		let heapLimit = Math.round(heapStats.heap_size_limit / 1048576);
+		const heapSize = Math.round((heapStats.total_heap_size) / 1048576);
+		const externalHeapSize = Math.round((heapStats.externally_allocated_size) / 1048576);
+		const heapLimit = Math.round(heapStats.heap_size_limit / 1048576);
 		console.log(`Heap usage: ${heapSize} MB + ${externalHeapSize} MB of ${heapLimit} MB (${heapPercent}%).`);
 	}
 }
@@ -259,7 +259,7 @@ function rotateMatrix<T>(matrix: T[][]): void {
 	// swap the symmetric elements
 	for (let i = 0; i < matrix.length; i++) {
 		for (let j = 0; j < i; j++) {
-			let temp = matrix[i][j];
+			const temp = matrix[i][j];
 			matrix[i][j] = matrix[j][i];
 			matrix[j][i] = temp;
 		}
@@ -270,7 +270,7 @@ function rotateMatrix<T>(matrix: T[][]): void {
  * Return a copy of a 2D array rotated by specified number of clockwise 90 turns
  */
 export function rotatedMatrix<T>(matrix: T[][], clockwiseTurns: 0 | 1 | 2 | 3): T[][] {
-	let mat = clone2DArray(matrix);
+	const mat = clone2DArray(matrix);
 	for (let i = 0; i < clockwiseTurns; i++) {
 		rotateMatrix(mat);
 	}

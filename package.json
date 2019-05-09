@@ -21,7 +21,7 @@
     "push-main": "rollup -c --environment DEST:main",
     "push-pserver": "rollup -c --environment DEST:pserver",
     "push-screepsplus": "rollup -c --environment DEST:screepsplus",
-    "test": "npm run clean && npm run build"
+    "test": "npm run clean && npm run lint && npm run build"
   },
   "devDependencies": {
     "@types/lodash": "3.10.1",
@@ -32,7 +32,7 @@
     "rollup-plugin-progress": "^0.4.0",
     "rollup-plugin-screeps": "0.1.2",
     "rollup-plugin-typescript2": "0.16.1",
-    "tslint": "5.11.0",
+    "tslint": "^5.16.0",
     "typedoc": "^0.14.2",
     "typescript": "2.9.2"
   },

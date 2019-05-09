@@ -1,3 +1,5 @@
+/* tslint:disable: max-line-length */
+
 export const asciiLogo: string[] =
 				 ['___________________________________________________________',
 				  '',
@@ -104,8 +106,8 @@ const textScale = 0.6 * logoScale;
 const charScale = 0.052 * textScale;
 
 let offset = 0;
-export const logoText = _.mapValues(_logoText, function (c) {
-	let ret = {
+export const logoText = _.mapValues(_logoText, function(c) {
+	const ret = {
 		style : c.style,
 		points: _.map(c.points, xy => [textX + textScale * (offset + xy[0]),
 									   textY + textScale * xy[1]])

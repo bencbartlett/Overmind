@@ -1,9 +1,9 @@
-import {Directive} from '../Directive';
-import {log} from '../../console/log';
-import {profile} from '../../profiler/decorator';
-import {BootstrappingOverlord} from '../../overlords/situational/bootstrap';
 import {Colony} from '../../Colony';
+import {log} from '../../console/log';
 import {Roles} from '../../creepSetups/setups';
+import {BootstrappingOverlord} from '../../overlords/situational/bootstrap';
+import {profile} from '../../profiler/decorator';
+import {Directive} from '../Directive';
 import {NotifierPriority} from '../Notifier';
 
 /**
@@ -52,8 +52,8 @@ export class DirectiveBootstrap extends Directive {
 		if (!this.needsQueen && !this.needsMiner && !this.needsManager) {
 			log.alert(`Colony ${this.room.print} has recovered from crash; removing bootstrap directive.`);
 			// Suicide any fillers so they don't get in the way
-			let overlord = this.overlords.bootstrap as BootstrappingOverlord;
-			for (let filler of overlord.fillers) {
+			const overlord = this.overlords.bootstrap as BootstrappingOverlord;
+			for (const filler of overlord.fillers) {
 				filler.suicide();
 			}
 			// Remove the directive

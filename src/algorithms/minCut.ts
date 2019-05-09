@@ -40,9 +40,9 @@ export interface Rectangle {
 }
 
 export class Graph {
-	public totalVertices: number;
-	public level: number[];
-	public edges: { [from: number]: Edge[] };
+	totalVertices: number;
+	level: number[];
+	edges: { [from: number]: Edge[] };
 
 	constructor(totalVertices: number) {
 		this.totalVertices = totalVertices;
@@ -57,7 +57,7 @@ export class Graph {
 	 * @param to - vertex edge leads to
 	 * @param capacity - max flow capacity for this edge
 	 */
-	public newEdge(from: number, to: number, capacity: number) {
+	newEdge(from: number, to: number, capacity: number) {
 		// Normal forward Edge
 		this.edges[from].push({to, resEdge: this.edges[to].length, capacity, flow: 0});
 		// reverse Edge for Residual Graph
@@ -69,7 +69,7 @@ export class Graph {
 	 * @param from - vertex to start from
 	 * @param to - vertex to try and reach
 	 */
-	public createLevelGraph(from: number, to: number) {
+	createLevelGraph(from: number, to: number) {
 		if (to >= this.totalVertices) {
 			return false;
 		}
@@ -99,7 +99,7 @@ export class Graph {
 	 * @param targetFlow - the amount of flow to try and achieve
 	 * @param count - keep track of which vertices have been visited so we don't include them twice
 	 */
-	public calcFlow(start: number, end: number, targetFlow: number, count: number[]) {
+	calcFlow(start: number, end: number, targetFlow: number, count: number[]) {
 		if (start === end) { // Sink reached , abort recursion
 			return targetFlow;
 		}
@@ -129,7 +129,7 @@ export class Graph {
 	 * - Must call calcMinCut first to prepare the graph
 	 * @param from - the vertex to start from
 	 */
-	public getMinCut(from: number) {
+	getMinCut(from: number) {
 		const eInCut = [];
 		this.level.fill(-1);
 		this.level[from] = 1;
@@ -169,7 +169,7 @@ export class Graph {
 	 * @param source - Source vertex
 	 * @param sink - Sink vertex
 	 */
-	public calcMinCut(source: number, sink: number) {
+	calcMinCut(source: number, sink: number) {
 		if (source === sink) {
 			return -1;
 		}
@@ -214,14 +214,14 @@ export function get2DArray(roomName: string, bounds: Rectangle = {x1: 0, y1: 0, 
 	// Marks tiles as unbuildable if they are proximate to exits
 	for (y = bounds.y1 + 1; y <= bounds.y2 - 1; y++) {
 		if (room2D[bounds.x1][y] === EXIT) {
-			for (let dy of [-1, 0, 1]) {
+			for (const dy of [-1, 0, 1]) {
 				if (room2D[bounds.x1 + 1][y + dy] !== UNWALKABLE) {
 					room2D[bounds.x1 + 1][y + dy] = CANNOT_BUILD;
 				}
 			}
 		}
 		if (room2D[bounds.x2][y] === EXIT) {
-			for (let dy of [-1, 0, 1]) {
+			for (const dy of [-1, 0, 1]) {
 				if (room2D[bounds.x2 - 1][y + dy] !== UNWALKABLE) {
 					room2D[bounds.x2 - 1][y + dy] = CANNOT_BUILD;
 				}
@@ -230,14 +230,14 @@ export function get2DArray(roomName: string, bounds: Rectangle = {x1: 0, y1: 0, 
 	}
 	for (x = bounds.x1 + 1; x <= bounds.x2 - 1; x++) {
 		if (room2D[x][bounds.y1] === EXIT) {
-			for (let dx of [-1, 0, 1]) {
+			for (const dx of [-1, 0, 1]) {
 				if (room2D[x + dx][bounds.y1 + 1] !== UNWALKABLE) {
 					room2D[x + dx][bounds.y1 + 1] = CANNOT_BUILD;
 				}
 			}
 		}
 		if (room2D[x][bounds.y2] === EXIT) {
-			for (let dx of [-1, 0, 1]) {
+			for (const dx of [-1, 0, 1]) {
 				if (room2D[x + dx][bounds.y2 - 1] !== UNWALKABLE) {
 					room2D[x + dx][bounds.y2 - 1] = CANNOT_BUILD;
 				}
@@ -289,17 +289,17 @@ export function createGraph(roomName: string, toProtect: Rectangle[],
 	// Preferentially weight closer tiles
 	if (preferCloserBarriers) {
 		for (r of _.take(toProtect, preferCloserBarrierLimit)) {
-			let [xmin, xmax] = [Math.max(r.x1 - RANGE_PADDING, 0), Math.min(r.x2 + RANGE_PADDING, 49)];
-			let [ymin, ymax] = [Math.max(r.y1 - RANGE_PADDING, 0), Math.min(r.y2 + RANGE_PADDING, 49)];
+			const [xmin, xmax] = [Math.max(r.x1 - RANGE_PADDING, 0), Math.min(r.x2 + RANGE_PADDING, 49)];
+			const [ymin, ymax] = [Math.max(r.y1 - RANGE_PADDING, 0), Math.min(r.y2 + RANGE_PADDING, 49)];
 			for (x = xmin; x <= xmax; x++) {
 				for (y = ymin; y <= ymax; y++) {
 					if (roomArray[x][y] >= NORMAL && roomArray[x][y] < PROTECTED) {
-						let x1range = Math.max(r.x1 - x, 0);
-						let x2range = Math.max(x - r.x2, 0);
-						let y1range = Math.max(r.y1 - y, 0);
-						let y2range = Math.max(y - r.y2, 0);
-						let rangeToBorder = Math.max(x1range, x2range, y1range, y2range);
-						let modifiedWeight = NORMAL + RANGE_MODIFIER * (RANGE_PADDING - rangeToBorder);
+						const x1range = Math.max(r.x1 - x, 0);
+						const x2range = Math.max(x - r.x2, 0);
+						const y1range = Math.max(r.y1 - y, 0);
+						const y2range = Math.max(y - r.y2, 0);
+						const rangeToBorder = Math.max(x1range, x2range, y1range, y2range);
+						const modifiedWeight = NORMAL + RANGE_MODIFIER * (RANGE_PADDING - rangeToBorder);
 						roomArray[x][y] = Math.max(roomArray[x][y], modifiedWeight);
 						if (visualize) {
 							visual.text(`${roomArray[x][y]}`, x, y);
@@ -310,7 +310,6 @@ export function createGraph(roomName: string, toProtect: Rectangle[],
 		}
 	}
 
-	let max: number;
 	// ********************** Visualization
 	if (visualize) {
 		for (x = bounds.x1; x <= bounds.x2; x++) {
@@ -511,34 +510,35 @@ export function pruneDeadEnds(roomName: string, cutTiles: Coord[]) {
  * @param roomName - the name of the room to use for the test, must be visible
  */
 export function testMinCut(colonyName: string, preferCloserBarriers = true) {
-	let colony = Overmind.colonies[colonyName];
+	const colony = Overmind.colonies[colonyName];
 	if (!colony) {
 		return `No colony: ${colonyName}`;
 	}
 	let cpu = Game.cpu.getUsed();
 	// Rectangle Array, the Rectangles will be protected by the returned tiles
 	const rectArray = [];
-	let padding = 3;
+	const padding = 3;
 	if (colony.hatchery) {
-		let {x, y} = colony.hatchery.pos;
-		let [x1, y1] = [Math.max(x - 5 - padding, 0), Math.max(y - 4 - padding, 0)];
-		let [x2, y2] = [Math.min(x + 5 + padding, 49), Math.min(y + 6 + padding, 49)];
+		const {x, y} = colony.hatchery.pos;
+		const [x1, y1] = [Math.max(x - 5 - padding, 0), Math.max(y - 4 - padding, 0)];
+		const [x2, y2] = [Math.min(x + 5 + padding, 49), Math.min(y + 6 + padding, 49)];
 		rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
 	}
 	if (colony.commandCenter) {
-		let {x, y} = colony.commandCenter.pos;
-		let [x1, y1] = [Math.max(x - 3 - padding, 0), Math.max(y - 0 - padding, 0)];
-		let [x2, y2] = [Math.min(x + 0 + padding, 49), Math.min(y + 5 + padding, 49)];
+		const {x, y} = colony.commandCenter.pos;
+		const [x1, y1] = [Math.max(x - 3 - padding, 0), Math.max(y - 0 - padding, 0)];
+		const [x2, y2] = [Math.min(x + 0 + padding, 49), Math.min(y + 5 + padding, 49)];
 		rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
 	}
 	if (colony.upgradeSite) {
-		let {x, y} = colony.upgradeSite.pos;
-		let [x1, y1] = [Math.max(x - 1, 0), Math.max(y - 1, 0)];
-		let [x2, y2] = [Math.min(x + 1, 49), Math.min(y + 1, 49)];
+		const {x, y} = colony.upgradeSite.pos;
+		const [x1, y1] = [Math.max(x - 1, 0), Math.max(y - 1, 0)];
+		const [x2, y2] = [Math.min(x + 1, 49), Math.min(y + 1, 49)];
 		rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
 	}
 	// Get Min cut
-	const positions = getCutTiles(colonyName, rectArray, preferCloserBarriers, 2); // Positions is an array where to build walls/ramparts
+	// Positions is an array where to build walls/ramparts
+	const positions = getCutTiles(colonyName, rectArray, preferCloserBarriers, 2);
 	// Test output
 	// console.log('Positions returned', positions.length);
 	cpu = Game.cpu.getUsed() - cpu;
@@ -554,20 +554,20 @@ export function testMinCut(colonyName: string, preferCloserBarriers = true) {
  * @param roomName - the name of the room to use for the test, must be visible
  */
 export function testMinCutSubset(colonyName: string) {
-	let colony = Overmind.colonies[colonyName];
+	const colony = Overmind.colonies[colonyName];
 	if (!colony) {
 		return `No colony: ${colonyName}`;
 	}
 	let cpu = Game.cpu.getUsed();
 	// Rectangle Array, the Rectangles will be protected by the returned tiles
 	const rectArray = [];
-	let padding = 3;
+	const padding = 3;
 	if (colony.hatchery) {
-		let {x, y} = colony.hatchery.pos;
+		const {x, y} = colony.hatchery.pos;
 		rectArray.push({x1: x - 5 - padding, y1: y - 4 - padding, x2: x + 5 + padding, y2: y + 6 + padding});
 	}
 	if (colony.commandCenter) {
-		let {x, y} = colony.commandCenter.pos;
+		const {x, y} = colony.commandCenter.pos;
 		rectArray.push({x1: x - 3 - padding, y1: y - 0 - padding, x2: x + 0 + padding, y2: y + 5 + padding});
 	}
 	// Get Min cut, returns the positions where ramparts/walls need to be

@@ -1,7 +1,7 @@
-import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
+import {profile} from '../profiler/decorator';
 
-export interface bodySetup {
+export interface BodySetup {
 	pattern: BodyPartConstant[];			// body pattern to be repeated
 	sizeLimit: number;						// maximum number of unit repetitions to make body
 	prefix: BodyPartConstant[];				// stuff at beginning of body
@@ -26,7 +26,7 @@ export function patternCost(setup: CreepSetup): number {
 export class CreepSetup {
 
 	role: string;
-	bodySetup: bodySetup;
+	bodySetup: BodySetup;
 
 	constructor(roleName: string, bodySetup = {}) {
 		this.role = roleName;
@@ -39,29 +39,29 @@ export class CreepSetup {
 			proportionalPrefixSuffix: false,
 			ordered                 : true,
 		});
-		this.bodySetup = bodySetup as bodySetup;
+		this.bodySetup = bodySetup as BodySetup;
 	}
 
 	/* Generate the largest body of a given pattern that is producable from a room,
 	 * subject to limitations from maxRepeats */
 	generateBody(availableEnergy: number): BodyPartConstant[] {
 		let patternCost, patternLength, numRepeats: number;
-		let prefix = this.bodySetup.prefix;
-		let suffix = this.bodySetup.suffix;
+		const prefix = this.bodySetup.prefix;
+		const suffix = this.bodySetup.suffix;
 		let body: BodyPartConstant[] = [];
 		// calculate repetitions
 		if (this.bodySetup.proportionalPrefixSuffix) { // if prefix and suffix are to be kept proportional to body size
 			patternCost = bodyCost(prefix) + bodyCost(this.bodySetup.pattern) + bodyCost(suffix);
 			patternLength = prefix.length + this.bodySetup.pattern.length + suffix.length;
-			let energyLimit = Math.floor(availableEnergy / patternCost); // max number of repeats room can produce
-			let maxPartLimit = Math.floor(MAX_CREEP_SIZE / patternLength); // max repetitions resulting in <50 parts
+			const energyLimit = Math.floor(availableEnergy / patternCost); // max number of repeats room can produce
+			const maxPartLimit = Math.floor(MAX_CREEP_SIZE / patternLength); // max repetitions resulting in <50 parts
 			numRepeats = Math.min(energyLimit, maxPartLimit, this.bodySetup.sizeLimit);
 		} else { // if prefix and suffix don't scale
-			let extraCost = bodyCost(prefix) + bodyCost(suffix);
+			const extraCost = bodyCost(prefix) + bodyCost(suffix);
 			patternCost = bodyCost(this.bodySetup.pattern);
 			patternLength = this.bodySetup.pattern.length;
-			let energyLimit = Math.floor((availableEnergy - extraCost) / patternCost);
-			let maxPartLimit = Math.floor((MAX_CREEP_SIZE - prefix.length - suffix.length) / patternLength);
+			const energyLimit = Math.floor((availableEnergy - extraCost) / patternCost);
+			const maxPartLimit = Math.floor((MAX_CREEP_SIZE - prefix.length - suffix.length) / patternLength);
 			numRepeats = Math.min(energyLimit, maxPartLimit, this.bodySetup.sizeLimit);
 		}
 		// build the body
@@ -74,7 +74,7 @@ export class CreepSetup {
 		}
 
 		if (this.bodySetup.ordered) { // repeated body pattern
-			for (let part of this.bodySetup.pattern) {
+			for (const part of this.bodySetup.pattern) {
 				for (let i = 0; i < numRepeats; i++) {
 					body.push(part);
 				}
@@ -101,11 +101,11 @@ export class CreepSetup {
 		// 							  colony.incubator ? colony.incubator.room.energyCapacityAvailable : 0);
 		let energyCapacity = colony.room.energyCapacityAvailable;
 		if (colony.spawnGroup) {
-			let colonies = _.compact(_.map(colony.spawnGroup.memory.colonies,
+			const colonies = _.compact(_.map(colony.spawnGroup.memory.colonies,
 										   name => Overmind.colonies[name])) as Colony[];
 			energyCapacity = _.max(_.map(colonies, colony => colony.room.energyCapacityAvailable));
 		}
-		let body = this.generateBody(energyCapacity);
+		const body = this.generateBody(energyCapacity);
 		return _.filter(body, (part: BodyPartConstant) => part == partType).length;
 	}
 

@@ -1,7 +1,7 @@
-import {Directive} from '../Directive';
+import {AttackStructurePriorities} from '../../priorities/priorities_structures';
 import {profile} from '../../profiler/decorator';
 import {Visualizer} from '../../visuals/Visualizer';
-import {AttackStructurePriorities} from '../../priorities/priorities_structures';
+import {Directive} from '../Directive';
 
 /**
  * [LEGACY] Manually specify targets to be prioritized during a siege
@@ -22,9 +22,9 @@ export class DirectiveTargetSiege extends Directive {
 	}
 
 	getTarget(): Structure | undefined {
-		let targetedStructures = this.pos.lookFor(LOOK_STRUCTURES) as Structure[];
-		for (let structure of targetedStructures) {
-			for (let structureType of AttackStructurePriorities) {
+		const targetedStructures = this.pos.lookFor(LOOK_STRUCTURES) as Structure[];
+		for (const structure of targetedStructures) {
+			for (const structureType of AttackStructurePriorities) {
 				if (structure.structureType == structureType) {
 					return structure;
 				}

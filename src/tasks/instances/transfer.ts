@@ -1,6 +1,6 @@
-import {Task} from '../Task';
-import {profile} from '../../profiler/decorator';
 import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../../declarations/typeGuards';
+import {profile} from '../../profiler/decorator';
+import {Task} from '../Task';
 
 
 export type transferTargetType =
@@ -23,9 +23,7 @@ export class TaskTransfer extends Task {
 	};
 
 	constructor(target: transferTargetType,
-				resourceType: ResourceConstant = RESOURCE_ENERGY,
-				amount: number | undefined     = undefined,
-				options                        = {} as TaskOptions) {
+				resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number, options = {} as TaskOptions) {
 		super(transferTaskName, target, options);
 		// Settings
 		this.settings.oneShot = true;
@@ -34,14 +32,14 @@ export class TaskTransfer extends Task {
 	}
 
 	isValidTask() {
-		let amount = this.data.amount || 1;
-		let resourcesInCarry = this.creep.carry[this.data.resourceType] || 0;
+		const amount = this.data.amount || 1;
+		const resourcesInCarry = this.creep.carry[this.data.resourceType] || 0;
 		return resourcesInCarry >= amount;
 	}
 
 	isValidTarget() {
-		let amount = this.data.amount || 1;
-		let target = this.target;
+		const amount = this.data.amount || 1;
+		const target = this.target;
 		if (target instanceof Creep) {
 			return _.sum(target.carry) <= target.carryCapacity - amount;
 		} else if (isStoreStructure(target)) {

@@ -1,8 +1,8 @@
 /* Withdraw a resource from a target */
 
-import {Task} from '../Task';
-import {profile} from '../../profiler/decorator';
 import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../../declarations/typeGuards';
+import {profile} from '../../profiler/decorator';
+import {Task} from '../Task';
 
 export type withdrawTargetType =
 	EnergyStructure
@@ -23,9 +23,7 @@ export class TaskWithdraw extends Task {
 	};
 
 	constructor(target: withdrawTargetType,
-				resourceType: ResourceConstant = RESOURCE_ENERGY,
-				amount: number | undefined     = undefined,
-				options                        = {} as TaskOptions) {
+				resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number, options = {} as TaskOptions) {
 		super(withdrawTaskName, target, options);
 		// Settings
 		this.settings.oneShot = true;
@@ -34,13 +32,13 @@ export class TaskWithdraw extends Task {
 	}
 
 	isValidTask() {
-		let amount = this.data.amount || 1;
+		const amount = this.data.amount || 1;
 		return (_.sum(this.creep.carry) <= this.creep.carryCapacity - amount);
 	}
 
 	isValidTarget() {
-		let amount = this.data.amount || 1;
-		let target = this.target;
+		const amount = this.data.amount || 1;
+		const target = this.target;
 		if (target instanceof Tombstone || isStoreStructure(target)) {
 			return (target.store[this.data.resourceType] || 0) >= amount;
 		} else if (isEnergyStructure(target) && this.data.resourceType == RESOURCE_ENERGY) {

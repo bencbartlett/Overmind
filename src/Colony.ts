@@ -1,36 +1,36 @@
-import {profile} from './profiler/decorator';
-import {Hatchery} from './hiveClusters/hatchery';
-import {CommandCenter} from './hiveClusters/commandCenter';
-import {UpgradeSite} from './hiveClusters/upgradeSite';
-import {WorkerOverlord} from './overlords/core/worker';
-import {Zerg} from './zerg/Zerg';
-import {RoomPlanner} from './roomPlanner/RoomPlanner';
-import {HiveCluster} from './hiveClusters/_HiveCluster';
-import {LinkNetwork} from './logistics/LinkNetwork';
-import {LOG_STATS_INTERVAL, Stats} from './stats/stats';
-import {SporeCrawler} from './hiveClusters/sporeCrawler';
-import {RoadLogistics} from './logistics/RoadLogistics';
-import {LogisticsNetwork} from './logistics/LogisticsNetwork';
-import {TransportOverlord} from './overlords/core/transporter';
-import {Energetics} from './logistics/Energetics';
-import {StoreStructure} from './declarations/typeGuards';
-import {maxBy, mergeSum, minBy} from './utilities/utils';
-import {Abathur} from './resources/Abathur';
-import {EvolutionChamber} from './hiveClusters/evolutionChamber';
-import {TransportRequestGroup} from './logistics/TransportRequestGroup';
-import {SpawnGroup} from './logistics/SpawnGroup';
-import {bunkerLayout, getPosFromBunkerCoord} from './roomPlanner/layouts/bunker';
-import {Mem} from './memory/Memory';
-import {RandomWalkerScoutOverlord} from './overlords/scouting/randomWalker';
-import {EXPANSION_EVALUATION_FREQ, ExpansionPlanner} from './strategy/ExpansionPlanner';
-import {log} from './console/log';
 import {assimilationLocked} from './assimilation/decorator';
-import {DefaultOverlord} from './overlords/core/default';
 import {$} from './caching/GlobalCache';
-import {_HARVEST_MEM_DOWNTIME, _HARVEST_MEM_USAGE, DirectiveHarvest} from './directives/resource/harvest';
+import {log} from './console/log';
+import {StoreStructure} from './declarations/typeGuards';
 import {DirectiveExtract} from './directives/resource/extract';
+import {_HARVEST_MEM_DOWNTIME, _HARVEST_MEM_USAGE, DirectiveHarvest} from './directives/resource/harvest';
+import {HiveCluster} from './hiveClusters/_HiveCluster';
+import {CommandCenter} from './hiveClusters/commandCenter';
+import {EvolutionChamber} from './hiveClusters/evolutionChamber';
+import {Hatchery} from './hiveClusters/hatchery';
+import {SporeCrawler} from './hiveClusters/sporeCrawler';
+import {UpgradeSite} from './hiveClusters/upgradeSite';
+import {Energetics} from './logistics/Energetics';
+import {LinkNetwork} from './logistics/LinkNetwork';
+import {LogisticsNetwork} from './logistics/LogisticsNetwork';
+import {RoadLogistics} from './logistics/RoadLogistics';
+import {SpawnGroup} from './logistics/SpawnGroup';
+import {TransportRequestGroup} from './logistics/TransportRequestGroup';
+import {Mem} from './memory/Memory';
+import {DefaultOverlord} from './overlords/core/default';
+import {TransportOverlord} from './overlords/core/transporter';
+import {WorkerOverlord} from './overlords/core/worker';
+import {RandomWalkerScoutOverlord} from './overlords/scouting/randomWalker';
+import {profile} from './profiler/decorator';
+import {Abathur} from './resources/Abathur';
+import {bunkerLayout, getPosFromBunkerCoord} from './roomPlanner/layouts/bunker';
+import {RoomPlanner} from './roomPlanner/RoomPlanner';
+import {LOG_STATS_INTERVAL, Stats} from './stats/stats';
+import {EXPANSION_EVALUATION_FREQ, ExpansionPlanner} from './strategy/ExpansionPlanner';
 import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
+import {maxBy, mergeSum, minBy} from './utilities/utils';
 import {Visualizer} from './visuals/Visualizer';
+import {Zerg} from './zerg/Zerg';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -61,11 +61,11 @@ export interface ColonyMemory {
 	defcon: {
 		level: number,
 		tick: number,
-	},
+	};
 	expansionData: {
 		possibleExpansions: { [roomName: string]: number | boolean },
 		expiration: number,
-	},
+	};
 	suspend?: boolean;
 }
 
@@ -310,7 +310,7 @@ export class Colony {
 		// Register physical objects across all rooms in the colony
 		$.set(this, 'sources', () => _.sortBy(_.flatten(_.map(this.rooms, room => room.sources)),
 											  source => source.pos.getMultiRoomRangeTo(this.pos)));
-		for (let source of this.sources) {
+		for (const source of this.sources) {
 			DirectiveHarvest.createIfNotPresent(source.pos, 'pos');
 		}
 		$.set(this, 'extractors', () =>
@@ -368,9 +368,9 @@ export class Colony {
 		// Set DEFCON level
 		// TODO: finish this
 		let defcon = DEFCON.safe;
-		let defconDecayTime = 200;
+		const defconDecayTime = 200;
 		if (this.room.dangerousHostiles.length > 0 && !this.controller.safeMode) {
-			let effectiveHostileCount = _.sum(_.map(this.room.dangerousHostiles,
+			const effectiveHostileCount = _.sum(_.map(this.room.dangerousHostiles,
 													hostile => hostile.boosts.length > 0 ? 2 : 1));
 			if (effectiveHostileCount >= 3) {
 				defcon = DEFCON.boostedInvasionNPC;
@@ -413,13 +413,13 @@ export class Colony {
 		this.roomPlanner = new RoomPlanner(this);
 		if (this.roomPlanner.memory.bunkerData && this.roomPlanner.memory.bunkerData.anchor) {
 			this.layout = 'bunker';
-			let anchor = derefRoomPosition(this.roomPlanner.memory.bunkerData.anchor);
+			const anchor = derefRoomPosition(this.roomPlanner.memory.bunkerData.anchor);
 			// log.debug(JSON.stringify(`anchor for ${this.name}: ${anchor}`));
-			let spawnPositions = _.map(bunkerLayout[8]!.buildings.spawn.pos, c => getPosFromBunkerCoord(c, this));
+			const spawnPositions = _.map(bunkerLayout[8]!.buildings.spawn.pos, c => getPosFromBunkerCoord(c, this));
 			// log.debug(JSON.stringify(`spawnPositions for ${this.name}: ${spawnPositions}`));
-			let rightSpawnPos = maxBy(spawnPositions, pos => pos.x) as RoomPosition;
-			let topSpawnPos = minBy(spawnPositions, pos => pos.y) as RoomPosition;
-			let coreSpawnPos = anchor.findClosestByRange(spawnPositions) as RoomPosition;
+			const rightSpawnPos = maxBy(spawnPositions, pos => pos.x) as RoomPosition;
+			const topSpawnPos = minBy(spawnPositions, pos => pos.y) as RoomPosition;
+			const coreSpawnPos = anchor.findClosestByRange(spawnPositions) as RoomPosition;
 			// log.debug(JSON.stringify(`spawnPoses: ${rightSpawnPos}, ${topSpawnPos}, ${coreSpawnPos}`));
 			this.bunker = {
 				anchor    : anchor,
@@ -508,7 +508,7 @@ export class Colony {
 		if (!this.observer) {
 			this.overlords.scout = new RandomWalkerScoutOverlord(this);
 		}
-		for (let hiveCluster of this.hiveClusters) {
+		for (const hiveCluster of this.hiveClusters) {
 			hiveCluster.spawnMoarOverlords();
 		}
 	}
@@ -533,11 +533,11 @@ export class Colony {
 	private getAllAssets(verbose = false): { [resourceType: string]: number } {
 		// if (this.name == 'E8S45') verbose = true; // 18863
 		// Include storage structures and manager carry
-		let stores = _.map(<StoreStructure[]>_.compact([this.storage, this.terminal]), s => s.store);
-		let creepCarriesToInclude = _.map(this.creeps, creep => creep.carry) as { [resourceType: string]: number }[];
-		let allAssets: { [resourceType: string]: number } = mergeSum([...stores, ...creepCarriesToInclude]);
+		const stores = _.map(<StoreStructure[]>_.compact([this.storage, this.terminal]), s => s.store);
+		const creepCarriesToInclude = _.map(this.creeps, creep => creep.carry) as { [resourceType: string]: number }[];
+		const allAssets: { [resourceType: string]: number } = mergeSum([...stores, ...creepCarriesToInclude]);
 		// Include lab amounts
-		for (let lab of this.labs) {
+		for (const lab of this.labs) {
 			if (lab.mineralType) {
 				if (!allAssets[lab.mineralType]) {
 					allAssets[lab.mineralType] = 0;
@@ -584,10 +584,10 @@ export class Colony {
 			Stats.log(`colonies.${this.name}.rcl.progress`, this.controller.progress);
 			Stats.log(`colonies.${this.name}.rcl.progressTotal`, this.controller.progressTotal);
 			// Log average miningSite usage and uptime and estimated colony energy income
-			let numSites = _.keys(this.miningSites).length;
-			let avgDowntime = _.sum(this.miningSites, site => site.memory[_HARVEST_MEM_DOWNTIME]) / numSites;
-			let avgUsage = _.sum(this.miningSites, site => site.memory[_HARVEST_MEM_USAGE]) / numSites;
-			let energyInPerTick = _.sum(this.miningSites,
+			const numSites = _.keys(this.miningSites).length;
+			const avgDowntime = _.sum(this.miningSites, site => site.memory[_HARVEST_MEM_DOWNTIME]) / numSites;
+			const avgUsage = _.sum(this.miningSites, site => site.memory[_HARVEST_MEM_USAGE]) / numSites;
+			const energyInPerTick = _.sum(this.miningSites,
 										site => site.overlords.mine.energyPerTick * site.memory[_HARVEST_MEM_USAGE]);
 			Stats.log(`colonies.${this.name}.miningSites.avgDowntime`, avgDowntime);
 			Stats.log(`colonies.${this.name}.miningSites.avgUsage`, avgUsage);
@@ -595,7 +595,7 @@ export class Colony {
 			Stats.log(`colonies.${this.name}.assets`, this.assets);
 			// Log defensive properties
 			Stats.log(`colonies.${this.name}.defcon`, this.defcon);
-			let avgBarrierHits = _.sum(this.room.barriers, barrier => barrier.hits) / this.room.barriers.length;
+			const avgBarrierHits = _.sum(this.room.barriers, barrier => barrier.hits) / this.room.barriers.length;
 			Stats.log(`colonies.${this.name}.avgBarrierHits`, avgBarrierHits);
 		}
 	}
@@ -616,7 +616,7 @@ export class Colony {
 		x = coord.x;
 		y = coord.y;
 
-		for (let hiveCluster of _.compact([this.hatchery, this.commandCenter, this.evolutionChamber])) {
+		for (const hiveCluster of _.compact([this.hatchery, this.commandCenter, this.evolutionChamber])) {
 			coord = hiveCluster!.visuals({x, y});
 			x = coord.x;
 			y = coord.y;

@@ -1,8 +1,8 @@
-import {Overlord} from './Overlord';
-import {CombatZerg} from '../zerg/CombatZerg';
+import {Directive} from '../directives/Directive';
 import {SpawnGroup} from '../logistics/SpawnGroup';
 import {profile} from '../profiler/decorator';
-import {Directive} from '../directives/Directive';
+import {CombatZerg} from '../zerg/CombatZerg';
+import {Overlord} from './Overlord';
 
 
 export interface CombatOverlordOptions {
@@ -28,7 +28,7 @@ export abstract class CombatOverlord extends Overlord {
 
 	// Standard sequence of actions for running combat creeps
 	autoRun(roleCreeps: CombatZerg[], creepHandler: (creep: CombatZerg) => void) {
-		for (let creep of roleCreeps) {
+		for (const creep of roleCreeps) {
 			if (creep.hasValidTask) {
 				creep.run();
 			} else {

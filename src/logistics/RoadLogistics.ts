@@ -1,8 +1,8 @@
-import {profile} from '../profiler/decorator';
-import {Colony} from '../Colony';
-import {Zerg} from '../zerg/Zerg';
-import {repairTaskName} from '../tasks/instances/repair';
 import {$} from '../caching/GlobalCache';
+import {Colony} from '../Colony';
+import {profile} from '../profiler/decorator';
+import {repairTaskName} from '../tasks/instances/repair';
+import {Zerg} from '../zerg/Zerg';
 
 const ROAD_CACHE_TIMEOUT = 15;
 
@@ -40,7 +40,7 @@ export class RoadLogistics {
 	 */
 	private workerShouldRepaveRoom(worker: Zerg, room: Room): boolean {
 		// Room should be repaved if there is a road with critical HP or if energy to repave >= worker carry capacity
-		let otherAssignedWorkers = _.filter(this.assignedWorkers(room), name => name != worker.name);
+		const otherAssignedWorkers = _.filter(this.assignedWorkers(room), name => name != worker.name);
 		if (otherAssignedWorkers.length < RoadLogistics.settings.allowedPaversPerRoom) {
 			if (this.assignedWorkers(room).includes(worker.name)) {
 				// If worker is already working in the room, have it repair until all roads are at acceptable level
@@ -60,14 +60,14 @@ export class RoadLogistics {
 	workerShouldRepave(worker: Zerg): Room | undefined {
 		// If the worker is already working in a room and should keep doing so, return that first
 		if (worker.task && worker.task.name == repairTaskName) {
-			let room = Game.rooms[worker.task.targetPos.roomName];
+			const room = Game.rooms[worker.task.targetPos.roomName];
 			if (room && this.assignedWorkers(room).includes(worker.name)
 				&& this.workerShouldRepaveRoom(worker, room)) {
 				return room;
 			}
 		}
 		// Otherwise scan through rooms and see if needs repaving
-		for (let room of this.rooms) {
+		for (const room of this.rooms) {
 			if (this.workerShouldRepaveRoom(worker, room)) {
 				return room;
 			}
@@ -122,10 +122,10 @@ export class RoadLogistics {
 	}
 
 	init(): void {
-		let workers = this.colony.overlords.work.workers;
-		for (let worker of workers) {
+		const workers = this.colony.overlords.work.workers;
+		for (const worker of workers) {
 			if (worker.task && worker.task.name == repairTaskName) {
-				let roomName = worker.task.targetPos.roomName;
+				const roomName = worker.task.targetPos.roomName;
 				if (!this._assignedWorkers[roomName]) {
 					this._assignedWorkers[roomName] = [];
 				}

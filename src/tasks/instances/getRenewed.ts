@@ -1,5 +1,5 @@
-import {Task} from '../Task';
 import {profile} from '../../profiler/decorator';
+import {Task} from '../Task';
 
 export type getRenewedTargetType = StructureSpawn;
 export const getRenewedTaskName = 'getRenewed';
@@ -13,8 +13,8 @@ export class TaskGetRenewed extends Task {
 	}
 
 	isValidTask() {
-		let hasClaimPart = _.filter(this.creep.body, (part: BodyPartDefinition) => part.type == CLAIM).length > 0;
-		let lifetime = hasClaimPart ? CREEP_CLAIM_LIFE_TIME : CREEP_LIFE_TIME;
+		const hasClaimPart = _.filter(this.creep.body, (part: BodyPartDefinition) => part.type == CLAIM).length > 0;
+		const lifetime = hasClaimPart ? CREEP_CLAIM_LIFE_TIME : CREEP_LIFE_TIME;
 		return this.creep.ticksToLive != undefined && this.creep.ticksToLive < 0.9 * lifetime;
 	}
 

@@ -1,4 +1,4 @@
-RoomVisual.prototype.infoBox = function (info: string[], x: number, y: number, opts = {}): RoomVisual {
+RoomVisual.prototype.infoBox = function(info: string[], x: number, y: number, opts = {}): RoomVisual {
 	_.defaults(opts, {
 		color    : colors.infoBoxGood,
 		textstyle: false,
@@ -38,15 +38,15 @@ RoomVisual.prototype.infoBox = function (info: string[], x: number, y: number, o
 	// 	});
 
 	// Draw vertical bar
-	let x0 = x + 0.9;
-	let y0 = y - 0.8 * opts.textsize;
+	const x0 = x + 0.9;
+	const y0 = y - 0.8 * opts.textsize;
 	this.line(x0, y0, x0, y0 + info.length * opts.textsize, {
 		color: opts.color,
 	});
 
 	// Draw text
 	let dy = 0;
-	for (let line of info) {
+	for (const line of info) {
 		this.text(line, x + 1, y + dy, {
 			color            : opts.color,
 			// backgroundColor  : opts.background,
@@ -61,7 +61,7 @@ RoomVisual.prototype.infoBox = function (info: string[], x: number, y: number, o
 	return this;
 };
 
-RoomVisual.prototype.multitext = function (textLines: string[], x: number, y: number, opts = {}): RoomVisual {
+RoomVisual.prototype.multitext = function(textLines: string[], x: number, y: number, opts = {}): RoomVisual {
 	_.defaults(opts, {
 		color    : colors.infoBoxGood,
 		textstyle: false,
@@ -85,7 +85,7 @@ RoomVisual.prototype.multitext = function (textLines: string[], x: number, y: nu
 
 	// Draw text
 	let dy = 0;
-	for (let line of textLines) {
+	for (const line of textLines) {
 		this.text(line, x, y + dy, {
 			color            : opts.color,
 			// backgroundColor  : opts.background,
@@ -100,7 +100,7 @@ RoomVisual.prototype.multitext = function (textLines: string[], x: number, y: nu
 	return this;
 };
 
-RoomVisual.prototype.box = function (x: number, y: number, w: number, h: number, style?: LineStyle): RoomVisual {
+RoomVisual.prototype.box = function(x: number, y: number, w: number, h: number, style?: LineStyle): RoomVisual {
 	return this.line(x, y, x + w, y, style)
 			   .line(x + w, y, x + w, y + h, style)
 			   .line(x + w, y + h, x, y + h, style)
@@ -127,7 +127,7 @@ const colors = {
 const speechSize = 0.5;
 const speechFont = 'Times New Roman';
 
-RoomVisual.prototype.structure = function (x: number, y: number, type: string, opts = {}): RoomVisual {
+RoomVisual.prototype.structure = function(x: number, y: number, type: string, opts = {}): RoomVisual {
 	_.defaults(opts, {opacity: 0.5});
 	switch (type) {
 		case STRUCTURE_EXTENSION:
@@ -330,7 +330,7 @@ RoomVisual.prototype.structure = function (x: number, y: number, type: string, o
 			});
 			break;
 		case STRUCTURE_STORAGE:
-			let storageOutline = relPoly(x, y, [
+			const storageOutline = relPoly(x, y, [
 				[-0.45, -0.55],
 				[0, -0.65],
 				[0.45, -0.55],
@@ -430,17 +430,17 @@ const dirs = [
 	[-1, -1]
 ];
 
-RoomVisual.prototype.connectRoads = function (opts = {}): RoomVisual | void {
+RoomVisual.prototype.connectRoads = function(opts = {}): RoomVisual | void {
 	_.defaults(opts, {opacity: 0.5});
-	let color = opts.color || colors.road || 'white';
+	const color = opts.color || colors.road || 'white';
 	if (!this.roads) return;
 	// this.text(this.roads.map(r=>r.join(',')).join(' '),25,23)
 	this.roads.forEach((r: number[]) => {
 		// this.text(`${r[0]},${r[1]}`,r[0],r[1],{ size: 0.2 })
 		for (let i = 1; i <= 4; i++) {
-			let d = dirs[i];
-			let c = [r[0] + d[0], r[1] + d[1]];
-			let rd = _.some(<number[][]>this.roads, r => r[0] == c[0] && r[1] == c[1]);
+			const d = dirs[i];
+			const c = [r[0] + d[0], r[1] + d[1]];
+			const rd = _.some(<number[][]>this.roads, r => r[0] == c[0] && r[1] == c[1]);
 			// this.text(`${c[0]},${c[1]}`,c[0],c[1],{ size: 0.2, color: rd?'green':'red' })
 			if (rd) {
 				this.line(r[0], r[1], c[0], c[1], {
@@ -456,16 +456,16 @@ RoomVisual.prototype.connectRoads = function (opts = {}): RoomVisual | void {
 };
 
 
-RoomVisual.prototype.speech = function (text: string, x: number, y: number, opts = {}): RoomVisual {
-	var background = !!opts.background ? opts.background : colors.speechBackground;
-	var textcolor = !!opts.textcolor ? opts.textcolor : colors.speechText;
+RoomVisual.prototype.speech = function(text: string, x: number, y: number, opts = {}): RoomVisual {
+	const background = !!opts.background ? opts.background : colors.speechBackground;
+	const textcolor = !!opts.textcolor ? opts.textcolor : colors.speechText;
 	// noinspection PointlessBooleanExpressionJS
-	var textstyle = !!opts.textstyle ? opts.textstyle : false;
-	var textsize = !!opts.textsize ? opts.textsize : speechSize;
-	var textfont = !!opts.textfont ? opts.textfont : speechFont;
-	var opacity = !!opts.opacity ? opts.opacity : 1;
+	const textstyle = !!opts.textstyle ? opts.textstyle : false;
+	const textsize = !!opts.textsize ? opts.textsize : speechSize;
+	const textfont = !!opts.textfont ? opts.textfont : speechFont;
+	const opacity = !!opts.opacity ? opts.opacity : 1;
 
-	var fontstring = '';
+	let fontstring = '';
 	if (textstyle) {
 		fontstring = textstyle + ' ';
 	}
@@ -498,22 +498,22 @@ RoomVisual.prototype.speech = function (text: string, x: number, y: number, opts
 };
 
 
-RoomVisual.prototype.animatedPosition = function (x: number, y: number, opts = {}): RoomVisual {
+RoomVisual.prototype.animatedPosition = function(x: number, y: number, opts = {}): RoomVisual {
 
-	let color = !!opts.color ? opts.color : 'blue';
-	let opacity = !!opts.opacity ? opts.opacity : 0.5;
+	const color = !!opts.color ? opts.color : 'blue';
+	const opacity = !!opts.opacity ? opts.opacity : 0.5;
 	let radius = !!opts.radius ? opts.radius : 0.75;
-	let frames = !!opts.frames ? opts.frames : 6;
+	const frames = !!opts.frames ? opts.frames : 6;
 
 
-	let angle = (Game.time % frames * 90 / frames) * (Math.PI / 180);
-	let s = Math.sin(angle);
-	let c = Math.cos(angle);
+	const angle = (Game.time % frames * 90 / frames) * (Math.PI / 180);
+	const s = Math.sin(angle);
+	const c = Math.cos(angle);
 
-	let sizeMod = Math.abs(Game.time % frames - frames / 2) / 10;
+	const sizeMod = Math.abs(Game.time % frames - frames / 2) / 10;
 	radius += radius * sizeMod;
 
-	let points = [
+	const points = [
 		rotate(0, -radius, s, c, x, y),
 		rotate(radius, 0, s, c, x, y),
 		rotate(0, radius, s, c, x, y),
@@ -527,8 +527,8 @@ RoomVisual.prototype.animatedPosition = function (x: number, y: number, opts = {
 };
 
 function rotate(x: number, y: number, s: number, c: number, px: number, py: number): { x: number, y: number } {
-	let xDelta = x * c - y * s;
-	let yDelta = x * s + y * c;
+	const xDelta = x * c - y * s;
+	const yDelta = x * s + y * c;
 	return {x: px + xDelta, y: py + yDelta};
 }
 
@@ -541,8 +541,8 @@ function relPoly(x: number, y: number, poly: number[][]): number[][] {
 	});
 }
 
-RoomVisual.prototype.test = function (): RoomVisual {
-	let demopos = [19, 24];
+RoomVisual.prototype.test = function(): RoomVisual {
+	const demopos = [19, 24];
 	this.clear();
 	this.structure(demopos[0] + 0, demopos[1] + 0, STRUCTURE_LAB);
 	this.structure(demopos[0] + 1, demopos[1] + 1, STRUCTURE_TOWER);
@@ -622,21 +622,22 @@ const ResourceColors: { [color: string]: [string, string] } = {
 };
 
 
-RoomVisual.prototype.resource = function (type, x, y, size = 0.25, opacity = 1) {
-	if (type == RESOURCE_ENERGY || type == RESOURCE_POWER)
+RoomVisual.prototype.resource = function(type, x, y, size = 0.25, opacity = 1) {
+	if (type == RESOURCE_ENERGY || type == RESOURCE_POWER) {
 		this._fluid(type, x, y, size, opacity);
-	else if ((<string[]>[RESOURCE_CATALYST, RESOURCE_HYDROGEN, RESOURCE_OXYGEN, RESOURCE_LEMERGIUM, RESOURCE_UTRIUM,
-						 RESOURCE_ZYNTHIUM, RESOURCE_KEANIUM])
-		.includes(type))
+	} else if ((<string[]>[RESOURCE_CATALYST, RESOURCE_HYDROGEN, RESOURCE_OXYGEN, RESOURCE_LEMERGIUM, RESOURCE_UTRIUM,
+						   RESOURCE_ZYNTHIUM, RESOURCE_KEANIUM])
+		.includes(type)) {
 		this._mineral(type, x, y, size, opacity);
-	else if (ResourceColors[type] != undefined)
+	} else if (ResourceColors[type] != undefined) {
 		this._compound(type, x, y, size, opacity);
-	else
+	} else {
 		return ERR_INVALID_ARGS;
+	}
 	return OK;
 };
 
-RoomVisual.prototype._fluid = function (type, x, y, size = 0.25, opacity = 1) {
+RoomVisual.prototype._fluid = function(type, x, y, size = 0.25, opacity = 1) {
 	this.circle(x, y, {
 		radius : size,
 		fill   : ResourceColors[type][0],
@@ -651,7 +652,7 @@ RoomVisual.prototype._fluid = function (type, x, y, size = 0.25, opacity = 1) {
 	});
 };
 
-RoomVisual.prototype._mineral = function (type, x, y, size = 0.25, opacity = 1) {
+RoomVisual.prototype._mineral = function(type, x, y, size = 0.25, opacity = 1) {
 	this.circle(x, y, {
 		radius : size,
 		fill   : ResourceColors[type][0],
@@ -671,8 +672,8 @@ RoomVisual.prototype._mineral = function (type, x, y, size = 0.25, opacity = 1) 
 	});
 };
 
-RoomVisual.prototype._compound = function (type, x, y, size = 0.25, opacity = 1) {
-	let label = type.replace('2', '₂');
+RoomVisual.prototype._compound = function(type, x, y, size = 0.25, opacity = 1) {
+	const label = type.replace('2', '₂');
 
 	this.text(label, x, y, {
 		font             : 'bold ' + (size * 1) + ' arial',

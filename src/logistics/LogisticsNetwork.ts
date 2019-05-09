@@ -1,9 +1,10 @@
-import {profile} from '../profiler/decorator';
-import {Zerg} from '../zerg/Zerg';
-import {log} from '../console/log';
-import {Pathing} from '../movement/Pathing';
-import {Colony} from '../Colony';
+/* tslint:disable:variable-name */
+
+import columnify from 'columnify';
 import {Matcher} from '../algorithms/galeShapley';
+import {Colony} from '../Colony';
+import {log} from '../console/log';
+import {Roles} from '../creepSetups/setups';
 import {
 	EnergyStructure,
 	isEnergyStructure,
@@ -12,10 +13,11 @@ import {
 	isTombstone,
 	StoreStructure
 } from '../declarations/typeGuards';
-import {minMax} from '../utilities/utils';
-import columnify from 'columnify';
 import {Mem} from '../memory/Memory';
-import {Roles} from '../creepSetups/setups';
+import {Pathing} from '../movement/Pathing';
+import {profile} from '../profiler/decorator';
+import {minMax} from '../utilities/utils';
+import {Zerg} from '../zerg/Zerg';
 
 export type LogisticsTarget =
 	EnergyStructure
@@ -54,7 +56,7 @@ interface LogisticsNetworkMemory {
 			predictedTransporterCarry: StoreDefinition,
 			tick: number,
 		}
-	}
+	};
 }
 
 const LogisticsNetworkMemoryDefaults: LogisticsNetworkMemory = {
@@ -144,8 +146,8 @@ export class LogisticsNetwork {
 			opts.amount = this.getInputAmount(target, opts.resourceType!);
 		}
 		// Register the request
-		let requestID = this.requests.length;
-		let req: LogisticsRequest = {
+		const requestID = this.requests.length;
+		const req: LogisticsRequest = {
 			id          : requestID.toString(),
 			target      : target,
 			amount      : opts.amount,
@@ -177,8 +179,8 @@ export class LogisticsNetwork {
 		opts.amount *= -1;
 		(opts.dAmountdt!) *= -1;
 		// Register the request
-		let requestID = this.requests.length;
-		let req: LogisticsRequest = {
+		const requestID = this.requests.length;
+		const req: LogisticsRequest = {
 			id          : requestID.toString(),
 			target      : target,
 			amount      : opts.amount,
@@ -194,9 +196,9 @@ export class LogisticsNetwork {
 	 * Requests output for every mineral in a requestor object
 	 */
 	requestOutputMinerals(target: StoreStructure, opts = {} as RequestOptions): void {
-		for (let resourceType in target.store) {
+		for (const resourceType in target.store) {
 			if (resourceType == RESOURCE_ENERGY) continue;
-			let amount = target.store[<ResourceConstant>resourceType] || 0;
+			const amount = target.store[<ResourceConstant>resourceType] || 0;
 			if (amount > 0) {
 				opts.resourceType = <ResourceConstant>resourceType;
 				this.requestOutput(target, opts);
@@ -297,10 +299,10 @@ export class LogisticsNetwork {
 		if (transporter.task) {
 			let approximateDistance = transporter.task.eta;
 			let pos = transporter.pos;
-			let targetPositions = transporter.task.targetPosManifest;
+			const targetPositions = transporter.task.targetPosManifest;
 			// If there is a well-defined task ETA, use that as the first leg, else set dist to zero and use range
 			if (approximateDistance) {
-				for (let targetPos of targetPositions.slice(1)) {
+				for (const targetPos of targetPositions.slice(1)) {
 					// The path lengths between any two logistics targets should be well-memorized
 					approximateDistance += Math.ceil(pos.getMultiRoomRangeTo(targetPos)
 													 * LogisticsNetwork.settings.rangeToPathHeuristic);
@@ -310,7 +312,7 @@ export class LogisticsNetwork {
 			} else {
 				// This probably shouldn't happen...
 				approximateDistance = 0;
-				for (let targetPos of targetPositions) {
+				for (const targetPos of targetPositions) {
 					approximateDistance += Math.ceil(pos.getMultiRoomRangeTo(targetPos)
 													 * LogisticsNetwork.settings.rangeToPathHeuristic);
 					// approximateDistance += Pathing.distance(pos, targetPos);
@@ -338,8 +340,9 @@ export class LogisticsNetwork {
 	static targetingTransporters(target: LogisticsTarget, excludedTransporter?: Zerg): Zerg[] {
 		const targetingZerg = _.map(target.targetedBy, name => Overmind.zerg[name]);
 		const targetingTransporters = _.filter(targetingZerg, zerg => zerg.roleName == Roles.transport);
-		if (excludedTransporter) _.remove(targetingTransporters,
-										  transporter => transporter.name == excludedTransporter.name);
+		if (excludedTransporter) {
+			_.remove(targetingTransporters, transporter => transporter.name == excludedTransporter.name);
+		}
 		return targetingTransporters;
 	}
 
@@ -349,21 +352,21 @@ export class LogisticsNetwork {
 	private computePredictedTransporterCarry(transporter: Zerg,
 											 nextAvailability?: [number, RoomPosition]): StoreDefinition {
 		if (transporter.task && transporter.task.target) {
-			let requestID = this.targetToRequest[transporter.task.target.ref];
+			const requestID = this.targetToRequest[transporter.task.target.ref];
 			if (requestID) {
-				let request = this.requests[requestID];
+				const request = this.requests[requestID];
 				if (request) {
-					let carry = transporter.carry as { [resourceType: string]: number };
-					let remainingCapacity = transporter.carryCapacity - _.sum(carry);
-					let resourceAmount = -1 * this.predictedRequestAmount(transporter, request, nextAvailability);
+					const carry = transporter.carry as { [resourceType: string]: number };
+					const remainingCapacity = transporter.carryCapacity - _.sum(carry);
+					const resourceAmount = -1 * this.predictedRequestAmount(transporter, request, nextAvailability);
 					// ^ need to multiply amount by -1 since transporter is doing complement of what request needs
 					if (request.resourceType == 'all') {
 						if (!isStoreStructure(request.target) && !isTombstone(request.target)) {
 							log.error(ALL_RESOURCE_TYPE_ERROR);
 							return {energy: 0};
 						}
-						for (let resourceType in request.target.store) {
-							let resourceFraction = (request.target.store[<ResourceConstant>resourceType] || 0)
+						for (const resourceType in request.target.store) {
+							const resourceFraction = (request.target.store[<ResourceConstant>resourceType] || 0)
 												   / _.sum(request.target.store);
 							if (carry[resourceType]) {
 								carry[resourceType]! += resourceAmount * resourceFraction;
@@ -411,11 +414,11 @@ export class LogisticsNetwork {
 			[busyUntil, newPos] = nextAvailability;
 		}
 		// let eta = busyUntil + Pathing.distance(newPos, request.target.pos);
-		let eta = busyUntil + LogisticsNetwork.settings.rangeToPathHeuristic *
-				  newPos.getMultiRoomRangeTo(request.target.pos);
-		let predictedDifference = request.dAmountdt * eta; // dAmountdt has same sign as amount
+		const eta = busyUntil + LogisticsNetwork.settings.rangeToPathHeuristic *
+					newPos.getMultiRoomRangeTo(request.target.pos);
+		const predictedDifference = request.dAmountdt * eta; // dAmountdt has same sign as amount
 		// Account for other transporters targeting the target
-		let otherTargetingTransporters = LogisticsNetwork.targetingTransporters(request.target, transporter);
+		const otherTargetingTransporters = LogisticsNetwork.targetingTransporters(request.target, transporter);
 		// let closerTargetingTransporters = _.filter(otherTargetingTransporters,
 		// 										   transporter => this.nextAvailability(transporter)[0] < eta);
 		if (request.amount > 0) { // input state, resources into target
@@ -425,7 +428,7 @@ export class LogisticsNetwork {
 			} else if (isEnergyStructure(request.target)) {
 				predictedAmount = Math.min(predictedAmount, request.target.energyCapacity);
 			}
-			let resourceInflux = _.sum(_.map(otherTargetingTransporters,
+			const resourceInflux = _.sum(_.map(otherTargetingTransporters,
 											 other => (other.carry[<ResourceConstant>request.resourceType] || 0)));
 			predictedAmount = Math.max(predictedAmount - resourceInflux, 0);
 			return predictedAmount;
@@ -436,7 +439,7 @@ export class LogisticsNetwork {
 			} else if (isEnergyStructure(request.target)) {
 				predictedAmount = Math.min(predictedAmount, -1 * request.target.energyCapacity);
 			}
-			let resourceOutflux = _.sum(_.map(otherTargetingTransporters,
+			const resourceOutflux = _.sum(_.map(otherTargetingTransporters,
 											  other => other.carryCapacity - _.sum(other.carry)));
 			predictedAmount = Math.min(predictedAmount + resourceOutflux, 0);
 			return predictedAmount;
@@ -453,9 +456,9 @@ export class LogisticsNetwork {
 		dt: number,			// Amount of time to execute the choice
 		targetRef: string	// Reference of the immediate target
 	}[] {
-		let [ticksUntilFree, newPos] = this.nextAvailability(transporter);
-		let choices: { dQ: number, dt: number, targetRef: string }[] = [];
-		let amount = this.predictedRequestAmount(transporter, request, [ticksUntilFree, newPos]);
+		const [ticksUntilFree, newPos] = this.nextAvailability(transporter);
+		const choices: { dQ: number, dt: number, targetRef: string }[] = [];
+		const amount = this.predictedRequestAmount(transporter, request, [ticksUntilFree, newPos]);
 		let carry: StoreDefinition;
 		if (!transporter.task || transporter.task.target != request.target) {
 			// If you are not targeting the requestor, use predicted carry after completing current task
@@ -470,10 +473,10 @@ export class LogisticsNetwork {
 				return [];
 			}
 			// Change in resources if transporter goes straight to the input
-			let dQ_direct = Math.min(amount, carry[request.resourceType] || 0);
+			const dQ_direct = Math.min(amount, carry[request.resourceType] || 0);
 			// let dt_direct = Pathing.distance(newPos, request.target.pos) + ticksUntilFree;
-			let dt_direct = ticksUntilFree + newPos.getMultiRoomRangeTo(request.target.pos)
-							* LogisticsNetwork.settings.rangeToPathHeuristic;
+			const dt_direct = ticksUntilFree + newPos.getMultiRoomRangeTo(request.target.pos)
+							  * LogisticsNetwork.settings.rangeToPathHeuristic;
 			choices.push({
 							 dQ       : dQ_direct,
 							 dt       : dt_direct,
@@ -483,9 +486,9 @@ export class LogisticsNetwork {
 				return choices; // Return early if you already have enough resources to go direct or are already full
 			}
 			// Change in resources if transporter picks up resources from a buffer first
-			for (let buffer of this.buffers) {
-				let dQ_buffer = Math.min(amount, transporter.carryCapacity, buffer.store[request.resourceType] || 0);
-				let dt_buffer = newPos.getMultiRoomRangeTo(buffer.pos) * LogisticsNetwork.settings.rangeToPathHeuristic
+			for (const buffer of this.buffers) {
+				const dQ_buffer = Math.min(amount, transporter.carryCapacity, buffer.store[request.resourceType] || 0);
+				const dt_buffer = newPos.getMultiRoomRangeTo(buffer.pos) * LogisticsNetwork.settings.rangeToPathHeuristic
 								+ Pathing.distance(buffer.pos, request.target.pos) + ticksUntilFree;
 				choices.push({
 								 dQ       : dQ_buffer,
@@ -495,9 +498,9 @@ export class LogisticsNetwork {
 			}
 		} else if (amount < 0) { // requestOutput instance, needs pickup
 			// Change in resources if transporter goes straight to the output
-			let remainingCarryCapacity = transporter.carryCapacity - _.sum(carry);
-			let dQ_direct = Math.min(Math.abs(amount), remainingCarryCapacity);
-			let dt_direct = newPos.getMultiRoomRangeTo(request.target.pos)
+			const remainingCarryCapacity = transporter.carryCapacity - _.sum(carry);
+			const dQ_direct = Math.min(Math.abs(amount), remainingCarryCapacity);
+			const dt_direct = newPos.getMultiRoomRangeTo(request.target.pos)
 							* LogisticsNetwork.settings.rangeToPathHeuristic + ticksUntilFree;
 			choices.push({
 							 dQ       : dQ_direct,
@@ -508,11 +511,11 @@ export class LogisticsNetwork {
 				return choices; // Return early you have sufficient free space or are empty
 			}
 			// Change in resources if transporter drops off resources at a buffer first
-			for (let buffer of this.buffers) {
-				let dQ_buffer = Math.min(Math.abs(amount), transporter.carryCapacity,
+			for (const buffer of this.buffers) {
+				const dQ_buffer = Math.min(Math.abs(amount), transporter.carryCapacity,
 										 buffer.storeCapacity - _.sum(buffer.store));
-				let dt_buffer = newPos.getMultiRoomRangeTo(buffer.pos) * LogisticsNetwork.settings.rangeToPathHeuristic
-								+ Pathing.distance(buffer.pos, request.target.pos) + ticksUntilFree;
+				const dt_buffer = newPos.getMultiRoomRangeTo(buffer.pos) * LogisticsNetwork.settings.rangeToPathHeuristic
+								  + Pathing.distance(buffer.pos, request.target.pos) + ticksUntilFree;
 				choices.push({
 								 dQ       : dQ_buffer,
 								 dt       : dt_buffer,
@@ -547,8 +550,8 @@ export class LogisticsNetwork {
 			this.cache.resourceChangeRate[request.id] = {};
 		}
 		if (!this.cache.resourceChangeRate[request.id][transporter.name]) {
-			let choices = this.bufferChoices(transporter, request);
-			let dQ_dt = _.map(choices, choice => request.multiplier * choice.dQ / Math.max(choice.dt, 0.1));
+			const choices = this.bufferChoices(transporter, request);
+			const dQ_dt = _.map(choices, choice => request.multiplier * choice.dQ / Math.max(choice.dt, 0.1));
 			this.cache.resourceChangeRate[request.id][transporter.name] = _.max(dQ_dt);
 		}
 		return this.cache.resourceChangeRate[request.id][transporter.name];
@@ -583,24 +586,24 @@ export class LogisticsNetwork {
 	 * Logs the output of the stable matching result
 	 */
 	summarizeMatching(): void {
-		let requests = this.requests.slice();
-		let transporters = _.filter(this.colony.getCreepsByRole(Roles.transport), creep => !creep.spawning);
-		let unmatchedTransporters = _.remove(transporters,
+		const requests = this.requests.slice();
+		const transporters = _.filter(this.colony.getCreepsByRole(Roles.transport), creep => !creep.spawning);
+		const unmatchedTransporters = _.remove(transporters,
 											 transporter => !_.keys(this._matching).includes(transporter.name));
-		let unmatchedRequests = _.remove(requests, request => !_.values(this._matching).includes(request));
+		const unmatchedRequests = _.remove(requests, request => !_.values(this._matching).includes(request));
 		console.log(`Stable matching for ${this.colony.name} at ${Game.time}`);
-		for (let transporter of transporters) {
-			let transporterStr = transporter.name + ' ' + transporter.pos;
-			let request = this._matching![transporter.name]!;
-			let requestStr = request.target.ref + ' ' + request.target.pos.print;
+		for (const transporter of transporters) {
+			const transporterStr = transporter.name + ' ' + transporter.pos;
+			const request = this._matching![transporter.name]!;
+			const requestStr = request.target.ref + ' ' + request.target.pos.print;
 			console.log(`${transporterStr.padRight(30)} : ${requestStr}`);
 		}
-		for (let transporter of unmatchedTransporters) {
-			let transporterStr = transporter.name + ' ' + transporter.pos;
+		for (const transporter of unmatchedTransporters) {
+			const transporterStr = transporter.name + ' ' + transporter.pos;
 			console.log(`${transporterStr.padRight(30)} : ${''}`);
 		}
-		for (let request of unmatchedRequests) {
-			let requestStr = request.target.ref + ' ' + request.target.pos;
+		for (const request of unmatchedRequests) {
+			const requestStr = request.target.ref + ' ' + request.target.pos;
 			console.log(`${''.padRight(30)} : ${requestStr}`);
 		}
 		console.log();
@@ -612,7 +615,7 @@ export class LogisticsNetwork {
 	summarize(): void {
 		// console.log(`Summary of logistics group for ${this.colony.name} at time ${Game.time}`);
 		let info = [];
-		for (let request of this.requests) {
+		for (const request of this.requests) {
 			let targetType: string;
 			if (request.target instanceof Resource) {
 				targetType = 'resource';
@@ -640,7 +643,7 @@ export class LogisticsNetwork {
 				}
 
 			}
-			let targetingTprtrNames = _.map(LogisticsNetwork.targetingTransporters(request.target), c => c.name);
+			const targetingTprtrNames = _.map(LogisticsNetwork.targetingTransporters(request.target), c => c.name);
 			info.push({
 						  target       : targetType,
 						  resourceType : request.resourceType,
@@ -652,11 +655,11 @@ export class LogisticsNetwork {
 		}
 		console.log('Requests: \n' + columnify(info) + '\n');
 		info = [];
-		for (let transporter of this.colony.overlords.logistics.transporters) {
-			let task = transporter.task ? transporter.task.name : 'none';
-			let target = transporter.task ?
+		for (const transporter of this.colony.overlords.logistics.transporters) {
+			const task = transporter.task ? transporter.task.name : 'none';
+			const target = transporter.task ?
 						 transporter.task.proto._target.ref + ' ' + transporter.task.targetPos.printPlain : 'none';
-			let nextAvailability = this.nextAvailability(transporter);
+			const nextAvailability = this.nextAvailability(transporter);
 			info.push({
 						  creep       : transporter.name,
 						  pos         : transporter.pos.printPlain,
@@ -679,16 +682,16 @@ export class LogisticsNetwork {
 	 * Generate a stable matching of transporters to requests with Gale-Shapley algorithm
 	 */
 	private stableMatching(transporters: Zerg[]): { [creepName: string]: LogisticsRequest | undefined } {
-		let tPrefs: { [transporterName: string]: string[] } = {};
-		for (let transporter of transporters) {
+		const tPrefs: { [transporterName: string]: string[] } = {};
+		for (const transporter of transporters) {
 			tPrefs[transporter.name] = _.map(this.transporterPreferences(transporter), request => request.id);
 		}
-		let rPrefs: { [requestID: string]: string[] } = {};
-		for (let request of this.requests) {
+		const rPrefs: { [requestID: string]: string[] } = {};
+		for (const request of this.requests) {
 			rPrefs[request.id] = _.map(this.requestPreferences(request, transporters), transporter => transporter.name);
 		}
-		let stableMatching = new Matcher(tPrefs, rPrefs).match();
-		let requestMatch = _.mapValues(stableMatching, reqID => _.find(this.requests, request => request.id == reqID));
+		const stableMatching = new Matcher(tPrefs, rPrefs).match();
+		const requestMatch = _.mapValues(stableMatching, reqID => _.find(this.requests, request => request.id == reqID));
 		return requestMatch;
 	}
 
