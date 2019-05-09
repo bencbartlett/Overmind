@@ -102,9 +102,11 @@ export abstract class Overlord {
 		return Overmind.overseer.suspendOverlordUntil(this, untilTick);
 	}
 
-	/* Refreshes overlord, recalculating creeps and refreshing existing Zerg. New creeps are automatically added,
+	/**
+	 * Refreshes overlord, recalculating creeps and refreshing existing Zerg. New creeps are automatically added,
 	 * and the corresponding role groups (e.g. 'queens') are automatically updated. Child methods do not need to
-	 * refresh their zerg properties, only other room objects stored on the Overlord. */
+	 * refresh their zerg properties, only other room objects stored on the Overlord.
+	 */
 	refresh(): void {
 		// // Handle suspension // TODO: finish this
 		// if (this.memory.suspendUntil) {
@@ -147,8 +149,10 @@ export abstract class Overlord {
 		}
 	}
 
-	/* Wraps all creeps of a given role to Zerg objects and updates the contents in future ticks to avoid having to
-	 * explicitly refresh groups of Zerg */
+	/**
+	 * Wraps all creeps of a given role to Zerg objects and updates the contents in future ticks to avoid having to
+	 * explicitly refresh groups of Zerg
+	 */
 	protected zerg(role: string, opts: ZergOptions = {}): Zerg[] {
 		if (!this._zerg[role]) {
 			this._zerg[role] = [];
@@ -180,7 +184,9 @@ export abstract class Overlord {
 		}
 	}
 
-	/* Wraps all creeps of a given role to CombatZerg objects and updates the contents in future ticks */
+	/**
+	 * Wraps all creeps of a given role to CombatZerg objects and updates the contents in future ticks
+	 */
 	protected combatZerg(role: string, opts: ZergOptions = {}): CombatZerg[] {
 		if (!this._combatZerg[role]) {
 			this._combatZerg[role] = [];
@@ -287,8 +293,10 @@ export abstract class Overlord {
 		}
 	}
 
-	/* Requests a group of (2-3) creeps from a hatchery to be spawned at the same time. Using this with low-priority
-	 * operations can result in a long time */
+	/**
+	 * Requests a group of (2-3) creeps from a hatchery to be spawned at the same time. Using this with low-priority
+	 * operations can result in a long time
+	 */
 	protected requestSquad(setups: CreepSetup[], opts = {} as CreepRequestOptions) {
 		log.warning(`Overlord.requestSquad() is not finished yet!`); // TODO: finish
 		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN});
@@ -314,7 +322,9 @@ export abstract class Overlord {
 		}
 	}
 
-	/* Create a creep setup and enqueue it to the Hatchery; does not include automatic reporting */
+	/**
+	 * Create a creep setup and enqueue it to the Hatchery; does not include automatic reporting
+	 */
 	protected requestCreep(setup: CreepSetup, opts = {} as CreepRequestOptions) {
 		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN});
 		let spawner = this.spawnGroup || this.colony.spawnGroup || this.colony.hatchery;
@@ -338,7 +348,9 @@ export abstract class Overlord {
 		}
 	}
 
-	/* Wishlist of creeps to simplify spawning logic; includes automatic reporting */
+	/**
+	 * Wishlist of creeps to simplify spawning logic; includes automatic reporting
+	 */
 	protected wishlist(quantity: number, setup: CreepSetup, opts = {} as CreepRequestOptions) {
 		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN, reassignIdle: false});
 		let creepQuantity: number;
@@ -387,7 +399,9 @@ export abstract class Overlord {
 		return false;
 	}
 
-	/* Return whether you are capable of boosting a creep to the desired specifications */
+	/**
+	 * Return whether you are capable of boosting a creep to the desired specifications
+	 */
 	shouldBoost(creep: Zerg, onlyBoostInSpawn = false): boolean {
 		// Can't boost if there's no evolution chamber or TTL is less than threshold
 		let colony = Overmind.colonies[creep.room.name] as Colony | undefined;
@@ -417,7 +431,9 @@ export abstract class Overlord {
 	}
 
 
-	/* Request a boost from the evolution chamber; should be called during init() */
+	/**
+	 * Request a boost from the evolution chamber; should be called during init()
+	 */
 	private requestBoostsForCreep(creep: Zerg): void {
 		let colony = Overmind.colonies[creep.room.name] as Colony | undefined;
 		let evolutionChamber = colony ? colony.evolutionChamber : undefined;
@@ -430,7 +446,9 @@ export abstract class Overlord {
 		}
 	}
 
-	/* Handle boosting of a creep; should be called during run() */
+	/**
+	 * Handle boosting of a creep; should be called during run()
+	 */
 	protected handleBoosting(creep: Zerg): void {
 		let colony = Overmind.colonies[creep.room.name] as Colony | undefined;
 		let evolutionChamber = colony ? colony.evolutionChamber : undefined;
@@ -447,7 +465,9 @@ export abstract class Overlord {
 		}
 	}
 
-	/* Request any needed boosting resources from terminal network */
+	/**
+	 * Request any needed boosting resources from terminal network
+	 */
 	private requestBoosts(creeps: Zerg[]): void {
 		for (let creep of creeps) {
 			if (this.shouldBoost(creep)) {
@@ -456,7 +476,9 @@ export abstract class Overlord {
 		}
 	}
 
-	/* Requests that should be handled for all overlords prior to the init() phase */
+	/**
+	 * Requests that should be handled for all overlords prior to the init() phase
+	 */
 	preInit(): void {
 		// Handle resource requests for boosts
 		for (let role in this.boosts) {
@@ -470,7 +492,9 @@ export abstract class Overlord {
 
 	abstract run(): void;
 
-	// Standard sequence of actions for running task-based creeps
+	/**
+	 * Standard sequence of actions for running task-based creeps
+	 */
 	autoRun(roleCreeps: Zerg[], taskHandler: (creep: Zerg) => void, fleeCallback?: (creep: Zerg) => boolean) {
 		for (let creep of roleCreeps) {
 			if (!!fleeCallback) {

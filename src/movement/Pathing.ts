@@ -1044,3 +1044,5 @@ export class Pathing {
 
 }
 
+// Register global instance
+global.Pathing = Pathing;

@@ -85,14 +85,24 @@ export class RoomIntel {
 	}
 
 	static inSafeMode(roomName: string): boolean {
-		return !!Memory.rooms[roomName] && !!Memory.rooms[roomName][_RM.CONTROLLER] &&
-			   (Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.SAFEMODE] || 0) > 0;
+		if (!!Memory.rooms[roomName] && !!Memory.rooms[roomName][_RM.CONTROLLER]) {
+			const safemode = Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.SAFEMODE];
+			const tick = Memory.rooms[roomName][_MEM.EXPIRATION];
+			if (safemode && tick) {
+				return Game.time < tick + safemode;
+			}
+		}
+		return false;
 	}
 
 	static safeModeCooldown(roomName: string): number | undefined {
 		if (Memory.rooms[roomName] && Memory.rooms[roomName][_RM.CONTROLLER] &&
 			Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.SAFEMODE_COOLDOWN]) {
-			return Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.SAFEMODE_COOLDOWN];
+			const smcooldown = Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.SAFEMODE_COOLDOWN];
+			const tick = Memory.rooms[roomName][_MEM.EXPIRATION];
+			if (smcooldown && tick) {
+				return smcooldown - (Game.time - tick);
+			}
 		}
 	}
 

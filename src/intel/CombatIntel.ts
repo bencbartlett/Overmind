@@ -209,6 +209,14 @@ export class CombatIntel {
 		let startPos = Pathing.findPathablePosition(simpleFallback.roomName, clearance);
 		let ret = Pathing.findSwarmPath(startPos, this.directive.pos, clearance.width, clearance.height,
 										{ignoreCreeps: true});
+		if (ret.incomplete) {
+			log.debug(`Incomplete swarm path to find assembly point. Retrying with startpos = fallback.`);
+			ret = Pathing.findSwarmPath(simpleFallback, this.directive.pos, clearance.width, clearance.height,
+										{ignoreCreeps: true});
+			if (ret.incomplete) {
+				log.warning(`No pathable assembly point!`);
+			}
+		}
 		let path = ret.path.reverse();
 		let acceptablePositions = _.filter(path, pos => pos.roomName == simpleFallback.roomName &&
 														pos.rangeToEdge > 1);

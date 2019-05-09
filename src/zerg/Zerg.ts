@@ -205,6 +205,9 @@ export class Zerg {
 			if (isCreep(target)) {
 				if (target.hitsPredicted == undefined) target.hitsPredicted = target.hits;
 				target.hitsPredicted -= CombatIntel.predictedDamageAmount(this.creep, target, 'attack');
+				// account for hitback effects
+				if (this.creep.hitsPredicted == undefined) this.creep.hitsPredicted = this.creep.hits;
+				this.creep.hitsPredicted -= CombatIntel.predictedDamageAmount(target, this.creep, 'attack');
 			}
 			if (this.memory.talkative) this.say(`💥`);
 		}

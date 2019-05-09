@@ -98,6 +98,15 @@ export class CombatTargeting {
 	static findBestHealingTargetInRange(healer: Zerg, range = 3, friendlies = healer.room.creeps): Creep | undefined {
 		return maxBy(_.filter(friendlies, f => healer.pos.getRangeTo(f) <= range), friend => {
 			if (friend.hitsPredicted == undefined) friend.hitsPredicted = friend.hits;
+			const attackProbability = 0.5;
+			for (let hostile of friend.pos.findInRange(friend.room.hostiles, 3)) {
+				if (hostile.pos.isNearTo(friend)) {
+					friend.hitsPredicted -= attackProbability * CombatIntel.getAttackDamage(hostile);
+				} else {
+					friend.hitsPredicted -= attackProbability * (CombatIntel.getAttackDamage(hostile)
+																 + CombatIntel.getRangedAttackDamage(hostile));
+				}
+			}
 			let healScore = friend.hitsMax - friend.hitsPredicted;
 			if (healer.pos.getRangeTo(friend) > 1) {
 				return healScore + CombatIntel.getRangedHealAmount(healer.creep);
