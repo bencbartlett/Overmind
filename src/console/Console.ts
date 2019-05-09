@@ -401,7 +401,16 @@ export class OvermindConsole {
 		for (let overlordName of Object.keys(directive.overlords)) {
 			let overlord = directive.overlords[overlordName] as Overlord;
 			msg += JSON.stringify(overlord.creepUsageReport) + `\n`;
-			for (let [roleName, zergArray] of Object.entries(overlord.getZerg())) {
+			let zerg = overlord.getZerg();
+			let combatZerg = overlord.getCombatZerg();
+			for (let [roleName, zergArray] of Object.entries(zerg)) {
+				msg += `Role: ${roleName} \n`;
+				for (let zerg of zergArray) {
+					msg += `Name: ${zerg.name}   Room: ${zerg.pos.print}   TTL/Spawning: ${zerg.ticksToLive || zerg.spawning} \n`;
+				}
+			}
+			msg += `Combat zerg \n`;
+			for (let [roleName, zergArray] of Object.entries(combatZerg)) {
 				msg += `Role: ${roleName} \n`;
 				for (let zerg of zergArray) {
 					msg += `Name: ${zerg.name}   Room: ${zerg.pos.print}   TTL/Spawning: ${zerg.ticksToLive || zerg.spawning} \n`;
