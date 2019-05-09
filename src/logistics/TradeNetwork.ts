@@ -322,10 +322,11 @@ export class TraderJoe implements ITradeNetwork {
 				let ret = Game.market.createOrder(ORDER_BUY, resource, marketHigh, amount, terminal.room.name);
 				this.notify(`${terminal.room.print}: creating buy order for ${resource} at price ${marketHigh}. ` +
 							`Response: ${ret}`);
-			} else {
-				this.notify(`${terminal.room.print}: cannot create another buy order for ${resource}:` +
-							` too many (${ordersOfType.length})`);
 			}
+			// else {
+			// 	this.notify(`${terminal.room.print}: cannot create another buy order for ${resource}:` +
+			// 				` too many (${ordersOfType.length})`);
+			// }
 
 		}
 	}
@@ -364,10 +365,11 @@ export class TraderJoe implements ITradeNetwork {
 				let ret = Game.market.createOrder(ORDER_SELL, resource, marketLow, amount, terminal.room.name);
 				this.notify(`${terminal.room.print}: creating sell order for ${resource} at price ${marketLow}. ` +
 							`Response: ${ret}`);
-			} else {
-				this.notify(`${terminal.room.print}: cannot create another sell order for ${resource}:` +
-							` too many (${ordersOfType.length})`);
 			}
+			// else {
+			// 	this.notify(`${terminal.room.print}: cannot create another sell order for ${resource}:` +
+			// 				` too many (${ordersOfType.length})`);
+			// }
 
 		}
 	}

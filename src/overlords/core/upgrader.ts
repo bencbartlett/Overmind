@@ -31,7 +31,7 @@ export class UpgradingOverlord extends Overlord {
 		if (this.colony.level < 3) { // can't spawn upgraders at early levels
 			return;
 		}
-		if (this.colony.assets[RESOURCE_ENERGY] > UpgradeSite.settings.storageBuffer
+		if (this.colony.assets[RESOURCE_ENERGY] > UpgradeSite.settings.energyBuffer
 			|| this.upgradeSite.controller.ticksToDowngrade < 500) {
 			const setup = this.colony.level == 8 ? Setups.upgraders.rcl8 : Setups.upgraders.default;
 			if (this.colony.level == 8) {

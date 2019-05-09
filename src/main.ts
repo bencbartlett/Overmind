@@ -27,7 +27,7 @@ import './prototypes/Structures'; // Prototypes for accessed structures
 import './prototypes/Miscellaneous'; // Everything else
 import './tasks/initializer'; // This line is necessary to ensure proper compilation ordering...
 import './zerg/CombatZerg'; // ...so is this one... rollup is dumb about generating reference errors
-import {MUON, MY_USERNAME, USE_PROFILER} from './~settings';
+import {MUON, MY_USERNAME, RL_MODE, USE_PROFILER} from './~settings';
 import {sandbox} from './sandbox';
 import {Mem} from './memory/Memory';
 import {OvermindConsole} from './console/Console';
@@ -71,17 +71,10 @@ function main(): void {
 
 }
 
+// Main loop if RL mode is enabled (~settings.ts)
+function main_rl(): void {
 
-// Profiler-wrapped main loop
-export function loop(): void {
-	profiler.wrap(main);
 }
-
-
-// Register these functions for checksum computations with the Assimilator
-Assimilator.validate(main);
-Assimilator.validate(loop);
-
 
 // This gets run on each global reset
 function onGlobalReset(): void {
@@ -91,21 +84,47 @@ function onGlobalReset(): void {
 	VersionMigration.run();
 	Memory.stats.persistent.lastGlobalReset = Game.time;
 
-	// log.alert(`Codebase updated or global reset. Type "help" for a list of console commands.` + alignedNewline +
-	// 		  OvermindConsole.info(true));
-
 	OvermindConsole.printUpdateMessage();
 
 	// Update the master ledger of valid checksums
 	if (MY_USERNAME == MUON) {
 		Assimilator.updateValidChecksumLedger();
 	}
+
 	// Make a new Overmind object
 	global.Overmind = new _Overmind();
+
 	// Make a remote debugger
 	global.remoteDebugger = new RemoteDebugger();
 }
 
 
-// Run the global reset code
-onGlobalReset();
+// Decide which loop to export as the script loop
+let _loop: () => void;
+if (RL_MODE) {
+	// Use stripped version for training reinforcment learning model
+	_loop = main_rl;
+} else {
+	if (USE_PROFILER) {
+		// Wrap the main loop in the profiler
+		_loop = () => profiler.wrap(main);
+	} else {
+		// Use the default main loop
+		_loop = main;
+	}
+}
+
+export const loop = _loop;
+
+if (!RL_MODE) {
+
+	// Register these functions for checksum computations with the Assimilator
+	Assimilator.validate(main);
+	Assimilator.validate(loop);
+
+	// Run the global reset code
+	onGlobalReset();
+}
+
+
+

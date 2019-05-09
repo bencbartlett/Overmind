@@ -209,6 +209,14 @@ export class CombatIntel {
 		let startPos = Pathing.findPathablePosition(simpleFallback.roomName, clearance);
 		let ret = Pathing.findSwarmPath(startPos, this.directive.pos, clearance.width, clearance.height,
 										{ignoreCreeps: true});
+		if (ret.incomplete) {
+			log.debug(`Incomplete swarm path to find assembly point. Retrying with startpos = fallback.`);
+			ret = Pathing.findSwarmPath(simpleFallback, this.directive.pos, clearance.width, clearance.height,
+										{ignoreCreeps: true});
+			if (ret.incomplete) {
+				log.warning(`No pathable assembly point!`);
+			}
+		}
 		let path = ret.path.reverse();
 		let acceptablePositions = _.filter(path, pos => pos.roomName == simpleFallback.roomName &&
 														pos.rangeToEdge > 1);
@@ -282,19 +290,21 @@ export class CombatIntel {
 	static getHealPotential(creep: Creep): number {
 		return this.cache(creep, 'healPotential', () =>
 			_.sum(creep.body, function (part) {
-				let potential = 0;
+				if (part.hits == 0) {
+					return 0;
+				}
 				if (part.type == HEAL) {
 					if (!part.boost) {
-						potential = 1;
+						return 1;
 					} else if (part.boost == boostResources.heal[1]) {
-						potential = BOOSTS.heal.LO.heal;
+						return BOOSTS.heal.LO.heal;
 					} else if (part.boost == boostResources.heal[2]) {
-						potential = BOOSTS.heal.LHO2.heal;
+						return BOOSTS.heal.LHO2.heal;
 					} else if (part.boost == boostResources.heal[3]) {
-						potential = BOOSTS.heal.XLHO2.heal;
+						return BOOSTS.heal.XLHO2.heal;
 					}
 				}
-				return potential * part.hits / 100;
+				return 0;
 			})
 		);
 	}
@@ -323,19 +333,21 @@ export class CombatIntel {
 	 */
 	static getAttackPotential(creep: Creep): number {
 		return this.cache(creep, 'attackPotential', () => _.sum(creep.body, function (part) {
-			let potential = 0;
+			if (part.hits == 0) {
+				return 0;
+			}
 			if (part.type == ATTACK) {
 				if (!part.boost) {
-					potential = 1;
+					return 1;
 				} else if (part.boost == boostResources.attack[1]) {
-					potential = BOOSTS.attack.UH.attack;
+					return BOOSTS.attack.UH.attack;
 				} else if (part.boost == boostResources.attack[2]) {
-					potential = BOOSTS.attack.UH2O.attack;
+					return BOOSTS.attack.UH2O.attack;
 				} else if (part.boost == boostResources.attack[3]) {
-					potential = BOOSTS.attack.XUH2O.attack;
+					return BOOSTS.attack.XUH2O.attack;
 				}
 			}
-			return potential * part.hits / 100;
+			return 0;
 		}));
 	}
 
@@ -349,19 +361,21 @@ export class CombatIntel {
 	static getRangedAttackPotential(creep: Creep): number {
 		return this.cache(creep, 'rangedAttackPotential', () =>
 			_.sum(creep.body, function (part) {
-				let potential = 0;
+				if (part.hits == 0) {
+					return 0;
+				}
 				if (part.type == RANGED_ATTACK) {
 					if (!part.boost) {
-						potential = 1;
+						return 1;
 					} else if (part.boost == boostResources.ranged_attack[1]) {
-						potential = BOOSTS.ranged_attack.KO.rangedAttack;
+						return BOOSTS.ranged_attack.KO.rangedAttack;
 					} else if (part.boost == boostResources.ranged_attack[2]) {
-						potential = BOOSTS.ranged_attack.KHO2.rangedAttack;
+						return BOOSTS.ranged_attack.KHO2.rangedAttack;
 					} else if (part.boost == boostResources.ranged_attack[3]) {
-						potential = BOOSTS.ranged_attack.XKHO2.rangedAttack;
+						return BOOSTS.ranged_attack.XKHO2.rangedAttack;
 					}
 				}
-				return potential * part.hits / 100;
+				return 0;
 			})
 		);
 	}
@@ -375,19 +389,21 @@ export class CombatIntel {
 	 */
 	static getDismantlePotential(creep: Creep): number {
 		return this.cache(creep, 'dismantlePotential', () => _.sum(creep.body, function (part) {
-			let potential = 0;
+			if (part.hits == 0) {
+				return 0;
+			}
 			if (part.type == WORK) {
 				if (!part.boost) {
-					potential = 1;
+					return 1;
 				} else if (part.boost == boostResources.dismantle[1]) {
-					potential = BOOSTS.work.ZH.dismantle;
+					return BOOSTS.work.ZH.dismantle;
 				} else if (part.boost == boostResources.dismantle[2]) {
-					potential = BOOSTS.work.ZH2O.dismantle;
+					return BOOSTS.work.ZH2O.dismantle;
 				} else if (part.boost == boostResources.dismantle[3]) {
-					potential = BOOSTS.work.XZH2O.dismantle;
+					return BOOSTS.work.XZH2O.dismantle;
 				}
 			}
-			return potential * part.hits / 100;
+			return 0;
 		}));
 	}
 

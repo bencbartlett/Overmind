@@ -27,6 +27,7 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 	assemblyPoints: RoomPosition[];
 	intel: CombatIntel;
 	zerglings: CombatZerg[];
+	// hydralisks: CombatZerg[];
 	healers: CombatZerg[];
 	swarms: { [ref: string]: Swarm };
 
@@ -44,6 +45,10 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 			notifyWhenAttacked: false,
 			boostWishlist     : [boostResources.attack[3], boostResources.tough[3], boostResources.move[3]]
 		});
+		// this.hydralisks = this.combatZerg(Roles.ranged, {
+		// 	notifyWhenAttacked: false,
+		// 	boostWishlist     : [boostResources.ranged_attack[3], boostResources.tough[3], boostResources.move[3]]
+		// });
 		this.healers = this.combatZerg(Roles.healer, {
 			notifyWhenAttacked: false,
 			boostWishlist     : [boostResources.heal[3], boostResources.tough[3], boostResources.move[3],]
@@ -68,18 +73,27 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 
 	makeSwarms(): void {
 		this.swarms = {};
-		let allZerg: CombatZerg[] = [...this.zerglings, ...this.healers];
-		let maxPerSwarm = {[Roles.melee]: 2, [Roles.healer]: 2};
-		let zergBySwarm = _.groupBy(allZerg, zerg => zerg.findSwarm(allZerg, maxPerSwarm));
-		for (let ref in zergBySwarm) {
+		let meleeZerg: CombatZerg[] = [...this.zerglings, ...this.healers];
+		// let rangedZerg: CombatZerg[] = this.hydralisks;
+		let maxPerSwarm = {[Roles.melee]: 2, [Roles.healer]: 2, [Roles.ranged]: 4};
+		let meleeZergBySwarm = _.groupBy(meleeZerg, zerg => zerg.findSwarm(meleeZerg, maxPerSwarm));
+		// let rangedZergBySwarm = _.groupBy(rangedZerg, zerg => zerg.findSwarm(rangedZerg, maxPerSwarm));
+		// let zergBySwarm = _.merge(meleeZergBySwarm, rangedZergBySwarm);
+		for (let ref in meleeZergBySwarm) {
 			if (ref != undefined) {
-				if (DEBUG) log.debug(`Making swarm for ${_.map(zergBySwarm[ref], z => z.name)}`);
-				this.swarms[ref] = new Swarm(this, ref, zergBySwarm[ref]);
+				if (DEBUG) log.debug(`Making swarm for ${_.map(meleeZergBySwarm[ref], z => z.name)}`);
+				this.swarms[ref] = new Swarm(this, ref, meleeZergBySwarm[ref]);
 			}
 		}
+		// for (let ref in rangedZergBySwarm) { // todo: finish changing
+		// 	if (ref != undefined) {
+		// 		if (DEBUG) log.debug(`Making swarm for ${_.map(meleeZergBySwarm[ref], z => z.name)}`);
+		// 		this.swarms[ref] = new Swarm(this, ref, meleeZergBySwarm[ref]);
+		// 	}
+		// }
 	}
 
-	private handleSwarm(swarm: Swarm, index: number) {
+	private handleSwarm(swarm: Swarm, index: number, waypoint = this.directive.pos) {
 		// Swarm initially groups up at fallback location
 		if (!swarm.memory.initialAssembly) {
 			let assemblyPoint = this.assemblyPoints[index] || this.fallback;
@@ -104,10 +118,10 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 		let canPopShield = (attack + rangedAttack + CombatIntel.towerDamageAtPos(swarm.anchor)) * myDamageMultiplier
 						   > _.min(_.map(swarm.creeps, creep => 100 * creep.getActiveBodyparts(TOUGH)));
 
-		if (canPopShield || room.hostileStructures.length == 0) {
-			swarm.autoCombat(this.pos.roomName);
+		if (canPopShield || room.hostileStructures.length == 0 || _.values(this.swarms).length > 1) {
+			swarm.autoCombat(this.pos.roomName, waypoint);
 		} else {
-			swarm.autoSiege(this.pos.roomName);
+			swarm.autoSiege(this.pos.roomName, waypoint);
 		}
 	}
 
@@ -125,14 +139,23 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 		let healerSetup = this.canBoostSetup(CombatSetups.healers.boosted_T3) ? CombatSetups.healers.boosted_T3
 																			  : CombatSetups.healers.default;
 
+		let hydraliskPriority = this.healers.length < this.zerglings.length ? this.priority - 0.1 : this.priority + 0.1;
+		let hydraliskSetup = this.canBoostSetup(CombatSetups.hydralisks.siege_T3) ? CombatSetups.healers.boosted_T3
+																				  : CombatSetups.healers.default;
+
 		const swarmConfig = [{setup: zerglingSetup, amount: 2, priority: zerglingPriority},
 							 {setup: healerSetup, amount: 2, priority: healerPriority}];
 		this.swarmWishlist(numSwarms, swarmConfig);
+
+		// const rangedSwarmConfig = [{setup: hydraliskSetup, amount: 4, priority: hydraliskPriority}];
+		// this.swarmWishlist(numSwarms, rangedSwarmConfig);
+
 	}
 
 	run() {
 		this.autoRun(this.zerglings, zergling => undefined); // zergling => undefined is to handle boosting
 		this.autoRun(this.healers, healer => undefined);
+		// this.autoRun(this.hydralisks, hydralisk => undefined);
 		// Run swarms in order
 		let refs = _.keys(this.swarms).sort();
 		let i = 0;

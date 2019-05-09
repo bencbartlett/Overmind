@@ -3,10 +3,10 @@ import {StructureLayout, StructureMap} from '../roomPlanner/RoomPlanner';
 import {asciiLogo, logoComponents, logoText} from './logos';
 
 
-const textColor = '#c9c9c9';
-const textSize = .8;
-const charWidth = textSize * 0.4;
-const charHeight = textSize * 0.9;
+const TEXT_COLOR = '#c9c9c9';
+const TEXT_SIZE = .8;
+const CHAR_WIDTH = TEXT_SIZE * 0.4;
+const CHAR_HEIGHT = TEXT_SIZE * 0.9;
 
 /**
  * The Visualizer contains many static methods for drawing room visuals and displaying information through a GUI
@@ -20,9 +20,9 @@ export class Visualizer {
 
 	private static textStyle(size = 1, style: TextStyle = {}) {
 		return _.defaults(style, {
-			color  : textColor,
+			color  : TEXT_COLOR,
 			align  : 'left',
-			font   : `${size * textSize} Trebuchet MS`,
+			font   : `${size * TEXT_SIZE} Trebuchet MS`,
 			opacity: 0.8,
 		});
 	}
@@ -131,10 +131,10 @@ export class Visualizer {
 	static section(title: string, pos: { x: number, y: number, roomName?: string }, width: number,
 				   height: number): { x: number, y: number } {
 		const vis = new RoomVisual(pos.roomName);
-		vis.rect(pos.x, pos.y - charHeight, width, 1.1 * charHeight, {opacity: 0.15});
-		vis.box(pos.x, pos.y - charHeight, width, height + (1.1 + .25) * charHeight, {color: textColor});
+		vis.rect(pos.x, pos.y - CHAR_HEIGHT, width, 1.1 * CHAR_HEIGHT, {opacity: 0.15});
+		vis.box(pos.x, pos.y - CHAR_HEIGHT, width, height + (1.1 + .25) * CHAR_HEIGHT, {color: TEXT_COLOR});
 		vis.text(title, pos.x + .25, pos.y - .05, this.textStyle());
-		return {x: pos.x + 0.25, y: pos.y + 1.1 * charHeight};
+		return {x: pos.x + 0.25, y: pos.y + 1.1 * CHAR_HEIGHT};
 	}
 
 	static infoBox(header: string, content: string[] | string[][], pos: { x: number, y: number, roomName?: string },
@@ -144,7 +144,7 @@ export class Visualizer {
 		// vis.box(pos.x, pos.y - charHeight, width, ((content.length || 1) + 1.1 + .25) * charHeight,
 		// 		{color: textColor});
 		// vis.text(header, pos.x + .25, pos.y - .05, this.textStyle());
-		let height = charHeight * (content.length || 1);
+		let height = CHAR_HEIGHT * (content.length || 1);
 		let {x, y} = this.section(header, pos, width, height);
 		if (content.length > 0) {
 			if (_.isArray(content[0])) {
@@ -183,19 +183,19 @@ export class Visualizer {
 			mode = 'fraction';
 		}
 		// Draw frame
-		vis.box(pos.x, pos.y - charHeight * scale, width, 1.1 * scale * charHeight, {color: textColor});
-		vis.rect(pos.x, pos.y - charHeight * scale, percent * width, 1.1 * scale * charHeight, {
-			fill       : textColor,
+		vis.box(pos.x, pos.y - CHAR_HEIGHT * scale, width, 1.1 * scale * CHAR_HEIGHT, {color: TEXT_COLOR});
+		vis.rect(pos.x, pos.y - CHAR_HEIGHT * scale, percent * width, 1.1 * scale * CHAR_HEIGHT, {
+			fill       : TEXT_COLOR,
 			opacity    : 0.4,
 			strokeWidth: 0
 		});
 		// Draw text
 		if (mode == 'percent') {
-			vis.text(`${Math.round(100 * percent)}%`, pos.x + width / 2, pos.y - .1 * charHeight,
+			vis.text(`${Math.round(100 * percent)}%`, pos.x + width / 2, pos.y - .1 * CHAR_HEIGHT,
 					 this.textStyle(1, {align: 'center'}));
 		} else {
 			let [num, den] = <[number, number]>progress;
-			vis.text(`${num}/${den}`, pos.x + width / 2, pos.y - .1 * charHeight,
+			vis.text(`${num}/${den}`, pos.x + width / 2, pos.y - .1 * CHAR_HEIGHT,
 					 this.textStyle(1, {align: 'center'}));
 		}
 
@@ -232,9 +232,9 @@ export class Visualizer {
 			let dx = 0;
 			for (let i in entries) {
 				vis.text(entries[i], pos.x + dx, pos.y + dy, style);
-				dx += charWidth * (columns[i] + colPadding);
+				dx += CHAR_WIDTH * (columns[i] + colPadding);
 			}
-			dy += charHeight;
+			dy += CHAR_HEIGHT;
 		}
 	};
 
@@ -248,7 +248,7 @@ export class Visualizer {
 		let dy = 0;
 		for (let line of lines) {
 			vis.text(line, pos.x, pos.y + dy, style);
-			dy += charHeight;
+			dy += CHAR_HEIGHT;
 		}
 	};
 
@@ -287,7 +287,7 @@ export class Visualizer {
 			notificationMessages = ['No notifications'];
 		}
 		const maxStringLength = _.max(_.map(notificationMessages, msg => msg.length));
-		const width = Math.max(11, 1.2 * charWidth * maxStringLength);
+		const width = Math.max(11, 1.2 * CHAR_WIDTH * maxStringLength);
 		this.infoBox('Notifications', notificationMessages, {x, y}, width);
 	}
 

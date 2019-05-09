@@ -224,10 +224,16 @@ export class Swarm implements ProtoSwarm {
 			if (c3) r3 = c3.move(RIGHT);
 			if (c4) r4 = c4.move(TOP);
 		}
-		if (_.all([r1, r2, r3, r4], r => r == OK)) {
+
+		const allMoved = _.all([r1, r2, r3, r4], r => r == OK);
+
+		if (allMoved) {
 			return OK;
 		} else {
-			return -1 * (_.find([r1, r2, r3, r4], r => r != OK) || 899) - 100;
+			for (let creep of this.creeps) {
+				creep.cancelOrder('move');
+			}
+			return -1 * (_.findIndex([r1, r2, r3, r4], r => r != OK) || 899) - 100;
 		}
 	}
 
@@ -256,17 +262,22 @@ export class Swarm implements ProtoSwarm {
 		if (c3) r3 = c3.move(TOP_RIGHT);
 		if (c4) r4 = c4.move(TOP_LEFT);
 
-		if (_.all([r1, r2, r3, r4], r => r == OK)) {
+		const allMoved = _.all([r1, r2, r3, r4], r => r == OK);
+
+		if (allMoved) {
 			return OK;
 		} else {
-			return -1 * (_.find([r1, r2, r3, r4], r => r != OK) || 899) - 100;
+			for (let creep of this.creeps) {
+				creep.cancelOrder('move');
+			}
+			return -1 * (_.findIndex([r1, r2, r3, r4], r => r != OK) || 899) - 100;
 		}
 	}
 
 	rotate(direction: TOP | BOTTOM | LEFT | RIGHT): number {
 		if (direction == this.orientation) {
 			// do nothing
-			return OK;
+			return NO_ACTION;
 		}
 
 		if (!(this.width == 2 && this.height == 2)) {
@@ -274,8 +285,9 @@ export class Swarm implements ProtoSwarm {
 			return -100;
 		}
 
+		let ret = -777;
 		if (this.fatigue > 0) {
-			return ERR_TIRED;
+			ret = ERR_TIRED;
 		} else {
 			let prevDirection = this.orientation;
 			let prevFormation = this.formation;
@@ -283,7 +295,6 @@ export class Swarm implements ProtoSwarm {
 			let newAngle = this.rotationsFromOrientation(direction);
 			let rotateAngle = newAngle - prevAngle;
 
-			let ret = -777;
 			if (rotateAngle == 3 || rotateAngle == -1) {
 				ret = this.pivot('counterclockwise');
 			} else if (rotateAngle == 1 || rotateAngle == -3) {
@@ -298,9 +309,10 @@ export class Swarm implements ProtoSwarm {
 			if (ret == OK) {
 				this.orientation = direction;
 			}
-
-			return ret;
 		}
+
+		this.debug(`Rotating to ${direction}, result: ${ret}`);
+		return ret;
 	}
 
 	/**
@@ -507,24 +519,26 @@ export class Swarm implements ProtoSwarm {
 	}
 
 	goTo(destination: RoomPosition | HasPos, options: SwarmMoveOptions = {}): number {
-		if (DEBUG) {
-			options.displayCostMatrix = true;
-		}
+		// if (DEBUG) {
+		// 	options.displayCostMatrix = true;
+		// }
 		return Movement.swarmMove(this, destination, options);
 	}
 
 	goToRoom(roomName: string, options: SwarmMoveOptions = {}): number {
-		if (DEBUG) {
-			options.displayCostMatrix = true;
-		}
+		// if (DEBUG) {
+		// 	options.displayCostMatrix = true;
+		// }
 		return Movement.goToRoom_swarm(this, roomName, options);
 	};
 
 	combatMove(approach: PathFinderGoal[], avoid: PathFinderGoal[], options: CombatMoveOptions = {}): number {
-		if (DEBUG) {
-			options.displayAvoid = true;
-		}
-		return Movement.swarmCombatMove(this, approach, avoid, options);
+		// if (DEBUG) {
+		// 	options.displayAvoid = true;
+		// }
+		let ret = Movement.swarmCombatMove(this, approach, avoid, options);
+		this.debug(`Moving... Result: ${ret}`);
+		return ret;
 	}
 
 	safelyInRoom(roomName: string): boolean {
@@ -645,12 +659,13 @@ export class Swarm implements ProtoSwarm {
 	/**
 	 * Standard sequence of actions for sieging a room. Assumes the swarm has already initially assembled.
 	 */
-	autoSiege(roomName: string) {
+	autoSiege(roomName: string, waypoint?: RoomPosition) {
 		this.autoMelee();
 		this.autoRanged();
 		this.autoHeal();
 
 		if (!this.isInFormation()) {
+			this.debug(`Regrouping!`);
 			if (!_.any(this.creeps, creep => creep.pos.isEdge)) {
 				return this.regroup();
 			}
@@ -665,8 +680,11 @@ export class Swarm implements ProtoSwarm {
 
 		// Travel to the target room
 		if (!this.safelyInRoom(roomName)) {
-			this.debug(`Going to room!`);
-			return this.goToRoom(roomName);
+			if (waypoint) {
+				return this.goTo(waypoint);
+			} else {
+				return this.goToRoom(roomName);
+			}
 		}
 
 		// Find a target if needed
@@ -705,7 +723,7 @@ export class Swarm implements ProtoSwarm {
 	/**
 	 * Standard sequence of actions for fighting within a room. Assumes the swarm has already initially assembled.
 	 */
-	autoCombat(roomName: string) {
+	autoCombat(roomName: string, waypoint?: RoomPosition) {
 
 		this.debug(`Running autocombat!`);
 
@@ -714,6 +732,7 @@ export class Swarm implements ProtoSwarm {
 		this.autoHeal();
 
 		if (!this.isInFormation()) {
+			this.debug(`Regrouping!`);
 			if (!_.any(this.creeps, creep => creep.pos.isEdge)) {
 				return this.regroup();
 			}
@@ -734,7 +753,11 @@ export class Swarm implements ProtoSwarm {
 			// } else {
 			//
 			// }
-			return this.goToRoom(roomName);
+			if (waypoint) {
+				return this.goTo(waypoint);
+			} else {
+				return this.goToRoom(roomName);
+			}
 		}
 
 		// Maneuver around the room
@@ -744,7 +767,6 @@ export class Swarm implements ProtoSwarm {
 		if (_.any(goals.avoid, goal => this.minRangeTo(goal) <= goal.range)) {
 			// If creeps nearby, try to flee first, then reorient
 			let result = this.combatMove(goals.approach, goals.avoid);
-			this.debug(`Move result: ${result}`);
 			if (result != OK) {
 				result = this.reorient(true, true);
 			}
@@ -754,7 +776,6 @@ export class Swarm implements ProtoSwarm {
 			let result = this.reorient(true, true);
 			if (result != OK) {
 				result = this.combatMove(goals.approach, goals.avoid);
-				this.debug(`Move result: ${result}`);
 			}
 			return result;
 		}
@@ -784,11 +805,12 @@ export class Swarm implements ProtoSwarm {
 		let allAvoidGoals = _.flatten(_.map(this.rooms, room => GoalFinder.retreatGoalsForRoom(room).avoid));
 		let result = Movement.swarmCombatMove(this, [], allAvoidGoals);
 
-		let safeRoom = _.first(_.filter(this.rooms, room => !room.owner || room.my));
-
-		if (result == NO_ACTION && safeRoom && !this.safelyInRoom(safeRoom.name)) {
-			if (Game.time < (this.memory.lastInDanger || 0) + 3) {
-				return this.goToRoom(safeRoom.name);
+		if (result == NO_ACTION) {
+			let safeRoom = _.first(_.filter(this.rooms, room => !room.owner || room.my));
+			if (safeRoom && !this.safelyInRoom(safeRoom.name)) {
+				if (Game.time < (this.memory.lastInDanger || 0) + 3) {
+					return this.goToRoom(safeRoom.name);
+				}
 			}
 		}
 		return result;

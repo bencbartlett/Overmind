@@ -30,8 +30,8 @@ export class UpgradeSite extends HiveCluster {
 	// energyPerTick: number;
 
 	static settings = {
-		storageBuffer    : 100000,	// Number of upgrader parts scales with energy - this value
-		energyPerBodyUnit: 25000,	// Scaling factor: this much excess energy adds one extra body repetition
+		energyBuffer     : 100000,	// Number of upgrader parts scales with energy - this value
+		energyPerBodyUnit: 10000,	// Scaling factor: this much excess energy adds one extra body repetition
 		minLinkDistance  : 10,		// Required distance to build link
 		linksRequestBelow: 200,		// Links request energy when less than this amount
 	};
@@ -93,7 +93,7 @@ export class UpgradeSite extends HiveCluster {
 	private getUpgradePowerNeeded(): number {
 		return $.number(this, 'upgradePowerNeeded', () => {
 			if (this.room.storage) { // Workers perform upgrading until storage is set up
-				let amountOver = Math.max(this.colony.assets.energy - UpgradeSite.settings.storageBuffer, 0);
+				let amountOver = Math.max(this.colony.assets.energy - UpgradeSite.settings.energyBuffer, 0);
 				let upgradePower = 1 + Math.floor(amountOver / UpgradeSite.settings.energyPerBodyUnit);
 				if (amountOver > 800000) {
 					upgradePower *= 4; // double upgrade power if we have lots of surplus energy

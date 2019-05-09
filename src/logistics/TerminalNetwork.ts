@@ -321,19 +321,23 @@ export class TerminalNetwork implements ITerminalNetwork {
 	 * Equalize resource amounts of each type through all non-exceptional terminals in the network
 	 */
 	private equalize(resourceType: ResourceConstant, terminals = this.terminals, verbose = false): void {
+
 		log.debug(`Equalizing ${resourceType} within terminal network`);
 		let maxSendSize = resourceType == RESOURCE_ENERGY ? TerminalNetwork.settings.equalize.maxEnergySendSize
 														  : TerminalNetwork.settings.equalize.maxMineralSendSize;
 		let averageAmount = _.sum(_.map(terminals,
 										terminal => (colonyOf(terminal).assets[resourceType] || 0))) / terminals.length;
+
 		let terminalsByResource = _.sortBy(terminals, terminal => (colonyOf(terminal).assets[resourceType] || 0));
 		if (verbose) log.debug(_.map(terminalsByResource, t => `${t.room.name}: ${colonyOf(t).assets[resourceType]}`));
 		// Min-max match terminals
 		let receivers = _.take(terminalsByResource, Math.floor(terminalsByResource.length / 2));
 		terminalsByResource.reverse();
+
 		let senders = _.take(terminalsByResource, Math.floor(terminalsByResource.length / 2));
 		if (verbose) log.debug(`Receivers: ${_.map(receivers, t => t.room.print)}`);
 		if (verbose) log.debug(`Senders:   ${_.map(senders, t => t.room.print)}`);
+
 		for (let [sender, receiver] of _.zip(senders, receivers)) {
 			if (verbose) log.debug(` > ${sender.room.print} to ${receiver.room.print}...`);
 			let senderAmount = colonyOf(sender).assets[resourceType] || 0;
@@ -342,17 +346,21 @@ export class TerminalNetwork implements ITerminalNetwork {
 							|| TerminalNetwork.settings.equalize.tolerance.default;
 			if (verbose) log.debug(`    sender amt: ${senderAmount}  ` +
 								   `receiver amt: ${receiverAmount}  tolerance: ${tolerance}`);
-			if (senderAmount - receiverAmount < tolerance) {
+			if (senderAmount - receiverAmount < tolerance
+				&& receiverAmount > Energetics.settings.terminal.energy.inThreshold) {
 				if (verbose) log.debug(`   Low tolerance`);
 				continue; // skip if colonies are close to equilibrium
 			}
+
 			let senderSurplus = senderAmount - averageAmount;
 			let receiverDeficit = averageAmount - receiverAmount;
+
 			let sendAmount = Math.min(senderSurplus, receiverDeficit, maxSendSize);
 			sendAmount = Math.floor(Math.max(sendAmount, 0));
 			let sendCost = Game.market.calcTransactionCost(sendAmount, sender.room.name, receiver.room.name);
 			sendAmount = Math.min(sendAmount, (sender.store[resourceType] || 0) - sendCost - 10,
 								  (receiver.storeCapacity - _.sum(receiver.store)));
+
 			if (sendAmount < TERMINAL_MIN_SEND) {
 				if (verbose) log.debug(`    Size too small`);
 				continue;
@@ -379,6 +387,9 @@ export class TerminalNetwork implements ITerminalNetwork {
 													 .concat(equalizeResources.slice(0, this.memory.equalizeIndex + 1));
 		let allColonies = getAllColonies();
 		let nextResourceType = _.find(resourceEqualizeOrder, resource => {
+			if (resource == RESOURCE_ENERGY) {
+				return true;
+			}
 			const amounts = _.map(this.terminals, terminal => colonyOf(terminal).assets[resource] || 0);
 			const tolerance = TerminalNetwork.settings.equalize.tolerance[resource]
 							  || TerminalNetwork.settings.equalize.tolerance.default;

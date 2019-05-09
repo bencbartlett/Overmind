@@ -149,7 +149,9 @@ export class RoomPlanner {
 		}
 	}
 
-	/* Recall or reconstruct the appropriate map from memory */
+	/**
+	 * Recall or reconstruct the appropriate map from memory
+	 */
 	private recallMap(level = this.colony.controller.level): void {
 		if (this.memory.bunkerData && this.memory.bunkerData.anchor) {
 			this.map = this.getStructureMapForBunkerAt(this.memory.bunkerData.anchor, level);
@@ -159,7 +161,9 @@ export class RoomPlanner {
 		}
 	}
 
-	/* Return a list of room positions for planned structure locations at RCL8 (or undefined if plan isn't made yet) */
+	/**
+	 * Return a list of room positions for planned structure locations at RCL8 (or undefined if plan isn't made yet)
+	 */
 	plannedStructurePositions(structureType: StructureConstant): RoomPosition[] | undefined {
 		if (this.map[structureType]) {
 			return this.map[structureType];
@@ -173,7 +177,9 @@ export class RoomPlanner {
 		}
 	}
 
-	/* Return the planned location of the storage structure */
+	/**
+	 * Return the planned location of the storage structure
+	 */
 	get storagePos(): RoomPosition | undefined {
 		if (this.placements.commandCenter) {
 			return this.placements.commandCenter;
@@ -184,7 +190,9 @@ export class RoomPlanner {
 		}
 	}
 
-	/* Return the planned location of the storage structure */
+	/**
+	 * Return the planned location of the spawning structure
+	 */
 	get hatcheryPos(): RoomPosition | undefined {
 		if (this.placements.hatchery) {
 			return this.placements.hatchery;
@@ -228,7 +236,9 @@ export class RoomPlanner {
 		_.forEach(msg, command => console.log(command));
 	}
 
-	/* Run the room planner to generate a plan and map*/
+	/**
+	 * Run the room planner to generate a plan and map
+	 */
 	private make(level = 8): void {
 		// Reset everything
 		this.plan = {};
@@ -239,8 +249,10 @@ export class RoomPlanner {
 		this.map = this.mapFromPlan(this.plan);
 	}
 
-	/* Adds the specified structure directly to the map. Only callable after this.map is generated.
-	 * Doesn't check for conflicts, so don't use freely. */
+	/**
+	 * Adds the specified structure directly to the map. Only callable after this.map is generated.
+	 * Doesn't check for conflicts, so don't use freely.
+	 */
 	private placeStructure(type: StructureConstant, pos: RoomPosition): void {
 		if (!this.map[type]) this.map[type] = [];
 		this.map[type].push(pos);
@@ -250,7 +262,9 @@ export class RoomPlanner {
 		this.placements[componentName] = pos;
 	}
 
-	/* Switcher that takes a component name and returns a layout */
+	/**
+	 * Switcher that takes a component name and returns a layout
+	 */
 	private getLayout(name: string): StructureLayout | undefined {
 		switch (name) {
 			case 'hatchery':
@@ -262,7 +276,9 @@ export class RoomPlanner {
 		}
 	}
 
-	/* Generate a plan of component placements for a given RCL */
+	/**
+	 * Generate a plan of component placements for a given RCL
+	 */
 	private generatePlan(level = 8): RoomPlan {
 		let plan: RoomPlan = {};
 		for (let name in this.placements) {
@@ -285,7 +301,9 @@ export class RoomPlanner {
 		return plan;
 	}
 
-	/* Generate a map of (structure type: RoomPositions[]) for a given layout */
+	/**
+	 * Generate a map of (structure type: RoomPositions[]) for a given layout
+	 */
 	private parseLayout(structureLayout: StructureLayout, level = 8): StructureMap {
 		let map = {} as StructureMap;
 		let layout = structureLayout[level];
@@ -298,7 +316,9 @@ export class RoomPlanner {
 		return map;
 	}
 
-	/* Generate a flatened map from a plan */
+	/**
+	 * Generate a flatened map from a plan
+	 */
 	private mapFromPlan(plan: RoomPlan): StructureMap {
 		let map: StructureMap = {};
 		let componentMaps: StructureMap[] = _.map(plan, componentPlan => componentPlan.map);
@@ -309,7 +329,9 @@ export class RoomPlanner {
 		return map;
 	}
 
-	/* Aligns the component position to the desired position; operations done in-place */
+	/**
+	 * Aligns the component position to the desired position; operations done in-place
+	 */
 	private translateComponent(map: StructureMap, fromPos: RoomPosition | Coord, toPos: RoomPosition | Coord): void {
 		let dx = toPos.x - fromPos.x;
 		let dy = toPos.y - fromPos.y;
@@ -346,7 +368,9 @@ export class RoomPlanner {
 		}
 	}
 
-	/* Get bunker building placements as a StructureMap */
+	/**
+	 * Get bunker building placements as a StructureMap
+	 */
 	getStructureMapForBunkerAt(anchor: { x: number, y: number }, level = 8): StructureMap {
 		let dx = anchor.x - bunkerLayout.data.anchor.x;
 		let dy = anchor.y - bunkerLayout.data.anchor.y;
@@ -355,7 +379,9 @@ export class RoomPlanner {
 			_.map(coordArr, coord => new RoomPosition(coord.x + dx, coord.y + dy, this.colony.name)));
 	}
 
-	/* Get the placement for a single type of structure for bunker layout */
+	/**
+	 * Get the placement for a single type of structure for bunker layout
+	 */
 	getBunkerStructurePlacement(structureType: string, anchor: { x: number, y: number },
 								level = 8): RoomPosition[] {
 		let dx = anchor.x - bunkerLayout.data.anchor.x;
@@ -364,7 +390,9 @@ export class RoomPlanner {
 					 coord => new RoomPosition(coord.x + dx, coord.y + dy, this.colony.name));
 	}
 
-	/* Generates a list of impassible obstacles from this.map or from this.memory.map */
+	/**
+	 * Generates a list of impassible obstacles from this.map or from this.memory.map
+	 */
 	getObstacles(): RoomPosition[] {
 		let obstacles: RoomPosition[] = [];
 		let passableStructureTypes: string[] = [STRUCTURE_ROAD, STRUCTURE_CONTAINER, STRUCTURE_RAMPART];
@@ -394,7 +422,9 @@ export class RoomPlanner {
 		return _.unique(obstacles);
 	}
 
-	/* Check to see if there are any structures that can't be built */
+	/**
+	 * Check to see if there are any structures that can't be built
+	 */
 	private findCollision(ignoreRoads = false): RoomPosition | undefined {
 		const terrain = Game.map.getRoomTerrain(this.colony.room.name);
 		for (let structureType in this.map) {
@@ -409,8 +439,10 @@ export class RoomPlanner {
 		}
 	}
 
-	/* Write everything to memory at the end of activation. If ignoreRoads is set, it will allow collisions with
-	 * roads, but will continue to alert you every time it fails to build a road in the terrain pos (WIP) */
+	/**
+	 * Write everything to memory at the end of activation. If ignoreRoads is set, it will allow collisions with
+	 * roads, but will continue to alert you every time it fails to build a road in the terrain pos (WIP)
+	 */
 	finalize(ignoreRoads = false): void {
 		let collision = this.findCollision(ignoreRoads);
 		if (collision) {
@@ -481,7 +513,9 @@ export class RoomPlanner {
 		return false;
 	}
 
-	/* Whether a structure (or constructionSite) of given type should be at location. */
+	/**
+	 * Whether a structure (or constructionSite) of given type should be at location.
+	 */
 	structureShouldBeHere(structureType: StructureConstant, pos: RoomPosition,
 						  level = this.colony.controller.level): boolean {
 		if (structureType == STRUCTURE_ROAD) {
@@ -509,7 +543,9 @@ export class RoomPlanner {
 		return false;
 	}
 
-	/* Demolish all hostile structures in the room */
+	/**
+	 * Demolish all hostile structures in the room
+	 */
 	private demolishHostileStructures(destroyStorageUnits = false) {
 		_.forEach(this.colony.room.walls, wall => wall.destroy()); // overmind never uses walls
 		for (let structure of _.filter(this.colony.room.hostileStructures)) {
@@ -520,7 +556,9 @@ export class RoomPlanner {
 		}
 	}
 
-	/* Remove all hostile constructionSites and ones which are misplaced */
+	/**
+	 * Remove all hostile constructionSites and ones which are misplaced
+	 */
 	private removeMisplacedConstructionSites() {
 		for (let site of this.colony.room.find(FIND_CONSTRUCTION_SITES)) {
 			if (site.owner.username != MY_USERNAME) {
@@ -531,7 +569,9 @@ export class RoomPlanner {
 		}
 	}
 
-	/* Create construction sites for any buildings that need to be built */
+	/**
+	 * Create construction sites for any buildings that need to be built
+	 */
 	private demolishMisplacedStructures(skipRamparts = true, destroyAllStructureTypes = false): void {
 
 		this.demolishHostileStructures();
@@ -670,7 +710,9 @@ export class RoomPlanner {
 		}
 	}
 
-	/* Create construction sites for any buildings that need to be built */
+	/**
+	 * Create construction sites for any buildings that need to be built
+	 */
 	private buildMissingStructures(): void {
 		// Max buildings that can be placed each tick
 		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
@@ -724,7 +766,9 @@ export class RoomPlanner {
 		}
 	}
 
-	/* Calculate where the link will be built */
+	/**
+	 * Calculate where the link will be built
+	 */
 	private calculateLinkPos(anchor: RoomPosition): RoomPosition | undefined {
 		if (anchor.isEqualTo(this.colony.controller.pos)) {
 			return this.calculateUpgradeSiteLinkPos();
@@ -741,7 +785,9 @@ export class RoomPlanner {
 		}
 	}
 
-	/* Calculate where the link will be built for this site */
+	/**
+	 * Calculate where the link will be built for this site
+	 */
 	private calculateUpgradeSiteLinkPos(): RoomPosition | undefined {
 		let originPos: RoomPosition | undefined = undefined;
 		if (this.colony.storage) {
@@ -773,7 +819,9 @@ export class RoomPlanner {
 		}
 	}
 
-	/* Builds links as they become available. UpgradeSite gets link first, then miningSites by distance. */
+	/**
+	 * Builds links as they become available. UpgradeSite gets link first, then miningSites by distance.
+	 */
 	private buildNeededLinks() {
 		let numLinks = this.colony.links.length +
 					   _.filter(this.colony.constructionSites, site => site.structureType == STRUCTURE_LINK).length;
@@ -794,7 +842,9 @@ export class RoomPlanner {
 		}
 	}
 
-	/* Quick lookup for if a road should be in this position. Roads returning false won't be maintained. */
+	/**
+	 * Quick lookup for if a road should be in this position. Roads returning false won't be maintained.
+	 */
 	roadShouldBeHere(pos: RoomPosition): boolean {
 		return this.roadPlanner.roadShouldBeHere(pos);
 	}

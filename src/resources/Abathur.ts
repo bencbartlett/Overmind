@@ -41,7 +41,6 @@ export const wantedStockAmounts: { [key: string]: number } = {
 	LH   : 3000, 	// (+50 % build and repair)
 	XUHO2: 3000, 	// (+600 % harvest)
 	XKH2O: 3000, 	// (+300 % carry)
-	XGH2O: 12000,	// (+100 % upgrade)
 	ZK   : 800,	// intermediate
 	UL   : 800,	// intermediate
 	GH   : 800,	// (+50 % upgrade)
@@ -50,6 +49,7 @@ export const wantedStockAmounts: { [key: string]: number } = {
 	GH2O : 800,	// (+80 % upgrade)
 	LH2O : 800,	// (+80 % build and repair)
 	KH2O : 800,	// (+200 % carry)
+	XGH2O: 12000,	// (+100 % upgrade)
 };
 
 export const baseStockAmounts: { [key: string]: number } = {

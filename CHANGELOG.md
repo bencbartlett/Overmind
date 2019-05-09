@@ -43,6 +43,8 @@ All notable changes to this project will be documented in this file. The format 
 - `Directive`s no longer have a `requiredRCL` property and now take more general `colonyFilter` optional arguments in their constructor
 - Managers will transfer 200000 energy from terminal to storage before it gets destroyed in the event of a rebuild state
 - Updated the Grafana dashboard to reflect lots of accumulated changes
+- `Abathur` now tries to synthesize a number of intermediate compounds if some minerals are unavailable (thanks, Conventia!)
+- Increased the scaling of number of upgraders to 1 upgrade part per 10k energy above threshold, down from 25k. This should make the bot spawn more upgraders below RCL8 and operate with less excess energy in storage.
 
 ### Fixed
 - Fixed a critical issue which caused the CPU reset routine to repeat indefinitely in low-CPU environments like shard3 (#65)
@@ -56,6 +58,10 @@ All notable changes to this project will be documented in this file. The format 
 - Fixed a bug which could calculate `outpostIndex` to be negative, messing up creep spawning priorities
 - Fixed a typo which miscalculated needed fortification hits for ramparts with incoming nukes
 - Fixed unhandled memory access when spawning in for the very first time on a new account (#75)
+- Fixed a bug in `RoomPosition.getPositionsAtRange` (thanks, Conventia!)
+- Account for hitback when computing `hitsPredicted`
+- Various `CombatIntel` and `RoomIntel` bugfixes
+- No longer calls `Directive.spawnMoarOverlords()` if directive instantiation is aborted (in lieu of #82)
 
 
 ## Overmind [0.5.2.1] - 2019.2.8
