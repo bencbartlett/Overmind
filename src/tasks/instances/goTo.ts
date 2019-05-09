@@ -1,6 +1,6 @@
-import {Task} from '../Task';
-import {profile} from '../../profiler/decorator';
 import {hasPos} from '../../declarations/typeGuards';
+import {profile} from '../../profiler/decorator';
+import {Task} from '../Task';
 
 export type goToTargetType = { pos: RoomPosition } | RoomPosition;
 export const goToTaskName = 'goTo';

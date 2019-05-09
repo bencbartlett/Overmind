@@ -1,6 +1,6 @@
-import {Directive} from '../Directive';
-import {profile} from '../../profiler/decorator';
 import {SourceReaperOverlord} from '../../overlords/mining/sourceKeeperReeper';
+import {profile} from '../../profiler/decorator';
+import {Directive} from '../Directive';
 
 
 /**

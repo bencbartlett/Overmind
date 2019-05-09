@@ -3,10 +3,10 @@ import {StructureLayout, StructureMap} from '../roomPlanner/RoomPlanner';
 import {asciiLogo, logoComponents, logoText} from './logos';
 
 
-const textColor = '#c9c9c9';
-const textSize = .8;
-const charWidth = textSize * 0.4;
-const charHeight = textSize * 0.9;
+const TEXT_COLOR = '#c9c9c9';
+const TEXT_SIZE = .8;
+const CHAR_WIDTH = TEXT_SIZE * 0.4;
+const CHAR_HEIGHT = TEXT_SIZE * 0.9;
 
 /**
  * The Visualizer contains many static methods for drawing room visuals and displaying information through a GUI
@@ -20,9 +20,9 @@ export class Visualizer {
 
 	private static textStyle(size = 1, style: TextStyle = {}) {
 		return _.defaults(style, {
-			color  : textColor,
+			color  : TEXT_COLOR,
 			align  : 'left',
-			font   : `${size * textSize} Trebuchet MS`,
+			font   : `${size * TEXT_SIZE} Trebuchet MS`,
 			opacity: 0.8,
 		});
 	}
@@ -42,16 +42,16 @@ export class Visualizer {
 
 	static drawStructureMap(structureMap: StructureMap): void {
 		if (!this.enabled) return;
-		let vis: { [roomName: string]: RoomVisual } = {};
-		for (let structureType in structureMap) {
-			for (let pos of structureMap[structureType]) {
+		const vis: { [roomName: string]: RoomVisual } = {};
+		for (const structureType in structureMap) {
+			for (const pos of structureMap[structureType]) {
 				if (!vis[pos.roomName]) {
 					vis[pos.roomName] = new RoomVisual(pos.roomName);
 				}
 				vis[pos.roomName].structure(pos.x, pos.y, structureType);
 			}
 		}
-		for (let roomName in vis) {
+		for (const roomName in vis) {
 			vis[roomName].connectRoads();
 		}
 	}
@@ -59,11 +59,11 @@ export class Visualizer {
 	static drawLayout(layout: StructureLayout, anchor: RoomPosition, opts = {}): void {
 		_.defaults(opts, {opacity: 0.5});
 		if (!this.enabled) return;
-		let vis = new RoomVisual(anchor.roomName);
-		for (let structureType in layout[8]!.buildings) {
-			for (let pos of layout[8]!.buildings[structureType].pos) {
-				let dx = pos.x - layout.data.anchor.x;
-				let dy = pos.y - layout.data.anchor.y;
+		const vis = new RoomVisual(anchor.roomName);
+		for (const structureType in layout[8]!.buildings) {
+			for (const pos of layout[8]!.buildings[structureType].pos) {
+				const dx = pos.x - layout.data.anchor.x;
+				const dy = pos.y - layout.data.anchor.y;
 				vis.structure(anchor.x + dx, anchor.y + dy, structureType, opts);
 			}
 		}
@@ -71,10 +71,10 @@ export class Visualizer {
 	}
 
 	static drawRoads(positoins: RoomPosition[]): void {
-		let pointsByRoom = _.groupBy(positoins, pos => pos.roomName);
-		for (let roomName in pointsByRoom) {
-			let vis = new RoomVisual(roomName);
-			for (let pos of pointsByRoom[roomName]) {
+		const pointsByRoom = _.groupBy(positoins, pos => pos.roomName);
+		for (const roomName in pointsByRoom) {
+			const vis = new RoomVisual(roomName);
+			for (const pos of pointsByRoom[roomName]) {
 				vis.structure(pos.x, pos.y, STRUCTURE_ROAD);
 			}
 			vis.connectRoads();
@@ -82,8 +82,8 @@ export class Visualizer {
 	}
 
 	static drawPath(path: RoomPosition[], style?: PolyStyle): void {
-		let pointsByRoom = _.groupBy(path, pos => pos.roomName);
-		for (let roomName in pointsByRoom) {
+		const pointsByRoom = _.groupBy(path, pos => pos.roomName);
+		for (const roomName in pointsByRoom) {
 			new RoomVisual(roomName).poly(pointsByRoom[roomName], style);
 		}
 	}
@@ -131,10 +131,10 @@ export class Visualizer {
 	static section(title: string, pos: { x: number, y: number, roomName?: string }, width: number,
 				   height: number): { x: number, y: number } {
 		const vis = new RoomVisual(pos.roomName);
-		vis.rect(pos.x, pos.y - charHeight, width, 1.1 * charHeight, {opacity: 0.15});
-		vis.box(pos.x, pos.y - charHeight, width, height + (1.1 + .25) * charHeight, {color: textColor});
+		vis.rect(pos.x, pos.y - CHAR_HEIGHT, width, 1.1 * CHAR_HEIGHT, {opacity: 0.15});
+		vis.box(pos.x, pos.y - CHAR_HEIGHT, width, height + (1.1 + .25) * CHAR_HEIGHT, {color: TEXT_COLOR});
 		vis.text(title, pos.x + .25, pos.y - .05, this.textStyle());
-		return {x: pos.x + 0.25, y: pos.y + 1.1 * charHeight};
+		return {x: pos.x + 0.25, y: pos.y + 1.1 * CHAR_HEIGHT};
 	}
 
 	static infoBox(header: string, content: string[] | string[][], pos: { x: number, y: number, roomName?: string },
@@ -144,8 +144,8 @@ export class Visualizer {
 		// vis.box(pos.x, pos.y - charHeight, width, ((content.length || 1) + 1.1 + .25) * charHeight,
 		// 		{color: textColor});
 		// vis.text(header, pos.x + .25, pos.y - .05, this.textStyle());
-		let height = charHeight * (content.length || 1);
-		let {x, y} = this.section(header, pos, width, height);
+		const height = CHAR_HEIGHT * (content.length || 1);
+		const {x, y} = this.section(header, pos, width, height);
 		if (content.length > 0) {
 			if (_.isArray(content[0])) {
 				this.table(<string[][]>content, {
@@ -183,19 +183,19 @@ export class Visualizer {
 			mode = 'fraction';
 		}
 		// Draw frame
-		vis.box(pos.x, pos.y - charHeight * scale, width, 1.1 * scale * charHeight, {color: textColor});
-		vis.rect(pos.x, pos.y - charHeight * scale, percent * width, 1.1 * scale * charHeight, {
-			fill       : textColor,
+		vis.box(pos.x, pos.y - CHAR_HEIGHT * scale, width, 1.1 * scale * CHAR_HEIGHT, {color: TEXT_COLOR});
+		vis.rect(pos.x, pos.y - CHAR_HEIGHT * scale, percent * width, 1.1 * scale * CHAR_HEIGHT, {
+			fill       : TEXT_COLOR,
 			opacity    : 0.4,
 			strokeWidth: 0
 		});
 		// Draw text
 		if (mode == 'percent') {
-			vis.text(`${Math.round(100 * percent)}%`, pos.x + width / 2, pos.y - .1 * charHeight,
+			vis.text(`${Math.round(100 * percent)}%`, pos.x + width / 2, pos.y - .1 * CHAR_HEIGHT,
 					 this.textStyle(1, {align: 'center'}));
 		} else {
-			let [num, den] = <[number, number]>progress;
-			vis.text(`${num}/${den}`, pos.x + width / 2, pos.y - .1 * charHeight,
+			const [num, den] = <[number, number]>progress;
+			vis.text(`${num}/${den}`, pos.x + width / 2, pos.y - .1 * CHAR_HEIGHT,
 					 this.textStyle(1, {align: 'center'}));
 		}
 
@@ -211,8 +211,8 @@ export class Visualizer {
 		const style = this.textStyle();
 
 		// Determine column locations
-		let columns = Array(_.first(data).length).fill(0);
-		for (let entries of data) {
+		const columns = Array(_.first(data).length).fill(0);
+		for (const entries of data) {
 			for (let i = 0; i < entries.length - 1; i++) {
 				columns[i] = Math.max(columns[i], entries[i].length);
 			}
@@ -228,15 +228,15 @@ export class Visualizer {
 		// Draw text
 		// let dy = 1.5 * charHeight;
 		let dy = 0;
-		for (let entries of data) {
+		for (const entries of data) {
 			let dx = 0;
-			for (let i in entries) {
+			for (const i in entries) {
 				vis.text(entries[i], pos.x + dx, pos.y + dy, style);
-				dx += charWidth * (columns[i] + colPadding);
+				dx += CHAR_WIDTH * (columns[i] + colPadding);
 			}
-			dy += charHeight;
+			dy += CHAR_HEIGHT;
 		}
-	};
+	}
 
 	static multitext(lines: string[], pos: { x: number, y: number, roomName?: string }): void {
 		if (lines.length == 0) {
@@ -246,11 +246,11 @@ export class Visualizer {
 		const style = this.textStyle();
 		// Draw text
 		let dy = 0;
-		for (let line of lines) {
+		for (const line of lines) {
 			vis.text(line, pos.x, pos.y + dy, style);
-			dy += charHeight;
+			dy += CHAR_HEIGHT;
 		}
-	};
+	}
 
 	static drawHUD(): void {
 		// Draw Overmind logo
@@ -287,7 +287,7 @@ export class Visualizer {
 			notificationMessages = ['No notifications'];
 		}
 		const maxStringLength = _.max(_.map(notificationMessages, msg => msg.length));
-		const width = Math.max(11, 1.2 * charWidth * maxStringLength);
+		const width = Math.max(11, 1.2 * CHAR_WIDTH * maxStringLength);
 		this.infoBox('Notifications', notificationMessages, {x, y}, width);
 	}
 

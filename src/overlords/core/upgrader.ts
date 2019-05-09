@@ -1,11 +1,11 @@
-import {Overlord} from '../Overlord';
+import {Roles, Setups} from '../../creepSetups/setups';
 import {UpgradeSite} from '../../hiveClusters/upgradeSite';
-import {Zerg} from '../../zerg/Zerg';
-import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {boostResources} from '../../resources/map_resources';
-import {Roles, Setups} from '../../creepSetups/setups';
+import {Tasks} from '../../tasks/Tasks';
+import {Zerg} from '../../zerg/Zerg';
+import {Overlord} from '../Overlord';
 
 /**
  * Spawns an upgrader to upgrade the room controller
@@ -31,7 +31,7 @@ export class UpgradingOverlord extends Overlord {
 		if (this.colony.level < 3) { // can't spawn upgraders at early levels
 			return;
 		}
-		if (this.colony.assets[RESOURCE_ENERGY] > UpgradeSite.settings.storageBuffer
+		if (this.colony.assets[RESOURCE_ENERGY] > UpgradeSite.settings.energyBuffer
 			|| this.upgradeSite.controller.ticksToDowngrade < 500) {
 			const setup = this.colony.level == 8 ? Setups.upgraders.rcl8 : Setups.upgraders.default;
 			if (this.colony.level == 8) {

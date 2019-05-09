@@ -1,5 +1,5 @@
-import {Task} from '../Task';
 import {profile} from '../../profiler/decorator';
+import {Task} from '../Task';
 
 // Attack task, includes attack and ranged attack if applicable.
 // Use meleeAttack and rangedAttack for the exclusive variants.
@@ -27,8 +27,8 @@ export class TaskAttack extends Task {
 	}
 
 	work() {
-		let creep = this.creep;
-		let target = this.target;
+		const creep = this.creep;
+		const target = this.target;
 		let attackReturn = 0;
 		let rangedAttackReturn = 0;
 		if (creep.getActiveBodyparts(ATTACK) > 0) {

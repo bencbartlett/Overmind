@@ -1,12 +1,12 @@
-import {Overlord} from '../Overlord';
-import {Zerg} from '../../zerg/Zerg';
-import {Tasks} from '../../tasks/Tasks';
-import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {profile} from '../../profiler/decorator';
+import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {DirectiveColonize} from '../../directives/colony/colonize';
 import {Pathing} from '../../movement/Pathing';
-import {log} from '../../console/log';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
+import {profile} from '../../profiler/decorator';
+import {Tasks} from '../../tasks/Tasks';
+import {Zerg} from '../../zerg/Zerg';
+import {Overlord} from '../Overlord';
 
 /**
  * Spawn pioneers - early workers which help to build a spawn in a new colony, then get converted to workers or drones
@@ -35,10 +35,10 @@ export class PioneerOverlord extends Overlord {
 	}
 
 	private findStructureBlockingController(pioneer: Zerg): Structure | undefined {
-		let blockingPos = Pathing.findBlockingPos(pioneer.pos, pioneer.room.controller!.pos,
-												  _.filter(pioneer.room.structures, s => !s.isWalkable));
+		const blockingPos = Pathing.findBlockingPos(pioneer.pos, pioneer.room.controller!.pos,
+													_.filter(pioneer.room.structures, s => !s.isWalkable));
 		if (blockingPos) {
-			let structure = blockingPos.lookFor(LOOK_STRUCTURES)[0];
+			const structure = blockingPos.lookFor(LOOK_STRUCTURES)[0];
 			if (structure) {
 				return structure;
 			} else {
@@ -52,7 +52,7 @@ export class PioneerOverlord extends Overlord {
 		if (pioneer.room == this.room && !pioneer.pos.isEdge) {
 			// Remove any blocking structures preventing claimer from reaching controller
 			if (!this.room.my && this.room.structures.length > 0) {
-				let dismantleTarget = this.findStructureBlockingController(pioneer);
+				const dismantleTarget = this.findStructureBlockingController(pioneer);
 				if (dismantleTarget) {
 					pioneer.task = Tasks.dismantle(dismantleTarget);
 					return;
@@ -61,6 +61,11 @@ export class PioneerOverlord extends Overlord {
 			// Build and recharge
 			if (pioneer.carry.energy == 0) {
 				pioneer.task = Tasks.recharge();
+			} else if (this.room && this.room.controller &&
+					   (this.room.controller.ticksToDowngrade < 2500 || !this.spawnSite) &&
+					   !(this.room.controller.upgradeBlocked > 0)) {
+				// Save controller if it's about to downgrade or if you have nothing else to do
+				pioneer.task = Tasks.upgrade(this.room.controller);
 			} else if (this.spawnSite) {
 				pioneer.task = Tasks.build(this.spawnSite);
 			}

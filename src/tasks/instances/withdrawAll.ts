@@ -1,8 +1,8 @@
 /* Withdraw a resource from a target */
 
-import {Task} from '../Task';
-import {profile} from '../../profiler/decorator';
 import {StoreStructure} from '../../declarations/typeGuards';
+import {profile} from '../../profiler/decorator';
+import {Task} from '../Task';
 
 export type withdrawAllTargetType = StoreStructure | Tombstone;
 
@@ -26,8 +26,8 @@ export class TaskWithdrawAll extends Task {
 	}
 
 	work() {
-		for (let resourceType in this.target.store) {
-			let amountInStore = this.target.store[<ResourceConstant>resourceType] || 0;
+		for (const resourceType in this.target.store) {
+			const amountInStore = this.target.store[<ResourceConstant>resourceType] || 0;
 			if (amountInStore > 0) {
 				return this.creep.withdraw(this.target, <ResourceConstant>resourceType);
 			}

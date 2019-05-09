@@ -1,12 +1,12 @@
-import {profile} from '../profiler/decorator';
-import {HiveCluster} from './_HiveCluster';
-import {Colony} from '../Colony';
-import {CombatIntel} from '../intel/CombatIntel';
 import {$} from '../caching/GlobalCache';
-import {CombatTargeting} from '../targeting/CombatTargeting';
-import {WorkerOverlord} from '../overlords/core/worker';
-import {TerminalState_Rebuild} from '../directives/terminalState/terminalState_rebuild';
+import {Colony} from '../Colony';
 import {log} from '../console/log';
+import {TERMINAL_STATE_REBUILD} from '../directives/terminalState/terminalState_rebuild';
+import {CombatIntel} from '../intel/CombatIntel';
+import {WorkerOverlord} from '../overlords/core/worker';
+import {profile} from '../profiler/decorator';
+import {CombatTargeting} from '../targeting/CombatTargeting';
+import {HiveCluster} from './_HiveCluster';
 
 
 /**
@@ -43,10 +43,10 @@ export class SporeCrawler extends HiveCluster {
 
 	private registerEnergyRequests() {
 		// Request energy from transporters if below request threshold
-		for (let tower of this.towers) {
+		for (const tower of this.towers) {
 			if (tower.energy < SporeCrawler.settings.requestThreshold) {
-				let multiplier = tower.energy < SporeCrawler.settings.criticalEnergyThreshold ? 2 : 1;
-				let dAmountdt = this.room.hostiles.length > 0 ? 10 : 0;
+				const multiplier = tower.energy < SporeCrawler.settings.criticalEnergyThreshold ? 2 : 1;
+				const dAmountdt = this.room.hostiles.length > 0 ? 10 : 0;
 				this.colony.logisticsNetwork.requestInput(tower, {multiplier: multiplier, dAmountdt: dAmountdt});
 			}
 		}
@@ -57,8 +57,8 @@ export class SporeCrawler extends HiveCluster {
 	}
 
 	private attack(target: Creep): void {
-		for (let tower of this.towers) {
-			let result = tower.attack(target);
+		for (const tower of this.towers) {
+			const result = tower.attack(target);
 			if (result == OK) {
 				if (target.hitsPredicted == undefined) target.hitsPredicted = target.hits;
 				target.hitsPredicted -= CombatIntel.singleTowerDamage(target.pos.getRangeTo(tower));
@@ -94,11 +94,11 @@ export class SporeCrawler extends HiveCluster {
 	private preventRampartDecay() {
 		if (this.colony.level < 7 && this.towers.length > 0) {
 			// expensive to check all rampart hits; only run in intermediate RCL
-			let dyingRamparts = _.filter(this.room.ramparts, rampart =>
+			const dyingRamparts = _.filter(this.room.ramparts, rampart =>
 				rampart.hits < WorkerOverlord.settings.barrierHits.critical
 				&& this.colony.roomPlanner.barrierPlanner.barrierShouldBeHere(rampart.pos));
 			if (dyingRamparts.length > 0) {
-				for (let tower of this.towers) {
+				for (const tower of this.towers) {
 					tower.repair(tower.pos.findClosestByRange(dyingRamparts)!);
 				}
 			}
@@ -118,25 +118,25 @@ export class SporeCrawler extends HiveCluster {
 
 	run() {
 		if (this.room.hostiles.length > 0) {
-			let myDefenders = _.filter(this.room.creeps, creep => creep.getActiveBodyparts(ATTACK) > 1);
-			let myRangedDefenders = _.filter(this.room.creeps, creep => creep.getActiveBodyparts(RANGED_ATTACK) > 1);
-			let myCreepDamage = ATTACK_POWER * _.sum(myDefenders, creep => CombatIntel.getAttackPotential(creep)) +
+			const myDefenders = _.filter(this.room.creeps, creep => creep.getActiveBodyparts(ATTACK) > 1);
+			const myRangedDefenders = _.filter(this.room.creeps, creep => creep.getActiveBodyparts(RANGED_ATTACK) > 1);
+			const myCreepDamage = ATTACK_POWER * _.sum(myDefenders, creep => CombatIntel.getAttackPotential(creep)) +
 								RANGED_ATTACK_POWER * _.sum(myRangedDefenders,
 															creep => CombatIntel.getRangedAttackPotential(creep));
 			const HEAL_FUDGE_FACTOR = 1.0;
-			let avgHealing = HEAL_FUDGE_FACTOR * CombatIntel.avgHostileHealingTo(this.room.hostiles);
+			const avgHealing = HEAL_FUDGE_FACTOR * CombatIntel.avgHostileHealingTo(this.room.hostiles);
 			let possibleTargets = _.filter(this.room.hostiles, hostile => {
 				// let healing = HEAL_FUDGE_FACTOR * CombatIntel.maxHostileHealingTo(hostile);
-				let damageTaken = CombatIntel.towerDamageAtPos(hostile.pos)! + myCreepDamage;
-				let damageMultiplier = CombatIntel.minimumDamageTakenMultiplier(hostile);
+				const damageTaken = CombatIntel.towerDamageAtPos(hostile.pos)! + myCreepDamage;
+				const damageMultiplier = CombatIntel.minimumDamageTakenMultiplier(hostile);
 				return damageTaken * damageMultiplier > avgHealing;
 			});
 			// Only attack dancing targets (drain attack) which are far enough in rooms to be killed off by towers
 			possibleTargets = _.filter(possibleTargets, hostile => {
 				if (CombatIntel.isEdgeDancing(hostile)) {
-					let netDPS = CombatIntel.towerDamageAtPos(hostile.pos)! + myCreepDamage
-								 - (HEAL_FUDGE_FACTOR * CombatIntel.maxHostileHealingTo(hostile));
-					let isKillable = netDPS * hostile.pos.rangeToEdge > hostile.hits;
+					const netDPS = CombatIntel.towerDamageAtPos(hostile.pos)! + myCreepDamage
+								   - (HEAL_FUDGE_FACTOR * CombatIntel.maxHostileHealingTo(hostile));
+					const isKillable = netDPS * hostile.pos.rangeToEdge > hostile.hits;
 					if (isKillable) {
 						return true;
 					} else {
@@ -150,34 +150,34 @@ export class SporeCrawler extends HiveCluster {
 					return true;
 				}
 			});
-			let target = CombatTargeting.findBestCreepTargetForTowers(this.room, possibleTargets);
+			const target = CombatTargeting.findBestCreepTargetForTowers(this.room, possibleTargets);
 			if (target) {
 				return this.attack(target);
 			}
 		}
 
-		let closestDamagedAlly = this.pos.findClosestByRange(_.filter(this.room.creeps,
+		const closestDamagedAlly = this.pos.findClosestByRange(_.filter(this.room.creeps,
 																	  creep => creep.hits < creep.hitsMax));
 		if (closestDamagedAlly) {
-			for (let tower of this.towers) {
+			for (const tower of this.towers) {
 				tower.heal(closestDamagedAlly);
 			}
 			return;
 		}
 
 		// Towers build nuke response ramparts
-		let nearbyNukeRamparts = _.filter(this.colony.overlords.work.nukeDefenseRamparts,
+		const nearbyNukeRamparts = _.filter(this.colony.overlords.work.nukeDefenseRamparts,
 										  rampart => this.pos.getRangeTo(rampart) <= TOWER_OPTIMAL_RANGE);
 		if (nearbyNukeRamparts.length > 0 && this.colony.terminal
-			&& this.colony.terminalState != TerminalState_Rebuild) {
-			let nukes = this.colony.room.find(FIND_NUKES);
-			let timeToImpact = _.min(_.map(nukes, nuke => nuke.timeToLand));
+			&& this.colony.terminalState != TERMINAL_STATE_REBUILD) {
+			const nukes = this.colony.room.find(FIND_NUKES);
+			const timeToImpact = _.min(_.map(nukes, nuke => nuke.timeToLand));
 			if (timeToImpact) {
-				let repairHitsRemaining = _.sum(_.values(this.colony.overlords.work.nukeDefenseHitsRemaining));
-				let hitsRepairedPerTick = this.towers.length * TOWER_POWER_REPAIR;
+				const repairHitsRemaining = _.sum(_.values(this.colony.overlords.work.nukeDefenseHitsRemaining));
+				const hitsRepairedPerTick = this.towers.length * TOWER_POWER_REPAIR;
 				// Only repair using towers if it looks like you won't finish repairs in time
 				if (repairHitsRemaining > 0.9 * hitsRepairedPerTick * timeToImpact) {
-					for (let tower of this.towers) {
+					for (const tower of this.towers) {
 						tower.repair(nearbyNukeRamparts[0]);
 					}
 					return;

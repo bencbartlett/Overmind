@@ -1,6 +1,6 @@
-import {Directive} from '../Directive';
-import {Overseer} from '../../Overseer';
 import {CombatOverlord} from '../../overlords/CombatOverlord';
+import {Overseer} from '../../Overseer';
+import {Directive} from '../Directive';
 
 export abstract class DefenseDirective extends Directive {
 

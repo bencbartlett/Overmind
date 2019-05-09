@@ -1,8 +1,8 @@
-import {Directive} from '../Directive';
-import {profile} from '../../profiler/decorator';
-import {Visualizer} from '../../visuals/Visualizer';
 import {log} from '../../console/log';
+import {profile} from '../../profiler/decorator';
 import {CombatPlanner, SiegeAnalysis} from '../../strategy/CombatPlanner';
+import {Visualizer} from '../../visuals/Visualizer';
+import {Directive} from '../Directive';
 
 interface DirectiveAutoSiegeMemory extends FlagMemory {
 	siegeAnalysis?: SiegeAnalysis;

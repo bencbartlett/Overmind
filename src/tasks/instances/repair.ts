@@ -1,5 +1,5 @@
-import {Task} from '../Task';
 import {profile} from '../../profiler/decorator';
+import {Task} from '../Task';
 
 export type repairTargetType = Structure;
 export const repairTaskName = 'repair';
@@ -24,10 +24,10 @@ export class TaskRepair extends Task {
 	}
 
 	work() {
-		let result = this.creep.repair(this.target);
+		const result = this.creep.repair(this.target);
 		if (this.target.structureType == STRUCTURE_ROAD) {
 			// prevents workers from idling for a tick before moving to next target
-			let newHits = this.target.hits + this.creep.getActiveBodyparts(WORK) * REPAIR_POWER;
+			const newHits = this.target.hits + this.creep.getActiveBodyparts(WORK) * REPAIR_POWER;
 			if (newHits > this.target.hitsMax) {
 				this.finish();
 			}

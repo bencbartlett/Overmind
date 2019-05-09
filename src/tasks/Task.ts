@@ -12,12 +12,12 @@
  * If you use Travler, change all occurrences of creep.moveTo() to creep.goTo()
  */
 
-import {initializeTask} from './initializer';
+import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
 import {Zerg} from '../zerg/Zerg';
-import {log} from '../console/log';
+import {initializeTask} from './initializer';
 
-type targetType = { ref: string, pos: protoPos }; // overwrite this variable in derived classes to specify more precise typing
+type targetType = { ref: string, pos: ProtoPos }; // overwrite this variable to specify more precise typing
 
 /**
  * An abstract class for encapsulating creep actions. This generalizes the concept of "do action X to thing Y until
@@ -36,9 +36,9 @@ export abstract class Task {
 	};
 	_target: { 					// Data for the target the task is directed to:
 		ref: string; 				// Target id or name
-		_pos: protoPos; 			// Target position's coordinates in case vision is lost
+		_pos: ProtoPos; 			// Target position's coordinates in case vision is lost
 	};
-	_parent: protoTask | null; 	// The parent of this task, if any. Task is changed to parent upon completion.
+	_parent: ProtoTask | null; 	// The parent of this task, if any. Task is changed to parent upon completion.
 	tick: number;				// When the task was set
 	settings: TaskSettings;		// Settings for a given type of task; shouldn't be modified on an instance-basis
 	options: TaskOptions;		// Options for a specific instance of a task
@@ -81,9 +81,9 @@ export abstract class Task {
 	}
 
 	/**
-	 * Get a serialized protoTask from the current task
+	 * Get a serialized ProtoTask from the current task
 	 */
-	get proto(): protoTask {
+	get proto(): ProtoTask {
 		return {
 			name   : this.name,
 			_creep : this._creep,
@@ -96,9 +96,9 @@ export abstract class Task {
 	}
 
 	/**
-	 * Set the current task from a serialized protoTask
+	 * Set the current task from a serialized ProtoTask
 	 */
-	set proto(protoTask: protoTask) {
+	set proto(protoTask: ProtoTask) {
 		// Don't write to this.name; used in task switcher
 		this._creep = protoTask._creep;
 		this._target = protoTask._target;
@@ -169,7 +169,7 @@ export abstract class Task {
 	 * Return a list of [this, this.parent, this.parent.parent, ...] as tasks
 	 */
 	get manifest(): Task[] {
-		let manifest: Task[] = [this];
+		const manifest: Task[] = [this];
 		let parent = this.parent;
 		while (parent) {
 			manifest.push(parent);
@@ -182,7 +182,7 @@ export abstract class Task {
 	 * Return a list of [this.target, this.parent.target, ...] without fully instantiating the list of tasks
 	 */
 	get targetManifest(): (RoomObject | null)[] {
-		let targetRefs: string[] = [this._target.ref];
+		const targetRefs: string[] = [this._target.ref];
 		let parent = this._parent;
 		while (parent) {
 			targetRefs.push(parent._target.ref);
@@ -195,7 +195,7 @@ export abstract class Task {
 	 * Return a list of [this.targetPos, this.parent.targetPos, ...] without fully instantiating the list of tasks
 	 */
 	get targetPosManifest(): RoomPosition[] {
-		let targetPositions: protoPos[] = [this._target._pos];
+		const targetPositions: ProtoPos[] = [this._target._pos];
 		let parent = this._parent;
 		while (parent) {
 			targetPositions.push(parent._target._pos);
@@ -247,7 +247,7 @@ export abstract class Task {
 		} else {
 			// Switch to parent task if there is one
 			this.finish();
-			let isValid = this.parent ? this.parent.isValid() : false;
+			const isValid = this.parent ? this.parent.isValid() : false;
 			return isValid;
 		}
 	}
@@ -264,7 +264,7 @@ export abstract class Task {
 	 */
 	moveToNextPos(): number | undefined {
 		if (this.options.nextPos) {
-			let nextPos = derefRoomPosition(this.options.nextPos);
+			const nextPos = derefRoomPosition(this.options.nextPos);
 			return this.creep.goTo(nextPos);
 		}
 	}
@@ -288,7 +288,7 @@ export abstract class Task {
 			// 	// Move to somewhere nearby that isn't on a road
 			// 	this.creep.park(this.targetPos, true);
 			// }
-			let result = this.work();
+			const result = this.work();
 			if (this.settings.oneShot && result === OK) {
 				this.finish();
 			}

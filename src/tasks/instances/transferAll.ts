@@ -1,5 +1,5 @@
-import {Task} from '../Task';
 import {profile} from '../../profiler/decorator';
+import {Task} from '../Task';
 
 
 export type transferAllTargetType = StructureStorage | StructureTerminal | StructureContainer;
@@ -20,11 +20,11 @@ export class TaskTransferAll extends Task {
 	}
 
 	isValidTask() {
-		for (let resourceType in this.creep.carry) {
+		for (const resourceType in this.creep.carry) {
 			if (this.data.skipEnergy && resourceType == RESOURCE_ENERGY) {
 				continue;
 			}
-			let amountInCarry = this.creep.carry[<ResourceConstant>resourceType] || 0;
+			const amountInCarry = this.creep.carry[<ResourceConstant>resourceType] || 0;
 			if (amountInCarry > 0) {
 				return true;
 			}
@@ -37,11 +37,11 @@ export class TaskTransferAll extends Task {
 	}
 
 	work() {
-		for (let resourceType in this.creep.carry) {
+		for (const resourceType in this.creep.carry) {
 			if (this.data.skipEnergy && resourceType == RESOURCE_ENERGY) {
 				continue;
 			}
-			let amountInCarry = this.creep.carry[<ResourceConstant>resourceType] || 0;
+			const amountInCarry = this.creep.carry[<ResourceConstant>resourceType] || 0;
 			if (amountInCarry > 0) {
 				return this.creep.transfer(this.target, <ResourceConstant>resourceType);
 			}
