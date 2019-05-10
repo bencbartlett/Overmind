@@ -45,11 +45,11 @@ export class PowerHaulingOverlord extends Overlord {
 	}
 
 	protected handleHauler(hauler: Zerg) {
-		if (_.sum(hauler.carry) == 0 && this.directive.haulingDone) {
+		if (_.sum(hauler.carry) == 0 && this.directive.pickupDone) {
 			hauler.retire();
 		} else if (_.sum(hauler.carry) == 0) {
 			// Travel to directive and collect resources
-			if (this.directive.haulingDone) {
+			if (this.directive.pickupDone) {
 				hauler.say('💀 RIP 💀',true);
 				log.warning(`${hauler.name} is committing suicide as directive is done!`);
 				this.numHaulers = 0;
@@ -121,12 +121,18 @@ export class PowerHaulingOverlord extends Overlord {
 	}
 
 	run() {
-		if (Game.time >= this.tickToSpawnOn && !this.directive.haulingDone) {
+		if (Game.time >= this.tickToSpawnOn && !this.directive.pickupDone) {
 			Game.notify('Time to spawn haulers ' + this.pos.roomName);
 			this.wishlist(this.numHaulers, Setups.transporters.default);
-		} else if (this.directive.haulingDone && this.haulers.length == 0) {
-			Game.notify('Deleting Power Mining Directive at ' + this.pos.print);
-			this.directive.remove();
+		}
+		// Check hauling is done
+		!this.directive.pickupDone && this.directive.isPickupDone();
+		if (this.directive.pickupDone) {
+			let stillCarryingPower = _.find(this.haulers, hauler => hauler.carry.power != undefined && hauler.carry.power > 0);
+			if (!stillCarryingPower) {
+				Game.notify('Deleting Power Mining Directive as no haulers are left carrying ' + this.pos.print);
+				this.directive.remove();
+			}
 		}
 		for (let hauler of this.haulers) {
 			if (hauler.isIdle) {

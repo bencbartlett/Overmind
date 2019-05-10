@@ -23,7 +23,7 @@ export class DirectivePowerMine extends Directive {
 	static secondaryColor = COLOR_RED;
 
 	miningDone:  boolean;
-	haulingDone: boolean;
+	pickupDone: boolean;
 	haulDirectiveCreated: boolean;
 	private _powerBank: StructurePowerBank | undefined;
 	private _drops: { [resourceType: string]: Resource[] };
@@ -39,7 +39,7 @@ export class DirectivePowerMine extends Directive {
 		if (!this.miningDone) {
 			this.overlords.powerMine = new PowerDrillOverlord(this);
 		}
-		if (!this.haulingDone) {
+		if (!this.pickupDone) {
 			this.spawnHaulers();
 		}
 	}
@@ -117,11 +117,12 @@ export class DirectivePowerMine extends Directive {
 	/**
 	 * This states when all the power has been picked up. Once all power has been picked up and delivered remove the directive
 	 */
-	isHaulingDone(): boolean {
-		if (!this.haulingDone && this.miningDone && this.pos.isVisible && !this.hasDrops) {
-			this.haulingDone = true;
+	isPickupDone(): boolean {
+		if (!this.pickupDone && this.miningDone && this.room && this.pos.isVisible && !this.hasDrops) {
+			this.pickupDone = true;
+			Game.notify(`Hauling is done for ${this.room.print} at time ${Game.time}`);
 		}
-		return this.haulingDone;
+		return this.pickupDone;
 	}
 
 	init(): void {
