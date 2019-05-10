@@ -1,12 +1,12 @@
-import {HiveCluster} from './_HiveCluster';
-import {profile} from '../profiler/decorator';
-import {UpgradingOverlord} from '../overlords/core/upgrader';
+import {$} from '../caching/GlobalCache';
 import {Colony, ColonyStage} from '../Colony';
-import {Mem} from '../memory/Memory';
 import {log} from '../console/log';
+import {Mem} from '../memory/Memory';
+import {UpgradingOverlord} from '../overlords/core/upgrader';
+import {profile} from '../profiler/decorator';
 import {Stats} from '../stats/stats';
 import {hasMinerals} from '../utilities/utils';
-import {$} from '../caching/GlobalCache';
+import {HiveCluster} from './_HiveCluster';
 
 interface UpgradeSiteMemory {
 	stats: { downtime: number };
@@ -43,7 +43,7 @@ export class UpgradeSite extends HiveCluster {
 		this.upgradePowerNeeded = this.getUpgradePowerNeeded();
 		// Register bettery
 		$.set(this, 'battery', () => {
-			let allowableContainers = _.filter(this.room.containers, container =>
+			const allowableContainers = _.filter(this.room.containers, container =>
 				container.pos.findInRange(FIND_SOURCES, 1).length == 0); // only count containers that aren't near sources
 			return this.pos.findClosestByLimitedRange(allowableContainers, 3);
 		});
@@ -83,7 +83,7 @@ export class UpgradeSite extends HiveCluster {
 	}
 
 	findInputConstructionSite(): ConstructionSite | undefined {
-		let nearbyInputSites = this.pos.findInRange(this.room.constructionSites, 4, {
+		const nearbyInputSites = this.pos.findInRange(this.room.constructionSites, 4, {
 			filter: (s: ConstructionSite) => s.structureType == STRUCTURE_CONTAINER ||
 											 s.structureType == STRUCTURE_LINK,
 		});
@@ -93,7 +93,7 @@ export class UpgradeSite extends HiveCluster {
 	private getUpgradePowerNeeded(): number {
 		return $.number(this, 'upgradePowerNeeded', () => {
 			if (this.room.storage) { // Workers perform upgrading until storage is set up
-				let amountOver = Math.max(this.colony.assets.energy - UpgradeSite.settings.energyBuffer, 0);
+				const amountOver = Math.max(this.colony.assets.energy - UpgradeSite.settings.energyBuffer, 0);
 				let upgradePower = 1 + Math.floor(amountOver / UpgradeSite.settings.energyPerBodyUnit);
 				if (amountOver > 800000) {
 					upgradePower *= 4; // double upgrade power if we have lots of surplus energy
@@ -118,10 +118,10 @@ export class UpgradeSite extends HiveCluster {
 		if (this.link && this.link.energy < UpgradeSite.settings.linksRequestBelow) {
 			this.colony.linkNetwork.requestReceive(this.link);
 		}
-		let inThreshold = this.colony.stage > ColonyStage.Larva ? 0.5 : 0.75;
+		const inThreshold = this.colony.stage > ColonyStage.Larva ? 0.5 : 0.75;
 		if (this.battery) {
 			if (this.battery.energy < inThreshold * this.battery.storeCapacity) {
-				let energyPerTick = UPGRADE_CONTROLLER_POWER * this.upgradePowerNeeded;
+				const energyPerTick = UPGRADE_CONTROLLER_POWER * this.upgradePowerNeeded;
 				this.colony.logisticsNetwork.requestInput(this.battery, {dAmountdt: energyPerTick});
 			}
 			if (hasMinerals(this.battery.store)) { // get rid of any minerals in the container if present
@@ -132,7 +132,7 @@ export class UpgradeSite extends HiveCluster {
 
 	/* Calculate where the input will be built for this site */
 	private calculateBatteryPos(): RoomPosition | undefined {
-		let originPos: RoomPosition | undefined = undefined;
+		let originPos: RoomPosition | undefined;
 		if (this.colony.storage) {
 			originPos = this.colony.storage.pos;
 		} else if (this.colony.roomPlanner.storagePos) {
@@ -142,17 +142,17 @@ export class UpgradeSite extends HiveCluster {
 		}
 		// Find all positions at range 2 from controller
 		let inputLocations: RoomPosition[] = [];
-		for (let pos of this.pos.getPositionsAtRange(2)) {
+		for (const pos of this.pos.getPositionsAtRange(2)) {
 			if (pos.isWalkable(true)) {
 				inputLocations.push(pos);
 			}
 		}
 		// Try to find locations where there is maximal standing room
-		let maxNeighbors = _.max(_.map(inputLocations, pos => pos.availableNeighbors(true).length));
+		const maxNeighbors = _.max(_.map(inputLocations, pos => pos.availableNeighbors(true).length));
 		inputLocations = _.filter(inputLocations,
 								  pos => pos.availableNeighbors(true).length >= maxNeighbors);
 		// Return location closest to storage by path
-		let inputPos = originPos.findClosestByPath(inputLocations);
+		const inputPos = originPos.findClosestByPath(inputLocations);
 		if (inputPos) {
 			return inputPos;
 		}
@@ -161,9 +161,9 @@ export class UpgradeSite extends HiveCluster {
 	/* Build a container output at the optimal location */
 	private buildBatteryIfMissing(): void {
 		if (!this.battery && !this.findInputConstructionSite()) {
-			let buildHere = this.batteryPos;
+			const buildHere = this.batteryPos;
 			if (buildHere) {
-				let result = buildHere.createConstructionSite(STRUCTURE_CONTAINER);
+				const result = buildHere.createConstructionSite(STRUCTURE_CONTAINER);
 				if (result == OK) {
 					return;
 				} else {
@@ -174,7 +174,7 @@ export class UpgradeSite extends HiveCluster {
 	}
 
 	private stats() {
-		let defaults = {
+		const defaults = {
 			downtime: 0,
 		};
 		if (!this.memory.stats) this.memory.stats = defaults;

@@ -1,18 +1,17 @@
-import {Overlord} from '../Overlord';
-import {Zerg} from '../../zerg/Zerg';
-import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {profile} from '../../profiler/decorator';
+import {$} from '../../caching/GlobalCache';
+import {ColonyStage} from '../../Colony';
+import {log} from '../../console/log';
 import {bodyCost, CreepSetup} from '../../creepSetups/CreepSetup';
-import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../../utilities/Cartographer';
+import {Roles, Setups} from '../../creepSetups/setups';
 import {DirectiveOutpost} from '../../directives/colony/outpost';
 import {DirectiveHarvest} from '../../directives/resource/harvest';
-import {log} from '../../console/log';
-import {$} from '../../caching/GlobalCache';
 import {Pathing} from '../../movement/Pathing';
-import {ColonyStage} from '../../Colony';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
+import {profile} from '../../profiler/decorator';
+import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../../utilities/Cartographer';
 import {maxBy, minBy} from '../../utilities/utils';
-import {Roles, Setups} from '../../creepSetups/setups';
-import {Directive} from "../../directives/Directive";
+import {Zerg} from '../../zerg/Zerg';
+import {Overlord} from '../Overlord';
 
 export const StandardMinerSetupCost = bodyCost(Setups.drones.miners.standard.generateBody(Infinity));
 
@@ -186,15 +185,15 @@ export class MiningOverlord extends Overlord {
 	 */
 	private calculateContainerPos(): RoomPosition {
 		// log.debug(`Computing container position for mining overlord at ${this.pos.print}...`);
-		let originPos: RoomPosition | undefined = undefined;
+		let originPos: RoomPosition | undefined;
 		if (this.colony.storage) {
 			originPos = this.colony.storage.pos;
 		} else if (this.colony.roomPlanner.storagePos) {
 			originPos = this.colony.roomPlanner.storagePos;
 		}
 		if (originPos) {
-			let path = Pathing.findShortestPath(this.pos, originPos).path;
-			let pos = _.find(path, pos => pos.getRangeTo(this) == 1);
+			const path = Pathing.findShortestPath(this.pos, originPos).path;
+			const pos = _.find(path, pos => pos.getRangeTo(this) == 1);
 			if (pos) return pos;
 		}
 		// Shouldn't ever get here
@@ -238,8 +237,8 @@ export class MiningOverlord extends Overlord {
 
 	private registerEnergyRequests(): void {
 		if (this.container) {
-			let transportCapacity = 200 * this.colony.level;
-			let threshold = this.colony.stage > ColonyStage.Larva ? 0.8 : 0.5;
+			const transportCapacity = 200 * this.colony.level;
+			const threshold = this.colony.stage > ColonyStage.Larva ? 0.8 : 0.5;
 			if (_.sum(this.container.store) > threshold * transportCapacity) {
 				this.colony.logisticsNetwork.requestOutput(this.container, {
 					resourceType: 'all',
@@ -249,7 +248,7 @@ export class MiningOverlord extends Overlord {
 		}
 		if (this.link) {
 			// If the link will be full with next deposit from the miner
-			let minerCapacity = 150;
+			const minerCapacity = 150;
 			if (this.link.energy + minerCapacity > this.link.energyCapacity) {
 				this.colony.linkNetwork.requestTransmit(this.link);
 			}
@@ -297,7 +296,7 @@ export class MiningOverlord extends Overlord {
 		if (this.allowDropMining) {
 			miner.goHarvest(this.source!);
 			if (miner.carry.energy > 0.8 * miner.carryCapacity) { // try to drop on top of largest drop if full
-				let biggestDrop = maxBy(miner.pos.findInRange(miner.room.droppedEnergy, 1), drop => drop.amount);
+				const biggestDrop = maxBy(miner.pos.findInRange(miner.room.droppedEnergy, 1), drop => drop.amount);
 				if (biggestDrop) {
 					miner.goDrop(biggestDrop.pos, RESOURCE_ENERGY);
 				}
@@ -312,12 +311,12 @@ export class MiningOverlord extends Overlord {
 	private suicideOldMiners(): boolean {
 		if (this.miners.length > this.minersNeeded && this.source) {
 			// if you have multiple miners and the source is visible
-			let targetPos = this.harvestPos || this.source.pos;
-			let minersNearSource = _.filter(this.miners,
+			const targetPos = this.harvestPos || this.source.pos;
+			const minersNearSource = _.filter(this.miners,
 											miner => miner.pos.getRangeTo(targetPos) <= SUICIDE_CHECK_FREQUENCY);
 			if (minersNearSource.length > this.minersNeeded) {
 				// if you have more miners by the source than you need
-				let oldestMiner = minBy(minersNearSource, miner => miner.ticksToLive || 9999);
+				const oldestMiner = minBy(minersNearSource, miner => miner.ticksToLive || 9999);
 				if (oldestMiner && (oldestMiner.ticksToLive || 9999) < MINER_SUICIDE_THRESHOLD) {
 					// if the oldest miner will die sufficiently soon
 					oldestMiner.suicide();
@@ -443,7 +442,7 @@ export class MiningOverlord extends Overlord {
 		if (this.allowDropMining) {
 			miner.harvest(this.source!);
 			if (miner.carry.energy > 0.8 * miner.carryCapacity) { // move over the drop when you're close to full
-				let biggestDrop = maxBy(miner.pos.findInRange(miner.room.droppedEnergy, 1), drop => drop.amount);
+				const biggestDrop = maxBy(miner.pos.findInRange(miner.room.droppedEnergy, 1), drop => drop.amount);
 				if (biggestDrop) {
 					miner.goTo(biggestDrop);
 				}
@@ -508,7 +507,7 @@ export class MiningOverlord extends Overlord {
 	}
 
 	run() {
-		for (let miner of this.miners) {
+		for (const miner of this.miners) {
 			this.handleMiner(miner);
 		}
 		if (this.room && Game.time % BUILD_OUTPUT_FREQUENCY == 1) {

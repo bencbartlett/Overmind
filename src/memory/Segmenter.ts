@@ -45,11 +45,11 @@ export class Segmenter {
 	}
 
 	static requestSegments(...ids: number[]) {
-		for (let id of ids) {
+		for (const id of ids) {
 			if (!this.memory.activeSegments.includes(id)) {
 				this.memory.activeSegments.push(id);
 				if (this.memory.activeSegments.length > MAX_ACTIVE_SEGMENTS) {
-					let removeSegment = this.memory.activeSegments.shift();
+					const removeSegment = this.memory.activeSegments.shift();
 					console.log(`Maximum active segments reached. Discarding segment ${removeSegment}.`);
 				}
 			}
@@ -61,7 +61,7 @@ export class Segmenter {
 			return this.cache.segments[id];
 		}
 
-		let str = RawMemory.segments[id];
+		const str = RawMemory.segments[id];
 		let segment: { [prop: string]: any };
 		try {
 			segment = JSON.parse(str);
@@ -79,7 +79,7 @@ export class Segmenter {
 	}
 
 	static getSegmentProperty(id: number, key: string): any | undefined {
-		let segment = this.getSegment(id);
+		const segment = this.getSegment(id);
 		return segment[key];
 	}
 
@@ -89,7 +89,7 @@ export class Segmenter {
 	}
 
 	static setSegmentProperty(id: number, key: string, value: any): void {
-		let segment = this.getSegment(id);
+		const segment = this.getSegment(id);
 		segment[key] = value;
 		this.cache.lastModified[id] = Game.time;
 	}
@@ -145,7 +145,7 @@ export class Segmenter {
 			RawMemory.setActiveForeignSegment(null);
 		}
 		// Write things that have been modified this tick to memory
-		for (let id in this.cache.lastModified) {
+		for (const id in this.cache.lastModified) {
 			if (this.cache.lastModified[id] == Game.time) {
 				RawMemory.segments[id] = JSON.stringify(this.cache.segments[id]);
 			}

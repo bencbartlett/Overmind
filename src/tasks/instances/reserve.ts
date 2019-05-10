@@ -1,5 +1,5 @@
-import {Task} from '../Task';
 import {profile} from '../../profiler/decorator';
+import {Task} from '../Task';
 
 
 export type reserveTargetType = StructureController;
@@ -18,7 +18,7 @@ export class TaskReserve extends Task {
 	}
 
 	isValidTarget() {
-		var target = this.target;
+		const target = this.target;
 		return (target != null && (!target.reservation || target.reservation.ticksToEnd < 4999 ));
 	}
 

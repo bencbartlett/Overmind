@@ -1,22 +1,22 @@
-import {HiveCluster} from './_HiveCluster';
-import {profile} from '../profiler/decorator';
-import {QueenOverlord} from '../overlords/core/queen';
-import {Priority} from '../priorities/priorities';
+import {$} from '../caching/GlobalCache';
 import {Colony, ColonyStage} from '../Colony';
-import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
-import {bodyCost, CreepSetup} from '../creepSetups/CreepSetup';
-import {Mem} from '../memory/Memory';
-import {Visualizer} from '../visuals/Visualizer';
-import {Stats} from '../stats/stats';
-import {Zerg} from '../zerg/Zerg';
 import {log} from '../console/log';
-import {energyStructureOrder, getPosFromBunkerCoord, insideBunkerBounds} from '../roomPlanner/layouts/bunker';
-import {BunkerQueenOverlord} from '../overlords/core/queen_bunker';
-import {Overlord} from '../overlords/Overlord';
+import {bodyCost, CreepSetup} from '../creepSetups/CreepSetup';
+import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
+import {Mem} from '../memory/Memory';
 import {Movement} from '../movement/Movement';
 import {Pathing} from '../movement/Pathing';
-import {$} from '../caching/GlobalCache';
+import {QueenOverlord} from '../overlords/core/queen';
+import {BunkerQueenOverlord} from '../overlords/core/queen_bunker';
+import {Overlord} from '../overlords/Overlord';
+import {Priority} from '../priorities/priorities';
+import {profile} from '../profiler/decorator';
+import {energyStructureOrder, getPosFromBunkerCoord, insideBunkerBounds} from '../roomPlanner/layouts/bunker';
+import {Stats} from '../stats/stats';
 import {exponentialMovingAverage, hasMinerals} from '../utilities/utils';
+import {Visualizer} from '../visuals/Visualizer';
+import {Zerg} from '../zerg/Zerg';
+import {HiveCluster} from './_HiveCluster';
 
 const ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH = -20;
 const ERR_SPECIFIED_SPAWN_BUSY = -21;
@@ -35,8 +35,8 @@ export interface SpawnRequestOptions {
 }
 
 interface SpawnOrder {
-	protoCreep: protoCreep,
-	options: SpawnOptions | undefined,
+	protoCreep: ProtoCreep;
+	options: SpawnOptions | undefined;
 }
 
 export interface HatcheryMemory {
@@ -147,12 +147,12 @@ export class Hatchery extends HiveCluster {
 
 	private computeEnergyStructures(): (StructureSpawn | StructureExtension)[] {
 		if (this.colony.layout == 'bunker') {
-			let positions = _.map(energyStructureOrder, coord => getPosFromBunkerCoord(coord, this.colony));
+			const positions = _.map(energyStructureOrder, coord => getPosFromBunkerCoord(coord, this.colony));
 			let spawnsAndExtensions: (StructureSpawn | StructureExtension)[] = [];
 			spawnsAndExtensions = spawnsAndExtensions.concat(this.spawns, this.extensions);
-			let energyStructures: (StructureSpawn | StructureExtension)[] = [];
-			for (let pos of positions) {
-				let structure = _.find(pos.lookFor(LOOK_STRUCTURES), s =>
+			const energyStructures: (StructureSpawn | StructureExtension)[] = [];
+			for (const pos of positions) {
+				const structure = _.find(pos.lookFor(LOOK_STRUCTURES), s =>
 					s.structureType == STRUCTURE_SPAWN
 					|| s.structureType == STRUCTURE_EXTENSION) as StructureSpawn | StructureExtension;
 				if (structure) {
@@ -175,7 +175,7 @@ export class Hatchery extends HiveCluster {
 			this.colony.linkNetwork.requestReceive(this.link);
 		}
 		if (this.battery) {
-			let threshold = this.colony.stage == ColonyStage.Larva ? 0.75 : 0.5;
+			const threshold = this.colony.stage == ColonyStage.Larva ? 0.75 : 0.5;
 			if (this.battery.energy < threshold * this.battery.storeCapacity) {
 				this.colony.logisticsNetwork.requestInput(this.battery, {multiplier: 1.5});
 			}
@@ -196,7 +196,7 @@ export class Hatchery extends HiveCluster {
 
 		// let refillSpawns = _.filter(this.spawns, spawn => spawn.energy < spawn.energyCapacity);
 		// let refillExtensions = _.filter(this.extensions, extension => extension.energy < extension.energyCapacity);
-		let refillTowers = _.filter(this.towers, tower => tower.energy < this.settings.refillTowersBelow);
+		const refillTowers = _.filter(this.towers, tower => tower.energy < this.settings.refillTowersBelow);
 		// _.forEach(refillSpawns, spawn => this.transportRequests.requestInput(spawn, Priority.NormalLow));
 		// _.forEach(refillExtensions, extension => this.transportRequests.requestInput(extension, Priority.NormalLow));
 		_.forEach(refillTowers, tower => this.transportRequests.requestInput(tower, Priority.NormalLow));
@@ -211,9 +211,9 @@ export class Hatchery extends HiveCluster {
 			i++;
 		}
 		return (roleName + '_' + i);
-	};
+	}
 
-	private spawnCreep(protoCreep: protoCreep, options: SpawnRequestOptions = {}): number {
+	private spawnCreep(protoCreep: ProtoCreep, options: SpawnRequestOptions = {}): number {
 		// get a spawn to use
 		let spawnToUse: StructureSpawn | undefined;
 		if (options.spawn) {
@@ -236,7 +236,7 @@ export class Hatchery extends HiveCluster {
 				return ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH;
 			}
 			protoCreep.memory.data.origin = spawnToUse.pos.roomName;
-			let result = spawnToUse.spawnCreep(protoCreep.body, protoCreep.name, {
+			const result = spawnToUse.spawnCreep(protoCreep.body, protoCreep.name, {
 				memory          : protoCreep.memory,
 				energyStructures: this.energyStructures,
 				directions      : options.directions
@@ -261,7 +261,7 @@ export class Hatchery extends HiveCluster {
 	}
 
 	/* Generate (but not spawn) the largest creep possible, returns the protoCreep as an object */
-	private generateProtoCreep(setup: CreepSetup, overlord: Overlord): protoCreep {
+	private generateProtoCreep(setup: CreepSetup, overlord: Overlord): ProtoCreep {
 		// Generate the creep body
 		let creepBody: BodyPartConstant[];
 		// if (overlord.colony.incubator) { // if you're being incubated, build as big a creep as you want
@@ -270,7 +270,7 @@ export class Hatchery extends HiveCluster {
 		creepBody = setup.generateBody(this.room.energyCapacityAvailable);
 		// }
 		// Generate the creep memory
-		let creepMemory: CreepMemory = {
+		const creepMemory: CreepMemory = {
 			[_MEM.COLONY]  : overlord.colony.name, 				// name of the colony the creep is assigned to
 			[_MEM.OVERLORD]: overlord.ref,						// name of the Overlord running this creep
 			role           : setup.role,						// role of the creep
@@ -280,7 +280,7 @@ export class Hatchery extends HiveCluster {
 			},
 		};
 		// Create the protocreep and return it
-		let protoCreep: protoCreep = { 							// object to add to spawner queue
+		const protoCreep: ProtoCreep = { 							// object to add to spawner queue
 			body  : creepBody, 										// body array
 			name  : setup.role, 									// name of the creep - gets modified by hatchery
 			memory: creepMemory,									// memory to initialize with
@@ -291,9 +291,9 @@ export class Hatchery extends HiveCluster {
 	/* Returns the approximate aggregated time at which the hatchery will next be available to spawn something */
 	get nextAvailability(): number {
 		if (!this._nextAvailability) {
-			let allQueued = _.flatten(_.values(this.productionQueue)) as SpawnOrder[];
-			let queuedSpawnTime = _.sum(allQueued, order => order.protoCreep.body.length) * CREEP_SPAWN_TIME;
-			let activeSpawnTime = _.sum(this.spawns, spawn => spawn.spawning ? spawn.spawning.remainingTime : 0);
+			const allQueued = _.flatten(_.values(this.productionQueue)) as SpawnOrder[];
+			const queuedSpawnTime = _.sum(allQueued, order => order.protoCreep.body.length) * CREEP_SPAWN_TIME;
+			const activeSpawnTime = _.sum(this.spawns, spawn => spawn.spawning ? spawn.spawning.remainingTime : 0);
 			this._nextAvailability = (activeSpawnTime + queuedSpawnTime) / this.spawns.length;
 		}
 		return this._nextAvailability;
@@ -311,8 +311,8 @@ export class Hatchery extends HiveCluster {
 
 	/* Enqueues a request to the hatchery */
 	enqueue(request: SpawnRequest): void {
-		let protoCreep = this.generateProtoCreep(request.setup, request.overlord);
-		let priority = request.priority;
+		const protoCreep = this.generateProtoCreep(request.setup, request.overlord);
+		const priority = request.priority;
 		if (this.canSpawn(protoCreep.body) && protoCreep.body.length > 0) {
 			// Spawn the creep yourself if you can
 			this._nextAvailability = undefined; // invalidate cache
@@ -329,8 +329,8 @@ export class Hatchery extends HiveCluster {
 	}
 
 	private spawnHighestPriorityCreep(): number | undefined {
-		let sortedKeys = _.sortBy(this.productionPriorities);
-		for (let priority of sortedKeys) {
+		const sortedKeys = _.sortBy(this.productionPriorities);
+		for (const priority of sortedKeys) {
 
 			// if (this.colony.defcon >= DEFCON.playerInvasion
 			// 	&& !this.colony.controller.safeMode
@@ -338,10 +338,10 @@ export class Hatchery extends HiveCluster {
 			// 	continue; // don't spawn non-critical creeps during wartime
 			// }
 
-			let nextOrder = this.productionQueue[priority].shift();
+			const nextOrder = this.productionQueue[priority].shift();
 			if (nextOrder) {
-				let {protoCreep, options} = nextOrder;
-				let result = this.spawnCreep(protoCreep, options);
+				const {protoCreep, options} = nextOrder;
+				const result = this.spawnCreep(protoCreep, options);
 				if (result == OK) {
 					return result;
 				} else if (result == ERR_SPECIFIED_SPAWN_BUSY) {
@@ -360,7 +360,7 @@ export class Hatchery extends HiveCluster {
 	private handleSpawns(): void {
 		// Spawn all queued creeps that you can
 		while (this.availableSpawns.length > 0) {
-			let result = this.spawnHighestPriorityCreep();
+			const result = this.spawnHighestPriorityCreep();
 			if (result == ERR_NOT_ENOUGH_ENERGY) { // if you can't spawn something you want to
 				this.isOverloaded = true;
 			}
@@ -370,7 +370,7 @@ export class Hatchery extends HiveCluster {
 			}
 		}
 		// Move creeps off of exit position to let the spawning creep out if necessary
-		for (let spawn of this.spawns) {
+		for (const spawn of this.spawns) {
 			if (spawn.spawning && spawn.spawning.remainingTime <= 1
 				&& spawn.pos.findInRange(FIND_MY_CREEPS, 1).length > 0) {
 				let directions: DirectionConstant[];
@@ -379,7 +379,7 @@ export class Hatchery extends HiveCluster {
 				} else {
 					directions = _.map(spawn.pos.availableNeighbors(true), pos => spawn.pos.getDirectionTo(pos));
 				}
-				let exitPos = Pathing.positionAtDirection(spawn.pos, _.first(directions)) as RoomPosition;
+				const exitPos = Pathing.positionAtDirection(spawn.pos, _.first(directions)) as RoomPosition;
 				Movement.vacatePos(exitPos);
 			}
 		}
@@ -399,10 +399,10 @@ export class Hatchery extends HiveCluster {
 
 	private recordStats() {
 		// Compute uptime and overload status
-		let spawnUsageThisTick = _.filter(this.spawns, spawn => spawn.spawning).length / this.spawns.length;
-		let uptime = exponentialMovingAverage(spawnUsageThisTick, this.memory.stats.uptime, CREEP_LIFE_TIME);
-		let longUptime = exponentialMovingAverage(spawnUsageThisTick, this.memory.stats.longUptime, 5 * CREEP_LIFE_TIME);
-		let overload = exponentialMovingAverage(this.isOverloaded ? 1 : 0, this.memory.stats.overload, CREEP_LIFE_TIME);
+		const spawnUsageThisTick = _.filter(this.spawns, spawn => spawn.spawning).length / this.spawns.length;
+		const uptime = exponentialMovingAverage(spawnUsageThisTick, this.memory.stats.uptime, CREEP_LIFE_TIME);
+		const longUptime = exponentialMovingAverage(spawnUsageThisTick, this.memory.stats.longUptime, 5 * CREEP_LIFE_TIME);
+		const overload = exponentialMovingAverage(this.isOverloaded ? 1 : 0, this.memory.stats.overload, CREEP_LIFE_TIME);
 
 		Stats.log(`colonies.${this.colony.name}.hatchery.uptime`, uptime);
 		Stats.log(`colonies.${this.colony.name}.hatchery.overload`, overload);
@@ -412,18 +412,18 @@ export class Hatchery extends HiveCluster {
 
 	visuals(coord: Coord): Coord {
 		let {x, y} = coord;
-		let spawning: string[] = [];
-		let spawnProgress: [number, number][] = [];
-		_.forEach(this.spawns, function (spawn) {
+		const spawning: string[] = [];
+		const spawnProgress: [number, number][] = [];
+		_.forEach(this.spawns, function(spawn) {
 			if (spawn.spawning) {
 				spawning.push(spawn.spawning.name.split('_')[0]);
-				let timeElapsed = spawn.spawning.needTime - spawn.spawning.remainingTime;
+				const timeElapsed = spawn.spawning.needTime - spawn.spawning.remainingTime;
 				spawnProgress.push([timeElapsed, spawn.spawning.needTime]);
 			}
 		});
-		let boxCoords = Visualizer.section(`${this.colony.name} Hatchery`, {x, y, roomName: this.room.name},
-										   9.5, 3 + spawning.length + .1);
-		let boxX = boxCoords.x;
+		const boxCoords = Visualizer.section(`${this.colony.name} Hatchery`, {x, y, roomName: this.room.name},
+											 9.5, 3 + spawning.length + .1);
+		const boxX = boxCoords.x;
 		y = boxCoords.y + 0.25;
 
 		// Log energy
@@ -433,18 +433,18 @@ export class Hatchery extends HiveCluster {
 		y += 1;
 
 		// Log uptime
-		let uptime = this.memory.stats.uptime;
+		const uptime = this.memory.stats.uptime;
 		Visualizer.text('Uptime', {x: boxX, y: y, roomName: this.room.name});
 		Visualizer.barGraph(uptime, {x: boxX + 4, y: y, roomName: this.room.name}, 5);
 		y += 1;
 
 		// Log overload status
-		let overload = this.memory.stats.overload;
+		const overload = this.memory.stats.overload;
 		Visualizer.text('Overload', {x: boxX, y: y, roomName: this.room.name});
 		Visualizer.barGraph(overload, {x: boxX + 4, y: y, roomName: this.room.name}, 5);
 		y += 1;
 
-		for (let i in spawning) {
+		for (const i in spawning) {
 			Visualizer.text(spawning[i], {x: boxX, y: y, roomName: this.room.name});
 			Visualizer.barGraph(spawnProgress[i], {x: boxX + 4, y: y, roomName: this.room.name}, 5);
 			y += 1;

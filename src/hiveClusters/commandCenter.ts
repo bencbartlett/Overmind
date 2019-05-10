@@ -1,20 +1,20 @@
-import {HiveCluster} from './_HiveCluster';
-import {profile} from '../profiler/decorator';
-import {CommandCenterOverlord} from '../overlords/core/manager';
+import {$} from '../caching/GlobalCache';
 import {Colony} from '../Colony';
-import {Mem} from '../memory/Memory';
 import {TerminalNetwork} from '../logistics/TerminalNetwork';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
+import {Mem} from '../memory/Memory';
+import {CommandCenterOverlord} from '../overlords/core/manager';
 import {Priority} from '../priorities/priorities';
-import {Cartographer} from '../utilities/Cartographer';
-import {$} from '../caching/GlobalCache';
-import {Visualizer} from '../visuals/Visualizer';
+import {profile} from '../profiler/decorator';
 import {Abathur} from '../resources/Abathur';
+import {Cartographer} from '../utilities/Cartographer';
+import {Visualizer} from '../visuals/Visualizer';
+import {HiveCluster} from './_HiveCluster';
 
 export const MAX_OBSERVE_DISTANCE = 7;
 
 interface CommandCenterMemory {
-	idlePos?: protoPos
+	idlePos?: ProtoPos;
 }
 
 /**
@@ -95,12 +95,12 @@ export class CommandCenter extends HiveCluster {
 	/* Find the best idle position */
 	private findIdlePos(): RoomPosition {
 		// Try to match as many other structures as possible
-		let proximateStructures: Structure[] = _.compact([this.link!,
-														  this.terminal!,
-														  this.powerSpawn!,
-														  this.nuker!,
-														  ...this.towers]);
-		let numNearbyStructures = (pos: RoomPosition) =>
+		const proximateStructures: Structure[] = _.compact([this.link!,
+															this.terminal!,
+															this.powerSpawn!,
+															this.nuker!,
+															...this.towers]);
+		const numNearbyStructures = (pos: RoomPosition) =>
 			_.filter(proximateStructures, s => s.pos.isNearTo(pos) && !s.pos.isEqualTo(pos)).length;
 		return _.last(_.sortBy(this.storage.pos.neighbors, pos => numNearbyStructures(pos)));
 	}
@@ -125,7 +125,7 @@ export class CommandCenter extends HiveCluster {
 			}
 		}
 		// Refill towers as needed with variable priority
-		let refillTowers = _.filter(this.towers, tower => tower.energy < CommandCenter.settings.refillTowersBelow);
+		const refillTowers = _.filter(this.towers, tower => tower.energy < CommandCenter.settings.refillTowersBelow);
 		_.forEach(refillTowers, tower => this.transportRequests.requestInput(tower, Priority.High));
 
 		// Refill core spawn (only applicable to bunker layouts)
@@ -168,9 +168,9 @@ export class CommandCenter extends HiveCluster {
 			if (this.observeRoom) {
 				this.observer.observeRoom(this.observeRoom);
 			} else if (CommandCenter.settings.enableIdleObservation) {
-				let dx = Game.time % MAX_OBSERVE_DISTANCE;
-				let dy = Game.time % (MAX_OBSERVE_DISTANCE ** 2);
-				let roomToObserve = Cartographer.findRelativeRoomName(this.pos.roomName, dx, dy);
+				const dx = Game.time % MAX_OBSERVE_DISTANCE;
+				const dy = Game.time % (MAX_OBSERVE_DISTANCE ** 2);
+				const roomToObserve = Cartographer.findRelativeRoomName(this.pos.roomName, dx, dy);
 				this.observer.observeRoom(roomToObserve);
 			}
 		}
@@ -189,10 +189,10 @@ export class CommandCenter extends HiveCluster {
 
 	visuals(coord: Coord): Coord {
 		let {x, y} = coord;
-		let height = this.storage && this.terminal ? 2 : 1;
-		let titleCoords = Visualizer.section(`${this.colony.name} Command Center`,
+		const height = this.storage && this.terminal ? 2 : 1;
+		const titleCoords = Visualizer.section(`${this.colony.name} Command Center`,
 											 {x, y, roomName: this.room.name}, 9.5, height + .1);
-		let boxX = titleCoords.x;
+		const boxX = titleCoords.x;
 		y = titleCoords.y + 0.25;
 		if (this.storage) {
 			Visualizer.text('Storage', {x: boxX, y: y, roomName: this.room.name});

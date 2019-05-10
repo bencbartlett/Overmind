@@ -1,12 +1,12 @@
-import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {CreepSetup} from '../../creepSetups/CreepSetup';
-import {boostResources} from '../../resources/map_resources';
+import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
-import {profile} from '../../profiler/decorator';
 import {CombatIntel} from '../../intel/CombatIntel';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
+import {profile} from '../../profiler/decorator';
+import {boostResources} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
-import {CombatSetups, Roles} from '../../creepSetups/setups';
 
 /**
  * Spawns ranged defenders to defend against incoming player invasions in an owned room
@@ -43,11 +43,11 @@ export class RangedDefenseOverlord extends CombatOverlord {
 	}
 
 	private computeNeededHydraliskAmount(setup: CreepSetup, boostMultiplier: number): number {
-		let healAmount = CombatIntel.maxHealingByCreeps(this.room.hostiles);
-		let hydraliskDamage = RANGED_ATTACK_POWER * boostMultiplier
+		const healAmount = CombatIntel.maxHealingByCreeps(this.room.hostiles);
+		const hydraliskDamage = RANGED_ATTACK_POWER * boostMultiplier
 							  * setup.getBodyPotential(RANGED_ATTACK, this.colony);
-		let towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 0 : 0;
-		let worstDamageMultiplier = _.min(_.map(this.room.hostiles,
+		const towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 0 : 0;
+		const worstDamageMultiplier = _.min(_.map(this.room.hostiles,
 												creep => CombatIntel.minimumDamageTakenMultiplier(creep)));
 		let finalValue = Math.ceil(.5 + 1.5 * healAmount / (worstDamageMultiplier * (hydraliskDamage + towerDamage + 1)));
 		// if ((Game.time - this.directive.memory.safeSince) > this.directive.safeSpawnHaltTime) {
@@ -60,10 +60,10 @@ export class RangedDefenseOverlord extends CombatOverlord {
 	init() {
 		this.reassignIdleCreeps(Roles.ranged);
 		if (this.canBoostSetup(CombatSetups.hydralisks.boosted_T3)) {
-			let setup = CombatSetups.hydralisks.boosted_T3;
+			const setup = CombatSetups.hydralisks.boosted_T3;
 			this.wishlist(this.computeNeededHydraliskAmount(setup, BOOSTS.ranged_attack.XKHO2.rangedAttack), setup);
 		} else {
-			let setup = CombatSetups.hydralisks.default;
+			const setup = CombatSetups.hydralisks.default;
 			this.wishlist(this.computeNeededHydraliskAmount(setup, 1), setup);
 		}
 	}

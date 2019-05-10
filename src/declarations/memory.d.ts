@@ -56,12 +56,12 @@ interface StatsMemory {
 				visuals: number;
 			}
 		}
-	}
+	};
 	gcl: {
 		progress: number;
 		progressTotal: number;
 		level: number;
-	}
+	};
 	colonies: {
 		[colonyName: string]: {
 			hatchery: {
@@ -80,7 +80,7 @@ interface StatsMemory {
 				progressTotal: number,
 			}
 		}
-	}
+	};
 }
 
 interface PublicSegment {
@@ -91,7 +91,7 @@ interface CreepMemory {
 	[_MEM.OVERLORD]: string | null;
 	[_MEM.COLONY]: string;
 	role: string;
-	task: protoTask | null;
+	task: ProtoTask | null;
 	data: {
 		origin: string;
 	};
@@ -106,7 +106,7 @@ interface MoveData {
 	path: string;
 	delay?: number;
 	fleeWait?: number;
-	destination?: protoPos;
+	destination?: ProtoPos;
 	priority?: number;
 }
 
@@ -125,8 +125,8 @@ interface CachedPath {
 
 interface PathingMemory {
 	paths: { [originName: string]: { [destinationName: string]: CachedPath; } };
-	distances: { [pos1Name: string]: { [pos2Name: string]: number; } }
-	weightedDistances: { [pos1Name: string]: { [pos2Name: string]: number; } }
+	distances: { [pos1Name: string]: { [pos2Name: string]: number; } };
+	weightedDistances: { [pos1Name: string]: { [pos2Name: string]: number; } };
 }
 
 interface FlagMemory {
@@ -136,7 +136,7 @@ interface FlagMemory {
 	suspendUntil?: number;
 	amount?: number;
 	persistent?: boolean;
-	setPosition?: protoPos;
+	setPosition?: ProtoPos;
 	rotation?: number;
 	parent?: string;
 	maxPathLength?: number;
@@ -288,13 +288,13 @@ interface RoomMemory {
 	[_RM.INVASION_DATA]?: {
 		harvested: number;
 		lastSeen: number;
-	}
-	[_RM.HARVEST]?: RollingStats
+	};
+	[_RM.HARVEST]?: RollingStats;
 	[_RM.CASUALTIES]?: {
 		cost: RollingStats
-	}
+	};
 	[_RM.SAFETY]?: SafetyData;
-	[_RM.PREV_POSITIONS]?: { [creepID: string]: protoPos };
+	[_RM.PREV_POSITIONS]?: { [creepID: string]: ProtoPos };
 	[_RM.CREEPS_IN_ROOM]?: { [tick: number]: string[] };
 }
 

@@ -1,15 +1,5 @@
-/**
- @param {PathFinder.CostMatrix} foregroundPixels - object pixels. modified for output
- @param {number} oob - value used for pixels outside image bounds
- @return {PathFinder.CostMatrix}
-
- the oob parameter is used so that if an object pixel is at the image boundary
- you can avoid having that reduce the pixel's value in the final output. Set
- it to a high value (e.g., 255) for this. Set oob to 0 to treat out of bounds
- as background pixels.
- */
 function applyDistanceTransform(foregroundPixels: CostMatrix, oob = 255): CostMatrix {
-	let dist = foregroundPixels; // not a copy. We're modifying the input
+	const dist = foregroundPixels;
 
 	// Variables to represent the 3x3 neighborhood of a pixel.
 	let UL, U, UR: number;
@@ -69,10 +59,10 @@ function applyDistanceTransform(foregroundPixels: CostMatrix, oob = 255): CostMa
 
 // Compute a cost matrix for walkable pixels in a room
 function walkablePixelsForRoom(roomName: string): CostMatrix {
-	var costMatrix = new PathFinder.CostMatrix();
+	const costMatrix = new PathFinder.CostMatrix();
 	const terrain = Game.map.getRoomTerrain(roomName);
-	for (var y = 0; y < 50; ++y) {
-		for (var x = 0; x < 50; ++x) {
+	for (let y = 0; y < 50; ++y) {
+		for (let x = 0; x < 50; ++x) {
 			if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
 				costMatrix.set(x, y, 1);
 			}
@@ -119,9 +109,9 @@ function wallOrAdjacentToExit(x: number, y: number, roomName: string): boolean {
 
 // Compute positions where you can build movement-blocking structures in a room
 function blockablePixelsForRoom(roomName: string): CostMatrix {
-	var costMatrix = new PathFinder.CostMatrix();
-	for (var y = 0; y < 50; ++y) {
-		for (var x = 0; x < 50; ++x) {
+	const costMatrix = new PathFinder.CostMatrix();
+	for (let y = 0; y < 50; ++y) {
+		for (let x = 0; x < 50; ++x) {
 			if (!wallOrAdjacentToExit(x, y, roomName)) {
 				costMatrix.set(x, y, 1);
 			}
@@ -132,18 +122,18 @@ function blockablePixelsForRoom(roomName: string): CostMatrix {
 
 // Visualize a given costMatrix globally
 function displayCostMatrix(costMatrix: CostMatrix, color = '#ff0000'): void {
-	var vis = new RoomVisual();
+	const vis = new RoomVisual();
 
-	var max = 1;
-	for (var y = 0; y < 50; ++y) {
-		for (var x = 0; x < 50; ++x) {
+	let max = 1;
+	for (let y = 0; y < 50; ++y) {
+		for (let x = 0; x < 50; ++x) {
 			max = Math.max(max, costMatrix.get(x, y));
 		}
 	}
 
-	for (var y = 0; y < 50; ++y) {
-		for (var x = 0; x < 50; ++x) {
-			var value = costMatrix.get(x, y);
+	for (let y = 0; y < 50; ++y) {
+		for (let x = 0; x < 50; ++x) {
+			const value = costMatrix.get(x, y);
 			if (value > 0) {
 				vis.circle(x, y, {radius: costMatrix.get(x, y) / max / 2, fill: color});
 			}
@@ -152,7 +142,7 @@ function displayCostMatrix(costMatrix: CostMatrix, color = '#ff0000'): void {
 }
 
 export function testDistanceTransform(roomName = 'sim') {
-	let dt = applyDistanceTransform(walkablePixelsForRoom(roomName));
+	const dt = applyDistanceTransform(walkablePixelsForRoom(roomName));
 	displayCostMatrix(dt);
 }
 

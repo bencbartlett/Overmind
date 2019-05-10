@@ -39,28 +39,28 @@ Object.defineProperty(StructureContainer.prototype, 'isEmpty', { // if this cont
 // Controller prototypes ===============================================================================================
 
 Object.defineProperty(StructureController.prototype, 'reservedByMe', {
-	get         : function () {
+	get         : function() {
 		return this.reservation && this.reservation.username == MY_USERNAME;
 	},
 	configurable: true,
 });
 
 Object.defineProperty(StructureController.prototype, 'signedByMe', {
-	get         : function () {
+	get         : function() {
 		return this.sign && this.sign.text == Memory.settings.signature && Game.time - this.sign.time < 250000;
 	},
 	configurable: true,
 });
 
 Object.defineProperty(StructureController.prototype, 'signedByScreeps', {
-	get         : function () {
+	get         : function() {
 		return this.sign && this.sign.username == 'Screeps';
 	},
 	configurable: true,
 });
 
 
-StructureController.prototype.needsReserving = function (reserveBuffer: number): boolean {
+StructureController.prototype.needsReserving = function(reserveBuffer: number): boolean {
 	return !this.reservation || (this.reservedByMe && this.reservation.ticksToEnd < reserveBuffer);
 };
 

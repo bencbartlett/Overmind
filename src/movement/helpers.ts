@@ -38,7 +38,7 @@ export function getCreepWeightInfo(creep: Creep, analyzeCarry = true): { move: n
 		bodyParts.weighted += Math.ceil(_.sum(creep.carry) / CARRY_CAPACITY);
 	}
 	// Account for boosts
-	for (let part of creep.body) {
+	for (const part of creep.body) {
 		if (part.type == MOVE && part.boost) {
 			bodyParts.move += (BOOSTS.move[<'ZO' | 'ZHO2' | 'XZHO2'>part.boost].fatigue - 1);
 		}

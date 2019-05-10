@@ -8,7 +8,7 @@ interface TaskSettings {
 
 interface TaskOptions {
 	blind?: boolean;
-	nextPos?: protoPos;
+	nextPos?: ProtoPos;
 	// moveOptions?: MoveOptions;
 }
 
@@ -20,16 +20,16 @@ interface TaskData {
 	[other: string]: any;
 }
 
-interface protoTask {
+interface ProtoTask {
 	name: string;
 	_creep: {
 		name: string;
 	};
 	_target: {
 		ref: string;
-		_pos: protoPos;
+		_pos: ProtoPos;
 	};
-	_parent: protoTask | null;
+	_parent: ProtoTask | null;
 	tick: number;
 	options: TaskOptions;
 	data: TaskData;

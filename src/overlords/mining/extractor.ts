@@ -1,13 +1,13 @@
-import {Overlord} from '../Overlord';
-import {Zerg} from '../../zerg/Zerg';
-import {Tasks} from '../../tasks/Tasks';
-import {profile} from '../../profiler/decorator';
-import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {DirectiveExtract} from '../../directives/resource/extract';
 import {$} from '../../caching/GlobalCache';
-import {Roles, Setups} from '../../creepSetups/setups';
 import {log} from '../../console/log';
+import {Roles, Setups} from '../../creepSetups/setups';
+import {DirectiveExtract} from '../../directives/resource/extract';
 import {Pathing} from '../../movement/Pathing';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
+import {profile} from '../../profiler/decorator';
+import {Tasks} from '../../tasks/Tasks';
+import {Zerg} from '../../zerg/Zerg';
+import {Overlord} from '../Overlord';
 
 const BUILD_OUTPUT_FREQUENCY = 15;
 
@@ -65,15 +65,15 @@ export class ExtractorOverlord extends Overlord {
 	/* Calculate where the container output will be built for this site */
 	private calculateContainerPos(): RoomPosition {
 		// log.debug(`Computing container position for mining overlord at ${this.pos.print}...`);
-		let originPos: RoomPosition | undefined = undefined;
+		let originPos: RoomPosition | undefined;
 		if (this.colony.storage) {
 			originPos = this.colony.storage.pos;
 		} else if (this.colony.roomPlanner.storagePos) {
 			originPos = this.colony.roomPlanner.storagePos;
 		}
 		if (originPos) {
-			let path = Pathing.findShortestPath(this.pos, originPos).path;
-			let pos = _.find(path, pos => pos.getRangeTo(this) == 1);
+			const path = Pathing.findShortestPath(this.pos, originPos).path;
+			const pos = _.find(path, pos => pos.getRangeTo(this) == 1);
 			if (pos) return pos;
 		}
 		// Shouldn't ever get here
@@ -84,12 +84,12 @@ export class ExtractorOverlord extends Overlord {
 	private buildOutputIfNeeded(): void {
 		// Create container if there is not already one being built and no link
 		if (!this.container) {
-			let containerSite = _.first(_.filter(this.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 2),
+			const containerSite = _.first(_.filter(this.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 2),
 												 site => site.structureType == STRUCTURE_CONTAINER));
 			if (!containerSite) {
-				let containerPos = this.calculateContainerPos();
+				const containerPos = this.calculateContainerPos();
 				log.info(`${this.print}: building container at ${containerPos.print}`);
-				let result = containerPos.createConstructionSite(STRUCTURE_CONTAINER);
+				const result = containerPos.createConstructionSite(STRUCTURE_CONTAINER);
 				if (result != OK) {
 					log.error(`${this.print}: cannot build container at ${containerPos.print}! Result: ${result}`);
 				}
@@ -99,7 +99,7 @@ export class ExtractorOverlord extends Overlord {
 	}
 
 	init() {
-		let amount = this.mineral && this.mineral.mineralAmount > 0 ? this.mineral.pos.availableNeighbors().length : 0;
+		const amount = this.mineral && this.mineral.mineralAmount > 0 ? this.mineral.pos.availableNeighbors().length : 0;
 		this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), Setups.drones.extractor);
 		this.registerOutputRequests();
 	}

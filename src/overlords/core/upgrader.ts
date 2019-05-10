@@ -1,11 +1,11 @@
-import {Overlord} from '../Overlord';
+import {Roles, Setups} from '../../creepSetups/setups';
 import {UpgradeSite} from '../../hiveClusters/upgradeSite';
-import {Zerg} from '../../zerg/Zerg';
-import {Tasks} from '../../tasks/Tasks';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {boostResources} from '../../resources/map_resources';
-import {Roles, Setups} from '../../creepSetups/setups';
+import {Tasks} from '../../tasks/Tasks';
+import {Zerg} from '../../zerg/Zerg';
+import {Overlord} from '../Overlord';
 
 /**
  * Spawns an upgrader to upgrade the room controller

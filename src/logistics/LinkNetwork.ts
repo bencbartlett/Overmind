@@ -1,5 +1,5 @@
-import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
+import {profile} from '../profiler/decorator';
 
 /**
  * The link network controls the flow of energy through various links in a room and uses a greedy matching algorithm
@@ -48,8 +48,8 @@ export class LinkNetwork {
 	 * Number of ticks until a dropoff link is available again to deposit energy to
 	 */
 	getDropoffAvailability(link: StructureLink): number {
-		let dest = this.colony.commandCenter ? this.colony.commandCenter.pos : this.colony.pos;
-		let usualCooldown = link.pos.getRangeTo(dest);
+		const dest = this.colony.commandCenter ? this.colony.commandCenter.pos : this.colony.pos;
+		const usualCooldown = link.pos.getRangeTo(dest);
 		if (link.energy > this.settings.linksTrasmitAt) { // Energy will be sent next time cooldown == 0
 			return link.cooldown + usualCooldown;
 		} else {
@@ -71,12 +71,12 @@ export class LinkNetwork {
 	 */
 	run(): void {
 		// For each receiving link, greedily get energy from the closest transmitting link - at most 9 operations
-		for (let receiveLink of this.receive) {
-			let closestTransmitLink = receiveLink.pos.findClosestByRange(this.transmit);
+		for (const receiveLink of this.receive) {
+			const closestTransmitLink = receiveLink.pos.findClosestByRange(this.transmit);
 			// If a send-receive match is found, transfer that first, then remove the pair from the link lists
 			if (closestTransmitLink) {
 				// Send min of (all the energy in sender link, amount of available space in receiver link)
-				let amountToSend = _.min([closestTransmitLink.energy, receiveLink.energyCapacity - receiveLink.energy]);
+				const amountToSend = _.min([closestTransmitLink.energy, receiveLink.energyCapacity - receiveLink.energy]);
 				closestTransmitLink.transferEnergy(receiveLink, amountToSend);
 				_.remove(this.transmit, link => link == closestTransmitLink);
 				// _.remove(this.receive, link => link == receiveLink);
@@ -84,7 +84,7 @@ export class LinkNetwork {
 		}
 		// Now send all remaining transmit link requests to the command center
 		if (this.colony.commandCenter && this.colony.commandCenter.link) {
-			for (let transmitLink of this.transmit) {
+			for (const transmitLink of this.transmit) {
 				transmitLink.transferEnergy(this.colony.commandCenter.link);
 			}
 		}

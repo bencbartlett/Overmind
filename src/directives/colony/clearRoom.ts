@@ -1,15 +1,14 @@
-import {profile} from '../../profiler/decorator';
-import {Directive} from '../Directive';
-import {ClaimingOverlord} from '../../overlords/colonization/claimer';
-import {MY_USERNAME} from '../../~settings';
 import {log} from '../../console/log';
+import {ClaimingOverlord} from '../../overlords/colonization/claimer';
+import {profile} from '../../profiler/decorator';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {hasContents, printRoomName} from '../../utilities/utils';
-import {DirectiveHaul} from "../resource/haul";
-import {WorkerOverlord} from "../../overlords/core/worker";
-import {Zerg} from "../../zerg/Zerg";
-import {Pathing} from "../../movement/Pathing";
+import {MY_USERNAME} from '../../~settings';
+import {Directive} from '../Directive';
 import {DirectiveDismantle} from "../targeting/dismantle";
+import {Pathing} from "../../movement/Pathing";
+import {DirectiveHaul} from "../resource/haul";
+import {Zerg} from "../../zerg/Zerg";
 
 
 /**
@@ -49,15 +48,15 @@ export class DirectiveClearRoom extends Directive {
 
 	private removeAllStructures(): boolean {
 
-		let keepStorageStructures = this.memory.keepStorageStructures !== undefined
+		const keepStorageStructures = this.memory.keepStorageStructures !== undefined
 									? this.memory.keepStorageStructures : true;
-		let keepRoads = this.memory.keepRoads !== undefined ? this.memory.keepRoads : true;
-		let keepContainers = this.memory.keepContainers !== undefined ? this.memory.keepContainers : true;
+		const keepRoads = this.memory.keepRoads !== undefined ? this.memory.keepRoads : true;
+		const keepContainers = this.memory.keepContainers !== undefined ? this.memory.keepContainers : true;
 
 		if (this.room) {
-			let allStructures = this.room.find(FIND_STRUCTURES);
+			const allStructures = this.room.find(FIND_STRUCTURES);
 			let i = 0;
-			for (let s of allStructures) {
+			for (const s of allStructures) {
 				if (s.structureType == STRUCTURE_CONTROLLER) continue;
 				if (keepStorageStructures &&
 					(s.structureType == STRUCTURE_STORAGE || s.structureType == STRUCTURE_TERMINAL) && hasContents(s.store)) {
@@ -71,7 +70,7 @@ export class DirectiveClearRoom extends Directive {
 				if (keepContainers && s.structureType == STRUCTURE_CONTAINER) {
 					continue;
 				}
-				let result = s.destroy();
+				const result = s.destroy();
 				if (result == OK) {
 					i++;
 				}
@@ -100,7 +99,7 @@ export class DirectiveClearRoom extends Directive {
 	run() {
 		// Remove if structures are done
 		if (this.room && this.room.my) {
-			let done = this.removeAllStructures();
+			const done = this.removeAllStructures();
 			if (done) {
 				this.room.controller!.unclaim();
 				log.notify(`Removing clearRoom directive in ${this.pos.roomName}: operation completed.`);

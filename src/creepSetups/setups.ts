@@ -185,7 +185,8 @@ export const Setups = {
 
 
 /**
- * This object contains default body setups for various types of combat-related creeps*/
+ * This object contains default body setups for various types of combat-related creeps
+ */
 export const CombatSetups = {
 
 	/**

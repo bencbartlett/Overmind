@@ -1,13 +1,13 @@
-import {profile} from '../../profiler/decorator';
-import {Directive} from '../Directive';
-import {ClaimingOverlord} from '../../overlords/colonization/claimer';
 import {Colony} from '../../Colony';
-import {PioneerOverlord} from '../../overlords/colonization/pioneer';
-import {MY_USERNAME} from '../../~settings';
 import {log} from '../../console/log';
 import {Roles} from '../../creepSetups/setups';
+import {ClaimingOverlord} from '../../overlords/colonization/claimer';
+import {PioneerOverlord} from '../../overlords/colonization/pioneer';
+import {profile} from '../../profiler/decorator';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {printRoomName} from '../../utilities/utils';
+import {MY_USERNAME} from '../../~settings';
+import {Directive} from '../Directive';
 
 
 /**
@@ -30,7 +30,7 @@ export class DirectiveColonize extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag, colony => colony.level >= DirectiveColonize.requiredRCL
-							  && colony.name != Directive.getPos(flag).roomName);
+							  && colony.name != Directive.getPos(flag).roomName && colony.spawns.length > 0);
 		// Register incubation status
 		this.toColonize = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
 		// Remove if misplaced
@@ -54,7 +54,7 @@ export class DirectiveColonize extends Directive {
 		if (this.toColonize && this.toColonize.spawns.length > 0) {
 			// Reassign all pioneers to be miners and workers
 			const miningOverlords = _.map(this.toColonize.miningSites, site => site.overlords.mine);
-			for (let pioneer of this.overlords.pioneer.pioneers) {
+			for (const pioneer of this.overlords.pioneer.pioneers) {
 				const miningOverlord = miningOverlords.shift();
 				if (miningOverlord) {
 					if (verbose) {

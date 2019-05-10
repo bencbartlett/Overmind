@@ -1,9 +1,9 @@
-import {Directive} from '../Directive';
-import {profile} from '../../profiler/decorator';
-import {RangedDefenseOverlord} from '../../overlords/defense/rangedDefense';
 import {ColonyStage} from '../../Colony';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {MeleeDefenseOverlord} from '../../overlords/defense/meleeDefense';
+import {RangedDefenseOverlord} from '../../overlords/defense/rangedDefense';
+import {profile} from '../../profiler/decorator';
+import {Directive} from '../Directive';
 import {NotifierPriority} from '../Notifier';
 import {isCombatZerg, isZerg} from "../../declarations/typeGuards";
 import {getOverlord, normalizeZerg, toCreep, Zerg} from "../../zerg/Zerg";
@@ -47,11 +47,11 @@ export class DirectiveInvasionDefense extends Directive {
 		let useBoosts = (expectedDamage > ATTACK_POWER * 13)
 						&& !!this.colony.terminal
 						&& !!this.colony.evolutionChamber;
-		// let percentWalls = _.filter(this.room.barriers, s => s.structureType == STRUCTURE_WALL).length /
-		// 				   this.room.barriers.length;
-		// let meleeHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(ATTACK) > 0 ||
-		// 															hostile.getActiveBodyparts(WORK) > 0);
-		// let rangedHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0);
+		const percentWalls = _.filter(this.room.barriers, s => s.structureType == STRUCTURE_WALL).length /
+							 this.room.barriers.length;
+		const meleeHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(ATTACK) > 0 ||
+																	  hostile.getActiveBodyparts(WORK) > 0);
+		const rangedHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0);
 		if (this.colony.stage > ColonyStage.Larva) {
 			this.overlords.rangedDefense = new RangedDefenseOverlord(this, useBoosts);
 		} else {
@@ -60,7 +60,7 @@ export class DirectiveInvasionDefense extends Directive {
 	}
 
 	init(): void {
-		let numHostiles: string = this.room ? this.room.hostiles.length.toString() : '???';
+		const numHostiles: string = this.room ? this.room.hostiles.length.toString() : '???';
 		this.alert(`Invasion (hostiles: ${numHostiles})`, NotifierPriority.Critical);
 	}
 
