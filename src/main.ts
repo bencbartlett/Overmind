@@ -1,5 +1,3 @@
-// @formatter:off
-/* tslint:disable:ordered-imports */
 
 //
 // ___________________________________________________________
@@ -14,32 +12,34 @@
 // Overmind repository: github.com/bencbartlett/overmind
 //
 
+
+// @formatter:off
+/* tslint:disable:ordered-imports */
+
 'use strict';
 // Import ALL the things! ==============================================================================================
 import './assimilation/initializer'; // This must always be imported before anything else
-import {OvermindConsole} from './console/Console';
 import './console/globals'; // Global functions accessible from CLI
-import {RemoteDebugger} from './debug/remoteDebugger';
-import {Mem} from './memory/Memory';
-import _Overmind from './Overmind_obfuscated'; // this should be './Overmind_obfuscated' unless you are me
-import profiler from './profiler/screeps-profiler';
 import './prototypes/Creep'; // Creep prototypes
-import './prototypes/Miscellaneous'; // Everything else
-import './prototypes/Room'; // Non-structure room prototypes
 import './prototypes/RoomObject'; // RoomObject and targeting prototypes
 import './prototypes/RoomPosition'; // RoomPosition prototypes
-import './prototypes/RoomStructures'; // IVM-cached structure prototypes
 import './prototypes/RoomVisual'; // Prototypes used in Visualizer class
+import './prototypes/Room'; // Non-structure room prototypes
+import './prototypes/RoomStructures'; // IVM-cached structure prototypes
 import './prototypes/Structures'; // Prototypes for accessed structures
-import {sandbox} from './sandbox';
-import {Stats} from './stats/stats';
+import './prototypes/Miscellaneous'; // Everything else
 import './tasks/initializer'; // This line is necessary to ensure proper compilation ordering...
-import {VersionMigration} from './versionMigration/migrator';
 import './zerg/CombatZerg'; // ...so is this one... rollup is dumb about generating reference errors
 import {MUON, MY_USERNAME, RL_MODE, USE_PROFILER} from './~settings';
+import {sandbox} from './sandbox';
+import {Mem} from './memory/Memory';
+import {OvermindConsole} from './console/Console';
+import {Stats} from './stats/stats';
+import profiler from './profiler/screeps-profiler';
+import _Overmind from './Overmind_obfuscated'; // this should be './Overmind_obfuscated' unless you are me
+import {VersionMigration} from './versionMigration/migrator';
+import {RemoteDebugger} from './debug/remoteDebugger';
 // =====================================================================================================================
-
-// @formatter:on
 
 // Main loop
 function main(): void {
