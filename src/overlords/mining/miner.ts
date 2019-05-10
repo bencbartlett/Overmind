@@ -32,6 +32,7 @@ export class MiningOverlord extends Overlord {
 	directive: DirectiveHarvest;
 	room: Room | undefined;
 	source: Source | undefined;
+	secondSource: Source | undefined;
 	container: StructureContainer | undefined;
 	link: StructureLink | undefined;
 	constructionSite: ConstructionSite | undefined;
@@ -65,6 +66,9 @@ export class MiningOverlord extends Overlord {
 			this.energyPerTick = SOURCE_ENERGY_NEUTRAL_CAPACITY / ENERGY_REGEN_TIME;
 		}
 		this.miningPowerNeeded = Math.ceil(this.energyPerTick / HARVEST_POWER) + 1;
+		let doubleMine = this.checkIfDoubleMine();
+
+
 		// Decide operating mode
 		if (Cartographer.roomType(this.pos.roomName) == ROOMTYPE_SOURCEKEEPER) {
 			this.mode = 'SK';
@@ -72,7 +76,11 @@ export class MiningOverlord extends Overlord {
 		} else if (this.colony.room.energyCapacityAvailable < StandardMinerSetupCost) {
 			this.mode = 'early';
 			this.setup = Setups.drones.miners.default;
-		} else if (this.link) {
+		} else if (doubleMine && this.colony.room.energyCapacityAvailable <= DoubleMinerSetupCost) {
+			this.mode = 'double';
+			this.setup = Setups.drones.miners.double;
+		}
+		else if (this.link) {
 			this.mode = 'link';
 			this.setup = Setups.drones.miners.default;
 		} else {
@@ -96,6 +104,43 @@ export class MiningOverlord extends Overlord {
 			}
 		}
 	}
+
+	checkIfDoubleMine() {
+		if (Game.rooms[this.pos.roomName]) {
+			this.source = _.first(this.pos.lookFor(LOOK_SOURCES));
+			let nearby = this.source.pos.findInRange(FIND_SOURCES, 2);
+			if (nearby.length > 0) {
+				this.secondSource = nearby[0];
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+
+
+
+
+		// 	let sources = this.room.find(FIND_SOURCES);
+		// 	for (let i = 0; i <sources.length; i++) {
+		// 		for (let j = 0; j<i; j++) {
+		// 			let first = sources[i].pos;
+		// 			let second = sources[j].pos;
+		// 			let range = first.getRangeTo(second);
+		// 			if (range <= 2) {
+		// 				// If within 2, check if spot inbetween is open
+		// 				if (range == 1 || first.getPositionAtDirection(first.getDirectionTo(second)).isWalkable()) {
+		// 					return [first, second];
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		//
+		// }
+		// return [];
+	//}
+
 
 	get distance(): number {
 		return this.directive.distance;
@@ -332,6 +377,59 @@ export class MiningOverlord extends Overlord {
 			}
 			return;
 		}
+	}
+
+	/**
+	 * Actions for handling double mining
+	 */
+	private doubleMiningActions(miner: Zerg) {
+
+		// Approach mining site
+		if (this.goToMiningSite(miner)) return;
+
+		// Container mining
+		if (this.container) {
+			if (this.container.hits < this.container.hitsMax
+				&& miner.carry.energy >= Math.min(miner.carryCapacity, REPAIR_POWER * miner.getActiveBodyparts(WORK))) {
+				return miner.repair(this.container);
+			} else if (this.source && this.source.energy == 0) {
+				return miner.harvest(this.source!);
+			} else if (this.secondSource != undefined) {
+				return miner.harvest(this.secondSource!);
+			}
+		}
+
+		// Build output site
+		if (this.constructionSite) {
+			if (miner.carry.energy >= Math.min(miner.carryCapacity, BUILD_POWER * miner.getActiveBodyparts(WORK))) {
+				return miner.build(this.constructionSite);
+			} else {
+				return miner.harvest(this.source!);
+			}
+		}
+
+		// Drop mining
+		if (this.allowDropMining) {
+			miner.harvest(this.source!);
+			if (miner.carry.energy > 0.8 * miner.carryCapacity) { // move over the drop when you're close to full
+				let biggestDrop = maxBy(miner.pos.findInRange(miner.room.droppedEnergy, 1), drop => drop.amount);
+				if (biggestDrop) {
+					miner.goTo(biggestDrop);
+				}
+			}
+			if (miner.carry.energy == miner.carryCapacity) { // drop when you are full
+				miner.drop(RESOURCE_ENERGY);
+			}
+			return;
+		}
+	}
+
+	private doubleMine() {
+	 // if (this.source && this.source.energy == 0) {
+		// 	return miner.harvest(this.source!);
+		// } else if (this.secondSource != undefined) {
+		// 	return miner.harvest(this.secondSource!);
+		// }
 	}
 
 	/**
