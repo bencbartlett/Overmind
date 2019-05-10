@@ -132,6 +132,8 @@ export class PowerHaulingOverlord extends Overlord {
 			if (!stillCarryingPower) {
 				Game.notify('Deleting Power Mining Directive as no haulers are left carrying ' + this.pos.print);
 				this.directive.remove();
+			} else {
+				console.log(`Still carrying power back with ${stillCarryingPower.print}`);
 			}
 		}
 		for (let hauler of this.haulers) {
