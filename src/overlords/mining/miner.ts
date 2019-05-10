@@ -12,6 +12,7 @@ import {Pathing} from '../../movement/Pathing';
 import {ColonyStage} from '../../Colony';
 import {maxBy, minBy} from '../../utilities/utils';
 import {Roles, Setups} from '../../creepSetups/setups';
+import {Directive} from "../../directives/Directive";
 
 export const StandardMinerSetupCost = bodyCost(Setups.drones.miners.standard.generateBody(Infinity));
 
@@ -33,6 +34,7 @@ export class MiningOverlord extends Overlord {
 	room: Room | undefined;
 	source: Source | undefined;
 	secondSource: Source | undefined;
+	isDisabled: boolean;
 	container: StructureContainer | undefined;
 	link: StructureLink | undefined;
 	constructionSite: ConstructionSite | undefined;
@@ -76,11 +78,10 @@ export class MiningOverlord extends Overlord {
 		} else if (this.colony.room.energyCapacityAvailable < StandardMinerSetupCost) {
 			this.mode = 'early';
 			this.setup = Setups.drones.miners.default;
-		} else if (doubleMine && this.colony.room.energyCapacityAvailable <= DoubleMinerSetupCost) {
+		} else if (doubleMine && this.colony.room.energyCapacityAvailable > DoubleMinerSetupCost) {
 			this.mode = 'double';
 			this.setup = Setups.drones.miners.double;
-		}
-		else if (this.link) {
+		} else if (this.link) {
 			this.mode = 'link';
 			this.setup = Setups.drones.miners.default;
 		} else {
@@ -89,8 +90,10 @@ export class MiningOverlord extends Overlord {
 			// todo: double miner condition
 		}
 		const miningPowerEach = this.setup.getBodyPotential(WORK, this.colony);
+		// this.minersNeeded = this.isDisabled ? 0 : Math.min(Math.ceil(this.miningPowerNeeded / miningPowerEach),
+		// 							 this.pos.availableNeighbors(true).length);
 		this.minersNeeded = Math.min(Math.ceil(this.miningPowerNeeded / miningPowerEach),
-									 this.pos.availableNeighbors(true).length);
+										 this.pos.availableNeighbors(true).length);
 		// Allow drop mining at low levels
 		this.allowDropMining = this.colony.level < MiningOverlord.settings.dropMineUntilRCL;
 		if (this.mode != 'early' && !this.allowDropMining) {
@@ -107,20 +110,26 @@ export class MiningOverlord extends Overlord {
 
 	checkIfDoubleMine() {
 		if (Game.rooms[this.pos.roomName]) {
+			//console.log('Double mining check');
 			this.source = _.first(this.pos.lookFor(LOOK_SOURCES));
-			let nearby = this.source.pos.findInRange(FIND_SOURCES, 2);
+			let nearby = this.source.pos.findInRange(FIND_SOURCES, 2).filter(source => this.source != source);
 			if (nearby.length > 0) {
 				this.secondSource = nearby[0];
+				let miningPos = this.source.pos.getPositionAtDirection(this.source.pos.getDirectionTo(this.secondSource.pos));
+				if (miningPos.isWalkable()) {
+						console.log(`Double mining found but there is no spot between ${this.secondSource} ${this.secondSource.pos.print} isWalkable ${miningPos}`);
+					return false;
+				}
+				console.log(`Double mining found ${this.secondSource} ${this.secondSource.pos.print}`);
+				if (this.source.id > this.secondSource.id) {
+					console.log(`This is a disabled mining ${this.directive.name} via source id`);
+					this.isDisabled = true;
+				}
 				return true;
 			}
 		}
 		return false;
 	}
-
-
-
-
-
 
 		// 	let sources = this.room.find(FIND_SOURCES);
 		// 	for (let i = 0; i <sources.length; i++) {
@@ -141,6 +150,9 @@ export class MiningOverlord extends Overlord {
 		// return [];
 	//}
 
+	/**
+	 * TODO Note to self - make directive to make a double miner
+	 */
 
 	get distance(): number {
 		return this.directive.distance;
@@ -191,7 +203,7 @@ export class MiningOverlord extends Overlord {
 	}
 
 	/**
-	 * Add or remove containers as needed to keep exactly one of contaner | link
+	 * Add or remove containers as needed to keep exactly one of container | link
 	 */
 	private addRemoveContainer(): void {
 		if (this.allowDropMining) {
@@ -385,16 +397,35 @@ export class MiningOverlord extends Overlord {
 	private doubleMiningActions(miner: Zerg) {
 
 		// Approach mining site
+
 		if (this.goToMiningSite(miner)) return;
+		console.log(`Double mining with ${miner.print} here ${this.source!.pos.print}, ${this.source}, ${this.secondSource} is disabled ${this.isDisabled}`);
+
+		// Link mining
+		if (this.link) {
+		 	if (this.source && this.source.energy > 0) {
+		 		miner.harvest(this.source!);
+			} else {
+				console.log('mining second source');
+				miner.harvest(this.secondSource!);
+			}
+			if (miner.carry.energy > 0.9 * miner.carryCapacity) {
+				miner.transfer(this.link, RESOURCE_ENERGY);
+			}
+			return;
+		} else {
+			log.warning(`Link miner ${miner.print} has no link!`);
+		}
 
 		// Container mining
 		if (this.container) {
 			if (this.container.hits < this.container.hitsMax
 				&& miner.carry.energy >= Math.min(miner.carryCapacity, REPAIR_POWER * miner.getActiveBodyparts(WORK))) {
 				return miner.repair(this.container);
-			} else if (this.source && this.source.energy == 0) {
+			} else if (this.source && this.source.energy > 0) {
 				return miner.harvest(this.source!);
-			} else if (this.secondSource != undefined) {
+			} else {
+				console.log('mining second source');
 				return miner.harvest(this.secondSource!);
 			}
 		}
@@ -422,14 +453,6 @@ export class MiningOverlord extends Overlord {
 			}
 			return;
 		}
-	}
-
-	private doubleMine() {
-	 // if (this.source && this.source.energy == 0) {
-		// 	return miner.harvest(this.source!);
-		// } else if (this.secondSource != undefined) {
-		// 	return miner.harvest(this.secondSource!);
-		// }
 	}
 
 	/**
@@ -477,7 +500,7 @@ export class MiningOverlord extends Overlord {
 			case 'SK':
 				return this.standardMiningActions(miner);
 			case 'double':
-				return this.standardMiningActions(miner);
+				return this.doubleMiningActions(miner);
 			default:
 				log.error(`UNHANDLED MINER STATE FOR ${miner.print} (MODE: ${this.mode})`);
 		}
