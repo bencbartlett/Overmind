@@ -5,6 +5,8 @@ import {CombatTargeting} from '../targeting/CombatTargeting';
 import {GoalFinder} from '../targeting/GoalFinder';
 import {randomHex} from '../utilities/utils';
 import {Zerg} from './Zerg';
+import {insideBunkerBounds} from "../roomPlanner/layouts/bunker";
+import {Colony} from "../Colony";
 
 interface CombatZergMemory extends CreepMemory {
 	recovering: boolean;
@@ -267,6 +269,33 @@ export class CombatZerg extends Zerg {
 				}
 			}
 			return Movement.combatMove(this, [{pos: target.pos, range: targetRange}], []);
+		}
+
+	}
+
+	autoBunkerCombat(roomName: string, verbose = false) {
+		if (this.getActiveBodyparts(ATTACK) > 0) {
+			this.autoMelee(); // Melee should be performed first
+		}
+		if (this.getActiveBodyparts(RANGED_ATTACK) > 0) {
+			this.autoRanged();
+		}
+
+		// Travel to the target room
+		if (!this.safelyInRoom(roomName)) {
+			this.debug(`Going to room!`);
+			return this.goToRoom(roomName, {ensurePath: true});
+		}
+
+		//let colony = Overmind.colonies[Overmind.colonyMap[roomName]] as Colony | undefined;
+		// TODO check if right colony
+		let siegingCreeps = this.room.hostiles.filter(creep => _.any(creep.pos.neighbors, pos => insideBunkerBounds(pos, this.colony)));
+
+
+		const target = CombatTargeting.findTarget(this, siegingCreeps);
+
+		if (target) {
+			return Movement.combatMove(this, [{pos: target.pos, range: 1}], [], {requireRamparts: true});
 		}
 
 	}

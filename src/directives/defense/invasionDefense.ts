@@ -5,10 +5,7 @@ import {RangedDefenseOverlord} from '../../overlords/defense/rangedDefense';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
 import {NotifierPriority} from '../Notifier';
-import {isCombatZerg, isZerg} from "../../declarations/typeGuards";
-import {getOverlord, normalizeZerg, toCreep, Zerg} from "../../zerg/Zerg";
-import {CombatZerg} from "../../zerg/CombatZerg";
-import {isUndefined} from "util";
+import {BunkerDefenseOverlord} from "../../overlords/defense/bunkerDefense";
 
 interface DirectiveInvasionDefenseMemory extends FlagMemory {
 	persistent?: boolean;
@@ -57,6 +54,12 @@ export class DirectiveInvasionDefense extends Directive {
 		} else {
 			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
 		}
+		// If serious bunker busting attempt, spawn lurkers
+		if (meleeHostiles.length > 0 && ((expectedDamage > ATTACK_POWER * 30) || meleeHostiles[0].owner.username == 'Inakrin')) {
+			Game.notify(`Adding a new Bunker Defense in room ${this.room.print}`);
+			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, true);
+		}
+
 	}
 
 	init(): void {

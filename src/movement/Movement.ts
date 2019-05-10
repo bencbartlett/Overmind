@@ -88,6 +88,7 @@ export interface CombatMoveOptions {
 	avoidPenalty?: number;
 	approachBonus?: number;
 	preferRamparts?: boolean;
+	requireRamparts?: boolean;
 	displayCostMatrix?: boolean;
 	displayAvoid?: boolean;
 }
@@ -862,6 +863,7 @@ export class Movement {
 			avoidPenalty  : 10,
 			approachBonus : 5,
 			preferRamparts: true,
+			requireRamparts: false,
 		});
 
 		const debug = false;
@@ -923,7 +925,7 @@ export class Movement {
 		}
 
 		// Try to maneuver under ramparts if possible
-		if (options.preferRamparts && !creep.inRampart && approach.length > 0) {
+		if ((options.preferRamparts || options.requireRamparts) && !creep.inRampart && approach.length > 0) {
 			const openRamparts = _.filter(creep.room.walkableRamparts,
 										rampart => _.any(approach,
 														 g => rampart.pos.inRangeToXY(g.pos.x, g.pos.y, g.range))
@@ -940,7 +942,11 @@ export class Movement {
 					outcome = creep.move(creep.pos.getDirectionTo(ret.path[0]));
 					if (outcome == OK) {
 						return outcome;
+					} else if (options.requireRamparts) {
+						creep.cancelOrder('move');
 					}
+				} else if (options.requireRamparts) {
+					creep.cancelOrder('move');
 				}
 			}
 		}

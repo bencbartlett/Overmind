@@ -21,6 +21,7 @@ export const Roles = {
 	melee     : 'zergling',
 	ranged    : 'hydralisk',
 	healer    : 'transfuser',
+	bunkerGuard : 'bunkerGuard',
 	dismantler: 'lurker',
 	drill : 'drill',
 	coolant : 'coolant',
@@ -294,6 +295,25 @@ export const CombatSetups = {
 
 		default: new CreepSetup(Roles.guardMelee, {
 			pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE, MOVE, HEAL],
+			sizeLimit: Infinity,
+		}),
+
+	},
+
+	bunkerGuard: {
+
+		early: new CreepSetup(Roles.bunkerGuard, {
+			pattern  : [ATTACK, MOVE],
+			sizeLimit: Infinity,
+		}),
+
+		default: new CreepSetup(Roles.bunkerGuard, {
+			pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE],
+			sizeLimit: Infinity,
+		}),
+
+		boosted_T3: new CreepSetup(Roles.bunkerGuard, {
+			pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, MOVE],
 			sizeLimit: Infinity,
 		}),
 
