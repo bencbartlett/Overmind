@@ -13,13 +13,14 @@ export class DirectiveSwarmDestroy extends Directive {
 	static directiveName = 'destroy';
 	static color = COLOR_RED;
 	static secondaryColor = COLOR_RED;
+	static requiredRCL = 6;
 
 	overlords: {
 		destroy: SwarmDestroyerOverlord;
 	};
 
 	constructor(flag: Flag) {
-		super(flag);
+		super(flag, colony => colony.level >= DirectiveSwarmDestroy.requiredRCL);
 	}
 
 	spawnMoarOverlords() {

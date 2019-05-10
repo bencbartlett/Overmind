@@ -152,7 +152,7 @@ export class SpawnGroup {
 			if (bestHatchery) {
 				bestHatchery.enqueue(request);
 			} else {
-				log.warning(`Could not enqueue creep ${request.setup.role} in ${this.roomName}, no hatchery with ${maxCost} energy capacity`);
+				log.warning(`Could not enqueue creep ${request.setup.role} in ${this.roomName} for Overlord ${request.overlord.name}, no hatchery with ${maxCost} energy capacity.`);
 			}
 		}
 	}

@@ -5,6 +5,10 @@ import {ColonyStage} from '../../Colony';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {MeleeDefenseOverlord} from '../../overlords/defense/meleeDefense';
 import {NotifierPriority} from '../Notifier';
+import {isCombatZerg, isZerg} from "../../declarations/typeGuards";
+import {getOverlord, normalizeZerg, toCreep, Zerg} from "../../zerg/Zerg";
+import {CombatZerg} from "../../zerg/CombatZerg";
+import {isUndefined} from "util";
 
 interface DirectiveInvasionDefenseMemory extends FlagMemory {
 	persistent?: boolean;
@@ -25,6 +29,9 @@ export class DirectiveInvasionDefense extends Directive {
 	memory: DirectiveInvasionDefenseMemory;
 	room: Room | undefined;
 
+	safeEndTime: 800;
+	safeSpawnHaltTime: 100;
+
 	private relocateFrequency: number;
 
 	constructor(flag: Flag) {
@@ -32,7 +39,6 @@ export class DirectiveInvasionDefense extends Directive {
 	}
 
 	spawnMoarOverlords() {
-
 		if (!this.room) {
 			return;
 		}
@@ -51,7 +57,6 @@ export class DirectiveInvasionDefense extends Directive {
 		} else {
 			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
 		}
-
 	}
 
 	init(): void {
@@ -65,7 +70,7 @@ export class DirectiveInvasionDefense extends Directive {
 		}
 		// If there are no hostiles left in the room and everyone's healed, then remove the flag
 		if (this.room && this.room.hostiles.length == 0 &&
-			Game.time - this.memory.safeSince > 300 && this.room.hostileStructures.length == 0) {
+			Game.time - this.memory.safeSince > this.safeEndTime && this.room.hostileStructures.length == 0) {
 			if (_.filter(this.room.creeps, creep => creep.hits < creep.hitsMax).length == 0) {
 				this.remove();
 			}
