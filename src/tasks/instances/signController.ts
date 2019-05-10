@@ -1,5 +1,5 @@
-import {Task} from '../Task';
 import {profile} from '../../profiler/decorator';
+import {Task} from '../Task';
 
 export type signControllerTargetType = StructureController;
 export const signControllerTaskName = 'signController';
@@ -17,7 +17,7 @@ export class TaskSignController extends Task {
 	}
 
 	isValidTarget() {
-		let controller = this.target;
+		const controller = this.target;
 		return (!controller.sign || controller.sign.text != Memory.settings.signature) && !controller.signedByScreeps;
 	}
 

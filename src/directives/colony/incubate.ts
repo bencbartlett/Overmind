@@ -1,8 +1,8 @@
-import {profile} from '../../profiler/decorator';
-import {Directive} from '../Directive';
-import {ClaimingOverlord} from '../../overlords/colonization/claimer';
 import {Colony} from '../../Colony';
 import {SpawnGroup} from '../../logistics/SpawnGroup';
+import {ClaimingOverlord} from '../../overlords/colonization/claimer';
+import {profile} from '../../profiler/decorator';
+import {Directive} from '../Directive';
 
 
 /**

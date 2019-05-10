@@ -8,8 +8,8 @@ export enum Priority {
 }
 
 export function blankPriorityQueue() {
-	let queue: { [priority: number]: any[] } = {};
-	for (let priority in Priority) {
+	const queue: { [priority: number]: any[] } = {};
+	for (const priority in Priority) {
 		queue[priority] = [];
 	}
 	return queue;

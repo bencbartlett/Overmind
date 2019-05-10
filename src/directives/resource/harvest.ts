@@ -1,10 +1,10 @@
-import {Directive} from '../Directive';
-import {MiningOverlord} from '../../overlords/mining/miner';
-import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../../utilities/Cartographer';
-import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {exponentialMovingAverage, getCacheExpiration} from '../../utilities/utils';
 import {Pathing} from '../../movement/Pathing';
+import {MiningOverlord} from '../../overlords/mining/miner';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
+import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../../utilities/Cartographer';
+import {exponentialMovingAverage, getCacheExpiration} from '../../utilities/utils';
+import {Directive} from '../Directive';
 
 
 // Because harvest directives are the most common, they have special shortened memory keys to minimize memory impact
@@ -53,8 +53,8 @@ export class DirectiveHarvest extends Directive {
 	// Hauling distance
 	get distance(): number {
 		if (!this.memory[_HARVEST_MEM_PATHING] || Game.time >= this.memory[_HARVEST_MEM_PATHING]![_MEM.EXPIRATION]) {
-			let distance = Pathing.distance(this.colony.pos, this.pos);
-			let expiration = getCacheExpiration(this.colony.storage ? 5000 : 1000);
+			const distance = Pathing.distance(this.colony.pos, this.pos);
+			const expiration = getCacheExpiration(this.colony.storage ? 5000 : 1000);
 			this.memory[_HARVEST_MEM_PATHING] = {
 				[_MEM.DISTANCE]  : distance,
 				[_MEM.EXPIRATION]: expiration

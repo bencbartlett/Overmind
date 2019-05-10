@@ -1,4 +1,3 @@
-// @formatter:off
 
 //
 // ___________________________________________________________
@@ -12,6 +11,10 @@
 //
 // Overmind repository: github.com/bencbartlett/overmind
 //
+
+
+// @formatter:off
+/* tslint:disable:ordered-imports */
 
 'use strict';
 // Import ALL the things! ==============================================================================================
@@ -37,8 +40,6 @@ import _Overmind from './Overmind_obfuscated'; // this should be './Overmind_obf
 import {VersionMigration} from './versionMigration/migrator';
 import {RemoteDebugger} from './debug/remoteDebugger';
 // =====================================================================================================================
-
-// @formatter:on
 
 // Main loop
 function main(): void {

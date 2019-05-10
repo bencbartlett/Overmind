@@ -1,6 +1,6 @@
-import {profile} from '../profiler/decorator';
 import {DirectiveOutpost} from '../directives/colony/outpost';
 import {DirectiveSKOutpost} from '../directives/colony/outpostSK';
+import {profile} from '../profiler/decorator';
 
 /**
  * GameCache does initial low-level preprocessing before each tick is run
@@ -31,8 +31,8 @@ export class GameCache implements ICache {
 	private cacheOverlords() {
 		this.overlords = {};
 		// keys: overlordRef, value: creepNames[]
-		let creepNamesByOverlord = _.groupBy(_.keys(Game.creeps), name => Game.creeps[name].memory[_MEM.OVERLORD]);
-		for (let ref in creepNamesByOverlord) {
+		const creepNamesByOverlord = _.groupBy(_.keys(Game.creeps), name => Game.creeps[name].memory[_MEM.OVERLORD]);
+		for (const ref in creepNamesByOverlord) {
 			// keys: roleName, value: creepNames[]
 			this.overlords[ref] = _.groupBy(creepNamesByOverlord[ref], name => Game.creeps[name].memory.role);
 		}
@@ -43,8 +43,8 @@ export class GameCache implements ICache {
 	 */
 	private cacheTargets() {
 		this.targets = {};
-		for (let i in Game.creeps) {
-			let creep = Game.creeps[i];
+		for (const i in Game.creeps) {
+			const creep = Game.creeps[i];
 			let task = creep.memory.task;
 			while (task) {
 				if (!this.targets[task._target.ref]) this.targets[task._target.ref] = [];

@@ -1,9 +1,9 @@
-import {Directive} from '../Directive';
+import {log} from '../../console/log';
+import {CombatIntel} from '../../intel/CombatIntel';
+import {PairDestroyerOverlord} from '../../overlords/offense/pairDestroyer';
 import {profile} from '../../profiler/decorator';
 import {Visualizer} from '../../visuals/Visualizer';
-import {PairDestroyerOverlord} from '../../overlords/offense/pairDestroyer';
-import {CombatIntel} from '../../intel/CombatIntel';
-import {log} from '../../console/log';
+import {Directive} from '../Directive';
 
 /**
  * Spawns a pair of attacker/healer creeps to siege a room
@@ -41,7 +41,7 @@ export class DirectivePairDestroy extends Directive {
 
 	visuals(): void {
 		Visualizer.marker(this.pos, {color: 'red'});
-		let fallback = CombatIntel.getFallbackFrom(this.pos);
+		const fallback = CombatIntel.getFallbackFrom(this.pos);
 		Visualizer.marker(fallback, {color: 'green'});
 	}
 }

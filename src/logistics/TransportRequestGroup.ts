@@ -1,16 +1,16 @@
 // A stripped-down version of the logistics network intended for local deliveries
 
-import {profile} from '../profiler/decorator';
-import {blankPriorityQueue, Priority} from '../priorities/priorities';
-import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../declarations/typeGuards';
 import {log} from '../console/log';
+import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../declarations/typeGuards';
+import {blankPriorityQueue, Priority} from '../priorities/priorities';
+import {profile} from '../profiler/decorator';
 
 export type TransportRequestTarget =
 	EnergyStructure
 	| StoreStructure
 	| StructureLab
 	| StructureNuker
-	| StructurePowerSpawn
+	| StructurePowerSpawn;
 
 export interface TransportRequest {
 	target: TransportRequestTarget;
@@ -48,7 +48,7 @@ export class TransportRequestGroup {
 	}
 
 	get needsSupplying(): boolean {
-		for (let priority in this.supply) {
+		for (const priority in this.supply) {
 			if (this.supply[priority].length > 0) {
 				return true;
 			}
@@ -57,7 +57,7 @@ export class TransportRequestGroup {
 	}
 
 	get needsWithdrawing(): boolean {
-		for (let priority in this.withdraw) {
+		for (const priority in this.withdraw) {
 			if (this.withdraw[priority].length > 0) {
 				return true;
 			}
@@ -66,12 +66,11 @@ export class TransportRequestGroup {
 	}
 
 	getPrioritizedClosestRequest(pos: RoomPosition, type: 'supply' | 'withdraw',
-								 filter: ((requst: TransportRequest) => boolean) | undefined = undefined
-	): TransportRequest | undefined {
-		let requests = type == 'withdraw' ? this.withdraw : this.supply;
-		for (let priority in requests) {
-			let targets = _.map(requests[priority], request => request.target);
-			let target = pos.findClosestByRangeThenPath(targets);
+								 filter?: ((requst: TransportRequest) => boolean)): TransportRequest | undefined {
+		const requests = type == 'withdraw' ? this.withdraw : this.supply;
+		for (const priority in requests) {
+			const targets = _.map(requests[priority], request => request.target);
+			const target = pos.findClosestByRangeThenPath(targets);
 			if (target) {
 				let searchRequests;
 				if (filter) {
@@ -95,7 +94,7 @@ export class TransportRequestGroup {
 			opts.amount = this.getInputAmount(target, opts.resourceType!);
 		}
 		// Register the request
-		let req: TransportRequest = {
+		const req: TransportRequest = {
 			target      : target,
 			resourceType: opts.resourceType!,
 			amount      : opts.amount!,
@@ -118,7 +117,7 @@ export class TransportRequestGroup {
 			opts.amount = this.getOutputAmount(target, opts.resourceType!);
 		}
 		// Register the request
-		let req: TransportRequest = {
+		const req: TransportRequest = {
 			target      : target,
 			resourceType: opts.resourceType!,
 			amount      : opts.amount!,
@@ -206,22 +205,22 @@ export class TransportRequestGroup {
 	 */
 	summarize(ignoreEnergy = false): void {
 		console.log(`Supply requests ==========================`);
-		for (let priority in this.supply) {
+		for (const priority in this.supply) {
 			if (this.supply[priority].length > 0) {
 				console.log(`Priority: ${priority}`);
 			}
-			for (let request of this.supply[priority]) {
+			for (const request of this.supply[priority]) {
 				if (ignoreEnergy && request.resourceType == RESOURCE_ENERGY) continue;
 				console.log(`    targetID: ${request.target.ref}  amount: ${request.amount}  ` +
 							`resourceType: ${request.resourceType}`);
 			}
 		}
 		console.log(`Withdraw requests ========================`);
-		for (let priority in this.withdraw) {
+		for (const priority in this.withdraw) {
 			if (this.withdraw[priority].length > 0) {
 				console.log(`Priority: ${priority}`);
 			}
-			for (let request of this.withdraw[priority]) {
+			for (const request of this.withdraw[priority]) {
 				if (ignoreEnergy && request.resourceType == RESOURCE_ENERGY) continue;
 				console.log(`    targetID: ${request.target.ref}  amount: ${request.amount}  ` +
 							`resourceType: ${request.resourceType}`);

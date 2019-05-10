@@ -1,8 +1,8 @@
 // Type guards library: this allows for instanceof - like behavior for much lower CPU cost. Each type guard
 // differentiates an ambiguous input by recognizing one or more unique properties.
 
-import {Zerg} from '../zerg/Zerg';
 import {CombatZerg} from '../zerg/CombatZerg';
+import {Zerg} from '../zerg/Zerg';
 
 export interface EnergyStructure extends Structure {
 	energy: number;

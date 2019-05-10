@@ -1,5 +1,5 @@
-import {Task} from '../Task';
 import {profile} from '../../profiler/decorator';
+import {Task} from '../Task';
 
 export type dropTargetType = { pos: RoomPosition } | RoomPosition;
 export const dropTaskName = 'drop';
@@ -16,7 +16,7 @@ export class TaskDrop extends Task {
 
 	constructor(target: dropTargetType,
 				resourceType: ResourceConstant = RESOURCE_ENERGY,
-				amount: number | undefined     = undefined,
+				amount?: number,
 				options                        = {} as TaskOptions) {
 		if (target instanceof RoomPosition) {
 			super(TaskDrop.taskName, {ref: '', pos: target}, options);
@@ -32,8 +32,8 @@ export class TaskDrop extends Task {
 	}
 
 	isValidTask() {
-		let amount = this.data.amount || 1;
-		let resourcesInCarry = this.creep.carry[this.data.resourceType] || 0;
+		const amount = this.data.amount || 1;
+		const resourcesInCarry = this.creep.carry[this.data.resourceType] || 0;
 		return resourcesInCarry >= amount;
 	}
 

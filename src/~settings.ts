@@ -1,7 +1,7 @@
 // Global settings file containing player information
 
-import {getUsername, onPublicServer} from './utilities/utils';
 import {leftAngleQuote, rightAngleQuote} from './utilities/stringConstants';
+import {getUsername, onPublicServer} from './utilities/utils';
 
 /**
  * My Screeps username; used for a variety of updating and communications purposes. (Changing this might break things.)

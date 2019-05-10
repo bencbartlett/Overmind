@@ -1,8 +1,8 @@
-import {Directive} from '../Directive';
-import {profile} from '../../profiler/decorator';
-import {Visualizer} from '../../visuals/Visualizer';
 import {log} from '../../console/log';
 import {SwarmDestroyerOverlord} from '../../overlords/offense/swarmDestroyer';
+import {profile} from '../../profiler/decorator';
+import {Visualizer} from '../../visuals/Visualizer';
+import {Directive} from '../Directive';
 
 /**
  * Spawns a 2x2 squad of coordinated creeps to destroy a room

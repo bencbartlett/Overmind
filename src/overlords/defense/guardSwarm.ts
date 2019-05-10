@@ -1,10 +1,10 @@
-import {Zerg} from '../../zerg/Zerg';
+import {CombatSetups, Roles} from '../../creepSetups/setups';
+import {DirectiveGuard} from '../../directives/defense/guard';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {DirectiveGuard} from '../../directives/defense/guard';
-import {Overlord} from '../Overlord';
 import {CombatZerg} from '../../zerg/CombatZerg';
-import {CombatSetups, Roles} from '../../creepSetups/setups';
+import {Zerg} from '../../zerg/Zerg';
+import {Overlord} from '../Overlord';
 
 /**
  * Guard swarm overlord: spawns lots of smaller guards to deal with swarm-like attacks or harassments
@@ -23,7 +23,7 @@ export class GuardSwarmOverlord extends Overlord {
 
 	private findAttackTarget(guard: Zerg): Creep | Structure | undefined | null {
 		if (guard.room.hostiles.length > 0) {
-			let targets = _.filter(guard.room.hostiles, hostile => hostile.pos.rangeToEdge > 0);
+			const targets = _.filter(guard.room.hostiles, hostile => hostile.pos.rangeToEdge > 0);
 			return guard.pos.findClosestByRange(targets);
 		}
 		if (guard.room.hostileStructures.length > 0) {
@@ -37,7 +37,7 @@ export class GuardSwarmOverlord extends Overlord {
 			// Move into the assigned room if there is a guard flag present
 			guard.goToRoom(this.pos.roomName);
 		} else { // If you're in the assigned room or if there is no assignment, try to attack or heal
-			let attackTarget = this.findAttackTarget(guard);
+			const attackTarget = this.findAttackTarget(guard);
 			if (attackTarget) {
 				guard.attackAndChase(attackTarget);
 			} else {
@@ -52,7 +52,7 @@ export class GuardSwarmOverlord extends Overlord {
 			this.wishlist(this.directive.memory.amount, CombatSetups.broodlings.early);
 		} else {
 			if (this.room) {
-				let smallHostiles = _.filter(this.room.dangerousHostiles, creep => creep.body.length < 10);
+				const smallHostiles = _.filter(this.room.dangerousHostiles, creep => creep.body.length < 10);
 				if (smallHostiles.length > 2) {
 					this.wishlist(Math.round(smallHostiles.length), CombatSetups.broodlings.early);
 				}
@@ -63,7 +63,7 @@ export class GuardSwarmOverlord extends Overlord {
 	}
 
 	run() {
-		for (let guard of this.guards) {
+		for (const guard of this.guards) {
 			// Run the creep if it has a task given to it by something else; otherwise, proceed with non-task actions
 			if (guard.hasValidTask) {
 				guard.run();

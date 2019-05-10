@@ -1,10 +1,10 @@
-import {Zerg} from './Zerg';
-import {CombatTargeting} from '../targeting/CombatTargeting';
-import {profile} from '../profiler/decorator';
 import {CombatIntel} from '../intel/CombatIntel';
-import {GoalFinder} from '../targeting/GoalFinder';
 import {Movement, NO_ACTION} from '../movement/Movement';
+import {profile} from '../profiler/decorator';
+import {CombatTargeting} from '../targeting/CombatTargeting';
+import {GoalFinder} from '../targeting/GoalFinder';
 import {randomHex} from '../utilities/utils';
+import {Zerg} from './Zerg';
 
 interface CombatZergMemory extends CreepMemory {
 	recovering: boolean;
@@ -37,7 +37,7 @@ export class CombatZerg extends Zerg {
 
 	findPartner(partners: CombatZerg[], tickDifference = DEFAULT_PARTNER_TICK_DIFFERENCE): CombatZerg | undefined {
 		if (this.memory.partner) {
-			let partner = _.find(partners, partner => partner.name == this.memory.partner);
+			const partner = _.find(partners, partner => partner.name == this.memory.partner);
 			if (partner) {
 				return partner;
 			} else {
@@ -68,13 +68,13 @@ export class CombatZerg extends Zerg {
 			return this.memory.swarm;
 		} else {
 			// Find a swarm that isn't too old and that has space for the creep's role
-			let partnersBySwarm = _.groupBy(partners, partner => partner.memory.swarm);
-			for (let swarmRef in partnersBySwarm) {
+			const partnersBySwarm = _.groupBy(partners, partner => partner.memory.swarm);
+			for (const swarmRef in partnersBySwarm) {
 				if (swarmRef == undefined || swarmRef == 'undefined') continue;
 				if (_.all(partnersBySwarm[swarmRef],
 						  c => Math.abs((this.ticksToLive || CREEP_LIFE_TIME)
 										- (c.ticksToLive || CREEP_LIFE_TIME)) <= tickDifference)) {
-					let swarmCreepsByRole = _.groupBy(partnersBySwarm[swarmRef], c => c.memory.role);
+					const swarmCreepsByRole = _.groupBy(partnersBySwarm[swarmRef], c => c.memory.role);
 					if ((swarmCreepsByRole[this.memory.role] || []).length + 1 <= maxByRole[this.memory.role]) {
 						this.memory.swarm = swarmRef;
 						return swarmRef;
@@ -82,7 +82,7 @@ export class CombatZerg extends Zerg {
 				}
 			}
 			// Otherwise just make a new swarm ref
-			let newSwarmRef = randomHex(6);
+			const newSwarmRef = randomHex(6);
 			this.memory.swarm = newSwarmRef;
 			return newSwarmRef;
 		}
@@ -95,10 +95,10 @@ export class CombatZerg extends Zerg {
 			return;
 		}
 		// Heal friendlies
-		let target = CombatTargeting.findClosestHurtFriendly(this);
+		const target = CombatTargeting.findClosestHurtFriendly(this);
 		if (target) {
 			// Approach the target
-			let range = this.pos.getRangeTo(target);
+			const range = this.pos.getRangeTo(target);
 			if (range > 1) {
 				this.goTo(target, {movingTarget: true});
 			}
@@ -149,8 +149,8 @@ export class CombatZerg extends Zerg {
 	 * Automatically melee-attack the best creep in range
 	 */
 	autoMelee(possibleTargets = this.room.hostiles) {
-		let target = CombatTargeting.findBestCreepTargetInRange(this, 1, possibleTargets)
-					 || CombatTargeting.findBestStructureTargetInRange(this, 1);
+		const target = CombatTargeting.findBestCreepTargetInRange(this, 1, possibleTargets)
+					   || CombatTargeting.findBestStructureTargetInRange(this, 1);
 		this.debug(`Melee target: ${target}`);
 		if (target) {
 			return this.attack(target);
@@ -161,8 +161,8 @@ export class CombatZerg extends Zerg {
 	 * Automatically ranged-attack the best creep in range
 	 */
 	autoRanged(possibleTargets = this.room.hostiles, allowMassAttack = true) {
-		let target = CombatTargeting.findBestCreepTargetInRange(this, 3, possibleTargets)
-					 || CombatTargeting.findBestStructureTargetInRange(this, 3);
+		const target = CombatTargeting.findBestCreepTargetInRange(this, 3, possibleTargets)
+					   || CombatTargeting.findBestStructureTargetInRange(this, 3);
 		this.debug(`Ranged target: ${target}`);
 		if (target) {
 			if (allowMassAttack
@@ -178,7 +178,7 @@ export class CombatZerg extends Zerg {
 	 * Automatically heal the best creep in range
 	 */
 	autoHeal(allowRangedHeal = true, friendlies = this.room.creeps) {
-		let target = CombatTargeting.findBestHealingTargetInRange(this, allowRangedHeal ? 3 : 1, friendlies);
+		const target = CombatTargeting.findBestHealingTargetInRange(this, allowRangedHeal ? 3 : 1, friendlies);
 		this.debug(`Heal taget: ${target}`);
 		if (target) {
 			if (this.pos.getRangeTo(target) <= 1) {
@@ -218,7 +218,7 @@ export class CombatZerg extends Zerg {
 		}
 
 		// Skirmish within the room
-		let goals = GoalFinder.skirmishGoals(this);
+		const goals = GoalFinder.skirmishGoals(this);
 		this.debug(JSON.stringify(goals));
 		return Movement.combatMove(this, goals.approach, goals.avoid);
 
@@ -258,11 +258,11 @@ export class CombatZerg extends Zerg {
 		const targetRange = preferRanged ? 3 : 1;
 		this.debug(`${target}, ${targetRange}`);
 		if (target) {
-			let avoid = [];
+			const avoid = [];
 			// Avoid melee hostiles if you are a ranged creep
 			if (preferRanged) {
-				let meleeHostiles = _.filter(this.room.hostiles, h => CombatIntel.getAttackDamage(h) > 0);
-				for (let hostile of meleeHostiles) {
+				const meleeHostiles = _.filter(this.room.hostiles, h => CombatIntel.getAttackDamage(h) > 0);
+				for (const hostile of meleeHostiles) {
 					avoid.push({pos: hostile.pos, range: 2});
 				}
 			}
@@ -290,8 +290,8 @@ export class CombatZerg extends Zerg {
 		if (this.pos.findInRange(this.room.hostiles, 5).length > 0 || this.room.towers.length > 0) {
 			this.memory.lastInDanger = Game.time;
 		}
-		let goals = GoalFinder.retreatGoals(this);
-		let result = Movement.combatMove(this, goals.approach, goals.avoid, {allowExit: true});
+		const goals = GoalFinder.retreatGoals(this);
+		const result = Movement.combatMove(this, goals.approach, goals.avoid, {allowExit: true});
 
 		if (result == NO_ACTION && this.pos.isEdge) {
 			if (Game.time < this.memory.lastInDanger + 3) {

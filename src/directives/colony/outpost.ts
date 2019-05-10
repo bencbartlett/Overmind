@@ -1,10 +1,10 @@
-import {Directive} from '../Directive';
-import {profile} from '../../profiler/decorator';
+import {log} from '../../console/log';
+import {RoomIntel} from '../../intel/RoomIntel';
 import {ReservingOverlord} from '../../overlords/colonization/reserver';
 import {StationaryScoutOverlord} from '../../overlords/scouting/stationary';
+import {profile} from '../../profiler/decorator';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
-import {RoomIntel} from '../../intel/RoomIntel';
-import {log} from '../../console/log';
+import {Directive} from '../Directive';
 
 /**
  * Claims a new room and incubates it from the nearest (or specified) colony

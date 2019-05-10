@@ -1,6 +1,6 @@
-import {Directive} from '../Directive';
-import {profile} from '../../profiler/decorator';
 import {log} from '../../console/log';
+import {profile} from '../../profiler/decorator';
+import {Directive} from '../Directive';
 
 /**
  * [DEPRECATED] Place a command center at the target location

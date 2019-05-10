@@ -1,5 +1,5 @@
-import {profile} from '../profiler/decorator';
 import {Mem} from '../memory/Memory';
+import {profile} from '../profiler/decorator';
 import {exponentialMovingAverage} from '../utilities/utils';
 
 /**
@@ -15,7 +15,7 @@ export class Stats {
 			const protectedKeys = [
 				'persistent',
 			];
-			for (let key in Memory.stats) {
+			for (const key in Memory.stats) {
 				if (!protectedKeys.includes(key)) {
 					delete Memory.stats[key];
 				}
@@ -30,7 +30,7 @@ export class Stats {
 				if (typeof value == 'number') {
 					value = value.truncate(decimals);
 				} else {
-					for (let i in value) {
+					for (const i in value) {
 						value[i] = value[i].truncate(decimals);
 					}
 				}

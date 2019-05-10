@@ -30,10 +30,10 @@ export class Cartographer {
 	 * Recursively enumerate all rooms from a root node using depth first search to a maximum depth
 	 */
 	static recursiveRoomSearch(roomName: string, maxDepth: number): { [depth: number]: string[] } {
-		let visitedRooms = this._recursiveRoomSearch(roomName, 0, maxDepth, {});
-		let roomDepths: { [depth: number]: string[] } = {};
-		for (let room in visitedRooms) {
-			let depth = visitedRooms[room];
+		const visitedRooms = this._recursiveRoomSearch(roomName, 0, maxDepth, {});
+		const roomDepths: { [depth: number]: string[] } = {};
+		for (const room in visitedRooms) {
+			const depth = visitedRooms[room];
 			if (!roomDepths[depth]) {
 				roomDepths[depth] = [];
 			}
@@ -52,9 +52,9 @@ export class Cartographer {
 		} else {
 			visited[roomName] = Math.min(depth, visited[roomName]);
 		}
-		let neighbors = _.values(Game.map.describeExits(roomName)) as string[];
+		const neighbors = _.values(Game.map.describeExits(roomName)) as string[];
 		if (depth < maxDepth) {
-			for (let neighbor of neighbors) {
+			for (const neighbor of neighbors) {
 				// Visit the neighbor if not already done or if this would be a more direct route
 				if (visited[neighbor] == undefined || depth + 1 < visited[neighbor]) {
 					this._recursiveRoomSearch(neighbor, depth + 1, maxDepth, visited);
@@ -68,7 +68,7 @@ export class Cartographer {
 	 * Get the type of the room
 	 */
 	static roomType(roomName: string): 'SK' | 'CORE' | 'CTRL' | 'ALLEY' {
-		let coords = this.getRoomCoordinates(roomName);
+		const coords = this.getRoomCoordinates(roomName);
 		if (coords.x % 10 === 0 || coords.y % 10 === 0) {
 			return ROOMTYPE_ALLEY;
 		} else if (coords.x % 5 === 0 && coords.y % 5 === 0) {
@@ -84,7 +84,7 @@ export class Cartographer {
 	 * Get the name of a room offset from the anchor room
 	 */
 	static findRelativeRoomName(roomName: string, xDelta: number, yDelta: number): string {
-		let coords = this.getRoomCoordinates(roomName);
+		const coords = this.getRoomCoordinates(roomName);
 		let xDir = coords.xDir;
 		if (xDir === 'W') {
 			xDelta = -xDelta;
@@ -112,8 +112,8 @@ export class Cartographer {
 	 * Find the relative x and y offsets of two rooms
 	 */
 	static findRoomCoordDeltas(origin: string, otherRoom: string): { x: number, y: number } {
-		let originCoords = this.getRoomCoordinates(origin);
-		let otherCoords = this.getRoomCoordinates(otherRoom);
+		const originCoords = this.getRoomCoordinates(origin);
+		const otherCoords = this.getRoomCoordinates(otherRoom);
 
 		let xDelta = otherCoords.x - originCoords.x;
 		if (originCoords.xDir !== otherCoords.xDir) {
@@ -140,7 +140,7 @@ export class Cartographer {
 	 * Returns the direction (not magnitude) of a room from an origin room
 	 */
 	static findRelativeRoomDir(origin: string, otherRoom: string): number {
-		let coordDeltas = this.findRoomCoordDeltas(origin, otherRoom);
+		const coordDeltas = this.findRoomCoordDeltas(origin, otherRoom);
 		// noinspection JSSuspiciousNameCombination
 		if (Math.abs(coordDeltas.x) == Math.abs(coordDeltas.y)) {
 			if (coordDeltas.x > 0) {
@@ -198,13 +198,13 @@ export class Cartographer {
 	 * Get the coordinates from a room name
 	 */
 	static getRoomCoordinates(roomName: string): RoomCoord {
-		let coordinateRegex = /(E|W)(\d+)(N|S)(\d+)/g;
-		let match = coordinateRegex.exec(roomName)!;
+		const coordinateRegex = /(E|W)(\d+)(N|S)(\d+)/g;
+		const match = coordinateRegex.exec(roomName)!;
 
-		let xDir = match[1];
-		let x = match[2];
-		let yDir = match[3];
-		let y = match[4];
+		const xDir = match[1];
+		const x = match[2];
+		const yDir = match[3];
+		const y = match[4];
 
 		return {
 			x   : Number(x),

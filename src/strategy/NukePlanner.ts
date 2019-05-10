@@ -14,7 +14,7 @@ const structureScores: { [structureType: string]: number } = {
 
 interface NukePlan {
 	score: number;
-	pos: protoPos;
+	pos: ProtoPos;
 }
 
 interface NukeLaunchMemory {
@@ -39,7 +39,7 @@ interface NukePlannerMemory {
 				[_MEM.EXPIRATION]: number
 			}
 		}
-	}
+	};
 
 }
 

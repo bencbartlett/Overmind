@@ -1,12 +1,12 @@
-import {profile} from '../profiler/decorator';
 import {Colony} from '../Colony';
-import {Overlord} from '../overlords/Overlord';
-import {initializeTask} from '../tasks/initializer';
-import {Task} from '../tasks/Task';
-import {Movement, MoveOptions} from '../movement/Movement';
+import {log} from '../console/log';
 import {isCreep, isZerg} from '../declarations/typeGuards';
 import {CombatIntel} from '../intel/CombatIntel';
-import {log} from '../console/log';
+import {Movement, MoveOptions} from '../movement/Movement';
+import {Overlord} from '../overlords/Overlord';
+import {profile} from '../profiler/decorator';
+import {initializeTask} from '../tasks/initializer';
+import {Task} from '../tasks/Task';
 import {NEW_OVERMIND_INTERVAL} from '../~settings';
 
 export function getOverlord(creep: Zerg | Creep): Overlord | null {
@@ -19,9 +19,9 @@ export function getOverlord(creep: Zerg | Creep): Overlord | null {
 
 export function setOverlord(creep: Zerg | Creep, newOverlord: Overlord | null) {
 	// Remove cache references to old assignments
-	let roleName = creep.memory.role;
-	let ref = creep.memory[_MEM.OVERLORD];
-	let oldOverlord: Overlord | null = ref ? Overmind.overlords[ref] : null;
+	const roleName = creep.memory.role;
+	const ref = creep.memory[_MEM.OVERLORD];
+	const oldOverlord: Overlord | null = ref ? Overmind.overlords[ref] : null;
 	if (ref && Overmind.cache.overlords[ref] && Overmind.cache.overlords[ref][roleName]) {
 		_.remove(Overmind.cache.overlords[ref][roleName], name => name == creep.name);
 	}
@@ -182,7 +182,7 @@ export class Zerg {
 
 	get ticksUntilSpawned(): number | undefined {
 		if (this.spawning) {
-			let spawner = this.pos.lookForStructure(STRUCTURE_SPAWN) as StructureSpawn;
+			const spawner = this.pos.lookForStructure(STRUCTURE_SPAWN) as StructureSpawn;
 			if (spawner && spawner.spawning) {
 				return spawner.spawning.remainingTime;
 			} else {
@@ -199,7 +199,7 @@ export class Zerg {
 	// Wrapped creep methods ===========================================================================================
 
 	attack(target: Creep | Structure) {
-		let result = this.creep.attack(target);
+		const result = this.creep.attack(target);
 		if (result == OK) {
 			this.actionLog.attack = true;
 			if (isCreep(target)) {
@@ -215,13 +215,13 @@ export class Zerg {
 	}
 
 	attackController(controller: StructureController) {
-		let result = this.creep.attackController(controller);
+		const result = this.creep.attackController(controller);
 		if (!this.actionLog.attackController) this.actionLog.attackController = (result == OK);
 		return result;
 	}
 
 	build(target: ConstructionSite) {
-		let result = this.creep.build(target);
+		const result = this.creep.build(target);
 		if (!this.actionLog.build) this.actionLog.build = (result == OK);
 		return result;
 	}
@@ -235,25 +235,25 @@ export class Zerg {
 	}
 
 	cancelOrder(methodName: string): OK | ERR_NOT_FOUND {
-		let result = this.creep.cancelOrder(methodName);
+		const result = this.creep.cancelOrder(methodName);
 		if (result == OK) this.actionLog[methodName] = false;
 		return result;
 	}
 
 	claimController(controller: StructureController) {
-		let result = this.creep.claimController(controller);
+		const result = this.creep.claimController(controller);
 		if (!this.actionLog.claimController) this.actionLog.claimController = (result == OK);
 		return result;
 	}
 
 	dismantle(target: Structure): CreepActionReturnCode {
-		let result = this.creep.dismantle(target);
+		const result = this.creep.dismantle(target);
 		if (!this.actionLog.dismantle) this.actionLog.dismantle = (result == OK);
 		return result;
 	}
 
 	drop(resourceType: ResourceConstant, amount?: number) {
-		let result = this.creep.drop(resourceType, amount);
+		const result = this.creep.drop(resourceType, amount);
 		if (!this.actionLog.drop) this.actionLog.drop = (result == OK);
 		return result;
 	}
@@ -271,7 +271,7 @@ export class Zerg {
 	}
 
 	harvest(source: Source | Mineral) {
-		let result = this.creep.harvest(source);
+		const result = this.creep.harvest(source);
 		if (!this.actionLog.harvest) this.actionLog.harvest = (result == OK);
 		return result;
 	}
@@ -286,7 +286,7 @@ export class Zerg {
 
 	move(direction: DirectionConstant, force = false) {
 		if (!this.blockMovement && !force) {
-			let result = this.creep.move(direction);
+			const result = this.creep.move(direction);
 			if (result == OK) {
 				if (!this.actionLog.move) this.actionLog.move = true;
 				this.nextPos = this.pos.getPositionAtDirection(direction);
@@ -302,13 +302,13 @@ export class Zerg {
 	}
 
 	pickup(resource: Resource) {
-		let result = this.creep.pickup(resource);
+		const result = this.creep.pickup(resource);
 		if (!this.actionLog.pickup) this.actionLog.pickup = (result == OK);
 		return result;
 	}
 
 	rangedAttack(target: Creep | Structure) {
-		let result = this.creep.rangedAttack(target);
+		const result = this.creep.rangedAttack(target);
 		if (result == OK) {
 			this.actionLog.rangedAttack = true;
 			if (isCreep(target)) {
@@ -321,10 +321,10 @@ export class Zerg {
 	}
 
 	rangedMassAttack() {
-		let result = this.creep.rangedMassAttack();
+		const result = this.creep.rangedMassAttack();
 		if (result == OK) {
 			this.actionLog.rangedMassAttack = true;
-			for (let target of this.pos.findInRange(this.room.hostiles, 3)) {
+			for (const target of this.pos.findInRange(this.room.hostiles, 3)) {
 				if (target.hitsPredicted == undefined) target.hitsPredicted = target.hits;
 				target.hitsPredicted -= CombatIntel.getMassAttackDamageTo(this, target);
 			}
@@ -334,7 +334,7 @@ export class Zerg {
 	}
 
 	repair(target: Structure) {
-		let result = this.creep.repair(target);
+		const result = this.creep.repair(target);
 		if (!this.actionLog.repair) this.actionLog.repair = (result == OK);
 		return result;
 	}
@@ -348,7 +348,7 @@ export class Zerg {
 	}
 
 	reserveController(controller: StructureController) {
-		let result = this.creep.reserveController(controller);
+		const result = this.creep.reserveController(controller);
 		if (!this.actionLog.reserveController) this.actionLog.reserveController = (result == OK);
 		return result;
 	}
@@ -359,7 +359,7 @@ export class Zerg {
 	}
 
 	signController(target: StructureController, text: string) {
-		let result = this.creep.signController(target, text);
+		const result = this.creep.signController(target, text);
 		if (!this.actionLog.signController) this.actionLog.signController = (result == OK);
 		return result;
 	}
@@ -369,7 +369,7 @@ export class Zerg {
 	}
 
 	upgradeController(controller: StructureController) {
-		let result = this.creep.upgradeController(controller);
+		const result = this.creep.upgradeController(controller);
 		if (!this.actionLog.upgradeController) this.actionLog.upgradeController = (result == OK);
 		// Determine amount of upgrade power
 		// let weightedUpgraderParts = _.map(this.boostCounts, )
@@ -385,7 +385,7 @@ export class Zerg {
 			return this.rangedHeal(target);
 		}
 		const creep = toCreep(target);
-		let result = this.creep.heal(creep);
+		const result = this.creep.heal(creep);
 		if (result == OK) {
 			this.actionLog.heal = true;
 			if (creep.hitsPredicted == undefined) creep.hitsPredicted = creep.hits;
@@ -397,7 +397,7 @@ export class Zerg {
 
 	rangedHeal(target: Creep | Zerg) {
 		const creep = toCreep(target);
-		let result = this.creep.rangedHeal(creep);
+		const result = this.creep.rangedHeal(creep);
 		if (result == OK) {
 			this.actionLog.rangedHeal = true;
 			if (creep.hitsPredicted == undefined) creep.hitsPredicted = creep.hits;
@@ -427,7 +427,7 @@ export class Zerg {
 	}
 
 	withdraw(target: Structure | Tombstone, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
-		let result = this.creep.withdraw(target, resourceType, amount);
+		const result = this.creep.withdraw(target, resourceType, amount);
 		if (!this.actionLog.withdraw) this.actionLog.withdraw = (result == OK);
 		return result;
 	}
@@ -449,10 +449,10 @@ export class Zerg {
 	canExecute(actionName: string): boolean {
 		// Only one action can be executed from within a single pipeline
 		let conflictingActions: string[] = [actionName];
-		for (let pipeline of actionPipelines) {
+		for (const pipeline of actionPipelines) {
 			if (pipeline.includes(actionName)) conflictingActions = conflictingActions.concat(pipeline);
 		}
-		for (let action of conflictingActions) {
+		for (const action of conflictingActions) {
 			if (this.actionLog[action]) {
 				return false;
 			}
@@ -476,7 +476,7 @@ export class Zerg {
 	// Carry methods
 
 	get hasMineralsInCarry(): boolean {
-		for (let resourceType in this.carry) {
+		for (const resourceType in this.carry) {
 			if (resourceType != RESOURCE_ENERGY && (this.carry[<ResourceConstant>resourceType] || 0) > 0) {
 				return true;
 			}
@@ -538,9 +538,9 @@ export class Zerg {
 	 */
 	set task(task: Task | null) {
 		// Unregister target from old task if applicable
-		let oldProtoTask = this.memory.task;
+		const oldProtoTask = this.memory.task;
 		if (oldProtoTask) {
-			let oldRef = oldProtoTask._target.ref;
+			const oldRef = oldProtoTask._target.ref;
 			if (Overmind.cache.targets[oldRef]) {
 				_.remove(Overmind.cache.targets[oldRef], name => name == this.name);
 			}
@@ -609,11 +609,11 @@ export class Zerg {
 
 	goTo(destination: RoomPosition | HasPos, options: MoveOptions = {}) {
 		return Movement.goTo(this, destination, options);
-	};
+	}
 
 	goToRoom(roomName: string, options: MoveOptions = {}) {
 		return Movement.goToRoom(this, roomName, options);
-	};
+	}
 
 	inSameRoomAs(target: HasPos): boolean {
 		return this.pos.roomName == target.pos.roomName;
@@ -628,7 +628,7 @@ export class Zerg {
 	}
 
 	get isMoving(): boolean {
-		let moveData = this.memory._go as MoveData | undefined;
+		const moveData = this.memory._go as MoveData | undefined;
 		return !!moveData && !!moveData.path && moveData.path.length > 1;
 	}
 
@@ -660,11 +660,11 @@ export class Zerg {
 		} else if (this.room.controller && this.room.controller.my && this.room.controller.safeMode) {
 			return false;
 		} else {
-			let fleeing = Movement.flee(this, avoidGoals, fleeOptions.dropEnergy, moveOptions) != undefined;
+			const fleeing = Movement.flee(this, avoidGoals, fleeOptions.dropEnergy, moveOptions) != undefined;
 			if (fleeing) {
 				// Drop energy if needed
 				if (fleeOptions.dropEnergy && this.carry.energy > 0) {
-					let nearbyContainers = this.pos.findInRange(this.room.storageUnits, 1);
+					const nearbyContainers = this.pos.findInRange(this.room.storageUnits, 1);
 					if (nearbyContainers.length > 0) {
 						this.transfer(_.first(nearbyContainers), RESOURCE_ENERGY);
 					} else {

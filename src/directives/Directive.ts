@@ -1,8 +1,8 @@
-import {log} from '../console/log';
-import {profile} from '../profiler/decorator';
 import {Colony, getAllColonies} from '../Colony';
-import {Overlord} from '../overlords/Overlord';
+import {log} from '../console/log';
 import {Pathing} from '../movement/Pathing';
+import {Overlord} from '../overlords/Overlord';
+import {profile} from '../profiler/decorator';
 import {equalXYR, randomHex} from '../utilities/utils';
 import {NotifierPriority} from './Notifier';
 
@@ -89,7 +89,7 @@ export abstract class Directive {
 	 */
 	static getPos(flag: Flag): RoomPosition {
 		if (flag.memory && flag.memory.setPosition) {
-			let pos = derefRoomPosition(flag.memory.setPosition);
+			const pos = derefRoomPosition(flag.memory.setPosition);
 			return pos;
 		}
 		return flag.pos;
@@ -134,9 +134,9 @@ export abstract class Directive {
 
 	private handleRelocation(): boolean {
 		if (this.memory.setPosition) {
-			let pos = derefRoomPosition(this.memory.setPosition);
+			const pos = derefRoomPosition(this.memory.setPosition);
 			if (!this.flag.pos.isEqualTo(pos)) {
-				let result = this.flag.setPosition(pos);
+				const result = this.flag.setPosition(pos);
 				if (result == OK) {
 					log.debug(`Moving ${this.name} from ${this.flag.pos.print} to ${pos.print}.`);
 				} else {
@@ -158,8 +158,8 @@ export abstract class Directive {
 			return Overmind.colonies[this.memory[_MEM.COLONY]!];
 		} else {
 			// If flag contains a colony name as a substring, assign to that colony, regardless of RCL
-			let colonyNames = _.keys(Overmind.colonies);
-			for (let name of colonyNames) {
+			const colonyNames = _.keys(Overmind.colonies);
+			for (const name of colonyNames) {
 				if (this.name.includes(name)) {
 					if (this.name.split(name)[1] != '') continue; // in case of other substring, e.g. E11S12 and E11S1
 					this.memory[_MEM.COLONY] = name;
@@ -167,7 +167,7 @@ export abstract class Directive {
 				}
 			}
 			// If flag is in a room belonging to a colony and the colony has sufficient RCL, assign to there
-			let colony = Overmind.colonies[Overmind.colonyMap[this.pos.roomName]] as Colony | undefined;
+			const colony = Overmind.colonies[Overmind.colonyMap[this.pos.roomName]] as Colony | undefined;
 			if (colony) {
 				if (!colonyFilter || colonyFilter(colony)) {
 					this.memory[_MEM.COLONY] = colony.name;
@@ -175,7 +175,7 @@ export abstract class Directive {
 				}
 			}
 			// Otherwise assign to closest colony
-			let nearestColony = this.findNearestColony(colonyFilter);
+			const nearestColony = this.findNearestColony(colonyFilter);
 			if (nearestColony) {
 				log.info(`Colony ${nearestColony.room.print} assigned to ${this.name}.`);
 				this.memory[_MEM.COLONY] = nearestColony.room.name;
@@ -191,15 +191,15 @@ export abstract class Directive {
 		const maxPathLength = this.memory.maxPathLength || DEFAULT_MAX_PATH_LENGTH;
 		const maxLinearRange = this.memory.maxLinearRange || DEFAULT_MAX_LINEAR_RANGE;
 		if (verbose) log.info(`Recalculating colony association for ${this.name} in ${this.pos.roomName}`);
-		let nearestColony: Colony | undefined = undefined;
+		let nearestColony: Colony | undefined;
 		let minDistance = Infinity;
-		let colonyRooms = _.filter(Game.rooms, room => room.my);
-		for (let colony of getAllColonies()) {
+		const colonyRooms = _.filter(Game.rooms, room => room.my);
+		for (const colony of getAllColonies()) {
 			if (Game.map.getRoomLinearDistance(this.pos.roomName, colony.name) > maxLinearRange) {
 				continue;
 			}
 			if (!colonyFilter || colonyFilter(colony)) {
-				let ret = Pathing.findPath((colony.hatchery || colony).pos, this.pos);
+				const ret = Pathing.findPath((colony.hatchery || colony).pos, this.pos);
 				if (!ret.incomplete) {
 					if (ret.path.length < maxPathLength && ret.path.length < minDistance) {
 						nearestColony = colony;
@@ -258,7 +258,7 @@ export abstract class Directive {
 		if (!opts.quiet) {
 			log.alert(`Creating ${this.directiveName} directive at ${pos.print}!`);
 		}
-		let result = pos.createFlag(flagName, this.color, this.secondaryColor) as string | number;
+		const result = pos.createFlag(flagName, this.color, this.secondaryColor) as string | number;
 		if (result == flagName && opts.memory) {
 			Memory.flags[flagName] = opts.memory;
 		}
@@ -278,7 +278,7 @@ export abstract class Directive {
 											!(flag.memory.setPosition
 											&& flag.memory.setPosition.roomName != pos.roomName)).length > 0;
 				} else {
-					let flagsInRoom = _.filter(Game.flags, function (flag) {
+					const flagsInRoom = _.filter(Game.flags, function(flag) {
 						if (flag.memory.setPosition) { // does it need to be relocated?
 							return flag.memory.setPosition.roomName == pos.roomName;
 						} else { // properly located
@@ -294,7 +294,7 @@ export abstract class Directive {
 											!(flag.memory.setPosition
 											&& !equalXYR(pos, flag.memory.setPosition))).length > 0;
 				} else {
-					let flagsAtPos = _.filter(Game.flags, function (flag) {
+					const flagsAtPos = _.filter(Game.flags, function(flag) {
 						if (flag.memory.setPosition) { // does it need to be relocated?
 							return equalXYR(flag.memory.setPosition, pos);
 						} else { // properly located
@@ -313,14 +313,13 @@ export abstract class Directive {
 		if (this.isPresent(pos, scope)) {
 			return; // do nothing if flag is already here
 		}
-		let room = Game.rooms[pos.roomName] as Room | undefined;
+		const room = Game.rooms[pos.roomName] as Room | undefined;
 		if (!room) {
 			if (!opts.memory) {
 				opts.memory = {};
 			}
 			opts.memory.setPosition = pos;
 		}
-		let flagsOfThisType: Flag[];
 		switch (scope) {
 			case 'room':
 				if (room) {

@@ -1,6 +1,8 @@
-import {getAllStructureCoordsFromLayout, StructureLayout} from '../RoomPlanner';
+/* tslint:disable */
+
 import {Colony} from '../../Colony';
 import {coordName} from '../../utilities/utils';
+import {getAllStructureCoordsFromLayout, StructureLayout} from '../RoomPlanner';
 
 
 export const BUNKER_RADIUS = 6;

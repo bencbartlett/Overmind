@@ -2,35 +2,89 @@
   "extends": [
     "tslint:recommended"
   ],
+  "linterOptions": {
+    "exclude": [
+      "src/deprecated/*.ts"
+    ]
+  },
   "rules": {
-    "forin": false,
-    "interface-name": [
+    "align": false,
+    "array-type": false,
+    "arrow-parens": false,
+    "ban-types": false,
+    "curly": [
       true,
-      "never-prefix"
+      "ignore-same-line"
+    ],
+    "forin": false,
+    "indent": [
+      true,
+      "tabs",
+      4
+    ],
+    "interface-name": false,
+    "interface-over-type-literal": false,
+    "jsdoc-format": [
+      true,
+      "check-multiline-start"
+    ],
+    "object-literal-sort-keys": false,
+    "one-line": [
+      true,
+      "check-catch",
+      "check-finally",
+      // "check-else", // putting else on a different line is sometimes useful
+      "check-open-brace",
+      "check-whitespace"
+    ],
+    "one-variable-per-declaration": false,
+    "only-arrow-functions": false,
+    "max-classes-per-file": false,
+    "max-line-length": [
+      true,
+      120
+    ],
+    "member-access": [
+      true,
+      "no-public"
     ],
     "member-ordering": [
       false
     ],
+    "no-angle-bracket-type-assertion": false,
+    "no-consecutive-blank-lines": false,
     "no-console": [
       false
     ],
+    "no-empty": false,
+    "no-empty-interface": false,
     "no-namespace": [
       true,
       "allow-declarations"
     ],
-    "trailing-comma": [
+    "no-shadowed-variable": false,
+    "no-trailing-whitespace": false,
+    "object-literal-shorthand": false,
+    "prefer-const": [
       true,
       {
-        "multiline": "never",
-        "singleline": "never"
+        "destructuring": "all"
       }
     ],
+    "quotemark": [
+      true,
+      "single"
+      // I recognize the irony here
+    ],
+    "trailing-comma": false,
+    "triple-equals": false,
     "variable-name": [
       true,
       "ban-keywords",
       "check-format",
       "allow-pascal-case",
       "allow-leading-underscore"
-    ]
+    ],
+    "whitespace": false
   }
 }
