@@ -50,10 +50,10 @@ export class RangedDefenseOverlord extends CombatOverlord {
 		let worstDamageMultiplier = _.min(_.map(this.room.hostiles,
 												creep => CombatIntel.minimumDamageTakenMultiplier(creep)));
 		let finalValue = Math.ceil(.5 + 1.5 * healAmount / (worstDamageMultiplier * (hydraliskDamage + towerDamage + 1)));
-		if ((Game.time - this.directive.memory.safeSince) > this.directive.safeSpawnHaltTime) {
-			console.log(`Been safe for ${(Game.time - this.directive.memory.safeSince)}, setting hydralisk wishlist in ${this.room.print} to 0.`)
-			return 0
-		}
+		// if ((Game.time - this.directive.memory.safeSince) > this.directive.safeSpawnHaltTime) {
+		// 	console.log(`Been safe for ${(Game.time - this.directive.memory.safeSince)}, setting hydralisk wishlist in ${this.room.print} to 0.`)
+		// 	return 0
+		// }
 		return finalValue;
 	}
 
