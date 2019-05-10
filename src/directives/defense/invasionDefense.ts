@@ -44,7 +44,7 @@ export class DirectiveInvasionDefense extends Directive {
 		}
 		let expectedDamage = CombatIntel.maxDamageByCreeps(this.room.dangerousPlayerHostiles);
 		console.log(`ATTACK POWER EXPECTED IS ${expectedDamage} in room ${this.room.print}, safe for ${Game.time - this.memory.safeSince}`);
-		let useBoosts = (expectedDamage > ATTACK_POWER * 14)
+		let useBoosts = (expectedDamage > ATTACK_POWER * 13)
 						&& !!this.colony.terminal
 						&& !!this.colony.evolutionChamber;
 		// let percentWalls = _.filter(this.room.barriers, s => s.structureType == STRUCTURE_WALL).length /
@@ -70,7 +70,7 @@ export class DirectiveInvasionDefense extends Directive {
 		}
 		// If there are no hostiles left in the room and everyone's healed, then remove the flag
 		if (this.room && this.room.hostiles.length == 0 &&
-			Game.time - this.memory.safeSince > this.safeEndTime && this.room.hostileStructures.length == 0) {
+			(Game.time - this.memory.safeSince) > this.safeEndTime && this.room.hostileStructures.length == 0) {
 			if (_.filter(this.room.creeps, creep => creep.hits < creep.hitsMax).length == 0) {
 				this.remove();
 			}
