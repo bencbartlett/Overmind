@@ -93,6 +93,7 @@ export class MiningOverlord extends Overlord {
 		// 							 this.pos.availableNeighbors(true).length);
 		this.minersNeeded = Math.min(Math.ceil(this.miningPowerNeeded / miningPowerEach),
 										 this.pos.availableNeighbors(true).length);
+		this.minersNeeded = this.isDisabled ? 0 : this.minersNeeded;
 		// Allow drop mining at low levels
 		this.allowDropMining = this.colony.level < MiningOverlord.settings.dropMineUntilRCL;
 		if (this.mode != 'early' && !this.allowDropMining) {
@@ -115,7 +116,7 @@ export class MiningOverlord extends Overlord {
 			if (nearby.length > 0) {
 				this.secondSource = nearby[0];
 				let miningPos = this.source.pos.getPositionAtDirection(this.source.pos.getDirectionTo(this.secondSource.pos));
-				if (miningPos.isWalkable()) {
+				if (!miningPos.isWalkable()) {
 						console.log(`Double mining found but there is no spot between ${this.secondSource} ${this.secondSource.pos.print} isWalkable ${miningPos}`);
 					return false;
 				}
@@ -129,25 +130,6 @@ export class MiningOverlord extends Overlord {
 		}
 		return false;
 	}
-
-		// 	let sources = this.room.find(FIND_SOURCES);
-		// 	for (let i = 0; i <sources.length; i++) {
-		// 		for (let j = 0; j<i; j++) {
-		// 			let first = sources[i].pos;
-		// 			let second = sources[j].pos;
-		// 			let range = first.getRangeTo(second);
-		// 			if (range <= 2) {
-		// 				// If within 2, check if spot inbetween is open
-		// 				if (range == 1 || first.getPositionAtDirection(first.getDirectionTo(second)).isWalkable()) {
-		// 					return [first, second];
-		// 				}
-		// 			}
-		// 		}
-		// 	}
-		//
-		// }
-		// return [];
-	//}
 
 	/**
 	 * TODO Note to self - make directive to make a double miner
