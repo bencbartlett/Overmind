@@ -26,6 +26,7 @@ import {DirectiveTerminalEmergencyState} from './terminalState/terminalState_eme
 import {DirectiveTerminalEvacuateState} from './terminalState/terminalState_evacuate';
 import {DirectiveTerminalRebuildState} from './terminalState/terminalState_rebuild';
 import {DirectivePowerMine} from "./resource/powerMine";
+import {DirectiveHarass} from "./offense/harass";
 
 /**
  * This is the initializer for directives, which maps flags by their color code to the corresponding directive
@@ -59,6 +60,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectivePairDestroy(flag);
 				case COLOR_PURPLE:
 					return new DirectiveControllerAttack(flag);
+				case COLOR_WHITE:
+					return new DirectiveHarass(flag);
 			}
 			break;
 
