@@ -17,7 +17,7 @@ export class HarassOverlord extends CombatOverlord {
 
 	hydralisks: CombatZerg[];
 	room: Room;
-	nextTarget: string;
+	targetRemoteToHarass: string;
 	directive: DirectiveHarass;
 
 
@@ -38,19 +38,31 @@ export class HarassOverlord extends CombatOverlord {
 	}
 
 	private handleHarass(hydralisk: CombatZerg): void {
-		if (this.nextTarget && this.room.name != this.nextTarget) {
-			hydralisk.goToRoom(this.nextTarget);
+		console.log(`Matt: hydralisk harassment in ${hydralisk.print}`);
+		hydralisk.autoCombat(this.targetRemoteToHarass || hydralisk.room.name);
+
+		//this.chooseRemoteToHarass(hydralisk, hydralisk.room.name);
+		if (!this.targetRemoteToHarass) {
+			this.chooseRemoteToHarass(hydralisk, hydralisk.room.name);
+		}
+		if (this.targetRemoteToHarass && hydralisk.room.name != this.targetRemoteToHarass) {
+			hydralisk.goToRoom(this.targetRemoteToHarass);
 		} else if (hydralisk.room.dangerousPlayerHostiles.length > 2) {
 			// Time to move on
-			this.moveToNearbyRoom(hydralisk, hydralisk.room.name);
+			this.chooseRemoteToHarass(hydralisk, hydralisk.room.name);
 		}
-		hydralisk.autoCombat(this.room.name);
-		// Clean up infra then move on to another room
+		// Clean up construction sites then move on to another room
 	}
 
-	moveToNearbyRoom(hydralisk: CombatZerg, currentRoom: string) {
-		this.nextTarget = _.sample(this.directive.memory.roomsToHarass);
-		hydralisk.goToRoom(this.nextTarget);
+	chooseRemoteToHarass(hydralisk: CombatZerg, currentRoom: string) {
+		this.targetRemoteToHarass = _.sample(this.directive.memory.roomsToHarass);
+		if (this.targetRemoteToHarass) {
+			console.log(`Selecting new target of ${this.targetRemoteToHarass} for ${hydralisk.print}`);
+			hydralisk.say(`Tgt ${this.targetRemoteToHarass}`);
+			hydralisk.goToRoom(this.targetRemoteToHarass);
+		} else {
+			console.log(`Tried to select new harass target from ${currentRoom} but failed for ${this.directive.print} with list ${this.directive.memory.roomsToHarass}`);
+		}
 	}
 
 	init() {
@@ -60,7 +72,7 @@ export class HarassOverlord extends CombatOverlord {
 	}
 
 	run() {
-		console.log(`Matt: Running directive harass in ${this.room.print}`);
+		console.log(`Matt: Running directive harass in ${this.directive.print}`);
 		this.autoRun(this.hydralisks, hydralisk => this.handleHarass(hydralisk));
 	}
 }
