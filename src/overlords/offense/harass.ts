@@ -38,19 +38,30 @@ export class HarassOverlord extends CombatOverlord {
 	}
 
 	private handleHarass(hydralisk: CombatZerg): void {
-		if (this.nextTarget && this.room.name != this.nextTarget) {
+		console.log(`Matt: hydralisk harassment in ${hydralisk.print}`);
+		//this.moveToNearbyRoom(hydralisk, hydralisk.room.name);
+		if (!this.nextTarget) {
+			this.moveToNearbyRoom(hydralisk, hydralisk.room.name);
+		}
+		if (this.nextTarget && this.directive.pos.roomName != this.nextTarget) {
 			hydralisk.goToRoom(this.nextTarget);
 		} else if (hydralisk.room.dangerousPlayerHostiles.length > 2) {
 			// Time to move on
 			this.moveToNearbyRoom(hydralisk, hydralisk.room.name);
 		}
-		hydralisk.autoCombat(this.room.name);
-		// Clean up infra then move on to another room
+		hydralisk.autoCombat(this.nextTarget || hydralisk.room.name);
+		// Clean up construction sites then move on to another room
 	}
 
 	moveToNearbyRoom(hydralisk: CombatZerg, currentRoom: string) {
 		this.nextTarget = _.sample(this.directive.memory.roomsToHarass);
-		hydralisk.goToRoom(this.nextTarget);
+		if (this.nextTarget) {
+			console.log(`Selecting new target of ${this.nextTarget} for ${hydralisk.print}`);
+			hydralisk.say(`Tgt ${this.nextTarget}`);
+			hydralisk.goToRoom(this.nextTarget);
+		} else {
+			console.log(`Tried to select new harass target from ${currentRoom} but failed for ${this.directive.print} with list ${this.directive.memory.roomsToHarass}`);
+		}
 	}
 
 	init() {
@@ -60,7 +71,7 @@ export class HarassOverlord extends CombatOverlord {
 	}
 
 	run() {
-		console.log(`Matt: Running directive harass in ${this.room.print}`);
+		console.log(`Matt: Running directive harass in ${this.directive.print}`);
 		this.autoRun(this.hydralisks, hydralisk => this.handleHarass(hydralisk));
 	}
 }
