@@ -1,6 +1,7 @@
 // Room intel - provides information related to room structure and occupation
 
 import {bodyCost} from '../creepSetups/CreepSetup';
+import {isCreep} from '../declarations/typeGuards';
 import {profile} from '../profiler/decorator';
 import {ExpansionPlanner} from '../strategy/ExpansionPlanner';
 import {getCacheExpiration, irregularExponentialMovingAverage} from '../utilities/utils';
@@ -184,7 +185,8 @@ export class RoomIntel {
 		for (const tombstone of room.tombstones) {
 			if (tombstone.ticksToDecay == 1) {
 				// record any casualties, which are my creeps which died prematurely
-				if ((tombstone.creep.ticksToLive || 0) > 1 && tombstone.creep.owner.username == MY_USERNAME) {
+				if ((tombstone.creep.ticksToLive || 0) > 1 && tombstone.creep.owner.username == MY_USERNAME
+					&& isCreep(tombstone.creep)) {
 					const body = _.map(tombstone.creep.body, part => part.type);
 					const lifetime = body.includes(CLAIM) ? CREEP_CLAIM_LIFE_TIME : CREEP_LIFE_TIME;
 					const dCost = bodyCost(body) * (tombstone.creep.ticksToLive || 0) / lifetime;

@@ -325,11 +325,11 @@ export class CombatPlanner {
 	}
 
 	private registerSiegeAnalysis(room: Room): void {
-		if (!this.memory.sieges[name]) {
-			this.memory.sieges[name] = {};
+		if (!this.memory.sieges[room.name]) {
+			this.memory.sieges[room.name] = {};
 		}
-		if (!this.memory.sieges[name].analysis || Game.time > this.memory.sieges[name].analysis!.expiration) {
-			this.memory.sieges[name].analysis = CombatPlanner.getSiegeAnalysis(room);
+		if (!this.memory.sieges[room.name].analysis || Game.time > this.memory.sieges[room.name].analysis!.expiration) {
+			this.memory.sieges[room.name].analysis = CombatPlanner.getSiegeAnalysis(room);
 		}
 	}
 
