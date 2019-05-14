@@ -3,7 +3,7 @@
 import {bodyCost} from '../creepSetups/CreepSetup';
 import {isCreep} from '../declarations/typeGuards';
 import {profile} from '../profiler/decorator';
-import {ExpansionPlanner} from '../strategy/ExpansionPlanner';
+import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
 import {getCacheExpiration, irregularExponentialMovingAverage} from '../utilities/utils';
 import {Zerg} from '../zerg/Zerg';
 import {MY_USERNAME} from '../~settings';
@@ -111,12 +111,12 @@ export class RoomIntel {
 		if (room.memory[_RM.EXPANSION_DATA] == false) { // room is uninhabitable or owned
 			if (Math.random() < FALSE_SCORE_RECALC_PROB) {
 				// false scores get evaluated very occasionally
-				return ExpansionPlanner.computeExpansionData(room);
+				return ExpansionEvaluator.computeExpansionData(room);
 			}
 		} else { // if the room is not uninhabitable
 			if (!room.memory[_RM.EXPANSION_DATA] || Math.random() < SCORE_RECALC_PROB) {
 				// recompute some of the time
-				return ExpansionPlanner.computeExpansionData(room);
+				return ExpansionEvaluator.computeExpansionData(room);
 			}
 		}
 		return false;
