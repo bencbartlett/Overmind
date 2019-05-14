@@ -23,7 +23,8 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 	};
 
 	constructor(directive: DirectiveInvasionDefense, boosted = false, priority = OverlordPriority.defense.meleeDefense) {
-		super(directive, 'bunkerDefense', priority, 1);
+		// Only spawn inside room
+		super(directive, 'bunkerDefense', priority, 1, 30);
 		this.lurkers = this.combatZerg(Roles.bunkerGuard, {
 			boostWishlist: boosted ? [boostResources.attack[3], boostResources.move[3]]
 								   : undefined
@@ -32,24 +33,20 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 
 	private handleDefender(zergling: CombatZerg): void {
 		if (zergling.room.hostiles.length > 0) {
+			console.log(`Running actual defender in room ${this.room.print}`);
 			zergling.autoBunkerCombat(zergling.room.name);
 		}
-	}
-
-	private computeNeededZerglingAmount(setup: CreepSetup, boostMultiplier: number): number {
-		return 1;
 	}
 
 	init() {
 		this.reassignIdleCreeps(Roles.melee);
 		if (this.canBoostSetup(CombatSetups.bunkerGuard.boosted_T3)) {
 			const setup = CombatSetups.bunkerGuard.boosted_T3;
-			this.wishlist(this.computeNeededZerglingAmount(setup, BOOSTS.attack.XUH2O.attack), setup);
+			this.wishlist(1, setup);
 		}
 	}
 
 	run() {
-		console.log(("Running Bunker defender"));
 		this.autoRun(this.lurkers, zergling => this.handleDefender(zergling));
 	}
 }
