@@ -52,7 +52,13 @@ export class DirectiveInvasionDefense extends Directive {
 			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
 		}
 		// If serious bunker busting attempt, spawn lurkers
-		if (meleeHostiles.length > 0 && ((expectedDamage > ATTACK_POWER * 30) || meleeHostiles[0].owner.username == 'Inakrin')) {
+		//console.log("Bunker Melee hostiles are: " + rangedHostiles);
+		               // if (meleeHostiles.length > 0 && ((expectedDamage > ATTACK_POWER * 30) || meleeHostiles[0].owner.username == 'Inakrin' || rangedHostiles[0])) {
+			               //      Game.notify(`Adding a new Bunker Defense in room ${this.room.print}`);
+				               //      this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, true);
+					               // }
+		if ((meleeHostiles.length > 0 && (meleeHostiles[0].owner.username == 'o4kapuk' ||  meleeHostiles[0].owner.username == 'Inakrin')) || (rangedHostiles.length > 0 && rangedHostiles[0].owner.username == 'o4kapuk')) {
+		//if (meleeHostiles.length > 0 && ((expectedDamage > ATTACK_POWER * 30) || meleeHostiles[0].owner.username == 'Inakrin')) {
 			Game.notify(`Adding a new Bunker Defense in room ${this.room.print}`);
 			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, true);
 		}

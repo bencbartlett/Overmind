@@ -942,11 +942,7 @@ export class Movement {
 					outcome = creep.move(creep.pos.getDirectionTo(ret.path[0]));
 					if (outcome == OK) {
 						return outcome;
-					} else if (options.requireRamparts) {
-						creep.cancelOrder('move');
 					}
-				} else if (options.requireRamparts) {
-					creep.cancelOrder('move');
 				}
 			}
 		}
