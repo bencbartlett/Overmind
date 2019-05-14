@@ -17,7 +17,7 @@ export class HarassOverlord extends CombatOverlord {
 
 	hydralisks: CombatZerg[];
 	room: Room;
-	nextTarget: string;
+	targetRemoteToHarass: string;
 	directive: DirectiveHarass;
 
 
@@ -39,26 +39,27 @@ export class HarassOverlord extends CombatOverlord {
 
 	private handleHarass(hydralisk: CombatZerg): void {
 		console.log(`Matt: hydralisk harassment in ${hydralisk.print}`);
-		//this.moveToNearbyRoom(hydralisk, hydralisk.room.name);
-		if (!this.nextTarget) {
-			this.moveToNearbyRoom(hydralisk, hydralisk.room.name);
+		hydralisk.autoCombat(this.targetRemoteToHarass || hydralisk.room.name);
+
+		//this.chooseRemoteToHarass(hydralisk, hydralisk.room.name);
+		if (!this.targetRemoteToHarass) {
+			this.chooseRemoteToHarass(hydralisk, hydralisk.room.name);
 		}
-		if (this.nextTarget && this.directive.pos.roomName != this.nextTarget) {
-			hydralisk.goToRoom(this.nextTarget);
+		if (this.targetRemoteToHarass && hydralisk.room.name != this.targetRemoteToHarass) {
+			hydralisk.goToRoom(this.targetRemoteToHarass);
 		} else if (hydralisk.room.dangerousPlayerHostiles.length > 2) {
 			// Time to move on
-			this.moveToNearbyRoom(hydralisk, hydralisk.room.name);
+			this.chooseRemoteToHarass(hydralisk, hydralisk.room.name);
 		}
-		hydralisk.autoCombat(this.nextTarget || hydralisk.room.name);
 		// Clean up construction sites then move on to another room
 	}
 
-	moveToNearbyRoom(hydralisk: CombatZerg, currentRoom: string) {
-		this.nextTarget = _.sample(this.directive.memory.roomsToHarass);
-		if (this.nextTarget) {
-			console.log(`Selecting new target of ${this.nextTarget} for ${hydralisk.print}`);
-			hydralisk.say(`Tgt ${this.nextTarget}`);
-			hydralisk.goToRoom(this.nextTarget);
+	chooseRemoteToHarass(hydralisk: CombatZerg, currentRoom: string) {
+		this.targetRemoteToHarass = _.sample(this.directive.memory.roomsToHarass);
+		if (this.targetRemoteToHarass) {
+			console.log(`Selecting new target of ${this.targetRemoteToHarass} for ${hydralisk.print}`);
+			hydralisk.say(`Tgt ${this.targetRemoteToHarass}`);
+			hydralisk.goToRoom(this.targetRemoteToHarass);
 		} else {
 			console.log(`Tried to select new harass target from ${currentRoom} but failed for ${this.directive.print} with list ${this.directive.memory.roomsToHarass}`);
 		}
