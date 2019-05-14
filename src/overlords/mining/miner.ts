@@ -67,8 +67,6 @@ export class MiningOverlord extends Overlord {
 			this.energyPerTick = SOURCE_ENERGY_NEUTRAL_CAPACITY / ENERGY_REGEN_TIME;
 		}
 		this.miningPowerNeeded = Math.ceil(this.energyPerTick / HARVEST_POWER) + 1;
-		let doubleMine = this.checkIfDoubleMine();
-
 
 		// Decide operating mode
 		if (Cartographer.roomType(this.pos.roomName) == ROOMTYPE_SOURCEKEEPER) {
@@ -77,7 +75,7 @@ export class MiningOverlord extends Overlord {
 		} else if (this.colony.room.energyCapacityAvailable < StandardMinerSetupCost) {
 			this.mode = 'early';
 			this.setup = Setups.drones.miners.default;
-		} else if (doubleMine && this.colony.room.energyCapacityAvailable > DoubleMinerSetupCost) {
+		} else if (this.checkIfDoubleMine() && this.colony.room.energyCapacityAvailable > DoubleMinerSetupCost) {
 			this.mode = 'double';
 			this.setup = Setups.drones.miners.double;
 		} else if (this.link) {
@@ -115,10 +113,13 @@ export class MiningOverlord extends Overlord {
 			let nearby = this.source.pos.findInRange(FIND_SOURCES, 2).filter(source => this.source != source);
 			if (nearby.length > 0) {
 				this.secondSource = nearby[0];
-				let miningPos = this.source.pos.getPositionAtDirection(this.source.pos.getDirectionTo(this.secondSource.pos));
-				if (!miningPos.isWalkable()) {
+				// If its over 1 spot away, is there spot in between to mine?
+				if (!this.source.pos.isNearTo(this.secondSource)) {
+					let miningPos = this.source.pos.getPositionAtDirection(this.source.pos.getDirectionTo(this.secondSource.pos));
+					if (!miningPos.isWalkable()) {
 						console.log(`Double mining found but there is no spot between ${this.secondSource} ${this.secondSource.pos.print} isWalkable ${miningPos}`);
-					return false;
+						return false;
+					}
 				}
 				console.log(`Double mining found ${this.secondSource} ${this.secondSource.pos.print}`);
 				if (this.source.id > this.secondSource.id) {
