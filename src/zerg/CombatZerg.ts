@@ -295,7 +295,7 @@ export class CombatZerg extends Zerg {
 		const target = CombatTargeting.findTarget(this, siegingCreeps);
 
 		if (target) {
-			return Movement.combatMove(this, [{pos: target.pos, range: 1}], [], {requireRamparts: true});
+			return Movement.combatMove(this, [{pos: target.pos, range: 1}], [], {preferRamparts: true, requireRamparts: true});
 		}
 
 	}

@@ -300,6 +300,9 @@ export const CombatSetups = {
 
 	},
 
+	/**
+	 * Pure melee raw power creeps that should never leave the bunker. These are the final guards for a room
+	 */
 	bunkerGuard: {
 
 		early: new CreepSetup(Roles.bunkerGuard, {
@@ -308,12 +311,14 @@ export const CombatSetups = {
 		}),
 
 		default: new CreepSetup(Roles.bunkerGuard, {
-			pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE],
+			pattern  : [ATTACK, ATTACK, MOVE],
 			sizeLimit: Infinity,
 		}),
 
 		boosted_T3: new CreepSetup(Roles.bunkerGuard, {
-			pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, MOVE],
+			// 22 ATTACK, 3 MOVE times 2
+			pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK,
+				ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE],
 			sizeLimit: Infinity,
 		}),
 

@@ -23,7 +23,7 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 	};
 
 	constructor(directive: DirectiveInvasionDefense, boosted = false, priority = OverlordPriority.defense.meleeDefense) {
-		super(directive, 'meleeDefense', priority, 1);
+		super(directive, 'bunkerDefense', priority, 1);
 		this.lurkers = this.combatZerg(Roles.bunkerGuard, {
 			boostWishlist: boosted ? [boostResources.attack[3], boostResources.move[3]]
 								   : undefined
