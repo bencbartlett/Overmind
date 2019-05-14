@@ -30,7 +30,7 @@ import './prototypes/Structures'; // Prototypes for accessed structures
 import './prototypes/Miscellaneous'; // Everything else
 import './tasks/initializer'; // This line is necessary to ensure proper compilation ordering...
 import './zerg/CombatZerg'; // ...so is this one... rollup is dumb about generating reference errors
-import {MUON, MY_USERNAME, RL_MODE, USE_PROFILER} from './~settings';
+import {MUON, MY_USERNAME, RL_TRAINING_MODE, USE_PROFILER} from './~settings';
 import {sandbox} from './sandbox';
 import {Mem} from './memory/Memory';
 import {OvermindConsole} from './console/Console';
@@ -39,6 +39,7 @@ import profiler from './profiler/screeps-profiler';
 import _Overmind from './Overmind_obfuscated'; // this should be './Overmind_obfuscated' unless you are me
 import {VersionMigration} from './versionMigration/migrator';
 import {RemoteDebugger} from './debug/remoteDebugger';
+import {ActionParser} from './reinforcementLearning/actionParser';
 // =====================================================================================================================
 
 // Main loop
@@ -74,7 +75,7 @@ function main(): void {
 
 // Main loop if RL mode is enabled (~settings.ts)
 function main_rl(): void {
-
+	ActionParser.run();
 }
 
 // This gets run on each global reset
@@ -102,7 +103,7 @@ function onGlobalReset(): void {
 
 // Decide which loop to export as the script loop
 let _loop: () => void;
-if (RL_MODE) {
+if (RL_TRAINING_MODE) {
 	// Use stripped version for training reinforcment learning model
 	_loop = main_rl;
 } else {
@@ -117,12 +118,14 @@ if (RL_MODE) {
 
 export const loop = _loop;
 
-if (!RL_MODE) {
-
+if (RL_TRAINING_MODE) {
+	// Clear memory when enabling training mode
+	(<any>Memory) = {};
+	OvermindConsole.printTrainingMessage();
+} else {
 	// Register these functions for checksum computations with the Assimilator
 	Assimilator.validate(main);
 	Assimilator.validate(loop);
-
 	// Run the global reset code
 	onGlobalReset();
 }
