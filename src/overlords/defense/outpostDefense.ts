@@ -1,11 +1,11 @@
-import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {CreepSetup, patternCost} from '../../creepSetups/CreepSetup';
-import {profile} from '../../profiler/decorator';
-import {CombatIntel} from '../../intel/CombatIntel';
-import {CombatZerg} from '../../zerg/CombatZerg';
-import {CombatOverlord} from '../CombatOverlord';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveOutpostDefense} from '../../directives/defense/outpostDefense';
+import {CombatIntel} from '../../intel/CombatIntel';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
+import {profile} from '../../profiler/decorator';
+import {CombatZerg} from '../../zerg/CombatZerg';
+import {CombatOverlord} from '../CombatOverlord';
 
 /**
  * General purpose skirmishing overlord for dealing with player combat in an outpost
@@ -50,20 +50,21 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 	}
 
 	private computeNeededHydraliskAmount(setup: CreepSetup, enemyRangedPotential: number): number {
-		let hydraliskPotential = setup.getBodyPotential(RANGED_ATTACK, this.colony); // TODO: body potential from spawnGroup energy?
+		const hydraliskPotential = setup.getBodyPotential(RANGED_ATTACK, this.colony);
+		// TODO: body potential from spawnGroup energy?
 		// let worstDamageMultiplier = CombatIntel.minimumDamageMultiplierForGroup(this.room.hostiles);
 		return Math.ceil(1.5 * enemyRangedPotential / hydraliskPotential);
 	}
 
 	// TODO: division by 0 error!
 	private computeNeededBroodlingAmount(setup: CreepSetup, enemyAttackPotential: number): number {
-		let broodlingPotential = setup.getBodyPotential(ATTACK, this.colony);
+		const broodlingPotential = setup.getBodyPotential(ATTACK, this.colony);
 		// let worstDamageMultiplier = CombatIntel.minimumDamageMultiplierForGroup(this.room.hostiles);
 		return Math.ceil(1.5 * enemyAttackPotential / broodlingPotential);
 	}
 
 	private computeNeededHealerAmount(setup: CreepSetup, enemyHealPotential: number): number {
-		let healerPotential = setup.getBodyPotential(HEAL, this.colony);
+		const healerPotential = setup.getBodyPotential(HEAL, this.colony);
 		return Math.ceil(1.5 * enemyHealPotential / healerPotential);
 	}
 

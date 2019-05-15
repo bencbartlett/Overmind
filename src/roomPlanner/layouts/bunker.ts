@@ -1,6 +1,8 @@
-import {getAllStructureCoordsFromLayout, StructureLayout} from '../RoomPlanner';
+/* tslint:disable */
+
 import {Colony} from '../../Colony';
 import {coordName} from '../../utilities/utils';
+import {getAllStructureCoordsFromLayout, StructureLayout} from '../RoomPlanner';
 
 
 export const BUNKER_RADIUS = 6;
@@ -482,9 +484,9 @@ export const bunkerCoordLookup = _.mapValues(_allBunkerCoords,
 // Fast function for checking if a position is inside the bunker
 export function insideBunkerBounds(pos: RoomPosition, colony: Colony): boolean {
 	if (colony.roomPlanner.memory.bunkerData && colony.roomPlanner.memory.bunkerData.anchor) {
-		let dx = bunkerLayout.data.anchor.x - colony.roomPlanner.memory.bunkerData.anchor.x;
-		let dy = bunkerLayout.data.anchor.y - colony.roomPlanner.memory.bunkerData.anchor.y;
-		let coord = {x: pos.x + dx, y: pos.y + dy};
+		const dx = bunkerLayout.data.anchor.x - colony.roomPlanner.memory.bunkerData.anchor.x;
+		const dy = bunkerLayout.data.anchor.y - colony.roomPlanner.memory.bunkerData.anchor.y;
+		const coord = {x: pos.x + dx, y: pos.y + dy};
 		return (!!bunkerCoordLookup[colony.level][coordName(coord)]);
 	}
 	return false;

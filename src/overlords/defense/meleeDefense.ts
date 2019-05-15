@@ -1,12 +1,12 @@
-import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {boostResources} from '../../resources/map_resources';
-import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
-import {profile} from '../../profiler/decorator';
-import {CombatIntel} from '../../intel/CombatIntel';
 import {CreepSetup} from '../../creepSetups/CreepSetup';
+import {CombatSetups, Roles} from '../../creepSetups/setups';
+import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
+import {CombatIntel} from '../../intel/CombatIntel';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
+import {profile} from '../../profiler/decorator';
+import {boostResources} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
-import {CombatSetups, Roles} from '../../creepSetups/setups';
 
 /**
  * Spawns melee defenders to defend against incoming player invasions in an owned room
@@ -37,10 +37,10 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 	}
 
 	private computeNeededZerglingAmount(setup: CreepSetup, boostMultiplier: number): number {
-		let healAmount = CombatIntel.maxHealingByCreeps(this.room.hostiles);
-		let zerglingDamage = ATTACK_POWER * boostMultiplier * setup.getBodyPotential(ATTACK, this.colony);
-		let towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 0 : 0;
-		let worstDamageMultiplier = _.min(_.map(this.room.hostiles,
+		const healAmount = CombatIntel.maxHealingByCreeps(this.room.hostiles);
+		const zerglingDamage = ATTACK_POWER * boostMultiplier * setup.getBodyPotential(ATTACK, this.colony);
+		const towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 0 : 0;
+		const worstDamageMultiplier = _.min(_.map(this.room.hostiles,
 												creep => CombatIntel.minimumDamageTakenMultiplier(creep)));
 		return Math.ceil(.5 + 1.5 * healAmount / (worstDamageMultiplier * (zerglingDamage + towerDamage + 1)));
 	}
@@ -48,10 +48,10 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 	init() {
 		this.reassignIdleCreeps(Roles.melee);
 		if (this.canBoostSetup(CombatSetups.zerglings.boosted_T3_defense)) {
-			let setup = CombatSetups.zerglings.boosted_T3_defense;
+			const setup = CombatSetups.zerglings.boosted_T3_defense;
 			this.wishlist(this.computeNeededZerglingAmount(setup, BOOSTS.attack.XUH2O.attack), setup);
 		} else {
-			let setup = CombatSetups.zerglings.default;
+			const setup = CombatSetups.zerglings.default;
 			this.wishlist(this.computeNeededZerglingAmount(setup, 1), setup);
 		}
 	}

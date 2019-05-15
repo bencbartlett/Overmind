@@ -1,8 +1,8 @@
 // Type guards library: this allows for instanceof - like behavior for much lower CPU cost. Each type guard
 // differentiates an ambiguous input by recognizing one or more unique properties.
 
-import {Zerg} from '../zerg/Zerg';
 import {CombatZerg} from '../zerg/CombatZerg';
+import {Zerg} from '../zerg/Zerg';
 
 export interface EnergyStructure extends Structure {
 	energy: number;
@@ -48,6 +48,10 @@ export function hasPos(obj: HasPos | RoomPosition): obj is HasPos {
 
 export function isCreep(obj: RoomObject): obj is Creep {
 	return (<Creep>obj).fatigue != undefined;
+}
+
+export function isPowerCreep(obj: RoomObject): obj is PowerCreep {
+	return (<PowerCreep>obj).powers != undefined;
 }
 
 export function isZerg(creep: Creep | Zerg): creep is Zerg {

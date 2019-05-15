@@ -1,8 +1,8 @@
-import {Directive} from '../Directive';
-import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {ExtractorOverlord} from '../../overlords/mining/extractor';
 import {log} from '../../console/log';
+import {ExtractorOverlord} from '../../overlords/mining/extractor';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
+import {Directive} from '../Directive';
 
 /**
  * Mineral extraction directive. Spawns extraction creeps to operate extractors in owned or source keeper rooms

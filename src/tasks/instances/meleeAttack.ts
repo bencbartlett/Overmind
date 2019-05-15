@@ -1,5 +1,5 @@
-import {Task} from '../Task';
 import {profile} from '../../profiler/decorator';
+import {Task} from '../Task';
 
 export type meleeAttackTargetType = Creep | Structure;
 export const meleeAttackTaskName = 'meleeAttack';
@@ -19,7 +19,7 @@ export class TaskMeleeAttack extends Task {
 	}
 
 	isValidTarget() {
-		var target = this.target;
+		const target = this.target;
 		return target && target.hits > 0; // && target.my == false);
 	}
 

@@ -1,16 +1,16 @@
-import {CombatZerg} from '../../zerg/CombatZerg';
+import {debug, log} from '../../console/log';
+import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveSKOutpost} from '../../directives/colony/outpostSK';
 import {RoomIntel} from '../../intel/RoomIntel';
-import {minBy} from '../../utilities/utils';
 import {Mem} from '../../memory/Memory';
-import {debug, log} from '../../console/log';
-import {CombatTargeting} from '../../targeting/CombatTargeting';
 import {Movement} from '../../movement/Movement';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {Visualizer} from '../../visuals/Visualizer';
 import {profile} from '../../profiler/decorator';
+import {CombatTargeting} from '../../targeting/CombatTargeting';
+import {minBy} from '../../utilities/utils';
+import {Visualizer} from '../../visuals/Visualizer';
+import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
-import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {OverlordMemory} from '../Overlord';
 
 interface SourceReaperOverlordMemory extends OverlordMemory {
@@ -56,8 +56,8 @@ export class SourceReaperOverlord extends CombatOverlord {
 	}
 
 	init() {
-		let defenderAmount = this.room && (this.room.invaders.length > 0
-										   || RoomIntel.isInvasionLikely(this.room)) ? 1 : 0;
+		const defenderAmount = this.room && (this.room.invaders.length > 0
+											 || RoomIntel.isInvasionLikely(this.room)) ? 1 : 0;
 		this.wishlist(1, CombatSetups.zerglings.sourceKeeper);
 		this.wishlist(defenderAmount, CombatSetups.hydralisks.sourceKeeper);
 	}
@@ -65,7 +65,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 	private getNextTargetLair(): StructureKeeperLair | undefined {
 		if (!this.room) return;
 		// If any lairs have an active keeper, target that
-		let activeLair = _.find(this.room.keeperLairs,
+		const activeLair = _.find(this.room.keeperLairs,
 								lair => lair.pos.findInRange(lair.room.sourceKeepers, 5).length > 0);
 		if (activeLair) return activeLair;
 		// Otherwise target whatever is closest to spawning
@@ -87,7 +87,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 			// Handle invader actions
 			// log.debugCreep(reaper, `Handling invader actions!`);
 			if (reaper.hits >= reaper.hitsMax * .5) {
-				let result = reaper.autoMelee(this.room.invaders);
+				const result = reaper.autoMelee(this.room.invaders);
 				if (result == undefined) { // didn't attack
 					reaper.autoHeal();
 				}
@@ -101,7 +101,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 			}
 			// If defender is already here or a small invasion
 			else {
-				let target = CombatTargeting.findTarget(reaper, this.room.invaders);
+				const target = CombatTargeting.findTarget(reaper, this.room.invaders);
 				if (target) {
 					Movement.invasionMove(reaper, target);
 				} else {
@@ -111,15 +111,15 @@ export class SourceReaperOverlord extends CombatOverlord {
 		} else {
 			// log.debugCreep(reaper, `Standard keeperReaper actions`);
 			// Standard keeperReaper actions
-			let nearestHostile = reaper.pos.findClosestByRange(this.room.hostiles) as Creep;
+			const nearestHostile = reaper.pos.findClosestByRange(this.room.hostiles) as Creep;
 			if (nearestHostile && reaper.pos.isNearTo(nearestHostile)) {
 				reaper.attack(nearestHostile);
 				reaper.move(reaper.pos.getDirectionTo(nearestHostile));
 			} else {
-				let keeper = this.targetLair.pos.findClosestByLimitedRange(this.room.sourceKeepers, 7);
+				const keeper = this.targetLair.pos.findClosestByLimitedRange(this.room.sourceKeepers, 7);
 				if (keeper) { // attack the source keeper
 					// stop and heal at range 4 if needed
-					let approachRange = (reaper.hits == reaper.hitsMax || reaper.pos.getRangeTo(keeper) <= 3) ? 1 : 4;
+					const approachRange = (reaper.hits == reaper.hitsMax || reaper.pos.getRangeTo(keeper) <= 3) ? 1 : 4;
 					reaper.goTo(keeper, {range: approachRange});
 				} else { // travel to next lair
 					reaper.goTo(this.targetLair, {range: 1});
@@ -147,13 +147,13 @@ export class SourceReaperOverlord extends CombatOverlord {
 
 		} else {
 			debug(defender, `Standard duty`);
-			let minKeepersToHelp = this.reapers.length == 0 ? 1 : 2;
+			const minKeepersToHelp = this.reapers.length == 0 ? 1 : 2;
 			if (this.room.sourceKeepers.length >= minKeepersToHelp) {
 				// Help out with keeper reaping
 				defender.autoRanged();
 				defender.autoHeal(false);
 
-				let reaper = defender.pos.findClosestByRange(this.reapers);
+				const reaper = defender.pos.findClosestByRange(this.reapers);
 				if (reaper) {
 					defender.goTo(reaper, {
 						movingTarget: defender.pos.getRangeTo(reaper) > 8,
@@ -161,10 +161,10 @@ export class SourceReaperOverlord extends CombatOverlord {
 						repath      : 0.1
 					});
 				} else {
-					let keeper = this.targetLair.pos.findClosestByLimitedRange(this.room.sourceKeepers, 7);
+					const keeper = this.targetLair.pos.findClosestByLimitedRange(this.room.sourceKeepers, 7);
 					if (keeper) { // attack the source keeper
-						let range = defender.pos.getRangeTo(keeper);
-						let keepAtRange = defender.hits < defender.hitsMax * .9 ? 4 : 3;
+						const range = defender.pos.getRangeTo(keeper);
+						const keepAtRange = defender.hits < defender.hitsMax * .9 ? 4 : 3;
 						if (range < keepAtRange) {
 							defender.kite(this.room.hostiles, {range: keepAtRange});
 						} else if (range > keepAtRange) {

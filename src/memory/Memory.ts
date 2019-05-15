@@ -1,8 +1,8 @@
-import {Stats} from '../stats/stats';
-import {profile} from '../profiler/decorator';
-import {DEFAULT_OPERATION_MODE, DEFAULT_OVERMIND_SIGNATURE, PROFILER_COLONY_LIMIT, USE_PROFILER} from '../~settings';
-import {isIVM} from '../utilities/utils';
 import {log} from '../console/log';
+import {profile} from '../profiler/decorator';
+import {Stats} from '../stats/stats';
+import {isIVM} from '../utilities/utils';
+import {DEFAULT_OPERATION_MODE, DEFAULT_OVERMIND_SIGNATURE, PROFILER_COLONY_LIMIT, USE_PROFILER} from '../~settings';
 
 export enum Autonomy {
 	Manual        = 0,
@@ -89,7 +89,9 @@ export class Mem {
 			RawMemory._parsed = lastMemory;
 		} else {
 			// noinspection BadExpressionStatementJS
+			/* tslint:disable:no-unused-expression */
 			Memory.rooms; // forces parsing
+			/* tslint:enable:no-unused-expression */
 			lastMemory = RawMemory._parsed;
 			Memory.stats.persistent.lastMemoryReset = Game.time;
 		}
@@ -104,7 +106,7 @@ export class Mem {
 
 	static garbageCollect(quick?: boolean) {
 		if (global.gc) { // sometimes garbage collection isn't available
-			let start = Game.cpu.getUsed();
+			const start = Game.cpu.getUsed();
 			global.gc(quick);
 			log.debug(`Running ${quick ? 'quick' : 'FULL'} garbage collection. ` +
 					  `Elapsed time: ${Game.cpu.getUsed() - start}.`);
@@ -126,7 +128,7 @@ export class Mem {
 	}
 
 	private static _setDeep(object: any, keys: string[], value: any): void {
-		let key = _.first(keys);
+		const key = _.first(keys);
 		keys = _.drop(keys);
 		if (keys.length == 0) { // at the end of the recursion
 			object[key] = value;
@@ -144,7 +146,7 @@ export class Mem {
 	 * Ex: Mem.setDeep(Memory.colonies, 'E1S1.miningSites.siteID.stats.uptime', 0.5)
 	 */
 	static setDeep(object: any, keyString: string, value: any): void {
-		let keys = keyString.split('.');
+		const keys = keyString.split('.');
 		return Mem._setDeep(object, keys, value);
 	}
 
@@ -256,7 +258,7 @@ export class Mem {
 
 	private static cleanCreeps() {
 		// Clear memory for non-existent creeps
-		for (let name in Memory.creeps) {
+		for (const name in Memory.creeps) {
 			if (!Game.creeps[name]) {
 				delete Memory.creeps[name];
 				delete global[name];
@@ -266,7 +268,7 @@ export class Mem {
 
 	private static cleanFlags() {
 		// Clear memory for non-existent flags
-		for (let name in Memory.flags) {
+		for (const name in Memory.flags) {
 			if (!Game.flags[name]) {
 				delete Memory.flags[name];
 				delete global[name];
@@ -276,8 +278,8 @@ export class Mem {
 
 	private static cleanColonies() {
 		// Clear memory of dead colonies
-		for (let name in Memory.colonies) {
-			let room = Game.rooms[name];
+		for (const name in Memory.colonies) {
+			const room = Game.rooms[name];
 			if (!(room && room.my)) {
 				// Delete only if "persistent" is not set - use case: praise rooms
 				if (!Memory.colonies[name].persistent) {
@@ -293,7 +295,7 @@ export class Mem {
 		if (Game.time % 10 == 0) {
 			const CONSTRUCTION_SITE_TIMEOUT = 50000;
 			// Add constructionSites to memory and remove really old ones
-			for (let id in Game.constructionSites) {
+			for (const id in Game.constructionSites) {
 				const site = Game.constructionSites[id];
 				if (!Memory.constructionSites[id]) {
 					Memory.constructionSites[id] = Game.time;
@@ -306,7 +308,7 @@ export class Mem {
 				}
 			}
 			// Remove dead constructionSites from memory
-			for (let id in Memory.constructionSites) {
+			for (const id in Memory.constructionSites) {
 				if (!Game.constructionSites[id]) {
 					delete Memory.constructionSites[id];
 				}
@@ -321,11 +323,11 @@ export class Mem {
 			const weightedDistanceCleanProbability = 0.01 * CLEAN_FREQUENCY;
 
 			// Randomly clear some cached path lengths
-			for (let pos1Name in Memory.pathing.distances) {
+			for (const pos1Name in Memory.pathing.distances) {
 				if (_.isEmpty(Memory.pathing.distances[pos1Name])) {
 					delete Memory.pathing.distances[pos1Name];
 				} else {
-					for (let pos2Name in Memory.pathing.distances[pos1Name]) {
+					for (const pos2Name in Memory.pathing.distances[pos1Name]) {
 						if (Math.random() < distanceCleanProbability) {
 							delete Memory.pathing.distances[pos1Name][pos2Name];
 						}
@@ -334,11 +336,11 @@ export class Mem {
 			}
 
 			// Randomly clear weighted distances
-			for (let pos1Name in Memory.pathing.weightedDistances) {
+			for (const pos1Name in Memory.pathing.weightedDistances) {
 				if (_.isEmpty(Memory.pathing.weightedDistances[pos1Name])) {
 					delete Memory.pathing.weightedDistances[pos1Name];
 				} else {
-					for (let pos2Name in Memory.pathing.weightedDistances[pos1Name]) {
+					for (const pos2Name in Memory.pathing.weightedDistances[pos1Name]) {
 						if (Math.random() < weightedDistanceCleanProbability) {
 							delete Memory.pathing.weightedDistances[pos1Name][pos2Name];
 						}

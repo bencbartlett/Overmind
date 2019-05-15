@@ -1,11 +1,11 @@
+import {Colony} from '../Colony';
+import {log} from '../console/log';
+import {bodyCost} from '../creepSetups/CreepSetup';
 import {Hatchery, SpawnRequest} from '../hiveClusters/hatchery';
 import {Mem} from '../memory/Memory';
-import {getAllColonyRooms, getCacheExpiration, minBy, onPublicServer} from '../utilities/utils';
 import {Pathing} from '../movement/Pathing';
-import {bodyCost} from '../creepSetups/CreepSetup';
-import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
-import {Colony} from '../Colony';
+import {getAllColonyRooms, getCacheExpiration, minBy, onPublicServer} from '../utilities/utils';
 
 interface SpawnGroupMemory {
 	colonies: string[];
@@ -13,7 +13,7 @@ interface SpawnGroupMemory {
 	routes: { [colonyName: string]: { [roomName: string]: boolean } };
 	// paths: { [colonyName: string]: { startPos: RoomPosition, path: string[] } }
 	// tick: number;
-	expiration: number,
+	expiration: number;
 }
 
 const SpawnGroupMemoryDefaults: SpawnGroupMemory = {
@@ -30,15 +30,15 @@ const MAX_PATH_DISTANCE = 600;	// maximum path distance to consider for ANY spaw
 const DEFAULT_RECACHE_TIME = onPublicServer() ? 2000 : 1000;
 
 const defaultSettings: SpawnGroupSettings = {
-	maxPathDistance: 250,		// override default path distance
+	maxPathDistance: 400,		// override default path distance
 	requiredRCL    : 7,
 	flexibleEnergy : true,
 };
 
 export interface SpawnGroupSettings {
-	maxPathDistance: number,	// maximum path distance colonies can spawn creeps to
-	requiredRCL: number,		// required RCL of colonies to contribute
-	flexibleEnergy: boolean,	// whether to enforce that only the largest possible creeps are spawned
+	maxPathDistance: number;	// maximum path distance colonies can spawn creeps to
+	requiredRCL: number;		// required RCL of colonies to contribute
+	flexibleEnergy: boolean;	// whether to enforce that only the largest possible creeps are spawned
 }
 
 export interface SpawnGroupInitializer {
@@ -104,17 +104,17 @@ export class SpawnGroup {
 	}
 
 	private recalculateColonies() { // don't use settings when recalculating colonies as spawnGroups share memory
-		let colonyRoomsInRange = _.filter(getAllColonyRooms(), room =>
+		const colonyRoomsInRange = _.filter(getAllColonyRooms(), room =>
 			Game.map.getRoomLinearDistance(room.name, this.roomName) <= MAX_LINEAR_DISTANCE);
-		let colonies = [] as string[];
-		let routes = {} as { [colonyName: string]: { [roomName: string]: boolean } };
+		const colonies = [] as string[];
+		const routes = {} as { [colonyName: string]: { [roomName: string]: boolean } };
 		// let paths = {} as { [colonyName: string]: { startPos: RoomPosition, path: string[] } };
-		let distances = {} as { [colonyName: string]: number };
-		for (let colonyRoom of colonyRoomsInRange) {
-			let spawn = colonyRoom.spawns[0];
+		const distances = {} as { [colonyName: string]: number };
+		for (const colonyRoom of colonyRoomsInRange) {
+			const spawn = colonyRoom.spawns[0];
 			if (spawn) {
-				let route = Pathing.findRoute(colonyRoom.name, this.roomName);
-				let path = Pathing.findPathToRoom(spawn.pos, this.roomName, {route: route});
+				const route = Pathing.findRoute(colonyRoom.name, this.roomName);
+				const path = Pathing.findPathToRoom(spawn.pos, this.roomName, {route: route});
 				if (route && !path.incomplete && path.path.length <= MAX_PATH_DISTANCE) {
 					colonies.push(colonyRoom.name);
 					routes[colonyRoom.name] = route;
@@ -143,16 +143,17 @@ export class SpawnGroup {
 		const hatcheries = _.compact(_.map(colonies, colony => colony.hatchery)) as Hatchery[];
 		const distanceTo = (hatchery: Hatchery) => this.memory.distances[hatchery.pos.roomName] + 25;
 		// Enqueue all requests to the hatchery with least expected wait time that can spawn full-size creep
-		for (let request of this.requests) {
+		for (const request of this.requests) {
 			const maxCost = bodyCost(request.setup.generateBody(this.energyCapacityAvailable));
 			const okHatcheries = _.filter(hatcheries,
-										hatchery => hatchery.room.energyCapacityAvailable >= maxCost);
+										  hatchery => hatchery.room.energyCapacityAvailable >= maxCost);
 			// || this.settings.flexibleEnergy);
 			const bestHatchery = minBy(okHatcheries, hatchery => hatchery.nextAvailability + distanceTo(hatchery));
 			if (bestHatchery) {
 				bestHatchery.enqueue(request);
 			} else {
-				log.warning(`Could not enqueue creep ${request.setup.role} in ${this.roomName}, no hatchery with ${maxCost} energy capacity`);
+				log.warning(`Could not enqueue creep ${request.setup.role} in ${this.roomName}, ` +
+							`no hatchery with ${maxCost} energy capacity`);
 			}
 		}
 	}

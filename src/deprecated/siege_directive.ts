@@ -7,7 +7,7 @@
 // import {Visualizer} from '../../visuals/Visualizer';
 //
 // interface DirectiveSiegeMemory extends FlagMemory {
-// 	recoveryWaypoint: protoPos;
+// 	recoveryWaypoint: ProtoPos;
 // }
 //
 // @profile

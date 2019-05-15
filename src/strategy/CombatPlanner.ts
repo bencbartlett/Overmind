@@ -1,19 +1,19 @@
 // High-level planning for skirmishing and combats
 
-import {CombatIntel, CombatPotentials} from '../intel/CombatIntel';
-import {CombatZerg} from '../zerg/CombatZerg';
-import {exponentialMovingAverage, getCacheExpiration} from '../utilities/utils';
-import {DefenseDirective} from '../directives/defense/_DefenseDirective';
-import {CombatOverlord} from '../overlords/CombatOverlord';
-import {Pathing} from '../movement/Pathing';
 import {log} from '../console/log';
+import {DefenseDirective} from '../directives/defense/_DefenseDirective';
+import {CombatIntel, CombatPotentials} from '../intel/CombatIntel';
+import {Pathing} from '../movement/Pathing';
+import {CombatOverlord} from '../overlords/CombatOverlord';
+import {exponentialMovingAverage, getCacheExpiration} from '../utilities/utils';
+import {CombatZerg} from '../zerg/CombatZerg';
 
 export interface Threat {
 	directive: DefenseDirective;
 	potentials: CombatPotentials | undefined;
 	roomName: string;
 	closestColony: string;
-	distances: {}
+	distances: {};
 	lastSeen: {
 		tick: number,
 	};
@@ -26,11 +26,11 @@ export interface EnemyProfile {
 		hydralisk: number;
 		broodling: number;
 		healer: number;
-	}
+	};
 	attackEffectiveness: {
 		drain: number;
 
-	}
+	};
 
 }
 
@@ -56,23 +56,23 @@ interface CombatPlannerMemory {
 
 	threats: {
 		[directiveRef: string]: Threat
-	}
+	};
 
-	profiles: { [playerName: string]: EnemyProfile }
+	profiles: { [playerName: string]: EnemyProfile };
 
 	defenses: {
 		[roomName: string]: {}
-	}
+	};
 
 	sieges: {
 		[roomName: string]: {
 			analysis?: SiegeAnalysis,
 		}
-	}
+	};
 
 	skirmishes: {
 		[roomName: string]: {}
-	}
+	};
 }
 
 const defaultCombatPlannerMemory: CombatPlannerMemory = {
@@ -113,14 +113,14 @@ export class CombatPlanner {
 	private assembleSquads(): void {
 
 		// Figure out the best thing for each creep to be doing
-		let idleCreeps: CombatZerg[] = [];
+		const idleCreeps: CombatZerg[] = [];
 
 
-		for (let creep of this.creeps) {
+		for (const creep of this.creeps) {
 			if (!creep.overlord) {
 				idleCreeps.push(creep);
 			} else {
-				let creepDirective = (<CombatOverlord>creep.overlord).directive;
+				const creepDirective = (<CombatOverlord>creep.overlord).directive;
 				if (creepDirective && creepDirective instanceof DefenseDirective) {
 					if (this.memory.threats[creepDirective.ref]) {
 
@@ -171,7 +171,7 @@ export class CombatPlanner {
 
 				// If you have new info on threat potentials, update the log in memory
 				let attack, rangedAttack, heal: number;
-				let lastPotentials = this.memory.threats[directive.ref].potentials;
+				const lastPotentials = this.memory.threats[directive.ref].potentials;
 				if (lastPotentials) {
 					attack = lastPotentials.attack;
 					rangedAttack = lastPotentials.rangedAttack;
@@ -182,15 +182,15 @@ export class CombatPlanner {
 					heal = 0;
 				}
 
-				let decayedAttack = exponentialMovingAverage(threat.potentials.attack, attack, THREAT_DECAY_TIMESCALE);
-				let decayedRangedAttack = exponentialMovingAverage(threat.potentials.rangedAttack,
+				const decayedAttack = exponentialMovingAverage(threat.potentials.attack, attack, THREAT_DECAY_TIMESCALE);
+				const decayedRangedAttack = exponentialMovingAverage(threat.potentials.rangedAttack,
 																   rangedAttack, THREAT_DECAY_TIMESCALE);
-				let decayedHeal = exponentialMovingAverage(threat.potentials.heal, heal, THREAT_DECAY_TIMESCALE);
+				const decayedHeal = exponentialMovingAverage(threat.potentials.heal, heal, THREAT_DECAY_TIMESCALE);
 
 				// TODO: adjust decay for creeps known to have moved to next visible room
 
 				// Set new potential to maximum of current or decayed potential
-				let potentials: CombatPotentials = {
+				const potentials: CombatPotentials = {
 					attack      : Math.max(threat.potentials.attack, decayedAttack),
 					rangedAttack: Math.max(threat.potentials.rangedAttack, decayedRangedAttack),
 					heal        : Math.max(threat.potentials.heal, decayedHeal),
@@ -220,16 +220,16 @@ export class CombatPlanner {
 		const terrain = Game.map.getRoomTerrain(room.name);
 
 		// Room is bunker if >80% of hostile structures are covered by ramparts
-		let hostileStructures = room.find(FIND_HOSTILE_STRUCTURES);
-		let hostileStructuresInRampart = _.filter(hostileStructures, s => s.pos.lookForStructure(STRUCTURE_RAMPART));
+		const hostileStructures = room.find(FIND_HOSTILE_STRUCTURES);
+		const hostileStructuresInRampart = _.filter(hostileStructures, s => s.pos.lookForStructure(STRUCTURE_RAMPART));
 		isBunker = (hostileStructuresInRampart.length / hostileStructures.length >= 0.8);
 
 		// Room is edgewall if every exit tile has wall or barrier at 2 range to left/right/top/bottom
-		let walledOffExitTiles = _.filter(exitPositions, pos => {
+		const walledOffExitTiles = _.filter(exitPositions, pos => {
 
 			let lookPos: RoomPosition;
-			let x = pos.x;
-			let y = pos.y;
+			const x = pos.x;
+			const y = pos.y;
 
 			if (x == 0) {
 				lookPos = new RoomPosition(x + 2, y, room.name);
@@ -246,8 +246,8 @@ export class CombatPlanner {
 			if (terrain.get(lookPos.x, lookPos.y) == TERRAIN_MASK_WALL) {
 				return true;
 			} else {
-				let rampart = lookPos.lookForStructure(STRUCTURE_RAMPART);
-				let wall = lookPos.lookForStructure(STRUCTURE_WALL);
+				const rampart = lookPos.lookForStructure(STRUCTURE_RAMPART);
+				const wall = lookPos.lookForStructure(STRUCTURE_WALL);
 				return rampart != undefined || wall != undefined;
 			}
 
@@ -258,16 +258,16 @@ export class CombatPlanner {
 
 		// Room is inner wall if not bunker or edgewall and there is no path to spawn, otherwise exposed
 		if (!isBunker && !isEdgeWall) {
-			let entryPoints = _.compact(
+			const entryPoints = _.compact(
 				[_.find(exitPositions, pos => pos.x == 0),  // left
 				 _.find(exitPositions, pos => pos.x == 49), // right
 				 _.find(exitPositions, pos => pos.y == 0),  // top
 				 _.find(exitPositions, pos => pos.y == 49), // bottom
 				]) as RoomPosition[];
-			let target = (room.spawns[0] || room.towers[0]);
+			const target = (room.spawns[0] || room.towers[0]);
 			if (target) {
-				let obstacles = _.filter(room.structures, s => !s.isWalkable);
-				let isReachable = _.find(entryPoints, pos => Pathing.isReachable(pos, target.pos, obstacles));
+				const obstacles = _.filter(room.structures, s => !s.isWalkable);
+				const isReachable = _.find(entryPoints, pos => Pathing.isReachable(pos, target.pos, obstacles));
 				if (isReachable) {
 					isExposed = true;
 				}
@@ -294,21 +294,21 @@ export class CombatPlanner {
 
 	static getSiegeAnalysis(room: Room): SiegeAnalysis {
 
-		let owner = room.owner;
-		let level = room.controller ? room.controller.level : 0;
-		let towerDamageSamplePositions = _.map(_.range(20),
+		const owner = room.owner;
+		const level = room.controller ? room.controller.level : 0;
+		const towerDamageSamplePositions = _.map(_.range(20),
 											   i => new RoomPosition(_.random(1, 48), _.random(1, 48), room.name));
-		let maxTowerDamage = _.max(_.map(towerDamageSamplePositions,
+		const maxTowerDamage = _.max(_.map(towerDamageSamplePositions,
 										 pos => CombatIntel.towerDamageAtPos(pos, true)));
-		let minBarrierHits = room.barriers.length > 0 ? _.min(_.map(room.barriers, b => b.hits)) : 0;
-		let avgBarrierHits = room.barriers.length > 0 ? _.sum(room.barriers, b => b.hits) / room.barriers.length : 0;
+		const minBarrierHits = room.barriers.length > 0 ? _.min(_.map(room.barriers, b => b.hits)) : 0;
+		const avgBarrierHits = room.barriers.length > 0 ? _.sum(room.barriers, b => b.hits) / room.barriers.length : 0;
 
-		let numWalls = room.walls.length;
-		let numRamparts = room.ramparts.length;
+		const numWalls = room.walls.length;
+		const numRamparts = room.ramparts.length;
 
-		let expiration = getCacheExpiration(SIEGE_ANALYSIS_EXPIRATION);
+		const expiration = getCacheExpiration(SIEGE_ANALYSIS_EXPIRATION);
 
-		let roomLayout = this.getRoomLayout(room);
+		const roomLayout = this.getRoomLayout(room);
 
 		return {
 			owner,
@@ -325,18 +325,18 @@ export class CombatPlanner {
 	}
 
 	private registerSiegeAnalysis(room: Room): void {
-		if (!this.memory.sieges[name]) {
-			this.memory.sieges[name] = {};
+		if (!this.memory.sieges[room.name]) {
+			this.memory.sieges[room.name] = {};
 		}
-		if (!this.memory.sieges[name].analysis || Game.time > this.memory.sieges[name].analysis!.expiration) {
-			this.memory.sieges[name].analysis = CombatPlanner.getSiegeAnalysis(room);
+		if (!this.memory.sieges[room.name].analysis || Game.time > this.memory.sieges[room.name].analysis!.expiration) {
+			this.memory.sieges[room.name].analysis = CombatPlanner.getSiegeAnalysis(room);
 		}
 	}
 
 	init() {
 
 		// Register new interactions in visible rooms
-		for (let roomName in Game.rooms) {
+		for (const roomName in Game.rooms) {
 
 			const room: Room = Game.rooms[roomName];
 
@@ -347,7 +347,7 @@ export class CombatPlanner {
 
 		}
 
-		for (let directive of this.directives) {
+		for (const directive of this.directives) {
 			this.registerThreat(directive);
 		}
 

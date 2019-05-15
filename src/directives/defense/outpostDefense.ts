@@ -1,6 +1,6 @@
-import {Directive} from '../Directive';
-import {profile} from '../../profiler/decorator';
 import {OutpostDefenseOverlord} from '../../overlords/defense/outpostDefense';
+import {profile} from '../../profiler/decorator';
+import {Directive} from '../Directive';
 import {NotifierPriority} from '../Notifier';
 
 interface DirectiveInvasionDefenseMemory extends FlagMemory {
@@ -31,7 +31,7 @@ export class DirectiveOutpostDefense extends Directive {
 	}
 
 	init(): void {
-		let numHostiles: string = this.room ? this.room.hostiles.length.toString() : '???';
+		const numHostiles: string = this.room ? this.room.hostiles.length.toString() : '???';
 		this.alert(`Outpost defense (hostiles: ${numHostiles})`, NotifierPriority.High);
 	}
 

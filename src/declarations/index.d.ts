@@ -18,7 +18,7 @@ declare namespace NodeJS {
 
 		deref(ref: string): RoomObject | null;
 
-		derefRoomPosition(protoPos: protoPos): RoomPosition;
+		derefRoomPosition(protoPos: ProtoPos): RoomPosition;
 
 		gc(quick?: boolean): void;
 	}
@@ -59,7 +59,7 @@ interface ICache {
 	refresh(): void;
 }
 
-interface IStrategist {
+interface IExpansionPlanner {
 
 	refresh(): void;
 
@@ -82,7 +82,7 @@ interface IAssimilator {
 
 	generateChecksum(): string;
 
-	updateValidChecksumLedger(): void
+	updateValidChecksumLedger(): void;
 
 	isAssimilated(username: string): boolean;
 
@@ -93,7 +93,7 @@ interface IAssimilator {
 }
 
 interface IOvermind {
-	shouldBuild: boolean
+	shouldBuild: boolean;
 	expiration: number;
 	cache: ICache;								// is actually GameCache
 	overseer: IOverseer;						// is actually Overseer
@@ -106,7 +106,7 @@ interface IOvermind {
 	memory: IOvermindMemory;
 	terminalNetwork: ITerminalNetwork;			// is actually TerminalNetwork
 	tradeNetwork: ITradeNetwork;				// is actually TradeNetwork
-	strategist: IStrategist | undefined;		// Strategist | undefined, only defined if Memory.bot == true
+	expansionPlanner: IExpansionPlanner;
 	exceptions: Error[];
 
 	build(): void;
@@ -159,10 +159,10 @@ interface IOverseer {
 
 
 interface TerminalState {
-	name: string,
-	type: 'in' | 'out' | 'in/out',
-	amounts: { [resourceType: string]: number },
-	tolerance: number,
+	name: string;
+	type: 'in' | 'out' | 'in/out';
+	amounts: { [resourceType: string]: number };
+	tolerance: number;
 }
 
 interface ITerminalNetwork {
@@ -175,7 +175,7 @@ interface ITerminalNetwork {
 
 	requestResource(terminal: StructureTerminal, resourceType: ResourceConstant, amount: number): void;
 
-	registerTerminalState(terminal: StructureTerminal, state: TerminalState): void
+	registerTerminalState(terminal: StructureTerminal, state: TerminalState): void;
 
 	init(): void;
 
@@ -187,18 +187,20 @@ interface ITradeNetwork {
 
 	refresh(): void;
 
-	priceOf(mineralType: ResourceConstant): number
+	priceOf(mineralType: ResourceConstant): number;
 
 	lookForGoodDeals(terminal: StructureTerminal, mineral: string, margin?: number): void;
 
 	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount?: number,
 				 flexibleAmount?: boolean): number | undefined;
 
-	sell(terminal: StructureTerminal, resource: ResourceConstant, amount: number, maxOrdersOfType?: number): number | undefined;
+	sell(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
+		 maxOrdersOfType?: number): number | undefined;
 
 	buy(terminal: StructureTerminal, mineralType: ResourceConstant, amount: number): void;
 
-	maintainBuyOrder(terminal: StructureTerminal, resource: ResourceConstant, amount: number, maxOrdersOfType?: number): void;
+	maintainBuyOrder(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
+					 maxOrdersOfType?: number): void;
 
 	init(): void;
 
@@ -229,38 +231,38 @@ interface PathFinderGoal {
 	cost?: number;
 }
 
-interface protoCreep {
+interface ProtoCreep {
 	body: BodyPartConstant[];
 	name: string;
 	memory: any;
 }
 
-interface protoCreepOptions {
+interface ProtoCreepOptions {
 	assignment?: RoomObject;
 	patternRepetitionLimit?: number;
 }
 
-interface protoRoomObject {
+interface ProtoRoomObject {
 	ref: string;
-	pos: protoPos;
+	pos: ProtoPos;
 }
 
-interface protoPos {
+interface ProtoPos {
 	x: number;
 	y: number;
 	roomName: string;
 }
 
 interface HasPos {
-	pos: RoomPosition
+	pos: RoomPosition;
 }
 
 interface HasRef {
-	ref: string
+	ref: string;
 }
 
 interface HasID {
-	id: string
+	id: string;
 }
 
 // interface StoreLike {
