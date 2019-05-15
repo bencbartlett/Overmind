@@ -7,6 +7,7 @@ import {profile} from '../../profiler/decorator';
 import {boostResources} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
+import {log} from "../../console/log";
 
 /**
  * Spawns bunker-only defenders to defend against incoming sieges
@@ -31,10 +32,10 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 		});
 	}
 
-	private handleDefender(zergling: CombatZerg): void {
-		if (zergling.room.hostiles.length > 0) {
-			console.log(`Running actual defender in room ${this.room.print}`);
-			zergling.autoBunkerCombat(zergling.room.name);
+	private handleDefender(lurker: CombatZerg): void {
+		log.debug(`Running BunkerDefender in room ${this.room.print}`);
+		if (lurker.room.hostiles.length > 0) {
+			lurker.autoBunkerCombat(lurker.room.name);
 		}
 	}
 
@@ -43,10 +44,13 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 		if (this.canBoostSetup(CombatSetups.bunkerGuard.boosted_T3)) {
 			const setup = CombatSetups.bunkerGuard.boosted_T3;
 			this.wishlist(1, setup);
+		} else {
+			const setup = CombatSetups.bunkerGuard.halfMove;
+			this.wishlist(2, setup);
 		}
 	}
 
 	run() {
-		this.autoRun(this.lurkers, zergling => this.handleDefender(zergling));
+		this.autoRun(this.lurkers, lurkers => this.handleDefender(lurkers));
 	}
 }

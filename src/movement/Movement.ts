@@ -943,6 +943,9 @@ export class Movement {
 					if (outcome == OK) {
 						return outcome;
 					}
+				} else if (options.requireRamparts) {
+					log.alert(`Canceling move order for non-ramparted area for ${creep.print}`);
+					creep.cancelOrder('move');
 				}
 			}
 		}

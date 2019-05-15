@@ -315,6 +315,11 @@ export const CombatSetups = {
 			sizeLimit: Infinity,
 		}),
 
+		halfMove: new CreepSetup(Roles.bunkerGuard, {
+			pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, MOVE],
+			sizeLimit: Infinity,
+		}),
+
 		boosted_T3: new CreepSetup(Roles.bunkerGuard, {
 			// 22 ATTACK, 3 MOVE times 2
 			pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK,
