@@ -68,6 +68,8 @@ export class MiningOverlord extends Overlord {
 		}
 		this.miningPowerNeeded = Math.ceil(this.energyPerTick / HARVEST_POWER) + 1;
 
+		//this.checkForNearbyMines();
+
 		// Decide operating mode
 		if (Cartographer.roomType(this.pos.roomName) == ROOMTYPE_SOURCEKEEPER) {
 			this.mode = 'SK';
@@ -130,6 +132,21 @@ export class MiningOverlord extends Overlord {
 			}
 		}
 		return false;
+	}
+
+	checkForNearbyMines() {
+		if (Game.rooms[this.pos.roomName]) {
+			//console.log('Double mining check');
+			this.source = _.first(this.pos.lookFor(LOOK_SOURCES));
+			let nearbySources = this.source.pos.findInRange(FIND_SOURCES, 8)
+				.filter(source => {
+					//if (source != this.source) {console.log(`Source path length is ${source.pos.findPathTo(this.source!).length} in ${source.room.print}`)}
+					return this.source != source && source.pos.findPathTo(this.source!).length < 8;
+				});
+			if (nearbySources.length > 0) {
+				//console.log(`Nearby sources are ${nearbySources} in ${this.room!.print}`);
+			}
+		}
 	}
 
 	/**
@@ -377,11 +394,9 @@ export class MiningOverlord extends Overlord {
 	 * Actions for handling double mining
 	 */
 	private doubleMiningActions(miner: Zerg) {
-
 		// Approach mining site
-
 		if (this.goToMiningSite(miner)) return;
-		console.log(`Double mining with ${miner.print} here ${this.source!.pos.print}, ${this.source}, ${this.secondSource} is disabled ${this.isDisabled}`);
+		//console.log(`Double mining with ${miner.print} here ${this.source!.pos.print}, ${this.source}, ${this.secondSource} is disabled ${this.isDisabled}`);
 
 		// Link mining
 		if (this.link) {
@@ -407,7 +422,6 @@ export class MiningOverlord extends Overlord {
 			} else if (this.source && this.source.energy > 0) {
 				return miner.harvest(this.source!);
 			} else {
-				console.log('mining second source');
 				return miner.harvest(this.secondSource!);
 			}
 		}
