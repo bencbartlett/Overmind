@@ -371,7 +371,7 @@ export class Colony {
 		const defconDecayTime = 200;
 		if (this.room.dangerousHostiles.length > 0 && !this.controller.safeMode) {
 			const effectiveHostileCount = _.sum(_.map(this.room.dangerousHostiles,
-													hostile => hostile.boosts.length > 0 ? 2 : 1));
+													  hostile => hostile.boosts.length > 0 ? 2 : 1));
 			if (effectiveHostileCount >= 3) {
 				defcon = DEFCON.boostedInvasionNPC;
 			} else {
@@ -532,19 +532,16 @@ export class Colony {
 	 */
 	private getAllAssets(verbose = false): { [resourceType: string]: number } {
 		// if (this.name == 'E8S45') verbose = true; // 18863
-		// Include storage structures and manager carry
+		// Include storage structures, lab contents, and manager carry
 		const stores = _.map(<StoreStructure[]>_.compact([this.storage, this.terminal]), s => s.store);
 		const creepCarriesToInclude = _.map(this.creeps, creep => creep.carry) as { [resourceType: string]: number }[];
-		const allAssets: { [resourceType: string]: number } = mergeSum([...stores, ...creepCarriesToInclude]);
-		// Include lab amounts
-		for (const lab of this.labs) {
-			if (lab.mineralType) {
-				if (!allAssets[lab.mineralType]) {
-					allAssets[lab.mineralType] = 0;
-				}
-				allAssets[lab.mineralType] += lab.mineralAmount;
-			}
-		}
+		const labContentsToInclude = _.map(_.filter(this.labs, lab => !!lab.mineralType), lab =>
+			({[<string>lab.mineralType]: lab.mineralAmount})) as { [resourceType: string]: number }[];
+		const allAssets: { [resourceType: string]: number } = mergeSum([
+																		   ...stores,
+																		   ...creepCarriesToInclude,
+																		   ...labContentsToInclude
+																	   ]);
 		if (verbose) log.debug(`${this.room.print} assets: ` + JSON.stringify(allAssets));
 		return allAssets;
 	}
@@ -588,7 +585,7 @@ export class Colony {
 			const avgDowntime = _.sum(this.miningSites, site => site.memory[_HARVEST_MEM_DOWNTIME]) / numSites;
 			const avgUsage = _.sum(this.miningSites, site => site.memory[_HARVEST_MEM_USAGE]) / numSites;
 			const energyInPerTick = _.sum(this.miningSites,
-										site => site.overlords.mine.energyPerTick * site.memory[_HARVEST_MEM_USAGE]);
+										  site => site.overlords.mine.energyPerTick * site.memory[_HARVEST_MEM_USAGE]);
 			Stats.log(`colonies.${this.name}.miningSites.avgDowntime`, avgDowntime);
 			Stats.log(`colonies.${this.name}.miningSites.avgUsage`, avgUsage);
 			Stats.log(`colonies.${this.name}.miningSites.energyInPerTick`, energyInPerTick);
