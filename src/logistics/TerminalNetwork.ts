@@ -4,7 +4,7 @@ import {Colony, getAllColonies} from '../Colony';
 import {log} from '../console/log';
 import {Mem} from '../memory/Memory';
 import {profile} from '../profiler/decorator';
-import {baseStockAmounts, priorityStockAmounts, wantedStockAmounts} from '../resources/Abathur';
+import {Abathur} from '../resources/Abathur';
 import {RESOURCE_IMPORTANCE} from '../resources/map_resources';
 import {alignedNewline, bullet, rightArrow} from '../utilities/stringConstants';
 import {maxBy, mergeSum, minBy, minMax} from '../utilities/utils';
@@ -46,8 +46,7 @@ function colonyOf(terminal: StructureTerminal): Colony {
 }
 
 function wantedAmount(colony: Colony, resource: ResourceConstant): number {
-	return (wantedStockAmounts[resource] || priorityStockAmounts[resource] || baseStockAmounts[resource] || 0)
-		   - (colony.assets[resource] || 0);
+	return Abathur.stockAmount(resource) - (colony.assets[resource] || 0);
 }
 
 

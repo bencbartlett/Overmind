@@ -176,9 +176,12 @@ export class Abathur {
 		return true;
 	}
 
+	static stockAmount(resource: ResourceConstant): number {
+		return (wantedStockAmounts[resource] || priorityStockAmounts[resource] || baseStockAmounts[resource] || 0);
+	}
+
 	private hasExcess(mineralType: ResourceConstant, excessAmount = 0): boolean {
-		return this.assets[mineralType] - excessAmount > Math.max((wantedStockAmounts[mineralType] || 0),
-																  (priorityStockAmounts[mineralType] || 0));
+		return this.assets[mineralType] - excessAmount > Abathur.stockAmount(mineralType);
 	}
 
 	private someColonyHasExcess(mineralType: ResourceConstant, excessAmount = 0): boolean {

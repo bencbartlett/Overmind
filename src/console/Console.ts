@@ -107,6 +107,12 @@ export class OvermindConsole {
 		log.alert(msg);
 	}
 
+	static printTrainingMessage(): void {
+		console.log(asciiLogoSmall.join('\n'));
+		console.log(`Reinforcement learning mode active; Memory has been cleared. \n`+
+					`Write commands to memory to interact with environment.`);
+	}
+
 	static info(aligned = false): string {
 		const b = bullet;
 		const checksum = Assimilator.generateChecksum();
