@@ -1,12 +1,10 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "module": "es2015",
-    "target": "es6",
-    "lib": [
-      "dom",
-      "es2016"
-    ],
+    "module": "esnext",
+    "lib": ["esnext"],
+    "target": "es2017",
+    "moduleResolution": "Node",
     "newLine": "CRLF",
     "outDir": "tsc-out",
     "baseUrl": "src/",
