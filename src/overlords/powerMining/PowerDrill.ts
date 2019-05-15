@@ -78,19 +78,18 @@ export class PowerDrillOverlord extends CombatOverlord {
 				if (this.directive.powerBank == undefined && !this.directive.haulDirectiveCreated) {
 					if (this.pos.lookFor(LOOK_RESOURCES).length == 0) {
 						// Well shit, we didn't finish mining
-						Game.notify(`WE FAILED. SORRY CHIEF, COULDN'T FINISHED POWER MINING IN ${this.room} DELETING CREEP at time: ${Game.time}`);
+						log.error(`WE FAILED. SORRY CHIEF, COULDN'T FINISHED POWER MINING IN ${this.room} DELETING CREEP at time: ${Game.time}`);
 						this.directive.remove();
 						return;
 					}
-					Game.notify("Power bank in " + this.room + " is dead.");
+					Game.notify(`Power bank in ${this.room.print} is dead.`);
 					drill.say('💀 RIP 💀');
 					this.directive.setMiningDone(this.name);
 					let result = drill.retire();
 					if (result == ERR_BUSY) {
 						drill.spawning
 					}
-					//this.directive.remove();
-					Game.notify("FINISHED POWER MINING IN " + this.room + " DELETING CREEP at time: " + Game.time.toString() + " result: " + result);
+					log.notify("FINISHED POWER MINING IN " + this.room + " DELETING CREEP at time: " + Game.time.toString() + " result: " + result);
 					return;
 				}
 			}
@@ -99,7 +98,7 @@ export class PowerDrillOverlord extends CombatOverlord {
 		// Go to power room
 		if (!this.room || drill.room != this.room || drill.pos.isEdge || !this.directive.powerBank) {
 			// log.debugCreep(drill, `Going to room!`);
-			Game.notify("Drill is moving to power site in " + this.pos.roomName + ".");
+			log.notify("Drill is moving to power site in " + this.pos.roomName + ".");
 			drill.goTo(this.pos);
 			return;
 		}

@@ -127,11 +127,13 @@ export class PowerHaulingOverlord extends Overlord {
 		}
 		// Check hauling is done
 		!this.directive.pickupDone && this.directive.isPickupDone();
-		if (this.directive.pickupDone) {
+		if (this.directive.pickupDone && Game.time % 16 == 0) {
 			let stillCarryingPower = _.find(this.haulers, hauler => hauler.carry.power != undefined && hauler.carry.power > 0);
 			if (!stillCarryingPower) {
-				Game.notify('Deleting Power Mining Directive as no haulers are left carrying ' + this.pos.print);
+				log.alert(`Deleting Power Mining Directive ${this.directive.print} as no haulers are left carrying power.`);
 				this.directive.remove();
+			} else {
+				log.debug(`Still carrying power back with ${stillCarryingPower.print} for ${this.directive.print}`);
 			}
 		}
 		for (let hauler of this.haulers) {

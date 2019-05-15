@@ -36,7 +36,7 @@ export class DirectivePowerMine extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		if (!this.miningDone) {
+		if (!this.miningDone && this.powerBank) {
 			this.overlords.powerMine = new PowerDrillOverlord(this);
 		}
 		if (!this.pickupDone) {
@@ -60,7 +60,7 @@ export class DirectivePowerMine extends Directive {
 	}
 
 	get powerBank(): StructurePowerBank | undefined {
-		this._powerBank = this._powerBank || this.room != undefined ? this.pos.lookForStructure(STRUCTURE_POWER_BANK) as StructurePowerBank : undefined;
+		this._powerBank = this._powerBank || this.room ? this.flag.pos.lookForStructure(STRUCTURE_POWER_BANK) as StructurePowerBank : undefined;
 		return this._powerBank;
 	}
 
@@ -74,7 +74,6 @@ export class DirectivePowerMine extends Directive {
 		if (this.pos.isVisible) {
 			this.memory.totalResources = this.powerBank ? this.powerBank.power : this.memory.totalResources; // update total amount remaining
 		}
-		console.log("Directive total resources = " + this.totalResources);
 		return this.memory.totalResources;
 	}
 
@@ -92,7 +91,6 @@ export class DirectivePowerMine extends Directive {
 			let attackStrength: number = tally.attack * ATTACK_POWER || 0;
 			// PB have 50% hitback, avg damage is attack strength if its enough healing, otherwise healing
 			let avgDamagePerTick = Math.min(attackStrength, healStrength*2);
-			console.log("Calculating PB remaining lifespan: " + this.powerBank.hits / avgDamagePerTick);
 			return this.powerBank.hits / avgDamagePerTick;
 		}
 	}
@@ -101,14 +99,14 @@ export class DirectivePowerMine extends Directive {
 		log.info("Checking spawning haulers");
 		// Begin checking for spawn haulers at 666 estimated ticks before PB destruction
 		if (this.haulDirectiveCreated || this.room && (!this.powerBank || this.powerBank.hits < 500000)) {
-			Game.notify('Activating spawning haulers for power mining in room ' + this.pos.roomName);
+			log.debug('Activating spawning haulers for power mining in room ' + this.pos.roomName);
 			this.haulDirectiveCreated = true;
 			this.overlords.powerHaul = new PowerHaulingOverlord(this);
 		}
 	}
 
 	setMiningDone(name: string) {
-		Game.notify("Setting mining done and removing overlord for power mine in room " + this.room + " at time " + Game.time);
+		log.debug("Setting mining done and removing overlord for power mine in room " + this.room + " at time " + Game.time);
 		delete this.overlords[name];
 		this.miningDone = true;
 		this._powerBank = undefined;
@@ -120,7 +118,6 @@ export class DirectivePowerMine extends Directive {
 	isPickupDone(): boolean {
 		if (!this.pickupDone && this.miningDone && this.room && this.pos.isVisible && !this.hasDrops) {
 			this.pickupDone = true;
-			Game.notify(`Hauling is done for ${this.room.print} at time ${Game.time}`);
 		}
 		return this.pickupDone;
 	}
