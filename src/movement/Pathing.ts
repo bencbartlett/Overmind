@@ -7,6 +7,7 @@ import {packPos, packPosList} from '../utilities/packrat';
 import {isAlly, minBy} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {AnyZerg} from '../zerg/AnyZerg';
+import {MY_USERNAME} from '../~settings';
 import {normalizePos} from './helpers';
 import {SwarmMoveOptions} from './Movement';
 
@@ -121,11 +122,14 @@ export class Pathing {
 		if (!room) {
 			return;
 		}
-		if (!room.my && room.towers.length > 0 && !isAlly(room.owner || '')) {
-			room.memory[RMEM.AVOID] = true;
-		} else {
-			delete room.memory[RMEM.AVOID];
-			// if (room.memory.expansionData == false) delete room.memory.expansionData;
+		if (room.controller) {
+			if (room.controller.owner && !(room.controller.my || isAlly(room.owner || '')) && room.towers.length > 0) {
+				room.memory[RMEM.AVOID] = true;
+			} else if ((!room.controller.reservation || room.controller.reservation.username === MY_USERNAME || isAlly(room.owner || '')) &&
+					room.memory[RMEM.AVOID] === true) {
+				delete room.memory[RMEM.AVOID];
+				// if (room.memory.expansionData == false) delete room.memory.expansionData;
+			}
 		}
 	}
 

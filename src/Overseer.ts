@@ -373,7 +373,7 @@ export class Overseer implements IOverseer {
 				// Game.notify("Room " + roomName + " is blocked, not expanding there.");
 			}
 			const disregardReservations = !onPublicServer() || MY_USERNAME == MUON;
-			if (alreadyOwned || (alreadyReserved && !disregardReservations) || isBlocked) {
+			if (alreadyOwned || (alreadyReserved && !disregardReservations) || isBlocked || Pathing.shouldAvoid(roomName)) {
 				return false;
 			}
 			const neighboringRooms = _.values(Game.map.describeExits(roomName)) as string[];

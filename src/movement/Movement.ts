@@ -1096,7 +1096,7 @@ export class Movement {
 				}
 				return matrix;
 			} else {
-				if (Memory.rooms[roomName] && Memory.rooms[roomName][RMEM.AVOID]) return false;
+				if (Pathing.shouldAvoid(roomName)) return false;
 				return matrix;
 			}
 		};

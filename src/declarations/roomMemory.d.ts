@@ -6,7 +6,8 @@ interface RoomMemory {
 	spawnGroup?: any;
 	[MEM.EXPIRATION]?: number;
 	[MEM.TICK]?: number;
-	[RMEM.AVOID]?: boolean;
+	// booleans are automatically added/removed, strings contain a reason for manual avoidance.
+	[RMEM.AVOID]?: boolean | string;
 	[RMEM.ROOM_STATUS]?: RoomStatusCompressed;
 	[RMEM.SOURCES]?: SavedSource[];
 	[RMEM.CONTROLLER]?: SavedController;
