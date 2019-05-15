@@ -48,6 +48,13 @@ export class DirectiveHarass extends Directive {
 
 	}
 
+	findNearbyReservedRoomsForHarassment() {
+		if (this.memory.targetPlayer) {
+			return this.findNearbyReservedRooms(this.flag.pos.roomName, this.memory.targetPlayer);
+		}
+		return [];
+	}
+
 	/**
 	 * Finds the rooms to harass
 	 *
