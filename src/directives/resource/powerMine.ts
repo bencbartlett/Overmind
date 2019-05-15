@@ -60,7 +60,7 @@ export class DirectivePowerMine extends Directive {
 	}
 
 	get powerBank(): StructurePowerBank | undefined {
-		this._powerBank = this._powerBank || this.room != undefined ? this.pos.lookForStructure(STRUCTURE_POWER_BANK) as StructurePowerBank : undefined;
+		this._powerBank = this._powerBank || this.room ? this.flag.pos.lookForStructure(STRUCTURE_POWER_BANK) as StructurePowerBank : undefined;
 		return this._powerBank;
 	}
 
