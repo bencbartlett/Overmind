@@ -29,7 +29,8 @@ interface Memory {
 	resetBucket?: boolean;
 	haltTick?: number;
 	combatPlanner: any;
-	[otherProperty:string]: any;
+
+	[otherProperty: string]: any;
 }
 
 interface StatsMemory {

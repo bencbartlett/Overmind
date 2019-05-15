@@ -19,28 +19,24 @@ const MAX_SCORE_BONUS = _.sum([UNOWNED_MINERAL_BONUS, CATALYST_BONUS]);
 
 const TOO_CLOSE_PENALTY = 100;
 
-interface StrategistMemory {
+interface ExpansionPlannerMemory {
 
 }
 
-const defaultStrategistMemory: StrategistMemory = {};
+const defaultExpansionPlannerMemory: ExpansionPlannerMemory = {};
 
-/**
- * The ExpansionPlanner makes high-level game decisions such as choosing when/where to expand and who to harass. It is located
- * on Overmind.expansionPlanner and is only instantiated if the AI is run in full-auto mode.
- */
 @assimilationLocked
 @profile
 export class ExpansionPlanner implements IExpansionPlanner {
 
-	memory: StrategistMemory;
+	memory: ExpansionPlannerMemory;
 
 	constructor() {
-		this.memory = Mem.wrap(Memory, 'expansionPlanner', defaultStrategistMemory);
+		this.memory = Mem.wrap(Memory, 'expansionPlanner', defaultExpansionPlannerMemory);
 	}
 
 	refresh() {
-		this.memory = Mem.wrap(Memory, 'expansionPlanner', defaultStrategistMemory);
+		this.memory = Mem.wrap(Memory, 'expansionPlanner', defaultExpansionPlannerMemory);
 	}
 
 	private handleExpansion(): void {
