@@ -25,8 +25,7 @@ export class DirectiveInvasionDefense extends Directive {
 
 	memory: DirectiveInvasionDefenseMemory;
 	room: Room | undefined;
-
-	safeEndTime: 800;
+	safeEndTime: 300;
 	safeSpawnHaltTime: 100;
 
 	private relocateFrequency: number;
@@ -39,9 +38,9 @@ export class DirectiveInvasionDefense extends Directive {
 		if (!this.room) {
 			return;
 		}
-		let expectedDamage = CombatIntel.maxDamageByCreeps(this.room.dangerousPlayerHostiles);
-		console.log(`ATTACK POWER EXPECTED IS ${expectedDamage} in room ${this.room.print}, safe for ${Game.time - this.memory.safeSince}`);
-		let useBoosts = (expectedDamage > ATTACK_POWER * 13)
+		const expectedDamage = CombatIntel.maxDamageByCreeps(this.room.dangerousPlayerHostiles);
+		const expectedHealing = CombatIntel.maxHealingByCreeps(this.room.dangerousPlayerHostiles);
+		const useBoosts = (expectedDamage > ATTACK_POWER * 13) || (expectedHealing > RANGED_ATTACK_POWER * 50)
 						&& !!this.colony.terminal
 						&& !!this.colony.evolutionChamber;
 		const percentWalls = _.filter(this.room.barriers, s => s.structureType == STRUCTURE_WALL).length /
