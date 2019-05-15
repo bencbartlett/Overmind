@@ -25,6 +25,9 @@ export class DirectiveInvasionDefense extends Directive {
 	memory: DirectiveInvasionDefenseMemory;
 	room: Room | undefined;
 
+	safeEndTime: 300;
+	safeSpawnHaltTime: 100;
+
 	private relocateFrequency: number;
 
 	constructor(flag: Flag) {
@@ -32,12 +35,12 @@ export class DirectiveInvasionDefense extends Directive {
 	}
 
 	spawnMoarOverlords() {
-
 		if (!this.room) {
 			return;
 		}
-		const expectedDamage = CombatIntel.maxDamageByCreeps(this.room.dangerousHostiles);
-		const useBoosts = (expectedDamage > ATTACK_POWER * 75)
+		const expectedDamage = CombatIntel.maxDamageByCreeps(this.room.dangerousPlayerHostiles);
+		const expectedHealing = CombatIntel.maxHealingByCreeps(this.room.dangerousPlayerHostiles);
+		const useBoosts = (expectedDamage > ATTACK_POWER * 13) || (expectedHealing > RANGED_ATTACK_POWER * 50)
 						&& !!this.colony.terminal
 						&& !!this.colony.evolutionChamber;
 		const percentWalls = _.filter(this.room.barriers, s => s.structureType == STRUCTURE_WALL).length /
@@ -64,7 +67,7 @@ export class DirectiveInvasionDefense extends Directive {
 		}
 		// If there are no hostiles left in the room and everyone's healed, then remove the flag
 		if (this.room && this.room.hostiles.length == 0 &&
-			Game.time - this.memory.safeSince > 100 && this.room.hostileStructures.length == 0) {
+			(Game.time - this.memory.safeSince) > this.safeEndTime && this.room.hostileStructures.length == 0) {
 			if (_.filter(this.room.creeps, creep => creep.hits < creep.hitsMax).length == 0) {
 				this.remove();
 			}

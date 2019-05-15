@@ -16,6 +16,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 
 	hydralisks: CombatZerg[];
 	room: Room;
+	directive: DirectiveInvasionDefense;
 
 	static settings = {
 		retreatHitsPercent : 0.85,
@@ -27,7 +28,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 				priority = OverlordPriority.defense.rangedDefense) {
 		super(directive, 'rangedDefense', priority, 1);
 		this.hydralisks = this.combatZerg(Roles.ranged, {
-			boostWishlist: boosted ? [boostResources.ranged_attack[3], boostResources.heal[3], boostResources.move[3]]
+			boostWishlist: boosted ? [boostResources.tough[3], boostResources.ranged_attack[3], boostResources.heal[3], boostResources.move[3]]
 								   : undefined
 		});
 	}
