@@ -21,7 +21,7 @@ export class DirectiveHaul extends Directive {
 
 	private _store: StoreDefinition;
 	private _drops: { [resourceType: string]: Resource[] };
-	private finishAtTime: number;
+	private _finishAtTime: number;
 
 	memory: DirectiveHaulMemory;
 
@@ -109,9 +109,9 @@ export class DirectiveHaul extends Directive {
 	run(): void {
 		if (_.sum(this.store) == 0 && this.pos.isVisible) {
 			// If everything is picked up, crudely give enough time to bring it back
-			this.finishAtTime = Game.time + 800;
+			this._finishAtTime = this._finishAtTime || (Game.time + 300);
 		}
-		if (Game.time >= this.finishAtTime) {
+		if (Game.time >= this._finishAtTime) {
 			this.remove();
 		}
 	}
