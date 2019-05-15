@@ -57,8 +57,8 @@ export class DirectiveInvasionDefense extends Directive {
 			               //      Game.notify(`Adding a new Bunker Defense in room ${this.room.print}`);
 				               //      this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, true);
 					               // }
-		if ((meleeHostiles.length > 0 && (meleeHostiles[0].owner.username == 'o4kapuk' ||  meleeHostiles[0].owner.username == 'Inakrin')) || (rangedHostiles.length > 0 && rangedHostiles[0].owner.username == 'o4kapuk')) {
-		//if (meleeHostiles.length > 0 && ((expectedDamage > ATTACK_POWER * 30) || meleeHostiles[0].owner.username == 'Inakrin')) {
+		// Look, it's 2am so going to go with name hack for now.
+		if ((meleeHostiles.length > 0 && (meleeHostiles[0].owner.username == 'o4kapuk' ||  meleeHostiles[0].owner.username == 'inakrin'))) {
 			Game.notify(`Adding a new Bunker Defense in room ${this.room.print}`);
 			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, true);
 		}
