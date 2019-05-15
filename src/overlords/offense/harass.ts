@@ -8,6 +8,7 @@ import {boostResources} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
 import {DirectiveHarass} from "../../directives/offense/harass";
+import {log} from "../../console/log";
 
 /**
  * Spawns ranged harassers to stop mining for an enemy room
@@ -38,7 +39,6 @@ export class HarassOverlord extends CombatOverlord {
 	}
 
 	private handleHarass(hydralisk: CombatZerg): void {
-		console.log(`Matt: hydralisk harassment in ${hydralisk.print}`);
 		hydralisk.autoCombat(this.targetRemoteToHarass || hydralisk.room.name);
 
 		//this.chooseRemoteToHarass(hydralisk, hydralisk.room.name);
@@ -55,13 +55,13 @@ export class HarassOverlord extends CombatOverlord {
 	}
 
 	chooseRemoteToHarass(hydralisk: CombatZerg, currentRoom: string) {
-		this.targetRemoteToHarass = _.sample(this.directive.memory.roomsToHarass);
-		if (this.targetRemoteToHarass) {
-			console.log(`Selecting new target of ${this.targetRemoteToHarass} for ${hydralisk.print}`);
+		let nextRoom = this.directive.memory.roomsToHarass.shift();
+		if (nextRoom) {
+			this.directive.memory.roomsToHarass.push(nextRoom);
+			this.targetRemoteToHarass = nextRoom;
+			log.debug(`Selecting new target of ${this.targetRemoteToHarass} for ${hydralisk.print} from ${this.directive.memory.roomsToHarass}`);
 			hydralisk.say(`Tgt ${this.targetRemoteToHarass}`);
 			hydralisk.goToRoom(this.targetRemoteToHarass);
-		} else {
-			console.log(`Tried to select new harass target from ${currentRoom} but failed for ${this.directive.print} with list ${this.directive.memory.roomsToHarass}`);
 		}
 	}
 
@@ -72,7 +72,6 @@ export class HarassOverlord extends CombatOverlord {
 	}
 
 	run() {
-		console.log(`Matt: Running directive harass in ${this.directive.print}`);
 		this.autoRun(this.hydralisks, hydralisk => this.handleHarass(hydralisk));
 	}
 }
