@@ -56,7 +56,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		return Math.ceil(1.5 * enemyRangedPotential / hydraliskPotential);
 	}
 
-	// TODO: division by 0 error!
+	// TODO: division by 0 error! 
 	private computeNeededBroodlingAmount(setup: CreepSetup, enemyAttackPotential: number): number {
 		const broodlingPotential = setup.getBodyPotential(ATTACK, this.colony);
 		// let worstDamageMultiplier = CombatIntel.minimumDamageMultiplierForGroup(this.room.hostiles);
