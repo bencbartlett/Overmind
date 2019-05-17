@@ -40,7 +40,7 @@ export class DirectiveInvasionDefense extends Directive {
 		}
 		const expectedDamage = CombatIntel.maxDamageByCreeps(this.room.dangerousPlayerHostiles);
 		const expectedHealing = CombatIntel.maxHealingByCreeps(this.room.dangerousPlayerHostiles);
-		const useBoosts = (expectedDamage > ATTACK_POWER * 13) || (expectedHealing > RANGED_ATTACK_POWER * 50)
+		const useBoosts = (expectedDamage > ATTACK_POWER * 50) || (expectedHealing > RANGED_ATTACK_POWER * 100)
 						&& !!this.colony.terminal
 						&& !!this.colony.evolutionChamber;
 		const percentWalls = _.filter(this.room.barriers, s => s.structureType == STRUCTURE_WALL).length /
@@ -48,7 +48,7 @@ export class DirectiveInvasionDefense extends Directive {
 		const meleeHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(ATTACK) > 0 ||
 																	  hostile.getActiveBodyparts(WORK) > 0);
 		const rangedHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0);
-		if (this.colony.stage > ColonyStage.Larva) {
+		if (this.colony.stage > ColonyStage.Larva && !this.colony.controller.upgradeBlocked) {
 			this.overlords.rangedDefense = new RangedDefenseOverlord(this, useBoosts);
 		} else {
 			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
@@ -62,7 +62,7 @@ export class DirectiveInvasionDefense extends Directive {
 		// Look, it's 2am so going to go with name hack for now.
 		if ((meleeHostiles.length > 0 && (meleeHostiles[0].owner.username == 'o4kapuk' ||  meleeHostiles[0].owner.username == 'inakrin'))) {
 			Game.notify(`Adding a new Bunker Defense in room ${this.room.print}`);
-			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, true);
+			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, false);
 		}
 
 	}
