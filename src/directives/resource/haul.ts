@@ -106,7 +106,7 @@ export class DirectiveHaul extends Directive {
 	}
 
 	run(): void {
-		if (this.totalResources == 0 && this.pos.isVisible) {
+		if (this.totalResources == 0) {
 			this.remove();
 		}
 	}
