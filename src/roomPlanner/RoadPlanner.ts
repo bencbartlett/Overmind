@@ -69,6 +69,7 @@ export class RoadPlanner {
 		// Compute coverage for each path
 		for (const destination of this.colony.destinations) {
 			const destName = destination.pos.name;
+			if(!!this.memory.roadLookup[destination.pos.roomName]) //fix, roadConvergence% should only consider rooms in roodLookup instead of all rooms in roadCovergaces
 			if (!this.memory.roadCoverages[destName] || Game.time > this.memory.roadCoverages[destName].exp) {
 				const roadCoverage = this.computeRoadCoverage(storagePos, destination.pos);
 				if (roadCoverage != undefined) {
