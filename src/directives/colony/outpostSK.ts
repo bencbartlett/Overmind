@@ -21,13 +21,13 @@ export class DirectiveSKOutpost extends Directive {
 		this.overlords.sourceReaper = new SourceReaperOverlord(this);
 	}
 
-	getTarget(): Structure | undefined {
+	getTarget(): ConstructionSite | undefined {
 		if (!this.pos.isVisible) {
 			return;
 		}
-		const structure = _.find(this.pos.lookFor(LOOK_STRUCTURES), s =>
-					s.structureType == STRUCTURE_CONTAINER) as StructureContainer;
-		return structure;
+		const ConstructionSite = _.find(this.pos.lookFor(LOOK_CONSTRUCTION_SITES), s =>
+					s.structureType == STRUCTURE_CONTAINER) as ConstructionSite;
+		return ConstructionSite;
 	}
 
 	init(): void {
