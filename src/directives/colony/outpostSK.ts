@@ -25,7 +25,8 @@ export class DirectiveSKOutpost extends Directive {
 		if (!this.pos.isVisible) {
 			return;
 		}
-		const constructionSites = this.room.find(FIND_CONSTRUCTION_SITES);
+		const room = Game.rooms[this.pos.roomName]
+		const constructionSites = room.find(FIND_CONSTRUCTION_SITES);
 		const containersInConstructionSites = _.filter(constructionSites, s => s.structureType == STRUCTURE_CONTAINER);
 
 		if(containersInConstructionSites.length > 0){
