@@ -21,8 +21,21 @@ export class DirectiveSKOutpost extends Directive {
 		this.overlords.sourceReaper = new SourceReaperOverlord(this);
 	}
 
-	init(): void {
+	getTarget(): Structure | undefined {
+		if (!this.pos.isVisible) {
+			return;
+		}
+		const structure = _.find(this.pos.lookFor(LOOK_STRUCTURES), s =>
+					s.structureType == STRUCTURE_CONTAINER) as StructureContainer;
+		return structure;
+	}
 
+	init(): void {
+		// Add this structure to worker overlord's build list
+		const target = this.getTarget();
+		if (target && !this.colony.overlords.work.constructionSites.includes(target)) {
+			this.colony.overlords.work.constructionSites.push(target);
+		}
 	}
 
 	run(): void {
