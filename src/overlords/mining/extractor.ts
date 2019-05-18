@@ -110,7 +110,7 @@ export class ExtractorOverlord extends Overlord {
             const dropoffPoints: (StructureTerminal | StructureStorage)[] = _.compact([this.colony.storage!]);
 			const bestDropoffPoint = drone.pos.findClosestByMultiRoomRange(dropoffPoints);
 			if (bestDropoffPoint) {
-				drone.task = Tasks.transfer(bestDropoffPoint);
+				drone.task = Tasks.transferAll(bestDropoffPoint);
 				return;
 			}
         }
