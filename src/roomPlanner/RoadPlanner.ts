@@ -69,17 +69,18 @@ export class RoadPlanner {
 		// Compute coverage for each path
 		for (const destination of this.colony.destinations) {
 			const destName = destination.pos.name;
-			if (!this.memory.roadCoverages[destName] || Game.time > this.memory.roadCoverages[destName].exp) {
+			if(!!this.memory.roadLookup[destination.pos.roomName]){ //<< add this line
+				if (!this.memory.roadCoverages[destName] || Game.time > this.memory.roadCoverages[destName].exp) {
 				const roadCoverage = this.computeRoadCoverage(storagePos, destination.pos);
 				if (roadCoverage != undefined) {
 					// Set expiration to be longer if road is nearly complete
 					const expiration = roadCoverage.roadCount / roadCoverage.length >= 0.75
-									 ? getCacheExpiration(RoadPlanner.settings.recomputeCoverageInterval)
-									 : getCacheExpiration(3 * RoadPlanner.settings.recomputeCoverageInterval);
+						? getCacheExpiration(RoadPlanner.settings.recomputeCoverageInterval)
+						: getCacheExpiration(3 * RoadPlanner.settings.recomputeCoverageInterval);
 					this.memory.roadCoverages[destName] = {
 						roadCount: roadCoverage.roadCount,
-						length   : roadCoverage.length,
-						exp      : expiration
+						length: roadCoverage.length,
+						exp: expiration
 					};
 				} else {
 					if (this.memory.roadCoverages[destName]) {
@@ -91,13 +92,14 @@ export class RoadPlanner {
 						const waitTime = onPublicServer() ? 300 : 100;
 						this.memory.roadCoverages[destName] = {
 							roadCount: 0,
-							length   : 1,
-							exp      : Game.time + waitTime
+							length: 1,
+							exp: Game.time + waitTime
 						};
 					}
 				}
 				log.debug(`Recomputing road coverage from ${storagePos.print} to ${destination.pos.print}... ` +
-						  `Coverage: ${JSON.stringify(roadCoverage)}`);
+					`Coverage: ${JSON.stringify(roadCoverage)}`);
+			}
 			}
 		}
 		// Store the aggregate roadCoverage score

@@ -25,7 +25,7 @@ export class DirectiveInvasionDefense extends Directive {
 
 	memory: DirectiveInvasionDefenseMemory;
 	room: Room | undefined;
-	safeEndTime: 300;
+	safeEndTime: 100;
 	safeSpawnHaltTime: 100;
 
 	private relocateFrequency: number;
@@ -60,7 +60,7 @@ export class DirectiveInvasionDefense extends Directive {
 				               //      this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, true);
 					               // }
 		// Look, it's 2am so going to go with name hack for now.
-		if ((meleeHostiles.length > 0 && (meleeHostiles[0].owner.username == 'o4kapuk' ||  meleeHostiles[0].owner.username == 'inakrin'))) {
+		if ((meleeHostiles.length > 2 && (meleeHostiles[0].owner.username == 'o4kapuk' ||  meleeHostiles[0].owner.username == 'inakrin'))) {
 			Game.notify(`Adding a new Bunker Defense in room ${this.room.print}`);
 			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, false);
 		}

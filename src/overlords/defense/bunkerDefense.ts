@@ -46,7 +46,7 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 			this.wishlist(1, setup);
 		} else {
 			const setup = CombatSetups.bunkerGuard.halfMove;
-			this.wishlist(2, setup);
+			this.wishlist(1, setup);
 		}
 	}
 

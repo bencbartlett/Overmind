@@ -53,7 +53,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		const hydraliskPotential = setup.getBodyPotential(RANGED_ATTACK, this.colony);
 		// TODO: body potential from spawnGroup energy?
 		// let worstDamageMultiplier = CombatIntel.minimumDamageMultiplierForGroup(this.room.hostiles);
-		return Math.ceil(1.5 * enemyRangedPotential / hydraliskPotential);
+		return Math.ceil(1.1 * enemyRangedPotential / hydraliskPotential);
 	}
 
 	// TODO: division by 0 error!
