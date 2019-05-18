@@ -25,9 +25,13 @@ export class DirectiveSKOutpost extends Directive {
 		if (!this.pos.isVisible) {
 			return;
 		}
-		const ConstructionSite = _.find(this.pos.lookFor(LOOK_CONSTRUCTION_SITES), s =>
-					s.structureType == STRUCTURE_CONTAINER) as ConstructionSite;
-		return ConstructionSite;
+		const constructionSites = this.room.find(FIND_CONSTRUCTION_SITES);
+		const containersInConstructionSites = _.filter(constructionSites, s => s.structureType == STRUCTURE_CONTAINER);
+
+		if(containersInConstructionSites.length > 0){
+			return containersInConstructionSites[0];	
+		}			
+		return;
 	}
 
 	init(): void {
