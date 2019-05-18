@@ -28,7 +28,7 @@ export class RandomWalkerScoutOverlord extends Overlord {
 	private handleScout(scout: Zerg) {
 		// Stomp on enemy construction sites
 		const enemyConstructionSites = scout.room.find(FIND_HOSTILE_CONSTRUCTION_SITES);
-		if (enemyConstructionSites.length > 0) {
+		if (enemyConstructionSites.length > 0 && enemyConstructionSites[0].pos.isWalkable(true)) {
 			scout.goTo(enemyConstructionSites[0].pos);
 			return; //bug fix, must not goToRoom until all hostile constuction sites have been stomped on.
 		}
