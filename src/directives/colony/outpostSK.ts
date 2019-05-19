@@ -21,7 +21,7 @@ export class DirectiveSKOutpost extends Directive {
 		this.overlords.sourceReaper = new SourceReaperOverlord(this);
 	}
 
-	getTarget(): ConstructionSite | undefined {
+	getConstructionSites(): ConstructionSite | undefined {
 		if (!this.pos.isVisible) {
 			return;
 		}
@@ -35,11 +35,32 @@ export class DirectiveSKOutpost extends Directive {
 		return;
 	}
 
+	getContainersToRepair(): Structure | undefined {
+		if (!this.pos.isVisible) {
+			return;
+		}
+		const room = Game.rooms[this.pos.roomName]
+		const allStrcutures = room.find(FIND_STRUCTURES);
+		const containersTorepair = _.filter(allStrcutures, s => s.structureType == STRUCTURE_CONTAINER && s.hits < 0.5 * s.hitsMax);
+
+		if(containersTorepair.length > 0){
+			return containersTorepair[0];	
+		}			
+		return;
+	}
+
 	init(): void {
-		// Add this structure to worker overlord's build list
-		const target = this.getTarget();
+		// Add this structure/CS to worker overlord's build/repair list
+		const container = this.getContainersToRepair();
+		if (container && !this.colony.overlords.work.repairStructures.includes(container)) {
+			this.colony.overlords.work.repairStructures.push(container);
+			return;
+		}
+
+		const target = this.getConstructionSites();
 		if (target && !this.colony.overlords.work.constructionSites.includes(target)) {
 			this.colony.overlords.work.constructionSites.push(target);
+			return;
 		}
 	}
 
@@ -47,4 +68,3 @@ export class DirectiveSKOutpost extends Directive {
 
 	}
 }
-
