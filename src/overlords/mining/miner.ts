@@ -403,7 +403,6 @@ export class MiningOverlord extends Overlord {
 		 	if (this.source && this.source.energy > 0) {
 		 		miner.harvest(this.source!);
 			} else {
-				console.log('mining second source');
 				miner.harvest(this.secondSource!);
 			}
 			if (miner.carry.energy > 0.9 * miner.carryCapacity) {
