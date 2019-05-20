@@ -126,8 +126,7 @@ export class PowerHaulingOverlord extends Overlord {
 			this.wishlist(this.numHaulers, Setups.transporters.default);
 		}
 		// Check hauling is done
-		!this.directive.pickupDone && this.directive.isPickupDone();
-		if (this.directive.pickupDone && Game.time % 16 == 0) {
+		if (this.directive.isPickupDone() && Game.time % 16 == 0) {
 			let stillCarryingPower = _.find(this.haulers, hauler => hauler.carry.power != undefined && hauler.carry.power > 0);
 			if (!stillCarryingPower) {
 				log.alert(`Deleting Power Mining Directive ${this.directive.print} as no haulers are left carrying power.`);
