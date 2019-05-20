@@ -334,8 +334,12 @@ export class WorkerOverlord extends Overlord {
 
 	private handleWorker(worker: Zerg) {
 		if (worker.carry.energy > 0) {
-			// Upgrade controller if close to downgrade
-			if (this.colony.controller.ticksToDowngrade <= (this.colony.level >= 4 ? 10000 : 2000)) {
+
+			// TODO Add high priority to block controller with ramparts/walls in case of downgrade attack
+			// FIXME workers get stalled at controller in case of downgrade attack
+			// Upgrade controller if close to downgrade or prepare to upgrade if getting controller attacked
+			const downgradeLevel = CONTROLLER_DOWNGRADE[this.colony.controller.level] * .7;
+			if (this.colony.controller.ticksToDowngrade <= downgradeLevel && !this.colony.controller.upgradeBlocked || this.colony.controller.upgradeBlocked < 30) {
 				if (this.upgradeActions(worker)) return;
 			}
 			// Repair damaged non-road non-barrier structures
