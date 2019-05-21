@@ -2,13 +2,13 @@ import {log} from '../../console/log';
 import {ClaimingOverlord} from '../../overlords/colonization/claimer';
 import {profile} from '../../profiler/decorator';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
-import {hasContents, printRoomName} from '../../utilities/utils';
+import {printRoomName} from '../../utilities/utils';
 import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
-import {DirectiveDismantle} from "../targeting/dismantle";
-import {Pathing} from "../../movement/Pathing";
-import {DirectiveHaul} from "../resource/haul";
 import {Zerg} from "../../zerg/Zerg";
+import {DirectiveHaul} from "../resource/haul";
+import {Pathing} from "../../movement/Pathing";
+import {DirectiveDismantle} from "../targeting/dismantle";
 
 
 /**
@@ -59,9 +59,9 @@ export class DirectiveClearRoom extends Directive {
 			for (const s of allStructures) {
 				if (s.structureType == STRUCTURE_CONTROLLER) continue;
 				if (keepStorageStructures &&
-					(s.structureType == STRUCTURE_STORAGE || s.structureType == STRUCTURE_TERMINAL) && hasContents(s.store)) {
+					(s.structureType == STRUCTURE_STORAGE || s.structureType == STRUCTURE_TERMINAL) && ~s.isEmpty) {
 					// Create a collection flag
-					let result = s.pos.createFlag(undefined, DirectiveHaul.color, DirectiveHaul.secondaryColor);
+					DirectiveHaul.create(s.pos);
 					continue;
 				}
 				if (keepRoads && s.structureType == STRUCTURE_ROAD) {
@@ -107,18 +107,16 @@ export class DirectiveClearRoom extends Directive {
 			}
 		// Clear path if controller is not reachable
 		} else if (this.room && this.room.creeps.length > 1) {
-			let currentlyDismantling = _.find(this.room.flags, function(flag) {
-				return (flag.color == DirectiveDismantle.color && flag.secondaryColor == DirectiveDismantle.secondaryColor)
-			});
+			let currentlyDismantlingLocations = DirectiveDismantle.find(this.room.flags);
 
-			if (!currentlyDismantling) {
+			if (currentlyDismantlingLocations.length == 0) {
 				let pathablePos = this.room.creeps[0] ? this.room.creeps[0].pos
 					: Pathing.findPathablePosition(this.room.name);
 				let blockingLocation = Pathing.findBlockingPos(pathablePos, this.room.controller!.pos,
 					_.filter(this.room.structures, s => !s.isWalkable));
-				if (blockingLocation && blockingLocation.lookFor(LOOK_FLAGS).length <= 0) {
+				if (blockingLocation && !Directive.isPresent(blockingLocation, 'pos')) {
 					log.notify(`Adding dismantle directive for ${this.pos.roomName} to reach controller.`);
-					blockingLocation!.createFlag(undefined, DirectiveDismantle.color, DirectiveDismantle.secondaryColor);
+					DirectiveDismantle.create(blockingLocation);
 				}
 			}
 		}
