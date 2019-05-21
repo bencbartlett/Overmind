@@ -1,9 +1,9 @@
-import {Overlord} from '../Overlord';
-import {Zerg} from '../../zerg/Zerg';
+import {Roles, Setups} from '../../creepSetups/setups';
+import {Directive} from '../../directives/Directive';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {Directive} from '../../directives/Directive';
-import {Roles, Setups} from '../../creepSetups/setups';
+import {Zerg} from '../../zerg/Zerg';
+import {Overlord} from '../Overlord';
 
 /**
  * Sends out a stationary scout, which travels to a waypoint and remains there indefinitely
@@ -23,7 +23,7 @@ export class StationaryScoutOverlord extends Overlord {
 	}
 
 	run() {
-		for (let scout of this.scouts) {
+		for (const scout of this.scouts) {
 			if (!(scout.pos.inRangeTo(this.pos, 3) && !scout.pos.isEdge)) {
 				scout.goTo(this.pos, {range: 3});
 			}

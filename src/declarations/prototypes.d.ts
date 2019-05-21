@@ -55,7 +55,7 @@ interface Room {
 	droppedEnergy: Resource[];
 	droppedPower: Resource[];
 	// Room structures
-	_refreshStructureCache
+	_refreshStructureCache;
 	// Multiple structures
 	spawns: StructureSpawn[];
 	extensions: StructureExtension[];
@@ -96,7 +96,7 @@ interface RoomObject {
 	ref: string;
 	targetedBy: string[];
 
-	serialize(): protoRoomObject;
+	serialize(): ProtoRoomObject;
 }
 
 interface RoomPosition {
@@ -115,7 +115,7 @@ interface RoomPosition {
 
 	inRangeToXY(x: number, y: number, range: number): boolean;
 
-	getRangeToXY(x: number, y: number): number
+	getRangeToXY(x: number, y: number): number;
 
 	getPositionsAtRange(range: number, includeWalls?: boolean, includeEdges?: boolean): RoomPosition[];
 
@@ -190,10 +190,6 @@ interface StructureController {
 interface StructureExtension {
 	isFull: boolean;
 	isEmpty: boolean;
-}
-
-interface StructureLab {
-
 }
 
 interface StructureLink {

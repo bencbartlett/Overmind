@@ -23,7 +23,7 @@
 // export class RangedDefenseOverlord extends Overlord {
 //
 // 	memory: {
-// 		retreatPos?: protoPos;
+// 		retreatPos?: ProtoPos;
 // 	};
 //
 // 	defenders: CombatZerg[];

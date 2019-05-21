@@ -1,6 +1,6 @@
-import {Task} from '../Task';
-import {profile} from '../../profiler/decorator';
 import {isSource} from '../../declarations/typeGuards';
+import {profile} from '../../profiler/decorator';
+import {Task} from '../Task';
 
 export type harvestTargetType = Source | Mineral;
 export const harvestTaskName = 'harvest';

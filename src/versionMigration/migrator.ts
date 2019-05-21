@@ -1,5 +1,7 @@
-import {Mem} from '../memory/Memory';
+/* tslint:disable:no-string-literal */
+
 import {log} from '../console/log';
+import {Mem} from '../memory/Memory';
 
 interface VersionMigratorMemory {
 	versions: { [version: string]: boolean };
@@ -172,7 +174,7 @@ export class VersionMigration {
 
 	static migrate_050_051() {
 		// Destroy all links that aren't hatchery or commandCenter links
-		for (let id in Game.structures) {
+		for (const id in Game.structures) {
 			const s = Game.structures[id];
 			if (s.structureType == STRUCTURE_LINK) {
 				const isCommandCenterLink = s.pos.findInRange(_.compact([s.room.storage!,
@@ -184,7 +186,7 @@ export class VersionMigration {
 			}
 		}
 		let count = 0;
-		for (let name in Game.creeps) {
+		for (const name in Game.creeps) {
 			const creep = Game.creeps[name];
 			if (creep.memory.role == 'drone' &&
 				(<any>creep.memory).overlord && (<any>creep.memory).overlord.includes('miningSite')) {
@@ -199,7 +201,7 @@ export class VersionMigration {
 
 	static migrate_050_051_part2() {
 		// Destroy all links that aren't hatchery or commandCenter links
-		for (let name in Game.creeps) {
+		for (const name in Game.creeps) {
 			const creep = Game.creeps[name];
 			if (creep.memory.role == 'reserver') {
 				creep.memory.role = 'infestor';
@@ -223,8 +225,8 @@ export class VersionMigration {
 		const protectedKeywords = ['suspendUntil', 'amount', 'created', 'persistent', 'setPosition', 'rotation',
 								   'colony', 'parent', 'pathing', 'stats', 'safeTick', 'enhanced', 'persistent',
 								   'recoveryWaypoint', 'totalResources', 'maxPathLength', 'maxLinearRange'];
-		for (let name in Memory.flags) {
-			for (let prop in Memory.flags[name]) {
+		for (const name in Memory.flags) {
+			for (const prop in Memory.flags[name]) {
 				if (!protectedKeywords.includes(prop)) {
 					delete (<any>Memory.flags[name])[prop];
 				}
@@ -236,7 +238,7 @@ export class VersionMigration {
 
 	static migrate_051_052() {
 		if (__VERSION__ == '0.5.2') {
-			for (let name in Game.creeps) {
+			for (const name in Game.creeps) {
 				if (name.includes('mutalisk')) {
 					Game.creeps[name].suicide();
 				}
@@ -255,16 +257,16 @@ export class VersionMigration {
 			overlord  : _MEM.OVERLORD,
 			colony    : _MEM.COLONY,
 		};
-		for (let name in Memory.flags) {
+		for (const name in Memory.flags) {
 
 			// Replace old keys with new ones
-			Memory.flags[name] = _.mapKeys((<any>Memory.flags[name]), function (value, key) {
+			Memory.flags[name] = _.mapKeys((<any>Memory.flags[name]), function(value, key) {
 				return newFlagKeys[key] || key;
 			});
 
 			// Special opertions for harvest flags
 			if (name.includes('harvest:')) {
-				let pathing = (<any>Memory.flags[name]).pathing;
+				const pathing = (<any>Memory.flags[name]).pathing;
 				if (pathing) {
 					(<any>Memory.flags[name])['P'] = {
 						D: pathing.distance,
@@ -284,16 +286,16 @@ export class VersionMigration {
 			overlord: _MEM.OVERLORD,
 			colony  : _MEM.COLONY,
 		};
-		for (let name in Memory.creeps) {
+		for (const name in Memory.creeps) {
 			// Replace old keys with new ones
-			(<any>Memory.creeps[name]) = _.mapKeys((<any>Memory.creeps[name]), function (value, key) {
+			(<any>Memory.creeps[name]) = _.mapKeys((<any>Memory.creeps[name]), function(value, key) {
 				return newCreepKeys[key] || key;
 			});
 		}
 
 		// Delete outdated colony memory properties
-		for (let name in Memory.colonies) {
-			for (let key in Memory.colonies[name]) {
+		for (const name in Memory.colonies) {
+			for (const key in Memory.colonies[name]) {
 				if (key.includes('miningSite@')) {
 					delete Memory.colonies[name][key];
 				}
@@ -301,7 +303,7 @@ export class VersionMigration {
 		}
 
 		// Delete ALL room memory
-		for (let name in Memory.rooms) {
+		for (const name in Memory.rooms) {
 			delete Memory.rooms[name];
 		}
 

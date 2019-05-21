@@ -1,20 +1,20 @@
-import {Overlord} from '../Overlord';
-import {Zerg} from '../../zerg/Zerg';
-import {Tasks} from '../../tasks/Tasks';
+import {$} from '../../caching/GlobalCache';
+import {Colony} from '../../Colony';
 import {log} from '../../console/log';
+import {CreepSetup} from '../../creepSetups/CreepSetup';
+import {Roles, Setups} from '../../creepSetups/setups';
+import {StoreStructure} from '../../declarations/typeGuards';
+import {Hatchery} from '../../hiveClusters/hatchery';
+import {TransportRequest} from '../../logistics/TransportRequestGroup';
+import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {hasMinerals, mergeSum, minBy} from '../../utilities/utils';
-import {StoreStructure} from '../../declarations/typeGuards';
-import {Colony} from '../../Colony';
-import {$} from '../../caching/GlobalCache';
 import {getPosFromBunkerCoord, insideBunkerBounds, quadrantFillOrder} from '../../roomPlanner/layouts/bunker';
-import {TransportRequest} from '../../logistics/TransportRequestGroup';
 import {Task} from '../../tasks/Task';
-import {Hatchery} from '../../hiveClusters/hatchery';
-import {Pathing} from '../../movement/Pathing';
-import {Roles, Setups} from '../../creepSetups/setups';
-import {CreepSetup} from '../../creepSetups/CreepSetup';
+import {Tasks} from '../../tasks/Tasks';
+import {hasMinerals, mergeSum, minBy} from '../../utilities/utils';
+import {Zerg} from '../../zerg/Zerg';
+import {Overlord} from '../Overlord';
 
 type SupplyStructure = StructureExtension | StructureSpawn | StructureTower | StructureLab;
 
@@ -26,10 +26,10 @@ function isSupplyStructure(structure: Structure): structure is SupplyStructure {
 }
 
 function computeQuadrant(colony: Colony, quadrant: Coord[]): SupplyStructure[] {
-	let positions = _.map(quadrant, coord => getPosFromBunkerCoord(coord, colony));
-	let structures: SupplyStructure[] = [];
-	for (let pos of positions) {
-		let structure = _.find(pos.lookFor(LOOK_STRUCTURES), s => isSupplyStructure(s)) as SupplyStructure | undefined;
+	const positions = _.map(quadrant, coord => getPosFromBunkerCoord(coord, colony));
+	const structures: SupplyStructure[] = [];
+	for (const pos of positions) {
+		const structure = _.find(pos.lookFor(LOOK_STRUCTURES), s => isSupplyStructure(s)) as SupplyStructure | undefined;
 		if (structure) {
 			structures.push(structure);
 		}
@@ -78,13 +78,13 @@ export class BunkerQueenOverlord extends Overlord {
 		const activeQueens = _.filter(this.queens, queen => !queen.spawning);
 		this.numActiveQueens = activeQueens.length;
 		if (this.numActiveQueens > 0) {
-			let quadrantAssignmentOrder = [this.quadrants.lowerRight,
-										   this.quadrants.upperLeft,
-										   this.quadrants.lowerLeft,
-										   this.quadrants.upperRight];
+			const quadrantAssignmentOrder = [this.quadrants.lowerRight,
+											 this.quadrants.upperLeft,
+											 this.quadrants.lowerLeft,
+											 this.quadrants.upperRight];
 			let i = 0;
-			for (let quadrant of quadrantAssignmentOrder) {
-				let queen = activeQueens[i % activeQueens.length];
+			for (const quadrant of quadrantAssignmentOrder) {
+				const queen = activeQueens[i % activeQueens.length];
 				_.extend(this.assignments[queen.name], _.zipObject(_.map(quadrant, s => [s.id, true])));
 				i++;
 			}
@@ -102,7 +102,7 @@ export class BunkerQueenOverlord extends Overlord {
 	}
 
 	init() {
-		for (let battery of this.batteries) {
+		for (const battery of this.batteries) {
 			if (hasMinerals(battery.store)) { // get rid of any minerals in the container if present
 				this.colony.logisticsNetwork.requestOutputMinerals(battery);
 			}
@@ -118,7 +118,7 @@ export class BunkerQueenOverlord extends Overlord {
 		// Step 1: empty all contents (this shouldn't be necessary since queen is normally empty at this point)
 		let queenPos = queen.pos;
 		if (_.sum(queen.carry) > 0) {
-			let transferTarget = this.colony.terminal || this.colony.storage || this.batteries[0];
+			const transferTarget = this.colony.terminal || this.colony.storage || this.batteries[0];
 			if (transferTarget) {
 				tasks.push(Tasks.transferAll(transferTarget));
 				queenPos = transferTarget.pos;
@@ -128,21 +128,21 @@ export class BunkerQueenOverlord extends Overlord {
 			}
 		}
 		// Step 2: figure out what you need to supply for and calculate the needed resources
-		let queenCarry = {} as { [resourceType: string]: number };
-		let allStore = mergeSum(_.map(this.storeStructures, s => s.store));
+		const queenCarry = {} as { [resourceType: string]: number };
+		const allStore = mergeSum(_.map(this.storeStructures, s => s.store));
 
-		let supplyRequests: TransportRequest[] = [];
-		for (let priority in this.colony.transportRequests.supply) {
-			for (let request of this.colony.transportRequests.supply[priority]) {
+		const supplyRequests: TransportRequest[] = [];
+		for (const priority in this.colony.transportRequests.supply) {
+			for (const request of this.colony.transportRequests.supply[priority]) {
 				if (this.assignments[queen.name][request.target.id]) {
 					supplyRequests.push(request);
 				}
 			}
 		}
-		let supplyTasks: Task[] = [];
-		for (let request of supplyRequests) {
+		const supplyTasks: Task[] = [];
+		for (const request of supplyRequests) {
 			// stop when carry will be full
-			let remainingAmount = queen.carryCapacity - _.sum(queenCarry);
+			const remainingAmount = queen.carryCapacity - _.sum(queenCarry);
 			if (remainingAmount == 0) break;
 			// figure out how much you can withdraw
 			let amount = Math.min(request.amount, remainingAmount);
@@ -157,17 +157,17 @@ export class BunkerQueenOverlord extends Overlord {
 			supplyTasks.push(Tasks.transfer(request.target, request.resourceType, amount));
 		}
 		// Step 3: make withdraw tasks to get the needed resources
-		let withdrawTasks: Task[] = [];
-		let neededResources = _.keys(queenCarry) as ResourceConstant[];
+		const withdrawTasks: Task[] = [];
+		const neededResources = _.keys(queenCarry) as ResourceConstant[];
 		// TODO: a single structure doesn't need to have all resources; causes jam if labs need supply but no minerals
-		let targets: StoreStructure[] = _.filter(this.storeStructures, s =>
+		const targets: StoreStructure[] = _.filter(this.storeStructures, s =>
 			_.all(neededResources, resource => (s.store[resource] || 0) >= (queenCarry[resource] || 0)));
-		let withdrawTarget = minBy(targets, target => Pathing.distance(queenPos, target.pos));
+		const withdrawTarget = minBy(targets, target => Pathing.distance(queenPos, target.pos));
 		if (!withdrawTarget) {
 			log.warning(`Could not find adequate withdraw structure for ${queen.print}!`);
 			return null;
 		}
-		for (let resourceType of neededResources) {
+		for (const resourceType of neededResources) {
 			withdrawTasks.push(Tasks.withdraw(withdrawTarget, resourceType, queenCarry[resourceType]));
 		}
 		// Step 4: put all the tasks in the correct order, set nextPos for each, and chain them together
@@ -177,8 +177,8 @@ export class BunkerQueenOverlord extends Overlord {
 
 	// Builds a series of tasks to withdraw required resources from targets
 	private buildWithdrawTaskManifest(queen: Zerg): Task | null {
-		let tasks: Task[] = [];
-		let transferTarget = this.colony.terminal || this.colony.storage || this.batteries[0];
+		const tasks: Task[] = [];
+		const transferTarget = this.colony.terminal || this.colony.storage || this.batteries[0];
 		// Step 1: empty all contents (this shouldn't be necessary since queen is normally empty at this point)
 		if (_.sum(queen.carry) > 0) {
 			if (transferTarget) {
@@ -189,23 +189,23 @@ export class BunkerQueenOverlord extends Overlord {
 			}
 		}
 		// Step 2: figure out what you need to withdraw from
-		let queenCarry = {energy: 0} as { [resourceType: string]: number };
+		const queenCarry = {energy: 0} as { [resourceType: string]: number };
 		// let allWithdrawRequests = _.compact(_.flatten(_.map(this.assignments[queen.name],
 		// 													struc => this.transportRequests.withdrawByID[struc.id])));
-		let withdrawRequests: TransportRequest[] = [];
-		for (let priority in this.colony.transportRequests.withdraw) {
-			for (let request of this.colony.transportRequests.withdraw[priority]) {
+		const withdrawRequests: TransportRequest[] = [];
+		for (const priority in this.colony.transportRequests.withdraw) {
+			for (const request of this.colony.transportRequests.withdraw[priority]) {
 				if (this.assignments[queen.name][request.target.id]) {
 					withdrawRequests.push(request);
 				}
 			}
 		}
-		for (let request of withdrawRequests) {
+		for (const request of withdrawRequests) {
 			// stop when carry will be full
-			let remainingAmount = queen.carryCapacity - _.sum(queenCarry);
+			const remainingAmount = queen.carryCapacity - _.sum(queenCarry);
 			if (remainingAmount == 0) break;
 			// figure out how much you can withdraw
-			let amount = Math.min(request.amount, remainingAmount);
+			const amount = Math.min(request.amount, remainingAmount);
 			if (amount == 0) continue;
 			// update the simulated carry
 			if (!queenCarry[request.resourceType]) {

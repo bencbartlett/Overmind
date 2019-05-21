@@ -1,8 +1,9 @@
-import {Task} from './Task';
+import {profile} from '../profiler/decorator';
 import {attackTargetType, TaskAttack} from './instances/attack';
 import {buildTargetType, TaskBuild} from './instances/build';
 import {claimTargetType, TaskClaim} from './instances/claim';
 import {dismantleTargetType, TaskDismantle} from './instances/dismantle';
+import {dropTargetType, TaskDrop} from './instances/drop';
 // import {fleeTargetType, TaskFlee} from './instances/flee';
 import {fortifyTargetType, TaskFortify} from './instances/fortify';
 import {getBoostedTargetType, TaskGetBoosted} from './instances/getBoosted';
@@ -13,6 +14,7 @@ import {healTargetType, TaskHeal} from './instances/heal';
 import {meleeAttackTargetType, TaskMeleeAttack} from './instances/meleeAttack';
 import {pickupTargetType, TaskPickup} from './instances/pickup';
 import {rangedAttackTargetType, TaskRangedAttack} from './instances/rangedAttack';
+import {TaskRecharge} from './instances/recharge';
 import {repairTargetType, TaskRepair} from './instances/repair';
 import {reserveTargetType, TaskReserve} from './instances/reserve';
 import {signControllerTargetType, TaskSignController} from './instances/signController';
@@ -20,10 +22,8 @@ import {TaskTransfer, transferTargetType} from './instances/transfer';
 import {TaskTransferAll, transferAllTargetType} from './instances/transferAll';
 import {TaskUpgrade, upgradeTargetType} from './instances/upgrade';
 import {TaskWithdraw, withdrawTargetType} from './instances/withdraw';
-import {dropTargetType, TaskDrop} from './instances/drop';
-import {profile} from '../profiler/decorator';
 import {TaskWithdrawAll, withdrawAllTargetType} from './instances/withdrawAll';
-import {TaskRecharge} from './instances/recharge';
+import {Task} from './Task';
 
 /**
  * Tasks class provides conveient wrappers for dispensing new Task instances
@@ -68,7 +68,7 @@ export class Tasks {
 
 	static drop(target: dropTargetType,
 				resourceType: ResourceConstant = RESOURCE_ENERGY,
-				amount: number | undefined     = undefined,
+				amount?: number,
 				options                        = {} as TaskOptions): TaskDrop {
 		return new TaskDrop(target, resourceType, amount, options);
 	}
@@ -83,8 +83,8 @@ export class Tasks {
 
 	static getBoosted(target: getBoostedTargetType,
 					  boostType: _ResourceConstantSansEnergy,
-					  amount: number | undefined = undefined,
-					  options                    = {} as TaskOptions): TaskGetBoosted {
+					  amount?: number,
+					  options = {} as TaskOptions): TaskGetBoosted {
 		return new TaskGetBoosted(target, boostType, amount, options);
 	}
 
@@ -135,7 +135,7 @@ export class Tasks {
 
 	static transfer(target: transferTargetType,
 					resourceType: ResourceConstant = RESOURCE_ENERGY,
-					amount: number | undefined     = undefined,
+					amount?: number,
 					options                        = {} as TaskOptions): TaskTransfer {
 		return new TaskTransfer(target, resourceType, amount, options);
 	}
@@ -152,7 +152,7 @@ export class Tasks {
 
 	static withdraw(target: withdrawTargetType,
 					resourceType: ResourceConstant = RESOURCE_ENERGY,
-					amount: number | undefined     = undefined,
+					amount?: number,
 					options                        = {} as TaskOptions): TaskWithdraw {
 		return new TaskWithdraw(target, resourceType, amount, options);
 	}

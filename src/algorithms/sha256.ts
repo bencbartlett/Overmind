@@ -1,10 +1,12 @@
+/* tslint:disable:no-bitwise */
+
 const digestLength: number = 32;
 const blockSize: number = 64;
 
 // Convert a string to a Uint8Array
 function stringToUint8Array(str: string): Uint8Array {
-	let arrayBuffer = new ArrayBuffer(str.length * 1);
-	let newUint = new Uint8Array(arrayBuffer);
+	const arrayBuffer = new ArrayBuffer(str.length * 1);
+	const newUint = new Uint8Array(arrayBuffer);
 	newUint.forEach((_, i) => {
 		newUint[i] = str.charCodeAt(i);
 	});

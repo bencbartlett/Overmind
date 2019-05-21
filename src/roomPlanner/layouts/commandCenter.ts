@@ -1,3 +1,5 @@
+/* tslint:disable */
+
 import {StructureLayout} from '../RoomPlanner';
 
 // @formatter:off

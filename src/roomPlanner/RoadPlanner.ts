@@ -1,12 +1,12 @@
-import {Visualizer} from '../visuals/Visualizer';
-import {RoomPlanner} from './RoomPlanner';
+import {$} from '../caching/GlobalCache';
+import {Colony, getAllColonies} from '../Colony';
 import {log} from '../console/log';
 import {Mem} from '../memory/Memory';
-import {Colony, getAllColonies} from '../Colony';
 import {MatrixTypes, Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
-import {$} from '../caching/GlobalCache';
 import {getCacheExpiration, onPublicServer} from '../utilities/utils';
+import {Visualizer} from '../visuals/Visualizer';
+import {RoomPlanner} from './RoomPlanner';
 
 export interface RoadPlannerMemory {
 	roadLookup: { [roomName: string]: { [roadCoordName: string]: boolean } };
@@ -17,7 +17,7 @@ export interface RoadPlannerMemory {
 			length: number;
 			exp: number;
 		}
-	}
+	};
 }
 
 const PLAIN_COST = 3;
@@ -25,7 +25,7 @@ const SWAMP_COST = 4;
 const WALL_COST = 15 * PLAIN_COST;
 const EXISTING_PATH_COST = PLAIN_COST - 1;
 
-let memoryDefaults: RoadPlannerMemory = {
+const memoryDefaults: RoadPlannerMemory = {
 	roadLookup   : {},
 	roadCoverage : 0.0,
 	roadCoverages: {}
@@ -67,13 +67,13 @@ export class RoadPlanner {
 
 	private recomputeRoadCoverages(storagePos: RoomPosition) {
 		// Compute coverage for each path
-		for (let destination of this.colony.destinations) {
-			let destName = destination.pos.name;
+		for (const destination of this.colony.destinations) {
+			const destName = destination.pos.name;
 			if (!this.memory.roadCoverages[destName] || Game.time > this.memory.roadCoverages[destName].exp) {
-				let roadCoverage = this.computeRoadCoverage(storagePos, destination.pos);
+				const roadCoverage = this.computeRoadCoverage(storagePos, destination.pos);
 				if (roadCoverage != undefined) {
 					// Set expiration to be longer if road is nearly complete
-					let expiration = roadCoverage.roadCount / roadCoverage.length >= 0.75
+					const expiration = roadCoverage.roadCount / roadCoverage.length >= 0.75
 									 ? getCacheExpiration(RoadPlanner.settings.recomputeCoverageInterval)
 									 : getCacheExpiration(3 * RoadPlanner.settings.recomputeCoverageInterval);
 					this.memory.roadCoverages[destName] = {
@@ -84,11 +84,11 @@ export class RoadPlanner {
 				} else {
 					if (this.memory.roadCoverages[destName]) {
 						// if you already have some data, use it for a little while
-						let waitTime = onPublicServer() ? 500 : 200;
+						const waitTime = onPublicServer() ? 500 : 200;
 						this.memory.roadCoverages[destName].exp += waitTime;
 					} else {
 						// otherwise put in a placeholder
-						let waitTime = onPublicServer() ? 300 : 100;
+						const waitTime = onPublicServer() ? 300 : 100;
 						this.memory.roadCoverages[destName] = {
 							roadCount: 0,
 							length   : 1,
@@ -103,8 +103,8 @@ export class RoadPlanner {
 		// Store the aggregate roadCoverage score
 		let totalRoadCount = 0;
 		let totalPathLength = 0;
-		for (let destName in this.memory.roadCoverages) {
-			let {roadCount, length, exp} = this.memory.roadCoverages[destName];
+		for (const destName in this.memory.roadCoverages) {
+			const {roadCount, length, exp} = this.memory.roadCoverages[destName];
 			totalRoadCount += roadCount;
 			totalPathLength += length;
 		}
@@ -113,13 +113,13 @@ export class RoadPlanner {
 
 	private computeRoadCoverage(storagePos: RoomPosition,
 								destination: RoomPosition): { roadCount: number, length: number } | undefined {
-		let ret = Pathing.findPath(storagePos, destination, {terrainCosts: {plainCost: 2, swampCost: 10}});
-		let path = ret.path;
-		let roomNames = _.unique(_.map(path, pos => pos.roomName));
+		const ret = Pathing.findPath(storagePos, destination, {terrainCosts: {plainCost: 2, swampCost: 10}});
+		const path = ret.path;
+		const roomNames = _.unique(_.map(path, pos => pos.roomName));
 		// If you have vision or cached vision of the room
 		if (_.all(roomNames, roomName => Game.rooms[roomName] || $.costMatrixRecall(roomName, MatrixTypes.default))) {
 			let roadCount = 0;
-			for (let pos of path) {
+			for (const pos of path) {
 				if (Game.rooms[pos.roomName]) {
 					if (pos.lookForStructure(STRUCTURE_ROAD)) {
 						roadCount++;
@@ -148,9 +148,9 @@ export class RoadPlanner {
 	private buildRoadNetwork(storagePos: RoomPosition, obstacles: RoomPosition[]): void {
 		this.costMatrices = {};
 		this.roadPositions = [];
-		let destinations = _.sortBy(this.colony.destinations, destination => destination.order);
+		const destinations = _.sortBy(this.colony.destinations, destination => destination.order);
 		// Connect commandCenter to each destination in colony
-		for (let destination of destinations) {
+		for (const destination of destinations) {
 			this.planRoad(storagePos, destination.pos, obstacles);
 		}
 		this.formatRoadPositions();
@@ -159,7 +159,7 @@ export class RoadPlanner {
 	// Plan a road between two locations avoiding a list of planned obstacles; pos1 should be storage for best results
 	private planRoad(pos1: RoomPosition, pos2: RoomPosition, obstacles: RoomPosition[]): void {
 		// Find the shortest path, preferentially stepping on tiles with road routing flags on them
-		let roadPath = this.generateRoadPath(pos1, pos2, obstacles);
+		const roadPath = this.generateRoadPath(pos1, pos2, obstacles);
 		if (roadPath) {
 			this.roadPositions = this.roadPositions.concat(roadPath);
 		}
@@ -167,7 +167,7 @@ export class RoadPlanner {
 
 	private generateRoadPlanningCostMatrix(roomName: string, obstacles: RoomPosition[]): CostMatrix {
 
-		let matrix = new PathFinder.CostMatrix();
+		const matrix = new PathFinder.CostMatrix();
 		const terrain = Game.map.getRoomTerrain(roomName);
 
 		for (let y = 0; y < 50; ++y) {
@@ -189,7 +189,7 @@ export class RoadPlanner {
 			}
 		}
 
-		for (let pos of obstacles) {
+		for (const pos of obstacles) {
 			if (pos.roomName == roomName) {
 				matrix.set(pos.x, pos.y, 0xff);
 			}
@@ -197,7 +197,7 @@ export class RoadPlanner {
 
 		const room = Game.rooms[roomName];
 		if (room) {
-			let impassibleStructures: Structure[] = [];
+			const impassibleStructures: Structure[] = [];
 			_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
 				if (!s.isWalkable) {
 					impassibleStructures.push(s);
@@ -219,7 +219,7 @@ export class RoadPlanner {
 	private generateRoadPath(origin: RoomPosition, destination: RoomPosition,
 							 obstacles: RoomPosition[]): RoomPosition[] | undefined {
 
-		let callback = (roomName: string): CostMatrix | boolean => {
+		const callback = (roomName: string): CostMatrix | boolean => {
 			if (!this.colony.roomNames.includes(roomName)) { // only route through colony rooms
 				return false;
 			}
@@ -232,7 +232,7 @@ export class RoadPlanner {
 			return this.costMatrices[roomName];
 		};
 
-		let ret = PathFinder.search(origin, {pos: destination, range: 1}, {roomCallback: callback, maxOps: 40000});
+		const ret = PathFinder.search(origin, {pos: destination, range: 1}, {roomCallback: callback, maxOps: 40000});
 
 		if (ret.incomplete) {
 			log.warning(`Roadplanner for ${this.colony.print}: could not plan road path!`);
@@ -241,8 +241,8 @@ export class RoadPlanner {
 
 		// Reduce the cost of planned paths to encourage road overlap for future pathing
 		if (RoadPlanner.settings.encourageRoadMerging) {
-			for (let i of _.range(ret.path.length)) {
-				let pos = ret.path[i];
+			for (const i of _.range(ret.path.length)) {
+				const pos = ret.path[i];
 				if (i % 2 == 0 && this.costMatrices[pos.roomName] && !pos.isEdge) {
 					this.costMatrices[pos.roomName].set(pos.x, pos.y, EXISTING_PATH_COST);
 				}
@@ -259,7 +259,7 @@ export class RoadPlanner {
 		// Remove roads located on exit tiles
 		_.remove(this.roadPositions, pos => pos.isEdge);
 		// Remove any roads duplicated in this.map
-		let roomPlannerRoads = this.roomPlanner.plannedStructurePositions(STRUCTURE_ROAD);
+		const roomPlannerRoads = this.roomPlanner.plannedStructurePositions(STRUCTURE_ROAD);
 		if (roomPlannerRoads != undefined) {
 			_.remove(this.roadPositions, pos => roomPlannerRoads!.includes(pos));
 		}
@@ -273,7 +273,7 @@ export class RoadPlanner {
 			roomPlannerRoads = this.roomPlanner.map[STRUCTURE_ROAD];
 		} else { // retrieve from memory
 			if (this.roomPlanner.memory.bunkerData && this.roomPlanner.memory.bunkerData.anchor) {
-				let layout = this.roomPlanner.getStructureMapForBunkerAt(this.roomPlanner.memory.bunkerData.anchor);
+				const layout = this.roomPlanner.getStructureMapForBunkerAt(this.roomPlanner.memory.bunkerData.anchor);
 				roomPlannerRoads = layout[STRUCTURE_ROAD];
 			} else if (this.roomPlanner.memory.mapsByLevel) {
 				roomPlannerRoads = _.map(this.roomPlanner.memory.mapsByLevel[8][STRUCTURE_ROAD],
@@ -283,10 +283,10 @@ export class RoadPlanner {
 				roomPlannerRoads = [];
 			}
 		}
-		let allRoadPos: RoomPosition[] = _.compact(this.roadPositions.concat(roomPlannerRoads));
+		const allRoadPos: RoomPosition[] = _.compact(this.roadPositions.concat(roomPlannerRoads));
 		// Encode the coordinates of the road as keys in a truthy hash table for fast lookup
 		this.memory.roadLookup = {};
-		for (let pos of allRoadPos) {
+		for (const pos of allRoadPos) {
 			if (!this.memory.roadLookup[pos.roomName]) this.memory.roadLookup[pos.roomName] = {};
 			this.memory.roadLookup[pos.roomName][pos.coordName] = true;
 		}
@@ -298,8 +298,8 @@ export class RoadPlanner {
 
 	static shouldBuild(structureType: BuildableStructureConstant, pos: RoomPosition): boolean {
 		if (!pos.room) return false;
-		let buildings = _.filter(pos.lookFor(LOOK_STRUCTURES), s => s && s.structureType == structureType);
-		let sites = pos.lookFor(LOOK_CONSTRUCTION_SITES);
+		const buildings = _.filter(pos.lookFor(LOOK_STRUCTURES), s => s && s.structureType == structureType);
+		const sites = pos.lookFor(LOOK_CONSTRUCTION_SITES);
 		if (!buildings || buildings.length == 0) {
 			if (!sites || sites.length == 0) {
 				return true;
@@ -314,17 +314,17 @@ export class RoadPlanner {
 		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
 		// Build missing roads
 		let roadPositions = [];
-		for (let roomName in this.memory.roadLookup) {
-			for (let coords of _.keys(this.memory.roadLookup[roomName])) {
-				let [x, y] = coords.split(':');
+		for (const roomName in this.memory.roadLookup) {
+			for (const coords of _.keys(this.memory.roadLookup[roomName])) {
+				const [x, y] = coords.split(':');
 				roadPositions.push(new RoomPosition(parseInt(x, 10), parseInt(y, 10), roomName));
 			}
 		}
-		let origin = (this.colony.storage || this.colony.hatchery || this.colony).pos;
+		const origin = (this.colony.storage || this.colony.hatchery || this.colony).pos;
 		roadPositions = _.sortBy(roadPositions, pos => pos.getMultiRoomRangeTo(origin));
-		for (let pos of roadPositions) {
+		for (const pos of roadPositions) {
 			if (count > 0 && RoomPlanner.canBuild(STRUCTURE_ROAD, pos)) {
-				let ret = pos.createConstructionSite(STRUCTURE_ROAD);
+				const ret = pos.createConstructionSite(STRUCTURE_ROAD);
 				if (ret != OK) {
 					log.warning(`${this.colony.name}: couldn't create road site at ${pos.print}. Result: ${ret}`);
 				} else {

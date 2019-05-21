@@ -1,7 +1,7 @@
 // Global settings file containing player information
 
-import {getUsername, onPublicServer} from './utilities/utils';
 import {leftAngleQuote, rightAngleQuote} from './utilities/stringConstants';
+import {getUsername, onPublicServer} from './utilities/utils';
 
 /**
  * My Screeps username; used for a variety of updating and communications purposes. (Changing this might break things.)
@@ -65,3 +65,15 @@ export const SHARD3_MAX_OWNED_ROOMS = 3;
  */
 export const NEW_OVERMIND_INTERVAL = onPublicServer() ? 20 : 5;
 
+/**
+ * Master scale for the RoomVisuals GUI // todo: not plugged in yet
+ */
+export const GUI_SCALE = 1.0;
+
+/**
+ * If this is set to true, a stripped-down version of Overmind suitable for training with my python screeps environment
+ * will be run instead. The main loop will be disabled and creeps will be controlled based on serialized actions
+ * communicated to them from the RL model through memory.
+ * WARNING: enabling RL_TRAINING_MODE will wipe the contents of your memory!
+ */
+export const RL_TRAINING_MODE = false;

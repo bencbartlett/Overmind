@@ -119,9 +119,9 @@ export function debug(thing: { name: string, memory: any, pos: RoomPosition }, .
  */
 @profile
 export class Log {
-	public static sourceMap: any;
+	static sourceMap: any;
 
-	public static loadSourceMap() {
+	static loadSourceMap() {
 		// try {
 		// 	// tslint:disable-next-line
 		// 	const map = require('main.js.map');
@@ -133,11 +133,11 @@ export class Log {
 		// }
 	}
 
-	public get level(): number {
+	get level(): number {
 		return Memory.settings.log.level;
 	}
 
-	public setLogLevel(value: number) {
+	setLogLevel(value: number) {
 		let changeValue = true;
 		switch (value) {
 			case LogLevels.ERROR:
@@ -166,19 +166,19 @@ export class Log {
 		}
 	}
 
-	public get showSource(): boolean {
+	get showSource(): boolean {
 		return Memory.settings.log.showSource;
 	}
 
-	public set showSource(value: boolean) {
+	set showSource(value: boolean) {
 		Memory.settings.log.showSource = value;
 	}
 
-	public get showTick(): boolean {
+	get showTick(): boolean {
 		return Memory.settings.log.showTick;
 	}
 
-	public set showTick(value: boolean) {
+	set showTick(value: boolean) {
 		Memory.settings.log.showTick = value;
 	}
 
@@ -196,7 +196,7 @@ export class Log {
 		});
 	}
 
-	public trace(error: Error): Log {
+	trace(error: Error): Log {
 		if (this.level >= LogLevels.ERROR && error.stack) {
 			console.log(this.resolveStack(error.stack));
 		}
@@ -204,61 +204,61 @@ export class Log {
 		return this;
 	}
 
-	public throw(e: Error) {
+	throw(e: Error) {
 		console.log.apply(this, this.buildArguments(FATAL).concat([color(e.toString(), fatalColor)]));
 	}
 
-	public error(...args: any[]): undefined {
+	error(...args: any[]): undefined {
 		if (this.level >= LogLevels.ERROR) {
 			console.log.apply(this, this.buildArguments(LogLevels.ERROR).concat([].slice.call(args)));
 		}
 		return undefined;
 	}
 
-	public warning(...args: any[]): undefined {
+	warning(...args: any[]): undefined {
 		if (this.level >= LogLevels.WARNING) {
 			console.log.apply(this, this.buildArguments(LogLevels.WARNING).concat([].slice.call(args)));
 		}
 		return undefined;
 	}
 
-	public alert(...args: any[]): undefined {
+	alert(...args: any[]): undefined {
 		if (this.level >= LogLevels.ALERT) {
 			console.log.apply(this, this.buildArguments(LogLevels.ALERT).concat([].slice.call(args)));
 		}
 		return undefined;
 	}
 
-	public notify(message: string): undefined {
+	notify(message: string): undefined {
 		this.alert(message);
 		Game.notify(message);
 		return undefined;
 	}
 
-	public info(...args: any[]): undefined {
+	info(...args: any[]): undefined {
 		if (this.level >= LogLevels.INFO) {
 			console.log.apply(this, this.buildArguments(LogLevels.INFO).concat([].slice.call(args)));
 		}
 		return undefined;
 	}
 
-	public debug(...args: any[]) {
+	debug(...args: any[]) {
 		if (this.level >= LogLevels.DEBUG) {
 			console.log.apply(this, this.buildArguments(LogLevels.DEBUG).concat([].slice.call(args)));
 		}
 	}
 
-	public debugCreep(creep: { name: string, memory: any, pos: RoomPosition }, ...args: any[]) {
+	debugCreep(creep: { name: string, memory: any, pos: RoomPosition }, ...args: any[]) {
 		if (creep.memory && creep.memory.debug) {
 			this.debug(`${creep.name} @ ${creep.pos.print}: `, args);
 		}
 	}
 
-	public printObject(obj: any) {
+	printObject(obj: any) {
 		console.log.apply(this, this.buildArguments(LogLevels.DEBUG).concat(JSON.stringify(obj)));
 	}
 
-	public getFileLine(upStack = 4): string {
+	getFileLine(upStack = 4): string {
 		const stack = new Error('').stack;
 
 		if (stack) {

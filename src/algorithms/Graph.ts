@@ -69,7 +69,7 @@ export class Graph {
 
 	removeVertex(vertex: Vertex) {
 		// Remove vertex from all of its neighbors
-		for (let neighbor of vertex.neighbors) {
+		for (const neighbor of vertex.neighbors) {
 			_.remove(neighbor.neighbors, vertex);
 		}
 		// Remove all edges that touch the vertex
@@ -79,7 +79,7 @@ export class Graph {
 	}
 
 	addEdge(edge: Edge) {
-		let [vertex1, vertex2] = edge.vertices;
+		const [vertex1, vertex2] = edge.vertices;
 		if (this.simple) {
 			if (vertex1.neighbors.includes(vertex2) || vertex2.neighbors.includes(vertex1)) {
 				throw new Error(`${vertex1.id} and ${vertex2.id} are already neighbors; graph is not simple.`);
@@ -96,7 +96,7 @@ export class Graph {
 
 	removeEdge(edge: Edge) {
 		// Remove neighbors connected by this edge
-		let [vertex1, vertex2] = edge.vertices;
+		const [vertex1, vertex2] = edge.vertices;
 		_.remove(vertex1.neighbors, vertex2);
 		if (!edge.directional) {
 			_.remove(vertex2.neighbors, vertex1);
@@ -107,7 +107,7 @@ export class Graph {
 	}
 
 	connect(vertex1: Vertex, vertex2: Vertex, weight?: number, directional?: boolean) {
-		let edge = new Edge(vertex1, vertex2, weight, directional);
+		const edge = new Edge(vertex1, vertex2, weight, directional);
 		this.addEdge(edge);
 	}
 
@@ -127,8 +127,8 @@ export class Graph {
 export class CompleteGraph extends Graph {
 	constructor(V: Vertex[]) {
 		super({V: V, simple: true, connected: true});
-		for (let v1 of this.vertices) {
-			for (let v2 of this.vertices) {
+		for (const v1 of this.vertices) {
+			for (const v2 of this.vertices) {
 				if (v1 != v2 && !v1.adjacentTo(v2)) {
 					this.connect(v1, v2);
 				}

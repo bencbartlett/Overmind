@@ -3,8 +3,8 @@
 
 import {getCacheExpiration, onPublicServer} from '../utilities/utils';
 
-var roomStructureIDs: { [roomName: string]: { [structureType: string]: string[] } } = {};
-var roomStructuresExpiration: { [roomName: string]: number } = {};
+const roomStructureIDs: { [roomName: string]: { [structureType: string]: string[] } } = {};
+const roomStructuresExpiration: { [roomName: string]: number } = {};
 
 const multipleList = [
 	STRUCTURE_SPAWN, STRUCTURE_EXTENSION, STRUCTURE_ROAD, STRUCTURE_WALL,
@@ -14,14 +14,14 @@ const multipleList = [
 
 const singleList = [
 	STRUCTURE_OBSERVER, STRUCTURE_POWER_SPAWN, STRUCTURE_EXTRACTOR, STRUCTURE_NUKER,
-	//STRUCTURE_TERMINAL,   STRUCTURE_CONTROLLER,   STRUCTURE_STORAGE,
+	// STRUCTURE_TERMINAL,   STRUCTURE_CONTROLLER,   STRUCTURE_STORAGE,
 ];
 
 const notRepairable: string[] = [STRUCTURE_KEEPER_LAIR, STRUCTURE_PORTAL, STRUCTURE_POWER_BANK];
 
 const STRUCTURE_TIMEOUT = onPublicServer() ? 50 : 10;
 
-Room.prototype._refreshStructureCache = function () {
+Room.prototype._refreshStructureCache = function() {
 	// if cache is expired or doesn't exist
 	if (!roomStructuresExpiration[this.name]
 		|| !roomStructureIDs[this.name]
@@ -33,9 +33,9 @@ Room.prototype._refreshStructureCache = function () {
 	}
 };
 
-multipleList.forEach(function (type) {
+multipleList.forEach(function(type) {
 	Object.defineProperty(Room.prototype, type + 's', {
-		get         : function () {
+		get         : function() {
 			if (this['_' + type + 's']) {
 				return this['_' + type + 's'];
 			} else {
@@ -52,9 +52,9 @@ multipleList.forEach(function (type) {
 	});
 });
 
-singleList.forEach(function (type) {
+singleList.forEach(function(type) {
 	Object.defineProperty(Room.prototype, type, {
-		get         : function () {
+		get         : function() {
 			if (this['_' + type]) {
 				return this['_' + type];
 			} else {
@@ -105,17 +105,17 @@ Object.defineProperty(Room.prototype, 'repairables', {
 	get() {
 		if (!this._repairables) {
 			this._refreshStructureCache();
-			if (roomStructureIDs[this.name]['repairables']) {
-				return this._repairables = _.compact(_.map(roomStructureIDs[this.name]['repairables'],
+			if (roomStructureIDs[this.name].repairables) {
+				return this._repairables = _.compact(_.map(roomStructureIDs[this.name].repairables,
 														   Game.getObjectById));
 			} else {
 				let repairables: Structure[] = [];
-				for (let structureType of singleList) {
+				for (const structureType of singleList) {
 					if (this[structureType]) {
 						repairables.push(this[structureType]);
 					}
 				}
-				for (let structureType of multipleList) {
+				for (const structureType of multipleList) {
 					if (structureType != STRUCTURE_WALL &&
 						structureType != STRUCTURE_RAMPART &&
 						structureType != STRUCTURE_ROAD &&
@@ -123,7 +123,7 @@ Object.defineProperty(Room.prototype, 'repairables', {
 						repairables = repairables.concat(this[structureType + 's']);
 					}
 				}
-				roomStructureIDs[this.name]['repairables'] = _.map(repairables, s => s.id);
+				roomStructureIDs[this.name].repairables = _.map(repairables, s => s.id);
 				return this._repairables = repairables;
 			}
 		}
@@ -136,13 +136,13 @@ Object.defineProperty(Room.prototype, 'walkableRamparts', {
 	get() {
 		if (!this._walkableRamparts) {
 			this._refreshStructureCache();
-			if (roomStructureIDs[this.name]['walkableRamparts']) {
-				return this._walkableRamparts = _.compact(_.map(roomStructureIDs[this.name]['walkableRamparts'],
+			if (roomStructureIDs[this.name].walkableRamparts) {
+				return this._walkableRamparts = _.compact(_.map(roomStructureIDs[this.name].walkableRamparts,
 																Game.getObjectById));
 			} else {
-				let walkableRamparts = _.filter(this.ramparts,
-												(r: StructureRampart) => r.pos.isWalkable(true));
-				roomStructureIDs[this.name]['walkableRamparts'] = _.map(walkableRamparts, r => r.id);
+				const walkableRamparts = _.filter(this.ramparts,
+												  (r: StructureRampart) => r.pos.isWalkable(true));
+				roomStructureIDs[this.name].walkableRamparts = _.map(walkableRamparts, r => r.id);
 				return this._walkableRamparts = walkableRamparts;
 			}
 		}

@@ -1,11 +1,11 @@
-import {Zerg} from '../../zerg/Zerg';
-import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {Overlord} from '../Overlord';
-import {DirectiveControllerAttack} from '../../directives/offense/controllerAttack';
-import {profile} from '../../profiler/decorator';
 import {SpawnGroup} from 'logistics/SpawnGroup';
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
+import {DirectiveControllerAttack} from '../../directives/offense/controllerAttack';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
+import {profile} from '../../profiler/decorator';
+import {Zerg} from '../../zerg/Zerg';
+import {Overlord} from '../Overlord';
 
 /**
  * Controller attacker overlord.  Spawn CLAIM creeps to mass up on a controller and attack all at once
@@ -39,9 +39,9 @@ export class ControllerAttackerOverlord extends Overlord {
 	}
 
 	private getPositionAssignments(): { [attackerName: string]: RoomPosition } {
-		let assignments: { [attackerName: string]: RoomPosition } = {};
-		let maxLoops = Math.min(this.attackPositions.length, this.controllerAttackers.length);
-		let controllerAttackers = _.sortBy(this.controllerAttackers, zerg => zerg.name);
+		const assignments: { [attackerName: string]: RoomPosition } = {};
+		const maxLoops = Math.min(this.attackPositions.length, this.controllerAttackers.length);
+		const controllerAttackers = _.sortBy(this.controllerAttackers, zerg => zerg.name);
 		for (let i = 0; i < maxLoops; i++) {
 			assignments[controllerAttackers[i].name] = this.attackPositions[i];
 		}
@@ -56,8 +56,8 @@ export class ControllerAttackerOverlord extends Overlord {
 	}
 
 	run() {
-		for (let controllerAttacker of this.controllerAttackers) {
-			let attackPos = this.assignments[controllerAttacker.name];
+		for (const controllerAttacker of this.controllerAttackers) {
+			const attackPos = this.assignments[controllerAttacker.name];
 			if (attackPos) {
 				controllerAttacker.goTo(attackPos);
 			} else {
@@ -76,7 +76,7 @@ export class ControllerAttackerOverlord extends Overlord {
 	private launchAttack(): void {
 		let signed = false;
 		if (this.room && this.room.controller) {
-			for (let infestor of this.controllerAttackers) {
+			for (const infestor of this.controllerAttackers) {
 				infestor.attackController(this.room.controller);
 				if (!signed) {
 					signed = (infestor.signController(this.room.controller, 'For the swarm') == OK);

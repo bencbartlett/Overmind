@@ -1,18 +1,18 @@
-import {CombatZerg, DEFAULT_SWARM_TICK_DIFFERENCE} from './CombatZerg';
-import {CombatMoveOptions, Movement, NO_ACTION, SwarmMoveOptions} from '../movement/Movement';
-import {hasPos} from '../declarations/typeGuards';
-import {getCacheExpiration, rotatedMatrix} from '../utilities/utils';
-import {Mem} from '../memory/Memory';
-import {CombatOverlord} from '../overlords/CombatOverlord';
-import {CombatIntel} from '../intel/CombatIntel';
 import {log} from '../console/log';
-import {GoalFinder} from '../targeting/GoalFinder';
-import {CombatTargeting} from '../targeting/CombatTargeting';
+import {hasPos} from '../declarations/typeGuards';
+import {CombatIntel} from '../intel/CombatIntel';
+import {Mem} from '../memory/Memory';
 import {normalizePos} from '../movement/helpers';
+import {CombatMoveOptions, Movement, NO_ACTION, SwarmMoveOptions} from '../movement/Movement';
+import {CombatOverlord} from '../overlords/CombatOverlord';
 import {profile} from '../profiler/decorator';
+import {CombatTargeting} from '../targeting/CombatTargeting';
+import {GoalFinder} from '../targeting/GoalFinder';
+import {getCacheExpiration, rotatedMatrix} from '../utilities/utils';
+import {CombatZerg, DEFAULT_SWARM_TICK_DIFFERENCE} from './CombatZerg';
 
 export interface ProtoSwarm {
-	creeps: Creep[] | CombatZerg[]
+	creeps: Creep[] | CombatZerg[];
 }
 
 interface SwarmMemory {
@@ -69,23 +69,23 @@ export class Swarm implements ProtoSwarm {
 		this.ref = ref;
 		this.memory = Mem.wrap(overlord.memory, `swarm:${ref}`, SwarmMemoryDefaults);
 		// Build the static formation by putting attackers at the front and healers at the rear
-		let paddedCreeps: (CombatZerg | undefined)[] = _.clone(creeps);
+		const paddedCreeps: (CombatZerg | undefined)[] = _.clone(creeps);
 		for (let i = paddedCreeps.length; i < width * height; i++) {
 			paddedCreeps.push(undefined); // fill in remaining positions with undefined
 		}
-		let creepScores = this.getCreepScores(paddedCreeps);
-		let sortedCreeps = _.sortBy(paddedCreeps,
+		const creepScores = this.getCreepScores(paddedCreeps);
+		const sortedCreeps = _.sortBy(paddedCreeps,
 									creep => creepScores[creep != undefined ? creep.name : 'undefined']);
 		this.uniformCreepType = (_.unique(_.filter(_.values(creepScores), score => score != 0)).length <= 1);
 		this.staticFormation = _.chunk(sortedCreeps, width);
 		this.width = width;
 		this.height = height;
-		let firstCreepIndex = _.findIndex(sortedCreeps);
+		const firstCreepIndex = _.findIndex(sortedCreeps);
 		let leadPos: RoomPosition; // upper left corner of formation when in TOP orientation
 		if (firstCreepIndex != -1) {
-			let firstCreepPos = sortedCreeps[firstCreepIndex]!.pos;
-			let dx = firstCreepIndex % width;
-			let dy = Math.floor(firstCreepIndex / width);
+			const firstCreepPos = sortedCreeps[firstCreepIndex]!.pos;
+			const dx = firstCreepIndex % width;
+			const dy = Math.floor(firstCreepIndex / width);
 			leadPos = firstCreepPos.getOffsetPos(-dx, -dy);
 		} else {
 			leadPos = this.overlord.pos;
@@ -117,13 +117,13 @@ export class Swarm implements ProtoSwarm {
 	}
 
 	private getCreepScores(creeps: (CombatZerg | undefined)[]): { [name: string]: number } {
-		let keys = _.map(creeps, c => c != undefined ? c.name : 'undefined');
-		let values = _.map(creeps, z => {
+		const keys = _.map(creeps, c => c != undefined ? c.name : 'undefined');
+		const values = _.map(creeps, z => {
 			if (z == undefined) {
 				return 0;
 			} else {
-				let score = CombatIntel.getAttackPotential(z.creep) + CombatIntel.getRangedAttackPotential(z.creep)
-							+ CombatIntel.getDismantlePotential(z.creep) - CombatIntel.getHealPotential(z.creep);
+				const score = CombatIntel.getAttackPotential(z.creep) + CombatIntel.getRangedAttackPotential(z.creep)
+							  + CombatIntel.getDismantlePotential(z.creep) - CombatIntel.getHealPotential(z.creep);
 				return (-1 * score) || 1;
 			}
 		});
@@ -131,16 +131,16 @@ export class Swarm implements ProtoSwarm {
 	}
 
 	private printFormation(formation: (CombatZerg | undefined)[][]): string {
-		let names = _.map(formation, creeps => _.map(creeps, creep => creep ? creep.name : 'NONE'));
+		const names = _.map(formation, creeps => _.map(creeps, creep => creep ? creep.name : 'NONE'));
 		const SPACE = '    ';
 		let msg = '';
-		for (let row of names) {
+		for (const row of names) {
 			msg += '\n' + SPACE;
-			for (let name of row) {
+			for (const name of row) {
 				if (name != 'NONE') {
-					let role = name.split('_')[0];
-					let num = name.split('_')[1];
-					let shortName = role.slice(0, 4 - num.length) + num;
+					const role = name.split('_')[0];
+					const num = name.split('_')[1];
+					const shortName = role.slice(0, 4 - num.length) + num;
 					msg += shortName;
 				} else {
 					msg += name;
@@ -163,14 +163,14 @@ export class Swarm implements ProtoSwarm {
 
 	// This should occasionally be executed at run() phase
 	static cleanMemory(overlord: { swarms: { [ref: string]: Swarm }, memory: any }) {
-		for (let ref in overlord.swarms) {
+		for (const ref in overlord.swarms) {
 			// TODO
 		}
 	}
 
 	get target(): Creep | Structure | undefined {
 		if (this.memory.target && this.memory.target.exp > Game.time) {
-			let target = Game.getObjectById(this.memory.target.id);
+			const target = Game.getObjectById(this.memory.target.id);
 			if (target) {
 				return target as Creep | Structure;
 			}
@@ -224,10 +224,16 @@ export class Swarm implements ProtoSwarm {
 			if (c3) r3 = c3.move(RIGHT);
 			if (c4) r4 = c4.move(TOP);
 		}
-		if (_.all([r1, r2, r3, r4], r => r == OK)) {
+
+		const allMoved = _.all([r1, r2, r3, r4], r => r == OK);
+
+		if (allMoved) {
 			return OK;
 		} else {
-			return -1 * (_.find([r1, r2, r3, r4], r => r != OK) || 899) - 100;
+			for (const creep of this.creeps) {
+				creep.cancelOrder('move');
+			}
+			return -1 * (_.findIndex([r1, r2, r3, r4], r => r != OK) || 899) - 100;
 		}
 	}
 
@@ -256,17 +262,22 @@ export class Swarm implements ProtoSwarm {
 		if (c3) r3 = c3.move(TOP_RIGHT);
 		if (c4) r4 = c4.move(TOP_LEFT);
 
-		if (_.all([r1, r2, r3, r4], r => r == OK)) {
+		const allMoved = _.all([r1, r2, r3, r4], r => r == OK);
+
+		if (allMoved) {
 			return OK;
 		} else {
-			return -1 * (_.find([r1, r2, r3, r4], r => r != OK) || 899) - 100;
+			for (const creep of this.creeps) {
+				creep.cancelOrder('move');
+			}
+			return -1 * (_.findIndex([r1, r2, r3, r4], r => r != OK) || 899) - 100;
 		}
 	}
 
 	rotate(direction: TOP | BOTTOM | LEFT | RIGHT): number {
 		if (direction == this.orientation) {
 			// do nothing
-			return OK;
+			return NO_ACTION;
 		}
 
 		if (!(this.width == 2 && this.height == 2)) {
@@ -274,16 +285,16 @@ export class Swarm implements ProtoSwarm {
 			return -100;
 		}
 
+		let ret = -777;
 		if (this.fatigue > 0) {
-			return ERR_TIRED;
+			ret = ERR_TIRED;
 		} else {
-			let prevDirection = this.orientation;
-			let prevFormation = this.formation;
-			let prevAngle = this.rotationsFromOrientation(prevDirection);
-			let newAngle = this.rotationsFromOrientation(direction);
-			let rotateAngle = newAngle - prevAngle;
+			const prevDirection = this.orientation;
+			const prevFormation = this.formation;
+			const prevAngle = this.rotationsFromOrientation(prevDirection);
+			const newAngle = this.rotationsFromOrientation(direction);
+			const rotateAngle = newAngle - prevAngle;
 
-			let ret = -777;
 			if (rotateAngle == 3 || rotateAngle == -1) {
 				ret = this.pivot('counterclockwise');
 			} else if (rotateAngle == 1 || rotateAngle == -3) {
@@ -298,9 +309,10 @@ export class Swarm implements ProtoSwarm {
 			if (ret == OK) {
 				this.orientation = direction;
 			}
-
-			return ret;
 		}
+
+		this.debug(`Rotating to ${direction}, result: ${ret}`);
+		return ret;
 	}
 
 	/**
@@ -345,8 +357,8 @@ export class Swarm implements ProtoSwarm {
 	}
 
 	findInMinRange(targets: HasPos[], range: number): HasPos[] {
-		let initialRange = range + Math.max(this.width, this.height) - 1;
-		let targetsInRange = _.filter(targets, t => this.anchor.inRangeToXY(t.pos.x, t.pos.y, initialRange));
+		const initialRange = range + Math.max(this.width, this.height) - 1;
+		const targetsInRange = _.filter(targets, t => this.anchor.inRangeToXY(t.pos.x, t.pos.y, initialRange));
 		return _.filter(targetsInRange, t => this.minRangeTo(t) <= range);
 	}
 
@@ -354,8 +366,8 @@ export class Swarm implements ProtoSwarm {
 	 * Compute the "average" direction to a target
 	 */
 	getDirectionTo(obj: RoomPosition | HasPos): DirectionConstant {
-		let pos = normalizePos(obj);
-		let directions = _.map(this.creeps, creep => creep.pos.getDirectionTo(obj));
+		const pos = normalizePos(obj);
+		const directions = _.map(this.creeps, creep => creep.pos.getDirectionTo(obj));
 		// TODO
 		log.warning(`NOT IMPLEMENTED`);
 		return TOP;
@@ -367,7 +379,7 @@ export class Swarm implements ProtoSwarm {
 	 * Generates a table of formation positions for each creep
 	 */
 	private getFormationPositionsFromAnchor(anchor: RoomPosition): { [creepName: string]: RoomPosition } {
-		let formationPositions: { [creepName: string]: RoomPosition } = {};
+		const formationPositions: { [creepName: string]: RoomPosition } = {};
 		for (let dy = 0; dy < this.formation.length; dy++) {
 			for (let dx = 0; dx < this.formation[dy].length; dx++) {
 				if (this.formation[dy][dx]) {
@@ -396,9 +408,9 @@ export class Swarm implements ProtoSwarm {
 	 */
 	get isExpired(): boolean {
 		if (!this.hasMaxCreeps) {
-			let minTicksToLive = _.min(_.map(this.creeps, creep => creep.ticksToLive || 9999)) || 0;
+			const minTicksToLive = _.min(_.map(this.creeps, creep => creep.ticksToLive || 9999)) || 0;
 			const spawnBuffer = 150 + 25;
-			let newCreepTicksToLive = CREEP_LIFE_TIME + spawnBuffer; // TTL of a creep spawned right now
+			const newCreepTicksToLive = CREEP_LIFE_TIME + spawnBuffer; // TTL of a creep spawned right now
 			return newCreepTicksToLive - minTicksToLive >= DEFAULT_SWARM_TICK_DIFFERENCE;
 		} else {
 			return false;
@@ -420,7 +432,7 @@ export class Swarm implements ProtoSwarm {
 			// Creeps travel to their relative formation positions
 			const formationPositions = this.getFormationPositionsFromAnchor(assemblyPoint);
 			console.log(JSON.stringify(formationPositions));
-			for (let creep of this.creeps) {
+			for (const creep of this.creeps) {
 				if (creep.hasValidTask) {
 					// Ignore creeps which have tasks (usually getting boosted)
 					continue;
@@ -429,7 +441,7 @@ export class Swarm implements ProtoSwarm {
 					creep.autoSkirmish(creep.room.name);
 				} else {
 					const destination = formationPositions[creep.name];
-					let ret = creep.goTo(destination, {
+					const ret = creep.goTo(destination, {
 						noPush                   : creep.pos.inRangeToPos(destination, 5),
 						ignoreCreepsOnDestination: true,
 						// ignoreCreeps: !creep.pos.inRangeToPos(destination, Math.max(this.width, this.height))
@@ -456,7 +468,7 @@ export class Swarm implements ProtoSwarm {
 						continue;
 					}
 					let allPathable = true;
-					let pos = new RoomPosition(x, y, this.anchor.roomName);
+					const pos = new RoomPosition(x, y, this.anchor.roomName);
 					for (let i = 0; i < this.formation.length; i++) {
 						for (let j = 0; j < this.formation[i].length; j++) {
 							if (!pos.getOffsetPos(i, j).isWalkable(true)) {
@@ -481,7 +493,7 @@ export class Swarm implements ProtoSwarm {
 		if (this.isInFormation(this.anchor)) {
 			return true;
 		} else {
-			let regroupPosition = this.findRegroupPosition();
+			const regroupPosition = this.findRegroupPosition();
 			this.debug(`Reassembling at ${regroupPosition.print}`);
 			return this.assemble(regroupPosition, false);
 		}
@@ -491,15 +503,15 @@ export class Swarm implements ProtoSwarm {
 
 	move(direction: DirectionConstant): number {
 		let allMoved = true;
-		for (let creep of this.creeps) {
-			let result = creep.move(direction);
+		for (const creep of this.creeps) {
+			const result = creep.move(direction);
 			this.debug(`${creep.print} move ${direction}, result: ${result}`);
 			if (result != OK) {
 				allMoved = false;
 			}
 		}
 		if (!allMoved) {
-			for (let creep of this.creeps) {
+			for (const creep of this.creeps) {
 				creep.cancelOrder('move');
 			}
 		}
@@ -507,24 +519,26 @@ export class Swarm implements ProtoSwarm {
 	}
 
 	goTo(destination: RoomPosition | HasPos, options: SwarmMoveOptions = {}): number {
-		if (DEBUG) {
-			options.displayCostMatrix = true;
-		}
+		// if (DEBUG) {
+		// 	options.displayCostMatrix = true;
+		// }
 		return Movement.swarmMove(this, destination, options);
 	}
 
 	goToRoom(roomName: string, options: SwarmMoveOptions = {}): number {
-		if (DEBUG) {
-			options.displayCostMatrix = true;
-		}
+		// if (DEBUG) {
+		// 	options.displayCostMatrix = true;
+		// }
 		return Movement.goToRoom_swarm(this, roomName, options);
-	};
+	}
 
 	combatMove(approach: PathFinderGoal[], avoid: PathFinderGoal[], options: CombatMoveOptions = {}): number {
-		if (DEBUG) {
-			options.displayAvoid = true;
-		}
-		return Movement.swarmCombatMove(this, approach, avoid, options);
+		// if (DEBUG) {
+		// 	options.displayAvoid = true;
+		// }
+		const ret = Movement.swarmCombatMove(this, approach, avoid, options);
+		this.debug(`Moving... Result: ${ret}`);
+		return ret;
 	}
 
 	safelyInRoom(roomName: string): boolean {
@@ -561,9 +575,9 @@ export class Swarm implements ProtoSwarm {
 		if (this.uniformCreepType) {
 			return NO_ACTION;
 		}
-		let targetRoom = _.find(this.rooms, room => room.owner && !room.my);
+		const targetRoom = _.find(this.rooms, room => room.owner && !room.my);
 		if (targetRoom) {
-			let orientation = this.getBestOrientation(targetRoom, includeStructures, includeCreeps);
+			const orientation = this.getBestOrientation(targetRoom, includeStructures, includeCreeps);
 			if (orientation != this.orientation && this.fatigue == 0) {
 				this.debug(`Reorienting to ${orientation}!`);
 				return this.rotate(orientation);
@@ -573,16 +587,16 @@ export class Swarm implements ProtoSwarm {
 	}
 
 	private getBestOrientation(room: Room, includeStructures = true, includeCreeps = false): TOP | RIGHT | BOTTOM | LEFT {
-		let targets: HasPos[] = [];
+		const targets: HasPos[] = [];
 		if (includeStructures) {
-			let structureTargets = this.findInMinRange(room.hostileStructures, 1);
-			for (let structure of structureTargets) {
+			const structureTargets = this.findInMinRange(room.hostileStructures, 1);
+			for (const structure of structureTargets) {
 				targets.push(structure);
 			}
 		}
 		if (includeCreeps) {
-			let creepTargets = this.findInMinRange(room.dangerousHostiles, 2);
-			for (let creep of creepTargets) {
+			const creepTargets = this.findInMinRange(room.dangerousHostiles, 2);
+			for (const creep of creepTargets) {
 				targets.push(creep);
 			}
 		}
@@ -591,14 +605,14 @@ export class Swarm implements ProtoSwarm {
 		if (targets.length == 0) {
 			return this.orientation;
 		}
-		let dxList = _.flatten(_.map(this.creeps,
+		const dxList = _.flatten(_.map(this.creeps,
 									 creep => _.map(targets,
 													target => target.pos.x - creep.pos.x))) as number[];
-		let dyList = _.flatten(_.map(this.creeps,
+		const dyList = _.flatten(_.map(this.creeps,
 									 creep => _.map(targets,
 													target => target.pos.y - creep.pos.y))) as number[];
-		let dx = _.sum(dxList) / dxList.length || 0;
-		let dy = _.sum(dyList) / dyList.length || 0;
+		const dx = _.sum(dxList) / dxList.length || 0;
+		const dy = _.sum(dyList) / dyList.length || 0;
 		this.debug(`dx: ${dx}, dy: ${dy}`);
 		if (Math.abs(dx) > Math.abs(dy)) {
 			return dx > 0 ? RIGHT : LEFT;
@@ -613,7 +627,7 @@ export class Swarm implements ProtoSwarm {
 	 * Automatically melee-attack the best creep in range
 	 */
 	autoMelee() {
-		for (let creep of this.creeps) {
+		for (const creep of this.creeps) {
 			if (creep.getActiveBodyparts(ATTACK) > 0) {
 				creep.autoMelee();
 			}
@@ -624,7 +638,7 @@ export class Swarm implements ProtoSwarm {
 	 * Automatically ranged-attack the best creep in range
 	 */
 	autoRanged() {
-		for (let creep of this.creeps) {
+		for (const creep of this.creeps) {
 			if (creep.getActiveBodyparts(RANGED_ATTACK) > 0) {
 				creep.autoRanged();
 			}
@@ -635,7 +649,7 @@ export class Swarm implements ProtoSwarm {
 	 * Automatically heal the best creep in range
 	 */
 	autoHeal(allowRangedHeal = true) {
-		for (let creep of this.creeps) {
+		for (const creep of this.creeps) {
 			if (creep.getActiveBodyparts(HEAL) > 0) {
 				creep.autoHeal(allowRangedHeal);
 			}
@@ -645,12 +659,13 @@ export class Swarm implements ProtoSwarm {
 	/**
 	 * Standard sequence of actions for sieging a room. Assumes the swarm has already initially assembled.
 	 */
-	autoSiege(roomName: string) {
+	autoSiege(roomName: string, waypoint?: RoomPosition) {
 		this.autoMelee();
 		this.autoRanged();
 		this.autoHeal();
 
 		if (!this.isInFormation()) {
+			this.debug(`Regrouping!`);
 			if (!_.any(this.creeps, creep => creep.pos.isEdge)) {
 				return this.regroup();
 			}
@@ -665,13 +680,16 @@ export class Swarm implements ProtoSwarm {
 
 		// Travel to the target room
 		if (!this.safelyInRoom(roomName)) {
-			this.debug(`Going to room!`);
-			return this.goToRoom(roomName);
+			if (waypoint) {
+				return this.goTo(waypoint);
+			} else {
+				return this.goToRoom(roomName);
+			}
 		}
 
 		// Find a target if needed
 		if (!this.target) {
-			let displayCostMatrix = DEBUG;
+			const displayCostMatrix = DEBUG;
 			this.target = CombatTargeting.findBestSwarmStructureTarget(this, roomName,
 																	   10 * this.memory.numRetreats, displayCostMatrix);
 			this.debug(this.target);
@@ -681,7 +699,7 @@ export class Swarm implements ProtoSwarm {
 		if (this.target) {
 			// let approach = _.map(Pathing.getPosWindow(this.target.pos, -this.width, -this.height),
 			// 					 pos => ({pos: pos, range: 1}));
-			let result = this.combatMove([{pos: this.target.pos, range: 1}], []);
+			const result = this.combatMove([{pos: this.target.pos, range: 1}], []);
 			if (result != NO_ACTION) {
 				this.debug(`Moving to target ${this.target}: ${result}`);
 				return result;
@@ -705,7 +723,7 @@ export class Swarm implements ProtoSwarm {
 	/**
 	 * Standard sequence of actions for fighting within a room. Assumes the swarm has already initially assembled.
 	 */
-	autoCombat(roomName: string) {
+	autoCombat(roomName: string, waypoint?: RoomPosition) {
 
 		this.debug(`Running autocombat!`);
 
@@ -714,6 +732,7 @@ export class Swarm implements ProtoSwarm {
 		this.autoHeal();
 
 		if (!this.isInFormation()) {
+			this.debug(`Regrouping!`);
 			if (!_.any(this.creeps, creep => creep.pos.isEdge)) {
 				return this.regroup();
 			}
@@ -734,17 +753,20 @@ export class Swarm implements ProtoSwarm {
 			// } else {
 			//
 			// }
-			return this.goToRoom(roomName);
+			if (waypoint) {
+				return this.goTo(waypoint);
+			} else {
+				return this.goToRoom(roomName);
+			}
 		}
 
 		// Maneuver around the room
-		let goals = GoalFinder.swarmCombatGoals(this, true);
+		const goals = GoalFinder.swarmCombatGoals(this, true);
 		this.debug(`Goals: ${JSON.stringify(goals)}`);
 
 		if (_.any(goals.avoid, goal => this.minRangeTo(goal) <= goal.range)) {
 			// If creeps nearby, try to flee first, then reorient
 			let result = this.combatMove(goals.approach, goals.avoid);
-			this.debug(`Move result: ${result}`);
 			if (result != OK) {
 				result = this.reorient(true, true);
 			}
@@ -754,7 +776,6 @@ export class Swarm implements ProtoSwarm {
 			let result = this.reorient(true, true);
 			if (result != OK) {
 				result = this.combatMove(goals.approach, goals.avoid);
-				this.debug(`Move result: ${result}`);
 			}
 			return result;
 		}
@@ -776,19 +797,20 @@ export class Swarm implements ProtoSwarm {
 	}
 
 	recover() {
-		let allHostiles = _.flatten(_.map(this.rooms, room => room.hostiles));
-		let allTowers = _.flatten(_.map(this.rooms, room => room.owner && !room.my ? room.towers : []));
+		const allHostiles = _.flatten(_.map(this.rooms, room => room.hostiles));
+		const allTowers = _.flatten(_.map(this.rooms, room => room.owner && !room.my ? room.towers : []));
 		if (_.filter(allHostiles, h => this.minRangeTo(h)).length > 0 || allTowers.length > 0) {
 			this.memory.lastInDanger = Game.time;
 		}
-		let allAvoidGoals = _.flatten(_.map(this.rooms, room => GoalFinder.retreatGoalsForRoom(room).avoid));
-		let result = Movement.swarmCombatMove(this, [], allAvoidGoals);
+		const allAvoidGoals = _.flatten(_.map(this.rooms, room => GoalFinder.retreatGoalsForRoom(room).avoid));
+		const result = Movement.swarmCombatMove(this, [], allAvoidGoals);
 
-		let safeRoom = _.first(_.filter(this.rooms, room => !room.owner || room.my));
-
-		if (result == NO_ACTION && safeRoom && !this.safelyInRoom(safeRoom.name)) {
-			if (Game.time < (this.memory.lastInDanger || 0) + 3) {
-				return this.goToRoom(safeRoom.name);
+		if (result == NO_ACTION) {
+			const safeRoom = _.first(_.filter(this.rooms, room => !room.owner || room.my));
+			if (safeRoom && !this.safelyInRoom(safeRoom.name)) {
+				if (Game.time < (this.memory.lastInDanger || 0) + 3) {
+					return this.goToRoom(safeRoom.name);
+				}
 			}
 		}
 		return result;
@@ -801,11 +823,11 @@ export class Swarm implements ProtoSwarm {
 	 * Groups enemies into proto-swarms based on proximity to each other
 	 */
 	static findEnemySwarms(room: Room, anchor?: HasPos, maxClumpSize = 3): ProtoSwarm[] {
-		let enemySwarms: ProtoSwarm[] = [];
-		let origin = anchor || _.first(room.spawns) || room.controller || {pos: new RoomPosition(25, 25, room.name)};
+		const enemySwarms: ProtoSwarm[] = [];
+		const origin = anchor || _.first(room.spawns) || room.controller || {pos: new RoomPosition(25, 25, room.name)};
 		let attackers = _.sortBy(room.dangerousHostiles, creep => origin.pos.getRangeTo(creep));
 		while (attackers.length > 0) {
-			let clump = _.first(attackers).pos.findInRange(attackers, maxClumpSize);
+			const clump = _.first(attackers).pos.findInRange(attackers, maxClumpSize);
 			attackers = _.difference(attackers, clump);
 			enemySwarms.push({creeps: clump});
 		}

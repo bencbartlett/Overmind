@@ -1,7 +1,7 @@
 // Invalid task assigned if instantiation fails.
 
-import {Task} from '../Task';
 import {profile} from '../../profiler/decorator';
+import {Task} from '../Task';
 
 const invalidTarget = {
 	ref: '',

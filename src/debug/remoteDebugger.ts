@@ -1,8 +1,10 @@
-import {MUON, MY_USERNAME} from '../~settings';
-import {Segmenter} from '../memory/Segmenter';
+/* tslint:disable:no-eval */
+
 import {log} from '../console/log';
+import {Segmenter} from '../memory/Segmenter';
 import {alignedNewline} from '../utilities/stringConstants';
 import {color} from '../utilities/utils';
+import {MUON, MY_USERNAME} from '../~settings';
 
 const DEBUG_SEGMENT = 97;
 const DEBUG_TIMEOUT = 1000;
@@ -58,7 +60,7 @@ export class RemoteDebugger {
 	 * Fetch the response from the debugee
 	 */
 	private fetchResponse_master(): string | undefined {
-		let response = Segmenter.getForeignSegmentProperty('response');
+		const response = Segmenter.getForeignSegmentProperty('response');
 		return response;
 	}
 
@@ -66,10 +68,10 @@ export class RemoteDebugger {
 	 * Execute the commands you are given
 	 */
 	private fetchCommands_slave(): void {
-		let cmd = Segmenter.getForeignSegmentProperty('command');
+		const cmd = Segmenter.getForeignSegmentProperty('command');
 		if (cmd) {
 			log.info(`[DEBUGGER] Executing command: ${cmd}`);
-			let response = eval(cmd);
+			const response = eval(cmd);
 			log.info(`[DEBUGGER] Relaying response: ${response}`);
 			this.memory.response = JSON.stringify(response);
 		} else {
@@ -122,7 +124,7 @@ export class RemoteDebugger {
 
 	private run_master() {
 		if (Game.time % 2 == 0) {
-			let response = this.fetchResponse_master();
+			const response = this.fetchResponse_master();
 			if (response && response != NO_COMMAND) {
 				log.info(`[DEBUGGER] Response: ` + response);
 			}

@@ -66,7 +66,7 @@ export class Notifier {
 	// }
 
 	generateNotificationsList(links = false): string[] {
-		let sortedAlerts = _.sortBy(this.alerts, alert => alert.priority);
+		const sortedAlerts = _.sortBy(this.alerts, alert => alert.priority);
 		return _.map(sortedAlerts, alert => {
 			if (alert.roomName) {
 				return (links ? printRoomName(alert.roomName) : alert.roomName) + ': ' + alert.message;
@@ -77,7 +77,7 @@ export class Notifier {
 	}
 
 	visuals(): void {
-		let notificationMessages = this.generateNotificationsList();
+		const notificationMessages = this.generateNotificationsList();
 		Visualizer.drawNotifications(notificationMessages);
 	}
 

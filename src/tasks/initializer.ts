@@ -1,9 +1,11 @@
-// Reinstantiation of a task object from protoTask data
-import {Task} from './Task';
+// Reinstantiation of a task object from ProtoTask data
+import {log} from '../console/log';
+import profiler from '../profiler/screeps-profiler';
 import {attackTargetType, attackTaskName, TaskAttack} from './instances/attack';
 import {buildTargetType, buildTaskName, TaskBuild} from './instances/build';
 import {claimTargetType, claimTaskName, TaskClaim} from './instances/claim';
 import {dismantleTargetType, dismantleTaskName, TaskDismantle} from './instances/dismantle';
+import {dropTargetType, dropTaskName, TaskDrop} from './instances/drop';
 import {fortifyTargetType, fortifyTaskName, TaskFortify} from './instances/fortify';
 import {getBoostedTargetType, getBoostedTaskName, TaskGetBoosted} from './instances/getBoosted';
 import {getRenewedTargetType, getRenewedTaskName, TaskGetRenewed} from './instances/getRenewed';
@@ -11,31 +13,29 @@ import {goToTaskName} from './instances/goTo';
 import {goToRoomTargetType, goToRoomTaskName, TaskGoToRoom} from './instances/goToRoom';
 import {harvestTargetType, harvestTaskName, TaskHarvest} from './instances/harvest';
 import {healTargetType, healTaskName, TaskHeal} from './instances/heal';
+import {TaskInvalid} from './instances/invalid';
 import {meleeAttackTargetType, meleeAttackTaskName, TaskMeleeAttack} from './instances/meleeAttack';
 import {pickupTargetType, pickupTaskName, TaskPickup} from './instances/pickup';
 import {rangedAttackTargetType, rangedAttackTaskName, TaskRangedAttack} from './instances/rangedAttack';
-import {TaskWithdraw, withdrawTargetType, withdrawTaskName} from './instances/withdraw';
+import {rechargeTaskName, TaskRecharge} from './instances/recharge';
 import {repairTargetType, repairTaskName, TaskRepair} from './instances/repair';
 import {reserveTargetType, reserveTaskName, TaskReserve} from './instances/reserve';
 import {signControllerTargetType, signControllerTaskName, TaskSignController} from './instances/signController';
 import {TaskTransfer, transferTargetType, transferTaskName} from './instances/transfer';
-import {TaskUpgrade, upgradeTargetType, upgradeTaskName} from './instances/upgrade';
-import {dropTargetType, dropTaskName, TaskDrop} from './instances/drop';
-import {TaskInvalid} from './instances/invalid';
 // import {fleeTargetType, fleeTaskName, TaskFlee} from './instances/flee';
 import {TaskTransferAll, transferAllTargetType, transferAllTaskName} from './instances/transferAll';
-import {log} from '../console/log';
+import {TaskUpgrade, upgradeTargetType, upgradeTaskName} from './instances/upgrade';
+import {TaskWithdraw, withdrawTargetType, withdrawTaskName} from './instances/withdraw';
 import {TaskWithdrawAll, withdrawAllTargetType, withdrawAllTaskName} from './instances/withdrawAll';
-import profiler from '../profiler/screeps-profiler';
-import {rechargeTaskName, TaskRecharge} from './instances/recharge';
+import {Task} from './Task';
 
 /**
  * The task initializer maps serialized prototasks to Task instances
  */
-export function initializeTask(protoTask: protoTask): Task {
-	// Retrieve name and target data from the protoTask
-	let taskName = protoTask.name;
-	let target = deref(protoTask._target.ref);
+export function initializeTask(protoTask: ProtoTask): Task {
+	// Retrieve name and target data from the ProtoTask
+	const taskName = protoTask.name;
+	const target = deref(protoTask._target.ref);
 	let task: any;
 	// Create a task object of the correct type
 	switch (taskName) {
@@ -55,7 +55,7 @@ export function initializeTask(protoTask: protoTask): Task {
 			task = new TaskDrop(derefRoomPosition(protoTask._target._pos) as dropTargetType);
 			break;
 		// case fleeTaskName:
-		// 	task = new TaskFlee(derefRoomPosition(protoTask._target._pos) as fleeTargetType);
+		// 	task = new TaskFlee(derefRoomPosition(ProtoTask._target._pos) as fleeTargetType);
 		// 	break;
 		case fortifyTaskName:
 			task = new TaskFortify(target as fortifyTargetType);
@@ -68,7 +68,7 @@ export function initializeTask(protoTask: protoTask): Task {
 			task = new TaskGetRenewed(target as getRenewedTargetType);
 			break;
 		case goToTaskName:
-			// task = new TaskGoTo(derefRoomPosition(protoTask._target._pos) as goToTargetType);
+			// task = new TaskGoTo(derefRoomPosition(ProtoTask._target._pos) as goToTargetType);
 			task = new TaskInvalid();
 			break;
 		case goToRoomTaskName:

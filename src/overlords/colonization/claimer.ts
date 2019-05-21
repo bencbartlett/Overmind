@@ -1,12 +1,12 @@
-import {Overlord} from '../Overlord';
-import {Zerg} from '../../zerg/Zerg';
-import {Tasks} from '../../tasks/Tasks';
+import {$} from '../../caching/GlobalCache';
+import {Roles, Setups} from '../../creepSetups/setups';
 import {Directive} from '../../directives/Directive';
+import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {Roles, Setups} from '../../creepSetups/setups';
-import {$} from '../../caching/GlobalCache';
-import {Pathing} from '../../movement/Pathing';
+import {Tasks} from '../../tasks/Tasks';
+import {Zerg} from '../../zerg/Zerg';
+import {Overlord} from '../Overlord';
 
 /**
  * Claim an unowned room
@@ -22,13 +22,13 @@ export class ClaimingOverlord extends Overlord {
 	}
 
 	init() {
-		let amount = $.number(this, 'claimerAmount', () => {
+		const amount = $.number(this, 'claimerAmount', () => {
 			if (this.room) { // if you have vision
 				if (this.room.my) { // already claimed
 					return 0;
 				} else { // don't ask for claimers if you can't reach controller
-					let pathablePos = this.room.creeps[0] ? this.room.creeps[0].pos
-														  : Pathing.findPathablePosition(this.room.name);
+					const pathablePos = this.room.creeps[0] ? this.room.creeps[0].pos
+															: Pathing.findPathablePosition(this.room.name);
 					if (!Pathing.isReachable(pathablePos, this.room.controller!.pos,
 											 _.filter(this.room.structures, s => !s.isWalkable))) {
 						return 0;

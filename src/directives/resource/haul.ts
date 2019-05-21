@@ -1,7 +1,7 @@
-import {Directive} from '../Directive';
-import {profile} from '../../profiler/decorator';
 import {isStoreStructure} from '../../declarations/typeGuards';
 import {HaulingOverlord} from '../../overlords/situational/hauler';
+import {profile} from '../../profiler/decorator';
+import {Directive} from '../Directive';
 
 
 interface DirectiveHaulMemory extends FlagMemory {
@@ -41,7 +41,7 @@ export class DirectiveHaul extends Directive {
 			return {};
 		}
 		if (!this._drops) {
-			let drops = (this.pos.lookFor(LOOK_RESOURCES) || []) as Resource[];
+			const drops = (this.pos.lookFor(LOOK_RESOURCES) || []) as Resource[];
 			this._drops = _.groupBy(drops, drop => drop.resourceType);
 		}
 		return this._drops;
@@ -68,14 +68,14 @@ export class DirectiveHaul extends Directive {
 				if (isStoreStructure(this.storeStructure)) {
 					store = this.storeStructure.store;
 				} else {
-					store = {'energy': this.storeStructure.energy};
+					store = {energy: this.storeStructure.energy};
 				}
 			} else {
-				store = {'energy': 0};
+				store = {energy: 0};
 			}
 			// Merge with drops
-			for (let resourceType of _.keys(this.drops)) {
-				let totalResourceAmount = _.sum(this.drops[resourceType], drop => drop.amount);
+			for (const resourceType of _.keys(this.drops)) {
+				const totalResourceAmount = _.sum(this.drops[resourceType], drop => drop.amount);
 				if (store[resourceType]) {
 					store[resourceType] += totalResourceAmount;
 				} else {
