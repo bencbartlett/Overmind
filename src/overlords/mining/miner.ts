@@ -119,13 +119,13 @@ export class MiningOverlord extends Overlord {
 				if (!this.source.pos.isNearTo(this.secondSource)) {
 					let miningPos = this.source.pos.getPositionAtDirection(this.source.pos.getDirectionTo(this.secondSource.pos));
 					if (!miningPos.isWalkable()) {
-						console.log(`Double mining found but there is no spot between ${this.secondSource} ${this.secondSource.pos.print} isWalkable ${miningPos}`);
+						//console.log(`Double mining found but there is no spot between ${this.secondSource} ${this.secondSource.pos.print} isWalkable ${miningPos}`);
 						return false;
 					}
 				}
 				console.log(`Double mining found ${this.secondSource} ${this.secondSource.pos.print}`);
 				if (this.source.id > this.secondSource.id) {
-					console.log(`This is a disabled mining ${this.directive.name} via source id`);
+					//console.log(`This is a disabled mining ${this.directive.name} via source id`);
 					this.isDisabled = true;
 				}
 				return true;
