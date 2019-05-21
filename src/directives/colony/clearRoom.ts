@@ -4,10 +4,8 @@ import {ClaimingOverlord} from '../../overlords/colonization/claimer';
 import {MY_USERNAME} from '../../~settings';
 import {log} from '../../console/log';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
-import {hasContents, printRoomName} from '../../utilities/utils';
+import {printRoomName} from '../../utilities/utils';
 import {DirectiveHaul} from "../resource/haul";
-import {WorkerOverlord} from "../../overlords/core/worker";
-import {Zerg} from "../../zerg/Zerg";
 import {Pathing} from "../../movement/Pathing";
 import {DirectiveDismantle} from "../targeting/dismantle";
 
