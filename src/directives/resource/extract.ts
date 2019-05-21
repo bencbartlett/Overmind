@@ -47,6 +47,9 @@ export class DirectiveExtract extends Directive {
 		if (this.colony.level < 6) {
 			log.notify(`Removing extraction directive in ${this.pos.roomName}: room RCL insufficient.`);
 			this.remove();
+		}  else if (!this.colony.terminal) {
+			log.notify(`Removing extraction directive in ${this.pos.roomName}: room is missing terminal.`);
+			this.remove();
 		}
 	}
 
