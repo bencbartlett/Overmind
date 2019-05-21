@@ -123,7 +123,6 @@ export class MiningOverlord extends Overlord {
 						return false;
 					}
 				}
-				console.log(`Double mining found ${this.secondSource} ${this.secondSource.pos.print}`);
 				if (this.source.id > this.secondSource.id) {
 					//console.log(`This is a disabled mining ${this.directive.name} via source id`);
 					this.isDisabled = true;
