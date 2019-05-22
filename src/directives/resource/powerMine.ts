@@ -113,7 +113,7 @@ export class DirectivePowerMine extends Directive {
 		} else if (currentState == 1 && this.room && (!this.powerBank || this.powerBank.hits < 500000)) {
 			log.info('Activating spawning haulers for power mining in room ' + this.pos.roomName);
 			this.memory.state = 2;
-		} else if (currentState == 1 || currentState == 2 && this.room && !this.powerBank && !this.hasDrops) {
+		} else if ((currentState == 1 || currentState == 2) && this.room && !this.powerBank && !this.hasDrops) {
 			log.error(`WE FAILED. SORRY CHIEF, COULDN'T FINISHED POWER MINING IN ${this.room} DELETING CREEP at time: ${Game.time}`);
 			this.remove();
 		} else if (currentState == 2 && this.room && (!this.powerBank)) {
@@ -130,6 +130,8 @@ export class DirectivePowerMine extends Directive {
 		} else if (currentState == 4 && this.overlords.powerHaul && (this.overlords.powerHaul as PowerHaulingOverlord).checkIfStillCarryingPower() == undefined) {
 			log.alert(`Hauling complete for ${this.print} at time ${Game.time}`);
 			this.remove();
+		} else {
+			log.debug(`Power mining ${this.print} is in state ${currentState}`);
 		}
 	}
 
