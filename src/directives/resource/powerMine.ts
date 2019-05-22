@@ -9,6 +9,14 @@ import {log} from "../../console/log";
 
 interface DirectivePowerMineMemory extends FlagMemory {
 	totalResources?: number;
+	/*
+		0: init
+		1: mining started
+		2: mining near done, hauling started
+		3: mining done
+		4: hauling picking is complete
+	 */
+	state: number;
 }
 
 
@@ -22,9 +30,6 @@ export class DirectivePowerMine extends Directive {
 	static color = COLOR_YELLOW;
 	static secondaryColor = COLOR_RED;
 
-	miningDone:  boolean;
-	pickupDone: boolean;
-	haulDirectiveCreated: boolean;
 	private _powerBank: StructurePowerBank | undefined;
 	private _drops: { [resourceType: string]: Resource[] };
 
@@ -33,14 +38,15 @@ export class DirectivePowerMine extends Directive {
 	constructor(flag: Flag) {
 		super(flag);
 		this._powerBank = this.room != undefined ? this.pos.lookForStructure(STRUCTURE_POWER_BANK) as StructurePowerBank : undefined;
+		this.memory.state = 0;
 	}
 
 	spawnMoarOverlords() {
-		if (!this.miningDone && this.powerBank) {
+		if (this.memory.state < 3 && this.powerBank) {
 			this.overlords.powerMine = new PowerDrillOverlord(this);
 		}
-		if (!this.pickupDone) {
-			this.spawnHaulers();
+		if (this.memory.state > 1) {
+			this.overlords.powerHaul = new PowerHaulingOverlord(this);
 		}
 	}
 
@@ -81,10 +87,7 @@ export class DirectivePowerMine extends Directive {
 		if (!this.room) {
 			return undefined;
 		} else if (this.powerBank == undefined) {
-			if (this.miningDone) {
-				// Power Bank is gone
-				return 0;
-			}
+			return 0;
 		} else {
 			let tally = calculateFormationStrength(this.powerBank.pos.findInRange(FIND_MY_CREEPS, 4));
 			let healStrength: number = tally.heal * HEAL_POWER || 0;
@@ -95,31 +98,39 @@ export class DirectivePowerMine extends Directive {
 		}
 	}
 
-	spawnHaulers() {
-		log.info("Checking spawning haulers");
-		// Begin checking for spawn haulers at 666 estimated ticks before PB destruction
-		if (this.haulDirectiveCreated || this.room && (!this.powerBank || this.powerBank.hits < 500000)) {
-			log.debug('Activating spawning haulers for power mining in room ' + this.pos.roomName);
-			this.haulDirectiveCreated = true;
-			this.overlords.powerHaul = new PowerHaulingOverlord(this);
-		}
-	}
 
-	setMiningDone(name: string) {
-		log.debug("Setting mining done and removing overlord for power mine in room " + this.room + " at time " + Game.time);
-		delete this.overlords[name];
-		this.miningDone = true;
-		this._powerBank = undefined;
-	}
-
-	/**
-	 * This states when all the power has been picked up. Once all power has been picked up and delivered remove the directive
-	 */
-	isPickupDone(): boolean {
-		if (!this.pickupDone && this.miningDone && this.room && this.pos.isVisible && !this.hasDrops) {
-			this.pickupDone = true;
+	manageState() {
+		let currentState = this.memory.state;
+		if (currentState == 0 && this.powerBank && this.powerBank.hits < this.powerBank.hitsMax) {
+			if (this.powerBank.pos.findInRange(FIND_MY_CREEPS, 3).length == 0) {
+				// Power bank is damage but we didn't mine it
+				log.alert(`Power bank mining ${this.print} failed as someone else is mining this location`);
+				this.remove();
+			} else {
+				// Set to mining started
+				this.memory.state = 1;
+			}
+		} else if (currentState == 1 && this.room && (!this.powerBank || this.powerBank.hits < 500000)) {
+			log.info('Activating spawning haulers for power mining in room ' + this.pos.roomName);
+			this.memory.state = 2;
+		} else if (currentState == 1 || currentState == 2 && this.room && !this.powerBank && !this.hasDrops) {
+			log.error(`WE FAILED. SORRY CHIEF, COULDN'T FINISHED POWER MINING IN ${this.room} DELETING CREEP at time: ${Game.time}`);
+			this.remove();
+		} else if (currentState == 2 && this.room && (!this.powerBank)) {
+			log.alert(`Mining is complete for ${this.print} in ${this.room.print} at time ${Game.time}`);
+			this.memory.state = 3;
+			// TODO reassign them to guard the bank
+			delete this.overlords["powerMine"];
+			this._powerBank = undefined; // This might be fluff
+		} else if (currentState == 3 && this.room && !this.hasDrops) {
+			// Hauler pickup is now complete
+			log.alert(`Hauler pickup is complete for ${this.print} in ${this.room.print} at time ${Game.time}`);
+			this.memory.state = 4;
+			// TODO  Stop spawning haulers
+		} else if (currentState == 4 && this.overlords.powerHaul && (this.overlords.powerHaul as PowerHaulingOverlord).checkIfStillCarryingPower() == undefined) {
+			log.alert(`Hauling complete for ${this.print} at time ${Game.time}`);
+			this.remove();
 		}
-		return this.pickupDone;
 	}
 
 	init(): void {
@@ -127,6 +138,9 @@ export class DirectivePowerMine extends Directive {
 	}
 
 	run(): void {
+		if (Game.time % 5 == 0) {
+			this.manageState();
+		}
 	}
 }
 
