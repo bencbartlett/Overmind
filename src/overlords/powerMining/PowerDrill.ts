@@ -31,7 +31,6 @@ export class PowerDrillOverlord extends CombatOverlord {
 	directive: DirectivePowerMine;
 	memory: PowerDrillOverlordMemory;
 	partnerMap: Map<string, string[]>;
-	isDone: boolean;
 
 	drills: CombatZerg[];
 	coolant: CombatZerg[];
@@ -75,19 +74,12 @@ export class PowerDrillOverlord extends CombatOverlord {
 				// We are not there yet
 			} else {
 				// If power bank is dead
-				if (this.directive.powerBank == undefined && !this.directive.haulDirectiveCreated) {
-					if (this.pos.lookFor(LOOK_RESOURCES).length == 0) {
-						// Well shit, we didn't finish mining
-						log.error(`WE FAILED. SORRY CHIEF, COULDN'T FINISHED POWER MINING IN ${this.room} DELETING CREEP at time: ${Game.time}`);
-						this.directive.remove();
-						return;
-					}
+				if (this.directive.powerBank == undefined && this.directive.memory.state < 2) {
 					Game.notify(`Power bank in ${this.room.print} is dead.`);
 					drill.say('💀 RIP 💀');
-					this.directive.setMiningDone(this.name);
 					let result = drill.retire();
 					if (result == ERR_BUSY) {
-						drill.spawning
+						// drill spawning, find something else to do with them
 					}
 					log.notify("FINISHED POWER MINING IN " + this.room + " DELETING CREEP at time: " + Game.time.toString() + " result: " + result);
 					return;
@@ -130,7 +122,6 @@ export class PowerDrillOverlord extends CombatOverlord {
 			// If power bank is dead
 			Game.notify("Power bank in " + this.room + " is dead.");
 			coolant.say('💀 RIP 💀');
-			this.isDone = true;
 			coolant.retire();
 			return;
 		}
@@ -204,11 +195,10 @@ export class PowerDrillOverlord extends CombatOverlord {
 	run() {
 		this.autoRun(this.drills, drill => this.handleDrill(drill));
 		this.autoRun(this.coolant, coolant => this.handleCoolant(coolant));
-		if (this.isDone && !this.directive.miningDone) {
+		if (this.directive.memory.state >= 3) {
+			Game.notify("DELETING ALL POWER MINING CREEPS BECAUSE STATE IS >= 3 in " + this.directive.print);
 			this.drills.forEach(drill => drill.retire());
 			this.coolant.forEach(coolant => coolant.retire());
-			this.directive.setMiningDone(this.name);
-			delete this.directive.overlords[this.name];
 		}
 	}
 

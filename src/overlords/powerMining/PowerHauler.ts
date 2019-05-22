@@ -22,7 +22,7 @@ export class PowerHaulingOverlord extends Overlord {
 
 	requiredRCL = 6;
 	// Allow time for body to spawn
-	prespawnAmount = 250;
+	prespawnAmount = 350;
 
 	constructor(directive: DirectivePowerMine, priority = OverlordPriority.collectionUrgent.haul) {
 		super(directive, 'powerHaul', priority);
@@ -33,7 +33,7 @@ export class PowerHaulingOverlord extends Overlord {
 		// Calculate amount of hauling each hauler provides in a lifetime
 		let haulerCarryParts = Setups.transporters.default.getBodyPotential(CARRY, this.colony);
 		// Calculate number of haulers
-		this.numHaulers = Math.round(haulingPartsNeeded/haulerCarryParts);
+		this.numHaulers = Math.ceil(haulingPartsNeeded/haulerCarryParts);
 		// setup time to request the haulers
 		this.tickToSpawnOn = Game.time + (this.directive.calculateRemainingLifespan() || 0) - this.prespawnAmount;
 	}
@@ -45,16 +45,15 @@ export class PowerHaulingOverlord extends Overlord {
 	}
 
 	protected handleHauler(hauler: Zerg) {
-		if (_.sum(hauler.carry) == 0 && this.directive.pickupDone) {
-			hauler.retire();
-		} else if (_.sum(hauler.carry) == 0) {
-			// Travel to directive and collect resources
-			if (this.directive.pickupDone) {
+		if (_.sum(hauler.carry) == 0) {
+			if (this.directive.memory.state >= 4) {
+				// FIXME: Maybe ditch this and put it as a separate on-finishing method to reassign
 				hauler.say('💀 RIP 💀',true);
 				log.warning(`${hauler.name} is committing suicide as directive is done!`);
 				this.numHaulers = 0;
 				hauler.retire();
 			}
+			// Travel to directive and collect resources
 			if (hauler.inSameRoomAs(this.directive)) {
 				// Pick up drops first
 				if (this.directive.hasDrops) {
@@ -120,20 +119,14 @@ export class PowerHaulingOverlord extends Overlord {
 		}
 	}
 
+	checkIfStillCarryingPower() {
+		return _.find(this.haulers, hauler => hauler.carry.power != undefined && hauler.carry.power > 0);
+	}
+
 	run() {
-		if (Game.time >= this.tickToSpawnOn && !this.directive.pickupDone) {
+		if (Game.time >= this.tickToSpawnOn && this.directive.memory.state < 4) {
 			Game.notify('Time to spawn haulers ' + this.pos.roomName);
 			this.wishlist(this.numHaulers, Setups.transporters.default);
-		}
-		// Check hauling is done
-		if (this.directive.isPickupDone() && Game.time % 16 == 0) {
-			let stillCarryingPower = _.find(this.haulers, hauler => hauler.carry.power != undefined && hauler.carry.power > 0);
-			if (!stillCarryingPower) {
-				log.alert(`Deleting Power Mining Directive ${this.directive.print} as no haulers are left carrying power.`);
-				this.directive.remove();
-			} else {
-				log.debug(`Still carrying power back with ${stillCarryingPower.print} for ${this.directive.print}`);
-			}
 		}
 		for (let hauler of this.haulers) {
 			if (hauler.isIdle) {
