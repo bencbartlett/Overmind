@@ -27,6 +27,7 @@ import {DirectiveTerminalEvacuateState} from './terminalState/terminalState_evac
 import {DirectiveTerminalRebuildState} from './terminalState/terminalState_rebuild';
 import {DirectivePowerMine} from "./resource/powerMine";
 import {DirectiveHarass} from "./offense/harass";
+import {DirectiveBaseOperator} from "./powerCreeps/baseOperator";
 
 /**
  * This is the initializer for directives, which maps flags by their color code to the corresponding directive
@@ -132,6 +133,13 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveRPCommandCenter(flag);
 				case COLOR_RED:
 					return new DirectiveRPBunker(flag);
+			}
+			break;
+		// Power directives ====================================================================================
+		case COLOR_CYAN:
+			switch (flag.secondaryColor) {
+				case COLOR_PURPLE:
+					return new DirectiveBaseOperator(flag);
 			}
 			break;
 	}
