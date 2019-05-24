@@ -40,7 +40,7 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 	}
 
 	init() {
-		this.reassignIdleCreeps(Roles.melee);
+		this.reassignIdleCreeps(Roles.bunkerGuard);
 		if (this.canBoostSetup(CombatSetups.bunkerGuard.boosted_T3)) {
 			const setup = CombatSetups.bunkerGuard.boosted_T3;
 			this.wishlist(1, setup);
