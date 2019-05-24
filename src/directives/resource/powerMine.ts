@@ -28,7 +28,7 @@ export class DirectivePowerMine extends Directive {
 	static directiveName = 'powerMine';
 	static color = COLOR_YELLOW;
 	static secondaryColor = COLOR_RED;
-	static requiredRCL: 7;
+	static requiredRCL = 7;
 
 	private _powerBank: StructurePowerBank | undefined;
 	private _drops: { [resourceType: string]: Resource[] };
