@@ -101,7 +101,7 @@ export class DirectivePowerMine extends Directive {
 
 	manageState() {
 		let currentState = this.memory.state;
-		log.alert(`Managing state ${currentState} of ${this.print} and ${this.powerBank}`);
+		log.debug(`Managing state ${currentState} of directive ${this.print} with PB ${this.powerBank}`);
 		if (currentState == 0 && this.powerBank && this.powerBank.hits < this.powerBank.hitsMax) {
 			if (this.powerBank.pos.findInRange(FIND_MY_CREEPS, 3).length == 0) {
 				// Power bank is damage but we didn't mine it
@@ -141,8 +141,8 @@ export class DirectivePowerMine extends Directive {
 			this.memory.state = 4;
 			// TODO  Stop spawning haulers
 		} else if (currentState == 4 && this.overlords.powerHaul && (this.overlords.powerHaul as PowerHaulingOverlord).checkIfStillCarryingPower() == undefined) {
-			Game.notify(`Hauling complete for ${this.print} at time ${Game.time}`);
-			log.alert(`Hauling complete for ${this.print} at time ${Game.time}`);
+			Game.notify(`Hauling complete for ${this.print} at time ${Game.time}. Final power collected was ${(this.overlords.powerHaul as PowerHaulingOverlord).totalCollected} out of ${this.memory.totalResources}`);
+			log.alert(`Hauling complete for ${this.print} at time ${Game.time}. Final power collected was ${(this.overlords.powerHaul as PowerHaulingOverlord).totalCollected} out of ${this.memory.totalResources}`);
 			this.remove();
 		} else {
 			log.debug(`Power mining ${this.print} is in state ${currentState}`);
@@ -155,7 +155,7 @@ export class DirectivePowerMine extends Directive {
 	}
 
 	run(): void {
-		if (Game.time % 1 == 0) {
+		if (Game.time % 9 == 0) {
 			this.manageState();
 		}
 	}
