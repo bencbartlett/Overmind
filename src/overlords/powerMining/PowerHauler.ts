@@ -73,7 +73,7 @@ export class PowerHaulingOverlord extends Overlord {
 						hauler.say('🚬', true);
 					}
 					return;
-				} else if (this.room &&  this.room.drops) {
+				} else if (this.room && this.room.drops) {
 					let allDrops: Resource[] = _.flatten(_.values(this.room.drops));
 					let drop = allDrops[0];
 					if (drop) {
