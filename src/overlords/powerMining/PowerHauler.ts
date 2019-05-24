@@ -19,7 +19,9 @@ export class PowerHaulingOverlord extends Overlord {
 	directive: DirectivePowerMine;
 	tickToSpawnOn: number;
 	numHaulers: number;
+	totalCollected: number;
 
+	// TODO bug where haulers can come from tiny rooms not ready yet
 	requiredRCL = 6;
 	// Allow time for body to spawn
 	prespawnAmount = 350;
@@ -28,6 +30,7 @@ export class PowerHaulingOverlord extends Overlord {
 		super(directive, 'powerHaul', priority);
 		this.directive = directive;
 		this.haulers = this.zerg(Roles.transport);
+		this.totalCollected = this.totalCollected || 0;
 		// Spawn haulers to collect ALL the power at the same time.
 		let haulingPartsNeeded = this.directive.totalResources/CARRY_CAPACITY;
 		// Calculate amount of hauling each hauler provides in a lifetime
@@ -102,6 +105,7 @@ export class PowerHaulingOverlord extends Overlord {
 							return;
 						}
 					} else { // prefer to put minerals in terminal
+						this.totalCollected += hauler.carry.power || 0;
 						if (this.colony.terminal && _.sum(this.colony.terminal.store) < TERMINAL_CAPACITY) {
 							hauler.task = Tasks.transfer(this.colony.terminal, <ResourceConstant>resourceType);
 							return;
@@ -125,7 +129,6 @@ export class PowerHaulingOverlord extends Overlord {
 
 	run() {
 		if (Game.time >= this.tickToSpawnOn && this.directive.memory.state < 4) {
-			Game.notify('Time to spawn haulers ' + this.pos.roomName);
 			this.wishlist(this.numHaulers, Setups.transporters.default);
 		}
 		for (let hauler of this.haulers) {
