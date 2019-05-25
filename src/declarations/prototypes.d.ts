@@ -7,6 +7,17 @@ interface Creep {
 	inRampart: boolean;
 }
 
+interface PowerCreep {
+	hitsPredicted?: number;
+	intel?: { [property: string]: number };
+	memory: CreepMemory;
+	fatigue: number;
+	body: BodyPartDefinition[];
+	boosts: _ResourceConstantSansEnergy[];
+	boostCounts: { [boostType: string]: number };
+	inRampart: boolean;
+}
+
 interface ConstructionSite {
 	isWalkable: boolean;
 }
