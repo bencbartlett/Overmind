@@ -1,5 +1,6 @@
 import {profile} from "../../../profiler/decorator";
 import {powerId} from "./generateOps";
+import {log} from "../../../console/log";
 
 /**
  * An abstract class for encapsulating power creep power usage.
@@ -17,6 +18,20 @@ export abstract class Power {
 	_powerCreep: {
 		name: string;
 	};
+
+	constructor(powerCreep: PowerCreep, target?: RoomObject) {
+		log.notify(`Creating power task for ${powerCreep}`);
+		this._powerCreep = {
+			name: powerCreep.name,
+		};
+		if (target) {
+			this._target = {
+				ref : target.ref,
+				_pos: target.pos,
+			}
+		}
+
+	}
 
 	/**
 	 * Dereferences the Task's target
