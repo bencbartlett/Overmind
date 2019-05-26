@@ -9,7 +9,7 @@ import {Directive} from '../Directive';
 
 
 /**
- * Poison sources in remote rooms by claiming controller, walling its sources and controller then unclaiming it.
+ * Poison sources in remote rooms by claiming controller, walling in its sources and controller then unclaiming it.
  */
 @profile
 export class DirectivePoisonRoom extends Directive {
@@ -44,17 +44,17 @@ export class DirectivePoisonRoom extends Directive {
 
 	private isPoisoned(): boolean {
 		if (this.room) {
-            const AllSources = this.room.find(FIND_SOURCES);
+            const allSources = this.room.find(FIND_SOURCES);
             let result = true;
             //Check for walkable source.pos.neighbors and place wall constuction site
-            for (const s of AllSources) {
+            for (const s of allSources) {
                 let walkableSourcePosisions =  _.filter(s.pos.neighbors, pos => pos.isWalkable());
                 if(walkableSourcePosisions.length){
                     _.forEach(walkableSourcePosisions,pos=>{pos.createConstructionSite(STRUCTURE_WALL)});
                 }
                 result = result && !walkableSourcePosisions.length;
             }
-            //Check for walkable source.pos.neighbors and place wall constuction site
+            //Check for walkable controller.pos.neighbors and place wall constuction site
             let walkableControllerPosisions =  _.filter(this.room.controller!.pos.neighbors, pos => pos.isWalkable());
             if(walkableControllerPosisions.length){
                 _.forEach(walkableControllerPosisions,pos=>{pos.createConstructionSite(STRUCTURE_WALL)});
@@ -66,20 +66,36 @@ export class DirectivePoisonRoom extends Directive {
 		}
 	}
 
+    private getWallsConstructionSites() {
+        const room = Game.rooms[this.pos.roomName];
+        const constructionSites = room.find(FIND_CONSTRUCTION_SITES);
+        const wallsConstructionSites = _.filter(constructionSites, s => s.structureType == STRUCTURE_WALL);
+        return wallsConstructionSites;
+    }
+
 	run() {
-		// Remove if structures are done
+		
 		if (this.room && this.room.my) {
-			const isPoisoned = this.isPoisoned();
-			if (isPoisoned) {
+            // Remove if poisoned
+			if (this.isPoisoned()) {
 				this.room.controller!.unclaim();
-				log.notify(`Removing roomPoising directive in ${this.pos.roomName}: operation completed.`);
+				log.notify(`Removing poisonRoom directive in ${this.pos.roomName}: operation completed.`);
 				this.remove();
-			}
+			} else {
+            //Assign workers to wall sources and controller
+                const wallsConstructionSites = this.getWallsConstructionSites();
+                _.forEach(wallsConstructionSites,csite => {
+                    if (!this.colony.overlords.work.constructionSites.includes(csite)) {
+                        this.colony.overlords.work.constructionSites.push(csite);
+                        return;
+                    }
+                })
+            }
 		}
 
 		// Remove if owned by other player
 		if (Game.time % 10 == 2 && this.room && !!this.room.owner && this.room.owner != MY_USERNAME) {
-			log.notify(`Removing roomPoising directive in ${this.pos.roomName}: room already owned by another player.`);
+			log.notify(`Removing poisonRoom directive in ${this.pos.roomName}: room already owned by another player.`);
 			this.remove();
 		}
 	}
