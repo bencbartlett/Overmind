@@ -316,7 +316,7 @@ export class Overseer implements IOverseer {
 	// Safe mode condition =============================================================================================
 
 	private handleSafeMode(colony: Colony): void {
-		if (colony.stage == ColonyStage.Larva && onPublicServer()) {
+		if (colony.stage == ColonyStage.Larva && onPublicServer() || colony.room.name == 'W16N37') {
 			return;
 		}
 		// Safe mode activates when there are dangerous player hostiles that can reach the spawn
