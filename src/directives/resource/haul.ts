@@ -102,7 +102,7 @@ export class DirectiveHaul extends Directive {
 	}
 
 	init(): void {
-		this.alert(`Haul directive active - ${this.totalResources} remaining`);
+		this.alert(`Haul directive active - ${this.totalResources}`);
 	}
 
 	run(): void {
