@@ -19,7 +19,7 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 	room: Room;
 
 	static settings = {
-		retreatHitsPercent : 0.75,
+		retreatHitsPercent : 0.85,
 		reengageHitsPercent: 0.95,
 	};
 

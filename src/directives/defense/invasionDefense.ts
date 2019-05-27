@@ -49,20 +49,14 @@ export class DirectiveInvasionDefense extends Directive {
 		const meleeHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(ATTACK) > 0 ||
 																	  hostile.getActiveBodyparts(WORK) > 0);
 		const rangedHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0);
-		if (this.colony.stage > ColonyStage.Larva && !this.colony.controller.upgradeBlocked) {
+		if (this.colony.stage > ColonyStage.Larva) {
 			this.overlords.rangedDefense = new RangedDefenseOverlord(this, useBoosts);
 		} else {
 			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
 		}
 		// If serious bunker busting attempt, spawn lurkers
-		//console.log("Bunker Melee hostiles are: " + rangedHostiles);
-		               // if (meleeHostiles.length > 0 && ((expectedDamage > ATTACK_POWER * 30) || meleeHostiles[0].owner.username == 'Inakrin' || rangedHostiles[0])) {
-			               //      Game.notify(`Adding a new Bunker Defense in room ${this.room.print}`);
-				               //      this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, true);
-					               // }
-		// Look, it's 2am so going to go with name hack for now.
-		if ((meleeHostiles.length > 0 && (meleeHostiles[0].owner.username == 'o4kapuk' ||  meleeHostiles[0].owner.username == 'inakrin'))) {
-			Game.notify(`Adding a new Bunker Defense in room ${this.room.print}`);
+		// TODO understand dismantlers damage output
+		if (meleeHostiles.length > 0 && (expectedDamage > ATTACK_POWER * 70)) {
 			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, false);
 		}
 
