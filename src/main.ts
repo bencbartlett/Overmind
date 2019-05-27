@@ -119,8 +119,6 @@ if (RL_TRAINING_MODE) {
 export const loop = _loop;
 
 if (RL_TRAINING_MODE) {
-	// Clear memory when enabling training mode
-	(<any>Memory) = {};
 	OvermindConsole.printTrainingMessage();
 } else {
 	// Register these functions for checksum computations with the Assimilator

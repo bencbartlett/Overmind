@@ -20,6 +20,24 @@ const RoomIntelMemoryDefaults = {};
 export class RoomIntel {
 
 	/**
+	 * Mark a room as being visible this tick
+	 */
+	private static markVisible(room: Room): void {
+		room.memory[_MEM.TICK] = Game.time;
+	}
+
+	/**
+	 * Returns the last tick at which the room was visible, or -100
+	 */
+	static lastVisible(roomName: string): number {
+		if (Memory.rooms[roomName]) {
+			return Memory.rooms[roomName][_MEM.TICK] || -100;
+		} else {
+			return -100;
+		}
+	}
+
+	/**
 	 * Records all info for permanent room objects, e.g. sources, controllers, etc.
 	 */
 	private static recordPermanentObjects(room: Room): void {
@@ -334,6 +352,7 @@ export class RoomIntel {
 
 			const room: Room = Game.rooms[name];
 
+			this.markVisible(room);
 			this.recordSafety(room);
 
 			// Track invasion data, harvesting, and casualties for all colony rooms and outposts

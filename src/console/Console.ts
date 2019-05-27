@@ -103,7 +103,7 @@ export class OvermindConsole {
 	}
 
 	static printTrainingMessage(): void {
-		console.log(asciiLogoSmall.join('\n'));
+		console.log('\n' + asciiLogoSmall.join('\n'));
 		console.log(`Reinforcement learning mode active; Memory has been cleared. \n`+
 					`Write commands to memory to interact with environment.`);
 	}
