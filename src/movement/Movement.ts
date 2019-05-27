@@ -144,7 +144,8 @@ export class Movement {
 
 		// set destination according to waypoint specifications; finalDestination is the true destination
 		destination = normalizePos(destination);
-		const finalDestination = _.clone(destination);
+		const finalDestination = destination;
+
 		if (options.waypoints) {
 			destination = this.getDestination(destination, options.waypoints, moveData);
 		}
@@ -163,6 +164,8 @@ export class Movement {
 				delete creep.memory._go;
 				return NO_ACTION;
 			} else {
+				// debug
+				console.log(`Destination ${destination} not equal to final destination ${finalDestination}!`);
 				if (!moveData.waypointsVisited) {
 					moveData.waypointsVisited = [];
 				}
@@ -249,6 +252,7 @@ export class Movement {
 			}
 		}
 
+
 		// randomly repath with specified probability
 		if (options.repath && Math.random() < options.repath) {
 			delete moveData.path;
@@ -294,6 +298,9 @@ export class Movement {
 			moveData.path = Pathing.serializePath(creep.pos, ret.path, color);
 
 			const roomsVisited = _.unique(_.map(ret.path, pos => pos.roomName));
+			if (!moveData.roomVisibility) {
+				moveData.roomVisibility = {};
+			}
 			for (const roomName of roomsVisited) {
 				moveData.roomVisibility[roomName] = !!Game.rooms[roomName];
 			}
@@ -336,7 +343,8 @@ export class Movement {
 	 * Gets the effective destination based on the waypoints to travel over and the creep.memory._go object.
 	 * Finds the next waypoint which has not been marked as visited in moveData.
 	 */
-	private static getDestination(destination: RoomPosition, waypoints: RoomPosition[], moveData: MoveData) {
+	private static getDestination(destination: RoomPosition, waypoints: RoomPosition[],
+								  moveData: MoveData): RoomPosition {
 
 		const waypointsVisited = _.compact(_.map(moveData.waypointsVisited || [],
 												 posName => getPosFromString(posName))) as RoomPosition[];
