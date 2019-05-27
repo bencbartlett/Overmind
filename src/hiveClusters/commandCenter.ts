@@ -140,7 +140,7 @@ export class CommandCenter extends HiveCluster {
 		}
 		// Refill nuker with low priority
 		if (this.nuker) {
-			if (this.nuker.energy < this.nuker.energyCapacity && this.storage.energy > 200000) {
+			if (this.nuker.energy < this.nuker.energyCapacity && this.storage.energy > 200000 && this.nuker.cooldown <= 1000) {
 				this.transportRequests.requestInput(this.nuker, Priority.Low);
 			}
 			if (this.nuker.ghodium < this.nuker.ghodiumCapacity
