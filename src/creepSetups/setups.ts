@@ -229,6 +229,11 @@ export const CombatSetups = {
 			sizeLimit: Infinity,
 		}),
 
+		distraction:  new CreepSetup(Roles.ranged, {
+			pattern  : [MOVE, MOVE, MOVE, RANGED_ATTACK, MOVE],
+			sizeLimit: 1,
+		}),
+
 		default: new CreepSetup(Roles.ranged, {
 			pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, MOVE, MOVE, MOVE, MOVE, HEAL],
 			sizeLimit: Infinity,
