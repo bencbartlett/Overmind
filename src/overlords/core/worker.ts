@@ -133,7 +133,7 @@ export class WorkerOverlord extends Overlord {
 		for (const nuke of rampart.pos.lookFor(LOOK_NUKES)) {
 			neededHits += 10e6;
 		}
-		for (const nuke of rampart.pos.findInRange(FIND_NUKES, 3)) {
+		for (const nuke of rampart.pos.findInRange(FIND_NUKES, 2)) {
 			if (nuke.pos != rampart.pos) {
 				neededHits += 5e6;
 			}
