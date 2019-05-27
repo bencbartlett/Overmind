@@ -94,7 +94,7 @@ interface CreepMemory {
 interface MoveData {
 	state: any[];
 	path: string;
-	roomVisibility: {[roomName: string]: boolean};
+	roomVisibility: { [roomName: string]: boolean };
 	delay?: number;
 	fleeWait?: number;
 	destination?: ProtoPos;
@@ -138,6 +138,7 @@ interface FlagMemory {
 	keepStorageStructures?: boolean;
 	keepRoads?: boolean;
 	keepContainers?: boolean;
+	waypoints?: string[];
 }
 
 // Room memory key aliases to minimize memory size
@@ -163,7 +164,8 @@ declare const enum _RM {
 	SAFETY               = 'f',
 	PREV_POSITIONS       = 'p',
 	CREEPS_IN_ROOM       = 'cr',
-	IMPORTANT_STRUCTURES = 'i'
+	IMPORTANT_STRUCTURES = 'i',
+	PORTALS              = 'pr',
 }
 
 declare const enum _RM_IS {
@@ -221,6 +223,7 @@ interface RoomMemory {
 	[_RM.AVOID]?: boolean;
 	[_RM.SOURCES]?: SavedSource[];
 	[_RM.CONTROLLER]?: SavedController | undefined;
+	[_RM.PORTALS]?: SavedPortal[];
 	[_RM.MINERAL]?: SavedMineral | undefined;
 	[_RM.SKLAIRS]?: SavedRoomObject[];
 	[_RM.IMPORTANT_STRUCTURES]?: {
@@ -252,6 +255,11 @@ interface SavedRoomObject {
 
 interface SavedSource extends SavedRoomObject {
 	contnr: string | undefined;
+}
+
+interface SavedPortal extends SavedRoomObject {
+	dest: string | { shard: string, room: string }; // destination name
+	[_MEM.EXPIRATION]: number; // when portal will decay
 }
 
 interface SavedController extends SavedRoomObject {

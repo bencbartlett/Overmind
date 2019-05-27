@@ -269,7 +269,7 @@ export class OvermindConsole {
 
 	static closeRoomPlanner(roomName: string): string {
 		if (Overmind.colonies[roomName]) {
-			if (Overmind.colonies[roomName].roomPlanner.active == true) {
+			if (Overmind.colonies[roomName].roomPlanner.active) {
 				Overmind.colonies[roomName].roomPlanner.finalize();
 				return '';
 			} else {
@@ -282,7 +282,7 @@ export class OvermindConsole {
 
 	static cancelRoomPlanner(roomName: string): string {
 		if (Overmind.colonies[roomName]) {
-			if (Overmind.colonies[roomName].roomPlanner.active == true) {
+			if (Overmind.colonies[roomName].roomPlanner.active) {
 				Overmind.colonies[roomName].roomPlanner.active = false;
 				return `RoomPlanner for ${roomName} has been deactivated without saving changes`;
 			} else {

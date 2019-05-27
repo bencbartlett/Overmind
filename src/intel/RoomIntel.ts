@@ -73,6 +73,12 @@ export class RoomIntel {
 		room.memory[_RM.SKLAIRS] = _.map(room.keeperLairs, lair => {
 			return {c: lair.pos.coordName};
 		});
+		room.memory[_RM.PORTALS] = _.map(room.portals, portal => {
+			const dest = portal.destination instanceof RoomPosition ? portal.destination.name
+																	: portal.destination;
+			const expiration = portal.ticksToDecay != undefined ? Game.time + portal.ticksToDecay : Game.time + 1e6;
+			return {c: portal.pos.coordName, dest: dest, [_MEM.EXPIRATION]: expiration};
+		});
 		if (room.controller && room.controller.owner) {
 			room.memory[_RM.IMPORTANT_STRUCTURES] = {
 				[_RM_IS.TOWERS]  : _.map(room.towers, t => t.pos.coordName),

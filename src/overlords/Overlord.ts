@@ -17,6 +17,7 @@ export interface OverlordInitializer {
 	pos: RoomPosition;
 	colony: Colony;
 	memory: any;
+	waypoints?: RoomPosition[];
 }
 
 export function hasColony(initializer: OverlordInitializer | Colony): initializer is OverlordInitializer {
@@ -167,9 +168,9 @@ export abstract class Overlord {
 	private synchronizeZerg(role: string, notifyWhenAttacked?: boolean): void {
 		// Synchronize the corresponding sets of Zerg
 		const zergNames = _.zipObject(_.map(this._zerg[role] || [],
-										  zerg => [zerg.name, true])) as { [name: string]: boolean };
+											zerg => [zerg.name, true])) as { [name: string]: boolean };
 		const creepNames = _.zipObject(_.map(this._creeps[role] || [],
-										   creep => [creep.name, true])) as { [name: string]: boolean };
+											 creep => [creep.name, true])) as { [name: string]: boolean };
 		// Add new creeps which aren't in the _zerg record
 		for (const creep of this._creeps[role] || []) {
 			if (!zergNames[creep.name]) {
@@ -201,9 +202,9 @@ export abstract class Overlord {
 	private synchronizeCombatZerg(role: string, notifyWhenAttacked?: boolean): void {
 		// Synchronize the corresponding sets of CombatZerg
 		const zergNames = _.zipObject(_.map(this._combatZerg[role] || [],
-										  zerg => [zerg.name, true])) as { [name: string]: boolean };
+											zerg => [zerg.name, true])) as { [name: string]: boolean };
 		const creepNames = _.zipObject(_.map(this._creeps[role] || [],
-										   creep => [creep.name, true])) as { [name: string]: boolean };
+											 creep => [creep.name, true])) as { [name: string]: boolean };
 		// Add new creeps which aren't in the _combatZerg record
 		for (const creep of this._creeps[role] || []) {
 			if (!zergNames[creep.name]) {
@@ -250,23 +251,26 @@ export abstract class Overlord {
 	}
 
 	// TODO: include creep move speed
-	lifetimeFilter(creeps: (Creep | Zerg)[], prespawn = DEFAULT_PRESPAWN): (Creep | Zerg)[] {
-		let spawnDistance = 0;
-		if (this.spawnGroup) {
-			const distances = _.take(_.sortBy(this.spawnGroup.memory.distances), 2);
-			spawnDistance = (_.sum(distances) / distances.length) || 0;
-		} else if (this.colony.hatchery) {
-			// Use distance or 0 (in case distance returns something undefined due to incomplete pathfinding)
-			spawnDistance = Pathing.distance(this.pos, this.colony.hatchery.pos) || 0;
+	lifetimeFilter(creeps: (Creep | Zerg)[], prespawn = DEFAULT_PRESPAWN, spawnDistance?: number): (Creep | Zerg)[] {
+		if (!spawnDistance) {
+			spawnDistance = 0;
+			if (this.spawnGroup) {
+				const distances = _.take(_.sortBy(this.spawnGroup.memory.distances), 2);
+				spawnDistance = (_.sum(distances) / distances.length) || 0;
+			} else if (this.colony.hatchery) {
+				// Use distance or 0 (in case distance returns something undefined due to incomplete pathfinding)
+				spawnDistance = Pathing.distance(this.pos, this.colony.hatchery.pos) || 0;
+			}
+			if (this.colony.isIncubating && this.colony.spawnGroup) {
+				spawnDistance += this.colony.spawnGroup.stats.avgDistance;
+			}
 		}
-		if (this.colony.isIncubating && this.colony.spawnGroup) {
-			spawnDistance += this.colony.spawnGroup.stats.avgDistance;
-		}
+
 		/* The last condition fixes a bug only present on private servers that took me a fucking week to isolate.
 		 * At the tick of birth, creep.spawning = false and creep.ticksTolive = undefined
 		 * See: https://screeps.com/forum/topic/443/creep-spawning-is-not-updated-correctly-after-spawn-process */
 		return _.filter(creeps, creep =>
-			creep.ticksToLive! > CREEP_SPAWN_TIME * creep.body.length + spawnDistance + prespawn ||
+			creep.ticksToLive! > CREEP_SPAWN_TIME * creep.body.length + spawnDistance! + prespawn ||
 			creep.spawning || (!creep.spawning && !creep.ticksToLive));
 	}
 
@@ -356,6 +360,9 @@ export abstract class Overlord {
 		let creepQuantity: number;
 		if (opts.noLifetimeFilter) {
 			creepQuantity = (this._creeps[setup.role] || []).length;
+		} else if (_.has(this.initializer, 'waypoints')) {
+			// TODO: replace hardcoded distance with distance computed through portals
+			creepQuantity = this.lifetimeFilter(this._creeps[setup.role] || [], opts.prespawn, 500).length;
 		} else {
 			creepQuantity = this.lifetimeFilter(this._creeps[setup.role] || [], opts.prespawn).length;
 		}
