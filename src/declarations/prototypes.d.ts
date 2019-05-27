@@ -192,10 +192,6 @@ interface StructureExtension {
 	isEmpty: boolean;
 }
 
-interface StructureLab {
-
-}
-
 interface StructureLink {
 	isFull: boolean;
 	isEmpty: boolean;

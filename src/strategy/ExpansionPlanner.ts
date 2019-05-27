@@ -1,148 +1,147 @@
-import {Colony} from '../Colony';
+import {assimilationLocked} from '../assimilation/decorator';
+import {Colony, getAllColonies} from '../Colony';
 import {log} from '../console/log';
+import {DirectiveColonize} from '../directives/colony/colonize';
+import {Autonomy, getAutonomyLevel, Mem} from '../memory/Memory';
 import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
-import {BasePlanner} from '../roomPlanner/BasePlanner';
-import {
-	Cartographer,
-	ROOMTYPE_ALLEY,
-	ROOMTYPE_CONTROLLER,
-	ROOMTYPE_CORE,
-	ROOMTYPE_SOURCEKEEPER
-} from '../utilities/Cartographer';
-import {derefCoords} from '../utilities/utils';
+import {Cartographer} from '../utilities/Cartographer';
+import {maxBy} from '../utilities/utils';
+import {MAX_OWNED_ROOMS, SHARD3_MAX_OWNED_ROOMS} from '../~settings';
+import {MIN_EXPANSION_DISTANCE} from './ExpansionEvaluator';
 
-export const EXPANSION_EVALUATION_FREQ = 500;
-export const MIN_EXPANSION_DISTANCE = 2;
 
-@profile
-export class ExpansionPlanner {
+const CHECK_EXPANSION_FREQUENCY = 1000;
 
-	static refreshExpansionData(colony: Colony): void {
-		// This only gets run once per colony
-		if (_.keys(colony.memory.expansionData.possibleExpansions).length == 0
-			|| Game.time > colony.memory.expansionData.expiration) {
-			// Generate a list of rooms which can possibly be settled in
-			const nearbyRooms = Cartographer.recursiveRoomSearch(colony.room.name, 5);
-			let possibleExpansions: string[] = [];
-			for (const depth in nearbyRooms) {
-				if (parseInt(depth, 10) <= MIN_EXPANSION_DISTANCE) continue;
-				possibleExpansions = possibleExpansions.concat(nearbyRooms[depth]);
-			}
-			for (const roomName of possibleExpansions) {
-				if (Cartographer.roomType(roomName) == ROOMTYPE_CONTROLLER) {
-					colony.memory.expansionData.possibleExpansions[roomName] = true;
-				}
-			}
-		}
-		// This gets run whenever function is called
-		for (const roomName in colony.memory.expansionData.possibleExpansions) {
-			if (colony.memory.expansionData.possibleExpansions[roomName] == true) {
-				if (Memory.rooms[roomName]) {
-					const expansionData = Memory.rooms[roomName][_RM.EXPANSION_DATA];
-					if (expansionData == false) {
-						colony.memory.expansionData.possibleExpansions[roomName] = false;
-					} else if (expansionData && expansionData.score) {
-						colony.memory.expansionData.possibleExpansions[roomName] = expansionData.score;
-					}
-				}
-			}
-		}
-	}
+const UNOWNED_MINERAL_BONUS = 100;
+const CATALYST_BONUS = 75;
+const MAX_SCORE_BONUS = _.sum([UNOWNED_MINERAL_BONUS, CATALYST_BONUS]);
 
-	// Compute the total score for a room
-	static computeExpansionData(room: Room, verbose = false): boolean {
-		if (verbose) log.info(`Computing score for ${room.print}...`);
-		if (!room.controller) {
-			room.memory[_RM.EXPANSION_DATA] = false;
-			return false;
-		}
+const TOO_CLOSE_PENALTY = 100;
 
-		// compute possible outposts (includes host room)
-		const possibleOutposts = Cartographer.findRoomsInRange(room.name, 2);
-
-		// find source positions
-		const outpostSourcePositions: { [roomName: string]: RoomPosition[] } = {};
-		for (const roomName of possibleOutposts) {
-			if (Cartographer.roomType(roomName) == ROOMTYPE_ALLEY) continue;
-			const roomMemory = Memory.rooms[roomName];
-			if (!roomMemory || !roomMemory[_RM.SOURCES]) {
-				if (verbose) log.info(`No memory of neighbor: ${roomName}. Aborting score calculation!`);
-				return false;
-			}
-			outpostSourcePositions[roomName] = _.map(roomMemory[_RM.SOURCES]!, obj => derefCoords(obj.c, roomName));
-		}
-
-		// compute a possible bunker position
-		const bunkerLocation = BasePlanner.getBunkerLocation(room, false);
-		if (!bunkerLocation) {
-			room.memory[_RM.EXPANSION_DATA] = false;
-			log.info(`Room ${room.name} is uninhabitable because a bunker can't be built here!`);
-			return false;
-		}
-
-		// evaluate energy contribution and compute outpost scores
-		if (verbose) log.info(`Origin: ${bunkerLocation.print}`);
-
-		const outpostScores: { [roomName: string]: number } = {};
-
-		for (const roomName in outpostSourcePositions) {
-			if (verbose) log.info(`Analyzing neighbor ${roomName}`);
-			const sourcePositions = outpostSourcePositions[roomName];
-			let valid = true;
-			const roomType = Cartographer.roomType(roomName);
-			let energyPerSource: number = SOURCE_ENERGY_CAPACITY;
-			if (roomType == ROOMTYPE_SOURCEKEEPER) {
-				energyPerSource = 0.6 * SOURCE_ENERGY_KEEPER_CAPACITY; // don't favor SK rooms too heavily -- more CPU
-			} else if (roomType == ROOMTYPE_CORE) {
-				energyPerSource = SOURCE_ENERGY_KEEPER_CAPACITY;
-			}
-
-			let roomScore = 0;
-			for (const position of sourcePositions) {
-				const msg = verbose ? `Computing distance from ${bunkerLocation.print} to ${position.print}... ` : '';
-				const ret = Pathing.findShortestPath(bunkerLocation, position,
-												   {ignoreStructures: true, allowHostile: true});
-				if (ret.incomplete || ret.path.length > Colony.settings.maxSourceDistance) {
-					if (verbose) log.info(msg + 'incomplete path!');
-					valid = false;
-					break;
-				}
-				if (verbose) log.info(msg + ret.path.length);
-				const offset = 25; // prevents over-sensitivity to very close sources
-				roomScore += energyPerSource / (ret.path.length + offset);
-			}
-			if (valid) {
-				outpostScores[roomName] = Math.floor(roomScore);
-			}
-		}
-
-		// Compute the total score of the room as the maximum energy score of max number of sources harvestable
-		let totalScore = 0;
-		let sourceCount = 0;
-		const roomsByScore = _.sortBy(_.keys(outpostScores), roomName => -1 * outpostScores[roomName]);
-		for (const roomName of roomsByScore) {
-			if (sourceCount > Colony.settings.remoteSourcesByLevel[8]) break;
-			const factor = roomName == room.name ? 2 : 1; // weight owned room scores more heavily
-			totalScore += outpostScores[roomName];
-			sourceCount += outpostSourcePositions[roomName].length;
-		}
-		totalScore = Math.floor(totalScore);
-
-		if (verbose) log.info(`Score: ${totalScore}`);
-
-		if (!room.memory[_RM.EXPANSION_DATA] ||
-			totalScore > (<ExpansionData>room.memory[_RM.EXPANSION_DATA]).score) {
-			room.memory[_RM.EXPANSION_DATA] = {
-				score       : totalScore,
-				bunkerAnchor: bunkerLocation.coordName,
-				outposts    : outpostScores,
-			};
-		}
-
-		return true;
-	}
+interface ExpansionPlannerMemory {
 
 }
 
+const defaultExpansionPlannerMemory: ExpansionPlannerMemory = {};
 
+@assimilationLocked
+@profile
+export class ExpansionPlanner implements IExpansionPlanner {
+
+	memory: ExpansionPlannerMemory;
+
+	constructor() {
+		this.memory = Mem.wrap(Memory, 'expansionPlanner', defaultExpansionPlannerMemory);
+	}
+
+	refresh() {
+		this.memory = Mem.wrap(Memory, 'expansionPlanner', defaultExpansionPlannerMemory);
+	}
+
+	private handleExpansion(): void {
+		const allColonies = getAllColonies();
+		// If you already have max number of colonies, ignore
+		if (allColonies.length >= Math.min(Game.gcl.level, MAX_OWNED_ROOMS)) {
+			return;
+		}
+		// If you are on shard3, limit to 3 owned rooms // TODO: use CPU-based limiting metric
+		if (Game.shard.name == 'shard3') {
+			if (allColonies.length >= SHARD3_MAX_OWNED_ROOMS) {
+				return;
+			}
+		}
+
+		const roomName = this.chooseNextColonyRoom();
+		if (roomName) {
+			const pos = Pathing.findPathablePosition(roomName);
+			DirectiveColonize.createIfNotPresent(pos, 'room');
+			log.notify(`Room ${roomName} selected as next colony! Creating colonization directive.`);
+		}
+	}
+
+	private chooseNextColonyRoom(): string | undefined {
+		// Generate a list of possible colonies to expand from based on level and whether they are already expanding
+		// let possibleIncubators: Colony[] = []; // TODO: support incubation
+		const possibleColonizers: Colony[] = [];
+		for (const colony of getAllColonies()) {
+			// if (colony.level >= DirectiveIncubate.requiredRCL
+			// 	&& _.filter(colony.flags, flag => DirectiveIncubate.filter(flag)).length == 0) {
+			// 	possibleIncubators.push(colony);
+			// }
+			if (colony.level >= DirectiveColonize.requiredRCL
+				&& _.filter(colony.flags, flag => DirectiveColonize.filter(flag)).length == 0) {
+				possibleColonizers.push(colony);
+			}
+		}
+		const possibleBestExpansions = _.compact(_.map(possibleColonizers, col => this.getBestExpansionRoomFor(col)));
+		log.debug(JSON.stringify(possibleBestExpansions));
+		const bestExpansion = maxBy(possibleBestExpansions, choice => choice!.score);
+		if (bestExpansion) {
+			log.alert(`Next expansion chosen: ${bestExpansion.roomName} with score ${bestExpansion.score}`);
+			return bestExpansion.roomName;
+		} else {
+			log.alert(`No viable expansion rooms found!`);
+		}
+	}
+
+	private getBestExpansionRoomFor(colony: Colony): { roomName: string, score: number } | undefined {
+		const allColonyRooms = _.zipObject(_.map(getAllColonies(),
+											   col => [col.room.name, true])) as { [roomName: string]: boolean };
+		const allOwnedMinerals = _.map(getAllColonies(), col => col.room.mineral!.mineralType) as MineralConstant[];
+		let bestRoom: string = '';
+		let bestScore: number = -Infinity;
+		for (const roomName in colony.memory.expansionData.possibleExpansions) {
+			let score = colony.memory.expansionData.possibleExpansions[roomName] as number | boolean;
+			if (typeof score != 'number') continue;
+			// Compute modified score
+			if (score + MAX_SCORE_BONUS > bestScore) {
+				// Is the room too close to an existing colony?
+				const range2Rooms = Cartographer.findRoomsInRange(roomName, MIN_EXPANSION_DISTANCE);
+				if (_.any(range2Rooms, roomName => allColonyRooms[roomName])) {
+					continue; // too close to another colony
+				}
+				const range3Rooms = Cartographer.findRoomsInRange(roomName, MIN_EXPANSION_DISTANCE + 1);
+				if (_.any(range3Rooms, roomName => allColonyRooms[roomName])) {
+					score -= TOO_CLOSE_PENALTY;
+				}
+				// Are there powerful hostile rooms nearby?
+				const adjacentRooms = Cartographer.findRoomsInRange(roomName, 1);
+				if (_.any(adjacentRooms, roomName => Memory.rooms[roomName][_RM.AVOID])) {
+					continue;
+				}
+				// Reward new minerals and catalyst rooms
+				const mineralType = Memory.rooms[roomName][_RM.MINERAL]
+								  ? Memory.rooms[roomName][_RM.MINERAL]![_RM_MNRL.MINERALTYPE]
+								  : undefined;
+				if (mineralType) {
+					if (!allOwnedMinerals.includes(mineralType)) {
+						score += UNOWNED_MINERAL_BONUS;
+					}
+					if (mineralType == RESOURCE_CATALYST) {
+						score += CATALYST_BONUS;
+					}
+				}
+				// Update best choices
+				if (score > bestScore && Game.map.isRoomAvailable(roomName)) {
+					bestScore = score;
+					bestRoom = roomName;
+				}
+			}
+		}
+		if (bestRoom != '') {
+			return {roomName: bestRoom, score: bestScore};
+		}
+	}
+
+	init(): void {
+
+	}
+
+	run(): void {
+		if (Game.time % CHECK_EXPANSION_FREQUENCY == 17 && getAutonomyLevel() == Autonomy.Automatic) {
+			this.handleExpansion();
+		}
+	}
+
+}

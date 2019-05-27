@@ -152,7 +152,7 @@ export abstract class Directive {
 		return false;
 	}
 
-	private getColony(colonyFilter?: (colony: Colony) => boolean): Colony | undefined {
+	private getColony(colonyFilter?: (colony: Colony) => boolean, verbose = false): Colony | undefined {
 		// If something is written to flag.colony, use that as the colony
 		if (this.memory[_MEM.COLONY]) {
 			return Overmind.colonies[this.memory[_MEM.COLONY]!];
@@ -175,13 +175,13 @@ export abstract class Directive {
 				}
 			}
 			// Otherwise assign to closest colony
-			const nearestColony = this.findNearestColony(colonyFilter);
+			const nearestColony = this.findNearestColony(colonyFilter, verbose);
 			if (nearestColony) {
 				log.info(`Colony ${nearestColony.room.print} assigned to ${this.name}.`);
 				this.memory[_MEM.COLONY] = nearestColony.room.name;
 				return nearestColony;
 			} else {
-				log.error(`Could not find colony match for ${this.name} in ${this.pos.roomName}!` +
+				log.error(`Could not find colony match for ${this.name} in ${this.pos.roomName}! ` +
 						  `Try setting memory.maxPathLength and memory.maxLinearRange.`);
 			}
 		}

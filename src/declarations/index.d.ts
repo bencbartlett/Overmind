@@ -59,7 +59,7 @@ interface ICache {
 	refresh(): void;
 }
 
-interface IStrategist {
+interface IExpansionPlanner {
 
 	refresh(): void;
 
@@ -106,7 +106,7 @@ interface IOvermind {
 	memory: IOvermindMemory;
 	terminalNetwork: ITerminalNetwork;			// is actually TerminalNetwork
 	tradeNetwork: ITradeNetwork;				// is actually TradeNetwork
-	strategist: IStrategist | undefined;		// Strategist | undefined, only defined if Memory.bot == true
+	expansionPlanner: IExpansionPlanner;
 	exceptions: Error[];
 
 	build(): void;
