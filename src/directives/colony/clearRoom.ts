@@ -30,7 +30,7 @@ export class DirectiveClearRoom extends Directive {
 		// Remove if misplaced
 		if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
 			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
-						`removing directive!`);
+				`removing directive!`);
 			this.remove(true);
 		}
 		if (Memory.settings.resourceCollectionMode && Memory.settings.resourceCollectionMode >= 1) {
@@ -49,7 +49,7 @@ export class DirectiveClearRoom extends Directive {
 	private removeAllStructures(): boolean {
 
 		const keepStorageStructures = this.memory.keepStorageStructures !== undefined
-									? this.memory.keepStorageStructures : true;
+			? this.memory.keepStorageStructures : true;
 		const keepRoads = this.memory.keepRoads !== undefined ? this.memory.keepRoads : true;
 		const keepContainers = this.memory.keepContainers !== undefined ? this.memory.keepContainers : true;
 
@@ -61,11 +61,11 @@ export class DirectiveClearRoom extends Directive {
 				if (keepStorageStructures &&
 					(s.structureType == STRUCTURE_STORAGE || s.structureType == STRUCTURE_TERMINAL) && !s.isEmpty) {
 					// Create a collection flag
-					DirectiveHaul.create(s.pos);
+					DirectiveHaul.createIfNotPresent(s.pos, 'pos');
 					continue;
 				}
 				if (s.structureType == STRUCTURE_NUKER && s.energy > 50000) {
-					DirectiveHaul.create(s.pos);
+					DirectiveHaul.createIfNotPresent(s.pos, 'pos');
 				}
 				if (keepRoads && s.structureType == STRUCTURE_ROAD) {
 					continue;
@@ -104,11 +104,13 @@ export class DirectiveClearRoom extends Directive {
 		if (this.room && this.room.my) {
 			const done = this.removeAllStructures();
 			if (done) {
-				this.room.controller!.unclaim();
+				let res = this.room.controller!.unclaim();
 				log.notify(`Removing clearRoom directive in ${this.pos.roomName}: operation completed.`);
-				this.remove();
+				if (res == OK) {
+					this.remove();
+				}
 			}
-		// Clear path if controller is not reachable
+			// Clear path if controller is not reachable
 		} else if (this.room && this.room.creeps.length > 1) {
 			let currentlyDismantlingLocations = DirectiveDismantle.find(this.room.flags);
 
