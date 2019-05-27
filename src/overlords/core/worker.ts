@@ -13,6 +13,7 @@ import {minBy} from '../../utilities/utils';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord, ZergOptions} from '../Overlord';
 import {DirectiveNukeResponse} from "../../directives/situational/nukeResponse";
+import {Visualizer} from "../../visuals/Visualizer";
 
 /**
  * Spawns general-purpose workers, which maintain a colony, performing actions such as building, repairing, fortifying,
@@ -109,8 +110,10 @@ export class WorkerOverlord extends Overlord {
 		if (this.room.find(FIND_NUKES).length > 0) {
 			for (const rampart of this.colony.room.ramparts) {
 				const neededHits = this.neededRampartHits(rampart);
-				if (rampart.hits < neededHits && DirectiveNukeResponse.shouldReinforceLocation(rampart.pos)) {
+				if (rampart.hits < neededHits && rampart.pos.findInRange(FIND_NUKES, 3)
+					&& DirectiveNukeResponse.shouldReinforceLocation(rampart.pos)) {
 					this.nukeDefenseRamparts.push(rampart);
+					Visualizer.marker(rampart.pos, {color: 'gold'});
 					this.nukeDefenseHitsRemaining[rampart.id] = neededHits - rampart.hits;
 				}
 			}
