@@ -39,7 +39,7 @@ export class DirectivePoisonRoom extends Directive {
 	}
 
 	init() {
-		this.alert(`Poisining Room ${printRoomName(this.pos.roomName)} `);
+		this.alert(`Poisining Room ${this.pos.roomName}`);
 	}
 
 	private isPoisoned(): boolean {
