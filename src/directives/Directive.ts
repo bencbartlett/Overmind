@@ -5,6 +5,7 @@ import {Overlord} from '../overlords/Overlord';
 import {profile} from '../profiler/decorator';
 import {equalXYR, randomHex} from '../utilities/utils';
 import {NotifierPriority} from './Notifier';
+import {DirectivePoisonRoom} from '../directives/offense/poisonRoom';
 
 interface DirectiveCreationOptions {
 	memory?: FlagMemory;
@@ -310,9 +311,10 @@ export abstract class Directive {
 	 * Calling this method on positions in invisible rooms can be expensive and should be used sparingly. */
 	static createIfNotPresent(pos: RoomPosition, scope: 'room' | 'pos',
 							  opts: DirectiveCreationOptions = {}): number | string | undefined {
-		if (this.isPresent(pos, scope)) {
+		if (this.isPresent(pos, scope) || !DirectivePoisonRoom.isPresent(pos, scope)) {
 			return; // do nothing if flag is already here
 		}
+		
 		const room = Game.rooms[pos.roomName] as Room | undefined;
 		if (!room) {
 			if (!opts.memory) {
