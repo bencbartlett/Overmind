@@ -69,6 +69,10 @@ export class DirectivePoisonRoom extends Directive {
 	run() {
 		
 		if (this.room && this.room.my) {
+			//kill claimer if room claimed, it is can be blocking wall csite creation
+			if (this.overlords.claim.claimers.length){
+				this.overlords.claim.claimers[0].suicide();
+			}
             // Remove if poisoned
 			if (this.isPoisoned()) {
 				this.room.controller!.unclaim();
