@@ -59,9 +59,9 @@ export class RoomPoisonerOverlord extends Overlord {
 					   !(this.room.controller.upgradeBlocked > 0)) {
 				// upgrade controller to level 2 to unlock walls
 				roomPoisoner.task = Tasks.upgrade(this.room.controller);
-			} else if (this.controllerWallSites) {
+			} else if (this.controllerWallSites && this.controllerWallSites[0]) {
 				roomPoisoner.task = Tasks.build(this.controllerWallSites[0]);
-			} else if (this.sourcesWallSites) {
+			} else if (this.sourcesWallSites && this.sourcesWallSites[0]) {
 				roomPoisoner.task = Tasks.build(this.sourcesWallSites[0]);
 			}
 		} else {
