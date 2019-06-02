@@ -43,7 +43,7 @@ export class DirectivePoisonRoom extends Directive {
 	}
 
 	private isPoisoned(): boolean {
-		if (this.room) {
+		if (Game.time % 25 && this.room && this.room.controller!.level > 1) {
             const allSources = this.room.find(FIND_SOURCES);
             let result = true;
             //Check for walkable source.pos.neighbors and place wall constuction site
