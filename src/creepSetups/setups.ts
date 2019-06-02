@@ -22,6 +22,7 @@ export const Roles = {
 	ranged    : 'hydralisk',
 	healer    : 'transfuser',
 	dismantler: 'lurker',
+	roomPoisoner: 'roomPoisoner',
 };
 
 /**
@@ -177,7 +178,12 @@ export const Setups = {
 			sizeLimit: 5,
 		}),
 
-	}
+	},
+
+	roomPoisoner: new CreepSetup(Roles.roomPoisoner, {
+		pattern  : [WORK, CARRY, MOVE, MOVE],
+		sizeLimit: 4,
+	}),
 
 };
 

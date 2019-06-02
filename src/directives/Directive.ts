@@ -311,7 +311,7 @@ export abstract class Directive {
 	 * Calling this method on positions in invisible rooms can be expensive and should be used sparingly. */
 	static createIfNotPresent(pos: RoomPosition, scope: 'room' | 'pos',
 							  opts: DirectiveCreationOptions = {}): number | string | undefined {
-		if (this.isPresent(pos, scope) || !DirectivePoisonRoom.isPresent(pos, scope)) {
+		if (this.isPresent(pos, scope) || DirectivePoisonRoom.isPresent(pos, 'room')) {
 			return; // do nothing if flag is already here
 		}
 		

@@ -1,5 +1,5 @@
 import {ClaimingOverlord} from '../../overlords/colonization/claimer';
-import {WorkerOverlord} from '../../overlords/core/worker';
+import {RoomPoisonerOverlord} from '../../overlords/offense/roomPoisoner';
 import {log} from '../../console/log';
 import {profile} from '../../profiler/decorator';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
@@ -20,7 +20,7 @@ export class DirectivePoisonRoom extends Directive {
 
 	overlords: {
         claim: ClaimingOverlord;
-        work: WorkerOverlord;
+        roomPoisoner: RoomPoisonerOverlord;
 	};
 
 	constructor(flag: Flag) {
@@ -35,7 +35,7 @@ export class DirectivePoisonRoom extends Directive {
 
 	spawnMoarOverlords() {
         this.overlords.claim = new ClaimingOverlord(this);
-        this.overlords.work = new WorkerOverlord(this.colony);
+        this.overlords.roomPoisoner = new RoomPoisonerOverlord(this);
 	}
 
 	init() {
@@ -66,13 +66,6 @@ export class DirectivePoisonRoom extends Directive {
 		}
 	}
 
-    private getWallsConstructionSites() {
-        const room = Game.rooms[this.pos.roomName];
-        const constructionSites = room.find(FIND_CONSTRUCTION_SITES);
-        const wallsConstructionSites = _.filter(constructionSites, s => s.structureType == STRUCTURE_WALL);
-        return wallsConstructionSites;
-    }
-
 	run() {
 		
 		if (this.room && this.room.my) {
@@ -81,16 +74,7 @@ export class DirectivePoisonRoom extends Directive {
 				this.room.controller!.unclaim();
 				log.notify(`Removing poisonRoom directive in ${this.pos.roomName}: operation completed.`);
 				this.remove();
-			} else {
-            //Assign workers to wall sources and controller
-                const wallsConstructionSites = this.getWallsConstructionSites();
-                _.forEach(wallsConstructionSites,csite => {
-                    if (!this.colony.overlords.work.constructionSites.includes(csite)) {
-                        this.colony.overlords.work.constructionSites.push(csite);
-                        return;
-                    }
-                })
-            }
+			} 
 		}
 
 		// Remove if owned by other player
