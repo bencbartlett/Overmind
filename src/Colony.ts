@@ -3,6 +3,7 @@ import {$} from './caching/GlobalCache';
 import {log} from './console/log';
 import {StoreStructure} from './declarations/typeGuards';
 import {DirectiveExtract} from './directives/resource/extract';
+import {DirectivePoisonRoom} from './directives/offense/poisonRoom';
 import {_HARVEST_MEM_DOWNTIME, _HARVEST_MEM_USAGE, DirectiveHarvest} from './directives/resource/harvest';
 import {HiveCluster} from './hiveClusters/_HiveCluster';
 import {CommandCenter} from './hiveClusters/commandCenter';
@@ -311,7 +312,7 @@ export class Colony {
 		$.set(this, 'sources', () => _.sortBy(_.flatten(_.map(this.rooms, room => room.sources)),
 											  source => source.pos.getMultiRoomRangeTo(this.pos)));
 		for (const source of this.sources) {
-			DirectiveHarvest.createIfNotPresent(source.pos, 'pos');
+			DirectivePoisonRoom.isPresent(source.pos, 'room') && DirectiveHarvest.createIfNotPresent(source.pos, 'pos');
 		}
 		$.set(this, 'extractors', () =>
 			_(this.rooms)

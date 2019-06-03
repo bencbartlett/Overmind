@@ -59,7 +59,7 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectivePairDestroy(flag);
 				case COLOR_PURPLE:
 					return new DirectiveControllerAttack(flag);
-				case COLOR_ORANGE:
+				case COLOR_BROWN:
 					return new DirectivePoisonRoom(flag);
 			}
 			break;
