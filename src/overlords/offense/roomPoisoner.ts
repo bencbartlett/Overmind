@@ -48,20 +48,15 @@ export class RoomPoisonerOverlord extends Overlord {
 		if (roomPoisoner.room == this.room && !roomPoisoner.pos.isEdge) {
 			// Build and recharge
 			if (roomPoisoner.carry.energy == 0) {
-                //Csites are not walkable, remove all sources wall csites to avoid being blocked from harvesting sources
-                //the direcrive will try recreate them every 25 ticks
-                if(this.sourcesWallSites){
-                    _.forEach(this.sourcesWallSites, csite => {csite.remove();} );
-                }
 				roomPoisoner.task = Tasks.recharge();
 			} else if (this.room && this.room.controller &&
 					   (this.room.controller.level < 2) &&
 					   !(this.room.controller.upgradeBlocked > 0)) {
 				// upgrade controller to level 2 to unlock walls
 				roomPoisoner.task = Tasks.upgrade(this.room.controller);
-			} else if (this.controllerWallSites && this.controllerWallSites[0]) {
+			} else if (this.controllerWallSites && this.controllerWallSites.length) {
 				roomPoisoner.task = Tasks.build(this.controllerWallSites[0]);
-			} else if (this.sourcesWallSites && this.sourcesWallSites[0]) {
+			} else if (this.sourcesWallSites && this.sourcesWallSites.length) {
 				roomPoisoner.task = Tasks.build(this.sourcesWallSites[0]);
 			}
 		} else {

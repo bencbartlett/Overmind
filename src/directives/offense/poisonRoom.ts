@@ -17,6 +17,8 @@ export class DirectivePoisonRoom extends Directive {
 	static directiveName = 'poisonRoom';
 	static color = COLOR_RED;
 	static secondaryColor = COLOR_BROWN;
+	static requiredRCL = 4;
+	static poisonSourcesOnly = false;
 
 	overlords: {
         claim: ClaimingOverlord;
@@ -24,7 +26,7 @@ export class DirectivePoisonRoom extends Directive {
 	};
 
 	constructor(flag: Flag) {
-		super(flag, colony => colony.level >= 4);
+		super(flag, colony => colony.level >= DirectivePoisonRoom.requiredRCL);
 		// Remove if misplaced
 		if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
 			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
@@ -43,23 +45,34 @@ export class DirectivePoisonRoom extends Directive {
 	}
 
 	private isPoisoned(): boolean {
+		let result = true;
 		if (Game.time % 25 && this.room && this.room.controller!.level > 1) {
-            const allSources = this.room.find(FIND_SOURCES);
-            let result = true;
-            //Check for walkable source.pos.neighbors and place wall constuction site
-            for (const s of allSources) {
-                let walkableSourcePosisions =  _.filter(s.pos.neighbors, pos => pos.isWalkable());
-                if(walkableSourcePosisions.length){
-                    _.forEach(walkableSourcePosisions,pos=>{pos.createConstructionSite(STRUCTURE_WALL)});
-                }
-                result = result && !walkableSourcePosisions.length;
-            }
-            //Check for walkable controller.pos.neighbors and place wall constuction site
-            let walkableControllerPosisions =  _.filter(this.room.controller!.pos.neighbors, pos => pos.isWalkable());
-            if(walkableControllerPosisions.length){
-                _.forEach(walkableControllerPosisions,pos=>{pos.createConstructionSite(STRUCTURE_WALL)});
-            }
-            result = result && !walkableControllerPosisions.length;
+			//wall csites are not walkable, block sources only if roomPoisoner.carry.energy > 0
+			if (this.overlords.roomPoisoner.roomPoisoners.length && 
+				this.overlords.roomPoisoner.roomPoisoners[0].carry.energy > 0){
+					const allSources = this.room.find(FIND_SOURCES);
+					//Check for walkable source.pos.neighbors and place wall constuction site
+					for (const s of allSources) {
+						let walkableSourcePosisions =  _.filter(s.pos.neighbors, pos => pos.isWalkable());
+						if(!!walkableSourcePosisions.length){
+							_.forEach(walkableSourcePosisions,pos=>{pos.createConstructionSite(STRUCTURE_WALL)});
+						}
+						result = result && !walkableSourcePosisions.length;
+					}
+			} else {
+				//remove all csites if roomPoisoner.carry.energy == 0, wall csites are not walkable
+				if(this.room){
+					_.forEach(this.room.constructionSites, csite => {csite.remove();} );
+				}
+			}
+			if(!DirectivePoisonRoom.poisonSourcesOnly){
+				//Check for walkable controller.pos.neighbors and place wall constuction site
+				let walkableControllerPosisions =  _.filter(this.room.controller!.pos.neighbors, pos => pos.isWalkable());
+				if(!!walkableControllerPosisions.length){
+					_.forEach(walkableControllerPosisions,pos=>{pos.createConstructionSite(STRUCTURE_WALL)});
+				}
+				result = result && !walkableControllerPosisions.length;
+			}
 			return result;
 		} else {
 			return false;
