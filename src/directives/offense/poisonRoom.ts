@@ -46,7 +46,7 @@ export class DirectivePoisonRoom extends Directive {
 	init() {
 		this.alert(`Poisoning Room ${this.pos.roomName}`);
 		if(this.room && this.room.controller){
-			this.walkableSourcePosisions = _.filter(_.map(_.compact([...this.room.sources]), obj =>  obj!.pos),pos => pos.isWalkable());
+			this.walkableSourcePosisions = _.filter(_.flatten(_.map(this.room.sources, s => s.pos.neighbors)),pos => pos.isWalkable());
 			this.walkableControllerPosisions =  _.filter(this.room.controller!.pos.neighbors, pos => pos.isWalkable());
 		}
 	}
