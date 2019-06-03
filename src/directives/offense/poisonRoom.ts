@@ -86,6 +86,10 @@ export class DirectivePoisonRoom extends Directive {
 			if (this.overlords.claim.claimers.length){
 				this.overlords.claim.claimers[0].suicide();
 			}
+			//remove any containers that can be next to sources
+			if(this.room.containers.length){
+				_.forEach(this.room.containers, container => {container.destroy();});
+			}
             // Remove if poisoned
 			if (this.isPoisoned()) {
 				this.room.controller!.unclaim();
