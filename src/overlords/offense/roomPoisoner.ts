@@ -42,10 +42,40 @@ export class RoomPoisonerOverlord extends Overlord {
 	init() {
 		this.wishlist(1, Setups.roomPoisoner);
 	}
+	private findStructureBlockingController(pioneer: Zerg): Structure | undefined {
+		const blockingPos = Pathing.findBlockingPos(pioneer.pos, pioneer.room.controller!.pos,
+													_.filter(pioneer.room.structures, s => !s.isWalkable));
+		if (blockingPos) {
+			const structure = blockingPos.lookFor(LOOK_STRUCTURES)[0];
+			if (structure) {
+				return structure;
+			} else {
+				log.error(`${this.print}: no structure at blocking pos ${blockingPos.print}! (Why?)`);
+			}
+		}
+	}
 
 	private handleRoomPoisoner(roomPoisoner: Zerg): void {
 		// Ensure you are in the assigned room
 		if (roomPoisoner.room == this.room && !roomPoisoner.pos.isEdge) {
+			
+			//stomp enemy csites (not sure if I can just .remove() them after owning the room)
+			const enemyConstructionSites = roomPoisoner.room.find(FIND_HOSTILE_CONSTRUCTION_SITES);
+			if (enemyConstructionSites.length > 0 && enemyConstructionSites[0].pos.isWalkable(true)) {
+					roomPoisoner.goTo(enemyConstructionSites[0].pos);
+				return;
+			}
+			
+			// Remove any blocking structures preventing claimer from reaching controller 
+			// assuming it will not be unlocked after successfull room poisoning (directive will be auto remvoed)
+			if (!this.room.my && this.room.structures.length > 0) {
+				const dismantleTarget = this.findStructureBlockingController(roomPoisoner);
+				if (dismantleTarget) {
+					roomPoisoner.task = Tasks.dismantle(dismantleTarget);
+					return;
+				}
+			}
+
 			// Build and recharge
 			if (roomPoisoner.carry.energy == 0) {
 				roomPoisoner.task = Tasks.recharge();
