@@ -90,7 +90,7 @@ export class DirectivePoisonRoom extends Directive {
 
 	run() {
 		
-		if (Game.time % 25 && this.room && this.room.my) {
+		if (Game.time % 25 == 0 && this.room && this.room.my) {
 			//kill claimer if room claimed, it is can be blocking wall csite creation
 			if (this.overlords.claim.claimers.length){
 				this.overlords.claim.claimers[0].suicide();
@@ -101,11 +101,8 @@ export class DirectivePoisonRoom extends Directive {
 			}
 
 			//remove any hostile consituction sites
-			if(this.room.constructionSites.length){
-				_.forEach(this.room.constructionSites, csite => {
-					!csite.my && csite.remove();
-				})
-			}
+			_.forEach(this.room.find(FIND_HOSTILE_CONSTRUCTION_SITES), csite => {csite.remove();});
+
             // Remove if poisoned
 			if (this.isPoisoned()) {
 				this.room.controller!.unclaim();
