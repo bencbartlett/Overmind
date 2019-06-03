@@ -99,6 +99,13 @@ export class DirectivePoisonRoom extends Directive {
 			if(this.room.containers.length){
 				_.forEach(this.room.containers, container => {container.destroy();});
 			}
+
+			//remove any hostile consituction sites
+			if(this.room.constructionSites.length){
+				_.forEach(this.room.constructionSites, csite => {
+					!csite.my && csite.remove();
+				})
+			}
             // Remove if poisoned
 			if (this.isPoisoned()) {
 				this.room.controller!.unclaim();

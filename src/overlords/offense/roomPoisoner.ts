@@ -58,14 +58,7 @@ export class RoomPoisonerOverlord extends Overlord {
 	private handleRoomPoisoner(roomPoisoner: Zerg): void {
 		// Ensure you are in the assigned room
 		if (roomPoisoner.room == this.room && !roomPoisoner.pos.isEdge) {
-			
-			//stomp enemy csites (not sure if I can just .remove() them after owning the room)
-			const enemyConstructionSites = roomPoisoner.room.find(FIND_HOSTILE_CONSTRUCTION_SITES);
-			if (enemyConstructionSites.length > 0 && enemyConstructionSites[0].pos.isWalkable(true)) {
-					roomPoisoner.goTo(enemyConstructionSites[0].pos);
-				return;
-			}
-			
+
 			// Remove any blocking structures preventing claimer from reaching controller 
 			// assuming it will not be unlocked after successfull room poisoning (directive will be auto remvoed)
 			if (!this.room.my && this.room.structures.length > 0) {
