@@ -58,17 +58,6 @@ export class RoomPoisonerOverlord extends Overlord {
 	private handleRoomPoisoner(roomPoisoner: Zerg): void {
 		// Ensure you are in the assigned room
 		if (roomPoisoner.room == this.room && !roomPoisoner.pos.isEdge) {
-
-			// Remove any blocking structures preventing claimer from reaching controller 
-			// assuming it will not be unlocked after successfull room poisoning (directive will be auto remvoed)
-			if (!this.room.my && this.room.structures.length > 0) {
-				const dismantleTarget = this.findStructureBlockingController(roomPoisoner);
-				if (dismantleTarget) {
-					roomPoisoner.task = Tasks.dismantle(dismantleTarget);
-					return;
-				}
-			}
-
 			// Build and recharge
 			if (roomPoisoner.carry.energy == 0) {
 				roomPoisoner.task = Tasks.recharge();

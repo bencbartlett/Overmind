@@ -6,6 +6,8 @@ import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {printRoomName} from '../../utilities/utils';
 import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
+import {DirectiveControllerAttack} from '../../directives/offense/controllerAttack';
+import {DirectiveOutpostDefense} from '../defense/outpostDefense';
 
 
 /**
@@ -48,6 +50,12 @@ export class DirectivePoisonRoom extends Directive {
 		if(this.room && this.room.controller){
 			this.walkableSourcePosisions = _.filter(_.flatten(_.map(this.room.sources, s => s.pos.neighbors)),pos => pos.isWalkable(true));
 			this.walkableControllerPosisions =  _.filter(this.room.controller!.pos.neighbors, pos => pos.isWalkable(true));
+		}
+		if(this.room && this.room.controller && this.room.controller.reservation && this.room.controller.reservation.ticksToEnd > 500){
+			DirectiveControllerAttack.createIfNotPresent(this.room.controller.pos,'room');
+		}
+		if(this.room && this.room.dangerousPlayerHostiles.length > 0){	
+			DirectiveOutpostDefense.createIfNotPresent(new RoomPosition(25,25,this.room.name),'room');
 		}
 	}
 
