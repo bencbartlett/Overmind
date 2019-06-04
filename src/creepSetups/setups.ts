@@ -23,6 +23,7 @@ export const Roles = {
 	healer    : 'transfuser',
 	bunkerGuard : 'bunkerGuard',
 	dismantler: 'lurker',
+	roomPoisoner: 'roomPoisoner',
 	drill : 'drill',
 	coolant : 'coolant',
 };
@@ -180,7 +181,12 @@ export const Setups = {
 			sizeLimit: 5,
 		}),
 
-	}
+	},
+
+	roomPoisoner: new CreepSetup(Roles.roomPoisoner, {
+		pattern  : [WORK, CARRY, MOVE, MOVE],
+		sizeLimit: 4,
+	}),
 
 };
 

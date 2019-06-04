@@ -8,6 +8,7 @@ import {DirectiveOutpost} from './directives/colony/outpost';
 import {DirectiveGuard} from './directives/defense/guard';
 import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
 import {DirectiveOutpostDefense} from './directives/defense/outpostDefense';
+import {DirectivePoisonRoom} from './directives/offense/poisonRoom';
 import {Directive} from './directives/Directive';
 import {Notifier} from './directives/Notifier';
 import {DirectiveBootstrap} from './directives/situational/bootstrap';
@@ -301,7 +302,8 @@ export class Overseer implements IOverseer {
 			}
 			// Place pioneer directives in case the colony doesn't have a spawn for some reason
 			if (Game.time % 25 == 0 && colony.spawns.length == 0 &&
-				!DirectiveClearRoom.isPresent(colony.pos, 'room')) {
+				!DirectiveClearRoom.isPresent(colony.pos, 'room') &&
+				!DirectivePoisonRoom.isPresent(colony.pos, 'room')) {
 				// verify that there are no spawns (not just a caching glitch)
 				const spawns = Game.rooms[colony.name]!.find(FIND_MY_SPAWNS);
 				if (spawns.length == 0) {
