@@ -313,6 +313,7 @@ export abstract class Directive {
 		if (this.isPresent(pos, scope)) {
 			return; // do nothing if flag is already here
 		}
+		
 		const room = Game.rooms[pos.roomName] as Room | undefined;
 		if (!room) {
 			if (!opts.memory) {
