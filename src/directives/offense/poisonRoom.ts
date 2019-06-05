@@ -22,7 +22,8 @@ export class DirectivePoisonRoom extends Directive {
 	static secondaryColor = COLOR_BROWN;
 	static requiredRCL = 4;
 	static poisonSourcesOnly = false;
-
+	
+	hasSpareGCL = false;
 	walkableSourcePosisions: RoomPosition[];
 	walkableControllerPosisions: RoomPosition[];
 
@@ -47,36 +48,43 @@ export class DirectivePoisonRoom extends Directive {
 						`removing directive!`);
 			this.remove(true);
 		}
-		
-		// remove if no spare GCL
-		if(_.filter(Game.rooms, room => room.my).length == Game.gcl.level){
-			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} not enough GCL; ` +
-						`removing directive!`);
-			this.remove(true);
-		}
 		*/
 	}
 
+	
+
 	spawnMoarOverlords() {
-		if(!this.pos.isVisible){
-			this.overlords.scout = new StationaryScoutOverlord(this);	
-		} else if(this.room && this.room.dangerousPlayerHostiles.length == 0 && !this.isPoisoned()){
-			this.overlords.claim = new ClaimingOverlord(this);
-			this.overlords.roomPoisoner = new RoomPoisonerOverlord(this);
+		if(this.hasSpareGCL){
+			if(!this.pos.isVisible){
+				this.overlords.scout = new StationaryScoutOverlord(this);	
+			} else if(this.room && this.room.dangerousPlayerHostiles.length == 0 && !this.isPoisoned()){
+				this.overlords.claim = new ClaimingOverlord(this);
+				this.overlords.roomPoisoner = new RoomPoisonerOverlord(this);
+			}
 		}
 	}
 
 	init() {
 		this.alert(`Poisoning Room ${this.pos.roomName}`);
-		if(this.room && this.room.controller){
-			this.walkableSourcePosisions = _.filter(_.flatten(_.map(this.room.sources, s => s.pos.neighbors)),pos => pos.isWalkable(true));
-			this.walkableControllerPosisions =  _.filter(this.room.controller!.pos.neighbors, pos => pos.isWalkable(true));
+		if(_.filter(Game.rooms, room => room.my).length == Game.gcl.level){
+			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} not enough GCL; ` +
+						`removing directive!`);
+			this.hasSpareGCL = false;
+		} else {
+			this.hasSpareGCL = true;
 		}
-		if(this.room && this.room.controller && this.room.controller.reservation && this.room.controller.reservation.ticksToEnd > 500){
-			DirectiveControllerAttack.createIfNotPresent(this.room.controller.pos,'room');
-		}
-		if(this.room && this.room.playerHostiles.length > 0 && !this.isPoisoned()){	
-			DirectiveOutpostDefense.createIfNotPresent(new RoomPosition(25,25,this.room.name),'room');
+
+		if(this.hasSpareGCL){
+			if(this.room && this.room.controller){
+				this.walkableSourcePosisions = _.filter(_.flatten(_.map(this.room.sources, s => s.pos.neighbors)),pos => pos.isWalkable(true));
+				this.walkableControllerPosisions =  _.filter(this.room.controller!.pos.neighbors, pos => pos.isWalkable(true));
+			}
+			if(this.room && this.room.controller && this.room.controller.reservation && this.room.controller.reservation.ticksToEnd > 500){
+				DirectiveControllerAttack.createIfNotPresent(this.room.controller.pos,'room');
+			}
+			if(this.room && this.room.playerHostiles.length > 0 && !this.isPoisoned()){	
+				DirectiveOutpostDefense.createIfNotPresent(new RoomPosition(25,25,this.room.name),'room');
+			}
 		}
 	}
 
@@ -121,12 +129,6 @@ export class DirectivePoisonRoom extends Directive {
 		
 
 		if (Game.time % 25 == 0 && this.room && this.room.my) {
-
-			if(_.filter(Game.rooms, room => room.my).length == Game.gcl.level){
-				log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} not enough GCL; ` +
-							`for contamination directive!`);
-			}
-
 			//kill claimer if room claimed, it is can be blocking wall csite creation
 			if (this.overlords.claim.claimers.length){
 				this.overlords.claim.claimers[0].suicide();
