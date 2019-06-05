@@ -75,7 +75,7 @@ export class DirectivePoisonRoom extends Directive {
 		if(this.room && this.room.controller && this.room.controller.reservation && this.room.controller.reservation.ticksToEnd > 500){
 			DirectiveControllerAttack.createIfNotPresent(this.room.controller.pos,'room');
 		}
-		if(this.room && this.room.playerHostiles.length > 0){	
+		if(this.room && this.room.playerHostiles.length > 0 && !this.isPoisoned()){	
 			DirectiveOutpostDefense.createIfNotPresent(new RoomPosition(25,25,this.room.name),'room');
 		}
 	}
