@@ -59,7 +59,7 @@ export class RoomPoisonerOverlord extends Overlord {
 	private handleRoomPoisoner(roomPoisoner: Zerg): void {
 		// Ensure you are in the assigned room
 		if (roomPoisoner.room == this.room && !roomPoisoner.pos.isEdge) {
-			//corner case: unclaimed controller blocked, while sources not 100% bloked
+			//corner case: unclaimed controller blocked, while sources not 100% blocked
 			if(!this.room.my && this.sourcesWallSites && this.controllerWallSites &&
 				this.controllerWallSites.length == 0 &&  this.sourcesWallSites.length > 0){
 				
@@ -82,6 +82,14 @@ export class RoomPoisonerOverlord extends Overlord {
 				roomPoisoner.task = Tasks.build(this.controllerWallSites[0]);
 			} else if (this.sourcesWallSites && this.sourcesWallSites.length) {
 				roomPoisoner.task = Tasks.build(this.sourcesWallSites[0]);
+			} else {
+				//repair poison walls, assuming all other wall are destoryed
+				let wallsToRepair = _.filter(this.room.walls, wall => wall.hits < 1000);
+				if(wallsToRepair.length){
+					let closestWall = roomPoisoner.pos.findClosestByRange(wallsToRepair);
+					if(closestWall)
+					roomPoisoner.task = Tasks.repair(closestWall);
+				}
 			}
 		} else {
 			roomPoisoner.goTo(this.pos, {ensurePath: true, avoidSK: true});
