@@ -1,7 +1,7 @@
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {DirectivePoisonRoom} from '../../directives/offense/poisonRoom';
 import {Pathing} from '../../movement/Pathing';
+import {DirectivePoisonRoom} from '../../directives/offense/poisonRoom';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
@@ -19,7 +19,7 @@ export class RoomPoisonerOverlord extends Overlord {
     sourcesWallSites: ConstructionSite[] | undefined;
 
 	constructor(directive: DirectivePoisonRoom, priority = OverlordPriority.offense.roomPoisoner) {
-		super(directive, 'roomPoisoner', priority);
+		super(directive, 'contaminate', priority);
 		this.roomPoisoners = this.zerg(Roles.roomPoisoner);
 		this.controllerWallSites = (this.room && this.room.controller) ? _.filter(this.room.constructionSites,
                                                                     s => s.structureType == STRUCTURE_WALL &&
@@ -42,9 +42,10 @@ export class RoomPoisonerOverlord extends Overlord {
 	init() {
 		this.wishlist(1, Setups.roomPoisoner);
 	}
-	private findStructureBlockingController(pioneer: Zerg): Structure | undefined {
-		const blockingPos = Pathing.findBlockingPos(pioneer.pos, pioneer.room.controller!.pos,
-													_.filter(pioneer.room.structures, s => !s.isWalkable));
+
+	private findStructureBlockingController(roomPoisoner: Zerg): Structure | undefined {
+		const blockingPos = Pathing.findBlockingPos(roomPoisoner.pos, roomPoisoner.room.controller!.pos,
+													_.filter(roomPoisoner.room.structures, s => !s.isWalkable));
 		if (blockingPos) {
 			const structure = blockingPos.lookFor(LOOK_STRUCTURES)[0];
 			if (structure) {
@@ -58,7 +59,19 @@ export class RoomPoisonerOverlord extends Overlord {
 	private handleRoomPoisoner(roomPoisoner: Zerg): void {
 		// Ensure you are in the assigned room
 		if (roomPoisoner.room == this.room && !roomPoisoner.pos.isEdge) {
-			// Build and recharge
+			//corner case: unclaimed controller blocked, while sources not 100% bloked
+			if(!this.room.my && this.sourcesWallSites && this.controllerWallSites &&
+				this.controllerWallSites.length ==0 &&  this.sourcesWallSites.length > 0){
+				
+				const dismantleTarget = this.findStructureBlockingController(roomPoisoner);
+				if (dismantleTarget) {
+					roomPoisoner.task = Tasks.dismantle(dismantleTarget);
+					return;
+				}	
+			}
+
+
+			// recharge
 			if (roomPoisoner.carry.energy == 0) {
 				roomPoisoner.task = Tasks.recharge();
 			} else if (this.room && this.room.controller &&
@@ -72,7 +85,6 @@ export class RoomPoisonerOverlord extends Overlord {
 				roomPoisoner.task = Tasks.build(this.sourcesWallSites[0]);
 			}
 		} else {
-			// pioneer.task = Tasks.goTo(this.pos);
 			roomPoisoner.goTo(this.pos, {ensurePath: true, avoidSK: true});
 		}
 	}
