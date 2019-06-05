@@ -107,9 +107,9 @@ export class DirectivePoisonRoom extends Directive {
 	private isPoisoned(): boolean {
 		let result = false;
 		if (this.room && this.room.controller!.level > 1) {
-			result = !this.walkableSourcePosisions.length;
+			result = !!this.walkableSourcePosisions && !this.walkableSourcePosisions.length;
 			if(!DirectivePoisonRoom.poisonSourcesOnly){
-				result = result && !this.walkableControllerPosisions.length;
+				result = result && !!this.walkableControllerPosisions && !this.walkableControllerPosisions.length;
 			}
 			return result;
 		} else {
@@ -119,6 +119,7 @@ export class DirectivePoisonRoom extends Directive {
 
 	run() {
 		
+
 		if (Game.time % 25 == 0 && this.room && this.room.my) {
 
 			if(_.filter(Game.rooms, room => room.my).length == Game.gcl.level){
