@@ -150,7 +150,7 @@ export class CombatZerg extends Zerg {
 	 */
 	autoMelee(possibleTargets = this.room.hostiles) {
 		const target = CombatTargeting.findBestCreepTargetInRange(this, 1, possibleTargets)
-					   || CombatTargeting.findBestStructureTargetInRange(this, 1);
+					   || CombatTargeting.findBestStructureTargetInRange(this, 1,false); //disabled allowUnowned structure attack in order not to desrtory poison walls
 		this.debug(`Melee target: ${target}`);
 		if (target) {
 			return this.attack(target);
