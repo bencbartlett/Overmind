@@ -90,10 +90,9 @@ export class DirectivePoisonRoom extends Directive {
 						_.forEach(this.walkableSourcePosisions,pos=>{pos.createConstructionSite(STRUCTURE_WALL)});
 					}
 			} else {
-				//remove all csites if roomPoisoner.carry.energy == 0, wall csites are not walkable, also remove roads!
+				//remove all csites if roomPoisoner.carry.energy == 0, wall csites are not walkable
 				if(this.room){
 					_.forEach(this.room.constructionSites, csite => {csite.remove();} );
-					_.forEach(this.room.roads, road => {road.destroy();} );
 				}
 			}
 			if(!DirectivePoisonRoom.poisonSourcesOnly){
@@ -140,6 +139,10 @@ export class DirectivePoisonRoom extends Directive {
 			_.forEach(this.room.find(FIND_HOSTILE_CONSTRUCTION_SITES), csite => {csite.remove();});
 
 			if (this.isPoisoned()) {
+				//remove roads before unclaiming
+				if(this.room.roads.length > 0){
+					_.forEach(this.room.roads, road => {road.destroy();} );
+				}
 				this.room.controller!.unclaim();
 				//log.notify(`Removing poisonRoom directive in ${this.pos.roomName}: operation completed.`);
 				//this.remove();

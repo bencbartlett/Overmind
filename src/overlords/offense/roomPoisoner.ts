@@ -1,4 +1,6 @@
+import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
+import {Pathing} from '../../movement/Pathing';
 import {DirectivePoisonRoom} from '../../directives/offense/poisonRoom';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
@@ -41,10 +43,35 @@ export class RoomPoisonerOverlord extends Overlord {
 		this.wishlist(1, Setups.roomPoisoner);
 	}
 
+	private findStructureBlockingController(roomPoisoner: Zerg): Structure | undefined {
+		const blockingPos = Pathing.findBlockingPos(roomPoisoner.pos, roomPoisoner.room.controller!.pos,
+													_.filter(roomPoisoner.room.structures, s => !s.isWalkable));
+		if (blockingPos) {
+			const structure = blockingPos.lookFor(LOOK_STRUCTURES)[0];
+			if (structure) {
+				return structure;
+			} else {
+				log.error(`${this.print}: no structure at blocking pos ${blockingPos.print}! (Why?)`);
+			}
+		}
+	}
+
 	private handleRoomPoisoner(roomPoisoner: Zerg): void {
 		// Ensure you are in the assigned room
 		if (roomPoisoner.room == this.room && !roomPoisoner.pos.isEdge) {
-			// Build and recharge
+			//corner case: unclaimed controller blocked, while sources not 100% bloked
+			if(!this.room.my && this.sourcesWallSites && this.controllerWallSites &&
+				this.controllerWallSites.length ==0 &&  this.sourcesWallSites.length > 0){
+				
+				const dismantleTarget = this.findStructureBlockingController(roomPoisoner);
+				if (dismantleTarget) {
+					roomPoisoner.task = Tasks.dismantle(dismantleTarget);
+					return;
+				}	
+			}
+
+
+			// recharge
 			if (roomPoisoner.carry.energy == 0) {
 				roomPoisoner.task = Tasks.recharge();
 			} else if (this.room && this.room.controller &&
@@ -58,7 +85,6 @@ export class RoomPoisonerOverlord extends Overlord {
 				roomPoisoner.task = Tasks.build(this.sourcesWallSites[0]);
 			}
 		} else {
-			// pioneer.task = Tasks.goTo(this.pos);
 			roomPoisoner.goTo(this.pos, {ensurePath: true, avoidSK: true});
 		}
 	}
