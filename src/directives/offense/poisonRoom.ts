@@ -60,7 +60,7 @@ export class DirectivePoisonRoom extends Directive {
 	spawnMoarOverlords() {
 		if(!this.pos.isVisible){
 			this.overlords.scout = new StationaryScoutOverlord(this);	
-		} else if(this.room!.dangerousPlayerHostiles.length == 0 && !this.isPoisoned()){
+		} else if(this.room && this.room.dangerousPlayerHostiles.length == 0 && !this.isPoisoned()){
 			this.overlords.claim = new ClaimingOverlord(this);
 			this.overlords.roomPoisoner = new RoomPoisonerOverlord(this);
 		}
