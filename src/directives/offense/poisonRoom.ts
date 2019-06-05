@@ -71,9 +71,11 @@ export class DirectivePoisonRoom extends Directive {
 				this.walkableSourcePosisions = _.filter(_.flatten(_.map(this.room.sources, s => s.pos.neighbors)),pos => pos.isWalkable(true));
 				this.walkableControllerPosisions =  _.filter(this.room.controller!.pos.neighbors, pos => pos.isWalkable(true));
 			}
+			/* //DirectiveControllerAttack does not attack reserved controllers!
 			if(this.room && this.room.controller && this.room.controller.reservation && this.room.controller.reservation.ticksToEnd > 500){
-				DirectiveControllerAttack.createIfNotPresent(this.room.controller.pos,'room');
+				//DirectiveControllerAttack.createIfNotPresent(this.room.controller.pos,'room');
 			}
+			*/
 			if(this.room && this.room.playerHostiles.length > 0 && !this.isPoisoned()){	
 				DirectiveOutpostDefense.createIfNotPresent(new RoomPosition(25,25,this.room.name),'room');
 			}
