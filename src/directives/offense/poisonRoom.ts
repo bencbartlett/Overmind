@@ -57,9 +57,12 @@ export class DirectivePoisonRoom extends Directive {
 		
 	}
 
-	
-
 	spawnMoarOverlords() {
+		//if room is visible + not claimed + GCL not enough, do not spawn claim/roomPoisiner
+		if(this.pos.isVisible && this.room && !this.room.my && _.values(Overmind.colonies).length >= Game.gcl.level){
+			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} not enough GCL to contaminate room;`);
+			return;
+		}
 		//conditions:
 		let isSafe = this.room && !this.room.dangerousPlayerHostiles.length;
 		let isNotReserved = !(this.room && this.room.controller && this.room.controller.reservation && this.room.controller.reservation.ticksToEnd > 500);
