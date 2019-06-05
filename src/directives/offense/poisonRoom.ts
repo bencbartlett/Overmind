@@ -54,7 +54,7 @@ export class DirectivePoisonRoom extends Directive {
 	
 
 	spawnMoarOverlords() {
-		if(_.values(Overmind.colonies).length == Game.gcl.level){
+		if(_.values(Overmind.colonies).length < Game.gcl.level){
 			if(!this.pos.isVisible){
 				this.overlords.scout = new StationaryScoutOverlord(this);	
 			} else if(this.room && this.room.dangerousPlayerHostiles.length == 0 && !this.isPoisoned()){
@@ -66,7 +66,7 @@ export class DirectivePoisonRoom extends Directive {
 
 	init() {
 		this.alert(`Poisoning Room ${this.pos.roomName}`);
-		if(_.values(Overmind.colonies).length == Game.gcl.level){
+		if(_.values(Overmind.colonies).length < Game.gcl.level){
 			if(this.room && this.room.controller){
 				this.walkableSourcePosisions = _.filter(_.flatten(_.map(this.room.sources, s => s.pos.neighbors)),pos => pos.isWalkable(true));
 				this.walkableControllerPosisions =  _.filter(this.room.controller!.pos.neighbors, pos => pos.isWalkable(true));
