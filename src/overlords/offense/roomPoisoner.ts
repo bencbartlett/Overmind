@@ -61,7 +61,7 @@ export class RoomPoisonerOverlord extends Overlord {
 		if (roomPoisoner.room == this.room && !roomPoisoner.pos.isEdge) {
 			//corner case: unclaimed controller blocked, while sources not 100% bloked
 			if(!this.room.my && this.sourcesWallSites && this.controllerWallSites &&
-				this.controllerWallSites.length ==0 &&  this.sourcesWallSites.length > 0){
+				this.controllerWallSites.length == 0 &&  this.sourcesWallSites.length > 0){
 				
 				const dismantleTarget = this.findStructureBlockingController(roomPoisoner);
 				if (dismantleTarget) {
@@ -70,11 +70,10 @@ export class RoomPoisonerOverlord extends Overlord {
 				}	
 			}
 
-
 			// recharge
 			if (roomPoisoner.carry.energy == 0) {
 				roomPoisoner.task = Tasks.recharge();
-			} else if (this.room && this.room.controller &&
+			} else if (this.room && this.room.controller && this.room.my &&
 					   (this.room.controller.level < 2) &&
 					   !(this.room.controller.upgradeBlocked > 0)) {
 				// upgrade controller to level 2 to unlock walls

@@ -7,7 +7,6 @@ import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {printRoomName} from '../../utilities/utils';
 import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
-import {DirectiveControllerAttack} from './controllerAttack';
 import {DirectiveOutpostDefense} from '../defense/outpostDefense';
 
 
@@ -22,7 +21,7 @@ export class DirectivePoisonRoom extends Directive {
 	static secondaryColor = COLOR_BROWN;
 	static requiredRCL = 4;
 	static poisonSourcesOnly = false;
-
+	
 	walkableSourcePosisions: RoomPosition[];
 	walkableControllerPosisions: RoomPosition[];
 
@@ -47,15 +46,10 @@ export class DirectivePoisonRoom extends Directive {
 						`removing directive!`);
 			this.remove(true);
 		}
-		
-		// remove if no spare GCL
-		if(_.filter(Game.rooms, room => room.my).length == Game.gcl.level){
-			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} not enough GCL; ` +
-						`removing directive!`);
-			this.remove(true);
-		}
 		*/
 	}
+
+	
 
 	spawnMoarOverlords() {
 		if(!this.pos.isVisible){
@@ -83,7 +77,7 @@ export class DirectivePoisonRoom extends Directive {
 	}
 
 	private poison() {
-		if (this.room && this.room.controller!.level > 1) {
+		if (this.room && this.room.my && this.room.controller!.level > 1) {
 			//wall csites are not walkable, block sources only if roomPoisoner.carry.energy > 0
 			if (this.overlords.roomPoisoner.roomPoisoners.length && 
 				this.overlords.roomPoisoner.roomPoisoners[0].carry.energy > 0){
@@ -93,9 +87,7 @@ export class DirectivePoisonRoom extends Directive {
 					}
 			} else {
 				//remove all csites if roomPoisoner.carry.energy == 0, wall csites are not walkable
-				if(this.room){
-					_.forEach(this.room.constructionSites, csite => {csite.remove();} );
-				}
+				_.forEach(this.room.constructionSites, csite => {csite.remove();} );
 			}
 			if(!DirectivePoisonRoom.poisonSourcesOnly){
 				//Check for walkable controller.pos.neighbors and place wall constuction site
