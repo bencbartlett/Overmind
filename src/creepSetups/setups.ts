@@ -22,7 +22,7 @@ export const Roles = {
 	ranged    : 'hydralisk',
 	healer    : 'transfuser',
 	dismantler: 'lurker',
-	roomPoisoner: 'roomPoisoner',
+	roomPoisoner: 'salter',
 };
 
 /**

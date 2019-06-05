@@ -1,7 +1,5 @@
-import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {DirectivePoisonRoom} from '../../directives/offense/poisonRoom';
-import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
@@ -19,7 +17,7 @@ export class RoomPoisonerOverlord extends Overlord {
     sourcesWallSites: ConstructionSite[] | undefined;
 
 	constructor(directive: DirectivePoisonRoom, priority = OverlordPriority.offense.roomPoisoner) {
-		super(directive, 'roomPoisoner', priority);
+		super(directive, 'contaminate', priority);
 		this.roomPoisoners = this.zerg(Roles.roomPoisoner);
 		this.controllerWallSites = (this.room && this.room.controller) ? _.filter(this.room.constructionSites,
                                                                     s => s.structureType == STRUCTURE_WALL &&
@@ -41,18 +39,6 @@ export class RoomPoisonerOverlord extends Overlord {
 
 	init() {
 		this.wishlist(1, Setups.roomPoisoner);
-	}
-	private findStructureBlockingController(pioneer: Zerg): Structure | undefined {
-		const blockingPos = Pathing.findBlockingPos(pioneer.pos, pioneer.room.controller!.pos,
-													_.filter(pioneer.room.structures, s => !s.isWalkable));
-		if (blockingPos) {
-			const structure = blockingPos.lookFor(LOOK_STRUCTURES)[0];
-			if (structure) {
-				return structure;
-			} else {
-				log.error(`${this.print}: no structure at blocking pos ${blockingPos.print}! (Why?)`);
-			}
-		}
 	}
 
 	private handleRoomPoisoner(roomPoisoner: Zerg): void {

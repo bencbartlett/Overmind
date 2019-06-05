@@ -1,4 +1,5 @@
 import {ClaimingOverlord} from '../../overlords/colonization/claimer';
+import {StationaryScoutOverlord} from '../../overlords/scouting/stationary';
 import {RoomPoisonerOverlord} from '../../overlords/offense/roomPoisoner';
 import {log} from '../../console/log';
 import {profile} from '../../profiler/decorator';
@@ -6,7 +7,7 @@ import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {printRoomName} from '../../utilities/utils';
 import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
-import {DirectiveControllerAttack} from '../../directives/offense/controllerAttack';
+import {DirectiveControllerAttack} from './controllerAttack';
 import {DirectiveOutpostDefense} from '../defense/outpostDefense';
 
 
@@ -15,8 +16,8 @@ import {DirectiveOutpostDefense} from '../defense/outpostDefense';
  */
 @profile
 export class DirectivePoisonRoom extends Directive {
-
-	static directiveName = 'poisonRoom';
+	
+	static directiveName = 'contaminate';
 	static color = COLOR_RED;
 	static secondaryColor = COLOR_BROWN;
 	static requiredRCL = 4;
@@ -27,7 +28,8 @@ export class DirectivePoisonRoom extends Directive {
 
 	overlords: {
         claim: ClaimingOverlord;
-        roomPoisoner: RoomPoisonerOverlord;
+		roomPoisoner: RoomPoisonerOverlord;
+		scout: StationaryScoutOverlord;
 	};
 
 	constructor(flag: Flag) {
@@ -38,11 +40,30 @@ export class DirectivePoisonRoom extends Directive {
 						`removing directive!`);
 			this.remove(true);
 		}
+		/* commented: keep the directive running for constant checking by stationary scout
+		// remove if already contaminated (if visible)
+		if (this.isPoisoned()) {
+			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is already contaminated; ` +
+						`removing directive!`);
+			this.remove(true);
+		}
+		
+		// remove if no spare GCL
+		if(_.filter(Game.rooms, room => room.my).length == Game.gcl.level){
+			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} not enough GCL; ` +
+						`removing directive!`);
+			this.remove(true);
+		}
+		*/
 	}
 
 	spawnMoarOverlords() {
-        this.overlords.claim = new ClaimingOverlord(this);
-        this.overlords.roomPoisoner = new RoomPoisonerOverlord(this);
+		if(!this.pos.isVisible){
+			this.overlords.scout = new StationaryScoutOverlord(this);	
+		} else if(this.room!.dangerousPlayerHostiles.length == 0 && !this.isPoisoned()){
+			this.overlords.claim = new ClaimingOverlord(this);
+			this.overlords.roomPoisoner = new RoomPoisonerOverlord(this);
+		}
 	}
 
 	init() {
@@ -69,9 +90,10 @@ export class DirectivePoisonRoom extends Directive {
 						_.forEach(this.walkableSourcePosisions,pos=>{pos.createConstructionSite(STRUCTURE_WALL)});
 					}
 			} else {
-				//remove all csites if roomPoisoner.carry.energy == 0, wall csites are not walkable
+				//remove all csites if roomPoisoner.carry.energy == 0, wall csites are not walkable, also remove roads!
 				if(this.room){
 					_.forEach(this.room.constructionSites, csite => {csite.remove();} );
+					_.forEach(this.room.roads, road => {road.destroy();} );
 				}
 			}
 			if(!DirectivePoisonRoom.poisonSourcesOnly){
@@ -99,6 +121,12 @@ export class DirectivePoisonRoom extends Directive {
 	run() {
 		
 		if (Game.time % 25 == 0 && this.room && this.room.my) {
+
+			if(_.filter(Game.rooms, room => room.my).length == Game.gcl.level){
+				log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} not enough GCL; ` +
+							`for contamination directive!`);
+			}
+
 			//kill claimer if room claimed, it is can be blocking wall csite creation
 			if (this.overlords.claim.claimers.length){
 				this.overlords.claim.claimers[0].suicide();
@@ -111,11 +139,10 @@ export class DirectivePoisonRoom extends Directive {
 			//remove any hostile consituction sites
 			_.forEach(this.room.find(FIND_HOSTILE_CONSTRUCTION_SITES), csite => {csite.remove();});
 
-            // Remove if poisoned
 			if (this.isPoisoned()) {
 				this.room.controller!.unclaim();
-				log.notify(`Removing poisonRoom directive in ${this.pos.roomName}: operation completed.`);
-				this.remove();
+				//log.notify(`Removing poisonRoom directive in ${this.pos.roomName}: operation completed.`);
+				//this.remove();
 			} else {
 				this.poison();
 			}
