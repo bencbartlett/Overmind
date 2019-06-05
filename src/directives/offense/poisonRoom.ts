@@ -85,7 +85,7 @@ export class DirectivePoisonRoom extends Directive {
 		}
 
 		//enemy creeps can block/attack operation, create OutpostDefense Directive to kill them
-		//NOTE: allowUnowned flag in findBestStructureTargetInRange for autoMele and autoRanged (combatZerg.ts) is set to true
+		//NOTE: allowUnowned flag in findBestStructureTargetInRange for autoMele and autoRanged (combatZerg.ts) is set to false
 		//		this is to prevent melee/ranged defences from destoying constucuted walls.
 		if(this.room && this.room.playerHostiles.length > 0 && !this.isPoisoned()){	
 			DirectiveOutpostDefense.createIfNotPresent(new RoomPosition(25,25,this.room.name),'room');
