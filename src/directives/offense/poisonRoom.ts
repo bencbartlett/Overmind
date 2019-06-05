@@ -24,7 +24,6 @@ export class DirectivePoisonRoom extends Directive {
 	static poisonSourcesOnly = false;
 	static scheduleEvery = 25;
 	
-	hasSpareGCL = false;
 	walkableSourcePosisions: RoomPosition[];
 	walkableControllerPosisions: RoomPosition[];
 
@@ -55,7 +54,7 @@ export class DirectivePoisonRoom extends Directive {
 	
 
 	spawnMoarOverlords() {
-		if(this.hasSpareGCL){
+		if(_.values(Overmind.colonies).length == Game.gcl.level){
 			if(!this.pos.isVisible){
 				this.overlords.scout = new StationaryScoutOverlord(this);	
 			} else if(this.room && this.room.dangerousPlayerHostiles.length == 0 && !this.isPoisoned()){
@@ -67,26 +66,16 @@ export class DirectivePoisonRoom extends Directive {
 
 	init() {
 		this.alert(`Poisoning Room ${this.pos.roomName}`);
-		if(Game.time % DirectivePoisonRoom.scheduleEvery == 0){
-			if(_.values(Overmind.colonies).length == Game.gcl.level){
-				//log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} not enough GCL; ` +
-				//			`removing directive!`);
-				this.hasSpareGCL = false;
-			} else {
-				this.hasSpareGCL = true;
+		if(_.values(Overmind.colonies).length == Game.gcl.level){
+			if(this.room && this.room.controller){
+				this.walkableSourcePosisions = _.filter(_.flatten(_.map(this.room.sources, s => s.pos.neighbors)),pos => pos.isWalkable(true));
+				this.walkableControllerPosisions =  _.filter(this.room.controller!.pos.neighbors, pos => pos.isWalkable(true));
 			}
-
-			if(this.hasSpareGCL){
-				if(this.room && this.room.controller){
-					this.walkableSourcePosisions = _.filter(_.flatten(_.map(this.room.sources, s => s.pos.neighbors)),pos => pos.isWalkable(true));
-					this.walkableControllerPosisions =  _.filter(this.room.controller!.pos.neighbors, pos => pos.isWalkable(true));
-				}
-				if(this.room && this.room.controller && this.room.controller.reservation && this.room.controller.reservation.ticksToEnd > 500){
-					DirectiveControllerAttack.createIfNotPresent(this.room.controller.pos,'room');
-				}
-				if(this.room && this.room.playerHostiles.length > 0 && !this.isPoisoned()){	
-					DirectiveOutpostDefense.createIfNotPresent(new RoomPosition(25,25,this.room.name),'room');
-				}
+			if(this.room && this.room.controller && this.room.controller.reservation && this.room.controller.reservation.ticksToEnd > 500){
+				DirectiveControllerAttack.createIfNotPresent(this.room.controller.pos,'room');
+			}
+			if(this.room && this.room.playerHostiles.length > 0 && !this.isPoisoned()){	
+				DirectiveOutpostDefense.createIfNotPresent(new RoomPosition(25,25,this.room.name),'room');
 			}
 		}
 	}
