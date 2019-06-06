@@ -30,6 +30,9 @@ interface Memory {
 	haltTick?: number;
 	combatPlanner: any;
 	reinforcementLearning?: any;
+	playerCreepTracker: {
+		[playerName: string]: CreepTracker
+	}
 
 	[otherProperty: string]: any;
 }
@@ -121,6 +124,13 @@ interface PathingMemory {
 	paths: { [originName: string]: { [destinationName: string]: CachedPath; } };
 	distances: { [pos1Name: string]: { [pos2Name: string]: number; } };
 	weightedDistances: { [pos1Name: string]: { [pos2Name: string]: number; } };
+}
+
+interface CreepTracker {
+	creeps: { [name: string]: number }; 	// first tick seen
+	types: { [type: string]:  number}; 		// amount seen
+	parts: { [bodyPart: string]: number}; 	// quantity
+	boosts: { [boostType: string]: number};	// how many boosts are spent
 }
 
 interface FlagMemory {
