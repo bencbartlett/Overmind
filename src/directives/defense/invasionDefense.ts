@@ -77,13 +77,13 @@ export class DirectiveInvasionDefense extends Directive {
 			if (!playerMem.creeps[creep.name]) {
 				playerMem.creeps[creep.name] = Game.time;
 				const creepType = creep.name.substr(0, creep.name.indexOf(" "));
-				playerMem.types[creepType] = (playerMem.types[creepType]+1) || 1 ;
-				for (const boostType of _.keys(creep.boostCounts)) {
-					const count = creep.boostCounts[boostType];
-					playerMem.boosts[boostType] = (playerMem.boosts[boostType])+count || count;
+				if (creepType == creep.name) {
+					// memory protection if they don't split name
+					return;
 				}
+				playerMem.types[creepType] = (playerMem.types[creepType]+1) || 1 ;
 				for (const bodyPart of creep.body) {
-					playerMem.parts[bodyPart.type] = (playerMem.boosts[bodyPart.type])+1 || 1;
+					playerMem.parts[bodyPart.type] = (playerMem.parts[bodyPart.type])+1 || 1;
 					if (bodyPart.boost) {
 						playerMem.boosts[bodyPart.boost] = (playerMem.boosts[bodyPart.boost])+1 || 1;
 					}
