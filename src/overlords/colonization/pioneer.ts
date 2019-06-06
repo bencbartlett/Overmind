@@ -14,11 +14,13 @@ import {Overlord} from '../Overlord';
 @profile
 export class PioneerOverlord extends Overlord {
 
+	directive: DirectiveColonize;
 	pioneers: Zerg[];
 	spawnSite: ConstructionSite | undefined;
 
 	constructor(directive: DirectiveColonize, priority = OverlordPriority.colonization.pioneer) {
 		super(directive, 'pioneer', priority);
+		this.directive = directive;
 		this.pioneers = this.zerg(Roles.pioneer);
 		this.spawnSite = this.room ? _.filter(this.room.constructionSites,
 											  s => s.structureType == STRUCTURE_SPAWN)[0] : undefined;
@@ -71,7 +73,7 @@ export class PioneerOverlord extends Overlord {
 			}
 		} else {
 			// pioneer.task = Tasks.goTo(this.pos);
-			pioneer.goTo(this.pos, {ensurePath: true, avoidSK: true});
+			pioneer.goTo(this.pos, {ensurePath: true, avoidSK: true, waypoints: this.directive.waypoints});
 		}
 	}
 

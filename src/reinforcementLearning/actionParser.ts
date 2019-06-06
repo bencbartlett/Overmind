@@ -67,8 +67,13 @@ export class ActionParser {
 		// }
 		//
 		// RawMemory.setActiveSegments([RL_ACTION_SEGMENT]); // keep this segment requested during training
-		console.log('My creeps: ', _.map(Game.creeps, creep => creep.name + ' ' + creep.pos));
-		ActionParser.parseActions(Memory);
+		console.log(`[${Game.time}] My creeps: `, _.map(Game.creeps, creep => creep.name + ' ' + creep.pos));
+
+		if (Memory.reinforcementLearning) {
+			console.log(`[${Game.time}] Memory.reinforcementLearning: ${JSON.stringify(Memory.reinforcementLearning)}`);
+			ActionParser.parseActions(Memory.reinforcementLearning);
+		}
+
 	}
 
 }
