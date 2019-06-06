@@ -191,6 +191,9 @@ export class Mem {
 		if (!Memory.settings) {
 			Memory.settings = {} as any;
 		}
+		if (!Memory.playerCreepTracker) {
+			Memory.playerCreepTracker = {};
+		}
 		if (!USE_PROFILER) {
 			delete Memory.profiler;
 		}
