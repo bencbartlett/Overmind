@@ -723,6 +723,8 @@ export class Zerg {
 		return Movement.moveOffExitToward(this, pos, detour);
 	}
 
+
+
 	// Miscellaneous fun stuff -----------------------------------------------------------------------------------------
 
 	sayLoop(messageList: string[], pub?: boolean) {
