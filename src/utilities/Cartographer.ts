@@ -1,4 +1,5 @@
 import {profile} from '../profiler/decorator';
+import {log} from "../console/log";
 
 export const ROOMTYPE_SOURCEKEEPER = 'SK';
 export const ROOMTYPE_CORE = 'CORE';
@@ -212,6 +213,26 @@ export class Cartographer {
 			xDir: xDir,
 			yDir: yDir,
 		};
+	}
+
+	static isNoviceRoom(roomName: string): boolean {
+		if (Memory.zoneRooms) {
+			const roomInfo = Memory.zoneRooms[roomName];
+			return !!roomInfo && !!roomInfo['novice'];
+		} else {
+			log.alert(`Checking novice room before segment is set in ${roomName}!`);
+			return false;
+		}
+	}
+
+	static isRespawnRoom(roomName: string): boolean {
+		if (Memory.zoneRooms) {
+			const roomInfo = Memory.zoneRooms[roomName];
+			return !!roomInfo && !!roomInfo['respawnArea'];
+		} else {
+			log.alert(`Checking respawn room before segment is set in ${roomName}!`);
+			return false;
+		}
 	}
 
 }

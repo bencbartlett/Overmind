@@ -10,6 +10,8 @@ import {MY_USERNAME} from '../~settings';
 import {DirectivePowerMine} from "../directives/resource/powerMine";
 import {Cartographer, ROOMTYPE_ALLEY} from "../utilities/Cartographer";
 import {getAllColonies} from "../Colony";
+import {Segmenter} from "../memory/Segmenter";
+import {log} from "../console/log";
 
 const RECACHE_TIME = 2500;
 const OWNED_RECACHE_TIME = 1000;
@@ -385,8 +387,25 @@ export class RoomIntel {
 		}
 	}
 
+	static requestZoneData() {
+		const checkOnTick = 123;
+		if (Game.time % 1000 == checkOnTick - 2) {
+			Segmenter.requestForeignSegment('LeagueOfAutomatedNations', 96);
+		} else if (Game.time % 1000 == checkOnTick - 1 ) {
+			const loanData = Segmenter.getForeignSegment();
+			if (loanData) {
+				Memory.zoneRooms = loanData;
+			} else {
+				log.error('Empty LOAN data');
+			}
+		}
+	}
+
+
 	static run(): void {
 		let alreadyComputedScore = false;
+		this.requestZoneData();
+
 		for (const name in Game.rooms) {
 
 			const room: Room = Game.rooms[name];
