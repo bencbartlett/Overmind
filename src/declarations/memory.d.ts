@@ -31,6 +31,7 @@ interface Memory {
 	combatPlanner: any;
 	reinforcementLearning?: any;
 
+	zoneRooms: { [roomName: string]: { [type: string]: number} };
 	[otherProperty: string]: any;
 }
 
