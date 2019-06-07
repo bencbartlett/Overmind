@@ -30,8 +30,8 @@ interface Memory {
 	haltTick?: number;
 	combatPlanner: any;
 	reinforcementLearning?: any;
-
 	zoneRooms: { [roomName: string]: { [type: string]: number} };
+
 	[otherProperty: string]: any;
 }
 
