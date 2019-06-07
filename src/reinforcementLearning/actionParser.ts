@@ -1,22 +1,11 @@
-// const RL_ACTION_SEGMENT = 70;
-
-
-type AllowableAction =
-	['move', DirectionConstant]
-	| ['moveTo', string]
-	| ['attack', string]
-	| ['rangedAttack', string]
-	| ['rangedMassAttack', null]
-	| ['heal', string]
-	| ['rangedHeal', string];
+import {RL_TRAINING_VERBOSITY} from '../~settings';
 
 export class ActionParser {
 
 	/**
 	 * Determine the list of actions for each Zerg to perform
 	 */
-	static parseActions(serializedActions: { [creepName: string]: AllowableAction[] }) {
-
+	static parseActions(serializedActions: { [creepName: string]: RLAction[] }) {
 		for (const creepName in serializedActions) {
 			const creep = Game.creeps[creepName];
 			if (!creep) {
@@ -42,16 +31,29 @@ export class ActionParser {
 							creep.rangedMassAttack();
 							break;
 						case 'heal':
-							if (targ) creep.heal(<Creep>targ);
+							if (targ) {
+								creep.heal(<Creep>targ);
+							} else if (typeof id != 'string') {
+								creep.heal(creep);
+							}
 							break;
 						case 'rangedHeal':
 							if (targ) creep.rangedHeal(<Creep>targ);
+							break;
+						default:
+							console.log(`Invalid command: ${command}!`);
 							break;
 					}
 				}
 			}
 		}
+	}
 
+	static logState() {
+		console.log(`[${Game.time}] My creeps: `, _.map(Game.creeps, creep => creep.name + ' ' + creep.pos));
+		if (Memory.reinforcementLearning) {
+			console.log(`[${Game.time}] Memory.reinforcementLearning: ${JSON.stringify(Memory.reinforcementLearning)}`);
+		}
 	}
 
 	/**
@@ -59,20 +61,24 @@ export class ActionParser {
 	 */
 	static run() {
 
-		// const raw = RawMemory.segments[RL_ACTION_SEGMENT];
-		//
-		// if (raw != undefined && raw != '') {
-		// 	const actions = JSON.parse(raw);
-		// 	ActionParser.parseActions(actions);
-		// }
-		//
-		// RawMemory.setActiveSegments([RL_ACTION_SEGMENT]); // keep this segment requested during training
-		console.log(`[${Game.time}] My creeps: `, _.map(Game.creeps, creep => creep.name + ' ' + creep.pos));
-
+		// Parse actions
 		if (Memory.reinforcementLearning) {
-			console.log(`[${Game.time}] Memory.reinforcementLearning: ${JSON.stringify(Memory.reinforcementLearning)}`);
 			ActionParser.parseActions(Memory.reinforcementLearning);
 		}
+
+		// Log state according to verbosity
+		if (RL_TRAINING_VERBOSITY == 0) {
+			// no logigng
+		} else if (RL_TRAINING_VERBOSITY == 1) {
+			if (Game.time % 100 == 0 || Game.time % 100 == 1) {
+				this.logState();
+			}
+		} else if (RL_TRAINING_VERBOSITY == 2) {
+			this.logState();
+		}
+
+		// Clear reinforcementLearning block when done
+		Memory.reinforcementLearning = {};
 
 	}
 

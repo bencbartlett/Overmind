@@ -77,3 +77,11 @@ export const GUI_SCALE = 1.0;
  * WARNING: enabling RL_TRAINING_MODE will wipe the contents of your memory!
  */
 export const RL_TRAINING_MODE = false;
+
+/**
+ * Configure how much stuff gets logged to console
+ * 0: no logging
+ * 1: log every 100th, 101th tick
+ * 2: log every tick
+ */
+export const RL_TRAINING_VERBOSITY: 0 | 1 | 2 = 1;

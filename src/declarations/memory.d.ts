@@ -29,10 +29,19 @@ interface Memory {
 	resetBucket?: boolean;
 	haltTick?: number;
 	combatPlanner: any;
-	reinforcementLearning?: any;
+	reinforcementLearning?: { [creepName: string]: RLAction[] };
 
 	[otherProperty: string]: any;
 }
+
+type RLAction =
+	['move', DirectionConstant]
+	| ['moveTo', string]
+	| ['attack', string]
+	| ['rangedAttack', string]
+	| ['rangedMassAttack', null]
+	| ['heal', string]
+	| ['rangedHeal', string];
 
 interface StatsMemory {
 	cpu: {
