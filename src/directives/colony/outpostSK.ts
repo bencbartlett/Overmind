@@ -1,6 +1,7 @@
 import {SourceReaperOverlord} from '../../overlords/mining/sourceKeeperReeper';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
+import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../../utilities/Cartographer';
 
 
 /**
@@ -14,13 +15,25 @@ export class DirectiveSKOutpost extends Directive {
 	static secondaryColor = COLOR_YELLOW;
 	static containerRepairTheshold = 0.5;
 
+	SafeSKroom : boolean|undefined;
+
 	constructor(flag: Flag) {
 		super(flag, colony => colony.level >= 7);
 	}
+	
+	isSafeSKroom(): boolean {
+		const coords = Cartographer.getRoomCoordinates(this.pos.roomName);
+		if(coords.x % 10 != 0 && coords.x % 5 == 0 && coords.y % 10 != 0 && coords.y % 5== 0){
+			return true;
+		}
+		return false;
+	}
 
 	spawnMoarOverlords() {
-		//TODO: skip sourceReapoers for safe SKrooms
-		this.overlords.sourceReaper = new SourceReaperOverlord(this);
+		//skip sourceReapoers for safe SKrooms
+		if(!this.isSafeSKroom){
+			this.overlords.sourceReaper = new SourceReaperOverlord(this);
+		}
 	}
 
 	getContainerConstructionSites(): ConstructionSite | undefined {
@@ -48,6 +61,10 @@ export class DirectiveSKOutpost extends Directive {
 	}
 
 	init(): void {
+		if(this.SafeSKroom == undefined){
+			this.SafeSKroom = this.isSafeSKroom();
+		}
+
 		// Add this structure/CS to worker overlord's build/repair list
 		const containerNeedRepair = this.getContainersToRepair();
 		if (containerNeedRepair && !this.colony.overlords.work.repairStructures.includes(containerNeedRepair)) {
