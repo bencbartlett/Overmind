@@ -29,19 +29,14 @@ interface Memory {
 	resetBucket?: boolean;
 	haltTick?: number;
 	combatPlanner: any;
-	reinforcementLearning?: { [creepName: string]: RLAction[] };
+	reinforcementLearning?: {
+		enabled?: boolean;
+		verbosity?: number;
+		workerIndex?: number;
+	};
 
 	[otherProperty: string]: any;
 }
-
-type RLAction =
-	['move', DirectionConstant]
-	| ['moveTo', string]
-	| ['attack', string]
-	| ['rangedAttack', string]
-	| ['rangedMassAttack', null]
-	| ['heal', string]
-	| ['rangedHeal', string];
 
 interface StatsMemory {
 	cpu: {
@@ -88,7 +83,7 @@ interface PublicSegment {
 
 interface CreepMemory {
 	[_MEM.OVERLORD]: string | null;
-	[_MEM.COLONY]: string;
+	[_MEM.COLONY]: string | null;
 	role: string;
 	task: ProtoTask | null;
 	data: {

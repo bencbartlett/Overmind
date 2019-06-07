@@ -2,6 +2,15 @@ import {RL_TRAINING_VERBOSITY} from '../~settings';
 
 export const RL_ACTION_SEGMENT = 70;
 
+export type RLAction =
+	['move', DirectionConstant]
+	| ['moveTo', string]
+	| ['attack', string]
+	| ['rangedAttack', string]
+	| ['rangedMassAttack', null]
+	| ['heal', string]
+	| ['rangedHeal', string];
+
 /**
  * The ActionParser provides a line of direct interaction for the external Python optimizers to control
  * creep actions via the Memory.reinforcementLearning object.
@@ -68,7 +77,7 @@ export class ActionParser {
 	/**
 	 * Wraps all creeps as Zerg
 	 */
-	private static wrapZerg(useCombatZerg=true) {
+	private static wrapZerg(useCombatZerg = true) {
 
 	}
 
@@ -76,11 +85,6 @@ export class ActionParser {
 	 * Read action commands from the designated memory segment, parse them, and run them
 	 */
 	static run() {
-
-		// Parse actions
-		// if (Memory.reinforcementLearning) {
-		// 	ActionParser.parseActions(Memory.reinforcementLearning);
-		// }
 
 		const raw = RawMemory.segments[RL_ACTION_SEGMENT];
 
@@ -101,9 +105,6 @@ export class ActionParser {
 		} else if (RL_TRAINING_VERBOSITY == 2) {
 			this.logState(raw);
 		}
-
-		// Clear reinforcementLearning block when done
-		Memory.reinforcementLearning = {};
 
 	}
 

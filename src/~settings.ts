@@ -1,7 +1,12 @@
 // Global settings file containing player information
 
 import {leftAngleQuote, rightAngleQuote} from './utilities/stringConstants';
-import {getUsername, onPublicServer} from './utilities/utils';
+import {
+	getReinforcementLearningTrainingVerbosity,
+	getUsername,
+	onPublicServer,
+	onTrainingEnvironment
+} from './utilities/utils';
 
 /**
  * My Screeps username; used for a variety of updating and communications purposes. (Changing this might break things.)
@@ -76,7 +81,7 @@ export const GUI_SCALE = 1.0;
  * communicated to them from the RL model through memory.
  * WARNING: enabling RL_TRAINING_MODE will wipe the contents of your memory!
  */
-export const RL_TRAINING_MODE = false;
+export const RL_TRAINING_MODE = onTrainingEnvironment();
 
 /**
  * Configure how much stuff gets logged to console
@@ -84,4 +89,4 @@ export const RL_TRAINING_MODE = false;
  * 1: log every 100th, 101th tick
  * 2: log every tick
  */
-export const RL_TRAINING_VERBOSITY: 0 | 1 | 2 = 1;
+export const RL_TRAINING_VERBOSITY = getReinforcementLearningTrainingVerbosity();
