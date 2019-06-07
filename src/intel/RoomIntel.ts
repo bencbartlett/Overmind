@@ -11,6 +11,7 @@ import {DirectivePowerMine} from "../directives/resource/powerMine";
 import {Cartographer, ROOMTYPE_ALLEY} from "../utilities/Cartographer";
 import {getAllColonies} from "../Colony";
 import {Segmenter} from "../memory/Segmenter";
+import {log} from "../console/log";
 
 const RECACHE_TIME = 2500;
 const OWNED_RECACHE_TIME = 1000;
@@ -387,15 +388,15 @@ export class RoomIntel {
 	}
 
 	static requestZoneData() {
-		const checkOnTick = 4;
-		if (Game.time % 10 == checkOnTick - 2) {
+		const checkOnTick = 123;
+		if (Game.time % 1000 == checkOnTick - 2) {
 			Segmenter.requestForeignSegment('LeagueOfAutomatedNations', 96);
-		} else if (Game.time % 10 == checkOnTick - 1 || Game.time % 10 == checkOnTick) {
+		} else if (Game.time % 1000 == checkOnTick - 1 ) {
 			const loanData = Segmenter.getForeignSegment();
 			if (loanData) {
-				console.log(`\n \n \n \n Loan Data is: ${JSON.stringify(loanData)} \n \n \n \n `);
+				Memory.zoneRooms = loanData;
 			} else {
-				console.log('Empty loan data');
+				log.error('Empty LOAN data');
 			}
 		}
 	}
