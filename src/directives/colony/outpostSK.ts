@@ -12,25 +12,25 @@ export class DirectiveSKOutpost extends Directive {
 	static directiveName = 'outpostSK';
 	static color = COLOR_PURPLE;
 	static secondaryColor = COLOR_YELLOW;
+	static containerRepairTheshold = 0.5;
 
 	constructor(flag: Flag) {
 		super(flag, colony => colony.level >= 7);
 	}
 
 	spawnMoarOverlords() {
+		//TODO: skip sourceReapoers for safe SKrooms
 		this.overlords.sourceReaper = new SourceReaperOverlord(this);
 	}
 
-	getConstructionSites(): ConstructionSite | undefined {
+	getContainerConstructionSites(): ConstructionSite | undefined {
 		if (!this.pos.isVisible) {
 			return;
 		}
-		const room = Game.rooms[this.pos.roomName]
-		const constructionSites = room.find(FIND_CONSTRUCTION_SITES);
-		const containersInConstructionSites = _.filter(constructionSites, s => s.structureType == STRUCTURE_CONTAINER);
+		const ContainerConstructionSites = _.filter(this.room!.constructionSites, s => s.structureType == STRUCTURE_CONTAINER);
 
-		if(containersInConstructionSites.length > 0){
-			return containersInConstructionSites[0];	
+		if(ContainerConstructionSites.length > 0){
+			return ContainerConstructionSites[0];	
 		}			
 		return;
 	}
@@ -39,9 +39,7 @@ export class DirectiveSKOutpost extends Directive {
 		if (!this.pos.isVisible) {
 			return;
 		}
-		const room = Game.rooms[this.pos.roomName]
-		const allStrcutures = room.find(FIND_STRUCTURES);
-		const containersTorepair = _.filter(allStrcutures, s => s.structureType == STRUCTURE_CONTAINER && s.hits < 0.5 * s.hitsMax);
+		const containersTorepair = _.filter(this.room!.structures, s => s.structureType == STRUCTURE_CONTAINER && s.hits < DirectiveSKOutpost.containerRepairTheshold * s.hitsMax);
 
 		if(containersTorepair.length > 0){
 			return containersTorepair[0];	
@@ -51,15 +49,15 @@ export class DirectiveSKOutpost extends Directive {
 
 	init(): void {
 		// Add this structure/CS to worker overlord's build/repair list
-		const container = this.getContainersToRepair();
-		if (container && !this.colony.overlords.work.repairStructures.includes(container)) {
-			this.colony.overlords.work.repairStructures.push(container);
+		const containerNeedRepair = this.getContainersToRepair();
+		if (containerNeedRepair && !this.colony.overlords.work.repairStructures.includes(containerNeedRepair)) {
+			this.colony.overlords.work.repairStructures.push(containerNeedRepair);
 			return;
 		}
 
-		const target = this.getConstructionSites();
-		if (target && !this.colony.overlords.work.constructionSites.includes(target)) {
-			this.colony.overlords.work.constructionSites.push(target);
+		const containerToBuild = this.getContainerConstructionSites();
+		if (containerToBuild && !this.colony.overlords.work.constructionSites.includes(containerToBuild)) {
+			this.colony.overlords.work.constructionSites.push(containerToBuild);
 			return;
 		}
 	}

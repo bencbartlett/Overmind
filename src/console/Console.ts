@@ -44,7 +44,6 @@ export class OvermindConsole {
 		global.endRemoteDebugSession = this.endRemoteDebugSession;
 		global.profileMemory = this.profileMemory;
 		global.cancelMarketOrders = this.cancelMarketOrders;
-		global.SKoutpostFilter = this.SKoutpostFilter;
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -85,7 +84,6 @@ export class OvermindConsole {
 		descr['profileMemory(depth=1)'] = 'scan through memory to get the size of various objects';
 		descr['startRemoteDebugSession()'] = 'enables the remote debugger so Muon can debug your code';
 		descr['cancelMarketOrders(filter?)'] = 'cancels all market orders matching filter (if provided)';
-		descr['SKoutpostFilter(source.id|lair.id,add=true)'] = 'customise SKoutpost by filtering our source/lair id';
 		// Console list
 		const descrMsg = toColumns(descr, {justify: true, padChar: '.'});
 		const maxLineLength = _.max(_.map(descrMsg, line => line.length)) + 2;
@@ -486,15 +484,6 @@ export class OvermindConsole {
 		const ordersToCancel = !!filter ? _.filter(Game.market.orders, order => filter(order)) : Game.market.orders;
 		_.forEach(_.values(ordersToCancel), (order: Order) => Game.market.cancelOrder(order.id));
 		return `Canceled ${_.values(ordersToCancel).length} orders.`;
-	}
-
-	static SKoutpostFilter(id: string, add = true): string {
-		Memory.SKoutpostFilter
-		if(add){
-			return `id ${id} added to SKoutpost exclusion list`;
-		} else {
-			return `id ${id} removed from SKoutpost exclusion list`;
-		}
 	}
 
 }

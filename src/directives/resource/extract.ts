@@ -26,8 +26,8 @@ export class DirectiveExtract extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		let priority: number;
-		if (this.room && this.room.my && (!!this.colony.terminal || !!this.colony.storage)) {
+		let priority: number; 
+		if (this.room && this.room.my) {
 			if (this.colony.level == 8) {
 				priority = OverlordPriority.ownedRoom.mineralRCL8;
 			} else {
@@ -36,7 +36,10 @@ export class DirectiveExtract extends Directive {
 		} else {
 			priority = OverlordPriority.remoteSKRoom.mineral;
 		}
-		this.overlords.extract = new ExtractorOverlord(this, priority);
+		//Fix: Only spawn drones if there is a terminal or storage
+		if (!!this.colony.terminal || !!this.colony.storage){
+			this.overlords.extract = new ExtractorOverlord(this, priority);
+		}
 	}
 
 	init() {

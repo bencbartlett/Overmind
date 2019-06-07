@@ -65,7 +65,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 	private getNextTargetLair(): StructureKeeperLair | undefined {
 		if (!this.room) return;
 		// If any lairs have an active keeper, target that
-		//filter Lairs to skip //kamal
+		// TODO: Filter out Lair for sources/minerala that you do not want to harvest
 		const activeLair = _.find(this.room.keeperLairs,
 								lair => lair.pos.findInRange(lair.room.sourceKeepers, 5).length > 0);
 		if (activeLair) return activeLair;
