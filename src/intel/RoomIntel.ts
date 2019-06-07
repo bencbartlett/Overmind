@@ -410,10 +410,6 @@ export class RoomIntel {
 
 			const room: Room = Game.rooms[name];
 
-			if (Memory.zoneRooms && _.keys(Memory.zoneRooms).indexOf(name) != -1) {
-				console.log(`Room ${name} found in zone! ${Memory.zoneRooms[name]}`);
-			}
-
 			this.markVisible(room);
 			this.recordSafety(room);
 
