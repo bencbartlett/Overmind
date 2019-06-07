@@ -387,25 +387,34 @@ export class RoomIntel {
 	}
 
 	static requestZoneData() {
-		const checkOnTick = 12;
-		if (Game.time % 30 == checkOnTick - 2) {
-			Segmenter.requestForeignSegment('LOAN', 96);
-		} else if (Game.time % 30 == checkOnTick - 1) {
+		const checkOnTick = 4;
+		if (Game.time % 10 == checkOnTick - 2) {
+			Segmenter.requestForeignSegment('LeagueOfAutomatedNations', 96);
+		} else if (Game.time % 10 == checkOnTick - 1 || Game.time % 10 == checkOnTick) {
 			const loanData = Segmenter.getForeignSegment();
-			console.log(`\n \n \n \n Loan Data is: ${loanData} \n \n \n \n `);
+			if (loanData) {
+				console.log(`\n \n \n \n Loan Data is: ${JSON.stringify(loanData)} \n \n \n \n `);
+			} else {
+				console.log('Empty loan data');
+			}
 		}
 	}
 
 
 	static run(): void {
 		let alreadyComputedScore = false;
+		this.requestZoneData();
+
 		for (const name in Game.rooms) {
 
 			const room: Room = Game.rooms[name];
 
+			if (Memory.zoneRooms && _.keys(Memory.zoneRooms).indexOf(name) != -1) {
+				console.log(`Room ${name} found in zone! ${Memory.zoneRooms[name]}`);
+			}
+
 			this.markVisible(room);
 			this.recordSafety(room);
-			this.requestZoneData();
 
 			// Track invasion data, harvesting, and casualties for all colony rooms and outposts
 			if (Overmind.colonyMap[room.name]) { // if it is an owned or outpost room

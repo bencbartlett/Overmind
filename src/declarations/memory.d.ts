@@ -47,6 +47,7 @@ interface Memory {
 		[playerName: string]: CreepTracker
 	}
 
+	zoneRooms: { [roomName: string]: { [type: string]: number} };
 	[otherProperty: string]: any;
 }
 
