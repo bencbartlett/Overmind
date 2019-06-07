@@ -218,7 +218,7 @@ export class Cartographer {
 	static isNoviceRoom(roomName: string): boolean {
 		if (Memory.zoneRooms) {
 			const roomInfo = Memory.zoneRooms[roomName];
-			return roomInfo && !!roomInfo['novice'];
+			return !!roomInfo && !!roomInfo['novice'];
 		} else {
 			log.alert(`Checking novice room before segment is set in ${roomName}!`);
 			return false;
@@ -228,7 +228,7 @@ export class Cartographer {
 	static isRespawnRoom(roomName: string): boolean {
 		if (Memory.zoneRooms) {
 			const roomInfo = Memory.zoneRooms[roomName];
-			return roomInfo && !!roomInfo['respawnArea'];
+			return !!roomInfo && !!roomInfo['respawnArea'];
 		} else {
 			log.alert(`Checking respawn room before segment is set in ${roomName}!`);
 			return false;
