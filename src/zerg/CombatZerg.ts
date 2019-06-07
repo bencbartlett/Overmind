@@ -162,7 +162,7 @@ export class CombatZerg extends Zerg {
 	 */
 	autoRanged(possibleTargets = this.room.hostiles, allowMassAttack = true) {
 		let nearbyHostiles = _.filter(this.room.dangerousHostiles, c => this.pos.inRangeToXY(c.pos.x, c.pos.y, 2));
-		if(nearbyHostiles.length){
+		if(nearbyHostiles.length && !this.inRampart) {
 			return this.kite();
 		}
 		const target = CombatTargeting.findBestCreepTargetInRange(this, 3, possibleTargets)
