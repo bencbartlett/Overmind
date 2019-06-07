@@ -10,6 +10,7 @@ import {MY_USERNAME} from '../~settings';
 import {DirectivePowerMine} from "../directives/resource/powerMine";
 import {Cartographer, ROOMTYPE_ALLEY} from "../utilities/Cartographer";
 import {getAllColonies} from "../Colony";
+import {Segmenter} from "../memory/Segmenter";
 
 const RECACHE_TIME = 2500;
 const OWNED_RECACHE_TIME = 1000;
@@ -385,6 +386,17 @@ export class RoomIntel {
 		}
 	}
 
+	static requestZoneData() {
+		const checkOnTick = 12;
+		if (Game.time % 30 == checkOnTick - 2) {
+			Segmenter.requestForeignSegment('LOAN', 96);
+		} else if (Game.time % 30 == checkOnTick - 1) {
+			const loanData = Segmenter.getForeignSegment();
+			console.log(`\n \n \n \n Loan Data is: ${loanData} \n \n \n \n `);
+		}
+	}
+
+
 	static run(): void {
 		let alreadyComputedScore = false;
 		for (const name in Game.rooms) {
@@ -393,6 +405,7 @@ export class RoomIntel {
 
 			this.markVisible(room);
 			this.recordSafety(room);
+			this.requestZoneData();
 
 			// Track invasion data, harvesting, and casualties for all colony rooms and outposts
 			if (Overmind.colonyMap[room.name]) { // if it is an owned or outpost room
