@@ -8,7 +8,7 @@ import {printRoomName} from '../../utilities/utils';
 import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
 import {DirectiveOutpostDefense} from '../defense/outpostDefense';
-import {Pathing} from '../movement/Pathing';
+import {Pathing} from '../../movement/Pathing';
 
 
 /**
