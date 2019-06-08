@@ -162,7 +162,7 @@ export class CombatZerg extends Zerg {
 	 */
 	autoRanged(possibleTargets = this.room.hostiles, allowMassAttack = true) {
 		let nearbyHostiles = _.filter(this.room.dangerousHostiles, c => this.pos.inRangeToXY(c.pos.x, c.pos.y, 2));
-		if(nearbyHostiles.length > 2 && !this.inRampart) {
+		if(nearbyHostiles.length > 1 && !this.inRampart) {
 			this.rangedMassAttack();
 			return this.kite();
 		} else if(nearbyHostiles.length == 1 && !this.inRampart) {
