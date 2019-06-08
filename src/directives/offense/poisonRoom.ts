@@ -70,18 +70,18 @@ export class DirectivePoisonRoom extends Directive {
 		let isSafe = this.room && !this.room.dangerousPlayerHostiles.length;
 		let isNotReserved = !(this.room && this.room.controller && this.room.controller.reservation && this.room.controller.reservation.ticksToEnd > 500);
 
-		//spawn required creeps to contaminate if visible + safe + notRserved + notPoisoned
-		if(this.pos.isVisible && isSafe && isNotReserved && !this.isPoisoned()){
-			this.overlords.claim = new ClaimingOverlord(this);
-			this.overlords.roomPoisoner = new RoomPoisonerOverlord(this);	
+		//spawn required creeps to contaminate if visible + safe + notRserved + notPoisoned, else spawn reserved is reserved by enemy
+		if(this.pos.isVisible && isSafe && !this.isPoisoned()){
+			if(isNotReserved){
+				this.overlords.claim = new ClaimingOverlord(this);
+				this.overlords.roomPoisoner = new RoomPoisonerOverlord(this);
+			}else{
+				this.overlords.reserve = new ReservingOverlord(this);		
+			}
 		}
 		//spawn stationary scout if not visible
 		if(!this.pos.isVisible){ //if not visible, send a scout
 			this.overlords.scout = new StationaryScoutOverlord(this);	
-		}
-		//spawn reserver if already reserved by the enemy
-		if(this.room && this.room.playerHostiles.length == 0 && !this.isPoisoned() && !isNotReserved){	
-			this.overlords.reserve = new ReservingOverlord(this);	
 		}
 	}
 

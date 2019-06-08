@@ -7,6 +7,7 @@ import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {MY_USERNAME} from '../../~settings';
 import {Overlord} from '../Overlord';
+import {DirectivePoisonRoom} from '../../directives/offense/poisonRoom';
 
 /**
  * Spawns reservers to reserve an outpost room
@@ -33,6 +34,8 @@ export class ReservingOverlord extends Overlord {
 			}
 		} else if (RoomIntel.roomReservedBy(this.pos.roomName) == MY_USERNAME &&
 				   RoomIntel.roomReservationRemaining(this.pos.roomName) < 1000) {
+			amount = 1;
+		} else if (DirectivePoisonRoom.isPresent(this.pos,'room')){
 			amount = 1;
 		}
 		this.wishlist(amount, Setups.infestors.reserve);
