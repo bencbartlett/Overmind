@@ -96,7 +96,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 				reaper.healSelfIfPossible();
 			}
 			// Kite around ranged invaders until a defender arrives
-			if (this.room.invaders.length > 2 && _.filter(this.defenders, def => def.room == this.room).length == 0) {
+			if (this.pos.findInRange(this.room.invaders,10).length > 2 && _.filter(this.defenders, def => def.room == this.room).length == 0) {
 				reaper.kite(_.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0));
 				reaper.healSelfIfPossible();
 			}
