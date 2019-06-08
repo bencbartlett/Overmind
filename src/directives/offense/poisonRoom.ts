@@ -9,6 +9,7 @@ import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
 import {DirectiveOutpostDefense} from '../defense/outpostDefense';
 import {Pathing} from '../../movement/Pathing';
+import {ReservingOverlord} from '../../overlords/colonization/reserver';
 
 
 /**
@@ -31,6 +32,7 @@ export class DirectivePoisonRoom extends Directive {
         claim: ClaimingOverlord;
 		roomPoisoner: RoomPoisonerOverlord;
 		scout: StationaryScoutOverlord;
+		reserve: ReservingOverlord;
 	};
 
 	constructor(flag: Flag) {
@@ -76,6 +78,10 @@ export class DirectivePoisonRoom extends Directive {
 		//spawn stationary scout if not visible
 		if(!this.pos.isVisible){ //if not visible, send a scout
 			this.overlords.scout = new StationaryScoutOverlord(this);	
+		}
+		//spawn reserver if already reserved by the enemy
+		if(this.room && this.room.playerHostiles.length == 0 && !this.isPoisoned() && !isNotReserved){	
+			this.overlords.reserve = new ReservingOverlord(this);	
 		}
 	}
 
