@@ -312,7 +312,7 @@ export class Colony {
 		$.set(this, 'sources', () => _.sortBy(_.flatten(_.map(this.rooms, room => room.sources)),
 											  source => source.pos.getMultiRoomRangeTo(this.pos)));
 		for (const source of this.sources) {
-			!DirectivePoisonRoom.isPresent(source.pos, 'room') && DirectiveHarvest.createIfNotPresent(source.pos, 'pos');
+			DirectiveHarvest.createIfNotPresent(source.pos, 'pos');
 		}
 		$.set(this, 'extractors', () =>
 			_(this.rooms)

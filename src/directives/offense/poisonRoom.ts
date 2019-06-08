@@ -10,6 +10,7 @@ import {Directive} from '../Directive';
 import {DirectiveOutpostDefense} from '../defense/outpostDefense';
 import {Pathing} from '../../movement/Pathing';
 import {ReservingOverlord} from '../../overlords/colonization/reserver';
+import {OvermindConsole} from '../../console/Console';
 
 
 /**
@@ -137,6 +138,9 @@ export class DirectivePoisonRoom extends Directive {
 			const roomRCL = this.room.controller!.level;
 			switch(roomRCL){
 				case 1:{
+					//suspend the colony to prevent colonization/harvest flags
+					OvermindConsole.suspendColony(this.room.name);
+
 					//kill claimer if room claimed, it can be blocking wall csite creation
 					if (this.overlords.claim.claimers && this.overlords.claim.claimers.length){
 						this.overlords.claim.claimers[0].suicide();
@@ -163,6 +167,8 @@ export class DirectivePoisonRoom extends Directive {
 							_.forEach(this.room.roads, road => {road.destroy();} );
 						}
 						
+						//clear unsuspend colony flag, then unclaim room
+						OvermindConsole.unsuspendColony(this.room.name);
 						this.room.controller!.unclaim();
 						
 						//remove direcitve if done, or keep it for constant harassement

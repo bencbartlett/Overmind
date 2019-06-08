@@ -216,7 +216,7 @@ export class Overseer implements IOverseer {
 				// Place defensive directive after hostiles have been present for a long enough time
 				const safetyData = RoomIntel.getSafetyData(colony.room.name);
 				const invasionIsPersistent = safetyData.unsafeFor > 20;
-				if (invasionIsPersistent && !DirectivePoisonRoom.isPresent(colony.pos, 'room')) {
+				if (invasionIsPersistent) {
 					DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
 				}
 			}
@@ -298,8 +298,7 @@ export class Overseer implements IOverseer {
 			}
 			// Place pioneer directives in case the colony doesn't have a spawn for some reason
 			if (Game.time % 25 == 0 && colony.spawns.length == 0 &&
-				!DirectiveClearRoom.isPresent(colony.pos, 'room') &&
-				!DirectivePoisonRoom.isPresent(colony.pos, 'room')) {
+				!DirectiveClearRoom.isPresent(colony.pos, 'room')) {
 				// verify that there are no spawns (not just a caching glitch)
 				const spawns = Game.rooms[colony.name]!.find(FIND_MY_SPAWNS);
 				if (spawns.length == 0) {
