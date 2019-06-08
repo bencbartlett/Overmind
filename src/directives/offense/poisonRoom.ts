@@ -7,10 +7,10 @@ import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {printRoomName} from '../../utilities/utils';
 import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
-import {DirectiveOutpostDefense} from '../defense/outpostDefense';
 import {Pathing} from '../../movement/Pathing';
 import {ReservingOverlord} from '../../overlords/colonization/reserver';
 import {OvermindConsole} from '../../console/Console';
+import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 
 
 /**
@@ -99,7 +99,7 @@ export class DirectivePoisonRoom extends Directive {
 		//NOTE: allowUnowned flag in findBestStructureTargetInRange for autoMele and autoRanged (combatZerg.ts) is set to false
 		//		this is to prevent melee/ranged defences from destoying constucuted walls.
 		if(this.room && this.room.playerHostiles.length > 0 && !this.isPoisoned()){	
-			DirectiveOutpostDefense.createIfNotPresent(Pathing.findPathablePosition(this.room.name),'room');
+			DirectiveInvasionDefense.createIfNotPresent(Pathing.findPathablePosition(this.room.name),'room');
 		}
 	}
 
