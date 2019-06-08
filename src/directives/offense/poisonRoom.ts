@@ -41,8 +41,8 @@ export class DirectivePoisonRoom extends Directive {
 			this.remove(true);
 		}
 
-		//remove if created in owned room!
-		if(this.room && this.room.my){
+		//remove if created in owned room! (fail safe)
+		if(this.room && this.room.my && this.room.controller!.level > 2){
 			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} can not contaminate owned room; ` +
 			`manually unclaim it  first if you still want to contaminate it!`);
 			this.remove(true);
@@ -68,7 +68,7 @@ export class DirectivePoisonRoom extends Directive {
 		let isNotReserved = !(this.room && this.room.controller && this.room.controller.reservation && this.room.controller.reservation.ticksToEnd > 500);
 
 		//spawn required creeps to contaminate if visible + safe + notRserved + notPoisoned
-		if(this.pos.isVisible && isSafe && isNotReserved && !this.isPoisoned){
+		if(this.pos.isVisible && isSafe && isNotReserved && !this.isPoisoned()){
 			this.overlords.claim = new ClaimingOverlord(this);
 			this.overlords.roomPoisoner = new RoomPoisonerOverlord(this);	
 		}
@@ -135,20 +135,24 @@ export class DirectivePoisonRoom extends Directive {
 						this.overlords.claim.claimers[0].suicide();
 					}
 					//remove any containers that can be next to sources
-					if(this.room.containers.length){
-						_.forEach(this.room.containers, container => {container.destroy();});
+					if(this.room.hostiles.length){
+						log.warning(`room ${this.print}: ${printRoomName(this.pos.roomName)} poisoning directive can't destory/remove structures/csites due to hostiles presense`);
+					} else {
+						if(this.room.containers.length){
+							_.forEach(this.room.containers, container => {container.destroy();});
+						}
+						//remove all wall (will keep all poisno walls in RCL2need
+						if(this.room.walls.length){
+							_.forEach(this.room.walls, wall => {wall.destroy();});
+						}
+						//remove any hostile consituction sites
+						_.forEach(this.room.find(FIND_HOSTILE_CONSTRUCTION_SITES), csite => {csite.remove();});
 					}
-					//remove all wall (will keep all poisno walls in RCL2need
-					if(this.room.walls.length){
-						_.forEach(this.room.walls, wall => {wall.destroy();});
-					}
-					//remove any hostile consituction sites
-					_.forEach(this.room.find(FIND_HOSTILE_CONSTRUCTION_SITES), csite => {csite.remove();});
 				}
 				default:{
 					if(this.isPoisoned()){
-						//remove roads before unclaiming
-						if(this.room.roads.length > 0){
+						//remove roads before unclaiming (if there are no hostiles to prevent it)
+						if(!this.room.hostiles.length && this.room.roads.length > 0){
 							_.forEach(this.room.roads, road => {road.destroy();} );
 						}
 						
