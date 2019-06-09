@@ -7,20 +7,21 @@
 
 */
 
-import {CombatZerg} from '../zerg/CombatZerg';
+import {NeuralZerg} from '../zerg/NeuralZerg';
 import {RL_TRAINING_VERBOSITY} from '../~settings';
 
 export const RL_ACTION_SEGMENT = 70;
 
 export type RLAction =
 	['move', DirectionConstant]
-	// | ['moveTo', string]
 	| ['goTo', string]
 	| ['attack', string]
 	| ['rangedAttack', string]
 	| ['rangedMassAttack', null]
 	| ['heal', string]
 	| ['rangedHeal', string]
+	| ['approachHostiles', null]
+	| ['avoidHostiles', null]
 	| ['noop', null];
 
 /**
@@ -33,7 +34,7 @@ export class ActionParser {
 	 * Parse an individual action from its serialized format and command the actor to execute it.
 	 * Returns whether the action was valid.
 	 */
-	private static parseAction(actor: CombatZerg, action: RLAction): boolean {
+	private static parseAction(actor: NeuralZerg, action: RLAction, autoEngage = true): boolean {
 
 		const [command, id] = action;
 		const targ: RoomObject | null = typeof id == 'string' ? Game.getObjectById(id) : null;
@@ -42,9 +43,6 @@ export class ActionParser {
 			case 'move':
 				actor.move(<DirectionConstant>id);
 				break;
-			// case 'moveTo':
-			// 	if (targ) creep.moveTo(targ);
-			// 	break;
 			case 'goTo':
 				if (targ) actor.goTo(targ);
 				break;
@@ -67,11 +65,20 @@ export class ActionParser {
 			case 'rangedHeal':
 				if (targ) actor.rangedHeal(<Creep>targ);
 				break;
+			case 'approachHostiles':
+				actor.approachHostiles();
+				break;
+			case 'avoidHostiles':
+				actor.avoidHostiles();
+				break;
 			case 'noop':
 				break;
 			default:
 				console.log(`[${Game.time}] Invalid command: ${command}!`);
 				return false;
+		}
+		if (autoEngage) {
+			actor.autoEngage();
 		}
 		return true;
 	}
@@ -79,7 +86,7 @@ export class ActionParser {
 	/**
 	 * Determine the list of actions for each Zerg to perform
 	 */
-	private static parseActions(actors: { [creepName: string]: CombatZerg },
+	private static parseActions(actors: { [creepName: string]: NeuralZerg },
 								serializedActions: { [creepName: string]: RLAction[] }) {
 
 		const receivedOrders: { [creepName: string]: boolean } = _.mapValues(actors, actor => false);
@@ -87,7 +94,7 @@ export class ActionParser {
 		// Deserialize the actions for each actor
 		for (const creepName in serializedActions) {
 
-			const creep = actors[creepName] as CombatZerg | undefined;
+			const creep = actors[creepName] as NeuralZerg | undefined;
 
 			if (!creep) {
 				console.log(`No creep with name ${creepName}!`);
@@ -125,8 +132,8 @@ export class ActionParser {
 	/**
 	 * Wraps all creeps as Zerg
 	 */
-	private static wrapZerg(): { [creepName: string]: CombatZerg } {
-		return _.mapValues(Game.creeps, creep => new CombatZerg(creep));
+	private static wrapZerg(): { [creepName: string]: NeuralZerg } {
+		return _.mapValues(Game.creeps, creep => new NeuralZerg(creep));
 	}
 
 	/**
