@@ -67,16 +67,18 @@ export class DirectiveSKOutpost extends Directive {
 
 	init(): void {
 		// Add this structure/CS to worker overlord's build/repair list
-		const containerNeedRepair = this.getContainersToRepair();
-		if (containerNeedRepair && !this.colony.overlords.work.repairStructures.includes(containerNeedRepair)) {
-			this.colony.overlords.work.repairStructures.push(containerNeedRepair);
-			return;
-		}
+		if(Game.time % 150 == 0){
+			const containerNeedRepair = this.getContainersToRepair();
+			if (containerNeedRepair && !this.colony.overlords.work.repairStructures.includes(containerNeedRepair)) {
+				this.colony.overlords.work.repairStructures.push(containerNeedRepair);
+				return;
+			}
 
-		const containerToBuild = this.getContainerConstructionSites();
-		if (containerToBuild && !this.colony.overlords.work.constructionSites.includes(containerToBuild)) {
-			this.colony.overlords.work.constructionSites.push(containerToBuild);
-			return;
+			const containerToBuild = this.getContainerConstructionSites();
+			if (containerToBuild && !this.colony.overlords.work.constructionSites.includes(containerToBuild)) {
+				this.colony.overlords.work.constructionSites.push(containerToBuild);
+				return;
+			}
 		}
 	}
 
