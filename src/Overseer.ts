@@ -8,7 +8,6 @@ import {DirectiveOutpost} from './directives/colony/outpost';
 import {DirectiveGuard} from './directives/defense/guard';
 import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
 import {DirectiveOutpostDefense} from './directives/defense/outpostDefense';
-import {DirectivePoisonRoom} from './directives/offense/poisonRoom';
 import {Directive} from './directives/Directive';
 import {Notifier} from './directives/Notifier';
 import {DirectiveBootstrap} from './directives/situational/bootstrap';
