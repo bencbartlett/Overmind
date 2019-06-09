@@ -35,9 +35,8 @@ export class ReservingOverlord extends Overlord {
 		} else if (RoomIntel.roomReservedBy(this.pos.roomName) == MY_USERNAME &&
 				   RoomIntel.roomReservationRemaining(this.pos.roomName) < 1000) {
 			amount = 1;
-		//TODO: make stationay scout sign the controller for poisoning, and check against it instead
-		// //this.room!.controller!.sign && this.room!.controller!.signedByMe && (this.room!.controller!.sign!.text).includes('poison');
-		} else if (DirectivePoisonRoom.isPresent(this.pos,'room')){
+		//spawn if it belongs to poisonRoom directive instead of checking DirectivePoisonRoom.isPresent(this.pos,'room')
+		} else if (this.name == DirectivePoisonRoom.name){
 			amount = 1;
 		}
 		this.wishlist(amount, Setups.infestors.reserve);

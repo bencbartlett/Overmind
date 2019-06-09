@@ -19,7 +19,7 @@ import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense
 @profile
 export class DirectivePoisonRoom extends Directive {
 	
-	static directiveName = 'contaminate';
+	static directiveName = 'PoisonRoom';
 	static color = COLOR_RED;
 	static secondaryColor = COLOR_BROWN;
 	static requiredRCL = 4;
@@ -69,19 +69,23 @@ export class DirectivePoisonRoom extends Directive {
 		}
 		//conditions:
 		let isSafe = this.room && !this.room.dangerousPlayerHostiles.length;
-		let isNotReserved = !(this.room && this.room.controller && this.room.controller.reservation && this.room.controller.reservation.ticksToEnd > 500);
+		let isNotReservedByEnemy = !(this.room && this.room.controller && this.room.controller.reservation && this.room.controller.reservation.ticksToEnd > 500);
+		let hasClaimer = (this.overlords.claim.claimers.length || 0);
+		let hasRoomPoisoner = (this.overlords.roomPoisoner.roomPoisoners.length || 0);
+		let hasScout = (this.overlords.scout.scouts.length || 0);
+		let hasReserver = (this.overlords.reserve.reservers.length || 0);
 
 		//spawn required creeps to contaminate if visible + safe + notRserved + notPoisoned, else spawn reserved is reserved by enemy
-		if(this.pos.isVisible && isSafe && !this.isPoisoned()){
-			if(isNotReserved){
-				this.overlords.claim = new ClaimingOverlord(this);
+		if((hasClaimer || hasRoomPoisoner || hasReserver) && (this.pos.isVisible && isSafe && !this.isPoisoned())){
+			if(isNotReservedByEnemy){
+				if(!(this.room && this.room.my)) this.overlords.claim = new ClaimingOverlord(this);
 				this.overlords.roomPoisoner = new RoomPoisonerOverlord(this);
 			}else{
 				this.overlords.reserve = new ReservingOverlord(this);		
 			}
 		}
-		//spawn stationary scout if not visible
-		if(!this.pos.isVisible){ //if not visible, send a scout
+		//spawn stationary scout if not visible nor claimed
+		if( !(this.room && this.room.my) && ((hasScout || !this.pos.isVisible))){
 			this.overlords.scout = new StationaryScoutOverlord(this);	
 		}
 	}
