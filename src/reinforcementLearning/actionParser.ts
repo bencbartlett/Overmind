@@ -9,6 +9,7 @@
 
 import {NeuralZerg} from '../zerg/NeuralZerg';
 import {RL_TRAINING_VERBOSITY} from '../~settings';
+import {TrainingOpponents} from './trainingOpponents';
 
 export const RL_ACTION_SEGMENT = 70;
 
@@ -132,7 +133,7 @@ export class ActionParser {
 	/**
 	 * Wraps all creeps as Zerg
 	 */
-	private static wrapZerg(): { [creepName: string]: NeuralZerg } {
+	private static getAllActors(): { [creepName: string]: NeuralZerg } {
 		return _.mapValues(Game.creeps, creep => new NeuralZerg(creep));
 	}
 
@@ -141,17 +142,37 @@ export class ActionParser {
 	 */
 	static run() {
 
-		const actors = ActionParser.wrapZerg();
-		const raw = RawMemory.segments[RL_ACTION_SEGMENT];
+		// Wrap all creep as NeuralZerg and partition actors into controllable and uncontrollable (scripted) sets
+		const allActors = ActionParser.getAllActors();
 
-		if (raw != undefined && raw != '') {
-			const actions = JSON.parse(raw);
-			ActionParser.parseActions(actors, actions);
-		} else {
-			console.log(`[${Game.time}]: No actions received!`);
+		const controllableActors: { [creepName: string]: NeuralZerg } = {};
+		const uncontrollableActors: { [creepName: string]: NeuralZerg } = {};
+
+		for (const name in allActors) {
+			const actor = allActors[name];
+			if (allActors[name].isBot) {
+				uncontrollableActors[name] = actor;
+			} else {
+				controllableActors[name] = actor;
+			}
 		}
 
-		RawMemory.setActiveSegments([RL_ACTION_SEGMENT]); // keep this segment requested during training
+		// Parse memory and relay actions to controllable actors
+		const raw = RawMemory.segments[RL_ACTION_SEGMENT];
+		if (raw != undefined && raw != '') {
+			const actions = JSON.parse(raw);
+			ActionParser.parseActions(controllableActors, actions);
+		} else {
+			if (_.size(controllableActors) > 0) {
+				console.log(`[${Game.time}]: No actions received!`);
+			}
+		}
+
+		// Run uncontrollable actors on a script
+		for (const name in uncontrollableActors) {
+			const bot = uncontrollableActors[name];
+			TrainingOpponents.stupidCombat(bot);
+		}
 
 		// Log state according to verbosity
 		if (RL_TRAINING_VERBOSITY == 0) {
@@ -163,6 +184,10 @@ export class ActionParser {
 		} else if (RL_TRAINING_VERBOSITY == 2) {
 			this.logState(raw);
 		}
+
+		// Clear the segment and keep it requested
+		RawMemory.segments[RL_ACTION_SEGMENT] = '';
+		RawMemory.setActiveSegments([RL_ACTION_SEGMENT]);
 
 	}
 

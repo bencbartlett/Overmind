@@ -10,8 +10,11 @@ import {CombatZerg} from './CombatZerg';
 @profile
 export class NeuralZerg extends CombatZerg {
 
+	isBot: boolean;
+
 	constructor(creep: Creep, notifyWhenAttacked = true) {
 		super(creep, notifyWhenAttacked);
+		this.isBot = creep.name.includes('_BOT');
 	}
 
 	approachHostiles() {
