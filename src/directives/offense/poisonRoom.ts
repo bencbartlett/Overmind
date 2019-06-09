@@ -70,10 +70,10 @@ export class DirectivePoisonRoom extends Directive {
 		//conditions:
 		let isSafe = this.room && !this.room.dangerousPlayerHostiles.length;
 		let isNotReservedByEnemy = !(this.room && this.room.controller && this.room.controller.reservation && this.room.controller.reservation.ticksToEnd > 500);
-		let hasClaimer = (this.overlords.claim.claimers.length || 0);
-		let hasRoomPoisoner = (this.overlords.roomPoisoner.roomPoisoners.length || 0);
-		let hasScout = (this.overlords.scout.scouts.length || 0);
-		let hasReserver = (this.overlords.reserve.reservers.length || 0);
+		let hasClaimer = (this.overlords.claim.claimers && this.overlords.claim.claimers.length);
+		let hasRoomPoisoner = (this.overlords.roomPoisoner.roomPoisoners && this.overlords.roomPoisoner.roomPoisoners.length);
+		let hasScout = (this.overlords.scout.scouts && this.overlords.scout.scouts.length);
+		let hasReserver = (this.overlords.reserve.reservers && this.overlords.reserve.reservers.length);
 
 		//spawn required creeps to contaminate if visible + safe + notRserved + notPoisoned, else spawn reserved is reserved by enemy
 		if((hasClaimer || hasRoomPoisoner || hasReserver) && (this.pos.isVisible && isSafe && !this.isPoisoned())){
