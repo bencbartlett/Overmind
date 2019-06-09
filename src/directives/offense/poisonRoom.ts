@@ -8,7 +8,7 @@ import {printRoomName} from '../../utilities/utils';
 import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
 import {Pathing} from '../../movement/Pathing';
-import {ReservingOverlord} from '../../overlords/colonization/reserver';
+import {ControllerAttackerOverlord} from '../../overlords/offense/controllerAttacker';
 import {OvermindConsole} from '../../console/Console';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 
@@ -33,7 +33,7 @@ export class DirectivePoisonRoom extends Directive {
         claim: ClaimingOverlord;
 		roomPoisoner: RoomPoisonerOverlord;
 		scout: StationaryScoutOverlord;
-		reserve: ReservingOverlord;
+		reserve: ControllerAttackerOverlord;
 	};
 
 	constructor(flag: Flag) {
@@ -77,7 +77,7 @@ export class DirectivePoisonRoom extends Directive {
 				if(!(this.room && this.room.my)) this.overlords.claim = new ClaimingOverlord(this);
 				this.overlords.roomPoisoner = new RoomPoisonerOverlord(this);
 			}else{
-				this.overlords.reserve = new ReservingOverlord(this);		
+				if(!(this.room && this.room.my)) this.overlords.reserve = new ControllerAttackerOverlord(this);		
 			}
 		}
 		//spawn stationary scout until claimed
