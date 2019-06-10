@@ -23,6 +23,9 @@ export type RLAction =
 	| ['rangedHeal', string]
 	| ['approachHostiles', null]
 	| ['avoidHostiles', null]
+	| ['approachAllies', null]
+	| ['avoidAllies', null]
+	| ['maneuver', [string[], string[]]]
 	| ['noop', null];
 
 /**
@@ -37,12 +40,13 @@ export class ActionParser {
 	 */
 	private static parseAction(actor: NeuralZerg, action: RLAction, autoEngage = true): boolean {
 
-		const [command, id] = action;
-		const targ: RoomObject | null = typeof id == 'string' ? Game.getObjectById(id) : null;
+		const command: string = action[0];
+		const predicate: any = action[1];
+		const targ: RoomObject | null = typeof predicate == 'string' ? Game.getObjectById(predicate) : null;
 
 		switch (command) {
 			case 'move':
-				actor.move(<DirectionConstant>id);
+				actor.move(<DirectionConstant>predicate);
 				break;
 			case 'goTo':
 				if (targ) actor.goTo(targ);
@@ -59,7 +63,7 @@ export class ActionParser {
 			case 'heal':
 				if (targ) {
 					actor.heal(<Creep>targ);
-				} else if (typeof id != 'string') {
+				} else if (typeof predicate != 'string') {
 					actor.heal(actor);
 				}
 				break;
@@ -71,6 +75,19 @@ export class ActionParser {
 				break;
 			case 'avoidHostiles':
 				actor.avoidHostiles();
+				break;
+			case 'approachAllies':
+				actor.approachAllies();
+				break;
+			case 'avoidAllies':
+				actor.avoidAllies();
+				break;
+			case 'maneuver':
+				const approachNames: string[] = predicate[0];
+				const avoidNames: string[] = predicate[1];
+				const approachTargs = _.map(approachNames, name => Game.creeps[name]);
+				const avoidTargs = _.map(avoidNames, name => Game.creeps[name]);
+				actor.maneuver(approachTargs, avoidTargs);
 				break;
 			case 'noop':
 				break;
@@ -171,7 +188,8 @@ export class ActionParser {
 		// Run uncontrollable actors on a script
 		for (const name in uncontrollableActors) {
 			const bot = uncontrollableActors[name];
-			TrainingOpponents.stupidCombat(bot);
+			// TrainingOpponents.stupidCombat(bot);
+			TrainingOpponents.simpleCombat(bot);
 		}
 
 		// Log state according to verbosity
