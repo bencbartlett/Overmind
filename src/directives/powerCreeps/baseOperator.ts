@@ -8,7 +8,7 @@ import {GenerateOps} from "./powers/generateOps";
 
 
 interface DirectiveBaseOperatorMemory extends FlagMemory {
-	powerPriorities: PowerConstant[]
+	powerPriorities: PowerConstant[];
 }
 
 /**
@@ -26,7 +26,7 @@ export class DirectiveBaseOperator extends Directive {
 	// Power Creep Hack
 	powerCreep: PowerCreep;
 
-	defaultPowerPriorities: [
+	defaultPowerPriorities: PowerConstant[] = [
 		PWR_GENERATE_OPS,
 		PWR_REGEN_SOURCE,
 		PWR_OPERATE_TOWER,
@@ -63,24 +63,29 @@ export class DirectiveBaseOperator extends Directive {
 	// Wrapped powerCreep methods ===========================================================================================
 
 	renew(powerSource: StructurePowerBank | StructurePowerSpawn) {
-		if (this.pos.inRangeToPos(powerSource.pos, 1)) {
+		if (this.powerCreep.pos.inRangeToPos(powerSource.pos, 1)) {
 			return this.powerCreep.renew(powerSource);
 		} else {
-			return this.powerCreep.moveTo(powerSource);
+			return this.powerCreep.moveTo(powerSource, {ignoreRoads: true, range: 1, swampCost: 1, reusePath: 0, visualizePathStyle: {lineStyle: "dashed", fill: 'yellow'}});
 		}
 	}
 
 	enablePower(controller: StructureController) {
-		if (this.pos.inRangeToPos(controller.pos, 1)) {
+		log.alert(`Trying to enable power for ${controller} with `);
+		if (this.powerCreep.pos.inRangeToPos(controller.pos, 1)) {
 			return this.powerCreep.enableRoom(controller);
 		} else {
-			return this.powerCreep.moveTo(controller);
+			//let path = this.powerCreep.pos.findPathTo(controller, {ignoreRoads: true, range: 1, swampCost: 1});
+			//log.alert(`Trying to enable power for ${controller} with ${JSON.stringify(path)}`);
+			//return this.powerCreep.moveByPath(path);
+			return this.powerCreep.moveTo(controller.pos, {ignoreRoads: true, range: 1, swampCost: 1, reusePath: 0, visualizePathStyle: {lineStyle: "solid"}});
 		}
 	}
 
 	usePower(power: PowerConstant) {
+		console.log(`The power constant is ${power}`)
 		switch(power) {
-			case PWR_GENERATE_OPS: return new GenerateOps();
+			case PWR_GENERATE_OPS: return new GenerateOps(this.powerCreep);
 //			case PWR_OPERATE_SPAWN: return this.operateSpawn();
 		}
 
@@ -217,8 +222,10 @@ export class DirectiveBaseOperator extends Directive {
 
 	runPowers() {
 		const priorities = this.memory.powerPriorities;
-		for (let powerId of priorities) {
-			let powerToUse = this.usePower(powerId);
+		console.log(`Powerid of priority list of ${priorities}`);
+		for (let powerId in priorities) {
+			console.log(`Powerid of ${powerId} and list of ${priorities}`);
+			let powerToUse = this.usePower(priorities[powerId]);
 			if (powerToUse && powerToUse.operatePower()) {
 				break;
 			}
@@ -227,18 +234,23 @@ export class DirectiveBaseOperator extends Directive {
 
 
 	run(): void {
+		console.log(`Running power creep ${JSON.stringify(this.powerCreep)} with ttl ${this.powerCreep.ticksToLive} with ${this.room!.powerSpawn}`);
 		if (!this.room) {
 			return;
-		} else if (this.powerCreep.ticksToLive == undefined && this.powerCreep.spawnCooldownTime !> 0 && this.room && this.room.powerSpawn) {
+		} else if (!this.powerCreep.ticksToLive && this.room && this.room.powerSpawn) {
 			// Spawn creep
-			this.powerCreep.spawn(this.room.powerSpawn);
+			let res = this.powerCreep.spawn(this.room.powerSpawn);
+			log.alert(`Running ${this.powerCreep} with spawn of ${res}`);
 		} else if (this.room.controller && !this.room.controller.isPowerEnabled) {
 			// Enable power
-			this.enablePower(this.room.controller);
-		} else if (this.powerCreep && this.powerCreep.ticksToLive && this.powerCreep.ticksToLive < 300 && this.room.powerSpawn) {
-			this.renew(this.room.powerSpawn);
+			let res = this.enablePower(this.room.controller);
+			log.alert(`Running ${this.powerCreep} with enable power of ${res}`);
+		} else if (this.powerCreep && this.powerCreep.ticksToLive && this.powerCreep.ticksToLive < 400 && this.room.powerSpawn) {
+			let res = this.renew(this.room.powerSpawn);
+			log.alert(`Running ${this.powerCreep} with renew of ${res}`);
 		} else {
-			this.runPowers();
+			let res = this.runPowers();
+			log.alert(`Running ${this.powerCreep} with power of ${res}`);
 		}
 
 

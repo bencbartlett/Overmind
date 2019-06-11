@@ -9,6 +9,11 @@ export const powerId = PWR_GENERATE_OPS;
  */
 @profile
 export class GenerateOps extends Power {
+
+	constructor(powerCreep: PowerCreep, target?: RoomObject) {
+		super(powerCreep, target);
+	}
+
 	operatePower() {
 		if (this.powerCreep.carry.ops && this.powerCreep.carry.ops > (this.powerCreep.carryCapacity * 0.9)) {
 			const terminal = this.powerCreep.room!.terminal;
