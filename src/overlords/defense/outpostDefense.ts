@@ -27,6 +27,9 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 
 	private handleCombat(zerg: CombatZerg): void {
 		if (this.room && this.room.hostiles.length == 0) {
+			if (zerg.pos.getRangeTo(this.directive.pos) > 4) {
+                zerg.goTo(this.directive.pos);
+            }
 			zerg.doMedicActions(this.room.name);
 		} else {
 			zerg.autoSkirmish(this.pos.roomName);
