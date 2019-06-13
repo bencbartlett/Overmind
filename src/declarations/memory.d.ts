@@ -29,6 +29,11 @@ interface Memory {
 	resetBucket?: boolean;
 	haltTick?: number;
 	combatPlanner: any;
+	reinforcementLearning?: {
+		enabled?: boolean;
+		verbosity?: number;
+		workerIndex?: number;
+	};
 
 	[otherProperty: string]: any;
 }
@@ -78,7 +83,7 @@ interface PublicSegment {
 
 interface CreepMemory {
 	[_MEM.OVERLORD]: string | null;
-	[_MEM.COLONY]: string;
+	[_MEM.COLONY]: string | null;
 	role: string;
 	task: ProtoTask | null;
 	data: {
@@ -93,10 +98,14 @@ interface CreepMemory {
 interface MoveData {
 	state: any[];
 	path: string;
+	roomVisibility: { [roomName: string]: boolean };
 	delay?: number;
 	fleeWait?: number;
 	destination?: ProtoPos;
 	priority?: number;
+	waypoints?: string[];
+	waypointsVisited?: string[];
+	portaling?: boolean;
 }
 
 interface LoggerMemory {
@@ -133,55 +142,10 @@ interface FlagMemory {
 	keepStorageStructures?: boolean;
 	keepRoads?: boolean;
 	keepContainers?: boolean;
+	waypoints?: string[];
 }
 
 // Room memory key aliases to minimize memory size
-
-// declare const _TICK = 'T';
-// declare const _EXPIRATION = 'X';
-// declare const _COLONY = 'C';
-// declare const _OVERLORD = 'O';
-// declare const _DISTANCE = 'D';
-//
-// declare const _RM_AVOID = 'a';
-// declare const _RM_SOURCE = 's';
-// declare const _RM_CONTROLLER = 'c';
-// declare const _RM_MINERAL = 'm';
-// declare const _RM_SKLAIRS = 'k';
-// declare const _RM_EXPANSIONDATA = 'e';
-// declare const _RM_INVASIONDATA = 'v';
-// declare const _RM_HARVEST = 'h';
-// declare const _RM_CASUALTIES = 'd';
-// declare const _RM_SAFETY = 'f';
-// declare const _RM_PREVPOSITIONS = 'p';
-// declare const _RM_CREEPSINROOM = 'cr';
-//
-// declare const _RM_IMPORTANTSTRUCTURES = 'i';
-// declare const _RM_IS_TOWERS = 't';
-// declare const _RM_IS_SPAWNS = 'sp';
-// declare const _RM_IS_STORAGE = 's';
-// declare const _RM_IS_TERMINAL = 'e';
-// declare const _RM_IS_WALLS = 'w';
-// declare const _RM_IS_RAMPARTS = 'r';
-//
-// declare const _AMOUNT = 'a';
-// declare const _AVG10K = 'D';
-// declare const _AVG100K = 'H';
-// declare const _AVG1M = 'M';
-//
-// declare const _CTRL_LEVEL = 'l';
-// declare const _CTRL_OWNER = 'o';
-// declare const _CTRL_RESERVATION = 'r';
-// declare const _CTRL_RES_USERNAME = 'u';
-// declare const _CTRL_RES_TICKSTOEND = 't';
-// declare const _CTRL_SAFEMODE = 's';
-// declare const _CTRL_SAFEMODE_AVAILABLE = 'sa';
-// declare const _CTRL_SAFEMODE_COOLDOWN = 'sc';
-// declare const _CTRL_PROGRESS = 'p';
-// declare const _CTRL_PROGRESSTOTAL = 'pt';
-//
-// declare const _MNRL_MINERALTYPE = 't';
-// declare const _MNRL_DENSITY = 'd';
 
 declare const enum _MEM {
 	TICK       = 'T',
@@ -204,7 +168,8 @@ declare const enum _RM {
 	SAFETY               = 'f',
 	PREV_POSITIONS       = 'p',
 	CREEPS_IN_ROOM       = 'cr',
-	IMPORTANT_STRUCTURES = 'i'
+	IMPORTANT_STRUCTURES = 'i',
+	PORTALS              = 'pr',
 }
 
 declare const enum _RM_IS {
@@ -262,6 +227,7 @@ interface RoomMemory {
 	[_RM.AVOID]?: boolean;
 	[_RM.SOURCES]?: SavedSource[];
 	[_RM.CONTROLLER]?: SavedController | undefined;
+	[_RM.PORTALS]?: SavedPortal[];
 	[_RM.MINERAL]?: SavedMineral | undefined;
 	[_RM.SKLAIRS]?: SavedRoomObject[];
 	[_RM.IMPORTANT_STRUCTURES]?: {
@@ -293,6 +259,11 @@ interface SavedRoomObject {
 
 interface SavedSource extends SavedRoomObject {
 	contnr: string | undefined;
+}
+
+interface SavedPortal extends SavedRoomObject {
+	dest: string | { shard: string, room: string }; // destination name
+	[_MEM.EXPIRATION]: number; // when portal will decay
 }
 
 interface SavedController extends SavedRoomObject {
