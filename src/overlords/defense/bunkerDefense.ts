@@ -5,7 +5,7 @@ import {profile} from '../../profiler/decorator';
 import {boostResources} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
-import {log} from "../../console/log";
+import {log} from '../../console/log';
 
 /**
  * Spawns bunker-only defenders to defend against incoming sieges
@@ -52,7 +52,7 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 			this.wishlist(1, setup);
 		} else {
 			const setup = CombatSetups.bunkerGuard.halfMove;
-			this.wishlist(2, setup);
+			this.wishlist(1, setup);
 		}
 	}
 

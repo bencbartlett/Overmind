@@ -1,12 +1,11 @@
 import {CombatIntel} from '../intel/CombatIntel';
+import {insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {Movement, NO_ACTION} from '../movement/Movement';
 import {profile} from '../profiler/decorator';
 import {CombatTargeting} from '../targeting/CombatTargeting';
 import {GoalFinder} from '../targeting/GoalFinder';
 import {randomHex} from '../utilities/utils';
 import {Zerg} from './Zerg';
-import {insideBunkerBounds} from "../roomPlanner/layouts/bunker";
-import {Colony} from "../Colony";
 
 interface CombatZergMemory extends CreepMemory {
 	recovering: boolean;
@@ -287,10 +286,9 @@ export class CombatZerg extends Zerg {
 			return this.goToRoom(roomName, {ensurePath: true});
 		}
 
-		//let colony = Overmind.colonies[Overmind.colonyMap[roomName]] as Colony | undefined;
 		// TODO check if right colony
-		let siegingCreeps = this.room.hostiles.filter(creep => _.any(creep.pos.neighbors, pos => insideBunkerBounds(pos, this.colony)));
-
+		const siegingCreeps = this.room.hostiles.filter(creep =>
+			_.any(creep.pos.neighbors, pos => insideBunkerBounds(pos, this.colony)));
 
 		const target = CombatTargeting.findTarget(this, siegingCreeps);
 
