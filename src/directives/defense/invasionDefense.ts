@@ -1,11 +1,12 @@
-import {ColonyStage} from '../../Colony';
 import {CombatIntel} from '../../intel/CombatIntel';
-import {Directive} from '../Directive';
 import {BunkerDefenseOverlord} from '../../overlords/defense/bunkerDefense';
 import {MeleeDefenseOverlord} from '../../overlords/defense/meleeDefense';
 import {RangedDefenseOverlord} from '../../overlords/defense/rangedDefense';
-import {NotifierPriority} from '../Notifier';
 import {profile} from '../../profiler/decorator';
+
+import {ColonyStage} from '../../Colony';
+import {Directive} from '../Directive';
+import {NotifierPriority} from '../Notifier';
 
 interface DirectiveInvasionDefenseMemory extends FlagMemory {
 	persistent?: boolean;

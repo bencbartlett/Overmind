@@ -1,3 +1,4 @@
+import {log} from '../../console/log';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -5,7 +6,6 @@ import {profile} from '../../profiler/decorator';
 import {boostResources} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
-import {log} from '../../console/log';
 
 /**
  * Spawns bunker-only defenders to defend against incoming sieges

@@ -1,7 +1,7 @@
 import {CombatIntel} from '../intel/CombatIntel';
-import {insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {Movement, NO_ACTION} from '../movement/Movement';
 import {profile} from '../profiler/decorator';
+import {insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {CombatTargeting} from '../targeting/CombatTargeting';
 import {GoalFinder} from '../targeting/GoalFinder';
 import {randomHex} from '../utilities/utils';
@@ -286,16 +286,15 @@ export class CombatZerg extends Zerg {
 			return this.goToRoom(roomName, {ensurePath: true});
 		}
 
-		// TODO check if right colony
+		// TODO check if right colony, also yes colony check is in there to stop red squigglies
 		const siegingCreeps = this.room.hostiles.filter(creep =>
-			_.any(creep.pos.neighbors, pos => insideBunkerBounds(pos, this.colony)));
+			_.any(creep.pos.neighbors, pos => this.colony && insideBunkerBounds(pos, this.colony)));
 
 		const target = CombatTargeting.findTarget(this, siegingCreeps);
 
 		if (target) {
 			return Movement.combatMove(this, [{pos: target.pos, range: 1}], [], {preferRamparts: true, requireRamparts: true});
 		}
-
 	}
 
 	needsToRecover(recoverThreshold  = CombatIntel.minimumDamageTakenMultiplier(this.creep) < 1 ? 0.85 : 0.75,
