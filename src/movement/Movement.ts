@@ -33,6 +33,7 @@ const STATE_CURRENT_Y = 8;
 export const MovePriorities = {
 	[Roles.manager]   : 1,
 	[Roles.queen]     : 2,
+	[Roles.bunkerGuard]: 3,
 	[Roles.melee]     : 3,
 	[Roles.ranged]    : 4,
 	[Roles.guardMelee]: 5,
@@ -1008,6 +1009,7 @@ export class Movement {
 				const matrix = Pathing.getDefaultMatrix(creep.room).clone();
 				Pathing.blockMyCreeps(matrix, creep.room);
 				Pathing.blockHostileCreeps(matrix, creep.room);
+				if (options.requireRamparts) { Pathing.blockNonRamparts(matrix, creep.room); }
 				Movement.combatMoveCallbackModifier(creep.room, matrix, approach, avoid, options);
 				if (options.displayCostMatrix) {
 					Visualizer.displayCostMatrix(matrix, roomName);
@@ -1079,9 +1081,6 @@ export class Movement {
 					if (outcome == OK) {
 						return outcome;
 					}
-				} else if (options.requireRamparts) {
-					log.alert(`Canceling move order for non-ramparted area for ${creep.print}`);
-					creep.cancelOrder('move');
 				}
 			}
 		}

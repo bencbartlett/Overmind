@@ -1,7 +1,5 @@
-import {CreepSetup} from '../../creepSetups/CreepSetup';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
-import {CombatIntel} from '../../intel/CombatIntel';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {boostResources} from '../../resources/map_resources';
@@ -34,8 +32,16 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 
 	private handleDefender(lurker: CombatZerg): void {
 		log.debug(`Running BunkerDefender in room ${this.room.print}`);
+		if (!lurker.inRampart) {
+			const nearRampart = _.find(lurker.room.walkableRamparts, rampart => rampart.pos.getRangeTo(lurker) < 5);
+			if (nearRampart) {
+				lurker.goTo(nearRampart);
+			}
+		}
 		if (lurker.room.hostiles.length > 0) {
 			lurker.autoBunkerCombat(lurker.room.name);
+		} else {
+			// go out of way in bunker
 		}
 	}
 
