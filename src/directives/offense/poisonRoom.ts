@@ -6,9 +6,7 @@ import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {printRoomName} from '../../utilities/utils';
 import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
-import {Pathing} from '../../movement/Pathing';
 import {OvermindConsole} from '../../console/Console';
-import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 import {OutpostDefenseOverlord} from '../../overlords/defense/outpostDefense';
 import {ColonyMemory} from '../../Colony';
 
@@ -16,6 +14,7 @@ interface DirectivePoisonRoomMemory extends FlagMemory {
 	poisonSourcesOnly: boolean;
 	removeIfPoisoned: boolean;
 	isPoisoned: boolean;
+	isHostile: boolean;
 
 	//the below are not used, but required for OutpostDefenseOverlord
 	persistent?: boolean;
@@ -51,6 +50,7 @@ export class DirectivePoisonRoom extends Directive {
 		this.memory.poisonSourcesOnly = false;
 		this.memory.removeIfPoisoned = true;
 		this.memory.isPoisoned = this.isPoisoned();
+		this.memory.isHostile = (this.room && this.room.hostiles.length > 0)? true:false;
 
 		// Remove if misplaced
 		if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
@@ -76,13 +76,14 @@ export class DirectivePoisonRoom extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		this.overlords.scout = new StationaryScoutOverlord(this); // TODO: Not have a scout at all times
+		this.overlords.scout = new StationaryScoutOverlord(this);
 		//if room is visible + not claimed + GCL not enough, do not spawn roomPoisiner
 		if(this.pos.isVisible && this.room && !this.room.my && _.values(Overmind.colonies).length >= Game.gcl.level){
 			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} not enough GCL to contaminate room;`);
 			return;
 		}
-		if(this.room && this.room.hostiles.length > 0){
+		if((this.room && this.room.hostiles.length > 0) || this.memory.isHostile){
+			this.memory.isHostile = true; //once hostile, always hostile
 			this.overlords.defenders = new OutpostDefenseOverlord(this);
 		}
 		this.overlords.roomPoisoner = new RoomPoisonerOverlord(this);
@@ -102,13 +103,6 @@ export class DirectivePoisonRoom extends Directive {
 		if(this.room && this.room.controller){
 			this.walkableSourcePosisions = _.filter(_.flatten(_.map(this.room.sources, s => s.pos.neighbors)),pos => pos.isWalkable(true));
 			this.walkableControllerPosisions =  _.filter(this.room.controller!.pos.neighbors, pos => pos.isWalkable(true));
-		}
-
-		//enemy creeps can block/attack operation, create OutpostDefense Directive to kill them
-		//NOTE: allowUnowned flag in findBestStructureTargetInRange for autoMele and autoRanged (combatZerg.ts) is set to false
-		//		this is to prevent melee/ranged defences from destoying constucuted walls.
-		if(this.room && this.room.playerHostiles.length > 0 && !this.isPoisoned()){	
-			DirectiveInvasionDefense.createIfNotPresent(Pathing.findPathablePosition(this.room.name),'room');
 		}
 	}
 
