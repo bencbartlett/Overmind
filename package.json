@@ -31,10 +31,10 @@
     "rollup-plugin-node-resolve": "3.3.0",
     "rollup-plugin-progress": "^0.4.0",
     "rollup-plugin-screeps": "0.1.2",
-    "rollup-plugin-typescript2": "0.16.1",
+    "rollup-plugin-typescript2": "^0.16.1",
     "tslint": "^5.16.0",
     "typedoc": "^0.14.2",
-    "typescript": "2.9.2"
+    "typescript": "^2.9.2"
   },
   "dependencies": {
     "@tensorflow/tfjs": "^1.1.2",
