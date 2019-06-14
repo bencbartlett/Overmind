@@ -76,15 +76,16 @@ export class DirectivePoisonRoom extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		this.overlords.scout = new StationaryScoutOverlord(this);
 		//if room is visible + not claimed + GCL not enough, do not spawn roomPoisiner
 		if(this.pos.isVisible && this.room && !this.room.my && _.values(Overmind.colonies).length >= Game.gcl.level){
 			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} not enough GCL to contaminate room;`);
 			return;
 		}
 		if((this.room && this.room.hostiles.length > 0) || this.memory.isHostile){
-			this.memory.isHostile = true; //once hostile, always hostile
+			this.memory.isHostile = true; //once hostile, always hostile, do not send scouts and always send defenders
 			this.overlords.defenders = new OutpostDefenseOverlord(this);
+		} else{
+			this.overlords.scout = new StationaryScoutOverlord(this);
 		}
 		this.overlords.roomPoisoner = new RoomPoisonerOverlord(this);
 	}
