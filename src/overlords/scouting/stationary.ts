@@ -19,8 +19,7 @@ export class StationaryScoutOverlord extends Overlord {
 	}
 
 	init() {
-		const amount = (this.pos.isVisible) ? 0 : 1;
-		this.wishlist(amount, Setups.scout);
+		this.wishlist(1, Setups.scout);
 	}
 
 	run() {
