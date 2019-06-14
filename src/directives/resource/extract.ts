@@ -36,8 +36,8 @@ export class DirectiveExtract extends Directive {
 		} else {
 			priority = OverlordPriority.remoteSKRoom.mineral;
 		}
-		//Fix: Only spawn drones if there is a terminal or storage
-		if (!!this.colony.terminal || !!this.colony.storage){
+		// Only spawn drones if there is a terminal or storage
+		if (!!this.colony.terminal || !!this.colony.storage) {
 			this.overlords.extract = new ExtractorOverlord(this, priority);
 		}
 	}

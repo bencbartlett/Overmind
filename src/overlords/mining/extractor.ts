@@ -99,22 +99,13 @@ export class ExtractorOverlord extends Overlord {
 	}
 
 	init() {
-		const amount = this.mineral && this.mineral.mineralAmount > 0 ? this.mineral.pos.availableNeighbors().length : 0;
+		const amount = this.mineral && this.mineral.mineralAmount > 0 && this.container? 
+					   this.mineral.pos.availableNeighbors().length : 0;
 		this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), Setups.drones.extractor);
 		this.registerOutputRequests();
 	}
 
 	private handleDrone(drone: Zerg): void {
-		//fix: if there is no container, then transfer the minerals yourself!
-		if(!this.container && _.sum(drone.carry) == drone.carryCapacity ){
-            const dropoffPoints: (StructureTerminal | StructureStorage)[] = _.compact([this.colony.terminal!]);
-			const bestDropoffPoint = drone.pos.findClosestByMultiRoomRange(dropoffPoints);
-			if (bestDropoffPoint) {
-				drone.task = Tasks.transferAll(bestDropoffPoint);
-				return;
-			}
-        }
-		
 		// Ensure you are in the assigned room
 		if (drone.room == this.room && !drone.pos.isEdge) {
 			if (_.sum(drone.carry) == 0) {
