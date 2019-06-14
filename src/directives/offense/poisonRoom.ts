@@ -1,4 +1,3 @@
-import {ClaimingOverlord} from '../../overlords/colonization/claimer';
 import {StationaryScoutOverlord} from '../../overlords/scouting/stationary';
 import {RoomPoisonerOverlord} from '../../overlords/offense/roomPoisoner';
 import {log} from '../../console/log';
@@ -8,10 +7,20 @@ import {printRoomName} from '../../utilities/utils';
 import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
 import {Pathing} from '../../movement/Pathing';
-import {ControllerAttackerOverlord} from '../../overlords/offense/controllerAttacker';
 import {OvermindConsole} from '../../console/Console';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
+import {OutpostDefenseOverlord} from '../../overlords/defense/outpostDefense';
 
+interface DirectivePoisonRoomMemory extends FlagMemory {
+	poisonSourcesOnly: boolean;
+	removeIfPoisoned: boolean;
+	isPoisoned: boolean;
+
+	//the below are not used, but required for OutpostDefenseOverlord
+	persistent?: boolean;
+	created: number;
+	safeSince: number;
+}
 
 /**
  * Poison sources in remote rooms by claiming controller, walling in its sources and controller then unclaiming it.
@@ -23,21 +32,25 @@ export class DirectivePoisonRoom extends Directive {
 	static color = COLOR_RED;
 	static secondaryColor = COLOR_BROWN;
 	static requiredRCL = 4;
-	static poisonSourcesOnly = false;
-	static removeIfPoisoned = true;
 	
+	memory: DirectivePoisonRoomMemory;
+
 	walkableSourcePosisions: RoomPosition[];
 	walkableControllerPosisions: RoomPosition[];
 
 	overlords: {
-        claim: ClaimingOverlord;
 		roomPoisoner: RoomPoisonerOverlord;
 		scout: StationaryScoutOverlord;
-		reserve: ControllerAttackerOverlord;
+		defenders: OutpostDefenseOverlord;
 	};
 
 	constructor(flag: Flag) {
 		super(flag, colony => colony.level >= DirectivePoisonRoom.requiredRCL);
+
+		this.memory.poisonSourcesOnly = false;
+		this.memory.removeIfPoisoned = true;
+		this.memory.isPoisoned = this.isPoisoned();
+
 		// Remove if misplaced
 		if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
 			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
@@ -53,7 +66,7 @@ export class DirectivePoisonRoom extends Directive {
 		}
 		
 		// remove if already contaminated (if visible)
-		if (DirectivePoisonRoom.removeIfPoisoned && this.isPoisoned()) {
+		if (this.memory.removeIfPoisoned && this.isPoisoned()) {
 			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is already contaminated; ` +
 						`removing directive!`);
 			this.remove(true);
@@ -62,28 +75,16 @@ export class DirectivePoisonRoom extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		//if room is visible + not claimed + GCL not enough, do not spawn claim/roomPoisiner
+		this.overlords.scout = new StationaryScoutOverlord(this); // TODO: Not have a scout at all times
+		//if room is visible + not claimed + GCL not enough, do not spawn roomPoisiner
 		if(this.pos.isVisible && this.room && !this.room.my && _.values(Overmind.colonies).length >= Game.gcl.level){
 			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} not enough GCL to contaminate room;`);
 			return;
 		}
-		//conditions:
-		let isSafe = this.room && !this.room.dangerousPlayerHostiles.length;
-		let isNotReservedByEnemy = !(this.room && this.room.controller && this.room.controller.reservation && this.room.controller.reservation.ticksToEnd > 500);
-
-		//spawn required creeps to contaminate if visible + safe + notRserved + notPoisoned, else spawn reserved is reserved by enemy
-		if((this.pos.isVisible && isSafe && !this.isPoisoned())){
-			if(isNotReservedByEnemy){
-				if(!(this.room && this.room.my)) this.overlords.claim = new ClaimingOverlord(this);
-				this.overlords.roomPoisoner = new RoomPoisonerOverlord(this);
-			}else{
-				if(!(this.room && this.room.my)) this.overlords.reserve = new ControllerAttackerOverlord(this);		
-			}
+		if(this.room && this.room.hostiles.length > 0){
+			this.overlords.defenders = new OutpostDefenseOverlord(this);
 		}
-		//spawn stationary scout until claimed
-		if( !(this.room && this.room.my)){
-			this.overlords.scout = new StationaryScoutOverlord(this);	
-		}
+		this.overlords.roomPoisoner = new RoomPoisonerOverlord(this);
 	}
 
 	init() {
@@ -112,7 +113,7 @@ export class DirectivePoisonRoom extends Directive {
 				_.forEach(this.walkableSourcePosisions,pos=>{pos.createConstructionSite(STRUCTURE_WALL)});
 			}
 			//wall in controller, if option is selected
-			if(!DirectivePoisonRoom.poisonSourcesOnly && this.walkableControllerPosisions.length){
+			if(!this.memory.poisonSourcesOnly && this.walkableControllerPosisions.length){
 				_.forEach(this.walkableControllerPosisions,pos=>{pos.createConstructionSite(STRUCTURE_WALL)});
 			}
 		} else {
@@ -124,7 +125,7 @@ export class DirectivePoisonRoom extends Directive {
 		let result = false;
 		if (this.room && this.room.controller!.level > 1) {
 			result = !!this.walkableSourcePosisions && !this.walkableSourcePosisions.length;
-			if(!DirectivePoisonRoom.poisonSourcesOnly){
+			if(!this.memory.poisonSourcesOnly){
 				result = result && !!this.walkableControllerPosisions && !this.walkableControllerPosisions.length;
 			}
 			return result;
@@ -141,10 +142,6 @@ export class DirectivePoisonRoom extends Directive {
 					//suspend the colony to prevent colonization/harvest flags
 					OvermindConsole.suspendColony(this.room.name);
 
-					//kill claimer if room claimed, it can be blocking wall csite creation
-					if (this.overlords.claim.claimers && this.overlords.claim.claimers.length){
-						this.overlords.claim.claimers[0].suicide();
-					}
 					//remove any containers that can be next to sources
 					if(this.room.hostiles.length){
 						log.warning(`room ${this.print}: ${printRoomName(this.pos.roomName)} poisoning directive can't destory/remove structures/csites due to hostiles presense`);
@@ -172,7 +169,7 @@ export class DirectivePoisonRoom extends Directive {
 						this.room.controller!.unclaim();
 						
 						//remove direcitve if done, or keep it for constant harassement
-						if(DirectivePoisonRoom.removeIfPoisoned){
+						if(this.memory.removeIfPoisoned){
 							log.notify(`Removing poisonRoom directive in ${this.pos.roomName}: operation completed.`);
 							this.remove();
 						}
