@@ -16,7 +16,7 @@ import {CombatOverlord} from '../CombatOverlord';
 @profile
 export class DistractionOverlord extends CombatOverlord {
 
-	distraction: CombatZerg[];
+	distractions: CombatZerg[];
 	room: Room;
 
 	static settings = {
@@ -28,18 +28,23 @@ export class DistractionOverlord extends CombatOverlord {
 				boosted  = false,
 				priority = OverlordPriority.defense.rangedDefense) {
 		super(directive, 'distraction', priority, 1);
-		this.distraction = this.combatZerg(Roles.ranged);
+		this.distractions = this.combatZerg(Roles.ranged);
 	}
 
 	private handleDistraction(distraction: CombatZerg): void {
 		if (this.room.hostiles.length > 0) {
-			distraction.autoCombat(this.room.name, false, 5);
+			distraction.autoCombat(this.room.name, false, 5, {preferRamparts: false});
 			this.taunt(distraction, this.room.hostiles[0].owner.username);
+			const nearbyHostiles = this.room.hostiles.filter(hostile => hostile.pos.getRangeTo(distraction) <= 6);
+			if (nearbyHostiles.length > 0) {
+				distraction.kite(nearbyHostiles);
+			}
 		}
 	}
 
-	taunt(distraction: CombatZerg, name?: string) {
-		const taunts: string[] = ['Heylisten!', 'Pssssst', 'Catch Me!', `Hi ${name || ''}`, '🍑🍑🍑', '🏎️ VROOM'];
+	static taunt(distraction: CombatZerg, name?: string) {
+		const taunts: string[] = ['Heylisten!', 'Pssssst', 'So close', '🎣', 'Try harder', 'Get good;)', 'Base ⬆️', '🔜',
+			'⚠️Swamp⚠️', 'Follow me!', 'Catch Me!', `Hi ${name || ''}`, '🍑🍑🍑', '🏎️ VROOM'];
 		distraction.sayRandom(taunts, true);
 	}
 
@@ -50,6 +55,7 @@ export class DistractionOverlord extends CombatOverlord {
 	}
 
 	run() {
-		this.autoRun(this.distraction, distraction => this.handleDistraction(distraction));
+		console.log(`Distraction overlord running in ${this.room.print} with ${this.distractions}!`);
+		this.autoRun(this.distractions, distraction => this.handleDistraction(distraction));
 	}
 }
