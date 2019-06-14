@@ -33,6 +33,7 @@ const STATE_CURRENT_Y = 8;
 export const MovePriorities = {
 	[Roles.manager]   : 1,
 	[Roles.queen]     : 2,
+	[Roles.bunkerGuard]: 3,
 	[Roles.melee]     : 3,
 	[Roles.ranged]    : 4,
 	[Roles.guardMelee]: 5,
@@ -92,6 +93,7 @@ export interface CombatMoveOptions {
 	avoidPenalty?: number;
 	approachBonus?: number;
 	preferRamparts?: boolean;
+	requireRamparts?: boolean;
 	displayCostMatrix?: boolean;
 	displayAvoid?: boolean;
 }
@@ -998,6 +1000,7 @@ export class Movement {
 			avoidPenalty  : 10,
 			approachBonus : 5,
 			preferRamparts: true,
+			requireRamparts: false,
 		});
 
 		const debug = false;
@@ -1006,6 +1009,7 @@ export class Movement {
 				const matrix = Pathing.getDefaultMatrix(creep.room).clone();
 				Pathing.blockMyCreeps(matrix, creep.room);
 				Pathing.blockHostileCreeps(matrix, creep.room);
+				if (options.requireRamparts) { Pathing.blockNonRamparts(matrix, creep.room); }
 				Movement.combatMoveCallbackModifier(creep.room, matrix, approach, avoid, options);
 				if (options.displayCostMatrix) {
 					Visualizer.displayCostMatrix(matrix, roomName);
@@ -1059,7 +1063,7 @@ export class Movement {
 		}
 
 		// Try to maneuver under ramparts if possible
-		if (options.preferRamparts && !creep.inRampart && approach.length > 0) {
+		if ((options.preferRamparts || options.requireRamparts) && !creep.inRampart && approach.length > 0) {
 			const openRamparts = _.filter(creep.room.walkableRamparts,
 										  rampart => _.any(approach,
 														   g => rampart.pos.inRangeToXY(g.pos.x, g.pos.y, g.range))
