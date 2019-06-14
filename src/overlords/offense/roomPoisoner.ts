@@ -16,7 +16,7 @@ import {Overlord} from '../Overlord';
 export class RoomPoisonerOverlord extends Overlord {
 
 	roomPoisoners: Zerg[];
-	reservers: Zerg[]; //claim and counter reserve if required
+	antiControllers: Zerg[]; //claim and counter reserve if required
 
     controllerWallSites: ConstructionSite[] | undefined;
     sourcesWallSites: ConstructionSite[] | undefined;
@@ -24,7 +24,7 @@ export class RoomPoisonerOverlord extends Overlord {
 	constructor(directive: DirectivePoisonRoom, priority = OverlordPriority.offense.roomPoisoner) {
 		super(directive, 'contaminate', priority);
 		this.roomPoisoners = this.zerg(Roles.roomPoisoner);
-		this.reservers = this.zerg(Roles.claim);
+		this.antiControllers = this.zerg(Roles.claim);
 
 		this.controllerWallSites = (this.room && this.room.controller) ? _.filter(this.room.constructionSites,
                                                                     s => s.structureType == STRUCTURE_WALL &&
@@ -55,7 +55,7 @@ export class RoomPoisonerOverlord extends Overlord {
 				if(!(this.room && this.room.my)) this.wishlist(1, Setups.infestors.claim);
 				this.wishlist(1, Setups.roomPoisoner);
 			}else{
-				if(!(this.room && this.room.my)) this.wishlist(1, Setups.infestors.reserve);	
+				if(!(this.room && this.room.my)) this.wishlist(1, Setups.infestors.controllerAttacker);	
 			}
 		}
 	}
@@ -119,28 +119,28 @@ export class RoomPoisonerOverlord extends Overlord {
 		}
 	}
 
-	private handleReserver(reserver: Zerg): void {					
-		if (reserver.room == this.room && !reserver.pos.isEdge) {
+	private handleReserver(antiController: Zerg): void {					
+		if (antiController.room == this.room && !antiController.pos.isEdge) {
 			//kill claimer if room claimed, it can be blocking wall csite creation
 			if (this.room.my && this.room!.controller!.level == 2){
-				reserver.suicide();
+				antiController.suicide();
 				return;
 			}
 			//counter reserver if reserved by enemy. else, claim it
 			if (this.room && this.room.controller && this.room.controller.reservation && this.room.controller.reservation.username != MY_USERNAME) {
-				reserver.task = Tasks.reserve(this.room.controller!);
+				antiController.attackController(this.room.controller);
 			} else {
-				reserver.task = Tasks.claim(this.room.controller!);
+				antiController.task = Tasks.claim(this.room.controller!);
 			}
 		} else {
 			// reserver.task = Tasks.goTo(this.pos);
-			reserver.goTo(this.pos);
+			antiController.goTo(this.pos);
 		}
 	}
 
 	run() {
 		this.autoRun(this.roomPoisoners, roomPoisoner => this.handleRoomPoisoner(roomPoisoner));
-		this.autoRun(this.reservers, reserver => this.handleReserver(reserver));
+		this.autoRun(this.antiControllers, antiController => this.handleReserver(antiController));
 	}
 }
 
