@@ -1,5 +1,5 @@
 import {CombatIntel} from '../intel/CombatIntel';
-import {Movement, NO_ACTION} from '../movement/Movement';
+import {CombatMoveOptions, Movement, MoveOptions, NO_ACTION} from '../movement/Movement';
 import {profile} from '../profiler/decorator';
 import {CombatTargeting} from '../targeting/CombatTargeting';
 import {GoalFinder} from '../targeting/GoalFinder';
@@ -227,7 +227,7 @@ export class CombatZerg extends Zerg {
 	/**
 	 * Navigate to a room, then engage hostile creeps there, perform medic actions, etc.
 	 */
-	autoCombat(roomName: string, verbose = false, preferredRange?: number) {
+	autoCombat(roomName: string, verbose = false, preferredRange?: number, options?: CombatMoveOptions) {
 
 		// Do standard melee, ranged, and heal actions
 		if (this.getActiveBodyparts(ATTACK) > 0) {
@@ -266,7 +266,7 @@ export class CombatZerg extends Zerg {
 					avoid.push({pos: hostile.pos, range: targetRange - 1});
 				}
 			}
-			return Movement.combatMove(this, [{pos: target.pos, range: targetRange}], avoid);
+			return Movement.combatMove(this, [{pos: target.pos, range: targetRange}], avoid, options);
 		}
 
 	}
