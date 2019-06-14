@@ -121,6 +121,9 @@ export class RoomPoisonerOverlord extends Overlord {
 
 	private handleReserver(antiController: Zerg): void {					
 		if (antiController.room == this.room && !antiController.pos.isEdge) {
+			if(!antiController.pos.isNearTo(this.room.controller!)){
+                antiController.goTo(this.room.controller!);
+            }
 			//kill claimer if room claimed, it can be blocking wall csite creation
 			if (this.room.my && this.room!.controller!.level == 2){
 				antiController.suicide();
