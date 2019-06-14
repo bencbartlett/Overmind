@@ -27,7 +27,7 @@ export class TaskRecharge extends Task {
 	}
 
 	private rechargeRateForCreep(creep: Zerg, obj: rechargeObjectType): number | false {
-		if (creep.colony.hatchery && creep.colony.hatchery.battery
+		if (creep.colony && creep.colony.hatchery && creep.colony.hatchery.battery
 			&& obj.id == creep.colony.hatchery.battery.id && creep.roleName != 'queen') {
 			return false; // only queens can use the hatchery battery
 		}
@@ -57,8 +57,9 @@ export class TaskRecharge extends Task {
 			this.parent!.creep = creep;
 		}
 		// Choose the target to maximize your energy gain subject to other targeting workers
-		const target = creep.inColonyRoom ? maxBy(creep.colony.rechargeables, o => this.rechargeRateForCreep(creep, o))
-										  : maxBy(creep.room.rechargeables, o => this.rechargeRateForCreep(creep, o));
+		const target = creep.colony && creep.inColonyRoom
+					   ? maxBy(creep.colony.rechargeables, o => this.rechargeRateForCreep(creep, o))
+					   : maxBy(creep.room.rechargeables, o => this.rechargeRateForCreep(creep, o));
 		if (!target || creep.pos.getMultiRoomRangeTo(target.pos) > 40) {
 			// workers shouldn't harvest; let drones do it (disabling this check can destabilize early economy)
 			const canHarvest = creep.getActiveBodyparts(WORK) > 0 && creep.roleName != 'worker';
