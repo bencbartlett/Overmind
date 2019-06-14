@@ -30,7 +30,7 @@ export class RandomWalkerScoutOverlord extends Overlord {
 		const enemyConstructionSites = scout.room.find(FIND_HOSTILE_CONSTRUCTION_SITES);
 		if (enemyConstructionSites.length > 0 && enemyConstructionSites[0].pos.isWalkable(true)) {
 			scout.goTo(enemyConstructionSites[0].pos);
-			return; //bug fix, must not goToRoom until all hostile constuction sites have been stomped on.
+			return;
 		}
 		// Check if room might be connected to newbie/respawn zone
 		const indestructibleWalls = _.filter(scout.room.walls, wall => wall.hits == undefined);
