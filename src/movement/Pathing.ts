@@ -614,6 +614,20 @@ export class Pathing {
 	}
 
 	/**
+	 * Sets walkable rampart positions to 1, everything else is blocked
+	 */
+	static blockNonRamparts(matrix: CostMatrix, room: Room) {
+		for (let y = 0; y < 50; ++y) {
+			for (let x = 0; x < 50; ++x) {
+				matrix.set(x, y, 0xff);
+			}
+		}
+		_.forEach(room.walkableRamparts, rampart => {
+			matrix.set(rampart.pos.x, rampart.pos.y, 1);
+		});
+	}
+
+	/**
 	 * Explicitly blocks off walls for a room
 	 */
 	static blockImpassibleTerrain(matrix: CostMatrix, roomName: string) {

@@ -71,6 +71,19 @@ export function onPublicServer(): boolean {
 	return Game.shard.name.includes('shard');
 }
 
+export function onTrainingEnvironment(): boolean {
+	return !!Memory.reinforcementLearning && !!Memory.reinforcementLearning.enabled;
+}
+
+export function getReinforcementLearningTrainingVerbosity(): number {
+	if (Memory.reinforcementLearning) {
+		if (Memory.reinforcementLearning.verbosity != undefined) {
+			return Memory.reinforcementLearning.verbosity;
+		}
+	}
+	return 0;
+}
+
 interface ToColumnOpts {
 	padChar: string;
 	justify: boolean;
@@ -209,7 +222,7 @@ export function logHeapStats(): void {
 	if (typeof Game.cpu.getHeapStatistics === 'function') {
 		const heapStats = Game.cpu.getHeapStatistics();
 		const heapPercent = Math.round(100 * (heapStats.total_heap_size + heapStats.externally_allocated_size)
-									 / heapStats.heap_size_limit);
+									   / heapStats.heap_size_limit);
 		const heapSize = Math.round((heapStats.total_heap_size) / 1048576);
 		const externalHeapSize = Math.round((heapStats.externally_allocated_size) / 1048576);
 		const heapLimit = Math.round(heapStats.heap_size_limit / 1048576);

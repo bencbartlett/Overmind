@@ -1,13 +1,11 @@
-import {CreepSetup} from '../../creepSetups/CreepSetup';
+import {log} from '../../console/log';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
-import {CombatIntel} from '../../intel/CombatIntel';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {boostResources} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
-import {log} from "../../console/log";
 
 /**
  * Spawns bunker-only defenders to defend against incoming sieges
@@ -19,7 +17,7 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 	room: Room;
 
 	static settings = {
-		retreatHitsPercent : 0.75,
+		retreatHitsPercent : 0.85,
 		reengageHitsPercent: 0.95,
 	};
 
@@ -34,8 +32,16 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 
 	private handleDefender(lurker: CombatZerg): void {
 		log.debug(`Running BunkerDefender in room ${this.room.print}`);
+		if (!lurker.inRampart) {
+			const nearRampart = _.find(lurker.room.walkableRamparts, rampart => rampart.pos.getRangeTo(lurker) < 5);
+			if (nearRampart) {
+				lurker.goTo(nearRampart);
+			}
+		}
 		if (lurker.room.hostiles.length > 0) {
 			lurker.autoBunkerCombat(lurker.room.name);
+		} else {
+			// go out of way in bunker
 		}
 	}
 
@@ -46,7 +52,7 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 			this.wishlist(1, setup);
 		} else {
 			const setup = CombatSetups.bunkerGuard.halfMove;
-			this.wishlist(2, setup);
+			this.wishlist(1, setup);
 		}
 	}
 
