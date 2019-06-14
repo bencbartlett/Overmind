@@ -119,7 +119,7 @@ export class RoomPoisonerOverlord extends Overlord {
 		}
 	}
 
-	private handleReserver(antiController: Zerg): void {					
+	private handleAntiController(antiController: Zerg): void {					
 		if (antiController.room == this.room && !antiController.pos.isEdge) {
 			if(!antiController.pos.isNearTo(this.room.controller!)){
                 antiController.goTo(this.room.controller!);
@@ -143,7 +143,7 @@ export class RoomPoisonerOverlord extends Overlord {
 
 	run() {
 		this.autoRun(this.roomPoisoners, roomPoisoner => this.handleRoomPoisoner(roomPoisoner));
-		this.autoRun(this.antiControllers, antiController => this.handleReserver(antiController));
+		this.autoRun(this.antiControllers, antiController => this.handleAntiController(antiController));
 	}
 }
 
