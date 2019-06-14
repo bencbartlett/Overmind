@@ -8,7 +8,6 @@ import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
 import {OvermindConsole} from '../../console/Console';
 import {OutpostDefenseOverlord} from '../../overlords/defense/outpostDefense';
-import {ColonyMemory} from '../../Colony';
 
 interface DirectivePoisonRoomMemory extends FlagMemory {
 	poisonSourcesOnly: boolean;
@@ -92,14 +91,6 @@ export class DirectivePoisonRoom extends Directive {
 
 	init() {
 		this.alert(`Poisoning Room ${this.pos.roomName}`);
-		//suspend the colony to prevent colonization/harvest flags
-		if(this.room && this.room.my){
-			const colonyMemory = Memory.colonies[this.room.name] as ColonyMemory | undefined;
-			if (colonyMemory && !colonyMemory.suspend) {
-				OvermindConsole.suspendColony(this.room.name);
-			}
-		}
-
 		//calculate wall positions
 		if(this.room && this.room.controller){
 			this.walkableSourcePosisions = _.filter(_.flatten(_.map(this.room.sources, s => s.pos.neighbors)),pos => pos.isWalkable(true));

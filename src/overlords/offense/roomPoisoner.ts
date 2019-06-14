@@ -8,6 +8,8 @@ import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {MY_USERNAME} from '../../~settings';
 import {Overlord} from '../Overlord';
+import {OvermindConsole} from '../../console/Console';
+import {ColonyMemory} from '../../Colony';
 
 /**
  * Spawn roomPoisoner - upgrqde controller to lvl2, wall in controller then sources.
@@ -132,12 +134,20 @@ export class RoomPoisonerOverlord extends Overlord {
 			//counter reserver if reserved by enemy. else, claim it
 			if (this.room && this.room.controller && this.room.controller.reservation && this.room.controller.reservation.username != MY_USERNAME) {
 				antiController.attackController(this.room.controller);
-			} else {
+			} else if (this.room && !this.room.my){
 				antiController.task = Tasks.claim(this.room.controller!);
 			}
 		} else {
 			// reserver.task = Tasks.goTo(this.pos);
 			antiController.goTo(this.pos);
+		}
+
+		//suspend immediatly to avoid colonization flag, (note: tried it in init() of directive but it missed it by one tick)
+		if(antiController.room == this.room && this.room.my){
+			const colonyMemory = Memory.colonies[this.room.name] as ColonyMemory | undefined;
+			if (colonyMemory && !colonyMemory.suspend) {
+				OvermindConsole.suspendColony(this.room.name);
+			}
 		}
 	}
 
