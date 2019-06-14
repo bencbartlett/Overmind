@@ -1,5 +1,6 @@
 import {ColonyStage} from '../../Colony';
 import {CombatIntel} from '../../intel/CombatIntel';
+import {DistractionOverlord} from '../../overlords/defense/distraction';
 import {MeleeDefenseOverlord} from '../../overlords/defense/meleeDefense';
 import {RangedDefenseOverlord} from '../../overlords/defense/rangedDefense';
 import {profile} from '../../profiler/decorator';
@@ -49,6 +50,11 @@ export class DirectiveInvasionDefense extends Directive {
 			this.overlords.rangedDefense = new RangedDefenseOverlord(this, useBoosts);
 		} else {
 			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
+		}
+
+		// Secondary defense
+		if (this.colony.level > 4 && meleeHostiles.length > 1 && expectedDamage > (ATTACK_POWER * 20)) {
+			this.overlords.distraction = new DistractionOverlord(this);
 		}
 
 	}
