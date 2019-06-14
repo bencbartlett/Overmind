@@ -39,7 +39,6 @@
   "dependencies": {
     "@tensorflow/tfjs": "^1.1.2",
     "columnify": "1.5.4",
-    "lint": "^0.7.0",
     "onnxjs": "^0.1.6",
     "source-map": "0.7.3"
   }
