@@ -10,6 +10,7 @@ import {Pathing} from '../../movement/Pathing';
 import {OvermindConsole} from '../../console/Console';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 import {OutpostDefenseOverlord} from '../../overlords/defense/outpostDefense';
+import {ColonyMemory} from '../../Colony';
 
 interface DirectivePoisonRoomMemory extends FlagMemory {
 	poisonSourcesOnly: boolean;
@@ -89,6 +90,13 @@ export class DirectivePoisonRoom extends Directive {
 
 	init() {
 		this.alert(`Poisoning Room ${this.pos.roomName}`);
+		//suspend the colony to prevent colonization/harvest flags
+		if(this.room && this.room.my){
+			const colonyMemory = Memory.colonies[this.room.name] as ColonyMemory | undefined;
+			if (colonyMemory && !colonyMemory.suspend) {
+				OvermindConsole.suspendColony(this.room.name);
+			}
+		}
 
 		//calculate wall positions
 		if(this.room && this.room.controller){
@@ -139,9 +147,6 @@ export class DirectivePoisonRoom extends Directive {
 			const roomRCL = this.room.controller!.level;
 			switch(roomRCL){
 				case 1:{
-					//suspend the colony to prevent colonization/harvest flags
-					OvermindConsole.suspendColony(this.room.name);
-
 					//remove any containers that can be next to sources
 					if(this.room.hostiles.length){
 						log.warning(`room ${this.print}: ${printRoomName(this.pos.roomName)} poisoning directive can't destory/remove structures/csites due to hostiles presense`);
