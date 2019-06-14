@@ -2,7 +2,7 @@ import {Colony, ColonyMemory} from '../Colony';
 import {Directive} from '../directives/Directive';
 import {alignedNewline, bullet} from '../utilities/stringConstants';
 import {color, toColumns} from '../utilities/utils';
-import {asciiLogoSmall} from '../visuals/logos';
+import {asciiLogoRL, asciiLogoSmall} from '../visuals/logos';
 import {DEFAULT_OVERMIND_SIGNATURE, MY_USERNAME, USE_PROFILER} from '../~settings';
 import {log} from './log';
 import {Overlord} from "../overlords/Overlord";
@@ -109,9 +109,7 @@ export class OvermindConsole {
 	}
 
 	static printTrainingMessage(): void {
-		console.log('\n' + asciiLogoSmall.join('\n'));
-		console.log(`Reinforcement learning mode active; Memory has been cleared. \n`+
-					`Write commands to memory to interact with environment.`);
+		console.log('\n' + asciiLogoRL.join('\n') + '\n');
 	}
 
 	static info(aligned = false): string {

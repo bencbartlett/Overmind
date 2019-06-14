@@ -14,6 +14,12 @@ export const asciiLogoSmall: string[] =
 				  '|     |  \\  /  |______ |_____/ |  |  |   |   | \\  | |     \\',
 				  '|_____|   \\/   |______ |    \\_ |  |  | __|__ |  \\_| |_____/'];
 
+export const asciiLogoRL: string[] =
+				 [' _____  _    _ _______  ______ _______ _____ __   _ ______ ',
+				  '|     |  \\  /  |______ |_____/ |  |  |   |   | \\  | |     \\',
+				  '|_____|   \\/   |______ |    \\_ |  |  | __|__ |  \\_| |_____/',
+				  '....... R E I N F O R C E M E N T   L E A R N I N G .......'];
+
 
 const _logoComponents: { [part: string]: { style: PolyStyle, points: [number, number][] } } = {
 	black : {

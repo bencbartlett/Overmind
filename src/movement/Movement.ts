@@ -608,7 +608,7 @@ export class Movement {
 		if (!road) return OK;
 
 		// Move out of the bunker if you're in it
-		if (!maintainDistance && creep.colony.bunker && insideBunkerBounds(creep.pos, creep.colony)) {
+		if (!maintainDistance && creep.colony && creep.colony.bunker && insideBunkerBounds(creep.pos, creep.colony)) {
 			return this.goTo(creep, creep.colony.controller.pos);
 		}
 

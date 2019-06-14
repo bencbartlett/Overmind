@@ -45,8 +45,13 @@ interface Memory {
 	reinforcementLearning?: any;
 	playerCreepTracker: {
 		[playerName: string]: CreepTracker
-	}
+	};
 	zoneRooms: { [roomName: string]: { [type: string]: number} };
+	reinforcementLearning?: {
+		enabled?: boolean;
+		verbosity?: number;
+		workerIndex?: number;
+	};
 
 	[otherProperty: string]: any;
 }
@@ -96,7 +101,7 @@ interface PublicSegment {
 
 interface CreepMemory {
 	[_MEM.OVERLORD]: string | null;
-	[_MEM.COLONY]: string;
+	[_MEM.COLONY]: string | null;
 	role: string;
 	task: ProtoTask | null;
 	data: {

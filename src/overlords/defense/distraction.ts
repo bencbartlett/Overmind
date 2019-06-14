@@ -36,14 +36,13 @@ export class DistractionOverlord extends CombatOverlord {
 			distraction.autoCombat(this.room.name, false, 5, {preferRamparts: false});
 			this.taunt(distraction, this.room.hostiles[0].owner.username);
 			const nearbyHostiles = this.room.hostiles.filter(hostile => hostile.pos.getRangeTo(distraction) <= 6);
-			//nearbyHostiles[0]
 			if (nearbyHostiles.length > 0) {
 				distraction.kite(nearbyHostiles);
 			}
 		}
 	}
 
-	taunt(distraction: CombatZerg, name?: string) {
+	static taunt(distraction: CombatZerg, name?: string) {
 		const taunts: string[] = ['Heylisten!', 'Pssssst', 'So close', '🎣', 'Try harder', 'Get good;)', 'Base ⬆️', '🔜',
 			'⚠️Swamp⚠️', 'Follow me!', 'Catch Me!', `Hi ${name || ''}`, '🍑🍑🍑', '🏎️ VROOM'];
 		distraction.sayRandom(taunts, true);
