@@ -19,12 +19,13 @@ export class StationaryScoutOverlord extends Overlord {
 	}
 
 	init() {
-		this.wishlist(1, Setups.scout);
+		const amount = (this.pos.isVisible)? 0:1;
+		this.wishlist(amount, Setups.scout);
 	}
 
 	run() {
 		for (const scout of this.scouts) {
-			if(this.pos.roomName == scout.room.name){
+			if(this.pos.roomName == scout.room.name) {
 				const enemyConstructionSites = scout.room.find(FIND_HOSTILE_CONSTRUCTION_SITES);
 				if (enemyConstructionSites.length > 0 && enemyConstructionSites[0].pos.isWalkable(true)) {
 					scout.goTo(enemyConstructionSites[0].pos);
