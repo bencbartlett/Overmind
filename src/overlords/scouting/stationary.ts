@@ -19,8 +19,7 @@ export class StationaryScoutOverlord extends Overlord {
 	}
 
 	init() {
-		let amount = (this.room)? 0:1;
-		this.wishlist(amount, Setups.scout);
+		this.wishlist(1, Setups.scout);
 	}
 
 	run() {

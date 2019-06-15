@@ -149,8 +149,9 @@ export class CombatZerg extends Zerg {
 	 * Automatically melee-attack the best creep in range
 	 */
 	autoMelee(possibleTargets = this.room.hostiles) {
+		// disabled allowUnowned structure attack in order not to desrtory poison walls
 		const target = CombatTargeting.findBestCreepTargetInRange(this, 1, possibleTargets)
-					   || CombatTargeting.findBestStructureTargetInRange(this, 1,false); //disabled allowUnowned structure attack in order not to desrtory poison walls
+					   || CombatTargeting.findBestStructureTargetInRange(this, 1,false);
 		this.debug(`Melee target: ${target}`);
 		if (target) {
 			return this.attack(target);
@@ -161,8 +162,9 @@ export class CombatZerg extends Zerg {
 	 * Automatically ranged-attack the best creep in range
 	 */
 	autoRanged(possibleTargets = this.room.hostiles, allowMassAttack = true) {
+		// disabled allowUnowned structure attack in order not to desrtory poison walls
 		const target = CombatTargeting.findBestCreepTargetInRange(this, 3, possibleTargets)
-					   || CombatTargeting.findBestStructureTargetInRange(this, 3,false); //disabled allowUnowned structure attack in order not to desrtory poison walls
+					   || CombatTargeting.findBestStructureTargetInRange(this, 3,false);
 		this.debug(`Ranged target: ${target}`);
 		if (target) {
 			if (allowMassAttack

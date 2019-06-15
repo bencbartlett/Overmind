@@ -1,13 +1,13 @@
-import {StationaryScoutOverlord} from '../../overlords/scouting/stationary';
-import {RoomPoisonerOverlord} from '../../overlords/offense/roomPoisoner';
+import {OvermindConsole} from '../../console/Console';
 import {log} from '../../console/log';
+import {OutpostDefenseOverlord} from '../../overlords/defense/outpostDefense';
+import {RoomPoisonerOverlord} from '../../overlords/offense/roomPoisoner';
+import {StationaryScoutOverlord} from '../../overlords/scouting/stationary';
 import {profile} from '../../profiler/decorator';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {printRoomName} from '../../utilities/utils';
 import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
-import {OvermindConsole} from '../../console/Console';
-import {OutpostDefenseOverlord} from '../../overlords/defense/outpostDefense';
 
 interface DirectivePoisonRoomMemory extends FlagMemory {
 	poisonSourcesOnly: boolean;
@@ -15,7 +15,7 @@ interface DirectivePoisonRoomMemory extends FlagMemory {
 	isPoisoned: boolean;
 	isHostile: boolean;
 
-	//the below are not used, but required for OutpostDefenseOverlord
+	// the below are not used, but required for OutpostDefenseOverlord
 	persistent?: boolean;
 	created: number;
 	safeSince: number;
@@ -58,8 +58,8 @@ export class DirectivePoisonRoom extends Directive {
 			this.remove(true);
 		}
 
-		//remove if created in owned room! (fail safe)
-		if(this.room && this.room.my && this.room.controller!.level > 2){
+		// remove if created in owned room! (fail safe)
+		if(this.room && this.room.my && this.room.controller!.level > 2) {
 			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} can not contaminate owned room; ` +
 			`manually unclaim it  first if you still want to contaminate it!`);
 			this.remove(true);
@@ -75,15 +75,15 @@ export class DirectivePoisonRoom extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		//if room is visible + not claimed + GCL not enough, do not spawn roomPoisiner
-		if(this.pos.isVisible && this.room && !this.room.my && _.values(Overmind.colonies).length >= Game.gcl.level){
+		// if room is visible + not claimed + GCL not enough, do not spawn roomPoisiner
+		if(this.pos.isVisible && this.room && !this.room.my && _.values(Overmind.colonies).length >= Game.gcl.level) {
 			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} not enough GCL to contaminate room;`);
 			return;
 		}
-		if((this.room && this.room.hostiles.length > 0) || this.memory.isHostile){
-			this.memory.isHostile = true; //once hostile, always hostile, do not send scouts and always send defenders
+		if((this.room && this.room.hostiles.length > 0) || this.memory.isHostile) {
+			this.memory.isHostile = true; // once hostile, always hostile, do not send scouts and always send defenders
 			this.overlords.defenders = new OutpostDefenseOverlord(this);
-		} else{
+		} else {
 			this.overlords.scout = new StationaryScoutOverlord(this);
 		}
 		this.overlords.roomPoisoner = new RoomPoisonerOverlord(this);
@@ -91,27 +91,33 @@ export class DirectivePoisonRoom extends Directive {
 
 	init() {
 		this.alert(`Poisoning Room ${this.pos.roomName}`);
-		//calculate wall positions
-		if(this.room && this.room.controller){
-			this.walkableSourcePosisions = _.filter(_.flatten(_.map(this.room.sources, s => s.pos.neighbors)),pos => pos.isWalkable(true));
-			this.walkableControllerPosisions =  _.filter(this.room.controller!.pos.neighbors, pos => pos.isWalkable(true));
+		// calculate wall positions
+		if(this.room && this.room.controller) {
+			this.walkableSourcePosisions = _.filter(_.flatten(_.map(this.room.sources, s => s.pos.neighbors)),pos => 
+											pos.isWalkable(true));
+			this.walkableControllerPosisions =  _.filter(this.room.controller!.pos.neighbors, pos => 
+											pos.isWalkable(true));
 		}
 	}
 
 	private poison() {
-		//poison actions (creating wall csites are only done when roomPoisoner creep is present with > 0 energy)
-		let roomPoisoner = (!!this.overlords.roomPoisoner.roomPoisoners.length) ? this.overlords.roomPoisoner.roomPoisoners[0] : undefined;
-		if(roomPoisoner && roomPoisoner.carry.energy > 0){
-			//wall in sources
-			if(this.walkableSourcePosisions.length){
-				_.forEach(this.walkableSourcePosisions,pos=>{pos.createConstructionSite(STRUCTURE_WALL)});
+		// poison actions (creating wall csites are only done when roomPoisoner creep is present with > 0 energy)
+		const roomPoisoner = (!!this.overlords.roomPoisoner.roomPoisoners.length) ? 
+							 this.overlords.roomPoisoner.roomPoisoners[0] : undefined;
+		if(roomPoisoner && roomPoisoner.carry.energy > 0) {
+			// wall in sources
+			if(this.walkableSourcePosisions.length) {
+				_.forEach(this.walkableSourcePosisions,pos=> { 
+					pos.createConstructionSite(STRUCTURE_WALL);
+				});
 			}
-			//wall in controller, if option is selected
-			if(!this.memory.poisonSourcesOnly && this.walkableControllerPosisions.length){
-				_.forEach(this.walkableControllerPosisions,pos=>{pos.createConstructionSite(STRUCTURE_WALL)});
+			// wall in controller, if option is selected
+			if(!this.memory.poisonSourcesOnly && this.walkableControllerPosisions.length) {
+				_.forEach(this.walkableControllerPosisions,pos=> { pos.createConstructionSite(STRUCTURE_WALL);});
 			}
 		} else {
-			//if creep does not exist or .carry == 0, just remove the wall csite, they are not walkable and can block harvesting 
+			// if creep does not exist or .carry == 0, just remove the wall csite, 
+			// they are not walkable and can block harvesting 
 			_.forEach(this.room!.constructionSites, csite => {csite.remove();} );
 		}
 	}
@@ -119,7 +125,7 @@ export class DirectivePoisonRoom extends Directive {
 		let result = false;
 		if (this.room && this.room.controller!.level > 1) {
 			result = !!this.walkableSourcePosisions && !this.walkableSourcePosisions.length;
-			if(!this.memory.poisonSourcesOnly){
+			if(!this.memory.poisonSourcesOnly) {
 				result = result && !!this.walkableControllerPosisions && !this.walkableControllerPosisions.length;
 			}
 			return result;
@@ -129,38 +135,40 @@ export class DirectivePoisonRoom extends Directive {
 	}
 
 	run() {
-		if(Game.time % 25 == 0 && this.room && this.room.my){ //if visible and owned room
+		if(Game.time % 25 == 0 && this.room && this.room.my) { // if visible and owned room
 			const roomRCL = this.room.controller!.level;
-			switch(roomRCL){
-				case 1:{
-					//remove any containers that can be next to sources
-					if(this.room.hostiles.length){
-						log.warning(`room ${this.print}: ${printRoomName(this.pos.roomName)} poisoning directive can't destory/remove structures/csites due to hostiles presense`);
+			switch(roomRCL) {
+				case 1: {
+					// remove any containers that can be next to sources
+					if(this.room.hostiles.length) {
+						log.warning(`room ${this.print}: ${printRoomName(this.pos.roomName)} 
+									 poisoning directive can't destory/remove structures/csites due to hostiles presense`);
 					} else {
-						if(this.room.containers.length){
+						if(this.room.containers.length) {
 							_.forEach(this.room.containers, container => {container.destroy();});
 						}
-						//remove all wall (will keep all poisno walls in RCL2need
-						if(this.room.walls.length){
+						// remove all wall (will keep all poisno walls in RCL2need
+						if(this.room.walls.length) {
 							_.forEach(this.room.walls, wall => {wall.destroy();});
 						}
-						//remove any hostile consituction sites
+						// remove any hostile consituction sites
 						_.forEach(this.room.find(FIND_HOSTILE_CONSTRUCTION_SITES), csite => {csite.remove();});
 					}
+					break;
 				}
 				default:{
-					if(this.isPoisoned()){
-						//remove roads before unclaiming (if there are no hostiles to prevent it)
-						if(!this.room.hostiles.length && this.room.roads.length > 0){
+					if(this.isPoisoned()) {
+						// remove roads before unclaiming (if there are no hostiles to prevent it)
+						if(!this.room.hostiles.length && this.room.roads.length > 0) {
 							_.forEach(this.room.roads, road => {road.destroy();} );
 						}
 						
-						//clear unsuspend colony flag, then unclaim room
+						// clear unsuspend colony flag, then unclaim room
 						OvermindConsole.unsuspendColony(this.room.name);
 						this.room.controller!.unclaim();
 						
-						//remove direcitve if done, or keep it for constant harassement
-						if(this.memory.removeIfPoisoned){
+						// remove direcitve if done, or keep it for constant harassement
+						if(this.memory.removeIfPoisoned) {
 							log.notify(`Removing poisonRoom directive in ${this.pos.roomName}: operation completed.`);
 							this.remove();
 						}
