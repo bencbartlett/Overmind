@@ -34,8 +34,8 @@ export class DirectivePoisonRoom extends Directive {
 	
 	memory: DirectivePoisonRoomMemory;
 
-	walkableSourcePosisions: RoomPosition[];
-	walkableControllerPosisions: RoomPosition[];
+	walkableSourcePositions: RoomPosition[];
+	walkableControllerPositions: RoomPosition[];
 
 	overlords: {
 		roomPoisoner: RoomPoisonerOverlord;
@@ -93,9 +93,9 @@ export class DirectivePoisonRoom extends Directive {
 		this.alert(`Poisoning Room ${this.pos.roomName}`);
 		// calculate wall positions
 		if(this.room && this.room.controller) {
-			this.walkableSourcePosisions = _.filter(_.flatten(_.map(this.room.sources, s => s.pos.neighbors)),pos => 
+			this.walkableSourcePositions = _.filter(_.flatten(_.map(this.room.sources, s => s.pos.neighbors)),pos => 
 											pos.isWalkable(true));
-			this.walkableControllerPosisions =  _.filter(this.room.controller!.pos.neighbors, pos => 
+			this.walkableControllerPositions =  _.filter(this.room.controller!.pos.neighbors, pos => 
 											pos.isWalkable(true));
 		}
 	}
@@ -106,14 +106,14 @@ export class DirectivePoisonRoom extends Directive {
 							 this.overlords.roomPoisoner.roomPoisoners[0] : undefined;
 		if(roomPoisoner && roomPoisoner.carry.energy > 0) {
 			// wall in sources
-			if(this.walkableSourcePosisions.length) {
-				_.forEach(this.walkableSourcePosisions,pos=> { 
+			if(this.walkableSourcePositions.length) {
+				_.forEach(this.walkableSourcePositions,pos=> { 
 					pos.createConstructionSite(STRUCTURE_WALL);
 				});
 			}
 			// wall in controller, if option is selected
-			if(!this.memory.poisonSourcesOnly && this.walkableControllerPosisions.length) {
-				_.forEach(this.walkableControllerPosisions,pos=> { pos.createConstructionSite(STRUCTURE_WALL);});
+			if(!this.memory.poisonSourcesOnly && this.walkableControllerPositions.length) {
+				_.forEach(this.walkableControllerPositions,pos=> { pos.createConstructionSite(STRUCTURE_WALL);});
 			}
 		} else {
 			// if creep does not exist or .carry == 0, just remove the wall csite, 
@@ -124,9 +124,9 @@ export class DirectivePoisonRoom extends Directive {
 	private isPoisoned(): boolean {
 		let result = false;
 		if (this.room && this.room.controller!.level > 1) {
-			result = !!this.walkableSourcePosisions && !this.walkableSourcePosisions.length;
+			result = !!this.walkableSourcePositions && !this.walkableSourcePositions.length;
 			if(!this.memory.poisonSourcesOnly) {
-				result = result && !!this.walkableControllerPosisions && !this.walkableControllerPosisions.length;
+				result = result && !!this.walkableControllerPositions && !this.walkableControllerPositions.length;
 			}
 			return result;
 		} else {

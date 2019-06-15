@@ -3,6 +3,7 @@ import {OvermindConsole} from '../../console/Console';
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {DirectivePoisonRoom} from '../../directives/offense/poisonRoom';
+import {RoomIntel} from '../../intel/RoomIntel';
 import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
@@ -20,7 +21,6 @@ export class RoomPoisonerOverlord extends Overlord {
 
 	roomPoisoners: Zerg[];
 	antiControllers: Zerg[]; // claim and counter reserve if required
-
 	controllerWallSites: ConstructionSite[] | undefined;
 	sourcesWallSites: ConstructionSite[] | undefined;
 
@@ -29,12 +29,15 @@ export class RoomPoisonerOverlord extends Overlord {
 		this.roomPoisoners = this.zerg(Roles.roomPoisoner);
 		this.antiControllers = this.zerg(Roles.claim);
 
-		this.controllerWallSites = (this.room && this.room.controller) ? 
-									_.filter(this.room.constructionSites,s => s.structureType == STRUCTURE_WALL && 
-																			  s.pos.isNearTo(this.room!.controller!.pos)) : undefined;
-		this.sourcesWallSites = (this.room && this.room.controller) ? 
-									_.filter(this.room.constructionSites, s => s.structureType == STRUCTURE_WALL && 
-																			  !s.pos.isNearTo(this.room!.controller!.pos)) : undefined;
+		if(this.room && this.room.controller) {
+			this.controllerWallSites = _.filter(this.room.constructionSites,s => 
+											this.room && this.room.controller &&
+											s.structureType == STRUCTURE_WALL && s.pos.isNearTo(this.room.controller.pos));
+			this.sourcesWallSites = _.filter(this.room.constructionSites, s => 
+											this.room && this.room.controller &&
+											s.structureType == STRUCTURE_WALL && 
+											!s.pos.isNearTo(this.room.controller.pos));
+		}
 	}
 
 	refresh() {
@@ -47,13 +50,13 @@ export class RoomPoisonerOverlord extends Overlord {
 
 	init() {
 		const isSafe = this.room && !this.room.dangerousPlayerHostiles.length;
-		const isNotReservedByEnemy = !(this.room && this.room.controller && this.room.controller.reservation && 
-									   this.room.controller.reservation.ticksToEnd > 500);
+		const isReservedByEnemy = (RoomIntel.roomReservedBy(this.pos.roomName) != MY_USERNAME &&
+								   RoomIntel.roomReservationRemaining(this.pos.roomName) > 500);
 
 		// spawn required creeps to contaminate if visible + safe + notRserved + notPoisoned,
 		// else spawn reserved is reserved by enemy
 		if(this.pos.isVisible && isSafe && !this.initializer.memory.isPoisoned) {
-			if(isNotReservedByEnemy) {
+			if(!isReservedByEnemy) {
 				if(!(this.room && this.room.my)) this.wishlist(1, Setups.infestors.claim);
 				this.wishlist(1, Setups.roomPoisoner);
 			} else {
@@ -83,17 +86,6 @@ export class RoomPoisonerOverlord extends Overlord {
 		}
 		// Ensure you are in the assigned room
 		if (roomPoisoner.room == this.room && !roomPoisoner.pos.isEdge) {
-			// corner case: unclaimed controller blocked, while sources not 100% blocked
-			if(!this.room.my && this.sourcesWallSites && this.controllerWallSites &&
-				this.controllerWallSites.length == 0 &&  this.sourcesWallSites.length > 0) {
-				
-				const dismantleTarget = this.findStructureBlockingController(roomPoisoner);
-				if (dismantleTarget) {
-					roomPoisoner.task = Tasks.dismantle(dismantleTarget);
-					return;
-				}	
-			}
-
 			// upgrade controller to level 2 to unlock walls			
 			if (this.room && this.room.controller && this.room.my &&
 					   (this.room.controller.level < 2) &&
@@ -103,7 +95,7 @@ export class RoomPoisonerOverlord extends Overlord {
 			} 
 			// repair poison walls < 1000 hits, assuming all other wall are destoryed by directive
 			const wallsToRepair = _.filter(this.room.walls, wall => wall.hits < 1000);
-			if(wallsToRepair.length) {
+			if(wallsToRepair.length > 0) {
 				const closestWall = roomPoisoner.pos.findClosestByRange(wallsToRepair);
 				if(closestWall) {
 					roomPoisoner.task = Tasks.repair(closestWall);
@@ -111,10 +103,20 @@ export class RoomPoisonerOverlord extends Overlord {
 				}
 			}
 			// build wall csites for controller then sources.
-			if (this.controllerWallSites && this.controllerWallSites.length) {
-				roomPoisoner.task = Tasks.build(this.controllerWallSites[0]);
-			} else if (this.sourcesWallSites && this.sourcesWallSites.length) {
-				roomPoisoner.task = Tasks.build(this.sourcesWallSites[0]);
+			if(this.controllerWallSites) {
+				const controllerWallSite = _.first(this.controllerWallSites); 
+				if (controllerWallSite) {
+					roomPoisoner.task = Tasks.build(controllerWallSite);
+					return;
+				}
+			}	
+
+			if (this.sourcesWallSites) {
+				const sourcesWallSite = _.first(this.sourcesWallSites);
+				if(sourcesWallSite) {
+					roomPoisoner.task = Tasks.build(sourcesWallSite);
+					return;
+				}
 			} 
 		} else {
 			roomPoisoner.goTo(this.pos, {ensurePath: true, avoidSK: true});
@@ -123,23 +125,28 @@ export class RoomPoisonerOverlord extends Overlord {
 
 	private handleAntiController(antiController: Zerg): void {					
 		if (antiController.room == this.room && !antiController.pos.isEdge) {
+			// go near controller
 			if(!antiController.pos.isNearTo(this.room.controller!)) {
 				antiController.goTo(this.room.controller!);
+				return;
 			}
+
 			// kill claimer if room claimed, it can be blocking wall csite creation
 			if (this.room.my && this.room!.controller!.level == 2) {
 				antiController.suicide();
 				return;
 			}
-			// counter reserver if reserved by enemy. else, claim it
+			// counter reserve controller if reserved by enemy. else, claim it
 			if (this.room && this.room.controller && this.room.controller.reservation && 
 				this.room.controller.reservation.username != MY_USERNAME) {
 				antiController.attackController(this.room.controller);
+				return;
 			} else if (this.room && !this.room.my) {
 				antiController.task = Tasks.claim(this.room.controller!);
+				return;
 			}
 		} else {
-			// reserver.task = Tasks.goTo(this.pos);
+			// Go to target room.
 			antiController.goTo(this.pos);
 		}
 
