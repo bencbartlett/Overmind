@@ -91,16 +91,15 @@ export class DirectivePoisonRoom extends Directive {
 	}
 
 	run() {
+		/* // commented out as the overseer will kick in first and place a colonization flag before getting suspended.
 		// suspend colony as soon as it becomes RCL1
 		if(this.room && this.room.my && this.room.controller!.level == 1) {
 			const colonyMemory = Memory.colonies[this.room.name] as ColonyMemory | undefined;
 			if (colonyMemory && !colonyMemory.suspend) {
 				OvermindConsole.suspendColony(this.room.name);
-				// Muon suggested doing the suspension here, 
-				// but the overseer runs first and do: DirectiveColonize.createIfNotPresent(pos, 'room');
-				// need a workaround, OR just return it back to roomPoisonerOverlord straight after claiming
 			}
 		}
+		*/
 		
 		if(!(Game.time % 25 == 0 && this.room)) {
 			return;
@@ -115,7 +114,11 @@ export class DirectivePoisonRoom extends Directive {
 				log.notify(`Removing poisonRoom directive in ${this.pos.roomName}: operation completed.`);
 				this.remove();
 			} else {
-				// TODO: safe mode the room until poison is successful.
+				const ret = this.colony.controller.activateSafeMode();
+				if(ret == OK) {
+					log.info(`${this.print}: ${printRoomName(this.pos.roomName)} 
+							   - activated safeMode until poison operation is complete`);
+				}
 			}
 		}
 
