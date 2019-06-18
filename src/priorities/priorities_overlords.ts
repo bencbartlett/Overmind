@@ -22,8 +22,8 @@ export let OverlordPriority = {
 		destroy         : 300,
 		healPoint       : 301,
 		siege           : 302,
-		controllerAttack: 399,
-		roomPoisoner	: 400,
+		controllerAttack: 398,
+		roomPoisoner	: 399,
 	},
 
 	colonization: { 			// Colonizing new rooms
