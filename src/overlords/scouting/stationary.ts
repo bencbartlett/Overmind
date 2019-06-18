@@ -24,6 +24,15 @@ export class StationaryScoutOverlord extends Overlord {
 
 	run() {
 		for (const scout of this.scouts) {
+			if (this.pos.roomName == scout.room.name) {
+				const enemyConstructionSites = scout.room.find(FIND_HOSTILE_CONSTRUCTION_SITES);
+				const squashTarget = _.first(enemyConstructionSites);
+				if (squashTarget) {
+					scout.goTo(squashTarget);
+					return;
+				}
+			}
+
 			if (!(scout.pos.inRangeTo(this.pos, 3) && !scout.pos.isEdge)) {
 				scout.goTo(this.pos, {range: 3});
 			}

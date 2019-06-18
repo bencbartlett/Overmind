@@ -19,11 +19,11 @@ export abstract class CombatOverlord extends Overlord {
 	spawnGroup: SpawnGroup;
 	requiredRCL: number; // default required RCL
 
-	constructor(directive: Directive, name: string, priority: number, requiredRCL: number) {
+	constructor(directive: Directive, name: string, priority: number, requiredRCL: number, maxPathDistance?: number) {
 		super(directive, name, priority);
 		this.directive = directive;
 		this.requiredRCL = requiredRCL;
-		this.spawnGroup = new SpawnGroup(this, {requiredRCL: this.requiredRCL});
+		this.spawnGroup = new SpawnGroup(this, {requiredRCL: this.requiredRCL, maxPathDistance: maxPathDistance});
 	}
 
 	// Standard sequence of actions for running combat creeps

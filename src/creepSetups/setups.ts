@@ -21,6 +21,7 @@ export const Roles = {
 	melee     : 'zergling',
 	ranged    : 'hydralisk',
 	healer    : 'transfuser',
+	bunkerGuard : 'bunkerGuard',
 	dismantler: 'lurker',
 };
 
@@ -292,6 +293,35 @@ export const CombatSetups = {
 
 		default: new CreepSetup(Roles.guardMelee, {
 			pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE, MOVE, HEAL],
+			sizeLimit: Infinity,
+		}),
+
+	},
+
+	/**
+	 * Pure melee raw power creeps that should never leave the bunker. These are the final guards for a room
+	 */
+	bunkerGuard: {
+
+		early: new CreepSetup(Roles.bunkerGuard, {
+			pattern  : [ATTACK, MOVE],
+			sizeLimit: Infinity,
+		}),
+
+		default: new CreepSetup(Roles.bunkerGuard, {
+			pattern  : [ATTACK, ATTACK, MOVE],
+			sizeLimit: Infinity,
+		}),
+
+		halfMove: new CreepSetup(Roles.bunkerGuard, {
+			pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, MOVE],
+			sizeLimit: Infinity,
+		}),
+
+		boosted_T3: new CreepSetup(Roles.bunkerGuard, {
+			// 22 ATTACK, 3 MOVE times 2
+			pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK,
+				ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE],
 			sizeLimit: Infinity,
 		}),
 

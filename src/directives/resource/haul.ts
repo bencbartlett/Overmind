@@ -102,11 +102,11 @@ export class DirectiveHaul extends Directive {
 	}
 
 	init(): void {
-		this.alert(`Haul directive active`);
+		this.alert(`Haul directive active - ${this.totalResources}`);
 	}
 
 	run(): void {
-		if (_.sum(this.store) == 0 && this.pos.isVisible) {
+		if (this.totalResources == 0) {
 			this.remove();
 		}
 	}

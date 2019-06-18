@@ -1,8 +1,10 @@
-import {ColonyStage} from '../../Colony';
 import {CombatIntel} from '../../intel/CombatIntel';
+import {BunkerDefenseOverlord} from '../../overlords/defense/bunkerDefense';
 import {MeleeDefenseOverlord} from '../../overlords/defense/meleeDefense';
 import {RangedDefenseOverlord} from '../../overlords/defense/rangedDefense';
 import {profile} from '../../profiler/decorator';
+
+import {ColonyStage} from '../../Colony';
 import {Directive} from '../Directive';
 import {NotifierPriority} from '../Notifier';
 
@@ -36,8 +38,9 @@ export class DirectiveInvasionDefense extends Directive {
 		if (!this.room) {
 			return;
 		}
-		const expectedDamage = CombatIntel.maxDamageByCreeps(this.room.dangerousHostiles);
-		const useBoosts = (expectedDamage > ATTACK_POWER * 75)
+		const expectedDamage = CombatIntel.maxDamageByCreeps(this.room.dangerousPlayerHostiles);
+		const expectedHealing = CombatIntel.maxHealingByCreeps(this.room.dangerousPlayerHostiles);
+		const useBoosts = (expectedDamage > ATTACK_POWER * 50) || (expectedHealing > RANGED_ATTACK_POWER * 100)
 						&& !!this.colony.terminal
 						&& !!this.colony.evolutionChamber;
 		const percentWalls = _.filter(this.room.barriers, s => s.structureType == STRUCTURE_WALL).length /
@@ -49,6 +52,11 @@ export class DirectiveInvasionDefense extends Directive {
 			this.overlords.rangedDefense = new RangedDefenseOverlord(this, useBoosts);
 		} else {
 			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
+		}
+		// If serious bunker busting attempt, spawn lurkers
+		// TODO understand dismantlers damage output
+		if (meleeHostiles.length > 0 && (expectedDamage > ATTACK_POWER * 70)) {
+			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, false);
 		}
 
 	}
