@@ -1,4 +1,3 @@
-import {ColonyMemory} from '../../Colony';
 import {OvermindConsole} from '../../console/Console';
 import {log} from '../../console/log';
 import {OutpostDefenseOverlord} from '../../overlords/defense/outpostDefense';
@@ -114,10 +113,10 @@ export class DirectivePoisonRoom extends Directive {
 				log.notify(`Removing poisonRoom directive in ${this.pos.roomName}: operation completed.`);
 				this.remove();
 			} else {
-				const ret = this.colony.controller.activateSafeMode();
+				const ret = this.room.controller!.activateSafeMode();
 				if(ret == OK) {
-					log.info(`${this.print}: ${printRoomName(this.pos.roomName)} 
-							   - activated safeMode until poison operation is complete`);
+					log.info(`${this.print}: ${printRoomName(this.pos.roomName)}` + 
+							 ` - activated safeMode until poison operation is complete`);
 				}
 			}
 		}

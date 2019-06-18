@@ -51,8 +51,8 @@ export class RoomPoisonerOverlord extends Overlord {
 		// Prepare room for poisoning before running creep logic
 		if(Game.time % 25 == 0 && this.room && this.room.my && this.room.controller!.level == 1) {
 			if(this.room.hostiles.length > 0) {
-				log.warning(`room ${this.print}: ${printRoomName(this.pos.roomName)}
-							 poisoning directive can't destroy/remove structures/csites due to hostiles presence`);
+				log.warning(`room ${this.print}: ${printRoomName(this.pos.roomName)}` +
+							` poisoning directive can't destroy/remove structures/csites due to hostiles presence`);
 			} else {
 				if(this.room.structures.length > 0) { // clear room of structures
 					_.forEach(this.room.structures, structure => {structure.destroy();});
@@ -108,7 +108,7 @@ export class RoomPoisonerOverlord extends Overlord {
 		}
 
 		// at this stage, it is in target OWNED room, upgrade if RCL1, Poison if RCL2
-		if(this.colony.level == 1 ) {
+		if(this.room.controller!.level == 1 ) {
 			roomPoisoner.task = Tasks.upgrade(this.room.controller!);
 			return;
 		} else { // owned room with RCL > 1, start poison actions
@@ -175,6 +175,7 @@ export class RoomPoisonerOverlord extends Overlord {
 			const colonyMemory = Memory.colonies[this.room.name] as ColonyMemory | undefined;
 			if (colonyMemory && !colonyMemory.suspend) {
 				OvermindConsole.suspendColony(this.room.name);
+				log.info(`room ${this.print}: suspended room ${printRoomName(this.pos.roomName)} during poison operation`);
 			}
 		}
 		

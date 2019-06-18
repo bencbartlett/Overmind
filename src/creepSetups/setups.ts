@@ -23,7 +23,7 @@ export const Roles = {
 	healer    : 'transfuser',
 	bunkerGuard : 'bunkerGuard',
 	dismantler: 'lurker',
-	roomPoisoner: 'roomPoisoner',
+	roomPoisoner: 'salter',
 };
 
 /**
