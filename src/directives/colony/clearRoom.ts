@@ -91,6 +91,12 @@ export class DirectiveClearRoom extends Directive {
 			const done = this.removeAllStructures();
 			if (done) {
 				let res = this.room.controller!.unclaim();
+				// Clear up flags
+				for (let flag of this.room.flags) {
+					if (!DirectiveClearRoom.filter(flag) && !DirectiveHaul.filter(flag)) {
+						flag.remove();
+					}
+				}
 				log.notify(`Removing clearRoom directive in ${this.pos.roomName}: operation completed.`);
 				if (res == OK) {
 					this.remove();
