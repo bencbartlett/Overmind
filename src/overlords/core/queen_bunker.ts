@@ -164,7 +164,8 @@ export class BunkerQueenOverlord extends Overlord {
 			_.all(neededResources, resource => (s.store[resource] || 0) >= (queenCarry[resource] || 0)));
 		const withdrawTarget = minBy(targets, target => Pathing.distance(queenPos, target.pos));
 		if (!withdrawTarget) {
-			log.warning(`Could not find adequate withdraw structure for ${queen.print}!`);
+			log.warning(`Could not find adequate withdraw structure for ${queen.print}! ` +
+						`(neededResources: ${neededResources}, queenCarry: ${queenCarry})`);
 			return null;
 		}
 		for (const resourceType of neededResources) {

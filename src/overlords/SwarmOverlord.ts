@@ -32,7 +32,7 @@ export abstract class SwarmOverlord extends CombatOverlord {
 				creepQuantities[setup.role] += existingCreepsOfRole.length;
 				if (!neededQuantities[setup.role]) neededQuantities[setup.role] = 0;
 				neededQuantities[setup.role] += amount;
-				// Spawn the neede quantity of creeps
+				// Spawn the needed quantity of creeps
 				const spawnQuantity = amount - existingCreepsOfRole.length;
 				for (let i = 0; i < spawnQuantity; i++) {
 					this.requestCreep(setup, {priority: priority});

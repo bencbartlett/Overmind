@@ -15,9 +15,11 @@ import {Overlord} from '../Overlord';
 export class ClaimingOverlord extends Overlord {
 
 	claimers: Zerg[];
+	directive: Directive;
 
 	constructor(directive: Directive, priority = OverlordPriority.colonization.claim) {
 		super(directive, 'claim', priority);
+		this.directive = directive;
 		this.claimers = this.zerg(Roles.claim);
 	}
 
@@ -53,7 +55,7 @@ export class ClaimingOverlord extends Overlord {
 				claimer.task = Tasks.claim(this.room.controller!);
 			}
 		} else {
-			claimer.goTo(this.pos, {ensurePath: true, avoidSK: true});
+			claimer.goTo(this.pos, {ensurePath: true, avoidSK: true, waypoints: this.directive.waypoints});
 		}
 	}
 

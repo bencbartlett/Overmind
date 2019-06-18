@@ -590,12 +590,20 @@ export class Zerg {
 	/**
 	 * Colony that the creep belongs to.
 	 */
-	get colony(): Colony {
-		return Overmind.colonies[this.memory[_MEM.COLONY]];
+	get colony(): Colony | null {
+		if (this.memory[_MEM.COLONY] != null) {
+			return Overmind.colonies[this.memory[_MEM.COLONY] as string];
+		} else {
+			return null;
+		}
 	}
 
-	set colony(newColony: Colony) {
-		this.memory[_MEM.COLONY] = newColony.name;
+	set colony(newColony: Colony | null) {
+		if (newColony != null) {
+			this.memory[_MEM.COLONY] = newColony.name;
+		} else {
+			this.memory[_MEM.COLONY] = null;
+		}
 	}
 
 	/**
@@ -711,6 +719,8 @@ export class Zerg {
 	moveOffExitToward(pos: RoomPosition, detour = true): number | undefined {
 		return Movement.moveOffExitToward(this, pos, detour);
 	}
+
+
 
 	// Miscellaneous fun stuff -----------------------------------------------------------------------------------------
 

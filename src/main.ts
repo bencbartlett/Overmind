@@ -44,13 +44,12 @@ import {ActionParser} from './reinforcementLearning/actionParser';
 
 // Main loop
 function main(): void {
-
-	// Memory operations: load and clean memory, suspend operation as needed
+	// Memory operations: load and clean memory, suspend operation as needed -------------------------------------------
 	Mem.load();														// Load previous parsed memory if present
 	if (!Mem.shouldRun()) return;									// Suspend operation if necessary
 	Mem.clean();													// Clean memory contents
 
-	// Instantiation operations: build or refresh the game state
+	// Instantiation operations: build or refresh the game state -------------------------------------------------------
 	if (!Overmind || Overmind.shouldBuild || Game.time >= Overmind.expiration) {
 		delete global.Overmind;										// Explicitly delete the old Overmind object
 		Mem.garbageCollect(true);								// Run quick garbage collection
@@ -60,21 +59,25 @@ function main(): void {
 		Overmind.refresh();											// Refresh phase: update the Overmind state
 	}
 
-	// Tick loop cycle: initialize and run each component
+	// Tick loop cycle: initialize and run each component --------------------------------------------------------------
 	Overmind.init();												// Init phase: spawning and energy requests
 	Overmind.run();													// Run phase: execute state-changing actions
 	Overmind.visuals(); 											// Draw visuals
 	Stats.run(); 													// Record statistics
 
-	// Post-run code: handle sandbox code and error catching
+	// Post-run code: handle sandbox code and error catching -----------------------------------------------------------
 	sandbox();														// Sandbox: run any testing code
 	global.remoteDebugger.run();									// Run remote debugger code if enabled
 	Overmind.postRun();												// Error catching is run at end of every tick
-
 }
 
 // Main loop if RL mode is enabled (~settings.ts)
-function main_rl(): void {
+function main_RL(): void {
+	Mem.clean();
+
+	delete global.Overmind;
+	global.Overmind = new _Overmind();
+
 	ActionParser.run();
 }
 
@@ -85,27 +88,28 @@ function onGlobalReset(): void {
 	OvermindConsole.init();
 	VersionMigration.run();
 	Memory.stats.persistent.lastGlobalReset = Game.time;
-
 	OvermindConsole.printUpdateMessage();
-
 	// Update the master ledger of valid checksums
 	if (MY_USERNAME == MUON) {
 		Assimilator.updateValidChecksumLedger();
 	}
-
 	// Make a new Overmind object
 	global.Overmind = new _Overmind();
-
 	// Make a remote debugger
 	global.remoteDebugger = new RemoteDebugger();
 }
 
 
+// Global reset function if RL mode is enabled
+function onGlobalReset_RL(): void {
+	Mem.format();
+}
+
 // Decide which loop to export as the script loop
 let _loop: () => void;
 if (RL_TRAINING_MODE) {
 	// Use stripped version for training reinforcment learning model
-	_loop = main_rl;
+	_loop = main_RL;
 } else {
 	if (USE_PROFILER) {
 		// Wrap the main loop in the profiler
@@ -118,10 +122,10 @@ if (RL_TRAINING_MODE) {
 
 export const loop = _loop;
 
+// Run the appropriate global reset function
 if (RL_TRAINING_MODE) {
-	// Clear memory when enabling training mode
-	(<any>Memory) = {};
 	OvermindConsole.printTrainingMessage();
+	onGlobalReset_RL();
 } else {
 	// Register these functions for checksum computations with the Assimilator
 	Assimilator.validate(main);
