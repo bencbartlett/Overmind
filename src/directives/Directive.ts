@@ -3,7 +3,7 @@ import {log} from '../console/log';
 import {Pathing} from '../movement/Pathing';
 import {Overlord} from '../overlords/Overlord';
 import {profile} from '../profiler/decorator';
-import {equalXYR, randomHex} from '../utilities/utils';
+import {equalXYR, getPosFromString, randomHex} from '../utilities/utils';
 import {NotifierPriority} from './Notifier';
 
 interface DirectiveCreationOptions {
@@ -34,6 +34,7 @@ export abstract class Directive {
 	room: Room | undefined;						// Flag room
 	memory: FlagMemory;							// Flag memory
 	overlords: { [name: string]: Overlord };	// Overlords
+	waypoints?: RoomPosition[];					// List of portals to travel through to reach destination
 
 	constructor(flag: Flag, colonyFilter?: (colony: Colony) => boolean) {
 		this.memory = flag.memory;
@@ -48,6 +49,9 @@ export abstract class Directive {
 		this.ref = flag.ref;
 		if (!this.memory[_MEM.TICK]) {
 			this.memory[_MEM.TICK] = Game.time;
+		}
+		if (this.memory.waypoints) {
+			this.waypoints = _.map(this.memory.waypoints, posName => getPosFromString(posName)!);
 		}
 		// Relocate flag if needed; this must be called before the colony calculations
 		const needsRelocating = this.handleRelocation();

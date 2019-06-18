@@ -34,7 +34,7 @@ export class RandomWalkerScoutOverlord extends Overlord {
 		// Check if room might be connected to newbie/respawn zone
 		const indestructibleWalls = _.filter(scout.room.walls, wall => wall.hits == undefined);
 		if (indestructibleWalls.length > 0) { // go back to origin colony if you find a room near newbie zone
-			scout.task = Tasks.goToRoom(scout.colony.room.name); // todo: make this more precise
+			scout.task = Tasks.goToRoom(this.colony.room.name); // todo: make this more precise
 		} else {
 			// Pick a new room
 			const neighboringRooms = _.values(Game.map.describeExits(scout.pos.roomName)) as string[];
