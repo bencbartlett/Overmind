@@ -422,6 +422,8 @@ export class Pathing {
 				}
 			});
 			_.forEach(impassibleStructures, s => matrix.set(s.pos.x, s.pos.y, 0xff));
+			const portals = _.filter(impassibleStructures, s => s.structureType == STRUCTURE_PORTAL);
+			_.forEach(portals, p => matrix.set(p.pos.x, p.pos.y, 0xfe));
 			// Set passability of construction sites
 			_.forEach(room.find(FIND_CONSTRUCTION_SITES), (site: ConstructionSite) => {
 				if (site.my && !site.isWalkable) {
@@ -447,6 +449,8 @@ export class Pathing {
 				}
 			});
 			_.forEach(impassibleStructures, s => matrix.set(s.pos.x, s.pos.y, 0xff));
+			const portals = _.filter(impassibleStructures, s => s.structureType == STRUCTURE_PORTAL);
+			_.forEach(portals, p => matrix.set(p.pos.x, p.pos.y, 0xfe));
 			// Set passability of construction sites
 			_.forEach(room.find(FIND_MY_CONSTRUCTION_SITES), (site: ConstructionSite) => {
 				if (!site.isWalkable) {
@@ -545,7 +549,11 @@ export class Pathing {
 	static blockImpassibleStructures(matrix: CostMatrix, room: Room) {
 		_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
 			if (!s.isWalkable) {
-				matrix.set(s.pos.x, s.pos.y, 0xff);
+				if (s.structureType == STRUCTURE_PORTAL) {
+					matrix.set(s.pos.x, s.pos.y, 0xfe);
+				} else {
+					matrix.set(s.pos.x, s.pos.y, 0xff);
+				}
 			}
 		});
 	}
@@ -602,6 +610,20 @@ export class Pathing {
 			if (matrix.get(rampart.pos.x, rampart.pos.y) < 0xfe) {
 				matrix.set(rampart.pos.x, rampart.pos.y, 1);
 			}
+		});
+	}
+
+	/**
+	 * Sets walkable rampart positions to 1, everything else is blocked
+	 */
+	static blockNonRamparts(matrix: CostMatrix, room: Room) {
+		for (let y = 0; y < 50; ++y) {
+			for (let x = 0; x < 50; ++x) {
+				matrix.set(x, y, 0xff);
+			}
+		}
+		_.forEach(room.walkableRamparts, rampart => {
+			matrix.set(rampart.pos.x, rampart.pos.y, 1);
 		});
 	}
 

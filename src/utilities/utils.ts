@@ -44,6 +44,12 @@ export function getUsername(): string {
 			return room.controller.owner.username;
 		}
 	}
+	for (const i in Game.creeps) {
+		const creep = Game.creeps[i];
+		if (creep.owner) {
+			return creep.owner.username;
+		}
+	}
 	console.log('ERROR: Could not determine username. You can set this manually in src/settings/settings_user');
 	return 'ERROR: Could not determine username.';
 }
@@ -54,6 +60,19 @@ export function hasJustSpawned(): boolean {
 
 export function onPublicServer(): boolean {
 	return Game.shard.name.includes('shard');
+}
+
+export function onTrainingEnvironment(): boolean {
+	return !!Memory.reinforcementLearning && !!Memory.reinforcementLearning.enabled;
+}
+
+export function getReinforcementLearningTrainingVerbosity(): number {
+	if (Memory.reinforcementLearning) {
+		if (Memory.reinforcementLearning.verbosity != undefined) {
+			return Memory.reinforcementLearning.verbosity;
+		}
+	}
+	return 0;
 }
 
 interface ToColumnOpts {
@@ -194,7 +213,7 @@ export function logHeapStats(): void {
 	if (typeof Game.cpu.getHeapStatistics === 'function') {
 		const heapStats = Game.cpu.getHeapStatistics();
 		const heapPercent = Math.round(100 * (heapStats.total_heap_size + heapStats.externally_allocated_size)
-									 / heapStats.heap_size_limit);
+									   / heapStats.heap_size_limit);
 		const heapSize = Math.round((heapStats.total_heap_size) / 1048576);
 		const externalHeapSize = Math.round((heapStats.externally_allocated_size) / 1048576);
 		const heapLimit = Math.round(heapStats.heap_size_limit / 1048576);

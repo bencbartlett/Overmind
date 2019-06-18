@@ -71,7 +71,7 @@ export class Cartographer {
 		const coords = this.getRoomCoordinates(roomName);
 		if (coords.x % 10 === 0 || coords.y % 10 === 0) {
 			return ROOMTYPE_ALLEY;
-		} else if (coords.x % 5 === 0 && coords.y % 5 === 0) {
+		} else if (coords.x % 10 != 0 && coords.x % 5 === 0 && coords.y % 10 != 0 && coords.y % 5 === 0) {
 			return ROOMTYPE_CORE;
 		} else if (coords.x % 10 <= 6 && coords.x % 10 >= 4 && coords.y % 10 <= 6 && coords.y % 10 >= 4) {
 			return ROOMTYPE_SOURCEKEEPER;
