@@ -56,7 +56,7 @@ export class DirectiveSKOutpost extends Directive {
 
 	init(): void {
 		// Add this structure/CS to worker overlord's build/repair list
-		if(Game.time % 150 == 0) {
+		if(Game.time % 25 == 0) {
 			const containerNeedRepair = this.getContainersToRepair();
 			if (containerNeedRepair && !this.colony.overlords.work.repairStructures.includes(containerNeedRepair)) {
 				this.colony.overlords.work.repairStructures.push(containerNeedRepair);

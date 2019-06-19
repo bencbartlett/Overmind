@@ -55,7 +55,7 @@ export class ExtractorOverlord extends Overlord {
 
 	private registerOutputRequests(): void {
 		if (this.container) {
-			if (_.sum(this.container.store) > 0.5 * this.container.storeCapacity ||
+			if (_.sum(this.container.store) > 0.3 * this.container.storeCapacity ||
 				(_.sum(this.container.store) > 0 && this.drones.length == 0)) {
 				this.colony.logisticsNetwork.requestOutput(this.container, {resourceType: 'all'});
 			}
@@ -100,9 +100,9 @@ export class ExtractorOverlord extends Overlord {
 
 	init() {
 		
-		const amount = this.mineral && this.mineral.mineralAmount > 0 && this.container? 
+		const amount = this.mineral && this.mineral.mineralAmount > 0 ? 
 					   this.mineral.pos.availableNeighbors().length : 0;
-		//this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), Setups.drones.extractor);
+		// this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), Setups.drones.extractor);
 		if(this.room && this.room.controller) { 
 			this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), Setups.drones.extractor);
 		} else {
@@ -112,15 +112,30 @@ export class ExtractorOverlord extends Overlord {
 	}
 
 	private handleDrone(drone: Zerg): void {
-		//fix: if there is no container, then transfer the minerals yourself!
-        if (!this.container && _.sum(drone.carry) == drone.carryCapacity) {
-			const dropoffPoints: (StructureTerminal)[] = _.compact([this.colony.terminal!]);
-            const bestDropoffPoint = drone.pos.findClosestByMultiRoomRange(dropoffPoints);
-            if (bestDropoffPoint) {
-				if (bestDropoffPoint) drone.task = Tasks.transfer(bestDropoffPoint);
-                return;
-            }
-        }
+		// fix: Build container
+		if (drone.room == this.room && !this.container) {
+			const containerCsites = _.filter(this.room.constructionSites,csite => csite.structureType == STRUCTURE_CONTAINER);
+			const containerCsite = this.pos.findClosestByLimitedRange(containerCsites, 1);
+			if (containerCsite && _.sum(drone.carry) == 0) {
+				drone.task = Tasks.recharge();
+				return;
+			}
+			if (containerCsite && drone.carry.energy > 0) {
+				drone.task = Tasks.build(containerCsite);
+				return;
+			}
+		}
+		// fix: repair container
+		if (drone.room == this.room && this.container && this.container.hits/this.container.hitsMax < 0.5) {
+			if (_.sum(drone.carry) == 0) {
+				drone.task = Tasks.recharge();
+				return;
+			}
+			if (drone.carry.energy > 0) {
+				drone.task = Tasks.repair(this.container);
+				return;
+			}
+		}
 		// Ensure you are in the assigned room
 		if (drone.room == this.room && !drone.pos.isEdge) {
 			if (_.sum(drone.carry) == 0) {
