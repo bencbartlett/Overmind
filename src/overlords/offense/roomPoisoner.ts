@@ -62,14 +62,18 @@ export class RoomPoisonerOverlord extends Overlord {
 			}
 		}			
 	}
-
+	/*
 	private poisonController(): boolean {
 		if(!(this.room && this.room.controller)) {
 			return false;
 		}
 		const poisonControllerPOS =  _.filter(this.room.controller.pos.neighbors, pos => pos.isWalkable(true));
 		if(poisonControllerPOS.length > 0) {
-			_.forEach(poisonControllerPOS,pos=> {pos.createConstructionSite(STRUCTURE_WALL);});
+			_.forEach(poisonControllerPOS,pos=> {
+				if(pos.lookFor(LOOK_CONSTRUCTION_SITES).length == 0) {
+					pos.createConstructionSite(STRUCTURE_WALL);
+				}
+			});
 			return true;
 		} else {
 			return false;
@@ -82,7 +86,29 @@ export class RoomPoisonerOverlord extends Overlord {
 		}
 		const poisonSourcesPOS =  _.filter(_.flatten(_.map(this.room.sources,s=>s.pos.neighbors)),pos =>pos.isWalkable(true));
 		if(poisonSourcesPOS.length > 0) {
-			_.forEach(poisonSourcesPOS,pos=> {pos.createConstructionSite(STRUCTURE_WALL);});
+			_.forEach(poisonSourcesPOS,pos=> {
+				if(pos.lookFor(LOOK_CONSTRUCTION_SITES).length == 0) {
+					pos.createConstructionSite(STRUCTURE_WALL);
+				}
+			});
+			return true;
+		} else {
+			return false;
+		}
+	}
+	*/
+	private poisonTarget(targets: Structure[] | Source[]): boolean {
+		if(!(this.room && this.room.controller)) {
+			return false;
+		}
+		const poisonTargetPOS =  _.filter(_.flatten(_.map(<Structure[]>targets,s=>s.pos.neighbors)),
+								pos => pos.isWalkable(true));
+		if(poisonTargetPOS.length > 0) {
+			_.forEach(poisonTargetPOS,pos=> {
+				if(pos.lookFor(LOOK_CONSTRUCTION_SITES).length == 0) {
+					pos.createConstructionSite(STRUCTURE_WALL);
+				}
+			});
 			return true;
 		} else {
 			return false;
@@ -130,13 +156,26 @@ export class RoomPoisonerOverlord extends Overlord {
 					return;
 				}
 			}
-			// 3) if no walls to build nor fortify found, then create csite walls around controller FIRST
-			if(this.poisonController()) {
+			// 3) move away from sources/controller if nearBy to allow for csite creation on creep location
+			if(this.room && this.room.controller) {
+				if(roomPoisoner.pos.isNearTo(this.room.controller)) {
+					roomPoisoner.creep.moveTo(this.room.mineral!);
+				}
+				_.forEach(this.room.sources,source => {
+					if(roomPoisoner.pos.isNearTo(source)) {
+						roomPoisoner.creep.moveTo(this.room!.mineral!);
+					}
+				});
+			}
+			
+
+			// 4) if no walls to build nor fortify found, then create csite walls around controller FIRST
+			if(this.poisonTarget([this.room!.controller!])) {
 				return;
 			} 
 
-			// 4) finally, poison sources (create wall csite around them)
-			this.poisonSources();
+			// 5) finally, poison sources (create wall csite around them)
+			this.poisonTarget(this.room!.sources!);
 			return;
 		}
 	}
