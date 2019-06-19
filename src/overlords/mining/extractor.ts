@@ -106,12 +106,21 @@ export class ExtractorOverlord extends Overlord {
 		if(this.room && this.room.controller) { 
 			this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), Setups.drones.extractor);
 		} else {
-			this.wishlist(1, Setups.drones.extractor); // to address the issue of transporters not keeping up with SKrooms
+			this.wishlist(Math.min(amount, 1), Setups.drones.extractor);
 		}
 		this.registerOutputRequests();
 	}
 
 	private handleDrone(drone: Zerg): void {
+		//fix: if there is no container, then transfer the minerals yourself!
+        if (!this.container && _.sum(drone.carry) == drone.carryCapacity) {
+			const dropoffPoints: (StructureLink | StructureStorage)[] = _.compact([this.colony.terminal!]);
+            const bestDropoffPoint = drone.pos.findClosestByMultiRoomRange(dropoffPoints);
+            if (bestDropoffPoint) {
+				if (bestDropoffPoint) drone.task = Tasks.transfer(bestDropoffPoint);
+                return;
+            }
+        }
 		// Ensure you are in the assigned room
 		if (drone.room == this.room && !drone.pos.isEdge) {
 			if (_.sum(drone.carry) == 0) {
