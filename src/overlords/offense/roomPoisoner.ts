@@ -62,41 +62,7 @@ export class RoomPoisonerOverlord extends Overlord {
 			}
 		}			
 	}
-	/*
-	private poisonController(): boolean {
-		if(!(this.room && this.room.controller)) {
-			return false;
-		}
-		const poisonControllerPOS =  _.filter(this.room.controller.pos.neighbors, pos => pos.isWalkable(true));
-		if(poisonControllerPOS.length > 0) {
-			_.forEach(poisonControllerPOS,pos=> {
-				if(pos.lookFor(LOOK_CONSTRUCTION_SITES).length == 0) {
-					pos.createConstructionSite(STRUCTURE_WALL);
-				}
-			});
-			return true;
-		} else {
-			return false;
-		}
-	}
-	
-	private poisonSources(): boolean {
-		if(!(this.room && this.room.controller)) {
-			return false;
-		}
-		const poisonSourcesPOS =  _.filter(_.flatten(_.map(this.room.sources,s=>s.pos.neighbors)),pos =>pos.isWalkable(true));
-		if(poisonSourcesPOS.length > 0) {
-			_.forEach(poisonSourcesPOS,pos=> {
-				if(pos.lookFor(LOOK_CONSTRUCTION_SITES).length == 0) {
-					pos.createConstructionSite(STRUCTURE_WALL);
-				}
-			});
-			return true;
-		} else {
-			return false;
-		}
-	}
-	*/
+
 	private poisonTarget(targets: Structure[] | Source[]): boolean {
 		if(!(this.room && this.room.controller)) {
 			return false;
@@ -160,10 +126,12 @@ export class RoomPoisonerOverlord extends Overlord {
 			if(this.room && this.room.controller) {
 				if(roomPoisoner.pos.isNearTo(this.room.controller)) {
 					roomPoisoner.creep.moveTo(this.room.mineral!);
+					return;
 				}
 				_.forEach(this.room.sources,source => {
 					if(roomPoisoner.pos.isNearTo(source)) {
 						roomPoisoner.creep.moveTo(this.room!.mineral!);
+						return;
 					}
 				});
 			}
