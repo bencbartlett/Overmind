@@ -67,14 +67,11 @@ export class RoomPoisonerOverlord extends Overlord {
 		if(!(this.room && this.room.controller)) {
 			return false;
 		}
-		const poisonTargetPOS =  _.filter(_.flatten(_.map(<Structure[]>targets,s=>s.pos.neighbors)),
+		const poisonTargetPOSs =  _.filter(_.flatten(_.map(<Structure[]>targets,s=>s.pos.neighbors)),
 								pos => pos.isWalkable(true));
-		if(poisonTargetPOS.length > 0) {
-			_.forEach(poisonTargetPOS,pos=> {
-				if(pos.lookFor(LOOK_CONSTRUCTION_SITES).length == 0) {
-					pos.createConstructionSite(STRUCTURE_WALL);
-				}
-			});
+		const target = _.first(poisonTargetPOSs); // poison one pos at a time, to avoid blocking self out by wall cstie
+		if (target) {
+			target.createConstructionSite(STRUCTURE_WALL);
 			return true;
 		} else {
 			return false;
