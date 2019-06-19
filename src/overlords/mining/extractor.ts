@@ -99,9 +99,15 @@ export class ExtractorOverlord extends Overlord {
 	}
 
 	init() {
+		
 		const amount = this.mineral && this.mineral.mineralAmount > 0 && this.container? 
 					   this.mineral.pos.availableNeighbors().length : 0;
-		this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), Setups.drones.extractor);
+		//this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), Setups.drones.extractor);
+		if(this.room && this.room.controller) { 
+			this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), Setups.drones.extractor);
+		} else {
+			this.wishlist(1, Setups.drones.extractor); // to address the issue of transporters not keeping up with SKrooms
+		}
 		this.registerOutputRequests();
 	}
 
