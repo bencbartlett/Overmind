@@ -114,7 +114,7 @@ export class ExtractorOverlord extends Overlord {
 	private handleDrone(drone: Zerg): void {
 		//fix: if there is no container, then transfer the minerals yourself!
         if (!this.container && _.sum(drone.carry) == drone.carryCapacity) {
-			const dropoffPoints: (StructureLink | StructureStorage)[] = _.compact([this.colony.terminal!]);
+			const dropoffPoints: (StructureTerminal)[] = _.compact([this.colony.terminal!]);
             const bestDropoffPoint = drone.pos.findClosestByMultiRoomRange(dropoffPoints);
             if (bestDropoffPoint) {
 				if (bestDropoffPoint) drone.task = Tasks.transfer(bestDropoffPoint);

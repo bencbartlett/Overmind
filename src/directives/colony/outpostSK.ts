@@ -13,7 +13,7 @@ export class DirectiveSKOutpost extends Directive {
 	static directiveName = 'outpostSK';
 	static color = COLOR_PURPLE;
 	static secondaryColor = COLOR_YELLOW;
-	static containerRepairTheshold = 0.5;
+	static containerRepairTheshold = 0.75;
 
 	isCenterRoom: boolean;
 
