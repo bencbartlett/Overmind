@@ -30,7 +30,7 @@ export class DirectiveSKOutpost extends Directive {
 	}
 
 	getContainerConstructionSites(): ConstructionSite | undefined {
-		if (!this.pos.isVisible) {
+		if (!this.pos.isVisible || (this.room && this.room.mineral && this.room.mineral.mineralAmount == 0)) {
 			return;
 		}
 		const ContainerCSites = _.filter(this.room!.constructionSites, s => s.structureType == STRUCTURE_CONTAINER);
@@ -42,7 +42,7 @@ export class DirectiveSKOutpost extends Directive {
 	}
 
 	getContainersToRepair(): Structure | undefined {
-		if (!this.pos.isVisible) {
+		if (!this.pos.isVisible || (this.room && this.room.mineral && this.room.mineral.mineralAmount == 0)) {
 			return;
 		}
 		const containersTorepair = _.filter(this.room!.structures, s => s.structureType == STRUCTURE_CONTAINER && 
