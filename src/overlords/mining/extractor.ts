@@ -37,6 +37,11 @@ export class ExtractorOverlord extends Overlord {
 		this.populateStructures();
 	}
 
+	// If mineral is ready to be mined, make a container
+	private shouldHaveContainer() {
+		return this.mineral && (this.mineral.mineralAmount > 0 || this.mineral.ticksToRegeneration < 2000);
+	}
+
 	private populateStructures() {
 		if (Game.rooms[this.pos.roomName]) {
 			this.extractor = this.pos.lookForStructure(STRUCTURE_EXTRACTOR) as StructureExtractor | undefined;
@@ -82,8 +87,8 @@ export class ExtractorOverlord extends Overlord {
 	}
 
 	private buildOutputIfNeeded(): void {
-		// Create container if there is not already one being built and no link
-		if (!this.container) {
+		// Create container if there is not already one being built
+		if (!this.container && this.shouldHaveContainer()) {
 			const containerSite = _.first(_.filter(this.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 2),
 												 site => site.structureType == STRUCTURE_CONTAINER));
 			if (!containerSite) {
