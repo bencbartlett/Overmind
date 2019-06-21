@@ -340,10 +340,12 @@ export class WorkerOverlord extends Overlord {
 		if (worker.carry.energy > 0) {
 			// TODO Add high priority to block controller with ramparts/walls in case of downgrade attack
 			// FIXME workers get stalled at controller in case of downgrade attack
-			// Upgrade controller if close to downgrade or prepare to upgrade if getting controller attacked/was downgraded
-			const downgradeLevel = CONTROLLER_DOWNGRADE[this.colony.controller.level] * .7;
+			// Upgrade controller if close to downgrade or if getting controller attacked/was downgraded
+			const downgradeLevel = CONTROLLER_DOWNGRADE[this.colony.controller.level] *
+				(this.colony.controller.level < 4 ? .3 : .7);
 			if ((!this.colony.controller.upgradeBlocked || this.colony.controller.upgradeBlocked < 30)
-				&& (this.colony.controller.ticksToDowngrade <= downgradeLevel || this.colony.controller.progress > this.colony.controller.progressTotal)) {
+				&& (this.colony.controller.ticksToDowngrade <= downgradeLevel
+					|| this.colony.controller.progress > this.colony.controller.progressTotal)) {
 				if (this.upgradeActions(worker)) return;
 			}
 
