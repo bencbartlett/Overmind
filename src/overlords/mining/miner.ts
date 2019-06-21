@@ -200,9 +200,9 @@ export class MiningOverlord extends Overlord {
 	}
 
 	init() {
-		if(this.room && !this.room.my && this.room.invaders.length == 4) {
+		if(this.room && !this.room.my && (this.room.invaders.length == 4 || this.room.dangerousPlayerHostiles.length > 0)) { 
 			return;
-		} 
+		}
 			this.wishlist(this.minersNeeded, this.setup);
 			this.registerEnergyRequests();
 	}
