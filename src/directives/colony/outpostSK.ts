@@ -23,10 +23,7 @@ export class DirectiveSKOutpost extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		// skip sourceReapoers for safe SKrooms
-		if(!this.isCenterRoom) {
 			this.overlords.sourceReaper = new SourceReaperOverlord(this);
-		}
 	}
 
 	getContainerConstructionSites(): ConstructionSite | undefined {

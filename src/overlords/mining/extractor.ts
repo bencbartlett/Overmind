@@ -99,7 +99,9 @@ export class ExtractorOverlord extends Overlord {
 	}
 
 	init() {
-		
+		if(this.room && !this.room.my && this.room.invaders.length == 4) { 
+			return;
+		}
 		const amount = this.mineral && this.mineral.mineralAmount > 0 ? 
 					   this.mineral.pos.availableNeighbors().length : 0;
 		// this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), Setups.drones.extractor);

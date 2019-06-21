@@ -7,6 +7,7 @@ import {Movement} from '../../movement/Movement';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {CombatTargeting} from '../../targeting/CombatTargeting';
+import {Cartographer, ROOMTYPE_CORE} from '../../utilities/Cartographer';
 import {minBy} from '../../utilities/utils';
 import {Visualizer} from '../../visuals/Visualizer';
 import {CombatZerg} from '../../zerg/CombatZerg';
@@ -28,6 +29,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 	directive: DirectiveSKOutpost;
 	memory: SourceReaperOverlordMemory;
 	targetLair: StructureKeeperLair | undefined;
+	isCenterRoom: boolean;
 
 	reapers: CombatZerg[];
 	defenders: CombatZerg[];
@@ -40,6 +42,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 		this.defenders = this.combatZerg(Roles.ranged);
 		this.memory = Mem.wrap(this.directive.memory, 'sourceReaper');
 		this.computeTargetLair();
+		this.isCenterRoom = Cartographer.roomType(this.pos.roomName) == ROOMTYPE_CORE;
 	}
 
 	private computeTargetLair() {
@@ -58,7 +61,9 @@ export class SourceReaperOverlord extends CombatOverlord {
 	init() {
 		const defenderAmount = this.room && (this.room.invaders.length > 0
 											 || RoomIntel.isInvasionLikely(this.room)) ? 1 : 0;
-		this.wishlist(1, CombatSetups.zerglings.sourceKeeper);
+		const reaperAmount = this.isCenterRoom? 0 : 1 ;
+	
+		this.wishlist(reaperAmount, CombatSetups.zerglings.sourceKeeper);
 		this.wishlist(defenderAmount, CombatSetups.hydralisks.sourceKeeper);
 	}
 
