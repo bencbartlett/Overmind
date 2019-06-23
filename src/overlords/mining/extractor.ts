@@ -135,6 +135,7 @@ export class ExtractorOverlord extends Overlord {
 					return;
 				}
 			}
+			/*
 			if(_.sum(drone.carry) < drone.carryCapacity/2) {
 				const tombsStone = _.first(_.filter(this.room.tombstones,tombstone => tombstone.pos.inRangeTo(drone,5)));
 				if(tombsStone && tombsStone.energy) {
@@ -142,6 +143,7 @@ export class ExtractorOverlord extends Overlord {
 					return;	
 				}
 			}
+			*/
 			if (drone.carry.energy > 0) {
 				drone.task = Tasks.repair(this.container);
 				return;
