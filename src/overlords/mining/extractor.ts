@@ -128,10 +128,19 @@ export class ExtractorOverlord extends Overlord {
 			}
 		}
 		// fix: repair container
-		if (drone.room == this.room && this.container && this.container.hits/this.container.hitsMax < 0.5) {
-			if (_.sum(drone.carry) == 0) {
-				drone.task = Tasks.recharge();
-				return;
+		if (drone.room == this.room && this.container) {
+			if(this.container.hits/this.container.hitsMax < 0.5) {
+				if (_.sum(drone.carry) == 0) {
+					drone.task = Tasks.recharge();
+					return;
+				}
+			}
+			if(drone.carry.energy < _.sum(drone.carry)/2) {
+				const tombsStone = _.first(_.filter(this.room.tombstones,tombstone => tombstone.pos.inRangeTo(drone,5)));
+				if(tombsStone && tombsStone.energy) {
+					drone.task = Tasks.withdraw(tombsStone,RESOURCE_ENERGY);
+					return;	
+				}
 			}
 			if (drone.carry.energy > 0) {
 				drone.task = Tasks.repair(this.container);
