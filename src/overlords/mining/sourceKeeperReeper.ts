@@ -29,7 +29,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 	directive: DirectiveSKOutpost;
 	memory: SourceReaperOverlordMemory;
 	targetLair: StructureKeeperLair | undefined;
-	// isCenterRoom: boolean;
+	isCenterRoom: boolean;
 
 	reapers: CombatZerg[];
 	defenders: CombatZerg[];
@@ -42,7 +42,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 		this.defenders = this.combatZerg(Roles.ranged);
 		this.memory = Mem.wrap(this.directive.memory, 'sourceReaper');
 		this.computeTargetLair();
-		// this.isCenterRoom = Cartographer.roomType(this.pos.roomName) == ROOMTYPE_CORE;
+		this.isCenterRoom = Cartographer.roomType(this.pos.roomName) == ROOMTYPE_CORE;
 	}
 
 	private computeTargetLair() {
@@ -59,12 +59,12 @@ export class SourceReaperOverlord extends CombatOverlord {
 	}
 
 	init() {
-		const amount = this.room && (this.room.invaders.length > 0
+		const defenderAmount = this.room && (this.room.invaders.length > 0
 											 || RoomIntel.isInvasionLikely(this.room)) ? 1 : 0;
-		// const reaperAmount = this.isCenterRoom? 0 : 1 ;
+		const reaperAmount = (defenderAmount || !this.isCenterRoom)? 1 : 0 ;
 	
-		this.wishlist(amount, CombatSetups.zerglings.sourceKeeper);
-		this.wishlist(amount, CombatSetups.hydralisks.sourceKeeper);
+		this.wishlist(reaperAmount, CombatSetups.zerglings.sourceKeeper);
+		this.wishlist(defenderAmount, CombatSetups.hydralisks.sourceKeeper);
 	}
 
 	private getNextTargetLair(): StructureKeeperLair | undefined {
