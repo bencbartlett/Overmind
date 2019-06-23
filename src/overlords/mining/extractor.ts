@@ -135,7 +135,7 @@ export class ExtractorOverlord extends Overlord {
 					return;
 				}
 			}
-			if(drone.carry.energy < _.sum(drone.carry)/2) {
+			if(_.sum(drone.carry) < _.sum(drone.carry)/2) {
 				const tombsStone = _.first(_.filter(this.room.tombstones,tombstone => tombstone.pos.inRangeTo(drone,5)));
 				if(tombsStone && tombsStone.energy) {
 					drone.task = Tasks.withdraw(tombsStone,RESOURCE_ENERGY);
