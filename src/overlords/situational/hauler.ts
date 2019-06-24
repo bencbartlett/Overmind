@@ -55,7 +55,7 @@ export class HaulingOverlord extends Overlord {
 				// Pick up drops first
 				if (this.directive.hasDrops) {
 					const allDrops: Resource[] = _.flatten(_.values(this.directive.drops));
-					const drop = allDrops[0];
+					const drop = _.find(allDrops, drop => drop.resourceType != "energy") || allDrops[0];
 					if (drop) {
 						hauler.task = Tasks.pickup(drop);
 						return;
