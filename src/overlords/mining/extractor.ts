@@ -115,7 +115,7 @@ export class ExtractorOverlord extends Overlord {
 			if (_.sum(drone.carry) == 0) {
 				drone.task = Tasks.harvest(this.mineral!);
 			}
-			// Else see if there is an output to depsit to or to maintain
+			// Else see if there is an output to deposit to or to maintain
 			else if (this.container) {
 				drone.task = Tasks.transferAll(this.container);
 				// Move onto the output container if you're the only drone
