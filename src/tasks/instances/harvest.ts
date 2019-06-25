@@ -14,7 +14,7 @@ export class TaskHarvest extends Task {
 	}
 
 	isValidTask() {
-		return _.sum(this.creep.carry) < this.creep.carryCapacity;
+		return _.sum(this.creep.carry) < this.creep.carryCapacity * .95;
 	}
 
 	isValidTarget() {
