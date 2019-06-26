@@ -11,6 +11,7 @@ import {boostResources} from '../resources/map_resources';
 import {Cartographer} from '../utilities/Cartographer';
 import {toCreep, Zerg} from '../zerg/Zerg';
 import {RoomIntel} from './RoomIntel';
+import {Visualizer} from "../visuals/Visualizer";
 
 interface CombatIntelMemory {
 	cache: {
@@ -91,6 +92,31 @@ export class CombatIntel {
 					matrix.set(barrier.pos.x, barrier.pos.y, Math.ceil(barrier.hits * 10 / highestHits) * 10);
 				}
 			}
+			return matrix;
+		}
+	}
+
+
+	static computeCreepDamagePotentialMatrix(room: Room, creeps: Creep[], startingMatrix?: CostMatrix): CostMatrix | undefined {
+		if (room) {
+			const matrix = startingMatrix || new PathFinder.CostMatrix();
+
+			creeps.forEach(creep => {
+				const meleeAttack = CombatIntel.getAttackPotential(creep);
+				const rangedAttack = CombatIntel.getRangedAttackPotential(creep);
+				// const heal = CombatIntel.getHealPotential(creep);
+				if (meleeAttack > 0) {
+					creep.pos.neighbors.forEach(pos =>
+						matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + meleeAttack * ATTACK_POWER))
+				}
+				if (rangedAttack > 0) {
+					creep.pos.getPositionsInRange(3).forEach(pos =>
+						matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + rangedAttack * RANGED_ATTACK_POWER))
+				}
+			});
+
+			Visualizer.displayCostMatrix(matrix, room.name);
+
 			return matrix;
 		}
 	}

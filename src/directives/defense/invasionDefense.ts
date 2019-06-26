@@ -70,6 +70,9 @@ export class DirectiveInvasionDefense extends Directive {
 		if (!this.room || this.room.hostiles.length > 0) {
 			this.memory.safeSince = Game.time;
 		}
+		if (this.room && this.room!.name == 'W13N45') {
+			CombatIntel.computeCreepDamagePotentialMatrix(this.room.dangerousPlayerHostiles);
+		}
 		// If there are no hostiles left in the room and everyone's healed, then remove the flag
 		if (this.room && this.room.hostiles.length == 0 &&
 			Game.time - this.memory.safeSince > 100 && this.room.hostileStructures.length == 0) {
