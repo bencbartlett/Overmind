@@ -11,6 +11,12 @@ interface DirectiveBaseOperatorMemory extends FlagMemory {
 	powerPriorities: PowerConstant[];
 }
 
+export enum types {
+	opgen,
+	baseoperator,
+	basedefender
+}
+
 /**
  * Simple directive to run a power creep where the flag name is the power creep name
  */
@@ -234,6 +240,10 @@ export class DirectiveBaseOperator extends Directive {
 
 
 	run(): void {
+
+		// For the power creeps that just sit on power spawn
+		const isStationary = this.powerCreep.name.toLowerCase().indexOf(types.basedefender.toString());
+
 		console.log(`Running power creep ${JSON.stringify(this.powerCreep)} with ttl ${this.powerCreep.ticksToLive} with ${this.room!.powerSpawn}`);
 		if (!this.room) {
 			return;
@@ -241,11 +251,11 @@ export class DirectiveBaseOperator extends Directive {
 			// Spawn creep
 			let res = this.powerCreep.spawn(this.room.powerSpawn);
 			log.alert(`Running ${this.powerCreep} with spawn of ${res}`);
-		} else if (this.room.controller && !this.room.controller.isPowerEnabled) {
+		} else if (this.room.controller && !this.room.controller.isPowerEnabled && !isStationary) {
 			// Enable power
 			let res = this.enablePower(this.room.controller);
 			log.alert(`Running ${this.powerCreep} with enable power of ${res}`);
-		} else if (this.powerCreep && this.powerCreep.ticksToLive && this.powerCreep.ticksToLive < 400 && this.room.powerSpawn) {
+		} else if (this.powerCreep && this.powerCreep.ticksToLive && this.powerCreep.ticksToLive < 900 && this.room.powerSpawn) {
 			let res = this.renew(this.room.powerSpawn);
 			log.alert(`Running ${this.powerCreep} with renew of ${res}`);
 		} else {
