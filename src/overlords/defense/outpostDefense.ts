@@ -6,6 +6,7 @@ import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
+import {boostResources} from "../../resources/map_resources";
 
 /**
  * General purpose skirmishing overlord for dealing with player combat in an outpost
@@ -84,6 +85,9 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 
 		const {attack, rangedAttack, heal} = this.getEnemyPotentials();
 
+		if (attack > 30 || rangedAttack > 30) {
+			return;
+		}
 		const hydraliskSetup = mode == 'NORMAL' ? CombatSetups.hydralisks.default : CombatSetups.hydralisks.early;
 		const hydraliskAmount = this.computeNeededHydraliskAmount(hydraliskSetup, rangedAttack);
 		this.wishlist(hydraliskAmount, hydraliskSetup, {priority: this.priority - .2, reassignIdle: true});

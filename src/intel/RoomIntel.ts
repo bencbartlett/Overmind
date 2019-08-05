@@ -401,10 +401,39 @@ export class RoomIntel {
 		}
 	}
 
+	static cleanRoomMemory() {
+		for (let roomName in Memory.rooms) {
+			if (Cartographer.roomType(roomName) == "ALLEY" || roomName.indexOf('E') != -1 || roomName.indexOf('S') != -1) {
+				delete Memory.rooms[roomName];
+				console.log(roomName);
+			}
+		}
+
+		let roomsToDelete = [];
+		let x = 0;
+		for (let roomName in Memory.rooms) {
+			let remove = true;
+			for (let colonyName in Memory.colonies){
+				if(Game.map.getRoomLinearDistance(roomName, colonyName) <= 5){
+					remove = false;
+				}
+			}
+			if(remove && roomsToDelete.indexOf(roomName) == -1){
+				x++;
+				roomsToDelete.push(roomName);
+				console.log(x+ ') '+ roomName);
+				delete Memory.rooms[roomName];
+			}
+		}
+	}
+
 
 	static run(): void {
 		let alreadyComputedScore = false;
 		this.requestZoneData();
+		if (Game.time % 1475 == 0) {
+			RoomIntel.cleanRoomMemory();
+		}
 
 		for (const name in Game.rooms) {
 

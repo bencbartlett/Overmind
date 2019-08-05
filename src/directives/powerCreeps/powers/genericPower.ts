@@ -20,7 +20,7 @@ export abstract class Power {
 	};
 
 	constructor(powerCreep: PowerCreep, target?: RoomObject) {
-		log.notify(`Creating power task for ${powerCreep}`);
+		// log.notify(`Creating power task for ${powerCreep}`);
 		this._powerCreep = {
 			name: powerCreep.name,
 		};

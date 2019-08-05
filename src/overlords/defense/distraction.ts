@@ -7,6 +7,7 @@ import {profile} from '../../profiler/decorator';
 import {boostResources} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
+import {Directive} from "../../directives/Directive";
 
 /**
  * 5 Move 1 RA creep that avoids all enemies and distracts attackers.
@@ -17,14 +18,14 @@ import {CombatOverlord} from '../CombatOverlord';
 export class DistractionOverlord extends CombatOverlord {
 
 	distractions: CombatZerg[];
-	room: Room;
+	room: Room | undefined;
 
 	static settings = {
 		retreatHitsPercent : 0.85,
 		reengageHitsPercent: 0.95,
 	};
 
-	constructor(directive: DirectiveInvasionDefense,
+	constructor(directive: Directive,
 				boosted  = false,
 				priority = OverlordPriority.defense.rangedDefense) {
 		super(directive, 'distraction', priority, 1);
@@ -32,9 +33,9 @@ export class DistractionOverlord extends CombatOverlord {
 	}
 
 	private handleDistraction(distraction: CombatZerg): void {
-		if (this.room.hostiles.length > 0) {
+		if (this.room && this.room.hostiles.length > 0) {
 			distraction.autoCombat(this.room.name, false, 5, {preferRamparts: false});
-			this.taunt(distraction, this.room.hostiles[0].owner.username);
+			DistractionOverlord.taunt(distraction, this.room.hostiles[0].owner.username);
 			const nearbyHostiles = this.room.hostiles.filter(hostile => hostile.pos.getRangeTo(distraction) <= 6);
 			if (nearbyHostiles.length > 0) {
 				distraction.kite(nearbyHostiles);
@@ -49,13 +50,14 @@ export class DistractionOverlord extends CombatOverlord {
 	}
 
 	init() {
-		this.reassignIdleCreeps(Roles.ranged);
+		// this.reassignIdleCreeps(Roles.ranged); until it's it's own role don't reassign
 		const setup = CombatSetups.hydralisks.distraction;
 		this.wishlist(1, setup);
 	}
 
 	run() {
-		console.log(`Distraction overlord running in ${this.room.print} with ${this.distractions}!`);
+		// need to check room exists
+		//console.log(`Distraction overlord running in ${this.room.print} with ${this.distractions}!`);
 		this.autoRun(this.distractions, distraction => this.handleDistraction(distraction));
 	}
 }

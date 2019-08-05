@@ -65,7 +65,7 @@ Object.defineProperty(Room.prototype, 'creeps', {
 Object.defineProperty(Room.prototype, 'hostiles', {
 	get() {
 		if (!this._hostiles) {
-			this._hostiles = this.find(FIND_HOSTILE_CREEPS);
+			this._hostiles = _.filter(this.find(FIND_HOSTILE_CREEPS), (creep: Creep) => creep &&  creep.owner.username != 'zGeneral');
 		}
 		return this._hostiles;
 	},

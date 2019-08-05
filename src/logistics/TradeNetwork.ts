@@ -59,6 +59,7 @@ export const maxMarketPrices: { [resourceType: string]: number } = {
 	[RESOURCE_ZYNTHIUM] : 0.25,
 	[RESOURCE_CATALYST] : 0.5,
 	[RESOURCE_ENERGY]   : 0.05,
+	[RESOURCE_CATALYZED_GHODIUM_ACID]	: 1.2,
 };
 
 export const MAX_ENERGY_SELL_ORDERS = 5;

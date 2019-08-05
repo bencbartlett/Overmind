@@ -77,10 +77,12 @@ export class MiningOverlord extends Overlord {
 		} else if (this.colony.room.energyCapacityAvailable < StandardMinerSetupCost) {
 			this.mode = 'early';
 			this.setup = Setups.drones.miners.default;
-		} else if (this.checkIfDoubleMine() && this.colony.room.energyCapacityAvailable > DoubleMinerSetupCost) {
-			this.mode = 'double';
-			this.setup = Setups.drones.miners.double;
-		} else if (this.link) {
+		}
+		// else if (this.checkIfDoubleMine() && this.colony.room.energyCapacityAvailable > DoubleMinerSetupCost) {
+		// 	this.mode = 'double';
+		// 	this.setup = Setups.drones.miners.double;
+		// }
+		else if (this.link) {
 			this.mode = 'link';
 			this.setup = Setups.drones.miners.default;
 		} else {
@@ -210,7 +212,11 @@ export class MiningOverlord extends Overlord {
 		// Create container if there is not already one being built and no link
 		if (!this.container && !this.constructionSite && !this.link) {
 			const containerPos = this.calculateContainerPos();
-			const container = containerPos.lookForStructure(STRUCTURE_CONTAINER) as StructureContainer | undefined;
+			if (!containerPos) {
+				log.info(`${this.print}: can't build container at ${this.room}`);
+				return;
+			}
+			const container = containerPos ? containerPos.lookForStructure(STRUCTURE_CONTAINER) as StructureContainer | undefined : undefined;
 			if (container) {
 				log.warning(`${this.print}: this.container out of sync at ${containerPos.print}`);
 				this.container = container;

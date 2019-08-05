@@ -7,6 +7,7 @@ import {profile} from '../../profiler/decorator';
 import {ColonyStage} from '../../Colony';
 import {Directive} from '../Directive';
 import {NotifierPriority} from '../Notifier';
+import {DistractionOverlord} from "../../overlords/defense/distraction";
 
 interface DirectiveInvasionDefenseMemory extends FlagMemory {
 	persistent?: boolean;
@@ -28,6 +29,7 @@ export class DirectiveInvasionDefense extends Directive {
 	room: Room | undefined;
 
 	private relocateFrequency: number;
+	safeEndTime: 500;
 
 	constructor(flag: Flag) {
 		super(flag, colony => colony.level >= 1 && colony.spawns.length > 0);
@@ -39,7 +41,7 @@ export class DirectiveInvasionDefense extends Directive {
 		}
 		const expectedDamage = CombatIntel.maxDamageByCreeps(this.room.dangerousPlayerHostiles);
 		const expectedHealing = CombatIntel.maxHealingByCreeps(this.room.dangerousPlayerHostiles);
-		const useBoosts = this.room.name == 'W13N45' || (expectedDamage > ATTACK_POWER * 50) || (expectedHealing > RANGED_ATTACK_POWER * 100)
+		const useBoosts = (expectedDamage > ATTACK_POWER * 50) || (expectedHealing > RANGED_ATTACK_POWER * 100)
 						&& !!this.colony.terminal
 						&& !!this.colony.evolutionChamber;
 		const percentWalls = _.filter(this.room.barriers, s => s.structureType == STRUCTURE_WALL).length /
@@ -47,28 +49,20 @@ export class DirectiveInvasionDefense extends Directive {
 		const meleeHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(ATTACK) > 0 ||
 																	  hostile.getActiveBodyparts(WORK) > 0);
 		const rangedHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0);
+		if (meleeHostiles.length > 0 && expectedDamage > 40*ATTACK_POWER || rangedHostiles.length >= 2) {
+			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, true);
+			this.overlords.distraction = new DistractionOverlord(this);
+		}
 		if (this.colony.stage > ColonyStage.Larva) {
 			this.overlords.rangedDefense = new RangedDefenseOverlord(this, useBoosts);
 		} else {
-			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
+			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, false);
 		}
-		// If serious bunker busting attempt, spawn lurkers
-		//console.log("Bunker Melee hostiles are: " + rangedHostiles);
-		               // if (meleeHostiles.length > 0 && ((expectedDamage > ATTACK_POWER * 30) || meleeHostiles[0].owner.username == 'Inakrin' || rangedHostiles[0])) {
-			               //      Game.notify(`Adding a new Bunker Defense in room ${this.room.print}`);
-				               //      this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, true);
-					               // }
-		// Look, it's 2am so going to go with name hack for now.
-		if ((meleeHostiles.length > 1 && (meleeHostiles[0].owner.username == 'o4kapuk' ||  meleeHostiles[0].owner.username == 'inakrin'))) {
-			Game.notify(`Adding a new Bunker Defense in room ${this.room.print}`);
-			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, false);
-		}
-
 	}
 
 	init(): void {
 		const numHostiles: string = this.room ? this.room.hostiles.length.toString() : '???';
-		this.alert(`Invasion (hostiles: ${numHostiles})`, NotifierPriority.Critical);
+		this.alert(`Invasion (hostiles: ${numHostiles}) ${Game.time - this.memory.safeSince}`, NotifierPriority.Critical);
 	}
 
 	recordBaddies () {
@@ -94,7 +88,7 @@ export class DirectiveInvasionDefense extends Directive {
 					// memory protection if they don't split name
 					return;
 				}
-				playerMem.types[creepType] = (playerMem.types[creepType]+1) || 1 ;
+				playerMem.types[creepType] = (playerMem.types[creepType]+1) || 1;
 				for (const bodyPart of creep.body) {
 					playerMem.parts[bodyPart.type] = (playerMem.parts[bodyPart.type])+1 || 1;
 					if (bodyPart.boost) {
@@ -103,6 +97,27 @@ export class DirectiveInvasionDefense extends Directive {
 				}
 			}
 		});
+	}
+
+	printPlayerExpenditure() {
+		let t3Count = 0;
+		let energyCount = 0;
+		let mem = Memory.playerCreepTracker['inakrin'];
+		for (let boostid in mem.boosts) {
+			let boost = mem.boosts[boostid];
+			console.log(`${boostid} : ${boost*30}`);
+			t3Count+=boost*30;
+			energyCount+=20;
+		}
+		for (let partType in mem.parts) {
+			let partCount = mem.parts[partType];
+			const cost = BODYPART_COST[(partType as BodyPartConstant)];
+			console.log(`${partType} : ${cost * partCount}`);
+			energyCount+=cost * partCount;
+		}
+
+		console.log(`Total T3 Cost: ${t3Count}`);
+		console.log(`Total Energy Cost: ${energyCount}`);
 	}
 
 	cleanUpPlayerMem() {
@@ -122,20 +137,23 @@ export class DirectiveInvasionDefense extends Directive {
 			this.memory.safeSince = Game.time;
 			this.recordBaddies();
 		}
+		//this.printPlayerExpenditure();
 
 		if (Game.time % 5000 == 0) {
 			// clean up, ya this shit
 			this.cleanUpPlayerMem();
 		}
-		if (this.room && this.room!.name == 'W13N45') {
-			CombatIntel.computeCreepDamagePotentialMatrix(this.room.dangerousPlayerHostiles);
+		if (this.room && (this.room!.name == 'W13N45' || this.room!.name == 'W18N49')) {
+			CombatIntel.computeCreepDamagePotentialMatrix(this.room, this.room.dangerousPlayerHostiles);
 		}
 		// If there are no hostiles left in the room and everyone's healed, then remove the flag
 		if (this.room && this.room.hostiles.length == 0 &&
-			(Game.time - this.memory.safeSince) > this.safeEndTime && this.room.hostileStructures.length == 0) {
+			(Game.time - this.memory.safeSince) > this.safeEndTime) {
 			if (_.filter(this.room.creeps, creep => creep.hits < creep.hitsMax).length == 0) {
 				this.remove();
 			}
+		} else if ((Game.time - this.memory.safeSince) > 3000) {
+			this.remove();
 		}
 	}
 

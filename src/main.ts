@@ -36,7 +36,7 @@ import {Mem} from './memory/Memory';
 import {OvermindConsole} from './console/Console';
 import {Stats} from './stats/stats';
 import profiler from './profiler/screeps-profiler';
-import _Overmind from './Overmind_obfuscated'; // this should be './Overmind_obfuscated' unless you are me
+import _Overmind from './Overmind'; // this should be './Overmind_obfuscated' unless you are me
 import {VersionMigration} from './versionMigration/migrator';
 import {RemoteDebugger} from './debug/remoteDebugger';
 import {ActionParser} from './reinforcementLearning/actionParser';

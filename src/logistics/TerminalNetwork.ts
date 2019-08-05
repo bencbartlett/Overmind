@@ -92,6 +92,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 				RESOURCE_UTRIUM,
 				RESOURCE_OXYGEN,
 				RESOURCE_HYDROGEN,
+				RESOURCE_OPS,
 			],
 		},
 		buyEnergyThreshold: 200000, // buy energy off market if average amount is less than this

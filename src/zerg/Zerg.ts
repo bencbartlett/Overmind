@@ -691,7 +691,7 @@ export class Zerg {
 					}
 				}
 				// Invalidate task
-				if (fleeOptions.invalidateTask) {
+				if (fleeOptions.invalidateTask && !this.inRampart) {
 					this.task = null;
 				}
 			}

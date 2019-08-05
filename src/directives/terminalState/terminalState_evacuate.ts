@@ -5,9 +5,9 @@ import {NotifierPriority} from '../Notifier';
 
 export const TERMINAL_STATE_EVACUATE: TerminalState = {
 	name     : 'evacuate',
-	type     : 'out',
-	amounts  : {},
-	tolerance: 500
+	type     : 'in/out',
+	amounts  : {[RESOURCE_ENERGY]: 10000,},
+	tolerance: 900,
 };
 
 const EVACUATE_STATE_TIMEOUT = 25000;

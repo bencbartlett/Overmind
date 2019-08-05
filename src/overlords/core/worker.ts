@@ -41,11 +41,11 @@ export class WorkerOverlord extends Overlord {
 			4       : 5e+4,
 			5       : 1e+5,
 			6       : 5e+5,
-			7       : 1e+6,
+			7       : 2e+6,
 			8       : 2e+7,
 		},
 		hitTolerance        : 100000, 	// allowable spread in HP
-		fortifyDutyThreshold: 500000,	// ignore fortify duties until this amount of energy is present in the room
+		fortifyDutyThreshold: 100000,	// ignore fortify duties until this amount of energy is present in the room
 	};
 
 	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.work) {
@@ -123,8 +123,8 @@ export class WorkerOverlord extends Overlord {
 		const opts: ZergOptions = {};
 		const totalNukeDefenseHitsRemaining = _.sum(_.values(this.nukeDefenseHitsRemaining));
 		const approximateRepairPowerPerLifetime = REPAIR_POWER * 50 / 3 * CREEP_LIFE_TIME;
-		if (totalNukeDefenseHitsRemaining > 3 * approximateRepairPowerPerLifetime) {
-			opts.boostWishlist = [boostResources.construct[3]];
+		if (totalNukeDefenseHitsRemaining > 3 * approximateRepairPowerPerLifetime || this.fortifyBarriers.length > 5) {
+			opts.boostWishlist = [boostResources.construct[2]];
 		}
 
 		// Register workers
@@ -187,7 +187,8 @@ export class WorkerOverlord extends Overlord {
 					const paveTicks = _.sum(this.colony.rooms,
 										  room => this.colony.roadLogistics.energyToRepave(room)) / 1; // repairCost=1
 					let fortifyTicks = 0;
-					if (this.colony.assets.energy > WorkerOverlord.settings.fortifyDutyThreshold) {
+					let shouldFortify = this.colony.assets.energy > (Game.map.getRoomLinearDistance(this.room.name, 'W16N48') * 15000);
+					if (shouldFortify) {
 						fortifyTicks = 0.25 * _.sum(this.fortifyBarriers, barrier =>
 							Math.max(0, WorkerOverlord.settings.barrierHits[this.colony.level]
 										- barrier.hits)) / REPAIR_POWER;
@@ -202,6 +203,9 @@ export class WorkerOverlord extends Overlord {
 					return numWorkers;
 				});
 			}
+		}
+		if (this.colony.name == 'W18N49' || this.colony.name == 'W11N54') {
+			numWorkers = 5;
 		}
 		this.wishlist(numWorkers, setup);
 	}

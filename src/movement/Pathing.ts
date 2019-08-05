@@ -482,6 +482,7 @@ export class Pathing {
 			return room._kitingMatrix;
 		}
 		const matrix = this.getCreepMatrix(room).clone();
+		Pathing.blockImpassibleTerrain(matrix, room.name);
 		const avoidCreeps = _.filter(room.hostiles,
 									 c => c.getActiveBodyparts(ATTACK) > 0 || c.getActiveBodyparts(RANGED_ATTACK) > 0);
 		// || c.getActiveBodyparts(HEAL) > 0);
@@ -561,17 +562,17 @@ export class Pathing {
 	/**
 	 * Sets all creep positions to impassible
 	 */
-	static blockMyCreeps(matrix: CostMatrix, room: Room, creeps?: (Creep | Zerg)[]) {
+		static blockMyCreeps(matrix: CostMatrix, room: Room, creeps?: (Creep | Zerg)[]) {
 
-		const blockCreeps = creeps || room.creeps as (Creep | Zerg)[];
-		const blockPositions = _.map(blockCreeps,
-									 creep => Overmind.zerg[creep.name] ? Overmind.zerg[creep.name].nextPos
-																		: creep.pos);
+			const blockCreeps = creeps || room.creeps as (Creep | Zerg)[];
+			const blockPositions = _.map(blockCreeps,
+										 creep => Overmind.zerg[creep.name] ? Overmind.zerg[creep.name].nextPos
+																			: creep.pos);
 
-		_.forEach(blockPositions, pos => {
-			matrix.set(pos.x, pos.y, CREEP_COST);
-		});
-	}
+			_.forEach(blockPositions, pos => {
+				matrix.set(pos.x, pos.y, CREEP_COST);
+			});
+		}
 
 	/**
 	 * Sets hostile creep positions to impassible
@@ -623,7 +624,7 @@ export class Pathing {
 			}
 		}
 		_.forEach(room.walkableRamparts, rampart => {
-			matrix.set(rampart.pos.x, rampart.pos.y, 1);
+				matrix.set(rampart.pos.x, rampart.pos.y, 1);
 		});
 	}
 

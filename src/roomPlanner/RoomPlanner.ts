@@ -725,7 +725,7 @@ export class RoomPlanner {
 		for (const structureType of BuildPriorities) {
 			if (this.map[structureType]) {
 				for (const pos of this.map[structureType]) {
-					if (count > 0 && RoomPlanner.canBuild(structureType, pos)) {
+					if ((structureType == STRUCTURE_SPAWN || count > 0) && RoomPlanner.canBuild(structureType, pos)) {
 						const result = pos.createConstructionSite(structureType);
 						if (result != OK) {
 							const structures = pos.lookFor(LOOK_STRUCTURES);
@@ -861,7 +861,7 @@ export class RoomPlanner {
 				if (expansionData) {
 					bunkerAnchor = derefCoords(expansionData.bunkerAnchor, this.colony.room.name);
 				} else {
-					log.error(`Cannot determine anchor! No spawns or expansionData.bunkerAnchor!`);
+					log.error(`Cannot determine anchor! No spawns or expansionData.bunkerAnchor for ${this.colony.print}!`);
 					return;
 				}
 			}

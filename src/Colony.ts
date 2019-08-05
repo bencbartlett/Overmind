@@ -548,8 +548,9 @@ export class Colony {
 	}
 
 	private runPowerSpawn() {
-		if (this.powerSpawn && this.assets.energy > 300000 && this.powerSpawn.energy > 50
+		if (this.powerSpawn && this.storage && this.storage.energy > 250000 && this.powerSpawn.energy > 50
 			&& this.powerSpawn.power > 0) {
+			console.log(`Processing power in ${this.room.print}`);
 			this.powerSpawn.processPower();
 		}
 	}

@@ -1,5 +1,5 @@
 import {CombatIntel} from '../intel/CombatIntel';
-import {CombatMoveOptions, Movement, MoveOptions, NO_ACTION} from '../movement/Movement';
+import {CombatMoveOptions, Movement, NO_ACTION} from '../movement/Movement';
 import {profile} from '../profiler/decorator';
 import {insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {CombatTargeting} from '../targeting/CombatTargeting';
@@ -162,6 +162,12 @@ export class CombatZerg extends Zerg {
 	 * Automatically ranged-attack the best creep in range
 	 */
 	autoRanged(possibleTargets = this.room.hostiles, allowMassAttack = true) {
+		let nearbyHostiles = _.filter(this.room.dangerousHostiles, c => this.pos.inRangeToXY(c.pos.x, c.pos.y, 2));
+		if (nearbyHostiles.length && !this.inRampart) {
+			//this.say('run!');
+			this.rangedMassAttack();
+			return this.kite(nearbyHostiles);
+		}
 		const target = CombatTargeting.findBestCreepTargetInRange(this, 3, possibleTargets)
 					   || CombatTargeting.findBestStructureTargetInRange(this, 3,false); //disabled allowUnowned structure attack in order not to desrtory poison walls
 		this.debug(`Ranged target: ${target}`);
@@ -287,10 +293,10 @@ export class CombatZerg extends Zerg {
 		}
 
 		// TODO check if right colony, also yes colony check is in there to stop red squigglies
-		const siegingCreeps = this.room.hostiles.filter(creep =>
-			_.any(creep.pos.neighbors, pos => this.colony && insideBunkerBounds(pos, this.colony)));
+		// const siegingCreeps = this.room.hostiles.filter(creep =>
+		// 	_.any(creep.pos.neighbors, pos => this.colony && insideBunkerBounds(pos, this.colony)));
 
-		const target = CombatTargeting.findTarget(this, siegingCreeps);
+		const target = CombatTargeting.findTarget(this, this.room.playerHostiles);
 
 		if (target) {
 			return Movement.combatMove(this, [{pos: target.pos, range: 1}], [], {preferRamparts: true, requireRamparts: true});

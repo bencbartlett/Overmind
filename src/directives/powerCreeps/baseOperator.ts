@@ -5,6 +5,7 @@ import {log} from "../../console/log";
 import {Visualizer} from "../../visuals/Visualizer";
 import {Power} from "./powers/genericPower";
 import {GenerateOps} from "./powers/generateOps";
+import {DirectiveNukeResponse} from "../situational/nukeResponse";
 
 
 interface DirectiveBaseOperatorMemory extends FlagMemory {
@@ -84,12 +85,11 @@ export class DirectiveBaseOperator extends Directive {
 			//let path = this.powerCreep.pos.findPathTo(controller, {ignoreRoads: true, range: 1, swampCost: 1});
 			//log.alert(`Trying to enable power for ${controller} with ${JSON.stringify(path)}`);
 			//return this.powerCreep.moveByPath(path);
-			return this.powerCreep.moveTo(controller.pos, {ignoreRoads: true, range: 1, swampCost: 1, reusePath: 0, visualizePathStyle: {lineStyle: "solid"}});
+			return this.powerCreep.moveTo(controller.pos, {ignoreRoads: true, range: 1, swampCost: 1, reusePath: 5, visualizePathStyle: {lineStyle: "solid"}});
 		}
 	}
 
 	usePower(power: PowerConstant) {
-		console.log(`The power constant is ${power}`)
 		switch(power) {
 			case PWR_GENERATE_OPS: return new GenerateOps(this.powerCreep);
 //			case PWR_OPERATE_SPAWN: return this.operateSpawn();
@@ -228,9 +228,7 @@ export class DirectiveBaseOperator extends Directive {
 
 	runPowers() {
 		const priorities = this.memory.powerPriorities;
-		console.log(`Powerid of priority list of ${priorities}`);
 		for (let powerId in priorities) {
-			console.log(`Powerid of ${powerId} and list of ${priorities}`);
 			let powerToUse = this.usePower(priorities[powerId]);
 			if (powerToUse && powerToUse.operatePower()) {
 				break;
@@ -239,35 +237,48 @@ export class DirectiveBaseOperator extends Directive {
 	}
 
 
+	visuals(): void {
+		Visualizer.marker(this.pos, {color: 'red'});
+	}
+
 	run(): void {
+		if (Game.cpu.bucket < 5000) {
+			return;
+		}
 
-		// For the power creeps that just sit on power spawn
-		const isStationary = this.powerCreep.name.toLowerCase().indexOf(types.basedefender.toString());
+		if (this.powerCreep.name == 'activate') {
+			console.log("Power creep move is " + JSON.stringify(this.powerCreep.memory));
+		}
 
-		console.log(`Running power creep ${JSON.stringify(this.powerCreep)} with ttl ${this.powerCreep.ticksToLive} with ${this.room!.powerSpawn}`);
+		//this.powerCreep.moveTo(this.room!.terminal!.pos, {ignoreRoads: true, range: 1, swampCost: 1, reusePath: 0, visualizePathStyle: {lineStyle: "solid", fill: 'white'}});
 		if (!this.room) {
 			return;
+		} else if (this.powerCreep && this.powerCreep.room && this.powerCreep.room.name != this.room.name) {
+			this.powerCreep.moveTo(this.flag);
 		} else if (!this.powerCreep.ticksToLive && this.room && this.room.powerSpawn) {
 			// Spawn creep
 			let res = this.powerCreep.spawn(this.room.powerSpawn);
 			log.alert(`Running ${this.powerCreep} with spawn of ${res}`);
-		} else if (this.room.controller && !this.room.controller.isPowerEnabled && !isStationary) {
+		} else if (this.room.controller && !this.room.controller.isPowerEnabled) {
 			// Enable power
 			let res = this.enablePower(this.room.controller);
-			log.alert(`Running ${this.powerCreep} with enable power of ${res}`);
-		} else if (this.powerCreep && this.powerCreep.ticksToLive && this.powerCreep.ticksToLive < 900 && this.room.powerSpawn) {
+			log.alert(`Running ${this.powerCreep} with enable power of ${res} targeting ${this.room.controller.pos.print}`);
+		} else if (this.powerCreep && this.powerCreep.ticksToLive && this.powerCreep.ticksToLive < 400 && this.room.powerSpawn) {
 			let res = this.renew(this.room.powerSpawn);
 			log.alert(`Running ${this.powerCreep} with renew of ${res}`);
 		} else {
 			let res = this.runPowers();
-			log.alert(`Running ${this.powerCreep} with power of ${res}`);
+			//log.alert(`Running ${this.powerCreep} with power of ${res}`);
+		}
+
+		if (this.room.hostiles.length > 2 || (this.powerCreep.pos && DirectiveNukeResponse.isPresent(this.powerCreep.pos, 'room'))) {
+			const towersToBoost = this.colony.towers.filter(tower => !tower.effects || tower.effects.length == 0);
+			if (towersToBoost.length > 0) {
+				this.powerCreep.usePower(PWR_OPERATE_TOWER, towersToBoost[0])
+			}
 		}
 
 
-	}
-
-	visuals(): void {
-		Visualizer.marker(this.pos, {color: 'red'});
 	}
 
 }

@@ -60,18 +60,24 @@ export class CombatTargeting {
 		return maxBy(targets, function(hostile) {
 			if (hostile.hitsPredicted == undefined) hostile.hitsPredicted = hostile.hits;
 			if (hostile.pos.lookForStructure(STRUCTURE_RAMPART)) return false;
+			if (hostile.name.substring(hostile.name.indexOf('_')) == 'ANTITIGGA') {
+				console.log('TIGGA ATTACK! :D');
+				return hostile.pos.findInRange(FIND_MY_CREEPS, 2).length;
+				//return (hostile.pos.getRangeTo(this.colony.bunker.anchor) <= 6 + 2) || hostile.hitsMax - hostile.hitsPredicted;
+			}
 			return hostile.hitsMax - hostile.hitsPredicted
 				   + CombatIntel.getHealPotential(hostile) + (CombatIntel.towerDamageAtPos(hostile.pos) || 0);
 		});
 	}
 
-	static findClosestHostile(zerg: Zerg, checkReachable = false, ignoreCreepsAtEdge = true): Creep | undefined {
+	static findClosestHostile(zerg: Zerg, checkReachable = false, ignoreCreepsAtEdge = true, playerOnly = false): Creep | undefined {
 		if (zerg.room.hostiles.length > 0) {
 			let targets: Creep[];
+			const potentialTargets = playerOnly ? zerg.room.playerHostiles : zerg.room.hostiles;
 			if (ignoreCreepsAtEdge) {
-				targets = _.filter(zerg.room.hostiles, hostile => hostile.pos.rangeToEdge > 0);
+				targets = _.filter(potentialTargets, hostile => hostile.pos.rangeToEdge > 0);
 			} else {
-				targets = zerg.room.hostiles;
+				targets = potentialTargets;
 			}
 			if (checkReachable) {
 				const targetsByRange = _.sortBy(targets, target => zerg.pos.getRangeTo(target));

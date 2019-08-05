@@ -22,9 +22,13 @@ export class UpgradingOverlord extends Overlord {
 	constructor(upgradeSite: UpgradeSite, priority = OverlordPriority.upgrading.upgrade) {
 		super(upgradeSite, 'upgrade', priority);
 		this.upgradeSite = upgradeSite;
-		this.upgraders = this.zerg(Roles.upgrader, {
-			boostWishlist: [boostResources.upgrade[3]]
-		});
+		if (this.colony.controller.level < 8) {
+			this.upgraders = this.zerg(Roles.upgrader, {
+				boostWishlist: [boostResources.upgrade[3]]
+			});
+		} else {
+			this.upgraders = this.zerg(Roles.upgrader);
+		}
 	}
 
 	init() {
@@ -38,7 +42,10 @@ export class UpgradingOverlord extends Overlord {
 				this.wishlist(1, setup);
 			} else {
 				const upgradePowerEach = setup.getBodyPotential(WORK, this.colony);
-				const upgradersNeeded = Math.ceil(this.upgradeSite.upgradePowerNeeded / upgradePowerEach);
+				let upgradersNeeded = Math.ceil(this.upgradeSite.upgradePowerNeeded / upgradePowerEach);
+				// if (this.colony.name == 'W13N45') {
+				// 	upgradersNeeded = 4;
+				// }
 				this.wishlist(upgradersNeeded, setup);
 			}
 		}

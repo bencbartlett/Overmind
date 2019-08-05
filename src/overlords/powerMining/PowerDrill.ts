@@ -127,21 +127,33 @@ export class PowerDrillOverlord extends CombatOverlord {
 		}
 		if (coolant.pos.getRangeTo(this.directive.powerBank) > 3) {
 			coolant.goTo(this.directive.powerBank);
-		} else if (coolant.pos.findInRange(FIND_MY_CREEPS, 1).filter(creep => _.contains(creep.name, "drill")).length == 0) {
-			let target = _.sample(_.filter(this.drills, drill => drill.hits < drill.hitsMax));
-			if (target) {
-				coolant.goTo(target, {range: 1, noPush: true});
+		} else {
+			const activeDrills = this.pos.findInRange(FIND_MY_CREEPS, 1).filter(creep => _.contains(creep.name, "drill"));
+			if (activeDrills.length > 0) {
+				const drill = activeDrills[0];
+				coolant.heal(drill);
+				if (coolant.pos.getRangeTo(drill) > 1) {
+					coolant.goTo(drill, {range: 1, noPush: true});
+				}
 			}
 		}
-		// else if (coolant.pos.getRangeTo(this.directive.powerBank) == 1) {
-		// 	coolant.move(Math.round(Math.random()*7) as DirectionConstant);
-		// }
-		else {
-			let drill = _.sample(_.filter(this.drills, drill => drill.hits < drill.hitsMax));
-			if (drill) { coolant.goTo(drill); }
-		}
 
-		coolant.autoHeal();
+
+		// else if (coolant.pos.findInRange(FIND_MY_CREEPS, 1).filter(creep => _.contains(creep.name, "drill")).length == 0) {
+		// 	let target = _.sample(_.filter(this.drills, drill => drill.hits < drill.hitsMax));
+		// 	if (target) {
+		// 		coolant.goTo(target, {range: 1, noPush: true});
+		// 	}
+		// }
+		// // else if (coolant.pos.getRangeTo(this.directive.powerBank) == 1) {
+		// // 	coolant.move(Math.round(Math.random()*7) as DirectionConstant);
+		// // }
+		// else {
+		// 	let drill = _.sample(_.filter(this.drills, drill => drill.hits < drill.hitsMax));
+		// 	if (drill) { coolant.goTo(drill); }
+		// }
+		//
+		// coolant.autoHeal();
 	}
 
 	// private findDrillToPartner(coolant: CombatZerg) {

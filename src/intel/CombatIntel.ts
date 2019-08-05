@@ -63,13 +63,13 @@ export class CombatIntel {
 	}
 
 	/**
-	 * Total tower tamage from all towers in room at a given position
+	 * Total tower damage from all towers in room at a given position
 	 */
 	static towerDamageAtPos(pos: RoomPosition, ignoreEnergy = false): number {
 		if (pos.room) {
 			let expectedDamage = 0;
 			for (const tower of pos.room.towers) {
-				if (tower.energy > 0 || ignoreEnergy) {
+				if (tower.isActive() && (tower.energy > 0 || ignoreEnergy)) {
 					expectedDamage += this.singleTowerDamage(pos.getRangeTo(tower));
 				}
 			}
@@ -99,7 +99,12 @@ export class CombatIntel {
 
 	static computeCreepDamagePotentialMatrix(room: Room, creeps: Creep[], startingMatrix?: CostMatrix): CostMatrix | undefined {
 		if (room) {
+			const cpuUsed = Game.cpu.getUsed();
 			const matrix = startingMatrix || new PathFinder.CostMatrix();
+
+			//const otherMatrix = new Array(50);
+			//otherMatrix.forEach((loc, index) => otherMatrix[index] = new Array(50));
+
 
 			creeps.forEach(creep => {
 				const meleeAttack = CombatIntel.getAttackPotential(creep);
@@ -107,16 +112,47 @@ export class CombatIntel {
 				// const heal = CombatIntel.getHealPotential(creep);
 				if (meleeAttack > 0) {
 					creep.pos.neighbors.forEach(pos =>
-						matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + meleeAttack * ATTACK_POWER))
+						matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + meleeAttack * ATTACK_POWER / 100));
 				}
 				if (rangedAttack > 0) {
 					creep.pos.getPositionsInRange(3).forEach(pos =>
-						matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + rangedAttack * RANGED_ATTACK_POWER))
+						matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + rangedAttack * RANGED_ATTACK_POWER / 100));
 				}
 			});
 
-			Visualizer.displayCostMatrix(matrix, room.name);
+			Visualizer.displayCostMatrix(matrix, room.name, false, undefined, false);
+			console.log(`Cost matrix cpu used in ${room.print} = ${(Game.cpu.getUsed() - cpuUsed)}`);
+			return matrix;
+		}
+	}
 
+
+
+	static computeTotalCreepPotentialMatrix(room: Room, creeps: Creep[], startingMatrix?: CostMatrix): CostMatrix | undefined {
+		if (room) {
+			const cpuUsed = Game.cpu.getUsed();
+			const matrix = startingMatrix || new PathFinder.CostMatrix();
+
+			//const otherMatrix = new Array(50);
+			//otherMatrix.forEach((loc, index) => otherMatrix[index] = new Array(50));
+
+
+			creeps.forEach(creep => {
+				const meleeAttack = CombatIntel.getAttackPotential(creep);
+				const rangedAttack = CombatIntel.getRangedAttackPotential(creep);
+				// const heal = CombatIntel.getHealPotential(creep);
+				if (meleeAttack > 0) {
+					creep.pos.neighbors.forEach(pos =>
+						matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + meleeAttack * ATTACK_POWER / 100));
+				}
+				if (rangedAttack > 0) {
+					creep.pos.getPositionsInRange(3).forEach(pos =>
+						matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + rangedAttack * RANGED_ATTACK_POWER / 100));
+				}
+			});
+
+			Visualizer.displayCostMatrix(matrix, room.name, false, undefined, false);
+			console.log(`Cost matrix cpu used in ${room.print} = ${(Game.cpu.getUsed() - cpuUsed)}`);
 			return matrix;
 		}
 	}
