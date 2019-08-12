@@ -31,7 +31,8 @@ export class DirectiveBaseOperator extends Directive {
 	memory: DirectiveBaseOperatorMemory;
 
 	// Power Creep Hack
-	powerCreep: PowerCreep;
+	//powerCreep: PowerCreep;
+	powerCreepName: string;
 
 	defaultPowerPriorities: PowerConstant[] = [
 		PWR_GENERATE_OPS,
@@ -51,8 +52,8 @@ export class DirectiveBaseOperator extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag);
-		this.powerCreep = Game.powerCreeps[flag.name];
-		if (!this.powerCreep) {
+		const powerCreep = Game.powerCreeps[flag.name];
+		if (!powerCreep) {
 			log.error(`Power Creep not found for ${this.print}, deleting directive`);
 			this.remove();
 		}
@@ -69,29 +70,30 @@ export class DirectiveBaseOperator extends Directive {
 
 	// Wrapped powerCreep methods ===========================================================================================
 
-	renew(powerSource: StructurePowerBank | StructurePowerSpawn) {
-		if (this.powerCreep.pos.inRangeToPos(powerSource.pos, 1)) {
-			return this.powerCreep.renew(powerSource);
+	renew(powerCreep: PowerCreep, powerSource: StructurePowerBank | StructurePowerSpawn) {
+		if (powerCreep.pos.inRangeToPos(powerSource.pos, 1)) {
+			return powerCreep.renew(powerSource);
 		} else {
-			return this.powerCreep.moveTo(powerSource, {ignoreRoads: true, range: 1, swampCost: 1, reusePath: 0, visualizePathStyle: {lineStyle: "dashed", fill: 'yellow'}});
+			return powerCreep.moveTo(powerSource, {ignoreRoads: true, range: 1, swampCost: 1, reusePath: 0, visualizePathStyle: {lineStyle: "dashed", fill: 'yellow'}});
 		}
 	}
 
-	enablePower(controller: StructureController) {
+	enablePower(powerCreep: PowerCreep, controller: StructureController) {
 		log.alert(`Trying to enable power for ${controller} with `);
-		if (this.powerCreep.pos.inRangeToPos(controller.pos, 1)) {
-			return this.powerCreep.enableRoom(controller);
+		if (powerCreep.pos.inRangeToPos(controller.pos, 1)) {
+			return powerCreep.enableRoom(controller);
 		} else {
-			//let path = this.powerCreep.pos.findPathTo(controller, {ignoreRoads: true, range: 1, swampCost: 1});
+			//let path = powerCreep.pos.findPathTo(controller, {ignoreRoads: true, range: 1, swampCost: 1});
 			//log.alert(`Trying to enable power for ${controller} with ${JSON.stringify(path)}`);
-			//return this.powerCreep.moveByPath(path);
-			return this.powerCreep.moveTo(controller.pos, {ignoreRoads: true, range: 1, swampCost: 1, reusePath: 5, visualizePathStyle: {lineStyle: "solid"}});
+			//return powerCreep.moveByPath(path);
+			return powerCreep.moveTo(controller.pos, {ignoreRoads: true, range: 1, swampCost: 1, reusePath: 0, visualizePathStyle: {lineStyle: "solid"}});
 		}
 	}
 
-	usePower(power: PowerConstant) {
+	usePower(powerCreep: PowerCreep, power: PowerConstant) {
+		console.log(`The power constant is ${power}`)
 		switch(power) {
-			case PWR_GENERATE_OPS: return new GenerateOps(this.powerCreep);
+			case PWR_GENERATE_OPS: return new GenerateOps(powerCreep);
 //			case PWR_OPERATE_SPAWN: return this.operateSpawn();
 		}
 
@@ -101,14 +103,14 @@ export class DirectiveBaseOperator extends Directive {
 	//  * Generate 1/2/4/6/8 ops resource units. Cooldown 50 ticks. Required creep level: 0/2/7/14/22.
 	//  */
 	// generateOps() {
-	// 	if (this.powerCreep.powers[PWR_GENERATE_OPS].cooldown !> 0) {
-	// 		return this.powerCreep.usePower(PWR_GENERATE_OPS);
+	// 	if (powerCreep.powers[PWR_GENERATE_OPS].cooldown !> 0) {
+	// 		return powerCreep.usePower(PWR_GENERATE_OPS);
 	// 	}
 	// 	return ERR_TIRED;
 	// }
 	//
 	// operateSpawn(spawn?: StructureSpawn) {
-	// 	// if (this.powerCreep.powers[PWR_oper])
+	// 	// if (powerCreep.powers[PWR_oper])
 	// 	// if (!spawn) {
 	// 	// 	spawn = _.first(this.room!.spawns.filter(spawn => spawn.effects.length == 0));
 	// 	// 	if (!spawn) {
@@ -116,120 +118,121 @@ export class DirectiveBaseOperator extends Directive {
 	// 	// 	}
 	// 	// }
 	// 	if (this.pos.inRangeToPos(spawn.pos, 1)) {
-	// 		return this.powerCreep.usePower(PWR_OPERATE_SPAWN, spawn);
+	// 		return powerCreep.usePower(PWR_OPERATE_SPAWN, spawn);
 	// 	} else {
-	// 		return this.powerCreep.moveTo(spawn);
+	// 		return powerCreep.moveTo(spawn);
 	// 	}
 	// }
 	//
 	// operateTower(tower: StructureTower) {
 	// 	if (this.pos.inRangeToPos(tower.pos, POWER_INFO[PWR_OPERATE_TOWER].range)) {
-	// 		return this.powerCreep.usePower(PWR_OPERATE_TOWER, tower);
+	// 		return powerCreep.usePower(PWR_OPERATE_TOWER, tower);
 	// 	} else {
-	// 		return this.powerCreep.moveTo(tower);
+	// 		return powerCreep.moveTo(tower);
 	// 	}
 	// }
 	//
 	// operateStorage(storage: StructureStorage) {
 	// 	if (this.pos.inRangeToPos(storage.pos, POWER_INFO[PWR_OPERATE_STORAGE].range)) {
-	// 		return this.powerCreep.usePower(PWR_OPERATE_STORAGE, storage);
+	// 		return powerCreep.usePower(PWR_OPERATE_STORAGE, storage);
 	// 	} else {
-	// 		return this.powerCreep.moveTo(storage);
+	// 		return powerCreep.moveTo(storage);
 	// 	}
 	// }
 	//
 	// operateExtensions(container: StructureStorage | StructureTerminal | StructureContainer) {
 	// 	if (this.pos.inRangeToPos(container.pos, POWER_INFO[PWR_OPERATE_EXTENSION].range)) {
-	// 		return this.powerCreep.usePower(PWR_OPERATE_EXTENSION, container);
+	// 		return powerCreep.usePower(PWR_OPERATE_EXTENSION, container);
 	// 	} else {
-	// 		return this.powerCreep.moveTo(container);
+	// 		return powerCreep.moveTo(container);
 	// 	}
 	// }
 	//
 	// operateObserver(observer: StructureObserver) {
 	// 	if (this.pos.inRangeToPos(observer.pos, POWER_INFO[PWR_OPERATE_OBSERVER].range)) {
-	// 		return this.powerCreep.usePower(PWR_OPERATE_OBSERVER, observer);
+	// 		return powerCreep.usePower(PWR_OPERATE_OBSERVER, observer);
 	// 	} else {
-	// 		return this.powerCreep.moveTo(observer);
+	// 		return powerCreep.moveTo(observer);
 	// 	}
 	// }
 	//
 	// operateTerminal(terminal: StructureTerminal) {
 	// 	if (this.pos.inRangeToPos(terminal.pos, POWER_INFO[PWR_OPERATE_TERMINAL].range)) {
-	// 		return this.powerCreep.usePower(PWR_OPERATE_TERMINAL, terminal);
+	// 		return powerCreep.usePower(PWR_OPERATE_TERMINAL, terminal);
 	// 	} else {
-	// 		return this.powerCreep.moveTo(terminal);
+	// 		return powerCreep.moveTo(terminal);
 	// 	}
 	// }
 	//
 	// operatePower(power: StructurePowerSpawn) {
 	// 	if (this.pos.inRangeToPos(power.pos, POWER_INFO[PWR_OPERATE_POWER].range)) {
-	// 		return this.powerCreep.usePower(PWR_OPERATE_POWER, power);
+	// 		return powerCreep.usePower(PWR_OPERATE_POWER, power);
 	// 	} else {
-	// 		return this.powerCreep.moveTo(power);
+	// 		return powerCreep.moveTo(power);
 	// 	}
 	// }
 	//
 	// operateController(controller: StructureController) {
 	// 	if (this.pos.inRangeToPos(controller.pos, POWER_INFO[PWR_OPERATE_CONTROLLER].range)) {
-	// 		return this.powerCreep.usePower(PWR_OPERATE_CONTROLLER, controller);
+	// 		return powerCreep.usePower(PWR_OPERATE_CONTROLLER, controller);
 	// 	} else {
-	// 		return this.powerCreep.moveTo(controller);
+	// 		return powerCreep.moveTo(controller);
 	// 	}
 	// }
 	//
 	// // operateFactory(factory: StructureFactory) {
 	// // 	if (this.pos.inRangeToPos(factory.pos, POWER_INFO[PWR_OPERATE_FACTORY].range)) {
-	// // 		return this.powerCreep.usePower(PWR_OPERATE_FACTORY, factory);
+	// // 		return powerCreep.usePower(PWR_OPERATE_FACTORY, factory);
 	// // 	} else {
 	// // 		return this.moveTo(factory);
 	// // 	}
 	// // }
 	//
 	// shield() {
-	// 	if (this.powerCreep.powers[PWR_SHIELD].cooldown !> 0) {
-	// 		return this.powerCreep.usePower(PWR_SHIELD);
+	// 	if (powerCreep.powers[PWR_SHIELD].cooldown !> 0) {
+	// 		return powerCreep.usePower(PWR_SHIELD);
 	// 	}
 	// 	return ERR_TIRED;
 	// }
 	//
 	// regenSource(source : Source) {
 	// 	if (this.pos.inRangeToPos(source.pos, POWER_INFO[PWR_REGEN_SOURCE].range)) {
-	// 		return this.powerCreep.usePower(PWR_REGEN_SOURCE, source);
+	// 		return powerCreep.usePower(PWR_REGEN_SOURCE, source);
 	// 	} else {
-	// 		return this.powerCreep.moveTo(source);
+	// 		return powerCreep.moveTo(source);
 	// 	}
 	// }
 	//
 	// regenMineral(mineral: Mineral) {
 	// 	if (this.pos.inRangeToPos(mineral.pos, POWER_INFO[PWR_REGEN_MINERAL].range)) {
-	// 		return this.powerCreep.usePower(PWR_REGEN_MINERAL, mineral);
+	// 		return powerCreep.usePower(PWR_REGEN_MINERAL, mineral);
 	// 	} else {
-	// 		return this.powerCreep.moveTo(mineral);
+	// 		return powerCreep.moveTo(mineral);
 	// 	}
 	// }
 	//
 	// fortify(rampart: StructureRampart) {
 	// 	if (this.pos.inRangeToPos(rampart.pos, POWER_INFO[PWR_FORTIFY].range)) {
-	// 		return this.powerCreep.usePower(PWR_FORTIFY, rampart);
+	// 		return powerCreep.usePower(PWR_FORTIFY, rampart);
 	// 	} else {
-	// 		return this.powerCreep.moveTo(rampart);
+	// 		return powerCreep.moveTo(rampart);
 	// 	}
 	// }
 	//
 	// operateLab(lab: StructureLab) {
 	// 	if (this.pos.inRangeToPos(lab.pos, POWER_INFO[PWR_OPERATE_LAB].range)) {
-	// 		return this.powerCreep.usePower(PWR_OPERATE_LAB, lab);
+	// 		return powerCreep.usePower(PWR_OPERATE_LAB, lab);
 	// 	} else {
-	// 		return this.powerCreep.moveTo(lab);
+	// 		return powerCreep.moveTo(lab);
 	// 	}
 	// }
 
 
-	runPowers() {
+	runPowers(powerCreep: PowerCreep) {
 		const priorities = this.memory.powerPriorities;
 		for (let powerId in priorities) {
-			let powerToUse = this.usePower(priorities[powerId]);
+			console.log(`Powerid of ${powerId} and list of ${priorities}`);
+			let powerToUse = this.usePower(powerCreep, priorities[powerId]);
 			if (powerToUse && powerToUse.operatePower()) {
 				break;
 			}
@@ -242,39 +245,40 @@ export class DirectiveBaseOperator extends Directive {
 	}
 
 	run(): void {
+		const powerCreep = Game.powerCreeps[this.powerCreepName];
 		if (Game.cpu.bucket < 5000) {
 			return;
 		}
 
-		if (this.powerCreep.name == 'activate') {
-			console.log("Power creep move is " + JSON.stringify(this.powerCreep.memory));
+		// For the power creeps that just sit on power spawn
+		const isStationary = powerCreep.name.toLowerCase().indexOf(types.basedefender.toString());
+		if (powerCreep.name == 'activate') {
+			console.log("Power creep move is " + JSON.stringify(powerCreep.memory));
 		}
 
-		//this.powerCreep.moveTo(this.room!.terminal!.pos, {ignoreRoads: true, range: 1, swampCost: 1, reusePath: 0, visualizePathStyle: {lineStyle: "solid", fill: 'white'}});
+		console.log(`Running power creep ${JSON.stringify(powerCreep)} with ttl ${powerCreep.ticksToLive} with ${this.room!.powerSpawn}`);
 		if (!this.room) {
 			return;
-		} else if (this.powerCreep && this.powerCreep.room && this.powerCreep.room.name != this.room.name) {
-			this.powerCreep.moveTo(this.flag);
-		} else if (!this.powerCreep.ticksToLive && this.room && this.room.powerSpawn) {
+		} else if (!powerCreep.ticksToLive && this.room && this.room.powerSpawn) {
 			// Spawn creep
-			let res = this.powerCreep.spawn(this.room.powerSpawn);
-			log.alert(`Running ${this.powerCreep} with spawn of ${res}`);
-		} else if (this.room.controller && !this.room.controller.isPowerEnabled) {
+			let res = powerCreep.spawn(this.room.powerSpawn);
+			log.alert(`Running ${powerCreep} with spawn of ${res}`);
+		} else if (this.room.controller && !this.room.controller.isPowerEnabled && !isStationary) {
 			// Enable power
-			let res = this.enablePower(this.room.controller);
-			log.alert(`Running ${this.powerCreep} with enable power of ${res} targeting ${this.room.controller.pos.print}`);
-		} else if (this.powerCreep && this.powerCreep.ticksToLive && this.powerCreep.ticksToLive < 400 && this.room.powerSpawn) {
-			let res = this.renew(this.room.powerSpawn);
-			log.alert(`Running ${this.powerCreep} with renew of ${res}`);
+			let res = this.enablePower(powerCreep, this.room.controller);
+			log.alert(`Running ${powerCreep} with enable power of ${res}`);
+		} else if (powerCreep && powerCreep.ticksToLive && powerCreep.ticksToLive < 900 && this.room.powerSpawn) {
+			let res = this.renew(powerCreep, this.room.powerSpawn);
+			log.alert(`Running ${powerCreep} with renew of ${res}`);
 		} else {
-			let res = this.runPowers();
-			//log.alert(`Running ${this.powerCreep} with power of ${res}`);
+			let res = this.runPowers(powerCreep);
+			log.alert(`Running ${powerCreep} with power of ${res}`);
 		}
 
-		if (this.room.hostiles.length > 2 || (this.powerCreep.pos && DirectiveNukeResponse.isPresent(this.powerCreep.pos, 'room'))) {
+		if (this.room.hostiles.length > 2 || (powerCreep.pos && DirectiveNukeResponse.isPresent(powerCreep.pos, 'room'))) {
 			const towersToBoost = this.colony.towers.filter(tower => !tower.effects || tower.effects.length == 0);
 			if (towersToBoost.length > 0) {
-				this.powerCreep.usePower(PWR_OPERATE_TOWER, towersToBoost[0])
+				powerCreep.usePower(PWR_OPERATE_TOWER, towersToBoost[0])
 			}
 		}
 
