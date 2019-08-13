@@ -65,7 +65,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 		this.reassignIdleCreeps(Roles.ranged);
 		if (this.canBoostSetup(CombatSetups.hydralisks.boosted_T3)) {
 			const setup = CombatSetups.hydralisks.boosted_T3;
-			this.wishlist(1, setup);
+			this.wishlist(2, setup);
 		} else {
 			const setup = CombatSetups.hydralisks.default;
 			this.wishlist(this.computeNeededHydraliskAmount(setup, 1), setup);

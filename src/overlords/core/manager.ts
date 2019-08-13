@@ -289,6 +289,12 @@ export class CommandCenterOverlord extends Overlord {
 		if (manager.ticksToLive! < 150) {
 			if (this.deathActions(manager)) return;
 		}
+
+		// if (this.room && this.room.terminal && this.room.storage && this.room.name == 'W18N48') {
+		// 	manager.task = Tasks.transferAll(this.room.storage).fork(Tasks.withdrawAll(this.room.terminal));
+		// 	return;
+		// }
+
 		// Pick up any dropped resources on ground
 		if (this.pickupActions(manager)) return;
 		// Move minerals from storage to terminal if needed

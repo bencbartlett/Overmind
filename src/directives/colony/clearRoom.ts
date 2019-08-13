@@ -9,6 +9,14 @@ import {Zerg} from "../../zerg/Zerg";
 import {DirectiveHaul} from "../resource/haul";
 import {Pathing} from "../../movement/Pathing";
 import {DirectiveDismantle} from "../targeting/dismantle";
+import {DirectiveOutpost} from "./outpost";
+
+
+interface DirectiveClearRoomMemory extends FlagMemory {
+	preexistingFlags: string[];
+	completedTime?: number;
+}
+
 
 
 /**
@@ -20,6 +28,8 @@ export class DirectiveClearRoom extends Directive {
 	static directiveName = 'clearRoom';
 	static color = COLOR_PURPLE;
 	static secondaryColor = COLOR_ORANGE;
+
+	memory: DirectiveClearRoomMemory;
 
 	overlords: {
 		claim: ClaimingOverlord;
@@ -36,6 +46,10 @@ export class DirectiveClearRoom extends Directive {
 		if (Memory.settings.resourceCollectionMode && Memory.settings.resourceCollectionMode >= 1) {
 			this.memory.keepStorageStructures = true;
 		}
+		this.memory.preexistingFlags = _.filter(Game.flags, testingflag =>
+			testingflag.pos.roomName == flag.pos.roomName && testingflag.name != flag.name)
+			.map(testingFlag => testingFlag.name);
+		console.log("Existing flags in clear room are " + JSON.stringify(this.memory.preexistingFlags));
 	}
 
 	spawnMoarOverlords() {
@@ -79,6 +93,7 @@ export class DirectiveClearRoom extends Directive {
 				}
 			}
 			log.alert(`Destroyed ${i} structures in ${this.room.print}.`);
+			this.memory.completedTime = Game.time;
 			return true;
 		} else {
 			return false;
@@ -99,18 +114,25 @@ export class DirectiveClearRoom extends Directive {
 		}
 	}
 
+	private cleanupFlags() {
+		if (!this.room) {
+			return false;
+		}
+		for (let flag of this.room.flags) {
+			if (!_.contains(this.memory.preexistingFlags, flag.name) && flag.name != this.flag.name && !DirectiveHaul.filter(flag)) {
+				flag.remove();
+			}
+		}
+	}
+
 	run() {
 		// Remove if structures are done
 		if (this.room && this.room.my) {
 			const done = this.removeAllStructures();
 			if (done) {
 				let res = this.room.controller!.unclaim();
-				// Clear up flags
-				for (let flag of this.room.flags) {
-					if (!DirectiveClearRoom.filter(flag) && !DirectiveHaul.filter(flag)) {
-						flag.remove();
-					}
-				}
+				// Clear up flags that weren't there before and aren't haul
+				this.cleanupFlags();
 				log.notify(`Removing clearRoom directive in ${this.pos.roomName}: operation completed.`);
 				if (res == OK) {
 					this.remove();

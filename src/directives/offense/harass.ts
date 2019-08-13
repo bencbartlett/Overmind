@@ -10,6 +10,7 @@ interface DirectiveHarassMemory extends FlagMemory {
 	aggressive?: boolean; // Harass EVERYONE
 	targetPlayer?: string;
 	roomsToHarass: string[];
+	nextSpawnTime: number;		// Wait till this time to spawn
 }
 
 /**
@@ -28,9 +29,12 @@ export class DirectiveHarass extends Directive {
 	constructor(flag: Flag) {
 		super(flag);
 		this.memory.targetPlayer = RoomIntel.roomOwnedBy(flag.pos.roomName);
+		this.memory.nextSpawnTime = Game.time;
 		if (this.memory.targetPlayer == MY_USERNAME) {
 			log.error(`Ahhhhhh harassing self in room ${flag.pos.roomName}`);
 			this.remove();
+		} else {
+			log.alert(`Starting harass on ${flag.pos.roomName} owned by ${this.memory.targetPlayer}`);
 		}
 		if (this.memory.targetPlayer) {
 			this.memory.roomsToHarass = this.findNearbyReservedRooms(flag.pos.roomName, this.memory.targetPlayer);
@@ -72,6 +76,7 @@ export class DirectiveHarass extends Directive {
 		let adjacentRooms = _.values(Game.map.describeExits(roomName)) as string[];
 		adjacentRooms.forEach(room => {
 			const reservation = RoomIntel.roomReservedBy(room);
+			console.log('Checking for harass in room ' + room);
 			if (reservation && this.memory.aggressive ? !whitelist.includes(reservation) : reservation == playerName) {
 				reservedByTargetPlayer.push(room);
 				// This will double add rooms next to owned rooms, making it more likely to harass them

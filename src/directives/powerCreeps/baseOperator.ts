@@ -91,7 +91,7 @@ export class DirectiveBaseOperator extends Directive {
 	}
 
 	usePower(powerCreep: PowerCreep, power: PowerConstant) {
-		console.log(`The power constant is ${power}`)
+		//console.log(`The power constant is ${power}`)
 		switch(power) {
 			case PWR_GENERATE_OPS: return new GenerateOps(powerCreep);
 //			case PWR_OPERATE_SPAWN: return this.operateSpawn();
@@ -231,7 +231,7 @@ export class DirectiveBaseOperator extends Directive {
 	runPowers(powerCreep: PowerCreep) {
 		const priorities = this.memory.powerPriorities;
 		for (let powerId in priorities) {
-			console.log(`Powerid of ${powerId} and list of ${priorities}`);
+			//console.log(`Powerid of ${powerId} and list of ${priorities}`);
 			let powerToUse = this.usePower(powerCreep, priorities[powerId]);
 			if (powerToUse && powerToUse.operatePower()) {
 				break;
@@ -245,8 +245,10 @@ export class DirectiveBaseOperator extends Directive {
 	}
 
 	run(): void {
-		const powerCreep = Game.powerCreeps[this.powerCreepName];
-		if (Game.cpu.bucket < 5000) {
+		const powerCreep = Game.powerCreeps[this.flag.name];
+		if (!powerCreep || Game.cpu.bucket < 5000 && (!powerCreep.ticksToLive || powerCreep.ticksToLive > 500)) {
+			this.powerCreepName = this.flag.name;
+			//console.log('Not running power creep because not defined or bucket is low');
 			return;
 		}
 
@@ -256,14 +258,14 @@ export class DirectiveBaseOperator extends Directive {
 			console.log("Power creep move is " + JSON.stringify(powerCreep.memory));
 		}
 
-		console.log(`Running power creep ${JSON.stringify(powerCreep)} with ttl ${powerCreep.ticksToLive} with ${this.room!.powerSpawn}`);
+		//console.log(`Running power creep ${JSON.stringify(powerCreep)} with ttl ${powerCreep.ticksToLive} with ${this.room!.powerSpawn}`);
 		if (!this.room) {
 			return;
 		} else if (!powerCreep.ticksToLive && this.room && this.room.powerSpawn) {
 			// Spawn creep
 			let res = powerCreep.spawn(this.room.powerSpawn);
 			log.alert(`Running ${powerCreep} with spawn of ${res}`);
-		} else if (this.room.controller && !this.room.controller.isPowerEnabled && !isStationary) {
+		} else if (this.room.controller && !this.room.controller.isPowerEnabled) {
 			// Enable power
 			let res = this.enablePower(powerCreep, this.room.controller);
 			log.alert(`Running ${powerCreep} with enable power of ${res}`);
@@ -272,7 +274,7 @@ export class DirectiveBaseOperator extends Directive {
 			log.alert(`Running ${powerCreep} with renew of ${res}`);
 		} else {
 			let res = this.runPowers(powerCreep);
-			log.alert(`Running ${powerCreep} with power of ${res}`);
+			//log.alert(`Running ${powerCreep} with power of ${res}`);
 		}
 
 		if (this.room.hostiles.length > 2 || (powerCreep.pos && DirectiveNukeResponse.isPresent(powerCreep.pos, 'room'))) {

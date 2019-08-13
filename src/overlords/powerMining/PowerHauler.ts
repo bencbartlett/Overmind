@@ -24,7 +24,7 @@ export class PowerHaulingOverlord extends Overlord {
 	// TODO bug where haulers can come from tiny rooms not ready yet
 	requiredRCL = 6;
 	// Allow time for body to spawn
-	prespawnAmount = 350;
+	prespawnAmount = 150;
 
 	constructor(directive: DirectivePowerMine, priority = OverlordPriority.collectionUrgent.haul) {
 		super(directive, 'powerHaul', priority);
@@ -38,7 +38,9 @@ export class PowerHaulingOverlord extends Overlord {
 		// Calculate number of haulers
 		this.numHaulers = Math.ceil(haulingPartsNeeded/haulerCarryParts);
 		// setup time to request the haulers
-		this.tickToSpawnOn = Game.time + (this.directive.calculateRemainingLifespan() || 0) - this.prespawnAmount;
+		const route = Game.map.findRoute(this.directive.pos.roomName, this.colony.room.name);
+		const distance = route == -2 ? 50 : route.length * 50;
+		this.tickToSpawnOn = Game.time + (this.directive.calculateRemainingLifespan() || 0) - distance - this.prespawnAmount;
 	}
 
 	init() {

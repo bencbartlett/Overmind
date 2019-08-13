@@ -172,8 +172,11 @@ export class CommandCenter extends HiveCluster {
 			if (this.observeRoom) {
 				this.observer.observeRoom(this.observeRoom);
 			} else if (CommandCenter.settings.enableIdleObservation) {
-				const dx = Game.time % MAX_OBSERVE_DISTANCE;
-				const dy = Game.time % (MAX_OBSERVE_DISTANCE ** 2);
+				const sign = Math.round(Game.time / 100) % 4;
+				const xsign = sign > 1 ? 1 : -1;
+				const ysign = sign % 2 == 0 ? 1 : -1;
+				const dx = Game.time % MAX_OBSERVE_DISTANCE * xsign;
+				const dy = Game.time % (MAX_OBSERVE_DISTANCE ** 2) * ysign;
 				const roomToObserve = Cartographer.findRelativeRoomName(this.pos.roomName, dx, dy);
 				this.observer.observeRoom(roomToObserve);
 			}

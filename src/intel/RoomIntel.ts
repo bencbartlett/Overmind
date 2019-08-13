@@ -331,7 +331,7 @@ export class RoomIntel {
 	static roomOwnedBy(roomName: string): string | undefined {
 		if (Memory.rooms[roomName] && Memory.rooms[roomName][_RM.CONTROLLER] &&
 			Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.OWNER]) {
-			if (Game.time - (Memory.rooms[roomName][_MEM.TICK] || 0) < 25000) { // ownership expires after 25k ticks
+			if (Game.time - (Memory.rooms[roomName][_MEM.TICK] || 0) < 250000) { // ownership expires after 25k ticks
 				return Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.OWNER];
 			}
 		}
@@ -340,7 +340,7 @@ export class RoomIntel {
 	static roomReservedBy(roomName: string): string | undefined {
 		if (Memory.rooms[roomName] && Memory.rooms[roomName][_RM.CONTROLLER] &&
 			Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.RESERVATION]) {
-			if (Game.time - (Memory.rooms[roomName][_MEM.TICK] || 0) < 10000) { // reservation expires after 10k ticks
+			if (Game.time - (Memory.rooms[roomName][_MEM.TICK] || 0) < 100000) { // reservation expires after 10k ticks
 				return Memory.rooms[roomName][_RM.CONTROLLER]![_RM_CTRL.RESERVATION]![_RM_CTRL.RES_USERNAME];
 			}
 		}
@@ -427,12 +427,39 @@ export class RoomIntel {
 		}
 	}
 
+	static periodicFunction() {
+		let zGeneral = ["W18N48"];
+		let total = 0;
+		let result = -1;
+		let zGeneralRoom = "";
+		_.forEach(Game.rooms, room => {
+			if(room.controller &&
+				room.controller.my &&
+				room.terminal){
+				if(room.terminal.energy > 5000 && room.terminal.cooldown == 0 && room.terminal.store[RESOURCE_ENERGY] >= 15000){
+					zGeneralRoom = zGeneral[0];
+					result = room.terminal.send(RESOURCE_ENERGY,10000,zGeneralRoom);
+				}
+				if (result == 0){
+					console.log(room.name + ' > 10000 => ' + zGeneralRoom + " result = " + result) ;
+					total = total + 10000;
+				} else {
+					console.log(room.name + ' ====SKIP====');
+				}
+			}
+		});
+		console.log("total ENERGY transfer = " + total);
+	}
+
 
 	static run(): void {
 		let alreadyComputedScore = false;
 		this.requestZoneData();
 		if (Game.time % 1475 == 0) {
 			RoomIntel.cleanRoomMemory();
+		}
+		if (Game.time % 204 == 0) {
+			this.periodicFunction();
 		}
 
 		for (const name in Game.rooms) {

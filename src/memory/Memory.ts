@@ -2,7 +2,13 @@ import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
 import {Stats} from '../stats/stats';
 import {isIVM} from '../utilities/utils';
-import {DEFAULT_OPERATION_MODE, DEFAULT_OVERMIND_SIGNATURE, PROFILER_COLONY_LIMIT, USE_PROFILER} from '../~settings';
+import {
+	DEFAULT_OPERATION_MODE,
+	DEFAULT_OVERMIND_SIGNATURE,
+	MY_USERNAME,
+	PROFILER_COLONY_LIMIT,
+	USE_PROFILER
+} from '../~settings';
 
 export enum Autonomy {
 	Manual        = 0,
@@ -203,6 +209,7 @@ export class Mem {
 			log          : {},
 			enableVisuals: true,
 			resourceCollectionMode: 0,
+			allies: [MY_USERNAME],
 			powerCollection: {
 				enabled: false,
 				maxRange: 5,

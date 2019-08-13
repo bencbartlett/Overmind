@@ -37,7 +37,7 @@ export class DirectivePairDestroy extends Directive {
 
 	run(): void {
 		// If there are no hostiles left in the room then remove the flag and associated healpoint
-		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0 && this.room.controller && this.room.name != 'W16N53') {
+		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0 && this.room.controller && this.room.name != 'W18N48') {
 			log.notify(`Pair destroyer mission at ${this.pos.roomName} completed successfully.`);
 			this.remove();
 		}
