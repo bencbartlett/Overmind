@@ -6,6 +6,7 @@ import {Visualizer} from "../../visuals/Visualizer";
 import {Power} from "./powers/genericPower";
 import {GenerateOps} from "./powers/generateOps";
 import {DirectiveNukeResponse} from "../situational/nukeResponse";
+import {OperateExtension} from "./powers/operateExtension";
 
 
 interface DirectiveBaseOperatorMemory extends FlagMemory {
@@ -94,6 +95,7 @@ export class DirectiveBaseOperator extends Directive {
 		//console.log(`The power constant is ${power}`)
 		switch(power) {
 			case PWR_GENERATE_OPS: return new GenerateOps(powerCreep);
+			case PWR_OPERATE_EXTENSION: return new OperateExtension(powerCreep);
 //			case PWR_OPERATE_SPAWN: return this.operateSpawn();
 		}
 
