@@ -17,6 +17,7 @@ import {log} from "../../console/log";
 export class HarassOverlord extends CombatOverlord {
 
 	hydralisks: CombatZerg[];
+	nibblers: CombatZerg[];
 	room: Room;
 	targetRemoteToHarass: string;
 	directive: DirectiveHarass;
@@ -32,10 +33,14 @@ export class HarassOverlord extends CombatOverlord {
 				priority = OverlordPriority.offense.harass) {
 		super(directive, 'harass', priority, 1);
 		this.directive = directive;
-		this.hydralisks = this.combatZerg(Roles.ranged, {
-			boostWishlist: boosted ? [boostResources.ranged_attack[3], boostResources.heal[3], boostResources.move[3]]
-								   : undefined
-		});
+		if (this.colony.level < 5) {
+			this.nibblers = this.combatZerg(Roles.melee);
+		} else {
+			this.hydralisks = this.combatZerg(Roles.ranged, {
+				boostWishlist: boosted ? [boostResources.ranged_attack[3], boostResources.heal[3], boostResources.move[3]]
+					: undefined
+			});
+		}
 	}
 
 	private handleHarass(hydralisk: CombatZerg): void {
@@ -47,7 +52,7 @@ export class HarassOverlord extends CombatOverlord {
 		}
 		if (this.targetRemoteToHarass && hydralisk.room.name != this.targetRemoteToHarass) {
 			hydralisk.goToRoom(this.targetRemoteToHarass);
-		} else if (hydralisk.room.dangerousPlayerHostiles.length > 2) {
+		} else if (hydralisk.room.dangerousHostiles.length > 2) {
 			// Time to move on
 			this.chooseRemoteToHarass(hydralisk, hydralisk.room.name);
 		}
@@ -70,7 +75,13 @@ export class HarassOverlord extends CombatOverlord {
 
 	init() {
 		this.reassignIdleCreeps(Roles.ranged);
-		const setup = CombatSetups.hydralisks.default;
+		this.reassignIdleCreeps(Roles.melee);
+		let setup;
+		if (this.colony.level < 5) {
+			setup = CombatSetups.zerglings.limitedDefault;
+		} else {
+			setup = CombatSetups.hydralisks.default;
+		}
 		this.wishlist(1, setup);
 	}
 
