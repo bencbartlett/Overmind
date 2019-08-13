@@ -280,8 +280,10 @@ export class DirectiveBaseOperator extends Directive {
 			if (towersToBoost.length > 0) {
 				powerCreep.usePower(PWR_OPERATE_TOWER, towersToBoost[0])
 			}
+			if ((!powerCreep.carry.ops || powerCreep.carry.ops < 20) && this.room.storage && this.room.storage.store.ops && this.room.storage.store.ops > 100) {
+				powerCreep.withdraw(this.room.storage, RESOURCE_OPS, 100);
+			}
 		}
-
 
 	}
 
