@@ -28,13 +28,14 @@ interface Memory {
 		operationMode: operationMode;
 		log: LoggerMemory;
 		enableVisuals: boolean;
+		allies: string[];
 		resourceCollectionMode: resourceCollectionMode;
 		powerCollection: {
 			enabled: boolean;
 			maxRange: number;
 			minPower: number;
 		};
-	}
+	};
 	profiler?: any;
 	stats: any;
 	constructionSites: { [id: string]: number };

@@ -212,6 +212,11 @@ export const CombatSetups = {
 			sizeLimit: Infinity,
 		}),
 
+		limitedDefault: new CreepSetup(Roles.melee, {
+			pattern  : [ATTACK, MOVE],
+			sizeLimit: 5,
+		}),
+
 		armored: new CreepSetup(Roles.melee, {
 			pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE],
 			sizeLimit: Infinity,
