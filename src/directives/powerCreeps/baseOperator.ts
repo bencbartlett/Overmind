@@ -5,6 +5,7 @@ import {log} from "../../console/log";
 import {Visualizer} from "../../visuals/Visualizer";
 import {Power} from "./powers/genericPower";
 import {GenerateOps} from "./powers/generateOps";
+import {DirectiveNukeResponse} from "../situational/nukeResponse";
 
 
 interface DirectiveBaseOperatorMemory extends FlagMemory {
@@ -263,6 +264,16 @@ export class DirectiveBaseOperator extends Directive {
 		} else {
 			let res = this.runPowers(powerCreep);
 			log.alert(`Running ${powerCreep} with power of ${res}`);
+		}
+
+		if (this.room.hostiles.length > 2 || (powerCreep.pos && DirectiveNukeResponse.isPresent(powerCreep.pos, 'room'))) {
+			const towersToBoost = this.colony.towers.filter(tower => !tower.effects || tower.effects.length == 0);
+			if (towersToBoost.length > 0) {
+				powerCreep.usePower(PWR_OPERATE_TOWER, towersToBoost[0])
+			}
+			if ((!powerCreep.carry.ops || powerCreep.carry.ops < 20) && this.room.storage && this.room.storage.store.ops && this.room.storage.store.ops > 100) {
+				powerCreep.withdraw(this.room.storage, RESOURCE_OPS, 100);
+			}
 		}
 
 
