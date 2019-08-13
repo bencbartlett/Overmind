@@ -7,6 +7,7 @@ import {MY_USERNAME} from "../../~settings";
 
 interface DirectiveHarassMemory extends FlagMemory {
 	enhanced?: boolean;
+	aggressive?: boolean; // Harass EVERYONE
 	targetPlayer?: string;
 	roomsToHarass: string[];
 }
@@ -66,10 +67,12 @@ export class DirectiveHarass extends Directive {
 			log.error(`Unable to find which player to harass in room ${roomName}`);
 			return [];
 		}
+		let whitelist = Memory.settings.allies;
 		let reservedByTargetPlayer: string[] = [];
 		let adjacentRooms = _.values(Game.map.describeExits(roomName)) as string[];
 		adjacentRooms.forEach(room => {
-			if (RoomIntel.roomReservedBy(room) == playerName) {
+			const reservation = RoomIntel.roomReservedBy(room);
+			if (reservation && this.memory.aggressive ? !whitelist.includes(reservation) : reservation == playerName) {
 				reservedByTargetPlayer.push(room);
 				// This will double add rooms next to owned rooms, making it more likely to harass them
 				(_.values(Game.map.describeExits(room)) as string[]).forEach(room => {
