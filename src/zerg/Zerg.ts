@@ -674,7 +674,7 @@ export class Zerg {
 	flee(avoidGoals: (RoomPosition | HasPos)[] = this.room.fleeDefaults,
 		 fleeOptions: FleeOptions              = {},
 		 moveOptions: MoveOptions              = {}): boolean {
-		if (avoidGoals.length == 0) {
+		if (avoidGoals.length == 0 || this.room.dangerousHostiles.find(creep => creep.pos.getRangeToXY(this.pos.x, this.pos.y) < 6) == undefined) {
 			return false;
 		} else if (this.room.controller && this.room.controller.my && this.room.controller.safeMode) {
 			return false;

@@ -128,7 +128,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 
 	/* Summarizes the total of all resources currently in a colony store structure */
 	private getAllAssets(): { [resourceType: string]: number } {
-		return mergeSum(_.map(this.terminals, terminal => colonyOf(terminal).assets));
+		return mergeSum(_.map(this.terminals, terminal => (colonyOf(terminal) != undefined ? colonyOf(terminal).assets : {})));
 	}
 
 	private logTransfer(resourceType: ResourceConstant, amount: number, origin: string, destination: string) {

@@ -15,6 +15,7 @@ export class OperateExtension extends Power {
 	}
 
 	operatePower() {
+		log.error(`Ops power creep with trying to op extensions`);
 		if (this.powerCreep.carry.ops && this.powerCreep.carry.ops > 2 && this.powerCreep.room
 			&& this.powerCreep.room.energyAvailable < this.powerCreep.room.energyCapacityAvailable * 0.5) {
 			const terminal = this.powerCreep.room!.storage;

@@ -233,7 +233,7 @@ export class DirectiveBaseOperator extends Directive {
 	runPowers(powerCreep: PowerCreep) {
 		const priorities = this.memory.powerPriorities;
 		for (let powerId in priorities) {
-			//console.log(`Powerid of ${powerId} and list of ${priorities}`);
+			console.log(`Powerid of ${powerId} and list of ${priorities}`);
 			let powerToUse = this.usePower(powerCreep, priorities[powerId]);
 			if (powerToUse && powerToUse.operatePower()) {
 				break;
