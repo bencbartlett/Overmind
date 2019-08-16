@@ -79,6 +79,7 @@ const defaultColonyMemory: ColonyMemory = {
 		possibleExpansions: {},
 		expiration        : 0,
 	},
+	//disabledExpansions?: string[], // rooms that are under attack and shouldn't be spawned for
 };
 
 

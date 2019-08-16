@@ -138,7 +138,8 @@ export class CommandCenter extends HiveCluster {
 		if (this.powerSpawn) {
 			if (this.powerSpawn.energy < this.powerSpawn.energyCapacity * .5) {
 				this.transportRequests.requestInput(this.powerSpawn, Priority.NormalLow);
-			} else if (this.powerSpawn.power < this.powerSpawn.powerCapacity * .5) {
+			} else if (this.powerSpawn.power < this.powerSpawn.powerCapacity * .5 && this.terminal
+				&& this.terminal.store.power && this.terminal.store.power > 100) {
 				this.transportRequests.requestInput(this.powerSpawn, Priority.NormalLow, {resourceType: RESOURCE_POWER});
 			}
 		}

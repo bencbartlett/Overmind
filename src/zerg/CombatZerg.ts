@@ -296,7 +296,8 @@ export class CombatZerg extends Zerg {
 		// const siegingCreeps = this.room.hostiles.filter(creep =>
 		// 	_.any(creep.pos.neighbors, pos => this.colony && insideBunkerBounds(pos, this.colony)));
 
-		const target = CombatTargeting.findTarget(this, this.room.playerHostiles);
+		const target = CombatTargeting.findTarget(this, this.colony ? this.room.playerHostiles
+			.filter(creep => creep.pos.getRangeTo(this.colony!.pos) <= 9) : this.room.dangerousHostiles);
 
 		if (target) {
 			return Movement.combatMove(this, [{pos: target.pos, range: 1}], [], {preferRamparts: true, requireRamparts: true});

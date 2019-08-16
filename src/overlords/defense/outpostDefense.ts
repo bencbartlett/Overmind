@@ -86,7 +86,8 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		const {attack, rangedAttack, heal} = this.getEnemyPotentials();
 
 		if (attack > 30 || rangedAttack > 30) {
-			return;
+			//return;
+			this.wishlist(1, CombatSetups.hydralisks.boosted_T3)
 		}
 		const hydraliskSetup = mode == 'NORMAL' ? CombatSetups.hydralisks.default : CombatSetups.hydralisks.early;
 		const hydraliskAmount = this.computeNeededHydraliskAmount(hydraliskSetup, rangedAttack);

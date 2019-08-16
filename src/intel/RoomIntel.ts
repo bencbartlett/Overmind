@@ -436,7 +436,7 @@ export class RoomIntel {
 			if(room.controller &&
 				room.controller.my &&
 				room.terminal){
-				if(room.terminal.energy > 5000 && room.terminal.cooldown == 0 && room.terminal.store[RESOURCE_ENERGY] >= 15000){
+				if(room.terminal.energy > 25000 && room.terminal.cooldown == 0 && room.terminal.store[RESOURCE_ENERGY] >= 15000){
 					zGeneralRoom = zGeneral[0];
 					result = room.terminal.send(RESOURCE_ENERGY,10000,zGeneralRoom);
 				}
@@ -459,7 +459,7 @@ export class RoomIntel {
 			RoomIntel.cleanRoomMemory();
 		}
 		if (Game.time % 204 == 0) {
-			this.periodicFunction();
+			//this.periodicFunction();
 		}
 
 		for (const name in Game.rooms) {
@@ -498,7 +498,7 @@ export class RoomIntel {
 			if (room.controller && Game.time % 5 == 0) {
 				this.recordControllerInfo(room.controller);
 			}
-			this.minePowerBanks(room);
+			//this.minePowerBanks(room);
 		}
 	}
 

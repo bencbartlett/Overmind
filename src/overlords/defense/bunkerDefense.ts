@@ -52,7 +52,7 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 		if (this.canBoostSetup(CombatSetups.bunkerGuard.boosted_T3)) {
 			const setup = CombatSetups.bunkerGuard.boosted_T3;
 			//const setup = CombatSetups.bunkerGuard.halfMove;
-			this.wishlist(2, setup);
+			this.wishlist(1, setup);
 		} else {
 			const setup = CombatSetups.bunkerGuard.halfMove;
 			this.wishlist(1, setup);
