@@ -247,7 +247,6 @@ export class DirectiveBaseOperator extends Directive {
 	}
 
 	run(): void {
-		const cpuBefore = Game.cpu.getUsed();
 		const powerCreep = Game.powerCreeps[this.flag.name];
 		if (!powerCreep || Game.cpu.bucket < 5000 && (!powerCreep.ticksToLive || powerCreep.ticksToLive > 500)) {
 			this.powerCreepName = this.flag.name;
@@ -289,9 +288,6 @@ export class DirectiveBaseOperator extends Directive {
 				powerCreep.withdraw(this.room.storage, RESOURCE_OPS, 100);
 			}
 		}
-
-		console.log(`Power creep ${powerCreep.name} cpu used was ${Game.cpu.getUsed() - cpuBefore}`);
-
 	}
 
 }
