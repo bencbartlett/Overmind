@@ -7,6 +7,7 @@ import {maxBy} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {Swarm} from '../zerg/Swarm';
 import {Zerg} from '../zerg/Zerg';
+import {MY_USERNAME} from "../~settings";
 
 @profile
 export class CombatTargeting {
@@ -81,7 +82,10 @@ export class CombatTargeting {
 			}
 			if (checkReachable) {
 				const targetsByRange = _.sortBy(targets, target => zerg.pos.getRangeTo(target));
-				return _.find(targetsByRange, target => Pathing.isReachable(zerg.pos, target.pos, zerg.room.barriers));
+				return _.find(targetsByRange, target => Pathing.isReachable(zerg.pos, target.pos,
+					zerg.room.barriers.filter(barrier => barrier.structureType == STRUCTURE_WALL
+						|| (barrier.structureType == STRUCTURE_RAMPART
+						&& (barrier.owner.username == MY_USERNAME || !barrier.isPublic)))));
 			} else {
 				return zerg.pos.findClosestByRange(targets) as Creep | undefined;
 			}

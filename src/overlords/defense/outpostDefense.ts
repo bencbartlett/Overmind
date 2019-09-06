@@ -91,7 +91,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		}
 		const hydraliskSetup = mode == 'NORMAL' ? CombatSetups.hydralisks.default : CombatSetups.hydralisks.early;
 		const hydraliskAmount = this.computeNeededHydraliskAmount(hydraliskSetup, rangedAttack);
-		this.wishlist(hydraliskAmount, hydraliskSetup, {priority: this.priority - .2, reassignIdle: true});
+		this.wishlist(Math.min(hydraliskAmount, 2), hydraliskSetup, {priority: this.priority - .2, reassignIdle: true});
 
 		const broodlingSetup = mode == 'NORMAL' ? CombatSetups.broodlings.default : CombatSetups.broodlings.early;
 		const broodlingAmount = this.computeNeededBroodlingAmount(broodlingSetup, attack);
@@ -103,7 +103,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		if (mode == 'EARLY' && attack + rangedAttack > 0) {
 			healerAmount = Math.max(healerAmount, 1);
 		}
-		this.wishlist(healerAmount, CombatSetups.healers.default, {priority: this.priority, reassignIdle: true});
+		this.wishlist(Math.min(healerAmount,2), CombatSetups.healers.default, {priority: this.priority, reassignIdle: true});
 
 	}
 

@@ -270,17 +270,16 @@ export abstract class Directive {
 		return result;
 	}
 
-
-	/* Whether a directive of the same type is already present (in room | at position) */
 	static isPresent(pos: RoomPosition, scope: 'room' | 'pos'): boolean {
+		//this.isPresentAndReturnName(pos, scope) != undefined
 		const room = Game.rooms[pos.roomName] as Room | undefined;
 		switch (scope) {
 			case 'room':
 				if (room) {
 					return _.filter(room.flags,
-									flag => this.filter(flag) &&
-											!(flag.memory.setPosition
-											&& flag.memory.setPosition.roomName != pos.roomName)).length > 0;
+						flag => this.filter(flag) &&
+							!(flag.memory.setPosition
+								&& flag.memory.setPosition.roomName != pos.roomName)).length > 0;
 				} else {
 					const flagsInRoom = _.filter(Game.flags, function(flag) {
 						if (flag.memory.setPosition) { // does it need to be relocated?
@@ -294,9 +293,9 @@ export abstract class Directive {
 			case 'pos':
 				if (room) {
 					return _.filter(pos.lookFor(LOOK_FLAGS),
-									flag => this.filter(flag) &&
-											!(flag.memory.setPosition
-											&& !equalXYR(pos, flag.memory.setPosition))).length > 0;
+						flag => this.filter(flag) &&
+							!(flag.memory.setPosition
+								&& !equalXYR(pos, flag.memory.setPosition))).length > 0;
 				} else {
 					const flagsAtPos = _.filter(Game.flags, function(flag) {
 						if (flag.memory.setPosition) { // does it need to be relocated?
@@ -306,6 +305,46 @@ export abstract class Directive {
 						}
 					});
 					return _.filter(flagsAtPos, flag => this.filter(flag)).length > 0;
+				}
+			}
+	}
+
+
+	/* Whether a directive of the same type is already present (in room | at position) */
+	static isPresentAndReturnName(pos: RoomPosition, scope: 'room' | 'pos'): Flag[] {
+		const room = Game.rooms[pos.roomName] as Room | undefined;
+		switch (scope) {
+			case 'room':
+				if (room) {
+					return _.filter(room.flags,
+									flag => this.filter(flag) &&
+											!(flag.memory.setPosition
+											&& flag.memory.setPosition.roomName != pos.roomName));
+				} else {
+					const flagsInRoom = _.filter(Game.flags, function(flag) {
+						if (flag.memory.setPosition) { // does it need to be relocated?
+							return flag.memory.setPosition.roomName == pos.roomName;
+						} else { // properly located
+							return flag.pos.roomName == pos.roomName;
+						}
+					});
+					return _.filter(flagsInRoom, flag => this.filter(flag));
+				}
+			case 'pos':
+				if (room) {
+					return _.filter(pos.lookFor(LOOK_FLAGS),
+									flag => this.filter(flag) &&
+											!(flag.memory.setPosition
+											&& !equalXYR(pos, flag.memory.setPosition)));
+				} else {
+					const flagsAtPos = _.filter(Game.flags, function(flag) {
+						if (flag.memory.setPosition) { // does it need to be relocated?
+							return equalXYR(flag.memory.setPosition, pos);
+						} else { // properly located
+							return equalXYR(flag.pos, pos);
+						}
+					});
+					return _.filter(flagsAtPos, flag => this.filter(flag));
 				}
 		}
 	}
@@ -317,7 +356,7 @@ export abstract class Directive {
 		if (this.isPresent(pos, scope)) {
 			return; // do nothing if flag is already here
 		}
-		
+
 		const room = Game.rooms[pos.roomName] as Room | undefined;
 		if (!room) {
 			if (!opts.memory) {
@@ -369,6 +408,11 @@ export abstract class Directive {
 	}
 
 	abstract spawnMoarOverlords(): void;
+
+	/* Determines if should spawn at a Game.time. Returns 0 if no issue, or a Game.time to start spawning after. Anti-harass */
+	shouldSpawn(): number {
+		return 0;
+	}
 
 	/* Initialization logic goes here, called in overseer.init() */
 	abstract init(): void;

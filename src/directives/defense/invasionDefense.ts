@@ -8,6 +8,7 @@ import {ColonyStage} from '../../Colony';
 import {Directive} from '../Directive';
 import {NotifierPriority} from '../Notifier';
 import {DistractionOverlord} from "../../overlords/defense/distraction";
+import {DirectivePairDestroy} from "../offense/pairDestroy";
 
 interface DirectiveInvasionDefenseMemory extends FlagMemory {
 	persistent?: boolean;
@@ -49,12 +50,13 @@ export class DirectiveInvasionDefense extends Directive {
 		const meleeHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(ATTACK) > 0 ||
 																	  hostile.getActiveBodyparts(WORK) > 0);
 		const rangedHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0);
-		if (meleeHostiles.length > 0 && expectedDamage > 40*ATTACK_POWER || rangedHostiles.length >= 2) {
+		if (meleeHostiles.length > 0 && expectedDamage > 40*ATTACK_POWER || rangedHostiles.length >= 3) {
 			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, true);
 			this.overlords.distraction = new DistractionOverlord(this);
 		}
 		if (this.colony.stage > ColonyStage.Larva) {
 			this.overlords.rangedDefense = new RangedDefenseOverlord(this, useBoosts);
+			//DirectivePairDestroy.createIfNotPresent(this.pos, 'room');
 		} else {
 			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, false);
 		}

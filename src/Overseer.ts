@@ -24,6 +24,7 @@ import {CombatPlanner} from './strategy/CombatPlanner';
 import {Cartographer, ROOMTYPE_CONTROLLER, ROOMTYPE_SOURCEKEEPER} from './utilities/Cartographer';
 import {derefCoords, hasJustSpawned, minBy, onPublicServer} from './utilities/utils';
 import {MUON, MY_USERNAME, USE_TRY_CATCH} from './~settings';
+import {DirectivePairDestroy} from "./directives/offense/pairDestroy";
 
 
 // export const DIRECTIVE_CHECK_FREQUENCY = 2;
@@ -217,7 +218,9 @@ export class Overseer implements IOverseer {
 				const safetyData = RoomIntel.getSafetyData(colony.room.name);
 				const invasionIsPersistent = safetyData.unsafeFor > 20;
 				if (invasionIsPersistent && !DirectivePoisonRoom.isPresent(colony.pos, 'room')) {
-					DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
+					//DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
+					let name = 'PairDefend: ' +colony.name;
+					DirectivePairDestroy.createIfNotPresent(colony.controller.pos, 'room', {name: name});
 				}
 			}
 		}

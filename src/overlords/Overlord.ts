@@ -70,6 +70,7 @@ export abstract class Overlord {
 	private _combatZerg: { [roleName: string]: CombatZerg[] };
 	private boosts: { [roleName: string]: _ResourceConstantSansEnergy[] | undefined };
 	creepUsageReport: { [roleName: string]: [number, number] | undefined };
+	shouldSpawnAt?: number;
 
 	constructor(initializer: OverlordInitializer | Colony, name: string, priority: number) {
 		this.initializer = initializer;
@@ -357,6 +358,11 @@ export abstract class Overlord {
 	 */
 	protected wishlist(quantity: number, setup: CreepSetup, opts = {} as CreepRequestOptions) {
 		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN, reassignIdle: false});
+		// Don't spawn if spawning is halted
+		if (this.shouldSpawnAt && this.shouldSpawnAt > Game.time) {
+			log.info(`Disabled spawning for ${this.print} for another ${this.shouldSpawnAt - Game.time} ticks`);
+			return;
+		}
 		let creepQuantity: number;
 		if (opts.noLifetimeFilter) {
 			creepQuantity = (this._creeps[setup.role] || []).length;
