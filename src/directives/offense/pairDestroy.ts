@@ -6,6 +6,11 @@ import {Visualizer} from '../../visuals/Visualizer';
 import {Directive} from '../Directive';
 import {DistractionOverlord} from "../../overlords/defense/distraction";
 
+
+interface DirectivePairDestroyMemory extends FlagMemory {
+	persistent?: boolean;
+}
+
 /**
  * Spawns a pair of attacker/healer creeps to siege a room
  */
@@ -38,8 +43,7 @@ export class DirectivePairDestroy extends Directive {
 	run(): void {
 		// If there are no hostiles left in the room then remove the flag and associated healpoint
 		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0 && this.room.controller
-			&& this.room.name != 'W18N48' && this.room.name != 'W17N47' && this.room.name != 'W54N37' && this.room.name != 'W16N53'
-			&& this.room.name != 'W55N39' && this.room.name != 'W16N54') {
+			&& this.room.name != 'W18N48' && this.room.name != 'W17N47' && this.room.name != 'W16N53' && this.room.name != 'W16N54') {
 			log.notify(`Pair destroyer mission at ${this.pos.roomName} completed successfully.`);
 			this.remove();
 		}

@@ -81,8 +81,9 @@ export let OverlordPriority = {
 		roomIncrement: 5,
 	},
 
-	collection: {				// Non-urgent collection of resources, like from a deserted storage
-		haul: 1100
+	tasks: {				// Non-urgent tasks, such as collection from a deserted storage
+		haul: 1100,
+		dismantle: 1101
 	},
 
 	default: 99999				// Default overlord priority to ensure it gets run last

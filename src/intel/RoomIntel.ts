@@ -414,7 +414,7 @@ export class RoomIntel {
 		for (let roomName in Memory.rooms) {
 			let remove = true;
 			for (let colonyName in Memory.colonies){
-				if(Game.map.getRoomLinearDistance(roomName, colonyName) <= 5){
+				if(Game.map.getRoomLinearDistance(roomName, colonyName) <= 3){
 					remove = false;
 				}
 			}
@@ -454,8 +454,8 @@ export class RoomIntel {
 
 	static run(): void {
 		let alreadyComputedScore = false;
-		this.requestZoneData();
-		if (Game.time % 1475 == 0) {
+		//this.requestZoneData();
+		if (Game.time % 975 == 0) {
 			RoomIntel.cleanRoomMemory();
 		}
 		if (Game.time % 204 == 0) {
@@ -498,7 +498,7 @@ export class RoomIntel {
 			if (room.controller && Game.time % 5 == 0) {
 				this.recordControllerInfo(room.controller);
 			}
-			//this.minePowerBanks(room);
+			this.minePowerBanks(room);
 		}
 	}
 

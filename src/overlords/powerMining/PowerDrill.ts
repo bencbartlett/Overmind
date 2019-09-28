@@ -48,7 +48,6 @@ export class PowerDrillOverlord extends CombatOverlord {
 	refresh() {
 		super.refresh();
 		this.memory = Mem.wrap(this.directive.memory, 'powerDrill');
-
 	}
 
 	init() {

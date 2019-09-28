@@ -216,8 +216,8 @@ export class CommandCenterOverlord extends Overlord {
 		const storageAmount = _.sum(storage.store);
 		const terminalAmount = _.sum(terminal.store);
 		const maxFillRatio = 0.95;
-		const terminalT3Amount = 10000;
-		const terminalOtherAmount = 15000;
+		const terminalT3Amount = 8000;
+		const terminalOtherAmount = 10000;
 		// Move all non-energy resources from storage to terminal
 		for (const resourceType in terminal.store) {
 			if (storageAmount < storageAmount * maxFillRatio && resourceType != RESOURCE_ENERGY
@@ -241,6 +241,11 @@ export class CommandCenterOverlord extends Overlord {
 				return true;
 			}
 		}
+		if (!storage.store[RESOURCE_OPS] || (storage.store[RESOURCE_OPS] && storage.store[RESOURCE_OPS]! < 3000)) {
+			manager.task = Tasks.withdraw(terminal, RESOURCE_OPS);
+			manager.task.parent = Tasks.transfer(storage, RESOURCE_OPS);
+		}
+
 		return false;
 	}
 
@@ -290,8 +295,20 @@ export class CommandCenterOverlord extends Overlord {
 			if (this.deathActions(manager)) return;
 		}
 
-		// if (this.room && this.room.terminal && this.room.storage && this.room.name == 'W18N48') {
-		// 	manager.task = Tasks.transferAll(this.room.storage).fork(Tasks.withdrawAll(this.room.terminal));
+		// Prevent terminal flooding
+		// if (this.room && this.room.terminal && this.room.storage && _.sum(this.room.terminal.store) > this.room.terminal.storeCapacity*.98) {
+		//
+		// 	let max = 0;
+		// 	let resType: ResourceConstant = RESOURCE_ENERGY;
+		// 	for (let res in this.room.terminal.store) {
+		// 		let amount = this.room.terminal.store[<ResourceConstant>res];
+		// 		if (amount && amount > max && res !== RESOURCE_ENERGY) {
+		// 			max = amount;
+		// 			resType = <ResourceConstant>res;
+		// 		}
+		// 	}
+		//
+		// 	manager.task = Tasks.transferAll(this.room.storage).fork(Tasks.withdraw(this.room.terminal, resType));
 		// 	return;
 		// }
 

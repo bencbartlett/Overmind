@@ -6,6 +6,7 @@ import {asciiLogoRL, asciiLogoSmall} from '../visuals/logos';
 import {DEFAULT_OVERMIND_SIGNATURE, MY_USERNAME, USE_PROFILER} from '../~settings';
 import {log} from './log';
 import {Overlord} from "../overlords/Overlord";
+import {EmpireAnalysis} from "../utilities/EmpireAnalysis";
 
 type RecursiveObject = { [key: string]: number | RecursiveObject };
 
@@ -48,6 +49,7 @@ export class OvermindConsole {
 		global.profileMemory = this.profileMemory;
 		global.cancelMarketOrders = this.cancelMarketOrders;
 		global.setRoomUpgradeRate = this.setRoomUpgradeRate;
+		global.getEmpireMineralDistribution = this.getEmpireMineralDistribution;
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -90,6 +92,7 @@ export class OvermindConsole {
 		descr['profileMemory(depth=1)'] = 'scan through memory to get the size of various objects';
 		descr['startRemoteDebugSession()'] = 'enables the remote debugger so Muon can debug your code';
 		descr['cancelMarketOrders(filter?)'] = 'cancels all market orders matching filter (if provided)';
+		descr['getEmpireMineralDistribution()'] = 'returns current census of colonies and mined sk room minerals';
 		// Console list
 		const descrMsg = toColumns(descr, {justify: true, padChar: '.'});
 		const maxLineLength = _.max(_.map(descrMsg, line => line.length)) + 2;
@@ -476,9 +479,17 @@ export class OvermindConsole {
 		let colony: Colony = Overmind.colonies[roomName];
 		colony.upgradeSite.memory.speedFactor = rate;
 
-		return `Colony ${roomName} is now upgrading at a rate of ${rate} barriers.`;
+		return `Colony ${roomName} is now upgrading at a rate of ${rate}.`;
 	}
 
+	static getEmpireMineralDistribution(): string {
+		const minerals = EmpireAnalysis.empireMineralDistribution();
+		let ret = 'Empire Mineral Distribution \n';
+		for (let mineral in minerals) {
+			ret += `${mineral}: ${minerals[mineral]} \n`;
+		}
+		return ret;
+	}
 
 	// Memory management ===============================================================================================
 

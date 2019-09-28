@@ -84,10 +84,10 @@ export class MiningOverlord extends Overlord {
 		// }
 		else if (this.link) {
 			this.mode = 'link';
-			this.setup = Setups.drones.miners.default;
+			this.setup = Setups.drones.miners.linkOptimized;
 		} else {
 			this.mode = 'standard';
-			this.setup = Setups.drones.miners.standard;
+			this.setup = Game.cpu.bucket < 9500 ? Setups.drones.miners.standardCPU : Setups.drones.miners.standard;
 			// todo: double miner condition
 		}
 		const miningPowerEach = this.setup.getBodyPotential(WORK, this.colony);
@@ -337,12 +337,13 @@ export class MiningOverlord extends Overlord {
 	 */
 	private linkMiningActions(miner: Zerg) {
 
-		// Approach mining site
-		if (this.goToMiningSite(miner)) return;
-
 		// Link mining
 		if (this.link) {
-			miner.harvest(this.source!);
+			const res = miner.harvest(this.source!);
+			if (res == ERR_NOT_IN_RANGE) {
+				// Approach mining site
+				if (this.goToMiningSite(miner)) return;
+			}
 			if (miner.carry.energy > 0.9 * miner.carryCapacity) {
 				miner.transfer(this.link, RESOURCE_ENERGY);
 			}

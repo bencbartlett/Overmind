@@ -220,6 +220,12 @@ export class Overseer implements IOverseer {
 				if (invasionIsPersistent && !DirectivePoisonRoom.isPresent(colony.pos, 'room')) {
 					//DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
 					let name = 'PairDefend: ' +colony.name;
+					if (colony.name == 'W14N57') {
+						DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
+					}
+					if (colony.name == 'W7N48') {
+						return;
+					}
 					DirectivePairDestroy.createIfNotPresent(colony.controller.pos, 'room', {name: name});
 				}
 			}

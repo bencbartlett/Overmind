@@ -111,7 +111,8 @@ export class WorkerOverlord extends Overlord {
 			for (const rampart of this.colony.room.ramparts) {
 				const neededHits = this.neededRampartHits(rampart);
 				if (rampart.hits < neededHits && rampart.pos.findInRange(FIND_NUKES, 3).length > 0
-					&& DirectiveNukeResponse.shouldReinforceLocation(rampart.pos)) {
+					&& DirectiveNukeResponse.shouldReinforceLocation(rampart.pos, this.room.storage
+						&& this.room.storage.energy < 300000)) {
 					this.nukeDefenseRamparts.push(rampart);
 					Visualizer.marker(rampart.pos, {color: 'gold'});
 					this.nukeDefenseHitsRemaining[rampart.id] = neededHits - rampart.hits;
@@ -204,8 +205,8 @@ export class WorkerOverlord extends Overlord {
 				});
 			}
 		}
-		if (this.colony.name == 'W18N49' || this.colony.name == 'W11N54') {
-			numWorkers = 5;
+		if (this.colony.name == 'W14N57') {
+			//numWorkers = 8;
 		}
 		this.wishlist(numWorkers, setup);
 	}

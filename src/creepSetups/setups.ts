@@ -48,8 +48,18 @@ export const Setups = {
 			}),
 
 			standard: new CreepSetup(Roles.drone, {
-				pattern  : [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE],
+				pattern  : [WORK, WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE, WORK],
 				sizeLimit: 1,
+			}),
+
+			standardCPU: new CreepSetup(Roles.drone, {
+				pattern  : [WORK, WORK, WORK, WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE, MOVE, WORK],
+				sizeLimit: 1,
+			}),
+
+			linkOptimized: new CreepSetup(Roles.drone, {
+				pattern  : [WORK, WORK, WORK, CARRY, MOVE, MOVE, WORK],
+				sizeLimit: 4,
 			}),
 
 			emergency: new CreepSetup(Roles.drone, {
@@ -78,6 +88,11 @@ export const Setups = {
 
 		claim: new CreepSetup(Roles.claim, {
 			pattern  : [CLAIM, MOVE],
+			sizeLimit: 1
+		}),
+
+		fastClaim: new CreepSetup(Roles.claim, {
+			pattern  : [MOVE, MOVE, MOVE, MOVE, CLAIM, MOVE],
 			sizeLimit: 1
 		}),
 
@@ -229,6 +244,16 @@ export const CombatSetups = {
 
 		boosted_T3: new CreepSetup(Roles.melee, {
 			pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE],
+			sizeLimit: Infinity,
+		}),
+
+		boosted_T3_armor: new CreepSetup(Roles.melee, {
+			pattern  : [TOUGH, TOUGH, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE],
+			sizeLimit: Infinity,
+		}),
+
+		boosted_T3_strongArmor: new CreepSetup(Roles.melee, {
+			pattern  : [TOUGH, TOUGH, TOUGH, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE],
 			sizeLimit: Infinity,
 		}),
 

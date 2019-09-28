@@ -395,6 +395,9 @@ export class RoomPlanner {
 	 */
 	getObstacles(): RoomPosition[] {
 		let obstacles: RoomPosition[] = [];
+		// Add sources and extractors to impassibles for tunnels
+		obstacles.concat(_.map(this.colony.sources, source => source.pos));
+		obstacles.concat(_.map(this.colony.extractors, extr => extr.pos));
 		const passableStructureTypes: string[] = [STRUCTURE_ROAD, STRUCTURE_CONTAINER, STRUCTURE_RAMPART];
 		if (_.keys(this.map).length > 0) { // if room planner has made the map, use that
 			for (const structureType in this.map) {
@@ -641,7 +644,7 @@ export class RoomPlanner {
 					}
 					if (this.colony.level < 6
 						&& structureType == STRUCTURE_TERMINAL && hasMinerals((<StructureTerminal> structure).store)) {
-						DirectiveHaul.create(structure.pos);
+						DirectiveHaul.createIfNotPresent(structure.pos, 'pos');
 						break; // don't destroy terminal when under RCL6 if there are resources available.
 					}
 					if (structureType != STRUCTURE_WALL && structureType != STRUCTURE_RAMPART) {

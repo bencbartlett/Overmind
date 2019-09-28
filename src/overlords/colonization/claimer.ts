@@ -39,7 +39,7 @@ export class ClaimingOverlord extends Overlord {
 			}
 			return 1; // otherwise ask for 1 claimer
 		});
-		this.wishlist(amount, Setups.infestors.claim);
+		this.wishlist(amount, this.colony.level > 4 ? Setups.infestors.fastClaim : Setups.infestors.claim);
 	}
 
 	private handleClaimer(claimer: Zerg): void {

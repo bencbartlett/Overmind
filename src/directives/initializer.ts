@@ -29,6 +29,8 @@ import {DirectiveTerminalRebuildState} from './terminalState/terminalState_rebui
 import {DirectivePowerMine} from "./resource/powerMine";
 import {DirectiveHarass} from "./offense/harass";
 import {DirectiveBaseOperator} from "./powerCreeps/baseOperator";
+import {DirectiveNukeTarget} from "./situational/nukeTarget";
+import {DirectiveModularDismantle} from "./targeting/modularDismantle";
 
 /**
  * This is the initializer for directives, which maps flags by their color code to the corresponding directive
@@ -88,6 +90,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveBootstrap(flag);
 				case COLOR_BLUE:
 					return new DirectiveNukeResponse(flag);
+				case COLOR_RED:
+					return new DirectiveNukeTarget(flag);
 			}
 			break;
 
@@ -124,6 +128,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveTargetSiege(flag);
 				case COLOR_YELLOW:
 					return new DirectiveDismantle(flag);
+				case COLOR_CYAN:
+					return new DirectiveModularDismantle(flag);
 			}
 			break;
 

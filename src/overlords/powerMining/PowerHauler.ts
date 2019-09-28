@@ -24,7 +24,7 @@ export class PowerHaulingOverlord extends Overlord {
 	// TODO bug where haulers can come from tiny rooms not ready yet
 	requiredRCL = 6;
 	// Allow time for body to spawn
-	prespawnAmount = 150;
+	prespawnAmount = 300;
 
 	constructor(directive: DirectivePowerMine, priority = OverlordPriority.collectionUrgent.haul) {
 		super(directive, 'powerHaul', priority);

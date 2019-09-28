@@ -1,0 +1,83 @@
+import {log} from '../../console/log';
+import {CombatSetups, Roles, Setups} from '../../creepSetups/setups';
+import {Pathing} from '../../movement/Pathing';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
+import {profile} from '../../profiler/decorator';
+import {Zerg} from '../../zerg/Zerg';
+import {Overlord} from '../Overlord';
+import {DirectiveModularDismantle} from "../../directives/targeting/modularDismantle";
+
+/**
+ * Spawns special-purpose dismantlers for transporting resources to/from a specified target
+ */
+@profile
+export class DismantleOverlord extends Overlord {
+
+	dismantlers: Zerg[];
+	directive: DirectiveModularDismantle;
+	target?: Structure;
+
+	requiredRCL: 4;
+
+	constructor(directive: DirectiveModularDismantle, target?: Structure, priority = OverlordPriority.tasks.dismantle) {
+		super(directive, 'dismantle', priority);
+		this.directive = directive;
+		this.target = target || Game.getObjectById(this.directive.memory.targetId) || undefined;
+		this.dismantlers = this.zerg(Roles.dismantler);
+	}
+
+	init() {
+		// Spawn a number of dismantlers, up to a max
+		const MAX_DISMANTLERS = 4;
+		// Calculate total needed amount of dismantleing power as (resource amount * trip distance)
+		const tripDistance = 2 * Pathing.distance((this.colony).pos, this.directive.pos);
+		// Calculate number of dismantlers
+		if (this.directive.room && this.target && ! this.directive.memory.numberSpots) {
+			this.directive.getDismantleSpots(this.target.pos);
+		}
+		const nearbySpots = this.directive.memory.numberSpots != undefined ? this.directive.memory.numberSpots : 1;
+
+		// needs to be reachable spots
+		const numDismantlers = Math.min(nearbySpots, MAX_DISMANTLERS);
+		// Request the dismantlers
+		this.wishlist(numDismantlers, CombatSetups.dismantlers.default);
+	}
+
+	private runDismantler(dismantler: Zerg) {
+		if (!dismantler.inSameRoomAs(this.directive)) {
+			let goal = this.target || this.directive;
+			dismantler.goTo(goal, {avoidSK: true});
+		} else {
+			if (!this.target) {
+				this.target = Game.getObjectById(this.directive.memory.targetId) || undefined;
+				if (!this.target) {
+					log.error(`No target found for ${this.directive.print}`);
+				}
+			} else {
+				let res = dismantler.dismantle(this.target);
+				if (res == ERR_NOT_IN_RANGE) {
+					dismantler.goTo(this.target);
+				}
+			}
+		}
+	}
+
+	run() {
+		this.reassignIdleCreeps(Roles.dismantler);
+		for (const dismantler of this.dismantlers) {
+			// Run the creep if it has a task given to it by something else; otherwise, proceed with non-task actions
+			if (dismantler.hasValidTask) {
+				dismantler.run();
+			} else {
+				if (dismantler.needsBoosts) {
+					this.handleBoosting(dismantler);
+				} else {
+					this.runDismantler(dismantler);
+				}
+			}
+		}
+		for (const dismantler of this.dismantlers) {
+			this.runDismantler(dismantler);
+		}
+	}
+}

@@ -22,7 +22,7 @@ export class HaulingOverlord extends Overlord {
 	requiredRCL: 4;
 
 	constructor(directive: DirectiveHaul, priority = directive.hasDrops ? OverlordPriority.collectionUrgent.haul :
-													 OverlordPriority.collection.haul) {
+													 OverlordPriority.tasks.haul) {
 		super(directive, 'haul', priority);
 		this.directive = directive;
 		this.haulers = this.zerg(Roles.transport);
@@ -80,7 +80,7 @@ export class HaulingOverlord extends Overlord {
 				log.warning(`${hauler.name} in ${hauler.room.print}: nothing to collect!`);
 			} else {
 				// hauler.task = Tasks.goTo(this.directive);
-				hauler.goTo(this.directive);
+				hauler.goTo(this.directive, {avoidSK: true});
 			}
 		} else {
 			// Travel to colony room and deposit resources
@@ -97,7 +97,7 @@ export class HaulingOverlord extends Overlord {
 							return;
 						}
 					} else { // prefer to put minerals in terminal
-						if (this.colony.terminal && _.sum(this.colony.terminal.store) < TERMINAL_CAPACITY) {
+						if (this.colony.terminal && this.colony.terminal.my && _.sum(this.colony.terminal.store) < TERMINAL_CAPACITY) {
 							hauler.task = Tasks.transfer(this.colony.terminal, <ResourceConstant>resourceType);
 							return;
 						} else if (this.colony.storage && _.sum(this.colony.storage.store) < STORAGE_CAPACITY) {

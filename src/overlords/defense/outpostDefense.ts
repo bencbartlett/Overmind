@@ -95,7 +95,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 
 		const broodlingSetup = mode == 'NORMAL' ? CombatSetups.broodlings.default : CombatSetups.broodlings.early;
 		const broodlingAmount = this.computeNeededBroodlingAmount(broodlingSetup, attack);
-		this.wishlist(broodlingAmount, broodlingSetup, {priority: this.priority - .1, reassignIdle: true});
+		this.wishlist(Math.min(broodlingAmount, 3), broodlingSetup, {priority: this.priority - .1, reassignIdle: true});
 
 		const enemyHealers = _.filter(this.room ? this.room.hostiles : [], creep => CombatIntel.isHealer(creep)).length;
 		let healerAmount = (enemyHealers > 0 || mode == 'EARLY') ?

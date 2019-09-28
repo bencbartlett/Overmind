@@ -46,7 +46,7 @@ export class DirectiveNukeResponse extends Directive {
 	 * @param pos
 	 * @param ignoreExtensions
 	 */
-	static shouldReinforceLocation(pos: RoomPosition, ignoreExtensions = true) {
+	static shouldReinforceLocation(pos: RoomPosition, ignoreExtensions = false) {
 		let dontReinforce: StructureConstant[] = [STRUCTURE_ROAD, STRUCTURE_RAMPART, STRUCTURE_WALL];
 		if (ignoreExtensions) { dontReinforce.push(STRUCTURE_EXTENSION);}
 		return _.filter(pos.lookFor(LOOK_STRUCTURES),
@@ -61,7 +61,7 @@ export class DirectiveNukeResponse extends Directive {
 					// Rampart should be built to protect all non-road, non-barrier structures in nuke range
 					return DirectiveNukeResponse.shouldReinforceLocation(pos,
 						// only reinforce extensions if room has spare energy
-						pos.room && pos.room.storage && pos.room.storage.energy > 500000);
+						pos.room && pos.room.storage && pos.room.storage.energy < 300000);
 				});
 				for (const pos of rampartPositions) {
 					// Build a rampart if there isn't one already
