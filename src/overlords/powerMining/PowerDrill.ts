@@ -89,7 +89,7 @@ export class PowerDrillOverlord extends CombatOverlord {
 		// Go to power room
 		if (!this.room || drill.room != this.room || drill.pos.isEdge || !this.directive.powerBank) {
 			// log.debugCreep(drill, `Going to room!`);
-			log.notify("Drill is moving to power site in " + this.pos.roomName + ".");
+			//log.notify("Drill is moving to power site in " + this.pos.roomName + ".");
 			drill.goTo(this.pos);
 			return;
 		}

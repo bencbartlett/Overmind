@@ -9,6 +9,7 @@ import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
+import {Task} from "../../tasks/Task";
 
 /**
  * Spawns special-purpose haulers for transporting resources to/from a specified target
@@ -69,11 +70,24 @@ export class HaulingOverlord extends Overlord {
 					} else {
 						store = {energy: this.directive.storeStructure.energy};
 					}
+					let totalDrawn = 0; // Fill to full
 					for (const resourceType in store) {
 						if (store[resourceType] > 0) {
-							hauler.task = Tasks.withdraw(this.directive.storeStructure, <ResourceConstant>resourceType);
-							return;
+							if (!!hauler.task) {
+								hauler.task = Tasks.withdraw(this.directive.storeStructure, <ResourceConstant>resourceType).fork(hauler.task);
+							} else {
+								hauler.task = Tasks.withdraw(this.directive.storeStructure, <ResourceConstant>resourceType)
+							}
+							totalDrawn += store[resourceType];
+							if (totalDrawn >= hauler.carryCapacity) {
+								return;
+							}
 						}
+					}
+					if (hauler.task) {
+						// If can't fill up, just go ahead and go home
+						log.notify(`Can't finish filling up ${totalDrawn} ${JSON.stringify(hauler.task)} ${this.room}`);
+						return;
 					}
 				}
 				// Shouldn't reach here

@@ -42,7 +42,7 @@ export class WorkerOverlord extends Overlord {
 			5       : 1e+5,
 			6       : 5e+5,
 			7       : 2e+6,
-			8       : 2e+7,
+			8       : 2.1e+7,
 		},
 		hitTolerance        : 100000, 	// allowable spread in HP
 		fortifyDutyThreshold: 100000,	// ignore fortify duties until this amount of energy is present in the room

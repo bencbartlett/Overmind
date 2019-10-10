@@ -66,19 +66,28 @@ export class DirectivePowerMine extends Directive {
 	}
 
 	get powerBank(): StructurePowerBank | undefined {
-		this._powerBank = this._powerBank || this.room ? this.flag.pos.lookForStructure(STRUCTURE_POWER_BANK) as StructurePowerBank : undefined;
+		this._powerBank = this._powerBank || this.flag.room ? this.flag.pos.lookForStructure(STRUCTURE_POWER_BANK) as StructurePowerBank : undefined;
 		return this._powerBank;
 	}
 
 	/**
 	 * Total amount of resources remaining to be transported; cached into memory in case room loses visibility
 	 */
-	get totalResources(): number {
-		if (this.memory.totalResources == undefined) {
-			return 5000; // pick some non-zero number so that powerMiners will spawn
-		}
+	// get totalResources(): number {
+	// 	if (this.memory.totalResources == undefined) {
+	// 		return 5000; // pick some non-zero number so that powerMiners will spawn
+	// 	}
+	// 	if (this.pos.isVisible) {
+	// 		this.memory.totalResources = this.powerBank ? this.powerBank.power : this.memory.totalResources; // update total amount remaining
+	// 	}
+	// 	return this.memory.totalResources;
+	// }
+	get totalResources() {
 		if (this.pos.isVisible) {
 			this.memory.totalResources = this.powerBank ? this.powerBank.power : this.memory.totalResources; // update total amount remaining
+		}
+		if (this.memory.totalResources == undefined) {
+			return 5000; // pick some non-zero number so that powerMiners will spawn
 		}
 		return this.memory.totalResources;
 	}
@@ -105,9 +114,8 @@ export class DirectivePowerMine extends Directive {
 		if (currentState == 0 && this.powerBank && this.powerBank.hits < this.powerBank.hitsMax) {
 			if (this.powerBank.pos.findInRange(FIND_MY_CREEPS, 3).length == 0 && this.powerBank.pos.findInRange(FIND_HOSTILE_CREEPS, 3).length > 0) {
 				// Power bank is damage but we didn't mine it
-				Game.notify(`Power bank mining ${this.print} failed as someone else is mining this location.`);
-				log.alert(`Power bank mining ${this.print} failed as someone else is mining this location.`);
-				this.remove();
+				log.alert(`Power bank mining ${this.print} competing with ${this.powerBank.room.hostiles[0].owner.username}.`);
+				//this.remove();
 			} else {
 				// Set to mining started
 				this.memory.state = 1;
@@ -116,7 +124,7 @@ export class DirectivePowerMine extends Directive {
 			Game.notify('Activating spawning haulers for power mining in room ' + this.pos.roomName);
 			log.info('Activating spawning haulers for power mining in room ' + this.pos.roomName);
 			this.memory.state = 2;
-		} else if (currentState == 2 && this.room && (!this.powerBank) && this.hasDrops) {
+		} else if (currentState == 2 && this.room && !this.powerBank && this.hasDrops) {
 			Game.notify(`Mining is complete for ${this.print} in ${this.room.print} at time ${Game.time}`);
 			log.alert(`Mining is complete for ${this.print} in ${this.room.print} at time ${Game.time}`);
 			this.memory.state = 3;
@@ -142,8 +150,7 @@ export class DirectivePowerMine extends Directive {
 			// TODO  Stop spawning haulers
 		} else if (currentState == 4 && this.overlords.powerHaul && (this.overlords.powerHaul as PowerHaulingOverlord).checkIfStillCarryingPower() == undefined) {
 			// TODO Doesn't give enough time to pick up power
-			Game.notify(`Hauling complete for ${this.print} at time ${Game.time}. Final power collected was ${(this.overlords.powerHaul as PowerHaulingOverlord).totalCollected} out of ${this.memory.totalResources}`);
-			log.alert(`Hauling complete for ${this.print} at time ${Game.time}. Final power collected was ${(this.overlords.powerHaul as PowerHaulingOverlord).totalCollected} out of ${this.memory.totalResources}`);
+			log.notify(`Hauling complete for ${this.print} at time ${Game.time}. Final power collected was ${(this.overlords.powerHaul as PowerHaulingOverlord).totalCollected} out of ${this.memory.totalResources}`);
 			this.remove();
 		} else {
 			log.debug(`Power mining ${this.print} is in state ${currentState}`);
@@ -152,11 +159,20 @@ export class DirectivePowerMine extends Directive {
 	}
 
 	init(): void {
-		this.alert(`PowerMine directive active`);
+		let alert;
+		if (!!this.powerBank) {
+			alert = `PM ${this.memory.state} ${this.totalResources} P${Math.floor(100*this.powerBank.hits/this.powerBank.hitsMax)}% @ ${this.powerBank.ticksToDecay}TTL`;
+
+		} else {
+			alert = `PowerMine ${this.memory.state} ${this.totalResources}`
+		}
+		this.alert(alert);
 	}
 
 	run(): void {
-		if (Game.time % 9 == 0) {
+		// Check frequently when almost mined and occasionally otherwise
+		const frequency = this.memory.state == 2 ? 1 : 21;
+		if (Game.time % frequency == 0) {
 			this.manageState();
 		}
 	}

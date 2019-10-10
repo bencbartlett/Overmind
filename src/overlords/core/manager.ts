@@ -289,28 +289,32 @@ export class CommandCenterOverlord extends Overlord {
 		return false;
 	}
 
+	private preventTerminalFlooding(manager: Zerg): boolean {
+		// Prevent terminal flooding
+		if (this.room && this.room.terminal && this.room.storage && _.sum(this.room.terminal.store) > this.room.terminal.storeCapacity*.98) {
+			let max = 0;
+			let resType: ResourceConstant = RESOURCE_ENERGY;
+			for (let res in this.room.terminal.store) {
+				let amount = this.room.terminal.store[<ResourceConstant>res];
+				if (amount && amount > max && res !== RESOURCE_ENERGY) {
+					max = amount;
+					resType = <ResourceConstant>res;
+				}
+			}
+
+			manager.task = Tasks.transferAll(this.room.storage).fork(Tasks.withdraw(this.room.terminal, resType));
+			return true;
+		}
+		return false;
+	}
+
 	private handleManager(manager: Zerg): void {
 		// Handle switching to next manager
 		if (manager.ticksToLive! < 150) {
 			if (this.deathActions(manager)) return;
 		}
 
-		// Prevent terminal flooding
-		// if (this.room && this.room.terminal && this.room.storage && _.sum(this.room.terminal.store) > this.room.terminal.storeCapacity*.98) {
-		//
-		// 	let max = 0;
-		// 	let resType: ResourceConstant = RESOURCE_ENERGY;
-		// 	for (let res in this.room.terminal.store) {
-		// 		let amount = this.room.terminal.store[<ResourceConstant>res];
-		// 		if (amount && amount > max && res !== RESOURCE_ENERGY) {
-		// 			max = amount;
-		// 			resType = <ResourceConstant>res;
-		// 		}
-		// 	}
-		//
-		// 	manager.task = Tasks.transferAll(this.room.storage).fork(Tasks.withdraw(this.room.terminal, resType));
-		// 	return;
-		// }
+		if (this.preventTerminalFlooding(manager)) return;
 
 		// Pick up any dropped resources on ground
 		if (this.pickupActions(manager)) return;

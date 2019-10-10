@@ -34,10 +34,10 @@ export const wantedStockAmounts: { [key: string]: number } = {
 	XLHO2: 15000, 	// (+300 % heal)
 	XZHO2: 6000, 	// (+300 % fat decr - speed)
 	XZH2O: 6000, 	// (+300 % dismantle)
-	XKHO2: 15000, 	// (+300 % ranged attack)
-	XUH2O: 15000, 	// (+300 % attack)
+	XKHO2: 20000, 	// (+300 % ranged attack)
+	XUH2O: 20000, 	// (+300 % attack)
 	G    : 5000, 	// For nukes
-	XLH2O: 3000, 	// (+100 % build and repair)
+	XLH2O: 8000, 	// (+100 % build and repair)
 	LH   : 3000, 	// (+50 % build and repair)
 	XUHO2: 3000, 	// (+600 % harvest)
 	XKH2O: 3000, 	// (+300 % carry)

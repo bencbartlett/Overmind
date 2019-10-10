@@ -363,12 +363,12 @@ export class RoomIntel {
 	 */
 	private static minePowerBanks(room: Room) {
 		let powerSetting = Memory.settings.powerCollection;
-		if (powerSetting.enabled && Game.time % 300 == 0 && Cartographer.roomType(room.name) == ROOMTYPE_ALLEY) {
+		if (powerSetting.enabled && Cartographer.roomType(room.name) == ROOMTYPE_ALLEY) {
 			let powerBank = _.first(room.find(FIND_STRUCTURES).filter(struct => struct.structureType == STRUCTURE_POWER_BANK)) as StructurePowerBank;
 			if (powerBank != undefined && powerBank.ticksToDecay > 4000 && powerBank.power >= powerSetting.minPower) {
-				Game.notify(`Looking for power banks in ${room}  found ${powerBank} with power ${powerBank.power} and ${powerBank.ticksToDecay} TTL.`);
+				//Game.notify(`Looking for power banks in ${room}  found ${powerBank} with power ${powerBank.power} and ${powerBank.ticksToDecay} TTL.`);
 				if (DirectivePowerMine.isPresent(powerBank.pos, 'pos')) {
-					Game.notify(`Already mining room ${powerBank.room}!`);
+					//Game.notify(`Already mining room ${powerBank.room}!`);
 					return;
 				}
 
@@ -455,7 +455,7 @@ export class RoomIntel {
 	static run(): void {
 		let alreadyComputedScore = false;
 		//this.requestZoneData();
-		if (Game.time % 975 == 0) {
+		if (Game.time % 275 == 0) {
 			RoomIntel.cleanRoomMemory();
 		}
 		if (Game.time % 204 == 0) {
@@ -485,7 +485,7 @@ export class RoomIntel {
 			}
 
 			// Record location of permanent objects in room and recompute score as needed
-			if (Game.time >= (room.memory[_MEM.EXPIRATION] || 0)) {
+			if (Game.time >= (room.memory[_MEM.EXPIRATION] || 0) && Cartographer.roomType(name) != 'ALLEY') {
 				this.recordPermanentObjects(room);
 				if (!alreadyComputedScore) {
 					alreadyComputedScore = this.recomputeScoreIfNecessary(room);
