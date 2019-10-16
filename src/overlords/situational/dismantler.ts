@@ -29,8 +29,17 @@ export class DismantleOverlord extends Overlord {
 	init() {
 		// Spawn a number of dismantlers, up to a max
 		const MAX_DISMANTLERS = 4;
-		// Calculate total needed amount of dismantleing power as (resource amount * trip distance)
-		const tripDistance = 2 * Pathing.distance((this.colony).pos, this.directive.pos);
+		let setup;
+		if (!!this.directive.memory.attackInsteadOfDismantle) {
+			setup = CombatSetups.dismantlers.attackDismantlers;
+		} else {
+			setup = CombatSetups.dismantlers.default;
+		}
+		const dismantlingParts = setup.getBodyPotential(!!this.directive.memory.attackInsteadOfDismantle ? ATTACK : WORK, this.colony);
+		const dismantlingPower = dismantlingParts * (!!this.directive.memory.attackInsteadOfDismantle ? ATTACK_POWER : DISMANTLE_POWER);
+		// Calculate total needed amount of dismantling power as (resource amount * trip distance)
+		const tripDistance = Pathing.distance((this.colony).pos, this.directive.pos);
+		const dismantleLifetimePower = (CREEP_LIFE_TIME-tripDistance)*dismantlingPower;
 		// Calculate number of dismantlers
 		if (this.directive.room && this.target && ! this.directive.memory.numberSpots) {
 			this.directive.getDismantleSpots(this.target.pos);
@@ -38,9 +47,10 @@ export class DismantleOverlord extends Overlord {
 		const nearbySpots = this.directive.memory.numberSpots != undefined ? this.directive.memory.numberSpots : 1;
 
 		// needs to be reachable spots
-		const numDismantlers = Math.min(nearbySpots, MAX_DISMANTLERS);
+		const dismantleNeeded = Math.ceil((this.target ? this.target.hits : 50000) / dismantleLifetimePower);
+		const numDismantlers = Math.min(nearbySpots, MAX_DISMANTLERS, dismantleNeeded);
 		// Request the dismantlers
-		this.wishlist(numDismantlers, CombatSetups.dismantlers.default);
+		this.wishlist(numDismantlers, setup);
 	}
 
 	private runDismantler(dismantler: Zerg) {
@@ -54,9 +64,12 @@ export class DismantleOverlord extends Overlord {
 					log.error(`No target found for ${this.directive.print}`);
 				}
 			} else {
-				let res = dismantler.dismantle(this.target);
+				let res = !!this.directive.memory.attackInsteadOfDismantle ? dismantler.attack(this.target) : dismantler.dismantle(this.target);
 				if (res == ERR_NOT_IN_RANGE) {
 					dismantler.goTo(this.target);
+					// TODO this is shit ⬇
+				} else if (res == ERR_NO_BODYPART) {
+					//dismantler.suicide();
 				}
 			}
 		}

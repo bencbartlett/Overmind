@@ -397,6 +397,11 @@ export const CombatSetups = {
 			sizeLimit: Infinity,
 		}),
 
+		attackDismantlers: new CreepSetup(Roles.dismantler, {
+			pattern  : [ATTACK, MOVE],
+			sizeLimit: Infinity,
+		}),
+
 		armored: new CreepSetup(Roles.dismantler, {
 			pattern  : [TOUGH, WORK, WORK, WORK, MOVE, MOVE, MOVE, MOVE],
 			sizeLimit: Infinity,

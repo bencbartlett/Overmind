@@ -66,7 +66,7 @@ export class DirectivePowerMine extends Directive {
 	}
 
 	get powerBank(): StructurePowerBank | undefined {
-		this._powerBank = this._powerBank || this.flag.room ? this.flag.pos.lookForStructure(STRUCTURE_POWER_BANK) as StructurePowerBank : undefined;
+		this._powerBank = this._powerBank || !!this.flag.room ? this.flag.pos.lookForStructure(STRUCTURE_POWER_BANK) as StructurePowerBank : undefined;
 		return this._powerBank;
 	}
 
@@ -137,7 +137,11 @@ export class DirectivePowerMine extends Directive {
 				Game.notify(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.print} DELETING Directive at time ${Game.time}`);
 				log.error(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.room} DELETING Directive at time: ${Game.time}`);
 				this.remove();
-			} else {
+			} else if (this.room.lookAt(this.pos).length != 0) { // If it's a ruin, until typescript is updated just wait
+				log.notify(`Power mining in ${this.pos.roomName} waiting with lookat of ${this.room.lookAt(this.pos)}`);
+				return;
+			}
+			else {
 				// If somehow there is no bank but there is drops where bank was
 				Game.notify(`Somehow the power bank died early in ${this.room} at state ${currentState}, setting state to 3 ${Game.time}`);
 				this.memory.state = 3;
@@ -160,7 +164,7 @@ export class DirectivePowerMine extends Directive {
 
 	init(): void {
 		let alert;
-		if (!!this.powerBank) {
+		if (this.pos.room && !!this.powerBank) {
 			alert = `PM ${this.memory.state} ${this.totalResources} P${Math.floor(100*this.powerBank.hits/this.powerBank.hitsMax)}% @ ${this.powerBank.ticksToDecay}TTL`;
 
 		} else {

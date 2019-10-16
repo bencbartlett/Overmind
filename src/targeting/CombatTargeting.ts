@@ -137,6 +137,10 @@ export class CombatTargeting {
 				return zerg.pos.findClosestByRange(structures) as Structure | undefined;
 			}
 		}
+		const core = _.filter(zerg.room.hostileStructures, s => s.structureType.toString() == 'invaderCore');
+		if (core.length != 0) {
+			return core[0];
+		}
 	}
 
 	static findBestStructureTarget(pos: RoomPosition): Structure | undefined {

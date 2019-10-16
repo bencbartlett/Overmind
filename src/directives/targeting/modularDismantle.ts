@@ -9,6 +9,7 @@ import {Pathing} from "../../movement/Pathing";
 interface DirectiveModularDismantleMemory extends FlagMemory {
 	targetId?: string;
 	numberSpots?: number;
+	attackInsteadOfDismantle?: boolean;
 }
 /**
  * Register a target to be dismantled by specific dismantlers
@@ -23,7 +24,6 @@ export class DirectiveModularDismantle extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag);
-
 		if (this.flag.room) {
 			if (!this.memory.targetId) {
 				const target = this.getTarget();
@@ -52,6 +52,10 @@ export class DirectiveModularDismantle extends Directive {
 				if (structure.structureType == structureType) {
 					return structure;
 				}
+			}
+			if (structure.structureType.toString() == 'invaderCore') {
+				this.memory.attackInsteadOfDismantle = true;
+				return structure;
 			}
 		}
 	}

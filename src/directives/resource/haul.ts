@@ -58,11 +58,13 @@ export class DirectiveHaul extends Directive {
 		return _.keys(this.drops).length > 0;
 	}
 
-	get storeStructure(): StructureStorage | StructureTerminal | StructureNuker | undefined {
+	get storeStructure(): StructureStorage | StructureTerminal | StructureNuker | StructureContainer | undefined {
+		// TODO remove me console.log(`Looking for store struct in ${this.pos.roomName} with ${this.pos.lookForStructure(STRUCTURE_CONTAINER)}`);
 		if (this.pos.isVisible) {
 			return <StructureStorage>this.pos.lookForStructure(STRUCTURE_STORAGE) ||
 				   <StructureTerminal>this.pos.lookForStructure(STRUCTURE_TERMINAL) ||
-				   <StructureNuker>this.pos.lookForStructure(STRUCTURE_NUKER);
+				   <StructureNuker>this.pos.lookForStructure(STRUCTURE_NUKER) ||
+				   <StructureContainer>this.pos.lookForStructure(STRUCTURE_CONTAINER);
 		}
 		return undefined;
 	}
