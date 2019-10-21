@@ -4,6 +4,7 @@ import {PowerDrillOverlord} from '../../overlords/powerMining/PowerDrill';
 import {calculateFormationStrength} from "../../utilities/creepUtils";
 import {PowerHaulingOverlord} from "../../overlords/powerMining/PowerHauler";
 import {log} from "../../console/log";
+import {StrongholdOverlord} from "../../overlords/situational/stronghold";
 
 
 interface DirectiveStrongholdMemory extends FlagMemory {
@@ -40,6 +41,7 @@ export class DirectiveStronghold extends Directive {
 	}
 
 	spawnMoarOverlords() {
+		this.overlords.strongholdKiller = new StrongholdOverlord(this);
 		if (this.memory.state < 3) {
 			//this.overlords.stronghold = new PowerDrillOverlord(this);
 		}

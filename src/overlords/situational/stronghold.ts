@@ -11,10 +11,10 @@ import {DirectiveStronghold} from "../../directives/situational/stronghold";
 import {Visualizer} from "../../visuals/Visualizer";
 
 /**
- * Spawns ranged defenders to defend against incoming player invasions in an owned room
+ * Spawns ranged attacker against stronghold
  */
 @profile
-export class RangedDefenseOverlord extends CombatOverlord {
+export class StrongholdOverlord extends CombatOverlord {
 
 	strongholdKillers: CombatZerg[];
 
@@ -26,13 +26,12 @@ export class RangedDefenseOverlord extends CombatOverlord {
 		reengageHitsPercent: 0.95,
 	};
 
-	constructor(directive: DirectiveInvasionDefense,
-				boosted  = false,
+	constructor(directive: DirectiveStronghold,
 				priority = OverlordPriority.defense.rangedDefense) {
-		super(directive, 'rangedDefense', priority, 1);
-		this.strongholdKillers = this.combatZerg(Roles.ranged, {
-			boostWishlist: boosted ? [boostResources.tough[3], boostResources.ranged_attack[3],
-					boostResources.heal[3], boostResources.move[3]] : undefined
+		super(directive, 'stronghold', priority, 1);
+		this.strongholdKillers = this.combatZerg(Roles.strongholdKiller, {
+			boostWishlist: [boostResources.tough[3], boostResources.ranged_attack[3],
+					boostResources.heal[3], boostResources.move[3]]
 		});
 	}
 
