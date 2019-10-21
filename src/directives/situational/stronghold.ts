@@ -62,6 +62,9 @@ export class DirectiveStronghold extends Directive {
 	run(): void {
 		// Check frequently when almost mined and occasionally otherwise
 		const frequency = this.memory.state == 2 ? 1 : 21;
+		if (this.colony.commandCenter && this.colony.commandCenter.observer) {
+			this.colony.commandCenter.requestRoomObservation(this.pos.roomName);
+		}
 		this.manageState();
 	}
 }
