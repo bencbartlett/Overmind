@@ -10,6 +10,7 @@ interface DirectiveModularDismantleMemory extends FlagMemory {
 	targetId?: string;
 	numberSpots?: number;
 	attackInsteadOfDismantle?: boolean;
+	onlyKillRampart?: boolean;
 }
 /**
  * Register a target to be dismantled by specific dismantlers
@@ -46,9 +47,10 @@ export class DirectiveModularDismantle extends Directive {
 		if (!this.pos.isVisible) {
 			return;
 		}
+		const targets = this.memory.onlyKillRampart ? [STRUCTURE_RAMPART] : AttackStructurePriorities;
 		const targetedStructures = this.pos.lookFor(LOOK_STRUCTURES) as Structure[];
 		for (const structure of targetedStructures) {
-			for (const structureType of AttackStructurePriorities) {
+			for (const structureType of targets) {
 				if (structure.structureType == structureType) {
 					return structure;
 				}

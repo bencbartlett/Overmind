@@ -26,6 +26,7 @@ export const Roles = {
 	drill : 'drill',
 	coolant : 'coolant',
 	roomPoisoner: 'salter',
+	strongholdKiller: 'strongman',
 };
 
 /**
@@ -430,7 +431,32 @@ export const CombatSetups = {
 			pattern  : [HEAL, MOVE],
 			sizeLimit: 16,
 		}),
-	}
+	},
 
+	strongholdKiller: {
+		// SK deal 200 RA, levels
+		3: new CreepSetup(Roles.strongholdKiller, {
+			// 540 damage so 6 tough, 12 healing, 22 RA
+			pattern  : [TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH,
+				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+				RANGED_ATTACK,
+				HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL,
+				MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
+			sizeLimit: 1,
+		}),
+
+		4: new CreepSetup(Roles.strongholdKiller, {
+			// 720 damage so 8 tough, 15 healing, 17RA
+			pattern  : [TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH,
+				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+				HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL,
+				MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
+			sizeLimit: 1,
+		}),
+	}
 
 };

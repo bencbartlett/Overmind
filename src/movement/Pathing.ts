@@ -22,7 +22,8 @@ export const MatrixTypes = {
 	default      : 'def',
 	sk           : 'sk',
 	obstacle     : 'obst',
-	preferRampart: 'preframp'
+	preferRampart: 'preframp',
+	nearRampart	 : 'nearRamp'
 };
 
 /**
@@ -514,6 +515,25 @@ export class Pathing {
 				for (let dx = -avoidRange; dx <= avoidRange; dx++) {
 					for (let dy = -avoidRange; dy <= avoidRange; dy++) {
 						matrix.set(lair.pos.x + dx, lair.pos.y + dy, 0xfe);
+					}
+				}
+			});
+			return matrix;
+		});
+	}
+
+	/**
+	 * Avoid locations in melee range of ramparts
+	 * @param room
+	 */
+	private static getNearRampartsMatrix(room: Room): CostMatrix {
+		return $.costMatrix(room.name, MatrixTypes.nearRampart, () => {
+			const matrix = this.getDefaultMatrix(room).clone();
+			const avoidRange = 1;
+			_.forEach(room.ramparts, rampart => {
+				for (let dx = -avoidRange; dx <= avoidRange; dx++) {
+					for (let dy = -avoidRange; dy <= avoidRange; dy++) {
+						matrix.set(rampart.pos.x + dx, rampart.pos.y + dy, 0xfe);
 					}
 				}
 			});

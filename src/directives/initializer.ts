@@ -31,6 +31,7 @@ import {DirectiveHarass} from "./offense/harass";
 import {DirectiveBaseOperator} from "./powerCreeps/baseOperator";
 import {DirectiveNukeTarget} from "./situational/nukeTarget";
 import {DirectiveModularDismantle} from "./targeting/modularDismantle";
+import {DirectiveStronghold} from "./situational/stronghold";
 
 /**
  * This is the initializer for directives, which maps flags by their color code to the corresponding directive
@@ -92,6 +93,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveNukeResponse(flag);
 				case COLOR_RED:
 					return new DirectiveNukeTarget(flag);
+				case COLOR_PURPLE:
+					return new DirectiveStronghold(flag);
 			}
 			break;
 
