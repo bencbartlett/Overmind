@@ -1,4 +1,4 @@
-import {isStoreStructure} from '../../declarations/typeGuards';
+import {isRuin, isStoreStructure} from '../../declarations/typeGuards';
 import {HaulingOverlord} from '../../overlords/situational/hauler';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
@@ -58,13 +58,14 @@ export class DirectiveHaul extends Directive {
 		return _.keys(this.drops).length > 0;
 	}
 
-	get storeStructure(): StructureStorage | StructureTerminal | StructureNuker | StructureContainer | undefined {
+	get storeStructure(): StructureStorage | StructureTerminal | StructureNuker | StructureContainer | Ruin | undefined {
 		// TODO remove me console.log(`Looking for store struct in ${this.pos.roomName} with ${this.pos.lookForStructure(STRUCTURE_CONTAINER)}`);
 		if (this.pos.isVisible) {
 			return <StructureStorage>this.pos.lookForStructure(STRUCTURE_STORAGE) ||
 				   <StructureTerminal>this.pos.lookForStructure(STRUCTURE_TERMINAL) ||
 				   <StructureNuker>this.pos.lookForStructure(STRUCTURE_NUKER) ||
-				   <StructureContainer>this.pos.lookForStructure(STRUCTURE_CONTAINER);
+				   <StructureContainer>this.pos.lookForStructure(STRUCTURE_CONTAINER) ||
+				   <Ruin>this.pos.lookFor(LOOK_RUINS).filter(ruin => _.sum(ruin.store) > 0)[0];
 		}
 		return undefined;
 	}
@@ -75,6 +76,8 @@ export class DirectiveHaul extends Directive {
 			let store: { [resourceType: string]: number } = {};
 			if (this.storeStructure) {
 				if (isStoreStructure(this.storeStructure)) {
+					store = this.storeStructure.store;
+				} else if (isRuin(this.storeStructure)) {
 					store = this.storeStructure.store;
 				} else {
 					store = {energy: this.storeStructure.energy};

@@ -1,6 +1,6 @@
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {isStoreStructure} from '../../declarations/typeGuards';
+import {isRuin, isStoreStructure} from '../../declarations/typeGuards';
 import {DirectiveHaul} from '../../directives/resource/haul';
 import {Energetics} from '../../logistics/Energetics';
 import {Pathing} from '../../movement/Pathing';
@@ -65,7 +65,7 @@ export class HaulingOverlord extends Overlord {
 				// Withdraw from store structure
 				if (this.directive.storeStructure) {
 					let store: { [resourceType: string]: number } = {};
-					if (isStoreStructure(this.directive.storeStructure)) {
+					if (isStoreStructure(this.directive.storeStructure) || isRuin(this.directive.storeStructure)) {
 						store = this.directive.storeStructure.store;
 					} else {
 						store = {energy: this.directive.storeStructure.energy};
@@ -86,7 +86,7 @@ export class HaulingOverlord extends Overlord {
 					}
 					if (hauler.task) {
 						// If can't fill up, just go ahead and go home
-						log.notify(`Can't finish filling up ${totalDrawn} ${JSON.stringify(hauler.task)} ${this.room}`);
+						//log.notify(`Can't finish filling up ${totalDrawn} ${JSON.stringify(hauler.task)} ${this.room}`);
 						return;
 					}
 				}
@@ -134,6 +134,9 @@ export class HaulingOverlord extends Overlord {
 				this.handleHauler(hauler);
 			}
 			hauler.run();
+		}
+		if (this.directive.memory.totalResources == 0 && this.haulers.filter(hauler => _.sum(hauler.carry) > 0).length == 0) {
+			this.directive.remove();
 		}
 	}
 }

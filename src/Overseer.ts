@@ -26,6 +26,7 @@ import {derefCoords, hasJustSpawned, minBy, onPublicServer} from './utilities/ut
 import {MUON, MY_USERNAME, USE_TRY_CATCH} from './~settings';
 import {DirectivePairDestroy} from "./directives/offense/pairDestroy";
 import {DirectiveModularDismantle} from "./directives/targeting/modularDismantle";
+import {DirectiveStronghold} from "./directives/situational/stronghold";
 
 
 // export const DIRECTIVE_CHECK_FREQUENCY = 2;
@@ -203,12 +204,21 @@ export class Overseer implements IOverseer {
 				}
 			}
 			if (Game.time % 55 == 0) {
-				let cores = room.hostileStructures.filter(s => s.structureType.toString() == 'invaderCore');
+				let cores = room.hostileStructures.filter(s => s.structureType == STRUCTURE_INVADER_CORE);
 				if (cores.length > 0) {
+					let core = <StructureInvaderCore>cores[0];
 					log.alert(`Found core in ${room.name} with ${cores[0]}`);
-					let res = DirectiveModularDismantle.createIfNotPresent(cores[0].pos, 'pos');
-					if (!!res) {
-						log.notify(`Creating stronghold clearing dismantle in room ${room.name}`);
+					let res;
+					if (core.level == 0) {
+						res = DirectiveModularDismantle.createIfNotPresent(cores[0].pos, 'pos');
+						if (!!res) {
+							log.notify(`Creating invader core dismantle in room ${room.name}`);
+						}
+					} else if (core.level <= 4 && core.ticksToDeploy) {
+						res = DirectiveStronghold.createIfNotPresent(core.pos, 'room');
+						if (!!res) {
+							log.notify(`Creating stronghold clearing ranged attacker in room ${room.name}`);
+						}
 					}
 				}
 			}
@@ -230,14 +240,6 @@ export class Overseer implements IOverseer {
 				const invasionIsPersistent = safetyData.unsafeFor > 20;
 				if (invasionIsPersistent && !DirectivePoisonRoom.isPresent(colony.pos, 'room')) {
 					DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
-					// let name = 'PairDefend: ' +colony.name;
-					// if (colony.name == 'W14N57') {
-					// 	DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
-					// }
-					// if (colony.name == 'W7N48') {
-					// 	return;
-					// }
-					// DirectivePairDestroy.createIfNotPresent(colony.controller.pos, 'room', {name: name});
 				}
 			}
 		}

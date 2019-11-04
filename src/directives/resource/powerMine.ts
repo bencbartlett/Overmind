@@ -16,6 +16,7 @@ interface DirectivePowerMineMemory extends FlagMemory {
 		4: hauling picking is complete
 	 */
 	state: number;
+	totalCollected: number;
 }
 
 
@@ -32,6 +33,7 @@ export class DirectivePowerMine extends Directive {
 
 	private _powerBank: StructurePowerBank | undefined;
 	private _drops: { [resourceType: string]: Resource[] };
+	private dropTick?: number;
 
 	memory: DirectivePowerMineMemory;
 
@@ -39,6 +41,7 @@ export class DirectivePowerMine extends Directive {
 		super(flag, colony => colony.level >= DirectivePowerMine.requiredRCL);
 		this._powerBank = this.powerBank;
 		this.memory.state = this.memory.state || 0;
+		this.memory.totalCollected = this.memory.totalCollected || 0;
 	}
 
 	spawnMoarOverlords() {
@@ -66,8 +69,10 @@ export class DirectivePowerMine extends Directive {
 	}
 
 	get powerBank(): StructurePowerBank | undefined {
-		this._powerBank = this._powerBank || !!this.flag.room ? this.flag.pos.lookForStructure(STRUCTURE_POWER_BANK) as StructurePowerBank : undefined;
-		return this._powerBank;
+		if (this.pos.isVisible) {
+			this._powerBank = this._powerBank || !!this.flag.room ? this.flag.pos.lookForStructure(STRUCTURE_POWER_BANK) as StructurePowerBank : undefined;
+			return this._powerBank;
+		}
 	}
 
 	/**
@@ -133,10 +138,15 @@ export class DirectivePowerMine extends Directive {
 			this._powerBank = undefined; // This might be fluff
 		} else if ((currentState == 0 || currentState == 1 || currentState == 2) && this.room && this.pos.isVisible && !this.powerBank) {
 			if (!this.hasDrops) {
-				// TODO this had an error where it triggered incorrectly
-				Game.notify(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.print} DELETING Directive at time ${Game.time}`);
-				log.error(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.room} DELETING Directive at time: ${Game.time}`);
-				this.remove();
+				if (!this.dropTick) {
+					this.dropTick = Game.time + 11;
+				} else if (Game.time >= this.dropTick) {
+					// TODO this had an error where it triggered incorrectly
+					Game.notify(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.print} DELETING Directive at time ${Game.time}`);
+					log.error(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.room} DELETING Directive at time: ${Game.time}`);
+					this.remove();
+				}
+
 			} else if (this.room.lookAt(this.pos).length != 0) { // If it's a ruin, until typescript is updated just wait
 				log.notify(`Power mining in ${this.pos.roomName} waiting with lookat of ${this.room.lookAt(this.pos)}`);
 				return;
@@ -154,7 +164,7 @@ export class DirectivePowerMine extends Directive {
 			// TODO  Stop spawning haulers
 		} else if (currentState == 4 && this.overlords.powerHaul && (this.overlords.powerHaul as PowerHaulingOverlord).checkIfStillCarryingPower() == undefined) {
 			// TODO Doesn't give enough time to pick up power
-			log.notify(`Hauling complete for ${this.print} at time ${Game.time}. Final power collected was ${(this.overlords.powerHaul as PowerHaulingOverlord).totalCollected} out of ${this.memory.totalResources}`);
+			log.notify(`Hauling complete for ${this.print} at time ${Game.time}. Final power collected was ${this.memory.totalCollected} out of ${this.memory.totalResources}`);
 			this.remove();
 		} else {
 			log.debug(`Power mining ${this.print} is in state ${currentState}`);

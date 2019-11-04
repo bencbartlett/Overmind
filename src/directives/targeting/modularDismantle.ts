@@ -11,6 +11,7 @@ interface DirectiveModularDismantleMemory extends FlagMemory {
 	numberSpots?: number;
 	attackInsteadOfDismantle?: boolean;
 	onlyKillRampart?: boolean;
+	additionalTargets?: StructureConstant[]
 }
 /**
  * Register a target to be dismantled by specific dismantlers
@@ -23,13 +24,15 @@ export class DirectiveModularDismantle extends Directive {
 	static secondaryColor = COLOR_CYAN;
 	memory: DirectiveModularDismantleMemory;
 
-	constructor(flag: Flag) {
+	constructor(flag: Flag, onlyKillRampart = false, additionalTargets?: StructureConstant[]) {
 		super(flag);
+		this.memory.onlyKillRampart = onlyKillRampart;
 		if (this.flag.room) {
 			if (!this.memory.targetId) {
 				const target = this.getTarget();
 				this.memory.targetId = target ? target.id : undefined;
 			}
+			this.memory.additionalTargets = additionalTargets;
 			if (!this.memory.numberSpots) {
 				let spots = this.getDismantleSpots(this.flag.pos);
 				if (spots) {
@@ -47,18 +50,29 @@ export class DirectiveModularDismantle extends Directive {
 		if (!this.pos.isVisible) {
 			return;
 		}
-		const targets = this.memory.onlyKillRampart ? [STRUCTURE_RAMPART] : AttackStructurePriorities;
-		const targetedStructures = this.pos.lookFor(LOOK_STRUCTURES) as Structure[];
-		for (const structure of targetedStructures) {
-			for (const structureType of targets) {
-				if (structure.structureType == structureType) {
-					return structure;
+		const targetedStructureTypes = this.memory.onlyKillRampart ? [STRUCTURE_RAMPART] : AttackStructurePriorities;
+		const targets = this.pos.lookFor(LOOK_STRUCTURES) as Structure[];
+		for (const structureType of targetedStructureTypes) {
+			let correctTargets = targets.filter(target => {
+				if (target.structureType == structureType) {
+					return target;
+				} else if (target.structureType == STRUCTURE_INVADER_CORE) {
+					this.memory.attackInsteadOfDismantle = true;
+					return target;
 				}
+			});
+			if (correctTargets.length > 0) {
+				return correctTargets[0];
 			}
-			if (structure.structureType.toString() == 'invaderCore') {
-				this.memory.attackInsteadOfDismantle = true;
-				return structure;
-			}
+			// for (const structure of targets) {
+			// 	if (structure.structureType == structureType) {
+			// 		return structure;
+			// 	}
+			// 	if (structure.structureType == STRUCTURE_INVADER_CORE) {
+			// 		this.memory.attackInsteadOfDismantle = true;
+			// 		return structure;
+			// 	}
+			// }
 		}
 	}
 
@@ -76,7 +90,7 @@ export class DirectiveModularDismantle extends Directive {
 	init(): void {
 		let hits = "???";
 		const target = this.getTarget();
-		hits = target ? target.hits.toString() : hits;
+		hits = target ? (target.hits/1000).toString()+'K' : hits;
 		this.alert(`Dismantling: ${hits}`);
 	}
 

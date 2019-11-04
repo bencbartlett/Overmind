@@ -75,6 +75,12 @@ export class PowerHaulingOverlord extends Overlord {
 						hauler.say('🚬', true);
 					}
 					return;
+				} else if (this.room && this.room.ruins) {
+					let pb = this.room.ruins.filter(ruin => !!ruin.store[RESOURCE_POWER] && ruin.store[RESOURCE_POWER]! > 0);
+					if (pb.length > 0) {
+						Game.notify(`Found power bank ruins containing power in ${this.room} at ${Game.time} ${pb[0]}`);
+						hauler.task = Tasks.withdraw(pb[0], RESOURCE_POWER);
+					}
 				} else if (this.room && this.room.drops) {
 					let allDrops: Resource[] = _.flatten(_.values(this.room.drops));
 					let drop = allDrops[0];
@@ -107,7 +113,7 @@ export class PowerHaulingOverlord extends Overlord {
 							return;
 						}
 					} else { // prefer to put minerals in terminal
-						this.totalCollected += hauler.carry.power || 0;
+						this.directive.memory.totalCollected += hauler.carry.power || 0;
 						if (this.colony.terminal && _.sum(this.colony.terminal.store) < TERMINAL_CAPACITY) {
 							hauler.task = Tasks.transfer(this.colony.terminal, <ResourceConstant>resourceType);
 							return;

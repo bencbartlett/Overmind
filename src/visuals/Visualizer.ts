@@ -36,6 +36,14 @@ export class Visualizer {
 		return new RoomVisual(pos.roomName).circle(pos.x, pos.y, opts);
 	}
 
+	static rect(pos: RoomPosition, color = 'red', opts = {}): RoomVisual {
+		_.defaults(opts, {
+			fill   : color,
+			opacity: 0.5,
+		});
+		return new RoomVisual(pos.roomName).rect(pos.x, pos.y, 1, 1, opts);
+	}
+
 	static marker(pos: RoomPosition, opts = {}): RoomVisual {
 		return new RoomVisual(pos.roomName).animatedPosition(pos.x, pos.y, opts);
 	}

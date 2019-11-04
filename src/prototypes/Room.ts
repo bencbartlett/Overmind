@@ -212,6 +212,16 @@ Object.defineProperty(Room.prototype, 'tombstones', {
 	configurable: true,
 });
 
+Object.defineProperty(Room.prototype, 'ruins', {
+	get() {
+		if (!this._ruins) {
+			this._ruins = this.find(FIND_RUINS);
+		}
+		return this._ruins;
+	},
+	configurable: true,
+});
+
 Object.defineProperty(Room.prototype, 'drops', {
 	get() {
 		if (!this._drops) {

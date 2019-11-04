@@ -4,14 +4,16 @@ import {bodyCost} from '../creepSetups/CreepSetup';
 import {isCreep} from '../declarations/typeGuards';
 import {profile} from '../profiler/decorator';
 import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
-import {getCacheExpiration, irregularExponentialMovingAverage} from '../utilities/utils';
+import {getCacheExpiration, irregularExponentialMovingAverage, maxBy} from '../utilities/utils';
 import {Zerg} from '../zerg/Zerg';
 import {MY_USERNAME} from '../~settings';
 import {DirectivePowerMine} from "../directives/resource/powerMine";
-import {Cartographer, ROOMTYPE_ALLEY} from "../utilities/Cartographer";
+import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER} from "../utilities/Cartographer";
 import {getAllColonies} from "../Colony";
 import {Segmenter} from "../memory/Segmenter";
 import {log} from "../console/log";
+import {DirectiveStronghold} from "../directives/situational/stronghold";
+import {Resources} from "typedoc/dist/lib/output/utils/resources";
 
 const RECACHE_TIME = 2500;
 const OWNED_RECACHE_TIME = 1000;
@@ -377,12 +379,36 @@ export class RoomIntel {
 				for (let colony of colonies) {
 					let route = Game.map.findRoute(colony.room, powerBank.room);
 					if (route != -2  && route.length <= powerSetting.maxRange) {
-						Game.notify(`FOUND POWER BANK IN RANGE ${route.length}, STARTING MINING ${powerBank.room}`);
+						log.info(`FOUND POWER BANK IN RANGE ${route.length}, STARTING MINING ${powerBank.room}`);
 						DirectivePowerMine.create(powerBank.pos);
 						return;
 					}
 				}
 
+			}
+		}
+	}
+
+	/**
+	 * Handle strongholds spawning in SK rooms
+	 * Should also eventually loot other people's strongholds that are killed
+	 * @param room
+	 */
+	private static handleStrongholds(room: Room) {
+		if (room && Cartographer.roomType(room.name) == ROOMTYPE_SOURCEKEEPER && !!room.invaderCore) {
+			let core = room.invaderCore;
+			if (DirectiveStronghold.isPresent(core.pos, 'pos')) {
+				return;
+			}
+
+			let colonies = getAllColonies().filter(colony => colony.level == 8);
+			for (let colony of colonies) {
+				let route = Game.map.findRoute(colony.room, core.room);
+				if (route != -2  && route.length <= 4) {
+					Game.notify(`FOUND STRONGHOLD AT DISTANCE ${route.length}, BEGINNING ATTACK ${core.room}`);
+					DirectiveStronghold.createIfNotPresent(core.pos, 'pos');
+					return;
+				}
 			}
 		}
 	}
@@ -451,14 +477,14 @@ export class RoomIntel {
 		console.log("total ENERGY transfer = " + total);
 	}
 
-
 	static run(): void {
 		let alreadyComputedScore = false;
 		//this.requestZoneData();
-		if (Game.time % 275 == 0) {
+		// If above 2030 kb wipe memory down
+		if (Game.time % 375 == 0 || RawMemory.get().length > 2030000) {
 			RoomIntel.cleanRoomMemory();
 		}
-		if (Game.time % 204 == 0) {
+		if (Game.time % 104 == 0) {
 			//this.periodicFunction();
 		}
 
@@ -499,6 +525,7 @@ export class RoomIntel {
 				this.recordControllerInfo(room.controller);
 			}
 			this.minePowerBanks(room);
+			this.handleStrongholds(room);
 		}
 	}
 

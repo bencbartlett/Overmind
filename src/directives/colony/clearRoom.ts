@@ -69,16 +69,20 @@ export class DirectiveClearRoom extends Directive {
 
 		if (this.room) {
 			const allStructures = this.room.find(FIND_STRUCTURES);
+			this.room.factory
 			let i = 0;
 			for (const s of allStructures) {
-				if (s.structureType == STRUCTURE_CONTROLLER) continue;
+				if (s.structureType == STRUCTURE_CONTROLLER) {
+					continue;
+				}
 				if (keepStorageStructures &&
-					(s.structureType == STRUCTURE_STORAGE || s.structureType == STRUCTURE_TERMINAL) && !s.isEmpty) {
+					(s.structureType == STRUCTURE_STORAGE || s.structureType == STRUCTURE_TERMINAL) &&
+					!(s as StructureStorage | StructureTerminal).isEmpty) {
 					// Create a collection flag
 					DirectiveHaul.createIfNotPresent(s.pos, 'pos');
 					continue;
 				}
-				if (s.structureType == STRUCTURE_NUKER && s.energy > 50000) {
+				if (s.structureType == STRUCTURE_NUKER && (s as StructureNuker).energy > 50000) {
 					DirectiveHaul.createIfNotPresent(s.pos, 'pos');
 				}
 				if (keepRoads && s.structureType == STRUCTURE_ROAD) {

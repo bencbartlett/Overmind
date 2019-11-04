@@ -87,6 +87,8 @@ interface Room {
 	// Single structures
 	observer: StructureObserver | undefined;
 	powerSpawn: StructurePowerSpawn | undefined;
+	factory: StructureFactory | undefined;
+	invaderCore: StructureInvaderCore | undefined;
 	extractor: StructureExtractor | undefined;
 	nuker: StructureNuker | undefined;
 	repairables: Structure[];
@@ -94,6 +96,7 @@ interface Room {
 	sources: Source[];
 	mineral: Mineral | undefined;
 	constructionSites: ConstructionSite[];
+	ruins: Ruin[];
 	// Used by movement library
 	// _defaultMatrix: CostMatrix;
 	// _directMatrix: CostMatrix;
@@ -245,6 +248,10 @@ interface StructureTower {
 }
 
 interface Tombstone {
+	energy: number;
+}
+
+interface Ruin {
 	energy: number;
 }
 

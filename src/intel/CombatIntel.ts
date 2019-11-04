@@ -473,6 +473,30 @@ export class CombatIntel {
 		return DISMANTLE_POWER * this.getDismantlePotential(toCreep(creep));
 	}
 
+	static getRepairPotential(creep: Creep): number {
+		return this.cache(creep, 'repairPotential', () => _.sum(creep.body, function(part) {
+			if (part.hits == 0) {
+				return 0;
+			}
+			if (part.type == WORK) {
+				if (!part.boost) {
+					return 1;
+				} else if (part.boost == boostResources.construct[1]) {
+					return BOOSTS.work.LH.repair;
+				} else if (part.boost == boostResources.construct[2]) {
+					return BOOSTS.work.LH2O.repair;
+				} else if (part.boost == boostResources.construct[3]) {
+					return BOOSTS.work.XLH2O.repair;
+				}
+			}
+			return 0;
+		}));
+	}
+
+	static getRepairPower(creep: Creep | Zerg): number {
+		return REPAIR_POWER * this.getRepairPotential(toCreep(creep));
+	}
+
 	/**
 	 * Minimum damage multiplier a creep has
 	 */

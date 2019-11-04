@@ -48,14 +48,20 @@ export class Pathing {
 		if (!room) {
 			return;
 		}
-		if (room.controller) {
-			if (room.controller.owner && !room.controller.my && room.towers.length > 0) {
-				room.memory[_RM.AVOID] = true;
-			} else {
-				delete room.memory[_RM.AVOID];
-				// if (room.memory.expansionData == false) delete room.memory.expansionData;
-			}
+		if (!(room.controller && room.controller.my) && room.towers.find(tower => tower.isActive()) != undefined) {
+			room.memory[_RM.AVOID] = true;
+		} else {
+			delete room.memory[_RM.AVOID];
+			// if (room.memory.expansionData == false) delete room.memory.expansionData;
 		}
+		// if (room.controller) {
+		// 	if (room.controller.owner && !room.controller.my && room.towers.length > 0) {
+		// 		room.memory[_RM.AVOID] = true;
+		// 	} else {
+		// 		delete room.memory[_RM.AVOID];
+		// 		// if (room.memory.expansionData == false) delete room.memory.expansionData;
+		// 	}
+		// }
 	}
 
 	// Pathfinding and room callback methods ===========================================================================
@@ -161,7 +167,7 @@ export class Pathing {
 			direct      : true,
 		});
 		const ret = this.findPath(startPos, endPos, options);
-		if (ret.incomplete) log.alert(`Pathing: incomplete path from ${startPos.print} to ${endPos.print}!`);
+		if (ret.incomplete) log.debug(`Pathing: incomplete path from ${startPos.print} to ${endPos.print}!`);
 		return ret;
 	}
 
@@ -171,7 +177,7 @@ export class Pathing {
 	static findPathToRoom(startPos: RoomPosition, roomName: string, options: MoveOptions = {}): PathFinderPath {
 		options.range = 23;
 		const ret = this.findPath(startPos, new RoomPosition(25, 25, roomName), options);
-		if (ret.incomplete) log.alert(`Pathing: incomplete path from ${startPos.print} to ${roomName}!`);
+		if (ret.incomplete) log.debug(`Pathing: incomplete path from ${startPos.print} to ${roomName}!`);
 		return ret;
 	}
 

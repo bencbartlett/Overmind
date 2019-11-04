@@ -22,7 +22,7 @@ export class DismantleOverlord extends Overlord {
 	constructor(directive: DirectiveModularDismantle, target?: Structure, priority = OverlordPriority.tasks.dismantle) {
 		super(directive, 'dismantle', priority);
 		this.directive = directive;
-		this.target = target || Game.getObjectById(this.directive.memory.targetId) || undefined;
+		//this.target = target || Game.getObjectById(this.directive.memory.targetId) || undefined;
 		this.dismantlers = this.zerg(Roles.dismantler);
 	}
 
@@ -59,14 +59,14 @@ export class DismantleOverlord extends Overlord {
 			dismantler.goTo(goal, {avoidSK: true});
 		} else {
 			if (!this.target) {
-				this.target = Game.getObjectById(this.directive.memory.targetId) || undefined;
+				this.target = Game.getObjectById(this.directive.memory.targetId) || this.directive.getTarget();
 				if (!this.target) {
 					log.error(`No target found for ${this.directive.print}`);
 				}
 			} else {
 				let res = !!this.directive.memory.attackInsteadOfDismantle ? dismantler.attack(this.target) : dismantler.dismantle(this.target);
 				if (res == ERR_NOT_IN_RANGE) {
-					dismantler.goTo(this.target);
+					let ret = dismantler.goTo(this.target);
 					// TODO this is shit ⬇
 				} else if (res == ERR_NO_BODYPART) {
 					//dismantler.suicide();

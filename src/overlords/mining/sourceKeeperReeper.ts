@@ -83,7 +83,8 @@ export class SourceReaperOverlord extends CombatOverlord {
 			return;
 		}
 
-		if (this.room.invaders.length > 0) {
+		const nonStrongholdInvaders = this.room.invaders.filter(creep => !creep.inRampart);
+		if (nonStrongholdInvaders.length > 0) {
 			// Handle invader actions
 			// log.debugCreep(reaper, `Handling invader actions!`);
 			if (reaper.hits >= reaper.hitsMax * .5) {

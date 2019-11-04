@@ -205,9 +205,6 @@ export class WorkerOverlord extends Overlord {
 				});
 			}
 		}
-		if (this.colony.name == 'W14N57') {
-			//numWorkers = 8;
-		}
 		this.wishlist(numWorkers, setup);
 	}
 

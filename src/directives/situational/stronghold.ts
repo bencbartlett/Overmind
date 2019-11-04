@@ -1,23 +1,48 @@
 import {Directive} from '../Directive';
 import {profile} from '../../profiler/decorator';
-import {PowerDrillOverlord} from '../../overlords/powerMining/PowerDrill';
-import {calculateFormationStrength} from "../../utilities/creepUtils";
-import {PowerHaulingOverlord} from "../../overlords/powerMining/PowerHauler";
 import {log} from "../../console/log";
 import {StrongholdOverlord} from "../../overlords/situational/stronghold";
+import {Visualizer} from "../../visuals/Visualizer";
+import {derefCoords, getCacheExpiration, getPosFromString} from "../../utilities/utils";
+import {DirectiveHaul} from "../resource/haul";
+import {DirectiveNukeTarget} from "./nukeTarget";
+import {DirectiveModularDismantle} from "../targeting/modularDismantle";
+import {CombatIntel} from "../../intel/CombatIntel";
+
+
+export const STRONGHOLD_SETUPS = {
+	5: 9, // L5 is 1 fortifier, 8 of [1 fortifier, 7 melee, 9 rangers] 17
+	4: 4, // L4 is 4 of [1 fortifier, 3 rangers, 4 melee] 8
+	3: 2, // L3 is 2 25A melee creeps
+	2: 1,
+	1: 0,
+};
 
 
 interface DirectiveStrongholdMemory extends FlagMemory {
-	totalResources?: number;
-	strongholdLevel: number;
 	/*
-		0: init
-		1: attacking started
-		2: next stage
-		3: attacking finished, cleanup
-		4: hauling picking is complete
+		0: Init
+		1: Assault is launched
+		2: Assault final stage - attacking core
+		3: No more attackers are needed
+		4: Core is dead, cleanup
+		5: hauling picking is complete
 	 */
 	state: number;
+	strongholdLevel: number;
+	target?: {
+		id: string;
+		exp: number;
+	};
+	// target : {
+	// 	id?:
+	// 	ref : string,
+	// 	_pos: string,
+	// }
+	targetId?: string;
+	attackingPosition?: string;
+	totalResources?: number;
+	waveCount: number; // Count each attempt, if it fails after 6 attempts stop trying
 }
 
 
@@ -31,42 +56,164 @@ export class DirectiveStronghold extends Directive {
 	static color = COLOR_ORANGE;
 	static secondaryColor = COLOR_PURPLE;
 	static requiredRCL = 7;
-	private _core: StructurePowerBank | undefined;
+	private _core: StructureInvaderCore | undefined;
 
 	memory: DirectiveStrongholdMemory;
 
 	constructor(flag: Flag) {
 		super(flag, colony => colony.level >= DirectiveStronghold.requiredRCL);
 		this.memory.state = this.memory.state || 0;
+		if (this.core) {
+			this.memory.strongholdLevel = this.core.level;
+		}
+		this.memory.waveCount = this.memory.waveCount || 0;
 	}
 
 	spawnMoarOverlords() {
-		this.overlords.strongholdKiller = new StrongholdOverlord(this);
+		//this.overlords.strongholdKiller = new StrongholdOverlord(this);
 		if (this.memory.state < 3) {
-			//this.overlords.stronghold = new PowerDrillOverlord(this);
+			//this.overlords.haul = new PowerDrillOverlord(this);
 		}
-		if (this.memory.state > 1) {
-			//this.overlords.powerHaul = new PowerHaulingOverlord(this);
+		if (this.memory.state > 0 && this.memory.state <= 4) {
+			this.overlords.strongholdKiller = new StrongholdOverlord(this);
+		}
+	}
+
+	get core(): StructureInvaderCore | undefined {
+		if (this.pos.room) {
+			return <StructureInvaderCore>this._core || this.pos.room.find(FIND_HOSTILE_STRUCTURES)
+				.filter(struct => struct.structureType == STRUCTURE_INVADER_CORE)[0];
+		}
+	}
+
+	getResourcePickupLocations() {
+		if (!!this.pos.room) {
+			let returns: (StructureContainer | Ruin)[] = [];
+			let containers = this.pos.room.containers;
+			let ruins = this.pos.room.ruins;
+			if (containers) {
+				returns = returns.concat(containers.filter(container => container.pos.getRangeTo(this.pos) < 5 && _.sum(container.store) > 0));
+			}
+			if (ruins) {
+				returns = returns.concat(ruins.filter(ruin => ruin.pos.getRangeTo(this.pos) <= 3 && _.sum(ruin.store) > 0));
+			}
+			return returns;
+		}
+	}
+
+	get target(): Creep | Structure | undefined {
+		if (this.memory.target && this.memory.target.exp > Game.time) {
+			const target = Game.getObjectById(this.memory.target.id);
+			if (target) {
+				return target as Creep | Structure;
+			}
+		}
+		// If nothing found
+		delete this.memory.target;
+	}
+
+	set target(targ: Creep | Structure | undefined) {
+		if (targ) {
+			this.memory.target = {id: targ.id, exp: getCacheExpiration(3000)};
+		} else {
+			delete this.memory.target;
 		}
 	}
 
 	manageState() {
 		let currentState = this.memory.state;
 
+		// Starting
+		if (this.room && this.core && currentState == 0) {
+			// Time to start
+			if (!this.core.ticksToDeploy || this.core.ticksToDeploy < 150) {
+				this.memory.state = 1;
+			}
+		} else if (this.room && this.memory.state == 0) {
+
+
+		} else if (this.pos.isVisible && !this.core && this.pos.lookFor(LOOK_RUINS).length > 0) {
+			this.memory.state = 4;
+			if (Game.time % 50 == 0) {
+				//log.notify(`Now looting stronghold ${this.print} in ${this.pos.roomName}`);
+				this.handleLooting();
+			}
+		} else if (this.pos.isVisible && !this.core && this.pos.lookFor(LOOK_RUINS).length == 0) {
+			// Stronghold is dead
+			this.remove();
+		}
+	}
+
+
+	handleLooting() {
+		let lootSpots = this.getResourcePickupLocations();
+		if (lootSpots && lootSpots.length > 0) {
+			lootSpots.forEach(spot => {
+				const isRamparted = spot.pos.lookFor(LOOK_STRUCTURES).filter(struct => struct.structureType == STRUCTURE_RAMPART).length > 0;
+				if (isRamparted) {
+					DirectiveModularDismantle.createIfNotPresent(spot.pos, 'pos');
+				} else {
+					DirectiveHaul.createIfNotPresent(spot.pos, 'pos');
+				}
+			});
+
+			const openingToCore = this.pos.getPositionAtDirection(TOP);
+			const isRamparted = openingToCore.lookFor(LOOK_STRUCTURES).filter(struct => struct.structureType == STRUCTURE_RAMPART).length > 0;
+			if (isRamparted) {
+				DirectiveModularDismantle.createIfNotPresent(openingToCore, 'pos');
+			}
+		}
+	}
+
+	checkStrongholdUnitComposition(defenders: Creep[]) {
+
+	}
+
+	handleL5() {
+		// Well this, this is an L5. Can't deal with it now so just nuke it's ugly mug
+		const bestTarget = this.pos.getPositionAtDirection(BOTTOM_RIGHT);
+		let res1 = DirectiveNukeTarget.create(bestTarget);
+		let res2 = DirectiveNukeTarget.create(bestTarget);
+		return res1 == OK && res2 == OK;
+	}
+
+	manageDirectives() {
+
+	}
+
+	lootPositions() {
+		this.pos.findInRange(FIND_STRUCTURES, 4);
 	}
 
 	init(): void {
 		let alert;
-		alert = `Stronghold ${'level'} ${this.memory.state}`;
+		alert = `Stronghold ${this.memory.strongholdLevel} is state ${this.memory.state}`;
 		this.alert(alert);
 	}
 
 	run(): void {
 		// Check frequently when almost mined and occasionally otherwise
-		const frequency = this.memory.state == 2 ? 1 : 21;
 		if (this.colony.commandCenter && this.colony.commandCenter.observer) {
 			this.colony.commandCenter.requestRoomObservation(this.pos.roomName);
 		}
+		if (this.memory.attackingPosition) {
+			const attackPos = getPosFromString(this.memory.attackingPosition);
+			if (!!attackPos) {
+				Visualizer.marker(attackPos, 'white');
+			}
+		}
+		if (this.memory.target && Game.getObjectById(this.memory.target.id)) {
+			const target = Game.getObjectById(this.memory.target.id) as RoomObject;
+			if (target) {
+				Visualizer.marker(target.pos, 'black');
+			}
+		}
+
+		const duration = Game.time - (this.memory[_MEM.TICK] || Game.time);
+		if (duration % 50000 == 0) {
+			log.notify(`DirectiveStronghold ${this.print} in ${this.pos.roomName} has been active for ${duration} ticks`);
+		}
+
 		this.manageState();
 	}
 }
