@@ -6,6 +6,7 @@ import {profile} from '../../profiler/decorator';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 import {DirectiveModularDismantle} from "../../directives/targeting/modularDismantle";
+import {boostResources} from "../../resources/map_resources";
 
 /**
  * Spawns special-purpose dismantlers for transporting resources to/from a specified target
@@ -19,19 +20,24 @@ export class DismantleOverlord extends Overlord {
 
 	requiredRCL: 4;
 
-	constructor(directive: DirectiveModularDismantle, target?: Structure, priority = OverlordPriority.tasks.dismantle) {
+	constructor(directive: DirectiveModularDismantle, target?: Structure, priority = OverlordPriority.tasks.dismantle, boosted  = false) {
 		super(directive, 'dismantle', priority);
 		this.directive = directive;
 		//this.target = target || Game.getObjectById(this.directive.memory.targetId) || undefined;
-		this.dismantlers = this.zerg(Roles.dismantler);
+		this.dismantlers = this.zerg(Roles.dismantler, {
+			boostWishlist: boosted ? [boostResources.tough[3], boostResources.dismantle[3],
+				boostResources.move[3]] : undefined
+		});
 	}
 
 	init() {
 		// Spawn a number of dismantlers, up to a max
-		const MAX_DISMANTLERS = 4;
+		const MAX_DISMANTLERS = 2;
 		let setup;
 		if (!!this.directive.memory.attackInsteadOfDismantle) {
 			setup = CombatSetups.dismantlers.attackDismantlers;
+		} else if (this.canBoostSetup(CombatSetups.dismantlers.boosted_T3)) {
+			setup = CombatSetups.dismantlers.boosted_T3;
 		} else {
 			setup = CombatSetups.dismantlers.default;
 		}
@@ -66,7 +72,7 @@ export class DismantleOverlord extends Overlord {
 			} else {
 				let res = !!this.directive.memory.attackInsteadOfDismantle ? dismantler.attack(this.target) : dismantler.dismantle(this.target);
 				if (res == ERR_NOT_IN_RANGE) {
-					let ret = dismantler.goTo(this.target);
+					let ret = dismantler.goTo(this.target, {});
 					// TODO this is shit ⬇
 				} else if (res == ERR_NO_BODYPART) {
 					//dismantler.suicide();

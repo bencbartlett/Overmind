@@ -123,6 +123,10 @@ export class DirectiveStronghold extends Directive {
 	manageState() {
 		let currentState = this.memory.state;
 
+		if (this.core && this.core.level == 5) {
+			//this.handleL5();
+		}
+
 		// Starting
 		if (this.room && this.core && currentState == 0) {
 			// Time to start
@@ -171,10 +175,42 @@ export class DirectiveStronghold extends Directive {
 
 	handleL5() {
 		// Well this, this is an L5. Can't deal with it now so just nuke it's ugly mug
-		const bestTarget = this.pos.getPositionAtDirection(BOTTOM_RIGHT);
-		let res1 = DirectiveNukeTarget.create(bestTarget);
-		let res2 = DirectiveNukeTarget.create(bestTarget);
-		return res1 == OK && res2 == OK;
+		// Wait for deploy
+		if (!this.pos.isVisible || !this.core || Game.time % 5 != 0) {
+			return;
+		}
+		if (this.core.ticksToDeploy) {
+			log.info(`Stronghold is still deploying! ${this.print}`);
+			return;
+		}
+		//const remainingDuration = this.core.effects.find(effect => effect.effect == EFFECT_COLLAPSE_TIMER);
+		const ramparts = this.core.room.ramparts;
+		if (ramparts.length == 0 || ramparts[0].ticksToDecay < NUKE_LAND_TIME + 10000) {
+			log.info(`Stronghold decaying too soon! ${this.print}`);
+			return;
+		}
+		// if (remainingDuration != undefined && remainingDuration.ticksRemaining < NUKE_LAND_TIME + 10000) {
+		// 	// It's too late, don't nuke
+		// 	log.info(`Stronghold decaying too soon at ${remainingDuration.ticksRemaining}! ${this.print}`);
+		// 	return;
+		// }
+
+		const bestTarget = this.pos.getPositionAtDirection(TOP_RIGHT);
+		const nukes = this.core.room.find(FIND_NUKES);
+		const nukesPrepped = DirectiveNukeTarget.isPresent(this.core.pos,'room');
+		if (nukes.length < 2 && !nukesPrepped) {
+			log.alert(`Nuking Stronghold! ${this.print}`);
+			let res1 = DirectiveNukeTarget.create(bestTarget, {memory: {maxLinearRange: 10, pathNotRequired: true}});
+			let res2 = DirectiveNukeTarget.create(bestTarget, {memory: {maxLinearRange: 10, pathNotRequired: true}});
+			return res1 == OK && res2 == OK;
+		} else {
+			const strongholdDefenders = this.core.pos.findInRange(FIND_HOSTILE_CREEPS, 4);
+			const reinforcers = strongholdDefenders.filter(creep => creep.body.find(bodyPart => bodyPart.type == WORK) != undefined);
+			if (reinforcers.length >= nukes.length - 1) {
+				log.alert(`Launching additional nuke against Stronghold with reinforcers ${reinforcers.length}! ${this.print}`);
+				return DirectiveNukeTarget.create(bestTarget, {memory: {maxLinearRange: 11, pathNotRequired: true}});
+			}
+		}
 	}
 
 	manageDirectives() {

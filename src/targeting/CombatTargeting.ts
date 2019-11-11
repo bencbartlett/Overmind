@@ -71,7 +71,7 @@ export class CombatTargeting {
 		});
 	}
 
-	static findClosestHostile(zerg: Zerg, checkReachable = false, ignoreCreepsAtEdge = true, playerOnly = false): Creep | undefined {
+	static findClosestHostile(zerg: Zerg, checkReachable = false, ignoreCreepsAtEdge = true, playerOnly = false, onlyUnramparted = false): Creep | undefined {
 		if (zerg.room.hostiles.length > 0) {
 			let targets: Creep[];
 			const potentialTargets = playerOnly ? zerg.room.playerHostiles : zerg.room.hostiles;
@@ -79,6 +79,9 @@ export class CombatTargeting {
 				targets = _.filter(potentialTargets, hostile => hostile.pos.rangeToEdge > 0);
 			} else {
 				targets = potentialTargets;
+			}
+			if (onlyUnramparted) {
+				targets = _.filter(targets, hostile => !hostile.inRampart);
 			}
 			if (checkReachable) {
 				const targetsByRange = _.sortBy(targets, target => zerg.pos.getRangeTo(target));

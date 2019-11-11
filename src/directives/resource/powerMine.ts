@@ -33,7 +33,6 @@ export class DirectivePowerMine extends Directive {
 
 	private _powerBank: StructurePowerBank | undefined;
 	private _drops: { [resourceType: string]: Resource[] };
-	private dropTick?: number;
 
 	memory: DirectivePowerMineMemory;
 
@@ -129,7 +128,7 @@ export class DirectivePowerMine extends Directive {
 			Game.notify('Activating spawning haulers for power mining in room ' + this.pos.roomName);
 			log.info('Activating spawning haulers for power mining in room ' + this.pos.roomName);
 			this.memory.state = 2;
-		} else if (currentState == 2 && this.room && !this.powerBank && this.hasDrops) {
+		} else if (currentState == 2 && this.room && !this.powerBank && (this.hasDrops || this.room.ruins.length == 0)) {
 			Game.notify(`Mining is complete for ${this.print} in ${this.room.print} at time ${Game.time}`);
 			log.alert(`Mining is complete for ${this.print} in ${this.room.print} at time ${Game.time}`);
 			this.memory.state = 3;
@@ -137,26 +136,18 @@ export class DirectivePowerMine extends Directive {
 			delete this.overlords["powerMine"];
 			this._powerBank = undefined; // This might be fluff
 		} else if ((currentState == 0 || currentState == 1 || currentState == 2) && this.room && this.pos.isVisible && !this.powerBank) {
-			if (!this.hasDrops) {
-				if (!this.dropTick) {
-					this.dropTick = Game.time + 11;
-				} else if (Game.time >= this.dropTick) {
-					// TODO this had an error where it triggered incorrectly
-					Game.notify(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.print} DELETING Directive at time ${Game.time}`);
-					log.error(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.room} DELETING Directive at time: ${Game.time}`);
-					this.remove();
-				}
-
-			} else if (this.room.lookAt(this.pos).length != 0) { // If it's a ruin, until typescript is updated just wait
-				log.notify(`Power mining in ${this.pos.roomName} waiting with lookat of ${this.room.lookAt(this.pos)}`);
-				return;
-			}
-			else {
+			if (!this.hasDrops && this.room.ruins.length == 0) {
+				// TODO this had an error where it triggered incorrectly
+				Game.notify(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.print} DELETING Directive at time ${Game.time}`);
+				log.error(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.room} DELETING Directive at time: ${Game.time}`);
+				this.remove();
+			} else {
 				// If somehow there is no bank but there is drops where bank was
 				Game.notify(`Somehow the power bank died early in ${this.room} at state ${currentState}, setting state to 3 ${Game.time}`);
 				this.memory.state = 3;
 			}
-		} else if (currentState == 3 && this.room && this.pos.isVisible && !this.hasDrops) {
+		} else if (currentState == 3 && this.room && this.pos.isVisible && !this.hasDrops
+			&& this.room.ruins.filter(ruin => !!ruin.store[RESOURCE_POWER] && ruin.store[RESOURCE_POWER]! > 0).length == 0) {
 			Game.notify(`Hauler pickup is complete for ${this.print} in ${this.room.print} at time ${Game.time}`);
 			// Hauler pickup is now complete
 			log.alert(`Hauler pickup is complete for ${this.print} in ${this.room.print} at time ${Game.time}`);

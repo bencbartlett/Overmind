@@ -11,7 +11,8 @@ interface DirectiveModularDismantleMemory extends FlagMemory {
 	numberSpots?: number;
 	attackInsteadOfDismantle?: boolean;
 	onlyKillRampart?: boolean;
-	additionalTargets?: StructureConstant[]
+	additionalTargets?: StructureConstant[];
+	boost?: boolean;
 }
 /**
  * Register a target to be dismantled by specific dismantlers
@@ -26,7 +27,8 @@ export class DirectiveModularDismantle extends Directive {
 
 	constructor(flag: Flag, onlyKillRampart = false, additionalTargets?: StructureConstant[]) {
 		super(flag);
-		this.memory.onlyKillRampart = onlyKillRampart;
+		this.memory.onlyKillRampart = onlyKillRampart || this.flag.name.includes('rampart');
+		this.memory.boost = this.memory.boost || this.flag.name.includes('boost');
 		if (this.flag.room) {
 			if (!this.memory.targetId) {
 				const target = this.getTarget();
@@ -43,7 +45,7 @@ export class DirectiveModularDismantle extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		this.overlords.dismantle = new DismantleOverlord(this, undefined);
+		this.overlords.dismantle = new DismantleOverlord(this, undefined, undefined, this.memory.boost);
 	}
 
 	getTarget(): Structure | undefined {
@@ -76,7 +78,7 @@ export class DirectiveModularDismantle extends Directive {
 		}
 	}
 
-	getDismantleSpots(target: RoomPosition) {
+	getDismantleSpots(target: RoomPosition): RoomPosition[] | undefined {
 		const nearbySpots = target.availableNeighbors(true);
 		if (target.room && target.room.creeps.length > 0) {
 			const startingCreep = target.room.creeps.filter(creep => creep.my)[0];

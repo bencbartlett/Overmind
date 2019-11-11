@@ -78,7 +78,6 @@ export class PowerHaulingOverlord extends Overlord {
 				} else if (this.room && this.room.ruins) {
 					let pb = this.room.ruins.filter(ruin => !!ruin.store[RESOURCE_POWER] && ruin.store[RESOURCE_POWER]! > 0);
 					if (pb.length > 0) {
-						Game.notify(`Found power bank ruins containing power in ${this.room} at ${Game.time} ${pb[0]}`);
 						hauler.task = Tasks.withdraw(pb[0], RESOURCE_POWER);
 					}
 				} else if (this.room && this.room.drops) {

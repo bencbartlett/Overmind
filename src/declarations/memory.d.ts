@@ -164,6 +164,7 @@ interface FlagMemory {
 	rotation?: number;
 	parent?: string;
 	maxPathLength?: number;
+	pathNotRequired?: boolean;
 	maxLinearRange?: number;
 	keepStorageStructures?: boolean;
 	keepRoads?: boolean;

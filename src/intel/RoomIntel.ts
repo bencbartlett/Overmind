@@ -404,8 +404,8 @@ export class RoomIntel {
 			let colonies = getAllColonies().filter(colony => colony.level == 8);
 			for (let colony of colonies) {
 				let route = Game.map.findRoute(colony.room, core.room);
-				if (route != -2  && route.length <= 4) {
-					Game.notify(`FOUND STRONGHOLD AT DISTANCE ${route.length}, BEGINNING ATTACK ${core.room}`);
+				if (route != -2  && route.length <= 5) {
+					Game.notify(`FOUND STRONGHOLD ${core.level} AT DISTANCE ${route.length}, BEGINNING ATTACK ${core.room}`);
 					DirectiveStronghold.createIfNotPresent(core.pos, 'pos');
 					return;
 				}
@@ -440,7 +440,7 @@ export class RoomIntel {
 		for (let roomName in Memory.rooms) {
 			let remove = true;
 			for (let colonyName in Memory.colonies){
-				if(Game.map.getRoomLinearDistance(roomName, colonyName) <= 3){
+				if(Game.map.getRoomLinearDistance(roomName, colonyName) <= 2){
 					remove = false;
 				}
 			}
@@ -481,7 +481,7 @@ export class RoomIntel {
 		let alreadyComputedScore = false;
 		//this.requestZoneData();
 		// If above 2030 kb wipe memory down
-		if (Game.time % 375 == 0 || RawMemory.get().length > 2030000) {
+		if (Game.time % 375 == 0 || RawMemory.get().length > 2040000) {
 			RoomIntel.cleanRoomMemory();
 		}
 		if (Game.time % 104 == 0) {

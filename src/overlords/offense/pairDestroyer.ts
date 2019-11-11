@@ -49,7 +49,7 @@ export class PairDestroyerOverlord extends Overlord {
 				return CombatTargeting.findClosestReachable(attacker.pos, targetedStructures);
 			} else {
 				// Target nearby hostile creeps
-				const creepTarget = CombatTargeting.findClosestHostile(attacker, true, true, true);
+				const creepTarget = CombatTargeting.findClosestHostile(attacker, true, true, true, true);
 				if (creepTarget) return creepTarget;
 				// Target nearby hostile structures
 				const structureTarget = CombatTargeting.findClosestPrioritizedStructure(attacker);

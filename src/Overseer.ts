@@ -207,7 +207,7 @@ export class Overseer implements IOverseer {
 				let cores = room.hostileStructures.filter(s => s.structureType == STRUCTURE_INVADER_CORE);
 				if (cores.length > 0) {
 					let core = <StructureInvaderCore>cores[0];
-					log.alert(`Found core in ${room.name} with ${cores[0]}`);
+					log.alert(`Found core in ${room.name} with ${core} level ${core.level}`);
 					let res;
 					if (core.level == 0) {
 						res = DirectiveModularDismantle.createIfNotPresent(cores[0].pos, 'pos');

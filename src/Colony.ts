@@ -32,6 +32,7 @@ import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
 import {maxBy, mergeSum, minBy} from './utilities/utils';
 import {Visualizer} from './visuals/Visualizer';
 import {Zerg} from './zerg/Zerg';
+import {DirectiveInvasionDefense} from "./directives/defense/invasionDefense";
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -579,6 +580,18 @@ export class Colony {
 		this.roomPlanner.run();												// Run the room planner
 		this.runPowerSpawn();												// Run power spawn - short term
 		this.stats();														// Log stats per tick
+		const underAttack = DirectiveInvasionDefense.isPresent(this.pos, 'room');
+		if (Game.time % 4001 == 0 && this.level == 8 && !underAttack && !!this.bunker) {
+			this.room.ramparts.forEach(rampart => {
+				let distance = rampart.pos.getRangeTo(this.bunker!.anchor);
+				if (distance == 2) {
+					rampart.setPublic(true);
+				}
+			});
+		}
+		if (this.level == 8 && underAttack) {
+			this.room.ramparts.forEach(rampart => rampart.setPublic(false));
+		}
 	}
 
 	/**

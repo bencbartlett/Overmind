@@ -197,14 +197,14 @@ export abstract class Directive {
 		if (verbose) log.info(`Recalculating colony association for ${this.name} in ${this.pos.roomName}`);
 		let nearestColony: Colony | undefined;
 		let minDistance = Infinity;
-		const colonyRooms = _.filter(Game.rooms, room => room.my);
+		//const colonyRooms = _.filter(Game.rooms, room => room.my);
 		for (const colony of getAllColonies()) {
 			if (Game.map.getRoomLinearDistance(this.pos.roomName, colony.name) > maxLinearRange) {
 				continue;
 			}
 			if (!colonyFilter || colonyFilter(colony)) {
 				const ret = Pathing.findPath((colony.hatchery || colony).pos, this.pos);
-				if (!ret.incomplete) {
+				if (this.memory.pathNotRequired || !ret.incomplete) {
 					if (ret.path.length < maxPathLength && ret.path.length < minDistance) {
 						nearestColony = colony;
 						minDistance = ret.path.length;
