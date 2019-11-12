@@ -181,7 +181,7 @@ export class Swarm implements ProtoSwarm {
 
 	set target(targ: Creep | Structure | undefined) {
 		if (targ) {
-			this.memory.target = {id: targ.id, exp: getCacheExpiration(100)};
+			this.memory.target = {id: targ.id.toString(), exp: getCacheExpiration(100)};
 		} else {
 			delete this.memory.target;
 		}

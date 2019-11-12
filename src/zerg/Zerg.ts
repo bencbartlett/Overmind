@@ -119,7 +119,7 @@ export class Zerg {
 		this.fatigue = creep.fatigue;
 		this.hits = creep.hits;
 		this.hitsMax = creep.hitsMax;
-		this.id = creep.id;
+		this.id = creep.id.toString();
 		this.memory = creep.memory;
 		this.name = creep.name;
 		this.pos = creep.pos;

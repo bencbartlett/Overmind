@@ -363,7 +363,7 @@ export class LogisticsNetwork {
 					if (request.resourceType == 'all') {
 						if (!isStoreStructure(request.target) && !isTombstone(request.target)) {
 							log.error(ALL_RESOURCE_TYPE_ERROR);
-							return {energy: 0};
+							return {energy: 0} as StoreDefinition;
 						}
 						for (const resourceType in request.target.store) {
 							const resourceFraction = (request.target.store[<ResourceConstant>resourceType] || 0)

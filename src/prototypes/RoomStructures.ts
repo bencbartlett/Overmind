@@ -29,7 +29,7 @@ Room.prototype._refreshStructureCache = function() {
 		roomStructuresExpiration[this.name] = getCacheExpiration(STRUCTURE_TIMEOUT);
 		roomStructureIDs[this.name] = _.mapValues(_.groupBy(this.find(FIND_STRUCTURES),
 															(s: Structure) => s.structureType),
-												  (structures: Structure[]) => _.map(structures, s => s.id));
+												  (structures: Structure[]) => _.map(structures, s => s.id.toString()));
 	}
 };
 
@@ -123,7 +123,7 @@ Object.defineProperty(Room.prototype, 'repairables', {
 						repairables = repairables.concat(this[structureType + 's']);
 					}
 				}
-				roomStructureIDs[this.name].repairables = _.map(repairables, s => s.id);
+				roomStructureIDs[this.name].repairables = _.map(repairables, s => s.id.toString());
 				return this._repairables = repairables;
 			}
 		}
@@ -142,7 +142,7 @@ Object.defineProperty(Room.prototype, 'walkableRamparts', {
 			} else {
 				const walkableRamparts = _.filter(this.ramparts,
 												  (r: StructureRampart) => r.pos.isWalkable(true));
-				roomStructureIDs[this.name].walkableRamparts = _.map(walkableRamparts, r => r.id);
+				roomStructureIDs[this.name].walkableRamparts = _.map(walkableRamparts, r => r.id.toString());
 				return this._walkableRamparts = walkableRamparts;
 			}
 		}

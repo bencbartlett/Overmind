@@ -134,7 +134,7 @@ export class BunkerQueenOverlord extends Overlord {
 		const supplyRequests: TransportRequest[] = [];
 		for (const priority in this.colony.transportRequests.supply) {
 			for (const request of this.colony.transportRequests.supply[priority]) {
-				if (this.assignments[queen.name][request.target.id]) {
+				if (this.assignments[queen.name][request.target.id.toString()]) {
 					supplyRequests.push(request);
 				}
 			}
@@ -196,7 +196,7 @@ export class BunkerQueenOverlord extends Overlord {
 		const withdrawRequests: TransportRequest[] = [];
 		for (const priority in this.colony.transportRequests.withdraw) {
 			for (const request of this.colony.transportRequests.withdraw[priority]) {
-				if (this.assignments[queen.name][request.target.id]) {
+				if (this.assignments[queen.name][request.target.id.toString()]) {
 					withdrawRequests.push(request);
 				}
 			}

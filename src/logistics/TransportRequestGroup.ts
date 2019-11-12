@@ -101,8 +101,8 @@ export class TransportRequestGroup {
 		};
 		if (opts.amount > 0) {
 			this.supply[priority].push(req);
-			if (!this.supplyByID[target.id]) this.supplyByID[target.id] = [];
-			this.supplyByID[target.id].push(req);
+			if (!this.supplyByID[target.id.toString()]) this.supplyByID[target.id.toString()] = [];
+			this.supplyByID[target.id.toString()].push(req);
 		}
 	}
 
@@ -124,8 +124,8 @@ export class TransportRequestGroup {
 		};
 		if (opts.amount > 0) {
 			this.withdraw[priority].push(req);
-			if (!this.withdrawByID[target.id]) this.withdrawByID[target.id] = [];
-			this.withdrawByID[target.id].push(req);
+			if (!this.withdrawByID[target.id.toString()]) this.withdrawByID[target.id.toString()] = [];
+			this.withdrawByID[target.id.toString()].push(req);
 		}
 	}
 

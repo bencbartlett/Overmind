@@ -65,7 +65,10 @@ export class DismantleOverlord extends Overlord {
 			dismantler.goTo(goal, {avoidSK: true});
 		} else {
 			if (!this.target) {
-				this.target = Game.getObjectById(this.directive.memory.targetId) || this.directive.getTarget();
+				if (this.directive.memory.targetId) {
+					this.target = Game.getObjectById(this.directive.memory.targetId.toString()) || undefined;
+				}
+				this.target = this.target || this.directive.getTarget();
 				if (!this.target) {
 					log.error(`No target found for ${this.directive.print}`);
 				}

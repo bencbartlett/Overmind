@@ -262,7 +262,7 @@ interface HasRef {
 }
 
 interface HasID {
-	id: string;
+	id: Id;
 }
 
 // interface StoreLike {

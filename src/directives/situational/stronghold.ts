@@ -31,7 +31,7 @@ interface DirectiveStrongholdMemory extends FlagMemory {
 	state: number;
 	strongholdLevel: number;
 	target?: {
-		id: string;
+		id: Id<Creep | Structure>;
 		exp: number;
 	};
 	// target : {
@@ -103,7 +103,7 @@ export class DirectiveStronghold extends Directive {
 
 	get target(): Creep | Structure | undefined {
 		if (this.memory.target && this.memory.target.exp > Game.time) {
-			const target = Game.getObjectById(this.memory.target.id);
+			const target = Game.getObjectById(this.memory.target.id.toString());
 			if (target) {
 				return target as Creep | Structure;
 			}
@@ -238,8 +238,8 @@ export class DirectiveStronghold extends Directive {
 				Visualizer.marker(attackPos, 'white');
 			}
 		}
-		if (this.memory.target && Game.getObjectById(this.memory.target.id)) {
-			const target = Game.getObjectById(this.memory.target.id) as RoomObject;
+		if (this.memory.target && Game.getObjectById(this.memory.target.id.toString())) {
+			const target = Game.getObjectById(this.memory.target.id.toString()) as RoomObject;
 			if (target) {
 				Visualizer.marker(target.pos, 'black');
 			}
