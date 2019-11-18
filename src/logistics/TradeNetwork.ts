@@ -8,6 +8,7 @@ import {maxBy, minBy, onPublicServer, printRoomName} from '../utilities/utils';
 interface MarketCache {
 	sell: { [resourceType: string]: { high: number, low: number } };
 	buy: { [resourceType: string]: { high: number, low: number } };
+	resources: { [resourceType: string]: { avgPrice: number, stdev: number } };
 	tick: number;
 }
 
@@ -36,6 +37,7 @@ const TraderMemoryDefaults: TraderMemory = {
 	cache        : {
 		sell: {},
 		buy : {},
+		resources: {},
 		tick: 0,
 	},
 	equalizeIndex: 0
@@ -143,6 +145,45 @@ export class TraderJoe implements ITradeNetwork {
 		this.memory.cache = {
 			sell: {},
 			buy : {},
+			resources: {},
+			tick: 0,
+		};
+	}
+
+	/**
+	 * Builds a cache for market - this is very expensive; use infrequently
+	 */
+	private buildMarketCacheFromHistory(verbose = false, orderThreshold = 1000): void {
+		//this.invalidateMarketCacheFromHistory();
+		//const myActiveOrderIDs = _.map(_.filter(Game.market.orders, order => order.active), order => order.id);
+		const allHistory = Game.market.getHistory();
+
+		// Iterate across all history entries, just use yesterday data for now
+		const today = new Date().getDate();
+		const yesterday = new Date();
+		yesterday.setDate(today - 1);
+		for (const history of allHistory) {
+			if (new Date(history.date).getDate() != yesterday.getDate()) {
+				// log.info(`Date of ${history.date} is out of time range!`);
+				continue;
+			}
+			this.memory.cache.resources[history.resourceType] = {
+				avgPrice: history.avgPrice,
+				stdev: history.stddevPrice
+			};
+			if (this.memory.cache.buy[history.resourceType]) {
+				log.info(`Generating market price: ${history.resourceType} with avgPrice ${history.avgPrice} compared to B${this.memory.cache.buy[history.resourceType]} diff ${this.memory.cache.buy[history.resourceType].high - history.avgPrice}`);
+			}
+		}
+		//this.memory.cache.tick = Game.time;
+		//this.memory.cache.tick = 0;
+	}
+
+	private invalidateMarketCacheFromHistory(): void {
+		this.memory.cache = {
+			sell: {},
+			buy : {},
+			resources: {},
 			tick: 0,
 		};
 	}
@@ -212,12 +253,18 @@ export class TraderJoe implements ITradeNetwork {
 		if (ordersForMineral === undefined) {
 			return;
 		}
-		const marketLow = this.memory.cache.sell[resource] ? this.memory.cache.sell[resource].low : undefined;
+		//const marketLow = this.memory.cache.sell[resource] ? this.memory.cache.sell[resource].low : undefined;
+		const marketEntry = this.memory.cache.resources[resource];
+		const marketLow = marketEntry ? marketEntry.avgPrice : undefined;
 		if (marketLow == undefined) {
 			return;
 		}
+		// TODO change to have margin be by stdev
 		const order = maxBy(ordersForMineral, order => this.effectiveBuyPrice(order, terminal));
-		if (order && order.price > marketLow * margin) {
+		if (resource == RESOURCE_UTRIUM_BAR && order) {
+			log.notify(`Found ${resource} order for ${JSON.stringify(order)} and ${order.price} vs ${marketLow}`);
+		}
+		if (order && order.price >= marketLow * margin) {
 			const amount = Math.min(order.amount, 10000);
 			const cost = Game.market.calcTransactionCost(amount, terminal.room.name, order.roomName!);
 			if (terminal.store[RESOURCE_ENERGY] > cost) {
@@ -376,8 +423,8 @@ export class TraderJoe implements ITradeNetwork {
 	}
 
 	priceOf(mineralType: ResourceConstant): number {
-		if (this.memory.cache.sell[mineralType]) {
-			return this.memory.cache.sell[mineralType].low;
+		if (this.memory.cache.resources[mineralType]) {
+			return this.memory.cache.resources[mineralType].avgPrice
 		} else {
 			return Infinity;
 		}
@@ -448,6 +495,7 @@ export class TraderJoe implements ITradeNetwork {
 	init(): void {
 		if (Game.time - (this.memory.cache.tick || 0) > TraderJoe.settings.cache.timeout) {
 			this.buildMarketCache();
+			this.buildMarketCacheFromHistory();
 		}
 	}
 

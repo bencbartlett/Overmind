@@ -254,6 +254,10 @@ export class DirectiveBaseOperator extends Directive {
 			return;
 		}
 
+		if (powerCreep.name == 'BaseDefender' && powerCreep.room && powerCreep.room.terminal) {
+			powerCreep.usePower(PWR_OPERATE_TERMINAL, powerCreep.room.terminal);
+		}
+
 		// For the power creeps that just sit on power spawn
 		const isStationary = powerCreep.name.toLowerCase().indexOf(types.basedefender.toString());
 		if (powerCreep.name == 'activate') {

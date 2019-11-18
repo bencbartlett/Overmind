@@ -404,7 +404,7 @@ export class RoomIntel {
 			let colonies = getAllColonies().filter(colony => colony.level == 8);
 			for (let colony of colonies) {
 				let route = Game.map.findRoute(colony.room, core.room);
-				if (route != -2  && route.length <= 5) {
+				if (route != -2  && route.length <= 7) {
 					Game.notify(`FOUND STRONGHOLD ${core.level} AT DISTANCE ${route.length}, BEGINNING ATTACK ${core.room}`);
 					DirectiveStronghold.createIfNotPresent(core.pos, 'pos');
 					return;
