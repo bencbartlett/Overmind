@@ -5,6 +5,7 @@ import {RangedDefenseOverlord} from '../../overlords/defense/rangedDefense';
 import {profile} from '../../profiler/decorator';
 
 import {ColonyStage} from '../../Colony';
+import {BarrierPlanner} from '../../roomPlanner/BarrierPlanner';
 import {Directive} from '../Directive';
 import {NotifierPriority} from '../Notifier';
 
@@ -55,7 +56,8 @@ export class DirectiveInvasionDefense extends Directive {
 		}
 		// If serious bunker busting attempt, spawn lurkers
 		// TODO understand dismantlers damage output
-		if (meleeHostiles.length > 0 && (expectedDamage > ATTACK_POWER * 70)) {
+		if (meleeHostiles.length > 0 && expectedDamage > ATTACK_POWER * 70 &&
+			this.colony.level >= BarrierPlanner.settings.bunkerizeRCL) {
 			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, false);
 		}
 

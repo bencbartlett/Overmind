@@ -7,7 +7,7 @@ import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {Directive} from '../Directive';
 
 /**
- * Claims a new room and incubates it from the nearest (or specified) colony
+ * Registers an unowned mining outpost for a nearby colony
  */
 @profile
 export class DirectiveOutpost extends Directive {

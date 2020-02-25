@@ -319,7 +319,14 @@ export class TraderJoe implements ITradeNetwork {
 
 			const ordersOfType = _.filter(Game.market.orders, o => o.type == ORDER_BUY && o.resourceType == resource);
 			if (ordersOfType.length < maxOrdersOfType) {
-				const ret = Game.market.createOrder(ORDER_BUY, resource, marketHigh, amount, terminal.room.name);
+				const params = {
+					type        : ORDER_BUY,
+					resourceType: resource,
+					price       : marketHigh,
+					totalAmount : amount,
+					roomName    : terminal.room.name
+				};
+				const ret = Game.market.createOrder(params);
 				this.notify(`${terminal.room.print}: creating buy order for ${resource} at price ${marketHigh}. ` +
 							`Response: ${ret}`);
 			}
@@ -362,7 +369,14 @@ export class TraderJoe implements ITradeNetwork {
 
 			const ordersOfType = _.filter(Game.market.orders, o => o.type == ORDER_SELL && o.resourceType == resource);
 			if (ordersOfType.length < maxOrdersOfType) {
-				const ret = Game.market.createOrder(ORDER_SELL, resource, marketLow, amount, terminal.room.name);
+				const params = {
+					type        : ORDER_SELL,
+					resourceType: resource,
+					price       : marketLow,
+					totalAmount : amount,
+					roomName    : terminal.room.name
+				};
+				const ret = Game.market.createOrder(params);
 				this.notify(`${terminal.room.print}: creating sell order for ${resource} at price ${marketLow}. ` +
 							`Response: ${ret}`);
 			}

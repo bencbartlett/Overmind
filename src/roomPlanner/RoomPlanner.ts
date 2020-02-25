@@ -18,9 +18,9 @@ import {hatcheryLayout} from './layouts/hatchery';
 import {RoadPlanner} from './RoadPlanner';
 
 export interface BuildingPlannerOutput {
-	name: string;
-	shard: string;
-	rcl: string;
+	name?: string;
+	shard?: string;
+	rcl?: string | number;
 	buildings: { [structureType: string]: { pos: Coord[] } };
 }
 
@@ -30,7 +30,7 @@ export interface StructureLayout {
 	data: {
 		anchor: Coord;
 		pointsOfInterest?: {
-			[pointLabel: string]: Coord;
+			[pointLabel: string]: Coord | Coord[];
 		}
 	};
 }
