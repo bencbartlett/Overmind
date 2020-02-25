@@ -300,8 +300,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 	private handleOverflowWithNoEnergy() {
 		for (const terminal of this.terminals) {
 			if (terminal.store.getFreeCapacity() < 5000 && terminal.store[RESOURCE_ENERGY] < 10000) {
-				let roomOrders = _.filter(Game.market.orders, order => order.roomName == terminal.room.name);
-				for (let res in terminal.store) {
+				const roomOrders = _.filter(Game.market.orders, order => order.roomName == terminal.room.name);
+				for (const res in terminal.store) {
 					const quantity = terminal.store[res as ResourceConstant];
 					if (quantity > 15000 && roomOrders.filter(order => order.resourceType == res).length == 0) {
 						log.info(`Creating sell order for ${res} in room ${terminal.room.print}`);
@@ -481,6 +481,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		// Equalize resources
 		if (Game.time % TerminalNetwork.settings.equalize.frequency == 0) {
 			this.equalizeCycle();
+			this.handleOverflowWithNoEnergy();
 		}
 		// else if (Game.time % this.settings.equalize.frequency == 20) {
 		// 	let powerTerminals = _.filter(this.terminals, t => colonyOf(t).powerSpawn != undefined);

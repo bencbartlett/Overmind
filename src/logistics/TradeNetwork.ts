@@ -343,7 +343,7 @@ export class TraderJoe implements ITradeNetwork {
 	 */
 	private maintainSellOrder(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
 							  maxOrdersOfType = Infinity): void {
-		const marketLow = this.memory.cache.sell[resource] ? this.memory.cache.sell[resource].low : undefined;
+		const marketLow = this.memory.cache.sell[resource] ? this.memory.cache.sell[resource].low * .9 : undefined;
 		if (!marketLow) {
 			return;
 		}
