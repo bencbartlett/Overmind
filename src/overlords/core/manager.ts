@@ -1,4 +1,5 @@
 import {$} from '../../caching/GlobalCache';
+import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {StoreStructure} from '../../declarations/typeGuards';
 import {TERMINAL_STATE_REBUILD} from '../../directives/terminalState/terminalState_rebuild';
@@ -7,6 +8,7 @@ import {SpawnRequestOptions} from '../../hiveClusters/hatchery';
 import {Energetics} from '../../logistics/Energetics';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
+import {BASE_RESOURCES} from '../../resources/map_resources';
 import {Tasks} from '../../tasks/Tasks';
 import {hasMinerals, minBy} from '../../utilities/utils';
 import {Zerg} from '../../zerg/Zerg';
@@ -227,6 +229,46 @@ export class CommandCenterOverlord extends Overlord {
 	}
 
 	/**
+	 * When storage + terminal are critically full, start dumping the least useful stuff on the ground.
+	 * This should rarely be run; added in Feb 2020 to fix a critical issue where I hadn't added factory code and all
+	 * my terminals and storage filled up with crap.
+	 */
+	private emergencyDumpingActions(manager: Zerg): boolean {
+		const storage = this.commandCenter.storage;
+		const terminal = this.commandCenter.terminal;
+		if (!storage && !terminal) {
+			return false;
+		}
+		const freeCapacity = (storage ? storage.store.getFreeCapacity() : 0) +
+							 (terminal ? terminal.store.getFreeCapacity() : 0);
+		const energy = (storage ? storage.store.energy : 0) +
+					   (terminal ? terminal.store.energy : 0);
+		if (freeCapacity < 50000 && energy < 5000) {
+			manager.say('Dump!');
+			// Start dumping least valuable shit on the ground
+			const toDump = _.sortBy(BASE_RESOURCES, resource => this.colony.assets[resource] * -1);
+			const toDumpInCarry = _.first(_.filter(toDump, res => manager.carry[res] > 0));
+			// Drop anything you have in carry that is dumpable
+			if (toDumpInCarry) {
+				manager.drop(toDumpInCarry);
+				return true;
+			}
+			// Take out stuff to dump
+			for (const resource of toDump) {
+				const target = (terminal && terminal.store[resource] > 0 ? terminal : storage);
+				if (target.store[resource] > 0) {
+					manager.task = Tasks.withdraw(target, resource);
+					return true;
+				}
+			}
+			log.warning('No shit to drop! Shouldn\'t reach here!');
+			return false;
+		} else {
+			return false;
+		}
+	}
+
+	/**
 	 * Suicide once you get old and make sure you don't drop and waste any resources
 	 */
 	private deathActions(manager: Zerg): boolean {
@@ -252,6 +294,9 @@ export class CommandCenterOverlord extends Overlord {
 		if (manager.ticksToLive! < 150) {
 			if (this.deathActions(manager)) return;
 		}
+		// Emergency dumping actions
+		if (this.emergencyDumpingActions(manager)) return;
+		;
 		// Pick up any dropped resources on ground
 		if (this.pickupActions(manager)) return;
 		// Move minerals from storage to terminal if needed
