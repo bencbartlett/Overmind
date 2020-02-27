@@ -96,6 +96,13 @@ Object.defineProperty(StructureLink.prototype, 'isEmpty', { // if this container
 	configurable: true,
 });
 
+Object.defineProperty(StructureLink.prototype, 'storeCapacity', { // forwards-backwards compatibility
+	get() {
+		return this.energyCapacity;
+	},
+	configurable: true,
+});
+
 
 // Nuker prototypes ====================================================================================================
 

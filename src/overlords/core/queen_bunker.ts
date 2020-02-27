@@ -49,6 +49,7 @@ export class BunkerQueenOverlord extends Overlord {
 	queenSetup: CreepSetup;
 	storeStructures: StoreStructure[];
 	batteries: StructureContainer[];
+	links: StoreStructure[]; // hacky workaround for new typings
 	quadrants: { [quadrant: string]: SupplyStructure[] };
 	private numActiveQueens: number;
 	assignments: { [queenName: string]: { [id: string]: boolean } };
@@ -58,7 +59,12 @@ export class BunkerQueenOverlord extends Overlord {
 		this.queenSetup = Setups.queens.default;
 		this.queens = this.zerg(Roles.queen);
 		this.batteries = _.filter(this.room.containers, container => insideBunkerBounds(container.pos, this.colony));
-		this.storeStructures = _.compact([this.colony.terminal!, this.colony.storage!, ...this.batteries]);
+		this.links = _.filter((this.room.links as StoreStructure[]), link => insideBunkerBounds(link.pos, this.colony));
+		this.storeStructures = _.compact([
+			this.colony.terminal!,
+			this.colony.storage!,
+			...this.batteries,
+			...this.links]);
 		this.quadrants = {
 			lowerRight: $.structures(this, 'LR',
 									 () => computeQuadrant(this.colony, quadrantFillOrder.lowerRight)),
