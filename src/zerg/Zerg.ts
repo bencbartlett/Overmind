@@ -176,7 +176,7 @@ export class Zerg {
 
 	debug(...args: any[]) {
 		if (this.memory.debug) {
-			log.debug(this.print, args);
+			log.alert(this.print, args);
 		}
 	}
 
