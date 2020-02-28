@@ -197,6 +197,10 @@ export class CommandCenterOverlord extends Overlord {
 		if (!storage || !terminal) {
 			return false;
 		}
+		// Don't do this if terminal is critially full
+		if (terminal.store.getFreeCapacity() < 1000) {
+			return false;
+		}
 		// Move all non-energy resources from storage to terminal
 		for (const resourceType in storage.store) {
 			if (resourceType != RESOURCE_ENERGY && storage.store[<ResourceConstant>resourceType]! > 0) {
@@ -239,33 +243,49 @@ export class CommandCenterOverlord extends Overlord {
 		if (!storage && !terminal) {
 			return false;
 		}
-		const freeCapacity = (storage ? storage.store.getFreeCapacity() : 0) +
-							 (terminal ? terminal.store.getFreeCapacity() : 0);
-		const energy = (storage ? storage.store.energy : 0) +
-					   (terminal ? terminal.store.energy : 0);
-		if (freeCapacity < 50000 && energy < 5000) {
-			manager.say('Dump!');
-			// Start dumping least valuable shit on the ground
-			const toDump = _.sortBy(BASE_RESOURCES, resource => this.colony.assets[resource] * -1);
-			const toDumpInCarry = _.first(_.filter(toDump, res => manager.carry[res] > 0));
-			// Drop anything you have in carry that is dumpable
-			if (toDumpInCarry) {
-				manager.drop(toDumpInCarry);
+		const storageCapacity = storage ? storage.store.getFreeCapacity() : 0;
+		const terminalCapacity = terminal ? terminal.store.getFreeCapacity() : 0;
+		const storageEnergy = storage ? storage.store.energy : 0;
+		const terminalEnergy = terminal ? terminal.store.energy : 0;
+		// const freeCapacity = (storage ? storage.store.getFreeCapacity() : 0) +
+		// 					 (terminal ? terminal.store.getFreeCapacity() : 0);
+		// const energy = (storage ? storage.store.energy : 0) +
+		// 			   (terminal ? terminal.store.energy : 0);
+		// if (energy >= 5000) {
+		// 	return false;
+		// }
+		const DUMP_THRESHOLD = 5000;
+		if (terminal && terminalCapacity < DUMP_THRESHOLD && terminalEnergy < DUMP_THRESHOLD) {
+			return this.dumpFrom(manager, terminal);
+		}
+		if (storage && storageCapacity < DUMP_THRESHOLD && terminalEnergy < DUMP_THRESHOLD) {
+			return this.dumpFrom(manager, storage);
+		}
+		return false;
+	}
+
+	/**
+	 * Dump resources on ground from a target that is critically full
+	 */
+	private dumpFrom(manager: Zerg, target: StructureTerminal | StructureStorage): boolean {
+		manager.say('Dump!');
+		// Start dumping least valuable shit on the ground
+		const toDump = _.sortBy(BASE_RESOURCES, resource => (target.store[resource] || 0) * -1);
+		const toDumpInCarry = _.first(_.filter(toDump, res => manager.carry[res] > 0));
+		// Drop anything you have in carry that is dumpable
+		if (toDumpInCarry) {
+			manager.drop(toDumpInCarry);
+			return true;
+		}
+		// Take out stuff to dump
+		for (const resource of toDump) {
+			if (target.store[resource] > 0) {
+				manager.task = Tasks.withdraw(target, resource);
 				return true;
 			}
-			// Take out stuff to dump
-			for (const resource of toDump) {
-				const target = (terminal && terminal.store[resource] > 0 ? terminal : storage);
-				if (target.store[resource] > 0) {
-					manager.task = Tasks.withdraw(target, resource);
-					return true;
-				}
-			}
-			log.warning('No shit to drop! Shouldn\'t reach here!');
-			return false;
-		} else {
-			return false;
 		}
+		log.warning('No shit to drop! Shouldn\'t reach here!');
+		return false;
 	}
 
 	/**
@@ -296,7 +316,6 @@ export class CommandCenterOverlord extends Overlord {
 		}
 		// Emergency dumping actions
 		if (this.emergencyDumpingActions(manager)) return;
-		;
 		// Pick up any dropped resources on ground
 		if (this.pickupActions(manager)) return;
 		// Move minerals from storage to terminal if needed
