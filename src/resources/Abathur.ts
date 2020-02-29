@@ -31,7 +31,7 @@ export const wantedStockAmounts: { [key: string]: number } = {
 	UH   : 3000, 	// (+100 % attack)
 	KO   : 3000, 	// (+100 % ranged attack)
 	XGHO2: 10000, 	// (-70 % dmg taken)
-	XLHO2: 15000, 	// (+300 % heal)
+	XLHO2: 20000, 	// (+300 % heal)
 	XZHO2: 6000, 	// (+300 % fat decr - speed)
 	XZH2O: 6000, 	// (+300 % dismantle)
 	XKHO2: 20000, 	// (+300 % ranged attack)

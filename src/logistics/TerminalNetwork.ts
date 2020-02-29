@@ -238,7 +238,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 	/**
 	 * Sell excess minerals on the market
 	 */
-	private handleExcess(terminal: StructureTerminal, threshold = 25000): void {
+	private handleExcess(terminal: StructureTerminal, threshold = 35000): void {
 
 		const terminalNearCapacity = terminal.store.getUsedCapacity() > 0.95 * terminal.store.getCapacity();
 
@@ -273,7 +273,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 				}
 
 			} else {
-				const commodities = [ 	RESOURCE_UTRIUM_BAR, RESOURCE_LEMERGIUM_BAR, RESOURCE_ZYNTHIUM_BAR, RESOURCE_KEANIUM_BAR,
+				const commodities = [RESOURCE_UTRIUM_BAR, RESOURCE_LEMERGIUM_BAR, RESOURCE_ZYNTHIUM_BAR, RESOURCE_KEANIUM_BAR,
 					RESOURCE_GHODIUM_MELT, RESOURCE_OXIDANT, RESOURCE_REDUCTANT, RESOURCE_PURIFIER, RESOURCE_BATTERY,
 					RESOURCE_COMPOSITE, RESOURCE_CRYSTAL, RESOURCE_LIQUID, RESOURCE_WIRE, RESOURCE_SWITCH, RESOURCE_TRANSISTOR,
 					RESOURCE_MICROCHIP, RESOURCE_CIRCUIT, RESOURCE_DEVICE, RESOURCE_CELL, RESOURCE_PHLEGM, RESOURCE_TISSUE,
@@ -525,6 +525,21 @@ export class TerminalNetwork implements ITerminalNetwork {
 		}
 	}
 
+	handleOverflowWithNoEnergy() {
+		for (let terminal of this.terminals) {
+			if (terminal.store.getFreeCapacity() < 5000 && terminal.store[RESOURCE_ENERGY] < 10000) {
+				let roomOrders = _.filter(Game.market.orders, order => order.roomName == terminal.room.name);
+				for (let res in terminal.store) {
+					let quantity = terminal.store[res as ResourceConstant];
+					if (quantity > 15000 && roomOrders.filter(order => order.resourceType == res).length == 0) {
+						log.info(`Creating sell order for ${res} in room ${terminal.room.print}`);
+						Overmind.tradeNetwork.sell(terminal, res as ResourceConstant, 2000);
+					}
+				}
+			}
+		}
+	}
+
 	init(): void {
 		this.assets = this.getAllAssets();
 	}
@@ -537,6 +552,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		// Equalize resources
 		if (Game.time % TerminalNetwork.settings.equalize.frequency == 0) {
 			this.equalizeCycle();
+			this.handleOverflowWithNoEnergy();
 		}
 		// else if (Game.time % this.settings.equalize.frequency == 20) {
 		// 	let powerTerminals = _.filter(this.terminals, t => colonyOf(t).powerSpawn != undefined);

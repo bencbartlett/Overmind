@@ -240,7 +240,7 @@ export class TraderJoe implements ITradeNetwork {
 	/**
 	 * Opportunistically sells resources when the buy price is higher than current market sell low price
 	 */
-	lookForGoodDeals(terminal: StructureTerminal, resource: ResourceConstant, margin = 1.25): void {
+	lookForGoodDeals(terminal: StructureTerminal, resource: ResourceConstant, margin = 1.05): void {
 		if (Game.market.credits < TraderJoe.settings.market.reserveCredits) {
 			return;
 		}
@@ -264,7 +264,7 @@ export class TraderJoe implements ITradeNetwork {
 		if (resource == RESOURCE_UTRIUM_BAR && order) {
 			log.notify(`Found ${resource} order for ${JSON.stringify(order)} and ${order.price} vs ${marketLow}`);
 		}
-		if (order && order.price >= marketLow * margin) {
+		if (order && order.price >= (marketLow * margin)) {
 			const amount = Math.min(order.amount, 10000);
 			const cost = Game.market.calcTransactionCost(amount, terminal.room.name, order.roomName!);
 			if (terminal.store[RESOURCE_ENERGY] > cost) {
@@ -384,7 +384,7 @@ export class TraderJoe implements ITradeNetwork {
 	 */
 	private maintainSellOrder(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
 							  maxOrdersOfType = Infinity): void {
-		const marketLow = this.memory.cache.sell[resource] ? this.memory.cache.sell[resource].low : undefined;
+		const marketLow = this.memory.cache.sell[resource] ? this.memory.cache.sell[resource].low*.9 : undefined;
 		if (!marketLow) {
 			return;
 		}
