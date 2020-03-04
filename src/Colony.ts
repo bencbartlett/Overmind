@@ -2,8 +2,9 @@ import {assimilationLocked} from './assimilation/decorator';
 import {$} from './caching/GlobalCache';
 import {log} from './console/log';
 import {StoreStructure} from './declarations/typeGuards';
-import {DirectiveExtract} from './directives/resource/extract';
+import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
 import {DirectivePoisonRoom} from './directives/offense/poisonRoom';
+import {DirectiveExtract} from './directives/resource/extract';
 import {_HARVEST_MEM_DOWNTIME, _HARVEST_MEM_USAGE, DirectiveHarvest} from './directives/resource/harvest';
 import {HiveCluster} from './hiveClusters/_HiveCluster';
 import {CommandCenter} from './hiveClusters/commandCenter';
@@ -32,7 +33,6 @@ import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
 import {maxBy, mergeSum, minBy} from './utilities/utils';
 import {Visualizer} from './visuals/Visualizer';
 import {Zerg} from './zerg/Zerg';
-import {DirectiveInvasionDefense} from "./directives/defense/invasionDefense";
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -80,7 +80,6 @@ const defaultColonyMemory: ColonyMemory = {
 		possibleExpansions: {},
 		expiration        : 0,
 	},
-	//disabledExpansions?: string[], // rooms that are under attack and shouldn't be spawned for
 };
 
 
@@ -314,7 +313,7 @@ export class Colony {
 		$.set(this, 'sources', () => _.sortBy(_.flatten(_.map(this.rooms, room => room.sources)),
 											  source => source.pos.getMultiRoomRangeTo(this.pos)));
 		for (const source of this.sources) {
-			!DirectivePoisonRoom.isPresent(source.pos, 'room') && DirectiveHarvest.createIfNotPresent(source.pos, 'pos');
+			DirectiveHarvest.createIfNotPresent(source.pos, 'pos');
 		}
 		$.set(this, 'extractors', () =>
 			_(this.rooms)
@@ -580,18 +579,6 @@ export class Colony {
 		this.roomPlanner.run();												// Run the room planner
 		this.runPowerSpawn();												// Run power spawn - short term
 		this.stats();														// Log stats per tick
-		const underAttack = DirectiveInvasionDefense.isPresent(this.pos, 'room');
-		if (Game.time % 4001 == 0 && this.level == 8 && !underAttack && !!this.bunker) {
-			this.room.ramparts.forEach(rampart => {
-				let distance = rampart.pos.getRangeTo(this.bunker!.anchor);
-				if (distance == 2) {
-					rampart.setPublic(true);
-				}
-			});
-		}
-		if (this.level == 8 && underAttack) {
-			this.room.ramparts.forEach(rampart => rampart.setPublic(false));
-		}
 	}
 
 	/**
