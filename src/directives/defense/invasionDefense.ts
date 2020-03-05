@@ -5,10 +5,10 @@ import {RangedDefenseOverlord} from '../../overlords/defense/rangedDefense';
 import {profile} from '../../profiler/decorator';
 
 import {ColonyStage} from '../../Colony';
+import {DistractionOverlord} from '../../overlords/defense/distraction';
 import {Directive} from '../Directive';
 import {NotifierPriority} from '../Notifier';
-import {DistractionOverlord} from "../../overlords/defense/distraction";
-import {DirectivePairDestroy} from "../offense/pairDestroy";
+import {DirectivePairDestroy} from '../offense/pairDestroy';
 
 interface DirectiveInvasionDefenseMemory extends FlagMemory {
 	persistent?: boolean;
@@ -56,7 +56,7 @@ export class DirectiveInvasionDefense extends Directive {
 		}
 		if (this.colony.stage > ColonyStage.Larva) {
 			this.overlords.rangedDefense = new RangedDefenseOverlord(this, useBoosts);
-			//DirectivePairDestroy.createIfNotPresent(this.pos, 'room');
+			// DirectivePairDestroy.createIfNotPresent(this.pos, 'room');
 		} else {
 			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, false);
 		}
@@ -67,12 +67,12 @@ export class DirectiveInvasionDefense extends Directive {
 		this.alert(`Invasion (hostiles: ${numHostiles}) ${Game.time - this.memory.safeSince}`, NotifierPriority.Critical);
 	}
 
-	recordBaddies () {
+	recordBaddies() {
 		if (!this.room) {
 			return;
 		}
-		let mem = Memory.playerCreepTracker;
-		let hostiles = this.room.hostiles;
+		const mem = Memory.playerCreepTracker;
+		const hostiles = this.room.hostiles;
 		hostiles.forEach(creep => {
 			if (!mem[creep.owner.username]) {
 				mem[creep.owner.username] = {
@@ -82,10 +82,10 @@ export class DirectiveInvasionDefense extends Directive {
 					boosts: {},
 				};
 			}
-			let playerMem = mem[creep.owner.username];
+			const playerMem = mem[creep.owner.username];
 			if (!playerMem.creeps[creep.name]) {
 				playerMem.creeps[creep.name] = Game.time;
-				const creepType = creep.name.substr(0, creep.name.indexOf(" "));
+				const creepType = creep.name.substr(0, creep.name.indexOf(' '));
 				if (creepType == creep.name) {
 					// memory protection if they don't split name
 					return;
@@ -104,15 +104,15 @@ export class DirectiveInvasionDefense extends Directive {
 	printPlayerExpenditure() {
 		let t3Count = 0;
 		let energyCount = 0;
-		let mem = Memory.playerCreepTracker['inakrin'];
-		for (let boostid in mem.boosts) {
-			let boost = mem.boosts[boostid];
+		const mem = Memory.playerCreepTracker.inakrin;
+		for (const boostid in mem.boosts) {
+			const boost = mem.boosts[boostid];
 			console.log(`${boostid} : ${boost*30}`);
 			t3Count+=boost*30;
 			energyCount+=20;
 		}
-		for (let partType in mem.parts) {
-			let partCount = mem.parts[partType];
+		for (const partType in mem.parts) {
+			const partCount = mem.parts[partType];
 			const cost = BODYPART_COST[(partType as BodyPartConstant)];
 			console.log(`${partType} : ${cost * partCount}`);
 			energyCount+=cost * partCount;
@@ -123,10 +123,10 @@ export class DirectiveInvasionDefense extends Directive {
 	}
 
 	cleanUpPlayerMem() {
-		let mem = Memory.playerCreepTracker;
-		for (let player of _.keys(mem)) {
-			let tracker = mem[player];
-			for (let creep of _.keys(tracker.creeps)) {
+		const mem = Memory.playerCreepTracker;
+		for (const player of _.keys(mem)) {
+			const tracker = mem[player];
+			for (const creep of _.keys(tracker.creeps)) {
 				if (tracker.creeps[creep] + 1500 < Game.time) {
 					delete tracker.creeps[creep];
 				}
@@ -139,14 +139,14 @@ export class DirectiveInvasionDefense extends Directive {
 			this.memory.safeSince = Game.time;
 			this.recordBaddies();
 		}
-		//this.printPlayerExpenditure();
+		// this.printPlayerExpenditure();
 
 		if (Game.time % 5000 == 0) {
 			// clean up, ya this shit
 			this.cleanUpPlayerMem();
 		}
-		if (this.room && (this.room!.name == 'W13N45' || this.room!.name == 'W18N49')) {
-			CombatIntel.computeCreepDamagePotentialMatrix(this.room, this.room.dangerousPlayerHostiles);
+		if (this.room && false) {
+			// CombatIntel.computeCreepDamagePotentialMatrix(this.room, this.room.dangerousPlayerHostiles);
 		}
 		// If there are no hostiles left in the room and everyone's healed, then remove the flag
 		if (this.room && this.room.hostiles.length == 0 &&

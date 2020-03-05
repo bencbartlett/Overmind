@@ -82,7 +82,8 @@
 // };
 //
 // /**
-//  * The Zerg class is a wrapper for owned creeps and contains all wrapped creep methods and many additional methods for
+//  * The Zerg class is a wrapper for owned creeps and contains all wrapped creep methods
+// and many additional methods for
 //  * direct control of a creep.
 //  */
 // @profile

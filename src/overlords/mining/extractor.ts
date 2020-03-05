@@ -6,10 +6,10 @@ import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
+import {Cartographer, ROOMTYPE_CORE, ROOMTYPE_SOURCEKEEPER} from '../../utilities/Cartographer';
+import {printRoomName} from '../../utilities/utils';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
-import {Cartographer, ROOMTYPE_CORE, ROOMTYPE_SOURCEKEEPER} from "../../utilities/Cartographer";
-import {printRoomName} from "../../utilities/utils";
 
 const BUILD_OUTPUT_FREQUENCY = 15;
 
@@ -110,8 +110,10 @@ export class ExtractorOverlord extends Overlord {
 		this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), Setups.drones.extractor);
 		this.registerOutputRequests();
 
-		// if(Cartographer.roomType(this.pos.roomName) == ROOMTYPE_SOURCEKEEPER || Cartographer.roomType(this.pos.roomName) == ROOMTYPE_CORE){
-		// 	this.container && console.log(printRoomName(this.pos.roomName)  + ' ' + this.pos + ' ' + this.container + ' ' + this.container.hits*100/this.container.hitsMax);
+		// if(Cartographer.roomType(this.pos.roomName) == ROOMTYPE_SOURCEKEEPER
+		// || Cartographer.roomType(this.pos.roomName) == ROOMTYPE_CORE){
+		// 	this.container && console.log(printRoomName(this.pos.roomName)  + ' ' + this.pos + ' ' + this.container +
+		// 	' ' + this.container.hits*100/this.container.hitsMax);
 		// 	!this.container && console.log(printRoomName(this.pos.roomName) + ' NO CONTAINER');
 		// }
 	}

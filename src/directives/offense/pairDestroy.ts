@@ -1,10 +1,10 @@
 import {log} from '../../console/log';
 import {CombatIntel} from '../../intel/CombatIntel';
+import {DistractionOverlord} from '../../overlords/defense/distraction';
 import {PairDestroyerOverlord} from '../../overlords/offense/pairDestroyer';
 import {profile} from '../../profiler/decorator';
 import {Visualizer} from '../../visuals/Visualizer';
 import {Directive} from '../Directive';
-import {DistractionOverlord} from "../../overlords/defense/distraction";
 
 
 interface DirectivePairDestroyMemory extends FlagMemory {

@@ -1,20 +1,20 @@
-import {CombatZerg} from '../../zerg/CombatZerg';
-import {DirectiveSKOutpost} from '../../directives/colony/outpostSK';
-import {RoomIntel} from '../../intel/RoomIntel';
-import {minBy} from '../../utilities/utils';
-import {Mem} from '../../memory/Memory';
 import {debug, log} from '../../console/log';
-import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {Visualizer} from '../../visuals/Visualizer';
-import {profile} from '../../profiler/decorator';
-import {CombatOverlord} from '../CombatOverlord';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
+import {DirectiveSKOutpost} from '../../directives/colony/outpostSK';
+import {DirectiveHaul} from '../../directives/resource/haul';
+import {DirectivePowerMine} from '../../directives/resource/powerMine';
+import {RoomIntel} from '../../intel/RoomIntel';
+import {Mem} from '../../memory/Memory';
+import {MoveOptions} from '../../movement/Movement';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
+import {profile} from '../../profiler/decorator';
+import {calculateFormationStrength} from '../../utilities/creepUtils';
+import {minBy} from '../../utilities/utils';
+import {Visualizer} from '../../visuals/Visualizer';
+import {CombatZerg} from '../../zerg/CombatZerg';
+import {Zerg} from '../../zerg/Zerg';
+import {CombatOverlord} from '../CombatOverlord';
 import {OverlordMemory} from '../Overlord';
-import {DirectivePowerMine} from "../../directives/resource/powerMine";
-import {DirectiveHaul} from "../../directives/resource/haul";
-import {calculateFormationStrength} from "../../utilities/creepUtils";
-import {Zerg} from "../../zerg/Zerg";
-import {MoveOptions} from "../../movement/Movement";
 
 interface PowerDrillOverlordMemory extends OverlordMemory {
 	targetPBID?: string;
@@ -76,11 +76,11 @@ export class PowerDrillOverlord extends CombatOverlord {
 				if (this.directive.powerBank == undefined && this.directive.memory.state < 2) {
 					Game.notify(`Power bank in ${this.room.print} is dead.`);
 					drill.say('💀 RIP 💀');
-					let result = drill.retire();
+					const result = drill.retire();
 					if (result == ERR_BUSY) {
 						// drill spawning, find something else to do with them
 					}
-					log.notify("FINISHED POWER MINING IN " + this.room + " DELETING CREEP at time: " + Game.time.toString() + " result: " + result);
+					log.notify('FINISHED POWER MINING IN ' + this.room + ' DELETING CREEP at time: ' + Game.time.toString() + ' result: ' + result);
 					return;
 				}
 			}
@@ -89,7 +89,7 @@ export class PowerDrillOverlord extends CombatOverlord {
 		// Go to power room
 		if (!this.room || drill.room != this.room || drill.pos.isEdge || !this.directive.powerBank) {
 			// log.debugCreep(drill, `Going to room!`);
-			//log.notify("Drill is moving to power site in " + this.pos.roomName + ".");
+			// log.notify("Drill is moving to power site in " + this.pos.roomName + ".");
 			drill.goTo(this.pos);
 			return;
 		}
@@ -119,7 +119,7 @@ export class PowerDrillOverlord extends CombatOverlord {
 			return;
 		} else if (!this.directive.powerBank) {
 			// If power bank is dead
-			Game.notify("Power bank in " + this.room + " is dead.");
+			Game.notify('Power bank in ' + this.room + ' is dead.');
 			coolant.say('💀 RIP 💀');
 			coolant.retire();
 			return;
@@ -127,7 +127,7 @@ export class PowerDrillOverlord extends CombatOverlord {
 		if (coolant.pos.getRangeTo(this.directive.powerBank) > 3) {
 			coolant.goTo(this.directive.powerBank);
 		} else {
-			const activeDrills = this.pos.findInRange(FIND_MY_CREEPS, 1).filter(creep => _.contains(creep.name, "drill"));
+			const activeDrills = this.pos.findInRange(FIND_MY_CREEPS, 1).filter(creep => _.contains(creep.name, 'drill'));
 			if (activeDrills.length > 0) {
 				const drill = activeDrills[0];
 				coolant.heal(drill);
@@ -200,14 +200,14 @@ export class PowerDrillOverlord extends CombatOverlord {
 	}
 
 	static getCreepNameOffset(zerg: Zerg) {
-		return parseInt(zerg.name.charAt(zerg.name.length-1)) || 0;
+		return parseInt(zerg.name.charAt(zerg.name.length-1), 10) || 0;
 	}
 
 	run() {
 		this.autoRun(this.drills, drill => this.handleDrill(drill));
 		this.autoRun(this.coolant, coolant => this.handleCoolant(coolant));
 		if (this.directive.memory.state >= 3) {
-			Game.notify("DELETING ALL POWER MINING CREEPS BECAUSE STATE IS >= 3 in " + this.directive.print);
+			Game.notify('DELETING ALL POWER MINING CREEPS BECAUSE STATE IS >= 3 in ' + this.directive.print);
 			this.drills.forEach(drill => drill.retire());
 			this.coolant.forEach(coolant => coolant.retire());
 		}

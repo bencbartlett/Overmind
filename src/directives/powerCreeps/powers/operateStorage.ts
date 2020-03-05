@@ -1,6 +1,6 @@
-import {profile} from "../../../profiler/decorator";
-import {Power} from "./genericPower";
-import {log} from "../../../console/log";
+import {log} from '../../../console/log';
+import {profile} from '../../../profiler/decorator';
+import {Power} from './genericPower';
 
 export const powerId = PWR_OPERATE_STORAGE;
 

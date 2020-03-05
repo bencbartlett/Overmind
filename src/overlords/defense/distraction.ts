@@ -1,13 +1,13 @@
 import {CreepSetup} from '../../creepSetups/CreepSetup';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
+import {Directive} from '../../directives/Directive';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {boostResources} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
-import {Directive} from "../../directives/Directive";
 
 /**
  * 5 Move 1 RA creep that avoids all enemies and distracts attackers.
@@ -57,7 +57,7 @@ export class DistractionOverlord extends CombatOverlord {
 
 	run() {
 		// need to check room exists
-		//console.log(`Distraction overlord running in ${this.room.print} with ${this.distractions}!`);
+		// console.log(`Distraction overlord running in ${this.room.print} with ${this.distractions}!`);
 		this.autoRun(this.distractions, distraction => this.handleDistraction(distraction));
 	}
 }

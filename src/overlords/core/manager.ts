@@ -197,7 +197,8 @@ export class CommandCenterOverlord extends Overlord {
 	// 	}
 	// 	// Move all non-energy resources from storage to terminal
 	// 	for (const resourceType in storage.store) {
-	// 		if (resourceType != RESOURCE_ENERGY && resourceType != RESOURCE_OPS && storage.store[<ResourceConstant>resourceType]! > 0) {
+	// 		if (resourceType != RESOURCE_ENERGY && resourceType
+	// 		!= RESOURCE_OPS && storage.store[<ResourceConstant>resourceType]! > 0) {
 	// 			if (this.unloadCarry(manager)) return true;
 	// 			manager.task = Tasks.withdraw(storage, <ResourceConstant>resourceType);
 	// 			manager.task.parent = Tasks.transfer(terminal, <ResourceConstant>resourceType);
@@ -223,19 +224,23 @@ export class CommandCenterOverlord extends Overlord {
 			if (storageAmount < storageAmount * maxFillRatio && resourceType != RESOURCE_ENERGY
 				&& ((terminal.store[<ResourceConstant>resourceType]! > terminalT3Amount && resourceType.length == 5)
 					|| (terminal.store[<ResourceConstant>resourceType]! > terminalOtherAmount))) {
-				if (this.unloadCarry(manager))
+				if (this.unloadCarry(manager)) {
 					return true;
+				}
 				manager.task = Tasks.withdraw(terminal, <ResourceConstant>resourceType);
 				manager.task.parent = Tasks.transfer(storage, <ResourceConstant>resourceType);
 				return true;
 			}
 		}
 		for (const resourceType in storage.store) {
-			if (terminalAmount < terminal.storeCapacity * maxFillRatio && resourceType != RESOURCE_ENERGY && storage.store[<ResourceConstant>resourceType]! > 0
+			if (terminalAmount < terminal.storeCapacity * maxFillRatio && resourceType != RESOURCE_ENERGY
+				&& storage.store[<ResourceConstant>resourceType]! > 0
 				&& (terminal.store[<ResourceConstant>resourceType]! < (terminalT3Amount-2000) || resourceType.length != 5
-					&& (terminal.store[<ResourceConstant>resourceType]! < (terminalOtherAmount-2000)) || resourceType == RESOURCE_POWER)) {
-				if (this.unloadCarry(manager))
+					&& (terminal.store[<ResourceConstant>resourceType]! < (terminalOtherAmount-2000))
+					|| resourceType == RESOURCE_POWER)) {
+				if (this.unloadCarry(manager)) {
 					return true;
+				}
 				manager.task = Tasks.withdraw(storage, <ResourceConstant>resourceType);
 				manager.task.parent = Tasks.transfer(terminal, <ResourceConstant>resourceType);
 				return true;
@@ -291,11 +296,12 @@ export class CommandCenterOverlord extends Overlord {
 
 	private preventTerminalFlooding(manager: Zerg): boolean {
 		// Prevent terminal flooding
-		if (this.room && this.room.terminal && this.room.storage && _.sum(this.room.terminal.store) > this.room.terminal.storeCapacity*.98) {
+		if (this.room && this.room.terminal && this.room.storage && _.sum(this.room.terminal.store)
+			> this.room.terminal.storeCapacity*.98) {
 			let max = 0;
 			let resType: ResourceConstant = RESOURCE_ENERGY;
-			for (let res in this.room.terminal.store) {
-				let amount = this.room.terminal.store[<ResourceConstant>res];
+			for (const res in this.room.terminal.store) {
+				const amount = this.room.terminal.store[<ResourceConstant>res];
 				if (amount && amount > max && res !== RESOURCE_ENERGY) {
 					max = amount;
 					resType = <ResourceConstant>res;

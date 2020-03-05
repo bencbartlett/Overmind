@@ -96,7 +96,8 @@ export class Visualizer {
 		}
 	}
 
-	static displayCostMatrix(costMatrix: CostMatrix, roomName?: string, dots = true, color = '#ff0000', displayZero = true): void {
+	static displayCostMatrix(costMatrix: CostMatrix, roomName?: string, dots = true, color = '#ff0000',
+							 displayZero = true): void {
 
 		const vis = new RoomVisual(roomName);
 		let x, y: number;

@@ -162,14 +162,15 @@ export class CombatZerg extends Zerg {
 	 * Automatically ranged-attack the best creep in range
 	 */
 	autoRanged(possibleTargets = this.room.hostiles, allowMassAttack = true) {
-		let nearbyHostiles = _.filter(this.room.dangerousHostiles, c => this.pos.inRangeToXY(c.pos.x, c.pos.y, 2));
+		const nearbyHostiles = _.filter(this.room.dangerousHostiles, c => this.pos.inRangeToXY(c.pos.x, c.pos.y, 2));
 		if (nearbyHostiles.length && !this.inRampart) {
-			//this.say('run!');
+			// this.say('run!');
 			this.rangedMassAttack();
 			return this.kite(nearbyHostiles);
 		}
 		const target = CombatTargeting.findBestCreepTargetInRange(this, 3, possibleTargets)
-					   || CombatTargeting.findBestStructureTargetInRange(this, 3,false); //disabled allowUnowned structure attack in order not to desrtory poison walls
+					   || CombatTargeting.findBestStructureTargetInRange(this, 3,false);
+		// disabled allowUnowned structure attack in order not to desrtory poison walls
 		this.debug(`Ranged target: ${target}`);
 		if (target) {
 			if (allowMassAttack

@@ -1,13 +1,13 @@
-import {Directive} from '../Directive';
+import {log} from '../../console/log';
+import {CombatIntel} from '../../intel/CombatIntel';
+import {StrongholdOverlord} from '../../overlords/situational/stronghold';
 import {profile} from '../../profiler/decorator';
-import {log} from "../../console/log";
-import {StrongholdOverlord} from "../../overlords/situational/stronghold";
-import {Visualizer} from "../../visuals/Visualizer";
-import {derefCoords, getCacheExpiration, getPosFromString} from "../../utilities/utils";
-import {DirectiveHaul} from "../resource/haul";
-import {DirectiveNukeTarget} from "./nukeTarget";
-import {DirectiveModularDismantle} from "../targeting/modularDismantle";
-import {CombatIntel} from "../../intel/CombatIntel";
+import {derefCoords, getCacheExpiration, getPosFromString} from '../../utilities/utils';
+import {Visualizer} from '../../visuals/Visualizer';
+import {Directive} from '../Directive';
+import {DirectiveHaul} from '../resource/haul';
+import {DirectiveModularDismantle} from '../targeting/modularDismantle';
+import {DirectiveNukeTarget} from './nukeTarget';
 
 
 export const STRONGHOLD_SETUPS = {
@@ -70,9 +70,9 @@ export class DirectiveStronghold extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		//this.overlords.strongholdKiller = new StrongholdOverlord(this);
+		// this.overlords.strongholdKiller = new StrongholdOverlord(this);
 		if (this.memory.state < 3) {
-			//this.overlords.haul = new PowerDrillOverlord(this);
+			// this.overlords.haul = new PowerDrillOverlord(this);
 		}
 		if (this.memory.state > 0 && this.memory.state <= 4) {
 			this.overlords.strongholdKiller = new StrongholdOverlord(this);
@@ -89,10 +89,11 @@ export class DirectiveStronghold extends Directive {
 	getResourcePickupLocations() {
 		if (!!this.pos.room) {
 			let returns: (StructureContainer | Ruin)[] = [];
-			let containers = this.pos.room.containers;
-			let ruins = this.pos.room.ruins;
+			const containers = this.pos.room.containers;
+			const ruins = this.pos.room.ruins;
 			if (containers) {
-				returns = returns.concat(containers.filter(container => container.pos.getRangeTo(this.pos) < 5 && _.sum(container.store) > 0));
+				returns = returns.concat(containers.filter(container =>
+					container.pos.getRangeTo(this.pos) < 5 && _.sum(container.store) > 0));
 			}
 			if (ruins) {
 				returns = returns.concat(ruins.filter(ruin => ruin.pos.getRangeTo(this.pos) <= 3 && _.sum(ruin.store) > 0));
@@ -121,10 +122,10 @@ export class DirectiveStronghold extends Directive {
 	}
 
 	manageState() {
-		let currentState = this.memory.state;
+		const currentState = this.memory.state;
 
 		if (this.core && this.core.level == 5) {
-			//this.handleL5();
+			// this.handleL5();
 		}
 
 		// Starting
@@ -139,7 +140,7 @@ export class DirectiveStronghold extends Directive {
 		} else if (this.pos.isVisible && !this.core && this.pos.lookFor(LOOK_RUINS).length > 0) {
 			this.memory.state = 4;
 			if (Game.time % 50 == 0) {
-				//log.notify(`Now looting stronghold ${this.print} in ${this.pos.roomName}`);
+				// log.notify(`Now looting stronghold ${this.print} in ${this.pos.roomName}`);
 				this.handleLooting();
 			}
 		} else if (this.pos.isVisible && !this.core && this.pos.lookFor(LOOK_RUINS).length == 0) {
@@ -150,10 +151,11 @@ export class DirectiveStronghold extends Directive {
 
 
 	handleLooting() {
-		let lootSpots = this.getResourcePickupLocations();
+		const lootSpots = this.getResourcePickupLocations();
 		if (lootSpots && lootSpots.length > 0) {
 			lootSpots.forEach(spot => {
-				const isRamparted = spot.pos.lookFor(LOOK_STRUCTURES).filter(struct => struct.structureType == STRUCTURE_RAMPART).length > 0;
+				const isRamparted = spot.pos.lookFor(LOOK_STRUCTURES)
+					.filter(struct => struct.structureType == STRUCTURE_RAMPART).length > 0;
 				if (isRamparted) {
 					DirectiveModularDismantle.createIfNotPresent(spot.pos, 'pos');
 				} else {
@@ -162,7 +164,8 @@ export class DirectiveStronghold extends Directive {
 			});
 
 			const openingToCore = this.pos.getPositionAtDirection(TOP);
-			const isRamparted = openingToCore.lookFor(LOOK_STRUCTURES).filter(struct => struct.structureType == STRUCTURE_RAMPART).length > 0;
+			const isRamparted = openingToCore.lookFor(LOOK_STRUCTURES)
+				.filter(struct => struct.structureType == STRUCTURE_RAMPART).length > 0;
 			if (isRamparted) {
 				DirectiveModularDismantle.createIfNotPresent(openingToCore, 'pos');
 			}
@@ -183,7 +186,7 @@ export class DirectiveStronghold extends Directive {
 			log.info(`Stronghold is still deploying! ${this.print}`);
 			return;
 		}
-		//const remainingDuration = this.core.effects.find(effect => effect.effect == EFFECT_COLLAPSE_TIMER);
+		// const remainingDuration = this.core.effects.find(effect => effect.effect == EFFECT_COLLAPSE_TIMER);
 		const ramparts = this.core.room.ramparts;
 		if (ramparts.length == 0 || ramparts[0].ticksToDecay < NUKE_LAND_TIME + 10000) {
 			log.info(`Stronghold decaying too soon! ${this.print}`);
@@ -200,12 +203,13 @@ export class DirectiveStronghold extends Directive {
 		const nukesPrepped = DirectiveNukeTarget.isPresent(this.core.pos,'room');
 		if (nukes.length < 2 && !nukesPrepped) {
 			log.alert(`Nuking Stronghold! ${this.print}`);
-			let res1 = DirectiveNukeTarget.create(bestTarget, {memory: {maxLinearRange: 10, pathNotRequired: true}});
-			let res2 = DirectiveNukeTarget.create(bestTarget, {memory: {maxLinearRange: 10, pathNotRequired: true}});
+			const res1 = DirectiveNukeTarget.create(bestTarget, {memory: {maxLinearRange: 10, pathNotRequired: true}});
+			const res2 = DirectiveNukeTarget.create(bestTarget, {memory: {maxLinearRange: 10, pathNotRequired: true}});
 			return res1 == OK && res2 == OK;
 		} else {
 			const strongholdDefenders = this.core.pos.findInRange(FIND_HOSTILE_CREEPS, 4);
-			const reinforcers = strongholdDefenders.filter(creep => creep.body.find(bodyPart => bodyPart.type == WORK) != undefined);
+			const reinforcers = strongholdDefenders.filter(creep =>
+				creep.body.find(bodyPart => bodyPart.type == WORK) != undefined);
 			if (reinforcers.length >= nukes.length - 1) {
 				log.alert(`Launching additional nuke against Stronghold with reinforcers ${reinforcers.length}! ${this.print}`);
 				return DirectiveNukeTarget.create(bestTarget, {memory: {maxLinearRange: 11, pathNotRequired: true}});

@@ -7,7 +7,7 @@ import {maxBy} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {Swarm} from '../zerg/Swarm';
 import {Zerg} from '../zerg/Zerg';
-import {MY_USERNAME} from "../~settings";
+import {MY_USERNAME} from '../~settings';
 
 @profile
 export class CombatTargeting {
@@ -64,14 +64,15 @@ export class CombatTargeting {
 			if (hostile.name.substring(hostile.name.indexOf('_')) == 'ANTITIGGA') {
 				console.log('TIGGA ATTACK! :D');
 				return hostile.pos.findInRange(FIND_MY_CREEPS, 2).length;
-				//return (hostile.pos.getRangeTo(this.colony.bunker.anchor) <= 6 + 2) || hostile.hitsMax - hostile.hitsPredicted;
+				// return (hostile.pos.getRangeTo(this.colony.bunker.anchor) <= 6 + 2) || hostile.hitsMax - hostile.hitsPredicted;
 			}
 			return hostile.hitsMax - hostile.hitsPredicted
 				   + CombatIntel.getHealPotential(hostile) + (CombatIntel.towerDamageAtPos(hostile.pos) || 0);
 		});
 	}
 
-	static findClosestHostile(zerg: Zerg, checkReachable = false, ignoreCreepsAtEdge = true, playerOnly = false, onlyUnramparted = false): Creep | undefined {
+	static findClosestHostile(zerg: Zerg, checkReachable = false, ignoreCreepsAtEdge = true, playerOnly = false,
+							  onlyUnramparted = false): Creep | undefined {
 		if (zerg.room.hostiles.length > 0) {
 			let targets: Creep[];
 			const potentialTargets = playerOnly ? zerg.room.playerHostiles : zerg.room.hostiles;

@@ -1,13 +1,13 @@
-import {Overlord} from '../Overlord';
-import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {Zerg} from '../../zerg/Zerg';
-import {Tasks} from '../../tasks/Tasks';
 import {log} from '../../console/log';
-import {Energetics} from '../../logistics/Energetics';
-import {profile} from '../../profiler/decorator';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {calculateFormationStrength} from "../../utilities/creepUtils";
-import {DirectivePowerMine} from "../../directives/resource/powerMine";
+import {DirectivePowerMine} from '../../directives/resource/powerMine';
+import {Energetics} from '../../logistics/Energetics';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
+import {profile} from '../../profiler/decorator';
+import {Tasks} from '../../tasks/Tasks';
+import {calculateFormationStrength} from '../../utilities/creepUtils';
+import {Zerg} from '../../zerg/Zerg';
+import {Overlord} from '../Overlord';
 
 /**
  * Spawns special-purpose haulers for transporting resources to/from a specified target
@@ -32,9 +32,9 @@ export class PowerHaulingOverlord extends Overlord {
 		this.haulers = this.zerg(Roles.transport);
 		this.totalCollected = this.totalCollected || 0;
 		// Spawn haulers to collect ALL the power at the same time.
-		let haulingPartsNeeded = this.directive.totalResources/CARRY_CAPACITY;
+		const haulingPartsNeeded = this.directive.totalResources/CARRY_CAPACITY;
 		// Calculate amount of hauling each hauler provides in a lifetime
-		let haulerCarryParts = Setups.transporters.default.getBodyPotential(CARRY, this.colony);
+		const haulerCarryParts = Setups.transporters.default.getBodyPotential(CARRY, this.colony);
 		// Calculate number of haulers
 		this.numHaulers = Math.ceil(haulingPartsNeeded/haulerCarryParts);
 		// setup time to request the haulers
@@ -62,8 +62,8 @@ export class PowerHaulingOverlord extends Overlord {
 			if (hauler.inSameRoomAs(this.directive)) {
 				// Pick up drops first
 				if (this.directive.hasDrops) {
-					let allDrops: Resource[] = _.flatten(_.values(this.directive.drops));
-					let drop = allDrops[0];
+					const allDrops: Resource[] = _.flatten(_.values(this.directive.drops));
+					const drop = allDrops[0];
 					if (drop) {
 						hauler.task = Tasks.pickup(drop);
 						return;
@@ -76,13 +76,13 @@ export class PowerHaulingOverlord extends Overlord {
 					}
 					return;
 				} else if (this.room && this.room.ruins) {
-					let pb = this.room.ruins.filter(ruin => !!ruin.store[RESOURCE_POWER] && ruin.store[RESOURCE_POWER]! > 0);
+					const pb = this.room.ruins.filter(ruin => !!ruin.store[RESOURCE_POWER] && ruin.store[RESOURCE_POWER]! > 0);
 					if (pb.length > 0) {
 						hauler.task = Tasks.withdraw(pb[0], RESOURCE_POWER);
 					}
 				} else if (this.room && this.room.drops) {
-					let allDrops: Resource[] = _.flatten(_.values(this.room.drops));
-					let drop = allDrops[0];
+					const allDrops: Resource[] = _.flatten(_.values(this.room.drops));
+					const drop = allDrops[0];
 					if (drop) {
 						hauler.task = Tasks.pickup(drop);
 						return;
@@ -101,7 +101,7 @@ export class PowerHaulingOverlord extends Overlord {
 		} else {
 			// Travel to colony room and deposit resources
 			if (hauler.inSameRoomAs(this.colony)) {
-				for (let resourceType in hauler.carry) {
+				for (const resourceType in hauler.carry) {
 					if (hauler.carry[<ResourceConstant>resourceType] == 0) continue;
 					if (resourceType == RESOURCE_ENERGY) { // prefer to put energy in storage
 						if (this.colony.storage && _.sum(this.colony.storage.store) < STORAGE_CAPACITY) {
@@ -138,7 +138,7 @@ export class PowerHaulingOverlord extends Overlord {
 		if (Game.time >= this.tickToSpawnOn && this.directive.memory.state < 4) {
 			this.wishlist(this.numHaulers, Setups.transporters.default);
 		}
-		for (let hauler of this.haulers) {
+		for (const hauler of this.haulers) {
 			if (hauler.isIdle) {
 				this.handleHauler(hauler);
 			}

@@ -154,8 +154,8 @@ export class TraderJoe implements ITradeNetwork {
 	 * Builds a cache for market - this is very expensive; use infrequently
 	 */
 	private buildMarketCacheFromHistory(verbose = false, orderThreshold = 1000): void {
-		//this.invalidateMarketCacheFromHistory();
-		//const myActiveOrderIDs = _.map(_.filter(Game.market.orders, order => order.active), order => order.id);
+		// this.invalidateMarketCacheFromHistory();
+		// const myActiveOrderIDs = _.map(_.filter(Game.market.orders, order => order.active), order => order.id);
 		const allHistory = Game.market.getHistory();
 
 		// Iterate across all history entries, just use yesterday data for now
@@ -175,8 +175,8 @@ export class TraderJoe implements ITradeNetwork {
 				log.info(`Generating market price: ${history.resourceType} with avgPrice ${history.avgPrice} compared to B${this.memory.cache.buy[history.resourceType]} diff ${this.memory.cache.buy[history.resourceType].high - history.avgPrice}`);
 			}
 		}
-		//this.memory.cache.tick = Game.time;
-		//this.memory.cache.tick = 0;
+		// this.memory.cache.tick = Game.time;
+		// this.memory.cache.tick = 0;
 	}
 
 	private invalidateMarketCacheFromHistory(): void {
@@ -253,7 +253,7 @@ export class TraderJoe implements ITradeNetwork {
 		if (ordersForMineral === undefined) {
 			return;
 		}
-		//const marketLow = this.memory.cache.sell[resource] ? this.memory.cache.sell[resource].low : undefined;
+		// const marketLow = this.memory.cache.sell[resource] ? this.memory.cache.sell[resource].low : undefined;
 		const marketEntry = this.memory.cache.resources[resource];
 		const marketLow = marketEntry ? marketEntry.avgPrice : undefined;
 		if (marketLow == undefined) {
@@ -367,7 +367,8 @@ export class TraderJoe implements ITradeNetwork {
 
 			const ordersOfType = _.filter(Game.market.orders, o => o.type == ORDER_BUY && o.resourceType == resource);
 			if (ordersOfType.length < maxOrdersOfType) {
-				const ret = Game.market.createOrder({type: ORDER_BUY, resourceType: resource, price: marketHigh, totalAmount: amount, roomName: terminal.room.name});
+				const ret = Game.market.createOrder({type: ORDER_BUY, resourceType:
+					resource, price: marketHigh, totalAmount: amount, roomName: terminal.room.name});
 				this.notify(`${terminal.room.print}: creating buy order for ${resource} at price ${marketHigh}. ` +
 							`Response: ${ret}`);
 			}
@@ -410,7 +411,8 @@ export class TraderJoe implements ITradeNetwork {
 
 			const ordersOfType = _.filter(Game.market.orders, o => o.type == ORDER_SELL && o.resourceType == resource);
 			if (ordersOfType.length < maxOrdersOfType) {
-				const ret = Game.market.createOrder({type: ORDER_SELL, resourceType: resource, price: marketLow, totalAmount: amount, roomName: terminal.room.name});
+				const ret = Game.market.createOrder({type: ORDER_SELL, resourceType: resource, price: marketLow,
+					totalAmount: amount, roomName: terminal.room.name});
 				this.notify(`${terminal.room.print}: creating sell order for ${resource} at price ${marketLow}. ` +
 							`Response: ${ret}`);
 			}
@@ -424,7 +426,7 @@ export class TraderJoe implements ITradeNetwork {
 
 	priceOf(mineralType: ResourceConstant): number {
 		if (this.memory.cache.resources[mineralType]) {
-			return this.memory.cache.resources[mineralType].avgPrice
+			return this.memory.cache.resources[mineralType].avgPrice;
 		} else {
 			return Infinity;
 		}

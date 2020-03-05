@@ -1,14 +1,14 @@
+import {log} from '../../console/log';
 import {CreepSetup} from '../../creepSetups/CreepSetup';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
+import {DirectiveHarass} from '../../directives/offense/harass';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {boostResources} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
-import {DirectiveHarass} from "../../directives/offense/harass";
-import {log} from "../../console/log";
 
 /**
  * Spawns ranged harassers to stop mining for an enemy room
@@ -45,9 +45,9 @@ export class HarassOverlord extends CombatOverlord {
 		hydralisk.autoCombat(this.targetRemoteToHarass || hydralisk.room.name);
 		hydralisk.room.getEventLog(
 
-		)
+		);
 
-		//this.chooseRemoteToHarass(hydralisk, hydralisk.room.name);
+		// this.chooseRemoteToHarass(hydralisk, hydralisk.room.name);
 		if (!this.targetRemoteToHarass) {
 			this.chooseRemoteToHarass(hydralisk, hydralisk.room.name);
 		}
@@ -78,7 +78,7 @@ export class HarassOverlord extends CombatOverlord {
 		if (!this.directive.memory.roomsToHarass || this.directive.memory.roomsToHarass.length == 0) {
 			this.directive.memory.roomsToHarass = this.directive.findNearbyReservedRoomsForHarassment();
 		}
-		let nextRoom = this.directive.memory.roomsToHarass.shift();
+		const nextRoom = this.directive.memory.roomsToHarass.shift();
 		if (nextRoom) {
 			this.directive.memory.roomsToHarass.push(nextRoom);
 			this.targetRemoteToHarass = nextRoom;

@@ -47,7 +47,7 @@ export class DirectiveNukeResponse extends Directive {
 	 * @param ignoreExtensions
 	 */
 	static shouldReinforceLocation(pos: RoomPosition, ignoreExtensions = false) {
-		let dontReinforce: StructureConstant[] = [STRUCTURE_ROAD, STRUCTURE_RAMPART, STRUCTURE_WALL];
+		const dontReinforce: StructureConstant[] = [STRUCTURE_ROAD, STRUCTURE_RAMPART, STRUCTURE_WALL];
 		if (ignoreExtensions) { dontReinforce.push(STRUCTURE_EXTENSION);}
 		return _.filter(pos.lookFor(LOOK_STRUCTURES),
 			s => !_.contains(dontReinforce, s.structureType)).length > 0;

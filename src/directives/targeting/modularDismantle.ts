@@ -1,9 +1,9 @@
+import {Pathing} from '../../movement/Pathing';
+import {DismantleOverlord} from '../../overlords/situational/dismantler';
 import {AttackStructurePriorities} from '../../priorities/priorities_structures';
 import {profile} from '../../profiler/decorator';
 import {Visualizer} from '../../visuals/Visualizer';
 import {Directive} from '../Directive';
-import {DismantleOverlord} from "../../overlords/situational/dismantler";
-import {Pathing} from "../../movement/Pathing";
 
 
 interface DirectiveModularDismantleMemory extends FlagMemory {
@@ -36,7 +36,7 @@ export class DirectiveModularDismantle extends Directive {
 			}
 			this.memory.additionalTargets = additionalTargets;
 			if (!this.memory.numberSpots) {
-				let spots = this.getDismantleSpots(this.flag.pos);
+				const spots = this.getDismantleSpots(this.flag.pos);
 				if (spots) {
 					this.memory.numberSpots = spots.length;
 				}
@@ -55,7 +55,7 @@ export class DirectiveModularDismantle extends Directive {
 		const targetedStructureTypes = this.memory.onlyKillRampart ? [STRUCTURE_RAMPART] : AttackStructurePriorities;
 		const targets = this.pos.lookFor(LOOK_STRUCTURES) as Structure[];
 		for (const structureType of targetedStructureTypes) {
-			let correctTargets = targets.filter(target => {
+			const correctTargets = targets.filter(target => {
 				if (target.structureType == structureType) {
 					return target;
 				} else if (target.structureType == STRUCTURE_INVADER_CORE) {
@@ -90,7 +90,7 @@ export class DirectiveModularDismantle extends Directive {
 	}
 
 	init(): void {
-		let hits = "???";
+		let hits = '???';
 		const target = this.getTarget();
 		hits = target ? (target.hits/1000).toString()+'K' : hits;
 		this.alert(`Dismantling: ${hits}`);

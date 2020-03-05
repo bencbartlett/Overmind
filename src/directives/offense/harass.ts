@@ -1,9 +1,9 @@
+import {log, Log} from '../../console/log';
 import {RoomIntel} from '../../intel/RoomIntel';
+import {HarassOverlord} from '../../overlords/offense/harass';
 import {profile} from '../../profiler/decorator';
+import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
-import {HarassOverlord} from "../../overlords/offense/harass";
-import {log, Log} from "../../console/log";
-import {MY_USERNAME} from "../../~settings";
 
 interface DirectiveHarassMemory extends FlagMemory {
 	enhanced?: boolean;
@@ -71,9 +71,9 @@ export class DirectiveHarass extends Directive {
 			log.error(`Unable to find which player to harass in room ${roomName}`);
 			return [];
 		}
-		let whitelist = Memory.settings.allies;
-		let reservedByTargetPlayer: string[] = [];
-		let adjacentRooms = _.values(Game.map.describeExits(roomName)) as string[];
+		const whitelist = Memory.settings.allies;
+		const reservedByTargetPlayer: string[] = [];
+		const adjacentRooms = _.values(Game.map.describeExits(roomName)) as string[];
 		adjacentRooms.forEach(room => {
 			const reservation = RoomIntel.roomReservedBy(room);
 			console.log('Checking for harass in room ' + room);
@@ -84,7 +84,7 @@ export class DirectiveHarass extends Directive {
 					if (RoomIntel.roomReservedBy(room) == playerName) {
 						reservedByTargetPlayer.push(room);
 					}
-				})
+				});
 			}
 		});
 		Game.notify(`Looking for nearby rooms to harass, found ${reservedByTargetPlayer}`);

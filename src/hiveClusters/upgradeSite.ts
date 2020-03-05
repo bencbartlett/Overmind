@@ -10,7 +10,7 @@ import {HiveCluster} from './_HiveCluster';
 
 interface UpgradeSiteMemory {
 	stats: { downtime: number };
-	speedFactor : number;		// Multiplier on upgrade parts for fast growth
+	speedFactor: number;		// Multiplier on upgrade parts for fast growth
 }
 
 

@@ -2,8 +2,6 @@ import {assimilationLocked} from './assimilation/decorator';
 import {$} from './caching/GlobalCache';
 import {log} from './console/log';
 import {StoreStructure} from './declarations/typeGuards';
-import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
-import {DirectivePoisonRoom} from './directives/offense/poisonRoom';
 import {DirectiveExtract} from './directives/resource/extract';
 import {_HARVEST_MEM_DOWNTIME, _HARVEST_MEM_USAGE, DirectiveHarvest} from './directives/resource/harvest';
 import {HiveCluster} from './hiveClusters/_HiveCluster';
@@ -551,7 +549,7 @@ export class Colony {
 	private runPowerSpawn() {
 		if (this.powerSpawn && this.storage && this.storage.energy > 300000 && this.powerSpawn.energy > 50
 			&& this.powerSpawn.power > 0) {
-			if (Game.time % 20 == 0) { log.info(`Processing power in ${this.room.print}`) }
+			if (Game.time % 20 == 0) { log.info(`Processing power in ${this.room.print}`); }
 			this.powerSpawn.processPower();
 		}
 	}

@@ -469,7 +469,7 @@ export abstract class Overlord {
 		if (this.boosts[creep.roleName] && evolutionChamber) {
 			const boosts = _.filter(this.boosts[creep.roleName]!, boost => {
 				return (creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost])
-					&& !(boost == RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE && creep.getActiveBodyparts(MOVE) >= creep.body.length/2)
+					&& !(boost == RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE && creep.getActiveBodyparts(MOVE) >= creep.body.length/2);
 			});
 			for (const boost of boosts) {
 				const boostLab = _.find(evolutionChamber.boostingLabs, lab => lab.mineralType == boost);

@@ -68,7 +68,7 @@ export class MiningOverlord extends Overlord {
 		}
 		this.miningPowerNeeded = Math.ceil(this.energyPerTick / HARVEST_POWER) + 1;
 
-		//this.checkForNearbyMines();
+		// this.checkForNearbyMines();
 
 		// Decide operating mode
 		if (Cartographer.roomType(this.pos.roomName) == ROOMTYPE_SOURCEKEEPER) {
@@ -112,21 +112,22 @@ export class MiningOverlord extends Overlord {
 
 	checkIfDoubleMine() {
 		if (Game.rooms[this.pos.roomName]) {
-			//console.log('Double mining check');
+			// console.log('Double mining check');
 			this.source = _.first(this.pos.lookFor(LOOK_SOURCES));
-			let nearby = this.source.pos.findInRange(FIND_SOURCES, 2).filter(source => this.source != source);
+			const nearby = this.source.pos.findInRange(FIND_SOURCES, 2).filter(source => this.source != source);
 			if (nearby.length > 0) {
 				this.secondSource = nearby[0];
 				// If its over 1 spot away, is there spot in between to mine?
 				if (!this.source.pos.isNearTo(this.secondSource)) {
-					let miningPos = this.source.pos.getPositionAtDirection(this.source.pos.getDirectionTo(this.secondSource.pos));
+					const miningPos = this.source.pos.getPositionAtDirection(this.source.pos.getDirectionTo(this.secondSource.pos));
 					if (!miningPos.isWalkable()) {
-						//console.log(`Double mining found but there is no spot between ${this.secondSource} ${this.secondSource.pos.print} isWalkable ${miningPos}`);
+						// console.log(`Double mining found but there is no spot between ${this.secondSource}
+						// ${this.secondSource.pos.print} isWalkable ${miningPos}`);
 						return false;
 					}
 				}
 				if (this.source.id > this.secondSource.id) {
-					//console.log(`This is a disabled mining ${this.directive.name} via source id`);
+					// console.log(`This is a disabled mining ${this.directive.name} via source id`);
 					this.isDisabled = true;
 				}
 				return true;
@@ -137,15 +138,16 @@ export class MiningOverlord extends Overlord {
 
 	checkForNearbyMines() {
 		if (Game.rooms[this.pos.roomName]) {
-			//console.log('Double mining check');
+			// console.log('Double mining check');
 			this.source = _.first(this.pos.lookFor(LOOK_SOURCES));
-			let nearbySources = this.source.pos.findInRange(FIND_SOURCES, 8)
+			const nearbySources = this.source.pos.findInRange(FIND_SOURCES, 8)
 				.filter(source => {
-					//if (source != this.source) {console.log(`Source path length is ${source.pos.findPathTo(this.source!).length} in ${source.room.print}`)}
+					// if (source != this.source) {console.log(`Source path length is
+					// ${source.pos.findPathTo(this.source!).length} in ${source.room.print}`)}
 					return this.source != source && source.pos.findPathTo(this.source!).length < 8;
 				});
 			if (nearbySources.length > 0) {
-				//console.log(`Nearby sources are ${nearbySources} in ${this.room!.print}`);
+				// console.log(`Nearby sources are ${nearbySources} in ${this.room!.print}`);
 			}
 		}
 	}
@@ -216,7 +218,8 @@ export class MiningOverlord extends Overlord {
 				log.info(`${this.print}: can't build container at ${this.room}`);
 				return;
 			}
-			const container = containerPos ? containerPos.lookForStructure(STRUCTURE_CONTAINER) as StructureContainer | undefined : undefined;
+			const container = containerPos ? containerPos.lookForStructure(STRUCTURE_CONTAINER) as StructureContainer
+				| undefined : undefined;
 			if (container) {
 				log.warning(`${this.print}: this.container out of sync at ${containerPos.print}`);
 				this.container = container;
@@ -384,7 +387,7 @@ export class MiningOverlord extends Overlord {
 		if (this.allowDropMining) {
 			miner.harvest(this.source!);
 			if (miner.carry.energy > 0.8 * miner.carryCapacity) { // move over the drop when you're close to full
-				let biggestDrop = maxBy(miner.pos.findInRange(miner.room.droppedEnergy, 1), drop => drop.amount);
+				const biggestDrop = maxBy(miner.pos.findInRange(miner.room.droppedEnergy, 1), drop => drop.amount);
 				if (biggestDrop) {
 					miner.goTo(biggestDrop);
 				}
@@ -402,7 +405,8 @@ export class MiningOverlord extends Overlord {
 	private doubleMiningActions(miner: Zerg) {
 		// Approach mining site
 		if (this.goToMiningSite(miner)) return;
-		//console.log(`Double mining with ${miner.print} here ${this.source!.pos.print}, ${this.source}, ${this.secondSource} is disabled ${this.isDisabled}`);
+		// console.log(`Double mining with ${miner.print} here ${this.source!.pos.print}, ${this.source},
+		// ${this.secondSource} is disabled ${this.isDisabled}`);
 
 		// Link mining
 		if (this.link) {

@@ -1,7 +1,7 @@
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {Pathing} from '../../movement/Pathing';
 import {DirectivePoisonRoom} from '../../directives/offense/poisonRoom';
+import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
@@ -15,28 +15,28 @@ import {Overlord} from '../Overlord';
 export class RoomPoisonerOverlord extends Overlord {
 
 	roomPoisoners: Zerg[];
-    controllerWallSites: ConstructionSite[] | undefined;
-    sourcesWallSites: ConstructionSite[] | undefined;
+	controllerWallSites: ConstructionSite[] | undefined;
+	sourcesWallSites: ConstructionSite[] | undefined;
 
 	constructor(directive: DirectivePoisonRoom, priority = OverlordPriority.offense.roomPoisoner) {
 		super(directive, 'contaminate', priority);
 		this.roomPoisoners = this.zerg(Roles.roomPoisoner);
 		this.controllerWallSites = (this.room && this.room.controller) ? _.filter(this.room.constructionSites,
-                                                                    s => s.structureType == STRUCTURE_WALL &&
-                                                                    s.pos.isNearTo(this.room!.controller!.pos)) : undefined;
-    	this.sourcesWallSites = (this.room && this.room.controller) ? _.filter(this.room.constructionSites,
-                                                                    s => s.structureType == STRUCTURE_WALL &&
-                                                                    !s.pos.isNearTo(this.room!.controller!.pos)) : undefined;
-    }
+																	s => s.structureType == STRUCTURE_WALL &&
+																	s.pos.isNearTo(this.room!.controller!.pos)) : undefined;
+		this.sourcesWallSites = (this.room && this.room.controller) ? _.filter(this.room.constructionSites,
+																	s => s.structureType == STRUCTURE_WALL &&
+																	!s.pos.isNearTo(this.room!.controller!.pos)) : undefined;
+	}
 
 	refresh() {
 		super.refresh();
 		this.controllerWallSites = (this.room && this.room.controller) ? _.filter(this.room.constructionSites,
-            s => s.structureType == STRUCTURE_WALL &&
-            s.pos.isNearTo(this.room!.controller!.pos)) : undefined;
-        this.sourcesWallSites = (this.room && this.room.controller) ? _.filter(this.room.constructionSites,
-            s => s.structureType == STRUCTURE_WALL &&
-            !s.pos.isNearTo(this.room!.controller!.pos)) : undefined;
+			s => s.structureType == STRUCTURE_WALL &&
+			s.pos.isNearTo(this.room!.controller!.pos)) : undefined;
+		this.sourcesWallSites = (this.room && this.room.controller) ? _.filter(this.room.constructionSites,
+			s => s.structureType == STRUCTURE_WALL &&
+			!s.pos.isNearTo(this.room!.controller!.pos)) : undefined;
 	}
 
 	init() {
@@ -59,9 +59,9 @@ export class RoomPoisonerOverlord extends Overlord {
 	private handleRoomPoisoner(roomPoisoner: Zerg): void {
 		// Ensure you are in the assigned room
 		if (roomPoisoner.room == this.room && !roomPoisoner.pos.isEdge) {
-			//corner case: unclaimed controller blocked, while sources not 100% bloked
+			// corner case: unclaimed controller blocked, while sources not 100% bloked
 			if(!this.room.my && this.sourcesWallSites && this.controllerWallSites &&
-				this.controllerWallSites.length ==0 &&  this.sourcesWallSites.length > 0){
+				this.controllerWallSites.length ==0 &&  this.sourcesWallSites.length > 0) {
 				
 				const dismantleTarget = this.findStructureBlockingController(roomPoisoner);
 				if (dismantleTarget) {

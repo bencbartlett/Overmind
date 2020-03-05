@@ -9,9 +9,9 @@ import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
 import {boostResources} from '../resources/map_resources';
 import {Cartographer} from '../utilities/Cartographer';
+import {Visualizer} from '../visuals/Visualizer';
 import {toCreep, Zerg} from '../zerg/Zerg';
 import {RoomIntel} from './RoomIntel';
-import {Visualizer} from "../visuals/Visualizer";
 
 interface CombatIntelMemory {
 	cache: {
@@ -97,13 +97,14 @@ export class CombatIntel {
 	}
 
 
-	static computeCreepDamagePotentialMatrix(room: Room, creeps: Creep[], startingMatrix?: CostMatrix): CostMatrix | undefined {
+	static computeCreepDamagePotentialMatrix(room: Room, creeps: Creep[],
+											 startingMatrix?: CostMatrix): CostMatrix | undefined {
 		if (room) {
 			const cpuUsed = Game.cpu.getUsed();
 			const matrix = startingMatrix || new PathFinder.CostMatrix();
 
-			//const otherMatrix = new Array(50);
-			//otherMatrix.forEach((loc, index) => otherMatrix[index] = new Array(50));
+			// const otherMatrix = new Array(50);
+			// otherMatrix.forEach((loc, index) => otherMatrix[index] = new Array(50));
 
 
 			creeps.forEach(creep => {
@@ -128,13 +129,14 @@ export class CombatIntel {
 
 
 
-	static computeTotalCreepPotentialMatrix(room: Room, creeps: Creep[], startingMatrix?: CostMatrix): CostMatrix | undefined {
+	static computeTotalCreepPotentialMatrix(room: Room, creeps: Creep[],
+											startingMatrix?: CostMatrix): CostMatrix | undefined {
 		if (room) {
 			const cpuUsed = Game.cpu.getUsed();
 			const matrix = startingMatrix || new PathFinder.CostMatrix();
 
-			//const otherMatrix = new Array(50);
-			//otherMatrix.forEach((loc, index) => otherMatrix[index] = new Array(50));
+			// const otherMatrix = new Array(50);
+			// otherMatrix.forEach((loc, index) => otherMatrix[index] = new Array(50));
 
 
 			creeps.forEach(creep => {

@@ -1,12 +1,12 @@
 import {Colony, ColonyMemory} from '../Colony';
 import {Directive} from '../directives/Directive';
+import {Overlord} from '../overlords/Overlord';
+import {EmpireAnalysis} from '../utilities/EmpireAnalysis';
 import {alignedNewline, bullet} from '../utilities/stringConstants';
 import {color, toColumns} from '../utilities/utils';
 import {asciiLogoRL, asciiLogoSmall} from '../visuals/logos';
 import {DEFAULT_OVERMIND_SIGNATURE, MY_USERNAME, USE_PROFILER} from '../~settings';
 import {log} from './log';
-import {Overlord} from "../overlords/Overlord";
-import {EmpireAnalysis} from "../utilities/EmpireAnalysis";
 
 type RecursiveObject = { [key: string]: number | RecursiveObject };
 
@@ -261,8 +261,8 @@ export class OvermindConsole {
 
 	static listSuspendedColonies(): string {
 		let msg = 'Colonies currently suspended: \n';
-		for (let i in Memory.colonies) {
-			let colonyMemory = Memory.colonies[i] as ColonyMemory | undefined;
+		for (const i in Memory.colonies) {
+			const colonyMemory = Memory.colonies[i] as ColonyMemory | undefined;
 			if (colonyMemory && colonyMemory.suspend == true) {
 				msg += 'Colony ' + i + ' \n';
 			}
@@ -399,28 +399,28 @@ export class OvermindConsole {
 
 	static directiveInfo(flagName: string): string {
 		let msg = '';
-		let directive = Overmind.directives[flagName];
+		const directive = Overmind.directives[flagName];
 		if (!directive) {
-			return `ERROR: Name is not a current directive`
+			return `ERROR: Name is not a current directive`;
 		}
 		msg += `Type: ${directive.directiveName}`.padRight(20) +
 			`Name: ${directive.name}`.padRight(25) +
 			`Pos: ${directive.pos.print}\n`;
-		for (let overlordName of Object.keys(directive.overlords)) {
-			let overlord = directive.overlords[overlordName] as Overlord;
+		for (const overlordName of Object.keys(directive.overlords)) {
+			const overlord = directive.overlords[overlordName] as Overlord;
 			msg += JSON.stringify(overlord.creepUsageReport) + `\n`;
-			let zerg = overlord.getZerg();
-			let combatZerg = overlord.getCombatZerg();
-			for (let [roleName, zergArray] of Object.entries(zerg)) {
+			const zerg = overlord.getZerg();
+			const combatZerg = overlord.getCombatZerg();
+			for (const [roleName, zergArray] of Object.entries(zerg)) {
 				msg += `Role: ${roleName} \n`;
-				for (let zerg of zergArray) {
+				for (const zerg of zergArray) {
 					msg += `Name: ${zerg.name}   Room: ${zerg.pos.print}   TTL/Spawning: ${zerg.ticksToLive || zerg.spawning} \n`;
 				}
 			}
 			msg += `Combat zerg \n`;
-			for (let [roleName, zergArray] of Object.entries(combatZerg)) {
+			for (const [roleName, zergArray] of Object.entries(combatZerg)) {
 				msg += `Role: ${roleName} \n`;
-				for (let zerg of zergArray) {
+				for (const zerg of zergArray) {
 					msg += `Name: ${zerg.name}   Room: ${zerg.pos.print}   TTL/Spawning: ${zerg.ticksToLive || zerg.spawning} \n`;
 				}
 			}
@@ -476,7 +476,7 @@ export class OvermindConsole {
 	// Colony Management =================================================================================================
 
 	static setRoomUpgradeRate(roomName: string, rate: number): string {
-		let colony: Colony = Overmind.colonies[roomName];
+		const colony: Colony = Overmind.colonies[roomName];
 		colony.upgradeSite.memory.speedFactor = rate;
 
 		return `Colony ${roomName} is now upgrading at a rate of ${rate}.`;
@@ -485,7 +485,7 @@ export class OvermindConsole {
 	static getEmpireMineralDistribution(): string {
 		const minerals = EmpireAnalysis.empireMineralDistribution();
 		let ret = 'Empire Mineral Distribution \n';
-		for (let mineral in minerals) {
+		for (const mineral in minerals) {
 			ret += `${mineral}: ${minerals[mineral]} \n`;
 		}
 		return ret;

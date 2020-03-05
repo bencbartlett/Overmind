@@ -148,7 +148,7 @@ interface PathingMemory {
 
 interface CreepTracker {
 	creeps: { [name: string]: number }; 	// first tick seen
-	types: { [type: string]:  number}; 		// amount seen
+	types: { [type: string]: number}; 		// amount seen
 	parts: { [bodyPart: string]: number}; 	// quantity
 	boosts: { [boostType: string]: number};	// how many boosts are spent
 }

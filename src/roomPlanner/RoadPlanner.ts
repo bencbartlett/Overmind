@@ -69,7 +69,7 @@ export class RoadPlanner {
 		// Compute coverage for each path
 		for (const destination of this.colony.destinations) {
 			const destName = destination.pos.name;
-			if(!!this.memory.roadLookup[destination.pos.roomName]){ //<< add this line
+			if(!!this.memory.roadLookup[destination.pos.roomName]) { // << add this line
 				if (!this.memory.roadCoverages[destName] || Game.time > this.memory.roadCoverages[destName].exp) {
 				const roadCoverage = this.computeRoadCoverage(storagePos, destination.pos);
 				if (roadCoverage != undefined) {
@@ -351,9 +351,9 @@ export class RoadPlanner {
 		console.log(`Colony ${this.colony.print} has destinations of ${JSON.stringify(colonyDestinations)}`);
 
 		for (const roadCoverageKey of Object.keys(this.memory.roadCoverages)) {
-			//console.log(`Colony ${this.colony.name} Road coverage of ${roadCoverageKey}`);
+			// console.log(`Colony ${this.colony.name} Road coverage of ${roadCoverageKey}`);
 			if (colonyDestinations.includes(roadCoverageKey)) {
-				//console.log(`Colony has destination of ${roadCoverageKey}`);
+				// console.log(`Colony has destination of ${roadCoverageKey}`);
 			} else {
 				console.log(`Colony does not have destination of ${roadCoverageKey}, deleting.`);
 				delete this.memory.roadCoverages[roadCoverageKey];

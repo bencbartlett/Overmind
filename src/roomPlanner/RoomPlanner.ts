@@ -1,6 +1,7 @@
 import {Colony, getAllColonies} from '../Colony';
 import {log} from '../console/log';
 import {isOwnedStructure} from '../declarations/typeGuards';
+import {DirectiveHaul} from '../directives/resource/haul';
 import {DirectiveTerminalRebuildState} from '../directives/terminalState/terminalState_rebuild';
 import {Energetics} from '../logistics/Energetics';
 import {Autonomy, getAutonomyLevel, Mem} from '../memory/Memory';
@@ -16,7 +17,6 @@ import {bunkerLayout} from './layouts/bunker';
 import {commandCenterLayout} from './layouts/commandCenter';
 import {hatcheryLayout} from './layouts/hatchery';
 import {RoadPlanner} from './RoadPlanner';
-import {DirectiveHaul} from "../directives/resource/haul";
 
 export interface BuildingPlannerOutput {
 	name: string;

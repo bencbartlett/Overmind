@@ -1,8 +1,8 @@
+import {log} from '../../console/log';
 import {isRuin, isStoreStructure} from '../../declarations/typeGuards';
 import {HaulingOverlord} from '../../overlords/situational/hauler';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
-import {log} from "../../console/log";
 
 
 interface DirectiveHaulMemory extends FlagMemory {
@@ -11,7 +11,7 @@ interface DirectiveHaulMemory extends FlagMemory {
 		plain: number,
 		swamp: number,
 		road: number
-	}
+	};
 }
 
 
@@ -59,7 +59,8 @@ export class DirectiveHaul extends Directive {
 	}
 
 	get storeStructure(): StructureStorage | StructureTerminal | StructureNuker | StructureContainer | Ruin | undefined {
-		// TODO remove me console.log(`Looking for store struct in ${this.pos.roomName} with ${this.pos.lookForStructure(STRUCTURE_CONTAINER)}`);
+		// TODO remove me console.log(`Looking for store struct in ${this.pos.roomName}
+		// with ${this.pos.lookForStructure(STRUCTURE_CONTAINER)}`);
 		if (this.pos.isVisible) {
 			return <StructureStorage>this.pos.lookForStructure(STRUCTURE_STORAGE) ||
 				   <StructureTerminal>this.pos.lookForStructure(STRUCTURE_TERMINAL) ||
@@ -96,7 +97,7 @@ export class DirectiveHaul extends Directive {
 			}
 			this._store = store as StoreDefinition;
 		}
-		//log.alert(`Haul directive ${this.print} has store of ${JSON.stringify(this._store)}`);
+		// log.alert(`Haul directive ${this.print} has store of ${JSON.stringify(this._store)}`);
 		return this._store;
 	}
 
@@ -123,8 +124,9 @@ export class DirectiveHaul extends Directive {
 			// If everything is picked up, crudely give enough time to bring it back
 			this._finishAtTime = this._finishAtTime || (Game.time + 300);
 		}
-		if (Game.time >= this._finishAtTime || (this.totalResources == 0 && (this.overlords.haul as HaulingOverlord).haulers.length == 0)) {
-			//this.remove();
+		if (Game.time >= this._finishAtTime || (this.totalResources == 0 &&
+			(this.overlords.haul as HaulingOverlord).haulers.length == 0)) {
+			// this.remove();
 		}
 	}
 }

@@ -8,11 +8,13 @@ import {DirectiveOutpost} from './directives/colony/outpost';
 import {DirectiveGuard} from './directives/defense/guard';
 import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
 import {DirectiveOutpostDefense} from './directives/defense/outpostDefense';
-import {DirectivePoisonRoom} from './directives/offense/poisonRoom';
 import {Directive} from './directives/Directive';
 import {Notifier} from './directives/Notifier';
+import {DirectivePoisonRoom} from './directives/offense/poisonRoom';
 import {DirectiveBootstrap} from './directives/situational/bootstrap';
 import {DirectiveNukeResponse} from './directives/situational/nukeResponse';
+import {DirectiveStronghold} from './directives/situational/stronghold';
+import {DirectiveModularDismantle} from './directives/targeting/modularDismantle';
 import {DirectiveTerminalEvacuateState} from './directives/terminalState/terminalState_evacuate';
 import {RoomIntel} from './intel/RoomIntel';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
@@ -24,9 +26,6 @@ import {CombatPlanner} from './strategy/CombatPlanner';
 import {Cartographer, ROOMTYPE_CONTROLLER, ROOMTYPE_SOURCEKEEPER} from './utilities/Cartographer';
 import {derefCoords, hasJustSpawned, minBy, onPublicServer} from './utilities/utils';
 import {MUON, MY_USERNAME, USE_TRY_CATCH} from './~settings';
-import {DirectivePairDestroy} from "./directives/offense/pairDestroy";
-import {DirectiveModularDismantle} from "./directives/targeting/modularDismantle";
-import {DirectiveStronghold} from "./directives/situational/stronghold";
 
 
 // export const DIRECTIVE_CHECK_FREQUENCY = 2;
@@ -44,7 +43,8 @@ const defaultOverseerMemory: OverseerMemory = {
  * in charge of starting new "processes" (directives) to respond to various situations.
  */
 @profile
-export class Overseer implements IOverseer {
+export class
+Overseer implements IOverseer {
 
 	private memory: OverseerMemory;
 	private overlords: Overlord[];								// Overlords sorted by priority
@@ -204,9 +204,9 @@ export class Overseer implements IOverseer {
 				}
 			}
 			if (Game.time % 55 == 0) {
-				let cores = room.hostileStructures.filter(s => s.structureType == STRUCTURE_INVADER_CORE);
+				const cores = room.hostileStructures.filter(s => s.structureType == STRUCTURE_INVADER_CORE);
 				if (cores.length > 0) {
-					let core = <StructureInvaderCore>cores[0];
+					const core = <StructureInvaderCore>cores[0];
 					log.alert(`Found core in ${room.name} with ${core} level ${core.level}`);
 					let res;
 					if (core.level == 0) {
@@ -265,13 +265,13 @@ export class Overseer implements IOverseer {
 			if (alreadyAColony || alreadyAnOutpost) {
 				return false;
 			}
-			let alreadyOwned = RoomIntel.roomOwnedBy(roomName);
-			let alreadyReserved = RoomIntel.roomReservedBy(roomName);
-			let isBlocked = Game.flags[roomName+"-Block"] != null;
+			const alreadyOwned = RoomIntel.roomOwnedBy(roomName);
+			const alreadyReserved = RoomIntel.roomReservedBy(roomName);
+			const isBlocked = Game.flags[roomName+'-Block'] != null;
 			if (isBlocked) {
-				//Game.notify("Room " + roomName + " is blocked, not expanding there.");
+				// Game.notify("Room " + roomName + " is blocked, not expanding there.");
 			}
-			let disregardReservations = !onPublicServer() || MY_USERNAME == MUON;
+			const disregardReservations = !onPublicServer() || MY_USERNAME == MUON;
 			if (alreadyOwned || (alreadyReserved && !disregardReservations) || isBlocked) {
 				return false;
 			}

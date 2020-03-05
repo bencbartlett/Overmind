@@ -142,7 +142,8 @@ export class PairDestroyerOverlord extends Overlord {
 		if (RoomIntel.inSafeMode(this.pos.roomName)) {
 			amount = 0;
 		}
-		const boostedAttackerType = this.directive.flag.name.includes('armor') ? CombatSetups.zerglings.boosted_T3_strongArmor: CombatSetups.zerglings.boosted_T3;
+		const boostedAttackerType = this.directive.flag.name.includes('armor')
+			? CombatSetups.zerglings.boosted_T3_strongArmor: CombatSetups.zerglings.boosted_T3;
 
 		const attackerPriority = this.attackers.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
 		const attackerSetup = this.canBoostSetup(CombatSetups.zerglings.boosted_T3) ? boostedAttackerType

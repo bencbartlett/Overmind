@@ -128,7 +128,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 
 	/* Summarizes the total of all resources currently in a colony store structure */
 	private getAllAssets(): { [resourceType: string]: number } {
-		return mergeSum(_.map(this.terminals, terminal => (colonyOf(terminal) != undefined ? colonyOf(terminal).assets : {})));
+		return mergeSum(_.map(this.terminals, terminal =>
+			(colonyOf(terminal) != undefined ? colonyOf(terminal).assets : {})));
 	}
 
 	private logTransfer(resourceType: ResourceConstant, amount: number, origin: string, destination: string) {
@@ -281,11 +282,13 @@ export class TerminalNetwork implements ITerminalNetwork {
 					RESOURCE_FRAME, RESOURCE_HYDRAULICS, RESOURCE_MACHINE, RESOURCE_CONDENSATE, RESOURCE_CONCENTRATE,
 					RESOURCE_EXTRACT, RESOURCE_SPIRIT, RESOURCE_EMANATION, RESOURCE_ESSENCE];
 
-				let tunedThreshold = threshold;
-				if (commodities.indexOf(resource) != -1 && terminal.store[resource as ResourceConstant] && terminal.store[resource as ResourceConstant]! > 100) {
-					//const response = Overmind.tradeNetwork.sell(terminal, <ResourceConstant>resource, 100);
-					//console.log(`Looking for ${resource} deals with threshold ${threshold} and liquid ${terminal.store['liquid' as ResourceConstant]}`);
-					//tunedThreshold = 1000;
+				const tunedThreshold = threshold;
+				if (commodities.indexOf(resource) != -1 && terminal.store[resource as ResourceConstant]
+					&& terminal.store[resource as ResourceConstant]! > 100) {
+					// const response = Overmind.tradeNetwork.sell(terminal, <ResourceConstant>resource, 100);
+					// console.log(`Looking for ${resource} deals with threshold ${threshold} and liquid
+					// ${terminal.store['liquid' as ResourceConstant]}`);
+					// tunedThreshold = 1000;
 				}
 
 
@@ -473,23 +476,24 @@ export class TerminalNetwork implements ITerminalNetwork {
 
 	addStore(store: { [resourceType: string]: number }, storeToAdd: StoreDefinition) {
 		_.keys(storeToAdd).forEach(resType => {
-			let resourceType = resType as ResourceConstant;
+			const resourceType = resType as ResourceConstant;
 			if (store[resType]) {
 				store[resType] += storeToAdd[resourceType] || 0;
 			} else {
 				store[resType] = storeToAdd[resourceType] || 0;
 			}
-		})
+		});
 	}
 
 	shareRooms() {
-		if(Game.time % 10 == 0){
-			let myRooms = _.filter(Game.rooms, room => room.controller && room.controller.my && room.terminal && room.terminal.my);
+		if(Game.time % 10 == 0) {
+			const myRooms = _.filter(Game.rooms, room => room.controller
+				&& room.controller.my && room.terminal && room.terminal.my);
 			let maxRoom: Room | undefined;
-			let usedTerminals: Room[] = [];
-			let store: { [resourceType: string]: number } = {};
+			const usedTerminals: Room[] = [];
+			const store: { [resourceType: string]: number } = {};
 
-			for (let room of myRooms) {
+			for (const room of myRooms) {
 				if (room.terminal) {
 					this.addStore(store, room.terminal.store);
 				}
@@ -500,23 +504,24 @@ export class TerminalNetwork implements ITerminalNetwork {
 
 			console.log(JSON.stringify(store));
 			for(const res in store) {
-				let resourceType = res as ResourceConstant;
+				const resourceType = res as ResourceConstant;
 				console.log(resourceType + ' ' + store[resourceType]);
 				if (store[resourceType] < 30000 || resourceType == RESOURCE_ENERGY || usedTerminals.length == myRooms.length) {
 					continue;
 				}
 				_.forEach(myRooms, room => {
 					if (room.storage && room.terminal && _.sum(room.storage.store) < room.storage.storeCapacity * 0.9) {
-						let total = (room.terminal ? room.terminal.store[resourceType] || 0 : 0) + (room.storage ? room.storage.store[resourceType] || 0 : 0);
+						const total = (room.terminal ? room.terminal.store[resourceType] || 0 : 0) +
+							(room.storage ? room.storage.store[resourceType] || 0 : 0);
 						if(total < store[resourceType]*0.7/32) {
-							console.log(room.name + ' ' + res + ' ' + total + ' ' + (100 - Math.floor(total*100/(store[resourceType]*0.85/31))));
+							console.log(room.name + ' ' + res + ' ' + total + ' ' +
+								(100 - Math.floor(total*100/(store[resourceType]*0.85/31))));
 							maxRoom = maxBy(myRooms, function(room) {
 								return !usedTerminals.includes(room) && room.storage ? room.storage.store[resourceType] || 0 : 0;
 							});
 							if (maxRoom && maxRoom.storage && maxRoom.terminal) {
 								maxRoom.terminal.send(resourceType,300,room.name);
 								usedTerminals.push(maxRoom);
-								//console.log(maxRoom.name + ' ' + maxRoom.storage.store[resourceType] + ' ' + maxRoom.terminal.send(resourceType,100,room.name));
 							}
 						}
 					}
@@ -526,11 +531,11 @@ export class TerminalNetwork implements ITerminalNetwork {
 	}
 
 	handleOverflowWithNoEnergy() {
-		for (let terminal of this.terminals) {
+		for (const terminal of this.terminals) {
 			if (terminal.store.getFreeCapacity() < 5000 && terminal.store[RESOURCE_ENERGY] < 10000) {
-				let roomOrders = _.filter(Game.market.orders, order => order.roomName == terminal.room.name);
-				for (let res in terminal.store) {
-					let quantity = terminal.store[res as ResourceConstant];
+				const roomOrders = _.filter(Game.market.orders, order => order.roomName == terminal.room.name);
+				for (const res in terminal.store) {
+					const quantity = terminal.store[res as ResourceConstant];
 					if (quantity > 15000 && roomOrders.filter(order => order.resourceType == res).length == 0) {
 						log.info(`Creating sell order for ${res} in room ${terminal.room.print}`);
 						Overmind.tradeNetwork.sell(terminal, res as ResourceConstant, 2000);
@@ -584,7 +589,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		if (this.notifications.length > 0) {
 			log.info(`Terminal network activity: ` + alignedNewline + this.notifications.join(alignedNewline));
 		}
-		//this.shareRooms();
+		// this.shareRooms();
 	}
 
 }

@@ -197,7 +197,6 @@ export abstract class Directive {
 		if (verbose) log.info(`Recalculating colony association for ${this.name} in ${this.pos.roomName}`);
 		let nearestColony: Colony | undefined;
 		let minDistance = Infinity;
-		//const colonyRooms = _.filter(Game.rooms, room => room.my);
 		for (const colony of getAllColonies()) {
 			if (Game.map.getRoomLinearDistance(this.pos.roomName, colony.name) > maxLinearRange) {
 				continue;
@@ -271,7 +270,6 @@ export abstract class Directive {
 	}
 
 	static isPresent(pos: RoomPosition, scope: 'room' | 'pos'): boolean {
-		//this.isPresentAndReturnName(pos, scope) != undefined
 		const room = Game.rooms[pos.roomName] as Room | undefined;
 		switch (scope) {
 			case 'room':
@@ -409,7 +407,8 @@ export abstract class Directive {
 
 	abstract spawnMoarOverlords(): void;
 
-	/* Determines if should spawn at a Game.time. Returns 0 if no issue, or a Game.time to start spawning after. Anti-harass */
+	/* Determines if should spawn at a Game.time.
+	Returns 0 if no issue, or a Game.time to start spawning after. Anti-harass */
 	shouldSpawn(): number {
 		return 0;
 	}

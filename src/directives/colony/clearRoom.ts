@@ -1,15 +1,15 @@
 import {log} from '../../console/log';
+import {Pathing} from '../../movement/Pathing';
 import {ClaimingOverlord} from '../../overlords/colonization/claimer';
 import {profile} from '../../profiler/decorator';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {printRoomName} from '../../utilities/utils';
+import {Zerg} from '../../zerg/Zerg';
 import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
-import {Zerg} from "../../zerg/Zerg";
-import {DirectiveHaul} from "../resource/haul";
-import {Pathing} from "../../movement/Pathing";
-import {DirectiveDismantle} from "../targeting/dismantle";
-import {DirectiveOutpost} from "./outpost";
+import {DirectiveHaul} from '../resource/haul';
+import {DirectiveDismantle} from '../targeting/dismantle';
+import {DirectiveOutpost} from './outpost';
 
 
 interface DirectiveClearRoomMemory extends FlagMemory {
@@ -49,7 +49,7 @@ export class DirectiveClearRoom extends Directive {
 		this.memory.preexistingFlags = _.filter(Game.flags, testingflag =>
 			testingflag.pos.roomName == flag.pos.roomName && testingflag.name != flag.name)
 			.map(testingFlag => testingFlag.name);
-		console.log("Existing flags in clear room are " + JSON.stringify(this.memory.preexistingFlags));
+		console.log('Existing flags in clear room are ' + JSON.stringify(this.memory.preexistingFlags));
 	}
 
 	spawnMoarOverlords() {
@@ -69,7 +69,6 @@ export class DirectiveClearRoom extends Directive {
 
 		if (this.room) {
 			const allStructures = this.room.find(FIND_STRUCTURES);
-			this.room.factory
 			let i = 0;
 			for (const s of allStructures) {
 				if (s.structureType == STRUCTURE_CONTROLLER) {
@@ -106,10 +105,10 @@ export class DirectiveClearRoom extends Directive {
 	}
 
 	private findStructureBlockingController(pioneer: Zerg): Structure | undefined {
-		let blockingPos = Pathing.findBlockingPos(pioneer.pos, pioneer.room.controller!.pos,
+		const blockingPos = Pathing.findBlockingPos(pioneer.pos, pioneer.room.controller!.pos,
 			_.filter(pioneer.room.structures, s => !s.isWalkable));
 		if (blockingPos) {
-			let structure = blockingPos.lookFor(LOOK_STRUCTURES)[0];
+			const structure = blockingPos.lookFor(LOOK_STRUCTURES)[0];
 			if (structure) {
 				return structure;
 			} else {
@@ -122,8 +121,9 @@ export class DirectiveClearRoom extends Directive {
 		if (!this.room) {
 			return false;
 		}
-		for (let flag of this.room.flags) {
-			if (!_.contains(this.memory.preexistingFlags, flag.name) && flag.name != this.flag.name && !DirectiveHaul.filter(flag)) {
+		for (const flag of this.room.flags) {
+			if (!_.contains(this.memory.preexistingFlags, flag.name) && flag.name != this.flag.name
+				&& !DirectiveHaul.filter(flag)) {
 				flag.remove();
 			}
 		}
@@ -134,7 +134,7 @@ export class DirectiveClearRoom extends Directive {
 		if (this.room && this.room.my) {
 			const done = this.removeAllStructures();
 			if (done) {
-				let res = this.room.controller!.unclaim();
+				const res = this.room.controller!.unclaim();
 				// Clear up flags that weren't there before and aren't haul
 				this.cleanupFlags();
 				log.notify(`Removing clearRoom directive in ${this.pos.roomName}: operation completed.`);
@@ -144,12 +144,12 @@ export class DirectiveClearRoom extends Directive {
 			}
 			// Clear path if controller is not reachable
 		} else if (this.room && this.room.creeps.length > 1) {
-			let currentlyDismantlingLocations = DirectiveDismantle.find(this.room.flags);
+			const currentlyDismantlingLocations = DirectiveDismantle.find(this.room.flags);
 
 			if (currentlyDismantlingLocations.length == 0) {
-				let pathablePos = this.room.creeps[0] ? this.room.creeps[0].pos
+				const pathablePos = this.room.creeps[0] ? this.room.creeps[0].pos
 					: Pathing.findPathablePosition(this.room.name);
-				let blockingLocation = Pathing.findBlockingPos(pathablePos, this.room.controller!.pos,
+				const blockingLocation = Pathing.findBlockingPos(pathablePos, this.room.controller!.pos,
 					_.filter(this.room.structures, s => !s.isWalkable));
 				if (blockingLocation && !Directive.isPresent(blockingLocation, 'pos')) {
 					log.notify(`Adding dismantle directive for ${this.pos.roomName} to reach controller.`);

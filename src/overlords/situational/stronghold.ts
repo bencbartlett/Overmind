@@ -1,17 +1,17 @@
+import index from 'rollup-plugin-typescript2';
+import {log} from '../../console/log';
 import {CreepSetup} from '../../creepSetups/CreepSetup';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
+import {DirectiveStronghold} from '../../directives/situational/stronghold';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {boostResources} from '../../resources/map_resources';
+import {derefCoords, getCacheExpiration, getPosFromString} from '../../utilities/utils';
+import {Visualizer} from '../../visuals/Visualizer';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
-import {DirectiveStronghold} from "../../directives/situational/stronghold";
-import {Visualizer} from "../../visuals/Visualizer";
-import index from "rollup-plugin-typescript2";
-import {log} from "../../console/log";
-import {derefCoords, getCacheExpiration, getPosFromString} from "../../utilities/utils";
 
 
 
@@ -58,39 +58,41 @@ export class StrongholdOverlord extends CombatOverlord {
 	 * @param range
 	 * @param myCreep
 	 */
-	private findAttackingPositionAndTarget(target: Creep | Structure, range: number, myCreep: CombatZerg): {attackPos: RoomPosition, target: Creep | Structure} | undefined {
+	private findAttackingPositionAndTarget(target: Creep | Structure, range: number,
+										   myCreep: CombatZerg): {attackPos: RoomPosition, target: Creep | Structure} | undefined {
 		log.info(`Finding attacking position in ${target.room} for ${this.print}`);
 		if (!target.room || range == 0) {return;}
 
 		// bug with containers
-		let shootPositions = target.pos.getPositionsAtRange(range, false, false);
+		const shootPositions = target.pos.getPositionsAtRange(range, false, false);
 
 		// Index is range to avoid from
-		let avoidLocs: RoomPosition[][] = Array.from({length: 5}, () => []);
+		const avoidLocs: RoomPosition[][] = Array.from({length: 5}, () => []);
 
 		avoidLocs[1] = avoidLocs[1].concat(target.room.ramparts.map(rampart => rampart.pos));
 		avoidLocs[4] = avoidLocs[4].concat(target.room.sources.map(s => s.pos));
 		avoidLocs[4] = avoidLocs[4].concat(target.room.keeperLairs.map(s => s.pos));
-		if (target.room.mineral) {avoidLocs[4] = avoidLocs[4].concat(target.room.mineral.pos)};
+		if (target.room.mineral) {avoidLocs[4] = avoidLocs[4].concat(target.room.mineral.pos);}
 
 		// Array where first index is how many hostile locations there are
-		let safeSpots: RoomPosition[][] = this.findSafeLocation(shootPositions, avoidLocs);
-		_.forEach(safeSpots, (distanceArray, hostilesIndex) => distanceArray.forEach(spot => Visualizer.marker(spot, {color: StrongholdOverlord.numberToColor(hostilesIndex), frames: 2})));
+		const safeSpots: RoomPosition[][] = this.findSafeLocation(shootPositions, avoidLocs);
+		_.forEach(safeSpots, (distanceArray, hostilesIndex) => distanceArray.forEach(
+			spot => Visualizer.marker(spot, {color: StrongholdOverlord.numberToColor(hostilesIndex), frames: 2})));
 
 		// If you can safely attack goal, do that
 		if (safeSpots[0].length > 0) {
-			const closestFirst = safeSpots[0].sort(((a, b) => this.bestRampartToAttackSortFunction(a, b, myCreep.pos)))
+			const closestFirst = safeSpots[0].sort(((a, b) =>
+				this.bestRampartToAttackSortFunction(a, b, myCreep.pos)));
 			return {attackPos: closestFirst[0], target: target};
 		} else if (safeSpots[1].length > 0) {
 			// Can't safely attack target, need to attack another position first
-			let newTargets: RoomPosition[];
-			let range1Spots = safeSpots[1];
-			let ramparts = target.room!.ramparts;
-			let posToRampartMap: Map<RoomPosition, StructureRampart[]> = new Map();
-			for (let spot of range1Spots) {
-				for (let rampart of ramparts) {
+			const range1Spots = safeSpots[1];
+			const ramparts = target.room!.ramparts;
+			const posToRampartMap: Map<RoomPosition, StructureRampart[]> = new Map();
+			for (const spot of range1Spots) {
+				for (const rampart of ramparts) {
 					if (rampart.pos.isNearTo(spot)) {
-						let temp: StructureRampart[] | undefined = posToRampartMap.get(spot);
+						const temp: StructureRampart[] | undefined = posToRampartMap.get(spot);
 						posToRampartMap.set(spot, !!temp ? temp.concat([rampart]): [rampart]);
 					}
 				}
@@ -99,18 +101,18 @@ export class StrongholdOverlord extends CombatOverlord {
 			// Now select closest
 			if (myCreep) {
 				// TODO currently extra filtering, don't need from above
-				let orderedByBest = Array.from(posToRampartMap.keys()).filter(p => posToRampartMap.get(p)
+				const orderedByBest = Array.from(posToRampartMap.keys()).filter(p => posToRampartMap.get(p)
 					&& posToRampartMap.get(p)!.length == 1).sort((a,b) => this.bestRampartToAttackSortFunction(a, b, myCreep.pos));
-				console.log('sorted array is ' + orderedByBest)
-				for (let pos of orderedByBest) {
-					let res = this.findAttackingPositionAndTarget(posToRampartMap.get(pos)![0], range-1, myCreep);
+				console.log('sorted array is ' + orderedByBest);
+				for (const pos of orderedByBest) {
+					const res = this.findAttackingPositionAndTarget(posToRampartMap.get(pos)![0], range-1, myCreep);
 					if (res) {
 						return res;
 					}
 				}
 			} else {
-				for (let pos of posToRampartMap) {
-					let res = this.findAttackingPositionAndTarget(pos[1][0]!, range-1, myCreep);
+				for (const pos of posToRampartMap) {
+					const res = this.findAttackingPositionAndTarget(pos[1][0]!, range-1, myCreep);
 					if (res) {
 						return res;
 					}
@@ -120,10 +122,11 @@ export class StrongholdOverlord extends CombatOverlord {
 		return;
 	}
 
-	bestRampartToAttackSortFunction(element1: RoomPosition, element2: RoomPosition, currentPos: RoomPosition, /*map: Map<RoomPosition, StructureRampart[]>*/) {
+	bestRampartToAttackSortFunction(element1: RoomPosition, element2: RoomPosition, currentPos: RoomPosition,
+									/*map: Map<RoomPosition, StructureRampart[]>*/) {
 		// const numRamparts1 = map.get(element1) == undefined ? 10 : map.get(element1)!.length;
 		// const numRamparts2 = map.get(element2) == undefined ? 10 : map.get(element2)!.length;
-		return element1.getRangeTo(currentPos) - element2.getRangeTo(currentPos); //+ (numRamparts1 - numRamparts2);
+		return element1.getRangeTo(currentPos) - element2.getRangeTo(currentPos); // + (numRamparts1 - numRamparts2);
 		// if (element.roomName == currentPos.roomName) {
 		//
 		// }
@@ -185,7 +188,7 @@ export class StrongholdOverlord extends CombatOverlord {
 
 		if (this.room && killer.pos.roomName == this.pos.roomName) {
 			if (this.directive.core && !this.directive.memory.target) {
-				let before = Game.cpu.getUsed();
+				const before = Game.cpu.getUsed();
 				const targetingInfo = this.resetAttacking(this.directive.core, 3, killer);
 				log.info(`CPU used for stronghold is ${Game.cpu.getUsed() - before}`);
 			}
@@ -202,21 +205,23 @@ export class StrongholdOverlord extends CombatOverlord {
 		}
 
 		// Shoot nearby enemies before moving on
-		const unprotectedHostiles = killer.room.hostiles.filter(hostile => hostile.pos.getRangeTo(killer.pos) <= 3 && !hostile.inRampart);
+		const unprotectedHostiles = killer.room.hostiles.filter(hostile => hostile.pos.getRangeTo(killer.pos)
+			<= 3 && !hostile.inRampart);
 		if (unprotectedHostiles.length > 0) {
 			killer.rangedAttack(unprotectedHostiles[0]);
 			return;
 		}
 		if (this.directive.memory.attackingPosition) {
-			let attackPos = getPosFromString(this.directive.memory.attackingPosition);
+			const attackPos = getPosFromString(this.directive.memory.attackingPosition);
 			// In room and in position
 			if (!attackPos || !killer.pos.isEqualTo(attackPos)) {
 				let avoids: RoomPosition[] = [];
 				if (this.directive.room) {
-					avoids = avoids.concat(_.flatten(this.directive.room.sourceKeepers.map(source => source.pos.getPositionsInRange(3, false, false))));
+					avoids = avoids.concat(_.flatten(this.directive.room.sourceKeepers.map(source =>
+						source.pos.getPositionsInRange(3, false, false))));
 					avoids = avoids.concat(_.flatten(this.directive.room.ramparts.map(ramparts => ramparts.pos.neighbors)));
 					if (this.directive.room.mineral) {
-						avoids = avoids.concat(this.directive.room.mineral.pos.getPositionsInRange(4, false, false))
+						avoids = avoids.concat(this.directive.room.mineral.pos.getPositionsInRange(4, false, false));
 					}
 					avoids.forEach(av => Visualizer.circle(av));
 					killer.goTo(attackPos!, {obstacles: avoids});
@@ -226,20 +231,20 @@ export class StrongholdOverlord extends CombatOverlord {
 
 		if (killer.pos.roomName == this.directive.pos.roomName) {
 			if (this.target) {
-				let res = killer.rangedAttack(this.target);
+				const res = killer.rangedAttack(this.target);
 				if (res == ERR_INVALID_TARGET) {
 
 				}
 			} else {
 				killer.goTo(this.pos);
 				killer.rangedMassAttack();
-				//killer.autoCombat(this.directive.pos.roomName);
+				// killer.autoCombat(this.directive.pos.roomName);
 			}
 		}
 	}
 
-	static numberToColor(number: number) {
-		switch(number) {
+	static numberToColor(colorNumber: number) {
+		switch(colorNumber) {
 			case 0: return 'green';
 			case 1: return 'yellow';
 			case 2: return 'orange';
@@ -260,21 +265,21 @@ export class StrongholdOverlord extends CombatOverlord {
 				return; // Fuck this shit we out
 			case 4:
 				return;
-				//setup = CombatSetups.strongholdKiller["4"];
-				//break;
+				// setup = CombatSetups.strongholdKiller["4"];
+				// break;
 			case 3:
-				setup = CombatSetups.strongholdKiller["3"];
+				setup = CombatSetups.strongholdKiller['3'];
 				break;
 			case 2:
-				setup = CombatSetups.strongholdKiller["2"];
+				setup = CombatSetups.strongholdKiller['2'];
 				break;
 			case 1:
-				setup = CombatSetups.strongholdKiller["1"];
+				setup = CombatSetups.strongholdKiller['1'];
 				break;
 			case 0:
 				return; // Forget it, no need for the lil ones
 			default:
-				return;//setup = CombatSetups.strongholdKiller["3"];
+				return;// setup = CombatSetups.strongholdKiller["3"];
 		}
 
 		if (!this.canBoostSetup(setup)) {
@@ -282,7 +287,7 @@ export class StrongholdOverlord extends CombatOverlord {
 			return log.error(`Can't boost stronghold killer in ${this.print}!`);
 		}
 
-		this.wishlist(1, setup, {})
+		this.wishlist(1, setup, {});
 	}
 
 	private resetAttacking(ultimateGoal: Creep | Structure, maxRange: number, myCreep: CombatZerg) {
@@ -295,16 +300,17 @@ export class StrongholdOverlord extends CombatOverlord {
 	}
 
 	run() {
-		let avoids: RoomPosition[] = [];
+		const avoids: RoomPosition[] = [];
 		// if (this.directive.room) {
-		// 	avoids = avoids.concat(_.flatten(this.directive.room.sources.map(source => source.pos.getPositionsInRange(4, false, false))));
+		// 	avoids = avoids.concat(_.flatten(this.directive.room.sources.map(source =>
+		// 	source.pos.getPositionsInRange(4, false, false))));
 		// 	avoids = avoids.concat(_.flatten(this.directive.room.ramparts.map(ramparts => ramparts.pos.neighbors)));
 		// 	if (this.directive.room.mineral) {
 		// 		avoids = avoids.concat(this.directive.room.mineral.pos.getPositionsInRange(4, false, false))
 		// 	}
 		// }
 		// avoids.forEach(av => Visualizer.circle(av, 'blue'));
-		//log.info(`Running stronghold overlord ${this.print}`);
+		// log.info(`Running stronghold overlord ${this.print}`);
 		this.autoRun(this.strongholdKillers, killer => this.handleKiller(killer));
 	}
 }

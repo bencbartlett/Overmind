@@ -1,12 +1,12 @@
-import {CombatPlanner, SiegeAnalysis} from "../../strategy/CombatPlanner";
-import {profile} from "../../profiler/decorator";
-import {Directive} from "../Directive";
-import {log} from "../../console/log";
-import {Visualizer} from "../../visuals/Visualizer";
-import {Power} from "./powers/genericPower";
-import {GenerateOps} from "./powers/generateOps";
-import {DirectiveNukeResponse} from "../situational/nukeResponse";
-import {OperateExtension} from "./powers/operateExtension";
+import {log} from '../../console/log';
+import {profile} from '../../profiler/decorator';
+import {CombatPlanner, SiegeAnalysis} from '../../strategy/CombatPlanner';
+import {Visualizer} from '../../visuals/Visualizer';
+import {Directive} from '../Directive';
+import {DirectiveNukeResponse} from '../situational/nukeResponse';
+import {GenerateOps} from './powers/generateOps';
+import {Power} from './powers/genericPower';
+import {OperateExtension} from './powers/operateExtension';
 
 
 interface DirectiveBaseOperatorMemory extends FlagMemory {
@@ -32,7 +32,7 @@ export class DirectiveBaseOperator extends Directive {
 	memory: DirectiveBaseOperatorMemory;
 
 	// Power Creep Hack
-	//powerCreep: PowerCreep;
+	// powerCreep: PowerCreep;
 	powerCreepName: string;
 
 	defaultPowerPriorities: PowerConstant[] = [
@@ -70,13 +70,14 @@ export class DirectiveBaseOperator extends Directive {
 	}
 
 
-	// Wrapped powerCreep methods ===========================================================================================
+	// Wrapped powerCreep methods ==================================================================================
 
 	renew(powerCreep: PowerCreep, powerSource: StructurePowerBank | StructurePowerSpawn) {
 		if (powerCreep.pos.inRangeToPos(powerSource.pos, 1)) {
 			return powerCreep.renew(powerSource);
 		} else {
-			return powerCreep.moveTo(powerSource, {ignoreRoads: true, range: 1, swampCost: 1, reusePath: 0, visualizePathStyle: {lineStyle: "dashed", fill: 'yellow'}});
+			return powerCreep.moveTo(powerSource, {ignoreRoads: true, range: 1, swampCost: 1, reusePath: 0,
+				visualizePathStyle: {lineStyle: 'dashed', fill: 'yellow'}});
 		}
 	}
 
@@ -85,19 +86,20 @@ export class DirectiveBaseOperator extends Directive {
 		if (powerCreep.pos.inRangeToPos(controller.pos, 1)) {
 			return powerCreep.enableRoom(controller);
 		} else {
-			//let path = powerCreep.pos.findPathTo(controller, {ignoreRoads: true, range: 1, swampCost: 1});
-			//log.alert(`Trying to enable power for ${controller} with ${JSON.stringify(path)}`);
-			//return powerCreep.moveByPath(path);
-			return powerCreep.moveTo(controller.pos, {ignoreRoads: true, range: 1, swampCost: 1, reusePath: 0, visualizePathStyle: {lineStyle: "solid"}});
+			// let path = powerCreep.pos.findPathTo(controller, {ignoreRoads: true, range: 1, swampCost: 1});
+			// log.alert(`Trying to enable power for ${controller} with ${JSON.stringify(path)}`);
+			// return powerCreep.moveByPath(path);
+			return powerCreep.moveTo(controller.pos, {ignoreRoads: true, range: 1, swampCost: 1,
+				reusePath: 0, visualizePathStyle: {lineStyle: 'solid'}});
 		}
 	}
 
 	usePower(powerCreep: PowerCreep, power: PowerConstant) {
-		//console.log(`The power constant is ${power}`)
+		// console.log(`The power constant is ${power}`)
 		switch(power) {
 			case PWR_GENERATE_OPS: return new GenerateOps(powerCreep);
 			case PWR_OPERATE_EXTENSION: return new OperateExtension(powerCreep);
-//			case PWR_OPERATE_SPAWN: return this.operateSpawn();
+// 			case PWR_OPERATE_SPAWN: return this.operateSpawn();
 		}
 
 	}
@@ -233,9 +235,9 @@ export class DirectiveBaseOperator extends Directive {
 
 	runPowers(powerCreep: PowerCreep) {
 		const priorities = this.memory.powerPriorities;
-		for (let powerId in priorities) {
-			//console.log(`Powerid of ${powerId} and list of ${priorities}`);
-			let powerToUse = this.usePower(powerCreep, priorities[powerId]);
+		for (const powerId in priorities) {
+			// console.log(`Powerid of ${powerId} and list of ${priorities}`);
+			const powerToUse = this.usePower(powerCreep, priorities[powerId]);
 			if (powerToUse && powerToUse.operatePower()) {
 				break;
 			}
@@ -251,7 +253,7 @@ export class DirectiveBaseOperator extends Directive {
 		const powerCreep = Game.powerCreeps[this.flag.name];
 		if (!powerCreep || Game.cpu.bucket < 5000 && (!powerCreep.ticksToLive || powerCreep.ticksToLive > 500)) {
 			this.powerCreepName = this.flag.name;
-			//console.log('Not running power creep because not defined or bucket is low');
+			// console.log('Not running power creep because not defined or bucket is low');
 			return;
 		}
 
@@ -262,34 +264,36 @@ export class DirectiveBaseOperator extends Directive {
 		// For the power creeps that just sit on power spawn
 		const isStationary = powerCreep.name.toLowerCase().indexOf(types.basedefender.toString());
 		if (powerCreep.name == 'activate') {
-			console.log("Power creep move is " + JSON.stringify(powerCreep.memory));
+			console.log('Power creep move is ' + JSON.stringify(powerCreep.memory));
 		}
 
-		//console.log(`Running power creep ${JSON.stringify(powerCreep)} with ttl ${powerCreep.ticksToLive} with ${this.room!.powerSpawn}`);
+		// console.log(`Running power creep ${JSON.stringify(powerCreep)}
+		// with ttl ${powerCreep.ticksToLive} with ${this.room!.powerSpawn}`);
 		if (!this.room) {
 			return;
 		} else if (!powerCreep.ticksToLive && this.room && this.room.powerSpawn) {
 			// Spawn creep
-			let res = powerCreep.spawn(this.room.powerSpawn);
+			const res = powerCreep.spawn(this.room.powerSpawn);
 			log.alert(`Running ${powerCreep} with spawn of ${res}`);
 		} else if (this.room.controller && !this.room.controller.isPowerEnabled) {
 			// Enable power
-			let res = this.enablePower(powerCreep, this.room.controller);
+			const res = this.enablePower(powerCreep, this.room.controller);
 			log.alert(`Running ${powerCreep} with enable power of ${res}`);
 		} else if (powerCreep && powerCreep.ticksToLive && powerCreep.ticksToLive < 900 && this.room.powerSpawn) {
-			let res = this.renew(powerCreep, this.room.powerSpawn);
+			const res = this.renew(powerCreep, this.room.powerSpawn);
 			log.alert(`Running ${powerCreep} with renew of ${res}`);
 		} else {
-			let res = this.runPowers(powerCreep);
-			//log.alert(`Running ${powerCreep} with power of ${res}`);
+			const res = this.runPowers(powerCreep);
+			// log.alert(`Running ${powerCreep} with power of ${res}`);
 		}
 
 		if (this.room.hostiles.length > 2 || (powerCreep.pos && DirectiveNukeResponse.isPresent(powerCreep.pos, 'room'))) {
 			const towersToBoost = this.colony.towers.filter(tower => !tower.effects || tower.effects.length == 0);
 			if (towersToBoost.length > 0) {
-				powerCreep.usePower(PWR_OPERATE_TOWER, towersToBoost[0])
+				powerCreep.usePower(PWR_OPERATE_TOWER, towersToBoost[0]);
 			}
-			if ((!powerCreep.carry.ops || powerCreep.carry.ops < 20) && this.room.storage && this.room.storage.store.ops && this.room.storage.store.ops > 100) {
+			if ((!powerCreep.carry.ops || powerCreep.carry.ops < 20) && this.room.storage && this.room.storage.store.ops
+				&& this.room.storage.store.ops > 100) {
 				powerCreep.withdraw(this.room.storage, RESOURCE_OPS, 100);
 			}
 		}

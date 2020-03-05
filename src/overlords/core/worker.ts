@@ -1,6 +1,7 @@
 import {$} from '../../caching/GlobalCache';
 import {Colony, ColonyStage, DEFCON} from '../../Colony';
 import {Roles, Setups} from '../../creepSetups/setups';
+import {DirectiveNukeResponse} from '../../directives/situational/nukeResponse';
 import {TERMINAL_STATE_REBUILD} from '../../directives/terminalState/terminalState_rebuild';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {BuildPriorities, FortifyPriorities} from '../../priorities/priorities_structures';
@@ -10,10 +11,9 @@ import {Task} from '../../tasks/Task';
 import {Tasks} from '../../tasks/Tasks';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {minBy} from '../../utilities/utils';
+import {Visualizer} from '../../visuals/Visualizer';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord, ZergOptions} from '../Overlord';
-import {DirectiveNukeResponse} from "../../directives/situational/nukeResponse";
-import {Visualizer} from "../../visuals/Visualizer";
 
 /**
  * Spawns general-purpose workers, which maintain a colony, performing actions such as building, repairing, fortifying,
@@ -186,9 +186,9 @@ export class WorkerOverlord extends Overlord {
 					const repairTicks = _.sum(this.repairStructures,
 											structure => structure.hitsMax - structure.hits) / REPAIR_POWER;
 					const paveTicks = _.sum(this.colony.rooms,
-										  room => this.colony.roadLogistics.energyToRepave(room)) / 1; // repairCost=1
+										  room => this.colony.roadLogistics.energyToRepave(room)); // repairCost=1
 					let fortifyTicks = 0;
-					let shouldFortify = this.colony.assets.energy > (Game.map.getRoomLinearDistance(this.room.name, 'W16N48') * 15000);
+					const shouldFortify = this.colony.assets.energy > 150000;
 					if (shouldFortify) {
 						fortifyTicks = 0.25 * _.sum(this.fortifyBarriers, barrier =>
 							Math.max(0, WorkerOverlord.settings.barrierHits[this.colony.level]
@@ -352,7 +352,7 @@ export class WorkerOverlord extends Overlord {
 			}
 
 			if (this.colony.controller.upgradeBlocked) {
-				let site = _.first(this.colony.controller.pos.findInRange(FIND_CONSTRUCTION_SITES, 1));
+				const site = _.first(this.colony.controller.pos.findInRange(FIND_CONSTRUCTION_SITES, 1));
 				if (site) {
 					worker.build(site);
 				}

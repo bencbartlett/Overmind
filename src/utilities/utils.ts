@@ -35,7 +35,7 @@ export function hasMinerals(store: { [resourceType: string]: number }): boolean 
 }
 
 export function hasContents(store: { [resourceType: string]: number }): boolean {
-	for (let resourceType in store) {
+	for (const resourceType in store) {
 		if ((store[<ResourceConstant>resourceType] || 0) > 0) {
 			return true;
 		}

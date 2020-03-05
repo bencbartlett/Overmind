@@ -1,6 +1,6 @@
-import {profile} from "../../../profiler/decorator";
-import {powerId} from "./generateOps";
-import {log} from "../../../console/log";
+import {log} from '../../../console/log';
+import {profile} from '../../../profiler/decorator';
+import {powerId} from './generateOps';
 
 /**
  * An abstract class for encapsulating power creep power usage.
@@ -28,7 +28,7 @@ export abstract class Power {
 			this._target = {
 				ref : target.ref,
 				_pos: target.pos,
-			}
+			};
 		}
 
 	}
@@ -62,7 +62,7 @@ export abstract class Power {
 
 	run() {
 		if (this.canRunPower()) {
-			this.operatePower()
+			this.operatePower();
 		}
 	}
 

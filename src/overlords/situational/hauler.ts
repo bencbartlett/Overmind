@@ -6,10 +6,10 @@ import {Energetics} from '../../logistics/Energetics';
 import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
+import {Task} from '../../tasks/Task';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
-import {Task} from "../../tasks/Task";
 
 /**
  * Spawns special-purpose haulers for transporting resources to/from a specified target
@@ -56,7 +56,7 @@ export class HaulingOverlord extends Overlord {
 				// Pick up drops first
 				if (this.directive.hasDrops) {
 					const allDrops: Resource[] = _.flatten(_.values(this.directive.drops));
-					const drop = _.find(allDrops, drop => drop.resourceType != "energy") || allDrops[0];
+					const drop = _.find(allDrops, drop => drop.resourceType != 'energy') || allDrops[0];
 					if (drop) {
 						hauler.task = Tasks.pickup(drop);
 						return;
@@ -76,7 +76,7 @@ export class HaulingOverlord extends Overlord {
 							if (!!hauler.task) {
 								hauler.task = Tasks.withdraw(this.directive.storeStructure, <ResourceConstant>resourceType).fork(hauler.task);
 							} else {
-								hauler.task = Tasks.withdraw(this.directive.storeStructure, <ResourceConstant>resourceType)
+								hauler.task = Tasks.withdraw(this.directive.storeStructure, <ResourceConstant>resourceType);
 							}
 							totalDrawn += store[resourceType];
 							if (totalDrawn >= hauler.carryCapacity) {
@@ -86,7 +86,7 @@ export class HaulingOverlord extends Overlord {
 					}
 					if (hauler.task) {
 						// If can't fill up, just go ahead and go home
-						//log.notify(`Can't finish filling up ${totalDrawn} ${JSON.stringify(hauler.task)} ${this.room}`);
+						// log.notify(`Can't finish filling up ${totalDrawn} ${JSON.stringify(hauler.task)} ${this.room}`);
 						return;
 					}
 				}

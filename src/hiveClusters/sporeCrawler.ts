@@ -166,11 +166,12 @@ export class SporeCrawler extends HiveCluster {
 				}
 			});
 			if (Game.time % 21 == 0 && _.filter(possibleTargets, target => target.hits < target.hitsMax /2).length == 0) {
-				//console.log('Scattershotting!');
+				// console.log('Scattershotting!');
 				return this.scattershot(possibleTargets);
 			}
-			possibleTargets = possibleTargets.filter(enemy => enemy.hits < enemy.hitsMax / 2 || enemy.pos.findInRange(FIND_MY_CREEPS, 3).length > 0);
-			let target = CombatTargeting.findBestCreepTargetForTowers(this.room, possibleTargets);
+			possibleTargets = possibleTargets.filter(enemy => enemy.hits < enemy.hitsMax / 2
+				|| enemy.pos.findInRange(FIND_MY_CREEPS, 3).length > 0);
+			const target = CombatTargeting.findBestCreepTargetForTowers(this.room, possibleTargets);
 			if (target) {
 				return this.attack(target);
 			}

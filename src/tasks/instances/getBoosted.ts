@@ -33,7 +33,8 @@ export class TaskGetBoosted extends Task {
 		if (this.creep.ticksToLive && this.creep.ticksToLive < MIN_LIFETIME_FOR_BOOST * lifetime) {
 			return false; // timeout after this amount of lifespan has passed
 		}
-		// else if (boostParts[this.data.resourceType] == MOVE && this.creep.getActiveBodyparts(boostParts[this.data.resourceType]) >= this.creep.body.length / 2) {
+		// else if (boostParts[this.data.resourceType] == MOVE &&
+		// this.creep.getActiveBodyparts(boostParts[this.data.resourceType]) >= this.creep.body.length / 2) {
 		// 	Game.notify(`Bad boosting of move on creep ${this.creep}, invalid task.`);
 		// 	return false;
 		// }

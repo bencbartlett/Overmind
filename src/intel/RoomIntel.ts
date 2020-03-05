@@ -1,19 +1,19 @@
 // Room intel - provides information related to room structure and occupation
 
+import {Resources} from 'typedoc/dist/lib/output/utils/resources';
+import {getAllColonies} from '../Colony';
+import {log} from '../console/log';
 import {bodyCost} from '../creepSetups/CreepSetup';
 import {isCreep} from '../declarations/typeGuards';
+import {DirectivePowerMine} from '../directives/resource/powerMine';
+import {DirectiveStronghold} from '../directives/situational/stronghold';
+import {Segmenter} from '../memory/Segmenter';
 import {profile} from '../profiler/decorator';
 import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
+import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
 import {getCacheExpiration, irregularExponentialMovingAverage, maxBy} from '../utilities/utils';
 import {Zerg} from '../zerg/Zerg';
 import {MY_USERNAME} from '../~settings';
-import {DirectivePowerMine} from "../directives/resource/powerMine";
-import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER} from "../utilities/Cartographer";
-import {getAllColonies} from "../Colony";
-import {Segmenter} from "../memory/Segmenter";
-import {log} from "../console/log";
-import {DirectiveStronghold} from "../directives/situational/stronghold";
-import {Resources} from "typedoc/dist/lib/output/utils/resources";
 
 const RECACHE_TIME = 2500;
 const OWNED_RECACHE_TIME = 1000;
@@ -364,20 +364,22 @@ export class RoomIntel {
 	 * TODO refactor when factory resources come out to be more generic
 	 */
 	private static minePowerBanks(room: Room) {
-		let powerSetting = Memory.settings.powerCollection;
+		const powerSetting = Memory.settings.powerCollection;
 		if (powerSetting.enabled && Cartographer.roomType(room.name) == ROOMTYPE_ALLEY) {
-			let powerBank = _.first(room.find(FIND_STRUCTURES).filter(struct => struct.structureType == STRUCTURE_POWER_BANK)) as StructurePowerBank;
+			const powerBank = _.first(room.find(FIND_STRUCTURES)
+				.filter(struct => struct.structureType == STRUCTURE_POWER_BANK)) as StructurePowerBank;
 			if (powerBank != undefined && powerBank.ticksToDecay > 4000 && powerBank.power >= powerSetting.minPower) {
-				//Game.notify(`Looking for power banks in ${room}  found ${powerBank} with power ${powerBank.power} and ${powerBank.ticksToDecay} TTL.`);
+				// Game.notify(`Looking for power banks in ${room}  found
+				// ${powerBank} with power ${powerBank.power} and ${powerBank.ticksToDecay} TTL.`);
 				if (DirectivePowerMine.isPresent(powerBank.pos, 'pos')) {
-					//Game.notify(`Already mining room ${powerBank.room}!`);
+					// Game.notify(`Already mining room ${powerBank.room}!`);
 					return;
 				}
 
-				let colonies = getAllColonies().filter(colony => colony.level > 6);
+				const colonies = getAllColonies().filter(colony => colony.level > 6);
 
-				for (let colony of colonies) {
-					let route = Game.map.findRoute(colony.room, powerBank.room);
+				for (const colony of colonies) {
+					const route = Game.map.findRoute(colony.room, powerBank.room);
 					if (route != -2  && route.length <= powerSetting.maxRange) {
 						log.info(`FOUND POWER BANK IN RANGE ${route.length}, STARTING MINING ${powerBank.room}`);
 						DirectivePowerMine.create(powerBank.pos);
@@ -396,14 +398,14 @@ export class RoomIntel {
 	 */
 	private static handleStrongholds(room: Room) {
 		if (room && Cartographer.roomType(room.name) == ROOMTYPE_SOURCEKEEPER && !!room.invaderCore) {
-			let core = room.invaderCore;
+			const core = room.invaderCore;
 			if (DirectiveStronghold.isPresent(core.pos, 'pos')) {
 				return;
 			}
 
-			let colonies = getAllColonies().filter(colony => colony.level == 8);
-			for (let colony of colonies) {
-				let route = Game.map.findRoute(colony.room, core.room);
+			const colonies = getAllColonies().filter(colony => colony.level == 8);
+			for (const colony of colonies) {
+				const route = Game.map.findRoute(colony.room, core.room);
 				if (route != -2  && route.length <= 7) {
 					Game.notify(`FOUND STRONGHOLD ${core.level} AT DISTANCE ${route.length}, BEGINNING ATTACK ${core.room}`);
 					DirectiveStronghold.createIfNotPresent(core.pos, 'pos');
@@ -428,23 +430,23 @@ export class RoomIntel {
 	}
 
 	static cleanRoomMemory() {
-		for (let roomName in Memory.rooms) {
-			if (Cartographer.roomType(roomName) == "ALLEY" || roomName.indexOf('E') != -1 || roomName.indexOf('S') != -1) {
+		for (const roomName in Memory.rooms) {
+			if (Cartographer.roomType(roomName) == 'ALLEY' || roomName.indexOf('E') != -1 || roomName.indexOf('S') != -1) {
 				delete Memory.rooms[roomName];
 				console.log(roomName);
 			}
 		}
 
-		let roomsToDelete = [];
+		const roomsToDelete = [];
 		let x = 0;
-		for (let roomName in Memory.rooms) {
+		for (const roomName in Memory.rooms) {
 			let remove = true;
-			for (let colonyName in Memory.colonies){
-				if(Game.map.getRoomLinearDistance(roomName, colonyName) <= 2){
+			for (const colonyName in Memory.colonies) {
+				if(Game.map.getRoomLinearDistance(roomName, colonyName) <= 2) {
 					remove = false;
 				}
 			}
-			if(remove && roomsToDelete.indexOf(roomName) == -1){
+			if(remove && roomsToDelete.indexOf(roomName) == -1) {
 				x++;
 				roomsToDelete.push(roomName);
 				console.log(x+ ') '+ roomName);
@@ -454,38 +456,38 @@ export class RoomIntel {
 	}
 
 	static periodicFunction() {
-		let zGeneral = ["W18N48"];
+		const zGeneral = ['W18N48'];
 		let total = 0;
 		let result = -1;
-		let zGeneralRoom = "";
+		let zGeneralRoom = '';
 		_.forEach(Game.rooms, room => {
 			if(room.controller &&
 				room.controller.my &&
-				room.terminal){
-				if(room.terminal.energy > 25000 && room.terminal.cooldown == 0 && room.terminal.store[RESOURCE_ENERGY] >= 15000){
+				room.terminal) {
+				if(room.terminal.energy > 25000 && room.terminal.cooldown == 0 && room.terminal.store[RESOURCE_ENERGY] >= 15000) {
 					zGeneralRoom = zGeneral[0];
 					result = room.terminal.send(RESOURCE_ENERGY,10000,zGeneralRoom);
 				}
-				if (result == 0){
-					console.log(room.name + ' > 10000 => ' + zGeneralRoom + " result = " + result) ;
+				if (result == 0) {
+					console.log(room.name + ' > 10000 => ' + zGeneralRoom + ' result = ' + result) ;
 					total = total + 10000;
 				} else {
 					console.log(room.name + ' ====SKIP====');
 				}
 			}
 		});
-		console.log("total ENERGY transfer = " + total);
+		console.log('total ENERGY transfer = ' + total);
 	}
 
 	static run(): void {
 		let alreadyComputedScore = false;
-		//this.requestZoneData();
+		// this.requestZoneData();
 		// If above 2030 kb wipe memory down
 		if (Game.time % 375 == 0 || RawMemory.get().length > 2040000) {
 			RoomIntel.cleanRoomMemory();
 		}
 		if (Game.time % 104 == 0) {
-			//this.periodicFunction();
+			// this.periodicFunction();
 		}
 
 		for (const name in Game.rooms) {

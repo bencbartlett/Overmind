@@ -1,9 +1,9 @@
+import {getAllColonies} from '../Colony';
+import {log} from '../console/log';
+import {DirectiveSKOutpost} from '../directives/colony/outpostSK';
+import {Directive} from '../directives/Directive';
+import {Overseer} from '../Overseer';
 import {profile} from '../profiler/decorator';
-import {log} from "../console/log";
-import {Overseer} from "../Overseer";
-import {getAllColonies} from "../Colony";
-import {Directive} from "../directives/Directive";
-import {DirectiveSKOutpost} from "../directives/colony/outpostSK";
 
 export const ROOMTYPE_SOURCEKEEPER = 'SK';
 export const ROOMTYPE_CORE = 'CORE';
@@ -17,12 +17,12 @@ export const ROOMTYPE_ALLEY = 'ALLEY';
 export class EmpireAnalysis {
 
 	static empireMineralDistribution(): {[mineralType: string]: number} {
-		let colonies = getAllColonies();
-		let minedSKRooms = DirectiveSKOutpost.find(Object.values(Game.flags));
+		const colonies = getAllColonies();
+		const minedSKRooms = DirectiveSKOutpost.find(Object.values(Game.flags));
 
 		const mineralDistribution: {[mineralType: string]: number} = {};
 
-		for (let colony of colonies) {
+		for (const colony of colonies) {
 			const mineral = colony.room.find(FIND_MINERALS)[0];
 			if (!mineralDistribution[mineral.mineralType]) {
 				mineralDistribution[mineral.mineralType] = 0;
@@ -30,7 +30,7 @@ export class EmpireAnalysis {
 			mineralDistribution[mineral.mineralType] += 1;
 		}
 
-		for (let skRoomFlag of minedSKRooms) {
+		for (const skRoomFlag of minedSKRooms) {
 			if (!skRoomFlag.room) {
 				continue;
 			}

@@ -10,28 +10,28 @@ import {DirectiveInvasionDefense} from './defense/invasionDefense';
 import {DirectiveOutpostDefense} from './defense/outpostDefense';
 import {Directive} from './Directive';
 import {DirectiveControllerAttack} from './offense/controllerAttack';
+import {DirectiveHarass} from './offense/harass';
 import {DirectivePairDestroy} from './offense/pairDestroy';
-import {DirectiveSwarmDestroy} from './offense/swarmDestroy';
 import {DirectivePoisonRoom} from './offense/poisonRoom';
+import {DirectiveSwarmDestroy} from './offense/swarmDestroy';
+import {DirectiveBaseOperator} from './powerCreeps/baseOperator';
 import {DirectiveExtract} from './resource/extract';
 import {DirectiveHarvest} from './resource/harvest';
 import {DirectiveHaul} from './resource/haul';
+import {DirectivePowerMine} from './resource/powerMine';
 import {DirectiveRPBunker} from './roomPlanner/roomPlanner_bunker';
 import {DirectiveRPCommandCenter} from './roomPlanner/roomPlanner_commandCenter';
 import {DirectiveRPHatchery} from './roomPlanner/roomPlanner_hatchery';
 import {DirectiveBootstrap} from './situational/bootstrap';
 import {DirectiveNukeResponse} from './situational/nukeResponse';
+import {DirectiveNukeTarget} from './situational/nukeTarget';
+import {DirectiveStronghold} from './situational/stronghold';
 import {DirectiveDismantle} from './targeting/dismantle';
+import {DirectiveModularDismantle} from './targeting/modularDismantle';
 import {DirectiveTargetSiege} from './targeting/siegeTarget';
 import {DirectiveTerminalEmergencyState} from './terminalState/terminalState_emergency';
 import {DirectiveTerminalEvacuateState} from './terminalState/terminalState_evacuate';
 import {DirectiveTerminalRebuildState} from './terminalState/terminalState_rebuild';
-import {DirectivePowerMine} from "./resource/powerMine";
-import {DirectiveHarass} from "./offense/harass";
-import {DirectiveBaseOperator} from "./powerCreeps/baseOperator";
-import {DirectiveNukeTarget} from "./situational/nukeTarget";
-import {DirectiveModularDismantle} from "./targeting/modularDismantle";
-import {DirectiveStronghold} from "./situational/stronghold";
 
 /**
  * This is the initializer for directives, which maps flags by their color code to the corresponding directive

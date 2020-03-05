@@ -38,7 +38,7 @@ export class DirectiveNukeTarget extends Directive {
 
 	run(): void {
 		if (this.colony.nuker && this.colony.nuker.cooldown == 0) {
-			let res = this.colony.nuker.launchNuke(this.flag.pos);
+			const res = this.colony.nuker.launchNuke(this.flag.pos);
 			if (res == OK) {
 				log.notify(`Launching nuclear strike at ${this.flag.pos.print}, ETA ${Game.time + NUKE_LAND_TIME}`);
 				this.remove();
