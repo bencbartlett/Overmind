@@ -148,7 +148,6 @@ export class TraderJoe implements ITradeNetwork {
 		// this.invalidateMarketCacheFromHistory();
 		// const myActiveOrderIDs = _.map(_.filter(Game.market.orders, order => order.active), order => order.id);
 		const allHistory = Game.market.getHistory();
-
 		// Iterate across all history entries, just use yesterday data for now
 		const today = new Date().getDate();
 		const yesterday = new Date();
@@ -163,7 +162,9 @@ export class TraderJoe implements ITradeNetwork {
 				stdev: history.stddevPrice
 			};
 			if (this.memory.cache.buy[history.resourceType]) {
-				log.info(`Generating market price: ${history.resourceType} with avgPrice ${history.avgPrice} compared to B${this.memory.cache.buy[history.resourceType]} diff ${this.memory.cache.buy[history.resourceType].high - history.avgPrice}`);
+				log.info(`Generating market price: ${history.resourceType} with avgPrice ${history.avgPrice} 
+				compared to B${this.memory.cache.buy[history.resourceType]} diff 
+				${this.memory.cache.buy[history.resourceType].high - history.avgPrice}`);
 			}
 		}
 		// this.memory.cache.tick = Game.time;
@@ -240,7 +241,7 @@ export class TraderJoe implements ITradeNetwork {
 	/**
 	 * Opportunistically sells resources when the buy price is higher than current market sell low price
 	 */
-	lookForGoodDeals(terminal: StructureTerminal, resource: ResourceConstant, margin = 1.05): void {
+	lookForGoodDeals(terminal: StructureTerminal, resource: ResourceConstant, margin = 1.25): void {
 		if (Game.market.credits < TraderJoe.settings.market.reserveCredits) {
 			return;
 		}
@@ -261,9 +262,6 @@ export class TraderJoe implements ITradeNetwork {
 		}
 		// TODO change to have margin be by stdev
 		const order = maxBy(ordersForMineral, order => this.effectiveBuyPrice(order, terminal));
-		if (resource == RESOURCE_UTRIUM_BAR && order) {
-			log.notify(`Found ${resource} order for ${JSON.stringify(order)} and ${order.price} vs ${marketLow}`);
-		}
 		if (order && order.price >= (marketLow * margin)) {
 			const amount = Math.min(order.amount, 10000);
 			const cost = Game.market.calcTransactionCost(amount, terminal.room.name, order.roomName!);

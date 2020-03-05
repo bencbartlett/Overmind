@@ -274,25 +274,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 				}
 
 			} else {
-				const commodities = [RESOURCE_UTRIUM_BAR, RESOURCE_LEMERGIUM_BAR, RESOURCE_ZYNTHIUM_BAR, RESOURCE_KEANIUM_BAR,
-					RESOURCE_GHODIUM_MELT, RESOURCE_OXIDANT, RESOURCE_REDUCTANT, RESOURCE_PURIFIER, RESOURCE_BATTERY,
-					RESOURCE_COMPOSITE, RESOURCE_CRYSTAL, RESOURCE_LIQUID, RESOURCE_WIRE, RESOURCE_SWITCH, RESOURCE_TRANSISTOR,
-					RESOURCE_MICROCHIP, RESOURCE_CIRCUIT, RESOURCE_DEVICE, RESOURCE_CELL, RESOURCE_PHLEGM, RESOURCE_TISSUE,
-					RESOURCE_MUSCLE, RESOURCE_ORGANOID, RESOURCE_ORGANISM, RESOURCE_ALLOY, RESOURCE_TUBE, RESOURCE_FIXTURES,
-					RESOURCE_FRAME, RESOURCE_HYDRAULICS, RESOURCE_MACHINE, RESOURCE_CONDENSATE, RESOURCE_CONCENTRATE,
-					RESOURCE_EXTRACT, RESOURCE_SPIRIT, RESOURCE_EMANATION, RESOURCE_ESSENCE];
-
-				const tunedThreshold = threshold;
-				if (commodities.indexOf(resource as CommodityConstant) != -1 && terminal.store[resource as ResourceConstant]
-					&& terminal.store[resource as ResourceConstant]! > 100) {
-					// const response = Overmind.tradeNetwork.sell(terminal, <ResourceConstant>resource, 100);
-					// console.log(`Looking for ${resource} deals with threshold ${threshold} and liquid
-					// ${terminal.store['liquid' as ResourceConstant]}`);
-					// tunedThreshold = 1000;
-				}
-
-
-				if (terminal.store[<ResourceConstant>resource]! > tunedThreshold) {
+				if (terminal.store[<ResourceConstant>resource]! > threshold) {
 					const receiver = maxBy(this.terminals,
 										   terminal => wantedAmount(colonyOf(terminal),
 																	<ResourceConstant>resource));
@@ -302,7 +284,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 						if (response == OK) return;
 					} else {
 						// Sell excess
-						if (terminalNearCapacity || terminal.store[<ResourceConstant>resource]! > 2 * tunedThreshold) {
+						if (terminalNearCapacity || terminal.store[<ResourceConstant>resource]! > 2 * threshold) {
 							const response = Overmind.tradeNetwork.sellDirectly(terminal, <ResourceConstant>resource, 1000);
 							if (response == OK) return;
 						} else {
@@ -484,6 +466,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		});
 	}
 
+	// TODO this is a hacky way to rebalance room resources over the network, make it better
 	shareRooms() {
 		if(Game.time % 10 == 0) {
 			const myRooms = _.filter(Game.rooms, room => room.controller
