@@ -1,4 +1,4 @@
-import {log, Log} from '../../console/log';
+import {log} from '../../console/log';
 import {RoomIntel} from '../../intel/RoomIntel';
 import {HarassOverlord} from '../../overlords/offense/harass';
 import {profile} from '../../profiler/decorator';
@@ -79,7 +79,7 @@ export class DirectiveHarass extends Directive {
 			console.log('Checking for harass in room ' + room);
 			if (reservation && this.memory.aggressive ? !whitelist.includes(reservation) : reservation == playerName) {
 				reservedByTargetPlayer.push(room);
-				// This will double add rooms next to owned rooms, making it more likely to harass them
+				// TODO This will double add rooms next to owned rooms, making it more likely to harass them, reconsider
 				(_.values(Game.map.describeExits(room)) as string[]).forEach(room => {
 					if (RoomIntel.roomReservedBy(room) == playerName) {
 						reservedByTargetPlayer.push(room);

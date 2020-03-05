@@ -21,8 +21,6 @@ export class DirectivePairDestroy extends Directive {
 	static color = COLOR_RED;
 	static secondaryColor = COLOR_CYAN;
 
-	specialRooms: ['W16N53'];
-
 	overlords: {
 		destroy: PairDestroyerOverlord;
 		distraction: DistractionOverlord;
@@ -42,8 +40,7 @@ export class DirectivePairDestroy extends Directive {
 
 	run(): void {
 		// If there are no hostiles left in the room then remove the flag and associated healpoint
-		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0 && this.room.controller
-			&& this.room.name != 'W17N47' && this.room.name != 'W16N53' && this.room.name != 'W16N54') {
+		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
 			log.notify(`Pair destroyer mission at ${this.pos.roomName} completed successfully.`);
 			this.remove();
 		}

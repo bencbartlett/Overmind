@@ -8,7 +8,7 @@ import {Directive} from '../Directive';
 
 interface DirectivePowerMineMemory extends FlagMemory {
 	totalResources?: number;
-	/*
+	/* TODO make an enum
 		0: init
 		1: mining started
 		2: mining near done, hauling started
@@ -105,6 +105,7 @@ export class DirectivePowerMine extends Directive {
 	}
 
 
+	// TODO FIXME XXX
 	manageState() {
 		const currentState = this.memory.state;
 		log.debug(`Managing state ${currentState} of directive ${this.print} with PB ${this.powerBank}`);

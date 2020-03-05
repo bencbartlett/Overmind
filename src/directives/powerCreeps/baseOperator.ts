@@ -45,13 +45,6 @@ export class DirectiveBaseOperator extends Directive {
 		PWR_OPERATE_EXTENSION,
 		PWR_REGEN_MINERAL];
 
-	// overlords: {
-	// 	scout?: StationaryScoutOverlord;
-	// 	destroy?: SwarmDestroyerOverlord | PairDestroyerOverlord;
-	// 	guard?: OutpostDefenseOverlord;
-	// 	controllerAttack?: ControllerAttackerOverlord;
-	// };
-
 	constructor(flag: Flag) {
 		super(flag);
 		const powerCreep = Game.powerCreeps[flag.name];
@@ -99,151 +92,19 @@ export class DirectiveBaseOperator extends Directive {
 		switch(power) {
 			case PWR_GENERATE_OPS: return new GenerateOps(powerCreep);
 			case PWR_OPERATE_EXTENSION: return new OperateExtension(powerCreep);
-// 			case PWR_OPERATE_SPAWN: return this.operateSpawn();
 		}
 
 	}
-	//
-	// /**
-	//  * Generate 1/2/4/6/8 ops resource units. Cooldown 50 ticks. Required creep level: 0/2/7/14/22.
-	//  */
-	// generateOps() {
-	// 	if (powerCreep.powers[PWR_GENERATE_OPS].cooldown !> 0) {
-	// 		return powerCreep.usePower(PWR_GENERATE_OPS);
-	// 	}
-	// 	return ERR_TIRED;
-	// }
-	//
-	// operateSpawn(spawn?: StructureSpawn) {
-	// 	// if (powerCreep.powers[PWR_oper])
-	// 	// if (!spawn) {
-	// 	// 	spawn = _.first(this.room!.spawns.filter(spawn => spawn.effects.length == 0));
-	// 	// 	if (!spawn) {
-	// 	// 		return ERR;
-	// 	// 	}
-	// 	// }
-	// 	if (this.pos.inRangeToPos(spawn.pos, 1)) {
-	// 		return powerCreep.usePower(PWR_OPERATE_SPAWN, spawn);
-	// 	} else {
-	// 		return powerCreep.moveTo(spawn);
-	// 	}
-	// }
-	//
-	// operateTower(tower: StructureTower) {
-	// 	if (this.pos.inRangeToPos(tower.pos, POWER_INFO[PWR_OPERATE_TOWER].range)) {
-	// 		return powerCreep.usePower(PWR_OPERATE_TOWER, tower);
-	// 	} else {
-	// 		return powerCreep.moveTo(tower);
-	// 	}
-	// }
-	//
-	// operateStorage(storage: StructureStorage) {
-	// 	if (this.pos.inRangeToPos(storage.pos, POWER_INFO[PWR_OPERATE_STORAGE].range)) {
-	// 		return powerCreep.usePower(PWR_OPERATE_STORAGE, storage);
-	// 	} else {
-	// 		return powerCreep.moveTo(storage);
-	// 	}
-	// }
-	//
-	// operateExtensions(container: StructureStorage | StructureTerminal | StructureContainer) {
-	// 	if (this.pos.inRangeToPos(container.pos, POWER_INFO[PWR_OPERATE_EXTENSION].range)) {
-	// 		return powerCreep.usePower(PWR_OPERATE_EXTENSION, container);
-	// 	} else {
-	// 		return powerCreep.moveTo(container);
-	// 	}
-	// }
-	//
-	// operateObserver(observer: StructureObserver) {
-	// 	if (this.pos.inRangeToPos(observer.pos, POWER_INFO[PWR_OPERATE_OBSERVER].range)) {
-	// 		return powerCreep.usePower(PWR_OPERATE_OBSERVER, observer);
-	// 	} else {
-	// 		return powerCreep.moveTo(observer);
-	// 	}
-	// }
-	//
-	// operateTerminal(terminal: StructureTerminal) {
-	// 	if (this.pos.inRangeToPos(terminal.pos, POWER_INFO[PWR_OPERATE_TERMINAL].range)) {
-	// 		return powerCreep.usePower(PWR_OPERATE_TERMINAL, terminal);
-	// 	} else {
-	// 		return powerCreep.moveTo(terminal);
-	// 	}
-	// }
-	//
-	// operatePower(power: StructurePowerSpawn) {
-	// 	if (this.pos.inRangeToPos(power.pos, POWER_INFO[PWR_OPERATE_POWER].range)) {
-	// 		return powerCreep.usePower(PWR_OPERATE_POWER, power);
-	// 	} else {
-	// 		return powerCreep.moveTo(power);
-	// 	}
-	// }
-	//
-	// operateController(controller: StructureController) {
-	// 	if (this.pos.inRangeToPos(controller.pos, POWER_INFO[PWR_OPERATE_CONTROLLER].range)) {
-	// 		return powerCreep.usePower(PWR_OPERATE_CONTROLLER, controller);
-	// 	} else {
-	// 		return powerCreep.moveTo(controller);
-	// 	}
-	// }
-	//
-	// // operateFactory(factory: StructureFactory) {
-	// // 	if (this.pos.inRangeToPos(factory.pos, POWER_INFO[PWR_OPERATE_FACTORY].range)) {
-	// // 		return powerCreep.usePower(PWR_OPERATE_FACTORY, factory);
-	// // 	} else {
-	// // 		return this.moveTo(factory);
-	// // 	}
-	// // }
-	//
-	// shield() {
-	// 	if (powerCreep.powers[PWR_SHIELD].cooldown !> 0) {
-	// 		return powerCreep.usePower(PWR_SHIELD);
-	// 	}
-	// 	return ERR_TIRED;
-	// }
-	//
-	// regenSource(source : Source) {
-	// 	if (this.pos.inRangeToPos(source.pos, POWER_INFO[PWR_REGEN_SOURCE].range)) {
-	// 		return powerCreep.usePower(PWR_REGEN_SOURCE, source);
-	// 	} else {
-	// 		return powerCreep.moveTo(source);
-	// 	}
-	// }
-	//
-	// regenMineral(mineral: Mineral) {
-	// 	if (this.pos.inRangeToPos(mineral.pos, POWER_INFO[PWR_REGEN_MINERAL].range)) {
-	// 		return powerCreep.usePower(PWR_REGEN_MINERAL, mineral);
-	// 	} else {
-	// 		return powerCreep.moveTo(mineral);
-	// 	}
-	// }
-	//
-	// fortify(rampart: StructureRampart) {
-	// 	if (this.pos.inRangeToPos(rampart.pos, POWER_INFO[PWR_FORTIFY].range)) {
-	// 		return powerCreep.usePower(PWR_FORTIFY, rampart);
-	// 	} else {
-	// 		return powerCreep.moveTo(rampart);
-	// 	}
-	// }
-	//
-	// operateLab(lab: StructureLab) {
-	// 	if (this.pos.inRangeToPos(lab.pos, POWER_INFO[PWR_OPERATE_LAB].range)) {
-	// 		return powerCreep.usePower(PWR_OPERATE_LAB, lab);
-	// 	} else {
-	// 		return powerCreep.moveTo(lab);
-	// 	}
-	// }
-
 
 	runPowers(powerCreep: PowerCreep) {
 		const priorities = this.memory.powerPriorities;
 		for (const powerId in priorities) {
-			// console.log(`Powerid of ${powerId} and list of ${priorities}`);
 			const powerToUse = this.usePower(powerCreep, priorities[powerId]);
 			if (powerToUse && powerToUse.operatePower()) {
 				break;
 			}
 		}
 	}
-
 
 	visuals(): void {
 		Visualizer.marker(this.pos, {color: 'red'});

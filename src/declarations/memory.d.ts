@@ -1,5 +1,5 @@
 type operationMode = 'manual' | 'semiautomatic' | 'automatic';
-/**
+/** TODO make this an enum
  * 0: Basic
  * 1: Collect from enemy storage/terminal
  * 2: Collect from all sources TBD
@@ -43,8 +43,7 @@ interface Memory {
 	resetBucket?: boolean;
 	haltTick?: number;
 	combatPlanner: any;
-	reinforcementLearning?: any;
-	playerCreepTracker: {
+	playerCreepTracker: { // TODO revisit for a better longterm solution
 		[playerName: string]: CreepTracker
 	};
 	zoneRooms: { [roomName: string]: { [type: string]: number} };

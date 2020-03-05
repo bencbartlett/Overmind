@@ -174,24 +174,24 @@ export class CommandCenter extends HiveCluster {
 			if (this.observeRoom) {
 				this.observer.observeRoom(this.observeRoom);
 			} else if (CommandCenter.settings.enableIdleObservation) {
-				// const sign = Math.round(Game.time / 100) % 4;
-				// const xsign = sign > 1 ? 1 : -1;
-				// const ysign = sign % 2 == 0 ? 1 : -1;
-				// const dx = Game.time % MAX_OBSERVE_DISTANCE * xsign;
-				// const dy = Game.time % (MAX_OBSERVE_DISTANCE ** 2) * ysign;
+				// TODO OBSERVER FIX ONLY LOOK AT southwest corner
+				const dx = Game.time % MAX_OBSERVE_DISTANCE;
+				const dy = Game.time % (MAX_OBSERVE_DISTANCE ** 2);
+				const roomToObserve = Cartographer.findRelativeRoomName(this.pos.roomName, dx, dy);
+				this.observer.observeRoom(roomToObserve);
 				// const roomToObserve = Cartographer.findRelativeRoomName(this.pos.roomName, dx, dy);
 				// this.observer.observeRoom(roomToObserve);
-				if ((Game.time + 225 * this.colony.id) % 1088 < 225) {
-					// 255*29/6 = 1088, meaning, scan 6 rooms instead of 29 room every tick
-					const dx = Game.time % (MAX_OBSERVE_DISTANCE * 2 + 1);// ((2*MAX_OBSERVE_DISTANCE)+1);
-					const dy = Math.floor((Game.time % (MAX_OBSERVE_DISTANCE * 2 + 1) ** 2)
-						/ (MAX_OBSERVE_DISTANCE * 2 + 1));
-					const shiftRefRoom = Cartographer.findRelativeRoomName(this.pos.roomName,
-						-MAX_OBSERVE_DISTANCE, -MAX_OBSERVE_DISTANCE);
-					const roomToObserve = Cartographer.findRelativeRoomName(shiftRefRoom, dx, dy);
-					this.observer.observeRoom(roomToObserve);
+				// if ((Game.time + 225 * this.colony.id) % 1088 < 225) {
+				// 	// 255*29/6 = 1088, meaning, scan 6 rooms instead of 29 room every tick
+				// 	const dx = Game.time % (MAX_OBSERVE_DISTANCE * 2 + 1);// ((2*MAX_OBSERVE_DISTANCE)+1);
+				// 	const dy = Math.floor((Game.time % (MAX_OBSERVE_DISTANCE * 2 + 1) ** 2)
+				// 		/ (MAX_OBSERVE_DISTANCE * 2 + 1));
+				// 	const shiftRefRoom = Cartographer.findRelativeRoomName(this.pos.roomName,
+				// 		-MAX_OBSERVE_DISTANCE, -MAX_OBSERVE_DISTANCE);
+				// 	const roomToObserve = Cartographer.findRelativeRoomName(shiftRefRoom, dx, dy);
+				// 	this.observer.observeRoom(roomToObserve);
 					// console.log(this.colony.id + ') ' + this.pos.roomName + ' shift ' + shiftRefRoom +' observe ' + roomToObserve);
-				}
+				// }
 			}
 		}
 	}

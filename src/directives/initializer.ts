@@ -64,8 +64,6 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectivePairDestroy(flag);
 				case COLOR_PURPLE:
 					return new DirectiveControllerAttack(flag);
-				case COLOR_BROWN:
-					// return new DirectivePoisonRoom(flag);
 				case COLOR_WHITE:
 					return new DirectiveHarass(flag);
 			}
@@ -146,6 +144,7 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveRPBunker(flag);
 			}
 			break;
+
 		// Power directives ====================================================================================
 		case COLOR_CYAN:
 			switch (flag.secondaryColor) {

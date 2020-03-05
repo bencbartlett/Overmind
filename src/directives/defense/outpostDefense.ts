@@ -27,9 +27,6 @@ export class DirectiveOutpostDefense extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		// if (this.room && _.contains(this.room.dangerousHostiles, hostile => hostile.owner.username == 'inakrin')) {
-		// 	this.overlords.outpostDefense = new OutpostDefenseOverlord(this);
-		// }
 		this.overlords.outpostDefense = new OutpostDefenseOverlord(this);
 	}
 

@@ -42,8 +42,7 @@ const defaultOverseerMemory: OverseerMemory = {
  * in charge of starting new "processes" (directives) to respond to various situations.
  */
 @profile
-export class
-Overseer implements IOverseer {
+export class Overseer implements IOverseer {
 
 	private memory: OverseerMemory;
 	private overlords: Overlord[];								// Overlords sorted by priority
@@ -202,22 +201,26 @@ Overseer implements IOverseer {
 					DirectiveGuard.create(room.dangerousHostiles[0].pos);
 				}
 			}
-			if (Game.time % 55 == 0) {
-				const cores = room.hostileStructures.filter(s => s.structureType == STRUCTURE_INVADER_CORE);
-				if (cores.length > 0) {
-					const core = <StructureInvaderCore>cores[0];
-					log.alert(`Found core in ${room.name} with ${core} level ${core.level}`);
-					let res;
-					if (core.level == 0) {
-						res = DirectiveModularDismantle.createIfNotPresent(cores[0].pos, 'pos');
-						if (!!res) {
-							log.notify(`Creating invader core dismantle in room ${room.name}`);
-						}
-					} else if (core.level <= 4 && core.ticksToDeploy) {
-						res = DirectiveStronghold.createIfNotPresent(core.pos, 'room');
-						if (!!res) {
-							log.notify(`Creating stronghold clearing ranged attacker in room ${room.name}`);
-						}
+			this.handleStrongholds(colony, room);
+		}
+	}
+
+	private handleStrongholds(colony: Colony, room: Room) {
+		if (Game.time % 55 == 0) {
+			const cores = room.hostileStructures.filter(s => s.structureType == STRUCTURE_INVADER_CORE);
+			if (cores.length > 0) {
+				const core = <StructureInvaderCore>cores[0];
+				log.alert(`Found core in ${room.name} with ${core} level ${core.level}`);
+				let res;
+				if (core.level == 0) {
+					res = DirectiveModularDismantle.createIfNotPresent(cores[0].pos, 'pos');
+					if (!!res) {
+						log.notify(`Creating invader core dismantle in room ${room.name}`);
+					}
+				} else if (core.level <= 4 && core.ticksToDeploy) {
+					res = DirectiveStronghold.createIfNotPresent(core.pos, 'room');
+					if (!!res) {
+						log.notify(`Creating stronghold clearing ranged attacker in room ${room.name}`);
 					}
 				}
 			}
@@ -338,7 +341,7 @@ Overseer implements IOverseer {
 	// Safe mode condition =============================================================================================
 
 	private handleSafeMode(colony: Colony): void {
-		if (colony.stage == ColonyStage.Larva && onPublicServer() || colony.room.name == 'W16N37') {
+		if (colony.stage == ColonyStage.Larva && onPublicServer()) {
 			return;
 		}
 		// Safe mode activates when there are dangerous player hostiles that can reach the spawn

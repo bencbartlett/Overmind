@@ -203,7 +203,8 @@ export abstract class Directive {
 			}
 			if (!colonyFilter || colonyFilter(colony)) {
 				const ret = Pathing.findPath((colony.hatchery || colony).pos, this.pos);
-				if (this.memory.pathNotRequired || !ret.incomplete) {
+				// TODO handle directives that can't find a path, at great range
+				if (!ret.incomplete) {
 					if (ret.path.length < maxPathLength && ret.path.length < minDistance) {
 						nearestColony = colony;
 						minDistance = ret.path.length;
@@ -269,6 +270,7 @@ export abstract class Directive {
 		return result;
 	}
 
+	// TODO return the flags that are present rather than just boolean
 	static isPresent(pos: RoomPosition, scope: 'room' | 'pos'): boolean {
 		const room = Game.rooms[pos.roomName] as Room | undefined;
 		switch (scope) {
@@ -305,46 +307,6 @@ export abstract class Directive {
 					return _.filter(flagsAtPos, flag => this.filter(flag)).length > 0;
 				}
 			}
-	}
-
-
-	/* Whether a directive of the same type is already present (in room | at position) */
-	static isPresentAndReturnName(pos: RoomPosition, scope: 'room' | 'pos'): Flag[] {
-		const room = Game.rooms[pos.roomName] as Room | undefined;
-		switch (scope) {
-			case 'room':
-				if (room) {
-					return _.filter(room.flags,
-									flag => this.filter(flag) &&
-											!(flag.memory.setPosition
-											&& flag.memory.setPosition.roomName != pos.roomName));
-				} else {
-					const flagsInRoom = _.filter(Game.flags, function(flag) {
-						if (flag.memory.setPosition) { // does it need to be relocated?
-							return flag.memory.setPosition.roomName == pos.roomName;
-						} else { // properly located
-							return flag.pos.roomName == pos.roomName;
-						}
-					});
-					return _.filter(flagsInRoom, flag => this.filter(flag));
-				}
-			case 'pos':
-				if (room) {
-					return _.filter(pos.lookFor(LOOK_FLAGS),
-									flag => this.filter(flag) &&
-											!(flag.memory.setPosition
-											&& !equalXYR(pos, flag.memory.setPosition)));
-				} else {
-					const flagsAtPos = _.filter(Game.flags, function(flag) {
-						if (flag.memory.setPosition) { // does it need to be relocated?
-							return equalXYR(flag.memory.setPosition, pos);
-						} else { // properly located
-							return equalXYR(flag.pos, pos);
-						}
-					});
-					return _.filter(flagsAtPos, flag => this.filter(flag));
-				}
-		}
 	}
 
 	/* Create a directive if one of the same type is not already present (in room | at position).
@@ -406,12 +368,6 @@ export abstract class Directive {
 	}
 
 	abstract spawnMoarOverlords(): void;
-
-	/* Determines if should spawn at a Game.time.
-	Returns 0 if no issue, or a Game.time to start spawning after. Anti-harass */
-	shouldSpawn(): number {
-		return 0;
-	}
 
 	/* Initialization logic goes here, called in overseer.init() */
 	abstract init(): void;

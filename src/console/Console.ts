@@ -92,6 +92,7 @@ export class OvermindConsole {
 		descr['profileMemory(depth=1)'] = 'scan through memory to get the size of various objects';
 		descr['startRemoteDebugSession()'] = 'enables the remote debugger so Muon can debug your code';
 		descr['cancelMarketOrders(filter?)'] = 'cancels all market orders matching filter (if provided)';
+		descr['setRoomUpgradeRate(room, upgradeRate)'] = 'changes the rate which a room upgrades at, default is 1';
 		descr['getEmpireMineralDistribution()'] = 'returns current census of colonies and mined sk room minerals';
 		// Console list
 		const descrMsg = toColumns(descr, {justify: true, padChar: '.'});

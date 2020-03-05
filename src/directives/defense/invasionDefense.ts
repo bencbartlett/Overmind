@@ -29,6 +29,7 @@ export class DirectiveInvasionDefense extends Directive {
 	room: Room | undefined;
 
 	private relocateFrequency: number;
+	// Safe end time is how long after last enemy this turns off
 	safeEndTime: 500;
 
 	constructor(flag: Flag) {
@@ -72,7 +73,8 @@ export class DirectiveInvasionDefense extends Directive {
 		this.alert(`Invasion (hostiles: ${numHostiles}) ${Game.time - this.memory.safeSince}`, NotifierPriority.Critical);
 	}
 
-	recordBaddies() {
+	// TODO record baddies needs to be redone in a more systemic fashion. But here for the 🍿
+	private recordBaddies(): void {
 		if (!this.room) {
 			return;
 		}
@@ -106,7 +108,7 @@ export class DirectiveInvasionDefense extends Directive {
 		});
 	}
 
-	printPlayerExpenditure() {
+	private printPlayerExpenditure(): void {
 		let t3Count = 0;
 		let energyCount = 0;
 		const mem = Memory.playerCreepTracker.inakrin;
@@ -127,7 +129,7 @@ export class DirectiveInvasionDefense extends Directive {
 		console.log(`Total Energy Cost: ${energyCount}`);
 	}
 
-	cleanUpPlayerMem() {
+	private cleanUpPlayerMem(): void {
 		const mem = Memory.playerCreepTracker;
 		for (const player of _.keys(mem)) {
 			const tracker = mem[player];
