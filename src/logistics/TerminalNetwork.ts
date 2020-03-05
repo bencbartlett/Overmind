@@ -283,7 +283,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 					RESOURCE_EXTRACT, RESOURCE_SPIRIT, RESOURCE_EMANATION, RESOURCE_ESSENCE];
 
 				const tunedThreshold = threshold;
-				if (commodities.indexOf(resource) != -1 && terminal.store[resource as ResourceConstant]
+				if (commodities.indexOf(resource as CommodityConstant) != -1 && terminal.store[resource as ResourceConstant]
 					&& terminal.store[resource as ResourceConstant]! > 100) {
 					// const response = Overmind.tradeNetwork.sell(terminal, <ResourceConstant>resource, 100);
 					// console.log(`Looking for ${resource} deals with threshold ${threshold} and liquid
@@ -312,21 +312,6 @@ export class TerminalNetwork implements ITerminalNetwork {
 					}
 				}
 
-			}
-		}
-	}
-
-	private handleOverflowWithNoEnergy() {
-		for (const terminal of this.terminals) {
-			if (terminal.store.getFreeCapacity() < 5000 && terminal.store[RESOURCE_ENERGY] < 10000) {
-				const roomOrders = _.filter(Game.market.orders, order => order.roomName == terminal.room.name);
-				for (const res in terminal.store) {
-					const quantity = terminal.store[res as ResourceConstant];
-					if (quantity > 15000 && roomOrders.filter(order => order.resourceType == res).length == 0) {
-						log.info(`Creating sell order for ${res} in room ${terminal.room.print}`);
-						Overmind.tradeNetwork.sell(terminal, res as ResourceConstant, 2000);
-					}
-				}
 			}
 		}
 	}

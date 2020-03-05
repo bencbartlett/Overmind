@@ -12,7 +12,6 @@ import {Directive} from './Directive';
 import {DirectiveControllerAttack} from './offense/controllerAttack';
 import {DirectiveHarass} from './offense/harass';
 import {DirectivePairDestroy} from './offense/pairDestroy';
-import {DirectivePoisonRoom} from './offense/poisonRoom';
 import {DirectiveSwarmDestroy} from './offense/swarmDestroy';
 import {DirectiveBaseOperator} from './powerCreeps/baseOperator';
 import {DirectiveExtract} from './resource/extract';
@@ -66,7 +65,7 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 				case COLOR_PURPLE:
 					return new DirectiveControllerAttack(flag);
 				case COLOR_BROWN:
-					return new DirectivePoisonRoom(flag);
+					// return new DirectivePoisonRoom(flag);
 				case COLOR_WHITE:
 					return new DirectiveHarass(flag);
 			}
