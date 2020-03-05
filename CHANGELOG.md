@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file. The format 
 ## [Unreleased]
 
 ### Added
+- Added modules for use in the reinforcement learning side project:
+    - The `ActionParser` module provides a line of direct interaction for the external Python optimizers to control creep actions via the `Memory.reinforcementLearning` object.
+    - The `TrainingOpponents` file provides a set of rudimentary opponents to train the RL models against.
 - Created a [documentation site](https://bencbartlett.github.io/overmind-docs/) using TypeDoc!
     - Added/reformatted docstring-comments throughout the codebase
 - Added the `RemoteDebugger` module, which lets me remotely debug other Overmind players' code in real-time by communicating through public memory segments. 

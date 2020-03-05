@@ -281,7 +281,7 @@ export function clone2DArray<T>(a: T[][]): T[][] {
 /**
  * Rotate a square matrix in place clockwise by 90 degrees
  */
-function rotateMatrix<T>(matrix: T[][]): void {
+export function rotateMatrix<T>(matrix: T[][]): void {
 	// reverse the rows
 	matrix.reverse();
 	// swap the symmetric elements
@@ -303,4 +303,11 @@ export function rotatedMatrix<T>(matrix: T[][], clockwiseTurns: 0 | 1 | 2 | 3): 
 		rotateMatrix(mat);
 	}
 	return mat;
+}
+
+/**
+ * Cyclically permute a list by n elements
+ */
+export function cyclicListPermutation<T>(list: T[], offset: number): T[] {
+	return list.slice(offset).concat(list.slice(0, offset));
 }

@@ -7,7 +7,7 @@ import {profile} from '../profiler/decorator';
 import {Abathur} from '../resources/Abathur';
 import {RESOURCE_IMPORTANCE} from '../resources/map_resources';
 import {alignedNewline, bullet, rightArrow} from '../utilities/stringConstants';
-import {maxBy, mergeSum, minBy, minMax} from '../utilities/utils';
+import {cyclicListPermutation, maxBy, mergeSum, minBy, minMax} from '../utilities/utils';
 import {Energetics} from './Energetics';
 import {MAX_ENERGY_BUY_ORDERS, MAX_ENERGY_SELL_ORDERS, TraderJoe} from './TradeNetwork';
 
@@ -316,6 +316,21 @@ export class TerminalNetwork implements ITerminalNetwork {
 		}
 	}
 
+	private handleOverflowWithNoEnergy() {
+		for (const terminal of this.terminals) {
+			if (terminal.store.getFreeCapacity() < 5000 && terminal.store[RESOURCE_ENERGY] < 10000) {
+				const roomOrders = _.filter(Game.market.orders, order => order.roomName == terminal.room.name);
+				for (const res in terminal.store) {
+					const quantity = terminal.store[res as ResourceConstant];
+					if (quantity > 15000 && roomOrders.filter(order => order.resourceType == res).length == 0) {
+						log.info(`Creating sell order for ${res} in room ${terminal.room.print}`);
+						Overmind.tradeNetwork.sell(terminal, res as ResourceConstant, 2000);
+					}
+				}
+			}
+		}
+	}
+
 	// private sendExcessEnergy(terminal: StructureTerminal): void {
 	// 	let {sendSize, inThreshold, outThreshold, equilibrium} = Energetics.settings.terminal.energy;
 	// 	// See if there are any rooms actively needing energy first
@@ -402,8 +417,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 			this.equalize(resource, terminals);
 		}
 		// Determine next resource type to equalize; most recent resourceType gets cycled to end
-		const resourceEqualizeOrder = equalizeResources.slice(this.memory.equalizeIndex + 1)
-													   .concat(equalizeResources.slice(0, this.memory.equalizeIndex + 1));
+		const resourceEqualizeOrder = cyclicListPermutation(equalizeResources, this.memory.equalizeIndex + 1);
 		const allColonies = getAllColonies();
 		const nextResourceType = _.find(resourceEqualizeOrder, resource => {
 			if (resource == RESOURCE_ENERGY) {

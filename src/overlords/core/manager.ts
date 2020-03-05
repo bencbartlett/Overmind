@@ -1,4 +1,5 @@
 import {$} from '../../caching/GlobalCache';
+import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {StoreStructure} from '../../declarations/typeGuards';
 import {TERMINAL_STATE_REBUILD} from '../../directives/terminalState/terminalState_rebuild';
@@ -7,6 +8,7 @@ import {SpawnRequestOptions} from '../../hiveClusters/hatchery';
 import {Energetics} from '../../logistics/Energetics';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
+import {BASE_RESOURCES} from '../../resources/map_resources';
 import {Tasks} from '../../tasks/Tasks';
 import {hasMinerals, minBy} from '../../utilities/utils';
 import {Zerg} from '../../zerg/Zerg';
@@ -85,6 +87,7 @@ export class CommandCenterOverlord extends Overlord {
 	 * Handle any supply requests from your transport request group
 	 */
 	private supplyActions(manager: Zerg): boolean {
+		manager.debug('supplyActions');
 		const request = this.commandCenter.transportRequests.getPrioritizedClosestRequest(manager.pos, 'supply');
 		if (request) {
 			const amount = Math.min(request.amount, manager.carryCapacity);
@@ -118,6 +121,7 @@ export class CommandCenterOverlord extends Overlord {
 	 * Handle any withdrawal requests from your transport request group
 	 */
 	private withdrawActions(manager: Zerg): boolean {
+		manager.debug('withdrawActions');
 		if (_.sum(manager.carry) < manager.carryCapacity) {
 			const request = this.commandCenter.transportRequests.getPrioritizedClosestRequest(manager.pos, 'withdraw');
 			if (request) {
@@ -136,6 +140,7 @@ export class CommandCenterOverlord extends Overlord {
 	 * Move energy into terminal if storage is too full and into storage if storage is too empty
 	 */
 	private equalizeStorageAndTerminal(manager: Zerg): boolean {
+		manager.debug('equalizeStorageAndTerminal');
 		const storage = this.commandCenter.storage;
 		const terminal = this.commandCenter.terminal;
 		if (!storage || !terminal) return false;
@@ -175,6 +180,7 @@ export class CommandCenterOverlord extends Overlord {
 	 * Move enough energy from a terminal which needs to be moved into storage to allow you to rebuild the terminal
 	 */
 	private moveEnergyFromRebuildingTerminal(manager: Zerg): boolean {
+		manager.debug('moveEnergyFromRebuildingTerminal');
 		const storage = this.commandCenter.storage;
 		const terminal = this.commandCenter.terminal;
 		if (!storage || !terminal) {
@@ -208,7 +214,8 @@ export class CommandCenterOverlord extends Overlord {
 	// 	return false;
 	// }
 
-	moveMineralsToTerminal(manager: Zerg) {
+	private moveMineralsToTerminal(manager: Zerg): boolean {
+		manager.debug('moveMineralsToTerminal');
 		const storage = this.commandCenter.storage;
 		const terminal = this.commandCenter.terminal;
 		if (!storage || !terminal) {
@@ -219,6 +226,10 @@ export class CommandCenterOverlord extends Overlord {
 		const maxFillRatio = 0.95;
 		const terminalT3Amount = 8000;
 		const terminalOtherAmount = 10000;
+		// Don't do this if terminal is critially full
+		if (terminal.store.getFreeCapacity() < 1000) {
+			return false;
+		}
 		// Move all non-energy resources from storage to terminal
 		for (const resourceType in terminal.store) {
 			if (storageAmount < storageAmount * maxFillRatio && resourceType != RESOURCE_ENERGY
@@ -257,19 +268,80 @@ export class CommandCenterOverlord extends Overlord {
 	/**
 	 * Pickup resources dropped on manager position or in tombstones from last manager
 	 */
-	private pickupActions(manager: Zerg): boolean {
-		// Pickup any resources that happen to be dropped where you are
-		const resources = manager.pos.lookFor(LOOK_RESOURCES);
-		if (resources.length > 0) {
-			manager.task = Tasks.transferAll(this.depositTarget).fork(Tasks.pickup(resources[0]));
-			return true;
-		}
+	private pickupActions(manager: Zerg, tombstonesOnly = true): boolean {
+		manager.debug('pickupActions');
 		// Look for tombstones at position
 		const tombstones = manager.pos.lookFor(LOOK_TOMBSTONES);
 		if (tombstones.length > 0) {
 			manager.task = Tasks.transferAll(this.depositTarget).fork(Tasks.withdrawAll(tombstones[0]));
 			return true;
 		}
+		if (tombstonesOnly) {
+			return false; // skip next bit if only looking at tombstones
+		}
+		// Pickup any resources that happen to be dropped where you are
+		const resources = manager.pos.lookFor(LOOK_RESOURCES);
+		if (resources.length > 0) {
+			manager.task = Tasks.transferAll(this.depositTarget).fork(Tasks.pickup(resources[0]));
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * When storage + terminal are critically full, start dumping the least useful stuff on the ground.
+	 * This should rarely be run; added in Feb 2020 to fix a critical issue where I hadn't added factory code and all
+	 * my terminals and storage filled up with crap.
+	 */
+	private emergencyDumpingActions(manager: Zerg): boolean {
+		manager.debug('emergencyDumpingActions');
+		const storage = this.commandCenter.storage;
+		const terminal = this.commandCenter.terminal;
+		if (!storage && !terminal) {
+			return false;
+		}
+		const storageCapacity = storage ? storage.store.getFreeCapacity() : 0;
+		const terminalCapacity = terminal ? terminal.store.getFreeCapacity() : 0;
+		const storageEnergy = storage ? storage.store.energy : 0;
+		const terminalEnergy = terminal ? terminal.store.energy : 0;
+		// const freeCapacity = (storage ? storage.store.getFreeCapacity() : 0) +
+		// 					 (terminal ? terminal.store.getFreeCapacity() : 0);
+		// const energy = (storage ? storage.store.energy : 0) +
+		// 			   (terminal ? terminal.store.energy : 0);
+		// if (energy >= 5000) {
+		// 	return false;
+		// }
+		const DUMP_THRESHOLD = 5000;
+		if (terminal && terminalCapacity < DUMP_THRESHOLD && terminalEnergy < DUMP_THRESHOLD) {
+			return this.dumpFrom(manager, terminal);
+		}
+		if (storage && storageCapacity < DUMP_THRESHOLD && storageEnergy < DUMP_THRESHOLD) {
+			return this.dumpFrom(manager, storage);
+		}
+		return false;
+	}
+
+	/**
+	 * Dump resources on ground from a target that is critically full
+	 */
+	private dumpFrom(manager: Zerg, target: StructureTerminal | StructureStorage): boolean {
+		manager.say('Dump!');
+		// Start dumping least valuable shit on the ground
+		const toDump = _.sortBy(BASE_RESOURCES, resource => (target.store[resource] || 0) * -1);
+		const toDumpInCarry = _.first(_.filter(toDump, res => manager.carry[res] > 0));
+		// Drop anything you have in carry that is dumpable
+		if (toDumpInCarry) {
+			manager.drop(toDumpInCarry);
+			return true;
+		}
+		// Take out stuff to dump
+		for (const resource of toDump) {
+			if (target.store[resource] > 0) {
+				manager.task = Tasks.drop(manager.pos, resource).fork(Tasks.withdraw(target, resource));
+				return true;
+			}
+		}
+		log.warning('No shit to drop! Shouldn\'t reach here!');
 		return false;
 	}
 
@@ -277,6 +349,7 @@ export class CommandCenterOverlord extends Overlord {
 	 * Suicide once you get old and make sure you don't drop and waste any resources
 	 */
 	private deathActions(manager: Zerg): boolean {
+		manager.debug('deathActions');
 		const nearbyManagers = _.filter(this.managers, manager => manager.pos.inRangeTo(this.commandCenter.pos, 3));
 		if (nearbyManagers.length > 1) {
 			if (_.sum(manager.carry) == 0) {
@@ -319,9 +392,9 @@ export class CommandCenterOverlord extends Overlord {
 		if (manager.ticksToLive! < 150) {
 			if (this.deathActions(manager)) return;
 		}
-
 		if (this.preventTerminalFlooding(manager)) return;
-
+		// Emergency dumping actions for critically clogged terminals and storages
+		if (this.emergencyDumpingActions(manager)) return;
 		// Pick up any dropped resources on ground
 		if (this.pickupActions(manager)) return;
 		// Move minerals from storage to terminal if needed
@@ -352,6 +425,7 @@ export class CommandCenterOverlord extends Overlord {
 	 * Handle idle actions if the manager has nothing to do
 	 */
 	private idleActions(manager: Zerg): void {
+		manager.debug('idleActions');
 		if (this.mode == 'bunker' && this.managerRepairTarget && manager.getActiveBodyparts(WORK) > 0) {
 			// Repair ramparts when idle
 			if (manager.carry.energy > 0) {

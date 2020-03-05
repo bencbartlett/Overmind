@@ -1,14 +1,13 @@
+import {ColonyStage} from '../../Colony';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {BunkerDefenseOverlord} from '../../overlords/defense/bunkerDefense';
+import {DistractionOverlord} from '../../overlords/defense/distraction';
 import {MeleeDefenseOverlord} from '../../overlords/defense/meleeDefense';
 import {RangedDefenseOverlord} from '../../overlords/defense/rangedDefense';
 import {profile} from '../../profiler/decorator';
-
-import {ColonyStage} from '../../Colony';
-import {DistractionOverlord} from '../../overlords/defense/distraction';
+import {BarrierPlanner} from '../../roomPlanner/BarrierPlanner';
 import {Directive} from '../Directive';
 import {NotifierPriority} from '../Notifier';
-import {DirectivePairDestroy} from '../offense/pairDestroy';
 
 interface DirectiveInvasionDefenseMemory extends FlagMemory {
 	persistent?: boolean;
@@ -58,7 +57,13 @@ export class DirectiveInvasionDefense extends Directive {
 			this.overlords.rangedDefense = new RangedDefenseOverlord(this, useBoosts);
 			// DirectivePairDestroy.createIfNotPresent(this.pos, 'room');
 		} else {
-			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, false);
+			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
+		}
+		// If serious bunker busting attempt, spawn lurkers
+		// TODO understand dismantlers damage output
+		if (meleeHostiles.length > 0 && expectedDamage > ATTACK_POWER * 70 &&
+			this.colony.level >= BarrierPlanner.settings.bunkerizeRCL) {
+			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, false);
 		}
 	}
 

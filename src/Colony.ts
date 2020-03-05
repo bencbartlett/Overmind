@@ -2,12 +2,14 @@ import {assimilationLocked} from './assimilation/decorator';
 import {$} from './caching/GlobalCache';
 import {log} from './console/log';
 import {StoreStructure} from './declarations/typeGuards';
+// import {DirectivePraise} from './directives/colony/praise';
 import {DirectiveExtract} from './directives/resource/extract';
 import {_HARVEST_MEM_DOWNTIME, _HARVEST_MEM_USAGE, DirectiveHarvest} from './directives/resource/harvest';
 import {HiveCluster} from './hiveClusters/_HiveCluster';
 import {CommandCenter} from './hiveClusters/commandCenter';
 import {EvolutionChamber} from './hiveClusters/evolutionChamber';
 import {Hatchery} from './hiveClusters/hatchery';
+// import {PraiseSite} from './hiveClusters/praiseSite';
 import {SporeCrawler} from './hiveClusters/sporeCrawler';
 import {UpgradeSite} from './hiveClusters/upgradeSite';
 import {Energetics} from './logistics/Energetics';
@@ -137,6 +139,7 @@ export class Colony {
 	// extractionSites: { [extractorID: string]: ExtractionSite };
 	miningSites: { [flagName: string]: DirectiveHarvest };	// Component with logic for mining and hauling
 	extractionSites: { [flagName: string]: DirectiveExtract };
+	// praiseSite: PraiseSite | undefined;
 	// Operational mode
 	bootstrapping: boolean; 							// Whether colony is bootstrapping or recovering from crash
 	isIncubating: boolean;								// If the colony is incubating
@@ -213,6 +216,7 @@ export class Colony {
 		this.rooms = [this.room].concat(this.outposts);
 		this.miningSites = {}; 				// filled in by harvest directives
 		this.extractionSites = {};			// filled in by extract directives
+		// this.praiseSite = undefined;
 		// Register creeps
 		this.creeps = Overmind.cache.creepsByColony[this.name] || [];
 		this.creepsByRole = _.groupBy(this.creeps, creep => creep.memory.role);

@@ -141,15 +141,6 @@ export class TraderJoe implements ITradeNetwork {
 		this.memory.cache.tick = Game.time;
 	}
 
-	private invalidateMarketCache(): void {
-		this.memory.cache = {
-			sell: {},
-			buy : {},
-			resources: {},
-			tick: 0,
-		};
-	}
-
 	/**
 	 * Builds a cache for market - this is very expensive; use infrequently
 	 */
@@ -177,6 +168,15 @@ export class TraderJoe implements ITradeNetwork {
 		}
 		// this.memory.cache.tick = Game.time;
 		// this.memory.cache.tick = 0;
+	}
+
+	private invalidateMarketCache(): void {
+		this.memory.cache = {
+			sell: {},
+			buy : {},
+			resources: {},
+			tick: 0,
+		};
 	}
 
 	private invalidateMarketCacheFromHistory(): void {
@@ -367,8 +367,14 @@ export class TraderJoe implements ITradeNetwork {
 
 			const ordersOfType = _.filter(Game.market.orders, o => o.type == ORDER_BUY && o.resourceType == resource);
 			if (ordersOfType.length < maxOrdersOfType) {
-				const ret = Game.market.createOrder({type: ORDER_BUY, resourceType:
-					resource, price: marketHigh, totalAmount: amount, roomName: terminal.room.name});
+				const params = {
+					type        : ORDER_BUY,
+					resourceType: resource,
+					price       : marketHigh,
+					totalAmount : amount,
+					roomName    : terminal.room.name
+				};
+				const ret = Game.market.createOrder(params);
 				this.notify(`${terminal.room.print}: creating buy order for ${resource} at price ${marketHigh}. ` +
 							`Response: ${ret}`);
 			}
@@ -385,7 +391,7 @@ export class TraderJoe implements ITradeNetwork {
 	 */
 	private maintainSellOrder(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
 							  maxOrdersOfType = Infinity): void {
-		const marketLow = this.memory.cache.sell[resource] ? this.memory.cache.sell[resource].low*.9 : undefined;
+		const marketLow = this.memory.cache.sell[resource] ? this.memory.cache.sell[resource].low * .9 : undefined;
 		if (!marketLow) {
 			return;
 		}
@@ -411,8 +417,14 @@ export class TraderJoe implements ITradeNetwork {
 
 			const ordersOfType = _.filter(Game.market.orders, o => o.type == ORDER_SELL && o.resourceType == resource);
 			if (ordersOfType.length < maxOrdersOfType) {
-				const ret = Game.market.createOrder({type: ORDER_SELL, resourceType: resource, price: marketLow,
-					totalAmount: amount, roomName: terminal.room.name});
+				const params = {
+					type        : ORDER_SELL,
+					resourceType: resource,
+					price       : marketLow,
+					totalAmount : amount,
+					roomName    : terminal.room.name
+				};
+				const ret = Game.market.createOrder(params);
 				this.notify(`${terminal.room.print}: creating sell order for ${resource} at price ${marketLow}. ` +
 							`Response: ${ret}`);
 			}

@@ -15,6 +15,7 @@ export const Roles = {
 	transport : 'transport',
 	worker    : 'worker',
 	upgrader  : 'upgrader',
+	praiser   : 'praiser',
 	// Combat roles
 	guardMelee: 'broodling',
 	// guardRanged: 'mutalisk',
@@ -209,6 +210,15 @@ export const Setups = {
 		pattern  : [WORK, CARRY, MOVE, MOVE],
 		sizeLimit: 4,
 	}),
+
+	praisers: {
+
+		default: new CreepSetup(Roles.upgrader, {
+			pattern  : [WORK, WORK, WORK, CARRY, MOVE],
+			sizeLimit: Infinity,
+		}),
+
+	}
 
 };
 

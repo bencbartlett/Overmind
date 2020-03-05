@@ -9,21 +9,17 @@ import {profile} from '../profiler/decorator';
 @profile
 export abstract class HiveCluster {
 
-	colony: Colony;					// Colony the cluster belongs to
+	colony: Colony;						// Colony the cluster belongs to
 	room: Room;							// Room of the baseComponent (not necessarily colony room)
 	pos: RoomPosition; 					// Position of the instantiation object
-	// componentName: string; 				// Name of the component (e.g. "hatchery")
-	// name: string;						// Unique identifier for the instance of the hive cluster
-	ref: string;
+	ref: string;						// Unique identifier for the cluster; can include position if multiple sites
 	memory: any;						// Memory for the hive cluster; can be typecasted in child classes
-	overlord: Overlord | undefined;	// Overlord (singular) for the hive cluster if there is one
+	overlord: Overlord | undefined;		// Overlord (singular) for the hive cluster if there is one
 
 	constructor(colony: Colony, instantiationObject: RoomObject, name: string, includePos = false) {
-		// Set up hatchery, register colony and memory
 		this.colony = colony;
 		this.room = instantiationObject.room!;
 		this.pos = instantiationObject.pos;
-		// this.componentName = name;
 		this.ref = includePos ? name + '@' + instantiationObject.pos.name : name + '@' + this.colony.name;
 		this.colony.hiveClusters.push(this);
 	}

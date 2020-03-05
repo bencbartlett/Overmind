@@ -209,6 +209,7 @@ interface StructureExtension {
 interface StructureLink {
 	isFull: boolean;
 	isEmpty: boolean;
+	storeCapacity: number;
 }
 
 interface StructureStorage {

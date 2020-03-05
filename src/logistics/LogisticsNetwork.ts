@@ -81,7 +81,7 @@ export class LogisticsNetwork {
 	// private logisticPositions: { [roomName: string]: RoomPosition[] };
 	private cache: {
 		nextAvailability: { [transporterName: string]: [number, RoomPosition] },
-		predictedTransporterCarry: { [transporterName: string]: StoreDefinition },
+		predictedTransporterCarry: { [transporterName: string]: { [resourceType: string]: number } },
 		resourceChangeRate: { [requestID: string]: { [transporterName: string]: number } },
 	};
 	static settings = {
@@ -350,7 +350,7 @@ export class LogisticsNetwork {
 	 * Returns the predicted state of the transporter's carry after completing its current task
 	 */
 	private computePredictedTransporterCarry(transporter: Zerg,
-											 nextAvailability?: [number, RoomPosition]): StoreDefinition {
+											 nextAvailability?: [number, RoomPosition]): { [resourceType: string]: number } {
 		if (transporter.task && transporter.task.target) {
 			const requestID = this.targetToRequest[transporter.task.target.ref];
 			if (requestID) {
@@ -367,7 +367,7 @@ export class LogisticsNetwork {
 						}
 						for (const resourceType in request.target.store) {
 							const resourceFraction = (request.target.store[<ResourceConstant>resourceType] || 0)
-												   / _.sum(request.target.store);
+													 / _.sum(request.target.store);
 							if (carry[resourceType]) {
 								carry[resourceType]! += resourceAmount * resourceFraction;
 								carry[resourceType] = minMax(carry[resourceType]!, 0, remainingCapacity);
@@ -393,7 +393,7 @@ export class LogisticsNetwork {
 	/**
 	 * Returns the predicted state of the transporter's carry after completing its task
 	 */
-	private predictedTransporterCarry(transporter: Zerg): StoreDefinition {
+	private predictedTransporterCarry(transporter: Zerg): { [resourceType: string]: number } {
 		if (!this.cache.predictedTransporterCarry[transporter.name]) {
 			this.cache.predictedTransporterCarry[transporter.name] = this.computePredictedTransporterCarry(transporter);
 		}
@@ -429,7 +429,7 @@ export class LogisticsNetwork {
 				predictedAmount = Math.min(predictedAmount, request.target.energyCapacity);
 			}
 			const resourceInflux = _.sum(_.map(otherTargetingTransporters,
-											 other => (other.carry[<ResourceConstant>request.resourceType] || 0)));
+											   other => (other.carry[<ResourceConstant>request.resourceType] || 0)));
 			predictedAmount = Math.max(predictedAmount - resourceInflux, 0);
 			return predictedAmount;
 		} else { // output state, resources withdrawn from target
@@ -440,7 +440,7 @@ export class LogisticsNetwork {
 				predictedAmount = Math.min(predictedAmount, -1 * request.target.energyCapacity);
 			}
 			const resourceOutflux = _.sum(_.map(otherTargetingTransporters,
-											  other => other.carryCapacity - _.sum(other.carry)));
+												other => other.carryCapacity - _.sum(other.carry)));
 			predictedAmount = Math.min(predictedAmount + resourceOutflux, 0);
 			return predictedAmount;
 		}
@@ -459,7 +459,7 @@ export class LogisticsNetwork {
 		const [ticksUntilFree, newPos] = this.nextAvailability(transporter);
 		const choices: { dQ: number, dt: number, targetRef: string }[] = [];
 		const amount = this.predictedRequestAmount(transporter, request, [ticksUntilFree, newPos]);
-		let carry: StoreDefinition;
+		let carry: { [resourceType: string]: number };
 		if (!transporter.task || transporter.task.target != request.target) {
 			// If you are not targeting the requestor, use predicted carry after completing current task
 			carry = this.predictedTransporterCarry(transporter);
@@ -489,7 +489,7 @@ export class LogisticsNetwork {
 			for (const buffer of this.buffers) {
 				const dQ_buffer = Math.min(amount, transporter.carryCapacity, buffer.store[request.resourceType] || 0);
 				const dt_buffer = newPos.getMultiRoomRangeTo(buffer.pos) * LogisticsNetwork.settings.rangeToPathHeuristic
-								+ Pathing.distance(buffer.pos, request.target.pos) + ticksUntilFree;
+								  + Pathing.distance(buffer.pos, request.target.pos) + ticksUntilFree;
 				choices.push({
 								 dQ       : dQ_buffer,
 								 dt       : dt_buffer,
@@ -501,7 +501,7 @@ export class LogisticsNetwork {
 			const remainingCarryCapacity = transporter.carryCapacity - _.sum(carry);
 			const dQ_direct = Math.min(Math.abs(amount), remainingCarryCapacity);
 			const dt_direct = newPos.getMultiRoomRangeTo(request.target.pos)
-							* LogisticsNetwork.settings.rangeToPathHeuristic + ticksUntilFree;
+							  * LogisticsNetwork.settings.rangeToPathHeuristic + ticksUntilFree;
 			choices.push({
 							 dQ       : dQ_direct,
 							 dt       : dt_direct,
@@ -513,7 +513,7 @@ export class LogisticsNetwork {
 			// Change in resources if transporter drops off resources at a buffer first
 			for (const buffer of this.buffers) {
 				const dQ_buffer = Math.min(Math.abs(amount), transporter.carryCapacity,
-										 buffer.storeCapacity - _.sum(buffer.store));
+										   buffer.storeCapacity - _.sum(buffer.store));
 				const dt_buffer = newPos.getMultiRoomRangeTo(buffer.pos) * LogisticsNetwork.settings.rangeToPathHeuristic
 								  + Pathing.distance(buffer.pos, request.target.pos) + ticksUntilFree;
 				choices.push({
@@ -589,7 +589,7 @@ export class LogisticsNetwork {
 		const requests = this.requests.slice();
 		const transporters = _.filter(this.colony.getCreepsByRole(Roles.transport), creep => !creep.spawning);
 		const unmatchedTransporters = _.remove(transporters,
-											 transporter => !_.keys(this._matching).includes(transporter.name));
+											   transporter => !_.keys(this._matching).includes(transporter.name));
 		const unmatchedRequests = _.remove(requests, request => !_.values(this._matching).includes(request));
 		console.log(`Stable matching for ${this.colony.name} at ${Game.time}`);
 		for (const transporter of transporters) {
@@ -658,7 +658,7 @@ export class LogisticsNetwork {
 		for (const transporter of this.colony.overlords.logistics.transporters) {
 			const task = transporter.task ? transporter.task.name : 'none';
 			const target = transporter.task ?
-						 transporter.task.proto._target.ref + ' ' + transporter.task.targetPos.printPlain : 'none';
+						   transporter.task.proto._target.ref + ' ' + transporter.task.targetPos.printPlain : 'none';
 			const nextAvailability = this.nextAvailability(transporter);
 			info.push({
 						  creep       : transporter.name,
