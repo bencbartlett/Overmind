@@ -89,11 +89,14 @@ export class CombatZerg extends Zerg {
 		}
 	}
 
-	doMedicActions(roomName: string): void {
+	/**
+	 * Returns true if there is a target for medic actions, otherwise false
+	 */
+	doMedicActions(roomName: string): boolean {
 		// Travel to the target room
 		if (!this.safelyInRoom(roomName)) {
 			this.goToRoom(roomName, {ensurePath: true});
-			return;
+			return true; // en route
 		}
 		// Heal friendlies
 		const target = CombatTargeting.findClosestHurtFriendly(this);
@@ -113,6 +116,7 @@ export class CombatZerg extends Zerg {
 		} else {
 			this.park();
 		}
+		return !!target;
 	}
 
 	healSelfIfPossible(): CreepActionReturnCode | undefined {

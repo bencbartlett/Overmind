@@ -36,13 +36,11 @@ export class RangedDefenseOverlord extends CombatOverlord {
 
 	private handleDefender(hydralisk: CombatZerg): void {
 		if (this.room.hostiles.length > 0) {
-			hydralisk.heal(hydralisk); // heal self if no other targets
 			hydralisk.autoCombat(this.room.name);
 		} else {
-			if (hydralisk.pos.getRangeTo(this.directive.pos) > 4) {
+			if (!hydralisk.doMedicActions(this.room.name) && hydralisk.pos.getRangeTo(this.directive.pos) > 4) {
 				hydralisk.goTo(this.directive.pos);
 			}
-			hydralisk.doMedicActions(this.room.name);
 		}
 	}
 
@@ -53,20 +51,14 @@ export class RangedDefenseOverlord extends CombatOverlord {
 		const towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 0 : 0;
 		const worstDamageMultiplier = _.min(_.map(this.room.hostiles,
 												creep => CombatIntel.minimumDamageTakenMultiplier(creep)));
-		const finalValue = Math.ceil(.5 + 0.7 * healAmount / (worstDamageMultiplier * (hydraliskDamage + towerDamage + 1)));
-		// if ((Game.time - this.directive.memory.safeSince) > this.directive.safeSpawnHaltTime) {
-		// 	console.log(`Been safe for ${(Game.time - this.directive.memory.safeSince)},
-		// 	setting hydralisk wishlist in ${this.room.print} to 0.`)
-		// 	return 0
-		// }
-		return finalValue;
+		return Math.ceil(.5 + 1.5 * healAmount / (worstDamageMultiplier * (hydraliskDamage + towerDamage + 1)));
 	}
 
 	init() {
 		this.reassignIdleCreeps(Roles.ranged);
 		if (this.canBoostSetup(CombatSetups.hydralisks.boosted_T3)) {
 			const setup = CombatSetups.hydralisks.boosted_T3;
-			this.wishlist(2, setup);
+			this.wishlist(this.computeNeededHydraliskAmount(setup, BOOSTS.ranged_attack.XKHO2.rangedAttack), setup);
 		} else {
 			const setup = CombatSetups.hydralisks.default;
 			this.wishlist(this.computeNeededHydraliskAmount(setup, 1), setup);

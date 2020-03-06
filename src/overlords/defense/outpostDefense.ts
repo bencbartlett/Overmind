@@ -54,6 +54,8 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		const hydraliskPotential = setup.getBodyPotential(RANGED_ATTACK, this.colony);
 		// TODO: body potential from spawnGroup energy?
 		// let worstDamageMultiplier = CombatIntel.minimumDamageMultiplierForGroup(this.room.hostiles);
+		// TODO this was reduced from 1.5 due to draining, but should be re-evaluated when we have infra in place to track
+		// If a directive is being too costly
 		return Math.ceil(1.1 * enemyRangedPotential / hydraliskPotential);
 	}
 
@@ -86,12 +88,12 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		const {attack, rangedAttack, heal} = this.getEnemyPotentials();
 
 		if (attack > 30 || rangedAttack > 30) {
-			// return;
+			// Handle boost worthy attackers
 			this.wishlist(1, CombatSetups.hydralisks.boosted_T3);
 		}
 		const hydraliskSetup = mode == 'NORMAL' ? CombatSetups.hydralisks.default : CombatSetups.hydralisks.early;
-		const hydraliskAmount = this.computeNeededHydraliskAmount(hydraliskSetup, rangedAttack);
-		this.wishlist(Math.min(hydraliskAmount, 2), hydraliskSetup, {priority: this.priority - .2, reassignIdle: true});
+		const hydraliskAmount = Math.min(2, this.computeNeededHydraliskAmount(hydraliskSetup, rangedAttack));
+		this.wishlist(hydraliskAmount, hydraliskSetup, {priority: this.priority - .2, reassignIdle: true});
 
 		const broodlingSetup = mode == 'NORMAL' ? CombatSetups.broodlings.default : CombatSetups.broodlings.early;
 		const broodlingAmount = this.computeNeededBroodlingAmount(broodlingSetup, attack);
@@ -99,11 +101,11 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 
 		const enemyHealers = _.filter(this.room ? this.room.hostiles : [], creep => CombatIntel.isHealer(creep)).length;
 		let healerAmount = (enemyHealers > 0 || mode == 'EARLY') ?
-						   this.computeNeededHealerAmount(CombatSetups.healers.default, heal) : 0;
+						   Math.min(2, this.computeNeededHealerAmount(CombatSetups.healers.default, heal)) : 0;
 		if (mode == 'EARLY' && attack + rangedAttack > 0) {
 			healerAmount = Math.max(healerAmount, 1);
 		}
-		this.wishlist(Math.min(healerAmount,2), CombatSetups.healers.default, {priority: this.priority, reassignIdle: true});
+		this.wishlist(healerAmount, CombatSetups.healers.default, {priority: this.priority, reassignIdle: true});
 
 	}
 

@@ -110,10 +110,10 @@ export class MiningOverlord extends Overlord {
 		}
 	}
 
-	checkIfDoubleMine() {
-		if (Game.rooms[this.pos.roomName]) {
+	private isDoubleSource(): boolean {
+		if (Game.rooms[this.pos.roomName] && this.pos.room) {
 			// console.log('Double mining check');
-			this.source = _.first(this.pos.lookFor(LOOK_SOURCES));
+			this.source = this.source || _.first(this.pos.room.sources);
 			const nearby = this.source.pos.findInRange(FIND_SOURCES, 2).filter(source => this.source != source);
 			if (nearby.length > 0) {
 				this.secondSource = nearby[0];
@@ -134,22 +134,6 @@ export class MiningOverlord extends Overlord {
 			}
 		}
 		return false;
-	}
-
-	checkForNearbyMines() {
-		if (Game.rooms[this.pos.roomName]) {
-			// console.log('Double mining check');
-			this.source = _.first(this.pos.lookFor(LOOK_SOURCES));
-			const nearbySources = this.source.pos.findInRange(FIND_SOURCES, 8)
-				.filter(source => {
-					// if (source != this.source) {console.log(`Source path length is
-					// ${source.pos.findPathTo(this.source!).length} in ${source.room.print}`)}
-					return this.source != source && source.pos.findPathTo(this.source!).length < 8;
-				});
-			if (nearbySources.length > 0) {
-				// console.log(`Nearby sources are ${nearbySources} in ${this.room!.print}`);
-			}
-		}
 	}
 
 	/**
@@ -215,7 +199,7 @@ export class MiningOverlord extends Overlord {
 		if (!this.container && !this.constructionSite && !this.link) {
 			const containerPos = this.calculateContainerPos();
 			if (!containerPos) {
-				log.info(`${this.print}: can't build container at ${this.room}`);
+				log.error(`${this.print}: can't build container at ${this.room}`);
 				return;
 			}
 			const container = containerPos ? containerPos.lookForStructure(STRUCTURE_CONTAINER) as StructureContainer

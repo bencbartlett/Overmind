@@ -73,6 +73,12 @@ export class CombatTargeting {
 
 	static findClosestHostile(zerg: Zerg, checkReachable = false, ignoreCreepsAtEdge = true, playerOnly = false,
 							  onlyUnramparted = false): Creep | undefined {
+		const defaults = {
+			checkReachable: false,
+			ignoreCreepsAtEdge: true,
+			playerOnly: false,
+			onlyUnramparted: false
+		};
 		if (zerg.room.hostiles.length > 0) {
 			let targets: Creep[];
 			const potentialTargets = playerOnly ? zerg.room.playerHostiles : zerg.room.hostiles;

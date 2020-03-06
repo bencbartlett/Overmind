@@ -74,7 +74,7 @@ export class HarassOverlord extends CombatOverlord {
 		// Clean up construction sites then move on to another room
 	}
 
-	chooseRemoteToHarass(hydralisk: CombatZerg, currentRoom: string) {
+	private chooseRemoteToHarass(hydralisk: CombatZerg, currentRoom: string) {
 		if (!this.directive.memory.roomsToHarass || this.directive.memory.roomsToHarass.length == 0) {
 			this.directive.memory.roomsToHarass = this.directive.findNearbyReservedRoomsForHarassment();
 		}

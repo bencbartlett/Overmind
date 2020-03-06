@@ -109,13 +109,6 @@ export class ExtractorOverlord extends Overlord {
 		const amount = this.mineral && this.mineral.mineralAmount > 0 ? this.mineral.pos.availableNeighbors().length : 0;
 		this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), Setups.drones.extractor);
 		this.registerOutputRequests();
-
-		// if(Cartographer.roomType(this.pos.roomName) == ROOMTYPE_SOURCEKEEPER
-		// || Cartographer.roomType(this.pos.roomName) == ROOMTYPE_CORE){
-		// 	this.container && console.log(printRoomName(this.pos.roomName)  + ' ' + this.pos + ' ' + this.container +
-		// 	' ' + this.container.hits*100/this.container.hitsMax);
-		// 	!this.container && console.log(printRoomName(this.pos.roomName) + ' NO CONTAINER');
-		// }
 	}
 
 	private handleDrone(drone: Zerg): void {
