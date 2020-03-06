@@ -101,7 +101,7 @@ export class UpgradeSite extends HiveCluster {
 					upgradePower *= 2;
 				}
 				if (this.controller.level == 8) {
-					if (this.room.storage.store.energy < 30000) {
+					if (this.colony.assets.energy < 30000) {
 						upgradePower = 0;
 					} else {
 						upgradePower = Math.min(upgradePower, 15); // don't go above 15 work parts at RCL 8

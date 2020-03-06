@@ -69,7 +69,7 @@ export class CombatIntel {
 		if (pos.room) {
 			let expectedDamage = 0;
 			for (const tower of pos.room.towers) {
-				if (tower.isActive() && (tower.energy > 0 || ignoreEnergy)) {
+				if ((tower.energy > 0 || ignoreEnergy)) {
 					expectedDamage += this.singleTowerDamage(pos.getRangeTo(tower));
 				}
 			}
@@ -97,6 +97,9 @@ export class CombatIntel {
 	}
 
 
+	/**
+	 * Calculates the total potential damage per tile in a region
+	 */
 	static computeCreepDamagePotentialMatrix(room: Room, creeps: Creep[],
 											 startingMatrix?: CostMatrix): CostMatrix | undefined {
 		if (room) {
@@ -127,8 +130,9 @@ export class CombatIntel {
 		}
 	}
 
-
-
+	/**
+	 * Calculates potential damage and heal per location in a region
+	 */
 	static computeTotalCreepPotentialMatrix(room: Room, creeps: Creep[],
 											startingMatrix?: CostMatrix): CostMatrix | undefined {
 		if (room) {

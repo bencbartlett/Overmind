@@ -31,7 +31,6 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 	}
 
 	private handleDefender(lurker: CombatZerg): void {
-		const cpuBefore = Game.cpu.getUsed();
 		log.debug(`Running BunkerDefender in room ${this.room.print}`);
 		if (!lurker.inRampart) {
 			const nearRampart = _.find(lurker.room.walkableRamparts, rampart => rampart.pos.getRangeTo(lurker) < 5);
@@ -44,7 +43,6 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 		} else {
 			// go out of way in bunker
 		}
-		console.log(`Bunker defender cpu used is ${Game.cpu.getUsed() - cpuBefore}`);
 	}
 
 	init() {

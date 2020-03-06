@@ -45,7 +45,7 @@ export class WorkerOverlord extends Overlord {
 			8       : 2.1e+7,
 		},
 		hitTolerance        : 100000, 	// allowable spread in HP
-		fortifyDutyThreshold: 100000,	// ignore fortify duties until this amount of energy is present in the room
+		fortifyDutyThreshold: 250000,	// ignore fortify duties until this amount of energy is present in the room
 	};
 
 	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.work) {
@@ -110,9 +110,9 @@ export class WorkerOverlord extends Overlord {
 		if (this.room.find(FIND_NUKES).length > 0) {
 			for (const rampart of this.colony.room.ramparts) {
 				const neededHits = this.neededRampartHits(rampart);
-				if (rampart.hits < neededHits && rampart.pos.findInRange(FIND_NUKES, 3).length > 0
-					&& DirectiveNukeResponse.shouldReinforceLocation(rampart.pos, this.room.storage
-						&& this.room.storage.energy < 300000)) {
+				const ignoreExtensions = this.room.storage && this.room.storage.energy < 300000;
+				if (rampart.hits < neededHits && rampart.pos.findInRange(FIND_NUKES, 2).length > 0
+					&& DirectiveNukeResponse.shouldReinforceLocation(rampart.pos, ignoreExtensions)) {
 					this.nukeDefenseRamparts.push(rampart);
 					Visualizer.marker(rampart.pos, {color: 'gold'});
 					this.nukeDefenseHitsRemaining[rampart.id.toString()] = neededHits - rampart.hits;
@@ -188,7 +188,7 @@ export class WorkerOverlord extends Overlord {
 					const paveTicks = _.sum(this.colony.rooms,
 										  room => this.colony.roadLogistics.energyToRepave(room)); // repairCost=1
 					let fortifyTicks = 0;
-					const shouldFortify = this.colony.assets.energy > 150000;
+					const shouldFortify = this.colony.assets.energy > WorkerOverlord.settings.fortifyDutyThreshold;
 					if (shouldFortify) {
 						fortifyTicks = 0.25 * _.sum(this.fortifyBarriers, barrier =>
 							Math.max(0, WorkerOverlord.settings.barrierHits[this.colony.level]

@@ -358,7 +358,7 @@ export abstract class Overlord {
 	 */
 	protected wishlist(quantity: number, setup: CreepSetup, opts = {} as CreepRequestOptions) {
 		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN, reassignIdle: false});
-		// Don't spawn if spawning is halted
+		// TODO Don't spawn if spawning is halted
 		if (this.shouldSpawnAt && this.shouldSpawnAt > Game.time) {
 			log.info(`Disabled spawning for ${this.print} for another ${this.shouldSpawnAt - Game.time} ticks`);
 			return;
@@ -468,6 +468,7 @@ export abstract class Overlord {
 
 		if (this.boosts[creep.roleName] && evolutionChamber) {
 			const boosts = _.filter(this.boosts[creep.roleName]!, boost => {
+				// TODO FIX BOOSTING!
 				return (creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost])
 					&& !(boost == RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE && creep.getActiveBodyparts(MOVE) >= creep.body.length/2);
 			});

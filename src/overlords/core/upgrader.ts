@@ -45,9 +45,6 @@ export class UpgradingOverlord extends Overlord {
 			} else {
 				const upgradePowerEach = setup.getBodyPotential(WORK, this.colony);
 				const upgradersNeeded = Math.ceil(this.upgradeSite.upgradePowerNeeded / upgradePowerEach);
-				// if (this.colony.name == 'W13N45') {
-				// 	upgradersNeeded = 4;
-				// }
 				this.wishlist(upgradersNeeded, setup);
 			}
 		}

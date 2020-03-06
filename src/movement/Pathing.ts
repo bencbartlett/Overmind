@@ -167,7 +167,7 @@ export class Pathing {
 			direct      : true,
 		});
 		const ret = this.findPath(startPos, endPos, options);
-		if (ret.incomplete) log.debug(`Pathing: incomplete path from ${startPos.print} to ${endPos.print}!`);
+		if (ret.incomplete) log.alert(`Pathing: incomplete path from ${startPos.print} to ${endPos.print}!`);
 		return ret;
 	}
 
@@ -177,7 +177,7 @@ export class Pathing {
 	static findPathToRoom(startPos: RoomPosition, roomName: string, options: MoveOptions = {}): PathFinderPath {
 		options.range = 23;
 		const ret = this.findPath(startPos, new RoomPosition(25, 25, roomName), options);
-		if (ret.incomplete) log.debug(`Pathing: incomplete path from ${startPos.print} to ${roomName}!`);
+		if (ret.incomplete) log.alert(`Pathing: incomplete path from ${startPos.print} to ${roomName}!`);
 		return ret;
 	}
 
@@ -588,7 +588,7 @@ export class Pathing {
 	/**
 	 * Sets all creep positions to impassible
 	 */
-		static blockMyCreeps(matrix: CostMatrix, room: Room, creeps?: (Creep | Zerg)[]) {
+	static blockMyCreeps(matrix: CostMatrix, room: Room, creeps?: (Creep | Zerg)[]) {
 
 			const blockCreeps = creeps || room.creeps as (Creep | Zerg)[];
 			const blockPositions = _.map(blockCreeps,
