@@ -23,8 +23,7 @@ export class UpgradingOverlord extends Overlord {
 		super(upgradeSite, 'upgrade', priority);
 		this.upgradeSite = upgradeSite;
 		// If new colony or boosts overflowing to storage
-		if (this.colony.controller.level < 8 || (this.colony.storage
-			&& !!this.colony.storage.store[RESOURCE_CATALYZED_GHODIUM_ACID])) {
+		if (this.shouldBoostUpgraders()) {
 			this.upgraders = this.zerg(Roles.upgrader, {
 				boostWishlist: [boostResources.upgrade[3]]
 			});
@@ -48,6 +47,11 @@ export class UpgradingOverlord extends Overlord {
 				this.wishlist(upgradersNeeded, setup);
 			}
 		}
+	}
+
+	private shouldBoostUpgraders(): boolean {
+		return this.colony.controller.level < 8 || (!!this.colony.storage
+			&& !!this.colony.storage.store[RESOURCE_CATALYZED_GHODIUM_ACID]);
 	}
 
 	private handleUpgrader(upgrader: Zerg): void {

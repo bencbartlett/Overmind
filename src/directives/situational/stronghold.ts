@@ -104,7 +104,7 @@ export class DirectiveStronghold extends Directive {
 
 	get target(): Creep | Structure | undefined {
 		if (this.memory.target && this.memory.target.exp > Game.time) {
-			const target = Game.getObjectById(this.memory.target.id.toString());
+			const target = Game.getObjectById(this.memory.target.id);
 			if (target) {
 				return target as Creep | Structure;
 			}

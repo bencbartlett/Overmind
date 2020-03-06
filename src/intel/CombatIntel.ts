@@ -64,6 +64,7 @@ export class CombatIntel {
 
 	/**
 	 * Total tower damage from all towers in room at a given position
+	 * TODO needs to address stronghold
 	 */
 	static towerDamageAtPos(pos: RoomPosition, ignoreEnergy = false): number {
 		if (pos.room) {

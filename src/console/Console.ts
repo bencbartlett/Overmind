@@ -39,7 +39,7 @@ export class OvermindConsole {
 		global.listConstructionSites = this.listConstructionSites;
 		global.listDirectives = this.listDirectives;
 		global.listPersistentDirectives = this.listPersistentDirectives;
-		global.directiveInfo = this.directiveInfo;
+		//global.directiveInfo = this.directiveInfo;
 		global.removeAllLogisticsDirectives = this.removeAllLogisticsDirectives;
 		global.removeFlagsByColor = this.removeFlagsByColor;
 		global.removeErrantFlags = this.removeErrantFlags;
@@ -85,7 +85,7 @@ export class OvermindConsole {
 		descr['listConstructionSites(filter?)'] = 'list all construction sites matching an optional filter';
 		descr['listDirectives(filter?)'] = 'list directives, matching a filter if specified';
 		descr['listPersistentDirectives()'] = 'print type, name, pos of every persistent directive';
-		descr['directiveInfo(directiveFlag)'] = 'print type, name, pos of every creep in directive';
+		// descr['directiveInfo(directiveFlag)'] = 'print type, name, pos of every creep in directive';
 		descr['removeFlagsByColor(color, secondaryColor)'] = 'remove flags that match the specified colors';
 		descr['removeErrantFlags()'] = 'remove all flags which don\'t match a directive';
 		descr['deepCleanMemory()'] = 'deletes all non-critical portions of memory (be careful!)';
@@ -398,37 +398,38 @@ export class OvermindConsole {
 		return `Removed ${count} flags.`;
 	}
 
-	static directiveInfo(flagName: string): string {
-		let msg = '';
-		const directive = Overmind.directives[flagName];
-		if (!directive) {
-			return `ERROR: Name is not a current directive`;
-		}
-		msg += `Type: ${directive.directiveName}`.padRight(20) +
-			`Name: ${directive.name}`.padRight(25) +
-			`Pos: ${directive.pos.print}\n`;
-		for (const overlordName of Object.keys(directive.overlords)) {
-			const overlord = directive.overlords[overlordName] as Overlord;
-			msg += JSON.stringify(overlord.creepUsageReport) + `\n`;
-			const zerg = overlord.getZerg();
-			const combatZerg = overlord.getCombatZerg();
-			for (const [roleName, zergArray] of Object.entries(zerg)) {
-				msg += `Role: ${roleName} \n`;
-				for (const zerg of zergArray) {
-					msg += `Name: ${zerg.name}   Room: ${zerg.pos.print}   TTL/Spawning: ${zerg.ticksToLive || zerg.spawning} \n`;
-				}
-			}
-			msg += `Combat zerg \n`;
-			for (const [roleName, zergArray] of Object.entries(combatZerg)) {
-				msg += `Role: ${roleName} \n`;
-				for (const zerg of zergArray) {
-					msg += `Name: ${zerg.name}   Room: ${zerg.pos.print}   TTL/Spawning: ${zerg.ticksToLive || zerg.spawning} \n`;
-				}
-			}
-		}
-
-		return msg;
-	}
+	// TODO MERGE INTO DIRECTIVES
+	// static directiveInfo(flagName: string): string {
+	// 	let msg = '';
+	// 	const directive = Overmind.directives[flagName];
+	// 	if (!directive) {
+	// 		return `ERROR: Name is not a current directive`;
+	// 	}
+	// 	msg += `Type: ${directive.directiveName}`.padRight(20) +
+	// 		`Name: ${directive.name}`.padRight(25) +
+	// 		`Pos: ${directive.pos.print}\n`;
+	// 	for (const overlordName of Object.keys(directive.overlords)) {
+	// 		const overlord = directive.overlords[overlordName] as Overlord;
+	// 		msg += JSON.stringify(overlord.creepUsageReport) + `\n`;
+	// 		const zerg = overlord.getZerg();
+	// 		const combatZerg = overlord.getCombatZerg();
+	// 		for (const [roleName, zergArray] of Object.entries(zerg)) {
+	// 			msg += `Role: ${roleName} \n`;
+	// 			for (const zerg of zergArray) {
+	// 				msg += `Name: ${zerg.name}   Room: ${zerg.pos.print}   TTL/Spawning: ${zerg.ticksToLive || zerg.spawning} \n`;
+	// 			}
+	// 		}
+	// 		msg += `Combat zerg \n`;
+	// 		for (const [roleName, zergArray] of Object.entries(combatZerg)) {
+	// 			msg += `Role: ${roleName} \n`;
+	// 			for (const zerg of zergArray) {
+	// 				msg += `Name: ${zerg.name}   Room: ${zerg.pos.print}   TTL/Spawning: ${zerg.ticksToLive || zerg.spawning} \n`;
+	// 			}
+	// 		}
+	// 	}
+	//
+	// 	return msg;
+	// }
 
 
 

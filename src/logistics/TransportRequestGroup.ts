@@ -124,7 +124,7 @@ export class TransportRequestGroup {
 		};
 		if (opts.amount > 0) {
 			this.withdraw[priority].push(req);
-			if (!this.withdrawByID[target.id.toString()]) this.withdrawByID[target.id.toString()] = [];
+			if (!this.withdrawByID[target.id.toString()]) this.withdrawByID[target.id] = [];
 			this.withdrawByID[target.id.toString()].push(req);
 		}
 	}

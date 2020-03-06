@@ -48,7 +48,7 @@ export class Pathing {
 		if (!room) {
 			return;
 		}
-		if (!(room.controller && room.controller.my) && room.towers.find(tower => tower.isActive()) != undefined) {
+		if (!(room.controller && room.controller.my) && room.towers.length > 0) {
 			room.memory[_RM.AVOID] = true;
 		} else {
 			delete room.memory[_RM.AVOID];

@@ -5,7 +5,7 @@ import {SpawnRequest, SpawnRequestOptions} from '../hiveClusters/hatchery';
 import {SpawnGroup} from '../logistics/SpawnGroup';
 import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
-import {boostParts} from '../resources/map_resources';
+import {boostParts, boostResources} from '../resources/map_resources';
 import {MIN_LIFETIME_FOR_BOOST} from '../tasks/instances/getBoosted';
 import {Tasks} from '../tasks/Tasks';
 import {CombatZerg} from '../zerg/CombatZerg';
@@ -470,7 +470,7 @@ export abstract class Overlord {
 			const boosts = _.filter(this.boosts[creep.roleName]!, boost => {
 				// TODO FIX BOOSTING!
 				return (creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost])
-					&& !(boost == RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE && creep.getActiveBodyparts(MOVE) >= creep.body.length/2);
+					&& !(boost == boostResources[MOVE][3] && creep.getActiveBodyparts(MOVE) >= creep.body.length/2);
 			});
 			for (const boost of boosts) {
 				const boostLab = _.find(evolutionChamber.boostingLabs, lab => lab.mineralType == boost);
@@ -479,14 +479,6 @@ export abstract class Overlord {
 				}
 			}
 		}
-	}
-
-	getZerg() {
-		return this._zerg;
-	}
-
-	getCombatZerg() {
-		return this._combatZerg;
 	}
 
 	/**

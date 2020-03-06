@@ -362,6 +362,7 @@ export class RoomIntel {
 	 * Find PowerBanks within range of maxRange and power above minPower to mine
 	 * Creates directive to mine it
 	 * TODO refactor when factory resources come out to be more generic
+	 * TODO move to strategist for opportunistic directives
 	 */
 	private static minePowerBanks(room: Room) {
 		const powerSetting = Memory.settings.powerCollection;
@@ -394,6 +395,7 @@ export class RoomIntel {
 	/**
 	 * Handle strongholds spawning in SK rooms
 	 * Should also eventually loot other people's strongholds that are killed
+	 * TODO move to strategist
 	 * @param room
 	 */
 	private static handleStrongholds(room: Room) {
