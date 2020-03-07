@@ -1,6 +1,6 @@
 // Creep utilities that don't belong anywhere else
 
-
+// TODO should probably live in combat intell or something similar
 // Does not account for range, just total of body parts
 export function calculateFormationStrength(creeps: Creep[]): Record<BodyPartConstant, number> {
 	const tally: Record<BodyPartConstant, number> = {

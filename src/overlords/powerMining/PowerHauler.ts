@@ -44,12 +44,9 @@ export class PowerHaulingOverlord extends Overlord {
 	}
 
 	init() {
-		if (!this.colony.storage || _.sum(this.colony.storage.store) > Energetics.settings.storage.total.cap) {
-			return;
-		}
 	}
 
-	protected handleHauler(hauler: Zerg) {
+	private handleHauler(hauler: Zerg) {
 		if (_.sum(hauler.carry) == 0) {
 			if (this.directive.memory.state >= 4) {
 				// FIXME: Maybe ditch this and put it as a separate on-finishing method to reassign

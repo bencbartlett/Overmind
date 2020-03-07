@@ -10,6 +10,7 @@ import {Abathur} from '../resources/Abathur';
 import {Cartographer} from '../utilities/Cartographer';
 import {Visualizer} from '../visuals/Visualizer';
 import {HiveCluster} from './_HiveCluster';
+import {Tasks} from "../tasks/Tasks";
 
 export const MAX_OBSERVE_DISTANCE = 7;
 
@@ -154,6 +155,14 @@ export class CommandCenter extends HiveCluster {
 				this.transportRequests.requestInput(this.nuker, Priority.Low, {resourceType: RESOURCE_GHODIUM});
 			}
 		}
+
+		if (this.storage && this.terminal) {
+			if (this.storage.store[RESOURCE_OPS] < 3000 && this.terminal.store[RESOURCE_OPS] > 100) {
+				this.transportRequests.requestInput(this.storage, Priority.Normal, {resourceType: RESOURCE_OPS});
+			}
+		}
+
+
 
 		// Withdraw requests:
 

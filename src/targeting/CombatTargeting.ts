@@ -71,6 +71,7 @@ export class CombatTargeting {
 		});
 	}
 
+	// TODO refactor method sig
 	static findClosestHostile(zerg: Zerg, checkReachable = false, ignoreCreepsAtEdge = true, playerOnly = false,
 							  onlyUnramparted = false): Creep | undefined {
 		const defaults = {
@@ -119,6 +120,7 @@ export class CombatTargeting {
 		return maxBy(_.filter(friendlies, f => healer.pos.getRangeTo(f) <= range), friend => {
 			if (friend.hitsPredicted == undefined) friend.hitsPredicted = friend.hits;
 			const attackProbability = 0.5;
+			// TODO need to only calculate this once per tick, can't trigger multiple times. This isn't correctly calcing
 			for (const hostile of friend.pos.findInRange(friend.room.hostiles, 3)) {
 				if (hostile.pos.isNearTo(friend)) {
 					friend.hitsPredicted -= attackProbability * CombatIntel.getAttackDamage(hostile);

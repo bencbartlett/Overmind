@@ -166,12 +166,6 @@ export class CombatZerg extends Zerg {
 	 * Automatically ranged-attack the best creep in range
 	 */
 	autoRanged(possibleTargets = this.room.hostiles, allowMassAttack = true) {
-		const nearbyHostiles = _.filter(this.room.dangerousHostiles, c => this.pos.inRangeToXY(c.pos.x, c.pos.y, 2));
-		if (nearbyHostiles.length && !this.inRampart) {
-			// this.say('run!');
-			this.rangedMassAttack();
-			return this.kite(nearbyHostiles);
-		}
 		const target = CombatTargeting.findBestCreepTargetInRange(this, 3, possibleTargets)
 					   || CombatTargeting.findBestStructureTargetInRange(this, 3,false);
 		// disabled allowUnowned structure attack in order not to desrtory poison walls
@@ -183,6 +177,15 @@ export class CombatZerg extends Zerg {
 			} else {
 				return this.rangedAttack(target);
 			}
+		}
+	}
+
+	private kiteIfNecessary() { // Should filter by melee at some point
+		const nearbyHostiles = _.filter(this.room.dangerousHostiles, c => this.pos.inRangeToXY(c.pos.x, c.pos.y, 2));
+		if (nearbyHostiles.length && !this.inRampart) {
+			// this.say('run!');
+			this.rangedMassAttack();
+			return this.kite(nearbyHostiles);
 		}
 	}
 
@@ -233,7 +236,6 @@ export class CombatZerg extends Zerg {
 		const goals = GoalFinder.skirmishGoals(this);
 		this.debug(JSON.stringify(goals));
 		return Movement.combatMove(this, goals.approach, goals.avoid);
-
 	}
 
 	/**
@@ -276,6 +278,9 @@ export class CombatZerg extends Zerg {
 				const meleeHostiles = _.filter(this.room.hostiles, h => CombatIntel.getAttackDamage(h) > 0);
 				for (const hostile of meleeHostiles) {
 					avoid.push({pos: hostile.pos, range: targetRange - 1});
+				}
+				if (this.kiteIfNecessary()) {
+					return;
 				}
 			}
 			return Movement.combatMove(this, [{pos: target.pos, range: targetRange}], avoid, options);

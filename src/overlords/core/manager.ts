@@ -195,73 +195,22 @@ export class CommandCenterOverlord extends Overlord {
 		return false;
 	}
 
-	// private moveMineralsToTerminal(manager: Zerg): boolean {
-	// 	const storage = this.commandCenter.storage;
-	// 	const terminal = this.commandCenter.terminal;
-	// 	if (!storage || !terminal) {
-	// 		return false;
-	// 	}
-	// 	// Move all non-energy resources from storage to terminal
-	// 	for (const resourceType in storage.store) {
-	// 		if (resourceType != RESOURCE_ENERGY && resourceType
-	// 		!= RESOURCE_OPS && storage.store[<ResourceConstant>resourceType]! > 0) {
-	// 			if (this.unloadCarry(manager)) return true;
-	// 			manager.task = Tasks.withdraw(storage, <ResourceConstant>resourceType);
-	// 			manager.task.parent = Tasks.transfer(terminal, <ResourceConstant>resourceType);
-	// 			return true;
-	// 		}
-	// 	}
-	// 	return false;
-	// }
-
 	private moveMineralsToTerminal(manager: Zerg): boolean {
-		manager.debug('moveMineralsToTerminal');
 		const storage = this.commandCenter.storage;
 		const terminal = this.commandCenter.terminal;
 		if (!storage || !terminal) {
 			return false;
 		}
-		const storageAmount = _.sum(storage.store);
-		const terminalAmount = _.sum(terminal.store);
-		const maxFillRatio = 0.95;
-		const terminalT3Amount = 8000;
-		const terminalOtherAmount = 10000;
-		// Don't do this if terminal is critially full
-		if (terminal.store.getFreeCapacity() < 1000) {
-			return false;
-		}
 		// Move all non-energy resources from storage to terminal
-		for (const resourceType in terminal.store) {
-			if (storageAmount < storageAmount * maxFillRatio && resourceType != RESOURCE_ENERGY
-				&& ((terminal.store[<ResourceConstant>resourceType]! > terminalT3Amount && resourceType.length == 5)
-					|| (terminal.store[<ResourceConstant>resourceType]! > terminalOtherAmount))) {
-				if (this.unloadCarry(manager)) {
-					return true;
-				}
-				manager.task = Tasks.withdraw(terminal, <ResourceConstant>resourceType);
-				manager.task.parent = Tasks.transfer(storage, <ResourceConstant>resourceType);
-				return true;
-			}
-		}
 		for (const resourceType in storage.store) {
-			if (terminalAmount < terminal.storeCapacity * maxFillRatio && resourceType != RESOURCE_ENERGY
-				&& storage.store[<ResourceConstant>resourceType]! > 0
-				&& (terminal.store[<ResourceConstant>resourceType]! < (terminalT3Amount-2000) || resourceType.length != 5
-					&& (terminal.store[<ResourceConstant>resourceType]! < (terminalOtherAmount-2000))
-					|| resourceType == RESOURCE_POWER)) {
-				if (this.unloadCarry(manager)) {
-					return true;
-				}
+			if (resourceType != RESOURCE_ENERGY && resourceType
+			!= RESOURCE_OPS && storage.store[<ResourceConstant>resourceType]! > 0) {
+				if (this.unloadCarry(manager)) return true;
 				manager.task = Tasks.withdraw(storage, <ResourceConstant>resourceType);
 				manager.task.parent = Tasks.transfer(terminal, <ResourceConstant>resourceType);
 				return true;
 			}
 		}
-		if (!storage.store[RESOURCE_OPS] || (storage.store[RESOURCE_OPS] && storage.store[RESOURCE_OPS]! < 3000)) {
-			manager.task = Tasks.withdraw(terminal, RESOURCE_OPS);
-			manager.task.parent = Tasks.transfer(storage, RESOURCE_OPS);
-		}
-
 		return false;
 	}
 
@@ -394,7 +343,7 @@ export class CommandCenterOverlord extends Overlord {
 		}
 		if (this.preventTerminalFlooding(manager)) return;
 		// Emergency dumping actions for critically clogged terminals and storages
-		if (this.emergencyDumpingActions(manager)) return;
+		// if (this.emergencyDumpingActions(manager)) return;
 		// Pick up any dropped resources on ground
 		if (this.pickupActions(manager)) return;
 		// Move minerals from storage to terminal if needed

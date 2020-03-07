@@ -55,9 +55,7 @@ export class PairDestroyerOverlord extends Overlord {
 				const structureTarget = CombatTargeting.findClosestPrioritizedStructure(attacker);
 				if (structureTarget) return structureTarget;
 			}
-		} else if (attacker.room) {
-			CombatTargeting.findClosestHostile(attacker, true, true, true);
-		}
+		} // TODO consider targets along path
 	}
 
 	private attackActions(attacker: CombatZerg, healer: CombatZerg): void {

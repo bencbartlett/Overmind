@@ -65,7 +65,7 @@ Object.defineProperty(Room.prototype, 'creeps', {
 Object.defineProperty(Room.prototype, 'hostiles', {
 	get() {
 		if (!this._hostiles) {
-			this._hostiles = _.filter(this.find(FIND_HOSTILE_CREEPS), (creep: Creep) => creep &&  creep.owner.username != 'zGeneral');
+			this._hostiles = _.filter(this.find(FIND_HOSTILE_CREEPS), (creep: Creep) => creep);
 		}
 		return this._hostiles;
 	},
@@ -97,7 +97,7 @@ Object.defineProperty(Room.prototype, 'playerHostiles', {
 		if (!this._playerHostiles) {
 			this._playerHostiles = _.filter(this.hostiles,
 											(creep: Creep) => creep.owner.username != 'Invader'
-															  && creep.owner.username != 'Source Keeper' && creep.owner.username != 'zGeneral');
+															  && creep.owner.username != 'Source Keeper');
 		}
 		return this._playerHostiles;
 	},

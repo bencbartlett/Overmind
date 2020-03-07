@@ -115,6 +115,7 @@ export class ExtractorOverlord extends Overlord {
 		// Ensure you are in the assigned room
 		if (drone.room == this.room && !drone.pos.isEdge) {
 			if (_.sum(drone.carry) == 0) {
+				// TODO handle the minerals on the bottom, 0.95 capacity rn
 				drone.task = Tasks.harvest(this.mineral!);
 			}
 			// Else see if there is an output to deposit to or to maintain

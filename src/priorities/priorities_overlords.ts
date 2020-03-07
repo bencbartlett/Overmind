@@ -23,7 +23,6 @@ export let OverlordPriority = {
 		healPoint       : 301,
 		siege           : 302,
 		controllerAttack: 399,
-		harass			: 571,
 		roomPoisoner	: 399,
 	},
 
@@ -46,15 +45,19 @@ export let OverlordPriority = {
 		guard         : 551,
 	},
 
+	outpostOffense: {
+		harass		  : 560,
+	},
+
 	upgrading: {				// Spawning upgraders
 		upgrade: 600,
 	},
 
-	throttleThreshold: 699,  	// Everything past this may be throttled in the event of low CPU
-
 	collectionUrgent: { 		// Collecting resources that are time sensitive, like decaying resources on ground
 		haul: 700
 	},
+
+	throttleThreshold: 799,  	// Everything past this may be throttled in the event of low CPU
 
 	scouting: {
 		stationary  : 800,
@@ -77,7 +80,6 @@ export let OverlordPriority = {
 	powerMine: {
 		cool : 1050,
 		drill : 1051,
-		gather : 604,
 		roomIncrement: 5,
 	},
 

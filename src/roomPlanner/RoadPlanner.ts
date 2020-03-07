@@ -346,7 +346,7 @@ export class RoadPlanner {
 	}
 
 	/* Clean up leftover road coverage locations from remotes that aren't mined or old structures */
-	clearRoadCoverage() {
+	private cleanRoadCoverage() {
 		const colonyDestinations = this.colony.destinations.map(dest => `${dest.pos.roomName}:${dest.pos.x}:${dest.pos.y}`);
 		console.log(`Colony ${this.colony.print} has destinations of ${JSON.stringify(colonyDestinations)}`);
 
@@ -371,7 +371,7 @@ export class RoadPlanner {
 			// Once in a blue moon, recalculate the entire network and write to memory to keep it up to date
 			if (Game.time % RoadPlanner.settings.recalculateRoadNetworkInterval == this.colony.id) {
 				if (this.roomPlanner.storagePos) {
-					this.clearRoadCoverage();
+					this.cleanRoadCoverage();
 					this.recalculateRoadNetwork(this.roomPlanner.storagePos, this.roomPlanner.getObstacles());
 				}
 			}

@@ -54,14 +54,6 @@ export class Pathing {
 			delete room.memory[_RM.AVOID];
 			// if (room.memory.expansionData == false) delete room.memory.expansionData;
 		}
-		// if (room.controller) {
-		// 	if (room.controller.owner && !room.controller.my && room.towers.length > 0) {
-		// 		room.memory[_RM.AVOID] = true;
-		// 	} else {
-		// 		delete room.memory[_RM.AVOID];
-		// 		// if (room.memory.expansionData == false) delete room.memory.expansionData;
-		// 	}
-		// }
 	}
 
 	// Pathfinding and room callback methods ===========================================================================
@@ -489,7 +481,6 @@ export class Pathing {
 			return room._kitingMatrix;
 		}
 		const matrix = this.getCreepMatrix(room).clone();
-		Pathing.blockImpassibleTerrain(matrix, room.name);
 		const avoidCreeps = _.filter(room.hostiles,
 									 c => c.getActiveBodyparts(ATTACK) > 0 || c.getActiveBodyparts(RANGED_ATTACK) > 0);
 		// || c.getActiveBodyparts(HEAL) > 0);

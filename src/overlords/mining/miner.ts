@@ -323,8 +323,8 @@ export class MiningOverlord extends Overlord {
 	 * Actions for handling link mining
 	 */
 	private linkMiningActions(miner: Zerg) {
-
 		// Link mining
+		// TODO
 		if (this.link) {
 			const res = miner.harvest(this.source!);
 			if (res == ERR_NOT_IN_RANGE) {
@@ -344,7 +344,7 @@ export class MiningOverlord extends Overlord {
 	 * Actions for handling mining at RCL high enough to spawn ideal miner body to saturate source
 	 */
 	private standardMiningActions(miner: Zerg) {
-
+		// TODO reeval to do mining first, try intent and if fail then more for cpu gain
 		// Approach mining site
 		if (this.goToMiningSite(miner)) return;
 
