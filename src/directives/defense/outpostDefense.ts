@@ -41,7 +41,7 @@ export class DirectiveOutpostDefense extends Directive {
 		}
 		// If there are no hostiles left in the room and everyone's healed, then remove the flag
 		if (this.room && this.room.hostiles.length == 0 &&
-			Game.time - this.memory.safeSince > 100 && this.room.hostileStructures.length == 0) {
+			Game.time - this.memory.safeSince > 100) {
 			if (_.filter(this.room.creeps, creep => creep.hits < creep.hitsMax).length == 0) {
 				this.remove();
 			}

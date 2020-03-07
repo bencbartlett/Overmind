@@ -196,7 +196,6 @@ export class CommandCenterOverlord extends Overlord {
 	}
 
 	private moveMineralsToTerminal(manager: Zerg): boolean {
-		manager.debug('moveMineralsToTerminal');
 		const storage = this.commandCenter.storage;
 		const terminal = this.commandCenter.terminal;
 		if (!storage || !terminal) {
@@ -208,7 +207,8 @@ export class CommandCenterOverlord extends Overlord {
 		}
 		// Move all non-energy resources from storage to terminal
 		for (const resourceType in storage.store) {
-			if (resourceType != RESOURCE_ENERGY && storage.store[<ResourceConstant>resourceType]! > 0) {
+			if (resourceType != RESOURCE_ENERGY && resourceType
+			!= RESOURCE_OPS && storage.store[<ResourceConstant>resourceType]! > 0) {
 				if (this.unloadCarry(manager)) return true;
 				manager.task = Tasks.withdraw(storage, <ResourceConstant>resourceType);
 				manager.task.parent = Tasks.transfer(terminal, <ResourceConstant>resourceType);
@@ -320,13 +320,34 @@ export class CommandCenterOverlord extends Overlord {
 		return false;
 	}
 
+	private preventTerminalFlooding(manager: Zerg): boolean {
+		// Prevent terminal flooding
+		if (this.room && this.room.terminal && this.room.storage && _.sum(this.room.terminal.store)
+			> this.room.terminal.storeCapacity*.98) {
+			let max = 0;
+			let resType: ResourceConstant = RESOURCE_ENERGY;
+			for (const res in this.room.terminal.store) {
+				const amount = this.room.terminal.store[<ResourceConstant>res];
+				if (amount && amount > max && res !== RESOURCE_ENERGY) {
+					max = amount;
+					resType = <ResourceConstant>res;
+				}
+			}
+
+			manager.task = Tasks.transferAll(this.room.storage).fork(Tasks.withdraw(this.room.terminal, resType));
+			return true;
+		}
+		return false;
+	}
+
 	private handleManager(manager: Zerg): void {
 		// Handle switching to next manager
 		if (manager.ticksToLive! < 150) {
 			if (this.deathActions(manager)) return;
 		}
+		if (this.preventTerminalFlooding(manager)) return;
 		// Emergency dumping actions for critically clogged terminals and storages
-		if (this.emergencyDumpingActions(manager)) return;
+		// if (this.emergencyDumpingActions(manager)) return;
 		// Pick up any dropped resources on ground
 		if (this.pickupActions(manager)) return;
 		// Move minerals from storage to terminal if needed

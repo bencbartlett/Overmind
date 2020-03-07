@@ -294,7 +294,7 @@ export class EvolutionChamber extends HiveCluster {
 
 	private boosterLabRequests(labs: StructureLab[]): void {
 		for (const lab of labs) {
-			const {mineralType, amount} = this.labReservations[lab.id];
+			const {mineralType, amount} = this.labReservations[lab.id.toString()];
 			// Empty out incorrect minerals
 			if (lab.mineralType != mineralType && lab.mineralAmount > 0) {
 				this.transportRequests.requestOutput(lab, Priority.NormalHigh, {resourceType: lab.mineralType!});
@@ -309,8 +309,8 @@ export class EvolutionChamber extends HiveCluster {
 
 	private registerRequests(): void {
 		// Separate product labs into actively boosting or ready for reaction
-		const boostingProductLabs = _.filter(this.productLabs, lab => this.labReservations[lab.id]);
-		const reactionProductLabs = _.filter(this.productLabs, lab => !this.labReservations[lab.id]);
+		const boostingProductLabs = _.filter(this.productLabs, lab => this.labReservations[lab.id.toString()]);
+		const reactionProductLabs = _.filter(this.productLabs, lab => !this.labReservations[lab.id.toString()]);
 
 		// Handle energy requests for labs with different priorities
 		const boostingRefillLabs = _.filter(boostingProductLabs, lab => lab.energy < lab.energyCapacity);
@@ -331,7 +331,7 @@ export class EvolutionChamber extends HiveCluster {
 	/* Reserves a product lab for boosting with a compound unrelated to production */
 	private reserveLab(mineralType: _ResourceConstantSansEnergy, amount: number, lab: StructureLab) {
 		// _.remove(this.productLabs, productLab => productLab.id == lab.id);
-		this.labReservations[lab.id] = {mineralType: mineralType, amount: amount};
+		this.labReservations[lab.id.toString()] = {mineralType: mineralType, amount: amount};
 	}
 
 	/* Return the amount of a given resource necessary to fully boost a creep body */
@@ -393,7 +393,7 @@ export class EvolutionChamber extends HiveCluster {
 				}
 			}
 			if (!boostLab) { // otherwise choose the first unreserved product lab
-				boostLab = _.find(this.boostingLabs, lab => !this.labReservations[lab.id]);
+				boostLab = _.find(this.boostingLabs, lab => !this.labReservations[lab.id.toString()]);
 			}
 			if (boostLab) {
 				this.reserveLab(<_ResourceConstantSansEnergy>mineralType, this.neededBoosts[mineralType], boostLab);
@@ -429,7 +429,7 @@ export class EvolutionChamber extends HiveCluster {
 		if (this.memory.status == LabStatus.Synthesizing) {
 			const [lab1, lab2] = this.reagentLabs;
 			for (const lab of this.productLabs) {
-				if (lab.cooldown == 0 && !this.labReservations[lab.id]) {
+				if (lab.cooldown == 0 && !this.labReservations[lab.id.toString()]) {
 					const result = lab.runReaction(lab1, lab2);
 					if (result == OK) { // update total production amount in memory
 						const product = this.memory.activeReaction ? this.memory.activeReaction.mineralType : 'ERROR';

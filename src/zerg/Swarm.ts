@@ -152,7 +152,8 @@ export class Swarm implements ProtoSwarm {
 	}
 
 	get print(): string {
-		return '<a href="#!/room/' + Game.shard.name + '/' + this.anchor.roomName + '">[' + `Swarm ` + this.ref + ']</a>';
+		return '<a href="#!/room/' + Game.shard.name + '/' + ((this.anchor
+			|| this.rooms[0])).roomName + '">[' + `Swarm ` + this.ref + ']</a>';
 	}
 
 	debug(...args: any[]) {
@@ -181,7 +182,7 @@ export class Swarm implements ProtoSwarm {
 
 	set target(targ: Creep | Structure | undefined) {
 		if (targ) {
-			this.memory.target = {id: targ.id, exp: getCacheExpiration(100)};
+			this.memory.target = {id: targ.id.toString(), exp: getCacheExpiration(100)};
 		} else {
 			delete this.memory.target;
 		}

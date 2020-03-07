@@ -197,13 +197,13 @@ export abstract class Directive {
 		if (verbose) log.info(`Recalculating colony association for ${this.name} in ${this.pos.roomName}`);
 		let nearestColony: Colony | undefined;
 		let minDistance = Infinity;
-		const colonyRooms = _.filter(Game.rooms, room => room.my);
 		for (const colony of getAllColonies()) {
 			if (Game.map.getRoomLinearDistance(this.pos.roomName, colony.name) > maxLinearRange) {
 				continue;
 			}
 			if (!colonyFilter || colonyFilter(colony)) {
 				const ret = Pathing.findPath((colony.hatchery || colony).pos, this.pos);
+				// TODO handle directives that can't find a path, at great range
 				if (!ret.incomplete) {
 					if (ret.path.length < maxPathLength && ret.path.length < minDistance) {
 						nearestColony = colony;
@@ -270,17 +270,16 @@ export abstract class Directive {
 		return result;
 	}
 
-
-	/* Whether a directive of the same type is already present (in room | at position) */
+	// TODO return the flags that are present rather than just boolean
 	static isPresent(pos: RoomPosition, scope: 'room' | 'pos'): boolean {
 		const room = Game.rooms[pos.roomName] as Room | undefined;
 		switch (scope) {
 			case 'room':
 				if (room) {
 					return _.filter(room.flags,
-									flag => this.filter(flag) &&
-											!(flag.memory.setPosition
-											&& flag.memory.setPosition.roomName != pos.roomName)).length > 0;
+						flag => this.filter(flag) &&
+							!(flag.memory.setPosition
+								&& flag.memory.setPosition.roomName != pos.roomName)).length > 0;
 				} else {
 					const flagsInRoom = _.filter(Game.flags, function(flag) {
 						if (flag.memory.setPosition) { // does it need to be relocated?
@@ -294,9 +293,9 @@ export abstract class Directive {
 			case 'pos':
 				if (room) {
 					return _.filter(pos.lookFor(LOOK_FLAGS),
-									flag => this.filter(flag) &&
-											!(flag.memory.setPosition
-											&& !equalXYR(pos, flag.memory.setPosition))).length > 0;
+						flag => this.filter(flag) &&
+							!(flag.memory.setPosition
+								&& !equalXYR(pos, flag.memory.setPosition))).length > 0;
 				} else {
 					const flagsAtPos = _.filter(Game.flags, function(flag) {
 						if (flag.memory.setPosition) { // does it need to be relocated?
@@ -307,7 +306,7 @@ export abstract class Directive {
 					});
 					return _.filter(flagsAtPos, flag => this.filter(flag)).length > 0;
 				}
-		}
+			}
 	}
 
 	/* Create a directive if one of the same type is not already present (in room | at position).
@@ -317,6 +316,7 @@ export abstract class Directive {
 		if (this.isPresent(pos, scope)) {
 			return; // do nothing if flag is already here
 		}
+
 		const room = Game.rooms[pos.roomName] as Room | undefined;
 		if (!room) {
 			if (!opts.memory) {

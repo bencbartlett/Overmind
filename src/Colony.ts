@@ -324,7 +324,7 @@ export class Colony {
 				.filter(e => (e!.my && e!.room.my)
 							 || Cartographer.roomType(e!.room.name) != ROOMTYPE_CONTROLLER)
 				.sortBy(e => e!.pos.getMultiRoomRangeTo(this.pos)).value() as StructureExtractor[]);
-		if (this.controller.level >= 6) {
+		if (this.controller.level >= 6 && this.terminal) {
 			_.forEach(this.extractors, extractor => DirectiveExtract.createIfNotPresent(extractor.pos, 'pos'));
 		}
 		$.set(this, 'repairables', () => _.flatten(_.map(this.rooms, room => room.repairables)));
@@ -550,6 +550,14 @@ export class Colony {
 		return allAssets;
 	}
 
+	private runPowerSpawn() {
+		if (this.powerSpawn && this.storage && this.storage.energy > 300000 && this.powerSpawn.energy > 50
+			&& this.powerSpawn.power > 0) {
+			if (Game.time % 20 == 0) { log.info(`Processing power in ${this.room.print}`); }
+			this.powerSpawn.processPower();
+		}
+	}
+
 	/**
 	 * Initializes the state of the colony each tick
 	 */
@@ -571,6 +579,7 @@ export class Colony {
 		this.linkNetwork.run();												// Run the link network
 		this.roadLogistics.run();											// Run the road network
 		this.roomPlanner.run();												// Run the room planner
+		this.runPowerSpawn();												// Run power spawn - short term
 		this.stats();														// Log stats per tick
 	}
 

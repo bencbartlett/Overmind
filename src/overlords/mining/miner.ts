@@ -32,6 +32,8 @@ export class MiningOverlord extends Overlord {
 	directive: DirectiveHarvest;
 	room: Room | undefined;
 	source: Source | undefined;
+	secondSource: Source | undefined;
+	isDisabled: boolean;
 	container: StructureContainer | undefined;
 	link: StructureLink | undefined;
 	constructionSite: ConstructionSite | undefined;
@@ -65,6 +67,9 @@ export class MiningOverlord extends Overlord {
 			this.energyPerTick = SOURCE_ENERGY_NEUTRAL_CAPACITY / ENERGY_REGEN_TIME;
 		}
 		this.miningPowerNeeded = Math.ceil(this.energyPerTick / HARVEST_POWER) + 1;
+
+		// this.checkForNearbyMines();
+
 		// Decide operating mode
 		if (Cartographer.roomType(this.pos.roomName) == ROOMTYPE_SOURCEKEEPER) {
 			this.mode = 'SK';
@@ -72,17 +77,25 @@ export class MiningOverlord extends Overlord {
 		} else if (this.colony.room.energyCapacityAvailable < StandardMinerSetupCost) {
 			this.mode = 'early';
 			this.setup = Setups.drones.miners.default;
-		} else if (this.link) {
+		}
+		// else if (this.checkIfDoubleMine() && this.colony.room.energyCapacityAvailable > DoubleMinerSetupCost) {
+		// 	this.mode = 'double';
+		// 	this.setup = Setups.drones.miners.double;
+		// }
+		else if (this.link) {
 			this.mode = 'link';
-			this.setup = Setups.drones.miners.default;
+			this.setup = Setups.drones.miners.linkOptimized;
 		} else {
 			this.mode = 'standard';
-			this.setup = Setups.drones.miners.standard;
+			this.setup = Game.cpu.bucket < 9500 ? Setups.drones.miners.standardCPU : Setups.drones.miners.standard;
 			// todo: double miner condition
 		}
 		const miningPowerEach = this.setup.getBodyPotential(WORK, this.colony);
+		// this.minersNeeded = this.isDisabled ? 0 : Math.min(Math.ceil(this.miningPowerNeeded / miningPowerEach),
+		// 							 this.pos.availableNeighbors(true).length);
 		this.minersNeeded = Math.min(Math.ceil(this.miningPowerNeeded / miningPowerEach),
-									 this.pos.availableNeighbors(true).length);
+										 this.pos.availableNeighbors(true).length);
+		this.minersNeeded = this.isDisabled ? 0 : this.minersNeeded;
 		// Allow drop mining at low levels
 		this.allowDropMining = this.colony.level < MiningOverlord.settings.dropMineUntilRCL;
 		if (this.mode != 'early' && !this.allowDropMining) {
@@ -96,6 +109,36 @@ export class MiningOverlord extends Overlord {
 			}
 		}
 	}
+
+	private isDoubleSource(): boolean {
+		if (Game.rooms[this.pos.roomName] && this.pos.room) {
+			// console.log('Double mining check');
+			this.source = this.source || _.first(this.pos.room.sources);
+			const nearby = this.source.pos.findInRange(FIND_SOURCES, 2).filter(source => this.source != source);
+			if (nearby.length > 0) {
+				this.secondSource = nearby[0];
+				// If its over 1 spot away, is there spot in between to mine?
+				if (!this.source.pos.isNearTo(this.secondSource)) {
+					const miningPos = this.source.pos.getPositionAtDirection(this.source.pos.getDirectionTo(this.secondSource.pos));
+					if (!miningPos.isWalkable()) {
+						// console.log(`Double mining found but there is no spot between ${this.secondSource}
+						// ${this.secondSource.pos.print} isWalkable ${miningPos}`);
+						return false;
+					}
+				}
+				if (this.source.id > this.secondSource.id) {
+					// console.log(`This is a disabled mining ${this.directive.name} via source id`);
+					this.isDisabled = true;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * TODO Note to self - make directive to make a double miner
+	 */
 
 	get distance(): number {
 		return this.directive.distance;
@@ -146,7 +189,7 @@ export class MiningOverlord extends Overlord {
 	}
 
 	/**
-	 * Add or remove containers as needed to keep exactly one of contaner | link
+	 * Add or remove containers as needed to keep exactly one of container | link
 	 */
 	private addRemoveContainer(): void {
 		if (this.allowDropMining) {
@@ -155,7 +198,12 @@ export class MiningOverlord extends Overlord {
 		// Create container if there is not already one being built and no link
 		if (!this.container && !this.constructionSite && !this.link) {
 			const containerPos = this.calculateContainerPos();
-			const container = containerPos.lookForStructure(STRUCTURE_CONTAINER) as StructureContainer | undefined;
+			if (!containerPos) {
+				log.error(`${this.print}: can't build container at ${this.room}`);
+				return;
+			}
+			const container = containerPos ? containerPos.lookForStructure(STRUCTURE_CONTAINER) as StructureContainer
+				| undefined : undefined;
 			if (container) {
 				log.warning(`${this.print}: this.container out of sync at ${containerPos.print}`);
 				this.container = container;
@@ -275,13 +323,14 @@ export class MiningOverlord extends Overlord {
 	 * Actions for handling link mining
 	 */
 	private linkMiningActions(miner: Zerg) {
-
-		// Approach mining site
-		if (this.goToMiningSite(miner)) return;
-
 		// Link mining
+		// TODO
 		if (this.link) {
-			miner.harvest(this.source!);
+			const res = miner.harvest(this.source!);
+			if (res == ERR_NOT_IN_RANGE) {
+				// Approach mining site
+				if (this.goToMiningSite(miner)) return;
+			}
 			if (miner.carry.energy > 0.9 * miner.carryCapacity) {
 				miner.transfer(this.link, RESOURCE_ENERGY);
 			}
@@ -295,7 +344,7 @@ export class MiningOverlord extends Overlord {
 	 * Actions for handling mining at RCL high enough to spawn ideal miner body to saturate source
 	 */
 	private standardMiningActions(miner: Zerg) {
-
+		// TODO reeval to do mining first, try intent and if fail then more for cpu gain
 		// Approach mining site
 		if (this.goToMiningSite(miner)) return;
 
@@ -306,6 +355,67 @@ export class MiningOverlord extends Overlord {
 				return miner.repair(this.container);
 			} else {
 				return miner.harvest(this.source!);
+			}
+		}
+
+		// Build output site
+		if (this.constructionSite) {
+			if (miner.carry.energy >= Math.min(miner.carryCapacity, BUILD_POWER * miner.getActiveBodyparts(WORK))) {
+				return miner.build(this.constructionSite);
+			} else {
+				return miner.harvest(this.source!);
+			}
+		}
+
+		// Drop mining
+		if (this.allowDropMining) {
+			miner.harvest(this.source!);
+			if (miner.carry.energy > 0.8 * miner.carryCapacity) { // move over the drop when you're close to full
+				const biggestDrop = maxBy(miner.pos.findInRange(miner.room.droppedEnergy, 1), drop => drop.amount);
+				if (biggestDrop) {
+					miner.goTo(biggestDrop);
+				}
+			}
+			if (miner.carry.energy == miner.carryCapacity) { // drop when you are full
+				miner.drop(RESOURCE_ENERGY);
+			}
+			return;
+		}
+	}
+
+	/**
+	 * Actions for handling double mining
+	 */
+	private doubleMiningActions(miner: Zerg) {
+		// Approach mining site
+		if (this.goToMiningSite(miner)) return;
+		// console.log(`Double mining with ${miner.print} here ${this.source!.pos.print}, ${this.source},
+		// ${this.secondSource} is disabled ${this.isDisabled}`);
+
+		// Link mining
+		if (this.link) {
+		 	if (this.source && this.source.energy > 0) {
+		 		miner.harvest(this.source!);
+			} else {
+				miner.harvest(this.secondSource!);
+			}
+			if (miner.carry.energy > 0.9 * miner.carryCapacity) {
+				miner.transfer(this.link, RESOURCE_ENERGY);
+			}
+			return;
+		} else {
+			log.warning(`Link miner ${miner.print} has no link!`);
+		}
+
+		// Container mining
+		if (this.container) {
+			if (this.container.hits < this.container.hitsMax
+				&& miner.carry.energy >= Math.min(miner.carryCapacity, REPAIR_POWER * miner.getActiveBodyparts(WORK))) {
+				return miner.repair(this.container);
+			} else if (this.source && this.source.energy > 0) {
+				return miner.harvest(this.source!);
+			} else {
+				return miner.harvest(this.secondSource!);
 			}
 		}
 
@@ -379,7 +489,7 @@ export class MiningOverlord extends Overlord {
 			case 'SK':
 				return this.standardMiningActions(miner);
 			case 'double':
-				return this.standardMiningActions(miner);
+				return this.doubleMiningActions(miner);
 			default:
 				log.error(`UNHANDLED MINER STATE FOR ${miner.print} (MODE: ${this.mode})`);
 		}

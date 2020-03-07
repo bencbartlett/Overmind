@@ -1,6 +1,7 @@
 import {$} from '../../caching/GlobalCache';
 import {Colony, ColonyStage, DEFCON} from '../../Colony';
 import {Roles, Setups} from '../../creepSetups/setups';
+import {DirectiveNukeResponse} from '../../directives/situational/nukeResponse';
 import {TERMINAL_STATE_REBUILD} from '../../directives/terminalState/terminalState_rebuild';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {BuildPriorities, FortifyPriorities} from '../../priorities/priorities_structures';
@@ -10,6 +11,7 @@ import {Task} from '../../tasks/Task';
 import {Tasks} from '../../tasks/Tasks';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {minBy} from '../../utilities/utils';
+import {Visualizer} from '../../visuals/Visualizer';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord, ZergOptions} from '../Overlord';
 
@@ -39,11 +41,11 @@ export class WorkerOverlord extends Overlord {
 			4       : 5e+4,
 			5       : 1e+5,
 			6       : 5e+5,
-			7       : 1e+6,
-			8       : 2e+7,
+			7       : 2e+6,
+			8       : 2.1e+7,
 		},
 		hitTolerance        : 100000, 	// allowable spread in HP
-		fortifyDutyThreshold: 500000,	// ignore fortify duties until this amount of energy is present in the room
+		fortifyDutyThreshold: 250000,	// ignore fortify duties until this amount of energy is present in the room
 	};
 
 	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.work) {
@@ -108,9 +110,12 @@ export class WorkerOverlord extends Overlord {
 		if (this.room.find(FIND_NUKES).length > 0) {
 			for (const rampart of this.colony.room.ramparts) {
 				const neededHits = this.neededRampartHits(rampart);
-				if (rampart.hits < neededHits) {
+				const ignoreExtensions = this.room.storage && this.room.storage.energy < 300000;
+				if (rampart.hits < neededHits && rampart.pos.findInRange(FIND_NUKES, 2).length > 0
+					&& DirectiveNukeResponse.shouldReinforceLocation(rampart.pos, ignoreExtensions)) {
 					this.nukeDefenseRamparts.push(rampart);
-					this.nukeDefenseHitsRemaining[rampart.id] = neededHits - rampart.hits;
+					Visualizer.marker(rampart.pos, {color: 'gold'});
+					this.nukeDefenseHitsRemaining[rampart.id.toString()] = neededHits - rampart.hits;
 				}
 			}
 		}
@@ -119,8 +124,8 @@ export class WorkerOverlord extends Overlord {
 		const opts: ZergOptions = {};
 		const totalNukeDefenseHitsRemaining = _.sum(_.values(this.nukeDefenseHitsRemaining));
 		const approximateRepairPowerPerLifetime = REPAIR_POWER * 50 / 3 * CREEP_LIFE_TIME;
-		if (totalNukeDefenseHitsRemaining > 3 * approximateRepairPowerPerLifetime) {
-			opts.boostWishlist = [boostResources.construct[3]];
+		if (totalNukeDefenseHitsRemaining > 3 * approximateRepairPowerPerLifetime || this.fortifyBarriers.length > 5) {
+			opts.boostWishlist = [boostResources.construct[2]];
 		}
 
 		// Register workers
@@ -132,7 +137,7 @@ export class WorkerOverlord extends Overlord {
 		for (const nuke of rampart.pos.lookFor(LOOK_NUKES)) {
 			neededHits += 10e6;
 		}
-		for (const nuke of rampart.pos.findInRange(FIND_NUKES, 3)) {
+		for (const nuke of rampart.pos.findInRange(FIND_NUKES, 2)) {
 			if (nuke.pos != rampart.pos) {
 				neededHits += 5e6;
 			}
@@ -181,9 +186,10 @@ export class WorkerOverlord extends Overlord {
 					const repairTicks = _.sum(this.repairStructures,
 											structure => structure.hitsMax - structure.hits) / REPAIR_POWER;
 					const paveTicks = _.sum(this.colony.rooms,
-										  room => this.colony.roadLogistics.energyToRepave(room)) / 1; // repairCost=1
+										  room => this.colony.roadLogistics.energyToRepave(room)); // repairCost=1
 					let fortifyTicks = 0;
-					if (this.colony.assets.energy > WorkerOverlord.settings.fortifyDutyThreshold) {
+					const shouldFortify = this.colony.assets.energy > WorkerOverlord.settings.fortifyDutyThreshold;
+					if (shouldFortify) {
 						fortifyTicks = 0.25 * _.sum(this.fortifyBarriers, barrier =>
 							Math.max(0, WorkerOverlord.settings.barrierHits[this.colony.level]
 										- barrier.hits)) / REPAIR_POWER;
@@ -249,15 +255,15 @@ export class WorkerOverlord extends Overlord {
 			if (energy <= 0) break;
 			if (previousPos) {
 				target = _.find(this.colony.roadLogistics.repairableRoads(room),
-								road => road.hits < road.hitsMax && !targetRefs[road.id]
+								road => road.hits < road.hitsMax && !targetRefs[road.id.toString()]
 										&& road.pos.getRangeTo(previousPos!) <= 1);
 			} else {
 				target = _.find(this.colony.roadLogistics.repairableRoads(room),
-								road => road.hits < road.hitsMax && !targetRefs[road.id]);
+								road => road.hits < road.hitsMax && !targetRefs[road.id.toString()]);
 			}
 			if (target) {
 				previousPos = target.pos;
-				targetRefs[target.id] = true;
+				targetRefs[target.id.toString()] = true;
 				energy -= (target.hitsMax - target.hits) / REPAIR_POWER;
 				tasks.push(Tasks.repair(target));
 			} else {
@@ -334,10 +340,24 @@ export class WorkerOverlord extends Overlord {
 
 	private handleWorker(worker: Zerg) {
 		if (worker.carry.energy > 0) {
-			// Upgrade controller if close to downgrade
-			if (this.colony.controller.ticksToDowngrade <= (this.colony.level >= 4 ? 10000 : 2000)) {
+			// TODO Add high priority to block controller with ramparts/walls in case of downgrade attack
+			// FIXME workers get stalled at controller in case of downgrade attack
+			// Upgrade controller if close to downgrade or if getting controller attacked/was downgraded
+			const downgradeLevel = CONTROLLER_DOWNGRADE[this.colony.controller.level] *
+				(this.colony.controller.level < 4 ? .3 : .7);
+			if ((!this.colony.controller.upgradeBlocked || this.colony.controller.upgradeBlocked < 30)
+				&& (this.colony.controller.ticksToDowngrade <= downgradeLevel
+					|| this.colony.controller.progress > this.colony.controller.progressTotal)) {
 				if (this.upgradeActions(worker)) return;
 			}
+
+			if (this.colony.controller.upgradeBlocked) {
+				const site = _.first(this.colony.controller.pos.findInRange(FIND_CONSTRUCTION_SITES, 1));
+				if (site) {
+					worker.build(site);
+				}
+			}
+
 			// Repair damaged non-road non-barrier structures
 			if (this.repairStructures.length > 0 && this.colony.defcon == DEFCON.safe) {
 				if (this.repairActions(worker)) return;

@@ -10,6 +10,7 @@ import {HiveCluster} from './_HiveCluster';
 
 interface UpgradeSiteMemory {
 	stats: { downtime: number };
+	speedFactor: number;		// Multiplier on upgrade parts for fast growth
 }
 
 
@@ -100,7 +101,14 @@ export class UpgradeSite extends HiveCluster {
 					upgradePower *= 2;
 				}
 				if (this.controller.level == 8) {
-					upgradePower = Math.min(upgradePower, 15); // don't go above 15 work parts at RCL 8
+					if (this.colony.assets.energy < 30000) {
+						upgradePower = 0;
+					} else {
+						upgradePower = Math.min(upgradePower, 15); // don't go above 15 work parts at RCL 8
+					}
+				} else if (this.controller.level >= 6) {
+					// Can set a room to upgrade at an accelerated rate manually
+					upgradePower = this.memory.speedFactor != undefined ? upgradePower*this.memory.speedFactor : upgradePower;
 				}
 				return upgradePower;
 			} else {

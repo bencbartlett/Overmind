@@ -1,6 +1,7 @@
 import {Colony, getAllColonies} from '../Colony';
 import {log} from '../console/log';
 import {isOwnedStructure} from '../declarations/typeGuards';
+import {DirectiveHaul} from '../directives/resource/haul';
 import {DirectiveTerminalRebuildState} from '../directives/terminalState/terminalState_rebuild';
 import {Energetics} from '../logistics/Energetics';
 import {Autonomy, getAutonomyLevel, Mem} from '../memory/Memory';
@@ -8,7 +9,7 @@ import {Pathing} from '../movement/Pathing';
 import {BuildPriorities, DemolishStructurePriorities} from '../priorities/priorities_structures';
 import {profile} from '../profiler/decorator';
 import {bullet} from '../utilities/stringConstants';
-import {derefCoords, maxBy, onPublicServer} from '../utilities/utils';
+import {derefCoords, hasMinerals, maxBy, onPublicServer} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {MY_USERNAME} from '../~settings';
 import {BarrierPlanner} from './BarrierPlanner';
@@ -394,6 +395,9 @@ export class RoomPlanner {
 	 */
 	getObstacles(): RoomPosition[] {
 		let obstacles: RoomPosition[] = [];
+		// Add sources and extractors to impassibles for tunnels
+		obstacles.concat(_.map(this.colony.sources, source => source.pos));
+		obstacles.concat(_.map(this.colony.extractors, extr => extr.pos));
 		const passableStructureTypes: string[] = [STRUCTURE_ROAD, STRUCTURE_CONTAINER, STRUCTURE_RAMPART];
 		if (_.keys(this.map).length > 0) { // if room planner has made the map, use that
 			for (const structureType in this.map) {
@@ -638,6 +642,11 @@ export class RoomPlanner {
 						&& (structureType == STRUCTURE_STORAGE || structureType == STRUCTURE_TERMINAL)) {
 						break; // don't destroy terminal or storage when under RCL4 - can use energy inside
 					}
+					if (this.colony.level < 6
+						&& structureType == STRUCTURE_TERMINAL && hasMinerals((<StructureTerminal> structure).store)) {
+						DirectiveHaul.createIfNotPresent(structure.pos, 'pos');
+						break; // don't destroy terminal when under RCL6 if there are resources available.
+					}
 					if (structureType != STRUCTURE_WALL && structureType != STRUCTURE_RAMPART) {
 						this.memory.relocating = true;
 					}
@@ -719,7 +728,7 @@ export class RoomPlanner {
 		for (const structureType of BuildPriorities) {
 			if (this.map[structureType]) {
 				for (const pos of this.map[structureType]) {
-					if (count > 0 && RoomPlanner.canBuild(structureType, pos)) {
+					if ((structureType == STRUCTURE_SPAWN || count > 0) && RoomPlanner.canBuild(structureType, pos)) {
 						const result = pos.createConstructionSite(structureType);
 						if (result != OK) {
 							const structures = pos.lookFor(LOOK_STRUCTURES);
@@ -855,7 +864,7 @@ export class RoomPlanner {
 				if (expansionData) {
 					bunkerAnchor = derefCoords(expansionData.bunkerAnchor, this.colony.room.name);
 				} else {
-					log.error(`Cannot determine anchor! No spawns or expansionData.bunkerAnchor!`);
+					log.error(`Cannot determine anchor! No spawns or expansionData.bunkerAnchor for ${this.colony.print}!`);
 					return;
 				}
 			}

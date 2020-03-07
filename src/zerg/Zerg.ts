@@ -119,7 +119,7 @@ export class Zerg {
 		this.fatigue = creep.fatigue;
 		this.hits = creep.hits;
 		this.hitsMax = creep.hitsMax;
-		this.id = creep.id;
+		this.id = creep.id.toString();
 		this.memory = creep.memory;
 		this.name = creep.name;
 		this.pos = creep.pos;
@@ -426,7 +426,7 @@ export class Zerg {
 		}
 	}
 
-	withdraw(target: Structure | Tombstone, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
+	withdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
 		const result = this.creep.withdraw(target, resourceType, amount);
 		if (!this.actionLog.withdraw) this.actionLog.withdraw = (result == OK);
 		return result;
@@ -509,6 +509,17 @@ export class Zerg {
 
 	set overlord(newOverlord: Overlord | null) {
 		setOverlord(this, newOverlord);
+	}
+
+	// TODO add retire/reassignment logic
+	// Eg. creep get repurposed, it gets recycled, etc
+	/**
+	 * When a zerg has no more use for it's current overlord, it will be retired.
+	 * For now, that means RIP
+	 */
+	retire() {
+		this.say('💀 RIP 💀', true);
+		return this.suicide();
 	}
 
 	/* Reassigns the creep to work under a new overlord and as a new role. */
@@ -663,7 +674,8 @@ export class Zerg {
 	flee(avoidGoals: (RoomPosition | HasPos)[] = this.room.fleeDefaults,
 		 fleeOptions: FleeOptions              = {},
 		 moveOptions: MoveOptions              = {}): boolean {
-		if (avoidGoals.length == 0) {
+		if (avoidGoals.length == 0 || this.room.dangerousHostiles.find(creep =>
+			creep.pos.getRangeToXY(this.pos.x, this.pos.y) < 6) == undefined) {
 			return false;
 		} else if (this.room.controller && this.room.controller.my && this.room.controller.safeMode) {
 			return false;
@@ -680,7 +692,7 @@ export class Zerg {
 					}
 				}
 				// Invalidate task
-				if (fleeOptions.invalidateTask) {
+				if (fleeOptions.invalidateTask && !this.inRampart) {
 					this.task = null;
 				}
 			}

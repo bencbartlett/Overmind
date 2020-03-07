@@ -64,7 +64,9 @@ export class ControllerAttackerOverlord extends Overlord {
 				log.debug(`No attack position for ${controllerAttacker.print}!`);
 			}
 		}
-		if (this.room && this.room.controller && !this.room.controller.upgradeBlocked) {
+		if (this.room && this.room.controller && this.room.controller.reservation && !this.room.controller.reservedByMe) {
+			this.launchAttack();
+		} else if (this.room && this.room.controller && !this.room.controller.upgradeBlocked) {
 			if (_.all(this.controllerAttackers, creep => creep.pos.isEqualTo(this.assignments[creep.name]))
 				|| _.any(this.controllerAttackers, creep => creep.pos.isNearTo(this.room!.controller!)
 															&& (creep.ticksToLive || 10) <= 2)) {

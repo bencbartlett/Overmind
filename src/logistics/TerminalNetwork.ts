@@ -92,6 +92,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 				RESOURCE_UTRIUM,
 				RESOURCE_OXYGEN,
 				RESOURCE_HYDROGEN,
+				RESOURCE_OPS,
 			],
 		},
 		buyEnergyThreshold: 200000, // buy energy off market if average amount is less than this
@@ -127,7 +128,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 
 	/* Summarizes the total of all resources currently in a colony store structure */
 	private getAllAssets(): { [resourceType: string]: number } {
-		return mergeSum(_.map(this.terminals, terminal => colonyOf(terminal).assets));
+		return mergeSum(_.map(this.terminals, terminal =>
+			(colonyOf(terminal) != undefined ? colonyOf(terminal).assets : {})));
 	}
 
 	private logTransfer(resourceType: ResourceConstant, amount: number, origin: string, destination: string) {
@@ -237,9 +239,9 @@ export class TerminalNetwork implements ITerminalNetwork {
 	/**
 	 * Sell excess minerals on the market
 	 */
-	private handleExcess(terminal: StructureTerminal, threshold = 25000): void {
+	private handleExcess(terminal: StructureTerminal, threshold = 35000): void {
 
-		const terminalNearCapacity = _.sum(terminal.store) > 0.95 * terminal.storeCapacity;
+		const terminalNearCapacity = terminal.store.getUsedCapacity() > 0.95 * terminal.store.getCapacity();
 
 		for (const resource in terminal.store) {
 			if (resource == RESOURCE_POWER) {
@@ -248,7 +250,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 			if (resource == RESOURCE_ENERGY) {
 
 				let energyThreshold = Energetics.settings.terminal.energy.outThreshold;
-				if (terminalNearCapacity) { // if you're close to full, be more agressive with selling energy
+				if (terminalNearCapacity) { // if you're close to full, be more aggressive with selling energy
 					energyThreshold = Energetics.settings.terminal.energy.equilibrium
 									  + Energetics.settings.terminal.energy.tolerance;
 				}
@@ -272,7 +274,6 @@ export class TerminalNetwork implements ITerminalNetwork {
 				}
 
 			} else {
-
 				if (terminal.store[<ResourceConstant>resource]! > threshold) {
 					const receiver = maxBy(this.terminals,
 										   terminal => wantedAmount(colonyOf(terminal),
@@ -293,21 +294,6 @@ export class TerminalNetwork implements ITerminalNetwork {
 					}
 				}
 
-			}
-		}
-	}
-
-	private handleOverflowWithNoEnergy() {
-		for (const terminal of this.terminals) {
-			if (terminal.store.getFreeCapacity() < 5000 && terminal.store[RESOURCE_ENERGY] < 10000) {
-				const roomOrders = _.filter(Game.market.orders, order => order.roomName == terminal.room.name);
-				for (const res in terminal.store) {
-					const quantity = terminal.store[res as ResourceConstant];
-					if (quantity > 15000 && roomOrders.filter(order => order.resourceType == res).length == 0) {
-						log.info(`Creating sell order for ${res} in room ${terminal.room.print}`);
-						Overmind.tradeNetwork.sell(terminal, res as ResourceConstant, 2000);
-					}
-				}
 			}
 		}
 	}
@@ -469,6 +455,78 @@ export class TerminalNetwork implements ITerminalNetwork {
 		}
 	}
 
+	addStore(store: { [resourceType: string]: number }, storeToAdd: StoreDefinition) {
+		_.keys(storeToAdd).forEach(resType => {
+			const resourceType = resType as ResourceConstant;
+			if (store[resType]) {
+				store[resType] += storeToAdd[resourceType] || 0;
+			} else {
+				store[resType] = storeToAdd[resourceType] || 0;
+			}
+		});
+	}
+
+	// TODO this is a hacky way to rebalance room resources over the network, make it better
+	shareRooms() {
+		if(Game.time % 10 == 0) {
+			const myRooms = _.filter(Game.rooms, room => room.controller
+				&& room.controller.my && room.terminal && room.terminal.my);
+			let maxRoom: Room | undefined;
+			const usedTerminals: Room[] = [];
+			const store: { [resourceType: string]: number } = {};
+
+			for (const room of myRooms) {
+				if (room.terminal) {
+					this.addStore(store, room.terminal.store);
+				}
+				if (room.storage) {
+					this.addStore(store, room.storage.store);
+				}
+			}
+
+			console.log(JSON.stringify(store));
+			for(const res in store) {
+				const resourceType = res as ResourceConstant;
+				console.log(resourceType + ' ' + store[resourceType]);
+				if (store[resourceType] < 30000 || resourceType == RESOURCE_ENERGY || usedTerminals.length == myRooms.length) {
+					continue;
+				}
+				_.forEach(myRooms, room => {
+					if (room.storage && room.terminal && _.sum(room.storage.store) < room.storage.storeCapacity * 0.9) {
+						const total = (room.terminal ? room.terminal.store[resourceType] || 0 : 0) +
+							(room.storage ? room.storage.store[resourceType] || 0 : 0);
+						if(total < store[resourceType]*0.7/32) {
+							console.log(room.name + ' ' + res + ' ' + total + ' ' +
+								(100 - Math.floor(total*100/(store[resourceType]*0.85/31))));
+							maxRoom = maxBy(myRooms, function(room) {
+								return !usedTerminals.includes(room) && room.storage ? room.storage.store[resourceType] || 0 : 0;
+							});
+							if (maxRoom && maxRoom.storage && maxRoom.terminal) {
+								maxRoom.terminal.send(resourceType,300,room.name);
+								usedTerminals.push(maxRoom);
+							}
+						}
+					}
+				});
+			}
+		}
+	}
+
+	handleOverflowWithNoEnergy() {
+		for (const terminal of this.terminals) {
+			if (terminal.store.getFreeCapacity() < 5000 && terminal.store[RESOURCE_ENERGY] < 10000) {
+				const roomOrders = _.filter(Game.market.orders, order => order.roomName == terminal.room.name);
+				for (const res in terminal.store) {
+					const quantity = terminal.store[res as ResourceConstant];
+					if (quantity > 15000 && roomOrders.filter(order => order.resourceType == res).length == 0) {
+						log.info(`Creating sell order for ${res} in room ${terminal.room.print}`);
+						Overmind.tradeNetwork.sell(terminal, res as ResourceConstant, 2000);
+					}
+				}
+			}
+		}
+	}
+
 	init(): void {
 		this.assets = this.getAllAssets();
 	}
@@ -513,6 +571,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		if (this.notifications.length > 0) {
 			log.info(`Terminal network activity: ` + alignedNewline + this.notifications.join(alignedNewline));
 		}
+		// this.shareRooms();
 	}
 
 }

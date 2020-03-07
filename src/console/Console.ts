@@ -1,5 +1,7 @@
 import {Colony, ColonyMemory} from '../Colony';
 import {Directive} from '../directives/Directive';
+import {Overlord} from '../overlords/Overlord';
+import {EmpireAnalysis} from '../utilities/EmpireAnalysis';
 import {alignedNewline, bullet} from '../utilities/stringConstants';
 import {color, toColumns} from '../utilities/utils';
 import {asciiLogoRL, asciiLogoSmall} from '../visuals/logos';
@@ -26,6 +28,7 @@ export class OvermindConsole {
 		global.setLogLevel = log.setLogLevel;
 		global.suspendColony = this.suspendColony;
 		global.unsuspendColony = this.unsuspendColony;
+		global.listSuspendedColonies = this.listSuspendedColonies;
 		global.openRoomPlanner = this.openRoomPlanner;
 		global.closeRoomPlanner = this.closeRoomPlanner;
 		global.cancelRoomPlanner = this.cancelRoomPlanner;
@@ -36,6 +39,7 @@ export class OvermindConsole {
 		global.listConstructionSites = this.listConstructionSites;
 		global.listDirectives = this.listDirectives;
 		global.listPersistentDirectives = this.listPersistentDirectives;
+		// global.directiveInfo = this.directiveInfo;
 		global.removeAllLogisticsDirectives = this.removeAllLogisticsDirectives;
 		global.removeFlagsByColor = this.removeFlagsByColor;
 		global.removeErrantFlags = this.removeErrantFlags;
@@ -44,6 +48,8 @@ export class OvermindConsole {
 		global.endRemoteDebugSession = this.endRemoteDebugSession;
 		global.profileMemory = this.profileMemory;
 		global.cancelMarketOrders = this.cancelMarketOrders;
+		global.setRoomUpgradeRate = this.setRoomUpgradeRate;
+		global.getEmpireMineralDistribution = this.getEmpireMineralDistribution;
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -68,6 +74,7 @@ export class OvermindConsole {
 		descr['setLogLevel(int)'] = 'set the logging level from 0 - 4';
 		descr['suspendColony(roomName)'] = 'suspend operations within a colony';
 		descr['unsuspendColony(roomName)'] = 'resume operations within a suspended colony';
+		descr['listSuspendedColonies()'] = 'Prints all suspended colonies';
 		descr['openRoomPlanner(roomName)'] = 'open the room planner for a room';
 		descr['closeRoomPlanner(roomName)'] = 'close the room planner and save changes';
 		descr['cancelRoomPlanner(roomName)'] = 'close the room planner and discard changes';
@@ -78,12 +85,15 @@ export class OvermindConsole {
 		descr['listConstructionSites(filter?)'] = 'list all construction sites matching an optional filter';
 		descr['listDirectives(filter?)'] = 'list directives, matching a filter if specified';
 		descr['listPersistentDirectives()'] = 'print type, name, pos of every persistent directive';
+		// descr['directiveInfo(directiveFlag)'] = 'print type, name, pos of every creep in directive';
 		descr['removeFlagsByColor(color, secondaryColor)'] = 'remove flags that match the specified colors';
 		descr['removeErrantFlags()'] = 'remove all flags which don\'t match a directive';
 		descr['deepCleanMemory()'] = 'deletes all non-critical portions of memory (be careful!)';
 		descr['profileMemory(depth=1)'] = 'scan through memory to get the size of various objects';
 		descr['startRemoteDebugSession()'] = 'enables the remote debugger so Muon can debug your code';
 		descr['cancelMarketOrders(filter?)'] = 'cancels all market orders matching filter (if provided)';
+		descr['setRoomUpgradeRate(room, upgradeRate)'] = 'changes the rate which a room upgrades at, default is 1';
+		descr['getEmpireMineralDistribution()'] = 'returns current census of colonies and mined sk room minerals';
 		// Console list
 		const descrMsg = toColumns(descr, {justify: true, padChar: '.'});
 		const maxLineLength = _.max(_.map(descrMsg, line => line.length)) + 2;
@@ -250,6 +260,17 @@ export class OvermindConsole {
 		}
 	}
 
+	static listSuspendedColonies(): string {
+		let msg = 'Colonies currently suspended: \n';
+		for (const i in Memory.colonies) {
+			const colonyMemory = Memory.colonies[i] as ColonyMemory | undefined;
+			if (colonyMemory && colonyMemory.suspend == true) {
+				msg += 'Colony ' + i + ' \n';
+			}
+		}
+		return msg;
+	}
+
 	// Room planner control ============================================================================================
 
 	static openRoomPlanner(roomName: string): string {
@@ -377,6 +398,41 @@ export class OvermindConsole {
 		return `Removed ${count} flags.`;
 	}
 
+	// TODO MERGE INTO DIRECTIVES
+	// static directiveInfo(flagName: string): string {
+	// 	let msg = '';
+	// 	const directive = Overmind.directives[flagName];
+	// 	if (!directive) {
+	// 		return `ERROR: Name is not a current directive`;
+	// 	}
+	// 	msg += `Type: ${directive.directiveName}`.padRight(20) +
+	// 		`Name: ${directive.name}`.padRight(25) +
+	// 		`Pos: ${directive.pos.print}\n`;
+	// 	for (const overlordName of Object.keys(directive.overlords)) {
+	// 		const overlord = directive.overlords[overlordName] as Overlord;
+	// 		msg += JSON.stringify(overlord.creepUsageReport) + `\n`;
+	// 		const zerg = overlord.getZerg();
+	// 		const combatZerg = overlord.getCombatZerg();
+	// 		for (const [roleName, zergArray] of Object.entries(zerg)) {
+	// 			msg += `Role: ${roleName} \n`;
+	// 			for (const zerg of zergArray) {
+	// 				msg += `Name: ${zerg.name}   Room: ${zerg.pos.print}   TTL/Spawning: ${zerg.ticksToLive || zerg.spawning} \n`;
+	// 			}
+	// 		}
+	// 		msg += `Combat zerg \n`;
+	// 		for (const [roleName, zergArray] of Object.entries(combatZerg)) {
+	// 			msg += `Role: ${roleName} \n`;
+	// 			for (const zerg of zergArray) {
+	// 				msg += `Name: ${zerg.name}   Room: ${zerg.pos.print}   TTL/Spawning: ${zerg.ticksToLive || zerg.spawning} \n`;
+	// 			}
+	// 		}
+	// 	}
+	//
+	// 	return msg;
+	// }
+
+
+
 
 	// Structure management ============================================================================================
 
@@ -419,6 +475,23 @@ export class OvermindConsole {
 		return `Destroyed ${room.barriers.length} barriers.`;
 	}
 
+	// Colony Management =================================================================================================
+
+	static setRoomUpgradeRate(roomName: string, rate: number): string {
+		const colony: Colony = Overmind.colonies[roomName];
+		colony.upgradeSite.memory.speedFactor = rate;
+
+		return `Colony ${roomName} is now upgrading at a rate of ${rate}.`;
+	}
+
+	static getEmpireMineralDistribution(): string {
+		const minerals = EmpireAnalysis.empireMineralDistribution();
+		let ret = 'Empire Mineral Distribution \n';
+		for (const mineral in minerals) {
+			ret += `${mineral}: ${minerals[mineral]} \n`;
+		}
+		return ret;
+	}
 
 	// Memory management ===============================================================================================
 

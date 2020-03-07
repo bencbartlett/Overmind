@@ -66,6 +66,17 @@ export class SporeCrawler extends HiveCluster {
 		}
 	}
 
+	private scatterShot(targets: Creep[]): void {
+		for (const tower of this.towers) {
+			const target = _.sample(targets);
+			const result = tower.attack(target);
+			if (result == OK) {
+				if (target.hitsPredicted == undefined) target.hitsPredicted = target.hits;
+				target.hitsPredicted -= CombatIntel.singleTowerDamage(target.pos.getRangeTo(tower));
+			}
+		}
+	}
+
 	// private attackNearestEnemy(prioritizeHealers = false) {
 	// 	if (prioritizeHealers) {
 	// 		let healers = _.filter(this.room.hostiles, creep => creep.getActiveBodyparts(HEAL) > 0);
@@ -147,9 +158,19 @@ export class SporeCrawler extends HiveCluster {
 						}
 					}
 				} else {
+					// const netDPS = CombatIntel.towerDamageAtPos(hostile.pos)! + myCreepDamage
+					// 	- (HEAL_FUDGE_FACTOR * CombatIntel.maxHostileHealingTo(hostile));
+					// const isKillable = netDPS * hostile.pos.rangeToEdge > hostile.hits/2;
+					// return isKillable;
 					return true;
 				}
 			});
+			if (Game.time % 21 == 0 && _.filter(possibleTargets, target => target.hits < target.hitsMax /2).length == 0) {
+				// console.log('Scattershotting!');
+				return this.scatterShot(possibleTargets);
+			}
+			possibleTargets = possibleTargets.filter(enemy => enemy.hits < enemy.hitsMax / 2
+				|| enemy.pos.findInRange(FIND_MY_CREEPS, 3).length > 0);
 			const target = CombatTargeting.findBestCreepTargetForTowers(this.room, possibleTargets);
 			if (target) {
 				return this.attack(target);

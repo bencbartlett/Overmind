@@ -12,6 +12,8 @@ import {Directive} from './directives/Directive';
 import {Notifier} from './directives/Notifier';
 import {DirectiveBootstrap} from './directives/situational/bootstrap';
 import {DirectiveNukeResponse} from './directives/situational/nukeResponse';
+import {DirectiveStronghold} from './directives/situational/stronghold';
+import {DirectiveModularDismantle} from './directives/targeting/modularDismantle';
 import {DirectiveTerminalEvacuateState} from './directives/terminalState/terminalState_evacuate';
 import {RoomIntel} from './intel/RoomIntel';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
@@ -199,6 +201,29 @@ export class Overseer implements IOverseer {
 					DirectiveGuard.create(room.dangerousHostiles[0].pos);
 				}
 			}
+			this.handleStrongholds(colony, room);
+		}
+	}
+
+	private handleStrongholds(colony: Colony, room: Room) {
+		if (Game.time % 55 == 0) {
+			const cores = room.hostileStructures.filter(s => s.structureType == STRUCTURE_INVADER_CORE);
+			if (cores.length > 0) {
+				const core = <StructureInvaderCore>cores[0];
+				log.alert(`Found core in ${room.name} with ${core} level ${core.level}`);
+				let res;
+				if (core.level == 0) {
+					res = DirectiveModularDismantle.createIfNotPresent(cores[0].pos, 'pos');
+					if (!!res) {
+						log.notify(`Creating invader core dismantle in room ${room.name}`);
+					}
+				} else if (core.level <= 4 && core.ticksToDeploy) {
+					res = DirectiveStronghold.createIfNotPresent(core.pos, 'room');
+					if (!!res) {
+						log.notify(`Creating stronghold clearing ranged attacker in room ${room.name}`);
+					}
+				}
+			}
 		}
 	}
 
@@ -244,8 +269,12 @@ export class Overseer implements IOverseer {
 			}
 			const alreadyOwned = RoomIntel.roomOwnedBy(roomName);
 			const alreadyReserved = RoomIntel.roomReservedBy(roomName);
+			const isBlocked = Game.flags[roomName+'-Block'] != null;
+			if (isBlocked) {
+				// Game.notify("Room " + roomName + " is blocked, not expanding there.");
+			}
 			const disregardReservations = !onPublicServer() || MY_USERNAME == MUON;
-			if (alreadyOwned || (alreadyReserved && !disregardReservations)) {
+			if (alreadyOwned || (alreadyReserved && !disregardReservations) || isBlocked) {
 				return false;
 			}
 			const neighboringRooms = _.values(Game.map.describeExits(roomName)) as string[];

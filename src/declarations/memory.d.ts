@@ -1,5 +1,14 @@
 type operationMode = 'manual' | 'semiautomatic' | 'automatic';
 
+/**
+ * TODO make this an enum
+ * 0: Basic
+ * 1: Collect from enemy storage/terminal
+ * 2: Collect from all sources TBD
+ * 3: Collect all and mine walls for energy TBD
+ */
+type resourceCollectionMode = number;
+
 interface RawMemory {
 	_parsed: any;
 }
@@ -21,6 +30,13 @@ interface Memory {
 		operationMode: operationMode;
 		log: LoggerMemory;
 		enableVisuals: boolean;
+		allies: string[];
+		resourceCollectionMode: resourceCollectionMode;
+		powerCollection: {
+			enabled: boolean;
+			maxRange: number;
+			minPower: number;
+		};
 	};
 	profiler?: any;
 	stats: any;
@@ -29,6 +45,10 @@ interface Memory {
 	resetBucket?: boolean;
 	haltTick?: number;
 	combatPlanner: any;
+	playerCreepTracker: { // TODO revisit for a better longterm solution
+		[playerName: string]: CreepTracker
+	};
+	zoneRooms: { [roomName: string]: { [type: string]: number} };
 	reinforcementLearning?: {
 		enabled?: boolean;
 		verbosity?: number;
@@ -127,6 +147,13 @@ interface PathingMemory {
 	weightedDistances: { [pos1Name: string]: { [pos2Name: string]: number; } };
 }
 
+interface CreepTracker {
+	creeps: { [name: string]: number }; 	// first tick seen
+	types: { [type: string]: number}; 		// amount seen
+	parts: { [bodyPart: string]: number}; 	// quantity
+	boosts: { [boostType: string]: number};	// how many boosts are spent
+}
+
 interface FlagMemory {
 	[_MEM.TICK]?: number;
 	[_MEM.EXPIRATION]?: number;
@@ -138,6 +165,7 @@ interface FlagMemory {
 	rotation?: number;
 	parent?: string;
 	maxPathLength?: number;
+	pathNotRequired?: boolean;
 	maxLinearRange?: number;
 	keepStorageStructures?: boolean;
 	keepRoads?: boolean;

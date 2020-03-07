@@ -5,7 +5,7 @@ import {SpawnRequest, SpawnRequestOptions} from '../hiveClusters/hatchery';
 import {SpawnGroup} from '../logistics/SpawnGroup';
 import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
-import {boostParts} from '../resources/map_resources';
+import {boostParts, boostResources} from '../resources/map_resources';
 import {MIN_LIFETIME_FOR_BOOST} from '../tasks/instances/getBoosted';
 import {Tasks} from '../tasks/Tasks';
 import {CombatZerg} from '../zerg/CombatZerg';
@@ -70,6 +70,7 @@ export abstract class Overlord {
 	private _combatZerg: { [roleName: string]: CombatZerg[] };
 	private boosts: { [roleName: string]: _ResourceConstantSansEnergy[] | undefined };
 	creepUsageReport: { [roleName: string]: [number, number] | undefined };
+	shouldSpawnAt?: number;
 
 	constructor(initializer: OverlordInitializer | Colony, name: string, priority: number) {
 		this.initializer = initializer;
@@ -357,6 +358,11 @@ export abstract class Overlord {
 	 */
 	protected wishlist(quantity: number, setup: CreepSetup, opts = {} as CreepRequestOptions) {
 		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN, reassignIdle: false});
+		// TODO Don't spawn if spawning is halted
+		if (this.shouldSpawnAt && this.shouldSpawnAt > Game.time) {
+			log.info(`Disabled spawning for ${this.print} for another ${this.shouldSpawnAt - Game.time} ticks`);
+			return;
+		}
 		let creepQuantity: number;
 		if (opts.noLifetimeFilter) {
 			creepQuantity = (this._creeps[setup.role] || []).length;
@@ -461,8 +467,11 @@ export abstract class Overlord {
 		const evolutionChamber = colony ? colony.evolutionChamber : undefined;
 
 		if (this.boosts[creep.roleName] && evolutionChamber) {
-			const boosts = _.filter(this.boosts[creep.roleName]!, boost =>
-				(creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost]));
+			const boosts = _.filter(this.boosts[creep.roleName]!, boost => {
+				// TODO FIX BOOSTING!
+				return (creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost])
+					&& !(boost == boostResources[MOVE][3] && creep.getActiveBodyparts(MOVE) >= creep.body.length/2);
+			});
 			for (const boost of boosts) {
 				const boostLab = _.find(evolutionChamber.boostingLabs, lab => lab.mineralType == boost);
 				if (boostLab) {

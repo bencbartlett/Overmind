@@ -26,11 +26,19 @@ export class TaskWithdrawAll extends Task {
 	}
 
 	work() {
+		let resourceTransferType;
 		for (const resourceType in this.target.store) {
 			const amountInStore = this.target.store[<ResourceConstant>resourceType] || 0;
 			if (amountInStore > 0) {
-				return this.creep.withdraw(this.target, <ResourceConstant>resourceType);
+				resourceTransferType = resourceType;
+				// Prioritize non-energy
+				if (resourceType != RESOURCE_ENERGY) {
+					break;
+				}
 			}
+		}
+		if (!!resourceTransferType) {
+			return this.creep.withdraw(this.target, <ResourceConstant>resourceTransferType);
 		}
 		return -1;
 	}

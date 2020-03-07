@@ -1,3 +1,4 @@
+import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
 
 export const ROOMTYPE_SOURCEKEEPER = 'SK';
@@ -212,6 +213,26 @@ export class Cartographer {
 			xDir: xDir,
 			yDir: yDir,
 		};
+	}
+
+	static isNoviceRoom(roomName: string): boolean {
+		if (Memory.zoneRooms) {
+			const roomInfo = Memory.zoneRooms[roomName];
+			return !!roomInfo && !!roomInfo.novice;
+		} else {
+			log.alert(`Checking novice room before segment is set in ${roomName}!`);
+			return false;
+		}
+	}
+
+	static isRespawnRoom(roomName: string): boolean {
+		if (Memory.zoneRooms) {
+			const roomInfo = Memory.zoneRooms[roomName];
+			return !!roomInfo && !!roomInfo.respawnArea;
+		} else {
+			log.alert(`Checking respawn room before segment is set in ${roomName}!`);
+			return false;
+		}
 	}
 
 }

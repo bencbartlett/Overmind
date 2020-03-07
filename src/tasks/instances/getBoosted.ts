@@ -33,6 +33,11 @@ export class TaskGetBoosted extends Task {
 		if (this.creep.ticksToLive && this.creep.ticksToLive < MIN_LIFETIME_FOR_BOOST * lifetime) {
 			return false; // timeout after this amount of lifespan has passed
 		}
+		// else if (boostParts[this.data.resourceType] == MOVE &&
+		// this.creep.getActiveBodyparts(boostParts[this.data.resourceType]) >= this.creep.body.length / 2) {
+		// 	Game.notify(`Bad boosting of move on creep ${this.creep}, invalid task.`);
+		// 	return false;
+		// }
 		const partCount = (this.data.amount || this.creep.getActiveBodyparts(boostParts[this.data.resourceType]));
 		return (this.creep.boostCounts[this.data.resourceType] || 0) < partCount;
 	}
@@ -49,6 +54,10 @@ export class TaskGetBoosted extends Task {
 			return ERR_INVALID_TARGET;
 		}
 		const partCount = (this.data.amount || this.creep.getActiveBodyparts(boostParts[this.data.resourceType]));
+		// if (boostParts[this.data.resourceType] == MOVE && partCount >= this.creep.body.length / 2){
+		// 	Game.notify(`Bad boosting of move on creep ${this.creep}, exiting work.`);
+		// 	return ERR_INVALID_TARGET;
+		// }
 		if (this.target.mineralType == this.data.resourceType &&
 			this.target.mineralAmount >= LAB_BOOST_MINERAL * partCount &&
 			this.target.energy >= LAB_BOOST_ENERGY * partCount) {

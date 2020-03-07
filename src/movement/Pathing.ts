@@ -22,7 +22,8 @@ export const MatrixTypes = {
 	default      : 'def',
 	sk           : 'sk',
 	obstacle     : 'obst',
-	preferRampart: 'preframp'
+	preferRampart: 'preframp',
+	nearRampart	 : 'nearRamp'
 };
 
 /**
@@ -47,13 +48,11 @@ export class Pathing {
 		if (!room) {
 			return;
 		}
-		if (room.controller) {
-			if (room.controller.owner && !room.controller.my && room.towers.length > 0) {
-				room.memory[_RM.AVOID] = true;
-			} else {
-				delete room.memory[_RM.AVOID];
-				// if (room.memory.expansionData == false) delete room.memory.expansionData;
-			}
+		if (!(room.controller && room.controller.my) && room.towers.length > 0) {
+			room.memory[_RM.AVOID] = true;
+		} else {
+			delete room.memory[_RM.AVOID];
+			// if (room.memory.expansionData == false) delete room.memory.expansionData;
 		}
 	}
 
@@ -520,6 +519,25 @@ export class Pathing {
 		});
 	}
 
+	/**
+	 * Avoid locations in melee range of ramparts
+	 * @param room
+	 */
+	private static getNearRampartsMatrix(room: Room): CostMatrix {
+		return $.costMatrix(room.name, MatrixTypes.nearRampart, () => {
+			const matrix = this.getDefaultMatrix(room).clone();
+			const avoidRange = 1;
+			_.forEach(room.ramparts, rampart => {
+				for (let dx = -avoidRange; dx <= avoidRange; dx++) {
+					for (let dy = -avoidRange; dy <= avoidRange; dy++) {
+						matrix.set(rampart.pos.x + dx, rampart.pos.y + dy, 0xfe);
+					}
+				}
+			});
+			return matrix;
+		});
+	}
+
 	// /* Avoids source keepers in a room */
 	// private static getInvisibleSkMatrix(roomName: string): CostMatrix {
 	// 	let matrix = new PathFinder.CostMatrix();
@@ -563,15 +581,15 @@ export class Pathing {
 	 */
 	static blockMyCreeps(matrix: CostMatrix, room: Room, creeps?: (Creep | Zerg)[]) {
 
-		const blockCreeps = creeps || room.creeps as (Creep | Zerg)[];
-		const blockPositions = _.map(blockCreeps,
-									 creep => Overmind.zerg[creep.name] ? Overmind.zerg[creep.name].nextPos
-																		: creep.pos);
+			const blockCreeps = creeps || room.creeps as (Creep | Zerg)[];
+			const blockPositions = _.map(blockCreeps,
+										 creep => Overmind.zerg[creep.name] ? Overmind.zerg[creep.name].nextPos
+																			: creep.pos);
 
-		_.forEach(blockPositions, pos => {
-			matrix.set(pos.x, pos.y, CREEP_COST);
-		});
-	}
+			_.forEach(blockPositions, pos => {
+				matrix.set(pos.x, pos.y, CREEP_COST);
+			});
+		}
 
 	/**
 	 * Sets hostile creep positions to impassible
@@ -623,7 +641,7 @@ export class Pathing {
 			}
 		}
 		_.forEach(room.walkableRamparts, rampart => {
-			matrix.set(rampart.pos.x, rampart.pos.y, 1);
+				matrix.set(rampart.pos.x, rampart.pos.y, 1);
 		});
 	}
 

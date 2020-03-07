@@ -6,6 +6,8 @@ import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
+import {Cartographer, ROOMTYPE_CORE, ROOMTYPE_SOURCEKEEPER} from '../../utilities/Cartographer';
+import {printRoomName} from '../../utilities/utils';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 
@@ -35,6 +37,11 @@ export class ExtractorOverlord extends Overlord {
 		this.drones = this.zerg(Roles.drone);
 		// Populate structures
 		this.populateStructures();
+	}
+
+	// If mineral is ready to be mined, make a container
+	private shouldHaveContainer() {
+		return this.mineral && (this.mineral.mineralAmount > 0 || this.mineral.ticksToRegeneration < 2000);
 	}
 
 	private populateStructures() {
@@ -82,8 +89,8 @@ export class ExtractorOverlord extends Overlord {
 	}
 
 	private buildOutputIfNeeded(): void {
-		// Create container if there is not already one being built and no link
-		if (!this.container) {
+		// Create container if there is not already one being built
+		if (!this.container && this.shouldHaveContainer()) {
 			const containerSite = _.first(_.filter(this.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 2),
 												 site => site.structureType == STRUCTURE_CONTAINER));
 			if (!containerSite) {
@@ -108,9 +115,10 @@ export class ExtractorOverlord extends Overlord {
 		// Ensure you are in the assigned room
 		if (drone.room == this.room && !drone.pos.isEdge) {
 			if (_.sum(drone.carry) == 0) {
+				// TODO handle the minerals on the bottom, 0.95 capacity rn
 				drone.task = Tasks.harvest(this.mineral!);
 			}
-			// Else see if there is an output to depsit to or to maintain
+			// Else see if there is an output to deposit to or to maintain
 			else if (this.container) {
 				drone.task = Tasks.transferAll(this.container);
 				// Move onto the output container if you're the only drone

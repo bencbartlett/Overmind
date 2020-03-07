@@ -35,7 +35,7 @@ export class PairDestroyerOverlord extends Overlord {
 		});
 		this.healers = this.combatZerg(Roles.healer, {
 			notifyWhenAttacked: false,
-			boostWishlist     : [boostResources.heal[3], boostResources.tough[3], boostResources.move[3],]
+			boostWishlist     : [boostResources.heal[3], boostResources.tough[3], boostResources.move[3]]
 		});
 	}
 
@@ -49,13 +49,13 @@ export class PairDestroyerOverlord extends Overlord {
 				return CombatTargeting.findClosestReachable(attacker.pos, targetedStructures);
 			} else {
 				// Target nearby hostile creeps
-				const creepTarget = CombatTargeting.findClosestHostile(attacker, true);
+				const creepTarget = CombatTargeting.findClosestHostile(attacker, true, true, true, true);
 				if (creepTarget) return creepTarget;
 				// Target nearby hostile structures
 				const structureTarget = CombatTargeting.findClosestPrioritizedStructure(attacker);
 				if (structureTarget) return structureTarget;
 			}
-		}
+		} // TODO consider targets along path
 	}
 
 	private attackActions(attacker: CombatZerg, healer: CombatZerg): void {
@@ -140,9 +140,11 @@ export class PairDestroyerOverlord extends Overlord {
 		if (RoomIntel.inSafeMode(this.pos.roomName)) {
 			amount = 0;
 		}
+		const boostedAttackerType = this.directive.flag.name.includes('armor')
+			? CombatSetups.zerglings.boosted_T3_strongArmor: CombatSetups.zerglings.boosted_T3;
 
 		const attackerPriority = this.attackers.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
-		const attackerSetup = this.canBoostSetup(CombatSetups.zerglings.boosted_T3) ? CombatSetups.zerglings.boosted_T3
+		const attackerSetup = this.canBoostSetup(CombatSetups.zerglings.boosted_T3) ? boostedAttackerType
 																				  : CombatSetups.zerglings.default;
 		this.wishlist(amount, attackerSetup, {priority: attackerPriority});
 
@@ -153,6 +155,8 @@ export class PairDestroyerOverlord extends Overlord {
 	}
 
 	run() {
+		this.reassignIdleCreeps(Roles.healer);
+		this.reassignIdleCreeps(Roles.melee);
 		for (const attacker of this.attackers) {
 			// Run the creep if it has a task given to it by something else; otherwise, proceed with non-task actions
 			if (attacker.hasValidTask) {

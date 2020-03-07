@@ -51,6 +51,7 @@ export class DirectiveColonize extends Directive {
 	}
 
 	run(verbose = false) {
+		// TODO bug where can't claim a reservation room -> this.flag.pos.roomName == this.toColonize.name
 		if (this.toColonize && this.toColonize.spawns.length > 0) {
 			// Reassign all pioneers to be miners and workers
 			const miningOverlords = _.map(this.toColonize.miningSites, site => site.overlords.mine);

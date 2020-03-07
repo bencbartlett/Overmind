@@ -38,6 +38,10 @@ export function isTombstone(obj: RoomObject): obj is Tombstone {
 	return (<Tombstone>obj).deathTime != undefined;
 }
 
+export function isRuin(obj: RoomObject): obj is Tombstone {
+	return (<Ruin>obj).destroyTime != undefined;
+}
+
 export function isResource(obj: RoomObject): obj is Resource {
 	return (<Resource>obj).amount != undefined;
 }

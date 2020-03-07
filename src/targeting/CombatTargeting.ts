@@ -7,6 +7,7 @@ import {maxBy} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {Swarm} from '../zerg/Swarm';
 import {Zerg} from '../zerg/Zerg';
+import {MY_USERNAME} from '../~settings';
 
 @profile
 export class CombatTargeting {
@@ -65,17 +66,32 @@ export class CombatTargeting {
 		});
 	}
 
-	static findClosestHostile(zerg: Zerg, checkReachable = false, ignoreCreepsAtEdge = true): Creep | undefined {
+	// TODO refactor method signature to have opts param
+	static findClosestHostile(zerg: Zerg, checkReachable = false, ignoreCreepsAtEdge = true, playerOnly = false,
+							  onlyUnramparted = false): Creep | undefined {
+		const defaults = {
+			checkReachable: false,
+			ignoreCreepsAtEdge: true,
+			playerOnly: false,
+			onlyUnramparted: false
+		};
 		if (zerg.room.hostiles.length > 0) {
 			let targets: Creep[];
+			const potentialTargets = playerOnly ? zerg.room.playerHostiles : zerg.room.hostiles;
 			if (ignoreCreepsAtEdge) {
-				targets = _.filter(zerg.room.hostiles, hostile => hostile.pos.rangeToEdge > 0);
+				targets = _.filter(potentialTargets, hostile => hostile.pos.rangeToEdge > 0);
 			} else {
-				targets = zerg.room.hostiles;
+				targets = potentialTargets;
+			}
+			if (onlyUnramparted) {
+				targets = _.filter(targets, hostile => !hostile.inRampart);
 			}
 			if (checkReachable) {
 				const targetsByRange = _.sortBy(targets, target => zerg.pos.getRangeTo(target));
-				return _.find(targetsByRange, target => Pathing.isReachable(zerg.pos, target.pos, zerg.room.barriers));
+				return _.find(targetsByRange, target => Pathing.isReachable(zerg.pos, target.pos,
+					zerg.room.barriers.filter(barrier => barrier.structureType == STRUCTURE_WALL
+						|| (barrier.structureType == STRUCTURE_RAMPART
+						&& (barrier.owner.username == MY_USERNAME || !barrier.isPublic)))));
 			} else {
 				return zerg.pos.findClosestByRange(targets) as Creep | undefined;
 			}
@@ -99,6 +115,7 @@ export class CombatTargeting {
 		return maxBy(_.filter(friendlies, f => healer.pos.getRangeTo(f) <= range), friend => {
 			if (friend.hitsPredicted == undefined) friend.hitsPredicted = friend.hits;
 			const attackProbability = 0.5;
+			// TODO need to only calculate this once per tick, can't trigger multiple times. This isn't correctly calcing
 			for (const hostile of friend.pos.findInRange(friend.room.hostiles, 3)) {
 				if (hostile.pos.isNearTo(friend)) {
 					friend.hitsPredicted -= attackProbability * CombatIntel.getAttackDamage(hostile);
@@ -126,6 +143,10 @@ export class CombatTargeting {
 			} else {
 				return zerg.pos.findClosestByRange(structures) as Structure | undefined;
 			}
+		}
+		const core = _.filter(zerg.room.hostileStructures, s => s.structureType.toString() == 'invaderCore');
+		if (core.length != 0) {
+			return core[0];
 		}
 	}
 

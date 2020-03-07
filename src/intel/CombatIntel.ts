@@ -9,6 +9,7 @@ import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
 import {boostResources} from '../resources/map_resources';
 import {Cartographer} from '../utilities/Cartographer';
+import {Visualizer} from '../visuals/Visualizer';
 import {toCreep, Zerg} from '../zerg/Zerg';
 import {RoomIntel} from './RoomIntel';
 
@@ -62,13 +63,14 @@ export class CombatIntel {
 	}
 
 	/**
-	 * Total tower tamage from all towers in room at a given position
+	 * Total tower damage from all towers in room at a given position
+	 * TODO needs to address stronghold
 	 */
 	static towerDamageAtPos(pos: RoomPosition, ignoreEnergy = false): number {
 		if (pos.room) {
 			let expectedDamage = 0;
 			for (const tower of pos.room.towers) {
-				if (tower.energy > 0 || ignoreEnergy) {
+				if ((tower.energy > 0 || ignoreEnergy)) {
 					expectedDamage += this.singleTowerDamage(pos.getRangeTo(tower));
 				}
 			}
@@ -91,6 +93,73 @@ export class CombatIntel {
 					matrix.set(barrier.pos.x, barrier.pos.y, Math.ceil(barrier.hits * 10 / highestHits) * 10);
 				}
 			}
+			return matrix;
+		}
+	}
+
+
+	/**
+	 * Calculates the total potential damage per tile in a region
+	 */
+	static computeCreepDamagePotentialMatrix(room: Room, creeps: Creep[],
+											 startingMatrix?: CostMatrix): CostMatrix | undefined {
+		if (room) {
+			const cpuUsed = Game.cpu.getUsed();
+			const matrix = startingMatrix || new PathFinder.CostMatrix();
+
+			// const otherMatrix = new Array(50);
+			// otherMatrix.forEach((loc, index) => otherMatrix[index] = new Array(50));
+
+
+			creeps.forEach(creep => {
+				const meleeAttack = CombatIntel.getAttackPotential(creep);
+				const rangedAttack = CombatIntel.getRangedAttackPotential(creep);
+				// const heal = CombatIntel.getHealPotential(creep);
+				if (meleeAttack > 0) {
+					creep.pos.neighbors.forEach(pos =>
+						matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + meleeAttack * ATTACK_POWER / 100));
+				}
+				if (rangedAttack > 0) {
+					creep.pos.getPositionsInRange(3).forEach(pos =>
+						matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + rangedAttack * RANGED_ATTACK_POWER / 100));
+				}
+			});
+
+			Visualizer.displayCostMatrix(matrix, room.name, false, undefined, false);
+			console.log(`Cost matrix cpu used in ${room.print} = ${(Game.cpu.getUsed() - cpuUsed)}`);
+			return matrix;
+		}
+	}
+
+	/**
+	 * Calculates potential damage and heal per location in a region
+	 */
+	static computeTotalCreepPotentialMatrix(room: Room, creeps: Creep[],
+											startingMatrix?: CostMatrix): CostMatrix | undefined {
+		if (room) {
+			const cpuUsed = Game.cpu.getUsed();
+			const matrix = startingMatrix || new PathFinder.CostMatrix();
+
+			// const otherMatrix = new Array(50);
+			// otherMatrix.forEach((loc, index) => otherMatrix[index] = new Array(50));
+
+
+			creeps.forEach(creep => {
+				const meleeAttack = CombatIntel.getAttackPotential(creep);
+				const rangedAttack = CombatIntel.getRangedAttackPotential(creep);
+				// const heal = CombatIntel.getHealPotential(creep);
+				if (meleeAttack > 0) {
+					creep.pos.neighbors.forEach(pos =>
+						matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + meleeAttack * ATTACK_POWER / 100));
+				}
+				if (rangedAttack > 0) {
+					creep.pos.getPositionsInRange(3).forEach(pos =>
+						matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + rangedAttack * RANGED_ATTACK_POWER / 100));
+				}
+			});
+
+			Visualizer.displayCostMatrix(matrix, room.name, false, undefined, false);
+			console.log(`Cost matrix cpu used in ${room.print} = ${(Game.cpu.getUsed() - cpuUsed)}`);
 			return matrix;
 		}
 	}
@@ -409,6 +478,30 @@ export class CombatIntel {
 
 	static getDismantleDamage(creep: Creep | Zerg): number {
 		return DISMANTLE_POWER * this.getDismantlePotential(toCreep(creep));
+	}
+
+	static getRepairPotential(creep: Creep): number {
+		return this.cache(creep, 'repairPotential', () => _.sum(creep.body, function(part) {
+			if (part.hits == 0) {
+				return 0;
+			}
+			if (part.type == WORK) {
+				if (!part.boost) {
+					return 1;
+				} else if (part.boost == boostResources.construct[1]) {
+					return BOOSTS.work.LH.repair;
+				} else if (part.boost == boostResources.construct[2]) {
+					return BOOSTS.work.LH2O.repair;
+				} else if (part.boost == boostResources.construct[3]) {
+					return BOOSTS.work.XLH2O.repair;
+				}
+			}
+			return 0;
+		}));
+	}
+
+	static getRepairPower(creep: Creep | Zerg): number {
+		return REPAIR_POWER * this.getRepairPotential(toCreep(creep));
 	}
 
 	/**

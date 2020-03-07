@@ -63,9 +63,9 @@ export class PioneerOverlord extends Overlord {
 			// Build and recharge
 			if (pioneer.carry.energy == 0) {
 				pioneer.task = Tasks.recharge();
-			} else if (this.room && this.room.controller &&
-					   (this.room.controller.ticksToDowngrade < 2500 || !this.spawnSite) &&
-					   !(this.room.controller.upgradeBlocked > 0)) {
+			} else if (this.room && this.room.controller && (this.room.controller.ticksToDowngrade
+				< (0.1 * CONTROLLER_DOWNGRADE[this.colony.controller.level]) || !this.spawnSite)
+				&& !(this.room.controller.upgradeBlocked > 0)) {
 				// Save controller if it's about to downgrade or if you have nothing else to do
 				pioneer.task = Tasks.upgrade(this.room.controller);
 			} else if (this.spawnSite) {

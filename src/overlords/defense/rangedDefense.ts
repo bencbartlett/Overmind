@@ -15,7 +15,9 @@ import {CombatOverlord} from '../CombatOverlord';
 export class RangedDefenseOverlord extends CombatOverlord {
 
 	hydralisks: CombatZerg[];
+
 	room: Room;
+	directive: DirectiveInvasionDefense;
 
 	static settings = {
 		retreatHitsPercent : 0.85,
@@ -36,7 +38,9 @@ export class RangedDefenseOverlord extends CombatOverlord {
 		if (this.room.hostiles.length > 0) {
 			hydralisk.autoCombat(this.room.name);
 		} else {
-			hydralisk.doMedicActions(this.room.name);
+			if (!hydralisk.doMedicActions(this.room.name) && hydralisk.pos.getRangeTo(this.directive.pos) > 4) {
+				hydralisk.goTo(this.directive.pos);
+			}
 		}
 	}
 

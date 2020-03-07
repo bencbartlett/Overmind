@@ -1,4 +1,5 @@
-import {isStoreStructure} from '../../declarations/typeGuards';
+import {log} from '../../console/log';
+import {isRuin, isStoreStructure} from '../../declarations/typeGuards';
 import {HaulingOverlord} from '../../overlords/situational/hauler';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
@@ -6,11 +7,16 @@ import {Directive} from '../Directive';
 
 interface DirectiveHaulMemory extends FlagMemory {
 	totalResources?: number;
+	path?: {
+		plain: number,
+		swamp: number,
+		road: number
+	};
 }
 
 
 /**
- * Hauling directive: spawns hauler creeps to move large amounts of resourecs from a location (e.g. draining a storage)
+ * Hauling directive: spawns hauler creeps to move large amounts of resources from a location (e.g. draining a storage)
  */
 @profile
 export class DirectiveHaul extends Directive {
@@ -21,6 +27,7 @@ export class DirectiveHaul extends Directive {
 
 	private _store: StoreDefinition;
 	private _drops: { [resourceType: string]: Resource[] };
+	private _finishAtTime: number;
 
 	memory: DirectiveHaulMemory;
 
@@ -51,11 +58,15 @@ export class DirectiveHaul extends Directive {
 		return _.keys(this.drops).length > 0;
 	}
 
-	get storeStructure(): StructureStorage | StructureTerminal | StructureNuker | undefined {
+	get storeStructure(): StructureStorage | StructureTerminal | StructureNuker | StructureContainer | Ruin | undefined {
+		// TODO remove me console.log(`Looking for store struct in ${this.pos.roomName}
+		// with ${this.pos.lookForStructure(STRUCTURE_CONTAINER)}`);
 		if (this.pos.isVisible) {
 			return <StructureStorage>this.pos.lookForStructure(STRUCTURE_STORAGE) ||
 				   <StructureTerminal>this.pos.lookForStructure(STRUCTURE_TERMINAL) ||
-				   <StructureNuker>this.pos.lookForStructure(STRUCTURE_NUKER);
+				   <StructureNuker>this.pos.lookForStructure(STRUCTURE_NUKER) ||
+				   <StructureContainer>this.pos.lookForStructure(STRUCTURE_CONTAINER) ||
+				   <Ruin>this.pos.lookFor(LOOK_RUINS).filter(ruin => _.sum(ruin.store) > 0)[0];
 		}
 		return undefined;
 	}
@@ -66,6 +77,8 @@ export class DirectiveHaul extends Directive {
 			let store: { [resourceType: string]: number } = {};
 			if (this.storeStructure) {
 				if (isStoreStructure(this.storeStructure)) {
+					store = this.storeStructure.store;
+				} else if (isRuin(this.storeStructure)) {
 					store = this.storeStructure.store;
 				} else {
 					store = {energy: this.storeStructure.energy};
@@ -84,6 +97,7 @@ export class DirectiveHaul extends Directive {
 			}
 			this._store = store as StoreDefinition;
 		}
+		// log.alert(`Haul directive ${this.print} has store of ${JSON.stringify(this._store)}`);
 		return this._store;
 	}
 
@@ -91,7 +105,7 @@ export class DirectiveHaul extends Directive {
 	 * Total amount of resources remaining to be transported; cached into memory in case room loses visibility
 	 */
 	get totalResources(): number {
-		if (this.pos.isVisible) {
+		if (this.pos.isVisible && this.store) {
 			this.memory.totalResources = _.sum(this.store); // update total amount remaining
 		} else {
 			if (this.memory.totalResources == undefined) {
@@ -106,10 +120,14 @@ export class DirectiveHaul extends Directive {
 	}
 
 	run(): void {
-		if (this.totalResources == 0) {
-			this.remove();
+		if (this.pos.isVisible  && _.sum(this.store) == 0) {
+			// If everything is picked up, crudely give enough time to bring it back
+			this._finishAtTime = this._finishAtTime || (Game.time + 300);
+		}
+		if (Game.time >= this._finishAtTime || (this.totalResources == 0 &&
+			(this.overlords.haul as HaulingOverlord).haulers.length == 0)) {
+			// this.remove();
 		}
 	}
-
 }
 

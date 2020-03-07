@@ -135,12 +135,18 @@ export class CommandCenter extends HiveCluster {
 			}
 		}
 		// Refill power spawn
-		if (this.powerSpawn && this.powerSpawn.energy < this.powerSpawn.energyCapacity) {
-			this.transportRequests.requestInput(this.powerSpawn, Priority.NormalLow);
+		if (this.powerSpawn) {
+			if (this.powerSpawn.energy < this.powerSpawn.energyCapacity * .5) {
+				this.transportRequests.requestInput(this.powerSpawn, Priority.NormalLow);
+			} else if (this.powerSpawn.power < this.powerSpawn.powerCapacity * .5 && this.terminal
+				&& this.terminal.store.power && this.terminal.store.power >= 100) {
+				this.transportRequests.requestInput(this.powerSpawn, Priority.NormalLow, {resourceType: RESOURCE_POWER});
+			}
 		}
 		// Refill nuker with low priority
 		if (this.nuker) {
-			if (this.nuker.energy < this.nuker.energyCapacity && this.storage.energy > 200000) {
+			if (this.nuker.energy < this.nuker.energyCapacity && (this.storage.energy > 200000 && this.nuker.cooldown
+				<= 1000 || this.storage.energy > 800000)) {
 				this.transportRequests.requestInput(this.nuker, Priority.Low);
 			}
 			if (this.nuker.ghodium < this.nuker.ghodiumCapacity
@@ -148,6 +154,14 @@ export class CommandCenter extends HiveCluster {
 				this.transportRequests.requestInput(this.nuker, Priority.Low, {resourceType: RESOURCE_GHODIUM});
 			}
 		}
+
+		if (this.storage && this.terminal) {
+			if (this.storage.store[RESOURCE_OPS] < 3000 && this.terminal.store[RESOURCE_OPS] > 100) {
+				this.transportRequests.requestInput(this.storage, Priority.Normal, {resourceType: RESOURCE_OPS});
+			}
+		}
+
+
 
 		// Withdraw requests:
 
@@ -168,6 +182,7 @@ export class CommandCenter extends HiveCluster {
 			if (this.observeRoom) {
 				this.observer.observeRoom(this.observeRoom);
 			} else if (CommandCenter.settings.enableIdleObservation) {
+				// TODO OBSERVER FIX ONLY LOOK AT southwest corner
 				const dx = Game.time % MAX_OBSERVE_DISTANCE;
 				const dy = Game.time % (MAX_OBSERVE_DISTANCE ** 2);
 				const roomToObserve = Cartographer.findRelativeRoomName(this.pos.roomName, dx, dy);
