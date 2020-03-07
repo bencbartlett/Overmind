@@ -61,17 +61,12 @@ export class CombatTargeting {
 		return maxBy(targets, function(hostile) {
 			if (hostile.hitsPredicted == undefined) hostile.hitsPredicted = hostile.hits;
 			if (hostile.pos.lookForStructure(STRUCTURE_RAMPART)) return false;
-			if (hostile.name.substring(hostile.name.indexOf('_')) == 'ANTITIGGA') {
-				console.log('TIGGA ATTACK! :D');
-				return hostile.pos.findInRange(FIND_MY_CREEPS, 2).length;
-				// return (hostile.pos.getRangeTo(this.colony.bunker.anchor) <= 6 + 2) || hostile.hitsMax - hostile.hitsPredicted;
-			}
 			return hostile.hitsMax - hostile.hitsPredicted
 				   + CombatIntel.getHealPotential(hostile) + (CombatIntel.towerDamageAtPos(hostile.pos) || 0);
 		});
 	}
 
-	// TODO refactor method sig
+	// TODO refactor method signature to have opts param
 	static findClosestHostile(zerg: Zerg, checkReachable = false, ignoreCreepsAtEdge = true, playerOnly = false,
 							  onlyUnramparted = false): Creep | undefined {
 		const defaults = {
