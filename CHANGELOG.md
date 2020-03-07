@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file. The format 
 ## [Unreleased]
 
 ### Added
+- Merged a lot of changes from Davaned's branches!
+    - List changes here
 - Added modules for use in the reinforcement learning side project:
     - The `ActionParser` module provides a line of direct interaction for the external Python optimizers to control creep actions via the `Memory.reinforcementLearning` object.
     - The `TrainingOpponents` file provides a set of rudimentary opponents to train the RL models against.

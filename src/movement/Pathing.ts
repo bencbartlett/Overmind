@@ -484,13 +484,19 @@ export class Pathing {
 		const avoidCreeps = _.filter(room.hostiles,
 									 c => c.getActiveBodyparts(ATTACK) > 0 || c.getActiveBodyparts(RANGED_ATTACK) > 0);
 		// || c.getActiveBodyparts(HEAL) > 0);
+		const terrain = Game.map.getRoomTerrain(room.name);
 		_.forEach(avoidCreeps, avoidCreep => {
 			let cost: number;
 			for (let dx = -3; dx <= 3; dx++) {
 				for (let dy = -3; dy <= 3; dy++) {
-					cost = matrix.get(avoidCreep.pos.x + dx, avoidCreep.pos.y + dy);
-					cost += 40 - (10 * Math.max(Math.abs(dx), Math.abs(dy)));
-					matrix.set(avoidCreep.pos.x + dx, avoidCreep.pos.y + dy, cost);
+					const x = avoidCreep.pos.x + dx;
+					const y = avoidCreep.pos.y + dy;
+					// TODO: add swamp avoidance penalty as well
+					if (terrain.get(x,y) != TERRAIN_MASK_WALL && matrix.get(x,y) != 1) { // if wall and no tunnel
+						cost = matrix.get(x, y);
+						cost += 40 - (10 * Math.max(Math.abs(dx), Math.abs(dy)));
+						matrix.set(avoidCreep.pos.x + dx, avoidCreep.pos.y + dy, cost);
+					}
 				}
 			}
 		});
