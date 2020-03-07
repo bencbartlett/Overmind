@@ -1,5 +1,7 @@
 type operationMode = 'manual' | 'semiautomatic' | 'automatic';
-/** TODO make this an enum
+
+/**
+ * TODO make this an enum
  * 0: Basic
  * 1: Collect from enemy storage/terminal
  * 2: Collect from all sources TBD

@@ -10,7 +10,6 @@ import {Abathur} from '../resources/Abathur';
 import {Cartographer} from '../utilities/Cartographer';
 import {Visualizer} from '../visuals/Visualizer';
 import {HiveCluster} from './_HiveCluster';
-import {Tasks} from "../tasks/Tasks";
 
 export const MAX_OBSERVE_DISTANCE = 7;
 
