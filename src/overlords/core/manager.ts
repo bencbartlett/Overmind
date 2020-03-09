@@ -206,12 +206,11 @@ export class CommandCenterOverlord extends Overlord {
 			return false;
 		}
 		// Move all non-energy resources from storage to terminal
-		for (const resourceType in storage.store) {
-			if (resourceType != RESOURCE_ENERGY && resourceType
-			!= RESOURCE_OPS && storage.store[<ResourceConstant>resourceType]! > 0) {
+		for (const [resourceType, amount] of storage.store.contents) {
+			if (resourceType != RESOURCE_ENERGY && resourceType != RESOURCE_OPS && amount > 0) {
 				if (this.unloadCarry(manager)) return true;
-				manager.task = Tasks.withdraw(storage, <ResourceConstant>resourceType);
-				manager.task.parent = Tasks.transfer(terminal, <ResourceConstant>resourceType);
+				manager.task = Tasks.withdraw(storage, resourceType);
+				manager.task.parent = Tasks.transfer(terminal, resourceType);
 				return true;
 			}
 		}

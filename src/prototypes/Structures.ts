@@ -124,6 +124,14 @@ Object.defineProperty(StructureSpawn.prototype, 'isEmpty', { // if this containe
 	configurable: true,
 });
 
+// Storage prototypes ==================================================================================================
+declare const Store: any; // Store prototype isn't included in typed-screeps yet
+Object.defineProperty(Store.prototype, 'contents', {
+	get() {
+		return Object.entries(this);
+	},
+	configurable: true,
+});
 
 // Storage prototypes ==================================================================================================
 

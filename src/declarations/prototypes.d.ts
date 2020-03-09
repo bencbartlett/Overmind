@@ -216,7 +216,10 @@ interface StructureStorage {
 	energy: number;
 	isFull: boolean;
 	isEmpty: boolean;
+}
 
+interface StoreBase {
+	contents: [ResourceConstant, number][];
 }
 
 interface StructureSpawn {
