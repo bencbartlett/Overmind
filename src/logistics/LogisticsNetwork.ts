@@ -196,9 +196,8 @@ export class LogisticsNetwork {
 	 * Requests output for every mineral in a requestor object
 	 */
 	requestOutputMinerals(target: StoreStructure, opts = {} as RequestOptions): void {
-		for (const resourceType in target.store) {
+		for (const [resourceType, amount] of target.store.contents) {
 			if (resourceType == RESOURCE_ENERGY) continue;
-			const amount = target.store[<ResourceConstant>resourceType] || 0;
 			if (amount > 0) {
 				opts.resourceType = <ResourceConstant>resourceType;
 				this.requestOutput(target, opts);
@@ -365,9 +364,8 @@ export class LogisticsNetwork {
 							log.error(ALL_RESOURCE_TYPE_ERROR);
 							return {energy: 0} as StoreDefinition;
 						}
-						for (const resourceType in request.target.store) {
-							const resourceFraction = (request.target.store[<ResourceConstant>resourceType] || 0)
-													 / _.sum(request.target.store);
+						for (const [resourceType, storeAmt] of request.target.store.contents) {
+							const resourceFraction = storeAmt / _.sum(request.target.store);
 							if (carry[resourceType]) {
 								carry[resourceType]! += resourceAmount * resourceFraction;
 								carry[resourceType] = minMax(carry[resourceType]!, 0, remainingCapacity);

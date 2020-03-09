@@ -27,8 +27,7 @@ export class TaskWithdrawAll extends Task {
 
 	work() {
 		let resourceTransferType;
-		for (const resourceType in this.target.store) {
-			const amountInStore = this.target.store[<ResourceConstant>resourceType] || 0;
+		for (const [resourceType, amountInStore] of this.target.store.contents) {
 			if (amountInStore > 0) {
 				resourceTransferType = resourceType;
 				// Prioritize non-energy

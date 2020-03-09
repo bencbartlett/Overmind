@@ -274,7 +274,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 				}
 
 			} else {
-				if (terminal.store[<ResourceConstant>resource]! > threshold) {
+				if (terminal.store[<ResourceConstant>resource] > threshold) {
 					const receiver = maxBy(this.terminals,
 										   terminal => wantedAmount(colonyOf(terminal),
 																	<ResourceConstant>resource));

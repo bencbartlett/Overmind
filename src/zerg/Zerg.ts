@@ -476,8 +476,8 @@ export class Zerg {
 	// Carry methods
 
 	get hasMineralsInCarry(): boolean {
-		for (const resourceType in this.carry) {
-			if (resourceType != RESOURCE_ENERGY && (this.carry[<ResourceConstant>resourceType] || 0) > 0) {
+		for (const [resourceType, amount] of this.carry.contents) {
+			if (resourceType != RESOURCE_ENERGY && amount > 0) {
 				return true;
 			}
 		}

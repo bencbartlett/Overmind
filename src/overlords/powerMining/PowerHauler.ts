@@ -98,8 +98,8 @@ export class PowerHaulingOverlord extends Overlord {
 		} else {
 			// Travel to colony room and deposit resources
 			if (hauler.inSameRoomAs(this.colony)) {
-				for (const resourceType in hauler.carry) {
-					if (hauler.carry[<ResourceConstant>resourceType] == 0) continue;
+				for (const [resourceType, amount] of hauler.carry.contents) {
+					if (amount == 0) continue;
 					if (resourceType == RESOURCE_ENERGY) { // prefer to put energy in storage
 						if (this.colony.storage && _.sum(this.colony.storage.store) < STORAGE_CAPACITY) {
 							hauler.task = Tasks.transfer(this.colony.storage, resourceType);
@@ -111,10 +111,10 @@ export class PowerHaulingOverlord extends Overlord {
 					} else { // prefer to put minerals in terminal
 						this.directive.memory.totalCollected += hauler.carry.power || 0;
 						if (this.colony.terminal && _.sum(this.colony.terminal.store) < TERMINAL_CAPACITY) {
-							hauler.task = Tasks.transfer(this.colony.terminal, <ResourceConstant>resourceType);
+							hauler.task = Tasks.transfer(this.colony.terminal, resourceType);
 							return;
 						} else if (this.colony.storage && _.sum(this.colony.storage.store) < STORAGE_CAPACITY) {
-							hauler.task = Tasks.transfer(this.colony.storage, <ResourceConstant>resourceType);
+							hauler.task = Tasks.transfer(this.colony.storage, resourceType);
 							return;
 						}
 					}
