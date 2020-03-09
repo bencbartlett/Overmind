@@ -66,32 +66,38 @@ export class CombatTargeting {
 		});
 	}
 
-	// TODO refactor method signature to have opts param
-	static findClosestHostile(zerg: Zerg, checkReachable = false, ignoreCreepsAtEdge = true, playerOnly = false,
-							  onlyUnramparted = false): Creep | undefined {
-		const defaults = {
-			checkReachable: false,
+
+	static findClosestHostile(zerg: Zerg, opts: {
+		checkReachable: boolean,
+		ignoreCreepsAtEdge: boolean,
+		playerOnly: boolean,
+		onlyUnramparted: boolean
+	}): Creep | undefined {
+
+		_.defaults(opts, {
+			checkReachable    : false,
 			ignoreCreepsAtEdge: true,
-			playerOnly: false,
-			onlyUnramparted: false
-		};
+			playerOnly        : false,
+			onlyUnramparted   : false
+		});
 		if (zerg.room.hostiles.length > 0) {
 			let targets: Creep[];
-			const potentialTargets = playerOnly ? zerg.room.playerHostiles : zerg.room.hostiles;
-			if (ignoreCreepsAtEdge) {
+			const potentialTargets = opts.playerOnly ? zerg.room.playerHostiles : zerg.room.hostiles;
+			if (opts.ignoreCreepsAtEdge) {
 				targets = _.filter(potentialTargets, hostile => hostile.pos.rangeToEdge > 0);
 			} else {
 				targets = potentialTargets;
 			}
-			if (onlyUnramparted) {
+			if (opts.onlyUnramparted) {
 				targets = _.filter(targets, hostile => !hostile.inRampart);
 			}
-			if (checkReachable) {
+			if (opts.checkReachable) {
 				const targetsByRange = _.sortBy(targets, target => zerg.pos.getRangeTo(target));
-				return _.find(targetsByRange, target => Pathing.isReachable(zerg.pos, target.pos,
-					zerg.room.barriers.filter(barrier => barrier.structureType == STRUCTURE_WALL
-						|| (barrier.structureType == STRUCTURE_RAMPART
-						&& (barrier.owner.username == MY_USERNAME || !barrier.isPublic)))));
+				return _.find(targetsByRange, target =>
+					Pathing.isReachable(zerg.pos, target.pos, zerg.room.barriers.filter(
+						barrier => barrier.structureType == STRUCTURE_WALL
+								   || (barrier.structureType == STRUCTURE_RAMPART
+									   && (barrier.owner.username == MY_USERNAME || !barrier.isPublic)))));
 			} else {
 				return zerg.pos.findClosestByRange(targets) as Creep | undefined;
 			}
