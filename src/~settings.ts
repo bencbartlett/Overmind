@@ -71,7 +71,7 @@ export const SHARD3_MAX_OWNED_ROOMS = 3;
 export const NEW_OVERMIND_INTERVAL = onPublicServer() ? 20 : 5;
 
 /**
- * Master scale for the RoomVisuals GUI // todo: not plugged in yet
+ * Master scale for the RoomVisuals GUI // TODO: not plugged in yet
  */
 export const GUI_SCALE = 1.0;
 

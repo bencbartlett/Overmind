@@ -38,7 +38,6 @@ export class $ { // $ = cash = cache... get it? :D
 		return _cache.numbers[cacheKey];
 	}
 
-	// TODO: for some reason overloading isn't working here...
 	// static pos(saver: { ref: string }, key: string, callback: () => RoomPosition, timeout ?: number): RoomPosition;
 	static pos(saver: { ref: string }, key: string, callback: () => RoomPosition | undefined, timeout?: number):
 		RoomPosition | undefined {

@@ -343,7 +343,7 @@ export class RoomPlanner {
 		}
 	}
 
-	// TODO: component rotation isn't currently fully supported
+	// No-fixTODO: component rotation isn't currently fully supported
 	/* Rotates component positions about a pivot point counterclockwise by the given angle; done in-place */
 	private rotateComponent(map: StructureMap, pivot: RoomPosition | Coord, angle: number): void {
 		let R = ([x, y]: number[]) => ([x, y]);

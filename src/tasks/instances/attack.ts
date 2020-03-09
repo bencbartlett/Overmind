@@ -4,7 +4,11 @@ import {Task} from '../Task';
 // Attack task, includes attack and ranged attack if applicable.
 // Use meleeAttack and rangedAttack for the exclusive variants.
 
-// TODO: creep is only approaching to range 3
+// I included this task for completion sake, but I don't use or advise using the tasks system for combat code,
+// since it's not very good at multi-tasking
+
+// Known issue: creep is only approaching to range 3 (won't fix because I don't use for combat)
+
 export type attackTargetType = Creep | Structure;
 export const attackTaskName = 'attack';
 

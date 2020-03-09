@@ -80,7 +80,8 @@ export class PowerDrillOverlord extends CombatOverlord {
 					if (result == ERR_BUSY) {
 						// drill spawning, find something else to do with them
 					}
-					log.notify('FINISHED POWER MINING IN ' + this.room + ' DELETING CREEP at time: ' + Game.time.toString() + ' result: ' + result);
+					log.notify('FINISHED POWER MINING IN ' + this.room + ' DELETING CREEP at time: ' +
+							   Game.time.toString() + ' result: ' + result);
 					return;
 				}
 			}

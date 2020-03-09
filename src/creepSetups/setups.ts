@@ -174,7 +174,7 @@ export const Setups = {
 	},
 
 	workers: {
-		// Todo inhouse workers to reinforce bunker
+		// TODO: implement inhouse workers to reinforce bunker
 		inhouse: new CreepSetup(Roles.worker, {
 			pattern  : [WORK, WORK, CARRY, MOVE],
 			sizeLimit: Infinity,

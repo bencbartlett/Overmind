@@ -199,7 +199,6 @@ export class CombatIntel {
 			}
 		}
 
-		// TODO
 		const exitPositions: RoomPosition[] = [];
 		const terrain = Game.map.getRoomTerrain(this.room.name);
 
