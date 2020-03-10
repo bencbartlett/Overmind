@@ -165,17 +165,44 @@ export class BunkerQueenOverlord extends Overlord {
 		// Step 3: make withdraw tasks to get the needed resources
 		const withdrawTasks: Task[] = [];
 		const neededResources = _.keys(queenCarry) as ResourceConstant[];
-		// TODO: a single structure doesn't need to have all resources; causes jam if labs need supply but no minerals
 		const targets: StoreStructure[] = _.filter(this.storeStructures, s =>
 			_.all(neededResources, resource => (s.store[resource] || 0) >= (queenCarry[resource] || 0)));
 		const withdrawTarget = minBy(targets, target => Pathing.distance(queenPos, target.pos));
-		if (!withdrawTarget) {
-			log.warning(`Could not find adequate withdraw structure for ${queen.print}! (neededResources: 
-			${neededResources}, queenCarry: ${queenCarry})`);
-			return null;
+		if (withdrawTarget) {
+			for (const resourceType of neededResources) {
+				withdrawTasks.push(Tasks.withdraw(withdrawTarget, resourceType, queenCarry[resourceType]));
+			}
+		} else {
+			const closestTarget = minBy(this.storeStructures, target => Pathing.distance(queenPos, target.pos));
+			if (!closestTarget) {
+				log.error(`Can't seem to find any pathable store structures in ${this.colony.print}`);
+			} else {
+				for (const resourceType of neededResources) {
+					if (closestTarget.store[resourceType] >= queenCarry[resourceType]) {
+						withdrawTasks.push(Tasks.withdraw(closestTarget, resourceType, queenCarry[resourceType]));
+					} else {
+						// TODO ordering tasks for fastest route, maybe a sortby for withdraw targets?
+						const hasResource = _.sortBy(_.filter(this.storeStructures, s => s.store[resourceType]
+							> 0), s => -s.store[resourceType]); // descending sort
+						let collected = 0;
+						for (const storeLoc of hasResource) {
+							// Might be bug in overwithdrawing
+							withdrawTasks.push(Tasks.withdraw(storeLoc, resourceType,
+								Math.min(queenCarry[resourceType] - collected, storeLoc.store[resourceType])));
+							collected += storeLoc.store[resourceType];
+							if (collected >= queenCarry[resourceType]) {
+								break;
+							}
+						}
+					}
+				}
+			}
 		}
-		for (const resourceType of neededResources) {
-			withdrawTasks.push(Tasks.withdraw(withdrawTarget, resourceType, queenCarry[resourceType]));
+
+		if (!withdrawTarget && withdrawTasks.length == 0) {
+			log.warning(`Could not find adequate withdraw structure for ${queen.print}! (neededResources: 
+			${neededResources}, queenCarry: ${JSON.stringify(queenCarry)})`);
+			return null;
 		}
 		// Step 4: put all the tasks in the correct order, set nextPos for each, and chain them together
 		tasks = tasks.concat(withdrawTasks, supplyTasks);
