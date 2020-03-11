@@ -201,13 +201,14 @@ export class CommandCenterOverlord extends Overlord {
 		if (!storage || !terminal) {
 			return false;
 		}
-		// Don't do this if terminal is critially full
+		// Don't do this if terminal is critically full
 		if (terminal.store.getFreeCapacity() < 1000) {
 			return false;
 		}
 		// Move all non-energy resources from storage to terminal
 		for (const [resourceType, amount] of storage.store.contents) {
-			if (resourceType != RESOURCE_ENERGY && resourceType != RESOURCE_OPS && amount > 0) {
+			if (resourceType != RESOURCE_ENERGY && resourceType != RESOURCE_OPS && amount > 0
+				&& terminal.store[resourceType] < 5000) {
 				if (this.unloadCarry(manager)) return true;
 				manager.task = Tasks.withdraw(storage, resourceType);
 				manager.task.parent = Tasks.transfer(terminal, resourceType);

@@ -50,21 +50,22 @@ export class DirectiveInvasionDefense extends Directive {
 		const meleeHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(ATTACK) > 0 ||
 																	  hostile.getActiveBodyparts(WORK) > 0);
 		const rangedHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0);
-		if (meleeHostiles.length > 0 && expectedDamage > 40*ATTACK_POWER || rangedHostiles.length >= 3) {
-			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, true);
-			this.overlords.distraction = new DistractionOverlord(this);
-		}
+
 		if (this.colony.stage > ColonyStage.Larva) {
 			this.overlords.rangedDefense = new RangedDefenseOverlord(this, useBoosts);
-			// DirectivePairDestroy.createIfNotPresent(this.pos, 'room');
 		} else {
 			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
 		}
 		// If serious bunker busting attempt, spawn lurkers
 		// TODO understand dismantlers damage output
 		if (meleeHostiles.length > 0 && expectedDamage > ATTACK_POWER * 70 &&
-			this.colony.level >= BarrierPlanner.settings.bunkerizeRCL) {
-			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, false);
+			this.colony.level >= BarrierPlanner.settings.bunkerizeRCL || rangedHostiles.length > 3) {
+			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, useBoosts);
+		}
+		// If melee attackers, try distractions
+		// TODO drop these if they don't work, need to detect effectiveness. Although the says make for great 🍿
+		if (meleeHostiles.length > 0 && expectedDamage > 40*ATTACK_POWER) {
+			this.overlords.distraction = new DistractionOverlord(this);
 		}
 	}
 
