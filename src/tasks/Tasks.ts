@@ -24,6 +24,7 @@ import {TaskUpgrade, upgradeTargetType} from './instances/upgrade';
 import {TaskWithdraw, withdrawTargetType} from './instances/withdraw';
 import {TaskWithdrawAll, withdrawAllTargetType} from './instances/withdrawAll';
 import {Task} from './Task';
+import {generateSafeModeTargetType, TaskGenerateSafeMode} from "./instances/generateSafeMode";
 
 /**
  * Tasks class provides conveient wrappers for dispensing new Task instances
@@ -159,6 +160,11 @@ export class Tasks {
 
 	static withdrawAll(target: withdrawAllTargetType, options = {} as TaskOptions): TaskWithdrawAll {
 		return new TaskWithdrawAll(target, options);
+	}
+
+	static generateSafeMode(target: generateSafeModeTargetType, options = {} as TaskOptions):
+		TaskGenerateSafeMode {
+		return new TaskGenerateSafeMode(target, options);
 	}
 
 }

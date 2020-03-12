@@ -28,6 +28,7 @@ import {TaskUpgrade, upgradeTargetType, upgradeTaskName} from './instances/upgra
 import {TaskWithdraw, withdrawTargetType, withdrawTaskName} from './instances/withdraw';
 import {TaskWithdrawAll, withdrawAllTargetType, withdrawAllTaskName} from './instances/withdrawAll';
 import {Task} from './Task';
+import {generateSafeModeTargetType, generateSafeModeTaskName, TaskGenerateSafeMode} from "./instances/generateSafeMode";
 
 /**
  * The task initializer maps serialized prototasks to Task instances
@@ -115,6 +116,9 @@ export function initializeTask(protoTask: ProtoTask): Task {
 			break;
 		case withdrawAllTaskName:
 			task = new TaskWithdrawAll(target as withdrawAllTargetType);
+			break;
+		case generateSafeModeTaskName:
+			task = new TaskGenerateSafeMode(target as generateSafeModeTargetType);
 			break;
 		default:
 			log.error(`Invalid task name: ${taskName}! task.creep: ${protoTask._creep.name}. Deleting from memory!`);

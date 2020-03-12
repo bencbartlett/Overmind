@@ -20,6 +20,7 @@ import {WorkerOverlord} from './worker';
  */
 @profile
 export class CommandCenterOverlord extends Overlord {
+	static MAX_TERMINAL_FILLED_PERCENTAGE: number = .98;
 
 	mode: 'twoPart' | 'bunker';
 	managers: Zerg[];
@@ -202,7 +203,8 @@ export class CommandCenterOverlord extends Overlord {
 			return false;
 		}
 		// Don't do this if terminal is critically full
-		if (terminal.store.getFreeCapacity() < 1000) {
+		if (terminal.store.getFreeCapacity() < (1 - CommandCenterOverlord.MAX_TERMINAL_FILLED_PERCENTAGE)
+			* terminal.store.getCapacity()) {
 			return false;
 		}
 		// Move all non-energy resources from storage to terminal
@@ -323,7 +325,7 @@ export class CommandCenterOverlord extends Overlord {
 	private preventTerminalFlooding(manager: Zerg): boolean {
 		// Prevent terminal flooding
 		if (this.room && this.room.terminal && this.room.storage && _.sum(this.room.terminal.store)
-			> this.room.terminal.storeCapacity*.98) {
+			> this.room.terminal.store.getCapacity()*CommandCenterOverlord.MAX_TERMINAL_FILLED_PERCENTAGE) {
 			let max = 0;
 			let resType: ResourceConstant = RESOURCE_ENERGY;
 			for (const res in this.room.terminal.store) {
