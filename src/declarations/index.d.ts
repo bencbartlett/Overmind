@@ -142,11 +142,11 @@ interface IOverseer {
 
 	getOverlordsForColony(colony: any): any[];
 
-	isOverlordSuspended(overlord: any): boolean;
+	// isOverlordSuspended(overlord: any): boolean;
 
-	suspendOverlordFor(overlord: any, ticks: number): void;
+	// suspendOverlordFor(overlord: any, ticks: number): void;
 
-	suspendOverlordUntil(overlord: any, untilTick: number): void;
+	// suspendOverlordUntil(overlord: any, untilTick: number): void;
 
 	init(): void;
 
