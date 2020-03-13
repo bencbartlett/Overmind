@@ -182,11 +182,11 @@ export class WorkerOverlord extends Overlord {
 						return MAX_WORKERS;
 					}
 					const buildTicks = _.sum(this.constructionSites,
-										   site => Math.max(site.progressTotal - site.progress, 0)) / BUILD_POWER;
+											 site => Math.max(site.progressTotal - site.progress, 0)) / BUILD_POWER;
 					const repairTicks = _.sum(this.repairStructures,
-											structure => structure.hitsMax - structure.hits) / REPAIR_POWER;
+											  structure => structure.hitsMax - structure.hits) / REPAIR_POWER;
 					const paveTicks = _.sum(this.colony.rooms,
-										  room => this.colony.roadLogistics.energyToRepave(room)); // repairCost=1
+											room => this.colony.roadLogistics.energyToRepave(room)); // repairCost=1
 					let fortifyTicks = 0;
 					const shouldFortify = this.colony.assets.energy > WorkerOverlord.settings.fortifyDutyThreshold;
 					if (shouldFortify) {
@@ -344,7 +344,7 @@ export class WorkerOverlord extends Overlord {
 			// FIXME workers get stalled at controller in case of downgrade attack
 			// Upgrade controller if close to downgrade or if getting controller attacked/was downgraded
 			const downgradeLevel = CONTROLLER_DOWNGRADE[this.colony.controller.level] *
-				(this.colony.controller.level < 4 ? .3 : .7);
+								   (this.colony.controller.level < 4 ? .3 : .7);
 			if ((!this.colony.controller.upgradeBlocked || this.colony.controller.upgradeBlocked < 30)
 				&& (this.colony.controller.ticksToDowngrade <= downgradeLevel
 					|| this.colony.controller.progress > this.colony.controller.progressTotal)) {

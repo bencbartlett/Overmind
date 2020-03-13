@@ -21,7 +21,7 @@ export class BasePlanner {
 			allowableLocations = _.sample(allowableLocations, MAX_SAMPLE);
 		}
 		const minimizePathLengthTo: RoomPosition[] = _.map(_.compact([...room.sources, room.controller]),
-														 obj => obj!.pos);
+														   obj => obj!.pos);
 		const totalPathLength = function(anchor: RoomPosition) {
 			let totalDistance = 0;
 			for (const pos of minimizePathLengthTo) {

@@ -30,7 +30,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 		super(directive, 'rangedDefense', priority, 1);
 		this.hydralisks = this.combatZerg(Roles.ranged, {
 			boostWishlist: boosted ? [boostResources.tough[3], boostResources.ranged_attack[3],
-					boostResources.heal[3], boostResources.move[3]] : undefined
+									  boostResources.heal[3], boostResources.move[3]] : undefined
 		});
 	}
 
@@ -47,10 +47,10 @@ export class RangedDefenseOverlord extends CombatOverlord {
 	private computeNeededHydraliskAmount(setup: CreepSetup, boostMultiplier: number): number {
 		const healAmount = CombatIntel.maxHealingByCreeps(this.room.hostiles);
 		const hydraliskDamage = RANGED_ATTACK_POWER * boostMultiplier
-							  * setup.getBodyPotential(RANGED_ATTACK, this.colony);
+								* setup.getBodyPotential(RANGED_ATTACK, this.colony);
 		const towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 0 : 0;
 		const worstDamageMultiplier = _.min(_.map(this.room.hostiles,
-												creep => CombatIntel.minimumDamageTakenMultiplier(creep)));
+												  creep => CombatIntel.minimumDamageTakenMultiplier(creep)));
 		return Math.ceil(.5 + 1.5 * healAmount / (worstDamageMultiplier * (hydraliskDamage + towerDamage + 1)));
 	}
 

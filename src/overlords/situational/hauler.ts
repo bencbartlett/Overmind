@@ -6,7 +6,6 @@ import {Energetics} from '../../logistics/Energetics';
 import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {Task} from '../../tasks/Task';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
@@ -38,8 +37,8 @@ export class HaulingOverlord extends Overlord {
 		// Calculate total needed amount of hauling power as (resource amount * trip distance)
 		const tripDistance = 2 * Pathing.distance((this.colony.storage || this.colony).pos, this.directive.pos);
 		const haulingPowerNeeded = Math.min(this.directive.totalResources,
-										  this.colony.storage.storeCapacity
-										  - _.sum(this.colony.storage.store)) * tripDistance;
+											this.colony.storage.storeCapacity
+											- _.sum(this.colony.storage.store)) * tripDistance;
 		// Calculate amount of hauling each hauler provides in a lifetime
 		const haulerCarryParts = Setups.transporters.early.getBodyPotential(CARRY, this.colony);
 		const haulingPowerPerLifetime = CREEP_LIFE_TIME * haulerCarryParts * CARRY_CAPACITY;

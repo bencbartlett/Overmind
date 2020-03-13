@@ -1,9 +1,4 @@
-import {CombatIntel} from '../intel/CombatIntel';
-import {Movement, NO_ACTION} from '../movement/Movement';
 import {profile} from '../profiler/decorator';
-import {CombatTargeting} from '../targeting/CombatTargeting';
-import {GoalFinder} from '../targeting/GoalFinder';
-import {randomHex} from '../utilities/utils';
 import {Zerg} from './Zerg';
 
 interface CombatZergMemory extends CreepMemory {

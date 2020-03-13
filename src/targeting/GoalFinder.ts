@@ -147,7 +147,7 @@ export class GoalFinder {
 			const damageMultiplier = CombatIntel.minimumDamageMultiplierForGroup(hostiles);
 
 			const canPopShield = (attack + rangedAttack + CombatIntel.towerDamageAtPos(swarm.anchor)) * myDamageMultiplier
-							   > _.min(_.map(swarm.creeps, creep => 100 * creep.getActiveBodyparts(TOUGH)));
+								 > _.min(_.map(swarm.creeps, creep => 100 * creep.getActiveBodyparts(TOUGH)));
 
 			const isRetreating = _.sum(hostiles, creep => +CombatIntel.isRetreating(creep, swarm.anchor))
 								 / hostiles.length >= 0.5;

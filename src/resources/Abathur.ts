@@ -204,7 +204,7 @@ export class Abathur {
 				const amountNeeded = stocks[resourceType];
 				if (amountOwned < amountNeeded) { // if there is a shortage of this resource
 					const reactionQueue = this.buildReactionQueue(<ResourceConstant>resourceType,
-																amountNeeded - amountOwned, verbose);
+																  amountNeeded - amountOwned, verbose);
 
 					const missingBaseMinerals = this.getMissingBasicMinerals(reactionQueue);
 					if (!_.any(missingBaseMinerals)

@@ -108,7 +108,7 @@ export class UpgradeSite extends HiveCluster {
 					}
 				} else if (this.controller.level >= 6) {
 					// Can set a room to upgrade at an accelerated rate manually
-					upgradePower = this.memory.speedFactor != undefined ? upgradePower*this.memory.speedFactor : upgradePower;
+					upgradePower = this.memory.speedFactor != undefined ? upgradePower * this.memory.speedFactor : upgradePower;
 				}
 				return upgradePower;
 			} else {

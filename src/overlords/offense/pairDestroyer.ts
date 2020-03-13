@@ -44,7 +44,7 @@ export class PairDestroyerOverlord extends Overlord {
 			// Prioritize specifically targeted structures first
 			const targetingDirectives = DirectiveTargetSiege.find(this.room.flags) as DirectiveTargetSiege[];
 			const targetedStructures = _.compact(_.map(targetingDirectives,
-													 directive => directive.getTarget())) as Structure[];
+													   directive => directive.getTarget())) as Structure[];
 			if (targetedStructures.length > 0) {
 				return CombatTargeting.findClosestReachable(attacker.pos, targetedStructures);
 			} else {
@@ -146,16 +146,16 @@ export class PairDestroyerOverlord extends Overlord {
 			amount = 0;
 		}
 		const boostedAttackerType = this.directive.flag.name.includes('armor')
-			? CombatSetups.zerglings.boosted_T3_strongArmor: CombatSetups.zerglings.boosted_T3;
+									? CombatSetups.zerglings.boosted_T3_strongArmor : CombatSetups.zerglings.boosted_T3;
 
 		const attackerPriority = this.attackers.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
 		const attackerSetup = this.canBoostSetup(CombatSetups.zerglings.boosted_T3) ? boostedAttackerType
-																				  : CombatSetups.zerglings.default;
+																					: CombatSetups.zerglings.default;
 		this.wishlist(amount, attackerSetup, {priority: attackerPriority});
 
 		const healerPriority = this.healers.length < this.attackers.length ? this.priority - 0.1 : this.priority + 0.1;
 		const healerSetup = this.canBoostSetup(CombatSetups.healers.boosted_T3) ? CombatSetups.healers.boosted_T3
-																			  : CombatSetups.healers.default;
+																				: CombatSetups.healers.default;
 		this.wishlist(amount, healerSetup, {priority: healerPriority});
 	}
 

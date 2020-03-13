@@ -65,7 +65,7 @@ function setupProfiler() {
                 setupMemory(type, duration, filter);
             }
         },
-        reset: resetMemory,
+        reset : resetMemory,
         output: Profiler.output,
     };
 
@@ -77,11 +77,11 @@ function setupMemory(profileType, duration, filter) {
     const disableTick = Number.isInteger(duration) ? Game.time + duration : false;
     if (!Memory.profiler) {
         Memory.profiler = {
-            map: {},
-            totalTime: 0,
+            map        : {},
+            totalTime  : 0,
             enabledTick: Game.time + 1,
             disableTick,
-            type: profileType,
+            type       : profileType,
             filter,
         };
     }
@@ -306,9 +306,9 @@ const Profiler = {
         const stats = Object.keys(Memory.profiler.map).map(functionName => {
             const functionCalls = Memory.profiler.map[functionName];
             return {
-                name: functionName,
-                calls: functionCalls.calls,
-                totalTime: functionCalls.time,
+                name       : functionName,
+                calls      : functionCalls.calls,
+                totalTime  : functionCalls.time,
                 averageTime: functionCalls.time / functionCalls.calls,
             };
         }).sort((val1, val2) => {
@@ -372,9 +372,9 @@ const Profiler = {
         if (!map[functionName]) {
             // eslint-disable-next-line no-param-reassign
             map[functionName] = {
-                time: 0,
+                time : 0,
                 calls: 0,
-                subs: {},
+                subs : {},
             };
         }
     },
@@ -464,10 +464,10 @@ module.exports = {
         hookUpPrototypes();
     },
 
-    output: Profiler.output,
+    output   : Profiler.output,
     callgrind: Profiler.callgrind,
 
     registerObject: profileObjectFunctions,
-    registerFN: profileFunction,
-    registerClass: profileObjectFunctions,
+    registerFN    : profileFunction,
+    registerClass : profileObjectFunctions,
 };

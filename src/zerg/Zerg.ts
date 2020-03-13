@@ -675,7 +675,7 @@ export class Zerg {
 		 fleeOptions: FleeOptions              = {},
 		 moveOptions: MoveOptions              = {}): boolean {
 		if (avoidGoals.length == 0 || this.room.dangerousHostiles.find(creep =>
-			creep.pos.getRangeToXY(this.pos.x, this.pos.y) < 6) == undefined) {
+																		   creep.pos.getRangeToXY(this.pos.x, this.pos.y) < 6) == undefined) {
 			return false;
 		} else if (this.room.controller && this.room.controller.my && this.room.controller.safeMode) {
 			return false;
@@ -731,7 +731,6 @@ export class Zerg {
 	moveOffExitToward(pos: RoomPosition, detour = true): number | undefined {
 		return Movement.moveOffExitToward(this, pos, detour);
 	}
-
 
 
 	// Miscellaneous fun stuff -----------------------------------------------------------------------------------------

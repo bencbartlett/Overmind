@@ -1,9 +1,6 @@
 import {log} from '../../console/log';
-import {CreepSetup} from '../../creepSetups/CreepSetup';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
-import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 import {DirectiveHarass} from '../../directives/offense/harass';
-import {CombatIntel} from '../../intel/CombatIntel';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {boostResources} from '../../resources/map_resources';
@@ -26,7 +23,7 @@ export class HarassOverlord extends CombatOverlord {
 	static settings = {
 		retreatHitsPercent : 0.85,
 		reengageHitsPercent: 0.95,
-		prespawn: 200,
+		prespawn           : 200,
 	};
 
 	constructor(directive: DirectiveHarass,
@@ -37,7 +34,7 @@ export class HarassOverlord extends CombatOverlord {
 		this.nibblers = this.combatZerg(Roles.melee);
 		this.hydralisks = this.combatZerg(Roles.ranged, {
 			boostWishlist: boosted ? [boostResources.ranged_attack[3], boostResources.heal[3], boostResources.move[3]]
-				: undefined
+								   : undefined
 		});
 	}
 
@@ -82,7 +79,8 @@ export class HarassOverlord extends CombatOverlord {
 		if (nextRoom) {
 			this.directive.memory.roomsToHarass.push(nextRoom);
 			this.targetRemoteToHarass = nextRoom;
-			log.debug(`Selecting new target of ${this.targetRemoteToHarass} for ${hydralisk.print} from ${this.directive.memory.roomsToHarass}`);
+			log.debug(`Selecting new target of ${this.targetRemoteToHarass} for ${hydralisk.print} from ` +
+					  `${this.directive.memory.roomsToHarass}`);
 			hydralisk.say(`Tgt ${this.targetRemoteToHarass}`);
 			return nextRoom;
 		}

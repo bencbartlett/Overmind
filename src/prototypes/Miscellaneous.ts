@@ -12,7 +12,7 @@ Number.prototype.toPercent = function(decimals = 0): string {
 
 Number.prototype.truncate = function(decimals: number): number {
 	const re = new RegExp('(\\d+\\.\\d{' + decimals + '})(\\d)'),
-		m  = this.toString().match(re);
+		  m  = this.toString().match(re);
 	return m ? parseFloat(m[1]) : this.valueOf();
 };
 

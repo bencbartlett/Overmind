@@ -7,6 +7,7 @@ import {claimTargetType, claimTaskName, TaskClaim} from './instances/claim';
 import {dismantleTargetType, dismantleTaskName, TaskDismantle} from './instances/dismantle';
 import {dropTargetType, dropTaskName, TaskDrop} from './instances/drop';
 import {fortifyTargetType, fortifyTaskName, TaskFortify} from './instances/fortify';
+import {generateSafeModeTargetType, generateSafeModeTaskName, TaskGenerateSafeMode} from './instances/generateSafeMode';
 import {getBoostedTargetType, getBoostedTaskName, TaskGetBoosted} from './instances/getBoosted';
 import {getRenewedTargetType, getRenewedTaskName, TaskGetRenewed} from './instances/getRenewed';
 import {goToTaskName} from './instances/goTo';
@@ -28,7 +29,6 @@ import {TaskUpgrade, upgradeTargetType, upgradeTaskName} from './instances/upgra
 import {TaskWithdraw, withdrawTargetType, withdrawTaskName} from './instances/withdraw';
 import {TaskWithdrawAll, withdrawAllTargetType, withdrawAllTaskName} from './instances/withdrawAll';
 import {Task} from './Task';
-import {generateSafeModeTargetType, generateSafeModeTaskName, TaskGenerateSafeMode} from "./instances/generateSafeMode";
 
 /**
  * The task initializer maps serialized prototasks to Task instances

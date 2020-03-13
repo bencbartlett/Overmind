@@ -33,9 +33,7 @@ interface OverseerMemory {
 
 }
 
-const defaultOverseerMemory: OverseerMemory = {
-
-};
+const defaultOverseerMemory: OverseerMemory = {};
 
 /**
  * The Overseer object acts as a scheduler, running directives and overlords for all colonies each tick. It is also
@@ -213,7 +211,7 @@ export class Overseer implements IOverseer {
 
 			// See if invasion is big enough to warrant creep defenses
 			const effectiveInvaderCount = _.sum(_.map(colony.room.hostiles,
-													invader => invader.boosts.length > 0 ? 2 : 1));
+													  invader => invader.boosts.length > 0 ? 2 : 1));
 			const needsDefending = effectiveInvaderCount >= 3 || colony.room.dangerousPlayerHostiles.length > 0;
 
 			if (needsDefending) {
@@ -242,14 +240,14 @@ export class Overseer implements IOverseer {
 				return false;
 			}
 			const alreadyAnOutpost = _.any(Overmind.cache.outpostFlags,
-										 flag => (flag.memory.setPosition || flag.pos).roomName == roomName);
+										   flag => (flag.memory.setPosition || flag.pos).roomName == roomName);
 			const alreadyAColony = !!Overmind.colonies[roomName];
 			if (alreadyAColony || alreadyAnOutpost) {
 				return false;
 			}
 			const alreadyOwned = RoomIntel.roomOwnedBy(roomName);
 			const alreadyReserved = RoomIntel.roomReservedBy(roomName);
-			const isBlocked = Game.flags[roomName+'-Block'] != null;
+			const isBlocked = Game.flags[roomName + '-Block'] != null;
 			if (isBlocked) {
 				// Game.notify("Room " + roomName + " is blocked, not expanding there.");
 			}
@@ -265,9 +263,9 @@ export class Overseer implements IOverseer {
 
 	private handleNewOutposts(colony: Colony) {
 		const numSources = _.sum(colony.roomNames,
-							   roomName => Memory.rooms[roomName] && Memory.rooms[roomName][_RM.SOURCES]
-										   ? Memory.rooms[roomName][_RM.SOURCES]!.length
-										   : 0);
+								 roomName => Memory.rooms[roomName] && Memory.rooms[roomName][_RM.SOURCES]
+											 ? Memory.rooms[roomName][_RM.SOURCES]!.length
+											 : 0);
 		const numRemotes = numSources - colony.room.sources.length;
 		if (numRemotes < Colony.settings.remoteSourcesByLevel[colony.level]) {
 

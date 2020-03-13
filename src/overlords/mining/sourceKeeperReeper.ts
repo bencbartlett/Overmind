@@ -66,7 +66,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 		if (!this.room) return;
 		// If any lairs have an active keeper, target that
 		const activeLair = _.find(this.room.keeperLairs,
-								lair => lair.pos.findInRange(lair.room.sourceKeepers, 5).length > 0);
+								  lair => lair.pos.findInRange(lair.room.sourceKeepers, 5).length > 0);
 		if (activeLair) return activeLair;
 		// Otherwise target whatever is closest to spawning
 		return minBy(this.room.keeperLairs,

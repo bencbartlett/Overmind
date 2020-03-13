@@ -97,7 +97,7 @@ export class Visualizer {
 	}
 
 	static displayCostMatrix(costMatrix: CostMatrix, roomName?: string, dots = true, color = '#ff0000',
-							 displayZero = true): void {
+							 displayZero                                                   = true): void {
 
 		const vis = new RoomVisual(roomName);
 		let x, y: number;
@@ -122,7 +122,7 @@ export class Visualizer {
 		} else {
 			for (y = 0; y < 50; ++y) {
 				for (x = 0; x < 50; ++x) {
-					if (displayZero || costMatrix.get(x,y) != 0) {
+					if (displayZero || costMatrix.get(x, y) != 0) {
 						vis.text(costMatrix.get(x, y).toString(), x, y, {color: color});
 					}
 				}

@@ -1,4 +1,3 @@
-import {log} from '../../console/log';
 import {isRuin, isStoreStructure} from '../../declarations/typeGuards';
 import {HaulingOverlord} from '../../overlords/situational/hauler';
 import {profile} from '../../profiler/decorator';
@@ -120,12 +119,12 @@ export class DirectiveHaul extends Directive {
 	}
 
 	run(): void {
-		if (this.pos.isVisible  && _.sum(this.store) == 0) {
+		if (this.pos.isVisible && _.sum(this.store) == 0) {
 			// If everything is picked up, crudely give enough time to bring it back
 			this._finishAtTime = this._finishAtTime || (Game.time + 300);
 		}
 		if (Game.time >= this._finishAtTime || (this.totalResources == 0 &&
-			(this.overlords.haul as HaulingOverlord).haulers.length == 0)) {
+												(this.overlords.haul as HaulingOverlord).haulers.length == 0)) {
 			// this.remove();
 		}
 	}

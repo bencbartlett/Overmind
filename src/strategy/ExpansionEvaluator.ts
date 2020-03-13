@@ -102,7 +102,7 @@ export class ExpansionEvaluator {
 			for (const position of sourcePositions) {
 				const msg = verbose ? `Computing distance from ${bunkerLocation.print} to ${position.print}... ` : '';
 				const ret = Pathing.findShortestPath(bunkerLocation, position,
-												   {ignoreStructures: true, allowHostile: true});
+													 {ignoreStructures: true, allowHostile: true});
 				if (ret.incomplete || ret.path.length > Colony.settings.maxSourceDistance) {
 					if (verbose) log.info(msg + 'incomplete path!');
 					valid = false;
