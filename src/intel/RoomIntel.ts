@@ -1,19 +1,23 @@
 // Room intel - provides information related to room structure and occupation
 
-import {Resources} from 'typedoc/dist/lib/output/utils/resources';
-import {getAllColonies} from '../Colony';
-import {log} from '../console/log';
-import {bodyCost} from '../creepSetups/CreepSetup';
-import {isCreep} from '../declarations/typeGuards';
-import {DirectivePowerMine} from '../directives/resource/powerMine';
-import {DirectiveStronghold} from '../directives/situational/stronghold';
-import {Segmenter} from '../memory/Segmenter';
-import {profile} from '../profiler/decorator';
-import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
-import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
-import {getCacheExpiration, irregularExponentialMovingAverage, maxBy} from '../utilities/utils';
-import {Zerg} from '../zerg/Zerg';
-import {MY_USERNAME} from '../~settings';
+import { Resources } from 'typedoc/dist/lib/output/utils/resources';
+import { getAllColonies } from '../Colony';
+import { log } from '../console/log';
+import { bodyCost } from '../creepSetups/CreepSetup';
+import { isCreep } from '../declarations/typeGuards';
+import {DirectiveOutpostDefense} from '../directives/defense/OutpostDefense';
+import {DirectiveControllerAttack} from '../directives/offense/controllerAttack';
+import {DirectivePairDestroy} from '../directives/offense/pairDestroy';
+import { DirectivePowerMine } from '../directives/resource/powerMine';
+import { DirectiveStronghold } from '../directives/situational/stronghold';
+import { Segmenter } from '../memory/Segmenter';
+import { profile } from '../profiler/decorator';
+import { ExpansionEvaluator } from '../strategy/ExpansionEvaluator';
+import { Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER } from '../utilities/Cartographer';
+import { getCacheExpiration, irregularExponentialMovingAverage, maxBy } from '../utilities/utils';
+import { Zerg } from '../zerg/Zerg';
+import { MY_USERNAME } from '../~settings';
+
 
 const RECACHE_TIME = 2500;
 const OWNED_RECACHE_TIME = 1000;
@@ -52,47 +56,47 @@ export class RoomIntel {
 		for (const source of room.sources) {
 			const container = source.pos.findClosestByLimitedRange(room.containers, 2);
 			savedSources.push({
-								  c     : source.pos.coordName,
-								  contnr: container ? container.pos.coordName : undefined
-							  });
+				c: source.pos.coordName,
+				contnr: container ? container.pos.coordName : undefined
+			});
 		}
 		room.memory[_RM.SOURCES] = savedSources;
 		room.memory[_RM.CONTROLLER] = room.controller ? {
-			c                            : room.controller.pos.coordName,
-			[_RM_CTRL.LEVEL]             : room.controller.level,
-			[_RM_CTRL.OWNER]             : room.controller.owner ? room.controller.owner.username : undefined,
-			[_RM_CTRL.RESERVATION]       : room.controller.reservation ?
-										   {
-											   [_RM_CTRL.RES_USERNAME]  : room.controller.reservation.username,
-											   [_RM_CTRL.RES_TICKSTOEND]: room.controller.reservation.ticksToEnd,
-										   } : undefined,
-			[_RM_CTRL.SAFEMODE]          : room.controller.safeMode,
+			c: room.controller.pos.coordName,
+			[_RM_CTRL.LEVEL]: room.controller.level,
+			[_RM_CTRL.OWNER]: room.controller.owner ? room.controller.owner.username : undefined,
+			[_RM_CTRL.RESERVATION]: room.controller.reservation ?
+				{
+					[_RM_CTRL.RES_USERNAME]: room.controller.reservation.username,
+					[_RM_CTRL.RES_TICKSTOEND]: room.controller.reservation.ticksToEnd,
+				} : undefined,
+			[_RM_CTRL.SAFEMODE]: room.controller.safeMode,
 			[_RM_CTRL.SAFEMODE_AVAILABLE]: room.controller.safeModeAvailable,
-			[_RM_CTRL.SAFEMODE_COOLDOWN] : room.controller.safeModeCooldown,
-			[_RM_CTRL.PROGRESS]          : room.controller.progress,
-			[_RM_CTRL.PROGRESS_TOTAL]    : room.controller.progressTotal
+			[_RM_CTRL.SAFEMODE_COOLDOWN]: room.controller.safeModeCooldown,
+			[_RM_CTRL.PROGRESS]: room.controller.progress,
+			[_RM_CTRL.PROGRESS_TOTAL]: room.controller.progressTotal
 		} : undefined;
 		room.memory[_RM.MINERAL] = room.mineral ? {
-			c                     : room.mineral.pos.coordName,
-			[_RM_MNRL.DENSITY]    : room.mineral.density,
+			c: room.mineral.pos.coordName,
+			[_RM_MNRL.DENSITY]: room.mineral.density,
 			[_RM_MNRL.MINERALTYPE]: room.mineral.mineralType
 		} : undefined;
 		room.memory[_RM.SKLAIRS] = _.map(room.keeperLairs, lair => {
-			return {c: lair.pos.coordName};
+			return { c: lair.pos.coordName };
 		});
 		room.memory[_RM.PORTALS] = _.map(room.portals, portal => {
 			const dest = portal.destination instanceof RoomPosition ? portal.destination.name
-																	: portal.destination;
+				: portal.destination;
 			const expiration = portal.ticksToDecay != undefined ? Game.time + portal.ticksToDecay : Game.time + 1e6;
-			return {c: portal.pos.coordName, dest: dest, [_MEM.EXPIRATION]: expiration};
+			return { c: portal.pos.coordName, dest: dest, [_MEM.EXPIRATION]: expiration };
 		});
 		if (room.controller && room.controller.owner) {
 			room.memory[_RM.IMPORTANT_STRUCTURES] = {
-				[_RM_IS.TOWERS]  : _.map(room.towers, t => t.pos.coordName),
-				[_RM_IS.SPAWNS]  : _.map(room.spawns, s => s.pos.coordName),
-				[_RM_IS.STORAGE] : room.storage ? room.storage.pos.coordName : undefined,
+				[_RM_IS.TOWERS]: _.map(room.towers, t => t.pos.coordName),
+				[_RM_IS.SPAWNS]: _.map(room.spawns, s => s.pos.coordName),
+				[_RM_IS.STORAGE]: room.storage ? room.storage.pos.coordName : undefined,
 				[_RM_IS.TERMINAL]: room.terminal ? room.terminal.pos.coordName : undefined,
-				[_RM_IS.WALLS]   : _.map(room.walls, w => w.pos.coordName),
+				[_RM_IS.WALLS]: _.map(room.walls, w => w.pos.coordName),
 				[_RM_IS.RAMPARTS]: _.map(room.ramparts, r => r.pos.coordName),
 			};
 		} else {
@@ -108,7 +112,7 @@ export class RoomIntel {
 		const savedController = controller.room.memory[_RM.CONTROLLER];
 		if (savedController) {
 			savedController[_RM_CTRL.RESERVATION] = controller.reservation ? {
-				[_RM_CTRL.RES_USERNAME]  : controller.reservation.username,
+				[_RM_CTRL.RES_USERNAME]: controller.reservation.username,
 				[_RM_CTRL.RES_TICKSTOEND]: controller.reservation.ticksToEnd,
 			} : undefined;
 			savedController[_RM_CTRL.SAFEMODE] = controller.safeMode;
@@ -157,7 +161,7 @@ export class RoomIntel {
 		if (!room.memory[_RM.INVASION_DATA]) {
 			room.memory[_RM.INVASION_DATA] = {
 				harvested: 0,
-				lastSeen : 0,
+				lastSeen: 0,
 			};
 		}
 		const sources = room.sources;
@@ -176,11 +180,11 @@ export class RoomIntel {
 	private static updateHarvestData(room: Room): void {
 		if (!room.memory[_RM.HARVEST]) {
 			room.memory[_RM.HARVEST] = {
-				[_ROLLING_STATS.AMOUNT] : 0,
-				[_ROLLING_STATS.AVG10K] : _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
+				[_ROLLING_STATS.AMOUNT]: 0,
+				[_ROLLING_STATS.AVG10K]: _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
 				[_ROLLING_STATS.AVG100K]: _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
-				[_ROLLING_STATS.AVG1M]  : _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
-				[_MEM.TICK]             : Game.time,
+				[_ROLLING_STATS.AVG1M]: _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
+				[_MEM.TICK]: Game.time,
 			};
 		}
 		const harvest = room.memory[_RM.HARVEST] as RollingStats;
@@ -204,11 +208,11 @@ export class RoomIntel {
 		if (!room.memory[_RM.CASUALTIES]) {
 			room.memory[_RM.CASUALTIES] = {
 				cost: {
-					[_ROLLING_STATS.AMOUNT] : 0,
-					[_ROLLING_STATS.AVG10K] : 0,
+					[_ROLLING_STATS.AMOUNT]: 0,
+					[_ROLLING_STATS.AVG10K]: 0,
 					[_ROLLING_STATS.AVG100K]: 0,
-					[_ROLLING_STATS.AVG1M]  : 0,
-					[_MEM.TICK]             : Game.time,
+					[_ROLLING_STATS.AVG1M]: 0,
+					[_MEM.TICK]: Game.time,
 				}
 			};
 		}
@@ -269,11 +273,11 @@ export class RoomIntel {
 	private static recordSafety(room: Room): void {
 		if (!room.memory[_RM.SAFETY]) {
 			room.memory[_RM.SAFETY] = {
-				safeFor  : 0,
+				safeFor: 0,
 				unsafeFor: 0,
-				safety1k : 1,
+				safety1k: 1,
 				safety10k: 1,
-				tick     : Game.time
+				tick: Game.time
 			};
 		}
 		let safety: number;
@@ -302,11 +306,11 @@ export class RoomIntel {
 		}
 		if (!Memory.rooms[roomName][_RM.SAFETY]) {
 			Memory.rooms[roomName][_RM.SAFETY] = {
-				safeFor  : 0,
+				safeFor: 0,
 				unsafeFor: 0,
-				safety1k : 1,
+				safety1k: 1,
 				safety10k: 1,
-				tick     : Game.time
+				tick: Game.time
 			};
 		}
 		return Memory.rooms[roomName][_RM.SAFETY]!;
@@ -381,7 +385,7 @@ export class RoomIntel {
 
 				for (const colony of colonies) {
 					const route = Game.map.findRoute(colony.room, powerBank.room);
-					if (route != -2  && route.length <= powerSetting.maxRange) {
+					if (route != -2 && route.length <= powerSetting.maxRange) {
 						log.info(`FOUND POWER BANK IN RANGE ${route.length}, STARTING MINING ${powerBank.room}`);
 						DirectivePowerMine.create(powerBank.pos);
 						return;
@@ -408,7 +412,7 @@ export class RoomIntel {
 			const colonies = getAllColonies().filter(colony => colony.level == 8);
 			for (const colony of colonies) {
 				const route = Game.map.findRoute(colony.room, core.room);
-				if (route != -2  && route.length <= 7) {
+				if (route != -2 && route.length <= 7) {
 					Game.notify(`FOUND STRONGHOLD ${core.level} AT DISTANCE ${route.length}, BEGINNING ATTACK ${core.room}`);
 					DirectiveStronghold.createIfNotPresent(core.pos, 'pos');
 					return;
@@ -421,7 +425,7 @@ export class RoomIntel {
 		const checkOnTick = 123;
 		if (Game.time % 1000 == checkOnTick - 2) {
 			Segmenter.requestForeignSegment('LeagueOfAutomatedNations', 96);
-		} else if (Game.time % 1000 == checkOnTick - 1 ) {
+		} else if (Game.time % 1000 == checkOnTick - 1) {
 			const loanData = Segmenter.getForeignSegment();
 			if (loanData) {
 				Memory.zoneRooms = loanData;
@@ -445,19 +449,65 @@ export class RoomIntel {
 		for (const roomName in Memory.rooms) {
 			let remove = true;
 			for (const colonyName in Memory.colonies) {
-				if(Game.map.getRoomLinearDistance(roomName, colonyName) <= 2) {
+				if (Game.map.getRoomLinearDistance(roomName, colonyName) <= 2) {
 					remove = false;
 				}
 			}
-			if(remove && roomsToDelete.indexOf(roomName) == -1) {
+			if (remove && roomsToDelete.indexOf(roomName) == -1) {
 				x++;
 				roomsToDelete.push(roomName);
-				console.log(x+ ') '+ roomName);
+				console.log(x + ') ' + roomName);
 				delete Memory.rooms[roomName];
 			}
 		}
 	}
+	static autoAttack(room: Room) {
+		if (room.my || !Memory.settings.autoAttack || !room.controller
+					|| (room.controller && (room.controller.safeMode || room.controller.level == 0 || room.controller.level >= 6))
+					|| (Memory.settings.allies).indexOf(_.get(room.controller, ['owner', 'username'])) >= 0
+					|| (Memory.settings.autoAttackWhiteList).indexOf(room.name) >= 0) {
+			return;
+		}
 
+		let sendPairs = false;
+		let sendControllerAttack = false;
+		let sendOutpostDefense = false;
+
+		const hasSpawn = _.first(room.find(FIND_STRUCTURES).filter(s => s.structureType == STRUCTURE_SPAWN));
+		if (hasSpawn != undefined && !DirectivePairDestroy.isPresent(hasSpawn.pos, 'pos')) {
+			sendPairs = true;
+		} else if(room.controller.pos.availableNeighbors(true).length > 0) {
+			if( !DirectiveControllerAttack.isPresent(room.controller.pos, 'pos')) {
+				sendControllerAttack = true;
+			}
+			if (room.hostiles.length > 0 && !DirectiveOutpostDefense.isPresent(room.controller.pos, 'pos')) {
+				sendOutpostDefense = true;
+			}
+		}
+
+		if(sendPairs || sendControllerAttack || sendOutpostDefense) {
+			const colonies = getAllColonies().filter(colony => colony.level > 6);
+			for (const colony of colonies) {
+				const route = Game.map.findRoute(colony.room, room);
+				if (sendPairs && route != -2 && route.length <= 12) {
+					Game.notify(`Found enemy spawning in range ${route.length}, sending pairs to ${room}`);
+					DirectivePairDestroy.create(hasSpawn.pos, { name: 'PairDefend: ' + room.name });
+					return;
+				}
+				if (sendControllerAttack && route != -2 && route.length <= 8) {
+					Game.notify(`Found enemy controller in range ${route.length}, sending AttackControllers to ${room}`);
+					DirectiveControllerAttack.create(room.controller.pos, { name: 'ControllerAttack: ' + room.name });
+					return;
+				}
+				if (sendOutpostDefense && route != -2 && route.length <= 12) {
+					Game.notify(`Found enemy controller with hostile creeps in range ${route.length}, sending OutpostDefense! to ${room}`);
+					DirectiveOutpostDefense.create(room.controller.pos, { name: 'OutpostDefend: ' + room.name });
+					return;
+				}
+			}	
+		}
+	}
+	
 	static run(): void {
 		let alreadyComputedScore = false;
 		// this.requestZoneData();
@@ -504,6 +554,7 @@ export class RoomIntel {
 			}
 			this.minePowerBanks(room);
 			this.handleStrongholds(room);
+			this.autoAttack(room);
 		}
 	}
 
