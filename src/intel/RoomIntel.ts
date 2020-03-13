@@ -376,8 +376,8 @@ export class RoomIntel {
 					return;
 				}
 
-				const colonies = getAllColonies().filter(colony => colony.level > 6);
-
+				const colonies = getAllColonies().filter(colony => colony.level > 6
+					&& Game.map.getRoomLinearDistance(colony.name, powerBank.room.name) > powerSetting.maxRange);
 				for (const colony of colonies) {
 					const route = Game.map.findRoute(colony.room, powerBank.room);
 					if (route != -2 && route.length <= powerSetting.maxRange) {
@@ -404,10 +404,11 @@ export class RoomIntel {
 				return;
 			}
 
-			const colonies = getAllColonies().filter(colony => colony.level == 8);
+			const colonies = getAllColonies().filter(colony => colony.level == 8
+				&& Game.map.getRoomLinearDistance(colony.name, core.room.name) < 5);
 			for (const colony of colonies) {
 				const route = Game.map.findRoute(colony.room, core.room);
-				if (route != -2 && route.length <= 7) {
+				if (route != -2  && route.length <= 4) {
 					Game.notify(`FOUND STRONGHOLD ${core.level} AT DISTANCE ${route.length}, BEGINNING ATTACK ${core.room}`);
 					DirectiveStronghold.createIfNotPresent(core.pos, 'pos');
 					return;
@@ -461,7 +462,7 @@ export class RoomIntel {
 		let alreadyComputedScore = false;
 		// this.requestZoneData();
 		// If above 2030 kb wipe memory down
-		if (Game.time % 375 == 0 || RawMemory.get().length > 2040000) {
+		if (Game.time % 375 == 0 || RawMemory.get().length > 2000000) {
 			RoomIntel.cleanRoomMemory();
 		}
 
