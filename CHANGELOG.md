@@ -4,8 +4,12 @@ All notable changes to this project will be documented in this file. The format 
 ## [Unreleased]
 
 ### Added
-- Merged a lot of changes from Davaned's branches!
-    - List changes here
+- Added CPU/resource profiling to `Overlord`s. Use the `profileOverlord` console command to activate this.
+- Merged a lot of additions from Davaned's branch(es)
+    - Initial support for power mining and power processing
+    - Preliminary programs for dealing with strongholds (level 1-4)
+    - Lots of defensive improvements
+    - Harassment overlords periodically spawn creeps to skirmish in enemy outposts
 - Added modules for use in the reinforcement learning side project:
     - The `ActionParser` module provides a line of direct interaction for the external Python optimizers to control creep actions via the `Memory.reinforcementLearning` object.
     - The `TrainingOpponents` file provides a set of rudimentary opponents to train the RL models against.

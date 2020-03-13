@@ -23,6 +23,12 @@ const DefaultSegmenterMemory: SegmenterMemory = {
 	publicSegments      : [],
 };
 
+export const SEGMENTS = {
+	reinforcementLearning: 70,
+	remoteDebugger: 97,
+	assimilator: 98,
+};
+
 if (!Memory.segmenter) {
 	Memory.segmenter = {};
 }
