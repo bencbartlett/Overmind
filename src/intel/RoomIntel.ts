@@ -191,9 +191,9 @@ export class RoomIntel {
 				harvest[_ROLLING_STATS.AVG10K] = +(irregularExponentialMovingAverage(
 					dEnergy / dTime, harvest[_ROLLING_STATS.AVG10K], dTime, 10000)).toFixed(7);
 				harvest[_ROLLING_STATS.AVG100K] = +(irregularExponentialMovingAverage(
-					dEnergy / dTime, harvest[_ROLLING_STATS.AVG10K], dTime, 100000)).toFixed(7);
+					dEnergy / dTime, harvest[_ROLLING_STATS.AVG100K], dTime, 100000)).toFixed(7);
 				harvest[_ROLLING_STATS.AVG1M] = +(irregularExponentialMovingAverage(
-					dEnergy / dTime, harvest[_ROLLING_STATS.AVG10K], dTime, 1000000)).toFixed(7);
+					dEnergy / dTime, harvest[_ROLLING_STATS.AVG1M], dTime, 1000000)).toFixed(7);
 				harvest[_MEM.TICK] = Game.time;
 			}
 		}
