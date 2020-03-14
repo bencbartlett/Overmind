@@ -49,8 +49,7 @@ interface DirectiveStrongholdMemory extends FlagMemory {
  * PowerMining directive: kills power banks and collects the resources.
  */
 @profile
-export class
-DirectiveStronghold extends Directive {
+export class DirectiveStronghold extends Directive {
 
 	static directiveName = 'stronghold';
 	static color = COLOR_ORANGE;
