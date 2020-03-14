@@ -17,7 +17,6 @@ import {getCacheExpiration, irregularExponentialMovingAverage} from '../utilitie
 import {Zerg} from '../zerg/Zerg';
 import {MY_USERNAME} from '../~settings';
 
-
 const RECACHE_TIME = 2500;
 const OWNED_RECACHE_TIME = 1000;
 const ROOM_CREEP_HISTORY_TICKS = 25;
