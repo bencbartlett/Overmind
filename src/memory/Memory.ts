@@ -212,8 +212,8 @@ export class Mem {
 			allies                : [MY_USERNAME],
 			autoAttack			  : false,
 			autoAttackWhiteList	  : [],
-			powerCollection		  : {
-				enabled	: false,
+			powerCollection       : {
+				enabled : false,
 				maxRange: 5,
 				minPower: 5000,
 			},

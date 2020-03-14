@@ -13,7 +13,7 @@ import {Segmenter} from '../memory/Segmenter';
 import {profile} from '../profiler/decorator';
 import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
 import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
-import {getCacheExpiration, irregularExponentialMovingAverage, maxBy} from '../utilities/utils';
+import {getCacheExpiration, irregularExponentialMovingAverage} from '../utilities/utils';
 import {Zerg} from '../zerg/Zerg';
 import {MY_USERNAME} from '../~settings';
 
