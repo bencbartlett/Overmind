@@ -11,7 +11,7 @@ import {Cartographer} from '../utilities/Cartographer';
 import {Visualizer} from '../visuals/Visualizer';
 import {HiveCluster} from './_HiveCluster';
 
-export const MAX_OBSERVE_DISTANCE = 7;
+export const MAX_OBSERVE_DISTANCE = 4;
 
 interface CommandCenterMemory {
 	idlePos?: ProtoPos;
@@ -180,7 +180,15 @@ export class CommandCenter extends HiveCluster {
 		if (this.observer) {
 			if (this.observeRoom) {
 				this.observer.observeRoom(this.observeRoom);
-			} else if (CommandCenter.settings.enableIdleObservation) {
+			} else if (CommandCenter.settings.enableIdleObservation && Game.time % 1000 < 100) {
+				// const axisLength = MAX_OBSERVE_DISTANCE * 2 + 1;
+				// const dx = Game.time % axisLength - MAX_OBSERVE_DISTANCE;
+				// const dy = Math.floor((Game.time % axisLength ** 2) / axisLength) - MAX_OBSERVE_DISTANCE;
+				// if (dx == 0 && dy == 0) {
+				// 	return;
+				// }
+				// const roomToObserve = Cartographer.findRelativeRoomName(this.pos.roomName, dx, dy);
+				// this.observer.observeRoom(roomToObserve);
 				// TODO OBSERVER FIX ONLY LOOK AT southwest corner
 				const dx = Game.time % MAX_OBSERVE_DISTANCE;
 				const dy = Game.time % (MAX_OBSERVE_DISTANCE ** 2);

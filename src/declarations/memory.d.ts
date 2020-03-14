@@ -212,6 +212,11 @@ declare const enum _RM_IS {
 	RAMPARTS = 'r',
 }
 
+declare const enum _RM_INVASION {
+	HARVESTED = 'h',
+	LAST_SEEN = 'l',
+}
+
 declare const enum _RM_CTRL {
 	LEVEL              = 'l',
 	OWNER              = 'o',
@@ -232,6 +237,7 @@ declare const enum _RM_MNRL {
 
 declare const enum _ROLLING_STATS {
 	AMOUNT  = 'a',
+	AVG1K   = 'k',
 	AVG10K  = 'D',
 	AVG100K = 'H',
 	AVG1M   = 'M',
@@ -272,13 +278,13 @@ interface RoomMemory {
 	} | undefined;
 	[_RM.EXPANSION_DATA]?: ExpansionData | false;
 	[_RM.INVASION_DATA]?: {
-		harvested: number;
-		lastSeen: number;
+		[_RM_INVASION.HARVESTED]: number;
+		[_RM_INVASION.LAST_SEEN]: number;
 	};
-	[_RM.HARVEST]?: RollingStats;
-	[_RM.CASUALTIES]?: {
-		cost: RollingStats
-	};
+	// [_RM.HARVEST]?: RollingStats;
+	// [_RM.CASUALTIES]?: {
+	// 	cost: RollingStats
+	// };
 	[_RM.SAFETY]?: SafetyData;
 	[_RM.PREV_POSITIONS]?: { [creepID: string]: ProtoPos };
 	[_RM.CREEPS_IN_ROOM]?: { [tick: number]: string[] };
@@ -316,10 +322,18 @@ interface SavedMineral extends SavedRoomObject {
 	[_RM_MNRL.DENSITY]: number;
 }
 
+declare const enum _RM_SAFETY {
+	SAFE_FOR = 's',
+	UNSAFE_FOR = 'u',
+	SAFETY_1K = 'k',
+	SAFETY_10K = 'D',
+	TICK = _MEM.TICK
+}
+
 interface SafetyData {
-	safeFor: number;
-	unsafeFor: number;
-	safety1k: number;
-	safety10k: number;
-	tick: number;
+	[_RM_SAFETY.SAFE_FOR]: number;
+	[_RM_SAFETY.UNSAFE_FOR]: number;
+	[_RM_SAFETY.SAFETY_1K]: number;
+	[_RM_SAFETY.SAFETY_10K]: number;
+	[_RM_SAFETY.TICK]: number;
 }

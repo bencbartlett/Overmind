@@ -35,6 +35,7 @@ export const MovePriorities = {
 	[Roles.queen]      : 2,
 	[Roles.bunkerGuard]: 3,
 	[Roles.melee]      : 3,
+	[Roles.dismantler] : 4,
 	[Roles.ranged]     : 4,
 	[Roles.guardMelee] : 5,
 	// [Roles.ranged]: 6,
