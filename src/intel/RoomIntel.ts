@@ -2,8 +2,6 @@
 
 import {getAllColonies} from '../Colony';
 import {log} from '../console/log';
-import {bodyCost} from '../creepSetups/CreepSetup';
-import {isCreep} from '../declarations/typeGuards';
 import {DirectivePowerMine} from '../directives/resource/powerMine';
 import {DirectiveStronghold} from '../directives/situational/stronghold';
 import {Segmenter} from '../memory/Segmenter';
@@ -12,7 +10,6 @@ import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
 import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
 import {getCacheExpiration, irregularExponentialMovingAverage} from '../utilities/utils';
 import {Zerg} from '../zerg/Zerg';
-import {MY_USERNAME} from '../~settings';
 
 const RECACHE_TIME = 2500;
 const OWNED_RECACHE_TIME = 1000;
@@ -155,84 +152,84 @@ export class RoomIntel {
 	private static updateInvasionData(room: Room): void {
 		if (!room.memory[_RM.INVASION_DATA]) {
 			room.memory[_RM.INVASION_DATA] = {
-				harvested: 0,
-				lastSeen : 0,
+				[_RM_INVASION.HARVESTED]: 0,
+				[_RM_INVASION.LAST_SEEN]: 0,
 			};
 		}
 		const sources = room.sources;
 		const invasionData = room.memory[_RM.INVASION_DATA]!;
 		for (const source of sources) {
 			if (source.ticksToRegeneration == 1) {
-				invasionData.harvested += source.energyCapacity - source.energy;
+				invasionData[_RM_INVASION.HARVESTED] += source.energyCapacity - source.energy;
 			}
 		}
 		if (room.invaders.length > 0) {
-			invasionData.harvested = 0;
-			invasionData.lastSeen = Game.time;
+			invasionData[_RM_INVASION.HARVESTED] = 0;
+			invasionData[_RM_INVASION.LAST_SEEN] = Game.time;
 		}
 	}
 
-	private static updateHarvestData(room: Room): void {
-		if (!room.memory[_RM.HARVEST]) {
-			room.memory[_RM.HARVEST] = {
-				[_ROLLING_STATS.AMOUNT] : 0,
-				[_ROLLING_STATS.AVG10K] : _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
-				[_ROLLING_STATS.AVG100K]: _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
-				[_ROLLING_STATS.AVG1M]  : _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
-				[_MEM.TICK]             : Game.time,
-			};
-		}
-		const harvest = room.memory[_RM.HARVEST] as RollingStats;
-		for (const source of room.sources) { // TODO: this implicitly assumes all energy is harvested by me
-			if (source.ticksToRegeneration == 1) {
-				const dEnergy = source.energyCapacity - source.energy;
-				const dTime = Game.time - harvest[_MEM.TICK] + 1; // +1 to avoid division by zero errors
-				harvest[_ROLLING_STATS.AMOUNT] += dEnergy;
-				harvest[_ROLLING_STATS.AVG10K] = +(irregularExponentialMovingAverage(
-					dEnergy / dTime, harvest[_ROLLING_STATS.AVG10K], dTime, 10000)).toFixed(7);
-				harvest[_ROLLING_STATS.AVG100K] = +(irregularExponentialMovingAverage(
-					dEnergy / dTime, harvest[_ROLLING_STATS.AVG100K], dTime, 100000)).toFixed(7);
-				harvest[_ROLLING_STATS.AVG1M] = +(irregularExponentialMovingAverage(
-					dEnergy / dTime, harvest[_ROLLING_STATS.AVG1M], dTime, 1000000)).toFixed(7);
-				harvest[_MEM.TICK] = Game.time;
-			}
-		}
-	}
+	// private static updateHarvestData(room: Room): void {
+	// 	if (!room.memory[_RM.HARVEST]) {
+	// 		room.memory[_RM.HARVEST] = {
+	// 			[_ROLLING_STATS.AMOUNT] : 0,
+	// 			[_ROLLING_STATS.AVG10K] : _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
+	// 			[_ROLLING_STATS.AVG100K]: _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
+	// 			[_ROLLING_STATS.AVG1M]  : _.sum(room.sources, s => s.energyCapacity / ENERGY_REGEN_TIME),
+	// 			[_MEM.TICK]             : Game.time,
+	// 		};
+	// 	}
+	// 	const harvest = room.memory[_RM.HARVEST] as RollingStats;
+	// 	for (const source of room.sources) { // TODO: this implicitly assumes all energy is harvested by me
+	// 		if (source.ticksToRegeneration == 1) {
+	// 			const dEnergy = source.energyCapacity - source.energy;
+	// 			const dTime = Game.time - harvest[_MEM.TICK] + 1; // +1 to avoid division by zero errors
+	// 			harvest[_ROLLING_STATS.AMOUNT] += dEnergy;
+	// 			harvest[_ROLLING_STATS.AVG10K] = +(irregularExponentialMovingAverage(
+	// 				dEnergy / dTime, harvest[_ROLLING_STATS.AVG10K], dTime, 10000)).toFixed(7);
+	// 			harvest[_ROLLING_STATS.AVG100K] = +(irregularExponentialMovingAverage(
+	// 				dEnergy / dTime, harvest[_ROLLING_STATS.AVG100K], dTime, 100000)).toFixed(7);
+	// 			harvest[_ROLLING_STATS.AVG1M] = +(irregularExponentialMovingAverage(
+	// 				dEnergy / dTime, harvest[_ROLLING_STATS.AVG1M], dTime, 1000000)).toFixed(7);
+	// 			harvest[_MEM.TICK] = Game.time;
+	// 		}
+	// 	}
+	// }
 
-	private static updateCasualtyData(room: Room): void {
-		if (!room.memory[_RM.CASUALTIES]) {
-			room.memory[_RM.CASUALTIES] = {
-				cost: {
-					[_ROLLING_STATS.AMOUNT] : 0,
-					[_ROLLING_STATS.AVG10K] : 0,
-					[_ROLLING_STATS.AVG100K]: 0,
-					[_ROLLING_STATS.AVG1M]  : 0,
-					[_MEM.TICK]             : Game.time,
-				}
-			};
-		}
-		const casualtiesCost = room.memory[_RM.CASUALTIES]!.cost as RollingStats;
-		for (const tombstone of room.tombstones) {
-			if (tombstone.ticksToDecay == 1) {
-				// record any casualties, which are my creeps which died prematurely
-				if ((tombstone.creep.ticksToLive || 0) > 1 && tombstone.creep.owner.username == MY_USERNAME
-					&& isCreep(tombstone.creep)) {
-					const body = _.map(tombstone.creep.body, part => part.type);
-					const lifetime = body.includes(CLAIM) ? CREEP_CLAIM_LIFE_TIME : CREEP_LIFE_TIME;
-					const dCost = bodyCost(body) * (tombstone.creep.ticksToLive || 0) / lifetime;
-					const dTime = Game.time - casualtiesCost[_MEM.TICK] + 1;
-					casualtiesCost[_ROLLING_STATS.AMOUNT] += dCost;
-					casualtiesCost[_ROLLING_STATS.AVG10K] = +(irregularExponentialMovingAverage(
-						dCost / dTime, casualtiesCost[_ROLLING_STATS.AVG10K], dTime, 10000)).toFixed(7);
-					casualtiesCost[_ROLLING_STATS.AVG100K] = +(irregularExponentialMovingAverage(
-						dCost / dTime, casualtiesCost[_ROLLING_STATS.AVG100K], dTime, 100000)).toFixed(7);
-					casualtiesCost[_ROLLING_STATS.AVG1M] = +(irregularExponentialMovingAverage(
-						dCost / dTime, casualtiesCost[_ROLLING_STATS.AVG1M], dTime, 1000000)).toFixed(7);
-					casualtiesCost[_MEM.TICK] = Game.time;
-				}
-			}
-		}
-	}
+	// private static updateCasualtyData(room: Room): void {
+	// 	if (!room.memory[_RM.CASUALTIES]) {
+	// 		room.memory[_RM.CASUALTIES] = {
+	// 			cost: {
+	// 				[_ROLLING_STATS.AMOUNT] : 0,
+	// 				[_ROLLING_STATS.AVG10K] : 0,
+	// 				[_ROLLING_STATS.AVG100K]: 0,
+	// 				[_ROLLING_STATS.AVG1M]  : 0,
+	// 				[_MEM.TICK]             : Game.time,
+	// 			}
+	// 		};
+	// 	}
+	// 	const casualtiesCost = room.memory[_RM.CASUALTIES]!.cost as RollingStats;
+	// 	for (const tombstone of room.tombstones) {
+	// 		if (tombstone.ticksToDecay == 1) {
+	// 			// record any casualties, which are my creeps which died prematurely
+	// 			if ((tombstone.creep.ticksToLive || 0) > 1 && tombstone.creep.owner.username == MY_USERNAME
+	// 				&& isCreep(tombstone.creep)) {
+	// 				const body = _.map(tombstone.creep.body, part => part.type);
+	// 				const lifetime = body.includes(CLAIM) ? CREEP_CLAIM_LIFE_TIME : CREEP_LIFE_TIME;
+	// 				const dCost = bodyCost(body) * (tombstone.creep.ticksToLive || 0) / lifetime;
+	// 				const dTime = Game.time - casualtiesCost[_MEM.TICK] + 1;
+	// 				casualtiesCost[_ROLLING_STATS.AMOUNT] += dCost;
+	// 				casualtiesCost[_ROLLING_STATS.AVG10K] = +(irregularExponentialMovingAverage(
+	// 					dCost / dTime, casualtiesCost[_ROLLING_STATS.AVG10K], dTime, 10000)).toFixed(7);
+	// 				casualtiesCost[_ROLLING_STATS.AVG100K] = +(irregularExponentialMovingAverage(
+	// 					dCost / dTime, casualtiesCost[_ROLLING_STATS.AVG100K], dTime, 100000)).toFixed(7);
+	// 				casualtiesCost[_ROLLING_STATS.AVG1M] = +(irregularExponentialMovingAverage(
+	// 					dCost / dTime, casualtiesCost[_ROLLING_STATS.AVG1M], dTime, 1000000)).toFixed(7);
+	// 				casualtiesCost[_MEM.TICK] = Game.time;
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	/**
 	 * Get the pos a creep was in on the previous tick
@@ -268,31 +265,31 @@ export class RoomIntel {
 	private static recordSafety(room: Room): void {
 		if (!room.memory[_RM.SAFETY]) {
 			room.memory[_RM.SAFETY] = {
-				safeFor  : 0,
-				unsafeFor: 0,
-				safety1k : 1,
-				safety10k: 1,
-				tick     : Game.time
+				[_RM_SAFETY.SAFE_FOR]  : 0,
+				[_RM_SAFETY.UNSAFE_FOR]: 0,
+				[_RM_SAFETY.SAFETY_1K] : 1,
+				[_RM_SAFETY.SAFETY_10K]: 1,
+				[_RM_SAFETY.TICK]      : Game.time
 			};
 		}
 		let safety: number;
 		const safetyData = room.memory[_RM.SAFETY] as SafetyData;
 		if (room.dangerousHostiles.length > 0) {
-			safetyData.safeFor = 0;
-			safetyData.unsafeFor += 1;
+			safetyData[_RM_SAFETY.SAFE_FOR]  = 0;
+			safetyData[_RM_SAFETY.UNSAFE_FOR] += 1;
 			safety = 0;
 		} else {
-			safetyData.safeFor += 1;
-			safetyData.unsafeFor = 0;
+			safetyData[_RM_SAFETY.SAFE_FOR]  += 1;
+			safetyData[_RM_SAFETY.UNSAFE_FOR] = 0;
 			safety = 1;
 		}
 		// Compute rolling averages
-		const dTime = Game.time - safetyData.tick;
-		safetyData.safety1k = +(irregularExponentialMovingAverage(
-			safety, safetyData.safety1k, dTime, 1000)).toFixed(5);
-		safetyData.safety10k = +(irregularExponentialMovingAverage(
-			safety, safetyData.safety10k, dTime, 10000)).toFixed(5);
-		safetyData.tick = Game.time;
+		const dTime = Game.time - safetyData[_RM_SAFETY.TICK];
+		safetyData[_RM_SAFETY.SAFETY_1K] = +(irregularExponentialMovingAverage(
+			safety, safetyData[_RM_SAFETY.SAFETY_1K], dTime, 1000)).toFixed(5);
+		safetyData[_RM_SAFETY.SAFETY_10K] = +(irregularExponentialMovingAverage(
+			safety, safetyData[_RM_SAFETY.SAFETY_10K], dTime, 10000)).toFixed(5);
+		safetyData[_RM_SAFETY.TICK] = Game.time;
 	}
 
 	static getSafetyData(roomName: string): SafetyData {
@@ -301,11 +298,11 @@ export class RoomIntel {
 		}
 		if (!Memory.rooms[roomName][_RM.SAFETY]) {
 			Memory.rooms[roomName][_RM.SAFETY] = {
-				safeFor  : 0,
-				unsafeFor: 0,
-				safety1k : 1,
-				safety10k: 1,
-				tick     : Game.time
+				[_RM_SAFETY.SAFE_FOR]  : 0,
+				[_RM_SAFETY.UNSAFE_FOR]: 0,
+				[_RM_SAFETY.SAFETY_1K] : 1,
+				[_RM_SAFETY.SAFETY_10K]: 1,
+				[_RM_SAFETY.TICK]      : Game.time
 			};
 		}
 		return Memory.rooms[roomName][_RM.SAFETY]!;
@@ -314,16 +311,18 @@ export class RoomIntel {
 	static isInvasionLikely(room: Room): boolean {
 		const data = room.memory[_RM.INVASION_DATA];
 		if (!data) return false;
-		if (data.lastSeen > 20000) { // maybe room is surrounded by owned/reserved rooms and invasions aren't possible
+		const harvested = data[_RM_INVASION.HARVESTED];
+		const lastSeen = data[_RM_INVASION.LAST_SEEN];
+		if (lastSeen > 20000) { // maybe room is surrounded by owned/reserved rooms and invasions aren't possible
 			return false;
 		}
 		switch (room.sources.length) {
 			case 1:
-				return data.harvested > 90000;
+				return harvested > 90000;
 			case 2:
-				return data.harvested > 75000;
+				return harvested > 75000;
 			case 3:
-				return data.harvested > 65000;
+				return harvested > 65000;
 			default: // shouldn't ever get here
 				return false;
 		}
@@ -475,16 +474,14 @@ export class RoomIntel {
 			// Track invasion data, harvesting, and casualties for all colony rooms and outposts
 			if (Overmind.colonyMap[room.name]) { // if it is an owned or outpost room
 				this.updateInvasionData(room);
-				this.updateHarvestData(room);
-				this.updateCasualtyData(room);
+				// this.updateHarvestData(room);
+				// this.updateCasualtyData(room);
 			}
 
-			// Record previous creep positions if needed (RoomIntel.run() is executed at end of each tick)
-			if (room.hostiles.length > 0) {
-				this.recordCreepPositions(room);
-				if (room.my) {
-					this.recordCreepOccupancies(room);
-				}
+			// Record previous creep positions (RoomIntel.run() is executed at end of each tick)
+			this.recordCreepPositions(room);
+			if (room.my) {
+				this.recordCreepOccupancies(room);
 			}
 
 			// Record location of permanent objects in room and recompute score as needed

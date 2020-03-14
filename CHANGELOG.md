@@ -27,6 +27,10 @@ All notable changes to this project will be documented in this file. The format 
     - EdgeWall: barriers placed as close as possible to all room exits
     - InnerWall: barriers placed to enclose structures but are recessed from the room exits
     - Exposed: key structures are pathable to from some room exit
+- Added lots of data tracking methods to `RoomIntel`:
+    - Harvesting data computes a variety of rollinga verages for energy harvesting in rooms to evaluate effectiveness of mining operations
+    - Casualty data computes effective energy and spawn costs of lost creeps
+    - These methods have been temporarily disabled to relieve room memory pressure, as they are not currently plugged in to anything
 - Added additional heap cleaning routines to prevent periodic bucket crashes. At low bucket, the global cache will periodically be cleared, and at even lower buckets, `Game.cpu.halt()` will occasionally be called.
 - `Visualizer` content:
     - Added `displayCostMatrix` method, which is useful for debugging pathfinding operations
