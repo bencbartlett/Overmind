@@ -31,16 +31,16 @@ const STATE_CURRENT_X = 7;
 const STATE_CURRENT_Y = 8;
 
 export const MovePriorities = {
-	[Roles.manager]   : 1,
-	[Roles.queen]     : 2,
+	[Roles.manager]    : 1,
+	[Roles.queen]      : 2,
 	[Roles.bunkerGuard]: 3,
-	[Roles.melee]     : 3,
-	[Roles.ranged]    : 4,
-	[Roles.guardMelee]: 5,
+	[Roles.melee]      : 3,
+	[Roles.ranged]     : 4,
+	[Roles.guardMelee] : 5,
 	// [Roles.ranged]: 6,
-	[Roles.transport] : 8,
-	[Roles.worker]    : 9,
-	default           : 10,
+	[Roles.transport]  : 8,
+	[Roles.worker]     : 9,
+	default            : 10,
 };
 
 
@@ -996,10 +996,10 @@ export class Movement {
 	static combatMove(creep: Zerg, approach: PathFinderGoal[], avoid: PathFinderGoal[],
 					  options: CombatMoveOptions = {}): number {
 		_.defaults(options, {
-			allowExit     : false,
-			avoidPenalty  : 10,
-			approachBonus : 5,
-			preferRamparts: true,
+			allowExit      : false,
+			avoidPenalty   : 10,
+			approachBonus  : 5,
+			preferRamparts : true,
 			requireRamparts: false,
 		});
 
@@ -1009,7 +1009,9 @@ export class Movement {
 				const matrix = Pathing.getDefaultMatrix(creep.room).clone();
 				Pathing.blockMyCreeps(matrix, creep.room);
 				Pathing.blockHostileCreeps(matrix, creep.room);
-				if (options.requireRamparts) { Pathing.blockNonRamparts(matrix, creep.room); }
+				if (options.requireRamparts) {
+					Pathing.blockNonRamparts(matrix, creep.room);
+				}
 				Movement.combatMoveCallbackModifier(creep.room, matrix, approach, avoid, options);
 				if (options.displayCostMatrix) {
 					Visualizer.displayCostMatrix(matrix, roomName);

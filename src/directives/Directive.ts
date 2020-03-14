@@ -277,9 +277,9 @@ export abstract class Directive {
 			case 'room':
 				if (room) {
 					return _.filter(room.flags,
-						flag => this.filter(flag) &&
-							!(flag.memory.setPosition
-								&& flag.memory.setPosition.roomName != pos.roomName)).length > 0;
+									flag => this.filter(flag) &&
+											!(flag.memory.setPosition
+											&& flag.memory.setPosition.roomName != pos.roomName)).length > 0;
 				} else {
 					const flagsInRoom = _.filter(Game.flags, function(flag) {
 						if (flag.memory.setPosition) { // does it need to be relocated?
@@ -293,9 +293,9 @@ export abstract class Directive {
 			case 'pos':
 				if (room) {
 					return _.filter(pos.lookFor(LOOK_FLAGS),
-						flag => this.filter(flag) &&
-							!(flag.memory.setPosition
-								&& !equalXYR(pos, flag.memory.setPosition))).length > 0;
+									flag => this.filter(flag) &&
+											!(flag.memory.setPosition
+											&& !equalXYR(pos, flag.memory.setPosition))).length > 0;
 				} else {
 					const flagsAtPos = _.filter(Game.flags, function(flag) {
 						if (flag.memory.setPosition) { // does it need to be relocated?
@@ -306,7 +306,7 @@ export abstract class Directive {
 					});
 					return _.filter(flagsAtPos, flag => this.filter(flag)).length > 0;
 				}
-			}
+		}
 	}
 
 	/* Create a directive if one of the same type is not already present (in room | at position).

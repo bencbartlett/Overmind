@@ -21,7 +21,7 @@ export class DirectiveNukeTarget extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag, (colony) => !!colony.nuker && !(colony.nuker.cooldown > 0)
-			&& Game.map.getRoomLinearDistance(colony.room.name, flag.pos.roomName) <= 10);
+								&& Game.map.getRoomLinearDistance(colony.room.name, flag.pos.roomName) <= 10);
 		this.refresh();
 	}
 
@@ -44,7 +44,8 @@ export class DirectiveNukeTarget extends Directive {
 				this.remove();
 			}
 		} else if (!this.colony.nuker || this.colony.nuker.cooldown > 0) {
-			log.error(`DirectiveNuke unable to fire from ${this.colony.name} due to nuker ${this.colony.nuker} being unavailable: ${this.print}`);
+			log.error(`DirectiveNuke unable to fire from ${this.colony.name} due to nuker ${this.colony.nuker} `+
+					  `being unavailable: ${this.print}`);
 			this.remove();
 		}
 	}

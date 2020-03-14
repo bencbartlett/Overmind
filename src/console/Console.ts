@@ -25,6 +25,8 @@ export class OvermindConsole {
 		global.setSignature = this.setSignature;
 		global.print = this.print;
 		global.timeit = this.timeit;
+		global.profileOverlord = this.profileOverlord;
+		global.finishProfilingOverlord = this.finishProfilingOverlord;
 		global.setLogLevel = log.setLogLevel;
 		global.suspendColony = this.suspendColony;
 		global.unsuspendColony = this.unsuspendColony;
@@ -71,6 +73,8 @@ export class OvermindConsole {
 		descr['debug(thing)'] = 'enable debug logging for a game object or process';
 		descr['stopDebug(thing)'] = 'disable debug logging for a game object or process';
 		descr['timeit(function, repeat=1)'] = 'time the execution of a snippet of code';
+		descr['profileOverlord(overlord, ticks?)'] = 'start profiling on an overlord instance or name';
+		descr['finishProfilingOverlord(overlord)'] = 'stop profiling on an overlord';
 		descr['setLogLevel(int)'] = 'set the logging level from 0 - 4';
 		descr['suspendColony(roomName)'] = 'suspend operations within a colony';
 		descr['unsuspendColony(roomName)'] = 'resume operations within a suspended colony';
@@ -225,6 +229,29 @@ export class OvermindConsole {
 		}
 		used = Game.cpu.getUsed() - start;
 		return `CPU used: ${used}. Repetitions: ${repeat} (${used / repeat} each).`;
+	}
+
+	// Overlord profiling ==============================================================================================
+	static profileOverlord(overlord: Overlord | string, ticks?: number): string {
+		const overlordInstance = typeof overlord == 'string' ? Overmind.overlords[overlord]
+															 : overlord as Overlord | undefined;
+		if (!overlordInstance) {
+			return `No overlord found for ${overlord}!`;
+		} else {
+			overlordInstance.startProfiling(ticks);
+			return `Profiling ${overlordInstance.print} for ${ticks || 'indefinite'} ticks.`;
+		}
+	}
+
+	static finishProfilingOverlord(overlord: Overlord | string, ticks?: number): string {
+		const overlordInstance = typeof overlord == 'string' ? Overmind.overlords[overlord]
+															 : overlord as Overlord | undefined;
+		if (!overlordInstance) {
+			return `No overlord found for ${overlord}!`;
+		} else {
+			overlordInstance.finishProfiling();
+			return `Profiling ${overlordInstance.print} stopped.`;
+		}
 	}
 
 
@@ -430,8 +457,6 @@ export class OvermindConsole {
 	//
 	// 	return msg;
 	// }
-
-
 
 
 	// Structure management ============================================================================================

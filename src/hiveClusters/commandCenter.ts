@@ -139,14 +139,14 @@ export class CommandCenter extends HiveCluster {
 			if (this.powerSpawn.energy < this.powerSpawn.energyCapacity * .5) {
 				this.transportRequests.requestInput(this.powerSpawn, Priority.NormalLow);
 			} else if (this.powerSpawn.power < this.powerSpawn.powerCapacity * .5 && this.terminal
-				&& this.terminal.store.power && this.terminal.store.power >= 100) {
+					   && this.terminal.store.power && this.terminal.store.power >= 100) {
 				this.transportRequests.requestInput(this.powerSpawn, Priority.NormalLow, {resourceType: RESOURCE_POWER});
 			}
 		}
 		// Refill nuker with low priority
 		if (this.nuker) {
 			if (this.nuker.energy < this.nuker.energyCapacity && (this.storage.energy > 200000 && this.nuker.cooldown
-				<= 1000 || this.storage.energy > 800000)) {
+																  <= 1000 || this.storage.energy > 800000)) {
 				this.transportRequests.requestInput(this.nuker, Priority.Low);
 			}
 			if (this.nuker.ghodium < this.nuker.ghodiumCapacity
@@ -160,7 +160,6 @@ export class CommandCenter extends HiveCluster {
 				this.transportRequests.requestInput(this.storage, Priority.Normal, {resourceType: RESOURCE_OPS});
 			}
 		}
-
 
 
 		// Withdraw requests:
@@ -206,7 +205,7 @@ export class CommandCenter extends HiveCluster {
 		let {x, y} = coord;
 		const height = this.storage && this.terminal ? 2 : 1;
 		const titleCoords = Visualizer.section(`${this.colony.name} Command Center`,
-											 {x, y, roomName: this.room.name}, 9.5, height + .1);
+											   {x, y, roomName: this.room.name}, 9.5, height + .1);
 		const boxX = titleCoords.x;
 		y = titleCoords.y + 0.25;
 		if (this.storage) {

@@ -9,14 +9,12 @@ import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
 import {DirectiveHaul} from '../resource/haul';
 import {DirectiveDismantle} from '../targeting/dismantle';
-import {DirectiveOutpost} from './outpost';
 
 
 interface DirectiveClearRoomMemory extends FlagMemory {
 	preexistingFlags: string[];
 	completedTime?: number;
 }
-
 
 
 /**
@@ -40,7 +38,7 @@ export class DirectiveClearRoom extends Directive {
 		// Remove if misplaced
 		if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
 			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
-				`removing directive!`);
+						`removing directive!`);
 			this.remove(true);
 		}
 		if (Memory.settings.resourceCollectionMode && Memory.settings.resourceCollectionMode >= 1) {
@@ -48,7 +46,7 @@ export class DirectiveClearRoom extends Directive {
 		}
 		this.memory.preexistingFlags = _.filter(Game.flags, testingflag =>
 			testingflag.pos.roomName == flag.pos.roomName && testingflag.name != flag.name)
-			.map(testingFlag => testingFlag.name);
+										.map(testingFlag => testingFlag.name);
 		console.log('Existing flags in clear room are ' + JSON.stringify(this.memory.preexistingFlags));
 	}
 
@@ -63,7 +61,7 @@ export class DirectiveClearRoom extends Directive {
 	private removeAllStructures(): boolean {
 
 		const keepStorageStructures = this.memory.keepStorageStructures !== undefined
-			? this.memory.keepStorageStructures : true;
+									  ? this.memory.keepStorageStructures : true;
 		const keepRoads = this.memory.keepRoads !== undefined ? this.memory.keepRoads : true;
 		const keepContainers = this.memory.keepContainers !== undefined ? this.memory.keepContainers : true;
 
@@ -106,7 +104,7 @@ export class DirectiveClearRoom extends Directive {
 
 	private findStructureBlockingController(pioneer: Zerg): Structure | undefined {
 		const blockingPos = Pathing.findBlockingPos(pioneer.pos, pioneer.room.controller!.pos,
-			_.filter(pioneer.room.structures, s => !s.isWalkable));
+													_.filter(pioneer.room.structures, s => !s.isWalkable));
 		if (blockingPos) {
 			const structure = blockingPos.lookFor(LOOK_STRUCTURES)[0];
 			if (structure) {
@@ -148,9 +146,9 @@ export class DirectiveClearRoom extends Directive {
 
 			if (currentlyDismantlingLocations.length == 0) {
 				const pathablePos = this.room.creeps[0] ? this.room.creeps[0].pos
-					: Pathing.findPathablePosition(this.room.name);
+														: Pathing.findPathablePosition(this.room.name);
 				const blockingLocation = Pathing.findBlockingPos(pathablePos, this.room.controller!.pos,
-					_.filter(this.room.structures, s => !s.isWalkable));
+																 _.filter(this.room.structures, s => !s.isWalkable));
 				if (blockingLocation && !Directive.isPresent(blockingLocation, 'pos')) {
 					log.notify(`Adding dismantle directive for ${this.pos.roomName} to reach controller.`);
 					DirectiveDismantle.create(blockingLocation);

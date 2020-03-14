@@ -3,6 +3,7 @@ import {log} from '../console/log';
 import {CreepSetup} from '../creepSetups/CreepSetup';
 import {SpawnRequest, SpawnRequestOptions} from '../hiveClusters/hatchery';
 import {SpawnGroup} from '../logistics/SpawnGroup';
+import {Mem} from '../memory/Memory';
 import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
 import {boostParts, boostResources} from '../resources/map_resources';
@@ -41,8 +42,25 @@ export interface ZergOptions {
 	boostWishlist?: _ResourceConstantSansEnergy[] | undefined;
 }
 
+export interface OverlordStats {
+	start: number;
+	end?: number;
+	cpu: number;
+	spawnCost: number;
+	deaths: number; // TODO: track deaths
+}
+
+export interface OverlordSuspendOptions {
+	endTick?: number;
+	condition?: {
+		fn: string; // stringified function with signature () => boolean;
+		freq: number; // how often to check if the condition is met
+	};
+}
+
 export interface OverlordMemory {
-	suspendUntil?: number;
+	suspend?: OverlordSuspendOptions;
+	[_MEM.STATS]?: OverlordStats;
 }
 
 const OverlordMemoryDefaults: OverlordMemory = {};
@@ -57,7 +75,7 @@ const OverlordMemoryDefaults: OverlordMemory = {};
 export abstract class Overlord {
 
 	protected initializer: OverlordInitializer | Colony;
-	// memory: OverlordMemory;
+	memory: OverlordMemory;
 	room: Room | undefined;
 	priority: number; 			// priority can be changed in constructor phase but not after
 	name: string;
@@ -70,11 +88,12 @@ export abstract class Overlord {
 	private _combatZerg: { [roleName: string]: CombatZerg[] };
 	private boosts: { [roleName: string]: _ResourceConstantSansEnergy[] | undefined };
 	creepUsageReport: { [roleName: string]: [number, number] | undefined };
-	shouldSpawnAt?: number;
+	private shouldSpawnAt?: number;
 
-	constructor(initializer: OverlordInitializer | Colony, name: string, priority: number) {
+	constructor(initializer: OverlordInitializer | Colony, name: string, priority: number,
+				memDefaults: OverlordMemory = OverlordMemoryDefaults) {
 		this.initializer = initializer;
-		// this.memory = Mem.wrap(initializer.memory, name, OverlordMemoryDefaults);
+		this.memory = Mem.wrap(initializer.memory, name, memDefaults);
 		this.room = initializer.room;
 		this.priority = priority;
 		this.name = name;
@@ -92,16 +111,41 @@ export abstract class Overlord {
 		Overmind.overseer.registerOverlord(this);
 	}
 
+	/**
+	 * Returns whether the overlord is currently suspended
+	 */
 	get isSuspended(): boolean {
-		return Overmind.overseer.isOverlordSuspended(this);
+		if (this.memory.suspend) {
+			if (this.memory.suspend.endTick) {
+				if (Game.time < this.memory.suspend.endTick) {
+					return true;
+				} else {
+					delete this.memory.suspend;
+					return false;
+				}
+			}
+			if (this.memory.suspend.condition) {
+				log.error('NOT IMPLEMENTED'); // TODO
+				const {fn, freq} = this.memory.suspend.condition;
+				if (Game.time % freq == 0) {
+					const condition = new Function(fn);
+					// TODO - finish this
+				}
+			}
+		}
+		return false;
 	}
 
-	suspendFor(ticks: number) {
-		return Overmind.overseer.suspendOverlordFor(this, ticks);
+	suspendFor(ticks: number): void {
+		this.memory.suspend = {
+			endTick: Game.time + ticks
+		};
 	}
 
-	suspendUntil(untilTick: number) {
-		return Overmind.overseer.suspendOverlordUntil(this, untilTick);
+	suspendUntil(endTick: number): void {
+		this.memory.suspend = {
+			endTick: endTick
+		};
 	}
 
 	/**
@@ -110,14 +154,8 @@ export abstract class Overlord {
 	 * refresh their zerg properties, only other room objects stored on the Overlord.
 	 */
 	refresh(): void {
-		// // Handle suspension // TODO: finish this
-		// if (this.memory.suspendUntil) {
-		// 	if (Game.time < this.memory.suspendUntil) {
-		// 		return;
-		// 	} else {
-		// 		delete this.memory.suspendUntil;
-		// 	}
-		// }
+		// Refresh memory
+		this.memory = Mem.wrap(this.initializer.memory, this.name);
 		// Refresh room
 		this.room = Game.rooms[this.pos.roomName];
 		// Refresh zerg
@@ -149,6 +187,56 @@ export abstract class Overlord {
 		for (const role in this._combatZerg) {
 			this.synchronizeCombatZerg(role);
 		}
+	}
+
+	/**
+	 * Check if profiling is active, also shuts it down if it is past end tick
+	 */
+	get profilingActive(): boolean {
+		if (this.memory[_MEM.STATS]) {
+			if (this.memory[_MEM.STATS]!.end) {
+				if (Game.time > this.memory[_MEM.STATS]!.end!) {
+					this.finishProfiling();
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Starts profiling on this overlord and initializes memory to defaults
+	 */
+	startProfiling(ticks?: number): void {
+		if (!this.memory[_MEM.STATS]) {
+			this.memory[_MEM.STATS] = {
+				start    : Game.time,
+				cpu      : 0,
+				spawnCost: 0,
+				deaths   : 0,
+			};
+			if (ticks) {
+				this.memory[_MEM.STATS]!.end = Game.time + ticks;
+			}
+		} else {
+			log.alert(`Overlord ${this.print} is already being profiled!`);
+		}
+	}
+
+	/**
+	 * Finishes profiling this overlord and deletes the memory objects
+	 */
+	finishProfiling(verbose = true): void {
+		if (!this.memory[_MEM.STATS]) {
+			log.error(`Overlord ${this.print} is not being profiled, finishProfiling() invalid!`);
+			return;
+		}
+		if (verbose) {
+			log.alert(`Profiling finished for overlord ${this.print}. Results:\n` +
+					  JSON.stringify(this.memory[_MEM.STATS]));
+		}
+		delete this.memory[_MEM.STATS];
 	}
 
 	/**
@@ -470,7 +558,7 @@ export abstract class Overlord {
 			const boosts = _.filter(this.boosts[creep.roleName]!, boost => {
 				// TODO FIX BOOSTING!
 				return (creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost])
-					&& !(boost == boostResources[MOVE][3] && creep.getActiveBodyparts(MOVE) >= creep.body.length/2);
+					   && !(boost == boostResources[MOVE][3] && creep.getActiveBodyparts(MOVE) >= creep.body.length / 2);
 			});
 			for (const boost of boosts) {
 				const boostLab = _.find(evolutionChamber.boostingLabs, lab => lab.mineralType == boost);

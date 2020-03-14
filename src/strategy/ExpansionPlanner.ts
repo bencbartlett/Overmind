@@ -87,7 +87,7 @@ export class ExpansionPlanner implements IExpansionPlanner {
 
 	private getBestExpansionRoomFor(colony: Colony): { roomName: string, score: number } | undefined {
 		const allColonyRooms = _.zipObject(_.map(getAllColonies(),
-											   col => [col.room.name, true])) as { [roomName: string]: boolean };
+												 col => [col.room.name, true])) as { [roomName: string]: boolean };
 		const allOwnedMinerals = _.map(getAllColonies(), col => col.room.mineral!.mineralType) as MineralConstant[];
 		let bestRoom: string = '';
 		let bestScore: number = -Infinity;
@@ -112,8 +112,8 @@ export class ExpansionPlanner implements IExpansionPlanner {
 				}
 				// Reward new minerals and catalyst rooms
 				const mineralType = Memory.rooms[roomName][_RM.MINERAL]
-								  ? Memory.rooms[roomName][_RM.MINERAL]![_RM_MNRL.MINERALTYPE]
-								  : undefined;
+									? Memory.rooms[roomName][_RM.MINERAL]![_RM_MNRL.MINERALTYPE]
+									: undefined;
 				if (mineralType) {
 					if (!allOwnedMinerals.includes(mineralType)) {
 						score += UNOWNED_MINERAL_BONUS;

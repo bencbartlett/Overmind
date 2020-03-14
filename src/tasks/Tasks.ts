@@ -6,6 +6,7 @@ import {dismantleTargetType, TaskDismantle} from './instances/dismantle';
 import {dropTargetType, TaskDrop} from './instances/drop';
 // import {fleeTargetType, TaskFlee} from './instances/flee';
 import {fortifyTargetType, TaskFortify} from './instances/fortify';
+import {generateSafeModeTargetType, TaskGenerateSafeMode} from './instances/generateSafeMode';
 import {getBoostedTargetType, TaskGetBoosted} from './instances/getBoosted';
 import {getRenewedTargetType, TaskGetRenewed} from './instances/getRenewed';
 import {goToRoomTargetType, TaskGoToRoom} from './instances/goToRoom';
@@ -24,7 +25,6 @@ import {TaskUpgrade, upgradeTargetType} from './instances/upgrade';
 import {TaskWithdraw, withdrawTargetType} from './instances/withdraw';
 import {TaskWithdrawAll, withdrawAllTargetType} from './instances/withdrawAll';
 import {Task} from './Task';
-import {generateSafeModeTargetType, TaskGenerateSafeMode} from "./instances/generateSafeMode";
 
 /**
  * Tasks class provides conveient wrappers for dispensing new Task instances
@@ -162,8 +162,7 @@ export class Tasks {
 		return new TaskWithdrawAll(target, options);
 	}
 
-	static generateSafeMode(target: generateSafeModeTargetType, options = {} as TaskOptions):
-		TaskGenerateSafeMode {
+	static generateSafeMode(target: generateSafeModeTargetType, options = {} as TaskOptions): TaskGenerateSafeMode {
 		return new TaskGenerateSafeMode(target, options);
 	}
 

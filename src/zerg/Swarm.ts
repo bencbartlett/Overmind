@@ -75,7 +75,7 @@ export class Swarm implements ProtoSwarm {
 		}
 		const creepScores = this.getCreepScores(paddedCreeps);
 		const sortedCreeps = _.sortBy(paddedCreeps,
-									creep => creepScores[creep != undefined ? creep.name : 'undefined']);
+									  creep => creepScores[creep != undefined ? creep.name : 'undefined']);
 		this.uniformCreepType = (_.unique(_.filter(_.values(creepScores), score => score != 0)).length <= 1);
 		this.staticFormation = _.chunk(sortedCreeps, width);
 		this.width = width;
@@ -153,7 +153,7 @@ export class Swarm implements ProtoSwarm {
 
 	get print(): string {
 		return '<a href="#!/room/' + Game.shard.name + '/' + ((this.anchor
-			|| this.rooms[0])).roomName + '">[' + `Swarm ` + this.ref + ']</a>';
+															   || this.rooms[0])).roomName + '">[' + `Swarm ` + this.ref + ']</a>';
 	}
 
 	debug(...args: any[]) {
@@ -607,11 +607,11 @@ export class Swarm implements ProtoSwarm {
 			return this.orientation;
 		}
 		const dxList = _.flatten(_.map(this.creeps,
-									 creep => _.map(targets,
-													target => target.pos.x - creep.pos.x))) as number[];
+									   creep => _.map(targets,
+													  target => target.pos.x - creep.pos.x))) as number[];
 		const dyList = _.flatten(_.map(this.creeps,
-									 creep => _.map(targets,
-													target => target.pos.y - creep.pos.y))) as number[];
+									   creep => _.map(targets,
+													  target => target.pos.y - creep.pos.y))) as number[];
 		const dx = _.sum(dxList) / dxList.length || 0;
 		const dy = _.sum(dyList) / dyList.length || 0;
 		this.debug(`dx: ${dx}, dy: ${dy}`);

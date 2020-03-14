@@ -1,15 +1,9 @@
-import {debug, log} from '../../console/log';
+import {log} from '../../console/log';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
-import {DirectiveSKOutpost} from '../../directives/colony/outpostSK';
-import {DirectiveHaul} from '../../directives/resource/haul';
 import {DirectivePowerMine} from '../../directives/resource/powerMine';
-import {RoomIntel} from '../../intel/RoomIntel';
 import {Mem} from '../../memory/Memory';
-import {MoveOptions} from '../../movement/Movement';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {calculateFormationStrength} from '../../utilities/creepUtils';
-import {minBy} from '../../utilities/utils';
 import {Visualizer} from '../../visuals/Visualizer';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {Zerg} from '../../zerg/Zerg';
@@ -100,10 +94,10 @@ export class PowerDrillOverlord extends CombatOverlord {
 			if (!this.partnerMap.get(drill.name)) {
 				this.partnerMap.set(drill.name, []);
 			}
-			PowerDrillOverlord.periodicSay(drill,'Drilling⚒️');
+			PowerDrillOverlord.periodicSay(drill, 'Drilling⚒️');
 			drill.attack(this.directive.powerBank);
 		} else {
-			PowerDrillOverlord.periodicSay(drill,'🚗Traveling🚗');
+			PowerDrillOverlord.periodicSay(drill, '🚗Traveling🚗');
 			drill.goTo(this.directive.powerBank);
 		}
 	}
@@ -201,7 +195,7 @@ export class PowerDrillOverlord extends CombatOverlord {
 	}
 
 	static getCreepNameOffset(zerg: Zerg) {
-		return parseInt(zerg.name.charAt(zerg.name.length-1), 10) || 0;
+		return parseInt(zerg.name.charAt(zerg.name.length - 1), 10) || 0;
 	}
 
 	run() {

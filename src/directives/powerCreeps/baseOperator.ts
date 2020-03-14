@@ -1,11 +1,9 @@
 import {log} from '../../console/log';
 import {profile} from '../../profiler/decorator';
-import {CombatPlanner, SiegeAnalysis} from '../../strategy/CombatPlanner';
 import {Visualizer} from '../../visuals/Visualizer';
 import {Directive} from '../Directive';
 import {DirectiveNukeResponse} from '../situational/nukeResponse';
 import {GenerateOps} from './powers/generateOps';
-import {Power} from './powers/genericPower';
 import {OperateExtension} from './powers/operateExtension';
 
 
@@ -69,8 +67,10 @@ export class DirectiveBaseOperator extends Directive {
 		if (powerCreep.pos.inRangeToPos(powerSource.pos, 1)) {
 			return powerCreep.renew(powerSource);
 		} else {
-			return powerCreep.moveTo(powerSource, {ignoreRoads: true, range: 1, swampCost: 1, reusePath: 0,
-				visualizePathStyle: {lineStyle: 'dashed', fill: 'yellow'}});
+			return powerCreep.moveTo(powerSource, {
+				ignoreRoads       : true, range: 1, swampCost: 1, reusePath: 0,
+				visualizePathStyle: {lineStyle: 'dashed', fill: 'yellow'}
+			});
 		}
 	}
 
@@ -82,16 +82,20 @@ export class DirectiveBaseOperator extends Directive {
 			// let path = powerCreep.pos.findPathTo(controller, {ignoreRoads: true, range: 1, swampCost: 1});
 			// log.alert(`Trying to enable power for ${controller} with ${JSON.stringify(path)}`);
 			// return powerCreep.moveByPath(path);
-			return powerCreep.moveTo(controller.pos, {ignoreRoads: true, range: 1, swampCost: 1,
-				reusePath: 0, visualizePathStyle: {lineStyle: 'solid'}});
+			return powerCreep.moveTo(controller.pos, {
+				ignoreRoads: true, range: 1, swampCost: 1,
+				reusePath  : 0, visualizePathStyle: {lineStyle: 'solid'}
+			});
 		}
 	}
 
 	usePower(powerCreep: PowerCreep, power: PowerConstant) {
 		// console.log(`The power constant is ${power}`)
-		switch(power) {
-			case PWR_GENERATE_OPS: return new GenerateOps(powerCreep);
-			case PWR_OPERATE_EXTENSION: return new OperateExtension(powerCreep);
+		switch (power) {
+			case PWR_GENERATE_OPS:
+				return new GenerateOps(powerCreep);
+			case PWR_OPERATE_EXTENSION:
+				return new OperateExtension(powerCreep);
 		}
 
 	}

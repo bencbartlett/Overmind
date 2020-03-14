@@ -30,12 +30,10 @@ import {MUON, MY_USERNAME, USE_TRY_CATCH} from './~settings';
 // export const DIRECTIVE_CHECK_FREQUENCY = 2;
 
 interface OverseerMemory {
-	suspendUntil: { [overlordRef: string]: number }; // overlords are suspended until tick
+
 }
 
-const defaultOverseerMemory: OverseerMemory = {
-	suspendUntil: {},
-};
+const defaultOverseerMemory: OverseerMemory = {};
 
 /**
  * The Overseer object acts as a scheduler, running directives and overlords for all colonies each tick. It is also
@@ -122,26 +120,6 @@ export class Overseer implements IOverseer {
 		if (this.overlordsByColony[overlord.colony.name]) {
 			_.remove(this.overlordsByColony[overlord.colony.name], o => o.ref == overlord.ref);
 		}
-	}
-
-	isOverlordSuspended(overlord: Overlord): boolean {
-		if (this.memory.suspendUntil[overlord.ref]) {
-			if (Game.time < this.memory.suspendUntil[overlord.ref]) {
-				return true;
-			} else {
-				delete this.memory.suspendUntil[overlord.ref];
-				return false;
-			}
-		}
-		return false;
-	}
-
-	suspendOverlordFor(overlord: Overlord, ticks: number): void {
-		this.memory.suspendUntil[overlord.ref] = Game.time + ticks;
-	}
-
-	suspendOverlordUntil(overlord: Overlord, untilTick: number): void {
-		this.memory.suspendUntil[overlord.ref] = untilTick;
 	}
 
 	private registerLogisticsRequests(colony: Colony): void {
@@ -233,7 +211,7 @@ export class Overseer implements IOverseer {
 
 			// See if invasion is big enough to warrant creep defenses
 			const effectiveInvaderCount = _.sum(_.map(colony.room.hostiles,
-													invader => invader.boosts.length > 0 ? 2 : 1));
+													  invader => invader.boosts.length > 0 ? 2 : 1));
 			const needsDefending = effectiveInvaderCount >= 3 || colony.room.dangerousPlayerHostiles.length > 0;
 
 			if (needsDefending) {
@@ -262,14 +240,14 @@ export class Overseer implements IOverseer {
 				return false;
 			}
 			const alreadyAnOutpost = _.any(Overmind.cache.outpostFlags,
-										 flag => (flag.memory.setPosition || flag.pos).roomName == roomName);
+										   flag => (flag.memory.setPosition || flag.pos).roomName == roomName);
 			const alreadyAColony = !!Overmind.colonies[roomName];
 			if (alreadyAColony || alreadyAnOutpost) {
 				return false;
 			}
 			const alreadyOwned = RoomIntel.roomOwnedBy(roomName);
 			const alreadyReserved = RoomIntel.roomReservedBy(roomName);
-			const isBlocked = Game.flags[roomName+'-Block'] != null;
+			const isBlocked = Game.flags[roomName + '-Block'] != null;
 			if (isBlocked) {
 				// Game.notify("Room " + roomName + " is blocked, not expanding there.");
 			}
@@ -285,9 +263,9 @@ export class Overseer implements IOverseer {
 
 	private handleNewOutposts(colony: Colony) {
 		const numSources = _.sum(colony.roomNames,
-							   roomName => Memory.rooms[roomName] && Memory.rooms[roomName][_RM.SOURCES]
-										   ? Memory.rooms[roomName][_RM.SOURCES]!.length
-										   : 0);
+								 roomName => Memory.rooms[roomName] && Memory.rooms[roomName][_RM.SOURCES]
+											 ? Memory.rooms[roomName][_RM.SOURCES]!.length
+											 : 0);
 		const numRemotes = numSources - colony.room.sources.length;
 		if (numRemotes < Colony.settings.remoteSourcesByLevel[colony.level]) {
 
@@ -394,9 +372,16 @@ export class Overseer implements IOverseer {
 		}
 		// Initialize overlords
 		for (const overlord of this.overlords) {
-			if (!this.isOverlordSuspended(overlord)) {
-				overlord.preInit();
-				this.try(() => overlord.init());
+			if (!overlord.isSuspended) {
+				if (overlord.profilingActive) {
+					const start = Game.cpu.getUsed();
+					overlord.preInit();
+					this.try(() => overlord.init());
+					overlord.memory[_MEM.STATS]!.cpu += Game.cpu.getUsed() - start;
+				} else {
+					overlord.preInit();
+					this.try(() => overlord.init());
+				}
 			}
 		}
 		// Register cleanup requests to logistics network
@@ -412,8 +397,14 @@ export class Overseer implements IOverseer {
 			directive.run();
 		}
 		for (const overlord of this.overlords) {
-			if (!this.isOverlordSuspended(overlord)) {
-				this.try(() => overlord.run());
+			if (!overlord.isSuspended) {
+				if (overlord.profilingActive) {
+					const start = Game.cpu.getUsed();
+					this.try(() => overlord.run());
+					overlord.memory[_MEM.STATS]!.cpu += Game.cpu.getUsed() - start;
+				} else {
+					this.try(() => overlord.run());
+				}
 			}
 		}
 		for (const colony of this.colonies) {

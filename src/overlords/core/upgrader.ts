@@ -51,7 +51,7 @@ export class UpgradingOverlord extends Overlord {
 
 	private shouldBoostUpgraders(): boolean {
 		return this.colony.controller.level < 8 || (!!this.colony.storage
-			&& !!this.colony.storage.store[RESOURCE_CATALYZED_GHODIUM_ACID]);
+													&& !!this.colony.storage.store[RESOURCE_CATALYZED_GHODIUM_ACID]);
 	}
 
 	private handleUpgrader(upgrader: Zerg): void {

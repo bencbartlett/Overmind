@@ -53,7 +53,7 @@ export class BootstrappingOverlord extends Overlord {
 		for (const overlord of miningOverlords) {
 			const filteredMiners = this.lifetimeFilter(overlord.miners);
 			const miningPowerAssigned = _.sum(_.map(this.lifetimeFilter(overlord.miners),
-												  creep => creep.getActiveBodyparts(WORK)));
+													creep => creep.getActiveBodyparts(WORK)));
 			if (miningPowerAssigned < overlord.miningPowerNeeded &&
 				filteredMiners.length < overlord.pos.availableNeighbors().length) {
 				if (this.colony.hatchery) {

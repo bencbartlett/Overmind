@@ -1,6 +1,5 @@
 // Room intel - provides information related to room structure and occupation
 
-import {Resources} from 'typedoc/dist/lib/output/utils/resources';
 import {getAllColonies} from '../Colony';
 import {log} from '../console/log';
 import {bodyCost} from '../creepSetups/CreepSetup';
@@ -11,7 +10,7 @@ import {Segmenter} from '../memory/Segmenter';
 import {profile} from '../profiler/decorator';
 import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
 import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
-import {getCacheExpiration, irregularExponentialMovingAverage, maxBy} from '../utilities/utils';
+import {getCacheExpiration, irregularExponentialMovingAverage} from '../utilities/utils';
 import {Zerg} from '../zerg/Zerg';
 import {MY_USERNAME} from '../~settings';
 
@@ -368,7 +367,7 @@ export class RoomIntel {
 		const powerSetting = Memory.settings.powerCollection;
 		if (powerSetting.enabled && Cartographer.roomType(room.name) == ROOMTYPE_ALLEY) {
 			const powerBank = _.first(room.find(FIND_STRUCTURES)
-				.filter(struct => struct.structureType == STRUCTURE_POWER_BANK)) as StructurePowerBank;
+										  .filter(struct => struct.structureType == STRUCTURE_POWER_BANK)) as StructurePowerBank;
 			if (powerBank != undefined && powerBank.ticksToDecay > 4000 && powerBank.power >= powerSetting.minPower) {
 				// Game.notify(`Looking for power banks in ${room}  found
 				// ${powerBank} with power ${powerBank.power} and ${powerBank.ticksToDecay} TTL.`);
@@ -381,7 +380,7 @@ export class RoomIntel {
 
 				for (const colony of colonies) {
 					const route = Game.map.findRoute(colony.room, powerBank.room);
-					if (route != -2  && route.length <= powerSetting.maxRange) {
+					if (route != -2 && route.length <= powerSetting.maxRange) {
 						log.info(`FOUND POWER BANK IN RANGE ${route.length}, STARTING MINING ${powerBank.room}`);
 						DirectivePowerMine.create(powerBank.pos);
 						return;
@@ -408,7 +407,7 @@ export class RoomIntel {
 			const colonies = getAllColonies().filter(colony => colony.level == 8);
 			for (const colony of colonies) {
 				const route = Game.map.findRoute(colony.room, core.room);
-				if (route != -2  && route.length <= 7) {
+				if (route != -2 && route.length <= 7) {
 					Game.notify(`FOUND STRONGHOLD ${core.level} AT DISTANCE ${route.length}, BEGINNING ATTACK ${core.room}`);
 					DirectiveStronghold.createIfNotPresent(core.pos, 'pos');
 					return;
@@ -421,7 +420,7 @@ export class RoomIntel {
 		const checkOnTick = 123;
 		if (Game.time % 1000 == checkOnTick - 2) {
 			Segmenter.requestForeignSegment('LeagueOfAutomatedNations', 96);
-		} else if (Game.time % 1000 == checkOnTick - 1 ) {
+		} else if (Game.time % 1000 == checkOnTick - 1) {
 			const loanData = Segmenter.getForeignSegment();
 			if (loanData) {
 				Memory.zoneRooms = loanData;
@@ -445,14 +444,14 @@ export class RoomIntel {
 		for (const roomName in Memory.rooms) {
 			let remove = true;
 			for (const colonyName in Memory.colonies) {
-				if(Game.map.getRoomLinearDistance(roomName, colonyName) <= 2) {
+				if (Game.map.getRoomLinearDistance(roomName, colonyName) <= 2) {
 					remove = false;
 				}
 			}
-			if(remove && roomsToDelete.indexOf(roomName) == -1) {
+			if (remove && roomsToDelete.indexOf(roomName) == -1) {
 				x++;
 				roomsToDelete.push(roomName);
-				console.log(x+ ') '+ roomName);
+				console.log(x + ') ' + roomName);
 				delete Memory.rooms[roomName];
 			}
 		}

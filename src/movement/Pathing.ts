@@ -23,7 +23,7 @@ export const MatrixTypes = {
 	sk           : 'sk',
 	obstacle     : 'obst',
 	preferRampart: 'preframp',
-	nearRampart	 : 'nearRamp'
+	nearRampart  : 'nearRamp'
 };
 
 /**
@@ -492,7 +492,7 @@ export class Pathing {
 					const x = avoidCreep.pos.x + dx;
 					const y = avoidCreep.pos.y + dy;
 					// TODO: add swamp avoidance penalty as well
-					if (terrain.get(x,y) != TERRAIN_MASK_WALL && matrix.get(x,y) != 1) { // if wall and no tunnel
+					if (terrain.get(x, y) != TERRAIN_MASK_WALL && matrix.get(x, y) != 1) { // if wall and no tunnel
 						cost = matrix.get(x, y);
 						cost += 40 - (10 * Math.max(Math.abs(dx), Math.abs(dy)));
 						matrix.set(avoidCreep.pos.x + dx, avoidCreep.pos.y + dy, cost);
@@ -587,15 +587,15 @@ export class Pathing {
 	 */
 	static blockMyCreeps(matrix: CostMatrix, room: Room, creeps?: (Creep | Zerg)[]) {
 
-			const blockCreeps = creeps || room.creeps as (Creep | Zerg)[];
-			const blockPositions = _.map(blockCreeps,
-										 creep => Overmind.zerg[creep.name] ? Overmind.zerg[creep.name].nextPos
-																			: creep.pos);
+		const blockCreeps = creeps || room.creeps as (Creep | Zerg)[];
+		const blockPositions = _.map(blockCreeps,
+									 creep => Overmind.zerg[creep.name] ? Overmind.zerg[creep.name].nextPos
+																		: creep.pos);
 
-			_.forEach(blockPositions, pos => {
-				matrix.set(pos.x, pos.y, CREEP_COST);
-			});
-		}
+		_.forEach(blockPositions, pos => {
+			matrix.set(pos.x, pos.y, CREEP_COST);
+		});
+	}
 
 	/**
 	 * Sets hostile creep positions to impassible
@@ -647,7 +647,7 @@ export class Pathing {
 			}
 		}
 		_.forEach(room.walkableRamparts, rampart => {
-				matrix.set(rampart.pos.x, rampart.pos.y, 1);
+			matrix.set(rampart.pos.x, rampart.pos.y, 1);
 		});
 	}
 

@@ -41,7 +41,7 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 		const zerglingDamage = ATTACK_POWER * boostMultiplier * setup.getBodyPotential(ATTACK, this.colony);
 		const towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 0 : 0;
 		const worstDamageMultiplier = _.min(_.map(this.room.hostiles,
-												creep => CombatIntel.minimumDamageTakenMultiplier(creep)));
+												  creep => CombatIntel.minimumDamageTakenMultiplier(creep)));
 		return Math.ceil(.5 + 1.5 * healAmount / (worstDamageMultiplier * (zerglingDamage + towerDamage + 1)));
 	}
 

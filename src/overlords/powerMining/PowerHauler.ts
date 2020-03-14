@@ -1,11 +1,9 @@
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {DirectivePowerMine} from '../../directives/resource/powerMine';
-import {Energetics} from '../../logistics/Energetics';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
-import {calculateFormationStrength} from '../../utilities/creepUtils';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 
@@ -32,11 +30,11 @@ export class PowerHaulingOverlord extends Overlord {
 		this.haulers = this.zerg(Roles.transport);
 		this.totalCollected = this.totalCollected || 0;
 		// Spawn haulers to collect ALL the power at the same time.
-		const haulingPartsNeeded = this.directive.totalResources/CARRY_CAPACITY;
+		const haulingPartsNeeded = this.directive.totalResources / CARRY_CAPACITY;
 		// Calculate amount of hauling each hauler provides in a lifetime
 		const haulerCarryParts = Setups.transporters.default.getBodyPotential(CARRY, this.colony);
 		// Calculate number of haulers
-		this.numHaulers = Math.ceil(haulingPartsNeeded/haulerCarryParts);
+		this.numHaulers = Math.ceil(haulingPartsNeeded / haulerCarryParts);
 		// setup time to request the haulers
 		const route = Game.map.findRoute(this.directive.pos.roomName, this.colony.room.name);
 		const distance = route == -2 ? 50 : route.length * 50;
@@ -50,7 +48,7 @@ export class PowerHaulingOverlord extends Overlord {
 		if (_.sum(hauler.carry) == 0) {
 			if (this.directive.memory.state >= 4) {
 				// FIXME: Maybe ditch this and put it as a separate on-finishing method to reassign
-				hauler.say('💀 RIP 💀',true);
+				hauler.say('💀 RIP 💀', true);
 				log.warning(`${hauler.name} is committing suicide as directive is done!`);
 				this.numHaulers = 0;
 				hauler.retire();
@@ -84,7 +82,7 @@ export class PowerHaulingOverlord extends Overlord {
 						hauler.task = Tasks.pickup(drop);
 						return;
 					} else {
-						hauler.say('💀 RIP 💀',true);
+						hauler.say('💀 RIP 💀', true);
 						log.warning(`${hauler.name} is committing suicide!`);
 						hauler.retire();
 						return;

@@ -19,7 +19,7 @@ export class TaskReserve extends Task {
 
 	isValidTarget() {
 		const target = this.target;
-		return (target != null && (!target.reservation || target.reservation.ticksToEnd < 4999 ));
+		return (target != null && (!target.reservation || target.reservation.ticksToEnd < 4999));
 	}
 
 	work() {

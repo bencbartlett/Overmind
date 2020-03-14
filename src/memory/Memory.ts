@@ -204,14 +204,14 @@ export class Mem {
 			delete Memory.profiler;
 		}
 		_.defaults(Memory.settings, {
-			signature    : DEFAULT_OVERMIND_SIGNATURE,
-			operationMode: DEFAULT_OPERATION_MODE,
-			log          : {},
-			enableVisuals: true,
+			signature             : DEFAULT_OVERMIND_SIGNATURE,
+			operationMode         : DEFAULT_OPERATION_MODE,
+			log                   : {},
+			enableVisuals         : true,
 			resourceCollectionMode: 0,
-			allies: [MY_USERNAME],
-			powerCollection: {
-				enabled: false,
+			allies                : [MY_USERNAME],
+			powerCollection       : {
+				enabled : false,
 				maxRange: 5,
 				minPower: 5000,
 			},

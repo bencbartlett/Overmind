@@ -64,7 +64,7 @@ export class TransportOverlord extends Overlord {
 	init() {
 		const ROAD_COVERAGE_THRESHOLD = 0.75; // switch from 1:1 to 2:1 transporters above this coverage threshold
 		const setup = this.colony.roomPlanner.roadPlanner.roadCoverage < ROAD_COVERAGE_THRESHOLD
-					? Setups.transporters.early : Setups.transporters.default;
+					  ? Setups.transporters.early : Setups.transporters.default;
 
 		const transportPowerEach = setup.getBodyPotential(CARRY, this.colony);
 		const neededTransportPower = this.neededTransportPower();
@@ -81,7 +81,7 @@ export class TransportOverlord extends Overlord {
 		if (request) {
 			const choices = this.colony.logisticsNetwork.bufferChoices(transporter, request);
 			const bestChoice = _.last(_.sortBy(choices, choice => request.multiplier * choice.dQ
-																/ Math.max(choice.dt, 0.1)));
+																  / Math.max(choice.dt, 0.1)));
 			let task = null;
 			const amount = this.colony.logisticsNetwork.predictedRequestAmount(transporter, request);
 			// Target is requesting input
@@ -99,7 +99,7 @@ export class TransportOverlord extends Overlord {
 					// If we need to go to a buffer first to get more stuff
 					const buffer = deref(bestChoice.targetRef) as BufferTarget;
 					const withdrawAmount = Math.min(buffer.store[request.resourceType] || 0,
-												  transporter.carryCapacity - _.sum(transporter.carry), amount);
+													transporter.carryCapacity - _.sum(transporter.carry), amount);
 					task = task.fork(Tasks.withdraw(buffer, request.resourceType, withdrawAmount));
 					if (transporter.hasMineralsInCarry && request.resourceType == RESOURCE_ENERGY) {
 						task = task.fork(Tasks.transferAll(buffer));
@@ -192,7 +192,7 @@ export class TransportOverlord extends Overlord {
 		const tombstone = transporter.pos.lookFor(LOOK_TOMBSTONES)[0];
 		if (tombstone) {
 			const resourceType = _.last(_.sortBy(_.keys(tombstone.store),
-											   resourceType => (tombstone.store[<ResourceConstant>resourceType] || 0)));
+												 resourceType => (tombstone.store[<ResourceConstant>resourceType] || 0)));
 			transporter.withdraw(tombstone, <ResourceConstant>resourceType);
 		}
 	}

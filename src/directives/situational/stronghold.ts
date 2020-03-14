@@ -1,8 +1,7 @@
 import {log} from '../../console/log';
-import {CombatIntel} from '../../intel/CombatIntel';
 import {StrongholdOverlord} from '../../overlords/situational/stronghold';
 import {profile} from '../../profiler/decorator';
-import {derefCoords, getCacheExpiration, getPosFromString} from '../../utilities/utils';
+import {getCacheExpiration, getPosFromString} from '../../utilities/utils';
 import {Visualizer} from '../../visuals/Visualizer';
 import {Directive} from '../Directive';
 import {DirectiveHaul} from '../resource/haul';
@@ -82,7 +81,7 @@ export class DirectiveStronghold extends Directive {
 	get core(): StructureInvaderCore | undefined {
 		if (this.pos.room) {
 			return <StructureInvaderCore>this._core || this.pos.room.find(FIND_HOSTILE_STRUCTURES)
-				.filter(struct => struct.structureType == STRUCTURE_INVADER_CORE)[0];
+														   .filter(struct => struct.structureType == STRUCTURE_INVADER_CORE)[0];
 		}
 	}
 
@@ -93,7 +92,7 @@ export class DirectiveStronghold extends Directive {
 			const ruins = this.pos.room.ruins;
 			if (containers) {
 				returns = returns.concat(containers.filter(container =>
-					container.pos.getRangeTo(this.pos) < 5 && _.sum(container.store) > 0));
+															   container.pos.getRangeTo(this.pos) < 5 && _.sum(container.store) > 0));
 			}
 			if (ruins) {
 				returns = returns.concat(ruins.filter(ruin => ruin.pos.getRangeTo(this.pos) <= 3 && _.sum(ruin.store) > 0));
@@ -155,7 +154,7 @@ export class DirectiveStronghold extends Directive {
 		if (lootSpots && lootSpots.length > 0) {
 			lootSpots.forEach(spot => {
 				const isRamparted = spot.pos.lookFor(LOOK_STRUCTURES)
-					.filter(struct => struct.structureType == STRUCTURE_RAMPART).length > 0;
+										.filter(struct => struct.structureType == STRUCTURE_RAMPART).length > 0;
 				if (isRamparted) {
 					DirectiveModularDismantle.createIfNotPresent(spot.pos, 'pos');
 				} else {
@@ -165,7 +164,7 @@ export class DirectiveStronghold extends Directive {
 
 			const openingToCore = this.pos.getPositionAtDirection(TOP);
 			const isRamparted = openingToCore.lookFor(LOOK_STRUCTURES)
-				.filter(struct => struct.structureType == STRUCTURE_RAMPART).length > 0;
+											 .filter(struct => struct.structureType == STRUCTURE_RAMPART).length > 0;
 			if (isRamparted) {
 				DirectiveModularDismantle.createIfNotPresent(openingToCore, 'pos');
 			}
@@ -200,7 +199,7 @@ export class DirectiveStronghold extends Directive {
 
 		const bestTarget = this.pos.getPositionAtDirection(TOP_RIGHT);
 		const nukes = this.core.room.find(FIND_NUKES);
-		const nukesPrepped = DirectiveNukeTarget.isPresent(this.core.pos,'room');
+		const nukesPrepped = DirectiveNukeTarget.isPresent(this.core.pos, 'room');
 		if (nukes.length < 2 && !nukesPrepped) {
 			log.alert(`Nuking Stronghold! ${this.print}`);
 			const res1 = DirectiveNukeTarget.create(bestTarget, {memory: {maxLinearRange: 10, pathNotRequired: true}});
@@ -209,7 +208,7 @@ export class DirectiveStronghold extends Directive {
 		} else {
 			const strongholdDefenders = this.core.pos.findInRange(FIND_HOSTILE_CREEPS, 4);
 			const reinforcers = strongholdDefenders.filter(creep =>
-				creep.body.find(bodyPart => bodyPart.type == WORK) != undefined);
+															   creep.body.find(bodyPart => bodyPart.type == WORK) != undefined);
 			if (reinforcers.length >= nukes.length - 1) {
 				log.alert(`Launching additional nuke against Stronghold with reinforcers ${reinforcers.length}! ${this.print}`);
 				return DirectiveNukeTarget.create(bestTarget, {memory: {maxLinearRange: 11, pathNotRequired: true}});

@@ -1,4 +1,3 @@
-import {log} from '../../../console/log';
 import {profile} from '../../../profiler/decorator';
 import {powerId} from './generateOps';
 

@@ -117,7 +117,7 @@ export class EvolutionChamber extends HiveCluster {
 		this.productLabs = _.difference(this.labs, this.reagentLabs);
 		// Boosting labs are product labs sorted by distance to terminal
 		const unrestrictedBoostingLabs = _.sortBy(_.difference(this.productLabs, restrictedLabs),
-												lab => Pathing.distance(this.terminal.pos, lab.pos));
+												  lab => Pathing.distance(this.terminal.pos, lab.pos));
 		this.boostingLabs = [...restrictedLabs, ...unrestrictedBoostingLabs];
 		// This keeps track of reservations for boosting
 		this.labReservations = {};
@@ -451,7 +451,7 @@ export class EvolutionChamber extends HiveCluster {
 		let {x, y} = coord;
 		const height = 2;
 		const titleCoords = Visualizer.section(`${this.colony.name} Evolution Chamber`,
-											 {x, y, roomName: this.room.name}, 9.5, height + .1);
+											   {x, y, roomName: this.room.name}, 9.5, height + .1);
 		const boxX = titleCoords.x;
 		y = titleCoords.y + 0.25;
 
@@ -484,7 +484,7 @@ export class EvolutionChamber extends HiveCluster {
 		y += 1;
 		if (this.memory.status == LabStatus.Synthesizing && activeReaction) {
 			const amountDone = _.sum(_.map(this.productLabs,
-										 lab => lab.mineralType == activeReaction!.mineralType ? lab.mineralAmount : 0));
+										   lab => lab.mineralType == activeReaction!.mineralType ? lab.mineralAmount : 0));
 			Visualizer.text(activeReaction.mineralType, {x: boxX, y: y, roomName: this.room.name});
 			Visualizer.barGraph([amountDone, activeReaction.amount],
 								{x: boxX + 4, y: y, roomName: this.room.name}, 5);
