@@ -23,7 +23,7 @@ export let OverlordPriority = {
 		healPoint       : 301,
 		siege           : 302,
 		controllerAttack: 399,
-		roomPoisoner	: 399,
+		roomPoisoner    : 399,
 	},
 
 	colonization: { 			// Colonizing new rooms
@@ -46,7 +46,7 @@ export let OverlordPriority = {
 	},
 
 	outpostOffense: {
-		harass		  : 560,
+		harass: 560,
 	},
 
 	upgrading: {				// Spawning upgraders
@@ -78,13 +78,13 @@ export let OverlordPriority = {
 	},
 
 	powerMine: {
-		cool : 1050,
-		drill : 1051,
+		cool         : 1050,
+		drill        : 1051,
 		roomIncrement: 5,
 	},
 
 	tasks: {				// Non-urgent tasks, such as collection from a deserted storage
-		haul: 1100,
+		haul     : 1100,
 		dismantle: 1101
 	},
 

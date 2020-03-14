@@ -69,8 +69,9 @@ export class DirectivePowerMine extends Directive {
 
 	get powerBank(): StructurePowerBank | undefined {
 		if (this.pos.isVisible) {
-			this._powerBank = this._powerBank || !!this.flag.room ? this.flag.pos
-				.lookForStructure(STRUCTURE_POWER_BANK) as StructurePowerBank : undefined;
+			this._powerBank = this._powerBank || !!this.flag.room
+							  ? this.flag.pos.lookForStructure(STRUCTURE_POWER_BANK) as StructurePowerBank
+							  : undefined;
 			return this._powerBank;
 		}
 	}
@@ -99,7 +100,7 @@ export class DirectivePowerMine extends Directive {
 			const healStrength: number = tally.heal * HEAL_POWER || 0;
 			const attackStrength: number = tally.attack * ATTACK_POWER || 0;
 			// PB have 50% hitback, avg damage is attack strength if its enough healing, otherwise healing
-			const avgDamagePerTick = Math.min(attackStrength, healStrength*2);
+			const avgDamagePerTick = Math.min(attackStrength, healStrength * 2);
 			return this.powerBank.hits / avgDamagePerTick;
 		}
 	}
@@ -120,7 +121,7 @@ export class DirectivePowerMine extends Directive {
 				this.memory.state = 1;
 			}
 		} else if ((currentState == 0 || currentState == 1) && this.room && (!this.powerBank
-			|| this.powerBank.hits < 500000)) {
+																			 || this.powerBank.hits < 500000)) {
 			Game.notify('Activating spawning haulers for power mining in room ' + this.pos.roomName);
 			log.info('Activating spawning haulers for power mining in room ' + this.pos.roomName);
 			this.memory.state = 2;
@@ -132,19 +133,23 @@ export class DirectivePowerMine extends Directive {
 			delete this.overlords.powerMine;
 			this._powerBank = undefined; // This might be fluff
 		} else if ((currentState == 0 || currentState == 1 || currentState == 2) && this.room
-			&& this.pos.isVisible && !this.powerBank) {
+				   && this.pos.isVisible && !this.powerBank) {
 			if (!this.hasDrops && this.room.ruins.length == 0) {
 				// TODO this had an error where it triggered incorrectly
-				Game.notify(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.print} DELETING Directive at time ${Game.time}`);
-				log.error(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.room} DELETING Directive at time: ${Game.time}`);
+				Game.notify(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.print} `+
+							`DELETING Directive at time ${Game.time}`);
+				log.error(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.room} `+
+						  `DELETING Directive at time: ${Game.time}`);
 				this.remove();
 			} else {
 				// If somehow there is no bank but there is drops where bank was
-				Game.notify(`Somehow the power bank died early in ${this.room} at state ${currentState}, setting state to 3 ${Game.time}`);
+				Game.notify(`Somehow the power bank died early in ${this.room} at state ${currentState}, `+
+							`setting state to 3 ${Game.time}`);
 				this.memory.state = 3;
 			}
 		} else if (currentState == 3 && this.room && this.pos.isVisible && !this.hasDrops
-			&& this.room.ruins.filter(ruin => !!ruin.store[RESOURCE_POWER] && ruin.store[RESOURCE_POWER]! > 0).length == 0) {
+				   && this.room.ruins.filter(ruin => !!ruin.store[RESOURCE_POWER]
+				   && ruin.store[RESOURCE_POWER]! > 0).length == 0) {
 			Game.notify(`Hauler pickup is complete for ${this.print} in ${this.room.print} at time ${Game.time}`);
 			// Hauler pickup is now complete
 			log.alert(`Hauler pickup is complete for ${this.print} in ${this.room.print} at time ${Game.time}`);
@@ -166,7 +171,7 @@ export class DirectivePowerMine extends Directive {
 		let alert;
 		if (this.pos.room && !!this.powerBank) {
 			alert = `PM ${this.memory.state} ${this.totalResources} P${Math.floor(
-				100*this.powerBank.hits/this.powerBank.hitsMax)}% @ ${this.powerBank.ticksToDecay}TTL`;
+				100 * this.powerBank.hits / this.powerBank.hitsMax)}% @ ${this.powerBank.ticksToDecay}TTL`;
 
 		} else {
 			alert = `PowerMine ${this.memory.state} ${this.totalResources}`;

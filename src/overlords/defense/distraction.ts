@@ -1,11 +1,7 @@
-import {CreepSetup} from '../../creepSetups/CreepSetup';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
-import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 import {Directive} from '../../directives/Directive';
-import {CombatIntel} from '../../intel/CombatIntel';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {boostResources} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
 
@@ -45,7 +41,7 @@ export class DistractionOverlord extends CombatOverlord {
 
 	static taunt(distraction: CombatZerg, name?: string) {
 		const taunts: string[] = ['Heylisten!', 'Pssssst', 'So close', '🎣', 'Try harder', 'Get good;)', 'Base ⬆️', '🔜',
-			'⚠️Swamp⚠️', 'Follow me!', 'Catch Me!', `Hi ${name || ''}`, '🍑🍑🍑', '🏎️ VROOM'];
+								  '⚠️Swamp⚠️', 'Follow me!', 'Catch Me!', `Hi ${name || ''}`, '🍑🍑🍑', '🏎️ VROOM'];
 		distraction.sayRandom(taunts, true);
 	}
 

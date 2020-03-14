@@ -102,7 +102,7 @@ export class CreepSetup {
 		let energyCapacity = colony.room.energyCapacityAvailable;
 		if (colony.spawnGroup) {
 			const colonies = _.compact(_.map(colony.spawnGroup.memory.colonies,
-										   name => Overmind.colonies[name])) as Colony[];
+											 name => Overmind.colonies[name])) as Colony[];
 			energyCapacity = _.max(_.map(colonies, colony => colony.room.energyCapacityAvailable));
 		}
 		const body = this.generateBody(energyCapacity);

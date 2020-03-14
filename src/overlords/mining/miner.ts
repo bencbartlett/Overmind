@@ -94,7 +94,7 @@ export class MiningOverlord extends Overlord {
 		// this.minersNeeded = this.isDisabled ? 0 : Math.min(Math.ceil(this.miningPowerNeeded / miningPowerEach),
 		// 							 this.pos.availableNeighbors(true).length);
 		this.minersNeeded = Math.min(Math.ceil(this.miningPowerNeeded / miningPowerEach),
-										 this.pos.availableNeighbors(true).length);
+									 this.pos.availableNeighbors(true).length);
 		this.minersNeeded = this.isDisabled ? 0 : this.minersNeeded;
 		// Allow drop mining at low levels
 		this.allowDropMining = this.colony.level < MiningOverlord.settings.dropMineUntilRCL;
@@ -305,7 +305,7 @@ export class MiningOverlord extends Overlord {
 			// if you have multiple miners and the source is visible
 			const targetPos = this.harvestPos || this.source.pos;
 			const minersNearSource = _.filter(this.miners,
-											miner => miner.pos.getRangeTo(targetPos) <= SUICIDE_CHECK_FREQUENCY);
+											  miner => miner.pos.getRangeTo(targetPos) <= SUICIDE_CHECK_FREQUENCY);
 			if (minersNearSource.length > this.minersNeeded) {
 				// if you have more miners by the source than you need
 				const oldestMiner = minBy(minersNearSource, miner => miner.ticksToLive || 9999);
@@ -394,8 +394,8 @@ export class MiningOverlord extends Overlord {
 
 		// Link mining
 		if (this.link) {
-		 	if (this.source && this.source.energy > 0) {
-		 		miner.harvest(this.source!);
+			if (this.source && this.source.energy > 0) {
+				miner.harvest(this.source!);
 			} else {
 				miner.harvest(this.secondSource!);
 			}

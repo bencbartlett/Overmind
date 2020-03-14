@@ -132,8 +132,8 @@ export class SporeCrawler extends HiveCluster {
 			const myDefenders = _.filter(this.room.creeps, creep => creep.getActiveBodyparts(ATTACK) > 1);
 			const myRangedDefenders = _.filter(this.room.creeps, creep => creep.getActiveBodyparts(RANGED_ATTACK) > 1);
 			const myCreepDamage = ATTACK_POWER * _.sum(myDefenders, creep => CombatIntel.getAttackPotential(creep)) +
-								RANGED_ATTACK_POWER * _.sum(myRangedDefenders,
-															creep => CombatIntel.getRangedAttackPotential(creep));
+								  RANGED_ATTACK_POWER * _.sum(myRangedDefenders,
+															  creep => CombatIntel.getRangedAttackPotential(creep));
 			const HEAL_FUDGE_FACTOR = 1.0;
 			const avgHealing = HEAL_FUDGE_FACTOR * CombatIntel.avgHostileHealingTo(this.room.hostiles);
 			let possibleTargets = _.filter(this.room.hostiles, hostile => {
@@ -165,12 +165,12 @@ export class SporeCrawler extends HiveCluster {
 					return true;
 				}
 			});
-			if (Game.time % 21 == 0 && _.filter(possibleTargets, target => target.hits < target.hitsMax /2).length == 0) {
+			if (Game.time % 21 == 0 && _.filter(possibleTargets, target => target.hits < target.hitsMax / 2).length == 0) {
 				// console.log('Scattershotting!');
 				return this.scatterShot(possibleTargets);
 			}
 			possibleTargets = possibleTargets.filter(enemy => enemy.hits < enemy.hitsMax / 2
-				|| enemy.pos.findInRange(FIND_MY_CREEPS, 3).length > 0);
+															  || enemy.pos.findInRange(FIND_MY_CREEPS, 3).length > 0);
 			const target = CombatTargeting.findBestCreepTargetForTowers(this.room, possibleTargets);
 			if (target) {
 				return this.attack(target);
@@ -178,7 +178,7 @@ export class SporeCrawler extends HiveCluster {
 		}
 
 		const closestDamagedAlly = this.pos.findClosestByRange(_.filter(this.room.creeps,
-																	  creep => creep.hits < creep.hitsMax));
+																		creep => creep.hits < creep.hitsMax));
 		if (closestDamagedAlly) {
 			for (const tower of this.towers) {
 				tower.heal(closestDamagedAlly);
@@ -188,7 +188,7 @@ export class SporeCrawler extends HiveCluster {
 
 		// Towers build nuke response ramparts
 		const nearbyNukeRamparts = _.filter(this.colony.overlords.work.nukeDefenseRamparts,
-										  rampart => this.pos.getRangeTo(rampart) <= TOWER_OPTIMAL_RANGE);
+											rampart => this.pos.getRangeTo(rampart) <= TOWER_OPTIMAL_RANGE);
 		if (nearbyNukeRamparts.length > 0 && this.colony.terminal
 			&& this.colony.terminalState != TERMINAL_STATE_REBUILD) {
 			const nukes = this.colony.room.find(FIND_NUKES);

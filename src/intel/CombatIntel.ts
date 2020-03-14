@@ -117,11 +117,11 @@ export class CombatIntel {
 				// const heal = CombatIntel.getHealPotential(creep);
 				if (meleeAttack > 0) {
 					creep.pos.neighbors.forEach(pos =>
-						matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + meleeAttack * ATTACK_POWER / 100));
+													matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + meleeAttack * ATTACK_POWER / 100));
 				}
 				if (rangedAttack > 0) {
 					creep.pos.getPositionsInRange(3).forEach(pos =>
-						matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + rangedAttack * RANGED_ATTACK_POWER / 100));
+																 matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + rangedAttack * RANGED_ATTACK_POWER / 100));
 				}
 			});
 
@@ -150,11 +150,11 @@ export class CombatIntel {
 				// const heal = CombatIntel.getHealPotential(creep);
 				if (meleeAttack > 0) {
 					creep.pos.neighbors.forEach(pos =>
-						matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + meleeAttack * ATTACK_POWER / 100));
+													matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + meleeAttack * ATTACK_POWER / 100));
 				}
 				if (rangedAttack > 0) {
 					creep.pos.getPositionsInRange(3).forEach(pos =>
-						matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + rangedAttack * RANGED_ATTACK_POWER / 100));
+																 matrix.set(pos.x, pos.y, matrix.get(pos.x, pos.y) + rangedAttack * RANGED_ATTACK_POWER / 100));
 				}
 			});
 
@@ -287,7 +287,7 @@ export class CombatIntel {
 		}
 		const path = ret.path.reverse();
 		const acceptablePositions = _.filter(path, pos => pos.roomName == simpleFallback.roomName &&
-														pos.rangeToEdge > 1);
+														  pos.rangeToEdge > 1);
 		const swarmSize = Math.max(clearance.width, clearance.height);
 		const posIndex = (swarmSize + 1) * swarmIndex;
 		return acceptablePositions[posIndex] || acceptablePositions[0] || simpleFallback;
@@ -624,7 +624,7 @@ export class CombatIntel {
 			const neighbors = _.filter(creep.room.hostiles, hostile => hostile.pos.isNearTo(creep));
 			const neighborHealing = _.sum(neighbors, neighbor => this.getHealAmount(neighbor));
 			const rangedHealers = _.filter(creep.room.hostiles, hostile => hostile.pos.getRangeTo(creep) <= 3 &&
-																		 !neighbors.includes(hostile));
+																		   !neighbors.includes(hostile));
 			const rangedHealing = _.sum(rangedHealers, healer => this.getRangedHealAmount(healer));
 			return selfHealing + neighborHealing + rangedHealing;
 		});
@@ -647,7 +647,7 @@ export class CombatIntel {
 			const neighbors = _.filter(creep.room.creeps, hostile => hostile.pos.isNearTo(creep));
 			const neighborHealing = _.sum(neighbors, neighbor => this.getHealAmount(neighbor));
 			const rangedHealers = _.filter(creep.room.creeps, hostile => hostile.pos.getRangeTo(creep) <= 3 &&
-																	   !neighbors.includes(hostile));
+																		 !neighbors.includes(hostile));
 			const rangedHealing = _.sum(rangedHealers, healer => this.getHealAmount(healer));
 			return selfHealing + neighborHealing + rangedHealing;
 		});

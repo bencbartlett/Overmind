@@ -5,28 +5,28 @@ import {CreepSetup} from './CreepSetup';
  */
 export const Roles = {
 	// Civilian roles
-	drone     : 'drone',
-	filler    : 'filler',
-	claim     : 'infestor',
-	pioneer   : 'pioneer',
-	manager   : 'manager',
-	queen     : 'queen',
-	scout     : 'scout',
-	transport : 'transport',
-	worker    : 'worker',
-	upgrader  : 'upgrader',
-	praiser   : 'praiser',
+	drone           : 'drone',
+	filler          : 'filler',
+	claim           : 'infestor',
+	pioneer         : 'pioneer',
+	manager         : 'manager',
+	queen           : 'queen',
+	scout           : 'scout',
+	transport       : 'transport',
+	worker          : 'worker',
+	upgrader        : 'upgrader',
+	praiser         : 'praiser',
 	// Combat roles
-	guardMelee: 'broodling',
+	guardMelee      : 'broodling',
 	// guardRanged: 'mutalisk',
-	melee     : 'zergling',
-	ranged    : 'hydralisk',
-	healer    : 'transfuser',
-	bunkerGuard : 'bunkerGuard',
-	dismantler: 'lurker',
-	drill : 'drill',
-	coolant : 'coolant',
-	roomPoisoner: 'salter',
+	melee           : 'zergling',
+	ranged          : 'hydralisk',
+	healer          : 'transfuser',
+	bunkerGuard     : 'bunkerGuard',
+	dismantler      : 'lurker',
+	drill           : 'drill',
+	coolant         : 'coolant',
+	roomPoisoner    : 'salter',
 	strongholdKiller: 'strongman',
 };
 
@@ -39,7 +39,7 @@ export const Setups = {
 		extractor: new CreepSetup(Roles.drone, {
 			pattern  : [WORK, WORK, MOVE],
 			sizeLimit: Infinity,
-			prefix: [CARRY, CARRY]
+			prefix   : [CARRY, CARRY]
 		}),
 
 		miners: {
@@ -285,7 +285,7 @@ export const CombatSetups = {
 			sizeLimit: Infinity,
 		}),
 
-		distraction:  new CreepSetup(Roles.ranged, {
+		distraction: new CreepSetup(Roles.ranged, {
 			pattern  : [MOVE, MOVE, MOVE, MOVE, RANGED_ATTACK, MOVE],
 			sizeLimit: 1,
 		}),
@@ -303,7 +303,7 @@ export const CombatSetups = {
 
 		boosted_T3_old: new CreepSetup(Roles.ranged, {
 			pattern  : [TOUGH, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-				MOVE, MOVE, HEAL, HEAL],
+						MOVE, MOVE, HEAL, HEAL],
 			sizeLimit: Infinity,
 		}),
 
@@ -392,7 +392,7 @@ export const CombatSetups = {
 		boosted_T3: new CreepSetup(Roles.bunkerGuard, {
 			// 22 ATTACK, 3 MOVE times 2
 			pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK,
-				ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE],
+						ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE],
 			sizeLimit: Infinity,
 		}),
 
@@ -442,7 +442,7 @@ export const CombatSetups = {
 			pattern  : [HEAL, MOVE],
 			sizeLimit: Infinity,
 		}),
-		small: new CreepSetup(Roles.coolant, {
+		small  : new CreepSetup(Roles.coolant, {
 			pattern  : [HEAL, MOVE],
 			sizeLimit: 16,
 		}),
@@ -451,51 +451,51 @@ export const CombatSetups = {
 	strongholdKiller: {
 		// SK deal 200 RA, gotta avoid, levels
 
-		1:  new CreepSetup(Roles.strongholdKiller, {
+		1: new CreepSetup(Roles.strongholdKiller, {
 			// 180 damage after tough so 2 tough, 4 healing, 34 RA
 			pattern  : [TOUGH, TOUGH,
-				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-				HEAL, HEAL, HEAL, HEAL,
-				MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
+						RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+						RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+						RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+						RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+						RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+						HEAL, HEAL, HEAL, HEAL,
+						MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
 			sizeLimit: 1,
 		}),
 
-		2:  new CreepSetup(Roles.strongholdKiller, {
+		2: new CreepSetup(Roles.strongholdKiller, {
 			// 360 damage after tough so 4 tough, 8 healing, 28 RA
 			pattern  : [TOUGH, TOUGH, TOUGH, TOUGH,
-				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-				HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL,
-				MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
+						RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+						RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+						RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+						RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+						HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL,
+						MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
 			sizeLimit: 1,
 		}),
 
 		3: new CreepSetup(Roles.strongholdKiller, {
 			// 540 damage after tough so 6 tough, 12 healing, 22 RA
 			pattern  : [TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH,
-				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-				RANGED_ATTACK,
-				HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL,
-				MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
+						RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+						RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+						RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+						RANGED_ATTACK,
+						HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL,
+						MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
 			sizeLimit: 1,
 		}),
 
 		4: new CreepSetup(Roles.strongholdKiller, {
 			// 720 damage after tough so 8 tough, 15 healing, 17RA - 15*250+17*150+50*11 = 6.8k
 			pattern  : [TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH,
-				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-				RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-				HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL,
-				MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
+						RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+						RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+						RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+						HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL,
+						MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
 			sizeLimit: 1,
 		}),
 	}

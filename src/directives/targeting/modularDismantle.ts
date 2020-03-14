@@ -14,6 +14,7 @@ interface DirectiveModularDismantleMemory extends FlagMemory {
 	additionalTargets?: StructureConstant[];
 	boost?: boolean;
 }
+
 /**
  * Register a target to be dismantled by specific dismantlers
  */
@@ -92,7 +93,7 @@ export class DirectiveModularDismantle extends Directive {
 	init(): void {
 		let hits = '???';
 		const target = this.getTarget();
-		hits = target ? (target.hits/1000).toString()+'K' : hits;
+		hits = target ? (target.hits / 1000).toString() + 'K' : hits;
 		this.alert(`Dismantling: ${hits}`);
 	}
 

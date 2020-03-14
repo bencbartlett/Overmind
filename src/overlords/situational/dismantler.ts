@@ -1,5 +1,5 @@
 import {log} from '../../console/log';
-import {CombatSetups, Roles, Setups} from '../../creepSetups/setups';
+import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveModularDismantle} from '../../directives/targeting/modularDismantle';
 import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -21,13 +21,13 @@ export class DismantleOverlord extends Overlord {
 	requiredRCL: 4;
 
 	constructor(directive: DirectiveModularDismantle, target?: Structure, priority
-		= OverlordPriority.tasks.dismantle, boosted  = false) {
+		= OverlordPriority.tasks.dismantle, boosted = false) {
 		super(directive, 'dismantle', priority);
 		this.directive = directive;
 		// this.target = target || Game.getObjectById(this.directive.memory.targetId) || undefined;
 		this.dismantlers = this.zerg(Roles.dismantler, {
 			boostWishlist: boosted ? [boostResources.tough[3], boostResources.dismantle[3],
-				boostResources.move[3]] : undefined
+									  boostResources.move[3]] : undefined
 		});
 	}
 
@@ -43,14 +43,14 @@ export class DismantleOverlord extends Overlord {
 			setup = CombatSetups.dismantlers.default;
 		}
 		const dismantlingParts = setup.getBodyPotential(!!this.directive.memory.attackInsteadOfDismantle
-			? ATTACK : WORK, this.colony);
+														? ATTACK : WORK, this.colony);
 		const dismantlingPower = dismantlingParts * (!!this.directive.memory.attackInsteadOfDismantle
-			? ATTACK_POWER : DISMANTLE_POWER);
+													 ? ATTACK_POWER : DISMANTLE_POWER);
 		// Calculate total needed amount of dismantling power as (resource amount * trip distance)
 		const tripDistance = Pathing.distance((this.colony).pos, this.directive.pos);
-		const dismantleLifetimePower = (CREEP_LIFE_TIME-tripDistance)*dismantlingPower;
+		const dismantleLifetimePower = (CREEP_LIFE_TIME - tripDistance) * dismantlingPower;
 		// Calculate number of dismantlers
-		if (this.directive.room && this.target && ! this.directive.memory.numberSpots) {
+		if (this.directive.room && this.target && !this.directive.memory.numberSpots) {
 			this.directive.getDismantleSpots(this.target.pos);
 		}
 		const nearbySpots = this.directive.memory.numberSpots != undefined ? this.directive.memory.numberSpots : 1;
@@ -77,7 +77,7 @@ export class DismantleOverlord extends Overlord {
 				}
 			} else {
 				const res = !!this.directive.memory.attackInsteadOfDismantle ? dismantler.attack(this.target)
-					: dismantler.dismantle(this.target);
+																			 : dismantler.dismantle(this.target);
 				if (res == ERR_NOT_IN_RANGE) {
 					const ret = dismantler.goTo(this.target, {});
 					// TODO this is shit ⬇

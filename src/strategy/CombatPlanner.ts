@@ -184,7 +184,7 @@ export class CombatPlanner {
 
 				const decayedAttack = exponentialMovingAverage(threat.potentials.attack, attack, THREAT_DECAY_TIMESCALE);
 				const decayedRangedAttack = exponentialMovingAverage(threat.potentials.rangedAttack,
-																   rangedAttack, THREAT_DECAY_TIMESCALE);
+																	 rangedAttack, THREAT_DECAY_TIMESCALE);
 				const decayedHeal = exponentialMovingAverage(threat.potentials.heal, heal, THREAT_DECAY_TIMESCALE);
 
 				// TODO: adjust decay for creeps known to have moved to next visible room
@@ -297,9 +297,9 @@ export class CombatPlanner {
 		const owner = room.owner;
 		const level = room.controller ? room.controller.level : 0;
 		const towerDamageSamplePositions = _.map(_.range(20),
-											   i => new RoomPosition(_.random(1, 48), _.random(1, 48), room.name));
+												 i => new RoomPosition(_.random(1, 48), _.random(1, 48), room.name));
 		const maxTowerDamage = _.max(_.map(towerDamageSamplePositions,
-										 pos => CombatIntel.towerDamageAtPos(pos, true)));
+										   pos => CombatIntel.towerDamageAtPos(pos, true)));
 		const minBarrierHits = room.barriers.length > 0 ? _.min(_.map(room.barriers, b => b.hits)) : 0;
 		const avgBarrierHits = room.barriers.length > 0 ? _.sum(room.barriers, b => b.hits) / room.barriers.length : 0;
 

@@ -50,7 +50,7 @@ interface Memory {
 	playerCreepTracker: { // TODO revisit for a better longterm solution
 		[playerName: string]: CreepTracker
 	};
-	zoneRooms: { [roomName: string]: { [type: string]: number} };
+	zoneRooms: { [roomName: string]: { [type: string]: number } };
 	reinforcementLearning?: {
 		enabled?: boolean;
 		verbosity?: number;
@@ -151,9 +151,9 @@ interface PathingMemory {
 
 interface CreepTracker {
 	creeps: { [name: string]: number }; 	// first tick seen
-	types: { [type: string]: number}; 		// amount seen
-	parts: { [bodyPart: string]: number}; 	// quantity
-	boosts: { [boostType: string]: number};	// how many boosts are spent
+	types: { [type: string]: number }; 		// amount seen
+	parts: { [bodyPart: string]: number }; 	// quantity
+	boosts: { [boostType: string]: number };	// how many boosts are spent
 }
 
 interface FlagMemory {
@@ -183,6 +183,7 @@ declare const enum _MEM {
 	COLONY     = 'C',
 	OVERLORD   = 'O',
 	DISTANCE   = 'D',
+	STATS      = 'S',
 }
 
 declare const enum _RM {

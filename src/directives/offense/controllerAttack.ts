@@ -30,7 +30,7 @@ export class DirectiveControllerAttack extends Directive {
 
 	run(): void {
 		if (this.room && this.room.controller && (this.room.controller.level == 0 && (!this.room.controller.reservation
-			|| this.room.controller.reservation.ticksToEnd < 5))) {
+																					  || this.room.controller.reservation.ticksToEnd < 5))) {
 			log.notify(`Removing ${this.name} since controller has reached level 0.`);
 			this.remove();
 		}

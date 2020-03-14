@@ -325,7 +325,7 @@ export class CommandCenterOverlord extends Overlord {
 	private preventTerminalFlooding(manager: Zerg): boolean {
 		// Prevent terminal flooding
 		if (this.room && this.room.terminal && this.room.storage && _.sum(this.room.terminal.store)
-			> this.room.terminal.store.getCapacity()*CommandCenterOverlord.MAX_TERMINAL_FILLED_PERCENTAGE) {
+			> this.room.terminal.store.getCapacity() * CommandCenterOverlord.MAX_TERMINAL_FILLED_PERCENTAGE) {
 			let max = 0;
 			let resType: ResourceConstant = RESOURCE_ENERGY;
 			for (const res in this.room.terminal.store) {

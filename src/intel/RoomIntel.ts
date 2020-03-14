@@ -1,22 +1,21 @@
 // Room intel - provides information related to room structure and occupation
 
-import { Resources } from 'typedoc/dist/lib/output/utils/resources';
-import { getAllColonies } from '../Colony';
-import { log } from '../console/log';
-import { bodyCost } from '../creepSetups/CreepSetup';
-import { isCreep } from '../declarations/typeGuards';
+import {getAllColonies} from '../Colony';
+import {log} from '../console/log';
+import {bodyCost} from '../creepSetups/CreepSetup';
+import {isCreep} from '../declarations/typeGuards';
 import {DirectiveOutpostDefense} from '../directives/defense/OutpostDefense';
 import {DirectiveControllerAttack} from '../directives/offense/controllerAttack';
 import {DirectivePairDestroy} from '../directives/offense/pairDestroy';
-import { DirectivePowerMine } from '../directives/resource/powerMine';
-import { DirectiveStronghold } from '../directives/situational/stronghold';
-import { Segmenter } from '../memory/Segmenter';
-import { profile } from '../profiler/decorator';
-import { ExpansionEvaluator } from '../strategy/ExpansionEvaluator';
-import { Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER } from '../utilities/Cartographer';
-import { getCacheExpiration, irregularExponentialMovingAverage, maxBy } from '../utilities/utils';
-import { Zerg } from '../zerg/Zerg';
-import { MY_USERNAME } from '../~settings';
+import {DirectivePowerMine} from '../directives/resource/powerMine';
+import {DirectiveStronghold} from '../directives/situational/stronghold';
+import {Segmenter} from '../memory/Segmenter';
+import {profile} from '../profiler/decorator';
+import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
+import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
+import {getCacheExpiration, irregularExponentialMovingAverage, maxBy} from '../utilities/utils';
+import {Zerg} from '../zerg/Zerg';
+import {MY_USERNAME} from '../~settings';
 
 
 const RECACHE_TIME = 2500;
@@ -372,7 +371,7 @@ export class RoomIntel {
 		const powerSetting = Memory.settings.powerCollection;
 		if (powerSetting.enabled && Cartographer.roomType(room.name) == ROOMTYPE_ALLEY) {
 			const powerBank = _.first(room.find(FIND_STRUCTURES)
-				.filter(struct => struct.structureType == STRUCTURE_POWER_BANK)) as StructurePowerBank;
+										  .filter(struct => struct.structureType == STRUCTURE_POWER_BANK)) as StructurePowerBank;
 			if (powerBank != undefined && powerBank.ticksToDecay > 4000 && powerBank.power >= powerSetting.minPower) {
 				// Game.notify(`Looking for power banks in ${room}  found
 				// ${powerBank} with power ${powerBank.power} and ${powerBank.ticksToDecay} TTL.`);

@@ -35,10 +35,10 @@ interface TraderStats {
 
 const TraderMemoryDefaults: TraderMemory = {
 	cache        : {
-		sell: {},
-		buy : {},
+		sell     : {},
+		buy      : {},
 		resources: {},
-		tick: 0,
+		tick     : 0,
 	},
 	equalizeIndex: 0
 };
@@ -52,16 +52,16 @@ const TraderStatsDefaults: TraderStats = {
 // Maximum prices I'm willing to pay to buy various resources - based on shard2 market data in June 2018
 // (might not always be up to date)
 export const maxMarketPrices: { [resourceType: string]: number } = {
-	default             : 5.0,
-	[RESOURCE_HYDROGEN] : 0.3,
-	[RESOURCE_OXYGEN]   : 0.25,
-	[RESOURCE_UTRIUM]   : 0.3,
-	[RESOURCE_LEMERGIUM]: 0.25,
-	[RESOURCE_KEANIUM]  : 0.25,
-	[RESOURCE_ZYNTHIUM] : 0.25,
-	[RESOURCE_CATALYST] : 0.5,
-	[RESOURCE_ENERGY]   : 0.05,
-	[RESOURCE_CATALYZED_GHODIUM_ACID]	: 1.2,
+	default                          : 5.0,
+	[RESOURCE_HYDROGEN]              : 0.3,
+	[RESOURCE_OXYGEN]                : 0.25,
+	[RESOURCE_UTRIUM]                : 0.3,
+	[RESOURCE_LEMERGIUM]             : 0.25,
+	[RESOURCE_KEANIUM]               : 0.25,
+	[RESOURCE_ZYNTHIUM]              : 0.25,
+	[RESOURCE_CATALYST]              : 0.5,
+	[RESOURCE_ENERGY]                : 0.05,
+	[RESOURCE_CATALYZED_GHODIUM_ACID]: 1.2,
 };
 
 export const MAX_ENERGY_SELL_ORDERS = 5;
@@ -159,7 +159,7 @@ export class TraderJoe implements ITradeNetwork {
 			}
 			this.memory.cache.resources[history.resourceType] = {
 				avgPrice: history.avgPrice,
-				stdev: history.stddevPrice
+				stdev   : history.stddevPrice
 			};
 			if (this.memory.cache.buy[history.resourceType]) {
 				log.info(`Generating market price: ${history.resourceType} with avgPrice ${history.avgPrice} 
@@ -173,19 +173,19 @@ export class TraderJoe implements ITradeNetwork {
 
 	private invalidateMarketCache(): void {
 		this.memory.cache = {
-			sell: {},
-			buy : {},
+			sell     : {},
+			buy      : {},
 			resources: {},
-			tick: 0,
+			tick     : 0,
 		};
 	}
 
 	private invalidateMarketCacheFromHistory(): void {
 		this.memory.cache = {
-			sell: {},
-			buy : {},
+			sell     : {},
+			buy      : {},
 			resources: {},
-			tick: 0,
+			tick     : 0,
 		};
 	}
 

@@ -4,7 +4,8 @@ import {
 	EnergyStructure,
 	isEnergyStructure,
 	isRuin,
-	isStoreStructure, isTombstone,
+	isStoreStructure,
+	isTombstone,
 	StoreStructure
 } from '../../declarations/typeGuards';
 import {profile} from '../../profiler/decorator';

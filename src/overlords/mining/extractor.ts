@@ -6,8 +6,6 @@ import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
-import {Cartographer, ROOMTYPE_CORE, ROOMTYPE_SOURCEKEEPER} from '../../utilities/Cartographer';
-import {printRoomName} from '../../utilities/utils';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 
@@ -92,7 +90,7 @@ export class ExtractorOverlord extends Overlord {
 		// Create container if there is not already one being built
 		if (!this.container && this.shouldHaveContainer()) {
 			const containerSite = _.first(_.filter(this.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 2),
-												 site => site.structureType == STRUCTURE_CONTAINER));
+												   site => site.structureType == STRUCTURE_CONTAINER));
 			if (!containerSite) {
 				const containerPos = this.calculateContainerPos();
 				log.info(`${this.print}: building container at ${containerPos.print}`);

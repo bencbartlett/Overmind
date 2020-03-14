@@ -643,7 +643,7 @@ export class RoomPlanner {
 						break; // don't destroy terminal or storage when under RCL4 - can use energy inside
 					}
 					if (this.colony.level < 6
-						&& structureType == STRUCTURE_TERMINAL && hasMinerals((<StructureTerminal> structure).store)) {
+						&& structureType == STRUCTURE_TERMINAL && hasMinerals((<StructureTerminal>structure).store)) {
 						DirectiveHaul.createIfNotPresent(structure.pos, 'pos');
 						break; // don't destroy terminal when under RCL6 if there are resources available.
 					}

@@ -61,10 +61,10 @@ export class BunkerQueenOverlord extends Overlord {
 		this.batteries = _.filter(this.room.containers, container => insideBunkerBounds(container.pos, this.colony));
 		this.links = _.filter((this.room.links as StoreStructure[]), link => insideBunkerBounds(link.pos, this.colony));
 		this.storeStructures = _.compact([
-			this.colony.terminal!,
-			this.colony.storage!,
-			...this.batteries,
-			...this.links]);
+											 this.colony.terminal!,
+											 this.colony.storage!,
+											 ...this.batteries,
+											 ...this.links]);
 		this.quadrants = {
 			lowerRight: $.structures(this, 'LR',
 									 () => computeQuadrant(this.colony, quadrantFillOrder.lowerRight)),
@@ -183,12 +183,12 @@ export class BunkerQueenOverlord extends Overlord {
 					} else {
 						// TODO ordering tasks for fastest route, maybe a sortby for withdraw targets?
 						const hasResource = _.sortBy(_.filter(this.storeStructures, s => s.store[resourceType]
-							> 0), s => -s.store[resourceType]); // descending sort
+																						 > 0), s => -s.store[resourceType]); // descending sort
 						let collected = 0;
 						for (const storeLoc of hasResource) {
 							// Might be bug in overwithdrawing
 							withdrawTasks.push(Tasks.withdraw(storeLoc, resourceType,
-								Math.min(queenCarry[resourceType] - collected, storeLoc.store[resourceType])));
+															  Math.min(queenCarry[resourceType] - collected, storeLoc.store[resourceType])));
 							collected += storeLoc.store[resourceType];
 							if (collected >= queenCarry[resourceType]) {
 								break;
@@ -309,13 +309,17 @@ export class BunkerQueenOverlord extends Overlord {
 				 _.any(_.keys(this.assignments[queen.name]), id => this.colony.transportRequests.supplyByID[id])) {
 			queen.task = this.buildSupplyTaskManifest(queen);
 		}
-		// Do we need safemodes?
-		else if (this.colony.level > 5 && this.colony.controller.safeModeAvailable < 3 && this.colony.terminal
-			&& this.colony.terminal.store[RESOURCE_GHODIUM] >= 1000) {
-			queen.task = Tasks.chain([Tasks.withdraw(this.colony.terminal, RESOURCE_GHODIUM, 1000),
-				Tasks.generateSafeMode(this.colony.controller)]);
-			log.alert(`${this.colony.print} has ${this.colony.controller.safeModeAvailable} safemodes avaliable, 
-			generating a new one`);
+		// Do we need to generate additional safemodes?
+		else if (this.colony.level > 5 && this.colony.controller.safeModeAvailable < 3 &&
+				 this.colony.terminal && this.colony.terminal.store[RESOURCE_GHODIUM] >= 1000 &&
+				 queen.carryCapacity >= 1000) {
+			queen.task = Tasks.chain([
+										 Tasks.transferAll(this.colony.terminal),
+										 Tasks.withdraw(this.colony.terminal, RESOURCE_GHODIUM, 1000),
+										 Tasks.generateSafeMode(this.colony.controller)
+									 ]);
+			log.alert(`${this.colony.print} has ${this.colony.controller.safeModeAvailable} safemodes avaliable, ` +
+					  `generating a new one`);
 		}
 		// Otherwise do idle actions
 		if (queen.isIdle) {

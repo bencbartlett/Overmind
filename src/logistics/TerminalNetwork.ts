@@ -468,9 +468,9 @@ export class TerminalNetwork implements ITerminalNetwork {
 
 	// TODO this is a hacky way to rebalance room resources over the network, make it better
 	shareRooms() {
-		if(Game.time % 10 == 0) {
+		if (Game.time % 10 == 0) {
 			const myRooms = _.filter(Game.rooms, room => room.controller
-				&& room.controller.my && room.terminal && room.terminal.my);
+														 && room.controller.my && room.terminal && room.terminal.my);
 			let maxRoom: Room | undefined;
 			const usedTerminals: Room[] = [];
 			const store: { [resourceType: string]: number } = {};
@@ -485,7 +485,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 			}
 
 			console.log(JSON.stringify(store));
-			for(const res in store) {
+			for (const res in store) {
 				const resourceType = res as ResourceConstant;
 				console.log(resourceType + ' ' + store[resourceType]);
 				if (store[resourceType] < 30000 || resourceType == RESOURCE_ENERGY || usedTerminals.length == myRooms.length) {
@@ -494,15 +494,15 @@ export class TerminalNetwork implements ITerminalNetwork {
 				_.forEach(myRooms, room => {
 					if (room.storage && room.terminal && _.sum(room.storage.store) < room.storage.storeCapacity * 0.9) {
 						const total = (room.terminal ? room.terminal.store[resourceType] || 0 : 0) +
-							(room.storage ? room.storage.store[resourceType] || 0 : 0);
-						if(total < store[resourceType]*0.7/32) {
+									  (room.storage ? room.storage.store[resourceType] || 0 : 0);
+						if (total < store[resourceType] * 0.7 / 32) {
 							console.log(room.name + ' ' + res + ' ' + total + ' ' +
-								(100 - Math.floor(total*100/(store[resourceType]*0.85/31))));
+										(100 - Math.floor(total * 100 / (store[resourceType] * 0.85 / 31))));
 							maxRoom = maxBy(myRooms, function(room) {
 								return !usedTerminals.includes(room) && room.storage ? room.storage.store[resourceType] || 0 : 0;
 							});
 							if (maxRoom && maxRoom.storage && maxRoom.terminal) {
-								maxRoom.terminal.send(resourceType,300,room.name);
+								maxRoom.terminal.send(resourceType, 300, room.name);
 								usedTerminals.push(maxRoom);
 							}
 						}

@@ -43,8 +43,8 @@ export class DirectiveInvasionDefense extends Directive {
 		const expectedDamage = CombatIntel.maxDamageByCreeps(this.room.dangerousPlayerHostiles);
 		const expectedHealing = CombatIntel.maxHealingByCreeps(this.room.dangerousPlayerHostiles);
 		const useBoosts = (expectedDamage > ATTACK_POWER * 50) || (expectedHealing > RANGED_ATTACK_POWER * 100)
-						&& !!this.colony.terminal
-						&& !!this.colony.evolutionChamber;
+						  && !!this.colony.terminal
+						  && !!this.colony.evolutionChamber;
 		const percentWalls = _.filter(this.room.barriers, s => s.structureType == STRUCTURE_WALL).length /
 							 this.room.barriers.length;
 		const meleeHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(ATTACK) > 0 ||
@@ -64,7 +64,7 @@ export class DirectiveInvasionDefense extends Directive {
 		}
 		// If melee attackers, try distractions
 		// TODO drop these if they don't work, need to detect effectiveness. Although the says make for great 🍿
-		if (meleeHostiles.length > 0 && expectedDamage > 40*ATTACK_POWER) {
+		if (meleeHostiles.length > 0 && expectedDamage > 40 * ATTACK_POWER) {
 			this.overlords.distraction = new DistractionOverlord(this);
 		}
 	}
@@ -85,8 +85,8 @@ export class DirectiveInvasionDefense extends Directive {
 			if (!mem[creep.owner.username]) {
 				mem[creep.owner.username] = {
 					creeps: {},
-					types: {},
-					parts: {},
+					types : {},
+					parts : {},
 					boosts: {},
 				};
 			}
@@ -98,11 +98,11 @@ export class DirectiveInvasionDefense extends Directive {
 					// memory protection if they don't split name
 					return;
 				}
-				playerMem.types[creepType] = (playerMem.types[creepType]+1) || 1;
+				playerMem.types[creepType] = (playerMem.types[creepType] + 1) || 1;
 				for (const bodyPart of creep.body) {
-					playerMem.parts[bodyPart.type] = (playerMem.parts[bodyPart.type])+1 || 1;
+					playerMem.parts[bodyPart.type] = (playerMem.parts[bodyPart.type]) + 1 || 1;
 					if (bodyPart.boost) {
-						playerMem.boosts[bodyPart.boost] = (playerMem.boosts[bodyPart.boost])+1 || 1;
+						playerMem.boosts[bodyPart.boost] = (playerMem.boosts[bodyPart.boost]) + 1 || 1;
 					}
 				}
 			}
@@ -115,15 +115,15 @@ export class DirectiveInvasionDefense extends Directive {
 		const mem = Memory.playerCreepTracker.inakrin;
 		for (const boostid in mem.boosts) {
 			const boost = mem.boosts[boostid];
-			console.log(`${boostid} : ${boost*30}`);
-			t3Count+=boost*30;
-			energyCount+=20;
+			console.log(`${boostid} : ${boost * 30}`);
+			t3Count += boost * 30;
+			energyCount += 20;
 		}
 		for (const partType in mem.parts) {
 			const partCount = mem.parts[partType];
 			const cost = BODYPART_COST[(partType as BodyPartConstant)];
 			console.log(`${partType} : ${cost * partCount}`);
-			energyCount+=cost * partCount;
+			energyCount += cost * partCount;
 		}
 
 		console.log(`Total T3 Cost: ${t3Count}`);

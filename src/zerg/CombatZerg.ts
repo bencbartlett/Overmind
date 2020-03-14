@@ -1,7 +1,6 @@
 import {CombatIntel} from '../intel/CombatIntel';
 import {CombatMoveOptions, Movement, NO_ACTION} from '../movement/Movement';
 import {profile} from '../profiler/decorator';
-import {insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {CombatTargeting} from '../targeting/CombatTargeting';
 import {GoalFinder} from '../targeting/GoalFinder';
 import {randomHex} from '../utilities/utils';
@@ -167,7 +166,7 @@ export class CombatZerg extends Zerg {
 	 */
 	autoRanged(possibleTargets = this.room.hostiles, allowMassAttack = true) {
 		const target = CombatTargeting.findBestCreepTargetInRange(this, 3, possibleTargets)
-					   || CombatTargeting.findBestStructureTargetInRange(this, 3,false);
+					   || CombatTargeting.findBestStructureTargetInRange(this, 3, false);
 		// disabled allowUnowned structure attack in order not to desrtory poison walls
 		this.debug(`Ranged target: ${target}`);
 		if (target) {
@@ -307,10 +306,13 @@ export class CombatZerg extends Zerg {
 		// 	_.any(creep.pos.neighbors, pos => this.colony && insideBunkerBounds(pos, this.colony)));
 
 		const target = CombatTargeting.findTarget(this, this.colony ? this.room.playerHostiles
-			.filter(creep => creep.pos.getRangeTo(this.colony!.pos) <= 9) : this.room.dangerousHostiles);
+																		  .filter(creep => creep.pos.getRangeTo(this.colony!.pos) <= 9) : this.room.dangerousHostiles);
 
 		if (target) {
-			return Movement.combatMove(this, [{pos: target.pos, range: 1}], [], {preferRamparts: true, requireRamparts: true});
+			return Movement.combatMove(this, [{pos: target.pos, range: 1}], [], {
+				preferRamparts : true,
+				requireRamparts: true
+			});
 		}
 	}
 
