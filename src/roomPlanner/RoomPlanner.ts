@@ -853,6 +853,9 @@ export class RoomPlanner {
 	}
 
 	init(): void {
+		if (this.active) {
+			Overmind.overseer.notifier.alert(`Room planner active!`, this.colony.room.name);
+		}
 		if (this.active && getAutonomyLevel() == Autonomy.Automatic) {
 			let bunkerAnchor: RoomPosition;
 			if (this.colony.spawns.length > 0) { // in case of very first spawn
