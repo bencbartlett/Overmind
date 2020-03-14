@@ -66,9 +66,10 @@ export class TaskRecharge extends Task {
 			if (canHarvest) {
 				// Harvest from a source if there is no recharge target available
 				const availableSources = _.filter(creep.room.sources, function(source) {
+					const filledSource = source.energy > 0 || source.ticksToRegeneration < 20;
 					// Only harvest from sources which aren't surrounded by creeps excluding yourself
 					const isSurrounded = source.pos.availableNeighbors(false).length == 0;
-					return !isSurrounded || creep.pos.isNearTo(source);
+					return filledSource && (!isSurrounded || creep.pos.isNearTo(source));
 				});
 				const availableSource = creep.pos.findClosestByMultiRoomRange(availableSources);
 				if (availableSource) {
