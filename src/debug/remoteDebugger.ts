@@ -1,12 +1,11 @@
 /* tslint:disable:no-eval */
 
 import {log} from '../console/log';
-import {Segmenter} from '../memory/Segmenter';
+import {Segmenter, SEGMENTS} from '../memory/Segmenter';
 import {alignedNewline} from '../utilities/stringConstants';
 import {color} from '../utilities/utils';
 import {MUON, MY_USERNAME} from '../~settings';
 
-const DEBUG_SEGMENT = 97;
 const DEBUG_TIMEOUT = 1000;
 const NO_COMMAND = 'No command';
 
@@ -49,7 +48,7 @@ export class RemoteDebugger {
 	 * Push all commands from secret memory to public memory and clear secret memory commands
 	 */
 	private pushCommands_master(): void {
-		Segmenter.setSegmentProperty(DEBUG_SEGMENT, 'command', this.memory.command);
+		Segmenter.setSegmentProperty(SEGMENTS.remoteDebugger, 'command', this.memory.command);
 		if (this.memory.command) {
 			log.info(`[DEBUGGER] Sending command: ${this.memory.command}`);
 		}
@@ -83,7 +82,7 @@ export class RemoteDebugger {
 	 * Push the response from the last run command
 	 */
 	private pushResponse_slave(): void {
-		Segmenter.setSegmentProperty(DEBUG_SEGMENT, 'response', this.memory.response);
+		Segmenter.setSegmentProperty(SEGMENTS.remoteDebugger, 'response', this.memory.response);
 		this.memory.response = undefined;
 	}
 
@@ -145,15 +144,15 @@ export class RemoteDebugger {
 			// Run the debugger
 			if (MY_USERNAME == MUON) {
 				if (this.memory.username) {
-					Segmenter.requestSegments(DEBUG_SEGMENT);
-					Segmenter.requestForeignSegment(this.memory.username, DEBUG_SEGMENT);
-					Segmenter.markSegmentAsPublic(DEBUG_SEGMENT);
+					Segmenter.requestSegments(SEGMENTS.remoteDebugger);
+					Segmenter.requestForeignSegment(this.memory.username, SEGMENTS.remoteDebugger);
+					Segmenter.markSegmentAsPublic(SEGMENTS.remoteDebugger);
 					this.run_master();
 				}
 			} else {
-				Segmenter.requestSegments(DEBUG_SEGMENT);
-				Segmenter.requestForeignSegment(MUON, DEBUG_SEGMENT);
-				Segmenter.markSegmentAsPublic(DEBUG_SEGMENT);
+				Segmenter.requestSegments(SEGMENTS.remoteDebugger);
+				Segmenter.requestForeignSegment(MUON, SEGMENTS.remoteDebugger);
+				Segmenter.markSegmentAsPublic(SEGMENTS.remoteDebugger);
 				this.run_slave();
 			}
 

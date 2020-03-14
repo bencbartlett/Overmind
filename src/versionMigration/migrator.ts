@@ -49,6 +49,9 @@ export class VersionMigration {
 		if (!this.memory.versions['052to053']) {
 			this.migrate_052_053();
 		}
+		if (!this.memory.versions['053to06X_part1']) {
+			this.migrate_053_06X_part1();
+		}
 	}
 
 	static get memory(): VersionMigratorMemory {
@@ -309,6 +312,17 @@ export class VersionMigration {
 
 		this.memory.versions['052to053'] = true;
 		log.alert(`Version migration from 0.5.2 -> 0.5.3 completed successfully.`);
+	}
+
+	static migrate_053_06X_part1() {
+		// Delete some old properties
+		delete Memory.overseer.suspendUntil;
+		// Delete ALL room memory
+		for (const name in Memory.rooms) {
+			delete Memory.rooms[name];
+		}
+		this.memory.versions['053to06X_part1'] = true;
+		log.alert(`Version migration from 0.5.3 -> 0.6.X part 1 completed successfully.`);
 	}
 
 }

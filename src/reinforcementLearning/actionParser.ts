@@ -7,11 +7,10 @@
 
 */
 
+import {SEGMENTS} from '../memory/Segmenter';
 import {NeuralZerg} from '../zerg/NeuralZerg';
 import {RL_TRAINING_VERBOSITY} from '../~settings';
 import {TrainingOpponents} from './trainingOpponents';
-
-export const RL_ACTION_SEGMENT = 70;
 
 export type RLAction =
 	['move', DirectionConstant]
@@ -175,7 +174,7 @@ export class ActionParser {
 		}
 
 		// Parse memory and relay actions to controllable actors
-		const raw = RawMemory.segments[RL_ACTION_SEGMENT];
+		const raw = RawMemory.segments[SEGMENTS.reinforcementLearning];
 		if (raw != undefined && raw != '') {
 			const actions = JSON.parse(raw);
 			ActionParser.parseActions(controllableActors, actions);
@@ -204,8 +203,8 @@ export class ActionParser {
 		}
 
 		// Clear the segment and keep it requested
-		RawMemory.segments[RL_ACTION_SEGMENT] = '';
-		RawMemory.setActiveSegments([RL_ACTION_SEGMENT]);
+		RawMemory.segments[SEGMENTS.reinforcementLearning] = '';
+		RawMemory.setActiveSegments([SEGMENTS.reinforcementLearning]);
 
 	}
 
