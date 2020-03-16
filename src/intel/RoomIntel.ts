@@ -376,7 +376,7 @@ export class RoomIntel {
 				}
 
 				const colonies = getAllColonies().filter(colony => colony.level > 6
-					&& Game.map.getRoomLinearDistance(colony.name, powerBank.room.name) > powerSetting.maxRange);
+					&& Game.map.getRoomLinearDistance(colony.name, powerBank.room.name) <= powerSetting.maxRange);
 				for (const colony of colonies) {
 					const route = Game.map.findRoute(colony.room, powerBank.room);
 					if (route != -2 && route.length <= powerSetting.maxRange) {
