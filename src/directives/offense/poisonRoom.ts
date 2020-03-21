@@ -1,4 +1,4 @@
-import {Colony, getAllColonies} from '../../Colony';
+import {Colony, ColonyMemory, getAllColonies} from '../../Colony';
 import {log} from '../../console/log';
 import {ClaimingOverlord} from '../../overlords/colonization/claimer';
 import {RoomPoisonerOverlord} from '../../overlords/offense/roomPoisoner';
@@ -61,6 +61,12 @@ export class DirectivePoisonRoom extends Directive {
 		if(!(this.room && this.room.controller)) {
 			return;
 		}
+
+		// suspend room immediately once claimed to avoid default room actions
+		if(this.room.controller.level == 1) {
+			this.suspendColony(this.room.name);
+		}
+
 		if (Game.time % RUN_TIMER == 0) {
 			// capture variables
 			this.walkableSourcePosisions	 = _.filter(_.flatten(_.map(this.room.sources,
@@ -79,6 +85,21 @@ export class DirectivePoisonRoom extends Directive {
 			}
 		}
 	}
+	private suspendColony(roomName: string): string {
+		if (Overmind.colonies[roomName]) {
+			const colonyMemory = Memory.colonies[roomName] as ColonyMemory | undefined;
+			if (colonyMemory) {
+				colonyMemory.suspend = true;
+				Overmind.shouldBuild = true;
+				return `Colony ${roomName} suspended.`;
+			} else {
+				return `No colony memory for ${roomName}!`;
+			}
+		} else {
+			return `Colony ${roomName} is not a valid colony!`;
+		}
+	}
+
 	private poisonActions() {
 		if(!(this.room && this.room.controller && this.room.controller.level == 2 && 
 			 this.walkableControllerPosisions && this.walkableControllerPosisions)) {
