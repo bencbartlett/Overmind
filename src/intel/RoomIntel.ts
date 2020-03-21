@@ -370,14 +370,14 @@ export class RoomIntel {
 		if (powerSetting.enabled && Cartographer.roomType(room.name) == ROOMTYPE_ALLEY) {
 			const powerBank = _.first(room.find(FIND_STRUCTURES)
 										  .filter(struct => struct.structureType == STRUCTURE_POWER_BANK)) as StructurePowerBank;
-			if (powerBank != undefined && powerBank.ticksToDecay > 4000 && powerBank.power >= powerSetting.minPower) {
-				// Game.notify(`Looking for power banks in ${room}  found
-				// ${powerBank} with power ${powerBank.power} and ${powerBank.ticksToDecay} TTL.`);
+			if (powerBank != undefined && powerBank.power >= powerSetting.minPower) {
 				if (DirectivePowerMine.isPresent(powerBank.pos, 'pos')) {
-					// Game.notify(`Already mining room ${powerBank.room}!`);
+					// if hostiles present, send fighters
 					return;
 				}
-
+				if(powerBank.ticksToDecay < 4000) {
+					return;
+				}
 				const colonies = getAllColonies().filter(colony => colony.level > 6
 					&& Game.map.getRoomLinearDistance(colony.name, powerBank.room.name) > powerSetting.maxRange);
 				for (const colony of colonies) {
