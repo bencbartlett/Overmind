@@ -460,10 +460,10 @@ export class RoomIntel {
 		}
 	}
 	static autoAttack(room: Room) {
-		if (room.my || !Memory.settings.autoAttack || !room.controller
+		if (room.my || !Memory.settings.autoAttack.enable || !room.controller
 					|| (room.controller && (room.controller.safeMode || room.controller.level == 0 || room.controller.level >= 6))
 					|| (Memory.settings.allies).indexOf(_.get(room.controller, ['owner', 'username'])) >= 0
-					|| (Memory.settings.autoAttackWhiteList).indexOf(room.name) >= 0) {
+					|| (Memory.settings.autoAttack.autoAttackWhiteList).indexOf(room.name) >= 0) {
 			return;
 		}
 
@@ -503,6 +503,11 @@ export class RoomIntel {
 					return;
 				}
 			}	
+		}
+
+		if((Memory.settings.autoAttack.autoAttackWatchList).indexOf(room.name) >= 0 && 
+			room.hostiles.length > 0 && !DirectiveOutpostDefense.isPresent(room.controller.pos, 'pos')) {
+				DirectiveOutpostDefense.create(room.controller.pos, { name: 'WatchDog:' + room.name });
 		}
 	}
 	
