@@ -49,7 +49,7 @@ export class RoomPoisonerOverlord extends Overlord {
 		}
 
 		// upgrade controller to level 2
-		if(this.room && this.room.controller && this.room.controller.level < 3) {
+		if(this.room && this.room.controller && this.room.controller.level < 2) {
 			roomPoisoner.task = Tasks.upgrade(this.room.controller);
 			return;
 		}
