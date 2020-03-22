@@ -208,7 +208,7 @@ export const Setups = {
 
 	roomPoisoner: new CreepSetup(Roles.roomPoisoner, {
 		pattern  : [WORK, CARRY, MOVE, MOVE],
-		sizeLimit: 4,
+		sizeLimit: 1,
 	}),
 
 	praisers: {

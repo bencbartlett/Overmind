@@ -27,7 +27,7 @@ export class RoomPoisonerOverlord extends Overlord {
 
 	init() {
 		if(this.room && this.room.dangerousPlayerHostiles.length == 0) {
-			this.wishlist(2, Setups.roomPoisoner);
+			this.wishlist(1, Setups.roomPoisoner);
 		}
 	}
 	
