@@ -71,8 +71,10 @@ export class RoomPoisonerOverlord extends Overlord {
 
 		// construct walls
 		// Note: directive will take care of managing the csites, so just build on sight!
-		if(this.room && this.room.constructionSites && this.room.constructionSites.length > 0) {
-			roomPoisoner.task = Tasks.build(_.first(this.room.constructionSites));
+		// Note: do not use cached room.constructionSites, get a fresh list
+		const csites = this.room!.find(FIND_CONSTRUCTION_SITES);
+		if(this.room && csites.length > 0) {
+			roomPoisoner.task = Tasks.build(_.first(csites));
 			return;
 		}
 
