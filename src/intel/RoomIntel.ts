@@ -2,6 +2,7 @@
 
 import {getAllColonies} from '../Colony';
 import {log} from '../console/log';
+import {DirectiveOutpost} from '../directives/colony/outpost';
 import {DirectivePoisonRoom} from '../directives/offense/poisonRoom';
 import {DirectivePowerMine} from '../directives/resource/powerMine';
 import {DirectiveStronghold} from '../directives/situational/stronghold';
@@ -476,7 +477,8 @@ export class RoomIntel {
 		
 		if (!(room.controller && room.controller.level == 0 && room.controller.reservation == undefined 
 			&& !room.storage && !room.terminal // do not include rooms with storage/terminal, i might want to loot
-			&& room.hostiles.length == 0)) { 
+			&& room.hostiles.length == 0)
+			|| DirectiveOutpost.isPresent(room.controller.pos,'pos')) {  // do not poison own outPost!
 			return; // not a valid room to poison;
 		} 
 		

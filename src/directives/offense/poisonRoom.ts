@@ -112,11 +112,6 @@ export class DirectivePoisonRoom extends Directive {
 			return;
 		} 
 
-		// for sources - place one construction site at a time
-		if(this.room.constructionSites.length > 0) {
-			return;
-		}
-
 		// Poison Sources Next
 		// Trick: Csite are not walkable, wait for poisoner to carry energy before blocking Sources
 		// Trick: Remove sources Csites if poisoner need to harvest, i.e carrying 0 energy

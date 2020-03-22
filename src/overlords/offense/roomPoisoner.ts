@@ -7,7 +7,7 @@ import {minBy} from '../../utilities/utils';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 
-export const MINIMUM_WALL_HITS = 10000;
+export const MINIMUM_WALL_HITS = 1;
 
 /**
  * Spawn roomPoisoner - upgrqde controller to lvl2, wall in controller then sources.
