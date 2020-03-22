@@ -67,7 +67,7 @@ export class DirectivePoisonRoom extends Directive {
 			this.suspendColony(this.room.name);
 		}
 
-		if (Game.time % RUN_TIMER == 0) {
+		if (Game.time % RUN_TIMER == 0 || this.room.constructionSites.length == 0) {
 			// capture variables
 			this.walkableSourcePosisions	 = _.filter(_.flatten(_.map(this.room.sources,
 													s => s.pos.neighbors)),pos => pos.isWalkable(true));
@@ -172,7 +172,8 @@ export class DirectivePoisonRoom extends Directive {
 	}
 
 	run() {
-		if (Game.time % RUN_TIMER == 0 && this.room && this.room.controller && this.room.controller.my) {
+		if (this.room && (Game.time % RUN_TIMER == 0 || this.room.constructionSites.length == 0 ) && 
+			 this.room.controller && this.room.controller.my) {
 
 			// Preperations start at controller level 1
 			if(this.room.controller.level == 1) {
