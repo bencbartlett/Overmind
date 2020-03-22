@@ -3,6 +3,7 @@ import {DirectivePoisonRoom} from '../../directives/offense/poisonRoom';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
+import {minBy} from '../../utilities/utils';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 
@@ -59,11 +60,12 @@ export class RoomPoisonerOverlord extends Overlord {
 		const walls = this.room!.find(FIND_STRUCTURES, {
 			 					 filter: (s: Structure) => s.structureType == STRUCTURE_WALL &&
 			 								  			   s.hits < MINIMUM_WALL_HITS});
-		const wallsToFortify = _.filter(walls, wall => wall.hits == 1) as StructureWall[];
-		const targetWall	 = _.first(wallsToFortify);
-		if(targetWall) {
-			roomPoisoner.task = Tasks.fortify(targetWall);
-			return;
+		if(walls) {
+			const wallToFortify = minBy(walls, wall => wall.hits) as StructureWall;
+			if(wallToFortify) {
+				roomPoisoner.task = Tasks.fortify(wallToFortify);
+				return;
+			}
 		}
 
 		// construct walls
