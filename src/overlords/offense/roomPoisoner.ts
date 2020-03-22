@@ -26,7 +26,7 @@ export class RoomPoisonerOverlord extends Overlord {
 
 	init() {
 		if(this.room && this.room.dangerousPlayerHostiles.length == 0) {
-			this.wishlist(1, Setups.roomPoisoner);
+			this.wishlist(2, Setups.roomPoisoner);
 		}
 	}
 	
@@ -53,9 +53,17 @@ export class RoomPoisonerOverlord extends Overlord {
 			roomPoisoner.task = Tasks.upgrade(this.room.controller);
 			return;
 		}
-		// fortify walls
-		const wallsToFortify = _.filter(this.room!.walls, wall => wall.hits < MINIMUM_WALL_HITS);
-		const targetWall	 = _.first(wallsToFortify);
+		// fortify walls.hits == 1 as a priority
+		let wallsToFortify = _.filter(this.room!.walls, wall => wall.hits == 1);
+		let targetWall	 = _.first(wallsToFortify);
+		if(targetWall) {
+			roomPoisoner.task = Tasks.fortify(targetWall);
+			return;
+		}
+
+		// fortify walls.hits < MINIMUM_WALL_HITS next
+		wallsToFortify = _.filter(this.room!.walls, wall => wall.hits < MINIMUM_WALL_HITS);
+		targetWall	 = _.first(wallsToFortify);
 		if(targetWall) {
 			roomPoisoner.task = Tasks.fortify(targetWall);
 			return;
@@ -68,8 +76,21 @@ export class RoomPoisonerOverlord extends Overlord {
 			return;
 		}
 
-		// if nothing to do, move away. might need to place a csite on current pos
-		roomPoisoner.goTo(this.room!.mineral!, {range: 5});
+		// if nothing to do, then move away from csite location if any.
+		if(this.room && this.room.controller) {
+			if(roomPoisoner.pos.isNearTo(this.room.controller)) {
+				roomPoisoner.creep.moveTo(this.room.mineral!);
+				return;
+			}
+			_.forEach(this.room.sources,source => {
+				if(roomPoisoner.pos.isNearTo(source)) {
+					roomPoisoner.creep.moveTo(this.room!.mineral!);
+					return;
+				}
+			});
+		}
+		// if nothing to do, then say something
+		roomPoisoner.say('something!');
 	}
 	run() {
 		this.autoRun(this.roomPoisoners, roomPoisoner => this.handleRoomPoisoner(roomPoisoner));
