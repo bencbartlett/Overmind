@@ -53,17 +53,14 @@ export class RoomPoisonerOverlord extends Overlord {
 			roomPoisoner.task = Tasks.upgrade(this.room.controller);
 			return;
 		}
-		// fortify walls.hits == 1 as a priority
-		let wallsToFortify = _.filter(this.room!.walls, wall => wall.hits == 1);
-		let targetWall	 = _.first(wallsToFortify);
-		if(targetWall) {
-			roomPoisoner.task = Tasks.fortify(targetWall);
-			return;
-		}
 
-		// fortify walls.hits < MINIMUM_WALL_HITS next
-		wallsToFortify = _.filter(this.room!.walls, wall => wall.hits < MINIMUM_WALL_HITS);
-		targetWall	 = _.first(wallsToFortify);
+		// fortify walls.hits < MINIMUM_WALL_HITS as a priority
+		// Note: do not use cached room.walls
+		const walls = this.room!.find(FIND_STRUCTURES, {
+			 					 filter: (s: Structure) => s.structureType == STRUCTURE_WALL &&
+			 								  			   s.hits < MINIMUM_WALL_HITS});
+		const wallsToFortify = _.filter(walls, wall => wall.hits == 1) as StructureWall[];
+		const targetWall	 = _.first(wallsToFortify);
 		if(targetWall) {
 			roomPoisoner.task = Tasks.fortify(targetWall);
 			return;
