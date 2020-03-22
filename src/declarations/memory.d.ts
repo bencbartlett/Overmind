@@ -37,6 +37,12 @@ interface Memory {
 			maxRange: number;
 			minPower: number;
 		};
+		autoPoison: {
+			enabled		 : boolean;
+			maxRange	 : number;
+			concurrent	 : number;
+			poisonedRooms: string[];
+		},
 	};
 	profiler?: any;
 	stats: any;

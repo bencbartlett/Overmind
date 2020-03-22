@@ -2,6 +2,7 @@
 
 import {getAllColonies} from '../Colony';
 import {log} from '../console/log';
+import {DirectivePoisonRoom} from '../directives/offense/poisonRoom';
 import {DirectivePowerMine} from '../directives/resource/powerMine';
 import {DirectiveStronghold} from '../directives/situational/stronghold';
 import {Segmenter} from '../memory/Segmenter';
@@ -456,7 +457,45 @@ export class RoomIntel {
 			}
 		}
 	}
+	private static autoPoison(room: Room) {
+		
+		if(!Memory.settings.autoPoison.enabled || !room || getAllColonies().length == Game.gcl.level) {
+			return;
+		}
 
+		// poison X rooms at a time
+		let count = 0;
+		for (const colony of getAllColonies()) {
+			if(Game.flags['POISON-'+colony.name]) {
+				count++;
+			}
+			if (count >= Memory.settings.autoPoison.concurrent) {
+				return;
+			}
+		}
+		
+		if (!(room.controller && room.controller.level == 0 && room.controller.reservation == undefined 
+			&& !room.storage && !room.terminal // do not include rooms with storage/terminal, i might want to loot
+			&& room.hostiles.length == 0)) { 
+			return; // not a valid room to poison;
+		} 
+		
+		const walkableControllerPositions = _.filter(room.controller.pos.neighbors, pos => pos.isWalkable(true));
+		if (walkableControllerPositions.length == 0) {
+			return; // already poisoned.
+		}
+		
+		const colonies = getAllColonies().filter(colony => colony.level > 6);
+		for (const colony of colonies) {
+			const route = Game.map.findRoute(colony.room, room);
+			if (route != -2 && route.length <= Memory.settings.autoPoison.maxRange) {
+				Game.notify(`FOUND ROOM TO POISON IN RANGE ${route.length}, POISONING ROOM ${room.name}`);
+				DirectivePoisonRoom.createIfNotPresent(room.controller.pos, 'pos',{name: 'POISON-'+colony.room.name});
+				Memory.settings.autoPoison.poisonedRooms.push(room.name);
+				return;
+			}
+		}
+	}
 	static run(): void {
 		let alreadyComputedScore = false;
 		// this.requestZoneData();
@@ -499,6 +538,7 @@ export class RoomIntel {
 			if (room.controller && Game.time % 5 == 0) {
 				this.recordControllerInfo(room.controller);
 			}
+			this.autoPoison(room);
 			this.minePowerBanks(room);
 			this.handleStrongholds(room);
 		}
