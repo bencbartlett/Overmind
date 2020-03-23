@@ -25,6 +25,7 @@ import {WorkerOverlord} from './overlords/core/worker';
 import {RandomWalkerScoutOverlord} from './overlords/scouting/randomWalker';
 import {profile} from './profiler/decorator';
 import {Abathur} from './resources/Abathur';
+import {ALL_ZERO_ASSETS} from './resources/map_resources';
 import {bunkerLayout, getPosFromBunkerCoord} from './roomPlanner/layouts/bunker';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
 import {LOG_STATS_INTERVAL, Stats} from './stats/stats';
@@ -108,10 +109,9 @@ export class Colony {
 	extensions: StructureExtension[];					// |
 	storage: StructureStorage | undefined;				// |
 	links: StructureLink[];								// |
-	availableLinks: StructureLink[];
-	// claimedLinks: StructureLink[];						// | Links belonging to hive cluseters excluding mining groups
-	// dropoffLinks: StructureLink[]; 						// | Links not belonging to a hiveCluster, used as dropoff
+	availableLinks: StructureLink[];					// | links available to claim
 	terminal: StructureTerminal | undefined;			// |
+	factory: StructureFactory | undefined;				// |
 	towers: StructureTower[];							// |
 	labs: StructureLab[];								// |
 	powerSpawn: StructurePowerSpawn | undefined;		// |
@@ -262,6 +262,7 @@ export class Colony {
 		this.links = this.room.links;
 		this.availableLinks = _.clone(this.room.links);
 		this.terminal = this.room.terminal && this.room.terminal.isActive() ? this.room.terminal : undefined;
+		this.factory = this.room.factory && this.room.factory.isActive() ? this.room.factory : undefined;
 		this.towers = this.room.towers;
 		this.labs = _.sortBy(_.filter(this.room.labs, lab => lab.my && lab.isActive()),
 							 lab => 50 * lab.pos.y + lab.pos.x); // Labs are sorted in reading order of positions
@@ -306,8 +307,8 @@ export class Colony {
 		$.set(this, 'spawns', () => _.sortBy(_.filter(this.room.spawns,
 													  spawn => spawn.my && spawn.isActive()), spawn => spawn.ref));
 		$.set(this, 'storage', () => this.room.storage && this.room.storage.isActive() ? this.room.storage : undefined);
-		// this.availableLinks = _.clone(this.room.links);
 		$.set(this, 'terminal', () => this.room.terminal && this.room.terminal.isActive() ? this.room.terminal : undefined);
+		$.set(this, 'factory', () => this.room.factory && this.room.factory.isActive() ? this.room.factory : undefined);
 		$.set(this, 'labs', () => _.sortBy(_.filter(this.room.labs, lab => lab.my && lab.isActive()),
 										   lab => 50 * lab.pos.y + lab.pos.x));
 		this.pos = (this.storage || this.terminal || this.spawns[0] || this.controller).pos;
@@ -341,7 +342,7 @@ export class Colony {
 	 */
 	private refreshRoomObjects(): void {
 		$.refresh(this, 'controller', 'extensions', 'links', 'towers', 'powerSpawn', 'nuker', 'observer', 'spawns',
-				  'storage', 'terminal', 'labs', 'sources', 'extractors', 'constructionSites', 'repairables',
+				  'storage', 'terminal', 'factory', 'labs', 'sources', 'extractors', 'constructionSites', 'repairables',
 				  'rechargeables');
 		$.set(this, 'constructionSites', () => _.flatten(_.map(this.rooms, room => room.constructionSites)), 10);
 		$.set(this, 'tombstones', () => _.flatten(_.map(this.rooms, room => room.tombstones)), 5);
@@ -532,7 +533,8 @@ export class Colony {
 	}
 
 	/**
-	 * Summarizes the total of all resources in colony store structures, labs, and some creeps
+	 * Summarizes the total of all resources in colony store structures, labs, and some creeps. Will always return
+	 * 0 for an asset that it has none of (not undefined)
 	 */
 	private getAllAssets(verbose = false): { [resourceType: string]: number } {
 		// if (this.name == 'E8S45') verbose = true; // 18863
@@ -544,7 +546,8 @@ export class Colony {
 		const allAssets: { [resourceType: string]: number } = mergeSum([
 																		   ...stores,
 																		   ...creepCarriesToInclude,
-																		   ...labContentsToInclude
+																		   ...labContentsToInclude,
+																		   ALL_ZERO_ASSETS
 																	   ]);
 		if (verbose) log.debug(`${this.room.print} assets: ` + JSON.stringify(allAssets));
 		return allAssets;
