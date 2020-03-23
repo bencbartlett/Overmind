@@ -194,7 +194,8 @@ export class Movement {
 		}
 
 		// traverse through a portal waypoint or check that has just been traversed
-		if (options.waypoints && !destination.isEqualTo(finalDestination)) {
+		if (options.waypoints && !destination.isEqualTo(finalDestination) && (moveData.portaling == true
+			|| creep.pos.getRangeTo(destination) < 2)) {
 			const portalTraversed = this.traversePortalWaypoint(creep, destination);
 			if (portalTraversed) {
 				return this.goTo(creep, finalDestination, options);
@@ -366,7 +367,6 @@ export class Movement {
 	 * Navigate a creep through a portal
 	 */
 	private static traversePortalWaypoint(creep: Zerg, portalPos: RoomPosition): boolean {
-
 		if (creep.pos.roomName == portalPos.roomName && creep.pos.getRangeTo(portalPos) > 1) {
 			log.error(`Movement.travelPortalWaypoint() should only be called in range 1 of portal!`);
 		}

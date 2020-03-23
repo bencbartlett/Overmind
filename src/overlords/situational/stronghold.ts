@@ -105,7 +105,6 @@ export class StrongholdOverlord extends CombatOverlord {
 				const orderedByBest = Array.from(posToRampartMap.keys()).filter(
 					p => posToRampartMap.get(p) && posToRampartMap.get(p)!.length == 1).sort(
 					(a, b) => this.bestRampartToAttackSortFunction(a, b, myCreep.pos));
-				console.log('sorted array is ' + orderedByBest);
 				for (const pos of orderedByBest) {
 					const res = this.findAttackingPositionAndTarget(posToRampartMap.get(pos)![0], range - 1, myCreep);
 					if (res) {

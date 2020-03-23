@@ -24,6 +24,7 @@ import {DirectiveRPHatchery} from './roomPlanner/roomPlanner_hatchery';
 import {DirectiveBootstrap} from './situational/bootstrap';
 import {DirectiveNukeResponse} from './situational/nukeResponse';
 import {DirectiveNukeTarget} from './situational/nukeTarget';
+import {DirectivePortalScout} from './situational/portalScout';
 import {DirectiveStronghold} from './situational/stronghold';
 import {DirectiveDismantle} from './targeting/dismantle';
 import {DirectiveModularDismantle} from './targeting/modularDismantle';
@@ -92,6 +93,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveNukeTarget(flag);
 				case COLOR_PURPLE:
 					return new DirectiveStronghold(flag);
+				case COLOR_WHITE:
+					return new DirectivePortalScout(flag);
 			}
 			break;
 

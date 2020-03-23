@@ -14,6 +14,7 @@ if (!dest) {
     throw new Error("Invalid upload destination");
 } else {
     console.log('\x1b[46m%s\x1b[0m \x1b[36m%s\x1b[0m', 'Compiling Overmind...', `(deploy destination: ${dest})`);
+    console.log(`Pushing at time: ${new Date()})`);
 }
 
 const ignoreWarnings = ['commonjs-proxy',
