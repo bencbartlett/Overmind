@@ -1,6 +1,7 @@
 import {assimilationLocked} from './assimilation/decorator';
 import {$} from './caching/GlobalCache';
 import {log} from './console/log';
+import {Roles} from './creepSetups/setups';
 import {StoreStructure} from './declarations/typeGuards';
 // import {DirectivePraise} from './directives/colony/praise';
 import {DirectiveExtract} from './directives/resource/extract';
@@ -285,7 +286,7 @@ export class Colony {
 		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
 		this.rechargeables = _.flatten(_.map(this.rooms, room => room.rechargeables));
 		// Register assets
-		this.assets = this.getAllAssets();
+		this.assets = this.computeAssets();
 	}
 
 	/**
@@ -334,7 +335,7 @@ export class Colony {
 		$.set(this, 'tombstones', () => _.flatten(_.map(this.rooms, room => room.tombstones)), 5);
 		this.drops = _.merge(_.map(this.rooms, room => room.drops));
 		// Register assets
-		this.assets = this.getAllAssets();
+		this.assets = this.computeAssets();
 	}
 
 	/**
@@ -348,7 +349,7 @@ export class Colony {
 		$.set(this, 'tombstones', () => _.flatten(_.map(this.rooms, room => room.tombstones)), 5);
 		this.drops = _.merge(_.map(this.rooms, room => room.drops));
 		// Re-compute assets
-		this.assets = this.getAllAssets();
+		this.assets = this.computeAssets();
 	}
 
 	/**
@@ -536,19 +537,14 @@ export class Colony {
 	 * Summarizes the total of all resources in colony store structures, labs, and some creeps. Will always return
 	 * 0 for an asset that it has none of (not undefined)
 	 */
-	private getAllAssets(verbose = false): { [resourceType: string]: number } {
-		// if (this.name == 'E8S45') verbose = true; // 18863
+	private computeAssets(verbose = false): { [resourceType: string]: number } {
 		// Include storage structures, lab contents, and manager carry
-		const stores = _.map(<StoreStructure[]>_.compact([this.storage, this.terminal]), s => s.store);
-		const creepCarriesToInclude = _.map(this.creeps, creep => creep.carry) as { [resourceType: string]: number }[];
-		const labContentsToInclude = _.map(_.filter(this.labs, lab => !!lab.mineralType), lab =>
-			({[<string>lab.mineralType]: lab.mineralAmount})) as { [resourceType: string]: number }[];
-		const allAssets: { [resourceType: string]: number } = mergeSum([
-																		   ...stores,
-																		   ...creepCarriesToInclude,
-																		   ...labContentsToInclude,
-																		   ALL_ZERO_ASSETS
-																	   ]);
+		const assetStructures = _.compact([this.storage, this.terminal, this.factory, ...this.labs]);
+		const assetCreeps = [...this.getCreepsByRole(Roles.queen), ...this.getCreepsByRole(Roles.manager)];
+		const assetStores = _.map([...assetStructures, ...assetCreeps], thing => thing!.store);
+
+		const allAssets = mergeSum([...assetStores, ALL_ZERO_ASSETS]);
+
 		if (verbose) log.debug(`${this.room.print} assets: ` + JSON.stringify(allAssets));
 		return allAssets;
 	}
