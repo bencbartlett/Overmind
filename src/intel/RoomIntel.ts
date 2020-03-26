@@ -461,7 +461,7 @@ export class RoomIntel {
 		let alreadyComputedScore = false;
 		// this.requestZoneData();
 		// If above 2030 kb wipe memory down
-		if (Game.time % 375 == 0 || RawMemory.get().length > 2040000) {
+		if (RawMemory.get().length > 2040000) {
 			RoomIntel.cleanRoomMemory();
 		}
 

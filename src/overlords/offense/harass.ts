@@ -15,7 +15,6 @@ export class HarassOverlord extends CombatOverlord {
 
 	hydralisks: CombatZerg[];
 	nibblers: CombatZerg[];
-	room: Room;
 	targetRemoteToHarass: string;
 	directive: DirectiveHarass;
 
@@ -40,9 +39,6 @@ export class HarassOverlord extends CombatOverlord {
 
 	private handleHarass(hydralisk: CombatZerg): void {
 		hydralisk.autoCombat(this.targetRemoteToHarass || hydralisk.room.name);
-		hydralisk.room.getEventLog(
-
-		);
 
 		// this.chooseRemoteToHarass(hydralisk, hydralisk.room.name);
 		if (!this.targetRemoteToHarass) {
@@ -59,7 +55,7 @@ export class HarassOverlord extends CombatOverlord {
 					this.directive.memory.nextSpawnTime = nextSafeSpawn;
 				}
 			});
-			if (this.room.name != this.targetRemoteToHarass) {
+			if (hydralisk.room.name != this.targetRemoteToHarass) {
 				hydralisk.goToRoom(this.targetRemoteToHarass);
 			} else {
 				const nextRoom = this.chooseRemoteToHarass(hydralisk, hydralisk.room.name);
@@ -90,7 +86,7 @@ export class HarassOverlord extends CombatOverlord {
 		this.reassignIdleCreeps(Roles.ranged);
 		this.reassignIdleCreeps(Roles.melee);
 		let setup;
-		if (this.colony.level > 5) {
+		if (this.colony.level < 5) {
 			setup = CombatSetups.zerglings.limitedDefault;
 		} else {
 			setup = CombatSetups.hydralisks.default;
