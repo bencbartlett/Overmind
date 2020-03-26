@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. The format 
 ## [Unreleased]
 
 ### Added
-- Added CPU/resource profiling to `Overlord`s. Use the `profileOverlord` console command to activate this.
+- Added CPU/resource profiling to `Overlord`s. Use the `profileOverlord()` console command to activate this.
 - Merged a lot of additions from Davaned's branch(es)
     - Initial support for power mining and power processing
     - Preliminary programs for dealing with strongholds (level 1-4)

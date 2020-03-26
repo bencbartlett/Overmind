@@ -407,7 +407,7 @@ export class EvolutionChamber extends HiveCluster {
 	run(): void {
 		// Obtain resources for boosting
 		for (const resourceType in this.neededBoosts) {
-			const needAmount = Math.max(this.neededBoosts[resourceType] - (this.colony.assets[resourceType] || 0), 0);
+			const needAmount = Math.max(this.neededBoosts[resourceType] - this.colony.assets[resourceType], 0);
 			if (needAmount > 0) {
 				this.terminalNetwork.requestResource(this.terminal, <ResourceConstant>resourceType,
 													 needAmount, true, 0);

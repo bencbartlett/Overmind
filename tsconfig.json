@@ -17,7 +17,11 @@
     "allowUnusedLabels": true,
     "allowSyntheticDefaultImports": true,
     "allowUnreachableCode": false,
-    "removeComments": false
+    "removeComments": false,
+    "typeRoots": [
+      "./node_modules/@types",
+      "./types/"
+    ]
   },
   "include": [
     "src/**/*"

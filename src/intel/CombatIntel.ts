@@ -744,3 +744,6 @@ export class CombatIntel {
 	}
 
 }
+
+// For debugging
+global.CombatIntel = CombatIntel;

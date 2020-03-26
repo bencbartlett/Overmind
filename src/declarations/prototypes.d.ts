@@ -233,7 +233,7 @@ interface StructureTerminal {
 	energy: any;
 	isFull: boolean;
 	isEmpty: boolean;
-	// _send(resourceType: ResourceConstant, amount: number, destination: string, description?: string): ScreepsReturnCode;
+	isReady: boolean;
 }
 
 interface StructureTower {

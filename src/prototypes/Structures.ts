@@ -180,17 +180,22 @@ Object.defineProperty(StructureTerminal.prototype, 'isEmpty', { // if this conta
 	configurable: true,
 });
 
-// StructureTerminal.prototype._send = StructureTerminal.prototype.send;
-// StructureTerminal.prototype.send = function(resourceType: ResourceConstant, amount: number, destination: string,
-// 											description?: string): ScreepsReturnCode {
-// 	// Log stats
-// 	let origin = this.room.name;
-// 	let response = this._send(resourceType, amount, destination, description);
-// 	if (response == OK) {
-// 		TerminalNetwork.logTransfer(resourceType,amount,origin, destination)
-// 	}
-// 	return response;
-// };
+Object.defineProperty(StructureTerminal.prototype, 'isReady', { // the terminal is ready to send or deal
+	get() {
+		return this.cooldown == 0 && !this._sentThisTick;
+	},
+	configurable: true,
+});
+
+const _terminalSend = StructureTerminal.prototype.send;
+StructureTerminal.prototype.send = function(resourceType: ResourceConstant, amount: number, destination: string,
+											description?: string): ScreepsReturnCode {
+	const response = _terminalSend.call(this, resourceType, amount, destination, description);
+	if (response == OK) {
+		this._sentThisTick = true;
+	}
+	return response;
+};
 
 // Tower prototypes
 
