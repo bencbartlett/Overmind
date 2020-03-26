@@ -71,6 +71,10 @@ export function onPublicServer(): boolean {
 	return Game.shard.name.includes('shard');
 }
 
+export function onBotArena(): boolean {
+	return Game.shard.name.toLowerCase() == 'botarena';
+}
+
 export function onTrainingEnvironment(): boolean {
 	return !!Memory.reinforcementLearning && !!Memory.reinforcementLearning.enabled;
 }

@@ -3,7 +3,7 @@ import {maxMarketPrices, TraderJoe} from '../logistics/TradeNetwork';
 import {Mem} from '../memory/Memory';
 import {profile} from '../profiler/decorator';
 import {mergeSum, minMax, onPublicServer} from '../utilities/utils';
-import {REAGENTS} from './map_resources';
+import {BASE_RESOURCES, REAGENTS} from './map_resources';
 
 export const priorityStockAmounts: { [key: string]: number } = {
 	XGHO2: 1000,	// (-70 % dmg taken)
@@ -229,7 +229,7 @@ export class Abathur {
 		amount = minMax(amount, Abathur.settings.minBatchSize, Abathur.settings.maxBatchSize);
 		if (verbose) console.log(`Abathur@${this.colony.room.print}: building reaction queue for ${amount} ${mineral}`);
 		let reactionQueue: Reaction[] = [];
-		for (const ingredient of this.ingredientsList(mineral)) {
+		for (const ingredient of Abathur.enumerateReactionProducts(mineral)) {
 			let productionAmount = amount;
 			if (ingredient != mineral) {
 				if (verbose) console.log(`productionAmount: ${productionAmount}, assets: ${this.assets[ingredient]}`);
@@ -314,16 +314,32 @@ export class Abathur {
 	}
 
 	/**
-	 * Recursively generate a list of ingredients required to produce a compound
+	 * Recursively generate a list of outputs from reactions required to generate a compound
 	 */
-	private ingredientsList(mineral: ResourceConstant): ResourceConstant[] {
+	static enumerateReactionProducts(mineral: ResourceConstant): ResourceConstant[] {
 		if (!REAGENTS[mineral] || _.isEmpty(mineral)) {
 			return [];
 		} else {
-			return this.ingredientsList(REAGENTS[mineral][0])
-					   .concat(this.ingredientsList(REAGENTS[mineral][1]),
-							   mineral);
+			return Abathur.enumerateReactionProducts(REAGENTS[mineral][0])
+						  .concat(Abathur.enumerateReactionProducts(REAGENTS[mineral][1]),
+								  mineral);
+		}
+	}
+
+	/**
+	 * Recursively enumerate the base ingredients required to synthesize a unit of the specified compound
+	 */
+	static enumerateReactionBaseIngredients(mineral: ResourceConstant): ResourceConstant[] {
+		if ((<ResourceConstant[]>BASE_RESOURCES).includes(mineral)) {
+			return [mineral];
+		} else if (REAGENTS[mineral]) {
+			return Abathur.enumerateReactionBaseIngredients(REAGENTS[mineral][0])
+						  .concat(Abathur.enumerateReactionBaseIngredients(REAGENTS[mineral][1]));
+		} else {
+			return [];
 		}
 	}
 
 }
+
+global.Abathur = Abathur;

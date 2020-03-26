@@ -204,7 +204,7 @@ Object.defineProperty(StructureTerminal.prototype, 'isEmpty', { // if this conta
 
 Object.defineProperty(StructureTerminal.prototype, 'isReady', { // the terminal is ready to send or deal
 	get() {
-		return this.cooldown == 0 && !this._sentThisTick;
+		return this.cooldown == 0 && !this._notReady;
 	},
 	configurable: true,
 });
@@ -214,7 +214,7 @@ StructureTerminal.prototype.send = function(resourceType: ResourceConstant, amou
 											description?: string): ScreepsReturnCode {
 	const response = _terminalSend.call(this, resourceType, amount, destination, description);
 	if (response == OK) {
-		this._sentThisTick = true;
+		this._notReady = true;
 	}
 	return response;
 };

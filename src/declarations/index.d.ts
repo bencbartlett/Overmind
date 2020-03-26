@@ -1,6 +1,8 @@
 declare const require: (module: string) => any;
 declare var global: any;
 
+declare const MARKET_FEE: 300; // missing in the typed-screeps declarations
+
 declare namespace NodeJS {
 	interface Global {
 

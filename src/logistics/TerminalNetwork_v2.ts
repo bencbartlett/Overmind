@@ -7,8 +7,6 @@ import {Abathur} from '../resources/Abathur';
 import {ALL_ZERO_ASSETS} from '../resources/map_resources';
 import {alignedNewline, bullet, rightArrow} from '../utilities/stringConstants';
 import {exponentialMovingAverage, maxBy, mergeSum, minBy, minMax} from '../utilities/utils';
-import {Energetics} from './Energetics';
-import {MAX_ENERGY_SELL_ORDERS} from './TradeNetwork';
 
 interface TerminalNetworkMemory {
 	equalizeIndex: number;
@@ -66,7 +64,7 @@ export const enum TN_STATE {
 	error            = 0, // this should never be used
 }
 
-const DEFAULT_TARGET = 2 * LAB_MINERAL_CAPACITY + 1000;
+const DEFAULT_TARGET = 2 * LAB_MINERAL_CAPACITY + 1000; //
 
 export const RESOURCE_EXCHANGE_PRIORITIES: ResourceConstant[] = [
 	// TODO: fill in
@@ -318,43 +316,6 @@ export class TerminalNetworkV2 {
 		return TN_STATE.error;
 	}
 
-	/**
-	 * Compute which colonies should act as active providers, passive providers, and requestors
-	 */
-	private assignColonyStates() {
-		// Assign a state to each colony whose state isn't already specified
-		for (const colony of this.colonies) {
-			for (const resource of RESOURCE_EXCHANGE_PRIORITIES) {
-				if (this.colonyStates[colony.name][resource] == undefined) {
-					this.colonyStates[colony.name][resource] = this.getColonyState(colony, resource);
-				}
-				// Populate the entry in the tier lists
-				switch (this.colonyStates[colony.name][resource]) {
-					case TN_STATE.activeProvider:
-						this.activeProviders[resource].push(colony);
-						break;
-					case TN_STATE.passiveProvier:
-						this.passiveProviders[resource].push(colony);
-						break;
-					case TN_STATE.equilibrium:
-						this.equilibriumNodes[resource].push(colony);
-						break;
-					case TN_STATE.passiveRequestor:
-						this.passiveRequestors[resource].push(colony);
-						break;
-					case TN_STATE.activeRequestor:
-						this.activeRequestors[resource].push(colony);
-						break;
-					case TN_STATE.error:
-						log.error(`TN_STATE.error type encountered!`);
-						break;
-					default:
-						log.error(`Should not be here! colony state is ${this.colonyStates[colony.name][resource]}`);
-						break;
-				}
-			}
-		}
-	}
 
 	/**
 	 * Request resources from the terminal network, placing the colony in an activeRequestor state
@@ -376,6 +337,10 @@ export class TerminalNetworkV2 {
 		} else {
 
 		}
+	}
+
+	requestResourceExport(): void {
+		// TODO
 	}
 
 	// /**
@@ -445,6 +410,50 @@ export class TerminalNetworkV2 {
 	init(): void {
 		// Update assets
 		this.assets = mergeSum(_.map(this.colonies, colony => colony.assets));
+	}
+
+	/**
+	 * Compute which colonies should act as active providers, passive providers, and requestors
+	 */
+	private assignColonyStates(): void {
+		// Assign a state to each colony whose state isn't already specified
+		for (const colony of this.colonies) {
+			for (const resource of RESOURCE_EXCHANGE_PRIORITIES) {
+				if (this.colonyStates[colony.name][resource] == undefined) {
+					this.colonyStates[colony.name][resource] = this.getColonyState(colony, resource);
+				}
+				// Populate the entry in the tier lists
+				switch (this.colonyStates[colony.name][resource]) {
+					case TN_STATE.activeProvider:
+						this.activeProviders[resource].push(colony);
+						break;
+					case TN_STATE.passiveProvier:
+						this.passiveProviders[resource].push(colony);
+						break;
+					case TN_STATE.equilibrium:
+						this.equilibriumNodes[resource].push(colony);
+						break;
+					case TN_STATE.passiveRequestor:
+						this.passiveRequestors[resource].push(colony);
+						break;
+					case TN_STATE.activeRequestor:
+						this.activeRequestors[resource].push(colony);
+						break;
+					case TN_STATE.error:
+						log.error(`TN_STATE.error type encountered!`);
+						break;
+					default:
+						log.error(`Should not be here! colony state is ${this.colonyStates[colony.name][resource]}`);
+						break;
+				}
+			}
+		}
+		// Shuffle all the colony orders in each tier - this helps prevent jams
+		_.forEach(this.activeRequestors, (cols, resource) => this.activeRequestors[resource!] = _.shuffle(cols));
+		_.forEach(this.passiveRequestors, (cols, resource) => this.passiveRequestors[resource!] = _.shuffle(cols));
+		_.forEach(this.equilibriumNodes, (cols, resource) => this.equilibriumNodes[resource!] = _.shuffle(cols));
+		_.forEach(this.passiveProviders, (cols, resource) => this.passiveProviders[resource!] = _.shuffle(cols));
+		_.forEach(this.activeProviders, (cols, resource) => this.activeProviders[resource!] = _.shuffle(cols));
 	}
 
 
@@ -617,6 +626,7 @@ export class TerminalNetworkV2 {
 		}
 
 		// TODO: if no send target, check out market options for getting rid of excess resources
+
 	}
 
 
