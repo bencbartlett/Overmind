@@ -48,7 +48,8 @@ export class Pathing {
 		if (!room) {
 			return;
 		}
-		if (!(room.controller && room.controller.my) && room.towers.length > 0) {
+		if (!(room.controller && (room.controller.my || Memory.settings.allies.includes(room.controller.owner.username)))
+			&& room.towers.length > 0) {
 			room.memory[_RM.AVOID] = true;
 		} else {
 			delete room.memory[_RM.AVOID];
