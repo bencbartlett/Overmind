@@ -501,7 +501,7 @@ export class Movement {
 					otherData.path = Pathing.oppositeDirection(pushDirection) + otherData.path;
 					this.updateStateNextCoord(otherData, otherNextPos);
 				}
-				otherCreep.blockMovement = true;
+				otherCreep.blockMovement = true; // TODO: <-- movement bug? what if cmds are procesed in wrong order?
 				return true;
 			} else {
 				return false;
