@@ -3,6 +3,7 @@ import {log} from '../console/log';
 import {Mem} from '../memory/Memory';
 import {profile} from '../profiler/decorator';
 import {Abathur} from '../resources/Abathur';
+import {BASE_RESOURCES} from '../resources/map_resources';
 import {alignedNewline, bullet, leftArrow, rightArrow} from '../utilities/stringConstants';
 import {maxBy, minBy, printRoomName} from '../utilities/utils';
 import {RESERVE_CREDITS} from '../~settings';
@@ -79,6 +80,7 @@ export const ERR_INSUFFICIENT_ENERGY_IN_TERMINAL = -103; // ERR_NOT_ENOUGH_ENERG
 export const ERR_NOT_ENOUGH_MARKET_DATA = -104;
 export const ERR_TOO_MANY_ORDERS_OF_TYPE = -105;
 export const ERR_BUY_DIRECT_PRICE_TOO_EXPENSIVE = -106;
+export const ERR_CREDIT_THRESHOLDS = -107;
 
 
 /**
@@ -128,6 +130,18 @@ export class TraderJoe implements ITradeNetwork {
 
 	private notify(msg: string): void {
 		this.notifications.push(bullet + msg);
+	}
+
+	/**
+	 * Returns the approximate price of a mineral - shouldn't be used for optimizing prices, just as a ballpark
+	 * feasibility estimate
+	 */
+	priceOf(mineralType: ResourceConstant): number {
+		if (this.memory.cache.history[mineralType]) {
+			return this.memory.cache.history[mineralType].avg;
+		} else {
+			return Infinity;
+		}
 	}
 
 	/**
@@ -259,124 +273,6 @@ export class TraderJoe implements ITradeNetwork {
 		}
 	}
 
-	private cleanUpInactiveOrders() {
-		// Clean up sell orders that have expired or orders belonging to rooms no longer owned
-		const ordersToClean = _.filter(Game.market.orders, o =>
-			(o.type == ORDER_SELL && o.active == false && o.remainingAmount == 0)		// if order is expired, or
-			|| (Game.time - o.created > TraderJoe.settings.market.orders.timeout		// order is old and almost done
-				&& o.remainingAmount < TraderJoe.settings.market.orders.cleanupAmount)
-			|| (o.roomName && !Overmind.colonies[o.roomName]));							// order placed from dead colony
-		for (const order of ordersToClean) {
-			Game.market.cancelOrder(order.id);
-		}
-	}
-
-	// /**
-	//  * Opportunistically sells resources when the buy price is higher than current market sell low price
-	//  */
-	// private lookForGoodDeals(terminal: StructureTerminal, resource: ResourceConstant, margin = 1.25): void {
-	// 	if (Game.market.credits < TraderJoe.settings.market.reserveCredits) {
-	// 		return;
-	// 	}
-	// 	let amount = 5000;
-	// 	if (resource === RESOURCE_POWER) {
-	// 		amount = 100;
-	// 	}
-	// 	let ordersForMineral = Game.market.getAllOrders({resourceType: resource, type: ORDER_BUY});
-	// 	ordersForMineral = _.filter(ordersForMineral, order => order.amount >= amount);
-	// 	if (ordersForMineral === undefined) {
-	// 		return;
-	// 	}
-	// 	// const marketLow = this.memory.cache.sell[resource] ? this.memory.cache.sell[resource].low : undefined;
-	// 	const marketEntry = this.memory.cache.resources[resource];
-	// 	const marketLow = marketEntry ? marketEntry.avgPrice : undefined;
-	// 	if (marketLow == undefined) {
-	// 		return;
-	// 	}
-	//
-	// 	const order = maxBy(ordersForMineral, order => this.effectiveBuyPrice(order, terminal));
-	// 	if (order && order.price >= (marketLow * margin)) {
-	// 		const amount = Math.min(order.amount, 10000);
-	// 		const cost = Game.market.calcTransactionCost(amount, terminal.room.name, order.roomName!);
-	// 		if (terminal.store[RESOURCE_ENERGY] > cost) {
-	// 			const response = Game.market.deal(order.id, amount, terminal.room.name);
-	// 			this.logTransaction(order, terminal.room.name, amount, response);
-	// 		}
-	// 	}
-	// }
-
-	/**
-	 * Buy a resource on the market, either through a buy order or directly
-	 */
-	buy(terminal: StructureTerminal, resource: ResourceConstant, amount: number): void {
-		// if (Game.market.credits < TraderJoe.settings.market.credits.reserve || terminal.cooldown > 0) {
-		// 	return;
-		// }
-		// amount = Math.max(amount, TERMINAL_MIN_SEND);
-		// if (terminal.store[RESOURCE_ENERGY] < 10000 || terminal.storeCapacity - _.sum(terminal.store) < amount) {
-		// 	return;
-		// }
-		// let ordersForMineral = Game.market.getAllOrders({resourceType: resource, type: ORDER_SELL});
-		// ordersForMineral = _.filter(ordersForMineral, order => order.amount >= amount);
-		// const bestOrder = minBy(ordersForMineral, (order: Order) => order.price);
-		// let maxPrice = maxMarketPrices[resource] || maxMarketPrices.default;
-		// if (!onPublicServer()) {
-		// 	maxPrice = Infinity; // don't care about price limits if on private server
-		// }
-		// if (bestOrder && bestOrder.price <= maxPrice) {
-		// 	const response = Game.market.deal(bestOrder.id, amount, terminal.room.name);
-		// 	this.logTransaction(bestOrder, terminal.room.name, amount, response);
-		// }
-	}
-
-	/**
-	 * Buy resources directly from a seller using Game.market.deal() rather than making a buy order
-	 */
-	private buyDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
-						flexibleAmount = true): number {
-		// If terminal is on cooldown or just did something then return tired
-		if (!terminal.isReady) {
-			return ERR_TIRED;
-		}
-		// If flexibleAmount is allowed, consider buying from orders which don't need the full amount
-		const minAmount = flexibleAmount ? Math.min(200, amount) : amount;
-		const validOrders = _.filter(Game.market.getAllOrders({resourceType: resource, type: ORDER_SELL}),
-									 order => order.amount >= minAmount);
-
-		// Find the cheapest order, minimizing by (buying price + marginal cost of transaction)
-		const order = minBy(validOrders, order => order.price
-												  + this.marginalTransactionPrice(order, terminal.room.name)
-												  - order.amount / 1000000000); // last bit prioritizes biggest orders
-
-		// If no valid order, notify a warning and return an error so it can be handled in .buy()
-		if (!order) {
-			this.notify(`No valid market order to buy from! Buy request: ${amount} ${resource} to ` +
-						`${printRoomName(terminal.room.name)}`);
-			return ERR_NO_ORDER_TO_BUY_FROM;
-		}
-
-		// Check that the buy price isn't too expensive
-		const price = order.price + this.marginalTransactionPrice(order, terminal.room.name);
-		const priceForBaseIngredients = this.getPriceForBaseIngredients(resource);
-		const maxPriceWillingToPay = priceForBaseIngredients * (1.5 + Game.market.credits / 2e6);
-		if (priceForBaseIngredients != Infinity && price > maxPriceWillingToPay) {
-			this.notify(`Buy order is too expenisive! Buy request: ${amount} ${resource} to ` +
-						`${printRoomName(terminal.room.name)}, cost of best order: ${price}`);
-			return ERR_BUY_DIRECT_PRICE_TOO_EXPENSIVE;
-		}
-
-		// Do the deal
-		const buyAmount = Math.min(order.amount, amount);
-		const transactionCost = Game.market.calcTransactionCost(buyAmount, terminal.room.name, order.roomName!);
-		if (terminal.store[RESOURCE_ENERGY] >= transactionCost) {
-			const response = Game.market.deal(order.id, buyAmount, terminal.room.name);
-			this.logTransaction(order, terminal.room.name, amount, response);
-			return response;
-		} else {
-			return ERR_INSUFFICIENT_ENERGY_IN_TERMINAL;
-		}
-	}
-
 	/**
 	 * Computes a competitive market price to buy or sell resources at or to adjust existing orders to.
 	 * Returns Infinity if sanity checks are not passed or if there is insufficient data to generate a buy price,
@@ -473,7 +369,8 @@ export class TraderJoe implements ITradeNetwork {
 				return ret;
 			}
 
-			if (!normalFluctuation) {
+			// Small chance of changing the price if it's not competitive; don't do too often or you are high risk
+			if (!normalFluctuation && Math.random() < 1 / 200) {
 				const ret = Game.market.changeOrderPrice(existingOrder.id, price);
 				this.notify(`${terminal.room.print}: updating ${type} order price for ${resource} from ` +
 							`${existingOrder.price} to ${price}. Response: ${ret}`);
@@ -520,6 +417,51 @@ export class TraderJoe implements ITradeNetwork {
 
 	}
 
+	private cleanUpInactiveOrders() {
+		// Clean up sell orders that have expired or orders belonging to rooms no longer owned
+		const ordersToClean = _.filter(Game.market.orders, o =>
+			(o.type == ORDER_SELL && o.active == false && o.remainingAmount == 0)		// if order is expired, or
+			|| (Game.time - o.created > TraderJoe.settings.market.orders.timeout		// order is old and almost done
+				&& o.remainingAmount < TraderJoe.settings.market.orders.cleanupAmount)
+			|| (o.roomName && !Overmind.colonies[o.roomName]));							// order placed from dead colony
+		for (const order of ordersToClean) {
+			Game.market.cancelOrder(order.id);
+		}
+	}
+
+	/**
+	 * Buy a resource on the market, either through a buy order or directly (usually direct=true will be used)
+	 */
+	buy(terminal: StructureTerminal, resource: ResourceConstant, amount: number, preferDirect = false): number {
+
+		if (Game.market.credits < TraderJoe.settings.market.credits.canBuyAbove) {
+			log.error(`Credits insufficient to buy resources; shouldn't be making this TradeNetwork.buy() request!`);
+			return ERR_CREDIT_THRESHOLDS;
+		}
+
+		if (Game.market.credits < TraderJoe.settings.market.credits.canBuyBoostsAbove &&
+			!BASE_RESOURCES.includes(resource)) {
+			log.error(`Credits insufficient to buy boosts; shouldn't be making this TradeNetwork.buy() request!`);
+			return ERR_CREDIT_THRESHOLDS;
+		}
+
+		if (resource == RESOURCE_ENERGY) {
+			// TODO
+		}
+
+		// If you don't have a lot of credits or preferDirect==true, try to sell directly to an existing buy order
+		if (preferDirect && this.getExistingOrders(ORDER_BUY, resource, terminal.room.name).length == 0) {
+			const result = this.buyDirectly(terminal, resource, amount);
+			if (result != ERR_NO_ORDER_TO_BUY_FROM) {
+				return result;
+			}
+		}
+
+		// Fallthrough - if not preferDirect or if there's no orders to buy from then place an order
+		const result = this.maintainOrder(terminal, ORDER_BUY, resource, amount);
+		return result;
+	}
+
 	/**
 	 * Sell a resource on the market, either through a sell order or directly
 	 */
@@ -533,7 +475,7 @@ export class TraderJoe implements ITradeNetwork {
 		if (Game.market.credits < TraderJoe.settings.market.credits.mustSellDirectBelow || preferDirect) {
 			if (this.getExistingOrders(ORDER_SELL, resource, terminal.room.name).length == 0) {
 				const result = this.sellDirectly(terminal, resource, amount);
-				if (result != ERR_NO_ORDER_TO_SELL_TO && result != ERR_INSUFFICIENT_ENERGY_IN_TERMINAL) {
+				if (result != ERR_NO_ORDER_TO_SELL_TO) {
 					return result;
 				}
 			}
@@ -541,12 +483,60 @@ export class TraderJoe implements ITradeNetwork {
 
 		// If you have enough credits or if there are no buy orders to sell to, create / maintain a sell order
 		if (Game.market.credits >= TraderJoe.settings.market.credits.canPlaceSellOrdersAbove) {
-			const result = this.maintainSellOrder(terminal, resource, amount);
+			const result = this.maintainOrder(terminal, ORDER_SELL, resource, amount);
 			return result;
 		}
 
 		// No action needed
 		return OK;
+	}
+
+	/**
+	 * Buy resources directly from a seller using Game.market.deal() rather than making a buy order
+	 */
+	private buyDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
+						flexibleAmount = true): number {
+		// If terminal is on cooldown or just did something then return tired
+		if (!terminal.isReady) {
+			return ERR_TIRED;
+		}
+		// If flexibleAmount is allowed, consider buying from orders which don't need the full amount
+		const minAmount = flexibleAmount ? Math.min(200, amount) : amount;
+		const validOrders = _.filter(Game.market.getAllOrders({resourceType: resource, type: ORDER_SELL}),
+									 order => order.amount >= minAmount);
+
+		// Find the cheapest order, minimizing by (buying price + marginal cost of transaction)
+		const order = minBy(validOrders, order => order.price
+												  + this.marginalTransactionPrice(order, terminal.room.name)
+												  - order.amount / 1000000000); // last bit prioritizes biggest orders
+
+		// If no valid order, notify a warning and return an error so it can be handled in .buy()
+		if (!order) {
+			this.notify(`No valid market order to buy from! Buy request: ${amount} ${resource} to ` +
+						`${printRoomName(terminal.room.name)}`);
+			return ERR_NO_ORDER_TO_BUY_FROM;
+		}
+
+		// Check that the buy price isn't too expensive
+		const price = order.price + this.marginalTransactionPrice(order, terminal.room.name);
+		const priceForBaseIngredients = this.getPriceForBaseIngredients(resource);
+		const maxPriceWillingToPay = priceForBaseIngredients * (1.5 + Game.market.credits / 2e6);
+		if (priceForBaseIngredients != Infinity && price > maxPriceWillingToPay) {
+			this.notify(`Buy order is too expenisive! Buy request: ${amount} ${resource} to ` +
+						`${printRoomName(terminal.room.name)}, cost of best order: ${price}`);
+			return ERR_BUY_DIRECT_PRICE_TOO_EXPENSIVE;
+		}
+
+		// Do the deal
+		const buyAmount = Math.min(order.amount, amount);
+		const transactionCost = Game.market.calcTransactionCost(buyAmount, terminal.room.name, order.roomName!);
+		if (terminal.store[RESOURCE_ENERGY] >= transactionCost) {
+			const response = Game.market.deal(order.id, buyAmount, terminal.room.name);
+			this.logTransaction(order, terminal.room.name, amount, response);
+			return response;
+		} else {
+			return ERR_INSUFFICIENT_ENERGY_IN_TERMINAL;
+		}
 	}
 
 	/**
@@ -585,94 +575,6 @@ export class TraderJoe implements ITradeNetwork {
 			this.notify(`No valid market order to sell to! Sell request: ${amount} ${resource} from ` +
 						`${printRoomName(terminal.room.name)}`);
 			return ERR_NO_ORDER_TO_SELL_TO;
-		}
-	}
-
-	/**
-	 * Create or maintain a sell order
-	 */
-	private maintainSellOrder(terminal: StructureTerminal, resource: ResourceConstant, amount: number): number {
-		// This is all somewhat expensive so only do this occasionally
-		if (Game.time % 10 != 5) {
-			return OK; // No action needed on these ticks
-		}
-
-		const existingOrder = _.first(this.getExistingOrders(ORDER_SELL, resource, terminal.room.name));
-
-		// Maintain an existing order
-		if (existingOrder) {
-			// Figure out if price should be changed - if the competitive price is now significantly different
-			const sellPrice = this.computeCompetitivePrice('sell', resource, terminal.room.name);
-			if (sellPrice == Infinity || sellPrice == 0) {
-				return ERR_NOT_ENOUGH_MARKET_DATA;
-			}
-			const ratio = existingOrder.price / sellPrice;
-			const tolerance = 0.03;
-			const normalFluctuation = (1 + tolerance > ratio && ratio > 1 - tolerance);
-
-			// Extend the order if you need to sell more of the resource
-			if (amount > existingOrder.remainingAmount && normalFluctuation) {
-				const addAmount = amount - existingOrder.remainingAmount;
-				const ret = Game.market.extendOrder(existingOrder.id, addAmount);
-				this.notify(`${terminal.room.print}: extending sell order for ${resource} by ${addAmount}.` +
-							` Response: ${ret}`);
-				return ret;
-			}
-
-			if (!normalFluctuation) {
-				const ret = Game.market.changeOrderPrice(existingOrder.id, sellPrice);
-				this.notify(`${terminal.room.print}: updating sell order price for ${resource} from ` +
-							`${existingOrder.price} to ${sellPrice}. Response: ${ret}`);
-				return ret;
-			}
-
-			// No action needed
-			return OK;
-		}
-		// Create a new sell order
-		else {
-			// Compute the sale price
-			const sellPrice = this.computeCompetitivePrice('sell', resource, terminal.room.name);
-			if (sellPrice == Infinity || sellPrice == 0) {
-				return ERR_NOT_ENOUGH_MARKET_DATA;
-			}
-
-			// adjust the sell amount to only immediately list what you can afford; it can be extended later
-			const brokersFee = sellPrice * amount * MARKET_FEE;
-			if (Game.market.credits < brokersFee) {
-				amount = amount * Game.market.credits / brokersFee * 0.9;
-			}
-
-			// Only place up to a certain amount of orders
-			const existingOrdersForThis = this.getExistingOrders(ORDER_SELL, resource);
-			if (existingOrdersForThis.length < TraderJoe.settings.market.orders.maxOrdersForResource) {
-				const params = {
-					type        : ORDER_SELL,
-					resourceType: resource,
-					price       : sellPrice,
-					totalAmount : amount,
-					roomName    : terminal.room.name
-				};
-				const ret = Game.market.createOrder(params);
-				this.notify(`${terminal.room.print}: creating sell order for ${resource} at price ${sellPrice}. ` +
-							`Response: ${ret}`);
-				return ret;
-			} else {
-				this.notify(`${terminal.room.print}: could not create sell order for ${resource} - too many existing!`);
-				return ERR_TOO_MANY_ORDERS_OF_TYPE;
-			}
-		}
-	}
-
-	/**
-	 * Returns the approximate price of a mineral - shouldn't be used for optimizing prices, just as a ballpark
-	 * feasibility estimate
-	 */
-	priceOf(mineralType: ResourceConstant): number {
-		if (this.memory.cache.history[mineralType]) {
-			return this.memory.cache.history[mineralType].avg;
-		} else {
-			return Infinity;
 		}
 	}
 

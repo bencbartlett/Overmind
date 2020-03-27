@@ -347,12 +347,12 @@ export class EvolutionChamber extends HiveCluster {
 		if (this.colony.assets[boostType] >= boostAmount) {
 			// Does this colony have the needed resources already?
 			return true;
-		} else if (this.terminalNetwork.assets[boostType] >= 2 * boostAmount) {
+		} else if (this.terminalNetwork.assets[boostType] >= 2 * boostAmount) { // TODO -> fix for new TerminalNetwork
 			// Is there enough of the resource in terminalNetwork?
 			return true;
 		} else {
 			// Can you buy the resources on the market?
-			return (Game.market.credits > TraderJoe.settings.market.boostCredits +
+			return (Game.market.credits > TraderJoe.settings.market.credits.canBuyBoostsAbove +
 					boostAmount * Overmind.tradeNetwork.priceOf(boostType));
 		}
 	}

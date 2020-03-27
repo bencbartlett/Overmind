@@ -9,7 +9,7 @@ import {RESOURCE_IMPORTANCE} from '../resources/map_resources';
 import {alignedNewline, bullet, rightArrow} from '../utilities/stringConstants';
 import {cyclicListPermutation, maxBy, mergeSum, minBy, minMax} from '../utilities/utils';
 import {Energetics} from './Energetics';
-import {MAX_ENERGY_BUY_ORDERS, MAX_ENERGY_SELL_ORDERS, TraderJoe} from './TradeNetwork';
+import {TraderJoe} from './TradeNetwork';
 
 interface TerminalNetworkMemory {
 	equalizeIndex: number;
@@ -260,16 +260,8 @@ export class TerminalNetwork implements ITerminalNetwork {
 					const storage = colonyOf(terminal).storage;
 					const storageEnergyCap = Energetics.settings.storage.total.cap;
 					if (!storage || storage.energy >= storageEnergyCap) {
-
-						if (terminalNearCapacity) { // just get rid of stuff at high capacities
-							const response = Overmind.tradeNetwork.sellDirectly(terminal, RESOURCE_ENERGY, amount, true);
-							if (response == OK) return;
-						} else {
-							const response = Overmind.tradeNetwork.sell(terminal, RESOURCE_ENERGY, amount,
-																		MAX_ENERGY_SELL_ORDERS);
-							if (response == OK) return;
-						}
-
+						const ret = Overmind.tradeNetwork.sell(terminal, RESOURCE_ENERGY, amount, terminalNearCapacity);
+						if (ret == OK) return;
 					}
 				}
 
@@ -285,7 +277,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 					} else {
 						// Sell excess
 						if (terminalNearCapacity || terminal.store[<ResourceConstant>resource]! > 2 * threshold) {
-							const response = Overmind.tradeNetwork.sellDirectly(terminal, <ResourceConstant>resource, 1000);
+							const response = Overmind.tradeNetwork.sell(terminal, <ResourceConstant>resource, 1000, true);
 							if (response == OK) return;
 						} else {
 							const response = Overmind.tradeNetwork.sell(terminal, <ResourceConstant>resource, 10000);
@@ -552,7 +544,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 				this.handleExcess(terminalToSellExcess);
 			}
 			// Order more energy if needed
-			if (Game.market.credits > TraderJoe.settings.market.energyCredits) {
+			if (Game.market.credits > TraderJoe.settings.market.credits.canBuyEnergyAbove) {
 				const averageEnergy = _.sum(this.terminals, terminal => colonyOf(terminal).assets[RESOURCE_ENERGY] || 0)
 									  / this.terminals.length;
 				if (averageEnergy < TerminalNetwork.settings.buyEnergyThreshold) {
@@ -560,8 +552,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 												  terminal => colonyOf(terminal).assets[RESOURCE_ENERGY] || 0);
 					if (poorestTerminal) {
 						const amount = Energetics.settings.terminal.energy.tradeAmount;
-						Overmind.tradeNetwork.maintainBuyOrder(poorestTerminal, RESOURCE_ENERGY, amount,
-															   MAX_ENERGY_BUY_ORDERS);
+						Overmind.tradeNetwork.buy(poorestTerminal, RESOURCE_ENERGY, amount, false);
 					}
 				}
 			}

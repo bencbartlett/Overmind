@@ -191,18 +191,9 @@ interface ITradeNetwork {
 
 	priceOf(mineralType: ResourceConstant): number;
 
-	lookForGoodDeals(terminal: StructureTerminal, mineral: string, margin?: number): void;
+	buy(terminal: StructureTerminal, mineralType: ResourceConstant, amount: number, preferDirect?: boolean): number;
 
-	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount?: number,
-				 flexibleAmount?: boolean): number | undefined;
-
-	sell(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
-		 maxOrdersOfType?: number): number | undefined;
-
-	buy(terminal: StructureTerminal, mineralType: ResourceConstant, amount: number): void;
-
-	maintainBuyOrder(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
-					 maxOrdersOfType?: number): void;
+	sell(terminal: StructureTerminal, resource: ResourceConstant, amount: number, preferDirect?: boolean): number;
 
 	init(): void;
 

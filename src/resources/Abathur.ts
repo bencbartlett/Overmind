@@ -161,7 +161,7 @@ export class Abathur {
 
 
 	private canBuyBasicMineralsForReaction(mineralQuantities: { [resourceType: string]: number }): boolean {
-		if (Game.market.credits < TraderJoe.settings.market.reserveCredits) {
+		if (Game.market.credits < TraderJoe.settings.market.credits.canBuyAbove) {
 			return false;
 		}
 		for (const mineral in mineralQuantities) {
