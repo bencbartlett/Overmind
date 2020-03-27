@@ -63,6 +63,10 @@ export function getUsername(): string {
 	return 'ERROR: Could not determine username.';
 }
 
+export function isAlly(username: string): boolean {
+	return (Memory.settings.allies || []).includes(username);
+}
+
 export function hasJustSpawned(): boolean {
 	return _.keys(Overmind.colonies).length == 1 && _.keys(Game.creeps).length == 0 && _.keys(Game.spawns).length == 1;
 }
