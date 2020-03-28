@@ -1,5 +1,4 @@
 import {log} from '../../console/log';
-import {DirectiveControllerAttack} from '../../directives/offense/controllerAttack';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {DistractionOverlord} from '../../overlords/defense/distraction';
 import {PairDestroyerOverlord} from '../../overlords/offense/pairDestroyer';
@@ -41,8 +40,7 @@ export class DirectivePairDestroy extends Directive {
 
 	run(): void {
 		// If there are no hostiles left in the room then remove the flag and associated healpoint
-		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0 
-			&& !(this.room.controller && DirectiveControllerAttack.isPresent(this.room.controller.pos, 'pos'))) {
+		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
 			log.notify(`Pair destroyer mission at ${this.pos.roomName} completed successfully.`);
 			this.remove();
 		}

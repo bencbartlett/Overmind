@@ -31,12 +31,6 @@ interface Memory {
 		log: LoggerMemory;
 		enableVisuals: boolean;
 		allies: string[];
-		autoAttack: {
-			enable			   : boolean,
-			autoAttackWhiteList: string[]; // do not auto attack rooms in this list.
-			autoAttackWatchList: string[]; // attack there rooms when hostile on site
-		};
-		
 		resourceCollectionMode: resourceCollectionMode;
 		powerCollection: {
 			enabled: boolean;

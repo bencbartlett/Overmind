@@ -210,11 +210,6 @@ export class Mem {
 			enableVisuals         : true,
 			resourceCollectionMode: 0,
 			allies                : [MY_USERNAME],
-			autoAttack			  : {
-				enable				  : true,
-				autoAttackWhiteList	  : [],
-				autoAttackWatchList	  : [],
-			},
 			powerCollection       : {
 				enabled : false,
 				maxRange: 5,
