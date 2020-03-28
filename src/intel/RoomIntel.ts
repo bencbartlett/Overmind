@@ -3,7 +3,7 @@
 import {getAllColonies} from '../Colony';
 import {log} from '../console/log';
 import {DirectiveOutpost} from '../directives/colony/outpost';
-import {DirectivePoisonRoom} from '../directives/offense/poisonRoom';
+import {DirectivePoisonRoom} from '../directives/colony/poisonRoom';
 import {DirectivePowerMine} from '../directives/resource/powerMine';
 import {DirectiveStronghold} from '../directives/situational/stronghold';
 import {Segmenter} from '../memory/Segmenter';
@@ -458,46 +458,24 @@ export class RoomIntel {
 			}
 		}
 	}
-	private static autoPoison(room: Room) {
-		
-		if(!Memory.settings.autoPoison.enabled || !room || getAllColonies().length == Game.gcl.level) {
-			return;
-		}
 
-		// poison X rooms at a time
-		let count = 0;
-		for (const colony of getAllColonies()) {
-			if(Game.flags['POISON-'+colony.name]) {
-				count++;
-			}
-			if (count >= Memory.settings.autoPoison.concurrent) {
-				return;
-			}
-		}
-		
-		if (!(room.controller && room.controller.level == 0 && room.controller.reservation == undefined 
-			&& !room.storage && !room.terminal // do not include rooms with storage/terminal, i might want to loot
-			&& room.hostiles.length == 0)
-			|| DirectiveOutpost.isPresent(room.controller.pos,'pos')) {  // do not poison own outPost!
-			return; // not a valid room to poison;
+	private static autoPoison(room: Room) {
+		if (!DirectivePoisonRoom.canAutoPoison(room)) {
+			return;
 		} 
-		
-		const walkableControllerPositions = _.filter(room.controller.pos.neighbors, pos => pos.isWalkable(true));
-		if (walkableControllerPositions.length == 0) {
-			return; // already poisoned.
-		}
-		
-		const colonies = getAllColonies().filter(colony => colony.level > 6);
+		const colonies = getAllColonies().filter(colony => colony.level > DirectivePoisonRoom.requiredRCL
+			&& Game.map.getRoomLinearDistance(colony.name, room.name) <= Memory.settings.autoPoison.maxRange );
 		for (const colony of colonies) {
 			const route = Game.map.findRoute(colony.room, room);
 			if (route != -2 && route.length <= Memory.settings.autoPoison.maxRange) {
-				Game.notify(`FOUND ROOM TO POISON IN RANGE ${route.length}, POISONING ROOM ${room.name}`);
-				DirectivePoisonRoom.createIfNotPresent(room.controller.pos, 'pos',{name: 'POISON-'+colony.room.name});
+				Game.notify(`Found a room to poison in range ${route.length}, poisoning ${room.name}`);
+				DirectivePoisonRoom.createIfNotPresent(room!.controller!.pos, 'pos',{name: 'poisonRoom-'+colony.room.name});
 				Memory.settings.autoPoison.poisonedRooms.push(room.name);
 				return;
 			}
 		}
 	}
+
 	static run(): void {
 		let alreadyComputedScore = false;
 		// this.requestZoneData();

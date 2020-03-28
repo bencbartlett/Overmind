@@ -5,6 +5,7 @@ import {DirectiveColonize} from './colony/colonize';
 import {DirectiveIncubate} from './colony/incubate';
 import {DirectiveOutpost} from './colony/outpost';
 import {DirectiveSKOutpost} from './colony/outpostSK';
+import {DirectivePoisonRoom} from './colony/poisonRoom';
 import {DirectiveGuard} from './defense/guard';
 import {DirectiveInvasionDefense} from './defense/invasionDefense';
 import {DirectiveOutpostDefense} from './defense/outpostDefense';
@@ -12,7 +13,6 @@ import {Directive} from './Directive';
 import {DirectiveControllerAttack} from './offense/controllerAttack';
 import {DirectiveHarass} from './offense/harass';
 import {DirectivePairDestroy} from './offense/pairDestroy';
-import {DirectivePoisonRoom} from './offense/poisonRoom';
 import {DirectiveSwarmDestroy} from './offense/swarmDestroy';
 import {DirectiveBaseOperator} from './powerCreeps/baseOperator';
 import {DirectiveExtract} from './resource/extract';
@@ -53,6 +53,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveColonize(flag);
 				case COLOR_ORANGE:
 					return new DirectiveClearRoom(flag);
+				case COLOR_RED:
+					return new DirectivePoisonRoom(flag);
 			}
 			break;
 
@@ -67,8 +69,6 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveControllerAttack(flag);
 				case COLOR_WHITE:
 					return new DirectiveHarass(flag);
-				case COLOR_BROWN:
-					return new DirectivePoisonRoom(flag);
 			}
 			break;
 
