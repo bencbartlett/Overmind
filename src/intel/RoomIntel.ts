@@ -469,8 +469,11 @@ export class RoomIntel {
 			const route = Game.map.findRoute(colony.room, room);
 			if (route != -2 && route.length <= Memory.settings.autoPoison.maxRange) {
 				Game.notify(`Found a room to poison in range ${route.length}, poisoning ${room.name}`);
-				DirectivePoisonRoom.createIfNotPresent(room!.controller!.pos, 'pos',{name: 'poisonRoom-'+colony.room.name});
-				Memory.settings.autoPoison.poisonedRooms.push(room.name);
+				const result = DirectivePoisonRoom.createIfNotPresent(room!.controller!.pos, 'pos',
+																	 {name: 'poisonRoom:'+colony.room.name});
+				if (typeof result == 'string' || result == OK) { // successfully made flag
+					Memory.settings.autoPoison.poisonedRooms.push(room.name);
+				}
 				return;
 			}
 		}

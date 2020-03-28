@@ -65,8 +65,7 @@ export class DirectivePoisonRoom extends Directive {
 				_.filter(Game.flags, flag => 
 					flag.color 			== DirectivePoisonRoom.color && 
 					flag.secondaryColor == DirectivePoisonRoom.secondaryColor).length < Memory.settings.autoPoison.concurrent &&
-				(_.unique(_.flatten(_.map(_.compact([room.controller, ...room.sources])
-													,obj => obj.pos.neighbors))).filter(pos => pos.isWalkable(true))).length > 0);
+				(_.filter(room.controller.pos.neighbors, pos => pos.isWalkable(true))).length > 0); // check controller only.
 	}
 
 	spawnMoarOverlords() {
