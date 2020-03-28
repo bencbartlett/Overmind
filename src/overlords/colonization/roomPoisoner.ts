@@ -79,8 +79,8 @@ export class RoomPoisonerOverlord extends Overlord {
 			}
 
 			// if nothing to do, then move away from possible csite location if any.
-			const fleePositions = (<RoomPosition[]><unknown>_(_.compact([this.room.controller, ...this.room.sources])).map(obj =>
-									obj.pos).unique(pos => pos.name).filter(pos => pos.isWalkable));
+			const fleePositions = (_.unique(_.map(_.compact([this.room.controller, ...this.room.sources]),
+									obj => obj.pos)).filter(pos => pos.isWalkable));
 			if(fleePositions.length > 0) {
 				roomPoisoner.flee(fleePositions,{},{fleeRange:3});
 			}

@@ -54,8 +54,7 @@ export class DirectivePoisonRoom extends Directive {
 			return [];
 		}
 		const thingsToBlock = _.compact([this.room.controller, ...this.room.sources]) as RoomObject[];
-		return <RoomPosition[]><unknown>_(thingsToBlock).map(obj => 
-				obj.pos).unique(pos => pos.name).filter(pos => pos.isWalkable);
+		return  _.unique(_.map(thingsToBlock,obj => obj.pos)).filter(pos => pos.isWalkable); 
 	}
 
 	static canAutoPoison(room: Room): boolean {
@@ -66,8 +65,8 @@ export class DirectivePoisonRoom extends Directive {
 				_.filter(Game.flags, flag => 
 					flag.color 			== DirectivePoisonRoom.color && 
 					flag.secondaryColor == DirectivePoisonRoom.secondaryColor).length < Memory.settings.autoPoison.concurrent &&
-				(<RoomPosition[]><unknown>_(_.compact([room.controller, ...room.sources])).map(obj => 
-													   obj.pos).unique(pos => pos.name).filter(pos => pos.isWalkable)).length > 0);
+				(_.unique(_.map(_.compact([room.controller, ...room.sources]),
+					obj => obj.pos)).filter(pos => pos.isWalkable)).length > 0);
 	}
 
 	spawnMoarOverlords() {
