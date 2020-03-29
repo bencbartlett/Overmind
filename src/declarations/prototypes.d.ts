@@ -234,6 +234,7 @@ interface StructureTerminal {
 	isFull: boolean;
 	isEmpty: boolean;
 	isReady: boolean;
+	hasReceived: boolean;
 }
 
 interface StructureTower {

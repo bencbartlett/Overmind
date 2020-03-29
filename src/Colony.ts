@@ -147,7 +147,7 @@ export class Colony {
 	level: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; 				// Level of the colony's main room
 	stage: number;										// The stage of the colony "lifecycle"
 	defcon: number;
-	terminalState: TerminalState | undefined;
+	// terminalState: TerminalState | undefined;
 	breached: boolean;
 	lowPowerMode: boolean; 								// Activate if RCL8 and full energy
 	layout: 'twoPart' | 'bunker';						// Which room design colony uses
@@ -404,7 +404,7 @@ export class Colony {
 		this.breached = (this.room.dangerousHostiles.length > 0 &&
 						 this.creeps.length == 0 &&
 						 !this.controller.safeMode);
-		this.terminalState = undefined;
+		// this.terminalState = undefined;
 	}
 
 	/**
@@ -440,6 +440,10 @@ export class Colony {
 		this.roadLogistics = new RoadLogistics(this);
 		// "Organism Abathur with you."
 		this.abathur = new Abathur(this);
+		// Add colony to TerminalNetwork if applicable
+		if (this.terminal) {
+			Overmind.terminalNetwork.addColony(this);
+		}
 	}
 
 	/**

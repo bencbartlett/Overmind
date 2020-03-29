@@ -6,7 +6,7 @@ import {TERMINAL_STATE_REBUILD} from '../../directives/terminalState/terminalSta
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {BuildPriorities, FortifyPriorities} from '../../priorities/priorities_structures';
 import {profile} from '../../profiler/decorator';
-import {boostResources} from '../../resources/map_resources';
+import {boostTypesAndTiers} from '../../resources/map_resources';
 import {Task} from '../../tasks/Task';
 import {Tasks} from '../../tasks/Tasks';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
@@ -125,7 +125,7 @@ export class WorkerOverlord extends Overlord {
 		const totalNukeDefenseHitsRemaining = _.sum(_.values(this.nukeDefenseHitsRemaining));
 		const approximateRepairPowerPerLifetime = REPAIR_POWER * 50 / 3 * CREEP_LIFE_TIME;
 		if (totalNukeDefenseHitsRemaining > 3 * approximateRepairPowerPerLifetime || this.fortifyBarriers.length > 5) {
-			opts.boostWishlist = [boostResources.construct[2]];
+			opts.boostWishlist = [boostTypesAndTiers.construct[2]];
 		}
 
 		// Register workers

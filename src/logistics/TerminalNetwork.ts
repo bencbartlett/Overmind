@@ -49,6 +49,13 @@ function wantedAmount(colony: Colony, resource: ResourceConstant): number {
 	return Abathur.stockAmount(resource) - (colony.assets[resource] || 0);
 }
 
+interface TerminalState {
+	name: string;
+	type: 'in' | 'out' | 'in/out';
+	amounts: { [resourceType: string]: number };
+	tolerance: number;
+}
+
 
 /**
  * The terminal network controls inter-colony resource transfers and requests, equalizing resources between rooms and
@@ -56,7 +63,7 @@ function wantedAmount(colony: Colony, resource: ResourceConstant): number {
  */
 @profile
 @assimilationLocked
-export class TerminalNetwork implements ITerminalNetwork {
+export class TerminalNetwork /*implements ITerminalNetwork*/ {
 	allTerminals: StructureTerminal[];				// All terminals
 	terminals: StructureTerminal[];					// Terminals in standard state
 	readyTerminals: StructureTerminal[];
@@ -74,15 +81,15 @@ export class TerminalNetwork implements ITerminalNetwork {
 
 	static settings = {
 		equalize          : {
-			frequency         : 2 * (TERMINAL_COOLDOWN + 1),
-			maxEnergySendSize : 25000,
-			maxMineralSendSize: 5000,
-			tolerance         : {
+			frequency            : 2 * (TERMINAL_COOLDOWN + 1),
+			maxEnergySendAmount  : 25000,
+			maxResourceSendAmount: 5000,
+			tolerance            : {
 				[RESOURCE_ENERGY]: 100000,
 				[RESOURCE_POWER] : 2000,
 				default          : 5000
 			} as { [resourceType: string]: number },
-			resources         : [
+			resources            : [
 				RESOURCE_ENERGY,
 				RESOURCE_POWER,
 				RESOURCE_CATALYST,

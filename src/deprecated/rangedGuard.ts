@@ -2,7 +2,7 @@
 //
 // import {OverlordPriority} from '../../priorities/priorities_overlords';
 // import {CreepSetup} from '../CreepSetup';
-// import {boostResources} from '../../resources/map_resources';
+// import {boostTypesAndTiers} from '../../resources/map_resources';
 // import {profile} from '../../profiler/decorator';
 // import {CombatIntel} from '../../intel/combatIntel';
 // import {Overlord} from '../Overlord';
@@ -149,7 +149,7 @@
 // 		let towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 0 : 0;
 // 		let worstDamageMultiplier = _.min(_.map(this.room.hostiles, creep => CombatIntel.minimumDamageTakenMultiplier(creep)));
 // 		let boosts = this.boosts[RangedGuardSetup.role];
-// 		if (boosts && boosts.includes(boostResources.ranged_attack[3])) { // TODO: add boost damage computation function to Overlord
+// 		if (boosts && boosts.includes(boostTypesAndTiers.ranged_attack[3])) { // TODO: add boost damage computation function to Overlord
 // 			hydraliskDamage *= 4;
 // 		}
 // 		// Match the hostile damage times some multiplier

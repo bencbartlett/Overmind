@@ -209,12 +209,22 @@ Object.defineProperty(StructureTerminal.prototype, 'isReady', { // the terminal 
 	configurable: true,
 });
 
+Object.defineProperty(StructureTerminal.prototype, 'hasReceived', { // terminal received this tick via send/deal
+	get() {
+		return this._hasReceived;
+	},
+	configurable: true,
+});
+
 const _terminalSend = StructureTerminal.prototype.send;
 StructureTerminal.prototype.send = function(resourceType: ResourceConstant, amount: number, destination: string,
 											description?: string): ScreepsReturnCode {
 	const response = _terminalSend.call(this, resourceType, amount, destination, description);
 	if (response == OK) {
 		this._notReady = true;
+		if (Game.rooms[destination] && Game.rooms[destination].terminal) {
+			(<any>Game.rooms[destination].terminal!)._hasReceived = true;
+		}
 	}
 	return response;
 };

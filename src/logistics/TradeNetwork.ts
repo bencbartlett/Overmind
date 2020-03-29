@@ -82,6 +82,12 @@ export const ERR_TOO_MANY_ORDERS_OF_TYPE = -105;
 export const ERR_BUY_DIRECT_PRICE_TOO_EXPENSIVE = -106;
 export const ERR_CREDIT_THRESHOLDS = -107;
 
+const defaultTradeOpts: TradeOpts = {
+	preferDirect    : false,
+	flexibleAmount  : true,
+	ignoreMinAmounts: false,
+};
+
 
 /**
  * The trade network controls resource acquisition and disposal on the player market.
@@ -96,11 +102,11 @@ export class TraderJoe implements ITradeNetwork {
 		},
 		market: {
 			credits: {
-				canBuyBoostsAbove      : 2 * Math.max(RESERVE_CREDITS, 1e5),
-				canBuyEnergyAbove      : 3 * Math.max(RESERVE_CREDITS, 1e5),
 				mustSellDirectBelow    : 75000,
 				canPlaceSellOrdersAbove: 10000,
 				canBuyAbove            : 40000,
+				canBuyBoostsAbove      : 2 * Math.max(RESERVE_CREDITS, 1e5),
+				canBuyEnergyAbove      : 3 * Math.max(RESERVE_CREDITS, 1e5),
 			},
 			orders : {
 				timeout             : 500000, // Remove orders after this many ticks if remaining amount < cleanupAmount
@@ -108,6 +114,10 @@ export class TraderJoe implements ITradeNetwork {
 				maxEnergySellOrders : 5,
 				maxEnergyBuyOrders  : 5,
 				maxOrdersForResource: 5,
+				minSellOrderAmount  : 5000,
+				minSellDirectAmount : 250,
+				minBuyOrderAmount   : 1000,
+				minBuyDirectAmount  : 500,
 			}
 		},
 	};
@@ -340,11 +350,17 @@ export class TraderJoe implements ITradeNetwork {
 	 * Create or maintain an order, extending and repricing as needed
 	 */
 	private maintainOrder(terminal: StructureTerminal, type: ORDER_SELL | ORDER_BUY,
-						  resource: ResourceConstant, amount: number): number {
+						  resource: ResourceConstant, amount: number, opts: TradeOpts): number {
 
 		// This is all somewhat expensive so only do this occasionally
 		if (Game.time % 10 != 5) {
 			return OK; // No action needed on these ticks
+		}
+		// Wait until you accumulate more of the resource to order with bigger transactions
+		const minAmount = type == ORDER_BUY ? TraderJoe.settings.market.orders.minBuyOrderAmount
+											: TraderJoe.settings.market.orders.minSellOrderAmount;
+		if (amount < minAmount && !opts.ignoreMinAmounts) {
+			return NO_ACTION;
 		}
 
 		const existingOrder = _.first(this.getExistingOrders(type, resource, terminal.room.name));
@@ -432,49 +448,59 @@ export class TraderJoe implements ITradeNetwork {
 	/**
 	 * Buy a resource on the market, either through a buy order or directly (usually direct=true will be used)
 	 */
-	buy(terminal: StructureTerminal, resource: ResourceConstant, amount: number, preferDirect = false): number {
+	buy(terminal: StructureTerminal, resource: ResourceConstant, amount: number, opts: TradeOpts = {}): number {
+
+		_.defaults(opts, defaultTradeOpts);
 
 		if (Game.market.credits < TraderJoe.settings.market.credits.canBuyAbove) {
 			log.error(`Credits insufficient to buy resources; shouldn't be making this TradeNetwork.buy() request!`);
 			return ERR_CREDIT_THRESHOLDS;
 		}
 
-		if (Game.market.credits < TraderJoe.settings.market.credits.canBuyBoostsAbove &&
-			!BASE_RESOURCES.includes(resource)) {
+		if (Game.market.credits < TraderJoe.settings.market.credits.canBuyBoostsAbove && Abathur.isBoost(resource)) {
 			log.error(`Credits insufficient to buy boosts; shouldn't be making this TradeNetwork.buy() request!`);
 			return ERR_CREDIT_THRESHOLDS;
 		}
 
 		if (resource == RESOURCE_ENERGY) {
 			// TODO
+			adsf
 		}
 
 		// If you don't have a lot of credits or preferDirect==true, try to sell directly to an existing buy order
-		if (preferDirect && this.getExistingOrders(ORDER_BUY, resource, terminal.room.name).length == 0) {
-			const result = this.buyDirectly(terminal, resource, amount);
+		if (opts.preferDirect && this.getExistingOrders(ORDER_BUY, resource, terminal.room.name).length == 0) {
+			const result = this.buyDirectly(terminal, resource, amount, opts);
 			if (result != ERR_NO_ORDER_TO_BUY_FROM) {
 				return result;
 			}
 		}
 
-		// Fallthrough - if not preferDirect or if there's no orders to buy from then place an order
-		const result = this.maintainOrder(terminal, ORDER_BUY, resource, amount);
+		// Fallthrough - if not preferDirect or if existing order or if there's no orders to buy from then make order
+		const result = this.maintainOrder(terminal, ORDER_BUY, resource, amount, opts);
 		return result;
 	}
 
 	/**
 	 * Sell a resource on the market, either through a sell order or directly
 	 */
-	sell(terminal: StructureTerminal, resource: ResourceConstant, amount: number, preferDirect = false): number {
+	sell(terminal: StructureTerminal, resource: ResourceConstant, amount: number, opts: TradeOpts = {}): number {
+
+		_.defaults(opts, defaultTradeOpts);
+
+		if (amount > terminal.store[resource]) {
+			log.warning(`Terminal @ ${printRoomName(terminal.room.name)} doesn't have ${amount} ${resource} in store!`);
+			amount = terminal.store[resource];
+		}
 
 		if (resource == RESOURCE_ENERGY) {
 			// TODO
+			asdf
 		}
 
 		// If you don't have a lot of credits or preferDirect==true, try to sell directly to an existing buy order
-		if (Game.market.credits < TraderJoe.settings.market.credits.mustSellDirectBelow || preferDirect) {
+		if (Game.market.credits < TraderJoe.settings.market.credits.mustSellDirectBelow || opts.preferDirect) {
 			if (this.getExistingOrders(ORDER_SELL, resource, terminal.room.name).length == 0) {
-				const result = this.sellDirectly(terminal, resource, amount);
+				const result = this.sellDirectly(terminal, resource, amount, opts);
 				if (result != ERR_NO_ORDER_TO_SELL_TO) {
 					return result;
 				}
@@ -483,25 +509,30 @@ export class TraderJoe implements ITradeNetwork {
 
 		// If you have enough credits or if there are no buy orders to sell to, create / maintain a sell order
 		if (Game.market.credits >= TraderJoe.settings.market.credits.canPlaceSellOrdersAbove) {
-			const result = this.maintainOrder(terminal, ORDER_SELL, resource, amount);
+			const result = this.maintainOrder(terminal, ORDER_SELL, resource, amount, opts);
 			return result;
+		} else {
+			return ERR_CREDIT_THRESHOLDS;
 		}
 
-		// No action needed
-		return OK;
 	}
 
 	/**
 	 * Buy resources directly from a seller using Game.market.deal() rather than making a buy order
 	 */
 	private buyDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
-						flexibleAmount = true): number {
-		// If terminal is on cooldown or just did something then return tired
+						opts: TradeOpts): number {
+		// If terminal is on cooldown or just did something then skip
 		if (!terminal.isReady) {
-			return ERR_TIRED;
+			return NO_ACTION; // don't return ERR_TIRED here because it doesn't signal an inability to buy
+		}
+		// Wait until you accumulate more of the resource to buy with bigger transactions
+		if (amount < TraderJoe.settings.market.orders.minBuyDirectAmount && !opts.ignoreMinAmounts) {
+			return NO_ACTION;
 		}
 		// If flexibleAmount is allowed, consider buying from orders which don't need the full amount
-		const minAmount = flexibleAmount ? Math.min(200, amount) : amount;
+		const minAmount = opts.flexibleAmount ? Math.min(TraderJoe.settings.market.orders.minBuyDirectAmount, amount)
+											  : amount;
 		const validOrders = _.filter(Game.market.getAllOrders({resourceType: resource, type: ORDER_SELL}),
 									 order => order.amount >= minAmount);
 
@@ -543,13 +574,18 @@ export class TraderJoe implements ITradeNetwork {
 	 * Sell resources directly to a buyer using Game.market.deal() rather than making a sell order
 	 */
 	private sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
-						 flexibleAmount = true): number {
-		// If terminal is on cooldown or just did something then return tired
+						 opts: TradeOpts): number {
+		// If terminal is on cooldown or just did something then skip
 		if (!terminal.isReady) {
-			return ERR_TIRED;
+			return NO_ACTION; // don't return ERR_TIRED here because it doesn't signal an inability to sell
+		}
+		// Wait until you accumulate more of the resource to sell with bigger transactions
+		if (amount < TraderJoe.settings.market.orders.minSellDirectAmount && !opts.ignoreMinAmounts) {
+			return NO_ACTION;
 		}
 		// If flexibleAmount is allowed, consider selling to orders which don't need the full amount
-		const minAmount = flexibleAmount ? Math.min(amount, 100) : amount;
+		const minAmount = opts.flexibleAmount ? Math.min(amount, TraderJoe.settings.market.orders.minSellDirectAmount)
+											  : amount;
 		const validOrders = _.filter(Game.market.getAllOrders({resourceType: resource, type: ORDER_BUY}),
 									 order => order.amount >= minAmount);
 

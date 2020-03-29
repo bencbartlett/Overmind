@@ -3,7 +3,7 @@ import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveStronghold} from '../../directives/situational/stronghold';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {boostResources} from '../../resources/map_resources';
+import {boostTypesAndTiers} from '../../resources/map_resources';
 import {getPosFromString} from '../../utilities/utils';
 import {Visualizer} from '../../visuals/Visualizer';
 import {CombatZerg} from '../../zerg/CombatZerg';
@@ -42,8 +42,8 @@ export class StrongholdOverlord extends CombatOverlord {
 		super(directive, 'stronghold', priority, 1);
 		this.strongholdKillers = this.combatZerg(Roles.strongholdKiller, {
 			notifyWhenAttacked: false,
-			boostWishlist     : [boostResources.tough[3], boostResources.ranged_attack[3],
-								 boostResources.heal[3], boostResources.move[3]]
+			boostWishlist     : [boostTypesAndTiers.tough[3], boostTypesAndTiers.ranged_attack[3],
+								 boostTypesAndTiers.heal[3], boostTypesAndTiers.move[3]]
 		});
 	}
 

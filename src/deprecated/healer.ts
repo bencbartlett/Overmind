@@ -3,7 +3,7 @@
 // import {Zerg} from '../../Zerg';
 // import {OverlordPriority} from '../priorities_overlords';
 // import {CombatOverlord} from '../CombatOverlord';
-// import {boostResources} from '../../resources/map_resources';
+// import {boostTypesAndTiers} from '../../resources/map_resources';
 // import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 // import {profile} from '../../profiler/decorator';
 // import {DirectiveTargetSiege} from '../../directives/targeting/siegeTarget';
@@ -34,7 +34,7 @@
 // 		this.defenders = this.creeps(HealerSetup.role);
 // 		if (boosted) {
 // 			this.boosts.defender = [
-// 				boostResources.attack[3],
+// 				boostTypesAndTiers.attack[3],
 // 			];
 // 		}
 // 		let rampartPositions = _.map(_.filter(this.colony.room.barriers, s => s.structureType == STRUCTURE_RAMPART),

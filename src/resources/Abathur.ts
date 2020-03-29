@@ -3,7 +3,14 @@ import {maxMarketPrices, TraderJoe} from '../logistics/TradeNetwork';
 import {Mem} from '../memory/Memory';
 import {profile} from '../profiler/decorator';
 import {mergeSum, minMax, onPublicServer} from '../utilities/utils';
-import {BASE_RESOURCES, REAGENTS} from './map_resources';
+import {
+	_baseResourcesLookup,
+	_boostTypesTierLookup, _commoditiesLookup,
+	_mineralCompoundsAllLookup,
+	BASE_RESOURCES, boostParts, DEPOSITS_ALL,
+	INTERMEDIATES,
+	REAGENTS
+} from './map_resources';
 
 export const priorityStockAmounts: { [key: string]: number } = {
 	XGHO2: 1000,	// (-70 % dmg taken)
@@ -129,6 +136,72 @@ export class Abathur {
 	refresh() {
 		this.memory = Mem.wrap(this.colony.memory, 'abathur', AbathurMemoryDefaults);
 		this.assets = this.colony.assets;
+	}
+
+	// Helper methods for identifying different types of resources
+
+	static isMineralOrCompound(resource: ResourceConstant): boolean {
+		return !!_mineralCompoundsAllLookup[resource];
+	}
+
+	static isBaseMineral(resource: ResourceConstant): boolean {
+		return !!_baseResourcesLookup[resource];
+	}
+
+	static isIntermediateReactant(resource: ResourceConstant): boolean {
+		return INTERMEDIATES.includes(resource);
+	}
+
+	static isBoost(resource: ResourceConstant): boolean {
+		return !!boostParts[resource];
+	}
+
+	static isAttackBoost(resource: ResourceConstant): boolean {
+		return !!_boostTypesTierLookup.attack[resource];
+	}
+
+	static isRangedBoost(resource: ResourceConstant): boolean {
+		return !!_boostTypesTierLookup.ranged_attack[resource];
+	}
+
+	static isHealBoost(resource: ResourceConstant): boolean {
+		return !!_boostTypesTierLookup.heal[resource];
+	}
+
+	static isToughBoost(resource: ResourceConstant): boolean {
+		return !!_boostTypesTierLookup.tough[resource];
+	}
+
+	static isMoveBoost(resource: ResourceConstant): boolean {
+		return !!_boostTypesTierLookup.move[resource];
+	}
+
+	static isDismantleBoost(resource: ResourceConstant): boolean {
+		return !!_boostTypesTierLookup.dismantle[resource];
+	}
+
+	static isConstructBoost(resource: ResourceConstant): boolean {
+		return !!_boostTypesTierLookup.construct[resource];
+	}
+
+	static isUpgradeBoost(resource: ResourceConstant): boolean {
+		return !!_boostTypesTierLookup.upgrade[resource];
+	}
+
+	static isHarvestBoost(resource: ResourceConstant): boolean {
+		return !!_boostTypesTierLookup.harvest[resource];
+	}
+
+	static isCarryBoost(resource: ResourceConstant): boolean {
+		return !!_boostTypesTierLookup.carry[resource];
+	}
+
+	static isDepositResource(resource: ResourceConstant): boolean {
+		return DEPOSITS_ALL.includes(resource);
+	}
+
+	static isCommodity(resource: ResourceConstant): boolean {
+		return !!_commoditiesLookup[resource];
 	}
 
 	/**
