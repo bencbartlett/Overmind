@@ -177,9 +177,11 @@ interface ITerminalNetwork {
 
 	refresh(): void;
 
+	getAssets(): { [resourceType: string]: number }
+
 	thresholds(colony: IColony, resource: ResourceConstant): Thresholds;
 
-	canObtainResource(requestor: IColony, resource: ResourceConstant, amount: number): boolean;
+	// canObtainResource(requestor: IColony, resource: ResourceConstant, amount: number): boolean;
 
 	requestResource(requestor: IColony, resource: ResourceConstant, amount: number, tolerance?: number): void;
 

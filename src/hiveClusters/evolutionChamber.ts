@@ -8,8 +8,8 @@ import {Mem} from '../memory/Memory';
 import {Pathing} from '../movement/Pathing';
 import {Priority} from '../priorities/priorities';
 import {profile} from '../profiler/decorator';
-import {Reaction} from '../resources/Abathur';
-import {boostParts, REAGENTS} from '../resources/map_resources';
+import {Abathur, Reaction} from '../resources/Abathur';
+import {boostParts, BoostType, REAGENTS} from '../resources/map_resources';
 import {Stats} from '../stats/stats';
 import {rightArrow} from '../utilities/stringConstants';
 import {exponentialMovingAverage} from '../utilities/utils';
@@ -80,7 +80,6 @@ export class EvolutionChamber extends HiveCluster {
 	labs: StructureLab[];									// Colony labs
 	reagentLabs: StructureLab[];
 	productLabs: StructureLab[];
-	// productLabsNonBoosting: StructureLab[];
 	boostingLabs: StructureLab[];
 	transportRequests: TransportRequestGroup;				// Box for resource requests
 
@@ -342,12 +341,12 @@ export class EvolutionChamber extends HiveCluster {
 	}
 
 	/* Return whether you have the resources to fully boost a creep body with a given resource */
-	canBoost(body: BodyPartDefinition[], boostType: ResourceConstant): boolean {
+	canBoost(body: BodyPartDefinition[], boostType: ResourceConstant, assetMultiplier = 5): boolean {
 		const boostAmount = EvolutionChamber.requiredBoostAmount(body, boostType);
 		if (this.colony.assets[boostType] >= boostAmount) {
 			// Does this colony have the needed resources already?
 			return true;
-		} else if (this.terminalNetwork.assets[boostType] >= 2 * boostAmount) { // TODO -> fix for new TerminalNetwork
+		} else if (this.terminalNetwork.getAssets()[boostType] >= assetMultiplier * boostAmount) {
 			// Is there enough of the resource in terminalNetwork?
 			return true;
 		} else {
@@ -355,6 +354,49 @@ export class EvolutionChamber extends HiveCluster {
 			return (Game.market.credits > TraderJoe.settings.market.credits.canBuyBoostsAbove +
 					boostAmount * Overmind.tradeNetwork.priceOf(boostType));
 		}
+	}
+
+	/**
+	 * Returns the best boost of a given type (e.g. "tough") that the room can acquire a specified amount of
+	 */
+	bestBoostAvailable(boostType: BoostType, amount: number): ResourceConstant | undefined {
+		let boostFilter: (resource: ResourceConstant) => boolean;
+		switch (boostType) {
+			case 'attack':
+				boostFilter = Abathur.isAttackBoost;
+				break;
+			case 'carry':
+				boostFilter = Abathur.isCarryBoost;
+				break;
+			case 'ranged':
+				boostFilter = Abathur.isRangedBoost;
+				break;
+			case 'heal':
+				boostFilter = Abathur.isHealBoost;
+				break;
+			case 'move':
+				boostFilter = Abathur.isMoveBoost;
+				break;
+			case 'tough':
+				boostFilter = Abathur.isToughBoost;
+				break;
+			case 'harvest':
+				boostFilter = Abathur.isHarvestBoost;
+				break;
+			case 'construct':
+				boostFilter = Abathur.isConstructBoost;
+				break;
+			case 'dismantle':
+				boostFilter = Abathur.isDismantleBoost;
+				break;
+			case 'upgrade':
+				boostFilter = Abathur.isUpgradeBoost;
+				break;
+			default:
+				log.error(`${this.print}: ${boostType} is not a valid boostType!`);
+				return;
+		}
+
 	}
 
 	/* Request boosts sufficient to fully boost a given creep to be added to the boosting queue */
@@ -409,8 +451,7 @@ export class EvolutionChamber extends HiveCluster {
 		for (const resourceType in this.neededBoosts) {
 			const needAmount = Math.max(this.neededBoosts[resourceType] - this.colony.assets[resourceType], 0);
 			if (needAmount > 0) {
-				this.terminalNetwork.requestResource(this.terminal, <ResourceConstant>resourceType,
-													 needAmount, true, 0);
+				this.terminalNetwork.requestResource(this.colony, <ResourceConstant>resourceType, needAmount);
 			}
 		}
 		// Obtain resources for reaction queue
@@ -419,10 +460,10 @@ export class EvolutionChamber extends HiveCluster {
 			queue = [this.memory.activeReaction].concat(queue);
 		}
 		const missingBasicMinerals = this.colony.abathur.getMissingBasicMinerals(queue);
-		for (const resourceType in missingBasicMinerals) {
-			if (missingBasicMinerals[resourceType] > 0) {
-				this.terminalNetwork.requestResource(this.terminal, <ResourceConstant>resourceType,
-													 missingBasicMinerals[resourceType], true);
+		for (const resource in missingBasicMinerals) {
+			if (missingBasicMinerals[resource] > 0) {
+				this.terminalNetwork.requestResource(this.colony, <ResourceConstant>resource,
+													 missingBasicMinerals[resource]);
 			}
 		}
 		// Run the reactions

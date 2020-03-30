@@ -4,9 +4,16 @@ import {log} from '../console/log';
 import {Mem} from '../memory/Memory';
 import {profile} from '../profiler/decorator';
 import {Abathur} from '../resources/Abathur';
-import {ALL_ZERO_ASSETS, RESOURCES_ALL_EXCEPT_ENERGY} from '../resources/map_resources';
+import {
+	BASE_RESOURCES,
+	BOOSTS_T1,
+	BOOSTS_T2,
+	BOOSTS_T3,
+	INTERMEDIATE_REACTANTS,
+	RESOURCES_ALL_EXCEPT_ENERGY
+} from '../resources/map_resources';
 import {alignedNewline, bullet, rightArrow} from '../utilities/stringConstants';
-import {exponentialMovingAverage, maxBy, mergeSum, minBy} from '../utilities/utils';
+import {exponentialMovingAverage, maxBy, mergeSum, minBy, printRoomName} from '../utilities/utils';
 import {TraderJoe} from './TradeNetwork';
 
 interface TerminalNetworkStats {
@@ -157,16 +164,28 @@ function getThresholds(resource: _ResourceConstantSansEnergy): Thresholds {
 const ALL_THRESHOLDS: { [resourceType: string]: Thresholds } =
 		  _.object(RESOURCES_ALL_EXCEPT_ENERGY, _.map(RESOURCES_ALL_EXCEPT_ENERGY, res => getThresholds(res)));
 
-
-export const RESOURCE_EXCHANGE_PRIORITIES: ResourceConstant[] = [
-	// TODO: fill in
+// The order in which resources are handled within the network
+const _resourcePrioritiesOrdered = [
+	...BOOSTS_T3,
+	RESOURCE_OPS,
+	...BOOSTS_T2,
+	...BOOSTS_T1,
+	...INTERMEDIATE_REACTANTS,
+	...BASE_RESOURCES,
+	RESOURCE_POWER,
+	RESOURCE_ENERGY
 ];
-const _resourceExchangePrioritiesLookup: { [resource: string]: number } =
-		  _.zipObject(RESOURCE_EXCHANGE_PRIORITIES,
-					  _.map(RESOURCE_EXCHANGE_PRIORITIES, res => _.indexOf(RESOURCE_EXCHANGE_PRIORITIES, res)));
+const _resourcePrioritiesEverythingElse = _.filter(RESOURCES_ALL, res => !_resourcePrioritiesOrdered.includes(res));
 
-const EMPTY_COLONY_TIER: { [resourceType: string]: Colony[] } = _.zipObject(RESOURCES_ALL,
-																			_.map(RESOURCES_ALL, i => []));
+export const RESOURCE_EXCHANGE_ORDER: ResourceConstant[] = [..._resourcePrioritiesOrdered,
+															..._resourcePrioritiesEverythingElse];
+
+const _resourceExchangePrioritiesLookup: { [resource: string]: number } =
+		  _.zipObject(RESOURCE_EXCHANGE_ORDER,
+					  _.map(RESOURCE_EXCHANGE_ORDER, res => _.indexOf(RESOURCE_EXCHANGE_ORDER, res)));
+
+const EMPTY_COLONY_TIER: { [resourceType: string]: Colony[] } =
+		  _.zipObject(RESOURCES_ALL, _.map(RESOURCES_ALL, i => []));
 
 
 /**
@@ -220,7 +239,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		this.passiveRequestors = _.clone(EMPTY_COLONY_TIER);
 		this.activeRequestors = _.clone(EMPTY_COLONY_TIER);
 
-		this.assets = _.clone(ALL_ZERO_ASSETS); // populated when colonies are added
+		this.assets = {}; // populated when getAssets() is called in init()
 
 		this.terminalOverload = {};
 		this.notifications = [];
@@ -236,6 +255,13 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		} else {
 			this.colonies.push(colony); // add colony to list
 		}
+	}
+
+	getAssets(): { [resourceType: string]: number } {
+		if (_.isEmpty(this.assets)) {
+			this.assets = mergeSum(_.map(this.colonies, colony => colony.assets));
+		}
+		return this.assets;
 	}
 
 	// Transfer logging and notification stuff =========================================================================
@@ -410,14 +436,14 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		this.colonyThresholds[provider.name][resource] = thresholds;
 	}
 
-	canObtainResource(requestor: Colony, resource: ResourceConstant, amount: number): boolean {
-
-	}
+	// canObtainResource(requestor: Colony, resource: ResourceConstant, amount: number): boolean {
+	//
+	// }
 
 
 	init(): void {
 		// Update assets
-		this.assets = mergeSum(_.map(this.colonies, colony => colony.assets));
+		this.assets = this.getAssets();
 		// Clear out the colony states so they can be refreshed during Colony.init(), which is called after this
 		for (const colony of this.colonies) {
 			this.colonyStates[colony.name] = {};
@@ -430,7 +456,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	private assignColonyStates(): void {
 		// Assign a state to each colony whose state isn't already specified
 		for (const colony of this.colonies) {
-			for (const resource of RESOURCE_EXCHANGE_PRIORITIES) {
+			for (const resource of RESOURCE_EXCHANGE_ORDER) {
 				if (this.colonyStates[colony.name][resource] == undefined) {
 					this.colonyStates[colony.name][resource] = this.getColonyState(colony, resource);
 				}
@@ -641,7 +667,13 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 
 		// Sell on the market if that's an option
 		if (opts.allowMarketSell) {
-			const ret = Overmind.tradeNetwork.sell(colony.terminal!, resource, sendAmount);
+			const opts: TradeOpts = {};
+			if (resource == RESOURCE_ENERGY || Abathur.isBaseMineral(resource)) {
+				if (this.getRemainingSpace(colony) < TerminalNetworkV2.settings.minColonySpace) {
+					opts.preferDirect = true;
+				}
+			}
+			const ret = Overmind.tradeNetwork.sell(colony.terminal!, resource, sendAmount, opts);
 			if (ret >= 0) {
 				return true;
 			}
@@ -660,7 +692,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			allowMarketBuy         : Game.market.credits > TraderJoe.settings.market.credits.canBuyAbove,
 			recieveOnlyOncePerTick : false,
 		});
-		for (const resource of RESOURCE_EXCHANGE_PRIORITIES) {
+		for (const resource of RESOURCE_EXCHANGE_ORDER) {
 			for (const colony of (requestors[resource] || [])) {
 				// Skip if the terminal if it has received in this tick if option is specified
 				if (opts.receiveOnlyOncePerTick && colony.terminal && colony.terminal.hasReceived) {
@@ -693,7 +725,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			allowPushToOtherRooms: true,
 			allowMarketSell      : true,
 		});
-		for (const resource of RESOURCE_EXCHANGE_PRIORITIES) {
+		for (const resource of RESOURCE_EXCHANGE_ORDER) {
 			for (const colony of (providers[resource] || [])) {
 				// Skip if the terminal is not ready -  prevents trying to send twice in a single tick
 				if (colony.terminal && !colony.terminal.isReady) {
@@ -793,6 +825,34 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		this.stats.states.passiveProviders = passiveProviders;
 		this.stats.states.activeProviders = activeProviders;
 
+	}
+
+	/**
+	 * Prints the current state of the terminal network to the console
+	 */
+	private summarize(): void {
+		const {activeRequestors, passiveRequestors, equilibriumNodes, passiveProviders, activeProviders} =
+				  this.stats.states;
+		console.log('Active providers ---------------------------------------------------------------------');
+		for (const colonyName in activeProviders) {
+			console.log(`${bullet}${printRoomName(colonyName)}: ${activeProviders[colonyName]}`);
+		}
+		console.log('Passive providers --------------------------------------------------------------------');
+		for (const colonyName in passiveProviders) {
+			console.log(`${bullet}${printRoomName(colonyName)}: ${passiveProviders[colonyName]}`);
+		}
+		console.log('Equilibrium nodes --------------------------------------------------------------------');
+		for (const colonyName in equilibriumNodes) {
+			console.log(`${bullet}${printRoomName(colonyName)}: ${equilibriumNodes[colonyName]}`);
+		}
+		console.log('Passive requestors -------------------------------------------------------------------');
+		for (const colonyName in passiveRequestors) {
+			console.log(`${bullet}${printRoomName(colonyName)}: ${passiveRequestors[colonyName]}`);
+		}
+		console.log('Active requestors --------------------------------------------------------------------');
+		for (const colonyName in activeRequestors) {
+			console.log(`${bullet}${printRoomName(colonyName)}: ${activeRequestors[colonyName]}`);
+		}
 	}
 
 }

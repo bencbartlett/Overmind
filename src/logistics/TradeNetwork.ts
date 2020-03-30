@@ -224,6 +224,26 @@ export class TraderJoe implements ITradeNetwork {
 	}
 
 	/**
+	 * Pretty-prints transaction information in the console
+	 */
+	private logTransaction(order: Order, terminalRoomName: string, amount: number, response: number): void {
+		const action = order.type == ORDER_SELL ? 'BOUGHT ' : 'SOLD   ';
+		const cost = (order.price * amount).toFixed(2);
+		const fee = order.roomName ? Game.market.calcTransactionCost(amount, order.roomName, terminalRoomName) : 0;
+		const roomName = Game.rooms[terminalRoomName] ? Game.rooms[terminalRoomName].print : terminalRoomName;
+		let msg: string;
+		if (order.type == ORDER_SELL) {
+			msg = `${roomName} ${leftArrow} ${amount} ${order.resourceType} ${leftArrow} ` +
+				  `${printRoomName(order.roomName!)} (result: ${response})`;
+		} else {
+			msg = `${roomName} ${rightArrow} ${amount} ${order.resourceType} ${rightArrow} ` +
+				  `${printRoomName(order.roomName!)} (result: ${response})`;
+		}
+		this.notify(msg);
+	}
+
+
+	/**
 	 * Returns a list of orders you have already placed for this type for this resource.
 	 * If roomName is undefined, count any of your orders; if roomName is specified, only return if order is in room
 	 */
@@ -379,7 +399,8 @@ export class TraderJoe implements ITradeNetwork {
 			// Extend the order if you need to sell more of the resource
 			if (amount > existingOrder.remainingAmount && normalFluctuation) {
 				const addAmount = amount - existingOrder.remainingAmount;
-				const ret = Game.market.extendOrder(existingOrder.id, addAmount);
+				// const ret = Game.market.extendOrder(existingOrder.id, addAmount); // TODO
+				const ret = OK;
 				this.notify(`${terminal.room.print}: extending ${type} order for ${resource} by ${addAmount}.` +
 							` Response: ${ret}`);
 				return ret;
@@ -387,7 +408,8 @@ export class TraderJoe implements ITradeNetwork {
 
 			// Small chance of changing the price if it's not competitive; don't do too often or you are high risk
 			if (!normalFluctuation && Math.random() < 1 / 200) {
-				const ret = Game.market.changeOrderPrice(existingOrder.id, price);
+				// const ret = Game.market.changeOrderPrice(existingOrder.id, price); // TODO
+				const ret = OK;
 				this.notify(`${terminal.room.print}: updating ${type} order price for ${resource} from ` +
 							`${existingOrder.price} to ${price}. Response: ${ret}`);
 				return ret;
@@ -420,7 +442,8 @@ export class TraderJoe implements ITradeNetwork {
 					totalAmount : amount,
 					roomName    : terminal.room.name
 				};
-				const ret = Game.market.createOrder(params);
+				// const ret = Game.market.createOrder(params);
+				const ret = OK;
 				this.notify(`${terminal.room.print}: creating ${type} order for ${resource} at price ${price}. ` +
 							`Response: ${ret}`);
 				return ret;
@@ -443,78 +466,6 @@ export class TraderJoe implements ITradeNetwork {
 		for (const order of ordersToClean) {
 			Game.market.cancelOrder(order.id);
 		}
-	}
-
-	/**
-	 * Buy a resource on the market, either through a buy order or directly (usually direct=true will be used)
-	 */
-	buy(terminal: StructureTerminal, resource: ResourceConstant, amount: number, opts: TradeOpts = {}): number {
-
-		_.defaults(opts, defaultTradeOpts);
-
-		if (Game.market.credits < TraderJoe.settings.market.credits.canBuyAbove) {
-			log.error(`Credits insufficient to buy resources; shouldn't be making this TradeNetwork.buy() request!`);
-			return ERR_CREDIT_THRESHOLDS;
-		}
-
-		if (Game.market.credits < TraderJoe.settings.market.credits.canBuyBoostsAbove && Abathur.isBoost(resource)) {
-			log.error(`Credits insufficient to buy boosts; shouldn't be making this TradeNetwork.buy() request!`);
-			return ERR_CREDIT_THRESHOLDS;
-		}
-
-		if (resource == RESOURCE_ENERGY) {
-			// TODO
-			adsf
-		}
-
-		// If you don't have a lot of credits or preferDirect==true, try to sell directly to an existing buy order
-		if (opts.preferDirect && this.getExistingOrders(ORDER_BUY, resource, terminal.room.name).length == 0) {
-			const result = this.buyDirectly(terminal, resource, amount, opts);
-			if (result != ERR_NO_ORDER_TO_BUY_FROM) {
-				return result;
-			}
-		}
-
-		// Fallthrough - if not preferDirect or if existing order or if there's no orders to buy from then make order
-		const result = this.maintainOrder(terminal, ORDER_BUY, resource, amount, opts);
-		return result;
-	}
-
-	/**
-	 * Sell a resource on the market, either through a sell order or directly
-	 */
-	sell(terminal: StructureTerminal, resource: ResourceConstant, amount: number, opts: TradeOpts = {}): number {
-
-		_.defaults(opts, defaultTradeOpts);
-
-		if (amount > terminal.store[resource]) {
-			log.warning(`Terminal @ ${printRoomName(terminal.room.name)} doesn't have ${amount} ${resource} in store!`);
-			amount = terminal.store[resource];
-		}
-
-		if (resource == RESOURCE_ENERGY) {
-			// TODO
-			asdf
-		}
-
-		// If you don't have a lot of credits or preferDirect==true, try to sell directly to an existing buy order
-		if (Game.market.credits < TraderJoe.settings.market.credits.mustSellDirectBelow || opts.preferDirect) {
-			if (this.getExistingOrders(ORDER_SELL, resource, terminal.room.name).length == 0) {
-				const result = this.sellDirectly(terminal, resource, amount, opts);
-				if (result != ERR_NO_ORDER_TO_SELL_TO) {
-					return result;
-				}
-			}
-		}
-
-		// If you have enough credits or if there are no buy orders to sell to, create / maintain a sell order
-		if (Game.market.credits >= TraderJoe.settings.market.credits.canPlaceSellOrdersAbove) {
-			const result = this.maintainOrder(terminal, ORDER_SELL, resource, amount, opts);
-			return result;
-		} else {
-			return ERR_CREDIT_THRESHOLDS;
-		}
-
 	}
 
 	/**
@@ -562,7 +513,8 @@ export class TraderJoe implements ITradeNetwork {
 		const buyAmount = Math.min(order.amount, amount);
 		const transactionCost = Game.market.calcTransactionCost(buyAmount, terminal.room.name, order.roomName!);
 		if (terminal.store[RESOURCE_ENERGY] >= transactionCost) {
-			const response = Game.market.deal(order.id, buyAmount, terminal.room.name);
+			// const response = Game.market.deal(order.id, buyAmount, terminal.room.name);
+			const response = OK;
 			this.logTransaction(order, terminal.room.name, amount, response);
 			return response;
 		} else {
@@ -599,7 +551,8 @@ export class TraderJoe implements ITradeNetwork {
 			const sellAmount = Math.min(order.amount, amount);
 			const transactionCost = Game.market.calcTransactionCost(sellAmount, terminal.room.name, order.roomName!);
 			if (terminal.store[RESOURCE_ENERGY] >= transactionCost) {
-				const response = Game.market.deal(order.id, sellAmount, terminal.room.name);
+				// const response = Game.market.deal(order.id, sellAmount, terminal.room.name); // TODO: uncomment this
+				const response = OK;
 				this.logTransaction(order, terminal.room.name, amount, response);
 				return response;
 			} else {
@@ -615,22 +568,87 @@ export class TraderJoe implements ITradeNetwork {
 	}
 
 	/**
-	 * Pretty-prints transaction information in the console
+	 * Buy a resource on the market, either through a buy order or directly (usually direct=true will be used)
 	 */
-	private logTransaction(order: Order, terminalRoomName: string, amount: number, response: number): void {
-		const action = order.type == ORDER_SELL ? 'BOUGHT ' : 'SOLD   ';
-		const cost = (order.price * amount).toFixed(2);
-		const fee = order.roomName ? Game.market.calcTransactionCost(amount, order.roomName, terminalRoomName) : 0;
-		const roomName = Game.rooms[terminalRoomName] ? Game.rooms[terminalRoomName].print : terminalRoomName;
-		let msg: string;
-		if (order.type == ORDER_SELL) {
-			msg = `${roomName} ${leftArrow} ${amount} ${order.resourceType} ${leftArrow} ` +
-				  `${printRoomName(order.roomName!)} (result: ${response})`;
-		} else {
-			msg = `${roomName} ${rightArrow} ${amount} ${order.resourceType} ${rightArrow} ` +
-				  `${printRoomName(order.roomName!)} (result: ${response})`;
+	buy(terminal: StructureTerminal, resource: ResourceConstant, amount: number, opts: TradeOpts = {}): number {
+
+		_.defaults(opts, defaultTradeOpts);
+
+		if (Game.market.credits < TraderJoe.settings.market.credits.canBuyAbove) {
+			log.error(`Credits insufficient to buy resources; shouldn't be making this TradeNetwork.buy() request!`);
+			return ERR_CREDIT_THRESHOLDS;
 		}
-		this.notify(msg);
+
+		if (Game.market.credits < TraderJoe.settings.market.credits.canBuyBoostsAbove && Abathur.isBoost(resource)) {
+			log.error(`Credits insufficient to buy boosts; shouldn't be making this TradeNetwork.buy() request!`);
+			return ERR_CREDIT_THRESHOLDS;
+		}
+
+		if (Game.market.credits < TraderJoe.settings.market.credits.canBuyEnergyAbove && resource == RESOURCE_ENERGY) {
+			log.error(`Credits insufficient to buy energy; shouldn't be making this TradeNetwork.buy() request!`);
+			return ERR_CREDIT_THRESHOLDS;
+		}
+
+		// If you don't have a lot of credits or preferDirect==true, try to sell directly to an existing buy order
+		if (opts.preferDirect && this.getExistingOrders(ORDER_BUY, resource, terminal.room.name).length == 0) {
+			const result = this.buyDirectly(terminal, resource, amount, opts);
+			if (result != ERR_NO_ORDER_TO_BUY_FROM) {
+				return result;
+			}
+		}
+
+		// Fallthrough - if not preferDirect or if existing order or if there's no orders to buy from then make order
+		const result = this.maintainOrder(terminal, ORDER_BUY, resource, amount, opts);
+		return result;
+	}
+
+	/**
+	 * Sell a resource on the market, either through a sell order or directly
+	 */
+	sell(terminal: StructureTerminal, resource: ResourceConstant, amount: number, opts: TradeOpts = {}): number {
+
+		_.defaults(opts, defaultTradeOpts);
+
+		if (amount > terminal.store[resource]) {
+			log.warning(`Terminal @ ${printRoomName(terminal.room.name)} doesn't have ${amount} ${resource} in store!`);
+			amount = terminal.store[resource];
+		}
+
+		// If you don't have a lot of credits or preferDirect==true, try to sell directly to an existing buy order
+		if (Game.market.credits < TraderJoe.settings.market.credits.mustSellDirectBelow || opts.preferDirect) {
+			if (this.getExistingOrders(ORDER_SELL, resource, terminal.room.name).length == 0) {
+				const result = this.sellDirectly(terminal, resource, amount, opts);
+				if (result != ERR_NO_ORDER_TO_SELL_TO) {
+					return result;
+				}
+			}
+		}
+
+		// If you have enough credits or if there are no buy orders to sell to, create / maintain a sell order
+		if (Game.market.credits >= TraderJoe.settings.market.credits.canPlaceSellOrdersAbove) {
+			const result = this.maintainOrder(terminal, ORDER_SELL, resource, amount, opts);
+			return result;
+		} else {
+			return ERR_CREDIT_THRESHOLDS;
+		}
+
+	}
+
+	init(): void {
+		if (Game.time - (this.memory.cache.tick || 0) > TraderJoe.settings.cache.timeout) {
+			this.buildMarketCache();
+			this.buildMarketHistoryCache();
+		}
+	}
+
+	run(): void {
+		if (Game.time % 10 == 0) {
+			this.cleanUpInactiveOrders();
+		}
+		if (this.notifications.length > 0) {
+			log.info(`Trade network activity: ` + alignedNewline + this.notifications.join(alignedNewline));
+		}
+		this.recordStats();
 	}
 
 	/**
@@ -673,24 +691,6 @@ export class TraderJoe implements ITradeNetwork {
 				}
 			}
 		}
-	}
-
-
-	init(): void {
-		if (Game.time - (this.memory.cache.tick || 0) > TraderJoe.settings.cache.timeout) {
-			this.buildMarketCache();
-			this.buildMarketHistoryCache();
-		}
-	}
-
-	run(): void {
-		if (Game.time % 10 == 0) {
-			this.cleanUpInactiveOrders();
-		}
-		if (this.notifications.length > 0) {
-			log.info(`Trade network activity: ` + alignedNewline + this.notifications.join(alignedNewline));
-		}
-		this.recordStats();
 	}
 
 }

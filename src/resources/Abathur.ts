@@ -8,7 +8,7 @@ import {
 	_boostTypesTierLookup, _commoditiesLookup,
 	_mineralCompoundsAllLookup,
 	BASE_RESOURCES, boostParts, DEPOSITS_ALL,
-	INTERMEDIATES,
+	INTERMEDIATE_REACTANTS,
 	REAGENTS
 } from './map_resources';
 
@@ -149,7 +149,7 @@ export class Abathur {
 	}
 
 	static isIntermediateReactant(resource: ResourceConstant): boolean {
-		return INTERMEDIATES.includes(resource);
+		return INTERMEDIATE_REACTANTS.includes(resource);
 	}
 
 	static isBoost(resource: ResourceConstant): boolean {
