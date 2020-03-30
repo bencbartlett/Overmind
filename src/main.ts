@@ -20,6 +20,7 @@
 // Import ALL the things! ==============================================================================================
 import './assimilation/initializer'; // This must always be imported before anything else
 import './console/globals'; // Global functions accessible from CLI
+import './prototypes/Game'; // Game prototypes
 import './prototypes/Creep'; // Creep prototypes
 import './prototypes/RoomObject'; // RoomObject and targeting prototypes
 import './prototypes/RoomPosition'; // RoomPosition prototypes
@@ -36,7 +37,7 @@ import {Mem} from './memory/Memory';
 import {OvermindConsole} from './console/Console';
 import {Stats} from './stats/stats';
 import profiler from './profiler/screeps-profiler';
-import _Overmind from './Overmind_obfuscated'; // this should be './Overmind_obfuscated' unless you are me
+import _Overmind from './Overmind'; // this should be './Overmind_obfuscated' unless you are me
 import {VersionMigration} from './versionMigration/migrator';
 import {RemoteDebugger} from './debug/remoteDebugger';
 import {ActionParser} from './reinforcementLearning/actionParser';

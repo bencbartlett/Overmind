@@ -2,7 +2,6 @@ import {assimilationLocked} from './assimilation/decorator';
 import {$} from './caching/GlobalCache';
 import {log} from './console/log';
 import {Roles} from './creepSetups/setups';
-import {StoreStructure} from './declarations/typeGuards';
 // import {DirectivePraise} from './directives/colony/praise';
 import {DirectiveExtract} from './directives/resource/extract';
 import {_HARVEST_MEM_DOWNTIME, _HARVEST_MEM_USAGE, DirectiveHarvest} from './directives/resource/harvest';
@@ -207,6 +206,19 @@ export class Colony {
 	 */
 	get print(): string {
 		return '<a href="#!/room/' + Game.shard.name + '/' + this.room.name + '">[' + this.name + ']</a>';
+	}
+
+	/**
+	 * Pretty-print the colony colony name right-padded with spaces to fit E**S** in the console
+	 */
+	get printAligned(): string {
+		const msg = '<a href="#!/room/' + Game.shard.name + '/' + this.room.name + '">[' + this.name + ']</a>';
+		const extraSpaces = 'E12S34'.length - this.room.name.length;
+		return msg + ' '.repeat(extraSpaces);
+	}
+
+	toString(): string {
+		return this.print;
 	}
 
 	/**

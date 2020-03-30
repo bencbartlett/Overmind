@@ -6,8 +6,14 @@ export function getAllColonyRooms(): Room[] {
 	return _.filter(_.values(Game.rooms), room => room.my);
 }
 
-export function printRoomName(roomName: string): string {
-	return '<a href="#!/room/' + Game.shard.name + '/' + roomName + '">' + roomName + '</a>';
+export function printRoomName(roomName: string, aligned = false): string {
+	if (aligned) {
+		const msg = '<a href="#!/room/' + Game.shard.name + '/' + roomName + '">[' + roomName + ']</a>';
+		const extraSpaces = 'E12S34'.length - roomName.length;
+		return msg + ' '.repeat(extraSpaces);
+	} else {
+		return '<a href="#!/room/' + Game.shard.name + '/' + roomName + '">' + roomName + '</a>';
+	}
 }
 
 export function color(str: string, color: string): string {

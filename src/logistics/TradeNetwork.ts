@@ -230,7 +230,7 @@ export class TraderJoe implements ITradeNetwork {
 		const action = order.type == ORDER_SELL ? 'BOUGHT ' : 'SOLD   ';
 		const cost = (order.price * amount).toFixed(2);
 		const fee = order.roomName ? Game.market.calcTransactionCost(amount, order.roomName, terminalRoomName) : 0;
-		const roomName = Game.rooms[terminalRoomName] ? Game.rooms[terminalRoomName].print : terminalRoomName;
+		const roomName = printRoomName(terminalRoomName, true);
 		let msg: string;
 		if (order.type == ORDER_SELL) {
 			msg = `${roomName} ${leftArrow} ${amount} ${order.resourceType} ${leftArrow} ` +

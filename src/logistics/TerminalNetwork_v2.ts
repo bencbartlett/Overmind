@@ -66,7 +66,7 @@ const TerminalNetworkStatsDefaults: TerminalNetworkStats = {
 
 export const enum TN_STATE {
 	activeProvider   = 5, // actively offload the resource into other non-activeProvider rooms in the network
-	passiveProvier   = 4, // place their resource at the disposal of the network
+	passiveProvider  = 4, // place their resource at the disposal of the network
 	equilibrium      = 3, // close to the desired amount of resource and prefer not to trade except to activeRequestors
 	passiveRequestor = 2, // below target amount of resource and will receive from providers
 	activeRequestor  = 1, // have an immediate need of the resource and will be filled by other non-activeRequestors
@@ -141,9 +141,9 @@ function getThresholds(resource: _ResourceConstantSansEnergy): Thresholds {
 			tolerance: DEFAULT_TOLERANCE,
 		};
 	}
-	if (Abathur.isCarryBoost(resource) || Abathur.isHarvestBoost(resource)) { // I don't use these
-		return THRESHOLDS_DONT_WANT;
-	}
+	// if (Abathur.isCarryBoost(resource) || Abathur.isHarvestBoost(resource)) { // I don't use these
+	// 	return THRESHOLDS_DONT_WANT;
+	// }
 	if (Abathur.isMineralOrCompound(resource)) { // all other boosts and resources are default
 		return THRESHOLDS_DEFAULT;
 	}
@@ -233,11 +233,11 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		this._energyThresholds = undefined;
 		this.colonyStates = {};
 
-		this.activeProviders = _.clone(EMPTY_COLONY_TIER);
-		this.passiveProviders = _.clone(EMPTY_COLONY_TIER);
-		this.equilibriumNodes = _.clone(EMPTY_COLONY_TIER);
-		this.passiveRequestors = _.clone(EMPTY_COLONY_TIER);
-		this.activeRequestors = _.clone(EMPTY_COLONY_TIER);
+		this.activeProviders = {}; // _.clone(EMPTY_COLONY_TIER);
+		this.passiveProviders = {}; // _.clone(EMPTY_COLONY_TIER);
+		this.equilibriumNodes = {}; // _.clone(EMPTY_COLONY_TIER);
+		this.passiveRequestors = {}; // _.clone(EMPTY_COLONY_TIER);
+		this.activeRequestors = {}; // _.clone(EMPTY_COLONY_TIER);
 
 		this.assets = {}; // populated when getAssets() is called in init()
 
@@ -295,10 +295,10 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		const cost = Game.market.calcTransactionCost(amount, sender.room.name, receiver.room.name);
 		const response = sender.send(resourceType, amount, receiver.room.name);
 		if (response == OK) {
-			let msg = `${sender.room.print} ${rightArrow} ${amount} ${resourceType} ${rightArrow} ` +
-					  `${receiver.room.print} `;
+			let msg = `${printRoomName(sender.room.name, true)} ${rightArrow} ${amount} ${resourceType} ${rightArrow} ` +
+					  `${printRoomName(receiver.room.name, true)} `;
 			if (description) {
-				msg += `(for ${description})`;
+				msg += `(${description})`;
 			}
 			this.notify(msg);
 			this.logTransfer(resourceType, amount, sender.room.name, receiver.room.name);
@@ -337,7 +337,8 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	private getEnergyThresholds(): Thresholds {
 		if (!this._energyThresholds) {
 			const nonExceptionalColonies = _.filter(this.colonies, colony =>
-				colony.storage && !this.colonyThresholds[colony.name][RESOURCE_ENERGY]);
+				colony.storage
+				&& !(this.colonyThresholds[colony.name] && this.colonyThresholds[colony.name][RESOURCE_ENERGY]));
 			const avgEnergy = _.sum(nonExceptionalColonies, colony => colony.assets.energy) /
 							  nonExceptionalColonies.length;
 			this._energyThresholds = {
@@ -364,7 +365,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		}
 		// Passive provider if the room has below surplus but above target+tolerance
 		if ((surplus != undefined ? surplus : Infinity) >= amount && amount > target + tolerance) {
-			return TN_STATE.passiveProvier;
+			return TN_STATE.passiveProvider;
 		}
 		// Equilibrium state if room has within +/- tolerance of target amount
 		if (target + tolerance >= amount && amount >= Math.max(target - tolerance, 0)) {
@@ -386,7 +387,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	 * Gets the thresholds for a given resource for a specific colony
 	 */
 	thresholds(colony: Colony, resource: ResourceConstant): Thresholds {
-		if (this.colonyThresholds[colony.name][resource]) {
+		if (this.colonyThresholds[colony.name] && this.colonyThresholds[colony.name][resource]) {
 			return this.colonyThresholds[colony.name][resource];
 		} else {
 			if (resource == RESOURCE_ENERGY) {
@@ -406,6 +407,9 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			log.error(`TerminalNetwork.requestResource() called for ${requestor.print} requesting ${amount} of ` +
 					  `${resource}, but colony already has ${requestor.assets[resource]} amount!`);
 			return;
+		}
+		if (!this.colonyThresholds[requestor.name]) {
+			this.colonyThresholds[requestor.name] = {};
 		}
 		// If you already requested the resource via a different method, throw a warning and override
 		if (this.colonyThresholds[requestor.name][resource] != undefined) {
@@ -428,11 +432,14 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	 */
 	exportResource(provider: Colony, resource: ResourceConstant, thresholds: Thresholds = THRESHOLDS_DONT_WANT): void {
 		// If you already requested the resource via a different method, throw a warning and override
-		if (this.colonyThresholds[provider.name][resource] != undefined) {
+		if (this.colonyThresholds[provider.name] && this.colonyThresholds[provider.name][resource] != undefined) {
 			log.warning(`TerminalNetwork.colonyThresholds[${provider.name}][${resource}] already set to:` +
 						`${this.colonyThresholds[provider.name][resource]} Overriding previous request!`);
 		}
 		// Set the thresholds, but in this case we don't set the state to activeProvider - this is automatically done
+		if (!this.colonyThresholds[provider.name]) {
+			this.colonyThresholds[provider.name] = {};
+		}
 		this.colonyThresholds[provider.name][resource] = thresholds;
 	}
 
@@ -457,24 +464,32 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		// Assign a state to each colony whose state isn't already specified
 		for (const colony of this.colonies) {
 			for (const resource of RESOURCE_EXCHANGE_ORDER) {
-				if (this.colonyStates[colony.name][resource] == undefined) {
+				if (!this.colonyThresholds[colony.name]) {
+					this.colonyThresholds[colony.name] = {};
+				}
+				if (!this.colonyStates[colony.name][resource]) {
 					this.colonyStates[colony.name][resource] = this.getColonyState(colony, resource);
 				}
 				// Populate the entry in the tier lists
 				switch (this.colonyStates[colony.name][resource]) {
 					case TN_STATE.activeProvider:
+						if (this.activeProviders[resource] == undefined) this.activeProviders[resource] = [];
 						this.activeProviders[resource].push(colony);
 						break;
-					case TN_STATE.passiveProvier:
+					case TN_STATE.passiveProvider:
+						if (this.passiveProviders[resource] == undefined) this.passiveProviders[resource] = [];
 						this.passiveProviders[resource].push(colony);
 						break;
 					case TN_STATE.equilibrium:
+						if (this.equilibriumNodes[resource] == undefined) this.equilibriumNodes[resource] = [];
 						this.equilibriumNodes[resource].push(colony);
 						break;
 					case TN_STATE.passiveRequestor:
+						if (this.passiveRequestors[resource] == undefined) this.passiveRequestors[resource] = [];
 						this.passiveRequestors[resource].push(colony);
 						break;
 					case TN_STATE.activeRequestor:
+						if (this.activeRequestors[resource] == undefined) this.activeRequestors[resource] = [];
 						this.activeRequestors[resource].push(colony);
 						break;
 					case TN_STATE.error:
@@ -511,7 +526,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		const BIG_COST = 2000; // size of a typical large transaction cost
 		return maxBy(partners, partner => {
 			const sendCost = Game.market.calcTransactionCost(amount, partner.name, colony.name);
-			const avgCooldown = this.stats.terminals.avgCooldown[partner.name];
+			const avgCooldown = this.stats.terminals.avgCooldown[partner.name] || 0;
 			const score = -1 * (sendCost) * (K + sendCost / BIG_COST + avgCooldown);
 			return score;
 		}) as Colony;
@@ -687,7 +702,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 							 prioritizedPartners: { [resource: string]: Colony[] }[],
 							 opts: RequestOpts = {}): void {
 		_.defaults(opts, {
-			allowDivvying          : true,
+			allowDivvying          : false,
 			sendTargetPlusTolerance: false,
 			allowMarketBuy         : Game.market.credits > TraderJoe.settings.market.credits.canBuyAbove,
 			recieveOnlyOncePerTick : false,
@@ -712,7 +727,8 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 
 				const success = this.handleRequestInstance(colony, resource, requestAmount, partnerSets, opts);
 				if (!success && Game.time % 5 == 0) {
-					this.notify(`Unable to fulfill request instance from ${colony} for ${requestAmount} ${resource}`);
+					this.notify(`Unable to fulfill request instance from ${colony.print} ` +
+								`for ${requestAmount} ${resource}`);
 				}
 			}
 		}
@@ -738,7 +754,8 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 
 				const success = this.handleProvideInstance(colony, resource, sendAmount, partnerSets, opts);
 				if (!success && Game.time % 5 == 0) {
-					this.notify(`Unable to fulfill provide instance from ${colony} for ${sendAmount} ${resource}`);
+					this.notify(`Unable to fulfill provide instance from ${colony.print} ` +
+								`for ${sendAmount} ${resource}`);
 				}
 			}
 		}
@@ -747,6 +764,16 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	run(): void {
 		// Assign states to each colony; manual state specification should have already been done in directive.init()
 		this.assignColonyStates();
+
+		// console.log(TN_STATE.activeProvider, TN_STATE.passiveProvider, TN_STATE.equilibrium, TN_STATE.passiveRequestor, TN_STATE.activeRequestor);
+		// console.log(`${this.colonies.length} this.colonies = ${this.colonies}`);
+		// console.log(`this.colonyStates = ${JSON.stringify(this.colonyStates)}`);
+		// console.log(`this.activeProviders = ${JSON.stringify(_.mapValues(this.activeProviders, cols => _.map(cols, col => col.name)))}`);
+		// console.log(`this.passiveProviders = ${JSON.stringify(_.mapValues(this.passiveProviders, cols => _.map(cols, col => col.name)))}`);
+		// console.log(`this.equilibriumNodes = ${JSON.stringify(_.mapValues(this.equilibriumNodes, cols => _.map(cols, col => col.name)))}`);
+		// console.log(`this.passiveRequestors = ${JSON.stringify(_.mapValues(this.passiveRequestors, cols => _.map(cols, col => col.name)))}`);
+		// console.log(`this.activeRequestors = ${JSON.stringify(_.mapValues(this.activeRequestors, cols => _.map(cols, col => col.name)))}`);
+
 
 		// Handle request types by descending priority: activeRequestors -> activeProviders -> passiveRequestors
 		// (passiveProviders and equilibriumNodes have no action)
@@ -767,10 +794,12 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		this.handleRequestors(this.passiveRequestors, [
 			this.activeProviders,
 			this.passiveProviders,
-		]);
+		], {allowMarketBuy: false});
 
 		// Record stats for this tick
 		this.recordStats();
+
+		this.summarize();
 
 		// Display notifications
 		if (this.notifications.length > 0) {
@@ -833,26 +862,28 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	private summarize(): void {
 		const {activeRequestors, passiveRequestors, equilibriumNodes, passiveProviders, activeProviders} =
 				  this.stats.states;
-		console.log('Active providers ---------------------------------------------------------------------');
+		let info: string = '\nTerminalNetwork Summary: \n';
+		info += 'Active providers ---------------------------------------------------------------------\n';
 		for (const colonyName in activeProviders) {
-			console.log(`${bullet}${printRoomName(colonyName)}: ${activeProviders[colonyName]}`);
+			info += `${bullet}${printRoomName(colonyName, true)}  ${activeProviders[colonyName]}\n`;
 		}
-		console.log('Passive providers --------------------------------------------------------------------');
+		info += 'Passive providers --------------------------------------------------------------------\n';
 		for (const colonyName in passiveProviders) {
-			console.log(`${bullet}${printRoomName(colonyName)}: ${passiveProviders[colonyName]}`);
+			info += `${bullet}${printRoomName(colonyName, true)}  ${passiveProviders[colonyName]}\n`;
 		}
-		console.log('Equilibrium nodes --------------------------------------------------------------------');
+		info += 'Equilibrium nodes --------------------------------------------------------------------\n';
 		for (const colonyName in equilibriumNodes) {
-			console.log(`${bullet}${printRoomName(colonyName)}: ${equilibriumNodes[colonyName]}`);
+			info += `${bullet}${printRoomName(colonyName, true)}  ${equilibriumNodes[colonyName]}\n`;
 		}
-		console.log('Passive requestors -------------------------------------------------------------------');
+		info += 'Passive requestors -------------------------------------------------------------------\n';
 		for (const colonyName in passiveRequestors) {
-			console.log(`${bullet}${printRoomName(colonyName)}: ${passiveRequestors[colonyName]}`);
+			info += `${bullet}${printRoomName(colonyName, true)}  ${passiveRequestors[colonyName]}\n`;
 		}
-		console.log('Active requestors --------------------------------------------------------------------');
+		info += 'Active requestors --------------------------------------------------------------------\n';
 		for (const colonyName in activeRequestors) {
-			console.log(`${bullet}${printRoomName(colonyName)}: ${activeRequestors[colonyName]}`);
+			info += `${bullet}${printRoomName(colonyName, true)}  ${activeRequestors[colonyName]}\n`;
 		}
+		console.log(info);
 	}
 
 }

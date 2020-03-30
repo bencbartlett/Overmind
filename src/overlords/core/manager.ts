@@ -14,9 +14,55 @@ import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 import {WorkerOverlord} from './worker';
 
+
+const TERMINAL_THRESHOLDS = {
+	energy               : {
+		target   : 50000,
+		tolerance: 5000,
+	},
+	power                : {
+		target   : 2500,
+		tolerance: 2500
+	},
+	ops                  : {
+		target   : 2500,
+		tolerance: 2500,
+	},
+	baseMinerals         : {
+		target   : 6500, // 2 * LAB_MINERAL_CAPACITY + 500
+		tolerance: 500,
+	},
+	intermediateReactants: {
+		target   : 3500, // LAB_MINERAL_CAPACITY + 500
+		tolerance: 500
+	},
+	boosts               : {
+		target   : 3500, // LAB_MINERAL_CAPACITY + 500
+		tolerance: 500,
+	}
+};
+
+function getTerminalThresholds(resource: ResourceConstant): { target: number, tolerance: number } | undefined {
+	let thresholds;
+	if (resource == RESOURCE_ENERGY) {
+		thresholds = TERMINAL_THRESHOLDS.energy;
+	} else if (resource == RESOURCE_POWER) {
+		thresholds = TERMINAL_THRESHOLDS.power;
+	} else if (resource == RESOURCE_OPS) {
+		thresholds = TERMINAL_THRESHOLDS.ops;
+	} else if (Abathur.isBaseMineral(resource)) {
+		thresholds = TERMINAL_THRESHOLDS.baseMinerals;
+	} else if (Abathur.isIntermediateReactant(resource)) {
+		thresholds = TERMINAL_THRESHOLDS.intermediateReactants;
+	} else if (Abathur.isBoost(resource)) {
+		thresholds = TERMINAL_THRESHOLDS.boosts;
+	}
+	return thresholds;
+}
+
+// Needs to be after class declaration because fuck lack of class hoisting
 const TERMINAL_THRESHOLDS_ALL: { [resource: string]: { target: number, tolerance: number } | undefined } =
-		  _.zipObject(RESOURCES_ALL, _.map(RESOURCES_ALL,
-										   resource => CommandCenterOverlord.getTerminalThresholds(resource)));
+		  _.zipObject(RESOURCES_ALL, _.map(RESOURCES_ALL, resource => getTerminalThresholds(resource)));
 
 /**
  * Command center overlord: spawn and run a dediated commandCenter attendant
@@ -31,54 +77,7 @@ export class CommandCenterOverlord extends Overlord {
 	// depositTarget: StructureTerminal | StructureStorage;
 	managerRepairTarget: StructureRampart | StructureWall | undefined;
 
-	static settings: {
-		terminal: {
-			threholds: {
-				energy: {
-					target: 50000,
-					tolerance: 5000,
-				},
-				power: {
-					target: 2500,
-					tolerance: 2500
-				}
-				ops: {
-					target: 2500,
-					tolerance: 2500,
-				}
-				baseMinerals: {
-					target: 6500, // 2 * LAB_MINERAL_CAPACITY + 500
-					tolerance: 500,
-				},
-				intermediateReactants: {
-					target: 3500, // LAB_MINERAL_CAPACITY + 500
-					tolerance: 500
-				},
-				boosts: {
-					target: 3500, // LAB_MINERAL_CAPACITY + 500
-					tolerance: 500,
-				}
-			}
-		}
-	};
-
-	static getTerminalThresholds(resource: ResourceConstant): { target: number, tolerance: number } | undefined {
-		let thresholds;
-		if (resource == RESOURCE_ENERGY) {
-			thresholds = CommandCenterOverlord.settings.terminal.threholds.energy;
-		} else if (resource == RESOURCE_POWER) {
-			thresholds = CommandCenterOverlord.settings.terminal.threholds.power;
-		} else if (resource == RESOURCE_OPS) {
-			thresholds = CommandCenterOverlord.settings.terminal.threholds.ops;
-		} else if (Abathur.isBaseMineral(resource)) {
-			thresholds = CommandCenterOverlord.settings.terminal.threholds.baseMinerals;
-		} else if (Abathur.isIntermediateReactant(resource)) {
-			thresholds = CommandCenterOverlord.settings.terminal.threholds.intermediateReactants;
-		} else if (Abathur.isBoost(resource)) {
-			thresholds = CommandCenterOverlord.settings.terminal.threholds.boosts;
-		}
-		return thresholds;
-	}
+	static settings: {};
 
 	constructor(commandCenter: CommandCenter, priority = OverlordPriority.core.manager) {
 		super(commandCenter, 'manager', priority);
@@ -583,3 +582,6 @@ export class CommandCenterOverlord extends Overlord {
 		}
 	}
 }
+
+
+
