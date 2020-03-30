@@ -155,7 +155,7 @@ export const boostParts: { [boostType: string]: BodyPartConstant } = {
 
 };
 
-export const boostTypesAndTiers /*: { [actionName: string]: { [boostLevel: number]: _ResourceConstantSansEnergy }}*/ = {
+export const boostTypesAndTiers: { [actionName: string]: { [boostLevel: number]: ResourceConstant } } = {
 	attack       : {
 		1: 'UH',
 		2: 'UH2O',

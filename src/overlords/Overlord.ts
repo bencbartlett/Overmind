@@ -39,7 +39,7 @@ export interface CreepRequestOptions {
 
 export interface ZergOptions {
 	notifyWhenAttacked?: boolean;
-	boostWishlist?: _ResourceConstantSansEnergy[] | undefined;
+	boostWishlist?: ResourceConstant[] | undefined;
 }
 
 export interface OverlordStats {
@@ -86,7 +86,7 @@ export abstract class Overlord {
 	private _creeps: { [roleName: string]: Creep[] };
 	private _zerg: { [roleName: string]: Zerg[] };
 	private _combatZerg: { [roleName: string]: CombatZerg[] };
-	private boosts: { [roleName: string]: _ResourceConstantSansEnergy[] | undefined };
+	private boosts: { [roleName: string]: ResourceConstant[] | undefined };
 	creepUsageReport: { [roleName: string]: [number, number] | undefined };
 	private shouldSpawnAt?: number;
 
@@ -350,7 +350,7 @@ export abstract class Overlord {
 				// Use distance or 0 (in case distance returns something undefined due to incomplete pathfinding)
 				spawnDistance = Pathing.distance(this.pos, this.colony.hatchery.pos) || 0;
 			}
-			if (this.colony.isIncubating && this.colony.spawnGroup) {
+			if (this.colony.state.isIncubating && this.colony.spawnGroup) {
 				spawnDistance += this.colony.spawnGroup.stats.avgDistance;
 			}
 		}

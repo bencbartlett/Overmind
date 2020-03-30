@@ -60,6 +60,8 @@ interface TerminalState {
 /**
  * The terminal network controls inter-colony resource transfers and requests, equalizing resources between rooms and
  * responding to on-demand resource requests
+ *
+ * NOTE: THIS VERSION OF THE TERMINAL NETWORK IS NOW DEPRECATED
  */
 @profile
 @assimilationLocked
@@ -267,7 +269,8 @@ export class TerminalNetwork /*implements ITerminalNetwork*/ {
 					const storage = colonyOf(terminal).storage;
 					const storageEnergyCap = Energetics.settings.storage.total.cap;
 					if (!storage || storage.energy >= storageEnergyCap) {
-						const ret = Overmind.tradeNetwork.sell(terminal, RESOURCE_ENERGY, amount, terminalNearCapacity);
+						const ret = Overmind.tradeNetwork.sell(terminal, RESOURCE_ENERGY, amount,
+															   {preferDirect: terminalNearCapacity});
 						if (ret == OK) return;
 					}
 				}
@@ -284,7 +287,8 @@ export class TerminalNetwork /*implements ITerminalNetwork*/ {
 					} else {
 						// Sell excess
 						if (terminalNearCapacity || terminal.store[<ResourceConstant>resource]! > 2 * threshold) {
-							const response = Overmind.tradeNetwork.sell(terminal, <ResourceConstant>resource, 1000, true);
+							const response = Overmind.tradeNetwork.sell(terminal, <ResourceConstant>resource, 1000,
+																		{preferDirect: true});
 							if (response == OK) return;
 						} else {
 							const response = Overmind.tradeNetwork.sell(terminal, <ResourceConstant>resource, 10000);
@@ -322,8 +326,8 @@ export class TerminalNetwork /*implements ITerminalNetwork*/ {
 	private equalize(resourceType: ResourceConstant, terminals = this.terminals, verbose = false): void {
 
 		log.debug(`Equalizing ${resourceType} within terminal network`);
-		const maxSendSize = resourceType == RESOURCE_ENERGY ? TerminalNetwork.settings.equalize.maxEnergySendSize
-															: TerminalNetwork.settings.equalize.maxMineralSendSize;
+		const maxSendSize = resourceType == RESOURCE_ENERGY ? TerminalNetwork.settings.equalize.maxEnergySendAmount
+															: TerminalNetwork.settings.equalize.maxResourceSendAmount;
 		const averageAmount = _.sum(_.map(terminals,
 										  terminal => (colonyOf(terminal).assets[resourceType] || 0))) / terminals.length;
 
@@ -403,7 +407,7 @@ export class TerminalNetwork /*implements ITerminalNetwork*/ {
 	 */
 	registerTerminalState(terminal: StructureTerminal, state: TerminalState): void {
 		this.exceptionTerminals[terminal.ref] = state;
-		colonyOf(terminal).terminalState = state;
+		// colonyOf(terminal).terminalState = state;
 		_.remove(this.terminals, t => t.id == terminal.id);
 	}
 
@@ -411,21 +415,21 @@ export class TerminalNetwork /*implements ITerminalNetwork*/ {
 	 * Handles exceptional terminal states
 	 */
 	private handleTerminalState(terminal: StructureTerminal, state: TerminalState): void {
-		for (const resourceType of RESOURCE_IMPORTANCE) {
-			const maxSendSize = resourceType == RESOURCE_ENERGY ? TerminalNetwork.settings.equalize.maxEnergySendSize
-																: TerminalNetwork.settings.equalize.maxMineralSendSize;
-			const amount = (terminal.store[resourceType] || 0);
-			const targetAmount = state.amounts[resourceType] || 0;
+		for (const resource of RESOURCE_IMPORTANCE) {
+			const maxSendSize = resource == RESOURCE_ENERGY ? TerminalNetwork.settings.equalize.maxEnergySendAmount
+															: TerminalNetwork.settings.equalize.maxResourceSendAmount;
+			const amount = (terminal.store[resource] || 0);
+			const targetAmount = state.amounts[resource] || 0;
 			const tolerance = targetAmount == 0 ? TERMINAL_MIN_SEND : state.tolerance;
 			// Terminal input state - request resources be sent to this colony
 			if (state.type == 'in' || state.type == 'in/out') {
 				if (amount < targetAmount - tolerance) {
 					// Request needed resources from most plentiful colony
-					const sender = maxBy(this.readyTerminals, t => t.store[resourceType] || 0);
+					const sender = maxBy(this.readyTerminals, t => t.store[resource] || 0);
 					if (sender) {
 						const receiveAmount = minMax(targetAmount - amount, TERMINAL_MIN_SEND, maxSendSize);
-						if ((sender.store[resourceType] || 0) > TERMINAL_MIN_SEND) {
-							this.transfer(sender, terminal, resourceType, receiveAmount, 'exception state in');
+						if ((sender.store[resource] || 0) > TERMINAL_MIN_SEND) {
+							this.transfer(sender, terminal, resource, receiveAmount, 'exception state in');
 							_.remove(this.readyTerminals, t => t.ref == sender!.ref);
 						}
 					}
@@ -437,14 +441,14 @@ export class TerminalNetwork /*implements ITerminalNetwork*/ {
 					const receiver = minBy(this.terminals, t => _.sum(t.store));
 					if (receiver) {
 						let sendAmount: number;
-						if (resourceType == RESOURCE_ENERGY) {
+						if (resource == RESOURCE_ENERGY) {
 							const cost = Game.market.calcTransactionCost(amount, terminal.room.name, receiver.room.name);
 							sendAmount = minMax(amount - targetAmount - cost, TERMINAL_MIN_SEND, maxSendSize);
 						} else {
 							sendAmount = minMax(amount - targetAmount, TERMINAL_MIN_SEND, maxSendSize);
 						}
 						if (receiver.storeCapacity - _.sum(receiver.store) > sendAmount) {
-							this.transfer(terminal, receiver, resourceType, sendAmount, 'exception state out');
+							this.transfer(terminal, receiver, resource, sendAmount, 'exception state out');
 							return;
 						}
 					}
@@ -559,7 +563,7 @@ export class TerminalNetwork /*implements ITerminalNetwork*/ {
 												  terminal => colonyOf(terminal).assets[RESOURCE_ENERGY] || 0);
 					if (poorestTerminal) {
 						const amount = Energetics.settings.terminal.energy.tradeAmount;
-						Overmind.tradeNetwork.buy(poorestTerminal, RESOURCE_ENERGY, amount, false);
+						Overmind.tradeNetwork.buy(poorestTerminal, RESOURCE_ENERGY, amount, {preferDirect: false});
 					}
 				}
 			}

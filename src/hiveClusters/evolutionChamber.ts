@@ -1,7 +1,7 @@
 import {$} from '../caching/GlobalCache';
 import {Colony} from '../Colony';
 import {log} from '../console/log';
-import {TerminalNetwork} from '../logistics/TerminalNetwork';
+import {TerminalNetworkV2} from '../logistics/TerminalNetwork_v2';
 import {TraderJoe} from '../logistics/TradeNetwork';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {Mem} from '../memory/Memory';
@@ -76,7 +76,7 @@ function labsAreEmpty(labs: StructureLab[]): boolean {
 export class EvolutionChamber extends HiveCluster {
 
 	terminal: StructureTerminal;							// The colony terminal
-	terminalNetwork: TerminalNetwork;						// Reference to Overmind.terminalNetwork
+	terminalNetwork: TerminalNetworkV2;						// Reference to Overmind.terminalNetwork
 	labs: StructureLab[];									// Colony labs
 	reagentLabs: StructureLab[];
 	productLabs: StructureLab[];
@@ -98,7 +98,7 @@ export class EvolutionChamber extends HiveCluster {
 		this.memory = Mem.wrap(this.colony.memory, 'evolutionChamber', EvolutionChamberMemoryDefaults);
 		// Register physical components
 		this.terminal = terminal;
-		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetwork;
+		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetworkV2;
 		this.labs = colony.labs;
 		// Reserve some easily-accessible labs which are restricted not to be reagent labs
 		const restrictedLabs = this.colony.bunker ?
@@ -335,14 +335,14 @@ export class EvolutionChamber extends HiveCluster {
 	}
 
 	/* Return the amount of a given resource necessary to fully boost a creep body */
-	static requiredBoostAmount(body: BodyPartDefinition[], boostType: _ResourceConstantSansEnergy): number {
+	static requiredBoostAmount(body: BodyPartDefinition[], boostType: ResourceConstant): number {
 		const existingBoostCounts = _.countBy(body, part => part.boost);
 		const numPartsToBeBoosted = _.filter(body, part => part.type == boostParts[boostType]).length;
 		return LAB_BOOST_MINERAL * (numPartsToBeBoosted - (existingBoostCounts[boostType] || 0));
 	}
 
 	/* Return whether you have the resources to fully boost a creep body with a given resource */
-	canBoost(body: BodyPartDefinition[], boostType: _ResourceConstantSansEnergy): boolean {
+	canBoost(body: BodyPartDefinition[], boostType: ResourceConstant): boolean {
 		const boostAmount = EvolutionChamber.requiredBoostAmount(body, boostType);
 		if (this.colony.assets[boostType] >= boostAmount) {
 			// Does this colony have the needed resources already?
@@ -358,7 +358,7 @@ export class EvolutionChamber extends HiveCluster {
 	}
 
 	/* Request boosts sufficient to fully boost a given creep to be added to the boosting queue */
-	requestBoost(creep: Zerg, boostType: _ResourceConstantSansEnergy): void {
+	requestBoost(creep: Zerg, boostType: ResourceConstant): void {
 
 		// Add the required amount to the neededBoosts
 		const boostAmount = EvolutionChamber.requiredBoostAmount(creep.body, boostType);

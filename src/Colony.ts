@@ -141,15 +141,18 @@ export class Colony {
 	miningSites: { [flagName: string]: DirectiveHarvest };	// Component with logic for mining and hauling
 	extractionSites: { [flagName: string]: DirectiveExtract };
 	// praiseSite: PraiseSite | undefined;
-	// Operational mode
-	bootstrapping: boolean; 							// Whether colony is bootstrapping or recovering from crash
-	isIncubating: boolean;								// If the colony is incubating
+	// Operational state
 	level: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; 				// Level of the colony's main room
 	stage: number;										// The stage of the colony "lifecycle"
-	defcon: number;
+	defcon: number;										//
+	state: {
+		bootstrapping?: boolean; 						// Whether colony is bootstrapping or recovering from crash
+		isIncubating?: boolean;							// If the colony is incubating
+		lowPowerMode?: boolean; 						// Activate if RCL8 and full energy
+		isRebuilding?: boolean;							// If colony is doing major reconstruction (e.g. moving in room)
+		isEvacuating?: boolean;							// If we're clearing the terminal if colony is about to fail
+	};
 	// terminalState: TerminalState | undefined;
-	breached: boolean;
-	lowPowerMode: boolean; 								// Activate if RCL8 and full energy
 	layout: 'twoPart' | 'bunker';						// Which room design colony uses
 	bunker: BunkerData | undefined;						// The center tile of the bunker, else undefined
 	// Creeps and subsets
@@ -357,10 +360,8 @@ export class Colony {
 	 */
 	private registerOperationalState(): void {
 		this.level = this.controller.level as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-		this.bootstrapping = false;
-		this.isIncubating = false;
+		// Set colony stage
 		if (this.storage && this.spawns[0]) {
-			// If the colony has storage and a hatchery
 			if (this.controller.level == 8) {
 				this.stage = ColonyStage.Adult;
 			} else {
@@ -369,10 +370,7 @@ export class Colony {
 		} else {
 			this.stage = ColonyStage.Larva;
 		}
-		// this.incubatingColonies = [];
-		this.lowPowerMode = Energetics.lowPowerMode(this);
-		// Set DEFCON level
-		// TODO: finish this
+		// Set DEFCON level TODO: finish this
 		let defcon = DEFCON.safe;
 		const defconDecayTime = 200;
 		if (this.room.dangerousHostiles.length > 0 && !this.controller.safeMode) {
@@ -401,10 +399,12 @@ export class Colony {
 			};
 		}
 		this.defcon = this.memory.defcon.level;
-		this.breached = (this.room.dangerousHostiles.length > 0 &&
-						 this.creeps.length == 0 &&
-						 !this.controller.safeMode);
-		// this.terminalState = undefined;
+
+		// Set colony state to blank - other directives can modify this
+		this.state = {};
+		if (Energetics.lowPowerMode(this)) {
+			this.state.lowPowerMode = true;
+		}
 	}
 
 	/**

@@ -29,7 +29,6 @@ import {DirectiveStronghold} from './situational/stronghold';
 import {DirectiveDismantle} from './targeting/dismantle';
 import {DirectiveModularDismantle} from './targeting/modularDismantle';
 import {DirectiveTargetSiege} from './targeting/siegeTarget';
-import {DirectiveTerminalEmergencyState} from './terminalState/terminalState_emergency';
 import {DirectiveTerminalEvacuateState} from './terminalState/terminalState_evacuate';
 import {DirectiveTerminalRebuildState} from './terminalState/terminalState_rebuild';
 
@@ -117,8 +116,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			switch (flag.secondaryColor) {
 				case COLOR_RED:
 					return new DirectiveTerminalEvacuateState(flag);
-				case COLOR_ORANGE:
-					return new DirectiveTerminalEmergencyState(flag);
+				// case COLOR_ORANGE:
+				// 	return new DirectiveTerminalEmergencyState(flag);
 				case COLOR_YELLOW:
 					return new DirectiveTerminalRebuildState(flag);
 			}

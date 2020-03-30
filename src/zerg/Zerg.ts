@@ -90,6 +90,7 @@ export class Zerg {
 	creep: Creep; 						// The creep that this wrapper class will control
 	body: BodyPartDefinition[];    	 	// These properties are all wrapped from this.creep.* to this.*
 	carry: StoreDefinition;				// |
+	store: StoreDefinition; 			// |
 	carryCapacity: number;				// |
 	fatigue: number;					// |
 	hits: number;						// |
@@ -115,6 +116,7 @@ export class Zerg {
 		this.creep = creep;
 		this.body = creep.body;
 		this.carry = creep.carry;
+		this.store = creep.store;
 		this.carryCapacity = creep.carryCapacity;
 		this.fatigue = creep.fatigue;
 		this.hits = creep.hits;
@@ -155,6 +157,7 @@ export class Zerg {
 			this.nextPos = creep.pos;
 			this.body = creep.body;
 			this.carry = creep.carry;
+			this.store = creep.store;
 			this.carryCapacity = creep.carryCapacity;
 			this.fatigue = creep.fatigue;
 			this.hits = creep.hits;

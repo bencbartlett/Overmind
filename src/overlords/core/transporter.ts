@@ -53,7 +53,7 @@ export class TransportOverlord extends Overlord {
 		}
 
 
-		if (this.colony.lowPowerMode) {
+		if (this.colony.state.lowPowerMode) {
 			// Reduce needed transporters when colony is in low power mode
 			transportPower *= 0.5;
 		}

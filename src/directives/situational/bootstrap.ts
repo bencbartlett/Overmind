@@ -29,7 +29,7 @@ export class DirectiveBootstrap extends Directive {
 
 	refresh() {
 		super.refresh();
-		this.colony.bootstrapping = true;
+		this.colony.state.bootstrapping = true;
 		this.needsMiner = (this.colony.getCreepsByRole(Roles.drone).length == 0);
 		this.needsManager = (this.colony.commandCenter != undefined &&
 							 this.colony.commandCenter.overlord != undefined &&

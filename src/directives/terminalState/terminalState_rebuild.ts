@@ -3,19 +3,20 @@ import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
 import {NotifierPriority} from '../Notifier';
 
-export const TERMINAL_STATE_REBUILD: TerminalState = {
-	name     : 'rebuild',
-	type     : 'in/out',
-	amounts  : {
-		[RESOURCE_ENERGY]: 25000,
-	},
-	tolerance: 1000
-};
+// export const TERMINAL_STATE_REBUILD: TerminalState = {
+// 	name     : 'rebuild',
+// 	type     : 'in/out',
+// 	amounts  : {
+// 		[RESOURCE_ENERGY]: 25000,
+// 	},
+// 	tolerance: 1000
+// };
 
 const REBUILD_STATE_TIMEOUT = 25000;
 
 /**
  * Put the colony's terminal in a rebuild state, which pushes resources out of a room which is undergoing reconstruction
+ * while maintaining a small reserve of energy
  */
 @profile
 export class DirectiveTerminalRebuildState extends Directive {
@@ -35,10 +36,21 @@ export class DirectiveTerminalRebuildState extends Directive {
 
 	refresh() {
 		super.refresh();
-		// Register abandon status
-		this.terminal = this.pos.lookForStructure(STRUCTURE_TERMINAL) as StructureTerminal;
-		if (this.terminal) {
-			Overmind.terminalNetwork.registerTerminalState(this.terminal, TERMINAL_STATE_REBUILD);
+		this.colony.state.isRebuilding = true;
+		if (this.colony && this.colony.terminal) {
+			for (const resource of RESOURCES_ALL) {
+				if (this.colony.assets[resource] > 0) {
+					if (resource == RESOURCE_ENERGY) { // keep a little energy just to keep the room functioning
+						Overmind.terminalNetwork.exportResource(this.colony, resource, {
+							target: 25000,
+							tolerance: 5000,
+							surplus: 35000,
+						});
+					} else {
+						Overmind.terminalNetwork.exportResource(this.colony, <ResourceConstant>resource);
+					}
+				}
+			}
 		}
 		if (Game.time % 25 == 0) {
 			log.alert(`${this.pos.print}: rebuild terminal state active!`);

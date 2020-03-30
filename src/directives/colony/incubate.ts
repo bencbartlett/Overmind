@@ -22,7 +22,7 @@ export class DirectiveIncubate extends Directive {
 		// Register incubation status
 		this.incubatee = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
 		if (this.incubatee) {
-			this.incubatee.isIncubating = true;
+			this.incubatee.state.isIncubating = true;
 			this.incubatee.spawnGroup = new SpawnGroup(this.incubatee);
 		}
 	}

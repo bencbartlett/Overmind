@@ -1,6 +1,5 @@
 import {$} from '../caching/GlobalCache';
 import {Colony} from '../Colony';
-import {TerminalNetwork} from '../logistics/TerminalNetwork';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {Mem} from '../memory/Memory';
 import {CommandCenterOverlord} from '../overlords/core/manager';
@@ -28,7 +27,6 @@ export class CommandCenter extends HiveCluster {
 	storage: StructureStorage;								// The colony storage, also the instantiation object
 	link: StructureLink | undefined;						// Link closest to storage
 	terminal: StructureTerminal | undefined;				// The colony terminal
-	terminalNetwork: TerminalNetwork;						// Reference to Overmind.terminalNetwork
 	towers: StructureTower[];								// Towers within range 3 of storage are part of cmdCenter
 	powerSpawn: StructurePowerSpawn | undefined;			// Colony Power Spawn
 	nuker: StructureNuker | undefined;						// Colony nuker
@@ -62,7 +60,6 @@ export class CommandCenter extends HiveCluster {
 			this.colony.linkNetwork.claimLink(this.link);
 			this.towers = this.pos.findInRange(colony.towers, 3);
 		}
-		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetwork;
 		this.transportRequests = new TransportRequestGroup(); // commandCenter always gets its own request group
 		this.observeRoom = undefined;
 	}

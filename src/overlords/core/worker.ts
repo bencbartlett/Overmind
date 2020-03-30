@@ -2,7 +2,6 @@ import {$} from '../../caching/GlobalCache';
 import {Colony, ColonyStage, DEFCON} from '../../Colony';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {DirectiveNukeResponse} from '../../directives/situational/nukeResponse';
-import {TERMINAL_STATE_REBUILD} from '../../directives/terminalState/terminalState_rebuild';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {BuildPriorities, FortifyPriorities} from '../../priorities/priorities_structures';
 import {profile} from '../../profiler/decorator';
@@ -371,7 +370,7 @@ export class WorkerOverlord extends Overlord {
 				if (this.buildActions(worker)) return;
 			}
 			// Build ramparts to block incoming nuke
-			if (this.nukeDefenseRamparts.length > 0 && this.colony.terminalState != TERMINAL_STATE_REBUILD) {
+			if (this.nukeDefenseRamparts.length > 0 && !this.colony.state.isRebuilding) {
 				if (this.nukeFortifyActions(worker, this.nukeDefenseRamparts)) return;
 			}
 			// Build and maintain roads

@@ -3,7 +3,7 @@ import {hasPos} from '../declarations/typeGuards';
 import {CombatIntel} from '../intel/CombatIntel';
 import {Mem} from '../memory/Memory';
 import {normalizePos} from '../movement/helpers';
-import {CombatMoveOptions, Movement, NO_ACTION, SwarmMoveOptions} from '../movement/Movement';
+import {CombatMoveOptions, Movement, SwarmMoveOptions} from '../movement/Movement';
 import {CombatOverlord} from '../overlords/CombatOverlord';
 import {profile} from '../profiler/decorator';
 import {CombatTargeting} from '../targeting/CombatTargeting';

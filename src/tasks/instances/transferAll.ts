@@ -41,9 +41,12 @@ export class TaskTransferAll extends Task {
 				continue;
 			}
 			if (amount > 0) {
-				return this.creep.transfer(this.target, resourceType);
+				const result = this.creep.transfer(this.target, resourceType);
+				if (result != OK) { // if we run into a problem, abort early, otherwise keep dumping everything
+					return result;
+				}
 			}
 		}
-		return -1;
+		return OK;
 	}
 }
