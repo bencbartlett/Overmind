@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file. The format 
 ## [Unreleased]
 
 ### Added
+- Colonies now have a `Colony.state` property which consolidates all behavior-altering hooks which can be modified by directives
+- Rewrote a large portion of the `ManagerOverlord` to allow for more flexible transfer between storage and terminal.
+    - Previously, storage was usable only for energy, which resulted in terminals operating near capacity and wasted a lot of the capacity of a room
+    - The new system seeks to maintain LAB_MIENRAL_CAPACITY + 500 +/- 500 mineral compounds of each type (more for base resources) and 50000 +/- 5000 energy within the terminal (other resources treated similarly) and will offload everything else into storage
+- Huge changes to `TraderJoe`. The new version employs the `Game.market.getHistory()` functionality, and should be much better about utilizing buy and sell orders for resources. It should also be better at computing competitive but sensible prices to place orders at, and will seek to make its orders more competitive by adjusting the price if the order is not selling in a timely manner.
+- Completely rewrote the `TerminalNetwork` system. The new version should have much better resource acquisition latency and is inspired by Factorio's logistics system. It works like this:
+    - Each colony with a terminal can be in one of 5 states for each resource depending on how much of the resource it has and on other conditions:
+        - Active providers will actively push resources from the room into other rooms in the terminal network which are requestors or will sell the resource on the market no receiving rooms are available
+        - Passive providers will place their resources at the disposal of the terminal network but don't actively want to get rid of stuff
+        - Equilibrium nodes are rooms which are near their desired amount for the resource and prefer to stay there
+        - Passive requestors are rooms which have less than their desired amount of the resource but don't have an immediate need for it; they will request resources from activeProviders and passiveProviders
+        - Active requestors are rooms which have an immediate need for and insufficient amounts of a resource; they will request resources from any room which is not also an activeRequestor
+    - The state of each room is determined by a `Thresholds` object, which has `target`, `tolerance`, and ()posisbly undefined) `surplus` properties. Conditions for each state are based on `amount` of resource in a colony:
+        - Active provider: `amount > surplus` (if defined) or `amont > target + tolerance` and room is near capacity
+        - Passive provider: `surplus >= amount > target + tolerance`
+        - Equilibrium: `target + tolerance >= amount >= target - tolerance`
+        - Passive requestor: `target - tolerance > amount`
+        - Active requestor: can only be placed in this state by an active call to `TerminalNetwork.requestResource` while `target > amount`
+    - To determine which room to request/provide resources from/to, a heuristic is used which tries to minimize transaction cost while accounting for:
+    	- If a terminal has a high output load (often on cooldown), receivers will de-prioritize it
+    	- If a terminal is far away, receivers will wait longer to find a less expensive sender
+    	- Bigger transactions with higher costs will wait longer for a closer colony, while smaller transactions are less picky
+    - The new system uses `Colony` in place of many arguments which were `StructureTerminal`, as it looks only at `colony.assets` when determining what to send; this fits with the new changes to the `ManagerOverlord` to allow for more flexible transfer between storage and terminal
 - Added CPU/resource profiling to `Overlord`s. Use the `profileOverlord()` console command to activate this.
 - Merged a lot of additions from Davaned's branch(es)
     - Initial support for power mining and power processing
