@@ -292,7 +292,6 @@ export abstract class Task {
 			if (this.settings.oneShot && result === OK) {
 				this.finish();
 			}
-			// TODO: make this execute the next task within the same tick (e.g. transfer to 2 nearby targets)
 			return result;
 		} else {
 			this.moveToTarget();

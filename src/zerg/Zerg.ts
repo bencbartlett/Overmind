@@ -246,6 +246,9 @@ export class Zerg {
 	claimController(controller: StructureController) {
 		const result = this.creep.claimController(controller);
 		if (!this.actionLog.claimController) this.actionLog.claimController = (result == OK);
+		if (result == OK) {
+			Overmind.shouldBuild = true; // rebuild the overmind object on the next tick to account for new room
+		}
 		return result;
 	}
 

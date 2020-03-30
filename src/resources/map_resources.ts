@@ -209,6 +209,31 @@ export const boostTypesAndTiers: { [actionName: string]: { [boostLevel: number]:
 
 };
 
+export type BoostType =
+	'attack'
+	| 'carry'
+	| 'ranged'
+	| 'heal'
+	| 'move'
+	| 'tough'
+	| 'harvest'
+	| 'construct'
+	| 'dismantle'
+	| 'upgrade';
+
+export function isBoostType(str: string): str is BoostType {
+	return str === 'attack'
+		   || str === 'carry'
+		   || str === 'ranged'
+		   || str === 'heal'
+		   || str === 'move'
+		   || str === 'tough'
+		   || str === 'harvest'
+		   || str === 'construct'
+		   || str === 'dismantle'
+		   || str === 'upgrade';
+}
+
 // This inverts the second-level values from above, so you get an object that looks like:
 // { attack: { UH: 1, UH2O: 2, XUH2O: 3 }, carry: { ... } ... }
 export const _boostTypesTierLookup = _.mapValues(boostTypesAndTiers,
