@@ -113,9 +113,12 @@ export class CommandCenterOverlord extends Overlord {
 		if (this.colony.bunker && this.colony.bunker.coreSpawn && this.colony.level == 8
 			&& !this.colony.roomPlanner.memory.relocating) {
 			setup = Setups.managers.stationary;
-			if (this.managerRepairTarget && this.colony.assets.energy > WorkerOverlord.settings.fortifyDutyThreshold) {
-				setup = Setups.managers.stationary_work; // use working manager body if you have something to repair
-			}
+			// // Spawn a worker manager to repair central tiles
+			// if (this.managerRepairTarget &&
+			// 	this.managerRepairTarget.hits < WorkerOverlord.settings.barrierHits[this.colony.level] - 1e5 &&
+			// 	this.colony.assets.energy > WorkerOverlord.settings.fortifyDutyThreshold) {
+			// 	setup = Setups.managers.stationary_work; // use working manager body if you have something to repair
+			// }
 			spawnRequestOptions = {
 				spawn     : this.colony.bunker.coreSpawn,
 				directions: [this.colony.bunker.coreSpawn.pos.getDirectionTo(this.colony.bunker.anchor)]
@@ -133,6 +136,7 @@ export class CommandCenterOverlord extends Overlord {
 		if (manager.store.getUsedCapacity() == 0) {
 			return false;
 		} else {
+			manager.debug(`Unloading carry: ${JSON.stringify(manager.carry)}`);
 			manager.task = Tasks.transferAll(this.commandCenter.storage); // placeholder solution
 			return true;
 		}
@@ -245,6 +249,8 @@ export class CommandCenterOverlord extends Overlord {
 		const terminal = this.commandCenter.terminal;
 		if (!storage || !terminal) return false;
 
+		const roomSellOrders = Overmind.tradeNetwork.getExistingOrders(ORDER_SELL, 'any', this.colony.name);
+
 		for (const resourceType in this.colony.assets) {
 
 			const resource = resourceType as ResourceConstant; // to make the fucking TS compiler happy
@@ -256,31 +262,43 @@ export class CommandCenterOverlord extends Overlord {
 			const thresholds = TERMINAL_THRESHOLDS_ALL[resource];
 			if (!thresholds) continue;
 
-			const {target, tolerance} = thresholds;
+			let {target, tolerance} = thresholds;
+
+			// If you're selling this resource from this room, keep a bunch of it in the terminal
+			if (roomSellOrders.length > 0) {
+				const sellOrderForResource = _.find(roomSellOrders, order => order.resourceType == resourceType);
+				if (sellOrderForResource) {
+					target = Math.max(target, sellOrderForResource.remainingAmount);
+				}
+			}
 
 			// Move stuff from terminal into storage
 			if (terminal.store[resource] > target + tolerance && storage.store.getFreeCapacity(resource) > 0) {
+				manager.debug(`Moving ${resource} from terminal into storage`);
 				if (this.unloadCarry(manager)) {
 					return true;
 				}
 				const transferAmount = Math.min(terminal.store[resource] - target,
 												storage.store.getFreeCapacity(resource),
 												manager.carryCapacity);
-				manager.task = Tasks.chain([Tasks.withdraw(storage, resource, transferAmount),
-											Tasks.transfer(terminal, resource, transferAmount)]);
+				manager.task = Tasks.chain([Tasks.withdraw(terminal, resource, transferAmount),
+											Tasks.transfer(storage, resource, transferAmount)]);
+				// manager.debug(`Assigned task ${print(manager.task)}`)
 				return true;
 			}
 
 			// Move stuff into terminal from storage
 			if (terminal.store[resource] < target - tolerance && storage.store[resource] > 0) {
+				manager.debug(`Moving ${resource} from storage into terminal`);
 				if (this.unloadCarry(manager)) {
 					return true;
 				}
 				const transferAmount = Math.min(target - terminal.store[resource],
 												storage.store[resource],
 												manager.carryCapacity);
-				manager.task = Tasks.chain([Tasks.withdraw(terminal, resource, transferAmount),
-											Tasks.transfer(storage, resource, transferAmount)]);
+				manager.task = Tasks.chain([Tasks.withdraw(storage, resource, transferAmount),
+											Tasks.transfer(terminal, resource, transferAmount)]);
+				// manager.debug(`Assigned task ${print(manager.task)}`)
 				return true;
 			}
 
@@ -573,6 +591,7 @@ export class CommandCenterOverlord extends Overlord {
 			if (manager.isIdle) {
 				this.handleManager(manager);
 			}
+			// manager.debug(print(manager.task))
 			// If you have a valid task, run it; else go to idle pos
 			if (manager.hasValidTask) {
 				manager.run();
