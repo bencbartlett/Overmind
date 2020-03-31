@@ -3,7 +3,6 @@ import {log} from '../console/log';
 import {Mem} from '../memory/Memory';
 import {profile} from '../profiler/decorator';
 import {Abathur} from '../resources/Abathur';
-import {BASE_RESOURCES} from '../resources/map_resources';
 import {alignedNewline, bullet, leftArrow, rightArrow} from '../utilities/stringConstants';
 import {maxBy, minBy, printRoomName} from '../utilities/utils';
 import {RESERVE_CREDITS} from '../~settings';
@@ -102,9 +101,9 @@ export class TraderJoe implements ITradeNetwork {
 		},
 		market: {
 			credits: {
-				mustSellDirectBelow    : 75000,
+				mustSellDirectBelow    : 70000,
 				canPlaceSellOrdersAbove: 10000,
-				canBuyAbove            : 40000,
+				canBuyAbove            : 20000,
 				canBuyBoostsAbove      : 2 * Math.max(RESERVE_CREDITS, 1e5),
 				canBuyEnergyAbove      : 3 * Math.max(RESERVE_CREDITS, 1e5),
 			},
@@ -115,9 +114,12 @@ export class TraderJoe implements ITradeNetwork {
 				maxEnergyBuyOrders  : 5,
 				maxOrdersForResource: 5,
 				minSellOrderAmount  : 5000,
+				maxSellOrderAmount  : 25000,
 				minSellDirectAmount : 250,
+				maxSellDirectAmount : 10000,
 				minBuyOrderAmount   : 1000,
 				minBuyDirectAmount  : 500,
+				maxBuyOrderAmount   : 25000,
 			}
 		},
 	};
@@ -227,19 +229,106 @@ export class TraderJoe implements ITradeNetwork {
 	 * Pretty-prints transaction information in the console
 	 */
 	private logTransaction(order: Order, terminalRoomName: string, amount: number, response: number): void {
-		const action = order.type == ORDER_SELL ? 'BOUGHT ' : 'SOLD   ';
 		const cost = (order.price * amount).toFixed(2);
 		const fee = order.roomName ? Game.market.calcTransactionCost(amount, order.roomName, terminalRoomName) : 0;
 		const roomName = printRoomName(terminalRoomName, true);
 		let msg: string;
-		if (order.type == ORDER_SELL) {
-			msg = `${roomName} ${leftArrow} ${amount} ${order.resourceType} ${leftArrow} ` +
-				  `${printRoomName(order.roomName!)} (result: ${response})`;
-		} else {
-			msg = `${roomName} ${rightArrow} ${amount} ${order.resourceType} ${rightArrow} ` +
-				  `${printRoomName(order.roomName!)} (result: ${response})`;
+		if (order.type == ORDER_SELL) { // I am buying
+			msg = `Direct: ${roomName} ${leftArrow} ${amount} ${order.resourceType} ${leftArrow} ` +
+				  `${printRoomName(order.roomName!)} (-${cost}c)`;
+			if (response != OK) {
+				msg += ` (ERROR: ${response})`;
+			}
+		} else { // I am selling
+			msg = `Direct: ${roomName} ${rightArrow} ${amount} ${order.resourceType} ${rightArrow} ` +
+				  `${printRoomName(order.roomName!)} (+${cost}c)`;
+			if (response != OK) {
+				msg += ` (ERROR: ${response})`;
+			}
 		}
 		this.notify(msg);
+	}
+
+	private notifyLastTickTransactions(): void {
+
+		// Outgoing transactions are where I did the .deal() call
+		for (const transaction of Game.market.outgoingTransactions) {
+			if (transaction.time < Game.time - 1) break; // list is ordered by descending time
+
+			if (transaction.order) { // if it was sold on the market
+				let msg: string;
+				const cost = Math.round(transaction.amount * transaction.order.price);
+				// I am buying from another person's sell order
+				if (transaction.order.type == ORDER_SELL) {
+					const coststr = `[-${cost}c]`.padRight('[-10000c]'.length);
+					msg = coststr + ` buy direct:  ${printRoomName(transaction.to, true)} ${leftArrow} ` +
+						  `${transaction.amount} ${transaction.resourceType} ${leftArrow} ` +
+						  `${printRoomName(transaction.from, true)} `;
+					if (transaction.sender && transaction.recipient) {
+						// const sender = transaction.sender.username; // should be me
+						const recipient = transaction.recipient.username;
+						msg += `(bought from: ${recipient})`;
+					} else {
+						msg += `(bought from: ???)`;
+					}
+				}
+				// I am selling to another person's buy order
+				else {
+					const coststr = `[+${cost}c]`.padRight('[-10000c]'.length);
+					msg = coststr + ` sell direct: ${printRoomName(transaction.from, true)} ${rightArrow} ` +
+						  `${transaction.amount} ${transaction.resourceType} ${rightArrow} ` +
+						  `${printRoomName(transaction.to, true)} `;
+					if (transaction.sender && transaction.recipient) {
+						// const sender = transaction.sender.username; // should be me
+						const recipient = transaction.recipient.username;
+						msg += `(sold to: ${recipient})`;
+					} else {
+						msg += `(sold to: ???)`;
+					}
+				}
+				this.notify(msg);
+			}
+		}
+
+		// Incoming transactions are where someone else did the .deal() call to my order
+		for (const transaction of Game.market.incomingTransactions) {
+			if (transaction.time < Game.time - 1) break; // list is ordered by descending time
+
+			if (transaction.order) { // if it was sold on the market
+				let msg: string;
+				const cost = Math.round(transaction.amount * transaction.order.price);
+				// Another person is fulfilling my buy order
+				if (transaction.order.type == ORDER_BUY) {
+					const coststr = `[-${cost}c]`.padRight('[-10000c]'.length);
+					msg = coststr + ` buy order:   ${printRoomName(transaction.to, true)} ${leftArrow} ` +
+						  `${transaction.amount} ${transaction.resourceType} ${leftArrow} ` +
+						  `${printRoomName(transaction.from, true)} `;
+					if (transaction.sender && transaction.recipient) {
+						const sender = transaction.sender.username;
+						// const recipient = transaction.recipient.username; // should be me
+						msg += `(seller: ${sender})`;
+					} else {
+						msg += `(seller: ???)`;
+					}
+				}
+				// Another person is buying from my sell order
+				else {
+					const coststr = `[+${cost}c]`.padRight('[-10000c]'.length);
+					msg = coststr + ` sell order:  ${printRoomName(transaction.from, true)} ${rightArrow} ` +
+						  `${transaction.amount} ${transaction.resourceType} ${rightArrow} ` +
+						  `${printRoomName(transaction.to, true)} `;
+					if (transaction.sender && transaction.recipient) {
+						const sender = transaction.sender.username;
+						// const recipient = transaction.recipient.username; // should be me
+						msg += `(buyer: ${sender})`;
+					} else {
+						msg += `(buyer: ???)`;
+					}
+				}
+				this.notify(msg);
+			}
+		}
+
 	}
 
 
@@ -247,17 +336,18 @@ export class TraderJoe implements ITradeNetwork {
 	 * Returns a list of orders you have already placed for this type for this resource.
 	 * If roomName is undefined, count any of your orders; if roomName is specified, only return if order is in room
 	 */
-	private getExistingOrders(type: ORDER_BUY | ORDER_SELL, resource: ResourceConstant, roomName?: string): Order[] {
+	getExistingOrders(type: ORDER_BUY | ORDER_SELL, resource: ResourceConstant | 'any', roomName?: string): Order[] {
 		let orders: Order[];
 		if (roomName) {
 			orders = _.filter(Game.market.orders, order => order.type == type &&
-														   order.resourceType == resource &&
+														   (order.resourceType == resource || resource == 'any') &&
 														   order.roomName == roomName);
-			if (orders.length > 1) {
+			if (orders.length > 1 && resource != 'any') {
 				log.error(`Multiple orders for ${resource} detected in ${printRoomName(roomName)}!`);
 			}
 		} else {
-			orders = _.filter(Game.market.orders, order => order.type == type && order.resourceType == resource);
+			orders = _.filter(Game.market.orders, order => order.type == type &&
+														   (order.resourceType == resource || resource == 'any'));
 		}
 		return orders;
 	}
@@ -376,6 +466,12 @@ export class TraderJoe implements ITradeNetwork {
 		if (Game.time % 10 != 5) {
 			return OK; // No action needed on these ticks
 		}
+		// Cap the amount based on the maximum you can make a buy/sell order with
+		if (type == ORDER_SELL) {
+			amount = Math.min(amount, TraderJoe.settings.market.orders.maxBuyOrderAmount);
+		} else {
+			amount = Math.min(amount, TraderJoe.settings.market.orders.maxSellOrderAmount);
+		}
 		// Wait until you accumulate more of the resource to order with bigger transactions
 		const minAmount = type == ORDER_BUY ? TraderJoe.settings.market.orders.minBuyOrderAmount
 											: TraderJoe.settings.market.orders.minSellOrderAmount;
@@ -456,13 +552,22 @@ export class TraderJoe implements ITradeNetwork {
 
 	}
 
-	private cleanUpInactiveOrders() {
-		// Clean up sell orders that have expired or orders belonging to rooms no longer owned
-		const ordersToClean = _.filter(Game.market.orders, o =>
-			(o.type == ORDER_SELL && o.active == false && o.remainingAmount == 0)		// if order is expired, or
-			|| (Game.time - o.created > TraderJoe.settings.market.orders.timeout		// order is old and almost done
-				&& o.remainingAmount < TraderJoe.settings.market.orders.cleanupAmount)
-			|| (o.roomName && !Overmind.colonies[o.roomName]));							// order placed from dead colony
+	private cleanOrders() {
+		const ordersToClean = _.filter(Game.market.orders, order => {
+			// Clean up inactive sell orders where you've sold everything
+			if (order.type == ORDER_SELL && order.active == false && order.remainingAmount == 0) {
+				return true;
+			}
+			// Clean up very old orders which are almost completed but which have some small amount remaining
+			if (Game.time - order.created > TraderJoe.settings.market.orders.timeout
+				&& order.remainingAmount < TraderJoe.settings.market.orders.cleanupAmount) {
+				return true;
+			}
+			// Clean up orders placed in colonies which are no longer with us :(
+			if (order.roomName && !Overmind.colonies[order.roomName]) {
+				return true;
+			}
+		});
 		for (const order of ordersToClean) {
 			Game.market.cancelOrder(order.id);
 		}
@@ -513,8 +618,7 @@ export class TraderJoe implements ITradeNetwork {
 		const buyAmount = Math.min(order.amount, amount);
 		const transactionCost = Game.market.calcTransactionCost(buyAmount, terminal.room.name, order.roomName!);
 		if (terminal.store[RESOURCE_ENERGY] >= transactionCost) {
-			// const response = Game.market.deal(order.id, buyAmount, terminal.room.name);
-			const response = OK;
+			const response = Game.market.deal(order.id, buyAmount, terminal.room.name);
 			this.logTransaction(order, terminal.room.name, amount, response);
 			return response;
 		} else {
@@ -548,11 +652,20 @@ export class TraderJoe implements ITradeNetwork {
 
 		// If you find a valid order, execute it
 		if (order) {
-			const sellAmount = Math.min(order.amount, amount);
+			let sellAmount = Math.min(order.amount, amount,
+									  terminal.store[resource],
+									  TraderJoe.settings.market.orders.maxSellDirectAmount);
 			const transactionCost = Game.market.calcTransactionCost(sellAmount, terminal.room.name, order.roomName!);
+			if (resource == RESOURCE_ENERGY) { // if we're selling energy, make sure we have amount + cost
+				if (amount + transactionCost > terminal.store[RESOURCE_ENERGY]) {
+					sellAmount -= transactionCost;
+					if (sellAmount <= 0) {
+						return ERR_INSUFFICIENT_ENERGY_IN_TERMINAL;
+					}
+				}
+			}
 			if (terminal.store[RESOURCE_ENERGY] >= transactionCost) {
-				// const response = Game.market.deal(order.id, sellAmount, terminal.room.name); // TODO: uncomment this
-				const response = OK;
+				const response = Game.market.deal(order.id, sellAmount, terminal.room.name);
 				this.logTransaction(order, terminal.room.name, amount, response);
 				return response;
 			} else {
@@ -610,7 +723,8 @@ export class TraderJoe implements ITradeNetwork {
 		_.defaults(opts, defaultTradeOpts);
 
 		if (amount > terminal.store[resource]) {
-			log.warning(`Terminal @ ${printRoomName(terminal.room.name)} doesn't have ${amount} ${resource} in store!`);
+			// log.warning(`Terminal in ${printRoomName(terminal.room.name)} ` +
+			// 			`doesn't have ${amount} ${resource} in store!`);
 			amount = terminal.store[resource];
 		}
 
@@ -643,11 +757,16 @@ export class TraderJoe implements ITradeNetwork {
 
 	run(): void {
 		if (Game.time % 10 == 0) {
-			this.cleanUpInactiveOrders();
+			this.cleanOrders();
 		}
+
+		this.notifyLastTickTransactions();
+
 		if (this.notifications.length > 0) {
+			this.notifications.sort();
 			log.info(`Trade network activity: ` + alignedNewline + this.notifications.join(alignedNewline));
 		}
+
 		this.recordStats();
 	}
 
