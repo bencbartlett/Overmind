@@ -219,8 +219,7 @@ Object.defineProperty(StructureTerminal.prototype, 'hasReceived', { // terminal 
 const _terminalSend = StructureTerminal.prototype.send;
 StructureTerminal.prototype.send = function(resourceType: ResourceConstant, amount: number, destination: string,
 											description?: string): ScreepsReturnCode {
-	// const response = _terminalSend.call(this, resourceType, amount, destination, description);
-	const response = OK;
+	const response = _terminalSend.call(this, resourceType, amount, destination, description);
 	if (response == OK) {
 		this._notReady = true;
 		if (Game.rooms[destination] && Game.rooms[destination].terminal) {

@@ -12,7 +12,7 @@ import {
 	INTERMEDIATE_REACTANTS,
 	RESOURCES_ALL_EXCEPT_ENERGY
 } from '../resources/map_resources';
-import {alignedNewline, bullet, rightArrow} from '../utilities/stringConstants';
+import {alignedNewline, bullet, leftArrow, rightArrow} from '../utilities/stringConstants';
 import {exponentialMovingAverage, maxBy, mergeSum, minBy, printRoomName} from '../utilities/utils';
 import {TraderJoe} from './TradeNetwork';
 
@@ -78,11 +78,13 @@ interface RequestOpts {
 	sendTargetPlusTolerance?: boolean;
 	allowMarketBuy?: boolean;
 	receiveOnlyOncePerTick?: boolean;
+	complainIfUnfulfilled?: boolean;
 }
 
 interface ProvideOpts {
 	allowPushToOtherRooms?: boolean;
 	allowMarketSell?: boolean;
+	complainIfUnfulfilled?: boolean;
 }
 
 const DEFAULT_TARGET = 2 * LAB_MINERAL_CAPACITY + 1000; // 7000 is default for most resources
@@ -295,11 +297,21 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		const cost = Game.market.calcTransactionCost(amount, sender.room.name, receiver.room.name);
 		const response = sender.send(resourceType, amount, receiver.room.name);
 		if (response == OK) {
-			let msg = `${printRoomName(sender.room.name, true)} ${rightArrow} ${amount} ${resourceType} ${rightArrow} ` +
-					  `${printRoomName(receiver.room.name, true)} `;
-			if (description) {
-				msg += `(${description})`;
+			let msg;
+			if (description == 'provide') {
+				msg = `${printRoomName(sender.room.name, true)} ${rightArrow} ${amount} ${resourceType} ` +
+					  `${rightArrow} ${printRoomName(receiver.room.name, true)} `;
+			} else if (description == 'request') {
+				msg = `${printRoomName(receiver.room.name, true)} ${leftArrow} ${amount} ${resourceType} ` +
+					  `${leftArrow} ${printRoomName(sender.room.name, true)} `;
+			} else {
+				msg = `${printRoomName(sender.room.name, true)} ${rightArrow} ${amount} ${resourceType} ` +
+					  `${rightArrow} ${printRoomName(receiver.room.name, true)} `;
+				if (description) {
+					msg += `(${description})`;
+				}
 			}
+
 			this.notify(msg);
 			this.logTransfer(resourceType, amount, sender.room.name, receiver.room.name);
 		} else {
@@ -399,7 +411,8 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	}
 
 	/**
-	 * Request resources from the terminal network, placing the colony in an activeRequestor state
+	 * Request resources from the terminal network, placing the colony in an activeRequestor state; amount is the
+	 * quantity of TOTAL resources you need, including requestor.assets
 	 */
 	requestResource(requestor: Colony, resource: ResourceConstant, amount: number, tolerance = 0): void {
 		// If you already have enough resources, you shouldn't have made the request so throw an error message
@@ -557,7 +570,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 				const sendAmount = Math.min(requestAmount, sendTerm.store[resource], maxAmount);
 				// Send the resources or mark the terminal as overloaded for this tick
 				if (sendTerm.isReady) {
-					this.transfer(sendTerm, recvTerm, resource, requestAmount, `request for ${resource}`);
+					this.transfer(sendTerm, recvTerm, resource, requestAmount, `request`);
 				} else {
 					this.terminalOverload[sendTerm.room.name] = true;
 				}
@@ -587,7 +600,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 				const sendAmount = Math.min(amountPartnerCanSend, remainingAmount, maxAmount);
 				// Send the resources or mark the terminal as overloaded for this tick
 				if (sendTerm.isReady) {
-					const ret = this.transfer(sendTerm, recvTerm, resource, sendAmount, `request for ${resource}`);
+					const ret = this.transfer(sendTerm, recvTerm, resource, sendAmount, `request`);
 					if (ret == OK) {
 						remainingAmount -= sendAmount;
 						sentSome = true;
@@ -671,7 +684,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 					sendAmount = Math.min(sendAmount, sendTerm.store[resource], maxAmount);
 					// Send the resources or mark the terminal as overloaded for this tick
 					if (sendTerm.isReady) {
-						this.transfer(sendTerm, recvTerm, resource, sendAmount, `provide instance for ${resource}`);
+						this.transfer(sendTerm, recvTerm, resource, sendAmount, `provide`);
 					} else {
 						this.terminalOverload[sendTerm.room.name] = true;
 					}
@@ -706,6 +719,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			sendTargetPlusTolerance: false,
 			allowMarketBuy         : Game.market.credits > TraderJoe.settings.market.credits.canBuyAbove,
 			recieveOnlyOncePerTick : false,
+			complainIfUnfulfilled  : true,
 		});
 		for (const resource of RESOURCE_EXCHANGE_ORDER) {
 			for (const colony of (requestors[resource] || [])) {
@@ -726,9 +740,9 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 				const partnerSets: Colony[][] = _.map(prioritizedPartners, partners => partners[resource] || []);
 
 				const success = this.handleRequestInstance(colony, resource, requestAmount, partnerSets, opts);
-				if (!success && Game.time % 5 == 0) {
-					this.notify(`Unable to fulfill request instance from ${colony.print} ` +
-								`for ${requestAmount} ${resource}`);
+				if (!success && opts.complainIfUnfulfilled) {
+					this.notify(`Unable to fulfill request instance: ${printRoomName(colony.name)} ${leftArrow} ` +
+								`${requestAmount} ${resource}`);
 				}
 			}
 		}
@@ -740,6 +754,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		_.defaults(opts, {
 			allowPushToOtherRooms: true,
 			allowMarketSell      : true,
+			complainIfUnfulfilled: true,
 		});
 		for (const resource of RESOURCE_EXCHANGE_ORDER) {
 			for (const colony of (providers[resource] || [])) {
@@ -753,9 +768,9 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 				const partnerSets: Colony[][] = _.map(prioritizedPartners, partners => partners[resource] || []);
 
 				const success = this.handleProvideInstance(colony, resource, sendAmount, partnerSets, opts);
-				if (!success && Game.time % 5 == 0) {
-					this.notify(`Unable to fulfill provide instance from ${colony.print} ` +
-								`for ${sendAmount} ${resource}`);
+				if (!success && opts.complainIfUnfulfilled) {
+					this.notify(`Unable to fulfill provide instance: ${printRoomName(colony.name)} ${rightArrow} ` +
+								`${sendAmount} ${resource}`);
 				}
 			}
 		}
@@ -764,16 +779,6 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	run(): void {
 		// Assign states to each colony; manual state specification should have already been done in directive.init()
 		this.assignColonyStates();
-
-		// console.log(TN_STATE.activeProvider, TN_STATE.passiveProvider, TN_STATE.equilibrium, TN_STATE.passiveRequestor, TN_STATE.activeRequestor);
-		// console.log(`${this.colonies.length} this.colonies = ${this.colonies}`);
-		// console.log(`this.colonyStates = ${JSON.stringify(this.colonyStates)}`);
-		// console.log(`this.activeProviders = ${JSON.stringify(_.mapValues(this.activeProviders, cols => _.map(cols, col => col.name)))}`);
-		// console.log(`this.passiveProviders = ${JSON.stringify(_.mapValues(this.passiveProviders, cols => _.map(cols, col => col.name)))}`);
-		// console.log(`this.equilibriumNodes = ${JSON.stringify(_.mapValues(this.equilibriumNodes, cols => _.map(cols, col => col.name)))}`);
-		// console.log(`this.passiveRequestors = ${JSON.stringify(_.mapValues(this.passiveRequestors, cols => _.map(cols, col => col.name)))}`);
-		// console.log(`this.activeRequestors = ${JSON.stringify(_.mapValues(this.activeRequestors, cols => _.map(cols, col => col.name)))}`);
-
 
 		// Handle request types by descending priority: activeRequestors -> activeProviders -> passiveRequestors
 		// (passiveProviders and equilibriumNodes have no action)
@@ -791,18 +796,23 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			// this.passiveProviders // shouldn't include passiveProviders - these already have too many
 		]);
 
-		this.handleRequestors(this.passiveRequestors, [
-			this.activeProviders,
-			this.passiveProviders,
-		], {allowMarketBuy: false});
+		// There are a lot of passive requestors, and usually their requests won't be able to be fulfilled, so
+		// we only run this call every few ticks
+		if (Game.time % 10 == 1) {
+			this.handleRequestors(this.passiveRequestors, [
+				this.activeProviders,
+				this.passiveProviders,
+			], {complainIfUnfulfilled: false, allowMarketBuy: false});
+		}
 
 		// Record stats for this tick
 		this.recordStats();
 
-		this.summarize();
+		// this.summarize();
 
 		// Display notifications
 		if (this.notifications.length > 0) {
+			this.notifications.sort();
 			log.info(`Terminal network activity: ` + alignedNewline + this.notifications.join(alignedNewline));
 		}
 	}

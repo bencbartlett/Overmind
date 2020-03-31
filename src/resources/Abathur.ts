@@ -115,7 +115,6 @@ export class Abathur {
 	memory: AbathurMemory;
 	priorityStock: Reaction[];
 	wantedStock: Reaction[];
-	assets: { [resourceType: string]: number };
 
 	private _globalAssets: { [resourceType: string]: number };
 
@@ -130,12 +129,10 @@ export class Abathur {
 		this.memory = Mem.wrap(this.colony.memory, 'abathur', AbathurMemoryDefaults);
 		this.priorityStock = priorityStock;
 		this.wantedStock = wantedStock;
-		this.assets = colony.assets;
 	}
 
 	refresh() {
 		this.memory = Mem.wrap(this.colony.memory, 'abathur', AbathurMemoryDefaults);
-		this.assets = this.colony.assets;
 	}
 
 	// Helper methods for identifying different types of resources
@@ -254,7 +251,7 @@ export class Abathur {
 	}
 
 	private hasExcess(mineralType: ResourceConstant, excessAmount = 0): boolean {
-		return this.assets[mineralType] - excessAmount > Abathur.stockAmount(mineralType);
+		return this.colony.assets[mineralType] - excessAmount > Abathur.stockAmount(mineralType);
 	}
 
 	private someColonyHasExcess(mineralType: ResourceConstant, excessAmount = 0): boolean {
@@ -273,7 +270,7 @@ export class Abathur {
 		const stocksToCheck = [priorityStockAmounts, wantedStockAmounts];
 		for (const stocks of stocksToCheck) {
 			for (const resourceType in stocks) {
-				const amountOwned = this.assets[resourceType] || 0;
+				const amountOwned = this.colony.assets[resourceType];
 				const amountNeeded = stocks[resourceType];
 				if (amountOwned < amountNeeded) { // if there is a shortage of this resource
 					const reactionQueue = this.buildReactionQueue(<ResourceConstant>resourceType,
@@ -305,8 +302,10 @@ export class Abathur {
 		for (const ingredient of Abathur.enumerateReactionProducts(mineral)) {
 			let productionAmount = amount;
 			if (ingredient != mineral) {
-				if (verbose) console.log(`productionAmount: ${productionAmount}, assets: ${this.assets[ingredient]}`);
-				productionAmount = Math.max(productionAmount - (this.assets[ingredient] || 0), 0);
+				if (verbose) {
+					console.log(`productionAmount: ${productionAmount}, assets: ${this.colony.assets[ingredient]}`);
+				}
+				productionAmount = Math.max(productionAmount - (this.colony.assets[ingredient]), 0);
 			}
 			productionAmount = Math.min(productionAmount, Abathur.settings.maxBatchSize);
 			reactionQueue.push({mineralType: ingredient, amount: productionAmount});
@@ -348,12 +347,12 @@ export class Abathur {
 	 * Figure out which basic minerals are missing and how much
 	 */
 	getMissingBasicMinerals(reactionQueue: Reaction[], verbose = false): { [resourceType: string]: number } {
-		const requiredBasicMinerals = this.getRequiredBasicMinerals(reactionQueue);
+		const requiredBasicMinerals = Abathur.getRequiredBasicMinerals(reactionQueue);
 		if (verbose) console.log(`Required basic minerals: ${JSON.stringify(requiredBasicMinerals)}`);
-		if (verbose) console.log(`assets: ${JSON.stringify(this.assets)}`);
+		if (verbose) console.log(`assets: ${JSON.stringify(this.colony.assets)}`);
 		const missingBasicMinerals: { [resourceType: string]: number } = {};
 		for (const mineralType in requiredBasicMinerals) {
-			const amountMissing = requiredBasicMinerals[mineralType] - (this.assets[mineralType] || 0);
+			const amountMissing = requiredBasicMinerals[mineralType] - this.colony.assets[mineralType];
 			if (amountMissing > 0) {
 				missingBasicMinerals[mineralType] = amountMissing;
 			}
@@ -365,7 +364,7 @@ export class Abathur {
 	/**
 	 * Get the required amount of basic minerals for a reaction queue
 	 */
-	private getRequiredBasicMinerals(reactionQueue: Reaction[]): { [resourceType: string]: number } {
+	static getRequiredBasicMinerals(reactionQueue: Reaction[]): { [resourceType: string]: number } {
 		const requiredBasicMinerals: { [resourceType: string]: number } = {
 			[RESOURCE_HYDROGEN] : 0,
 			[RESOURCE_OXYGEN]   : 0,

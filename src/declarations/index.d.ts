@@ -206,6 +206,8 @@ interface ITradeNetwork {
 
 	refresh(): void;
 
+	getExistingOrders(type: ORDER_BUY | ORDER_SELL, resource: ResourceConstant | 'any', roomName?: string): Order[];
+
 	priceOf(resource: ResourceConstant): number;
 
 	buy(terminal: StructureTerminal, resource: ResourceConstant, amount: number, opts?: TradeOpts): number;

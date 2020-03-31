@@ -163,7 +163,7 @@ export class EvolutionChamber extends HiveCluster {
 				timeout = ticksInStatus > LabStageTimeouts.UnloadingLabs;
 				break;
 			default:
-				log.warning(`Bad lab state at ${this.print}!`);
+				log.error(`Bad lab state at ${this.print}!`);
 				this.memory.status = LabStatus.Idle;
 				this.memory.statusTick = Game.time;
 				break;
@@ -228,7 +228,7 @@ export class EvolutionChamber extends HiveCluster {
 				break;
 
 			default:
-				log.warning(`Bad lab state at ${this.print}!`);
+				log.error(`Bad lab state at ${this.print}!`);
 				this.memory.status = LabStatus.Idle;
 				this.memory.statusTick = Game.time;
 				break;
@@ -330,7 +330,7 @@ export class EvolutionChamber extends HiveCluster {
 	/* Reserves a product lab for boosting with a compound unrelated to production */
 	private reserveLab(mineralType: _ResourceConstantSansEnergy, amount: number, lab: StructureLab) {
 		// _.remove(this.productLabs, productLab => productLab.id == lab.id);
-		this.labReservations[lab.id.toString()] = {mineralType: mineralType, amount: amount};
+		this.labReservations[lab.id] = {mineralType: mineralType, amount: amount};
 	}
 
 	/* Return the amount of a given resource necessary to fully boost a creep body */
@@ -448,10 +448,9 @@ export class EvolutionChamber extends HiveCluster {
 
 	run(): void {
 		// Obtain resources for boosting
-		for (const resourceType in this.neededBoosts) {
-			const needAmount = Math.max(this.neededBoosts[resourceType] - this.colony.assets[resourceType], 0);
-			if (needAmount > 0) {
-				this.terminalNetwork.requestResource(this.colony, <ResourceConstant>resourceType, needAmount);
+		for (const boost in this.neededBoosts) {
+			if (this.neededBoosts[boost] > this.colony.assets[boost]) {
+				this.terminalNetwork.requestResource(this.colony, <ResourceConstant>boost, this.neededBoosts[boost]);
 			}
 		}
 		// Obtain resources for reaction queue
@@ -459,11 +458,11 @@ export class EvolutionChamber extends HiveCluster {
 		if (this.memory.activeReaction && this.memory.status == LabStatus.AcquiringMinerals) {
 			queue = [this.memory.activeReaction].concat(queue);
 		}
-		const missingBasicMinerals = this.colony.abathur.getMissingBasicMinerals(queue);
-		for (const resource in missingBasicMinerals) {
-			if (missingBasicMinerals[resource] > 0) {
-				this.terminalNetwork.requestResource(this.colony, <ResourceConstant>resource,
-													 missingBasicMinerals[resource]);
+		const requiredBasicMinerals = Abathur.getRequiredBasicMinerals(queue);
+		for (const mineral in requiredBasicMinerals) {
+			if (requiredBasicMinerals[mineral] > this.colony.assets[mineral]) {
+				this.terminalNetwork.requestResource(this.colony, <ResourceConstant>mineral,
+													 requiredBasicMinerals[mineral]);
 			}
 		}
 		// Run the reactions

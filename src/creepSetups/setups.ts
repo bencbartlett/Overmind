@@ -130,7 +130,7 @@ export const Setups = {
 
 		stationary: new CreepSetup(Roles.manager, {
 			pattern  : [CARRY, CARRY],
-			sizeLimit: 8,
+			sizeLimit: 16,
 		}),
 
 		stationary_work: new CreepSetup(Roles.manager, {

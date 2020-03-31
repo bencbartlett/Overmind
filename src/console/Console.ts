@@ -196,6 +196,7 @@ export class OvermindConsole {
 	}
 
 	static print(...args: any[]): string {
+		let message = '';
 		for (const arg of args) {
 			let cache: any = [];
 			const msg = JSON.stringify(arg, function(key, value) {
@@ -216,9 +217,9 @@ export class OvermindConsole {
 				return value;
 			}, '\t');
 			cache = null;
-			console.log(msg);
+			message += '\n' + msg;
 		}
-		return 'Done.';
+		return message;
 	}
 
 	static timeit(callback: () => any, repeat = 1): string {

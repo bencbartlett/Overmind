@@ -1,4 +1,4 @@
-export const RESOURCES_ALL_EXCEPT_ENERGY = _.pull(RESOURCES_ALL, RESOURCE_ENERGY) as _ResourceConstantSansEnergy[];
+export const RESOURCES_ALL_EXCEPT_ENERGY = _.without(RESOURCES_ALL, RESOURCE_ENERGY) as _ResourceConstantSansEnergy[];
 
 export const BOOSTS_T3 = [
 	RESOURCE_CATALYZED_GHODIUM_ALKALIDE,
