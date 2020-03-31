@@ -570,7 +570,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 				const sendAmount = Math.min(requestAmount, sendTerm.store[resource], maxAmount);
 				// Send the resources or mark the terminal as overloaded for this tick
 				if (sendTerm.isReady) {
-					this.transfer(sendTerm, recvTerm, resource, requestAmount, `request`);
+					this.transfer(sendTerm, recvTerm, resource, sendAmount, `request`);
 				} else {
 					this.terminalOverload[sendTerm.room.name] = true;
 				}
@@ -597,7 +597,13 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 				const amountPartnerCanSend = sendTerm.store[resource] - this.thresholds(partner, resource).target;
 				const maxAmount = resource == RESOURCE_ENERGY ? TerminalNetworkV2.settings.maxEnergySendAmount
 															  : TerminalNetworkV2.settings.maxResourceSendAmount;
-				const sendAmount = Math.min(amountPartnerCanSend, remainingAmount, maxAmount);
+				let sendAmount = Math.min(amountPartnerCanSend, remainingAmount, maxAmount);
+				if (resource == RESOURCE_ENERGY) { // if we're sending energy, make sure we have amount + cost
+					const sendCost = Game.market.calcTransactionCost(sendAmount, colony.name, partner.name);
+					if (sendAmount + sendCost > sendTerm.store[resource]) {
+						sendAmount -= sendCost;
+					}
+				}
 				// Send the resources or mark the terminal as overloaded for this tick
 				if (sendTerm.isReady) {
 					const ret = this.transfer(sendTerm, recvTerm, resource, sendAmount, `request`);
@@ -642,7 +648,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		return false;
 	}
 
-	private handleProvideInstance(colony: Colony, resource: ResourceConstant, sendAmount: number,
+	private handleProvideInstance(colony: Colony, resource: ResourceConstant, provideAmount: number,
 								  partnerSets: Colony[][], opts: ProvideOpts): boolean {
 		// Sometimes we don't necessarily want to push to other rooms - we usually do, but not always
 		if (opts.allowPushToOtherRooms) {
@@ -650,38 +656,44 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			for (const partners of partnerSets) {
 				// First try to find a partner that has less resources than target - sendAmount and can hold more stuff
 				let validPartners: Colony[] = _.filter(partners, partner =>
-					partner.assets[resource] + sendAmount <= this.thresholds(partner, resource).target &&
-					this.getRemainingSpace(partner) - sendAmount >= TerminalNetworkV2.settings.minColonySpace);
+					partner.assets[resource] + provideAmount <= this.thresholds(partner, resource).target &&
+					this.getRemainingSpace(partner) - provideAmount >= TerminalNetworkV2.settings.minColonySpace);
 				// If that doesn't work, tfind partner where assets + sendAmount < target + tolerance and has space
 				if (validPartners.length == 0) {
 					validPartners = _.filter(partners, partner =>
-						partner.assets[resource] + sendAmount <=
+						partner.assets[resource] + provideAmount <=
 						this.thresholds(partner, resource).target + this.thresholds(colony, resource).tolerance &&
-						this.getRemainingSpace(partner) - sendAmount >= TerminalNetworkV2.settings.minColonySpace);
+						this.getRemainingSpace(partner) - provideAmount >= TerminalNetworkV2.settings.minColonySpace);
 				}
 				// If that doesn't work, just try to find any room with space that won't become an activeProvider
 				if (validPartners.length == 0) {
 					validPartners = _.filter(partners, partner => {
-						if (this.getRemainingSpace(partner) - sendAmount < TerminalNetworkV2.settings.minColonySpace) {
+						if (this.getRemainingSpace(partner) - provideAmount < TerminalNetworkV2.settings.minColonySpace) {
 							return false;
 						}
 						const {target, surplus, tolerance} = this.thresholds(partner, resource);
 						if (surplus != undefined) {
-							return partner.assets[resource] + sendAmount < surplus;
+							return partner.assets[resource] + provideAmount < surplus;
 						} else {
-							return partner.assets[resource] + sendAmount <= target + tolerance;
+							return partner.assets[resource] + provideAmount <= target + tolerance;
 						}
 					});
 				}
 				// If you've found partners, send it to the best one
 				if (validPartners.length > 0) {
 					const bestPartner = minBy(validPartners, partner =>
-						Game.market.calcTransactionCost(sendAmount, colony.name, partner.name)) as Colony;
+						Game.market.calcTransactionCost(provideAmount, colony.name, partner.name)) as Colony;
 					const sendTerm = colony.terminal!;
 					const recvTerm = bestPartner.terminal!;
 					const maxAmount = resource == RESOURCE_ENERGY ? TerminalNetworkV2.settings.maxEnergySendAmount
 																  : TerminalNetworkV2.settings.maxResourceSendAmount;
-					sendAmount = Math.min(sendAmount, sendTerm.store[resource], maxAmount);
+					let sendAmount = Math.min(provideAmount, sendTerm.store[resource], maxAmount);
+					if (resource == RESOURCE_ENERGY) { // if we're sending energy, make sure we have amount + cost
+						const sendCost = Game.market.calcTransactionCost(sendAmount, colony.name, bestPartner.name);
+						if (sendAmount + sendCost > sendTerm.store[resource]) {
+							sendAmount -= sendCost;
+						}
+					}
 					// Send the resources or mark the terminal as overloaded for this tick
 					if (sendTerm.isReady) {
 						this.transfer(sendTerm, recvTerm, resource, sendAmount, `provide`);
@@ -701,7 +713,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 					opts.preferDirect = true;
 				}
 			}
-			const ret = Overmind.tradeNetwork.sell(colony.terminal!, resource, sendAmount, opts);
+			const ret = Overmind.tradeNetwork.sell(colony.terminal!, resource, provideAmount, opts);
 			if (ret >= 0) {
 				return true;
 			}

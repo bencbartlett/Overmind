@@ -229,18 +229,18 @@ export class TraderJoe implements ITradeNetwork {
 	 * Pretty-prints transaction information in the console
 	 */
 	private logTransaction(order: Order, terminalRoomName: string, amount: number, response: number): void {
-		const cost = (order.price * amount).toFixed(2);
+		const cost = (order.price * amount).toFixed(0);
 		const fee = order.roomName ? Game.market.calcTransactionCost(amount, order.roomName, terminalRoomName) : 0;
 		const roomName = printRoomName(terminalRoomName, true);
 		let msg: string;
 		if (order.type == ORDER_SELL) { // I am buying
-			msg = `Direct: ${roomName} ${leftArrow} ${amount} ${order.resourceType} ${leftArrow} ` +
+			msg = `Direct: ${roomName} ${leftArrow} ${Math.round(amount)} ${order.resourceType} ${leftArrow} ` +
 				  `${printRoomName(order.roomName!)} (-${cost}c)`;
 			if (response != OK) {
 				msg += ` (ERROR: ${response})`;
 			}
 		} else { // I am selling
-			msg = `Direct: ${roomName} ${rightArrow} ${amount} ${order.resourceType} ${rightArrow} ` +
+			msg = `Direct: ${roomName} ${rightArrow} ${Math.round(amount)} ${order.resourceType} ${rightArrow} ` +
 				  `${printRoomName(order.roomName!)} (+${cost}c)`;
 			if (response != OK) {
 				msg += ` (ERROR: ${response})`;
@@ -435,6 +435,10 @@ export class TraderJoe implements ITradeNetwork {
 			const discountFactor = 1 - adjustment * adjustMagnitude;
 			const marketRate = Math.max(lowestSellOrder.price, highestBuyOrder.price * 1.1);
 			const price = marketRate * discountFactor;
+			// If the sell price is greater than the lowestSell order price, it might mean an opportunity for arbitrage
+			if (price > lowestSellOrder.price) {
+				// TODO
+			}
 			// It's not sensible to sell at a lower cost than what you paid to make it
 			if (price < priceForBaseResources) {
 				return Infinity;
@@ -445,6 +449,10 @@ export class TraderJoe implements ITradeNetwork {
 			const outbidFactor = 1 + adjustment * adjustMagnitude;
 			const marketRate = Math.min(highestBuyOrder.price, lowestSellOrder.price / 1.1);
 			const price = marketRate * outbidFactor;
+			// If the buy price is less than the highestBuy order price, it might mean an opportunity for arbitrage
+			if (price < highestBuyOrder.price) {
+				// TODO
+			}
 			// Don't pay >10x what ingredients cost - about 5.0c for XGHO2 based on March 2020 data
 			const maxMarkupWillingToBuyFrom = 10;
 			if (price > priceForBaseResources * maxMarkupWillingToBuyFrom) {
@@ -540,11 +548,11 @@ export class TraderJoe implements ITradeNetwork {
 				};
 				// const ret = Game.market.createOrder(params);
 				const ret = OK;
-				this.notify(`${terminal.room.print}: creating ${type} order for ${resource} at price ${price}. ` +
-							`Response: ${ret}`);
+				this.notify(`${terminal.room.print}: creating ${type} order for ${amount} ${resource} ` +
+							`at price ${price.toFixed(4)}. Response: ${ret}`);
 				return ret;
 			} else {
-				this.notify(`${terminal.room.print}: could not create ${type} order for ${resource} - ` +
+				this.notify(`${terminal.room.print}: could not create ${type} order for ${amount} ${resource} - ` +
 							`too many existing!`);
 				return ERR_TOO_MANY_ORDERS_OF_TYPE;
 			}
