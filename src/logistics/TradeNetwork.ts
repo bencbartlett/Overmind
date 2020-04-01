@@ -514,7 +514,8 @@ export class TraderJoe implements ITradeNetwork {
 		// Maintain an existing order
 		if (existingOrder) {
 			// Figure out if price should be changed - if the competitive price is now significantly different
-			const price = this.computeCompetitivePrice(type, resource, terminal.room.name);
+			const price = +this.computeCompetitivePrice(type, resource, terminal.room.name)
+							   .toFixed(3); // market only allows for 3 decimal places of precision
 			if (price == Infinity || price == 0) {
 				log.warning(`TradeNetwork: sanity checks not passed to handle existing ${type} order ${resource} ` +
 							`in ${printRoomName(terminal.room.name)}!`);
@@ -547,7 +548,8 @@ export class TraderJoe implements ITradeNetwork {
 		// Create a new order
 		else {
 			// Compute the buy or sell price
-			const price = this.computeCompetitivePrice(type, resource, terminal.room.name);
+			const price = +this.computeCompetitivePrice(type, resource, terminal.room.name)
+							   .toFixed(3); // market only allows for 3 decimal places of precision
 			if (price == Infinity || price == 0) {
 				log.warning(`TradeNetwork: sanity checks not passed to create ${type} order ${resource} in ` +
 							`${printRoomName(terminal.room.name)}!`);
@@ -596,8 +598,8 @@ export class TraderJoe implements ITradeNetwork {
 
 	private cleanOrders() {
 		const ordersToClean = _.filter(Game.market.orders, order => {
-			// Clean up inactive sell orders where you've sold everything
-			if (order.type == ORDER_SELL && order.active == false && order.remainingAmount == 0) {
+			// Clean up inactive orders where you've bought/sold everything
+			if (order.active == false && order.remainingAmount == 0) {
 				return true;
 			}
 			// Clean up very old orders which are almost completed but which have some small amount remaining
