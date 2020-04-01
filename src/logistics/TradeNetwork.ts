@@ -84,12 +84,14 @@ export const ERR_TOO_MANY_ORDERS_OF_TYPE = -105;
 export const ERR_SELL_DIRECT_PRICE_TOO_LOW = -106;
 export const ERR_BUY_DIRECT_PRICE_TOO_HIGH = -107;
 export const ERR_CREDIT_THRESHOLDS = -108;
+export const ERR_DRY_RUN_ONLY_SUPPORTS_DIRECT_TRANSACTIONS = -109;
 
 const defaultTradeOpts: TradeOpts = {
 	preferDirect              : false,
 	flexibleAmount            : true,
 	ignoreMinAmounts          : false,
 	ignorePriceChecksForDirect: false,
+	dryRun                    : false,
 };
 
 
@@ -634,11 +636,11 @@ export class TraderJoe implements ITradeNetwork {
 						opts: TradeOpts): number {
 		this.debug(`buyDirectly for ${terminal.room.print}: ${amount} ${resource}`);
 		// If terminal is on cooldown or just did something then skip
-		if (!terminal.isReady) {
+		if (!terminal.isReady && !opts.dryRun) {
 			return NO_ACTION; // don't return ERR_TIRED here because it doesn't signal an inability to buy
 		}
 		// Wait until you accumulate more of the resource to buy with bigger transactions
-		if (amount < TraderJoe.settings.market.orders.minBuyDirectAmount && !opts.ignoreMinAmounts) {
+		if (amount < TraderJoe.settings.market.orders.minBuyDirectAmount && !opts.ignoreMinAmounts && !opts.dryRun) {
 			return NO_ACTION;
 		}
 		// If flexibleAmount is allowed, consider buying from orders which don't need the full amount
@@ -654,8 +656,10 @@ export class TraderJoe implements ITradeNetwork {
 
 		// If no valid order, notify a warning and return an error so it can be handled in .buy()
 		if (!order) {
-			this.notify(`No valid market order to buy from! Buy request: ${amount} ${resource} to ` +
-						`${printRoomName(terminal.room.name)}`);
+			if (!opts.dryRun) {
+				this.notify(`No valid market order to buy from! Buy request: ${amount} ${resource} to ` +
+							`${printRoomName(terminal.room.name)}`);
+			}
 			return ERR_NO_ORDER_TO_BUY_FROM;
 		}
 
@@ -668,9 +672,11 @@ export class TraderJoe implements ITradeNetwork {
 		if (priceForBaseIngredients == Infinity
 			|| (adjustedPrice > maxPriceWillingToPay && !opts.ignorePriceChecksForDirect)
 			|| adjustedPrice > 100) { // never buy above an absurd threshold, regardless of opts.ignorePriceChecks
-			this.notify(`Buy direct call is too expenisive! Buy request: ${amount} ${resource} to ` +
-						`${printRoomName(terminal.room.name)}, adjusted price of best order: ` +
-						`${adjustedPrice.toFixed(4)}`);
+			if (!opts.dryRun) {
+				this.notify(`Buy direct call is too expenisive! Buy request: ${amount} ${resource} to ` +
+							`${printRoomName(terminal.room.name)}, adjusted price of best order: ` +
+							`${adjustedPrice.toFixed(4)}`);
+			}
 			return ERR_BUY_DIRECT_PRICE_TOO_HIGH;
 		}
 
@@ -678,6 +684,12 @@ export class TraderJoe implements ITradeNetwork {
 		const buyAmount = Math.min(order.amount, amount);
 		const transactionCost = Game.market.calcTransactionCost(buyAmount, terminal.room.name, order.roomName!);
 		if (terminal.store[RESOURCE_ENERGY] >= transactionCost) {
+			// If this is a dry run just check that you have enough credits
+			if (opts.dryRun) {
+				const haveEnoughCredits = Game.market.credits >= buyAmount * order.price;
+				return haveEnoughCredits ? OK : ERR_NOT_ENOUGH_RESOURCES;
+			}
+			// Otherwise make the deal
 			const response = Game.market.deal(order.id, buyAmount, terminal.room.name);
 			this.debug(`buyDirectly executed for ${terminal.room.print}: ${buyAmount} ${resource} (${response})`);
 			this.logTransaction(order, terminal.room.name, amount, response);
@@ -694,11 +706,11 @@ export class TraderJoe implements ITradeNetwork {
 						 opts: TradeOpts): number {
 		this.debug(`sellDirectly for ${terminal.room.print}: ${amount} ${resource}`);
 		// If terminal is on cooldown or just did something then skip
-		if (!terminal.isReady) {
+		if (!terminal.isReady && !opts.dryRun) {
 			return NO_ACTION; // don't return ERR_TIRED here because it doesn't signal an inability to sell
 		}
 		// Wait until you accumulate more of the resource to sell with bigger transactions
-		if (amount < TraderJoe.settings.market.orders.minSellDirectAmount && !opts.ignoreMinAmounts) {
+		if (amount < TraderJoe.settings.market.orders.minSellDirectAmount && !opts.ignoreMinAmounts && !opts.dryRun) {
 			return NO_ACTION;
 		}
 		// If flexibleAmount is allowed, consider selling to orders which don't need the full amount
@@ -714,8 +726,10 @@ export class TraderJoe implements ITradeNetwork {
 
 		// If no order found, notify a warning and return an error so it can be handled in .sell()
 		if (!order) {
-			this.notify(`No valid market order to sell to! Sell request: ${amount} ${resource} from ` +
-						`${printRoomName(terminal.room.name)}`);
+			if (!opts.dryRun) {
+				this.notify(`No valid market order to sell to! Sell request: ${amount} ${resource} from ` +
+							`${printRoomName(terminal.room.name)}`);
+			}
 			return ERR_NO_ORDER_TO_SELL_TO;
 		}
 
@@ -728,9 +742,11 @@ export class TraderJoe implements ITradeNetwork {
 		if (priceForBaseIngredients == Infinity
 			|| (adjustedPrice < minPriceWillingToSell && !opts.ignorePriceChecksForDirect)
 			|| adjustedPrice < 0) { // never sell if it will be a net negative, regardless of opts.ignorePriceChecks
-			this.notify(`Sell direct call is too cheap! Sell request: ${amount} ${resource} from ` +
-						`${printRoomName(terminal.room.name)}, adjusted price of best order: ` +
-						`${adjustedPrice}`);
+			if (!opts.dryRun) {
+				this.notify(`Sell direct call is too cheap! Sell request: ${amount} ${resource} from ` +
+							`${printRoomName(terminal.room.name)}, adjusted price of best order: ` +
+							`${adjustedPrice}`);
+			}
 			return ERR_SELL_DIRECT_PRICE_TOO_LOW;
 		}
 
@@ -747,6 +763,11 @@ export class TraderJoe implements ITradeNetwork {
 			}
 		}
 		if (terminal.store[RESOURCE_ENERGY] >= transactionCost) {
+			// If this is a dry run we should be able to execute the deal by now, so just return OK
+			if (opts.dryRun) {
+				return OK;
+			}
+			// Otherwise do the deal
 			const response = Game.market.deal(order.id, sellAmount, terminal.room.name);
 			this.debug(`sellDirectly executed for ${terminal.room.print}: ${sellAmount} ${resource} (${response})`);
 			this.logTransaction(order, terminal.room.name, amount, response);
@@ -786,6 +807,10 @@ export class TraderJoe implements ITradeNetwork {
 			}
 		}
 
+		if (opts.dryRun) {
+			return ERR_DRY_RUN_ONLY_SUPPORTS_DIRECT_TRANSACTIONS;
+		}
+
 		// Fallthrough - if not preferDirect or if existing order or if there's no orders to buy from then make order
 		const result = this.maintainOrder(terminal, ORDER_BUY, resource, amount, opts);
 		return result;
@@ -812,6 +837,10 @@ export class TraderJoe implements ITradeNetwork {
 					return result; // if there's nowhere to sensibly sell, allow creating an order
 				}
 			}
+		}
+
+		if (opts.dryRun) {
+			return ERR_DRY_RUN_ONLY_SUPPORTS_DIRECT_TRANSACTIONS;
 		}
 
 		// If you have enough credits or if there are no buy orders to sell to, create / maintain a sell order

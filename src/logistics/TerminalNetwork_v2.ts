@@ -66,29 +66,42 @@ export const enum TN_STATE {
 	error            = 0, // this should never be used
 }
 
-interface RequestOpts {
-	allowDivvying?: boolean;
-	takeFromColoniesBelowTarget?: boolean;
-	sendTargetPlusTolerance?: boolean;
-	allowMarketBuy?: boolean;
-	receiveOnlyOncePerTick?: boolean;
-	complainIfUnfulfilled?: boolean;
-}
 
-interface ProvideOpts {
-	allowPushToOtherRooms?: boolean;
-	allowMarketSell?: boolean;
-	complainIfUnfulfilled?: boolean;
-}
 
 const DEFAULT_TARGET = 2 * LAB_MINERAL_CAPACITY + 1000; // 7000 is default for most resources
 const DEFAULT_SURPLUS = 15 * LAB_MINERAL_CAPACITY;		// 45000 is default surplus
+const ENERGY_SURPLUS = 500000;
 const DEFAULT_TOLERANCE = LAB_MINERAL_CAPACITY / 3;		// 1000 is default tolerance
 
 const THRESHOLDS_DEFAULT: Thresholds = { // default thresholds for most resources
 	target   : DEFAULT_TARGET,
 	surplus  : DEFAULT_SURPLUS,
 	tolerance: DEFAULT_TOLERANCE,
+};
+const THRESHOLDS_BOOSTS_T3: Thresholds = { // we want to be able to stockpile a bunch of these
+	target   : DEFAULT_TARGET + 10 * LAB_MINERAL_CAPACITY, // max: 7000 + 2*30000 = 67000 -> 51% capacity for all T3
+	tolerance: DEFAULT_TOLERANCE + 10 * LAB_MINERAL_CAPACITY,
+	surplus  : 75000,
+};
+const THRESHOLDS_BOOSTS_T2: Thresholds = {
+	target   : DEFAULT_TARGET + 2 * LAB_MINERAL_CAPACITY, // max: 7000 + 2*6000 = 19000 -> 14% capacity for all T2
+	tolerance: DEFAULT_TARGET + 2 * LAB_MINERAL_CAPACITY,
+	surplus  : 25000,
+};
+const THRESHOLDS_BOOSTS_T1: Thresholds = {
+	target   : DEFAULT_TARGET + 2 * LAB_MINERAL_CAPACITY, // max: 7000 + 2*6000 = 19000 -> 14% capacity for all T1
+	tolerance: DEFAULT_TARGET + 2 * LAB_MINERAL_CAPACITY,
+	surplus  : 25000,
+};
+const THREHSOLDS_INTERMEDIATE_REACTANTS: Thresholds = {
+	target   : LAB_MINERAL_CAPACITY + 1000,
+	tolerance: LAB_MINERAL_CAPACITY / 3,
+	surplus  : 3 * LAB_MINERAL_CAPACITY,
+};
+const THRESHOLDS_GHODIUM: Thresholds = {
+	target   : 10000,
+	tolerance: 5000,
+	surplus  : 20000,
 };
 const THRESHOLDS_DONT_WANT: Thresholds = { // thresholds for stuff you actively don't want
 	target   : 0,
@@ -127,16 +140,33 @@ function getThresholds(resource: _ResourceConstantSansEnergy): Thresholds {
 	if (Abathur.isBaseMineral(resource)) { // base minerals get default treatment
 		return THRESHOLDS_DEFAULT;
 	}
-	if (Abathur.isIntermediateReactant(resource)) { // reaction intermediates (plus ghodium) get default
-		return THRESHOLDS_DEFAULT;
+	if (Abathur.isIntermediateReactant(resource)) { // reaction intermediates get default
+		if (resource == RESOURCE_HYDROXIDE) { // this takes a long time to make so let's keep a bit more of it around
+			return THRESHOLDS_DEFAULT;
+		} else {
+			return THREHSOLDS_INTERMEDIATE_REACTANTS;
+		}
 	}
-	if (Abathur.isHealBoost(resource)) { // heal boosts are really important and commonly used
-		return {
-			target   : 1.5 * DEFAULT_TARGET,
-			surplus  : DEFAULT_SURPLUS,
-			tolerance: DEFAULT_TOLERANCE,
-		};
+	if (resource == RESOURCE_GHODIUM) {
+		return THRESHOLDS_GHODIUM;
 	}
+	if (Abathur.isBoost(resource)) {
+		const tier = Abathur.getBoostTier(resource);
+		if (tier == 'T3') {
+			return THRESHOLDS_BOOSTS_T3;
+		} else if (tier == 'T2') {
+			return THRESHOLDS_BOOSTS_T2;
+		} else if (tier == 'T1') {
+			return THRESHOLDS_BOOSTS_T1;
+		}
+	}
+	// if (Abathur.isHealBoost(resource)) { // heal boosts are really important and commonly used
+	// 	return {
+	// 		target   : 1.5 * DEFAULT_TARGET,
+	// 		surplus  : DEFAULT_SURPLUS,
+	// 		tolerance: DEFAULT_TOLERANCE,
+	// 	};
+	// }
 	// if (Abathur.isCarryBoost(resource) || Abathur.isHarvestBoost(resource)) { // I don't use these
 	// 	return THRESHOLDS_DONT_WANT;
 	// }
@@ -182,6 +212,25 @@ const _resourceExchangePrioritiesLookup: { [resource: string]: number } =
 
 const EMPTY_COLONY_TIER: { [resourceType: string]: Colony[] } =
 		  _.zipObject(RESOURCES_ALL, _.map(RESOURCES_ALL, i => []));
+
+
+interface RequestOpts {
+	allowDivvying?: boolean;
+	takeFromColoniesBelowTarget?: boolean;
+	sendTargetPlusTolerance?: boolean;
+	allowMarketBuy?: boolean;
+	receiveOnlyOncePerTick?: boolean;
+	complainIfUnfulfilled?: boolean;
+	dryRun?: boolean;
+}
+
+interface ProvideOpts {
+	allowPushToOtherRooms?: boolean;
+	allowMarketSell?: boolean;
+	complainIfUnfulfilled?: boolean;
+	dryRun?: boolean;
+}
+
 
 
 /**
@@ -388,7 +437,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 							  nonExceptionalColonies.length;
 			this._energyThresholds = {
 				target   : avgEnergy,
-				surplus  : 500000,
+				surplus  : ENERGY_SURPLUS,
 				tolerance: avgEnergy / 5,
 			};
 		}
@@ -490,7 +539,9 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	}
 
 	// canObtainResource(requestor: Colony, resource: ResourceConstant, amount: number): boolean {
-	//
+	// 	if (PHASE != 'run') { // need to have all the information from init() about colony states first
+	// 		log.error(`TerminalNetwork.canObtainResource must be called in the run() phase!`);
+	// 	}
 	// }
 
 
@@ -602,10 +653,12 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 															  : TerminalNetworkV2.settings.maxResourceSendAmount;
 				const sendAmount = Math.min(requestAmount, sendTerm.store[resource], maxAmount);
 				// Send the resources or mark the terminal as overloaded for this tick
-				if (sendTerm.isReady) {
-					this.transfer(sendTerm, recvTerm, resource, sendAmount, `request`);
-				} else {
-					this.terminalOverload[sendTerm.room.name] = true;
+				if (!opts.dryRun) {
+					if (sendTerm.isReady) {
+						this.transfer(sendTerm, recvTerm, resource, sendAmount, `request`);
+					} else {
+						this.terminalOverload[sendTerm.room.name] = true;
+					}
 				}
 				return true;
 			}
@@ -646,6 +699,10 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 					}
 				}
 				// Send the resources or mark the terminal as overloaded for this tick
+				if (opts.dryRun) {
+					log.error(`RequestOpts.dryRun currently incompatible with RequestOps.allowDivvying!`);
+					return false;
+				}
 				if (sendTerm.isReady) {
 					const ret = this.transfer(sendTerm, recvTerm, resource, sendAmount, `request`);
 					if (ret == OK) {
@@ -679,7 +736,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 				return false;
 			}
 			// If you can still buy the thing, then buy then thing!
-			const buyOpts: TradeOpts = {};
+			const buyOpts: TradeOpts = {dryRun: opts.dryRun};
 			if (Abathur.isBaseMineral(resource) &&
 				colony.assets[resource] < TerminalNetworkV2.settings.buyBaseMineralsDirectUnder) {
 				buyOpts.preferDirect = true;
@@ -745,10 +802,12 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 						}
 					}
 					// Send the resources or mark the terminal as overloaded for this tick
-					if (sendTerm.isReady) {
-						this.transfer(sendTerm, recvTerm, resource, sendAmount, `provide`);
-					} else {
-						this.terminalOverload[sendTerm.room.name] = true;
+					if (!opts.dryRun) {
+						if (sendTerm.isReady) {
+							this.transfer(sendTerm, recvTerm, resource, sendAmount, `provide`);
+						} else {
+							this.terminalOverload[sendTerm.room.name] = true;
+						}
 					}
 					return true;
 				}
@@ -757,14 +816,14 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 
 		// Sell on the market if that's an option
 		if (opts.allowMarketSell) {
-			const opts: TradeOpts = {};
+			const sellOpts: TradeOpts = {dryRun: opts.dryRun};
 			if (resource == RESOURCE_ENERGY || Abathur.isBaseMineral(resource)) {
 				if (this.getRemainingSpace(colony) < TerminalNetworkV2.settings.minColonySpace) {
-					opts.preferDirect = true;
-					opts.ignorePriceChecksForDirect = true;
+					sellOpts.preferDirect = true;
+					sellOpts.ignorePriceChecksForDirect = true;
 				}
 			}
-			const ret = Overmind.tradeNetwork.sell(colony.terminal!, resource, provideAmount, opts);
+			const ret = Overmind.tradeNetwork.sell(colony.terminal!, resource, provideAmount, sellOpts);
 			this.debug(`Selling ${provideAmount} ${resource} from ${colony.print} with trade network (${ret})`);
 			if (ret >= 0) {
 				return true;
@@ -859,7 +918,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		this.handleProviders(this.activeProviders, [
 			this.activeRequestors,
 			this.passiveRequestors,
-			// this.equilibriumNodes, // probably don't include equilibrium nodes - want to have few rooms with orders
+			this.equilibriumNodes,
 			// this.passiveProviders // shouldn't include passiveProviders - these already have too many
 		]);
 

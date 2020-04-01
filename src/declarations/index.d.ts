@@ -7,6 +7,9 @@ global.MARKET_FEE = MARKET_FEE;
 declare const NO_ACTION: 1;
 global.NO_ACTION = NO_ACTION;
 
+type TickPhase = 'assimilating' | 'build' | 'refresh' | 'init' | 'run' | 'postRun';
+declare var PHASE: TickPhase;
+
 declare namespace NodeJS {
 	interface Global {
 
@@ -200,6 +203,7 @@ interface TradeOpts {
 	flexibleAmount?: boolean;		// true if you're okay filling the transaction with several smaller transactions
 	ignoreMinAmounts?: boolean;		// true if you want to ignore quantity checks (e.g. T5 commodities in small amounts)
 	ignorePriceChecksForDirect?: boolean; 	// true if you want to bypass price sanity checks when .deal'ing
+	dryRun?: boolean; 				// don't actually execute the trade, just check to see if you can make it
 }
 
 interface ITradeNetwork {
