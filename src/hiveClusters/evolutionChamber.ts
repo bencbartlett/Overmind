@@ -400,15 +400,14 @@ export class EvolutionChamber extends HiveCluster {
 	}
 
 	/* Request boosts sufficient to fully boost a given creep to be added to the boosting queue */
-	requestBoost(creep: Zerg, boostType: ResourceConstant): void {
-
+	requestBoost(zerg: Zerg, boostType: ResourceConstant): void {
 		// Add the required amount to the neededBoosts
-		const boostAmount = EvolutionChamber.requiredBoostAmount(creep.body, boostType);
+		this.debug(`${boostType} boost requested for ${zerg.print}`);
+		const boostAmount = EvolutionChamber.requiredBoostAmount(zerg.body, boostType);
 		if (!this.neededBoosts[boostType]) {
 			this.neededBoosts[boostType] = 0;
 		}
 		this.neededBoosts[boostType] = Math.min(this.neededBoosts[boostType] + boostAmount, LAB_MINERAL_CAPACITY);
-
 	}
 
 	// Initialization and operation ====================================================================================
@@ -450,6 +449,7 @@ export class EvolutionChamber extends HiveCluster {
 		// Obtain resources for boosting
 		for (const boost in this.neededBoosts) {
 			if (this.neededBoosts[boost] > this.colony.assets[boost]) {
+				this.debug(`Requesting boost from terminal network: ${this.neededBoosts[boost]} ${boost}`);
 				this.terminalNetwork.requestResource(this.colony, <ResourceConstant>boost, this.neededBoosts[boost]);
 			}
 		}
@@ -461,6 +461,7 @@ export class EvolutionChamber extends HiveCluster {
 		const requiredBasicMinerals = Abathur.getRequiredBasicMinerals(queue);
 		for (const mineral in requiredBasicMinerals) {
 			if (requiredBasicMinerals[mineral] > this.colony.assets[mineral]) {
+				this.debug(`Requesting mineral from terminal network: ${requiredBasicMinerals[mineral]} ${mineral}`);
 				this.terminalNetwork.requestResource(this.colony, <ResourceConstant>mineral,
 													 requiredBasicMinerals[mineral]);
 			}

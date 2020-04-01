@@ -119,8 +119,8 @@ export class Abathur {
 	private _globalAssets: { [resourceType: string]: number };
 
 	static settings = {
-		minBatchSize: 100,	// anything less than this wastes time
-		maxBatchSize: 800, 	// manager/queen carry capacity
+		minBatchSize: 800,	// anything less than this wastes time
+		maxBatchSize: 1600, // manager/queen carry capacity
 		sleepTime   : 100,  // sleep for this many ticks once you can't make anything
 	};
 

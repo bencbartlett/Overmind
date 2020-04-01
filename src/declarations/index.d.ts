@@ -196,9 +196,10 @@ interface ITerminalNetwork {
 
 
 interface TradeOpts {
-	preferDirect?: boolean;		// true if you prefer to sell directly via a .deal() call
-	flexibleAmount?: boolean;	// true if you're okay filling the transaction with several smaller transactions
-	ignoreMinAmounts?: boolean;	// true if you want to ignore quantity checks (e.g. T5 commodities in small amounts)
+	preferDirect?: boolean;			// true if you prefer to sell directly via a .deal() call
+	flexibleAmount?: boolean;		// true if you're okay filling the transaction with several smaller transactions
+	ignoreMinAmounts?: boolean;		// true if you want to ignore quantity checks (e.g. T5 commodities in small amounts)
+	ignorePriceChecksForDirect?: boolean; 	// true if you want to bypass price sanity checks when .deal'ing
 }
 
 interface ITradeNetwork {

@@ -16,6 +16,12 @@ import {alignedNewline, bullet, leftArrow, rightArrow} from '../utilities/string
 import {exponentialMovingAverage, maxBy, mergeSum, minBy, printRoomName} from '../utilities/utils';
 import {TraderJoe} from './TradeNetwork';
 
+interface TerminalNetworkMemory {
+	debug?: boolean;
+}
+
+const TerminalNetworkMemoryDefaults: TerminalNetworkMemory = {};
+
 interface TerminalNetworkStats {
 	transfers: {
 		[resourceType: string]: {
@@ -198,6 +204,8 @@ const EMPTY_COLONY_TIER: { [resourceType: string]: Colony[] } =
 @assimilationLocked
 export class TerminalNetworkV2 implements ITerminalNetwork {
 
+	name: string; // for console.debug() purposes
+
 	private colonies: Colony[];
 	private colonyThresholds: { [colName: string]: { [resourceType: string]: Thresholds } };
 	private _energyThresholds: Thresholds | undefined;
@@ -212,6 +220,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	private assets: { [resourceType: string]: number };
 	private notifications: string[];
 
+	private memory: TerminalNetworkMemory;
 	private stats: TerminalNetworkStats;
 	private terminalOverload: { [colName: string]: boolean };
 
@@ -220,9 +229,11 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		maxResourceSendAmount          : 3000,	// max size of resources you can send in one tick
 		minColonySpace                 : 20000,	// colonies should have at least this much space in the room
 		terminalCooldownAveragingWindow: 1000,	// duration for computing rolling average of terminal cooldowns
+		buyBaseMineralsDirectUnder     : DEFAULT_TARGET - DEFAULT_TOLERANCE, // buy base mins directly if very low
 	};
 
 	constructor() {
+		this.name = 'TerminalNetwork';
 		this.colonies = [];
 		this.refresh();
 	}
@@ -245,7 +256,14 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 
 		this.terminalOverload = {};
 		this.notifications = [];
+		this.memory = Mem.wrap(Memory.Overmind, 'terminalNetwork', TerminalNetworkMemoryDefaults, true);
 		this.stats = Mem.wrap(Memory.stats.persistent, 'terminalNetwork', TerminalNetworkStatsDefaults, true);
+	}
+
+	private debug(...args: any[]) {
+		if (this.memory.debug) {
+			log.alert('TerminalNetwork:', args);
+		}
 	}
 
 	/**
@@ -514,12 +532,12 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 				}
 			}
 		}
-		// Shuffle all the colony orders in each tier - this helps prevent jams
-		_.forEach(this.activeRequestors, (cols, resource) => this.activeRequestors[resource!] = _.shuffle(cols));
-		_.forEach(this.passiveRequestors, (cols, resource) => this.passiveRequestors[resource!] = _.shuffle(cols));
-		_.forEach(this.equilibriumNodes, (cols, resource) => this.equilibriumNodes[resource!] = _.shuffle(cols));
-		_.forEach(this.passiveProviders, (cols, resource) => this.passiveProviders[resource!] = _.shuffle(cols));
-		_.forEach(this.activeProviders, (cols, resource) => this.activeProviders[resource!] = _.shuffle(cols));
+		// // Shuffle all the colony orders in each tier - this helps prevent jams
+		// _.forEach(this.activeRequestors, (cols, resource) => this.activeRequestors[resource!] = _.shuffle(cols));
+		// _.forEach(this.passiveRequestors, (cols, resource) => this.passiveRequestors[resource!] = _.shuffle(cols)); TODO
+		// _.forEach(this.equilibriumNodes, (cols, resource) => this.equilibriumNodes[resource!] = _.shuffle(cols));
+		// _.forEach(this.passiveProviders, (cols, resource) => this.passiveProviders[resource!] = _.shuffle(cols));
+		// _.forEach(this.activeProviders, (cols, resource) => this.activeProviders[resource!] = _.shuffle(cols));
 	}
 
 	/**
@@ -638,7 +656,16 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 				return false;
 			}
 			// If you can still buy the thing, then buy then thing!
-			const ret = Overmind.tradeNetwork.buy(colony.terminal!, resource, requestAmount);
+			const buyOpts: TradeOpts = {};
+			if (Abathur.isBaseMineral(resource) &&
+				colony.assets[resource] < TerminalNetworkV2.settings.buyBaseMineralsDirectUnder) {
+				buyOpts.preferDirect = true;
+				buyOpts.ignorePriceChecksForDirect = true;
+				buyOpts.ignoreMinAmounts = true;
+			}
+			const ret = Overmind.tradeNetwork.buy(colony.terminal!, resource, requestAmount, buyOpts);
+			this.debug(`Buying ${requestAmount} ${resource} for ${colony.print} ` +
+					   `(preferDirect: ${buyOpts.preferDirect}, response: ${ret})`);
 			if (ret >= 0) {
 				return true;
 			}
@@ -711,9 +738,11 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			if (resource == RESOURCE_ENERGY || Abathur.isBaseMineral(resource)) {
 				if (this.getRemainingSpace(colony) < TerminalNetworkV2.settings.minColonySpace) {
 					opts.preferDirect = true;
+					opts.ignorePriceChecksForDirect = true;
 				}
 			}
 			const ret = Overmind.tradeNetwork.sell(colony.terminal!, resource, provideAmount, opts);
+			this.debug(`Selling ${provideAmount} ${resource} from ${colony.print} with trade network (${ret})`);
 			if (ret >= 0) {
 				return true;
 			}
@@ -820,6 +849,16 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		// Record stats for this tick
 		this.recordStats();
 
+		// Display a warning for colonies that are critically full
+		if (Game.time % 10 == 0) {
+			for (const colony of this.colonies) {
+				if (this.getRemainingSpace(colony) < TerminalNetworkV2.settings.minColonySpace
+					&& !colony.state.isRebuilding) {
+					log.warning(`${colony.print} is critially full; requires immediate attention!`);
+				}
+			}
+		}
+
 		// this.summarize();
 
 		// Display notifications
@@ -881,29 +920,58 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	/**
 	 * Prints the current state of the terminal network to the console
 	 */
-	private summarize(): void {
+	private summarize(resourceOrColony?: string | Colony): void {
 		const {activeRequestors, passiveRequestors, equilibriumNodes, passiveProviders, activeProviders} =
 				  this.stats.states;
 		let info: string = '\nTerminalNetwork Summary: \n';
-		info += 'Active providers ---------------------------------------------------------------------\n';
-		for (const colonyName in activeProviders) {
-			info += `${bullet}${printRoomName(colonyName, true)}  ${activeProviders[colonyName]}\n`;
-		}
-		info += 'Passive providers --------------------------------------------------------------------\n';
-		for (const colonyName in passiveProviders) {
-			info += `${bullet}${printRoomName(colonyName, true)}  ${passiveProviders[colonyName]}\n`;
-		}
-		info += 'Equilibrium nodes --------------------------------------------------------------------\n';
-		for (const colonyName in equilibriumNodes) {
-			info += `${bullet}${printRoomName(colonyName, true)}  ${equilibriumNodes[colonyName]}\n`;
-		}
-		info += 'Passive requestors -------------------------------------------------------------------\n';
-		for (const colonyName in passiveRequestors) {
-			info += `${bullet}${printRoomName(colonyName, true)}  ${passiveRequestors[colonyName]}\n`;
-		}
-		info += 'Active requestors --------------------------------------------------------------------\n';
-		for (const colonyName in activeRequestors) {
-			info += `${bullet}${printRoomName(colonyName, true)}  ${activeRequestors[colonyName]}\n`;
+
+		if (resourceOrColony && resourceOrColony instanceof Colony) {
+			const colony = resourceOrColony as Colony;
+			info += `${colony.print} actively providing -----------------------------------------------------\n` +
+					`${bullet}${activeProviders[colony.name] || '(None)'}\n` +
+					`${colony.print} passively providing ----------------------------------------------------\n` +
+					`${bullet}${passiveProviders[colony.name] || '(None)'}\n` +
+					`${colony.print} at equilibrium for -----------------------------------------------------\n` +
+					`${bullet}${equilibriumNodes[colony.name] || '(None)'}\n` +
+					`${colony.print} passively requesting ---------------------------------------------------\n` +
+					`${bullet}${passiveRequestors[colony.name] || '(None)'}\n` +
+					`${colony.print} actively requesting ----------------------------------------------------\n` +
+					`${bullet}${activeRequestors[colony.name] || '(None)'}\n`;
+		} else {
+			const resource = resourceOrColony || undefined;
+			if (resource) {
+				info += `Active providers for ${resource} -----------------------------------------------------\n` +
+						`${bullet}${_.map(this.activeProviders[resource], col => col.printAligned) || '(None)'}\n` +
+						`Passive providers for ${resource} ----------------------------------------------------\n` +
+						`${bullet}${_.map(this.passiveProviders[resource], col => col.printAligned) || '(None)'}\n` +
+						`Equilibrium nodes for ${resource} ----------------------------------------------------\n` +
+						`${bullet}${_.map(this.equilibriumNodes[resource], col => col.printAligned) || '(None)'}\n` +
+						`Passive requestors for ${resource} ----------------------------------------------------\n` +
+						`${bullet}${_.map(this.passiveRequestors[resource], col => col.printAligned) || '(None)'}\n` +
+						`Active requestors for ${resource} -----------------------------------------------------\n` +
+						`${bullet}${_.map(this.activeRequestors[resource], col => col.printAligned) || '(None)'}\n`;
+			} else {
+				info += 'Active providers ---------------------------------------------------------------------\n';
+				for (const colonyName in activeProviders) {
+					info += `${bullet}${printRoomName(colonyName, true)}  ${activeProviders[colonyName]}\n`;
+				}
+				info += 'Passive providers --------------------------------------------------------------------\n';
+				for (const colonyName in passiveProviders) {
+					info += `${bullet}${printRoomName(colonyName, true)}  ${passiveProviders[colonyName]}\n`;
+				}
+				info += 'Equilibrium nodes --------------------------------------------------------------------\n';
+				for (const colonyName in equilibriumNodes) {
+					info += `${bullet}${printRoomName(colonyName, true)}  ${equilibriumNodes[colonyName]}\n`;
+				}
+				info += 'Passive requestors -------------------------------------------------------------------\n';
+				for (const colonyName in passiveRequestors) {
+					info += `${bullet}${printRoomName(colonyName, true)}  ${passiveRequestors[colonyName]}\n`;
+				}
+				info += 'Active requestors --------------------------------------------------------------------\n';
+				for (const colonyName in activeRequestors) {
+					info += `${bullet}${printRoomName(colonyName, true)}  ${activeRequestors[colonyName]}\n`;
+				}
+			}
 		}
 		console.log(info);
 	}

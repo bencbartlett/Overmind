@@ -1,4 +1,5 @@
 import {Colony} from '../Colony';
+import {log} from '../console/log';
 import {Overlord} from '../overlords/Overlord';
 import {profile} from '../profiler/decorator';
 
@@ -26,6 +27,12 @@ export abstract class HiveCluster {
 
 	get print(): string {
 		return '<a href="#!/room/' + Game.shard.name + '/' + this.pos.roomName + '">[' + this.ref + ']</a>';
+	}
+
+	protected debug(...args: any[]) {
+		if (this.memory.debug) {
+			log.alert(this.print, args);
+		}
 	}
 
 	// Logic to refresh the state of the hive cluster between ticks
