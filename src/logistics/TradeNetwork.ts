@@ -259,7 +259,7 @@ export class TraderJoe implements ITradeNetwork {
 				msg += ` (ERROR: ${response})`;
 			}
 		}
-		this.notify(msg);
+		// this.notify(msg); // use the transactions from the ledger instead
 	}
 
 	private notifyLastTickTransactions(): void {
@@ -270,10 +270,10 @@ export class TraderJoe implements ITradeNetwork {
 
 			if (transaction.order) { // if it was sold on the market
 				let msg: string;
-				const cost = Math.round(transaction.amount * transaction.order.price);
+				const cost = (transaction.amount * transaction.order.price).toFixed(2);
 				// I am selling to another person's buy order
 				if (transaction.order.type == ORDER_BUY) {
-					const coststr = `[+${cost}c]`.padRight('[-10000c]'.length);
+					const coststr = `[+${cost}c]`.padRight('[-10000.00c]'.length);
 					msg = coststr + ` sell direct: ${printRoomName(transaction.to, true)} ${leftArrow} ` +
 						  `${transaction.amount} ${transaction.resourceType} ${leftArrow} ` +
 						  `${printRoomName(transaction.from, true)} `;
@@ -287,7 +287,7 @@ export class TraderJoe implements ITradeNetwork {
 				}
 				// Someone else is buying from by sell order
 				else {
-					const coststr = `[+${cost}c]`.padRight('[-10000c]'.length);
+					const coststr = `[+${cost}c]`.padRight('[-10000.00c]'.length);
 					msg = coststr + ` sell order: ${printRoomName(transaction.from, true)} ${rightArrow} ` +
 						  `${transaction.amount} ${transaction.resourceType} ${rightArrow} ` +
 						  `${printRoomName(transaction.to, true)} `;
@@ -309,10 +309,10 @@ export class TraderJoe implements ITradeNetwork {
 
 			if (transaction.order) { // if it was sold on the market
 				let msg: string;
-				const cost = Math.round(transaction.amount * transaction.order.price);
+				const cost = (transaction.amount * transaction.order.price).toFixed(2);
 				// I am receiving resources from a direct purchase of someone else's sell order
 				if (transaction.order.type == ORDER_SELL) {
-					const coststr = `[-${cost}c]`.padRight('[-10000c]'.length);
+					const coststr = `[-${cost}c]`.padRight('[-10000.00c]'.length);
 					msg = coststr + ` buy direct: ${printRoomName(transaction.to, true)} ${leftArrow} ` +
 						  `${transaction.amount} ${transaction.resourceType} ${leftArrow} ` +
 						  `${printRoomName(transaction.from, true)} `;
@@ -326,7 +326,7 @@ export class TraderJoe implements ITradeNetwork {
 				}
 				// Another person is selling to my buy order
 				else {
-					const coststr = `[-${cost}c]`.padRight('[-10000c]'.length);
+					const coststr = `[-${cost}c]`.padRight('[-10000.00c]'.length);
 					msg = coststr + ` buy order: ${printRoomName(transaction.from, true)} ${rightArrow} ` +
 						  `${transaction.amount} ${transaction.resourceType} ${rightArrow} ` +
 						  `${printRoomName(transaction.to, true)} `;
@@ -377,7 +377,7 @@ export class TraderJoe implements ITradeNetwork {
 	private marginalTransactionPrice(order: Order, dealerRoomName: string): number {
 		if (order.roomName) {
 			const transferCost = Game.market.calcTransactionCost(10000, order.roomName, dealerRoomName) / 10000;
-			const energyToCreditMultiplier = Math.max(this.memory.cache.history[RESOURCE_ENERGY].avg14, 0.1);
+			const energyToCreditMultiplier = Math.min(this.memory.cache.history[RESOURCE_ENERGY].avg14, 0.1);
 			return transferCost * energyToCreditMultiplier;
 		} else {
 			// no order.roomName means subscription token, and I don't trade these so this should never get used
@@ -435,12 +435,12 @@ export class TraderJoe implements ITradeNetwork {
 		}
 
 		// Compute an adjustment factor based on how long it's been sitting on the market
-		const adjustMagnitude = 0.05;
+		const adjustMagnitude = 0.1;
 		let adjustment = 1;
 		const existingOrder = _.first(this.getExistingOrders(ORDER_SELL, resource, room));
 		if (existingOrder) {
 			const timeOnMarket = Game.time - existingOrder.created;
-			const orderDiscountTimescale = 100000; // should be less than the timeout value
+			const orderDiscountTimescale = 50000; // order will change by adjustMagnitude percent every this many ticks
 			adjustment = (adjustment + timeOnMarket / orderDiscountTimescale) / 2;
 		}
 
@@ -449,15 +449,17 @@ export class TraderJoe implements ITradeNetwork {
 			const discountFactor = 1 - adjustment * adjustMagnitude;
 			// In the sell case only, we include the energy transaction costs so that people in the vicinity of the
 			// lowest seller will see our sell order as preferable
-			const marketRate = Math.max(lowestSellOrder.price - this.marginalTransactionPrice(lowestSellOrder, room),
-										highestBuyOrder.price - this.marginalTransactionPrice(highestBuyOrder, room));
+			const marketRate = Math.max(lowestSellOrder.price, highestBuyOrder.price);
 			const price = marketRate * discountFactor;
+			this.debug(`Candidate price to ${type} ${resource} in ${printRoomName(room)}: ${price}`);
 			// If the sell price is greater than the lowestSell order price, it might mean an opportunity for arbitrage
 			if (price > lowestSellOrder.price) {
 				// TODO
 			}
 			// It's not sensible to sell at a lower cost than what you paid to make it
-			if (price < priceForBaseResources) {
+			if ((Abathur.isBoost(resource) && price < priceForBaseResources)
+				|| (Abathur.isBaseMineral(resource) && price < priceForBaseResources / 2) // can sell base below market
+				|| price < 0) {
 				return Infinity;
 			} else {
 				return price;
@@ -466,12 +468,13 @@ export class TraderJoe implements ITradeNetwork {
 			const outbidFactor = 1 + adjustment * adjustMagnitude;
 			const marketRate = Math.min(highestBuyOrder.price, lowestSellOrder.price);
 			const price = marketRate * outbidFactor;
+			this.debug(`Candidate price to ${type} ${resource} in ${printRoomName(room)}: ${price}`);
 			// If the buy price is less than the highestBuy order price, it might mean an opportunity for arbitrage
 			if (price < highestBuyOrder.price) {
 				// TODO
 			}
 			// Don't pay >10x what ingredients cost - about 5.0c for XGHO2 based on March 2020 data
-			const maxMarkupWillingToBuyFrom = 10;
+			const maxMarkupWillingToBuyFrom = 5;
 			if (price > priceForBaseResources * maxMarkupWillingToBuyFrom) {
 				return Infinity;
 			} else {
@@ -513,8 +516,8 @@ export class TraderJoe implements ITradeNetwork {
 			// Figure out if price should be changed - if the competitive price is now significantly different
 			const price = this.computeCompetitivePrice(type, resource, terminal.room.name);
 			if (price == Infinity || price == 0) {
-				log.warning(`TradeNetwork: sanity checks not passed to ${type} ${resource} from ` +
-							`${printRoomName(terminal.room.name)}!`);
+				log.warning(`TradeNetwork: sanity checks not passed to handle existing ${type} order ${resource} ` +
+							`in ${printRoomName(terminal.room.name)}!`);
 				return ERR_NOT_ENOUGH_MARKET_DATA;
 			}
 			const ratio = existingOrder.price / price;
@@ -546,7 +549,7 @@ export class TraderJoe implements ITradeNetwork {
 			// Compute the buy or sell price
 			const price = this.computeCompetitivePrice(type, resource, terminal.room.name);
 			if (price == Infinity || price == 0) {
-				log.warning(`TradeNetwork: sanity checks not passed to ${type} ${resource} from ` +
+				log.warning(`TradeNetwork: sanity checks not passed to create ${type} order ${resource} in ` +
 							`${printRoomName(terminal.room.name)}!`);
 				return ERR_NOT_ENOUGH_MARKET_DATA;
 			}
@@ -567,7 +570,7 @@ export class TraderJoe implements ITradeNetwork {
 					totalAmount : amount,
 					roomName    : terminal.room.name
 				};
-				const ret = OK;//Game.market.createOrder(params);//TODO
+				const ret = Game.market.createOrder(params);
 				let msg = '';
 				if (type == ORDER_BUY) {
 					msg += `${printRoomName(terminal.room.name, true)} creating buy order:  ` +

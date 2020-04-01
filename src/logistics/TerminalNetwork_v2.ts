@@ -230,6 +230,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		minColonySpace                 : 20000,	// colonies should have at least this much space in the room
 		terminalCooldownAveragingWindow: 1000,	// duration for computing rolling average of terminal cooldowns
 		buyBaseMineralsDirectUnder     : DEFAULT_TARGET - DEFAULT_TOLERANCE, // buy base mins directly if very low
+		complainIfUnfulfilledFrequency : 20,
 	};
 
 	constructor() {
@@ -781,7 +782,8 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 				const partnerSets: Colony[][] = _.map(prioritizedPartners, partners => partners[resource] || []);
 
 				const success = this.handleRequestInstance(colony, resource, requestAmount, partnerSets, opts);
-				if (!success && opts.complainIfUnfulfilled) {
+				if (!success && opts.complainIfUnfulfilled &&
+					Game.time % TerminalNetworkV2.settings.complainIfUnfulfilledFrequency == 0) {
 					this.notify(`Unable to fulfill request instance: ${printRoomName(colony.name)} ${leftArrow} ` +
 								`${requestAmount} ${resource}`);
 				}
@@ -809,7 +811,8 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 				const partnerSets: Colony[][] = _.map(prioritizedPartners, partners => partners[resource] || []);
 
 				const success = this.handleProvideInstance(colony, resource, sendAmount, partnerSets, opts);
-				if (!success && opts.complainIfUnfulfilled) {
+				if (!success && opts.complainIfUnfulfilled &&
+					Game.time % TerminalNetworkV2.settings.complainIfUnfulfilledFrequency == 0) {
 					this.notify(`Unable to fulfill provide instance: ${printRoomName(colony.name)} ${rightArrow} ` +
 								`${sendAmount} ${resource}`);
 				}
