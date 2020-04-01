@@ -7,7 +7,7 @@ import {Directive} from '../directives/Directive';
 import {Mem} from '../memory/Memory';
 import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
-import {boostTypesAndTiers} from '../resources/map_resources';
+import {BOOST_TIERS} from '../resources/map_resources';
 import {Cartographer} from '../utilities/Cartographer';
 import {Visualizer} from '../visuals/Visualizer';
 import {toCreep, Zerg} from '../zerg/Zerg';
@@ -364,11 +364,11 @@ export class CombatIntel {
 				if (part.type == HEAL) {
 					if (!part.boost) {
 						return 1;
-					} else if (part.boost == boostTypesAndTiers.heal[1]) {
+					} else if (part.boost == BOOST_TIERS.heal.T1) {
 						return BOOSTS.heal.LO.heal;
-					} else if (part.boost == boostTypesAndTiers.heal[2]) {
+					} else if (part.boost == BOOST_TIERS.heal.T2) {
 						return BOOSTS.heal.LHO2.heal;
-					} else if (part.boost == boostTypesAndTiers.heal[3]) {
+					} else if (part.boost == BOOST_TIERS.heal.T3) {
 						return BOOSTS.heal.XLHO2.heal;
 					}
 				}
@@ -407,11 +407,11 @@ export class CombatIntel {
 			if (part.type == ATTACK) {
 				if (!part.boost) {
 					return 1;
-				} else if (part.boost == boostTypesAndTiers.attack[1]) {
+				} else if (part.boost == BOOST_TIERS.attack.T1) {
 					return BOOSTS.attack.UH.attack;
-				} else if (part.boost == boostTypesAndTiers.attack[2]) {
+				} else if (part.boost == BOOST_TIERS.attack.T2) {
 					return BOOSTS.attack.UH2O.attack;
-				} else if (part.boost == boostTypesAndTiers.attack[3]) {
+				} else if (part.boost == BOOST_TIERS.attack.T3) {
 					return BOOSTS.attack.XUH2O.attack;
 				}
 			}
@@ -435,11 +435,11 @@ export class CombatIntel {
 				if (part.type == RANGED_ATTACK) {
 					if (!part.boost) {
 						return 1;
-					} else if (part.boost == boostTypesAndTiers.ranged_attack[1]) {
+					} else if (part.boost == BOOST_TIERS.ranged.T1) {
 						return BOOSTS.ranged_attack.KO.rangedAttack;
-					} else if (part.boost == boostTypesAndTiers.ranged_attack[2]) {
+					} else if (part.boost == BOOST_TIERS.ranged.T2) {
 						return BOOSTS.ranged_attack.KHO2.rangedAttack;
-					} else if (part.boost == boostTypesAndTiers.ranged_attack[3]) {
+					} else if (part.boost == BOOST_TIERS.ranged.T3) {
 						return BOOSTS.ranged_attack.XKHO2.rangedAttack;
 					}
 				}
@@ -463,11 +463,11 @@ export class CombatIntel {
 			if (part.type == WORK) {
 				if (!part.boost) {
 					return 1;
-				} else if (part.boost == boostTypesAndTiers.dismantle[1]) {
+				} else if (part.boost == BOOST_TIERS.dismantle.T1) {
 					return BOOSTS.work.ZH.dismantle;
-				} else if (part.boost == boostTypesAndTiers.dismantle[2]) {
+				} else if (part.boost == BOOST_TIERS.dismantle.T2) {
 					return BOOSTS.work.ZH2O.dismantle;
-				} else if (part.boost == boostTypesAndTiers.dismantle[3]) {
+				} else if (part.boost == BOOST_TIERS.dismantle.T3) {
 					return BOOSTS.work.XZH2O.dismantle;
 				}
 			}
@@ -487,11 +487,11 @@ export class CombatIntel {
 			if (part.type == WORK) {
 				if (!part.boost) {
 					return 1;
-				} else if (part.boost == boostTypesAndTiers.construct[1]) {
+				} else if (part.boost == BOOST_TIERS.construct.T1) {
 					return BOOSTS.work.LH.repair;
-				} else if (part.boost == boostTypesAndTiers.construct[2]) {
+				} else if (part.boost == BOOST_TIERS.construct.T2) {
 					return BOOSTS.work.LH2O.repair;
-				} else if (part.boost == boostTypesAndTiers.construct[3]) {
+				} else if (part.boost == BOOST_TIERS.construct.T3) {
 					return BOOSTS.work.XLH2O.repair;
 				}
 			}
@@ -510,11 +510,11 @@ export class CombatIntel {
 		return this.cache(creep, 'minDamageMultiplier', () =>
 			_.min(_.map(creep.body, function(part) {
 				if (part.type == TOUGH && part.hits > 0) {
-					if (part.boost == boostTypesAndTiers.tough[1]) {
+					if (part.boost == BOOST_TIERS.tough.T1) {
 						return BOOSTS.tough.GO.damage;
-					} else if (part.boost == boostTypesAndTiers.tough[2]) {
+					} else if (part.boost == BOOST_TIERS.tough.T2) {
 						return BOOSTS.tough.GHO2.damage;
-					} else if (part.boost == boostTypesAndTiers.tough[3]) {
+					} else if (part.boost == BOOST_TIERS.tough.T3) {
 						return BOOSTS.tough.XGHO2.damage;
 					}
 				}

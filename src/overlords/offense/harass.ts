@@ -3,7 +3,7 @@ import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveHarass} from '../../directives/offense/harass';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {boostTypesAndTiers} from '../../resources/map_resources';
+import {BOOST_TIERS} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
 
@@ -32,7 +32,7 @@ export class HarassOverlord extends CombatOverlord {
 		this.directive = directive;
 		this.nibblers = this.combatZerg(Roles.melee);
 		this.hydralisks = this.combatZerg(Roles.ranged, {
-			boostWishlist: boosted ? [boostTypesAndTiers.ranged_attack[3], boostTypesAndTiers.heal[3], boostTypesAndTiers.move[3]]
+			boostWishlist: boosted ? [BOOST_TIERS.ranged.T3, BOOST_TIERS.heal.T3, BOOST_TIERS.move.T3]
 								   : undefined
 		});
 	}

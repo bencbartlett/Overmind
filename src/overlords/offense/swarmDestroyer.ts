@@ -7,7 +7,7 @@ import {RoomIntel} from '../../intel/RoomIntel';
 import {Mem} from '../../memory/Memory';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {boostTypesAndTiers} from '../../resources/map_resources';
+import {BOOST_TIERS} from '../../resources/map_resources';
 import {Visualizer} from '../../visuals/Visualizer';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {Swarm} from '../../zerg/Swarm';
@@ -43,15 +43,15 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 		this.intel = new CombatIntel(this.directive);
 		this.zerglings = this.combatZerg(Roles.melee, {
 			notifyWhenAttacked: false,
-			boostWishlist     : [boostTypesAndTiers.attack[3], boostTypesAndTiers.tough[3], boostTypesAndTiers.move[3]]
+			boostWishlist     : [BOOST_TIERS.attack.T3, BOOST_TIERS.tough.T3, BOOST_TIERS.move.T3]
 		});
 		// this.hydralisks = this.combatZerg(Roles.ranged, {
 		// 	notifyWhenAttacked: false,
-		// 	boostWishlist     : [boostTypesAndTiers.ranged_attack[3], boostTypesAndTiers.tough[3], boostTypesAndTiers.move[3]]
+		// 	boostWishlist     : [BOOST_TIERS.ranged[3], BOOST_TIERS.tough[3], BOOST_TIERS.move[3]]
 		// });
 		this.healers = this.combatZerg(Roles.healer, {
 			notifyWhenAttacked: false,
-			boostWishlist     : [boostTypesAndTiers.heal[3], boostTypesAndTiers.tough[3], boostTypesAndTiers.move[3],]
+			boostWishlist     : [BOOST_TIERS.heal.T3, BOOST_TIERS.tough.T3, BOOST_TIERS.move.T3,]
 		});
 		// Make swarms
 		this.makeSwarms();

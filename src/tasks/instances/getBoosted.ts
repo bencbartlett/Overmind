@@ -1,6 +1,6 @@
 import {log} from '../../console/log';
 import {profile} from '../../profiler/decorator';
-import {boostParts} from '../../resources/map_resources';
+import {BOOST_PARTS} from '../../resources/map_resources';
 import {Task} from '../Task';
 
 export type getBoostedTargetType = StructureLab;
@@ -33,17 +33,17 @@ export class TaskGetBoosted extends Task {
 		if (this.creep.ticksToLive && this.creep.ticksToLive < MIN_LIFETIME_FOR_BOOST * lifetime) {
 			return false; // timeout after this amount of lifespan has passed
 		}
-		// else if (boostParts[this.data.resourceType] == MOVE &&
-		// this.creep.getActiveBodyparts(boostParts[this.data.resourceType]) >= this.creep.body.length / 2) {
+		// else if (BOOST_PARTS[this.data.resourceType] == MOVE &&
+		// this.creep.getActiveBodyparts(BOOST_PARTS[this.data.resourceType]) >= this.creep.body.length / 2) {
 		// 	Game.notify(`Bad boosting of move on creep ${this.creep}, invalid task.`);
 		// 	return false;
 		// }
-		const partCount = (this.data.amount || this.creep.getActiveBodyparts(boostParts[this.data.resourceType]));
+		const partCount = (this.data.amount || this.creep.getActiveBodyparts(BOOST_PARTS[this.data.resourceType]));
 		return (this.creep.boostCounts[this.data.resourceType] || 0) < partCount;
 	}
 
 	isValidTarget() {
-		const partCount = (this.data.amount || this.creep.getActiveBodyparts(boostParts[this.data.resourceType]));
+		const partCount = (this.data.amount || this.creep.getActiveBodyparts(BOOST_PARTS[this.data.resourceType]));
 		return this.target && this.target.mineralType == this.data.resourceType &&
 			   this.target.mineralAmount >= LAB_BOOST_MINERAL * partCount &&
 			   this.target.energy >= LAB_BOOST_ENERGY * partCount;
@@ -53,8 +53,8 @@ export class TaskGetBoosted extends Task {
 		if (this.creep.spawning) {
 			return ERR_INVALID_TARGET;
 		}
-		const partCount = (this.data.amount || this.creep.getActiveBodyparts(boostParts[this.data.resourceType]));
-		// if (boostParts[this.data.resourceType] == MOVE && partCount >= this.creep.body.length / 2){
+		const partCount = (this.data.amount || this.creep.getActiveBodyparts(BOOST_PARTS[this.data.resourceType]));
+		// if (BOOST_PARTS[this.data.resourceType] == MOVE && partCount >= this.creep.body.length / 2){
 		// 	Game.notify(`Bad boosting of move on creep ${this.creep}, exiting work.`);
 		// 	return ERR_INVALID_TARGET;
 		// }

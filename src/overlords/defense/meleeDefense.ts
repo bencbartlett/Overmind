@@ -4,7 +4,7 @@ import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense
 import {CombatIntel} from '../../intel/CombatIntel';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {boostTypesAndTiers} from '../../resources/map_resources';
+import {BOOST_TIERS} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
 
@@ -25,7 +25,7 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 	constructor(directive: DirectiveInvasionDefense, boosted = false, priority = OverlordPriority.defense.meleeDefense) {
 		super(directive, 'meleeDefense', priority, 1);
 		this.zerglings = this.combatZerg(Roles.melee, {
-			boostWishlist: boosted ? [boostTypesAndTiers.tough[3], boostTypesAndTiers.attack[3], boostTypesAndTiers.move[3]]
+			boostWishlist: boosted ? [BOOST_TIERS.tough.T3, BOOST_TIERS.attack.T3, BOOST_TIERS.move.T3]
 								   : undefined
 		});
 	}

@@ -9,7 +9,7 @@ import {Pathing} from '../movement/Pathing';
 import {Priority} from '../priorities/priorities';
 import {profile} from '../profiler/decorator';
 import {Abathur, Reaction} from '../resources/Abathur';
-import {boostParts, BoostType, REAGENTS} from '../resources/map_resources';
+import {BOOST_PARTS, BoostType, REAGENTS} from '../resources/map_resources';
 import {Stats} from '../stats/stats';
 import {rightArrow} from '../utilities/stringConstants';
 import {exponentialMovingAverage} from '../utilities/utils';
@@ -336,7 +336,7 @@ export class EvolutionChamber extends HiveCluster {
 	/* Return the amount of a given resource necessary to fully boost a creep body */
 	static requiredBoostAmount(body: BodyPartDefinition[], boostType: ResourceConstant): number {
 		const existingBoostCounts = _.countBy(body, part => part.boost);
-		const numPartsToBeBoosted = _.filter(body, part => part.type == boostParts[boostType]).length;
+		const numPartsToBeBoosted = _.filter(body, part => part.type == BOOST_PARTS[boostType]).length;
 		return LAB_BOOST_MINERAL * (numPartsToBeBoosted - (existingBoostCounts[boostType] || 0));
 	}
 
@@ -453,7 +453,7 @@ export class EvolutionChamber extends HiveCluster {
 				this.terminalNetwork.requestResource(this.colony, <ResourceConstant>boost, this.neededBoosts[boost]);
 			}
 		}
-		// Obtain resources for reaction queue
+		// Obtain resources for reaction queue // TODO: why am i obtaining this outside of AcquireMinerals phase?
 		let queue = this.memory.reactionQueue;
 		if (this.memory.activeReaction && this.memory.status == LabStatus.AcquiringMinerals) {
 			queue = [this.memory.activeReaction].concat(queue);

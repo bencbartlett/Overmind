@@ -24,27 +24,14 @@ const TerminalNetworkMemoryDefaults: TerminalNetworkMemory = {};
 
 interface TerminalNetworkStats {
 	transfers: {
-		[resourceType: string]: {
-			[origin: string]: {
-				[destination: string]: number
-			}
-		},
-		costs: {
-			[origin: string]: {
-				[destination: string]: number
-			}
-		}
+		[resourceType: string]: { [origin: string]: { [destination: string]: number } },
+		costs: { [origin: string]: { [destination: string]: number } }
 	};
 	terminals: {
-		avgCooldown: { // moving exponential average of cooldown - ranges from 0 to 5
-			[colonyName: string]: number
-		};
-		overload: { // moving exponential average of (1 if terminal wants to send but can't | 0 otherwise)
-			[colonyName: string]: number
-		};
+		avgCooldown: { [colonyName: string]: number }; // moving exponential average of cooldown - ranges from 0 to 5
+		overload: { [colonyName: string]: number }; // rolling avg of (1 if terminal wants to send but can't || 0)
 	};
-	states: {
-		// These are grouped as (stateTier: { colonyName: { resources[] } } )
+	states: { // These are grouped as (stateTier: { colonyName: { resources[] } } )
 		activeProviders: { [colony: string]: string[] };
 		passiveProviders: { [colony: string]: string[] };
 		equilibriumNodes: { [colony: string]: string[] };
@@ -81,6 +68,7 @@ export const enum TN_STATE {
 
 interface RequestOpts {
 	allowDivvying?: boolean;
+	takeFromColoniesBelowTarget?: boolean;
 	sendTargetPlusTolerance?: boolean;
 	allowMarketBuy?: boolean;
 	receiveOnlyOncePerTick?: boolean;
@@ -197,8 +185,34 @@ const EMPTY_COLONY_TIER: { [resourceType: string]: Colony[] } =
 
 
 /**
- * The terminal network controls inter-colony resource transfers and requests, equalizing resources between rooms and
- * responding to on-demand resource requests
+ * The TerminalNetwork manages internal resource transfers between owned colonies and tries to get resources where
+ * they need to be as fast as possible. This second version of the TerminalNetwork is inspired by Factorio's logistics
+ * system. (Factorio is a fantastic game if you haven't played it but it's literally the video game equivalent of
+ * Mexican black tar heroin and will consume your life if you let it, kind of like Screeps...) It works like this:
+ * - Each colony with a terminal can be in one of 5 states for each resource depending on how much of the resource
+ *   it has and on other conditions:
+ *   - Active providers will actively push resources from the room into other rooms in the terminal network
+ *     which are requestors or will sell the resource on the market no receiving rooms are available
+ *   - Passive providers will place their resources at the disposal of the terminal network
+ *   - Equilibrium nodes are rooms which are near their desired amount for the resource and prefer to stay there
+ *   - Passive requestors are rooms which have less than their desired amount of the resource but which don't have an
+ *     immediate need for it; they will request resources from activeProviders and passiveProviders
+ *   - Active requestors are rooms which have an immediate need for and insufficient amounts of a resource; they will
+ *     request resources from any room which is not also an activeRequestor
+ * - The state of each room is determined by a `Thresholds` object, which has `target`, `tolerance`, and (posisbly
+ *   undefined) `surplus` properties. Conditions for each state are based on `amount` of resource in a colony:
+ *   - Active provider: `amount > surplus` (if defined) or `amont > target + tolerance` and room is near capacity
+ *   - Passive provider: `surplus >= amount > target + tolerance`
+ *   - Equilibrium: `target + tolerance >= amount >= target - tolerance`
+ *   - Passive requestor: `target - tolerance > amount`
+ *   - Active requestor: colonies can only be placed in this state by an active call to
+ *     `TerminalNetwork.requestResource()` while `target > amount`
+ * - To determine which room to request/provide resources from/to, a heuristic is used which tries to minimize
+ *   transaction cost while accounting for:
+ *   - If a terminal has a high output load (often on cooldown), receivers will de-prioritize it
+ * 	 - If a terminal is far away, receivers will wait longer to find a less expensive sender
+ * 	 - Bigger transactions with higher costs will wait longer for a closer colony, while smaller transactions are
+ * 	   less picky
  */
 @profile
 @assimilationLocked
@@ -602,10 +616,18 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			const MAX_SEND_REQUESTS = 3;
 			const allPartners = _.flatten(partnerSets) as Colony[];
 			// find all colonies that have more than target amt of resource and pick 3 with the most amt
-			const validPartners: Colony[] = _(allPartners)
+			let validPartners: Colony[] = _(allPartners)
 				.filter(partner => partner.assets[resource] > this.thresholds(partner, resource).target)
 				.sortBy(partner => partner.assets[resource] - this.thresholds(partner, resource).target)
-				.take(MAX_SEND_REQUESTS).value();
+				.take(MAX_SEND_REQUESTS).run();
+
+			// If still no partners and this is a super urgent request, steal from colonies that have below target amt
+			if (validPartners.length == 0 && opts.takeFromColoniesBelowTarget) {
+				validPartners = _(allPartners)
+					.filter(partner => partner.assets[resource] > 0)
+					.sortBy(partner => partner.assets[resource])
+					.take(MAX_SEND_REQUESTS).run();
+			}
 
 			// request bits of the amount until you have enough
 			let remainingAmount = requestAmount;
@@ -757,11 +779,12 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 							 prioritizedPartners: { [resource: string]: Colony[] }[],
 							 opts: RequestOpts = {}): void {
 		_.defaults(opts, {
-			allowDivvying          : false,
-			sendTargetPlusTolerance: false,
-			allowMarketBuy         : Game.market.credits > TraderJoe.settings.market.credits.canBuyAbove,
-			recieveOnlyOncePerTick : false,
-			complainIfUnfulfilled  : true,
+			allowDivvying              : false,
+			takeFromColoniesBelowTarget: false,
+			sendTargetPlusTolerance    : false,
+			allowMarketBuy             : Game.market.credits > TraderJoe.settings.market.credits.canBuyAbove,
+			recieveOnlyOncePerTick     : false,
+			complainIfUnfulfilled      : true,
 		});
 		for (const resource of RESOURCE_EXCHANGE_ORDER) {
 			for (const colony of (requestors[resource] || [])) {
@@ -944,15 +967,20 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			const resource = resourceOrColony || undefined;
 			if (resource) {
 				info += `Active providers for ${resource} -----------------------------------------------------\n` +
-						`${bullet}${_.map(this.activeProviders[resource], col => col.printAligned) || '(None)'}\n` +
+						`${bullet}${_.map(this.activeProviders[resource], col =>
+							col.printAligned + ` (${col.assets[resource]}), `) || '(None)'}\n` +
 						`Passive providers for ${resource} ----------------------------------------------------\n` +
-						`${bullet}${_.map(this.passiveProviders[resource], col => col.printAligned) || '(None)'}\n` +
+						`${bullet}${_.map(this.passiveProviders[resource], col =>
+							col.printAligned + ` (${col.assets[resource]}), `) || '(None)'}\n` +
 						`Equilibrium nodes for ${resource} ----------------------------------------------------\n` +
-						`${bullet}${_.map(this.equilibriumNodes[resource], col => col.printAligned) || '(None)'}\n` +
+						`${bullet}${_.map(this.equilibriumNodes[resource], col =>
+							col.printAligned + ` (${col.assets[resource]}), `) || '(None)'}\n` +
 						`Passive requestors for ${resource} ----------------------------------------------------\n` +
-						`${bullet}${_.map(this.passiveRequestors[resource], col => col.printAligned) || '(None)'}\n` +
+						`${bullet}${_.map(this.passiveRequestors[resource], col =>
+							col.printAligned + ` (${col.assets[resource]}), `) || '(None)'}\n` +
 						`Active requestors for ${resource} -----------------------------------------------------\n` +
-						`${bullet}${_.map(this.activeRequestors[resource], col => col.printAligned) || '(None)'}\n`;
+						`${bullet}${_.map(this.activeRequestors[resource], col =>
+							col.printAligned + ` (${col.assets[resource]}), `) || '(None)'}\n`;
 			} else {
 				info += 'Active providers ---------------------------------------------------------------------\n';
 				for (const colonyName in activeProviders) {

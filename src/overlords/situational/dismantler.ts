@@ -4,7 +4,7 @@ import {DirectiveModularDismantle} from '../../directives/targeting/modularDisma
 import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {boostTypesAndTiers} from '../../resources/map_resources';
+import {BOOST_TIERS} from '../../resources/map_resources';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 
@@ -26,8 +26,8 @@ export class DismantleOverlord extends Overlord {
 		this.directive = directive;
 		// this.target = target || Game.getObjectById(this.directive.memory.targetId) || undefined;
 		this.dismantlers = this.zerg(Roles.dismantler, {
-			boostWishlist: boosted ? [boostTypesAndTiers.tough[3], boostTypesAndTiers.dismantle[3],
-									  boostTypesAndTiers.move[3]] : undefined
+			boostWishlist: boosted ? [BOOST_TIERS.tough.T3, BOOST_TIERS.dismantle.T3,
+									  BOOST_TIERS.move.T3] : undefined
 		});
 	}
 

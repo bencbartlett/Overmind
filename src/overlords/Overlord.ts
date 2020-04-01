@@ -6,7 +6,7 @@ import {SpawnGroup} from '../logistics/SpawnGroup';
 import {Mem} from '../memory/Memory';
 import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
-import {boostParts, boostTypesAndTiers} from '../resources/map_resources';
+import {BOOST_PARTS, BOOST_TIERS} from '../resources/map_resources';
 import {MIN_LIFETIME_FOR_BOOST} from '../tasks/instances/getBoosted';
 import {Tasks} from '../tasks/Tasks';
 import {CombatZerg} from '../zerg/CombatZerg';
@@ -523,7 +523,7 @@ export abstract class Overlord {
 		// Otherwise just boost if you need it and can get the resources
 		if (this.boosts[creep.roleName]) {
 			const boosts = _.filter(this.boosts[creep.roleName]!, boost =>
-				(creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost]));
+				(creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(BOOST_PARTS[boost]));
 			if (boosts.length > 0) {
 				return _.all(boosts, boost => evolutionChamber!.canBoost(creep.body, boost));
 			}
@@ -540,7 +540,7 @@ export abstract class Overlord {
 		const evolutionChamber = colony ? colony.evolutionChamber : undefined;
 		if (evolutionChamber && this.boosts[creep.roleName]) {
 			const boosts = _.filter(this.boosts[creep.roleName]!, boost =>
-				(creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost]));
+				(creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(BOOST_PARTS[boost]));
 			for (const boost of boosts) {
 				evolutionChamber.requestBoost(creep, boost);
 			}
@@ -557,8 +557,8 @@ export abstract class Overlord {
 		if (this.boosts[creep.roleName] && evolutionChamber) {
 			const boosts = _.filter(this.boosts[creep.roleName]!, boost => {
 				// TODO FIX BOOSTING!
-				return (creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost])
-					   && !(boost == boostTypesAndTiers[MOVE][3] && creep.getActiveBodyparts(MOVE) >= creep.body.length / 2);
+				return (creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(BOOST_PARTS[boost])
+					   && !(boost == BOOST_TIERS.move.T3 && creep.getActiveBodyparts(MOVE) >= creep.body.length / 2);
 			});
 			for (const boost of boosts) {
 				const boostLab = _.find(evolutionChamber.boostingLabs, lab => lab.mineralType == boost);

@@ -4,7 +4,7 @@ import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense
 import {CombatIntel} from '../../intel/CombatIntel';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {boostTypesAndTiers} from '../../resources/map_resources';
+import {BOOST_TIERS} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
 
@@ -29,8 +29,8 @@ export class RangedDefenseOverlord extends CombatOverlord {
 				priority = OverlordPriority.defense.rangedDefense) {
 		super(directive, 'rangedDefense', priority, 1);
 		this.hydralisks = this.combatZerg(Roles.ranged, {
-			boostWishlist: boosted ? [boostTypesAndTiers.tough[3], boostTypesAndTiers.ranged_attack[3],
-									  boostTypesAndTiers.heal[3], boostTypesAndTiers.move[3]] : undefined
+			boostWishlist: boosted ? [BOOST_TIERS.tough.T3, BOOST_TIERS.ranged.T3,
+									  BOOST_TIERS.heal.T3, BOOST_TIERS.move.T3] : undefined
 		});
 	}
 

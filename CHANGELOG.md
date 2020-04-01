@@ -16,7 +16,7 @@ All notable changes to this project will be documented in this file. The format 
         - Equilibrium nodes are rooms which are near their desired amount for the resource and prefer to stay there
         - Passive requestors are rooms which have less than their desired amount of the resource but don't have an immediate need for it; they will request resources from activeProviders and passiveProviders
         - Active requestors are rooms which have an immediate need for and insufficient amounts of a resource; they will request resources from any room which is not also an activeRequestor
-    - The state of each room is determined by a `Thresholds` object, which has `target`, `tolerance`, and ()posisbly undefined) `surplus` properties. Conditions for each state are based on `amount` of resource in a colony:
+    - The state of each room is determined by a `Thresholds` object, which has `target`, `tolerance`, and (posisbly undefined) `surplus` properties. Conditions for each state are based on `amount` of resource in a colony:
         - Active provider: `amount > surplus` (if defined) or `amont > target + tolerance` and room is near capacity
         - Passive provider: `surplus >= amount > target + tolerance`
         - Equilibrium: `target + tolerance >= amount >= target - tolerance`

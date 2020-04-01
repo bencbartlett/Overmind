@@ -7,7 +7,7 @@ import {
 	_baseResourcesLookup,
 	_boostTypesTierLookup, _commoditiesLookup,
 	_mineralCompoundsAllLookup,
-	BASE_RESOURCES, boostParts, DEPOSITS_ALL,
+	BASE_RESOURCES, BOOST_PARTS, BOOST_TIERS, DEPOSITS_ALL,
 	INTERMEDIATE_REACTANTS,
 	REAGENTS
 } from './map_resources';
@@ -150,7 +150,7 @@ export class Abathur {
 	}
 
 	static isBoost(resource: ResourceConstant): boolean {
-		return !!boostParts[resource];
+		return !!BOOST_PARTS[resource];
 	}
 
 	static isAttackBoost(resource: ResourceConstant): boolean {
@@ -158,7 +158,7 @@ export class Abathur {
 	}
 
 	static isRangedBoost(resource: ResourceConstant): boolean {
-		return !!_boostTypesTierLookup.ranged_attack[resource];
+		return !!_boostTypesTierLookup.ranged[resource];
 	}
 
 	static isHealBoost(resource: ResourceConstant): boolean {
@@ -200,6 +200,7 @@ export class Abathur {
 	static isCommodity(resource: ResourceConstant): boolean {
 		return !!_commoditiesLookup[resource];
 	}
+
 
 	/**
 	 * Summarizes the total of all resources currently in a colony store structure
