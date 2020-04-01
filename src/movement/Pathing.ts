@@ -3,6 +3,7 @@ import {log} from '../console/log';
 import {hasPos} from '../declarations/typeGuards';
 import {profile} from '../profiler/decorator';
 import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
+import {isAlly} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {Zerg} from '../zerg/Zerg';
 import {normalizePos} from './helpers';
@@ -48,7 +49,7 @@ export class Pathing {
 		if (!room) {
 			return;
 		}
-		if (!(room.controller && room.controller.my) && room.towers.length > 0) {
+		if (!room.my && room.towers.length > 0 && !isAlly(room.owner || '')) {
 			room.memory[_RM.AVOID] = true;
 		} else {
 			delete room.memory[_RM.AVOID];

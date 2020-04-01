@@ -132,12 +132,13 @@ export class DirectiveClearRoom extends Directive {
 		if (this.room && this.room.my) {
 			const done = this.removeAllStructures();
 			if (done) {
-				const res = this.room.controller!.unclaim();
+				const result = this.room.controller!.unclaim();
 				// Clear up flags that weren't there before and aren't haul
 				this.cleanupFlags();
 				log.notify(`Removing clearRoom directive in ${this.pos.roomName}: operation completed.`);
-				if (res == OK) {
+				if (result == OK) {
 					this.remove();
+					Overmind.shouldBuild = true; // rebuild to account for difference in rooms
 				}
 			}
 			// Clear path if controller is not reachable

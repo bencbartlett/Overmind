@@ -6,7 +6,7 @@ import {RoomIntel} from '../../intel/RoomIntel';
 import {Movement} from '../../movement/Movement';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {boostResources} from '../../resources/map_resources';
+import {boostTypesAndTiers} from '../../resources/map_resources';
 import {CombatTargeting} from '../../targeting/CombatTargeting';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {Overlord} from '../Overlord';
@@ -31,11 +31,11 @@ export class PairDestroyerOverlord extends Overlord {
 		this.directive = directive;
 		this.attackers = this.combatZerg(Roles.melee, {
 			notifyWhenAttacked: false,
-			boostWishlist     : [boostResources.attack[3], boostResources.tough[3], boostResources.move[3]]
+			boostWishlist     : [boostTypesAndTiers.attack[3], boostTypesAndTiers.tough[3], boostTypesAndTiers.move[3]]
 		});
 		this.healers = this.combatZerg(Roles.healer, {
 			notifyWhenAttacked: false,
-			boostWishlist     : [boostResources.heal[3], boostResources.tough[3], boostResources.move[3]]
+			boostWishlist     : [boostTypesAndTiers.heal[3], boostTypesAndTiers.tough[3], boostTypesAndTiers.move[3]]
 		});
 	}
 

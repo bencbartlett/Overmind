@@ -1,5 +1,5 @@
 import {CombatIntel} from '../intel/CombatIntel';
-import {CombatMoveOptions, Movement, NO_ACTION} from '../movement/Movement';
+import {CombatMoveOptions, Movement} from '../movement/Movement';
 import {profile} from '../profiler/decorator';
 import {CombatTargeting} from '../targeting/CombatTargeting';
 import {GoalFinder} from '../targeting/GoalFinder';

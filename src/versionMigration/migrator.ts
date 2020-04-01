@@ -52,6 +52,9 @@ export class VersionMigration {
 		if (!this.memory.versions['053to06X_part1']) {
 			this.migrate_053_06X_part1();
 		}
+		if (!this.memory.versions['053to06X_part2']) {
+			this.migrate_053_06X_part2();
+		}
 	}
 
 	static get memory(): VersionMigratorMemory {
@@ -323,6 +326,19 @@ export class VersionMigration {
 		}
 		this.memory.versions['053to06X_part1'] = true;
 		log.alert(`Version migration from 0.5.3 -> 0.6.X part 1 completed successfully.`);
+	}
+
+	static migrate_053_06X_part2() {
+		// Delete some old properties
+		if ((<any>Memory).Overmind.terminalNetwork) {
+			delete (<any>Memory).Overmind.terminalNetwork;
+		}
+		// Remove all orders
+		for (const id in Game.market.orders) {
+			Game.market.cancelOrder(id);
+		}
+		this.memory.versions['053to06X_part2'] = true;
+		log.alert(`Version migration from 0.5.3 -> 0.6.X part 2 completed successfully.`);
 	}
 
 }

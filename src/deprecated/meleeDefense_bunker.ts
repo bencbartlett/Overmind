@@ -1,7 +1,7 @@
 // // archer overlord - spawns defender/healer pairs for sustained combat
 //
 // import {OverlordPriority} from '../../priorities/priorities_overlords';
-// import {boostResources} from '../../resources/map_resources';
+// import {boostTypesAndTiers} from '../../resources/map_resources';
 // import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 // import {profile} from '../../profiler/decorator';
 // import {CombatIntel} from '../../intel/combatIntel';
@@ -34,7 +34,7 @@
 // 		this.defenders = _.map(this.creeps(MeleeBunkerZerglingSetup.role), creep => new CombatZerg(creep));
 // 		if (boosted) {
 // 			this.boosts[MeleeBunkerZerglingSetup.role] = [
-// 				boostResources.attack[3],
+// 				boostTypesAndTiers.attack[3],
 // 			];
 // 		}
 // 	}
@@ -114,7 +114,7 @@
 // 		let towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 0 : 0;
 // 		let worstDamageMultiplier = _.min(_.map(this.room.hostiles, creep => CombatIntel.minimumDamageTakenMultiplier(creep)));
 // 		let boosts = this.boosts[MeleeBunkerZerglingSetup.role];
-// 		if (boosts && boosts.includes(boostResources.attack[3])) { // TODO: add boost damage computation function to Overlord
+// 		if (boosts && boosts.includes(boostTypesAndTiers.attack[3])) { // TODO: add boost damage computation function to Overlord
 // 			zerglingDamage *= 4;
 // 		}
 // 		// Match the hostile damage times some multiplier

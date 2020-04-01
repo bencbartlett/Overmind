@@ -2,7 +2,7 @@ import {Roles, Setups} from '../../creepSetups/setups';
 import {UpgradeSite} from '../../hiveClusters/upgradeSite';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {boostResources} from '../../resources/map_resources';
+import {boostTypesAndTiers} from '../../resources/map_resources';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
@@ -25,7 +25,7 @@ export class UpgradingOverlord extends Overlord {
 		// If new colony or boosts overflowing to storage
 		if (this.shouldBoostUpgraders()) {
 			this.upgraders = this.zerg(Roles.upgrader, {
-				boostWishlist: [boostResources.upgrade[3]]
+				boostWishlist: [boostTypesAndTiers.upgrade[3]]
 			});
 		} else {
 			this.upgraders = this.zerg(Roles.upgrader);

@@ -14,6 +14,28 @@ Object.defineProperty(Structure.prototype, 'isWalkable', {
 	configurable: true,
 });
 
+// // monkey-patch OwnedStructure.isActive to include some caching since it's actually pretty expensive
+// const isActive = OwnedStructure.prototype.isActive;
+// OwnedStructure.prototype.isActive = function() {
+// 	// Do a quick check to see if the room is owned by same owner of structure and/or if it's RCL 8
+// 	if (this.room.controller && this.room.controller.level) {
+// 		const thisOwner = this.owner ? this.owner.username : 'noOwner';
+// 		const controllerOwner = this.room.controller.owner ? this.room.controller.username : 'noControllerOwner';
+// 		if (thisOwner != controllerOwner) { // if it's not owned by room owner, it's not active
+// 			return false;
+// 		}
+// 		const level = this.room.controller.level;
+// 		if (level == 8) { // everything is active at RCL 8
+// 			return true;
+// 		}
+// 	}
+// 	// Otherwise use cached value or call this.inActive()
+// 	if (this._isActive == undefined) {
+// 		this._isActive = isActive.call(this);
+// 	}
+// 	return this._isActive;
+// };
+
 // Container prototypes ================================================================================================
 
 Object.defineProperty(StructureContainer.prototype, 'energy', {
@@ -180,17 +202,32 @@ Object.defineProperty(StructureTerminal.prototype, 'isEmpty', { // if this conta
 	configurable: true,
 });
 
-// StructureTerminal.prototype._send = StructureTerminal.prototype.send;
-// StructureTerminal.prototype.send = function(resourceType: ResourceConstant, amount: number, destination: string,
-// 											description?: string): ScreepsReturnCode {
-// 	// Log stats
-// 	let origin = this.room.name;
-// 	let response = this._send(resourceType, amount, destination, description);
-// 	if (response == OK) {
-// 		TerminalNetwork.logTransfer(resourceType,amount,origin, destination)
-// 	}
-// 	return response;
-// };
+Object.defineProperty(StructureTerminal.prototype, 'isReady', { // the terminal is ready to send or deal
+	get() {
+		return this.cooldown == 0 && !this._notReady;
+	},
+	configurable: true,
+});
+
+Object.defineProperty(StructureTerminal.prototype, 'hasReceived', { // terminal received this tick via send/deal
+	get() {
+		return this._hasReceived;
+	},
+	configurable: true,
+});
+
+const _terminalSend = StructureTerminal.prototype.send;
+StructureTerminal.prototype.send = function(resourceType: ResourceConstant, amount: number, destination: string,
+											description?: string): ScreepsReturnCode {
+	const response = _terminalSend.call(this, resourceType, amount, destination, description);
+	if (response == OK) {
+		this._notReady = true;
+		if (Game.rooms[destination] && Game.rooms[destination].terminal) {
+			(<any>Game.rooms[destination].terminal!)._hasReceived = true;
+		}
+	}
+	return response;
+};
 
 // Tower prototypes
 

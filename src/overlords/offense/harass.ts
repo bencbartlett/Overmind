@@ -3,7 +3,7 @@ import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveHarass} from '../../directives/offense/harass';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {boostResources} from '../../resources/map_resources';
+import {boostTypesAndTiers} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
 
@@ -15,7 +15,6 @@ export class HarassOverlord extends CombatOverlord {
 
 	hydralisks: CombatZerg[];
 	nibblers: CombatZerg[];
-	room: Room;
 	targetRemoteToHarass: string;
 	directive: DirectiveHarass;
 
@@ -33,16 +32,13 @@ export class HarassOverlord extends CombatOverlord {
 		this.directive = directive;
 		this.nibblers = this.combatZerg(Roles.melee);
 		this.hydralisks = this.combatZerg(Roles.ranged, {
-			boostWishlist: boosted ? [boostResources.ranged_attack[3], boostResources.heal[3], boostResources.move[3]]
+			boostWishlist: boosted ? [boostTypesAndTiers.ranged_attack[3], boostTypesAndTiers.heal[3], boostTypesAndTiers.move[3]]
 								   : undefined
 		});
 	}
 
 	private handleHarass(hydralisk: CombatZerg): void {
 		hydralisk.autoCombat(this.targetRemoteToHarass || hydralisk.room.name);
-		hydralisk.room.getEventLog(
-
-		);
 
 		// this.chooseRemoteToHarass(hydralisk, hydralisk.room.name);
 		if (!this.targetRemoteToHarass) {
@@ -59,7 +55,7 @@ export class HarassOverlord extends CombatOverlord {
 					this.directive.memory.nextSpawnTime = nextSafeSpawn;
 				}
 			});
-			if (this.room.name != this.targetRemoteToHarass) {
+			if (hydralisk.room.name != this.targetRemoteToHarass) {
 				hydralisk.goToRoom(this.targetRemoteToHarass);
 			} else {
 				const nextRoom = this.chooseRemoteToHarass(hydralisk, hydralisk.room.name);
@@ -90,7 +86,7 @@ export class HarassOverlord extends CombatOverlord {
 		this.reassignIdleCreeps(Roles.ranged);
 		this.reassignIdleCreeps(Roles.melee);
 		let setup;
-		if (this.colony.level > 5) {
+		if (this.colony.level < 5) {
 			setup = CombatSetups.zerglings.limitedDefault;
 		} else {
 			setup = CombatSetups.hydralisks.default;

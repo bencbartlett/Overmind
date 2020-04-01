@@ -11,8 +11,8 @@ import {normalizeZerg, Zerg} from '../zerg/Zerg';
 import {getTerrainCosts, isExit, normalizePos, sameCoord} from './helpers';
 import {Pathing} from './Pathing';
 
-export const NO_ACTION = -20;
-export const CROSSING_PORTAL = -21;
+
+export const CROSSING_PORTAL = 21;
 export const ERR_CANNOT_PUSH_CREEP = -30;
 
 const REPORT_CPU_THRESHOLD = 1000; 	// Report when creep uses more than this amount of CPU over lifetime
@@ -194,7 +194,8 @@ export class Movement {
 		}
 
 		// traverse through a portal waypoint or check that has just been traversed
-		if (options.waypoints && !destination.isEqualTo(finalDestination)) {
+		if (options.waypoints && !destination.isEqualTo(finalDestination) && (moveData.portaling == true
+																			  || creep.pos.getRangeTo(destination) < 2)) {
 			const portalTraversed = this.traversePortalWaypoint(creep, destination);
 			if (portalTraversed) {
 				return this.goTo(creep, finalDestination, options);
@@ -366,7 +367,6 @@ export class Movement {
 	 * Navigate a creep through a portal
 	 */
 	private static traversePortalWaypoint(creep: Zerg, portalPos: RoomPosition): boolean {
-
 		if (creep.pos.roomName == portalPos.roomName && creep.pos.getRangeTo(portalPos) > 1) {
 			log.error(`Movement.travelPortalWaypoint() should only be called in range 1 of portal!`);
 		}
@@ -501,7 +501,7 @@ export class Movement {
 					otherData.path = Pathing.oppositeDirection(pushDirection) + otherData.path;
 					this.updateStateNextCoord(otherData, otherNextPos);
 				}
-				otherCreep.blockMovement = true;
+				otherCreep.blockMovement = true; // TODO: <-- movement bug? what if cmds are procesed in wrong order?
 				return true;
 			} else {
 				return false;
@@ -932,7 +932,7 @@ export class Movement {
 			return matrix;
 		};
 
-		let outcome = NO_ACTION;
+		let outcome: number = NO_ACTION;
 
 		// Flee from bad things that that you're too close to
 		if (avoid.length > 0) {
@@ -1023,7 +1023,7 @@ export class Movement {
 			}
 		};
 
-		let outcome = NO_ACTION;
+		let outcome: number = NO_ACTION;
 
 		// Flee from bad things that that you're too close to
 		if (avoid.length > 0) {

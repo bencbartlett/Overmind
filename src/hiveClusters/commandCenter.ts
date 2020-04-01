@@ -1,6 +1,5 @@
 import {$} from '../caching/GlobalCache';
 import {Colony} from '../Colony';
-import {TerminalNetwork} from '../logistics/TerminalNetwork';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {Mem} from '../memory/Memory';
 import {CommandCenterOverlord} from '../overlords/core/manager';
@@ -28,7 +27,6 @@ export class CommandCenter extends HiveCluster {
 	storage: StructureStorage;								// The colony storage, also the instantiation object
 	link: StructureLink | undefined;						// Link closest to storage
 	terminal: StructureTerminal | undefined;				// The colony terminal
-	terminalNetwork: TerminalNetwork;						// Reference to Overmind.terminalNetwork
 	towers: StructureTower[];								// Towers within range 3 of storage are part of cmdCenter
 	powerSpawn: StructurePowerSpawn | undefined;			// Colony Power Spawn
 	nuker: StructureNuker | undefined;						// Colony nuker
@@ -62,7 +60,6 @@ export class CommandCenter extends HiveCluster {
 			this.colony.linkNetwork.claimLink(this.link);
 			this.towers = this.pos.findInRange(colony.towers, 3);
 		}
-		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetwork;
 		this.transportRequests = new TransportRequestGroup(); // commandCenter always gets its own request group
 		this.observeRoom = undefined;
 	}
@@ -181,18 +178,18 @@ export class CommandCenter extends HiveCluster {
 			if (this.observeRoom) {
 				this.observer.observeRoom(this.observeRoom);
 			} else if (CommandCenter.settings.enableIdleObservation && Game.time % 1000 < 100) {
-				// const axisLength = MAX_OBSERVE_DISTANCE * 2 + 1;
-				// const dx = Game.time % axisLength - MAX_OBSERVE_DISTANCE;
-				// const dy = Math.floor((Game.time % axisLength ** 2) / axisLength) - MAX_OBSERVE_DISTANCE;
-				// if (dx == 0 && dy == 0) {
-				// 	return;
-				// }
-				// const roomToObserve = Cartographer.findRelativeRoomName(this.pos.roomName, dx, dy);
-				// this.observer.observeRoom(roomToObserve);
-				// TODO OBSERVER FIX ONLY LOOK AT southwest corner
-				const dx = Game.time % MAX_OBSERVE_DISTANCE;
-				const dy = Game.time % (MAX_OBSERVE_DISTANCE ** 2);
+				const axisLength = MAX_OBSERVE_DISTANCE * 2 + 1;
+				const dx = Game.time % axisLength - MAX_OBSERVE_DISTANCE;
+				const dy = Math.floor((Game.time % axisLength ** 2) / axisLength) - MAX_OBSERVE_DISTANCE;
+				if (dx == 0 && dy == 0) {
+					return;
+				}
 				const roomToObserve = Cartographer.findRelativeRoomName(this.pos.roomName, dx, dy);
+				this.observer.observeRoom(roomToObserve);
+				// // TODO OBSERVER FIX ONLY LOOK AT southwest corner
+				// const dx = Game.time % MAX_OBSERVE_DISTANCE;
+				// const dy = Game.time % (MAX_OBSERVE_DISTANCE ** 2);
+				// const roomToObserve = Cartographer.findRelativeRoomName(this.pos.roomName, dx, dy);
 				this.observer.observeRoom(roomToObserve);
 			}
 		}

@@ -1,6 +1,5 @@
 import {CreepSetup} from '../../creepSetups/CreepSetup';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {TERMINAL_STATE_REBUILD} from '../../directives/terminalState/terminalState_rebuild';
 import {Hatchery} from '../../hiveClusters/hatchery';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
@@ -29,10 +28,8 @@ export class QueenOverlord extends Overlord {
 	constructor(hatchery: Hatchery, priority = OverlordPriority.core.queen) {
 		super(hatchery, 'supply', priority);
 		this.hatchery = hatchery;
-		this.queenSetup = this.colony.storage ? Setups.queens.default : Setups.queens.early;
-		if (this.colony.terminalState == TERMINAL_STATE_REBUILD) {
-			this.queenSetup = Setups.queens.early;
-		}
+		this.queenSetup = this.colony.storage && !this.colony.state.isRebuilding ? Setups.queens.default
+																				 : Setups.queens.early;
 		this.queens = this.zerg(Roles.queen);
 		this.settings = {
 			refillTowersBelow: 500,

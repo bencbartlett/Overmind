@@ -175,14 +175,14 @@ export class OvermindConsole {
 
 	// Debugging methods ===============================================================================================
 
-	static debug(thing: { name: string, memory: any }): string {
+	static debug(thing: { name?: string, ref?: string, memory: any }): string {
 		thing.memory.debug = true;
-		return `Enabled debugging for ${thing.name}.`;
+		return `Enabled debugging for ${thing.name || thing.ref || '(no name or ref)'}.`;
 	}
 
-	static stopDebug(thing: { name: string, memory: any }): string {
+	static stopDebug(thing: { name?: string, ref?: string, memory: any }): string {
 		delete thing.memory.debug;
-		return `Disabled debugging for ${thing.name}.`;
+		return `Disabled debugging for ${thing.name || thing.ref || '(no name or ref)'}.`;
 	}
 
 	static startRemoteDebugSession(): string {
@@ -196,6 +196,7 @@ export class OvermindConsole {
 	}
 
 	static print(...args: any[]): string {
+		let message = '';
 		for (const arg of args) {
 			let cache: any = [];
 			const msg = JSON.stringify(arg, function(key, value) {
@@ -216,9 +217,9 @@ export class OvermindConsole {
 				return value;
 			}, '\t');
 			cache = null;
-			console.log(msg);
+			message += '\n' + msg;
 		}
-		return 'Done.';
+		return message;
 	}
 
 	static timeit(callback: () => any, repeat = 1): string {

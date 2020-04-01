@@ -378,7 +378,7 @@ export class RoomIntel {
 				}
 
 				const colonies = getAllColonies().filter(colony => colony.level > 6
-					&& Game.map.getRoomLinearDistance(colony.name, powerBank.room.name) > powerSetting.maxRange);
+					&& Game.map.getRoomLinearDistance(colony.name, powerBank.room.name) <= powerSetting.maxRange);
 				for (const colony of colonies) {
 					const route = Game.map.findRoute(colony.room, powerBank.room);
 					if (route != -2 && route.length <= powerSetting.maxRange) {
@@ -483,7 +483,7 @@ export class RoomIntel {
 		let alreadyComputedScore = false;
 		// this.requestZoneData();
 		// If above 2030 kb wipe memory down
-		if (Game.time % 375 == 0 || RawMemory.get().length > 2040000) {
+		if (RawMemory.get().length > 2040000) {
 			RoomIntel.cleanRoomMemory();
 		}
 

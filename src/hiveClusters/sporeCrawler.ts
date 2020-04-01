@@ -1,7 +1,6 @@
 import {$} from '../caching/GlobalCache';
 import {Colony} from '../Colony';
 import {log} from '../console/log';
-import {TERMINAL_STATE_REBUILD} from '../directives/terminalState/terminalState_rebuild';
 import {CombatIntel} from '../intel/CombatIntel';
 import {WorkerOverlord} from '../overlords/core/worker';
 import {profile} from '../profiler/decorator';
@@ -189,8 +188,7 @@ export class SporeCrawler extends HiveCluster {
 		// Towers build nuke response ramparts
 		const nearbyNukeRamparts = _.filter(this.colony.overlords.work.nukeDefenseRamparts,
 											rampart => this.pos.getRangeTo(rampart) <= TOWER_OPTIMAL_RANGE);
-		if (nearbyNukeRamparts.length > 0 && this.colony.terminal
-			&& this.colony.terminalState != TERMINAL_STATE_REBUILD) {
+		if (nearbyNukeRamparts.length > 0 && this.colony.terminal && !this.colony.state.isRebuilding) {
 			const nukes = this.colony.room.find(FIND_NUKES);
 			const timeToImpact = _.min(_.map(nukes, nuke => nuke.timeToLand));
 			if (timeToImpact) {

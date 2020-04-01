@@ -236,3 +236,6 @@ export class Cartographer {
 	}
 
 }
+
+// Register on global for debugging
+global.Cartographer = Cartographer;

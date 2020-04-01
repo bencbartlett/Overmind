@@ -6,8 +6,14 @@ export function getAllColonyRooms(): Room[] {
 	return _.filter(_.values(Game.rooms), room => room.my);
 }
 
-export function printRoomName(roomName: string): string {
-	return '<a href="#!/room/' + Game.shard.name + '/' + roomName + '">' + roomName + '</a>';
+export function printRoomName(roomName: string, aligned = false): string {
+	if (aligned) {
+		const msg = '<a href="#!/room/' + Game.shard.name + '/' + roomName + '">' + roomName + '</a>';
+		const extraSpaces = 'E12S34'.length - roomName.length;
+		return msg + ' '.repeat(extraSpaces);
+	} else {
+		return '<a href="#!/room/' + Game.shard.name + '/' + roomName + '">' + roomName + '</a>';
+	}
 }
 
 export function color(str: string, color: string): string {
@@ -63,12 +69,20 @@ export function getUsername(): string {
 	return 'ERROR: Could not determine username.';
 }
 
+export function isAlly(username: string): boolean {
+	return (Memory.settings.allies || []).includes(username);
+}
+
 export function hasJustSpawned(): boolean {
 	return _.keys(Overmind.colonies).length == 1 && _.keys(Game.creeps).length == 0 && _.keys(Game.spawns).length == 1;
 }
 
 export function onPublicServer(): boolean {
 	return Game.shard.name.includes('shard');
+}
+
+export function onBotArena(): boolean {
+	return Game.shard.name.toLowerCase() == 'botarena';
 }
 
 export function onTrainingEnvironment(): boolean {

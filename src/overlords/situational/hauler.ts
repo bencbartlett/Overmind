@@ -135,6 +135,7 @@ export class HaulingOverlord extends Overlord {
 			}
 			hauler.run();
 		}
+		// TODO: fix the way this is done
 		if (this.directive.memory.totalResources == 0 && this.haulers.filter(hauler => _.sum(hauler.carry) > 0).length == 0) {
 			this.directive.remove();
 		}

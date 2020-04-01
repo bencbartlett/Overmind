@@ -1,5 +1,6 @@
 // Room prototypes - commonly used room properties and methods
 
+import {isAlly} from '../utilities/utils';
 import {MY_USERNAME} from '../~settings';
 
 // Logging =============================================================================================================
@@ -65,9 +66,19 @@ Object.defineProperty(Room.prototype, 'creeps', {
 Object.defineProperty(Room.prototype, 'hostiles', {
 	get() {
 		if (!this._hostiles) {
-			this._hostiles = this.find(FIND_HOSTILE_CREEPS);
+			this._hostiles = this.find(FIND_HOSTILE_CREEPS, {filter: (creep: Creep) => !isAlly(creep.owner.username)});
 		}
 		return this._hostiles;
+	},
+	configurable: true,
+});
+
+Object.defineProperty(Room.prototype, 'friendlies', {
+	get() {
+		if (!this._friendlies) {
+			this._friendlies = this.find(FIND_HOSTILE_CREEPS, {filter: (creep: Creep) => isAlly(creep.owner.username)});
+		}
+		return this._friendlies;
 	},
 	configurable: true,
 });
@@ -170,7 +181,9 @@ Object.defineProperty(Room.prototype, 'structures', {
 Object.defineProperty(Room.prototype, 'hostileStructures', {
 	get() {
 		if (!this._hostileStructures) {
-			this._hostileStructures = this.find(FIND_HOSTILE_STRUCTURES, {filter: (s: Structure) => s.hitsMax});
+			this._hostileStructures = this.find(FIND_HOSTILE_STRUCTURES, {
+				filter: (s: Structure) => (s.hitsMax) && !isAlly(_.get(s, ['owner', 'username']))
+			});
 		}
 		return this._hostileStructures;
 	},

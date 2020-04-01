@@ -301,12 +301,12 @@ export class BunkerQueenOverlord extends Overlord {
 
 	private handleQueen(queen: Zerg): void {
 		// Does something need withdrawing?
-		if (this.colony.transportRequests.needsWithdrawing &&
+		if (this.colony.transportRequests.needsWithdrawing() &&
 			_.any(_.keys(this.assignments[queen.name]), id => this.colony.transportRequests.withdrawByID[id])) {
 			queen.task = this.buildWithdrawTaskManifest(queen);
 		}
 		// Does something need supplying?
-		else if (this.colony.transportRequests.needsSupplying &&
+		else if (this.colony.transportRequests.needsSupplying() &&
 				 _.any(_.keys(this.assignments[queen.name]), id => this.colony.transportRequests.supplyByID[id])) {
 			queen.task = this.buildSupplyTaskManifest(queen);
 		}

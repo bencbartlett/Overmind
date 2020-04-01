@@ -20,6 +20,7 @@
 // Import ALL the things! ==============================================================================================
 import './assimilation/initializer'; // This must always be imported before anything else
 import './console/globals'; // Global functions accessible from CLI
+import './prototypes/Game'; // Game prototypes
 import './prototypes/Creep'; // Creep prototypes
 import './prototypes/RoomObject'; // RoomObject and targeting prototypes
 import './prototypes/RoomPosition'; // RoomPosition prototypes
@@ -133,6 +134,5 @@ if (RL_TRAINING_MODE) {
 	// Run the global reset code
 	onGlobalReset();
 }
-
 
 

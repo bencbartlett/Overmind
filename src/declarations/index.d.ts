@@ -1,6 +1,12 @@
 declare const require: (module: string) => any;
 declare var global: any;
 
+declare const MARKET_FEE: 300; // missing in the typed-screeps declarations
+global.MARKET_FEE = MARKET_FEE;
+
+declare const NO_ACTION: 1;
+global.NO_ACTION = NO_ACTION;
+
 declare namespace NodeJS {
 	interface Global {
 
@@ -142,12 +148,6 @@ interface IOverseer {
 
 	getOverlordsForColony(colony: any): any[];
 
-	// isOverlordSuspended(overlord: any): boolean;
-
-	// suspendOverlordFor(overlord: any, ticks: number): void;
-
-	// suspendOverlordUntil(overlord: any, untilTick: number): void;
-
 	init(): void;
 
 	run(): void;
@@ -158,28 +158,48 @@ interface IOverseer {
 }
 
 
-interface TerminalState {
-	name: string;
-	type: 'in' | 'out' | 'in/out';
-	amounts: { [resourceType: string]: number };
+// interface TerminalState {
+// 	name: string;
+// 	type: 'in' | 'out' | 'in/out';
+// 	amounts: { [resourceType: string]: number };
+// 	tolerance: number;
+// }
+
+interface Thresholds {
+	target: number;
+	surplus: number | undefined;
 	tolerance: number;
 }
 
 interface ITerminalNetwork {
-	allTerminals: StructureTerminal[];
-	readyTerminals: StructureTerminal[];
-	// terminals: StructureTerminal[];
-	memory: any;
+
+	addColony(colony: IColony): void;
 
 	refresh(): void;
 
-	requestResource(terminal: StructureTerminal, resourceType: ResourceConstant, amount: number): void;
+	getAssets(): { [resourceType: string]: number }
 
-	registerTerminalState(terminal: StructureTerminal, state: TerminalState): void;
+	thresholds(colony: IColony, resource: ResourceConstant): Thresholds;
+
+	// canObtainResource(requestor: IColony, resource: ResourceConstant, amount: number): boolean;
+
+	requestResource(requestor: IColony, resource: ResourceConstant, amount: number, tolerance?: number): void;
+
+	exportResource(provider: IColony, resource: ResourceConstant, thresholds?: Thresholds): void;
+
+	// registerTerminalState(terminal: StructureTerminal, state: TerminalState): void;
 
 	init(): void;
 
 	run(): void;
+}
+
+
+interface TradeOpts {
+	preferDirect?: boolean;			// true if you prefer to sell directly via a .deal() call
+	flexibleAmount?: boolean;		// true if you're okay filling the transaction with several smaller transactions
+	ignoreMinAmounts?: boolean;		// true if you want to ignore quantity checks (e.g. T5 commodities in small amounts)
+	ignorePriceChecksForDirect?: boolean; 	// true if you want to bypass price sanity checks when .deal'ing
 }
 
 interface ITradeNetwork {
@@ -187,20 +207,13 @@ interface ITradeNetwork {
 
 	refresh(): void;
 
-	priceOf(mineralType: ResourceConstant): number;
+	getExistingOrders(type: ORDER_BUY | ORDER_SELL, resource: ResourceConstant | 'any', roomName?: string): Order[];
 
-	lookForGoodDeals(terminal: StructureTerminal, mineral: string, margin?: number): void;
+	priceOf(resource: ResourceConstant): number;
 
-	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount?: number,
-				 flexibleAmount?: boolean): number | undefined;
+	buy(terminal: StructureTerminal, resource: ResourceConstant, amount: number, opts?: TradeOpts): number;
 
-	sell(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
-		 maxOrdersOfType?: number): number | undefined;
-
-	buy(terminal: StructureTerminal, mineralType: ResourceConstant, amount: number): void;
-
-	maintainBuyOrder(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
-					 maxOrdersOfType?: number): void;
+	sell(terminal: StructureTerminal, resource: ResourceConstant, amount: number, opts?: TradeOpts): number;
 
 	init(): void;
 

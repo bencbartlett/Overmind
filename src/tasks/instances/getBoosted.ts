@@ -14,12 +14,12 @@ export class TaskGetBoosted extends Task {
 	target: getBoostedTargetType;
 
 	data: {
-		resourceType: _ResourceConstantSansEnergy;
+		resourceType: ResourceConstant;
 		amount: number | undefined;
 	};
 
 	constructor(target: getBoostedTargetType,
-				boostType: _ResourceConstantSansEnergy,
+				boostType: ResourceConstant,
 				partCount?: number,
 				options = {} as TaskOptions) {
 		super(getBoostedTaskName, target, options);

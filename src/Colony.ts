@@ -1,7 +1,7 @@
 import {assimilationLocked} from './assimilation/decorator';
 import {$} from './caching/GlobalCache';
 import {log} from './console/log';
-import {StoreStructure} from './declarations/typeGuards';
+import {Roles} from './creepSetups/setups';
 // import {DirectivePraise} from './directives/colony/praise';
 import {DirectiveExtract} from './directives/resource/extract';
 import {_HARVEST_MEM_DOWNTIME, _HARVEST_MEM_USAGE, DirectiveHarvest} from './directives/resource/harvest';
@@ -17,6 +17,7 @@ import {LinkNetwork} from './logistics/LinkNetwork';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {RoadLogistics} from './logistics/RoadLogistics';
 import {SpawnGroup} from './logistics/SpawnGroup';
+import {TraderJoe} from './logistics/TradeNetwork';
 import {TransportRequestGroup} from './logistics/TransportRequestGroup';
 import {Mem} from './memory/Memory';
 import {DefaultOverlord} from './overlords/core/default';
@@ -25,6 +26,7 @@ import {WorkerOverlord} from './overlords/core/worker';
 import {RandomWalkerScoutOverlord} from './overlords/scouting/randomWalker';
 import {profile} from './profiler/decorator';
 import {Abathur} from './resources/Abathur';
+import {ALL_ZERO_ASSETS} from './resources/map_resources';
 import {bunkerLayout, getPosFromBunkerCoord} from './roomPlanner/layouts/bunker';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
 import {LOG_STATS_INTERVAL, Stats} from './stats/stats';
@@ -69,6 +71,7 @@ export interface ColonyMemory {
 		expiration: number,
 	};
 	suspend?: boolean;
+	debug?: boolean;
 }
 
 const defaultColonyMemory: ColonyMemory = {
@@ -108,10 +111,9 @@ export class Colony {
 	extensions: StructureExtension[];					// |
 	storage: StructureStorage | undefined;				// |
 	links: StructureLink[];								// |
-	availableLinks: StructureLink[];
-	// claimedLinks: StructureLink[];						// | Links belonging to hive cluseters excluding mining groups
-	// dropoffLinks: StructureLink[]; 						// | Links not belonging to a hiveCluster, used as dropoff
+	availableLinks: StructureLink[];					// | links available to claim
 	terminal: StructureTerminal | undefined;			// |
+	factory: StructureFactory | undefined;				// |
 	towers: StructureTower[];							// |
 	labs: StructureLab[];								// |
 	powerSpawn: StructurePowerSpawn | undefined;		// |
@@ -140,15 +142,18 @@ export class Colony {
 	miningSites: { [flagName: string]: DirectiveHarvest };	// Component with logic for mining and hauling
 	extractionSites: { [flagName: string]: DirectiveExtract };
 	// praiseSite: PraiseSite | undefined;
-	// Operational mode
-	bootstrapping: boolean; 							// Whether colony is bootstrapping or recovering from crash
-	isIncubating: boolean;								// If the colony is incubating
+	// Operational state
 	level: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; 				// Level of the colony's main room
 	stage: number;										// The stage of the colony "lifecycle"
-	defcon: number;
-	terminalState: TerminalState | undefined;
-	breached: boolean;
-	lowPowerMode: boolean; 								// Activate if RCL8 and full energy
+	defcon: number;										//
+	state: {
+		bootstrapping?: boolean; 						// Whether colony is bootstrapping or recovering from crash
+		isIncubating?: boolean;							// If the colony is incubating
+		lowPowerMode?: boolean; 						// Activate if RCL8 and full energy
+		isRebuilding?: boolean;							// If colony is doing major reconstruction (e.g. moving in room)
+		isEvacuating?: boolean;							// If we're clearing the terminal if colony is about to fail
+	};
+	// terminalState: TerminalState | undefined;
 	layout: 'twoPart' | 'bunker';						// Which room design colony uses
 	bunker: BunkerData | undefined;						// The center tile of the bunker, else undefined
 	// Creeps and subsets
@@ -203,6 +208,25 @@ export class Colony {
 	 */
 	get print(): string {
 		return '<a href="#!/room/' + Game.shard.name + '/' + this.room.name + '">[' + this.name + ']</a>';
+	}
+
+	/**
+	 * Pretty-print the colony colony name right-padded with spaces to fit E**S** in the console
+	 */
+	get printAligned(): string {
+		const msg = '<a href="#!/room/' + Game.shard.name + '/' + this.room.name + '">[' + this.name + ']</a>';
+		const extraSpaces = 'E12S34'.length - this.room.name.length;
+		return msg + ' '.repeat(extraSpaces);
+	}
+
+	toString(): string {
+		return this.print;
+	}
+
+	protected debug(...args: any[]) {
+		if (this.memory.debug) {
+			log.alert(this.print, args);
+		}
 	}
 
 	/**
@@ -262,6 +286,7 @@ export class Colony {
 		this.links = this.room.links;
 		this.availableLinks = _.clone(this.room.links);
 		this.terminal = this.room.terminal && this.room.terminal.isActive() ? this.room.terminal : undefined;
+		this.factory = this.room.factory && this.room.factory.isActive() ? this.room.factory : undefined;
 		this.towers = this.room.towers;
 		this.labs = _.sortBy(_.filter(this.room.labs, lab => lab.my && lab.isActive()),
 							 lab => 50 * lab.pos.y + lab.pos.x); // Labs are sorted in reading order of positions
@@ -284,7 +309,7 @@ export class Colony {
 		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
 		this.rechargeables = _.flatten(_.map(this.rooms, room => room.rechargeables));
 		// Register assets
-		this.assets = this.getAllAssets();
+		this.assets = this.computeAssets();
 	}
 
 	/**
@@ -306,8 +331,8 @@ export class Colony {
 		$.set(this, 'spawns', () => _.sortBy(_.filter(this.room.spawns,
 													  spawn => spawn.my && spawn.isActive()), spawn => spawn.ref));
 		$.set(this, 'storage', () => this.room.storage && this.room.storage.isActive() ? this.room.storage : undefined);
-		// this.availableLinks = _.clone(this.room.links);
 		$.set(this, 'terminal', () => this.room.terminal && this.room.terminal.isActive() ? this.room.terminal : undefined);
+		$.set(this, 'factory', () => this.room.factory && this.room.factory.isActive() ? this.room.factory : undefined);
 		$.set(this, 'labs', () => _.sortBy(_.filter(this.room.labs, lab => lab.my && lab.isActive()),
 										   lab => 50 * lab.pos.y + lab.pos.x));
 		this.pos = (this.storage || this.terminal || this.spawns[0] || this.controller).pos;
@@ -333,7 +358,7 @@ export class Colony {
 		$.set(this, 'tombstones', () => _.flatten(_.map(this.rooms, room => room.tombstones)), 5);
 		this.drops = _.merge(_.map(this.rooms, room => room.drops));
 		// Register assets
-		this.assets = this.getAllAssets();
+		this.assets = this.computeAssets();
 	}
 
 	/**
@@ -341,13 +366,13 @@ export class Colony {
 	 */
 	private refreshRoomObjects(): void {
 		$.refresh(this, 'controller', 'extensions', 'links', 'towers', 'powerSpawn', 'nuker', 'observer', 'spawns',
-				  'storage', 'terminal', 'labs', 'sources', 'extractors', 'constructionSites', 'repairables',
+				  'storage', 'terminal', 'factory', 'labs', 'sources', 'extractors', 'constructionSites', 'repairables',
 				  'rechargeables');
 		$.set(this, 'constructionSites', () => _.flatten(_.map(this.rooms, room => room.constructionSites)), 10);
 		$.set(this, 'tombstones', () => _.flatten(_.map(this.rooms, room => room.tombstones)), 5);
 		this.drops = _.merge(_.map(this.rooms, room => room.drops));
 		// Re-compute assets
-		this.assets = this.getAllAssets();
+		this.assets = this.computeAssets();
 	}
 
 	/**
@@ -355,10 +380,8 @@ export class Colony {
 	 */
 	private registerOperationalState(): void {
 		this.level = this.controller.level as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-		this.bootstrapping = false;
-		this.isIncubating = false;
+		// Set colony stage
 		if (this.storage && this.spawns[0]) {
-			// If the colony has storage and a hatchery
 			if (this.controller.level == 8) {
 				this.stage = ColonyStage.Adult;
 			} else {
@@ -367,10 +390,7 @@ export class Colony {
 		} else {
 			this.stage = ColonyStage.Larva;
 		}
-		// this.incubatingColonies = [];
-		this.lowPowerMode = Energetics.lowPowerMode(this);
-		// Set DEFCON level
-		// TODO: finish this
+		// Set DEFCON level TODO: finish this
 		let defcon = DEFCON.safe;
 		const defconDecayTime = 200;
 		if (this.room.dangerousHostiles.length > 0 && !this.controller.safeMode) {
@@ -399,10 +419,12 @@ export class Colony {
 			};
 		}
 		this.defcon = this.memory.defcon.level;
-		this.breached = (this.room.dangerousHostiles.length > 0 &&
-						 this.creeps.length == 0 &&
-						 !this.controller.safeMode);
-		this.terminalState = undefined;
+
+		// Set colony state to blank - other directives can modify this
+		this.state = {};
+		if (Energetics.lowPowerMode(this)) {
+			this.state.lowPowerMode = true;
+		}
 	}
 
 	/**
@@ -438,6 +460,10 @@ export class Colony {
 		this.roadLogistics = new RoadLogistics(this);
 		// "Organism Abathur with you."
 		this.abathur = new Abathur(this);
+		// Add colony to TerminalNetwork if applicable
+		if (this.terminal) {
+			Overmind.terminalNetwork.addColony(this);
+		}
 	}
 
 	/**
@@ -532,27 +558,31 @@ export class Colony {
 	}
 
 	/**
-	 * Summarizes the total of all resources in colony store structures, labs, and some creeps
+	 * Summarizes the total of all resources in colony store structures, labs, and some creeps. Will always return
+	 * 0 for an asset that it has none of (not undefined)
 	 */
-	private getAllAssets(verbose = false): { [resourceType: string]: number } {
-		// if (this.name == 'E8S45') verbose = true; // 18863
+	private computeAssets(verbose = false): { [resourceType: string]: number } {
 		// Include storage structures, lab contents, and manager carry
-		const stores = _.map(<StoreStructure[]>_.compact([this.storage, this.terminal]), s => s.store);
-		const creepCarriesToInclude = _.map(this.creeps, creep => creep.carry) as { [resourceType: string]: number }[];
-		const labContentsToInclude = _.map(_.filter(this.labs, lab => !!lab.mineralType), lab =>
-			({[<string>lab.mineralType]: lab.mineralAmount})) as { [resourceType: string]: number }[];
-		const allAssets: { [resourceType: string]: number } = mergeSum([
-																		   ...stores,
-																		   ...creepCarriesToInclude,
-																		   ...labContentsToInclude
-																	   ]);
+		const assetStructures = _.compact([this.storage, this.terminal, this.factory, ...this.labs]);
+		const assetCreeps = [...this.getCreepsByRole(Roles.queen), ...this.getCreepsByRole(Roles.manager)];
+		const assetStores = _.map([...assetStructures, ...assetCreeps], thing => thing!.store);
+
+		const allAssets = mergeSum([...assetStores, ALL_ZERO_ASSETS]);
+
 		if (verbose) log.debug(`${this.room.print} assets: ` + JSON.stringify(allAssets));
 		return allAssets;
 	}
 
 	private runPowerSpawn() {
-		if (this.powerSpawn && this.storage && this.storage.energy > 300000 && this.powerSpawn.energy > 50
+		if (this.powerSpawn && this.storage && this.assets.energy > 300000 && this.powerSpawn.energy > 50
 			&& this.powerSpawn.power > 0) {
+			if (Game.market.credits < TraderJoe.settings.market.credits.canBuyAbove) {
+				// We need to get enough credits that we can start to buy things. Since mineral prices have plunged
+				// recently, often the only way to do this without net losing credits (after factoring in the
+				// energy -> credits of transaction costs) is to sell excess energy. Power processing eats up a
+				// huge amount of energy, so we're going to disable it below a certain threshold.
+				return;
+			}
 			if (Game.time % 20 == 0) {
 				log.info(`Processing power in ${this.room.print}`);
 			}

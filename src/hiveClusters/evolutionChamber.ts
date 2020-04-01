@@ -1,15 +1,15 @@
 import {$} from '../caching/GlobalCache';
 import {Colony} from '../Colony';
 import {log} from '../console/log';
-import {TerminalNetwork} from '../logistics/TerminalNetwork';
+import {TerminalNetworkV2} from '../logistics/TerminalNetwork_v2';
 import {TraderJoe} from '../logistics/TradeNetwork';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {Mem} from '../memory/Memory';
 import {Pathing} from '../movement/Pathing';
 import {Priority} from '../priorities/priorities';
 import {profile} from '../profiler/decorator';
-import {Reaction} from '../resources/Abathur';
-import {boostParts, REAGENTS} from '../resources/map_resources';
+import {Abathur, Reaction} from '../resources/Abathur';
+import {boostParts, BoostType, REAGENTS} from '../resources/map_resources';
 import {Stats} from '../stats/stats';
 import {rightArrow} from '../utilities/stringConstants';
 import {exponentialMovingAverage} from '../utilities/utils';
@@ -76,11 +76,10 @@ function labsAreEmpty(labs: StructureLab[]): boolean {
 export class EvolutionChamber extends HiveCluster {
 
 	terminal: StructureTerminal;							// The colony terminal
-	terminalNetwork: TerminalNetwork;						// Reference to Overmind.terminalNetwork
+	terminalNetwork: TerminalNetworkV2;						// Reference to Overmind.terminalNetwork
 	labs: StructureLab[];									// Colony labs
 	reagentLabs: StructureLab[];
 	productLabs: StructureLab[];
-	// productLabsNonBoosting: StructureLab[];
 	boostingLabs: StructureLab[];
 	transportRequests: TransportRequestGroup;				// Box for resource requests
 
@@ -98,7 +97,7 @@ export class EvolutionChamber extends HiveCluster {
 		this.memory = Mem.wrap(this.colony.memory, 'evolutionChamber', EvolutionChamberMemoryDefaults);
 		// Register physical components
 		this.terminal = terminal;
-		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetwork;
+		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetworkV2;
 		this.labs = colony.labs;
 		// Reserve some easily-accessible labs which are restricted not to be reagent labs
 		const restrictedLabs = this.colony.bunker ?
@@ -164,7 +163,7 @@ export class EvolutionChamber extends HiveCluster {
 				timeout = ticksInStatus > LabStageTimeouts.UnloadingLabs;
 				break;
 			default:
-				log.warning(`Bad lab state at ${this.print}!`);
+				log.error(`Bad lab state at ${this.print}!`);
 				this.memory.status = LabStatus.Idle;
 				this.memory.statusTick = Game.time;
 				break;
@@ -229,7 +228,7 @@ export class EvolutionChamber extends HiveCluster {
 				break;
 
 			default:
-				log.warning(`Bad lab state at ${this.print}!`);
+				log.error(`Bad lab state at ${this.print}!`);
 				this.memory.status = LabStatus.Idle;
 				this.memory.statusTick = Game.time;
 				break;
@@ -331,42 +330,84 @@ export class EvolutionChamber extends HiveCluster {
 	/* Reserves a product lab for boosting with a compound unrelated to production */
 	private reserveLab(mineralType: _ResourceConstantSansEnergy, amount: number, lab: StructureLab) {
 		// _.remove(this.productLabs, productLab => productLab.id == lab.id);
-		this.labReservations[lab.id.toString()] = {mineralType: mineralType, amount: amount};
+		this.labReservations[lab.id] = {mineralType: mineralType, amount: amount};
 	}
 
 	/* Return the amount of a given resource necessary to fully boost a creep body */
-	static requiredBoostAmount(body: BodyPartDefinition[], boostType: _ResourceConstantSansEnergy): number {
+	static requiredBoostAmount(body: BodyPartDefinition[], boostType: ResourceConstant): number {
 		const existingBoostCounts = _.countBy(body, part => part.boost);
 		const numPartsToBeBoosted = _.filter(body, part => part.type == boostParts[boostType]).length;
 		return LAB_BOOST_MINERAL * (numPartsToBeBoosted - (existingBoostCounts[boostType] || 0));
 	}
 
 	/* Return whether you have the resources to fully boost a creep body with a given resource */
-	canBoost(body: BodyPartDefinition[], boostType: _ResourceConstantSansEnergy): boolean {
+	canBoost(body: BodyPartDefinition[], boostType: ResourceConstant, assetMultiplier = 5): boolean {
 		const boostAmount = EvolutionChamber.requiredBoostAmount(body, boostType);
 		if (this.colony.assets[boostType] >= boostAmount) {
 			// Does this colony have the needed resources already?
 			return true;
-		} else if (this.terminalNetwork.assets[boostType] >= 2 * boostAmount) {
+		} else if (this.terminalNetwork.getAssets()[boostType] >= assetMultiplier * boostAmount) {
 			// Is there enough of the resource in terminalNetwork?
 			return true;
 		} else {
 			// Can you buy the resources on the market?
-			return (Game.market.credits > TraderJoe.settings.market.boostCredits +
+			return (Game.market.credits > TraderJoe.settings.market.credits.canBuyBoostsAbove +
 					boostAmount * Overmind.tradeNetwork.priceOf(boostType));
 		}
 	}
 
-	/* Request boosts sufficient to fully boost a given creep to be added to the boosting queue */
-	requestBoost(creep: Zerg, boostType: _ResourceConstantSansEnergy): void {
+	/**
+	 * Returns the best boost of a given type (e.g. "tough") that the room can acquire a specified amount of
+	 */
+	bestBoostAvailable(boostType: BoostType, amount: number): ResourceConstant | undefined {
+		let boostFilter: (resource: ResourceConstant) => boolean;
+		switch (boostType) {
+			case 'attack':
+				boostFilter = Abathur.isAttackBoost;
+				break;
+			case 'carry':
+				boostFilter = Abathur.isCarryBoost;
+				break;
+			case 'ranged':
+				boostFilter = Abathur.isRangedBoost;
+				break;
+			case 'heal':
+				boostFilter = Abathur.isHealBoost;
+				break;
+			case 'move':
+				boostFilter = Abathur.isMoveBoost;
+				break;
+			case 'tough':
+				boostFilter = Abathur.isToughBoost;
+				break;
+			case 'harvest':
+				boostFilter = Abathur.isHarvestBoost;
+				break;
+			case 'construct':
+				boostFilter = Abathur.isConstructBoost;
+				break;
+			case 'dismantle':
+				boostFilter = Abathur.isDismantleBoost;
+				break;
+			case 'upgrade':
+				boostFilter = Abathur.isUpgradeBoost;
+				break;
+			default:
+				log.error(`${this.print}: ${boostType} is not a valid boostType!`);
+				return;
+		}
 
+	}
+
+	/* Request boosts sufficient to fully boost a given creep to be added to the boosting queue */
+	requestBoost(zerg: Zerg, boostType: ResourceConstant): void {
 		// Add the required amount to the neededBoosts
-		const boostAmount = EvolutionChamber.requiredBoostAmount(creep.body, boostType);
+		this.debug(`${boostType} boost requested for ${zerg.print}`);
+		const boostAmount = EvolutionChamber.requiredBoostAmount(zerg.body, boostType);
 		if (!this.neededBoosts[boostType]) {
 			this.neededBoosts[boostType] = 0;
 		}
 		this.neededBoosts[boostType] = Math.min(this.neededBoosts[boostType] + boostAmount, LAB_MINERAL_CAPACITY);
-
 	}
 
 	// Initialization and operation ====================================================================================
@@ -406,11 +447,10 @@ export class EvolutionChamber extends HiveCluster {
 
 	run(): void {
 		// Obtain resources for boosting
-		for (const resourceType in this.neededBoosts) {
-			const needAmount = Math.max(this.neededBoosts[resourceType] - (this.colony.assets[resourceType] || 0), 0);
-			if (needAmount > 0) {
-				this.terminalNetwork.requestResource(this.terminal, <ResourceConstant>resourceType,
-													 needAmount, true, 0);
+		for (const boost in this.neededBoosts) {
+			if (this.neededBoosts[boost] > this.colony.assets[boost]) {
+				this.debug(`Requesting boost from terminal network: ${this.neededBoosts[boost]} ${boost}`);
+				this.terminalNetwork.requestResource(this.colony, <ResourceConstant>boost, this.neededBoosts[boost]);
 			}
 		}
 		// Obtain resources for reaction queue
@@ -418,11 +458,12 @@ export class EvolutionChamber extends HiveCluster {
 		if (this.memory.activeReaction && this.memory.status == LabStatus.AcquiringMinerals) {
 			queue = [this.memory.activeReaction].concat(queue);
 		}
-		const missingBasicMinerals = this.colony.abathur.getMissingBasicMinerals(queue);
-		for (const resourceType in missingBasicMinerals) {
-			if (missingBasicMinerals[resourceType] > 0) {
-				this.terminalNetwork.requestResource(this.terminal, <ResourceConstant>resourceType,
-													 missingBasicMinerals[resourceType], true);
+		const requiredBasicMinerals = Abathur.getRequiredBasicMinerals(queue);
+		for (const mineral in requiredBasicMinerals) {
+			if (requiredBasicMinerals[mineral] > this.colony.assets[mineral]) {
+				this.debug(`Requesting mineral from terminal network: ${requiredBasicMinerals[mineral]} ${mineral}`);
+				this.terminalNetwork.requestResource(this.colony, <ResourceConstant>mineral,
+													 requiredBasicMinerals[mineral]);
 			}
 		}
 		// Run the reactions

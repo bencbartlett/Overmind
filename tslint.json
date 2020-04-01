@@ -4,7 +4,8 @@
   ],
   "linterOptions": {
     "exclude": [
-      "src/deprecated/*.ts"
+      "src/deprecated/*.ts",
+      "node_modules/**/*"
     ]
   },
   "rules": {
