@@ -114,7 +114,7 @@ export class WorkerOverlord extends Overlord {
 					&& DirectiveNukeResponse.shouldReinforceLocation(rampart.pos, ignoreExtensions)) {
 					this.nukeDefenseRamparts.push(rampart);
 					Visualizer.marker(rampart.pos, {color: 'gold'});
-					this.nukeDefenseHitsRemaining[rampart.id.toString()] = neededHits - rampart.hits;
+					this.nukeDefenseHitsRemaining[rampart.id] = neededHits - rampart.hits;
 				}
 			}
 		}
@@ -254,15 +254,15 @@ export class WorkerOverlord extends Overlord {
 			if (energy <= 0) break;
 			if (previousPos) {
 				target = _.find(this.colony.roadLogistics.repairableRoads(room),
-								road => road.hits < road.hitsMax && !targetRefs[road.id.toString()]
+								road => road.hits < road.hitsMax && !targetRefs[road.id]
 										&& road.pos.getRangeTo(previousPos!) <= 1);
 			} else {
 				target = _.find(this.colony.roadLogistics.repairableRoads(room),
-								road => road.hits < road.hitsMax && !targetRefs[road.id.toString()]);
+								road => road.hits < road.hitsMax && !targetRefs[road.id]);
 			}
 			if (target) {
 				previousPos = target.pos;
-				targetRefs[target.id.toString()] = true;
+				targetRefs[target.id] = true;
 				energy -= (target.hitsMax - target.hits) / REPAIR_POWER;
 				tasks.push(Tasks.repair(target));
 			} else {

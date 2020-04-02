@@ -33,7 +33,7 @@ export class DirectiveModularDismantle extends Directive {
 		if (this.flag.room) {
 			if (!this.memory.targetId) {
 				const target = this.getTarget();
-				this.memory.targetId = target ? target.id.toString() : undefined;
+				this.memory.targetId = target ? target.id : undefined;
 			}
 			this.memory.additionalTargets = additionalTargets;
 			if (!this.memory.numberSpots) {

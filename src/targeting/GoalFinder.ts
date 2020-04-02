@@ -58,7 +58,7 @@ export class GoalFinder {
 			if (healing > 0 && attack == 0 && rangedAttack == 0) {
 				hostileHealers.push(hostile);
 			}
-			analysis[hostile.id.toString()] = {
+			analysis[hostile.id] = {
 				attack       : attack,
 				rangedAttack : rangedAttack,
 				heal         : healing,
@@ -73,7 +73,7 @@ export class GoalFinder {
 		// Generate list of targets to approach and respective ranges to keep them at
 		const approachTargets = hostileHealers.length > 0 ? hostileHealers : room.hostiles;
 		for (const target of approachTargets) {
-			const data = analysis[target.id.toString()];
+			const data = analysis[target.id];
 			if (data && (data.advantage || braveMode)) {
 				let range = 1;
 				if (!preferCloseCombat && (data.attack > 0 || data.rangedAttack > myRangedAttack)) {
@@ -93,7 +93,7 @@ export class GoalFinder {
 
 		// Avoid hostiles that are significantly better than you
 		for (const target of room.hostiles) {
-			const data = analysis[target.id.toString()];
+			const data = analysis[target.id];
 			if (data && (!data.advantage && !braveMode)) {
 				let range = data.isApproaching ? 3 : 2;
 				if (data.rangedAttack > 0) {
