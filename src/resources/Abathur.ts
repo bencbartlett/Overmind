@@ -1,8 +1,7 @@
 import {Colony, getAllColonies} from '../Colony';
 import {maxMarketPrices, TraderJoe} from '../logistics/TradeNetwork';
-import {Mem} from '../memory/Memory';
 import {profile} from '../profiler/decorator';
-import {mergeSum, minMax, onPublicServer} from '../utilities/utils';
+import {onPublicServer} from '../utilities/utils';
 import {
 	_baseResourcesLookup,
 	_boostTierLookupAllTypes,
@@ -287,47 +286,58 @@ export class Abathur {
 		const globalAssets = Overmind.terminalNetwork.getAssets();
 		const numColonies = _.filter(getAllColonies(), colony => !!colony.terminal).length;
 
+		let possibleReactions = REACTION_PRIORITIES;
+		if (colony.labs.length < 10) { // don't make the really long cooldown stuff if you don't have all labs
+			possibleReactions = _.filter(possibleReactions,
+										 resource => ((<any>REACTION_TIME)[resource] || Infinity) <= 30);
+		}
+
 		let nextTargetResource: ResourceConstant | undefined;
 
 		// We want to build up a stockpile of boosts but we want to maintain and utilize a stockpile of the cheaper
 		// stuff before we start building up higher tier boosts
 		for (const n of _.range(1, 50)) {
-			nextTargetResource = _.find(REACTION_PRIORITIES, resource => {
+			nextTargetResource = _.find(possibleReactions, resource => {
+
 				const tier = Abathur.getBoostTier(resource);
 				// Get 3 lab's worth of a global stockpile before you start making T3 boosts
 				if (tier == 'T3' && n * BATCH_SIZE < 3 * LAB_MINERAL_CAPACITY) {
 					return false;
 				}
+
 				// Get 2 lab's worth of a global stockpile before you start making T2 boosts
 				if (tier == 'T2' && n * BATCH_SIZE < 2 * LAB_MINERAL_CAPACITY) {
 					return false;
 				}
+
 				// Don't need to stockpile a ton of reaction intermediates or ghodium
 				if (resource == RESOURCE_GHODIUM || Abathur.isIntermediateReactant(resource)) {
 					if (colony.assets[resource] > Overmind.terminalNetwork.thresholds(colony, resource).target) {
 						return false;
 					}
 				}
-				// If we're significantly lower on this globally than on other resources then prioritize making this
-				const avgAmountPerColony = globalAssets[resource] / numColonies;
-				if (avgAmountPerColony < (n - 3) * BATCH_SIZE) {
-					return true;
-				}
-				// Otherwise, we're allowed to make more of this and not significantly short on this, so advance each
-				// resource in the priority order one batch size at a time
-				if (colony.assets[resource] < n * BATCH_SIZE) {
+
+				// Otherwise, we're allowed to make more of this
+				if (globalAssets[resource] / numColonies < (n - 3) * BATCH_SIZE || // is there a global shortage?
+					colony.assets[resource] < n * BATCH_SIZE) { // is there a local shortage?
+
 					// Do we have enough ingredients to make this step of the reaction?
 					const [reagent1, reagent2] = REAGENTS[resource];
 					if (colony.assets[reagent1] >= BATCH_SIZE && colony.assets[reagent2] >= BATCH_SIZE) {
-						return true; // we have enough in room
+						return true;
 					}
+
+					// If not, can we get the ingredients promptly from the terminal network?
 					if (Overmind.terminalNetwork.canObtainResource(colony, reagent1, BATCH_SIZE) &&
 						Overmind.terminalNetwork.canObtainResource(colony, reagent2, BATCH_SIZE)) {
-						return true; // can get promptly from terminal network
+						return true;
 					}
+
 				}
+
 				// We can't make this thing :(
 				return false;
+
 			});
 			if (nextTargetResource) break;
 		}
@@ -355,7 +365,7 @@ export class Abathur {
 	// }
 
 	private static canReceiveBasicMineralsForReaction(mineralQuantities: { [resourceType: string]: number },
-											   amount: number): boolean {
+													  amount: number): boolean {
 		for (const mineral in mineralQuantities) {
 			if (!Abathur.someColonyHasExcess(<ResourceConstant>mineral, mineralQuantities[mineral])) {
 				return false;
@@ -405,7 +415,7 @@ export class Abathur {
 				const amountNeeded = stocks[resourceType];
 				if (amountOwned < amountNeeded) { // if there is a shortage of this resource
 					const reactionQueue = Abathur.buildReactionQueue(colony, <ResourceConstant>resourceType,
-																  amountNeeded - amountOwned, verbose);
+																	 amountNeeded - amountOwned, verbose);
 
 					const missingBaseMinerals = Abathur.getMissingBasicMinerals(colony, reactionQueue);
 					if (!_.any(missingBaseMinerals)
@@ -478,7 +488,7 @@ export class Abathur {
 	 * Figure out which basic minerals are missing and how much
 	 */
 	private static getMissingBasicMinerals(colony: Colony, reactionQueue: Reaction[],
-								   verbose = false): { [resourceType: string]: number } {
+										   verbose = false): { [resourceType: string]: number } {
 		const requiredBasicMinerals = Abathur.getRequiredBasicMinerals(reactionQueue);
 		if (verbose) console.log(`Required basic minerals: ${JSON.stringify(requiredBasicMinerals)}`);
 		if (verbose) console.log(`assets: ${JSON.stringify(colony.assets)}`);

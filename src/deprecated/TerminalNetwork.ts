@@ -2,14 +2,13 @@ import {assimilationLocked} from '../assimilation/decorator';
 import {$} from '../caching/GlobalCache';
 import {Colony, getAllColonies} from '../Colony';
 import {log} from '../console/log';
+import {Energetics} from '../logistics/Energetics';
+import {TraderJoe} from '../logistics/TradeNetwork';
 import {Mem} from '../memory/Memory';
 import {profile} from '../profiler/decorator';
-import {Abathur} from '../resources/Abathur';
 import {RESOURCE_IMPORTANCE} from '../resources/map_resources';
 import {alignedNewline, bullet, rightArrow} from '../utilities/stringConstants';
 import {cyclicListPermutation, maxBy, mergeSum, minBy, minMax} from '../utilities/utils';
-import {Energetics} from './Energetics';
-import {TraderJoe} from './TradeNetwork';
 
 interface TerminalNetworkMemory {
 	equalizeIndex: number;
@@ -46,7 +45,7 @@ function colonyOf(terminal: StructureTerminal): Colony {
 }
 
 function wantedAmount(colony: Colony, resource: ResourceConstant): number {
-	return Abathur.stockAmount(resource) - (colony.assets[resource] || 0);
+	return 0; // Abathur.stockAmount(resource) - (colony.assets[resource] || 0);
 }
 
 interface TerminalState {

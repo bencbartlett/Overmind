@@ -174,7 +174,7 @@ export class Colony {
 	roadLogistics: RoadLogistics;
 	// Room planner
 	roomPlanner: RoomPlanner;
-	abathur: Abathur;
+	// abathur: Abathur;
 
 	static settings = {
 		remoteSourcesByLevel: {
@@ -458,8 +458,8 @@ export class Colony {
 		}
 		// Register road network
 		this.roadLogistics = new RoadLogistics(this);
-		// "Organism Abathur with you."
-		this.abathur = new Abathur(this);
+		// // "Organism Abathur with you."
+		// this.abathur = new Abathur(this);
 		// Add colony to TerminalNetwork if applicable
 		if (this.terminal) {
 			Overmind.terminalNetwork.addColony(this);
@@ -486,7 +486,7 @@ export class Colony {
 			}
 		}
 		this.roadLogistics.refresh();
-		this.abathur.refresh();
+		// this.abathur.refresh();
 	}
 
 	/**

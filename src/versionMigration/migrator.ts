@@ -55,6 +55,9 @@ export class VersionMigration {
 		if (!this.memory.versions['053to06X_part2']) {
 			this.migrate_053_06X_part2();
 		}
+		if (!this.memory.versions['053to06X_part3']) {
+			this.migrate_053_06X_part3();
+		}
 	}
 
 	static get memory(): VersionMigratorMemory {
@@ -339,6 +342,20 @@ export class VersionMigration {
 		}
 		this.memory.versions['053to06X_part2'] = true;
 		log.alert(`Version migration from 0.5.3 -> 0.6.X part 2 completed successfully.`);
+	}
+
+	static migrate_053_06X_part3() {
+		// Remove all orders
+		for (const colonyName in Memory.colonies) {
+			if (Memory.colonies[colonyName].evolutionChamber) {
+				delete Memory.colonies[colonyName].evolutionChamber.activeReaction;
+				delete Memory.colonies[colonyName].evolutionChamber.reactionQueue;
+				delete Memory.colonies[colonyName].evolutionChamber.status;
+				delete Memory.colonies[colonyName].evolutionChamber.statusTick;
+			}
+		}
+		this.memory.versions['053to06X_part3'] = true;
+		log.alert(`Version migration from 0.5.3 -> 0.6.X part 3 completed successfully.`);
 	}
 
 }
