@@ -1,7 +1,5 @@
 import {log} from '../../console/log';
-import {Pathing} from '../../movement/Pathing';
 import {LeecherOverlord} from '../../overlords/mining/leecher';
-import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Cartographer,ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {Directive} from '../Directive';
@@ -25,7 +23,7 @@ export class DirectiveLeech extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		this.overlords.mine = new LeecherOverlord(this);
+		this.overlords.leech = new LeecherOverlord(this);
 	}
 
 	init() {
