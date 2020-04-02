@@ -24,8 +24,6 @@ export class DirectiveTerminalEvacuateState extends Directive {
 
 	// colony: Colony | undefined; // this is technically unallowable, but at end of life, colony can be undefined
 
-	terminal: StructureTerminal | undefined;
-
 	constructor(flag: Flag) {
 		super(flag);
 		this.refresh();
@@ -34,24 +32,6 @@ export class DirectiveTerminalEvacuateState extends Directive {
 	refresh() {
 		super.refresh();
 		this.colony.state.isEvacuating = true;
-		if (this.colony && this.colony.terminal) {
-			for (const resource of RESOURCES_ALL) {
-				if (this.colony.assets[resource] > 0) {
-					if (resource == RESOURCE_ENERGY) { // keep a little energy just to keep the room functioning
-						Overmind.terminalNetwork.exportResource(this.colony, resource, {
-							target: 10000,
-							tolerance: 2000,
-							surplus: 15000,
-						});
-					} else {
-						Overmind.terminalNetwork.exportResource(this.colony, <ResourceConstant>resource);
-					}
-				}
-			}
-		}
-		if (Game.time % 25 == 0) {
-			log.alert(`${this.pos.print}: evacuation terminal state active!`);
-		}
 	}
 
 	spawnMoarOverlords() {
@@ -59,12 +39,28 @@ export class DirectiveTerminalEvacuateState extends Directive {
 	}
 
 	init() {
+		if (this.colony && this.colony.terminal) {
+			for (const resource of RESOURCES_ALL) {
+				if (resource == RESOURCE_ENERGY) { // keep a little energy just to keep the room functioning
+					Overmind.terminalNetwork.exportResource(this.colony, resource, {
+						target: 10000,
+						tolerance: 2000,
+						surplus: 15000,
+					});
+				} else {
+					Overmind.terminalNetwork.exportResource(this.colony, <ResourceConstant>resource);
+				}
+			}
+		}
+		if (Game.time % 25 == 0) {
+			log.alert(`${this.pos.print}: evacuation terminal state active!`);
+		}
 		this.alert('Evacuation terminal state active!', NotifierPriority.High);
 	}
 
 	run() {
 		// Incubation directive gets removed once the colony has a command center (storage)
-		if (!this.colony || !this.terminal || !!this.colony.controller.safeMode
+		if (!this.colony || !this.colony.terminal || !!this.colony.controller.safeMode
 			|| Game.time > (this.memory[_MEM.TICK] || 0) + EVACUATE_STATE_TIMEOUT) {
 			this.remove();
 		}

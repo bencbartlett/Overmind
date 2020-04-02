@@ -308,6 +308,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	static settings = {
 		maxEnergySendAmount            : 25000,	// max size you can send of energy in one tick
 		maxResourceSendAmount          : 3000,	// max size of resources you can send in one tick
+		maxEvacuateSendAmount          : 50000,
 		minColonySpace                 : 20000,	// colonies should have at least this much space in the room
 		terminalCooldownAveragingWindow: 1000,	// duration for computing rolling average of terminal cooldowns
 		buyBaseMineralsDirectUnder     : DEFAULT_TARGET - DEFAULT_TOLERANCE, // buy base mins directly if very low
@@ -977,10 +978,14 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 					continue;
 				}
 				let provideAmount = colony.assets[resource] - this.thresholds(colony, resource).target;
-				if (resource == RESOURCE_ENERGY) {
-					provideAmount = Math.min(provideAmount, TerminalNetworkV2.settings.maxEnergySendAmount);
+				if (colony.state.isEvacuating) {
+					Math.min(provideAmount, TerminalNetworkV2.settings.maxEvacuateSendAmount)
 				} else {
-					provideAmount = Math.min(provideAmount, TerminalNetworkV2.settings.maxResourceSendAmount);
+					if (resource == RESOURCE_ENERGY) {
+						provideAmount = Math.min(provideAmount, TerminalNetworkV2.settings.maxEnergySendAmount);
+					} else {
+						provideAmount = Math.min(provideAmount, TerminalNetworkV2.settings.maxResourceSendAmount);
+					}
 				}
 				if (provideAmount <= 0) continue;
 				// Generate a list of partner sets by picking the appropriate resource from the prioritizedPartners

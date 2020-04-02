@@ -381,7 +381,7 @@ export class Colony {
 	private registerOperationalState(): void {
 		this.level = this.controller.level as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 		// Set colony stage
-		if (this.storage && this.spawns[0]) {
+		if (this.storage && this.spawns[0]) { // TODO: remove colony stage
 			if (this.controller.level == 8) {
 				this.stage = ColonyStage.Adult;
 			} else {
@@ -495,8 +495,8 @@ export class Colony {
 	private registerHiveClusters(): void {
 		this.hiveClusters = [];
 		// Instantiate the command center if there is storage in the room - this must be done first!
-		if (this.stage > ColonyStage.Larva) {
-			this.commandCenter = new CommandCenter(this, this.storage!);
+		if (this.storage) {
+			this.commandCenter = new CommandCenter(this, this.storage);
 		}
 		// Instantiate the hatchery - the incubation directive assignes hatchery to incubator's hatchery if none exists
 		if (this.spawns[0]) {
