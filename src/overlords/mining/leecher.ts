@@ -12,11 +12,10 @@ import {OverlordMemory} from '../Overlord';
 /**
  * Sends out a stationary scout, which travels to a waypoint and remains there indefinitely
  */
-@profile
-
 interface LeechOverlordMemory extends OverlordMemory {
 	leechTimer: number;
 }
+@profile
 export class LeecherOverlord extends Overlord {
 
 	leechers: Zerg[];
