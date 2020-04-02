@@ -104,17 +104,22 @@ export class EvolutionChamber extends HiveCluster {
 		const restrictedLabs = this.colony.bunker
 							   ? _.filter(this.labs, lab => lab.pos.findInRange(this.colony.spawns, 1).length > 0)
 							   : _.take(_.sortBy(this.labs, lab => Pathing.distance(this.terminal.pos, lab.pos)), 1);
-
-		const reagentLabPositions = _.map(reagentLabSpots, coord => getPosFromBunkerCoord(coord, this.colony));
-		const preferredReagentLabs = _.compact(_.map(reagentLabPositions, pos => pos.lookForStructure(STRUCTURE_LAB)));
-		if (this.colony.bunker && preferredReagentLabs.length == 2) {
-			this.reagentLabs = <StructureLab[]>preferredReagentLabs;
-		} else {
+		const getReagentLabs: () => StructureLab[] = () => {
+			if (this.colony.bunker) {
+				const reagentLabPositions = _.map(reagentLabSpots, coord => getPosFromBunkerCoord(coord, this.colony));
+				const preferredReagentLabs = _.compact(_.map(reagentLabPositions,
+															 pos => pos.lookForStructure(STRUCTURE_LAB)));
+				if (preferredReagentLabs.length == 2) {
+					return <StructureLab[]>preferredReagentLabs;
+				}
+			}
 			// Reagent labs are range=2 from all other labs and are not a boosting lab
 			const range2Labs = _.filter(this.labs, lab => _.all(this.labs, otherLab => lab.pos.inRangeTo(otherLab, 2)));
 			const reagentLabCandidates = _.filter(range2Labs, lab => !_.any(restrictedLabs, l => l.id == lab.id));
-			this.reagentLabs = _.take(_.sortBy(reagentLabCandidates, lab => -1 * neighboringLabs(lab.pos).length), 2);
-		}
+			return _.take(_.sortBy(reagentLabCandidates, lab => -1 * neighboringLabs(lab.pos).length), 2);
+		};
+		this.reagentLabs = getReagentLabs();
+
 		// Product labs are everything that isn't a reagent lab. (boostingLab can also be a productLab)
 		this.productLabs = _.difference(this.labs, this.reagentLabs);
 		// Boosting labs are product labs sorted by distance to terminal
