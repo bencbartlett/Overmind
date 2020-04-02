@@ -42,7 +42,7 @@ export const INTERMEDIATE_REACTANTS: ResourceConstant[] = [
 	RESOURCE_HYDROXIDE,
 	RESOURCE_ZYNTHIUM_KEANITE,
 	RESOURCE_UTRIUM_LEMERGITE,
-	RESOURCE_GHODIUM,
+	// RESOURCE_GHODIUM,
 ];
 
 export const BASE_RESOURCES: ResourceConstant[] = [
@@ -280,6 +280,11 @@ export const BOOST_TIERS: { [boostType in BoostType]: { [boostTier in BoostTier]
 export const _boostTypesTierLookup = _.mapValues(
 	BOOST_TIERS, boostType => _.invert(boostType)
 ) as { [boostType in BoostType]: { [resource in ResourceConstant]: BoostTier } };
+
+// This inverts the second-level values from above, so you get an object that looks like:
+// { attack: { UH: T1, UH2O: T2, XUH2O: T3 }, carry: { ... } ... }
+export const _boostTierLookupAllTypes: { [resource in ResourceConstant]: BoostTier } =
+				 _.extend({}, ..._.values(_boostTypesTierLookup));
 
 export const COMMODITIES_ALL: ResourceConstant[] = [
 	// Compressed mineral compounds
