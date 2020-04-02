@@ -17,6 +17,7 @@
 /* tslint:disable:ordered-imports */
 
 'use strict';
+global.PHASE = 'assimilating';
 // Import ALL the things! ==============================================================================================
 import './assimilation/initializer'; // This must always be imported before anything else
 import './console/globals'; // Global functions accessible from CLI
@@ -52,17 +53,22 @@ function main(): void {
 
 	// Instantiation operations: build or refresh the game state -------------------------------------------------------
 	if (!Overmind || Overmind.shouldBuild || Game.time >= Overmind.expiration) {
+		PHASE = 'build';
 		delete global.Overmind;										// Explicitly delete the old Overmind object
 		Mem.garbageCollect(true);								// Run quick garbage collection
 		global.Overmind = new _Overmind();							// Instantiate the Overmind object
 		Overmind.build();											// Build phase: instantiate all game components
 	} else {
+		PHASE = 'refresh';
 		Overmind.refresh();											// Refresh phase: update the Overmind state
 	}
 
 	// Tick loop cycle: initialize and run each component --------------------------------------------------------------
+	PHASE = 'init';
 	Overmind.init();												// Init phase: spawning and energy requests
+	PHASE = 'run';
 	Overmind.run();													// Run phase: execute state-changing actions
+	PHASE = 'postRun';
 	Overmind.visuals(); 											// Draw visuals
 	Stats.run(); 													// Record statistics
 

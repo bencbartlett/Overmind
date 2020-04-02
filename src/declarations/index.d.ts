@@ -33,6 +33,10 @@ declare namespace NodeJS {
 	}
 }
 
+type Full<T> = {
+	[P in keyof T]-?: T[P];
+};
+
 // declare module 'screeps-profiler'; // I stopped using the typings for this because it was fucking up the Game typings
 
 declare module 'columnify';
@@ -180,13 +184,15 @@ interface ITerminalNetwork {
 
 	refresh(): void;
 
-	getAssets(): { [resourceType: string]: number }
+	getAssets(): { [resourceType: string]: number };
 
 	thresholds(colony: IColony, resource: ResourceConstant): Thresholds;
 
-	// canObtainResource(requestor: IColony, resource: ResourceConstant, amount: number): boolean;
+	canObtainResource(requestor: IColony, resource: ResourceConstant, totalAmount: number, allowMarketBuy = true): boolean;
 
-	requestResource(requestor: IColony, resource: ResourceConstant, amount: number, tolerance?: number): void;
+	requestResource(requestor: IColony, resource: ResourceConstant, totalAmount: number, tolerance?: number): void;
+
+	lockResourceAmount(requestor: IColony, resource: ResourceConstant, lockedAmount: number): void;
 
 	exportResource(provider: IColony, resource: ResourceConstant, thresholds?: Thresholds): void;
 
