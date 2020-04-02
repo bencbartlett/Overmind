@@ -599,7 +599,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	canObtainResource(requestor: Colony, resource: ResourceConstant, totalAmount: number,
 					  allowMarketBuy = true): boolean {
 		if (PHASE != 'run') { // need to have all the information from init() about colony states first
-			log.error(`TerminalNetwork.canObtainResource must be called in the run() phase!`);
+			log.error(`TerminalNetwork.canObtainResource() must be called in the run() phase!`);
 			return false;
 		}
 
@@ -795,19 +795,19 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 				}
 				// Send the resources or mark the terminal as overloaded for this tick
 				if (opts.dryRun) {
-					log.error(`RequestOpts.dryRun currently incompatible with RequestOps.allowDivvying!`);
-					return false;
-				}
-				if (sendTerm.isReady) {
-					const ret = this.transfer(sendTerm, recvTerm, resource, sendAmount, `request`);
-					if (ret == OK) {
-						remainingAmount -= sendAmount;
-						sentSome = true;
+					remainingAmount -= sendAmount;
+				} else {
+					if (sendTerm.isReady) {
+						const ret = this.transfer(sendTerm, recvTerm, resource, sendAmount, `request`);
+						if (ret == OK) {
+							remainingAmount -= sendAmount;
+							sentSome = true;
+						} else {
+							this.terminalOverload[sendTerm.room.name] = true;
+						}
 					} else {
 						this.terminalOverload[sendTerm.room.name] = true;
 					}
-				} else {
-					this.terminalOverload[sendTerm.room.name] = true;
 				}
 				// If you've obtained what you need from the assortment of colonies, we're done
 				if (remainingAmount <= 0) {
