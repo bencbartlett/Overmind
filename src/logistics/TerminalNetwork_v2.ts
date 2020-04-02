@@ -728,21 +728,37 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 								  partnerSets: Colony[][], opts: RequestOpts): boolean {
 		// Try to find the best single colony to obtain resources from
 		for (const partners of partnerSets) {
-			// First try to find a partner that has more resources than (target + request)
+			// First try to find a partner that has more free resources than (target + request)
 			let validPartners: Colony[] = _.filter(partners, partner =>
 				partner.assets[resource] - requestAmount - this.lockedAmount(partner, resource)
 				>= this.thresholds(partner, resource).target);
-			// If that doesn't work, try to find a partner where assets - request > target - tolerance
+			// If that doesn't work, try to find a partner where assets - request - locked > target - tolerance
 			if (validPartners.length == 0) {
 				validPartners = _.filter(partners, partner =>
 					partner.assets[resource] - requestAmount - this.lockedAmount(partner, resource) >=
 					this.thresholds(partner, resource).target - this.thresholds(colony, resource).tolerance);
 			}
+			// If that doesn't work, try to find a partner where assets - request - locked > 0
+			if (validPartners.length == 0 && opts.takeFromColoniesBelowTarget) {
+				validPartners = _.filter(partners, partner =>
+					partner.assets[resource] - requestAmount - this.lockedAmount(partner, resource) > 0);
+			}
 			if (validPartners.length > 0) {
 				const bestPartner = this.getBestSenderColony(resource, requestAmount, colony, validPartners);
+				const lockedAmount = this.lockedAmount(bestPartner, resource);
+				const thresholds = this.thresholds(bestPartner, resource);
 				const sendTerm = bestPartner.terminal!;
 				const recvTerm = colony.terminal!;
-				const sendAmount = Math.min(requestAmount, sendTerm.store[resource]);
+				const sendAmount = opts.takeFromColoniesBelowTarget
+								   ? Math.min(requestAmount,
+											  sendTerm.store[resource] - lockedAmount)
+								   : Math.min(requestAmount,
+											  sendTerm.store[resource] - (thresholds.target - thresholds.tolerance),
+											  sendTerm.store[resource] - lockedAmount);
+				if (sendAmount <= 0) {
+					log.error(`Request from ${colony.print} to ${bestPartner.print} for ${sendAmount} ${resource}`);
+					return false;
+				}
 				// Send the resources or mark the terminal as overloaded for this tick
 				if (!opts.dryRun) {
 					if (sendTerm.isReady) {
@@ -979,7 +995,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 				}
 				let provideAmount = colony.assets[resource] - this.thresholds(colony, resource).target;
 				if (colony.state.isEvacuating) {
-					Math.min(provideAmount, TerminalNetworkV2.settings.maxEvacuateSendAmount)
+					Math.min(provideAmount, TerminalNetworkV2.settings.maxEvacuateSendAmount);
 				} else {
 					if (resource == RESOURCE_ENERGY) {
 						provideAmount = Math.min(provideAmount, TerminalNetworkV2.settings.maxEnergySendAmount);
@@ -1005,14 +1021,14 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		// Assign states to each colony; manual state specification should have already been done in directive.init()
 		this.assignColonyStates();
 
-		// Handle request types by descending priority: activeRequestors -> activeProviders -> passiveRequestors
+		// Handle request types by descending priority: activeRequestors -> activeProviders -> xzsiveRequestors
 		// (passiveProviders and equilibriumNodes have no action)
 		this.handleRequestors(this.activeRequestors, [
 			this.activeProviders,
 			this.passiveProviders,
 			this.equilibriumNodes,
 			this.passiveRequestors,
-		]);
+		], {takeFromColoniesBelowTarget: true});
 
 		this.handleProviders(this.activeProviders, [
 			this.activeRequestors,
@@ -1027,6 +1043,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			this.handleRequestors(this.passiveRequestors, [
 				this.activeProviders,
 				this.passiveProviders,
+				this.equilibriumNodes, // here we won't take enough of the resource to turn it into a passive requestor
 			], {complainIfUnfulfilled: false, allowMarketBuy: false});
 		}
 
