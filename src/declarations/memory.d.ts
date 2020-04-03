@@ -321,11 +321,11 @@ interface SavedMineral extends SavedRoomObject {
 }
 
 declare const enum _RM_SAFETY {
-	SAFE_FOR = 's',
+	SAFE_FOR   = 's',
 	UNSAFE_FOR = 'u',
-	SAFETY_1K = 'k',
+	SAFETY_1K  = 'k',
 	SAFETY_10K = 'D',
-	TICK = _MEM.TICK
+	TICK       = _MEM.TICK
 }
 
 interface SafetyData {

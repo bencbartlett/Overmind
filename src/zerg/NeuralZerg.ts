@@ -12,10 +12,12 @@ const APPROACH_RANGE = 1;
 @profile
 export class NeuralZerg extends CombatZerg {
 
+	isNeuralZerg: true;
 	isBot: boolean;
 
 	constructor(creep: Creep, notifyWhenAttacked = true) {
 		super(creep, notifyWhenAttacked);
+		this.isNeuralZerg = true;
 		this.isBot = creep.name.includes('_BOT');
 	}
 

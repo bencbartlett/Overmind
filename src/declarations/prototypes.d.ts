@@ -3,7 +3,7 @@ interface Creep {
 	intel?: { [property: string]: number };
 	memory: CreepMemory;
 	boosts: _ResourceConstantSansEnergy[];
-	boostCounts: { [boostType: string]: number };
+	// boostCounts: { [boostType: string]: number };
 	inRampart: boolean;
 }
 
@@ -11,11 +11,30 @@ interface PowerCreep {
 	hitsPredicted?: number;
 	intel?: { [property: string]: number };
 	memory: CreepMemory;
-	fatigue: number;
-	body: BodyPartDefinition[];
-	boosts: _ResourceConstantSansEnergy[];
-	boostCounts: { [boostType: string]: number };
 	inRampart: boolean;
+	// // Fake methods and properties
+	// body: BodyPartDefinition[];
+	// fatigue: number;
+	// spawning: boolean;
+	// attack(target: AnyCreep | Structure): CreepActionReturnCode;
+	// attackController(target: StructureController): CreepActionReturnCode;
+	// build(target: ConstructionSite): CreepActionReturnCode | ERR_NOT_ENOUGH_RESOURCES | ERR_RCL_NOT_ENOUGH;
+	// claimController(target: StructureController): CreepActionReturnCode | ERR_FULL | ERR_GCL_NOT_ENOUGH;
+	// dismantle(target: Structure): CreepActionReturnCode;
+	// generateSafeMode(target: StructureController): CreepActionReturnCode;
+	// getActiveBodyparts(type: BodyPartConstant): number;
+	// harvest(target: Source | Mineral | Deposit): CreepActionReturnCode | ERR_NOT_FOUND | ERR_NOT_ENOUGH_RESOURCES;
+	// heal(target: AnyCreep): CreepActionReturnCode;
+	// pull(target: Creep): OK | ERR_NOT_OWNER | ERR_BUSY | ERR_INVALID_TARGET | ERR_NOT_IN_RANGE | ERR_NO_BODYPART;
+	// rangedAttack(target: AnyCreep | Structure): CreepActionReturnCode;
+	// rangedHeal(target: AnyCreep): CreepActionReturnCode;
+	// rangedMassAttack(): OK | ERR_NOT_OWNER | ERR_BUSY | ERR_NO_BODYPART;
+	// repair(target: Structure): CreepActionReturnCode | ERR_NOT_ENOUGH_RESOURCES;
+	// reserveController(target: StructureController): CreepActionReturnCode;
+	// signController(target: StructureController, text: string): OK | ERR_BUSY | ERR_INVALID_TARGET | ERR_NOT_IN_RANGE;
+	// upgradeController(target: StructureController): ScreepsReturnCode;
+	// typed-screeps messed up the typings for withdraw(), so we override them here
+	withdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode;
 }
 
 interface ConstructionSite {

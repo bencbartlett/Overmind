@@ -753,7 +753,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 								   ? Math.min(requestAmount,
 											  sendTerm.store[resource] - lockedAmount)
 								   : Math.min(requestAmount,
-											  sendTerm.store[resource] - (thresholds.target - thresholds.tolerance),
+											  // TODO sendTerm.store[resource] - (thresholds.target - thresholds.tolerance),
 											  sendTerm.store[resource] - lockedAmount);
 				if (sendAmount <= 0) {
 					log.error(`Request from ${colony.print} to ${bestPartner.print} for ${sendAmount} ${resource}`);
@@ -1028,7 +1028,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			this.passiveProviders,
 			this.equilibriumNodes,
 			this.passiveRequestors,
-		], {takeFromColoniesBelowTarget: true});
+		], /*TODO {takeFromColoniesBelowTarget: true}*/);
 
 		this.handleProviders(this.activeProviders, [
 			this.activeRequestors,
@@ -1043,7 +1043,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			this.handleRequestors(this.passiveRequestors, [
 				this.activeProviders,
 				this.passiveProviders,
-				this.equilibriumNodes, // here we won't take enough of the resource to turn it into a passive requestor
+				// this.equilibriumNodes, // here we won't take enough of the resource to turn it into a passive requestor
 			], {complainIfUnfulfilled: false, allowMarketBuy: false});
 		}
 

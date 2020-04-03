@@ -2,7 +2,7 @@
 
 import {Colony} from '../Colony';
 import {log} from '../console/log';
-import {isOwnedStructure, isStructure, isZerg} from '../declarations/typeGuards';
+import {isCreep, isOwnedStructure, isStandardZerg, isStructure} from '../declarations/typeGuards';
 import {Directive} from '../directives/Directive';
 import {Mem} from '../memory/Memory';
 import {Pathing} from '../movement/Pathing';
@@ -352,6 +352,10 @@ export class CombatIntel {
 		return creep.intel[key];
 	}
 
+	static uniqueBoosts(creep: Creep): ResourceConstant[] {
+		return _.compact(_.unique(_.map(creep.body, bodyPart => bodyPart.boost))) as ResourceConstant[];
+	}
+
 	/**
 	 * Heal potential of a single creep in units of effective number of parts
 	 */
@@ -527,7 +531,7 @@ export class CombatIntel {
 		return _.min(_.map(creeps, creep => this.minimumDamageTakenMultiplier(creep)));
 	}
 
-	static getMassAttackDamageTo(attacker: Creep | Zerg, target: Creep | Structure): number {
+	static getMassAttackDamageTo(attacker: Creep | Zerg, target: AnyCreep | Structure): number {
 		if (isStructure(target) && (!isOwnedStructure(target) || target.my)) {
 			return 0;
 		}
@@ -540,7 +544,7 @@ export class CombatIntel {
 		} else if (range == 3) {
 			rangedMassAttackPower = 1;
 		}
-		return rangedMassAttackPower * this.getRangedAttackPotential(isZerg(attacker) ? attacker.creep : attacker);
+		return rangedMassAttackPower * this.getRangedAttackPotential(isStandardZerg(attacker) ? attacker.creep : attacker);
 	}
 
 	/**
@@ -657,7 +661,7 @@ export class CombatIntel {
 	 * Determine the predicted damage amount of a certain type of attack. Can specify if you should use predicted or
 	 * current hits amount and whether to include predicted healing. Does not update predicted hits.
 	 */
-	static predictedDamageAmount(attacker: Creep | Zerg, target: Creep, attackType: 'attack' | 'rangedAttack',
+	static predictedDamageAmount(attacker: Creep | Zerg, target: AnyCreep, attackType: 'attack' | 'rangedAttack',
 								 useHitsPredicted = true): number {
 		// Compute initial (gross) damage amount
 		let grossDamage: number;
@@ -670,14 +674,20 @@ export class CombatIntel {
 		}
 		// Adjust for remaining tough parts
 		let toughHits: number;
-		if (useHitsPredicted) {
-			if (target.hitsPredicted == undefined) target.hitsPredicted = target.hits;
-			const nonToughHits = _.sum(target.body, part => part.type == TOUGH ? 0 : part.hits);
-			toughHits = Math.min(target.hitsPredicted - nonToughHits, 0); // predicted amount of TOUGH
+		let damageMultiplier: number;
+		if (isCreep(target)) {
+			if (useHitsPredicted) {
+				if (target.hitsPredicted == undefined) target.hitsPredicted = target.hits;
+				const nonToughHits = _.sum(target.body, part => part.type == TOUGH ? 0 : part.hits);
+				toughHits = Math.min(target.hitsPredicted - nonToughHits, 0); // predicted amount of TOUGH
+			} else {
+				toughHits = 100 * target.getActiveBodyparts(TOUGH);
+			}
+			damageMultiplier = this.minimumDamageTakenMultiplier(target); // assumes only 1 tier of boosts
 		} else {
-			toughHits = 100 * target.getActiveBodyparts(TOUGH);
+			toughHits = 0;
+			damageMultiplier = 1;
 		}
-		const damageMultiplier = this.minimumDamageTakenMultiplier(target); // assumes only 1 tier of boosts
 		if (grossDamage * damageMultiplier < toughHits) { // if you can't eat through armor
 			return grossDamage * damageMultiplier;
 		} else { // if you break tough shield

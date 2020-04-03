@@ -15,6 +15,7 @@ import {DirectiveNukeResponse} from './directives/situational/nukeResponse';
 import {DirectiveStronghold} from './directives/situational/stronghold';
 import {DirectiveModularDismantle} from './directives/targeting/modularDismantle';
 import {DirectiveTerminalEvacuateState} from './directives/terminalState/terminalState_evacuate';
+import {CombatIntel} from './intel/CombatIntel';
 import {RoomIntel} from './intel/RoomIntel';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {Autonomy, getAutonomyLevel, Mem} from './memory/Memory';
@@ -211,7 +212,7 @@ export class Overseer implements IOverseer {
 
 			// See if invasion is big enough to warrant creep defenses
 			const effectiveInvaderCount = _.sum(_.map(colony.room.hostiles,
-													  invader => invader.boosts.length > 0 ? 2 : 1));
+													  invader => CombatIntel.uniqueBoosts(invader).length > 0 ? 2 : 1));
 			const needsDefending = effectiveInvaderCount >= 3 || colony.room.dangerousPlayerHostiles.length > 0;
 
 			if (needsDefending) {

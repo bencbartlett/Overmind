@@ -43,9 +43,9 @@ export class DirectiveTerminalEvacuateState extends Directive {
 			for (const resource of RESOURCES_ALL) {
 				if (resource == RESOURCE_ENERGY) { // keep a little energy just to keep the room functioning
 					Overmind.terminalNetwork.exportResource(this.colony, resource, {
-						target: 10000,
+						target   : 10000,
 						tolerance: 2000,
-						surplus: 15000,
+						surplus  : 15000,
 					});
 				} else {
 					Overmind.terminalNetwork.exportResource(this.colony, <ResourceConstant>resource);

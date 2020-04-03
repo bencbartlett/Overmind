@@ -5,7 +5,6 @@ import {Mem} from '../memory/Memory';
 import {CommandCenterOverlord} from '../overlords/core/manager';
 import {Priority} from '../priorities/priorities';
 import {profile} from '../profiler/decorator';
-import {Abathur} from '../resources/Abathur';
 import {Cartographer} from '../utilities/Cartographer';
 import {Visualizer} from '../visuals/Visualizer';
 import {HiveCluster} from './_HiveCluster';
@@ -147,7 +146,7 @@ export class CommandCenter extends HiveCluster {
 				this.transportRequests.requestInput(this.nuker, Priority.Low);
 			}
 			if (this.nuker.ghodium < this.nuker.ghodiumCapacity
-				&& this.colony.assets[RESOURCE_GHODIUM]>= LAB_MINERAL_CAPACITY) {
+				&& this.colony.assets[RESOURCE_GHODIUM] >= LAB_MINERAL_CAPACITY) {
 				this.transportRequests.requestInput(this.nuker, Priority.Low, {resourceType: RESOURCE_GHODIUM});
 			}
 		}

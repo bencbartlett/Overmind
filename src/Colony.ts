@@ -12,6 +12,7 @@ import {Hatchery} from './hiveClusters/hatchery';
 // import {PraiseSite} from './hiveClusters/praiseSite';
 import {SporeCrawler} from './hiveClusters/sporeCrawler';
 import {UpgradeSite} from './hiveClusters/upgradeSite';
+import {CombatIntel} from './intel/CombatIntel';
 import {Energetics} from './logistics/Energetics';
 import {LinkNetwork} from './logistics/LinkNetwork';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
@@ -25,7 +26,6 @@ import {TransportOverlord} from './overlords/core/transporter';
 import {WorkerOverlord} from './overlords/core/worker';
 import {RandomWalkerScoutOverlord} from './overlords/scouting/randomWalker';
 import {profile} from './profiler/decorator';
-import {Abathur} from './resources/Abathur';
 import {ALL_ZERO_ASSETS} from './resources/map_resources';
 import {bunkerLayout, getPosFromBunkerCoord} from './roomPlanner/layouts/bunker';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
@@ -394,8 +394,8 @@ export class Colony {
 		let defcon = DEFCON.safe;
 		const defconDecayTime = 200;
 		if (this.room.dangerousHostiles.length > 0 && !this.controller.safeMode) {
-			const effectiveHostileCount = _.sum(_.map(this.room.dangerousHostiles,
-													  hostile => hostile.boosts.length > 0 ? 2 : 1));
+			const effectiveHostileCount = _.sum(this.room.dangerousHostiles,
+												hostile => CombatIntel.uniqueBoosts(hostile).length > 0 ? 2 : 1);
 			if (effectiveHostileCount >= 3) {
 				defcon = DEFCON.boostedInvasionNPC;
 			} else {

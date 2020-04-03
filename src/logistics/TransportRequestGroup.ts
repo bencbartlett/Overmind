@@ -49,7 +49,7 @@ export class TransportRequestGroup {
 
 	needsSupplying(priorityThreshold?: Priority): boolean {
 		for (const priority in this.supply) {
-			if (priorityThreshold != undefined && parseInt(priority,10) > priorityThreshold) {
+			if (priorityThreshold != undefined && parseInt(priority, 10) > priorityThreshold) {
 				continue; // lower numerical priority values are more important; if priority > threshold then ignore it
 			}
 			if (this.supply[priority].length > 0) {
@@ -61,7 +61,7 @@ export class TransportRequestGroup {
 
 	needsWithdrawing(priorityThreshold?: Priority): boolean {
 		for (const priority in this.withdraw) {
-			if (priorityThreshold != undefined && parseInt(priority,10) > priorityThreshold) {
+			if (priorityThreshold != undefined && parseInt(priority, 10) > priorityThreshold) {
 				continue; // lower numerical priority values are more important; if priority > threshold then ignore it
 			}
 			if (this.withdraw[priority].length > 0) {

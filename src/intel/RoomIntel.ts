@@ -275,11 +275,11 @@ export class RoomIntel {
 		let safety: number;
 		const safetyData = room.memory[_RM.SAFETY] as SafetyData;
 		if (room.dangerousHostiles.length > 0) {
-			safetyData[_RM_SAFETY.SAFE_FOR]  = 0;
+			safetyData[_RM_SAFETY.SAFE_FOR] = 0;
 			safetyData[_RM_SAFETY.UNSAFE_FOR] += 1;
 			safety = 0;
 		} else {
-			safetyData[_RM_SAFETY.SAFE_FOR]  += 1;
+			safetyData[_RM_SAFETY.SAFE_FOR] += 1;
 			safetyData[_RM_SAFETY.UNSAFE_FOR] = 0;
 			safety = 1;
 		}
@@ -365,7 +365,7 @@ export class RoomIntel {
 	private static minePowerBanks(room: Room) {
 		const powerSetting = Memory.settings.powerCollection;
 		if (powerSetting.enabled && (Cartographer.roomType(room.name) == ROOMTYPE_ALLEY
-			|| Cartographer.roomType(room.name) == ROOMTYPE_CROSSROAD)) {
+									 || Cartographer.roomType(room.name) == ROOMTYPE_CROSSROAD)) {
 			const powerBank = _.first(room.find(FIND_STRUCTURES)
 										  .filter(struct => struct.structureType == STRUCTURE_POWER_BANK)) as StructurePowerBank;
 			if (powerBank != undefined && powerBank.ticksToDecay > 4000 && powerBank.power >= powerSetting.minPower) {
@@ -377,7 +377,7 @@ export class RoomIntel {
 				}
 
 				const colonies = getAllColonies().filter(colony => colony.level > 6
-					&& Game.map.getRoomLinearDistance(colony.name, powerBank.room.name) <= powerSetting.maxRange);
+																   && Game.map.getRoomLinearDistance(colony.name, powerBank.room.name) <= powerSetting.maxRange);
 				for (const colony of colonies) {
 					const route = Game.map.findRoute(colony.room, powerBank.room);
 					if (route != -2 && route.length <= powerSetting.maxRange) {
@@ -405,10 +405,10 @@ export class RoomIntel {
 			}
 
 			const colonies = getAllColonies().filter(colony => colony.level == 8
-				&& Game.map.getRoomLinearDistance(colony.name, core.room.name) < 5);
+															   && Game.map.getRoomLinearDistance(colony.name, core.room.name) < 5);
 			for (const colony of colonies) {
 				const route = Game.map.findRoute(colony.room, core.room);
-				if (route != -2  && route.length <= 4) {
+				if (route != -2 && route.length <= 4) {
 					Game.notify(`FOUND STRONGHOLD ${core.level} AT DISTANCE ${route.length}, BEGINNING ATTACK ${core.room}`);
 					DirectiveStronghold.createIfNotPresent(core.pos, 'pos');
 					return;

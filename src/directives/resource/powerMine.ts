@@ -136,14 +136,14 @@ export class DirectivePowerMine extends Directive {
 				   && this.pos.isVisible && !this.powerBank) {
 			if (!this.hasDrops && this.room.ruins.length == 0) {
 				// TODO this had an error where it triggered incorrectly
-				Game.notify(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.print} `+
+				Game.notify(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.print} ` +
 							`DELETING Directive at time ${Game.time}`);
-				log.error(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.room} `+
+				log.error(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.room} ` +
 						  `DELETING Directive at time: ${Game.time}`);
 				this.remove();
 			} else {
 				// If somehow there is no bank but there is drops where bank was
-				Game.notify(`Somehow the power bank died early in ${this.room} at state ${currentState}, `+
+				Game.notify(`Somehow the power bank died early in ${this.room} at state ${currentState}, ` +
 							`setting state to 3 ${Game.time}`);
 				this.memory.state = 3;
 			}

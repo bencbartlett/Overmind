@@ -5,6 +5,7 @@ import {profile} from '../profiler/decorator';
 import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_CROSSROAD, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
 import {isAlly} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
+import {AnyZerg} from '../zerg/AnyZerg';
 import {Zerg} from '../zerg/Zerg';
 import {normalizePos} from './helpers';
 import {MoveOptions, SwarmMoveOptions} from './Movement';
@@ -809,7 +810,7 @@ export class Pathing {
 					return Number.POSITIVE_INFINITY;
 				}
 				if (options.preferHighway && (Cartographer.roomType(roomName) == ROOMTYPE_ALLEY
-					|| Cartographer.roomType(roomName) == ROOMTYPE_CROSSROAD)) {
+											  || Cartographer.roomType(roomName) == ROOMTYPE_CROSSROAD)) {
 					return 1;
 				}
 				return highwayBias;
@@ -843,7 +844,7 @@ export class Pathing {
 		return serializedPath;
 	}
 
-	static nextDirectionInPath(creep: Zerg): number | undefined {
+	static nextDirectionInPath(creep: AnyZerg): number | undefined {
 		const moveData = creep.memory._go as MoveData;
 		if (!moveData || !moveData.path || moveData.path.length == 0) {
 			return;
@@ -851,7 +852,7 @@ export class Pathing {
 		return Number.parseInt(moveData.path[0], 10);
 	}
 
-	static nextPositionInPath(creep: Zerg): RoomPosition | undefined {
+	static nextPositionInPath(creep: AnyZerg): RoomPosition | undefined {
 		const nextDir = this.nextDirectionInPath(creep);
 		if (!nextDir) {
 			return;

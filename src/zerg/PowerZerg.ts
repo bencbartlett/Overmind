@@ -1,5 +1,5 @@
 import {profile} from '../profiler/decorator';
-import {Zerg} from './Zerg';
+import {AnyZerg} from './AnyZerg';
 
 interface CombatZergMemory extends CreepMemory {
 	recovering: boolean;
@@ -15,12 +15,13 @@ export const DEFAULT_SWARM_TICK_DIFFERENCE = 500;
  * CombatZerg is an extension of the Zerg class which contains additional combat-related methods
  */
 @profile
-export class PowerZerg extends Zerg {
+export class PowerZerg extends AnyZerg {
 
+	creep: PowerCreep;
 	memory: CombatZergMemory;
-	isPowerZerg: boolean;
+	isPowerZerg: true;
 
-	constructor(creep: Creep, notifyWhenAttacked = true) {
+	constructor(creep: PowerCreep, notifyWhenAttacked = true) {
 		super(creep, notifyWhenAttacked);
 		this.isPowerZerg = true;
 		_.defaults(this.memory, {
