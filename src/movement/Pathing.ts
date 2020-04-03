@@ -2,7 +2,7 @@ import {$} from '../caching/GlobalCache';
 import {log} from '../console/log';
 import {hasPos} from '../declarations/typeGuards';
 import {profile} from '../profiler/decorator';
-import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
+import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_CROSSROAD, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
 import {isAlly} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {Zerg} from '../zerg/Zerg';
@@ -808,7 +808,8 @@ export class Pathing {
 					roomName !== destination && roomName !== origin) { // room is marked as "avoid" in room memory
 					return Number.POSITIVE_INFINITY;
 				}
-				if (options.preferHighway && Cartographer.roomType(roomName) == ROOMTYPE_ALLEY) {
+				if (options.preferHighway && (Cartographer.roomType(roomName) == ROOMTYPE_ALLEY
+					|| Cartographer.roomType(roomName) == ROOMTYPE_CROSSROAD)) {
 					return 1;
 				}
 				return highwayBias;

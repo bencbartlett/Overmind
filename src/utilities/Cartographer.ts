@@ -5,6 +5,7 @@ export const ROOMTYPE_SOURCEKEEPER = 'SK';
 export const ROOMTYPE_CORE = 'CORE';
 export const ROOMTYPE_CONTROLLER = 'CTRL';
 export const ROOMTYPE_ALLEY = 'ALLEY';
+export const ROOMTYPE_CROSSROAD = 'CROSSROAD';
 
 /**
  * Cartographer: provides helper methods related to Game.map. A few of these methods have been modified from BonzAI
@@ -68,9 +69,11 @@ export class Cartographer {
 	/**
 	 * Get the type of the room
 	 */
-	static roomType(roomName: string): 'SK' | 'CORE' | 'CTRL' | 'ALLEY' {
+	static roomType(roomName: string): 'SK' | 'CORE' | 'CTRL' | 'ALLEY' | 'CROSSROAD' {
 		const coords = this.getRoomCoordinates(roomName);
-		if (coords.x % 10 === 0 || coords.y % 10 === 0) {
+		if (coords.x % 10 === 0 && coords.y % 10 === 0) {
+			return ROOMTYPE_CROSSROAD;
+		} else if (coords.x % 10 === 0 || coords.y % 10 === 0) {
 			return ROOMTYPE_ALLEY;
 		} else if (coords.x % 10 != 0 && coords.x % 5 === 0 && coords.y % 10 != 0 && coords.y % 5 === 0) {
 			return ROOMTYPE_CORE;

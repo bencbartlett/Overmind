@@ -7,7 +7,7 @@ import {DirectiveStronghold} from '../directives/situational/stronghold';
 import {Segmenter} from '../memory/Segmenter';
 import {profile} from '../profiler/decorator';
 import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
-import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
+import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_CROSSROAD, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
 import {getCacheExpiration, irregularExponentialMovingAverage} from '../utilities/utils';
 import {Zerg} from '../zerg/Zerg';
 
@@ -364,7 +364,8 @@ export class RoomIntel {
 	 */
 	private static minePowerBanks(room: Room) {
 		const powerSetting = Memory.settings.powerCollection;
-		if (powerSetting.enabled && Cartographer.roomType(room.name) == ROOMTYPE_ALLEY) {
+		if (powerSetting.enabled && (Cartographer.roomType(room.name) == ROOMTYPE_ALLEY
+			|| Cartographer.roomType(room.name) == ROOMTYPE_CROSSROAD)) {
 			const powerBank = _.first(room.find(FIND_STRUCTURES)
 										  .filter(struct => struct.structureType == STRUCTURE_POWER_BANK)) as StructurePowerBank;
 			if (powerBank != undefined && powerBank.ticksToDecay > 4000 && powerBank.power >= powerSetting.minPower) {

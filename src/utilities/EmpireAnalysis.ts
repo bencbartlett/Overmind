@@ -2,11 +2,6 @@ import {getAllColonies} from '../Colony';
 import {DirectiveSKOutpost} from '../directives/colony/outpostSK';
 import {profile} from '../profiler/decorator';
 
-export const ROOMTYPE_SOURCEKEEPER = 'SK';
-export const ROOMTYPE_CORE = 'CORE';
-export const ROOMTYPE_CONTROLLER = 'CTRL';
-export const ROOMTYPE_ALLEY = 'ALLEY';
-
 /**
  * Empire: Utilities on analyzing the overall empire
  */
@@ -37,8 +32,6 @@ export class EmpireAnalysis {
 			}
 			mineralDistribution[mineral.mineralType] += 1;
 		}
-
 		return mineralDistribution;
 	}
-
 }
