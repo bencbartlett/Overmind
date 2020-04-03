@@ -1,5 +1,6 @@
 import { DirectiveLeech } from 'directives/resource/leech';
 import { transferAllTargetType } from 'tasks/instances/transferAll';
+import {bodyCost, CreepSetup} from '../../creepSetups/CreepSetup';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -42,7 +43,9 @@ export class LeecherOverlord extends Overlord {
 	}
 
 	private handleLeecher(leecher: Zerg) {
-
+		if(leecher.ticksToLive == 1500) {
+			this.directive.memory.totalCost += bodyCost(_.map(leecher.body, part => part.type)); 
+		}
 		// heal @colony room if damaged.
 		if(leecher.hits < leecher.hitsMax) {
 			this.memory.leechTimer = Game.time + 300;
@@ -65,12 +68,14 @@ export class LeecherOverlord extends Overlord {
 	private updateLeechTimer(leecher: Zerg): boolean {
 		if (!this.memory.leechTimer) {
 			if (leecher.inSameRoomAs(this) && !leecher.pos.isEdge) {
+				
 				// if there are dangerous creep, then fallback for 100 ticks
-				if((leecher.room.dangerousHostiles.length > 0 ||
-				   leecher.room.invaders.length) > 0) {
-					this.memory.leechTimer = Game.time + 100;
+				// if((// leecher.room.dangerousHostiles.length > 0 ||
+				//  leecher.room.invaders.length) > 0) {
+				// 	this.memory.leechTimer = Game.time + 100;
 				// if containers are not full, then wait for x
-				} else if(leecher.room.containers.length > 0) {
+				// } else 
+				if(leecher.room.containers.length > 0) {
 					const presentEnergy = _.sum(_.map(leecher.room.containers, cont => cont.store.energy));
 					if(presentEnergy >= leecher.carryCapacity) {
 						this.memory.leechTimer = Game.time; // now
@@ -97,15 +102,20 @@ export class LeecherOverlord extends Overlord {
 		return false;
 	}
 	private leech(leecher: Zerg): boolean {
-		if (this.memory.leechTimer < Game.time) {
+		if (this.memory.leechTimer <= Game.time) {
 			if(!leecher.inSameRoomAs(this) && !leecher.pos.isEdge) {
 				leecher.goTo(this);
 			} else {
 				if(leecher.room.containers.length == 1) {
 					leecher.task = Tasks.withdraw(leecher.room.containers[0],RESOURCE_ENERGY);	
 				} else if(leecher.room.containers.length == 2) {
-					 leecher.task = Tasks.chain([Tasks.withdraw(leecher.room.containers[0],RESOURCE_ENERGY),
-												 Tasks.withdraw(leecher.room.containers[1], RESOURCE_ENERGY)]);
+					 if(leecher.room.containers[0] > leecher.room.containers[1]) {
+						leecher.task = Tasks.chain([Tasks.withdraw(leecher.room.containers[0],RESOURCE_ENERGY),
+												Tasks.withdraw(leecher.room.containers[1], RESOURCE_ENERGY)]);
+					 } else {
+						leecher.task = Tasks.chain([Tasks.withdraw(leecher.room.containers[1],RESOURCE_ENERGY),
+												Tasks.withdraw(leecher.room.containers[0], RESOURCE_ENERGY)]);
+					 }
 				} else {
 					// will fallback waiting for container to be built in updateLeechTimer
 				}
@@ -118,6 +128,7 @@ export class LeecherOverlord extends Overlord {
 	}
 	private transferBack(leecher: Zerg) {
 		if (leecher.inSameRoomAs(this.colony) && !leecher.pos.isEdge) {
+			this.directive.memory.totalLeech += leecher.carry.energy;
 			if (this.colony.storage || this.colony.terminal) {
 				leecher.task = Tasks.transferAll(<transferAllTargetType>(this.colony.storage || this.colony.terminal));
 			}

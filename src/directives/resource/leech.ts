@@ -7,12 +7,17 @@ import {Directive} from '../Directive';
 /**
  * Leech energy from near by rooms harvested/reserved by enemy players
  */
+interface DirectiveLeechMemory extends FlagMemory {
+	totalCost: number;
+	totalLeech: number;
+}
 @profile
 export class DirectiveLeech extends Directive {
 
 	static directiveName = 'leech';
 	static color = COLOR_YELLOW;
 	static secondaryColor = COLOR_ORANGE;
+	memory: DirectiveLeechMemory;
 
 	constructor(flag: Flag) {
 		super(flag);
@@ -31,7 +36,15 @@ export class DirectiveLeech extends Directive {
 	}
 
 	run() {
-
+		// leaving the below constantly on for observation
+		if( true && // Game.time % 50 == 0 &&
+		   this.memory.totalLeech && this.memory.totalCost && 
+		   this.memory.totalLeech < this.memory.totalCost &&
+		   this.memory.totalCost > 2500) {
+			log.notify(`Removing leech directive in ${this.pos.roomName}: making loss ${this.memory.totalLeech - this.memory.totalCost}`);
+			console.log(`Removing leech directive in ${this.pos.roomName}: making loss ${this.memory.totalLeech - this.memory.totalCost}`);
+			// this.remove();
+		   }
 	}
 
 }
