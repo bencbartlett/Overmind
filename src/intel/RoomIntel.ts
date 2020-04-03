@@ -7,7 +7,13 @@ import {DirectiveStronghold} from '../directives/situational/stronghold';
 import {Segmenter} from '../memory/Segmenter';
 import {profile} from '../profiler/decorator';
 import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
-import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_CROSSROAD, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
+import {
+	Cartographer,
+	ROOMTYPE_ALLEY,
+	ROOMTYPE_CORE,
+	ROOMTYPE_CROSSROAD,
+	ROOMTYPE_SOURCEKEEPER
+} from '../utilities/Cartographer';
 import {getCacheExpiration, irregularExponentialMovingAverage} from '../utilities/utils';
 import {Zerg} from '../zerg/Zerg';
 
@@ -356,6 +362,14 @@ export class RoomIntel {
 		return 0;
 	}
 
+	private static scoutPortals(room: Room) {
+		if (Cartographer.roomType(room.name) == ROOMTYPE_CROSSROAD || Cartographer.roomType(room.name) == ROOMTYPE_CORE) {
+			if (room.portals) {
+				// Store the portals
+			}
+		}
+	}
+
 	/**
 	 * Find PowerBanks within range of maxRange and power above minPower to mine
 	 * Creates directive to mine it
@@ -502,6 +516,7 @@ export class RoomIntel {
 			}
 			this.minePowerBanks(room);
 			this.handleStrongholds(room);
+			this.scoutPortals(room);
 		}
 	}
 
