@@ -1,12 +1,13 @@
-import {Colony, ColonyMemory} from '../Colony';
+import {Colony, ColonyMemory, getAllColonies} from '../Colony';
 import {Directive} from '../directives/Directive';
 import {Overlord} from '../overlords/Overlord';
 import {EmpireAnalysis} from '../utilities/EmpireAnalysis';
 import {alignedNewline, bullet} from '../utilities/stringConstants';
-import {color, toColumns} from '../utilities/utils';
+import {color, printRoomName, toColumns} from '../utilities/utils';
 import {asciiLogoRL, asciiLogoSmall} from '../visuals/logos';
 import {DEFAULT_OVERMIND_SIGNATURE, MY_USERNAME, USE_PROFILER} from '../~settings';
 import {log} from './log';
+import {PortalUtils} from "../utilities/PortalUtils";
 
 type RecursiveObject = { [key: string]: number | RecursiveObject };
 
@@ -52,6 +53,7 @@ export class OvermindConsole {
 		global.cancelMarketOrders = this.cancelMarketOrders;
 		global.setRoomUpgradeRate = this.setRoomUpgradeRate;
 		global.getEmpireMineralDistribution = this.getEmpireMineralDistribution;
+		global.getPortals = this.getPortals;
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -98,6 +100,7 @@ export class OvermindConsole {
 		descr['cancelMarketOrders(filter?)'] = 'cancels all market orders matching filter (if provided)';
 		descr['setRoomUpgradeRate(room, upgradeRate)'] = 'changes the rate which a room upgrades at, default is 1';
 		descr['getEmpireMineralDistribution()'] = 'returns current census of colonies and mined sk room minerals';
+		descr['getPortals(rangeFromColonies)'] = 'returns active portals within colony range';
 		// Console list
 		const descrMsg = toColumns(descr, {justify: true, padChar: '.'});
 		const maxLineLength = _.max(_.map(descrMsg, line => line.length)) + 2;
@@ -515,6 +518,23 @@ export class OvermindConsole {
 		let ret = 'Empire Mineral Distribution \n';
 		for (const mineral in minerals) {
 			ret += `${mineral}: ${minerals[mineral]} \n`;
+		}
+		return ret;
+	}
+
+	static getPortals(rangeFromColonies: number, includeIntershard: boolean = false) {
+		const colonies = getAllColonies();
+		const allPortals = colonies.map(colony => PortalUtils.findPortalsInRange(colony.name, rangeFromColonies));
+		let ret = `Empire Portal Census \n`;
+		for (const colonyId in allPortals) {
+			const portals = allPortals[colonyId];
+			if (Object.keys(portals).length > 0) {
+				ret += `Colony ${colonies[colonyId].print}: \n`;
+			}
+			for (const portalRoomName of Object.keys(portals)) {
+				const samplePortal = portals[portalRoomName][0]; // For now we're tracking all 8 portals, this unclutters it
+				ret += `\t\t Room ${printRoomName(portalRoomName)} Destination ${samplePortal.dest} Expiration ${samplePortal[_MEM.EXPIRATION] - Game.time}] \n`;
+			}
 		}
 		return ret;
 	}
