@@ -46,13 +46,6 @@ export function normalizeAnyZerg(creep: AnyZerg | AnyCreep): AnyZerg | AnyCreep 
 	return Overmind.zerg[creep.name] || Overmind.powerZerg[creep.name] || creep;
 }
 
-// Last pipeline is more complex because it depends on the energy a creep has; sidelining this for now
-const actionPipelines: string[][] = [
-	['harvest', 'attack', 'build', 'repair', 'dismantle', 'attackController', 'rangedHeal', 'heal'],
-	['rangedAttack', 'rangedMassAttack', 'build', 'repair', 'rangedHeal'],
-	// ['upgradeController', 'build', 'repair', 'withdraw', 'transfer', 'drop'],
-];
-
 interface ParkingOptions {
 	range: number;
 	exactRange: boolean;
@@ -74,10 +67,11 @@ const RANGES = {
 };
 
 /**
- * TODO
+ * The AnyZerg abstract class contains all of the base methods that are present on both the Zerg and PowerZerg classes.
+ * Most of these methods have been moved from the Zerg class.
  */
 @profile
-export class AnyZerg {
+export abstract class AnyZerg {
 
 	isAnyZerg: true;
 	creep: AnyCreep; 					// The creep that this wrapper class will control
@@ -85,6 +79,7 @@ export class AnyZerg {
 	carry: StoreDefinition;				// |
 	store: StoreDefinition; 			// |
 	carryCapacity: number;				// |
+	effects: RoomObjectEffect[];
 	// fatigue: number;					// |
 	hits: number;						// |
 	hitsMax: number;					// |
@@ -113,6 +108,7 @@ export class AnyZerg {
 		this.store = creep.store;
 		this.carryCapacity = creep.carryCapacity;
 		// this.fatigue = creep.fatigue;
+		this.effects = creep.effects;
 		this.hits = creep.hits;
 		this.hitsMax = creep.hitsMax;
 		this.id = creep.id;
@@ -271,26 +267,6 @@ export class AnyZerg {
 		} else {
 			return this.goTo(target);
 		}
-	}
-
-	// Simultaneous creep actions --------------------------------------------------------------------------------------
-
-	/**
-	 * Determine whether the given action will conflict with an action the creep has already taken.
-	 * See http://docs.screeps.com/simultaneous-actions.html for more details.
-	 */
-	canExecute(actionName: string): boolean {
-		// Only one action can be executed from within a single pipeline
-		let conflictingActions: string[] = [actionName];
-		for (const pipeline of actionPipelines) {
-			if (pipeline.includes(actionName)) conflictingActions = conflictingActions.concat(pipeline);
-		}
-		for (const action of conflictingActions) {
-			if (this.actionLog[action]) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 	// Custom creep methods ============================================================================================

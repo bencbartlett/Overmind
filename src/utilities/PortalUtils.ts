@@ -1,4 +1,4 @@
-import {Cartographer, ROOMTYPE_CORE, ROOMTYPE_CROSSROAD} from './Cartographer';
+import {Cartographer, ROOMTYPE_CORE} from './Cartographer';
 
 export class PortalUtils {
 	/**
@@ -10,10 +10,10 @@ export class PortalUtils {
 	static findPortalsInRange(startingRoom: string, range: number) {
 		// TODO won't take into account intershard CROSSROAD rooms for simplicity sake, fix later
 		const potentialPortalRooms = Cartographer.findRoomsInRange(startingRoom, range)
-			.filter(roomName => Cartographer.roomType(roomName) == ROOMTYPE_CORE);
+												 .filter(roomName => Cartographer.roomType(roomName) == ROOMTYPE_CORE);
 		// Examine for portals
 		const portalRooms = potentialPortalRooms.filter(roomName => !!Memory.rooms[roomName]
-			&& !!Memory.rooms[roomName][_RM.PORTALS]);
+																	&& !!Memory.rooms[roomName][_RM.PORTALS]);
 		const rooms: { [name: string]: SavedPortal[]; } = {};
 		for (const roomName of portalRooms) {
 			const roomPortals = Memory.rooms[roomName][_RM.PORTALS]; // to prevent TS errors

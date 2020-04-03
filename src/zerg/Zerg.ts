@@ -16,7 +16,7 @@ export function toCreep(creep: Zerg | Creep): Creep {
 }
 
 // Last pipeline is more complex because it depends on the energy a creep has; sidelining this for now
-const actionPipelines: string[][] = [
+const ACTION_PIPELINES: string[][] = [
 	['harvest', 'attack', 'build', 'repair', 'dismantle', 'attackController', 'rangedHeal', 'heal'],
 	['rangedAttack', 'rangedMassAttack', 'build', 'repair', 'rangedHeal'],
 	// ['upgradeController', 'build', 'repair', 'withdraw', 'transfer', 'drop'],
@@ -406,23 +406,23 @@ export class Zerg extends AnyZerg {
 
 	// Simultaneous creep actions --------------------------------------------------------------------------------------
 
-	// /**
-	//  * Determine whether the given action will conflict with an action the creep has already taken.
-	//  * See http://docs.screeps.com/simultaneous-actions.html for more details.
-	//  */
-	// canExecute(actionName: string): boolean {
-	// 	// Only one action can be executed from within a single pipeline
-	// 	let conflictingActions: string[] = [actionName];
-	// 	for (const pipeline of actionPipelines) {
-	// 		if (pipeline.includes(actionName)) conflictingActions = conflictingActions.concat(pipeline);
-	// 	}
-	// 	for (const action of conflictingActions) {
-	// 		if (this.actionLog[action]) {
-	// 			return false;
-	// 		}
-	// 	}
-	// 	return true;
-	// }
+	/**
+	 * Determine whether the given action will conflict with an action the creep has already taken.
+	 * See http://docs.screeps.com/simultaneous-actions.html for more details.
+	 */
+	canExecute(actionName: string): boolean {
+		// Only one action can be executed from within a single pipeline
+		let conflictingActions: string[] = [actionName];
+		for (const pipeline of ACTION_PIPELINES) {
+			if (pipeline.includes(actionName)) conflictingActions = conflictingActions.concat(pipeline);
+		}
+		for (const action of conflictingActions) {
+			if (this.actionLog[action]) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 	// Body configuration and related data -----------------------------------------------------------------------------
 

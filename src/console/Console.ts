@@ -2,12 +2,12 @@ import {Colony, ColonyMemory, getAllColonies} from '../Colony';
 import {Directive} from '../directives/Directive';
 import {Overlord} from '../overlords/Overlord';
 import {EmpireAnalysis} from '../utilities/EmpireAnalysis';
+import {PortalUtils} from '../utilities/PortalUtils';
 import {alignedNewline, bullet} from '../utilities/stringConstants';
 import {color, printRoomName, toColumns} from '../utilities/utils';
 import {asciiLogoRL, asciiLogoSmall} from '../visuals/logos';
 import {DEFAULT_OVERMIND_SIGNATURE, MY_USERNAME, USE_PROFILER} from '../~settings';
 import {log} from './log';
-import {PortalUtils} from "../utilities/PortalUtils";
 
 type RecursiveObject = { [key: string]: number | RecursiveObject };
 
