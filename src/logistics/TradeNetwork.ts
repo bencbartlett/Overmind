@@ -84,7 +84,8 @@ export const ERR_TOO_MANY_ORDERS_OF_TYPE = -105;
 export const ERR_SELL_DIRECT_PRICE_TOO_LOW = -106;
 export const ERR_BUY_DIRECT_PRICE_TOO_HIGH = -107;
 export const ERR_CREDIT_THRESHOLDS = -108;
-export const ERR_DRY_RUN_ONLY_SUPPORTS_DIRECT_TRANSACTIONS = -109;
+export const ERR_DONT_BUY_REACTION_INTERMEDIATES = -109;
+export const ERR_DRY_RUN_ONLY_SUPPORTS_DIRECT_TRANSACTIONS = -110;
 
 const defaultTradeOpts: TradeOpts = {
 	preferDirect              : false,
@@ -108,11 +109,11 @@ export class TraderJoe implements ITradeNetwork {
 		},
 		market: {
 			credits: {
-				mustSellDirectBelow    : 50000,
+				mustSellDirectBelow    : 5000,
 				canPlaceSellOrdersAbove: 2000,
-				canBuyAbove            : 20000,
+				canBuyAbove            : 10000,
 				canBuyBoostsAbove      : 2 * Math.max(RESERVE_CREDITS, 1e5),
-				canBuyEnergyAbove      : 3 * Math.max(RESERVE_CREDITS, 1e5),
+				canBuyEnergyAbove      : 5 * Math.max(RESERVE_CREDITS, 1e5),
 			},
 			orders : {
 				timeout             : 500000, // Remove orders after this many ticks if remaining amount < cleanupAmount
@@ -120,13 +121,14 @@ export class TraderJoe implements ITradeNetwork {
 				maxEnergySellOrders : 5,
 				maxEnergyBuyOrders  : 5,
 				maxOrdersForResource: 5,
-				minSellOrderAmount  : 5000,
+				minSellOrderAmount  : 1000,
 				maxSellOrderAmount  : 25000,
 				minSellDirectAmount : 250,
 				maxSellDirectAmount : 10000,
-				minBuyOrderAmount   : 1000,
-				minBuyDirectAmount  : 500,
+				minBuyOrderAmount   : 250,
 				maxBuyOrderAmount   : 25000,
+				minBuyDirectAmount  : 500,
+				maxBuyDirectAmount  : 10000,
 			}
 		},
 	};
@@ -459,9 +461,9 @@ export class TraderJoe implements ITradeNetwork {
 				// TODO
 			}
 			// It's not sensible to sell at a lower cost than what you paid to make it
-			if ((Abathur.isBoost(resource) && price < priceForBaseResources)
-				|| (Abathur.isBaseMineral(resource) && price < priceForBaseResources / 2) // can sell base below market
-				|| price < 0) {
+			if ((!Abathur.isBaseMineral(resource) && price < priceForBaseResources) ||
+				(Abathur.isBaseMineral(resource) && price < priceForBaseResources / 2) || // can sell base below market
+				price < 0) {
 				return Infinity;
 			} else {
 				return price;
@@ -643,6 +645,11 @@ export class TraderJoe implements ITradeNetwork {
 		if (amount < TraderJoe.settings.market.orders.minBuyDirectAmount && !opts.ignoreMinAmounts && !opts.dryRun) {
 			return NO_ACTION;
 		}
+
+		// Can only buy what you are allowed to and have space for
+		amount = Math.min(amount, terminal.store.getFreeCapacity(),
+						  TraderJoe.settings.market.orders.maxBuyDirectAmount);
+
 		// If flexibleAmount is allowed, consider buying from orders which don't need the full amount
 		const minAmount = opts.flexibleAmount ? Math.min(TraderJoe.settings.market.orders.minBuyDirectAmount, amount)
 											  : amount;
@@ -713,6 +720,10 @@ export class TraderJoe implements ITradeNetwork {
 		if (amount < TraderJoe.settings.market.orders.minSellDirectAmount && !opts.ignoreMinAmounts && !opts.dryRun) {
 			return NO_ACTION;
 		}
+
+		// Can only sell what you have in store and are allowed to sell
+		amount = Math.min(amount, terminal.store[resource], TraderJoe.settings.market.orders.maxSellDirectAmount);
+
 		// If flexibleAmount is allowed, consider selling to orders which don't need the full amount
 		const minAmount = opts.flexibleAmount ? Math.min(amount, TraderJoe.settings.market.orders.minSellDirectAmount)
 											  : amount;
@@ -750,9 +761,7 @@ export class TraderJoe implements ITradeNetwork {
 			return ERR_SELL_DIRECT_PRICE_TOO_LOW;
 		}
 
-		let sellAmount = Math.min(order.amount, amount,
-								  terminal.store[resource],
-								  TraderJoe.settings.market.orders.maxSellDirectAmount);
+		let sellAmount = Math.min(order.amount, amount);
 		const transactionCost = Game.market.calcTransactionCost(sellAmount, terminal.room.name, order.roomName!);
 		if (resource == RESOURCE_ENERGY) { // if we're selling energy, make sure we have amount + cost
 			if (amount + transactionCost > terminal.store[RESOURCE_ENERGY]) {
@@ -785,18 +794,26 @@ export class TraderJoe implements ITradeNetwork {
 		_.defaults(opts, defaultTradeOpts);
 
 		if (Game.market.credits < TraderJoe.settings.market.credits.canBuyAbove) {
-			log.error(`Credits insufficient to buy resources; shouldn't be making this TradeNetwork.buy() request!`);
+			log.error(`Credits insufficient to buy resource ${amount} ${resource} to ${terminal.room.print}; ` +
+					  `shouldn't be making this TradeNetwork.buy() request!`);
 			return ERR_CREDIT_THRESHOLDS;
 		}
 
 		if (Game.market.credits < TraderJoe.settings.market.credits.canBuyBoostsAbove && Abathur.isBoost(resource)) {
-			log.error(`Credits insufficient to buy boosts; shouldn't be making this TradeNetwork.buy() request!`);
+			log.error(`Credits insufficient to buy boost ${amount} ${resource} to ${terminal.room.print}; ` +
+					  `shouldn't be making this TradeNetwork.buy() request!`);
 			return ERR_CREDIT_THRESHOLDS;
 		}
 
 		if (Game.market.credits < TraderJoe.settings.market.credits.canBuyEnergyAbove && resource == RESOURCE_ENERGY) {
-			log.error(`Credits insufficient to buy energy; shouldn't be making this TradeNetwork.buy() request!`);
+			log.error(`Credits insufficient to buy ${amount} energy to ${terminal.room.print}; ` +
+					  `shouldn't be making this TradeNetwork.buy() request!`);
 			return ERR_CREDIT_THRESHOLDS;
+		}
+
+		if (Abathur.isIntermediateReactant(resource) || resource == RESOURCE_GHODIUM) {
+			log.error(`Shouldn't request reaction intermediate ${amount} ${resource} to ${terminal.room.print}!`);
+			return ERR_DONT_BUY_REACTION_INTERMEDIATES;
 		}
 
 		// If you don't have a lot of credits or preferDirect==true, try to sell directly to an existing buy order
@@ -805,6 +822,8 @@ export class TraderJoe implements ITradeNetwork {
 			if (result != ERR_NO_ORDER_TO_BUY_FROM && result != ERR_BUY_DIRECT_PRICE_TOO_HIGH) {
 				return result;
 			}
+			this.notify(`Buy direct request: ${amount} ${resource} to ${printRoomName(terminal.room.name)} ` +
+						`was unsuccessful; allowing fallthrough to TradeNetwork.maintainOrder()`);
 		}
 
 		if (opts.dryRun) {
@@ -823,11 +842,6 @@ export class TraderJoe implements ITradeNetwork {
 
 		_.defaults(opts, defaultTradeOpts);
 
-		if (amount > terminal.store[resource]) {
-			// log.warning(`Terminal in ${printRoomName(terminal.room.name)} ` +
-			// 			`doesn't have ${amount} ${resource} in store!`);
-			amount = terminal.store[resource];
-		}
 
 		// If you don't have a lot of credits or preferDirect==true, try to sell directly to an existing buy order
 		if (opts.preferDirect || Game.market.credits < TraderJoe.settings.market.credits.mustSellDirectBelow) {
@@ -836,6 +850,8 @@ export class TraderJoe implements ITradeNetwork {
 				if (result != ERR_NO_ORDER_TO_SELL_TO && result != ERR_SELL_DIRECT_PRICE_TOO_LOW) {
 					return result; // if there's nowhere to sensibly sell, allow creating an order
 				}
+				this.notify(`Sell direct request: ${amount} ${resource} from ${printRoomName(terminal.room.name)} ` +
+							`was unsuccessful; allowing fallthrough to TradeNetwork.maintainOrder()`);
 			}
 		}
 

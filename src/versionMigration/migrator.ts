@@ -58,6 +58,9 @@ export class VersionMigration {
 		if (!this.memory.versions['053to06X_part3']) {
 			this.migrate_053_06X_part3();
 		}
+		if (!this.memory.versions['053to06X_part4']) {
+			this.migrate_053_06X_part4();
+		}
 	}
 
 	static get memory(): VersionMigratorMemory {
@@ -356,6 +359,20 @@ export class VersionMigration {
 		}
 		this.memory.versions['053to06X_part3'] = true;
 		log.alert(`Version migration from 0.5.3 -> 0.6.X part 3 completed successfully.`);
+	}
+
+	static migrate_053_06X_part4() {
+		// Remove orders for reaction intermediates
+		for (const id in Game.market.orders) {
+			const order = Game.market.orders[id];
+			const deleteOrdersFor: MarketResourceConstant[] = [RESOURCE_GHODIUM, RESOURCE_ZYNTHIUM_KEANITE,
+															   RESOURCE_UTRIUM_LEMERGITE, RESOURCE_HYDROXIDE];
+			if (deleteOrdersFor.includes(order.resourceType)) {
+				Game.market.cancelOrder(id);
+			}
+		}
+		this.memory.versions['053to06X_part4'] = true;
+		log.alert(`Version migration from 0.5.3 -> 0.6.X part 4 completed successfully.`);
 	}
 
 }

@@ -202,6 +202,10 @@ interface RoomVisual {
 	test(): RoomVisual;
 }
 
+interface OwnedStructure {
+	_isActive(): boolean;
+}
+
 interface Structure {
 	isWalkable: boolean;
 }

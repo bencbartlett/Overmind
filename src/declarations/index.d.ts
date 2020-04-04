@@ -82,10 +82,10 @@ interface IExpansionPlanner {
 
 }
 
-interface IOvermindMemory {
-	terminalNetwork: any;
-	versionUpdater: any;
-}
+// interface IOvermindMemory {
+// 	terminalNetwork: any;
+// 	versionUpdater: any;
+// }
 
 declare const Assimilator: IAssimilator;
 
@@ -193,7 +193,7 @@ interface ITerminalNetwork {
 
 	requestResource(requestor: IColony, resource: ResourceConstant, totalAmount: number, tolerance?: number): void;
 
-	lockResourceAmount(requestor: IColony, resource: ResourceConstant, lockedAmount: number): void;
+	lockResource(requestor: IColony, resource: ResourceConstant, lockedAmount: number): void;
 
 	exportResource(provider: IColony, resource: ResourceConstant, thresholds?: Thresholds): void;
 
