@@ -34,7 +34,7 @@ import './prototypes/Miscellaneous'; // Everything else
 import './tasks/initializer'; // This line is necessary to ensure proper compilation ordering...
 import './zerg/CombatZerg'; // ...so is this one... rollup is dumb about generating reference errors
 import {MUON, MY_USERNAME, RL_TRAINING_MODE, USE_PROFILER} from './~settings';
-import {sandbox} from './sandbox';
+import {sandbox} from './utilities/sandbox';
 import {Mem} from './memory/Memory';
 import {OvermindConsole} from './console/Console';
 import {Stats} from './stats/stats';
