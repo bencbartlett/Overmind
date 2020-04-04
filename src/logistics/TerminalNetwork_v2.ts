@@ -558,21 +558,22 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	 */
 	lockResource(requestor: Colony, resource: ResourceConstant, lockAmount: number): void {
 		if (PHASE != 'init') log.error(`TerminalNetwork.lockResource() must be called in the init() phase!`);
-		// Need to have the resources to lock them
-		if (requestor.assets[resource] < lockAmount) {
-			log.warning(`TerminalNetwork.lockResource() called for ${requestor.print} locking ${lockAmount} ` +
-						`of ${resource}, but colony only has ${requestor.assets[resource]} amount!`);
-		}
+
 		if (!this.colonyLockedAmounts[requestor.name]) {
 			this.colonyLockedAmounts[requestor.name] = {};
 		}
-		// Shouldn't lock more than once per tick
-		if (this.colonyLockedAmounts[requestor.name][resource] != undefined) {
-			log.warning(`TerminalNetwork.colonyLockedAmounts[${requestor.name}][${resource}] already set to:` +
-						`${this.colonyLockedAmounts[requestor.name][resource]}; overriding previous order!`);
+
+		const alreadyLockedAmount = this.colonyLockedAmounts[requestor.name][resource] || 0;
+		const newLockAmount = alreadyLockedAmount + lockAmount;
+
+		// Need to have the resources to lock them
+		if (requestor.assets[resource] < newLockAmount) {
+			log.warning(`TerminalNetwork.lockResource() called for ${requestor.print} locking ${lockAmount} ` +
+						`of ${resource}, but colony only has ${requestor.assets[resource]} amount!`);
 		}
+
 		// Lock this amount of resources
-		this.colonyLockedAmounts[requestor.name][resource] = lockAmount;
+		this.colonyLockedAmounts[requestor.name][resource] = newLockAmount;
 	}
 
 	/**

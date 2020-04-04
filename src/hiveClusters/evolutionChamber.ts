@@ -420,23 +420,18 @@ export class EvolutionChamber extends HiveCluster {
 		this.neededBoosts[boostType] = Math.min(this.neededBoosts[boostType] + boostAmount, LAB_MINERAL_CAPACITY);
 	}
 
+	private lockLabFromTerminalNetwork(lab: StructureLab) {
+		if (lab.mineralType && lab.store[lab.mineralType]) {
+			this.terminalNetwork.lockResource(this.colony, lab.mineralType, lab.store[lab.mineralType]);
+		}
+	}
+
 	// Initialization and operation ====================================================================================
 
 	init(): void { // This gets called after every Overlord.init() so you should have all your boost requests in already
 
-		// // Get a reaction queue if needed
-		// if (this.memory.reactionQueue.length == 0) {
-		// 	this.memory.reactionQueue = this.colony.abathur.getReactionQueue();
-		// }
-		// // Switch to next reaction on the queue if you are idle
-		// if (this.memory.status == LabStatus.Idle) {
-		// 	this.memory.activeReaction = this.memory.reactionQueue.shift();
-		// }
-
-
 		// Set boosting lab reservations and compute needed resources; needs to be done BEFORE initLabStatus()!
 		for (const mineralType in this.neededBoosts) {
-
 			if (this.neededBoosts[mineralType] == 0) continue;
 
 			let boostLab: StructureLab | undefined;
@@ -453,47 +448,69 @@ export class EvolutionChamber extends HiveCluster {
 			}
 		}
 
+		// Update the evo chamber status
 		this.initLabStatus();
 
+		// Register local transport requests
 		this.registerRequests();
 
-		// Request resources for boosting
+		// Request resources for boosting and lock them once you have them
 		for (const boost in this.neededBoosts) {
 			if (this.neededBoosts[boost] > this.colony.assets[boost]) {
 				this.debug(`Requesting boost from terminal network: ${this.neededBoosts[boost]} ${boost}`);
 				this.terminalNetwork.requestResource(this.colony, <ResourceConstant>boost, this.neededBoosts[boost]);
 			} else {
 				this.debug(`Locking boost from terminal network: ${this.neededBoosts[boost]} ${boost}`);
-				this.terminalNetwork.lockResourceAmount(this.colony, <ResourceConstant>boost, this.neededBoosts[boost]);
+				this.terminalNetwork.lockResource(this.colony, <ResourceConstant>boost, this.neededBoosts[boost]);
 			}
 		}
 
-		// // Obtain resources for reaction queue // TODO: why am i obtaining this outside of AcquireMinerals phase?
-		// let queue = this.memory.reactionQueue;
-		// if (this.memory.activeReaction && this.memory.status == LabStatus.AcquiringMinerals) {
-		// 	queue = [this.memory.activeReaction].concat(queue);
-		// }
-		// const requiredBasicMinerals = Abathur.getRequiredBasicMinerals(queue);
-		// for (const mineral in requiredBasicMinerals) {
-		// 	if (requiredBasicMinerals[mineral] > this.colony.assets[mineral]) {
-		// 		this.debug(`Requesting mineral from terminal network: ${requiredBasicMinerals[mineral]} ${mineral}`);
-		// 		this.terminalNetwork.requestResource(this.colony, <ResourceConstant>mineral,
-		// 											 requiredBasicMinerals[mineral]);
-		// 	}
-		// }
-
 		// Request or lock resources from the terminal network
 		if (this.memory.activeReaction) {
-			if (this.memory.status == LabStatus.AcquiringMinerals || this.memory.status == LabStatus.LoadingLabs) {
-				const amount = this.memory.activeReaction.amount;
-				for (const reagent of REAGENTS[this.memory.activeReaction.mineralType]) {
-					if (this.colony.assets[reagent] < this.memory.activeReaction.amount) {
-						this.terminalNetwork.requestResource(this.colony, reagent, amount);
-					} else {
-						this.terminalNetwork.lockResourceAmount(this.colony, reagent, amount);
-					}
-				}
+
+			const amount = this.memory.activeReaction.amount;
+			const product = this.memory.activeReaction.mineralType;
+			const reagents = REAGENTS[this.memory.activeReaction.mineralType];
+
+			// Lock resources that are currently being used or produced
+			switch (this.memory.status) {
+				case LabStatus.Idle:
+					break;
+				case LabStatus.AcquiringMinerals:
+					_.forEach(reagents, reagent => {
+						if (this.colony.assets[reagent] < amount) {
+							this.terminalNetwork.requestResource(this.colony, reagent, amount);
+						} else {
+							this.terminalNetwork.lockResource(this.colony, reagent, amount);
+						}
+					});
+					break;
+				case LabStatus.LoadingLabs:
+					_.forEach(reagents, reagent => this.terminalNetwork.lockResource(this.colony, reagent, amount));
+					break;
+				case LabStatus.Synthesizing:
+					_.forEach(this.reagentLabs, lab => {
+						if (lab.mineralType == reagents[0] || lab.mineralType == reagents[1]) {
+							this.lockLabFromTerminalNetwork(lab);
+						}
+					});
+					_.forEach(this.productLabs, lab => {
+						if (lab.mineralType == product) {
+							this.lockLabFromTerminalNetwork(lab);
+						}
+					});
+					break;
+				case LabStatus.UnloadingLabs:
+					_.forEach(this.labs, lab => {
+						if (lab.mineralType == product ||
+							lab.mineralType == reagents[0] ||
+							lab.mineralType == reagents[1]) {
+							this.lockLabFromTerminalNetwork(lab);
+						}
+					});
+					break;
 			}
+
 		}
 
 	}
