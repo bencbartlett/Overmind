@@ -87,6 +87,10 @@ export abstract class Directive {
 		Overmind.directives[this.name] = this;
 	}
 
+	get print(): string {
+		return '<a href="#!/room/' + Game.shard.name + '/' + this.pos.roomName + '">[' + this.name + ']</a>';
+	}
+
 	/**
 	 * Gets an effective room position for a directive; allows you to reference this.pos in constructor super() without
 	 * throwing an error
@@ -104,17 +108,6 @@ export abstract class Directive {
 		return Game.flags[this.name];
 	}
 
-	// get isSuspended(): boolean {
-	// 	return !!this.memory.suspendUntil && Game.time < this.memory.suspendUntil;
-	// }
-	//
-	// suspend(ticks: number) {
-	// 	this.memory.suspendUntil = Game.time + ticks;
-	// }
-	//
-	// suspendUntil(tick: number) {
-	// 	this.memory.suspendUntil = tick;
-	// }
 
 	refresh(): void {
 		const flag = this.flag;
@@ -130,10 +123,6 @@ export abstract class Directive {
 
 	alert(message: string, priority = NotifierPriority.Normal): void {
 		Overmind.overseer.notifier.alert(message, this.pos.roomName, priority);
-	}
-
-	get print(): string {
-		return '<a href="#!/room/' + Game.shard.name + '/' + this.pos.roomName + '">[' + this.name + ']</a>';
 	}
 
 	private handleRelocation(): boolean {
@@ -156,6 +145,9 @@ export abstract class Directive {
 		return false;
 	}
 
+	/**
+	 * Computes the parent colony for the directive to be handled by
+	 */
 	private getColony(colonyFilter?: (colony: Colony) => boolean, verbose = false): Colony | undefined {
 		// If something is written to flag.colony, use that as the colony
 		if (this.memory[_MEM.COLONY]) {
@@ -191,6 +183,9 @@ export abstract class Directive {
 		}
 	}
 
+	/**
+	 * Finds the nearest colony for the directive subject to path length constraints
+	 */
 	private findNearestColony(colonyFilter?: (colony: Colony) => boolean, verbose = false): Colony | undefined {
 		const maxPathLength = this.memory.maxPathLength || DEFAULT_MAX_PATH_LENGTH;
 		const maxLinearRange = this.memory.maxLinearRange || DEFAULT_MAX_LINEAR_RANGE;
@@ -369,11 +364,17 @@ export abstract class Directive {
 
 	abstract spawnMoarOverlords(): void;
 
-	/* Initialization logic goes here, called in overseer.init() */
+	/**
+	 * Initialization logic for the directive goes here and is called in overseer.init()
+	 */
 	abstract init(): void;
 
-	/* Runtime logic goes here, called in overseer.run() */
+	/**
+	 * Runtime logic for the directive goes here and is called in overseer.run()
+	 */
 	abstract run(): void;
+
+
 
 	// Overwrite this in child classes to display relevant information
 	visuals(): void {

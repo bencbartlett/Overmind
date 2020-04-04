@@ -16,6 +16,7 @@ interface RawMemory {
 interface Memory {
 	assimilator: any;
 	Overmind: {};
+	profiler: any;
 	overseer: any;
 	segmenter: any;
 	strategist?: any;
@@ -38,7 +39,6 @@ interface Memory {
 			minPower: number;
 		};
 	};
-	profiler?: any;
 	stats: any;
 	constructionSites: { [id: string]: number };
 	// suspend?: number;
@@ -54,6 +54,8 @@ interface Memory {
 		verbosity?: number;
 		workerIndex?: number;
 	};
+
+	screepsProfiler?: any;
 
 	[otherProperty: string]: any;
 }

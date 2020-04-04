@@ -6,7 +6,7 @@ import {PortalUtils} from '../utilities/PortalUtils';
 import {alignedNewline, bullet} from '../utilities/stringConstants';
 import {color, printRoomName, toColumns} from '../utilities/utils';
 import {asciiLogoRL, asciiLogoSmall} from '../visuals/logos';
-import {DEFAULT_OVERMIND_SIGNATURE, MY_USERNAME, USE_PROFILER} from '../~settings';
+import {DEFAULT_OVERMIND_SIGNATURE, MY_USERNAME, USE_SCREEPS_PROFILER} from '../~settings';
 import {log} from './log';
 
 type RecursiveObject = { [key: string]: number | RecursiveObject };
@@ -416,7 +416,7 @@ export class OvermindConsole {
 
 	static removeErrantFlags(): string {
 		// This may need to be be run several times depending on visibility
-		if (USE_PROFILER) {
+		if (USE_SCREEPS_PROFILER) {
 			return `ERROR: should not be run while profiling is enabled!`;
 		}
 		let count = 0;
@@ -558,7 +558,7 @@ export class OvermindConsole {
 			}
 		}
 		// Remove profiler memory
-		delete Memory.profiler;
+		delete Memory.screepsProfiler;
 		// Remove overlords memory from flags
 		for (const i in Memory.flags) {
 			if ((<any>Memory.flags[i]).overlords) {

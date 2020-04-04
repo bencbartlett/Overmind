@@ -9,6 +9,7 @@ import {profile} from '../profiler/decorator';
 import {BOOST_PARTS, BOOST_TIERS} from '../resources/map_resources';
 import {MIN_LIFETIME_FOR_BOOST} from '../tasks/instances/getBoosted';
 import {Tasks} from '../tasks/Tasks';
+import {getOverlord, setOverlord} from '../zerg/AnyZerg';
 import {CombatZerg} from '../zerg/CombatZerg';
 import {Zerg} from '../zerg/Zerg';
 
@@ -622,40 +623,40 @@ export abstract class Overlord {
 
 }
 
-export function getOverlord(creep: Zerg | Creep): Overlord | null {
-	if (creep.memory[_MEM.OVERLORD]) {
-		return Overmind.overlords[creep.memory[_MEM.OVERLORD]!] || null;
-	} else {
-		return null;
-	}
-}
-
-export function setOverlord(creep: Zerg | Creep, newOverlord: Overlord | null) {
-	// Remove cache references to old assignments
-	const roleName = creep.memory.role;
-	const ref = creep.memory[_MEM.OVERLORD];
-	const oldOverlord: Overlord | null = ref ? Overmind.overlords[ref] : null;
-	if (ref && Overmind.cache.overlords[ref] && Overmind.cache.overlords[ref][roleName]) {
-		_.remove(Overmind.cache.overlords[ref][roleName], name => name == creep.name);
-	}
-	if (newOverlord) {
-		// Change to the new overlord's colony
-		creep.memory[_MEM.COLONY] = newOverlord.colony.name;
-		// Change assignments in memory
-		creep.memory[_MEM.OVERLORD] = newOverlord.ref;
-		// Update the cache references
-		if (!Overmind.cache.overlords[newOverlord.ref]) {
-			Overmind.cache.overlords[newOverlord.ref] = {};
-		}
-		if (!Overmind.cache.overlords[newOverlord.ref][roleName]) {
-			Overmind.cache.overlords[newOverlord.ref][roleName] = [];
-		}
-		Overmind.cache.overlords[newOverlord.ref][roleName].push(creep.name);
-	} else {
-		creep.memory[_MEM.OVERLORD] = null;
-	}
-	if (oldOverlord) oldOverlord.recalculateCreeps();
-	if (newOverlord) newOverlord.recalculateCreeps();
-	log.info(`${creep.name} has been reassigned from ${oldOverlord ? oldOverlord.print : 'IDLE'} ` +
-			 `to ${newOverlord ? newOverlord.print : 'IDLE'}`);
-}
+// export function getOverlord(creep: Zerg | Creep): Overlord | null {
+// 	if (creep.memory[_MEM.OVERLORD]) {
+// 		return Overmind.overlords[creep.memory[_MEM.OVERLORD]!] || null;
+// 	} else {
+// 		return null;
+// 	}
+// }
+//
+// export function setOverlord(creep: Zerg | Creep, newOverlord: Overlord | null) {
+// 	// Remove cache references to old assignments
+// 	const roleName = creep.memory.role;
+// 	const ref = creep.memory[_MEM.OVERLORD];
+// 	const oldOverlord: Overlord | null = ref ? Overmind.overlords[ref] : null;
+// 	if (ref && Overmind.cache.overlords[ref] && Overmind.cache.overlords[ref][roleName]) {
+// 		_.remove(Overmind.cache.overlords[ref][roleName], name => name == creep.name);
+// 	}
+// 	if (newOverlord) {
+// 		// Change to the new overlord's colony
+// 		creep.memory[_MEM.COLONY] = newOverlord.colony.name;
+// 		// Change assignments in memory
+// 		creep.memory[_MEM.OVERLORD] = newOverlord.ref;
+// 		// Update the cache references
+// 		if (!Overmind.cache.overlords[newOverlord.ref]) {
+// 			Overmind.cache.overlords[newOverlord.ref] = {};
+// 		}
+// 		if (!Overmind.cache.overlords[newOverlord.ref][roleName]) {
+// 			Overmind.cache.overlords[newOverlord.ref][roleName] = [];
+// 		}
+// 		Overmind.cache.overlords[newOverlord.ref][roleName].push(creep.name);
+// 	} else {
+// 		creep.memory[_MEM.OVERLORD] = null;
+// 	}
+// 	if (oldOverlord) oldOverlord.recalculateCreeps();
+// 	if (newOverlord) newOverlord.recalculateCreeps();
+// 	log.info(`${creep.name} has been reassigned from ${oldOverlord ? oldOverlord.print : 'IDLE'} ` +
+// 			 `to ${newOverlord ? newOverlord.print : 'IDLE'}`);
+// }

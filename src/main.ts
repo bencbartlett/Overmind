@@ -33,7 +33,7 @@ import './prototypes/Structures'; // Prototypes for accessed structures
 import './prototypes/Miscellaneous'; // Everything else
 import './tasks/initializer'; // This line is necessary to ensure proper compilation ordering...
 import './zerg/CombatZerg'; // ...so is this one... rollup is dumb about generating reference errors
-import {MUON, MY_USERNAME, RL_TRAINING_MODE, USE_PROFILER} from './~settings';
+import {MUON, MY_USERNAME, RL_TRAINING_MODE, USE_SCREEPS_PROFILER} from './~settings';
 import {sandbox} from './utilities/sandbox';
 import {Mem} from './memory/Memory';
 import {OvermindConsole} from './console/Console';
@@ -91,7 +91,7 @@ function main_RL(): void {
 
 // This gets run on each global reset
 function onGlobalReset(): void {
-	if (USE_PROFILER) profiler.enable();
+	if (USE_SCREEPS_PROFILER) profiler.enable();
 	Mem.format();
 	OvermindConsole.init();
 	VersionMigration.run();
@@ -119,7 +119,7 @@ if (RL_TRAINING_MODE) {
 	// Use stripped version for training reinforcment learning model
 	_loop = main_RL;
 } else {
-	if (USE_PROFILER) {
+	if (USE_SCREEPS_PROFILER) {
 		// Wrap the main loop in the profiler
 		_loop = () => profiler.wrap(main);
 	} else {

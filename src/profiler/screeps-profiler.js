@@ -54,14 +54,14 @@ function setupProfiler() {
         },
         restart() {
             if (Profiler.isProfiling()) {
-                const filter = Memory.profiler.filter;
+                const filter = Memory.screepsProfiler.filter;
                 let duration = false;
-                if (!!Memory.profiler.disableTick) {
+                if (!!Memory.screepsProfiler.disableTick) {
                     // Calculate the original duration, profile is enabled on the tick after the first call,
                     // so add 1.
-                    duration = Memory.profiler.disableTick - Memory.profiler.enabledTick + 1;
+                    duration = Memory.screepsProfiler.disableTick - Memory.screepsProfiler.enabledTick + 1;
                 }
-                const type = Memory.profiler.type;
+                const type = Memory.screepsProfiler.type;
                 setupMemory(type, duration, filter);
             }
         },
@@ -75,8 +75,8 @@ function setupProfiler() {
 function setupMemory(profileType, duration, filter) {
     resetMemory();
     const disableTick = Number.isInteger(duration) ? Game.time + duration : false;
-    if (!Memory.profiler) {
-        Memory.profiler = {
+    if (!Memory.screepsProfiler) {
+        Memory.screepsProfiler = {
             map        : {},
             totalTime  : 0,
             enabledTick: Game.time + 1,
@@ -88,7 +88,7 @@ function setupMemory(profileType, duration, filter) {
 }
 
 function resetMemory() {
-    Memory.profiler = null;
+    Memory.screepsProfiler = null;
 }
 
 function overloadCPUCalc() {
@@ -101,7 +101,7 @@ function overloadCPUCalc() {
 }
 
 function getFilter() {
-    return Memory.profiler.filter;
+    return Memory.screepsProfiler.filter;
 }
 
 const functionBlackList = [
@@ -243,18 +243,18 @@ const Profiler = {
     },
 
     callgrind() {
-        const elapsedTicks = Game.time - Memory.profiler.enabledTick + 1;
-        Memory.profiler.map['(tick)'].calls = elapsedTicks;
-        Memory.profiler.map['(tick)'].time = Memory.profiler.totalTime;
+        const elapsedTicks = Game.time - Memory.screepsProfiler.enabledTick + 1;
+        Memory.screepsProfiler.map['(tick)'].calls = elapsedTicks;
+        Memory.screepsProfiler.map['(tick)'].time = Memory.screepsProfiler.totalTime;
         Profiler.checkMapItem('(root)');
-        Memory.profiler.map['(root)'].calls = 1;
-        Memory.profiler.map['(root)'].time = Memory.profiler.totalTime;
-        Profiler.checkMapItem('(tick)', Memory.profiler.map['(root)'].subs);
-        Memory.profiler.map['(root)'].subs['(tick)'].calls = elapsedTicks;
-        Memory.profiler.map['(root)'].subs['(tick)'].time = Memory.profiler.totalTime;
-        let body = `events: ns\nsummary: ${Math.round(Memory.profiler.totalTime * 1000000)}\n`;
-        for (const fnName of Object.keys(Memory.profiler.map)) {
-            const fn = Memory.profiler.map[fnName];
+        Memory.screepsProfiler.map['(root)'].calls = 1;
+        Memory.screepsProfiler.map['(root)'].time = Memory.screepsProfiler.totalTime;
+        Profiler.checkMapItem('(tick)', Memory.screepsProfiler.map['(root)'].subs);
+        Memory.screepsProfiler.map['(root)'].subs['(tick)'].calls = elapsedTicks;
+        Memory.screepsProfiler.map['(root)'].subs['(tick)'].time = Memory.screepsProfiler.totalTime;
+        let body = `events: ns\nsummary: ${Math.round(Memory.screepsProfiler.totalTime * 1000000)}\n`;
+        for (const fnName of Object.keys(Memory.screepsProfiler.map)) {
+            const fn = Memory.screepsProfiler.map[fnName];
             let callsBody = '';
             let callsTime = 0;
             for (const callName of Object.keys(fn.subs)) {
@@ -270,17 +270,17 @@ const Profiler = {
 
     output(passedOutputLengthLimit) {
         const outputLengthLimit = passedOutputLengthLimit || 1000;
-        if (!Memory.profiler || !Memory.profiler.enabledTick) {
+        if (!Memory.screepsProfiler || !Memory.screepsProfiler.enabledTick) {
             return 'Profiler not active.';
         }
 
-        const endTick = Math.min(Memory.profiler.disableTick || Game.time, Game.time);
-        const startTick = Memory.profiler.enabledTick + 1;
+        const endTick = Math.min(Memory.screepsProfiler.disableTick || Game.time, Game.time);
+        const startTick = Memory.screepsProfiler.enabledTick + 1;
         const elapsedTicks = endTick - startTick;
         const header = 'calls\t\ttime\t\tavg\t\tfunction';
         const footer = [
-            `Avg: ${(Memory.profiler.totalTime / elapsedTicks).toFixed(2)}`,
-            `Total: ${Memory.profiler.totalTime.toFixed(2)}`,
+            `Avg: ${(Memory.screepsProfiler.totalTime / elapsedTicks).toFixed(2)}`,
+            `Total: ${Memory.screepsProfiler.totalTime.toFixed(2)}`,
             `Ticks: ${elapsedTicks}`,
         ].join('\t');
 
@@ -303,8 +303,8 @@ const Profiler = {
     },
 
     lines() {
-        const stats = Object.keys(Memory.profiler.map).map(functionName => {
-            const functionCalls = Memory.profiler.map[functionName];
+        const stats = Object.keys(Memory.screepsProfiler.map).map(functionName => {
+            const functionCalls = Memory.screepsProfiler.map[functionName];
             return {
                 name       : functionName,
                 calls      : functionCalls.calls,
@@ -368,7 +368,7 @@ const Profiler = {
         {name: 'StructureWall', val: global.StructureWall},
     ],
 
-    checkMapItem(functionName, map = Memory.profiler.map) {
+    checkMapItem(functionName, map = Memory.screepsProfiler.map) {
         if (!map[functionName]) {
             // eslint-disable-next-line no-param-reassign
             map[functionName] = {
@@ -381,20 +381,20 @@ const Profiler = {
 
     record(functionName, time, parent) {
         this.checkMapItem(functionName);
-        Memory.profiler.map[functionName].calls++;
-        Memory.profiler.map[functionName].time += time;
+        Memory.screepsProfiler.map[functionName].calls++;
+        Memory.screepsProfiler.map[functionName].time += time;
         if (parent) {
             this.checkMapItem(parent);
-            this.checkMapItem(functionName, Memory.profiler.map[parent].subs);
-            Memory.profiler.map[parent].subs[functionName].calls++;
-            Memory.profiler.map[parent].subs[functionName].time += time;
+            this.checkMapItem(functionName, Memory.screepsProfiler.map[parent].subs);
+            Memory.screepsProfiler.map[parent].subs[functionName].calls++;
+            Memory.screepsProfiler.map[parent].subs[functionName].time += time;
         }
     },
 
     endTick() {
-        if (Game.time >= Memory.profiler.enabledTick) {
+        if (Game.time >= Memory.screepsProfiler.enabledTick) {
             const cpuUsed = Game.cpu.getUsed();
-            Memory.profiler.totalTime += cpuUsed;
+            Memory.screepsProfiler.totalTime += cpuUsed;
             Profiler.report();
         }
     },
@@ -408,25 +408,25 @@ const Profiler = {
     },
 
     isProfiling() {
-        if (!enabled || !Memory.profiler) {
+        if (!enabled || !Memory.screepsProfiler) {
             return false;
         }
-        return !Memory.profiler.disableTick || Game.time <= Memory.profiler.disableTick;
+        return !Memory.screepsProfiler.disableTick || Game.time <= Memory.screepsProfiler.disableTick;
     },
 
     type() {
-        return Memory.profiler.type;
+        return Memory.screepsProfiler.type;
     },
 
     shouldPrint() {
         const streaming = Profiler.type() === 'stream';
         const profiling = Profiler.type() === 'profile';
-        const onEndingTick = Memory.profiler.disableTick === Game.time;
+        const onEndingTick = Memory.screepsProfiler.disableTick === Game.time;
         return streaming || (profiling && onEndingTick);
     },
 
     shouldEmail() {
-        return Profiler.type() === 'email' && Memory.profiler.disableTick === Game.time;
+        return Profiler.type() === 'email' && Memory.screepsProfiler.disableTick === Game.time;
     },
 };
 
