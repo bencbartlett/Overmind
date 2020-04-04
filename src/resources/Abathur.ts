@@ -321,15 +321,13 @@ export class Abathur {
 				if (globalAssets[resource] / numColonies < (n - 3) * BATCH_SIZE || // is there a global shortage?
 					colony.assets[resource] < n * BATCH_SIZE) { // is there a local shortage?
 
-					// Do we have enough ingredients to make this step of the reaction?
+					// Do we have enough ingredients (or can we obtain enough) to make this step of the reaction?
 					const [reagent1, reagent2] = REAGENTS[resource];
-					if (colony.assets[reagent1] >= BATCH_SIZE && colony.assets[reagent2] >= BATCH_SIZE) {
-						return true;
-					}
-
-					// If not, can we get the ingredients promptly from the terminal network?
-					if (Overmind.terminalNetwork.canObtainResource(colony, reagent1, BATCH_SIZE) &&
-						Overmind.terminalNetwork.canObtainResource(colony, reagent2, BATCH_SIZE)) {
+					const reagent1Available = colony.assets[reagent1] >= BATCH_SIZE ||
+											  Overmind.terminalNetwork.canObtainResource(colony, reagent1, BATCH_SIZE);
+					const reagent2Available = colony.assets[reagent2] >= BATCH_SIZE ||
+											  Overmind.terminalNetwork.canObtainResource(colony, reagent2, BATCH_SIZE);
+					if (reagent1Available && reagent2Available) {
 						return true;
 					}
 
