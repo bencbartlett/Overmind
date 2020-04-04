@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "@types/lodash": "3.10.2",
-    "@types/screeps": "^3.0.0",
+    "@types/screeps": "^3.1.0",
     "rollup": "0.62.0",
     "rollup-plugin-commonjs": "8.4.1",
     "rollup-plugin-node-resolve": "3.3.0",

@@ -52,10 +52,10 @@ export function hasContents(store: { [resourceType: string]: number }): boolean 
 /**
  * Obtain the username of the player
  */
-export function getUsername(): string {
+export function getMyUsername(): string {
 	for (const i in Game.rooms) {
 		const room = Game.rooms[i];
-		if (room.controller && room.controller.my) {
+		if (room.controller && room.controller.owner && room.controller.my) {
 			return room.controller.owner.username;
 		}
 	}

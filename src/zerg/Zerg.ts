@@ -116,6 +116,7 @@ export class Zerg extends AnyZerg {
 	 * Refresh all changeable properties of the creep or delete from Overmind and global when dead
 	 */
 	refresh(): void {
+		super.refresh();
 		const creep = Game.creeps[this.name];
 		if (creep) {
 			// this.creep = creep;

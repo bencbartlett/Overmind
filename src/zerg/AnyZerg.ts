@@ -166,7 +166,7 @@ export abstract class AnyZerg {
 			this.blockMovement = false;
 			// this._task = null; // todo
 		} else {
-			log.debug(`Deleting from global`);
+			log.debug(`Deleting ${this.print} from global`);
 			// delete Overmind.zerg[this.name];
 			delete global[this.name];
 		}
