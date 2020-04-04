@@ -39,13 +39,22 @@ export class LeecherOverlord extends Overlord {
 	}
 
 	run() {
+		this.updateTotalCreepCost();
 		this.autoRun(this.leechers, leacher => this.handleLeecher(leacher));
 	}
 
+	private updateTotalCreepCost() {
+		// note: do not execute in handleLeecher after autoRun
+		// autoRun does not execute if there is a TASK already running
+		// so run it inside run() instead 
+		_.forEach(this.leechers, leecher => {
+			if (leecher.ticksToLive == 1500) {
+				this.directive.memory.totalCost += bodyCost(_.map(leecher.body, part => part.type));
+			}
+		});
+	}
+
 	private handleLeecher(leecher: Zerg) {
-		if(leecher.ticksToLive == 1500) {
-			this.directive.memory.totalCost += bodyCost(_.map(leecher.body, part => part.type)); 
-		}
 		// heal @colony room if damaged.
 		if(leecher.hits < leecher.hitsMax) {
 			this.memory.leechTimer = Game.time + 300;
