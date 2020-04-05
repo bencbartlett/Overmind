@@ -180,26 +180,25 @@ export class Overseer implements IOverseer {
 					DirectiveGuard.create(room.dangerousHostiles[0].pos);
 				}
 			}
-			this.handleStrongholds(colony, room);
 		}
 	}
 
-	private handleStrongholds(colony: Colony, room: Room) {
+	private handleStrongholds(colony: Colony) {
 		if (Game.time % 55 == 0) {
-			const cores = room.hostileStructures.filter(s => s.structureType == STRUCTURE_INVADER_CORE);
-			if (cores.length > 0) {
-				const core = <StructureInvaderCore>cores[0];
-				log.alert(`Found core in ${room.name} with ${core} level ${core.level}`);
-				let res;
-				if (core.level == 0) {
-					res = DirectiveModularDismantle.createIfNotPresent(cores[0].pos, 'pos');
-					if (!!res) {
-						log.notify(`Creating invader core dismantle in room ${room.name}`);
-					}
-				} else if (core.level <= 4 && core.ticksToDeploy) {
-					res = DirectiveStronghold.createIfNotPresent(core.pos, 'room');
-					if (!!res) {
-						log.notify(`Creating stronghold clearing ranged attacker in room ${room.name}`);
+			for (const room of colony.outposts) {
+				if (room.invaderCore) {
+					log.alert(`Found core in ${room.name} with ${room.invaderCore} level ${room.invaderCore.level}`);
+					let res;
+					if (room.invaderCore.level == 0) {
+						res = DirectiveModularDismantle.createIfNotPresent(room.invaderCore.pos, 'pos');
+						if (!!res) {
+							log.notify(`Creating invader core dismantle in room ${room.name}`);
+						}
+					} else if (room.invaderCore.level <= 4 && room.invaderCore.ticksToDeploy) {
+						res = DirectiveStronghold.createIfNotPresent(room.invaderCore.pos, 'room');
+						if (!!res) {
+							log.notify(`Creating stronghold clearing ranged attacker in room ${room.name}`);
+						}
 					}
 				}
 			}
@@ -207,21 +206,17 @@ export class Overseer implements IOverseer {
 	}
 
 	private handleColonyInvasions(colony: Colony) {
-		// Defend against invasions in owned rooms
-		if (colony.room) {
+		// See if invasion is big enough to warrant creep defenses
+		const effectiveInvaderCount = _.sum(_.map(colony.room.hostiles,
+												  invader => CombatIntel.uniqueBoosts(invader).length > 0 ? 2 : 1));
+		const needsDefending = effectiveInvaderCount >= 3 || colony.room.dangerousPlayerHostiles.length > 0;
 
-			// See if invasion is big enough to warrant creep defenses
-			const effectiveInvaderCount = _.sum(_.map(colony.room.hostiles,
-													  invader => CombatIntel.uniqueBoosts(invader).length > 0 ? 2 : 1));
-			const needsDefending = effectiveInvaderCount >= 3 || colony.room.dangerousPlayerHostiles.length > 0;
-
-			if (needsDefending) {
-				// Place defensive directive after hostiles have been present for a long enough time
-				const safetyData = RoomIntel.getSafetyData(colony.room.name);
-				const invasionIsPersistent = safetyData[_RM_SAFETY.UNSAFE_FOR] > 20;
-				if (invasionIsPersistent) {
-					DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
-				}
+		if (needsDefending) {
+			// Place defensive directive after hostiles have been present for a long enough time
+			const safetyData = RoomIntel.getSafetyData(colony.room.name);
+			const invasionIsPersistent = safetyData[_RM_SAFETY.UNSAFE_FOR] > 20;
+			if (invasionIsPersistent) {
+				DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
 			}
 		}
 	}
@@ -293,19 +288,27 @@ export class Overseer implements IOverseer {
 		}
 	}
 
-	/* Place new event-driven flags where needed to be instantiated on the next tick */
+	/**
+	 * Place directives to respond to various conditions
+	 */
 	private placeDirectives(colony: Colony): void {
+
 		this.handleBootstrapping(colony);
+
 		this.handleOutpostDefense(colony);
+
+		this.handleStrongholds(colony);
+
 		this.handleColonyInvasions(colony);
+
 		this.handleNukeResponse(colony);
+
 		if (getAutonomyLevel() > Autonomy.Manual) {
 			if (Game.time % Overseer.settings.outpostCheckFrequency == 2 * colony.id) {
 				this.handleNewOutposts(colony);
 			}
 			// Place pioneer directives in case the colony doesn't have a spawn for some reason
-			if (Game.time % 25 == 0 && colony.spawns.length == 0 &&
-				!DirectiveClearRoom.isPresent(colony.pos, 'room')) {
+			if (Game.time % 25 == 0 && colony.spawns.length == 0 && !DirectiveClearRoom.isPresent(colony.pos, 'room')) {
 				// verify that there are no spawns (not just a caching glitch)
 				const spawns = Game.rooms[colony.name]!.find(FIND_MY_SPAWNS);
 				if (spawns.length == 0) {
@@ -363,6 +366,7 @@ export class Overseer implements IOverseer {
 		for (const directive of this.directives) {
 			directive.init();
 		}
+
 		// Sort overlords by priority if needed (assumes priority does not change after constructor phase
 		if (!this.sorted) {
 			this.overlords.sort((o1, o2) => o1.priority - o2.priority);
@@ -371,6 +375,7 @@ export class Overseer implements IOverseer {
 			}
 			this.sorted = true;
 		}
+
 		// Initialize overlords
 		for (const overlord of this.overlords) {
 			if (!overlord.isSuspended) {
@@ -385,6 +390,7 @@ export class Overseer implements IOverseer {
 				}
 			}
 		}
+
 		// Register cleanup requests to logistics network
 		for (const colony of this.colonies) {
 			this.registerLogisticsRequests(colony);
