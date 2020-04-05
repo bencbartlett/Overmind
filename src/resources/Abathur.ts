@@ -292,12 +292,18 @@ export class Abathur {
 										 resource => ((<any>REACTION_TIME)[resource] || Infinity) <= 30);
 		}
 
+		const ingredientsUnavailable: {[resource: string]: boolean} = {}; // track what we can't make to save CPU
 		let nextTargetResource: ResourceConstant | undefined;
 
 		// We want to build up a stockpile of boosts but we want to maintain and utilize a stockpile of the cheaper
 		// stuff before we start building up higher tier boosts
 		for (const n of _.range(1, 50)) {
 			nextTargetResource = _.find(possibleReactions, resource => {
+
+				// If we've already figured out we can't make this in a previous pass then skip it
+				if (ingredientsUnavailable[resource]) {
+					return false;
+				}
 
 				const tier = Abathur.getBoostTier(resource);
 				// Get 3 lab's worth of a global stockpile before you start making T3 boosts
@@ -329,6 +335,8 @@ export class Abathur {
 											  Overmind.terminalNetwork.canObtainResource(colony, reagent2, BATCH_SIZE);
 					if (reagent1Available && reagent2Available) {
 						return true;
+					} else {
+						ingredientsUnavailable[resource] = true;
 					}
 
 				}
