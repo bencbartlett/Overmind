@@ -12,6 +12,7 @@ import {Abathur, Reaction} from '../resources/Abathur';
 import {BOOST_PARTS, BoostType, REAGENTS} from '../resources/map_resources';
 import {getPosFromBunkerCoord, reagentLabSpots} from '../roomPlanner/layouts/bunker';
 import {Stats} from '../stats/stats';
+import {randint} from '../utilities/random';
 import {rightArrow} from '../utilities/stringConstants';
 import {exponentialMovingAverage} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
@@ -40,10 +41,7 @@ interface EvolutionChamberMemory {
 	status: number;
 	statusTick: number;
 	activeReaction: Reaction | undefined;
-	// reactionQueue: Reaction[];
-	labMineralTypes: {
-		[labID: string]: _ResourceConstantSansEnergy;
-	};
+	suspendReactionsUntil?: number;
 	stats: {
 		totalProduction: { [resourceType: string]: number }
 		avgUsage: number;
@@ -51,12 +49,10 @@ interface EvolutionChamberMemory {
 }
 
 const EvolutionChamberMemoryDefaults: EvolutionChamberMemory = {
-	status         : LabStatus.Idle,
-	statusTick     : 0,
-	activeReaction : undefined,
-	// reactionQueue  : [],
-	labMineralTypes: {},
-	stats          : {
+	status        : LabStatus.Idle,
+	statusTick    : 0,
+	activeReaction: undefined,
+	stats         : {
 		totalProduction: {},
 		avgUsage       : 1,
 	}
@@ -91,7 +87,9 @@ export class EvolutionChamber extends HiveCluster {
 	};
 	private neededBoosts: { [boostType: string]: number };
 
-	static settings = {};
+	static settings = {
+		sleepTime: 100
+	};
 
 	constructor(colony: Colony, terminal: StructureTerminal) {
 		super(colony, terminal, 'evolutionChamber');
@@ -517,15 +515,25 @@ export class EvolutionChamber extends HiveCluster {
 
 	run(): void {
 
+		if (this.memory.suspendReactionsUntil && Game.time > this.memory.suspendReactionsUntil) {
+			delete this.memory.suspendReactionsUntil;
+		}
+
 		// Get an active reaction if you don't have one
-		if (!this.memory.activeReaction) {
-			this.memory.activeReaction = Abathur.getNextReaction(this.colony);
+		if (!this.memory.activeReaction && !this.memory.suspendReactionsUntil) {
+			const nextReaction = Abathur.getNextReaction(this.colony);
 			// There's a 1 tick delay between generating the reaction and being able to request the resources from
 			// the terminal network. The reason for this is that this needs to be placed in the run() phase because
 			// Abathur.getNextReaction() calls TerminalNetwork.canObtainResource(), which requires that knowledge of
 			// the colony request states have already been registered in the init() phase. In any case, this adds an
 			// inefficiency of like 1 tick in ~6000 for a T3 compound, so you can just deal with it. :P
-			return;
+			if (nextReaction) {
+				this.memory.activeReaction = nextReaction;
+			} else {
+				const sleepTime = EvolutionChamber.settings.sleepTime + randint(0, 20);
+				log.info(`${this.print}: no reaction available; sleeping for ${sleepTime} ticks.`);
+				this.memory.suspendReactionsUntil = Game.time + sleepTime;
+			}
 		}
 
 		// Run the reactions
