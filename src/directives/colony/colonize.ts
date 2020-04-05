@@ -38,6 +38,7 @@ export class DirectiveColonize extends Directive {
 			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
 						`removing directive!`);
 			this.remove(true);
+			return;
 		}
 	}
 

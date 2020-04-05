@@ -160,6 +160,7 @@ interface FlagMemory {
 	[_MEM.TICK]?: number;
 	[_MEM.EXPIRATION]?: number;
 	[_MEM.COLONY]?: string;
+	debug?: boolean;
 	suspendUntil?: number;
 	amount?: number;
 	persistent?: boolean;
