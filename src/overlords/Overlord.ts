@@ -268,11 +268,13 @@ export abstract class Overlord {
 			}
 		}
 		// Remove dead/reassigned creeps from the _zerg record
+		const removeZergNames: string[] = [];
 		for (const zerg of this._zerg[role]) {
 			if (!creepNames[zerg.name]) {
-				_.remove(this._zerg[role], z => z.name == zerg.name);
+				removeZergNames.push(zerg.name);
 			}
 		}
+		_.remove(this._zerg[role], deadZerg => removeZergNames.includes(deadZerg.name));
 	}
 
 	/**
@@ -306,14 +308,18 @@ export abstract class Overlord {
 			}
 		}
 		// Remove dead/reassigned creeps from the _combatZerg record
+		const removeZergNames: string[] = [];
 		for (const zerg of this._combatZerg[role]) {
 			if (!creepNames[zerg.name]) {
-				_.remove(this._combatZerg[role], z => z.name == zerg.name);
+				removeZergNames.push(zerg.name);
 			}
 		}
+		_.remove(this._combatZerg[role], deadZerg => removeZergNames.includes(deadZerg.name));
 	}
 
-	/* Gets the "ID" of the outpost this overlord is operating in. 0 for owned rooms, >= 1 for outposts, -1 for other */
+	/**
+	 * Gets the "ID" of the outpost this overlord is operating in. 0 for owned rooms, >= 1 for outposts, -1 for other
+	 */
 	get outpostIndex(): number {
 		return _.findIndex(this.colony.roomNames, roomName => roomName == this.pos.roomName);
 	}
@@ -364,28 +370,28 @@ export abstract class Overlord {
 			creep.spawning || (!creep.spawning && !creep.ticksToLive));
 	}
 
-	parkCreepsIfIdle(creeps: Zerg[], outsideHatchery = true) {
-		for (const creep of creeps) {
-			if (!creep) {
-				console.log(`creeps: ${_.map(creeps, creep => creep.name)}`);
-				continue;
-			}
-			if (creep.isIdle && creep.canExecute('move')) {
-				if (this.colony.hatchery) {
-					const hatcheryRestrictedRange = 6;
-					if (creep.pos.getRangeTo(this.colony.hatchery.pos) < hatcheryRestrictedRange) {
-						const hatcheryBorder = this.colony.hatchery.pos.getPositionsAtRange(hatcheryRestrictedRange);
-						const moveToPos = creep.pos.findClosestByRange(hatcheryBorder);
-						if (moveToPos) creep.goTo(moveToPos);
-					} else {
-						creep.park();
-					}
-				} else {
-					creep.park();
-				}
-			}
-		}
-	}
+	// parkCreepsIfIdle(creeps: Zerg[], outsideHatchery = true) {
+	// 	for (const creep of creeps) {
+	// 		if (!creep) {
+	// 			console.log(`creeps: ${_.map(creeps, creep => creep.name)}`);
+	// 			continue;
+	// 		}
+	// 		if (creep.isIdle && creep.canExecute('move')) {
+	// 			if (this.colony.hatchery) {
+	// 				const hatcheryRestrictedRange = 6;
+	// 				if (creep.pos.getRangeTo(this.colony.hatchery.pos) < hatcheryRestrictedRange) {
+	// 					const hatcheryBorder = this.colony.hatchery.pos.getPositionsAtRange(hatcheryRestrictedRange);
+	// 					const moveToPos = creep.pos.findClosestByRange(hatcheryBorder);
+	// 					if (moveToPos) creep.goTo(moveToPos);
+	// 				} else {
+	// 					creep.park();
+	// 				}
+	// 			} else {
+	// 				creep.park();
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	/**
 	 * Requests a group of (2-3) creeps from a hatchery to be spawned at the same time. Using this with low-priority
@@ -445,13 +451,16 @@ export abstract class Overlord {
 	/**
 	 * Wishlist of creeps to simplify spawning logic; includes automatic reporting
 	 */
-	protected wishlist(quantity: number, setup: CreepSetup, opts = {} as CreepRequestOptions) {
+	protected wishlist(quantity: number, setup: CreepSetup, opts = {} as CreepRequestOptions): void {
+
 		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN, reassignIdle: false});
+
 		// TODO Don't spawn if spawning is halted
 		if (this.shouldSpawnAt && this.shouldSpawnAt > Game.time) {
 			log.info(`Disabled spawning for ${this.print} for another ${this.shouldSpawnAt - Game.time} ticks`);
 			return;
 		}
+
 		let creepQuantity: number;
 		if (opts.noLifetimeFilter) {
 			creepQuantity = (this._creeps[setup.role] || []).length;
@@ -461,6 +470,7 @@ export abstract class Overlord {
 		} else {
 			creepQuantity = this.lifetimeFilter(this._creeps[setup.role] || [], opts.prespawn).length;
 		}
+
 		let spawnQuantity = quantity - creepQuantity;
 		if (opts.reassignIdle && spawnQuantity > 0) {
 			const idleCreeps = _.filter(this.colony.getCreepsByRole(setup.role), creep => !getOverlord(creep));
@@ -469,6 +479,7 @@ export abstract class Overlord {
 				spawnQuantity--;
 			}
 		}
+
 		// A bug in outpostDefenseOverlord caused infinite requests and cost me two botarena rounds before I found it...
 		if (spawnQuantity > MAX_SPAWN_REQUESTS) {
 			log.warning(`Too many requests for ${setup.role}s submitted by ${this.print}! (Check for errors.)`);
@@ -477,6 +488,7 @@ export abstract class Overlord {
 				this.requestCreep(setup, opts);
 			}
 		}
+
 		this.creepReport(setup.role, creepQuantity, quantity);
 	}
 

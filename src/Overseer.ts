@@ -286,7 +286,7 @@ export class Overseer implements IOverseer {
 			}
 			const alreadyOwned = RoomIntel.roomOwnedBy(roomName);
 			const alreadyReserved = RoomIntel.roomReservedBy(roomName);
-			const isBlocked = Game.flags[roomName + '-Block'] != null;
+			const isBlocked = Game.flags[roomName + '-Block'] != null; // TODO: this is ugly
 			if (isBlocked) {
 				// Game.notify("Room " + roomName + " is blocked, not expanding there.");
 			}
