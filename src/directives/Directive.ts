@@ -284,7 +284,9 @@ export abstract class Directive {
 		return result;
 	}
 
-	// TODO return the flags that are present rather than just boolean
+	/**
+	 * Returns whether a directive of this type is present either at this position or within the room
+	 */
 	static isPresent(pos: RoomPosition, scope: 'room' | 'pos'): boolean {
 		const room = Game.rooms[pos.roomName] as Room | undefined;
 		switch (scope) {

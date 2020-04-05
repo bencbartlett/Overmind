@@ -10,6 +10,7 @@ import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
 import {DirectiveOutpostDefense} from './directives/defense/outpostDefense';
 import {Directive} from './directives/Directive';
 import {Notifier} from './directives/Notifier';
+import {DirectivePowerMine} from './directives/resource/powerMine';
 import {DirectiveBootstrap} from './directives/situational/bootstrap';
 import {DirectiveNukeResponse} from './directives/situational/nukeResponse';
 import {DirectiveStronghold} from './directives/situational/stronghold';
@@ -23,8 +24,14 @@ import {Pathing} from './movement/Pathing';
 import {Overlord} from './overlords/Overlord';
 import {profile} from './profiler/decorator';
 import {CombatPlanner} from './strategy/CombatPlanner';
-import {Cartographer, ROOMTYPE_CONTROLLER, ROOMTYPE_SOURCEKEEPER} from './utilities/Cartographer';
-import {derefCoords, hasJustSpawned, minBy, onPublicServer} from './utilities/utils';
+import {
+	Cartographer,
+	ROOMTYPE_ALLEY,
+	ROOMTYPE_CONTROLLER,
+	ROOMTYPE_CROSSROAD,
+	ROOMTYPE_SOURCEKEEPER
+} from './utilities/Cartographer';
+import {derefCoords, getAllRooms, hasJustSpawned, minBy, onPublicServer} from './utilities/utils';
 import {MUON, MY_USERNAME, USE_TRY_CATCH} from './~settings';
 
 
@@ -184,7 +191,7 @@ export class Overseer implements IOverseer {
 	}
 
 	private handleStrongholds(colony: Colony) {
-		if (Game.time % 55 == 0) {
+		if (Game.time % 57 == 0) {
 			for (const room of colony.outposts) {
 				if (room.invaderCore) {
 					log.alert(`Found core in ${room.name} with ${room.invaderCore} level ${room.invaderCore.level}`);
@@ -228,6 +235,42 @@ export class Overseer implements IOverseer {
 				DirectiveNukeResponse.createIfNotPresent(nuke.pos, 'pos');
 			}
 		}
+	}
+
+	/**
+	 * Creates directives to handle mining from nearby power banks
+	 */
+	private handlePowerMining(room: Room) {
+
+		const powerSetting = Memory.settings.powerCollection;
+
+		const roomType = Cartographer.roomType(room.name);
+
+		if (powerSetting.enabled && (roomType == ROOMTYPE_ALLEY || roomType == ROOMTYPE_CROSSROAD)) {
+
+			const powerBank = _.first(room.powerBanks);
+			if (powerBank && powerBank.ticksToDecay > 4000 && powerBank.power >= powerSetting.minPower) {
+
+				if (DirectivePowerMine.isPresent(powerBank.pos, 'pos')) {
+					return;
+				}
+
+				const validColonies = _.filter(this.colonies,
+											   colony => colony.level >= DirectivePowerMine.requiredRCL
+														 && Game.map.getRoomLinearDistance(colony.name, room.name)
+														 <= powerSetting.maxRange);
+				for (const colony of validColonies) {
+					const route = Game.map.findRoute(colony.room, powerBank.room);
+					if (route != ERR_NO_PATH && route.length <= powerSetting.maxRange) {
+						log.info(`FOUND POWER BANK IN RANGE ${route.length}, STARTING MINING ${powerBank.room}`);
+						DirectivePowerMine.create(powerBank.pos);
+						return;
+					}
+				}
+			}
+
+		}
+
 	}
 
 	private computePossibleOutposts(colony: Colony, depth = 3): string[] {
@@ -291,31 +334,38 @@ export class Overseer implements IOverseer {
 	/**
 	 * Place directives to respond to various conditions
 	 */
-	private placeDirectives(colony: Colony): void {
+	private placeDirectives(): void {
 
-		this.handleBootstrapping(colony);
+		_.forEach(this.colonies, colony => this.handleBootstrapping(colony));
 
-		this.handleOutpostDefense(colony);
+		_.forEach(this.colonies, colony => this.handleOutpostDefense(colony));
 
-		this.handleStrongholds(colony);
+		_.forEach(this.colonies, colony => this.handleStrongholds(colony));
 
-		this.handleColonyInvasions(colony);
+		_.forEach(this.colonies, colony => this.handleColonyInvasions(colony));
 
-		this.handleNukeResponse(colony);
+		_.forEach(this.colonies, colony => this.handleNukeResponse(colony));
+
+		_.forEach(getAllRooms(), room => this.handlePowerMining(room));
+
 
 		if (getAutonomyLevel() > Autonomy.Manual) {
-			if (Game.time % Overseer.settings.outpostCheckFrequency == 2 * colony.id) {
-				this.handleNewOutposts(colony);
-			}
-			// Place pioneer directives in case the colony doesn't have a spawn for some reason
-			if (Game.time % 25 == 0 && colony.spawns.length == 0 && !DirectiveClearRoom.isPresent(colony.pos, 'room')) {
-				// verify that there are no spawns (not just a caching glitch)
-				const spawns = Game.rooms[colony.name]!.find(FIND_MY_SPAWNS);
-				if (spawns.length == 0) {
-					const pos = Pathing.findPathablePosition(colony.room.name);
-					DirectiveColonize.createIfNotPresent(pos, 'room');
+			_.forEach(this.colonies, colony => {
+				if (Game.time % Overseer.settings.outpostCheckFrequency == 2 * colony.id) {
+					this.handleNewOutposts(colony);
 				}
-			}
+				// Place pioneer directives in case the colony doesn't have a spawn for some reason
+				if (Game.time % 25 == 0 && colony.spawns.length == 0
+					&& !DirectiveClearRoom.isPresent(colony.pos, 'room')) {
+					// verify that there are no spawns (not just a caching glitch)
+					const spawns = Game.rooms[colony.name]!.find(FIND_MY_SPAWNS);
+					if (spawns.length == 0) {
+						const pos = Pathing.findPathablePosition(colony.room.name);
+						DirectiveColonize.createIfNotPresent(pos, 'room');
+					}
+				}
+			});
+
 		}
 	}
 
@@ -416,8 +466,9 @@ export class Overseer implements IOverseer {
 		}
 		for (const colony of this.colonies) {
 			this.handleSafeMode(colony);
-			this.placeDirectives(colony);
 		}
+
+		this.placeDirectives();
 	}
 
 	getCreepReport(colony: Colony): string[][] {

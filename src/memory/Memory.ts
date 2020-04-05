@@ -206,7 +206,7 @@ export class Mem {
 		if (!USE_SCREEPS_PROFILER) { // this is for the
 			delete Memory.screepsProfiler;
 		}
-		_.defaults(Memory.settings, {
+		_.defaultsDeep(Memory.settings, {
 			signature             : DEFAULT_OVERMIND_SIGNATURE,
 			operationMode         : DEFAULT_OPERATION_MODE,
 			log                   : {},

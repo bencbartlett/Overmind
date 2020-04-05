@@ -6,6 +6,10 @@ export function getAllColonyRooms(): Room[] {
 	return _.filter(_.values(Game.rooms), room => room.my);
 }
 
+export function getAllRooms(): Room[] {
+	return _.values(Game.rooms);
+}
+
 export function printRoomName(roomName: string, aligned = false): string {
 	if (aligned) {
 		const msg = '<a href="#!/room/' + Game.shard.name + '/' + roomName + '">' + roomName + '</a>';
