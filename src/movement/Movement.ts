@@ -541,7 +541,7 @@ export class Movement {
 			}
 		} else {
 			// Shouldn't reach here ideally
-			log.debug(`${otherCreep.name}@${otherCreep.pos.print} is not Zerg! (Why?)`);
+			log.warning(`${otherCreep.name}@${otherCreep.pos.print} is not Zerg! (Why?)`);
 			if (outcome == OK) {
 				if (otherData && otherData.path) {
 					otherData.path = Pathing.oppositeDirection(pushDirection) + otherData.path;
