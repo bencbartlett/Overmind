@@ -119,6 +119,13 @@ export class CommandCenter extends HiveCluster {
 			}
 		}
 
+		// If the link has energy and nothing needs it, empty it
+		if (this.link && this.link.energy > 0) {
+			if (this.colony.linkNetwork.receive.length == 0 || this.link.cooldown > 3) {
+				this.transportRequests.requestOutput(this.link, Priority.High);
+			}
+		}
+
 		// Nothing else should request if you're trying to start a room back up again
 		if (this.colony.state.bootstrapping) {
 			return;
@@ -163,15 +170,6 @@ export class CommandCenter extends HiveCluster {
 			}
 		}
 
-
-		// Withdraw requests:
-
-		// If the link has energy and nothing needs it, empty it
-		if (this.link && this.link.energy > 0) {
-			if (this.colony.linkNetwork.receive.length == 0 || this.link.cooldown > 3) {
-				this.transportRequests.requestOutput(this.link, Priority.High);
-			}
-		}
 	}
 
 	requestRoomObservation(roomName: string) {

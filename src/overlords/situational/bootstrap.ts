@@ -55,7 +55,7 @@ export class BootstrappingOverlord extends Overlord {
 		const allMiners = _.flatten(_.map(miningOverlordsInRoom, overlord => overlord.lifetimeFilter(overlord.miners)));
 		const allMiningPower = _.sum(allMiners, creep => creep.getActiveBodyparts(WORK));
 		if (allMiningPower == 0) {
-			const sizeLimit = Math.min(Math.floor(bodyCost(pattern) / this.colony.room.energyAvailable), 3);
+			const sizeLimit = Math.min(Math.floor(this.colony.room.energyAvailable / bodyCost(pattern)), 3);
 			setup = new CreepSetup(Roles.drone, {
 				pattern  : pattern,
 				sizeLimit: sizeLimit,
@@ -83,6 +83,7 @@ export class BootstrappingOverlord extends Overlord {
 						priority: this.priority + 1,
 					};
 					this.colony.hatchery.enqueue(request);
+					this.debug(`Enqueueing bootstrap miner with size ${setup.bodySetup.sizeLimit}`);
 				}
 			}
 		}

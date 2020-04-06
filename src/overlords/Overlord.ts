@@ -62,6 +62,7 @@ export interface OverlordSuspendOptions {
 export interface OverlordMemory {
 	suspend?: OverlordSuspendOptions;
 	[_MEM.STATS]?: OverlordStats;
+	debug?: boolean;
 }
 
 const OverlordMemoryDefaults: OverlordMemory = {};
@@ -110,6 +111,12 @@ export abstract class Overlord {
 		// Register the overlord on the colony overseer and on the overmind
 		Overmind.overlords[this.ref] = this;
 		Overmind.overseer.registerOverlord(this);
+	}
+
+	debug(...args: any[]) {
+		if (this.memory.debug) {
+			log.alert(this.print, args);
+		}
 	}
 
 	/**
