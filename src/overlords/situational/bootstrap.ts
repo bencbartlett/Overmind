@@ -1,4 +1,4 @@
-import {ColonyStage} from '../../Colony';
+import {bodyCost, CreepSetup, patternCost} from '../../creepSetups/CreepSetup';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {DirectiveHarvest} from '../../directives/resource/harvest';
 import {DirectiveBootstrap} from '../../directives/situational/bootstrap';
@@ -22,7 +22,7 @@ export class BootstrappingOverlord extends Overlord {
 	supplyStructures: (StructureSpawn | StructureExtension)[];
 
 	static settings = {
-		spawnBootstrapMinerThreshold: 2500
+		spawnBootstrapMinerThreshold: 3000
 	};
 
 	constructor(directive: DirectiveBootstrap, priority = OverlordPriority.emergency.bootstrap) {
@@ -42,15 +42,35 @@ export class BootstrappingOverlord extends Overlord {
 
 	private spawnBootstrapMiners() {
 		// Isolate mining site overlords in the room
-		let miningSites = _.filter(_.values(this.colony.miningSites),
-								   (site: DirectiveHarvest) => site.room == this.colony.room) as DirectiveHarvest[];
+		let miningSitesInRoom = _.filter(_.values(this.colony.miningSites),
+										 site => site.room == this.colony.room) as DirectiveHarvest[];
 		if (this.colony.spawns[0]) {
-			miningSites = _.sortBy(miningSites, site => site.pos.getRangeTo(this.colony.spawns[0]));
+			miningSitesInRoom = _.sortBy(miningSitesInRoom, site => site.pos.getRangeTo(this.colony.spawns[0]));
 		}
-		const miningOverlords = _.map(miningSites, site => site.overlords.mine);
+
+		// If you have no miners then create whatever is the biggest miner you can make
+		const pattern = [WORK, WORK, CARRY, MOVE];
+		let setup: CreepSetup;
+		const miningOverlordsInRoom = _.map(miningSitesInRoom, site => site.overlords.mine);
+		const allMiners = _.flatten(_.map(miningOverlordsInRoom, overlord => overlord.lifetimeFilter(overlord.miners)));
+		const allMiningPower = _.sum(allMiners, creep => creep.getActiveBodyparts(WORK));
+		if (allMiningPower == 0) {
+			const sizeLimit = Math.min(Math.floor(bodyCost(pattern) / this.colony.room.energyAvailable), 3);
+			setup = new CreepSetup(Roles.drone, {
+				pattern  : pattern,
+				sizeLimit: sizeLimit,
+			});
+		}
+		// Otherwise if you have miners then you can afford to make normal ones
+		else {
+			setup = new CreepSetup(Roles.drone, {
+				pattern  : pattern,
+				sizeLimit: 3,
+			});
+		}
 
 		// Create a bootstrapMiners and donate them to the miningSite overlords as needed
-		for (const overlord of miningOverlords) {
+		for (const overlord of miningOverlordsInRoom) {
 			const filteredMiners = this.lifetimeFilter(overlord.miners);
 			const miningPowerAssigned = _.sum(_.map(this.lifetimeFilter(overlord.miners),
 													creep => creep.getActiveBodyparts(WORK)));
@@ -58,7 +78,7 @@ export class BootstrappingOverlord extends Overlord {
 				filteredMiners.length < overlord.pos.availableNeighbors().length) {
 				if (this.colony.hatchery) {
 					const request: SpawnRequest = {
-						setup   : Setups.drones.miners.emergency,
+						setup   : setup,
 						overlord: overlord,
 						priority: this.priority + 1,
 					};
@@ -69,8 +89,11 @@ export class BootstrappingOverlord extends Overlord {
 	}
 
 	init() {
-		// At early levels, spawn one miner, then a filler, then the rest of the miners
-		if (this.colony.stage == ColonyStage.Larva) {
+		// If you are super low on energy, spawn one miner, then a filler, then rest of the miners
+		const totalEnergyInRoom = _.sum(this.withdrawStructures, structure => structure.store.energy);
+		const costToMakeNormalMinerAndFiller = patternCost(Setups.drones.miners.emergency) * 3
+											   + patternCost(Setups.filler); // costs 1000
+		if (totalEnergyInRoom < costToMakeNormalMinerAndFiller) {
 			if (this.colony.getCreepsByRole(Roles.drone).length == 0) {
 				this.spawnBootstrapMiners();
 				return;
@@ -88,11 +111,12 @@ export class BootstrappingOverlord extends Overlord {
 			}
 		}
 		// Then spawn the rest of the needed miners
-		const energyInStructures = _.sum(_.map(this.withdrawStructures, structure => structure.energy));
-		const droppedEnergy = _.sum(this.room.droppedEnergy, drop => drop.amount);
-		if (energyInStructures + droppedEnergy < BootstrappingOverlord.settings.spawnBootstrapMinerThreshold) {
-			this.spawnBootstrapMiners();
-		}
+		this.spawnBootstrapMiners();
+		// const energyInStructures = _.sum(_.map(this.withdrawStructures, structure => structure.energy));
+		// const droppedEnergy = _.sum(this.room.droppedEnergy, drop => drop.amount);
+		// if (energyInStructures + droppedEnergy < BootstrappingOverlord.settings.spawnBootstrapMinerThreshold) {
+		// 	this.spawnBootstrapMiners();
+		// }
 	}
 
 	private supplyActions(filler: Zerg) {

@@ -315,6 +315,11 @@ export class EvolutionChamber extends HiveCluster {
 	}
 
 	private registerRequests(): void {
+		// Don't care about labs if you can't spawn any creeps!
+		if (this.colony.state.bootstrapping) {
+			return;
+		}
+
 		// Separate product labs into actively boosting or ready for reaction
 		const boostingProductLabs = _.filter(this.productLabs, lab => this.labReservations[lab.id]);
 		const reactionProductLabs = _.filter(this.productLabs, lab => !this.labReservations[lab.id]);

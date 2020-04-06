@@ -112,6 +112,18 @@ export class CommandCenter extends HiveCluster {
 
 	private registerRequests(): void {
 
+		// Refill core spawn (only applicable to bunker layouts)
+		if (this.colony.bunker && this.colony.bunker.coreSpawn) {
+			if (this.colony.bunker.coreSpawn.energy < this.colony.bunker.coreSpawn.energyCapacity) {
+				this.transportRequests.requestInput(this.colony.bunker.coreSpawn, Priority.Normal);
+			}
+		}
+
+		// Nothing else should request if you're trying to start a room back up again
+		if (this.colony.state.bootstrapping) {
+			return;
+		}
+
 		// Supply requests:
 
 		// If the link is empty and can send energy and something needs energy, fill it up
@@ -124,12 +136,6 @@ export class CommandCenter extends HiveCluster {
 		const refillTowers = _.filter(this.towers, tower => tower.energy < CommandCenter.settings.refillTowersBelow);
 		_.forEach(refillTowers, tower => this.transportRequests.requestInput(tower, Priority.High));
 
-		// Refill core spawn (only applicable to bunker layouts)
-		if (this.colony.bunker && this.colony.bunker.coreSpawn) {
-			if (this.colony.bunker.coreSpawn.energy < this.colony.bunker.coreSpawn.energyCapacity) {
-				this.transportRequests.requestInput(this.colony.bunker.coreSpawn, Priority.Normal);
-			}
-		}
 		// Refill power spawn
 		if (this.powerSpawn) {
 			if (this.powerSpawn.energy < this.powerSpawn.energyCapacity * .5) {

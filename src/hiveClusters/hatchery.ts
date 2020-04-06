@@ -192,7 +192,7 @@ export class Hatchery extends HiveCluster {
 		// 	}
 		// }
 		// if (this.room.defcon > 0) {refillStructures = _.filter()}
-		_.forEach(this.energyStructures, struct => this.transportRequests.requestInput(struct, Priority.NormalLow));
+		_.forEach(this.energyStructures, struct => this.transportRequests.requestInput(struct, Priority.Normal));
 
 		// let refillSpawns = _.filter(this.spawns, spawn => spawn.energy < spawn.energyCapacity);
 		// let refillExtensions = _.filter(this.extensions, extension => extension.energy < extension.energyCapacity);
