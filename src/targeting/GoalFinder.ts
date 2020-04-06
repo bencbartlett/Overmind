@@ -289,4 +289,6 @@ export class GoalFinder {
 
 }
 
+global.GoalFinder = GoalFinder;
+
 

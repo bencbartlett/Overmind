@@ -50,24 +50,19 @@ export class BootstrappingOverlord extends Overlord {
 
 		// If you have no miners then create whatever is the biggest miner you can make
 		const pattern = [WORK, WORK, CARRY, MOVE];
-		let setup: CreepSetup;
 		const miningOverlordsInRoom = _.map(miningSitesInRoom, site => site.overlords.mine);
 		const allMiners = _.flatten(_.map(miningOverlordsInRoom, overlord => overlord.lifetimeFilter(overlord.miners)));
 		const allMiningPower = _.sum(allMiners, creep => creep.getActiveBodyparts(WORK));
+		let sizeLimit: number;
 		if (allMiningPower == 0) {
-			const sizeLimit = Math.min(Math.floor(this.colony.room.energyAvailable / bodyCost(pattern)), 3);
-			setup = new CreepSetup(Roles.drone, {
-				pattern  : pattern,
-				sizeLimit: sizeLimit,
-			});
+			sizeLimit = Math.min(Math.floor(this.colony.room.energyAvailable / bodyCost(pattern)), 3);
+		} else { // Otherwise if you have miners then you can afford to make normal ones
+			sizeLimit = 3;
 		}
-		// Otherwise if you have miners then you can afford to make normal ones
-		else {
-			setup = new CreepSetup(Roles.drone, {
-				pattern  : pattern,
-				sizeLimit: 3,
-			});
-		}
+		const setup = new CreepSetup(Roles.drone, {
+			pattern  : pattern,
+			sizeLimit: sizeLimit,
+		});
 
 		// Create a bootstrapMiners and donate them to the miningSite overlords as needed
 		for (const overlord of miningOverlordsInRoom) {
@@ -83,7 +78,7 @@ export class BootstrappingOverlord extends Overlord {
 						priority: this.priority + 1,
 					};
 					this.colony.hatchery.enqueue(request);
-					this.debug(`Enqueueing bootstrap miner with size ${setup.bodySetup.sizeLimit}`);
+					this.debug(`Enqueueing bootstrap miner with size ${sizeLimit}`);
 				}
 			}
 		}

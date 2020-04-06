@@ -906,12 +906,17 @@ export class Movement {
 		}
 		// Add penalties for things you want to avoid
 		_.forEach(avoid, avoidThis => {
+			let cost: number;
 			let x, y: number;
 			for (let dx = -avoidThis.range; dx <= avoidThis.range; dx++) {
 				for (let dy = -avoidThis.range; dy <= avoidThis.range; dy++) {
 					x = avoidThis.pos.x + dx;
 					y = avoidThis.pos.y + dy;
-					matrix.set(x, y, matrix.get(x, y) + options.avoidPenalty!);
+					cost = matrix.get(x, y);
+					if (cost < 0xff) {
+						cost = Math.min(cost + options.avoidPenalty!, 0xfe);
+						matrix.set(x, y, cost);
+					}
 				}
 			}
 		});
@@ -926,8 +931,8 @@ export class Movement {
 					cost = matrix.get(x, y);
 					if (cost < 0xff) { // is walkable
 						cost = Math.max(cost - options.approachBonus!, 1);
+						matrix.set(x, y, cost);
 					}
-					matrix.set(x, y, cost);
 				}
 			}
 		});
@@ -1194,7 +1199,9 @@ export class Movement {
 		_.defaults(options, {
 			terrainCosts: isPowerZerg(creep) ? {plainCost: 1, swampCost: 1} : getTerrainCosts((<Creep>creep.creep)),
 		});
-		if (options.fleeRange == undefined) options.fleeRange = options.terrainCosts!.plainCost > 1 ? 8 : 16;
+		if (options.fleeRange == undefined) {
+			options.fleeRange = options.terrainCosts!.plainCost > 1 ? 8 : 16;
+		}
 
 		const closest = creep.pos.findClosestByRange(avoidGoals);
 		const rangeToClosest = closest ? creep.pos.getRangeTo(closest) : 50;

@@ -85,6 +85,13 @@ const defaultColonyMemory: ColonyMemory = {
 	},
 };
 
+export interface Assets {
+	energy: number;
+	power: number;
+	ops: number;
+	[resourceType: string]: number;
+}
+
 
 /**
  * Colonies are the highest-level object other than the global Overmind. A colony groups together all rooms, structures,
@@ -104,7 +111,7 @@ export class Colony {
 	outposts: Room[];									// Rooms for remote resource collection
 	rooms: Room[];										// All rooms including the primary room
 	pos: RoomPosition;
-	assets: { [resourceType: string]: number };
+	assets: Assets;
 	// Physical colony structures and roomObjects
 	controller: StructureController;					// These are all duplicated from room properties
 	spawns: StructureSpawn[];							// |
@@ -561,13 +568,13 @@ export class Colony {
 	 * Summarizes the total of all resources in colony store structures, labs, and some creeps. Will always return
 	 * 0 for an asset that it has none of (not undefined)
 	 */
-	private computeAssets(verbose = false): { [resourceType: string]: number } {
+	private computeAssets(verbose = false): Assets {
 		// Include storage structures, lab contents, and manager carry
 		const assetStructures = _.compact([this.storage, this.terminal, this.factory, ...this.labs]);
 		const assetCreeps = [...this.getCreepsByRole(Roles.queen), ...this.getCreepsByRole(Roles.manager)];
 		const assetStores = _.map([...assetStructures, ...assetCreeps], thing => thing!.store);
 
-		const allAssets = mergeSum([...assetStores, ALL_ZERO_ASSETS]);
+		const allAssets = mergeSum([...assetStores, ALL_ZERO_ASSETS]) as Assets;
 
 		if (verbose) log.debug(`${this.room.print} assets: ` + JSON.stringify(allAssets));
 		return allAssets;

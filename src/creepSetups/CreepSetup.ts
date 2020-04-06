@@ -41,8 +41,9 @@ export class CreepSetup {
 		this.bodySetup = bodySetup as BodySetup;
 	}
 
-	/* Generate the largest body of a given pattern that is producable from a room,
-	 * subject to limitations from maxRepeats */
+	/**
+	 * Generate the largest body of a given pattern that can be made from a room, subject to limitations from maxRepeats
+	 */
 	generateBody(availableEnergy: number): BodyPartConstant[] {
 		let patternCost, patternLength, numRepeats: number;
 		const prefix = this.bodySetup.prefix;
@@ -95,6 +96,9 @@ export class CreepSetup {
 		return body;
 	}
 
+	/**
+	 * Returns the number of parts that a body will have if made from a given colony
+	 */
 	getBodyPotential(partType: BodyPartConstant, colony: Colony): number {
 		// let energyCapacity = Math.max(colony.room.energyCapacityAvailable,
 		// 							  colony.incubator ? colony.incubator.room.energyCapacityAvailable : 0);

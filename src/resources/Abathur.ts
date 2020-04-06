@@ -353,23 +353,6 @@ export class Abathur {
 		}
 	}
 
-	// Everything below is deprecated ==================================================================================
-
-	// private computeGlobalAssets(): { [resourceType: string]: number } {
-	// 	const colonyAssets: { [resourceType: string]: number }[] = [];
-	// 	for (const colony of getAllColonies()) {
-	// 		colonyAssets.push(colony.assets);
-	// 	}
-	// 	return mergeSum(colonyAssets);
-	// }
-	//
-	// get globalAssets(): { [resourceType: string]: number } {
-	// 	if (!this._globalAssets) {
-	// 		this._globalAssets = this.computeGlobalAssets();
-	// 	}
-	// 	return this._globalAssets;
-	// }
-
 	private static canReceiveBasicMineralsForReaction(mineralQuantities: { [resourceType: string]: number },
 													  amount: number): boolean {
 		for (const mineral in mineralQuantities) {
