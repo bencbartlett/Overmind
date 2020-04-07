@@ -1,4 +1,5 @@
 import {assimilationLocked} from '../assimilation/decorator';
+import {getAllColonies} from '../Colony';
 import {log} from '../console/log';
 import {Mem} from '../memory/Memory';
 import {profile} from '../profiler/decorator';
@@ -10,6 +11,10 @@ import {RESERVE_CREDITS} from '../~settings';
 interface MarketCache {
 	sell: { [resourceType: string]: { high: number, low: number } };
 	buy: { [resourceType: string]: { high: number, low: number } };
+	energyPrice: {
+		sell: number;
+		buy: number;
+	};
 	history: {
 		[resourceType: string]: {
 			avg: number,
@@ -24,7 +29,6 @@ interface MarketCache {
 interface TraderMemory {
 	debug?: boolean;
 	cache: MarketCache;
-	equalizeIndex: number;
 	canceledOrders: Order[];
 }
 
@@ -46,12 +50,15 @@ interface TraderStats {
 
 const TraderMemoryDefaults: TraderMemory = {
 	cache         : {
-		sell   : {},
-		buy    : {},
-		history: {},
-		tick   : 0,
+		sell       : {},
+		buy        : {},
+		energyPrice: {
+			sell: 0.1,
+			buy : 0.1,
+		},
+		history    : {},
+		tick       : 0,
 	},
-	equalizeIndex : 0,
 	canceledOrders: []
 };
 
@@ -233,13 +240,30 @@ export class TraderJoe implements ITradeNetwork {
 		}
 	}
 
+	/**
+	 * Computes the effective price of energy accounting for transfer costs
+	 */
+	private computeEffectiveEnergyPrices(): void {
+		const energyOrders = _(Game.market.getAllOrders({resourceType: RESOURCE_ENERGY}))
+			.filter(order => order.amount >= 5000)
+			.groupBy(order => order.type).value();
+		const sellOrders = energyOrders[ORDER_SELL];
+		const buyOrders = energyOrders[ORDER_BUY];
+
+		for (const colony of _.sample(getAllColonies(), 5)) {
+			const room = colony.room.name;
+			const sellDirectPrice = maxBy(buyOrders, order => order.price - this.marginalTransactionPrice(order, room));
+			const buyDirectPrice = minBy(sellOrders, order => order.price + this.marginalTransactionPrice(order, room));
+			const sellOrderPrice = this.computeCompetitivePrice(ORDER_SELL, RESOURCE_ENERGY, room);
+			const buyOrderPrice = this.computeCompetitivePrice(ORDER_BUY, RESOURCE_ENERGY, room);
+		}
+
+		// TODO: this implicitly requires knonwledge of energy price for this.marginalTransactionPrice() -> problematic?
+
+	}
+
 	private invalidateMarketCache(): void {
-		this.memory.cache = {
-			sell   : {},
-			buy    : {},
-			history: {},
-			tick   : 0,
-		};
+		this.memory.cache = TraderMemoryDefaults.cache;
 	}
 
 	/**
@@ -381,7 +405,11 @@ export class TraderJoe implements ITradeNetwork {
 	private marginalTransactionPrice(order: Order, dealerRoomName: string): number {
 		if (order.roomName) {
 			const transferCost = Game.market.calcTransactionCost(10000, order.roomName, dealerRoomName) / 10000;
-			const energyToCreditMultiplier = Math.min(this.memory.cache.history[RESOURCE_ENERGY].avg14, 0.1);
+			// Average distance between any two rooms is 25 since the map wraps, which has 56% transaction price, so
+			// energy is 44% what is is normally. This is a bit pessimistic, so let's bump it to 55%, which currently
+			// is what computeCompetitivePrice(sell, energy) is telling me it should be around...
+			const energyPriceGuess = 0.55 * this.memory.cache.history.energy.avg14;
+			const energyToCreditMultiplier = Math.min(energyPriceGuess, 0.1);
 			return transferCost * energyToCreditMultiplier;
 		} else {
 			// no order.roomName means subscription token, and I don't trade these so this should never get used
@@ -451,8 +479,6 @@ export class TraderJoe implements ITradeNetwork {
 		// Compute the price, returning Infinity if sanity checks are not passed
 		if (type == ORDER_SELL) { // if you are trying to sell a resource to buyers, undercut their prices a bit
 			const discountFactor = 1 - adjustment * adjustMagnitude;
-			// In the sell case only, we include the energy transaction costs so that people in the vicinity of the
-			// lowest seller will see our sell order as preferable
 			const marketRate = Math.max(lowestSellOrder.price, highestBuyOrder.price);
 			const price = marketRate * discountFactor;
 			this.debug(`Candidate price to ${type} ${resource} in ${printRoomName(room)}: ${price}`);
@@ -634,9 +660,9 @@ export class TraderJoe implements ITradeNetwork {
 	/**
 	 * Buy resources directly from a seller using Game.market.deal() rather than making a buy order
 	 */
-	private buyDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
-						opts: TradeOpts): number {
-		this.debug(`buyDirectly for ${terminal.room.print}: ${amount} ${resource}`);
+	private buyDirect(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
+					  opts: TradeOpts): number {
+		this.debug(`buyDirect for ${terminal.room.print}: ${amount} ${resource}`);
 		// If terminal is on cooldown or just did something then skip
 		if (!terminal.isReady && !opts.dryRun) {
 			return NO_ACTION; // don't return ERR_TIRED here because it doesn't signal an inability to buy
@@ -698,7 +724,7 @@ export class TraderJoe implements ITradeNetwork {
 			}
 			// Otherwise make the deal
 			const response = Game.market.deal(order.id, buyAmount, terminal.room.name);
-			this.debug(`buyDirectly executed for ${terminal.room.print}: ${buyAmount} ${resource} (${response})`);
+			this.debug(`buyDirect executed for ${terminal.room.print}: ${buyAmount} ${resource} (${response})`);
 			this.logTransaction(order, terminal.room.name, amount, response);
 			return response;
 		} else {
@@ -709,9 +735,9 @@ export class TraderJoe implements ITradeNetwork {
 	/**
 	 * Sell resources directly to a buyer using Game.market.deal() rather than making a sell order
 	 */
-	private sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
-						 opts: TradeOpts): number {
-		this.debug(`sellDirectly for ${terminal.room.print}: ${amount} ${resource}`);
+	private sellDirect(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
+					   opts: TradeOpts): number {
+		this.debug(`sellDirect for ${terminal.room.print}: ${amount} ${resource}`);
 		// If terminal is on cooldown or just did something then skip
 		if (!terminal.isReady && !opts.dryRun) {
 			return NO_ACTION; // don't return ERR_TIRED here because it doesn't signal an inability to sell
@@ -778,7 +804,7 @@ export class TraderJoe implements ITradeNetwork {
 			}
 			// Otherwise do the deal
 			const response = Game.market.deal(order.id, sellAmount, terminal.room.name);
-			this.debug(`sellDirectly executed for ${terminal.room.print}: ${sellAmount} ${resource} (${response})`);
+			this.debug(`sellDirect executed for ${terminal.room.print}: ${sellAmount} ${resource} (${response})`);
 			this.logTransaction(order, terminal.room.name, amount, response);
 			return response;
 		} else {
@@ -818,7 +844,7 @@ export class TraderJoe implements ITradeNetwork {
 
 		// If you don't have a lot of credits or preferDirect==true, try to sell directly to an existing buy order
 		if (opts.preferDirect && this.getExistingOrders(ORDER_BUY, resource, terminal.room.name).length == 0) {
-			const result = this.buyDirectly(terminal, resource, amount, opts);
+			const result = this.buyDirect(terminal, resource, amount, opts);
 			if (result != ERR_NO_ORDER_TO_BUY_FROM && result != ERR_BUY_DIRECT_PRICE_TOO_HIGH) {
 				return result;
 			}
@@ -846,7 +872,7 @@ export class TraderJoe implements ITradeNetwork {
 		// If you don't have a lot of credits or preferDirect==true, try to sell directly to an existing buy order
 		if (opts.preferDirect || Game.market.credits < TraderJoe.settings.market.credits.mustSellDirectBelow) {
 			if (this.getExistingOrders(ORDER_SELL, resource, terminal.room.name).length == 0) {
-				const result = this.sellDirectly(terminal, resource, amount, opts);
+				const result = this.sellDirect(terminal, resource, amount, opts);
 				if (result != ERR_NO_ORDER_TO_SELL_TO && result != ERR_SELL_DIRECT_PRICE_TOO_LOW) {
 					return result; // if there's nowhere to sensibly sell, allow creating an order
 				}
