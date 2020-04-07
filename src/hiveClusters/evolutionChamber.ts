@@ -2,21 +2,19 @@ import {$} from '../caching/GlobalCache';
 import {Colony} from '../Colony';
 import {log} from '../console/log';
 import {TerminalNetworkV2} from '../logistics/TerminalNetwork_v2';
-import {TraderJoe} from '../logistics/TradeNetwork';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {Mem} from '../memory/Memory';
 import {Pathing} from '../movement/Pathing';
 import {Priority} from '../priorities/priorities';
 import {profile} from '../profiler/decorator';
 import {Abathur, Reaction} from '../resources/Abathur';
-import {BOOST_PARTS, BoostType, REAGENTS} from '../resources/map_resources';
+import {BOOST_PARTS, BOOST_TIERS, BoostType, REAGENTS} from '../resources/map_resources';
 import {getPosFromBunkerCoord, reagentLabSpots} from '../roomPlanner/layouts/bunker';
 import {Stats} from '../stats/stats';
 import {randint} from '../utilities/random';
 import {rightArrow} from '../utilities/stringConstants';
 import {exponentialMovingAverage} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
-import {Zerg} from '../zerg/Zerg';
 import {HiveCluster} from './_HiveCluster';
 
 const LabStatus = {
@@ -353,63 +351,59 @@ export class EvolutionChamber extends HiveCluster {
 		return LAB_BOOST_MINERAL * (numPartsToBeBoosted - (existingBoostCounts[boostType] || 0));
 	}
 
-	/* Return whether you have the resources to fully boost a creep body with a given resource */
-	canBoost(body: BodyPartDefinition[], boostType: ResourceConstant, assetMultiplier = 5): boolean { // TODO
-		const boostAmount = EvolutionChamber.requiredBoostAmount(body, boostType);
-		if (this.colony.assets[boostType] >= boostAmount) {
-			// Does this colony have the needed resources already?
-			return true;
-		} else if (this.terminalNetwork.getAssets()[boostType] >= assetMultiplier * boostAmount) {
-			// Is there enough of the resource in terminalNetwork?
-			return true;
-		} else {
-			// Can you buy the resources on the market?
-			return (Game.market.credits > TraderJoe.settings.market.credits.canBuyBoostsAbove +
-					boostAmount * Overmind.tradeNetwork.priceOf(boostType));
-		}
-	}
-
 	/**
 	 * Returns the best boost of a given type (e.g. "tough") that the room can acquire a specified amount of
 	 */
-	bestBoostAvailable(boostType: BoostType, amount: number): ResourceConstant | undefined { // TODO
-		let boostFilter: (resource: ResourceConstant) => boolean;
-		switch (boostType) {
-			case 'attack':
-				boostFilter = Abathur.isAttackBoost;
-				break;
-			case 'carry':
-				boostFilter = Abathur.isCarryBoost;
-				break;
-			case 'ranged':
-				boostFilter = Abathur.isRangedBoost;
-				break;
-			case 'heal':
-				boostFilter = Abathur.isHealBoost;
-				break;
-			case 'move':
-				boostFilter = Abathur.isMoveBoost;
-				break;
-			case 'tough':
-				boostFilter = Abathur.isToughBoost;
-				break;
-			case 'harvest':
-				boostFilter = Abathur.isHarvestBoost;
-				break;
-			case 'construct':
-				boostFilter = Abathur.isConstructBoost;
-				break;
-			case 'dismantle':
-				boostFilter = Abathur.isDismantleBoost;
-				break;
-			case 'upgrade':
-				boostFilter = Abathur.isUpgradeBoost;
-				break;
-			default:
-				log.error(`${this.print}: ${boostType} is not a valid boostType!`);
-				return;
+	bestBoostAvailable(boostType: BoostType, amount: number): ResourceConstant | undefined {
+		if (PHASE != 'run') {
+			log.error(`EvolutionChamber.bestBoostAvailable() must be called in the run() phase!`);
 		}
-
+		// let boostFilter: (resource: ResourceConstant) => boolean;
+		// switch (boostType) {
+		// 	case 'attack':
+		// 		boostFilter = Abathur.isAttackBoost;
+		// 		break;
+		// 	case 'carry':
+		// 		boostFilter = Abathur.isCarryBoost;
+		// 		break;
+		// 	case 'ranged':
+		// 		boostFilter = Abathur.isRangedBoost;
+		// 		break;
+		// 	case 'heal':
+		// 		boostFilter = Abathur.isHealBoost;
+		// 		break;
+		// 	case 'move':
+		// 		boostFilter = Abathur.isMoveBoost;
+		// 		break;
+		// 	case 'tough':
+		// 		boostFilter = Abathur.isToughBoost;
+		// 		break;
+		// 	case 'harvest':
+		// 		boostFilter = Abathur.isHarvestBoost;
+		// 		break;
+		// 	case 'construct':
+		// 		boostFilter = Abathur.isConstructBoost;
+		// 		break;
+		// 	case 'dismantle':
+		// 		boostFilter = Abathur.isDismantleBoost;
+		// 		break;
+		// 	case 'upgrade':
+		// 		boostFilter = Abathur.isUpgradeBoost;
+		// 		break;
+		// 	default:
+		// 		log.error(`${this.print}: ${boostType} is not a valid boostType!`);
+		// 		return;
+		// }
+		const boosts = BOOST_TIERS[boostType];
+		for (const boost of [boosts.T3, boosts.T2, boosts.T1]) {
+			if (this.colony.assets[boost] >= amount) {
+				return boost;
+			} else if (this.terminalNetwork.canObtainResource(this.colony, boost, amount)) {
+				return boost;
+			}
+		}
+		// If we get to here there's no available boosts of this type
+		return undefined;
 	}
 
 	/* Request boosts sufficient to fully boost a given creep to be added to the boosting queue */
@@ -423,7 +417,6 @@ export class EvolutionChamber extends HiveCluster {
 			// want a lot of this
 			this.neededBoosts[boostResource] = this.neededBoosts[boostResource] + boostAmount;
 		}
-
 	}
 
 	private lockLabFromTerminalNetwork(lab: StructureLab) {

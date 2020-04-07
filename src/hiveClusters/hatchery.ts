@@ -350,6 +350,7 @@ export class Hatchery extends HiveCluster {
 	 */
 	enqueue(request: SpawnRequest): void {
 		const protoCreep = this.generateProtoCreep(request.setup, request.overlord);
+		// TODO: ^shouldn't need to do this at enqueue, just at spawn. Implement approximateSize() method?
 		const priority = request.priority;
 		if (this.canSpawn(protoCreep.body) && protoCreep.body.length > 0) {
 			// Spawn the creep yourself if you can
