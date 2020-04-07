@@ -319,8 +319,8 @@ export class EvolutionChamber extends HiveCluster {
 		}
 
 		// Separate product labs into actively boosting or ready for reaction
-		const boostingProductLabs = _.filter(this.productLabs, lab => this.labReservations[lab.id]);
-		const reactionProductLabs = _.filter(this.productLabs, lab => !this.labReservations[lab.id]);
+		const [boostingProductLabs, reactionProductLabs] = _.partition(this.productLabs,
+																	   lab => this.labReservations[lab.id]);
 
 		// Handle energy requests for labs with different priorities
 		const boostingRefillLabs = _.filter(boostingProductLabs, lab => lab.energy < lab.energyCapacity);
@@ -430,12 +430,12 @@ export class EvolutionChamber extends HiveCluster {
 	init(): void { // This gets called after every Overlord.init() so you should have all your boost requests in already
 
 		// Set boosting lab reservations and compute needed resources; needs to be done BEFORE initLabStatus()!
-		for (const mineralType in this.neededBoosts) {
-			if (this.neededBoosts[mineralType] == 0) continue;
+		for (const boost in this.neededBoosts) {
+			if (this.neededBoosts[boost] == 0) continue;
 
 			let boostLab: StructureLab | undefined;
 			for (const id in this.labReservations) { // find a lab already reserved for this mineral type
-				if (this.labReservations[id] && this.labReservations[id].mineralType == mineralType) {
+				if (this.labReservations[id] && this.labReservations[id].mineralType == boost) {
 					boostLab = deref(id) as StructureLab;
 				}
 			}
@@ -443,7 +443,7 @@ export class EvolutionChamber extends HiveCluster {
 				boostLab = _.find(this.boostingLabs, lab => !this.labReservations[lab.id]);
 			}
 			if (boostLab) {
-				this.reserveLab(boostLab, <ResourceConstant>mineralType, this.neededBoosts[mineralType]);
+				this.reserveLab(boostLab, <ResourceConstant>boost, this.neededBoosts[boost]);
 			}
 		}
 
@@ -455,12 +455,42 @@ export class EvolutionChamber extends HiveCluster {
 
 		// Request resources for boosting and lock them once you have them
 		for (const boost in this.neededBoosts) {
-			if (this.neededBoosts[boost] > this.colony.assets[boost]) {
+
+			const product = this.memory.activeReaction ? this.memory.activeReaction.mineralType : undefined;
+			const reagents = this.memory.activeReaction ? REAGENTS[this.memory.activeReaction.mineralType]
+														: [undefined, undefined];
+
+			let amountUnavailable = 0;
+			if (boost == product) {
+				_.forEach(this.productLabs, lab => {
+					if (lab.mineralType == boost &&
+						(!this.labReservations[lab.id] || this.labReservations[lab.id].mineralType != boost)) {
+						amountUnavailable += lab.mineralAmount;
+					}
+				});
+			} else if (boost == reagents[0]) {
+				_.forEach(this.reagentLabs, lab => {
+					if (lab.mineralType == boost &&
+						(!this.labReservations[lab.id] || this.labReservations[lab.id].mineralType != boost)) {
+						amountUnavailable += lab.mineralAmount;
+					}
+				});
+			} else if (boost == reagents[1]) {
+				_.forEach(this.reagentLabs, lab => {
+					if (lab.mineralType == boost &&
+						(!this.labReservations[lab.id] || this.labReservations[lab.id].mineralType != boost)) {
+						amountUnavailable += lab.mineralAmount;
+					}
+				});
+			}
+
+			const amountNeeded = this.neededBoosts[boost] + amountUnavailable;
+			if (amountNeeded > this.colony.assets[boost]) {
 				this.debug(`Requesting boost from terminal network: ${this.neededBoosts[boost]} ${boost}`);
-				this.terminalNetwork.requestResource(this.colony, <ResourceConstant>boost, this.neededBoosts[boost]);
+				this.terminalNetwork.requestResource(this.colony, <ResourceConstant>boost, amountNeeded);
 			} else {
 				this.debug(`Locking boost from terminal network: ${this.neededBoosts[boost]} ${boost}`);
-				this.terminalNetwork.lockResource(this.colony, <ResourceConstant>boost, this.neededBoosts[boost]);
+				this.terminalNetwork.lockResource(this.colony, <ResourceConstant>boost, amountNeeded);
 			}
 		}
 

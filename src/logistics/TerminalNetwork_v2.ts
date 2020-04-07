@@ -569,7 +569,8 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		// Need to have the resources to lock them
 		if (requestor.assets[resource] < newLockAmount) {
 			log.warning(`TerminalNetwork.lockResource() called for ${requestor.print} locking ${lockAmount} ` +
-						`of ${resource}, but colony only has ${requestor.assets[resource]} amount!`);
+						`(total: ${newLockAmount}) of ${resource}, but colony only has ` +
+						`${requestor.assets[resource]} amount!`);
 		}
 
 		// Lock this amount of resources
@@ -928,7 +929,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 					const sendTerm = colony.terminal!;
 					const recvTerm = bestPartner.terminal!;
 					sendAmount = Math.min(sendAmount,
-											  sendTerm.store[resource] - this.lockedAmount(colony, resource));
+										  sendTerm.store[resource] - this.lockedAmount(colony, resource));
 					if (resource == RESOURCE_ENERGY) { // if we're sending energy, make sure we have amount + cost
 						const sendCost = Game.market.calcTransactionCost(sendAmount, colony.name, bestPartner.name);
 						if (sendAmount + sendCost > sendTerm.store[resource]) {
