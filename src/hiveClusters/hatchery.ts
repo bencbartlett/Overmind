@@ -78,13 +78,13 @@ export class Hatchery extends HiveCluster {
 		linksRequestEnergyBelow: number, 						// What value will links store more energy at?
 		suppressSpawning: boolean,             					// Prevents the hatchery from spawning this tick
 	};
-	private _nextAvailability: number | undefined;
-	// private _queuedSpawnTime: number | undefined;
+
 	private productionPriorities: number[];
 	private productionQueue: {								// Prioritized spawning queue
 		[priority: number]: SpawnOrder[]
 	};
 	private isOverloaded: boolean;
+	private _waitTimes: { [priority: number]: number } | undefined;
 
 	static restrictedRange = 6;								// Don't stand idly within this range of hatchery
 
@@ -109,6 +109,7 @@ export class Hatchery extends HiveCluster {
 		this.productionPriorities = [];
 		this.productionQueue = {};
 		this.isOverloaded = false;
+		this._waitTimes = undefined;
 		this.settings = {
 			refillTowersBelow      : 750,
 			linksRequestEnergyBelow: 0,
@@ -122,9 +123,10 @@ export class Hatchery extends HiveCluster {
 		$.refreshRoom(this);
 		$.refresh(this, 'spawns', 'extensions', 'energyStructures', 'link', 'towers', 'battery');
 		this.availableSpawns = _.filter(this.spawns, spawn => !spawn.spawning);
-		this.isOverloaded = false;
 		this.productionPriorities = [];
 		this.productionQueue = {};
+		this.isOverloaded = false;
+		this._waitTimes = undefined;
 	}
 
 	spawnMoarOverlords() {
@@ -236,11 +238,14 @@ export class Hatchery extends HiveCluster {
 				return ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH;
 			}
 			protoCreep.memory.data.origin = spawnToUse.pos.roomName;
+
+			// Spawn the creep
 			const result = spawnToUse.spawnCreep(protoCreep.body, protoCreep.name, {
 				memory          : protoCreep.memory,
 				energyStructures: this.energyStructures,
 				directions      : options.directions
 			});
+
 			if (result == OK) {
 				// Creep has been successfully spawned; add cost into profiling
 				const overlordRef = protoCreep.memory[_MEM.OVERLORD];
@@ -273,13 +278,7 @@ export class Hatchery extends HiveCluster {
 
 	/* Generate (but not spawn) the largest creep possible, returns the protoCreep as an object */
 	private generateProtoCreep(setup: CreepSetup, overlord: Overlord): ProtoCreep {
-		// Generate the creep body
-		let creepBody: BodyPartConstant[];
-		// if (overlord.colony.incubator) { // if you're being incubated, build as big a creep as you want
-		// 	creepBody = setup.generateBody(overlord.colony.incubator.room.energyCapacityAvailable);
-		// } else { // otherwise limit yourself to actual energy constraints
-		creepBody = setup.generateBody(this.room.energyCapacityAvailable);
-		// }
+
 		// Generate the creep memory
 		const creepMemory: CreepMemory = {
 			[_MEM.COLONY]  : overlord.colony.name, 				// name of the colony the creep is assigned to
@@ -290,43 +289,71 @@ export class Hatchery extends HiveCluster {
 				origin: '',										// where it was spawned, filled in at spawn time
 			},
 		};
+
+		// Generate the creep body
+		const {body, boosts} = setup.create(this.colony);
+
+		if (boosts.length > 0) {
+			creepMemory.needBoosts = boosts; // tell the creep what boosts it will need to get
+		}
+
 		// Create the protocreep and return it
 		const protoCreep: ProtoCreep = { 							// object to add to spawner queue
-			body  : creepBody, 										// body array
-			name  : setup.role, 									// name of the creep - gets modified by hatchery
+			body  : body, 											// body array
+			name  : setup.role, 									// name of the creep; gets modified by hatchery
 			memory: creepMemory,									// memory to initialize with
 		};
 		return protoCreep;
 	}
 
-	/* Returns the approximate aggregated time at which the hatchery will next be available to spawn something */
-	get nextAvailability(): number {
-		if (!this._nextAvailability) {
-			const allQueued = _.flatten(_.values(this.productionQueue)) as SpawnOrder[];
-			const queuedSpawnTime = _.sum(allQueued, order => order.protoCreep.body.length) * CREEP_SPAWN_TIME;
-			const activeSpawnTime = _.sum(this.spawns, spawn => spawn.spawning ? spawn.spawning.remainingTime : 0);
-			this._nextAvailability = (activeSpawnTime + queuedSpawnTime) / this.spawns.length;
+	/**
+	 * Returns the approximate aggregated time at which the hatchery will next be available to spawn a creep request
+	 * with a given priority.
+	 */
+	getWaitTimeForPriority(priority: number): number {
+		if (!this._waitTimes) {
+			const waitTimes: { [priority: number]: number } = {};
+
+			// Initialize wait time to what is currently spawning
+			let waitTime = _.sum(this.spawns, spawn => spawn.spawning ? spawn.spawning.remainingTime : 0) /
+			this.spawns.length;
+
+			// Add in expected time for whatever else needs to be spawned, cumulative up to each priority
+			for (const priority of this.productionPriorities.sort()) {
+				waitTime += CREEP_SPAWN_TIME * _.sum(this.productionQueue[priority],
+													 order => order.protoCreep.body.length) / this.spawns.length;
+				waitTimes[priority] = waitTime;
+			}
+			this._waitTimes = waitTimes;
 		}
-		return this._nextAvailability;
+		if (this._waitTimes[priority] != undefined) {
+			return this._waitTimes[priority];
+		}
+		const priorities = this.productionPriorities.sort();
+		if (priorities.length == 0) {
+			return 0;
+		}
+		if (priority < _.first(priorities)) {
+			return 0;
+		}
+		const priorityIndex = _.sortedIndex(priorities, priority);
+		const waitTime = this._waitTimes[priorities[priorityIndex]];
+		if (waitTime == undefined) {
+			log.error(`Undefined wait time in wait times: ${this._waitTimes}!`);
+			return 0;
+		}
+		return waitTime;
 	}
 
-	// /* Number of ticks required to make everything in spawn queue divided by number of spawns */
-	// get queuedSpawnTime(): number {
-	// 	if (!this._queuedSpawnTime) {
-	// 		let allQueued = _.flatten(_.values(this.productionQueue)) as SpawnOrder[];
-	// 		let queuedSpawnTime = _.sum(allQueued, order => order.protoCreep.body.length) * CREEP_SPAWN_TIME;
-	// 		this._queuedSpawnTime = queuedSpawnTime / this.spawns.length;
-	// 	}
-	// 	return this._queuedSpawnTime;
-	// }
-
-	/* Enqueues a request to the hatchery */
+	/**
+	 * Enqueues a spawn request to the hatchery production queue
+	 */
 	enqueue(request: SpawnRequest): void {
 		const protoCreep = this.generateProtoCreep(request.setup, request.overlord);
 		const priority = request.priority;
 		if (this.canSpawn(protoCreep.body) && protoCreep.body.length > 0) {
 			// Spawn the creep yourself if you can
-			this._nextAvailability = undefined; // invalidate cache
+			this._waitTimes = undefined; // invalidate cache
 			// this._queuedSpawnTime = undefined;
 			if (!this.productionQueue[priority]) {
 				this.productionQueue[priority] = [];
@@ -342,7 +369,6 @@ export class Hatchery extends HiveCluster {
 	private spawnHighestPriorityCreep(): number | undefined {
 		const sortedKeys = _.sortBy(this.productionPriorities);
 		for (const priority of sortedKeys) {
-
 			// if (this.colony.defcon >= DEFCON.playerInvasion
 			// 	&& !this.colony.controller.safeMode
 			// 	&& priority > OverlordPriority.warSpawnCutoff) {
@@ -368,43 +394,43 @@ export class Hatchery extends HiveCluster {
 		}
 	}
 
-	private handleSpawns(): void {
-		// Spawn all queued creeps that you can
-		while (this.availableSpawns.length > 0) {
-			const result = this.spawnHighestPriorityCreep();
-			if (result == ERR_NOT_ENOUGH_ENERGY) { // if you can't spawn something you want to
-				this.isOverloaded = true;
-			}
-			if (result != OK && result != ERR_SPECIFIED_SPAWN_BUSY) {
-				// Can't spawn creep right now
-				break;
-			}
-		}
-		// Move creeps off of exit position to let the spawning creep out if necessary
-		for (const spawn of this.spawns) {
-			if (spawn.spawning && spawn.spawning.remainingTime <= 1
-				&& spawn.pos.findInRange(FIND_MY_CREEPS, 1).length > 0) {
-				let directions: DirectionConstant[];
-				if (spawn.spawning.directions) {
-					directions = spawn.spawning.directions;
-				} else {
-					directions = _.map(spawn.pos.availableNeighbors(true), pos => spawn.pos.getDirectionTo(pos));
-				}
-				const exitPos = Pathing.positionAtDirection(spawn.pos, _.first(directions)) as RoomPosition;
-				Movement.vacatePos(exitPos);
-			}
-		}
-	}
-
 	// Runtime operation ===============================================================================================
 	init(): void {
 		this.registerEnergyRequests();
 	}
 
 	run(): void {
+		// Handle spawning
 		if (!this.settings.suppressSpawning) {
-			this.handleSpawns();
+
+			// Spawn all queued creeps that you can
+			while (this.availableSpawns.length > 0) {
+				const result = this.spawnHighestPriorityCreep();
+				if (result == ERR_NOT_ENOUGH_ENERGY) { // if you can't spawn something you want to
+					this.isOverloaded = true;
+				}
+				if (result != OK && result != ERR_SPECIFIED_SPAWN_BUSY) {
+					// Can't spawn creep right now
+					break;
+				}
+			}
+			// Move creeps off of exit position to let the spawning creep out if necessary
+			for (const spawn of this.spawns) {
+				if (spawn.spawning && spawn.spawning.remainingTime <= 1
+					&& spawn.pos.findInRange(FIND_MY_CREEPS, 1).length > 0) {
+					let directions: DirectionConstant[];
+					if (spawn.spawning.directions) {
+						directions = spawn.spawning.directions;
+					} else {
+						directions = _.map(spawn.pos.availableNeighbors(true), pos => spawn.pos.getDirectionTo(pos));
+					}
+					const exitPos = Pathing.positionAtDirection(spawn.pos, _.first(directions)) as RoomPosition;
+					Movement.vacatePos(exitPos);
+				}
+			}
+
 		}
+
 		this.recordStats();
 	}
 
@@ -412,7 +438,7 @@ export class Hatchery extends HiveCluster {
 		// Compute uptime and overload status
 		const spawnUsageThisTick = _.filter(this.spawns, spawn => spawn.spawning).length / this.spawns.length;
 		const uptime = exponentialMovingAverage(spawnUsageThisTick, this.memory.stats.uptime, CREEP_LIFE_TIME);
-		const longUptime = exponentialMovingAverage(spawnUsageThisTick, this.memory.stats.longUptime, 5 * CREEP_LIFE_TIME);
+		const longUptime = exponentialMovingAverage(spawnUsageThisTick, this.memory.stats.longUptime, 3 * CREEP_LIFE_TIME);
 		const overload = exponentialMovingAverage(this.isOverloaded ? 1 : 0, this.memory.stats.overload, CREEP_LIFE_TIME);
 
 		Stats.log(`colonies.${this.colony.name}.hatchery.uptime`, uptime);

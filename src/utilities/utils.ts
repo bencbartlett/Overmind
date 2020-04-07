@@ -2,10 +2,6 @@
 
 import {alignedNewline, bullet} from './stringConstants';
 
-export function getAllColonyRooms(): Room[] {
-	return _.filter(_.values(Game.rooms), room => room.my);
-}
-
 export function getAllRooms(): Room[] {
 	return _.values(Game.rooms);
 }

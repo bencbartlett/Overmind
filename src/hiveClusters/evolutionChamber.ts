@@ -343,7 +343,7 @@ export class EvolutionChamber extends HiveCluster {
 	/* Reserves a product lab for boosting with a compound unrelated to production */
 	private reserveLab(lab: StructureLab, resourceType: ResourceConstant, amount: number) {
 		// _.remove(this.productLabs, productLab => productLab.id == lab.id); // This gets excluded in registerRequests
-		this.labReservations[lab.id] = {mineralType: resourceType, amount: amount};
+		this.labReservations[lab.id] = {mineralType: resourceType, amount: Math.min(amount, LAB_MINERAL_CAPACITY)};
 	}
 
 	/* Return the amount of a given resource necessary to fully boost a creep body */
@@ -413,14 +413,17 @@ export class EvolutionChamber extends HiveCluster {
 	}
 
 	/* Request boosts sufficient to fully boost a given creep to be added to the boosting queue */
-	requestBoost(zerg: Zerg, boostType: ResourceConstant): void {
+	requestBoosts(boosts: { [boostResource: string]: number }): void {
 		// Add the required amount to the neededBoosts
-		this.debug(`${boostType} boost requested for ${zerg.print}`);
-		const boostAmount = EvolutionChamber.requiredBoostAmount(zerg.body, boostType);
-		if (!this.neededBoosts[boostType]) {
-			this.neededBoosts[boostType] = 0;
+		this.debug(`${JSON.stringify(boosts)} boosts requested!`);
+		for (const boostResource in boosts) {
+			const boostAmount = boosts[boostResource];
+			// Here this.neededBoosts is describing what we want, not what we are going to load into labs, so it's okay
+			// (and in fact better) to allow this to exceed LAB_MINERAL_CAPACITY so that terminalNetwork knows we
+			// want a lot of this
+			this.neededBoosts[boostResource] = this.neededBoosts[boostResource] + boostAmount;
 		}
-		this.neededBoosts[boostType] = Math.min(this.neededBoosts[boostType] + boostAmount, LAB_MINERAL_CAPACITY);
+
 	}
 
 	private lockLabFromTerminalNetwork(lab: StructureLab) {

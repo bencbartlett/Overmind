@@ -108,6 +108,7 @@ interface CreepMemory {
 	[_MEM.COLONY]: string | null;
 	role: string;
 	task: ProtoTask | null;
+	needBoosts?: ResourceConstant[];
 	data: {
 		origin: string;
 	};
@@ -260,6 +261,7 @@ interface ExpansionData {
 }
 
 interface RoomMemory {
+	spawnGroup?: any;
 	[_MEM.EXPIRATION]?: number;
 	[_MEM.TICK]?: number;
 	[_RM.AVOID]?: boolean;

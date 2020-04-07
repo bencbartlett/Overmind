@@ -207,6 +207,19 @@ export type BoostType =
 	| 'dismantle'
 	| 'upgrade';
 
+export const BoostTypeBodyparts: { [boostType in BoostType]: BodyPartConstant } = {
+	attack   : ATTACK,
+	carry    : CARRY,
+	ranged   : RANGED_ATTACK,
+	heal     : HEAL,
+	move     : MOVE,
+	tough    : TOUGH,
+	harvest  : WORK,
+	construct: WORK,
+	dismantle: WORK,
+	upgrade  : WORK,
+};
+
 export type BoostTier = 'T1' | 'T2' | 'T3';
 
 export function isBoostType(str: string): str is BoostType {

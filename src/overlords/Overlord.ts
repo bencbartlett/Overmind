@@ -6,8 +6,7 @@ import {SpawnGroup} from '../logistics/SpawnGroup';
 import {Mem} from '../memory/Memory';
 import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
-import {BOOST_PARTS, BOOST_TIERS} from '../resources/map_resources';
-import {MIN_LIFETIME_FOR_BOOST} from '../tasks/instances/getBoosted';
+import {Abathur} from '../resources/Abathur';
 import {Tasks} from '../tasks/Tasks';
 import {getOverlord, setOverlord} from '../zerg/AnyZerg';
 import {CombatZerg} from '../zerg/CombatZerg';
@@ -40,7 +39,7 @@ export interface CreepRequestOptions {
 
 export interface ZergOptions {
 	notifyWhenAttacked?: boolean;
-	boostWishlist?: ResourceConstant[] | undefined;
+	// boostWishlist?: ResourceConstant[] | undefined;
 }
 
 export interface OverlordStats {
@@ -88,7 +87,7 @@ export abstract class Overlord {
 	private _creeps: { [roleName: string]: Creep[] };
 	private _zerg: { [roleName: string]: Zerg[] };
 	private _combatZerg: { [roleName: string]: CombatZerg[] };
-	private boosts: { [roleName: string]: ResourceConstant[] | undefined };
+	// private boosts: { [roleName: string]: ResourceConstant[] | undefined };
 	creepUsageReport: { [roleName: string]: [number, number] | undefined };
 	private shouldSpawnAt?: number;
 
@@ -103,19 +102,64 @@ export abstract class Overlord {
 		this.pos = initializer.pos;
 		this.colony = hasColony(initializer) ? initializer.colony : initializer;
 		this.spawnGroup = undefined;
+
+		// Calculate the creeps associated with this overlord and group by roles
+		this._creeps = {};
 		this._zerg = {};
 		this._combatZerg = {};
 		this.recalculateCreeps();
+
 		this.creepUsageReport = _.mapValues(this._creeps, creep => undefined);
-		this.boosts = _.mapValues(this._creeps, creep => undefined);
+		// this.boosts = _.mapValues(this._creeps, creep => undefined);
 		// Register the overlord on the colony overseer and on the overmind
 		Overmind.overlords[this.ref] = this;
 		Overmind.overseer.registerOverlord(this);
 	}
 
+	get print(): string {
+		return '<a href="#!/room/' + Game.shard.name + '/' + this.pos.roomName + '">[' + this.ref + ']</a>';
+	}
+
 	debug(...args: any[]) {
 		if (this.memory.debug) {
 			log.alert(this.print, args);
+		}
+	}
+
+	/**
+	 * Refreshes overlord, recalculating creeps and refreshing existing Zerg. New creeps are automatically added,
+	 * and the corresponding role groups (e.g. 'queens') are automatically updated. Child methods do not need to
+	 * refresh their zerg properties, only other room objects stored on the Overlord.
+	 */
+	refresh(): void {
+		// Refresh memory
+		this.memory = Mem.wrap(this.initializer.memory, this.name);
+		// Refresh room
+		this.room = Game.rooms[this.pos.roomName];
+		// Refresh zerg
+		this.recalculateCreeps();
+		for (const role in this._creeps) {
+			for (const creep of this._creeps[role]) {
+				if (Overmind.zerg[creep.name]) {
+					// log.debug(`Refreshing creep ${creep.name}`)
+					Overmind.zerg[creep.name].refresh();
+				} else {
+					log.warning(`${this.print}: could not find and refresh zerg with name ${creep.name}!`);
+				}
+			}
+		}
+	}
+
+	recalculateCreeps(): void {
+		// Recalculate the sets of creeps for each role in this overlord
+		this._creeps = _.mapValues(Overmind.cache.overlords[this.ref],
+								   creepsOfRole => _.map(creepsOfRole, creepName => Game.creeps[creepName]));
+		// Update zerg and combatZerg records
+		for (const role in this._zerg) {
+			this.synchronizeZerg(role);
+		}
+		for (const role in this._combatZerg) {
+			this.synchronizeCombatZerg(role);
 		}
 	}
 
@@ -154,47 +198,6 @@ export abstract class Overlord {
 		this.memory.suspend = {
 			endTick: endTick
 		};
-	}
-
-	/**
-	 * Refreshes overlord, recalculating creeps and refreshing existing Zerg. New creeps are automatically added,
-	 * and the corresponding role groups (e.g. 'queens') are automatically updated. Child methods do not need to
-	 * refresh their zerg properties, only other room objects stored on the Overlord.
-	 */
-	refresh(): void {
-		// Refresh memory
-		this.memory = Mem.wrap(this.initializer.memory, this.name);
-		// Refresh room
-		this.room = Game.rooms[this.pos.roomName];
-		// Refresh zerg
-		this.recalculateCreeps();
-		for (const role in this._creeps) {
-			for (const creep of this._creeps[role]) {
-				if (Overmind.zerg[creep.name]) {
-					// log.debug(`Refreshing creep ${creep.name}`)
-					Overmind.zerg[creep.name].refresh();
-				} else {
-					log.warning(`${this.print}: could not find and refresh zerg with name ${creep.name}!`);
-				}
-			}
-		}
-	}
-
-	get print(): string {
-		return '<a href="#!/room/' + Game.shard.name + '/' + this.pos.roomName + '">[' + this.ref + ']</a>';
-	}
-
-	recalculateCreeps(): void {
-		// Recalculate the sets of creeps for each role in this overlord
-		this._creeps = _.mapValues(Overmind.cache.overlords[this.ref],
-								   creepsOfRole => _.map(creepsOfRole, creepName => Game.creeps[creepName]));
-		// Update zerg and combatZerg records
-		for (const role in this._zerg) {
-			this.synchronizeZerg(role);
-		}
-		for (const role in this._combatZerg) {
-			this.synchronizeCombatZerg(role);
-		}
 	}
 
 	/**
@@ -256,9 +259,9 @@ export abstract class Overlord {
 			this._zerg[role] = [];
 			this.synchronizeZerg(role, opts.notifyWhenAttacked);
 		}
-		if (opts.boostWishlist) {
-			this.boosts[role] = opts.boostWishlist;
-		}
+		// if (opts.boostWishlist) {
+		// 	this.boosts[role] = opts.boostWishlist;
+		// }
 		return this._zerg[role];
 	}
 
@@ -292,9 +295,9 @@ export abstract class Overlord {
 			this._combatZerg[role] = [];
 			this.synchronizeCombatZerg(role, opts.notifyWhenAttacked);
 		}
-		if (opts.boostWishlist) {
-			this.boosts[role] = opts.boostWishlist;
-		}
+		// if (opts.boostWishlist) {
+		// 	this.boosts[role] = opts.boostWishlist;
+		// }
 		return this._combatZerg[role];
 	}
 
@@ -499,116 +502,77 @@ export abstract class Overlord {
 		this.creepReport(setup.role, creepQuantity, quantity);
 	}
 
-	// TODO: finish this; currently requires host colony to have evolution chamber
-	canBoostSetup(setup: CreepSetup): boolean {
-		if (this.colony.evolutionChamber && this.boosts[setup.role] && this.boosts[setup.role]!.length > 0) {
-			let energyCapacityAvailable: number;
-			if (this.spawnGroup) {
-				energyCapacityAvailable = this.spawnGroup.energyCapacityAvailable;
-			} else if (this.colony.spawnGroup) {
-				energyCapacityAvailable = this.colony.spawnGroup.energyCapacityAvailable;
-			} else if (this.colony.hatchery) {
-				energyCapacityAvailable = this.colony.hatchery.room.energyCapacityAvailable;
-			} else {
-				return false;
-			}
-			const body = _.map(setup.generateBody(energyCapacityAvailable),
-							   part => ({type: part, hits: 100})) as BodyPartDefinition[];
-			if (body.length == 0) return false;
-			return _.all(this.boosts[setup.role]!,
-						 boost => this.colony.evolutionChamber!.canBoost(body, boost));
-		}
-		return false;
-	}
-
-	/**
-	 * Return whether you are capable of boosting a creep to the desired specifications
-	 */
-	shouldBoost(creep: Zerg, onlyBoostInSpawn = false): boolean {
-		// Can't boost if there's no evolution chamber or TTL is less than threshold
-		const colony = Overmind.colonies[creep.room.name] as Colony | undefined;
-		const evolutionChamber = colony ? colony.evolutionChamber : undefined;
-		if (!evolutionChamber ||
-			(creep.ticksToLive && creep.ticksToLive < MIN_LIFETIME_FOR_BOOST * creep.lifetime)) {
-			return false;
-		}
-
-		// EDIT: they removed in-spawn boosting... RIP :(
-		// // If you're in a bunker layout at level 8 with max labs, only boost while spawning
-		// if (onlyBoostInSpawn && this.colony.bunker && this.colony.level == 8 && this.colony.labs.length == 10) {
-		// 	if (!creep.spawning) {
-		// 		return false;
-		// 	}
-		// }
-
-		// Otherwise just boost if you need it and can get the resources
-		if (this.boosts[creep.roleName]) {
-			const boosts = _.filter(this.boosts[creep.roleName]!, boost =>
-				(creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(BOOST_PARTS[boost]));
-			if (boosts.length > 0) {
-				return _.all(boosts, boost => evolutionChamber!.canBoost(creep.body, boost));
-			}
-		}
-		return false;
-	}
-
-
-	/**
-	 * Request a boost from the evolution chamber; should be called during init()
-	 */
-	private requestBoostsForCreep(creep: Zerg): void {
-		const colony = Overmind.colonies[creep.room.name] as Colony | undefined;
-		const evolutionChamber = colony ? colony.evolutionChamber : undefined;
-		if (evolutionChamber && this.boosts[creep.roleName]) {
-			const boosts = _.filter(this.boosts[creep.roleName]!, boost =>
-				(creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(BOOST_PARTS[boost]));
-			for (const boost of boosts) {
-				evolutionChamber.requestBoost(creep, boost);
-			}
-		}
-	}
-
-	/**
-	 * Handle boosting of a creep; should be called during run()
-	 */
-	protected handleBoosting(creep: Zerg): void {
-		const colony = Overmind.colonies[creep.room.name] as Colony | undefined;
-		const evolutionChamber = colony ? colony.evolutionChamber : undefined;
-
-		if (this.boosts[creep.roleName] && evolutionChamber) {
-			const boosts = _.filter(this.boosts[creep.roleName]!, boost => {
-				// TODO FIX BOOSTING!
-				return (creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(BOOST_PARTS[boost])
-					   && !(boost == BOOST_TIERS.move.T3 && creep.getActiveBodyparts(MOVE) >= creep.body.length / 2);
-			});
-			for (const boost of boosts) {
-				const boostLab = _.find(evolutionChamber.boostingLabs, lab => lab.mineralType == boost);
-				if (boostLab) {
-					creep.task = Tasks.getBoosted(boostLab, boost);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Request any needed boosting resources from terminal network
-	 */
-	private requestBoosts(creeps: Zerg[]): void {
-		for (const creep of creeps) {
-			if (this.shouldBoost(creep)) {
-				this.requestBoostsForCreep(creep);
-			}
-		}
-	}
+	// /**
+	//  * Return whether you are capable of boosting a creep to the desired specifications
+	//  */
+	// shouldBoost(creep: Zerg, onlyBoostInSpawn = false): boolean {
+	// 	// Can't boost if there's no evolution chamber or TTL is less than threshold
+	// 	const colony = Overmind.colonies[creep.room.name] as Colony | undefined;
+	// 	const evolutionChamber = colony ? colony.evolutionChamber : undefined;
+	// 	if (!evolutionChamber ||
+	// 		(creep.ticksToLive && creep.ticksToLive < MIN_LIFETIME_FOR_BOOST * creep.lifetime)) {
+	// 		return false;
+	// 	}
+	//
+	// 	// EDIT: they removed in-spawn boosting... RIP :(
+	// 	// // If you're in a bunker layout at level 8 with max labs, only boost while spawning
+	// 	// if (onlyBoostInSpawn && this.colony.bunker && this.colony.level == 8 && this.colony.labs.length == 10) {
+	// 	// 	if (!creep.spawning) {
+	// 	// 		return false;
+	// 	// 	}
+	// 	// }
+	//
+	// 	// Otherwise just boost if you need it and can get the resources
+	// 	if (this.boosts[creep.roleName]) {
+	// 		const boosts = _.filter(this.boosts[creep.roleName]!, boost =>
+	// 			(creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(BOOST_PARTS[boost]));
+	// 		if (boosts.length > 0) {
+	// 			return _.all(boosts, boost => evolutionChamber!.canBoost(creep.body, boost));
+	// 		}
+	// 	}
+	// 	return false;
+	// }
+	//
+	//
+	// /**
+	//  * Request a boost from the evolution chamber; should be called during init()
+	//  */
+	// private requestBoostsForCreep(creep: Zerg): void {
+	// 	const colony = Overmind.colonies[creep.room.name] as Colony | undefined;
+	// 	const evolutionChamber = colony ? colony.evolutionChamber : undefined;
+	// 	if (evolutionChamber && this.boosts[creep.roleName]) {
+	// 		const boosts = _.filter(this.boosts[creep.roleName]!, boost =>
+	// 			(creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(BOOST_PARTS[boost]));
+	// 		for (const boost of boosts) {
+	// 			evolutionChamber.requestBoost(creep, boost);
+	// 		}
+	// 	}
+	// }
+	//
+	// /**
+	//  * Request any needed boosting resources from terminal network
+	//  */
+	// private requestBoosts(creeps: Zerg[]): void {
+	// 	for (const creep of creeps) {
+	// 		if (this.shouldBoost(creep)) {
+	// 			this.requestBoostsForCreep(creep);
+	// 		}
+	// 	}
+	// }
 
 	/**
 	 * Requests that should be handled for all overlords prior to the init() phase
 	 */
 	preInit(): void {
-		// Handle resource requests for boosts
-		for (const role in this.boosts) {
-			if (this.boosts[role] && this._creeps[role]) {
-				this.requestBoosts(_.compact(_.map(this._creeps[role], creep => Overmind.zerg[creep.name])));
+		// Handle requesting boosts from the evolution chamber
+		const allZerg = _.flatten([..._.values(this._zerg), ..._.values(this._combatZerg)]) as (Zerg | CombatZerg)[];
+		for (const zerg of allZerg) {
+			if (zerg.needsBoosts) {
+				const colony = Overmind.colonies[zerg.room.name] as Colony | undefined;
+				const evolutionChamber = colony ? colony.evolutionChamber : undefined;
+				if (evolutionChamber) {
+					evolutionChamber.requestBoosts(zerg.getNeededBoosts());
+				}
 			}
 		}
 	}
@@ -616,6 +580,36 @@ export abstract class Overlord {
 	abstract init(): void;
 
 	abstract run(): void;
+
+	/**
+	 * Handle boosting of a creep; should be called during run()
+	 */
+	protected handleBoosting(zerg: Zerg | CombatZerg): void {
+		const colony = Overmind.colonies[zerg.room.name] as Colony | undefined;
+		const evolutionChamber = colony ? colony.evolutionChamber : undefined;
+
+		if (evolutionChamber) {
+
+			if (!zerg.needsBoosts) {
+				log.error(`Overlord.handleBoosting() called for ${zerg.print}, but no boosts needed!`);
+			}
+
+			const neededBoosts = zerg.getNeededBoosts();
+			const neededBoostResources = _.keys(neededBoosts);
+
+			const [moveBoosts, nonMoveBoosts] = _.partition(neededBoostResources,
+															resource => Abathur.isMoveBoost(<ResourceConstant>resource));
+
+			for (const boost in [...moveBoosts, nonMoveBoosts]) { // try to get move boosts first if they're available
+				const boostLab = _.find(evolutionChamber.boostingLabs, lab => lab.mineralType == boost);
+				if (boostLab) {
+					zerg.task = Tasks.getBoosted(boostLab, <ResourceConstant>boost);
+				}
+			}
+		}
+
+
+	}
 
 	/**
 	 * Standard sequence of actions for running task-based creeps
@@ -626,7 +620,7 @@ export abstract class Overlord {
 				if (fleeCallback(creep)) continue;
 			}
 			if (creep.isIdle) {
-				if (this.shouldBoost(creep)) {
+				if (creep.needsBoosts) {
 					this.handleBoosting(creep);
 				} else {
 					taskHandler(creep);

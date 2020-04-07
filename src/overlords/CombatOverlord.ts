@@ -32,7 +32,7 @@ export abstract class CombatOverlord extends Overlord {
 			if (creep.hasValidTask) {
 				creep.run();
 			} else {
-				if (this.shouldBoost(creep)) {
+				if (creep.needsBoosts) {
 					this.handleBoosting(creep);
 				} else {
 					creepHandler(creep);

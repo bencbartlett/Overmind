@@ -295,8 +295,8 @@ export class Abathur {
 		const ingredientsUnavailable: {[resource: string]: boolean} = {}; // track what we can't make to save CPU
 		let nextTargetResource: ResourceConstant | undefined;
 
-		// We want to build up a stockpile of boosts but we want to maintain and utilize a stockpile of the cheaper
-		// stuff before we start building up higher tier boosts
+		// Want to build up a stockpile of boosts but we want to maintain and utilize a stockpile of the cheaper stuff
+		// before we start building up higher tier boosts
 		for (const n of _.range(1, 50)) {
 			nextTargetResource = _.find(possibleReactions, resource => {
 

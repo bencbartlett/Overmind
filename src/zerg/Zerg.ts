@@ -2,7 +2,9 @@ import {isCreep, isPowerCreep, isStandardZerg} from '../declarations/typeGuards'
 import {CombatIntel} from '../intel/CombatIntel';
 import {Overlord} from '../overlords/Overlord';
 import {profile} from '../profiler/decorator';
+import {BOOST_PARTS} from '../resources/map_resources';
 import {initializeTask} from '../tasks/initializer';
+import {MIN_LIFETIME_FOR_BOOST} from '../tasks/instances/getBoosted';
 import {Task} from '../tasks/Task';
 import {AnyZerg} from './AnyZerg';
 
@@ -73,7 +75,10 @@ export class Zerg extends AnyZerg {
 	lifetime: number;
 	actionLog: { [actionName: string]: boolean }; // Tracks the actions that a creep has completed this tick
 	blockMovement: boolean; 			// Whether the zerg is allowed to move or not
-	private _task: Task | null; 		// Cached Task object that is instantiated once per tick and on change
+
+	// Cached properties
+	private _task: Task | null;
+	private _neededBoosts: { [boostResource: string]: number } | undefined;
 
 	constructor(creep: Creep, notifyWhenAttacked = true) {
 		super(creep, notifyWhenAttacked);
@@ -137,6 +142,7 @@ export class Zerg extends AnyZerg {
 			// this.actionLog = {};
 			// this.blockMovement = false;
 			this._task = null; // todo
+			this._neededBoosts = undefined;
 		} else {
 			// log.debug(`Deleting from global`);
 			delete Overmind.zerg[this.name];
@@ -431,7 +437,9 @@ export class Zerg extends AnyZerg {
 		return this.creep.getActiveBodyparts(type);
 	}
 
-	/* The same as creep.getActiveBodyparts, but just counts bodyparts regardless of condition. */
+	/**
+	 * The same as creep.getActiveBodyparts, but just counts bodyparts regardless of condition.
+	 */
 	getBodyparts(partType: BodyPartConstant): number {
 		return _.filter(this.body, (part: BodyPartDefinition) => part.type == partType).length;
 	}
@@ -455,11 +463,51 @@ export class Zerg extends AnyZerg {
 		return _.countBy(this.body, bodyPart => bodyPart.boost);
 	}
 
+	get bodypartCounts(): { [bodypart: string]: number } {
+		return _.countBy(this.body, part => part.type);
+	}
+
 	get needsBoosts(): boolean {
-		if (this.overlord) {
-			return this.overlord.shouldBoost(this);
+		if (!this.overlord) {
+			return false;
 		}
-		return false;
+		if ((this.ticksToLive||this.lifetime) < MIN_LIFETIME_FOR_BOOST * this.lifetime) {
+			return false;
+		}
+		return !_.isEmpty(this.getNeededBoosts());
+	}
+
+	/**
+	 * Gets an object describing the amount of boosts (in minerals, not bodyparts) this Zerg needs. If the zerg is
+	 * fully boosted for a given resource type, the entry is removed from memory.needBoosts.
+	 */
+	getNeededBoosts(): { [boostResource: string]: number } {
+		if (!this._neededBoosts) {
+			if (this.memory.needBoosts && this.memory.needBoosts.length > 0) {
+
+				const neededBoosts: { [boostResource: string]: number } = {};
+
+				const boostCounts = this.boostCounts;
+				const bodyCounts = this.bodypartCounts;
+
+				for (const boost of _.clone(this.memory.needBoosts)) {
+					const bodypartType = BOOST_PARTS[boost];
+					const numParts = bodyCounts[bodypartType] || 0;
+					const numBoostedParts = boostCounts[bodypartType] || 0;
+					if (numBoostedParts < numParts && !!bodypartType) {
+						neededBoosts[bodypartType] = LAB_BOOST_MINERAL * (numParts - numBoostedParts);
+					} else {
+						_.pull(this.memory.needBoosts, boost);
+					}
+				}
+
+				this._neededBoosts = neededBoosts;
+			} else {
+				this._neededBoosts = {};
+			}
+		}
+
+		return this._neededBoosts;
 	}
 
 	// Overlord logic --------------------------------------------------------------------------------------------------
