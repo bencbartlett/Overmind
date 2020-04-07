@@ -276,10 +276,11 @@ export function randomHex(length: number): string {
  */
 export function exponentialMovingAverage(current: number, avg: number | undefined, window: number,
 										 zeroThreshold = 1e-9): number {
-	const newAvg = (current + (avg || 0) * (window - 1)) / window;
+	let newAvg = (current + (avg || 0) * (window - 1)) / window;
 	if (zeroThreshold && newAvg < zeroThreshold) {
-		return 0;
+		newAvg = 0;
 	}
+	return newAvg;
 }
 
 /**

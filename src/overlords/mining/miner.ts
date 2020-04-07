@@ -56,8 +56,10 @@ export class MiningOverlord extends Overlord {
 		this.directive = directive;
 		this.priority += this.outpostIndex * OverlordPriority.remoteRoom.roomIncrement;
 		this.miners = this.zerg(Roles.drone);
+
 		// Populate structures
 		this.populateStructures();
+
 		// Compute energy output
 		if (Cartographer.roomType(this.pos.roomName) == ROOMTYPE_SOURCEKEEPER) {
 			this.energyPerTick = SOURCE_ENERGY_KEEPER_CAPACITY / ENERGY_REGEN_TIME;
