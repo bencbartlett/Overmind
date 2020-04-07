@@ -22,7 +22,7 @@ export const Roles = {
 	melee           : 'zergling',
 	ranged          : 'hydralisk',
 	healer          : 'transfuser',
-	bunkerGuard     : 'bunkerGuard',
+	bunkerDefender  : 'ravager',
 	dismantler      : 'lurker',
 	drill           : 'drill',
 	coolant         : 'coolant',
@@ -369,27 +369,27 @@ export const CombatSetups = {
 	 */
 	bunkerGuard: {
 
-		early: new CreepSetup(Roles.bunkerGuard, {
+		early: new CreepSetup(Roles.bunkerDefender, {
 			pattern  : [ATTACK, MOVE],
 			sizeLimit: Infinity,
 		}),
 
-		default: new CreepSetup(Roles.bunkerGuard, {
+		default: new CreepSetup(Roles.bunkerDefender, {
 			pattern  : [ATTACK, ATTACK, MOVE],
 			sizeLimit: Infinity,
 		}),
 
-		tiny: new CreepSetup(Roles.bunkerGuard, {
+		tiny: new CreepSetup(Roles.bunkerDefender, {
 			pattern  : [ATTACK, ATTACK, MOVE, MOVE],
 			sizeLimit: 2,
 		}),
 
-		halfMove: new CreepSetup(Roles.bunkerGuard, {
+		halfMove: new CreepSetup(Roles.bunkerDefender, {
 			pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, MOVE],
 			sizeLimit: Infinity,
 		}),
 
-		boosted_T3: new CreepSetup(Roles.bunkerGuard, {
+		boosted_T3: new CreepSetup(Roles.bunkerDefender, {
 			// 22 ATTACK, 3 MOVE times 2
 			pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK,
 						ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE],

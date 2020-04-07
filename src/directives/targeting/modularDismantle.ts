@@ -46,7 +46,7 @@ export class DirectiveModularDismantle extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		this.overlords.dismantle = new DismantleOverlord(this, undefined, undefined, this.memory.boost);
+		this.overlords.dismantle = new DismantleOverlord(this);
 	}
 
 	getTarget(): Structure | undefined {

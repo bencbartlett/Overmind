@@ -11,7 +11,6 @@ import {NotifierPriority} from '../Notifier';
 
 interface DirectiveInvasionDefenseMemory extends FlagMemory {
 	persistent?: boolean;
-	created: number;
 	safeSince: number;
 }
 
@@ -52,15 +51,15 @@ export class DirectiveInvasionDefense extends Directive {
 		const rangedHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0);
 
 		if (this.colony.stage > ColonyStage.Larva) {
-			this.overlords.rangedDefense = new RangedDefenseOverlord(this, useBoosts);
+			this.overlords.rangedDefense = new RangedDefenseOverlord(this);
 		} else {
-			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
+			this.overlords.meleeDefense = new MeleeDefenseOverlord(this);
 		}
 		// If serious bunker busting attempt, spawn lurkers
 		// TODO understand dismantlers damage output
 		if (meleeHostiles.length > 0 && expectedDamage > ATTACK_POWER * 70 &&
-			this.colony.level >= BarrierPlanner.settings.bunkerizeRCL || rangedHostiles.length > 3) {
-			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, useBoosts);
+			(this.colony.level >= BarrierPlanner.settings.bunkerizeRCL || rangedHostiles.length > 3)) {
+			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this);
 		}
 		// If melee attackers, try distractions
 		// TODO drop these if they don't work, need to detect effectiveness. Although the says make for great 🍿

@@ -1,19 +1,19 @@
 import {log} from '../../console/log';
+import {CombatCreepSetup} from '../../creepSetups/CombatCreepSetup';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {BOOST_TIERS} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
 
 /**
- * Spawns bunker-only defenders to defend against incoming sieges
+ * Spawns bunker-only defenders to defend against incoming sieges // TODO: needs some revision
  */
 @profile
 export class BunkerDefenseOverlord extends CombatOverlord {
 
-	lurkers: CombatZerg[];
+	defenders: CombatZerg[];
 	room: Room;
 
 	static settings = {
@@ -21,21 +21,17 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 		reengageHitsPercent: 0.95,
 	};
 
-	constructor(directive: DirectiveInvasionDefense, boosted = false, priority = OverlordPriority.defense.meleeDefense) {
+	constructor(directive: DirectiveInvasionDefense, priority = OverlordPriority.defense.meleeDefense) {
 		// Only spawn inside room
 		super(directive, 'bunkerDefense', priority, 1, 30);
-		this.lurkers = this.combatZerg(Roles.bunkerGuard, {
-			boostWishlist: boosted ? [BOOST_TIERS.attack.T3, BOOST_TIERS.move.T3]
-								   : undefined
-		});
+		this.defenders = this.combatZerg(Roles.bunkerDefender);
 	}
 
 	private handleDefender(lurker: CombatZerg): void {
-		log.debug(`Running BunkerDefender in room ${this.room.print}`);
 		if (!lurker.inRampart) {
-			const nearRampart = _.find(lurker.room.walkableRamparts, rampart => rampart.pos.getRangeTo(lurker) < 5);
-			if (nearRampart) {
-				lurker.goTo(nearRampart);
+			const nearbyRampart = _.find(lurker.room.walkableRamparts, rampart => rampart.pos.getRangeTo(lurker) < 5);
+			if (nearbyRampart) {
+				lurker.goTo(nearbyRampart);
 			}
 		}
 		if (lurker.room.hostiles.length > 0) {
@@ -46,18 +42,14 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 	}
 
 	init() {
-		this.reassignIdleCreeps(Roles.bunkerGuard);
-		if (this.canBoostSetup(CombatSetups.bunkerGuard.boosted_T3)) {
-			const setup = CombatSetups.bunkerGuard.boosted_T3;
-			// const setup = CombatSetups.bunkerGuard.halfMove;
-			this.wishlist(1, setup);
-		} else {
-			const setup = CombatSetups.bunkerGuard.halfMove;
-			this.wishlist(1, setup);
-		}
+		this.reassignIdleCreeps(Roles.bunkerDefender);
+
+		const setup = new CombatCreepSetup(Roles.bunkerDefender, () =>
+			CombatCreepSetup.createZerglingBody(this.colony, {moveSpeed: 0.5, boosted: true}));
+		this.wishlist(1, setup);
 	}
 
 	run() {
-		this.autoRun(this.lurkers, lurkers => this.handleDefender(lurkers));
+		this.autoRun(this.defenders, defender => this.handleDefender(defender));
 	}
 }

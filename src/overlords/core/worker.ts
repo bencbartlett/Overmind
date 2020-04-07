@@ -1,18 +1,18 @@
 import {$} from '../../caching/GlobalCache';
 import {Colony, ColonyStage, DEFCON} from '../../Colony';
+import {CreepSetup} from '../../creepSetups/CreepSetup';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {DirectiveNukeResponse} from '../../directives/situational/nukeResponse';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {BuildPriorities, FortifyPriorities} from '../../priorities/priorities_structures';
 import {profile} from '../../profiler/decorator';
-import {BOOST_TIERS} from '../../resources/map_resources';
 import {Task} from '../../tasks/Task';
 import {Tasks} from '../../tasks/Tasks';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {minBy} from '../../utilities/utils';
 import {Visualizer} from '../../visuals/Visualizer';
 import {Zerg} from '../../zerg/Zerg';
-import {Overlord, ZergOptions} from '../Overlord';
+import {Overlord} from '../Overlord';
 
 /**
  * Spawns general-purpose workers, which maintain a colony, performing actions such as building, repairing, fortifying,
@@ -30,6 +30,7 @@ export class WorkerOverlord extends Overlord {
 	constructionSites: ConstructionSite[];
 	nukeDefenseRamparts: StructureRampart[];
 	nukeDefenseHitsRemaining: { [id: string]: number };
+	useBoostedRepair?: boolean;
 
 	static settings = {
 		barrierHits         : {			// What HP to fortify barriers to at each RCL
@@ -117,18 +118,21 @@ export class WorkerOverlord extends Overlord {
 					this.nukeDefenseHitsRemaining[rampart.id] = neededHits - rampart.hits;
 				}
 			}
+
 		}
 
 		// Spawn boosted workers if there is significant fortifying which needs to be done
-		const opts: ZergOptions = {};
 		const totalNukeDefenseHitsRemaining = _.sum(_.values(this.nukeDefenseHitsRemaining));
-		const approximateRepairPowerPerLifetime = REPAIR_POWER * 50 / 3 * CREEP_LIFE_TIME;
-		if (totalNukeDefenseHitsRemaining > 3 * approximateRepairPowerPerLifetime || this.fortifyBarriers.length > 5) {
-			opts.boostWishlist = [BOOST_TIERS.construct.T2];
+		const totalFortifyHitsRemaining = _.sum(this.fortifyBarriers, barrier =>
+			Math.min(WorkerOverlord.settings.barrierHits[this.colony.level] - barrier.hits, 0));
+		const approxRepairAmountPerLifetime = REPAIR_POWER * 50 / 3 * CREEP_LIFE_TIME;
+		if (totalNukeDefenseHitsRemaining > 3 * approxRepairAmountPerLifetime ||
+			totalFortifyHitsRemaining > 5 * approxRepairAmountPerLifetime) {
+			this.useBoostedRepair = true;
 		}
 
 		// Register workers
-		this.workers = this.zerg(Roles.worker, opts);
+		this.workers = this.zerg(Roles.worker);
 	}
 
 	private neededRampartHits(rampart: StructureRampart): number {
@@ -151,7 +155,7 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	init() {
-		const setup = this.colony.level == 1 ? Setups.workers.early : Setups.workers.default;
+		let setup = this.colony.level == 1 ? Setups.workers.early : Setups.workers.default;
 		const workPartsPerWorker = setup.getBodyPotential(WORK, this.colony);
 		let numWorkers: number;
 		if (this.colony.stage == ColonyStage.Larva) {
@@ -203,6 +207,10 @@ export class WorkerOverlord extends Overlord {
 					return numWorkers;
 				});
 			}
+		}
+
+		if (this.useBoostedRepair) {
+			setup = CreepSetup.boosted(setup, ['construct']);
 		}
 		this.wishlist(numWorkers, setup);
 	}

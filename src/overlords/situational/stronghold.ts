@@ -40,11 +40,7 @@ export class StrongholdOverlord extends CombatOverlord {
 	constructor(directive: DirectiveStronghold,
 				priority = OverlordPriority.defense.rangedDefense) {
 		super(directive, 'stronghold', priority, 1);
-		this.strongholdKillers = this.combatZerg(Roles.strongholdKiller, {
-			notifyWhenAttacked: false,
-			boostWishlist     : [BOOST_TIERS.tough.T3, BOOST_TIERS.ranged.T3,
-								 BOOST_TIERS.heal.T3, BOOST_TIERS.move.T3]
-		});
+		this.strongholdKillers = this.combatZerg(Roles.strongholdKiller, {notifyWhenAttacked: false});
 	}
 
 	/**
@@ -289,12 +285,12 @@ export class StrongholdOverlord extends CombatOverlord {
 				return;// setup = CombatSetups.strongholdKiller["3"];
 		}
 
-		if (!this.canBoostSetup(setup)) {
-			// Need boosts
-			return log.error(`Can't boost stronghold killer in ${this.print}!`);
-		}
-
-		this.wishlist(1, setup, {});
+		// if (!this.canBoostSetup(setup)) {// TODO: need to move this to the new CombatCreepSetup system
+		// 	// Need boosts
+		// 	return log.error(`Can't boost stronghold killer in ${this.print}!`);
+		// }
+		//
+		// this.wishlist(1, setup, {});
 	}
 
 	private resetAttacking(ultimateGoal: Creep | Structure, maxRange: number, myCreep: CombatZerg) {

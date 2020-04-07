@@ -20,28 +20,25 @@ export class DismantleOverlord extends Overlord {
 
 	requiredRCL: 4;
 
-	constructor(directive: DirectiveModularDismantle, target?: Structure, priority
-		= OverlordPriority.tasks.dismantle, boosted = false) {
+	constructor(directive: DirectiveModularDismantle, priority = OverlordPriority.tasks.dismantle) {
 		super(directive, 'dismantle', priority);
 		this.directive = directive;
 		// this.target = target || Game.getObjectById(this.directive.memory.targetId) || undefined;
-		this.dismantlers = this.zerg(Roles.dismantler, {
-			boostWishlist: boosted ? [BOOST_TIERS.tough.T3, BOOST_TIERS.dismantle.T3,
-									  BOOST_TIERS.move.T3] : undefined
-		});
+		this.dismantlers = this.zerg(Roles.dismantler);
 	}
 
 	init() {
 		// Spawn a number of dismantlers, up to a max
 		const MAX_DISMANTLERS = 2;
 		let setup;
-		if (!!this.directive.memory.attackInsteadOfDismantle) {
-			setup = CombatSetups.dismantlers.attackDismantlers;
-		} else if (this.canBoostSetup(CombatSetups.dismantlers.boosted_T3)) {
-			setup = CombatSetups.dismantlers.boosted_T3;
-		} else {
-			setup = CombatSetups.dismantlers.default;
-		}
+		// if (!!this.directive.memory.attackInsteadOfDismantle) { // TODO: need to move this to the new CombatCreepSetup system
+		// 	setup = CombatSetups.dismantlers.attackDismantlers;
+		// } else if (this.canBoostSetup(CombatSetups.dismantlers.boosted_T3)) {
+		// 	setup = CombatSetups.dismantlers.boosted_T3;
+		// } else {
+		// 	setup = CombatSetups.dismantlers.default;
+		// }
+		setup = CombatSetups.dismantlers.default;
 		const dismantlingParts = setup.getBodyPotential(!!this.directive.memory.attackInsteadOfDismantle
 														? ATTACK : WORK, this.colony);
 		const dismantlingPower = dismantlingParts * (!!this.directive.memory.attackInsteadOfDismantle

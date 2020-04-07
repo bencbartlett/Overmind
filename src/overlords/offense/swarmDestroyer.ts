@@ -1,5 +1,6 @@
 import {$} from '../../caching/GlobalCache';
 import {log} from '../../console/log';
+import {CombatCreepSetup} from '../../creepSetups/CombatCreepSetup';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveSwarmDestroy} from '../../directives/offense/swarmDestroy';
 import {CombatIntel} from '../../intel/CombatIntel';
@@ -41,18 +42,12 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 		this.directive = directive;
 		this.memory = Mem.wrap(this.directive.memory, this.name);
 		this.intel = new CombatIntel(this.directive);
-		this.zerglings = this.combatZerg(Roles.melee, {
-			notifyWhenAttacked: false,
-			boostWishlist     : [BOOST_TIERS.attack.T3, BOOST_TIERS.tough.T3, BOOST_TIERS.move.T3]
-		});
+		this.zerglings = this.combatZerg(Roles.melee, {notifyWhenAttacked: false});
 		// this.hydralisks = this.combatZerg(Roles.ranged, {
 		// 	notifyWhenAttacked: false,
 		// 	boostWishlist     : [BOOST_TIERS.ranged[3], BOOST_TIERS.tough[3], BOOST_TIERS.move[3]]
 		// });
-		this.healers = this.combatZerg(Roles.healer, {
-			notifyWhenAttacked: false,
-			boostWishlist     : [BOOST_TIERS.heal.T3, BOOST_TIERS.tough.T3, BOOST_TIERS.move.T3,]
-		});
+		this.healers = this.combatZerg(Roles.healer, {notifyWhenAttacked: false});
 		// Make swarms
 		this.makeSwarms();
 		// Compute fallback positions and assembly points
@@ -132,16 +127,16 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 		}
 
 		const zerglingPriority = this.zerglings.length <= this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
-		const zerglingSetup = this.canBoostSetup(CombatSetups.zerglings.boosted_T3) ? CombatSetups.zerglings.boosted_T3_armor
-																					: CombatSetups.zerglings.default;
+		const zerglingSetup = new CombatCreepSetup(Roles.melee, () =>
+			CombatCreepSetup.createZerglingBody(this.colony, {boosted: true, armored: true}));
 
 		const healerPriority = this.healers.length < this.zerglings.length ? this.priority - 0.1 : this.priority + 0.1;
-		const healerSetup = this.canBoostSetup(CombatSetups.healers.boosted_T3) ? CombatSetups.healers.boosted_T3
-																				: CombatSetups.healers.default;
+		const healerSetup = new CombatCreepSetup(Roles.healer, () =>
+			CombatCreepSetup.createTransfuserBody(this.colony, {boosted: true, armored: true}));
 
 		const hydraliskPriority = this.healers.length < this.zerglings.length ? this.priority - 0.1 : this.priority + 0.1;
-		const hydraliskSetup = this.canBoostSetup(CombatSetups.hydralisks.siege_T3) ? CombatSetups.healers.boosted_T3
-																					: CombatSetups.healers.default;
+		const hydraliskSetup = new CombatCreepSetup(Roles.ranged, () =>
+			CombatCreepSetup.createHydraliskBody(this.colony, {boosted: true, armored: true}));
 
 		const swarmConfig = [{setup: zerglingSetup, amount: 2, priority: zerglingPriority},
 							 {setup: healerSetup, amount: 2, priority: healerPriority}];

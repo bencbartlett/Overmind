@@ -1,3 +1,4 @@
+import {CreepSetup} from '../../creepSetups/CreepSetup';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {UpgradeSite} from '../../hiveClusters/upgradeSite';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -23,13 +24,7 @@ export class UpgradingOverlord extends Overlord {
 		super(upgradeSite, 'upgrade', priority);
 		this.upgradeSite = upgradeSite;
 		// If new colony or boosts overflowing to storage
-		if (this.shouldBoostUpgraders()) {
-			this.upgraders = this.zerg(Roles.upgrader, {
-				boostWishlist: [BOOST_TIERS.upgrade.T3]
-			});
-		} else {
-			this.upgraders = this.zerg(Roles.upgrader);
-		}
+		this.upgraders = this.zerg(Roles.upgrader);
 	}
 
 	init() {
@@ -38,7 +33,14 @@ export class UpgradingOverlord extends Overlord {
 		}
 		if (this.colony.assets.energy > UpgradeSite.settings.energyBuffer
 			|| this.upgradeSite.controller.ticksToDowngrade < 500) {
-			const setup = this.colony.level == 8 ? Setups.upgraders.rcl8 : Setups.upgraders.default;
+			let setup =  Setups.upgraders.default;
+			if (this.colony.level == 8) {
+				setup = Setups.upgraders.rcl8
+			}
+			if (this.colony.labs.length == 10 &&
+				this.colony.assets[RESOURCE_CATALYZED_GHODIUM_ACID] >= 4 * LAB_BOOST_MINERAL) {
+				setup = CreepSetup.boosted(setup, ['upgrade']);
+			}
 			if (this.colony.level == 8) {
 				this.wishlist(1, setup);
 			} else {
@@ -47,11 +49,6 @@ export class UpgradingOverlord extends Overlord {
 				this.wishlist(upgradersNeeded, setup);
 			}
 		}
-	}
-
-	private shouldBoostUpgraders(): boolean {
-		return this.colony.controller.level < 8 || (!!this.colony.storage
-													&& !!this.colony.storage.store[RESOURCE_CATALYZED_GHODIUM_ACID]);
 	}
 
 	private handleUpgrader(upgrader: Zerg): void {

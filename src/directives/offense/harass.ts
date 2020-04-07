@@ -43,7 +43,7 @@ export class DirectiveHarass extends Directive {
 
 	spawnMoarOverlords() {
 		// For now, just spawn from RCL 5+ rooms
-		this.overlords.harassOverlord = new HarassOverlord(this, this.memory.enhanced);
+		this.overlords.harassOverlord = new HarassOverlord(this);
 	}
 
 	init(): void {

@@ -29,7 +29,7 @@ export class CreepSetup {
 
 	role: string;
 	bodySetup: BodySetup;
-	boosts: BoostType[];
+	private boosts: BoostType[];
 
 	constructor(roleName: string, bodySetup = {}, boosts?: BoostType[]) {
 		this.role = roleName;
@@ -44,6 +44,14 @@ export class CreepSetup {
 		});
 		this.bodySetup = bodySetup as BodySetup;
 		this.boosts = boosts || [];
+	}
+
+	/**
+	 * Returns a new CreepSetup instance which is a copy of the existing setup but with boosts applied. This allows
+	 * you to easily make boosted versions of the default setups in setups.ts without modifying the original objects.
+	 */
+	static boosted(setup: CreepSetup, boosts: BoostType[]) {
+		return new CreepSetup(setup.role, setup.bodySetup, boosts);
 	}
 
 	/**

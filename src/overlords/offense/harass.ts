@@ -1,4 +1,5 @@
 import {log} from '../../console/log';
+import {CombatCreepSetup} from '../../creepSetups/CombatCreepSetup';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveHarass} from '../../directives/offense/harass';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -26,15 +27,11 @@ export class HarassOverlord extends CombatOverlord {
 	};
 
 	constructor(directive: DirectiveHarass,
-				boosted  = false,
 				priority = OverlordPriority.outpostOffense.harass) {
 		super(directive, 'harass', priority, 1);
 		this.directive = directive;
 		this.nibblers = this.combatZerg(Roles.melee);
-		this.hydralisks = this.combatZerg(Roles.ranged, {
-			boostWishlist: boosted ? [BOOST_TIERS.ranged.T3, BOOST_TIERS.heal.T3, BOOST_TIERS.move.T3]
-								   : undefined
-		});
+		this.hydralisks = this.combatZerg(Roles.ranged);
 	}
 
 	private handleHarass(hydralisk: CombatZerg): void {
@@ -85,12 +82,7 @@ export class HarassOverlord extends CombatOverlord {
 	init() {
 		this.reassignIdleCreeps(Roles.ranged);
 		this.reassignIdleCreeps(Roles.melee);
-		let setup;
-		if (this.colony.level < 5) {
-			setup = CombatSetups.zerglings.limitedDefault;
-		} else {
-			setup = CombatSetups.hydralisks.default;
-		}
+		const setup = new CombatCreepSetup(Roles.ranged, () => CombatCreepSetup.createHydraliskBody(this.colony));
 		const numtoSpawn = (!this.directive.memory.nextSpawnTime || Game.time >= this.directive.memory.nextSpawnTime) ? 1 : 0;
 		this.wishlist(numtoSpawn, setup);
 	}

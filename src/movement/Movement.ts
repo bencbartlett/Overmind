@@ -32,18 +32,18 @@ const STATE_CURRENT_X = 7;
 const STATE_CURRENT_Y = 8;
 
 export const MovePriorities = {
-	[Roles.manager]    : 1,
-	[Roles.queen]      : 2,
-	[Roles.bunkerGuard]: 3,
-	[Roles.melee]      : 3,
-	powerCreep         : 3,
-	[Roles.dismantler] : 4,
-	[Roles.ranged]     : 4,
-	[Roles.guardMelee] : 5,
+	[Roles.manager]       : 1,
+	[Roles.queen]         : 2,
+	[Roles.bunkerDefender]: 3,
+	[Roles.melee]         : 3,
+	powerCreep            : 3,
+	[Roles.dismantler]    : 4,
+	[Roles.ranged]        : 4,
+	[Roles.guardMelee]    : 5,
 	// [Roles.ranged]: 6,
-	[Roles.transport]  : 8,
-	[Roles.worker]     : 9,
-	default            : 10,
+	[Roles.transport]     : 8,
+	[Roles.worker]        : 9,
+	default               : 10,
 };
 
 
