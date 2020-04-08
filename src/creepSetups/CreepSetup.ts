@@ -1,5 +1,7 @@
 import {Colony} from '../Colony';
 import {profile} from '../profiler/decorator';
+import {BoostType, BoostTypeBodyparts} from '../resources/map_resources';
+import {BodyGeneratorReturn} from './CombatCreepSetup';
 
 export interface BodySetup {
 	pattern: BodyPartConstant[];			// body pattern to be repeated
@@ -27,8 +29,9 @@ export class CreepSetup {
 
 	role: string;
 	bodySetup: BodySetup;
+	private boosts: BoostType[];
 
-	constructor(roleName: string, bodySetup = {}) {
+	constructor(roleName: string, bodySetup = {}, boosts?: BoostType[]) {
 		this.role = roleName;
 		// Defaults for a creep setup
 		_.defaults(bodySetup, {
@@ -40,10 +43,45 @@ export class CreepSetup {
 			ordered                 : true,
 		});
 		this.bodySetup = bodySetup as BodySetup;
+		this.boosts = boosts || [];
 	}
 
-	/* Generate the largest body of a given pattern that is producable from a room,
-	 * subject to limitations from maxRepeats */
+	/**
+	 * Returns a new CreepSetup instance which is a copy of the existing setup but with boosts applied. This allows
+	 * you to easily make boosted versions of the default setups in setups.ts without modifying the original objects.
+	 */
+	static boosted(setup: CreepSetup, boosts: BoostType[]) {
+		return new CreepSetup(setup.role, setup.bodySetup, boosts);
+	}
+
+	/**
+	 * Generate the body and best boosts for a requested creep
+	 */
+	create(colony: Colony): BodyGeneratorReturn {
+		const body = this.generateBody(colony.room.energyCapacityAvailable);
+		const bodyCounts = _.countBy(body);
+
+		const boosts: ResourceConstant[] = [];
+
+		if (this.boosts.length > 0 && colony.evolutionChamber) {
+			for (const boostType of this.boosts) {
+				const numParts = bodyCounts[BoostTypeBodyparts[boostType]];
+				const bestBoost = colony.evolutionChamber.bestBoostAvailable(boostType, numParts * LAB_BOOST_MINERAL);
+				if (bestBoost) {
+					boosts.push(bestBoost);
+				}
+			}
+		}
+
+		return {
+			body  : body,
+			boosts: boosts,
+		};
+	}
+
+	/**
+	 * Generate the largest body of a given pattern that can be made from a room, subject to limitations from maxRepeats
+	 */
 	generateBody(availableEnergy: number): BodyPartConstant[] {
 		let patternCost, patternLength, numRepeats: number;
 		const prefix = this.bodySetup.prefix;
@@ -96,6 +134,9 @@ export class CreepSetup {
 		return body;
 	}
 
+	/**
+	 * Returns the number of parts that a body will have if made from a given colony
+	 */
 	getBodyPotential(partType: BodyPartConstant, colony: Colony): number {
 		// let energyCapacity = Math.max(colony.room.energyCapacityAvailable,
 		// 							  colony.incubator ? colony.incubator.room.energyCapacityAvailable : 0);

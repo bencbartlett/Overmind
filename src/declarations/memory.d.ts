@@ -16,6 +16,7 @@ interface RawMemory {
 interface Memory {
 	assimilator: any;
 	Overmind: {};
+	profiler: any;
 	overseer: any;
 	segmenter: any;
 	strategist?: any;
@@ -44,7 +45,6 @@ interface Memory {
 			poisonedRooms: string[];
 		},
 	};
-	profiler?: any;
 	stats: any;
 	constructionSites: { [id: string]: number };
 	// suspend?: number;
@@ -60,6 +60,8 @@ interface Memory {
 		verbosity?: number;
 		workerIndex?: number;
 	};
+
+	screepsProfiler?: any;
 
 	[otherProperty: string]: any;
 }
@@ -112,6 +114,7 @@ interface CreepMemory {
 	[_MEM.COLONY]: string | null;
 	role: string;
 	task: ProtoTask | null;
+	needBoosts?: ResourceConstant[];
 	data: {
 		origin: string;
 	};
@@ -164,6 +167,7 @@ interface FlagMemory {
 	[_MEM.TICK]?: number;
 	[_MEM.EXPIRATION]?: number;
 	[_MEM.COLONY]?: string;
+	debug?: boolean;
 	suspendUntil?: number;
 	amount?: number;
 	persistent?: boolean;
@@ -263,6 +267,7 @@ interface ExpansionData {
 }
 
 interface RoomMemory {
+	spawnGroup?: any;
 	[_MEM.EXPIRATION]?: number;
 	[_MEM.TICK]?: number;
 	[_RM.AVOID]?: boolean;
@@ -304,7 +309,7 @@ interface SavedSource extends SavedRoomObject {
 
 interface SavedPortal extends SavedRoomObject {
 	dest: string | { shard: string, room: string }; // destination name
-	[_MEM.EXPIRATION]: number; // when portal will decay
+	[_MEM.EXPIRATION]: number; // when portal will decay TODO factor in forever intershard portals
 }
 
 interface SavedController extends SavedRoomObject {
@@ -327,11 +332,11 @@ interface SavedMineral extends SavedRoomObject {
 }
 
 declare const enum _RM_SAFETY {
-	SAFE_FOR = 's',
+	SAFE_FOR   = 's',
 	UNSAFE_FOR = 'u',
-	SAFETY_1K = 'k',
+	SAFETY_1K  = 'k',
 	SAFETY_10K = 'D',
-	TICK = _MEM.TICK
+	TICK       = _MEM.TICK
 }
 
 interface SafetyData {

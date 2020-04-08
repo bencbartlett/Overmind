@@ -12,6 +12,7 @@ import {Hatchery} from './hiveClusters/hatchery';
 // import {PraiseSite} from './hiveClusters/praiseSite';
 import {SporeCrawler} from './hiveClusters/sporeCrawler';
 import {UpgradeSite} from './hiveClusters/upgradeSite';
+import {CombatIntel} from './intel/CombatIntel';
 import {Energetics} from './logistics/Energetics';
 import {LinkNetwork} from './logistics/LinkNetwork';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
@@ -25,7 +26,6 @@ import {TransportOverlord} from './overlords/core/transporter';
 import {WorkerOverlord} from './overlords/core/worker';
 import {RandomWalkerScoutOverlord} from './overlords/scouting/randomWalker';
 import {profile} from './profiler/decorator';
-import {Abathur} from './resources/Abathur';
 import {ALL_ZERO_ASSETS} from './resources/map_resources';
 import {bunkerLayout, getPosFromBunkerCoord} from './roomPlanner/layouts/bunker';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
@@ -85,6 +85,13 @@ const defaultColonyMemory: ColonyMemory = {
 	},
 };
 
+export interface Assets {
+	energy: number;
+	power: number;
+	ops: number;
+	[resourceType: string]: number;
+}
+
 
 /**
  * Colonies are the highest-level object other than the global Overmind. A colony groups together all rooms, structures,
@@ -104,7 +111,7 @@ export class Colony {
 	outposts: Room[];									// Rooms for remote resource collection
 	rooms: Room[];										// All rooms including the primary room
 	pos: RoomPosition;
-	assets: { [resourceType: string]: number };
+	assets: Assets;
 	// Physical colony structures and roomObjects
 	controller: StructureController;					// These are all duplicated from room properties
 	spawns: StructureSpawn[];							// |
@@ -174,7 +181,7 @@ export class Colony {
 	roadLogistics: RoadLogistics;
 	// Room planner
 	roomPlanner: RoomPlanner;
-	abathur: Abathur;
+	// abathur: Abathur;
 
 	static settings = {
 		remoteSourcesByLevel: {
@@ -381,7 +388,7 @@ export class Colony {
 	private registerOperationalState(): void {
 		this.level = this.controller.level as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 		// Set colony stage
-		if (this.storage && this.spawns[0]) {
+		if (this.storage && this.spawns[0]) { // TODO: remove colony stage
 			if (this.controller.level == 8) {
 				this.stage = ColonyStage.Adult;
 			} else {
@@ -394,8 +401,8 @@ export class Colony {
 		let defcon = DEFCON.safe;
 		const defconDecayTime = 200;
 		if (this.room.dangerousHostiles.length > 0 && !this.controller.safeMode) {
-			const effectiveHostileCount = _.sum(_.map(this.room.dangerousHostiles,
-													  hostile => hostile.boosts.length > 0 ? 2 : 1));
+			const effectiveHostileCount = _.sum(this.room.dangerousHostiles,
+												hostile => CombatIntel.uniqueBoosts(hostile).length > 0 ? 2 : 1);
 			if (effectiveHostileCount >= 3) {
 				defcon = DEFCON.boostedInvasionNPC;
 			} else {
@@ -458,8 +465,8 @@ export class Colony {
 		}
 		// Register road network
 		this.roadLogistics = new RoadLogistics(this);
-		// "Organism Abathur with you."
-		this.abathur = new Abathur(this);
+		// // "Organism Abathur with you."
+		// this.abathur = new Abathur(this);
 		// Add colony to TerminalNetwork if applicable
 		if (this.terminal) {
 			Overmind.terminalNetwork.addColony(this);
@@ -486,7 +493,7 @@ export class Colony {
 			}
 		}
 		this.roadLogistics.refresh();
-		this.abathur.refresh();
+		// this.abathur.refresh();
 	}
 
 	/**
@@ -495,8 +502,8 @@ export class Colony {
 	private registerHiveClusters(): void {
 		this.hiveClusters = [];
 		// Instantiate the command center if there is storage in the room - this must be done first!
-		if (this.stage > ColonyStage.Larva) {
-			this.commandCenter = new CommandCenter(this, this.storage!);
+		if (this.storage) {
+			this.commandCenter = new CommandCenter(this, this.storage);
 		}
 		// Instantiate the hatchery - the incubation directive assignes hatchery to incubator's hatchery if none exists
 		if (this.spawns[0]) {
@@ -561,13 +568,13 @@ export class Colony {
 	 * Summarizes the total of all resources in colony store structures, labs, and some creeps. Will always return
 	 * 0 for an asset that it has none of (not undefined)
 	 */
-	private computeAssets(verbose = false): { [resourceType: string]: number } {
+	private computeAssets(verbose = false): Assets {
 		// Include storage structures, lab contents, and manager carry
 		const assetStructures = _.compact([this.storage, this.terminal, this.factory, ...this.labs]);
 		const assetCreeps = [...this.getCreepsByRole(Roles.queen), ...this.getCreepsByRole(Roles.manager)];
 		const assetStores = _.map([...assetStructures, ...assetCreeps], thing => thing!.store);
 
-		const allAssets = mergeSum([...assetStores, ALL_ZERO_ASSETS]);
+		const allAssets = mergeSum([...assetStores, ALL_ZERO_ASSETS]) as Assets;
 
 		if (verbose) log.debug(`${this.room.print} assets: ` + JSON.stringify(allAssets));
 		return allAssets;

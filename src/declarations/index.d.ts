@@ -7,6 +7,9 @@ global.MARKET_FEE = MARKET_FEE;
 declare const NO_ACTION: 1;
 global.NO_ACTION = NO_ACTION;
 
+type TickPhase = 'assimilating' | 'build' | 'refresh' | 'init' | 'run' | 'postRun';
+declare var PHASE: TickPhase;
+
 declare namespace NodeJS {
 	interface Global {
 
@@ -29,6 +32,10 @@ declare namespace NodeJS {
 		gc(quick?: boolean): void;
 	}
 }
+
+type Full<T> = {
+	[P in keyof T]-?: T[P];
+};
 
 // declare module 'screeps-profiler'; // I stopped using the typings for this because it was fucking up the Game typings
 
@@ -75,10 +82,10 @@ interface IExpansionPlanner {
 
 }
 
-interface IOvermindMemory {
-	terminalNetwork: any;
-	versionUpdater: any;
-}
+// interface IOvermindMemory {
+// 	terminalNetwork: any;
+// 	versionUpdater: any;
+// }
 
 declare const Assimilator: IAssimilator;
 
@@ -105,6 +112,7 @@ interface IOvermind {
 	overseer: IOverseer;						// is actually Overseer
 	directives: { [flagName: string]: any }; 	// is actually { [flagName: string]: Directive }
 	zerg: { [creepName: string]: any };			// is actually { [creepName: string]: Zerg }
+	powerZerg: { [creepName: string]: any };	// is actually { [creepName: string]: PowerZerg }
 	colonies: { [roomName: string]: any }; 		// is actually { [roomName: string]: Colony }
 	overlords: { [ref: string]: any }; 			// is actually { [ref: string]: Overlord }
 	spawnGroups: { [ref: string]: any };		// is actually { [ref: string]: SpawnGroup }
@@ -177,13 +185,15 @@ interface ITerminalNetwork {
 
 	refresh(): void;
 
-	getAssets(): { [resourceType: string]: number }
+	getAssets(): { [resourceType: string]: number };
 
 	thresholds(colony: IColony, resource: ResourceConstant): Thresholds;
 
-	// canObtainResource(requestor: IColony, resource: ResourceConstant, amount: number): boolean;
+	canObtainResource(requestor: IColony, resource: ResourceConstant, totalAmount: number, allowMarketBuy = true): boolean;
 
-	requestResource(requestor: IColony, resource: ResourceConstant, amount: number, tolerance?: number): void;
+	requestResource(requestor: IColony, resource: ResourceConstant, totalAmount: number, tolerance?: number): void;
+
+	lockResource(requestor: IColony, resource: ResourceConstant, lockedAmount: number): void;
 
 	exportResource(provider: IColony, resource: ResourceConstant, thresholds?: Thresholds): void;
 
@@ -200,6 +210,7 @@ interface TradeOpts {
 	flexibleAmount?: boolean;		// true if you're okay filling the transaction with several smaller transactions
 	ignoreMinAmounts?: boolean;		// true if you want to ignore quantity checks (e.g. T5 commodities in small amounts)
 	ignorePriceChecksForDirect?: boolean; 	// true if you want to bypass price sanity checks when .deal'ing
+	dryRun?: boolean; 				// don't actually execute the trade, just check to see if you can make it
 }
 
 interface ITradeNetwork {

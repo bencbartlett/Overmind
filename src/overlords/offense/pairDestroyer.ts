@@ -1,3 +1,4 @@
+import {CombatCreepSetup} from '../../creepSetups/CombatCreepSetup';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectivePairDestroy} from '../../directives/offense/pairDestroy';
 import {DirectiveTargetSiege} from '../../directives/targeting/siegeTarget';
@@ -6,7 +7,6 @@ import {RoomIntel} from '../../intel/RoomIntel';
 import {Movement} from '../../movement/Movement';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {boostTypesAndTiers} from '../../resources/map_resources';
 import {CombatTargeting} from '../../targeting/CombatTargeting';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {Overlord} from '../Overlord';
@@ -29,14 +29,8 @@ export class PairDestroyerOverlord extends Overlord {
 	constructor(directive: DirectivePairDestroy, priority = OverlordPriority.offense.destroy) {
 		super(directive, 'destroy', priority);
 		this.directive = directive;
-		this.attackers = this.combatZerg(Roles.melee, {
-			notifyWhenAttacked: false,
-			boostWishlist     : [boostTypesAndTiers.attack[3], boostTypesAndTiers.tough[3], boostTypesAndTiers.move[3]]
-		});
-		this.healers = this.combatZerg(Roles.healer, {
-			notifyWhenAttacked: false,
-			boostWishlist     : [boostTypesAndTiers.heal[3], boostTypesAndTiers.tough[3], boostTypesAndTiers.move[3]]
-		});
+		this.attackers = this.combatZerg(Roles.melee, {notifyWhenAttacked: false});
+		this.healers = this.combatZerg(Roles.healer, {notifyWhenAttacked: false});
 	}
 
 	private findTarget(attacker: CombatZerg): Creep | Structure | undefined {
@@ -145,17 +139,15 @@ export class PairDestroyerOverlord extends Overlord {
 		if (RoomIntel.inSafeMode(this.pos.roomName)) {
 			amount = 0;
 		}
-		const boostedAttackerType = this.directive.flag.name.includes('armor')
-									? CombatSetups.zerglings.boosted_T3_strongArmor : CombatSetups.zerglings.boosted_T3;
 
 		const attackerPriority = this.attackers.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
-		const attackerSetup = this.canBoostSetup(CombatSetups.zerglings.boosted_T3) ? boostedAttackerType
-																					: CombatSetups.zerglings.default;
+		const attackerSetup = new CombatCreepSetup(Roles.melee, () =>
+			CombatCreepSetup.createZerglingBody(this.colony, {boosted: true, armored: true}));
 		this.wishlist(amount, attackerSetup, {priority: attackerPriority});
 
 		const healerPriority = this.healers.length < this.attackers.length ? this.priority - 0.1 : this.priority + 0.1;
-		const healerSetup = this.canBoostSetup(CombatSetups.healers.boosted_T3) ? CombatSetups.healers.boosted_T3
-																				: CombatSetups.healers.default;
+		const healerSetup =  new CombatCreepSetup(Roles.healer, () =>
+			CombatCreepSetup.createTransfuserBody(this.colony, {boosted: true, armored: true}));
 		this.wishlist(amount, healerSetup, {priority: healerPriority});
 	}
 

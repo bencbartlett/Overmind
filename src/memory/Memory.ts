@@ -7,7 +7,7 @@ import {
 	DEFAULT_OVERMIND_SIGNATURE,
 	MY_USERNAME,
 	PROFILER_COLONY_LIMIT,
-	USE_PROFILER
+	USE_SCREEPS_PROFILER
 } from '../~settings';
 
 export enum Autonomy {
@@ -52,7 +52,7 @@ export class Mem {
 			log.warning(`Overmind requires isolated-VM to run. Change settings at screeps.com/a/#!/account/runtime`);
 			shouldRun = false;
 		}
-		if (USE_PROFILER && Game.time % 10 == 0) {
+		if (USE_SCREEPS_PROFILER && Game.time % 10 == 0) {
 			log.warning(`Profiling is currently enabled; only ${PROFILER_COLONY_LIMIT} colonies will be run!`);
 		}
 		if (Game.cpu.bucket < 500) {
@@ -200,10 +200,13 @@ export class Mem {
 		if (!Memory.playerCreepTracker) {
 			Memory.playerCreepTracker = {};
 		}
-		if (!USE_PROFILER) {
-			delete Memory.profiler;
+		if (!Memory.profiler) {
+			Memory.profiler = {};
 		}
-		_.defaults(Memory.settings, {
+		if (!USE_SCREEPS_PROFILER) { // this is for the
+			delete Memory.screepsProfiler;
+		}
+		_.defaultsDeep(Memory.settings, {
 			signature             : DEFAULT_OVERMIND_SIGNATURE,
 			operationMode         : DEFAULT_OPERATION_MODE,
 			log                   : {},

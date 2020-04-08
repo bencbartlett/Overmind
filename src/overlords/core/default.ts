@@ -1,8 +1,9 @@
 import {Colony} from '../../Colony';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
+import {getOverlord} from '../../zerg/AnyZerg';
 import {Zerg} from '../../zerg/Zerg';
-import {getOverlord, Overlord} from '../Overlord';
+import {Overlord} from '../Overlord';
 
 /**
  * This overlord contains the default actions for any creeps which lack an overlord (for example, miners whose

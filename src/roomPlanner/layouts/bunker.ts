@@ -506,6 +506,8 @@ export function getPosFromBunkerCoord(coord: Coord, colony: Colony): RoomPositio
 // Spots where queens can sit to be renewed when idle
 export const bunkerChargingSpots: Coord[] = [{'x': 29, 'y': 24}, {'x': 24, 'y': 21}];
 
+export const reagentLabSpots: [Coord, Coord] = [{'x': 27, 'y': 22}, {'x': 28, 'y': 23}];
+
 // Efficient, hard-coded order in which to refill extensions, spawns, labs, and towers
 export const quadrantFillOrder = {
 	lowerRight: [{'x': 30, 'y': 24}, {'x': 30, 'y': 25}, {'x': 29, 'y': 25}, {'x': 29, 'y': 26}, {'x': 28, 'y': 26}, {

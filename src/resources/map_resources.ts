@@ -42,7 +42,7 @@ export const INTERMEDIATE_REACTANTS: ResourceConstant[] = [
 	RESOURCE_HYDROXIDE,
 	RESOURCE_ZYNTHIUM_KEANITE,
 	RESOURCE_UTRIUM_LEMERGITE,
-	RESOURCE_GHODIUM,
+	// RESOURCE_GHODIUM,
 ];
 
 export const BASE_RESOURCES: ResourceConstant[] = [
@@ -113,7 +113,6 @@ export const RESOURCE_IMPORTANCE = [
 ];
 
 
-
 export const REAGENTS: { [product: string]: [ResourceConstant, ResourceConstant] } = {
 	// Tier 3
 	[RESOURCE_CATALYZED_GHODIUM_ALKALIDE]  : [RESOURCE_GHODIUM_ALKALIDE, RESOURCE_CATALYST],
@@ -159,7 +158,7 @@ export const MINERAL_COMPOUNDS_ALL = _.keys(REAGENTS).concat(BASE_RESOURCES);
 export const _mineralCompoundsAllLookup: { [resource: string]: boolean | undefined } =
 				 _.zipObject(MINERAL_COMPOUNDS_ALL, _.map(MINERAL_COMPOUNDS_ALL, i => true));
 
-export const boostParts: { [boostType: string]: BodyPartConstant } = {
+export const BOOST_PARTS: { [boost: string]: BodyPartConstant } = {
 
 	UH: ATTACK,
 	UO: WORK,
@@ -196,60 +195,6 @@ export const boostParts: { [boostType: string]: BodyPartConstant } = {
 
 };
 
-export const boostTypesAndTiers: { [actionName: string]: { [boostLevel: number]: ResourceConstant } } = {
-	attack       : {
-		1: 'UH',
-		2: 'UH2O',
-		3: 'XUH2O',
-	},
-	carry        : {
-		1: 'KH',
-		2: 'KH2O',
-		3: 'XKH2O',
-	},
-	ranged_attack: {
-		1: 'KO',
-		2: 'KHO2',
-		3: 'XKHO2',
-	},
-	heal         : {
-		1: 'LO',
-		2: 'LHO2',
-		3: 'XLHO2',
-	},
-	move         : {
-		1: 'ZO',
-		2: 'ZHO2',
-		3: 'XZHO2',
-	},
-	tough        : {
-		1: 'GO',
-		2: 'GHO2',
-		3: 'XGHO2',
-	},
-	harvest      : {
-		1: 'UO',
-		2: 'UHO2',
-		3: 'XUHO2',
-	},
-	construct    : {
-		1: 'LH',
-		2: 'LH2O',
-		3: 'XLH2O',
-	},
-	dismantle    : {
-		1: 'ZH',
-		2: 'ZH2O',
-		3: 'XZH2O',
-	},
-	upgrade      : {
-		1: 'GH',
-		2: 'GH2O',
-		3: 'XGH2O',
-	},
-
-};
-
 export type BoostType =
 	'attack'
 	| 'carry'
@@ -261,6 +206,21 @@ export type BoostType =
 	| 'construct'
 	| 'dismantle'
 	| 'upgrade';
+
+export const BoostTypeBodyparts: { [boostType in BoostType]: BodyPartConstant } = {
+	attack   : ATTACK,
+	carry    : CARRY,
+	ranged   : RANGED_ATTACK,
+	heal     : HEAL,
+	move     : MOVE,
+	tough    : TOUGH,
+	harvest  : WORK,
+	construct: WORK,
+	dismantle: WORK,
+	upgrade  : WORK,
+};
+
+export type BoostTier = 'T1' | 'T2' | 'T3';
 
 export function isBoostType(str: string): str is BoostType {
 	return str === 'attack'
@@ -275,11 +235,69 @@ export function isBoostType(str: string): str is BoostType {
 		   || str === 'upgrade';
 }
 
+export const BOOST_TIERS: { [boostType in BoostType]: { [boostTier in BoostTier]: ResourceConstant } } = {
+	attack   : {
+		T1: 'UH',
+		T2: 'UH2O',
+		T3: 'XUH2O',
+	},
+	carry    : {
+		T1: 'KH',
+		T2: 'KH2O',
+		T3: 'XKH2O',
+	},
+	ranged   : {
+		T1: 'KO',
+		T2: 'KHO2',
+		T3: 'XKHO2',
+	},
+	heal     : {
+		T1: 'LO',
+		T2: 'LHO2',
+		T3: 'XLHO2',
+	},
+	move     : {
+		T1: 'ZO',
+		T2: 'ZHO2',
+		T3: 'XZHO2',
+	},
+	tough    : {
+		T1: 'GO',
+		T2: 'GHO2',
+		T3: 'XGHO2',
+	},
+	harvest  : {
+		T1: 'UO',
+		T2: 'UHO2',
+		T3: 'XUHO2',
+	},
+	construct: {
+		T1: 'LH',
+		T2: 'LH2O',
+		T3: 'XLH2O',
+	},
+	dismantle: {
+		T1: 'ZH',
+		T2: 'ZH2O',
+		T3: 'XZH2O',
+	},
+	upgrade  : {
+		T1: 'GH',
+		T2: 'GH2O',
+		T3: 'XGH2O',
+	},
+
+};
 // This inverts the second-level values from above, so you get an object that looks like:
-// { attack: { UH: 1, UH2O: 2, XUH2O: 3 }, carry: { ... } ... }
-export const _boostTypesTierLookup = _.mapValues(boostTypesAndTiers,
-												 boostType => _.mapValues(_.invert(boostType),
-																		  (tier: string) => parseInt(tier, 10)));
+// { attack: { UH: T1, UH2O: T2, XUH2O: T3 }, carry: { ... } ... }
+export const _boostTypesTierLookup = _.mapValues(
+	BOOST_TIERS, boostType => _.invert(boostType)
+) as { [boostType in BoostType]: { [resource in ResourceConstant]: BoostTier } };
+
+// This inverts the second-level values from above, so you get an object that looks like:
+// { attack: { UH: T1, UH2O: T2, XUH2O: T3 }, carry: { ... } ... }
+export const _boostTierLookupAllTypes: { [resource in ResourceConstant]: BoostTier } =
+				 _.extend({}, ..._.values(_boostTypesTierLookup));
 
 export const COMMODITIES_ALL: ResourceConstant[] = [
 	// Compressed mineral compounds

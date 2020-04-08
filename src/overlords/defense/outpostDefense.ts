@@ -19,7 +19,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 
 	constructor(directive: DirectiveOutpostDefense, priority = OverlordPriority.outpostDefense.outpostDefense) {
 		super(directive, 'outpostDefense', priority, 1);
-		this.spawnGroup.settings.flexibleEnergy = true;
+		// this.spawnGroup.settings.flexibleEnergy = true;
 		this.broodlings = this.combatZerg(Roles.guardMelee);
 		this.hydralisks = this.combatZerg(Roles.ranged);
 		this.healers = this.combatZerg(Roles.healer);

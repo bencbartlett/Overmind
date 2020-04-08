@@ -288,6 +288,8 @@ export class Visualizer {
 						.poly(logoText.I.points, logoText.I.style)
 						.poly(logoText.N.points, logoText.N.style)
 						.poly(logoText.D.points, logoText.D.style);
+		Visualizer.text(`Colonies: ${_.keys(Overmind.colonies).length} | Creeps: ${_.keys(Game.creeps).length}`,
+						{x: 1, y: 10}, .93);
 	}
 
 	static drawNotifications(notificationMessages: string[]): void {
@@ -316,18 +318,11 @@ export class Visualizer {
 		this.barGraph(Game.gcl.progress / Game.gcl.progressTotal, {x: 2.75, y: 9});
 	}
 
-	static summary(): void {
-		this.text(`Colonies: ${_.keys(Overmind.colonies).length} | Creeps: ${_.keys(Game.creeps).length}`, {
-			x: 1,
-			y: 10
-		}, .93);
-	}
 
 	// This typically takes about 0.3-0.6 CPU in total
 	static visuals(): void {
 		this.drawLogo();
 		this.drawGraphs();
 		// this.drawNotifications();
-		this.summary();
 	}
 }

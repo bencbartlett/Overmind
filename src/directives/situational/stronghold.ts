@@ -241,8 +241,8 @@ export class DirectiveStronghold extends Directive {
 				Visualizer.marker(attackPos, 'white');
 			}
 		}
-		if (this.memory.target && Game.getObjectById(this.memory.target.id.toString())) {
-			const target = Game.getObjectById(this.memory.target.id.toString()) as RoomObject;
+		if (this.memory.target && Game.getObjectById(this.memory.target.id)) {
+			const target = Game.getObjectById(this.memory.target.id) as RoomObject;
 			if (target) {
 				Visualizer.marker(target.pos, 'black');
 			}

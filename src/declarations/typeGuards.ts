@@ -1,7 +1,10 @@
 // Type guards library: this allows for instanceof - like behavior for much lower CPU cost. Each type guard
 // differentiates an ambiguous input by recognizing one or more unique properties.
 
+import {AnyZerg} from '../zerg/AnyZerg';
 import {CombatZerg} from '../zerg/CombatZerg';
+import {NeuralZerg} from '../zerg/NeuralZerg';
+import {PowerZerg} from '../zerg/PowerZerg';
 import {Zerg} from '../zerg/Zerg';
 
 export interface EnergyStructure extends Structure {
@@ -58,10 +61,22 @@ export function isPowerCreep(obj: RoomObject): obj is PowerCreep {
 	return (<PowerCreep>obj).powers != undefined;
 }
 
-export function isZerg(creep: Creep | Zerg): creep is Zerg {
-	return (<Zerg>creep).creep != undefined;
+export function isAnyZerg(creep: AnyCreep | AnyZerg): creep is AnyZerg {
+	return (<AnyZerg>creep).isAnyZerg || false;
 }
 
-export function isCombatZerg(zerg: Creep | Zerg | CombatZerg): zerg is CombatZerg {
-	return (<CombatZerg>zerg).isCombatZerg != undefined;
+export function isStandardZerg(creep: AnyCreep | AnyZerg): creep is Zerg {
+	return (<Zerg>creep).isStandardZerg || false;
+}
+
+export function isPowerZerg(creep: AnyCreep | AnyZerg): creep is PowerZerg {
+	return (<PowerZerg>creep).isPowerZerg || false;
+}
+
+export function isCombatZerg(zerg: AnyCreep | AnyZerg): zerg is CombatZerg {
+	return (<CombatZerg>zerg).isCombatZerg || false;
+}
+
+export function isNeuralZerg(zerg: AnyCreep | AnyZerg): zerg is NeuralZerg {
+	return (<NeuralZerg>zerg).isNeuralZerg || false;
 }

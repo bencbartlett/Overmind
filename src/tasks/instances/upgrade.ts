@@ -21,7 +21,7 @@ export class TaskUpgrade extends Task {
 	}
 
 	isValidTarget() {
-		return this.target && this.target.my;
+		return this.target && !!this.target.my;
 	}
 
 	work() {

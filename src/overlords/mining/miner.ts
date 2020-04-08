@@ -56,8 +56,10 @@ export class MiningOverlord extends Overlord {
 		this.directive = directive;
 		this.priority += this.outpostIndex * OverlordPriority.remoteRoom.roomIncrement;
 		this.miners = this.zerg(Roles.drone);
+
 		// Populate structures
 		this.populateStructures();
+
 		// Compute energy output
 		if (Cartographer.roomType(this.pos.roomName) == ROOMTYPE_SOURCEKEEPER) {
 			this.energyPerTick = SOURCE_ENERGY_KEEPER_CAPACITY / ENERGY_REGEN_TIME;
@@ -84,10 +86,15 @@ export class MiningOverlord extends Overlord {
 		// }
 		else if (this.link) {
 			this.mode = 'link';
-			this.setup = Setups.drones.miners.linkOptimized;
+			if (this.colony.assets.energy >= 100000) {
+				this.setup = Setups.drones.miners.linkOptimized;
+			} else {
+				this.setup = Setups.drones.miners.default;
+			}
 		} else {
 			this.mode = 'standard';
-			this.setup = Game.cpu.bucket < 9500 ? Setups.drones.miners.standardCPU : Setups.drones.miners.standard;
+			// this.setup = Game.cpu.bucket < 9500 ? Setups.drones.miners.standardCPU : Setups.drones.miners.standard;
+			this.setup = Setups.drones.miners.standard;
 			// todo: double miner condition
 		}
 		const miningPowerEach = this.setup.getBodyPotential(WORK, this.colony);
@@ -147,7 +154,9 @@ export class MiningOverlord extends Overlord {
 	private populateStructures() {
 		if (Game.rooms[this.pos.roomName]) {
 			this.source = _.first(this.pos.lookFor(LOOK_SOURCES));
-			this.constructionSite = _.first(this.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 2));
+			this.constructionSite = _.first(_.filter(this.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 2),
+													 site => site.structureType == STRUCTURE_CONTAINER ||
+															 site.structureType == STRUCTURE_LINK));
 			this.container = this.pos.findClosestByLimitedRange(Game.rooms[this.pos.roomName].containers, 1);
 			this.link = this.pos.findClosestByLimitedRange(this.colony.availableLinks, 2);
 			// if (this.link) { // this won't cause repopulation problems since link rooms are always visible

@@ -8,6 +8,7 @@ import {
 	ROOMTYPE_ALLEY,
 	ROOMTYPE_CONTROLLER,
 	ROOMTYPE_CORE,
+	ROOMTYPE_CROSSROAD,
 	ROOMTYPE_SOURCEKEEPER
 } from '../utilities/Cartographer';
 import {derefCoords} from '../utilities/utils';
@@ -64,7 +65,10 @@ export class ExpansionEvaluator {
 		// find source positions
 		const outpostSourcePositions: { [roomName: string]: RoomPosition[] } = {};
 		for (const roomName of possibleOutposts) {
-			if (Cartographer.roomType(roomName) == ROOMTYPE_ALLEY) continue;
+			if (Cartographer.roomType(roomName) == ROOMTYPE_ALLEY
+				|| Cartographer.roomType(roomName) == ROOMTYPE_CROSSROAD) {
+				continue;
+			}
 			const roomMemory = Memory.rooms[roomName];
 			if (!roomMemory || !roomMemory[_RM.SOURCES]) {
 				if (verbose) log.info(`No memory of neighbor: ${roomName}. Aborting score calculation!`);

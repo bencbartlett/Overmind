@@ -1,10 +1,11 @@
+import {CombatCreepSetup} from '../../creepSetups/CombatCreepSetup';
 import {CreepSetup} from '../../creepSetups/CreepSetup';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {boostTypesAndTiers} from '../../resources/map_resources';
+import {BOOST_TIERS} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
 
@@ -22,12 +23,9 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 		reengageHitsPercent: 0.95,
 	};
 
-	constructor(directive: DirectiveInvasionDefense, boosted = false, priority = OverlordPriority.defense.meleeDefense) {
+	constructor(directive: DirectiveInvasionDefense, priority = OverlordPriority.defense.meleeDefense) {
 		super(directive, 'meleeDefense', priority, 1);
-		this.zerglings = this.combatZerg(Roles.melee, {
-			boostWishlist: boosted ? [boostTypesAndTiers.tough[3], boostTypesAndTiers.attack[3], boostTypesAndTiers.move[3]]
-								   : undefined
-		});
+		this.zerglings = this.combatZerg(Roles.melee);
 	}
 
 	private handleDefender(zergling: CombatZerg): void {
@@ -47,13 +45,9 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 
 	init() {
 		this.reassignIdleCreeps(Roles.melee);
-		if (this.canBoostSetup(CombatSetups.zerglings.boosted_T3_defense)) {
-			const setup = CombatSetups.zerglings.boosted_T3_defense;
-			this.wishlist(this.computeNeededZerglingAmount(setup, BOOSTS.attack.XUH2O.attack), setup);
-		} else {
-			const setup = CombatSetups.zerglings.default;
-			this.wishlist(this.computeNeededZerglingAmount(setup, 1), setup);
-		}
+		const setup = new CombatCreepSetup(Roles.melee, () =>
+			CombatCreepSetup.createZerglingBody(this.colony, {boosted:true, armored:true}));
+		this.wishlist(this.computeNeededZerglingAmount(setup, 1), setup); // TODO: boost multiplier needs fixing!
 	}
 
 	run() {

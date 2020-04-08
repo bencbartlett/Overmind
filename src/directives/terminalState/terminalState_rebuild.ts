@@ -42,9 +42,9 @@ export class DirectiveTerminalRebuildState extends Directive {
 				if (this.colony.assets[resource] > 0) {
 					if (resource == RESOURCE_ENERGY) { // keep a little energy just to keep the room functioning
 						Overmind.terminalNetwork.exportResource(this.colony, resource, {
-							target: 25000,
+							target   : 25000,
 							tolerance: 5000,
-							surplus: 35000,
+							surplus  : 35000,
 						});
 					} else {
 						Overmind.terminalNetwork.exportResource(this.colony, <ResourceConstant>resource);

@@ -1,16 +1,69 @@
 import {Colony, getAllColonies} from '../Colony';
 import {maxMarketPrices, TraderJoe} from '../logistics/TradeNetwork';
-import {Mem} from '../memory/Memory';
 import {profile} from '../profiler/decorator';
-import {mergeSum, minMax, onPublicServer} from '../utilities/utils';
+import {onPublicServer} from '../utilities/utils';
 import {
 	_baseResourcesLookup,
-	_boostTypesTierLookup, _commoditiesLookup,
+	_boostTierLookupAllTypes,
+	_boostTypesTierLookup,
+	_commoditiesLookup,
 	_mineralCompoundsAllLookup,
-	BASE_RESOURCES, boostParts, DEPOSITS_ALL,
+	BASE_RESOURCES,
+	BOOST_PARTS,
+	BOOST_TIERS,
+	BoostTier,
+	DEPOSITS_ALL,
 	INTERMEDIATE_REACTANTS,
 	REAGENTS
 } from './map_resources';
+
+export const REACTION_PRIORITIES = [
+	BOOST_TIERS.attack.T1,
+	BOOST_TIERS.heal.T1,
+	BOOST_TIERS.ranged.T1,
+	BOOST_TIERS.move.T1,
+	BOOST_TIERS.construct.T1,
+	BOOST_TIERS.dismantle.T1,
+	// BOOST_TIERS.carry.T1, // not used yet
+	// BOOST_TIERS.harvest.T1, // not used yet
+	BOOST_TIERS.tough.T1,
+	// BOOST_TIERS.upgrade.T1,
+
+	RESOURCE_GHODIUM,
+
+	RESOURCE_ZYNTHIUM_KEANITE,
+	RESOURCE_UTRIUM_LEMERGITE,
+	RESOURCE_HYDROXIDE,
+
+	BOOST_TIERS.attack.T2,
+	BOOST_TIERS.heal.T2,
+	BOOST_TIERS.ranged.T2,
+	BOOST_TIERS.move.T2,
+	// BOOST_TIERS.construct.T2,
+	BOOST_TIERS.dismantle.T2,
+	// BOOST_TIERS.carry.T2, // not used yet
+	// BOOST_TIERS.harvest.T2, // not used yet
+	BOOST_TIERS.tough.T2,
+	// BOOST_TIERS.upgrade.T2,
+
+	BOOST_TIERS.attack.T3,
+	BOOST_TIERS.heal.T3,
+	BOOST_TIERS.ranged.T3,
+	BOOST_TIERS.move.T3,
+	// BOOST_TIERS.construct.T3,
+	BOOST_TIERS.dismantle.T3,
+	// BOOST_TIERS.carry.T3, // not used yet
+	// BOOST_TIERS.harvest.T3, // not used yet
+	BOOST_TIERS.tough.T3,
+	// BOOST_TIERS.upgrade.T3,
+
+	BOOST_TIERS.construct.T2,
+	BOOST_TIERS.construct.T3,
+
+	BOOST_TIERS.upgrade.T1,
+	BOOST_TIERS.upgrade.T2,
+	BOOST_TIERS.upgrade.T3,
+];
 
 export const priorityStockAmounts: { [key: string]: number } = {
 	XGHO2: 1000,	// (-70 % dmg taken)
@@ -68,41 +121,42 @@ export const baseStockAmounts: { [key: string]: number } = {
 	[RESOURCE_OXYGEN]   : 5000,
 	[RESOURCE_HYDROGEN] : 5000
 };
+//
+// // Compute priority and wanted stock
+// const _priorityStock: Reaction[] = [];
+// for (const resourceType in priorityStockAmounts) {
+// 	const stock = {
+// 		mineralType: resourceType,
+// 		amount     : priorityStockAmounts[resourceType]
+// 	};
+// 	_priorityStock.push(stock);
+// }
+//
+// const _wantedStock: Reaction[] = [];
+// for (const resourceType in wantedStockAmounts) {
+// 	const stock = {
+// 		mineralType: resourceType,
+// 		amount     : wantedStockAmounts[resourceType]
+// 	};
+// 	_wantedStock.push(stock);
+// }
+//
+//
+// export const priorityStock = _priorityStock;
+// export const wantedStock = _wantedStock;
 
 export interface Reaction {
 	mineralType: string;
 	amount: number;
 }
 
-// Compute priority and wanted stock
-const _priorityStock: Reaction[] = [];
-for (const resourceType in priorityStockAmounts) {
-	const stock = {
-		mineralType: resourceType,
-		amount     : priorityStockAmounts[resourceType]
-	};
-	_priorityStock.push(stock);
-}
-
-const _wantedStock: Reaction[] = [];
-for (const resourceType in wantedStockAmounts) {
-	const stock = {
-		mineralType: resourceType,
-		amount     : wantedStockAmounts[resourceType]
-	};
-	_wantedStock.push(stock);
-}
-
-export const priorityStock = _priorityStock;
-export const wantedStock = _wantedStock;
-
-interface AbathurMemory {
-	sleepUntil: number;
-}
-
-const AbathurMemoryDefaults = {
-	sleepUntil: 0
-};
+// interface AbathurMemory {
+// 	sleepUntil: number;
+// }
+//
+// const AbathurMemoryDefaults = {
+// 	sleepUntil: 0
+// };
 
 /**
  * Abathur is responsible for the evolution of the swarm and directs global production of minerals. Abathur likes
@@ -111,29 +165,30 @@ const AbathurMemoryDefaults = {
 @profile
 export class Abathur {
 
-	colony: Colony;
-	memory: AbathurMemory;
-	priorityStock: Reaction[];
-	wantedStock: Reaction[];
+	// colony: Colony;
+	// memory: AbathurMemory;
+	// priorityStock: Reaction[];
+	// wantedStock: Reaction[];
 
-	private _globalAssets: { [resourceType: string]: number };
+	// private _globalAssets: { [resourceType: string]: number };
 
 	static settings = {
-		minBatchSize: 800,	// anything less than this wastes time
-		maxBatchSize: 1600, // manager/queen carry capacity
-		sleepTime   : 100,  // sleep for this many ticks once you can't make anything
+		// minBatchSize: 800,	// anything less than this wastes time
+		// maxBatchSize: 1600, // manager/queen carry capacity
+		batchSize: 1600,
+		// sleepTime: 100,  // sleep for this many ticks once you can't make anything
 	};
 
-	constructor(colony: Colony) {
-		this.colony = colony;
-		this.memory = Mem.wrap(this.colony.memory, 'abathur', AbathurMemoryDefaults);
-		this.priorityStock = priorityStock;
-		this.wantedStock = wantedStock;
-	}
+	// constructor() {
+	// 	// this.colony = colony;
+	// 	// this.memory = Mem.wrap(this.colony.memory, 'abathur', AbathurMemoryDefaults);
+	// 	this.priorityStock = priorityStock;
+	// 	this.wantedStock = wantedStock;
+	// }
 
-	refresh() {
-		this.memory = Mem.wrap(this.colony.memory, 'abathur', AbathurMemoryDefaults);
-	}
+	// refresh() {
+	// 	this.memory = Mem.wrap(this.colony.memory, 'abathur', AbathurMemoryDefaults);
+	// }
 
 	// Helper methods for identifying different types of resources
 
@@ -150,7 +205,7 @@ export class Abathur {
 	}
 
 	static isBoost(resource: ResourceConstant): boolean {
-		return !!boostParts[resource];
+		return !!BOOST_PARTS[resource];
 	}
 
 	static isAttackBoost(resource: ResourceConstant): boolean {
@@ -158,7 +213,7 @@ export class Abathur {
 	}
 
 	static isRangedBoost(resource: ResourceConstant): boolean {
-		return !!_boostTypesTierLookup.ranged_attack[resource];
+		return !!_boostTypesTierLookup.ranged[resource];
 	}
 
 	static isHealBoost(resource: ResourceConstant): boolean {
@@ -201,28 +256,107 @@ export class Abathur {
 		return !!_commoditiesLookup[resource];
 	}
 
+	static getBoostTier(boost: ResourceConstant): BoostTier | 'notaboost' {
+		return _boostTierLookupAllTypes[boost] || 'notaboost';
+	}
+
 	/**
-	 * Summarizes the total of all resources currently in a colony store structure
+	 * Recursively enumerate the base ingredients required to synthesize a unit of the specified compound,
+	 * e.g. Abathur.enumerateReactionBaseIngredients("XGH2O") = Z,K,U,L,H,O,H,X
 	 */
-	private computeGlobalAssets(): { [resourceType: string]: number } {
-		const colonyAssets: { [resourceType: string]: number }[] = [];
-		for (const colony of getAllColonies()) {
-			colonyAssets.push(colony.assets);
+	static enumerateReactionBaseIngredients(mineral: ResourceConstant): ResourceConstant[] {
+		if ((<ResourceConstant[]>BASE_RESOURCES).includes(mineral)) {
+			return [mineral];
+		} else if (REAGENTS[mineral]) {
+			return Abathur.enumerateReactionBaseIngredients(REAGENTS[mineral][0])
+						  .concat(Abathur.enumerateReactionBaseIngredients(REAGENTS[mineral][1]));
+		} else {
+			return [];
 		}
-		return mergeSum(colonyAssets);
 	}
 
-	get globalAssets(): { [resourceType: string]: number } {
-		if (!this._globalAssets) {
-			this._globalAssets = this.computeGlobalAssets();
+	// Reaction scheduling =============================================================================================
+
+	/**
+	 * Compute the next reaction that a colony should undertake based on local and global stockpiles of all target
+	 * compounds.
+	 */
+	static getNextReaction(colony: Colony): Reaction | undefined {
+		const BATCH_SIZE = Abathur.settings.batchSize;
+		const globalAssets = Overmind.terminalNetwork.getAssets();
+		const numColonies = _.filter(getAllColonies(), colony => !!colony.terminal).length;
+
+		let possibleReactions = REACTION_PRIORITIES;
+		if (colony.labs.length < 10) { // don't make the really long cooldown stuff if you don't have all labs
+			possibleReactions = _.filter(possibleReactions,
+										 resource => ((<any>REACTION_TIME)[resource] || Infinity) <= 30);
 		}
-		return this._globalAssets;
+
+		const ingredientsUnavailable: {[resource: string]: boolean} = {}; // track what we can't make to save CPU
+		let nextTargetResource: ResourceConstant | undefined;
+
+		// Want to build up a stockpile of boosts but we want to maintain and utilize a stockpile of the cheaper stuff
+		// before we start building up higher tier boosts
+		for (const n of _.range(1, 50)) {
+			nextTargetResource = _.find(possibleReactions, resource => {
+
+				// If we've already figured out we can't make this in a previous pass then skip it
+				if (ingredientsUnavailable[resource]) {
+					return false;
+				}
+
+				const tier = Abathur.getBoostTier(resource);
+				// Get 3 lab's worth of a global stockpile before you start making T3 boosts
+				if (tier == 'T3' && n * BATCH_SIZE < 3 * LAB_MINERAL_CAPACITY) {
+					return false;
+				}
+
+				// Get 2 lab's worth of a global stockpile before you start making T2 boosts
+				if (tier == 'T2' && n * BATCH_SIZE < 2 * LAB_MINERAL_CAPACITY) {
+					return false;
+				}
+
+				// Don't need to stockpile a ton of reaction intermediates or ghodium
+				if (resource == RESOURCE_GHODIUM || Abathur.isIntermediateReactant(resource)) {
+					if (colony.assets[resource] > Overmind.terminalNetwork.thresholds(colony, resource).target) {
+						return false;
+					}
+				}
+
+				// Otherwise, we're allowed to make more of this
+				if (globalAssets[resource] / numColonies < (n - 3) * BATCH_SIZE || // is there a global shortage?
+					colony.assets[resource] < n * BATCH_SIZE) { // is there a local shortage?
+
+					// Do we have enough ingredients (or can we obtain enough) to make this step of the reaction?
+					const [reagent1, reagent2] = REAGENTS[resource];
+					const reagent1Available = colony.assets[reagent1] >= BATCH_SIZE ||
+											  Overmind.terminalNetwork.canObtainResource(colony, reagent1, BATCH_SIZE);
+					const reagent2Available = colony.assets[reagent2] >= BATCH_SIZE ||
+											  Overmind.terminalNetwork.canObtainResource(colony, reagent2, BATCH_SIZE);
+					if (reagent1Available && reagent2Available) {
+						return true;
+					} else {
+						ingredientsUnavailable[resource] = true;
+					}
+
+				}
+
+				// We can't make this thing :(
+				return false;
+
+			});
+			if (nextTargetResource) break;
+		}
+
+		if (nextTargetResource) {
+			return {mineralType: nextTargetResource, amount: BATCH_SIZE};
+		}
 	}
 
-	private canReceiveBasicMineralsForReaction(mineralQuantities: { [resourceType: string]: number },
-											   amount: number): boolean {
+	private static canReceiveBasicMineralsForReaction(mineralQuantities: { [resourceType: string]: number },
+													  amount: number): boolean {
 		for (const mineral in mineralQuantities) {
-			if (!this.someColonyHasExcess(<ResourceConstant>mineral, mineralQuantities[mineral])) {
+			if (!Abathur.someColonyHasExcess(<ResourceConstant>mineral, mineralQuantities[mineral])) {
 				return false;
 			}
 		}
@@ -230,7 +364,7 @@ export class Abathur {
 	}
 
 
-	private canBuyBasicMineralsForReaction(mineralQuantities: { [resourceType: string]: number }): boolean {
+	private static canBuyBasicMineralsForReaction(mineralQuantities: { [resourceType: string]: number }): boolean {
 		if (Game.market.credits < TraderJoe.settings.market.credits.canBuyAbove) {
 			return false;
 		}
@@ -246,37 +380,33 @@ export class Abathur {
 		return true;
 	}
 
-	static stockAmount(resource: ResourceConstant): number {
-		return (wantedStockAmounts[resource] || priorityStockAmounts[resource] || baseStockAmounts[resource] || 0);
+	private static stockAmount(resource: ResourceConstant): number {
+		return 0; // (wantedStockAmounts[resource] || priorityStockAmounts[resource] || baseStockAmounts[resource] || 0);
 	}
 
-	private hasExcess(mineralType: ResourceConstant, excessAmount = 0): boolean {
-		return this.colony.assets[mineralType] - excessAmount > Abathur.stockAmount(mineralType);
+	private static hasExcess(colony: Colony, mineralType: ResourceConstant, excessAmount = 0): boolean {
+		return colony.assets[mineralType] - excessAmount > Abathur.stockAmount(mineralType);
 	}
 
-	private someColonyHasExcess(mineralType: ResourceConstant, excessAmount = 0): boolean {
-		return _.any(getAllColonies(), colony => colony.abathur.hasExcess(mineralType, excessAmount));
+	private static someColonyHasExcess(mineralType: ResourceConstant, excessAmount = 0): boolean {
+		return _.any(getAllColonies(), colony => Abathur.hasExcess(colony, mineralType, excessAmount));
 	}
 
 	/**
 	 * Generate a queue of reactions to produce the most needed compound
 	 */
-	getReactionQueue(verbose = false): Reaction[] {
-		// Return nothing if you are sleeping; prevents wasteful reaction queue calculations
-		if (Game.time < this.memory.sleepUntil) {
-			return [];
-		}
+	private static getReactionQueue(colony: Colony, verbose = false): Reaction[] {
 		// Compute the reaction queue for the highest priority item that you should be and can be making
 		const stocksToCheck = [priorityStockAmounts, wantedStockAmounts];
 		for (const stocks of stocksToCheck) {
 			for (const resourceType in stocks) {
-				const amountOwned = this.colony.assets[resourceType];
+				const amountOwned = colony.assets[resourceType];
 				const amountNeeded = stocks[resourceType];
 				if (amountOwned < amountNeeded) { // if there is a shortage of this resource
-					const reactionQueue = this.buildReactionQueue(<ResourceConstant>resourceType,
-																  amountNeeded - amountOwned, verbose);
+					const reactionQueue = Abathur.buildReactionQueue(colony, <ResourceConstant>resourceType,
+																	 amountNeeded - amountOwned, verbose);
 
-					const missingBaseMinerals = this.getMissingBasicMinerals(reactionQueue);
+					const missingBaseMinerals = Abathur.getMissingBasicMinerals(colony, reactionQueue);
 					if (!_.any(missingBaseMinerals)
 						|| this.canReceiveBasicMineralsForReaction(missingBaseMinerals, amountNeeded + 1000)
 						|| this.canBuyBasicMineralsForReaction(missingBaseMinerals)) {
@@ -288,30 +418,31 @@ export class Abathur {
 			}
 		}
 		// If there's nothing you can make, sleep for 100 ticks
-		this.memory.sleepUntil = Game.time + Abathur.settings.sleepTime;
+		// this.memory.sleepUntil = Game.time + Abathur.settings.sleepTime;
 		return [];
 	}
 
 	/**
 	 * Build a reaction queue for a target compound
 	 */
-	private buildReactionQueue(mineral: ResourceConstant, amount: number, verbose = false): Reaction[] {
-		amount = minMax(amount, Abathur.settings.minBatchSize, Abathur.settings.maxBatchSize);
-		if (verbose) console.log(`Abathur@${this.colony.room.print}: building reaction queue for ${amount} ${mineral}`);
+	private static buildReactionQueue(colony: Colony, mineral: ResourceConstant, amount: number,
+									  verbose = false): Reaction[] {
+		amount = Abathur.settings.batchSize; // minMax(amount, Abathur.settings.minBatchSize, Abathur.settings.maxBatchSize);
+		if (verbose) console.log(`Abathur@${colony.room.print}: building reaction queue for ${amount} ${mineral}`);
 		let reactionQueue: Reaction[] = [];
 		for (const ingredient of Abathur.enumerateReactionProducts(mineral)) {
 			let productionAmount = amount;
 			if (ingredient != mineral) {
 				if (verbose) {
-					console.log(`productionAmount: ${productionAmount}, assets: ${this.colony.assets[ingredient]}`);
+					console.log(`productionAmount: ${productionAmount}, assets: ${colony.assets[ingredient]}`);
 				}
-				productionAmount = Math.max(productionAmount - (this.colony.assets[ingredient]), 0);
+				productionAmount = Math.max(productionAmount - (colony.assets[ingredient]), 0);
 			}
-			productionAmount = Math.min(productionAmount, Abathur.settings.maxBatchSize);
+			productionAmount = Math.min(productionAmount, Abathur.settings.batchSize);
 			reactionQueue.push({mineralType: ingredient, amount: productionAmount});
 		}
 		if (verbose) console.log(`Pre-trim queue: ${JSON.stringify(reactionQueue)}`);
-		reactionQueue = this.trimReactionQueue(reactionQueue);
+		reactionQueue = Abathur.trimReactionQueue(reactionQueue);
 		if (verbose) console.log(`Post-trim queue: ${JSON.stringify(reactionQueue)}`);
 		reactionQueue = _.filter(reactionQueue, rxn => rxn.amount > 0);
 		if (verbose) console.log(`Final queue: ${JSON.stringify(reactionQueue)}`);
@@ -321,7 +452,7 @@ export class Abathur {
 	/**
 	 * Trim a reaction queue, reducing the amounts of precursor compounds which need to be produced
 	 */
-	private trimReactionQueue(reactionQueue: Reaction[]): Reaction[] {
+	private static trimReactionQueue(reactionQueue: Reaction[]): Reaction[] {
 		// Scan backwards through the queue and reduce the production amount of subsequently baser resources as needed
 		reactionQueue.reverse();
 		for (const reaction of reactionQueue) {
@@ -333,8 +464,7 @@ export class Abathur {
 					if (reactionQueue[index].amount == 0) {
 						reactionQueue[index].amount = 0;
 					} else {
-						reactionQueue[index].amount = minMax(reaction.amount, Abathur.settings.minBatchSize,
-															 reactionQueue[index].amount);
+						reactionQueue[index].amount = Math.min(reaction.amount, reactionQueue[index].amount);
 					}
 				}
 			}
@@ -346,13 +476,14 @@ export class Abathur {
 	/**
 	 * Figure out which basic minerals are missing and how much
 	 */
-	getMissingBasicMinerals(reactionQueue: Reaction[], verbose = false): { [resourceType: string]: number } {
+	private static getMissingBasicMinerals(colony: Colony, reactionQueue: Reaction[],
+										   verbose = false): { [resourceType: string]: number } {
 		const requiredBasicMinerals = Abathur.getRequiredBasicMinerals(reactionQueue);
 		if (verbose) console.log(`Required basic minerals: ${JSON.stringify(requiredBasicMinerals)}`);
-		if (verbose) console.log(`assets: ${JSON.stringify(this.colony.assets)}`);
+		if (verbose) console.log(`assets: ${JSON.stringify(colony.assets)}`);
 		const missingBasicMinerals: { [resourceType: string]: number } = {};
 		for (const mineralType in requiredBasicMinerals) {
-			const amountMissing = requiredBasicMinerals[mineralType] - this.colony.assets[mineralType];
+			const amountMissing = requiredBasicMinerals[mineralType] - colony.assets[mineralType];
 			if (amountMissing > 0) {
 				missingBasicMinerals[mineralType] = amountMissing;
 			}
@@ -364,7 +495,7 @@ export class Abathur {
 	/**
 	 * Get the required amount of basic minerals for a reaction queue
 	 */
-	static getRequiredBasicMinerals(reactionQueue: Reaction[]): { [resourceType: string]: number } {
+	private static getRequiredBasicMinerals(reactionQueue: Reaction[]): { [resourceType: string]: number } {
 		const requiredBasicMinerals: { [resourceType: string]: number } = {
 			[RESOURCE_HYDROGEN] : 0,
 			[RESOURCE_OXYGEN]   : 0,
@@ -388,27 +519,13 @@ export class Abathur {
 	/**
 	 * Recursively generate a list of outputs from reactions required to generate a compound
 	 */
-	static enumerateReactionProducts(mineral: ResourceConstant): ResourceConstant[] {
+	private static enumerateReactionProducts(mineral: ResourceConstant): ResourceConstant[] {
 		if (!REAGENTS[mineral] || _.isEmpty(mineral)) {
 			return [];
 		} else {
 			return Abathur.enumerateReactionProducts(REAGENTS[mineral][0])
 						  .concat(Abathur.enumerateReactionProducts(REAGENTS[mineral][1]),
 								  mineral);
-		}
-	}
-
-	/**
-	 * Recursively enumerate the base ingredients required to synthesize a unit of the specified compound
-	 */
-	static enumerateReactionBaseIngredients(mineral: ResourceConstant): ResourceConstant[] {
-		if ((<ResourceConstant[]>BASE_RESOURCES).includes(mineral)) {
-			return [mineral];
-		} else if (REAGENTS[mineral]) {
-			return Abathur.enumerateReactionBaseIngredients(REAGENTS[mineral][0])
-						  .concat(Abathur.enumerateReactionBaseIngredients(REAGENTS[mineral][1]));
-		} else {
-			return [];
 		}
 	}
 

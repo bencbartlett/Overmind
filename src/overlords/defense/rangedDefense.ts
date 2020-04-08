@@ -1,10 +1,10 @@
+import {CombatCreepSetup} from '../../creepSetups/CombatCreepSetup';
 import {CreepSetup} from '../../creepSetups/CreepSetup';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {boostTypesAndTiers} from '../../resources/map_resources';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
 
@@ -25,13 +25,9 @@ export class RangedDefenseOverlord extends CombatOverlord {
 	};
 
 	constructor(directive: DirectiveInvasionDefense,
-				boosted  = false,
 				priority = OverlordPriority.defense.rangedDefense) {
 		super(directive, 'rangedDefense', priority, 1);
-		this.hydralisks = this.combatZerg(Roles.ranged, {
-			boostWishlist: boosted ? [boostTypesAndTiers.tough[3], boostTypesAndTiers.ranged_attack[3],
-									  boostTypesAndTiers.heal[3], boostTypesAndTiers.move[3]] : undefined
-		});
+		this.hydralisks = this.combatZerg(Roles.ranged);
 	}
 
 	private handleDefender(hydralisk: CombatZerg): void {
@@ -56,13 +52,9 @@ export class RangedDefenseOverlord extends CombatOverlord {
 
 	init() {
 		this.reassignIdleCreeps(Roles.ranged);
-		if (this.canBoostSetup(CombatSetups.hydralisks.boosted_T3)) {
-			const setup = CombatSetups.hydralisks.boosted_T3;
-			this.wishlist(this.computeNeededHydraliskAmount(setup, BOOSTS.ranged_attack.XKHO2.rangedAttack), setup);
-		} else {
-			const setup = CombatSetups.hydralisks.default;
-			this.wishlist(this.computeNeededHydraliskAmount(setup, 1), setup);
-		}
+		const setup = new CombatCreepSetup(Roles.ranged, () => // TODO: handle non-boosted case
+			CombatCreepSetup.createHydraliskBody(this.colony, {healing: true, boosted: true}));
+		this.wishlist(this.computeNeededHydraliskAmount(setup, 1), setup); // TODO: boostmultiplier needs fixing
 	}
 
 	run() {

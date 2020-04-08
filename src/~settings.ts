@@ -2,8 +2,8 @@
 
 import {leftAngleQuote, rightAngleQuote} from './utilities/stringConstants';
 import {
+	getMyUsername,
 	getReinforcementLearningTrainingVerbosity,
-	getUsername,
 	onPublicServer,
 	onTrainingEnvironment
 } from './utilities/utils';
@@ -16,12 +16,12 @@ export const MUON = 'Muon';
 /**
  * Your username - you shouldn't need to change this.
  */
-export const MY_USERNAME: string = getUsername();
+export const MY_USERNAME: string = getMyUsername();
 
 /**
  * Enable this to build from source including screeps-profiler. (This is separate from Overmind-Profiler.)
  */
-export const USE_PROFILER: boolean = false;
+export const USE_SCREEPS_PROFILER: boolean = false;
 
 /**
  * Profiling is incredibly expensive and can cause the script to time out. By setting this option, you can limit the

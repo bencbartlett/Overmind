@@ -1,7 +1,7 @@
+import {log} from '../../console/log';
 import {PortalScoutOverlord} from '../../overlords/scouting/portalWalker';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
-import {log} from "../../console/log";
 
 /**
  * It's like the movie Interstellar, but the special effects budget is whatever cash I left in my jeans

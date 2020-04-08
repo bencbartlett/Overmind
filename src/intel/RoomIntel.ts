@@ -5,11 +5,10 @@ import {log} from '../console/log';
 import {DirectiveOutpost} from '../directives/colony/outpost';
 import {DirectivePoisonRoom} from '../directives/colony/poisonRoom';
 import {DirectivePowerMine} from '../directives/resource/powerMine';
-import {DirectiveStronghold} from '../directives/situational/stronghold';
 import {Segmenter} from '../memory/Segmenter';
 import {profile} from '../profiler/decorator';
 import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
-import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
+import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_CORE, ROOMTYPE_CROSSROAD} from '../utilities/Cartographer';
 import {getCacheExpiration, irregularExponentialMovingAverage} from '../utilities/utils';
 import {Zerg} from '../zerg/Zerg';
 
@@ -237,8 +236,8 @@ export class RoomIntel {
 	 * Get the pos a creep was in on the previous tick
 	 */
 	static getPreviousPos(creep: Creep | Zerg): RoomPosition {
-		if (creep.room.memory[_RM.PREV_POSITIONS] && creep.room.memory[_RM.PREV_POSITIONS]![creep.id.toString()]) {
-			return derefRoomPosition(creep.room.memory[_RM.PREV_POSITIONS]![creep.id.toString()]);
+		if (creep.room.memory[_RM.PREV_POSITIONS] && creep.room.memory[_RM.PREV_POSITIONS]![creep.id]) {
+			return derefRoomPosition(creep.room.memory[_RM.PREV_POSITIONS]![creep.id]);
 		} else {
 			return creep.pos; // no data
 		}
@@ -247,7 +246,7 @@ export class RoomIntel {
 	private static recordCreepPositions(room: Room): void {
 		room.memory[_RM.PREV_POSITIONS] = {};
 		for (const creep of room.find(FIND_CREEPS)) {
-			room.memory[_RM.PREV_POSITIONS]![creep.id.toString()] = creep.pos;
+			room.memory[_RM.PREV_POSITIONS]![creep.id] = creep.pos;
 		}
 	}
 
@@ -277,11 +276,11 @@ export class RoomIntel {
 		let safety: number;
 		const safetyData = room.memory[_RM.SAFETY] as SafetyData;
 		if (room.dangerousHostiles.length > 0) {
-			safetyData[_RM_SAFETY.SAFE_FOR]  = 0;
+			safetyData[_RM_SAFETY.SAFE_FOR] = 0;
 			safetyData[_RM_SAFETY.UNSAFE_FOR] += 1;
 			safety = 0;
 		} else {
-			safetyData[_RM_SAFETY.SAFE_FOR]  += 1;
+			safetyData[_RM_SAFETY.SAFE_FOR] += 1;
 			safetyData[_RM_SAFETY.UNSAFE_FOR] = 0;
 			safety = 1;
 		}
@@ -358,62 +357,10 @@ export class RoomIntel {
 		return 0;
 	}
 
-	/**
-	 * Find PowerBanks within range of maxRange and power above minPower to mine
-	 * Creates directive to mine it
-	 * TODO refactor when factory resources come out to be more generic
-	 * TODO move to strategist for opportunistic directives
-	 */
-	private static minePowerBanks(room: Room) {
-		const powerSetting = Memory.settings.powerCollection;
-		if (powerSetting.enabled && Cartographer.roomType(room.name) == ROOMTYPE_ALLEY) {
-			const powerBank = _.first(room.find(FIND_STRUCTURES)
-										  .filter(struct => struct.structureType == STRUCTURE_POWER_BANK)) as StructurePowerBank;
-			if (powerBank != undefined && powerBank.ticksToDecay > 4000 && powerBank.power >= powerSetting.minPower) {
-				// Game.notify(`Looking for power banks in ${room}  found
-				// ${powerBank} with power ${powerBank.power} and ${powerBank.ticksToDecay} TTL.`);
-				if (DirectivePowerMine.isPresent(powerBank.pos, 'pos')) {
-					// Game.notify(`Already mining room ${powerBank.room}!`);
-					return;
-				}
-
-				const colonies = getAllColonies().filter(colony => colony.level > 6
-					&& Game.map.getRoomLinearDistance(colony.name, powerBank.room.name) <= powerSetting.maxRange);
-				for (const colony of colonies) {
-					const route = Game.map.findRoute(colony.room, powerBank.room);
-					if (route != -2 && route.length <= powerSetting.maxRange) {
-						log.info(`FOUND POWER BANK IN RANGE ${route.length}, STARTING MINING ${powerBank.room}`);
-						DirectivePowerMine.create(powerBank.pos);
-						return;
-					}
-				}
-
-			}
-		}
-	}
-
-	/**
-	 * Handle strongholds spawning in SK rooms
-	 * Should also eventually loot other people's strongholds that are killed
-	 * TODO move to strategist
-	 * @param room
-	 */
-	private static handleStrongholds(room: Room) {
-		if (room && Cartographer.roomType(room.name) == ROOMTYPE_SOURCEKEEPER && !!room.invaderCore) {
-			const core = room.invaderCore;
-			if (DirectiveStronghold.isPresent(core.pos, 'pos')) {
-				return;
-			}
-
-			const colonies = getAllColonies().filter(colony => colony.level == 8
-				&& Game.map.getRoomLinearDistance(colony.name, core.room.name) < 5);
-			for (const colony of colonies) {
-				const route = Game.map.findRoute(colony.room, core.room);
-				if (route != -2  && route.length <= 4) {
-					Game.notify(`FOUND STRONGHOLD ${core.level} AT DISTANCE ${route.length}, BEGINNING ATTACK ${core.room}`);
-					DirectiveStronghold.createIfNotPresent(core.pos, 'pos');
-					return;
-				}
+	private static scoutPortals(room: Room) {
+		if (Cartographer.roomType(room.name) == ROOMTYPE_CROSSROAD || Cartographer.roomType(room.name) == ROOMTYPE_CORE) {
+			if (room.portals) {
+				// Store the portals
 			}
 		}
 	}
@@ -431,61 +378,10 @@ export class RoomIntel {
 			}
 		}
 	}
-
-	// TODO FIXME XXX necessary evil for now since memory is overloaded
-	static cleanRoomMemory() {
-		for (const roomName in Memory.rooms) {
-			if (Cartographer.roomType(roomName) == 'ALLEY' || roomName.indexOf('E') != -1 || roomName.indexOf('S') != -1) {
-				delete Memory.rooms[roomName];
-				console.log(roomName);
-			}
-		}
-
-		const roomsToDelete = [];
-		let x = 0;
-		for (const roomName in Memory.rooms) {
-			let remove = true;
-			for (const colonyName in Memory.colonies) {
-				if (Game.map.getRoomLinearDistance(roomName, colonyName) <= 2) {
-					remove = false;
-				}
-			}
-			if (remove && roomsToDelete.indexOf(roomName) == -1) {
-				x++;
-				roomsToDelete.push(roomName);
-				console.log(x + ') ' + roomName);
-				delete Memory.rooms[roomName];
-			}
-		}
-	}
-
-	private static autoPoison(room: Room) {
-		if (!DirectivePoisonRoom.canAutoPoison(room)) {
-			return;
-		} 
-		const colonies = getAllColonies().filter(colony => colony.level > DirectivePoisonRoom.requiredRCL
-			&& Game.map.getRoomLinearDistance(colony.name, room.name) <= Memory.settings.autoPoison.maxRange );
-		for (const colony of colonies) {
-			const route = Game.map.findRoute(colony.room, room);
-			if (route != -2 && route.length <= Memory.settings.autoPoison.maxRange) {
-				Game.notify(`Found a room to poison in range ${route.length}, poisoning ${room.name}`);
-				const result = DirectivePoisonRoom.createIfNotPresent(room!.controller!.pos, 'pos',
-																	 {name: 'poisonRoom:'+colony.room.name});
-				if (typeof result == 'string' || result == OK) { // successfully made flag
-					Memory.settings.autoPoison.poisonedRooms.push(room.name);
-				}
-				return;
-			}
-		}
-	}
-
+  
 	static run(): void {
+
 		let alreadyComputedScore = false;
-		// this.requestZoneData();
-		// If above 2030 kb wipe memory down
-		if (RawMemory.get().length > 2040000) {
-			RoomIntel.cleanRoomMemory();
-		}
 
 		for (const name in Game.rooms) {
 
@@ -521,10 +417,10 @@ export class RoomIntel {
 			if (room.controller && Game.time % 5 == 0) {
 				this.recordControllerInfo(room.controller);
 			}
-			this.autoPoison(room);
-			this.minePowerBanks(room);
-			this.handleStrongholds(room);
+
+			this.scoutPortals(room);
 		}
+
 	}
 
 }

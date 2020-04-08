@@ -5,7 +5,6 @@ import {Mem} from '../memory/Memory';
 import {CommandCenterOverlord} from '../overlords/core/manager';
 import {Priority} from '../priorities/priorities';
 import {profile} from '../profiler/decorator';
-import {Abathur} from '../resources/Abathur';
 import {Cartographer} from '../utilities/Cartographer';
 import {Visualizer} from '../visuals/Visualizer';
 import {HiveCluster} from './_HiveCluster';
@@ -113,6 +112,25 @@ export class CommandCenter extends HiveCluster {
 
 	private registerRequests(): void {
 
+		// Refill core spawn (only applicable to bunker layouts)
+		if (this.colony.bunker && this.colony.bunker.coreSpawn) {
+			if (this.colony.bunker.coreSpawn.energy < this.colony.bunker.coreSpawn.energyCapacity) {
+				this.transportRequests.requestInput(this.colony.bunker.coreSpawn, Priority.Normal);
+			}
+		}
+
+		// If the link has energy and nothing needs it, empty it
+		if (this.link && this.link.energy > 0) {
+			if (this.colony.linkNetwork.receive.length == 0 || this.link.cooldown > 3) {
+				this.transportRequests.requestOutput(this.link, Priority.High);
+			}
+		}
+
+		// Nothing else should request if you're trying to start a room back up again
+		if (this.colony.state.bootstrapping) {
+			return;
+		}
+
 		// Supply requests:
 
 		// If the link is empty and can send energy and something needs energy, fill it up
@@ -125,12 +143,6 @@ export class CommandCenter extends HiveCluster {
 		const refillTowers = _.filter(this.towers, tower => tower.energy < CommandCenter.settings.refillTowersBelow);
 		_.forEach(refillTowers, tower => this.transportRequests.requestInput(tower, Priority.High));
 
-		// Refill core spawn (only applicable to bunker layouts)
-		if (this.colony.bunker && this.colony.bunker.coreSpawn) {
-			if (this.colony.bunker.coreSpawn.energy < this.colony.bunker.coreSpawn.energyCapacity) {
-				this.transportRequests.requestInput(this.colony.bunker.coreSpawn, Priority.Normal);
-			}
-		}
 		// Refill power spawn
 		if (this.powerSpawn) {
 			if (this.powerSpawn.energy < this.powerSpawn.energyCapacity * .5) {
@@ -147,7 +159,7 @@ export class CommandCenter extends HiveCluster {
 				this.transportRequests.requestInput(this.nuker, Priority.Low);
 			}
 			if (this.nuker.ghodium < this.nuker.ghodiumCapacity
-				&& (this.colony.assets[RESOURCE_GHODIUM] || 0) >= 2 * Abathur.settings.maxBatchSize) {
+				&& this.colony.assets[RESOURCE_GHODIUM] >= LAB_MINERAL_CAPACITY) {
 				this.transportRequests.requestInput(this.nuker, Priority.Low, {resourceType: RESOURCE_GHODIUM});
 			}
 		}
@@ -158,15 +170,6 @@ export class CommandCenter extends HiveCluster {
 			}
 		}
 
-
-		// Withdraw requests:
-
-		// If the link has energy and nothing needs it, empty it
-		if (this.link && this.link.energy > 0) {
-			if (this.colony.linkNetwork.receive.length == 0 || this.link.cooldown > 3) {
-				this.transportRequests.requestOutput(this.link, Priority.High);
-			}
-		}
 	}
 
 	requestRoomObservation(roomName: string) {

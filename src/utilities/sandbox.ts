@@ -1,6 +1,6 @@
 // Sandbox code: lets you try out random stuff at the end of main loop
 
-import {log} from './console/log';
+import {log} from '../console/log';
 
 // import {tftest} from './reinforcementLearning/test'
 
