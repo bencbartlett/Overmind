@@ -38,6 +38,12 @@ interface Memory {
 			maxRange: number;
 			minPower: number;
 		};
+		autoPoison: {
+			enabled		 : boolean;
+			maxRange	 : number;
+			concurrent	 : number;
+			poisonedRooms: string[];
+		},
 	};
 	stats: any;
 	constructionSites: { [id: string]: number };

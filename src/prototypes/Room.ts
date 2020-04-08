@@ -76,7 +76,7 @@ Object.defineProperty(Room.prototype, 'hostiles', {
 Object.defineProperty(Room.prototype, 'friendlies', {
 	get() {
 		if (!this._friendlies) {
-			this._friendlies = this.find(FIND_HOSTILE_CREEPS, {filter: (creep: Creep) => !isAlly(creep.owner.username)});
+			this._friendlies = this.find(FIND_HOSTILE_CREEPS, {filter: (creep: Creep) => isAlly(creep.owner.username)});
 		}
 		return this._friendlies;
 	},
