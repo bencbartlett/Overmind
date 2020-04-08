@@ -26,7 +26,7 @@ export const Roles = {
 	dismantler      : 'lurker',
 	drill           : 'drill',
 	coolant         : 'coolant',
-	roomPoisoner    : 'salter',
+	roomPoisoner    : 'poisoner',
 	strongholdKiller: 'strongman',
 };
 

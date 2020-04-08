@@ -218,6 +218,12 @@ export class Mem {
 				maxRange: 5,
 				minPower: 5000,
 			},
+			autoPoison       	 : {
+				enabled		 : false,
+				maxRange	 : 4,
+				concurrent	 : 1,
+				poisonedRooms: [],
+			},
 		});
 		if (!Memory.stats) {
 			Memory.stats = {};

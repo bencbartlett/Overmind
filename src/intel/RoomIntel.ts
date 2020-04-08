@@ -2,6 +2,8 @@
 
 import {getAllColonies} from '../Colony';
 import {log} from '../console/log';
+import {DirectiveOutpost} from '../directives/colony/outpost';
+import {DirectivePoisonRoom} from '../directives/colony/poisonRoom';
 import {DirectivePowerMine} from '../directives/resource/powerMine';
 import {Segmenter} from '../memory/Segmenter';
 import {profile} from '../profiler/decorator';
@@ -376,7 +378,7 @@ export class RoomIntel {
 			}
 		}
 	}
-
+  
 	static run(): void {
 
 		let alreadyComputedScore = false;
