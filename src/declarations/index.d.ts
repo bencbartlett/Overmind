@@ -197,8 +197,6 @@ interface ITerminalNetwork {
 
 	exportResource(provider: IColony, resource: ResourceConstant, thresholds?: Thresholds): void;
 
-	// registerTerminalState(terminal: StructureTerminal, state: TerminalState): void;
-
 	init(): void;
 
 	run(): void;

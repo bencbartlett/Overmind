@@ -3,15 +3,6 @@ import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
 import {NotifierPriority} from '../Notifier';
 
-// export const TERMINAL_STATE_REBUILD: TerminalState = {
-// 	name     : 'rebuild',
-// 	type     : 'in/out',
-// 	amounts  : {
-// 		[RESOURCE_ENERGY]: 25000,
-// 	},
-// 	tolerance: 1000
-// };
-
 const REBUILD_STATE_TIMEOUT = 25000;
 
 /**
@@ -37,6 +28,13 @@ export class DirectiveTerminalRebuildState extends Directive {
 	refresh() {
 		super.refresh();
 		this.colony.state.isRebuilding = true;
+	}
+
+	spawnMoarOverlords() {
+
+	}
+
+	init() {
 		if (this.colony && this.colony.terminal) {
 			for (const resource of RESOURCES_ALL) {
 				if (this.colony.assets[resource] > 0) {
@@ -55,13 +53,6 @@ export class DirectiveTerminalRebuildState extends Directive {
 		if (Game.time % 25 == 0) {
 			log.alert(`${this.pos.print}: rebuild terminal state active!`);
 		}
-	}
-
-	spawnMoarOverlords() {
-
-	}
-
-	init() {
 		this.alert('Rebuild terminal state active!', NotifierPriority.High);
 	}
 
