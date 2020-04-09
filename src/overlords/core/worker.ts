@@ -110,12 +110,11 @@ export class WorkerOverlord extends Overlord {
 		if (this.room.find(FIND_NUKES).length > 0) {
 			for (const rampart of this.colony.room.ramparts) {
 				const neededHits = this.neededRampartHits(rampart);
-				const ignoreExtensions = this.room.storage && this.room.storage.energy < 300000;
 				if (rampart.hits < neededHits && rampart.pos.findInRange(FIND_NUKES, 2).length > 0
-					&& DirectiveNukeResponse.shouldReinforceLocation(rampart.pos, ignoreExtensions)) {
+					&& DirectiveNukeResponse.shouldReinforceLocation(rampart.pos)) {
 					this.nukeDefenseRamparts.push(rampart);
 					Visualizer.marker(rampart.pos, {color: 'gold'});
-					this.nukeDefenseHitsRemaining[rampart.id] = neededHits - rampart.hits;
+					this.nukeDefenseHitsRemaining[rampart.id] = Math.min(neededHits - rampart.hits,0);
 				}
 			}
 

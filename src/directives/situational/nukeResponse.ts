@@ -1,3 +1,4 @@
+import {Colony} from '../../Colony';
 import {log} from '../../console/log';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
@@ -13,9 +14,9 @@ export class DirectiveNukeResponse extends Directive {
 	static color = COLOR_ORANGE;
 	static secondaryColor = COLOR_BLUE;
 
-	static requiredRCL = 4;
+	static requiredRCL = 6;
 
-	nuke: Nuke | undefined;
+	nukes: Nuke[];
 	room: Room;
 
 	constructor(flag: Flag) {
@@ -26,7 +27,10 @@ export class DirectiveNukeResponse extends Directive {
 
 	refresh() {
 		super.refresh();
-		this.nuke = this.pos.lookFor(LOOK_NUKES)[0]; // TODO: needs to handle multiple nukes on same pos
+		this.nukes = this.room.find(FIND_NUKES);
+		if (this.nukes.length > 0) {
+			this.colony.state.isBeingNuked = true;
+		}
 	}
 
 	spawnMoarOverlords() {
@@ -34,44 +38,38 @@ export class DirectiveNukeResponse extends Directive {
 	}
 
 	init(): void {
-		if (this.nuke) {
-			this.alert(`Nuclear impact in ${this.nuke.timeToLand}`, NotifierPriority.Critical);
-		} else {
-			this.alert(`Nuke response directive active!`, NotifierPriority.Critical);
+		for (const nuke of this.nukes) {
+			this.alert(`Nuclear impact in ${nuke.timeToLand}`, NotifierPriority.Critical);
 		}
 	}
 
 	/**
 	 * Returns whether a position should be reinforced or not
-	 * @param pos
-	 * @param ignoreExtensions
 	 */
-	static shouldReinforceLocation(pos: RoomPosition, ignoreExtensions = false) {
+	static shouldReinforceLocation(pos: RoomPosition): boolean {
 		const dontReinforce: StructureConstant[] = [STRUCTURE_ROAD, STRUCTURE_RAMPART, STRUCTURE_WALL];
-		if (ignoreExtensions) {
+		const colony = Overmind.colonies[pos.roomName];
+		if (colony && colony.assets.energy < 200000) {
 			dontReinforce.push(STRUCTURE_EXTENSION);
 		}
-		return _.filter(pos.lookFor(LOOK_STRUCTURES),
-						s => !_.contains(dontReinforce, s.structureType)).length > 0;
+		return _.filter(pos.lookFor(LOOK_STRUCTURES), s => !_.contains(dontReinforce, s.structureType)).length > 0;
 	}
 
 	run(): void {
 		// Build ramparts at all positions affected by nukes with structures on them
 		if (Game.time % 50 == 0) {
-			if (this.nuke) {
-				const rampartPositions = _.filter(this.nuke.pos.getPositionsInRange(2), function(pos) {
-					// Rampart should be built to protect all non-road, non-barrier structures in nuke range
-					return DirectiveNukeResponse.shouldReinforceLocation(pos,
-																		 // only reinforce extensions if room has spare energy
-																		 pos.room && pos.room.storage && pos.room.storage.energy < 300000);
-				});
-				for (const pos of rampartPositions) {
-					// Build a rampart if there isn't one already
-					if (!pos.lookForStructure(STRUCTURE_RAMPART)) {
-						pos.createConstructionSite(STRUCTURE_RAMPART);
+			if (this.nukes.length > 0) {
+				for (const nuke of this.nukes) {
+					const rampartPositions = _.filter(nuke.pos.getPositionsInRange(2),
+													  pos => DirectiveNukeResponse.shouldReinforceLocation(pos));
+					for (const pos of rampartPositions) {
+						// Build a rampart if there isn't one already
+						if (!pos.lookForStructure(STRUCTURE_RAMPART)) {
+							pos.createConstructionSite(STRUCTURE_RAMPART);
+						}
 					}
+					log.alert(`Incoming nuke at ${nuke.pos.print}! Time until impact: ${nuke.timeToLand}`);
 				}
-				log.alert(`Incoming nuke at ${this.nuke.pos.print}! Time until impact: ${this.nuke.timeToLand}`);
 			} else {
 				// Remove once nuke is gone
 				this.remove();

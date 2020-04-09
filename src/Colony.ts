@@ -159,6 +159,7 @@ export class Colony {
 		lowPowerMode?: boolean; 						// Activate if RCL8 and full energy
 		isRebuilding?: boolean;							// If colony is doing major reconstruction (e.g. moving in room)
 		isEvacuating?: boolean;							// If we're clearing the terminal if colony is about to fail
+		isBeingNuked?: boolean;
 	};
 	// terminalState: TerminalState | undefined;
 	layout: 'twoPart' | 'bunker';						// Which room design colony uses
