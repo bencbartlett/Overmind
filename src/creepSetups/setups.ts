@@ -423,10 +423,10 @@ export const CombatSetups = {
 			sizeLimit: Infinity,
 		}),
 
-		boosted_T3: new CreepSetup(Roles.dismantler, {
-			pattern  : [WORK, WORK, WORK, WORK, WORK, WORK, WORK, WORK, MOVE, MOVE],
-			sizeLimit: Infinity,
-		}),
+		// boosted_T3: new CreepSetup(Roles.dismantler, {
+		// 	pattern  : [WORK, WORK, WORK, WORK, WORK, WORK, WORK, WORK, MOVE, MOVE],
+		// 	sizeLimit: Infinity,
+		// }),
 
 	},
 

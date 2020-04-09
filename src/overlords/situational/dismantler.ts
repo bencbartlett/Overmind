@@ -31,13 +31,15 @@ export class DismantleOverlord extends Overlord {
 		// Spawn a number of dismantlers, up to a max
 		const MAX_DISMANTLERS = 2;
 		let setup;
-		// if (!!this.directive.memory.attackInsteadOfDismantle) { // TODO: need to move this to the new CombatCreepSetup system
-		// 	setup = CombatSetups.dismantlers.attackDismantlers;
-		// } else if (this.canBoostSetup(CombatSetups.dismantlers.boosted_T3)) {
+		if (!!this.directive.memory.attackInsteadOfDismantle) { // TODO: need to move this to the new CombatCreepSetup system
+			setup = CombatSetups.dismantlers.attackDismantlers;
+		}
+		// else if (this.canBoostSetup(CombatSetups.dismantlers.boosted_T3)) {
 		// 	setup = CombatSetups.dismantlers.boosted_T3;
-		// } else {
-		// 	setup = CombatSetups.dismantlers.default;
 		// }
+		else {
+			setup = CombatSetups.dismantlers.default;
+		}
 		setup = CombatSetups.dismantlers.default;
 		const dismantlingParts = setup.getBodyPotential(!!this.directive.memory.attackInsteadOfDismantle
 														? ATTACK : WORK, this.colony);
