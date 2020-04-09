@@ -177,7 +177,7 @@ export class RoomIntel {
 	// 		};
 	// 	}
 	// 	const harvest = room.memory[_RM.HARVEST] as RollingStats;
-	// 	for (const source of room.sources) { // TODO: this implicitly assumes all energy is harvested by me
+	// 	for (const source of room.sources) {
 	// 		if (source.ticksToRegeneration == 1) {
 	// 			const dEnergy = source.energyCapacity - source.energy;
 	// 			const dTime = Game.time - harvest[_MEM.TICK] + 1; // +1 to avoid division by zero errors

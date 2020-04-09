@@ -1,4 +1,4 @@
-// TODO: finish this
+
 
 //
 // export class Whitelist {

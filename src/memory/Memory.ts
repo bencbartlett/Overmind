@@ -76,7 +76,9 @@ export class Mem {
 		}
 		if (Memory.haltTick) {
 			if (Memory.haltTick == Game.time) {
-				(<any>Game.cpu).halt(); // TODO: remove any typing when typed-screeps updates to include this method
+				if (Game.cpu.halt) { // this is undefined on non-IVM
+					Game.cpu.halt();
+				}
 				shouldRun = false;
 			} else if (Memory.haltTick < Game.time) {
 				delete Memory.haltTick;

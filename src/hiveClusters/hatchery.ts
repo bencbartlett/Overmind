@@ -24,7 +24,7 @@ const ERR_SPECIFIED_SPAWN_BUSY = -21;
 export interface SpawnRequest {
 	setup: CreepSetup;					// creep body generator to use
 	overlord: Overlord;					// overlord requesting the creep
-	priority: number;					// priority of the request // TODO: WIP
+	priority: number;					// priority of the request
 	partners?: CreepSetup[];			// partners to spawn along with the creep
 	options?: SpawnRequestOptions;		// options
 }

@@ -2,9 +2,10 @@ interface Creep {
 	hitsPredicted?: number;
 	intel?: { [property: string]: number };
 	memory: CreepMemory;
-	boosts: _ResourceConstantSansEnergy[];
-	// boostCounts: { [boostType: string]: number };
+	boosts: ResourceConstant[];
+	boostCounts: { [boostType: string]: number };
 	inRampart: boolean;
+	approxMoveSpeed: number;
 }
 
 interface PowerCreep {

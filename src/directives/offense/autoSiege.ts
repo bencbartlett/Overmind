@@ -17,7 +17,7 @@ export class DirectiveAutoSiege extends Directive {
 
 	static directiveName = 'autoSiege';
 	static color = COLOR_RED;
-	static secondaryColor = COLOR_ORANGE; // todo
+	static secondaryColor = COLOR_ORANGE;
 
 	memory: DirectiveAutoSiegeMemory;
 

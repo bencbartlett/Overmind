@@ -43,7 +43,7 @@
 // 		let creepSetup = MinerSetup;
 // 		if (this.colony.hatchery && Pathing.distance(this.colony.hatchery.pos, this.pos) > 50 * 3) {
 // 			creepSetup = MinerLongDistanceSetup; // long distance miners
-// 			// todo: this.colony.hatchery is normal hatcher for incubating once spawns[0] != undefined
+//
 // 		}
 // 		if (Cartographer.roomType(this.pos.roomName) == ROOMTYPE_SOURCEKEEPER) {
 // 			creepSetup = SKMinerSetup;

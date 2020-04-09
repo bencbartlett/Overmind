@@ -8,7 +8,7 @@
 // import {CombatZerg} from '../../zerg/CombatZerg';
 // import {CombatSetups, Roles} from '../../creepSetups/setups';
 //
-// // TODO: this overlord is deprecated and should be updated
+//
 //
 // @profile
 // export class SiegeOverlord extends Overlord {

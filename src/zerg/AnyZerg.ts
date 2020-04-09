@@ -164,7 +164,7 @@ export abstract class AnyZerg {
 			this.ticksToLive = creep.ticksToLive;
 			this.actionLog = {};
 			this.blockMovement = false;
-			// this._task = null; // todo
+			// this._task = null;
 		} else {
 			log.debug(`Deleting ${this.print} from global`);
 			// delete Overmind.zerg[this.name];

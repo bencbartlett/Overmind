@@ -114,7 +114,7 @@
 // 		let towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 0 : 0;
 // 		let worstDamageMultiplier = _.min(_.map(this.room.hostiles, creep => CombatIntel.minimumDamageTakenMultiplier(creep)));
 // 		let boosts = this.boosts[MeleeBunkerZerglingSetup.role];
-// 		if (boosts && boosts.includes(BOOST_TIERS.attack[3])) { // TODO: add boost damage computation function to Overlord
+// 		if (boosts && boosts.includes(BOOST_TIERS.attack[3])) {
 // 			zerglingDamage *= 4;
 // 		}
 // 		// Match the hostile damage times some multiplier

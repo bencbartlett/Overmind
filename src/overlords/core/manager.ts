@@ -141,32 +141,6 @@ export class CommandCenterOverlord extends Overlord {
 			return true;
 		}
 
-		// TODO: plug this in later
-		// const terminal = this.commandCenter.terminal;
-		// const storage = this.commandCenter.storage;
-		// if (!manager.pos.isNearTo(storage) || (terminal && !manager.pos.isNearTo(terminal))) {
-		// 	manager.goTo(this.commandCenter.idlePos); // need to be in range to terminal and storage
-		// 	return true;
-		// }
-		//
-		// // If you have a choice between putting stuff in terminal or storage, try to choose sensibly
-		// let tasks = [];
-		// for (const [resource, amount] of manager.carry.contents) {
-		// 	if (terminal) {
-		// 		const thresholds = TERMINAL_THRESHOLDS_ALL[resource];
-		// 		if (thresholds) {
-		// 			const {target, tolerance} = thresholds;
-		// 			if (terminal.store[resource] < target && terminal.store.getFreeCapacity() > 5000) {
-		// 				manager.transfer(terminal); // terminal wants more of this resource
-		// 			} else {
-		// 				manager.transfer(storage); // terminal has enough of this, put in storage
-		// 			}
-		// 		}
-		// 	} else { // otherwise (if no terminal) you just have to dump it in storage
-		// 		manager.transfer(storage);
-		// 	}
-		// }
-		// return true;
 	}
 
 	/**

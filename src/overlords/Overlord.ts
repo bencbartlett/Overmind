@@ -25,7 +25,7 @@ export function hasColony(initializer: OverlordInitializer | Colony): initialize
 	return (<OverlordInitializer>initializer).colony != undefined;
 }
 
-export const DEFAULT_PRESPAWN = 50;
+export const DEFAULT_PRESPAWN = 40;
 export const MAX_SPAWN_REQUESTS = 100; // this stops division by zero or related errors from sending infinite requests
 
 export interface CreepRequestOptions {
@@ -343,41 +343,8 @@ export abstract class Overlord {
 		}
 	}
 
-	// /* Returns all creeps of a specified role */
-	// protected creeps(role: string): Creep[] {
-	// 	if (this._creeps[role]) {
-	// 		return this._creeps[role];
-	// 	} else {
-	// 		return [];
-	// 	}
-	// }
-
 	protected creepReport(role: string, currentAmt: number, neededAmt: number) {
 		this.creepUsageReport[role] = [currentAmt, neededAmt];
-	}
-
-	// TODO: include creep move speed
-	lifetimeFilter(creeps: (Creep | Zerg)[], prespawn = DEFAULT_PRESPAWN, spawnDistance?: number): (Creep | Zerg)[] {
-		if (!spawnDistance) {
-			spawnDistance = 0;
-			if (this.spawnGroup) {
-				const distances = _.take(_.sortBy(this.spawnGroup.memory.distances), 2);
-				spawnDistance = (_.sum(distances) / distances.length) || 0;
-			} else if (this.colony.hatchery) {
-				// Use distance or 0 (in case distance returns something undefined due to incomplete pathfinding)
-				spawnDistance = Pathing.distance(this.pos, this.colony.hatchery.pos) || 0;
-			}
-			if (this.colony.state.isIncubating && this.colony.spawnGroup) {
-				spawnDistance += this.colony.spawnGroup.stats.avgDistance;
-			}
-		}
-
-		/* The last condition fixes a bug only present on private servers that took me a fucking week to isolate.
-		 * At the tick of birth, creep.spawning = false and creep.ticksTolive = undefined
-		 * See: https://screeps.com/forum/topic/443/creep-spawning-is-not-updated-correctly-after-spawn-process */
-		return _.filter(creeps, creep =>
-			creep.ticksToLive! > CREEP_SPAWN_TIME * creep.body.length + spawnDistance! + prespawn ||
-			creep.spawning || (!creep.spawning && !creep.ticksToLive));
 	}
 
 	// parkCreepsIfIdle(creeps: Zerg[], outsideHatchery = true) {
@@ -456,6 +423,30 @@ export abstract class Overlord {
 				log.warning(`Overlord ${this.ref} @ ${this.pos.print}: no spawner object!`);
 			}
 		}
+	}
+
+	// TODO: include creep move speed
+	lifetimeFilter(creeps: (Creep | Zerg)[], prespawn = DEFAULT_PRESPAWN, spawnDistance?: number): (Creep | Zerg)[] {
+		if (!spawnDistance) {
+			spawnDistance = 0;
+			if (this.spawnGroup) {
+				const distances = _.take(_.sortBy(this.spawnGroup.memory.distances), 2);
+				spawnDistance = (_.sum(distances) / distances.length) || 0;
+			} else if (this.colony.hatchery) {
+				// Use distance or 0 (in case distance returns something undefined due to incomplete pathfinding)
+				spawnDistance = Pathing.distance(this.pos, this.colony.hatchery.pos) || 0;
+			}
+			if (this.colony.state.isIncubating && this.colony.spawnGroup) {
+				spawnDistance += this.colony.spawnGroup.stats.avgDistance;
+			}
+		}
+
+		/* The last condition fixes a bug only present on private servers that took me a fucking week to isolate.
+		 * At the tick of birth, creep.spawning = false and creep.ticksTolive = undefined
+		 * See: https://screeps.com/forum/topic/443/creep-spawning-is-not-updated-correctly-after-spawn-process */
+		return _.filter(creeps, creep =>
+			creep.ticksToLive! > CREEP_SPAWN_TIME * creep.body.length + spawnDistance! + prespawn ||
+			creep.spawning || (!creep.spawning && !creep.ticksToLive));
 	}
 
 	/**
