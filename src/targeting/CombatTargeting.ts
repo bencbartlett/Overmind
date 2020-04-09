@@ -118,23 +118,25 @@ export class CombatTargeting {
 	 * Finds the best (friendly) target in range that a zerg can currently heal
 	 */
 	static findBestHealingTargetInRange(healer: Zerg, range = 3, friendlies = healer.room.creeps): Creep | undefined {
+		const tempHitsPredicted: {[id:string]: number} = {};
 		return maxBy(_.filter(friendlies, f => healer.pos.getRangeTo(f) <= range), friend => {
 			if (friend.hitsPredicted == undefined) friend.hitsPredicted = friend.hits;
 			const attackProbability = 0.5;
-			// TODO need to only calculate this once per tick, can't trigger multiple times. This isn't correctly calcing
+			tempHitsPredicted[friend.id] = friend.hitsPredicted;
 			for (const hostile of friend.pos.findInRange(friend.room.hostiles, 3)) {
-				if (hostile.pos.isNearTo(friend)) {
-					friend.hitsPredicted -= attackProbability * CombatIntel.getAttackDamage(hostile);
-				} else {
-					friend.hitsPredicted -= attackProbability * (CombatIntel.getAttackDamage(hostile)
-																 + CombatIntel.getRangedAttackDamage(hostile));
+				if (!friend.inRampart) {
+					if (hostile.pos.isNearTo(friend)) {
+						tempHitsPredicted[friend.id] -= attackProbability * CombatIntel.getAttackDamage(hostile);
+					} else {
+						tempHitsPredicted[friend.id] -= attackProbability * CombatIntel.getRangedAttackDamage(hostile);
+					}
 				}
 			}
-			const healScore = friend.hitsMax - friend.hitsPredicted;
+			const missingHits = friend.hitsMax - tempHitsPredicted[friend.id];
 			if (healer.pos.getRangeTo(friend) > 1) {
-				return healScore + CombatIntel.getRangedHealAmount(healer.creep);
+				return Math.min(missingHits, CombatIntel.getRangedHealAmount(healer.creep));
 			} else {
-				return healScore + CombatIntel.getHealAmount(healer.creep);
+				return Math.min(missingHits, CombatIntel.getHealAmount(healer.creep))
 			}
 		});
 	}
