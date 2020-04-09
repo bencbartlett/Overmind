@@ -402,14 +402,15 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		const response = sender.send(resourceType, amount, receiver.room.name);
 		if (response == OK) {
 			let msg;
+			const floorAmt = Math.floor(amount);
 			if (description == 'provide') {
-				msg = `${printRoomName(sender.room.name, true)} ${rightArrow} ${amount} ${resourceType} ` +
+				msg = `${printRoomName(sender.room.name, true)} ${rightArrow} ${floorAmt} ${resourceType} ` +
 					  `${rightArrow} ${printRoomName(receiver.room.name, true)} `;
 			} else if (description == 'request') {
-				msg = `${printRoomName(receiver.room.name, true)} ${leftArrow} ${amount} ${resourceType} ` +
+				msg = `${printRoomName(receiver.room.name, true)} ${leftArrow} ${floorAmt} ${resourceType} ` +
 					  `${leftArrow} ${printRoomName(sender.room.name, true)} `;
 			} else {
-				msg = `${printRoomName(sender.room.name, true)} ${rightArrow} ${amount} ${resourceType} ` +
+				msg = `${printRoomName(sender.room.name, true)} ${rightArrow} ${floorAmt} ${resourceType} ` +
 					  `${rightArrow} ${printRoomName(receiver.room.name, true)} `;
 				if (description) {
 					msg += `(${description})`;
