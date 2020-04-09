@@ -13,8 +13,6 @@ import {Notifier} from './directives/Notifier';
 import {DirectivePowerMine} from './directives/resource/powerMine';
 import {DirectiveBootstrap} from './directives/situational/bootstrap';
 import {DirectiveNukeResponse} from './directives/situational/nukeResponse';
-import {DirectiveStronghold} from './directives/situational/stronghold';
-import {DirectiveModularDismantle} from './directives/targeting/modularDismantle';
 import {DirectiveTerminalEvacuateState} from './directives/terminalState/terminalState_evacuate';
 import {CombatIntel} from './intel/CombatIntel';
 import {RoomIntel} from './intel/RoomIntel';
@@ -231,27 +229,27 @@ export class Overseer implements IOverseer {
 		}
 	}
 
-	private handleStrongholds(colony: Colony) {
-		if (Game.time % 57 == 0) {
-			for (const room of colony.outposts) {
-				if (room.invaderCore) {
-					log.alert(`Found core in ${room.name} with ${room.invaderCore} level ${room.invaderCore.level}`);
-					let res;
-					if (room.invaderCore.level == 0) {
-						res = DirectiveModularDismantle.createIfNotPresent(room.invaderCore.pos, 'pos');
-						if (!!res) {
-							log.notify(`Creating invader core dismantle in room ${room.name}`);
-						}
-					} else if (room.invaderCore.level <= 4 && room.invaderCore.ticksToDeploy) {
-						res = DirectiveStronghold.createIfNotPresent(room.invaderCore.pos, 'room');
-						if (!!res) {
-							log.notify(`Creating stronghold clearing ranged attacker in room ${room.name}`);
-						}
-					}
-				}
-			}
-		}
-	}
+	// private handleStrongholds(colony: Colony) {
+	// 	if (Game.time % 57 == 0) {
+	// 		for (const room of colony.outposts) {
+	// 			if (room.invaderCore) {
+	// 				log.alert(`Found core in ${room.name} with ${room.invaderCore} level ${room.invaderCore.level}`);
+	// 				let res;
+	// 				if (room.invaderCore.level == 0) {
+	// 					res = DirectiveModularDismantle.createIfNotPresent(room.invaderCore.pos, 'pos');
+	// 					if (!!res) {
+	// 						log.notify(`Creating invader core dismantle in room ${room.name}`);
+	// 					}
+	// 				} else if (room.invaderCore.level <= 4 && room.invaderCore.ticksToDeploy) {
+	// 					res = DirectiveStronghold.createIfNotPresent(room.invaderCore.pos, 'room');
+	// 					if (!!res) {
+	// 						log.notify(`Creating stronghold clearing ranged attacker in room ${room.name}`);
+	// 					}
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	private handleColonyInvasions(colony: Colony) {
 		// See if invasion is big enough to warrant creep defenses
@@ -413,7 +411,7 @@ export class Overseer implements IOverseer {
 
 		_.forEach(allColonies, colony => this.handleOutpostDefense(colony));
 
-		_.forEach(allColonies, colony => this.handleStrongholds(colony));
+		// _.forEach(allColonies, colony => this.handleStrongholds(colony));
 
 		_.forEach(allColonies, colony => this.handleColonyInvasions(colony));
 

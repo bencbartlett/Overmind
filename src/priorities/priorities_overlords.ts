@@ -80,7 +80,7 @@ export let OverlordPriority = {
 	powerMine: {
 		cool         : 1050,
 		drill        : 1051,
-		roomIncrement: 5,
+		roomIncrement: 5
 	},
 
 	tasks: {				// Non-urgent tasks, such as collection from a deserted storage
