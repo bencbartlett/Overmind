@@ -22,8 +22,8 @@ export const Roles = {
 	melee           : 'zergling',
 	ranged          : 'hydralisk',
 	healer          : 'transfuser',
-	bunkerDefender  : 'ravager',
 	dismantler      : 'lurker',
+	bunkerDefender  : 'ravager',
 	drill           : 'drill',
 	coolant         : 'coolant',
 	roomPoisoner    : 'poisoner',
@@ -204,6 +204,8 @@ export const Setups = {
 			sizeLimit: 5,
 		}),
 
+		rcl8_boosted: CreepSetup.boosted(this.upgraders.rcl8, ['upgrade']),
+
 	},
 
 	roomPoisoner: new CreepSetup(Roles.roomPoisoner, {
@@ -233,40 +235,42 @@ export const CombatSetups = {
 	 */
 	zerglings: {
 
-		default: new CreepSetup(Roles.melee, {
-			pattern  : [ATTACK, MOVE],
-			sizeLimit: Infinity,
-		}),
+		// default: new CreepSetup(Roles.melee, {
+		// 	pattern  : [ATTACK, MOVE],
+		// 	sizeLimit: Infinity,
+		// }),
+		//
+		// limitedDefault: new CreepSetup(Roles.melee, {
+		// 	pattern  : [ATTACK, MOVE],
+		// 	sizeLimit: 5,
+		// }),
+		//
+		// armored: new CreepSetup(Roles.melee, {
+		// 	pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE],
+		// 	sizeLimit: Infinity,
+		// }),
+		//
+		// boosted_T3_defense: new CreepSetup(Roles.melee, {
+		// 	pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE],
+		// 	sizeLimit: Infinity,
+		// }),
+		//
+		// boosted_T3: new CreepSetup(Roles.melee, {
+		// 	pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE],
+		// 	sizeLimit: Infinity,
+		// }),
+		//
+		// boosted_T3_armor: new CreepSetup(Roles.melee, {
+		// 	pattern  : [TOUGH, TOUGH, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE],
+		// 	sizeLimit: Infinity,
+		// }),
+		//
+		// boosted_T3_strongArmor: new CreepSetup(Roles.melee, {
+		// 	pattern  : [TOUGH, TOUGH, TOUGH, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE],
+		// 	sizeLimit: Infinity,
+		// }),
 
-		limitedDefault: new CreepSetup(Roles.melee, {
-			pattern  : [ATTACK, MOVE],
-			sizeLimit: 5,
-		}),
 
-		armored: new CreepSetup(Roles.melee, {
-			pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE],
-			sizeLimit: Infinity,
-		}),
-
-		boosted_T3_defense: new CreepSetup(Roles.melee, {
-			pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE],
-			sizeLimit: Infinity,
-		}),
-
-		boosted_T3: new CreepSetup(Roles.melee, {
-			pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE],
-			sizeLimit: Infinity,
-		}),
-
-		boosted_T3_armor: new CreepSetup(Roles.melee, {
-			pattern  : [TOUGH, TOUGH, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE],
-			sizeLimit: Infinity,
-		}),
-
-		boosted_T3_strongArmor: new CreepSetup(Roles.melee, {
-			pattern  : [TOUGH, TOUGH, TOUGH, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE],
-			sizeLimit: Infinity,
-		}),
 
 		sourceKeeper: new CreepSetup(Roles.melee, {
 			pattern  : [MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK, HEAL, MOVE],

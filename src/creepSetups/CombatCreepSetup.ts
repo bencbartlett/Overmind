@@ -2,9 +2,9 @@ import {Colony} from '../Colony';
 import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
 import {BoostType} from '../resources/map_resources';
-import {BodySetup, CreepSetup} from './CreepSetup';
+import {Roles} from './setups';
 
-interface BodyOpts {
+export interface BodyOpts {
 	moveSpeed?: number;
 	putMoveFirstInBody?: boolean;
 	bodyRatio?: {
@@ -24,13 +24,18 @@ interface BodyOpts {
 	boosts?: BoostType[];
 }
 
-interface SimpleBodyOpts {
+export interface SimpleBodyOpts {
 	moveSpeed?: number;
 	boosted?: boolean;
 	armored?: boolean;
 	healing?: boolean;
 	withRanged?: boolean;
 	bodyOpts?: BodyOpts;
+}
+
+export interface BodyGeneratorReturn {
+	body: BodyPartConstant[];
+	boosts: ResourceConstant[];
 }
 
 interface AvailableBoosts {
@@ -42,11 +47,6 @@ interface AvailableBoosts {
 	move?: ResourceConstant | undefined;
 }
 
-export interface BodyGeneratorReturn {
-	body: BodyPartConstant[];
-	boosts: ResourceConstant[];
-}
-
 // This re-declaration is needed to get typings to work since typed-screeps has a hard-on for over-typing things
 const BOOST_EFFECTS: { [part: string]: { [boost: string]: { [action: string]: number } } } = BOOSTS;
 
@@ -56,22 +56,40 @@ const BOOST_EFFECTS: { [part: string]: { [boost: string]: { [action: string]: nu
  * CombatOverlord creep requests while I use the old system for standard Overlord creep requests.
  */
 @profile
-export class CombatCreepSetup extends CreepSetup {
+export class CombatCreepSetup /*extends CreepSetup*/ {
 
 	role: string;
-	bodyGenerator: () => BodyGeneratorReturn; 	// use this to specify body generation function
-	bodySetup: BodySetup;						// not used; here for backward-compatibility with old CreepSetup
+	private bodyGenerator: ((colony: Colony, opts: Full<BodyOpts>) => BodyGeneratorReturn); 	// use this to specify body generation function
+	// bodySetup: BodySetup;						// not used; here for backward-compatibility with old CreepSetup
+	private opts: Full<BodyOpts>;
+	protected cache: { [colonyName: string]: { result: BodyGeneratorReturn, expiration: number } };
 
-	constructor(roleName: string, bodyGenerator: () => BodyGeneratorReturn) {
-		super(roleName, {}, []);
+	constructor(roleName: string, opts: Full<BodyOpts>,
+				bodyGenerator: ((colony: Colony, opts: Full<BodyOpts>) => BodyGeneratorReturn)) {
+		// super(roleName, {}, []);
+		this.role = roleName;
+		this.opts = opts;
 		this.bodyGenerator = bodyGenerator;
+		this.cache = {};
 	}
 
 	/**
 	 * Generate the body and boosts for a requested creep
 	 */
-	create(colony: Colony): BodyGeneratorReturn {
-		return this.bodyGenerator();
+	create(colony: Colony, useCache = false): BodyGeneratorReturn {
+		// If you're allowed to use a cached result (e.g. for estimating wait times), return that
+		if (useCache && this.cache[colony.name] && Game.time < this.cache[colony.name].expiration) {
+			return this.cache[colony.name].result;
+		}
+
+		// Otherwise recompute
+		const result = this.bodyGenerator(colony, this.opts);
+		this.cache[colony.name] = {
+			result    : result,
+			expiration: Game.time + 20,
+		};
+
+		return result;
 	}
 
 	/**
@@ -161,7 +179,7 @@ export class CombatCreepSetup extends CreepSetup {
 	 * requested move boosts are applied, which has a body ratio specified by opts.bodyRatio, and where max part
 	 * counts are capped by opts.maxParts.
 	 */
-	private static generateMeleeAttackerBody(colony: Colony, opts: Full<BodyOpts>): BodyGeneratorReturn {
+	static generateMeleeAttackerBody(colony: Colony, opts: Full<BodyOpts>): BodyGeneratorReturn {
 
 		if (!opts.bodyRatio.attack) {
 			log.error(`Bad opts.bodyRatio: ${opts.bodyRatio}; No attack!`);
@@ -242,7 +260,7 @@ export class CombatCreepSetup extends CreepSetup {
 	 * requested move boosts are applied, which has a body ratio specified by opts.bodyRatio, and where max part
 	 * counts are capped by opts.maxParts.
 	 */
-	private static generateRangedAttackerBody(colony: Colony, opts: Full<BodyOpts>): BodyGeneratorReturn {
+	static generateRangedAttackerBody(colony: Colony, opts: Full<BodyOpts>): BodyGeneratorReturn {
 
 		if (!opts.bodyRatio.ranged) {
 			log.error(`Bad opts.bodyRatio: ${opts.bodyRatio}; No ranged!`);
@@ -323,7 +341,7 @@ export class CombatCreepSetup extends CreepSetup {
 	 * requested move boosts are applied, which has a body ratio specified by opts.bodyRatio, and where max part
 	 * counts are capped by opts.maxParts.
 	 */
-	private static generateHealerBody(colony: Colony, opts: Full<BodyOpts>): BodyGeneratorReturn {
+	static generateHealerBody(colony: Colony, opts: Full<BodyOpts>): BodyGeneratorReturn {
 
 		if (!opts.bodyRatio.heal) {
 			log.error(`Bad opts.bodyRatio: ${opts.bodyRatio}; No heal!`);
@@ -404,7 +422,7 @@ export class CombatCreepSetup extends CreepSetup {
 	 * requested move boosts are applied, which has a body ratio specified by opts.bodyRatio, and where max part
 	 * counts are capped by opts.maxParts.
 	 */
-	private static generateDismantlerBody(colony: Colony, opts: Full<BodyOpts>): BodyGeneratorReturn {
+	static generateDismantlerBody(colony: Colony, opts: Full<BodyOpts>): BodyGeneratorReturn {
 
 		if (!opts.bodyRatio.work) {
 			log.error(`Bad opts.bodyRatio: ${opts.bodyRatio}; No dismantle!`);
@@ -484,7 +502,6 @@ export class CombatCreepSetup extends CreepSetup {
 
 	}
 
-
 	/**
 	 * Creates a body for a zergling (melee attacker). Takes an object of possible options:
 	 * - If opts.boosted is true, all parts are requested to be boosted
@@ -495,7 +512,7 @@ export class CombatCreepSetup extends CreepSetup {
 	static createZerglingBody(colony: Colony, opts: SimpleBodyOpts = {}): BodyGeneratorReturn {
 		_.defaults(opts, {moveSpeed: 1, boosted: false, armored: false, healing: false, bodyOpts: {}});
 		const zerglingBodyOpts: Full<BodyOpts> = {
-			moveSpeed   : opts.moveSpeed || 1,
+			moveSpeed         : opts.moveSpeed || 1,
 			putMoveFirstInBody: true,
 			bodyRatio         : {attack: 30, tough: opts.armored ? 10 : 0, heal: opts.healing ? 2 : 0},
 			maxParts          : {attack: 50, tough: 10, heal: 2},
@@ -515,7 +532,7 @@ export class CombatCreepSetup extends CreepSetup {
 	static createHydraliskBody(colony: Colony, opts: SimpleBodyOpts = {}): BodyGeneratorReturn {
 		_.defaults(opts, {moveSpeed: 1, boosted: false, armored: false, healing: true, bodyOpts: {}});
 		const hydraliskBodyOpts: Full<BodyOpts> = {
-			moveSpeed   : opts.moveSpeed || 1,
+			moveSpeed         : opts.moveSpeed || 1,
 			putMoveFirstInBody: false,
 			bodyRatio         : {ranged: 12, tough: opts.armored ? 3 : 0, heal: opts.healing ? 4 : 0},
 			maxParts          : {ranged: 30, tough: 8, heal: 10},
@@ -535,7 +552,7 @@ export class CombatCreepSetup extends CreepSetup {
 	static createTransfuserBody(colony: Colony, opts: SimpleBodyOpts = {}): BodyGeneratorReturn {
 		_.defaults(opts, {moveSpeed: 1, boosted: false, armored: false, withRanged: false, bodyOpts: {}});
 		const healerBodyOpts: Full<BodyOpts> = {
-			moveSpeed   : opts.moveSpeed || 1,
+			moveSpeed         : opts.moveSpeed || 1,
 			putMoveFirstInBody: false,
 			bodyRatio         : {heal: 12, tough: opts.armored ? 3 : 0, ranged: opts.withRanged ? 4 : 0},
 			maxParts          : {heal: 30, tough: 8, ranged: 10},
@@ -556,7 +573,7 @@ export class CombatCreepSetup extends CreepSetup {
 	static createLurkerBody(colony: Colony, opts: SimpleBodyOpts = {}): BodyGeneratorReturn {
 		_.defaults(opts, {moveSpeed: 1, boosted: false, armored: false, healing: false, bodyOpts: {}});
 		const lurkerBodyOptions: Full<BodyOpts> = {
-			moveSpeed   : opts.moveSpeed || 1,
+			moveSpeed         : opts.moveSpeed || 1,
 			putMoveFirstInBody: false,
 			bodyRatio         : {work: 24, tough: opts.armored ? 6 : 0, ranged: opts.withRanged ? 8 : 0, heal: 2},
 			maxParts          : {work: 30, tough: 10, ranged: 10, heal: 2},
@@ -566,6 +583,96 @@ export class CombatCreepSetup extends CreepSetup {
 		return this.generateDismantlerBody(colony, bodyOpts);
 	}
 
+}
+
+
+/**
+ * Creates a body for a zergling (melee attacker). Takes an object of possible options:
+ * - If opts.boosted is true, all parts are requested to be boosted
+ * - If opts.armored is true, a 3:1 attack:tough ratio will be used up to 10 tough parts
+ * - If opts.healing is true, up to 2 heal parts will be added
+ * - Specifying opts.bodyOpts may override any of the behaviors above
+ */
+export class ZerglingSetup extends CombatCreepSetup {
+	constructor(opts: SimpleBodyOpts = {}) {
+		_.defaults(opts, {moveSpeed: 1, boosted: false, armored: false, healing: false, bodyOpts: {}});
+		const zerglingBodyOpts: Full<BodyOpts> = {
+			moveSpeed         : opts.moveSpeed || 1,
+			putMoveFirstInBody: true,
+			bodyRatio         : {attack: 30, tough: opts.armored ? 10 : 0, heal: opts.healing ? 2 : 0},
+			maxParts          : {attack: 50, tough: 10, heal: 2},
+			boosts            : opts.boosted ? ['attack', 'tough', 'heal', 'move'] : [],
+		};
+		const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, zerglingBodyOpts);
+		super(Roles.melee, bodyOpts, CombatCreepSetup.generateMeleeAttackerBody);
+	}
+}
+
+/**
+ * Creates a body for a hydralisk (ranged attacker which may have some healing). Possible optoins:
+ * - If opts.boosted is true, all parts are requested to be boosted
+ * - If opts.armored is true, a 4:1 ranged:tough ratio will be used up to 8 tough parts
+ * - If opts.healing is true (default), a 3:1 ranged:heal ratio will be used up to 10 heal parts
+ * - Specifying opts.bodyOpts may override any of the behaviors above
+ */
+export class HydraliskSetup extends CombatCreepSetup {
+	constructor(opts: SimpleBodyOpts = {}) {
+		_.defaults(opts, {moveSpeed: 1, boosted: false, armored: false, healing: true, bodyOpts: {}});
+		const hydraliskBodyOpts: Full<BodyOpts> = {
+			moveSpeed         : opts.moveSpeed || 1,
+			putMoveFirstInBody: false,
+			bodyRatio         : {ranged: 12, tough: opts.armored ? 3 : 0, heal: opts.healing ? 4 : 0},
+			maxParts          : {ranged: 30, tough: 8, heal: 10},
+			boosts            : opts.boosted ? ['ranged', 'tough', 'heal', 'move'] : [],
+		};
+		const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, hydraliskBodyOpts);
+		super(Roles.ranged, bodyOpts, CombatCreepSetup.generateRangedAttackerBody);
+	}
+}
+
+/**
+ * Creates a body for a transfuser (healer which may have some ranged attack parts). Possible optoins:
+ * - If opts.boosted is true, all parts are requested to be boosted
+ * - If opts.armored is true, a 4:1 heal:tough ratio will be used up to 8 tough parts
+ * - If opts.withRanged is true, a 3:1 heal:ranged ratio will be used up to 10 ranged parts
+ * - Specifying opts.bodyOpts may override any of the behaviors above
+ */
+export class TransfuserSetup extends CombatCreepSetup {
+	constructor(opts: SimpleBodyOpts = {}) {
+		_.defaults(opts, {moveSpeed: 1, boosted: false, armored: false, withRanged: false, bodyOpts: {}});
+		const healerBodyOpts: Full<BodyOpts> = {
+			moveSpeed         : opts.moveSpeed || 1,
+			putMoveFirstInBody: false,
+			bodyRatio         : {heal: 12, tough: opts.armored ? 3 : 0, ranged: opts.withRanged ? 4 : 0},
+			maxParts          : {heal: 30, tough: 8, ranged: 10},
+			boosts            : opts.boosted ? ['ranged', 'tough', 'heal', 'move'] : [],
+		};
+		const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, healerBodyOpts);
+		super(Roles.healer, bodyOpts, CombatCreepSetup.generateHealerBody);
+	}
+}
+
+/**
+ * Creates a body for a lurker (dismantler which may have some ranged or healing). Possible optoins:
+ * - If opts.boosted is true, all parts are requested to be boosted
+ * - If opts.armored is true, a 4:1 work:tough ratio will be used up to 10 tough parts
+ * - If opts.withRanged is true, a 3:1 work:ranged ratoi will be used up to 10 ranged parts
+ * - If opts.healing is true, up to 2 heal parts may be added
+ * - Specifying opts.bodyOpts may override any of the behaviors above
+ */
+export class LurkerSetup extends CombatCreepSetup {
+	constructor(opts: SimpleBodyOpts = {}) {
+		_.defaults(opts, {moveSpeed: 1, boosted: false, armored: false, healing: false, bodyOpts: {}});
+		const lurkerBodyOptions: Full<BodyOpts> = {
+			moveSpeed         : opts.moveSpeed || 1,
+			putMoveFirstInBody: false,
+			bodyRatio         : {work: 24, tough: opts.armored ? 6 : 0, ranged: opts.withRanged ? 8 : 0, heal: 2},
+			maxParts          : {work: 30, tough: 10, ranged: 10, heal: 2},
+			boosts            : opts.boosted ? ['dismantle', 'ranged', 'tough', 'heal', 'move'] : [],
+		};
+		const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, lurkerBodyOptions);
+		super(Roles.dismantler, bodyOpts, CombatCreepSetup.generateDismantlerBody);
+	}
 }
 
 global.CombatCreepSetup = CombatCreepSetup;

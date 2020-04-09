@@ -30,6 +30,7 @@ export class CreepSetup {
 	role: string;
 	bodySetup: BodySetup;
 	private boosts: BoostType[];
+	protected cache: { [colonyName: string]: { result: BodyGeneratorReturn, expiration: number } };
 
 	constructor(roleName: string, bodySetup = {}, boosts?: BoostType[]) {
 		this.role = roleName;
@@ -44,6 +45,7 @@ export class CreepSetup {
 		});
 		this.bodySetup = bodySetup as BodySetup;
 		this.boosts = boosts || [];
+		this.cache = {};
 	}
 
 	/**
@@ -57,7 +59,13 @@ export class CreepSetup {
 	/**
 	 * Generate the body and best boosts for a requested creep
 	 */
-	create(colony: Colony): BodyGeneratorReturn {
+	create(colony: Colony, useCache = false): BodyGeneratorReturn {
+		// If you're allowed to use a cached result (e.g. for estimating wait times), return that
+		if (useCache && this.cache[colony.name] && Game.time < this.cache[colony.name].expiration) {
+			return this.cache[colony.name].result;
+		}
+
+		// Otherwise recompute
 		const body = this.generateBody(colony.room.energyCapacityAvailable);
 		const bodyCounts = _.countBy(body);
 
@@ -73,10 +81,16 @@ export class CreepSetup {
 			}
 		}
 
-		return {
+		const result = {
 			body  : body,
 			boosts: boosts,
 		};
+		this.cache[colony.name] = {
+			result    : result,
+			expiration: Game.time + 20,
+		};
+
+		return result;
 	}
 
 	/**
