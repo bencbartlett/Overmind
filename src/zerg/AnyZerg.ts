@@ -1,6 +1,6 @@
 import {Colony} from '../Colony';
 import {log} from '../console/log';
-import {isPowerCreep} from '../declarations/typeGuards';
+import {isAnyZerg, isPowerCreep} from '../declarations/typeGuards';
 import {Movement, MoveOptions} from '../movement/Movement';
 import {Overlord} from '../overlords/Overlord';
 import {profile} from '../profiler/decorator';
@@ -238,13 +238,21 @@ export abstract class AnyZerg {
 
 	transfer(target: AnyCreep | AnyZerg | Structure, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
 		let result: ScreepsReturnCode;
-		if (target instanceof AnyZerg) {
+		if (isAnyZerg(target)) {
 			result = this.creep.transfer(target.creep, resourceType, amount);
 		} else {
 			result = this.creep.transfer(target, resourceType, amount);
 		}
 		if (!this.actionLog.transfer) this.actionLog.transfer = (result == OK);
 		return result;
+	}
+
+	transferAll(target: AnyCreep | AnyZerg | Structure, amount?: number) {
+		for (const [resourceType, amount] of this.creep.store.contents) {
+			if (amount > 0) {
+				return this.transfer(target, resourceType);
+			}
+		}
 	}
 
 	goTransfer(target: Creep | AnyZerg | Structure, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {

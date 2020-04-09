@@ -333,11 +333,9 @@ export class MiningOverlord extends Overlord {
 	 */
 	private linkMiningActions(miner: Zerg) {
 		// Link mining
-		// TODO
 		if (this.link) {
 			const res = miner.harvest(this.source!);
-			if (res == ERR_NOT_IN_RANGE) {
-				// Approach mining site
+			if (res == ERR_NOT_IN_RANGE) { // approach mining site
 				if (this.goToMiningSite(miner)) return;
 			}
 			if (miner.carry.energy > 0.9 * miner.carryCapacity) {
@@ -368,7 +366,7 @@ export class MiningOverlord extends Overlord {
 		}
 
 		// Build output site
-		if (this.constructionSite) {
+		if (this.constructionSite) { // standard miners won't have both a container and a construction site
 			if (miner.carry.energy >= Math.min(miner.carryCapacity, BUILD_POWER * miner.getActiveBodyparts(WORK))) {
 				return miner.build(this.constructionSite);
 			} else {

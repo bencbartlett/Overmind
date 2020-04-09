@@ -5,7 +5,6 @@ import {DirectiveExtract} from '../../directives/resource/extract';
 import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 
@@ -60,8 +59,8 @@ export class ExtractorOverlord extends Overlord {
 
 	private registerOutputRequests(): void {
 		if (this.container) {
-			if (_.sum(this.container.store) > 0.5 * this.container.storeCapacity ||
-				(_.sum(this.container.store) > 0 && this.drones.length == 0)) {
+			const outputThreshold = this.drones.length == 0 ? this.container.store.getCapacity() : 0;
+			if (this.container.store.getUsedCapacity() > outputThreshold) {
 				this.colony.logisticsNetwork.requestOutput(this.container, {resourceType: 'all'});
 			}
 		}
@@ -104,25 +103,43 @@ export class ExtractorOverlord extends Overlord {
 	}
 
 	init() {
-		const amount = this.mineral && this.mineral.mineralAmount > 0 ? this.mineral.pos.availableNeighbors().length : 0;
+		const amount = this.mineral && this.mineral.mineralAmount > 0 && this.extractor
+					   ? this.mineral.pos.availableNeighbors().length
+					   : 0;
 		this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), Setups.drones.extractor);
 		this.registerOutputRequests();
 	}
 
-	private handleDrone(drone: Zerg): void {
+	private handleDrone(drone: Zerg) {
+		if (drone.flee()) {
+			return;
+		}
 		// Ensure you are in the assigned room
 		if (drone.room == this.room && !drone.pos.isEdge) {
-			if (_.sum(drone.carry) == 0) {
-				// TODO handle the minerals on the bottom, 0.95 capacity rn
-				drone.task = Tasks.harvest(this.mineral!);
+			if (this.mineral && !drone.pos.inRangeToPos(this.mineral.pos, 1)) {
+				return drone.goTo(this.mineral.pos);
 			}
-			// Else see if there is an output to deposit to or to maintain
-			else if (this.container) {
-				drone.task = Tasks.transferAll(this.container);
-				// Move onto the output container if you're the only drone
-				if (!drone.pos.isEqualTo(this.container.pos) && this.drones.length == 1) {
-					drone.goTo(this.container, {range: 0});
+			if (this.mineral) {
+				// Do harvest first - needs to check if in range anyway so this is more CPU efficient
+				const ret = drone.harvest(this.mineral);
+				if (ret == ERR_NOT_IN_RANGE) {
+					return drone.goTo(this.mineral);
 				}
+				if (this.container) {
+					// Transfer to container if you need to (can do at same tick as harvest)
+					if (drone.store.getUsedCapacity() > 0.9 * drone.store.getCapacity()) {
+						const transfer = drone.transferAll(this.container);
+						if (transfer == ERR_NOT_IN_RANGE) {
+							return drone.goTo(this.container, {range: 1});
+						}
+					}
+					// Move onto the container pos if you need to
+					if (this.drones.length == 1 && !drone.pos.isEqualTo(this.container.pos)) {
+						return drone.goTo(this.container, {range: 0});
+					}
+				}
+			} else {
+				log.error(`${this.print}: room defined and no mineral! (Why?)`);
 			}
 		} else {
 			drone.goTo(this);
@@ -130,7 +147,7 @@ export class ExtractorOverlord extends Overlord {
 	}
 
 	run() {
-		this.autoRun(this.drones, drone => this.handleDrone(drone), drone => drone.flee());
+		_.forEach(this.drones, drone => this.handleDrone(drone));
 		if (this.room && Game.time % BUILD_OUTPUT_FREQUENCY == 2) {
 			this.buildOutputIfNeeded();
 		}

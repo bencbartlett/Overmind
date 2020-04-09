@@ -61,8 +61,8 @@ export function isPowerCreep(obj: RoomObject): obj is PowerCreep {
 	return (<PowerCreep>obj).powers != undefined;
 }
 
-export function isAnyZerg(creep: AnyCreep | AnyZerg): creep is AnyZerg {
-	return (<AnyZerg>creep).isAnyZerg || false;
+export function isAnyZerg(thing: any): thing is AnyZerg {
+	return (<AnyZerg>thing).isAnyZerg || false;
 }
 
 export function isStandardZerg(creep: AnyCreep | AnyZerg): creep is Zerg {
