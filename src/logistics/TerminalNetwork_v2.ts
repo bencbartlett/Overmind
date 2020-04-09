@@ -760,10 +760,12 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 				const recvTerm = colony.terminal!;
 				const sendAmount = opts.takeFromColoniesBelowTarget
 								   ? Math.min(requestAmount,
-											  sendTerm.store[resource] - lockedAmount)
+											  sendTerm.store[resource],
+											  bestPartner.assets[resource] - lockedAmount)
 								   : Math.min(requestAmount,
-											  // TODO sendTerm.store[resource] - (thresholds.target - thresholds.tolerance),
-											  sendTerm.store[resource] - lockedAmount);
+											  sendTerm.store[resource],
+											  bestPartner.assets[resource]
+											  - (thresholds.target - thresholds.tolerance) - lockedAmount);
 				if (sendAmount <= 0) {
 					log.error(`Request from ${colony.print} to ${bestPartner.print} for ${sendAmount} ${resource}`);
 					return false;
