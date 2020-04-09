@@ -429,39 +429,6 @@ export class OvermindConsole {
 		return `Removed ${count} flags.`;
 	}
 
-	// TODO MERGE INTO DIRECTIVES
-	// static directiveInfo(flagName: string): string {
-	// 	let msg = '';
-	// 	const directive = Overmind.directives[flagName];
-	// 	if (!directive) {
-	// 		return `ERROR: Name is not a current directive`;
-	// 	}
-	// 	msg += `Type: ${directive.directiveName}`.padRight(20) +
-	// 		`Name: ${directive.name}`.padRight(25) +
-	// 		`Pos: ${directive.pos.print}\n`;
-	// 	for (const overlordName of Object.keys(directive.overlords)) {
-	// 		const overlord = directive.overlords[overlordName] as Overlord;
-	// 		msg += JSON.stringify(overlord.creepUsageReport) + `\n`;
-	// 		const zerg = overlord.getZerg();
-	// 		const combatZerg = overlord.getCombatZerg();
-	// 		for (const [roleName, zergArray] of Object.entries(zerg)) {
-	// 			msg += `Role: ${roleName} \n`;
-	// 			for (const zerg of zergArray) {
-	// 				msg += `Name: ${zerg.name}   Room: ${zerg.pos.print}   TTL/Spawning: ${zerg.ticksToLive || zerg.spawning} \n`;
-	// 			}
-	// 		}
-	// 		msg += `Combat zerg \n`;
-	// 		for (const [roleName, zergArray] of Object.entries(combatZerg)) {
-	// 			msg += `Role: ${roleName} \n`;
-	// 			for (const zerg of zergArray) {
-	// 				msg += `Name: ${zerg.name}   Room: ${zerg.pos.print}   TTL/Spawning: ${zerg.ticksToLive || zerg.spawning} \n`;
-	// 			}
-	// 		}
-	// 	}
-	//
-	// 	return msg;
-	// }
-
 
 	// Structure management ============================================================================================
 

@@ -3,7 +3,7 @@ import {log} from '../console/log';
 import {Pathing} from '../movement/Pathing';
 import {Overlord} from '../overlords/Overlord';
 import {profile} from '../profiler/decorator';
-import {equalXYR, getPosFromString, randomHex} from '../utilities/utils';
+import {equalXYR, getPosFromString, randomHex, toColumns} from '../utilities/utils';
 import {NotifierPriority} from './Notifier';
 
 interface DirectiveCreationOptions {
@@ -112,6 +112,33 @@ export abstract class Directive {
 		if (this.memory.debug) {
 			log.alert(this.print, args);
 		}
+	}
+
+	private info(): string {
+		let msg: string =
+				`Info for ${this.print}: —————————————————————————————————————————————————————————————————————————`;
+		const info1 = {
+			'Type:'  : this.directiveName,
+			'Name:'  : this.name,
+			'Pos:'   : this.pos.print,
+			'Colony:': this.colony.print,
+		};
+		msg += toColumns(info1).join('\n');
+		msg += `Overlords: \n`;
+		const tab = `  `;
+		for (const overlordName in this.overlords) {
+			msg += tab + `${overlordName}:\n`;
+			const olInfo: { [left: string]: string } = {};
+			const overlord = this.overlords[overlordName] as any;
+			olInfo[tab + tab + 'Creep usage:'] = JSON.stringify(overlord.creepUsageReport);
+			olInfo[tab + tab + 'Zerg:'] = _.mapValues(overlord._zerg,
+													  zergOfRole => _.map(zergOfRole, (zerg: any) => zerg.print));
+			olInfo[tab + tab + 'CombatZerg:'] = _.mapValues(overlord._combatZerg,
+															zergOfRole => _.map(zergOfRole, (zerg: any) => zerg.print));
+			msg += toColumns(olInfo).join('\n');
+		}
+		msg += 'Memory:\n' + print(this.memory);
+		return msg;
 	}
 
 	/**
