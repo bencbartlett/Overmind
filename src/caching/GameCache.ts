@@ -22,7 +22,7 @@ export class GameCache implements ICache {
 	}
 
 	private cacheCreepsByColony() {
-		this.creepsByColony = _.groupBy(Game.creeps, creep => creep.memory[_MEM.COLONY]) as { [colName: string]: Creep[] };
+		this.creepsByColony = _.groupBy(Game.creeps, creep => creep.memory[_MEM.COLONY]);
 	}
 
 	/**

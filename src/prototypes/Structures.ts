@@ -70,7 +70,7 @@ Object.defineProperty(StructureController.prototype, 'reservedByMe', {
 
 Object.defineProperty(StructureController.prototype, 'signedByMe', {
 	get         : function() {
-		return this.sign && this.sign.text == Memory.settings.signature && Game.time - this.sign.time < 250000;
+		return this.sign && this.sign.username == MY_USERNAME && Game.time - this.sign.time < 250000;
 	},
 	configurable: true,
 });

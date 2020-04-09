@@ -20,6 +20,14 @@ Object.defineProperty(Room.prototype, 'my', {
 	configurable: true,
 });
 
+Object.defineProperty(Room.prototype, 'isColony', {
+	get() {
+		return Overmind.colonies[this.name] != undefined;
+	},
+	configurable: true,
+});
+
+
 Object.defineProperty(Room.prototype, 'isOutpost', {
 	get() {
 		return Overmind.colonyMap[this.name] != undefined;
@@ -211,6 +219,16 @@ Object.defineProperty(Room.prototype, 'constructionSites', {
 			this._constructionSites = this.find(FIND_MY_CONSTRUCTION_SITES);
 		}
 		return this._constructionSites;
+	},
+	configurable: true,
+});
+
+Object.defineProperty(Room.prototype, 'allConstructionSites', {
+	get() {
+		if (!this._allConstructionSites) {
+			this._allConstructionSites = this.find(FIND_CONSTRUCTION_SITES);
+		}
+		return this._allConstructionSites;
 	},
 	configurable: true,
 });

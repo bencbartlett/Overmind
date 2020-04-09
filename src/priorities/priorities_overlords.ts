@@ -23,7 +23,6 @@ export let OverlordPriority = {
 		healPoint       : 301,
 		siege           : 302,
 		controllerAttack: 399,
-		roomPoisoner    : 399,
 	},
 
 	colonization: { 			// Colonizing new rooms
@@ -46,7 +45,8 @@ export let OverlordPriority = {
 	},
 
 	outpostOffense: {
-		harass: 560,
+		harass      : 560,
+		roomPoisoner: 561,
 	},
 
 	upgrading: {				// Spawning upgraders

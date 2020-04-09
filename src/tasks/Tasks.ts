@@ -78,8 +78,8 @@ export class Tasks {
 	// 	return new TaskFlee(target, options);
 	// }
 
-	static fortify(target: fortifyTargetType, options = {} as TaskOptions): TaskFortify {
-		return new TaskFortify(target, options);
+	static fortify(target: fortifyTargetType, hitsMax?: number, options = {} as TaskOptions): TaskFortify {
+		return new TaskFortify(target, hitsMax, options);
 	}
 
 	static getBoosted(target: getBoostedTargetType,

@@ -40,6 +40,11 @@ export const PROFILER_INCLUDE_COLONIES: string[] = [/*'E15S49'*/];
 export const USE_TRY_CATCH: boolean = true;
 
 /**
+ * Enable this to suppress alerts of invalid flag color codes. (Don't do this unless you know what you're doing.)
+ */
+export const SUPPRESS_INVALID_DIRECTIVE_ALERTS: boolean = false;
+
+/**
  * Default controller signature; don't change this.
  * You can set your controller signature with the console command "setSignature()"
  * Operation will be penalized by skipping every 3rd tick for using a signature that does not contain the substring

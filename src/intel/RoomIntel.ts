@@ -1,14 +1,10 @@
 // Room intel - provides information related to room structure and occupation
 
-import {getAllColonies} from '../Colony';
 import {log} from '../console/log';
-import {DirectiveOutpost} from '../directives/colony/outpost';
-import {DirectivePoisonRoom} from '../directives/colony/poisonRoom';
-import {DirectivePowerMine} from '../directives/resource/powerMine';
 import {Segmenter} from '../memory/Segmenter';
 import {profile} from '../profiler/decorator';
 import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
-import {Cartographer, ROOMTYPE_ALLEY, ROOMTYPE_CORE, ROOMTYPE_CROSSROAD} from '../utilities/Cartographer';
+import {Cartographer, ROOMTYPE_CORE, ROOMTYPE_CROSSROAD} from '../utilities/Cartographer';
 import {getCacheExpiration, irregularExponentialMovingAverage} from '../utilities/utils';
 import {Zerg} from '../zerg/Zerg';
 

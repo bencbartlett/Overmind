@@ -66,12 +66,12 @@ export abstract class Directive {
 		}
 
 		// Relocate flag if needed; this must be called before the colony calculations
-		if (this.memory.setPosition) {
-			const setPosition = derefRoomPosition(this.memory.setPosition);
+		if (this.memory.setPos) {
+			const setPosition = derefRoomPosition(this.memory.setPos);
 			if (!this.flag.pos.isEqualTo(setPosition)) {
 				this.flag.setPosition(setPosition);
 			} else {
-				delete this.memory.setPosition;
+				delete this.memory.setPos;
 			}
 			this.pos = setPosition;
 			this.room = Game.rooms[setPosition.roomName];
@@ -119,8 +119,8 @@ export abstract class Directive {
 	 * throwing an error
 	 */
 	static getPos(flag: Flag): RoomPosition {
-		if (flag.memory && flag.memory.setPosition) {
-			const pos = derefRoomPosition(flag.memory.setPosition);
+		if (flag.memory && flag.memory.setPos) {
+			const pos = derefRoomPosition(flag.memory.setPos);
 			return pos;
 		}
 		return flag.pos;
@@ -131,6 +131,10 @@ export abstract class Directive {
 		return Game.flags[this.name];
 	}
 
+	// This allows you to access static DirectiveClass.directiveName from an instance of DirectiveClass
+	get directiveName(): string {
+		return (<any>this.constructor).directiveName;
+	}
 
 	refresh(): void {
 		const flag = this.flag;
@@ -149,17 +153,17 @@ export abstract class Directive {
 	}
 
 	private handleRelocation(): boolean {
-		if (this.memory.setPosition) {
-			const pos = derefRoomPosition(this.memory.setPosition);
+		if (this.memory.setPos) {
+			const pos = derefRoomPosition(this.memory.setPos);
 			if (!this.flag.pos.isEqualTo(pos)) {
 				const result = this.flag.setPosition(pos);
 				if (result == OK) {
 					log.debug(`Moving ${this.name} from ${this.flag.pos.print} to ${pos.print}.`);
 				} else {
-					log.warning(`Could not set room position to ${JSON.stringify(this.memory.setPosition)}!`);
+					log.warning(`Could not set room position to ${JSON.stringify(this.memory.setPos)}!`);
 				}
 			} else {
-				delete this.memory.setPosition;
+				delete this.memory.setPos;
 			}
 			this.pos = pos;
 			this.room = Game.rooms[pos.roomName];
@@ -294,28 +298,23 @@ export abstract class Directive {
 				if (room) {
 					return _.filter(room.flags,
 									flag => this.filter(flag) &&
-											!(flag.memory.setPosition
-											&& flag.memory.setPosition.roomName != pos.roomName)).length > 0;
+											!(flag.memory.setPos
+											&& flag.memory.setPos.roomName != pos.roomName)).length > 0;
 				} else {
-					const flagsInRoom = _.filter(Game.flags, function(flag) {
-						if (flag.memory.setPosition) { // does it need to be relocated?
-							return flag.memory.setPosition.roomName == pos.roomName;
-						} else { // properly located
-							return flag.pos.roomName == pos.roomName;
-						}
-					});
+					const flagsInRoom = _.filter(Game.flags,
+												 flag => (flag.memory.setPos || flag.pos).roomName == pos.roomName);
 					return _.filter(flagsInRoom, flag => this.filter(flag)).length > 0;
 				}
 			case 'pos':
 				if (room) {
 					return _.filter(pos.lookFor(LOOK_FLAGS),
 									flag => this.filter(flag) &&
-											!(flag.memory.setPosition
-											&& !equalXYR(pos, flag.memory.setPosition))).length > 0;
+											!(flag.memory.setPos
+											&& !equalXYR(pos, flag.memory.setPos))).length > 0;
 				} else {
 					const flagsAtPos = _.filter(Game.flags, function(flag) {
-						if (flag.memory.setPosition) { // does it need to be relocated?
-							return equalXYR(flag.memory.setPosition, pos);
+						if (flag.memory.setPos) { // does it need to be relocated?
+							return equalXYR(flag.memory.setPos, pos);
 						} else { // properly located
 							return equalXYR(flag.pos, pos);
 						}
@@ -325,8 +324,10 @@ export abstract class Directive {
 		}
 	}
 
-	/* Create a directive if one of the same type is not already present (in room | at position).
-	 * Calling this method on positions in invisible rooms can be expensive and should be used sparingly. */
+	/**
+	 * Create a directive if one of the same type is not already present (in room | at position).
+	 * Calling this method on positions in invisible rooms can be expensive and should be used sparingly.
+	 */
 	static createIfNotPresent(pos: RoomPosition, scope: 'room' | 'pos',
 							  opts: DirectiveCreationOptions = {}): number | string | undefined {
 		if (this.isPresent(pos, scope)) {
@@ -338,7 +339,7 @@ export abstract class Directive {
 			if (!opts.memory) {
 				opts.memory = {};
 			}
-			opts.memory.setPosition = pos;
+			opts.memory.setPos = pos;
 		}
 		switch (scope) {
 			case 'room':

@@ -3,7 +3,21 @@
 import {alignedNewline, bullet} from './stringConstants';
 
 export function getAllRooms(): Room[] {
-	return _.values(Game.rooms);
+	if (!Game._allRooms) {
+		Game._allRooms = _.values(Game.rooms); // this is cleared every tick
+	}
+	return Game._allRooms;
+}
+
+export function getOwnedRooms(): Room[] {
+	if (!Game._ownedRooms) {
+		Game._ownedRooms = _.filter(getAllRooms(), room => room.my); // this is cleared every tick
+	}
+	return Game._ownedRooms;
+}
+
+export function canClaimAnotherRoom(): boolean {
+	return getOwnedRooms().length < Game.gcl.level;
 }
 
 export function printRoomName(roomName: string, aligned = false): string {

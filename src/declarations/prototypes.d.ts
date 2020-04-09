@@ -64,6 +64,7 @@ type rechargeObjectType = StructureStorage
 interface Room {
 	print: string;
 	my: boolean;
+	isColony: boolean;
 	isOutpost: boolean;
 	owner: string | undefined;
 	reservedByMe: boolean;
@@ -115,6 +116,7 @@ interface Room {
 	sources: Source[];
 	mineral: Mineral | undefined;
 	constructionSites: ConstructionSite[];
+	allConstructionSites: ConstructionSite[];
 	ruins: Ruin[];
 	// Used by movement library
 	// _defaultMatrix: CostMatrix;

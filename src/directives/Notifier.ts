@@ -54,7 +54,6 @@ export class Notifier {
 	// TODO: finish
 	email(message: string, roomName: string, duration = 100, email = false) {
 		log.alert(printRoomName(roomName) + ': ' + message);
-
 	}
 
 	// init() {

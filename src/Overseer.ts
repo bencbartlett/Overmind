@@ -1,10 +1,10 @@
-import {Colony, ColonyStage} from './Colony';
+import {Colony, ColonyStage, getAllColonies} from './Colony';
 import {log} from './console/log';
 import {bodyCost} from './creepSetups/CreepSetup';
 import {Roles} from './creepSetups/setups';
-import {DirectiveClearRoom} from './directives/colony/clearRoom';
 import {DirectiveColonize} from './directives/colony/colonize';
 import {DirectiveOutpost} from './directives/colony/outpost';
+import {DirectivePoisonRoom} from './directives/colony/poisonRoom';
 import {DirectiveGuard} from './directives/defense/guard';
 import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
 import {DirectiveOutpostDefense} from './directives/defense/outpostDefense';
@@ -31,7 +31,7 @@ import {
 	ROOMTYPE_CROSSROAD,
 	ROOMTYPE_SOURCEKEEPER
 } from './utilities/Cartographer';
-import {derefCoords, getAllRooms, hasJustSpawned, minBy, onPublicServer} from './utilities/utils';
+import {canClaimAnotherRoom, derefCoords, getAllRooms, hasJustSpawned, minBy, onPublicServer} from './utilities/utils';
 import {MUON, MY_USERNAME, USE_TRY_CATCH} from './~settings';
 
 
@@ -55,6 +55,7 @@ export class Overseer implements IOverseer {
 	private sorted: boolean;
 	private overlordsByColony: { [col: string]: Overlord[] };	// Overlords grouped by colony
 	private directives: Directive[];							// Directives across the colony
+	private directivesByType: { [directiveName: string]: Directive[] };
 
 	combatPlanner: CombatPlanner;
 	notifier: Notifier;
@@ -96,10 +97,6 @@ export class Overseer implements IOverseer {
 		}
 	}
 
-	private get colonies(): Colony[] {
-		return _.values(Overmind.colonies);
-	}
-
 	registerDirective(directive: Directive): void {
 		this.directives.push(directive);
 	}
@@ -130,6 +127,8 @@ export class Overseer implements IOverseer {
 		}
 	}
 
+	// Initialization ==================================================================================================
+
 	private registerLogisticsRequests(colony: Colony): void {
 		// Register logistics requests for all dropped resources and tombstones
 		for (const room of colony.rooms) {
@@ -152,6 +151,48 @@ export class Overseer implements IOverseer {
 			}
 		}
 	}
+
+	init(): void {
+		// Group directives by type
+		this.directivesByType = _.groupBy(this.directives, directive => directive.directiveName);
+
+		// Initialize directives
+		for (const directive of this.directives) {
+			directive.init();
+		}
+
+		// Sort overlords by priority if needed (assumes priority does not change after constructor phase
+		if (!this.sorted) {
+			this.overlords.sort((o1, o2) => o1.priority - o2.priority);
+			for (const colName in this.overlordsByColony) {
+				this.overlordsByColony[colName].sort((o1, o2) => o1.priority - o2.priority);
+			}
+			this.sorted = true;
+		}
+
+		// Initialize overlords
+		for (const overlord of this.overlords) {
+			if (!overlord.isSuspended) {
+				if (overlord.profilingActive) {
+					const start = Game.cpu.getUsed();
+					overlord.preInit();
+					this.try(() => overlord.init());
+					overlord.memory[_MEM.STATS]!.cpu += Game.cpu.getUsed() - start;
+				} else {
+					overlord.preInit();
+					this.try(() => overlord.init());
+				}
+			}
+		}
+
+		// Register cleanup requests to logistics network
+		for (const colony of getAllColonies()) {
+			this.registerLogisticsRequests(colony);
+		}
+	}
+
+
+	// Run phase methods ===============================================================================================
 
 	private handleBootstrapping(colony: Colony) {
 		// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
@@ -255,7 +296,7 @@ export class Overseer implements IOverseer {
 					return;
 				}
 
-				const validColonies = _.filter(this.colonies,
+				const validColonies = _.filter(getAllColonies(),
 											   colony => colony.level >= DirectivePowerMine.requiredRCL
 														 && Game.map.getRoomLinearDistance(colony.name, room.name)
 														 <= powerSetting.maxRange);
@@ -279,7 +320,7 @@ export class Overseer implements IOverseer {
 				return false;
 			}
 			const alreadyAnOutpost = _.any(Overmind.cache.outpostFlags,
-										   flag => (flag.memory.setPosition || flag.pos).roomName == roomName);
+										   flag => (flag.memory.setPos || flag.pos).roomName == roomName);
 			const alreadyAColony = !!Overmind.colonies[roomName];
 			if (alreadyAColony || alreadyAnOutpost) {
 				return false;
@@ -331,41 +372,75 @@ export class Overseer implements IOverseer {
 		}
 	}
 
+	private handleAutoPoisoning() {
+		// Can only have a max number of concurrent poisons at a time
+		const poisonDirectives = this.directivesByType[DirectivePoisonRoom.directiveName];
+		if (poisonDirectives.length >= Memory.settings.autoPoison.maxConcurrent) {
+			return;
+		}
+		// Find a room to poison
+		for (const room of getAllRooms()) {
+			if (DirectivePoisonRoom.canAutoPoison(room)) {
+				const controller = room.controller!;
+				const maxRange = Memory.settings.autoPoison.maxRange;
+				if (!DirectivePoisonRoom.isPresent(controller.pos, 'pos')) {
+					// See if you can poison a room
+					const colonies = getAllColonies().filter(
+						colony => colony.level >= DirectivePoisonRoom.requiredRCL
+								  && Game.map.getRoomLinearDistance(room.name, colony.room.name) <= maxRange);
+					for (const colony of colonies) {
+						const route = Game.map.findRoute(colony.room, room);
+						if (route != ERR_NO_PATH && route.length <= maxRange) {
+							log.notify(`Poisoning room ${room.print}`);
+							DirectivePoisonRoom.create(controller.pos);
+							return;
+						}
+					}
+				}
+			}
+		}
+	}
+
 	/**
 	 * Place directives to respond to various conditions
 	 */
 	private placeDirectives(): void {
 
-		_.forEach(this.colonies, colony => this.handleBootstrapping(colony));
+		const allRooms = getAllRooms();
+		const allColonies = getAllColonies();
 
-		_.forEach(this.colonies, colony => this.handleOutpostDefense(colony));
+		_.forEach(allColonies, colony => this.handleBootstrapping(colony));
 
-		_.forEach(this.colonies, colony => this.handleStrongholds(colony));
+		_.forEach(allColonies, colony => this.handleOutpostDefense(colony));
 
-		_.forEach(this.colonies, colony => this.handleColonyInvasions(colony));
+		_.forEach(allColonies, colony => this.handleStrongholds(colony));
 
-		_.forEach(this.colonies, colony => this.handleNukeResponse(colony));
+		_.forEach(allColonies, colony => this.handleColonyInvasions(colony));
 
-		_.forEach(getAllRooms(), room => this.handlePowerMining(room));
+		_.forEach(allColonies, colony => this.handleNukeResponse(colony));
 
+		if (Memory.settings.powerCollection.enabled && Game.cpu.bucket > 6000) {
+			_.forEach(allRooms, room => this.handlePowerMining(room));
+		}
+
+		if (Memory.settings.autoPoison.enabled && canClaimAnotherRoom() && Game.cpu.bucket > 9000) {
+			this.handleAutoPoisoning();
+		}
 
 		if (getAutonomyLevel() > Autonomy.Manual) {
-			_.forEach(this.colonies, colony => {
+			_.forEach(allColonies, colony => {
 				if (Game.time % Overseer.settings.outpostCheckFrequency == 2 * colony.id) {
 					this.handleNewOutposts(colony);
 				}
 				// Place pioneer directives in case the colony doesn't have a spawn for some reason
-				if (Game.time % 25 == 0 && colony.spawns.length == 0
-					&& !DirectiveClearRoom.isPresent(colony.pos, 'room')) {
+				if (Game.time % 25 == 0 && colony.spawns.length == 0) {
 					// verify that there are no spawns (not just a caching glitch)
-					const spawns = Game.rooms[colony.name]!.find(FIND_MY_SPAWNS);
-					if (spawns.length == 0) {
+					if (colony.room.find(FIND_MY_SPAWNS).length == 0) {
 						const pos = Pathing.findPathablePosition(colony.room.name);
 						DirectiveColonize.createIfNotPresent(pos, 'room');
 					}
 				}
 			});
-
 		}
 	}
 
@@ -409,44 +484,6 @@ export class Overseer implements IOverseer {
 		}
 	}
 
-	// Initialization ==================================================================================================
-
-	init(): void {
-		// Initialize directives
-		for (const directive of this.directives) {
-			directive.init();
-		}
-
-		// Sort overlords by priority if needed (assumes priority does not change after constructor phase
-		if (!this.sorted) {
-			this.overlords.sort((o1, o2) => o1.priority - o2.priority);
-			for (const colName in this.overlordsByColony) {
-				this.overlordsByColony[colName].sort((o1, o2) => o1.priority - o2.priority);
-			}
-			this.sorted = true;
-		}
-
-		// Initialize overlords
-		for (const overlord of this.overlords) {
-			if (!overlord.isSuspended) {
-				if (overlord.profilingActive) {
-					const start = Game.cpu.getUsed();
-					overlord.preInit();
-					this.try(() => overlord.init());
-					overlord.memory[_MEM.STATS]!.cpu += Game.cpu.getUsed() - start;
-				} else {
-					overlord.preInit();
-					this.try(() => overlord.init());
-				}
-			}
-		}
-
-		// Register cleanup requests to logistics network
-		for (const colony of this.colonies) {
-			this.registerLogisticsRequests(colony);
-		}
-	}
-
 	// Operation =======================================================================================================
 
 	run(): void {
@@ -464,7 +501,7 @@ export class Overseer implements IOverseer {
 				}
 			}
 		}
-		for (const colony of this.colonies) {
+		for (const colony of getAllColonies()) {
 			this.handleSafeMode(colony);
 		}
 

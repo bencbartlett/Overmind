@@ -39,10 +39,9 @@ interface Memory {
 			minPower: number;
 		};
 		autoPoison: {
-			enabled		 : boolean;
-			maxRange	 : number;
-			concurrent	 : number;
-			poisonedRooms: string[];
+			enabled: boolean;
+			maxRange: number;
+			maxConcurrent: number;
 		},
 	};
 	stats: any;
@@ -171,7 +170,7 @@ interface FlagMemory {
 	suspendUntil?: number;
 	amount?: number;
 	persistent?: boolean;
-	setPosition?: ProtoPos;
+	setPos?: ProtoPos;
 	rotation?: number;
 	parent?: string;
 	maxPathLength?: number;
