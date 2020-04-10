@@ -361,6 +361,26 @@ export class RoomIntel {
 		}
 	}
 
+	/**
+	 * Returns the portals that are within a specified range of a colony indexed by their room
+	 */
+	static findPortalsInRange(roomName: string, range: number): { [roomName: string]: SavedPortal[] } {
+		// TODO won't take into account intershard CROSSROAD rooms for simplicity sake, fix later
+		const potentialPortalRooms = Cartographer.findRoomsInRange(roomName, range)
+												 .filter(roomName => Cartographer.roomType(roomName) == ROOMTYPE_CORE);
+		// Examine for portals
+		const portalRooms = potentialPortalRooms.filter(roomName => Memory.rooms[roomName]
+																	&& !!Memory.rooms[roomName][_RM.PORTALS]);
+		const rooms: { [name: string]: SavedPortal[]; } = {};
+		for (const roomName of portalRooms) {
+			const roomPortals = Memory.rooms[roomName][_RM.PORTALS]; // to prevent TS errors
+			if (roomPortals != undefined && roomPortals.length > 0) {
+				rooms[roomName] = roomPortals;
+			}
+		}
+		return rooms;
+	}
+
 	static requestZoneData() {
 		const checkOnTick = 123;
 		if (Game.time % 1000 == checkOnTick - 2) {

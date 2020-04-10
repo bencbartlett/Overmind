@@ -1,8 +1,8 @@
 import {Colony, ColonyMemory, getAllColonies} from '../Colony';
 import {Directive} from '../directives/Directive';
+import {RoomIntel} from '../intel/RoomIntel';
 import {Overlord} from '../overlords/Overlord';
 import {EmpireAnalysis} from '../utilities/EmpireAnalysis';
-import {PortalUtils} from '../utilities/PortalUtils';
 import {alignedNewline, bullet} from '../utilities/stringConstants';
 import {color, printRoomName, toColumns} from '../utilities/utils';
 import {asciiLogoRL, asciiLogoSmall} from '../visuals/logos';
@@ -53,7 +53,7 @@ export class OvermindConsole {
 		global.cancelMarketOrders = this.cancelMarketOrders;
 		global.setRoomUpgradeRate = this.setRoomUpgradeRate;
 		global.getEmpireMineralDistribution = this.getEmpireMineralDistribution;
-		global.getPortals = this.getPortals;
+		global.listPortals = this.listPortals;
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -489,18 +489,19 @@ export class OvermindConsole {
 		return ret;
 	}
 
-	static getPortals(rangeFromColonies: number, includeIntershard: boolean = false) {
+	static listPortals(rangeFromColonies: number = 5, includeIntershard: boolean = false): string {
 		const colonies = getAllColonies();
-		const allPortals = colonies.map(colony => PortalUtils.findPortalsInRange(colony.name, rangeFromColonies));
+		const allPortals = colonies.map(colony => RoomIntel.findPortalsInRange(colony.name, rangeFromColonies));
 		let ret = `Empire Portal Census \n`;
 		for (const colonyId in allPortals) {
 			const portals = allPortals[colonyId];
-			if (Object.keys(portals).length > 0) {
+			if (_.keys(portals).length > 0) {
 				ret += `Colony ${colonies[colonyId].print}: \n`;
 			}
-			for (const portalRoomName of Object.keys(portals)) {
-				const samplePortal = portals[portalRoomName][0]; // For now we're tracking all 8 portals, this unclutters it
-				ret += `\t\t Room ${printRoomName(portalRoomName)} Destination ${samplePortal.dest} Expiration ${samplePortal[_MEM.EXPIRATION] - Game.time}] \n`;
+			for (const portalRoomName of _.keys(portals)) {
+				const samplePortal = _.first(portals[portalRoomName]); // don't need to list all 8 in a room
+				ret += `\t\t Room ${printRoomName(portalRoomName)} Destination ${samplePortal.dest} ` +
+					   `Expiration ${samplePortal[_MEM.EXPIRATION] - Game.time}] \n`;
 			}
 		}
 		return ret;
