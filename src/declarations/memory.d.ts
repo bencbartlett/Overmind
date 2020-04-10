@@ -20,6 +20,7 @@ interface Memory {
 	overseer: any;
 	segmenter: any;
 	strategist?: any;
+	roomIntel: any;
 	colonies: { [name: string]: any };
 	creeps: { [name: string]: CreepMemory; };
 	flags: { [name: string]: FlagMemory; };
@@ -282,9 +283,9 @@ interface RoomMemory {
 	[RMEM.AVOID]?: boolean;
 	[RMEM.ROOM_STATUS]?: RoomStatusCompressed;
 	[RMEM.SOURCES]?: SavedSource[];
-	[RMEM.CONTROLLER]?: SavedController | undefined;
+	[RMEM.CONTROLLER]?: SavedController;
 	[RMEM.PORTALS]?: SavedPortal[];
-	[RMEM.MINERAL]?: SavedMineral | undefined;
+	[RMEM.MINERAL]?: SavedMineral;
 	[RMEM.SKLAIRS]?: SavedRoomObject[];
 	[RMEM.IMPORTANT_STRUCTURES]?: {
 		// Positions of important structures relevant to sieges
@@ -294,7 +295,7 @@ interface RoomMemory {
 		[RMEM_STRUCTS.TERMINAL]: string | undefined;
 		[RMEM_STRUCTS.WALLS]: string[];
 		[RMEM_STRUCTS.RAMPARTS]: string[];
-	} | undefined;
+	};
 	[RMEM.EXPANSION_DATA]?: ExpansionData | false;
 	[RMEM.INVASION_DATA]?: {
 		[RMEM_INVASION.HARVESTED]: number;

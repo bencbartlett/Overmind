@@ -1,11 +1,12 @@
 // Room intel - provides information related to room structure and occupation
 
+import {Colony} from '../Colony';
 import {log} from '../console/log';
 import {Segmenter} from '../memory/Segmenter';
 import {profile} from '../profiler/decorator';
 import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
-import {Cartographer, ROOMTYPE_CORE, ROOMTYPE_CROSSROAD} from '../utilities/Cartographer';
-import {getCacheExpiration, irregularExponentialMovingAverage} from '../utilities/utils';
+import {Cartographer, ROOMTYPE_CORE} from '../utilities/Cartographer';
+import {derefCoords, getCacheExpiration, getPosFromString, irregularExponentialMovingAverage} from '../utilities/utils';
 import {Zerg} from '../zerg/Zerg';
 
 const RECACHE_TIME = 2500;
@@ -14,10 +15,55 @@ const ROOM_CREEP_HISTORY_TICKS = 25;
 const SCORE_RECALC_PROB = 0.05;
 const FALSE_SCORE_RECALC_PROB = 0.01;
 
-const RoomIntelMemoryDefaults = {};
+
+export interface PortalInfo {
+	pos: RoomPosition;
+	destination: RoomPosition;
+	expiration: number | undefined;
+}
+
+export interface PortalInfoInterShard {
+	pos: RoomPosition;
+	destination: { shard: string; room: string };
+	expiration: number | undefined;
+}
+
+interface RoomIntelMemory {
+	portalRooms: {
+		[roomName: string]:
+			{ c: string, dest: string | { shard: string; room: string }, [MEM.EXPIRATION]: number | undefined }[]
+	};
+}
+
+const defaultRoomIntelMemory: RoomIntelMemory = {
+	portalRooms: {},
+};
 
 @profile
 export class RoomIntel {
+
+	constructor() {
+		_.defaultsDeep(Memory.roomIntel, defaultRoomIntelMemory);
+	}
+
+	// Making this a static getter prevents us from having to call Overmind.roomIntel.whatever() all the time
+	static get memory(): RoomIntelMemory {
+		return Memory.roomIntel;
+	}
+
+	private static cleanMemory(): void {
+		// // Clean out memory of inactive portals // this actually gets done automatically with recordPermanentObjects
+		// for (const portalRoomName in this.memory.portalRooms) {
+		// 	const portals = this.memory.portalRooms[portalRoomName];
+		// 	if (portals) {
+		// 		for (const portal of portals) {
+		// 			if (portal[MEM.EXPIRATION]) {
+		// 				// TODO
+		// 			}
+		// 		}
+		// 	}
+		// }
+	}
 
 	/**
 	 * Mark a room as being visible this tick
@@ -41,44 +87,60 @@ export class RoomIntel {
 	 * Records all info for permanent room objects, e.g. sources, controllers, etc.
 	 */
 	private static recordPermanentObjects(room: Room): void {
-		const savedSources: SavedSource[] = [];
-		for (const source of room.sources) {
-			const container = source.pos.findClosestByLimitedRange(room.containers, 2);
-			savedSources.push({
-								  c     : source.pos.coordName,
-								  contnr: container ? container.pos.coordName : undefined
-							  });
+		room.memory[MEM.TICK] = Game.time;
+		if (room.sources.length > 0) {
+			const savedSources: SavedSource[] = [];
+			for (const source of room.sources) {
+				const container = source.pos.findClosestByLimitedRange(room.containers, 2);
+				savedSources.push({
+									  c     : source.pos.coordName,
+									  contnr: container ? container.pos.coordName : undefined
+								  });
+			}
+			room.memory[RMEM.SOURCES] = savedSources;
+		} else {
+			delete room.memory[RMEM.SOURCES];
 		}
-		room.memory[RMEM.SOURCES] = savedSources;
-		room.memory[RMEM.CONTROLLER] = room.controller ? {
-			c                             : room.controller.pos.coordName,
-			[RMEM_CTRL.LEVEL]             : room.controller.level,
-			[RMEM_CTRL.OWNER]             : room.controller.owner ? room.controller.owner.username : undefined,
-			[RMEM_CTRL.RESERVATION]       : room.controller.reservation ?
-											{
-												[RMEM_CTRL.RES_USERNAME]  : room.controller.reservation.username,
-												[RMEM_CTRL.RES_TICKSTOEND]: room.controller.reservation.ticksToEnd,
-											} : undefined,
-			[RMEM_CTRL.SAFEMODE]          : room.controller.safeMode,
-			[RMEM_CTRL.SAFEMODE_AVAILABLE]: room.controller.safeModeAvailable,
-			[RMEM_CTRL.SAFEMODE_COOLDOWN] : room.controller.safeModeCooldown,
-			[RMEM_CTRL.PROGRESS]          : room.controller.progress,
-			[RMEM_CTRL.PROGRESS_TOTAL]    : room.controller.progressTotal
-		} : undefined;
-		room.memory[RMEM.MINERAL] = room.mineral ? {
-			c                      : room.mineral.pos.coordName,
-			[RMEM_MNRL.DENSITY]    : room.mineral.density,
-			[RMEM_MNRL.MINERALTYPE]: room.mineral.mineralType
-		} : undefined;
-		room.memory[RMEM.SKLAIRS] = _.map(room.keeperLairs, lair => {
-			return {c: lair.pos.coordName};
-		});
-		room.memory[RMEM.PORTALS] = _.map(room.portals, portal => {
-			const dest = portal.destination instanceof RoomPosition ? portal.destination.name
-																	: portal.destination;
-			const expiration = portal.ticksToDecay != undefined ? Game.time + portal.ticksToDecay : Game.time + 1e6;
-			return {c: portal.pos.coordName, dest: dest, [MEM.EXPIRATION]: expiration};
-		});
+		if (room.controller) {
+			room.memory[RMEM.CONTROLLER] = {
+				c                             : room.controller.pos.coordName,
+				[RMEM_CTRL.LEVEL]             : room.controller.level,
+				[RMEM_CTRL.OWNER]             : room.controller.owner ? room.controller.owner.username : undefined,
+				[RMEM_CTRL.RESERVATION]       : room.controller.reservation ?
+												{
+													[RMEM_CTRL.RES_USERNAME]  : room.controller.reservation.username,
+													[RMEM_CTRL.RES_TICKSTOEND]: room.controller.reservation.ticksToEnd,
+												} : undefined,
+				[RMEM_CTRL.SAFEMODE]          : room.controller.safeMode,
+				[RMEM_CTRL.SAFEMODE_AVAILABLE]: room.controller.safeModeAvailable,
+				[RMEM_CTRL.SAFEMODE_COOLDOWN] : room.controller.safeModeCooldown,
+				[RMEM_CTRL.PROGRESS]          : room.controller.progress,
+				[RMEM_CTRL.PROGRESS_TOTAL]    : room.controller.progressTotal
+			};
+		} else {
+			delete room.memory[RMEM.CONTROLLER];
+		}
+		if (room.mineral) {
+			room.memory[RMEM.MINERAL] = {
+				c                      : room.mineral.pos.coordName,
+				[RMEM_MNRL.DENSITY]    : room.mineral.density,
+				[RMEM_MNRL.MINERALTYPE]: room.mineral.mineralType
+			};
+		} else {
+			delete room.memory[RMEM.MINERAL];
+		}
+		if (room.keeperLairs.length > 0) {
+			room.memory[RMEM.SKLAIRS] = _.map(room.keeperLairs, lair => {
+				return {c: lair.pos.coordName};
+			});
+		} else {
+			delete room.memory[RMEM.SKLAIRS];
+		}
+		this.recordOwnedRoomStructures(room);
+		this.recordPortalInfo(room);
+	}
+
+	private static recordOwnedRoomStructures(room: Room) {
 		if (room.controller && room.controller.owner) {
 			room.memory[RMEM.IMPORTANT_STRUCTURES] = {
 				[RMEM_STRUCTS.TOWERS]  : _.map(room.towers, t => t.pos.coordName),
@@ -89,9 +151,33 @@ export class RoomIntel {
 				[RMEM_STRUCTS.RAMPARTS]: _.map(room.ramparts, r => r.pos.coordName),
 			};
 		} else {
-			room.memory[RMEM.IMPORTANT_STRUCTURES] = undefined;
+			delete room.memory[RMEM.IMPORTANT_STRUCTURES];
 		}
-		room.memory[MEM.TICK] = Game.time;
+	}
+
+	private static recordPortalInfo(room: Room) {
+		if (room.portals.length > 0) {
+			room.memory[RMEM.PORTALS] = _.map(room.portals, portal => {
+				const dest = portal.destination instanceof RoomPosition ? portal.destination.name
+																		: portal.destination;
+				const expiration = portal.ticksToDecay != undefined ? Game.time + portal.ticksToDecay : Game.time + 1e6;
+				return {c: portal.pos.coordName, dest: dest, [MEM.EXPIRATION]: expiration};
+			});
+			const uniquePortals = _.unique(room.portals, portal =>
+				portal.destination instanceof RoomPosition ? portal.destination.name
+														   : portal.destination);
+			this.memory.portalRooms[room.name] = _.map(uniquePortals, portal => {
+				return {
+					c               : portal.pos.coordName,
+					dest            : portal.destination instanceof RoomPosition ? portal.destination.name
+																				 : portal.destination,
+					[MEM.EXPIRATION]: portal.ticksToDecay,
+				};
+			});
+		} else {
+			delete room.memory[RMEM.PORTALS];
+			delete this.memory.portalRooms[room.name];
+		}
 	}
 
 	/**
@@ -353,19 +439,29 @@ export class RoomIntel {
 		return 0;
 	}
 
-	private static scoutPortals(room: Room) {
-		if (Cartographer.roomType(room.name) == ROOMTYPE_CROSSROAD || Cartographer.roomType(room.name) == ROOMTYPE_CORE) {
-			if (room.portals) {
-				// Store the portals
-			}
+	/**
+	 * Returns information about intra-shard portals in a given room
+	 */
+	static getPortalInfo(roomName: string): PortalInfo[] {
+		if (!Memory.rooms[roomName] || !Memory.rooms[roomName][RMEM.PORTALS]) {
+			return [];
 		}
+		const localPortals = _.filter(Memory.rooms[roomName][RMEM.PORTALS]!,
+									  savedPortal => typeof savedPortal.dest == 'string');
+		return _.map(localPortals, savedPortal => {
+			const pos = derefCoords(savedPortal.c, roomName);
+			const destinationPos = getPosFromString(<string>savedPortal.dest)!;
+			const expiration = savedPortal[MEM.EXPIRATION];
+			return {pos: pos, destination: destinationPos, expiration: expiration};
+		});
 	}
 
 	/**
 	 * Returns the portals that are within a specified range of a colony indexed by their room
 	 */
-	static findPortalsInRange(roomName: string, range: number): { [roomName: string]: SavedPortal[] } {
-		// TODO won't take into account intershard CROSSROAD rooms for simplicity sake, fix later
+	static findPortalsInRange(roomName: string, range: number,
+							  includeIntershard = false): { [roomName: string]: SavedPortal[] } {
+
 		const potentialPortalRooms = Cartographer.findRoomsInRange(roomName, range)
 												 .filter(roomName => Cartographer.roomType(roomName) == ROOMTYPE_CORE);
 		// Examine for portals
@@ -438,13 +534,21 @@ export class RoomIntel {
 		}
 	}
 
+	/**
+	 * Returns the type of zone that your empire is in
+	 */
+	static getMyZoneStatus(): 'normal' | 'novice' | 'respawn' {
+		const oneOfMyColonies = _.first(_.values(Overmind.colonies)) as Colony;
+		return RoomIntel.getRoomStatus(oneOfMyColonies.name).status as 'normal' | 'novice' | 'respawn';
+	}
+
 	static run(): void {
 
 		let alreadyComputedScore = false;
 
-		for (const name in Game.rooms) {
+		for (const roomName in Game.rooms) {
 
-			const room: Room = Game.rooms[name];
+			const room: Room = Game.rooms[roomName];
 
 			this.markVisible(room);
 			this.recordSafety(room);
@@ -463,7 +567,7 @@ export class RoomIntel {
 			}
 
 			// Record location of permanent objects in room and recompute score as needed
-			if (Game.time >= (room.memory[MEM.EXPIRATION] || 0) && Cartographer.roomType(name) != 'ALLEY') {
+			if (Game.time >= (room.memory[MEM.EXPIRATION] || 0)) {
 				this.recordPermanentObjects(room);
 				if (!alreadyComputedScore) {
 					alreadyComputedScore = this.recomputeScoreIfNecessary(room);
@@ -477,7 +581,10 @@ export class RoomIntel {
 				this.recordControllerInfo(room.controller);
 			}
 
-			this.scoutPortals(room);
+		}
+
+		if (Game.time % 20 == 0) {
+			this.cleanMemory();
 		}
 
 	}
