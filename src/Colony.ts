@@ -581,23 +581,6 @@ export class Colony {
 		return allAssets;
 	}
 
-	private runPowerSpawn() {
-		if (this.powerSpawn && this.storage && this.assets.energy > 300000 && this.powerSpawn.energy > 50
-			&& this.powerSpawn.power > 0) {
-			if (Game.market.credits < TraderJoe.settings.market.credits.canBuyAbove) {
-				// We need to get enough credits that we can start to buy things. Since mineral prices have plunged
-				// recently, often the only way to do this without net losing credits (after factoring in the
-				// energy -> credits of transaction costs) is to sell excess energy. Power processing eats up a
-				// huge amount of energy, so we're going to disable it below a certain threshold.
-				return;
-			}
-			if (Game.time % 20 == 0) {
-				log.info(`Processing power in ${this.room.print}`);
-			}
-			this.powerSpawn.processPower();
-		}
-	}
-
 	/**
 	 * Initializes the state of the colony each tick
 	 */
@@ -619,7 +602,6 @@ export class Colony {
 		this.linkNetwork.run();												// Run the link network
 		this.roadLogistics.run();											// Run the road network
 		this.roomPlanner.run();												// Run the room planner
-		this.runPowerSpawn();												// Run power spawn - short term
 		this.stats();														// Log stats per tick
 	}
 
