@@ -52,7 +52,7 @@ function getTerminalThresholds(resource: ResourceConstant): { target: number, to
 		thresholds = TERMINAL_THRESHOLDS.ops;
 	} else if (Abathur.isBaseMineral(resource)) {
 		thresholds = TERMINAL_THRESHOLDS.baseMinerals;
-	} else if (Abathur.isIntermediateReactant(resource)) {
+	} else if (Abathur.isIntermediateReactant(resource) || resource == RESOURCE_GHODIUM) {
 		thresholds = TERMINAL_THRESHOLDS.intermediateReactants;
 	} else if (Abathur.isBoost(resource)) {
 		thresholds = TERMINAL_THRESHOLDS.boosts;
