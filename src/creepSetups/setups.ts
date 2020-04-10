@@ -205,7 +205,10 @@ export const Setups = {
 			sizeLimit: 5,
 		}),
 
-		rcl8_boosted: CreepSetup.boosted(this.upgraders.rcl8, ['upgrade']),
+		rcl8_boosted: new CreepSetup(Roles.upgrader, {
+			pattern  : [WORK, WORK, WORK, CARRY, MOVE],
+			sizeLimit: 5,
+		}, ['upgrade']),
 
 	},
 

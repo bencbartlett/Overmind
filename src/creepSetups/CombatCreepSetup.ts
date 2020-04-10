@@ -198,7 +198,7 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 		opts.maxParts.tough = opts.maxParts.tough || DEFAULT_MAX_PARTS_MELEE.tough;
 		opts.maxParts.heal = opts.maxParts.heal || DEFAULT_MAX_PARTS_MELEE.heal;
 
-		const availableBoosts = this.getBestBoostsAvailable(colony, opts);
+		const availableBoosts = CombatCreepSetup.getBestBoostsAvailable(colony, opts);
 
 		if (!availableBoosts.tough) { // no point in adding tough parts if they can't be boosted
 			opts.bodyRatio.tough = 0;
@@ -233,11 +233,11 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 				bodyCounts.move++;
 				cost += BODYPART_COST[MOVE];
 			} else if (bodyCounts.tough < opts.maxParts.tough &&
-					   bodyCounts.tough * opts.bodyRatio.tough < bodyCounts.attack * opts.bodyRatio.attack) {
+					   bodyCounts.tough / bodyCounts.attack < opts.bodyRatio.tough / opts.bodyRatio.attack) {
 				bodyCounts.tough++;
 				cost += BODYPART_COST[TOUGH];
 			} else if (bodyCounts.heal < opts.maxParts.heal &&
-					   bodyCounts.heal * opts.bodyRatio.heal < bodyCounts.attack * opts.bodyRatio.attack) {
+					   bodyCounts.heal / bodyCounts.attack < opts.bodyRatio.heal / opts.bodyRatio.attack) {
 				bodyCounts.heal++;
 				cost += BODYPART_COST[HEAL];
 			} else {
@@ -246,7 +246,7 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 			}
 		}
 
-		const body = this.arrangeBodyParts(bodyCounts, opts);
+		const body = CombatCreepSetup.arrangeBodyParts(bodyCounts, opts);
 		const boosts = _.compact(_.values(availableBoosts)) as ResourceConstant[];
 		return {body: body, boosts: boosts};
 
@@ -279,7 +279,7 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 		opts.maxParts.tough = opts.maxParts.tough || DEFAULT_MAX_PARTS_RANGED.tough;
 		opts.maxParts.heal = opts.maxParts.heal || DEFAULT_MAX_PARTS_RANGED.heal;
 
-		const availableBoosts = this.getBestBoostsAvailable(colony, opts);
+		const availableBoosts = CombatCreepSetup.getBestBoostsAvailable(colony, opts);
 
 		if (!availableBoosts.tough) { // no point in adding tough parts if they can't be boosted
 			opts.bodyRatio.tough = 0;
@@ -314,11 +314,11 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 				bodyCounts.move++;
 				cost += BODYPART_COST[MOVE];
 			} else if (bodyCounts.tough < opts.maxParts.tough &&
-					   bodyCounts.tough * opts.bodyRatio.tough < bodyCounts.ranged * opts.bodyRatio.ranged) {
+					   bodyCounts.tough / bodyCounts.ranged < opts.bodyRatio.tough / opts.bodyRatio.ranged) {
 				bodyCounts.tough++;
 				cost += BODYPART_COST[TOUGH];
 			} else if (bodyCounts.heal < opts.maxParts.heal &&
-					   bodyCounts.heal * opts.bodyRatio.heal < bodyCounts.ranged * opts.bodyRatio.ranged) {
+					   bodyCounts.heal / bodyCounts.ranged < opts.bodyRatio.heal / opts.bodyRatio.ranged) {
 				bodyCounts.heal++;
 				cost += BODYPART_COST[HEAL];
 			} else {
@@ -327,7 +327,7 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 			}
 		}
 
-		const body = this.arrangeBodyParts(bodyCounts, opts);
+		const body = CombatCreepSetup.arrangeBodyParts(bodyCounts, opts);
 		const boosts = _.compact(_.values(availableBoosts)) as ResourceConstant[];
 		return {body: body, boosts: boosts};
 
@@ -360,7 +360,7 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 		opts.maxParts.ranged = opts.maxParts.ranged || DEFAULT_MAX_PARTS_HEAL.ranged;
 		opts.maxParts.tough = opts.maxParts.tough || DEFAULT_MAX_PARTS_HEAL.tough;
 
-		const availableBoosts = this.getBestBoostsAvailable(colony, opts);
+		const availableBoosts = CombatCreepSetup.getBestBoostsAvailable(colony, opts);
 
 		if (!availableBoosts.tough) { // no point in adding tough parts if they can't be boosted
 			opts.bodyRatio.tough = 0;
@@ -395,11 +395,11 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 				bodyCounts.move++;
 				cost += BODYPART_COST[MOVE];
 			} else if (bodyCounts.tough < opts.maxParts.tough &&
-					   bodyCounts.tough * opts.bodyRatio.tough < bodyCounts.heal * opts.bodyRatio.heal) {
+					   bodyCounts.tough / bodyCounts.heal < opts.bodyRatio.tough / opts.bodyRatio.heal) {
 				bodyCounts.tough++;
 				cost += BODYPART_COST[TOUGH];
 			} else if (bodyCounts.ranged < opts.maxParts.ranged &&
-					   bodyCounts.ranged * opts.bodyRatio.ranged < bodyCounts.heal * opts.bodyRatio.heal) {
+					   bodyCounts.ranged / bodyCounts.heal < opts.bodyRatio.ranged / opts.bodyRatio.heal) {
 				bodyCounts.ranged++;
 				cost += BODYPART_COST[RANGED_ATTACK];
 			} else {
@@ -408,7 +408,7 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 			}
 		}
 
-		const body = this.arrangeBodyParts(bodyCounts, opts);
+		const body = CombatCreepSetup.arrangeBodyParts(bodyCounts, opts);
 		const boosts = _.compact(_.values(availableBoosts)) as ResourceConstant[];
 		return {body: body, boosts: boosts};
 
@@ -438,7 +438,7 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 		opts.maxParts.tough = opts.maxParts.tough || DEFAULT_MAX_PARTS_DISMANTLER.tough;
 		opts.maxParts.heal = opts.maxParts.heal || DEFAULT_MAX_PARTS_DISMANTLER.heal;
 
-		const availableBoosts = this.getBestBoostsAvailable(colony, opts);
+		const availableBoosts = CombatCreepSetup.getBestBoostsAvailable(colony, opts);
 
 		if (!availableBoosts.tough) { // no point in adding tough parts if they can't be boosted
 			opts.bodyRatio.tough = 0;
@@ -478,15 +478,15 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 				bodyCounts.move++;
 				cost += BODYPART_COST[MOVE];
 			} else if (bodyCounts.tough < opts.maxParts.tough &&
-					   bodyCounts.tough * opts.bodyRatio.tough < bodyCounts.work * opts.bodyRatio.work) {
+					   bodyCounts.tough / bodyCounts.work < opts.bodyRatio.tough / opts.bodyRatio.work) {
 				bodyCounts.tough++;
 				cost += BODYPART_COST[TOUGH];
 			} else if (bodyCounts.ranged < opts.maxParts.ranged &&
-					   bodyCounts.ranged * opts.bodyRatio.ranged < bodyCounts.work * opts.bodyRatio.work) {
+					   bodyCounts.ranged / bodyCounts.work < opts.bodyRatio.ranged / opts.bodyRatio.work) {
 				bodyCounts.ranged++;
 				cost += BODYPART_COST[RANGED_ATTACK];
 			} else if (bodyCounts.heal < opts.maxParts.heal &&
-					   bodyCounts.heal * opts.bodyRatio.heal < bodyCounts.work * opts.bodyRatio.work) {
+					   bodyCounts.heal / bodyCounts.work < opts.bodyRatio.heal / opts.bodyRatio.work) {
 				bodyCounts.heal++;
 				cost += BODYPART_COST[HEAL];
 			} else {
@@ -495,7 +495,7 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 			}
 		}
 
-		const body = this.arrangeBodyParts(bodyCounts, opts);
+		const body = CombatCreepSetup.arrangeBodyParts(bodyCounts, opts);
 		const boosts = _.compact(_.values(availableBoosts)) as ResourceConstant[];
 		return {body: body, boosts: boosts};
 
@@ -518,7 +518,7 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 			boosts            : opts.boosted ? ['attack', 'tough', 'heal', 'move'] : [],
 		};
 		const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, zerglingBodyOpts);
-		return this.generateMeleeAttackerBody(colony, bodyOpts);
+		return CombatCreepSetup.generateMeleeAttackerBody(colony, bodyOpts);
 	}
 
 	/**
@@ -538,7 +538,7 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 			boosts            : opts.boosted ? ['ranged', 'tough', 'heal', 'move'] : [],
 		};
 		const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, hydraliskBodyOpts);
-		return this.generateRangedAttackerBody(colony, bodyOpts);
+		return CombatCreepSetup.generateRangedAttackerBody(colony, bodyOpts);
 	}
 
 	/**
@@ -558,7 +558,7 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 			boosts            : opts.boosted ? ['ranged', 'tough', 'heal', 'move'] : [],
 		};
 		const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, healerBodyOpts);
-		return this.generateHealerBody(colony, bodyOpts);
+		return CombatCreepSetup.generateHealerBody(colony, bodyOpts);
 	}
 
 	/**
@@ -579,7 +579,7 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 			boosts            : opts.boosted ? ['dismantle', 'ranged', 'tough', 'heal', 'move'] : [],
 		};
 		const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, lurkerBodyOptions);
-		return this.generateDismantlerBody(colony, bodyOpts);
+		return CombatCreepSetup.generateDismantlerBody(colony, bodyOpts);
 	}
 
 }

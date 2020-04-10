@@ -25,7 +25,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		this.healers = this.combatZerg(Roles.healer);
 	}
 
-	private handleCombat(zerg: CombatZerg): void {
+	private handleCombat(zerg: CombatZerg) {
 		if (this.room && this.room.hostiles.length == 0) {
 			zerg.doMedicActions(this.room.name);
 		} else {
@@ -33,12 +33,12 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		}
 	}
 
-	private handleHealer(healer: CombatZerg): void {
+	private handleHealer(healer: CombatZerg) {
 		if (CombatIntel.isHealer(healer) && healer.getActiveBodyparts(HEAL) == 0) {
 			if (this.colony.towers.length > 0) {
-				healer.goToRoom(this.colony.room.name); // go get healed
+				return healer.goToRoom(this.colony.room.name); // go get healed
 			} else {
-				healer.suicide(); // you're useless at this point // TODO: this isn't smart
+				return healer.suicide(); // you're useless at this point // TODO: this isn't smart
 			}
 		} else {
 			if (this.room && _.any([...this.zerglings, ...this.hydralisks], creep => creep.room == this.room)) {

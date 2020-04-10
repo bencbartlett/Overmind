@@ -152,7 +152,7 @@ export class Hatchery extends HiveCluster {
 						   this.spawns.length;
 
 			// Add in expected time for whatever else needs to be spawned, cumulative up to each priority
-			for (const priority of this.productionPriorities.sort()) {
+			for (const priority of _.sortBy(this.productionPriorities)) {
 				for (const request of this.productionQueue[priority]) {
 					const {body, boosts} = request.setup.create(this.colony, true); // use cached setup as estimate
 					waitTime += CREEP_SPAWN_TIME * body.length / this.spawns.length;
@@ -164,17 +164,18 @@ export class Hatchery extends HiveCluster {
 		if (this._waitTimes[priority] != undefined) {
 			return this._waitTimes[priority];
 		}
-		const priorities = this.productionPriorities.sort();
+		const priorities = _.sortBy(this.productionPriorities);
 		if (priorities.length == 0) {
 			return 0;
 		}
 		if (priority < _.first(priorities)) {
 			return 0;
 		}
-		const priorityIndex = _.sortedIndex(priorities, priority);
+		// each slot represents time to spawn all of priority, so slot-1 puts you at the beginning of this new priority
+		const priorityIndex = _.sortedIndex(priorities, priority) - 1;
 		const waitTime = this._waitTimes[priorities[priorityIndex]];
 		if (waitTime == undefined) {
-			log.error(`Undefined wait time in wait times: ${this._waitTimes}!`);
+			log.error(`${this.print}: Undefined wait time in wait times: ${this._waitTimes}!`);
 			return 0;
 		}
 		return waitTime;
