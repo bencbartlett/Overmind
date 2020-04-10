@@ -208,6 +208,7 @@ declare const enum RMEM {
 	CREEPS_IN_ROOM       = 'cr',
 	IMPORTANT_STRUCTURES = 'i',
 	PORTALS              = 'pr',
+	ROOM_STATUS          = 'rs',
 }
 
 declare const enum RMEM_STRUCTS {
@@ -250,6 +251,15 @@ declare const enum MEM_AVGS {
 	AVG1M   = 'M',
 }
 
+declare const enum RMEM_ROOM_STATUS {
+	normal  = 'nm',
+	closed  = 'cl',
+	novice  = 'nv',
+	respawn = 're'
+}
+
+type RoomStatusCompressed = [RMEM_ROOM_STATUS, number];
+
 
 interface RollingStats {
 	[MEM_AVGS.AMOUNT]: number;
@@ -270,6 +280,7 @@ interface RoomMemory {
 	[MEM.EXPIRATION]?: number;
 	[MEM.TICK]?: number;
 	[RMEM.AVOID]?: boolean;
+	[RMEM.ROOM_STATUS]?: RoomStatusCompressed;
 	[RMEM.SOURCES]?: SavedSource[];
 	[RMEM.CONTROLLER]?: SavedController | undefined;
 	[RMEM.PORTALS]?: SavedPortal[];

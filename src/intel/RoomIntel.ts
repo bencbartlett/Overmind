@@ -56,9 +56,9 @@ export class RoomIntel {
 			[RMEM_CTRL.OWNER]             : room.controller.owner ? room.controller.owner.username : undefined,
 			[RMEM_CTRL.RESERVATION]       : room.controller.reservation ?
 											{
-											   [RMEM_CTRL.RES_USERNAME]  : room.controller.reservation.username,
-											   [RMEM_CTRL.RES_TICKSTOEND]: room.controller.reservation.ticksToEnd,
-										   } : undefined,
+												[RMEM_CTRL.RES_USERNAME]  : room.controller.reservation.username,
+												[RMEM_CTRL.RES_TICKSTOEND]: room.controller.reservation.ticksToEnd,
+											} : undefined,
 			[RMEM_CTRL.SAFEMODE]          : room.controller.safeMode,
 			[RMEM_CTRL.SAFEMODE_AVAILABLE]: room.controller.safeModeAvailable,
 			[RMEM_CTRL.SAFEMODE_COOLDOWN] : room.controller.safeModeCooldown,
@@ -394,7 +394,50 @@ export class RoomIntel {
 			}
 		}
 	}
-  
+
+	/**
+	 * Cached version of Game.map.getRoomStatus() which retrieves compressed status data and converts to RoomStatus
+	 */
+	static getRoomStatus(roomName: string): RoomStatus {
+		Memory.rooms[roomName] = Memory.rooms[roomName] || {};
+		// Recalculate if you haven't seen this room before or if the timestamp is expired
+		if (!Memory.rooms[roomName][RMEM.ROOM_STATUS] ||
+			new Date().getTime() > new Date(Memory.rooms[roomName][RMEM.ROOM_STATUS]![1] * 1000).getTime()) {
+			let {status, timestamp} = Game.map.getRoomStatus(roomName);
+			if (timestamp == null) { // null timestamp means indefinite, but not really; let's recheck in a few days
+				const extraMilliseconds = 3 * 24 * 60 * 60 * 1000; // check again in 3 days
+				timestamp = new Date().getTime() + extraMilliseconds;
+			}
+			timestamp = Math.floor(timestamp / 1000); // don't need milliseconds; seconds will do
+			switch (status) {
+				case 'normal':
+					Memory.rooms[roomName][RMEM.ROOM_STATUS] = [RMEM_ROOM_STATUS.normal, timestamp];
+					break;
+				case 'closed':
+					Memory.rooms[roomName][RMEM.ROOM_STATUS] = [RMEM_ROOM_STATUS.closed, timestamp];
+					break;
+				case 'novice':
+					Memory.rooms[roomName][RMEM.ROOM_STATUS] = [RMEM_ROOM_STATUS.novice, timestamp];
+					break;
+				case 'respawn':
+					Memory.rooms[roomName][RMEM.ROOM_STATUS] = [RMEM_ROOM_STATUS.respawn, timestamp];
+					break;
+			}
+		}
+		const [statusCompressed, timestampCompressed] = Memory.rooms[roomName][RMEM.ROOM_STATUS]!;
+		const timestamp = timestampCompressed * 1000;
+		switch (statusCompressed) {
+			case RMEM_ROOM_STATUS.normal:
+				return {status: 'normal', timestamp: null};
+			case RMEM_ROOM_STATUS.closed:
+				return {status: 'closed', timestamp: null};
+			case RMEM_ROOM_STATUS.novice:
+				return {status: 'novice', timestamp: timestamp};
+			case RMEM_ROOM_STATUS.respawn:
+				return {status: 'respawn', timestamp: timestamp};
+		}
+	}
+
 	static run(): void {
 
 		let alreadyComputedScore = false;
