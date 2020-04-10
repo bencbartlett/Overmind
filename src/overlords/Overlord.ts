@@ -1,5 +1,6 @@
 import {Colony} from '../Colony';
 import {log} from '../console/log';
+import {CombatCreepSetup} from '../creepSetups/CombatCreepSetup';
 import {CreepSetup} from '../creepSetups/CreepSetup';
 import {SpawnRequest, SpawnRequestOptions} from '../hiveClusters/hatchery';
 import {SpawnGroup} from '../logistics/SpawnGroup';
@@ -33,7 +34,7 @@ export interface CreepRequestOptions {
 	noLifetimeFilter?: boolean;
 	prespawn?: number;
 	priority?: number;
-	partners?: CreepSetup[];
+	partners?: (CreepSetup | CombatCreepSetup)[];
 	options?: SpawnRequestOptions;
 }
 
@@ -334,13 +335,21 @@ export abstract class Overlord {
 		return _.findIndex(this.colony.roomNames, roomName => roomName == this.pos.roomName);
 	}
 
-	protected reassignIdleCreeps(role: string): void {
+	// TODO: make this potentially colony independent
+	protected reassignIdleCreeps(role: string, maxPerTick=1): boolean {
 		// Find all creeps without an overlord
 		const idleCreeps = _.filter(this.colony.getCreepsByRole(role), creep => !getOverlord(creep));
 		// Reassign them all to this flag
+		let reassigned = 0;
 		for (const creep of idleCreeps) {
+			// TODO: check range of creep from overlord
 			setOverlord(creep, this);
+			reassigned++
+			if (reassigned >= maxPerTick) {
+				break;
+			}
 		}
+		return reassigned > 0;
 	}
 
 	protected creepReport(role: string, currentAmt: number, neededAmt: number) {
@@ -374,7 +383,7 @@ export abstract class Overlord {
 	 * Requests a group of (2-3) creeps from a hatchery to be spawned at the same time. Using this with low-priority
 	 * operations can result in a long time
 	 */
-	protected requestSquad(setups: CreepSetup[], opts = {} as CreepRequestOptions) {
+	protected requestSquad(setups: (CreepSetup | CombatCreepSetup)[], opts = {} as CreepRequestOptions) {
 		log.warning(`Overlord.requestSquad() is not finished yet!`); // TODO: finish
 		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN});
 		const spawner = this.spawnGroup || this.colony.spawnGroup || this.colony.hatchery;
@@ -402,7 +411,7 @@ export abstract class Overlord {
 	/**
 	 * Create a creep setup and enqueue it to the Hatchery; does not include automatic reporting
 	 */
-	protected requestCreep(setup: CreepSetup, opts = {} as CreepRequestOptions) {
+	protected requestCreep(setup: CreepSetup | CombatCreepSetup, opts = {} as CreepRequestOptions) {
 		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN});
 		const spawner = this.spawnGroup || this.colony.spawnGroup || this.colony.hatchery;
 		if (spawner) {
@@ -452,7 +461,7 @@ export abstract class Overlord {
 	/**
 	 * Wishlist of creeps to simplify spawning logic; includes automatic reporting
 	 */
-	protected wishlist(quantity: number, setup: CreepSetup, opts = {} as CreepRequestOptions): void {
+	protected wishlist(quantity: number, setup: CreepSetup | CombatCreepSetup, opts = {} as CreepRequestOptions): void {
 
 		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN, reassignIdle: false});
 
@@ -483,7 +492,7 @@ export abstract class Overlord {
 
 		// A bug in outpostDefenseOverlord caused infinite requests and cost me two botarena rounds before I found it...
 		if (spawnQuantity > MAX_SPAWN_REQUESTS) {
-			log.warning(`Too many requests for ${setup.role}s submitted by ${this.print}! (Check for errors.)`);
+			log.error(`Too many requests for ${setup.role}s submitted by ${this.print}! (Check for errors.)`);
 		} else {
 			for (let i = 0; i < spawnQuantity; i++) {
 				this.requestCreep(setup, opts);

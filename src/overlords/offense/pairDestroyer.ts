@@ -141,13 +141,11 @@ export class PairDestroyerOverlord extends Overlord {
 		}
 
 		const attackerPriority = this.attackers.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
-		const attackerSetup = new CombatCreepSetup(Roles.melee, () =>
-			CombatCreepSetup.createZerglingBody(this.colony, {boosted: true, armored: true}));
+		const attackerSetup = CombatSetups.zerglings.boosted.armored;
 		this.wishlist(amount, attackerSetup, {priority: attackerPriority});
 
 		const healerPriority = this.healers.length < this.attackers.length ? this.priority - 0.1 : this.priority + 0.1;
-		const healerSetup =  new CombatCreepSetup(Roles.healer, () =>
-			CombatCreepSetup.createTransfuserBody(this.colony, {boosted: true, armored: true}));
+		const healerSetup =  CombatSetups.transfusers.boosted.default;
 		this.wishlist(amount, healerSetup, {priority: healerPriority});
 	}
 

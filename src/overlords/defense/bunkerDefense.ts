@@ -44,9 +44,7 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 	init() {
 		this.reassignIdleCreeps(Roles.bunkerDefender);
 
-		const setup = new CombatCreepSetup(Roles.bunkerDefender, () =>
-			CombatCreepSetup.createZerglingBody(this.colony, {moveSpeed: 0.5, boosted: true}));
-		this.wishlist(1, setup);
+		this.wishlist(1, CombatSetups.bunkerDefender.boosted);
 	}
 
 	run() {

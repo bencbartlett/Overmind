@@ -82,7 +82,7 @@ export class HarassOverlord extends CombatOverlord {
 	init() {
 		this.reassignIdleCreeps(Roles.ranged);
 		this.reassignIdleCreeps(Roles.melee);
-		const setup = new CombatCreepSetup(Roles.ranged, () => CombatCreepSetup.createHydraliskBody(this.colony));
+		const setup = CombatSetups.hydralisks.default;
 		const numtoSpawn = (!this.directive.memory.nextSpawnTime || Game.time >= this.directive.memory.nextSpawnTime) ? 1 : 0;
 		this.wishlist(numtoSpawn, setup);
 	}

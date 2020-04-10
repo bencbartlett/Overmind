@@ -1,6 +1,5 @@
 import {$} from '../../caching/GlobalCache';
 import {log} from '../../console/log';
-import {CombatCreepSetup} from '../../creepSetups/CombatCreepSetup';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveSwarmDestroy} from '../../directives/offense/swarmDestroy';
 import {CombatIntel} from '../../intel/CombatIntel';
@@ -8,7 +7,6 @@ import {RoomIntel} from '../../intel/RoomIntel';
 import {Mem} from '../../memory/Memory';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {BOOST_TIERS} from '../../resources/map_resources';
 import {Visualizer} from '../../visuals/Visualizer';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {Swarm} from '../../zerg/Swarm';
@@ -127,16 +125,13 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 		}
 
 		const zerglingPriority = this.zerglings.length <= this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
-		const zerglingSetup = new CombatCreepSetup(Roles.melee, () =>
-			CombatCreepSetup.createZerglingBody(this.colony, {boosted: true, armored: true}));
+		const zerglingSetup = CombatSetups.zerglings.boosted.armored;
 
 		const healerPriority = this.healers.length < this.zerglings.length ? this.priority - 0.1 : this.priority + 0.1;
-		const healerSetup = new CombatCreepSetup(Roles.healer, () =>
-			CombatCreepSetup.createTransfuserBody(this.colony, {boosted: true, armored: true}));
+		const healerSetup = CombatSetups.transfusers.boosted.armored;
 
 		const hydraliskPriority = this.healers.length < this.zerglings.length ? this.priority - 0.1 : this.priority + 0.1;
-		const hydraliskSetup = new CombatCreepSetup(Roles.ranged, () =>
-			CombatCreepSetup.createHydraliskBody(this.colony, {boosted: true, armored: true}));
+		const hydraliskSetup = CombatSetups.hydralisks.boosted.armored;
 
 		const swarmConfig = [{setup: zerglingSetup, amount: 2, priority: zerglingPriority},
 							 {setup: healerSetup, amount: 2, priority: healerPriority}];

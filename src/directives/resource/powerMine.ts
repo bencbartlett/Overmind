@@ -6,8 +6,16 @@ import {calculateFormationStrength} from '../../utilities/creepUtils';
 import {Directive} from '../Directive';
 
 
+export enum PowerMineState {
+	init            = 0,
+	miningStarted   = 1,
+	haulingStarted  = 2,
+	miningDone      = 3,
+	haulingComplete = 4,
+}
+
 interface DirectivePowerMineMemory extends FlagMemory {
-	totalResources?: number;
+	totalResources?: PowerMineState;
 	/* TODO make an enum
 		0: init
 		1: mining started

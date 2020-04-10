@@ -59,10 +59,9 @@ const BOOST_EFFECTS: { [part: string]: { [boost: string]: { [action: string]: nu
 export class CombatCreepSetup /*extends CreepSetup*/ {
 
 	role: string;
-	private bodyGenerator: ((colony: Colony, opts: Full<BodyOpts>) => BodyGeneratorReturn); 	// use this to specify body generation function
-	// bodySetup: BodySetup;						// not used; here for backward-compatibility with old CreepSetup
+	private bodyGenerator: ((colony: Colony, opts: Full<BodyOpts>) => BodyGeneratorReturn);
 	private opts: Full<BodyOpts>;
-	protected cache: { [colonyName: string]: { result: BodyGeneratorReturn, expiration: number } };
+	private cache: { [colonyName: string]: { result: BodyGeneratorReturn, expiration: number } };
 
 	constructor(roleName: string, opts: Full<BodyOpts>,
 				bodyGenerator: ((colony: Colony, opts: Full<BodyOpts>) => BodyGeneratorReturn)) {
@@ -92,13 +91,13 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 		return result;
 	}
 
-	/**
-	 * Here for legacy purposes to that this can extend the old CreepSetup class, but you never want to use this!
-	 */
-	generateBody(availableEnergy: number): BodyPartConstant[] {
-		log.error(`CombatCreepSetup.generateBody() should not be used!`);
-		return [];
-	}
+	// /**
+	//  * Here for legacy purposes to that this can extend the old CreepSetup class, but you never want to use this!
+	//  */
+	// generateBody(availableEnergy: number): BodyPartConstant[] {
+	// 	log.error(`CombatCreepSetup.generateBody() should not be used!`);
+	// 	return [];
+	// }
 
 	/**
 	 * Returns an object with the best boosts available for each type of boost requested. The object will only have
@@ -672,6 +671,28 @@ export class LurkerSetup extends CombatCreepSetup {
 		};
 		const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, lurkerBodyOptions);
 		super(Roles.dismantler, bodyOpts, CombatCreepSetup.generateDismantlerBody);
+	}
+}
+
+/**
+ * Creates a body for a ravager (melee bunker defender with 0.5 move speed). Takes an object of possible options:
+ * - If opts.boosted is true, all parts are requested to be boosted
+ * - If opts.armored is true, a 3:1 attack:tough ratio will be used up to 10 tough parts
+ * - If opts.healing is true, up to 2 heal parts will be added
+ * - Specifying opts.bodyOpts may override any of the behaviors above
+ */
+export class RavagerSetup extends CombatCreepSetup {
+	constructor(opts: SimpleBodyOpts = {}) {
+		_.defaults(opts, {moveSpeed: 0.5, boosted: false, armored: false, healing: false, bodyOpts: {}});
+		const ravagerBodyDefaults: Full<BodyOpts> = {
+			moveSpeed         : opts.moveSpeed || 0.5,
+			putMoveFirstInBody: true,
+			bodyRatio         : {attack: 30, tough: opts.armored ? 10 : 0, heal: opts.healing ? 2 : 0},
+			maxParts          : {attack: 50, tough: 10, heal: 2},
+			boosts            : opts.boosted ? ['attack', 'tough', 'heal', 'move'] : [],
+		};
+		const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, ravagerBodyDefaults);
+		super(Roles.bunkerDefender, bodyOpts, CombatCreepSetup.generateMeleeAttackerBody);
 	}
 }
 

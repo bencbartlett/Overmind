@@ -1,5 +1,4 @@
 import {CombatCreepSetup} from '../../creepSetups/CombatCreepSetup';
-import {CreepSetup} from '../../creepSetups/CreepSetup';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveInvasionDefense} from '../../directives/defense/invasionDefense';
 import {CombatIntel} from '../../intel/CombatIntel';
@@ -40,21 +39,39 @@ export class RangedDefenseOverlord extends CombatOverlord {
 		}
 	}
 
-	private computeNeededHydraliskAmount(setup: CreepSetup, boostMultiplier: number): number {
+	/**
+	 * Computes how much *additional* ranged parts we need
+	 */
+	private computeNeededAdditionalRangedPotential(): number {
 		const healAmount = CombatIntel.maxHealingByCreeps(this.room.hostiles);
-		const hydraliskDamage = RANGED_ATTACK_POWER * boostMultiplier
-								* setup.getBodyPotential(RANGED_ATTACK, this.colony);
 		const towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 0 : 0;
 		const worstDamageMultiplier = _.min(_.map(this.room.hostiles,
 												  creep => CombatIntel.minimumDamageTakenMultiplier(creep)));
-		return Math.ceil(.5 + 1.5 * healAmount / (worstDamageMultiplier * (hydraliskDamage + towerDamage + 1)));
+		const hydraliskDamage = RANGED_ATTACK_POWER * CombatIntel.getMyCombatPotentials(this.hydralisks).rangedAttack;
+		const maxDamageReceived = worstDamageMultiplier * (hydraliskDamage + towerDamage + 1);
+		const needAdditionalDamage = Math.max(healAmount - maxDamageReceived, 0);
+		const neededRangedParts = needAdditionalDamage / RANGED_ATTACK_POWER;
+		return neededRangedParts;
 	}
 
 	init() {
-		this.reassignIdleCreeps(Roles.ranged);
-		const setup = new CombatCreepSetup(Roles.ranged, () => // TODO: handle non-boosted case
-			CombatCreepSetup.createHydraliskBody(this.colony, {healing: true, boosted: true}));
-		this.wishlist(this.computeNeededHydraliskAmount(setup, 1), setup); // TODO: boostmultiplier needs fixing
+		if (this.reassignIdleCreeps(Roles.ranged, 1)) return;
+
+		let setup = CombatSetups.hydralisks.default;
+		if (_.all(this.spawnGroup.colonies, col => col.room.energyCapacityAvailable < 800)) {
+			setup = CombatSetups.hydralisks.noHeal; // can't spawn default hydras at very low rcl
+		} else {
+			const {attack, rangedAttack, heal} = CombatIntel.getCombatPotentials(this.room.hostiles);
+			// if there's a lot of big baddies or this assault has lasted a long time, pull out the boosts
+			if (attack + rangedAttack + heal > 100 || this.activeFor > 1000) {
+				setup = CombatSetups.hydralisks.boosted.default;
+			}
+		}
+
+		const neededAdditionalRangedPotential = this.computeNeededAdditionalRangedPotential();
+		if (neededAdditionalRangedPotential) {
+			this.requestCreep(setup);
+		}
 	}
 
 	run() {

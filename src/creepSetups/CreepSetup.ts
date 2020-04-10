@@ -30,7 +30,7 @@ export class CreepSetup {
 	role: string;
 	bodySetup: BodySetup;
 	private boosts: BoostType[];
-	protected cache: { [colonyName: string]: { result: BodyGeneratorReturn, expiration: number } };
+	private cache: { [colonyName: string]: { result: BodyGeneratorReturn, expiration: number } };
 
 	constructor(roleName: string, bodySetup = {}, boosts?: BoostType[]) {
 		this.role = roleName;

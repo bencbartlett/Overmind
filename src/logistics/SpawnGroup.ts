@@ -66,6 +66,7 @@ export class SpawnGroup {
 	stats: {
 		avgDistance: number;
 	};
+	private _colonies: Colony[] | undefined;
 
 	constructor(initializer: SpawnGroupInitializer, settings: Partial<SpawnGroupSettings> = {}) {
 		this.roomName = initializer.pos.roomName;
@@ -94,7 +95,15 @@ export class SpawnGroup {
 		}
 		this.energyCapacityAvailable = _.max(_.map(this.colonyNames,
 												   roomName => Game.rooms[roomName].energyCapacityAvailable));
+		this._colonies = undefined;
 		Overmind.spawnGroups[this.ref] = this;
+	}
+
+	get colonies(): Colony[] {
+		if (!this._colonies) {
+			this._colonies = _.compact(_.map(this.colonyNames, roomName => Overmind.colonies[roomName]));
+		}
+		return this._colonies;
 	}
 
 	/**
@@ -103,6 +112,7 @@ export class SpawnGroup {
 	refresh() {
 		this.memory = Mem.wrap(Memory.rooms[this.roomName], 'spawnGroup', SpawnGroupMemoryDefaults);
 		this.requests = [];
+		this._colonies = undefined;
 	}
 
 	private recalculateColonies() { // don't use settings when recalculating colonies as spawnGroups share memory

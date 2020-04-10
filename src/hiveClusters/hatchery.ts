@@ -1,6 +1,7 @@
 import {$} from '../caching/GlobalCache';
 import {Colony, ColonyStage} from '../Colony';
 import {log} from '../console/log';
+import {CombatCreepSetup} from '../creepSetups/CombatCreepSetup';
 import {bodyCost, CreepSetup} from '../creepSetups/CreepSetup';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
 import {Mem} from '../memory/Memory';
@@ -22,10 +23,10 @@ const ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH = -20;
 const ERR_SPECIFIED_SPAWN_BUSY = -21;
 
 export interface SpawnRequest {
-	setup: CreepSetup;					// creep body generator to use
-	overlord: Overlord;					// overlord requesting the creep
+	setup: CreepSetup | CombatCreepSetup;					// creep body generator to use
+	overlord: Overlord;								// overlord requesting the creep
 	priority: number;					// priority of the request
-	partners?: CreepSetup[];			// partners to spawn along with the creep
+	partners?: (CreepSetup | CombatCreepSetup)[];			// partners to spawn along with the creep
 	options?: SpawnRequestOptions;		// options
 }
 
@@ -34,10 +35,10 @@ export interface SpawnRequestOptions {
 	directions?: DirectionConstant[];	// StructureSpawn.spawning.directions
 }
 
-interface SpawnOrder {
-	protoCreep: ProtoCreep;
-	options: SpawnOptions | undefined;
-}
+// interface SpawnOrder {
+// 	// protoCreep: ProtoCreep;
+// 	options: SpawnOptions | undefined;
+// }
 
 export interface HatcheryMemory {
 	stats: {
@@ -81,7 +82,7 @@ export class Hatchery extends HiveCluster {
 
 	private productionPriorities: number[];
 	private productionQueue: {								// Prioritized spawning queue
-		[priority: number]: SpawnOrder[]
+		[priority: number]: SpawnRequest[]
 	};
 	private isOverloaded: boolean;
 	private _waitTimes: { [priority: number]: number } | undefined;
@@ -136,6 +137,47 @@ export class Hatchery extends HiveCluster {
 		} else {
 			this.overlord = new QueenOverlord(this);
 		}
+	}
+
+	/**
+	 * Returns the approximate aggregated time at which the hatchery will next be available to spawn a creep request
+	 * with a given priority.
+	 */
+	getWaitTimeForPriority(priority: number): number {
+		if (!this._waitTimes) {
+			const waitTimes: { [priority: number]: number } = {};
+
+			// Initialize wait time to what is currently spawning
+			let waitTime = _.sum(this.spawns, spawn => spawn.spawning ? spawn.spawning.remainingTime : 0) /
+						   this.spawns.length;
+
+			// Add in expected time for whatever else needs to be spawned, cumulative up to each priority
+			for (const priority of this.productionPriorities.sort()) {
+				for (const request of this.productionQueue[priority]) {
+					const {body, boosts} = request.setup.create(this.colony, true); // use cached setup as estimate
+					waitTime += CREEP_SPAWN_TIME * body.length / this.spawns.length;
+				}
+				waitTimes[priority] = waitTime;
+			}
+			this._waitTimes = waitTimes;
+		}
+		if (this._waitTimes[priority] != undefined) {
+			return this._waitTimes[priority];
+		}
+		const priorities = this.productionPriorities.sort();
+		if (priorities.length == 0) {
+			return 0;
+		}
+		if (priority < _.first(priorities)) {
+			return 0;
+		}
+		const priorityIndex = _.sortedIndex(priorities, priority);
+		const waitTime = this._waitTimes[priorities[priorityIndex]];
+		if (waitTime == undefined) {
+			log.error(`Undefined wait time in wait times: ${this._waitTimes}!`);
+			return 0;
+		}
+		return waitTime;
 	}
 
 	// Idle position for queen
@@ -216,7 +258,11 @@ export class Hatchery extends HiveCluster {
 	}
 
 	private spawnCreep(protoCreep: ProtoCreep, options: SpawnRequestOptions = {}): number {
-		// get a spawn to use
+		// If you can't build it, return this error
+		if (bodyCost(protoCreep.body) > this.room.energyCapacityAvailable) {
+			return ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH;
+		}
+		// Get a spawn to use
 		let spawnToUse: StructureSpawn | undefined;
 		if (options.spawn) {
 			spawnToUse = options.spawn;
@@ -228,15 +274,13 @@ export class Hatchery extends HiveCluster {
 		} else {
 			spawnToUse = this.availableSpawns.shift();
 		}
-		if (spawnToUse) { // if there is a spawn, create the creep
+		// If you have a spawn available then spawn the creep
+		if (spawnToUse) {
 			if (this.colony.bunker && this.colony.bunker.coreSpawn
 				&& spawnToUse.id == this.colony.bunker.coreSpawn.id && !options.directions) {
 				options.directions = [TOP, RIGHT]; // don't spawn into the manager spot
 			}
 			protoCreep.name = this.generateCreepName(protoCreep.name); // modify the creep name to make it unique
-			if (bodyCost(protoCreep.body) > this.room.energyCapacityAvailable) {
-				return ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH;
-			}
 			protoCreep.memory.data.origin = spawnToUse.pos.roomName;
 
 			// Spawn the creep
@@ -263,7 +307,7 @@ export class Hatchery extends HiveCluster {
 				this.availableSpawns.unshift(spawnToUse); // return the spawn to the available spawns list
 				return result;
 			}
-		} else { // otherwise, return busy
+		} else { // otherwise, if there's no spawn to use, return busy
 			return ERR_BUSY;
 		}
 	}
@@ -277,7 +321,7 @@ export class Hatchery extends HiveCluster {
 	}
 
 	/* Generate (but not spawn) the largest creep possible, returns the protoCreep as an object */
-	private generateProtoCreep(setup: CreepSetup, overlord: Overlord): ProtoCreep {
+	private generateProtoCreep(setup: CreepSetup | CombatCreepSetup, overlord: Overlord): ProtoCreep {
 
 		// Generate the creep memory
 		const creepMemory: CreepMemory = {
@@ -307,64 +351,20 @@ export class Hatchery extends HiveCluster {
 	}
 
 	/**
-	 * Returns the approximate aggregated time at which the hatchery will next be available to spawn a creep request
-	 * with a given priority.
-	 */
-	getWaitTimeForPriority(priority: number): number {
-		if (!this._waitTimes) {
-			const waitTimes: { [priority: number]: number } = {};
-
-			// Initialize wait time to what is currently spawning
-			let waitTime = _.sum(this.spawns, spawn => spawn.spawning ? spawn.spawning.remainingTime : 0) /
-			this.spawns.length;
-
-			// Add in expected time for whatever else needs to be spawned, cumulative up to each priority
-			for (const priority of this.productionPriorities.sort()) {
-				waitTime += CREEP_SPAWN_TIME * _.sum(this.productionQueue[priority],
-													 order => order.protoCreep.body.length) / this.spawns.length;
-				waitTimes[priority] = waitTime;
-			}
-			this._waitTimes = waitTimes;
-		}
-		if (this._waitTimes[priority] != undefined) {
-			return this._waitTimes[priority];
-		}
-		const priorities = this.productionPriorities.sort();
-		if (priorities.length == 0) {
-			return 0;
-		}
-		if (priority < _.first(priorities)) {
-			return 0;
-		}
-		const priorityIndex = _.sortedIndex(priorities, priority);
-		const waitTime = this._waitTimes[priorities[priorityIndex]];
-		if (waitTime == undefined) {
-			log.error(`Undefined wait time in wait times: ${this._waitTimes}!`);
-			return 0;
-		}
-		return waitTime;
-	}
-
-	/**
 	 * Enqueues a spawn request to the hatchery production queue
 	 */
 	enqueue(request: SpawnRequest): void {
-		const protoCreep = this.generateProtoCreep(request.setup, request.overlord);
+		// const protoCreep = this.generateProtoCreep(request.setup, request.overlord);
 		// TODO: ^shouldn't need to do this at enqueue, just at spawn. Implement approximateSize() method?
 		const priority = request.priority;
-		if (this.canSpawn(protoCreep.body) && protoCreep.body.length > 0) {
-			// Spawn the creep yourself if you can
-			this._waitTimes = undefined; // invalidate cache
-			// this._queuedSpawnTime = undefined;
-			if (!this.productionQueue[priority]) {
-				this.productionQueue[priority] = [];
-				this.productionPriorities.push(priority); // this is necessary because keys interpret number as string
-			}
-			this.productionQueue[priority].push({protoCreep: protoCreep, options: request.options});
-		} else {
-			log.debug(`${this.room.print}: cannot spawn creep ${protoCreep.name} with body ` +
-					  `${JSON.stringify(protoCreep.body)}!`);
+		// Spawn the creep yourself if you can
+		this._waitTimes = undefined; // invalidate cache
+		// this._queuedSpawnTime = undefined;
+		if (!this.productionQueue[priority]) {
+			this.productionQueue[priority] = [];
+			this.productionPriorities.push(priority); // this is necessary because keys interpret number as string
 		}
+		this.productionQueue[priority].push(request);
 	}
 
 	private spawnHighestPriorityCreep(): number | undefined {
@@ -376,20 +376,27 @@ export class Hatchery extends HiveCluster {
 			// 	continue; // don't spawn non-critical creeps during wartime
 			// }
 
-			const nextOrder = this.productionQueue[priority].shift();
-			if (nextOrder) {
-				const {protoCreep, options} = nextOrder;
-				const result = this.spawnCreep(protoCreep, options);
-				if (result == OK) {
-					return result;
-				} else if (result == ERR_SPECIFIED_SPAWN_BUSY) {
-					return result; // continue to spawn other things while waiting on specified spawn
-				} else {
-					// If there's not enough energyCapacity to spawn, ignore it and move on, otherwise block and wait
-					if (result != ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH) {
-						this.productionQueue[priority].unshift(nextOrder);
+			const request = this.productionQueue[priority].shift();
+			if (request) {
+				// Generate a protocreep from the request
+				const protoCreep = this.generateProtoCreep(request.setup, request.overlord);
+				if (this.canSpawn(protoCreep.body) && protoCreep.body.length > 0) {
+					// Try to spawn the creep
+					const result = this.spawnCreep(protoCreep, request.options);
+					if (result == OK) {
 						return result;
+					} else if (result == ERR_SPECIFIED_SPAWN_BUSY) {
+						return result; // continue to spawn other things while waiting on specified spawn
+					} else {
+						// If there's not enough energyCapacity to spawn, ignore and move on, otherwise block and wait
+						if (result != ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH) {
+							this.productionQueue[priority].unshift(request);
+							return result;
+						}
 					}
+				} else {
+					log.debug(`${this.room.print}: cannot spawn creep ${protoCreep.name} with body ` +
+							  `${JSON.stringify(protoCreep.body)}!`);
 				}
 			}
 		}

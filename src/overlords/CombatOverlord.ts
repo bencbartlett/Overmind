@@ -1,9 +1,14 @@
+import {CombatCreepSetup} from '../creepSetups/CombatCreepSetup';
 import {Directive} from '../directives/Directive';
 import {SpawnGroup} from '../logistics/SpawnGroup';
 import {profile} from '../profiler/decorator';
 import {CombatZerg} from '../zerg/CombatZerg';
-import {Overlord} from './Overlord';
+import {Overlord, OverlordMemory} from './Overlord';
 
+
+export interface CombatOverlordMemory extends OverlordMemory {
+	[_MEM.TICK]: number;
+}
 
 export interface CombatOverlordOptions {
 
@@ -15,6 +20,7 @@ export interface CombatOverlordOptions {
 @profile
 export abstract class CombatOverlord extends Overlord {
 
+	memory: CombatOverlordMemory;
 	directive: Directive;
 	spawnGroup: SpawnGroup;
 	requiredRCL: number; // default required RCL
@@ -24,6 +30,13 @@ export abstract class CombatOverlord extends Overlord {
 		this.directive = directive;
 		this.requiredRCL = requiredRCL;
 		this.spawnGroup = new SpawnGroup(this, {requiredRCL: this.requiredRCL, maxPathDistance: maxPathDistance});
+		if (!this.memory[_MEM.TICK]) {
+			this.memory[_MEM.TICK] = Game.time;
+		}
+	}
+
+	get activeFor(): number {
+		return Game.time - this.memory[_MEM.TICK];
 	}
 
 	// Standard sequence of actions for running combat creeps

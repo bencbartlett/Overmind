@@ -25,7 +25,7 @@ export class DistractionOverlord extends CombatOverlord {
 				boosted  = false,
 				priority = OverlordPriority.defense.rangedDefense) {
 		super(directive, 'distraction', priority, 1);
-		this.distractions = this.combatZerg(Roles.ranged);
+		this.distractions = this.combatZerg(Roles.rangedDistractor);
 	}
 
 	private handleDistraction(distraction: CombatZerg): void {
@@ -47,7 +47,7 @@ export class DistractionOverlord extends CombatOverlord {
 
 	init() {
 		// this.reassignIdleCreeps(Roles.ranged); until it's it's own role don't reassign
-		const setup = CombatSetups.hydralisks.distraction;
+		const setup = CombatSetups.distractors.ranged;
 		this.wishlist(1, setup);
 	}
 

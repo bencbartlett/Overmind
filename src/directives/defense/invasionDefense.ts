@@ -1,8 +1,6 @@
-import {ColonyStage} from '../../Colony';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {BunkerDefenseOverlord} from '../../overlords/defense/bunkerDefense';
 import {DistractionOverlord} from '../../overlords/defense/distraction';
-import {MeleeDefenseOverlord} from '../../overlords/defense/meleeDefense';
 import {RangedDefenseOverlord} from '../../overlords/defense/rangedDefense';
 import {profile} from '../../profiler/decorator';
 import {BarrierPlanner} from '../../roomPlanner/BarrierPlanner';
@@ -50,11 +48,8 @@ export class DirectiveInvasionDefense extends Directive {
 																	  hostile.getActiveBodyparts(WORK) > 0);
 		const rangedHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0);
 
-		if (this.colony.stage > ColonyStage.Larva) {
-			this.overlords.rangedDefense = new RangedDefenseOverlord(this);
-		} else {
-			this.overlords.meleeDefense = new MeleeDefenseOverlord(this);
-		}
+		this.overlords.rangedDefense = new RangedDefenseOverlord(this);
+
 		// If serious bunker busting attempt, spawn lurkers
 		// TODO understand dismantlers damage output
 		if (meleeHostiles.length > 0 && expectedDamage > ATTACK_POWER * 70 &&

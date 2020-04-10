@@ -1,9 +1,7 @@
-import {CreepSetup} from '../../creepSetups/CreepSetup';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {UpgradeSite} from '../../hiveClusters/upgradeSite';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {BOOST_TIERS} from '../../resources/map_resources';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
@@ -33,14 +31,15 @@ export class UpgradingOverlord extends Overlord {
 		}
 		if (this.colony.assets.energy > UpgradeSite.settings.energyBuffer
 			|| this.upgradeSite.controller.ticksToDowngrade < 500) {
-			let setup =  Setups.upgraders.default;
+			let setup = Setups.upgraders.default;
 			if (this.colony.level == 8) {
-				setup = Setups.upgraders.rcl8
+				setup = Setups.upgraders.rcl8;
+				if (this.colony.labs.length == 10 &&
+					this.colony.assets[RESOURCE_CATALYZED_GHODIUM_ACID] >= 4 * LAB_BOOST_MINERAL) {
+					setup = Setups.upgraders.rcl8_boosted;
+				}
 			}
-			if (this.colony.labs.length == 10 &&
-				this.colony.assets[RESOURCE_CATALYZED_GHODIUM_ACID] >= 4 * LAB_BOOST_MINERAL) {
-				setup = CreepSetup.boosted(setup, ['upgrade']);
-			}
+
 			if (this.colony.level == 8) {
 				this.wishlist(1, setup);
 			} else {

@@ -10,10 +10,10 @@ import {CombatTargeting} from '../../targeting/CombatTargeting';
 import {minBy} from '../../utilities/utils';
 import {Visualizer} from '../../visuals/Visualizer';
 import {CombatZerg} from '../../zerg/CombatZerg';
-import {CombatOverlord} from '../CombatOverlord';
+import {CombatOverlord, CombatOverlordMemory} from '../CombatOverlord';
 import {OverlordMemory} from '../Overlord';
 
-interface SourceReaperOverlordMemory extends OverlordMemory {
+interface SourceReaperOverlordMemory extends CombatOverlordMemory {
 	targetLairID?: string;
 }
 

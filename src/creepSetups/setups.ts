@@ -1,3 +1,4 @@
+import {CombatCreepSetup, HydraliskSetup, RavagerSetup, TransfuserSetup, ZerglingSetup} from './CombatCreepSetup';
 import {CreepSetup} from './CreepSetup';
 
 /**
@@ -17,10 +18,10 @@ export const Roles = {
 	upgrader        : 'upgrader',
 	praiser         : 'praiser',
 	// Combat roles
-	guardMelee      : 'broodling',
-	// guardRanged: 'mutalisk',
+	guardMelee      : 'broodling', // currently not a CombatCreepSetup
 	melee           : 'zergling',
 	ranged          : 'hydralisk',
+	rangedDistractor: 'babbylisk',
 	healer          : 'transfuser',
 	dismantler      : 'lurker',
 	bunkerDefender  : 'ravager',
@@ -270,6 +271,15 @@ export const CombatSetups = {
 		// 	sizeLimit: Infinity,
 		// }),
 
+		default: new ZerglingSetup(),
+
+		healing: new ZerglingSetup({healing: true}),
+
+		boosted: {
+			default       : new ZerglingSetup({boosted: true}),
+			armored       : new ZerglingSetup({boosted: true, armored: true}),
+			armoredHealing: new ZerglingSetup({boosted: true, armored: true, healing: true}),
+		},
 
 
 		sourceKeeper: new CreepSetup(Roles.melee, {
@@ -284,43 +294,54 @@ export const CombatSetups = {
 	 */
 	hydralisks: {
 
-		early: new CreepSetup(Roles.ranged, {
-			pattern  : [RANGED_ATTACK, MOVE],
-			sizeLimit: Infinity,
-		}),
+		default: new HydraliskSetup(),
 
-		distraction: new CreepSetup(Roles.ranged, {
-			pattern  : [MOVE, MOVE, MOVE, MOVE, RANGED_ATTACK, MOVE],
-			sizeLimit: 1,
-		}),
+		noHeal: new HydraliskSetup({healing: false}),
 
-		default: new CreepSetup(Roles.ranged, {
-			pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, MOVE, MOVE, MOVE, MOVE, HEAL],
-			sizeLimit: Infinity,
-		}),
+		boosted: {
+			default: new HydraliskSetup({boosted: true}),
+			armored: new HydraliskSetup({boosted: true, armored: true}),
+			noHeal : new HydraliskSetup({boosted: true, healing: false}),
+		},
 
-		boosted_T3: new CreepSetup(Roles.ranged, {
-			pattern  : [TOUGH, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, MOVE,
-						MOVE, HEAL, HEAL, HEAL],
-			sizeLimit: Infinity,
-		}),
 
-		boosted_T3_old: new CreepSetup(Roles.ranged, {
-			pattern  : [TOUGH, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-						MOVE, MOVE, HEAL, HEAL],
-			sizeLimit: Infinity,
-		}),
-
-		siege: new CreepSetup(Roles.ranged, {
-			pattern  : [RANGED_ATTACK, RANGED_ATTACK, MOVE, MOVE, MOVE, MOVE, HEAL, HEAL],
-			sizeLimit: Infinity,
-		}),
-
-		siege_T3: new CreepSetup(Roles.ranged, {
-			pattern  : [TOUGH, TOUGH, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-						MOVE, MOVE, HEAL, HEAL],
-			sizeLimit: Infinity,
-		}),
+		// early: new CreepSetup(Roles.ranged, {
+		// 	pattern  : [RANGED_ATTACK, MOVE],
+		// 	sizeLimit: Infinity,
+		// }),
+		//
+		// distraction: new CreepSetup(Roles.ranged, {
+		// 	pattern  : [MOVE, MOVE, MOVE, MOVE, RANGED_ATTACK, MOVE],
+		// 	sizeLimit: 1,
+		// }),
+		//
+		// default: new CreepSetup(Roles.ranged, {
+		// 	pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, MOVE, MOVE, MOVE, MOVE, HEAL],
+		// 	sizeLimit: Infinity,
+		// }),
+		//
+		// boosted_T3: new CreepSetup(Roles.ranged, {
+		// 	pattern  : [TOUGH, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, MOVE,
+		// 				MOVE, HEAL, HEAL, HEAL],
+		// 	sizeLimit: Infinity,
+		// }),
+		//
+		// boosted_T3_old: new CreepSetup(Roles.ranged, {
+		// 	pattern  : [TOUGH, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+		// 				MOVE, MOVE, HEAL, HEAL],
+		// 	sizeLimit: Infinity,
+		// }),
+		//
+		// siege: new CreepSetup(Roles.ranged, {
+		// 	pattern  : [RANGED_ATTACK, RANGED_ATTACK, MOVE, MOVE, MOVE, MOVE, HEAL, HEAL],
+		// 	sizeLimit: Infinity,
+		// }),
+		//
+		// siege_T3: new CreepSetup(Roles.ranged, {
+		// 	pattern  : [TOUGH, TOUGH, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+		// 				MOVE, MOVE, HEAL, HEAL],
+		// 	sizeLimit: Infinity,
+		// }),
 
 		sourceKeeper: new CreepSetup(Roles.ranged, {
 			pattern  : [MOVE, MOVE, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, HEAL, HEAL, MOVE],
@@ -332,22 +353,29 @@ export const CombatSetups = {
 	/**
 	 * Healers (transfusers) are creeps which only do healing
 	 */
-	healers: {
+	transfusers: {
 
-		default: new CreepSetup(Roles.healer, {
-			pattern  : [HEAL, MOVE],
-			sizeLimit: Infinity,
-		}),
+		default: new TransfuserSetup(),
 
-		armored: new CreepSetup(Roles.healer, {
-			pattern  : [TOUGH, HEAL, HEAL, HEAL, MOVE, MOVE, MOVE, MOVE],
-			sizeLimit: Infinity,
-		}),
+		boosted: {
+			default: new TransfuserSetup({boosted: true}),
+			armored: new TransfuserSetup({boosted: true, armored: true}),
+		}
 
-		boosted_T3: new CreepSetup(Roles.healer, {
-			pattern  : [TOUGH, TOUGH, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, MOVE, MOVE],
-			sizeLimit: Infinity,
-		}),
+		// default: new CreepSetup(Roles.healer, {
+		// 	pattern  : [HEAL, MOVE],
+		// 	sizeLimit: Infinity,
+		// }),
+		//
+		// armored: new CreepSetup(Roles.healer, {
+		// 	pattern  : [TOUGH, HEAL, HEAL, HEAL, MOVE, MOVE, MOVE, MOVE],
+		// 	sizeLimit: Infinity,
+		// }),
+		//
+		// boosted_T3: new CreepSetup(Roles.healer, {
+		// 	pattern  : [TOUGH, TOUGH, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, MOVE, MOVE],
+		// 	sizeLimit: Infinity,
+		// }),
 
 	},
 
@@ -371,34 +399,37 @@ export const CombatSetups = {
 	/**
 	 * Pure melee raw power creeps that should never leave the bunker. These are the final guards for a room
 	 */
-	bunkerGuard: {
+	bunkerDefender: {
 
-		early: new CreepSetup(Roles.bunkerDefender, {
-			pattern  : [ATTACK, MOVE],
-			sizeLimit: Infinity,
-		}),
+		default: new RavagerSetup(),
 
-		default: new CreepSetup(Roles.bunkerDefender, {
-			pattern  : [ATTACK, ATTACK, MOVE],
-			sizeLimit: Infinity,
-		}),
-
-		tiny: new CreepSetup(Roles.bunkerDefender, {
-			pattern  : [ATTACK, ATTACK, MOVE, MOVE],
-			sizeLimit: 2,
-		}),
-
-		halfMove: new CreepSetup(Roles.bunkerDefender, {
-			pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, MOVE],
-			sizeLimit: Infinity,
-		}),
-
-		boosted_T3: new CreepSetup(Roles.bunkerDefender, {
-			// 22 ATTACK, 3 MOVE times 2
-			pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK,
-						ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE],
-			sizeLimit: Infinity,
-		}),
+		boosted: new RavagerSetup({boosted:true}),
+		// early: new CreepSetup(Roles.bunkerDefender, {
+		// 	pattern  : [ATTACK, MOVE],
+		// 	sizeLimit: Infinity,
+		// }),
+		//
+		// default: new CreepSetup(Roles.bunkerDefender, {
+		// 	pattern  : [ATTACK, ATTACK, MOVE],
+		// 	sizeLimit: Infinity,
+		// }),
+		//
+		// tiny: new CreepSetup(Roles.bunkerDefender, {
+		// 	pattern  : [ATTACK, ATTACK, MOVE, MOVE],
+		// 	sizeLimit: 2,
+		// }),
+		//
+		// halfMove: new CreepSetup(Roles.bunkerDefender, {
+		// 	pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, MOVE],
+		// 	sizeLimit: Infinity,
+		// }),
+		//
+		// boosted_T3: new CreepSetup(Roles.bunkerDefender, {
+		// 	// 22 ATTACK, 3 MOVE times 2
+		// 	pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK,
+		// 				ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE],
+		// 	sizeLimit: Infinity,
+		// }),
 
 	},
 
@@ -432,6 +463,13 @@ export const CombatSetups = {
 		// 	sizeLimit: Infinity,
 		// }),
 
+	},
+
+	distractors: {
+		ranged: new CreepSetup(Roles.rangedDistractor, {
+			pattern  : [MOVE, MOVE, MOVE, MOVE, RANGED_ATTACK, MOVE],
+			sizeLimit: 1,
+		}),
 	},
 
 	drill: {

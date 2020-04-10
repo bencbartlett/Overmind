@@ -7,10 +7,9 @@ import {profile} from '../../profiler/decorator';
 import {Visualizer} from '../../visuals/Visualizer';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {Zerg} from '../../zerg/Zerg';
-import {CombatOverlord} from '../CombatOverlord';
-import {OverlordMemory} from '../Overlord';
+import {CombatOverlord, CombatOverlordMemory} from '../CombatOverlord';
 
-interface PowerDrillOverlordMemory extends OverlordMemory {
+interface PowerDrillOverlordMemory extends CombatOverlordMemory {
 	targetPBID?: string;
 }
 
