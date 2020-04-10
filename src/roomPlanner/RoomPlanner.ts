@@ -863,7 +863,7 @@ export class RoomPlanner {
 				const spawnPos = lowerRightSpawn.pos;
 				bunkerAnchor = new RoomPosition(spawnPos.x - 4, spawnPos.y, spawnPos.roomName);
 			} else {
-				const expansionData = this.colony.room.memory[_RM.EXPANSION_DATA];
+				const expansionData = this.colony.room.memory[RMEM.EXPANSION_DATA];
 				if (expansionData) {
 					bunkerAnchor = derefCoords(expansionData.bunkerAnchor, this.colony.room.name);
 				} else {
@@ -919,7 +919,7 @@ export class RoomPlanner {
 	visuals(): void {
 		// Draw the map
 		if (getAutonomyLevel() < Autonomy.Automatic) {
-			const expansionData = this.colony.room.memory[_RM.EXPANSION_DATA];
+			const expansionData = this.colony.room.memory[RMEM.EXPANSION_DATA];
 			if (expansionData) {
 				const bunkerPos = derefCoords(expansionData.bunkerAnchor, this.colony.room.name);
 				if (bunkerPos) {

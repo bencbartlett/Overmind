@@ -248,7 +248,7 @@ export class DirectiveStronghold extends Directive {
 			}
 		}
 
-		const duration = Game.time - (this.memory[_MEM.TICK] || Game.time);
+		const duration = Game.time - (this.memory[MEM.TICK] || Game.time);
 		if (duration % 50000 == 0) {
 			log.notify(`DirectiveStronghold ${this.print} in ${this.pos.roomName} has been active for ${duration} ticks`);
 		}

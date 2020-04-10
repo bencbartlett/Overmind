@@ -1060,7 +1060,7 @@ export class Movement {
 				}
 				return matrix;
 			} else {
-				return !(Memory.rooms[roomName] && Memory.rooms[roomName][_RM.AVOID]);
+				return !(Memory.rooms[roomName] && Memory.rooms[roomName][RMEM.AVOID]);
 			}
 		};
 

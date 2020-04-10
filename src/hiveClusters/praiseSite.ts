@@ -9,7 +9,7 @@
 // import {HiveCluster} from './_HiveCluster';
 //
 // interface PraiseSiteMemory {
-// 	[_MEM.TICK]: number;
+// 	[MEM.TICK]: number;
 // 	stats: { downtime: number };
 // }
 //
@@ -49,7 +49,7 @@
 // 		this.towers = this.room.towers;
 // 		// Register with parent colony
 // 		this.colony.praiseSite = this;
-// 		this.colony.destinations.push({pos: this.anchor, order: this.directive.memory[_MEM.TICK] || Game.time});
+// 		this.colony.destinations.push({pos: this.anchor, order: this.directive.memory[MEM.TICK] || Game.time});
 // 		// Register upgrader positions and overlord
 // 		this.praiserPositions = this.getPraiserPositions();
 // 		// Compute stats

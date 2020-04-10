@@ -175,7 +175,7 @@ export class Overseer implements IOverseer {
 					const start = Game.cpu.getUsed();
 					overlord.preInit();
 					this.try(() => overlord.init());
-					overlord.memory[_MEM.STATS]!.cpu += Game.cpu.getUsed() - start;
+					overlord.memory[MEM.STATS]!.cpu += Game.cpu.getUsed() - start;
 				} else {
 					overlord.preInit();
 					this.try(() => overlord.init());
@@ -341,8 +341,8 @@ export class Overseer implements IOverseer {
 
 	private handleNewOutposts(colony: Colony) {
 		const numSources = _.sum(colony.roomNames,
-								 roomName => Memory.rooms[roomName] && Memory.rooms[roomName][_RM.SOURCES]
-											 ? Memory.rooms[roomName][_RM.SOURCES]!.length
+								 roomName => Memory.rooms[roomName] && Memory.rooms[roomName][RMEM.SOURCES]
+											 ? Memory.rooms[roomName][RMEM.SOURCES]!.length
 											 : 0);
 		const numRemotes = numSources - colony.room.sources.length;
 		if (numRemotes < Colony.settings.remoteSourcesByLevel[colony.level]) {
@@ -352,7 +352,7 @@ export class Overseer implements IOverseer {
 			const origin = colony.pos;
 			const bestOutpost = minBy(possibleOutposts, function(roomName) {
 				if (!Memory.rooms[roomName]) return false;
-				const sourceCoords = Memory.rooms[roomName][_RM.SOURCES] as SavedSource[] | undefined;
+				const sourceCoords = Memory.rooms[roomName][RMEM.SOURCES] as SavedSource[] | undefined;
 				if (!sourceCoords) return false;
 				const sourcePositions = _.map(sourceCoords, src => derefCoords(src.c, roomName));
 				const sourceDistances = _.map(sourcePositions, pos => Pathing.distance(origin, pos));
@@ -365,7 +365,7 @@ export class Overseer implements IOverseer {
 			if (bestOutpost) {
 				const pos = Pathing.findPathablePosition(bestOutpost);
 				log.info(`Colony ${colony.room.print} now remote mining from ${pos.print}`);
-				DirectiveOutpost.createIfNotPresent(pos, 'room', {memory: {[_MEM.COLONY]: colony.name}});
+				DirectiveOutpost.createIfNotPresent(pos, 'room', {memory: {[MEM.COLONY]: colony.name}});
 			}
 		}
 	}
@@ -493,7 +493,7 @@ export class Overseer implements IOverseer {
 				if (overlord.profilingActive) {
 					const start = Game.cpu.getUsed();
 					this.try(() => overlord.run());
-					overlord.memory[_MEM.STATS]!.cpu += Game.cpu.getUsed() - start;
+					overlord.memory[MEM.STATS]!.cpu += Game.cpu.getUsed() - start;
 				} else {
 					this.try(() => overlord.run());
 				}

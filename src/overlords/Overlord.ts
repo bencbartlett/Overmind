@@ -61,7 +61,7 @@ export interface OverlordSuspendOptions {
 
 export interface OverlordMemory {
 	suspend?: OverlordSuspendOptions;
-	[_MEM.STATS]?: OverlordStats;
+	[MEM.STATS]?: OverlordStats;
 	debug?: boolean;
 }
 
@@ -205,9 +205,9 @@ export abstract class Overlord {
 	 * Check if profiling is active, also shuts it down if it is past end tick
 	 */
 	get profilingActive(): boolean {
-		if (this.memory[_MEM.STATS]) {
-			if (this.memory[_MEM.STATS]!.end) {
-				if (Game.time > this.memory[_MEM.STATS]!.end!) {
+		if (this.memory[MEM.STATS]) {
+			if (this.memory[MEM.STATS]!.end) {
+				if (Game.time > this.memory[MEM.STATS]!.end!) {
 					this.finishProfiling();
 					return false;
 				}
@@ -221,15 +221,15 @@ export abstract class Overlord {
 	 * Starts profiling on this overlord and initializes memory to defaults
 	 */
 	startProfiling(ticks?: number): void {
-		if (!this.memory[_MEM.STATS]) {
-			this.memory[_MEM.STATS] = {
+		if (!this.memory[MEM.STATS]) {
+			this.memory[MEM.STATS] = {
 				start    : Game.time,
 				cpu      : 0,
 				spawnCost: 0,
 				deaths   : 0,
 			};
 			if (ticks) {
-				this.memory[_MEM.STATS]!.end = Game.time + ticks;
+				this.memory[MEM.STATS]!.end = Game.time + ticks;
 			}
 		} else {
 			log.alert(`Overlord ${this.print} is already being profiled!`);
@@ -240,15 +240,15 @@ export abstract class Overlord {
 	 * Finishes profiling this overlord and deletes the memory objects
 	 */
 	finishProfiling(verbose = true): void {
-		if (!this.memory[_MEM.STATS]) {
+		if (!this.memory[MEM.STATS]) {
 			log.error(`Overlord ${this.print} is not being profiled, finishProfiling() invalid!`);
 			return;
 		}
 		if (verbose) {
 			log.alert(`Profiling finished for overlord ${this.print}. Results:\n` +
-					  JSON.stringify(this.memory[_MEM.STATS]));
+					  JSON.stringify(this.memory[MEM.STATS]));
 		}
-		delete this.memory[_MEM.STATS];
+		delete this.memory[MEM.STATS];
 	}
 
 	/**

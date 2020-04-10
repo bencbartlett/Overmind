@@ -7,7 +7,7 @@ import {Overlord, OverlordMemory} from './Overlord';
 
 
 export interface CombatOverlordMemory extends OverlordMemory {
-	[_MEM.TICK]: number;
+	[MEM.TICK]: number;
 }
 
 export interface CombatOverlordOptions {
@@ -30,13 +30,13 @@ export abstract class CombatOverlord extends Overlord {
 		this.directive = directive;
 		this.requiredRCL = requiredRCL;
 		this.spawnGroup = new SpawnGroup(this, {requiredRCL: this.requiredRCL, maxPathDistance: maxPathDistance});
-		if (!this.memory[_MEM.TICK]) {
-			this.memory[_MEM.TICK] = Game.time;
+		if (!this.memory[MEM.TICK]) {
+			this.memory[MEM.TICK] = Game.time;
 		}
 	}
 
 	get activeFor(): number {
-		return Game.time - this.memory[_MEM.TICK];
+		return Game.time - this.memory[MEM.TICK];
 	}
 
 	// Standard sequence of actions for running combat creeps

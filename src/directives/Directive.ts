@@ -51,11 +51,11 @@ export abstract class Directive {
 		}
 
 		// Register creation tick
-		if (!this.memory[_MEM.TICK]) {
-			this.memory[_MEM.TICK] = Game.time;
+		if (!this.memory[MEM.TICK]) {
+			this.memory[MEM.TICK] = Game.time;
 		}
 		// Delete the directive if expired
-		if (this.memory[_MEM.EXPIRATION] && !this.memory.persistent && Game.time > this.memory[_MEM.EXPIRATION]!) {
+		if (this.memory[MEM.EXPIRATION] && !this.memory.persistent && Game.time > this.memory[MEM.EXPIRATION]!) {
 			log.alert(`Removing expired directive ${this.print}!`);
 			flag.remove();
 			return;
@@ -204,8 +204,8 @@ export abstract class Directive {
 	 */
 	private getColony(colonyFilter?: (colony: Colony) => boolean): Colony | undefined {
 		// If something is written to flag.colony, use that as the colony
-		if (this.memory[_MEM.COLONY]) {
-			return Overmind.colonies[this.memory[_MEM.COLONY]!];
+		if (this.memory[MEM.COLONY]) {
+			return Overmind.colonies[this.memory[MEM.COLONY]!];
 		} else {
 
 			// If flag contains a colony name as a substring, assign to that colony, regardless of RCL
@@ -213,7 +213,7 @@ export abstract class Directive {
 			for (const name of colonyNames) {
 				if (this.name.includes(name)) {
 					if (this.name.split(name)[1] != '') continue; // in case of other substring, e.g. E11S12 and E11S1
-					this.memory[_MEM.COLONY] = name;
+					this.memory[MEM.COLONY] = name;
 					return Overmind.colonies[name];
 				}
 			}
@@ -222,7 +222,7 @@ export abstract class Directive {
 			const colony = Overmind.colonies[Overmind.colonyMap[this.pos.roomName]] as Colony | undefined;
 			if (colony) {
 				if (!colonyFilter || colonyFilter(colony)) {
-					this.memory[_MEM.COLONY] = colony.name;
+					this.memory[MEM.COLONY] = colony.name;
 					return colony;
 				}
 			}
@@ -255,7 +255,7 @@ export abstract class Directive {
 
 			if (nearestColony) {
 				log.info(`Colony ${nearestColony.room.print} assigned to ${this.name}.`);
-				this.memory[_MEM.COLONY] = nearestColony.room.name;
+				this.memory[MEM.COLONY] = nearestColony.room.name;
 				return nearestColony;
 			} else {
 				log.error(`Could not find colony match for ${this.name} in ${this.pos.roomName}! ` +
@@ -376,8 +376,8 @@ export abstract class Directive {
 					log.info(`Creating directive at ${pos.print}... ` +
 							 `No visibility in room; directive will be relocated on next tick.`);
 					let createAtPos: RoomPosition;
-					if (opts.memory && opts.memory[_MEM.COLONY]) {
-						createAtPos = Pathing.findPathablePosition(opts.memory[_MEM.COLONY]!);
+					if (opts.memory && opts.memory[MEM.COLONY]) {
+						createAtPos = Pathing.findPathablePosition(opts.memory[MEM.COLONY]!);
 					} else {
 						createAtPos = Pathing.findPathablePosition(_.first(getAllColonies()).room.name);
 					}
@@ -390,8 +390,8 @@ export abstract class Directive {
 					log.info(`Creating directive at ${pos.print}... ` +
 							 `No visibility in room; directive will be relocated on next tick.`);
 					let createAtPos: RoomPosition;
-					if (opts.memory && opts.memory[_MEM.COLONY]) {
-						createAtPos = Pathing.findPathablePosition(opts.memory[_MEM.COLONY]!);
+					if (opts.memory && opts.memory[MEM.COLONY]) {
+						createAtPos = Pathing.findPathablePosition(opts.memory[MEM.COLONY]!);
 					} else {
 						createAtPos = Pathing.findPathablePosition(_.first(getAllColonies()).room.name);
 					}

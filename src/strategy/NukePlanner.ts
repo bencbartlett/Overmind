@@ -36,7 +36,7 @@ interface NukePlannerMemory {
 			},
 			intel?: {
 				plan: NukePlan,
-				[_MEM.EXPIRATION]: number
+				[MEM.EXPIRATION]: number
 			}
 		}
 	};
@@ -76,7 +76,7 @@ export class NukePlanner {
 		}
 
 		const expiration = this.memory.targetRooms[room.name].intel
-						   ? this.memory.targetRooms[room.name].intel![_MEM.EXPIRATION] : -1;
+						   ? this.memory.targetRooms[room.name].intel![MEM.EXPIRATION] : -1;
 
 		if (Game.time < expiration) {
 			return;
@@ -93,11 +93,11 @@ export class NukePlanner {
 
 		if (bestStructure) {
 			this.memory.targetRooms[room.name].intel = {
-				plan             : {
+				plan            : {
 					pos  : bestStructure.pos,
 					score: structureScore(bestStructure)
 				},
-				[_MEM.EXPIRATION]: getCacheExpiration(EVALUATE_ROOM_EXPIRATION, 100)
+				[MEM.EXPIRATION]: getCacheExpiration(EVALUATE_ROOM_EXPIRATION, 100)
 			};
 		}
 	}
@@ -131,7 +131,7 @@ export class NukePlanner {
 		}
 
 		const intel = this.memory.targetRooms[targetRoomName].intel;
-		if (intel && intel.plan && intel[_MEM.EXPIRATION]) {
+		if (intel && intel.plan && intel[MEM.EXPIRATION]) {
 
 		}
 

@@ -611,8 +611,8 @@ export class Zerg extends AnyZerg {
 	//  * Colony that the creep belongs to.
 	//  */
 	// get colony(): Colony | null {
-	// 	if (this.memory[_MEM.COLONY] != null) {
-	// 		return Overmind.colonies[this.memory[_MEM.COLONY] as string];
+	// 	if (this.memory[MEM.COLONY] != null) {
+	// 		return Overmind.colonies[this.memory[MEM.COLONY] as string];
 	// 	} else {
 	// 		return null;
 	// 	}
@@ -620,9 +620,9 @@ export class Zerg extends AnyZerg {
 	//
 	// set colony(newColony: Colony | null) {
 	// 	if (newColony != null) {
-	// 		this.memory[_MEM.COLONY] = newColony.name;
+	// 		this.memory[MEM.COLONY] = newColony.name;
 	// 	} else {
-	// 		this.memory[_MEM.COLONY] = null;
+	// 		this.memory[MEM.COLONY] = null;
 	// 	}
 	// }
 	//
@@ -630,7 +630,7 @@ export class Zerg extends AnyZerg {
 	//  * If the creep is in a colony room or outpost
 	//  */
 	// get inColonyRoom(): boolean {
-	// 	return Overmind.colonyMap[this.room.name] == this.memory[_MEM.COLONY];
+	// 	return Overmind.colonyMap[this.room.name] == this.memory[MEM.COLONY];
 	// }
 
 	// Movement and location -------------------------------------------------------------------------------------------

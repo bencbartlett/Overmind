@@ -109,8 +109,8 @@ interface PublicSegment {
 }
 
 interface CreepMemory {
-	[_MEM.OVERLORD]: string | null;
-	[_MEM.COLONY]: string | null;
+	[MEM.OVERLORD]: string | null;
+	[MEM.COLONY]: string | null;
 	role: string;
 	task: ProtoTask | null;
 	needBoosts?: ResourceConstant[];
@@ -163,9 +163,9 @@ interface CreepTracker {
 }
 
 interface FlagMemory {
-	[_MEM.TICK]?: number;
-	[_MEM.EXPIRATION]?: number;
-	[_MEM.COLONY]?: string;
+	[MEM.TICK]?: number;
+	[MEM.EXPIRATION]?: number;
+	[MEM.COLONY]?: string;
 	debug?: boolean;
 	suspendUntil?: number;
 	amount?: number;
@@ -184,7 +184,7 @@ interface FlagMemory {
 
 // Room memory key aliases to minimize memory size
 
-declare const enum _MEM {
+declare const enum MEM {
 	TICK       = 'T',
 	EXPIRATION = 'X',
 	COLONY     = 'C',
@@ -193,7 +193,7 @@ declare const enum _MEM {
 	STATS      = 'S',
 }
 
-declare const enum _RM {
+declare const enum RMEM {
 	AVOID                = 'a',
 	SOURCES              = 's',
 	CONTROLLER           = 'c',
@@ -210,7 +210,7 @@ declare const enum _RM {
 	PORTALS              = 'pr',
 }
 
-declare const enum _RM_IS {
+declare const enum RMEM_STRUCTS {
 	TOWERS   = 't',
 	SPAWNS   = 'sp',
 	STORAGE  = 's',
@@ -219,12 +219,12 @@ declare const enum _RM_IS {
 	RAMPARTS = 'r',
 }
 
-declare const enum _RM_INVASION {
+declare const enum RMEM_INVASION {
 	HARVESTED = 'h',
 	LAST_SEEN = 'l',
 }
 
-declare const enum _RM_CTRL {
+declare const enum RMEM_CTRL {
 	LEVEL              = 'l',
 	OWNER              = 'o',
 	RESERVATION        = 'r',
@@ -237,12 +237,12 @@ declare const enum _RM_CTRL {
 	PROGRESS_TOTAL     = 'pt',
 }
 
-declare const enum _RM_MNRL {
+declare const enum RMEM_MNRL {
 	MINERALTYPE = 't',
 	DENSITY     = 'd',
 }
 
-declare const enum _ROLLING_STATS {
+declare const enum MEM_AVGS {
 	AMOUNT  = 'a',
 	AVG1K   = 'k',
 	AVG10K  = 'D',
@@ -252,11 +252,11 @@ declare const enum _ROLLING_STATS {
 
 
 interface RollingStats {
-	[_ROLLING_STATS.AMOUNT]: number;
-	[_ROLLING_STATS.AVG10K]: number;
-	[_ROLLING_STATS.AVG100K]: number;
-	[_ROLLING_STATS.AVG1M]: number;
-	[_MEM.TICK]: number;
+	[MEM_AVGS.AMOUNT]: number;
+	[MEM_AVGS.AVG10K]: number;
+	[MEM_AVGS.AVG100K]: number;
+	[MEM_AVGS.AVG1M]: number;
+	[MEM.TICK]: number;
 }
 
 interface ExpansionData {
@@ -267,35 +267,35 @@ interface ExpansionData {
 
 interface RoomMemory {
 	spawnGroup?: any;
-	[_MEM.EXPIRATION]?: number;
-	[_MEM.TICK]?: number;
-	[_RM.AVOID]?: boolean;
-	[_RM.SOURCES]?: SavedSource[];
-	[_RM.CONTROLLER]?: SavedController | undefined;
-	[_RM.PORTALS]?: SavedPortal[];
-	[_RM.MINERAL]?: SavedMineral | undefined;
-	[_RM.SKLAIRS]?: SavedRoomObject[];
-	[_RM.IMPORTANT_STRUCTURES]?: {
+	[MEM.EXPIRATION]?: number;
+	[MEM.TICK]?: number;
+	[RMEM.AVOID]?: boolean;
+	[RMEM.SOURCES]?: SavedSource[];
+	[RMEM.CONTROLLER]?: SavedController | undefined;
+	[RMEM.PORTALS]?: SavedPortal[];
+	[RMEM.MINERAL]?: SavedMineral | undefined;
+	[RMEM.SKLAIRS]?: SavedRoomObject[];
+	[RMEM.IMPORTANT_STRUCTURES]?: {
 		// Positions of important structures relevant to sieges
-		[_RM_IS.TOWERS]: string[];
-		[_RM_IS.SPAWNS]: string[];
-		[_RM_IS.STORAGE]: string | undefined;
-		[_RM_IS.TERMINAL]: string | undefined;
-		[_RM_IS.WALLS]: string[];
-		[_RM_IS.RAMPARTS]: string[];
+		[RMEM_STRUCTS.TOWERS]: string[];
+		[RMEM_STRUCTS.SPAWNS]: string[];
+		[RMEM_STRUCTS.STORAGE]: string | undefined;
+		[RMEM_STRUCTS.TERMINAL]: string | undefined;
+		[RMEM_STRUCTS.WALLS]: string[];
+		[RMEM_STRUCTS.RAMPARTS]: string[];
 	} | undefined;
-	[_RM.EXPANSION_DATA]?: ExpansionData | false;
-	[_RM.INVASION_DATA]?: {
-		[_RM_INVASION.HARVESTED]: number;
-		[_RM_INVASION.LAST_SEEN]: number;
+	[RMEM.EXPANSION_DATA]?: ExpansionData | false;
+	[RMEM.INVASION_DATA]?: {
+		[RMEM_INVASION.HARVESTED]: number;
+		[RMEM_INVASION.LAST_SEEN]: number;
 	};
-	// [_RM.HARVEST]?: RollingStats;
-	// [_RM.CASUALTIES]?: {
+	// [RMEM.HARVEST]?: RollingStats;
+	// [RMEM.CASUALTIES]?: {
 	// 	cost: RollingStats
 	// };
-	[_RM.SAFETY]?: SafetyData;
-	[_RM.PREV_POSITIONS]?: { [creepID: string]: ProtoPos };
-	[_RM.CREEPS_IN_ROOM]?: { [tick: number]: string[] };
+	[RMEM.SAFETY]?: SafetyData;
+	[RMEM.PREV_POSITIONS]?: { [creepID: string]: ProtoPos };
+	[RMEM.CREEPS_IN_ROOM]?: { [tick: number]: string[] };
 }
 
 interface SavedRoomObject {
@@ -308,26 +308,26 @@ interface SavedSource extends SavedRoomObject {
 
 interface SavedPortal extends SavedRoomObject {
 	dest: string | { shard: string, room: string }; // destination name
-	[_MEM.EXPIRATION]: number; // when portal will decay TODO factor in forever intershard portals
+	[MEM.EXPIRATION]: number; // when portal will decay TODO factor in forever intershard portals
 }
 
 interface SavedController extends SavedRoomObject {
-	[_RM_CTRL.LEVEL]: number;
-	[_RM_CTRL.OWNER]: string | undefined;
-	[_RM_CTRL.RESERVATION]: {
-		[_RM_CTRL.RES_USERNAME]: string,
-		[_RM_CTRL.RES_TICKSTOEND]: number,
+	[RMEM_CTRL.LEVEL]: number;
+	[RMEM_CTRL.OWNER]: string | undefined;
+	[RMEM_CTRL.RESERVATION]: {
+		[RMEM_CTRL.RES_USERNAME]: string,
+		[RMEM_CTRL.RES_TICKSTOEND]: number,
 	} | undefined;
-	[_RM_CTRL.SAFEMODE]: number | undefined;
-	[_RM_CTRL.SAFEMODE_AVAILABLE]: number;
-	[_RM_CTRL.SAFEMODE_COOLDOWN]: number | undefined;
-	[_RM_CTRL.PROGRESS]: number | undefined;
-	[_RM_CTRL.PROGRESS_TOTAL]: number | undefined;
+	[RMEM_CTRL.SAFEMODE]: number | undefined;
+	[RMEM_CTRL.SAFEMODE_AVAILABLE]: number;
+	[RMEM_CTRL.SAFEMODE_COOLDOWN]: number | undefined;
+	[RMEM_CTRL.PROGRESS]: number | undefined;
+	[RMEM_CTRL.PROGRESS_TOTAL]: number | undefined;
 }
 
 interface SavedMineral extends SavedRoomObject {
-	[_RM_MNRL.MINERALTYPE]: MineralConstant;
-	[_RM_MNRL.DENSITY]: number;
+	[RMEM_MNRL.MINERALTYPE]: MineralConstant;
+	[RMEM_MNRL.DENSITY]: number;
 }
 
 declare const enum _RM_SAFETY {
@@ -335,7 +335,7 @@ declare const enum _RM_SAFETY {
 	UNSAFE_FOR = 'u',
 	SAFETY_1K  = 'k',
 	SAFETY_10K = 'D',
-	TICK       = _MEM.TICK
+	TICK       = MEM.TICK
 }
 
 interface SafetyData {

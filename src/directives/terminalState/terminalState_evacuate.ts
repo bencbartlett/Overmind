@@ -61,7 +61,7 @@ export class DirectiveTerminalEvacuateState extends Directive {
 	run() {
 		// Incubation directive gets removed once the colony has a command center (storage)
 		if (!this.colony || !this.colony.terminal || !!this.colony.controller.safeMode
-			|| Game.time > (this.memory[_MEM.TICK] || 0) + EVACUATE_STATE_TIMEOUT) {
+			|| Game.time > (this.memory[MEM.TICK] || 0) + EVACUATE_STATE_TIMEOUT) {
 			this.remove();
 		}
 	}

@@ -501,7 +501,7 @@ export class OvermindConsole {
 			for (const portalRoomName of _.keys(portals)) {
 				const samplePortal = _.first(portals[portalRoomName]); // don't need to list all 8 in a room
 				ret += `\t\t Room ${printRoomName(portalRoomName)} Destination ${samplePortal.dest} ` +
-					   `Expiration ${samplePortal[_MEM.EXPIRATION] - Game.time}] \n`;
+					   `Expiration ${samplePortal[MEM.EXPIRATION] - Game.time}] \n`;
 			}
 		}
 		return ret;

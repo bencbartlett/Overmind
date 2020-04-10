@@ -40,7 +40,7 @@ export class Pathing {
 	 * Check if the room should be avoiding when calculating routes
 	 */
 	static shouldAvoid(roomName: string) {
-		return Memory.rooms[roomName] && Memory.rooms[roomName][_RM.AVOID];
+		return Memory.rooms[roomName] && Memory.rooms[roomName][RMEM.AVOID];
 	}
 
 	/**
@@ -51,9 +51,9 @@ export class Pathing {
 			return;
 		}
 		if (!room.my && room.towers.length > 0 && !isAlly(room.owner || '')) {
-			room.memory[_RM.AVOID] = true;
+			room.memory[RMEM.AVOID] = true;
 		} else {
-			delete room.memory[_RM.AVOID];
+			delete room.memory[RMEM.AVOID];
 			// if (room.memory.expansionData == false) delete room.memory.expansionData;
 		}
 	}
@@ -63,7 +63,8 @@ export class Pathing {
 	/**
 	 * Find a path from origin to destination
 	 */
-	static findPath(origin: RoomPosition, destination: RoomPosition, options: MoveOptions = {}): PathFinderPath {
+	static findPath(origin: RoomPosition, destination: RoomPosition,
+					options: MoveOptions = {}): PathFinderPath | ERR_NO_PATH {
 		_.defaults(options, {
 			ignoreCreeps: true,
 			maxOps      : DEFAULT_MAXOPS,
@@ -76,9 +77,13 @@ export class Pathing {
 		}
 
 		// check to see whether findRoute should be used
-		const roomDistance = Game.map.getRoomLinearDistance(origin.roomName, destination.roomName);
+		const linearDistance = Game.map.getRoomLinearDistance(origin.roomName, destination.roomName);
+		if (options.maxRooms && linearDistance > options.maxRooms) {
+			return ERR_NO_PATH;
+		}
+
 		let allowedRooms = options.route;
-		if (!allowedRooms && (options.useFindRoute || (options.useFindRoute === undefined && roomDistance > 2))) {
+		if (!allowedRooms && (options.useFindRoute || (options.useFindRoute === undefined && linearDistance > 2))) {
 			allowedRooms = this.findRoute(origin.roomName, destination.roomName, options);
 		}
 
@@ -100,7 +105,7 @@ export class Pathing {
 				// handle case where pathfinder failed at a short distance due to not using findRoute
 				// can happen for situations where the creep would have to take an uncommonly indirect path
 				// options.allowedRooms and options.routeCallback can also be used to handle this situation
-				if (roomDistance <= 2) {
+				if (linearDistance <= 2) {
 					log.warning(`Movement: path failed without findroute. Origin: ${origin.print}, ` +
 								`destination: ${destination.print}. Trying again with options.useFindRoute = true...`);
 					options.useFindRoute = true;
@@ -113,6 +118,60 @@ export class Pathing {
 			}
 		}
 		return ret;
+	}
+
+	/**
+	 * Find a viable sequence of rooms to narrow down Pathfinder algorithm
+	 */
+	static findRoute(origin: string, destination: string,
+					 options: MoveOptions = {}): { [roomName: string]: boolean } | undefined {
+
+		const linearDistance = Game.map.getRoomLinearDistance(origin, destination);
+		const restrictDistance = options.restrictDistance || linearDistance + 10;
+		const allowedRooms = {[origin]: true, [destination]: true};
+
+		// Determine whether to use highway bias
+		let highwayBias = 1;
+		if (options.preferHighway) {
+			highwayBias = 2.5;
+		} else if (options.preferHighway != false) {
+			// if (linearDistance > 8) {
+			// 	highwayBias = 2.5;
+			// } else {
+			// 	let oCoords = Cartographer.getRoomCoordinates(origin);
+			// 	let dCoords = Cartographer.getRoomCoordinates(destination);
+			// 	if (_.any([oCoords.x, oCoords.y, dCoords.x, dCoords.y], z => z % 10 <= 1 || z % 10 >= 9)) {
+			// 		highwayBias = 2.5;
+			// 	}
+			// }
+		}
+
+		const ret = Game.map.findRoute(origin, destination, {
+			routeCallback: (roomName: string) => {
+				const rangeToRoom = Game.map.getRoomLinearDistance(origin, roomName);
+				if (rangeToRoom > restrictDistance) { // room is too far out of the way
+					return Number.POSITIVE_INFINITY;
+				}
+				if (!options.allowHostile && this.shouldAvoid(roomName) &&
+					roomName !== destination && roomName !== origin) { // room is marked as "avoid" in room memory
+					return Number.POSITIVE_INFINITY;
+				}
+				if (options.preferHighway && (Cartographer.roomType(roomName) == ROOMTYPE_ALLEY
+											  || Cartographer.roomType(roomName) == ROOMTYPE_CROSSROAD)) {
+					return 1;
+				}
+				return highwayBias;
+			},
+		});
+
+		if (!_.isArray(ret)) {
+			log.warning(`Movement: couldn't findRoute from ${origin} to ${destination}!`);
+		} else {
+			for (const value of ret) {
+				allowedRooms[value.room] = true;
+			}
+			return allowedRooms;
+		}
 	}
 
 	/**
@@ -771,60 +830,6 @@ export class Pathing {
 		}
 
 		return exitPositions;
-	}
-
-
-	/**
-	 * Find a viable sequence of rooms to narrow down Pathfinder algorithm
-	 */
-	static findRoute(origin: string, destination: string,
-					 options: MoveOptions = {}): { [roomName: string]: boolean } | undefined {
-		const linearDistance = Game.map.getRoomLinearDistance(origin, destination);
-		const restrictDistance = options.restrictDistance || linearDistance + 10;
-		const allowedRooms = {[origin]: true, [destination]: true};
-
-		// Determine whether to use highway bias
-		let highwayBias = 1;
-		if (options.preferHighway) {
-			highwayBias = 2.5;
-		} else if (options.preferHighway != false) {
-			// if (linearDistance > 8) {
-			// 	highwayBias = 2.5;
-			// } else {
-			// 	let oCoords = Cartographer.getRoomCoordinates(origin);
-			// 	let dCoords = Cartographer.getRoomCoordinates(destination);
-			// 	if (_.any([oCoords.x, oCoords.y, dCoords.x, dCoords.y], z => z % 10 <= 1 || z % 10 >= 9)) {
-			// 		highwayBias = 2.5;
-			// 	}
-			// }
-		}
-
-		const ret = (<GameMap>Game.map).findRoute(origin, destination, {
-			routeCallback: (roomName: string) => {
-				const rangeToRoom = Game.map.getRoomLinearDistance(origin, roomName);
-				if (rangeToRoom > restrictDistance) { // room is too far out of the way
-					return Number.POSITIVE_INFINITY;
-				}
-				if (!options.allowHostile && this.shouldAvoid(roomName) &&
-					roomName !== destination && roomName !== origin) { // room is marked as "avoid" in room memory
-					return Number.POSITIVE_INFINITY;
-				}
-				if (options.preferHighway && (Cartographer.roomType(roomName) == ROOMTYPE_ALLEY
-											  || Cartographer.roomType(roomName) == ROOMTYPE_CROSSROAD)) {
-					return 1;
-				}
-				return highwayBias;
-			},
-		});
-
-		if (!_.isArray(ret)) {
-			log.warning(`Movement: couldn't findRoute from ${origin} to ${destination}!`);
-		} else {
-			for (const value of ret) {
-				allowedRooms[value.room] = true;
-			}
-			return allowedRooms;
-		}
 	}
 
 	/**

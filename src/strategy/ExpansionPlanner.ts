@@ -107,12 +107,12 @@ export class ExpansionPlanner implements IExpansionPlanner {
 				}
 				// Are there powerful hostile rooms nearby?
 				const adjacentRooms = Cartographer.findRoomsInRange(roomName, 1);
-				if (_.any(adjacentRooms, roomName => Memory.rooms[roomName][_RM.AVOID])) {
+				if (_.any(adjacentRooms, roomName => Memory.rooms[roomName][RMEM.AVOID])) {
 					continue;
 				}
 				// Reward new minerals and catalyst rooms
-				const mineralType = Memory.rooms[roomName][_RM.MINERAL]
-									? Memory.rooms[roomName][_RM.MINERAL]![_RM_MNRL.MINERALTYPE]
+				const mineralType = Memory.rooms[roomName][RMEM.MINERAL]
+									? Memory.rooms[roomName][RMEM.MINERAL]![RMEM_MNRL.MINERALTYPE]
 									: undefined;
 				if (mineralType) {
 					if (!allOwnedMinerals.includes(mineralType)) {

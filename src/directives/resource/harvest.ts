@@ -14,8 +14,8 @@ export const _HARVEST_MEM_DOWNTIME = 'd';
 
 interface DirectiveHarvestMemory extends FlagMemory {
 	[_HARVEST_MEM_PATHING]?: {
-		[_MEM.DISTANCE]: number,
-		[_MEM.EXPIRATION]: number
+		[MEM.DISTANCE]: number,
+		[MEM.EXPIRATION]: number
 	};
 	[_HARVEST_MEM_USAGE]: number;
 	[_HARVEST_MEM_DOWNTIME]: number;
@@ -45,22 +45,22 @@ export class DirectiveHarvest extends Directive {
 		super(flag);
 		if (this.colony) {
 			this.colony.miningSites[this.name] = this;
-			this.colony.destinations.push({pos: this.pos, order: this.memory[_MEM.TICK] || Game.time});
+			this.colony.destinations.push({pos: this.pos, order: this.memory[MEM.TICK] || Game.time});
 		}
 		_.defaultsDeep(this.memory, defaultDirectiveHarvestMemory);
 	}
 
 	// Hauling distance
 	get distance(): number {
-		if (!this.memory[_HARVEST_MEM_PATHING] || Game.time >= this.memory[_HARVEST_MEM_PATHING]![_MEM.EXPIRATION]) {
+		if (!this.memory[_HARVEST_MEM_PATHING] || Game.time >= this.memory[_HARVEST_MEM_PATHING]![MEM.EXPIRATION]) {
 			const distance = Pathing.distance(this.colony.pos, this.pos);
 			const expiration = getCacheExpiration(this.colony.storage ? 5000 : 1000);
 			this.memory[_HARVEST_MEM_PATHING] = {
-				[_MEM.DISTANCE]  : distance,
-				[_MEM.EXPIRATION]: expiration
+				[MEM.DISTANCE]  : distance,
+				[MEM.EXPIRATION]: expiration
 			};
 		}
-		return this.memory[_HARVEST_MEM_PATHING]![_MEM.DISTANCE];
+		return this.memory[_HARVEST_MEM_PATHING]![MEM.DISTANCE];
 	}
 
 	spawnMoarOverlords() {

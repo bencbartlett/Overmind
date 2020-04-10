@@ -264,10 +264,10 @@ export class VersionMigration {
 
 		// Reformat flag and harvest directive memory
 		const newFlagKeys: { [oldKey: string]: string } = {
-			created   : _MEM.TICK,
-			expiration: _MEM.EXPIRATION,
-			overlord  : _MEM.OVERLORD,
-			colony    : _MEM.COLONY,
+			created   : MEM.TICK,
+			expiration: MEM.EXPIRATION,
+			overlord  : MEM.OVERLORD,
+			colony    : MEM.COLONY,
 		};
 		for (const name in Memory.flags) {
 
@@ -295,8 +295,8 @@ export class VersionMigration {
 
 		// Reformat creep memory
 		const newCreepKeys: { [oldKey: string]: string } = {
-			overlord: _MEM.OVERLORD,
-			colony  : _MEM.COLONY,
+			overlord: MEM.OVERLORD,
+			colony  : MEM.COLONY,
 		};
 		for (const name in Memory.creeps) {
 			// Replace old keys with new ones

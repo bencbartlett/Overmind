@@ -779,7 +779,7 @@ export class CombatIntel {
 		if (!creep.room.my) {
 			log.warning(`isEdgeDancing should only be called in owned rooms!`);
 		}
-		const creepOccupancies = creep.room.memory[_RM.CREEPS_IN_ROOM];
+		const creepOccupancies = creep.room.memory[RMEM.CREEPS_IN_ROOM];
 		if (creepOccupancies) {
 			// Look to see if the creep has exited and re-entered the room a given number of times
 			const creepInRoomTicks = [];

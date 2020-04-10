@@ -63,7 +63,7 @@
 //
 // 	run() {
 // 		// Incubation directive gets removed once the colony has a command center (storage)
-// 		if (!this.colony || !this.terminal || Game.time > (this.memory[_MEM.TICK] || 0) + EMERGENCY_STATE_TIMEOUT) {
+// 		if (!this.colony || !this.terminal || Game.time > (this.memory[MEM.TICK] || 0) + EMERGENCY_STATE_TIMEOUT) {
 // 			this.remove();
 // 		}
 // 	}
