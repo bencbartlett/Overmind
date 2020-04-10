@@ -159,7 +159,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 					defender.goTo(reaper, {
 						movingTarget: defender.pos.getRangeTo(reaper) > 8,
 						maxRooms    : 1,
-						repath      : 0.1
+						repathChance: 0.1
 					});
 				} else {
 					const keeper = this.targetLair.pos.findClosestByLimitedRange(this.room.sourceKeepers, 7);

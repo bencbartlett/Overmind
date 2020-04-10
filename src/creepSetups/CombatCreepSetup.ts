@@ -137,7 +137,7 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 
 
 	/**
-	 * Generate a body array from a count of body parts. We order the body as
+	 * Generate a body array from a count of body parts. Body is ordered as
 	 * TOUGH -> RANGED -> WORK -> ATTACK -> HEAL -> MOVE if opts.putMoveFirstInBody is true, otherwise we order as
 	 * TOUGH -> MOVE -> RANGED -> WORK -> ATTACK -> HEAL, and always put a final MOVE part at the end. Although this
 	 * ordering is the same for all methods in this class, it isn't possible for example to have a creep with

@@ -10,7 +10,7 @@ import {AnyZerg, normalizeAnyZerg} from '../zerg/AnyZerg';
 import {Swarm} from '../zerg/Swarm';
 import {Zerg} from '../zerg/Zerg';
 import {getTerrainCosts, isExit, normalizePos, sameCoord} from './helpers';
-import {Pathing} from './Pathing';
+import {Pathing, Route} from './Pathing';
 
 
 export const CROSSING_PORTAL = 21;
@@ -46,6 +46,27 @@ export const MovePriorities = {
 	default               : 10,
 };
 
+export interface PathOptions {
+	terrainCosts?: {							// terrain costs, determined automatically for creep body if unspecified
+		plainCost: number,							// plain costs; typical: 2
+		swampCost: number							// swamp costs; typical: 10
+	};
+	ignoreCreeps?: boolean;						// ignore pathing around creeps
+	ignoreStructures?: boolean;					// ignore pathing around structures
+	avoidSK?: boolean;							// avoid walking within range 4 of source keepers
+	obstacles?: RoomPosition[];					// don't path through these room positions
+	route?: Route;								// manually supply the map route to take
+	useFindRoute?: boolean;						// whether to use the route finder; determined automatically otherwise
+	maxOps?: number;							// pathfinding times out after this many operations
+	ensurePath?: boolean;						// can be useful if route keeps being found as incomplete
+	modifyRoomCallback?: (r: Room, m: CostMatrix) => CostMatrix; // modifications to default cost matrix calculations
+}
+
+export interface RouteOptions {
+	preferHighway?: boolean;					// prefer alley-type rooms
+	allowHostile?: boolean;						// allow to path through hostile rooms; origin/destination room excluded
+	allowPortals?: boolean;
+}
 
 export interface MoveOptions {
 	direct?: boolean;							// ignore all terrain costs
@@ -63,18 +84,17 @@ export interface MoveOptions {
 	range?: number;								// range to approach target
 	fleeRange?: number;							// range to flee from targets
 	obstacles?: RoomPosition[];					// don't path through these room positions
-	restrictDistance?: number;					// restrict the distance of route to this number of rooms
+	maxRooms?: number;							// maximum number of rooms to path through
+	route?: Route;								// manually supply the map route to take
 	useFindRoute?: boolean;						// whether to use the route finder; determined automatically otherwise
 	maxOps?: number;							// pathfinding times out after this many operations
 	movingTarget?: boolean;						// appends a direction to path in case creep moves
 	stuckValue?: number;						// creep is marked stuck after this many idle ticks
-	maxRooms?: number;							// maximum number of rooms to path through
-	repath?: number;							// probability of repathing on a given tick
-	repathOnceVisible?: boolean;				// repath after gaining visibility to a previously invisible room
-	route?: { [roomName: string]: boolean };	// lookup table for allowable pathing rooms
+	repathChance?: number;							// probability of repathing on a given tick
 	ensurePath?: boolean;						// can be useful if route keeps being found as incomplete
 	noPush?: boolean;							// whether to ignore pushing behavior
 	modifyRoomCallback?: (r: Room, m: CostMatrix) => CostMatrix; // modifications to default cost matrix calculations
+	allowPortals?: boolean;
 	waypoints?: RoomPosition[];					// list of waypoints to visit on the way to target
 }
 
@@ -263,12 +283,7 @@ export class Movement {
 
 
 		// randomly repath with specified probability
-		if (options.repath && Math.random() < options.repath) {
-			delete moveData.path;
-		}
-
-		// repath if there was no vision for this room when pathfinding was run
-		if (options.repathOnceVisible && !(moveData.roomVisibility || {})[creep.room.name]) {
+		if (options.repathChance && Math.random() < options.repathChance) {
 			delete moveData.path;
 		}
 
@@ -847,7 +862,7 @@ export class Movement {
 			delete moveData.path;
 		}
 
-		if (options.repath && Math.random() < options.repath) {	// randomly repath with specified probability
+		if (options.repath && Math.random() < options.repath) {	// randomly repathChance with specified probability
 			delete moveData.path;
 		}
 
@@ -1163,7 +1178,7 @@ export class Movement {
 		});
 		const dest = normalizePos(destination);
 		if (creep.pos.getRangeTo(dest) > 8) {
-			options.repath = .1;
+			options.repathChance = .1;
 			options.movingTarget = true;
 		}
 		if (creep.room.name == dest.roomName) {

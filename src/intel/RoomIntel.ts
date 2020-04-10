@@ -29,14 +29,11 @@ export interface PortalInfoInterShard {
 }
 
 interface RoomIntelMemory {
-	portalRooms: {
-		[roomName: string]:
-			{ c: string, dest: string | { shard: string; room: string }, [MEM.EXPIRATION]: number | undefined }[]
-	};
+	portalRooms: string[];
 }
 
 const defaultRoomIntelMemory: RoomIntelMemory = {
-	portalRooms: {},
+	portalRooms: [],
 };
 
 @profile
@@ -160,23 +157,19 @@ export class RoomIntel {
 			room.memory[RMEM.PORTALS] = _.map(room.portals, portal => {
 				const dest = portal.destination instanceof RoomPosition ? portal.destination.name
 																		: portal.destination;
-				const expiration = portal.ticksToDecay != undefined ? Game.time + portal.ticksToDecay : Game.time + 1e6;
+				const expiration = portal.ticksToDecay != undefined ? Game.time + portal.ticksToDecay
+																	: Game.time + 1000000;
 				return {c: portal.pos.coordName, dest: dest, [MEM.EXPIRATION]: expiration};
 			});
 			const uniquePortals = _.unique(room.portals, portal =>
 				portal.destination instanceof RoomPosition ? portal.destination.name
 														   : portal.destination);
-			this.memory.portalRooms[room.name] = _.map(uniquePortals, portal => {
-				return {
-					c               : portal.pos.coordName,
-					dest            : portal.destination instanceof RoomPosition ? portal.destination.name
-																				 : portal.destination,
-					[MEM.EXPIRATION]: portal.ticksToDecay,
-				};
-			});
+			if (!this.memory.portalRooms.includes(room.name)) {
+				this.memory.portalRooms.push(room.name);
+			}
 		} else {
 			delete room.memory[RMEM.PORTALS];
-			delete this.memory.portalRooms[room.name];
+			_.pull(this.memory.portalRooms, room.name);
 		}
 	}
 

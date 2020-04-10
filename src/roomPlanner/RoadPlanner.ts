@@ -20,10 +20,10 @@ export interface RoadPlannerMemory {
 	};
 }
 
-const PLAIN_COST = 3;
-const SWAMP_COST = 4;
-const WALL_COST = 15 * PLAIN_COST;
-const EXISTING_PATH_COST = PLAIN_COST - 1;
+const ROAD_PLANNER_PLAIN_COST = 3;
+const ROAD_PLANNER_SWAMP_COST = 4;
+const ROAD_PLANNER_TUNNEL_COST = 15 * ROAD_PLANNER_PLAIN_COST;
+const EXISTING_PATH_COST = ROAD_PLANNER_PLAIN_COST - 1;
 
 const memoryDefaults: RoadPlannerMemory = {
 	roadLookup   : {},
@@ -176,16 +176,16 @@ export class RoadPlanner {
 			for (let x = 0; x < 50; ++x) {
 				switch (terrain.get(x, y)) {
 					case TERRAIN_MASK_SWAMP:
-						matrix.set(x, y, SWAMP_COST);
+						matrix.set(x, y, ROAD_PLANNER_SWAMP_COST);
 						break;
 					case TERRAIN_MASK_WALL:
 						if (x != 0 && y != 0 && x != 49 && y != 49) {
 							// Can't tunnel through walls on edge tiles
-							matrix.set(x, y, WALL_COST);
+							matrix.set(x, y, ROAD_PLANNER_TUNNEL_COST);
 						}
 						break;
 					default: // plain
-						matrix.set(x, y, PLAIN_COST);
+						matrix.set(x, y, ROAD_PLANNER_PLAIN_COST);
 						break;
 				}
 			}

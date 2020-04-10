@@ -319,8 +319,8 @@ interface SavedSource extends SavedRoomObject {
 }
 
 interface SavedPortal extends SavedRoomObject {
-	dest: string | { shard: string, room: string }; // destination name
-	[MEM.EXPIRATION]: number; // when portal will decay TODO factor in forever intershard portals
+	dest: string | { shard: string, room: string }; // destination pos name or intershard destination
+	[MEM.EXPIRATION]: number; // when portal will decay - set to Game.time + 1 million for undefined decay
 }
 
 interface SavedController extends SavedRoomObject {

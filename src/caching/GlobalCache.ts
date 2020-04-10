@@ -1,8 +1,12 @@
+import {MoveOptions} from '../movement/Movement';
 import {profile} from '../profiler/decorator';
 import {getCacheExpiration} from '../utilities/utils';
 
 const CACHE_TIMEOUT = 50;
 const SHORT_CACHE_TIMEOUT = 10;
+const COSTMATRIX_TIMEOUT = 20;
+const PATH_TIMEOUT = 1000;
+
 
 /**
  * The GlobalCache ($) module saves frequently accessed deserialized objects in temporary, volatile global memory
@@ -62,7 +66,7 @@ export class $ { // $ = cash = cache... get it? :D
 	}
 
 	static costMatrix(roomName: string, key: string, callback: () => CostMatrix,
-					  timeout = SHORT_CACHE_TIMEOUT): CostMatrix {
+					  timeout = COSTMATRIX_TIMEOUT): CostMatrix {
 		const cacheKey = roomName + 'm' + key;
 		if (_cache.costMatrices[cacheKey] == undefined || Game.time > _cache.expiration[cacheKey]) {
 			// Recache if new entry or entry is expired
@@ -75,6 +79,11 @@ export class $ { // $ = cash = cache... get it? :D
 	static costMatrixRecall(roomName: string, key: string): CostMatrix | undefined {
 		const cacheKey = roomName + ':' + key;
 		return _cache.costMatrices[cacheKey];
+	}
+
+	static path(fromPos: RoomPosition, toPos: RoomPosition, opts: MoveOptions): RoomPosition[] {
+		// TODO
+		return [];
 	}
 
 	static set<T extends HasRef, K extends keyof T>(thing: T, key: K,
