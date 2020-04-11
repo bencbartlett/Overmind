@@ -16,10 +16,8 @@ const SCORE_RECALC_PROB = 0.05;
 const FALSE_SCORE_RECALC_PROB = 0.01;
 
 
-export interface PortalInfo {
+export interface RoomObjectInfo {
 	pos: RoomPosition;
-	destination: RoomPosition;
-	expiration: number | undefined;
 }
 
 export interface PortalInfoInterShard {
@@ -27,6 +25,53 @@ export interface PortalInfoInterShard {
 	destination: { shard: string; room: string };
 	expiration: number | undefined;
 }
+
+export interface PortalInfo extends RoomObjectInfo {
+	destination: RoomPosition;
+	expiration: number | undefined;
+}
+
+export interface ControllerInfo {
+	level: number | undefined;
+	owner: string | undefined;
+	reservation: {
+		username: string;
+		ticksToEnd: number;
+	} | undefined;
+	safemode: number | undefined;
+	safemodeAvailable: number;
+	safemodeCooldown: number | undefined;
+	progress: number | undefined;
+	progressTotal: number | undefined;
+}
+
+export interface SourceInfo extends RoomObjectInfo {
+	containerPos?: RoomPosition;
+}
+
+export interface MineralInfo extends RoomObjectInfo {
+	mineralType: MineralConstant;
+	density: number;
+}
+
+export interface ImportantStructureInfo {
+	storagePos: RoomPosition | undefined;
+	terminalPos: RoomPosition | undefined;
+	towerPositions: RoomPosition[];
+	spawnPositions: RoomPosition[];
+	wallPositions: RoomPosition[];
+	rampartPositions: RoomPosition[];
+}
+
+export interface RoomInfo {
+	controller: ControllerInfo | undefined;
+	sources: SourceInfo[];
+	portals: PortalInfo[];
+	mineral: MineralInfo | undefined;
+	skLairs: RoomObjectInfo[];
+	importantStructures: ImportantStructureInfo | undefined;
+}
+
 
 interface RoomIntelMemory {
 	portalRooms: string[];
@@ -81,6 +126,96 @@ export class RoomIntel {
 	}
 
 	/**
+	 * Returns information about intra-shard portals in a given room
+	 */
+	static getPortalInfo(roomName: string): PortalInfo[] {
+		if (!Memory.rooms[roomName] || !Memory.rooms[roomName][RMEM.PORTALS]) {
+			return [];
+		}
+		const localPortals = _.filter(Memory.rooms[roomName][RMEM.PORTALS]!,
+									  savedPortal => typeof savedPortal.dest == 'string');
+		return _.map(localPortals, savedPortal => {
+			const pos = derefCoords(savedPortal.c, roomName);
+			const destinationPos = getPosFromString(<string>savedPortal.dest)!;
+			const expiration = savedPortal[MEM.EXPIRATION];
+			return {pos: pos, destination: destinationPos, expiration: expiration};
+		});
+	}
+
+	/**
+	 * Unpackages saved information about a room's controller
+	 */
+	static retrieveControllerInfo(roomName: string): ControllerInfo | undefined {
+		if (!Memory.rooms[roomName] || !Memory.rooms[roomName][RMEM.CONTROLLER]) {
+			return;
+		}
+		const ctlr = Memory.rooms[roomName][RMEM.CONTROLLER]!;
+		return {
+			level            : ctlr[RMEM_CTRL.LEVEL],
+			owner            : ctlr[RMEM_CTRL.OWNER],
+			reservation      : ctlr[RMEM_CTRL.RESERVATION] ? {
+				username  : ctlr[RMEM_CTRL.RESERVATION]![RMEM_CTRL.RES_USERNAME],
+				ticksToEnd: ctlr[RMEM_CTRL.RESERVATION]![RMEM_CTRL.RES_TICKSTOEND],
+			} : undefined,
+			safemode         : ctlr[RMEM_CTRL.SAFEMODE],
+			safemodeAvailable: ctlr[RMEM_CTRL.SAFEMODE_AVAILABLE],
+			safemodeCooldown : ctlr[RMEM_CTRL.SAFEMODE_COOLDOWN],
+			progress         : ctlr[RMEM_CTRL.PROGRESS],
+			progressTotal    : ctlr[RMEM_CTRL.PROGRESS_TOTAL],
+		};
+	}
+
+	static retrieveImportantStructureInfo(roomName: string): ImportantStructureInfo | undefined {
+		if (!Memory.rooms[roomName] || !Memory.rooms[roomName][RMEM.CONTROLLER]) {
+			return;
+		}
+		const data = Memory.rooms[roomName][RMEM.IMPORTANT_STRUCTURES]!;
+		return {
+			storagePos      : data[RMEM_STRUCTS.STORAGE] ?
+							  derefCoords(data[RMEM_STRUCTS.STORAGE]!, roomName) : undefined,
+			terminalPos     : data[RMEM_STRUCTS.TERMINAL] ?
+							  derefCoords(data[RMEM_STRUCTS.TERMINAL]!, roomName) : undefined,
+			towerPositions  : _.map(data[RMEM_STRUCTS.TOWERS], obj => derefCoords(obj, roomName)),
+			spawnPositions  : _.map(data[RMEM_STRUCTS.TOWERS], obj => derefCoords(obj, roomName)),
+			wallPositions   : _.map(data[RMEM_STRUCTS.TOWERS], obj => derefCoords(obj, roomName)),
+			rampartPositions: _.map(data[RMEM_STRUCTS.TOWERS], obj => derefCoords(obj, roomName)),
+		};
+	}
+
+
+	/**
+	 * Retrieves all info for permanent room objects and returns it in a more readable/useful form
+	 */
+	static retrieveRoomObjectData(roomName: string): RoomInfo | undefined {
+		const mem = Memory.rooms[roomName];
+		if (mem) {
+			const savedController = mem[RMEM.CONTROLLER];
+			const savedSources = mem[RMEM.SOURCES] || [];
+			const savedMineral = mem[RMEM.MINERAL];
+			const savedSkLairs = mem[RMEM.SKLAIRS] || [];
+			const savedImportantStructures = mem[RMEM.IMPORTANT_STRUCTURES];
+
+			const returnObject: RoomInfo = {
+				controller         : this.retrieveControllerInfo(roomName),
+				portals            : this.getPortalInfo(roomName),
+				sources            : _.map(savedSources, src =>
+					src.cn ? {pos: derefCoords(src.c, roomName), containerPos: derefCoords(src.cn, roomName)}
+						   : {pos: derefCoords(src.c, roomName)}),
+				mineral            : savedMineral ? {
+					pos        : derefCoords(savedMineral.c, roomName),
+					mineralType: savedMineral[RMEM_MNRL.MINERALTYPE],
+					density    : savedMineral[RMEM_MNRL.DENSITY],
+				} : undefined,
+				skLairs            : _.map(savedSkLairs, lair => ({pos: derefCoords(lair.c, roomName)})),
+				importantStructures: this.retrieveImportantStructureInfo(roomName)
+			};
+
+			return returnObject;
+		}
+	}
+
+
+	/**
 	 * Records all info for permanent room objects, e.g. sources, controllers, etc.
 	 */
 	private static recordPermanentObjects(room: Room): void {
@@ -88,11 +223,12 @@ export class RoomIntel {
 		if (room.sources.length > 0) {
 			const savedSources: SavedSource[] = [];
 			for (const source of room.sources) {
+				const savedSource: SavedSource = {c: source.pos.coordName};
 				const container = source.pos.findClosestByLimitedRange(room.containers, 2);
-				savedSources.push({
-									  c     : source.pos.coordName,
-									  contnr: container ? container.pos.coordName : undefined
-								  });
+				if (container) {
+					savedSource.cn = container.pos.coordName;
+				}
+				savedSources.push(savedSource);
 			}
 			room.memory[RMEM.SOURCES] = savedSources;
 		} else {
@@ -430,23 +566,6 @@ export class RoomIntel {
 			return ticksToEnd - timeSinceLastSeen;
 		}
 		return 0;
-	}
-
-	/**
-	 * Returns information about intra-shard portals in a given room
-	 */
-	static getPortalInfo(roomName: string): PortalInfo[] {
-		if (!Memory.rooms[roomName] || !Memory.rooms[roomName][RMEM.PORTALS]) {
-			return [];
-		}
-		const localPortals = _.filter(Memory.rooms[roomName][RMEM.PORTALS]!,
-									  savedPortal => typeof savedPortal.dest == 'string');
-		return _.map(localPortals, savedPortal => {
-			const pos = derefCoords(savedPortal.c, roomName);
-			const destinationPos = getPosFromString(<string>savedPortal.dest)!;
-			const expiration = savedPortal[MEM.EXPIRATION];
-			return {pos: pos, destination: destinationPos, expiration: expiration};
-		});
 	}
 
 	/**

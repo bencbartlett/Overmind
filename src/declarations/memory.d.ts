@@ -315,7 +315,7 @@ interface SavedRoomObject {
 }
 
 interface SavedSource extends SavedRoomObject {
-	contnr: string | undefined;
+	cn?: string;
 }
 
 interface SavedPortal extends SavedRoomObject {
@@ -324,7 +324,7 @@ interface SavedPortal extends SavedRoomObject {
 }
 
 interface SavedController extends SavedRoomObject {
-	[RMEM_CTRL.LEVEL]: number;
+	[RMEM_CTRL.LEVEL]: number | undefined;
 	[RMEM_CTRL.OWNER]: string | undefined;
 	[RMEM_CTRL.RESERVATION]: {
 		[RMEM_CTRL.RES_USERNAME]: string,

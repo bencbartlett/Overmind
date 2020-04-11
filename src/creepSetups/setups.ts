@@ -12,7 +12,7 @@ export const Roles = {
 	pioneer         : 'pioneer',
 	manager         : 'manager',
 	queen           : 'queen',
-	scout           : 'scout',
+	scout           : 'changeling',
 	transport       : 'transport',
 	worker          : 'worker',
 	upgrader        : 'upgrader',

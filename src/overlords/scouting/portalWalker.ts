@@ -16,23 +16,16 @@ export class PortalScoutOverlord extends Overlord {
 
 	scouts: Zerg[];
 	directive: DirectivePortalScout;
-	waypointNames: string[];
 	waypoints: RoomPosition[];
 
 	constructor(directive: DirectivePortalScout, priority = OverlordPriority.scouting.randomWalker) {
 		super(directive, 'scout', priority);
 		this.directive = directive;
-		this.waypointNames = ['wp1'];
 		this.scouts = this.zerg(Roles.scout, {notifyWhenAttacked: false});
 	}
 
 	init() {
 		this.wishlist(6, Setups.scout);
-	}
-
-	private createWaypoints(): RoomPosition[] {
-		this.waypoints = _.map(this.waypointNames, name => Game.flags[name].pos);
-		return this.waypoints;
 	}
 
 	private portalSays(creep: Zerg, isPublic: boolean) {
@@ -41,12 +34,10 @@ export class PortalScoutOverlord extends Overlord {
 	}
 
 	private handleScout(scout: Zerg) {
-		// Go to the thing. Wild, I know.
-		const waypoints = this.createWaypoints();
 		const finalDestination = this.directive;
 		log.alert(`Portal walker ${scout.print} is in ${scout.room.name}`);
 		if (scout.pos != finalDestination.pos) {
-			scout.goTo(finalDestination, {waypoints: waypoints, pathOpts: {avoidSK: true}});
+			scout.goTo(finalDestination, {pathOpts: {avoidSK: true}});
 		}
 		this.portalSays(scout, true);
 	}

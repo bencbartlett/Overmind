@@ -12,7 +12,7 @@ export function normalizePos(destination: HasPos | RoomPosition): RoomPosition {
 }
 
 /**
- * Returns if the coordinate is on an exit tile
+ * Returns if the coordinate is at the edge of a room. Does not explicitly check if the position is an exit tile.
  */
 export function isExit(pos: Coord): boolean {
 	return pos.x == 0 || pos.y == 0 || pos.x == 49 || pos.y == 49;

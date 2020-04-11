@@ -9,26 +9,18 @@ import {Directive} from '../Directive';
 @profile
 export class DirectivePortalScout extends Directive {
 
-	static directiveName = 'portalscout';
+	static directiveName = 'portalScout';
 	static color = COLOR_ORANGE;
 	static secondaryColor = COLOR_WHITE;
 
 	static requiredRCL = 3;
-
-	constructor(flag: Flag) {
-		super(flag);
-		this.refresh();
-	}
-
-	refresh() {
-		super.refresh();
-	}
 
 	spawnMoarOverlords() {
 		this.overlords.portalScoutOverlord = new PortalScoutOverlord(this);
 	}
 
 	init(): void {
+
 	}
 
 	run(): void {

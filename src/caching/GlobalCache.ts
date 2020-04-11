@@ -65,6 +65,10 @@ export class $ { // $ = cash = cache... get it? :D
 		return _cache.lists[cacheKey];
 	}
 
+	/**
+	 * Caches a CostMatrix computation. Times out quickly, but you can use $.costMatrixRecall() to pull the value for
+	 * an invisible room without triggering a recalc
+	 */
 	static costMatrix(roomName: string, key: string, callback: () => CostMatrix,
 					  timeout = COSTMATRIX_TIMEOUT): CostMatrix {
 		const cacheKey = roomName + 'm' + key;
@@ -76,6 +80,9 @@ export class $ { // $ = cash = cache... get it? :D
 		return _cache.costMatrices[cacheKey];
 	}
 
+	/**
+	 * Returns the value of a previously cached CostMatrix without triggering a cache expiration and recalc
+	 */
 	static costMatrixRecall(roomName: string, key: string): CostMatrix | undefined {
 		const cacheKey = roomName + ':' + key;
 		return _cache.costMatrices[cacheKey];
