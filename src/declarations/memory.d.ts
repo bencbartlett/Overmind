@@ -181,6 +181,7 @@ interface FlagMemory {
 	keepRoads?: boolean;
 	keepContainers?: boolean;
 	waypoints?: string[];
+	allowPortals?: boolean;
 }
 
 // Room memory key aliases to minimize memory size

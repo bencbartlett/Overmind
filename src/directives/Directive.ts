@@ -235,7 +235,8 @@ export abstract class Directive {
 			let nearestColony: Colony | undefined;
 			let minDistance = Infinity;
 			for (const colony of getAllColonies()) {
-				if (Game.map.getRoomLinearDistance(this.pos.roomName, colony.name) > maxLinearRange) {
+				if (Game.map.getRoomLinearDistance(this.pos.roomName, colony.name) > maxLinearRange
+					&& !this.memory.allowPortals) {
 					continue;
 				}
 				if (!colonyFilter || colonyFilter(colony)) {
