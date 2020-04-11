@@ -64,7 +64,7 @@ export class DismantleOverlord extends Overlord {
 	private runDismantler(dismantler: Zerg) {
 		if (!dismantler.inSameRoomAs(this.directive)) {
 			const goal = this.target || this.directive;
-			dismantler.goTo(goal, {avoidSK: true});
+			dismantler.goTo(goal, {pathOpts:{avoidSK: true}});
 		} else {
 			if (!this.target) {
 				if (this.directive.memory.targetId) {

@@ -94,7 +94,7 @@ export class CombatZerg extends Zerg {
 	doMedicActions(roomName: string): boolean {
 		// Travel to the target room
 		if (!this.safelyInRoom(roomName)) {
-			this.goToRoom(roomName, {ensurePath: true});
+			this.goToRoom(roomName, {pathOpts: {ensurePath: true}});
 			return true; // en route
 		}
 		// Heal friendlies
@@ -228,7 +228,7 @@ export class CombatZerg extends Zerg {
 		// Travel to the target room
 		if (!this.safelyInRoom(roomName)) {
 			this.debug(`Going to room!`);
-			return this.goToRoom(roomName, {ensurePath: true});
+			return this.goToRoom(roomName, {pathOpts: {ensurePath: true}});
 		}
 
 		// Skirmish within the room
@@ -262,7 +262,7 @@ export class CombatZerg extends Zerg {
 		// Travel to the target room
 		if (!this.safelyInRoom(roomName)) {
 			this.debug(`Going to room!`);
-			return this.goToRoom(roomName, {ensurePath: true});
+			return this.goToRoom(roomName, {pathOpts: {ensurePath: true}});
 		}
 
 		// Fight within the room
@@ -298,7 +298,7 @@ export class CombatZerg extends Zerg {
 		// Travel to the target room
 		if (!this.safelyInRoom(roomName)) {
 			this.debug(`Going to room!`);
-			return this.goToRoom(roomName, {ensurePath: true});
+			return this.goToRoom(roomName, {pathOpts: {ensurePath: true}});
 		}
 
 		// TODO check if right colony, also yes colony check is in there to stop red squigglies

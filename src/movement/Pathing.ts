@@ -35,6 +35,38 @@ export const MatrixTypes = {
 	nearRampart  : 'nearRamp'
 };
 
+export interface PathOptions {
+	range?: number;
+	fleeRange?: number;							// range to flee from targets
+	terrainCosts?: {							// terrain costs, determined automatically for creep body if unspecified
+		plainCost: number,							// plain costs; typical: 2
+		swampCost: number							// swamp costs; typical: 10
+	};
+	obstacles?: RoomPosition[];					// don't path through these room positions
+	ignoreCreeps?: boolean;						// ignore pathing around creeps
+	ignoreStructures?: boolean;					// ignore pathing around structures
+	allowHostile?: boolean;						// allow to path through hostile rooms; origin/destination room excluded
+	avoidSK?: boolean;							// avoid walking within range 4 of source keepers
+	allowPortals?: boolean;						// allow pathing through portals
+	route?: Route;								// manually supply the map route to take
+	maxRooms?: number;							// maximum number of rooms to path through
+	useFindRoute?: boolean;						// whether to use the route finder; determined automatically otherwise
+	maxOps?: number;							// pathfinding times out after this many operations
+	ensurePath?: boolean;						// can be useful if route keeps being found as incomplete
+	modifyRoomCallback?: (r: Room, m: CostMatrix) => CostMatrix; // modifications to default cost matrix calculations
+}
+
+export const defaultPathOptions: PathOptions = {
+	range       : 1,
+	terrainCosts: {plainCost: 1, swampCost: 5},
+	ignoreCreeps: true,
+	maxOps      : DEFAULT_MAXOPS,
+	maxRooms    : 25,
+	allowPortals: false,
+	ensurePath  : true,
+};
+
+
 /**
  * Module for pathing-related operations.
  */
@@ -71,7 +103,7 @@ export class Pathing {
 	/**
 	 * Find a path from origin to destination
 	 */
-	static findPath(origin: RoomPosition, destination: RoomPosition, opts: MoveOptions = {}): PathFinderPath {
+	static findPath(origin: RoomPosition, destination: RoomPosition, opts: PathOptions = {}): PathFinderPath {
 		_.defaults(opts, {
 			ignoreCreeps: true,
 			maxOps      : DEFAULT_MAXOPS,
@@ -81,10 +113,6 @@ export class Pathing {
 			terrainCosts: {plainCost: 1, swampCost: 5},
 		});
 
-		if (opts.movingTarget) {
-			opts.range = 0;
-		}
-
 		// check to see whether findRoute should be used
 		const linearDistance = Game.map.getRoomLinearDistance(origin.roomName, destination.roomName);
 		if (opts.maxRooms && linearDistance > opts.maxRooms && !opts.allowPortals) {
@@ -93,15 +121,11 @@ export class Pathing {
 		}
 
 		let route: Route | undefined = opts.route;
-		if (!route && (opts.useFindRoute || (opts.useFindRoute === undefined && linearDistance > 2))) {
+		if (!route && (opts.useFindRoute == true || (opts.useFindRoute === undefined && linearDistance > 2))) {
 			const foundRoute = this.findRoute(origin.roomName, destination.roomName, opts);
 			if (foundRoute != ERR_NO_PATH) {
 				route = foundRoute;
 			}
-		}
-
-		if (opts.direct) {
-			opts.terrainCosts = {plainCost: 1, swampCost: 1};
 		}
 
 		const callback = (roomName: string) => Pathing.roomCallback(roomName, origin, destination, route, opts);
@@ -113,21 +137,22 @@ export class Pathing {
 			roomCallback: callback,
 		});
 
-		if (ret.incomplete && opts.ensurePath) {
-			if (opts.useFindRoute == undefined) {
-				// handle case where pathfinder failed at a short distance due to not using findRoute
-				// can happen for situations where the creep would have to take an uncommonly indirect path
-				// options.allowedRooms and options.routeCallback can also be used to handle this situation
-				if (linearDistance <= 2) {
-					log.warning(`Pathing: path failed without findroute. Origin: ${origin.print}, ` +
-								`destination: ${destination.print}. Trying again with options.useFindRoute = true...`);
-					opts.useFindRoute = true;
-					ret = this.findPath(origin, destination, opts);
-					log.warning(`Pathing: second attempt was ${ret.incomplete ? 'not ' : ''}successful`);
-					return ret;
+		if (ret.incomplete && opts.ensurePath && linearDistance <= 3 && !opts.route) {
+			// handle case where pathfinder failed at a short distance due to not using findRoute
+			// can happen for situations where the creep would have to take an uncommonly indirect path
+			// options.allowedRooms and options.routeCallback can also be used to handle this situation
+			const useRoute = this.findRoute(origin.roomName, destination.roomName, opts);
+			if (useRoute != ERR_NO_PATH) {
+				log.warning(`Pathing: findPath from ${origin.print} to ${destination.print} failed without ` +
+							`specified route. Trying again with route: ${JSON.stringify(useRoute)}.`);
+				opts.route = useRoute;
+				ret = this.findPath(origin, destination, opts);
+				if (ret.incomplete) {
+					log.error(`Pathing: second attempt from ${origin.print} to ${destination.print} was unsuccessful!`);
 				}
 			} else {
-
+				log.error(`Pathing: findPath from ${origin.print} to ${destination.print} failed and route could ` +
+						  `not be explicitly computed!`);
 			}
 		}
 		return ret;
@@ -136,7 +161,7 @@ export class Pathing {
 	/**
 	 * Find a viable sequence of rooms to narrow down Pathfinder algorithm
 	 */
-	static findRoute(origin: string, destination: string, opts: MoveOptions = {}): Route | ERR_NO_PATH {
+	static findRoute(origin: string, destination: string, opts: PathOptions = {}): Route | ERR_NO_PATH {
 
 		_.defaults(opts, {
 			maxRooms    : 25,
@@ -248,7 +273,7 @@ export class Pathing {
 	 * Find a path from origin to destination
 	 */
 	static findSwarmPath(origin: RoomPosition, destination: RoomPosition, width: number, height: number,
-						 options: SwarmMoveOptions = {}): PathFinderPath {
+						 options: PathOptions = {}): PathFinderPath {
 		_.defaults(options, {
 			ignoreCreeps: true,
 			maxOps      : 2 * DEFAULT_MAXOPS,
@@ -283,13 +308,13 @@ export class Pathing {
 	 * Returns the shortest path from start to end position, regardless of (passable) terrain
 	 */
 	static findShortestPath(startPos: RoomPosition, endPos: RoomPosition,
-							options: MoveOptions = {}): PathFinderPath {
-		_.defaults(options, {
+							opts: PathOptions = {}): PathFinderPath {
+		_.defaults(opts, {
 			ignoreCreeps: true,
 			range       : 1,
 			direct      : true,
 		});
-		const ret = this.findPath(startPos, endPos, options);
+		const ret = this.findPath(startPos, endPos, opts);
 		if (ret.incomplete) log.alert(`Pathing: incomplete path from ${startPos.print} to ${endPos.print}!`);
 		return ret;
 	}
@@ -297,9 +322,9 @@ export class Pathing {
 	/**
 	 * Returns the shortest path from start to end position, regardless of (passable) terrain
 	 */
-	static findPathToRoom(startPos: RoomPosition, roomName: string, options: MoveOptions = {}): PathFinderPath {
-		options.range = 23;
-		const ret = this.findPath(startPos, new RoomPosition(25, 25, roomName), options);
+	static findPathToRoom(startPos: RoomPosition, roomName: string, opts: PathOptions = {}): PathFinderPath {
+		opts.range = 23;
+		const ret = Pathing.findPath(startPos, new RoomPosition(25, 25, roomName), opts);
 		if (ret.incomplete) log.alert(`Pathing: incomplete path from ${startPos.print} to ${roomName}!`);
 		return ret;
 	}
@@ -308,39 +333,39 @@ export class Pathing {
 	 * Default room callback, which automatically determines the most appropriate callback method to use
 	 */
 	static roomCallback(roomName: string, origin: RoomPosition, destination: RoomPosition,
-						route: Route | undefined, options: MoveOptions): CostMatrix | boolean {
+						route: Route | undefined, opts: PathOptions): CostMatrix | boolean {
 		if (roomName != origin.roomName && roomName != destination.roomName) {
 			if (route && !_.any(route, routePart => routePart.room == roomName)) {
 				return false; // only allowed to visit these rooms if route is specified
 			}
-			if (!options.allowHostile && this.shouldAvoid(roomName)) {
+			if (!opts.allowHostile && this.shouldAvoid(roomName)) {
 				return false; // don't go through hostile rooms
 			}
 		}
 		const room = Game.rooms[roomName];
 		if (room) {
-			const matrix = this.getCostMatrix(room, options, false);
+			const matrix = this.getCostMatrix(room, opts, false);
 			// Modify cost matrix if needed
-			if (options.modifyRoomCallback) {
-				return options.modifyRoomCallback(room, matrix.clone());
+			if (opts.modifyRoomCallback) {
+				return opts.modifyRoomCallback(room, matrix.clone());
 			} else {
 				return matrix;
 			}
 		} else { // have no vision
-			return this.getCostMatrixForInvisibleRoom(roomName, options);
+			return this.getCostMatrixForInvisibleRoom(roomName, opts);
 		}
 	}
 
 	static swarmRoomCallback(roomName: string, width: number, height: number,
-							 options: SwarmMoveOptions): CostMatrix | boolean {
+							 opts: SwarmMoveOptions): CostMatrix | boolean {
 		const room = Game.rooms[roomName];
 		let matrix: CostMatrix;
-		if (room && !options.ignoreStructures) {
-			matrix = this.getSwarmDefaultMatrix(room, width, height, options, false);
+		if (room && !opts.ignoreStructures) {
+			matrix = this.getSwarmDefaultMatrix(room, width, height, opts, false);
 		} else {
-			matrix = this.getSwarmTerrainMatrix(roomName, width, height, options.exitCost);
+			matrix = this.getSwarmTerrainMatrix(roomName, width, height, opts.exitCost);
 		}
-		if (options.displayCostMatrix) {
+		if (opts.displayCostMatrix) {
 			Visualizer.displayCostMatrix(matrix, roomName);
 		}
 		return matrix;
@@ -359,19 +384,19 @@ export class Pathing {
 	 * Get a kiting path within a room
 	 */
 	static findKitingPath(creepPos: RoomPosition, fleeFrom: (RoomPosition | HasPos)[],
-						  options: MoveOptions = {}): PathFinderPath {
-		_.defaults(options, {
+						  opts: PathOptions = {}): PathFinderPath {
+		_.defaults(opts, {
 			fleeRange   : 5,
 			terrainCosts: {plainCost: 1, swampCost: 5},
 		});
 		const fleeFromPos = _.map(fleeFrom, flee => normalizePos(flee));
 		const avoidGoals = _.map(fleeFromPos, pos => {
-			return {pos: pos, range: options.fleeRange!};
+			return {pos: pos, range: opts.fleeRange!};
 		});
 		return PathFinder.search(creepPos, avoidGoals,
 								 {
-									 plainCost   : options.terrainCosts!.plainCost,
-									 swampCost   : options.terrainCosts!.swampCost,
+									 plainCost   : opts.terrainCosts!.plainCost,
+									 swampCost   : opts.terrainCosts!.swampCost,
 									 flee        : true,
 									 roomCallback: Pathing.kitingRoomCallback,
 									 maxRooms    : 1
@@ -382,25 +407,25 @@ export class Pathing {
 	 * Get a flee path possibly leaving the room; generally called further in advance of kitingPath
 	 */
 	static findFleePath(creepPos: RoomPosition, fleeFrom: (RoomPosition | HasPos)[],
-						options: MoveOptions = {}): PathFinderPath {
-		_.defaults(options, {
+						opts: PathOptions = {}): PathFinderPath {
+		_.defaults(opts, {
 			terrainCosts: {plainCost: 1, swampCost: 5},
 		});
-		if (options.fleeRange == undefined) options.fleeRange = options.terrainCosts!.plainCost > 1 ? 20 : 10;
+		if (opts.fleeRange == undefined) opts.fleeRange = opts.terrainCosts!.plainCost > 1 ? 20 : 10;
 		const fleeFromPos = _.map(fleeFrom, flee => normalizePos(flee));
 		const avoidGoals = _.map(fleeFromPos, pos => {
-			return {pos: pos, range: options.fleeRange!};
+			return {pos: pos, range: opts.fleeRange!};
 		});
 		const callback = (roomName: string) => {
-			if (!options.allowHostile && this.shouldAvoid(roomName) && roomName != creepPos.roomName) {
+			if (!opts.allowHostile && this.shouldAvoid(roomName) && roomName != creepPos.roomName) {
 				return false;
 			}
 			const room = Game.rooms[roomName];
 			if (room) {
-				const matrix = this.getCostMatrix(room, options, false);
+				const matrix = this.getCostMatrix(room, opts, false);
 				// Modify cost matrix if needed
-				if (options.modifyRoomCallback) {
-					return options.modifyRoomCallback(room, matrix.clone());
+				if (opts.modifyRoomCallback) {
+					return opts.modifyRoomCallback(room, matrix.clone());
 				} else {
 					return matrix;
 				}
@@ -410,8 +435,8 @@ export class Pathing {
 		};
 		return PathFinder.search(creepPos, avoidGoals,
 								 {
-									 plainCost   : options.terrainCosts!.plainCost,
-									 swampCost   : options.terrainCosts!.swampCost,
+									 plainCost   : opts.terrainCosts!.plainCost,
+									 swampCost   : opts.terrainCosts!.swampCost,
 									 flee        : true,
 									 roomCallback: callback,
 								 });
@@ -422,7 +447,7 @@ export class Pathing {
 	/**
 	 * Get a cloned copy of the cost matrix for a room with specified options
 	 */
-	static getCostMatrix(room: Room, options: MoveOptions, clone = true): CostMatrix {
+	static getCostMatrix(room: Room, options: PathOptions, clone = true): CostMatrix {
 		let matrix: CostMatrix;
 		if (options.ignoreCreeps == false) {
 			matrix = this.getCreepMatrix(room);
@@ -430,8 +455,6 @@ export class Pathing {
 			matrix = this.getSkMatrix(room);
 		} else if (options.ignoreStructures) {
 			matrix = new PathFinder.CostMatrix();
-		} else if (options.direct) {
-			matrix = this.getDirectMatrix(room);
 		} else {
 			matrix = this.getDefaultMatrix(room);
 		}
@@ -469,13 +492,11 @@ export class Pathing {
 		return matrix;
 	}
 
-	private static getCostMatrixForInvisibleRoom(roomName: string, options: MoveOptions,
+	private static getCostMatrixForInvisibleRoom(roomName: string, options: PathOptions,
 												 clone = true): CostMatrix | boolean {
 		let matrix: CostMatrix | undefined;
 		if (options.avoidSK) {
 			matrix = $.costMatrixRecall(roomName, MatrixTypes.sk);
-		} else if (options.direct) {
-			matrix = $.costMatrixRecall(roomName, MatrixTypes.direct);
 		} else {
 			matrix = $.costMatrixRecall(roomName, MatrixTypes.default);
 		}
@@ -567,7 +588,7 @@ export class Pathing {
 	/**
 	 * Default matrix for a room, setting impassable structures and constructionSites to impassible, ignoring roads
 	 */
-	static getDirectMatrix(room: Room): CostMatrix {
+	static getDirectMatrix(room: Room): CostMatrix { // TODO: deprecated
 		return $.costMatrix(room.name, MatrixTypes.direct, () => {
 			const matrix = new PathFinder.CostMatrix();
 			// Set passability of structure positions
@@ -1051,10 +1072,11 @@ export class Pathing {
 	}
 
 	/**
-	 * Whether another object in the same room can be reached from the current position
+	 * Whether another object in the same room can be reached from the current position.
+	 * This method is very expensive and kind of stupid, so use it sparingly!
 	 */
 	static isReachable(startPos: RoomPosition, endPos: RoomPosition, obstacles: (RoomPosition | HasPos)[],
-					   options: MoveOptions = {}): boolean {
+					   options: PathOptions = {}): boolean {
 		_.defaults(options, {
 			ignoreCreeps: true,
 			range       : 1,
@@ -1097,7 +1119,7 @@ export class Pathing {
 	 * Like isReachable(), but returns the first position which should be cleared to find a path to destination
 	 */
 	static findBlockingPos(startPos: RoomPosition, endPos: RoomPosition, obstacles: (RoomPosition | HasPos)[],
-						   options: MoveOptions = {}): RoomPosition | undefined {
+						   options: PathOptions = {}): RoomPosition | undefined {
 		_.defaults(options, {
 			ignoreCreeps: true,
 			range       : 1,

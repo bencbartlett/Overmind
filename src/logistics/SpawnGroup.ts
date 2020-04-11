@@ -9,7 +9,7 @@ import {getCacheExpiration, minBy, onPublicServer} from '../utilities/utils';
 interface SpawnGroupMemory {
 	colonies: string[];
 	distances: { [colonyName: string]: number };
-	routes: { [colonyName: string]: { [roomName: string]: boolean } };
+	// routes: { [colonyName: string]: { [roomName: string]: boolean } };
 	// paths: { [colonyName: string]: { startPos: RoomPosition, path: string[] } }
 	// tick: number;
 	expiration: number;
@@ -18,7 +18,7 @@ interface SpawnGroupMemory {
 const SpawnGroupMemoryDefaults: SpawnGroupMemory = {
 	colonies  : [],
 	distances : {},
-	routes    : {},
+	// routes    : {},
 	// paths    : {},
 	expiration: 0,
 };
@@ -130,18 +130,18 @@ export class SpawnGroup {
 		for (const colony of coloniesInRange) {
 			const spawn = colony.room.spawns[0];
 			if (spawn) {
-				const route = Pathing.findRoute(colony.room.name, this.roomName);
-				const path = Pathing.findPathToRoom(spawn.pos, this.roomName, {route: route});
-				if (route && !path.incomplete && path.path.length <= MAX_PATH_DISTANCE) {
+				// const route = Pathing.findRoute(colony.room.name, this.roomName);
+				const path = Pathing.findPathToRoom(spawn.pos, this.roomName);
+				if (!path.incomplete && path.path.length <= MAX_PATH_DISTANCE) {
 					colonyNames.push(colony.room.name);
-					routes[colony.room.name] = route;
+					// routes[colony.room.name] = route;
 					// paths[room.name] = path.path;
 					distances[colony.room.name] = path.path.length;
 				}
 			}
 		}
 		this.memory.colonies = colonyNames;
-		this.memory.routes = routes;
+		// this.memory.routes = routes;
 		// this.memory.paths = TODO
 		this.memory.distances = distances;
 		this.memory.expiration = getCacheExpiration(DEFAULT_RECACHE_TIME, 25);

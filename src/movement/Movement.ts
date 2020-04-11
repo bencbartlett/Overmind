@@ -10,7 +10,7 @@ import {AnyZerg, normalizeAnyZerg} from '../zerg/AnyZerg';
 import {Swarm} from '../zerg/Swarm';
 import {Zerg} from '../zerg/Zerg';
 import {getTerrainCosts, isExit, normalizePos, sameCoord} from './helpers';
-import {Pathing, Route} from './Pathing';
+import {defaultPathOptions, Pathing, PathOptions} from './Pathing';
 
 
 export const CROSSING_PORTAL = 21;
@@ -46,57 +46,38 @@ export const MovePriorities = {
 	default               : 10,
 };
 
-export interface PathOptions {
-	terrainCosts?: {							// terrain costs, determined automatically for creep body if unspecified
-		plainCost: number,							// plain costs; typical: 2
-		swampCost: number							// swamp costs; typical: 10
-	};
-	ignoreCreeps?: boolean;						// ignore pathing around creeps
-	ignoreStructures?: boolean;					// ignore pathing around structures
-	avoidSK?: boolean;							// avoid walking within range 4 of source keepers
-	obstacles?: RoomPosition[];					// don't path through these room positions
-	route?: Route;								// manually supply the map route to take
-	useFindRoute?: boolean;						// whether to use the route finder; determined automatically otherwise
-	maxOps?: number;							// pathfinding times out after this many operations
-	ensurePath?: boolean;						// can be useful if route keeps being found as incomplete
-	modifyRoomCallback?: (r: Room, m: CostMatrix) => CostMatrix; // modifications to default cost matrix calculations
-}
-
-export interface RouteOptions {
-	preferHighway?: boolean;					// prefer alley-type rooms
-	allowHostile?: boolean;						// allow to path through hostile rooms; origin/destination room excluded
-	allowPortals?: boolean;
-}
-
 export interface MoveOptions {
-	direct?: boolean;							// ignore all terrain costs
-	terrainCosts?: {							// terrain costs, determined automatically for creep body if unspecified
-		plainCost: number,							// plain costs; typical: 2
-		swampCost: number							// swamp costs; typical: 10
-	};											//
+	// terrainCosts?: {							// terrain costs, determined automatically for creep body if unspecified
+	// 	plainCost: number,							// plain costs; typical: 2
+	// 	swampCost: number							// swamp costs; typical: 10
+	// };											//
 	force?: boolean;							// whether to ignore Zerg.blockMovement
-	ignoreCreeps?: boolean;						// ignore pathing around creeps
+	// ignoreCreeps?: boolean;						// ignore pathing around creeps
 	ignoreCreepsOnDestination?: boolean; 		// ignore creeps currently standing on the destination
-	ignoreStructures?: boolean;					// ignore pathing around structures
-	preferHighway?: boolean;					// prefer alley-type rooms
-	allowHostile?: boolean;						// allow to path through hostile rooms; origin/destination room excluded
-	avoidSK?: boolean;							// avoid walking within range 4 of source keepers
+	// ignoreStructures?: boolean;					// ignore pathing around structures
+	// preferHighway?: boolean;					// prefer alley-type rooms
+	// allowHostile?: boolean;						// allow to path through hostile rooms; origin/destination room excluded
+	// avoidSK?: boolean;							// avoid walking within range 4 of source keepers
 	range?: number;								// range to approach target
 	fleeRange?: number;							// range to flee from targets
-	obstacles?: RoomPosition[];					// don't path through these room positions
-	maxRooms?: number;							// maximum number of rooms to path through
-	route?: Route;								// manually supply the map route to take
-	useFindRoute?: boolean;						// whether to use the route finder; determined automatically otherwise
-	maxOps?: number;							// pathfinding times out after this many operations
+	// obstacles?: RoomPosition[];					// don't path through these room positions
+	// maxRooms?: number;							// maximum number of rooms to path through
+	// route?: Route;								// manually supply the map route to take
+	// maxOps?: number;							// pathfinding times out after this many operations
 	movingTarget?: boolean;						// appends a direction to path in case creep moves
 	stuckValue?: number;						// creep is marked stuck after this many idle ticks
 	repathChance?: number;							// probability of repathing on a given tick
-	ensurePath?: boolean;						// can be useful if route keeps being found as incomplete
+	// ensurePath?: boolean;						// can be useful if route keeps being found as incomplete
 	noPush?: boolean;							// whether to ignore pushing behavior
-	modifyRoomCallback?: (r: Room, m: CostMatrix) => CostMatrix; // modifications to default cost matrix calculations
-	allowPortals?: boolean;
+	// modifyRoomCallback?: (r: Room, m: CostMatrix) => CostMatrix; // modifications to default cost matrix calculations
+	// allowPortals?: boolean;
 	waypoints?: RoomPosition[];					// list of waypoints to visit on the way to target
+	pathOpts?: PathOptions;
 }
+
+export const defaultMoveOptions: MoveOptions = {
+	pathOpts: defaultPathOptions,
+};
 
 export interface SwarmMoveOptions {
 	range?: number;
@@ -107,7 +88,7 @@ export interface SwarmMoveOptions {
 	maxOps?: number;							// pathfinding times out after this many operations
 	stuckValue?: number;						// creep is marked stuck after this many idle ticks
 	maxRooms?: number;							// maximum number of rooms to path through
-	repath?: number;							// probability of repathing on a given tick
+	repathChance?: number;							// probability of repathing on a given tick
 	displayCostMatrix?: boolean;
 }
 
@@ -142,9 +123,9 @@ export class Movement {
 	/**
 	 * Move a creep to a destination
 	 */
-	static goTo(creep: AnyZerg, destination: HasPos | RoomPosition, options: MoveOptions = {}): number {
+	static goTo(creep: AnyZerg, destination: HasPos | RoomPosition, opts: MoveOptions = {}): number {
 
-		if (creep.blockMovement && !options.force) {
+		if (creep.blockMovement && !opts.force) {
 			return ERR_BUSY;
 		}
 		if (isStandardZerg(creep)) {
@@ -157,12 +138,22 @@ export class Movement {
 			}
 		}
 
+		if (opts.movingTarget) {
+			opts.range = 0;
+		}
 
 		// Set default options
-		_.defaults(options, {
-			ignoreCreeps     : true,
-			repathOnceVisible: !!options.waypoints || !!options.avoidSK,
-		});
+		_.defaults(opts, defaultMoveOptions);
+		const pathOpts = opts.pathOpts as PathOptions; // modifications to pathOpts show up on opts.pathOpts
+
+		// Take care of properties which exist on both moveOpts and pathOpts: if they are specified on both moveOpts
+		// and moveOpts.pathOpts then the value of range or fleeRange on moveOpts takes precedence.
+		if (opts.range != undefined) {
+			pathOpts.range = opts.range;
+		}
+		if (opts.fleeRange != undefined) {
+			pathOpts.fleeRange = opts.fleeRange;
+		}
 
 		// initialize data object
 		if (!creep.memory._go) {
@@ -174,20 +165,20 @@ export class Movement {
 		destination = normalizePos(destination);
 		const finalDestination = destination;
 
-		if (options.waypoints) {
-			destination = this.getDestination(destination, options.waypoints, moveData);
+		if (opts.waypoints) {
+			destination = this.getDestination(destination, opts.waypoints, moveData);
 		}
 
 		Pathing.updateRoomStatus(creep.room);
 
 		// Fixes bug that causes creeps to idle on the other side of a room
-		if (options.range != undefined && destination.rangeToEdge <= options.range) {
-			options.range = Math.min(Math.abs(destination.rangeToEdge - 1), 0);
+		if (opts.range != undefined && destination.rangeToEdge <= opts.range) {
+			opts.range = Math.min(Math.abs(destination.rangeToEdge - 1), 0);
 		}
 
 		// manage case where creep is nearby destination
 		const rangeToDestination = creep.pos.getRangeTo(destination);
-		if (options.range != undefined && rangeToDestination <= options.range) {
+		if (opts.range != undefined && rangeToDestination <= opts.range) {
 			if (destination.isEqualTo(finalDestination)) {
 				delete creep.memory._go;
 				return NO_ACTION;
@@ -200,15 +191,15 @@ export class Movement {
 				moveData.waypointsVisited.push(destination.name);
 
 				// call goTo again to path to the final destination
-				return this.goTo(creep, finalDestination, options);
+				return this.goTo(creep, finalDestination, opts);
 			}
 
 		} else if (rangeToDestination <= 1) {
 			// move onto destination
-			if (rangeToDestination == 1 && !options.range) {
+			if (rangeToDestination == 1 && !opts.range) {
 				const direction = creep.pos.getDirectionTo(destination);
-				if (destination.isWalkable(options.ignoreCreepsOnDestination)) {
-					return creep.move(direction, !!options.force);
+				if (destination.isWalkable(opts.ignoreCreepsOnDestination)) {
+					return creep.move(direction, !!opts.force);
 				}
 			} else { // at destination
 				if (!moveData.fleeWait) {
@@ -219,11 +210,11 @@ export class Movement {
 		}
 
 		// traverse through a portal waypoint or check that has just been traversed
-		if (options.waypoints && !destination.isEqualTo(finalDestination) && (moveData.portaling == true
-																			  || creep.pos.getRangeTo(destination) < 2)) {
+		if (opts.waypoints && !destination.isEqualTo(finalDestination) && (moveData.portaling == true
+																		   || creep.pos.getRangeTo(destination) < 2)) {
 			const portalTraversed = this.traversePortalWaypoint(creep, destination);
 			if (portalTraversed) {
-				return this.goTo(creep, finalDestination, options);
+				return this.goTo(creep, finalDestination, opts);
 			} else {
 				return CROSSING_PORTAL;
 			}
@@ -263,17 +254,17 @@ export class Movement {
 		}
 
 		// handle case where creep is stuck
-		if (!options.stuckValue) {
-			options.stuckValue = DEFAULT_STUCK_VALUE;
+		if (!opts.stuckValue) {
+			opts.stuckValue = DEFAULT_STUCK_VALUE;
 		}
-		if (state.stuckCount >= options.stuckValue && Math.random() > .5) {
-			options.ignoreCreeps = false;
+		if (state.stuckCount >= opts.stuckValue && Math.random() > .5) {
+			pathOpts.ignoreCreeps = false;
 			delete moveData.path;
 		}
 
 		// delete path cache if destination is different
 		if (!destination.isEqualTo(state.destination)) {
-			if (options.movingTarget && state.destination.isNearTo(destination)) {
+			if (opts.movingTarget && state.destination.isNearTo(destination)) {
 				moveData.path += state.destination.getDirectionTo(destination);
 				state.destination = destination;
 			} else {
@@ -283,7 +274,7 @@ export class Movement {
 
 
 		// randomly repath with specified probability
-		if (options.repathChance && Math.random() < options.repathChance) {
+		if (opts.repathChance && Math.random() < opts.repathChance) {
 			delete moveData.path;
 		}
 
@@ -300,16 +291,13 @@ export class Movement {
 			state.destination = destination;
 			// Compute terrain costs
 			if (isPowerZerg(creep)) {
-				if (options.direct) {
-					log.warning(`${creep.print}: MoveOptions.direct is implicit for PowerZerg`);
-				}
-				if (options.terrainCosts) {
+				if (pathOpts.terrainCosts) {
 					log.error(`${creep.print}: MoveOptions.terrainCosts not supported by PowerZerg`);
 				}
-				options.terrainCosts = {plainCost: 1, swampCost: 1};
+				pathOpts.terrainCosts = {plainCost: 1, swampCost: 1};
 			} else if (isStandardZerg(creep)) {
-				if (!options.direct && !options.terrainCosts) {
-					options.terrainCosts = getTerrainCosts(creep.creep);
+				if (!pathOpts.terrainCosts) {
+					pathOpts.terrainCosts = getTerrainCosts(creep.creep);
 				}
 			} else {
 				log.error(`${creep.print} is not Zerg or PowerZerg!`);
@@ -318,7 +306,7 @@ export class Movement {
 
 
 			// Pathfinding call ------------------------------------------
-			const ret = Pathing.findPath(creep.pos, destination, options);
+			const ret = Pathing.findPath(creep.pos, destination, opts);
 			// -----------------------------------------------------------
 
 
@@ -355,7 +343,7 @@ export class Movement {
 		}
 
 		// push creeps out of the way if needed
-		if (!options.noPush) {
+		if (!opts.noPush) {
 			const obstructingCreep = this.findBlockingCreep(creep);
 			if (obstructingCreep && this.shouldPush(creep, obstructingCreep)) {
 				const pushedCreep = this.pushCreep(creep, obstructingCreep);
@@ -377,7 +365,7 @@ export class Movement {
 
 		this.serializeState(creep, destination, state, moveData, {x: nextPos.x, y: nextPos.y});
 
-		return creep.move(nextDirection, !!options.force);
+		return creep.move(nextDirection, !!opts.force);
 	}
 
 	/**
@@ -753,7 +741,7 @@ export class Movement {
 			}
 		}
 		if (detour) {
-			return this.goTo(creep, pos, {ignoreCreeps: false});
+			return this.goTo(creep, pos, {pathOpts: {ignoreCreeps: false}});
 		}
 	}
 
@@ -862,7 +850,7 @@ export class Movement {
 			delete moveData.path;
 		}
 
-		if (options.repath && Math.random() < options.repath) {	// randomly repathChance with specified probability
+		if (options.repathChance && Math.random() < options.repathChance) {	// randomly repath with some probability
 			delete moveData.path;
 		}
 
@@ -1172,20 +1160,20 @@ export class Movement {
 	/**
 	 * Moving routine for guards or sourceReapers in a room with NPC invaders
 	 */
-	static invasionMove(creep: Zerg, destination: RoomPosition | HasPos, options: MoveOptions = {}): number {
-		_.defaults(options, {
-			ignoreRoads: true
-		});
+	static invasionMove(creep: Zerg, destination: RoomPosition | HasPos, opts: MoveOptions = {}): number {
+		_.defaults(opts, defaultMoveOptions);
 		const dest = normalizePos(destination);
 		if (creep.pos.getRangeTo(dest) > 8) {
-			options.repathChance = .1;
-			options.movingTarget = true;
+			opts.repathChance = .1;
+			opts.movingTarget = true;
 		}
 		if (creep.room.name == dest.roomName) {
-			options.maxRooms = 1;
-			options.modifyRoomCallback = this.invasionMoveCallbackModifier;
+			_.defaults(opts.pathOpts!, {
+				maxRooms          : 1,
+				modifyRoomCallback: Movement.invasionMoveCallbackModifier,
+			});
 		}
-		return creep.goTo(dest, options);
+		return creep.goTo(dest, opts);
 	}
 
 	/**
@@ -1206,22 +1194,25 @@ export class Movement {
 	 * Flee from avoid goals in the room while not re-pathing every tick like kite() does.
 	 */
 	static flee(creep: AnyZerg, avoidGoals: (RoomPosition | HasPos)[],
-				dropEnergy = false, options: MoveOptions = {}): number | undefined {
+				dropEnergy = false, opts: MoveOptions = {}): number | undefined {
 
 		if (avoidGoals.length == 0) {
 			return; // nothing to flee from
 		}
-		_.defaults(options, {
-			terrainCosts: isPowerZerg(creep) ? {plainCost: 1, swampCost: 1} : getTerrainCosts((<Creep>creep.creep)),
-		});
-		if (options.fleeRange == undefined) {
-			options.fleeRange = options.terrainCosts!.plainCost > 1 ? 8 : 16;
+		const terrainCosts = isPowerZerg(creep) ? {plainCost: 1, swampCost: 1} : getTerrainCosts((<Creep>creep.creep));
+		const fleeDefaultOpts: MoveOptions = {pathOpts: {terrainCosts: terrainCosts}};
+		_.defaults(opts, fleeDefaultOpts);
+
+		const fleeRange = opts.fleeRange || (terrainCosts.plainCost > 1 ? 8 : 16);
+		if (opts.fleeRange == undefined) {
+			opts.fleeRange = fleeRange;
+			opts.pathOpts!.fleeRange = fleeRange;
 		}
 
 		const closest = creep.pos.findClosestByRange(avoidGoals);
 		const rangeToClosest = closest ? creep.pos.getRangeTo(closest) : 50;
 
-		if (rangeToClosest > options.fleeRange) { // Out of range of baddies
+		if (rangeToClosest > opts.fleeRange) { // Out of range of baddies
 
 			if (!creep.memory._go) {
 				return;
@@ -1275,7 +1266,7 @@ export class Movement {
 
 			// Re-calculate path if needed
 			if (!moveData.path || !moveData.destination) {
-				const ret = Pathing.findFleePath(creep.pos, avoidGoals, options);
+				const ret = Pathing.findFleePath(creep.pos, avoidGoals, opts);
 				if (ret.path.length == 0) {
 					return NO_ACTION;
 				}
@@ -1284,7 +1275,7 @@ export class Movement {
 			}
 
 			// Call goTo to the final position in path
-			return Movement.goTo(creep, derefRoomPosition(moveData.destination), options);
+			return Movement.goTo(creep, derefRoomPosition(moveData.destination), opts);
 		}
 	}
 

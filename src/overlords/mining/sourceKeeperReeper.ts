@@ -158,8 +158,10 @@ export class SourceReaperOverlord extends CombatOverlord {
 				if (reaper) {
 					defender.goTo(reaper, {
 						movingTarget: defender.pos.getRangeTo(reaper) > 8,
-						maxRooms    : 1,
-						repathChance: 0.1
+						repathChance: 0.1,
+						pathOpts: {
+							maxRooms    : 1,
+						}
 					});
 				} else {
 					const keeper = this.targetLair.pos.findClosestByLimitedRange(this.room.sourceKeepers, 7);
@@ -169,7 +171,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 						if (range < keepAtRange) {
 							defender.kite(this.room.hostiles, {range: keepAtRange});
 						} else if (range > keepAtRange) {
-							defender.goTo(keeper, {maxRooms: 1, range: keepAtRange});
+							defender.goTo(keeper, {range: keepAtRange, pathOpts: {maxRooms: 1}});
 						}
 					} else { // travel to next lair
 						defender.goTo(this.targetLair, {range: 5});

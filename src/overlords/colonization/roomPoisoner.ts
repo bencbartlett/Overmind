@@ -49,7 +49,7 @@ export class RoomPoisonerOverlord extends Overlord {
 		}
 		// Go to Target Room
 		if (!posioner.inSameRoomAs(this)) {
-			posioner.goTo(this.pos, {ensurePath: true, avoidSK: true});
+			posioner.goTo(this.pos, {pathOpts:{ensurePath: true, avoidSK: true}});
 			return;
 		}
 		// If you're in the room

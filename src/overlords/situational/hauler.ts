@@ -93,7 +93,7 @@ export class HaulingOverlord extends Overlord {
 				log.warning(`${hauler.name} in ${hauler.room.print}: nothing to collect!`);
 			} else {
 				// hauler.task = Tasks.goTo(this.directive);
-				hauler.goTo(this.directive, {avoidSK: true});
+				hauler.goTo(this.directive, {pathOpts:{avoidSK: true}});
 			}
 		} else {
 			// Travel to colony room and deposit resources

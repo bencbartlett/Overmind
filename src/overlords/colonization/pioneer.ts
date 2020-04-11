@@ -74,7 +74,8 @@ export class PioneerOverlord extends Overlord {
 			}
 		} else {
 			// pioneer.task = Tasks.goTo(this.pos);
-			pioneer.goTo(this.pos, {ensurePath: true, avoidSK: true, waypoints: this.directive.waypoints});
+			pioneer.goTo(this.pos, {waypoints: this.directive.waypoints,
+				pathOpts: {ensurePath: true, avoidSK: true}});
 		}
 	}
 

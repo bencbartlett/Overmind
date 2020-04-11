@@ -223,7 +223,7 @@ export class StrongholdOverlord extends CombatOverlord {
 							this.directive.room.mineral.pos.getPositionsInRange(4, false, false));
 					}
 					avoids.forEach(av => Visualizer.circle(av));
-					killer.goTo(attackPos!, {obstacles: avoids});
+					killer.goTo(attackPos!, {pathOpts:{obstacles: avoids}});
 				}
 			}
 		}

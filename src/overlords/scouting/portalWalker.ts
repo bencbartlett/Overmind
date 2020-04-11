@@ -46,7 +46,7 @@ export class PortalScoutOverlord extends Overlord {
 		const finalDestination = this.directive;
 		log.alert(`Portal walker ${scout.print} is in ${scout.room.name}`);
 		if (scout.pos != finalDestination.pos) {
-			scout.goTo(finalDestination, {avoidSK: true, waypoints: waypoints});
+			scout.goTo(finalDestination, {waypoints: waypoints, pathOpts: {avoidSK: true}});
 		}
 		this.portalSays(scout, true);
 	}
