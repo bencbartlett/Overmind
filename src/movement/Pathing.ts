@@ -331,9 +331,25 @@ export class Pathing {
 	/**
 	 * Returns the shortest path from start to end position, regardless of (passable) terrain
 	 */
-	static findPathToRoom(startPos: RoomPosition, roomName: string, opts: PathOptions = {}): PathFinderPath {
-		opts.range = 23;
-		const ret = Pathing.findPath(startPos, new RoomPosition(25, 25, roomName), opts);
+	static findShortestPath(startPos: RoomPosition, endPos: RoomPosition,
+							opts: PathOptions = {}): PathFinderPath {
+		const optDefaults: PathOptions = {
+			ignoreCreeps: true,
+			range       : 1,
+			terrainCosts: {plainCost: 1, swampCost: 1}
+		};
+		_.defaults(opts, opts);
+		const ret = this.findPath(startPos, endPos, opts);
+		if (ret.incomplete) log.alert(`Pathing: incomplete path from ${startPos.print} to ${endPos.print}!`);
+		return ret;
+	}
+
+	/**
+	 * Returns the shortest path from start to end position, regardless of (passable) terrain
+	 */
+	static findPathToRoom(startPos: RoomPosition, roomName: string, options: PathOptions = {}): PathFinderPath {
+		options.range = 23;
+		const ret = this.findPath(startPos, new RoomPosition(25, 25, roomName), options);
 		if (ret.incomplete) log.alert(`Pathing: incomplete path from ${startPos.print} to ${roomName}!`);
 		return ret;
 	}
@@ -515,7 +531,7 @@ export class Pathing {
 			if (roomInfo) {
 				// Cool let's set walkability based on what we remember
 				matrix = new PathFinder.CostMatrix();
-				const structureData =roomInfo.importantStructures;
+				const structureData = roomInfo.importantStructures;
 				if (structureData) {
 					const structures = _.compact([structureData.storagePos,
 												  structureData.terminalPos,
