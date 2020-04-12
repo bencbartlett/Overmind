@@ -10,7 +10,7 @@ import {AnyZerg, normalizeAnyZerg} from '../zerg/AnyZerg';
 import {Swarm} from '../zerg/Swarm';
 import {Zerg} from '../zerg/Zerg';
 import {getTerrainCosts, isExit, normalizePos, sameCoord} from './helpers';
-import {defaultPathOptions, Pathing, PathOptions} from './Pathing';
+import {Pathing, PathOptions} from './Pathing';
 
 
 export const CROSSING_PORTAL = 21;
@@ -75,8 +75,9 @@ export interface MoveOptions {
 	pathOpts?: PathOptions;
 }
 
+
 export const defaultMoveOptions: MoveOptions = {
-	pathOpts: defaultPathOptions,
+	pathOpts: {},
 };
 
 export interface SwarmMoveOptions {

@@ -1,6 +1,5 @@
 // Room intel - provides information related to room structure and occupation
 
-import {Colony} from '../Colony';
 import {log} from '../console/log';
 import {Segmenter} from '../memory/Segmenter';
 import {profile} from '../profiler/decorator';
@@ -166,7 +165,7 @@ export class RoomIntel {
 	}
 
 	static retrieveImportantStructureInfo(roomName: string): ImportantStructureInfo | undefined {
-		if (!Memory.rooms[roomName] || !Memory.rooms[roomName][RMEM.CONTROLLER]) {
+		if (!Memory.rooms[roomName] || !Memory.rooms[roomName][RMEM.IMPORTANT_STRUCTURES]) {
 			return;
 		}
 		const data = Memory.rooms[roomName][RMEM.IMPORTANT_STRUCTURES]!;
@@ -650,7 +649,7 @@ export class RoomIntel {
 	 * Returns the type of zone that your empire is in
 	 */
 	static getMyZoneStatus(): 'normal' | 'novice' | 'respawn' {
-		const oneOfMyColonies = _.first(_.values(Overmind.colonies)) as Colony;
+		const oneOfMyColonies = _.first(_.values(Overmind.colonies)) as any;
 		return RoomIntel.getRoomStatus(oneOfMyColonies.name).status as 'normal' | 'novice' | 'respawn';
 	}
 

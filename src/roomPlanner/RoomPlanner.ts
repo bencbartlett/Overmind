@@ -1,7 +1,6 @@
 import {Colony, getAllColonies} from '../Colony';
 import {log} from '../console/log';
 import {isOwnedStructure} from '../declarations/typeGuards';
-import {DirectiveHaul} from '../directives/resource/haul';
 import {DirectiveTerminalRebuildState} from '../directives/terminalState/terminalState_rebuild';
 import {Energetics} from '../logistics/Energetics';
 import {Autonomy, getAutonomyLevel, Mem} from '../memory/Memory';
@@ -644,7 +643,6 @@ export class RoomPlanner {
 					}
 					if (this.colony.level < 6
 						&& structureType == STRUCTURE_TERMINAL && hasMinerals((<StructureTerminal>structure).store)) {
-						DirectiveHaul.createIfNotPresent(structure.pos, 'pos');
 						break; // don't destroy terminal when under RCL6 if there are resources available.
 					}
 					if (structureType != STRUCTURE_WALL && structureType != STRUCTURE_RAMPART) {

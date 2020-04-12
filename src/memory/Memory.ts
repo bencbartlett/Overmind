@@ -165,6 +165,9 @@ export class Mem {
 		if (!Memory.colonies) {
 			Memory.colonies = {};
 		}
+		if (!Memory.roomIntel) {
+			Memory.roomIntel = {};
+		}
 	}
 
 	private static formatPathingMemory() {
