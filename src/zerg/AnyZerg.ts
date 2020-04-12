@@ -352,7 +352,7 @@ export abstract class AnyZerg {
 
 	get isMoving(): boolean {
 		const moveData = this.memory._go as MoveData | undefined;
-		return !!moveData && !!moveData.path && moveData.path.length > 1;
+		return (!!moveData && !!moveData.path && moveData.path.length > 1) || this.actionLog[MOVE];
 	}
 
 	/**

@@ -307,7 +307,7 @@ export class Movement {
 
 
 			// Pathfinding call ------------------------------------------
-			const ret = Pathing.findPath(creep.pos, destination, opts);
+			const ret = Pathing.findPath(creep.pos, destination, pathOpts);
 			// -----------------------------------------------------------
 
 
