@@ -40,6 +40,7 @@ export class OvermindConsole {
 		global.destroyAllHostileStructures = this.destroyAllHostileStructures;
 		global.destroyAllBarriers = this.destroyAllBarriers;
 		global.listConstructionSites = this.listConstructionSites;
+		global.removeUnbuiltConstructionSites = this.removeUnbuiltConstructionSites;
 		global.listDirectives = this.listDirectives;
 		global.listPersistentDirectives = this.listPersistentDirectives;
 		// global.directiveInfo = this.directiveInfo;
@@ -65,6 +66,7 @@ export class OvermindConsole {
 		}
 		msg += '</font>';
 
+		// Generate a methods description object
 		const descr: { [functionName: string]: string } = {};
 		descr.help = 'show this message';
 		descr['info()'] = 'display version and operation information';
@@ -89,9 +91,9 @@ export class OvermindConsole {
 		descr['destroyAllHostileStructures(roomName)'] = 'destroys all hostile structures in an owned room';
 		descr['destroyAllBarriers(roomName)'] = 'destroys all ramparts and barriers in a room';
 		descr['listConstructionSites(filter?)'] = 'list all construction sites matching an optional filter';
+		descr['removeUnbuiltConstructionSites()'] = 'removes all construction sites with 0 progress';
 		descr['listDirectives(filter?)'] = 'list directives, matching a filter if specified';
 		descr['listPersistentDirectives()'] = 'print type, name, pos of every persistent directive';
-		// descr['directiveInfo(directiveFlag)'] = 'print type, name, pos of every creep in directive';
 		descr['removeFlagsByColor(color, secondaryColor)'] = 'remove flags that match the specified colors';
 		descr['removeErrantFlags()'] = 'remove all flags which don\'t match a directive';
 		descr['deepCleanMemory()'] = 'deletes all non-critical portions of memory (be careful!)';
@@ -101,6 +103,7 @@ export class OvermindConsole {
 		descr['setRoomUpgradeRate(room, upgradeRate)'] = 'changes the rate which a room upgrades at, default is 1';
 		descr['getEmpireMineralDistribution()'] = 'returns current census of colonies and mined sk room minerals';
 		descr['getPortals(rangeFromColonies)'] = 'returns active portals within colony range';
+
 		// Console list
 		const descrMsg = toColumns(descr, {justify: true, padChar: '.'});
 		const maxLineLength = _.max(_.map(descrMsg, line => line.length)) + 2;
@@ -469,6 +472,19 @@ export class OvermindConsole {
 			barrier.destroy();
 		}
 		return `Destroyed ${room.barriers.length} barriers.`;
+	}
+
+	static removeUnbuiltConstructionSites(): string {
+		let msg = '';
+		for (const id in Game.constructionSites) {
+			const csite = Game.constructionSites[id];
+			if (csite.progress == 0) {
+				const ret = csite.remove();
+				msg += `Removing construction site for ${csite.structureType} with 0% progress at ` +
+					   `${csite.pos.print}; response: ${ret}\n`;
+			}
+		}
+		return msg;
 	}
 
 	// Colony Management =================================================================================================

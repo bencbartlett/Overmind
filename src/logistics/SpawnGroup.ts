@@ -1,5 +1,6 @@
 import {Colony, getAllColonies} from '../Colony';
 import {log} from '../console/log';
+import {DEFAULT_MAX_PATH_LENGTH} from '../directives/Directive';
 import {Hatchery, SpawnRequest} from '../hiveClusters/hatchery';
 import {Mem} from '../memory/Memory';
 import {Pathing} from '../movement/Pathing';
@@ -24,8 +25,7 @@ const SpawnGroupMemoryDefaults: SpawnGroupMemory = {
 };
 
 
-const MAX_LINEAR_DISTANCE = 6; // maximum linear distance to search for ANY spawn group
-const MAX_PATH_DISTANCE = 600;	// maximum path distance to consider for ANY spawn group
+const MAX_LINEAR_DISTANCE = 10; // maximum linear distance to search for ANY spawn group
 const DEFAULT_RECACHE_TIME = onPublicServer() ? 2000 : 1000;
 
 const defaultSettings: SpawnGroupSettings = {
@@ -132,7 +132,7 @@ export class SpawnGroup {
 			if (spawn) {
 				// const route = Pathing.findRoute(colony.room.name, this.roomName);
 				const path = Pathing.findPathToRoom(spawn.pos, this.roomName);
-				if (!path.incomplete && path.path.length <= MAX_PATH_DISTANCE) {
+				if (!path.incomplete && path.path.length <= DEFAULT_MAX_PATH_LENGTH + 25) {
 					colonyNames.push(colony.room.name);
 					// routes[colony.room.name] = route;
 					// paths[room.name] = path.path;

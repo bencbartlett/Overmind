@@ -30,7 +30,7 @@ export interface TerrainCosts {
 export interface PathingReturn extends PathFinderPath {
 	route: Route | undefined;
 	usesPortals: boolean;
-	possiblePortals: PortalInfo[] | undefined;
+	portalUsed: PortalInfo | undefined;
 }
 
 export const MatrixTypes = {
@@ -55,7 +55,8 @@ export interface PathOptions {
 	allowHostile?: boolean;						// allow to path through hostile rooms; origin/destination room excluded
 	avoidSK?: boolean;							// avoid walking within range 4 of source keepers
 	allowPortals?: boolean;						// allow pathing through portals
-	minPortalDistance?: number;					// skip portal search unless desination is at least this many rooms away
+	usePortalThreshold?: number;				// skip portal search unless desination is at least this many rooms away
+	portalsMustBeInRange?: number | undefined;	// portals must be within this many rooms to be considered for search
 	route?: Route;								// manually supply the map route to take
 	maxRooms?: number;							// maximum number of rooms to path through
 	useFindRoute?: boolean;						// whether to use the route finder; determined automatically otherwise
@@ -65,15 +66,16 @@ export interface PathOptions {
 }
 
 export const defaultPathOptions: PathOptions = {
-	range            : 1,
-	terrainCosts     : {plainCost: 1, swampCost: 5},
-	ignoreCreeps     : true,
-	maxOps           : DEFAULT_MAXOPS,
-	maxRooms         : 25,
-	avoidSK          : true,
-	allowPortals     : true,
-	minPortalDistance: 10,
-	ensurePath       : true,
+	range               : 1,
+	terrainCosts        : {plainCost: 1, swampCost: 5},
+	ignoreCreeps        : true,
+	maxOps              : DEFAULT_MAXOPS,
+	maxRooms            : 20,
+	avoidSK             : true,
+	allowPortals        : true,
+	usePortalThreshold  : 10,
+	portalsMustBeInRange: 6,
+	ensurePath          : true,
 };
 
 
@@ -127,33 +129,76 @@ export class Pathing {
 		}
 
 		let route: Route | undefined = opts.route;
-		if (!route && (opts.useFindRoute == true || (opts.useFindRoute === undefined && linearDistance > 2))) {
+		if (!route && (opts.useFindRoute == true || (opts.useFindRoute === undefined && linearDistance >= 3))) {
 			const foundRoute = this.findRoute(origin.roomName, destination.roomName, opts);
 			if (foundRoute != ERR_NO_PATH) {
 				route = foundRoute;
 			}
 		}
 
-		// If we're traversing through portals then we make the portal the destination and trust that the creep
-		// will use a subsequent goTo call to get off the portal
-		let destinationGoal: PathFinderGoal | PathFinderGoal[] = {pos: destination, range: opts.range!};
-		const portalStep = _.find(route || [], step => step.exit == FIND_EXIT_PORTAL);
-		if (portalStep) {
-			const portals = RoomIntel.getPortalInfo(portalStep.room);
-			destinationGoal = _.map(portals, portal => ({pos: portal.pos, range: 0}));
-			destination = _.first(portals).pos;
-			log.debug(`Pathing: navigating through portals; reassigning destination from ` +
-					  `${originalDestination.print} to portal position(s) ${destination.print}!`);
-		}
 
+		const destinationGoal: PathFinderGoal | PathFinderGoal[] = {pos: destination, range: opts.range!};
 		const callback = (roomName: string) => Pathing.roomCallback(roomName, origin, destination, route, opts);
-		let ret = PathFinder.search(origin, destinationGoal, {
-			maxOps      : opts.maxOps,
-			maxRooms    : opts.maxRooms,
-			plainCost   : opts.terrainCosts!.plainCost,
-			swampCost   : opts.terrainCosts!.swampCost,
-			roomCallback: callback,
-		});
+		let ret: PathFinderPath;
+
+		// Did the route use portals?
+		const portalExitStepIndex = _.findIndex(route || [], step => step.exit == FIND_EXIT_PORTAL);
+		const usesPortals = (portalExitStepIndex != -1); // index is -1 if not found
+		let portalUsed: PortalInfo | undefined;
+
+		if (usesPortals) {
+			// If we traversed a portal we need to call pathfinder twice and merge the two paths
+			const portalEntranceStepIndex = portalExitStepIndex - 1;
+			const portalEntraceRoom = portalEntranceStepIndex < 0
+									  ? origin.roomName
+									  : route![portalExitStepIndex - 1].room;
+
+			const portals = RoomIntel.getPortalInfo(portalEntraceRoom);
+			const portalGoals = _.map(portals, portal => ({pos: portal.pos, range: 0}));
+			const path1ret = PathFinder.search(origin, portalGoals, {
+				maxOps      : opts.maxOps,
+				maxRooms    : opts.maxRooms,
+				plainCost   : opts.terrainCosts!.plainCost,
+				swampCost   : opts.terrainCosts!.swampCost,
+				roomCallback: callback,
+			});
+			// if the path is incomplete then we'll let it get handled at the end of this method
+			if (!path1ret.incomplete) {
+				const lastPosInPath = _.last(path1ret.path);
+				const usedPortal = _.find(portals, portal => portal.pos.isEqualTo(lastPosInPath));
+				if (usedPortal) {
+					portalUsed = usedPortal;
+					const portalDest = usedPortal.destination;
+					const path2ret = PathFinder.search(portalDest, destinationGoal, {
+						maxOps      : opts.maxOps,
+						maxRooms    : opts.maxRooms,
+						plainCost   : opts.terrainCosts!.plainCost,
+						swampCost   : opts.terrainCosts!.swampCost,
+						roomCallback: callback,
+					});
+					ret = {
+						path      : path1ret.path.concat([usedPortal.destination]).concat(path2ret.path),
+						ops       : path1ret.ops + path2ret.ops,
+						cost      : path1ret.ops + path2ret.ops,
+						incomplete: path1ret.incomplete || path2ret.incomplete,
+					};
+				} else {
+					log.error(`Pathing: No Portal pos in ${JSON.stringify(path1ret.path)}! (Why?)`);
+					ret = path1ret;
+				}
+			} else {
+				log.error(`Pathing: Incomplete first half of pathing from ${origin.print} to nearest portal!`);
+				ret = path1ret;
+			}
+		} else {
+			ret = PathFinder.search(origin, destinationGoal, {
+				maxOps      : opts.maxOps,
+				maxRooms    : opts.maxRooms,
+				plainCost   : opts.terrainCosts!.plainCost,
+				swampCost   : opts.terrainCosts!.swampCost,
+				roomCallback: callback,
+			});
+		}
 
 		if (ret.incomplete && opts.ensurePath && linearDistance <= 3 && !opts.route) {
 			// handle case where pathfinder failed at a short distance due to not using findRoute
@@ -175,13 +220,13 @@ export class Pathing {
 			}
 		}
 		return {
-			path           : ret.path,
-			incomplete     : ret.incomplete,
-			ops            : ret.ops,
-			cost           : ret.cost,
-			route          : route,
-			usesPortals    : !!portalStep,
-			possiblePortals: portalStep ? RoomIntel.getPortalInfo(portalStep.room) : undefined,
+			path       : ret.path,
+			incomplete : ret.incomplete,
+			ops        : ret.ops,
+			cost       : ret.cost,
+			route      : route,
+			usesPortals: usesPortals,
+			portalUsed : portalUsed,
 		};
 	}
 
@@ -200,6 +245,20 @@ export class Pathing {
 			return ERR_NO_PATH;
 		}
 
+		// This takes a portal room near the origin and spits out the best destination room of all portals in the room
+		const getBestPortalDestination: (portalRoom: string) => string | undefined = (portalRoom) => {
+			const portalInfo = RoomIntel.getPortalInfo(portalRoom);
+			if (portalInfo.length == 0) {
+				return;
+			}
+			const bestPortalDest = _(portalInfo)
+				.map(portal => portal.destination.roomName)
+				.unique()
+				.min(portalDest => Game.map.getRoomLinearDistance(portalDest, destination)) as string;
+			return bestPortalDest;
+		};
+
+		// Route finder callback for portal searching
 		const callback = (roomName: string) => {
 			const rangeToRoom = Game.map.getRoomLinearDistance(origin, roomName);
 			if (rangeToRoom > maxRooms) { // room is too far out of the way
@@ -218,27 +277,27 @@ export class Pathing {
 
 		let route: Route | ERR_NO_PATH = Game.map.findRoute(origin, destination, {routeCallback: callback});
 
-		if (opts.allowPortals && (route == ERR_NO_PATH || route.length >= (opts.minPortalDistance || 1))) {
+		if (opts.allowPortals && (route == ERR_NO_PATH || route.length >= (opts.usePortalThreshold || 1))) {
 			// Narrow down a list of portal rooms that could possibly lead to the destination
 			const validPortalRooms = _.filter(RoomIntel.memory.portalRooms, roomName => {
 				// Is the first leg of the trip too far?
+				if (origin == 'E26S47') console.log(roomName);
 				const originToPortal = Game.map.getRoomLinearDistance(origin, roomName);
+				if (origin == 'E26S47') console.log('originToPortal', originToPortal);
 				if (originToPortal > opts.maxRooms!) return false;
+				if (opts.portalsMustBeInRange && originToPortal > opts.portalsMustBeInRange) return false;
 
 				// Are there intra-shard portals here?
-				const localPortals = RoomIntel.getPortalInfo(roomName);
-				if (localPortals.length == 0) return false;
-
-				// Get destinations of portals
-				const destinationRooms = _.unique(_.map(localPortals,
-														portal => portal.destination.roomName)); // usually length = 1
-				const bestPortalDestination = _.min(destinationRooms,
-													room => Game.map.getRoomLinearDistance(destination, room));
+				const bestPortalDestination = getBestPortalDestination(roomName);
+				if (origin == 'E26S47') console.log('bestPortalDestination', bestPortalDestination);
+				if (!bestPortalDestination) return false;
 
 				// Is the first + second leg of the trip too far?
 				const portalToDestination = Game.map.getRoomLinearDistance(destination, bestPortalDestination);
+				if (origin == 'E26S47') console.log('portalToDestination', portalToDestination);
 				return originToPortal + portalToDestination <= opts.maxRooms!;
 			});
+			if (origin == 'E26S47') console.log('valid portals:', print(validPortalRooms));
 
 			// Figure out which portal room is the best one to use
 			const portalCallback = (roomName: string) => {
@@ -252,13 +311,17 @@ export class Pathing {
 				return 1;
 			};
 			const bestPortalRoom = minBy(validPortalRooms, portalRoom => {
+				const bestPortalDestination = getBestPortalDestination(portalRoom) as string; // room def has portal
 				const originToPortalRoute = Game.map.findRoute(origin, portalRoom,
 															   {routeCallback: portalCallback});
-				const portalToDestinationRoute = Game.map.findRoute(portalRoom, destination,
+				if (origin == 'E26S47') console.log(`origin to portal route from ${origin} to ${portalRoom}`, print(originToPortalRoute));
+				const portalToDestinationRoute = Game.map.findRoute(bestPortalDestination, destination,
 																	{routeCallback: portalCallback});
+				if (origin == 'E26S47') console.log(`portal to destination route from ${bestPortalDestination} to ${destination}`, print(portalToDestinationRoute));
 				if (originToPortalRoute != ERR_NO_PATH && portalToDestinationRoute != ERR_NO_PATH) {
 					const portalRouteLength = originToPortalRoute.length + portalToDestinationRoute.length;
 					const directRouteLength = route != ERR_NO_PATH ? route.length : Infinity;
+					if (origin == 'E26S47') console.log('portal route length', print(portalRouteLength));
 					if (portalRouteLength < directRouteLength) {
 						return portalRouteLength;
 					} else {
@@ -269,15 +332,20 @@ export class Pathing {
 				}
 			});
 
+			if (origin == 'E26S47') console.log('best portal room', print(bestPortalRoom));
+
 			if (bestPortalRoom) {
+				const portalDest = getBestPortalDestination(bestPortalRoom) as string;
 				const originToPortalRoute = Game.map.findRoute(origin, bestPortalRoom,
 															   {routeCallback: portalCallback});
-				const portalToDestinationRoute = Game.map.findRoute(bestPortalRoom, destination,
+				const portalToDestinationRoute = Game.map.findRoute(portalDest, destination,
 																	{routeCallback: portalCallback});
+				if (origin == 'E26S47') console.log(print(originToPortalRoute));
+				if (origin == 'E26S47') console.log(print(portalToDestinationRoute));
 				// This will always be true but gotta check so TS doesn't complain...
 				if (originToPortalRoute != ERR_NO_PATH && portalToDestinationRoute != ERR_NO_PATH) {
 					route = [...originToPortalRoute,
-							 {exit: FIND_EXIT_PORTAL, room: bestPortalRoom},
+							 {exit: FIND_EXIT_PORTAL, room: portalDest},
 							 ...portalToDestinationRoute];
 				}
 

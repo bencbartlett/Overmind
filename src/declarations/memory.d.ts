@@ -182,6 +182,7 @@ interface FlagMemory {
 	keepContainers?: boolean;
 	waypoints?: string[];
 	allowPortals?: boolean;
+	recalcColonyOnTick?: number;
 }
 
 // Room memory key aliases to minimize memory size

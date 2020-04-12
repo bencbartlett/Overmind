@@ -6,7 +6,7 @@ import {profile} from '../../profiler/decorator';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 
-const DEFAULT_NUM_SCOUTS = 3;
+const DEFAULT_NUM_SCOUTS = 2;
 
 /**
  * Sends out scouts which randomly traverse rooms to uncover possible expansion locations and gather intel
@@ -25,7 +25,7 @@ export class PortalScoutOverlord extends Overlord {
 	}
 
 	init() {
-		this.wishlist(6, Setups.scout);
+		this.wishlist(DEFAULT_NUM_SCOUTS, Setups.scout);
 	}
 
 	private portalSays(creep: Zerg, isPublic: boolean) {
@@ -35,7 +35,7 @@ export class PortalScoutOverlord extends Overlord {
 
 	private handleScout(scout: Zerg) {
 		const finalDestination = this.directive;
-		log.alert(`Portal walker ${scout.print} is in ${scout.room.name}`);
+		// log.alert(`Portal walker ${scout.print} is in ${scout.room.name}`);
 		if (scout.pos != finalDestination.pos) {
 			scout.goTo(finalDestination, {pathOpts: {avoidSK: true}});
 		}

@@ -29,6 +29,7 @@ export class DirectiveColonize extends Directive {
 	};
 
 	constructor(flag: Flag) {
+		flag.memory.allowPortals = true;
 		super(flag, colony => colony.level >= DirectiveColonize.requiredRCL
 							  && colony.name != Directive.getPos(flag).roomName && colony.spawns.length > 0);
 		// Register incubation status

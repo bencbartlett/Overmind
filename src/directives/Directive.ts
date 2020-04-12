@@ -12,7 +12,7 @@ interface DirectiveCreationOptions {
 	quiet?: boolean;
 }
 
-const DEFAULT_MAX_PATH_LENGTH = 600;
+export const DEFAULT_MAX_PATH_LENGTH = 600;
 const DEFAULT_MAX_LINEAR_RANGE = 10;
 
 /**
@@ -81,7 +81,9 @@ export abstract class Directive {
 		}
 
 		// Handle colony assigning
-		const colony = this.getColony(colonyFilter);
+		const forceRecalc = !!this.memory.recalcColonyOnTick && Game.time >= this.memory.recalcColonyOnTick;
+		const colony = this.getColony(colonyFilter, forceRecalc);
+
 		// Delete the directive if the colony is dead
 		if (!colony) {
 			if (Overmind.exceptions.length == 0) {
@@ -202,9 +204,9 @@ export abstract class Directive {
 	/**
 	 * Computes the parent colony for the directive to be handled by
 	 */
-	private getColony(colonyFilter?: (colony: Colony) => boolean): Colony | undefined {
+	private getColony(colonyFilter?: (colony: Colony) => boolean, forceRecalc = false): Colony | undefined {
 		// If something is written to flag.colony, use that as the colony
-		if (this.memory[MEM.COLONY]) {
+		if (this.memory[MEM.COLONY] && !forceRecalc) {
 			return Overmind.colonies[this.memory[MEM.COLONY]!];
 		} else {
 
@@ -246,6 +248,9 @@ export abstract class Directive {
 						if (ret.path.length < maxPathLength && ret.path.length < minDistance) {
 							nearestColony = colony;
 							minDistance = ret.path.length;
+						}
+						if (ret.portalUsed && ret.portalUsed.expiration) {
+							this.memory.recalcColonyOnTick = ret.portalUsed.expiration + 1;
 						}
 						this.debug(`Path length to ${colony.room.print}: ${ret.path.length}`);
 					} else {

@@ -1,4 +1,4 @@
-import {log} from '../../console/log';
+import {Colony} from '../../Colony';
 import {PortalScoutOverlord} from '../../overlords/scouting/portalWalker';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
@@ -15,15 +15,20 @@ export class DirectivePortalScout extends Directive {
 
 	static requiredRCL = 3;
 
+	constructor(flag: Flag, colonyFilter?: (colony: Colony) => boolean) {
+		flag.memory.allowPortals = true;
+		super(flag, colonyFilter);
+	}
+
 	spawnMoarOverlords() {
 		this.overlords.portalScoutOverlord = new PortalScoutOverlord(this);
 	}
 
 	init(): void {
-
+		this.alert(`Portal scout active`);
 	}
 
 	run(): void {
-		log.alert(`Running portal scout ${this.print}`);
+
 	}
 }

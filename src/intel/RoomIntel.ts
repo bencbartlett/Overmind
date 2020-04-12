@@ -133,7 +133,8 @@ export class RoomIntel {
 		}
 		const localPortals = _.filter(Memory.rooms[roomName][RMEM.PORTALS]!,
 									  savedPortal => typeof savedPortal.dest == 'string');
-		return _.map(localPortals, savedPortal => {
+		const nonExpiredPortals = _.filter(localPortals, portal => Game.time < portal[MEM.EXPIRATION]);
+		return _.map(nonExpiredPortals, savedPortal => {
 			const pos = derefCoords(savedPortal.c, roomName);
 			const destinationPos = getPosFromString(<string>savedPortal.dest)!;
 			const expiration = savedPortal[MEM.EXPIRATION];
