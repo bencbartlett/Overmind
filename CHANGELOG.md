@@ -3,7 +3,21 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+NOTE: This release of Overmind now requires Node 10+ to deploy.
+
 ### Added
+- Refactored the Zerg class to extend AnyZerg and added a PowerZerg class which also extends AnyZerg. A number of methods throughout the codebase (especially on Movement) have been changed to take AnyZerg as an argument.
+- Lots of new methods on RoomIntel:
+    - RoomIntel.retrieveRoomObjectData retrieves and de-compresses the stored data on room layouts, including saved owned structures, portals, sources, minerals, SKlairs, and controller info
+    - RoomIntel.getRoomStatus provides a cached version of Game.map.getRoomStatus
+    - RoomIntel.findPortalsInRange searches for open portals within a certain range of any colony
+    - RoomIntel.getMyZoneStatus returns the type of zone that you are currently spawned in. I will use this method to implement novice zone restrictions in the near future
+- Merged and modified pull request #156 from @zGeneral, which adds "room poisoner" functionality to wall off sources and controllers in unused rooms
+- Added portal capabilities and automatic portal pathing to the `Pathing` module
+- Added and plugged in new `CombatCreepSetup` class which creates more flexible creep bodies based on the desired boost types. If lower tier move boosts are the best available, the body ratios are adjusted accordingly to maintain a target move speed.
+- Improvements to the `EvolutionChamber` to utilize the new terminal network and use a wider variety of boosts, not just T3.
+    - `EvolutionChamber.bestBoostAvailable` takes a BoostType ('attack', 'tough', 'move', etc.) and amount and returns the highest tier boost that is either available in the colony or obtainable throught the terminal network to boost that type of part.
+    - The evo chamber locks resources from the terminal network that it is about to use to prevent them from being transported elsewhere
 - Colonies now have a `Colony.state` property which consolidates all behavior-altering hooks which can be modified by directives
 - Rewrote a large portion of the `ManagerOverlord` to allow for more flexible transfer between storage and terminal.
     - Previously, storage was usable only for energy, which resulted in terminals operating near capacity and wasted a lot of the capacity of a room
@@ -27,8 +41,10 @@ All notable changes to this project will be documented in this file. The format 
     	- If a terminal is far away, receivers will wait longer to find a less expensive sender
     	- Bigger transactions with higher costs will wait longer for a closer colony, while smaller transactions are less picky
     - The new system uses `Colony` in place of many arguments which were `StructureTerminal`, as it looks only at `colony.assets` when determining what to send; this fits with the new changes to the `ManagerOverlord` to allow for more flexible transfer between storage and terminal
+    - New `TerminalNetwork.canObtainResource(resource, amount)` method simulates a resource transfer (or purchase via market) using a `dryRun` option to be able to tell with near 100% certainty whether a certain resource will be available through the network.
+    - `TerminalNetwork.lockResource(resource, amount)` prevents a specified amount of a resource from being withdrawn from the room via the network. Useful for preventing ingredients or boosts which will soon be used from leaving the colony.
 - Added CPU/resource profiling to `Overlord`s. Use the `profileOverlord()` console command to activate this.
-- Merged a lot of additions from Davaned's branch(es)
+- Merged a lot of additions from @Davaned's branch(es)
     - Initial support for power mining and power processing
     - Preliminary programs for dealing with strongholds (level 1-4)
     - Lots of defensive improvements
@@ -72,6 +88,8 @@ All notable changes to this project will be documented in this file. The format 
     - Reduced terminal equilibrium energy from 100k to 50k
 
 ### Changed
+- Updated the Grafana dashboard to account for new TerminalNetwork changes
+- Updated many of the deployment dependencies in package.json. You will need to `npm install` to update these packages.
 - MASSIVE memory size reduction: many common memory keys have been aliased to single-character names using a set of constant enums in `memory.d.ts`. For example, `memory.colony` is now `memory.C` and is referenced in code as `memory[_MEM.COLONY]`.
     - You can expect your memory usage to drop by about half(!) after applying this change.
 - `MiningOverlord` will now suicide old miners when their replacements arrive, preventing excess CPU use
