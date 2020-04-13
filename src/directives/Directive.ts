@@ -186,12 +186,21 @@ export abstract class Directive {
 	/**
 	 * Returns values for weighted and unweighted path length from colony and recomputes if necessary.
 	 */
-	get distanceFromColony(): { weighted: number, unweighted: number } {
+	get distanceFromColony(): { unweighted: number, terrainWeighted: number } {
 		if (!this.memory[MEM.DISTANCE] || Game.time >= this.memory[MEM.DISTANCE]![MEM.EXPIRATION]) {
 			const ret = Pathing.findPath(this.colony.pos, this.pos, {maxOps: DIRECTIVE_PATH_TIMEOUT});
+			const terrainCache: { [room: string]: RoomTerrain } = {};
+			const terrainWeighted = _.sum(ret.path, pos => {
+				let terrain: RoomTerrain;
+				if (!terrainCache[pos.roomName]) {
+					terrainCache[pos.roomName] = Game.map.getRoomTerrain(pos.roomName);
+				}
+				terrain = terrainCache[pos.roomName];
+				return terrain.get(pos.x, pos.y) == TERRAIN_MASK_SWAMP ? 5 : 1;
+			});
 			this.memory[MEM.DISTANCE] = {
 				[MEM_DISTANCE.UNWEIGHTED]: ret.path.length,
-				[MEM_DISTANCE.WEIGHTED]  : ret.cost,
+				[MEM_DISTANCE.WEIGHTED]  : terrainWeighted,
 				[MEM.EXPIRATION]         : Game.time + 10000 + randint(0, 100),
 			};
 			if (ret.incomplete) {
@@ -203,8 +212,8 @@ export abstract class Directive {
 			log.warning(`${this.print}: distanceFromColony() info incomplete!`);
 		}
 		return {
-			weighted  : memDistance[MEM_DISTANCE.WEIGHTED],
 			unweighted: memDistance[MEM_DISTANCE.UNWEIGHTED],
+			terrainWeighted  : memDistance[MEM_DISTANCE.WEIGHTED],
 		};
 	}
 
