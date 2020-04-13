@@ -157,7 +157,8 @@ Object.defineProperty(Room.prototype, 'rechargeables', {
 		if (!this._rechargeables) {
 			this._rechargeables = [...this.storageUnits,
 								   ...this.droppedEnergy,
-								   ...this.tombstones];
+								   ...this.tombstones,
+								   ...this.ruins];
 		}
 		return this._rechargeables;
 	},

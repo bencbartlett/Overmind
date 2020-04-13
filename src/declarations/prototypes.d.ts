@@ -60,6 +60,7 @@ type rechargeObjectType = StructureStorage
 	| StructureContainer
 	| StructureLink
 	| Tombstone
+	| Ruin
 	| Resource;
 
 interface Room {
