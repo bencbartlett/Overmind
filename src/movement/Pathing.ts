@@ -66,7 +66,7 @@ export interface PathOptions {
 	modifyRoomCallback?: (r: Room, m: CostMatrix) => CostMatrix; // modifications to default cost matrix calculations
 }
 
-export const defaultPathOptions: PathOptions = {
+export const getDefaultPathOptions: () => PathOptions = () => ({
 	range               : 1,
 	terrainCosts        : {plainCost: 1, swampCost: 5},
 	ignoreCreeps        : true,
@@ -77,7 +77,7 @@ export const defaultPathOptions: PathOptions = {
 	usePortalThreshold  : 10,
 	portalsMustBeInRange: 6,
 	ensurePath          : false,
-};
+});
 
 
 /**
@@ -118,9 +118,7 @@ export class Pathing {
 	 */
 	static findPath(origin: RoomPosition, destination: RoomPosition, opts: PathOptions = {}): PathingReturn {
 
-		_.defaults(opts, defaultPathOptions);
-
-		const originalDestination = destination;
+		_.defaults(opts, getDefaultPathOptions());
 
 		// check to see whether findRoute should be used
 		const linearDistance = Game.map.getRoomLinearDistance(origin.roomName, destination.roomName);
@@ -207,12 +205,12 @@ export class Pathing {
 			// options.allowedRooms and options.routeCallback can also be used to handle this situation
 			const useRoute = this.findRoute(origin.roomName, destination.roomName, opts);
 			if (useRoute != ERR_NO_PATH) {
-				log.warning(`Pathing: findPath from ${origin.print} to ${originalDestination.print} failed without ` +
+				log.warning(`Pathing: findPath from ${origin.print} to ${destination.print} failed without ` +
 							`specified route. Trying again with route: ${JSON.stringify(useRoute)}.`);
 				opts.route = useRoute;
 				ret = this.findPath(origin, destination, opts);
 				if (ret.incomplete) {
-					log.error(`Pathing: second attempt from ${origin.print} to ${originalDestination.print} ` +
+					log.error(`Pathing: second attempt from ${origin.print} to ${destination.print} ` +
 							  `was unsuccessful!`);
 				}
 			} else {
@@ -236,7 +234,7 @@ export class Pathing {
 	 */
 	static findRoute(origin: string, destination: string, opts: PathOptions = {}): Route | ERR_NO_PATH {
 
-		_.defaults(opts, defaultPathOptions);
+		_.defaults(opts, getDefaultPathOptions());
 
 		const linearDistance = Game.map.getRoomLinearDistance(origin, destination);
 		const maxRooms = opts.maxRooms || linearDistance + 10;
@@ -325,8 +323,6 @@ export class Pathing {
 				}
 			});
 
-			// if (origin == 'E26S47') console.log('best portal room: ', print(bestPortalRoom));
-
 			if (bestPortalRoom) {
 				const portalDest = getBestPortalDestination(bestPortalRoom) as string;
 				const originToPortalRoute = Game.map.findRoute(origin, bestPortalRoom,
@@ -338,7 +334,9 @@ export class Pathing {
 					route = [...originToPortalRoute,
 							 {exit: FIND_EXIT_PORTAL, room: portalDest},
 							 ...portalToDestinationRoute];
-					if (origin == 'E26S47') console.log('PORTAL ROUTE:', print(route));
+
+					// if (origin == 'E26S47') console.log('PORTAL ROUTE:', print(route));
+
 				}
 
 			}

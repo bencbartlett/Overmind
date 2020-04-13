@@ -84,7 +84,7 @@ export class RemoteUpgradingOverlord extends Overlord {
 		if (this.childColony.terminal && this.childColony.terminal.my) {
 			return 0; // don't need this once you have a terminal
 		}
-		const roundTripDistance = .2 /*TODO*/ * this.directive.distanceFromColony.weighted;
+		const roundTripDistance = .2 /*TODO*/ * this.directive.distanceFromColony.terrainWeighted;
 		const energyPerTick = _.sum(this.upgraders,
 									upgrader => UPGRADE_CONTROLLER_POWER * upgrader.getActiveBodyparts(WORK));
 		return energyPerTick * roundTripDistance;
@@ -198,23 +198,33 @@ export class RemoteUpgradingOverlord extends Overlord {
 				return;
 			}
 
-			// Try to deposit in container, otherwise stick around
+			// Try to deposit in container, unless there's already a crowd waiting there;
+			// otherwise put in storage if you can
 			const depositPos = this.upgradeSite.batteryPos || this.upgradeSite.pos;
-			if (!carrier.pos.inRangeToPos(depositPos, 1)) {
-				carrier.goTo(depositPos);
+			const carriersWaitingToUnload = _.filter(this.carriers, carrier =>
+				carrier.carry.energy > 0 && carrier.pos.inRangeToPos(depositPos, 5));
+			const firstCarrierInQueue = minBy(carriersWaitingToUnload, carrier =>
+				carrier.carry.energy + (carrier.ticksToLive || Infinity) / 10000);
+
+			// Put in storage if you can
+			if (this.childColony.storage && firstCarrierInQueue && firstCarrierInQueue != carrier) {
+				carrier.task = Tasks.transfer(this.childColony.storage);
 				return;
 			}
 
-			// Once you're nearby try to deposit in the battery if there is one
-			if (this.upgradeSite.battery && this.upgradeSite.battery.store.getFreeCapacity() > 0) {
-				if (carrier.transfer(this.upgradeSite.battery) == OK) return;
+			// Otherwise go to the dropoff point
+			const range = firstCarrierInQueue && carrier == firstCarrierInQueue ? 0 : 3;
+			if (!carrier.pos.inRangeToPos(depositPos, range)) {
+				const ret = carrier.goTo(depositPos);
+				return;
 			}
 
 			// Otherwise try to transfer to any empty upgraders
-			const carriersWaitingToUnload = _.filter(this.carriers, carrier =>
-				carrier.carry.energy > 0 && carrier.room == this.childColony.room);
-			const lowestEnergyCarrier = minBy(carriersWaitingToUnload, carrier => carrier.carry.energy);
-			if (carrier == lowestEnergyCarrier) {
+			if (carrier == firstCarrierInQueue) {
+				// Once you're nearby try to deposit in the battery if there is one
+				if (this.upgradeSite.battery && this.upgradeSite.battery.store.getFreeCapacity() > 0) {
+					if (carrier.transfer(this.upgradeSite.battery) == OK) return;
+				}
 				// Carriers should unload one at a time
 				const upgraderTransferTarget = maxBy(_.filter(this.upgraders, upgrader => upgrader.pos.isNearTo(carrier)),
 													 upgrader => upgrader.store.getFreeCapacity());

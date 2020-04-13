@@ -76,9 +76,9 @@ export interface MoveOptions {
 }
 
 
-export const defaultMoveOptions: MoveOptions = {
+export const getDefaultMoveOptions: () => MoveOptions = () => ({
 	pathOpts: {},
-};
+});
 
 export interface SwarmMoveOptions {
 	range?: number;
@@ -144,7 +144,7 @@ export class Movement {
 		}
 
 		// Set default options
-		_.defaults(opts, defaultMoveOptions);
+		_.defaultsDeep(opts, getDefaultMoveOptions());
 		const pathOpts = opts.pathOpts as PathOptions; // modifications to pathOpts show up on opts.pathOpts
 
 		// Take care of properties which exist on both moveOpts and pathOpts: if they are specified on both moveOpts
@@ -305,11 +305,11 @@ export class Movement {
 			}
 			const cpu = Game.cpu.getUsed();
 
-
+			// creep.debug(`Pathfinding from ${creep.pos} to ${destination} with opts ${JSON.stringify(pathOpts)}`);
 			// Pathfinding call ------------------------------------------
 			const ret = Pathing.findPath(creep.pos, destination, pathOpts);
 			// -----------------------------------------------------------
-
+			// creep.debug(`Pathfinding return: ${print(ret)}`);
 
 			const cpuUsed = Game.cpu.getUsed() - cpu;
 			state.cpu = _.round(cpuUsed + state.cpu);
@@ -1162,7 +1162,7 @@ export class Movement {
 	 * Moving routine for guards or sourceReapers in a room with NPC invaders
 	 */
 	static invasionMove(creep: Zerg, destination: RoomPosition | HasPos, opts: MoveOptions = {}): number {
-		_.defaults(opts, defaultMoveOptions);
+		_.defaults(opts, getDefaultMoveOptions());
 		const dest = normalizePos(destination);
 		if (creep.pos.getRangeTo(dest) > 8) {
 			opts.repathChance = .1;
@@ -1185,7 +1185,7 @@ export class Movement {
 			fleeRange   : 5,
 			terrainCosts: isPowerZerg(creep) ? {plainCost: 1, swampCost: 1} : getTerrainCosts((<Creep>creep.creep)),
 		});
-		const nextPos = _.first(Pathing.findKitingPath(creep.pos, avoidGoals, options).path);
+		const nextPos = _.first(Pathing.findKitingPath(creep.pos, avoidGoals, options.pathOpts || {}).path);
 		if (nextPos) {
 			return creep.move(creep.pos.getDirectionTo(nextPos));
 		}
@@ -1267,7 +1267,7 @@ export class Movement {
 
 			// Re-calculate path if needed
 			if (!moveData.path || !moveData.destination) {
-				const ret = Pathing.findFleePath(creep.pos, avoidGoals, opts);
+				const ret = Pathing.findFleePath(creep.pos, avoidGoals, opts.pathOpts || {});
 				if (ret.path.length == 0) {
 					return NO_ACTION;
 				}
