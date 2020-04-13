@@ -591,6 +591,14 @@ export class TraderJoe implements ITradeNetwork {
 				return NO_ACTION;
 			}
 
+			// Only place up to a certain amount of orders
+			const existingOrdersForThis = this.getExistingOrders(type, resource);
+			if (existingOrdersForThis.length > TraderJoe.settings.market.orders.maxOrdersForResource) {
+				this.notify(`${printRoomName(terminal.room.name, true)}: could not create ${type} order for ` +
+							`${Math.round(amount)} ${resource} - too many existing!`);
+				return ERR_TOO_MANY_ORDERS_OF_TYPE;
+			}
+
 			// Compute the buy or sell price
 			const price = +this.computeCompetitivePrice(type, resource, terminal.room.name)
 							   .toFixed(3); // market only allows for 3 decimal places of precision
@@ -606,38 +614,32 @@ export class TraderJoe implements ITradeNetwork {
 				amount = amount * Game.market.credits / brokersFee * 0.9;
 			}
 
-			// Only place up to a certain amount of orders
-			const existingOrdersForThis = this.getExistingOrders(type, resource);
-			if (existingOrdersForThis.length < TraderJoe.settings.market.orders.maxOrdersForResource) {
-				const params = {
-					type        : type,
-					resourceType: resource,
-					price       : price,
-					totalAmount : amount,
-					roomName    : terminal.room.name
-				};
-				const ret = Game.market.createOrder(params);
-				let msg = '';
-				if (type == ORDER_BUY) {
-					msg += `${printRoomName(terminal.room.name, true)} creating buy order:  ` +
-						   `${Math.round(amount)} ${resource} at price ${price.toFixed(4)}`;
-				} else {
-					msg += `${printRoomName(terminal.room.name, true)} creating sell order: ` +
-						   `${Math.round(amount)} ${resource} at price ${price.toFixed(4)}`;
-				}
-				if (ret == OK) {
-					this.ordersPlacedThisTick++;
-				} else {
-					msg += ` ERROR: ${ret}`;
-				}
-				this.debug(msg);
-				this.notify(msg);
-				return ret;
+			// Create the order
+			const params = {
+				type        : type,
+				resourceType: resource,
+				price       : price,
+				totalAmount : amount,
+				roomName    : terminal.room.name
+			};
+			const ret = Game.market.createOrder(params);
+			let msg = '';
+			if (type == ORDER_BUY) {
+				msg += `${printRoomName(terminal.room.name, true)} creating buy order:  ` +
+					   `${Math.round(amount)} ${resource} at price ${price.toFixed(4)}`;
 			} else {
-				this.notify(`${printRoomName(terminal.room.name, true)}: could not create ${type} order for ` +
-							`${Math.round(amount)} ${resource} - too many existing!`);
-				return ERR_TOO_MANY_ORDERS_OF_TYPE;
+				msg += `${printRoomName(terminal.room.name, true)} creating sell order: ` +
+					   `${Math.round(amount)} ${resource} at price ${price.toFixed(4)}`;
 			}
+			if (ret == OK) {
+				this.ordersPlacedThisTick++;
+			} else {
+				msg += ` ERROR: ${ret}`;
+			}
+			this.debug(msg);
+			this.notify(msg);
+			return ret;
+
 		}
 
 	}
