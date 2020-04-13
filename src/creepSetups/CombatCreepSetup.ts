@@ -881,7 +881,7 @@ export class RemoteUpgraderSetup extends CombatCreepSetup {
 		const remoteUpgraderBodyOptions: Full<BodyOpts> = {
 			moveSpeed         : opts.moveSpeed || 1,
 			putMoveFirstInBody: false,
-			bodyRatio         : {work: 5, carry: 1},
+			bodyRatio         : {work: 8, carry: 1},
 			maxParts          : {work: 40, carry: 10},
 			boosts            : opts.boosted ? ['upgrade', 'carry', 'move'] : [],
 		};

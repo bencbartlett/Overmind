@@ -84,7 +84,7 @@ export class RemoteUpgradingOverlord extends Overlord {
 		if (this.childColony.terminal && this.childColony.terminal.my) {
 			return 0; // don't need this once you have a terminal
 		}
-		const roundTripDistance = .3 /*TODO*/ * this.directive.distanceFromColony.weighted;
+		const roundTripDistance = .2 /*TODO*/ * this.directive.distanceFromColony.weighted;
 		const energyPerTick = _.sum(this.upgraders,
 									upgrader => UPGRADE_CONTROLLER_POWER * upgrader.getActiveBodyparts(WORK));
 		return energyPerTick * roundTripDistance;
@@ -92,13 +92,18 @@ export class RemoteUpgradingOverlord extends Overlord {
 
 	init() {
 		let neededCarriers = this.carriers.length;
-		const neededCarryCapacity = this.computeNeededCarrierCapacity();
-		const currentCarryCapacity = _.sum(this.carriers, carrier =>
-			CARRY_CAPACITY * CombatIntel.getCarryPotential(carrier.creep, true));
-		this.debug(`Needed carry capacity: ${neededCarryCapacity}; Current carry capacity: ${currentCarryCapacity}`);
-		if (currentCarryCapacity < neededCarryCapacity) {
-			neededCarriers += 1;
+		if (this.carriers.length == 0) {
+			neededCarriers = 1;
+		} else {
+			const neededCarryCapacity = this.computeNeededCarrierCapacity();
+			const currentCarryCapacity = _.sum(this.carriers, carrier =>
+				CARRY_CAPACITY * CombatIntel.getCarryPotential(carrier.creep, true));
+			const avgCarrierCapactiy = currentCarryCapacity / this.carriers.length;
+			this.debug(`Needed carry capacity: ${neededCarryCapacity}; Current carry capacity: ${currentCarryCapacity}`);
+			neededCarriers = Math.ceil(neededCarryCapacity / avgCarrierCapactiy);
+			this.debug(`Needed carriers: ${neededCarriers}`);
 		}
+
 		if (this.boosted) {
 			this.wishlist(neededCarriers, Setups.transporters.boosted, {priority: this.priority});
 			this.wishlist(8, Setups.upgraders.remote_boosted, {priority: this.priority + 1});
