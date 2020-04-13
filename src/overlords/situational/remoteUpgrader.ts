@@ -197,16 +197,19 @@ export class RemoteUpgradingOverlord extends Overlord {
 				carrier.goToRoom(this.childColony.room.name);
 				return;
 			}
+
 			// Try to deposit in container, otherwise stick around
 			const depositPos = this.upgradeSite.batteryPos || this.upgradeSite.pos;
 			if (!carrier.pos.inRangeToPos(depositPos, 1)) {
 				carrier.goTo(depositPos);
 				return;
 			}
+
 			// Once you're nearby try to deposit in the battery if there is one
 			if (this.upgradeSite.battery && this.upgradeSite.battery.store.getFreeCapacity() > 0) {
 				if (carrier.transfer(this.upgradeSite.battery) == OK) return;
 			}
+
 			// Otherwise try to transfer to any empty upgraders
 			const carriersWaitingToUnload = _.filter(this.carriers, carrier =>
 				carrier.carry.energy > 0 && carrier.room == this.childColony.room);
@@ -219,6 +222,7 @@ export class RemoteUpgradingOverlord extends Overlord {
 					if (carrier.transfer(upgraderTransferTarget) == OK) return;
 				}
 			}
+
 		}
 	}
 

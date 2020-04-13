@@ -615,14 +615,20 @@ export class Pathing {
 				_.forEach(portals, portal => matrix!.set(portal.pos.x, portal.pos.y, PORTAL_COST));
 				const skLairs = roomInfo.skLairs;
 				const avoidRange = 5;
-				_.forEach(skLairs, lair => {
-					for (let dx = -avoidRange; dx <= avoidRange; dx++) {
-						for (let dy = -avoidRange; dy <= avoidRange; dy++) {
-							const cost = SK_COST * (avoidRange - Math.max(Math.abs(dx), Math.abs(dy)));
-							matrix!.set(lair.pos.x + dx, lair.pos.y + dy, cost);
+				if (skLairs.length > 0) {
+					// The source keepers usually hang out by the closest mineral or source but sometimes on lair
+					const blockThese = _.compact([...roomInfo.sources,
+												  roomInfo.mineral,
+												  ...roomInfo.skLairs]) as HasPos[];
+					_.forEach(blockThese, thing => {
+						for (let dx = -avoidRange; dx <= avoidRange; dx++) {
+							for (let dy = -avoidRange; dy <= avoidRange; dy++) {
+								const cost = SK_COST * (avoidRange - Math.max(Math.abs(dx), Math.abs(dy)));
+								matrix!.set(thing.pos.x + dx, thing.pos.y + dy, cost);
+							}
 						}
-					}
-				});
+					});
+				}
 			}
 		}
 		// Register other obstacles
@@ -789,14 +795,26 @@ export class Pathing {
 		}
 		return $.costMatrix(room.name, MatrixTypes.sk, () => {
 			const matrix = this.getDefaultMatrix(room).clone();
-			const avoidRange = 6;
-			_.forEach(room.keeperLairs, lair => {
-				for (let dx = -avoidRange; dx <= avoidRange; dx++) {
-					for (let dy = -avoidRange; dy <= avoidRange; dy++) {
-						matrix.set(lair.pos.x + dx, lair.pos.y + dy, 0xfe);
+			const avoidRange = 5;
+			if (room.keeperLairs.length > 0) {
+				const blockThese = _.compact([...room.sources, room.mineral, room.keeperLairs]) as HasPos[];
+				_.forEach(blockThese, thing => {
+					for (let dx = -avoidRange; dx <= avoidRange; dx++) {
+						for (let dy = -avoidRange; dy <= avoidRange; dy++) {
+							const cost = SK_COST / 5 * (avoidRange - Math.max(Math.abs(dx), Math.abs(dy)));
+							matrix!.set(thing.pos.x + dx, thing.pos.y + dy, cost);
+						}
 					}
-				}
-			});
+				});
+				_.forEach(room.sourceKeepers, sourceKeeper => {
+					for (let dx = -avoidRange; dx <= avoidRange; dx++) {
+						for (let dy = -avoidRange; dy <= avoidRange; dy++) {
+							const cost = SK_COST * 2 * (avoidRange - Math.max(Math.abs(dx), Math.abs(dy)));
+							matrix!.set(sourceKeeper.pos.x + dx, sourceKeeper.pos.y + dy, cost);
+						}
+					}
+				});
+			}
 			return matrix;
 		});
 	}
