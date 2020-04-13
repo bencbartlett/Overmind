@@ -42,10 +42,14 @@ export interface BodyGeneratorReturn {
 
 interface AvailableBoosts {
 	attack?: ResourceConstant | undefined;
+	carry?: ResourceConstant | undefined;
 	ranged?: ResourceConstant | undefined;
 	heal?: ResourceConstant | undefined;
 	tough?: ResourceConstant | undefined;
+	harvest?: ResourceConstant | undefined;
 	dismantle?: ResourceConstant | undefined;
+	upgrade?: ResourceConstant | undefined;
+	construct?: ResourceConstant | undefined;
 	move?: ResourceConstant | undefined;
 }
 
@@ -121,26 +125,37 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 				const rangedBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.ranged || 0);
 				availableBoosts.ranged = colony.evolutionChamber.bestBoostAvailable('ranged', rangedBoostNeeded);
 			}
-			if (opts.bodyRatio.work && opts.boosts.includes('dismantle')) {
-				const dismantleBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.work || 0);
-				availableBoosts.dismantle = colony.evolutionChamber.bestBoostAvailable('dismantle', dismantleBoostNeeded);
-			}
-			if (opts.bodyRatio.work && opts.boosts.includes('upgrade')) {
-				const upgradeBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.work || 0);
-				availableBoosts.heal = colony.evolutionChamber.bestBoostAvailable('upgrade', upgradeBoostNeeded);
-			}
 			if (opts.bodyRatio.attack && opts.boosts.includes('attack')) {
 				const attackBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.attack || 0);
 				availableBoosts.attack = colony.evolutionChamber.bestBoostAvailable('attack', attackBoostNeeded);
 			}
 			if (opts.bodyRatio.carry && opts.boosts.includes('carry')) {
 				const carryBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.carry || 0);
-				availableBoosts.heal = colony.evolutionChamber.bestBoostAvailable('carry', carryBoostNeeded);
+				availableBoosts.carry = colony.evolutionChamber.bestBoostAvailable('carry', carryBoostNeeded);
+			}
+			if (opts.bodyRatio.work && opts.boosts.includes('dismantle')) {
+				const dismantleBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.work || 0);
+				availableBoosts.dismantle = colony.evolutionChamber.bestBoostAvailable('dismantle', dismantleBoostNeeded);
+			}
+			if (opts.bodyRatio.work && opts.boosts.includes('upgrade')) {
+				const upgradeBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.work || 0);
+				availableBoosts.upgrade = colony.evolutionChamber.bestBoostAvailable('upgrade', upgradeBoostNeeded);
+			}
+			if (opts.bodyRatio.work && opts.boosts.includes('construct')) {
+				const constructBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.work || 0);
+				availableBoosts.construct = colony.evolutionChamber.bestBoostAvailable('construct', constructBoostNeeded);
+			}
+			if (opts.bodyRatio.work && opts.boosts.includes('harvest')) {
+				const harvestBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.work || 0);
+				availableBoosts.harvest = colony.evolutionChamber.bestBoostAvailable('harvest', harvestBoostNeeded);
 			}
 			if (opts.boosts.includes('move')) {
 				const moveBoostNeeded = LAB_BOOST_MINERAL * 50 / 3; // T1 most boost lets you do move ratio of 2 : 1
 				availableBoosts.move = colony.evolutionChamber.bestBoostAvailable('move', moveBoostNeeded);
 			}
+		}
+		if (_.sum(opts.boosts, b => ['dismantle', 'upgrade', 'construct', 'harvest'].includes(b) ? 1 : 0) > 1) {
+			log.warning(`Multiple boost types requested for work part! opts.boosts: ${print(opts.boosts)}`);
 		}
 		return availableBoosts;
 	}
@@ -529,11 +544,11 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 			return {body: [], boosts: []};
 		}
 
-		const DEFAULT_MAX_PARTS_DISMANTLER = {work: 40, tough: 10, carry: 20, heal: 2};
-		opts.maxParts.work = opts.maxParts.work || DEFAULT_MAX_PARTS_DISMANTLER.work;
-		opts.maxParts.tough = opts.maxParts.tough || DEFAULT_MAX_PARTS_DISMANTLER.tough;
-		opts.maxParts.carry = opts.maxParts.carry || DEFAULT_MAX_PARTS_DISMANTLER.carry;
-		opts.maxParts.heal = opts.maxParts.heal || DEFAULT_MAX_PARTS_DISMANTLER.heal;
+		const DEFAULT_MAX_PARTS_UPGRADER = {work: 50, tough: 10, carry: 20, heal: 2};
+		opts.maxParts.work = opts.maxParts.work || DEFAULT_MAX_PARTS_UPGRADER.work;
+		opts.maxParts.tough = opts.maxParts.tough || DEFAULT_MAX_PARTS_UPGRADER.tough;
+		opts.maxParts.carry = opts.maxParts.carry || DEFAULT_MAX_PARTS_UPGRADER.carry;
+		opts.maxParts.heal = opts.maxParts.heal || DEFAULT_MAX_PARTS_UPGRADER.heal;
 
 		const availableBoosts = CombatCreepSetup.getBestBoostsAvailable(colony, opts);
 
@@ -912,3 +927,12 @@ export class CarrierSetup extends CombatCreepSetup {
 }
 
 global.CombatCreepSetup = CombatCreepSetup;
+global.DefaultCombatCreepSetups = {
+	zergling      : ZerglingSetup,
+	hydralisk     : HydraliskSetup,
+	transfuser    : TransfuserSetup,
+	lurker        : LurkerSetup,
+	ravager       : RavagerSetup,
+	remoteUpgrader: RemoteUpgraderSetup,
+	carrier       : CarrierSetup,
+};
