@@ -26,6 +26,7 @@ import {DirectiveBootstrap} from './situational/bootstrap';
 import {DirectiveNukeResponse} from './situational/nukeResponse';
 import {DirectiveNukeTarget} from './situational/nukeTarget';
 import {DirectivePortalScout} from './situational/portalScout';
+import {DirectiveRemoteUpgrade} from './situational/remoteUpgrade';
 import {DirectiveStronghold} from './situational/stronghold';
 import {DirectiveDismantle} from './targeting/dismantle';
 import {DirectiveModularDismantle} from './targeting/modularDismantle';
@@ -97,6 +98,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveStronghold(flag);
 				case COLOR_WHITE:
 					return new DirectivePortalScout(flag);
+				case COLOR_YELLOW:
+					return new DirectiveRemoteUpgrade(flag);
 			}
 			break;
 

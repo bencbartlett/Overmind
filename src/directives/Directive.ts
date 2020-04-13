@@ -3,6 +3,7 @@ import {log} from '../console/log';
 import {Pathing} from '../movement/Pathing';
 import {Overlord} from '../overlords/Overlord';
 import {profile} from '../profiler/decorator';
+import {randint} from '../utilities/random';
 import {equalXYR, getPosFromString, randomHex, toColumns} from '../utilities/utils';
 import {NotifierPriority} from './Notifier';
 
@@ -12,8 +13,9 @@ interface DirectiveCreationOptions {
 	quiet?: boolean;
 }
 
-export const DEFAULT_MAX_PATH_LENGTH = 600;
-const DEFAULT_MAX_LINEAR_RANGE = 10;
+export const DEFAULT_MAX_PATH_LENGTH = 800;
+const DEFAULT_MAX_LINEAR_RANGE = 15;
+const DIRECTIVE_PATH_TIMEOUT = 30000;
 
 /**
  * Directives are contextual wrappers for flags and serve as attachment points for Overlords, acting as a sort of
@@ -181,6 +183,31 @@ export abstract class Directive {
 		Overmind.overseer.notifier.alert(message, this.pos.roomName, priority);
 	}
 
+	/**
+	 * Returns values for weighted and unweighted path length from colony and recomputes if necessary.
+	 */
+	get distanceFromColony(): { weighted: number, unweighted: number } {
+		if (!this.memory[MEM.DISTANCE] || Game.time >= this.memory[MEM.DISTANCE]![MEM.EXPIRATION]) {
+			const ret = Pathing.findPath(this.colony.pos, this.pos, {maxOps: DIRECTIVE_PATH_TIMEOUT});
+			this.memory[MEM.DISTANCE] = {
+				[MEM_DISTANCE.UNWEIGHTED]: ret.path.length,
+				[MEM_DISTANCE.WEIGHTED]  : ret.cost,
+				[MEM.EXPIRATION]         : Game.time + 10000 + randint(0, 100),
+			};
+			if (ret.incomplete) {
+				this.memory[MEM.DISTANCE]!.incomplete = true;
+			}
+		}
+		const memDistance = this.memory[MEM.DISTANCE]!;
+		if (memDistance.incomplete) {
+			log.warning(`${this.print}: distanceFromColony() info incomplete!`);
+		}
+		return {
+			weighted  : memDistance[MEM_DISTANCE.WEIGHTED],
+			unweighted: memDistance[MEM_DISTANCE.UNWEIGHTED],
+		};
+	}
+
 	private handleRelocation(): boolean {
 		if (this.memory.setPos) {
 			const pos = derefRoomPosition(this.memory.setPos);
@@ -242,7 +269,8 @@ export abstract class Directive {
 					continue;
 				}
 				if (!colonyFilter || colonyFilter(colony)) {
-					const ret = Pathing.findPath((colony.hatchery || colony).pos, this.pos);
+					const ret = Pathing.findPath((colony.hatchery || colony).pos, this.pos,
+												 {maxOps: DIRECTIVE_PATH_TIMEOUT});
 					// TODO handle directives that can't find a path at great range
 					if (!ret.incomplete) {
 						if (ret.path.length < maxPathLength && ret.path.length < minDistance) {
@@ -454,4 +482,5 @@ export abstract class Directive {
 	visuals(): void {
 
 	}
+
 }

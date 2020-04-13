@@ -134,7 +134,9 @@ export class UpgradeSite extends HiveCluster {
 		}
 	}
 
-	/* Calculate where the input will be built for this site */
+	/**
+	 * Calculate where the input will be built for this site
+	 */
 	private calculateBatteryPos(): RoomPosition | undefined {
 		let originPos: RoomPosition | undefined;
 		if (this.colony.storage) {
@@ -162,7 +164,9 @@ export class UpgradeSite extends HiveCluster {
 		}
 	}
 
-	/* Build a container output at the optimal location */
+	/**
+	 * Build a container output at the optimal location
+	 */
 	private buildBatteryIfMissing(): void {
 		if (!this.battery && !this.findInputConstructionSite()) {
 			const buildHere = this.batteryPos;

@@ -167,6 +167,12 @@ interface FlagMemory {
 	[MEM.TICK]?: number;
 	[MEM.EXPIRATION]?: number;
 	[MEM.COLONY]?: string;
+	[MEM.DISTANCE]?: {
+		[MEM_DISTANCE.UNWEIGHTED]: number;
+		[MEM_DISTANCE.WEIGHTED]: number;
+		[MEM.EXPIRATION]: number;
+		incomplete?: boolean;
+	};
 	debug?: boolean;
 	suspendUntil?: number;
 	amount?: number;
@@ -194,6 +200,11 @@ declare const enum MEM {
 	OVERLORD   = 'O',
 	DISTANCE   = 'D',
 	STATS      = 'S',
+}
+
+declare const enum MEM_DISTANCE {
+	UNWEIGHTED = 'u',
+	WEIGHTED   = 'w',
 }
 
 declare const enum RMEM {

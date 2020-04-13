@@ -31,6 +31,7 @@ export const MAX_SPAWN_REQUESTS = 100; // this stops division by zero or related
 
 export interface CreepRequestOptions {
 	reassignIdle?: boolean;
+	spawnOneAtATime?: boolean;
 	noLifetimeFilter?: boolean;
 	prespawn?: number;
 	priority?: number;
@@ -495,6 +496,7 @@ export abstract class Overlord {
 			log.error(`Too many requests for ${setup.role}s submitted by ${this.print}! (Check for errors.)`);
 		} else {
 			for (let i = 0; i < spawnQuantity; i++) {
+				if (i >= 1 && opts.spawnOneAtATime) break;
 				this.requestCreep(setup, opts);
 			}
 		}

@@ -18,6 +18,7 @@ export type AnyExitConstant = FIND_EXIT_TOP | FIND_EXIT_RIGHT | FIND_EXIT_BOTTOM
 
 const DEFAULT_MAXOPS = 20000; // default timeout for pathfinding
 const CREEP_COST = 0xfe;
+const SK_COST = 10; // add this cost time (range-5) to approaching SK lairs if avoidSK is true
 const PORTAL_COST = 25; // don't want to set this too high or it'll spend a bunch of time searching around it
 
 export type Route = { exit: AnyExitConstant, room: string }[];
@@ -75,7 +76,7 @@ export const defaultPathOptions: PathOptions = {
 	allowPortals        : true,
 	usePortalThreshold  : 10,
 	portalsMustBeInRange: 6,
-	ensurePath          : true,
+	ensurePath          : false,
 };
 
 
@@ -281,23 +282,23 @@ export class Pathing {
 			// Narrow down a list of portal rooms that could possibly lead to the destination
 			const validPortalRooms = _.filter(RoomIntel.memory.portalRooms, roomName => {
 				// Is the first leg of the trip too far?
-				if (origin == 'E26S47') console.log(roomName);
+				// if (origin == 'E26S47') console.log(roomName);
 				const originToPortal = Game.map.getRoomLinearDistance(origin, roomName);
-				if (origin == 'E26S47') console.log('originToPortal', originToPortal);
+				// if (origin == 'E26S47') console.log('originToPortal', originToPortal);
 				if (originToPortal > opts.maxRooms!) return false;
 				if (opts.portalsMustBeInRange && originToPortal > opts.portalsMustBeInRange) return false;
 
 				// Are there intra-shard portals here?
 				const bestPortalDestination = getBestPortalDestination(roomName);
-				if (origin == 'E26S47') console.log('bestPortalDestination', bestPortalDestination);
+				// if (origin == 'E26S47') console.log('bestPortalDestination', bestPortalDestination);
 				if (!bestPortalDestination) return false;
 
 				// Is the first + second leg of the trip too far?
 				const portalToDestination = Game.map.getRoomLinearDistance(destination, bestPortalDestination);
-				if (origin == 'E26S47') console.log('portalToDestination', portalToDestination);
+				// if (origin == 'E26S47') console.log('portalToDestination', portalToDestination);
 				return originToPortal + portalToDestination <= opts.maxRooms!;
 			});
-			if (origin == 'E26S47') console.log('valid portals:', print(validPortalRooms));
+			// if (origin == 'E26S47') console.log('valid portals:', print(validPortalRooms));
 
 			// Figure out which portal room is the best one to use
 			const portalCallback = (roomName: string) => {
@@ -314,14 +315,14 @@ export class Pathing {
 				const bestPortalDestination = getBestPortalDestination(portalRoom) as string; // room def has portal
 				const originToPortalRoute = Game.map.findRoute(origin, portalRoom,
 															   {routeCallback: portalCallback});
-				if (origin == 'E26S47') console.log(`origin to portal route from ${origin} to ${portalRoom}`, print(originToPortalRoute));
+				// if (origin == 'E26S47') console.log(`origin to portal route from ${origin} to ${portalRoom}`, print(originToPortalRoute));
 				const portalToDestinationRoute = Game.map.findRoute(bestPortalDestination, destination,
 																	{routeCallback: portalCallback});
-				if (origin == 'E26S47') console.log(`portal to destination route from ${bestPortalDestination} to ${destination}`, print(portalToDestinationRoute));
+				// if (origin == 'E26S47') console.log(`portal to destination route from ${bestPortalDestination} to ${destination}`, print(portalToDestinationRoute));
 				if (originToPortalRoute != ERR_NO_PATH && portalToDestinationRoute != ERR_NO_PATH) {
 					const portalRouteLength = originToPortalRoute.length + portalToDestinationRoute.length;
 					const directRouteLength = route != ERR_NO_PATH ? route.length : Infinity;
-					if (origin == 'E26S47') console.log('portal route length', print(portalRouteLength));
+					// if (origin == 'E26S47') console.log('portal route length', print(portalRouteLength));
 					if (portalRouteLength < directRouteLength) {
 						return portalRouteLength;
 					} else {
@@ -340,13 +341,14 @@ export class Pathing {
 															   {routeCallback: portalCallback});
 				const portalToDestinationRoute = Game.map.findRoute(portalDest, destination,
 																	{routeCallback: portalCallback});
-				if (origin == 'E26S47') console.log(print(originToPortalRoute));
-				if (origin == 'E26S47') console.log(print(portalToDestinationRoute));
+				// if (origin == 'E26S47') console.log(print(originToPortalRoute));
+				// if (origin == 'E26S47') console.log(print(portalToDestinationRoute));
 				// This will always be true but gotta check so TS doesn't complain...
 				if (originToPortalRoute != ERR_NO_PATH && portalToDestinationRoute != ERR_NO_PATH) {
 					route = [...originToPortalRoute,
 							 {exit: FIND_EXIT_PORTAL, room: portalDest},
 							 ...portalToDestinationRoute];
+					if (origin == 'E26S47') console.log('PORTAL ROUTE:', print(route));
 				}
 
 			}
@@ -616,7 +618,8 @@ export class Pathing {
 				_.forEach(skLairs, lair => {
 					for (let dx = -avoidRange; dx <= avoidRange; dx++) {
 						for (let dy = -avoidRange; dy <= avoidRange; dy++) {
-							matrix!.set(lair.pos.x + dx, lair.pos.y + dy, 0xff);
+							const cost = SK_COST * (avoidRange - Math.max(Math.abs(dx), Math.abs(dy)));
+							matrix!.set(lair.pos.x + dx, lair.pos.y + dy, cost);
 						}
 					}
 				});

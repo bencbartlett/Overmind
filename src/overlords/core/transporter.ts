@@ -112,8 +112,8 @@ export class TransportOverlord extends Overlord {
 					task = Tasks.pickup(request.target);
 				} else {
 					if (request.resourceType == 'all') {
-						if (!isResource(request.target)) {
-							log.error(`TransportOverlord: ` + ALL_RESOURCE_TYPE_ERROR);
+						if (isResource(request.target)) {
+							log.error(this.print + ALL_RESOURCE_TYPE_ERROR);
 							return;
 						}
 						task = Tasks.withdrawAll(request.target);

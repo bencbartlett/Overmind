@@ -1,4 +1,11 @@
-import {CombatCreepSetup, HydraliskSetup, RavagerSetup, TransfuserSetup, ZerglingSetup} from './CombatCreepSetup';
+import {
+	CarrierSetup,
+	HydraliskSetup,
+	RavagerSetup,
+	RemoteUpgraderSetup,
+	TransfuserSetup,
+	ZerglingSetup
+} from './CombatCreepSetup';
 import {CreepSetup} from './CreepSetup';
 
 /**
@@ -172,6 +179,8 @@ export const Setups = {
 			sizeLimit: Infinity,
 		}),
 
+		boosted: new CarrierSetup({boosted: true}),
+
 	},
 
 	workers: {
@@ -210,10 +219,12 @@ export const Setups = {
 			sizeLimit: 5,
 		}, ['upgrade']),
 
-		remote:  new CreepSetup(Roles.upgrader, {
+		remote: new CreepSetup(Roles.upgrader, {
 			pattern  : [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
 			sizeLimit: Infinity,
 		}),
+
+		remote_boosted: new RemoteUpgraderSetup({boosted: true}),
 
 	},
 
@@ -411,7 +422,7 @@ export const CombatSetups = {
 
 		default: new RavagerSetup(),
 
-		boosted: new RavagerSetup({boosted:true}),
+		boosted: new RavagerSetup({boosted: true}),
 		// early: new CreepSetup(Roles.bunkerDefender, {
 		// 	pattern  : [ATTACK, MOVE],
 		// 	sizeLimit: Infinity,

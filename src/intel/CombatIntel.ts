@@ -553,6 +553,38 @@ export class CombatIntel {
 	}
 
 	/**
+	 * Attack potential of a single creep in units of effective number of parts
+	 */
+	static getCarryPotential(creep: Creep, countIntendedBoosts = false): number {
+		return this.cache(creep, 'carryPotential', () => _.sum(creep.body, function(part) {
+			if (part.hits == 0) {
+				return 0;
+			}
+			if (part.type == CARRY) {
+				let boost = part.boost as ResourceConstant | undefined;
+				if (!boost && countIntendedBoosts && creep.my) {
+					if (creep.memory.needBoosts) {
+						boost = _.find(creep.memory.needBoosts,
+									   boost => boost == BOOST_TIERS.carry.T1 ||
+												boost == BOOST_TIERS.carry.T2 ||
+												boost == BOOST_TIERS.carry.T3);
+					}
+				}
+				if (!boost) {
+					return 1;
+				} else if (boost == BOOST_TIERS.carry.T1) {
+					return BOOSTS.carry.KH.capacity;
+				} else if (boost == BOOST_TIERS.carry.T2) {
+					return BOOSTS.carry.KH2O.capacity;
+				} else if (boost == BOOST_TIERS.carry.T3) {
+					return BOOSTS.carry.XKH2O.capacity;
+				}
+			}
+			return 0;
+		}));
+	}
+
+	/**
 	 * Minimum damage multiplier a creep has
 	 */
 	static minimumDamageTakenMultiplier(creep: Creep): number {
