@@ -282,23 +282,18 @@ export class Pathing {
 			// Narrow down a list of portal rooms that could possibly lead to the destination
 			const validPortalRooms = _.filter(RoomIntel.memory.portalRooms, roomName => {
 				// Is the first leg of the trip too far?
-				// if (origin == 'E26S47') console.log(roomName);
 				const originToPortal = Game.map.getRoomLinearDistance(origin, roomName);
-				// if (origin == 'E26S47') console.log('originToPortal', originToPortal);
 				if (originToPortal > opts.maxRooms!) return false;
 				if (opts.portalsMustBeInRange && originToPortal > opts.portalsMustBeInRange) return false;
 
 				// Are there intra-shard portals here?
 				const bestPortalDestination = getBestPortalDestination(roomName);
-				// if (origin == 'E26S47') console.log('bestPortalDestination', bestPortalDestination);
 				if (!bestPortalDestination) return false;
 
 				// Is the first + second leg of the trip too far?
 				const portalToDestination = Game.map.getRoomLinearDistance(destination, bestPortalDestination);
-				// if (origin == 'E26S47') console.log('portalToDestination', portalToDestination);
 				return originToPortal + portalToDestination <= opts.maxRooms!;
 			});
-			// if (origin == 'E26S47') console.log('valid portals:', print(validPortalRooms));
 
 			// Figure out which portal room is the best one to use
 			const portalCallback = (roomName: string) => {
@@ -315,14 +310,11 @@ export class Pathing {
 				const bestPortalDestination = getBestPortalDestination(portalRoom) as string; // room def has portal
 				const originToPortalRoute = Game.map.findRoute(origin, portalRoom,
 															   {routeCallback: portalCallback});
-				// if (origin == 'E26S47') console.log(`origin to portal route from ${origin} to ${portalRoom}`, print(originToPortalRoute));
 				const portalToDestinationRoute = Game.map.findRoute(bestPortalDestination, destination,
 																	{routeCallback: portalCallback});
-				// if (origin == 'E26S47') console.log(`portal to destination route from ${bestPortalDestination} to ${destination}`, print(portalToDestinationRoute));
 				if (originToPortalRoute != ERR_NO_PATH && portalToDestinationRoute != ERR_NO_PATH) {
 					const portalRouteLength = originToPortalRoute.length + portalToDestinationRoute.length;
 					const directRouteLength = route != ERR_NO_PATH ? route.length : Infinity;
-					// if (origin == 'E26S47') console.log('portal route length', print(portalRouteLength));
 					if (portalRouteLength < directRouteLength) {
 						return portalRouteLength;
 					} else {
@@ -333,7 +325,7 @@ export class Pathing {
 				}
 			});
 
-			if (origin == 'E26S47') console.log('best portal room', print(bestPortalRoom));
+			// if (origin == 'E26S47') console.log('best portal room: ', print(bestPortalRoom));
 
 			if (bestPortalRoom) {
 				const portalDest = getBestPortalDestination(bestPortalRoom) as string;
@@ -341,8 +333,6 @@ export class Pathing {
 															   {routeCallback: portalCallback});
 				const portalToDestinationRoute = Game.map.findRoute(portalDest, destination,
 																	{routeCallback: portalCallback});
-				// if (origin == 'E26S47') console.log(print(originToPortalRoute));
-				// if (origin == 'E26S47') console.log(print(portalToDestinationRoute));
 				// This will always be true but gotta check so TS doesn't complain...
 				if (originToPortalRoute != ERR_NO_PATH && portalToDestinationRoute != ERR_NO_PATH) {
 					route = [...originToPortalRoute,
@@ -544,14 +534,15 @@ export class Pathing {
 	 */
 	static getCostMatrix(room: Room, options: PathOptions, clone = true): CostMatrix {
 		let matrix: CostMatrix;
-		if (options.ignoreCreeps == false) {
-			matrix = this.getCreepMatrix(room);
-		} else if (options.avoidSK) {
+		if (options.avoidSK) {
 			matrix = this.getSkMatrix(room);
 		} else if (options.ignoreStructures) {
 			matrix = new PathFinder.CostMatrix();
 		} else {
 			matrix = this.getDefaultMatrix(room);
+		}
+		if (options.ignoreCreeps == false) {
+			matrix = this.getCreepMatrix(room, matrix);
 		}
 		// Register other obstacles
 		if (options.obstacles && options.obstacles.length > 0) {
@@ -623,7 +614,7 @@ export class Pathing {
 					_.forEach(blockThese, thing => {
 						for (let dx = -avoidRange; dx <= avoidRange; dx++) {
 							for (let dy = -avoidRange; dy <= avoidRange; dy++) {
-								const cost = SK_COST * (avoidRange - Math.max(Math.abs(dx), Math.abs(dy)));
+								const cost = SK_COST * (avoidRange + 1 - Math.max(Math.abs(dx), Math.abs(dy)));
 								matrix!.set(thing.pos.x + dx, thing.pos.y + dy, cost);
 							}
 						}
@@ -749,7 +740,13 @@ export class Pathing {
 		if (room._creepMatrix) {
 			return room._creepMatrix;
 		}
-		const matrix = this.getDefaultMatrix(room).clone();
+		let matrix: CostMatrix;
+		if (fromMatrix) {
+			matrix = fromMatrix.clone();
+			_.forEach(room.find(FIND_CREEPS), c => matrix.set(c.pos.x, c.pos.y, CREEP_COST));
+			return matrix;
+		}
+		matrix = this.getDefaultMatrix(room).clone();
 		_.forEach(room.find(FIND_CREEPS), c => matrix.set(c.pos.x, c.pos.y, CREEP_COST)); // don't block off entirely
 		room._creepMatrix = matrix;
 		return room._creepMatrix;
@@ -797,11 +794,11 @@ export class Pathing {
 			const matrix = this.getDefaultMatrix(room).clone();
 			const avoidRange = 5;
 			if (room.keeperLairs.length > 0) {
-				const blockThese = _.compact([...room.sources, room.mineral, room.keeperLairs]) as HasPos[];
+				const blockThese = _.compact([...room.sources, room.mineral, ...room.keeperLairs]) as HasPos[];
 				_.forEach(blockThese, thing => {
 					for (let dx = -avoidRange; dx <= avoidRange; dx++) {
 						for (let dy = -avoidRange; dy <= avoidRange; dy++) {
-							const cost = SK_COST / 5 * (avoidRange - Math.max(Math.abs(dx), Math.abs(dy)));
+							const cost = SK_COST / 5 * (avoidRange + 1 - Math.max(Math.abs(dx), Math.abs(dy)));
 							matrix!.set(thing.pos.x + dx, thing.pos.y + dy, cost);
 						}
 					}
@@ -809,7 +806,7 @@ export class Pathing {
 				_.forEach(room.sourceKeepers, sourceKeeper => {
 					for (let dx = -avoidRange; dx <= avoidRange; dx++) {
 						for (let dy = -avoidRange; dy <= avoidRange; dy++) {
-							const cost = SK_COST * 2 * (avoidRange - Math.max(Math.abs(dx), Math.abs(dy)));
+							const cost = SK_COST * 2 * (avoidRange + 1 - Math.max(Math.abs(dx), Math.abs(dy)));
 							matrix!.set(sourceKeeper.pos.x + dx, sourceKeeper.pos.y + dy, cost);
 						}
 					}
