@@ -287,6 +287,34 @@ interface HasID {
 	id: Id;
 }
 
+type AnyStoreStructure =
+	StructureContainer
+	| StructureExtension
+	| StructureFactory
+	| StructureLab
+	| StructureLink
+	| StructureNuker
+	| StructurePowerSpawn
+	| StructureSpawn
+	| StructureStorage
+	| StructureTerminal
+	| StructureTower
+	| Ruin
+	| Tombstone;
+
+type TransferrableStoreStructure =
+	StructureContainer
+	| StructureExtension
+	| StructureFactory
+	| StructureLab
+	| StructureLink
+	| StructureNuker
+	| StructurePowerSpawn
+	| StructureSpawn
+	| StructureStorage
+	| StructureTerminal
+	| StructureTower;
+
 // interface StoreLike {
 // 	[resourceType: string]: number
 // }

@@ -31,7 +31,7 @@ export class TaskRecharge extends Task {
 			&& obj.id == creep.colony.hatchery.battery.id && creep.roleName != 'queen') {
 			return false; // only queens can use the hatchery battery
 		}
-		let amount = isResource(obj) ? obj.amount : obj.energy;
+		let amount = isResource(obj) ? obj.amount : obj.store[RESOURCE_ENERGY];
 		if (amount < this.data.minEnergy) {
 			return false;
 		}

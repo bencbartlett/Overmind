@@ -63,6 +63,10 @@ export const REACTION_PRIORITIES = [
 	BOOST_TIERS.upgrade.T1,
 	BOOST_TIERS.upgrade.T2,
 	BOOST_TIERS.upgrade.T3,
+
+	BOOST_TIERS.carry.T1,
+	BOOST_TIERS.carry.T2,
+	BOOST_TIERS.carry.T3,
 ];
 
 export const priorityStockAmounts: { [key: string]: number } = {

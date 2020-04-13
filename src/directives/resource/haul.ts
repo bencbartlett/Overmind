@@ -6,6 +6,8 @@ import {Directive} from '../Directive';
 
 interface DirectiveHaulMemory extends FlagMemory {
 	totalResources?: number;
+	hasDrops?: boolean;
+	store: { [resource: string]: number };
 	path?: {
 		plain: number,
 		swamp: number,
@@ -38,9 +40,9 @@ export class DirectiveHaul extends Directive {
 		this.overlords.haul = new HaulingOverlord(this);
 	}
 
-	get targetedBy(): string[] {
-		return Overmind.cache.targets[this.ref];
-	}
+	// get targetedBy(): string[] {
+	// 	return Overmind.cache.targets[this.ref];
+	// }
 
 	get drops(): { [resourceType: string]: Resource[] } {
 		if (!this.pos.isVisible) {

@@ -1,7 +1,7 @@
 import {Colony} from '../../Colony';
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {isResource, isStoreStructure, isTombstone} from '../../declarations/typeGuards';
+import {isResource, isTombstone} from '../../declarations/typeGuards';
 import {ALL_RESOURCE_TYPE_ERROR, BufferTarget, LogisticsRequest} from '../../logistics/LogisticsNetwork';
 import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -93,7 +93,7 @@ export class TransportOverlord extends Overlord {
 					log.error(`${this.print}: cannot request 'all' as input!`);
 					return;
 				} else {
-					task = Tasks.transfer(request.target, request.resourceType);
+					task = Tasks.transfer(<TransferrableStoreStructure>request.target, request.resourceType);
 				}
 				if (bestChoice.targetRef != request.target.ref) {
 					// If we need to go to a buffer first to get more stuff
@@ -112,7 +112,7 @@ export class TransportOverlord extends Overlord {
 					task = Tasks.pickup(request.target);
 				} else {
 					if (request.resourceType == 'all') {
-						if (!isStoreStructure(request.target) && !isTombstone(request.target)) {
+						if (!isResource(request.target)) {
 							log.error(`TransportOverlord: ` + ALL_RESOURCE_TYPE_ERROR);
 							return;
 						}

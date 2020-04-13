@@ -3,7 +3,6 @@ import {Colony} from '../../Colony';
 import {log} from '../../console/log';
 import {CreepSetup} from '../../creepSetups/CreepSetup';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {StoreStructure} from '../../declarations/typeGuards';
 import {Hatchery} from '../../hiveClusters/hatchery';
 import {TransportRequest} from '../../logistics/TransportRequestGroup';
 import {Pathing} from '../../movement/Pathing';
@@ -47,9 +46,9 @@ export class BunkerQueenOverlord extends Overlord {
 	room: Room;
 	queens: Zerg[];
 	queenSetup: CreepSetup;
-	storeStructures: StoreStructure[];
+	storeStructures: AnyStoreStructure[];
 	batteries: StructureContainer[];
-	links: StoreStructure[]; // hacky workaround for new typings
+	links: StructureLink[]; // hacky workaround for new typings
 	quadrants: { [quadrant: string]: SupplyStructure[] };
 	private numActiveQueens: number;
 	assignments: { [queenName: string]: { [id: string]: boolean } };
@@ -59,7 +58,7 @@ export class BunkerQueenOverlord extends Overlord {
 		this.queenSetup = Setups.queens.default;
 		this.queens = this.zerg(Roles.queen);
 		this.batteries = _.filter(this.room.containers, container => insideBunkerBounds(container.pos, this.colony));
-		this.links = _.filter((this.room.links as StoreStructure[]), link => insideBunkerBounds(link.pos, this.colony));
+		this.links = _.filter(this.room.links, link => insideBunkerBounds(link.pos, this.colony));
 		this.storeStructures = _.compact([this.colony.terminal!,
 										  this.colony.storage!,
 										  ...this.batteries,
@@ -164,7 +163,7 @@ export class BunkerQueenOverlord extends Overlord {
 		// Step 3: make withdraw tasks to get the needed resources
 		const withdrawTasks: Task[] = [];
 		const neededResources = _.keys(queenCarry) as ResourceConstant[];
-		const targets: StoreStructure[] = _.filter(this.storeStructures, s =>
+		const targets: AnyStoreStructure[] = _.filter(this.storeStructures, s =>
 			_.all(neededResources, resource => (s.store[resource] || 0) >= (queenCarry[resource] || 0)));
 		const withdrawTarget = minBy(targets, target => Pathing.distance(queenPos, target.pos));
 		if (withdrawTarget) {

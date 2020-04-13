@@ -1,16 +1,24 @@
 // A stripped-down version of the logistics network intended for local deliveries
 
-import {log} from '../console/log';
-import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../declarations/typeGuards';
 import {blankPriorityQueue, Priority} from '../priorities/priorities';
 import {profile} from '../profiler/decorator';
 
-export type TransportRequestTarget =
-	EnergyStructure
-	| StoreStructure
-	| StructureLab
-	| StructureNuker
-	| StructurePowerSpawn;
+// export type TransportRequestTarget =
+// 	StructureContainer
+// 	| StructureExtension
+// 	| StructureFactory
+// 	| StructureLab
+// 	| StructureLink
+// 	| StructureNuker
+// 	| StructurePowerSpawn
+// 	| StructureSpawn
+// 	| StructureStorage
+// 	| StructureTerminal
+// 	| StructureTower
+// 	| Ruin
+// 	| Tombstone;
+
+export type TransportRequestTarget = TransferrableStoreStructure;
 
 export interface TransportRequest {
 	target: TransportRequestTarget;
@@ -147,63 +155,71 @@ export class TransportRequestGroup {
 	// }
 
 	private getInputAmount(target: TransportRequestTarget, resourceType: ResourceConstant): number {
-		if (isStoreStructure(target)) {
-			return target.storeCapacity - _.sum(target.store);
-		} else if (isEnergyStructure(target) && resourceType == RESOURCE_ENERGY) {
-			return target.energyCapacity - target.energy;
-		} else {
-			if (target instanceof StructureLab) {
-				if (resourceType == target.mineralType) {
-					return target.mineralCapacity - target.mineralAmount;
-				} else if (resourceType == RESOURCE_ENERGY) {
-					return target.energyCapacity - target.energy;
-				}
-			} else if (target instanceof StructureNuker) {
-				if (resourceType == RESOURCE_GHODIUM) {
-					return target.ghodiumCapacity - target.ghodium;
-				} else if (resourceType == RESOURCE_ENERGY) {
-					return target.energyCapacity - target.energy;
-				}
-			} else if (target instanceof StructurePowerSpawn) {
-				if (resourceType == RESOURCE_POWER) {
-					return target.powerCapacity - target.power;
-				} else if (resourceType == RESOURCE_ENERGY) {
-					return target.energyCapacity - target.energy;
-				}
-			}
-		}
-		log.warning('Could not determine requestor amount!');
-		return 0;
+		// @ts-ignore
+		return target.store.getFreeCapacity(resourceType) || 0;
+
+		// Legacy code from before the structure.store refactor
+		// if (isStoreStructure(target)) {
+		// 	return target.storeCapacity - _.sum(target.store);
+		// } else if (isEnergyStructure(target) && resourceType == RESOURCE_ENERGY) {
+		// 	return target.energyCapacity - target.energy;
+		// } else {
+		// 	if (target instanceof StructureLab) {
+		// 		if (resourceType == target.mineralType) {
+		// 			return target.mineralCapacity - target.mineralAmount;
+		// 		} else if (resourceType == RESOURCE_ENERGY) {
+		// 			return target.energyCapacity - target.energy;
+		// 		}
+		// 	} else if (target instanceof StructureNuker) {
+		// 		if (resourceType == RESOURCE_GHODIUM) {
+		// 			return target.ghodiumCapacity - target.ghodium;
+		// 		} else if (resourceType == RESOURCE_ENERGY) {
+		// 			return target.energyCapacity - target.energy;
+		// 		}
+		// 	} else if (target instanceof StructurePowerSpawn) {
+		// 		if (resourceType == RESOURCE_POWER) {
+		// 			return target.powerCapacity - target.power;
+		// 		} else if (resourceType == RESOURCE_ENERGY) {
+		// 			return target.energyCapacity - target.energy;
+		// 		}
+		// 	}
+		// }
+		// log.warning('Could not determine requestor amount!');
+		// return 0;
 	}
 
 	private getOutputAmount(target: TransportRequestTarget, resourceType: ResourceConstant): number {
-		if (isStoreStructure(target)) {
-			return target.store[resourceType]!;
-		} else if (isEnergyStructure(target) && resourceType == RESOURCE_ENERGY) {
-			return target.energy;
-		} else {
-			if (target instanceof StructureLab) {
-				if (resourceType == target.mineralType) {
-					return target.mineralAmount;
-				} else if (resourceType == RESOURCE_ENERGY) {
-					return target.energy;
-				}
-			} else if (target instanceof StructureNuker) {
-				if (resourceType == RESOURCE_GHODIUM) {
-					return target.ghodium;
-				} else if (resourceType == RESOURCE_ENERGY) {
-					return target.energy;
-				}
-			} else if (target instanceof StructurePowerSpawn) {
-				if (resourceType == RESOURCE_POWER) {
-					return target.power;
-				} else if (resourceType == RESOURCE_ENERGY) {
-					return target.energy;
-				}
-			}
-		}
-		log.warning('Could not determine provider amount!');
-		return 0;
+		// @ts-ignore
+		return target.store.getUsedCapacity(resourceType) || 0;
+
+		// Legacy code from before the structure.store refactor
+		// if (isStoreStructure(target)) {
+		// 	return target.store[resourceType]!;
+		// } else if (isEnergyStructure(target) && resourceType == RESOURCE_ENERGY) {
+		// 	return target.energy;
+		// } else {
+		// 	if (target instanceof StructureLab) {
+		// 		if (resourceType == target.mineralType) {
+		// 			return target.mineralAmount;
+		// 		} else if (resourceType == RESOURCE_ENERGY) {
+		// 			return target.energy;
+		// 		}
+		// 	} else if (target instanceof StructureNuker) {
+		// 		if (resourceType == RESOURCE_GHODIUM) {
+		// 			return target.ghodium;
+		// 		} else if (resourceType == RESOURCE_ENERGY) {
+		// 			return target.energy;
+		// 		}
+		// 	} else if (target instanceof StructurePowerSpawn) {
+		// 		if (resourceType == RESOURCE_POWER) {
+		// 			return target.power;
+		// 		} else if (resourceType == RESOURCE_ENERGY) {
+		// 			return target.energy;
+		// 		}
+		// 	}
+		// }
+		// log.warning('Could not determine provider amount!');
+		// return 0;
 	}
 
 	/**

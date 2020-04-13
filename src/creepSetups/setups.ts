@@ -210,6 +210,11 @@ export const Setups = {
 			sizeLimit: 5,
 		}, ['upgrade']),
 
+		remote:  new CreepSetup(Roles.upgrader, {
+			pattern  : [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
+			sizeLimit: Infinity,
+		}),
+
 	},
 
 	roomPoisoner: new CreepSetup(Roles.roomPoisoner, {

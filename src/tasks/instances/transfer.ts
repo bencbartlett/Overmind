@@ -1,14 +1,9 @@
-import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../../declarations/typeGuards';
 import {profile} from '../../profiler/decorator';
 import {Task} from '../Task';
 
 
 export type transferTargetType =
-	EnergyStructure
-	| StoreStructure
-	| StructureLab
-	| StructureNuker
-	| StructurePowerSpawn
+	TransferrableStoreStructure
 	| Creep;
 
 export const transferTaskName = 'transfer';
@@ -39,26 +34,28 @@ export class TaskTransfer extends Task {
 
 	isValidTarget() {
 		const amount = this.data.amount || 1;
-		const target = this.target;
-		if (target instanceof Creep) {
-			return _.sum(target.carry) <= target.carryCapacity - amount;
-		} else if (isStoreStructure(target)) {
-			return _.sum(target.store) <= target.storeCapacity - amount;
-		} else if (isEnergyStructure(target) && this.data.resourceType == RESOURCE_ENERGY) {
-			return target.energy <= target.energyCapacity - amount;
-		} else {
-			if (target instanceof StructureLab) {
-				return (target.mineralType == this.data.resourceType || !target.mineralType) &&
-					   target.mineralAmount <= target.mineralCapacity - amount;
-			} else if (target instanceof StructureNuker) {
-				return this.data.resourceType == RESOURCE_GHODIUM &&
-					   target.ghodium <= target.ghodiumCapacity - amount;
-			} else if (target instanceof StructurePowerSpawn) {
-				return this.data.resourceType == RESOURCE_POWER &&
-					   target.power <= target.powerCapacity - amount;
-			}
-		}
-		return false;
+		// @ts-ignore
+		return this.target.store.getFreeCapacity(this.data.resourceType) >= amount;
+		// const target = this.target;
+		// if (target instanceof Creep) {
+		// 	return _.sum(target.carry) <= target.carryCapacity - amount;
+		// } else if (isStoreStructure(target)) {
+		// 	return _.sum(target.store) <= target.storeCapacity - amount;
+		// } else if (isEnergyStructure(target) && this.data.resourceType == RESOURCE_ENERGY) {
+		// 	return target.energy <= target.energyCapacity - amount;
+		// } else {
+		// 	if (target instanceof StructureLab) {
+		// 		return (target.mineralType == this.data.resourceType || !target.mineralType) &&
+		// 			   target.mineralAmount <= target.mineralCapacity - amount;
+		// 	} else if (target instanceof StructureNuker) {
+		// 		return this.data.resourceType == RESOURCE_GHODIUM &&
+		// 			   target.ghodium <= target.ghodiumCapacity - amount;
+		// 	} else if (target instanceof StructurePowerSpawn) {
+		// 		return this.data.resourceType == RESOURCE_POWER &&
+		// 			   target.power <= target.powerCapacity - amount;
+		// 	}
+		// }
+		// return false;
 	}
 
 	work() {

@@ -7,23 +7,23 @@ import {NeuralZerg} from '../zerg/NeuralZerg';
 import {PowerZerg} from '../zerg/PowerZerg';
 import {Zerg} from '../zerg/Zerg';
 
-export interface EnergyStructure extends Structure {
-	energy: number;
-	energyCapacity: number;
-}
+// export interface EnergyStructure extends Structure {
+// 	energy: number;
+// 	energyCapacity: number;
+// }
 
-export interface StoreStructure extends Structure {
-	store: StoreDefinition;
-	storeCapacity: number;
-}
+// export interface StoreStructure extends Structure {
+// 	store: StoreDefinition;
+// 	storeCapacity: number;
+// }
 
-export function isEnergyStructure(obj: RoomObject): obj is EnergyStructure {
-	return (<EnergyStructure>obj).energy != undefined && (<EnergyStructure>obj).energyCapacity != undefined;
-}
-
-export function isStoreStructure(obj: RoomObject): obj is StoreStructure {
-	return (<StoreStructure>obj).store != undefined && (<StoreStructure>obj).storeCapacity != undefined;
-}
+// export function isEnergyStructure(obj: RoomObject): obj is EnergyStructure {
+// 	return (<EnergyStructure>obj).energy != undefined && (<EnergyStructure>obj).energyCapacity != undefined;
+// }
+//
+// export function isStoreStructure(obj: RoomObject): obj is StoreStructure {
+// 	return (<StoreStructure>obj).store != undefined && (<StoreStructure>obj).storeCapacity != undefined;
+// }
 
 export function isStructure(obj: RoomObject): obj is Structure {
 	return (<Structure>obj).structureType != undefined;
@@ -41,7 +41,7 @@ export function isTombstone(obj: RoomObject): obj is Tombstone {
 	return (<Tombstone>obj).deathTime != undefined;
 }
 
-export function isRuin(obj: RoomObject): obj is Tombstone {
+export function isRuin(obj: RoomObject): obj is Ruin {
 	return (<Ruin>obj).destroyTime != undefined;
 }
 

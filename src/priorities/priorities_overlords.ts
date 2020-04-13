@@ -50,7 +50,8 @@ export let OverlordPriority = {
 	},
 
 	upgrading: {				// Spawning upgraders
-		upgrade: 600,
+		upgrade        : 600,
+		remoteUpgrading: 601,
 	},
 
 	collectionUrgent: { 		// Collecting resources that are time sensitive, like decaying resources on ground

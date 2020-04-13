@@ -279,13 +279,7 @@ interface StructureTower {
 	// preventRampartDecay(): number;
 }
 
-interface Tombstone {
-	energy: number;
-}
 
-interface Ruin {
-	energy: number;
-}
 
 interface String {
 	padRight(length: number, char?: string): string;
