@@ -1,4 +1,3 @@
-import {isRuin, isStoreStructure} from '../../declarations/typeGuards';
 import {HaulingOverlord} from '../../overlords/situational/hauler';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
@@ -7,7 +6,7 @@ import {Directive} from '../Directive';
 interface DirectiveHaulMemory extends FlagMemory {
 	totalResources?: number;
 	hasDrops?: boolean;
-	store: { [resource: string]: number };
+	// store: { [resource: string]: number };
 	path?: {
 		plain: number,
 		swamp: number,
@@ -40,9 +39,9 @@ export class DirectiveHaul extends Directive {
 		this.overlords.haul = new HaulingOverlord(this);
 	}
 
-	// get targetedBy(): string[] {
-	// 	return Overmind.cache.targets[this.ref];
-	// }
+	get targetedBy(): string[] {
+		return Overmind.cache.targets[this.ref];
+	}
 
 	get drops(): { [resourceType: string]: Resource[] } {
 		if (!this.pos.isVisible) {
@@ -72,18 +71,12 @@ export class DirectiveHaul extends Directive {
 		return undefined;
 	}
 
-	get store(): StoreDefinition {
+	get store(): { [resource: string]: number } {
 		if (!this._store) {
 			// Merge the "storage" of drops with the store of structure
 			let store: { [resourceType: string]: number } = {};
 			if (this.storeStructure) {
-				if (isStoreStructure(this.storeStructure)) {
-					store = this.storeStructure.store;
-				} else if (isRuin(this.storeStructure)) {
-					store = this.storeStructure.store;
-				} else {
-					store = {energy: this.storeStructure.energy};
-				}
+				store = this.storeStructure.store;
 			} else {
 				store = {energy: 0};
 			}

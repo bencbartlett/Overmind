@@ -1,6 +1,5 @@
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {isRuin} from '../../declarations/typeGuards';
 import {DirectiveHaul} from '../../directives/resource/haul';
 import {Energetics} from '../../logistics/Energetics';
 import {Pathing} from '../../movement/Pathing';
@@ -63,12 +62,7 @@ export class HaulingOverlord extends Overlord {
 				}
 				// Withdraw from store structure
 				if (this.directive.storeStructure) {
-					let store: { [resourceType: string]: number } = {};
-					if (isStoreStructure(this.directive.storeStructure) || isRuin(this.directive.storeStructure)) {
-						store = this.directive.storeStructure.store;
-					} else {
-						store = {energy: this.directive.storeStructure.energy};
-					}
+					const store = this.directive.store!;
 					let totalDrawn = 0; // Fill to full
 					for (const resourceType in store) {
 						if (store[resourceType] > 0) {
@@ -93,7 +87,7 @@ export class HaulingOverlord extends Overlord {
 				log.warning(`${hauler.name} in ${hauler.room.print}: nothing to collect!`);
 			} else {
 				// hauler.task = Tasks.goTo(this.directive);
-				hauler.goTo(this.directive, {pathOpts:{avoidSK: true}});
+				hauler.goTo(this.directive, {pathOpts: {avoidSK: true}});
 			}
 		} else {
 			// Travel to colony room and deposit resources
