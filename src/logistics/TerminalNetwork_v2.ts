@@ -216,6 +216,7 @@ const EMPTY_COLONY_TIER: { [resourceType: string]: Colony[] } =
 interface RequestOpts {
 	allowDivvying?: boolean;
 	takeFromColoniesBelowTarget?: boolean;
+	requestType?: 'active' | 'passive';
 	// sendTargetPlusTolerance?: boolean;
 	allowMarketBuy?: boolean;
 	receiveOnlyOncePerTick?: boolean;
@@ -601,8 +602,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	 * Returns whether the terminal network would be able to fulfill an activeRequest for an amount of resource.
 	 * Performs a dry run of the request handling logic and returns true if the transfer would have been made.
 	 */
-	canObtainResource(requestor: Colony, resource: ResourceConstant, totalAmount: number,
-					  allowMarketBuy = true): boolean {
+	canObtainResource(requestor: Colony, resource: ResourceConstant, totalAmount: number): boolean {
 		if (PHASE != 'run') { // need to have all the information from init() about colony states first
 			log.error(`TerminalNetwork.canObtainResource() must be called in the run() phase!`);
 			return false;
@@ -617,6 +617,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		const opts: RequestOpts = {
 			allowDivvying              : false,
 			takeFromColoniesBelowTarget: false,
+			requestType                : 'active',
 			allowMarketBuy             : Game.market.credits > TraderJoe.settings.market.credits.canBuyAbove,
 			receiveOnlyOncePerTick     : false,
 			complainIfUnfulfilled      : true,
@@ -862,13 +863,23 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 				Game.market.credits < TraderJoe.settings.market.credits.canBuyBoostsAbove) {
 				return false;
 			}
+			if (opts.requestType == 'passive' && !Abathur.isBaseMineral(resource)) {
+				return false; // can only buy base minerals for passive requests
+			}
 			// If you can still buy the thing, then buy then thing!
 			const buyOpts: TradeOpts = {dryRun: opts.dryRun};
 			if (Abathur.isBaseMineral(resource) &&
 				colony.assets[resource] < TerminalNetworkV2.settings.buyBaseMineralsDirectUnder) {
-				buyOpts.preferDirect = true;
-				buyOpts.ignorePriceChecksForDirect = true;
-				buyOpts.ignoreMinAmounts = true;
+				if (opts.requestType == 'active') {
+					buyOpts.preferDirect = true;
+					buyOpts.ignorePriceChecksForDirect = true;
+					buyOpts.ignoreMinAmounts = true;
+				} else if (opts.requestType == 'passive') {
+					buyOpts.preferDirect = false; // passive requests should only place buy orders
+					buyOpts.ignoreMinAmounts = false;
+				} else {
+					log.error(`Need to specify active or passive request type request for ${resource}!`);
+				}
 			}
 			const ret = Overmind.tradeNetwork.buy(colony.terminal!, resource, originalRequestAmount, buyOpts);
 			this.debug(`Buying ${requestAmount} ${resource} for ${colony.print} with opts=${JSON.stringify(buyOpts)}` +
@@ -1054,23 +1065,24 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			this.passiveProviders,
 			this.equilibriumNodes,
 			this.passiveRequestors,
-		], {takeFromColoniesBelowTarget: true});
+		], {requestType: 'active', takeFromColoniesBelowTarget: true});
 
 		this.handleProviders(this.activeProviders, [
 			this.activeRequestors,
 			this.passiveRequestors,
 			this.equilibriumNodes,
 			// this.passiveProviders // shouldn't include passiveProviders - these already have too many
-		]);
+		], {allowMarketSell: true});
 
 		// There are a lot of passive requestors, and usually their requests won't be able to be fulfilled, so
 		// we only run this call every few ticks
-		if (Game.time % 10 == 1) {
+		if (Overmind.tradeNetwork.ordersProcessedThisTick()) {
+			const canBuyPassively = Game.market.credits >= TraderJoe.settings.market.credits.canBuyPassivelyAbove;
 			this.handleRequestors(this.passiveRequestors, [
 				this.activeProviders,
 				this.passiveProviders,
 				this.equilibriumNodes, // here we won't take enough of the resource to turn it into a passive requestor
-			], {complainIfUnfulfilled: false, allowMarketBuy: false});
+			], {requestType: 'passive', complainIfUnfulfilled: false, allowMarketBuy: canBuyPassively});
 		}
 
 		// Record stats for this tick

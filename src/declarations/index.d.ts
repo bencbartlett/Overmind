@@ -189,7 +189,7 @@ interface ITerminalNetwork {
 
 	thresholds(colony: IColony, resource: ResourceConstant): Thresholds;
 
-	canObtainResource(requestor: IColony, resource: ResourceConstant, totalAmount: number, allowMarketBuy = true): boolean;
+	canObtainResource(requestor: IColony, resource: ResourceConstant, totalAmount: number): boolean;
 
 	requestResource(requestor: IColony, resource: ResourceConstant, totalAmount: number, tolerance?: number): void;
 
@@ -219,6 +219,8 @@ interface ITradeNetwork {
 	getExistingOrders(type: ORDER_BUY | ORDER_SELL, resource: ResourceConstant | 'any', roomName?: string): Order[];
 
 	priceOf(resource: ResourceConstant): number;
+
+	ordersProcessedThisTick(): boolean;
 
 	buy(terminal: StructureTerminal, resource: ResourceConstant, amount: number, opts?: TradeOpts): number;
 

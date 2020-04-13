@@ -119,23 +119,25 @@ export class TraderJoe implements ITradeNetwork {
 				mustSellDirectBelow    : 5000,
 				canPlaceSellOrdersAbove: 2000,
 				canBuyAbove            : 10000,
+				canBuyPassivelyAbove   : 50000,
 				canBuyBoostsAbove      : 5 * Math.max(RESERVE_CREDITS, 1e5),
 				canBuyEnergyAbove      : 10 * Math.max(RESERVE_CREDITS, 1e5),
 			},
 			orders : {
-				timeout             : 500000, // Remove orders after this many ticks if remaining amount < cleanupAmount
-				cleanupAmount       : 100,	  // RemainingAmount threshold to remove expiring orders
-				maxEnergySellOrders : 5,
-				maxEnergyBuyOrders  : 5,
-				maxOrdersForResource: 5,
-				minSellOrderAmount  : 1000,
-				maxSellOrderAmount  : 25000,
-				minSellDirectAmount : 250,
-				maxSellDirectAmount : 10000,
-				minBuyOrderAmount   : 250,
-				maxBuyOrderAmount   : 25000,
-				minBuyDirectAmount  : 500,
-				maxBuyDirectAmount  : 10000,
+				timeout               : 500000, // Remove orders after this many ticks if remaining amount < cleanupAmount
+				cleanupAmount         : 100,	  // RemainingAmount threshold to remove expiring orders
+				maxEnergySellOrders   : 5,
+				maxEnergyBuyOrders    : 5,
+				maxOrdersPlacedPerTick: 7,
+				maxOrdersForResource  : 20,
+				minSellOrderAmount    : 1000,
+				maxSellOrderAmount    : 25000,
+				minSellDirectAmount   : 250,
+				maxSellDirectAmount   : 10000,
+				minBuyOrderAmount     : 250,
+				maxBuyOrderAmount     : 25000,
+				minBuyDirectAmount    : 500,
+				maxBuyDirectAmount    : 10000,
 			}
 		},
 	};
@@ -143,7 +145,9 @@ export class TraderJoe implements ITradeNetwork {
 	name: string;
 	memory: TraderMemory;
 	stats: TraderStats;
+
 	private notifications: string[];
+	private ordersPlacedThisTick: number;
 
 	constructor() {
 		this.name = 'TradeNetwork';
@@ -154,6 +158,7 @@ export class TraderJoe implements ITradeNetwork {
 		this.memory = Mem.wrap(Memory.Overmind, 'trader', TraderMemoryDefaults, true);
 		this.stats = Mem.wrap(Memory.stats.persistent, 'trader', TraderStatsDefaults);
 		this.notifications = [];
+		this.ordersPlacedThisTick = 0;
 	}
 
 	private debug(...args: any[]) {
@@ -514,6 +519,10 @@ export class TraderJoe implements ITradeNetwork {
 
 	}
 
+	ordersProcessedThisTick(): boolean {
+		return Game.time % 10 == 5;
+	}
+
 	/**
 	 * Create or maintain an order, extending and repricing as needed
 	 */
@@ -522,7 +531,7 @@ export class TraderJoe implements ITradeNetwork {
 		this.debug(`maintain ${type} order for ${terminal.room.print}: ${amount} ${resource}`);
 
 		// This is all somewhat expensive so only do this occasionally
-		if (Game.time % 10 != 5) {
+		if (!this.ordersProcessedThisTick()) {
 			return OK; // No action needed on these ticks
 		}
 		// Cap the amount based on the maximum you can make a buy/sell order with
@@ -592,6 +601,11 @@ export class TraderJoe implements ITradeNetwork {
 				amount = amount * Game.market.credits / brokersFee * 0.9;
 			}
 
+			// Put a cap on the number of orders you can create per tick
+			if (this.ordersPlacedThisTick > TraderJoe.settings.market.orders.maxOrdersPlacedPerTick) {
+				return NO_ACTION;
+			}
+
 			// Only place up to a certain amount of orders
 			const existingOrdersForThis = this.getExistingOrders(type, resource);
 			if (existingOrdersForThis.length < TraderJoe.settings.market.orders.maxOrdersForResource) {
@@ -611,7 +625,9 @@ export class TraderJoe implements ITradeNetwork {
 					msg += `${printRoomName(terminal.room.name, true)} creating sell order: ` +
 						   `${Math.round(amount)} ${resource} at price ${price.toFixed(4)}`;
 				}
-				if (ret != OK) {
+				if (ret == OK) {
+					this.ordersPlacedThisTick++;
+				} else {
 					msg += ` ERROR: ${ret}`;
 				}
 				this.debug(msg);
