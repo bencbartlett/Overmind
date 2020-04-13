@@ -28,6 +28,7 @@ export let OverlordPriority = {
 	colonization: { 			// Colonizing new rooms
 		claim  : 400,
 		pioneer: 401,
+		remoteUpgrading: 410,
 	},
 
 	ownedRoom: { 				// Operation of an owned room
@@ -51,7 +52,6 @@ export let OverlordPriority = {
 
 	upgrading: {				// Spawning upgraders
 		upgrade        : 600,
-		remoteUpgrading: 601,
 	},
 
 	collectionUrgent: { 		// Collecting resources that are time sensitive, like decaying resources on ground

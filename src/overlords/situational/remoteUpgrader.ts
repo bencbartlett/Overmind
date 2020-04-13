@@ -56,7 +56,7 @@ export class RemoteUpgradingOverlord extends Overlord {
 	upgradeSite: UpgradeSite;
 	room: Room;	//  Operates in owned room
 
-	constructor(directive: DirectiveRemoteUpgrade, priority = OverlordPriority.upgrading.remoteUpgrading) {
+	constructor(directive: DirectiveRemoteUpgrade, priority = OverlordPriority.colonization.remoteUpgrading) {
 		super(directive, 'remoteUpgrade', priority);
 
 		this.directive = directive;
@@ -84,7 +84,7 @@ export class RemoteUpgradingOverlord extends Overlord {
 		if (this.childColony.terminal && this.childColony.terminal.my) {
 			return 0; // don't need this once you have a terminal
 		}
-		const roundTripDistance = .5 /*TODO*/ * this.directive.distanceFromColony.weighted;
+		const roundTripDistance = .3 /*TODO*/ * this.directive.distanceFromColony.weighted;
 		const energyPerTick = _.sum(this.upgraders,
 									upgrader => UPGRADE_CONTROLLER_POWER * upgrader.getActiveBodyparts(WORK));
 		return energyPerTick * roundTripDistance;
@@ -142,6 +142,11 @@ export class RemoteUpgradingOverlord extends Overlord {
 	}
 
 	private handleCarrier(carrier: Zerg): void {
+
+		if (carrier.getActiveBodyparts(HEAL) > 0) {
+			carrier.heal(carrier);
+		}
+
 		// Get energy from the parent colony if you need it
 		if (carrier.carry.energy == 0) {
 			// If you are in the child room and there are valuable resources in a storage/terminal that isn't mine,
@@ -167,13 +172,18 @@ export class RemoteUpgradingOverlord extends Overlord {
 				carrier.goToRoom(this.parentColony.room.name);
 				return;
 			}
-			const energyWithdrawTarget = _.find(_.compact([this.parentColony.storage, this.parentColony.terminal]),
-												s => s!.store[RESOURCE_ENERGY] >= carrier.carryCapacity);
-			if (!energyWithdrawTarget) {
+
+			const target = _.find(_.compact([this.parentColony.storage, this.parentColony.terminal]),
+								  s => s!.store[RESOURCE_ENERGY] >= carrier.carryCapacity);
+			if (!target) {
 				log.warning(`${this.print}: no energy withdraw target for ${carrier.print}!`);
 				return;
 			}
-			carrier.task = Tasks.withdraw(energyWithdrawTarget);
+			if (carrier.carry.getUsedCapacity() > carrier.carry.getUsedCapacity(RESOURCE_ENERGY)) {
+				carrier.task = Tasks.transferAll(target);
+			} else {
+				carrier.task = Tasks.withdraw(target);
+			}
 
 		} else {
 

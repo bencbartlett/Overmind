@@ -34,7 +34,7 @@ export class TaskWithdraw extends Task {
 	isValidTarget() {
 		const amount = this.data.amount || 1;
 		// @ts-ignore
-		return this.target.store.getUsedCapacity(this.data.resourceType) > amount;
+		return this.target.store.getUsedCapacity(this.data.resourceType) >= amount;
 		// const target = this.target;
 		// if (isTombstone(target) || isRuin(target) || isStoreStructure(target)) {
 		// 	return (target.store[this.data.resourceType] || 0) >= amount;

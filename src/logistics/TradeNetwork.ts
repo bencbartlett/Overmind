@@ -119,8 +119,8 @@ export class TraderJoe implements ITradeNetwork {
 				mustSellDirectBelow    : 5000,
 				canPlaceSellOrdersAbove: 2000,
 				canBuyAbove            : 10000,
-				canBuyBoostsAbove      : 2 * Math.max(RESERVE_CREDITS, 1e5),
-				canBuyEnergyAbove      : 5 * Math.max(RESERVE_CREDITS, 1e5),
+				canBuyBoostsAbove      : 5 * Math.max(RESERVE_CREDITS, 1e5),
+				canBuyEnergyAbove      : 10 * Math.max(RESERVE_CREDITS, 1e5),
 			},
 			orders : {
 				timeout             : 500000, // Remove orders after this many ticks if remaining amount < cleanupAmount
@@ -503,8 +503,8 @@ export class TraderJoe implements ITradeNetwork {
 			if (price < highestBuyOrder.price) {
 				// TODO
 			}
-			// Don't pay >10x what ingredients cost - about 5.0c for XGHO2 based on March 2020 data
-			const maxMarkupWillingToBuyFrom = 5;
+			// Don't pay >10x what ingredients cost - about 3.0c for XGHO2 based on March 2020 data
+			const maxMarkupWillingToBuyFrom = 3;
 			if (price > priceForBaseResources * maxMarkupWillingToBuyFrom) {
 				return Infinity;
 			} else {

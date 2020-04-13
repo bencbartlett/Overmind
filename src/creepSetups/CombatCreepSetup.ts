@@ -902,7 +902,7 @@ export class CarrierSetup extends CombatCreepSetup {
 		const carrierBodyOptions: Full<BodyOpts> = {
 			moveSpeed         : opts.moveSpeed || 1,
 			putMoveFirstInBody: false,
-			bodyRatio         : {carry: 1, heal: 0.01},
+			bodyRatio         : {carry: 1, heal: opts.healing ? 0.01 : 0},
 			maxParts          : {carry: 40, heal: opts.healing ? 1 : 0},
 			boosts            : opts.boosted ? ['carry', 'move', 'heal'] : [],
 		};
