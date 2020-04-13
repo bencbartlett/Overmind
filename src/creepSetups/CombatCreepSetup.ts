@@ -125,17 +125,17 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 				const dismantleBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.work || 0);
 				availableBoosts.dismantle = colony.evolutionChamber.bestBoostAvailable('dismantle', dismantleBoostNeeded);
 			}
-			if (opts.bodyRatio.heal && opts.boosts.includes('upgrade')) {
-				const healBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.work || 0);
-				availableBoosts.heal = colony.evolutionChamber.bestBoostAvailable('upgrade', healBoostNeeded);
+			if (opts.bodyRatio.work && opts.boosts.includes('upgrade')) {
+				const upgradeBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.work || 0);
+				availableBoosts.heal = colony.evolutionChamber.bestBoostAvailable('upgrade', upgradeBoostNeeded);
 			}
 			if (opts.bodyRatio.attack && opts.boosts.includes('attack')) {
 				const attackBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.attack || 0);
 				availableBoosts.attack = colony.evolutionChamber.bestBoostAvailable('attack', attackBoostNeeded);
 			}
 			if (opts.bodyRatio.carry && opts.boosts.includes('carry')) {
-				const healBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.carry || 0);
-				availableBoosts.heal = colony.evolutionChamber.bestBoostAvailable('carry', healBoostNeeded);
+				const carryBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.carry || 0);
+				availableBoosts.heal = colony.evolutionChamber.bestBoostAvailable('carry', carryBoostNeeded);
 			}
 			if (opts.boosts.includes('move')) {
 				const moveBoostNeeded = LAB_BOOST_MINERAL * 50 / 3; // T1 most boost lets you do move ratio of 2 : 1
@@ -886,24 +886,25 @@ export class RemoteUpgraderSetup extends CombatCreepSetup {
 			boosts            : opts.boosted ? ['upgrade', 'carry', 'move'] : [],
 		};
 		const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, remoteUpgraderBodyOptions);
-		super(Roles.dismantler, bodyOpts, CombatCreepSetup.generateUpgraderBody);
+		super(Roles.upgrader, bodyOpts, CombatCreepSetup.generateUpgraderBody);
 	}
 }
 
 /**
  * Creates a body for a remote upgrader. Possible optoins:
  * - If opts.boosted is true, all parts are requested to be boosted to max level
+ * - If opts.healing is true, up to 2 heal part will be added
  * - Specifying opts.bodyOpts may override any of the behaviors above
  */
 export class CarrierSetup extends CombatCreepSetup {
 	constructor(opts: SimpleBodyOpts = {}) {
-		_.defaults(opts, {moveSpeed: 1, boosted: false, bodyOpts: {}});
+		_.defaults(opts, {moveSpeed: 1, boosted: false, healing: false, bodyOpts: {}});
 		const carrierBodyOptions: Full<BodyOpts> = {
 			moveSpeed         : opts.moveSpeed || 1,
 			putMoveFirstInBody: false,
-			bodyRatio         : {carry: 1},
-			maxParts          : {carry: 40},
-			boosts            : opts.boosted ? ['carry', 'move'] : [],
+			bodyRatio         : {carry: 1, heal: 0.01},
+			maxParts          : {carry: 40, heal: opts.healing ? 1 : 0},
+			boosts            : opts.boosted ? ['carry', 'move', 'heal'] : [],
 		};
 		const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, carrierBodyOptions);
 		super(Roles.transport, bodyOpts, CombatCreepSetup.generateCarrierBody);

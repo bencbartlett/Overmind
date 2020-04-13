@@ -8,7 +8,7 @@ import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {BASE_RESOURCES, BOOSTS_T1, BOOSTS_T2, BOOSTS_T3, INTERMEDIATE_REACTANTS} from '../../resources/map_resources';
 import {Tasks} from '../../tasks/Tasks';
-import {maxBy} from '../../utilities/utils';
+import {maxBy, minBy} from '../../utilities/utils';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 
@@ -84,7 +84,7 @@ export class RemoteUpgradingOverlord extends Overlord {
 		if (this.childColony.terminal && this.childColony.terminal.my) {
 			return 0; // don't need this once you have a terminal
 		}
-		const roundTripDistance = 2.2 * this.directive.distanceFromColony.weighted;
+		const roundTripDistance = .5 /*TODO*/ * this.directive.distanceFromColony.weighted;
 		const energyPerTick = _.sum(this.upgraders,
 									upgrader => UPGRADE_CONTROLLER_POWER * upgrader.getActiveBodyparts(WORK));
 		return energyPerTick * roundTripDistance;
@@ -93,8 +93,9 @@ export class RemoteUpgradingOverlord extends Overlord {
 	init() {
 		let neededCarriers = this.carriers.length;
 		const neededCarryCapacity = this.computeNeededCarrierCapacity();
-		const currentCarryCapacity = _.sum(this.carriers,
-										   carrier => CombatIntel.getCarryPotential(carrier.creep, true));
+		const currentCarryCapacity = _.sum(this.carriers, carrier =>
+			CARRY_CAPACITY * CombatIntel.getCarryPotential(carrier.creep, true));
+		this.debug(`Needed carry capacity: ${neededCarryCapacity}; Current carry capacity: ${currentCarryCapacity}`);
 		if (currentCarryCapacity < neededCarryCapacity) {
 			neededCarriers += 1;
 		}
@@ -129,9 +130,10 @@ export class RemoteUpgradingOverlord extends Overlord {
 		}
 		// Recharge from transporter?
 		const nearbyCarriers = _.filter(this.carriers, carrier => upgrader.pos.getRangeTo(carrier) <= 5);
-		if (nearbyCarriers.length > 0) {
-			const carrierTarget = _.first(_.filter(nearbyCarriers, carrier => carrier.carry.energy > 0));
-			upgrader.goTo(carrierTarget);
+		const nearbyCarriersWaitingToUnload = _.filter(nearbyCarriers, carrier => carrier.carry.energy > 0);
+		const lowestEnergyCarrier = minBy(nearbyCarriersWaitingToUnload, carrier => carrier.carry.energy);
+		if (lowestEnergyCarrier) {
+			upgrader.goTo(lowestEnergyCarrier);
 			return;
 		} else {
 			// Just recharge how you normally would
@@ -146,8 +148,8 @@ export class RemoteUpgradingOverlord extends Overlord {
 			// then take those back before you go home
 			if (carrier.room == this.childColony.room && carrier.carry.getFreeCapacity() > 0) {
 				const storeStructuresNotMy =
-						  _.filter(_.compact([this.parentColony.room.storage,
-											  this.parentColony.room.terminal]),
+						  _.filter(_.compact([this.childColony.room.storage,
+											  this.childColony.room.terminal]),
 								   structure => !structure!.my) as (StructureStorage | StructureTerminal)[];
 				for (const resource of LOOTING_ORDER) {
 					const withdrawTarget = _.find(storeStructuresNotMy,
@@ -191,14 +193,17 @@ export class RemoteUpgradingOverlord extends Overlord {
 				if (carrier.transfer(this.upgradeSite.battery) == OK) return;
 			}
 			// Otherwise try to transfer to any empty upgraders
-			const upgraderTransferTarget = maxBy(_.filter(this.upgraders, upgrader => upgrader.pos.isNearTo(carrier)),
-												 upgrader => upgrader.store.getFreeCapacity());
-			if (upgraderTransferTarget) {
-				if (carrier.transfer(upgraderTransferTarget) == OK) return;
+			const carriersWaitingToUnload = _.filter(this.carriers, carrier =>
+				carrier.carry.energy > 0 && carrier.room == this.childColony.room);
+			const lowestEnergyCarrier = minBy(carriersWaitingToUnload, carrier => carrier.carry.energy);
+			if (carrier == lowestEnergyCarrier) {
+				// Carriers should unload one at a time
+				const upgraderTransferTarget = maxBy(_.filter(this.upgraders, upgrader => upgrader.pos.isNearTo(carrier)),
+													 upgrader => upgrader.store.getFreeCapacity());
+				if (upgraderTransferTarget) {
+					if (carrier.transfer(upgraderTransferTarget) == OK) return;
+				}
 			}
-			// We shoulnd't get here
-			log.warning(`${carrier.print}: nothing to do!`);
-
 		}
 	}
 

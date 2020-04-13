@@ -72,6 +72,7 @@ export interface ColonyMemory {
 	};
 	suspend?: boolean;
 	debug?: boolean;
+	maxLevel: number;
 }
 
 const defaultColonyMemory: ColonyMemory = {
@@ -83,6 +84,7 @@ const defaultColonyMemory: ColonyMemory = {
 		possibleExpansions: {},
 		expiration        : 0,
 	},
+	maxLevel: 0,
 };
 
 export interface Assets {

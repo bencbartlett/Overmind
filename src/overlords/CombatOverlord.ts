@@ -1,4 +1,3 @@
-import {CombatCreepSetup} from '../creepSetups/CombatCreepSetup';
 import {Directive} from '../directives/Directive';
 import {SpawnGroup} from '../logistics/SpawnGroup';
 import {profile} from '../profiler/decorator';
