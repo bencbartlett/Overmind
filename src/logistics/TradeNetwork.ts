@@ -532,7 +532,7 @@ export class TraderJoe implements ITradeNetwork {
 
 		// This is all somewhat expensive so only do this occasionally
 		if (!this.ordersProcessedThisTick()) {
-			return OK; // No action needed on these ticks
+			return OK; // No action needed on these ticks; we'll pretend this works OK
 		}
 		// Cap the amount based on the maximum you can make a buy/sell order with
 		if (type == ORDER_SELL) {
@@ -586,6 +586,11 @@ export class TraderJoe implements ITradeNetwork {
 		}
 		// Create a new order
 		else {
+			// Put a cap on the number of orders you can create per tick
+			if (this.ordersPlacedThisTick > TraderJoe.settings.market.orders.maxOrdersPlacedPerTick) {
+				return NO_ACTION;
+			}
+
 			// Compute the buy or sell price
 			const price = +this.computeCompetitivePrice(type, resource, terminal.room.name)
 							   .toFixed(3); // market only allows for 3 decimal places of precision
@@ -599,11 +604,6 @@ export class TraderJoe implements ITradeNetwork {
 			const brokersFee = price * amount * MARKET_FEE;
 			if (Game.market.credits < brokersFee) {
 				amount = amount * Game.market.credits / brokersFee * 0.9;
-			}
-
-			// Put a cap on the number of orders you can create per tick
-			if (this.ordersPlacedThisTick > TraderJoe.settings.market.orders.maxOrdersPlacedPerTick) {
-				return NO_ACTION;
 			}
 
 			// Only place up to a certain amount of orders
