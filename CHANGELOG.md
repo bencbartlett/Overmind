@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. The format 
 NOTE: This release of Overmind now requires Node 10+ to deploy.
 
 ### Added
+- Added a remote upgrading directive and overlord: will spawn haulers and upgraders to quickly upgrade a far-away room and integrates with the new portal code. Carriers will also haul valuable resources from un-owned store structures on their return trip to the parent colony.
 - Refactored the Zerg class to extend AnyZerg and added a PowerZerg class which also extends AnyZerg. A number of methods throughout the codebase (especially on Movement) have been changed to take AnyZerg as an argument.
 - Lots of new methods on RoomIntel:
     - RoomIntel.retrieveRoomObjectData retrieves and de-compresses the stored data on room layouts, including saved owned structures, portals, sources, minerals, SKlairs, and controller info

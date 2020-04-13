@@ -101,8 +101,8 @@ export class SporeCrawler extends HiveCluster {
 	// 	}
 	// }
 
-	private preventRampartDecay() {
-		if (this.colony.level < 7 && this.towers.length > 0) {
+	private preventStructureDecay(includeRoads=true) {
+		if (this.towers.length > 0) {
 			// expensive to check all rampart hits; only run in intermediate RCL
 			const dyingRamparts = _.filter(this.room.ramparts, rampart =>
 				rampart.hits < WorkerOverlord.settings.barrierHits.critical
@@ -110,6 +110,18 @@ export class SporeCrawler extends HiveCluster {
 			if (dyingRamparts.length > 0) {
 				for (const tower of this.towers) {
 					tower.repair(tower.pos.findClosestByRange(dyingRamparts)!);
+				}
+				return;
+			}
+			// repair roads
+			if (includeRoads) {
+				const decayingRoads = _.filter(this.room.roads, road => road.hits < 0.2 * road.hitsMax);
+				if (decayingRoads.length > 0) {
+					const roadsToRepair = _.sample(decayingRoads, this.towers.length);
+					// ^ if |towers| > |roads| then this will have length of |roads|
+					for (const i in roadsToRepair) {
+						this.towers[i].repair(roadsToRepair[i]);
+					}
 				}
 			}
 		}
@@ -208,7 +220,7 @@ export class SporeCrawler extends HiveCluster {
 		}
 
 		// Prevent rampart decay at early RCL
-		this.preventRampartDecay();
+		this.preventStructureDecay();
 	}
 
 	visuals() {
