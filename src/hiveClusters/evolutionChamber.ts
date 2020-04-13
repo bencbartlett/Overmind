@@ -415,7 +415,7 @@ export class EvolutionChamber extends HiveCluster {
 			// Here this.neededBoosts is describing what we want, not what we are going to load into labs, so it's okay
 			// (and in fact better) to allow this to exceed LAB_MINERAL_CAPACITY so that terminalNetwork knows we
 			// want a lot of this
-			this.neededBoosts[boostResource] = this.neededBoosts[boostResource] + boostAmount;
+			this.neededBoosts[boostResource] = (this.neededBoosts[boostResource] || 0) + boostAmount;
 		}
 	}
 

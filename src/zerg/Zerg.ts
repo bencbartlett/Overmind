@@ -1,3 +1,4 @@
+import {log} from '../console/log';
 import {isCreep, isPowerCreep, isStandardZerg} from '../declarations/typeGuards';
 import {CombatIntel} from '../intel/CombatIntel';
 import {Overlord} from '../overlords/Overlord';
@@ -490,12 +491,15 @@ export class Zerg extends AnyZerg {
 				const boostCounts = this.boostCounts;
 				const bodyCounts = this.bodypartCounts;
 
-				for (const boost of _.clone(this.memory.needBoosts)) {
+				for (const boost of _.cloneDeep(this.memory.needBoosts)) {
 					const bodypartType = BOOST_PARTS[boost];
+					if (!bodypartType) {
+						log.error(`${boost} is not a valid boost!`);
+					}
 					const numParts = bodyCounts[bodypartType] || 0;
-					const numBoostedParts = boostCounts[bodypartType] || 0;
-					if (numBoostedParts < numParts && !!bodypartType) {
-						neededBoosts[bodypartType] = LAB_BOOST_MINERAL * (numParts - numBoostedParts);
+					const numBoostedParts = boostCounts[boost] || 0;
+					if (numBoostedParts < numParts) {
+						neededBoosts[boost] = LAB_BOOST_MINERAL * (numParts - numBoostedParts);
 					} else {
 						_.pull(this.memory.needBoosts, boost);
 					}

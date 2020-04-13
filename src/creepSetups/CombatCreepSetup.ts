@@ -886,7 +886,7 @@ export class RemoteUpgraderSetup extends CombatCreepSetup {
 			boosts            : opts.boosted ? ['upgrade', 'carry', 'move'] : [],
 		};
 		const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, remoteUpgraderBodyOptions);
-		super(Roles.dismantler, bodyOpts, CombatCreepSetup.generateDismantlerBody);
+		super(Roles.dismantler, bodyOpts, CombatCreepSetup.generateUpgraderBody);
 	}
 }
 
@@ -906,7 +906,7 @@ export class CarrierSetup extends CombatCreepSetup {
 			boosts            : opts.boosted ? ['carry', 'move'] : [],
 		};
 		const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, carrierBodyOptions);
-		super(Roles.dismantler, bodyOpts, CombatCreepSetup.generateDismantlerBody);
+		super(Roles.transport, bodyOpts, CombatCreepSetup.generateCarrierBody);
 	}
 }
 

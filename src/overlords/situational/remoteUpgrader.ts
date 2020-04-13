@@ -72,7 +72,9 @@ export class RemoteUpgradingOverlord extends Overlord {
 		this.upgradeSite = this.childColony.upgradeSite;
 		// If new colony or boosts overflowing to storage
 		this.carriers = this.zerg(Roles.transport);
-		this.upgraders = this.zerg(Roles.transport);
+		this.upgraders = this.zerg(Roles.upgrader);
+
+		this.boosted = true; // TODO
 	}
 
 	/**
@@ -140,7 +142,6 @@ export class RemoteUpgradingOverlord extends Overlord {
 	private handleCarrier(carrier: Zerg): void {
 		// Get energy from the parent colony if you need it
 		if (carrier.carry.energy == 0) {
-
 			// If you are in the child room and there are valuable resources in a storage/terminal that isn't mine,
 			// then take those back before you go home
 			if (carrier.room == this.childColony.room && carrier.carry.getFreeCapacity() > 0) {

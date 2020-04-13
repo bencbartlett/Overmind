@@ -42,6 +42,9 @@ export abstract class CombatOverlord extends Overlord {
 	// Standard sequence of actions for running combat creeps
 	autoRun(roleCreeps: CombatZerg[], creepHandler: (creep: CombatZerg) => void) {
 		for (const creep of roleCreeps) {
+			if (creep.spawning) {
+				return;
+			}
 			if (creep.hasValidTask) {
 				creep.run();
 			} else {
