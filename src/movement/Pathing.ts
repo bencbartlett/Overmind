@@ -790,7 +790,6 @@ export class Pathing {
 		}
 		return $.costMatrix(room.name, MatrixTypes.sk, () => {
 			const matrix = this.getDefaultMatrix(room).clone();
-			const avoidRange = 5;
 			if (room.sourceKeepers.length > 0) {
 				// const blockThese = _.compact([...room.sources, room.mineral, ...room.keeperLairs]) as HasPos[];
 				// _.forEach(blockThese, thing => {
@@ -801,11 +800,14 @@ export class Pathing {
 				// 		}
 				// 	}
 				// });
+				const terrain = Game.map.getRoomTerrain(room.name);
+				const avoidRange = 5;
 				_.forEach(room.sourceKeepers, sourceKeeper => {
 					for (let dx = -avoidRange; dx <= avoidRange; dx++) {
 						for (let dy = -avoidRange; dy <= avoidRange; dy++) {
+
 							const cost = SK_COST * 2 * (avoidRange + 1 - Math.max(Math.abs(dx), Math.abs(dy)));
-							matrix!.set(sourceKeeper.pos.x + dx, sourceKeeper.pos.y + dy, cost);
+							matrix.set(sourceKeeper.pos.x + dx, sourceKeeper.pos.y + dy, cost);
 						}
 					}
 				});

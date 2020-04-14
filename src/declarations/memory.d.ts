@@ -118,6 +118,10 @@ interface CreepMemory {
 	data: {
 		origin: string;
 	};
+	avoidDanger?: {
+		start: number;
+		timer: number;
+	};
 	noNotifications?: boolean;
 	_go?: MoveData;
 	debug?: boolean;
@@ -275,7 +279,6 @@ declare const enum RMEM_ROOM_STATUS {
 
 type RoomStatusCompressed = [RMEM_ROOM_STATUS, number];
 
-
 interface RollingStats {
 	[MEM_AVGS.AMOUNT]: number;
 	[MEM_AVGS.AVG10K]: number;
@@ -319,7 +322,7 @@ interface RoomMemory {
 	// [RMEM.CASUALTIES]?: {
 	// 	cost: RollingStats
 	// };
-	[RMEM.SAFETY]?: SafetyData;
+	[RMEM.SAFETY]?: SafetyData; // TODO: deprecate
 	[RMEM.PREV_POSITIONS]?: { [creepID: string]: ProtoPos }; // TODO: deprecate
 	[RMEM.CREEPS_IN_ROOM]?: { [tick: number]: string[] }; // TODO: deprecate
 	[RMEM.CREEP_INFOS]?: SavedCreepInfo;
@@ -380,7 +383,7 @@ interface SavedCombatPotentials {
 	[COMBAT_POTENTIALS.ATTACK]: number;
 	[COMBAT_POTENTIALS.RANGED]: number;
 	[COMBAT_POTENTIALS.HEAL]: number;
-	[COMBAT_POTENTIALS.DISMANTLE]: number;
+	[COMBAT_POTENTIALS.DISMANTLE]?: number;
 }
 
 declare const enum RMEM_CREEP_INFO {
@@ -406,8 +409,8 @@ interface SavedSafetyDataOwnedRoom {
 	[RMEM_SAFETY.THREAT_LEVEL]: number;
 	[RMEM_SAFETY.SAFE_FOR]: number;
 	[RMEM_SAFETY.UNSAFE_FOR]: number;
-	[RMEM_SAFETY.SAFETY_1K]: number;
-	[RMEM_SAFETY.SAFETY_10K]: number;
+	// [RMEM_SAFETY.SAFETY_1K]: number;
+	// [RMEM_SAFETY.SAFETY_10K]: number;
 	[RMEM_SAFETY.COMBAT_POTENTIALS]?: SavedCombatPotentials;
 	[RMEM_SAFETY.NUM_HOSTILES]?: number;
 	[RMEM_SAFETY.NUM_BOOSTED_HOSTILES]?: number;

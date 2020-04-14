@@ -46,3 +46,43 @@ Object.defineProperty(Creep.prototype, 'inRampart', {
 	},
 	configurable: true,
 });
+
+// Permanently cached properties
+
+Object.defineProperty(Creep.prototype, 'bodypartCounts', {
+	get() {
+		PERMACACHE.bodypartCounts = PERMACACHE.bodypartCounts || {};
+		if (PERMACACHE.bodypartCounts[this.id] === undefined) {
+			PERMACACHE.bodypartCounts[this.id] = _.countBy(this.body, (part: BodyPartDefinition) => part.type);
+			_.defaults(PERMACACHE.bodypartCounts[this.id], {
+				[MOVE]         : 0,
+				[WORK]         : 0,
+				[CARRY]        : 0,
+				[ATTACK]       : 0,
+				[RANGED_ATTACK]: 0,
+				[TOUGH]        : 0,
+				[HEAL]         : 0,
+				[CLAIM]        : 0,
+			});
+		}
+		return PERMACACHE.bodypartCounts[this.id];
+	},
+	configurable: true,
+});
+
+Object.defineProperty(Creep.prototype, 'isHuman', {
+	get() {
+		PERMACACHE.isHuman = PERMACACHE.isHuman || {};
+		if (PERMACACHE.isHuman[this.id] === undefined) {
+			PERMACACHE.isHuman[this.id] = this.owner.username != 'Invader' &&
+										  this.owner.username != 'Source Keeper' &&
+										  this.owner.username != 'Screeps';
+		}
+		return PERMACACHE.isHuman[this.id];
+	},
+	configurable: true,
+});
+
+
+
+

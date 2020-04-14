@@ -1,4 +1,3 @@
-import {MoveOptions} from '../movement/Movement';
 import {profile} from '../profiler/decorator';
 import {getCacheExpiration} from '../utilities/utils';
 
@@ -88,7 +87,7 @@ export class $ { // $ = cash = cache... get it? :D
 		return _cache.costMatrices[cacheKey];
 	}
 
-	static path(fromPos: RoomPosition, toPos: RoomPosition, opts: MoveOptions): RoomPosition[] {
+	static path(fromPos: RoomPosition, toPos: RoomPosition, opts: any /*todo*/): RoomPosition[] {
 		// TODO
 		return [];
 	}

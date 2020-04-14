@@ -6,6 +6,8 @@ interface Creep {
 	boostCounts: { [boostType: string]: number };
 	inRampart: boolean;
 	approxMoveSpeed: number;
+	bodypartCounts: { [bodypart in BodyPartConstant]: number };
+	isHuman: true;
 }
 
 interface PowerCreep {

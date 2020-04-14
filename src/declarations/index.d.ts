@@ -58,6 +58,7 @@ interface IGlobalCache {
 	costMatrices: { [key: string]: CostMatrix };
 	roomPositions: { [key: string]: RoomPosition | undefined };
 	things: { [key: string]: undefined | HasID | HasID[] };
+	permaCache: { [key: string]: any };
 	// objects: { [key: string]: Object };
 }
 
@@ -234,6 +235,8 @@ interface ITradeNetwork {
 declare var Overmind: IOvermind;
 
 declare var _cache: IGlobalCache;
+
+declare var PERMACACHE: any;
 
 declare function print(...args: any[]): void;
 

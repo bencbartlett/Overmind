@@ -373,7 +373,7 @@ export abstract class AnyZerg {
 	}
 
 	/**
-	 * Flee from hostiles in the room, while not repathing every tick
+	 * Flee from hostiles in the room, while not repathing every tick // TODO: take a look at this
 	 */
 	flee(avoidGoals: (RoomPosition | HasPos)[] = this.room.fleeDefaults,
 		 fleeOptions: FleeOptions              = {},

@@ -223,10 +223,10 @@ export class Mem {
 				maxRange: 5,
 				minPower: 5000,
 			},
-			autoPoison       	 : {
-				enabled		 : false,
-				maxRange	 : 4,
-				concurrent	 : 1,
+			autoPoison            : {
+				enabled      : false,
+				maxRange     : 4,
+				concurrent   : 1,
 				poisonedRooms: [],
 			},
 		});
@@ -244,7 +244,7 @@ export class Mem {
 	}
 
 	private static initGlobalMemory() {
-		global._cache = <IGlobalCache>{
+		const defaultGlobalCache: IGlobalCache = {
 			accessed     : {},
 			expiration   : {},
 			structures   : {},
@@ -253,7 +253,10 @@ export class Mem {
 			costMatrices : {},
 			roomPositions: {},
 			things       : {},
+			permaCache   : {},
 		};
+		global._cache = defaultGlobalCache;
+		global.PERMACACHE = global._cache.permaCache;
 	}
 
 	static clean() {

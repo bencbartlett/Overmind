@@ -464,8 +464,8 @@ export class Zerg extends AnyZerg {
 		return _.countBy(this.body, bodyPart => bodyPart.boost);
 	}
 
-	get bodypartCounts(): { [bodypart: string]: number } {
-		return _.countBy(this.body, part => part.type);
+	get bodypartCounts(): { [bodypart in BodyPartConstant]: number } {
+		return this.creep.bodypartCounts;
 	}
 
 	get needsBoosts(): boolean {
