@@ -11,7 +11,6 @@ import {minBy} from '../../utilities/utils';
 import {Visualizer} from '../../visuals/Visualizer';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord, CombatOverlordMemory} from '../CombatOverlord';
-import {OverlordMemory} from '../Overlord';
 
 interface SourceReaperOverlordMemory extends CombatOverlordMemory {
 	targetLairID?: string;
@@ -79,7 +78,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 		if (!this.targetLair || !this.room || reaper.room != this.room || reaper.pos.isEdge) {
 			// log.debugCreep(reaper, `Going to room!`);
 			reaper.healSelfIfPossible();
-			reaper.goTo(this.pos);
+			reaper.goTo(this.pos, {pathOpts: {avoidSK: false}});
 			return;
 		}
 
@@ -97,7 +96,8 @@ export class SourceReaperOverlord extends CombatOverlord {
 			}
 			// Kite around ranged invaders until a defender arrives
 			if (this.room.invaders.length > 2 && _.filter(this.defenders, def => def.room == this.room).length == 0) {
-				reaper.kite(_.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0));
+				reaper.kite(_.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0),
+							{pathOpts:{avoidSK:false}});
 				reaper.healSelfIfPossible();
 			}
 			// If defender is already here or a small invasion
@@ -121,9 +121,9 @@ export class SourceReaperOverlord extends CombatOverlord {
 				if (keeper) { // attack the source keeper
 					// stop and heal at range 4 if needed
 					const approachRange = (reaper.hits == reaper.hitsMax || reaper.pos.getRangeTo(keeper) <= 3) ? 1 : 4;
-					reaper.goTo(keeper, {range: approachRange});
+					reaper.goTo(keeper, {range: approachRange, pathOpts: {avoidSK: false}});
 				} else { // travel to next lair
-					reaper.goTo(this.targetLair, {range: 1});
+					reaper.goTo(this.targetLair, {range: 1, pathOpts: {avoidSK: false}});
 				}
 			}
 			reaper.healSelfIfPossible();
@@ -137,7 +137,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 		if (!this.targetLair || !this.room || defender.room != this.room || defender.pos.isEdge) {
 			debug(defender, `Going to room!`);
 			defender.healSelfIfPossible();
-			defender.goToRoom(this.pos.roomName);
+			defender.goToRoom(this.pos.roomName, {pathOpts: {avoidSK: false}});
 			return;
 		}
 
@@ -159,8 +159,9 @@ export class SourceReaperOverlord extends CombatOverlord {
 					defender.goTo(reaper, {
 						movingTarget: defender.pos.getRangeTo(reaper) > 8,
 						repathChance: 0.1,
-						pathOpts: {
-							maxRooms    : 1,
+						pathOpts    : {
+							maxRooms: 1,
+							avoidSK : false,
 						}
 					});
 				} else {
@@ -169,12 +170,12 @@ export class SourceReaperOverlord extends CombatOverlord {
 						const range = defender.pos.getRangeTo(keeper);
 						const keepAtRange = defender.hits < defender.hitsMax * .9 ? 4 : 3;
 						if (range < keepAtRange) {
-							defender.kite(this.room.hostiles, {range: keepAtRange});
+							defender.kite(this.room.hostiles, {range: keepAtRange, pathOpts: {avoidSK: false}});
 						} else if (range > keepAtRange) {
-							defender.goTo(keeper, {range: keepAtRange, pathOpts: {maxRooms: 1}});
+							defender.goTo(keeper, {range: keepAtRange, pathOpts: {maxRooms: 1, avoidSK: false}});
 						}
 					} else { // travel to next lair
-						defender.goTo(this.targetLair, {range: 5});
+						defender.goTo(this.targetLair, {range: 5, pathOpts: {avoidSK: false}});
 					}
 				}
 			} else {

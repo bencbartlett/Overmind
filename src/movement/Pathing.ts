@@ -791,16 +791,16 @@ export class Pathing {
 		return $.costMatrix(room.name, MatrixTypes.sk, () => {
 			const matrix = this.getDefaultMatrix(room).clone();
 			const avoidRange = 5;
-			if (room.keeperLairs.length > 0) {
-				const blockThese = _.compact([...room.sources, room.mineral, ...room.keeperLairs]) as HasPos[];
-				_.forEach(blockThese, thing => {
-					for (let dx = -avoidRange; dx <= avoidRange; dx++) {
-						for (let dy = -avoidRange; dy <= avoidRange; dy++) {
-							const cost = SK_COST / 5 * (avoidRange + 1 - Math.max(Math.abs(dx), Math.abs(dy)));
-							matrix!.set(thing.pos.x + dx, thing.pos.y + dy, cost);
-						}
-					}
-				});
+			if (room.sourceKeepers.length > 0) {
+				// const blockThese = _.compact([...room.sources, room.mineral, ...room.keeperLairs]) as HasPos[];
+				// _.forEach(blockThese, thing => {
+				// 	for (let dx = -avoidRange; dx <= avoidRange; dx++) {
+				// 		for (let dy = -avoidRange; dy <= avoidRange; dy++) {
+				// 			const cost = SK_COST / 5 * (avoidRange + 1 - Math.max(Math.abs(dx), Math.abs(dy)));
+				// 			matrix!.set(thing.pos.x + dx, thing.pos.y + dy, cost);
+				// 		}
+				// 	}
+				// });
 				_.forEach(room.sourceKeepers, sourceKeeper => {
 					for (let dx = -avoidRange; dx <= avoidRange; dx++) {
 						for (let dy = -avoidRange; dy <= avoidRange; dy++) {
