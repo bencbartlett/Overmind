@@ -538,6 +538,9 @@ export class Zerg extends AnyZerg {
 	/* Reassigns the creep to work under a new overlord and as a new role. */
 	reassign(newOverlord: Overlord | null, newRole: string, invalidateTask = true) {
 		this.overlord = newOverlord;
+		if (newOverlord && newOverlord.colony && this.colony != newOverlord.colony) {
+			this.colony = newOverlord.colony;
+		}
 		this.roleName = newRole;
 		this.memory.role = newRole;
 		if (invalidateTask) {
