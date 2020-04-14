@@ -378,16 +378,10 @@ export abstract class AnyZerg {
 	flee(avoidGoals: (RoomPosition | HasPos)[] = this.room.fleeDefaults,
 		 fleeOptions: FleeOptions              = {},
 		 moveOptions: MoveOptions              = {}): boolean {
-
-		_.defaults(moveOptions, {
-			fleeRange: 6
-		});
-
-		// if (avoidGoals.length == 0 || this.room.dangerousHostiles.find(
-		// 	creep => creep.pos.getRangeToXY(this.pos.x, this.pos.y) < moveOptions.fleeRange!) == undefined) {
-		// 	return false;
-		// } else
-		if (this.room.controller && this.room.controller.my && this.room.controller.safeMode) {
+		if (avoidGoals.length == 0 || this.room.dangerousHostiles.find(
+			creep => creep.pos.getRangeToXY(this.pos.x, this.pos.y) < 6) == undefined) {
+			return false;
+		} else if (this.room.controller && this.room.controller.my && this.room.controller.safeMode) {
 			return false;
 		} else {
 			const fleeing = Movement.flee(this, avoidGoals, fleeOptions.dropEnergy, moveOptions) != undefined;
