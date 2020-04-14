@@ -39,7 +39,7 @@ global.NO_ACTION = 1;
 // global._RM_INVASIONDATA = 'v';
 // global._RM_HARVEST = 'h';
 // global._RM_CASUALTIES = 'd';
-// global._RM_SAFETY = 'f';
+// global.RMEM_SAFETY = 'f';
 // global._RM_PREVPOSITIONS = 'p';
 // global._RM_CREEPSINROOM = 'cr';
 //

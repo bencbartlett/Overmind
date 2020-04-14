@@ -260,7 +260,7 @@ export class Overseer implements IOverseer {
 		if (needsDefending) {
 			// Place defensive directive after hostiles have been present for a long enough time
 			const safetyData = RoomIntel.getSafetyData(colony.room.name);
-			const invasionIsPersistent = safetyData[_RM_SAFETY.UNSAFE_FOR] > 20;
+			const invasionIsPersistent = safetyData[RMEM_SAFETY.UNSAFE_FOR] > 20;
 			if (invasionIsPersistent) {
 				DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
 			}

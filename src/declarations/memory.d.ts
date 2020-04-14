@@ -223,6 +223,7 @@ declare const enum RMEM {
 	IMPORTANT_STRUCTURES = 'i',
 	PORTALS              = 'pr',
 	ROOM_STATUS          = 'rs',
+	CREEP_INFO           = 'ci',
 }
 
 declare const enum RMEM_STRUCTS {
@@ -319,8 +320,9 @@ interface RoomMemory {
 	// 	cost: RollingStats
 	// };
 	[RMEM.SAFETY]?: SafetyData;
-	[RMEM.PREV_POSITIONS]?: { [creepID: string]: ProtoPos };
-	[RMEM.CREEPS_IN_ROOM]?: { [tick: number]: string[] };
+	[RMEM.PREV_POSITIONS]?: { [creepID: string]: ProtoPos }; // TODO: deprecate
+	[RMEM.CREEPS_IN_ROOM]?: { [tick: number]: string[] }; // TODO: deprecate
+	[RMEM.CREEP_INFOS]?: SavedCreepInfo;
 }
 
 interface SavedRoomObject {
@@ -355,18 +357,78 @@ interface SavedMineral extends SavedRoomObject {
 	[RMEM_MNRL.DENSITY]: number;
 }
 
-declare const enum _RM_SAFETY {
-	SAFE_FOR   = 's',
-	UNSAFE_FOR = 'u',
-	SAFETY_1K  = 'k',
-	SAFETY_10K = 'D',
-	TICK       = MEM.TICK
+declare const enum RMEM_SAFETY {
+	TICK                 = MEM.TICK,
+	THREAT_LEVEL         = 't',
+	SAFE_FOR             = 's',
+	UNSAFE_FOR           = 'u',
+	SAFETY_1K            = 'k',
+	SAFETY_10K           = 'D',
+	COMBAT_POTENTIALS    = 'c',
+	NUM_HOSTILES         = 'nh',
+	NUM_BOOSTED_HOSTILES = 'nb',
+}
+
+declare const enum COMBAT_POTENTIALS {
+	ATTACK    = 'a',
+	RANGED    = 'r',
+	HEAL      = 'h',
+	DISMANTLE = 'd',
+}
+
+interface SavedCombatPotentials {
+	[COMBAT_POTENTIALS.ATTACK]: number;
+	[COMBAT_POTENTIALS.RANGED]: number;
+	[COMBAT_POTENTIALS.HEAL]: number;
+	[COMBAT_POTENTIALS.DISMANTLE]: number;
+}
+
+declare const enum RMEM_CREEP_INFO {
+	ID          = 'id',
+	COORD       = 'c',
+	X_AVG       = 'xa',
+	Y_AVG       = 'ya',
+	TTL         = 'ttl',
+	ENERGY_COST = 'e',
+}
+
+interface SavedCreepInfo {
+	[RMEM_CREEP_INFO.ID]: string;
+	[RMEM_CREEP_INFO.COORD]: string;
+	[RMEM_CREEP_INFO.X_AVG]: number;
+	[RMEM_CREEP_INFO.Y_AVG]: number;
+	[RMEM_CREEP_INFO.TTL]: number;
+	[RMEM_CREEP_INFO.ENERGY_COST]: number;
+}
+
+interface SavedSafetyDataOwnedRoom {
+	[RMEM_SAFETY.TICK]: number;
+	[RMEM_SAFETY.THREAT_LEVEL]: number;
+	[RMEM_SAFETY.SAFE_FOR]: number;
+	[RMEM_SAFETY.UNSAFE_FOR]: number;
+	[RMEM_SAFETY.SAFETY_1K]: number;
+	[RMEM_SAFETY.SAFETY_10K]: number;
+	[RMEM_SAFETY.COMBAT_POTENTIALS]?: SavedCombatPotentials;
+	[RMEM_SAFETY.NUM_HOSTILES]?: number;
+	[RMEM_SAFETY.NUM_BOOSTED_HOSTILES]?: number;
+}
+
+interface SavedSafetyDataOutpost {
+	[RMEM_SAFETY.SAFE_FOR]: number;
+	[RMEM_SAFETY.UNSAFE_FOR]: number;
+	[RMEM_SAFETY.SAFETY_1K]: number;
+	[RMEM_SAFETY.SAFETY_10K]: number;
+	[RMEM_SAFETY.TICK]: number;
 }
 
 interface SafetyData {
-	[_RM_SAFETY.SAFE_FOR]: number;
-	[_RM_SAFETY.UNSAFE_FOR]: number;
-	[_RM_SAFETY.SAFETY_1K]: number;
-	[_RM_SAFETY.SAFETY_10K]: number;
-	[_RM_SAFETY.TICK]: number;
+	[RMEM_SAFETY.SAFE_FOR]: number;
+	[RMEM_SAFETY.UNSAFE_FOR]: number;
+	[RMEM_SAFETY.SAFETY_1K]: number;
+	[RMEM_SAFETY.SAFETY_10K]: number;
+	[RMEM_SAFETY.TICK]: number;
 }
+
+
+
+

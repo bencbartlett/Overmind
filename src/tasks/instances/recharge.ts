@@ -57,9 +57,9 @@ export class TaskRecharge extends Task {
 			this.parent!.creep = creep;
 		}
 		// Choose the target to maximize your energy gain subject to other targeting workers
-		let possibleTargets = creep.colony && creep.inColonyRoom ? creep.colony.rechargeables
-																 : creep.room.rechargeables;
-		possibleTargets = _.filter(possibleTargets, targ => targ.pos.isWalkable());
+		const possibleTargets = creep.colony && creep.inColonyRoom ? creep.colony.rechargeables
+																   : creep.room.rechargeables;
+
 		const target = maxBy(possibleTargets, o => this.rechargeRateForCreep(creep, o));
 		if (!target || creep.pos.getMultiRoomRangeTo(target.pos) > 40) {
 			// workers shouldn't harvest; let drones do it (disabling this check can destabilize early economy)

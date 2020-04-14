@@ -477,31 +477,31 @@ export class RoomIntel {
 	private static recordSafety(room: Room): void {
 		if (!room.memory[RMEM.SAFETY]) {
 			room.memory[RMEM.SAFETY] = {
-				[_RM_SAFETY.SAFE_FOR]  : 0,
-				[_RM_SAFETY.UNSAFE_FOR]: 0,
-				[_RM_SAFETY.SAFETY_1K] : 1,
-				[_RM_SAFETY.SAFETY_10K]: 1,
-				[_RM_SAFETY.TICK]      : Game.time
+				[RMEM_SAFETY.SAFE_FOR]  : 0,
+				[RMEM_SAFETY.UNSAFE_FOR]: 0,
+				[RMEM_SAFETY.SAFETY_1K] : 1,
+				[RMEM_SAFETY.SAFETY_10K]: 1,
+				[RMEM_SAFETY.TICK]      : Game.time
 			};
 		}
 		let safety: number;
 		const safetyData = room.memory[RMEM.SAFETY] as SafetyData;
 		if (room.dangerousHostiles.length > 0) {
-			safetyData[_RM_SAFETY.SAFE_FOR] = 0;
-			safetyData[_RM_SAFETY.UNSAFE_FOR] += 1;
+			safetyData[RMEM_SAFETY.SAFE_FOR] = 0;
+			safetyData[RMEM_SAFETY.UNSAFE_FOR] += 1;
 			safety = 0;
 		} else {
-			safetyData[_RM_SAFETY.SAFE_FOR] += 1;
-			safetyData[_RM_SAFETY.UNSAFE_FOR] = 0;
+			safetyData[RMEM_SAFETY.SAFE_FOR] += 1;
+			safetyData[RMEM_SAFETY.UNSAFE_FOR] = 0;
 			safety = 1;
 		}
 		// Compute rolling averages
-		const dTime = Game.time - safetyData[_RM_SAFETY.TICK];
-		safetyData[_RM_SAFETY.SAFETY_1K] = +(irregularExponentialMovingAverage(
-			safety, safetyData[_RM_SAFETY.SAFETY_1K], dTime, 1000)).toFixed(5);
-		safetyData[_RM_SAFETY.SAFETY_10K] = +(irregularExponentialMovingAverage(
-			safety, safetyData[_RM_SAFETY.SAFETY_10K], dTime, 10000)).toFixed(5);
-		safetyData[_RM_SAFETY.TICK] = Game.time;
+		const dTime = Game.time - safetyData[RMEM_SAFETY.TICK];
+		safetyData[RMEM_SAFETY.SAFETY_1K] = +(irregularExponentialMovingAverage(
+			safety, safetyData[RMEM_SAFETY.SAFETY_1K], dTime, 1000)).toFixed(5);
+		safetyData[RMEM_SAFETY.SAFETY_10K] = +(irregularExponentialMovingAverage(
+			safety, safetyData[RMEM_SAFETY.SAFETY_10K], dTime, 10000)).toFixed(5);
+		safetyData[RMEM_SAFETY.TICK] = Game.time;
 	}
 
 	static getSafetyData(roomName: string): SafetyData {
@@ -510,11 +510,11 @@ export class RoomIntel {
 		}
 		if (!Memory.rooms[roomName][RMEM.SAFETY]) {
 			Memory.rooms[roomName][RMEM.SAFETY] = {
-				[_RM_SAFETY.SAFE_FOR]  : 0,
-				[_RM_SAFETY.UNSAFE_FOR]: 0,
-				[_RM_SAFETY.SAFETY_1K] : 1,
-				[_RM_SAFETY.SAFETY_10K]: 1,
-				[_RM_SAFETY.TICK]      : Game.time
+				[RMEM_SAFETY.SAFE_FOR]  : 0,
+				[RMEM_SAFETY.UNSAFE_FOR]: 0,
+				[RMEM_SAFETY.SAFETY_1K] : 1,
+				[RMEM_SAFETY.SAFETY_10K]: 1,
+				[RMEM_SAFETY.TICK]      : Game.time
 			};
 		}
 		return Memory.rooms[roomName][RMEM.SAFETY]!;
@@ -654,6 +654,19 @@ export class RoomIntel {
 		return RoomIntel.getRoomStatus(oneOfMyColonies.name).status as 'normal' | 'novice' | 'respawn';
 	}
 
+	/**
+	 * RoomIntel.init() is the very first thing that is run in the init phase of each tick. The only stuff that should
+	 * go in here is critical and inexpensive stuff that is necessary information for this tick.
+	 */
+	static init(): void {
+
+	}
+
+
+	/**
+	 * RoomIntel.run() is the very last thing that is run in the run phase of each tick. If something times out earlier
+	 * in the script, then this will not be fully executed, so do not put critical stuff here.
+	 */
 	static run(): void {
 
 		let alreadyComputedScore = false;

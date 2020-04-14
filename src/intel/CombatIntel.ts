@@ -24,6 +24,7 @@ export interface CombatPotentials {
 	attack: number;
 	rangedAttack: number;
 	heal: number;
+	dismantle?: number;
 }
 
 
@@ -675,7 +676,8 @@ export class CombatIntel {
 		const attack = _.sum(creeps, creep => this.getAttackPotential(creep));
 		const rangedAttack = _.sum(creeps, creep => this.getRangedAttackPotential(creep));
 		const heal = _.sum(creeps, creep => this.getHealPotential(creep));
-		return {attack, rangedAttack, heal};
+		const dismantle = _.sum(creeps, creep => this.getDismantlePotential(creep));
+		return {attack, rangedAttack, heal, dismantle};
 	}
 
 	/**
@@ -685,7 +687,8 @@ export class CombatIntel {
 		const attack = _.sum(zergs, zerg => this.getAttackPotential(zerg.creep, countIntendedBoosts));
 		const rangedAttack = _.sum(zergs, zerg => this.getRangedAttackPotential(zerg.creep, countIntendedBoosts));
 		const heal = _.sum(zergs, zerg => this.getHealPotential(zerg.creep, countIntendedBoosts));
-		return {attack, rangedAttack, heal};
+		const dismantle = _.sum(zergs, zerg => this.getDismantlePotential(zerg.creep, countIntendedBoosts));
+		return {attack, rangedAttack, heal, dismantle};
 	}
 
 	/**
