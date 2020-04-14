@@ -32,7 +32,7 @@ const STATE_CURRENT_X = 7;
 const STATE_CURRENT_Y = 8;
 
 export const MovePriorities = {
-	[Roles.manager]       : 1,
+	[Roles.manager]       : 0, // movement priority 0 means you will never get pushed
 	[Roles.queen]         : 2,
 	[Roles.bunkerDefender]: 3,
 	[Roles.melee]         : 3,
@@ -465,6 +465,8 @@ export class Movement {
 		if (this.getPushPriority(pusher) < this.getPushPriority(pushee)) {
 			// pushee less important than pusher
 			return true;
+		} else if (this.getPushPriority(pushee) == 0) {
+			return false;
 		} else {
 			pushee = normalizeAnyZerg(pushee);
 			if (isAnyZerg(pushee)) {
