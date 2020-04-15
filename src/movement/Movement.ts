@@ -628,7 +628,7 @@ export class Movement {
 	 * Travel to a room
 	 */
 	static goToRoom(creep: AnyZerg, roomName: string, options: MoveOptions = {}): number {
-		options.range = 23;
+		options.range = 20;
 		return this.goTo(creep, new RoomPosition(25, 25, roomName), options);
 	}
 

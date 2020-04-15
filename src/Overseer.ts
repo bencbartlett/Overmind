@@ -411,7 +411,7 @@ export class Overseer implements IOverseer {
 
 		_.forEach(allColonies, colony => this.handleOutpostDefense(colony));
 
-		// _.forEach(allColonies, colony => this.handleStrongholds(colony));
+		// _.forEach(allColonies, colony => this.handleStrongholds(colony)); // TODO: FIX
 
 		_.forEach(allColonies, colony => this.handleColonyInvasions(colony));
 
@@ -450,10 +450,11 @@ export class Overseer implements IOverseer {
 		}
 	}
 
-	// Harass Response =================================================================================================
+
 
 	private handleUnkillableStrongholds(colony: Colony, room: Room): void {
-		if (Cartographer.roomType(room.name) == ROOMTYPE_SOURCEKEEPER && !!room.invaderCore && room.invaderCore.level > 3) {
+		if (Cartographer.roomType(room.name) == ROOMTYPE_SOURCEKEEPER &&
+			room.invaderCore && room.invaderCore.level > 3) {
 			const roomDirectives = Directive.find(room.flags);
 			roomDirectives.map(directiveInRoom => Object.values(directiveInRoom.overlords))
 				.forEach(overlordsInDirective => overlordsInDirective

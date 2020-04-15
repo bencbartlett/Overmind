@@ -1,9 +1,12 @@
-import {Colony} from '../Colony';
+import {Colony, getAllColonies} from '../Colony';
 import {log} from '../console/log';
 import {isAnyZerg, isPowerCreep} from '../declarations/typeGuards';
 import {Movement, MoveOptions} from '../movement/Movement';
+import {Pathing} from '../movement/Pathing';
 import {Overlord} from '../overlords/Overlord';
 import {profile} from '../profiler/decorator';
+import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
+import {minBy} from '../utilities/utils';
 import {NEW_OVERMIND_INTERVAL} from '../~settings';
 
 export function getOverlord(creep: AnyZerg | AnyCreep): Overlord | null {
@@ -398,6 +401,82 @@ export abstract class AnyZerg {
 			}
 			return fleeing;
 		}
+	}
+
+	/**
+	 * Callback that is checked for many civilian roles. Returns true if the civilian zerg is in a dangerous situation
+	 * and handles the zerg retreating to a fallback room.
+	 */
+	avoidDanger(timer = 10): boolean {
+
+		// If you're almost expired or you're spawning do nothing
+		if ((this.ticksToLive || 0) < 50) {
+			// I just wanna die!!
+			return false;
+		}
+
+		if (this.memory.avoidDanger) {
+			if (this.memory.avoidDanger.timer > 0) {
+				this.goToRoom(this.memory.avoidDanger.fallback);
+				this.memory.avoidDanger.timer--;
+				return true;
+			} else {
+				delete this.memory.avoidDanger;
+			}
+		}
+
+		if (!this.room.isSafe || this.hits < this.hitsMax) {
+
+			if (Cartographer.roomType(this.room.name) == ROOMTYPE_SOURCEKEEPER) {
+				// If you're in an SK room, you can skip the danger avoidance as long as you have max hp, there are no
+				// player hostiles, no invaders, and you're not in range to any of the sourceKeepers or spawning lairs
+				if (this.hits == this.hitsMax &&
+					this.room.dangerousPlayerHostiles.length == 0 &&
+					this.room.invaders.length == 0 &&
+					!_.any(this.room.fleeDefaults, fleeThing => this.pos.inRangeTo(fleeThing, 5))) {
+					// Not actually in danger
+					return false;
+				}
+			}
+
+			let fallback: string;
+			const maxLinearRange = 6;
+			// Like 99.999% of the time this will be the case
+			if (this.colony && Game.map.getRoomLinearDistance(this.room.name, this.colony.name) <= maxLinearRange) {
+				fallback = this.colony.name;
+			}
+			// But this could happen if the creep was working remotely through a portal
+			else {
+				const nearbyColonies = _.filter(getAllColonies(), colony =>
+					Game.map.getRoomLinearDistance(this.room.name, colony.name) <= maxLinearRange);
+				const closestColony = minBy(nearbyColonies, colony => {
+					const route = Pathing.findRoute(this.room.name, colony.room.name);
+					if (route == ERR_NO_PATH) {
+						return false;
+					} else {
+						return route.length;
+					}
+				});
+				if (!closestColony) {
+					log.error(`${this.print} is all alone in a dangerous place and can't find their way home!`);
+					return false;
+				}
+				fallback = closestColony.name;
+			}
+
+			this.memory.avoidDanger = {
+				start   : Game.time,
+				timer   : timer,
+				fallback: fallback,
+			};
+
+			this.goToRoom(fallback);
+			return true;
+
+		}
+
+		return false;
+
 	}
 
 	/**

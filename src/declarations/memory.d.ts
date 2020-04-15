@@ -121,6 +121,7 @@ interface CreepMemory {
 	avoidDanger?: {
 		start: number;
 		timer: number;
+		fallback: string;
 	};
 	noNotifications?: boolean;
 	_go?: MoveData;
