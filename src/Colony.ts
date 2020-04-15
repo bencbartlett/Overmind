@@ -565,7 +565,7 @@ export class Colony {
 		});
 	}
 
-	handleAbandonedOutposts() {
+	private handleAbandonedOutposts() {
 		const outpostsToEnable: String[] = [];
 		for (const outpost of this.memory.abandonedOuposts) {
 			if (outpost.endTick && outpost.endTick > Game.time) {
