@@ -7,6 +7,8 @@ export const ROOMTYPE_CONTROLLER = 'CTRL';
 export const ROOMTYPE_ALLEY = 'ALLEY';
 export const ROOMTYPE_CROSSROAD = 'CROSSROAD';
 
+export type RoomType = 'SK' | 'CORE' | 'CTRL' | 'ALLEY' | 'CROSSROAD';
+
 /**
  * Cartographer: provides helper methods related to Game.map. A few of these methods have been modified from BonzAI
  * codebase, although I have introduced new methods of my own over time as well.
@@ -15,14 +17,14 @@ export const ROOMTYPE_CROSSROAD = 'CROSSROAD';
 export class Cartographer {
 
 	/**
-	 * Lists all rooms up to a given distance away, including roomName
+	 * Lists all rooms up to and including a given distance away, including roomName
 	 */
 	static findRoomsInRange(roomName: string, depth: number): string[] {
 		return _.flatten(_.values(this.recursiveRoomSearch(roomName, depth)));
 	}
 
 	/**
-	 * Lists all rooms up at a given distance away, including roomName
+	 * Lists all rooms at exactly a given distance away, including roomName
 	 */
 	static findRoomsAtRange(roomName: string, depth: number): string[] {
 		return this.recursiveRoomSearch(roomName, depth)[depth];
@@ -69,19 +71,24 @@ export class Cartographer {
 	/**
 	 * Get the type of the room
 	 */
-	static roomType(roomName: string): 'SK' | 'CORE' | 'CTRL' | 'ALLEY' | 'CROSSROAD' {
-		const coords = this.getRoomCoordinates(roomName);
-		if (coords.x % 10 === 0 && coords.y % 10 === 0) {
-			return ROOMTYPE_CROSSROAD;
-		} else if (coords.x % 10 === 0 || coords.y % 10 === 0) {
-			return ROOMTYPE_ALLEY;
-		} else if (coords.x % 10 != 0 && coords.x % 5 === 0 && coords.y % 10 != 0 && coords.y % 5 === 0) {
-			return ROOMTYPE_CORE;
-		} else if (coords.x % 10 <= 6 && coords.x % 10 >= 4 && coords.y % 10 <= 6 && coords.y % 10 >= 4) {
-			return ROOMTYPE_SOURCEKEEPER;
-		} else {
-			return ROOMTYPE_CONTROLLER;
+	static roomType(roomName: string): RoomType {
+		if (!PERMACACHE.cartographerRoomTypes[roomName]) {
+			let roomType: RoomType;
+			const coords = Cartographer.getRoomCoordinates(roomName);
+			if (coords.x % 10 === 0 && coords.y % 10 === 0) {
+				roomType = ROOMTYPE_CROSSROAD;
+			} else if (coords.x % 10 === 0 || coords.y % 10 === 0) {
+				roomType = ROOMTYPE_ALLEY;
+			} else if (coords.x % 10 != 0 && coords.x % 5 === 0 && coords.y % 10 != 0 && coords.y % 5 === 0) {
+				roomType = ROOMTYPE_CORE;
+			} else if (coords.x % 10 <= 6 && coords.x % 10 >= 4 && coords.y % 10 <= 6 && coords.y % 10 >= 4) {
+				roomType = ROOMTYPE_SOURCEKEEPER;
+			} else {
+				roomType = ROOMTYPE_CONTROLLER;
+			}
+			PERMACACHE.cartographerRoomTypes[roomName] = roomType;
 		}
+		return PERMACACHE.cartographerRoomTypes[roomName];
 	}
 
 	/**
