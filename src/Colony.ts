@@ -50,6 +50,13 @@ export enum DEFCON {
 	bigPlayerInvasion  = 3,
 }
 
+export enum OutpostDisableState {
+	cpu				= 0, // CPU limitations
+	upkeep			= 1, // room can't sustain this remote because rebooting, spawn pressure, etc
+	playerHarass	= 2,
+	stronghold		= 3,
+}
+
 export function getAllColonies(): Colony[] {
 	return _.values(Overmind.colonies);
 }
@@ -73,6 +80,14 @@ export interface ColonyMemory {
 	suspend?: boolean;
 	debug?: boolean;
 	maxLevel: number;
+	abandonedOuposts: AbandonedOutpost[];
+}
+
+// Outpost that is currently not being maintained
+export interface AbandonedOutpost {
+	room: String;
+	reason: OutpostDisableState;
+	endTick?: number; // Tick to reanable, if any
 }
 
 const defaultColonyMemory: ColonyMemory = {
@@ -85,6 +100,7 @@ const defaultColonyMemory: ColonyMemory = {
 		expiration        : 0,
 	},
 	maxLevel: 0,
+	abandonedOuposts: [],
 };
 
 export interface Assets {
@@ -93,7 +109,6 @@ export interface Assets {
 	ops: number;
 	[resourceType: string]: number;
 }
-
 
 /**
  * Colonies are the highest-level object other than the global Overmind. A colony groups together all rooms, structures,
@@ -111,6 +126,7 @@ export class Colony {
 	roomNames: string[];								// The names of all rooms including the primary room
 	room: Room;											// Primary (owned) room of the colony
 	outposts: Room[];									// Rooms for remote resource collection
+	// abandonedOutposts: AbandonedOutpost[];				// Outposts that are not currently maintained, not used for now
 	rooms: Room[];										// All rooms including the primary room
 	pos: RoomPosition;
 	assets: Assets;
@@ -246,7 +262,10 @@ export class Colony {
 		// Register rooms
 		this.roomNames = [roomName].concat(outposts);
 		this.room = Game.rooms[roomName];
-		this.outposts = _.compact(_.map(outposts, outpost => Game.rooms[outpost]));
+		// TODO this could be optimized
+		const abandonedOutpostRooms = this.memory.abandonedOuposts.map(outpost => outpost.room);
+		this.outposts = _.compact(_.map(_.filter(outposts, outpost => !abandonedOutpostRooms.includes(outpost)),
+				outpost => Game.rooms[outpost]));
 		this.rooms = [this.room].concat(this.outposts);
 		this.miningSites = {}; 				// filled in by harvest directives
 		this.extractionSites = {};			// filled in by extract directives
@@ -534,6 +553,26 @@ export class Colony {
 		for (let i = this.hiveClusters.length - 1; i >= 0; i--) {
 			this.hiveClusters[i].refresh();
 		}
+	}
+
+	abandonOutpost(roomName: string, reason: OutpostDisableState, endTime?: number) {
+		this.outposts = this.outposts.filter(room => room.name != roomName);
+		this.memory.abandonedOuposts.push({
+			room: roomName,
+			endTick: endTime,
+			reason: reason,
+		});
+	}
+
+	handleAbandonedOutposts() {
+		const outpostsToEnable: String[] = [];
+		for (const outpost of this.memory.abandonedOuposts) {
+			if (outpost.endTick && outpost.endTick > Game.time) {
+				outpostsToEnable.push(outpost.room);
+			}
+		}
+		this.memory.abandonedOuposts = this.memory.abandonedOuposts
+			.filter(outpost => !outpostsToEnable.includes(outpost.room));
 	}
 
 	/**

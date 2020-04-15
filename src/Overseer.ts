@@ -1,4 +1,4 @@
-import {Colony, ColonyStage, getAllColonies} from './Colony';
+import {Colony, ColonyStage, getAllColonies, OutpostDisableState} from './Colony';
 import {log} from './console/log';
 import {bodyCost} from './creepSetups/CreepSetup';
 import {Roles} from './creepSetups/setups';
@@ -421,13 +421,12 @@ export class Overseer implements IOverseer {
 			_.forEach(allRooms, room => this.handlePowerMining(room));
 		}
 
-		if (Game.time % 100 == 0) {
-			_.forEach(allColonies, colony => {
+
+		_.forEach(allColonies, colony => {
 				for (const room of colony.outposts) {
 					this.handleUnkillableStrongholds(colony, room);
 				}
-			});
-		}
+		});
 
 		if (Memory.settings.autoPoison.enabled && canClaimAnotherRoom() && Game.cpu.bucket > 9000) {
 			this.handleAutoPoisoning();
@@ -453,11 +452,15 @@ export class Overseer implements IOverseer {
 	// Harass Response =================================================================================================
 
 	private handleUnkillableStrongholds(colony: Colony, room: Room): void {
+		const suspensionDuration = 5000;
 		if (Cartographer.roomType(room.name) == ROOMTYPE_SOURCEKEEPER && !!room.invaderCore && room.invaderCore.level > 3) {
 			const roomDirectives = Directive.find(room.flags);
+			log.notify(`Disabling outpost ${room.print} due to Stronghold presence`);
+			colony.abandonOutpost(room.name, OutpostDisableState.stronghold, suspensionDuration);
+			// TODO don't suspend military
 			roomDirectives.map(directiveInRoom => Object.values(directiveInRoom.overlords))
 				.forEach(overlordsInDirective => overlordsInDirective
-					.forEach(overlordToSuspend => overlordToSuspend.suspendFor(5000)));
+					.forEach(overlordToSuspend => overlordToSuspend.suspendFor(suspensionDuration)));
 			// TODO needs to prevent haulers and workers, but this reduces the problem
 		}
 	}
