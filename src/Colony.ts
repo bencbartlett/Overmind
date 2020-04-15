@@ -287,6 +287,7 @@ export class Colony {
 	refresh(): void {
 		this.memory = Mem.wrap(Memory.colonies, this.room.name, defaultColonyMemory, true);
 		// Refresh rooms
+		this.handleAbandonedOutposts();
 		this.room = Game.rooms[this.room.name];
 		this.outposts = _.compact(_.map(this.outposts, outpost => Game.rooms[outpost.name]));
 		this.rooms = [this.room].concat(this.outposts);
