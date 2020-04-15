@@ -30,6 +30,8 @@ export class ReservingOverlord extends Overlord {
 		if (this.room) {
 			if (this.room.controller!.needsReserving(this.reserveBuffer)) {
 				amount = 1;
+			} else if (this.room.controller!.reservation && !this.room.controller!.reservedByMe) {
+				amount = 2; // Get control back
 			}
 		} else if (RoomIntel.roomReservedBy(this.pos.roomName) == MY_USERNAME &&
 				   RoomIntel.roomReservationRemaining(this.pos.roomName) < 1000) {
