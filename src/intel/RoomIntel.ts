@@ -5,8 +5,9 @@ import {Segmenter} from '../memory/Segmenter';
 import {profile} from '../profiler/decorator';
 import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
 import {Cartographer, ROOMTYPE_CORE} from '../utilities/Cartographer';
-import {derefCoords, getCacheExpiration, getPosFromString, irregularExponentialMovingAverage} from '../utilities/utils';
+import {derefCoords, ema, getCacheExpiration, getPosFromString} from '../utilities/utils';
 import {Zerg} from '../zerg/Zerg';
+import {CombatIntel} from './CombatIntel';
 
 const RECACHE_TIME = 2500;
 const OWNED_RECACHE_TIME = 1000;
@@ -474,50 +475,129 @@ export class RoomIntel {
 		creepsInRoom[Game.time] = _.map(room.hostiles, creep => creep.name);
 	}
 
-	private static recordSafety(room: Room): void {
-		if (!room.memory[RMEM.SAFETY]) {
-			room.memory[RMEM.SAFETY] = {
-				[RMEM_SAFETY.SAFE_FOR]  : 0,
-				[RMEM_SAFETY.UNSAFE_FOR]: 0,
-				[RMEM_SAFETY.SAFETY_1K] : 1,
-				[RMEM_SAFETY.SAFETY_10K]: 1,
-				[RMEM_SAFETY.TICK]      : Game.time
-			};
-		}
-		let safety: number;
-		const safetyData = room.memory[RMEM.SAFETY] as SafetyData;
-		if (room.dangerousHostiles.length > 0) {
-			safetyData[RMEM_SAFETY.SAFE_FOR] = 0;
-			safetyData[RMEM_SAFETY.UNSAFE_FOR] += 1;
-			safety = 0;
+
+	/**
+	 * Records threat levels, visibility, consecutive safe/unsafe ticks and other data on visible or invisible rooms.
+	 * Must be run in RoomIntel.init(), as it populates several room properties used elsewhere
+	 */
+	private static recordSafety(roomName: string): void {
+		// Make sure the memory objects are there
+		Memory.rooms[roomName] = Memory.rooms[roomName] || {};
+		Memory.rooms[roomName][RMEM.SAFETY] = Memory.rooms[roomName][RMEM.SAFETY] || {
+			[RMEM_SAFETY.THREAT_LEVEL] : 0,
+			[RMEM_SAFETY.SAFE_FOR]     : 0,
+			[RMEM_SAFETY.UNSAFE_FOR]   : 0,
+			[RMEM_SAFETY.INVISIBLE_FOR]: 0,
+			// [RMEM_SAFETY.SAFETY_1K]   : 1,
+			// [RMEM_SAFETY.SAFETY_10K]  : 1,
+		};
+
+		const safetyData = Memory.rooms[roomName][RMEM.SAFETY] as SavedSafetyData;
+		const room = Game.rooms[roomName] as Room | undefined;
+
+		if (room) {
+			safetyData[RMEM_SAFETY.INVISIBLE_FOR] = 0;
+			if (room.dangerousHostiles.length > 0) {
+				safetyData[RMEM_SAFETY.SAFE_FOR] = 0;
+				safetyData[RMEM_SAFETY.UNSAFE_FOR] += 1;
+			} else {
+				safetyData[RMEM_SAFETY.SAFE_FOR] += 1;
+				safetyData[RMEM_SAFETY.UNSAFE_FOR] = 0;
+			}
+			if (room.my || room.isOutpost) {
+				// Record combat potentials of creeps in room
+				const potentials = CombatIntel.getCombatPotentials(room.dangerousPlayerHostiles);
+				safetyData[RMEM_SAFETY.COMBAT_POTENTIALS] = {
+					[COMBAT_POTENTIALS.ATTACK]: potentials.attack,
+					[COMBAT_POTENTIALS.RANGED]: potentials.ranged,
+					[COMBAT_POTENTIALS.HEAL]  : potentials.heal,
+				};
+				if (potentials.dismantle) {
+					safetyData[RMEM_SAFETY.COMBAT_POTENTIALS]![COMBAT_POTENTIALS.DISMANTLE] = potentials.dismantle;
+				}
+
+				// Record hostile counts
+				safetyData[RMEM_SAFETY.NUM_HOSTILES] = room.hostiles.length; // this records ALL hostiles!
+				safetyData[RMEM_SAFETY.NUM_BOOSTED_HOSTILES] = _.filter(room.hostiles,
+																		hostile => hostile.boosts.length > 0).length;
+
+			} else {
+				delete safetyData[RMEM_SAFETY.COMBAT_POTENTIALS];
+				delete safetyData[RMEM_SAFETY.NUM_HOSTILES];
+				delete safetyData[RMEM_SAFETY.NUM_BOOSTED_HOSTILES];
+			}
 		} else {
-			safetyData[RMEM_SAFETY.SAFE_FOR] += 1;
-			safetyData[RMEM_SAFETY.UNSAFE_FOR] = 0;
-			safety = 1;
+			safetyData[RMEM_SAFETY.INVISIBLE_FOR] += 1;
 		}
-		// Compute rolling averages
-		const dTime = Game.time - safetyData[RMEM_SAFETY.TICK];
-		safetyData[RMEM_SAFETY.SAFETY_1K] = +(irregularExponentialMovingAverage(
-			safety, safetyData[RMEM_SAFETY.SAFETY_1K], dTime, 1000)).toFixed(5);
-		safetyData[RMEM_SAFETY.SAFETY_10K] = +(irregularExponentialMovingAverage(
-			safety, safetyData[RMEM_SAFETY.SAFETY_10K], dTime, 10000)).toFixed(5);
-		safetyData[RMEM_SAFETY.TICK] = Game.time;
+
+		// Instantaneous threat level functions similarly to colony.defcon: 0 is safe, 1 is invaders, 2 is human threat
+		let instantaneousThreatLevel: 0 | 1 | 2;
+		if (!room) {
+			instantaneousThreatLevel = 1;
+		} else {
+			if (room.controller && room.controller.safeMode) {
+				instantaneousThreatLevel = 0;
+			} else {
+				if (room.dangerousPlayerHostiles.length > 0) {
+					instantaneousThreatLevel = 2;
+				} else if (room.dangerousHostiles.length > 0) {
+					instantaneousThreatLevel = 1;
+				} else {
+					instantaneousThreatLevel = 0;
+				}
+			}
+		}
+
+		// Average it over time, using different averaging windows depending on the scenario
+		const numBoostedHostiles = safetyData[RMEM_SAFETY.NUM_BOOSTED_HOSTILES] || 0;
+		switch (instantaneousThreatLevel) {
+			case 0:
+				safetyData[RMEM_SAFETY.THREAT_LEVEL] = ema(instantaneousThreatLevel,
+														   safetyData[RMEM_SAFETY.THREAT_LEVEL],
+														   CREEP_LIFE_TIME / 2);
+				break;
+			case 1:
+				safetyData[RMEM_SAFETY.THREAT_LEVEL] = ema(instantaneousThreatLevel,
+														   safetyData[RMEM_SAFETY.THREAT_LEVEL],
+														   CREEP_LIFE_TIME / (1 + numBoostedHostiles));
+				break;
+			case 2:
+				safetyData[RMEM_SAFETY.THREAT_LEVEL] = ema(instantaneousThreatLevel,
+														   safetyData[RMEM_SAFETY.THREAT_LEVEL],
+														   CREEP_LIFE_TIME / (4 + numBoostedHostiles));
+				break;
+		}
+
+
+		// // Compute rolling averages
+		// const dTime = Game.time - safetyData[RMEM_SAFETY.TICK];
+		// safetyData[RMEM_SAFETY.SAFETY_1K] = +(irregularEma(
+		// 	safety, safetyData[RMEM_SAFETY.SAFETY_1K], dTime, 1000)).toFixed(5);
+		// safetyData[RMEM_SAFETY.SAFETY_10K] = +(irregularEma(
+		// 	safety, safetyData[RMEM_SAFETY.SAFETY_10K], dTime, 10000)).toFixed(5);
+
+
+		// Populate the per-tick properties on the room object itself
+		if (room) {
+			room.instantaneousThreatLevel = instantaneousThreatLevel;
+			room.threatLevel = safetyData[RMEM_SAFETY.THREAT_LEVEL];
+			room.isSafe = room.instantaneousThreatLevel == 0 &&
+						  (room.threatLevel < 0.25 || safetyData[RMEM_SAFETY.SAFE_FOR] > 50);
+		}
+
 	}
 
 	static getSafetyData(roomName: string): SafetyData {
-		if (!Memory.rooms[roomName]) {
-			Memory.rooms[roomName] = {};
-		}
-		if (!Memory.rooms[roomName][RMEM.SAFETY]) {
-			Memory.rooms[roomName][RMEM.SAFETY] = {
-				[RMEM_SAFETY.SAFE_FOR]  : 0,
-				[RMEM_SAFETY.UNSAFE_FOR]: 0,
-				[RMEM_SAFETY.SAFETY_1K] : 1,
-				[RMEM_SAFETY.SAFETY_10K]: 1,
-				[RMEM_SAFETY.TICK]      : Game.time
-			};
-		}
-		return Memory.rooms[roomName][RMEM.SAFETY]!;
+		const data = Memory.rooms[roomName][RMEM.SAFETY] as SavedSafetyData;
+		return {
+			threatLevel       : data[RMEM_SAFETY.THREAT_LEVEL],
+			safeFor           : data[RMEM_SAFETY.SAFE_FOR],
+			unsafeFor         : data[RMEM_SAFETY.UNSAFE_FOR],
+			invisibleFor      : data[RMEM_SAFETY.INVISIBLE_FOR],
+			combatPotentials  : data[RMEM_SAFETY.COMBAT_POTENTIALS],
+			numHostiles       : data[RMEM_SAFETY.NUM_HOSTILES],
+			numBoostedHostiles: data[RMEM_SAFETY.NUM_BOOSTED_HOSTILES],
+		};
 	}
 
 	static isInvasionLikely(room: Room): boolean {
@@ -660,6 +740,21 @@ export class RoomIntel {
 	 */
 	static init(): void {
 
+		for (const roomName in Game.rooms) {
+			Memory.rooms[roomName] = Memory.rooms[roomName] || {};
+		}
+
+		for (const roomName in Memory.rooms) {
+
+			const room: Room | undefined = Game.rooms[roomName];
+
+			this.recordSafety(roomName);
+			if (room) {
+				this.markVisible(room);
+			}
+
+		}
+
 	}
 
 
@@ -674,9 +769,6 @@ export class RoomIntel {
 		for (const roomName in Game.rooms) {
 
 			const room: Room = Game.rooms[roomName];
-
-			this.markVisible(room);
-			this.recordSafety(room);
 
 			// Track invasion data, harvesting, and casualties for all colony rooms and outposts
 			if (Overmind.colonyMap[room.name]) { // if it is an owned or outpost room
