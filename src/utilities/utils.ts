@@ -288,10 +288,9 @@ export function randomHex(length: number): string {
 /**
  * Compute an exponential moving average
  */
-export function exponentialMovingAverage(current: number, avg: number | undefined, window: number,
-										 zeroThreshold = 1e-9): number {
+export function ema(current: number, avg: number | undefined, window: number, zeroThreshold = 1e-9): number {
 	let newAvg = (current + (avg || 0) * (window - 1)) / window;
-	if (zeroThreshold && newAvg < zeroThreshold) {
+	if (zeroThreshold && Math.abs(newAvg) < zeroThreshold) {
 		newAvg = 0;
 	}
 	return newAvg;
@@ -300,7 +299,7 @@ export function exponentialMovingAverage(current: number, avg: number | undefine
 /**
  * Compute an exponential moving average for unevenly spaced samples
  */
-export function irregularExponentialMovingAverage(current: number, avg: number, dt: number, window: number): number {
+export function irregularEma(current: number, avg: number, dt: number, window: number): number {
 	return (current * dt + avg * (window - dt)) / window;
 }
 

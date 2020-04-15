@@ -11,7 +11,7 @@
 // import {Pathing} from '../movement/Pathing';
 // import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
 // import {$} from '../caching/GlobalCache';
-// import {exponentialMovingAverage} from '../utilities/utils';
+// import {ema} from '../utilities/utils';
 //
 // interface MiningSiteMemory {
 // 	stats: {
@@ -114,7 +114,7 @@
 // 		if (this.source.ticksToRegeneration == 1) {
 // 			this.memory.stats.usage = (this.source.energyCapacity - this.source.energy) / this.source.energyCapacity;
 // 		}
-// 		this.memory.stats.downtime = exponentialMovingAverage(this.output ? +this.output.isFull : 0,
+// 		this.memory.stats.downtime = ema(this.output ? +this.output.isFull : 0,
 // 													this.memory.stats.downtime, CREEP_LIFE_TIME);
 // 	}
 //

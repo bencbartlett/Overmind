@@ -322,7 +322,7 @@ interface RoomMemory {
 	// [RMEM.CASUALTIES]?: {
 	// 	cost: RollingStats
 	// };
-	[RMEM.SAFETY]?: SafetyData; // TODO: deprecate
+	[RMEM.SAFETY]?: SavedSafetyData; // TODO: deprecate
 	[RMEM.PREV_POSITIONS]?: { [creepID: string]: ProtoPos }; // TODO: deprecate
 	[RMEM.CREEPS_IN_ROOM]?: { [tick: number]: string[] }; // TODO: deprecate
 	[RMEM.CREEP_INFOS]?: SavedCreepInfo;
@@ -361,12 +361,12 @@ interface SavedMineral extends SavedRoomObject {
 }
 
 declare const enum RMEM_SAFETY {
-	TICK                 = MEM.TICK,
 	THREAT_LEVEL         = 't',
 	SAFE_FOR             = 's',
 	UNSAFE_FOR           = 'u',
-	SAFETY_1K            = 'k',
-	SAFETY_10K           = 'D',
+	INVISIBLE_FOR         = 'v',
+	// SAFETY_1K            = 'k',
+	// SAFETY_10K           = 'D',
 	COMBAT_POTENTIALS    = 'c',
 	NUM_HOSTILES         = 'nh',
 	NUM_BOOSTED_HOSTILES = 'nb',
@@ -404,33 +404,29 @@ interface SavedCreepInfo {
 	[RMEM_CREEP_INFO.ENERGY_COST]: number;
 }
 
-interface SavedSafetyDataOwnedRoom {
-	[RMEM_SAFETY.TICK]: number;
+interface SavedSafetyData {
 	[RMEM_SAFETY.THREAT_LEVEL]: number;
 	[RMEM_SAFETY.SAFE_FOR]: number;
 	[RMEM_SAFETY.UNSAFE_FOR]: number;
+	[RMEM_SAFETY.INVISIBLE_FOR]: number;
 	// [RMEM_SAFETY.SAFETY_1K]: number;
 	// [RMEM_SAFETY.SAFETY_10K]: number;
 	[RMEM_SAFETY.COMBAT_POTENTIALS]?: SavedCombatPotentials;
 	[RMEM_SAFETY.NUM_HOSTILES]?: number;
 	[RMEM_SAFETY.NUM_BOOSTED_HOSTILES]?: number;
 }
-
-interface SavedSafetyDataOutpost {
-	[RMEM_SAFETY.SAFE_FOR]: number;
-	[RMEM_SAFETY.UNSAFE_FOR]: number;
-	[RMEM_SAFETY.SAFETY_1K]: number;
-	[RMEM_SAFETY.SAFETY_10K]: number;
-	[RMEM_SAFETY.TICK]: number;
-}
-
 interface SafetyData {
-	[RMEM_SAFETY.SAFE_FOR]: number;
-	[RMEM_SAFETY.UNSAFE_FOR]: number;
-	[RMEM_SAFETY.SAFETY_1K]: number;
-	[RMEM_SAFETY.SAFETY_10K]: number;
-	[RMEM_SAFETY.TICK]: number;
+	threatLevel: number;
+	safeFor: number;
+	unsafeFor: number;
+	invisibleFor: number;
+	// [RMEM_SAFETY.SAFETY_1K]: number;
+	// [RMEM_SAFETY.SAFETY_10K]: number;
+	combatPotentials?: SavedCombatPotentials;
+	numHostiles?: number;
+	numBoostedHostiles?: number;
 }
+
 
 
 

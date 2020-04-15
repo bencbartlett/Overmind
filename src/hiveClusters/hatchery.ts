@@ -14,7 +14,7 @@ import {Priority} from '../priorities/priorities';
 import {profile} from '../profiler/decorator';
 import {energyStructureOrder, getPosFromBunkerCoord, insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {Stats} from '../stats/stats';
-import {exponentialMovingAverage, hasMinerals} from '../utilities/utils';
+import {ema, hasMinerals} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {Zerg} from '../zerg/Zerg';
 import {HiveCluster} from './_HiveCluster';
@@ -446,9 +446,9 @@ export class Hatchery extends HiveCluster {
 	private recordStats() {
 		// Compute uptime and overload status
 		const spawnUsageThisTick = _.filter(this.spawns, spawn => spawn.spawning).length / this.spawns.length;
-		const uptime = exponentialMovingAverage(spawnUsageThisTick, this.memory.stats.uptime, CREEP_LIFE_TIME);
-		const longUptime = exponentialMovingAverage(spawnUsageThisTick, this.memory.stats.longUptime, 3 * CREEP_LIFE_TIME);
-		const overload = exponentialMovingAverage(this.isOverloaded ? 1 : 0, this.memory.stats.overload, CREEP_LIFE_TIME);
+		const uptime = ema(spawnUsageThisTick, this.memory.stats.uptime, CREEP_LIFE_TIME);
+		const longUptime = ema(spawnUsageThisTick, this.memory.stats.longUptime, 3 * CREEP_LIFE_TIME);
+		const overload = ema(this.isOverloaded ? 1 : 0, this.memory.stats.overload, CREEP_LIFE_TIME);
 
 		Stats.log(`colonies.${this.colony.name}.hatchery.uptime`, uptime);
 		Stats.log(`colonies.${this.colony.name}.hatchery.overload`, overload);

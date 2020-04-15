@@ -126,13 +126,13 @@ Object.defineProperty(Room.prototype, 'dangerousHostiles', {
 		if (!this._dangerousHostiles) {
 			if (this.my) {
 				this._dangerousHostiles = _.filter(this.hostiles,
-												   (creep: Creep) => creep.bodypartCounts[ATTACK] > 0
-																	 || creep.bodypartCounts[RANGED_ATTACK] > 0
-																	 || creep.bodypartCounts[WORK] > 0);
+												   (creep: Creep) => creep.getActiveBodyparts(ATTACK) > 0
+																	 || creep.getActiveBodyparts(RANGED_ATTACK) > 0
+																	 || creep.getActiveBodyparts(WORK) > 0);
 			} else {
 				this._dangerousHostiles = _.filter(this.hostiles,
-												   (creep: Creep) => creep.bodypartCounts[ATTACK] > 0
-																	 || creep.bodypartCounts[RANGED_ATTACK] > 0);
+												   (creep: Creep) => creep.getActiveBodyparts(ATTACK) > 0
+																	 || creep.getActiveBodyparts(RANGED_ATTACK) > 0);
 			}
 		}
 		return this._dangerousHostiles;
@@ -145,13 +145,13 @@ Object.defineProperty(Room.prototype, 'dangerousPlayerHostiles', {
 		if (!this._dangerousPlayerHostiles) {
 			if (this.my) {
 				this._dangerousPlayerHostiles = _.filter(this.playerHostiles,
-												   (creep: Creep) => creep.bodypartCounts[ATTACK] > 0
-																	 || creep.bodypartCounts[RANGED_ATTACK] > 0
-																	 || creep.bodypartCounts[WORK] > 0);
+												   (creep: Creep) => creep.getActiveBodyparts(ATTACK) > 0
+																	 || creep.getActiveBodyparts(RANGED_ATTACK) > 0
+																	 || creep.getActiveBodyparts(WORK) > 0);
 			} else {
 				this._dangerousPlayerHostiles = _.filter(this.playerHostiles,
-												   (creep: Creep) => creep.bodypartCounts[ATTACK] > 0
-																	 || creep.bodypartCounts[RANGED_ATTACK] > 0);
+												   (creep: Creep) => creep.getActiveBodyparts(ATTACK) > 0
+																	 || creep.getActiveBodyparts(RANGED_ATTACK) > 0);
 			}
 		}
 		return this._dangerousPlayerHostiles;

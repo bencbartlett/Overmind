@@ -5,7 +5,7 @@ import {DefenseDirective} from '../directives/defense/_DefenseDirective';
 import {CombatIntel, CombatPotentials} from '../intel/CombatIntel';
 import {Pathing} from '../movement/Pathing';
 import {CombatOverlord} from '../overlords/CombatOverlord';
-import {exponentialMovingAverage, getCacheExpiration} from '../utilities/utils';
+import {ema, getCacheExpiration} from '../utilities/utils';
 import {CombatZerg} from '../zerg/CombatZerg';
 
 export interface Threat {
@@ -174,7 +174,7 @@ export class CombatPlanner {
 				const lastPotentials = this.memory.threats[directive.ref].potentials;
 				if (lastPotentials) {
 					attack = lastPotentials.attack;
-					rangedAttack = lastPotentials.rangedAttack;
+					rangedAttack = lastPotentials.ranged;
 					heal = lastPotentials.heal;
 				} else {
 					attack = 0;
@@ -182,18 +182,18 @@ export class CombatPlanner {
 					heal = 0;
 				}
 
-				const decayedAttack = exponentialMovingAverage(threat.potentials.attack, attack, THREAT_DECAY_TIMESCALE);
-				const decayedRangedAttack = exponentialMovingAverage(threat.potentials.rangedAttack,
-																	 rangedAttack, THREAT_DECAY_TIMESCALE);
-				const decayedHeal = exponentialMovingAverage(threat.potentials.heal, heal, THREAT_DECAY_TIMESCALE);
+				const decayedAttack = ema(threat.potentials.attack, attack, THREAT_DECAY_TIMESCALE);
+				const decayedRangedAttack = ema(threat.potentials.ranged,
+												rangedAttack, THREAT_DECAY_TIMESCALE);
+				const decayedHeal = ema(threat.potentials.heal, heal, THREAT_DECAY_TIMESCALE);
 
 				// TODO: adjust decay for creeps known to have moved to next visible room
 
 				// Set new potential to maximum of current or decayed potential
 				const potentials: CombatPotentials = {
-					attack      : Math.max(threat.potentials.attack, decayedAttack),
-					rangedAttack: Math.max(threat.potentials.rangedAttack, decayedRangedAttack),
-					heal        : Math.max(threat.potentials.heal, decayedHeal),
+					attack: Math.max(threat.potentials.attack, decayedAttack),
+					ranged: Math.max(threat.potentials.ranged, decayedRangedAttack),
+					heal  : Math.max(threat.potentials.heal, decayedHeal),
 				};
 
 				// Update the existing threat

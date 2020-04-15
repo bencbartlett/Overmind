@@ -251,17 +251,17 @@ export class Overseer implements IOverseer {
 	// 	}
 	// }
 
-	private handleColonyInvasions(colony: Colony) {
+	private handleColonyInvasions(colony: Colony, checkPersistent = false) {
 		// See if invasion is big enough to warrant creep defenses
-		const effectiveInvaderCount = _.sum(_.map(colony.room.hostiles,
-												  invader => CombatIntel.uniqueBoosts(invader).length > 0 ? 2 : 1));
-		const needsDefending = effectiveInvaderCount >= 3 || colony.room.dangerousPlayerHostiles.length > 0;
-
-		if (needsDefending) {
-			// Place defensive directive after hostiles have been present for a long enough time
-			const safetyData = RoomIntel.getSafetyData(colony.room.name);
-			const invasionIsPersistent = safetyData[RMEM_SAFETY.UNSAFE_FOR] > 20;
-			if (invasionIsPersistent) {
+		if (!colony.room.isSafe && colony.room.threatLevel > 0.25) {
+			if (checkPersistent) {
+				// Place defensive directive after hostiles have been present for a long enough time
+				const safetyData = RoomIntel.getSafetyData(colony.room.name);
+				const invasionIsPersistent = safetyData.unsafeFor > 20;
+				if (invasionIsPersistent) {
+					DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
+				}
+			} else {
 				DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
 			}
 		}

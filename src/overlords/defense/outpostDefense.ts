@@ -1,7 +1,7 @@
 import {CombatCreepSetup} from '../../creepSetups/CombatCreepSetup';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveOutpostDefense} from '../../directives/defense/outpostDefense';
-import {CombatIntel} from '../../intel/CombatIntel';
+import {CombatIntel, CombatPotentials} from '../../intel/CombatIntel';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {CombatZerg} from '../../zerg/CombatZerg';
@@ -70,18 +70,18 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 	// 	return Math.ceil(1.1 * enemyHealPotential / healerPotential);
 	// }
 
-	private getEnemyPotentials(): { attack: number, rangedAttack: number, heal: number } {
+	private getEnemyPotentials(): CombatPotentials {
 		if (this.room) {
 			return CombatIntel.getCombatPotentials(this.room.hostiles);
 		} else {
-			return {attack: 0, rangedAttack: 1, heal: 0,};
+			return {attack: 0, ranged: 1, heal: 0,};
 		}
 	}
 
 	init() {
 		const enemyPotentials = this.getEnemyPotentials();
 		const needAttack = enemyPotentials.attack * 1.1;
-		const needRanged = enemyPotentials.rangedAttack * 1.3;
+		const needRanged = enemyPotentials.ranged * 1.3;
 		const needHeal = enemyPotentials.heal * 1.2;
 
 		if (needAttack > 100 || needRanged > 100 || needHeal > 100) {
@@ -108,7 +108,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		const zerglingSetup = noBigColoniesNearby ? CombatSetups.zerglings.default : CombatSetups.zerglings.healing;
 		const healerSetup = CombatSetups.transfusers.default;
 
-		if (myPotentials.rangedAttack < needRanged) {
+		if (myPotentials.ranged < needRanged) {
 			this.requestCreep(hydraliskSetup);
 		} else if (myPotentials.heal < needHeal) {
 			this.requestCreep(healerSetup);

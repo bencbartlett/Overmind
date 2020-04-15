@@ -47,7 +47,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 		const towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 0 : 0;
 		const worstDamageMultiplier = _.min(_.map(this.room.hostiles,
 												  creep => CombatIntel.minimumDamageTakenMultiplier(creep)));
-		const hydraliskDamage = RANGED_ATTACK_POWER * CombatIntel.getMyCombatPotentials(this.hydralisks).rangedAttack;
+		const hydraliskDamage = RANGED_ATTACK_POWER * CombatIntel.getMyCombatPotentials(this.hydralisks).ranged;
 		const maxDamageReceived = worstDamageMultiplier * (hydraliskDamage + towerDamage + 1);
 		const needAdditionalDamage = Math.max(healAmount - maxDamageReceived, 0);
 		const neededRangedParts = needAdditionalDamage / RANGED_ATTACK_POWER;
@@ -61,9 +61,9 @@ export class RangedDefenseOverlord extends CombatOverlord {
 		if (_.all(this.spawnGroup.colonies, col => col.room.energyCapacityAvailable < 800)) {
 			setup = CombatSetups.hydralisks.noHeal; // can't spawn default hydras at very low rcl
 		} else {
-			const {attack, rangedAttack, heal} = CombatIntel.getCombatPotentials(this.room.hostiles);
+			const {attack, ranged, heal} = CombatIntel.getCombatPotentials(this.room.hostiles);
 			// if there's a lot of big baddies or this assault has lasted a long time, pull out the boosts
-			if (attack + rangedAttack + heal > 100 || this.activeFor > 1000) {
+			if (attack + ranged + heal > 100 || this.activeFor > 1000) {
 				setup = CombatSetups.hydralisks.boosted.default;
 			}
 		}

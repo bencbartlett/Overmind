@@ -13,7 +13,7 @@ import {
 	RESOURCES_ALL_EXCEPT_ENERGY
 } from '../resources/map_resources';
 import {alignedNewline, bullet, leftArrow, rightArrow} from '../utilities/stringConstants';
-import {exponentialMovingAverage, maxBy, mergeSum, minBy, printRoomName} from '../utilities/utils';
+import {ema, maxBy, mergeSum, minBy, printRoomName} from '../utilities/utils';
 import {TraderJoe} from './TradeNetwork';
 
 interface TerminalNetworkMemory {
@@ -1110,11 +1110,11 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	private recordStats(): void {
 		for (const colony of this.colonies) {
 			if (colony.terminal) {
-				this.stats.terminals.avgCooldown[colony.name] = exponentialMovingAverage(
+				this.stats.terminals.avgCooldown[colony.name] = ema(
 					colony.terminal.cooldown,
 					this.stats.terminals.avgCooldown[colony.name] || 0,
 					TerminalNetworkV2.settings.terminalCooldownAveragingWindow);
-				this.stats.terminals.overload[colony.name] = exponentialMovingAverage(
+				this.stats.terminals.overload[colony.name] = ema(
 					this.terminalOverload[colony.name] ? 1 : 0,
 					this.stats.terminals.overload[colony.name],
 					CREEP_LIFE_TIME);

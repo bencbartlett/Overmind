@@ -70,15 +70,15 @@ Object.defineProperty(Creep.prototype, 'bodypartCounts', {
 	configurable: true,
 });
 
-Object.defineProperty(Creep.prototype, 'isHuman', {
+Object.defineProperty(Creep.prototype, 'isPlayer', {
 	get() {
-		PERMACACHE.isHuman = PERMACACHE.isHuman || {};
-		if (PERMACACHE.isHuman[this.id] === undefined) {
-			PERMACACHE.isHuman[this.id] = this.owner.username != 'Invader' &&
+		PERMACACHE.isPlayer = PERMACACHE.isPlayer || {};
+		if (PERMACACHE.isPlayer[this.id] === undefined) {
+			PERMACACHE.isPlayer[this.id] = this.owner.username != 'Invader' &&
 										  this.owner.username != 'Source Keeper' &&
 										  this.owner.username != 'Screeps';
 		}
-		return PERMACACHE.isHuman[this.id];
+		return PERMACACHE.isPlayer[this.id];
 	},
 	configurable: true,
 });

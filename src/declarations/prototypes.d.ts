@@ -15,28 +15,6 @@ interface PowerCreep {
 	intel?: { [property: string]: number };
 	memory: CreepMemory;
 	inRampart: boolean;
-	// // Fake methods and properties
-	// body: BodyPartDefinition[];
-	// fatigue: number;
-	// spawning: boolean;
-	// attack(target: AnyCreep | Structure): CreepActionReturnCode;
-	// attackController(target: StructureController): CreepActionReturnCode;
-	// build(target: ConstructionSite): CreepActionReturnCode | ERR_NOT_ENOUGH_RESOURCES | ERR_RCL_NOT_ENOUGH;
-	// claimController(target: StructureController): CreepActionReturnCode | ERR_FULL | ERR_GCL_NOT_ENOUGH;
-	// dismantle(target: Structure): CreepActionReturnCode;
-	// generateSafeMode(target: StructureController): CreepActionReturnCode;
-	// getActiveBodyparts(type: BodyPartConstant): number;
-	// harvest(target: Source | Mineral | Deposit): CreepActionReturnCode | ERR_NOT_FOUND | ERR_NOT_ENOUGH_RESOURCES;
-	// heal(target: AnyCreep): CreepActionReturnCode;
-	// pull(target: Creep): OK | ERR_NOT_OWNER | ERR_BUSY | ERR_INVALID_TARGET | ERR_NOT_IN_RANGE | ERR_NO_BODYPART;
-	// rangedAttack(target: AnyCreep | Structure): CreepActionReturnCode;
-	// rangedHeal(target: AnyCreep): CreepActionReturnCode;
-	// rangedMassAttack(): OK | ERR_NOT_OWNER | ERR_BUSY | ERR_NO_BODYPART;
-	// repair(target: Structure): CreepActionReturnCode | ERR_NOT_ENOUGH_RESOURCES;
-	// reserveController(target: StructureController): CreepActionReturnCode;
-	// signController(target: StructureController, text: string): OK | ERR_BUSY | ERR_INVALID_TARGET | ERR_NOT_IN_RANGE;
-	// upgradeController(target: StructureController): ScreepsReturnCode;
-	// typed-screeps messed up the typings for withdraw(), so we override them here
 	withdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode;
 }
 
@@ -66,31 +44,48 @@ type rechargeObjectType = StructureStorage
 	| Resource;
 
 interface Room {
+
 	print: string;
+
 	my: boolean;
+
 	isColony: boolean;
 	isOutpost: boolean;
+
 	owner: string | undefined;
 	reservedByMe: boolean;
 	signedByMe: boolean;
+
 	creeps: Creep[];
-	sourceKeepers: Creep[];
 	hostiles: Creep[];
+	friendlies: Creep[];
+	invaders: Creep[];
+	sourceKeepers: Creep[];
 	dangerousHostiles: Creep[];
 	playerHostiles: Creep[];
-	invaders: Creep[];
 	dangerousPlayerHostiles: Creep[];
+
+	// Populated and tracked by RoomIntel
+	isSafe: boolean;
+	threatLevel: number;
+	instantaneousThreatLevel: 0 | 1 | 2;
+
 	fleeDefaults: HasPos[];
-	hostileStructures: Structure[];
+
 	structures: Structure[];
+	hostileStructures: Structure[];
+
 	flags: Flag[];
+
 	// Cached structures
 	tombstones: Tombstone[];
 	drops: { [resourceType: string]: Resource[] };
 	droppedEnergy: Resource[];
 	droppedPower: Resource[];
+
 	// Room structures
 	_refreshStructureCache;
+
 	// Multiple structures
 	spawns: StructureSpawn[];
 	extensions: StructureExtension[];
@@ -108,6 +103,7 @@ interface Room {
 	labs: StructureLab[];
 	containers: StructureContainer[];
 	powerBanks: StructurePowerBank[];
+
 	// Single structures
 	observer: StructureObserver | undefined;
 	powerSpawn: StructurePowerSpawn | undefined;
@@ -122,6 +118,7 @@ interface Room {
 	constructionSites: ConstructionSite[];
 	allConstructionSites: ConstructionSite[];
 	ruins: Ruin[];
+
 	// Used by movement library
 	// _defaultMatrix: CostMatrix;
 	// _directMatrix: CostMatrix;

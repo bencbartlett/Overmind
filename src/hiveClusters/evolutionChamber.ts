@@ -13,7 +13,7 @@ import {getPosFromBunkerCoord, reagentLabSpots} from '../roomPlanner/layouts/bun
 import {Stats} from '../stats/stats';
 import {randint} from '../utilities/random';
 import {rightArrow} from '../utilities/stringConstants';
-import {exponentialMovingAverage} from '../utilities/utils';
+import {ema} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {HiveCluster} from './_HiveCluster';
 
@@ -653,7 +653,7 @@ export class EvolutionChamber extends HiveCluster {
 	private stats(): void {
 		Stats.log(`colonies.${this.colony.name}.evolutionChamber.totalProduction`, this.memory.stats.totalProduction);
 		const labUsage = _.sum(this.productLabs, lab => lab.cooldown > 0 ? 1 : 0) / this.productLabs.length;
-		this.memory.stats.avgUsage = exponentialMovingAverage(labUsage, this.memory.stats.avgUsage, LAB_USAGE_WINDOW);
+		this.memory.stats.avgUsage = ema(labUsage, this.memory.stats.avgUsage, LAB_USAGE_WINDOW);
 		Stats.log(`colonies.${this.colony.name}.evolutionChamber.avgUsage`, this.memory.stats.avgUsage);
 	}
 

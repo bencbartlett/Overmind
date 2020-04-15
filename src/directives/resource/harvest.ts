@@ -3,7 +3,7 @@ import {MiningOverlord} from '../../overlords/mining/miner';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../../utilities/Cartographer';
-import {exponentialMovingAverage, getCacheExpiration} from '../../utilities/utils';
+import {ema, getCacheExpiration} from '../../utilities/utils';
 import {Directive} from '../Directive';
 
 
@@ -87,9 +87,9 @@ export class DirectiveHarvest extends Directive {
 			this.memory[_HARVEST_MEM_USAGE] = (source.energyCapacity - source.energy) / source.energyCapacity;
 		}
 		const container = this.overlords.mine.container;
-		this.memory[_HARVEST_MEM_DOWNTIME] = +(exponentialMovingAverage(container ? +container.isFull : 0,
-																		this.memory[_HARVEST_MEM_DOWNTIME],
-																		CREEP_LIFE_TIME)).toFixed(5);
+		this.memory[_HARVEST_MEM_DOWNTIME] = +(ema(container ? +container.isFull : 0,
+												   this.memory[_HARVEST_MEM_DOWNTIME],
+												   CREEP_LIFE_TIME)).toFixed(5);
 	}
 
 }

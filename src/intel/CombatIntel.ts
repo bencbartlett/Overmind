@@ -22,7 +22,7 @@ interface CombatIntelMemory {
 
 export interface CombatPotentials {
 	attack: number;
-	rangedAttack: number;
+	ranged: number;
 	heal: number;
 	dismantle?: number;
 }
@@ -677,7 +677,7 @@ export class CombatIntel {
 		const rangedAttack = _.sum(creeps, creep => this.getRangedAttackPotential(creep));
 		const heal = _.sum(creeps, creep => this.getHealPotential(creep));
 		const dismantle = _.sum(creeps, creep => this.getDismantlePotential(creep));
-		return {attack, rangedAttack, heal, dismantle};
+		return {attack, ranged: rangedAttack, heal, dismantle};
 	}
 
 	/**
@@ -688,7 +688,7 @@ export class CombatIntel {
 		const rangedAttack = _.sum(zergs, zerg => this.getRangedAttackPotential(zerg.creep, countIntendedBoosts));
 		const heal = _.sum(zergs, zerg => this.getHealPotential(zerg.creep, countIntendedBoosts));
 		const dismantle = _.sum(zergs, zerg => this.getDismantlePotential(zerg.creep, countIntendedBoosts));
-		return {attack, rangedAttack, heal, dismantle};
+		return {attack, ranged: rangedAttack, heal, dismantle};
 	}
 
 	/**
