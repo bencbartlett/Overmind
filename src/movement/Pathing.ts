@@ -603,17 +603,24 @@ export class Pathing {
 				const portals = roomInfo.portals;
 				_.forEach(portals, portal => matrix!.set(portal.pos.x, portal.pos.y, PORTAL_COST));
 				const skLairs = roomInfo.skLairs;
-				const avoidRange = 5;
+
 				if (skLairs.length > 0) {
 					// The source keepers usually hang out by the closest mineral or source but sometimes on lair
+					const avoidRange = 5;
+					const terrain = Game.map.getRoomTerrain(roomName);
 					const blockThese = _.compact([...roomInfo.sources,
 												  roomInfo.mineral,
 												  ...roomInfo.skLairs]) as HasPos[];
 					_.forEach(blockThese, thing => {
+						let x, y: number;
 						for (let dx = -avoidRange; dx <= avoidRange; dx++) {
 							for (let dy = -avoidRange; dy <= avoidRange; dy++) {
-								const cost = SK_COST * (avoidRange + 1 - Math.max(Math.abs(dx), Math.abs(dy)));
-								matrix!.set(thing.pos.x + dx, thing.pos.y + dy, cost);
+								x = thing.pos.x + dx;
+								y = thing.pos.y + dy;
+								if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
+									const cost = SK_COST * (avoidRange + 1 - Math.max(Math.abs(dx), Math.abs(dy)));
+									matrix!.set(thing.pos.x + dx, thing.pos.y + dy, cost);
+								}
 							}
 						}
 					});
@@ -803,11 +810,15 @@ export class Pathing {
 				const terrain = Game.map.getRoomTerrain(room.name);
 				const avoidRange = 5;
 				_.forEach(room.sourceKeepers, sourceKeeper => {
+					let x, y: number;
 					for (let dx = -avoidRange; dx <= avoidRange; dx++) {
 						for (let dy = -avoidRange; dy <= avoidRange; dy++) {
-
-							const cost = SK_COST * 2 * (avoidRange + 1 - Math.max(Math.abs(dx), Math.abs(dy)));
-							matrix.set(sourceKeeper.pos.x + dx, sourceKeeper.pos.y + dy, cost);
+							x = sourceKeeper.pos.x + dx;
+							y = sourceKeeper.pos.y + dy;
+							if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
+								const cost = SK_COST * 2 * (avoidRange + 1 - Math.max(Math.abs(dx), Math.abs(dy)));
+								matrix.set(x, y, cost);
+							}
 						}
 					}
 				});
