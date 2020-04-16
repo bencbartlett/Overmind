@@ -15,6 +15,8 @@ global.derefRoomPosition = function(protoPos: ProtoPos): RoomPosition {
 
 global.NO_ACTION = 1;
 
+global.PERMACACHE = {};
+
 // // Assign values to the memory key aliases declared in memory.d.ts
 // global._TICK = 'T';
 // global._EXPIRATION = 'X';

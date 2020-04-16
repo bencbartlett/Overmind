@@ -9,6 +9,8 @@ export const ROOMTYPE_CROSSROAD = 'CROSSROAD';
 
 export type RoomType = 'SK' | 'CORE' | 'CTRL' | 'ALLEY' | 'CROSSROAD';
 
+PERMACACHE.cartographerRoomTypes = PERMACACHE.cartographerRoomTypes || {};
+
 /**
  * Cartographer: provides helper methods related to Game.map. A few of these methods have been modified from BonzAI
  * codebase, although I have introduced new methods of my own over time as well.
@@ -72,7 +74,6 @@ export class Cartographer {
 	 * Get the type of the room
 	 */
 	static roomType(roomName: string): RoomType {
-		PERMACACHE.cartographerRoomTypes = PERMACACHE.cartographerRoomTypes || {};
 		if (!PERMACACHE.cartographerRoomTypes[roomName]) {
 			let roomType: RoomType;
 			const coords = Cartographer.getRoomCoordinates(roomName);

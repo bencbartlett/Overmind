@@ -4,12 +4,19 @@
 
 import {MY_USERNAME} from '../~settings';
 
+PERMACACHE.structureWalkability = PERMACACHE.structureWalkability || {};
 Object.defineProperty(Structure.prototype, 'isWalkable', {
 	get() {
-		return this.structureType == STRUCTURE_ROAD ||
-			   this.structureType == STRUCTURE_CONTAINER ||
-			   (this.structureType == STRUCTURE_RAMPART && (<StructureRampart>this.my ||
-															<StructureRampart>this.isPublic));
+		if (PERMACACHE.structureWalkability[this.id] !== undefined) {
+			return PERMACACHE.structureWalkability[this.id];
+		}
+		if (this.structureType == STRUCTURE_RAMPART) {
+			return (<StructureRampart>this.my || <StructureRampart>this.isPublic);
+		} else {
+			PERMACACHE.structureWalkability[this.id] = this.structureType == STRUCTURE_ROAD ||
+													   this.structureType == STRUCTURE_CONTAINER;
+			return PERMACACHE.structureWalkability[this.id];
+		}
 	},
 	configurable: true,
 });

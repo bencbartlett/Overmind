@@ -70,9 +70,9 @@ Object.defineProperty(Creep.prototype, 'bodypartCounts', {
 	configurable: true,
 });
 
+PERMACACHE.isPlayer = PERMACACHE.isPlayer || {};
 Object.defineProperty(Creep.prototype, 'isPlayer', {
 	get() {
-		PERMACACHE.isPlayer = PERMACACHE.isPlayer || {};
 		if (PERMACACHE.isPlayer[this.id] === undefined) {
 			PERMACACHE.isPlayer[this.id] = this.owner.username != 'Invader' &&
 										  this.owner.username != 'Source Keeper' &&

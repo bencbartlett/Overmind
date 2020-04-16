@@ -66,6 +66,7 @@
     "no-shadowed-variable": false,
     "no-trailing-whitespace": false,
     "object-literal-shorthand": false,
+    "prefer-for-of": false,
     "prefer-const": [
       true,
       {

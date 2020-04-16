@@ -253,10 +253,8 @@ export class Mem {
 			costMatrices : {},
 			roomPositions: {},
 			things       : {},
-			permaCache   : {},
 		};
 		global._cache = defaultGlobalCache;
-		global.PERMACACHE = global._cache.permaCache;
 	}
 
 	static clean() {

@@ -1,14 +1,8 @@
-import {hasPos} from '../declarations/typeGuards';
-
 /**
  * Returns destination.pos if destination has a position, or destination if destination is a RoomPosition
  */
 export function normalizePos(destination: HasPos | RoomPosition): RoomPosition {
-	if (hasPos(destination)) {
-		return destination.pos;
-	} else {
-		return destination;
-	}
+	return (<any>destination).pos || destination;
 }
 
 /**
