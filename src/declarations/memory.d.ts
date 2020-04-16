@@ -179,7 +179,6 @@ interface FlagMemory {
 		incomplete?: boolean;
 	};
 	debug?: boolean;
-	suspendUntil?: number;
 	amount?: number;
 	persistent?: boolean;
 	setPos?: ProtoPos;

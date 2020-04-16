@@ -44,14 +44,6 @@ export abstract class Directive {
 		this.name = flag.name;
 		this.ref = flag.ref;
 
-		if (this.memory.suspendUntil) {
-			if (Game.time < this.memory.suspendUntil) {
-				return;
-			} else {
-				delete this.memory.suspendUntil;
-			}
-		}
-
 		// Register creation tick
 		if (!this.memory[MEM.TICK]) {
 			this.memory[MEM.TICK] = Game.time;
@@ -443,12 +435,16 @@ export abstract class Directive {
 		}
 	}
 
-	/* Filter for _.filter() that checks if a flag is of the matching type */
+	/**
+	 * Filter for _.filter() that checks if a flag is of the matching type
+	 */
 	static filter(flag: Flag): boolean {
 		return flag.color == this.color && flag.secondaryColor == this.secondaryColor;
 	}
 
-	/* Map a list of flags to directives, accepting a filter */
+	/**
+	 * Map a list of flags to directives, accepting a filter
+	 */
 	static find(flags: Flag[]): Directive[] {
 		flags = _.filter(flags, flag => this.filter(flag));
 		return _.compact(_.map(flags, flag => Overmind.directives[flag.name]));
