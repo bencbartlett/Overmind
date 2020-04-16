@@ -572,11 +572,11 @@ export class OvermindConsole {
 		}
 	}
 
-	static profileMemory(depth = 1): string {
+	static profileMemory(depth = 1, root = Memory): string {
 		const sizes: RecursiveObject = {};
 		console.log(`Profiling memory...`);
 		const start = Game.cpu.getUsed();
-		OvermindConsole.recursiveMemoryProfile(Memory, sizes, depth);
+		OvermindConsole.recursiveMemoryProfile(root, sizes, depth);
 		console.log(`Time elapsed: ${Game.cpu.getUsed() - start}`);
 		return JSON.stringify(sizes, undefined, '\t');
 	}
