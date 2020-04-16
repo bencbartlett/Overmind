@@ -1,4 +1,4 @@
-/* tslint:disable */
+/* tslint:disable:no-bitwise prefer-for-of */
 
 import {log} from '../console/log';
 import {normalizePos} from '../movement/helpers';
