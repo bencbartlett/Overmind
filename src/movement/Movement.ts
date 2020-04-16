@@ -1055,7 +1055,7 @@ export class Movement {
 		const callback = (roomName: string) => {
 			if (roomName == creep.room.name) {
 				const matrix = Pathing.getDefaultMatrix(creep.room).clone();
-				Pathing.blockMyCreeps(matrix, creep.room);
+				Pathing.blockMyCreeps(matrix, creep.room); // TODO: is this necessary?
 				Pathing.blockHostileCreeps(matrix, creep.room);
 				if (options.requireRamparts) {
 					Pathing.blockNonRamparts(matrix, creep.room);
