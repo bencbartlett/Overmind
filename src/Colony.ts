@@ -18,7 +18,6 @@ import {LinkNetwork} from './logistics/LinkNetwork';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {RoadLogistics} from './logistics/RoadLogistics';
 import {SpawnGroup} from './logistics/SpawnGroup';
-import {TraderJoe} from './logistics/TradeNetwork';
 import {TransportRequestGroup} from './logistics/TransportRequestGroup';
 import {Mem} from './memory/Memory';
 import {DefaultOverlord} from './overlords/core/default';
@@ -50,13 +49,6 @@ export enum DEFCON {
 	bigPlayerInvasion  = 3,
 }
 
-export enum OutpostDisableState {
-	cpu				= 0, // CPU limitations
-	upkeep			= 1, // room can't sustain this remote because rebooting, spawn pressure, etc
-	playerHarass	= 2,
-	stronghold		= 3,
-}
-
 export function getAllColonies(): Colony[] {
 	return _.values(Overmind.colonies);
 }
@@ -80,14 +72,22 @@ export interface ColonyMemory {
 	suspend?: boolean;
 	debug?: boolean;
 	maxLevel: number;
-	abandonedOuposts: AbandonedOutpost[];
+	outposts: { [roomName: string]: OutpostData };
 }
 
 // Outpost that is currently not being maintained
-export interface AbandonedOutpost {
-	room: String;
-	reason: OutpostDisableState;
-	endTick?: number; // Tick to reanable, if any
+export interface OutpostData {
+	active: boolean;
+	suspendReason?: OutpostDisableReason;
+	[MEM.EXPIRATION]?: number; // Tick to recalculate
+}
+
+export enum OutpostDisableReason {
+	active             = 'active',
+	inactiveCPU        = 'i_cpu', // CPU limitations
+	inactiveUpkeep     = 'i_upkeep', // room can't sustain this remote because rebooting, spawn pressure, etc
+	inactiveHarassment = 'i_harassment',
+	inactiveStronghold = 'i_stronghold',
 }
 
 const defaultColonyMemory: ColonyMemory = {
@@ -99,14 +99,15 @@ const defaultColonyMemory: ColonyMemory = {
 		possibleExpansions: {},
 		expiration        : 0,
 	},
-	maxLevel: 0,
-	abandonedOuposts: [],
+	maxLevel     : 0,
+	outposts     : {},
 };
 
 export interface Assets {
 	energy: number;
 	power: number;
 	ops: number;
+
 	[resourceType: string]: number;
 }
 
@@ -121,10 +122,10 @@ export class Colony {
 	memory: ColonyMemory;								// Memory.colonies[name]
 	// Room associations
 	name: string;										// Name of the primary colony room
+	room: Room;											// Primary (owned) room of the colony
 	ref: string;
 	id: number; 										// Order in which colony is instantiated from Overmind
 	roomNames: string[];								// The names of all rooms including the primary room
-	room: Room;											// Primary (owned) room of the colony
 	outposts: Room[];									// Rooms for remote resource collection
 	// abandonedOutposts: AbandonedOutpost[];				// Outposts that are not currently maintained, not used for now
 	rooms: Room[];										// All rooms including the primary room
@@ -222,6 +223,17 @@ export class Colony {
 		this.name = roomName;
 		this.ref = roomName;
 		this.memory = Mem.wrap(Memory.colonies, roomName, defaultColonyMemory, true);
+		// Format outpost state memory
+		_.forEach(outposts, outpost => {
+			if (!this.memory.outposts[outpost]) {
+				this.memory.outposts[outpost] = {active: true};
+			}
+		});
+		_.forEach(_.keys(_.clone(this.memory.outposts)), roomName => {
+			if (!outposts.includes(roomName)) {
+				delete this.memory.outposts[roomName];
+			}
+		});
 		// Register colony globally to allow 'W1N1' and 'w1n1' to refer to Overmind.colonies.W1N1
 		global[this.name] = this;
 		global[this.name.toLowerCase()] = this;
@@ -260,12 +272,10 @@ export class Colony {
 	 */
 	build(roomName: string, outposts: string[]): void {
 		// Register rooms
-		this.roomNames = [roomName].concat(outposts);
 		this.room = Game.rooms[roomName];
-		// TODO this could be optimized
-		const abandonedOutpostRooms = this.memory.abandonedOuposts.map(outpost => outpost.room);
-		this.outposts = _.compact(_.map(_.filter(outposts, outpost => !abandonedOutpostRooms.includes(outpost)),
-				outpost => Game.rooms[outpost]));
+		this.roomNames = [roomName].concat(outposts);
+		// Register outposts
+		this.outposts = _.compact(_.map(outposts, outpost => Game.rooms[outpost]));
 		this.rooms = [this.room].concat(this.outposts);
 		this.miningSites = {}; 				// filled in by harvest directives
 		this.extractionSites = {};			// filled in by extract directives
@@ -287,9 +297,9 @@ export class Colony {
 	refresh(): void {
 		this.memory = Mem.wrap(Memory.colonies, this.room.name, defaultColonyMemory, true);
 		// Refresh rooms
-		this.handleAbandonedOutposts();
 		this.room = Game.rooms[this.room.name];
-		this.outposts = _.compact(_.map(this.outposts, outpost => Game.rooms[outpost.name]));
+		const outpostRoomNames = _.filter(this.roomNames, roomName => this.room.name != roomName);
+		this.outposts =  _.compact(_.map(outpostRoomNames, outpost => Game.rooms[outpost]));
 		this.rooms = [this.room].concat(this.outposts);
 		// refresh creeps
 		this.creeps = Overmind.cache.creepsByColony[this.name] || [];
@@ -556,24 +566,37 @@ export class Colony {
 		}
 	}
 
-	abandonOutpost(roomName: string, reason: OutpostDisableState, endTime?: number) {
-		this.outposts = this.outposts.filter(room => room.name != roomName);
-		this.memory.abandonedOuposts.push({
-			room: roomName,
-			endTick: endTime,
-			reason: reason,
-		});
+	/**
+	 * Returns whether a room is part of this colony and is actively being maintained
+	 */
+	isRoomActive(roomName: string): boolean {
+		if (roomName == this.room.name) {
+			return true;
+		} else if (!this.roomNames.includes(roomName)) {
+			return false;
+		} else {
+			return this.memory.outposts[roomName] && this.memory.outposts[roomName].active;
+		}
 	}
 
-	private handleAbandonedOutposts() {
-		const outpostsToEnable: String[] = [];
-		for (const outpost of this.memory.abandonedOuposts) {
-			if (outpost.endTick && outpost.endTick > Game.time) {
-				outpostsToEnable.push(outpost.room);
+	/**
+	 * Deactivates an outpost and suspends operations in that room
+	 */
+	suspendOutpost(roomName: string, reason: OutpostDisableReason, duration: number): void {
+		this.memory.outposts[roomName] = {
+			active          : false,
+			suspendReason   : reason,
+			[MEM.EXPIRATION]: Game.time + duration
+		};
+	}
+
+	private handleReactivatingOutposts(): void {
+		for (const roomName in this.memory.outposts) {
+			const outpostData = this.memory.outposts[roomName];
+			if (!outpostData.active && Game.time >= (outpostData[MEM.EXPIRATION] || Infinity)) {
+				this.memory.outposts[roomName] = {active: true};
 			}
 		}
-		this.memory.abandonedOuposts = this.memory.abandonedOuposts
-			.filter(outpost => !outpostsToEnable.includes(outpost.room));
 	}
 
 	/**

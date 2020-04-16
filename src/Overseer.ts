@@ -1,4 +1,4 @@
-import {Colony, ColonyStage, getAllColonies, OutpostDisableState} from './Colony';
+import {Colony, ColonyStage, getAllColonies, OutpostDisableReason} from './Colony';
 import {log} from './console/log';
 import {bodyCost} from './creepSetups/CreepSetup';
 import {Roles} from './creepSetups/setups';
@@ -14,7 +14,6 @@ import {DirectivePowerMine} from './directives/resource/powerMine';
 import {DirectiveBootstrap} from './directives/situational/bootstrap';
 import {DirectiveNukeResponse} from './directives/situational/nukeResponse';
 import {DirectiveTerminalEvacuateState} from './directives/terminalState/terminalState_evacuate';
-import {CombatIntel} from './intel/CombatIntel';
 import {RoomIntel} from './intel/RoomIntel';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {Autonomy, getAutonomyLevel, Mem} from './memory/Memory';
@@ -29,6 +28,7 @@ import {
 	ROOMTYPE_CROSSROAD,
 	ROOMTYPE_SOURCEKEEPER
 } from './utilities/Cartographer';
+import {p} from './utilities/random';
 import {canClaimAnotherRoom, derefCoords, getAllRooms, hasJustSpawned, minBy, onPublicServer} from './utilities/utils';
 import {MUON, MY_USERNAME, USE_TRY_CATCH} from './~settings';
 
@@ -210,9 +210,12 @@ export class Overseer implements IOverseer {
 		}
 	}
 
-	private handleOutpostDefense(colony: Colony) {
+	private handleOutpostDefense(colony: Colony) { // TODO: plug in threatLevel infra
 		// Guard directive: defend your outposts and all rooms of colonies that you are incubating
 		for (const room of colony.outposts) {
+			if (!colony.isRoomActive(room.name)) {
+				continue;
+			}
 			// Handle player defense
 			if (room.dangerousPlayerHostiles.length > 0) {
 				DirectiveOutpostDefense.createIfNotPresent(Pathing.findPathablePosition(room.name), 'room');
@@ -220,10 +223,12 @@ export class Overseer implements IOverseer {
 			}
 			// Handle NPC invasion directives
 			if (Cartographer.roomType(room.name) != ROOMTYPE_SOURCEKEEPER) { // SK rooms can fend for themselves
-				const defenseFlags = _.filter(room.flags, flag => DirectiveGuard.filter(flag) ||
-																  DirectiveOutpostDefense.filter(flag));
-				if (room.dangerousHostiles.length > 0 && defenseFlags.length == 0) {
-					DirectiveGuard.create(room.dangerousHostiles[0].pos);
+				if (room.dangerousHostiles.length > 0) {
+					const defenseDirectives = [...DirectiveGuard.find(room.flags),
+											   ...DirectiveOutpostDefense.find(room.flags)];
+					if (defenseDirectives.length == 0) {
+						DirectiveGuard.create(room.dangerousHostiles[0].pos);
+					}
 				}
 			}
 		}
@@ -243,7 +248,7 @@ export class Overseer implements IOverseer {
 	// 				} else if (room.invaderCore.level <= 4 && room.invaderCore.ticksToDeploy) {
 	// 					res = DirectiveStronghold.createIfNotPresent(room.invaderCore.pos, 'room');
 	// 					if (!!res) {
-	// 						log.notify(`Creating stronghold clearing ranged attacker in room ${room.name}`);
+	// 						log.notify(`Creating inactiveStronghold clearing ranged attacker in room ${room.name}`);
 	// 					}
 	// 				}
 	// 			}
@@ -340,7 +345,7 @@ export class Overseer implements IOverseer {
 	}
 
 	private handleNewOutposts(colony: Colony) {
-		const numSources = _.sum(colony.roomNames,
+		const numSources = _.sum(colony.roomNames, // TODO: rewrite to include suspension?
 								 roomName => Memory.rooms[roomName] && Memory.rooms[roomName][RMEM.SOURCES]
 											 ? Memory.rooms[roomName][RMEM.SOURCES]!.length
 											 : 0);
@@ -411,25 +416,20 @@ export class Overseer implements IOverseer {
 
 		_.forEach(allColonies, colony => this.handleOutpostDefense(colony));
 
+		_.forEach(allColonies, colony => this.handleUnkillableStrongholds(colony));
+
 		// _.forEach(allColonies, colony => this.handleStrongholds(colony));
 
 		_.forEach(allColonies, colony => this.handleColonyInvasions(colony));
 
 		_.forEach(allColonies, colony => this.handleNukeResponse(colony));
 
-		if (Memory.settings.powerCollection.enabled && Game.cpu.bucket > 6000) {
+		if (Memory.settings.powerCollection.enabled && Game.cpu.bucket > 8000) {
 			_.forEach(allRooms, room => this.handlePowerMining(room));
 		}
 
-
-		_.forEach(allColonies, colony => {
-				for (const room of colony.outposts) {
-					this.handleUnkillableStrongholds(colony, room);
-				}
-		});
-
-		if (Memory.settings.autoPoison.enabled && canClaimAnotherRoom() && Game.cpu.bucket > 9000) {
-			this.handleAutoPoisoning();
+		if (Memory.settings.autoPoison.enabled && canClaimAnotherRoom() && Game.cpu.bucket > 9500) {
+			if (p(0.05)) this.handleAutoPoisoning();
 		}
 
 		if (getAutonomyLevel() > Autonomy.Manual) {
@@ -451,18 +451,27 @@ export class Overseer implements IOverseer {
 
 	// Harass Response =================================================================================================
 
-	private handleUnkillableStrongholds(colony: Colony, room: Room): void {
+	private handleUnkillableStrongholds(colony: Colony): void {
+
 		const suspensionDuration = 5000;
-		if (Cartographer.roomType(room.name) == ROOMTYPE_SOURCEKEEPER && !!room.invaderCore && room.invaderCore.level > 3) {
-			const roomDirectives = Directive.find(room.flags);
-			log.notify(`Disabling outpost ${room.print} due to Stronghold presence`);
-			colony.abandonOutpost(room.name, OutpostDisableState.stronghold, suspensionDuration);
-			// TODO don't suspend military
-			roomDirectives.map(directiveInRoom => Object.values(directiveInRoom.overlords))
-				.forEach(overlordsInDirective => overlordsInDirective
-					.forEach(overlordToSuspend => overlordToSuspend.suspendFor(suspensionDuration)));
-			// TODO needs to prevent haulers and workers, but this reduces the problem
+
+		for (const room of colony.outposts) {
+
+			if (Cartographer.roomType(room.name) == ROOMTYPE_SOURCEKEEPER &&
+				room.invaderCore && room.invaderCore.level > 3) {
+
+				const roomDirectives = Directive.find(room.flags);
+				log.notify(`Disabling outpost ${room.print} due to Stronghold presence`);
+
+				for (const directive of roomDirectives) {
+					for (const name in directive.overlords) {
+						directive.overlords[name].suspendFor(suspensionDuration);
+					}
+				}
+				colony.suspendOutpost(room.name, OutpostDisableReason.inactiveStronghold, suspensionDuration);
+			}
 		}
+
 	}
 
 	// Safe mode condition =============================================================================================

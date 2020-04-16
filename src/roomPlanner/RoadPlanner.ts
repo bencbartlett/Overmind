@@ -4,7 +4,7 @@ import {log} from '../console/log';
 import {Mem} from '../memory/Memory';
 import {MatrixTypes, Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
-import {getCacheExpiration, onPublicServer} from '../utilities/utils';
+import {getCacheExpiration, getPosFromString, onPublicServer} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {RoomPlanner} from './RoomPlanner';
 
@@ -65,13 +65,18 @@ export class RoadPlanner {
 		return this.memory.roadCoverage;
 	}
 
-	private recomputeRoadCoverages(storagePos: RoomPosition) {
+	private recomputeRoadCoverages(storagePos: RoomPosition, ignoreInactiveRooms = true) {
 		// Compute coverage for each path
 		for (const destination of this.colony.destinations) {
+
 			const destName = destination.pos.name;
-			if (!!this.memory.roadLookup[destination.pos.roomName]) { // << add this line
+
+			if (!!this.memory.roadLookup[destination.pos.roomName]) {
+
 				if (!this.memory.roadCoverages[destName] || Game.time > this.memory.roadCoverages[destName].exp) {
+
 					const roadCoverage = this.computeRoadCoverage(storagePos, destination.pos);
+
 					if (roadCoverage != undefined) {
 						// Set expiration to be longer if road is nearly complete
 						const expiration = roadCoverage.roadCount / roadCoverage.length >= 0.75
@@ -82,7 +87,9 @@ export class RoadPlanner {
 							length   : roadCoverage.length,
 							exp      : expiration
 						};
+
 					} else {
+
 						if (this.memory.roadCoverages[destName]) {
 							// if you already have some data, use it for a little while
 							const waitTime = onPublicServer() ? 500 : 200;
@@ -96,16 +103,23 @@ export class RoadPlanner {
 								exp      : Game.time + waitTime
 							};
 						}
+
 					}
+
 					log.debug(`Recomputing road coverage from ${storagePos.print} to ${destination.pos.print}... ` +
 							  `Coverage: ${JSON.stringify(roadCoverage)}`);
 				}
+
 			}
 		}
 		// Store the aggregate roadCoverage score
 		let totalRoadCount = 0;
 		let totalPathLength = 0;
 		for (const destName in this.memory.roadCoverages) {
+			const destPos = getPosFromString(destName)!;
+			if (ignoreInactiveRooms && !this.colony.isRoomActive(destPos.roomName)) {
+				continue;
+			}
 			const {roadCount, length, exp} = this.memory.roadCoverages[destName];
 			totalRoadCount += roadCount;
 			totalPathLength += length;

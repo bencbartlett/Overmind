@@ -4,7 +4,7 @@ import {profile} from '../profiler/decorator';
 import {repairTaskName} from '../tasks/instances/repair';
 import {Zerg} from '../zerg/Zerg';
 
-const ROAD_CACHE_TIMEOUT = 15;
+const ROAD_CACHE_TIMEOUT = 25;
 
 
 /**
@@ -15,7 +15,6 @@ export class RoadLogistics {
 
 	ref: string;
 	private colony: Colony;
-	private rooms: Room[];
 	private _assignedWorkers: { [roomName: string]: string[] };
 
 	static settings = {
@@ -27,7 +26,6 @@ export class RoadLogistics {
 	constructor(colony: Colony) {
 		this.colony = colony;
 		this.ref = this.colony.name + ':roadLogistics';
-		this.rooms = colony.rooms;
 		this._assignedWorkers = {};
 	}
 
@@ -67,8 +65,8 @@ export class RoadLogistics {
 			}
 		}
 		// Otherwise scan through rooms and see if needs repaving
-		for (const room of this.rooms) {
-			if (this.workerShouldRepaveRoom(worker, room)) {
+		for (const room of this.colony.rooms) {
+			if (this.colony.isRoomActive(room.name) && this.workerShouldRepaveRoom(worker, room)) {
 				return room;
 			}
 		}
@@ -100,7 +98,7 @@ export class RoadLogistics {
 	 */
 	energyToRepave(room: Room): number {
 		return $.number(this, 'energyToRepave:' + room.name, () =>
-			_.sum(this.repairableRoads(room), road => (road.hitsMax - road.hits) / REPAIR_POWER));
+			_.sum(this.repairableRoads(room), road => (road.hitsMax - road.hits) / REPAIR_POWER), ROAD_CACHE_TIMEOUT);
 	}
 
 	/**
