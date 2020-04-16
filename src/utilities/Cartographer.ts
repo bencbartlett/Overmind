@@ -72,6 +72,7 @@ export class Cartographer {
 	 * Get the type of the room
 	 */
 	static roomType(roomName: string): RoomType {
+		PERMACACHE.cartographerRoomTypes = PERMACACHE.cartographerRoomTypes || {};
 		if (!PERMACACHE.cartographerRoomTypes[roomName]) {
 			let roomType: RoomType;
 			const coords = Cartographer.getRoomCoordinates(roomName);
