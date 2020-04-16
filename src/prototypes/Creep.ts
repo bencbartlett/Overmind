@@ -48,10 +48,9 @@ Object.defineProperty(Creep.prototype, 'inRampart', {
 });
 
 // Permanently cached properties
-
+PERMACACHE.bodypartCounts = PERMACACHE.bodypartCounts || {};
 Object.defineProperty(Creep.prototype, 'bodypartCounts', {
 	get() {
-		PERMACACHE.bodypartCounts = PERMACACHE.bodypartCounts || {};
 		if (PERMACACHE.bodypartCounts[this.id] === undefined) {
 			PERMACACHE.bodypartCounts[this.id] = _.countBy(this.body, (part: BodyPartDefinition) => part.type);
 			_.defaults(PERMACACHE.bodypartCounts[this.id], {

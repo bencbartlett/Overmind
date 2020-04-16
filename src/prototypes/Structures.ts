@@ -10,11 +10,12 @@ Object.defineProperty(Structure.prototype, 'isWalkable', {
 		if (PERMACACHE.structureWalkability[this.id] !== undefined) {
 			return PERMACACHE.structureWalkability[this.id];
 		}
-		if (this.structureType == STRUCTURE_RAMPART) {
+		if (this.structureType === STRUCTURE_RAMPART) {
 			return (<StructureRampart>this.my || <StructureRampart>this.isPublic);
 		} else {
 			PERMACACHE.structureWalkability[this.id] = this.structureType == STRUCTURE_ROAD ||
-													   this.structureType == STRUCTURE_CONTAINER;
+													   this.structureType == STRUCTURE_CONTAINER ||
+													   this.structureType == STRUCTURE_PORTAL;
 			return PERMACACHE.structureWalkability[this.id];
 		}
 	},
