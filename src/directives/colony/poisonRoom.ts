@@ -3,6 +3,7 @@ import {ClaimingOverlord} from '../../overlords/colonization/claimer';
 import {RoomPoisonerOverlord} from '../../overlords/colonization/roomPoisoner';
 import {profile} from '../../profiler/decorator';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
+import {packPos} from '../../utilities/packrat';
 import {MY_USERNAME} from '../../~settings';
 import {DirectiveOutpostDefense} from '../defense/outpostDefense';
 import {Directive} from '../Directive';
@@ -64,7 +65,8 @@ export class DirectivePoisonRoom extends Directive {
 	 */
 	static roomAlreadyPoisoned(room: Room): boolean {
 		const thingsToBlock = _.compact([room.controller, ...room.sources]) as RoomObject[];
-		const neighborTiles = _.unique(_.flatten(_.map(thingsToBlock, obj => obj.pos.neighbors)), pos => pos.name);
+		const neighborTiles = _.unique(_.flatten(_.map(thingsToBlock, obj => obj.pos.neighbors)),
+									   pos => packPos(pos));
 		const blockPositions = _.filter(neighborTiles, pos => pos.isWalkable(true));
 		return blockPositions.length == 0;
 	}
@@ -99,7 +101,8 @@ export class DirectivePoisonRoom extends Directive {
 		// Re-compute the list of positions to block
 		if (this.room) {
 			const thingsToBlock = _.compact([this.room.controller, ...this.room.sources]) as RoomObject[];
-			const neighborTiles = _.unique(_.flatten(_.map(thingsToBlock, obj => obj.pos.neighbors)), pos => pos.name);
+			const neighborTiles = _.unique(_.flatten(_.map(thingsToBlock, obj => obj.pos.neighbors)),
+										   pos => packPos(pos));
 			this.blockPositions = _.filter(neighborTiles, pos => pos.isWalkable(true));
 		} else {
 			this.blockPositions = [];

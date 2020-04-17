@@ -2,6 +2,7 @@
 
 import {log} from '../console/log';
 import {Mem} from '../memory/Memory';
+import {packCoordList} from '../utilities/packrat';
 
 interface VersionMigratorMemory {
 	versions: { [version: string]: boolean };
@@ -60,6 +61,9 @@ export class VersionMigration {
 		}
 		if (!this.memory.versions['053to06X_part4']) {
 			this.migrate_053_06X_part4();
+		}
+		if (!this.memory.versions['053to06X_part5']) {
+			this.migrate_053_06X_part5();
 		}
 	}
 
@@ -373,6 +377,78 @@ export class VersionMigration {
 		}
 		this.memory.versions['053to06X_part4'] = true;
 		log.alert(`Version migration from 0.5.3 -> 0.6.X part 4 completed successfully.`);
+	}
+
+	static migrate_053_06X_part5() {
+
+		const mem = Memory as any;
+
+		delete Memory.roomIntel; // reset this
+
+		delete mem.pathing.paths; // not used
+		delete mem.pathing.weightedDistances;
+
+		for (const name in Game.creeps) {
+			const creep = Game.creeps[name];
+			if (creep) {
+				delete creep.memory._go;
+			}
+		}
+
+		function derefCoords(coordName: string): Coord {
+			const [x, y] = coordName.split(':');
+			return {x: parseInt(x, 10), y: parseInt(y, 10)};
+		}
+
+		for (const name in Memory.colonies) {
+			const colmem = Memory.colonies[name];
+
+			delete colmem.abathur; // outdated
+
+			delete colmem.expansionData; // bugged
+
+			// Clean room planner memory of some old shit
+			const validRoomPlannerMemKeys = ['active', 'relocating', 'recheckStructuresAt', 'bunkerData',
+											 'lastGenerated', 'mapsByLevel', 'savedFlags'];
+			if (colmem.roomPlanner) {
+				for (const key in colmem.roomPlanner) {
+					if (!validRoomPlannerMemKeys.includes(key)) {
+						delete colmem.roomPlanner[key];
+					}
+				}
+			}
+
+			// Migrate road planner to new format
+			if (colmem.roadPlanner) {
+				if (colmem.roadPlanner.roadLookup) {
+					const roadLookup = colmem.roadPlanner.roadLookup;
+					const roadCoordsPacked: { [roomName: string]: string } = {};
+					for (const roomName in roadLookup) {
+						const roadCoords = _.map(_.keys(roadLookup[roomName]), coordName => derefCoords(coordName));
+						roadCoordsPacked[roomName] = packCoordList(roadCoords);
+					}
+					colmem.roadPlanner.roadCoordsPacked = roadCoordsPacked;
+					delete colmem.roadPlanner.roadLookup;
+				}
+			}
+
+			// Migrate barrier planner to new format
+			if (colmem.barrierPlanner) {
+				if (colmem.barrierPlanner.barrierLookup) {
+					const barrierLookup = colmem.barrierPlanner.barrierLookup;
+					const barrierCoords = _.map(_.keys(barrierLookup), coordName => derefCoords(coordName));
+					colmem.barrierPlanner.barrierCoordsPacked = packCoordList(barrierCoords);
+					delete colmem.barrierPlanner.barrierLookup;
+				}
+			}
+		}
+
+		for (const roomName in Memory.rooms) {
+			delete Memory.rooms[roomName];
+		}
+
+		this.memory.versions['053to06X_part5'] = true;
+		log.alert(`Version migration from 0.5.3 -> 0.6.X part 5 completed successfully.`);
 	}
 
 }

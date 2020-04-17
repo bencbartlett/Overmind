@@ -1,5 +1,6 @@
 import {Colony} from '../Colony';
 import {log} from '../console/log';
+import {RoomIntel} from '../intel/RoomIntel';
 import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
 import {BasePlanner} from '../roomPlanner/BasePlanner';
@@ -11,7 +12,6 @@ import {
 	ROOMTYPE_CROSSROAD,
 	ROOMTYPE_SOURCEKEEPER
 } from '../utilities/Cartographer';
-import {derefCoords} from '../utilities/utils';
 
 export const EXPANSION_EVALUATION_FREQ = 500;
 export const MIN_EXPANSION_DISTANCE = 2;
@@ -40,7 +40,7 @@ export class ExpansionEvaluator {
 		for (const roomName in colony.memory.expansionData.possibleExpansions) {
 			if (colony.memory.expansionData.possibleExpansions[roomName] == true) {
 				if (Memory.rooms[roomName]) {
-					const expansionData = Memory.rooms[roomName][RMEM.EXPANSION_DATA];
+					const expansionData = RoomIntel.getExpansionData(roomName);
 					if (expansionData == false) {
 						colony.memory.expansionData.possibleExpansions[roomName] = false;
 					} else if (expansionData && expansionData.score) {
@@ -55,7 +55,7 @@ export class ExpansionEvaluator {
 	static computeExpansionData(room: Room, verbose = false): boolean {
 		if (verbose) log.info(`Computing score for ${room.print}...`);
 		if (!room.controller) {
-			room.memory[RMEM.EXPANSION_DATA] = false;
+			RoomIntel.setExpansionData(room.name, false);
 			return false;
 		}
 
@@ -69,18 +69,19 @@ export class ExpansionEvaluator {
 				|| Cartographer.roomType(roomName) == ROOMTYPE_CROSSROAD) {
 				continue;
 			}
-			const roomMemory = Memory.rooms[roomName];
-			if (!roomMemory || !roomMemory[RMEM.SOURCES]) {
+			const sourcePositions = RoomIntel.getSourceInfo(roomName);
+			if (sourcePositions == undefined) {
 				if (verbose) log.info(`No memory of neighbor: ${roomName}. Aborting score calculation!`);
 				return false;
+			} else {
+				outpostSourcePositions[roomName] = _.map(sourcePositions, src => src.pos);
 			}
-			outpostSourcePositions[roomName] = _.map(roomMemory[RMEM.SOURCES]!, obj => derefCoords(obj.c, roomName));
 		}
 
 		// compute a possible bunker position
 		const bunkerLocation = BasePlanner.getBunkerLocation(room, false);
 		if (!bunkerLocation) {
-			room.memory[RMEM.EXPANSION_DATA] = false;
+			RoomIntel.setExpansionData(room.name, false);
 			log.info(`Room ${room.name} is uninhabitable because a bunker can't be built here!`);
 			return false;
 		}
@@ -135,13 +136,18 @@ export class ExpansionEvaluator {
 
 		if (verbose) log.info(`Score: ${totalScore}`);
 
-		if (!room.memory[RMEM.EXPANSION_DATA] ||
-			totalScore > (<ExpansionData>room.memory[RMEM.EXPANSION_DATA]).score) {
-			room.memory[RMEM.EXPANSION_DATA] = {
+		const existingExpansionData = RoomIntel.getExpansionData(room.name);
+		if (existingExpansionData === false) {
+			log.error(`ExpansionEvaluator: shouldn't be here!`);
+			return false;
+		}
+
+		if (existingExpansionData == undefined || totalScore > existingExpansionData.score) {
+			RoomIntel.setExpansionData(room.name, {
 				score       : totalScore,
-				bunkerAnchor: bunkerLocation.coordName,
+				bunkerAnchor: bunkerLocation,
 				outposts    : outpostScores,
-			};
+			});
 		}
 
 		return true;

@@ -3,11 +3,10 @@ import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveStronghold} from '../../directives/situational/stronghold';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {BOOST_TIERS} from '../../resources/map_resources';
-import {getPosFromString} from '../../utilities/utils';
+import {getCacheExpiration, posFromReadableName} from '../../utilities/utils';
 import {Visualizer} from '../../visuals/Visualizer';
 import {CombatZerg} from '../../zerg/CombatZerg';
-import {CombatOverlord} from '../CombatOverlord';
+import {CombatOverlord, CombatOverlordMemory} from '../CombatOverlord';
 
 
 /**
@@ -20,12 +19,22 @@ export const StrongholdAttackPriorities: StructureConstant[] = [
 	STRUCTURE_WALL,
 ];
 
+interface StrongholdOverlordMemory extends CombatOverlordMemory {
+	target?: {
+		id: Id<Creep | Structure>;
+		exp: number;
+	};
+	targetId?: string;
+	attackingPosition?: string;
+}
+
 /**
  * Spawns ranged attacker against stronghold
  */
 @profile
 export class StrongholdOverlord extends CombatOverlord {
 
+	memory: StrongholdOverlordMemory;
 	strongholdKillers: CombatZerg[];
 	room: Room | undefined;
 	directive: DirectiveStronghold;
@@ -119,6 +128,26 @@ export class StrongholdOverlord extends CombatOverlord {
 		return;
 	}
 
+	get target(): Creep | Structure | undefined {
+		if (this.memory.target && this.memory.target.exp > Game.time) {
+			const target = Game.getObjectById(this.memory.target.id);
+			if (target) {
+				return target as Creep | Structure;
+			}
+		}
+		// If nothing found
+		delete this.memory.target;
+	}
+
+	set target(targ: Creep | Structure | undefined) {
+		if (targ) {
+			this.memory.target = {id: targ.id, exp: getCacheExpiration(3000)};
+		} else {
+			delete this.memory.target;
+		}
+	}
+
+
 	bestRampartToAttackSortFunction(element1: RoomPosition, element2: RoomPosition, currentPos: RoomPosition,
 									/*map: Map<RoomPosition, StructureRampart[]>*/) {
 		// const numRamparts1 = map.get(element1) == undefined ? 10 : map.get(element1)!.length;
@@ -156,24 +185,12 @@ export class StrongholdOverlord extends CombatOverlord {
 		return locationToHostilesMapping;
 	}
 
-
-	get target(): Creep | Structure | undefined {
-		if (this.directive.memory.target && this.directive.memory.target.exp > Game.time) {
-			const target = Game.getObjectById(this.directive.memory.target.id);
-			if (target) {
-				return target as Creep | Structure;
-			}
-		}
-		// If nothing found
-		delete this.directive.memory.target;
-	}
-
 	private get attackPos(): RoomPosition | undefined {
 		if (this._attackPos) {
 			return this._attackPos;
 		}
-		if (this.directive.memory.target && this.directive.memory.attackingPosition) {
-			this._attackPos = getPosFromString(this.directive.memory.attackingPosition);
+		if (this.memory.target && this.memory.attackingPosition) {
+			this._attackPos = posFromReadableName(this.memory.attackingPosition);
 			return this._attackPos;
 		}
 	}
@@ -184,7 +201,7 @@ export class StrongholdOverlord extends CombatOverlord {
 		}
 
 		if (this.room && killer.pos.roomName == this.pos.roomName) {
-			if (this.directive.core && !this.directive.memory.target) {
+			if (this.directive.core && !this.memory.target) {
 				const before = Game.cpu.getUsed();
 				const targetingInfo = this.resetAttacking(this.directive.core, 3, killer);
 				log.info(`CPU used for stronghold is ${Game.cpu.getUsed() - before}`);
@@ -208,8 +225,8 @@ export class StrongholdOverlord extends CombatOverlord {
 			killer.rangedAttack(unprotectedHostiles[0]);
 			return;
 		}
-		if (this.directive.memory.attackingPosition) {
-			const attackPos = getPosFromString(this.directive.memory.attackingPosition);
+		if (this.memory.attackingPosition) {
+			const attackPos = posFromReadableName(this.memory.attackingPosition);
 			// In room and in position
 			if (!attackPos || !killer.pos.isEqualTo(attackPos)) {
 				let avoids: RoomPosition[] = [];
@@ -223,7 +240,7 @@ export class StrongholdOverlord extends CombatOverlord {
 							this.directive.room.mineral.pos.getPositionsInRange(4, false, false));
 					}
 					avoids.forEach(av => Visualizer.circle(av));
-					killer.goTo(attackPos!, {pathOpts:{obstacles: avoids}});
+					killer.goTo(attackPos!, {pathOpts: {obstacles: avoids}});
 				}
 			}
 		}
@@ -256,6 +273,19 @@ export class StrongholdOverlord extends CombatOverlord {
 	}
 
 	init() {
+		if (this.memory.attackingPosition) {
+			const attackPos = posFromReadableName(this.memory.attackingPosition);
+			if (!!attackPos) {
+				Visualizer.marker(attackPos, 'white');
+			}
+		}
+		if (this.memory.target && Game.getObjectById(this.memory.target.id)) {
+			const target = Game.getObjectById(this.memory.target.id) as RoomObject;
+			if (target) {
+				Visualizer.marker(target.pos, 'black');
+			}
+		}
+
 		if (this.directive.memory.state >= 3) {
 			return; // No need to spawn more
 		}
@@ -293,11 +323,12 @@ export class StrongholdOverlord extends CombatOverlord {
 		// this.wishlist(1, setup, {});
 	}
 
+
 	private resetAttacking(ultimateGoal: Creep | Structure, maxRange: number, myCreep: CombatZerg) {
 		const targetingInfo = this.findAttackingPositionAndTarget(ultimateGoal, 3, myCreep);
 		if (targetingInfo) {
-			this.directive.target = targetingInfo.target;
-			this.directive.memory.attackingPosition = targetingInfo.attackPos.name;
+			this.target = targetingInfo.target;
+			this.memory.attackingPosition = targetingInfo.attackPos.readableName;
 		}
 		return targetingInfo;
 	}

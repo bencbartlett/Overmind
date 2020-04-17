@@ -16,26 +16,30 @@ Object.defineProperty(RoomPosition.prototype, 'printPlain', {
 	configurable: true,
 });
 
-Object.defineProperty(RoomPosition.prototype, 'room', { // identifier for the pos, used in caching
+Object.defineProperty(RoomPosition.prototype, 'room', {
 	get         : function() {
 		return Game.rooms[this.roomName];
 	},
 	configurable: true,
 });
 
-Object.defineProperty(RoomPosition.prototype, 'name', { // identifier for the pos, used in caching
+RoomPosition.prototype.toCoord = function(): Coord {
+	return {x: this.x, y: this.y};
+};
+
+Object.defineProperty(RoomPosition.prototype, 'readableName', { // identifier for the pos, used in caching
 	get         : function() {
 		return this.roomName + ':' + this.x + ':' + this.y;
 	},
 	configurable: true,
 });
 
-Object.defineProperty(RoomPosition.prototype, 'coordName', { // name, but without the roomName
-	get         : function() {
-		return this.x + ':' + this.y;
-	},
-	configurable: true,
-});
+// Object.defineProperty(RoomPosition.prototype, 'coordName', { // name, but without the roomName
+// 	get         : function() {
+// 		return this.x + ':' + this.y;
+// 	},
+// 	configurable: true,
+// });
 
 RoomPosition.prototype.lookForStructure = function(structureType: StructureConstant): Structure | undefined {
 	return _.find(this.lookFor(LOOK_STRUCTURES), s => s.structureType === structureType);

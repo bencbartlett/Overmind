@@ -90,7 +90,7 @@ export enum OutpostDisableReason {
 	inactiveStronghold = 'i_stronghold',
 }
 
-const defaultColonyMemory: ColonyMemory = {
+const getDefaultColonyMemory: () => ColonyMemory = () => ({
 	defcon       : {
 		level: DEFCON.safe,
 		tick : -Infinity
@@ -101,7 +101,7 @@ const defaultColonyMemory: ColonyMemory = {
 	},
 	maxLevel     : 0,
 	outposts     : {},
-};
+});
 
 export interface Assets {
 	energy: number;
@@ -222,7 +222,7 @@ export class Colony {
 		this.id = id;
 		this.name = roomName;
 		this.ref = roomName;
-		this.memory = Mem.wrap(Memory.colonies, roomName, defaultColonyMemory, true);
+		this.memory = Mem.wrap(Memory.colonies, roomName, getDefaultColonyMemory(), true);
 		// Format outpost state memory
 		_.forEach(outposts, outpost => {
 			if (!this.memory.outposts[outpost]) {
@@ -295,7 +295,7 @@ export class Colony {
 	 * Refreshes the state of the colony object
 	 */
 	refresh(): void {
-		this.memory = Mem.wrap(Memory.colonies, this.room.name, defaultColonyMemory, true);
+		this.memory = Memory.colonies[this.room.name];
 		// Refresh rooms
 		this.room = Game.rooms[this.room.name];
 		const outpostRoomNames = _.filter(this.roomNames, roomName => this.room.name != roomName);

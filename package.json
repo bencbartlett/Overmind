@@ -31,7 +31,6 @@
     "@types/lodash": "3.10.2",
     "@types/screeps": "^3.1.0",
     "@rollup/plugin-commonjs": "^11.0.2",
-    "@rollup/plugin-multi-entry": "^3.0.0",
     "@rollup/plugin-node-resolve": "^7.1.1",
     "rollup": "2.6.0",
     "rollup-plugin-progress": "1.1.1",

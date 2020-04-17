@@ -811,31 +811,34 @@ export class CombatIntel {
 	 * This method is probably expensive; use sparingly
 	 */
 	static isEdgeDancing(creep: Creep, reentryThreshold = 3): boolean {
-		if (!creep.room.my) {
-			log.warning(`isEdgeDancing should only be called in owned rooms!`);
-		}
-		const creepOccupancies = creep.room.memory[RMEM.CREEPS_IN_ROOM];
-		if (creepOccupancies) {
-			// Look to see if the creep has exited and re-entered the room a given number of times
-			const creepInRoomTicks = [];
-			for (const tick in creepOccupancies) {
-				if (creepOccupancies[tick].includes(creep.name)) {
-					creepInRoomTicks.push(parseInt(tick, 10));
-				}
-			}
-			let reentries = 1;
-			if (creepInRoomTicks.length > 0) {
-				for (const i of _.range(creepInRoomTicks.length - 1)) {
-					if (creepInRoomTicks[i + 1] != creepInRoomTicks[i] + 1) {
-						// There was a gap between the creep's presence in the room so it must have reentered
-						reentries++;
-					}
-				}
-			}
-			return reentries >= reentryThreshold;
-		} else {
-			return false;
-		}
+		return false;
+		// TODO: rewrite this
+
+		// if (!creep.room.my) {
+		// 	log.warning(`isEdgeDancing should only be called in owned rooms!`);
+		// }
+		// const creepOccupancies = creep.room.memory[RMEM.CREEPS_IN_ROOM];
+		// if (creepOccupancies) {
+		// 	// Look to see if the creep has exited and re-entered the room a given number of times
+		// 	const creepInRoomTicks = [];
+		// 	for (const tick in creepOccupancies) {
+		// 		if (creepOccupancies[tick].includes(creep.name)) {
+		// 			creepInRoomTicks.push(parseInt(tick, 10));
+		// 		}
+		// 	}
+		// 	let reentries = 1;
+		// 	if (creepInRoomTicks.length > 0) {
+		// 		for (const i of _.range(creepInRoomTicks.length - 1)) {
+		// 			if (creepInRoomTicks[i + 1] != creepInRoomTicks[i] + 1) {
+		// 				// There was a gap between the creep's presence in the room so it must have reentered
+		// 				reentries++;
+		// 			}
+		// 		}
+		// 	}
+		// 	return reentries >= reentryThreshold;
+		// } else {
+		// 	return false;
+		// }
 	}
 
 	static getPositionsNearEnemies(hostiles: Creep[], range = 0): RoomPosition[] {

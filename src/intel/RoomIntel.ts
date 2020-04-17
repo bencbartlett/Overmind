@@ -5,7 +5,16 @@ import {Segmenter} from '../memory/Segmenter';
 import {profile} from '../profiler/decorator';
 import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
 import {Cartographer, ROOMTYPE_CORE} from '../utilities/Cartographer';
-import {derefCoords, ema, getCacheExpiration, getPosFromString} from '../utilities/utils';
+import {
+	packCoord,
+	packCoordList,
+	packId,
+	packPos,
+	unpackCoordAsPos,
+	unpackCoordListAsPosList,
+	unpackPos
+} from '../utilities/packrat';
+import {ema, getCacheExpiration} from '../utilities/utils';
 import {Zerg} from '../zerg/Zerg';
 import {CombatIntel} from './CombatIntel';
 
@@ -15,6 +24,12 @@ const ROOM_CREEP_HISTORY_TICKS = 25;
 const SCORE_RECALC_PROB = 0.05;
 const FALSE_SCORE_RECALC_PROB = 0.01;
 
+
+export interface ExpansionData {
+	score: number;
+	bunkerAnchor: RoomPosition;
+	outposts: { [roomName: string]: number };
+}
 
 export interface RoomObjectInfo {
 	pos: RoomPosition;
@@ -31,7 +46,7 @@ export interface PortalInfo extends RoomObjectInfo {
 	expiration: number | undefined;
 }
 
-export interface ControllerInfo {
+export interface ControllerInfo extends RoomObjectInfo {
 	level: number | undefined;
 	owner: string | undefined;
 	reservation: {
@@ -126,6 +141,42 @@ export class RoomIntel {
 	}
 
 	/**
+	 * Gets expansion data from a room in readable format. Undefined means that a data is not present, while false
+	 * means that the room has been analyzed and determined to be unsuitable for expansion. Be sure to use === when
+	 * comparing to false!
+	 */
+	static getExpansionData(roomName: string): ExpansionData | false | undefined {
+		if (!Memory.rooms[roomName] || !Memory.rooms[roomName][RMEM.EXPANSION_DATA]) {
+			return;
+		}
+		const data = Memory.rooms[roomName][RMEM.EXPANSION_DATA] as SavedExpansionData | 0;
+		if (data === 0) {
+			return false;
+		}
+		return {
+			score       : data[RMEM_EXPANSION_DATA.SCORE],
+			bunkerAnchor: unpackCoordAsPos(data[RMEM_EXPANSION_DATA.BUNKER_ANCHOR], roomName),
+			outposts    : data[RMEM_EXPANSION_DATA.OUTPOSTS]
+		};
+	}
+
+	/**
+	 * Sets expansion data for a room. Setting the data to false marks the room as uninhabitable.
+	 */
+	static setExpansionData(roomName: string, data: ExpansionData | false): void {
+		Memory.rooms[roomName] = Memory.rooms[roomName] || {};
+		if (data === false) {
+			Memory.rooms[roomName][RMEM.EXPANSION_DATA] = 0;
+		} else {
+			Memory.rooms[roomName][RMEM.EXPANSION_DATA] = {
+				[RMEM_EXPANSION_DATA.SCORE]        : data.score,
+				[RMEM_EXPANSION_DATA.BUNKER_ANCHOR]: packCoord(data.bunkerAnchor),
+				[RMEM_EXPANSION_DATA.OUTPOSTS]     : data.outposts,
+			};
+		}
+	}
+
+	/**
 	 * Returns information about intra-shard portals in a given room
 	 */
 	static getPortalInfo(roomName: string): PortalInfo[] {
@@ -136,22 +187,36 @@ export class RoomIntel {
 									  savedPortal => typeof savedPortal.dest == 'string');
 		const nonExpiredPortals = _.filter(localPortals, portal => Game.time < portal[MEM.EXPIRATION]);
 		return _.map(nonExpiredPortals, savedPortal => {
-			const pos = derefCoords(savedPortal.c, roomName);
-			const destinationPos = getPosFromString(<string>savedPortal.dest)!;
+			const pos = unpackCoordAsPos(savedPortal.c, roomName);
+			const destinationPos = unpackPos(<string>savedPortal.dest)!;
 			const expiration = savedPortal[MEM.EXPIRATION];
 			return {pos: pos, destination: destinationPos, expiration: expiration};
 		});
 	}
 
 	/**
+	 * Returns information about intra-shard portals in a given room
+	 */
+	static getSourceInfo(roomName: string): SourceInfo[] | undefined {
+		if (!Memory.rooms[roomName] || !Memory.rooms[roomName][RMEM.SOURCES]) {
+			return;
+		}
+		return _.map(Memory.rooms[roomName][RMEM.SOURCES]!, savedSource => ({
+			pos         : unpackCoordAsPos(savedSource.c, roomName),
+			containerPos: savedSource.cn ? unpackCoordAsPos(savedSource.cn, roomName) : undefined
+		}));
+	}
+
+	/**
 	 * Unpackages saved information about a room's controller
 	 */
-	static retrieveControllerInfo(roomName: string): ControllerInfo | undefined {
+	static getControllerInfo(roomName: string): ControllerInfo | undefined {
 		if (!Memory.rooms[roomName] || !Memory.rooms[roomName][RMEM.CONTROLLER]) {
 			return;
 		}
 		const ctlr = Memory.rooms[roomName][RMEM.CONTROLLER]!;
 		return {
+			pos              : unpackCoordAsPos(ctlr.c, roomName),
 			level            : ctlr[RMEM_CTRL.LEVEL],
 			owner            : ctlr[RMEM_CTRL.OWNER],
 			reservation      : ctlr[RMEM_CTRL.RESERVATION] ? {
@@ -166,20 +231,20 @@ export class RoomIntel {
 		};
 	}
 
-	static retrieveImportantStructureInfo(roomName: string): ImportantStructureInfo | undefined {
+	static getImportantStructureInfo(roomName: string): ImportantStructureInfo | undefined {
 		if (!Memory.rooms[roomName] || !Memory.rooms[roomName][RMEM.IMPORTANT_STRUCTURES]) {
 			return;
 		}
 		const data = Memory.rooms[roomName][RMEM.IMPORTANT_STRUCTURES]!;
 		return {
 			storagePos      : data[RMEM_STRUCTS.STORAGE] ?
-							  derefCoords(data[RMEM_STRUCTS.STORAGE]!, roomName) : undefined,
+							  unpackCoordAsPos(data[RMEM_STRUCTS.STORAGE]!, roomName) : undefined,
 			terminalPos     : data[RMEM_STRUCTS.TERMINAL] ?
-							  derefCoords(data[RMEM_STRUCTS.TERMINAL]!, roomName) : undefined,
-			towerPositions  : _.map(data[RMEM_STRUCTS.TOWERS], obj => derefCoords(obj, roomName)),
-			spawnPositions  : _.map(data[RMEM_STRUCTS.TOWERS], obj => derefCoords(obj, roomName)),
-			wallPositions   : _.map(data[RMEM_STRUCTS.TOWERS], obj => derefCoords(obj, roomName)),
-			rampartPositions: _.map(data[RMEM_STRUCTS.TOWERS], obj => derefCoords(obj, roomName)),
+							  unpackCoordAsPos(data[RMEM_STRUCTS.TERMINAL]!, roomName) : undefined,
+			towerPositions  : unpackCoordListAsPosList(data[RMEM_STRUCTS.TOWERS], roomName),
+			spawnPositions  : unpackCoordListAsPosList(data[RMEM_STRUCTS.SPAWNS], roomName),
+			wallPositions   : unpackCoordListAsPosList(data[RMEM_STRUCTS.WALLS], roomName),
+			rampartPositions: unpackCoordListAsPosList(data[RMEM_STRUCTS.RAMPARTS], roomName),
 		};
 	}
 
@@ -187,7 +252,7 @@ export class RoomIntel {
 	/**
 	 * Retrieves all info for permanent room objects and returns it in a more readable/useful form
 	 */
-	static retrieveRoomObjectData(roomName: string): RoomInfo | undefined {
+	static getRoomObjectData(roomName: string): RoomInfo | undefined {
 		const mem = Memory.rooms[roomName];
 		if (mem) {
 			const savedController = mem[RMEM.CONTROLLER];
@@ -197,18 +262,18 @@ export class RoomIntel {
 			const savedImportantStructures = mem[RMEM.IMPORTANT_STRUCTURES];
 
 			const returnObject: RoomInfo = {
-				controller         : this.retrieveControllerInfo(roomName),
+				controller         : this.getControllerInfo(roomName),
 				portals            : this.getPortalInfo(roomName),
 				sources            : _.map(savedSources, src =>
-					src.cn ? {pos: derefCoords(src.c, roomName), containerPos: derefCoords(src.cn, roomName)}
-						   : {pos: derefCoords(src.c, roomName)}),
+					src.cn ? {pos: unpackCoordAsPos(src.c, roomName), containerPos: unpackCoordAsPos(src.cn, roomName)}
+						   : {pos: unpackCoordAsPos(src.c, roomName)}),
 				mineral            : savedMineral ? {
-					pos        : derefCoords(savedMineral.c, roomName),
+					pos        : unpackCoordAsPos(savedMineral.c, roomName),
 					mineralType: savedMineral[RMEM_MNRL.MINERALTYPE],
 					density    : savedMineral[RMEM_MNRL.DENSITY],
 				} : undefined,
-				skLairs            : _.map(savedSkLairs, lair => ({pos: derefCoords(lair.c, roomName)})),
-				importantStructures: this.retrieveImportantStructureInfo(roomName)
+				skLairs            : _.map(savedSkLairs, lair => ({pos: unpackCoordAsPos(lair.c, roomName)})),
+				importantStructures: this.getImportantStructureInfo(roomName)
 			};
 
 			return returnObject;
@@ -224,10 +289,10 @@ export class RoomIntel {
 		if (room.sources.length > 0) {
 			const savedSources: SavedSource[] = [];
 			for (const source of room.sources) {
-				const savedSource: SavedSource = {c: source.pos.coordName};
+				const savedSource: SavedSource = {c: packCoord(source.pos)};
 				const container = source.pos.findClosestByLimitedRange(room.containers, 2);
 				if (container) {
-					savedSource.cn = container.pos.coordName;
+					savedSource.cn = packCoord(container.pos);
 				}
 				savedSources.push(savedSource);
 			}
@@ -237,7 +302,7 @@ export class RoomIntel {
 		}
 		if (room.controller) {
 			room.memory[RMEM.CONTROLLER] = {
-				c                             : room.controller.pos.coordName,
+				c                             : packCoord(room.controller.pos),
 				[RMEM_CTRL.LEVEL]             : room.controller.level,
 				[RMEM_CTRL.OWNER]             : room.controller.owner ? room.controller.owner.username : undefined,
 				[RMEM_CTRL.RESERVATION]       : room.controller.reservation ?
@@ -256,7 +321,7 @@ export class RoomIntel {
 		}
 		if (room.mineral) {
 			room.memory[RMEM.MINERAL] = {
-				c                      : room.mineral.pos.coordName,
+				c                      : packCoord(room.mineral.pos),
 				[RMEM_MNRL.DENSITY]    : room.mineral.density,
 				[RMEM_MNRL.MINERALTYPE]: room.mineral.mineralType
 			};
@@ -264,9 +329,7 @@ export class RoomIntel {
 			delete room.memory[RMEM.MINERAL];
 		}
 		if (room.keeperLairs.length > 0) {
-			room.memory[RMEM.SKLAIRS] = _.map(room.keeperLairs, lair => {
-				return {c: lair.pos.coordName};
-			});
+			room.memory[RMEM.SKLAIRS] = _.map(room.keeperLairs, lair => ({c: packCoord(lair.pos)}));
 		} else {
 			delete room.memory[RMEM.SKLAIRS];
 		}
@@ -277,12 +340,12 @@ export class RoomIntel {
 	private static recordOwnedRoomStructures(room: Room) {
 		if (room.controller && room.controller.owner) {
 			room.memory[RMEM.IMPORTANT_STRUCTURES] = {
-				[RMEM_STRUCTS.TOWERS]  : _.map(room.towers, t => t.pos.coordName),
-				[RMEM_STRUCTS.SPAWNS]  : _.map(room.spawns, s => s.pos.coordName),
-				[RMEM_STRUCTS.STORAGE] : room.storage ? room.storage.pos.coordName : undefined,
-				[RMEM_STRUCTS.TERMINAL]: room.terminal ? room.terminal.pos.coordName : undefined,
-				[RMEM_STRUCTS.WALLS]   : _.map(room.walls, w => w.pos.coordName),
-				[RMEM_STRUCTS.RAMPARTS]: _.map(room.ramparts, r => r.pos.coordName),
+				[RMEM_STRUCTS.TOWERS]  : packCoordList(_.map(room.towers, t => t.pos)),
+				[RMEM_STRUCTS.SPAWNS]  : packCoordList(_.map(room.spawns, s => s.pos)),
+				[RMEM_STRUCTS.WALLS]   : packCoordList(_.map(room.walls, w => w.pos)),
+				[RMEM_STRUCTS.RAMPARTS]: packCoordList(_.map(room.ramparts, r => r.pos)),
+				[RMEM_STRUCTS.STORAGE] : room.storage ? packCoord(room.storage.pos) : undefined,
+				[RMEM_STRUCTS.TERMINAL]: room.terminal ? packCoord(room.terminal.pos) : undefined,
 			};
 		} else {
 			delete room.memory[RMEM.IMPORTANT_STRUCTURES];
@@ -292,14 +355,14 @@ export class RoomIntel {
 	private static recordPortalInfo(room: Room) {
 		if (room.portals.length > 0) {
 			room.memory[RMEM.PORTALS] = _.map(room.portals, portal => {
-				const dest = portal.destination instanceof RoomPosition ? portal.destination.name
+				const dest = portal.destination instanceof RoomPosition ? packPos(portal.destination)
 																		: portal.destination;
 				const expiration = portal.ticksToDecay != undefined ? Game.time + portal.ticksToDecay
 																	: Game.time + 1000000;
-				return {c: portal.pos.coordName, dest: dest, [MEM.EXPIRATION]: expiration};
+				return {c: packCoord(portal.pos), dest: dest, [MEM.EXPIRATION]: expiration};
 			});
 			const uniquePortals = _.unique(room.portals, portal =>
-				portal.destination instanceof RoomPosition ? portal.destination.name
+				portal.destination instanceof RoomPosition ? packPos(portal.destination)
 														   : portal.destination);
 			if (!this.memory.portalRooms.includes(room.name)) {
 				this.memory.portalRooms.push(room.name);
@@ -348,7 +411,7 @@ export class RoomIntel {
 	}
 
 	private static recomputeScoreIfNecessary(room: Room): boolean {
-		if (room.memory[RMEM.EXPANSION_DATA] == false) { // room is uninhabitable or owned
+		if (room.memory[RMEM.EXPANSION_DATA] === 0) { // room is uninhabitable or owned
 			if (Math.random() < FALSE_SCORE_RECALC_PROB) {
 				// false scores get evaluated very occasionally
 				return ExpansionEvaluator.computeExpansionData(room);
@@ -445,35 +508,40 @@ export class RoomIntel {
 	// }
 
 	/**
-	 * Get the pos a creep was in on the previous tick
+	 * Get the pos a creep was in on the previous tick, returning the same position as the creep if no data was
+	 * gathered on the previous tick.
 	 */
 	static getPreviousPos(creep: Creep | Zerg): RoomPosition {
-		if (creep.room.memory[RMEM.PREV_POSITIONS] && creep.room.memory[RMEM.PREV_POSITIONS]![creep.id]) {
-			return derefRoomPosition(creep.room.memory[RMEM.PREV_POSITIONS]![creep.id]);
-		} else {
-			return creep.pos; // no data
+		const prevPositions = creep.room.memory[RMEM.PREV_POSITIONS];
+		if (prevPositions) {
+			const packedId = packId(creep.id);
+			if (prevPositions[packedId]) {
+				return unpackCoordAsPos(prevPositions[packedId], creep.room.name);
+			}
 		}
+		return creep.pos; // no data
 	}
 
 	private static recordCreepPositions(room: Room): void {
-		room.memory[RMEM.PREV_POSITIONS] = {};
+		const positions: { [packedCreepId: string]: string } = {};
 		for (const creep of room.find(FIND_CREEPS)) {
-			room.memory[RMEM.PREV_POSITIONS]![creep.id] = creep.pos;
+			positions[packId(creep.id)] = packCoord(creep.pos);
 		}
+		room.memory[RMEM.PREV_POSITIONS] = {};
 	}
 
-	private static recordCreepOccupancies(room: Room): void {
-		if (!room.memory[RMEM.CREEPS_IN_ROOM]) {
-			room.memory[RMEM.CREEPS_IN_ROOM] = {};
-		}
-		const creepsInRoom = room.memory[RMEM.CREEPS_IN_ROOM]!;
-		for (const tick in creepsInRoom) {
-			if (parseInt(tick, 10) < Game.time - ROOM_CREEP_HISTORY_TICKS) {
-				delete creepsInRoom[tick];
-			}
-		}
-		creepsInRoom[Game.time] = _.map(room.hostiles, creep => creep.name);
-	}
+	// private static recordCreepOccupancies(room: Room): void {
+	// 	if (!room.memory[RMEM.CREEPS_IN_ROOM]) {
+	// 		room.memory[RMEM.CREEPS_IN_ROOM] = {};
+	// 	}
+	// 	const creepsInRoom = room.memory[RMEM.CREEPS_IN_ROOM]!;
+	// 	for (const tick in creepsInRoom) {
+	// 		if (parseInt(tick, 10) < Game.time - ROOM_CREEP_HISTORY_TICKS) {
+	// 			delete creepsInRoom[tick];
+	// 		}
+	// 	}
+	// 	creepsInRoom[Game.time] = _.map(room.hostiles, creep => creep.name);
+	// }
 
 
 	/**
@@ -779,9 +847,9 @@ export class RoomIntel {
 
 			// Record previous creep positions (RoomIntel.run() is executed at end of each tick)
 			this.recordCreepPositions(room);
-			if (room.my) {
-				this.recordCreepOccupancies(room);
-			}
+			// if (room.my) {
+			// 	this.recordCreepOccupancies(room);
+			// }
 
 			// Record location of permanent objects in room and recompute score as needed
 			if (Game.time >= (room.memory[MEM.EXPIRATION] || 0)) {

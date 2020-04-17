@@ -29,7 +29,7 @@ import {
 	ROOMTYPE_SOURCEKEEPER
 } from './utilities/Cartographer';
 import {p} from './utilities/random';
-import {canClaimAnotherRoom, derefCoords, getAllRooms, hasJustSpawned, minBy, onPublicServer} from './utilities/utils';
+import {canClaimAnotherRoom, getAllRooms, hasJustSpawned, minBy, onPublicServer} from './utilities/utils';
 import {MUON, MY_USERNAME, USE_TRY_CATCH} from './~settings';
 
 
@@ -355,12 +355,10 @@ export class Overseer implements IOverseer {
 			const possibleOutposts = this.computePossibleOutposts(colony);
 
 			const origin = colony.pos;
-			const bestOutpost = minBy(possibleOutposts, function(roomName) {
-				if (!Memory.rooms[roomName]) return false;
-				const sourceCoords = Memory.rooms[roomName][RMEM.SOURCES] as SavedSource[] | undefined;
-				if (!sourceCoords) return false;
-				const sourcePositions = _.map(sourceCoords, src => derefCoords(src.c, roomName));
-				const sourceDistances = _.map(sourcePositions, pos => Pathing.distance(origin, pos));
+			const bestOutpost = minBy(possibleOutposts, function(outpostName) {
+				const sourceInfo = RoomIntel.getSourceInfo(outpostName);
+				if (!sourceInfo) return false;
+				const sourceDistances = _.map(sourceInfo, src => Pathing.distance(origin, src.pos));
 				if (_.any(sourceDistances, dist => dist == undefined || dist > Colony.settings.maxSourceDistance)) {
 					return false;
 				}

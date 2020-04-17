@@ -53,7 +53,7 @@ export class DirectiveHarvest extends Directive {
 	// Hauling distance
 	get distance(): number {
 		if (!this.memory[_HARVEST_MEM_PATHING] || Game.time >= this.memory[_HARVEST_MEM_PATHING]![MEM.EXPIRATION]) {
-			const distance = Pathing.distance(this.colony.pos, this.pos);
+			const distance = Pathing.distance(this.colony.pos, this.pos) || Infinity;
 			const expiration = getCacheExpiration(this.colony.storage ? 5000 : 1000);
 			this.memory[_HARVEST_MEM_PATHING] = {
 				[MEM.DISTANCE]  : distance,

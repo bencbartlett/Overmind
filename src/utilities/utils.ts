@@ -170,25 +170,25 @@ export function mergeSum(objects: { [key: string]: number | undefined }[]): { [k
 	return ret;
 }
 
-export function coordName(coord: Coord): string {
-	return coord.x + ':' + coord.y;
-}
+// export function coordName(coord: Coord): string {
+// 	return coord.x + ':' + coord.y;
+// }
 
 const CHARCODE_A = 65;
 
 /**
  * Returns a compact two-character encoding of the coordinate
  */
-export function compactCoordName(coord: Coord): string {
-	return String.fromCharCode(CHARCODE_A + coord.x, CHARCODE_A + coord.y);
-}
+// export function compactCoordName(coord: Coord): string {
+// 	return String.fromCharCode(CHARCODE_A + coord.x, CHARCODE_A + coord.y);
+// }
+//
+// export function derefCoords(coordName: string, roomName: string): RoomPosition {
+// 	const [x, y] = coordName.split(':');
+// 	return new RoomPosition(parseInt(x, 10), parseInt(y, 10), roomName);
+// }
 
-export function derefCoords(coordName: string, roomName: string): RoomPosition {
-	const [x, y] = coordName.split(':');
-	return new RoomPosition(parseInt(x, 10), parseInt(y, 10), roomName);
-}
-
-export function getPosFromString(str: string | undefined | null): RoomPosition | undefined {
+export function posFromReadableName(str: string | undefined | null): RoomPosition | undefined {
 	if (!str) return;
 	const posName = _.first(str.match(/(E|W)\d+(N|S)\d+:\d+:\d+/g) || []);
 	if (posName) {

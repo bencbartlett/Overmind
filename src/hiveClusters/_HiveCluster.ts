@@ -17,11 +17,11 @@ export abstract class HiveCluster {
 	memory: any;						// Memory for the hive cluster; can be typecasted in child classes
 	overlord: Overlord | undefined;		// Overlord (singular) for the hive cluster if there is one
 
-	constructor(colony: Colony, instantiationObject: RoomObject, name: string, includePos = false) {
+	constructor(colony: Colony, instantiationObject: RoomObject, name: string) {
 		this.colony = colony;
 		this.room = instantiationObject.room!;
 		this.pos = instantiationObject.pos;
-		this.ref = includePos ? name + '@' + instantiationObject.pos.name : name + '@' + this.colony.name;
+		this.ref = name + '@' + this.colony.name;
 		this.colony.hiveClusters.push(this);
 	}
 

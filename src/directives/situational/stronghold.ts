@@ -1,7 +1,7 @@
 import {log} from '../../console/log';
 import {StrongholdOverlord} from '../../overlords/situational/stronghold';
 import {profile} from '../../profiler/decorator';
-import {getCacheExpiration, getPosFromString} from '../../utilities/utils';
+import {getCacheExpiration} from '../../utilities/utils';
 import {Visualizer} from '../../visuals/Visualizer';
 import {Directive} from '../Directive';
 import {DirectiveHaul} from '../resource/haul';
@@ -29,24 +29,20 @@ interface DirectiveStrongholdMemory extends FlagMemory {
 	 */
 	state: number;
 	strongholdLevel: number;
-	target?: {
-		id: Id<Creep | Structure>;
-		exp: number;
-	};
 	// target : {
 	// 	id?:
 	// 	ref : string,
 	// 	_pos: string,
 	// }
-	targetId?: string;
-	attackingPosition?: string;
+	// targetId?: string;
+	// attackingPosition?: string;
 	totalResources?: number;
 	waveCount: number; // Count each attempt, if it fails after 6 attempts stop trying
 }
 
 
 /**
- * PowerMining directive: kills power banks and collects the resources.
+ * Stronghold directive contributed by @Davaned
  */
 @profile
 export class DirectiveStronghold extends Directive {
@@ -79,17 +75,17 @@ export class DirectiveStronghold extends Directive {
 	}
 
 	get core(): StructureInvaderCore | undefined {
-		if (this.pos.room) {
-			return <StructureInvaderCore>this._core || this.pos.room.find(FIND_HOSTILE_STRUCTURES)
+		if (this.room) {
+			return <StructureInvaderCore>this._core || this.room.find(FIND_HOSTILE_STRUCTURES)
 														   .filter(struct => struct.structureType == STRUCTURE_INVADER_CORE)[0];
 		}
 	}
 
 	getResourcePickupLocations() {
-		if (!!this.pos.room) {
+		if (this.room) {
 			let returns: (StructureContainer | Ruin)[] = [];
-			const containers = this.pos.room.containers;
-			const ruins = this.pos.room.ruins;
+			const containers = this.room.containers;
+			const ruins = this.room.ruins;
 			if (containers) {
 				returns = returns.concat(containers.filter(container =>
 															   container.pos.getRangeTo(this.pos) < 5 && _.sum(container.store) > 0));
@@ -98,25 +94,6 @@ export class DirectiveStronghold extends Directive {
 				returns = returns.concat(ruins.filter(ruin => ruin.pos.getRangeTo(this.pos) <= 3 && _.sum(ruin.store) > 0));
 			}
 			return returns;
-		}
-	}
-
-	get target(): Creep | Structure | undefined {
-		if (this.memory.target && this.memory.target.exp > Game.time) {
-			const target = Game.getObjectById(this.memory.target.id);
-			if (target) {
-				return target as Creep | Structure;
-			}
-		}
-		// If nothing found
-		delete this.memory.target;
-	}
-
-	set target(targ: Creep | Structure | undefined) {
-		if (targ) {
-			this.memory.target = {id: targ.id, exp: getCacheExpiration(3000)};
-		} else {
-			delete this.memory.target;
 		}
 	}
 
@@ -235,18 +212,7 @@ export class DirectiveStronghold extends Directive {
 		if (this.colony.commandCenter && this.colony.commandCenter.observer) {
 			this.colony.commandCenter.requestRoomObservation(this.pos.roomName);
 		}
-		if (this.memory.attackingPosition) {
-			const attackPos = getPosFromString(this.memory.attackingPosition);
-			if (!!attackPos) {
-				Visualizer.marker(attackPos, 'white');
-			}
-		}
-		if (this.memory.target && Game.getObjectById(this.memory.target.id)) {
-			const target = Game.getObjectById(this.memory.target.id) as RoomObject;
-			if (target) {
-				Visualizer.marker(target.pos, 'black');
-			}
-		}
+
 
 		const duration = Game.time - (this.memory[MEM.TICK] || Game.time);
 		if (duration % 50000 == 0) {

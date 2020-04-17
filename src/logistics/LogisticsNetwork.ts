@@ -508,7 +508,7 @@ export class LogisticsNetwork {
 			for (const buffer of this.buffers) {
 				const dQ_buffer = Math.min(amount, transporter.carryCapacity, buffer.store[request.resourceType] || 0);
 				const dt_buffer = newPos.getMultiRoomRangeTo(buffer.pos) * LogisticsNetwork.settings.rangeToPathHeuristic
-								  + Pathing.distance(buffer.pos, request.target.pos) + ticksUntilFree;
+								  + (Pathing.distance(buffer.pos, request.target.pos) || Infinity) + ticksUntilFree;
 				choices.push({
 								 dQ       : dQ_buffer,
 								 dt       : dt_buffer,
@@ -534,7 +534,7 @@ export class LogisticsNetwork {
 				const dQ_buffer = Math.min(Math.abs(amount), transporter.carryCapacity,
 										   buffer.storeCapacity - _.sum(buffer.store));
 				const dt_buffer = newPos.getMultiRoomRangeTo(buffer.pos) * LogisticsNetwork.settings.rangeToPathHeuristic
-								  + Pathing.distance(buffer.pos, request.target.pos) + ticksUntilFree;
+								  + (Pathing.distance(buffer.pos, request.target.pos) || Infinity) + ticksUntilFree;
 				choices.push({
 								 dQ       : dQ_buffer,
 								 dt       : dt_buffer,

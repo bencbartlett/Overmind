@@ -4,12 +4,14 @@ import {log} from '../console/log';
 import {Mem} from '../memory/Memory';
 import {MatrixTypes, Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
-import {getCacheExpiration, getPosFromString, onPublicServer} from '../utilities/utils';
+import {packCoord, packCoordList, unpackCoordListAsPosList} from '../utilities/packrat';
+import {getCacheExpiration, onPublicServer, posFromReadableName} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {RoomPlanner} from './RoomPlanner';
 
 export interface RoadPlannerMemory {
-	roadLookup: { [roomName: string]: { [roadCoordName: string]: boolean } };
+	roadCoordsPacked: { [roomName: string]: string };
+	// roadLookup: { [roomName: string]: { [roadCoordName: string]: boolean } };
 	roadCoverage: number;
 	roadCoverages: {
 		[destination: string]: {
@@ -26,7 +28,7 @@ const ROAD_PLANNER_TUNNEL_COST = 15 * ROAD_PLANNER_PLAIN_COST;
 const EXISTING_PATH_COST = ROAD_PLANNER_PLAIN_COST - 1;
 
 const memoryDefaults: RoadPlannerMemory = {
-	roadLookup   : {},
+	roadCoordsPacked: {},
 	roadCoverage : 0.0,
 	roadCoverages: {}
 };
@@ -34,11 +36,12 @@ const memoryDefaults: RoadPlannerMemory = {
 @profile
 export class RoadPlanner {
 
-	roomPlanner: RoomPlanner;
-	colony: Colony;
-	memory: RoadPlannerMemory;
-	roadPositions: RoomPosition[];
-	costMatrices: { [roomName: string]: CostMatrix };
+	private roomPlanner: RoomPlanner;
+	private colony: Colony;
+	private memory: RoadPlannerMemory;
+	private roadPositions: RoomPosition[];
+	private costMatrices: { [roomName: string]: CostMatrix };
+	private _roadLookup: ((pos: RoomPosition) => boolean) | undefined;
 
 	static settings = {
 		encourageRoadMerging          : true,
@@ -69,9 +72,9 @@ export class RoadPlanner {
 		// Compute coverage for each path
 		for (const destination of this.colony.destinations) {
 
-			const destName = destination.pos.name;
+			const destName = destination.pos.readableName;
 
-			if (!!this.memory.roadLookup[destination.pos.roomName]) {
+			if (!!this.memory.roadCoordsPacked[destination.pos.roomName]) {
 
 				if (!this.memory.roadCoverages[destName] || Game.time > this.memory.roadCoverages[destName].exp) {
 
@@ -116,7 +119,7 @@ export class RoadPlanner {
 		let totalRoadCount = 0;
 		let totalPathLength = 0;
 		for (const destName in this.memory.roadCoverages) {
-			const destPos = getPosFromString(destName)!;
+			const destPos = posFromReadableName(destName)!;
 			if (ignoreInactiveRooms && !this.colony.isRoomActive(destPos.roomName)) {
 				continue;
 			}
@@ -300,11 +303,10 @@ export class RoadPlanner {
 			}
 		}
 		const allRoadPos: RoomPosition[] = _.compact(this.roadPositions.concat(roomPlannerRoads));
-		// Encode the coordinates of the road as keys in a truthy hash table for fast lookup
-		this.memory.roadLookup = {};
-		for (const pos of allRoadPos) {
-			if (!this.memory.roadLookup[pos.roomName]) this.memory.roadLookup[pos.roomName] = {};
-			this.memory.roadLookup[pos.roomName][pos.coordName] = true;
+		const allRoadPosByRoomName = _.groupBy(allRoadPos, pos => pos.roomName);
+		this.memory.roadCoordsPacked = {};
+		for (const roomName in allRoadPos) {
+			this.memory.roadCoordsPacked[roomName] = packCoordList(allRoadPosByRoomName[roomName]);
 		}
 	}
 
@@ -329,12 +331,10 @@ export class RoadPlanner {
 		// Max buildings that can be placed each tick
 		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
 		// Build missing roads
-		let roadPositions = [];
-		for (const roomName in this.memory.roadLookup) {
-			for (const coords of _.keys(this.memory.roadLookup[roomName])) {
-				const [x, y] = coords.split(':');
-				roadPositions.push(new RoomPosition(parseInt(x, 10), parseInt(y, 10), roomName));
-			}
+		let roadPositions: RoomPosition[] = [];
+		for (const roomName in this.memory.roadCoordsPacked) {
+			roadPositions = roadPositions.concat(
+				unpackCoordListAsPosList(this.memory.roadCoordsPacked[roomName], roomName));
 		}
 		const origin = (this.colony.storage || this.colony.hatchery || this.colony).pos;
 		roadPositions = _.sortBy(roadPositions, pos => pos.getMultiRoomRangeTo(origin));
@@ -350,13 +350,15 @@ export class RoadPlanner {
 		}
 	}
 
-	/* Quick lookup for if a road should be in this position. Roads returning false won't be maintained. */
+	/**
+	 * Quick lookup for if a road should be in this position. Roads returning false won't be maintained.
+	 */
 	roadShouldBeHere(pos: RoomPosition): boolean {
-		// Initial migration code, can delete later
-		if (this.memory.roadLookup[pos.roomName]) {
-			return this.memory.roadLookup[pos.roomName][pos.coordName];
+		if (this._roadLookup == undefined) {
+			this._roadLookup = _.memoize((p: RoomPosition) =>
+												this.memory.roadCoordsPacked[p.roomName].includes(packCoord(p)));
 		}
-		return false;
+		return this._roadLookup(pos);
 	}
 
 	/* Clean up leftover road coverage locations from remotes that aren't mined or old structures */

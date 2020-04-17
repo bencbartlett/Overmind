@@ -143,13 +143,15 @@ interface RoomPosition {
 	print: string;
 	printPlain: string;
 	room: Room | undefined;
-	name: string;
-	coordName: string;
+	readableName: string;
+	// coordName: string;
 	isEdge: boolean;
 	isVisible: boolean;
 	rangeToEdge: number;
 	roomCoords: Coord;
 	neighbors: RoomPosition[];
+
+	toCoord(): Coord;
 
 	inRangeToPos(pos: RoomPosition, range: number): boolean;
 

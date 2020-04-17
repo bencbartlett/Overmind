@@ -3,6 +3,7 @@ import {DirectivePoisonRoom} from '../../directives/colony/poisonRoom';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
+import {packPos} from '../../utilities/packrat';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 
@@ -30,7 +31,8 @@ export class RoomPoisonerOverlord extends Overlord {
 		// Re-compute the list of positions to block
 		if (this.room) {
 			const thingsToBlock = _.compact([this.room.controller, ...this.room.sources]) as RoomObject[];
-			const neighborTiles = _.unique(_.flatten(_.map(thingsToBlock, obj => obj.pos.neighbors)), pos => pos.name);
+			const neighborTiles = _.unique(_.flatten(_.map(thingsToBlock, obj => obj.pos.neighbors)),
+										   pos => packPos(pos));
 			this.blockPositions = _.filter(neighborTiles, pos => pos.isWalkable(true));
 		} else {
 			this.blockPositions = [];

@@ -4,6 +4,7 @@ import {hasPos} from '../declarations/typeGuards';
 import {PortalInfo, RoomIntel} from '../intel/RoomIntel';
 import {profile} from '../profiler/decorator';
 import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
+import {packPos} from '../utilities/packrat';
 import {isAlly, minBy} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {AnyZerg} from '../zerg/AnyZerg';
@@ -72,7 +73,7 @@ export const getDefaultPathOptions: () => PathOptions = () => ({
 	ignoreCreeps        : true,
 	maxOps              : DEFAULT_MAXOPS,
 	maxRooms            : 20,
-	avoidSK             : true,
+	avoidSK             : false,
 	allowPortals        : true,
 	usePortalThreshold  : 10,
 	portalsMustBeInRange: 6,
@@ -586,7 +587,7 @@ export class Pathing {
 		}
 		// Hm, we haven't found any previously cached matrices; let's see if we can get stuff from room intel
 		if (!matrix) {
-			const roomInfo = RoomIntel.retrieveRoomObjectData(roomName);
+			const roomInfo = RoomIntel.getRoomObjectData(roomName);
 			if (roomInfo) {
 				// Cool let's set walkability based on what we remember
 				matrix = new PathFinder.CostMatrix();
@@ -1141,19 +1142,19 @@ export class Pathing {
 		return new RoomPosition(x, y, origin.roomName);
 	}
 
-	static savePath(path: RoomPosition[]): void {
-		const savedPath: CachedPath = {
-			path  : path,
-			length: path.length,
-			tick  : Game.time
-		};
-		const originName = _.first(path).name;
-		const destinationName = _.last(path).name;
-		if (!Memory.pathing.paths[originName]) {
-			Memory.pathing.paths[originName] = {};
-		}
-		Memory.pathing.paths[originName][destinationName] = savedPath;
-	}
+	// static savePath(path: RoomPosition[]): void {
+	// 	const savedPath: CachedPath = {
+	// 		path  : path,
+	// 		length: path.length,
+	// 		tick  : Game.time
+	// 	};
+	// 	const originName = _.first(path).name;
+	// 	const destinationName = _.last(path).name;
+	// 	if (!Memory.pathing.paths[originName]) {
+	// 		Memory.pathing.paths[originName] = {};
+	// 	}
+	// 	Memory.pathing.paths[originName][destinationName] = savedPath;
+	// }
 
 	// Distance and path weight calculations ===========================================================================
 
@@ -1161,8 +1162,8 @@ export class Pathing {
 	 * Calculate and/or cache the length of the shortest path between two points.
 	 * Cache is probabilistically cleared in Mem
 	 */
-	static distance(pos1: RoomPosition, pos2: RoomPosition): number {
-		const [name1, name2] = [pos1.name, pos2.name].sort(); // alphabetize since path is the same in either direction
+	static distance(pos1: RoomPosition, pos2: RoomPosition): number | undefined {
+		const [name1, name2] = [packPos(pos1), packPos(pos2)].sort(); // path length is the same in either direction
 		if (!Memory.pathing.distances[name1]) {
 			Memory.pathing.distances[name1] = {};
 		}
@@ -1170,57 +1171,52 @@ export class Pathing {
 			const ret = this.findPath(pos1, pos2);
 			if (!ret.incomplete) {
 				Memory.pathing.distances[name1][name2] = ret.path.length;
+			} else {
+				log.error(`PATHING: could not compute distance from ${pos1.print} to ${pos2.print}!`);
 			}
 		}
 		return Memory.pathing.distances[name1][name2];
 	}
 
-	static calculatePathWeight(startPos: RoomPosition, endPos: RoomPosition, options: MoveOptions = {}): number {
-		_.defaults(options, {
-			range: 1,
-		});
-		const ret = this.findPath(startPos, endPos, options);
-		let weight = 0;
-		for (const pos of ret.path) {
-			if (!pos.room) { // If you don't have vision, assume there are roads
-				weight += 1;
-			} else {
-				if (pos.lookForStructure(STRUCTURE_ROAD)) {
-					weight += 1;
-				} else {
-					const terrain = pos.lookFor(LOOK_TERRAIN)[0];
-					if (terrain == 'plain') {
-						weight += 2;
-					} else if (terrain == 'swamp') {
-						weight += 10;
-					}
-				}
-			}
-		}
-		return weight;
-	}
+	// static calculatePathWeight(startPos: RoomPosition, endPos: RoomPosition, options: MoveOptions = {}): number {
+	// 	_.defaults(options, {
+	// 		range: 1,
+	// 	});
+	// 	const ret = this.findPath(startPos, endPos, options);
+	// 	let weight = 0;
+	// 	for (const pos of ret.path) {
+	// 		if (!pos.room) { // If you don't have vision, assume there are roads
+	// 			weight += 1;
+	// 		} else {
+	// 			if (pos.lookForStructure(STRUCTURE_ROAD)) {
+	// 				weight += 1;
+	// 			} else {
+	// 				const terrain = pos.lookFor(LOOK_TERRAIN)[0];
+	// 				if (terrain == 'plain') {
+	// 					weight += 2;
+	// 				} else if (terrain == 'swamp') {
+	// 					weight += 10;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// 	return weight;
+	// }
 
-	/**
-	 * Calculates and/or caches the weighted distance for the most efficient path. Weight is sum of tile weights:
-	 * Road = 1, Plain = 2, Swamp = 10. Cached weights are cleared in Mem occasionally.
-	 */
-	static weightedDistance(arg1: RoomPosition, arg2: RoomPosition): number {
-		let pos1, pos2: RoomPosition;
-		if (arg1.name < arg2.name) { // alphabetize since path lengths are the same either direction
-			pos1 = arg1;
-			pos2 = arg2;
-		} else {
-			pos1 = arg2;
-			pos2 = arg1;
-		}
-		if (!Memory.pathing.weightedDistances[pos1.name]) {
-			Memory.pathing.weightedDistances[pos1.name] = {};
-		}
-		if (!Memory.pathing.weightedDistances[pos1.name][pos2.name]) {
-			Memory.pathing.weightedDistances[pos1.name][pos2.name] = this.calculatePathWeight(pos1, pos2);
-		}
-		return Memory.pathing.weightedDistances[pos1.name][pos2.name];
-	}
+	// /**
+	//  * Calculates and/or caches the weighted distance for the most efficient path. Weight is sum of tile weights:
+	//  * Road = 1, Plain = 2, Swamp = 10. Cached weights are cleared in Mem occasionally.
+	//  */
+	// static weightedDistance(arg1: RoomPosition, arg2: RoomPosition): number {
+	// 	const [pos1, pos2] = _.sortBy([arg1, arg2], pos => packPos(pos)); // alphabetize since path lengths are the same
+	// 	if (!Memory.pathing.weightedDistances[pos1.name]) {
+	// 		Memory.pathing.weightedDistances[pos1.name] = {};
+	// 	}
+	// 	if (!Memory.pathing.weightedDistances[pos1.name][pos2.name]) {
+	// 		Memory.pathing.weightedDistances[pos1.name][pos2.name] = this.calculatePathWeight(pos1, pos2);
+	// 	}
+	// 	return Memory.pathing.weightedDistances[pos1.name][pos2.name];
+	// }
 
 	/**
 	 * Whether another object in the same room can be reached from the current position.

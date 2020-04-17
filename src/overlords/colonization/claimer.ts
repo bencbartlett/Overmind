@@ -56,10 +56,7 @@ export class ClaimingOverlord extends Overlord {
 				claimer.task = Tasks.claim(this.room.controller!);
 			}
 		} else {
-			claimer.goTo(this.pos, {
-				waypoints: this.directive.waypoints,
-				pathOpts : {ensurePath: true, avoidSK: true}
-			});
+			claimer.goTo(this.pos, {pathOpts : {ensurePath: true, avoidSK: true}});
 		}
 	}
 

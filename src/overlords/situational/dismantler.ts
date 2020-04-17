@@ -46,7 +46,7 @@ export class DismantleOverlord extends Overlord {
 		const dismantlingPower = dismantlingParts * (!!this.directive.memory.attackInsteadOfDismantle
 													 ? ATTACK_POWER : DISMANTLE_POWER);
 		// Calculate total needed amount of dismantling power as (resource amount * trip distance)
-		const tripDistance = Pathing.distance((this.colony).pos, this.directive.pos);
+		const tripDistance = Pathing.distance((this.colony).pos, this.directive.pos) || 0;
 		const dismantleLifetimePower = (CREEP_LIFE_TIME - tripDistance) * dismantlingPower;
 		// Calculate number of dismantlers
 		if (this.directive.room && this.target && !this.directive.memory.numberSpots) {

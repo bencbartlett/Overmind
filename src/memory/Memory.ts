@@ -361,18 +361,18 @@ export class Mem {
 				}
 			}
 
-			// Randomly clear weighted distances
-			for (const pos1Name in Memory.pathing.weightedDistances) {
-				if (_.isEmpty(Memory.pathing.weightedDistances[pos1Name])) {
-					delete Memory.pathing.weightedDistances[pos1Name];
-				} else {
-					for (const pos2Name in Memory.pathing.weightedDistances[pos1Name]) {
-						if (Math.random() < weightedDistanceCleanProbability) {
-							delete Memory.pathing.weightedDistances[pos1Name][pos2Name];
-						}
-					}
-				}
-			}
+			// // Randomly clear weighted distances
+			// for (const pos1Name in Memory.pathing.weightedDistances) {
+			// 	if (_.isEmpty(Memory.pathing.weightedDistances[pos1Name])) {
+			// 		delete Memory.pathing.weightedDistances[pos1Name];
+			// 	} else {
+			// 		for (const pos2Name in Memory.pathing.weightedDistances[pos1Name]) {
+			// 			if (Math.random() < weightedDistanceCleanProbability) {
+			// 				delete Memory.pathing.weightedDistances[pos1Name][pos2Name];
+			// 			}
+			// 		}
+			// 	}
+			// }
 		}
 	}
 

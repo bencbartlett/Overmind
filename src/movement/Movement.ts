@@ -4,7 +4,6 @@ import {isAnyZerg, isPowerZerg, isStandardZerg} from '../declarations/typeGuards
 import {profile} from '../profiler/decorator';
 import {insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {rightArrow} from '../utilities/stringConstants';
-import {getPosFromString} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {AnyZerg, normalizeAnyZerg} from '../zerg/AnyZerg';
 import {Swarm} from '../zerg/Swarm';
@@ -71,7 +70,7 @@ export interface MoveOptions {
 	noPush?: boolean;							// whether to ignore pushing behavior
 	// modifyRoomCallback?: (r: Room, m: CostMatrix) => CostMatrix; // modifications to default cost matrix calculations
 	// allowPortals?: boolean;
-	waypoints?: RoomPosition[];					// list of waypoints to visit on the way to target
+	// waypoints?: RoomPosition[];					// list of waypoints to visit on the way to target
 	pathOpts?: PathOptions;
 }
 
@@ -164,11 +163,11 @@ export class Movement {
 
 		// set destination according to waypoint specifications; finalDestination is the true destination
 		destination = normalizePos(destination);
-		const finalDestination = destination;
+		// const finalDestination = destination;
 
-		if (opts.waypoints) {
-			destination = this.getDestination(destination, opts.waypoints, moveData);
-		}
+		// if (opts.waypoints) {
+		// 	destination = this.getDestination(destination, opts.waypoints, moveData);
+		// }
 
 		Pathing.updateRoomStatus(creep.room);
 
@@ -180,21 +179,20 @@ export class Movement {
 		// manage case where creep is nearby destination
 		const rangeToDestination = creep.pos.getRangeTo(destination);
 		if (opts.range != undefined && rangeToDestination <= opts.range) {
-			if (destination.isEqualTo(finalDestination)) {
-				delete creep.memory._go;
-				return NO_ACTION;
-			} else {
-				// debug
-				console.log(`Destination ${destination} not equal to final destination ${finalDestination}!`);
-				if (!moveData.waypointsVisited) {
-					moveData.waypointsVisited = [];
-				}
-				moveData.waypointsVisited.push(destination.name);
-
-				// call goTo again to path to the final destination
-				return this.goTo(creep, finalDestination, opts);
-			}
-
+			// if (destination.isEqualTo(finalDestination)) {
+			delete creep.memory._go;
+			return NO_ACTION;
+			// } else {
+			// 	// debug
+			// 	console.log(`Destination ${destination} not equal to final destination ${finalDestination}!`);
+			// 	if (!moveData.waypointsVisited) {
+			// 		moveData.waypointsVisited = [];
+			// 	}
+			// 	moveData.waypointsVisited.push(destination.name);
+			//
+			// 	// call goTo again to path to the final destination
+			// 	return this.goTo(creep, finalDestination, opts);
+			// }
 		} else if (rangeToDestination <= 1) {
 			// move onto destination
 			if (rangeToDestination == 1 && !opts.range) {
@@ -210,16 +208,16 @@ export class Movement {
 			}
 		}
 
-		// traverse through a portal waypoint or check that has just been traversed
-		if (opts.waypoints && !destination.isEqualTo(finalDestination) && (moveData.portaling == true
-																		   || creep.pos.getRangeTo(destination) < 2)) {
-			const portalTraversed = this.traversePortalWaypoint(creep, destination);
-			if (portalTraversed) {
-				return this.goTo(creep, finalDestination, opts);
-			} else {
-				return CROSSING_PORTAL;
-			}
-		}
+		// // traverse through a portal waypoint or check that has just been traversed
+		// if (opts.waypoints && !destination.isEqualTo(finalDestination) && (moveData.portaling == true
+		// 																   || creep.pos.getRangeTo(destination) < 2)) {
+		// 	const portalTraversed = this.traversePortalWaypoint(creep, destination);
+		// 	if (portalTraversed) {
+		// 		return this.goTo(creep, finalDestination, opts);
+		// 	} else {
+		// 		return CROSSING_PORTAL;
+		// 	}
+		// }
 
 		// handle delay
 		if (moveData.delay != undefined) {
@@ -369,84 +367,84 @@ export class Movement {
 		return creep.move(nextDirection, !!opts.force);
 	}
 
-	/**
-	 * Gets the effective destination based on the waypoints to travel over and the creep.memory._go object.
-	 * Finds the next waypoint which has not been marked as visited in moveData.
-	 */
-	private static getDestination(destination: RoomPosition, waypoints: RoomPosition[],
-								  moveData: MoveData): RoomPosition {
+	// /**
+	//  * Gets the effective destination based on the waypoints to travel over and the creep.memory._go object.
+	//  * Finds the next waypoint which has not been marked as visited in moveData.
+	//  */
+	// private static getDestination(destination: RoomPosition, waypoints: RoomPosition[],
+	// 							  moveData: MoveData): RoomPosition {
+	//
+	// 	const waypointsVisited = _.compact(_.map(moveData.waypointsVisited || [],
+	// 											 posName => getPosFromString(posName))) as RoomPosition[];
+	// 	const nextWaypoint = _.find(waypoints, waypoint => !_.any(waypointsVisited,
+	// 															  visited => waypoint.isEqualTo(visited)));
+	//
+	// 	if (nextWaypoint) {
+	// 		return nextWaypoint;
+	// 	} else {
+	// 		return destination;
+	// 	}
+	//
+	// }
 
-		const waypointsVisited = _.compact(_.map(moveData.waypointsVisited || [],
-												 posName => getPosFromString(posName))) as RoomPosition[];
-		const nextWaypoint = _.find(waypoints, waypoint => !_.any(waypointsVisited,
-																  visited => waypoint.isEqualTo(visited)));
+	// /**
+	//  * Navigate a creep through a portal
+	//  */
+	// private static traversePortalWaypoint(creep: AnyZerg, portalPos: RoomPosition): boolean {
+	// 	if (creep.pos.roomName == portalPos.roomName && creep.pos.getRangeTo(portalPos) > 1) {
+	// 		log.error(`Movement.travelPortalWaypoint() should only be called in range 1 of portal!`);
+	// 	}
+	//
+	// 	const moveData = creep.memory._go || {} as MoveData;
+	//
+	// 	if (portalPos.room && !portalPos.lookForStructure(STRUCTURE_PORTAL)) {
+	// 		log.error(`Portal not found at ${portalPos.print}!`);
+	// 		return false;
+	// 	}
+	//
+	// 	moveData.portaling = true;
+	// 	const crossed = this.crossPortal(creep, portalPos);
+	//
+	// 	if (crossed) {
+	// 		moveData.portaling = false;
+	// 		if (!moveData.waypointsVisited) {
+	// 			moveData.waypointsVisited = [];
+	// 		}
+	// 		moveData.waypointsVisited.push(portalPos.name);
+	//
+	// 		return true; // done crossing portal
+	// 	} else {
+	// 		return false; // still trying to cross portal
+	// 	}
+	//
+	// }
 
-		if (nextWaypoint) {
-			return nextWaypoint;
-		} else {
-			return destination;
-		}
-
-	}
-
-	/**
-	 * Navigate a creep through a portal
-	 */
-	private static traversePortalWaypoint(creep: AnyZerg, portalPos: RoomPosition): boolean {
-		if (creep.pos.roomName == portalPos.roomName && creep.pos.getRangeTo(portalPos) > 1) {
-			log.error(`Movement.travelPortalWaypoint() should only be called in range 1 of portal!`);
-		}
-
-		const moveData = creep.memory._go || {} as MoveData;
-
-		if (portalPos.room && !portalPos.lookForStructure(STRUCTURE_PORTAL)) {
-			log.error(`Portal not found at ${portalPos.print}!`);
-			return false;
-		}
-
-		moveData.portaling = true;
-		const crossed = this.crossPortal(creep, portalPos);
-
-		if (crossed) {
-			moveData.portaling = false;
-			if (!moveData.waypointsVisited) {
-				moveData.waypointsVisited = [];
-			}
-			moveData.waypointsVisited.push(portalPos.name);
-
-			return true; // done crossing portal
-		} else {
-			return false; // still trying to cross portal
-		}
-
-	}
-
-	/**
-	 * Cross a portal that is within range 1 and then step off of the exit portal. Returns true when creep is on the
-	 * other side of the portal and no longer standing on a portal.
-	 */
-	private static crossPortal(creep: AnyZerg, portalPos: RoomPosition): boolean {
-		if (Game.map.getRoomLinearDistance(creep.pos.roomName, portalPos.roomName) > 5) {
-			// if you're on the other side of the portal
-			const creepOnPortal = !!creep.pos.lookForStructure(STRUCTURE_PORTAL);
-			if (!creepOnPortal) {
-				return true;
-			} else {
-				creep.moveOffCurrentPos();
-				return false;
-			}
-			// console.log(agent.name + " waiting on other side");
-		} else {
-			if (creep.pos.getRangeTo(portalPos) > 1) {
-				log.error(`Movement.crossPortal() should only be called in range 1 of portal!`);
-			} else {
-				const dir = creep.pos.getDirectionTo(portalPos);
-				creep.move(dir);
-			}
-			// console.log(agent.name + " traveling to waypoint");
-			return false;
-		}
-	}
+	// /**
+	//  * Cross a portal that is within range 1 and then step off of the exit portal. Returns true when creep is on the
+	//  * other side of the portal and no longer standing on a portal.
+	//  */
+	// private static crossPortal(creep: AnyZerg, portalPos: RoomPosition): boolean {
+	// 	if (Game.map.getRoomLinearDistance(creep.pos.roomName, portalPos.roomName) > 5) {
+	// 		// if you're on the other side of the portal
+	// 		const creepOnPortal = !!creep.pos.lookForStructure(STRUCTURE_PORTAL);
+	// 		if (!creepOnPortal) {
+	// 			return true;
+	// 		} else {
+	// 			creep.moveOffCurrentPos();
+	// 			return false;
+	// 		}
+	// 		// console.log(agent.name + " waiting on other side");
+	// 	} else {
+	// 		if (creep.pos.getRangeTo(portalPos) > 1) {
+	// 			log.error(`Movement.crossPortal() should only be called in range 1 of portal!`);
+	// 		} else {
+	// 			const dir = creep.pos.getDirectionTo(portalPos);
+	// 			creep.move(dir);
+	// 		}
+	// 		// console.log(agent.name + " traveling to waypoint");
+	// 		return false;
+	// 	}
+	// }
 
 	private static getPushPriority(creep: AnyCreep | AnyZerg): number {
 		if (!creep.memory) return MovePriorities.default;

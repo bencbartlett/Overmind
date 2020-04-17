@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
-NOTE: This release of Overmind now requires Node 10+ to deploy.
+NOTE: This release of Overmind now requires Node 10+ to deploy. You will need to check `node --version` to verify that you have at least 10.0, then you need to run `npm install` to update several key deployment packages.
 
 ### Added
 - Added a remote upgrading directive and overlord: will spawn haulers and upgraders to quickly upgrade a far-away room and integrates with the new portal code. Carriers will also haul valuable resources from un-owned store structures on their return trip to the parent colony.

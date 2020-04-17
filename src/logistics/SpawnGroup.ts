@@ -124,7 +124,7 @@ export class SpawnGroup {
 								   colony => maxColonyLevel - colony.level <= this.settings.maxLevelDifference);
 
 		const colonyNames = [] as string[];
-		const routes = {} as { [colonyName: string]: { [roomName: string]: boolean } };
+		// const routes = {} as { [colonyName: string]: { [roomName: string]: boolean } };
 		// let paths = {} as { [colonyName: string]: { startPos: RoomPosition, path: string[] } };
 		const distances = {} as { [colonyName: string]: number };
 		for (const colony of coloniesInRange) {

@@ -2,7 +2,8 @@ import {distanceTransform} from '../algorithms/distanceTransform';
 import {Colony} from '../Colony';
 import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
-import {coordName, minBy} from '../utilities/utils';
+import {packCoord} from '../utilities/packrat';
+import {minBy} from '../utilities/utils';
 import {allBunkerCoords, BUNKER_RADIUS, bunkerCoordLookup, bunkerLayout} from './layouts/bunker';
 
 const MAX_SAMPLE = 10;
@@ -103,7 +104,7 @@ export class BasePlanner {
 		let x, y: number;
 		for (x of _.range(obstacle.x + dx - padding, obstacle.x + dx + padding + 1)) {
 			for (y of _.range(obstacle.y + dy - padding, obstacle.y + dy + padding + 1)) {
-				if (bunkerCoordLookup[8][coordName({x, y})]) {
+				if (bunkerCoordLookup[8][packCoord({x, y})]) {
 					return true;
 				}
 			}

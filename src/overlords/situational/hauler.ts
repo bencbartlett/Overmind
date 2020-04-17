@@ -34,7 +34,7 @@ export class HaulingOverlord extends Overlord {
 		// Spawn a number of haulers sufficient to move all resources within a lifetime, up to a max
 		const MAX_HAULERS = 5;
 		// Calculate total needed amount of hauling power as (resource amount * trip distance)
-		const tripDistance = 2 * Pathing.distance((this.colony.storage || this.colony).pos, this.directive.pos);
+		const tripDistance = 2 * (Pathing.distance((this.colony.storage || this.colony).pos, this.directive.pos) || 0);
 		const haulingPowerNeeded = Math.min(this.directive.totalResources,
 											this.colony.storage.storeCapacity
 											- _.sum(this.colony.storage.store)) * tripDistance;

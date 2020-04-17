@@ -165,13 +165,14 @@ export class BunkerQueenOverlord extends Overlord {
 		const neededResources = _.keys(queenCarry) as ResourceConstant[];
 		const targets: AnyStoreStructure[] = _.filter(this.storeStructures, s =>
 			_.all(neededResources, resource => (s.store[resource] || 0) >= (queenCarry[resource] || 0)));
-		const withdrawTarget = minBy(targets, target => Pathing.distance(queenPos, target.pos));
+		const withdrawTarget = minBy(targets, target => Pathing.distance(queenPos, target.pos) || Infinity);
 		if (withdrawTarget) {
 			for (const resourceType of neededResources) {
 				withdrawTasks.push(Tasks.withdraw(withdrawTarget, resourceType, queenCarry[resourceType]));
 			}
 		} else {
-			const closestTarget = minBy(this.storeStructures, target => Pathing.distance(queenPos, target.pos));
+			const closestTarget = minBy(this.storeStructures,
+										target => Pathing.distance(queenPos, target.pos) || Infinity);
 			if (!closestTarget) {
 				log.error(`Can't seem to find any pathable store structures in ${this.colony.print}`);
 			} else {

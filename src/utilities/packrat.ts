@@ -31,7 +31,7 @@ function uint16ArrayToHex(array: Uint16Array): string {
 /**
  * Convert a standard 24-character hex id in screeps to a compressed UTF-16 encoded string of length 6.
  *
- * Benchmarking: average of 500ns to execute, reduce stringified size by 75%
+ * Benchmarking: average of 500ns to execute on shard2 public server, reduce stringified size by 75%
  */
 export function packId(id: string): string {
 	return String.fromCharCode(parseInt(id.substr(0, 4), 16)) +
@@ -45,7 +45,7 @@ export function packId(id: string): string {
 /**
  * Convert a compressed six-character UTF-encoded id back into the original 24-character format.
  *
- * Benchmarking: average of 1.3us to execute
+ * Benchmarking: average of 1.3us to execute on shard2 public server
  */
 export function unpackId(packedId: string): string {
 	let id = '';
@@ -62,7 +62,7 @@ export function unpackId(packedId: string): string {
  * Packs a list of ids as a utf-16 string. This is better than having a list of packed coords, as it avoids
  * extra commas and "" when memroy gets stringified.
  *
- * Benchmarking: average of 500ns per id to execute, reduce stringified size by 81%
+ * Benchmarking: average of 500ns per id to execute on shard2 public server, reduce stringified size by 81%
  */
 export function packIdList(ids: string[]): string {
 	let str = '';
@@ -75,7 +75,7 @@ export function packIdList(ids: string[]): string {
 /**
  * Unpacks a list of ids stored as a utf-16 string.
  *
- * Benchmarking: average of 1.2us per id to execute.
+ * Benchmarking: average of 1.2us per id to execute on shard2 public server.
  */
 export function unpackIdList(packedIds: string): string[] {
 	const ids: string[] = [];
@@ -91,7 +91,7 @@ export function unpackIdList(packedIds: string): string[] {
  * chosen to be fast to compute (x << 6 | y is significantly faster than 50 * x + y) and to avoid control characters,
  * as "A" starts at character code 65.
  *
- * Benchmarking: average of 150ns to execute, reduce stringified size by 80%
+ * Benchmarking: average of 150ns to execute on shard2 public server, reduce stringified size by 80%
  */
 export function packCoord(coord: Coord): string {
 	return String.fromCharCode(((coord.x << 6) | coord.y) + 65);
@@ -100,7 +100,7 @@ export function packCoord(coord: Coord): string {
 /**
  * Unpacks a coord stored as a single utf-16 character
  *
- * Benchmarking: average of 60ns-150ns to execute.
+ * Benchmarking: average of 60ns-150ns to execute on shard2 public server
  */
 export function unpackCoord(char: string): Coord {
 	const xShiftedSixOrY = char.charCodeAt(0) - 65;
@@ -111,10 +111,32 @@ export function unpackCoord(char: string): Coord {
 }
 
 /**
+ * Unpacks a coordinate and creates a RoomPosition object from a specified roomName
+ */
+export function unpackCoordAsPos(packedCoord: string, roomName: string): RoomPosition {
+	const coord = unpackCoord(packedCoord);
+	return new RoomPosition(coord.x, coord.y, roomName);
+}
+
+/**
+ * Unpacks a list of coordinates and creates a list of RoomPositions from a specified roomName
+ */
+export function unpackCoordListAsPosList(packedCoords: string, roomName: string): RoomPosition[] {
+	const positions: RoomPosition[] = [];
+	let coord: Coord;
+	for (let i = 0; i < packedCoords.length; ++i) {
+		// Each coord is saved as a single character; unpack each and insert the room name to get the positions list
+		coord = unpackCoord(packedCoords[i]);
+		positions.push(new RoomPosition(coord.x, coord.y, roomName));
+	}
+	return positions;
+}
+
+/**
  * Packs a list of coords as a utf-16 string. This is better than having a list of packed coords, as it avoids
  * extra commas and "" when memroy gets stringified.
  *
- * Benchmarking: average of 120ns per coord to execute, reduce stringified size by 94%
+ * Benchmarking: average of 120ns per coord to execute on shard2 public server, reduce stringified size by 94%
  */
 export function packCoordList(coords: Coord[]): string {
 	let str = '';
@@ -127,7 +149,7 @@ export function packCoordList(coords: Coord[]): string {
 /**
  * Unpacks a list of coords stored as a utf-16 string
  *
- * Benchmarking: average of 100ns per coord to execute
+ * Benchmarking: average of 100ns per coord to execute on shard2 public server
  */
 export function unpackCoordList(chars: string): Coord[] {
 	const coords: Coord[] = [];
@@ -226,7 +248,7 @@ function unpackRoomName(char: string): string {
  * was chosen to be fast to compute (x << 6 | y is significantly faster than 50 * x + y) and to avoid control
  * characters, as "A" starts at character code 65.
  *
- * Benchmarking: average of 100-400ns to execute, reduce stringified size by 90%
+ * Benchmarking: average of 100-400ns to execute on shard2 public server, reduce stringified size by 90%
  */
 export function packPos(pos: RoomPosition): string {
 	return packCoord(pos) + packRoomName(pos.roomName);
@@ -235,7 +257,7 @@ export function packPos(pos: RoomPosition): string {
 /**
  * Unpacks a RoomPosition stored as a pair of utf-16 characters.
  *
- * Benchmarking: average of 100-500ns to execute.
+ * Benchmarking: average of 100-500ns to execute on shard2 public server.
  */
 export function unpackPos(chars: string): RoomPosition {
 	const {x, y} = unpackCoord(chars[0]);
@@ -246,7 +268,7 @@ export function unpackPos(chars: string): RoomPosition {
  * Packs a list of RoomPositions as a utf-16 string. This is better than having a list of packed RoomPositions, as it
  * avoids extra commas and "" when memroy gets stringified.
  *
- * Benchmarking: average of 100-200ns per position to execute, reduce stringified size by 95%
+ * Benchmarking: average of 100-200ns per position to execute on shard2 public server, reduce stringified size by 95%
  */
 export function packPosList(posList: RoomPosition[]): string {
 	let str = '';
@@ -259,7 +281,7 @@ export function packPosList(posList: RoomPosition[]): string {
 /**
  * Unpacks a list of RoomPositions stored as a utf-16 string.
  *
- * Benchmarking: average of 0.5-1.5us per position to execute.
+ * Benchmarking: average of 0.5-1.5us per position to execute on shard2 public server.
  */
 export function unpackPosList(chars: string): RoomPosition[] {
 	const posList: RoomPosition[] = [];
@@ -268,6 +290,24 @@ export function unpackPosList(chars: string): RoomPosition[] {
 	}
 	return posList;
 }
+
+
+
+// Useful to register these functions on global
+global.packId = packId;
+global.unpackId = unpackId;
+global.packIdList = packIdList;
+global.unpackIdList = unpackIdList;
+global.packCoord = packCoord;
+global.unpackCoord = unpackCoord;
+global.packCoordList = packCoordList;
+global.unpackCoordList = unpackCoordList;
+global.packPos = packPos;
+global.unpackPos = unpackPos;
+global.packPosList = packPosList;
+global.unpackPosList = unpackPosList;
+
+
 
 
 export class PackratTests {
