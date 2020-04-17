@@ -59,9 +59,9 @@ interface LogisticsNetworkMemory {
 	};
 }
 
-const LogisticsNetworkMemoryDefaults: LogisticsNetworkMemory = {
+const getDefaultLogisticsMemory: () => LogisticsNetworkMemory = () => ({
 	transporterCache: {},
-};
+});
 
 /**
  * Logistics network: efficiently partners resource requests with transporters using a stable matching algorithm to
@@ -92,7 +92,7 @@ export class LogisticsNetwork {
 	};
 
 	constructor(colony: Colony) {
-		this.memory = Mem.wrap(colony.memory, 'logisticsNetwork', LogisticsNetworkMemoryDefaults);
+		this.memory = Mem.wrap(colony.memory, 'logisticsNetwork', getDefaultLogisticsMemory);
 		this.requests = [];
 		this.targetToRequest = {};
 		this.colony = colony;
@@ -112,7 +112,7 @@ export class LogisticsNetwork {
 	}
 
 	refresh(): void {
-		this.memory = Mem.wrap(this.colony.memory, 'logisticsNetwork', LogisticsNetworkMemoryDefaults);
+		this.memory = Mem.wrap(this.colony.memory, 'logisticsNetwork', getDefaultLogisticsMemory);
 		this.requests = [];
 		this.targetToRequest = {};
 		this._matching = undefined;

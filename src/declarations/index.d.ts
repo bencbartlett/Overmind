@@ -9,6 +9,9 @@ global.NO_ACTION = NO_ACTION;
 
 type TickPhase = 'assimilating' | 'build' | 'refresh' | 'init' | 'run' | 'postRun';
 declare var PHASE: TickPhase;
+declare var LATEST_BUILD_TICK: number;
+declare var LATEST_GLOBAL_RESET_TICK: number;
+declare var LATEST_GLOBAL_RESET_DATE: Date;
 
 declare namespace NodeJS {
 	interface Global {

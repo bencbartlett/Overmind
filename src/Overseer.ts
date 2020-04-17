@@ -39,7 +39,7 @@ interface OverseerMemory {
 
 }
 
-const defaultOverseerMemory: OverseerMemory = {};
+const getDefaultOverseerMemory: () => OverseerMemory = () => ({});
 
 /**
  * The Overseer object acts as a scheduler, running directives and overlords for all colonies each tick. It is also
@@ -63,7 +63,7 @@ export class Overseer implements IOverseer {
 	};
 
 	constructor() {
-		this.memory = Mem.wrap(Memory, 'overseer', defaultOverseerMemory);
+		this.memory = Mem.wrap(Memory, 'overseer', getDefaultOverseerMemory);
 		this.directives = [];
 		this.overlords = [];
 		this.overlordsByColony = {};
@@ -73,7 +73,7 @@ export class Overseer implements IOverseer {
 	}
 
 	refresh() {
-		this.memory = Mem.wrap(Memory, 'overseer', defaultOverseerMemory);
+		this.memory = Mem.wrap(Memory, 'overseer', getDefaultOverseerMemory);
 		this.notifier.clear();
 	}
 

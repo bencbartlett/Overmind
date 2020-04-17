@@ -3,6 +3,7 @@
 import {log} from '../console/log';
 import {Mem} from '../memory/Memory';
 import {packCoordList} from '../utilities/packrat';
+import {MY_USERNAME} from '../~settings';
 
 interface VersionMigratorMemory {
 	versions: { [version: string]: boolean };
@@ -68,9 +69,9 @@ export class VersionMigration {
 	}
 
 	static get memory(): VersionMigratorMemory {
-		return Mem.wrap(Memory.Overmind, 'versionMigrator', {
+		return Mem.wrap(Memory.Overmind, 'versionMigrator', () => ({
 			versions: {}
-		});
+		}));
 	}
 
 	/*
@@ -381,9 +382,37 @@ export class VersionMigration {
 
 	static migrate_053_06X_part5() {
 
-		const mem = Memory as any;
+		// Find oldest tick we can find
+		log.alert(`Fetching approximate empire age...`);
+		if (MY_USERNAME == 'Muon') {
+			Memory.tick = Game.time - 5461275;
+		} else {
+			let oldestTick = Infinity;
+			for (const name in Memory.colonies) {
+				if (Memory.colonies[name] && Memory.colonies[name].roomPlanner) {
+					const rpmem =  Memory.colonies[name].roomPlanner;
+					if (rpmem.lastGenerated && rpmem.lastGenerated < oldestTick) {
+						oldestTick = rpmem.lastGenerated;
+					}
+				}
+			}
+			for (const name in Memory.flags) {
+				const fmem = Memory.flags[name];
+				if (fmem.T && fmem.T < oldestTick) {
+					oldestTick = fmem.T;
+				}
+			}
+			if (oldestTick < Infinity) {
+				Memory.tick = Game.time - oldestTick;
+			}
+		}
 
+		log.alert(`Cleaning memory...`);
+		delete Memory.strategist;
+		delete Memory.zoneRooms;
 		delete Memory.roomIntel; // reset this
+
+		const mem = Memory as any;
 
 		delete mem.pathing.paths; // not used
 		delete mem.pathing.weightedDistances;
@@ -400,6 +429,7 @@ export class VersionMigration {
 			return {x: parseInt(x, 10), y: parseInt(y, 10)};
 		}
 
+
 		for (const name in Memory.colonies) {
 			const colmem = Memory.colonies[name];
 
@@ -407,6 +437,7 @@ export class VersionMigration {
 
 			delete colmem.expansionData; // bugged
 
+			log.alert(`Migrating room planner memories...`);
 			// Clean room planner memory of some old shit
 			const validRoomPlannerMemKeys = ['active', 'relocating', 'recheckStructuresAt', 'bunkerData',
 											 'lastGenerated', 'mapsByLevel', 'savedFlags'];
@@ -419,6 +450,7 @@ export class VersionMigration {
 			}
 
 			// Migrate road planner to new format
+			log.alert(`Migrating road planner memories...`);
 			if (colmem.roadPlanner) {
 				if (colmem.roadPlanner.roadLookup) {
 					const roadLookup = colmem.roadPlanner.roadLookup;
@@ -433,6 +465,7 @@ export class VersionMigration {
 			}
 
 			// Migrate barrier planner to new format
+			log.alert(`Migrating barrier planner memories...`);
 			if (colmem.barrierPlanner) {
 				if (colmem.barrierPlanner.barrierLookup) {
 					const barrierLookup = colmem.barrierPlanner.barrierLookup;
@@ -443,6 +476,7 @@ export class VersionMigration {
 			}
 		}
 
+		log.alert(`Clearing room memories...`);
 		for (const roomName in Memory.rooms) {
 			delete Memory.rooms[roomName];
 		}

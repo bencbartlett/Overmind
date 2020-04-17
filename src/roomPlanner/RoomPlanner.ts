@@ -48,7 +48,7 @@ export interface RoomPlan {
 	};
 }
 
-export interface PlannerMemory {
+export interface RoomPlannerMemory {
 	active: boolean;
 	relocating?: boolean;
 	recheckStructuresAt?: number;
@@ -60,10 +60,10 @@ export interface PlannerMemory {
 	savedFlags: { secondaryColor: ColorConstant, pos: ProtoPos, memory: FlagMemory }[];
 }
 
-const memoryDefaults: PlannerMemory = {
+const getDefaultRoomPlannerMemory: () => RoomPlannerMemory = () => ({
 	active    : true,
 	savedFlags: [],
-};
+});
 
 
 export function getAllStructureCoordsFromLayout(layout: StructureLayout, rcl: number): Coord[] {
@@ -95,7 +95,7 @@ export function translatePositions(positions: RoomPosition[], fromAnchor: Coord,
 @profile
 export class RoomPlanner {
 	colony: Colony;							// The colony this is for
-	memory: PlannerMemory;
+	memory: RoomPlannerMemory;
 	map: StructureMap;						// Flattened {structureType: RoomPositions[]} for final structure placements
 	placements: { 							// Used for generating the plan
 		hatchery: RoomPosition | undefined;
@@ -116,14 +116,14 @@ export class RoomPlanner {
 
 	constructor(colony: Colony) {
 		this.colony = colony;
-		this.memory = Mem.wrap(this.colony.memory, 'roomPlanner', memoryDefaults);
+		this.memory = Mem.wrap(this.colony.memory, 'roomPlanner', getDefaultRoomPlannerMemory);
 		this.barrierPlanner = new BarrierPlanner(this);
 		this.roadPlanner = new RoadPlanner(this);
 		this.refresh();
 	}
 
 	refresh(): void {
-		this.memory = Mem.wrap(this.colony.memory, 'roomPlanner', memoryDefaults);
+		this.memory = Mem.wrap(this.colony.memory, 'roomPlanner', getDefaultRoomPlannerMemory);
 		this.placements = {
 			hatchery     : undefined,
 			commandCenter: undefined,

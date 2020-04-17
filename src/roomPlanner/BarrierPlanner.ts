@@ -12,9 +12,9 @@ export interface BarrierPlannerMemory {
 	barrierCoordsPacked: string;
 }
 
-const defaultBarrierPlannerMemory: BarrierPlannerMemory = {
+const getDefaultBarrierPlannerMemory: () => BarrierPlannerMemory = () => ({
 	barrierCoordsPacked: '',
-};
+});
 
 @profile
 export class BarrierPlanner {
@@ -34,12 +34,12 @@ export class BarrierPlanner {
 	constructor(roomPlanner: RoomPlanner) {
 		this.roomPlanner = roomPlanner;
 		this.colony = roomPlanner.colony;
-		this.memory = Mem.wrap(this.colony.memory, 'barrierPlanner', defaultBarrierPlannerMemory);
+		this.memory = Mem.wrap(this.colony.memory, 'barrierPlanner', getDefaultBarrierPlannerMemory);
 		this.barrierPositions = [];
 	}
 
 	refresh(): void {
-		this.memory = Mem.wrap(this.colony.memory, 'barrierPlanner', defaultBarrierPlannerMemory);
+		this.memory = Mem.wrap(this.colony.memory, 'barrierPlanner', getDefaultBarrierPlannerMemory);
 		this.barrierPositions = [];
 	}
 

@@ -46,7 +46,7 @@ interface EvolutionChamberMemory {
 	};
 }
 
-const EvolutionChamberMemoryDefaults: EvolutionChamberMemory = {
+const getDefaultEvolutionChamberMemory: () => EvolutionChamberMemory = () => ({
 	status        : LabStatus.Idle,
 	statusTick    : 0,
 	activeReaction: undefined,
@@ -54,7 +54,7 @@ const EvolutionChamberMemoryDefaults: EvolutionChamberMemory = {
 		totalProduction: {},
 		avgUsage       : 1,
 	}
-};
+});
 
 function neighboringLabs(pos: RoomPosition): StructureLab[] {
 	return _.compact(_.map(pos.neighbors, neighbor => neighbor.lookForStructure(STRUCTURE_LAB))) as StructureLab[];
@@ -91,7 +91,7 @@ export class EvolutionChamber extends HiveCluster {
 
 	constructor(colony: Colony, terminal: StructureTerminal) {
 		super(colony, terminal, 'evolutionChamber');
-		this.memory = Mem.wrap(this.colony.memory, 'evolutionChamber', EvolutionChamberMemoryDefaults);
+		this.memory = Mem.wrap(this.colony.memory, 'evolutionChamber', getDefaultEvolutionChamberMemory);
 		// Register physical components
 		this.terminal = terminal;
 		this.terminalNetwork = Overmind.terminalNetwork as TerminalNetworkV2;
@@ -136,7 +136,7 @@ export class EvolutionChamber extends HiveCluster {
 	}
 
 	refresh() {
-		this.memory = Mem.wrap(this.colony.memory, 'evolutionChamber', EvolutionChamberMemoryDefaults);
+		this.memory = Mem.wrap(this.colony.memory, 'evolutionChamber', getDefaultEvolutionChamberMemory);
 		$.refreshRoom(this);
 		$.refresh(this, 'terminal', 'labs', 'boostingLabs', 'reagentLabs', 'productLabs');
 		this.labReservations = {};

@@ -48,7 +48,7 @@ interface TraderStats {
 	};
 }
 
-const TraderMemoryDefaults: TraderMemory = {
+const getDefaultTraderMemory: () => TraderMemory = () => ({
 	cache         : {
 		sell       : {},
 		buy        : {},
@@ -60,13 +60,13 @@ const TraderMemoryDefaults: TraderMemory = {
 		tick       : 0,
 	},
 	canceledOrders: []
-};
+});
 
-const TraderStatsDefaults: TraderStats = {
+const getDefaultTraderStats: () => TraderStats = () => ({
 	credits: 0,
 	bought : {},
 	sold   : {},
-};
+});
 
 // Maximum prices I'm willing to pay to buy various resources - based on shard2 market data in June 2018
 // (might not always be up to date)
@@ -155,8 +155,8 @@ export class TraderJoe implements ITradeNetwork {
 	}
 
 	refresh() {
-		this.memory = Mem.wrap(Memory.Overmind, 'trader', TraderMemoryDefaults, true);
-		this.stats = Mem.wrap(Memory.stats.persistent, 'trader', TraderStatsDefaults);
+		this.memory = Mem.wrap(Memory.Overmind, 'trader', getDefaultTraderMemory);
+		this.stats = Mem.wrap(Memory.stats.persistent, 'trader', getDefaultTraderStats);
 		this.notifications = [];
 		this.ordersPlacedThisTick = 0;
 	}
@@ -268,7 +268,7 @@ export class TraderJoe implements ITradeNetwork {
 	}
 
 	private invalidateMarketCache(): void {
-		this.memory.cache = TraderMemoryDefaults.cache;
+		this.memory.cache = getDefaultTraderMemory().cache;
 	}
 
 	/**

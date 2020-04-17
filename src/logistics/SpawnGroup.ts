@@ -16,13 +16,13 @@ interface SpawnGroupMemory {
 	expiration: number;
 }
 
-const SpawnGroupMemoryDefaults: SpawnGroupMemory = {
+const getDefaultSpawnGroupMemory: () => SpawnGroupMemory = () => ({
 	colonies  : [],
 	distances : {},
 	// routes    : {},
 	// paths    : {},
 	expiration: 0,
-};
+});
 
 
 const MAX_LINEAR_DISTANCE = 10; // maximum linear distance to search for ANY spawn group
@@ -74,7 +74,7 @@ export class SpawnGroup {
 		if (!Memory.rooms[this.roomName]) {
 			Memory.rooms[this.roomName] = {};
 		}
-		this.memory = Mem.wrap(Memory.rooms[this.roomName], 'spawnGroup', SpawnGroupMemoryDefaults);
+		this.memory = Mem.wrap(Memory.rooms[this.roomName], 'spawnGroup', getDefaultSpawnGroupMemory);
 		this.ref = initializer.ref + ':SG';
 		this.stats = {
 			avgDistance: (_.sum(this.memory.distances) / _.keys(this.memory.distances).length) || 100,
@@ -110,7 +110,7 @@ export class SpawnGroup {
 	 * Refresh the state of the spawnGroup; called by the Overmind object.
 	 */
 	refresh() {
-		this.memory = Mem.wrap(Memory.rooms[this.roomName], 'spawnGroup', SpawnGroupMemoryDefaults);
+		this.memory = Mem.wrap(Memory.rooms[this.roomName], 'spawnGroup', getDefaultSpawnGroupMemory);
 		this.requests = [];
 		this._colonies = undefined;
 	}

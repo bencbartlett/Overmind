@@ -222,7 +222,7 @@ export class Colony {
 		this.id = id;
 		this.name = roomName;
 		this.ref = roomName;
-		this.memory = Mem.wrap(Memory.colonies, roomName, getDefaultColonyMemory(), true);
+		this.memory = Mem.wrap(Memory.colonies, roomName, getDefaultColonyMemory);
 		// Format outpost state memory
 		_.forEach(outposts, outpost => {
 			if (!this.memory.outposts[outpost]) {

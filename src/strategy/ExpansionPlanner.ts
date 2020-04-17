@@ -23,7 +23,7 @@ interface ExpansionPlannerMemory {
 
 }
 
-const defaultExpansionPlannerMemory: ExpansionPlannerMemory = {};
+const defaultExpansionPlannerMemory: () => ExpansionPlannerMemory = () => ({});
 
 @assimilationLocked
 @profile

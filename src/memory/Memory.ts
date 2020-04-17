@@ -77,6 +77,7 @@ export class Mem {
 		if (Memory.haltTick) {
 			if (Memory.haltTick == Game.time) {
 				if (Game.cpu.halt) { // this is undefined on non-IVM
+					Memory.build--; // don't count this reset as a build
 					Game.cpu.halt();
 				}
 				shouldRun = false;
@@ -105,11 +106,11 @@ export class Mem {
 		}
 		lastTime = Game.time;
 		// Handle global time
-		if (!global.age) {
-			global.age = 0;
+		if (!global.GLOBAL_AGE) {
+			global.GLOBAL_AGE = 0;
 		}
-		global.age++;
-		Memory.stats.persistent.globalAge = global.age;
+		global.GLOBAL_AGE++;
+		Memory.stats.persistent.globalAge = global.GLOBAL_AGE;
 	}
 
 	static garbageCollect(quick?: boolean) {
@@ -123,15 +124,24 @@ export class Mem {
 		}
 	}
 
-	static wrap(memory: any, memName: string, defaults = {}, deep = false) {
-		if (!memory[memName]) {
-			memory[memName] = _.clone(defaults);
-		}
-		if (deep) {
-			_.defaultsDeep(memory[memName], defaults);
+	/**
+	 * Wrap a parent memory object with a key name and set the default properties for the child memory object if needed
+	 */
+	static wrap(memory: any, memName: string, getDefaults: () => ({ [key: string]: any }) = () => ({})) {
+		if (memory[memName] === undefined) {
+			memory[memName] = getDefaults();
 		} else {
-			_.defaults(memory[memName], defaults);
+			if (Game.time == LATEST_GLOBAL_RESET_TICK) {
+				// The mem defaults would only change with a global reset
+				_.defaultsDeep(memory[memName], getDefaults());
+			}
+
 		}
+		// if (deep) {
+		// 	_.defaultsDeep(memory[memName], defaults);
+		// } else {
+		// 	_.defaults(memory[memName], defaults);
+		// }
 		return memory[memName];
 	}
 
@@ -158,87 +168,53 @@ export class Mem {
 		return Mem._setDeep(object, keys, value);
 	}
 
-	private static formatOvermindMemory() {
-		if (!Memory.Overmind) {
-			Memory.Overmind = {};
-		}
-		if (!Memory.colonies) {
-			Memory.colonies = {};
-		}
-		if (!Memory.roomIntel) {
-			Memory.roomIntel = {};
-		}
-	}
-
-	private static formatPathingMemory() {
-		if (!Memory.pathing) {
-			Memory.pathing = {} as PathingMemory; // Hacky workaround
-		}
-		_.defaults(Memory.pathing, {
-			paths            : {},
-			distances        : {},
-			weightedDistances: {},
-		});
-	}
-
-	private static formatDefaultMemory() {
-		if (!Memory.rooms) {
-			Memory.rooms = {};
-		}
-		if (!Memory.creeps) {
-			Memory.creeps = {};
-		}
-		if (!Memory.flags) {
-			Memory.flags = {};
-		}
+	private static getDefaultMemory(): Memory {
+		return {
+			tick              : Game.time,
+			build             : 0,
+			assimilator       : {},
+			Overmind          : {},
+			combatPlanner     : {},
+			profiler          : {},
+			overseer          : {},
+			segmenter         : {},
+			roomIntel         : {},
+			colonies          : {},
+			rooms             : {},
+			creeps            : {},
+			powerCreeps       : {},
+			flags             : {},
+			spawns            : {},
+			pathing           : {distances: {}},
+			constructionSites : {},
+			stats             : {},
+			playerCreepTracker: {},
+			settings          : {
+				signature             : DEFAULT_OVERMIND_SIGNATURE,
+				operationMode         : DEFAULT_OPERATION_MODE,
+				log                   : {},
+				enableVisuals         : true,
+				resourceCollectionMode: 0,
+				allies                : [MY_USERNAME],
+				powerCollection       : {
+					enabled : false,
+					maxRange: 5,
+					minPower: 5000,
+				},
+				autoPoison            : {
+					enabled      : false,
+					maxRange     : 4,
+					maxConcurrent: 1,
+				},
+			},
+		};
 	}
 
 	static format() {
 		// Format the memory as needed, done once every global reset
-		this.formatDefaultMemory();
-		this.formatOvermindMemory();
-		this.formatPathingMemory();
-		// Rest of memory formatting
-		if (!Memory.settings) {
-			Memory.settings = {} as any;
-		}
-		if (!Memory.playerCreepTracker) {
-			Memory.playerCreepTracker = {};
-		}
-		if (!Memory.profiler) {
-			Memory.profiler = {};
-		}
-		if (!USE_SCREEPS_PROFILER) { // this is for the
-			delete Memory.screepsProfiler;
-		}
-		_.defaultsDeep(Memory.settings, {
-			signature             : DEFAULT_OVERMIND_SIGNATURE,
-			operationMode         : DEFAULT_OPERATION_MODE,
-			log                   : {},
-			enableVisuals         : true,
-			resourceCollectionMode: 0,
-			allies                : [MY_USERNAME],
-			powerCollection       : {
-				enabled : false,
-				maxRange: 5,
-				minPower: 5000,
-			},
-			autoPoison            : {
-				enabled      : false,
-				maxRange     : 4,
-				concurrent   : 1,
-				poisonedRooms: [],
-			},
-		});
-		if (!Memory.stats) {
-			Memory.stats = {};
-		}
-		if (!Memory.stats.persistent) {
-			Memory.stats.persistent = {};
-		}
-		if (!Memory.constructionSites) {
-			Memory.constructionSites = {};
-		}
+		_.defaultsDeep(Memory, Mem.getDefaultMemory());
+		// Increment build counter (if global reset is due to CPU halt, the count will have been decremented)
+		Memory.build++;
 		// Make global memory
 		this.initGlobalMemory();
 	}
@@ -273,8 +249,9 @@ export class Mem {
 	 */
 	private static cleanHeap(): void {
 		if (Game.time % HEAP_CLEAN_FREQUENCY == HEAP_CLEAN_FREQUENCY - 3) {
-			if (Game.cpu.bucket < BUCKET_CPU_HALT) {
-				(<any>Game.cpu).halt();
+			if (Game.cpu.bucket < BUCKET_CPU_HALT && Game.cpu.halt !== undefined) {
+				Memory.build--; // don't count this reset as a build
+				Game.cpu.halt();
 			} else if (Game.cpu.bucket < BUCKET_CLEAR_CACHE) {
 				delete global._cache;
 				this.initGlobalMemory();

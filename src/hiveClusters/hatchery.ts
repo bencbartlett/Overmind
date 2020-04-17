@@ -48,13 +48,13 @@ export interface HatcheryMemory {
 	};
 }
 
-const HatcheryMemoryDefaults: HatcheryMemory = {
+const getDefaultHatcheryMemory: () => HatcheryMemory = () => ({
 	stats: {
 		overload  : 0,
 		uptime    : 0,
 		longUptime: 0,
 	}
-};
+});
 
 
 /**
@@ -92,7 +92,7 @@ export class Hatchery extends HiveCluster {
 	constructor(colony: Colony, headSpawn: StructureSpawn) {
 		super(colony, headSpawn, 'hatchery');
 		// Register structure components
-		this.memory = Mem.wrap(this.colony.memory, 'hatchery', HatcheryMemoryDefaults, true);
+		this.memory = Mem.wrap(this.colony.memory, 'hatchery', getDefaultHatcheryMemory);
 		if (this.colony.layout == 'twoPart') this.colony.destinations.push({pos: this.pos, order: -1});
 		this.spawns = colony.spawns;
 		this.availableSpawns = _.filter(this.spawns, spawn => !spawn.spawning);
@@ -120,7 +120,7 @@ export class Hatchery extends HiveCluster {
 	}
 
 	refresh() {
-		this.memory = Mem.wrap(this.colony.memory, 'hatchery', HatcheryMemoryDefaults, true);
+		this.memory = Mem.wrap(this.colony.memory, 'hatchery', getDefaultHatcheryMemory);
 		$.refreshRoom(this);
 		$.refresh(this, 'spawns', 'extensions', 'energyStructures', 'link', 'towers', 'battery');
 		this.availableSpawns = _.filter(this.spawns, spawn => !spawn.spawning);

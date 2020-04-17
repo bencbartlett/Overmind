@@ -14,23 +14,45 @@ interface RawMemory {
 }
 
 interface Memory {
+	tick: number;
+	build: number;
 	assimilator: any;
 	Overmind: {};
 	profiler: any;
 	overseer: any;
 	segmenter: any;
-	// strategist?: any;
 	roomIntel: any;
 	colonies: { [name: string]: any };
 	creeps: { [name: string]: CreepMemory; };
+	powerCreeps: {[name: string]: PowerCreepMemory};
 	flags: { [name: string]: FlagMemory; };
 	rooms: { [name: string]: RoomMemory; };
 	spawns: { [name: string]: SpawnMemory; };
 	pathing: PathingMemory;
+	constructionSites: { [id: string]: number };
+	stats: any;
+
+	// suspend?: number;
+	resetBucket?: boolean;
+	haltTick?: number;
+	combatPlanner: any;
+	playerCreepTracker: { // TODO revisit for a better longterm solution
+		[playerName: string]: CreepTracker
+	};
+	// zoneRooms: { [roomName: string]: { [type: string]: number } };
+
+	reinforcementLearning?: {
+		enabled?: boolean;
+		verbosity?: number;
+		workerIndex?: number;
+	};
+
+	screepsProfiler?: any;
+
 	settings: {
 		signature: string;
 		operationMode: operationMode;
-		log: LoggerMemory;
+		log: any;
 		enableVisuals: boolean;
 		allies: string[];
 		resourceCollectionMode: resourceCollectionMode;
@@ -45,23 +67,6 @@ interface Memory {
 			maxConcurrent: number;
 		},
 	};
-	stats: any;
-	constructionSites: { [id: string]: number };
-	// suspend?: number;
-	resetBucket?: boolean;
-	haltTick?: number;
-	combatPlanner: any;
-	playerCreepTracker: { // TODO revisit for a better longterm solution
-		[playerName: string]: CreepTracker
-	};
-	zoneRooms: { [roomName: string]: { [type: string]: number } };
-	reinforcementLearning?: {
-		enabled?: boolean;
-		verbosity?: number;
-		workerIndex?: number;
-	};
-
-	screepsProfiler?: any;
 
 	[otherProperty: string]: any;
 }
@@ -141,13 +146,6 @@ interface MoveData {
 	// waypointsVisited?: string[];
 	portaling?: boolean;
 }
-
-interface LoggerMemory {
-	level: number;
-	showSource: boolean;
-	showTick: boolean;
-}
-
 
 interface CachedPath {
 	path: RoomPosition[];

@@ -27,11 +27,11 @@ const ROAD_PLANNER_SWAMP_COST = 4;
 const ROAD_PLANNER_TUNNEL_COST = 15 * ROAD_PLANNER_PLAIN_COST;
 const EXISTING_PATH_COST = ROAD_PLANNER_PLAIN_COST - 1;
 
-const memoryDefaults: RoadPlannerMemory = {
+const getDefaultRoadPlannerMemory: () => RoadPlannerMemory = () => ({
 	roadCoordsPacked: {},
 	roadCoverage : 0.0,
 	roadCoverages: {}
-};
+});
 
 @profile
 export class RoadPlanner {
@@ -53,13 +53,13 @@ export class RoadPlanner {
 	constructor(roomPlanner: RoomPlanner) {
 		this.roomPlanner = roomPlanner;
 		this.colony = roomPlanner.colony;
-		this.memory = Mem.wrap(this.colony.memory, 'roadPlanner', memoryDefaults);
+		this.memory = Mem.wrap(this.colony.memory, 'roadPlanner', getDefaultRoadPlannerMemory);
 		this.costMatrices = {};
 		this.roadPositions = [];
 	}
 
 	refresh(): void {
-		this.memory = Mem.wrap(this.colony.memory, 'roadPlanner', memoryDefaults);
+		this.memory = Mem.wrap(this.colony.memory, 'roadPlanner', getDefaultRoadPlannerMemory);
 		this.costMatrices = {};
 		this.roadPositions = [];
 	}

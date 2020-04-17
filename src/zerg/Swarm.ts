@@ -29,11 +29,11 @@ interface SwarmMemory {
 	lastInDanger?: number;
 }
 
-const SwarmMemoryDefaults: SwarmMemory = {
+const getDefaultSwarmMemory: () => SwarmMemory = () => ({
 	creeps     : [],
 	orientation: TOP,
 	numRetreats: 0,
-};
+});
 
 const ERR_NOT_ALL_OK = -7;
 
@@ -67,7 +67,7 @@ export class Swarm implements ProtoSwarm {
 	constructor(overlord: SwarmOverlord, ref: string, creeps: CombatZerg[], width = 2, height = 2) {
 		this.overlord = overlord;
 		this.ref = ref;
-		this.memory = Mem.wrap(overlord.memory, `swarm:${ref}`, SwarmMemoryDefaults);
+		this.memory = Mem.wrap(overlord.memory, `swarm:${ref}`, getDefaultSwarmMemory);
 		// Build the static formation by putting attackers at the front and healers at the rear
 		const paddedCreeps: (CombatZerg | undefined)[] = _.clone(creeps);
 		for (let i = paddedCreeps.length; i < width * height; i++) {

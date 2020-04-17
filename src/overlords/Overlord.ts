@@ -66,7 +66,7 @@ export interface OverlordMemory {
 	debug?: boolean;
 }
 
-const OverlordMemoryDefaults: OverlordMemory = {};
+const getDefaultOverlordMemory: () => OverlordMemory = () => ({});
 
 /**
  * An Overlord is roughly analogous to a process in an OS: it is a generalization of a set of related things that need
@@ -94,7 +94,7 @@ export abstract class Overlord {
 	private shouldSpawnAt?: number;
 
 	constructor(initializer: OverlordInitializer | Colony, name: string, priority: number,
-				memDefaults: OverlordMemory = OverlordMemoryDefaults) {
+				memDefaults: () => OverlordMemory = getDefaultOverlordMemory) {
 		this.initializer = initializer;
 		this.memory = Mem.wrap(initializer.memory, name, memDefaults);
 		this.room = initializer.room;

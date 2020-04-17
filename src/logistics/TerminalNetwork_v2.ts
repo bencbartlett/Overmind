@@ -20,7 +20,7 @@ interface TerminalNetworkMemory {
 	debug?: boolean;
 }
 
-const TerminalNetworkMemoryDefaults: TerminalNetworkMemory = {};
+const getDefaultTerminalNetworkMemory: () => TerminalNetworkMemory = () => ({});
 
 interface TerminalNetworkStats {
 	transfers: {
@@ -40,7 +40,7 @@ interface TerminalNetworkStats {
 	};
 }
 
-const TerminalNetworkStatsDefaults: TerminalNetworkStats = {
+const getDefaultTerminalNetworkStats: () => TerminalNetworkStats = () => ({
 	transfers: {
 		costs: {},
 	},
@@ -55,7 +55,7 @@ const TerminalNetworkStatsDefaults: TerminalNetworkStats = {
 		passiveRequestors: {},
 		activeRequestors : {},
 	}
-};
+});
 
 export const enum TN_STATE {
 	activeProvider   = 5, // actively offload the resource into other non-activeProvider rooms in the network
@@ -343,8 +343,8 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 
 		this.terminalOverload = {};
 		this.notifications = [];
-		this.memory = Mem.wrap(Memory.Overmind, 'terminalNetwork', TerminalNetworkMemoryDefaults, true);
-		this.stats = Mem.wrap(Memory.stats.persistent, 'terminalNetwork', TerminalNetworkStatsDefaults, true);
+		this.memory = Mem.wrap(Memory.Overmind, 'terminalNetwork', getDefaultTerminalNetworkMemory);
+		this.stats = Mem.wrap(Memory.stats.persistent, 'terminalNetwork', getDefaultTerminalNetworkStats);
 	}
 
 	private debug(...args: any[]) {

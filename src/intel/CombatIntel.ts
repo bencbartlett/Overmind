@@ -20,6 +20,12 @@ interface CombatIntelMemory {
 	};
 }
 
+const getDefaultCombatIntelMemory: () => CombatIntelMemory = () => ({
+	cache: {
+		tick: Game.time,
+	}
+});
+
 export interface CombatPotentials {
 	attack: number;
 	ranged: number;
@@ -38,7 +44,7 @@ export class CombatIntel {
 	}
 
 	get memory(): CombatIntelMemory {
-		return Mem.wrap(this.directive.memory, 'combatIntel', {});
+		return Mem.wrap(this.directive.memory, 'combatIntel', getDefaultCombatIntelMemory);
 	}
 
 	get room(): Room | undefined {

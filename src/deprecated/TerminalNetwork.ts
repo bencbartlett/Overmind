@@ -30,15 +30,15 @@ interface TerminalNetworkStats {
 
 }
 
-const TerminalNetworkMemoryDefaults: TerminalNetworkMemory = {
+const getDefaultTerminalNetworkMemory: () => TerminalNetworkMemory = () => ({
 	equalizeIndex: 0
-};
+});
 
-const TerminalNetworkStatsDefaults: TerminalNetworkStats = {
+const getDefaultTerminalNetworkStats: () => TerminalNetworkStats = () => ({
 	transfers: {
 		costs: {},
 	},
-};
+});
 
 function colonyOf(terminal: StructureTerminal): Colony {
 	return Overmind.colonies[terminal.room.name];
@@ -110,8 +110,8 @@ export class TerminalNetwork /*implements ITerminalNetwork*/ {
 		this.allTerminals = terminals;
 		this.terminals = _.clone(terminals);
 		this.readyTerminals = _.filter(terminals, t => t.cooldown == 0);
-		this.memory = Mem.wrap(Memory.Overmind, 'terminalNetwork', TerminalNetworkMemoryDefaults);
-		this.stats = Mem.wrap(Memory.stats.persistent, 'terminalNetwork', TerminalNetworkStatsDefaults, true);
+		this.memory = Mem.wrap(Memory.Overmind, 'terminalNetwork', getDefaultTerminalNetworkMemory);
+		this.stats = Mem.wrap(Memory.stats.persistent, 'terminalNetwork', getDefaultTerminalNetworkStats);
 		this.alreadyReceived = [];
 		this.alreadySent = [];
 		this.exceptionTerminals = {}; 		// populated in init()
@@ -124,8 +124,8 @@ export class TerminalNetwork /*implements ITerminalNetwork*/ {
 		$.refresh(this, 'allTerminals');
 		this.terminals = _.clone(this.allTerminals);
 		this.readyTerminals = _.filter(this.terminals, t => t.cooldown == 0);
-		this.memory = Mem.wrap(Memory.Overmind, 'terminalNetwork', TerminalNetworkMemoryDefaults);
-		this.stats = Mem.wrap(Memory.stats.persistent, 'terminalNetwork', TerminalNetworkStatsDefaults);
+		this.memory = Mem.wrap(Memory.Overmind, 'terminalNetwork', getDefaultTerminalNetworkMemory);
+		this.stats = Mem.wrap(Memory.stats.persistent, 'terminalNetwork', getDefaultTerminalNetworkStats);
 		this.alreadyReceived = [];
 		this.alreadySent = [];
 		this.exceptionTerminals = {}; 		// populated in init()

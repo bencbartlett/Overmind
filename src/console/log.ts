@@ -119,6 +119,19 @@ export function debug(thing: { name: string, memory: any, pos: RoomPosition }, .
  */
 @profile
 export class Log {
+
+	constructor() {
+		_.defaultsDeep(Memory, {
+			settings: {
+				log: {
+					level     : LOG_LEVEL,
+					showSource: LOG_PRINT_LINES,
+					showTick  : LOG_PRINT_TICK,
+				}
+			}
+		});
+	}
+
 	static sourceMap: any;
 
 	static loadSourceMap() {
@@ -183,18 +196,6 @@ export class Log {
 	}
 
 	private _maxFileString: number = 0;
-
-	constructor() {
-		_.defaultsDeep(Memory, {
-			settings: {
-				log: {
-					level     : LOG_LEVEL,
-					showSource: LOG_PRINT_LINES,
-					showTick  : LOG_PRINT_TICK,
-				}
-			}
-		});
-	}
 
 	trace(error: Error): Log {
 		if (this.level >= LogLevels.ERROR && error.stack) {
