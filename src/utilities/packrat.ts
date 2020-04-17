@@ -30,8 +30,10 @@ function uint16ArrayToHex(array: Uint16Array): string {
 
 /**
  * Convert a standard 24-character hex id in screeps to a compressed UTF-16 encoded string of length 6.
+ *
+ * Benchmarking: average of 500ns to execute, reduce stringified size by 75%
  */
-function packId(id: string): string {
+export function packId(id: string): string {
 	return String.fromCharCode(parseInt(id.substr(0, 4), 16)) +
 		   String.fromCharCode(parseInt(id.substr(4, 4), 16)) +
 		   String.fromCharCode(parseInt(id.substr(8, 4), 16)) +
@@ -41,9 +43,11 @@ function packId(id: string): string {
 }
 
 /**
- * Convert a compressed six-character UTF-encoded id back into the original 24-character format
+ * Convert a compressed six-character UTF-encoded id back into the original 24-character format.
+ *
+ * Benchmarking: average of 1.3us to execute
  */
-function unpackId(packedId: string): string {
+export function unpackId(packedId: string): string {
 	let id = '';
 	let current: number;
 	for (let i = 0; i < 6; ++i) {
@@ -57,8 +61,10 @@ function unpackId(packedId: string): string {
 /**
  * Packs a list of ids as a utf-16 string. This is better than having a list of packed coords, as it avoids
  * extra commas and "" when memroy gets stringified.
+ *
+ * Benchmarking: average of 500ns per id to execute, reduce stringified size by 81%
  */
-function packIdList(ids: string[]): string {
+export function packIdList(ids: string[]): string {
 	let str = '';
 	for (let i = 0; i < ids.length; ++i) {
 		str += packId(ids[i]);
@@ -67,9 +73,11 @@ function packIdList(ids: string[]): string {
 }
 
 /**
- * Unpacks a list of ids stored as a utf-16 string
+ * Unpacks a list of ids stored as a utf-16 string.
+ *
+ * Benchmarking: average of 1.2us per id to execute.
  */
-function unpackIdList(packedIds: string): string[] {
+export function unpackIdList(packedIds: string): string[] {
 	const ids: string[] = [];
 	for (let i = 0; i < packedIds.length; i += 6) {
 		ids.push(unpackId(packedIds.substr(i, 6)));
@@ -82,15 +90,19 @@ function unpackIdList(packedIds: string): string[] {
  * Packs a coord as a single utf-16 character. The seemingly strange choice of encoding value ((x << 6) | y) + 65 was
  * chosen to be fast to compute (x << 6 | y is significantly faster than 50 * x + y) and to avoid control characters,
  * as "A" starts at character code 65.
+ *
+ * Benchmarking: average of 150ns to execute, reduce stringified size by 80%
  */
-function packCoord(coord: Coord): string {
+export function packCoord(coord: Coord): string {
 	return String.fromCharCode(((coord.x << 6) | coord.y) + 65);
 }
 
 /**
  * Unpacks a coord stored as a single utf-16 character
+ *
+ * Benchmarking: average of 60ns-150ns to execute.
  */
-function unpackCoord(char: string): Coord {
+export function unpackCoord(char: string): Coord {
 	const xShiftedSixOrY = char.charCodeAt(0) - 65;
 	return {
 		x: (xShiftedSixOrY & 0b111111000000) >>> 6,
@@ -101,8 +113,10 @@ function unpackCoord(char: string): Coord {
 /**
  * Packs a list of coords as a utf-16 string. This is better than having a list of packed coords, as it avoids
  * extra commas and "" when memroy gets stringified.
+ *
+ * Benchmarking: average of 120ns per coord to execute, reduce stringified size by 94%
  */
-function packCoordList(coords: Coord[]): string {
+export function packCoordList(coords: Coord[]): string {
 	let str = '';
 	for (let i = 0; i < coords.length; ++i) {
 		str += String.fromCharCode(((coords[i].x << 6) | coords[i].y) + 65);
@@ -112,12 +126,14 @@ function packCoordList(coords: Coord[]): string {
 
 /**
  * Unpacks a list of coords stored as a utf-16 string
+ *
+ * Benchmarking: average of 100ns per coord to execute
  */
-function unpackCoordList(chars: string): Coord[] {
+export function unpackCoordList(chars: string): Coord[] {
 	const coords: Coord[] = [];
 	let xShiftedSixOrY: number;
 	for (let i = 0; i < chars.length; ++i) {
-		xShiftedSixOrY = chars.charCodeAt(0) - 65;
+		xShiftedSixOrY = chars.charCodeAt(i) - 65;
 		coords.push({
 						x: (xShiftedSixOrY & 0b111111000000) >>> 6,
 						y: (xShiftedSixOrY & 0b000000111111),
@@ -160,8 +176,10 @@ function packRoomName(roomName: string): string {
 
 		// y is 6 bits, x is 6 bits, quadrant is 2 bits
 		const num = (quadrant << 12 | (x << 6) | y) + 65;
+		const char = String.fromCharCode(num);
 
-		PERMACACHE._packedRoomNames[roomName] = String.fromCharCode(num);
+		PERMACACHE._packedRoomNames[roomName] = char;
+		PERMACACHE._unpackedRoomNames[char] = roomName;
 	}
 	return PERMACACHE._packedRoomNames[roomName];
 }
@@ -196,6 +214,7 @@ function unpackRoomName(char: string): string {
 				roomName = 'ERROR';
 		}
 
+		PERMACACHE._packedRoomNames[roomName] = char;
 		PERMACACHE._unpackedRoomNames[char] = roomName;
 	}
 	return PERMACACHE._unpackedRoomNames[char];
@@ -206,15 +225,19 @@ function unpackRoomName(char: string): string {
  * Packs a RoomPosition as a pair utf-16 characters. The seemingly strange choice of encoding value ((x << 6) | y) + 65
  * was chosen to be fast to compute (x << 6 | y is significantly faster than 50 * x + y) and to avoid control
  * characters, as "A" starts at character code 65.
+ *
+ * Benchmarking: average of 100-400ns to execute, reduce stringified size by 90%
  */
-function packPos(pos: RoomPosition): string {
+export function packPos(pos: RoomPosition): string {
 	return packCoord(pos) + packRoomName(pos.roomName);
 }
 
 /**
- * Unpacks a RoomPosition stored as a pair of utf-16 characters
+ * Unpacks a RoomPosition stored as a pair of utf-16 characters.
+ *
+ * Benchmarking: average of 100-500ns to execute.
  */
-function unpackPos(chars: string): RoomPosition {
+export function unpackPos(chars: string): RoomPosition {
 	const {x, y} = unpackCoord(chars[0]);
 	return new RoomPosition(x, y, unpackRoomName(chars[1]));
 }
@@ -222,8 +245,10 @@ function unpackPos(chars: string): RoomPosition {
 /**
  * Packs a list of RoomPositions as a utf-16 string. This is better than having a list of packed RoomPositions, as it
  * avoids extra commas and "" when memroy gets stringified.
+ *
+ * Benchmarking: average of 100-200ns per position to execute, reduce stringified size by 95%
  */
-function packPosList(posList: RoomPosition[]): string {
+export function packPosList(posList: RoomPosition[]): string {
 	let str = '';
 	for (let i = 0; i < posList.length; ++i) {
 		str += packPos(posList[i]);
@@ -233,8 +258,10 @@ function packPosList(posList: RoomPosition[]): string {
 
 /**
  * Unpacks a list of RoomPositions stored as a utf-16 string.
+ *
+ * Benchmarking: average of 0.5-1.5us per position to execute.
  */
-function unpackPosList(chars: string): RoomPosition[] {
+export function unpackPosList(chars: string): RoomPosition[] {
 	const posList: RoomPosition[] = [];
 	for (let i = 0; i < chars.length; i += 2) {
 		posList.push(unpackPos(chars.substr(i, 2)));
@@ -299,7 +326,11 @@ export class PackratTests {
 		elapsed = Game.cpu.getUsed() - start;
 		console.log(`Time elapsed: ${elapsed}; avg: ${elapsed / idsUnpacked.length}`);
 
+		console.log(`Testing id list-decoding...`);
+		start = Game.cpu.getUsed();
 		const idsListUnpacked = unpackIdList(idsListPacked);
+		elapsed = Game.cpu.getUsed() - start;
+		console.log(`Time elapsed: ${elapsed}; avg: ${elapsed / idsListUnpacked.length}`);
 
 		console.log(`Verifying equality...`);
 		let idsEqual = true;
@@ -316,6 +347,86 @@ export class PackratTests {
 			}
 		}
 		console.log(`Retrieved ids are equal: ${idsEqual}`);
+
+		console.log(`Total time elapsed: ${Game.cpu.getUsed() - ogStart}`);
+
+	}
+
+
+	static testCoordPacker() {
+
+		const ogStart = Game.cpu.getUsed();
+
+		let start, elapsed: number;
+
+		console.log(`Collecting positions...`);
+
+		start = Game.cpu.getUsed();
+		const allCoord: Coord[] = [];
+		for (const name in Game.creeps) {
+			const pos = Game.creeps[name].pos;
+			allCoord.push({x: pos.x, y: pos.y});
+		}
+		for (const id in Game.structures) {
+			const pos = Game.structures[id].pos;
+			allCoord.push({x: pos.x, y: pos.y});
+		}
+		console.log(`Time elapsed: ${Game.cpu.getUsed() - start}`);
+
+
+		console.log(`Testing coord encoding...`);
+
+		start = Game.cpu.getUsed();
+		const coordPacked = [];
+		for (let i = 0, len = allCoord.length; i < len; ++i) {
+			coordPacked.push(packCoord(allCoord[i]));
+		}
+		elapsed = Game.cpu.getUsed() - start;
+		console.log(`Time elapsed: ${elapsed}; avg: ${elapsed / coordPacked.length}`);
+		console.log(`Unpacked len: ${JSON.stringify(allCoord).length}`);
+		console.log(`Packed len: ${JSON.stringify(coordPacked).length}`);
+
+		console.log(`Testing listCoord encoding...`);
+		start = Game.cpu.getUsed();
+		const coordListPacked = packCoordList(allCoord);
+		elapsed = Game.cpu.getUsed() - start;
+		console.log(`Time elapsed: ${elapsed}; avg: ${elapsed / coordListPacked.length}`);
+		console.log(`List-packed len: ${JSON.stringify(coordListPacked).length}`);
+
+
+		console.log(`Testing coord decoding...`);
+		start = Game.cpu.getUsed();
+		const coordUnpacked = [];
+		for (let i = 0, len = coordPacked.length; i < len; ++i) {
+			coordUnpacked.push(unpackCoord(coordPacked[i]));
+		}
+		elapsed = Game.cpu.getUsed() - start;
+		console.log(`Time elapsed: ${elapsed}; avg: ${elapsed / coordUnpacked.length}`);
+
+
+		console.log(`Testing listCoord decoding...`);
+		start = Game.cpu.getUsed();
+		const coordListUnpacked = unpackCoordList(coordListPacked);
+		elapsed = Game.cpu.getUsed() - start;
+		console.log(`Time elapsed: ${elapsed}; avg: ${elapsed / coordListUnpacked.length}`);
+
+
+		let posEqual = true;
+		for (let i = 0; i < allCoord.length; i++) {
+			if (!(allCoord[i].x == coordUnpacked[i].x && allCoord[i].y == coordUnpacked[i].y)) {
+				console.log(`Unpacked pos not equal! orig: ${JSON.stringify(allCoord[i])}; `+
+							`unpacked: ${JSON.stringify(coordUnpacked[i])}`);
+				posEqual = false;
+				break;
+			}
+			if (!(allCoord[i].x == coordListUnpacked[i].x && allCoord[i].y == coordListUnpacked[i].y)) {
+				console.log(`Unpacked pos not equal! orig: ${JSON.stringify(allCoord[i])}; `+
+							`unpacked: ${JSON.stringify(coordListUnpacked[i])}`);
+				posEqual = false;
+				break;
+			}
+		}
+		console.log(`Retrieved coords are equal: ${posEqual}`);
 
 		console.log(`Total time elapsed: ${Game.cpu.getUsed() - ogStart}`);
 
