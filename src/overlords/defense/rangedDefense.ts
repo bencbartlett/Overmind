@@ -63,7 +63,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 		} else {
 			const {attack, ranged, heal} = CombatIntel.getCombatPotentials(this.room.hostiles);
 			// if there's a lot of big baddies or this assault has lasted a long time, pull out the boosts
-			if (attack + ranged + heal > 100 || this.activeFor > 1000) {
+			if (attack + ranged + heal > 100 || this.age > 1000) {
 				setup = CombatSetups.hydralisks.boosted.default;
 			}
 		}

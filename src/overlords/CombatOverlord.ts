@@ -34,7 +34,7 @@ export abstract class CombatOverlord extends Overlord {
 		}
 	}
 
-	get activeFor(): number {
+	get age(): number {
 		return Game.time - this.memory[MEM.TICK];
 	}
 

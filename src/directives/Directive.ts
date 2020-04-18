@@ -94,6 +94,12 @@ export abstract class Directive {
 		this.colony = colony;
 		this.colony.flags.push(flag);
 		this.overlords = {};
+
+		// Run creation actions if needed
+		if (this.age == 0) {
+			this.onCreation();
+		}
+
 		// Register directive on Overmind
 		global[this.name] = this;
 		Overmind.overseer.registerDirective(this);
@@ -108,6 +114,10 @@ export abstract class Directive {
 		if (this.memory.debug) {
 			log.alert(this.print, args);
 		}
+	}
+
+	get age(): number {
+		return Game.time - this.memory[MEM.TICK]!;
 	}
 
 	private info(): string {
@@ -458,6 +468,13 @@ export abstract class Directive {
 	// static creation(): void {
 	//
 	// }
+
+	/**
+	 * Actions that are performed only once on the tick of the directive creation
+	 */
+	onCreation(): void {
+
+	}
 
 	/**
 	 * Directive.spawnMoarOverlords contains all calls to instantiate overlords on the directive instance
