@@ -883,7 +883,7 @@ export class RoomPlanner {
 	}
 
 	shouldRecheck(offset = 0): boolean {
-		if (Game.time >= (this.memory.recheckStructuresAt || Infinity) + offset) {
+		if (Game.time == (this.memory.recheckStructuresAt || Infinity) + offset) {
 			return true;
 		} else {
 			const checkFreq = RoomPlanner.settings.siteCheckFrequency * this.colony.level;
