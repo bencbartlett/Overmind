@@ -342,9 +342,11 @@ export class RoadPlanner {
 			if (count > 0 && RoomPlanner.canBuild(STRUCTURE_ROAD, pos)) {
 				const ret = pos.createConstructionSite(STRUCTURE_ROAD);
 				if (ret != OK) {
-					if (ret == ERR_NOT_OWNER && Game.time % 50 == 0) {
-						log.warning(`${this.colony.name}: couldn't create road site at ${pos.print}; room is ` +
-									`reserved/owned by hostile forces!`);
+					if (ret == ERR_NOT_OWNER) {
+						if (Game.time % 50 == 0) {
+							log.warning(`${this.colony.name}: couldn't create road site at ${pos.print}; room is ` +
+										`reserved/owned by hostile forces!`);
+						}
 					} else {
 						log.warning(`${this.colony.name}: couldn't create road site at ${pos.print}. Result: ${ret}`);
 					}
