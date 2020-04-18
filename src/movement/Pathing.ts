@@ -587,7 +587,7 @@ export class Pathing {
 		}
 		// Hm, we haven't found any previously cached matrices; let's see if we can get stuff from room intel
 		if (!matrix) {
-			const roomInfo = RoomIntel.getRoomObjectData(roomName);
+			const roomInfo = RoomIntel.getAllRoomObjectInfo(roomName);
 			if (roomInfo) {
 				// Cool let's set walkability based on what we remember
 				matrix = new PathFinder.CostMatrix();

@@ -3,9 +3,17 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
-NOTE: This release of Overmind now requires Node 10+ to deploy. You will need to check `node --version` to verify that you have at least 10.0, then you need to run `npm install` to update several key deployment packages.
+(!) NOTE: This release of Overmind now requires Node 10+ and Rollup 2+ to deploy. You will need to check `node --version` to verify that you have at least 10.0, then you need to run `npm install` to update Rollup and several other key deployment packages.
 
 ### Added
+- Added `MatrixLib` class that performs a variety of cost matrix manupulations. Many methods from `Pathing` have been moved to this class.
+- Added `Zerg.avoidDanger()` method for use primarily by non-combat zerg which will replace the current `Zerg.flee()` logic as the default retreating response when working in a room which becomes unsafe.
+- Added a new `packrat.ts` module for compressing and retrieving room positions, ids, and coordinates as utf-16 characters. The methods are quite performant, taking about 100ns per RoomPosition and 500ns per id to execute on shard2 public server, and reduce memory impact by up to 95% in the case of packed room position lists. Plugging this in to many places where I had previously stored coordinates or room positions in Memory reduced total memory impact by about 70%. Exported packrat functions:
+    - packId, unpackId, packIdList, unpackIdList: Convert a standard 24-character hex id in screeps to a compressed UTF-16 encoded string of length 6. Benchmarking: average of 500ns to pack, 1.2us to unpack per id on shard2 public server, reduce stringified size by up to 81% (packIdList)
+    - packCoord, unpackCoord, packCoordList, unpackCoordList, unpackCoordAsPos, unpackCoordListAsPosList: Packs a coord as a single utf-16 character. Benchmarking: average of 150ns to pack, 100ns to unpack per coord on shard2 public server, reduce stringified size by up to 94% (packCoordList)
+    - packPos, unpackPos, packPosList, unpackPosList: Packs a RoomPosition as a pair utf-16 characters. Benchmarking: average of 100-200ns per position to pack, 500-1000ns to unpack on shard2 public server, reduce stringified size by 95% (packPosList)
+- @Davaned: Added `Colony.suspendOutpost` methods which allow a colony to temporarily cease operations in an outpost which is currently not viable, such as having an invader core spawn in the room
+- Added a global PERMACACHE object which is used to track immutable properties such as Cartographer.roomType or creep body compositions. Plugged into several points in the codebase, and working on further integration.
 - Added a remote upgrading directive and overlord: will spawn haulers and upgraders to quickly upgrade a far-away room and integrates with the new portal code. Carriers will also haul valuable resources from un-owned store structures on their return trip to the parent colony.
 - Refactored the Zerg class to extend AnyZerg and added a PowerZerg class which also extends AnyZerg. A number of methods throughout the codebase (especially on Movement) have been changed to take AnyZerg as an argument.
 - Lots of new methods on RoomIntel:
@@ -13,8 +21,16 @@ NOTE: This release of Overmind now requires Node 10+ to deploy. You will need to
     - RoomIntel.getRoomStatus provides a cached version of Game.map.getRoomStatus
     - RoomIntel.findPortalsInRange searches for open portals within a certain range of any colony
     - RoomIntel.getMyZoneStatus returns the type of zone that you are currently spawned in. I will use this method to implement novice zone restrictions in the near future
+    - Methods for working with stored room memory data in human-readable format:
+        - RoomIntel.getExpansionData
+        - RoomIntel.setExpansionData
+        - RoomIntel.getPortalInfo
+        - RoomIntel.getSourceInfo
+        - RoomIntel.getControllerInfo
+        - RoomIntel.getImportantStructureInfo
+        - RoomIntel.getAllRoomObjectInfo
 - Merged and modified pull request #156 from @zGeneral, which adds "room poisoner" functionality to wall off sources and controllers in unused rooms
-- Added portal capabilities and automatic portal pathing to the `Pathing` module
+- Added portal capabilities and automatic portal pathing to the `Pathing` module!
 - Added and plugged in new `CombatCreepSetup` class which creates more flexible creep bodies based on the desired boost types. If lower tier move boosts are the best available, the body ratios are adjusted accordingly to maintain a target move speed.
 - Improvements to the `EvolutionChamber` to utilize the new terminal network and use a wider variety of boosts, not just T3.
     - `EvolutionChamber.bestBoostAvailable` takes a BoostType ('attack', 'tough', 'move', etc.) and amount and returns the highest tier boost that is either available in the colony or obtainable throught the terminal network to boost that type of part.
@@ -55,7 +71,7 @@ NOTE: This release of Overmind now requires Node 10+ to deploy. You will need to
     - The `TrainingOpponents` file provides a set of rudimentary opponents to train the RL models against.
 - Created a [documentation site](https://bencbartlett.github.io/overmind-docs/) using TypeDoc!
     - Added/reformatted docstring-comments throughout the codebase
-- Added the `RemoteDebugger` module, which lets me remotely debug other Overmind players' code in real-time by communicating through public memory segments. 
+- Added the `RemoteDebugger` module, which lets me remotely debug other Overmind players' code in real-time by communicating through public memory segments.
     - You can start and end a debug session with the `startRemoteDebugSession()` and `endRemoteDebugSession()` commands
     - Debug sessions automatically time out after 1000 ticks unless extended
     - Ping me on Slack #overmind if you want me to debug something for you
@@ -89,9 +105,13 @@ NOTE: This release of Overmind now requires Node 10+ to deploy. You will need to
     - Reduced terminal equilibrium energy from 100k to 50k
 
 ### Changed
+- Changed the signature of Mem.wrap to take a memory defaults generator instead of an object. This will avoid future bugs which are caused by _.defaults(memObject, defaultMemObject) copying references of the default memory object and subsequent modifications to memory mutating the defaults object.
+- Another massive memory size reduction: plugged in `packrat.ts` methods to many places in the codebase where coordinates and positions are serialized. This, along with other changes to memory and logged stats, reduced memory impact by about 70% (1760kB -> 570kB)
+- Lots of changes to logistics systems to account for the recent(ish) changes to Structure.store and Creep.carry -> Creep.store
 - Updated the Grafana dashboard to account for new TerminalNetwork changes
 - Updated many of the deployment dependencies in package.json. You will need to `npm install` to update these packages.
-- MASSIVE memory size reduction: many common memory keys have been aliased to single-character names using a set of constant enums in `memory.d.ts`. For example, `memory.colony` is now `memory.C` and is referenced in code as `memory[_MEM.COLONY]`.
+- Rewrote the extractor overlord to be more CPU efficient
+- Massive memory size reduction: many common memory keys have been aliased to single-character names using a set of constant enums in `memory.d.ts`. For example, `memory.colony` is now `memory.C` and is referenced in code as `memory[_MEM.COLONY]`.
     - You can expect your memory usage to drop by about half(!) after applying this change.
 - `MiningOverlord` will now suicide old miners when their replacements arrive, preventing excess CPU use
 - Major improvements to swarm target finding/avoiding logic

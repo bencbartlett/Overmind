@@ -252,7 +252,7 @@ export class RoomIntel {
 	/**
 	 * Retrieves all info for permanent room objects and returns it in a more readable/useful form
 	 */
-	static getRoomObjectData(roomName: string): RoomInfo | undefined {
+	static getAllRoomObjectInfo(roomName: string): RoomInfo | undefined {
 		const mem = Memory.rooms[roomName];
 		if (mem) {
 			const savedController = mem[RMEM.CONTROLLER];

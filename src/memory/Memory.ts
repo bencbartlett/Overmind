@@ -130,12 +130,8 @@ export class Mem {
 	static wrap(memory: any, memName: string, getDefaults: () => ({ [key: string]: any }) = () => ({})) {
 		if (memory[memName] === undefined) {
 			memory[memName] = getDefaults();
-		} else {
-			if (Game.time == LATEST_GLOBAL_RESET_TICK) {
-				// The mem defaults would only change with a global reset
-				_.defaultsDeep(memory[memName], getDefaults());
-			}
-
+		} else if (Game.time == LATEST_GLOBAL_RESET_TICK) { // mem defaults would only change with a global reset
+			_.defaultsDeep(memory[memName], getDefaults());
 		}
 		// if (deep) {
 		// 	_.defaultsDeep(memory[memName], defaults);
