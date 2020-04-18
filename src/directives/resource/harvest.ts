@@ -8,22 +8,24 @@ import {Directive} from '../Directive';
 
 
 // Because harvest directives are the most common, they have special shortened memory keys to minimize memory impact
-export const _HARVEST_MEM_PATHING = 'P';
-export const _HARVEST_MEM_USAGE = 'u';
-export const _HARVEST_MEM_DOWNTIME = 'd';
+const enum HARVEST_MEM {
+	PATHING='P',
+	USAGE = 'u',
+	DOWNTIME = 'd',
+}
 
 interface DirectiveHarvestMemory extends FlagMemory {
-	[_HARVEST_MEM_PATHING]?: {
+	[HARVEST_MEM.PATHING]?: {
 		[MEM.DISTANCE]: number,
 		[MEM.EXPIRATION]: number
 	};
-	[_HARVEST_MEM_USAGE]: number;
-	[_HARVEST_MEM_DOWNTIME]: number;
+	[HARVEST_MEM.USAGE]: number;
+	[HARVEST_MEM.DOWNTIME]: number;
 }
 
 const defaultDirectiveHarvestMemory: DirectiveHarvestMemory = {
-	[_HARVEST_MEM_USAGE]   : 1,
-	[_HARVEST_MEM_DOWNTIME]: 0,
+	[HARVEST_MEM.USAGE]   : 1,
+	[HARVEST_MEM.DOWNTIME]: 0,
 };
 
 /**
@@ -52,15 +54,15 @@ export class DirectiveHarvest extends Directive {
 
 	// Hauling distance
 	get distance(): number {
-		if (!this.memory[_HARVEST_MEM_PATHING] || Game.time >= this.memory[_HARVEST_MEM_PATHING]![MEM.EXPIRATION]) {
+		if (!this.memory[HARVEST_MEM.PATHING] || Game.time >= this.memory[HARVEST_MEM.PATHING]![MEM.EXPIRATION]) {
 			const distance = Pathing.distance(this.colony.pos, this.pos) || Infinity;
 			const expiration = getCacheExpiration(this.colony.storage ? 5000 : 1000);
-			this.memory[_HARVEST_MEM_PATHING] = {
+			this.memory[HARVEST_MEM.PATHING] = {
 				[MEM.DISTANCE]  : distance,
 				[MEM.EXPIRATION]: expiration
 			};
 		}
-		return this.memory[_HARVEST_MEM_PATHING]![MEM.DISTANCE];
+		return this.memory[HARVEST_MEM.PATHING]![MEM.DISTANCE];
 	}
 
 	spawnMoarOverlords() {
@@ -84,11 +86,11 @@ export class DirectiveHarvest extends Directive {
 	private computeStats() {
 		const source = this.overlords.mine.source;
 		if (source && source.ticksToRegeneration == 1) {
-			this.memory[_HARVEST_MEM_USAGE] = (source.energyCapacity - source.energy) / source.energyCapacity;
+			this.memory[HARVEST_MEM.USAGE] = (source.energyCapacity - source.energy) / source.energyCapacity;
 		}
 		const container = this.overlords.mine.container;
-		this.memory[_HARVEST_MEM_DOWNTIME] = +(ema(container ? +container.isFull : 0,
-												   this.memory[_HARVEST_MEM_DOWNTIME],
+		this.memory[HARVEST_MEM.DOWNTIME] = +(ema(container ? +container.isFull : 0,
+												   this.memory[HARVEST_MEM.DOWNTIME],
 												   CREEP_LIFE_TIME)).toFixed(5);
 	}
 

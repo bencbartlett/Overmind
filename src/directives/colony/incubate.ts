@@ -21,6 +21,10 @@ export class DirectiveIncubate extends Directive {
 		super(flag, colony => colony.level >= 7);
 		// Register incubation status
 		this.incubatee = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
+		this.refresh();
+	}
+
+	refresh() {
 		if (this.incubatee) {
 			this.incubatee.state.isIncubating = true;
 			this.incubatee.spawnGroup = new SpawnGroup(this.incubatee);

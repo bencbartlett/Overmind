@@ -31,6 +31,11 @@ export let OverlordPriority = {
 		remoteUpgrading: 410,
 	},
 
+	priorityOwnedRoom: {		// Situationally prioritized in-room operations
+		priorityUpgrade: 450,
+		priorityTransport: 451,
+	},
+
 	ownedRoom: { 				// Operation of an owned room
 		firstTransport: 500,		// High priority to spawn the first transporter
 		mine          : 501,
