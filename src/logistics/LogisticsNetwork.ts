@@ -659,8 +659,7 @@ export class LogisticsNetwork {
 					if (isResource(request.target)) {
 						amount = request.target.amount;
 					} else {
-						// @ts-ignore
-						amount = request.target.store(request.resourceType);
+						amount = request.target.store[request.resourceType];
 					}
 				}
 

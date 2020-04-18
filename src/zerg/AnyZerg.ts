@@ -56,6 +56,7 @@ interface ParkingOptions {
 }
 
 interface FleeOptions {
+	timer?: number
 	dropEnergy?: boolean;
 	invalidateTask?: boolean;
 }
@@ -405,9 +406,10 @@ export abstract class AnyZerg {
 
 	/**
 	 * Callback that is checked for many civilian roles. Returns true if the civilian zerg is in a dangerous situation
-	 * and handles the zerg retreating to a fallback room.
+	 * and handles the zerg retreating to a fallback room. Acts as a replacement to the current default Zerg.flee()
+	 * danger avoidance logic
 	 */
-	avoidDanger(timer = 10): boolean {
+	avoidDanger(opts: FleeOptions = {}): boolean {
 
 		// If you're almost expired or you're spawning do nothing
 		if ((this.ticksToLive || 0) < 50) {
@@ -415,9 +417,15 @@ export abstract class AnyZerg {
 			return false;
 		}
 
+		_.defaults(opts, {timer: 10, dropEnergy: true});
+
+		// If you previously determined you are in danger, wait for timer to expire
 		if (this.memory.avoidDanger) {
 			if (this.memory.avoidDanger.timer > 0) {
 				this.goToRoom(this.memory.avoidDanger.fallback);
+				if (opts.dropEnergy && this.carry.energy > 0) {
+					this.drop(RESOURCE_ENERGY); // transfer energy to container check is only run on first danger tick
+				}
 				this.memory.avoidDanger.timer--;
 				return true;
 			} else {
@@ -466,9 +474,17 @@ export abstract class AnyZerg {
 
 			this.memory.avoidDanger = {
 				start   : Game.time,
-				timer   : timer,
+				timer   : opts.timer!,
 				fallback: fallback,
 			};
+
+			if (opts.dropEnergy && this.carry.energy > 0) {
+				const containersInRange = this.pos.findInRange(this.room.containers, 1);
+				const adjacentContainer = _.first(containersInRange);
+				if (adjacentContainer) {
+					this.transfer(adjacentContainer, RESOURCE_ENERGY);
+				}
+			}
 
 			this.goToRoom(fallback);
 			return true;
