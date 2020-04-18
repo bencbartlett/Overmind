@@ -1,5 +1,7 @@
+import {MatrixLib} from '../matrix/MatrixLib';
 import {profile} from '../profiler/decorator';
 import {StructureLayout, StructureMap} from '../roomPlanner/RoomPlanner';
+import {rgbToHex} from '../utilities/utils';
 import {asciiLogo, logoComponents, logoText} from './logos';
 
 
@@ -96,34 +98,36 @@ export class Visualizer {
 		}
 	}
 
-	static displayCostMatrix(costMatrix: CostMatrix, roomName?: string, dots = true, color = '#ff0000',
-							 displayZero                                                   = true): void {
+	static displayCostMatrix(matrix: CostMatrix, roomName?: string,
+							 opts = {dots: true, displayZero: true}): void {
+
+		opts = _.defaults(opts, {dots: true, displayZero: true});
 
 		const vis = new RoomVisual(roomName);
-		let x, y: number;
+		let x, y, cost, percentOfMax: number;
+		let color: string;
 
-		if (dots) {
-			let cost: number;
-			let max = 1;
+		const maxVal = MatrixLib.getMaxValue(matrix) + 1;
+
+		if (opts.dots) {
 			for (y = 0; y < 50; ++y) {
 				for (x = 0; x < 50; ++x) {
-					max = Math.max(max, costMatrix.get(x, y));
-				}
-			}
-
-			for (y = 0; y < 50; ++y) {
-				for (x = 0; x < 50; ++x) {
-					cost = costMatrix.get(x, y);
+					cost = matrix.get(x, y);
 					if (cost > 0) {
-						vis.circle(x, y, {radius: costMatrix.get(x, y) / max / 2, fill: color});
+						percentOfMax = Math.round(255 * cost / maxVal);
+						color = rgbToHex(255, 255 - percentOfMax, 255 - percentOfMax);
+						vis.circle(x, y, {radius: matrix.get(x, y) / maxVal / 2, fill: color});
 					}
 				}
 			}
 		} else {
 			for (y = 0; y < 50; ++y) {
 				for (x = 0; x < 50; ++x) {
-					if (displayZero || costMatrix.get(x, y) != 0) {
-						vis.text(costMatrix.get(x, y).toString(), x, y, {color: color});
+					cost = matrix.get(x, y);
+					if (opts.displayZero || cost != 0) {
+						percentOfMax = Math.round(255 * cost / maxVal);
+						color = rgbToHex(255, 255 - percentOfMax, 255 - percentOfMax);
+						vis.text(matrix.get(x, y).toString(), x, y, {color: color});
 					}
 				}
 			}

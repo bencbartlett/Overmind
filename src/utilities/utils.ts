@@ -34,6 +34,15 @@ export function color(str: string, color: string): string {
 	return `<font color='${color}'>${str}</font>`;
 }
 
+function componentToHex(n: number): string {
+	const hex = n.toString(16);
+	return hex.length == 1 ? '0' + hex : hex;
+}
+
+export function rgbToHex(r: number, g: number, b: number): string {
+	return '#' + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
 /**
  * Correct generalization of the modulo operator to negative numbers
  */

@@ -131,7 +131,7 @@ export abstract class Overlord {
 	/**
 	 * Refreshes overlord, recalculating creeps and refreshing existing Zerg. New creeps are automatically added,
 	 * and the corresponding role groups (e.g. 'queens') are automatically updated. Child methods do not need to
-	 * refresh their zerg properties, only other room objects stored on the Overlord.
+	 * refresh their zerg properties or their memories, only other room objects stored on the Overlord.
 	 */
 	refresh(): void {
 		// Refresh memory

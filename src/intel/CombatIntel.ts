@@ -132,7 +132,7 @@ export class CombatIntel {
 				}
 			});
 
-			Visualizer.displayCostMatrix(matrix, room.name, false, undefined, false);
+			Visualizer.displayCostMatrix(matrix, room.name);
 			console.log(`Cost matrix cpu used in ${room.print} = ${(Game.cpu.getUsed() - cpuUsed)}`);
 			return matrix;
 		}
@@ -165,7 +165,7 @@ export class CombatIntel {
 				}
 			});
 
-			Visualizer.displayCostMatrix(matrix, room.name, false, undefined, false);
+			Visualizer.displayCostMatrix(matrix, room.name);
 			console.log(`Cost matrix cpu used in ${room.print} = ${(Game.cpu.getUsed() - cpuUsed)}`);
 			return matrix;
 		}
