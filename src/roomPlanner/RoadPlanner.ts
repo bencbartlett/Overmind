@@ -29,8 +29,8 @@ const EXISTING_PATH_COST = ROAD_PLANNER_PLAIN_COST - 1;
 
 const getDefaultRoadPlannerMemory: () => RoadPlannerMemory = () => ({
 	roadCoordsPacked: {},
-	roadCoverage : 0.0,
-	roadCoverages: {}
+	roadCoverage    : 0.0,
+	roadCoverages   : {}
 });
 
 @profile
@@ -342,7 +342,12 @@ export class RoadPlanner {
 			if (count > 0 && RoomPlanner.canBuild(STRUCTURE_ROAD, pos)) {
 				const ret = pos.createConstructionSite(STRUCTURE_ROAD);
 				if (ret != OK) {
-					log.warning(`${this.colony.name}: couldn't create road site at ${pos.print}. Result: ${ret}`);
+					if (ret == ERR_NOT_OWNER && Game.time % 50 == 0) {
+						log.warning(`${this.colony.name}: couldn't create road site at ${pos.print}; room is ` +
+									`reserved/owned by hostile forces!`);
+					} else {
+						log.warning(`${this.colony.name}: couldn't create road site at ${pos.print}. Result: ${ret}`);
+					}
 				} else {
 					count--;
 				}
@@ -356,7 +361,7 @@ export class RoadPlanner {
 	roadShouldBeHere(pos: RoomPosition): boolean {
 		if (this._roadLookup == undefined) {
 			this._roadLookup = _.memoize((p: RoomPosition) =>
-												this.memory.roadCoordsPacked[p.roomName].includes(packCoord(p)));
+											 this.memory.roadCoordsPacked[p.roomName].includes(packCoord(p)));
 		}
 		return this._roadLookup(pos);
 	}

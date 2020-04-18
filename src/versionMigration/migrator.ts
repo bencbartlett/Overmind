@@ -411,7 +411,7 @@ export class VersionMigration {
 		log.alert(`Cleaning memory...`);
 		delete Memory.strategist;
 		delete Memory.zoneRooms;
-		delete Memory.roomIntel; // reset this
+		Memory.roomIntel = {}; // reset this
 
 		delete Memory.stats.persistent.terminalNetwork.transfers;
 		delete Memory.stats.persistent.terminalNetwork.costs;
