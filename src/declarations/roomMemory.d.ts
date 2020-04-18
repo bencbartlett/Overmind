@@ -12,7 +12,7 @@ interface RoomMemory {
 	[RMEM.CONTROLLER]?: SavedController;
 	[RMEM.PORTALS]?: SavedPortal[];
 	[RMEM.MINERAL]?: SavedMineral;
-	[RMEM.SKLAIRS]?: SavedRoomObject[];
+	[RMEM.SKLAIRS]?: SavedKeeperLair[];
 	[RMEM.IMPORTANT_STRUCTURES]?: {
 		// Positions of important structures relevant to sieges
 		[RMEM_STRUCTS.STORAGE]: string | undefined;
@@ -156,6 +156,10 @@ interface SavedController extends SavedRoomObject {
 interface SavedMineral extends SavedRoomObject {
 	[RMEM_MNRL.MINERALTYPE]: MineralConstant;
 	[RMEM_MNRL.DENSITY]: number;
+}
+
+interface SavedKeeperLair extends SavedRoomObject {
+	cp?: string;
 }
 
 declare const enum RMEM_SAFETY {

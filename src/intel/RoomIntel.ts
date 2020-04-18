@@ -1,7 +1,5 @@
 // Room intel - provides information related to room structure and occupation
 
-import {log} from '../console/log';
-import {Segmenter} from '../memory/Segmenter';
 import {profile} from '../profiler/decorator';
 import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
 import {Cartographer, ROOMTYPE_CORE} from '../utilities/Cartographer';
@@ -18,7 +16,7 @@ import {ema, getCacheExpiration} from '../utilities/utils';
 import {Zerg} from '../zerg/Zerg';
 import {CombatIntel} from './CombatIntel';
 
-const RECACHE_TIME = 2500;
+const RECACHE_TIME = 5000;
 const OWNED_RECACHE_TIME = 1000;
 const ROOM_CREEP_HISTORY_TICKS = 25;
 const SCORE_RECALC_PROB = 0.05;
@@ -62,6 +60,10 @@ export interface ControllerInfo extends RoomObjectInfo {
 
 export interface SourceInfo extends RoomObjectInfo {
 	containerPos?: RoomPosition;
+}
+
+export interface KeeperLairInfo extends RoomObjectInfo {
+	chillPos?: RoomPosition;
 }
 
 export interface MineralInfo extends RoomObjectInfo {
@@ -208,6 +210,19 @@ export class RoomIntel {
 	}
 
 	/**
+	 * Returns information about intra-shard portals in a given room
+	 */
+	static getKeeperLairInfo(roomName: string): KeeperLairInfo[] | undefined {
+		if (!Memory.rooms[roomName] || !Memory.rooms[roomName][RMEM.SKLAIRS]) {
+			return;
+		}
+		return _.map(Memory.rooms[roomName][RMEM.SKLAIRS]!, savedLair => ({
+			pos     : unpackCoordAsPos(savedLair.c, roomName),
+			chillPos: savedLair.cp ? unpackCoordAsPos(savedLair.cp, roomName) : undefined
+		}));
+	}
+
+	/**
 	 * Unpackages saved information about a room's controller
 	 */
 	static getControllerInfo(roomName: string): ControllerInfo | undefined {
@@ -287,16 +302,11 @@ export class RoomIntel {
 	private static recordPermanentObjects(room: Room): void {
 		room.memory[MEM.TICK] = Game.time;
 		if (room.sources.length > 0) {
-			const savedSources: SavedSource[] = [];
-			for (const source of room.sources) {
-				const savedSource: SavedSource = {c: packCoord(source.pos)};
+			room.memory[RMEM.SOURCES] = _.map(room.sources, source => {
+				const coord = packCoord(source.pos);
 				const container = source.pos.findClosestByLimitedRange(room.containers, 2);
-				if (container) {
-					savedSource.cn = packCoord(container.pos);
-				}
-				savedSources.push(savedSource);
-			}
-			room.memory[RMEM.SOURCES] = savedSources;
+				return container ? {c: coord, cn: packCoord(container.pos)} : {c: coord};
+			});
 		} else {
 			delete room.memory[RMEM.SOURCES];
 		}
@@ -329,7 +339,17 @@ export class RoomIntel {
 			delete room.memory[RMEM.MINERAL];
 		}
 		if (room.keeperLairs.length > 0) {
-			room.memory[RMEM.SKLAIRS] = _.map(room.keeperLairs, lair => ({c: packCoord(lair.pos)}));
+			room.memory[RMEM.SKLAIRS] = _.map(room.keeperLairs, lair => {
+				// Keeper logic is to just move to the first _.find([...sources, mineral], range <=5); see
+				// https://github.com/screeps/engine/blob/master/src/processor/intents/creeps/keepers/pretick.js
+				const keeperTarget = _.find(_.compact([...room.sources, room.mineral]),
+											thing => thing!.pos.getRangeTo(lair.pos) <= 5);
+				let chillPos: RoomPosition | undefined;
+				if (keeperTarget) { // should always be true
+					chillPos = lair.pos.findClosestByPath(keeperTarget.pos.neighbors) || undefined;
+				}
+				return chillPos ? {c: packCoord(lair.pos), cp: packCoord(chillPos)} : {c: packCoord(lair.pos)};
+			});
 		} else {
 			delete room.memory[RMEM.SKLAIRS];
 		}

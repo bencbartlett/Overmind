@@ -24,7 +24,6 @@ export class SourceReaperOverlord extends CombatOverlord {
 
 	static requiredRCL = 7;
 
-	directive: DirectiveSKOutpost;
 	memory: SourceReaperOverlordMemory;
 	targetLair: StructureKeeperLair | undefined;
 
@@ -33,7 +32,6 @@ export class SourceReaperOverlord extends CombatOverlord {
 
 	constructor(directive: DirectiveSKOutpost, priority = OverlordPriority.remoteSKRoom.sourceReaper) {
 		super(directive, 'sourceReaper', priority, SourceReaperOverlord.requiredRCL);
-		this.directive = directive;
 		this.priority += this.outpostIndex * OverlordPriority.remoteSKRoom.roomIncrement;
 		this.reapers = this.combatZerg(Roles.melee);
 		this.defenders = this.combatZerg(Roles.ranged);
@@ -44,13 +42,22 @@ export class SourceReaperOverlord extends CombatOverlord {
 	private computeTargetLair() {
 		this.targetLair = this.memory.targetLairID ? <StructureKeeperLair>deref(this.memory.targetLairID) : undefined;
 		if (!this.targetLair || (this.targetLair.ticksToSpawn || Infinity) >= 299) {
-			this.targetLair = this.getNextTargetLair();
+			if (this.room) {
+				// If any lairs have an active keeper, target that
+				const activeLair = _.find(this.room.keeperLairs,
+										  lair => lair.pos.findInRange(lair.room.sourceKeepers, 5).length > 0);
+				if (activeLair) {
+					this.targetLair = activeLair;
+				} else {
+					// Otherwise target whatever is closest to spawning
+					this.targetLair = minBy(this.room.keeperLairs, lair => lair.ticksToSpawn || Infinity);
+				}
+			}
 		}
 	}
 
 	refresh() {
 		super.refresh();
-		this.memory = Mem.wrap(this.directive.memory, 'sourceReaper');
 		this.computeTargetLair();
 	}
 
@@ -59,17 +66,6 @@ export class SourceReaperOverlord extends CombatOverlord {
 											 || RoomIntel.isInvasionLikely(this.room)) ? 1 : 0;
 		this.wishlist(1, CombatSetups.zerglings.sourceKeeper);
 		this.wishlist(defenderAmount, CombatSetups.hydralisks.sourceKeeper);
-	}
-
-	private getNextTargetLair(): StructureKeeperLair | undefined {
-		if (!this.room) return;
-		// If any lairs have an active keeper, target that
-		const activeLair = _.find(this.room.keeperLairs,
-								  lair => lair.pos.findInRange(lair.room.sourceKeepers, 5).length > 0);
-		if (activeLair) return activeLair;
-		// Otherwise target whatever is closest to spawning
-		return minBy(this.room.keeperLairs,
-					 lair => lair.ticksToSpawn || Infinity); // not sure why ticksToSpawn is number | undefined
 	}
 
 	private handleReaper(reaper: CombatZerg) {
@@ -97,7 +93,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 			// Kite around ranged invaders until a defender arrives
 			if (this.room.invaders.length > 2 && _.filter(this.defenders, def => def.room == this.room).length == 0) {
 				reaper.kite(_.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0),
-							{pathOpts:{avoidSK:false}});
+							{pathOpts: {avoidSK: false}});
 				reaper.healSelfIfPossible();
 			}
 			// If defender is already here or a small invasion
