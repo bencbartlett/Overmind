@@ -23,10 +23,15 @@ interface TerminalNetworkMemory {
 const getDefaultTerminalNetworkMemory: () => TerminalNetworkMemory = () => ({});
 
 interface TerminalNetworkStats {
-	transfers: {
-		[resourceType: string]: { [origin: string]: { [destination: string]: number } },
-		costs: { [origin: string]: { [destination: string]: number } }
-	};
+	// transfers: {
+	// 	[resourceType: string]: { [origin: string]: { [destination: string]: number } },
+	// 	costs: { [origin: string]: { [destination: string]: number } }
+	// };
+	assets: { [resource: string]: number };
+	fractionalEnergyTransferCost: number;
+	incomingResources: { [resource: string]: { [colony: string]: number } };
+	outgoingResources: { [resource: string]: { [colony: string]: number } };
+	sendCosts: { [colony: string]: number };
 	terminals: {
 		avgCooldown: { [colonyName: string]: number }; // moving exponential average of cooldown - ranges from 0 to 5
 		overload: { [colonyName: string]: number }; // rolling avg of (1 if terminal wants to send but can't || 0)
@@ -41,9 +46,14 @@ interface TerminalNetworkStats {
 }
 
 const getDefaultTerminalNetworkStats: () => TerminalNetworkStats = () => ({
-	transfers: {
-		costs: {},
-	},
+	// transfers: {
+	// 	costs: {},
+	// },
+	assets: {},
+	fractionalEnergyTransferCost: 0.25, // some believable initial value
+	incomingResources: {},
+	outgoingResources: {},
+	sendCosts: {},
 	terminals: {
 		avgCooldown: {},
 		overload   : {},
@@ -373,22 +383,22 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 
 	// Transfer logging and notification stuff =========================================================================
 
-	private logTransfer(resourceType: ResourceConstant, amount: number, origin: string, destination: string) {
-		if (!this.stats.transfers[resourceType]) this.stats.transfers[resourceType] = {};
-		if (!this.stats.transfers[resourceType][origin]) this.stats.transfers[resourceType][origin] = {};
-		if (!this.stats.transfers[resourceType][origin][destination]) {
-			this.stats.transfers[resourceType][origin][destination] = 0;
-		}
-		this.stats.transfers[resourceType][origin][destination] += amount;
-		this.logTransferCosts(amount, origin, destination);
-	}
-
-	private logTransferCosts(amount: number, origin: string, destination: string) {
-		if (!this.stats.transfers.costs[origin]) this.stats.transfers.costs[origin] = {};
-		if (!this.stats.transfers.costs[origin][destination]) this.stats.transfers.costs[origin][destination] = 0;
-		const transactionCost = Game.market.calcTransactionCost(amount, origin, destination);
-		this.stats.transfers.costs[origin][destination] += transactionCost;
-	}
+	// private logTransfer(resourceType: ResourceConstant, amount: number, origin: string, destination: string) {
+	// 	if (!this.stats.transfers[resourceType]) this.stats.transfers[resourceType] = {};
+	// 	if (!this.stats.transfers[resourceType][origin]) this.stats.transfers[resourceType][origin] = {};
+	// 	if (!this.stats.transfers[resourceType][origin][destination]) {
+	// 		this.stats.transfers[resourceType][origin][destination] = 0;
+	// 	}
+	// 	this.stats.transfers[resourceType][origin][destination] += amount;
+	// 	this.logTransferCosts(amount, origin, destination);
+	// }
+	//
+	// private logTransferCosts(amount: number, origin: string, destination: string) {
+	// 	if (!this.stats.transfers.costs[origin]) this.stats.transfers.costs[origin] = {};
+	// 	if (!this.stats.transfers.costs[origin][destination]) this.stats.transfers.costs[origin][destination] = 0;
+	// 	const transactionCost = Game.market.calcTransactionCost(amount, origin, destination);
+	// 	this.stats.transfers.costs[origin][destination] += transactionCost;
+	// }
 
 	private notify(msg: string): void {
 		this.notifications.push(bullet + msg);
@@ -400,7 +410,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	private transfer(sender: StructureTerminal, receiver: StructureTerminal, resourceType: ResourceConstant,
 					 amount: number, description: string): ScreepsReturnCode {
 		const cost = Game.market.calcTransactionCost(amount, sender.room.name, receiver.room.name);
-		const response = sender.send(resourceType, amount, receiver.room.name);
+		const response = sender.send(resourceType, amount, receiver.room.name, description);
 		if (response == OK) {
 			let msg;
 			const floorAmt = Math.floor(amount);
@@ -419,7 +429,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			}
 
 			this.notify(msg);
-			this.logTransfer(resourceType, amount, sender.room.name, receiver.room.name);
+			// this.logTransfer(resourceType, amount, sender.room.name, receiver.room.name);
 		} else {
 			log.warning(`Could not send ${amount} ${resourceType} from ${sender.room.print} to ` +
 						`${receiver.room.print}! Response: ${response}`);
@@ -1107,19 +1117,25 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		}
 	}
 
+	private isInternalTransaction(transaction: Transaction): boolean {
+		return !!transaction.sender && !!transaction.sender.username &&
+			   !!transaction.recipient && !!transaction.recipient.username &&
+			   transaction.sender.username == transaction.recipient.username;
+	}
+
 	private recordStats(): void {
+		// Record terminal stats
 		for (const colony of this.colonies) {
 			if (colony.terminal) {
-				this.stats.terminals.avgCooldown[colony.name] = ema(
-					colony.terminal.cooldown,
-					this.stats.terminals.avgCooldown[colony.name] || 0,
-					TerminalNetworkV2.settings.terminalCooldownAveragingWindow);
-				this.stats.terminals.overload[colony.name] = ema(
-					this.terminalOverload[colony.name] ? 1 : 0,
-					this.stats.terminals.overload[colony.name],
-					CREEP_LIFE_TIME);
+				this.stats.terminals.avgCooldown[colony.name] =
+					ema(colony.terminal.cooldown, this.stats.terminals.avgCooldown[colony.name] || 0,
+						TerminalNetworkV2.settings.terminalCooldownAveragingWindow);
+				this.stats.terminals.overload[colony.name] =
+					ema(this.terminalOverload[colony.name] ? 1 : 0, this.stats.terminals.overload[colony.name],
+						CREEP_LIFE_TIME);
 			}
 		}
+
 		// Rearrange and populate the states entries of stats
 		const activeRequestors: { [colony: string]: string[] } = {};
 		const passiveRequestors: { [colony: string]: string[] } = {};
@@ -1147,13 +1163,46 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			}
 		}
 
-		// Assign the transformed object to stats
+		// Assign the transformed object to stats // TODO: graphite doesn't allow string values; need to rewrite this
 		this.stats.states.activeRequestors = activeRequestors;
 		this.stats.states.passiveRequestors = passiveRequestors;
 		this.stats.states.equilibriumNodes = equilibriumNodes;
 		this.stats.states.passiveProviders = passiveProviders;
 		this.stats.states.activeProviders = activeProviders;
 
+		// Record internal incoming/outgoing resource stats
+		const lastTick = Game.time - 1;
+		for (const transaction of Game.market.incomingTransactions) {
+			if (transaction.time < lastTick) break; // only look at things from last tick
+			if (!this.isInternalTransaction(transaction)) continue; // only count internal transfers here
+			const resource = transaction.resourceType;
+			const room = transaction.to;
+			this.stats.incomingResources[resource] = this.stats.incomingResources[resource] || {};
+			this.stats.incomingResources[resource][room] = this.stats.incomingResources[resource][room] || 0;
+			this.stats.incomingResources[resource][room] += transaction.amount;
+		}
+		for (const transaction of Game.market.outgoingTransactions) {
+			if (transaction.time < lastTick) break; // only look at things from last tick
+			if (!this.isInternalTransaction(transaction)) continue; // only count internal transfers here
+			const resource = transaction.resourceType;
+			const room = transaction.from;
+			this.stats.outgoingResources[resource] = this.stats.outgoingResources[resource] || {};
+			this.stats.outgoingResources[resource][room] = this.stats.outgoingResources[resource][room] || 0;
+			this.stats.outgoingResources[resource][room] += transaction.amount;
+			// Also count the energy send costs
+			const sendCost = Game.market.calcTransactionCost(transaction.amount, transaction.from, transaction.to);
+			this.stats.sendCosts[room] = this.stats.sendCosts[room] || 0;
+			this.stats.sendCosts[room] += sendCost;
+			// Update fractional energy send cost, averaged over last 100 energy transfers
+			if (resource == RESOURCE_ENERGY) {
+				const fractionalEnergyTransferCost = sendCost / transaction.amount;
+				this.stats.fractionalEnergyTransferCost =
+					ema(fractionalEnergyTransferCost, this.stats.fractionalEnergyTransferCost, 100);
+			}
+		}
+
+		// Record assets
+		this.stats.assets = this.assets;
 	}
 
 	/**

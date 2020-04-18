@@ -271,111 +271,31 @@ export class TraderJoe implements ITradeNetwork {
 		this.memory.cache = getDefaultTraderMemory().cache;
 	}
 
-	/**
-	 * Pretty-prints transaction information in the console
-	 */
-	private logTransaction(order: Order, terminalRoomName: string, amount: number, response: number): void {
-		const cost = (order.price * amount).toFixed(0);
-		const fee = order.roomName ? Game.market.calcTransactionCost(amount, order.roomName, terminalRoomName) : 0;
-		const roomName = printRoomName(terminalRoomName, true);
-		let msg: string;
-		if (order.type == ORDER_SELL) { // I am buying
-			msg = `Direct: ${roomName} ${leftArrow} ${Math.round(amount)} ${order.resourceType} ${leftArrow} ` +
-				  `${printRoomName(order.roomName!)} (-${cost}c)`;
-			if (response != OK) {
-				msg += ` (ERROR: ${response})`;
-			}
-		} else { // I am selling
-			msg = `Direct: ${roomName} ${rightArrow} ${Math.round(amount)} ${order.resourceType} ${rightArrow} ` +
-				  `${printRoomName(order.roomName!)} (+${cost}c)`;
-			if (response != OK) {
-				msg += ` (ERROR: ${response})`;
-			}
-		}
-		// this.notify(msg); // use the transactions from the ledger instead
-	}
+	// /**
+	//  * Pretty-prints transaction information in the console
+	//  */
+	// private logTransaction(order: Order, terminalRoomName: string, amount: number, response: number): void {
+	// 	const cost = (order.price * amount).toFixed(0);
+	// 	const fee = order.roomName ? Game.market.calcTransactionCost(amount, order.roomName, terminalRoomName) : 0;
+	// 	const roomName = printRoomName(terminalRoomName, true);
+	// 	let msg: string;
+	// 	if (order.type == ORDER_SELL) { // I am buying
+	// 		msg = `Direct: ${roomName} ${leftArrow} ${Math.round(amount)} ${order.resourceType} ${leftArrow} ` +
+	// 			  `${printRoomName(order.roomName!)} (-${cost}c)`;
+	// 		if (response != OK) {
+	// 			msg += ` (ERROR: ${response})`;
+	// 		}
+	// 	} else { // I am selling
+	// 		msg = `Direct: ${roomName} ${rightArrow} ${Math.round(amount)} ${order.resourceType} ${rightArrow} ` +
+	// 			  `${printRoomName(order.roomName!)} (+${cost}c)`;
+	// 		if (response != OK) {
+	// 			msg += ` (ERROR: ${response})`;
+	// 		}
+	// 	}
+	// 	// this.notify(msg); // use the transactions from the ledger instead
+	// }
 
-	private notifyLastTickTransactions(): void {
 
-		// Outgoing transactions are where I sent the resource
-		for (const transaction of Game.market.outgoingTransactions) {
-			if (transaction.time < Game.time - 1) break; // list is ordered by descending time
-
-			if (transaction.order) { // if it was sold on the market
-				let msg: string;
-				const cost = (transaction.amount * transaction.order.price).toFixed(2);
-				// I am selling to another person's buy order
-				if (transaction.order.type == ORDER_BUY) {
-					const coststr = `[+${cost}c]`.padRight('[-10000.00c]'.length);
-					msg = coststr + ` sell direct: ${printRoomName(transaction.to, true)} ${leftArrow} ` +
-						  `${transaction.amount} ${transaction.resourceType} ${leftArrow} ` +
-						  `${printRoomName(transaction.from, true)} `;
-					if (transaction.sender && transaction.recipient) {
-						// const sender = transaction.sender.username; // should be me
-						const recipient = transaction.recipient.username;
-						msg += `(sold to: ${recipient})`;
-					} else {
-						msg += `(sold to: ???)`;
-					}
-				}
-				// Someone else is buying from by sell order
-				else {
-					const coststr = `[+${cost}c]`.padRight('[-10000.00c]'.length);
-					msg = coststr + ` sell order: ${printRoomName(transaction.from, true)} ${rightArrow} ` +
-						  `${transaction.amount} ${transaction.resourceType} ${rightArrow} ` +
-						  `${printRoomName(transaction.to, true)} `;
-					if (transaction.sender && transaction.recipient) {
-						// const sender = transaction.sender.username; // should be me
-						const recipient = transaction.recipient.username;
-						msg += `(buyer: ${recipient})`;
-					} else {
-						msg += `(buyer: ???)`;
-					}
-				}
-				this.notify(msg);
-			}
-		}
-
-		// Incoming transactions are where I received the resource
-		for (const transaction of Game.market.incomingTransactions) {
-			if (transaction.time < Game.time - 1) break; // list is ordered by descending time
-
-			if (transaction.order) { // if it was sold on the market
-				let msg: string;
-				const cost = (transaction.amount * transaction.order.price).toFixed(2);
-				// I am receiving resources from a direct purchase of someone else's sell order
-				if (transaction.order.type == ORDER_SELL) {
-					const coststr = `[-${cost}c]`.padRight('[-10000.00c]'.length);
-					msg = coststr + ` buy direct: ${printRoomName(transaction.to, true)} ${leftArrow} ` +
-						  `${transaction.amount} ${transaction.resourceType} ${leftArrow} ` +
-						  `${printRoomName(transaction.from, true)} `;
-					if (transaction.sender && transaction.recipient) {
-						const sender = transaction.sender.username;
-						// const recipient = transaction.recipient.username; // should be me
-						msg += `(bought from: ${sender})`;
-					} else {
-						msg += `(bought from: ???)`;
-					}
-				}
-				// Another person is selling to my buy order
-				else {
-					const coststr = `[-${cost}c]`.padRight('[-10000.00c]'.length);
-					msg = coststr + ` buy order: ${printRoomName(transaction.from, true)} ${rightArrow} ` +
-						  `${transaction.amount} ${transaction.resourceType} ${rightArrow} ` +
-						  `${printRoomName(transaction.to, true)} `;
-					if (transaction.sender && transaction.recipient) {
-						const sender = transaction.sender.username;
-						// const recipient = transaction.recipient.username; // should be me
-						msg += `(seller: ${sender})`;
-					} else {
-						msg += `(seller: ???)`;
-					}
-				}
-				this.notify(msg);
-			}
-		}
-
-	}
 
 	/**
 	 * Returns a list of orders you have already placed for this type for this resource.
@@ -743,7 +663,7 @@ export class TraderJoe implements ITradeNetwork {
 			// Otherwise make the deal
 			const response = Game.market.deal(order.id, buyAmount, terminal.room.name);
 			this.debug(`buyDirect executed for ${terminal.room.print}: ${buyAmount} ${resource} (${response})`);
-			this.logTransaction(order, terminal.room.name, amount, response);
+			// this.logTransaction(order, terminal.room.name, amount, response);
 			return response;
 		} else {
 			return ERR_INSUFFICIENT_ENERGY_IN_TERMINAL;
@@ -823,7 +743,7 @@ export class TraderJoe implements ITradeNetwork {
 			// Otherwise do the deal
 			const response = Game.market.deal(order.id, sellAmount, terminal.room.name);
 			this.debug(`sellDirect executed for ${terminal.room.print}: ${sellAmount} ${resource} (${response})`);
-			this.logTransaction(order, terminal.room.name, amount, response);
+			// this.logTransaction(order, terminal.room.name, amount, response);
 			return response;
 		} else {
 			return ERR_INSUFFICIENT_ENERGY_IN_TERMINAL;
@@ -935,24 +855,106 @@ export class TraderJoe implements ITradeNetwork {
 		this.recordStats();
 	}
 
+
+	private notifyLastTickTransactions(): void {
+
+		// Outgoing transactions are where I sent the resource
+		for (const transaction of Game.market.outgoingTransactions) {
+			if (transaction.time < Game.time - 1) break; // list is ordered by descending time
+
+			if (transaction.order) { // if it was sold on the market
+				let msg: string;
+				const cost = (transaction.amount * transaction.order.price).toFixed(2);
+				// I am selling to another person's buy order
+				if (transaction.order.type == ORDER_BUY) {
+					const coststr = `[+${cost}c]`.padRight('[-10000.00c]'.length);
+					msg = coststr + ` sell direct: ${printRoomName(transaction.to, true)} ${leftArrow} ` +
+						  `${transaction.amount} ${transaction.resourceType} ${leftArrow} ` +
+						  `${printRoomName(transaction.from, true)} `;
+					if (transaction.sender && transaction.recipient) {
+						// const sender = transaction.sender.username; // should be me
+						const recipient = transaction.recipient.username;
+						msg += `(sold to: ${recipient})`;
+					} else {
+						msg += `(sold to: ???)`;
+					}
+				}
+				// Someone else is buying from by sell order
+				else {
+					const coststr = `[+${cost}c]`.padRight('[-10000.00c]'.length);
+					msg = coststr + ` sell order: ${printRoomName(transaction.from, true)} ${rightArrow} ` +
+						  `${transaction.amount} ${transaction.resourceType} ${rightArrow} ` +
+						  `${printRoomName(transaction.to, true)} `;
+					if (transaction.sender && transaction.recipient) {
+						// const sender = transaction.sender.username; // should be me
+						const recipient = transaction.recipient.username;
+						msg += `(buyer: ${recipient})`;
+					} else {
+						msg += `(buyer: ???)`;
+					}
+				}
+				this.notify(msg);
+			}
+		}
+
+		// Incoming transactions are where I received the resource
+		for (const transaction of Game.market.incomingTransactions) {
+			if (transaction.time < Game.time - 1) break; // list is ordered by descending time
+
+			if (transaction.order) { // if it was sold on the market
+				let msg: string;
+				const cost = (transaction.amount * transaction.order.price).toFixed(2);
+				// I am receiving resources from a direct purchase of someone else's sell order
+				if (transaction.order.type == ORDER_SELL) {
+					const coststr = `[-${cost}c]`.padRight('[-10000.00c]'.length);
+					msg = coststr + ` buy direct: ${printRoomName(transaction.to, true)} ${leftArrow} ` +
+						  `${transaction.amount} ${transaction.resourceType} ${leftArrow} ` +
+						  `${printRoomName(transaction.from, true)} `;
+					if (transaction.sender && transaction.recipient) {
+						const sender = transaction.sender.username;
+						// const recipient = transaction.recipient.username; // should be me
+						msg += `(bought from: ${sender})`;
+					} else {
+						msg += `(bought from: ???)`;
+					}
+				}
+				// Another person is selling to my buy order
+				else {
+					const coststr = `[-${cost}c]`.padRight('[-10000.00c]'.length);
+					msg = coststr + ` buy order: ${printRoomName(transaction.from, true)} ${rightArrow} ` +
+						  `${transaction.amount} ${transaction.resourceType} ${rightArrow} ` +
+						  `${printRoomName(transaction.to, true)} `;
+					if (transaction.sender && transaction.recipient) {
+						const sender = transaction.sender.username;
+						// const recipient = transaction.recipient.username; // should be me
+						msg += `(seller: ${sender})`;
+					} else {
+						msg += `(seller: ???)`;
+					}
+				}
+				this.notify(msg);
+			}
+		}
+
+	}
+
 	/**
 	 * Look through transactions happening on the previous tick and record stats
 	 */
 	private recordStats(): void {
 		this.stats.credits = Game.market.credits;
-		const time = Game.time - 1;
+		const lastTick = Game.time - 1;
 		// Incoming transactions
 		for (const transaction of Game.market.incomingTransactions) {
-			if (transaction.time < time) {
+			if (transaction.time < lastTick) {
 				break; // only look at things from last tick
 			} else {
 				if (transaction.order) {
+
 					const resourceType = transaction.resourceType;
 					const amount = transaction.amount;
 					const price = transaction.order.price;
-					if (!this.stats.bought[resourceType]) {
-						this.stats.bought[resourceType] = {amount: 0, credits: 0};
-					}
+					this.stats.bought[resourceType] = this.stats.bought[resourceType] || {amount: 0, credits: 0};
 					this.stats.bought[resourceType].amount += amount;
 					this.stats.bought[resourceType].credits += amount * price;
 				}
@@ -960,16 +962,14 @@ export class TraderJoe implements ITradeNetwork {
 		}
 		// Outgoing transactions
 		for (const transaction of Game.market.outgoingTransactions) {
-			if (transaction.time < time) {
+			if (transaction.time < lastTick) {
 				break; // only look at things from last tick
 			} else {
 				if (transaction.order) {
 					const resourceType = transaction.resourceType;
 					const amount = transaction.amount;
 					const price = transaction.order.price;
-					if (!this.stats.sold[resourceType]) {
-						this.stats.sold[resourceType] = {amount: 0, credits: 0};
-					}
+					this.stats.sold[resourceType] = this.stats.sold[resourceType] || {amount: 0, credits: 0};
 					this.stats.sold[resourceType].amount += amount;
 					this.stats.sold[resourceType].credits += amount * price;
 				}

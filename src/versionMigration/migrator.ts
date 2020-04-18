@@ -385,7 +385,7 @@ export class VersionMigration {
 		// Find oldest tick we can find
 		log.alert(`Fetching approximate empire age...`);
 		if (MY_USERNAME == 'Muon') {
-			Memory.tick = Game.time - 5461275;
+			Memory.tick = Game.time - 4461275; // oldest tick I could find
 		} else {
 			let oldestTick = Infinity;
 			for (const name in Memory.colonies) {
@@ -407,16 +407,21 @@ export class VersionMigration {
 			}
 		}
 
+		// Clean some properties we don't use anymore
 		log.alert(`Cleaning memory...`);
 		delete Memory.strategist;
 		delete Memory.zoneRooms;
 		delete Memory.roomIntel; // reset this
+
+		delete Memory.stats.persistent.terminalNetwork.transfers;
+		delete Memory.stats.persistent.terminalNetwork.costs;
 
 		const mem = Memory as any;
 
 		delete mem.pathing.paths; // not used
 		delete mem.pathing.weightedDistances;
 
+		// Changes will need repathing
 		for (const name in Game.creeps) {
 			const creep = Game.creeps[name];
 			if (creep) {

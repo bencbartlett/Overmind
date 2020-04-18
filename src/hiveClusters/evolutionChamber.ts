@@ -651,7 +651,7 @@ export class EvolutionChamber extends HiveCluster {
 	}
 
 	private stats(): void {
-		Stats.log(`colonies.${this.colony.name}.evolutionChamber.totalProduction`, this.memory.stats.totalProduction);
+		// Stats.log(`colonies.${this.colony.name}.evolutionChamber.totalProduction`, this.memory.stats.totalProduction);
 		const labUsage = _.sum(this.productLabs, lab => lab.cooldown > 0 ? 1 : 0) / this.productLabs.length;
 		this.memory.stats.avgUsage = ema(labUsage, this.memory.stats.avgUsage, LAB_USAGE_WINDOW);
 		Stats.log(`colonies.${this.colony.name}.evolutionChamber.avgUsage`, this.memory.stats.avgUsage);

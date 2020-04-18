@@ -63,5 +63,7 @@ export class Stats {
 		const used = Game.cpu.getUsed();
 		this.log('cpu.getUsed', used);
 		Memory.stats.persistent.avgCPU = ema(used, Memory.stats.persistent.avgCPU, 100);
+		Memory.stats.persistent.empireAge = Memory.tick;
+		Memory.stats.persistent.build = Memory.build;
 	}
 }

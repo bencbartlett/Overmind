@@ -97,7 +97,7 @@ export class OvermindConsole {
 		descr['removeFlagsByColor(color, secondaryColor)'] = 'remove flags that match the specified colors';
 		descr['removeErrantFlags()'] = 'remove all flags which don\'t match a directive';
 		descr['deepCleanMemory()'] = 'deletes all non-critical portions of memory (be careful!)';
-		descr['profileMemory(depth=1)'] = 'scan through memory to get the size of various objects';
+		descr['profileMemory(root=Memory, depth=1)'] = 'scan through memory to get the size of various objects';
 		descr['startRemoteDebugSession()'] = 'enables the remote debugger so Muon can debug your code';
 		descr['cancelMarketOrders(filter?)'] = 'cancels all market orders matching filter (if provided)';
 		descr['setRoomUpgradeRate(room, upgradeRate)'] = 'changes the rate which a room upgrades at, default is 1';
@@ -572,7 +572,7 @@ export class OvermindConsole {
 		}
 	}
 
-	static profileMemory(depth = 1, root = Memory): string {
+	static profileMemory(root = Memory, depth = 1): string {
 		const sizes: RecursiveObject = {};
 		console.log(`Profiling memory...`);
 		const start = Game.cpu.getUsed();
