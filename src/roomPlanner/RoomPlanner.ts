@@ -108,7 +108,7 @@ export class RoomPlanner {
 
 	static settings = {
 		recheckAfter      : 50,
-		siteCheckFrequency: onPublicServer() ? 50 : 10,	// how often to recheck for structures; multiplied by RCL
+		siteCheckFrequency: onPublicServer() ? 50 : 20,	// how often to recheck for structures; multiplied by RCL
 		linkCheckFrequency: 100,
 		maxSitesPerColony : onPublicServer() ? 10 : 25,
 		maxDismantleCount : 5,
@@ -882,12 +882,16 @@ export class RoomPlanner {
 		this.roadPlanner.init();
 	}
 
+	requestRecheck(ticksFromNow = 1): void {
+		this.memory.recheckStructuresAt = Game.time + ticksFromNow;
+	}
+
 	shouldRecheck(offset = 0): boolean {
 		if (Game.time == (this.memory.recheckStructuresAt || Infinity) + offset) {
 			return true;
 		} else {
 			const checkFreq = RoomPlanner.settings.siteCheckFrequency * this.colony.level;
-			return Game.time % checkFreq == 2 * this.colony.id + offset;
+			return Game.time % checkFreq == (2 * this.colony.id + offset) % checkFreq;
 		}
 	}
 
