@@ -4,7 +4,7 @@ import {log} from './console/log';
 import {Roles} from './creepSetups/setups';
 // import {DirectivePraise} from './directives/colony/praise';
 import {DirectiveExtract} from './directives/resource/extract';
-import {_HARVEST_MEM_DOWNTIME, _HARVEST_MEM_USAGE, DirectiveHarvest} from './directives/resource/harvest';
+import {DirectiveHarvest, HARVEST_MEM} from './directives/resource/harvest';
 import {HiveCluster} from './hiveClusters/_HiveCluster';
 import {CommandCenter} from './hiveClusters/commandCenter';
 import {EvolutionChamber} from './hiveClusters/evolutionChamber';
@@ -682,10 +682,10 @@ export class Colony {
 			Stats.log(`colonies.${this.name}.rcl.progressTotal`, this.controller.progressTotal);
 			// Log average miningSite usage and uptime and estimated colony energy income
 			const numSites = _.keys(this.miningSites).length;
-			const avgDowntime = _.sum(this.miningSites, site => site.memory[_HARVEST_MEM_DOWNTIME]) / numSites;
-			const avgUsage = _.sum(this.miningSites, site => site.memory[_HARVEST_MEM_USAGE]) / numSites;
+			const avgDowntime = _.sum(this.miningSites, site => site.memory[HARVEST_MEM.DOWNTIME]) / numSites;
+			const avgUsage = _.sum(this.miningSites, site => site.memory[HARVEST_MEM.USAGE]) / numSites;
 			const energyInPerTick = _.sum(this.miningSites,
-										  site => site.overlords.mine.energyPerTick * site.memory[_HARVEST_MEM_USAGE]);
+										  site => site.overlords.mine.energyPerTick * site.memory[HARVEST_MEM.USAGE]);
 			Stats.log(`colonies.${this.name}.miningSites.avgDowntime`, avgDowntime);
 			Stats.log(`colonies.${this.name}.miningSites.avgUsage`, avgUsage);
 			Stats.log(`colonies.${this.name}.miningSites.energyInPerTick`, energyInPerTick);

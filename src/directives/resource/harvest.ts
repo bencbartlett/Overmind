@@ -8,9 +8,9 @@ import {Directive} from '../Directive';
 
 
 // Because harvest directives are the most common, they have special shortened memory keys to minimize memory impact
-const enum HARVEST_MEM {
-	PATHING='P',
-	USAGE = 'u',
+export const enum HARVEST_MEM {
+	PATHING  = 'P',
+	USAGE    = 'u',
 	DOWNTIME = 'd',
 }
 
@@ -90,8 +90,8 @@ export class DirectiveHarvest extends Directive {
 		}
 		const container = this.overlords.mine.container;
 		this.memory[HARVEST_MEM.DOWNTIME] = +(ema(container ? +container.isFull : 0,
-												   this.memory[HARVEST_MEM.DOWNTIME],
-												   CREEP_LIFE_TIME)).toFixed(5);
+												  this.memory[HARVEST_MEM.DOWNTIME],
+												  CREEP_LIFE_TIME)).toFixed(5);
 	}
 
 }

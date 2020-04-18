@@ -362,8 +362,8 @@ export class RoadPlanner {
 	 */
 	roadShouldBeHere(pos: RoomPosition): boolean {
 		if (this._roadLookup == undefined) {
-			this._roadLookup = _.memoize((p: RoomPosition) =>
-											 this.memory.roadCoordsPacked[p.roomName].includes(packCoord(p)));
+			this._roadLookup = _.memoize(
+				(p: RoomPosition) => (this.memory.roadCoordsPacked[p.roomName] || '').includes(packCoord(p)));
 		}
 		return this._roadLookup(pos);
 	}

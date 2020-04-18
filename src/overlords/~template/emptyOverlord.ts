@@ -25,7 +25,7 @@ export class EmptyOverlord extends Overlord {
 	constructor(directive: Directive, priority = OverlordPriority.default) {
 		super(directive, 'empty', priority, getDefaultEmptyOverlordMemory);
 		// TODO
-		this.role1 = this.zerg('ROLES.SOMETHING');
+		this.role1 = this.zerg('ROLES.SOMETHING'); // TODO
 	}
 
 	refresh(): void {
