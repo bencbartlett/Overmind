@@ -23,13 +23,19 @@ export interface MatrixOptions {			// Listed in the order they are processed in
 	avoidSK: boolean;						// Avoid getting near source keepers
 	allowPortals: boolean;					// Portals will be soft-blocked unless this is true
 	ignoreStructures: boolean;				// Ignore structures (excluding roads) and impassible construction sites
-	ignoreCreeps: boolean;					// Ignore creeps
-	obstacles: string;						// Extra room positions to avoid, packed as packPos (not packCoord!)
+	obstacles: string;						// Obstacles packed as packPos (not packCoord!); should rarely change
+	swarmWidth: number;						// The width of the squad (if any); >1 calls MatrixLib.applyMovingMaximum()
+	swarmHeight: number;					// The height of the squad (if any); >1 calls MatrixLib.applyMovingMaximum()
+}
+
+// This describes matrix options that generally only last for one tick. All properties here should be optional!
+export interface VolatileMatrixOptions {
+	blockCreeps?: boolean;					// Whether to block creeps (default is undefined -> false)
 }
 
 const getDefaultMatrixOptions: () => MatrixOptions = () => ({
-	roomName            : 'override',
-	roomVisibile        : false,
+	roomName            : 'none',	// overridden in MatrixLib.getMatrix()
+	roomVisibile        : false,	// overridden in MatrixLib.getMatrix()
 	explicitTerrainCosts: false,
 	plainCost           : 1,
 	swampCost           : 5,
@@ -38,9 +44,13 @@ const getDefaultMatrixOptions: () => MatrixOptions = () => ({
 	avoidSK             : true,
 	allowPortals        : false,
 	ignoreStructures    : false,
-	ignoreCreeps        : true,
 	obstacles           : '',
+	swarmWidth          : 1,
+	swarmHeight         : 1,
 });
+
+
+const getDefaultVolatileMatrixOptions: () => VolatileMatrixOptions = () => ({});
 
 PERMACACHE.terrainMatrices = PERMACACHE.terrainMatrices || {};
 
@@ -66,83 +76,145 @@ export class MatrixLib {
 		portalCost: 20, // if portals are not blocked, we still want to avoid accidentally stepping on them
 	};
 
-	static getMatrix(roomName: string, opts: Partial<MatrixOptions>): CostMatrix {
+	static getMatrix(roomName: string, opts: Partial<MatrixOptions>,
+					 volatileOpts: VolatileMatrixOptions = {}): CostMatrix {
 		// Copy the opts objects because we don't want to back-modify it
-		opts = _.defaults(_.cloneDeep(opts), getDefaultMatrixOptions()) as Full<MatrixOptions>;
+		opts = _.defaults(_.cloneDeep(opts), getDefaultMatrixOptions());
+		volatileOpts = _.cloneDeep(volatileOpts);
 
-		const room = Game.rooms[roomName];
+		const room = Game.rooms[roomName] as Room | undefined;
 		opts.roomVisibile = !!Game.rooms[roomName];
 
 		// Generate a hash to look up any previously cached matrices
-		const hash = MatrixLib.generateMatrixOptionsHash(<Full<MatrixOptions>>opts);
+		const hash = MatrixLib.generateMatrixOptionsHash(<MatrixOptions>opts);
 
-		// If you have previously cached this matrix and it's still valid, return that
-		if (MatrixCache[hash]) {
-			const expiration = MatrixCache[hash].expiration || Infinity;
-			const invalidateCondition = MatrixCache[hash].invalidateCondition || (() => false);
+		// Volatile hash gets added to hash; if no volatile options are specified; use empty string to not change hash
+		const volatileHash = _.isEmpty(volatileOpts) ? '' : MatrixLib.generateMatrixOptionsHash(volatileOpts);
+
+		// If you have previously cached this matrix with volatile properties and it's still valid, return that
+		// If no volatile opts are specified; the method will usually return from this block of code
+		if (MatrixCache[hash + volatileHash]) {
+			const expiration = MatrixCache[hash + volatileHash].expiration || Infinity;
+			const invalidateCondition = MatrixCache[hash + volatileHash].invalidateCondition || (() => false);
 			if (Game.time >= expiration || invalidateCondition()) {
-				delete MatrixCache[hash];
+				delete MatrixCache[hash + volatileHash];
 			} else {
-				return MatrixCache[hash].matrix;
+				return MatrixCache[hash + volatileHash].matrix;
 			}
 		}
 
-		// Generate and cache the cost matrix for this room
-		let matrix: CostMatrix;
+		let matrix: CostMatrix | undefined;
 		let expiration: number;
 		let invalidateCondition: () => boolean;
 
-		if (room) {
-			matrix = MatrixLib.generateCostMatrixForRoom(room, <Full<MatrixOptions>>opts);
-			const roomOwner = RoomIntel.roomOwnedBy(roomName);
-			if (opts.ignoreCreeps == false) {
-				expiration = Game.time + 1;
-			} else if (Cartographer.roomType(roomName) == ROOMTYPE_SOURCEKEEPER) {
-				expiration = Game.time + 10;
-			} else if (roomOwner && !isAlly(roomOwner)) {
-				expiration = Game.time + 15;
+		// If you've previously cached a matrix with the same non-volatile opts; start from there and then modify it
+		if (MatrixCache[hash]) {
+			expiration = MatrixCache[hash].expiration || Infinity;
+			invalidateCondition = MatrixCache[hash].invalidateCondition || (() => false);
+			if (Game.time >= expiration || invalidateCondition()) {
+				delete MatrixCache[hash];
+				matrix = undefined;
 			} else {
-				expiration = Game.time + 100;
+				matrix = MatrixCache[hash].matrix;
 			}
-			if (opts.ignoreStructures) {
-				invalidateCondition = () => false;
-			} else {
-				// Invalidate the path if the number of structures in the room changes
-				const numStructures = room.structures.length;
-				invalidateCondition = () => Game.rooms[roomName].structures.length != numStructures;
-			}
-		} else {
-			matrix = MatrixLib.generateCostMatrixForInvisibleRoom(roomName, <Full<MatrixOptions>>opts);
-			const roomOwner = RoomIntel.roomOwnedBy(roomName);
-			if (roomOwner && !isAlly(roomOwner)) {
-				expiration = Game.time + 100;
-			} else {
-				expiration = Game.time + 1000;
-			}
-			invalidateCondition = () => false;
 		}
 
-		// Cache the results and return the cost matrix
-		MatrixCache[hash] = {
-			matrix: matrix,
-			generated: Game.time,
-			expiration: expiration,
-			invalidateCondition: invalidateCondition,
+		// Otherwise we'll build a base matrix for the non-volatile options, cache it, then modify it for volatile opts
+		if (matrix === undefined) {
+			if (room) {
+				matrix = MatrixLib.generateCostMatrixForRoom(room, <MatrixOptions>opts);
+				const roomOwner = RoomIntel.roomOwnedBy(roomName);
+				if (Cartographer.roomType(roomName) == ROOMTYPE_SOURCEKEEPER) {
+					expiration = Game.time + 10;
+				} else if (roomOwner && !isAlly(roomOwner)) {
+					expiration = Game.time + 25;
+				} else {
+					expiration = Game.time + 100;
+				}
+				if (opts.ignoreStructures) {
+					invalidateCondition = () => false;
+				} else {
+					// Invalidate the path if the number of structures in the room changes
+					const numStructures = room.structures.length;
+					invalidateCondition = () => Game.rooms[roomName].structures.length != numStructures;
+				}
+			} else {
+				matrix = MatrixLib.generateCostMatrixForInvisibleRoom(roomName, <MatrixOptions>opts);
+				const roomOwner = RoomIntel.roomOwnedBy(roomName);
+				if (roomOwner && !isAlly(roomOwner)) {
+					expiration = Game.time + 100;
+				} else {
+					expiration = Game.time + 1000;
+				}
+				invalidateCondition = () => false;
+			}
+
+			// Cache the results for the non-volatile options
+			MatrixCache[hash] = {
+				matrix             : matrix,
+				generated          : Game.time,
+				expiration         : expiration,
+				invalidateCondition: invalidateCondition,
+			};
+		}
+
+		// If there's no modifications we need to make, we're done, so return the matrix
+		if (_.isEmpty(volatileOpts)) {
+			return MatrixCache[hash].matrix;
+		}
+
+		// Otherwise, clone the matrix and apply volatile modifications, then cache it for this tick
+		const clonedMatrix = matrix.clone();
+
+		MatrixLib.applyVolatileModifications(clonedMatrix, <MatrixOptions>opts, volatileOpts);
+
+		// Cache the results for the non-volatile options
+		MatrixCache[hash+volatileHash] = {
+			matrix             : clonedMatrix,
+			generated          : Game.time,
+			expiration         : Game.time + 1, // only sits around for this tick
+			invalidateCondition: () => false,	// invalidated next tick so we don't need an invalidation condition
 		};
-		return MatrixCache[hash].matrix;
+
+		return MatrixCache[hash+volatileHash].matrix;
+
 	}
 
 	/**
 	 * Generate a deterministic string hash that you can store a costmatrix with
 	 */
-	private static generateMatrixOptionsHash(opts: Full<MatrixOptions>): string {
+	private static generateMatrixOptionsHash(opts: MatrixOptions | VolatileMatrixOptions): string {
 		return JSON.stringify(opts, Object.keys(opts).sort());
+	}
+
+	/**
+	 * Applies modificaitons to account for volatile options. Make sure to clone the matrix before passing it to this!
+	 */
+	private static applyVolatileModifications(clonedMatrix: CostMatrix, opts: MatrixOptions,
+											  volatileOpts: VolatileMatrixOptions): CostMatrix {
+		const room = Game.rooms[opts.roomName] as Room | undefined;
+
+		// Block creep positions
+		if (volatileOpts.blockCreeps) {
+			if (room) {
+				if (opts.swarmWidth > 1 || opts.swarmHeight > 1) {
+
+				} else {
+					MatrixLib.block(clonedMatrix, _.map(room.find(FIND_CREEPS), creep => creep.pos));
+				}
+			} else {
+				// Can't block creeps without vision
+			}
+		}
+
+		return clonedMatrix;
+
 	}
 
 	/**
 	 * Generates a cost matrix for a visible room based on the fully-specified matrix options
 	 */
-	private static generateCostMatrixForRoom(room: Room, opts: Full<MatrixOptions>): CostMatrix {
+	private static generateCostMatrixForRoom(room: Room, opts: MatrixOptions): CostMatrix {
 
 		const matrix = new PathFinder.CostMatrix();
 
@@ -198,11 +270,6 @@ export class MatrixLib {
 										  ...impassibleConstructionSites,
 										  ...alliedConstructionSites], s => s.pos) as RoomPosition[];
 			MatrixLib.block(matrix, blockPositions);
-		}
-
-		// Block creep positions
-		if (!opts.ignoreCreeps) {
-			MatrixLib.block(matrix, _.map(room.find(FIND_CREEPS), creep => creep.pos));
 		}
 
 		// Block any other obstacles that might be specified
@@ -269,11 +336,6 @@ export class MatrixLib {
 				if (info.storagePos) MatrixLib.block(matrix, [info.storagePos]);
 				if (info.terminalPos) MatrixLib.block(matrix, [info.terminalPos]);
 			}
-		}
-
-		// Block creep positions
-		if (!opts.ignoreCreeps) {
-			// Can't do anything here
 		}
 
 		// Block any other obstacles that might be specified
@@ -488,7 +550,7 @@ export class MatrixLib {
 	 * using implicit costs of {plain: 1, swamp: 5}
 	 */
 	static setInRange(matrix: CostMatrix, pos: RoomPosition | HasPos, range: number, cost: number,
-					  add = false): CostMatrix {
+					  addDefaultTerrainCosts = false): CostMatrix {
 
 		pos = normalizePos(pos);
 		const terrain = Game.map.getRoomTerrain(pos.roomName);
@@ -500,9 +562,8 @@ export class MatrixLib {
 			for (dy = -range; dy <= range; dy++) {
 				y = pos.y + dy;
 				if (y < 0 || y > 49) continue;
-				if (terrain.get(x, y) & TERRAIN_MASK_WALL) {
-					continue;
-				}
+				if (terrain.get(x, y) & TERRAIN_MASK_WALL) continue;
+
 				currentCost = matrix.get(x, y);
 				if (currentCost === 0) {
 					if (terrain.get(x, y) & TERRAIN_MASK_SWAMP) {
@@ -512,7 +573,7 @@ export class MatrixLib {
 					}
 				}
 				// if (currentCost >= 0xff || currentCost > cost) continue; // not necessary, done in backend
-				matrix.set(x, y, add ? cost + currentCost : cost);
+				matrix.set(x, y, addDefaultTerrainCosts ? cost + currentCost : cost);
 			}
 		}
 		return matrix;
@@ -607,6 +668,69 @@ export class MatrixLib {
 			}
 		}
 		return matrix;
+	}
+
+	/**
+	 * Sets all creep positions to impassible
+	 */
+	static blockMyCreeps(matrix: CostMatrix, room: Room) {
+		_.forEach(room.creeps, creep => {
+			matrix.set(creep.pos.x, creep.pos.y, 0xff);
+		});
+	}
+
+	/**
+	 * Sets hostile creep positions to impassible
+	 */
+	static blockHostileCreeps(matrix: CostMatrix, room: Room) {
+		_.forEach(room.hostiles, hostile => {
+			matrix.set(hostile.pos.x, hostile.pos.y, 0xff);
+		});
+	}
+
+	/**
+	 * Sets all creep positions to impassible
+	 */
+	static blockAllCreeps(matrix: CostMatrix, room: Room) {
+		_.forEach(room.find(FIND_CREEPS), creep => {
+			matrix.set(creep.pos.x, creep.pos.y, 0xff);
+		});
+	}
+
+	/**
+	 * Sets road positions to 1 if cost is less than 0xfe
+	 */
+	static preferRoads(matrix: CostMatrix, room: Room) {
+		_.forEach(room.roads, road => {
+			if (matrix.get(road.pos.x, road.pos.y) < 0xfe) {
+				matrix.set(road.pos.x, road.pos.y, 1);
+			}
+		});
+	}
+
+	/**
+	 * Sets walkable rampart positions to 1 if cost is less than 0xfe
+	 */
+	static preferRamparts(matrix: CostMatrix, room: Room) {
+		_.forEach(room.walkableRamparts, rampart => {
+			if (matrix.get(rampart.pos.x, rampart.pos.y) < 0xfe) {
+				matrix.set(rampart.pos.x, rampart.pos.y, 1);
+			}
+		});
+	}
+
+	/**
+	 * Sets walkable rampart positions to 1, everything else is blocked
+	 */
+	static blockNonRamparts(matrix: CostMatrix, room: Room) {
+		for (let y = 0; y < 50; ++y) {
+			for (let x = 0; x < 50; ++x) {
+				matrix.set(x, y, 0xff);
+			}
+		}
+		_.forEach(room.walkableRamparts, rampart => {
+			matrix.set(rampart.pos.x, rampart.pos.y, 1);
+		});
 	}
 
 	/**
