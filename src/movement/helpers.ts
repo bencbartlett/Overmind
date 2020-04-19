@@ -45,10 +45,10 @@ export function getCreepWeightInfo(creep: Creep, analyzeCarry = true): { move: n
  */
 export function getTerrainCosts(creep: Creep): { plainCost: number, swampCost: number } {
 	const data = getCreepWeightInfo(creep);
-	const ratio = data.weighted / data.move;
+	const fatigueRatio = data.weighted / data.move;
 	return {
-		plainCost: Math.ceil(ratio),
-		swampCost: 5 * Math.ceil(ratio),
+		plainCost: Math.max(Math.ceil(fatigueRatio), 1),
+		swampCost: Math.max(Math.ceil(5 * fatigueRatio), 1),
 	};
 }
 

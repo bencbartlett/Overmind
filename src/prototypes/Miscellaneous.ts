@@ -16,11 +16,15 @@ Number.prototype.truncate = function(decimals: number): number {
 	return m ? parseFloat(m[1]) : this.valueOf();
 };
 
+PERMACACHE.structureWalkability = PERMACACHE.structureWalkability || {};
 Object.defineProperty(ConstructionSite.prototype, 'isWalkable', {
 	get() {
-		return this.structureType == STRUCTURE_ROAD ||
-			   this.structureType == STRUCTURE_CONTAINER ||
-			   this.structureType == STRUCTURE_RAMPART;
+		if (PERMACACHE.structureWalkability[this.id] === undefined) {
+			PERMACACHE.structureWalkability[this.id] = this.structureType == STRUCTURE_ROAD ||
+													   this.structureType == STRUCTURE_CONTAINER ||
+													   this.structureType == STRUCTURE_RAMPART;
+		}
+		return PERMACACHE.structureWalkability[this.id];
 	},
 	configurable: true,
 });

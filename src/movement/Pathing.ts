@@ -52,6 +52,7 @@ export interface PathOptions {
 		swampCost: number							// swamp costs; typical: 10
 	};
 	obstacles?: RoomPosition[];					// don't path through these room positions
+	stayInRoom?: boolean;						// ensures you stay in the room you're currently in
 	ignoreCreeps?: boolean;						// ignore pathing around creeps
 	ignoreStructures?: boolean;					// ignore pathing around structures
 	allowHostile?: boolean;						// allow to path through hostile rooms; origin/destination room excluded

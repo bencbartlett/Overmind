@@ -121,6 +121,7 @@ interface Room {
 	mineral: Mineral | undefined;
 	constructionSites: ConstructionSite[];
 	allConstructionSites: ConstructionSite[];
+	hostileConstructionSites: ConstructionSite[];
 	ruins: Ruin[];
 
 	// Used by movement library

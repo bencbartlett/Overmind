@@ -232,6 +232,16 @@ Object.defineProperty(Room.prototype, 'allConstructionSites', {
 	configurable: true,
 });
 
+Object.defineProperty(Room.prototype, 'hostileConstructionSites', {
+	get() {
+		if (!this._hostileConstructionSites) {
+			this._hostileConstructionSites = this.find(FIND_HOSTILE_CONSTRUCTION_SITES);
+		}
+		return this._hostileConstructionSites;
+	},
+	configurable: true,
+});
+
 Object.defineProperty(Room.prototype, 'tombstones', {
 	get() {
 		if (!this._tombstones) {
