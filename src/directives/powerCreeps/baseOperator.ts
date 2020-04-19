@@ -152,7 +152,7 @@ export class DirectiveBaseOperator extends Directive {
 			// log.alert(`Running ${powerCreep} with power of ${res}`);
 		}
 
-		if (this.room.hostiles.length > 2 || (powerCreep.pos && DirectiveNukeResponse.isPresent(powerCreep.pos, 'room'))) {
+		if (this.room.hostiles.length > 2 || (powerCreep.pos && DirectiveNukeResponse.isPresent(powerCreep.pos.roomName))) {
 			const towersToBoost = this.colony.towers.filter(tower => !tower.effects || tower.effects.length == 0);
 			if (towersToBoost.length > 0) {
 				powerCreep.usePower(PWR_OPERATE_TOWER, towersToBoost[0]);

@@ -150,7 +150,7 @@ export class DirectiveClearRoom extends Directive {
 														: Pathing.findPathablePosition(this.room.name);
 				const blockingLocation = Pathing.findBlockingPos(pathablePos, this.room.controller!.pos,
 																 _.filter(this.room.structures, s => !s.isWalkable));
-				if (blockingLocation && !Directive.isPresent(blockingLocation, 'pos')) {
+				if (blockingLocation && !Directive.isPresent(blockingLocation)) {
 					log.notify(`Adding dismantle directive for ${this.pos.roomName} to reach controller.`);
 					DirectiveDismantle.create(blockingLocation);
 				}

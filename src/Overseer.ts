@@ -49,11 +49,17 @@ const getDefaultOverseerMemory: () => OverseerMemory = () => ({});
 export class Overseer implements IOverseer {
 
 	private memory: OverseerMemory;
-	private overlords: Overlord[];								// Overlords sorted by priority
-	private sorted: boolean;
-	private overlordsByColony: { [col: string]: Overlord[] };	// Overlords grouped by colony
-	private directives: Directive[];							// Directives across the colony
+
+	private directives: Directive[];
 	private directivesByType: { [directiveName: string]: Directive[] };
+	private directivesByRoom: { [roomName: string]: Directive[] };
+	private directivesByColony: { [colonyName: string]: Directive[] };
+
+	private overlords: Overlord[];
+	private overlordsByColony: { [col: string]: Overlord[] };
+
+	private _directiveCached: boolean;
+	private _overlordsCached: boolean;
 
 	combatPlanner: CombatPlanner;
 	notifier: Notifier;
@@ -66,8 +72,7 @@ export class Overseer implements IOverseer {
 		this.memory = Mem.wrap(Memory, 'overseer', getDefaultOverseerMemory);
 		this.directives = [];
 		this.overlords = [];
-		this.overlordsByColony = {};
-		this.sorted = false;
+		this._overlordsCached = false;
 		this.notifier = new Notifier();
 		this.combatPlanner = new CombatPlanner();
 	}
@@ -97,6 +102,7 @@ export class Overseer implements IOverseer {
 
 	registerDirective(directive: Directive): void {
 		this.directives.push(directive);
+		this._directiveCached = false;
 	}
 
 	removeDirective(directive: Directive): void {
@@ -104,18 +110,38 @@ export class Overseer implements IOverseer {
 		for (const name in directive.overlords) {
 			this.removeOverlord(directive.overlords[name]);
 		}
+		this._directiveCached = false;
+	}
+
+	private ensureDirectivesCached(): void {
+		if (!this._directiveCached) {
+			this.directivesByType = _.groupBy(this.directives, directive => directive.directiveName);
+			this.directivesByRoom = _.groupBy(this.directives, directive => directive.pos.roomName);
+			this.directivesByColony = _.groupBy(this.directives, directive => directive.colony.name || 'none');
+			this._directiveCached = true;
+		}
+	}
+
+	getDirectivesOfType(directiveName: string): Directive[] {
+		this.ensureDirectivesCached();
+		return this.directivesByType[directiveName] || [];
+	}
+
+	getDirectivesInRoom(roomName: string): Directive[] {
+		this.ensureDirectivesCached();
+		return this.directivesByRoom[roomName] || [];
+	}
+
+	getDirectivesForColony(colony: Colony): Directive[] {
+		this.ensureDirectivesCached();
+		return this.directivesByColony[colony.name] || [];
 	}
 
 	registerOverlord(overlord: Overlord): void {
 		this.overlords.push(overlord);
-		if (!this.overlordsByColony[overlord.colony.name]) {
-			this.overlordsByColony[overlord.colony.name] = [];
-		}
+		this.overlordsByColony[overlord.colony.name] = this.overlordsByColony[overlord.colony.name] || [];
 		this.overlordsByColony[overlord.colony.name].push(overlord);
-	}
-
-	getOverlordsForColony(colony: Colony): Overlord[] {
-		return this.overlordsByColony[colony.name];
+		this._overlordsCached = false;
 	}
 
 	private removeOverlord(overlord: Overlord): void {
@@ -123,6 +149,21 @@ export class Overseer implements IOverseer {
 		if (this.overlordsByColony[overlord.colony.name]) {
 			_.remove(this.overlordsByColony[overlord.colony.name], o => o.ref == overlord.ref);
 		}
+		this._overlordsCached = false;
+	}
+
+	private ensureOverlordsCached(): void {
+		if (!this._overlordsCached) {
+			this.overlords.sort((o1, o2) => o1.priority - o2.priority);
+			for (const colName in this.overlordsByColony) {
+				this.overlordsByColony[colName].sort((o1, o2) => o1.priority - o2.priority);
+			}
+			this._overlordsCached = true;
+		}
+	}
+
+	getOverlordsForColony(colony: Colony): Overlord[] {
+		return this.overlordsByColony[colony.name] || [];
 	}
 
 	// Initialization ==================================================================================================
@@ -151,21 +192,13 @@ export class Overseer implements IOverseer {
 	}
 
 	init(): void {
-		// Group directives by type
-		this.directivesByType = _.groupBy(this.directives, directive => directive.directiveName);
+
+		this.ensureDirectivesCached();
+		this.ensureOverlordsCached();
 
 		// Initialize directives
 		for (const directive of this.directives) {
 			directive.init();
-		}
-
-		// Sort overlords by priority if needed (assumes priority does not change after constructor phase
-		if (!this.sorted) {
-			this.overlords.sort((o1, o2) => o1.priority - o2.priority);
-			for (const colName in this.overlordsByColony) {
-				this.overlordsByColony[colName].sort((o1, o2) => o1.priority - o2.priority);
-			}
-			this.sorted = true;
 		}
 
 		// Initialize overlords
@@ -295,7 +328,7 @@ export class Overseer implements IOverseer {
 			const powerBank = _.first(room.powerBanks);
 			if (powerBank && powerBank.ticksToDecay > 4000 && powerBank.power >= powerSetting.minPower) {
 
-				if (DirectivePowerMine.isPresent(powerBank.pos, 'pos')) {
+				if (DirectivePowerMine.isPresent(powerBank.pos)) {
 					return;
 				}
 
@@ -384,7 +417,7 @@ export class Overseer implements IOverseer {
 			if (DirectivePoisonRoom.canAutoPoison(room)) {
 				const controller = room.controller!;
 				const maxRange = Memory.settings.autoPoison.maxRange;
-				if (!DirectivePoisonRoom.isPresent(controller.pos, 'pos')) {
+				if (!DirectivePoisonRoom.isPresent(controller.pos)) {
 					// See if you can poison a room
 					const colonies = getAllColonies().filter(
 						colony => colony.level >= DirectivePoisonRoom.requiredRCL

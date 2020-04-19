@@ -155,6 +155,12 @@ interface IOverseer {
 
 	removeDirective(directive: any): void;
 
+	getDirectivesOfType(directiveName: string): any[];
+
+	getDirectivesInRoom(roomName: string): any[];
+
+	getDirectivesForColony(colony: {name: string}): any[];
+
 	registerOverlord(overlord: any): void;
 
 	getOverlordsForColony(colony: any): any[];

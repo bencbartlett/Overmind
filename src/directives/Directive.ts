@@ -361,38 +361,18 @@ export abstract class Directive {
 	}
 
 	/**
-	 * Returns whether a directive of this type is present either at this position or within the room
+	 * Returns whether a directive of this type is present either at this position or within the room of this name
 	 */
-	static isPresent(pos: RoomPosition, scope: 'room' | 'pos'): boolean {
-		const room = Game.rooms[pos.roomName] as Room | undefined;
-		switch (scope) {
-			case 'room':
-				if (room) {
-					return _.filter(room.flags,
-									flag => this.filter(flag) &&
-											!(flag.memory.setPos
-											&& flag.memory.setPos.roomName != pos.roomName)).length > 0;
-				} else {
-					const flagsInRoom = _.filter(Game.flags,
-												 flag => (flag.memory.setPos || flag.pos).roomName == pos.roomName);
-					return _.filter(flagsInRoom, flag => this.filter(flag)).length > 0;
-				}
-			case 'pos':
-				if (room) {
-					return _.filter(pos.lookFor(LOOK_FLAGS),
-									flag => this.filter(flag) &&
-											!(flag.memory.setPos
-											&& !equalXYR(pos, flag.memory.setPos))).length > 0;
-				} else {
-					const flagsAtPos = _.filter(Game.flags, function(flag) {
-						if (flag.memory.setPos) { // does it need to be relocated?
-							return equalXYR(flag.memory.setPos, pos);
-						} else { // properly located
-							return equalXYR(flag.pos, pos);
-						}
-					});
-					return _.filter(flagsAtPos, flag => this.filter(flag)).length > 0;
-				}
+	static isPresent(posOrRoomName: string | RoomPosition): boolean {
+		if (typeof posOrRoomName === 'string') {
+			const roomName = posOrRoomName as string;
+			const directivesInRoom = Overmind.overseer.getDirectivesInRoom(roomName) as Directive[];
+			return _.filter(directivesInRoom, directive => this.filter(directive.flag)).length > 0;
+		} else {
+			const pos = posOrRoomName as RoomPosition;
+			const directivesInRoom = Overmind.overseer.getDirectivesInRoom(pos.roomName) as Directive[];
+			return _.filter(directivesInRoom,
+							directive => this.filter(directive.flag) && equalXYR(pos, directive.pos)).length > 0;
 		}
 	}
 
@@ -402,8 +382,11 @@ export abstract class Directive {
 	 */
 	static createIfNotPresent(pos: RoomPosition, scope: 'room' | 'pos',
 							  opts: DirectiveCreationOptions = {}): number | string | undefined {
-		if (this.isPresent(pos, scope)) {
-			return; // do nothing if flag is already here
+		// Do nothing if flag is already here
+		if (scope == 'pos') {
+			if (this.isPresent(pos)) return;
+		} else {
+			if (this.isPresent(pos.roomName)) return;
 		}
 
 		const room = Game.rooms[pos.roomName] as Room | undefined;
@@ -453,11 +436,27 @@ export abstract class Directive {
 	}
 
 	/**
-	 * Map a list of flags to directives, accepting a filter
+	 * Map a list of flags to directive using the filter of the subclassed directive
 	 */
 	static find(flags: Flag[]): Directive[] {
 		flags = _.filter(flags, flag => this.filter(flag));
 		return _.compact(_.map(flags, flag => Overmind.directives[flag.name]));
+	}
+
+	/**
+	 * Map a list of flags to directive using the filter of the subclassed directive
+	 */
+	static findInRoom(roomName: string): Directive[] {
+		const directivesInRoom = Overmind.overseer.getDirectivesInRoom(roomName) as Directive[];
+		return _.filter(directivesInRoom, directive => this.filter(directive.flag));
+	}
+
+	/**
+	 * Map a list of flags to directive using the filter of the subclassed directive
+	 */
+	static findInColony(colony: Colony): Directive[] {
+		const directivesInColony = Overmind.overseer.getDirectivesForColony(colony) as Directive[];
+		return _.filter(directivesInColony, directive => this.filter(directive.flag));
 	}
 
 

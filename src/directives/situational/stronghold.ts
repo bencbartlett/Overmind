@@ -176,7 +176,7 @@ export class DirectiveStronghold extends Directive {
 
 		const bestTarget = this.pos.getPositionAtDirection(TOP_RIGHT);
 		const nukes = this.core.room.find(FIND_NUKES);
-		const nukesPrepped = DirectiveNukeTarget.isPresent(this.core.pos, 'room');
+		const nukesPrepped = DirectiveNukeTarget.isPresent(this.core.room.name);
 		if (nukes.length < 2 && !nukesPrepped) {
 			log.alert(`Nuking Stronghold! ${this.print}`);
 			const res1 = DirectiveNukeTarget.create(bestTarget, {memory: {maxLinearRange: 10, pathNotRequired: true}});
