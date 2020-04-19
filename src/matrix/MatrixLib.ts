@@ -24,8 +24,8 @@ export interface MatrixOptions {			// Listed in the order they are processed in
 	allowPortals: boolean;					// Portals will be soft-blocked unless this is true
 	ignoreStructures: boolean;				// Ignore structures (excluding roads) and impassible construction sites
 	obstacles: string;						// Obstacles packed as packPos (not packCoord!); should rarely change
-	swarmWidth: number;						// The width of the squad (if any); >1 calls MatrixLib.applyMovingMaximum()
-	swarmHeight: number;					// The height of the squad (if any); >1 calls MatrixLib.applyMovingMaximum()
+	swarmWidth: number;						// The width of the squad (if any); >1 calls MatrixLib.applyMovingMaxPool()
+	swarmHeight: number;					// The height of the squad (if any); >1 calls MatrixLib.applyMovingMaxPool()
 }
 
 // This describes matrix options that generally only last for one tick. All properties here should be optional!
@@ -169,14 +169,14 @@ export class MatrixLib {
 		MatrixLib.applyVolatileModifications(clonedMatrix, <MatrixOptions>opts, volatileOpts);
 
 		// Cache the results for the non-volatile options
-		MatrixCache[hash+volatileHash] = {
+		MatrixCache[hash + volatileHash] = {
 			matrix             : clonedMatrix,
 			generated          : Game.time,
 			expiration         : Game.time + 1, // only sits around for this tick
 			invalidateCondition: () => false,	// invalidated next tick so we don't need an invalidation condition
 		};
 
-		return MatrixCache[hash+volatileHash].matrix;
+		return MatrixCache[hash + volatileHash].matrix;
 
 	}
 
@@ -198,9 +198,10 @@ export class MatrixLib {
 		if (volatileOpts.blockCreeps) {
 			if (room) {
 				if (opts.swarmWidth > 1 || opts.swarmHeight > 1) {
-
+					MatrixLib.blockForSwarmAfterMaxPooling(clonedMatrix, room.find(FIND_CREEPS),
+														   opts.swarmWidth, opts.swarmHeight);
 				} else {
-					MatrixLib.block(clonedMatrix, _.map(room.find(FIND_CREEPS), creep => creep.pos));
+					MatrixLib.block(clonedMatrix, room.find(FIND_CREEPS));
 				}
 			} else {
 				// Can't block creeps without vision
@@ -278,6 +279,15 @@ export class MatrixLib {
 			MatrixLib.block(matrix, obstacles);
 		}
 
+		// Finally, as the very last step, we apply a smear to account for swarm size if greater than 1x1
+		if (opts.swarmWidth > 1 || opts.swarmHeight > 1) {
+			if (!opts.explicitTerrainCosts) {
+				log.error(`Swarm matrix generation requires opts.explicitTerrainCosts! opts: ${JSON.stringify(opts)}`);
+			}
+			MatrixLib.applyMovingMaxPool(matrix, opts.swarmWidth, opts.swarmHeight);
+		}
+
+		// Tada!
 		return matrix;
 
 	}
@@ -344,7 +354,17 @@ export class MatrixLib {
 			MatrixLib.block(matrix, obstacles);
 		}
 
+		// Finally, as the very last step, we apply a smear to account for swarm size if greater than 1x1
+		if (opts.swarmWidth > 1 || opts.swarmHeight > 1) {
+			if (!opts.explicitTerrainCosts) {
+				log.error(`Swarm matrix generation requires opts.explicitTerrainCosts! opts: ${JSON.stringify(opts)}`);
+			}
+			MatrixLib.applyMovingMaxPool(matrix, opts.swarmWidth, opts.swarmHeight);
+		}
+
+		// Tada!
 		return matrix;
+
 	}
 
 	/**
@@ -384,6 +404,29 @@ export class MatrixLib {
 			pos = normalizePos(positions[i]);
 			if (terrain.get(pos.x, pos.y) & TERRAIN_MASK_WALL) continue;
 			matrix.set(pos.x, pos.y, Math.max(cost, matrix.get(pos.x, pos.y)));
+		}
+		return matrix;
+	}
+
+	/**
+	 * Blocks all specified positions for a swarm cost matrix that has already been "smeared" by
+	 * MatrixLib.applyMovingMaxPool(). Do not run additional passes of applyMovingMaxPool after doing this!
+	 */
+	static blockForSwarmAfterMaxPooling(matrix: CostMatrix, positions: (RoomPosition | HasPos)[],
+										width: number, height: number): CostMatrix {
+		let pos: RoomPosition;
+		let x, y, dx, dy: number;
+		for (let i = 0; i < positions.length; i++) {
+			pos = normalizePos(positions[i]);
+			for (dx = 0; dx > -width; dx--) {
+				x = pos.x + dx;
+				if (x < 0 || x > 49) continue;
+				for (dy = 0; dy > -height; dy--) {
+					y = pos.y + dy;
+					if (y < 0 || y > 49) continue;
+					matrix.set(x, y, 0xff);
+				}
+			}
 		}
 		return matrix;
 	}
@@ -521,17 +564,19 @@ export class MatrixLib {
 
 	/**
 	 * Transform a CostMatrix such that the cost at each point is transformed to the max of costs in a width x height
-	 * window (indexed from upper left corner). This requires that terrain be explicitly specified in the matrix!
+	 * window (indexed from upper left corner). This is basically a 2D max-pool operation except that the pooling
+	 * window moves with the max-kernel. This method requires that terrain be explicitly specified in the matrix!
 	 */
-	static applyMovingMaximum(matrix: CostMatrix, width: number, height: number): CostMatrix {
+	static applyMovingMaxPool(matrix: CostMatrix, width: number, height: number): CostMatrix {
 		// Since we're moving in increasing order of x, y, we don't need to clone the matrix
 		let x, y, dx, dy: number;
 		let maxCost, cost: number;
 		for (x = 0; x <= 50 - width; x++) {
 			for (y = 0; y <= 50 - height; y++) {
 				maxCost = matrix.get(x, y);
-				for (dx = 0; dx <= width - 1; dx++) {
-					for (dy = 0; dy <= height - 1; dy++) {
+				for (dx = 0; dx < width; dx++) {
+					for (dy = 0; dy < height; dy++) {
+						// Don't need 0 <= x,y <= 49 safety checks here since 0 <= x <= (50 - w + (w-1)) = 49
 						cost = matrix.get(x + dx, y + dy);
 						if (cost > maxCost) {
 							maxCost = cost;
