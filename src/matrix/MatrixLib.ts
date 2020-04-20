@@ -80,8 +80,10 @@ export class MatrixLib {
 		opts = _.defaults(_.cloneDeep(opts), getDefaultMatrixOptions());
 		volatileOpts = _.cloneDeep(volatileOpts);
 
+		// Populate roomName and roomVisible properties
 		const room = Game.rooms[roomName] as Room | undefined;
-		opts.roomVisibile = !!Game.rooms[roomName];
+		opts.roomName = roomName;
+		opts.roomVisibile = !!room;
 
 		// Generate a hash to look up any previously cached matrices
 		const hash = MatrixLib.generateMatrixOptionsHash(<MatrixOptions>opts);
@@ -1040,5 +1042,6 @@ export class MatrixLib {
 
 }
 
+global.MatrixCache = MatrixCache;
 global.MatrixLib = MatrixLib;
 
