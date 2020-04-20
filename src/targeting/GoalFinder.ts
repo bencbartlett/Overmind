@@ -23,28 +23,28 @@ const DEBUG = false;
 export class GoalFinder {
 
 	// Standard set of goals for fighting small groups of hostiles (not optimal for larger fights)
-	static skirmishGoals(creep: CombatZerg): { approach: PathFinderGoal[], avoid: PathFinderGoal[] } {
+	static skirmishGoals(zerg: CombatZerg): { approach: PathFinderGoal[], avoid: PathFinderGoal[] } {
 
 		const approach: PathFinderGoal[] = [];
 		const avoid: PathFinderGoal[] = [];
 
-		const room = creep.room;
+		const room = zerg.room;
 
 		const analysis = {} as { [id: string]: SkirmishAnalysis | undefined };
 
-		const myAttack = CombatIntel.getAttackDamage(creep);
-		const myRangedAttack = CombatIntel.getRangedAttackDamage(creep);
-		const myHealing = CombatIntel.getHealAmount(creep);
+		const myAttack = CombatIntel.getAttackDamage(zerg);
+		const myRangedAttack = CombatIntel.getRangedAttackDamage(zerg);
+		const myHealing = CombatIntel.getHealAmount(zerg);
 
 		// If you're purely a healer, ignore combat goals
 		if (myHealing > 0 && myAttack == 0 && myRangedAttack == 0) {
-			return this.healingGoals(creep);
+			return this.healingGoals(zerg);
 		}
 
 		const preferCloseCombat = myAttack > 0;
-		const myRating = CombatIntel.rating(creep);
-		const nearbyRating = _.sum(creep.pos.findInRange(room.creeps, 6), c => CombatIntel.rating(c));
-		const braveMode = creep.hits * (nearbyRating / myRating) * .5 > creep.hitsMax;
+		const myRating = CombatIntel.rating(zerg);
+		const nearbyRating = _.sum(zerg.pos.findInRange(room.creeps, 6), c => CombatIntel.rating(c));
+		const braveMode = zerg.hits * (nearbyRating / myRating) * .5 > zerg.hitsMax;
 
 		const hostileHealers: Creep[] = [];
 
@@ -63,10 +63,10 @@ export class GoalFinder {
 				rangedAttack : rangedAttack,
 				heal         : healing,
 				advantage    : healing == 0 || attack + rangedAttack == 0 ||
-							   myAttack + myRangedAttack + myHealing / CombatIntel.minimumDamageTakenMultiplier(creep.creep)
+							   myAttack + myRangedAttack + myHealing / CombatIntel.minimumDamageTakenMultiplier(zerg.creep)
 							   > attack + rangedAttack + healing / CombatIntel.minimumDamageTakenMultiplier(hostile),
-				isRetreating : CombatIntel.isRetreating(hostile, RoomIntel.getPreviousPos(creep)),
-				isApproaching: CombatIntel.isApproaching(hostile, RoomIntel.getPreviousPos(creep)),
+				isRetreating : CombatIntel.isRetreating(hostile, RoomIntel.getPreviousPos(zerg.creep)),
+				isApproaching: CombatIntel.isApproaching(hostile, RoomIntel.getPreviousPos(zerg.creep)),
 			};
 		}
 
@@ -77,7 +77,7 @@ export class GoalFinder {
 			if (data && (data.advantage || braveMode)) {
 				let range = 1;
 				if (!preferCloseCombat && (data.attack > 0 || data.rangedAttack > myRangedAttack)) {
-					range = creep.pos.getRangeTo(target) == 3 && data.isRetreating ? 2 : 3;
+					range = zerg.pos.getRangeTo(target) == 3 && data.isRetreating ? 2 : 3;
 					avoid.push({pos: target.pos, range: range});
 				}
 				approach.push({pos: target.pos, range: range});
@@ -104,9 +104,9 @@ export class GoalFinder {
 		}
 
 		if (DEBUG) {
-			log.debug(`Report for ${creep.name}:`, JSON.stringify(analysis));
-			log.debug(`Approach for ${creep.name}:`, JSON.stringify(approach));
-			log.debug(`Avoid for ${creep.name}:`, JSON.stringify(avoid));
+			log.debug(`Report for ${zerg.name}:`, JSON.stringify(analysis));
+			log.debug(`Approach for ${zerg.name}:`, JSON.stringify(approach));
+			log.debug(`Avoid for ${zerg.name}:`, JSON.stringify(avoid));
 		}
 
 		return {approach, avoid};

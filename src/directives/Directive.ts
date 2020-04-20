@@ -364,6 +364,10 @@ export abstract class Directive {
 	 * Returns whether a directive of this type is present either at this position or within the room of this name
 	 */
 	static isPresent(posOrRoomName: string | RoomPosition): boolean {
+		if (PHASE != 'run' && PHASE != 'init') {
+			log.error(`Directive.isPresent() will only give correct results in init() and run() phases!`);
+			return true; // usually we want to do something if directive isn't present; so this minimizes bad results
+		}
 		if (typeof posOrRoomName === 'string') {
 			const roomName = posOrRoomName as string;
 			const directivesInRoom = Overmind.overseer.getDirectivesInRoom(roomName) as Directive[];
@@ -382,6 +386,10 @@ export abstract class Directive {
 	 */
 	static createIfNotPresent(pos: RoomPosition, scope: 'room' | 'pos',
 							  opts: DirectiveCreationOptions = {}): number | string | undefined {
+		if (PHASE != 'run') {
+			log.error(`Directive.createIfNotPresent() can only be called during the run phase!`);
+			return;
+		}
 		// Do nothing if flag is already here
 		if (scope == 'pos') {
 			if (this.isPresent(pos)) return;

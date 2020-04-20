@@ -1,4 +1,3 @@
-import {Colony} from '../Colony';
 import {log} from '../console/log';
 import {RoomIntel} from '../intel/RoomIntel';
 import {Pathing} from '../movement/Pathing';
@@ -16,15 +15,23 @@ import {
 export const EXPANSION_EVALUATION_FREQ = 500;
 export const MIN_EXPANSION_DISTANCE = 2;
 
+export interface ColonyExpansionData {
+	possibleExpansions: { [roomName: string]: number | boolean };
+	expiration: number;
+}
+
+
 @profile
 export class ExpansionEvaluator {
 
-	static refreshExpansionData(colony: Colony): void {
+
+	static refreshExpansionData(expansionData: ColonyExpansionData, colonyRoomName: string): void {
+		// This method is typed a little strangely to avoid some circular dependency problems
+
 		// This only gets run once per colony
-		if (_.keys(colony.memory.expansionData.possibleExpansions).length == 0
-			|| Game.time > colony.memory.expansionData.expiration) {
+		if (_.keys(expansionData.possibleExpansions).length == 0 || Game.time > expansionData.expiration) {
 			// Generate a list of rooms which can possibly be settled in
-			const nearbyRooms = Cartographer.recursiveRoomSearch(colony.room.name, 5);
+			const nearbyRooms = Cartographer.recursiveRoomSearch(colonyRoomName, 5);
 			let possibleExpansions: string[] = [];
 			for (const depth in nearbyRooms) {
 				if (parseInt(depth, 10) <= MIN_EXPANSION_DISTANCE) continue;
@@ -32,19 +39,19 @@ export class ExpansionEvaluator {
 			}
 			for (const roomName of possibleExpansions) {
 				if (Cartographer.roomType(roomName) == ROOMTYPE_CONTROLLER) {
-					colony.memory.expansionData.possibleExpansions[roomName] = true;
+					expansionData.possibleExpansions[roomName] = true;
 				}
 			}
 		}
 		// This gets run whenever function is called
-		for (const roomName in colony.memory.expansionData.possibleExpansions) {
-			if (colony.memory.expansionData.possibleExpansions[roomName] == true) {
+		for (const roomName in expansionData.possibleExpansions) {
+			if (expansionData.possibleExpansions[roomName] == true) {
 				if (Memory.rooms[roomName]) {
-					const expansionData = RoomIntel.getExpansionData(roomName);
-					if (expansionData == false) {
-						colony.memory.expansionData.possibleExpansions[roomName] = false;
-					} else if (expansionData && expansionData.score) {
-						colony.memory.expansionData.possibleExpansions[roomName] = expansionData.score;
+					const roomExpansionData = RoomIntel.getExpansionData(roomName);
+					if (roomExpansionData == false) {
+						expansionData.possibleExpansions[roomName] = false;
+					} else if (roomExpansionData && roomExpansionData.score) {
+						expansionData.possibleExpansions[roomName] = roomExpansionData.score;
 					}
 				}
 			}
@@ -108,7 +115,7 @@ export class ExpansionEvaluator {
 				const msg = verbose ? `Computing distance from ${bunkerLocation.print} to ${position.print}... ` : '';
 				const ret = Pathing.findShortestPath(bunkerLocation, position,
 													 {ignoreStructures: true, allowHostile: true});
-				if (ret.incomplete || ret.path.length > Colony.settings.maxSourceDistance) {
+				if (ret.incomplete || ret.path.length > 100 /* Colony.settings.maxSourceDistance */) {
 					if (verbose) log.info(msg + 'incomplete path!');
 					valid = false;
 					break;
@@ -127,7 +134,7 @@ export class ExpansionEvaluator {
 		let sourceCount = 0;
 		const roomsByScore = _.sortBy(_.keys(outpostScores), roomName => -1 * outpostScores[roomName]);
 		for (const roomName of roomsByScore) {
-			if (sourceCount > Colony.settings.remoteSourcesByLevel[8]) break;
+			if (sourceCount > 9 /*Colony.settings.remoteSourcesByLevel[8]*/) break;
 			const factor = roomName == room.name ? 2 : 1; // weight owned room scores more heavily
 			totalScore += outpostScores[roomName];
 			sourceCount += outpostSourcePositions[roomName].length;

@@ -1,7 +1,6 @@
 /* tslint:disable:no-bitwise prefer-for-of */
 
 import {log} from '../console/log';
-import {DirectiveSKOutpost} from '../directives/colony/outpostSK';
 import {RoomIntel} from '../intel/RoomIntel';
 import {normalizePos} from '../movement/helpers';
 import {TerrainCosts} from '../movement/Pathing';
@@ -31,9 +30,9 @@ export const getDefaultMatrixOptions: () => MatrixOptions = () => ({
 	roomName            : 'none',	// overridden in MatrixLib.getMatrix()
 	roomVisibile        : false,	// overridden in MatrixLib.getMatrix()
 	explicitTerrainCosts: false,
-	terrainCosts: {
-		plainCost           : 1,
-		swampCost           : 5,
+	terrainCosts        : {
+		plainCost: 1,
+		swampCost: 5,
 	},
 	roadCost            : 'auto',
 	blockExits          : false,
@@ -61,8 +60,6 @@ const MatrixCache: {
 		invalidateCondition?: () => boolean;
 	}
 } = {};
-
-
 
 
 /**
@@ -243,8 +240,11 @@ export class MatrixLib {
 
 		// Avoid source keepers
 		if (opts.avoidSK && Cartographer.roomType(room.name) == ROOMTYPE_SOURCEKEEPER) {
-			const skDirective = _.first(DirectiveSKOutpost.findInRoom(room.name));
 			// Skip this step if we've been harvesting from the room for a while
+			const skDirective = _.find(Overmind.overseer.getDirectivesInRoom(room.name), dir =>
+				dir.directiveName == 'outpostSK'); // had to do this ungly thing due to circular dependency problems :(
+			// const skDirective = _.first(DirectiveSKOutpost.findInRoom(roomName));
+
 			if (!(skDirective && skDirective.age > 2500)) {
 				const keeperLairInfo = RoomIntel.getKeeperLairInfo(room.name);
 				const chillPositions = _.compact(_.map(keeperLairInfo || [], info => info.chillPos)) as RoomPosition[];
@@ -317,8 +317,11 @@ export class MatrixLib {
 
 		// Avoid source keepers
 		if (opts.avoidSK && Cartographer.roomType(roomName) == ROOMTYPE_SOURCEKEEPER) {
-			const skDirective = _.first(DirectiveSKOutpost.findInRoom(roomName));
 			// Skip this step if we've been harvesting from the room for a while
+			const skDirective = _.find(Overmind.overseer.getDirectivesInRoom(roomName), dir =>
+				dir.directiveName == 'outpostSK'); // had to do this ungly thing due to circular dependency problems :(
+			// const skDirective = _.first(DirectiveSKOutpost.findInRoom(roomName));
+
 			if (!(skDirective && skDirective.age > 2500)) {
 				const keeperLairInfo = RoomIntel.getKeeperLairInfo(roomName);
 				const chillPositions = _.compact(_.map(keeperLairInfo || [], info => info.chillPos)) as RoomPosition[];
@@ -851,7 +854,7 @@ export class MatrixLib {
 	 * If onlyMy=true, then only ramparts that are owned by me are counted.
 	 * -> This method does not take rampart walkability into account (if there are structures under the rampart)
 	 */
-	private static getRampartMask(room: Room, onlyMy = true, value=0xff): CostMatrix {
+	private static getRampartMask(room: Room, onlyMy = true, value = 0xff): CostMatrix {
 		const key = `rampartMask_${room.name}_onlymy_${onlyMy}`;
 
 		let matrix: CostMatrix | undefined;
@@ -904,7 +907,7 @@ export class MatrixLib {
 	/**
 	 * Blocks all non-rampart positions in the room. If onlyMy=true, then only my rampart positions are blocked
 	 */
-	static blockNonRamparts(matrix: CostMatrix, room: Room, onlyMy=true) {
+	static blockNonRamparts(matrix: CostMatrix, room: Room, onlyMy = true) {
 		const mask = MatrixLib.getRampartMask(room, onlyMy);
 		MatrixLib.addMatrices(matrix, mask);
 	}

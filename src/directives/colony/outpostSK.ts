@@ -15,6 +15,12 @@ export class DirectiveSKOutpost extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag, colony => colony.level >= 7);
+		this.refresh();
+	}
+
+	refresh(): void {
+		super.refresh();
+
 	}
 
 	spawnMoarOverlords() {

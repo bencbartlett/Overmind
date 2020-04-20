@@ -13,6 +13,7 @@ import {Hatchery} from './hiveClusters/hatchery';
 import {SporeCrawler} from './hiveClusters/sporeCrawler';
 import {UpgradeSite} from './hiveClusters/upgradeSite';
 import {CombatIntel} from './intel/CombatIntel';
+import {ExpansionData} from './intel/RoomIntel';
 import {Energetics} from './logistics/Energetics';
 import {LinkNetwork} from './logistics/LinkNetwork';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
@@ -29,7 +30,7 @@ import {ALL_ZERO_ASSETS} from './resources/map_resources';
 import {bunkerLayout, getPosFromBunkerCoord} from './roomPlanner/layouts/bunker';
 import {RoomPlanner} from './roomPlanner/RoomPlanner';
 import {LOG_STATS_INTERVAL, Stats} from './stats/stats';
-import {EXPANSION_EVALUATION_FREQ, ExpansionEvaluator} from './strategy/ExpansionEvaluator';
+import {ColonyExpansionData, EXPANSION_EVALUATION_FREQ, ExpansionEvaluator} from './strategy/ExpansionEvaluator';
 import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
 import {maxBy, mergeSum, minBy} from './utilities/utils';
 import {Visualizer} from './visuals/Visualizer';
@@ -65,10 +66,7 @@ export interface ColonyMemory {
 		level: number,
 		tick: number,
 	};
-	expansionData: {
-		possibleExpansions: { [roomName: string]: number | boolean },
-		expiration: number,
-	};
+	expansionData: ColonyExpansionData;
 	maxLevel: number;
 	outposts: { [roomName: string]: OutpostData };
 	suspend?: boolean;
@@ -379,9 +377,6 @@ export class Colony {
 		// Register physical objects across all rooms in the colony
 		$.set(this, 'sources', () => _.sortBy(_.flatten(_.map(this.rooms, room => room.sources)),
 											  source => source.pos.getMultiRoomRangeTo(this.pos)));
-		for (const source of this.sources) {
-			DirectiveHarvest.createIfNotPresent(source.pos, 'pos');
-		}
 		$.set(this, 'extractors', () =>
 			_(this.rooms)
 				.map(room => room.extractor)
@@ -389,9 +384,6 @@ export class Colony {
 				.filter(e => (e!.my && e!.room.my)
 							 || Cartographer.roomType(e!.room.name) != ROOMTYPE_CONTROLLER)
 				.sortBy(e => e!.pos.getMultiRoomRangeTo(this.pos)).value() as StructureExtractor[]);
-		if (this.controller.level >= 6 && this.terminal) {
-			_.forEach(this.extractors, extractor => DirectiveExtract.createIfNotPresent(extractor.pos, 'pos'));
-		}
 		$.set(this, 'repairables', () => _.flatten(_.map(this.rooms, room => room.repairables)));
 		$.set(this, 'rechargeables', () => _.flatten(_.map(this.rooms, room => room.rechargeables)));
 		$.set(this, 'constructionSites', () => _.flatten(_.map(this.rooms, room => room.constructionSites)), 10);
@@ -655,7 +647,7 @@ export class Colony {
 		this.linkNetwork.init();											// Initialize link network
 		this.roomPlanner.init();											// Initialize the room planner
 		if (Game.time % EXPANSION_EVALUATION_FREQ == 5 * this.id) {			// Re-evaluate expansion data if needed
-			ExpansionEvaluator.refreshExpansionData(this);
+			ExpansionEvaluator.refreshExpansionData(this.memory.expansionData, this.room.name);
 		}
 	}
 

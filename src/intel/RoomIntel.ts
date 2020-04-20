@@ -553,7 +553,7 @@ export class RoomIntel {
 	 * Get the pos a creep was in on the previous tick, returning the same position as the creep if no data was
 	 * gathered on the previous tick.
 	 */
-	static getPreviousPos(creep: Creep | Zerg): RoomPosition {
+	static getPreviousPos(creep: Creep): RoomPosition {
 		const prevPositions = creep.room.memory[RMEM.PREV_POSITIONS];
 		if (prevPositions) {
 			const packedId = packId(creep.id);

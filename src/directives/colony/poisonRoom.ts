@@ -107,17 +107,6 @@ export class DirectivePoisonRoom extends Directive {
 		} else {
 			this.blockPositions = [];
 		}
-
-		if (this.room && this.room.controller && Game.time % DirectivePoisonRoom.settings.runFrequency == 0) {
-			// Remove hostile reservation if needed
-			if (this.room.controller.reservation && this.room.controller.reservation.ticksToEnd > 500) {
-				DirectiveControllerAttack.createIfNotPresent(this.room.controller.pos, 'room');
-			}
-			// Send fighters if needed
-			if (this.room.playerHostiles.length > 0) {
-				DirectiveOutpostDefense.createIfNotPresent(this.room.controller.pos, 'room');
-			}
-		}
 	}
 
 	private prePoisonActions(): void {
@@ -173,6 +162,18 @@ export class DirectivePoisonRoom extends Directive {
 	}
 
 	run() {
+
+		if (this.room && this.room.controller && Game.time % DirectivePoisonRoom.settings.runFrequency == 0) {
+			// Remove hostile reservation if needed
+			if (this.room.controller.reservation && this.room.controller.reservation.ticksToEnd > 500) {
+				DirectiveControllerAttack.createIfNotPresent(this.room.controller.pos, 'room');
+			}
+			// Send fighters if needed
+			if (this.room.playerHostiles.length > 0) {
+				DirectiveOutpostDefense.createIfNotPresent(this.room.controller.pos, 'room');
+			}
+		}
+
 		if (this.room && this.room.controller && this.room.controller.my) {
 			if (Game.time % DirectivePoisonRoom.settings.runFrequency == 0 || this.room.constructionSites.length == 0) {
 				// At RCL 1, prepare room by removing structures and hostile construction sites

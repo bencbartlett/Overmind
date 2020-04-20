@@ -10,6 +10,8 @@ import {DirectiveInvasionDefense} from './directives/defense/invasionDefense';
 import {DirectiveOutpostDefense} from './directives/defense/outpostDefense';
 import {Directive} from './directives/Directive';
 import {Notifier} from './directives/Notifier';
+import {DirectiveExtract} from './directives/resource/extract';
+import {DirectiveHarvest} from './directives/resource/harvest';
 import {DirectivePowerMine} from './directives/resource/powerMine';
 import {DirectiveBootstrap} from './directives/situational/bootstrap';
 import {DirectiveNukeResponse} from './directives/situational/nukeResponse';
@@ -224,6 +226,15 @@ export class Overseer implements IOverseer {
 
 
 	// Run phase methods ===============================================================================================
+
+	private placeHarvestingDirectives(colony: Colony) {
+		for (const source of colony.sources) {
+			DirectiveHarvest.createIfNotPresent(source.pos, 'pos');
+		}
+		if (colony.controller.level >= 6 && colony.terminal) {
+			_.forEach(colony.extractors, extractor => DirectiveExtract.createIfNotPresent(extractor.pos, 'pos'));
+		}
+	}
 
 	private handleBootstrapping(colony: Colony) {
 		// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
@@ -442,6 +453,10 @@ export class Overseer implements IOverseer {
 
 		const allRooms = getAllRooms();
 		const allColonies = getAllColonies();
+
+		if (LATEST_BUILD_TICK == Game.time) {
+			_.forEach(allColonies, colony => this.placeHarvestingDirectives(colony));
+		}
 
 		_.forEach(allColonies, colony => this.handleBootstrapping(colony));
 
