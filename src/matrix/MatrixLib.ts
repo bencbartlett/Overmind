@@ -11,34 +11,30 @@ import {unpackPosList} from '../utilities/packrat';
 import {color, isAlly, rgbToHex} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 
-// This should not have nested properties!
+// Properties and sub-properties here shouldn't be undefined
 export interface MatrixOptions {			// Listed in the order they are processed in
 	roomName: string;						// Name of the room
 	roomVisibile: boolean;					// Whether the room is visible
 	explicitTerrainCosts: boolean;			// If true, call MatrixLib.addTerrainCosts(matrix, roomName, terrainCosts)
-	plainCost: number;						// Cost of plain tiles
-	swampCost: number;						// Cost of swamp tiles
-	roadCost: number | 'auto' | undefined;	// Cost of roads; 'auto' = set to ceil(plain/2); undefined = ignore
+	terrainCosts: TerrainCosts;				// terrain costs, determined automatically for creep body if unspecified
+	roadCost: number | 'auto' | 'ignore';	// road costs; 'auto' = set to ceil(plain/2); 'ignore' = ignore roads
 	blockExits: boolean;					// Whether to block the exits; shouldn't be used with exitCosts
 	avoidSK: boolean;						// Avoid getting near source keepers
-	allowPortals: boolean;					// Portals will be soft-blocked unless this is true
+	allowPortals: boolean;					// Portals are hard-blocked if false; soft-blocked if true
 	ignoreStructures: boolean;				// Ignore structures (excluding roads) and impassible construction sites
 	obstacles: string;						// Obstacles packed as packPos (not packCoord!); should rarely change
 	swarmWidth: number;						// The width of the squad (if any); >1 calls MatrixLib.applyMovingMaxPool()
 	swarmHeight: number;					// The height of the squad (if any); >1 calls MatrixLib.applyMovingMaxPool()
 }
 
-// This describes matrix options that generally only last for one tick. All properties here should be optional!
-export interface VolatileMatrixOptions {
-	blockCreeps?: boolean;					// Whether to block creeps (default is undefined -> false)
-}
-
-const getDefaultMatrixOptions: () => MatrixOptions = () => ({
+export const getDefaultMatrixOptions: () => MatrixOptions = () => ({
 	roomName            : 'none',	// overridden in MatrixLib.getMatrix()
 	roomVisibile        : false,	// overridden in MatrixLib.getMatrix()
 	explicitTerrainCosts: false,
-	plainCost           : 1,
-	swampCost           : 5,
+	terrainCosts: {
+		plainCost           : 1,
+		swampCost           : 5,
+	},
 	roadCost            : 'auto',
 	blockExits          : false,
 	avoidSK             : true,
@@ -49,8 +45,11 @@ const getDefaultMatrixOptions: () => MatrixOptions = () => ({
 	swarmHeight         : 1,
 });
 
+// This describes matrix options that generally only last for one tick. All properties here should be optional!
+export interface VolatileMatrixOptions {
+	blockCreeps?: boolean;	// Whether to block creeps (default is undefined -> false)
+}
 
-const getDefaultVolatileMatrixOptions: () => VolatileMatrixOptions = () => ({});
 
 PERMACACHE.terrainMatrices = PERMACACHE.terrainMatrices || {};
 
@@ -62,6 +61,8 @@ const MatrixCache: {
 		invalidateCondition?: () => boolean;
 	}
 } = {};
+
+
 
 
 /**
@@ -136,7 +137,8 @@ export class MatrixLib {
 				} else {
 					// Invalidate the path if the number of structures in the room changes
 					const numStructures = room.structures.length;
-					invalidateCondition = () => Game.rooms[roomName].structures.length != numStructures;
+					invalidateCondition =
+						() => Game.rooms[roomName] && Game.rooms[roomName].structures.length != numStructures;
 				}
 			} else {
 				matrix = MatrixLib.generateCostMatrixForInvisibleRoom(roomName, <MatrixOptions>opts);
@@ -198,8 +200,8 @@ export class MatrixLib {
 		if (volatileOpts.blockCreeps) {
 			if (room) {
 				if (opts.swarmWidth > 1 || opts.swarmHeight > 1) {
-					MatrixLib.blockForSwarmAfterMaxPooling(clonedMatrix, room.find(FIND_CREEPS),
-														   opts.swarmWidth, opts.swarmHeight);
+					MatrixLib.blockAfterMaxPooling(clonedMatrix, room.find(FIND_CREEPS),
+												   opts.swarmWidth, opts.swarmHeight);
 				} else {
 					MatrixLib.block(clonedMatrix, room.find(FIND_CREEPS));
 				}
@@ -221,14 +223,13 @@ export class MatrixLib {
 
 		// Explicitly specify the terrain costs if needed
 		if (opts.explicitTerrainCosts) {
-			const terrainCosts: TerrainCosts = {plainCost: opts.plainCost, swampCost: opts.swampCost};
-			MatrixLib.addTerrainCosts(matrix, room.name, terrainCosts);
+			MatrixLib.addTerrainCosts(matrix, room.name, opts.terrainCosts);
 		}
 
 		// Set road costs, usually to plainCost / 2
-		if (opts.roadCost !== undefined) {
+		if (opts.roadCost != 'ignore') {
 			if (opts.roadCost == 'auto') {
-				opts.roadCost = Math.ceil(opts.plainCost / 2);
+				opts.roadCost = Math.ceil(opts.terrainCosts.plainCost / 2);
 			}
 			for (const road of room.roads) {
 				matrix.set(road.pos.x, road.pos.y, opts.roadCost);
@@ -301,8 +302,7 @@ export class MatrixLib {
 
 		// Explicitly specify the terrain costs if needed
 		if (opts.explicitTerrainCosts) {
-			const terrainCosts: TerrainCosts = {plainCost: opts.plainCost, swampCost: opts.swampCost};
-			MatrixLib.addTerrainCosts(matrix, roomName, terrainCosts);
+			MatrixLib.addTerrainCosts(matrix, roomName, opts.terrainCosts);
 		}
 
 		// Set road costs, usually to plainCost / 2
@@ -380,6 +380,17 @@ export class MatrixLib {
 		return matrixToModify;
 	}
 
+	/**
+	 * Quickly fills an entire matrix with a value. This method accesses the non-api CostMatrix._bits property so
+	 * it may break in the future if they modify the mechanics of cost matrices. See this file for details:
+	 * https://github.com/screeps/engine/blob/master/src/game/path-finder.js
+	 */
+	static fillMatrix(matrixToModify: CostMatrix, value: number): CostMatrix {
+		value = Math.min(Math.max(0, value), 255);
+		matrixToModify._bits.fill(value);
+		return matrixToModify;
+	}
+
 
 	/**
 	 * Blocks all specified positions, setting their cost to 0xff
@@ -404,29 +415,6 @@ export class MatrixLib {
 			pos = normalizePos(positions[i]);
 			if (terrain.get(pos.x, pos.y) & TERRAIN_MASK_WALL) continue;
 			matrix.set(pos.x, pos.y, Math.max(cost, matrix.get(pos.x, pos.y)));
-		}
-		return matrix;
-	}
-
-	/**
-	 * Blocks all specified positions for a swarm cost matrix that has already been "smeared" by
-	 * MatrixLib.applyMovingMaxPool(). Do not run additional passes of applyMovingMaxPool after doing this!
-	 */
-	static blockForSwarmAfterMaxPooling(matrix: CostMatrix, positions: (RoomPosition | HasPos)[],
-										width: number, height: number): CostMatrix {
-		let pos: RoomPosition;
-		let x, y, dx, dy: number;
-		for (let i = 0; i < positions.length; i++) {
-			pos = normalizePos(positions[i]);
-			for (dx = 0; dx > -width; dx--) {
-				x = pos.x + dx;
-				if (x < 0 || x > 49) continue;
-				for (dy = 0; dy > -height; dy--) {
-					y = pos.y + dy;
-					if (y < 0 || y > 49) continue;
-					matrix.set(x, y, 0xff);
-				}
-			}
 		}
 		return matrix;
 	}
@@ -565,7 +553,8 @@ export class MatrixLib {
 	/**
 	 * Transform a CostMatrix such that the cost at each point is transformed to the max of costs in a width x height
 	 * window (indexed from upper left corner). This is basically a 2D max-pool operation except that the pooling
-	 * window moves with the max-kernel. This method requires that terrain be explicitly specified in the matrix!
+	 * window moves with the max-kernel.
+	 * -> This method requires that terrain be explicitly specified in the matrix!
 	 */
 	static applyMovingMaxPool(matrix: CostMatrix, width: number, height: number): CostMatrix {
 		// Since we're moving in increasing order of x, y, we don't need to clone the matrix
@@ -578,14 +567,93 @@ export class MatrixLib {
 					for (dy = 0; dy < height; dy++) {
 						// Don't need 0 <= x,y <= 49 safety checks here since 0 <= x <= (50 - w + (w-1)) = 49
 						cost = matrix.get(x + dx, y + dy);
-						if (cost > maxCost) {
-							maxCost = cost;
-						}
+						if (cost > maxCost) maxCost = cost;
 					}
 				}
 				matrix.set(x, y, maxCost);
 			}
 		}
+		return matrix;
+	}
+
+	/**
+	 * Blocks all specified positions for a swarm cost matrix that has already been "smeared" by
+	 * MatrixLib.applyMovingMaxPool().
+	 * -> Do not run additional passes of applyMovingMaxPool after doing this!
+	 * -> This method assumes that you have already added explicit terrian costs.
+	 */
+	static blockAfterMaxPooling(matrix: CostMatrix, positions: (RoomPosition | HasPos)[],
+								width: number, height: number): CostMatrix {
+		let pos: RoomPosition;
+		let x, y, dx, dy: number;
+		for (let i = 0; i < positions.length; ++i) {
+			pos = normalizePos(positions[i]);
+			for (dx = 0; dx > -width; dx--) {
+				x = pos.x + dx;
+				if (x < 0 || x > 49) continue;
+				for (dy = 0; dy > -height; dy--) {
+					y = pos.y + dy;
+					if (y < 0 || y > 49) continue;
+					matrix.set(x, y, 0xff);
+				}
+			}
+		}
+		return matrix;
+	}
+
+	/**
+	 * Sets the effective cost of all specified positions for a swarm cost matrix that has already been "smeared" by
+	 * MatrixLib.applyMovingMaxPool(). The cost for each tile is the maximum of the set cost and the current cost.
+	 * -> Do not run additional passes of applyMovingMaxPool after doing this!
+	 * -> This method assumes that you have already added explicit terrain costs.
+	 * Example -----------------------------------------------------------------------------------------------------
+	 * Start       SetCost     MaxPool    |    Start       MaxPool     SetToMaxCostAfterMaxPooling
+	 * 0 0 0 0     0 0 0 0     1 5 5 0    |    0 0 0 0     1 2 2 0     1 5 5 0
+	 * 0 1 2 0     0 1 5 0     9 9 5 0    |    0 1 2 0     9 9 2 0     9 9 5 0
+	 * 0 9 0 0     0 9 5 0     9 9 5 1    |    0 9 0 0     9 9 1 1     9 9 5 1
+	 * 0 0 0 1     0 0 0 1     0 0 1 1    |    0 0 0 1     0 0 1 1     0 0 1 1
+	 */
+	static setToMaxCostAfterMaxPooling(matrix: CostMatrix, positions: (RoomPosition | HasPos)[],
+									   width: number, height: number, cost: number): CostMatrix {
+		let pos: RoomPosition;
+		let x, y, dx, dy: number;
+		for (let i = 0; i < positions.length; ++i) {
+			pos = normalizePos(positions[i]);
+			for (dx = 0; dx > -width; dx--) {
+				x = pos.x + dx;
+				if (x < 0 || x > 49) continue;
+				for (dy = 0; dy > -height; dy--) {
+					y = pos.y + dy;
+					if (y < 0 || y > 49) continue;
+					if (matrix.get(x, y) < cost) {
+						matrix.set(x, y, cost);
+					}
+				}
+			}
+		}
+		return matrix;
+	}
+
+	/**
+	 * Adds an extra cost to the effective specified positions for a swarm cost matrix that has already been "smeared"
+	 * by MatrixLib.applyMovingMaxPool(). The cost is added on top of what is already there to any tiles which have a
+	 * lower existing cost than the new value. Tiles in overlapping cost-adding windows will have the maximum of the
+	 * costs added to their value, not the total of the costs.
+	 * -> This method will not always produce the same results as setting the cost first and then smearing!
+	 * -> Do not run additional passes of applyMovingMaxPool after doing this!
+	 * -> This method assumes that you have already added explicit terrain costs.
+	 * Example -----------------------------------------------------------------------------------------------------
+	 * Start       AddCost     MaxPool    |    Start       MaxPool     AddCostAfterMaxPooling
+	 * 0 0 0 0     0 0 0 0     1 7 7 0    |    0 0 0 0     1 2 2 0     1 7 7 0
+	 * 0 1 2 0     0 1 7 0     9 9 7 0    |    0 1 2 0     9 9 2 0     9 9 7 0
+	 * 0 9 0 0     0 9 5 0     9 9 5 1    |    0 9 0 0     9 9 1 1     9 9 6 1
+	 * 0 0 0 1     0 0 0 1     0 0 1 1    |    0 0 0 1     0 0 1 1     0 0 1 1
+	 */
+	static addCostAfterMaxPooling(matrix: CostMatrix, positions: (RoomPosition | HasPos)[],
+								  width: number, height: number, cost: number): CostMatrix {
+		const addMatrix = new PathFinder.CostMatrix();
+		MatrixLib.setToMaxCostAfterMaxPooling(addMatrix, positions, width, height, cost);
+		MatrixLib.addMatrices(matrix, addMatrix);
 		return matrix;
 	}
 
@@ -629,9 +697,8 @@ export class MatrixLib {
 	 * in the permacache. By default, a cloned matrix is returned which you may safely modify, but if you know what
 	 * you are doing, you can set skipClone=true.
 	 */
-	static getTerrainMatrix(roomName: string, terrainCosts: TerrainCosts = {plainCost: 1, swampCost: 5},
-							skipClone                                    = false): CostMatrix {
-		const key = `${roomName}:${terrainCosts.plainCost}:${terrainCosts.swampCost}`;
+	static getTerrainMatrix(roomName: string, terrainCosts: TerrainCosts, skipClone = false): CostMatrix {
+		const key = `${roomName}_${terrainCosts.plainCost}_${terrainCosts.swampCost}`;
 		if (PERMACACHE.terrainMatrices[key] === undefined) {
 			// This takes about 0.2 to 0.4 CPU to generate
 			const matrix = new PathFinder.CostMatrix();
@@ -653,6 +720,24 @@ export class MatrixLib {
 			}
 			PERMACACHE.terrainMatrices[key] = matrix;
 		}
+		if (skipClone) { // be careful with this!
+			return PERMACACHE.terrainMatrices[key];
+		}
+		return PERMACACHE.terrainMatrices[key].clone();
+	}
+
+	/**
+	 * Get a cloned copy of the cost matrix for a room with specified options
+	 */
+	static getSwarmTerrainMatrix(roomName: string, terrainCosts: TerrainCosts, width: number, height: number,
+								 exitCost = 10, skipClone = false): CostMatrix {
+		const key = `s_${roomName}_${terrainCosts.plainCost}_${terrainCosts.swampCost}_${width}_${height}_${exitCost}`;
+		if (PERMACACHE.terrainMatrices[key] === undefined) {
+			const terrainMatrix = MatrixLib.getTerrainMatrix(roomName, terrainCosts);
+			MatrixLib.setExitCosts(terrainMatrix, roomName, exitCost);
+			MatrixLib.applyMovingMaxPool(terrainMatrix, width, height);
+			PERMACACHE.terrainMatrices[key] = terrainMatrix;
+		}
 		if (skipClone) {
 			return PERMACACHE.terrainMatrices[key];
 		}
@@ -663,8 +748,7 @@ export class MatrixLib {
 	/**
 	 * Adds the terrain costs to an existing cost matrix
 	 */
-	static addTerrainCosts(matrix: CostMatrix, roomName: string,
-						   terrainCosts: TerrainCosts = {plainCost: 1, swampCost: 5}): CostMatrix {
+	static addTerrainCosts(matrix: CostMatrix, roomName: string, terrainCosts: TerrainCosts): CostMatrix {
 		const terrainMatrix = MatrixLib.getTerrainMatrix(roomName, terrainCosts, true);
 		MatrixLib.addMatrices(matrix, terrainMatrix);
 		return matrix;
@@ -734,6 +818,15 @@ export class MatrixLib {
 	}
 
 	/**
+	 * Sets allied creep positions to impassible
+	 */
+	static blockAlliedCreeps(matrix: CostMatrix, room: Room) {
+		_.forEach(room.friendlies, hostile => {
+			matrix.set(hostile.pos.x, hostile.pos.y, 0xff);
+		});
+	}
+
+	/**
 	 * Sets all creep positions to impassible
 	 */
 	static blockAllCreeps(matrix: CostMatrix, room: Room) {
@@ -754,9 +847,53 @@ export class MatrixLib {
 	}
 
 	/**
-	 * Sets walkable rampart positions to 1 if cost is less than 0xfe
+	 * Generates and caches a rampart mask for the room with 0x00 where there are ramparts and 0xff everywhere else.
+	 * If onlyMy=true, then only ramparts that are owned by me are counted.
+	 * -> This method does not take rampart walkability into account (if there are structures under the rampart)
 	 */
-	static preferRamparts(matrix: CostMatrix, room: Room) {
+	private static getRampartMask(room: Room, onlyMy = true, value=0xff): CostMatrix {
+		const key = `rampartMask_${room.name}_onlymy_${onlyMy}`;
+
+		let matrix: CostMatrix | undefined;
+		let expiration: number;
+		let invalidateCondition: () => boolean;
+
+		if (MatrixCache[key]) {
+			expiration = MatrixCache[key].expiration || Infinity;
+			invalidateCondition = MatrixCache[key].invalidateCondition || (() => false);
+			if (Game.time >= expiration || invalidateCondition()) {
+				delete MatrixCache[key];
+				matrix = undefined;
+			} else {
+				matrix = MatrixCache[key].matrix;
+			}
+		}
+
+		if (!matrix) {
+			matrix = new PathFinder.CostMatrix();
+			MatrixLib.fillMatrix(matrix, 0xff);
+			const ramparts = onlyMy ? _.filter(room.ramparts, rampart => rampart.my) : room.ramparts;
+			for (const rampart of ramparts) {
+				matrix.set(rampart.pos.x, rampart.pos.y, 0);
+			}
+		}
+
+		const numRamparts = room.ramparts.length; // this doesn't account for onlyMy option but I think this is okay
+		MatrixCache[key] = {
+			matrix             : matrix,
+			generated          : Game.time,
+			expiration         : Game.time + 100,
+			invalidateCondition: () => Game.rooms[room.name] && Game.rooms[room.name].ramparts.length != numRamparts,
+		};
+
+		return MatrixCache[key].matrix;
+	}
+
+	/**
+	 * Sets walkable rampart positions to 1 if cost is less than 0xfe
+	 * TODO: maybe increasing cost elsewhere would be better than decreasing cost in ramparts
+	 */
+	static setWalkableRampartCostToOne(matrix: CostMatrix, room: Room) {
 		_.forEach(room.walkableRamparts, rampart => {
 			if (matrix.get(rampart.pos.x, rampart.pos.y) < 0xfe) {
 				matrix.set(rampart.pos.x, rampart.pos.y, 1);
@@ -765,17 +902,11 @@ export class MatrixLib {
 	}
 
 	/**
-	 * Sets walkable rampart positions to 1, everything else is blocked
+	 * Blocks all non-rampart positions in the room. If onlyMy=true, then only my rampart positions are blocked
 	 */
-	static blockNonRamparts(matrix: CostMatrix, room: Room) {
-		for (let y = 0; y < 50; ++y) {
-			for (let x = 0; x < 50; ++x) {
-				matrix.set(x, y, 0xff);
-			}
-		}
-		_.forEach(room.walkableRamparts, rampart => {
-			matrix.set(rampart.pos.x, rampart.pos.y, 1);
-		});
+	static blockNonRamparts(matrix: CostMatrix, room: Room, onlyMy=true) {
+		const mask = MatrixLib.getRampartMask(room, onlyMy);
+		MatrixLib.addMatrices(matrix, mask);
 	}
 
 	/**

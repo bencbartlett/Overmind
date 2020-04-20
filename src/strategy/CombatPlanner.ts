@@ -3,6 +3,7 @@
 import {log} from '../console/log';
 import {DefenseDirective} from '../directives/defense/_DefenseDirective';
 import {CombatIntel, CombatPotentials} from '../intel/CombatIntel';
+import {RoomIntel} from '../intel/RoomIntel';
 import {Pathing} from '../movement/Pathing';
 import {CombatOverlord} from '../overlords/CombatOverlord';
 import {ema, getCacheExpiration} from '../utilities/utils';
@@ -216,7 +217,7 @@ export class CombatPlanner {
 
 	static getRoomLayout(room: Room): RoomLayout {
 		let isBunker, isExposed, isInnerWall, isEdgeWall = false;
-		const exitPositions = Pathing.getExitPositions(room.name);
+		const exitPositions = RoomIntel.getExitPositions(room.name);
 		const terrain = Game.map.getRoomTerrain(room.name);
 
 		// Room is bunker if >80% of hostile structures are covered by ramparts

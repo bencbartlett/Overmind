@@ -282,12 +282,10 @@ export class CombatIntel {
 	findSwarmAssemblyPoint(clearance: { width: number, height: number }, swarmIndex = 0): RoomPosition {
 		const simpleFallback = this.findSimpleSiegeFallback();
 		const startPos = Pathing.findPathablePosition(simpleFallback.roomName, clearance);
-		let ret = Pathing.findSwarmPath(startPos, this.directive.pos, clearance.width, clearance.height,
-										{ignoreCreeps: true});
+		let ret = Pathing.findSwarmPath(startPos, this.directive.pos, clearance.width, clearance.height);
 		if (ret.incomplete) {
 			log.debug(`Incomplete swarm path to find assembly point. Retrying with startpos = fallback.`);
-			ret = Pathing.findSwarmPath(simpleFallback, this.directive.pos, clearance.width, clearance.height,
-										{ignoreCreeps: true});
+			ret = Pathing.findSwarmPath(simpleFallback, this.directive.pos, clearance.width, clearance.height);
 			if (ret.incomplete) {
 				log.warning(`No pathable assembly point!`);
 			}
@@ -306,7 +304,7 @@ export class CombatIntel {
 	findSwarmAssemblyPointInColony(clearance: { width: number, height: number }, swarmIndex = 0): RoomPosition {
 		// let ret = Pathing.findSwarmPath(this.colony.pos, this.directive.pos, clearance.width, clearance.height,
 		// 								{ignoreCreeps: true});
-		const ret = Pathing.findPath(this.colony.pos, this.directive.pos, {ignoreCreeps: true});
+		const ret = Pathing.findPath(this.colony.pos, this.directive.pos);
 		const path = ret.path.reverse();
 		const acceptablePositions = _.filter(path, pos => pos.roomName == this.colony.name && pos.rangeToEdge > 1);
 		const swarmSize = Math.max(clearance.width, clearance.height);

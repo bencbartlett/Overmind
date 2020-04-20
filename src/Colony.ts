@@ -69,10 +69,10 @@ export interface ColonyMemory {
 		possibleExpansions: { [roomName: string]: number | boolean },
 		expiration: number,
 	};
-	suspend?: boolean;
-	debug?: boolean;
 	maxLevel: number;
 	outposts: { [roomName: string]: OutpostData };
+	suspend?: boolean;
+	debug?: boolean;
 }
 
 // Outpost that is currently not being maintained

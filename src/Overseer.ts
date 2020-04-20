@@ -447,13 +447,15 @@ export class Overseer implements IOverseer {
 
 		_.forEach(allColonies, colony => this.handleOutpostDefense(colony));
 
-		_.forEach(allColonies, colony => this.handleUnkillableStrongholds(colony));
-
 		// _.forEach(allColonies, colony => this.handleStrongholds(colony));
 
 		_.forEach(allColonies, colony => this.handleColonyInvasions(colony));
 
 		_.forEach(allColonies, colony => this.handleNukeResponse(colony));
+
+		if (Game.time % 100 == 67) {
+			_.forEach(allColonies, colony => this.handleUnkillableStrongholds(colony));
+		}
 
 		if (Memory.settings.powerCollection.enabled && Game.cpu.bucket > 8000) {
 			_.forEach(allRooms, room => this.handlePowerMining(room));
@@ -492,12 +494,14 @@ export class Overseer implements IOverseer {
 				room.invaderCore && room.invaderCore.level > 3) {
 
 				const roomDirectives = Directive.find(room.flags);
-				log.notify(`Disabling outpost ${room.print} due to Stronghold presence`);
 
 				for (const directive of roomDirectives) {
 					for (const name in directive.overlords) {
 						directive.overlords[name].suspendFor(suspensionDuration);
 					}
+				}
+				if (colony.isRoomActive(room.name)) {
+					log.notify(`Disabling outpost ${room.print} due to Stronghold presence`);
 				}
 				colony.suspendOutpost(room.name, OutpostDisableReason.inactiveStronghold, suspensionDuration);
 			}

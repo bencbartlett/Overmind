@@ -1,16 +1,14 @@
-import {$} from '../caching/GlobalCache';
 import {log} from '../console/log';
 import {hasPos} from '../declarations/typeGuards';
 import {PortalInfo, RoomIntel} from '../intel/RoomIntel';
+import {getDefaultMatrixOptions, MatrixLib, MatrixOptions, VolatileMatrixOptions} from '../matrix/MatrixLib';
 import {profile} from '../profiler/decorator';
-import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../utilities/Cartographer';
-import {packPos} from '../utilities/packrat';
+import {packPos, packPosList} from '../utilities/packrat';
 import {isAlly, minBy} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {AnyZerg} from '../zerg/AnyZerg';
-import {Zerg} from '../zerg/Zerg';
 import {normalizePos} from './helpers';
-import {MoveOptions, SwarmMoveOptions} from './Movement';
+import {SwarmMoveOptions} from './Movement';
 
 
 export type FIND_EXIT_PORTAL = 42;
@@ -47,13 +45,11 @@ export const MatrixTypes = {
 export interface PathOptions {
 	range?: number;
 	fleeRange?: number;							// range to flee from targets
-	terrainCosts?: {							// terrain costs, determined automatically for creep body if unspecified
-		plainCost: number,							// plain costs; typical: 2
-		swampCost: number							// swamp costs; typical: 10
-	};
+	terrainCosts?: TerrainCosts;				// terrain costs, determined automatically for creep body if unspecified
+	roadCost?: number | 'auto' | 'ignore';		// road costs; 'auto' = set to ceil(plain/2); 'ignore' = ignore roads
 	obstacles?: RoomPosition[];					// don't path through these room positions
-	stayInRoom?: boolean;						// ensures you stay in the room you're currently in
-	ignoreCreeps?: boolean;						// ignore pathing around creeps
+	blockExits?: boolean;						// ensures you stay in the room you're currently in
+	blockCreeps?: boolean;						// ignore pathing around creeps
 	ignoreStructures?: boolean;					// ignore pathing around structures
 	allowHostile?: boolean;						// allow to path through hostile rooms; origin/destination room excluded
 	avoidSK?: boolean;							// avoid walking within range 4 of source keepers
@@ -71,6 +67,7 @@ export interface PathOptions {
 export const getDefaultPathOptions: () => PathOptions = () => ({
 	range               : 1,
 	terrainCosts        : {plainCost: 1, swampCost: 5},
+	roadCost            : 'auto',
 	ignoreCreeps        : true,
 	maxOps              : DEFAULT_MAXOPS,
 	maxRooms            : 20,
@@ -81,6 +78,25 @@ export const getDefaultPathOptions: () => PathOptions = () => ({
 	ensurePath          : false,
 });
 
+/**
+ * Selects the properties of PathOptions that are also on MatrixOptions.
+ */
+const _defaultMatrixOptionsKeys = _.keys(getDefaultMatrixOptions());
+
+function getMatrixOptsFromPathOpts(opts: PathOptions): Partial<MatrixOptions> {
+	const matrixOpts: Partial<MatrixOptions> = _.pick(opts, _defaultMatrixOptionsKeys);
+	if (opts.obstacles) { // might need to sort this string if I start adding nondeterministic obstacles
+		matrixOpts.obstacles = packPosList(opts.obstacles);
+	}
+	return matrixOpts;
+}
+
+function pathOptsToMatrixAndVolatileOpts(opts: PathOptions): [Partial<MatrixOptions>, VolatileMatrixOptions] {
+	const matrixOpts = getMatrixOptsFromPathOpts(opts);
+	const volatileMatrixOpts: VolatileMatrixOptions = {};
+	if (opts.blockCreeps) volatileMatrixOpts.blockCreeps = opts.blockCreeps;
+	return [matrixOpts, volatileMatrixOpts];
+}
 
 /**
  * Module for pathing-related operations.
@@ -359,9 +375,9 @@ export class Pathing {
 	static findSwarmPath(origin: RoomPosition, destination: RoomPosition, width: number, height: number,
 						 options: PathOptions = {}): PathFinderPath {
 		_.defaults(options, {
-			ignoreCreeps: true,
-			maxOps      : 2 * DEFAULT_MAXOPS,
-			range       : 1,
+			blockCreeps: false,
+			maxOps     : 2 * DEFAULT_MAXOPS,
+			range      : 1,
 		});
 		// Make copies of the destination offset for where anchor could be
 		const destinations = this.getPosWindow(destination, -width, -height);
@@ -394,7 +410,7 @@ export class Pathing {
 	static findShortestPath(startPos: RoomPosition, endPos: RoomPosition,
 							opts: PathOptions = {}): PathFinderPath {
 		const optDefaults: PathOptions = {
-			ignoreCreeps: true,
+			blockCreeps : false,
 			range       : 1,
 			terrainCosts: {plainCost: 1, swampCost: 1}
 		};
@@ -427,29 +443,33 @@ export class Pathing {
 				return false; // don't go through hostile rooms
 			}
 		}
-		const room = Game.rooms[roomName];
-		if (room) {
-			const matrix = this.getCostMatrix(room, opts, false);
-			// Modify cost matrix if needed
-			if (opts.modifyRoomCallback) {
-				return opts.modifyRoomCallback(room, matrix.clone());
-			} else {
-				return matrix;
-			}
-		} else { // have no vision
-			return this.getCostMatrixForInvisibleRoom(roomName, opts);
+
+		const [matrixOpts, volatileMatrixOpts] = pathOptsToMatrixAndVolatileOpts(opts);
+		const matrix = MatrixLib.getMatrix(roomName, matrixOpts, volatileMatrixOpts);
+
+		if (opts.modifyRoomCallback && Game.rooms[roomName]) {
+			// Return a modified copy the matrix
+			return opts.modifyRoomCallback(Game.rooms[roomName], matrix.clone());
+		} else {
+			// No modifications necessary; return the matrix
+			return matrix;
 		}
+
 	}
 
 	static swarmRoomCallback(roomName: string, width: number, height: number,
-							 opts: SwarmMoveOptions): CostMatrix | boolean {
-		const room = Game.rooms[roomName];
-		let matrix: CostMatrix;
-		if (room && !opts.ignoreStructures) {
-			matrix = this.getSwarmDefaultMatrix(room, width, height, opts, false);
-		} else {
-			matrix = this.getSwarmTerrainMatrix(roomName, width, height, opts.exitCost);
-		}
+							 opts: SwarmMoveOptions): CostMatrix {
+		const matrixOpts: Partial<MatrixOptions> = {
+			explicitTerrainCosts: true,
+			ignoreStructures    : opts.ignoreStructures,
+			swarmWidth          : width,
+			swarmHeight         : height,
+		};
+		const volatileMatrixOpts: VolatileMatrixOptions = {};
+		if (opts.blockCreeps) volatileMatrixOpts.blockCreeps = opts.blockCreeps;
+
+		const matrix = MatrixLib.getMatrix(roomName, matrixOpts, volatileMatrixOpts);
+
 		if (opts.displayCostMatrix) {
 			Visualizer.displayCostMatrix(matrix, roomName);
 		}
@@ -505,17 +525,14 @@ export class Pathing {
 			if (!opts.allowHostile && this.shouldAvoid(roomName) && roomName != creepPos.roomName) {
 				return false;
 			}
-			const room = Game.rooms[roomName];
-			if (room) {
-				const matrix = this.getCostMatrix(room, opts, false);
-				// Modify cost matrix if needed
-				if (opts.modifyRoomCallback) {
-					return opts.modifyRoomCallback(room, matrix.clone());
-				} else {
-					return matrix;
-				}
-			} else { // have no vision
-				return true;
+
+			const [matrixOpts, volatileMatrixOpts] = pathOptsToMatrixAndVolatileOpts(opts);
+			const matrix = MatrixLib.getMatrix(roomName, matrixOpts, volatileMatrixOpts);
+			// Modify cost matrix if needed
+			if (opts.modifyRoomCallback && Game.rooms[roomName]) {
+				return opts.modifyRoomCallback(Game.rooms[roomName], matrix.clone());
+			} else {
+				return matrix;
 			}
 		};
 		return PathFinder.search(creepPos, avoidGoals,
@@ -529,235 +546,223 @@ export class Pathing {
 
 	// Cost matrix retrieval functions =================================================================================
 
-	/**
-	 * Get a cloned copy of the cost matrix for a room with specified options
-	 */
-	static getCostMatrix(room: Room, options: PathOptions, clone = true): CostMatrix {
-		let matrix: CostMatrix;
-		if (options.avoidSK) {
-			matrix = this.getSkMatrix(room);
-		} else if (options.ignoreStructures) {
-			matrix = new PathFinder.CostMatrix();
-		} else {
-			matrix = this.getDefaultMatrix(room);
-		}
-		if (options.ignoreCreeps == false) {
-			matrix = this.getCreepMatrix(room, matrix);
-		}
-		// Register other obstacles
-		if (options.obstacles && options.obstacles.length > 0) {
-			matrix = matrix.clone();
-			for (const obstacle of options.obstacles) {
-				if (obstacle && obstacle.roomName == room.name) {
-					matrix.set(obstacle.x, obstacle.y, 0xff);
-				}
-			}
-		}
-		if (clone) {
-			matrix = matrix.clone();
-		}
-		return matrix;
-	}
+	// /**
+	//  * Get a cloned copy of the cost matrix for a room with specified options
+	//  */
+	// static getCostMatrix(room: Room, options: PathOptions, clone = true): CostMatrix {
+	// 	let matrix: CostMatrix;
+	// 	if (options.avoidSK) {
+	// 		matrix = this.getSkMatrix(room);
+	// 	} else if (options.ignoreStructures) {
+	// 		matrix = new PathFinder.CostMatrix();
+	// 	} else {
+	// 		matrix = this.getDefaultMatrix(room);
+	// 	}
+	// 	if (options.ignoreCreeps == false) {
+	// 		matrix = this.getCreepMatrix(room, matrix);
+	// 	}
+	// 	// Register other obstacles
+	// 	if (options.obstacles && options.obstacles.length > 0) {
+	// 		matrix = matrix.clone();
+	// 		for (const obstacle of options.obstacles) {
+	// 			if (obstacle && obstacle.roomName == room.name) {
+	// 				matrix.set(obstacle.x, obstacle.y, 0xff);
+	// 			}
+	// 		}
+	// 	}
+	// 	if (clone) {
+	// 		matrix = matrix.clone();
+	// 	}
+	// 	return matrix;
+	// }
 
-	static getSwarmDefaultMatrix(room: Room, width: number, height: number,
-								 options: SwarmMoveOptions = {}, clone = true): CostMatrix {
-		let matrix = $.costMatrix(room.name, `swarm${width}x${height}`, () => {
-			const mat = this.getTerrainMatrix(room.name).clone();
-			this.blockImpassibleStructures(mat, room);
-			this.setExitCosts(mat, room.name, options.exitCost || 10);
-			this.applyMovingMaximum(mat, width, height);
-			return mat;
-		}, 25);
-		if (options.ignoreCreeps == false) {
-			matrix = matrix.clone();
-			this.blockHostileCreeps(matrix, room); // todo: need to smear again?
-		}
-		if (clone) {
-			matrix = matrix.clone();
-		}
-		return matrix;
-	}
+	// static getSwarmDefaultMatrix(room: Room, width: number, height: number,
+	// 							 options: SwarmMoveOptions = {}, clone = true): CostMatrix {
+	// 	let matrix = $.costMatrix(room.name, `swarm${width}x${height}`, () => {
+	// 		const mat = this.getTerrainMatrix(room.name).clone();
+	// 		this.blockImpassibleStructures(mat, room);
+	// 		this.setExitCosts(mat, room.name, options.exitCost || 10);
+	// 		this.applyMovingMaximum(mat, width, height);
+	// 		return mat;
+	// 	}, 25);
+	// 	if (options.ignoreCreeps == false) {
+	// 		matrix = matrix.clone();
+	// 		this.blockHostileCreeps(matrix, room); // todo: need to smear again?
+	// 	}
+	// 	if (clone) {
+	// 		matrix = matrix.clone();
+	// 	}
+	// 	return matrix;
+	// }
 
-	private static getCostMatrixForInvisibleRoom(roomName: string, options: PathOptions,
-												 clone = true): CostMatrix {
-		let matrix: CostMatrix | undefined;
-		if (options.avoidSK) {
-			matrix = $.costMatrixRecall(roomName, MatrixTypes.sk);
-		} else {
-			matrix = $.costMatrixRecall(roomName, MatrixTypes.default);
-		}
-		// Hm, we haven't found any previously cached matrices; let's see if we can get stuff from room intel
-		if (!matrix) {
-			const roomInfo = RoomIntel.getAllRoomObjectInfo(roomName);
-			if (roomInfo) {
-				// Cool let's set walkability based on what we remember
-				matrix = new PathFinder.CostMatrix();
-				const structureData = roomInfo.importantStructures;
-				if (structureData) {
-					const structures = _.compact([structureData.storagePos,
-												  structureData.terminalPos,
-												  ...structureData.towerPositions,
-												  ...structureData.spawnPositions,
-												  ...structureData.wallPositions,
-												  ...structureData.rampartPositions]) as RoomPosition[];
-					_.forEach(structures, pos => matrix!.set(pos.x, pos.y, 0xff));
-				}
-				const portals = roomInfo.portals;
-				_.forEach(portals, portal => matrix!.set(portal.pos.x, portal.pos.y, PORTAL_COST));
-				const skLairs = roomInfo.skLairs;
-
-				if (skLairs.length > 0) {
-					// The source keepers usually hang out by the closest mineral or source but sometimes on lair
-					const avoidRange = 5;
-					const terrain = Game.map.getRoomTerrain(roomName);
-					const blockThese = _.compact([...roomInfo.sources,
-												  roomInfo.mineral,
-												  ...roomInfo.skLairs]) as HasPos[];
-					_.forEach(blockThese, thing => {
-						let x, y: number;
-						for (let dx = -avoidRange; dx <= avoidRange; dx++) {
-							for (let dy = -avoidRange; dy <= avoidRange; dy++) {
-								x = thing.pos.x + dx;
-								y = thing.pos.y + dy;
-								if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
-									const cost = SK_COST * (avoidRange + 1 - Math.max(Math.abs(dx), Math.abs(dy)));
-									matrix!.set(thing.pos.x + dx, thing.pos.y + dy, cost);
-								}
-							}
-						}
-					});
-				}
-			}
-		}
-		// Register other obstacles
-		if (matrix && options.obstacles && options.obstacles.length > 0) {
-			matrix = matrix.clone();
-			for (const obstacle of options.obstacles) {
-				if (obstacle && obstacle.roomName == roomName) {
-					matrix.set(obstacle.x, obstacle.y, 0xff);
-				}
-			}
-		}
-		if (matrix && clone) {
-			matrix = matrix.clone();
-		}
-		return matrix!;
-	}
+	// private static getCostMatrixForInvisibleRoom(roomName: string, options: PathOptions,
+	// 											 clone = true): CostMatrix {
+	// 	let matrix: CostMatrix | undefined;
+	// 	if (options.avoidSK) {
+	// 		matrix = $.costMatrixRecall(roomName, MatrixTypes.sk);
+	// 	} else {
+	// 		matrix = $.costMatrixRecall(roomName, MatrixTypes.default);
+	// 	}
+	// 	// Hm, we haven't found any previously cached matrices; let's see if we can get stuff from room intel
+	// 	if (!matrix) {
+	// 		const roomInfo = RoomIntel.getAllRoomObjectInfo(roomName);
+	// 		if (roomInfo) {
+	// 			// Cool let's set walkability based on what we remember
+	// 			matrix = new PathFinder.CostMatrix();
+	// 			const structureData = roomInfo.importantStructures;
+	// 			if (structureData) {
+	// 				const structures = _.compact([structureData.storagePos,
+	// 											  structureData.terminalPos,
+	// 											  ...structureData.towerPositions,
+	// 											  ...structureData.spawnPositions,
+	// 											  ...structureData.wallPositions,
+	// 											  ...structureData.rampartPositions]) as RoomPosition[];
+	// 				_.forEach(structures, pos => matrix!.set(pos.x, pos.y, 0xff));
+	// 			}
+	// 			const portals = roomInfo.portals;
+	// 			_.forEach(portals, portal => matrix!.set(portal.pos.x, portal.pos.y, PORTAL_COST));
+	// 			const skLairs = roomInfo.skLairs;
+	//
+	// 			if (skLairs.length > 0) {
+	// 				// The source keepers usually hang out by the closest mineral or source but sometimes on lair
+	// 				const avoidRange = 5;
+	// 				const terrain = Game.map.getRoomTerrain(roomName);
+	// 				const blockThese = _.compact([...roomInfo.sources,
+	// 											  roomInfo.mineral,
+	// 											  ...roomInfo.skLairs]) as HasPos[];
+	// 				_.forEach(blockThese, thing => {
+	// 					let x, y: number;
+	// 					for (let dx = -avoidRange; dx <= avoidRange; dx++) {
+	// 						for (let dy = -avoidRange; dy <= avoidRange; dy++) {
+	// 							x = thing.pos.x + dx;
+	// 							y = thing.pos.y + dy;
+	// 							if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
+	// 								const cost = SK_COST * (avoidRange + 1 - Math.max(Math.abs(dx), Math.abs(dy)));
+	// 								matrix!.set(thing.pos.x + dx, thing.pos.y + dy, cost);
+	// 							}
+	// 						}
+	// 					}
+	// 				});
+	// 			}
+	// 		}
+	// 	}
+	// 	// Register other obstacles
+	// 	if (matrix && options.obstacles && options.obstacles.length > 0) {
+	// 		matrix = matrix.clone();
+	// 		for (const obstacle of options.obstacles) {
+	// 			if (obstacle && obstacle.roomName == roomName) {
+	// 				matrix.set(obstacle.x, obstacle.y, 0xff);
+	// 			}
+	// 		}
+	// 	}
+	// 	if (matrix && clone) {
+	// 		matrix = matrix.clone();
+	// 	}
+	// 	return matrix!;
+	// }
 
 	// Cost matrix generation functions ================================================================================
 
-	/**
-	 * Get a matrix of explicit terrain values for a room
-	 */
-	static getTerrainMatrix(roomName: string, costs: TerrainCosts = {plainCost: 1, swampCost: 5}): CostMatrix {
-		return $.costMatrix(roomName, `terrain:${costs.plainCost}:${costs.swampCost}`, () => {
-			const matrix = new PathFinder.CostMatrix();
-			const terrain = Game.map.getRoomTerrain(roomName);
-			for (let y = 0; y < 50; ++y) {
-				for (let x = 0; x < 50; ++x) {
-					switch (terrain.get(x, y)) {
-						case TERRAIN_MASK_SWAMP:
-							matrix.set(x, y, costs.swampCost);
-							break;
-						case TERRAIN_MASK_WALL:
-							matrix.set(x, y, 0xff);
-							break;
-						default: // plain
-							matrix.set(x, y, costs.plainCost);
-							break;
-					}
-				}
-			}
-			return matrix;
-		}, 10000);
-	}
-
-	/**
-	 * Get a cloned copy of the cost matrix for a room with specified options
-	 */
-	static getSwarmTerrainMatrix(roomName: string, width: number, height: number, exitCost = 10): CostMatrix {
-		const matrix = $.costMatrix(roomName, `swarmTerrain${width}x${height}EC${exitCost}`, () => {
-			const mat = this.getTerrainMatrix(roomName).clone();
-			this.setExitCosts(mat, roomName, exitCost);
-			this.applyMovingMaximum(mat, width, height);
-			return mat;
-		}, 10000);
-		return matrix;
-	}
-
-	/**
-	 * Default matrix for a room, setting impassable structures and constructionSites to impassible
-	 */
-	static getDefaultMatrix(room: Room): CostMatrix {
-		return $.costMatrix(room.name, MatrixTypes.default, () => {
-			const matrix = new PathFinder.CostMatrix();
-			// Set passability of structure positions
-			const impassibleStructures: Structure[] = [];
-			_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
-				if (s.structureType == STRUCTURE_ROAD) {
-					matrix.set(s.pos.x, s.pos.y, 1);
-				} else if (!s.isWalkable) {
-					impassibleStructures.push(s);
-				}
-			});
-			_.forEach(impassibleStructures, s => matrix.set(s.pos.x, s.pos.y, 0xff));
-			const portals = _.filter(impassibleStructures, s => s.structureType == STRUCTURE_PORTAL);
-			_.forEach(portals, p => matrix.set(p.pos.x, p.pos.y, PORTAL_COST));
-			// Set passability of construction sites
-			_.forEach(room.find(FIND_CONSTRUCTION_SITES), (site: ConstructionSite) => {
-				if (site.my && !site.isWalkable) {
-					matrix.set(site.pos.x, site.pos.y, 0xff);
-				}
-			});
-			return matrix;
-		});
-	}
+	// /**
+	//  * Get a matrix of explicit terrain values for a room
+	//  */
+	// static getTerrainMatrix(roomName: string, costs: TerrainCosts = {plainCost: 1, swampCost: 5}): CostMatrix {
+	// 	return $.costMatrix(roomName, `terrain:${costs.plainCost}:${costs.swampCost}`, () => {
+	// 		const matrix = new PathFinder.CostMatrix();
+	// 		const terrain = Game.map.getRoomTerrain(roomName);
+	// 		for (let y = 0; y < 50; ++y) {
+	// 			for (let x = 0; x < 50; ++x) {
+	// 				switch (terrain.get(x, y)) {
+	// 					case TERRAIN_MASK_SWAMP:
+	// 						matrix.set(x, y, costs.swampCost);
+	// 						break;
+	// 					case TERRAIN_MASK_WALL:
+	// 						matrix.set(x, y, 0xff);
+	// 						break;
+	// 					default: // plain
+	// 						matrix.set(x, y, costs.plainCost);
+	// 						break;
+	// 				}
+	// 			}
+	// 		}
+	// 		return matrix;
+	// 	}, 10000);
+	// }
 
 
-	/**
-	 * Default matrix for a room, setting impassable structures and constructionSites to impassible, ignoring roads
-	 */
-	static getDirectMatrix(room: Room): CostMatrix { // TODO: deprecated
-		return $.costMatrix(room.name, MatrixTypes.direct, () => {
-			const matrix = new PathFinder.CostMatrix();
-			// Set passability of structure positions
-			const impassibleStructures: Structure[] = [];
-			_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
-				if (!s.isWalkable) {
-					impassibleStructures.push(s);
-				}
-			});
-			_.forEach(impassibleStructures, s => matrix.set(s.pos.x, s.pos.y, 0xff));
-			const portals = _.filter(impassibleStructures, s => s.structureType == STRUCTURE_PORTAL);
-			_.forEach(portals, p => matrix.set(p.pos.x, p.pos.y, 0xfe));
-			// Set passability of construction sites
-			_.forEach(room.find(FIND_MY_CONSTRUCTION_SITES), (site: ConstructionSite) => {
-				if (!site.isWalkable) {
-					matrix.set(site.pos.x, site.pos.y, 0xff);
-				}
-			});
-			return matrix;
-		});
-	}
-
-	/**
-	 * Avoids creeps in a room
-	 */
-	static getCreepMatrix(room: Room, fromMatrix?: CostMatrix): CostMatrix {
-		if (room._creepMatrix) {
-			return room._creepMatrix;
-		}
-		let matrix: CostMatrix;
-		if (fromMatrix) {
-			matrix = fromMatrix.clone();
-			_.forEach(room.find(FIND_CREEPS), c => matrix.set(c.pos.x, c.pos.y, CREEP_COST));
-			return matrix;
-		}
-		matrix = this.getDefaultMatrix(room).clone();
-		_.forEach(room.find(FIND_CREEPS), c => matrix.set(c.pos.x, c.pos.y, CREEP_COST)); // don't block off entirely
-		room._creepMatrix = matrix;
-		return room._creepMatrix;
-	}
+	// /**
+	//  * Default matrix for a room, setting impassable structures and constructionSites to impassible
+	//  */
+	// static getDefaultMatrix(room: Room): CostMatrix {
+	// 	return $.costMatrix(room.name, MatrixTypes.default, () => {
+	// 		const matrix = new PathFinder.CostMatrix();
+	// 		// Set passability of structure positions
+	// 		const impassibleStructures: Structure[] = [];
+	// 		_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
+	// 			if (s.structureType == STRUCTURE_ROAD) {
+	// 				matrix.set(s.pos.x, s.pos.y, 1);
+	// 			} else if (!s.isWalkable) {
+	// 				impassibleStructures.push(s);
+	// 			}
+	// 		});
+	// 		_.forEach(impassibleStructures, s => matrix.set(s.pos.x, s.pos.y, 0xff));
+	// 		const portals = _.filter(impassibleStructures, s => s.structureType == STRUCTURE_PORTAL);
+	// 		_.forEach(portals, p => matrix.set(p.pos.x, p.pos.y, PORTAL_COST));
+	// 		// Set passability of construction sites
+	// 		_.forEach(room.find(FIND_CONSTRUCTION_SITES), (site: ConstructionSite) => {
+	// 			if (site.my && !site.isWalkable) {
+	// 				matrix.set(site.pos.x, site.pos.y, 0xff);
+	// 			}
+	// 		});
+	// 		return matrix;
+	// 	});
+	// }
+	//
+	//
+	// /**
+	//  * Default matrix for a room, setting impassable structures and constructionSites to impassible, ignoring roads
+	//  */
+	// static getDirectMatrix(room: Room): CostMatrix { // TODO: deprecated
+	// 	return $.costMatrix(room.name, MatrixTypes.direct, () => {
+	// 		const matrix = new PathFinder.CostMatrix();
+	// 		// Set passability of structure positions
+	// 		const impassibleStructures: Structure[] = [];
+	// 		_.forEach(room.find(FIND_STRUCTURES), (s: Structure) => {
+	// 			if (!s.isWalkable) {
+	// 				impassibleStructures.push(s);
+	// 			}
+	// 		});
+	// 		_.forEach(impassibleStructures, s => matrix.set(s.pos.x, s.pos.y, 0xff));
+	// 		const portals = _.filter(impassibleStructures, s => s.structureType == STRUCTURE_PORTAL);
+	// 		_.forEach(portals, p => matrix.set(p.pos.x, p.pos.y, 0xfe));
+	// 		// Set passability of construction sites
+	// 		_.forEach(room.find(FIND_MY_CONSTRUCTION_SITES), (site: ConstructionSite) => {
+	// 			if (!site.isWalkable) {
+	// 				matrix.set(site.pos.x, site.pos.y, 0xff);
+	// 			}
+	// 		});
+	// 		return matrix;
+	// 	});
+	// }
+	//
+	// /**
+	//  * Avoids creeps in a room
+	//  */
+	// static getCreepMatrix(room: Room, fromMatrix?: CostMatrix): CostMatrix {
+	// 	if (room._creepMatrix) {
+	// 		return room._creepMatrix;
+	// 	}
+	// 	let matrix: CostMatrix;
+	// 	if (fromMatrix) {
+	// 		matrix = fromMatrix.clone();
+	// 		_.forEach(room.find(FIND_CREEPS), c => matrix.set(c.pos.x, c.pos.y, CREEP_COST));
+	// 		return matrix;
+	// 	}
+	// 	matrix = this.getDefaultMatrix(room).clone();
+	// 	_.forEach(room.find(FIND_CREEPS), c => matrix.set(c.pos.x, c.pos.y, CREEP_COST)); // don't block off entirely
+	// 	room._creepMatrix = matrix;
+	// 	return room._creepMatrix;
+	// }
 
 	/**
 	 * Kites around hostile creeps in a room
@@ -766,87 +771,89 @@ export class Pathing {
 		if (room._kitingMatrix) {
 			return room._kitingMatrix;
 		}
-		const matrix = this.getCreepMatrix(room).clone();
-		const avoidCreeps = _.filter(room.hostiles,
-									 c => c.getActiveBodyparts(ATTACK) > 0 || c.getActiveBodyparts(RANGED_ATTACK) > 0);
-		// || c.getActiveBodyparts(HEAL) > 0);
-		const terrain = Game.map.getRoomTerrain(room.name);
-		_.forEach(avoidCreeps, avoidCreep => {
-			let cost: number;
-			for (let dx = -3; dx <= 3; dx++) {
-				for (let dy = -3; dy <= 3; dy++) {
-					const x = avoidCreep.pos.x + dx;
-					const y = avoidCreep.pos.y + dy;
-					// TODO: add swamp avoidance penalty as well
-					if (terrain.get(x, y) != TERRAIN_MASK_WALL && matrix.get(x, y) != 1) { // if wall and no tunnel
-						cost = matrix.get(x, y);
-						cost += 40 - (10 * Math.max(Math.abs(dx), Math.abs(dy)));
-						matrix.set(avoidCreep.pos.x + dx, avoidCreep.pos.y + dy, cost);
-					}
-				}
-			}
-		});
+		const matrix = MatrixLib.getMatrix(room.name, {}).clone();
+		const avoidCreeps = room.dangerousHostiles;
+
+		_.forEach(avoidCreeps, avoidCreep => MatrixLib.addSquarePotential(matrix, avoidCreep.pos, 3, 30));
+
+		// // || c.getActiveBodyparts(HEAL) > 0);
+		// const terrain = Game.map.getRoomTerrain(room.name);
+		// _.forEach(avoidCreeps, avoidCreep => {
+		// 	let cost: number;
+		// 	for (let dx = -3; dx <= 3; dx++) {
+		// 		for (let dy = -3; dy <= 3; dy++) {
+		// 			const x = avoidCreep.pos.x + dx;
+		// 			const y = avoidCreep.pos.y + dy;
+		// 			if (terrain.get(x, y) != TERRAIN_MASK_WALL && matrix.get(x, y) != 1) { // if wall and no tunnel
+		// 				cost = matrix.get(x, y);
+		// 				cost += 40 - (10 * Math.max(Math.abs(dx), Math.abs(dy)));
+		// 				matrix.set(avoidCreep.pos.x + dx, avoidCreep.pos.y + dy, cost);
+		// 			}
+		// 		}
+		// 	}
+		// });
+
 		room._kitingMatrix = matrix;
 		return room._kitingMatrix;
 	}
 
-	/**
-	 * Avoids source keepers in a room
-	 */
-	private static getSkMatrix(room: Room): CostMatrix {
-		if (Cartographer.roomType(room.name) != ROOMTYPE_SOURCEKEEPER) {
-			return this.getDefaultMatrix(room);
-		}
-		return $.costMatrix(room.name, MatrixTypes.sk, () => {
-			const matrix = this.getDefaultMatrix(room).clone();
-			if (room.sourceKeepers.length > 0) {
-				// const blockThese = _.compact([...room.sources, room.mineral, ...room.keeperLairs]) as HasPos[];
-				// _.forEach(blockThese, thing => {
-				// 	for (let dx = -avoidRange; dx <= avoidRange; dx++) {
-				// 		for (let dy = -avoidRange; dy <= avoidRange; dy++) {
-				// 			const cost = SK_COST / 5 * (avoidRange + 1 - Math.max(Math.abs(dx), Math.abs(dy)));
-				// 			matrix!.set(thing.pos.x + dx, thing.pos.y + dy, cost);
-				// 		}
-				// 	}
-				// });
-				const terrain = Game.map.getRoomTerrain(room.name);
-				const avoidRange = 5;
-				_.forEach(room.sourceKeepers, sourceKeeper => {
-					let x, y: number;
-					for (let dx = -avoidRange; dx <= avoidRange; dx++) {
-						for (let dy = -avoidRange; dy <= avoidRange; dy++) {
-							x = sourceKeeper.pos.x + dx;
-							y = sourceKeeper.pos.y + dy;
-							if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
-								const cost = SK_COST * 2 * (avoidRange + 1 - Math.max(Math.abs(dx), Math.abs(dy)));
-								matrix.set(x, y, cost);
-							}
-						}
-					}
-				});
-			}
-			return matrix;
-		});
-	}
+	// /**
+	//  * Avoids source keepers in a room
+	//  */
+	// private static getSkMatrix(room: Room): CostMatrix {
+	// 	if (Cartographer.roomType(room.name) != ROOMTYPE_SOURCEKEEPER) {
+	// 		return this.getDefaultMatrix(room);
+	// 	}
+	// 	return $.costMatrix(room.name, MatrixTypes.sk, () => {
+	// 		const matrix = this.getDefaultMatrix(room).clone();
+	// 		if (room.sourceKeepers.length > 0) {
+	// 			// const blockThese = _.compact([...room.sources, room.mineral, ...room.keeperLairs]) as HasPos[];
+	// 			// _.forEach(blockThese, thing => {
+	// 			// 	for (let dx = -avoidRange; dx <= avoidRange; dx++) {
+	// 			// 		for (let dy = -avoidRange; dy <= avoidRange; dy++) {
+	// 			// 			const cost = SK_COST / 5 * (avoidRange + 1 - Math.max(Math.abs(dx), Math.abs(dy)));
+	// 			// 			matrix!.set(thing.pos.x + dx, thing.pos.y + dy, cost);
+	// 			// 		}
+	// 			// 	}
+	// 			// });
+	// 			const terrain = Game.map.getRoomTerrain(room.name);
+	// 			const avoidRange = 5;
+	// 			_.forEach(room.sourceKeepers, sourceKeeper => {
+	// 				let x, y: number;
+	// 				for (let dx = -avoidRange; dx <= avoidRange; dx++) {
+	// 					for (let dy = -avoidRange; dy <= avoidRange; dy++) {
+	// 						x = sourceKeeper.pos.x + dx;
+	// 						y = sourceKeeper.pos.y + dy;
+	// 						if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
+	// 							const cost = SK_COST * 2 * (avoidRange + 1 - Math.max(Math.abs(dx), Math.abs(dy)));
+	// 							matrix.set(x, y, cost);
+	// 						}
+	// 					}
+	// 				}
+	// 			});
+	// 		}
+	// 		return matrix;
+	// 	});
+	// }
 
-	/**
-	 * Avoid locations in melee range of ramparts
-	 * @param room
-	 */
-	private static getNearRampartsMatrix(room: Room): CostMatrix {
-		return $.costMatrix(room.name, MatrixTypes.nearRampart, () => {
-			const matrix = this.getDefaultMatrix(room).clone();
-			const avoidRange = 1;
-			_.forEach(room.ramparts, rampart => {
-				for (let dx = -avoidRange; dx <= avoidRange; dx++) {
-					for (let dy = -avoidRange; dy <= avoidRange; dy++) {
-						matrix.set(rampart.pos.x + dx, rampart.pos.y + dy, 0xfe);
-					}
-				}
-			});
-			return matrix;
-		});
-	}
+	// /**
+	//  * Avoid locations in melee range of ramparts
+	//  * @param room
+	//  */
+	// private static getNearRampartsMatrix(room: Room): CostMatrix {
+	// 	return $.costMatrix(room.name, MatrixTypes.nearRampart, () => {
+	// 		const matrix = this.getDefaultMatrix(room).clone();
+	// 		const avoidRange = 1;
+	// 		_.forEach(room.ramparts, rampart => {
+	// 			for (let dx = -avoidRange; dx <= avoidRange; dx++) {
+	// 				for (let dy = -avoidRange; dy <= avoidRange; dy++) {
+	// 					matrix.set(rampart.pos.x + dx, rampart.pos.y + dy, 0xfe);
+	// 				}
+	// 			}
+	// 		});
+	// 		return matrix;
+	// 	});
+	// }
 
 	// /* Avoids source keepers in a room */
 	// private static getInvisibleSkMatrix(roomName: string): CostMatrix {
@@ -886,194 +893,103 @@ export class Pathing {
 		});
 	}
 
-	/**
-	 * Sets all creep positions to impassible
-	 */
-	static blockMyCreeps(matrix: CostMatrix, room: Room, creeps?: (Creep | Zerg)[]) {
+	// /**
+	//  * Explicitly blocks off walls for a room
+	//  */
+	// static blockImpassibleTerrain(matrix: CostMatrix, roomName: string) {
+	// 	const terrain = Game.map.getRoomTerrain(roomName);
+	// 	for (let y = 0; y < 50; ++y) {
+	// 		for (let x = 0; x < 50; ++x) {
+	// 			if (terrain.get(x, y) === TERRAIN_MASK_WALL) {
+	// 				matrix.set(x, y, 0xff);
+	// 			}
+	// 		}
+	// 	}
+	// }
 
-		const blockCreeps = creeps || room.creeps as (Creep | Zerg)[];
-		const blockPositions = _.map(blockCreeps,
-									 creep => Overmind.zerg[creep.name] ? Overmind.zerg[creep.name].nextPos
-																		: creep.pos);
+	// /**
+	//  * Transform a CostMatrix such that the cost at each point is transformed to the max of costs in a width x height
+	//  * window (indexed from upper left corner). This requires that terrain be explicitly specified in the matrix!
+	//  */
+	// static applyMovingMaxPool(matrix: CostMatrix, width: number, height: number) {
+	// 	// Since we're moving in increasing order of x, y, we don't need to clone the matrix
+	// 	let x, y, dx, dy: number;
+	// 	let maxCost, cost: number;
+	// 	for (x = 0; x <= 50 - width; x++) {
+	// 		for (y = 0; y <= 50 - height; y++) {
+	// 			maxCost = matrix.get(x, y);
+	// 			for (dx = 0; dx <= width - 1; dx++) {
+	// 				for (dy = 0; dy <= height - 1; dy++) {
+	// 					cost = matrix.get(x + dx, y + dy);
+	// 					if (cost > maxCost) {
+	// 						maxCost = cost;
+	// 					}
+	// 				}
+	// 			}
+	// 			matrix.set(x, y, maxCost);
+	// 		}
+	// 	}
+	// }
 
-		_.forEach(blockPositions, pos => {
-			matrix.set(pos.x, pos.y, CREEP_COST);
-		});
-	}
+	// static setCostsInRange(matrix: CostMatrix, pos: RoomPosition | HasPos, range: number, cost = 30, add = false) {
+	// 	pos = normalizePos(pos);
+	// 	const terrain = Game.map.getRoomTerrain(pos.roomName);
+	//
+	// 	for (let dx = -range; dx <= range; dx++) {
+	// 		const x = pos.x + dx;
+	// 		if (x < 0 || x > 49) continue;
+	// 		for (let dy = -range; dy <= range; dy++) {
+	// 			const y = pos.y + dy;
+	// 			if (y < 0 || y > 49) continue;
+	// 			const posTerrain = terrain.get(x, y);
+	// 			if (posTerrain === TERRAIN_MASK_WALL) {
+	// 				continue;
+	// 			}
+	// 			let currentCost = matrix.get(x, y);
+	// 			if (currentCost === 0) {
+	// 				if (posTerrain === TERRAIN_MASK_SWAMP) {
+	// 					currentCost += 10;
+	// 				} else {
+	// 					currentCost += 2;
+	// 				}
+	// 			}
+	// 			if (currentCost >= 0xff || currentCost > cost) continue;
+	// 			matrix.set(x, y, add ? Math.min(cost + currentCost, 200) : cost);
+	// 		}
+	// 	}
+	// }
 
-	/**
-	 * Sets hostile creep positions to impassible
-	 */
-	static blockHostileCreeps(matrix: CostMatrix, room: Room) {
-		_.forEach(room.hostiles, hostile => {
-			matrix.set(hostile.pos.x, hostile.pos.y, CREEP_COST);
-		});
-	}
-
-	/**
-	 * Sets all creep positions to impassible
-	 */
-	static blockAllCreeps(matrix: CostMatrix, room: Room) {
-		_.forEach(room.find(FIND_CREEPS), creep => {
-			matrix.set(creep.pos.x, creep.pos.y, CREEP_COST);
-		});
-	}
-
-	/**
-	 * Sets road positions to 1 if cost is less than 0xfe
-	 */
-	static preferRoads(matrix: CostMatrix, room: Room) {
-		_.forEach(room.roads, road => {
-			if (matrix.get(road.pos.x, road.pos.y) < 0xfe) {
-				matrix.set(road.pos.x, road.pos.y, 1);
-			}
-		});
-	}
-
-	/**
-	 * Sets walkable rampart positions to 1 if cost is less than 0xfe
-	 */
-	static preferRamparts(matrix: CostMatrix, room: Room) {
-		_.forEach(room.walkableRamparts, rampart => {
-			if (matrix.get(rampart.pos.x, rampart.pos.y) < 0xfe) {
-				matrix.set(rampart.pos.x, rampart.pos.y, 1);
-			}
-		});
-	}
-
-	/**
-	 * Sets walkable rampart positions to 1, everything else is blocked
-	 */
-	static blockNonRamparts(matrix: CostMatrix, room: Room) {
-		for (let y = 0; y < 50; ++y) {
-			for (let x = 0; x < 50; ++x) {
-				matrix.set(x, y, 0xff);
-			}
-		}
-		_.forEach(room.walkableRamparts, rampart => {
-			matrix.set(rampart.pos.x, rampart.pos.y, 1);
-		});
-	}
-
-	/**
-	 * Explicitly blocks off walls for a room
-	 */
-	static blockImpassibleTerrain(matrix: CostMatrix, roomName: string) {
-		const terrain = Game.map.getRoomTerrain(roomName);
-		for (let y = 0; y < 50; ++y) {
-			for (let x = 0; x < 50; ++x) {
-				if (terrain.get(x, y) === TERRAIN_MASK_WALL) {
-					matrix.set(x, y, 0xff);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Transform a CostMatrix such that the cost at each point is transformed to the max of costs in a width x height
-	 * window (indexed from upper left corner). This requires that terrain be explicitly specified in the matrix!
-	 */
-	static applyMovingMaximum(matrix: CostMatrix, width: number, height: number) {
-		// Since we're moving in increasing order of x, y, we don't need to clone the matrix
-		let x, y, dx, dy: number;
-		let maxCost, cost: number;
-		for (x = 0; x <= 50 - width; x++) {
-			for (y = 0; y <= 50 - height; y++) {
-				maxCost = matrix.get(x, y);
-				for (dx = 0; dx <= width - 1; dx++) {
-					for (dy = 0; dy <= height - 1; dy++) {
-						cost = matrix.get(x + dx, y + dy);
-						if (cost > maxCost) {
-							maxCost = cost;
-						}
-					}
-				}
-				matrix.set(x, y, maxCost);
-			}
-		}
-	}
-
-	static setCostsInRange(matrix: CostMatrix, pos: RoomPosition | HasPos, range: number, cost = 30, add = false) {
-		pos = normalizePos(pos);
-		const terrain = Game.map.getRoomTerrain(pos.roomName);
-
-		for (let dx = -range; dx <= range; dx++) {
-			const x = pos.x + dx;
-			if (x < 0 || x > 49) continue;
-			for (let dy = -range; dy <= range; dy++) {
-				const y = pos.y + dy;
-				if (y < 0 || y > 49) continue;
-				const posTerrain = terrain.get(x, y);
-				if (posTerrain === TERRAIN_MASK_WALL) {
-					continue;
-				}
-				let currentCost = matrix.get(x, y);
-				if (currentCost === 0) {
-					if (posTerrain === TERRAIN_MASK_SWAMP) {
-						currentCost += 10;
-					} else {
-						currentCost += 2;
-					}
-				}
-				if (currentCost >= 0xff || currentCost > cost) continue;
-				matrix.set(x, y, add ? Math.min(cost + currentCost, 200) : cost);
-			}
-		}
-	}
-
-	static blockExits(matrix: CostMatrix, rangeToEdge = 0) {
-		for (let x = rangeToEdge; x < 50 - rangeToEdge; x += 49 - rangeToEdge * 2) {
-			for (let y = rangeToEdge; y < 50 - rangeToEdge; y++) {
-				matrix.set(x, y, 0xff);
-			}
-		}
-		for (let x = rangeToEdge; x < 50 - rangeToEdge; x++) {
-			for (let y = rangeToEdge; y < 50 - rangeToEdge; y += 49 - rangeToEdge * 2) {
-				matrix.set(x, y, 0xff);
-			}
-		}
-	}
-
-	static setExitCosts(matrix: CostMatrix, roomName: string, cost: number, rangeToEdge = 0) {
-		const terrain = Game.map.getRoomTerrain(roomName);
-
-		for (let x = rangeToEdge; x < 50 - rangeToEdge; x += 49 - rangeToEdge * 2) {
-			for (let y = rangeToEdge; y < 50 - rangeToEdge; y++) {
-				if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
-					matrix.set(x, y, cost);
-				}
-			}
-		}
-		for (let x = rangeToEdge; x < 50 - rangeToEdge; x++) {
-			for (let y = rangeToEdge; y < 50 - rangeToEdge; y += 49 - rangeToEdge * 2) {
-				if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
-					matrix.set(x, y, cost);
-				}
-			}
-		}
-	}
-
-	static getExitPositions(roomName: string): RoomPosition[] {
-		const terrain = Game.map.getRoomTerrain(roomName);
-		const exitPositions: RoomPosition[] = [];
-
-		for (let x = 0; x < 50; x += 49) {
-			for (let y = 0; y < 50; y++) {
-				if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
-					exitPositions.push(new RoomPosition(x, y, roomName));
-				}
-			}
-		}
-		for (let x = 0; x < 50; x++) {
-			for (let y = 0; y < 50; y += 49) {
-				if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
-					exitPositions.push(new RoomPosition(x, y, roomName));
-				}
-			}
-		}
-
-		return exitPositions;
-	}
+	// static blockExits(matrix: CostMatrix, rangeToEdge = 0) {
+	// 	for (let x = rangeToEdge; x < 50 - rangeToEdge; x += 49 - rangeToEdge * 2) {
+	// 		for (let y = rangeToEdge; y < 50 - rangeToEdge; y++) {
+	// 			matrix.set(x, y, 0xff);
+	// 		}
+	// 	}
+	// 	for (let x = rangeToEdge; x < 50 - rangeToEdge; x++) {
+	// 		for (let y = rangeToEdge; y < 50 - rangeToEdge; y += 49 - rangeToEdge * 2) {
+	// 			matrix.set(x, y, 0xff);
+	// 		}
+	// 	}
+	// }
+	//
+	// static setExitCosts(matrix: CostMatrix, roomName: string, cost: number, rangeToEdge = 0) {
+	// 	const terrain = Game.map.getRoomTerrain(roomName);
+	//
+	// 	for (let x = rangeToEdge; x < 50 - rangeToEdge; x += 49 - rangeToEdge * 2) {
+	// 		for (let y = rangeToEdge; y < 50 - rangeToEdge; y++) {
+	// 			if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
+	// 				matrix.set(x, y, cost);
+	// 			}
+	// 		}
+	// 	}
+	// 	for (let x = rangeToEdge; x < 50 - rangeToEdge; x++) {
+	// 		for (let y = rangeToEdge; y < 50 - rangeToEdge; y += 49 - rangeToEdge * 2) {
+	// 			if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
+	// 				matrix.set(x, y, cost);
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	/**
 	 * Serialize a path as a string of move directions
@@ -1226,10 +1142,10 @@ export class Pathing {
 	static isReachable(startPos: RoomPosition, endPos: RoomPosition, obstacles: (RoomPosition | HasPos)[],
 					   options: PathOptions = {}): boolean {
 		_.defaults(options, {
-			ignoreCreeps: true,
-			range       : 1,
-			maxOps      : 2000,
-			ensurePath  : false,
+			blockCreeps: false,
+			range      : 1,
+			maxOps     : 2000,
+			ensurePath : false,
 		});
 		if (startPos.roomName != endPos.roomName) {
 			log.error(`isReachable() should only be used within a single room!`);
@@ -1269,10 +1185,10 @@ export class Pathing {
 	static findBlockingPos(startPos: RoomPosition, endPos: RoomPosition, obstacles: (RoomPosition | HasPos)[],
 						   options: PathOptions = {}): RoomPosition | undefined {
 		_.defaults(options, {
-			ignoreCreeps: true,
-			range       : 1,
-			maxOps      : 2000,
-			ensurePath  : false,
+			blockCreeps: false,
+			range      : 1,
+			maxOps     : 2000,
+			ensurePath : false,
 		});
 		if (startPos.roomName != endPos.roomName) {
 			log.error(`findBlockingPos() should only be used within a single room!`);

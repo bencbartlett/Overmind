@@ -133,6 +133,8 @@ Object.defineProperty(Room.prototype, 'repairables', {
 	configurable: true,
 });
 
+
+// TODO: this is expensive and easy to over-use. Perhaps remove this.
 Object.defineProperty(Room.prototype, 'walkableRamparts', {
 	get() {
 		if (!this._walkableRamparts) {

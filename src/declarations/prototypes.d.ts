@@ -88,7 +88,7 @@ interface Room {
 	droppedPower: Resource[];
 
 	// Room structures
-	_refreshStructureCache;
+	_refreshStructureCache(): void;
 
 	// Multiple structures
 	spawns: StructureSpawn[];
@@ -127,7 +127,7 @@ interface Room {
 	// Used by movement library
 	// _defaultMatrix: CostMatrix;
 	// _directMatrix: CostMatrix;
-	_creepMatrix: CostMatrix;
+	// _creepMatrix: CostMatrix;
 	// _priorityMatrices: { [priority: number]: CostMatrix };
 	// _skMatrix: CostMatrix;
 	_kitingMatrix: CostMatrix;

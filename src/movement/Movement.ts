@@ -1,6 +1,7 @@
 import {log} from '../console/log';
 import {Roles} from '../creepSetups/setups';
 import {isAnyZerg, isPowerZerg, isStandardZerg} from '../declarations/typeGuards';
+import {MatrixLib, MatrixOptions} from '../matrix/MatrixLib';
 import {profile} from '../profiler/decorator';
 import {insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {rightArrow} from '../utilities/stringConstants';
@@ -82,13 +83,12 @@ export const getDefaultMoveOptions: () => MoveOptions = () => ({
 export interface SwarmMoveOptions {
 	range?: number;
 	ensureSingleRoom?: boolean;
-	ignoreCreeps?: boolean;						// ignore pathing around creeps
 	ignoreStructures?: boolean;					// ignore pathing around structures
-	exitCost?: number;
+	blockCreeps?: boolean;						// ignore pathing around creeps
 	maxOps?: number;							// pathfinding times out after this many operations
 	stuckValue?: number;						// creep is marked stuck after this many idle ticks
 	maxRooms?: number;							// maximum number of rooms to path through
-	repathChance?: number;							// probability of repathing on a given tick
+	repathChance?: number;						// probability of repathing on a given tick
 	displayCostMatrix?: boolean;
 }
 
@@ -100,6 +100,9 @@ export interface CombatMoveOptions {
 	requireRamparts?: boolean;
 	displayCostMatrix?: boolean;
 	displayAvoid?: boolean;
+	blockMyCreeps?: boolean;
+	blockHostileCreeps?: boolean;
+	blockAlliedCreeps?: boolean;
 }
 
 export interface MoveState {
@@ -257,7 +260,7 @@ export class Movement {
 			opts.stuckValue = DEFAULT_STUCK_VALUE;
 		}
 		if (state.stuckCount >= opts.stuckValue && Math.random() > .5) {
-			pathOpts.ignoreCreeps = false;
+			pathOpts.blockCreeps = true;
 			delete moveData.path;
 		}
 
@@ -742,7 +745,7 @@ export class Movement {
 			}
 		}
 		if (detour) {
-			return this.goTo(creep, pos, {pathOpts: {ignoreCreeps: false}});
+			return this.goTo(creep, pos, {pathOpts: {blockCreeps:true}});
 		}
 	}
 
@@ -784,7 +787,7 @@ export class Movement {
 	/**
 	 * Moves a swarm to a destination, accounting for group pathfinding
 	 */
-	static swarmMove(swarm: Swarm, destination: HasPos | RoomPosition, options: SwarmMoveOptions = {}): number {
+	static swarmMove(swarm: Swarm, destination: HasPos | RoomPosition, opts: SwarmMoveOptions = {}): number {
 
 		if (swarm.fatigue > 0) {
 			Movement.circle(swarm.anchor, 'aqua', .3);
@@ -793,10 +796,10 @@ export class Movement {
 		}
 
 		// Set default options
-		_.defaults(options, {
-			range       : 1, // Math.max(swarm.width, swarm.height),
-			ignoreCreeps: true,
-			exitCost    : 10,
+		_.defaults(opts, {
+			range      : 1, // Math.max(swarm.width, swarm.height),
+			blockCreeps: false,
+			exitCost   : 10,
 		});
 
 		// if (options.range! < Math.max(swarm.width, swarm.height)) {
@@ -812,8 +815,8 @@ export class Movement {
 		const moveData = swarm.memory._go as MoveData;
 
 		// manage case where creep is nearby destination
-		if (options.range != undefined && swarm.minRangeTo(destination) <= options.range &&
-			swarm.maxRangeTo(destination) <= options.range + Math.max(swarm.width, swarm.height)) {
+		if (opts.range != undefined && swarm.minRangeTo(destination) <= opts.range &&
+			swarm.maxRangeTo(destination) <= opts.range + Math.max(swarm.width, swarm.height)) {
 			delete swarm.memory._go;
 			console.log('no action');
 			return NO_ACTION;
@@ -838,11 +841,11 @@ export class Movement {
 		}
 
 		// handle case where creep is stuck
-		if (!options.stuckValue) {
-			options.stuckValue = DEFAULT_STUCK_VALUE;
+		if (!opts.stuckValue) {
+			opts.stuckValue = DEFAULT_STUCK_VALUE;
 		}
-		if (state.stuckCount >= options.stuckValue && Math.random() > .5) {
-			options.ignoreCreeps = false;
+		if (state.stuckCount >= opts.stuckValue && Math.random() > .5) {
+			opts.blockCreeps = true;
 			delete moveData.path;
 		}
 
@@ -851,7 +854,7 @@ export class Movement {
 			delete moveData.path;
 		}
 
-		if (options.repathChance && Math.random() < options.repathChance) {	// randomly repath with some probability
+		if (opts.repathChance && Math.random() < opts.repathChance) {	// randomly repath with some probability
 			delete moveData.path;
 		}
 
@@ -862,7 +865,7 @@ export class Movement {
 			state.destination = destination;
 			const cpu = Game.cpu.getUsed();
 			// (!) Pathfinding is done here
-			const ret = Pathing.findSwarmPath(swarm.anchor, destination, swarm.width, swarm.height, options);
+			const ret = Pathing.findSwarmPath(swarm.anchor, destination, swarm.width, swarm.height, opts);
 			const cpuUsed = Game.cpu.getUsed() - cpu;
 			state.cpu = _.round(cpuUsed + state.cpu);
 			if (Game.time % 10 == 0 && state.cpu > REPORT_SWARM_CPU_THRESHOLD) {
@@ -906,7 +909,7 @@ export class Movement {
 											  options: CombatMoveOptions) {
 		// This is only applied once creep is in the target room
 		if (!options.allowExit) {
-			Pathing.blockExits(matrix);
+			MatrixLib.blockExits(matrix);
 		}
 		// Add penalties for things you want to avoid
 		_.forEach(avoid, avoidThis => {
@@ -942,7 +945,7 @@ export class Movement {
 		});
 		// Prefer to path into open ramparts
 		if (options.preferRamparts) {
-			Pathing.preferRamparts(matrix, room);
+			MatrixLib.setWalkableRampartCostToOne(matrix, room);
 		}
 		return matrix;
 	}
@@ -955,21 +958,28 @@ export class Movement {
 			avoidPenalty  : 10,
 			approachBonus : 5,
 			preferRamparts: true,
+			blockMyCreeps : true, // todo: is this necessary?
 		});
 
 		const debug = false;
 		const callback = (roomName: string) => {
-			let matrix: CostMatrix;
 			const room = swarm.roomsByName[roomName];
+			const matrixOpts: Partial<MatrixOptions> = {
+				explicitTerrainCosts: true,
+				swarmWidth          : swarm.width,
+				swarmHeight         : swarm.height,
+				blockExits          : !options.allowExit, // todo: maybe refactor allowExit => blockExits
+			};
+			let matrix = MatrixLib.getMatrix(roomName, matrixOpts).clone();
 			if (room) {
-				matrix = Pathing.getSwarmDefaultMatrix(room, swarm.width, swarm.height); // already cloned
-				// Block positions from other swarms in the room
-				const otherCreeps = _.filter(room.creeps, creep => !_.any(swarm.creeps, c => c.name == creep.name));
-				Pathing.blockMyCreeps(matrix, room, otherCreeps);
+				matrix = matrix.clone();
+				if (options.blockMyCreeps) {
+					const otherCreeps = _.filter(room.creeps, creep => !_.any(swarm.creeps, c => c.name == creep.name));
+					MatrixLib.blockAfterMaxPooling(matrix, otherCreeps, swarm.width, swarm.height);
+				}
 				// Pathing.blockHostileCreeps(matrix, creep.room);
 				Movement.combatMoveCallbackModifier(room, matrix, approach, avoid, options);
-			} else {
-				matrix = Pathing.getSwarmTerrainMatrix(roomName, swarm.width, swarm.height);
+				// TODO: ^ needs to take swarm size into account
 			}
 			if (options.displayCostMatrix) {
 				Visualizer.displayCostMatrix(matrix, roomName);
@@ -1040,31 +1050,49 @@ export class Movement {
 	}
 
 	static combatMove(creep: Zerg, approach: PathFinderGoal[], avoid: PathFinderGoal[],
-					  options: CombatMoveOptions = {}): number {
-		_.defaults(options, {
-			allowExit      : false,
-			avoidPenalty   : 10,
-			approachBonus  : 5,
-			preferRamparts : true,
-			requireRamparts: false,
+					  opts: CombatMoveOptions = {}): number {
+		_.defaults(opts, {
+			allowExit         : false,
+			avoidPenalty      : 10,
+			approachBonus     : 5,
+			preferRamparts    : true,
+			requireRamparts   : false,
+			blockMyCreeps     : true, // TODO: is this necessary?
+			blockHostileCreeps: false,
+			blockAlliedCreeps : false,
 		});
 
 		const debug = false;
 		const callback = (roomName: string) => {
+			const matrixOpts: Partial<MatrixOptions> = {
+				blockExits: !opts.allowExit, // todo: maybe refactor allowExit => blockExits
+			};
+			let matrix = MatrixLib.getMatrix(roomName, matrixOpts);
 			if (roomName == creep.room.name) {
-				const matrix = Pathing.getDefaultMatrix(creep.room).clone();
-				Pathing.blockMyCreeps(matrix, creep.room); // TODO: is this necessary?
-				Pathing.blockHostileCreeps(matrix, creep.room);
-				if (options.requireRamparts) {
-					Pathing.blockNonRamparts(matrix, creep.room);
+				matrix = matrix.clone();
+				if (opts.blockMyCreeps) {
+					MatrixLib.blockMyCreeps(matrix, creep.room);
+				} // TODO: is this necessary?
+				if (opts.blockHostileCreeps) {
+					MatrixLib.blockHostileCreeps(matrix, creep.room);
 				}
-				Movement.combatMoveCallbackModifier(creep.room, matrix, approach, avoid, options);
-				if (options.displayCostMatrix) {
+				if (opts.blockAlliedCreeps) {
+					MatrixLib.blockAlliedCreeps(matrix, creep.room);
+				}
+				if (opts.preferRamparts) {
+					MatrixLib.setWalkableRampartCostToOne(matrix, creep.room);
+				}
+				if (opts.requireRamparts) {
+					MatrixLib.blockNonRamparts(matrix, creep.room);
+				}
+				Movement.combatMoveCallbackModifier(creep.room, matrix, approach, avoid, opts);
+				if (opts.displayCostMatrix) {
 					Visualizer.displayCostMatrix(matrix, roomName);
 				}
 				return matrix;
 			} else {
-				return !(Memory.rooms[roomName] && Memory.rooms[roomName][RMEM.AVOID]);
+				if (Memory.rooms[roomName] && Memory.rooms[roomName][RMEM.AVOID]) return false;
+				return matrix;
 			}
 		};
 
@@ -1077,7 +1105,7 @@ export class Movement {
 				const avoidRet = PathFinder.search(creep.pos, avoid, {
 					roomCallback: callback,
 					flee        : true,
-					maxRooms    : options.allowExit ? 5 : 1,
+					maxRooms    : opts.allowExit ? 5 : 1,
 					plainCost   : 2,
 					swampCost   : 10,
 				});
@@ -1111,7 +1139,7 @@ export class Movement {
 		}
 
 		// Try to maneuver under ramparts if possible
-		if ((options.preferRamparts || options.requireRamparts) && !creep.inRampart && approach.length > 0) {
+		if ((opts.preferRamparts || opts.requireRamparts) && !creep.inRampart && approach.length > 0) {
 			const openRamparts = _.filter(creep.room.walkableRamparts,
 										  rampart => _.any(approach,
 														   g => rampart.pos.inRangeToXY(g.pos.x, g.pos.y, g.range))
@@ -1139,20 +1167,20 @@ export class Movement {
 
 	private static invasionMoveCallbackModifier(room: Room, matrix: CostMatrix): CostMatrix {
 		// This is only applied once creep is in the target room
-		Pathing.blockExits(matrix);
+		MatrixLib.blockExits(matrix);
 		for (const hostile of room.invaders) {
 			if (hostile.getActiveBodyparts(RANGED_ATTACK) > 1) {
-				Pathing.setCostsInRange(matrix, hostile, 3, 1, true);
+				MatrixLib.setInRange(matrix, hostile, 3, 1, true);
 			} else if (hostile.getActiveBodyparts(ATTACK) > 1) {
-				Pathing.setCostsInRange(matrix, hostile, 1, 1, true);
+				MatrixLib.setInRange(matrix, hostile, 1, 1, true);
 			}
 		}
 		for (const keeper of room.sourceKeepers) {
-			Pathing.setCostsInRange(matrix, keeper, 3, 10, true);
+			MatrixLib.setInRange(matrix, keeper, 3, 10, true);
 		}
 		for (const lair of room.keeperLairs) {
 			if ((lair.ticksToSpawn || Infinity) < 25) {
-				Pathing.setCostsInRange(matrix, lair, 5, 5, true);
+				MatrixLib.setInRange(matrix, lair, 5, 5, true);
 			}
 		}
 		return matrix;

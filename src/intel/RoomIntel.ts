@@ -527,6 +527,28 @@ export class RoomIntel {
 	// 	}
 	// }
 
+	static getExitPositions(roomName: string): RoomPosition[] {
+		const terrain = Game.map.getRoomTerrain(roomName);
+		const exitPositions: RoomPosition[] = [];
+
+		for (let x = 0; x < 50; x += 49) {
+			for (let y = 0; y < 50; y++) {
+				if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
+					exitPositions.push(new RoomPosition(x, y, roomName));
+				}
+			}
+		}
+		for (let x = 0; x < 50; x++) {
+			for (let y = 0; y < 50; y += 49) {
+				if (terrain.get(x, y) != TERRAIN_MASK_WALL) {
+					exitPositions.push(new RoomPosition(x, y, roomName));
+				}
+			}
+		}
+
+		return exitPositions;
+	}
+
 	/**
 	 * Get the pos a creep was in on the previous tick, returning the same position as the creep if no data was
 	 * gathered on the previous tick.
