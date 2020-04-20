@@ -74,6 +74,7 @@ export class Overseer implements IOverseer {
 		this.memory = Mem.wrap(Memory, 'overseer', getDefaultOverseerMemory);
 		this.directives = [];
 		this.overlords = [];
+		this.overlordsByColony = {};
 		this._overlordsCached = false;
 		this.notifier = new Notifier();
 		this.combatPlanner = new CombatPlanner();
@@ -141,22 +142,18 @@ export class Overseer implements IOverseer {
 
 	registerOverlord(overlord: Overlord): void {
 		this.overlords.push(overlord);
-		this.overlordsByColony[overlord.colony.name] = this.overlordsByColony[overlord.colony.name] || [];
-		this.overlordsByColony[overlord.colony.name].push(overlord);
 		this._overlordsCached = false;
 	}
 
 	private removeOverlord(overlord: Overlord): void {
 		_.remove(this.overlords, o => o.ref == overlord.ref);
-		if (this.overlordsByColony[overlord.colony.name]) {
-			_.remove(this.overlordsByColony[overlord.colony.name], o => o.ref == overlord.ref);
-		}
 		this._overlordsCached = false;
 	}
 
 	private ensureOverlordsCached(): void {
 		if (!this._overlordsCached) {
 			this.overlords.sort((o1, o2) => o1.priority - o2.priority);
+			this.overlordsByColony = _.groupBy(this.overlords, overlord => overlord.colony.name);
 			for (const colName in this.overlordsByColony) {
 				this.overlordsByColony[colName].sort((o1, o2) => o1.priority - o2.priority);
 			}
