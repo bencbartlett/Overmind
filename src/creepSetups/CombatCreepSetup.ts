@@ -248,11 +248,10 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 
 
 	/**
-	 * Generate a body array from a count of body parts. Body is ordered as
-	 * TOUGH -> RANGED -> WORK -> ATTACK -> HEAL -> MOVE if opts.putMoveFirstInBody is true, otherwise we order as
-	 * TOUGH -> MOVE -> RANGED -> WORK -> ATTACK -> HEAL, and always put a final MOVE part at the end. Although this
-	 * ordering is the same for all methods in this class, it isn't possible for example to have a creep with
-	 * both attack and ranged parts using the other methods in this class.
+	 * Generate a body array from a count of body parts. Body is ordered as:
+	 * - TOUGH -> CARRY -> MOVE -> RANGED -> WORK -> ATTACK -> CLAIM -> HEAL if opts.putMoveFirstInBody is true
+	 * - TOUGH -> CARRY -> RANGED -> WORK -> ATTACK -> HEAL -> CLAIM -> MOVE if opts.putMoveFirstInBody is false
+	 * - The final MOVE part is always put at the end of the body array
 	 */
 	private static arrangeBodyParts(partialBodyCounts: BodyCounts, opts: BodyOpts): BodyPartConstant[] {
 
@@ -275,12 +274,14 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 			_.forEach(_.range(bodyCounts.ranged), i => body.push(RANGED_ATTACK));
 			_.forEach(_.range(bodyCounts.work), i => body.push(WORK));
 			_.forEach(_.range(bodyCounts.attack), i => body.push(ATTACK));
+			_.forEach(_.range(bodyCounts.claim), i => body.push(CLAIM));
 			_.forEach(_.range(bodyCounts.heal), i => body.push(HEAL));
 		} else {
 			_.forEach(_.range(bodyCounts.carry), i => body.push(CARRY));
 			_.forEach(_.range(bodyCounts.ranged), i => body.push(RANGED_ATTACK));
 			_.forEach(_.range(bodyCounts.work), i => body.push(WORK));
 			_.forEach(_.range(bodyCounts.attack), i => body.push(ATTACK));
+			_.forEach(_.range(bodyCounts.claim), i => body.push(CLAIM));
 			_.forEach(_.range(bodyCounts.move - 1), i => body.push(MOVE));
 			_.forEach(_.range(bodyCounts.heal), i => body.push(HEAL));
 		}
