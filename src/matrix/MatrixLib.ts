@@ -27,8 +27,8 @@ export interface MatrixOptions {			// Listed in the order they are processed in
 }
 
 export const getDefaultMatrixOptions: () => MatrixOptions = () => ({
-	roomName            : 'none',	// overridden in MatrixLib.getMatrix()
-	roomVisibile        : false,	// overridden in MatrixLib.getMatrix()
+	roomName            : 'none',
+	roomVisibile        : false,
 	explicitTerrainCosts: false,
 	terrainCosts        : {
 		plainCost: 1,
