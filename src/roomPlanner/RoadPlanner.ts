@@ -305,7 +305,7 @@ export class RoadPlanner {
 		const allRoadPos: RoomPosition[] = _.compact(this.roadPositions.concat(roomPlannerRoads));
 		const allRoadPosByRoomName = _.groupBy(allRoadPos, pos => pos.roomName);
 		this.memory.roadCoordsPacked = {};
-		for (const roomName in allRoadPos) {
+		for (const roomName in allRoadPosByRoomName) {
 			this.memory.roadCoordsPacked[roomName] = packCoordList(allRoadPosByRoomName[roomName]);
 		}
 	}
