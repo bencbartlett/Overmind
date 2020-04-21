@@ -11,7 +11,7 @@ import {profile} from '../../profiler/decorator';
 import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../../utilities/Cartographer';
 import {maxBy, minBy} from '../../utilities/utils';
 import {Zerg} from '../../zerg/Zerg';
-import {Overlord} from '../Overlord';
+import {Overlord, OverlordMemory} from '../Overlord';
 
 export const StandardMinerSetupCost = bodyCost(Setups.drones.miners.standard.generateBody(Infinity));
 
@@ -22,6 +22,10 @@ const BUILD_OUTPUT_FREQUENCY = 15;
 const SUICIDE_CHECK_FREQUENCY = 3;
 const MINER_SUICIDE_THRESHOLD = 200;
 
+interface MiningOverlordMemory extends OverlordMemory {
+	doubleSource?: boolean;
+}
+
 /**
  * Spawns miners to harvest from remote, owned, or sourcekeeper energy deposits. Standard mining actions have been
  * heavily CPU-optimized
@@ -29,8 +33,10 @@ const MINER_SUICIDE_THRESHOLD = 200;
 @profile
 export class MiningOverlord extends Overlord {
 
-	directive: DirectiveHarvest;
+	memory: MiningOverlordMemory;
+
 	room: Room | undefined;
+	distance: number;
 	source: Source | undefined;
 	secondSource: Source | undefined;
 	isDisabled: boolean;
@@ -53,7 +59,8 @@ export class MiningOverlord extends Overlord {
 
 	constructor(directive: DirectiveHarvest, priority: number) {
 		super(directive, 'mine', priority);
-		this.directive = directive;
+		this.distance = directive.distance;
+
 		this.priority += this.outpostIndex * OverlordPriority.remoteRoom.roomIncrement;
 		this.miners = this.zerg(Roles.drone);
 
@@ -80,9 +87,9 @@ export class MiningOverlord extends Overlord {
 			this.mode = 'early';
 			this.setup = Setups.drones.miners.default;
 		}
-		// else if (this.checkIfDoubleMine() && this.colony.room.energyCapacityAvailable > DoubleMinerSetupCost) {
-		// 	this.mode = 'double';
-		// 	this.setup = Setups.drones.miners.double;
+			// else if (this.isDoubleSource() && this.colony.room.energyCapacityAvailable > DoubleMinerSetupCost) {
+			// 	this.mode = 'double';
+			// 	this.setup = Setups.drones.miners.double;
 		// }
 		else if (this.link) {
 			this.mode = 'link';
@@ -117,15 +124,23 @@ export class MiningOverlord extends Overlord {
 		}
 	}
 
+	/**
+	 * Calculates if this source has another one very nearby that should be handled by the same miner
+	 * TODO: plug in
+	 */
 	private isDoubleSource(): boolean {
-		if (Game.rooms[this.pos.roomName] && this.pos.room) {
-			// console.log('Double mining check');
-			this.source = this.source || _.first(this.pos.room.sources);
-			const nearby = this.source.pos.findInRange(FIND_SOURCES, 2).filter(source => this.source != source);
-			if (nearby.length > 0) {
-				this.secondSource = nearby[0];
+		if (this.memory.doubleSource !== undefined) {
+			return this.memory.doubleSource;
+		}
+		const room = Game.rooms[this.pos.roomName];
+		if (room) {
+			this.source = this.source || _.first(room.sources);
+			const otherSource = _.find(this.source.pos.findInRange(FIND_SOURCES, 2),
+									   source => source.id != (this.source ? this.source.id : ''));
+			if (otherSource) {
+				this.secondSource = otherSource;
 				// If its over 1 spot away, is there spot in between to mine?
-				if (!this.source.pos.isNearTo(this.secondSource)) {
+				if (this.source.pos.getRangeTo(this.secondSource) > 1) {
 					const miningPos = this.source.pos.getPositionAtDirection(this.source.pos.getDirectionTo(this.secondSource.pos));
 					if (!miningPos.isWalkable()) {
 						// console.log(`Double mining found but there is no spot between ${this.secondSource}
@@ -133,6 +148,7 @@ export class MiningOverlord extends Overlord {
 						return false;
 					}
 				}
+				// Disable mining from the source with greater id
 				if (this.source.id > this.secondSource.id) {
 					// console.log(`This is a disabled mining ${this.directive.name} via source id`);
 					this.isDisabled = true;
@@ -143,14 +159,6 @@ export class MiningOverlord extends Overlord {
 		return false;
 	}
 
-	/**
-	 * TODO Note to self - make directive to make a double miner
-	 */
-
-	get distance(): number {
-		return this.directive.distance;
-	}
-
 	private populateStructures() {
 		if (Game.rooms[this.pos.roomName]) {
 			this.source = _.first(this.pos.lookFor(LOOK_SOURCES));
@@ -159,9 +167,6 @@ export class MiningOverlord extends Overlord {
 															 site.structureType == STRUCTURE_LINK));
 			this.container = this.pos.findClosestByLimitedRange(Game.rooms[this.pos.roomName].containers, 1);
 			this.link = this.pos.findClosestByLimitedRange(this.colony.availableLinks, 2);
-			// if (this.link) { // this won't cause repopulation problems since link rooms are always visible
-			// 	this.colony.linkNetwork.claimLink(this.link);
-			// }
 		}
 	}
 
@@ -169,10 +174,8 @@ export class MiningOverlord extends Overlord {
 		if (!this.room && Game.rooms[this.pos.roomName]) { // if you just gained vision of this room
 			this.populateStructures();
 		}
-		// if (!this.allowDropMining && Game.time % 100 == 0 && !this.container && !this.link) {
-		// 	log.warning(`Mining site at ${this.pos.print} has no output!`);
-		// }
 		super.refresh();
+		// Refresh your references to the objects
 		$.refresh(this, 'source', 'container', 'link', 'constructionSite');
 	}
 
@@ -266,8 +269,9 @@ export class MiningOverlord extends Overlord {
 	 */
 	private earlyMiningActions(miner: Zerg) {
 
-		if (miner.room != this.room) {
-			return miner.goToRoom(this.pos.roomName);
+		// Don't use goToMiningSite() here because miners will push each other around and waste CPU
+		if (!miner.pos.inRangeToPos(this.pos, 1)) {
+			return miner.goTo(this);
 		}
 
 		// Container mining
@@ -332,6 +336,9 @@ export class MiningOverlord extends Overlord {
 	 * Actions for handling link mining
 	 */
 	private linkMiningActions(miner: Zerg) {
+		// Sleep until your source regens
+		if (this.isSleeping(miner)) return;
+
 		// Link mining
 		if (this.link) {
 			const res = miner.harvest(this.source!);
@@ -341,9 +348,16 @@ export class MiningOverlord extends Overlord {
 			if (miner.carry.energy > 0.9 * miner.carryCapacity) {
 				miner.transfer(this.link, RESOURCE_ENERGY);
 			}
-			return;
+			// If for whatever reason there's no reciever link, you can get stuck in a bootstrapping loop, so
+			// occasionally check for this and drop energy on the ground if needed
+			if (Game.time % 10 == 0) {
+				const commandCenterLink = this.colony.commandCenter ? this.colony.commandCenter.link : undefined;
+				if (!commandCenterLink) {
+					miner.drop(RESOURCE_ENERGY);
+				}
+			}
 		} else {
-			log.warning(`Link miner ${miner.print} has no link!`);
+			log.warning(`${this.print}: Link miner ${miner.print} has no link! (Why?)`);
 		}
 	}
 
@@ -352,8 +366,15 @@ export class MiningOverlord extends Overlord {
 	 */
 	private standardMiningActions(miner: Zerg) {
 		// TODO reeval to do mining first, try intent and if fail then more for cpu gain
+
+		// Sleep until your source regens
+		if (this.isSleeping(miner)) return;
+
 		// Approach mining site
 		if (this.goToMiningSite(miner)) return;
+
+		// At this point the miner is in the room so we have vision of the source
+		const source = this.source as Source;
 
 		// Container mining
 		if (this.container) {
@@ -361,7 +382,7 @@ export class MiningOverlord extends Overlord {
 				&& miner.carry.energy >= Math.min(miner.carryCapacity, REPAIR_POWER * miner.getActiveBodyparts(WORK))) {
 				return miner.repair(this.container);
 			} else {
-				return miner.harvest(this.source!);
+				return this.harvestOrSleep(miner, source);
 			}
 		}
 
@@ -370,13 +391,13 @@ export class MiningOverlord extends Overlord {
 			if (miner.carry.energy >= Math.min(miner.carryCapacity, BUILD_POWER * miner.getActiveBodyparts(WORK))) {
 				return miner.build(this.constructionSite);
 			} else {
-				return miner.harvest(this.source!);
+				return this.harvestOrSleep(miner, source);
 			}
 		}
 
 		// Drop mining
 		if (this.allowDropMining) {
-			miner.harvest(this.source!);
+			this.harvestOrSleep(miner, source);
 			if (miner.carry.energy > 0.8 * miner.carryCapacity) { // move over the drop when you're close to full
 				const biggestDrop = maxBy(miner.pos.findInRange(miner.room.droppedEnergy, 1), drop => drop.amount);
 				if (biggestDrop) {
@@ -391,13 +412,60 @@ export class MiningOverlord extends Overlord {
 	}
 
 	/**
-	 * Actions for handling double mining
+	 * Actions for handling mining in source keeper rooms
+	 */
+	private skMiningActions(miner: Zerg) {
+		// Sleep until your source regens
+		if (this.isSleeping(miner)) return;
+
+		// Approach mining site
+		if (this.goToMiningSite(miner, false)) return;
+
+		// At this point the miner is in the room so we have vision of the source
+		const source = this.source as Source;
+
+		// Container mining
+		if (this.container) {
+			if (this.container.hits < this.container.hitsMax
+				&& miner.carry.energy >= Math.min(miner.carryCapacity, REPAIR_POWER * miner.getActiveBodyparts(WORK))) {
+				return miner.repair(this.container);
+			} else {
+				return this.harvestOrSleep(miner, source);
+			}
+		}
+
+		// Build output site
+		if (this.constructionSite) { // standard miners won't have both a container and a construction site
+			if (miner.carry.energy >= Math.min(miner.carryCapacity, BUILD_POWER * miner.getActiveBodyparts(WORK))) {
+				return miner.build(this.constructionSite);
+			} else {
+				return this.harvestOrSleep(miner, source);
+			}
+		}
+
+		// Drop mining
+		if (this.allowDropMining) {
+			this.harvestOrSleep(miner, source);
+			if (miner.carry.energy > 0.8 * miner.carryCapacity) { // move over the drop when you're close to full
+				const biggestDrop = maxBy(miner.pos.findInRange(miner.room.droppedEnergy, 1), drop => drop.amount);
+				if (biggestDrop) {
+					miner.goTo(biggestDrop);
+				}
+			}
+			if (miner.carry.energy == miner.carryCapacity) { // drop when you are full
+				miner.drop(RESOURCE_ENERGY);
+			}
+			return;
+		}
+	}
+
+	/**
+	 * Actions for handling double mining TODO: plug this in
 	 */
 	private doubleMiningActions(miner: Zerg) {
+
 		// Approach mining site
 		if (this.goToMiningSite(miner)) return;
-		// console.log(`Double mining with ${miner.print} here ${this.source!.pos.print}, ${this.source},
-		// ${this.secondSource} is disabled ${this.isDisabled}`);
 
 		// Link mining
 		if (this.link) {
@@ -452,40 +520,63 @@ export class MiningOverlord extends Overlord {
 	}
 
 	/**
-	 * Move onto harvesting position or near to source (depending on early/standard mode)
+	 * Move onto harvesting position or near to source
 	 */
-	private goToMiningSite(miner: Zerg): boolean {
+	private goToMiningSite(miner: Zerg, avoidSK = true): boolean {
 		if (this.harvestPos) {
 			if (!miner.pos.inRangeToPos(this.harvestPos, 0)) {
-				miner.goTo(this.harvestPos);
+				miner.goTo(this.harvestPos, {range: 0, pathOpts: {avoidSK: avoidSK}});
 				return true;
 			}
 		} else {
 			if (!miner.pos.inRangeToPos(this.pos, 1)) {
-				miner.goTo(this);
+				miner.goTo(this.pos, {range: 1, pathOpts: {avoidSK: avoidSK}});
 				return true;
 			}
 		}
 		return false;
 	}
 
+	private isSleeping(miner: Zerg): boolean {
+		if (miner.memory.sleepUntil) {
+			if (Game.time >= miner.memory.sleepUntil) {
+				delete miner.memory.sleepUntil;
+				return false;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Harvests from a source and sleeps the creep until regeneration if needed. This method doesn't run many safety
+	 * checks, so the creep will need to be in range
+	 */
+	private harvestOrSleep(miner: Zerg, source: Source, allowSuicide = true): void {
+		const ret = miner.harvest(source);
+		if (ret != OK) {
+			if (ret == ERR_NOT_ENOUGH_RESOURCES) { // energy depleted
+				if (allowSuicide && source.ticksToRegeneration > (miner.ticksToLive || Infinity)) {
+					miner.suicide();
+				} else {
+					miner.memory.sleepUntil = Game.time + source.ticksToRegeneration;
+				}
+			} else if (ret == ERR_NO_BODYPART && allowSuicide) {
+				miner.suicide();
+			} else {
+				log.error(`${this.print}: Unhandled miner.harvest() exception: ${ret}`);
+			}
+		}
+	}
+
 	private handleMiner(miner: Zerg) {
-		// Flee hostiles
-		if (miner.flee(miner.room.fleeDefaults, {dropEnergy: true})) {
+
+		// Stay safe out there!
+		if (miner.avoidDanger({timer: 10, dropEnergy: true})) {
 			return;
 		}
 
-		// Move onto harvesting position or near to source (depending on early/standard mode)
-		if (this.mode == 'early' || !this.harvestPos) {
-			if (!miner.pos.inRangeToPos(this.pos, 1)) {
-				return miner.goTo(this);
-			}
-		} else {
-			if (!miner.pos.inRangeToPos(this.harvestPos, 0)) {
-				return miner.goTo(this.harvestPos, {range: 0});
-			}
-		}
-
+		// Run the appropriate mining actions
 		switch (this.mode) {
 			case 'early':
 				return this.earlyMiningActions(miner);
@@ -494,7 +585,7 @@ export class MiningOverlord extends Overlord {
 			case 'standard':
 				return this.standardMiningActions(miner);
 			case 'SK':
-				return this.standardMiningActions(miner);
+				return this.skMiningActions(miner);
 			case 'double':
 				return this.doubleMiningActions(miner);
 			default:

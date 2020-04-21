@@ -196,10 +196,8 @@ export class Zerg extends AnyZerg {
 	}
 
 	goBuild(target: ConstructionSite) {
-		if (this.pos.inRangeToPos(target.pos, RANGES.BUILD)) {
-			return this.build(target);
-		} else {
-			return this.goTo(target);
+		if (this.build(target) == ERR_NOT_IN_RANGE) {
+			this.goTo(target);
 		}
 	}
 
@@ -248,11 +246,9 @@ export class Zerg extends AnyZerg {
 		return result;
 	}
 
-	goHarvest(source: Source | Mineral) {
-		if (this.pos.inRangeToPos(source.pos, RANGES.HARVEST)) {
-			return this.harvest(source);
-		} else {
-			return this.goTo(source);
+	goHarvest(source: Source | Mineral): void {
+		if (this.harvest(source) == ERR_NOT_IN_RANGE) {
+			this.goTo(source);
 		}
 	}
 
@@ -311,11 +307,9 @@ export class Zerg extends AnyZerg {
 		return result;
 	}
 
-	goRepair(target: Structure) {
-		if (this.pos.inRangeToPos(target.pos, RANGES.REPAIR)) {
-			return this.repair(target);
-		} else {
-			return this.goTo(target);
+	goRepair(target: Structure): void {
+		if (this.repair(target) == ERR_NOT_IN_RANGE) {
+			this.goTo(target);
 		}
 	}
 

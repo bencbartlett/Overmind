@@ -72,7 +72,7 @@ interface Room {
 	// Populated and tracked by RoomIntel
 	isSafe: boolean;
 	threatLevel: number;
-	instantaneousThreatLevel: 0 | 1 | 2;
+	instantaneousThreatLevel: 0 | 0.5 | 1;
 
 	fleeDefaults: HasPos[];
 

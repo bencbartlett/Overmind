@@ -119,6 +119,7 @@ interface CreepMemory {
 	[MEM.COLONY]: string | null;
 	role: string;
 	task: ProtoTask | null;
+	sleepUntil?: number;
 	needBoosts?: ResourceConstant[];
 	data: {
 		origin: string;

@@ -56,7 +56,7 @@ interface ParkingOptions {
 }
 
 interface FleeOptions {
-	timer?: number
+	timer?: number;
 	dropEnergy?: boolean;
 	invalidateTask?: boolean;
 }
@@ -259,11 +259,10 @@ export abstract class AnyZerg {
 		}
 	}
 
-	goTransfer(target: Creep | AnyZerg | Structure, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
-		if (this.pos.inRangeToPos(target.pos, RANGES.TRANSFER)) {
-			return this.transfer(target, resourceType, amount);
-		} else {
-			return this.goTo(target);
+	goTransfer(target: Creep | AnyZerg | Structure, resourceType: ResourceConstant = RESOURCE_ENERGY,
+			   amount?: number): void {
+		if (this.transfer(target, resourceType, amount) == ERR_NOT_IN_RANGE) {
+			this.goTo(target);
 		}
 	}
 
@@ -273,11 +272,10 @@ export abstract class AnyZerg {
 		return result;
 	}
 
-	goWithdraw(target: Structure | Tombstone, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
-		if (this.pos.inRangeToPos(target.pos, RANGES.WITHDRAW)) {
-			return this.withdraw(target, resourceType, amount);
-		} else {
-			return this.goTo(target);
+	goWithdraw(target: Structure | Tombstone, resourceType: ResourceConstant = RESOURCE_ENERGY,
+			   amount?: number): void {
+		if (this.withdraw(target, resourceType, amount) == ERR_NOT_IN_RANGE) {
+			this.goTo(target);
 		}
 	}
 
@@ -411,10 +409,9 @@ export abstract class AnyZerg {
 	 */
 	avoidDanger(opts: FleeOptions = {}): boolean {
 
-		// If you're almost expired or you're spawning do nothing
+		// If you're almost expired or you're spawning do nothing - if you get killed you're cheap and faster to replace
 		if ((this.ticksToLive || 0) < 50) {
-			// I just wanna die!!
-			return false;
+			return false; // I just wanna die!!
 		}
 
 		_.defaults(opts, {timer: 10, dropEnergy: true});

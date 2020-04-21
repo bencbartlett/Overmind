@@ -598,8 +598,6 @@ export class RoomIntel {
 			[RMEM_SAFETY.SAFE_FOR]     : 0,
 			[RMEM_SAFETY.UNSAFE_FOR]   : 0,
 			[RMEM_SAFETY.INVISIBLE_FOR]: 0,
-			// [RMEM_SAFETY.SAFETY_1K]   : 1,
-			// [RMEM_SAFETY.SAFETY_10K]  : 1,
 		};
 
 		const safetyData = Memory.rooms[roomName][RMEM.SAFETY] as SavedSafetyData;
@@ -640,18 +638,19 @@ export class RoomIntel {
 			safetyData[RMEM_SAFETY.INVISIBLE_FOR] += 1;
 		}
 
-		// Instantaneous threat level functions similarly to colony.defcon: 0 is safe, 1 is invaders, 2 is human threat
-		let instantaneousThreatLevel: 0 | 1 | 2;
+		// Instantaneous threat level for a room scales from 0 to 1, with presence from non-player hostiles capped at
+		// a threat levle of 0.5.
+		let instantaneousThreatLevel: 0 | 0.5 | 1;
 		if (!room) {
-			instantaneousThreatLevel = 1;
+			instantaneousThreatLevel = 0.5;
 		} else {
 			if (room.controller && room.controller.safeMode) {
 				instantaneousThreatLevel = 0;
 			} else {
 				if (room.dangerousPlayerHostiles.length > 0) {
-					instantaneousThreatLevel = 2;
-				} else if (room.dangerousHostiles.length > 0) {
 					instantaneousThreatLevel = 1;
+				} else if (room.dangerousHostiles.length > 0) {
+					instantaneousThreatLevel = 0.5;
 				} else {
 					instantaneousThreatLevel = 0;
 				}
@@ -666,12 +665,12 @@ export class RoomIntel {
 														   safetyData[RMEM_SAFETY.THREAT_LEVEL],
 														   CREEP_LIFE_TIME / 2);
 				break;
-			case 1:
+			case 0.5:
 				safetyData[RMEM_SAFETY.THREAT_LEVEL] = ema(instantaneousThreatLevel,
 														   safetyData[RMEM_SAFETY.THREAT_LEVEL],
 														   CREEP_LIFE_TIME / (1 + numBoostedHostiles));
 				break;
-			case 2:
+			case 1:
 				safetyData[RMEM_SAFETY.THREAT_LEVEL] = ema(instantaneousThreatLevel,
 														   safetyData[RMEM_SAFETY.THREAT_LEVEL],
 														   CREEP_LIFE_TIME / (4 + numBoostedHostiles));
@@ -692,7 +691,7 @@ export class RoomIntel {
 			room.instantaneousThreatLevel = instantaneousThreatLevel;
 			room.threatLevel = safetyData[RMEM_SAFETY.THREAT_LEVEL];
 			room.isSafe = room.instantaneousThreatLevel == 0 &&
-						  (room.threatLevel < 0.25 || safetyData[RMEM_SAFETY.SAFE_FOR] > 50);
+						  (room.threatLevel < 0.15 || safetyData[RMEM_SAFETY.SAFE_FOR] > 50);
 		}
 
 	}
