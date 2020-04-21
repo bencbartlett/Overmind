@@ -4,25 +4,35 @@ import {profile} from '../profiler/decorator';
 import {BoostType} from '../resources/map_resources';
 import {Roles} from './setups';
 
+type PartNonMove = 'attack' | 'ranged' | 'heal' | 'tough' | 'work' | 'carry' | 'claim';
+
+export interface BodyCounts {
+	move?: number;
+	attack?: number;
+	ranged?: number;
+	heal?: number;
+	tough?: number;
+	work?: number;
+	carry?: number;
+	claim?: number;
+}
+
+const allZeroParts: () => Full<BodyCounts> = () => ({
+	move  : 0,
+	attack: 0,
+	ranged: 0,
+	heal  : 0,
+	tough : 0,
+	work  : 0,
+	carry : 0,
+	claim : 0,
+});
+
 export interface BodyOpts {
 	moveSpeed?: number;
 	putMoveFirstInBody?: boolean;
-	bodyRatio?: {
-		attack?: number;
-		ranged?: number;
-		heal?: number;
-		tough?: number;
-		work?: number;
-		carry?: number;
-	};
-	maxParts?: {
-		attack?: number;
-		ranged?: number;
-		heal?: number;
-		tough?: number;
-		work?: number;
-		carry?: number;
-	};
+	bodyRatio?: Omit<BodyCounts, 'move'>;
+	maxParts?: Omit<BodyCounts, 'move'>;
 	boosts?: BoostType[];
 }
 
@@ -56,9 +66,12 @@ interface AvailableBoosts {
 // This re-declaration is needed to get typings to work since typed-screeps has a hard-on for over-typing things
 const BOOST_EFFECTS: { [part: string]: { [boost: string]: { [action: string]: number } } } = BOOSTS;
 
+const BODYPART_COSTS = _.extend(_.clone(BODYPART_COST),
+								{ranged: BODYPART_COST[RANGED_ATTACK]}) as { [part: string]: number };
+
 /**
  * This class creates body plans for combat creeps, especially ones where the body may depend on the available boosts.
- * It extends my old CreepSetup class for backward compatibility; going forward, I will use this class for
+ * It extends my old CreepSetup class for backward compatibility; going forward, I will use this class for most
  * CombatOverlord creep requests while I use the old system for standard Overlord creep requests.
  */
 @profile
@@ -112,7 +125,7 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 	 */
 	private static getBestBoostsAvailable(colony: Colony, opts: Full<BodyOpts>): AvailableBoosts {
 		const availableBoosts: AvailableBoosts = {};
-		if (colony.evolutionChamber) { // TODO: add the rest of the boosts we might need
+		if (colony.evolutionChamber) {
 			if (opts.bodyRatio.tough && opts.boosts.includes('tough')) {
 				const toughBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.tough || 0);
 				availableBoosts.tough = colony.evolutionChamber.bestBoostAvailable('tough', toughBoostNeeded);
@@ -160,6 +173,79 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 		return availableBoosts;
 	}
 
+	/**
+	 * Generates a body counts based on a body ratio and a required move ratio (which depends on the available boosts
+	 * for the generating colony). If carryPartsAreWeighted=true, all carry parts are assumed to be full for the
+	 * purposes of computing move speed.
+	 */
+	private static generateBodyCounts(colony: Colony, opts: Full<BodyOpts>, moveRatio: number,
+									  rootPart: PartNonMove, partPriorities: PartNonMove[],
+									  unweightedCarryParts = false): Full<BodyCounts> {
+
+		if (partPriorities.includes(rootPart)) {
+			log.error(`generateBodyCounts() error: part priorities ${partPriorities} cannot ` +
+					  `include root part ${rootPart}`);
+			return allZeroParts();
+		}
+
+		const bodyRatio = _.defaults(_.clone(opts.bodyRatio), allZeroParts()) as Full<BodyCounts>;
+		const maxParts = _.defaults(_.clone(opts.maxParts), allZeroParts()) as Full<BodyCounts>;
+
+
+		// Compute the most expensive part you may need to add to the body
+		const nonZeroParts = _.filter(_.keys(opts.bodyRatio),
+									  part => (<{ [p: string]: number }>opts.bodyRatio)[part] > 0);
+		const maxPartCost = _.max(_.map(nonZeroParts, part => (<{ [p: string]: number }>BODYPART_COSTS)[part]));
+
+		// Initialize body counts object
+		const bodyCounts = {
+			move  : 1,
+			attack: bodyRatio.attack > 0 ? 1 : 0,
+			ranged: bodyRatio.ranged > 0 ? 1 : 0,
+			heal  : bodyRatio.heal > 0 ? 1 : 0,
+			tough : bodyRatio.tough > 0 ? 1 : 0,
+			work  : bodyRatio.work > 0 ? 1 : 0,
+			carry : bodyRatio.carry > 0 ? 1 : 0,
+			claim : bodyRatio.claim > 0 ? 1 : 0,
+		} as { [part: string]: number };
+
+		// Initialize cost of starting body counts
+		let cost = 0;
+		for (const part in bodyCounts) {
+			cost += bodyCounts[part] * BODYPART_COSTS[part];
+		}
+
+		// Keep adding stuff until you run out of space on the body or out of energy capacity in the room
+		while (_.sum(bodyCounts) < MAX_CREEP_SIZE && cost <= colony.room.energyCapacityAvailable - maxPartCost) {
+			// Highest priority is add move parts to maintain the target move speed
+			const weightedParts = unweightedCarryParts ? _.sum(bodyCounts) - bodyCounts.move - bodyCounts.carry
+													   : _.sum(bodyCounts) - bodyCounts.move;
+			if (weightedParts >= moveRatio * bodyCounts.move) {
+				bodyCounts.move++;
+				cost += BODYPART_COST[MOVE];
+			} else {
+				// If any non-root parts are below the target ratio and below the maxParts limit, add them
+				let nonRootPartAdded = false;
+				for (const part of partPriorities) {
+					if (bodyCounts[part] < maxParts[part] &&
+						bodyCounts[part] / bodyCounts[rootPart] < bodyRatio[part] / bodyRatio[rootPart]) {
+						bodyCounts[part]++;
+						cost += BODYPART_COSTS[part];
+						nonRootPartAdded = true;
+						break;
+					}
+				}
+				// Otherwise add another root part
+				if (!nonRootPartAdded) {
+					bodyCounts[rootPart]++;
+					cost += BODYPART_COSTS[rootPart];
+				}
+			}
+		}
+
+		return bodyCounts as Full<BodyCounts>;
+	}
+
 
 	/**
 	 * Generate a body array from a count of body parts. Body is ordered as
@@ -168,32 +254,35 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 	 * ordering is the same for all methods in this class, it isn't possible for example to have a creep with
 	 * both attack and ranged parts using the other methods in this class.
 	 */
-	private static arrangeBodyParts(bodyCounts: {
-		move: number;
-		attack?: number;
-		ranged?: number;
-		heal?: number;
-		tough?: number;
-		work?: number;
-		carry?: number;
-	}, opts: BodyOpts): BodyPartConstant[] {
+	private static arrangeBodyParts(partialBodyCounts: BodyCounts, opts: BodyOpts): BodyPartConstant[] {
+
+		const bodyCounts = _.defaults(partialBodyCounts, {
+			move  : 1,
+			attack: 0,
+			ranged: 0,
+			heal  : 0,
+			tough : 0,
+			work  : 0,
+			carry : 0,
+			claim : 0,
+		}) as Full<BodyCounts>;
 
 		const body: BodyPartConstant[] = [];
-		_.forEach(_.range(bodyCounts.tough || 0), i => body.push(TOUGH));
+		_.forEach(_.range(bodyCounts.tough), i => body.push(TOUGH));
 		if (opts.putMoveFirstInBody) {
-			_.forEach(_.range(bodyCounts.carry || 0), i => body.push(CARRY));
+			_.forEach(_.range(bodyCounts.carry), i => body.push(CARRY));
 			_.forEach(_.range(bodyCounts.move - 1), i => body.push(MOVE));
-			_.forEach(_.range(bodyCounts.ranged || 0), i => body.push(RANGED_ATTACK));
-			_.forEach(_.range(bodyCounts.work || 0), i => body.push(WORK));
-			_.forEach(_.range(bodyCounts.attack || 0), i => body.push(ATTACK));
-			_.forEach(_.range(bodyCounts.heal || 0), i => body.push(HEAL));
+			_.forEach(_.range(bodyCounts.ranged), i => body.push(RANGED_ATTACK));
+			_.forEach(_.range(bodyCounts.work), i => body.push(WORK));
+			_.forEach(_.range(bodyCounts.attack), i => body.push(ATTACK));
+			_.forEach(_.range(bodyCounts.heal), i => body.push(HEAL));
 		} else {
-			_.forEach(_.range(bodyCounts.carry || 0), i => body.push(CARRY));
-			_.forEach(_.range(bodyCounts.ranged || 0), i => body.push(RANGED_ATTACK));
-			_.forEach(_.range(bodyCounts.work || 0), i => body.push(WORK));
-			_.forEach(_.range(bodyCounts.attack || 0), i => body.push(ATTACK));
+			_.forEach(_.range(bodyCounts.carry), i => body.push(CARRY));
+			_.forEach(_.range(bodyCounts.ranged), i => body.push(RANGED_ATTACK));
+			_.forEach(_.range(bodyCounts.work), i => body.push(WORK));
+			_.forEach(_.range(bodyCounts.attack), i => body.push(ATTACK));
 			_.forEach(_.range(bodyCounts.move - 1), i => body.push(MOVE));
-			_.forEach(_.range(bodyCounts.heal || 0), i => body.push(HEAL));
+			_.forEach(_.range(bodyCounts.heal), i => body.push(HEAL));
 		}
 		body.push(MOVE);
 		return body;
@@ -232,47 +321,17 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 			opts.bodyRatio.tough = 0;
 		}
 
-		const partsPerMovePart = (availableBoosts.move ? BOOST_EFFECTS.move[availableBoosts.move].fatigue : 1)
-								 * opts.moveSpeed;
+		const moveRatio = (availableBoosts.move ? BOOST_EFFECTS.move[availableBoosts.move].fatigue : 1)
+						  * opts.moveSpeed;
 
-		// We need attack, tough, heal to be defined for bodyRatio and maxParts
+		// We need attack to be defined for bodyRatio and maxParts
 		opts.bodyRatio.attack = opts.bodyRatio.attack || 1;
 		opts.bodyRatio.tough = opts.bodyRatio.tough || 0;
 		opts.bodyRatio.heal = opts.bodyRatio.heal || 0;
 
-		const bodyCounts = {
-			tough : opts.bodyRatio.tough > 0 ? 1 : 0,
-			heal  : opts.bodyRatio.heal > 0 ? 1 : 0,
-			attack: 1,
-			move  : 1,
-		};
-
-		const maxPartCost = opts.bodyRatio.heal ? BODYPART_COST[HEAL] : BODYPART_COST[ATTACK];
-
-		let cost = BODYPART_COST[TOUGH] * bodyCounts.tough +
-				   BODYPART_COST[ATTACK] * bodyCounts.attack +
-				   BODYPART_COST[HEAL] * bodyCounts.heal +
-				   BODYPART_COST[MOVE] * bodyCounts.move;
-
-		// Keep adding stuff until you run out of space on the body or out of energy capacity in the room
-		while (_.sum(bodyCounts) < MAX_CREEP_SIZE && cost <= colony.room.energyCapacityAvailable - maxPartCost) {
-			const nonMoveParts = _.sum(bodyCounts) - bodyCounts.move;
-			if (nonMoveParts >= partsPerMovePart * bodyCounts.move) {
-				bodyCounts.move++;
-				cost += BODYPART_COST[MOVE];
-			} else if (bodyCounts.tough < opts.maxParts.tough &&
-					   bodyCounts.tough / bodyCounts.attack < opts.bodyRatio.tough / opts.bodyRatio.attack) {
-				bodyCounts.tough++;
-				cost += BODYPART_COST[TOUGH];
-			} else if (bodyCounts.heal < opts.maxParts.heal &&
-					   bodyCounts.heal / bodyCounts.attack < opts.bodyRatio.heal / opts.bodyRatio.attack) {
-				bodyCounts.heal++;
-				cost += BODYPART_COST[HEAL];
-			} else {
-				bodyCounts.attack++;
-				cost += BODYPART_COST[ATTACK];
-			}
-		}
+		const rootPart: PartNonMove = 'attack';
+		const partPriorities: PartNonMove[] = ['tough','heal'];
+		const bodyCounts = CombatCreepSetup.generateBodyCounts(colony, opts, moveRatio, rootPart, partPriorities);
 
 		const body = CombatCreepSetup.arrangeBodyParts(bodyCounts, opts);
 		const boosts = _.compact(_.values(availableBoosts)) as ResourceConstant[];
@@ -313,47 +372,15 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 			opts.bodyRatio.tough = 0;
 		}
 
-		const partsPerMovePart = (availableBoosts.move ? BOOST_EFFECTS.move[availableBoosts.move].fatigue : 1)
+		const moveRatio = (availableBoosts.move ? BOOST_EFFECTS.move[availableBoosts.move].fatigue : 1)
 								 * opts.moveSpeed;
 
-		// We need ranged, tough, heal to be defined for bodyRatio and maxParts
+		// We need ranged to be defined for bodyRatio and maxParts
 		opts.bodyRatio.ranged = opts.bodyRatio.ranged || 1;
-		opts.bodyRatio.tough = opts.bodyRatio.tough || 0;
-		opts.bodyRatio.heal = opts.bodyRatio.heal || 0;
 
-		const bodyCounts = {
-			tough : opts.bodyRatio.tough > 0 ? 1 : 0,
-			heal  : opts.bodyRatio.heal > 0 ? 1 : 0,
-			ranged: 1,
-			move  : 1,
-		};
-
-		const maxPartCost = opts.bodyRatio.heal ? BODYPART_COST[HEAL] : BODYPART_COST[RANGED_ATTACK];
-
-		let cost = BODYPART_COST[TOUGH] * bodyCounts.tough +
-				   BODYPART_COST[RANGED_ATTACK] * bodyCounts.ranged +
-				   BODYPART_COST[HEAL] * bodyCounts.heal +
-				   BODYPART_COST[MOVE] * bodyCounts.move;
-
-		// Keep adding stuff until you run out of space on the body or out of energy capacity in the room
-		while (_.sum(bodyCounts) < MAX_CREEP_SIZE && cost <= colony.room.energyCapacityAvailable - maxPartCost) {
-			const nonMoveParts = _.sum(bodyCounts) - bodyCounts.move;
-			if (nonMoveParts >= partsPerMovePart * bodyCounts.move) {
-				bodyCounts.move++;
-				cost += BODYPART_COST[MOVE];
-			} else if (bodyCounts.tough < opts.maxParts.tough &&
-					   bodyCounts.tough / bodyCounts.ranged < opts.bodyRatio.tough / opts.bodyRatio.ranged) {
-				bodyCounts.tough++;
-				cost += BODYPART_COST[TOUGH];
-			} else if (bodyCounts.heal < opts.maxParts.heal &&
-					   bodyCounts.heal / bodyCounts.ranged < opts.bodyRatio.heal / opts.bodyRatio.ranged) {
-				bodyCounts.heal++;
-				cost += BODYPART_COST[HEAL];
-			} else {
-				bodyCounts.ranged++;
-				cost += BODYPART_COST[RANGED_ATTACK];
-			}
-		}
+		const rootPart: PartNonMove = 'ranged';
+		const partPriorities: PartNonMove[] = ['tough','heal'];
+		const bodyCounts = CombatCreepSetup.generateBodyCounts(colony, opts, moveRatio, rootPart, partPriorities);
 
 		const body = CombatCreepSetup.arrangeBodyParts(bodyCounts, opts);
 		const boosts = _.compact(_.values(availableBoosts)) as ResourceConstant[];
@@ -394,47 +421,15 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 			opts.bodyRatio.tough = 0;
 		}
 
-		const partsPerMovePart = (availableBoosts.move ? BOOST_EFFECTS.move[availableBoosts.move].fatigue : 1)
+		const moveRatio = (availableBoosts.move ? BOOST_EFFECTS.move[availableBoosts.move].fatigue : 1)
 								 * opts.moveSpeed;
 
-		// We need ranged, tough, heal to be defined for bodyRatio and maxParts
+		// We need heal to be defined for bodyRatio and maxParts
 		opts.bodyRatio.heal = opts.bodyRatio.heal || 1;
-		opts.bodyRatio.tough = opts.bodyRatio.tough || 0;
-		opts.bodyRatio.ranged = opts.bodyRatio.ranged || 0;
 
-		const bodyCounts = {
-			tough : opts.bodyRatio.tough > 0 ? 1 : 0,
-			ranged: opts.bodyRatio.ranged > 0 ? 1 : 0,
-			heal  : 1,
-			move  : 1,
-		};
-
-		const maxPartCost = BODYPART_COST[HEAL];
-
-		let cost = BODYPART_COST[TOUGH] * bodyCounts.tough +
-				   BODYPART_COST[RANGED_ATTACK] * bodyCounts.ranged +
-				   BODYPART_COST[HEAL] * bodyCounts.heal +
-				   BODYPART_COST[MOVE] * bodyCounts.move;
-
-		// Keep adding stuff until you run out of space on the body or out of energy capacity in the room
-		while (_.sum(bodyCounts) < MAX_CREEP_SIZE && cost <= colony.room.energyCapacityAvailable - maxPartCost) {
-			const nonMoveParts = _.sum(bodyCounts) - bodyCounts.move;
-			if (nonMoveParts >= partsPerMovePart * bodyCounts.move) {
-				bodyCounts.move++;
-				cost += BODYPART_COST[MOVE];
-			} else if (bodyCounts.tough < opts.maxParts.tough &&
-					   bodyCounts.tough / bodyCounts.heal < opts.bodyRatio.tough / opts.bodyRatio.heal) {
-				bodyCounts.tough++;
-				cost += BODYPART_COST[TOUGH];
-			} else if (bodyCounts.ranged < opts.maxParts.ranged &&
-					   bodyCounts.ranged / bodyCounts.heal < opts.bodyRatio.ranged / opts.bodyRatio.heal) {
-				bodyCounts.ranged++;
-				cost += BODYPART_COST[RANGED_ATTACK];
-			} else {
-				bodyCounts.heal++;
-				cost += BODYPART_COST[HEAL];
-			}
-		}
+		const rootPart: PartNonMove = 'heal';
+		const partPriorities: PartNonMove[] = ['tough','ranged'];
+		const bodyCounts = CombatCreepSetup.generateBodyCounts(colony, opts, moveRatio, rootPart, partPriorities);
 
 		const body = CombatCreepSetup.arrangeBodyParts(bodyCounts, opts);
 		const boosts = _.compact(_.values(availableBoosts)) as ResourceConstant[];
@@ -472,56 +467,15 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 			opts.bodyRatio.tough = 0;
 		}
 
-		const partsPerMovePart = (availableBoosts.move ? BOOST_EFFECTS.move[availableBoosts.move].fatigue : 1)
+		const moveRatio = (availableBoosts.move ? BOOST_EFFECTS.move[availableBoosts.move].fatigue : 1)
 								 * opts.moveSpeed;
 
-		// We need work, ranged, tough, heal to be defined for bodyRatio and maxParts
+		// We need work to be defined for bodyRatio and maxParts
 		opts.bodyRatio.work = opts.bodyRatio.work || 1;
-		opts.bodyRatio.ranged = opts.bodyRatio.ranged || 0;
-		opts.bodyRatio.tough = opts.bodyRatio.tough || 0;
-		opts.bodyRatio.heal = opts.bodyRatio.heal || 0;
 
-		const bodyCounts = {
-			tough : opts.bodyRatio.tough > 0 ? 1 : 0,
-			heal  : opts.bodyRatio.heal > 0 ? 1 : 0,
-			ranged: opts.bodyRatio.ranged > 0 ? 1 : 0,
-			work  : 1,
-			move  : 1,
-		};
-
-		const maxPartCost = opts.bodyRatio.heal ? BODYPART_COST[HEAL]
-												: opts.bodyRatio.ranged ? BODYPART_COST[RANGED_ATTACK]
-																		: BODYPART_COST[WORK];
-
-		let cost = BODYPART_COST[TOUGH] * bodyCounts.tough +
-				   BODYPART_COST[RANGED_ATTACK] * bodyCounts.ranged +
-				   BODYPART_COST[WORK] * bodyCounts.work +
-				   BODYPART_COST[HEAL] * bodyCounts.heal +
-				   BODYPART_COST[MOVE] * bodyCounts.move;
-
-		// Keep adding stuff until you run out of space on the body or out of energy capacity in the room
-		while (_.sum(bodyCounts) < MAX_CREEP_SIZE && cost <= colony.room.energyCapacityAvailable - maxPartCost) {
-			const nonMoveParts = _.sum(bodyCounts) - bodyCounts.move;
-			if (nonMoveParts >= partsPerMovePart * bodyCounts.move) {
-				bodyCounts.move++;
-				cost += BODYPART_COST[MOVE];
-			} else if (bodyCounts.tough < opts.maxParts.tough &&
-					   bodyCounts.tough / bodyCounts.work < opts.bodyRatio.tough / opts.bodyRatio.work) {
-				bodyCounts.tough++;
-				cost += BODYPART_COST[TOUGH];
-			} else if (bodyCounts.ranged < opts.maxParts.ranged &&
-					   bodyCounts.ranged / bodyCounts.work < opts.bodyRatio.ranged / opts.bodyRatio.work) {
-				bodyCounts.ranged++;
-				cost += BODYPART_COST[RANGED_ATTACK];
-			} else if (bodyCounts.heal < opts.maxParts.heal &&
-					   bodyCounts.heal / bodyCounts.work < opts.bodyRatio.heal / opts.bodyRatio.work) {
-				bodyCounts.heal++;
-				cost += BODYPART_COST[HEAL];
-			} else {
-				bodyCounts.work++;
-				cost += BODYPART_COST[WORK];
-			}
-		}
+		const rootPart: PartNonMove = 'work';
+		const partPriorities: PartNonMove[] = ['tough','ranged','heal'];
+		const bodyCounts = CombatCreepSetup.generateBodyCounts(colony, opts, moveRatio, rootPart, partPriorities);
 
 		const body = CombatCreepSetup.arrangeBodyParts(bodyCounts, opts);
 		const boosts = _.compact(_.values(availableBoosts)) as ResourceConstant[];
@@ -556,55 +510,15 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 			opts.bodyRatio.tough = 0;
 		}
 
-		const partsPerMovePart = (availableBoosts.move ? BOOST_EFFECTS.move[availableBoosts.move].fatigue : 1)
+		const moveRatio = (availableBoosts.move ? BOOST_EFFECTS.move[availableBoosts.move].fatigue : 1)
 								 * opts.moveSpeed;
 
-		// We need work, ranged, tough, heal to be defined for bodyRatio and maxParts
+		// We need work to be defined for bodyRatio and maxParts
 		opts.bodyRatio.work = opts.bodyRatio.work || 1;
-		opts.bodyRatio.carry = opts.bodyRatio.carry || 0;
-		opts.bodyRatio.tough = opts.bodyRatio.tough || 0;
-		opts.bodyRatio.heal = opts.bodyRatio.heal || 0;
 
-		const bodyCounts = {
-			tough: opts.bodyRatio.tough > 0 ? 1 : 0,
-			heal : opts.bodyRatio.heal > 0 ? 1 : 0,
-			carry: opts.bodyRatio.carry > 0 ? 1 : 0,
-			work : 1,
-			move : 1,
-		};
-
-		const maxPartCost = opts.bodyRatio.heal ? BODYPART_COST[HEAL] : BODYPART_COST[WORK];
-
-		let cost = BODYPART_COST[TOUGH] * bodyCounts.tough +
-				   BODYPART_COST[CARRY] * bodyCounts.carry +
-				   BODYPART_COST[WORK] * bodyCounts.work +
-				   BODYPART_COST[HEAL] * bodyCounts.heal +
-				   BODYPART_COST[MOVE] * bodyCounts.move;
-
-		// Keep adding stuff until you run out of space on the body or out of energy capacity in the room
-		while (_.sum(bodyCounts) < MAX_CREEP_SIZE && cost <= colony.room.energyCapacityAvailable - maxPartCost) {
-			// In this one case we assume the carry parts are empty while calculating move speed
-			const nonMoveNonCarryParts = _.sum(bodyCounts) - bodyCounts.move - bodyCounts.carry;
-			if (nonMoveNonCarryParts >= partsPerMovePart * bodyCounts.move) {
-				bodyCounts.move++;
-				cost += BODYPART_COST[MOVE];
-			} else if (bodyCounts.tough < opts.maxParts.tough &&
-					   bodyCounts.tough / bodyCounts.work < opts.bodyRatio.tough / opts.bodyRatio.work) {
-				bodyCounts.tough++;
-				cost += BODYPART_COST[TOUGH];
-			} else if (bodyCounts.carry < opts.maxParts.carry &&
-					   bodyCounts.carry / bodyCounts.work < opts.bodyRatio.carry / opts.bodyRatio.work) {
-				bodyCounts.carry++;
-				cost += BODYPART_COST[CARRY];
-			} else if (bodyCounts.heal < opts.maxParts.heal &&
-					   bodyCounts.heal / bodyCounts.work < opts.bodyRatio.heal / opts.bodyRatio.work) {
-				bodyCounts.heal++;
-				cost += BODYPART_COST[HEAL];
-			} else {
-				bodyCounts.work++;
-				cost += BODYPART_COST[WORK];
-			}
-		}
+		const rootPart: PartNonMove = 'work';
+		const partPriorities: PartNonMove[] = ['tough','carry', 'heal'];
+		const bodyCounts = CombatCreepSetup.generateBodyCounts(colony, opts, moveRatio, rootPart, partPriorities, true);
 
 		const body = CombatCreepSetup.arrangeBodyParts(bodyCounts, opts);
 		const boosts = _.compact(_.values(availableBoosts)) as ResourceConstant[];
@@ -637,134 +551,23 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 			opts.bodyRatio.tough = 0;
 		}
 
-		const partsPerMovePart = (availableBoosts.move ? BOOST_EFFECTS.move[availableBoosts.move].fatigue : 1)
+		const moveRatio = (availableBoosts.move ? BOOST_EFFECTS.move[availableBoosts.move].fatigue : 1)
 								 * opts.moveSpeed;
 
-		// We need attack, tough, heal to be defined for bodyRatio and maxParts
+		// We need carry to be defined for bodyRatio and maxParts
 		opts.bodyRatio.carry = opts.bodyRatio.carry || 1;
 		opts.bodyRatio.tough = opts.bodyRatio.tough || 0;
 		opts.bodyRatio.heal = opts.bodyRatio.heal || 0;
 
-		const bodyCounts = {
-			tough: opts.bodyRatio.tough > 0 ? 1 : 0,
-			heal : opts.bodyRatio.heal > 0 ? 1 : 0,
-			carry: 1,
-			move : 1,
-		};
-
-		const maxPartCost = opts.bodyRatio.heal ? BODYPART_COST[HEAL] : BODYPART_COST[MOVE];
-
-		let cost = BODYPART_COST[TOUGH] * bodyCounts.tough +
-				   BODYPART_COST[CARRY] * bodyCounts.carry +
-				   BODYPART_COST[HEAL] * bodyCounts.heal +
-				   BODYPART_COST[MOVE] * bodyCounts.move;
-
-		// Keep adding stuff until you run out of space on the body or out of energy capacity in the room
-		while (_.sum(bodyCounts) < MAX_CREEP_SIZE && cost <= colony.room.energyCapacityAvailable - maxPartCost) {
-			const nonMoveParts = _.sum(bodyCounts) - bodyCounts.move;
-			if (nonMoveParts >= partsPerMovePart * bodyCounts.move) {
-				bodyCounts.move++;
-				cost += BODYPART_COST[MOVE];
-			} else if (bodyCounts.tough < opts.maxParts.tough &&
-					   bodyCounts.tough / bodyCounts.carry < opts.bodyRatio.tough / opts.bodyRatio.carry) {
-				bodyCounts.tough++;
-				cost += BODYPART_COST[TOUGH];
-			} else if (bodyCounts.heal < opts.maxParts.heal &&
-					   bodyCounts.heal / bodyCounts.carry < opts.bodyRatio.heal / opts.bodyRatio.carry) {
-				bodyCounts.heal++;
-				cost += BODYPART_COST[HEAL];
-			} else {
-				bodyCounts.carry++;
-				cost += BODYPART_COST[CARRY];
-			}
-		}
+		const rootPart: PartNonMove = 'carry';
+		const partPriorities: PartNonMove[] = ['tough','heal'];
+		const bodyCounts = CombatCreepSetup.generateBodyCounts(colony, opts, moveRatio, rootPart, partPriorities);
 
 		const body = CombatCreepSetup.arrangeBodyParts(bodyCounts, opts);
 		const boosts = _.compact(_.values(availableBoosts)) as ResourceConstant[];
 		return {body: body, boosts: boosts};
 
 	}
-
-	// /**
-	//  * Creates a body for a zergling (melee attacker). Takes an object of possible options:
-	//  * - If opts.boosted is true, all parts are requested to be boosted
-	//  * - If opts.armored is true, a 3:1 attack:tough ratio will be used up to 10 tough parts
-	//  * - If opts.healing is true, up to 2 heal parts will be added
-	//  * - Specifying opts.bodyOpts may override any of the behaviors above
-	//  */
-	// static createZerglingBody(colony: Colony, opts: SimpleBodyOpts = {}): BodyGeneratorReturn {
-	// 	_.defaults(opts, {moveSpeed: 1, boosted: false, armored: false, healing: false, bodyOpts: {}});
-	// 	const zerglingBodyOpts: Full<BodyOpts> = {
-	// 		moveSpeed         : opts.moveSpeed || 1,
-	// 		putMoveFirstInBody: true,
-	// 		bodyRatio         : {attack: 30, tough: opts.armored ? 10 : 0, heal: opts.healing ? 2 : 0},
-	// 		maxParts          : {attack: 50, tough: 10, heal: 2},
-	// 		boosts            : opts.boosted ? ['attack', 'tough', 'heal', 'move'] : [],
-	// 	};
-	// 	const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, zerglingBodyOpts);
-	// 	return CombatCreepSetup.generateMeleeAttackerBody(colony, bodyOpts);
-	// }
-	//
-	// /**
-	//  * Creates a body for a hydralisk (ranged attacker which may have some healing). Possible optoins:
-	//  * - If opts.boosted is true, all parts are requested to be boosted
-	//  * - If opts.armored is true, a 4:1 ranged:tough ratio will be used up to 8 tough parts
-	//  * - If opts.healing is true (default), a 3:1 ranged:heal ratio will be used up to 10 heal parts
-	//  * - Specifying opts.bodyOpts may override any of the behaviors above
-	//  */
-	// static createHydraliskBody(colony: Colony, opts: SimpleBodyOpts = {}): BodyGeneratorReturn {
-	// 	_.defaults(opts, {moveSpeed: 1, boosted: false, armored: false, healing: true, bodyOpts: {}});
-	// 	const hydraliskBodyOpts: Full<BodyOpts> = {
-	// 		moveSpeed         : opts.moveSpeed || 1,
-	// 		putMoveFirstInBody: false,
-	// 		bodyRatio         : {ranged: 12, tough: opts.armored ? 3 : 0, heal: opts.healing ? 4 : 0},
-	// 		maxParts          : {ranged: 30, tough: 8, heal: 10},
-	// 		boosts            : opts.boosted ? ['ranged', 'tough', 'heal', 'move'] : [],
-	// 	};
-	// 	const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, hydraliskBodyOpts);
-	// 	return CombatCreepSetup.generateRangedAttackerBody(colony, bodyOpts);
-	// }
-	//
-	// /**
-	//  * Creates a body for a transfuser (healer which may have some ranged attack parts). Possible optoins:
-	//  * - If opts.boosted is true, all parts are requested to be boosted
-	//  * - If opts.armored is true, a 4:1 heal:tough ratio will be used up to 8 tough parts
-	//  * - If opts.withRanged is true, a 3:1 heal:ranged ratio will be used up to 10 ranged parts
-	//  * - Specifying opts.bodyOpts may override any of the behaviors above
-	//  */
-	// static createTransfuserBody(colony: Colony, opts: SimpleBodyOpts = {}): BodyGeneratorReturn {
-	// 	_.defaults(opts, {moveSpeed: 1, boosted: false, armored: false, withRanged: false, bodyOpts: {}});
-	// 	const healerBodyOpts: Full<BodyOpts> = {
-	// 		moveSpeed         : opts.moveSpeed || 1,
-	// 		putMoveFirstInBody: false,
-	// 		bodyRatio         : {heal: 12, tough: opts.armored ? 3 : 0, ranged: opts.withRanged ? 4 : 0},
-	// 		maxParts          : {heal: 30, tough: 8, ranged: 10},
-	// 		boosts            : opts.boosted ? ['ranged', 'tough', 'heal', 'move'] : [],
-	// 	};
-	// 	const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, healerBodyOpts);
-	// 	return CombatCreepSetup.generateHealerBody(colony, bodyOpts);
-	// }
-	//
-	// /**
-	//  * Creates a body for a lurker (dismantler which may have some ranged or healing). Possible optoins:
-	//  * - If opts.boosted is true, all parts are requested to be boosted
-	//  * - If opts.armored is true, a 4:1 work:tough ratio will be used up to 10 tough parts
-	//  * - If opts.withRanged is true, a 3:1 work:ranged ratoi will be used up to 10 ranged parts
-	//  * - If opts.healing is true, up to 2 heal parts may be added
-	//  * - Specifying opts.bodyOpts may override any of the behaviors above
-	//  */
-	// static createLurkerBody(colony: Colony, opts: SimpleBodyOpts = {}): BodyGeneratorReturn {
-	// 	_.defaults(opts, {moveSpeed: 1, boosted: false, armored: false, healing: false, bodyOpts: {}});
-	// 	const lurkerBodyOptions: Full<BodyOpts> = {
-	// 		moveSpeed         : opts.moveSpeed || 1,
-	// 		putMoveFirstInBody: false,
-	// 		bodyRatio         : {work: 24, tough: opts.armored ? 6 : 0, ranged: opts.withRanged ? 8 : 0, heal: 2},
-	// 		maxParts          : {work: 30, tough: 10, ranged: 10, heal: 2},
-	// 		boosts            : opts.boosted ? ['dismantle', 'ranged', 'tough', 'heal', 'move'] : [],
-	// 	};
-	// 	const bodyOpts: Full<BodyOpts> = _.defaults(opts.bodyOpts || {}, lurkerBodyOptions);
-	// 	return CombatCreepSetup.generateDismantlerBody(colony, bodyOpts);
-	// }
 
 }
 
