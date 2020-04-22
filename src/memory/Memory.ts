@@ -291,14 +291,18 @@ export class Mem {
 
 	private static cleanConstructionSites() {
 		// Remove ancient construction sites
-		if (Game.time % 10 == 0) {
-			const CONSTRUCTION_SITE_TIMEOUT = 50000;
+		if (Game.time % 20 == 0) {
+			const CONSTRUCTION_SITE_TIMEOUT = 100000;			// sites time out after this long
+			const UNBUILT_CONSTRUCTION_SITE_TIMEOUT = 1000;		// sites that haven't made any progress time out
 			// Add constructionSites to memory and remove really old ones
 			for (const id in Game.constructionSites) {
 				const site = Game.constructionSites[id];
 				if (!Memory.constructionSites[id]) {
 					Memory.constructionSites[id] = Game.time;
-				} else if (Game.time - Memory.constructionSites[id] > CONSTRUCTION_SITE_TIMEOUT) {
+				} else if (Game.time - Memory.constructionSites[id] >= CONSTRUCTION_SITE_TIMEOUT) {
+					site.remove();
+				} else if (site.progress == 0 &&
+						   Game.time - Memory.constructionSites[id] >= UNBUILT_CONSTRUCTION_SITE_TIMEOUT) {
 					site.remove();
 				}
 				// Remove duplicate construction sites that get placed on top of existing structures due to caching
