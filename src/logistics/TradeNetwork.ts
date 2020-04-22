@@ -115,7 +115,10 @@ export class TraderJoe implements ITradeNetwork {
 			timeout: 250,
 		},
 		market: {
-			credits: {
+			resources: {
+				allowBuyT1T2boosts: false, // the market for T1/T2 boosts is unstable; disallow buying this by default
+			},
+			credits  : {
 				mustSellDirectBelow    : 5000,
 				canPlaceSellOrdersAbove: 2000,
 				canBuyAbove            : 10000,
@@ -123,7 +126,7 @@ export class TraderJoe implements ITradeNetwork {
 				canBuyBoostsAbove      : 5 * Math.max(RESERVE_CREDITS, 1e5),
 				canBuyEnergyAbove      : 10 * Math.max(RESERVE_CREDITS, 1e5),
 			},
-			orders : {
+			orders   : {
 				timeout               : 500000, // Remove orders after this many ticks if remaining amount < cleanupAmount
 				cleanupAmount         : 100,	  // RemainingAmount threshold to remove expiring orders
 				maxEnergySellOrders   : 5,
@@ -294,7 +297,6 @@ export class TraderJoe implements ITradeNetwork {
 	// 	}
 	// 	// this.notify(msg); // use the transactions from the ledger instead
 	// }
-
 
 
 	/**

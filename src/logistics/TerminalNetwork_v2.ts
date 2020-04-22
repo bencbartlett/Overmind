@@ -869,9 +869,14 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			if (Abathur.isIntermediateReactant(resource) || resource == RESOURCE_GHODIUM) {
 				return false; // just make these yourself, you lazy fuck
 			}
-			if (Abathur.isBoost(resource) &&
-				Game.market.credits < TraderJoe.settings.market.credits.canBuyBoostsAbove) {
-				return false;
+			if (Abathur.isBoost(resource)) {
+				if (Game.market.credits < TraderJoe.settings.market.credits.canBuyBoostsAbove) {
+					return false;
+				}
+				const boostTier = Abathur.getBoostTier(resource);
+				if (boostTier != 'T3' && !TraderJoe.settings.market.resources.allowBuyT1T2boosts) {
+					return false;
+				}
 			}
 			if (opts.requestType == 'passive' && !Abathur.isBaseMineral(resource)) {
 				return false; // can only buy base minerals for passive requests
