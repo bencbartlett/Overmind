@@ -111,7 +111,8 @@ export class ExtractorOverlord extends Overlord {
 	}
 
 	private handleDrone(drone: Zerg) {
-		if (drone.flee()) {
+		// Stay safe out there!
+		if (drone.avoidDanger({timer: 10, dropEnergy: true})) {
 			return;
 		}
 		// Ensure you are in the assigned room

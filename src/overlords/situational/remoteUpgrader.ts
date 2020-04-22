@@ -84,7 +84,7 @@ export class RemoteUpgradingOverlord extends Overlord {
 		if (this.childColony.terminal && this.childColony.terminal.my) {
 			return 0; // don't need this once you have a terminal
 		}
-		const roundTripDistance = .2 /*TODO*/ * this.directive.distanceFromColony.terrainWeighted;
+		const roundTripDistance = 1.5 /* todo */ * this.directive.distanceFromColony.terrainWeighted;
 		const energyPerTick = _.sum(this.upgraders,
 									upgrader => UPGRADE_CONTROLLER_POWER * upgrader.getActiveBodyparts(WORK));
 		return energyPerTick * roundTripDistance;

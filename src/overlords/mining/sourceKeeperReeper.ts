@@ -70,18 +70,22 @@ export class SourceReaperOverlord extends CombatOverlord {
 
 	private handleReaper(reaper: CombatZerg) {
 
+		const moveOpts: any = {pathOpts: {avoidSK: false}};
+
 		// Go to keeper room
 		if (!this.targetLair || !this.room || reaper.room != this.room || reaper.pos.isEdge) {
 			// log.debugCreep(reaper, `Going to room!`);
 			reaper.healSelfIfPossible();
-			reaper.goTo(this.pos, {pathOpts: {avoidSK: false}});
+			reaper.goTo(this.pos, moveOpts);
 			return;
 		}
+
+		// Once you're safely in the room, block off the exits
+		moveOpts.pathOpts.blockExits = true;
 
 		const nonStrongholdInvaders = this.room.invaders.filter(creep => !creep.inRampart);
 		if (nonStrongholdInvaders.length > 0) {
 			// Handle invader actions
-			// log.debugCreep(reaper, `Handling invader actions!`);
 			if (reaper.hits >= reaper.hitsMax * .5) {
 				const result = reaper.autoMelee(this.room.invaders);
 				if (result == undefined) { // didn't attack
@@ -92,8 +96,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 			}
 			// Kite around ranged invaders until a defender arrives
 			if (this.room.invaders.length > 2 && _.filter(this.defenders, def => def.room == this.room).length == 0) {
-				reaper.kite(_.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0),
-							{pathOpts: {avoidSK: false}});
+				reaper.kite(_.filter(this.room.hostiles, h => h.getActiveBodyparts(RANGED_ATTACK) > 0), moveOpts);
 				reaper.healSelfIfPossible();
 			}
 			// If defender is already here or a small invasion
@@ -106,7 +109,6 @@ export class SourceReaperOverlord extends CombatOverlord {
 				}
 			}
 		} else {
-			// log.debugCreep(reaper, `Standard keeperReaper actions`);
 			// Standard keeperReaper actions
 			const nearestHostile = reaper.pos.findClosestByRange(this.room.hostiles) as Creep;
 			if (nearestHostile && reaper.pos.isNearTo(nearestHostile)) {
@@ -117,9 +119,9 @@ export class SourceReaperOverlord extends CombatOverlord {
 				if (keeper) { // attack the source keeper
 					// stop and heal at range 4 if needed
 					const approachRange = (reaper.hits == reaper.hitsMax || reaper.pos.getRangeTo(keeper) <= 3) ? 1 : 4;
-					reaper.goTo(keeper, {range: approachRange, pathOpts: {avoidSK: false}});
+					reaper.goTo(keeper, {range: approachRange, pathOpts: moveOpts.pathOpts});
 				} else { // travel to next lair
-					reaper.goTo(this.targetLair, {range: 1, pathOpts: {avoidSK: false}});
+					reaper.goTo(this.targetLair, {range: 1, pathOpts: moveOpts.pathOpts});
 				}
 			}
 			reaper.healSelfIfPossible();
@@ -141,7 +143,6 @@ export class SourceReaperOverlord extends CombatOverlord {
 			// Handle invader actions
 			debug(defender, `AutoCombat`);
 			defender.autoSkirmish(this.room.name);
-
 		} else {
 			debug(defender, `Standard duty`);
 			const minKeepersToHelp = this.reapers.length == 0 ? 1 : 2;
@@ -156,8 +157,9 @@ export class SourceReaperOverlord extends CombatOverlord {
 						movingTarget: defender.pos.getRangeTo(reaper) > 8,
 						repathChance: 0.1,
 						pathOpts    : {
-							maxRooms: 1,
-							avoidSK : false,
+							maxRooms  : 1,
+							avoidSK   : false,
+							blockExits: true,
 						}
 					});
 				} else {
@@ -166,12 +168,27 @@ export class SourceReaperOverlord extends CombatOverlord {
 						const range = defender.pos.getRangeTo(keeper);
 						const keepAtRange = defender.hits < defender.hitsMax * .9 ? 4 : 3;
 						if (range < keepAtRange) {
-							defender.kite(this.room.hostiles, {range: keepAtRange, pathOpts: {avoidSK: false}});
+							defender.kite(this.room.hostiles, {
+								range: keepAtRange, pathOpts: {
+									avoidSK   : false,
+									blockExits: true,
+								}
+							});
 						} else if (range > keepAtRange) {
-							defender.goTo(keeper, {range: keepAtRange, pathOpts: {maxRooms: 1, avoidSK: false}});
+							defender.goTo(keeper, {
+								range: keepAtRange, pathOpts: {
+									avoidSK   : false,
+									blockExits: true
+								}
+							});
 						}
 					} else { // travel to next lair
-						defender.goTo(this.targetLair, {range: 5, pathOpts: {avoidSK: false}});
+						defender.goTo(this.targetLair, {
+							range: 5, pathOpts: {
+								avoidSK   : false,
+								blockExits: true
+							}
+						});
 					}
 				}
 			} else {

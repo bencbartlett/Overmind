@@ -202,7 +202,8 @@ export class MatrixLib {
 					MatrixLib.blockAfterMaxPooling(clonedMatrix, room.find(FIND_CREEPS),
 												   opts.swarmWidth, opts.swarmHeight);
 				} else {
-					MatrixLib.block(clonedMatrix, room.find(FIND_CREEPS));
+					// use soft-block to avoid creeps but not result in unpathable errors
+					MatrixLib.softBlock(clonedMatrix, room.find(FIND_CREEPS), opts.roomName,100);
 				}
 			} else {
 				// Can't block creeps without vision

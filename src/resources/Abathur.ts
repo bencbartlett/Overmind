@@ -18,55 +18,58 @@ import {
 } from './map_resources';
 
 export const REACTION_PRIORITIES = [
+
+	// T1 Boosts
 	BOOST_TIERS.attack.T1,
 	BOOST_TIERS.heal.T1,
 	BOOST_TIERS.ranged.T1,
 	BOOST_TIERS.move.T1,
 	BOOST_TIERS.construct.T1,
 	BOOST_TIERS.dismantle.T1,
-	// BOOST_TIERS.carry.T1, // not used yet
+	// BOOST_TIERS.carry.T1,
 	// BOOST_TIERS.harvest.T1, // not used yet
 	BOOST_TIERS.tough.T1,
 	// BOOST_TIERS.upgrade.T1,
 
+	// Reaction intermediates + ghodium
 	RESOURCE_GHODIUM,
-
 	RESOURCE_ZYNTHIUM_KEANITE,
 	RESOURCE_UTRIUM_LEMERGITE,
 	RESOURCE_HYDROXIDE,
 
+	// T2 Boosts
 	BOOST_TIERS.attack.T2,
 	BOOST_TIERS.heal.T2,
 	BOOST_TIERS.ranged.T2,
 	BOOST_TIERS.move.T2,
 	// BOOST_TIERS.construct.T2,
 	BOOST_TIERS.dismantle.T2,
-	// BOOST_TIERS.carry.T2, // not used yet
+	// BOOST_TIERS.carry.T2,
 	// BOOST_TIERS.harvest.T2, // not used yet
 	BOOST_TIERS.tough.T2,
 	// BOOST_TIERS.upgrade.T2,
 
+	// T3 Boosts
 	BOOST_TIERS.attack.T3,
 	BOOST_TIERS.heal.T3,
 	BOOST_TIERS.ranged.T3,
 	BOOST_TIERS.move.T3,
 	// BOOST_TIERS.construct.T3,
 	BOOST_TIERS.dismantle.T3,
-	// BOOST_TIERS.carry.T3, // not used yet
+	// BOOST_TIERS.carry.T3,
 	// BOOST_TIERS.harvest.T3, // not used yet
 	BOOST_TIERS.tough.T3,
 	// BOOST_TIERS.upgrade.T3,
 
+	// Other boosts I don't use as much
 	BOOST_TIERS.construct.T2,
 	BOOST_TIERS.construct.T3,
-
-	BOOST_TIERS.upgrade.T1,
-	BOOST_TIERS.upgrade.T2,
-	BOOST_TIERS.upgrade.T3,
-
 	BOOST_TIERS.carry.T1,
 	BOOST_TIERS.carry.T2,
 	BOOST_TIERS.carry.T3,
+	BOOST_TIERS.upgrade.T1,
+	BOOST_TIERS.upgrade.T2,
+	BOOST_TIERS.upgrade.T3,
 ];
 
 export const priorityStockAmounts: { [key: string]: number } = {
@@ -125,42 +128,11 @@ export const baseStockAmounts: { [key: string]: number } = {
 	[RESOURCE_OXYGEN]   : 5000,
 	[RESOURCE_HYDROGEN] : 5000
 };
-//
-// // Compute priority and wanted stock
-// const _priorityStock: Reaction[] = [];
-// for (const resourceType in priorityStockAmounts) {
-// 	const stock = {
-// 		mineralType: resourceType,
-// 		amount     : priorityStockAmounts[resourceType]
-// 	};
-// 	_priorityStock.push(stock);
-// }
-//
-// const _wantedStock: Reaction[] = [];
-// for (const resourceType in wantedStockAmounts) {
-// 	const stock = {
-// 		mineralType: resourceType,
-// 		amount     : wantedStockAmounts[resourceType]
-// 	};
-// 	_wantedStock.push(stock);
-// }
-//
-//
-// export const priorityStock = _priorityStock;
-// export const wantedStock = _wantedStock;
 
 export interface Reaction {
 	mineralType: string;
 	amount: number;
 }
-
-// interface AbathurMemory {
-// 	sleepUntil: number;
-// }
-//
-// const AbathurMemoryDefaults = {
-// 	sleepUntil: 0
-// };
 
 /**
  * Abathur is responsible for the evolution of the swarm and directs global production of minerals. Abathur likes
@@ -169,30 +141,10 @@ export interface Reaction {
 @profile
 export class Abathur {
 
-	// colony: Colony;
-	// memory: AbathurMemory;
-	// priorityStock: Reaction[];
-	// wantedStock: Reaction[];
-
-	// private _globalAssets: { [resourceType: string]: number };
 
 	static settings = {
-		// minBatchSize: 800,	// anything less than this wastes time
-		// maxBatchSize: 1600, // manager/queen carry capacity
 		batchSize: 1600,
-		// sleepTime: 100,  // sleep for this many ticks once you can't make anything
 	};
-
-	// constructor() {
-	// 	// this.colony = colony;
-	// 	// this.memory = Mem.wrap(this.colony.memory, 'abathur', AbathurMemoryDefaults);
-	// 	this.priorityStock = priorityStock;
-	// 	this.wantedStock = wantedStock;
-	// }
-
-	// refresh() {
-	// 	this.memory = Mem.wrap(this.colony.memory, 'abathur', AbathurMemoryDefaults);
-	// }
 
 	// Helper methods for identifying different types of resources
 
@@ -296,41 +248,37 @@ export class Abathur {
 										 resource => ((<any>REACTION_TIME)[resource] || Infinity) <= 30);
 		}
 
-		const ingredientsUnavailable: {[resource: string]: boolean} = {}; // track what we can't make to save CPU
+		// Want to build up a stockpile of high tier boosts, but also to maintain and utilize a stockpile of the
+		// cheaper stuff before we start building up higher tier boosts, which have declining returns
 		let nextTargetResource: ResourceConstant | undefined;
+		const ingredientsUnavailable: { [resource: string]: boolean } = {}; // track what we can't make to save CPU
+		const maxAmountOfEachBoostPerColony = 50000;
+		const maxBatches = Math.ceil(maxAmountOfEachBoostPerColony / BATCH_SIZE);
+		for (const batchNum of _.range(1, maxBatches)) {
 
-		// Want to build up a stockpile of boosts but we want to maintain and utilize a stockpile of the cheaper stuff
-		// before we start building up higher tier boosts
-		for (const n of _.range(1, 50)) {
 			nextTargetResource = _.find(possibleReactions, resource => {
 
 				// If we've already figured out we can't make this in a previous pass then skip it
-				if (ingredientsUnavailable[resource]) {
-					return false;
-				}
+				if (ingredientsUnavailable[resource]) return false;
 
 				const tier = Abathur.getBoostTier(resource);
-				// Get 3 lab's worth of a global stockpile before you start making T3 boosts
-				if (tier == 'T3' && n * BATCH_SIZE < 3 * LAB_MINERAL_CAPACITY) {
-					return false;
-				}
-
-				// Get 2 lab's worth of a global stockpile before you start making T2 boosts
-				if (tier == 'T2' && n * BATCH_SIZE < 2 * LAB_MINERAL_CAPACITY) {
-					return false;
-				}
+				// Get 2 labs' worth of a stockpile before you start making T2 boosts
+				if (tier == 'T2' && batchNum * BATCH_SIZE < 2 * LAB_MINERAL_CAPACITY) return false;
+				// Get 3 labs' worth of a stockpile before you start making T3 boosts
+				if (tier == 'T3' && batchNum * BATCH_SIZE < 3 * LAB_MINERAL_CAPACITY) return false;
 
 				// Don't need to stockpile a ton of reaction intermediates or ghodium
 				if (resource == RESOURCE_GHODIUM || Abathur.isIntermediateReactant(resource)) {
+					// If the colony already has more of this this intermediate than it wants, skip it
 					if (colony.assets[resource] > Overmind.terminalNetwork.thresholds(colony, resource).target) {
 						return false;
 					}
 				}
 
-				// Otherwise, we're allowed to make more of this
-				if (globalAssets[resource] / numColonies < (n - 3) * BATCH_SIZE || // is there a global shortage?
-					colony.assets[resource] < n * BATCH_SIZE) { // is there a local shortage?
-
+				// Otherwise, we're allowed to make more of this, so figure out what we should and can make
+				const globalShortage = globalAssets[resource] / numColonies < (batchNum - 3) * BATCH_SIZE;
+				const localShortage = colony.assets[resource] < batchNum * BATCH_SIZE;
+				if (globalShortage || localShortage) {
 					// Do we have enough ingredients (or can we obtain enough) to make this step of the reaction?
 					const [reagent1, reagent2] = REAGENTS[resource];
 					const reagent1Available = colony.assets[reagent1] >= BATCH_SIZE ||
@@ -340,16 +288,16 @@ export class Abathur {
 					if (reagent1Available && reagent2Available) {
 						return true;
 					} else {
-						ingredientsUnavailable[resource] = true;
+						ingredientsUnavailable[resource] = true; // canObtainResource() is expensive; cache it
 					}
-
 				}
 
 				// We can't make this thing :(
 				return false;
-
 			});
+
 			if (nextTargetResource) break;
+
 		}
 
 		if (nextTargetResource) {

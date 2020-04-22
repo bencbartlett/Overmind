@@ -466,7 +466,7 @@ export class Zerg extends AnyZerg {
 		if (!this.overlord) {
 			return false;
 		}
-		if ((this.ticksToLive||this.lifetime) < MIN_LIFETIME_FOR_BOOST * this.lifetime) {
+		if ((this.ticksToLive || this.lifetime) < MIN_LIFETIME_FOR_BOOST * this.lifetime) {
 			return false;
 		}
 		return !_.isEmpty(this.getNeededBoosts());
@@ -477,7 +477,7 @@ export class Zerg extends AnyZerg {
 	 * fully boosted for a given resource type, the entry is removed from memory.needBoosts.
 	 */
 	getNeededBoosts(): { [boostResource: string]: number } {
-		if (!this._neededBoosts) {
+		if (!this._neededBoosts) { // this is cleared each tick
 			if (this.memory.needBoosts && this.memory.needBoosts.length > 0) {
 
 				const neededBoosts: { [boostResource: string]: number } = {};

@@ -41,6 +41,7 @@ export class ReservingOverlord extends Overlord {
 	}
 
 	private handleReserver(reserver: Zerg): void {
+		if (reserver.avoidDanger()) return;
 		if (reserver.room == this.room && !reserver.pos.isEdge) {
 			// If reserver is in the room and not on exit tile
 			if (!this.room.controller!.signedByMe) {

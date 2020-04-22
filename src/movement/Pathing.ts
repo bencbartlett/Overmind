@@ -71,7 +71,7 @@ export const getDefaultPathOptions: () => PathOptions = () => ({
 	ignoreCreeps        : true,
 	maxOps              : DEFAULT_MAXOPS,
 	maxRooms            : 20,
-	avoidSK             : false,
+	avoidSK             : true,
 	allowPortals        : true,
 	usePortalThreshold  : 10,
 	portalsMustBeInRange: 6,
