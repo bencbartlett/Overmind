@@ -16,24 +16,9 @@
   "gnetId": null,
   "graphTooltip": 1,
   "id": 2135,
-  "iteration": 1586292878332,
+  "iteration": 1587493502114,
   "links": [],
   "panels": [
-    {
-      "collapsed": false,
-      "datasource": null,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "id": 81,
-      "panels": [],
-      "repeat": null,
-      "title": "CPU",
-      "type": "row"
-    },
     {
       "cacheTimeout": null,
       "colorBackground": false,
@@ -58,7 +43,7 @@
         "h": 7,
         "w": 6,
         "x": 0,
-        "y": 1
+        "y": 0
       },
       "id": 18,
       "interval": null,
@@ -139,7 +124,7 @@
         "h": 7,
         "w": 18,
         "x": 6,
-        "y": 1
+        "y": 0
       },
       "height": "",
       "hiddenSeries": false,
@@ -216,7 +201,7 @@
           "hide": false,
           "refCount": 0,
           "refId": "C",
-          "target": "alias(movingAverage(screeps.$User.cpu.getUsed, '5min'), 'Average CPU')"
+          "target": "alias(movingAverage(screeps.$User.cpu.getUsed, '1hour'), 'Average CPU')"
         },
         {
           "refCount": 0,
@@ -305,7 +290,7 @@
         "h": 5,
         "w": 3,
         "x": 0,
-        "y": 8
+        "y": 7
       },
       "id": 25,
       "interval": null,
@@ -387,7 +372,7 @@
         "h": 5,
         "w": 3,
         "x": 3,
-        "y": 8
+        "y": 7
       },
       "id": 84,
       "interval": null,
@@ -447,6 +432,90 @@
       "valueName": "current"
     },
     {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "rgba(50, 172, 45, 0.97)",
+        "rgba(237, 129, 40, 0.89)",
+        "rgba(245, 54, 54, 0.9)"
+      ],
+      "datasource": "ScreepsPlus-Graphite",
+      "decimals": 0,
+      "editable": true,
+      "error": false,
+      "format": "none",
+      "gauge": {
+        "maxValue": 2048000,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 6,
+        "y": 7
+      },
+      "id": 137,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "hide": false,
+          "refCount": 0,
+          "refId": "A",
+          "target": "screeps.$User.persistent.empireAge"
+        }
+      ],
+      "thresholds": "1433600,1740800",
+      "title": "Empire Age",
+      "type": "singlestat",
+      "valueFontSize": "70%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
+    },
+    {
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
@@ -456,9 +525,9 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 5,
-        "w": 18,
-        "x": 6,
-        "y": 8
+        "w": 15,
+        "x": 9,
+        "y": 7
       },
       "hiddenSeries": false,
       "id": 115,
@@ -550,19 +619,88 @@
       }
     },
     {
-      "collapsed": false,
-      "datasource": null,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 13
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "rgba(50, 172, 45, 0.97)",
+        "rgba(237, 129, 40, 0.89)",
+        "rgba(245, 54, 54, 0.9)"
+      ],
+      "datasource": "ScreepsPlus-Graphite",
+      "decimals": 0,
+      "editable": true,
+      "error": false,
+      "format": "none",
+      "gauge": {
+        "maxValue": 2048000,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
       },
-      "id": 82,
-      "panels": [],
-      "repeat": null,
-      "title": "GCL",
-      "type": "row"
+      "gridPos": {
+        "h": 2,
+        "w": 3,
+        "x": 6,
+        "y": 10
+      },
+      "id": 138,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "hide": false,
+          "refCount": 0,
+          "refId": "A",
+          "target": "screeps.$User.persistent.build"
+        }
+      ],
+      "thresholds": "1433600,1740800",
+      "title": "Build #",
+      "type": "singlestat",
+      "valueFontSize": "70%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
     },
     {
       "cacheTimeout": null,
@@ -587,9 +725,9 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 5,
+        "w": 6,
         "x": 0,
-        "y": 14
+        "y": 12
       },
       "height": "",
       "id": 59,
@@ -681,8 +819,8 @@
       "gridPos": {
         "h": 3,
         "w": 3,
-        "x": 5,
-        "y": 14
+        "x": 6,
+        "y": 12
       },
       "id": 92,
       "interval": null,
@@ -752,9 +890,9 @@
       "grid": {},
       "gridPos": {
         "h": 7,
-        "w": 12,
-        "x": 8,
-        "y": 14
+        "w": 11,
+        "x": 9,
+        "y": 12
       },
       "hiddenSeries": false,
       "id": 50,
@@ -877,7 +1015,7 @@
         "h": 7,
         "w": 4,
         "x": 20,
-        "y": 14
+        "y": 12
       },
       "id": 63,
       "interval": null,
@@ -929,8 +1067,8 @@
       "gridPos": {
         "h": 4,
         "w": 3,
-        "x": 5,
-        "y": 17
+        "x": 6,
+        "y": 15
       },
       "id": 60,
       "interval": null,
@@ -1019,7 +1157,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 21
+        "y": 19
       },
       "id": 83,
       "panels": [],
@@ -1040,7 +1178,7 @@
         "h": 21,
         "w": 3,
         "x": 0,
-        "y": 22
+        "y": 20
       },
       "id": 119,
       "links": [],
@@ -1125,7 +1263,7 @@
         "h": 7,
         "w": 9,
         "x": 3,
-        "y": 22
+        "y": 20
       },
       "hiddenSeries": false,
       "id": 64,
@@ -1218,7 +1356,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 22
+        "y": 20
       },
       "hiddenSeries": false,
       "id": 61,
@@ -1317,7 +1455,7 @@
         "h": 7,
         "w": 9,
         "x": 3,
-        "y": 29
+        "y": 27
       },
       "hiddenSeries": false,
       "id": 107,
@@ -1411,7 +1549,7 @@
         "h": 7,
         "w": 6,
         "x": 12,
-        "y": 29
+        "y": 27
       },
       "hiddenSeries": false,
       "id": 117,
@@ -1508,7 +1646,7 @@
         "h": 7,
         "w": 6,
         "x": 18,
-        "y": 29
+        "y": 27
       },
       "hiddenSeries": false,
       "id": 62,
@@ -1601,7 +1739,7 @@
         "h": 7,
         "w": 9,
         "x": 3,
-        "y": 36
+        "y": 34
       },
       "hiddenSeries": false,
       "id": 106,
@@ -1701,7 +1839,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 36
+        "y": 34
       },
       "hiddenSeries": false,
       "id": 124,
@@ -1790,7 +1928,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 43
+        "y": 41
       },
       "id": 88,
       "panels": [],
@@ -1798,106 +1936,168 @@
       "type": "row"
     },
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
       "datasource": "ScreepsPlus-Graphite",
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 16,
-        "w": 7,
-        "x": 0,
-        "y": 44
-      },
-      "hiddenSeries": false,
-      "id": 111,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": false,
-        "hideEmpty": true,
-        "hideZero": true,
-        "max": false,
-        "min": false,
-        "rightSide": true,
+      "decimals": 1,
+      "format": "short",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
         "show": false,
-        "total": false,
-        "values": false
+        "thresholdLabels": false,
+        "thresholdMarkers": true
       },
-      "lines": true,
-      "linewidth": 1,
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 42
+      },
+      "id": 135,
+      "interval": null,
       "links": [],
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true,
+        "ymin": 0
       },
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": true,
-      "steppedLine": false,
+      "tableColumn": "",
       "targets": [
         {
-          "hide": true,
-          "refCount": -1,
           "refId": "A",
-          "target": "groupByNodes(keepLastValue(screeps.$User.colonies.*.assets.*, 500), \"sum\", 5)",
-          "textEditor": true
-        },
-        {
-          "hide": false,
-          "refCount": 0,
-          "refId": "B",
-          "target": "exclude(aliasByNode(#A, 0), \"energy\")",
-          "targetFull": "exclude(aliasByNode(groupByNodes(keepLastValue(screeps.$User.colonies.*.assets.*, 500), \"sum\", 5), 0), \"energy\")",
+          "target": "keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.assets.energy))",
           "textEditor": true
         }
       ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Global Assets",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
+      "thresholds": "",
+      "title": "Total Energy",
+      "type": "singlestat",
+      "valueFontSize": "100%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": "ScreepsPlus-Graphite",
+      "decimals": 1,
+      "format": "short",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
         "show": false,
-        "values": []
+        "thresholdLabels": false,
+        "thresholdMarkers": true
       },
-      "yaxes": [
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 42
+      },
+      "id": 136,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
         {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
+          "name": "value to text",
+          "value": 1
         },
         {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
+          "name": "range to text",
+          "value": 2
         }
       ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true,
+        "ymin": 0
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "refId": "A",
+          "target": "keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.assets.power))",
+          "textEditor": true
+        }
+      ],
+      "thresholds": "",
+      "title": "Total Power",
+      "type": "singlestat",
+      "valueFontSize": "100%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
     },
     {
       "aliasColors": {},
@@ -1910,8 +2110,8 @@
       "gridPos": {
         "h": 4,
         "w": 6,
-        "x": 7,
-        "y": 44
+        "x": 8,
+        "y": 42
       },
       "hiddenSeries": false,
       "id": 130,
@@ -1920,7 +2120,7 @@
         "avg": false,
         "current": false,
         "hideEmpty": true,
-        "hideZero": true,
+        "hideZero": false,
         "max": false,
         "min": false,
         "rightSide": true,
@@ -1948,15 +2148,15 @@
           "hide": true,
           "refCount": -1,
           "refId": "A",
-          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5)",
-          "textEditor": false
+          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5)",
+          "textEditor": true
         },
         {
           "hide": false,
           "refCount": 0,
           "refId": "B",
           "target": "aliasByNode(grep(#A, '^(H|O|U|K|L|Z|X|OH|ZK|UL|G)$'), 0)",
-          "targetFull": "aliasByNode(grep(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5), '^(H|O|U|K|L|Z|X|OH|ZK|UL|G)$'), 0)",
+          "targetFull": "aliasByNode(grep(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5), '^(H|O|U|K|L|Z|X|OH|ZK|UL|G)$'), 0)",
           "textEditor": true
         }
       ],
@@ -2011,9 +2211,9 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 4,
-        "w": 11,
-        "x": 13,
-        "y": 44
+        "w": 10,
+        "x": 14,
+        "y": 42
       },
       "hiddenSeries": false,
       "id": 125,
@@ -2022,7 +2222,7 @@
         "avg": false,
         "current": false,
         "hideEmpty": true,
-        "hideZero": true,
+        "hideZero": false,
         "max": false,
         "min": false,
         "rightSide": true,
@@ -2050,7 +2250,7 @@
           "hide": true,
           "refCount": -1,
           "refId": "A",
-          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5)",
+          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5)",
           "textEditor": false
         },
         {
@@ -2058,7 +2258,7 @@
           "refCount": 0,
           "refId": "B",
           "target": "aliasByNode(movingAverage(derivative(grep(#A, '^(|H|O|U|K|L|Z|X)$')), '1hour'), 0)",
-          "targetFull": "aliasByNode(movingAverage(derivative(grep(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5), '^(|H|O|U|K|L|Z|X)$')), '1hour'), 0)",
+          "targetFull": "aliasByNode(movingAverage(derivative(grep(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5), '^(|H|O|U|K|L|Z|X)$')), '1hour'), 0)",
           "textEditor": true
         }
       ],
@@ -2109,13 +2309,115 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "ScreepsPlus-Graphite",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 12,
+        "w": 8,
+        "x": 0,
+        "y": 46
+      },
+      "hiddenSeries": false,
+      "id": 111,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "hideEmpty": true,
+        "hideZero": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "hide": true,
+          "refCount": -1,
+          "refId": "A",
+          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5)",
+          "textEditor": true
+        },
+        {
+          "hide": false,
+          "refCount": 0,
+          "refId": "B",
+          "target": "exclude(aliasByNode(#A, 0), '^(energy|power)$')",
+          "targetFull": "exclude(aliasByNode(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5), 0), '^(energy|power)$')",
+          "textEditor": true
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Global Assets",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": false,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "ScreepsPlus-Graphite",
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
         "h": 4,
         "w": 6,
-        "x": 7,
-        "y": 48
+        "x": 8,
+        "y": 46
       },
       "hiddenSeries": false,
       "id": 131,
@@ -2124,7 +2426,7 @@
         "avg": false,
         "current": false,
         "hideEmpty": true,
-        "hideZero": true,
+        "hideZero": false,
         "max": false,
         "min": false,
         "rightSide": true,
@@ -2152,15 +2454,15 @@
           "hide": true,
           "refCount": -1,
           "refId": "A",
-          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5)",
-          "textEditor": false
+          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5)",
+          "textEditor": true
         },
         {
           "hide": false,
           "refCount": 0,
           "refId": "B",
           "target": "aliasByNode(grep(#A, '^(UH|UO|KH|KO|LH|LO|ZH|ZO|GH|GO)$'), 0)",
-          "targetFull": "aliasByNode(grep(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5), '^(UH|UO|KH|KO|LH|LO|ZH|ZO|GH|GO)$'), 0)",
+          "targetFull": "aliasByNode(grep(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5), '^(UH|UO|KH|KO|LH|LO|ZH|ZO|GH|GO)$'), 0)",
           "textEditor": true
         }
       ],
@@ -2215,9 +2517,9 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 4,
-        "w": 11,
-        "x": 13,
-        "y": 48
+        "w": 10,
+        "x": 14,
+        "y": 46
       },
       "hiddenSeries": false,
       "id": 127,
@@ -2226,7 +2528,7 @@
         "avg": false,
         "current": false,
         "hideEmpty": true,
-        "hideZero": true,
+        "hideZero": false,
         "max": false,
         "min": false,
         "rightSide": true,
@@ -2254,7 +2556,7 @@
           "hide": true,
           "refCount": -1,
           "refId": "A",
-          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5)",
+          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5)",
           "textEditor": false
         },
         {
@@ -2262,7 +2564,7 @@
           "refCount": 0,
           "refId": "B",
           "target": "aliasByNode(movingAverage(derivative(grep(#A, '^(UH|UO|KH|KO|LH|LO|ZH|ZO|GH|GO)$')), '1hour'), 0)",
-          "targetFull": "aliasByNode(movingAverage(derivative(grep(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5), '^(UH|UO|KH|KO|LH|LO|ZH|ZO|GH|GO)$')), '1hour'), 0)",
+          "targetFull": "aliasByNode(movingAverage(derivative(grep(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5), '^(UH|UO|KH|KO|LH|LO|ZH|ZO|GH|GO)$')), '1hour'), 0)",
           "textEditor": true
         }
       ],
@@ -2318,8 +2620,8 @@
       "gridPos": {
         "h": 4,
         "w": 6,
-        "x": 7,
-        "y": 52
+        "x": 8,
+        "y": 50
       },
       "hiddenSeries": false,
       "id": 132,
@@ -2328,7 +2630,7 @@
         "avg": false,
         "current": false,
         "hideEmpty": true,
-        "hideZero": true,
+        "hideZero": false,
         "max": false,
         "min": false,
         "rightSide": true,
@@ -2356,15 +2658,15 @@
           "hide": true,
           "refCount": -1,
           "refId": "A",
-          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5)",
-          "textEditor": false
+          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5)",
+          "textEditor": true
         },
         {
           "hide": false,
           "refCount": 0,
           "refId": "B",
           "target": "aliasByNode(grep(#A, '^(UH2O|UHO2|KH2O|KHO2|LH2O|LHO2|ZH2O|ZHO2|GH2O|GHO2)$'), 0)",
-          "targetFull": "aliasByNode(grep(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5), '^(UH2O|UHO2|KH2O|KHO2|LH2O|LHO2|ZH2O|ZHO2|GH2O|GHO2)$'), 0)",
+          "targetFull": "aliasByNode(grep(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5), '^(UH2O|UHO2|KH2O|KHO2|LH2O|LHO2|ZH2O|ZHO2|GH2O|GHO2)$'), 0)",
           "textEditor": true
         }
       ],
@@ -2419,9 +2721,9 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 4,
-        "w": 11,
-        "x": 13,
-        "y": 52
+        "w": 10,
+        "x": 14,
+        "y": 50
       },
       "hiddenSeries": false,
       "id": 128,
@@ -2430,7 +2732,7 @@
         "avg": false,
         "current": false,
         "hideEmpty": true,
-        "hideZero": true,
+        "hideZero": false,
         "max": false,
         "min": false,
         "rightSide": true,
@@ -2458,7 +2760,7 @@
           "hide": true,
           "refCount": -1,
           "refId": "A",
-          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5)",
+          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5)",
           "textEditor": false
         },
         {
@@ -2466,7 +2768,7 @@
           "refCount": 0,
           "refId": "B",
           "target": "aliasByNode(movingAverage(derivative(grep(#A, '^(UH2O|UHO2|KH2O|KHO2|LH2O|LHO2|ZH2O|ZHO2|GH2O|GHO2)$')), '1hour'), 0)",
-          "targetFull": "aliasByNode(movingAverage(derivative(grep(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5), '^(UH2O|UHO2|KH2O|KHO2|LH2O|LHO2|ZH2O|ZHO2|GH2O|GHO2)$')), '1hour'), 0)",
+          "targetFull": "aliasByNode(movingAverage(derivative(grep(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5), '^(UH2O|UHO2|KH2O|KHO2|LH2O|LHO2|ZH2O|ZHO2|GH2O|GHO2)$')), '1hour'), 0)",
           "textEditor": true
         }
       ],
@@ -2522,8 +2824,8 @@
       "gridPos": {
         "h": 4,
         "w": 6,
-        "x": 7,
-        "y": 56
+        "x": 8,
+        "y": 54
       },
       "hiddenSeries": false,
       "id": 126,
@@ -2532,7 +2834,7 @@
         "avg": false,
         "current": false,
         "hideEmpty": true,
-        "hideZero": true,
+        "hideZero": false,
         "max": false,
         "min": false,
         "rightSide": true,
@@ -2557,74 +2859,18 @@
       "steppedLine": false,
       "targets": [
         {
-          "hide": false,
-          "refCount": 0,
+          "hide": true,
+          "refCount": -1,
           "refId": "A",
-          "target": "groupByNodes(keepLastValue(screeps.$User.colonies.*.assets.XGH2O, 500), 'sum', 5)",
-          "textEditor": false
+          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5)",
+          "textEditor": true
         },
         {
-          "hide": false,
           "refCount": 0,
           "refId": "B",
-          "target": "groupByNodes(keepLastValue(screeps.$User.colonies.*.assets.XGHO2, 500), 'sum', 5)",
-          "textEditor": false
-        },
-        {
-          "hide": false,
-          "refCount": 0,
-          "refId": "C",
-          "target": "groupByNodes(keepLastValue(screeps.$User.colonies.*.assets.XKH2O, 500), 'sum', 5)",
-          "textEditor": false
-        },
-        {
-          "hide": false,
-          "refCount": 0,
-          "refId": "D",
-          "target": "groupByNodes(keepLastValue(screeps.$User.colonies.*.assets.XKHO2, 500), 'sum', 5)",
-          "textEditor": false
-        },
-        {
-          "hide": false,
-          "refCount": 0,
-          "refId": "E",
-          "target": "groupByNodes(keepLastValue(screeps.$User.colonies.*.assets.XLH2O, 500), 'sum', 5)",
-          "textEditor": false
-        },
-        {
-          "hide": false,
-          "refCount": 0,
-          "refId": "F",
-          "target": "groupByNodes(keepLastValue(screeps.$User.colonies.*.assets.XLHO2, 500), 'sum', 5)",
-          "textEditor": false
-        },
-        {
-          "hide": false,
-          "refCount": 0,
-          "refId": "G",
-          "target": "groupByNodes(keepLastValue(screeps.$User.colonies.*.assets.XUH2O, 500), 'sum', 5)",
-          "textEditor": false
-        },
-        {
-          "hide": false,
-          "refCount": 0,
-          "refId": "H",
-          "target": "groupByNodes(keepLastValue(screeps.$User.colonies.*.assets.XUHO2, 500), 'sum', 5)",
-          "textEditor": false
-        },
-        {
-          "hide": false,
-          "refCount": 0,
-          "refId": "I",
-          "target": "groupByNodes(keepLastValue(screeps.$User.colonies.*.assets.XZH2O, 500), 'sum', 5)",
-          "textEditor": false
-        },
-        {
-          "hide": false,
-          "refCount": 0,
-          "refId": "J",
-          "target": "groupByNodes(keepLastValue(screeps.$User.colonies.*.assets.XZHO2, 500), 'sum', 5)",
-          "textEditor": false
+          "target": "aliasByNode(grep(#A, '^(XUH2O|XUHO2|XKH2O|XKHO2|XLH2O|XLHO2|XZH2O|XZHO2|XGH2O|XGHO2)$'), 0)",
+          "targetFull": "aliasByNode(grep(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5), '^(XUH2O|XUHO2|XKH2O|XKHO2|XLH2O|XLHO2|XZH2O|XZHO2|XGH2O|XGHO2)$'), 0)",
+          "textEditor": true
         }
       ],
       "thresholds": [],
@@ -2678,9 +2924,9 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 4,
-        "w": 11,
-        "x": 13,
-        "y": 56
+        "w": 10,
+        "x": 14,
+        "y": 54
       },
       "hiddenSeries": false,
       "id": 129,
@@ -2689,7 +2935,7 @@
         "avg": false,
         "current": false,
         "hideEmpty": true,
-        "hideZero": true,
+        "hideZero": false,
         "max": false,
         "min": false,
         "rightSide": true,
@@ -2717,7 +2963,7 @@
           "hide": true,
           "refCount": -1,
           "refId": "A",
-          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5)",
+          "target": "groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5)",
           "textEditor": false
         },
         {
@@ -2725,7 +2971,7 @@
           "refCount": 0,
           "refId": "B",
           "target": "aliasByNode(movingAverage(derivative(grep(#A, '^(XUH2O|XUHO2|XKH2O|XKHO2|XLH2O|XLHO2|XZH2O|XZHO2|XGH2O|XGHO2)$')), '1hour'), 0)",
-          "targetFull": "aliasByNode(movingAverage(derivative(grep(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.colonies.*.assets.*, 500), 0), \"sum\", 5), '^(XUH2O|XUHO2|XKH2O|XKHO2|XLH2O|XLHO2|XZH2O|XZHO2|XGH2O|XGHO2)$')), '1hour'), 0)",
+          "targetFull": "aliasByNode(movingAverage(derivative(grep(groupByNodes(removeBelowValue(keepLastValue(screeps.$User.persistent.terminalNetwork.assets.*, 500), 0), 'sum', 5), '^(XUH2O|XUHO2|XKH2O|XKHO2|XLH2O|XLHO2|XZH2O|XZHO2|XGH2O|XGHO2)$')), '1hour'), 0)",
           "textEditor": true
         }
       ],
@@ -2789,10 +3035,10 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 7,
+        "h": 4,
         "w": 5,
         "x": 0,
-        "y": 60
+        "y": 58
       },
       "id": 98,
       "interval": null,
@@ -2833,14 +3079,14 @@
       "targets": [
         {
           "refId": "A",
-          "target": "movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*))), 86400), 500)",
-          "textEditor": true
+          "target": "movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.outgoingResources.energy.*))), 86400), 500)",
+          "textEditor": false
         }
       ],
       "thresholds": "",
       "title": "Energy Transfer Rate",
       "type": "singlestat",
-      "valueFontSize": "200%",
+      "valueFontSize": "100%",
       "valueMaps": [
         {
           "op": "=",
@@ -2863,9 +3109,9 @@
       "format": "short",
       "gridPos": {
         "h": 7,
-        "w": 4,
+        "w": 5,
         "x": 5,
-        "y": 60
+        "y": 58
       },
       "id": 102,
       "interval": null,
@@ -2884,8 +3130,8 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(sortByTotal(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 7, 'sumSeries'))), '24hour'), 86000)), 0)",
-          "textEditor": false
+          "target": "aliasByNode(sortByTotal(movingAverage(scaleToSeconds(perSecond(keepLastValue(screeps.$User.persistent.terminalNetwork.incomingResources.energy.*)), 86000), '24hour')), 6)",
+          "textEditor": true
         }
       ],
       "title": "Incoming Energy Rate",
@@ -2902,17 +3148,17 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 7,
-        "w": 15,
-        "x": 9,
-        "y": 60
+        "w": 14,
+        "x": 10,
+        "y": 58
       },
       "hiddenSeries": false,
       "id": 90,
       "legend": {
         "avg": false,
         "current": false,
-        "hideEmpty": true,
-        "hideZero": true,
+        "hideEmpty": false,
+        "hideZero": false,
         "max": false,
         "min": false,
         "show": false,
@@ -2937,8 +3183,8 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 7, 'sumSeries'))), 500), 86000), 0)",
-          "textEditor": true
+          "target": "aliasByNode(scaleToSeconds(movingAverage(perSecond(keepLastValue(screeps.$User.persistent.terminalNetwork.incomingResources.energy.*)), '4hour'), 86000), 6)",
+          "textEditor": false
         }
       ],
       "thresholds": [],
@@ -3002,10 +3248,10 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 7,
+        "h": 6,
         "w": 5,
         "x": 0,
-        "y": 67
+        "y": 62
       },
       "id": 94,
       "interval": null,
@@ -3045,28 +3291,14 @@
       "tableColumn": "",
       "targets": [
         {
-          "hide": true,
+          "hide": false,
           "refCount": -1,
           "refId": "A",
-          "target": "movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.costs.*.*))), 86400), 200)",
-          "textEditor": true
-        },
-        {
-          "hide": true,
-          "refCount": -1,
-          "refId": "B",
-          "target": "movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*))), 86400), 200)",
-          "textEditor": true
-        },
-        {
-          "refCount": 0,
-          "refId": "C",
-          "target": "divideSeries(#A, #B)",
-          "targetFull": "divideSeries(movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.costs.*.*))), 86400), 200), movingAverage(scaleToSeconds(perSecond(keepLastValue(sumSeries(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*))), 86400), 200))",
-          "textEditor": true
+          "target": "keepLastValue(screeps.$User.persistent.terminalNetwork.fractionalEnergyTransferCost)",
+          "textEditor": false
         }
       ],
-      "thresholds": "0.25, 0.5",
+      "thresholds": "0.4, 0.7",
       "title": "Fractional Energy Transfer Cost",
       "type": "singlestat",
       "valueFontSize": "80%",
@@ -3092,9 +3324,9 @@
       "format": "short",
       "gridPos": {
         "h": 7,
-        "w": 4,
+        "w": 5,
         "x": 5,
-        "y": 67
+        "y": 65
       },
       "id": 100,
       "interval": null,
@@ -3114,8 +3346,8 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(sortByTotal(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 6, 'sumSeries'))), '24hour'), 86000)), 0)",
-          "textEditor": false
+          "target": "aliasByNode(sortByTotal(movingAverage(scaleToSeconds(perSecond(keepLastValue(screeps.$User.persistent.terminalNetwork.outgoingResources.energy.*)), 86000), '24hour')), 6)",
+          "textEditor": true
         }
       ],
       "title": "Outgoing Energy Rate",
@@ -3132,17 +3364,17 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 7,
-        "w": 15,
-        "x": 9,
-        "y": 67
+        "w": 14,
+        "x": 10,
+        "y": 65
       },
       "hiddenSeries": false,
       "id": 103,
       "legend": {
         "avg": false,
         "current": false,
-        "hideEmpty": true,
-        "hideZero": true,
+        "hideEmpty": false,
+        "hideZero": false,
         "max": false,
         "min": false,
         "show": false,
@@ -3167,8 +3399,8 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.transfers.energy.*.*, 6, 'sumSeries'))), 500), 86000), 0)",
-          "textEditor": true
+          "target": "aliasByNode(scaleToSeconds(movingAverage(perSecond(keepLastValue(groupByNode(screeps.$User.persistent.terminalNetwork.outgoingResources.energy.*, 6, 'sumSeries'))), '4hour'), 86000), 0)",
+          "textEditor": false
         }
       ],
       "thresholds": [],
@@ -3213,13 +3445,95 @@
       }
     },
     {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": "ScreepsPlus-Graphite",
+      "format": "short",
+      "gauge": {
+        "maxValue": 1,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 0,
+        "y": 68
+      },
+      "id": 133,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": true,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "hide": false,
+          "refCount": -1,
+          "refId": "A",
+          "target": "movingAverage(scaleToSeconds(perSecond(sumSeries(screeps.$User.persistent.terminalNetwork.sendCosts.*)), 86400), '1hour')",
+          "textEditor": false
+        }
+      ],
+      "thresholds": "0.4, 0.7",
+      "title": "Transaction Costs per 24h",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "avg"
+    },
+    {
       "collapsed": false,
       "datasource": null,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 74
+        "y": 72
       },
       "id": 109,
       "panels": [],
@@ -3236,6 +3550,7 @@
         "#d44a3a"
       ],
       "datasource": null,
+      "decimals": 2,
       "format": "short",
       "gauge": {
         "maxValue": 100,
@@ -3248,7 +3563,7 @@
         "h": 4,
         "w": 3,
         "x": 0,
-        "y": 75
+        "y": 73
       },
       "id": 121,
       "interval": null,
@@ -3283,7 +3598,8 @@
         "fillColor": "rgba(31, 118, 189, 0.18)",
         "full": false,
         "lineColor": "rgb(31, 120, 193)",
-        "show": true
+        "show": true,
+        "ymin": null
       },
       "tableColumn": "",
       "targets": [
@@ -3315,9 +3631,100 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
-        "w": 11,
+        "w": 5,
         "x": 3,
-        "y": 75
+        "y": 73
+      },
+      "hiddenSeries": false,
+      "id": 134,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "hideEmpty": true,
+        "hideZero": true,
+        "max": false,
+        "min": false,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "refCount": 0,
+          "refId": "A",
+          "target": "alias(keepLastValue(screeps.$User.persistent.trader.credits), 'Credits')",
+          "textEditor": false
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Credits",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "ScreepsPlus-Graphite",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 73
       },
       "hiddenSeries": false,
       "id": 110,
@@ -3412,9 +3819,9 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
-        "w": 10,
-        "x": 14,
-        "y": 75
+        "w": 8,
+        "x": 16,
+        "y": 73
       },
       "hiddenSeries": false,
       "id": 113,
@@ -3521,7 +3928,7 @@
         "h": 4,
         "w": 3,
         "x": 0,
-        "y": 79
+        "y": 77
       },
       "id": 123,
       "interval": null,
@@ -3562,7 +3969,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "scaleToSeconds(perSecond(keepLastValue(screeps.$User.persistent.trader.credits, 500)), 86400)"
+          "target": "scaleToSeconds(derivative(keepLastValue(screeps.$User.persistent.trader.credits, 500)), 86400)"
         }
       ],
       "thresholds": "",
@@ -3579,7 +3986,7 @@
       "valueName": "current"
     }
   ],
-  "refresh": "15s",
+  "refresh": false,
   "schemaVersion": 22,
   "style": "dark",
   "tags": [
@@ -3680,5 +4087,5 @@
   "timezone": "browser",
   "title": "Overmind",
   "uid": "000002135",
-  "version": 90
+  "version": 100
 }
