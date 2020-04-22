@@ -13,7 +13,6 @@ import {
 	unpackPos
 } from '../utilities/packrat';
 import {ema, getCacheExpiration} from '../utilities/utils';
-import {Zerg} from '../zerg/Zerg';
 import {CombatIntel} from './CombatIntel';
 
 const RECACHE_TIME = 5000;

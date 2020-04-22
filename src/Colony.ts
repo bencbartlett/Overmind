@@ -13,7 +13,6 @@ import {Hatchery} from './hiveClusters/hatchery';
 import {SporeCrawler} from './hiveClusters/sporeCrawler';
 import {UpgradeSite} from './hiveClusters/upgradeSite';
 import {CombatIntel} from './intel/CombatIntel';
-import {ExpansionData} from './intel/RoomIntel';
 import {Energetics} from './logistics/Energetics';
 import {LinkNetwork} from './logistics/LinkNetwork';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
@@ -684,6 +683,7 @@ export class Colony {
 			Stats.log(`colonies.${this.name}.assets`, this.assets);
 			// Log defensive properties
 			Stats.log(`colonies.${this.name}.defcon`, this.defcon);
+			Stats.log(`colonies.${this.name}.threatLevel`, this.room.threatLevel);
 			const avgBarrierHits = _.sum(this.room.barriers, barrier => barrier.hits) / this.room.barriers.length;
 			Stats.log(`colonies.${this.name}.avgBarrierHits`, avgBarrierHits);
 		}
