@@ -142,8 +142,11 @@ export class Zerg extends AnyZerg {
 			// this.ticksToLive = creep.ticksToLive;
 			// this.actionLog = {};
 			// this.blockMovement = false;
-			this._task = null; // todo
+			// this._task = null; // todo
 			this._neededBoosts = undefined;
+			if (this._task) {
+				this._task.refresh();
+			}
 		} else {
 			// log.debug(`Deleting from global`);
 			delete Overmind.zerg[this.name];
@@ -579,8 +582,7 @@ export class Zerg extends AnyZerg {
 			// Register references to creep
 			task.creep = this;
 		}
-		// Clear cache
-		this._task = null;
+		this._task = task;
 	}
 
 	/**

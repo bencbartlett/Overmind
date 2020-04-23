@@ -44,7 +44,10 @@ export abstract class Task {
 	options: TaskOptions;		// Options for a specific instance of a task
 	data: TaskData; 			// Data pertaining to a given instance of a task
 
-	private _targetPos: RoomPosition;
+	target: RoomObject | null;
+	targetPos: RoomPosition;
+
+	// private _targetPos: RoomPosition;
 
 	constructor(taskName: string, target: targetType, options = {} as TaskOptions) {
 		// Parameters for the task
@@ -78,6 +81,22 @@ export abstract class Task {
 		this.tick = Game.time;
 		this.options = options;
 		this.data = {};
+		this.refresh();
+	}
+
+	/**
+	 * Refresh all changeable properties of the task
+	 */
+	refresh(): void {
+		const target = deref(this._target.ref);
+		if (target) {
+			this.target = target;
+			this.targetPos = target.pos;
+			this._target._pos = target.pos;
+		} else {
+			this.target = null;
+			this.targetPos = derefRoomPosition(this._target._pos);
+		}
 	}
 
 	/**
@@ -111,8 +130,7 @@ export abstract class Task {
 	/**
 	 * Return the wrapped creep which is executing this task
 	 */
-	get creep(): Zerg { // Get task's own creep by its name
-		// Returns zerg wrapper instead of creep to use monkey-patched functions
+	get creep(): Zerg {
 		return Overmind.zerg[this._creep.name];
 	}
 
@@ -126,26 +144,26 @@ export abstract class Task {
 		}
 	}
 
-	/**
-	 * Dereferences the Task's target
-	 */
-	get target(): RoomObject | null {
-		return deref(this._target.ref);
-	}
-
-	/**
-	 * Dereferences the saved target position; useful for situations where you might lose vision
-	 */
-	get targetPos(): RoomPosition {
-		// refresh if you have visibility of the target
-		if (!this._targetPos) {
-			if (this.target) {
-				this._target._pos = this.target.pos;
-			}
-			this._targetPos = derefRoomPosition(this._target._pos);
-		}
-		return this._targetPos;
-	}
+	// /**
+	//  * Dereferences the Task's target
+	//  */
+	// get target(): RoomObject | null {
+	// 	return deref(this._target.ref);
+	// }
+	//
+	// /**
+	//  * Dereferences the saved target position; useful for situations where you might lose vision
+	//  */
+	// get targetPos(): RoomPosition {
+	// 	// refresh if you have visibility of the target
+	// 	if (!this._targetPos) {
+	// 		if (this.target) {
+	// 			this._target._pos = this.target.pos;
+	// 		}
+	// 		this._targetPos = derefRoomPosition(this._target._pos);
+	// 	}
+	// 	return this._targetPos;
+	// }
 
 	/**
 	 * Get the Task's parent
