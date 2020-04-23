@@ -555,16 +555,27 @@ export class MiningOverlord extends Overlord {
 	private harvestOrSleep(miner: Zerg, source: Source, allowSuicide = true): void {
 		const ret = miner.harvest(source);
 		if (ret != OK) {
-			if (ret == ERR_NOT_ENOUGH_RESOURCES) { // energy depleted
-				if (allowSuicide && source.ticksToRegeneration > (miner.ticksToLive || Infinity)) {
-					miner.suicide();
-				} else {
-					miner.memory.sleepUntil = Game.time + source.ticksToRegeneration;
-				}
-			} else if (ret == ERR_NO_BODYPART && allowSuicide) {
-				miner.suicide();
-			} else {
-				log.error(`${this.print}: Unhandled miner.harvest() exception: ${ret}`);
+			switch (ret) {
+				case ERR_NOT_ENOUGH_RESOURCES: // energy depleted
+					if (allowSuicide && source.ticksToRegeneration > (miner.ticksToLive || Infinity)) {
+						miner.suicide();
+					} else {
+						miner.memory.sleepUntil = Game.time + source.ticksToRegeneration;
+					}
+					break;
+				case ERR_NO_BODYPART:
+					if (allowSuicide) {
+						miner.suicide();
+					}
+					break;
+				case ERR_NOT_OWNER:
+					if (Game.time % 20 == 0) {
+						log.alert(`${miner.print}: room is reserved by hostiles!`);
+					}
+					break;
+				default:
+					log.error(`${miner.print}: unhandled miner.harvest() exception: ${ret}`);
+					break;
 			}
 		}
 	}
