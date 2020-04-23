@@ -5,6 +5,7 @@ declare const MARKET_FEE: 300; // missing in the typed-screeps declarations
 global.MARKET_FEE = MARKET_FEE;
 
 declare const NO_ACTION: 1;
+declare type NO_ACTION = NO_ACTION;
 global.NO_ACTION = NO_ACTION;
 
 type TickPhase = 'assimilating' | 'build' | 'refresh' | 'init' | 'run' | 'postRun';

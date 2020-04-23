@@ -516,12 +516,8 @@ export abstract class AnyZerg {
 	/**
 	 * Moves off of an exit tile
 	 */
-	moveOffExit(avoidSwamp = true): ScreepsReturnCode {
-		return Movement.moveOffExit(this, avoidSwamp);
-	}
-
-	moveOffExitToward(pos: RoomPosition, detour = true): number | undefined {
-		return Movement.moveOffExitToward(this, pos, detour);
+	moveOffExit(towardPos?: RoomPosition, avoidSwamp = true): ScreepsReturnCode {
+		return Movement.moveOffExit(this, towardPos, avoidSwamp);
 	}
 
 

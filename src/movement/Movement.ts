@@ -5,6 +5,7 @@ import {MatrixLib, MatrixOptions} from '../matrix/MatrixLib';
 import {profile} from '../profiler/decorator';
 import {insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {rightArrow} from '../utilities/stringConstants';
+import {minBy} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {AnyZerg, normalizeAnyZerg} from '../zerg/AnyZerg';
 import {Swarm} from '../zerg/Swarm';
@@ -183,8 +184,12 @@ export class Movement {
 		const rangeToDestination = creep.pos.getRangeTo(destination);
 		if (opts.range != undefined && rangeToDestination <= opts.range) {
 			// if (destination.isEqualTo(finalDestination)) {
-			delete creep.memory._go;
-			return NO_ACTION;
+			if (creep.pos.isEdge) { // move the creep off the edge tiles to prevent it bouncing
+				return creep.moveOffExit(destination);
+			} else {
+				delete creep.memory._go;
+				return NO_ACTION;
+			}
 			// } else {
 			// 	// debug
 			// 	console.log(`Destination ${destination} not equal to final destination ${finalDestination}!`);
@@ -715,37 +720,29 @@ export class Movement {
 	/**
 	 * Moves off of an exit tile
 	 */
-	static moveOffExit(creep: AnyZerg, avoidSwamp = true): ScreepsReturnCode {
-		let swampDirection;
-		const directions = [1, 3, 5, 7, 2, 4, 6, 8] as DirectionConstant[];
-		for (const direction of directions) {
-			const position = creep.pos.getPositionAtDirection(direction);
-			if (position.rangeToEdge > 0 && position.isWalkable()) {
-				const terrain = position.lookFor(LOOK_TERRAIN)[0];
-				if (avoidSwamp && terrain == 'swamp') {
-					swampDirection = direction;
-					continue;
-				}
-				return creep.move(direction);
+	static moveOffExit(creep: AnyZerg, towardPos?: RoomPosition, avoidSwamp = true): ScreepsReturnCode | NO_ACTION {
+		if (!creep.pos.isEdge) {
+			return NO_ACTION;
+		}
+		const terrain = creep.room.getTerrain();
+		const pos = minBy(creep.pos.neighbors, pos => {
+			if (pos.isEdge || !pos.isWalkable()) {
+				return false;
 			}
-		}
-		if (swampDirection) {
-			return creep.move(swampDirection as DirectionConstant);
-		}
-		return ERR_NO_PATH;
-	}
-
-	/**
-	 * Moves off of an exit tile toward a given direction
-	 */
-	static moveOffExitToward(creep: AnyZerg, pos: RoomPosition, detour = true): number | undefined {
-		for (const position of creep.pos.availableNeighbors()) {
-			if (position.getRangeTo(pos) == 1) {
-				return this.goTo(creep, position);
+			let penalty = 0;
+			if (avoidSwamp && terrain.get(pos.x, pos.y) == TERRAIN_MASK_SWAMP) {
+				penalty += 10;
 			}
-		}
-		if (detour) {
-			return this.goTo(creep, pos, {pathOpts: {blockCreeps:true}});
+			if (towardPos) {
+				penalty += pos.getRangeTo(towardPos);
+			}
+			return penalty;
+		});
+		if (pos) {
+			return creep.move(creep.pos.getDirectionTo(pos));
+		} else {
+			log.warning(`${creep.print}: cannot move off exit!`);
+			return ERR_NO_PATH;
 		}
 	}
 
@@ -767,8 +764,13 @@ export class Movement {
 		const range = leader.pos.getRangeTo(follower);
 		if (range > allowedRange) {
 			// If leader is farther than max allowed range, allow follower to catch up
-			if (follower.pos.rangeToEdge == 0 && follower.room == leader.room) {
-				follower.moveOffExitToward(leader.pos);
+			if (follower.pos.isEdge && follower.room == leader.room) {
+				const goToPos = _.find(follower.pos.availableNeighbors(), pos => pos.isNearTo(leader));
+				if (goToPos) {
+					follower.goTo(goToPos);
+				} else {
+					follower.goTo(leader, {pathOpts: {blockCreeps:true}});
+				}
 			} else {
 				follower.goTo(leader, {stuckValue: 1});
 			}
