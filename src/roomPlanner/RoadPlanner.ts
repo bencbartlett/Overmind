@@ -344,11 +344,19 @@ export class RoadPlanner {
 				if (ret != OK) {
 					if (ret == ERR_NOT_OWNER) {
 						if (Game.time % 50 == 0) {
-							log.warning(`${this.colony.name}: couldn't create road site at ${pos.print}; room is ` +
+							log.warning(`${this.colony.print}: couldn't create road site at ${pos.print}; room is ` +
 										`reserved/owned by hostile forces!`);
 						}
+					} else if (ret == ERR_FULL) {
+						// For some reason, when you place a construction site, the last check they run to see if
+						// you're already at max placed sites searches through EVERY SINGLE GAME OBJECT you have
+						// access to, which is quite expensive! Don't try to make a bunch more of these or you'll
+						// murder your CPU.
+						log.warning(`${this.colony.print}: couldn't create road site at ${pos.print}, too many ` +
+									`construction sites!`);
+						break;
 					} else {
-						log.warning(`${this.colony.name}: couldn't create road site at ${pos.print}. Result: ${ret}`);
+						log.warning(`${this.colony.print}: couldn't create road site at ${pos.print}. Result: ${ret}`);
 					}
 				} else {
 					count--;
@@ -366,6 +374,17 @@ export class RoadPlanner {
 				(p: RoomPosition) => (this.memory.roadCoordsPacked[p.roomName] || '').includes(packCoord(p)));
 		}
 		return this._roadLookup(pos);
+	}
+
+	/**
+	 * Enumerate the positions in a room which should have roads on them
+	 */
+	getRoadPositions(roomName: string): RoomPosition[] {
+		if (this.memory.roadCoordsPacked[roomName]) {
+			return unpackCoordListAsPosList(this.memory.roadCoordsPacked[roomName], roomName);
+		} else {
+			return [];
+		}
 	}
 
 	/* Clean up leftover road coverage locations from remotes that aren't mined or old structures */

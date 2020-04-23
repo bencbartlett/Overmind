@@ -41,6 +41,11 @@ export class $ { // $ = cash = cache... get it? :D
 		return _cache.numbers[cacheKey];
 	}
 
+	static numberRecall(saver: { ref: string }, key: string): number | undefined {
+		const cacheKey = saver.ref + '#' + key;
+		return _cache.numbers[cacheKey] as number | undefined;
+	}
+
 	// static pos(saver: { ref: string }, key: string, callback: () => RoomPosition, timeout ?: number): RoomPosition;
 	static pos(saver: { ref: string }, key: string, callback: () => RoomPosition | undefined, timeout?: number):
 		RoomPosition | undefined {

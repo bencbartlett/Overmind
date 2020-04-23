@@ -47,7 +47,7 @@ export class RoadLogistics {
 				return this.repairableRoads(room).length > 0;
 			} else {
 				// If worker is not already assigned, repair if critical roads or repaving energy >= carry capacity
-				return this.criticalRoads(room).length > 0 || this.energyToRepave(room) >= worker.carryCapacity;
+				return this.criticalRoads(room).length > 0 || this.energyToRepave(room.name) >= worker.carryCapacity;
 			}
 		} else {
 			return false;
@@ -74,33 +74,62 @@ export class RoadLogistics {
 		}
 	}
 
-	// /* Compute roads ordered by a depth-first search from a root node */
-	// roads(room: Room): StructureRoad[] {
-	//
-	// }
-
 	criticalRoads(room: Room): StructureRoad[] {
-		return $.structures(this, 'criticalRoads:' + room.name, () =>
-			_.sortBy(_.filter(room.roads, road =>
-				road.hits < road.hitsMax * RoadLogistics.settings.criticalThreshold &&
-				this.colony.roomPlanner.roadShouldBeHere(road.pos)),
-					 road => road.pos.getMultiRoomRangeTo(this.colony.pos)), ROAD_CACHE_TIMEOUT);
+		return $.structures(this, 'criticalRoads:' + room.name, () => {
+			const criticalRoads = _.filter(room.roads,
+										   road => road.hits < road.hitsMax * RoadLogistics.settings.criticalThreshold
+												   && this.colony.roomPlanner.roadShouldBeHere(road.pos));
+			return _.sortBy(criticalRoads, road => road.pos.getMultiRoomRangeTo(this.colony.pos));
+		}, ROAD_CACHE_TIMEOUT);
 	}
 
 	repairableRoads(room: Room): StructureRoad[] {
-		return $.structures(this, 'repairableRoads:' + room.name, () =>
-			_.sortBy(_.filter(room.roads, road =>
-				road.hits < road.hitsMax * RoadLogistics.settings.repairThreshold &&
-				this.colony.roomPlanner.roadShouldBeHere(road.pos)),
-					 road => road.pos.getMultiRoomRangeTo(this.colony.pos)), ROAD_CACHE_TIMEOUT);
+		return $.structures(this, 'repairableRoads:' + room.name, () => {
+			const repairRoads = _.filter(room.roads,
+										 road => road.hits < road.hitsMax * RoadLogistics.settings.repairThreshold
+												 && this.colony.roomPlanner.roadShouldBeHere(road.pos));
+			return _.sortBy(repairRoads, road => road.pos.getMultiRoomRangeTo(this.colony.pos));
+		}, ROAD_CACHE_TIMEOUT);
+	}
+
+	unbuiltRoads(room: Room): RoomPosition[] {
+		return $.list(this, 'repairableRoads:' + room.name, () => {
+			const roadPositions = this.colony.roomPlanner.roadPlanner.getRoadPositions(room.name);
+			const unbuiltPositions = _.filter(roadPositions, pos => !pos.lookForStructure(STRUCTURE_ROAD));
+			return _.sortBy(unbuiltPositions, pos => pos.getMultiRoomRangeTo(this.colony.pos));
+		}, ROAD_CACHE_TIMEOUT);
 	}
 
 	/**
-	 * Total amount of energy needed to repair all roads in the room
+	 * Total amount of energy needed to repair all roads in the room and build all needed roads
 	 */
-	energyToRepave(room: Room): number {
-		return $.number(this, 'energyToRepave:' + room.name, () =>
-			_.sum(this.repairableRoads(room), road => (road.hitsMax - road.hits) / REPAIR_POWER), ROAD_CACHE_TIMEOUT);
+	energyToRepave(roomName: string): number {
+		const room = Game.rooms[roomName] as Room | undefined;
+		if (room) {
+			return $.number(this, 'energyToRepave:' + room.name, () => {
+				const repairEnergy = _.sum(this.repairableRoads(room), road => (road.hitsMax - road.hits))
+									 / REPAIR_POWER;
+				const terrain = room.getTerrain();
+				const buildEnergy = _.sum(this.unbuiltRoads(room), pos => {
+					if (terrain.get(pos.x, pos.y) == TERRAIN_MASK_SWAMP) {
+						return CONSTRUCTION_COST.road * CONSTRUCTION_COST_ROAD_SWAMP_RATIO;
+					} else if (terrain.get(pos.x, pos.y) == TERRAIN_MASK_WALL) {
+						return CONSTRUCTION_COST.road * CONSTRUCTION_COST_ROAD_WALL_RATIO;
+					} else {
+						return CONSTRUCTION_COST.road;
+					}
+				}) / BUILD_POWER;
+				return repairEnergy + buildEnergy;
+			}, ROAD_CACHE_TIMEOUT);
+		} else {
+			const cached = $.numberRecall(this, 'energyToRepave:' + roomName);
+			if (cached) {
+				return cached;
+			} else {
+				return 0;
+			}
+		}
+
 	}
 
 	/**

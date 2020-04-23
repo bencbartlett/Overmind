@@ -186,8 +186,9 @@ export class WorkerOverlord extends Overlord {
 											 site => Math.max(site.progressTotal - site.progress, 0)) / BUILD_POWER;
 					const repairTicks = _.sum(this.repairStructures,
 											  structure => structure.hitsMax - structure.hits) / REPAIR_POWER;
-					const paveTicks = _.sum(this.colony.rooms,
-											room => this.colony.roadLogistics.energyToRepave(room)); // repairCost=1
+					const activeRooms = _.filter(this.colony.roomNames, roomName => this.colony.isRoomActive(roomName));
+					const paveTicks = _.sum(activeRooms,
+											roomName => this.colony.roadLogistics.energyToRepave(roomName));
 					let fortifyTicks = 0;
 					const shouldFortify = this.colony.assets.energy > WorkerOverlord.settings.fortifyDutyThreshold;
 					if (shouldFortify) {
@@ -254,9 +255,9 @@ export class WorkerOverlord extends Overlord {
 		const roomToRepave = this.colony.roadLogistics.workerShouldRepave(worker)!;
 		this.colony.roadLogistics.registerWorkerAssignment(worker, roomToRepave);
 		// Build a paving manifest
-		const task = this.colony.roadLogistics.buildPavingManifest(worker, roomToRepave);
-		if (task) {
-			worker.task = task;
+		const pavingManifest = this.colony.roadLogistics.buildPavingManifest(worker, roomToRepave);
+		if (pavingManifest) {
+			worker.task = pavingManifest;
 			return true;
 		} else {
 			return false;
