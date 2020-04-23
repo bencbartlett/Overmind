@@ -2,6 +2,8 @@ import {$} from '../caching/GlobalCache';
 import {Colony} from '../Colony';
 import {profile} from '../profiler/decorator';
 import {repairTaskName} from '../tasks/instances/repair';
+import {Task} from '../tasks/Task';
+import {Tasks} from '../tasks/Tasks';
 import {Zerg} from '../zerg/Zerg';
 
 const ROAD_CACHE_TIMEOUT = 25;
@@ -66,7 +68,7 @@ export class RoadLogistics {
 		}
 		// Otherwise scan through rooms and see if needs repaving
 		for (const room of this.colony.rooms) {
-			if (this.colony.isRoomActive(room.name) && this.workerShouldRepaveRoom(worker, room)) {
+			if (this.colony.isRoomActive(room.name) && room.isSafe && this.workerShouldRepaveRoom(worker, room)) {
 				return room;
 			}
 		}
@@ -130,6 +132,34 @@ export class RoadLogistics {
 				this._assignedWorkers[roomName].push(worker.name);
 			}
 		}
+	}
+
+	buildPavingManifest(worker: Zerg, room: Room): Task | null {
+		let energy = worker.carry.energy;
+		const targetRefs: { [ref: string]: boolean } = {};
+		const tasks: Task[] = [];
+		let target: StructureRoad | undefined;
+		let previousPos: RoomPosition | undefined;
+		while (true) {
+			if (energy <= 0) break;
+			if (previousPos) {
+				target = _.find(this.repairableRoads(room),
+								road => road.hits < road.hitsMax && !targetRefs[road.id]
+										&& road.pos.getRangeTo(previousPos!) <= 1);
+			} else {
+				target = _.find(this.repairableRoads(room),
+								road => road.hits < road.hitsMax && !targetRefs[road.id]);
+			}
+			if (target) {
+				previousPos = target.pos;
+				targetRefs[target.id] = true;
+				energy -= (target.hitsMax - target.hits) / REPAIR_POWER;
+				tasks.push(Tasks.repair(target));
+			} else {
+				break;
+			}
+		}
+		return Tasks.chain(tasks);
 	}
 
 	run(): void {

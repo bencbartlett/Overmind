@@ -6,7 +6,6 @@ import {DirectiveNukeResponse} from '../../directives/situational/nukeResponse';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {BuildPriorities, FortifyPriorities} from '../../priorities/priorities_structures';
 import {profile} from '../../profiler/decorator';
-import {Task} from '../../tasks/Task';
 import {Tasks} from '../../tasks/Tasks';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {minBy} from '../../utilities/utils';
@@ -114,7 +113,7 @@ export class WorkerOverlord extends Overlord {
 					&& DirectiveNukeResponse.shouldReinforceLocation(rampart.pos)) {
 					this.nukeDefenseRamparts.push(rampart);
 					Visualizer.marker(rampart.pos, {color: 'gold'});
-					this.nukeDefenseHitsRemaining[rampart.id] = Math.min(neededHits - rampart.hits,0);
+					this.nukeDefenseHitsRemaining[rampart.id] = Math.min(neededHits - rampart.hits, 0);
 				}
 			}
 
@@ -251,39 +250,11 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	// Find a suitable repair ordering of roads with a depth first search
-	private buildPavingManifest(worker: Zerg, room: Room): Task | null {
-		let energy = worker.carry.energy;
-		const targetRefs: { [ref: string]: boolean } = {};
-		const tasks: Task[] = [];
-		let target: StructureRoad | undefined;
-		let previousPos: RoomPosition | undefined;
-		while (true) {
-			if (energy <= 0) break;
-			if (previousPos) {
-				target = _.find(this.colony.roadLogistics.repairableRoads(room),
-								road => road.hits < road.hitsMax && !targetRefs[road.id]
-										&& road.pos.getRangeTo(previousPos!) <= 1);
-			} else {
-				target = _.find(this.colony.roadLogistics.repairableRoads(room),
-								road => road.hits < road.hitsMax && !targetRefs[road.id]);
-			}
-			if (target) {
-				previousPos = target.pos;
-				targetRefs[target.id] = true;
-				energy -= (target.hitsMax - target.hits) / REPAIR_POWER;
-				tasks.push(Tasks.repair(target));
-			} else {
-				break;
-			}
-		}
-		return Tasks.chain(tasks);
-	}
-
 	private pavingActions(worker: Zerg): boolean {
 		const roomToRepave = this.colony.roadLogistics.workerShouldRepave(worker)!;
 		this.colony.roadLogistics.registerWorkerAssignment(worker, roomToRepave);
 		// Build a paving manifest
-		const task = this.buildPavingManifest(worker, roomToRepave);
+		const task = this.colony.roadLogistics.buildPavingManifest(worker, roomToRepave);
 		if (task) {
 			worker.task = task;
 			return true;
