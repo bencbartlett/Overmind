@@ -503,17 +503,14 @@ export class RoomPlanner {
 		}
 	}
 
-	/* Whether a constructionSite should be placed at a position */
+	/**
+	 * Whether a constructionSite should be placed at a position
+	 */
 	static canBuild(structureType: BuildableStructureConstant, pos: RoomPosition): boolean {
 		if (!pos.room) return false;
-		const buildings = _.filter(pos.lookFor(LOOK_STRUCTURES), s => s && s.structureType == structureType);
-		const sites = pos.lookFor(LOOK_CONSTRUCTION_SITES);
-		if (!buildings || buildings.length == 0) {
-			if (!sites || sites.length == 0) {
-				return true;
-			}
-		}
-		return false;
+		const structure = pos.lookForStructure(structureType);
+		const constructionSite = pos.lookFor(LOOK_CONSTRUCTION_SITES)[0];
+		return !structure && !constructionSite;
 	}
 
 	/**
