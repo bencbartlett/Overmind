@@ -46,14 +46,16 @@ export class DefenseNPCOverlord extends Overlord {
 			return guard.pos.findClosestByRange(targets);
 		}
 		if (guard.room.hostileStructures.length > 0) {
-			const haulFlags = _.filter(guard.room.flags, flag => DirectiveHaul.filter(flag));
+			const haulFlags = DirectiveHaul.find(guard.room.flags);
 			if (haulFlags.length == 0) {
 				return guard.pos.findClosestByRange(guard.room.hostileStructures);
 			}
 		}
 	}
 
-	/* Attack and chase the specified target */
+	/**
+	 * Attack and chase the specified target
+	 */
 	private combatActions(guard: CombatZerg, target: Creep | Structure): void {
 		// Attack the target if you can, else move to get in range
 		guard.attackAndChase(target);

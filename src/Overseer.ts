@@ -260,15 +260,15 @@ export class Overseer implements IOverseer {
 			// Handle player defense
 			if (room.dangerousPlayerHostiles.length > 0) {
 				DirectiveOutpostDefense.createIfNotPresent(Pathing.findPathablePosition(room.name), 'room');
-				return;
 			}
 			// Handle NPC invasion directives
-			if (Cartographer.roomType(room.name) != ROOMTYPE_SOURCEKEEPER) { // SK rooms can fend for themselves
-				if (room.dangerousHostiles.length > 0) {
+			else if (Cartographer.roomType(room.name) != ROOMTYPE_SOURCEKEEPER) { // SK rooms can fend for themselves
+				if (room.invaders.length > 0 || (room.invaderCore && room.invaderCore.level == 0)) {
 					const defenseDirectives = [...DirectiveGuard.find(room.flags),
 											   ...DirectiveOutpostDefense.find(room.flags)];
 					if (defenseDirectives.length == 0) {
-						DirectiveGuard.create(room.dangerousHostiles[0].pos);
+						const placePos = (room.invaders[0] || room.invaderCore).pos;
+						DirectiveGuard.create(placePos);
 					}
 				}
 			}
@@ -280,18 +280,15 @@ export class Overseer implements IOverseer {
 	// 		for (const room of colony.outposts) {
 	// 			if (room.invaderCore) {
 	// 				log.alert(`Found core in ${room.name} with ${room.invaderCore} level ${room.invaderCore.level}`);
-	// 				let res;
 	// 				if (room.invaderCore.level == 0) {
-	// 					res = DirectiveModularDismantle.createIfNotPresent(room.invaderCore.pos, 'pos');
-	// 					if (!!res) {
-	// 						log.notify(`Creating invader core dismantle in room ${room.name}`);
-	// 					}
-	// 				} else if (room.invaderCore.level <= 4 && room.invaderCore.ticksToDeploy) {
-	// 					res = DirectiveStronghold.createIfNotPresent(room.invaderCore.pos, 'room');
-	// 					if (!!res) {
-	// 						log.notify(`Creating inactiveStronghold clearing ranged attacker in room ${room.name}`);
-	// 					}
+	// 					DirectiveModularDismantle.createIfNotPresent(room.invaderCore.pos, 'pos');
 	// 				}
+	// 				// else if (room.invaderCore.level <= 4 && room.invaderCore.ticksToDeploy) {
+	// 				// 	res = DirectiveStronghold.createIfNotPresent(room.invaderCore.pos, 'room');
+	// 				// 	if (!!res) {
+	// 				// 		log.notify(`Creating inactiveStronghold clearing ranged attacker in room ${room.name}`);
+	// 				// 	}
+	// 				// }
 	// 			}
 	// 		}
 	// 	}
