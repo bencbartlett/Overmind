@@ -150,15 +150,6 @@ export class Movement {
 		_.defaultsDeep(opts, getDefaultMoveOptions());
 		const pathOpts = opts.pathOpts as PathOptions; // modifications to pathOpts show up on opts.pathOpts
 
-		// Take care of properties which exist on both moveOpts and pathOpts: if they are specified on both moveOpts
-		// and moveOpts.pathOpts then the value of range or fleeRange on moveOpts takes precedence.
-		if (opts.range != undefined) {
-			pathOpts.range = opts.range;
-		}
-		if (opts.fleeRange != undefined) {
-			pathOpts.fleeRange = opts.fleeRange;
-		}
-
 		// initialize data object
 		if (!creep.memory._go) {
 			creep.memory._go = {} as MoveData;
@@ -178,6 +169,16 @@ export class Movement {
 		// Fixes bug that causes creeps to idle on the other side of a room
 		if (opts.range != undefined && destination.rangeToEdge <= opts.range) {
 			opts.range = Math.min(Math.abs(destination.rangeToEdge - 1), 0);
+		}
+
+		// Take care of properties which exist on both moveOpts and pathOpts: if they are specified on both moveOpts
+		// and moveOpts.pathOpts then the value of range or fleeRange on moveOpts takes precedence.
+		// -> This must be done after the last modification to opts.range and opts.fleeRange!
+		if (opts.range != undefined) {
+			pathOpts.range = opts.range;
+		}
+		if (opts.fleeRange != undefined) {
+			pathOpts.fleeRange = opts.fleeRange;
 		}
 
 		// manage case where creep is nearby destination
@@ -739,7 +740,9 @@ export class Movement {
 			return penalty;
 		});
 		if (pos) {
-			return creep.move(creep.pos.getDirectionTo(pos));
+			const direction = creep.pos.getDirectionTo(pos);
+			creep.debug(`moving off exit toward ${pos.print}, direction ${direction}`)
+			return creep.move(direction);
 		} else {
 			log.warning(`${creep.print}: cannot move off exit!`);
 			return ERR_NO_PATH;
