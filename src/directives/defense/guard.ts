@@ -2,10 +2,11 @@ import {GuardSwarmOverlord} from '../../overlords/defense/guardSwarm';
 import {DefenseNPCOverlord} from '../../overlords/defense/npcDefense';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
+import {NotifierPriority} from '../Notifier';
 
 interface DirectiveGuardMemory extends FlagMemory {
-	safeTick?: number;
 	enhanced?: boolean;
+	invaderCore?: boolean;
 }
 
 /**
@@ -37,23 +38,21 @@ export class DirectiveGuard extends Directive {
 	}
 
 	init(): void {
-
+		if (this.room && this.room.invaderCore) {
+			this.memory.invaderCore = true;
+		}
+		if (this.memory.invaderCore) {
+			this.alert(`Attacking invader core`, NotifierPriority.Low);
+		}
 	}
 
 	run(): void {
-		// If there are no hostiles left in the room...
+		// If there are no hostiles or hostiles structures left in the room, possibly remove
 		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
-			// If everyone's healed up, mark as safe
-			if (_.filter(this.room.creeps, creep => creep.hits < creep.hitsMax).length == 0 && !this.memory.safeTick) {
-				this.memory.safeTick = Game.time;
-			}
-			// If has been safe for more than 100 ticks, remove directive
-			if (this.memory.safeTick && Game.time - this.memory.safeTick > 100) {
+			// If everyone's healed up and the room is safe, remove
+			const creepsNeedingHealing = _.filter(this.room.creeps, creep => creep.hits < creep.hitsMax);
+			if (creepsNeedingHealing.length == 0 && this.room.isSafe) {
 				this.remove();
-			}
-		} else {
-			if (this.memory.safeTick) {
-				delete this.memory.safeTick;
 			}
 		}
 	}
