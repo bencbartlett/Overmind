@@ -103,11 +103,12 @@ export class ExtractorOverlord extends Overlord {
 	}
 
 	init() {
-		const amount = this.mineral && this.mineral.mineralAmount > 0 && this.extractor
-					   ? this.mineral.pos.availableNeighbors().length
-					   : 0;
-		this.wishlist(Math.min(amount, ExtractorOverlord.settings.maxDrones), Setups.drones.extractor);
 		this.registerOutputRequests();
+
+		const amount = this.mineral && this.mineral.mineralAmount > 0 && this.extractor && this.container
+					   ? Math.min(this.mineral.pos.availableNeighbors().length, ExtractorOverlord.settings.maxDrones)
+					   : 0;
+		this.wishlist(amount, Setups.drones.extractor);
 	}
 
 	private handleDrone(drone: Zerg) {
