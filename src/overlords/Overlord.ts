@@ -284,6 +284,16 @@ export abstract class Overlord {
 		_.remove(this._zerg[role], deadZerg => removeZergNames.includes(deadZerg.name));
 	}
 
+	getAllZerg(): Zerg[] {
+		const allZerg: Zerg[] = [];
+		for (const role in this._creeps) {
+			for (const zerg of this.zerg(role)) {
+				allZerg.push(zerg);
+			}
+		}
+		return allZerg;
+	}
+
 	/**
 	 * Wraps all creeps of a given role to CombatZerg objects and updates the contents in future ticks
 	 */
@@ -319,6 +329,16 @@ export abstract class Overlord {
 			}
 		}
 		_.remove(this._combatZerg[role], deadZerg => removeZergNames.includes(deadZerg.name));
+	}
+
+	getAllCombatZerg(): CombatZerg[] {
+		const allCombatZerg: CombatZerg[] = [];
+		for (const role in this._creeps) {
+			for (const combatZerg of this.combatZerg(role)) {
+				allCombatZerg.push(combatZerg);
+			}
+		}
+		return allCombatZerg;
 	}
 
 	/**
@@ -495,6 +515,16 @@ export abstract class Overlord {
 	abstract run(): void;
 
 	/**
+	 * Contains logic for shutting down the overlord
+	 */
+	finish(successful: boolean): void {
+		for (const zerg of this.getAllZerg()) {
+			zerg.reassign(this.colony.overlords.default);
+		}
+		// TODO: CombatOverlord
+	}
+
+	/**
 	 * Handle boosting of a creep; should be called during run()
 	 */
 	protected handleBoosting(zerg: Zerg | CombatZerg): void {
@@ -520,9 +550,8 @@ export abstract class Overlord {
 					return;
 				}
 			}
+
 		}
-
-
 	}
 
 	/**

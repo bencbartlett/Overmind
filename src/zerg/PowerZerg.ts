@@ -13,9 +13,10 @@ interface PowerZergMemory extends CreepMemory {
 @profile
 export abstract class PowerZerg extends AnyZerg {
 
+	memory: PowerZergMemory;
+
 	isPowerZerg: true;
 	creep: PowerCreep;
-	memory: PowerZergMemory;
 	className: PowerClassConstant;
 	deleteTime: number | undefined;
 	level: number;
@@ -37,6 +38,7 @@ export abstract class PowerZerg extends AnyZerg {
 			// We're not spawned in the world
 			log.error(`Trying to instantiate power creep ${this.print} while not spawned in!`);
 		}
+		Overmind.powerZerg[this.name] = this;
 	}
 
 	refresh(): void {
@@ -66,7 +68,7 @@ export abstract class PowerZerg extends AnyZerg {
 	/**
 	 * Enable power usage in this room. The room controller should be at adjacent tile.
 	 */
-	enableRoom(controller: StructureController): OK | ERR_NOT_OWNER | ERR_INVALID_TARGET | ERR_NOT_IN_RANGE {
+	enableRoom(controller: StructureController): ScreepsReturnCode {
 		return this.creep.enableRoom(controller);
 	}
 
@@ -81,21 +83,19 @@ export abstract class PowerZerg extends AnyZerg {
 	/**
 	 * Instantly restore time to live to the maximum using a Power Spawn or a Power Bank nearby.
 	 */
-	renew(target: StructurePowerBank | StructurePowerSpawn):
-		OK | ERR_NOT_OWNER | ERR_BUSY | ERR_INVALID_TARGET | ERR_NOT_IN_RANGE {
+	renew(target: StructurePowerBank | StructurePowerSpawn): ScreepsReturnCode {
 		return this.creep.renew(target);
 	}
 
-	// spawn(powerSpawn: StructurePowerSpawn):
-	// 	OK | ERR_NOT_OWNER | ERR_BUSY | ERR_INVALID_TARGET | ERR_TIRED | ERR_RCL_NOT_ENOUGH {
-	//
-	// }
+	spawn(powerSpawn: StructurePowerSpawn): ScreepsReturnCode {
+		return this.creep.spawn(powerSpawn);
+	}
 
 	/**
 	 * Upgrade the creep, adding a new power ability to it or increasing the level of the existing power.
 	 * You need one free Power Level in your account to perform this action.
 	 */
-	upgrade(power: PowerConstant): OK | ERR_NOT_OWNER | ERR_NOT_ENOUGH_RESOURCES | ERR_FULL | ERR_INVALID_ARGS {
+	upgrade(power: PowerConstant): ScreepsReturnCode {
 		return this.creep.upgrade(power);
 	}
 
