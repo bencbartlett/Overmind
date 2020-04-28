@@ -11,6 +11,10 @@ export let OverlordPriority = {
 		manager: 101,
 	},
 
+	powerCreeps: {
+		default: 150,
+	},
+
 	defense: {					// Defense of local and remote rooms
 		meleeDefense : 200,
 		rangedDefense: 201,
@@ -26,13 +30,13 @@ export let OverlordPriority = {
 	},
 
 	colonization: { 			// Colonizing new rooms
-		claim  : 400,
-		pioneer: 401,
+		claim          : 400,
+		pioneer        : 401,
 		remoteUpgrading: 410,
 	},
 
 	priorityOwnedRoom: {		// Situationally prioritized in-room operations
-		priorityUpgrade: 450,
+		priorityUpgrade  : 450,
 		priorityTransport: 451,
 	},
 
@@ -56,7 +60,7 @@ export let OverlordPriority = {
 	},
 
 	upgrading: {				// Spawning upgraders
-		upgrade        : 600,
+		upgrade: 600,
 	},
 
 	collectionUrgent: { 		// Collecting resources that are time sensitive, like decaying resources on ground

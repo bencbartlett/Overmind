@@ -31,10 +31,14 @@ export class GameCache implements ICache {
 	private cacheOverlords() {
 		this.overlords = {};
 		// keys: overlordRef, value: creepNames[]
-		const creepNamesByOverlord = _.groupBy(_.keys(Game.creeps), name => Game.creeps[name].memory[MEM.OVERLORD]);
+		const creepNamesByOverlord = _.groupBy(_.keys(Game.creeps),
+											   name => Game.creeps[name].memory[MEM.OVERLORD]);
+		const powerCreepNamesByOverlord = _.groupBy(_.keys(Game.powerCreeps),
+													name => Game.powerCreeps[name].memory[MEM.OVERLORD]);
 		for (const ref in creepNamesByOverlord) {
 			// keys: roleName, value: creepNames[]
-			this.overlords[ref] = _.groupBy(creepNamesByOverlord[ref], name => Game.creeps[name].memory.role);
+			this.overlords[ref] = _.groupBy(creepNamesByOverlord[ref],
+											name => (Game.creeps[name] || Game.powerCreeps[name]).memory.role);
 		}
 	}
 

@@ -16,6 +16,8 @@ export abstract class PowerZerg extends AnyZerg {
 	memory: PowerZergMemory;
 
 	isPowerZerg: true;
+	isSpawned: boolean;
+
 	creep: PowerCreep;
 	className: PowerClassConstant;
 	deleteTime: number | undefined;
@@ -34,25 +36,52 @@ export abstract class PowerZerg extends AnyZerg {
 		this.powers = powerCreep.powers;
 		this.shard = powerCreep.shard;
 		this.spawnCooldownTime = powerCreep.spawnCooldownTime;
-		if (!(this.shard && this.room)) {
-			// We're not spawned in the world
-			log.error(`Trying to instantiate power creep ${this.print} while not spawned in!`);
+		this.isSpawned = !!this.shard && !!this.ticksToLive;
+		// PowerZerg room is casted to its overlord's colony's room if it is not spawned in
+		if (this.room == undefined && this.overlord) {
+			this.room = this.overlord.colony.room;
+		}
+		if (this.pos == undefined && this.overlord) {
+			this.pos = this.overlord.colony.powerSpawn ? this.overlord.colony.powerSpawn.pos
+													   : this.overlord.colony.pos;
 		}
 		Overmind.powerZerg[this.name] = this;
 	}
 
 	refresh(): void {
-		super.refresh();
-		const powerCreep = Game.powerCreeps[this.name];
-		if (powerCreep && powerCreep.room && powerCreep.shard) {
+		// super.refresh(); // doesn't call super.refresh()
+		const powerCreep = Game.powerCreeps[this.name] as PowerCreep | undefined;
+		if (powerCreep) {
+			this.creep = powerCreep;
+			this.pos = powerCreep.pos;
+			this.nextPos = powerCreep.pos;
+			this.carry = powerCreep.carry;
+			this.store = powerCreep.store;
+			this.carryCapacity = powerCreep.carryCapacity;
+			this.hits = powerCreep.hits;
+			this.memory = powerCreep.memory;
+			this.room = powerCreep.room as Room; // not actually as Room
+			this.saying = powerCreep.saying;
+			this.ticksToLive = powerCreep.ticksToLive;
+			this.actionLog = {};
+			this.blockMovement = false;
 			this.deleteTime = powerCreep.deleteTime;
 			this.level = powerCreep.level;
 			this.powers = powerCreep.powers;
 			this.shard = powerCreep.shard;
 			this.spawnCooldownTime = powerCreep.spawnCooldownTime;
+			this.isSpawned = !!this.shard && !!this.ticksToLive;
+			if (this.room == undefined && this.overlord) {
+				this.room = this.overlord.colony.room;
+			}
+			if (this.pos == undefined && this.overlord) {
+				this.pos = this.overlord.colony.powerSpawn ? this.overlord.colony.powerSpawn.pos
+														   : this.overlord.colony.pos;
+			}
 		} else {
-			log.info(`${this.print} has despawned or been deleted; deleting from global and Overmind.powerZerg!`);
+			log.debug(`Deleting ${this.print} from global`);
 			delete Overmind.powerZerg[this.name];
+			delete global[this.name];
 		}
 	}
 
