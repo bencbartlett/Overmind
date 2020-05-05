@@ -25,6 +25,7 @@ interface DirectivePowerMineMemory extends FlagMemory {
 	 */
 	state: number;
 	totalCollected: number;
+	expirationTime: number;
 }
 
 
@@ -48,6 +49,8 @@ export class DirectivePowerMine extends Directive {
 		super(flag, colony => colony.level >= DirectivePowerMine.requiredRCL);
 		this._powerBank = this.powerBank;
 		this.memory.state = this.memory.state || 0;
+		this.memory.expirationTime = this.memory.expirationTime ||
+			Game.time + (this.powerBank ? this.powerBank.ticksToDecay + 1000 : 5500);
 		this.memory.totalCollected = this.memory.totalCollected || 0;
 	}
 
@@ -192,6 +195,9 @@ export class DirectivePowerMine extends Directive {
 		const frequency = this.memory.state == 2 ? 1 : 21;
 		if (Game.time % frequency == 0) {
 			this.manageState();
+		}
+		if (Game.time > this.memory.expirationTime) {
+			this.remove();
 		}
 	}
 }

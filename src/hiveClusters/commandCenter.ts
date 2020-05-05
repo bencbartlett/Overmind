@@ -202,13 +202,13 @@ export class CommandCenter extends HiveCluster {
 
 	private runPowerSpawn() {
 		if (this.powerSpawn && this.storage && this.colony.assets.energy > 300000 &&
-			this.powerSpawn.energy > 50 && this.powerSpawn.power > 0) {
+			this.powerSpawn.store.energy >= 50 && this.powerSpawn.store.power > 0) {
 			if (Game.market.credits < TraderJoe.settings.market.credits.canBuyAbove) {
 				// We need to get enough credits that we can start to buy things. Since mineral prices have plunged
 				// recently, often the only way to do this without net losing credits (after factoring in the
 				// energy -> credits of transaction costs) is to sell excess energy. Power processing eats up a
 				// huge amount of energy, so we're going to disable it below a certain threshold.
-				return;
+				// return;
 			}
 			if (Game.time % 20 == 0) {
 				log.info(`Processing power in ${this.room.print}`);
