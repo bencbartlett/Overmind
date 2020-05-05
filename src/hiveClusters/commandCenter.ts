@@ -208,7 +208,7 @@ export class CommandCenter extends HiveCluster {
 				// recently, often the only way to do this without net losing credits (after factoring in the
 				// energy -> credits of transaction costs) is to sell excess energy. Power processing eats up a
 				// huge amount of energy, so we're going to disable it below a certain threshold.
-				// return;
+				return;
 			}
 			if (Game.time % 20 == 0) {
 				log.info(`Processing power in ${this.room.print}`);
