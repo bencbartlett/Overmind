@@ -535,12 +535,17 @@ export class RoomPlanner {
 			if (positions && _.find(positions, p => p.isEqualTo(pos))) {
 				return true;
 			}
-			if (structureType == STRUCTURE_CONTAINER || structureType == STRUCTURE_LINK) {
-				const thingsBuildingLinksAndContainers = _.map([...this.colony.room.sources,
-																this.colony.room.mineral!,
+			if (this.colony.upgradeSite.batteryPos && this.colony.upgradeSite.batteryPos.isEqualTo(pos)) {
+				return true;
+			}
+			if (structureType == STRUCTURE_CONTAINER) {
+				const thingsBuildingContainers = _.map([...this.colony.room.sources,
+															  this.colony.room.mineral!], thing => thing.pos);
+				return pos.findInRange(thingsBuildingContainers, 1).length > 0;
+			} else if (structureType == STRUCTURE_LINK) {
+				const thingsBuildingLinks = _.map([...this.colony.room.sources,
 																this.colony.controller], thing => thing.pos);
-				const maxRange = 4;
-				return pos.findInRange(thingsBuildingLinksAndContainers, 4).length > 0;
+				return pos.findInRange(thingsBuildingLinks, 3).length > 0;
 			}
 		}
 		return false;

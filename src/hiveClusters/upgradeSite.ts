@@ -4,6 +4,7 @@ import {log} from '../console/log';
 import {Mem} from '../memory/Memory';
 import {UpgradingOverlord} from '../overlords/core/upgrader';
 import {profile} from '../profiler/decorator';
+import {insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {Stats} from '../stats/stats';
 import {hasMinerals} from '../utilities/utils';
 import {HiveCluster} from './_HiveCluster';
@@ -44,7 +45,8 @@ export class UpgradeSite extends HiveCluster {
 		// Register bettery
 		$.set(this, 'battery', () => {
 			const allowableContainers = _.filter(this.room.containers, container =>
-				container.pos.findInRange(FIND_SOURCES, 1).length == 0); // only count containers that aren't near sources
+				container.pos.findInRange(FIND_SOURCES, 1).length == 0 && // only count containers that aren't near sources
+				!insideBunkerBounds(container.pos, this.colony)); // only count containers not inside the bunker
 			return this.pos.findClosestByLimitedRange(allowableContainers, 3);
 		});
 		this.batteryPos = $.pos(this, 'batteryPos', () => {
@@ -149,14 +151,16 @@ export class UpgradeSite extends HiveCluster {
 		// Find all positions at range 2 from controller
 		let inputLocations: RoomPosition[] = [];
 		for (const pos of this.pos.getPositionsAtRange(2)) {
-			if (pos.isWalkable(true)) {
+			if (pos.isWalkable(true) && !insideBunkerBounds(pos, this.colony)) {
 				inputLocations.push(pos);
 			}
 		}
+		const usableNeighbors = (pos: RoomPosition): number => {
+			return _.filter(pos.neighbors, p => p.isWalkable(true) && !insideBunkerBounds(p, this.colony)).length;
+		};
 		// Try to find locations where there is maximal standing room
-		const maxNeighbors = _.max(_.map(inputLocations, pos => pos.availableNeighbors(true).length));
-		inputLocations = _.filter(inputLocations,
-								  pos => pos.availableNeighbors(true).length >= maxNeighbors);
+		const maxNeighbors = _.max(_.map(inputLocations, pos => usableNeighbors(pos)));
+		inputLocations = _.filter(inputLocations, pos => usableNeighbors(pos) >= maxNeighbors);
 		// Return location closest to storage by path
 		const inputPos = originPos.findClosestByPath(inputLocations);
 		if (inputPos) {
