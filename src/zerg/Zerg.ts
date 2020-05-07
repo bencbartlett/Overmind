@@ -49,7 +49,7 @@ export function normalizeZerg(creep: Zerg | Creep): Zerg | Creep {
 	return Overmind.zerg[creep.name] || creep;
 }
 
-export function toCreep(creep: Zerg | Creep): Creep {
+export function toCreep(creep: Zerg | Creep | PowerCreep): Creep | PowerCreep {
 	return isZerg(creep) ? creep.creep : creep;
 }
 
@@ -201,7 +201,7 @@ export class Zerg {
 
 	// Wrapped creep methods ===========================================================================================
 
-	attack(target: Creep | Structure) {
+	attack(target: Creep | PowerCreep | Structure) {
 		const result = this.creep.attack(target);
 		if (result == OK) {
 			this.actionLog.attack = true;
@@ -313,7 +313,7 @@ export class Zerg {
 		return result;
 	}
 
-	rangedAttack(target: Creep | Structure) {
+	rangedAttack(target: Creep | PowerCreep | Structure) {
 		const result = this.creep.rangedAttack(target);
 		if (result == OK) {
 			this.actionLog.rangedAttack = true;

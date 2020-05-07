@@ -46,7 +46,7 @@ export class GoalFinder {
 		const nearbyRating = _.sum(creep.pos.findInRange(room.creeps, 6), c => CombatIntel.rating(c));
 		const braveMode = creep.hits * (nearbyRating / myRating) * .5 > creep.hitsMax;
 
-		const hostileHealers: Creep[] = [];
+		const hostileHealers: (Creep | PowerCreep)[] = [];
 
 		// Analyze capabilities of hostile creeps in the room
 		for (const hostile of room.hostiles) {

@@ -129,7 +129,7 @@ export class CombatZerg extends Zerg {
 	/**
 	 * Attack and chase the specified target
 	 */
-	attackAndChase(target: Creep | Structure): CreepActionReturnCode {
+	attackAndChase(target: Creep | PowerCreep | Structure): CreepActionReturnCode {
 		let ret: CreepActionReturnCode;
 		// Attack the target if you can, else move to get in range
 		if (this.pos.isNearTo(target)) {

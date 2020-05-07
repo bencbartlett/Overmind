@@ -23,6 +23,7 @@ import './assimilation/initializer'; // This must always be imported before anyt
 import './console/globals'; // Global functions accessible from CLI
 import './prototypes/Game'; // Game prototypes
 import './prototypes/Creep'; // Creep prototypes
+import './prototypes/PowerCreep'; // PowerCreep prototypes
 import './prototypes/RoomObject'; // RoomObject and targeting prototypes
 import './prototypes/RoomPosition'; // RoomPosition prototypes
 import './prototypes/RoomVisual'; // Prototypes used in Visualizer class

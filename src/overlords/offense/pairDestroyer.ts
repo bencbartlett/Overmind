@@ -39,7 +39,7 @@ export class PairDestroyerOverlord extends Overlord {
 		});
 	}
 
-	private findTarget(attacker: CombatZerg): Creep | Structure | undefined {
+	private findTarget(attacker: CombatZerg): Creep | PowerCreep | Structure | undefined {
 		if (this.room) {
 			// Prioritize specifically targeted structures first
 			const targetingDirectives = DirectiveTargetSiege.find(this.room.flags) as DirectiveTargetSiege[];

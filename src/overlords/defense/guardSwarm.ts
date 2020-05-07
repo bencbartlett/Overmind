@@ -21,7 +21,7 @@ export class GuardSwarmOverlord extends Overlord {
 		this.guards = this.combatZerg(Roles.guardMelee);
 	}
 
-	private findAttackTarget(guard: Zerg): Creep | Structure | undefined | null {
+	private findAttackTarget(guard: Zerg): Creep | PowerCreep | Structure | undefined | null {
 		if (guard.room.hostiles.length > 0) {
 			const targets = _.filter(guard.room.hostiles, hostile => hostile.pos.rangeToEdge > 0);
 			return guard.pos.findClosestByRange(targets);

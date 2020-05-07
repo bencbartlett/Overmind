@@ -15,7 +15,8 @@ export class CombatTargeting {
 	/**
 	 * Finds the best target within a given range that a zerg can currently attack
 	 */
-	static findBestCreepTargetInRange(zerg: Zerg, range: number, targets = zerg.room.hostiles): Creep | undefined {
+	static findBestCreepTargetInRange(zerg: Zerg, range: number, targets = zerg.room.hostiles)
+			: Creep | PowerCreep | undefined {
 		const nearbyHostiles = _.filter(targets, c => zerg.pos.inRangeToXY(c.pos.x, c.pos.y, range));
 		return maxBy(nearbyHostiles, function(hostile) {
 			if (hostile.hitsPredicted == undefined) hostile.hitsPredicted = hostile.hits;
@@ -45,7 +46,7 @@ export class CombatTargeting {
 	/**
 	 * Standard target-finding logic
 	 */
-	static findTarget(zerg: Zerg, targets = zerg.room.hostiles): Creep | undefined {
+	static findTarget(zerg: Zerg, targets = zerg.room.hostiles): Creep | PowerCreep | undefined {
 		return maxBy(targets, function(hostile) {
 			if (hostile.hitsPredicted == undefined) hostile.hitsPredicted = hostile.hits;
 			if (hostile.pos.lookForStructure(STRUCTURE_RAMPART)) return false;
@@ -57,7 +58,7 @@ export class CombatTargeting {
 	/**
 	 * Finds the best target within a given range that a zerg can currently attack
 	 */
-	static findBestCreepTargetForTowers(room: Room, targets = room.hostiles): Creep | undefined {
+	static findBestCreepTargetForTowers(room: Room, targets = room.hostiles): Creep | PowerCreep | undefined {
 		return maxBy(targets, function(hostile) {
 			if (hostile.hitsPredicted == undefined) hostile.hitsPredicted = hostile.hits;
 			if (hostile.pos.lookForStructure(STRUCTURE_RAMPART)) return false;
@@ -72,7 +73,7 @@ export class CombatTargeting {
 		ignoreCreepsAtEdge: boolean,
 		playerOnly: boolean,
 		onlyUnramparted: boolean
-	}): Creep | undefined {
+	}): Creep | PowerCreep | undefined {
 
 		_.defaults(opts, {
 			checkReachable    : false,
@@ -81,7 +82,7 @@ export class CombatTargeting {
 			onlyUnramparted   : false
 		});
 		if (zerg.room.hostiles.length > 0) {
-			let targets: Creep[];
+			let targets: (Creep | PowerCreep)[];
 			const potentialTargets = opts.playerOnly ? zerg.room.playerHostiles : zerg.room.hostiles;
 			if (opts.ignoreCreepsAtEdge) {
 				targets = _.filter(potentialTargets, hostile => hostile.pos.rangeToEdge > 0);

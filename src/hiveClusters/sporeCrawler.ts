@@ -55,7 +55,7 @@ export class SporeCrawler extends HiveCluster {
 		this.registerEnergyRequests();
 	}
 
-	private attack(target: Creep): void {
+	private attack(target: Creep | PowerCreep): void {
 		for (const tower of this.towers) {
 			const result = tower.attack(target);
 			if (result == OK) {

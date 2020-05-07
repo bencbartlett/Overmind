@@ -344,7 +344,7 @@ export class CombatIntel {
 	/**
 	 * Cache the result of a computation for a tick
 	 */
-	static cache(creep: Creep, key: string, callback: () => number): number {
+	static cache(creep: Creep | PowerCreep, key: string, callback: () => number): number {
 		if (!creep.intel) creep.intel = {};
 		if (creep.intel[key] == undefined) {
 			creep.intel[key] = callback();
@@ -355,7 +355,7 @@ export class CombatIntel {
 	/**
 	 * Heal potential of a single creep in units of effective number of parts
 	 */
-	static getHealPotential(creep: Creep): number {
+	static getHealPotential(creep: Creep | PowerCreep): number {
 		return this.cache(creep, 'healPotential', () =>
 			_.sum(creep.body, function(part) {
 				if (part.hits == 0) {
@@ -377,18 +377,18 @@ export class CombatIntel {
 		);
 	}
 
-	static getHealAmount(creep: Creep | Zerg): number {
+	static getHealAmount(creep: Creep | PowerCreep | Zerg): number {
 		return HEAL_POWER * this.getHealPotential(toCreep(creep));
 	}
 
-	static getRangedHealAmount(creep: Creep | Zerg): number {
+	static getRangedHealAmount(creep: Creep | PowerCreep | Zerg): number {
 		return RANGED_HEAL_POWER * this.getHealPotential(toCreep(creep));
 	}
 
 	/**
 	 * If a creep appears to primarily be a healer
 	 */
-	static isHealer(zerg: Creep | Zerg): boolean {
+	static isHealer(zerg: Creep | PowerCreep | Zerg): boolean {
 		const creep = toCreep(zerg);
 		const healParts = _.filter(zerg.body, part => part.type == HEAL).length;
 		const attackParts = _.filter(zerg.body, part => part.type == ATTACK).length;
@@ -399,7 +399,7 @@ export class CombatIntel {
 	/**
 	 * Attack potential of a single creep in units of effective number of parts
 	 */
-	static getAttackPotential(creep: Creep): number {
+	static getAttackPotential(creep: Creep | PowerCreep): number {
 		return this.cache(creep, 'attackPotential', () => _.sum(creep.body, function(part) {
 			if (part.hits == 0) {
 				return 0;
@@ -419,14 +419,14 @@ export class CombatIntel {
 		}));
 	}
 
-	static getAttackDamage(creep: Creep | Zerg): number {
+	static getAttackDamage(creep: Creep | PowerCreep | Zerg): number {
 		return ATTACK_POWER * this.getAttackPotential(toCreep(creep));
 	}
 
 	/**
 	 * Ranged attack potential of a single creep in units of effective number of parts
 	 */
-	static getRangedAttackPotential(creep: Creep): number {
+	static getRangedAttackPotential(creep: Creep | PowerCreep): number {
 		return this.cache(creep, 'rangedAttackPotential', () =>
 			_.sum(creep.body, function(part) {
 				if (part.hits == 0) {
@@ -448,14 +448,14 @@ export class CombatIntel {
 		);
 	}
 
-	static getRangedAttackDamage(creep: Creep | Zerg): number {
+	static getRangedAttackDamage(creep: Creep | PowerCreep | Zerg): number {
 		return RANGED_ATTACK_POWER * this.getRangedAttackPotential(toCreep(creep));
 	}
 
 	/**
 	 * Attack potential of a single creep in units of effective number of parts
 	 */
-	static getDismantlePotential(creep: Creep): number {
+	static getDismantlePotential(creep: Creep | PowerCreep): number {
 		return this.cache(creep, 'dismantlePotential', () => _.sum(creep.body, function(part) {
 			if (part.hits == 0) {
 				return 0;
@@ -506,7 +506,7 @@ export class CombatIntel {
 	/**
 	 * Minimum damage multiplier a creep has
 	 */
-	static minimumDamageTakenMultiplier(creep: Creep): number {
+	static minimumDamageTakenMultiplier(creep: Creep | PowerCreep): number {
 		return this.cache(creep, 'minDamageMultiplier', () =>
 			_.min(_.map(creep.body, function(part) {
 				if (part.type == TOUGH && part.hits > 0) {
@@ -527,7 +527,7 @@ export class CombatIntel {
 		return _.min(_.map(creeps, creep => this.minimumDamageTakenMultiplier(creep)));
 	}
 
-	static getMassAttackDamageTo(attacker: Creep | Zerg, target: Creep | Structure): number {
+	static getMassAttackDamageTo(attacker: Creep | Zerg, target: Creep | PowerCreep | Structure): number {
 		if (isStructure(target) && (!isOwnedStructure(target) || target.my)) {
 			return 0;
 		}
@@ -583,14 +583,14 @@ export class CombatIntel {
 	/**
 	 * Maximum healing that a group of creeps can provide (doesn't count for simultaneity restrictions)
 	 */
-	static maxHealingByCreeps(creeps: Creep[]): number {
+	static maxHealingByCreeps(creeps: (Creep | PowerCreep)[]): number {
 		return _.sum(creeps, creep => this.getHealAmount(creep));
 	}
 
 	/**
 	 * Total attack/rangedAttack/heal potentials for a group of creeps
 	 */
-	static getCombatPotentials(creeps: Creep[]): CombatPotentials {
+	static getCombatPotentials(creeps: (Creep | PowerCreep)[]): CombatPotentials {
 		const attack = _.sum(creeps, creep => this.getAttackPotential(creep));
 		const rangedAttack = _.sum(creeps, creep => this.getRangedAttackPotential(creep));
 		const heal = _.sum(creeps, creep => this.getHealPotential(creep));
@@ -618,12 +618,13 @@ export class CombatIntel {
 	/**
 	 * Heal potential of self and possible healer neighbors
 	 */
-	static maxHostileHealingTo(creep: Creep): number {
+	static maxHostileHealingTo(creep: Creep | PowerCreep): number {
 		return this.cache(creep, 'maxHostileHealing', () => {
 			const selfHealing = this.getHealAmount(creep);
-			const neighbors = _.filter(creep.room.hostiles, hostile => hostile.pos.isNearTo(creep));
+			const hostiles = creep.room !== undefined ? creep.room.hostiles : [];
+			const neighbors = _.filter(hostiles, hostile => hostile.pos.isNearTo(creep));
 			const neighborHealing = _.sum(neighbors, neighbor => this.getHealAmount(neighbor));
-			const rangedHealers = _.filter(creep.room.hostiles, hostile => hostile.pos.getRangeTo(creep) <= 3 &&
+			const rangedHealers = _.filter(hostiles, hostile => hostile.pos.getRangeTo(creep) <= 3 &&
 																		   !neighbors.includes(hostile));
 			const rangedHealing = _.sum(rangedHealers, healer => this.getRangedHealAmount(healer));
 			return selfHealing + neighborHealing + rangedHealing;
@@ -633,7 +634,7 @@ export class CombatIntel {
 	/**
 	 * Heal potential of self and possible healer neighbors
 	 */
-	static avgHostileHealingTo(creeps: Creep[]): number {
+	static avgHostileHealingTo(creeps: (Creep | PowerCreep)[]): number {
 		return _.max(_.map(creeps, creep => CombatIntel.maxHostileHealingTo(creep))) / creeps.length;
 	}
 
@@ -644,9 +645,10 @@ export class CombatIntel {
 		const creep = toCreep(friendly);
 		return this.cache(creep, 'maxFriendlyHealing', () => {
 			const selfHealing = this.getHealAmount(creep);
-			const neighbors = _.filter(creep.room.creeps, hostile => hostile.pos.isNearTo(creep));
+			const creeps = creep.room !== undefined ? creep.room.creeps : [];
+			const neighbors = _.filter(creeps, hostile => hostile.pos.isNearTo(creep));
 			const neighborHealing = _.sum(neighbors, neighbor => this.getHealAmount(neighbor));
-			const rangedHealers = _.filter(creep.room.creeps, hostile => hostile.pos.getRangeTo(creep) <= 3 &&
+			const rangedHealers = _.filter(creeps, hostile => hostile.pos.getRangeTo(creep) <= 3 &&
 																		 !neighbors.includes(hostile));
 			const rangedHealing = _.sum(rangedHealers, healer => this.getHealAmount(healer));
 			return selfHealing + neighborHealing + rangedHealing;
@@ -693,14 +695,14 @@ export class CombatIntel {
 	//
 	// }
 
-	static isApproaching(approacher: Creep, toPos: RoomPosition): boolean {
+	static isApproaching(approacher: Creep | PowerCreep, toPos: RoomPosition): boolean {
 		const previousPos = RoomIntel.getPreviousPos(approacher);
 		const previousRange = toPos.getRangeTo(previousPos);
 		const currentRange = toPos.getRangeTo(approacher.pos);
 		return currentRange < previousRange;
 	}
 
-	static isRetreating(retreater: Creep, fromPos: RoomPosition): boolean {
+	static isRetreating(retreater: Creep | PowerCreep, fromPos: RoomPosition): boolean {
 		const previousPos = RoomIntel.getPreviousPos(retreater);
 		const previousRange = fromPos.getRangeTo(previousPos);
 		const currentRange = fromPos.getRangeTo(retreater.pos);
@@ -710,7 +712,10 @@ export class CombatIntel {
 	/**
 	 * This method is probably expensive; use sparingly
 	 */
-	static isEdgeDancing(creep: Creep, reentryThreshold = 3): boolean {
+	static isEdgeDancing(creep: Creep | PowerCreep, reentryThreshold = 3): boolean {
+		if (creep.room === undefined) {
+			return false;
+		}
 		if (!creep.room.my) {
 			log.warning(`isEdgeDancing should only be called in owned rooms!`);
 		}

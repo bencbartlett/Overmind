@@ -34,10 +34,10 @@ export class DefenseNPCOverlord extends Overlord {
 	// 	this.guards = this.creeps('guard');
 	// }
 
-	private findAttackTarget(guard: CombatZerg): Creep | Structure | undefined | null {
+	private findAttackTarget(guard: CombatZerg): Creep | PowerCreep | Structure | undefined | null {
 		const targetingDirectives = DirectiveTargetSiege.find(guard.room.flags) as DirectiveTargetSiege[];
 		const targetedStructures = _.compact(_.map(targetingDirectives,
-												   directive => directive.getTarget())) as Structure[];
+												 directive => directive.getTarget())) as Structure[];
 		if (targetedStructures.length > 0) {
 			return guard.pos.findClosestByRange(targetedStructures);
 		}
@@ -54,7 +54,7 @@ export class DefenseNPCOverlord extends Overlord {
 	}
 
 	/* Attack and chase the specified target */
-	private combatActions(guard: CombatZerg, target: Creep | Structure): void {
+	private combatActions(guard: CombatZerg, target: Creep | PowerCreep | Structure): void {
 		// Attack the target if you can, else move to get in range
 		guard.attackAndChase(target);
 		// Heal yourself if it won't interfere with attacking

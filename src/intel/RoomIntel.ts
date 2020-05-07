@@ -234,8 +234,9 @@ export class RoomIntel {
 	/**
 	 * Get the pos a creep was in on the previous tick
 	 */
-	static getPreviousPos(creep: Creep | Zerg): RoomPosition {
-		if (creep.room.memory[_RM.PREV_POSITIONS] && creep.room.memory[_RM.PREV_POSITIONS]![creep.id]) {
+	static getPreviousPos(creep: Creep | PowerCreep | Zerg): RoomPosition {
+		if (creep.room !== undefined && creep.room.memory[_RM.PREV_POSITIONS] &&
+				creep.room.memory[_RM.PREV_POSITIONS]![creep.id]) {
 			return derefRoomPosition(creep.room.memory[_RM.PREV_POSITIONS]![creep.id]);
 		} else {
 			return creep.pos; // no data

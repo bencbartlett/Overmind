@@ -66,7 +66,7 @@ Object.defineProperty(Room.prototype, 'creeps', {
 Object.defineProperty(Room.prototype, 'hostiles', {
 	get() {
 		if (!this._hostiles) {
-			this._hostiles = this.find(FIND_HOSTILE_CREEPS, {filter: (creep: Creep) => !isAlly(creep.owner.username)});
+			this._hostiles = _.flatten([this.find(FIND_HOSTILE_CREEPS, { filter: (creep: Creep) => !isAlly(creep.owner.username)}), this.find(FIND_HOSTILE_POWER_CREEPS, { filter: (creep: PowerCreep) => !isAlly(creep.owner.username)}))]);
 		}
 		return this._hostiles;
 	},

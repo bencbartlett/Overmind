@@ -16,6 +16,8 @@ interface PowerCreep {
 	boosts: _ResourceConstantSansEnergy[];
 	boostCounts: { [boostType: string]: number };
 	inRampart: boolean;
+
+	getActiveBodyparts(type: BodyPartConstant): number;
 }
 
 interface ConstructionSite {
@@ -51,7 +53,7 @@ interface Room {
 	signedByMe: boolean;
 	creeps: Creep[];
 	sourceKeepers: Creep[];
-	hostiles: Creep[];
+	hostiles: (PowerCreep | Creep)[];
 	dangerousHostiles: Creep[];
 	playerHostiles: Creep[];
 	invaders: Creep[];
@@ -241,6 +243,7 @@ interface StructureTower {
 	isFull: boolean;
 	isEmpty: boolean;
 
+	attack(target: Creep | PowerCreep): CreepActionReturnCode;
 	// run(): void;
 	//
 	// attackNearestEnemy(): number;
