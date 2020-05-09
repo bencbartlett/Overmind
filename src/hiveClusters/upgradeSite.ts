@@ -55,7 +55,14 @@ export class UpgradeSite extends HiveCluster {
 			if (inputSite) {
 				return inputSite.pos;
 			}
-			return this.calculateBatteryPos() || log.alert(`Upgrade site at ${this.pos.print}: no batteryPos!`);
+			const plannedPos = this.calculateBatteryPos();
+			if (plannedPos) {
+				return plannedPos;
+			}
+			if (!this.colony.roomPlanner.active) {
+				log.alert(`Upgrade site at ${this.pos.print}: no batteryPos!`);
+			}
+			return undefined;
 		});
 		if (this.batteryPos) this.colony.destinations.push({pos: this.batteryPos, order: 0});
 		// Register link
@@ -144,7 +151,7 @@ export class UpgradeSite extends HiveCluster {
 		} else if (this.colony.roomPlanner.storagePos) {
 			originPos = this.colony.roomPlanner.storagePos;
 		} else {
-			return;
+			return undefined;
 		}
 		// Find all positions at range 2 from controller
 		let inputLocations: RoomPosition[] = [];
