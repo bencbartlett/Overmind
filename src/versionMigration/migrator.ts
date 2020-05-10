@@ -413,8 +413,11 @@ export class VersionMigration {
 		delete Memory.zoneRooms;
 		Memory.roomIntel = {}; // reset this
 
-		delete Memory.stats.persistent.terminalNetwork.transfers;
-		delete Memory.stats.persistent.terminalNetwork.costs;
+		if ((<any>Memory).stats.persistent && (<any>Memory).stats.persistent.terminalNetwork) {
+			delete Memory.stats.persistent.terminalNetwork.transfers;
+			delete Memory.stats.persistent.terminalNetwork.costs;
+		}
+
 
 		const mem = Memory as any;
 

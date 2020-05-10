@@ -600,7 +600,7 @@ export class OvermindConsole {
 
 	static deepCleanMemory(): string {
 		// Clean colony memory
-		const protectedColonyKeys = ['defcon', 'roomPlanner', 'roadPlanner', 'barrierPlanner'];
+		const protectedColonyKeys = ['defcon', 'roomPlanner', 'roadPlanner', 'barrierPlanner', 'expansionData'];
 		for (const colName in Memory.colonies) {
 			for (const key in Memory.colonies[colName]) {
 				if (!protectedColonyKeys.includes(key)) {

@@ -183,7 +183,7 @@ export class Mem {
 			spawns            : {},
 			pathing           : {distances: {}},
 			constructionSites : {},
-			stats             : {},
+			stats             : {persistent: {}},
 			playerCreepTracker: {},
 			settings          : {
 				signature             : DEFAULT_OVERMIND_SIGNATURE,
