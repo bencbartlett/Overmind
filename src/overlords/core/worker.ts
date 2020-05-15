@@ -122,7 +122,7 @@ export class WorkerOverlord extends Overlord {
 		// Spawn boosted workers if there is significant fortifying which needs to be done
 		const totalNukeDefenseHitsRemaining = _.sum(_.values(this.nukeDefenseHitsRemaining));
 		const totalFortifyHitsRemaining = _.sum(this.fortifyBarriers, barrier =>
-			Math.min(WorkerOverlord.settings.barrierHits[this.colony.level] - barrier.hits, 0));
+			Math.max(WorkerOverlord.settings.barrierHits[this.colony.level] - barrier.hits, 0));
 		const approxRepairAmountPerLifetime = REPAIR_POWER * 50 / 3 * CREEP_LIFE_TIME;
 		if (totalNukeDefenseHitsRemaining > 3 * approxRepairAmountPerLifetime ||
 			totalFortifyHitsRemaining > 5 * approxRepairAmountPerLifetime) {
