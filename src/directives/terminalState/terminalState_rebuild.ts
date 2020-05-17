@@ -18,8 +18,6 @@ export class DirectiveTerminalRebuildState extends Directive {
 
 	// colony: Colony | undefined; // this is technically unallowable, but at end of life, colony can be undefined
 
-	terminal: StructureTerminal | undefined;
-
 	constructor(flag: Flag) {
 		super(flag);
 		this.refresh();
@@ -58,7 +56,7 @@ export class DirectiveTerminalRebuildState extends Directive {
 
 	run() {
 		// Incubation directive gets removed once the colony has a command center (storage)
-		if (!this.colony || !this.terminal || Game.time > (this.memory[MEM.TICK] || 0) + REBUILD_STATE_TIMEOUT) {
+		if (!this.colony || !this.colony.terminal || Game.time > (this.memory[MEM.TICK] || 0) + REBUILD_STATE_TIMEOUT) {
 			this.remove();
 		}
 	}
