@@ -68,8 +68,9 @@ export class ExpansionEvaluator {
 	 * @param room
 	 * @param verbose
 	 */
-	static computeTheoreticalMiningEfficiency(dropoffLocation: RoomPosition, room: Room, verbose = false): boolean|number {
-		const roomName = room.name;
+	static computeTheoreticalMiningEfficiency(dropoffLocation: RoomPosition, room: string, verbose = false)
+		: boolean|number {
+		const roomName = room;
 		const roomType = Cartographer.roomType(roomName);
 		let cpuCost = 0;
 		let creepEnergyCost = 0;
@@ -168,7 +169,7 @@ export class ExpansionEvaluator {
 
 		const netIncome = (energyPerSource*sourcePositions.length/ENERGY_REGEN_TIME)-creepEnergyCost;
 
-		let msg = `(Potential) Outpost ${room.print} type ${roomType} evaluated for colony at ${dropoffLocation.roomName} with per tick results \n`;
+		let msg = `(Potential) Outpost ${room} type ${roomType} evaluated for colony at ${dropoffLocation.roomName} with per tick results \n`;
 		msg += `Income: ${energyPerSource*sourcePositions.length/ENERGY_REGEN_TIME} Net Income: ${netIncome} Net Energy per CPU: ${netIncome/cpuCost}\n`;
 		msg += `Creep Costs: Energy ${creepEnergyCost}, Spawn Time ${spawnTimeCost}, and CPU ${cpuCost} \n`;
 		log.alert(msg);

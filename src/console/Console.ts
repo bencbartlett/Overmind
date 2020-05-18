@@ -3,6 +3,7 @@ import {Directive} from '../directives/Directive';
 import {RoomIntel} from '../intel/RoomIntel';
 import {Overlord} from '../overlords/Overlord';
 import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
+import {Cartographer} from '../utilities/Cartographer';
 import {EmpireAnalysis} from '../utilities/EmpireAnalysis';
 import {alignedNewline, bullet} from '../utilities/stringConstants';
 import {color, printRoomName, toColumns} from '../utilities/utils';
@@ -57,6 +58,7 @@ export class OvermindConsole {
 		global.getEmpireMineralDistribution = this.getEmpireMineralDistribution;
 		global.listPortals = this.listPortals;
 		global.evaluateOutpostEfficiencies = this.evaluateOutpostEfficiencies;
+		global.evaluatePotentialOutpostEfficiencies = this.evaluatePotentialOutpostEfficiencies;
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -106,6 +108,7 @@ export class OvermindConsole {
 		descr['getEmpireMineralDistribution()'] = 'returns current census of colonies and mined sk room minerals';
 		descr['getPortals(rangeFromColonies)'] = 'returns active portals within colony range';
 		descr['evaluateOutpostEfficiencies()'] = 'prints all colony outposts efficiency';
+		descr['evaluatePotentialOutpostEfficiencies()'] = 'prints all nearby unmined outposts';
 
 		// Console list
 		const descrMsg = toColumns(descr, {justify: true, padChar: '.'});
@@ -534,7 +537,7 @@ export class OvermindConsole {
 		colonies.forEach(colony => {
 			if (colony.bunker) {
 				colony.outposts.forEach(outpost => {
-					const res = ExpansionEvaluator.computeTheoreticalMiningEfficiency(colony.bunker!.anchor, outpost);
+					const res = ExpansionEvaluator.computeTheoreticalMiningEfficiency(colony.bunker!.anchor, outpost.name);
 					if (typeof res === 'boolean') {
 						log.error(`Failed on outpost ${outpost.print}`);
 					} else {
@@ -556,6 +559,42 @@ export class OvermindConsole {
 
 		return ret;
 	}
+
+	static evaluatePotentialOutpostEfficiencies(): string {
+		const colonies = getAllColonies();
+		const outpostEfficiencies: {[roomName: string]: number} = {};
+		let avgEnergyPerCPU = 0;
+
+		colonies.forEach(colony => {
+			if (colony.bunker) {
+				Cartographer.findRoomsInRange(colony.name, 2).forEach(outpost => {
+					if (!colony.outposts.map(room => room.name).includes(outpost)) {
+						const res = ExpansionEvaluator.computeTheoreticalMiningEfficiency(colony.bunker!.anchor, outpost);
+						if (typeof res === 'boolean') {
+							log.error(`Failed on outpost ${outpost}`);
+						} else {
+							outpostEfficiencies[outpost] = res;
+							avgEnergyPerCPU += res;
+						}
+					}
+				});
+			}
+		});
+
+		avgEnergyPerCPU = avgEnergyPerCPU/Object.keys(outpostEfficiencies).length;
+		let ret = `Possible new outposts above avg efficiency of ${avgEnergyPerCPU}: \n`;
+
+		for (const outpost in outpostEfficiencies) {
+			// 20E/cpu is a good guideline for an efficient room
+			if (outpostEfficiencies[outpost] > avgEnergyPerCPU*1.25 || outpostEfficiencies[outpost] > 20) {
+				ret += `${outpost} ${outpostEfficiencies[outpost]} \n`;
+			}
+		}
+
+		return ret;
+	}
+
+
 
 	// Memory management ===============================================================================================
 
