@@ -345,7 +345,7 @@ export abstract class Overlord {
 		for (const creep of idleCreeps) {
 			// TODO: check range of creep from overlord
 			setOverlord(creep, this);
-			reassigned++
+			reassigned++;
 			if (reassigned >= maxPerTick) {
 				break;
 			}
