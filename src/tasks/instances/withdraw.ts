@@ -4,7 +4,7 @@ import {isRuin, isTombstone,} from '../../declarations/typeGuards';
 import {profile} from '../../profiler/decorator';
 import {Task} from '../Task';
 
-export type withdrawTargetType = AnyStoreStructure
+export type withdrawTargetType = AnyStoreStructure;
 
 export const withdrawTaskName = 'withdraw';
 

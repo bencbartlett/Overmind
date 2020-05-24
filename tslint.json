@@ -9,27 +9,53 @@
     ]
   },
   "rules": {
-    "align": false,
-    "array-type": false,
-    "arrow-parens": false,
+    // Grouped/ordered the same as https://palantir.github.io/tslint/rules/
+
+    // TypeScript-specific
     "ban-types": false,
+    "member-access": [
+      true,
+      "no-public"
+    ],
+    "member-ordering": [
+      false
+    ],
+    "no-empty-interface": false,
+    "no-namespace": [
+      true,
+      "allow-declarations"
+    ],
+    "only-arrow-functions": false,
+
+    // Functionality
     "curly": [
       true,
       "ignore-same-line"
     ],
     "forin": false,
-    "indent": [
-      true,
-      "tabs",
-      4
+    "no-console": [
+      false
     ],
+    "no-empty": false,
+    "no-shadowed-variable": false,
+    "triple-equals": false,
+
+    // Maintainability
+    "max-classes-per-file": false,
+    "object-literal-sort-keys": false,
+    "prefer-const": [
+      true,
+      {
+        "destructuring": "all"
+      }
+    ],
+
+    // Style
+    "array-type": false,
     "interface-name": false,
     "interface-over-type-literal": false,
-    "jsdoc-format": [
-      true,
-      "check-multiline-start"
-    ],
-    "object-literal-sort-keys": false,
+    "no-angle-bracket-type-assertion": false,
+    "object-literal-shorthand": false,
     "one-line": [
       true,
       "check-catch",
@@ -39,46 +65,6 @@
       "check-whitespace"
     ],
     "one-variable-per-declaration": false,
-    "only-arrow-functions": false,
-    "max-classes-per-file": false,
-    "max-line-length": [
-      true,
-      120
-    ],
-    "member-access": [
-      true,
-      "no-public"
-    ],
-    "member-ordering": [
-      false
-    ],
-    "no-angle-bracket-type-assertion": false,
-    "no-consecutive-blank-lines": false,
-    "no-console": [
-      false
-    ],
-    "no-empty": false,
-    "no-empty-interface": false,
-    "no-namespace": [
-      true,
-      "allow-declarations"
-    ],
-    "no-shadowed-variable": false,
-    "no-trailing-whitespace": false,
-    "object-literal-shorthand": false,
-    "prefer-const": [
-      true,
-      {
-        "destructuring": "all"
-      }
-    ],
-    "quotemark": [
-      true,
-      "single"
-      // I recognize the irony here
-    ],
-    "trailing-comma": false,
-    "triple-equals": false,
     "variable-name": [
       true,
       "ban-keywords",
@@ -86,6 +72,31 @@
       "allow-pascal-case",
       "allow-leading-underscore"
     ],
+
+    // Format
+    "align": false,
+    "arrow-parens": false,
+    "indent": [
+      true,
+      "tabs",
+      4
+    ],
+    "jsdoc-format": [
+      true,
+      "check-multiline-start"
+    ],
+    "max-line-length": [
+      true,
+      120
+    ],
+    "quotemark": [
+      true,
+      "single"
+      // I recognize the irony here
+    ],
+    "no-consecutive-blank-lines": false,
+    "no-trailing-whitespace": false,
+    "trailing-comma": false,
     "whitespace": false
   }
 }

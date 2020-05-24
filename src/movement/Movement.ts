@@ -741,7 +741,7 @@ export class Movement {
 		});
 		if (pos) {
 			const direction = creep.pos.getDirectionTo(pos);
-			creep.debug(`moving off exit toward ${pos.print}, direction ${direction}`)
+			creep.debug(`moving off exit toward ${pos.print}, direction ${direction}`);
 			return creep.move(direction);
 		} else {
 			log.warning(`${creep.print}: cannot move off exit!`);

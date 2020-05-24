@@ -21,7 +21,7 @@
     "push-main": "rollup -c --environment DEST:main",
     "push-pserver": "rollup -c --environment DEST:pserver",
     "push-screepsplus": "rollup -c --environment DEST:screepsplus",
-    "test": "npm run clean && npm run build"
+    "test": "npm run clean && npm run build && npm run lint"
   },
   "engines": {
     "node": "10.x"
