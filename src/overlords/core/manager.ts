@@ -374,7 +374,7 @@ export class CommandCenterOverlord extends Overlord {
 		// Look for tombstones at position
 		const tombstones = manager.pos.lookFor(LOOK_TOMBSTONES);
 		const tombstone = _.first(tombstones);
-		if (tombstone) {
+		if (tombstone && _.sum(tombstone.store) > 0) {
 			manager.task = Tasks.chain([Tasks.withdrawAll(tombstone), Tasks.transferAll(this.commandCenter.storage)]);
 			return true;
 		}
