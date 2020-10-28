@@ -148,6 +148,11 @@ export class CreepSetup {
 		return body;
 	}
 
+	generateMaxedBody() {
+		// TODO hardcoded for our current cap with extensions missing
+		return this.generateBody(11100);
+	}
+
 	/**
 	 * Returns the number of parts that a body will have if made from a given colony
 	 */
