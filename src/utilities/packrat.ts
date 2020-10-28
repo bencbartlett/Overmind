@@ -1,4 +1,44 @@
+/**
+ * screeps-packrat
+ * ---------------
+ * Lightning-fast and memory-efficient serialization of Screeps IDs, Coords, and RoomPositions
+ * Code written by Muon as part of Overmind Screeps AI. Feel free to adapt as desired.
+ * Package repository: https://github.com/bencbartlett/screeps-packrat
+ *
+ * Plain JS version is available in the #share-thy-code channel on the Screeps Slack.
+ *
+ * To use: import desired functions from module, or import entire module on main and use functions from global.
+ * To benchmark: import tests file, PackratTests.run()
+ *
+ * Exported functions (available on global):
+ *
+ * +--------------------------+------------------------------------------------+-----------------+--------------------+
+ * |         function         |                  description                   | execution time* | memory reduction** |
+ * +--------------------------+------------------------------------------------+-----------------+--------------------+
+ * | packId                   | packs a game object id into 6 chars            | 500ns           | -75%               |
+ * | unpackId                 | unpacks 6 chars into original format           | 1.3us           |                    |
+ * | packIdList               | packs a list of ids into a single string       | 500ns/id        | -81%               |
+ * | unpackIdList             | unpacks a string into a list of ids            | 1.2us/id        |                    |
+ * | packPos                  | packs a room position into 2 chars             | 150ns           | -90%               |
+ * | unpackPos                | unpacks 2 chars into a room position           | 600ns           |                    |
+ * | packPosList              | packs a list of room positions into a string   | 150ns/pos       | -95%               |
+ * | unpackPosList            | unpacks a string into a list of room positions | 1.5us/pos       |                    |
+ * | packCoord                | packs a coord (e.g. {x:25,y:25}) as a string   | 150ns           | -80%               |
+ * | unpackCoord              | unpacks a string into a coord                  | 60-150ns        |                    |
+ * | packCoordList            | packs a list of coords as a string             | 120ns/coord     | -94%               |
+ * | unpackCoordList          | unpacks a string into a list of coords         | 100ns/coord     |                    |
+ * | unpackCoordAsPos         | unpacks string + room name into a pos          | 500ns           |                    |
+ * | unpackCoordListAsPosList | unpacks string + room name into a list of pos  | 500ns/coord     |                    |
+ * +--------------------------+------------------------------------------------+-----------------+--------------------+
+ *
+ *  * Execution time measured on shard2 public servers and may vary on different machines or shards.
+ * ** Memory reduction for list functions is the asymptotic limit of lists containing many entries. Lower reductions
+ *    can be expected for smaller lists.
+ *
+ */
+
 /* tslint:disable no-bitwise prefer-for-of */
+
 
 /**
  * Convert a hex string to a Uint16Array.
@@ -100,7 +140,7 @@ export function packCoord(coord: Coord): string {
 /**
  * Unpacks a coord stored as a single utf-16 character
  *
- * Benchmarking: average of 60ns-150ns to execute on shard2 public server
+ * Benchmarking: average of 60ns-100ns to execute on shard2 public server
  */
 export function unpackCoord(char: string): Coord {
 	const xShiftedSixOrY = char.charCodeAt(0) - 65;
@@ -112,24 +152,12 @@ export function unpackCoord(char: string): Coord {
 
 /**
  * Unpacks a coordinate and creates a RoomPosition object from a specified roomName
+ *
+ * Benchmarking: average of 500ns to execute on shard2 public server
  */
 export function unpackCoordAsPos(packedCoord: string, roomName: string): RoomPosition {
 	const coord = unpackCoord(packedCoord);
 	return new RoomPosition(coord.x, coord.y, roomName);
-}
-
-/**
- * Unpacks a list of coordinates and creates a list of RoomPositions from a specified roomName
- */
-export function unpackCoordListAsPosList(packedCoords: string, roomName: string): RoomPosition[] {
-	const positions: RoomPosition[] = [];
-	let coord: Coord;
-	for (let i = 0; i < packedCoords.length; ++i) {
-		// Each coord is saved as a single character; unpack each and insert the room name to get the positions list
-		coord = unpackCoord(packedCoords[i]);
-		positions.push(new RoomPosition(coord.x, coord.y, roomName));
-	}
-	return positions;
 }
 
 /**
@@ -162,6 +190,22 @@ export function unpackCoordList(chars: string): Coord[] {
 					});
 	}
 	return coords;
+}
+
+/**
+ * Unpacks a list of coordinates and creates a list of RoomPositions from a specified roomName
+ *
+ * Benchmarking: average of 500ns per coord to execute on shard2 public server
+ */
+export function unpackCoordListAsPosList(packedCoords: string, roomName: string): RoomPosition[] {
+	const positions: RoomPosition[] = [];
+	let coord: Coord;
+	for (let i = 0; i < packedCoords.length; ++i) {
+		// Each coord is saved as a single character; unpack each and insert the room name to get the positions list
+		coord = unpackCoord(packedCoords[i]);
+		positions.push(new RoomPosition(coord.x, coord.y, roomName));
+	}
+	return positions;
 }
 
 
@@ -248,7 +292,7 @@ function unpackRoomName(char: string): string {
  * was chosen to be fast to compute (x << 6 | y is significantly faster than 50 * x + y) and to avoid control
  * characters, as "A" starts at character code 65.
  *
- * Benchmarking: average of 100-400ns to execute on shard2 public server, reduce stringified size by 90%
+ * Benchmarking: average of 150ns to execute on shard2 public server, reduce stringified size by 90%
  */
 export function packPos(pos: RoomPosition): string {
 	return packCoord(pos) + packRoomName(pos.roomName);
@@ -257,7 +301,7 @@ export function packPos(pos: RoomPosition): string {
 /**
  * Unpacks a RoomPosition stored as a pair of utf-16 characters.
  *
- * Benchmarking: average of 100-500ns to execute on shard2 public server.
+ * Benchmarking: average of 600ns to execute on shard2 public server.
  */
 export function unpackPos(chars: string): RoomPosition {
 	const {x, y} = unpackCoord(chars[0]);
@@ -268,7 +312,7 @@ export function unpackPos(chars: string): RoomPosition {
  * Packs a list of RoomPositions as a utf-16 string. This is better than having a list of packed RoomPositions, as it
  * avoids extra commas and "" when memroy gets stringified.
  *
- * Benchmarking: average of 100-200ns per position to execute on shard2 public server, reduce stringified size by 95%
+ * Benchmarking: average of 150ns per position to execute on shard2 public server, reduce stringified size by 95%
  */
 export function packPosList(posList: RoomPosition[]): string {
 	let str = '';
@@ -281,7 +325,7 @@ export function packPosList(posList: RoomPosition[]): string {
 /**
  * Unpacks a list of RoomPositions stored as a utf-16 string.
  *
- * Benchmarking: average of 0.5-1.5us per position to execute on shard2 public server.
+ * Benchmarking: average of 1.5us per position to execute on shard2 public server.
  */
 export function unpackPosList(chars: string): RoomPosition[] {
 	const posList: RoomPosition[] = [];
@@ -300,8 +344,10 @@ global.packIdList = packIdList;
 global.unpackIdList = unpackIdList;
 global.packCoord = packCoord;
 global.unpackCoord = unpackCoord;
+global.unpackCoordAsPos  = unpackCoordAsPos;
 global.packCoordList = packCoordList;
 global.unpackCoordList = unpackCoordList;
+global.unpackCoordListAsPosList  = unpackCoordListAsPosList;
 global.packPos = packPos;
 global.unpackPos = unpackPos;
 global.packPosList = packPosList;
@@ -450,18 +496,34 @@ export class PackratTests {
 		elapsed = Game.cpu.getUsed() - start;
 		console.log(`Time elapsed: ${elapsed}; avg: ${elapsed / coordListUnpacked.length}`);
 
+		console.log(`Testing coord to pos decoding...`);
+		start = Game.cpu.getUsed();
+		const coordAsPosUnpacked = [];
+		for (let i = 0, len = coordPacked.length; i < len; ++i) {
+			coordAsPosUnpacked.push(unpackCoordAsPos(coordPacked[i], 'W10N10'));
+		}
+		elapsed = Game.cpu.getUsed() - start;
+		console.log(`Time elapsed: ${elapsed}; avg: ${elapsed / coordAsPosUnpacked.length}`);
+
+
+		console.log(`Testing listCoord to posList decoding...`);
+		start = Game.cpu.getUsed();
+		const coordListAsPosListUnpacked = unpackCoordListAsPosList(coordListPacked, 'W10N10');
+		elapsed = Game.cpu.getUsed() - start;
+		console.log(`Time elapsed: ${elapsed}; avg: ${elapsed / coordListAsPosListUnpacked.length}`);
+
 
 		let posEqual = true;
 		for (let i = 0; i < allCoord.length; i++) {
-			if (!(allCoord[i].x == coordUnpacked[i].x && allCoord[i].y == coordUnpacked[i].y)) {
+			if (!(allCoord[i].x == coordAsPosUnpacked[i].x && allCoord[i].y == coordAsPosUnpacked[i].y)) {
 				console.log(`Unpacked pos not equal! orig: ${JSON.stringify(allCoord[i])}; `+
-							`unpacked: ${JSON.stringify(coordUnpacked[i])}`);
+							`unpacked: ${JSON.stringify(coordAsPosUnpacked[i])}`);
 				posEqual = false;
 				break;
 			}
-			if (!(allCoord[i].x == coordListUnpacked[i].x && allCoord[i].y == coordListUnpacked[i].y)) {
+			if (!(allCoord[i].x == coordListAsPosListUnpacked[i].x && allCoord[i].y == coordListAsPosListUnpacked[i].y)) {
 				console.log(`Unpacked pos not equal! orig: ${JSON.stringify(allCoord[i])}; `+
-							`unpacked: ${JSON.stringify(coordListUnpacked[i])}`);
+							`unpacked: ${JSON.stringify(coordListAsPosListUnpacked[i])}`);
 				posEqual = false;
 				break;
 			}
@@ -548,8 +610,15 @@ export class PackratTests {
 
 	}
 
+	static run() {
+		PackratTests.testIdPacker();
+		PackratTests.testCoordPacker();
+		PackratTests.testPosPacker();
+	}
 
 }
+
+global.PackratTests = PackratTests;
 
 
 
