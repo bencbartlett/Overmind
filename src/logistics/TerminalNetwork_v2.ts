@@ -23,10 +23,6 @@ interface TerminalNetworkMemory {
 const getDefaultTerminalNetworkMemory: () => TerminalNetworkMemory = () => ({});
 
 interface TerminalNetworkStats {
-	// transfers: {
-	// 	[resourceType: string]: { [origin: string]: { [destination: string]: number } },
-	// 	costs: { [origin: string]: { [destination: string]: number } }
-	// };
 	assets: { [resource: string]: number };
 	fractionalEnergyTransferCost: number;
 	incomingResources: { [resource: string]: { [colony: string]: number } };
@@ -46,9 +42,6 @@ interface TerminalNetworkStats {
 }
 
 const getDefaultTerminalNetworkStats: () => TerminalNetworkStats = () => ({
-	// transfers: {
-	// 	costs: {},
-	// },
 	assets: {},
 	fractionalEnergyTransferCost: 0.25, // some believable initial value
 	incomingResources: {},
@@ -380,25 +373,6 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		}
 		return this.assets;
 	}
-
-	// Transfer logging and notification stuff =========================================================================
-
-	// private logTransfer(resourceType: ResourceConstant, amount: number, origin: string, destination: string) {
-	// 	if (!this.stats.transfers[resourceType]) this.stats.transfers[resourceType] = {};
-	// 	if (!this.stats.transfers[resourceType][origin]) this.stats.transfers[resourceType][origin] = {};
-	// 	if (!this.stats.transfers[resourceType][origin][destination]) {
-	// 		this.stats.transfers[resourceType][origin][destination] = 0;
-	// 	}
-	// 	this.stats.transfers[resourceType][origin][destination] += amount;
-	// 	this.logTransferCosts(amount, origin, destination);
-	// }
-	//
-	// private logTransferCosts(amount: number, origin: string, destination: string) {
-	// 	if (!this.stats.transfers.costs[origin]) this.stats.transfers.costs[origin] = {};
-	// 	if (!this.stats.transfers.costs[origin][destination]) this.stats.transfers.costs[origin][destination] = 0;
-	// 	const transactionCost = Game.market.calcTransactionCost(amount, origin, destination);
-	// 	this.stats.transfers.costs[origin][destination] += transactionCost;
-	// }
 
 	private notify(msg: string): void {
 		this.notifications.push(bullet + msg);
