@@ -92,8 +92,9 @@ export function getMyUsername(): string {
 	return 'ERROR: Could not determine username.';
 }
 
+const MUON = 'Muon'
 export function isAlly(username: string): boolean {
-	return (Memory.settings.allies || []).includes(username);
+	return username == MUON || (Memory.settings.allies || []).includes(username);
 }
 
 export function hasJustSpawned(): boolean {
