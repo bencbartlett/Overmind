@@ -222,6 +222,12 @@ export class Zerg extends AnyZerg {
 		return result;
 	}
 
+	goDismantle(target: Structure) {
+		if (this.dismantle(target) == ERR_NOT_IN_RANGE) {
+			this.goTo(target);
+		}
+	}
+
 	// drop(resourceType: ResourceConstant, amount?: number) {
 	// 	const result = this.creep.drop(resourceType, amount);
 	// 	if (!this.actionLog.drop) this.actionLog.drop = (result == OK);

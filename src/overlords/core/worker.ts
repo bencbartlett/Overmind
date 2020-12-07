@@ -328,14 +328,6 @@ export class WorkerOverlord extends Overlord {
 					|| this.colony.controller.progress > this.colony.controller.progressTotal)) {
 				if (this.upgradeActions(worker)) return;
 			}
-
-			if (this.colony.controller.upgradeBlocked) {
-				const site = _.first(this.colony.controller.pos.findInRange(FIND_CONSTRUCTION_SITES, 1));
-				if (site) {
-					worker.build(site);
-				}
-			}
-
 			// Repair damaged non-road non-barrier structures
 			if (this.repairStructures.length > 0 && this.colony.defcon == DEFCON.safe) {
 				if (this.repairActions(worker)) return;

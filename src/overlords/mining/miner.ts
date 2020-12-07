@@ -9,7 +9,7 @@ import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Cartographer, ROOMTYPE_SOURCEKEEPER} from '../../utilities/Cartographer';
-import {maxBy, minBy} from '../../utilities/utils';
+import {getCacheExpiration, maxBy, minBy} from '../../utilities/utils';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord, OverlordMemory} from '../Overlord';
 
@@ -21,9 +21,14 @@ export const DoubleMinerSetupCost = bodyCost(Setups.drones.miners.double.generat
 const BUILD_OUTPUT_FREQUENCY = 15;
 const SUICIDE_CHECK_FREQUENCY = 3;
 const MINER_SUICIDE_THRESHOLD = 200;
+const DISMANTLE_CHECK_FREQUENCY = 1500;
+
+const DISMANTLE_CHECK = 'dc';
 
 interface MiningOverlordMemory extends OverlordMemory {
 	doubleSource?: boolean;
+	[DISMANTLE_CHECK]?: number;
+	dismantleNeeded?: boolean;
 }
 
 /**
@@ -52,6 +57,8 @@ export class MiningOverlord extends Overlord {
 	minersNeeded: number;
 	allowDropMining: boolean;
 
+	private dismantlePositions: RoomPosition[] | undefined;
+
 	static settings = {
 		minLinkDistance : 10,
 		dropMineUntilRCL: 3,
@@ -66,6 +73,18 @@ export class MiningOverlord extends Overlord {
 
 		// Populate structures
 		this.populateStructures();
+
+		// Check if dismantling is needed
+		if (this.memory.dismantleNeeded || Game.time > (this.memory[DISMANTLE_CHECK] || 0)) {
+			const dismantleNeeded = this.isDismantlingNeeded();
+			if (dismantleNeeded == true) {
+				this.memory.dismantleNeeded = true;
+				this.dismantlePositions = this.getDismantlePositions();
+			} else if (dismantleNeeded == false) {
+				this.memory[DISMANTLE_CHECK] = getCacheExpiration(DISMANTLE_CHECK_FREQUENCY,
+																  DISMANTLE_CHECK_FREQUENCY / 5);
+			}
+		}
 
 		// Compute energy output
 		if (Cartographer.roomType(this.pos.roomName) == ROOMTYPE_SOURCEKEEPER) {
@@ -104,6 +123,7 @@ export class MiningOverlord extends Overlord {
 			this.setup = Setups.drones.miners.standard;
 			// todo: double miner condition
 		}
+
 		const miningPowerEach = this.setup.getBodyPotential(WORK, this.colony);
 		// this.minersNeeded = this.isDisabled ? 0 : Math.min(Math.ceil(this.miningPowerNeeded / miningPowerEach),
 		// 							 this.pos.availableNeighbors(true).length);
@@ -159,6 +179,63 @@ export class MiningOverlord extends Overlord {
 		return false;
 	}
 
+	/**
+	 * Checks if dismantling is needed in the operating room
+	 */
+	private isDismantlingNeeded(): boolean | undefined {
+		if (this.room) {
+			const targets = _.compact([...this.room.sources, this.room.controller]) as RoomObject[];
+			for (const target of targets) {
+				if (this.findBlockingStructure(target)) {
+					return true;
+				}
+			}
+			return false;
+		} else {
+			return undefined;
+		}
+	}
+
+	/**
+	 * Checks if dismantling is needed in the operating room
+	 */
+	private getDismantlePositions(): RoomPosition[] {
+		const dismantleStructures: Structure[] = [];
+		if (this.room) {
+			const targets = _.compact([...this.room.sources, this.room.controller]) as RoomObject[];
+			for (const target of targets) {
+				// Add blocking structures
+				const blockingStructure = this.findBlockingStructure(target);
+				if (blockingStructure) {
+					dismantleStructures.push(blockingStructure);
+				}
+				// Add unwalkable structures with low hits in 2 range
+				for (const pos of target.pos.getPositionsInRange(2, false, false)) {
+					const unwalkableStructure = _.find(pos.lookFor(LOOK_STRUCTURES), s => !s.isWalkable);
+					if (unwalkableStructure && !(<OwnedStructure>unwalkableStructure).my) {
+						dismantleStructures.push(unwalkableStructure);
+					}
+				}
+			}
+		} else {
+			log.error(`MiningOverlord.getDismantleStructures() called with no vision in room ${this.pos.roomName}!`);
+		}
+		return _.unique(_.map(dismantleStructures, s => s.pos));
+	}
+
+	/**
+	 * Finds the structure which is blocking access to a source or controller
+	 */
+	private findBlockingStructure(target: RoomObject): Structure | undefined {
+		if (!this.room) return;
+		const pos = Pathing.findBlockingPos(this.colony.pos, target.pos,
+											_.filter(this.room.structures, s => !s.isWalkable));
+		if (pos) {
+			const structure = _.find(pos.lookFor(LOOK_STRUCTURES), s => !s.isWalkable);
+			return structure || log.error(`${this.print}: no structure at blocking pos ${pos.print}!`);
+		}
+	}
+
 	private populateStructures() {
 		if (Game.rooms[this.pos.roomName]) {
 			this.source = _.first(this.pos.lookFor(LOOK_SOURCES));
@@ -178,6 +255,7 @@ export class MiningOverlord extends Overlord {
 		// Refresh your references to the objects
 		$.refresh(this, 'source', 'container', 'link', 'constructionSite');
 	}
+
 
 	/**
 	 * Calculate where the container output will be built for this site
@@ -520,6 +598,51 @@ export class MiningOverlord extends Overlord {
 	}
 
 	/**
+	 * Actions for handling mining at RCL high enough to spawn ideal miner body to saturate source
+	 */
+	private dismantleActions(miner: Zerg): any {
+
+		// Go to the room
+		if (!miner.safelyInRoom(this.pos.roomName)) {
+			return miner.goToRoom(this.pos.roomName);
+		}
+
+		// We're done if there are no dismantle positions left
+		if (!this.dismantlePositions || this.dismantlePositions.length == 0) {
+			log.info(`Miner dismantling completed in room ${miner.room.print}`);
+			delete this.memory.dismantleNeeded;
+			this.memory[DISMANTLE_CHECK] = getCacheExpiration(DISMANTLE_CHECK_FREQUENCY,
+															  DISMANTLE_CHECK_FREQUENCY / 5);
+			return;
+		}
+
+		// Find the first reachable position to dismantle stuff
+		const dismantlePos = _.find(this.dismantlePositions,
+									pos => Pathing.isReachable(miner.pos, pos,
+															   _.filter(miner.room.structures, s => !s.isWalkable)));
+		if (dismantlePos) {
+			// Find the first blocking structure on the target position
+			const dismantleTarget = _.find(dismantlePos.lookFor(LOOK_STRUCTURES),
+										   s => !s.isWalkable && !(<OwnedStructure>s).my);
+			// Dismantle it
+			if (dismantleTarget) {
+				if (dismantleTarget.hits > 1000 && Game.time % 10 == 0) {
+					log.alert(`${miner.print} attempting to dismantle large structure!`);
+				}
+				return miner.goDismantle(dismantleTarget);
+			}
+			// Otherwise reclaculate dismantle positions and call again to get next target
+			else {
+				this.dismantlePositions = this.getDismantlePositions();
+				return this.dismantleActions(miner);
+			}
+		} else {
+			log.warning(`No reachable dismantle positions for ${miner.print}!`);
+		}
+
+	}
+
+	/**
 	 * Move onto harvesting position or near to source
 	 */
 	private goToMiningSite(miner: Zerg, avoidSK = true): boolean {
@@ -580,11 +703,17 @@ export class MiningOverlord extends Overlord {
 		}
 	}
 
+
 	private handleMiner(miner: Zerg) {
 
 		// Stay safe out there!
 		if (miner.avoidDanger({timer: 10, dropEnergy: true})) {
 			return;
+		}
+
+		// Check if stuff needs to be dismantled to clean up the room
+		if (this.memory.dismantleNeeded) {
+			return this.dismantleActions(miner);
 		}
 
 		// Run the appropriate mining actions

@@ -587,7 +587,7 @@ export class RoomIntel {
 
 	/**
 	 * Records threat levels, visibility, consecutive safe/unsafe ticks and other data on visible or invisible rooms.
-	 * Must be run in RoomIntel.init(), as it populates several room properties used elsewhere
+	 * Must be run in RoomIntel.init(), as it populates several room properties used elsewhere // TODO: expensive
 	 */
 	private static recordSafety(roomName: string): void {
 		// Make sure the memory objects are there

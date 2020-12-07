@@ -41,11 +41,7 @@ export class PioneerOverlord extends Overlord {
 													_.filter(pioneer.room.structures, s => !s.isWalkable));
 		if (blockingPos) {
 			const structure = blockingPos.lookFor(LOOK_STRUCTURES)[0];
-			if (structure) {
-				return structure;
-			} else {
-				log.error(`${this.print}: no structure at blocking pos ${blockingPos.print}! (Why?)`);
-			}
+			return structure || log.error(`${this.print}: no structure at blocking pos ${blockingPos.print}!`);
 		}
 	}
 
