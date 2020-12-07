@@ -76,13 +76,15 @@ export class MiningOverlord extends Overlord {
 
 		// Check if dismantling is needed
 		if (this.memory.dismantleNeeded || Game.time > (this.memory[DISMANTLE_CHECK] || 0)) {
-			const dismantleNeeded = this.isDismantlingNeeded();
-			if (dismantleNeeded == true) {
-				this.memory.dismantleNeeded = true;
+			if (this.room) {
 				this.dismantlePositions = this.getDismantlePositions();
-			} else if (dismantleNeeded == false) {
-				this.memory[DISMANTLE_CHECK] = getCacheExpiration(DISMANTLE_CHECK_FREQUENCY,
-																  DISMANTLE_CHECK_FREQUENCY / 5);
+				if (this.dismantlePositions.length > 0) {
+					this.memory.dismantleNeeded = true;
+					this.dismantlePositions = this.getDismantlePositions();
+				} else {
+					this.memory[DISMANTLE_CHECK] = getCacheExpiration(DISMANTLE_CHECK_FREQUENCY,
+																	  DISMANTLE_CHECK_FREQUENCY / 5);
+				}
 			}
 		}
 
@@ -177,23 +179,6 @@ export class MiningOverlord extends Overlord {
 			}
 		}
 		return false;
-	}
-
-	/**
-	 * Checks if dismantling is needed in the operating room
-	 */
-	private isDismantlingNeeded(): boolean | undefined {
-		if (this.room) {
-			const targets = _.compact([...this.room.sources, this.room.controller]) as RoomObject[];
-			for (const target of targets) {
-				if (this.findBlockingStructure(target)) {
-					return true;
-				}
-			}
-			return false;
-		} else {
-			return undefined;
-		}
 	}
 
 	/**
