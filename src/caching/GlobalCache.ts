@@ -74,7 +74,7 @@ export class $ { // $ = cash = cache... get it? :D
 	}
 
 	static costMatrixRecall(roomName: string, key: string): CostMatrix | undefined {
-		const cacheKey = roomName + ':' + key;
+		const cacheKey = roomName + 'm' + key;
 		return _cache.costMatrices[cacheKey];
 	}
 
