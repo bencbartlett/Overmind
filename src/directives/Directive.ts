@@ -48,12 +48,6 @@ export abstract class Directive {
 		if (!this.memory[MEM.TICK]) {
 			this.memory[MEM.TICK] = Game.time;
 		}
-		// Delete the directive if expired
-		if (this.memory[MEM.EXPIRATION] && !this.memory.persistent && Game.time > this.memory[MEM.EXPIRATION]!) {
-			log.alert(`Removing expired directive ${this.print}!`);
-			flag.remove();
-			return;
-		}
 
 		// if (this.memory.waypoints) {
 		// 	this.waypoints = _.map(this.memory.waypoints, posName => getPosFromString(posName)!);
@@ -72,6 +66,13 @@ export abstract class Directive {
 		} else {
 			this.pos = flag.pos;
 			this.room = flag.room;
+		}
+
+		// Delete the directive if expired
+		if (this.memory[MEM.EXPIRATION] && !this.memory.persistent && Game.time > this.memory[MEM.EXPIRATION]!) {
+			log.alert(`Removing expired directive ${this.print}!`);
+			flag.remove();
+			return;
 		}
 
 		// Handle colony assigning
