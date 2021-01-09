@@ -135,7 +135,7 @@ export class BootstrappingOverlord extends Overlord {
 				const firstOverlord = miningOverlords[0];
 				// first
 				if (this.colony.hatchery) {
-					let setup = Setups.drones.miners.first;
+					let setup = Setups.drones.miners.default;
 					if (this.colony.controller.level > 2) {
 						setup = Setups.drones.miners.emergency;
 					}
