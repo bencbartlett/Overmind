@@ -30,13 +30,13 @@ export class BootstrappingOverlord extends Overlord {
 		this.fillers = this.zerg(Roles.filler);
 		// Pick up all possible structures first
 		this.supplyStructures = [...this.colony.spawns, ...this.colony.extensions];
-		this.withdrawStructures = [this.colony.storage!,
-									this.colony.terminal!,
-									this.colony.powerSpawn!,
-									...this.room.containers,
-									...this.room.links,
-									...this.room.towers,
-									...this.room.labs];
+		this.withdrawStructures = _.compact([this.colony.storage!,
+											this.colony.terminal!,
+											this.colony.powerSpawn!,
+											...this.room.containers,
+											...this.room.links,
+											...this.room.towers,
+											...this.room.labs]);
 	}
 
 	private spawnBootstrapMiners() {
