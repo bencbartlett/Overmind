@@ -161,7 +161,7 @@ export class BunkerQueenOverlord extends Overlord {
 					if (exceedAmount > 0) {
 						tasks.push(Tasks.transfer(transferTarget, res as ResourceConstant, exceedAmount))
 					} else if (exceedAmount < 0) {
-						queenCarry[res] -= exceedAmount
+						queenCarry[res] = -exceedAmount
 					}
 				}
 				queenPos = transferTarget.pos;
