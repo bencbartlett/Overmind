@@ -119,18 +119,6 @@ export class BunkerQueenOverlord extends Overlord {
 	// Builds a series of tasks to empty unnecessary carry contents, withdraw required resources, and supply structures
 	private buildSupplyTaskManifest(queen: Zerg): Task | null {
 		let tasks: Task[] = [];
-		// Step 1: empty all contents (this shouldn't be necessary since queen is normally empty at this point)
-		let queenPos = queen.pos;
-		if (_.sum(queen.carry) > 0) {
-			const transferTarget = this.colony.terminal || this.colony.storage || this.batteries[0];
-			if (transferTarget) {
-				tasks.push(Tasks.transferAll(transferTarget));
-				queenPos = transferTarget.pos;
-			} else {
-				log.warning(`No transfer targets for ${queen.print}!`);
-				return null;
-			}
-		}
 		// Step 2: figure out what you need to supply for and calculate the needed resources
 		const queenCarry = {} as { [resourceType: string]: number };
 		const allStore = mergeSum(_.map(this.storeStructures, s => s.store));
@@ -149,7 +137,7 @@ export class BunkerQueenOverlord extends Overlord {
 			const remainingAmount = queen.carryCapacity - _.sum(queenCarry);
 			if (remainingAmount == 0) break;
 			// figure out how much you can withdraw
-			let amount = Math.min(request.amount, remainingAmount);
+			let amount: number | undefined = Math.min(request.amount, remainingAmount);
 			amount = Math.min(amount, allStore[request.resourceType] || 0);
 			if (amount == 0) continue;
 			// update the simulated carry
@@ -157,8 +145,32 @@ export class BunkerQueenOverlord extends Overlord {
 				queenCarry[request.resourceType] = 0;
 			}
 			queenCarry[request.resourceType] += amount;
+			// avoid auto regeneration conflict
+			if (request.target instanceof StructureSpawn && amount == request.amount) {
+				amount = undefined;
+			}
 			// add a task to supply the target
 			supplyTasks.push(Tasks.transfer(request.target, request.resourceType, amount));
+		}
+		// Step 1->2.5: decide what and how much to empty
+		let queenPos = queen.pos;
+		if (queen.carry.getUsedCapacity() > 0) {
+			const transferTarget = this.colony.terminal || this.colony.storage || this.batteries[0];
+			if (transferTarget) {
+				// tasks.push(Tasks.transferAll(transferTarget));
+				for (const res in queen.carry) {
+					const exceedAmount = queen.carry[res as ResourceConstant] - (queenCarry[res] || 0);
+					if (exceedAmount > 0) {
+						tasks.push(Tasks.transfer(transferTarget, res as ResourceConstant, exceedAmount));
+					} else if (exceedAmount < 0) {
+						queenCarry[res] = -exceedAmount;
+					}
+				}
+				queenPos = transferTarget.pos;
+			} else {
+				log.warning(`No transfer targets for ${queen.print}!`);
+				return null;
+			}
 		}
 		// Step 3: make withdraw tasks to get the needed resources
 		const withdrawTasks: Task[] = [];
