@@ -146,7 +146,9 @@ export class BunkerQueenOverlord extends Overlord {
 			}
 			queenCarry[request.resourceType] += amount;
 			// avoid auto regeneration conflict
-			if (request.target instanceof StructureSpawn && amount == request.amount) amount = undefined 
+			if (request.target instanceof StructureSpawn && amount == request.amount) {
+				amount = undefined;
+			}
 			// add a task to supply the target
 			supplyTasks.push(Tasks.transfer(request.target, request.resourceType, amount));
 		}
@@ -157,11 +159,11 @@ export class BunkerQueenOverlord extends Overlord {
 			if (transferTarget) {
 				// tasks.push(Tasks.transferAll(transferTarget));
 				for (const res in queen.carry) {
-					const exceedAmount = queen.carry[res as ResourceConstant] - (queenCarry[res] || 0)
+					const exceedAmount = queen.carry[res as ResourceConstant] - (queenCarry[res] || 0);
 					if (exceedAmount > 0) {
-						tasks.push(Tasks.transfer(transferTarget, res as ResourceConstant, exceedAmount))
+						tasks.push(Tasks.transfer(transferTarget, res as ResourceConstant, exceedAmount));
 					} else if (exceedAmount < 0) {
-						queenCarry[res] = -exceedAmount
+						queenCarry[res] = -exceedAmount;
 					}
 				}
 				queenPos = transferTarget.pos;
