@@ -32,17 +32,35 @@ export class RandomWalkerScoutOverlord extends Overlord {
 		// 	scout.goTo(enemyConstructionSites[0].pos);
 		// 	return;
 		// }
+
 		// Check if room might be connected to newbie/respawn zone
 		const indestructibleWalls = _.filter(scout.room.walls, wall => wall.hits == undefined);
 		if (indestructibleWalls.length > 0) { // go back to origin colony if you find a room near newbie zone
 			scout.task = Tasks.goToRoom(this.colony.room.name); // todo: make this more precise
-		} else {
-			// Pick a new room
-			const neighboringRooms = _.values(Game.map.describeExits(scout.pos.roomName)) as string[];
-			const roomName = _.sample(neighboringRooms);
-			if (Game.map.isRoomAvailable(roomName)) {
-				scout.task = Tasks.goToRoom(roomName);
+			return;
+		}
+
+		const roomStatus = Game.map.getRoomStatus(scout.room.name);
+
+		let neighboringRooms = <string[]>_.values(Game.map.describeExits(scout.pos.roomName));
+		neighboringRooms = _.shuffle(neighboringRooms);
+
+		// Pick a new random room from the neighboring rooms, making sure they have compatible room status
+		let neighboringRoom;
+		while ((neighboringRoom = neighboringRooms.shift())) {
+
+			const neighborStatus = Game.map.getRoomStatus(scout.room.name);
+			if (roomStatus.status !== neighborStatus.status) {
+				continue;
 			}
+
+			scout.task = Tasks.goToRoom(neighboringRoom);
+			break;
+		}
+
+		// Just move back to the colony and start over
+		if (!scout.task) {
+			scout.task = Tasks.goToRoom(this.colony.room.name);
 		}
 	}
 
