@@ -120,7 +120,7 @@ export class TransportOverlord extends Overlord {
 					// If we need to go to a buffer first to get more stuff
 					const buffer = deref(bestChoice.targetRef) as BufferTarget;
 					const withdrawAmount = Math.min(buffer.store[request.resourceType] || 0,
-													transporter.carryCapacity - _.sum(transporter.carry), amount);
+													transporter.store.getFreeCapacity(request.resourceType), amount);
 					task = task.fork(Tasks.withdraw(buffer, request.resourceType, withdrawAmount));
 					if (transporter.hasMineralsInCarry && request.resourceType == RESOURCE_ENERGY) {
 						task = task.fork(Tasks.transferAll(buffer));
@@ -162,7 +162,7 @@ export class TransportOverlord extends Overlord {
 			this.colony.logisticsNetwork.invalidateCache(transporter, request);
 		} else {
 			// If nothing to do, put everything in a store structure
-			if (_.sum(transporter.carry) > 0) {
+			if (transporter.store.getUsedCapacity() > 0) {
 				if (transporter.hasMineralsInCarry) {
 					const target = this.colony.terminal || this.colony.storage;
 					if (target) {

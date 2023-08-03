@@ -15,7 +15,7 @@ export class TaskRepair extends Task<repairTargetType> {
 	}
 
 	isValidTask() {
-		return this.creep.carry.energy > 0;
+		return this.creep.store.energy > 0;
 	}
 
 	isValidTarget() {

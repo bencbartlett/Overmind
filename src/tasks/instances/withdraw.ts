@@ -28,12 +28,12 @@ export class TaskWithdraw extends Task<withdrawTargetType> {
 
 	isValidTask() {
 		const amount = this.data.amount || 1;
-		return (_.sum(this.creep.carry) <= this.creep.carryCapacity - amount);
+		return (this.creep.store.getUsedCapacity() <= this.creep.store.getCapacity() - amount);
 	}
 
 	isValidTarget() {
 		const amount = this.data.amount || 1;
-		return !!this.target && this.target.store.getUsedCapacity(this.data.resourceType) >= amount;
+		return !!this.target && (this.target.store.getUsedCapacity(this.data.resourceType) ?? 0) >= amount;
 
 		// const target = this.target;
 		// if (isTombstone(target) || isRuin(target) || isStoreStructure(target)) {

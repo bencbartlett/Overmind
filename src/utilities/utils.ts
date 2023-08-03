@@ -73,7 +73,7 @@ export function minMax(value: number, min: number, max: number): number {
 	return Math.max(Math.min(value, max), min);
 }
 
-export function hasMinerals(store: { [resourceType: string]: number }): boolean {
+export function hasMinerals(store: StoreDefinition): boolean {
 	for (const resourceType in store) {
 		if (resourceType != RESOURCE_ENERGY && (store[<ResourceConstant>resourceType] || 0) > 0) {
 			return true;
@@ -186,14 +186,11 @@ export function toColumns(obj: { [key: string]: string }, opts = {} as ToColumnO
 /**
  * Merges a list of store-like objects, summing overlapping keys. Useful for calculating assets from multiple sources
  */
-export function mergeSum(objects: { [key: string]: number | undefined }[]): { [key: string]: number } {
-	const ret: { [key: string]: number } = {};
-	for (const object of objects) {
-		for (const key in object) {
-			const amount = object[key] || 0;
-			if (!ret[key]) {
-				ret[key] = 0;
-			}
+export function mergeSum(...stores: StoreContents[]): StoreContents {
+	const ret = <StoreContents>{};
+	for (const store of stores) {
+		for (const [key, amount] of <[ResourceConstant, number][]>Object.entries(store)) {
+			if (!ret[key]) ret[key] = 0;
 			ret[key] += amount;
 		}
 	}

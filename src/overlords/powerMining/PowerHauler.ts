@@ -45,7 +45,7 @@ export class PowerHaulingOverlord extends Overlord {
 	}
 
 	private handleHauler(hauler: Zerg) {
-		if (_.sum(hauler.carry) == 0) {
+		if (hauler.store.getUsedCapacity() === 0) {
 			if (this.directive.memory.state >= 4) {
 				// FIXME: Maybe ditch this and put it as a separate on-finishing method to reassign
 				hauler.say('💀 RIP 💀', true);
@@ -96,22 +96,22 @@ export class PowerHaulingOverlord extends Overlord {
 		} else {
 			// Travel to colony room and deposit resources
 			if (hauler.inSameRoomAs(this.colony)) {
-				for (const [resourceType, amount] of hauler.carry.contents) {
+				for (const [resourceType, amount] of hauler.store.contents) {
 					if (amount == 0) continue;
 					if (resourceType == RESOURCE_ENERGY) { // prefer to put energy in storage
-						if (this.colony.storage && _.sum(this.colony.storage.store) < STORAGE_CAPACITY) {
+						if (this.colony.storage && this.colony.storage.store.getUsedCapacity() < STORAGE_CAPACITY) {
 							hauler.task = Tasks.transfer(this.colony.storage, resourceType);
 							return;
-						} else if (this.colony.terminal && _.sum(this.colony.terminal.store) < TERMINAL_CAPACITY) {
+						} else if (this.colony.terminal && this.colony.terminal.store.getUsedCapacity() < TERMINAL_CAPACITY) {
 							hauler.task = Tasks.transfer(this.colony.terminal, resourceType);
 							return;
 						}
 					} else { // prefer to put minerals in terminal
-						this.directive.memory.totalCollected += hauler.carry.power || 0;
-						if (this.colony.terminal && _.sum(this.colony.terminal.store) < TERMINAL_CAPACITY) {
+						this.directive.memory.totalCollected += hauler.store.power || 0;
+						if (this.colony.terminal && this.colony.terminal.store.getUsedCapacity() < TERMINAL_CAPACITY) {
 							hauler.task = Tasks.transfer(this.colony.terminal, resourceType);
 							return;
-						} else if (this.colony.storage && _.sum(this.colony.storage.store) < STORAGE_CAPACITY) {
+						} else if (this.colony.storage && this.colony.storage.store.getUsedCapacity() < STORAGE_CAPACITY) {
 							hauler.task = Tasks.transfer(this.colony.storage, resourceType);
 							return;
 						}
@@ -126,7 +126,7 @@ export class PowerHaulingOverlord extends Overlord {
 	}
 
 	checkIfStillCarryingPower() {
-		return _.find(this.haulers, hauler => hauler.carry.power != undefined && hauler.carry.power > 0);
+		return _.find(this.haulers, hauler => hauler.store.power != undefined && hauler.store.power > 0);
 	}
 
 	run() {

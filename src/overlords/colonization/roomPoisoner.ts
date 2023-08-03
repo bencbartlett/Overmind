@@ -45,7 +45,7 @@ export class RoomPoisonerOverlord extends Overlord {
 
 	private handleRoomPoisoner(posioner: Zerg): void {
 		// Recharge if needed
-		if (posioner.carry.energy < BUILD_POWER) {
+		if (posioner.store.energy < BUILD_POWER) {
 			posioner.task = Tasks.recharge();
 			return;
 		}

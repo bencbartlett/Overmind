@@ -88,10 +88,10 @@ export class DirectiveStronghold extends Directive {
 			const ruins = this.room.ruins;
 			if (containers) {
 				returns = returns.concat(containers.filter(container =>
-															   container.pos.getRangeTo(this.pos) < 5 && _.sum(container.store) > 0));
+															   container.pos.getRangeTo(this.pos) < 5 && container.store.getUsedCapacity() > 0));
 			}
 			if (ruins) {
-				returns = returns.concat(ruins.filter(ruin => ruin.pos.getRangeTo(this.pos) <= 3 && _.sum(ruin.store) > 0));
+				returns = returns.concat(ruins.filter(ruin => ruin.pos.getRangeTo(this.pos) <= 3 && ruin.store.getUsedCapacity() > 0));
 			}
 			return returns;
 		}

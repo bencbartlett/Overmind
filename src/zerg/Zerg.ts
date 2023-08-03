@@ -59,9 +59,7 @@ export class Zerg extends AnyZerg {
 	isStandardZerg: true;
 	creep: Creep; 						// The creep that this wrapper class will control
 	body: BodyPartDefinition[];    	 	// These properties are all wrapped from this.creep.* to this.*
-	carry: StoreDefinition;				// |
-	store: StoreDefinition; 			// |
-	carryCapacity: number;				// |
+	store: StoreDefinition;				// |
 	fatigue: number;					// |
 	hits: number;						// |
 	hitsMax: number;					// |

@@ -26,8 +26,8 @@ export class DirectiveHaul extends Directive {
 	static color = COLOR_YELLOW;
 	static secondaryColor = COLOR_BLUE;
 
-	private _store: StoreDefinition;
-	private _drops: { [resourceType: string]: Resource[] };
+	private _store: StoreContents | undefined;
+	private _drops: DropContents;
 	private _finishAtTime: number;
 
 	memory: DirectiveHaulMemory;
@@ -44,13 +44,13 @@ export class DirectiveHaul extends Directive {
 		return Overmind.cache.targets[this.ref];
 	}
 
-	get drops(): { [resourceType: string]: Resource[] } {
+	get drops(): DropContents {
 		if (!this.pos.isVisible) {
-			return {};
+			return <DropContents>{};
 		}
 		if (!this._drops) {
 			const drops = (this.pos.lookFor(LOOK_RESOURCES) || []) as Resource[];
-			this._drops = _.groupBy(drops, drop => drop.resourceType);
+			this._drops = <DropContents>_.groupBy(drops, drop => drop.resourceType);
 		}
 		return this._drops;
 	}
@@ -67,30 +67,30 @@ export class DirectiveHaul extends Directive {
 				   <StructureTerminal>this.pos.lookForStructure(STRUCTURE_TERMINAL) ||
 				   <StructureNuker>this.pos.lookForStructure(STRUCTURE_NUKER) ||
 				   <StructureContainer>this.pos.lookForStructure(STRUCTURE_CONTAINER) ||
-				   <Ruin>this.pos.lookFor(LOOK_RUINS).filter(ruin => _.sum(ruin.store) > 0)[0];
+				   <Ruin>this.pos.lookFor(LOOK_RUINS).filter(ruin => ruin.store.getUsedCapacity() > 0)[0];
 		}
 		return undefined;
 	}
 
-	get store(): { [resource: string]: number } {
+	get store(): StoreContents {
 		if (!this._store) {
 			// Merge the "storage" of drops with the store of structure
-			let store: { [resourceType: string]: number } = {};
+			let store = <StoreContents>{};
 			if (this.storeStructure) {
 				store = this.storeStructure.store;
 			} else {
-				store = {energy: 0};
+				store = <StoreContents>{energy: 0};
 			}
 			// Merge with drops
-			for (const resourceType of _.keys(this.drops)) {
-				const totalResourceAmount = _.sum(this.drops[resourceType], drop => drop.amount);
+			for (const resourceType of (_.keys(this.drops) as ResourceConstant[])) {
+				const totalResourceAmount = _.sum(this.drops[resourceType] as Resource[], drop => drop.amount);
 				if (store[resourceType]) {
 					store[resourceType] += totalResourceAmount;
 				} else {
 					store[resourceType] = totalResourceAmount;
 				}
 			}
-			this._store = store as StoreDefinition;
+			this._store = store;
 		}
 		// log.alert(`Haul directive ${this.print} has store of ${JSON.stringify(this._store)}`);
 		return this._store;

@@ -19,8 +19,8 @@ export class DirectiveDrop extends Directive {
 	static color = COLOR_GREEN;
 	static secondaryColor = COLOR_GREEN;
 
-	private _store: StoreDefinition;
-	private _drops: { [resourceType: string]: Resource[] };
+	private _store: StoreDefinition | undefined;
+	private _drops: DropContents;
 
 	memory: DirectiveDropMemory;
 
@@ -37,24 +37,24 @@ export class DirectiveDrop extends Directive {
 		return Overmind.cache.targets[this.ref];
 	}
 
-	private get drops(): { [resourceType: string]: Resource[] } {
+	private get drops(): DropContents {
 		if (!this.pos.isVisible) {
-			return {};
+			return {} as DropContents;
 		}
 		if (!this._drops) {
-			const drops = (this.pos.lookFor(LOOK_RESOURCES) || []) as Resource[];
-			this._drops = _.groupBy(drops, drop => drop.resourceType);
+			const drops = this.pos.lookFor(LOOK_RESOURCES);
+			this._drops = _.groupBy(drops, drop => drop.resourceType) as DropContents;
 		}
 		return this._drops;
 	}
 
-	get store(): { [resource: string]: number } {
+	get store() {
 		if (!this._store) {
 			// Merge the "storage" of drops with the store of structure
-			const store: { [resourceType: string]: number } = {energy: 0};
+			const store: StoreDefinition = { energy: 0 } as StoreDefinition;
 			// Merge with drops
-			for (const resourceType of _.keys(this.drops)) {
-				const totalResourceAmount = _.sum(this.drops[resourceType], drop => drop.amount);
+			for (const resourceType of _.keys(this.drops) as ResourceConstant[]) {
+				const totalResourceAmount = _.sum(this.drops[resourceType]!, drop => drop.amount);
 				if (store[resourceType]) {
 					store[resourceType] += totalResourceAmount;
 				} else {
@@ -80,7 +80,7 @@ export class DirectiveDrop extends Directive {
 
 	init(): void {
 		this.registerEnergyRequests();
-		this.alert(`Drop directive active - ${_.sum(this.store)}`);
+		this.alert(`Drop directive active - ${_.sum(this.store as StoreContents)}`);
 	}
 
 	run(): void {

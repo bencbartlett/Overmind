@@ -136,7 +136,7 @@ export class CommandCenterOverlord extends Overlord {
 		if (manager.store.getUsedCapacity() == 0) {
 			return false;
 		} else {
-			manager.debug(`Unloading carry: ${JSON.stringify(manager.carry)}`);
+			manager.debug(`Unloading carry: ${JSON.stringify(manager.store)}`);
 			manager.task = Tasks.transferAll(this.commandCenter.storage); // placeholder solution
 			return true;
 		}
@@ -150,7 +150,7 @@ export class CommandCenterOverlord extends Overlord {
 		manager.debug('supplyActions');
 		const request = this.commandCenter.transportRequests.getPrioritizedClosestRequest(manager.pos, 'supply');
 		if (request) {
-			const amount = Math.min(request.amount, manager.carryCapacity);
+			const amount = Math.min(request.amount, manager.store.getCapacity());
 			const resource = request.resourceType;
 			// If we have enough to fulfill the request, we're done
 			if (manager.store[request.resourceType] >= amount) {
@@ -254,7 +254,7 @@ export class CommandCenterOverlord extends Overlord {
 				}
 				const transferAmount = Math.min(terminal.store[resource] - target,
 												storage.store.getFreeCapacity(resource),
-												manager.carryCapacity);
+												manager.store.getCapacity());
 				manager.task = Tasks.chain([Tasks.withdraw(terminal, resource, transferAmount),
 											Tasks.transfer(storage, resource, transferAmount)]);
 				// manager.debug(`Assigned task ${print(manager.task)}`)
@@ -269,7 +269,7 @@ export class CommandCenterOverlord extends Overlord {
 				}
 				const transferAmount = Math.min(target - terminal.store[resource],
 												storage.store[resource],
-												manager.carryCapacity);
+												manager.store.getCapacity());
 				manager.task = Tasks.chain([Tasks.withdraw(storage, resource, transferAmount),
 											Tasks.transfer(terminal, resource, transferAmount)]);
 				// manager.debug(`Assigned task ${print(manager.task)}`)
@@ -543,7 +543,7 @@ export class CommandCenterOverlord extends Overlord {
 		manager.debug('idleActions');
 		if (this.mode == 'bunker' && this.managerRepairTarget && manager.getActiveBodyparts(WORK) > 0) {
 			// Repair ramparts when idle
-			if (manager.carry.energy > 0) {
+			if (manager.store.energy > 0) {
 				manager.repair(this.managerRepairTarget);
 			} else {
 				const storage = this.commandCenter.storage;

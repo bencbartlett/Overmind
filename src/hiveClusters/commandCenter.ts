@@ -238,13 +238,13 @@ export class CommandCenter extends HiveCluster {
 		y = titleCoords.y + 0.25;
 		if (this.storage) {
 			Visualizer.text('Storage', {x: boxX, y: y, roomName: this.room.name});
-			Visualizer.barGraph(_.sum(this.storage.store) / this.storage.storeCapacity,
+			Visualizer.barGraph(this.storage.store.getUsedCapacity() / this.storage.store.getCapacity(),
 								{x: boxX + 4, y: y, roomName: this.room.name}, 5);
 			y += 1;
 		}
 		if (this.terminal) {
 			Visualizer.text('Terminal', {x: boxX, y: y, roomName: this.room.name});
-			Visualizer.barGraph(_.sum(this.terminal.store) / this.terminal.storeCapacity,
+			Visualizer.barGraph(this.terminal.store.getUsedCapacity() / this.terminal.store.getCapacity(),
 								{x: boxX + 4, y: y, roomName: this.room.name}, 5);
 			y += 1;
 		}

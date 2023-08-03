@@ -134,7 +134,7 @@ export class BootstrappingOverlord extends Overlord {
 	}
 
 	private handleFiller(filler: Zerg) {
-		if (filler.carry.energy > 0) {
+		if (filler.store.energy > 0) {
 			this.supplyActions(filler);
 		} else {
 			this.rechargeActions(filler);
