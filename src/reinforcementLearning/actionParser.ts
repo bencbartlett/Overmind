@@ -41,14 +41,14 @@ export class ActionParser {
 
 		const command: string = action[0];
 		const predicate: any = action[1];
-		const targ: RoomObject | null = typeof predicate == 'string' ? Game.getObjectById(predicate) : null;
+		const targ: _HasId | null = typeof predicate == 'string' ? Game.getObjectById(predicate) : null;
 
 		switch (command) {
 			case 'move':
 				actor.move(<DirectionConstant>predicate);
 				break;
 			case 'goTo':
-				if (targ) actor.goTo(targ);
+				if (targ) actor.goTo(targ as any as RoomObject);
 				break;
 			case 'attack':
 				if (targ) actor.attack(<Creep>targ);

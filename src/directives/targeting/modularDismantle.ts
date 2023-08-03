@@ -7,7 +7,7 @@ import {Directive} from '../Directive';
 
 
 interface DirectiveModularDismantleMemory extends FlagMemory {
-	targetId?: string;
+	targetId?: Id<Structure<StructureConstant>>;
 	numberSpots?: number;
 	attackInsteadOfDismantle?: boolean;
 	onlyKillRampart?: boolean;

@@ -68,7 +68,7 @@ export class DismantleOverlord extends Overlord {
 		} else {
 			if (!this.target) {
 				if (this.directive.memory.targetId) {
-					this.target = Game.getObjectById(this.directive.memory.targetId.toString()) || undefined;
+					this.target = Game.getObjectById(this.directive.memory.targetId) || undefined;
 				}
 				this.target = this.target || this.directive.getTarget();
 				if (!this.target) {
