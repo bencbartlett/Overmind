@@ -1,6 +1,6 @@
+// @ts-nocheck
 // This module has been adapted from Mototroller's utf15 library:
 // https://github.com/screepers/utf15
-
 
 /* tslint:disable:no-bitwise prefer-for-of variable-name no-unused-expression */
 
