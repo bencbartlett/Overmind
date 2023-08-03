@@ -358,6 +358,7 @@ export class Overseer implements IOverseer {
 	}
 
 	private computePossibleOutposts(colony: Colony, depth = 3): string[] {
+		const colonyRoomStatus = RoomIntel.getRoomStatus(colony.room.name).status;
 		return _.filter(Cartographer.findRoomsInRange(colony.room.name, depth), roomName => {
 			if (Cartographer.roomType(roomName) != ROOMTYPE_CONTROLLER) {
 				return false;
@@ -380,7 +381,7 @@ export class Overseer implements IOverseer {
 			}
 			const neighboringRooms = _.values(Game.map.describeExits(roomName)) as string[];
 			const isReachableFromColony = _.any(neighboringRooms, r => colony.roomNames.includes(r));
-			return isReachableFromColony && Game.map.isRoomAvailable(roomName);
+			return isReachableFromColony && RoomIntel.getRoomStatus(roomName).status === colonyRoomStatus;
 		});
 	}
 
