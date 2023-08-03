@@ -1,7 +1,7 @@
 import {profile} from '../../profiler/decorator';
 import {Task} from '../Task';
 
-export type dropTargetType = HasRef & HasPos | RoomPosition;
+export type dropTargetType = HasRef & _HasRoomPosition | RoomPosition;
 export const dropTaskName = 'drop';
 
 @profile

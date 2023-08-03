@@ -80,7 +80,7 @@ interface Room {
 	threatLevel: number;
 	instantaneousThreatLevel: 0 | 0.5 | 1;
 
-	fleeDefaults: HasPos[];
+	fleeDefaults: _HasRoomPosition[];
 
 	structures: Structure[];
 	hostileStructures: Structure[];
@@ -147,7 +147,7 @@ interface Room {
 	_dangerousHostiles: Creep[];
 	_playerHostiles: Creep[];
 	_dangerousPlayerHostiles: Creep[];
-	_fleeDefaults: HasPos[];
+	_fleeDefaults: _HasRoomPosition[];
 	_allStructures: Structure[];
 	_hostileStructures: Structure[];
 	_flags: Flag[];

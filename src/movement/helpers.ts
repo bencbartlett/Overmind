@@ -1,7 +1,7 @@
 /**
  * Returns destination.pos if destination has a position, or destination if destination is a RoomPosition
  */
-export function normalizePos(destination: HasPos | RoomPosition): RoomPosition {
+export function normalizePos(destination: _HasRoomPosition | RoomPosition): RoomPosition {
 	return (<any>destination).pos || destination;
 }
 

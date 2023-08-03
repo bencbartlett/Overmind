@@ -22,18 +22,18 @@ interface AbstractTaskTarget {
 	_pos: ProtoPos;	// Target position's coordinates in case vision is lost
 }
 
-type ConcreteTaskTarget = HasRef | HasPos | RoomPosition;
+type ConcreteTaskTarget = HasRef | _HasRoomPosition | RoomPosition;
 
 function isAbstractTarget(target: any): target is AbstractTaskTarget {
-	return target && target._pos !== undefined;
+	return target && (<AbstractTaskTarget>target)._pos !== undefined;
 }
 
-function isRoomRefTarget(target: any): target is HasRef & HasPos {
-	return target && target.ref !== undefined;
+function isRoomRefTarget(target: any): target is HasRef & _HasRoomPosition {
+	return target && (<HasRef>target).ref !== undefined;
 }
 
 function isRoomObjectTarget(target: any): target is RoomObject {
-	return target && target.pos !== undefined;
+	return target && (<RoomObject>target).pos !== undefined;
 }
 
 /**
@@ -171,7 +171,7 @@ export abstract class Task<TargetType extends ConcreteTaskTarget | null> {
 		// refresh if you have visibility of the target
 		if (!this._targetPos) {
 			if (this.target) {
-				this._target._pos = (this.target as HasPos).pos;
+				this._target._pos = (this.target as _HasRoomPosition).pos;
 			}
 			this._targetPos = derefRoomPosition(this._target._pos);
 		}
