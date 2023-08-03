@@ -54,7 +54,7 @@ export function minMax(value: number, min: number, max: number): number {
 	return Math.max(Math.min(value, max), min);
 }
 
-export function hasMinerals(store: { [resourceType: string]: number }): boolean {
+export function hasMinerals(store: StoreDefinition): boolean {
 	for (const resourceType in store) {
 		if (resourceType != RESOURCE_ENERGY && (store[<ResourceConstant>resourceType] || 0) > 0) {
 			return true;
