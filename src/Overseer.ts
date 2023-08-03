@@ -90,13 +90,17 @@ export class Overseer implements IOverseer {
 			try {
 				callback();
 			} catch (e) {
-				if (identifier) {
-					e.name = `Caught unhandled exception at ${'' + callback} (identifier: ${identifier}): \n`
-							 + e.name + '\n' + e.stack;
+				if (e instanceof Error) {
+					if (identifier) {
+						e.name = `Caught unhandled exception at ${'' + callback} (identifier: ${identifier}): \n`
+								+ e.name + '\n' + e.stack;
+					} else {
+						e.name = `Caught unhandled exception at ${'' + callback}: \n` + e.name + '\n' + e.stack;
+					}
+					Overmind.exceptions.push(e);
 				} else {
-					e.name = `Caught unhandled exception at ${'' + callback}: \n` + e.name + '\n' + e.stack;
+					log.error(`Got a non-Error exception`, e);
 				}
-				Overmind.exceptions.push(e);
 			}
 		} else {
 			callback();
