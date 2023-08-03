@@ -1,3 +1,4 @@
+import { RoomIntel } from 'intel/RoomIntel';
 import {assimilationLocked} from '../assimilation/decorator';
 import {Colony, getAllColonies} from '../Colony';
 import {log} from '../console/log';
@@ -122,8 +123,10 @@ export class ExpansionPlanner implements IExpansionPlanner {
 						score += CATALYST_BONUS;
 					}
 				}
+
 				// Update best choices
-				if (score > bestScore && Game.map.isRoomAvailable(roomName)) {
+				if (score > bestScore &&
+					RoomIntel.getRoomStatus(roomName).status === RoomIntel.getRoomStatus(colony.room.name).status) {
 					bestScore = score;
 					bestRoom = roomName;
 				}
