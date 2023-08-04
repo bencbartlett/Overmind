@@ -167,8 +167,8 @@ export class Colony {
 	// praiseSite: PraiseSite | undefined;
 	// Operational state
 	level: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; 				// Level of the colony's main room
-	stage: number;										// The stage of the colony "lifecycle"
-	defcon: number;										//
+	stage: ColonyStage;									// The stage of the colony "lifecycle"
+	defcon: DEFCON;										//
 	state: {
 		bootstrapping?: boolean; 						// Whether colony is bootstrapping or recovering from crash
 		isIncubating?: boolean;							// If the colony is incubating
