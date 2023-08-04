@@ -593,7 +593,7 @@ export class RoomPlanner {
 
 		// Recall the appropriate map
 		this.recallMap();
-		if (!this.map || this.map == {}) { // in case a map hasn't been generated yet
+		if (!this.map || _.isEmpty(this.map)) { // in case a map hasn't been generated yet
 			log.info(this.colony.name + ' does not have a room plan yet! Unable to demolish errant structures.');
 		}
 
@@ -653,7 +653,7 @@ export class RoomPlanner {
 							log.info(`${this.colony.name}: waiting until storage is built to remove terminal`);
 							return;
 						} else if (this.colony.terminal &&
-								   _.sum(this.colony.terminal.store) - this.colony.terminal.energy > 1000) {
+								   this.colony.terminal.store.getUsedCapacity() - this.colony.terminal.energy > 1000) {
 							log.info(`${this.colony.name}: waiting on resources to evacuate before removing terminal`);
 							return;
 						} else if (this.colony.storage &&
@@ -718,7 +718,7 @@ export class RoomPlanner {
 		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
 		// Recall the appropriate map
 		this.recallMap();
-		if (!this.map || this.map == {}) { // in case a map hasn't been generated yet
+		if (!this.map || _.isEmpty(this.map)) { // in case a map hasn't been generated yet
 			log.info(this.colony.name + ' does not have a room plan yet! Unable to build missing structures.');
 		}
 		// Build missing structures from room plan

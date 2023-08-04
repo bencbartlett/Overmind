@@ -53,11 +53,9 @@ const launchPos = [
 ];
 
 export function verifyLaunchManifest() {
-	for (const i in launchFrom) {
-		const from = launchFrom[i];
+	for (const [i, from] of launchFrom.entries()) {
 		const to = launchTo[i];
-		const [x, y] = launchPos[i];
-		const nuker: StructureNuker = Overmind.colonies[from].commandCenter.nuker;
+		const nuker = Overmind.colonies[from].commandCenter?.nuker;
 
 		if (Game.map.getRoomLinearDistance(from, to) > NUKE_RANGE) {
 			log.info(`${from} to ${to} is out of range!`);
@@ -71,13 +69,12 @@ export function verifyLaunchManifest() {
 }
 
 export function doomsdayLaunch() {
-	for (const i in launchFrom) {
-		const from = launchFrom[i];
+	for (const [i, from] of launchFrom.entries()) {
 		const to = launchTo[i];
 		const [x, y] = launchPos[i];
-		const nuker: StructureNuker = Overmind.colonies[from].commandCenter.nuker;
+		const nuker = Overmind.colonies[from].commandCenter?.nuker;
 
-		if (nuker.cooldown == 0) {
+		if (nuker && nuker.cooldown == 0) {
 			const pos = new RoomPosition(x, y, to);
 			const ret = nuker.launchNuke(pos);
 			log.alert(`[NUCLEAR LAUNCH] Launching nuke from ${from} to ${pos.print}! Result: ${ret}`);

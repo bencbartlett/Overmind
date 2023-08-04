@@ -71,7 +71,7 @@ export class VersionMigration {
 	static get memory(): VersionMigratorMemory {
 		return Mem.wrap(Memory.Overmind, 'versionMigrator', () => ({
 			versions: {}
-		}));
+		})) as VersionMigratorMemory;
 	}
 
 	/*
@@ -314,6 +314,7 @@ export class VersionMigration {
 		for (const name in Memory.colonies) {
 			for (const key in Memory.colonies[name]) {
 				if (key.includes('miningSite@')) {
+					// @ts-expect-error migrated
 					delete Memory.colonies[name][key];
 				}
 			}
@@ -356,10 +357,10 @@ export class VersionMigration {
 		// Remove all orders
 		for (const colonyName in Memory.colonies) {
 			if (Memory.colonies[colonyName].evolutionChamber) {
-				delete Memory.colonies[colonyName].evolutionChamber.activeReaction;
-				delete Memory.colonies[colonyName].evolutionChamber.reactionQueue;
-				delete Memory.colonies[colonyName].evolutionChamber.status;
-				delete Memory.colonies[colonyName].evolutionChamber.statusTick;
+				delete Memory.colonies[colonyName].evolutionChamber?.activeReaction;
+				delete Memory.colonies[colonyName].evolutionChamber?.reactionQueue;
+				delete Memory.colonies[colonyName].evolutionChamber?.status;
+				delete Memory.colonies[colonyName].evolutionChamber?.statusTick;
 			}
 		}
 		this.memory.versions['053to06X_part3'] = true;
@@ -391,7 +392,7 @@ export class VersionMigration {
 			for (const name in Memory.colonies) {
 				if (Memory.colonies[name] && Memory.colonies[name].roomPlanner) {
 					const rpmem =  Memory.colonies[name].roomPlanner;
-					if (rpmem.lastGenerated && rpmem.lastGenerated < oldestTick) {
+					if (rpmem && rpmem.lastGenerated && rpmem.lastGenerated < oldestTick) {
 						oldestTick = rpmem.lastGenerated;
 					}
 				}
@@ -413,8 +414,10 @@ export class VersionMigration {
 		delete Memory.zoneRooms;
 		Memory.roomIntel = {}; // reset this
 
-		delete Memory.stats.persistent.terminalNetwork.transfers;
-		delete Memory.stats.persistent.terminalNetwork.costs;
+		// @ts-expect-error migrated
+		delete Memory.stats.persistent.terminalNetwork?.transfers;
+		// @ts-expect-error migrated
+		delete Memory.stats.persistent.terminalNetwork?.costs;
 
 		const mem = Memory as any;
 
@@ -438,8 +441,9 @@ export class VersionMigration {
 		for (const name in Memory.colonies) {
 			const colmem = Memory.colonies[name];
 
+			// @ts-expect-error migrated
 			delete colmem.abathur; // outdated
-
+			// @ts-expect-error migrated
 			delete colmem.expansionData; // bugged
 
 			log.alert(`Migrating room planner memories...`);
@@ -449,6 +453,7 @@ export class VersionMigration {
 			if (colmem.roomPlanner) {
 				for (const key in colmem.roomPlanner) {
 					if (!validRoomPlannerMemKeys.includes(key)) {
+						// @ts-expect-error migrated
 						delete colmem.roomPlanner[key];
 					}
 				}
@@ -457,14 +462,16 @@ export class VersionMigration {
 			// Migrate road planner to new format
 			log.alert(`Migrating road planner memories...`);
 			if (colmem.roadPlanner) {
-				if (colmem.roadPlanner.roadLookup) {
-					const roadLookup = colmem.roadPlanner.roadLookup;
+				// @ts-expect-error migration
+				const roadLookup = colmem.roadPlanner.roadLookup;
+				if (roadLookup) {
 					const roadCoordsPacked: { [roomName: string]: string } = {};
 					for (const roomName in roadLookup) {
 						const roadCoords = _.map(_.keys(roadLookup[roomName]), coordName => derefCoords(coordName));
 						roadCoordsPacked[roomName] = packCoordList(roadCoords);
 					}
 					colmem.roadPlanner.roadCoordsPacked = roadCoordsPacked;
+					// @ts-expect-error migration
 					delete colmem.roadPlanner.roadLookup;
 				}
 			}
@@ -472,10 +479,12 @@ export class VersionMigration {
 			// Migrate barrier planner to new format
 			log.alert(`Migrating barrier planner memories...`);
 			if (colmem.barrierPlanner) {
-				if (colmem.barrierPlanner.barrierLookup) {
-					const barrierLookup = colmem.barrierPlanner.barrierLookup;
+				// @ts-expect-error migration
+				const barrierLookup = colmem.barrierPlanner.barrierLookup;
+				if (barrierLookup) {
 					const barrierCoords = _.map(_.keys(barrierLookup), coordName => derefCoords(coordName));
 					colmem.barrierPlanner.barrierCoordsPacked = packCoordList(barrierCoords);
+					// @ts-expect-error migration
 					delete colmem.barrierPlanner.barrierLookup;
 				}
 			}

@@ -13,6 +13,51 @@ import {log} from './log';
 
 type RecursiveObject = { [key: string]: number | RecursiveObject };
 
+declare global {
+	var help: string;
+	var info: () => string;
+	var notifications: () => string;
+	var debug: (obj: any) => string;
+	var stopDebug: (obj: any) => string;
+	var setMode: (mode: operationMode) => string;
+	var setSignature: (signature: string | undefined) => string | undefined;
+	var timeit: (cb: () => any, repeat?: number) => string;
+	var profileOverlord: (overlord: string | Overlord, ticks?: number | undefined) => string;
+	var finishProfilingOverlord: (overlord: string | Overlord) => string;
+	var setLogLevel: (value: number) => void;
+	var suspendColony: (roomName: string) => string;
+	var unsuspendColony: (roomName: string) => string;
+	var listSuspendedColonies: () => string;
+	var openRoomPlanner: (roomName: string) => string;
+	var closeRoomPlanner: (roomName: string) => string;
+	var cancelRoomPlanner: (roomName: string) => string;
+	var listActiveRoomPlanners: () => string;
+	var destroyErrantStructures: (roomName: string) => string;
+	var destroyAllHostileStructures: (roomName: string) => string;
+	var destroyAllBarriers: (roomName: string) => string;
+	var listConstructionSites: () => string;
+	var removeUnbuiltConstructionSites: () => string;
+	var listDirectives: () => string;
+	var listPersistentDirectives: () => string;
+	var removeAllLogisticsDirectives: () => string;
+	var removeFlagsByColor: (color: ColorConstant, secondaryColor: ColorConstant) => string;
+	var removeErrantFlags: () => string;
+	var deepCleanMemory: () => string;
+	var startRemoteDebugSession: () => string;
+	var endRemoteDebugSession: () => string;
+	var profileMemory: () => string;
+	var cancelMarketOrders: () => string;
+	var setRoomUpgradeRate: (roomName: string, rate: number) => string;
+	var getEmpireMineralDistribution: () => string;
+	var listPortals: () => string;
+	var evaluateOutpostEfficiencies: () => string;
+	var evaluatePotentialOutpostEfficiencies: () => string;
+}
+
+interface MemoryDebug {
+	debug?: boolean;
+}
+
 /**
  * OvermindConsole registers a number of global methods for direct use in the Screeps console
  */
@@ -187,12 +232,12 @@ export class OvermindConsole {
 
 	// Debugging methods ===============================================================================================
 
-	static debug(thing: { name?: string, ref?: string, memory: any }): string {
+	static debug(thing: { name?: string, ref?: string, memory: MemoryDebug }): string {
 		thing.memory.debug = true;
 		return `Enabled debugging for ${thing.name || thing.ref || '(no name or ref)'}.`;
 	}
 
-	static stopDebug(thing: { name?: string, ref?: string, memory: any }): string {
+	static stopDebug(thing: { name?: string, ref?: string, memory: MemoryDebug }): string {
 		delete thing.memory.debug;
 		return `Disabled debugging for ${thing.name || thing.ref || '(no name or ref)'}.`;
 	}
@@ -210,8 +255,8 @@ export class OvermindConsole {
 	static print(...args: any[]): string {
 		let message = '';
 		for (const arg of args) {
-			let cache: any = [];
-			const msg = JSON.stringify(arg, function(key, value) {
+			let cache: any[] = [];
+			const msg = JSON.stringify(arg, function(key, value: any): any {
 				if (typeof value === 'object' && value !== null) {
 					if (cache.indexOf(value) !== -1) {
 						// Duplicate reference found
@@ -228,6 +273,7 @@ export class OvermindConsole {
 				}
 				return value;
 			}, '\t');
+			// @ts-expect-error Clear out the cache
 			cache = null;
 			message += '\n' + msg;
 		}
@@ -235,12 +281,12 @@ export class OvermindConsole {
 	}
 
 	static timeit(callback: () => any, repeat = 1): string {
-		let start, used, i: number;
-		start = Game.cpu.getUsed();
+		const start = Game.cpu.getUsed();
+		let i: number;
 		for (i = 0; i < repeat; i++) {
 			callback();
 		}
-		used = Game.cpu.getUsed() - start;
+		const used = Game.cpu.getUsed() - start;
 		return `CPU used: ${used}. Repetitions: ${repeat} (${used / repeat} each).`;
 	}
 
@@ -256,7 +302,7 @@ export class OvermindConsole {
 		}
 	}
 
-	static finishProfilingOverlord(overlord: Overlord | string, ticks?: number): string {
+	static finishProfilingOverlord(overlord: Overlord | string): string {
 		const overlordInstance = typeof overlord == 'string' ? Overmind.overlords[overlord]
 															 : overlord as Overlord | undefined;
 		if (!overlordInstance) {
@@ -358,7 +404,7 @@ export class OvermindConsole {
 			(colony: Colony) => colony.roomPlanner.active);
 		const names: string[] = _.map(coloniesWithActiveRoomPlanners, colony => colony.room.print);
 		if (names.length > 0) {
-			console.log('Colonies with active room planners: ' + names);
+			console.log('Colonies with active room planners: ' + names.toString());
 			return '';
 		} else {
 			return `No colonies with active room planners`;
@@ -442,7 +488,7 @@ export class OvermindConsole {
 	// Structure management ============================================================================================
 
 	static destroyErrantStructures(roomName: string): string {
-		const colony = Overmind.colonies[roomName] as Colony;
+		const colony = Overmind.colonies[roomName];
 		if (!colony) return `${roomName} is not a valid colony!`;
 		const room = colony.room;
 		const allStructures = room.find(FIND_STRUCTURES);
@@ -493,7 +539,7 @@ export class OvermindConsole {
 		return msg;
 	}
 
-	// Colony Management =================================================================================================
+	// Colony Management ===============================================================================================
 
 	static setRoomUpgradeRate(roomName: string, rate: number): string {
 		const colony: Colony = Overmind.colonies[roomName];
@@ -515,10 +561,9 @@ export class OvermindConsole {
 		const colonies = getAllColonies();
 		const allPortals = colonies.map(colony => RoomIntel.findPortalsInRange(colony.name, rangeFromColonies));
 		let ret = `Empire Portal Census \n`;
-		for (const colonyId in allPortals) {
-			const portals = allPortals[colonyId];
+		for (const [colonyId, portals] of Object.entries(allPortals)) {
 			if (_.keys(portals).length > 0) {
-				ret += `Colony ${colonies[colonyId].print}: \n`;
+				ret += `Colony ${Overmind.colonies[colonyId].print}: \n`;
 			}
 			for (const portalRoomName of _.keys(portals)) {
 				const samplePortal = _.first(portals[portalRoomName]); // don't need to list all 8 in a room
@@ -588,7 +633,8 @@ export class OvermindConsole {
 		for (const colName in Memory.colonies) {
 			for (const key in Memory.colonies[colName]) {
 				if (!protectedColonyKeys.includes(key)) {
-					delete (<any>Memory.colonies[colName])[key];
+					// @ts-expect-error direct property access
+					delete Memory.colonies[colName][key];
 				}
 			}
 		}
@@ -602,8 +648,8 @@ export class OvermindConsole {
 		delete Memory.screepsProfiler;
 		// Remove overlords memory from flags
 		for (const i in Memory.flags) {
-			if ((<any>Memory.flags[i]).overlords) {
-				delete (<any>Memory.flags[i]).overlords;
+			if (Memory.flags[i].overlords) {
+				delete Memory.flags[i].overlords;
 			}
 		}
 		// Clean creep memory
@@ -638,7 +684,7 @@ export class OvermindConsole {
 		return JSON.stringify(sizes, undefined, '\t');
 	}
 
-	static cancelMarketOrders(filter?: (order: Order) => any): string {
+	static cancelMarketOrders(filter?: (order: Order) => boolean): string {
 		const ordersToCancel = !!filter ? _.filter(Game.market.orders, order => filter(order)) : Game.market.orders;
 		_.forEach(_.values(ordersToCancel), (order: Order) => Game.market.cancelOrder(order.id));
 		return `Canceled ${_.values(ordersToCancel).length} orders.`;

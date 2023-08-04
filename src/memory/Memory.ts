@@ -32,7 +32,7 @@ export function getAutonomyLevel(): number {
 	}
 }
 
-let lastMemory: any;
+let lastMemory: Memory;
 let lastTime: number = 0;
 
 const MAX_BUCKET = 10000;
@@ -93,14 +93,14 @@ export class Mem {
 	 */
 	static load() {
 		if (lastTime && lastMemory && Game.time == lastTime + 1) {
+			// @ts-expect-error global shenanigans
 			delete global.Memory;
 			global.Memory = lastMemory;
 			RawMemory._parsed = lastMemory;
 		} else {
-			// noinspection BadExpressionStatementJS
-			/* tslint:disable:no-unused-expression */
+			// eslint-disable-next-line
 			Memory.rooms; // forces parsing
-			/* tslint:enable:no-unused-expression */
+			// eslint-disable-next-line
 			lastMemory = RawMemory._parsed;
 			Memory.stats.persistent.lastMemoryReset = Game.time;
 		}
@@ -183,7 +183,7 @@ export class Mem {
 			spawns            : {},
 			pathing           : {distances: {}},
 			constructionSites : {},
-			stats             : {},
+			stats             : {persistent:{}},
 			playerCreepTracker: {},
 			settings          : {
 				signature             : DEFAULT_OVERMIND_SIGNATURE,
@@ -249,6 +249,7 @@ export class Mem {
 				Memory.build--; // don't count this reset as a build
 				Game.cpu.halt();
 			} else if (Game.cpu.bucket < BUCKET_CLEAR_CACHE) {
+				// @ts-expect-error global shenanigans
 				delete global._cache;
 				this.initGlobalMemory();
 			}
@@ -260,6 +261,7 @@ export class Mem {
 		for (const name in Memory.creeps) {
 			if (!Game.creeps[name]) {
 				delete Memory.creeps[name];
+				// @ts-expect-error global shenanigans
 				delete global[name];
 			}
 		}
@@ -270,6 +272,7 @@ export class Mem {
 		for (const name in Memory.flags) {
 			if (!Game.flags[name]) {
 				delete Memory.flags[name];
+				// @ts-expect-error global shenanigans
 				delete global[name];
 			}
 		}
@@ -283,6 +286,7 @@ export class Mem {
 				// Delete only if "persistent" is not set - use case: praise rooms
 				if (!Memory.colonies[name].persistent) {
 					delete Memory.colonies[name];
+					// @ts-expect-error global shenanigans
 					delete global[name];
 				}
 			}

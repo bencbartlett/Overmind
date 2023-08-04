@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "tsc -p .",
-    "lint": "tslint \"src/**/*.ts\"",
+    "lint": "eslint \"src/**/*.ts\"",
     "clean": "rm -rf tsc-out && rm -rf dist",
     "obfuscate": "tsc && javascript-obfuscator tsc-out/Overmind.js --output src/Overmind_obfuscated.js --compact false --self-defending true --string-array true --string-array-threshold 1 --string-array-encoding true && javascript-obfuscator tsc-out/assimilation/Assimilator.js --output src/assimilation/Assimilator_obfuscated.js --compact false --self-defending true --string-array true --string-array-threshold 1 --string-array-encoding true",
     "compile": "rollup -c",
@@ -23,6 +23,7 @@
     "push-screepsplus": "rollup -c --environment DEST:screepsplus",
     "test": "npm run clean && npm run build"
   },
+  "type": "module",
   "engines": {
     "node": ">= 18.9.1"
   },
@@ -32,11 +33,16 @@
     "@types/columnify": "^1.5.1",
     "@types/lodash": "3.10.2",
     "@types/screeps": "^3.3.3",
+    "@typescript-eslint/eslint-plugin": "^6.3.0",
+    "@typescript-eslint/parser": "^6.3.0",
+    "eslint": "^8.46.0",
+    "eslint-config-prettier": "^8.10.0",
+    "eslint-plugin-jsdoc": "^46.4.5",
+    "eslint-plugin-prefer-arrow": "^1.2.3",
     "rollup": "^3.27.1",
     "rollup-plugin-progress": "^1.1.2",
     "rollup-plugin-screeps": "^1.0.1",
     "rollup-plugin-typescript2": "^0.35.0",
-    "tslint": "^6.1.3",
     "typedoc": "^0.24.8",
     "typescript": "^5.1.6"
   },

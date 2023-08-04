@@ -102,6 +102,7 @@ export abstract class Directive {
 		}
 
 		// Register directive on Overmind
+		// @ts-expect-error global shenanigans
 		global[this.name] = this;
 		Overmind.overseer.registerDirective(this);
 		Overmind.directives[this.name] = this;
@@ -312,6 +313,7 @@ export abstract class Directive {
 	remove(force = false): OK | undefined {
 		if (!this.memory.persistent || force) {
 			delete Overmind.directives[this.name];
+			// @ts-expect-error global shenanigans
 			delete global[this];
 			Overmind.overseer.removeDirective(this);
 			if (this.colony) {

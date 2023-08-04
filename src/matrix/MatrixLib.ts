@@ -52,7 +52,7 @@ export interface VolatileMatrixOptions {
 
 PERMACACHE.terrainMatrices = PERMACACHE.terrainMatrices || {};
 
-const MatrixCache: {
+export const MatrixCache: {
 	[hash: string]: {
 		matrix: CostMatrix;
 		generated: number;

@@ -1,41 +1,51 @@
 declare const require: (module: string) => any;
-declare var global: any;
 
-declare const MARKET_FEE: 300; // missing in the typed-screeps declarations
-global.MARKET_FEE = MARKET_FEE;
+declare const MARKET_FEE = 300; // missing in the typed-screeps declarations
 
-declare const NO_ACTION: 1;
-declare type NO_ACTION = NO_ACTION;
-global.NO_ACTION = NO_ACTION;
+declare type NO_ACTION = 1;
+declare var NO_ACTION: NO_ACTION = 1;
 
 type TickPhase = 'assimilating' | 'build' | 'refresh' | 'init' | 'run' | 'postRun';
 declare var PHASE: TickPhase;
 declare var LATEST_BUILD_TICK: number;
 declare var LATEST_GLOBAL_RESET_TICK: number;
 declare var LATEST_GLOBAL_RESET_DATE: Date;
+declare var GLOBAL_AGE: number;
 
-declare namespace NodeJS {
-	interface Global {
+declare var __VERSION__: string;
 
-		age?: number;
+declare function print(...args: any[]): string;
+declare function deref(ref: string): RoomObject | null;
+declare function derefRoomPosition(protoPos: ProtoPos): RoomPosition;
+declare function gc(quick?: boolean): void;
 
-		_cache: IGlobalCache;
+declare var _cache: IGlobalCache;
 
-		__VERSION__: string;
+declare var PERMACACHE: { [key: string]: any };
 
-		Overmind: IOvermind;
+declare var __DEFAULT_OVERMIND_SIGNATURE__: string;
 
-		Assimilator: IAssimilator;
+declare var remoteDebugger: import('debug/remoteDebugger').RemoteDebugger;
 
-		print(...args: any[]): string;
+declare var Overmind: IOvermind;
 
-		deref(ref: string): RoomObject | null;
+declare var Memory: Memory;
+declare var Assimilator: IAssimilator;
 
-		derefRoomPosition(protoPos: ProtoPos): RoomPosition;
+declare var Cartographer: import('utilities/Cartographer').Cartographer;
+declare var Pathing: import('movement/Pathing').Pathing;
+declare var RoomIntel: typeof import('intel/RoomIntel').RoomIntel;
+declare var CombatIntel: typeof import('intel/CombatIntel').CombatIntel;
+declare var GoalFinder: import('targeting/GoalFinder').GoalFinder;
+declare var Abathur: import('resources/Abathur').Abathur;
 
-		gc(quick?: boolean): void;
-	}
-}
+declare var MatrixCache: import('matrix/MatrixLib').MatrixCache;
+declare var MatrixLib: import('matrix/MatrixLib').MatrixLib;
+
+declare var PackratTests: import('utilities/packrat').PackratTests;
+
+declare var CombatCreepSetup: typeof import('creepSetups/CombatCreepSetup').CombatCreepSetup;
+declare var DefaultCombatCreepSetups: {[type: string]: any }; // import('creepSetups/CombatCreepSetup').CombatCreepSetup }
 
 type Full<T> = {
 	[P in keyof T]-?: T[P];
@@ -113,8 +123,8 @@ interface IAssimilator {
 interface IOvermind {
 	shouldBuild: boolean;
 	expiration: number;
-	cache: ICache;								// is actually GameCache
-	overseer: IOverseer;						// is actually Overseer
+	cache: import('caching/GameCache').GameCache;
+	overseer: import('Overseer').Overseer;
 	directives: { [flagName: string]: import('directives/Directive').Directive };
 	zerg: { [creepName: string]: import('zerg/Zerg').Zerg };
 	powerZerg: { [creepName: string]: import('zerg/PowerZerg').PowerZerg };
@@ -125,7 +135,7 @@ interface IOvermind {
 	memory: IOvermindMemory;
 	terminalNetwork: ITerminalNetwork;			// is actually TerminalNetwork
 	tradeNetwork: ITradeNetwork;				// is actually TradeNetwork
-	expansionPlanner: IExpansionPlanner;
+	expansionPlanner: import('strategy/ExpansionPlanner').ExpansionPlanner;
 	exceptions: Error[];
 
 	build(): void;
@@ -241,14 +251,6 @@ interface ITradeNetwork {
 
 	run(): void;
 }
-
-declare var Overmind: IOvermind;
-
-declare var _cache: IGlobalCache;
-
-declare var PERMACACHE: { [key: string]: any };
-
-declare function print(...args: any[]): void;
 
 interface Coord {
 	x: number;

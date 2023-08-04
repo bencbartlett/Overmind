@@ -56,8 +56,10 @@ function main(): void {
 	// Instantiation operations: build or refresh the game state -------------------------------------------------------
 	if (!Overmind || Overmind.shouldBuild || Game.time >= Overmind.expiration) {
 		PHASE = 'build';
+		// @ts-expect-error global shenanigans
 		delete global.Overmind;					// Explicitly delete the old Overmind object
-		Mem.garbageCollect(true);			// Run quick garbage collection
+		Mem.garbageCollect(true);				// Run quick garbage collection
+		// @ts-expect-error obfuscated
 		global.Overmind = new _Overmind();		// Instantiate the Overmind object
 		Overmind.build();						// Build phase: instantiate all game components
 		LATEST_BUILD_TICK = Game.time;			// Record this tick as having a build reset
@@ -86,7 +88,9 @@ function main(): void {
 function main_RL(): void {
 	Mem.clean();
 
+	// @ts-expect-error global shenanigans
 	delete global.Overmind;
+	// @ts-expect-error obfuscated
 	global.Overmind = new _Overmind();
 
 	ActionParser.run();
@@ -107,6 +111,7 @@ function onGlobalReset(): void {
 		Assimilator.updateValidChecksumLedger();
 	}
 	// Make a new Overmind object
+	// @ts-expect-error obfuscated
 	global.Overmind = new _Overmind();
 	// Make a remote debugger
 	global.remoteDebugger = new RemoteDebugger();

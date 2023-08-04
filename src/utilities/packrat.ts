@@ -335,6 +335,22 @@ export function unpackPosList(chars: string): RoomPosition[] {
 	return posList;
 }
 
+declare global {
+	var packId: any;
+	var unpackId: any;
+	var packIdList: any;
+	var unpackIdList: any;
+	var packCoord: any;
+	var unpackCoord: any;
+	var unpackCoordAsPos: any;
+	var packCoordList: any;
+	var unpackCoordList: any;
+	var unpackCoordListAsPosList: any;
+	var packPos: any;
+	var unpackPos: any;
+	var packPosList: any;
+	var unpackPosList: any;
+}
 
 
 // Useful to register these functions on global

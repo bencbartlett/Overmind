@@ -137,6 +137,7 @@ export abstract class AnyZerg {
 		this.blockMovement = false;
 		// Register global references
 		// Overmind.zerg[this.name] = this;
+		// @ts-expect-error Global getter for Zergs
 		global[this.name] = this;
 		// Handle attack notification when at lifetime - 1
 		if (!notifyWhenAttacked && (this.ticksToLive || 0) >= this.lifetime - (NEW_OVERMIND_INTERVAL + 1)) {
@@ -171,7 +172,7 @@ export abstract class AnyZerg {
 			// this._task = null;
 		} else {
 			log.debug(`Deleting ${this.print} from global`);
-			// delete Overmind.zerg[this.name];
+			// @ts-expect-error Global getter for Zergs
 			delete global[this.name];
 		}
 	}
@@ -240,7 +241,8 @@ export abstract class AnyZerg {
 		return this.creep.suicide();
 	}
 
-	transfer(target: AnyCreep | AnyZerg | Structure, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
+	transfer(target: AnyCreep | AnyZerg | Structure,
+		resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
 		let result: ScreepsReturnCode;
 		if (isAnyZerg(target)) {
 			result = this.creep.transfer(target.creep, resourceType, amount);
@@ -251,7 +253,7 @@ export abstract class AnyZerg {
 		return result;
 	}
 
-	transferAll(target: AnyCreep | AnyZerg | Structure, amount?: number) {
+	transferAll(target: AnyCreep | AnyZerg | Structure) {
 		for (const [resourceType, amount] of this.creep.store.contents) {
 			if (amount > 0) {
 				return this.transfer(target, resourceType);
@@ -309,7 +311,7 @@ export abstract class AnyZerg {
 	 */
 	get colony(): Colony | null {
 		if (this.memory[MEM.COLONY] != null) {
-			return Overmind.colonies[this.memory[MEM.COLONY] as string];
+			return Overmind.colonies[this.memory[MEM.COLONY]];
 		} else {
 			return null;
 		}
@@ -353,14 +355,15 @@ export abstract class AnyZerg {
 	}
 
 	get isMoving(): boolean {
-		const moveData = this.memory._go as MoveData | undefined;
+		const moveData = this.memory._go;
 		return (!!moveData && !!moveData.path && moveData.path.length > 1) || this.actionLog[MOVE];
 	}
 
 	/**
 	 * Kite around hostiles in the room
 	 */
-	kite(avoidGoals: (RoomPosition | _HasRoomPosition)[] = this.room.hostiles, options: MoveOptions = {}): number | undefined {
+	kite(avoidGoals: (RoomPosition | _HasRoomPosition)[] = this.room.hostiles,
+		options: MoveOptions = {}): number | undefined {
 		_.defaults(options, {
 			fleeRange: 5
 		});
@@ -449,9 +452,8 @@ export abstract class AnyZerg {
 			// Like 99.999% of the time this will be the case
 			if (this.colony && Game.map.getRoomLinearDistance(this.room.name, this.colony.name) <= maxLinearRange) {
 				fallback = this.colony.name;
-			}
-			// But this could happen if the creep was working remotely through a portal
-			else {
+			} else {
+				// But this could happen if the creep was working remotely through a portal
 				const nearbyColonies = _.filter(getAllColonies(), colony =>
 					Game.map.getRoomLinearDistance(this.room.name, colony.name) <= maxLinearRange);
 				const closestColony = minBy(nearbyColonies, colony => {
@@ -516,7 +518,7 @@ export abstract class AnyZerg {
 	/**
 	 * Moves off of an exit tile
 	 */
-	moveOffExit(towardPos?: RoomPosition, avoidSwamp = true): ScreepsReturnCode {
+	moveOffExit(towardPos?: RoomPosition, avoidSwamp = true): ScreepsReturnCode | NO_ACTION {
 		return Movement.moveOffExit(this, towardPos, avoidSwamp);
 	}
 

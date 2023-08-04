@@ -58,7 +58,7 @@ export class Cartographer {
 		} else {
 			visited[roomName] = Math.min(depth, visited[roomName]);
 		}
-		const neighbors = _.values(Game.map.describeExits(roomName)) as string[];
+		const neighbors = _.values<string>(Game.map.describeExits(roomName));
 		if (depth < maxDepth) {
 			for (const neighbor of neighbors) {
 				// Visit the neighbor if not already done or if this would be a more direct route

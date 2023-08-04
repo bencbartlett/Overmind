@@ -81,6 +81,7 @@ export abstract class PowerZerg extends AnyZerg {
 		} else {
 			log.debug(`Deleting ${this.print} from global`);
 			delete Overmind.powerZerg[this.name];
+			// @ts-expect-error global getter for PowerZergs
 			delete global[this.name];
 		}
 	}

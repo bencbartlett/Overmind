@@ -16,13 +16,13 @@ interface RawMemory {
 interface Memory {
 	tick: number;
 	build: number;
-	assimilator: any;
+	assimilator: { users?: any };
 	Overmind: {};
 	profiler: any;
 	overseer: any;
 	segmenter: any;
 	roomIntel: any;
-	colonies: { [name: string]: any };
+	colonies: { [name: string]: import("Colony").ColonyMemory };
 	creeps: { [name: string]: CreepMemory; };
 	powerCreeps: {[name: string]: PowerCreepMemory};
 	flags: { [name: string]: FlagMemory; };
@@ -30,7 +30,17 @@ interface Memory {
 	spawns: { [name: string]: SpawnMemory; };
 	pathing: PathingMemory;
 	constructionSites: { [id: string]: number };
-	stats: any;
+	stats: {
+		persistent:{
+			lastGlobalReset?: number;
+			lastMemoryReset?: number;
+			globalAge?: number;
+			avgCPU?: number;
+			empireAge?: number;
+			build?: number;
+		};
+		"cpu.heapStatistics"?: HeapStatistics;
+	};
 
 	// suspend?: number;
 	resetBucket?: boolean;
@@ -177,6 +187,7 @@ interface FlagMemory {
 		[MEM.EXPIRATION]: number;
 		incomplete?: boolean;
 	};
+	overlords?: any;
 	debug?: boolean;
 	amount?: number;
 	persistent?: boolean;
