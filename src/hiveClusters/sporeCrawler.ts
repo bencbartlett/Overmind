@@ -15,6 +15,7 @@ import {HiveCluster} from './_HiveCluster';
 export class SporeCrawler extends HiveCluster {
 
 	towers: StructureTower[];
+	memory: undefined;
 
 	static settings = {
 		requestThreshold       : 500,
@@ -34,10 +35,6 @@ export class SporeCrawler extends HiveCluster {
 
 	spawnMoarOverlords() {
 
-	}
-
-	get memory(): undefined {
-		return undefined;
 	}
 
 	private registerEnergyRequests() {
