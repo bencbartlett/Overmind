@@ -2,13 +2,11 @@ import {hasPos} from '../../declarations/typeGuards';
 import {profile} from '../../profiler/decorator';
 import {Task} from '../Task';
 
-export type goToTargetType = { pos: RoomPosition } | RoomPosition;
+export type goToTargetType = _HasRoomPosition | RoomPosition;
 export const goToTaskName = 'goTo';
 
 @profile
-export class TaskGoTo extends Task {
-	target: null;
-
+export class TaskGoTo extends Task<goToTargetType> {
 	constructor(target: goToTargetType, options = {} as TaskOptions) {
 		if (hasPos(target)) {
 			super(goToTaskName, {ref: '', pos: target.pos}, options);

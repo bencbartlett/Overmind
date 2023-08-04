@@ -5,9 +5,7 @@ export type repairTargetType = Structure;
 export const repairTaskName = 'repair';
 
 @profile
-export class TaskRepair extends Task {
-	target: repairTargetType;
-
+export class TaskRepair extends Task<repairTargetType> {
 	constructor(target: repairTargetType, options = {} as TaskOptions) {
 		super(repairTaskName, target, options);
 		// Settings

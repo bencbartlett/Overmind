@@ -14,15 +14,13 @@ export const rechargeTaskName = 'recharge';
 // This is a "dispenser task" which is not itself a valid task, but dispenses a task when assigned to a creep.
 
 @profile
-export class TaskRecharge extends Task {
-	target: rechargeTargetType;
-
+export class TaskRecharge extends Task<rechargeTargetType> {
 	data: {
 		minEnergy: number;
 	};
 
-	constructor(target: rechargeTargetType, minEnergy = 0, options = {} as TaskOptions) {
-		super(rechargeTaskName, {ref: '', pos: {x: -1, y: -1, roomName: ''}}, options);
+	constructor(minEnergy = 0, options = {} as TaskOptions) {
+		super(rechargeTaskName, null, options);
 		this.data.minEnergy = minEnergy;
 	}
 

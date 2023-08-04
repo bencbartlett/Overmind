@@ -6,9 +6,7 @@ export type reserveTargetType = StructureController;
 export const reserveTaskName = 'colony';
 
 @profile
-export class TaskReserve extends Task {
-	target: reserveTargetType;
-
+export class TaskReserve extends Task<reserveTargetType> {
 	constructor(target: reserveTargetType, options = {} as TaskOptions) {
 		super(reserveTaskName, target, options);
 	}

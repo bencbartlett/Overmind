@@ -5,9 +5,7 @@ export type claimTargetType = StructureController;
 export const claimTaskName = 'claim';
 
 @profile
-export class TaskClaim extends Task {
-	target: claimTargetType;
-
+export class TaskClaim extends Task<claimTargetType> {
 	constructor(target: claimTargetType, options = {} as TaskOptions) {
 		super(claimTaskName, target, options);
 		// Settings

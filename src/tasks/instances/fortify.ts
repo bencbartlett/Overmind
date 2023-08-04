@@ -6,8 +6,7 @@ export type fortifyTargetType = StructureWall | StructureRampart;
 export const fortifyTaskName = 'fortify';
 
 @profile
-export class TaskFortify extends Task {
-	target: fortifyTargetType;
+export class TaskFortify extends Task<fortifyTargetType> {
 	data: {
 		hitsMax: number | undefined;
 	};

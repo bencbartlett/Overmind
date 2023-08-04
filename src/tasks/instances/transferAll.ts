@@ -7,9 +7,7 @@ export type transferAllTargetType = StructureStorage | StructureTerminal | Struc
 export const transferAllTaskName = 'transferAll';
 
 @profile
-export class TaskTransferAll extends Task {
-
-	target: transferAllTargetType;
+export class TaskTransferAll extends Task<transferAllTargetType> {
 	data: {
 		skipEnergy?: boolean;
 	};

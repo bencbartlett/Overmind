@@ -5,9 +5,7 @@ export type getRenewedTargetType = StructureSpawn;
 export const getRenewedTaskName = 'getRenewed';
 
 @profile
-export class TaskGetRenewed extends Task {
-	target: getRenewedTargetType;
-
+export class TaskGetRenewed extends Task<getRenewedTargetType> {
 	constructor(target: getRenewedTargetType, options = {} as TaskOptions) {
 		super(getRenewedTaskName, target, options);
 	}

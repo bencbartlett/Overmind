@@ -5,15 +5,12 @@ export type healTargetType = Creep;
 export const healTaskName = 'heal';
 
 @profile
-export class TaskHeal extends Task {
-	target: healTargetType;
-
+export class TaskHeal extends Task<healTargetType> {
 	constructor(target: healTargetType, options = {} as TaskOptions) {
 		super(healTaskName, target, options);
 		// Settings
 		this.settings.targetRange = 3;
 	}
-
 
 	isValidTask() {
 		return (this.creep.getActiveBodyparts(HEAL) > 0);

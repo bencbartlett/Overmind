@@ -6,9 +6,7 @@ export type harvestTargetType = Source | Mineral;
 export const harvestTaskName = 'harvest';
 
 @profile
-export class TaskHarvest extends Task {
-	target: harvestTargetType;
-
+export class TaskHarvest extends Task<harvestTargetType> {
 	constructor(target: harvestTargetType, options = {} as TaskOptions) {
 		super(harvestTaskName, target, options);
 	}

@@ -8,10 +8,7 @@ export type withdrawAllTargetType = AnyStoreStructure;
 export const withdrawAllTaskName = 'withdrawAll';
 
 @profile
-export class TaskWithdrawAll extends Task {
-
-	target: withdrawAllTargetType;
-
+export class TaskWithdrawAll extends Task<withdrawAllTargetType> {
 	constructor(target: withdrawAllTargetType, options = {} as TaskOptions) {
 		super(withdrawAllTaskName, target, options);
 	}

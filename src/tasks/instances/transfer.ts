@@ -9,9 +9,7 @@ export type transferTargetType =
 export const transferTaskName = 'transfer';
 
 @profile
-export class TaskTransfer extends Task {
-
-	target: transferTargetType;
+export class TaskTransfer extends Task<transferTargetType> {
 	data: {
 		resourceType: ResourceConstant
 		amount: number | undefined

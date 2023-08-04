@@ -9,9 +9,7 @@ export type withdrawTargetType = AnyStoreStructure
 export const withdrawTaskName = 'withdraw';
 
 @profile
-export class TaskWithdraw extends Task {
-
-	target: withdrawTargetType;
+export class TaskWithdraw extends Task<withdrawTargetType> {
 	data: {
 		resourceType: ResourceConstant,
 		amount: number | undefined,

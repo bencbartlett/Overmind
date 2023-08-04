@@ -17,7 +17,24 @@ import {profile} from '../profiler/decorator';
 import {Zerg} from '../zerg/Zerg';
 import {initializeTask} from './initializer';
 
-type targetType = { ref: string, pos: ProtoPos }; // overwrite this variable to specify more precise typing
+interface AbstractTaskTarget {
+	ref: string; 	// Target id or name
+	_pos: ProtoPos;	// Target position's coordinates in case vision is lost
+}
+
+type ConcreteTaskTarget = HasRef | HasPos | RoomPosition;
+
+function isAbstractTarget(target: any): target is AbstractTaskTarget {
+	return target && target._pos !== undefined;
+}
+
+function isRoomRefTarget(target: any): target is HasRef & HasPos {
+	return target && target.ref !== undefined;
+}
+
+function isRoomObjectTarget(target: any): target is RoomObject {
+	return target && target.pos !== undefined;
+}
 
 /**
  * An abstract class for encapsulating creep actions. This generalizes the concept of "do action X to thing Y until
@@ -26,18 +43,15 @@ type targetType = { ref: string, pos: ProtoPos }; // overwrite this variable to 
  * to continue.
  */
 @profile
-export abstract class Task {
+export abstract class Task<TargetType extends ConcreteTaskTarget | null> {
 
 	static taskName: string;
 
 	name: string;				// Name of the task type, e.g. 'upgrade'
-	_creep: { 					// Data for the creep the task is assigned to"
+	_creep: { 					// Data for the creep the task is assigned to
 		name: string;				// Name of the creep
 	};
-	_target: { 					// Data for the target the task is directed to:
-		ref: string; 				// Target id or name
-		_pos: ProtoPos; 			// Target position's coordinates in case vision is lost
-	};
+	_target: AbstractTaskTarget;// Data for the target the task is directed to:
 	_parent: ProtoTask | null; 	// The parent of this task, if any. Task is changed to parent upon completion.
 	tick: number;				// When the task was set
 	settings: TaskSettings;		// Settings for a given type of task; shouldn't be modified on an instance-basis
@@ -46,17 +60,33 @@ export abstract class Task {
 
 	private _targetPos: RoomPosition;
 
-	constructor(taskName: string, target: targetType, options = {} as TaskOptions) {
+	constructor(taskName: string, target: TargetType | AbstractTaskTarget, options = {} as TaskOptions) {
 		// Parameters for the task
 		this.name = taskName;
 		this._creep = {
 			name: '',
 		};
-		if (target) { // Handles edge cases like when you're done building something and target disappears
+		// Handles edge cases like when you're done building something and target disappears
+		if (target instanceof RoomPosition) {
+			this._target = {
+				ref: '',
+				_pos: { x: target.x, y: target.y, roomName: target.room!.name },
+			}
+		} else if (isAbstractTarget(target)) {
+			this._target = {
+				ref : target.ref,
+				_pos: target._pos,
+			};
+		} else if (isRoomRefTarget(target)) {
 			this._target = {
 				ref : target.ref,
 				_pos: target.pos,
 			};
+		} else if (isRoomObjectTarget(target)) {
+			this._target = {
+				ref: '',
+				_pos: target.pos,
+			}
 		} else {
 			this._target = {
 				ref : '',
@@ -67,6 +97,7 @@ export abstract class Task {
 				}
 			};
 		}
+		// log.debug(`creating task ${this.constructor.name}, ${taskName}, target: ${target}, ${print(this._target)}`);
 		this._parent = null;
 		this.settings = {
 			targetRange: 1,			// range at which you can perform action
@@ -129,8 +160,8 @@ export abstract class Task {
 	/**
 	 * Dereferences the Task's target
 	 */
-	get target(): RoomObject | null {
-		return deref(this._target.ref);
+	get target(): TargetType {
+		return deref(this._target.ref) as TargetType;
 	}
 
 	/**
@@ -140,7 +171,7 @@ export abstract class Task {
 		// refresh if you have visibility of the target
 		if (!this._targetPos) {
 			if (this.target) {
-				this._target._pos = this.target.pos;
+				this._target._pos = (this.target as HasPos).pos;
 			}
 			this._targetPos = derefRoomPosition(this._target._pos);
 		}
@@ -150,14 +181,14 @@ export abstract class Task {
 	/**
 	 * Get the Task's parent
 	 */
-	get parent(): Task | null {
+	get parent(): Task<any> | null {
 		return (this._parent ? initializeTask(this._parent) : null);
 	}
 
 	/**
 	 * Set the Task's parent
 	 */
-	set parent(parentTask: Task | null) {
+	set parent(parentTask: Task<any> | null) {
 		this._parent = parentTask ? parentTask.proto : null;
 		// If the task is already assigned to a creep, update their memory
 		if (this.creep) {
@@ -168,8 +199,8 @@ export abstract class Task {
 	/**
 	 * Return a list of [this, this.parent, this.parent.parent, ...] as tasks
 	 */
-	get manifest(): Task[] {
-		const manifest: Task[] = [this];
+	get manifest(): Task<any>[] {
+		const manifest: Task<any>[] = [this];
 		let parent = this.parent;
 		while (parent) {
 			manifest.push(parent);
@@ -207,7 +238,7 @@ export abstract class Task {
 	/**
 	 * Fork the task, assigning a new task to the creep with this task as its parent
 	 */
-	fork(newTask: Task): Task {
+	fork(newTask: Task<any>): Task<any> {
 		newTask.parent = this;
 		if (this.creep) {
 			this.creep.task = newTask;

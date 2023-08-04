@@ -5,9 +5,7 @@ export type rangedAttackTargetType = Creep | Structure;
 export const rangedAttackTaskName = 'rangedAttack';
 
 @profile
-export class TaskRangedAttack extends Task {
-	target: rangedAttackTargetType;
-
+export class TaskRangedAttack extends Task<rangedAttackTargetType> {
 	constructor(target: rangedAttackTargetType, options = {} as TaskOptions) {
 		super(rangedAttackTaskName, target, options);
 		// Settings

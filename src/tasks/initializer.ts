@@ -33,7 +33,7 @@ import {Task} from './Task';
 /**
  * The task initializer maps serialized prototasks to Task instances
  */
-export function initializeTask(protoTask: ProtoTask): Task {
+export function initializeTask(protoTask: ProtoTask): Task<any> {
 	// Retrieve name and target data from the ProtoTask
 	const taskName = protoTask.name;
 	const target = deref(protoTask._target.ref);
@@ -91,7 +91,7 @@ export function initializeTask(protoTask: ProtoTask): Task {
 			task = new TaskRangedAttack(target as rangedAttackTargetType);
 			break;
 		case rechargeTaskName:
-			task = new TaskRecharge(null);
+			task = new TaskRecharge();
 			break;
 		case repairTaskName:
 			task = new TaskRepair(target as repairTargetType);

@@ -6,8 +6,7 @@ export type dismantleTargetType = Structure;
 export const dismantleTaskName = 'dismantle';
 
 @profile
-export class TaskDismantle extends Task {
-	target: dismantleTargetType;
+export class TaskDismantle extends Task<dismantleTargetType> {
 
 	constructor(target: dismantleTargetType, options = {} as TaskOptions) {
 		super(dismantleTaskName, target, options);

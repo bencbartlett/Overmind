@@ -6,12 +6,10 @@ export type goToRoomTargetType = string;
 export const goToRoomTaskName = 'goToRoom';
 
 @profile
-export class TaskGoToRoom extends Task {
-
-	target: null;
+export class TaskGoToRoom extends Task<RoomPosition> {
 
 	constructor(roomName: goToRoomTargetType, options = {} as TaskOptions) {
-		super(goToRoomTaskName, {ref: '', pos: new RoomPosition(25, 25, roomName)}, options);
+		super(goToRoomTaskName, {ref: '', _pos: new RoomPosition(25, 25, roomName)}, options);
 		// Settings
 		this.settings.targetRange = 23; // Target is almost always controller flag, so range of 2 is acceptable
 	}

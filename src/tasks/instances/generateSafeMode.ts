@@ -5,9 +5,7 @@ export type generateSafeModeTargetType = StructureController;
 export const generateSafeModeTaskName = 'generateSafeMode';
 
 @profile
-export class TaskGenerateSafeMode extends Task {
-	target: generateSafeModeTargetType;
-
+export class TaskGenerateSafeMode extends Task<generateSafeModeTargetType> {
 	constructor(target: generateSafeModeTargetType, options = {} as TaskOptions) {
 		super(generateSafeModeTaskName, target, options);
 	}

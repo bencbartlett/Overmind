@@ -32,7 +32,7 @@ import {Task} from './Task';
 @profile
 export class Tasks {
 
-	static chain(tasks: Task[], setNextPos = true): Task | null {
+	static chain(tasks: Task<any>[], setNextPos = true): Task<any> | null {
 		if (tasks.length == 0) {
 			// log.error(`Tasks.chain was passed an empty array of tasks!`);
 			return null;
@@ -118,7 +118,7 @@ export class Tasks {
 	}
 
 	static recharge(minEnergy = 0, options = {} as TaskOptions): TaskRecharge {
-		return new TaskRecharge(null, minEnergy, options);
+		return new TaskRecharge(minEnergy, options);
 	}
 
 	static repair(target: repairTargetType, options = {} as TaskOptions): TaskRepair {

@@ -5,9 +5,7 @@ export type pickupTargetType = Resource;
 export const pickupTaskName = 'pickup';
 
 @profile
-export class TaskPickup extends Task {
-	target: pickupTargetType;
-
+export class TaskPickup extends Task<pickupTargetType> {
 	constructor(target: pickupTargetType, options = {} as TaskOptions) {
 		super('pickup', target, options);
 		this.settings.oneShot = true;

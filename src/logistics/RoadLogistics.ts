@@ -163,10 +163,10 @@ export class RoadLogistics {
 		}
 	}
 
-	buildPavingManifest(worker: Zerg, room: Room): Task | null {
+	buildPavingManifest(worker: Zerg, room: Room): Task<any> | null {
 		let energy = worker.carry.energy;
 		const targetRefs: { [ref: string]: boolean } = {};
-		const tasks: Task[] = [];
+		const tasks: Task<any>[] = [];
 		let target: StructureRoad | undefined;
 		let previousPos: RoomPosition | undefined;
 		while (true) {
