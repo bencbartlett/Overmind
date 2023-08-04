@@ -55,9 +55,7 @@ export abstract class PowerZerg extends AnyZerg {
 			this.creep = powerCreep;
 			this.pos = powerCreep.pos;
 			this.nextPos = powerCreep.pos;
-			this.carry = powerCreep.carry;
 			this.store = powerCreep.store;
-			this.carryCapacity = powerCreep.carryCapacity;
 			this.hits = powerCreep.hits;
 			this.memory = powerCreep.memory;
 			this.room = powerCreep.room as Room; // not actually as Room

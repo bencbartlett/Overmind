@@ -124,7 +124,7 @@ export class UpgradeSite extends HiveCluster {
 		}
 		const inThreshold = this.colony.stage > ColonyStage.Larva ? 0.5 : 0.75;
 		if (this.battery) {
-			if (this.battery.energy < inThreshold * this.battery.storeCapacity) {
+			if (this.battery.energy < inThreshold * this.battery.store.getCapacity()) {
 				const energyPerTick = UPGRADE_CONTROLLER_POWER * this.upgradePowerNeeded;
 				this.colony.logisticsNetwork.requestInput(this.battery, {dAmountdt: energyPerTick});
 			}

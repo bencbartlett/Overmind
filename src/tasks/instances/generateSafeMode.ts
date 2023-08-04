@@ -11,7 +11,7 @@ export class TaskGenerateSafeMode extends Task<generateSafeModeTargetType> {
 	}
 
 	isValidTask() {
-		return (this.creep.carry[RESOURCE_GHODIUM] >= 1000);
+		return (this.creep.store[RESOURCE_GHODIUM] >= 1000);
 	}
 
 	isValidTarget() {

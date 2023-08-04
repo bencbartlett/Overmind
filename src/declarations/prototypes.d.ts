@@ -247,11 +247,16 @@ interface Structure {
 	isWalkable: boolean;
 }
 
-interface StructureContainer {
+interface _StoreLike {
 	energy: number;
 	isFull: boolean;
 	isEmpty: boolean;
 }
+
+interface StructureContainer extends _StoreLike {}
+interface StructureExtension extends _StoreLike {}
+interface StructureLink extends _StoreLike {}
+interface StructureStorage extends _StoreLike {}
 
 interface StructureController {
 	reservedByMe: boolean;
@@ -261,46 +266,20 @@ interface StructureController {
 	needsReserving(reserveBuffer: number): boolean;
 }
 
-interface StructureExtension {
-	isFull: boolean;
-	isEmpty: boolean;
-}
-
-interface StructureLink {
-	isFull: boolean;
-	isEmpty: boolean;
-	storeCapacity: number;
-}
-
-interface StructureStorage {
-	energy: number;
-	isFull: boolean;
-	isEmpty: boolean;
-}
-
 interface StoreBase {
 	contents: [ResourceConstant, number][];
 }
 
-interface StructureSpawn {
-	isFull: boolean;
-	isEmpty: boolean;
-
+interface StructureSpawn extends _StoreLike {
 	cost(bodyArray: string[]): number;
 }
 
-interface StructureTerminal {
-	energy: any;
-	isFull: boolean;
-	isEmpty: boolean;
+interface StructureTerminal extends _StoreLike {
 	isReady: boolean;
 	hasReceived: boolean;
 }
 
-interface StructureTower {
-	isFull: boolean;
-	isEmpty: boolean;
-
+interface StructureTower extends _StoreLike {
 	// run(): void;
 	//
 	// attackNearestEnemy(): number;

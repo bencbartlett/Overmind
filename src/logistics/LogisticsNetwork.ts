@@ -169,7 +169,7 @@ export class LogisticsNetwork {
 			dAmountdt   : 0,
 		});
 		if (opts.resourceType == 'all' && !isResource(target)) {
-			if (_.sum(target.store) == target.store.energy) {
+			if (target.store.getUsedCapacity() == target.store.energy) {
 				opts.resourceType = RESOURCE_ENERGY; // convert "all" requests to energy if that's all they have
 			}
 		}
@@ -294,8 +294,8 @@ export class LogisticsNetwork {
 			if (requestID) {
 				const request = this.requests[requestID];
 				if (request) {
-					const carry = transporter.carry as { [resourceType: string]: number };
-					const remainingCapacity = transporter.carryCapacity - _.sum(carry);
+					const carry = transporter.store;
+					const remainingCapacity = carry.getFreeCapacity()
 					const resourceAmount = -1 * this.predictedRequestAmount(transporter, request, nextAvailability);
 					// ^ need to multiply amount by -1 since transporter is doing complement of what request needs
 					if (request.resourceType == 'all') {
@@ -304,9 +304,9 @@ export class LogisticsNetwork {
 							return {energy: 0} as StoreDefinition;
 						}
 						for (const [resourceType, storeAmt] of request.target.store.contents) {
-							const resourceFraction = storeAmt / _.sum(request.target.store);
+							const resourceFraction = storeAmt / (request.target.store.getUsedCapacity(resourceType) || storeAmt);
 							if (carry[resourceType]) {
-								carry[resourceType]! += resourceAmount * resourceFraction;
+								carry[resourceType] += resourceAmount * resourceFraction;
 								carry[resourceType] = minMax(carry[resourceType]!, 0, remainingCapacity);
 							} else {
 								carry[resourceType] = minMax(resourceAmount, 0, remainingCapacity);
@@ -324,7 +324,7 @@ export class LogisticsNetwork {
 				}
 			}
 		}
-		return transporter.carry;
+		return transporter.store;
 	}
 
 	/**
@@ -371,7 +371,7 @@ export class LogisticsNetwork {
 				predictedAmount = minMax(predictedAmount, 0, request.target.store.getCapacity(request.resourceType));
 			}
 			const resourceInflux = _.sum(_.map(otherTargetingTransporters,
-											   other => (other.carry[<ResourceConstant>request.resourceType] || 0)));
+											   other => (other.store[<ResourceConstant>request.resourceType] || 0)));
 			predictedAmount = Math.max(predictedAmount - resourceInflux, 0);
 			return predictedAmount;
 		} else { // output state, resources withdrawn from target
@@ -386,7 +386,7 @@ export class LogisticsNetwork {
 				predictedAmount = minMax(predictedAmount, -1 * request.target.store.getCapacity(request.resourceType), 0);
 			}
 			const resourceOutflux = _.sum(_.map(otherTargetingTransporters,
-												other => other.carryCapacity - _.sum(other.carry)));
+												other => other.store.getCapacity() - other.store.getUsedCapacity()));
 			predictedAmount = Math.min(predictedAmount + resourceOutflux, 0);
 			return predictedAmount;
 		}
@@ -411,7 +411,7 @@ export class LogisticsNetwork {
 			carry = this.predictedTransporterCarry(transporter);
 		} else {
 			// If you are targeting the requestor, use current carry for computations
-			carry = transporter.carry;
+			carry = transporter.store;
 		}
 		if (amount > 0) { // requestInput instance, needs refilling
 			if (request.resourceType == 'all') {
@@ -428,12 +428,12 @@ export class LogisticsNetwork {
 							 dt       : dt_direct,
 							 targetRef: request.target.ref
 						 });
-			if ((carry[request.resourceType] || 0) > amount || _.sum(carry) == transporter.carryCapacity) {
+			if ((carry[request.resourceType] || 0) > amount || _.sum(carry) == transporter.store.getCapacity()) {
 				return choices; // Return early if you already have enough resources to go direct or are already full
 			}
 			// Change in resources if transporter picks up resources from a buffer first
 			for (const buffer of this.buffers) {
-				const dQ_buffer = Math.min(amount, transporter.carryCapacity, buffer.store[request.resourceType] || 0);
+				const dQ_buffer = Math.min(amount, transporter.store.getCapacity(), buffer.store[request.resourceType] || 0);
 				const dt_buffer = newPos.getMultiRoomRangeTo(buffer.pos) * LogisticsNetwork.settings.rangeToPathHeuristic
 								  + (Pathing.distance(buffer.pos, request.target.pos) || Infinity) + ticksUntilFree;
 				choices.push({
@@ -444,7 +444,7 @@ export class LogisticsNetwork {
 			}
 		} else if (amount < 0) { // requestOutput instance, needs pickup
 			// Change in resources if transporter goes straight to the output
-			const remainingCarryCapacity = transporter.carryCapacity - _.sum(carry);
+			const remainingCarryCapacity = transporter.store.getCapacity() - _.sum(carry);
 			const dQ_direct = Math.min(Math.abs(amount), remainingCarryCapacity);
 			const dt_direct = newPos.getMultiRoomRangeTo(request.target.pos)
 							  * LogisticsNetwork.settings.rangeToPathHeuristic + ticksUntilFree;
@@ -453,13 +453,13 @@ export class LogisticsNetwork {
 							 dt       : dt_direct,
 							 targetRef: request.target.ref
 						 });
-			if (remainingCarryCapacity >= Math.abs(amount) || remainingCarryCapacity == transporter.carryCapacity) {
+			if (remainingCarryCapacity >= Math.abs(amount) || remainingCarryCapacity == transporter.store.getCapacity()) {
 				return choices; // Return early you have sufficient free space or are empty
 			}
 			// Change in resources if transporter drops off resources at a buffer first
 			for (const buffer of this.buffers) {
-				const dQ_buffer = Math.min(Math.abs(amount), transporter.carryCapacity,
-										   buffer.storeCapacity - _.sum(buffer.store));
+				const dQ_buffer = Math.min(Math.abs(amount), transporter.store.getCapacity(),
+										   buffer.store.getFreeCapacity());
 				const dt_buffer = newPos.getMultiRoomRangeTo(buffer.pos) * LogisticsNetwork.settings.rangeToPathHeuristic
 								  + (Pathing.distance(buffer.pos, request.target.pos) || Infinity) + ticksUntilFree;
 				choices.push({
@@ -578,7 +578,7 @@ export class LogisticsNetwork {
 			} else {
 				if (request.resourceType == 'all') {
 					if (!isResource(request.target)) {
-						amount = _.sum(request.target.store);
+						amount = request.target.store.getUsedCapacity() || 0;
 					} else {
 						amount = -0.001;
 					}

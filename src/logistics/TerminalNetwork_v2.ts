@@ -422,8 +422,8 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	private getRemainingSpace(colony: Colony, includeFactoryCapacity = false): number {
 		let totalAssets = _.sum(colony.assets);
 		// Overfilled storage gets counted as just 100% full
-		if (colony.storage && _.sum(colony.storage.store) > STORAGE_CAPACITY) {
-			totalAssets -= (_.sum(colony.storage.store) - STORAGE_CAPACITY);
+		if (colony.storage && colony.storage.store.getUsedCapacity() > STORAGE_CAPACITY) {
+			totalAssets -= (colony.storage.store.getUsedCapacity() - STORAGE_CAPACITY);
 		}
 
 		const roomCapacity = (colony.terminal ? TERMINAL_CAPACITY : 0) +

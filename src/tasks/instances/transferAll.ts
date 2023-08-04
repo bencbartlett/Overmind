@@ -18,7 +18,7 @@ export class TaskTransferAll extends Task<transferAllTargetType> {
 	}
 
 	isValidTask() {
-		for (const [resourceType, amount] of this.creep.carry.contents) {
+		for (const [resourceType, amount] of this.creep.store.contents) {
 			if (this.data.skipEnergy && resourceType == RESOURCE_ENERGY) {
 				continue;
 			}
@@ -30,11 +30,11 @@ export class TaskTransferAll extends Task<transferAllTargetType> {
 	}
 
 	isValidTarget() {
-		return _.sum(this.target.store) < this.target.storeCapacity;
+		return this.target.store.getUsedCapacity() < this.target.store.getCapacity();
 	}
 
 	work() {
-		for (const [resourceType, amount] of this.creep.carry.contents) {
+		for (const [resourceType, amount] of this.creep.store.contents) {
 			if (this.data.skipEnergy && resourceType == RESOURCE_ENERGY) {
 				continue;
 			}

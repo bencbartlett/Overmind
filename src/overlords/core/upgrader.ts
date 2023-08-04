@@ -51,7 +51,7 @@ export class UpgradingOverlord extends Overlord {
 	}
 
 	private handleUpgrader(upgrader: Zerg): void {
-		if (upgrader.carry.energy > 0) {
+		if (upgrader.store.energy > 0) {
 			// Repair link
 			if (this.upgradeSite.link && this.upgradeSite.link.hits < this.upgradeSite.link.hitsMax) {
 				upgrader.task = Tasks.repair(this.upgradeSite.link);

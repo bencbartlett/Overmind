@@ -40,8 +40,8 @@ export class SporeCrawler extends HiveCluster {
 	private registerEnergyRequests() {
 		// Request energy from transporters if below request threshold
 		for (const tower of this.towers) {
-			if (tower.energy < SporeCrawler.settings.requestThreshold) {
-				const multiplier = tower.energy < SporeCrawler.settings.criticalEnergyThreshold ? 2 : 1;
+			if (tower.store[RESOURCE_ENERGY] < SporeCrawler.settings.requestThreshold) {
+				const multiplier = tower.store[RESOURCE_ENERGY] < SporeCrawler.settings.criticalEnergyThreshold ? 2 : 1;
 				const dAmountdt = this.room.hostiles.length > 0 ? 10 : 0;
 				this.colony.logisticsNetwork.requestInput(tower, {multiplier: multiplier, dAmountdt: dAmountdt});
 			}

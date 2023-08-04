@@ -26,7 +26,7 @@ export class TaskTransfer extends Task<transferTargetType> {
 
 	isValidTask() {
 		const amount = this.data.amount || 1;
-		const resourcesInCarry = this.creep.carry[this.data.resourceType] || 0;
+		const resourcesInCarry = this.creep.store[this.data.resourceType] || 0;
 		return resourcesInCarry >= amount;
 	}
 

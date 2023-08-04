@@ -220,7 +220,7 @@ export class Hatchery extends HiveCluster {
 		}
 		if (this.battery) {
 			const threshold = this.colony.stage == ColonyStage.Larva ? 0.75 : 0.5;
-			if (this.battery.energy < threshold * this.battery.storeCapacity) {
+			if (this.battery.store.getUsedCapacity() < threshold * this.battery.store.getCapacity()) {
 				this.colony.logisticsNetwork.requestInput(this.battery, {multiplier: 1.5});
 			}
 			// get rid of any minerals in the container if present
