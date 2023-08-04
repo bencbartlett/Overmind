@@ -81,7 +81,7 @@ export class LogisticsNetwork {
 	// private logisticPositions: { [roomName: string]: RoomPosition[] };
 	private cache: {
 		nextAvailability: { [transporterName: string]: [number, RoomPosition] },
-		predictedTransporterCarry: { [transporterName: string]: { [resourceType: string]: number } },
+		predictedTransporterCarry: { [transporterName: string]: StoreContents },
 		resourceChangeRate: { [requestID: string]: { [transporterName: string]: number } },
 	};
 	static settings = {
@@ -288,7 +288,7 @@ export class LogisticsNetwork {
 	 * Returns the predicted state of the transporter's carry after completing its current task
 	 */
 	private computePredictedTransporterCarry(transporter: Zerg,
-											 nextAvailability?: [number, RoomPosition]): { [resourceType: string]: number } {
+											 nextAvailability?: [number, RoomPosition]): StoreContents {
 		if (transporter.task && transporter.task.target) {
 			const requestID = this.targetToRequest[transporter.task.target.ref];
 			if (requestID) {
@@ -301,7 +301,7 @@ export class LogisticsNetwork {
 					if (request.resourceType == 'all') {
 						if (isResource(request.target)) {
 							log.error(ALL_RESOURCE_TYPE_ERROR);
-							return {energy: 0} as StoreDefinition;
+							return <StoreContents>{energy: 0};
 						}
 						for (const [resourceType, storeAmt] of request.target.store.contents) {
 							const resourceFraction = storeAmt / (request.target.store.getUsedCapacity(resourceType) || storeAmt);
@@ -320,7 +320,7 @@ export class LogisticsNetwork {
 							carry[request.resourceType] = minMax(resourceAmount, 0, remainingCapacity);
 						}
 					}
-					return carry as StoreDefinition;
+					return carry;
 				}
 			}
 		}
@@ -330,7 +330,7 @@ export class LogisticsNetwork {
 	/**
 	 * Returns the predicted state of the transporter's carry after completing its task
 	 */
-	private predictedTransporterCarry(transporter: Zerg): { [resourceType: string]: number } {
+	private predictedTransporterCarry(transporter: Zerg): StoreContents {
 		if (!this.cache.predictedTransporterCarry[transporter.name]) {
 			this.cache.predictedTransporterCarry[transporter.name] = this.computePredictedTransporterCarry(transporter);
 		}
@@ -405,7 +405,7 @@ export class LogisticsNetwork {
 		const [ticksUntilFree, newPos] = this.nextAvailability(transporter);
 		const choices: { dQ: number, dt: number, targetRef: string }[] = [];
 		const amount = this.predictedRequestAmount(transporter, request, [ticksUntilFree, newPos]);
-		let carry: { [resourceType: string]: number };
+		let carry: StoreContents;
 		if (!transporter.task || transporter.task.target != request.target) {
 			// If you are not targeting the requestor, use predicted carry after completing current task
 			carry = this.predictedTransporterCarry(transporter);

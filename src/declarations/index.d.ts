@@ -324,7 +324,7 @@ type TransferrableStoreStructure =
 	| StructureTerminal
 	| StructureTower;
 
-// interface StoreLike {
-// 	[resourceType: string]: number
-// }
 
+type StoreContentsArray = [resourceType: ResourceConstant, amount: number][];
+type StoreContents = { [resourceType in ResourceConstant]: number };
+type DropContents = { [resourceType in ResourceConstant]: Resource[] | undefined };

@@ -247,6 +247,10 @@ interface Structure {
 	isWalkable: boolean;
 }
 
+interface StoreBase {
+	contents: StoreContentsArray;
+}
+
 interface _StoreLike {
 	energy: number;
 	isFull: boolean;
@@ -264,10 +268,6 @@ interface StructureController {
 	signedByScreeps: boolean;
 
 	needsReserving(reserveBuffer: number): boolean;
-}
-
-interface StoreBase {
-	contents: [ResourceConstant, number][];
 }
 
 interface StructureSpawn extends _StoreLike {

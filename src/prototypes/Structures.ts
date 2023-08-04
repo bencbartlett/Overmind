@@ -124,10 +124,11 @@ StructureController.prototype.needsReserving = function(this: StructureControlle
 // Spawn prototypes ====================================================================================================
 
 // Storage prototypes ==================================================================================================
+
 declare const Store: any; // Store prototype isn't included in typed-screeps yet
 Object.defineProperty(Store.prototype, 'contents', {
-	get() {
-		return Object.entries(this);
+	get(this: StoreDefinition) {
+		return <StoreContentsArray>Object.entries(this);
 	},
 	configurable: true,
 });

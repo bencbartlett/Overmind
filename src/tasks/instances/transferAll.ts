@@ -18,7 +18,7 @@ export class TaskTransferAll extends Task<transferAllTargetType> {
 	}
 
 	isValidTask() {
-		for (const [resourceType, amount] of this.creep.store.contents) {
+		for (const [resourceType, amount] of Object.entries(this.creep.store)) {
 			if (this.data.skipEnergy && resourceType == RESOURCE_ENERGY) {
 				continue;
 			}

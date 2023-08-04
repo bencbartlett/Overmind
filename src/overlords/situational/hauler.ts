@@ -68,7 +68,7 @@ export class HaulingOverlord extends Overlord {
 				if (this.directive.storeStructure) {
 					const store = this.directive.store!;
 					let totalDrawn = 0; // Fill to full
-					for (const resourceType in store) {
+					for (const resourceType of <ResourceConstant[]>Object.keys(store)) {
 						if (store[resourceType] > 0) {
 							if (hauler.task) {
 								hauler.task = Tasks.withdraw(this.directive.storeStructure, <ResourceConstant>resourceType).fork(hauler.task);

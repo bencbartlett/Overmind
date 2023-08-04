@@ -139,8 +139,8 @@ export class BunkerQueenOverlord extends Overlord {
 			}
 		}
 		// Step 2: figure out what you need to supply for and calculate the needed resources
-		const queenCarry = {} as { [resourceType: string]: number };
-		const allStore = mergeSum(_.map(this.storeStructures, s => s.store));
+		const queenCarry = <StoreContents>{};
+		const allStore = mergeSum(..._.map(this.storeStructures, s => s.store));
 
 		const supplyRequests: TransportRequest[] = [];
 		for (const priority in this.colony.transportRequests.supply) {

@@ -72,7 +72,7 @@ export const REACTION_PRIORITIES = [
 	BOOST_TIERS.upgrade.T3,
 ];
 
-export const priorityStockAmounts: { [key: string]: number } = {
+export const priorityStockAmounts = <StoreContents>{
 	XGHO2: 1000,	// (-70 % dmg taken)
 	XLHO2: 1000, 	// (+300 % heal)
 	XZHO2: 1000, 	// (+300 % fat decr - speed)
@@ -94,7 +94,7 @@ export const priorityStockAmounts: { [key: string]: number } = {
 	G    : 2000, 	// For nukes and common compounds
 };
 
-export const wantedStockAmounts: { [key: string]: number } = {
+export const wantedStockAmounts = <StoreContents>{
 	UH   : 3000, 	// (+100 % attack)
 	KO   : 3000, 	// (+100 % ranged attack)
 	XGHO2: 10000, 	// (-70 % dmg taken)
@@ -351,7 +351,7 @@ export class Abathur {
 		// Compute the reaction queue for the highest priority item that you should be and can be making
 		const stocksToCheck = [priorityStockAmounts, wantedStockAmounts];
 		for (const stocks of stocksToCheck) {
-			for (const resourceType in stocks) {
+			for (const resourceType of <ResourceConstant[]>Object.keys(stocks)) {
 				const amountOwned = colony.assets[resourceType];
 				const amountNeeded = stocks[resourceType];
 				if (amountOwned < amountNeeded) { // if there is a shortage of this resource
@@ -433,8 +433,8 @@ export class Abathur {
 		const requiredBasicMinerals = Abathur.getRequiredBasicMinerals(reactionQueue);
 		if (verbose) console.log(`Required basic minerals: ${JSON.stringify(requiredBasicMinerals)}`);
 		if (verbose) console.log(`assets: ${JSON.stringify(colony.assets)}`);
-		const missingBasicMinerals: { [resourceType: string]: number } = {};
-		for (const mineralType in requiredBasicMinerals) {
+		const missingBasicMinerals = <StoreContents>{};
+		for (const mineralType of <ResourceConstant[]>Object.keys(requiredBasicMinerals)) {
 			const amountMissing = requiredBasicMinerals[mineralType] - colony.assets[mineralType];
 			if (amountMissing > 0) {
 				missingBasicMinerals[mineralType] = amountMissing;
