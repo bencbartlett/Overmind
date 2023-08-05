@@ -188,7 +188,8 @@ export class Overseer implements IOverseer {
 		for (const tombstone of colony.tombstones) {
 			if (tombstone.store.getUsedCapacity() > LogisticsNetwork.settings.droppedEnergyThreshold
 				|| tombstone.store.getUsedCapacity() > tombstone.store.energy) {
-				if (colony.bunker && tombstone.pos.isEqualTo(colony.bunker.anchor)) continue;
+				if (colony.bunker && tombstone.pos.isEqualTo(colony.bunker.anchor)
+					|| tombstone.pos.lookForStructure(STRUCTURE_CONTAINER)) continue;
 				colony.logisticsNetwork.requestOutput(tombstone, {resourceType: 'all'});
 			}
 		}
