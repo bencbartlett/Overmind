@@ -463,8 +463,10 @@ export class Movement {
 		} else {
 			if (isPowerZerg(creep)) {
 				return MovePriorities.powerCreep;
+			} else if (creep.memory.role in MovePriorities) {
+				return MovePriorities[creep.memory.role];
 			} else {
-				return MovePriorities[creep.memory.role] || MovePriorities.default;
+				return MovePriorities.default;
 			}
 		}
 	}
