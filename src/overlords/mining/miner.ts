@@ -77,10 +77,10 @@ export class MiningOverlord extends Overlord {
 		// Check if dismantling is needed
 		if (this.memory.dismantleNeeded || Game.time > (this.memory[DISMANTLE_CHECK] || 0)) {
 			if (this.room) {
-				this.dismantlePositions = this.getDismantlePositions();
-				if (this.dismantlePositions.length > 0) {
+				const positions = this.getDismantlePositions();
+				if (positions.length > 0) {
 					this.memory.dismantleNeeded = true;
-					this.dismantlePositions = this.getDismantlePositions();
+					this.dismantlePositions = positions;
 				} else {
 					this.memory[DISMANTLE_CHECK] = getCacheExpiration(DISMANTLE_CHECK_FREQUENCY,
 																	  DISMANTLE_CHECK_FREQUENCY / 5);
@@ -187,7 +187,7 @@ export class MiningOverlord extends Overlord {
 	private getDismantlePositions(): RoomPosition[] {
 		const dismantleStructures: Structure[] = [];
 		if (this.room) {
-			const targets = _.compact([...this.room.sources, this.room.controller]) as RoomObject[];
+			const targets = _.compact([this.source, this.secondSource, this.container, this.link]) as RoomObject[];
 			for (const target of targets) {
 				// Add blocking structures
 				const blockingStructure = this.findBlockingStructure(target);

@@ -1190,10 +1190,21 @@ export class Pathing {
 			maxOps     : 2000,
 			ensurePath : false,
 		});
-		if (startPos.roomName != endPos.roomName) {
-			log.error(`findBlockingPos() should only be used within a single room!`);
-			return undefined;
+		if (startPos.roomName !== endPos.roomName) {
+			// Start and end aren't in the same room.
+			const pathToEnd = this.findPath(startPos, endPos, {
+				range: options.range!,
+				roadCost: "auto",
+				terrainCosts: { plainCost: 1, swampCost: 5 },
+			});
+
+			let newStartPos = pathToEnd.path.find(step => step.roomName === endPos.roomName);
+			if (!newStartPos)
+				return undefined;
+
+			startPos = newStartPos;
 		}
+
 		const matrix = new PathFinder.CostMatrix();
 		_.forEach(obstacles, obstacle => {
 			if (hasPos(obstacle)) {
@@ -1210,11 +1221,14 @@ export class Pathing {
 			maxRooms    : 1,
 			roomCallback: callback,
 		});
+
 		for (const pos of ret.path) {
 			if (matrix.get(pos.x, pos.y) > 100) {
 				return pos;
 			}
 		}
+
+		return undefined;
 	}
 
 	/**
