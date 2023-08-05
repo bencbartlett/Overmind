@@ -55,10 +55,10 @@ export class DirectiveBootstrap extends Directive {
 				return; // wait a little while at higher levels before stopping bootstrapping
 			}
 			log.alert(`Colony ${this.room.print} has recovered from crash; removing bootstrap directive.`);
-			// Suicide any fillers so they don't get in the way
+			// Reassign any filler to the work force
 			const overlord = this.overlords.bootstrap as BootstrappingOverlord;
 			for (const filler of overlord.fillers) {
-				filler.suicide();
+				filler.reassign(this.colony.overlords.logistics, Roles.transport);
 			}
 			// Remove the directive
 			this.remove();
