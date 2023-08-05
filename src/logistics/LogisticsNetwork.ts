@@ -542,15 +542,15 @@ export class LogisticsNetwork {
 			const transporterStr = transporter.name + ' ' + transporter.pos;
 			const request = this._matching![transporter.name]!;
 			const requestStr = request.target.ref + ' ' + request.target.pos.print;
-			console.log(`${transporterStr.padRight(30)} : ${requestStr}`);
+			console.log(`${transporterStr.padRight(35)} : ${requestStr}`);
 		}
 		for (const transporter of unmatchedTransporters) {
 			const transporterStr = transporter.name + ' ' + transporter.pos;
-			console.log(`${transporterStr.padRight(30)} : ${''}`);
+			console.log(`${transporterStr.padRight(35)} : ${''}`);
 		}
 		for (const request of unmatchedRequests) {
 			const requestStr = request.target.ref + ' ' + request.target.pos;
-			console.log(`${''.padRight(30)} : ${requestStr}`);
+			console.log(`${''.padRight(35)} : ${requestStr}`);
 		}
 		console.log();
 	}
