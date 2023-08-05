@@ -44,7 +44,11 @@ export class HaulingOverlord extends Overlord {
 		// Calculate number of haulers
 		const numHaulers = Math.min(Math.ceil(haulingPowerNeeded / haulingPowerPerLifetime), MAX_HAULERS);
 		// Request the haulers
-		this.wishlist(numHaulers, Setups.transporters.early);
+		if (this.haulers.length === 0) {
+			this.wishlist(numHaulers, Setups.transporters.early, { priority: OverlordPriority.collectionUrgent.haul });
+		} else {
+			this.wishlist(numHaulers, Setups.transporters.early);
+		}
 	}
 
 	private handleHauler(hauler: Zerg) {
