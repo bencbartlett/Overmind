@@ -206,48 +206,12 @@ export class LogisticsNetwork {
 	}
 
 	private getInputAmount(target: LogisticsTarget, resourceType: ResourceConstant): number {
-		// if (target instanceof DirectivePickup) {
-		// 	return target.storeCapacity - _.sum(target.store);
-		// } else
 		if (isResource(target) || isTombstone(target) || isRuin(target)) {
 			log.error(`Improper logistics request: should not request input for resource or tombstone!`);
 			return 0;
 		}
 
-		// @ts-ignore
 		return target.store.getFreeCapacity(resourceType) || 0;
-
-		// else if (isStoreStructure(target)) {
-		// 	return target.storeCapacity - _.sum(target.store);
-		// } else if (isEnergyStructure(target) && resourceType == RESOURCE_ENERGY) {
-		// 	return target.energyCapacity - target.energy;
-		// }
-		// // else if (target instanceof Zerg) {
-		// // 	return target.carryCapacity - _.sum(target.carry);
-		// // }
-		// else {
-		// 	if (target instanceof StructureLab) {
-		// 		if (resourceType == target.mineralType) {
-		// 			return target.mineralCapacity - target.mineralAmount;
-		// 		} else if (resourceType == RESOURCE_ENERGY) {
-		// 			return target.energyCapacity - target.energy;
-		// 		}
-		// 	} else if (target instanceof StructureNuker) {
-		// 		if (resourceType == RESOURCE_GHODIUM) {
-		// 			return target.ghodiumCapacity - target.ghodium;
-		// 		} else if (resourceType == RESOURCE_ENERGY) {
-		// 			return target.energyCapacity - target.energy;
-		// 		}
-		// 	} else if (target instanceof StructurePowerSpawn) {
-		// 		if (resourceType == RESOURCE_POWER) {
-		// 			return target.powerCapacity - target.power;
-		// 		} else if (resourceType == RESOURCE_ENERGY) {
-		// 			return target.energyCapacity - target.energy;
-		// 		}
-		// 	}
-		// }
-		// log.warning('Could not determine input amount!');
-		// return 0;
 	}
 
 	private getOutputAmount(target: LogisticsTarget, resourceType: ResourceConstant | 'all'): number {
@@ -256,52 +220,15 @@ export class LogisticsNetwork {
 				log.error(ALL_RESOURCE_TYPE_ERROR);
 				return 0;
 			} else {
-				// @ts-ignore
-				return target.store.getUsedCapacity();
+				return target.store.getUsedCapacity() || 0;
 			}
 		} else {
 			if (isResource(target)) {
 				return target.amount;
 			} else {
-				// @ts-ignore
-				return target.store.getUsedCapacity(resourceType);
+				return target.store.getUsedCapacity(resourceType) || 0;
 			}
-
-			// Legacy code
-			// else if (isTombstone(target)) {
-			// 	return target.store[resourceType] || 0;
-			// } else if (isStoreStructure(target)) {
-			// 	return target.store[resourceType] || 0;
-			// } else if (isEnergyStructure(target) && resourceType == RESOURCE_ENERGY) {
-			// 	return target.energy;
-			// }
-			// // else if (target instanceof Zerg) {
-			// // 	return target.carry[resourceType]!;
-			// // }
-			// else {
-			// 	if (target instanceof StructureLab) {
-			// 		if (resourceType == target.mineralType) {
-			// 			return target.mineralAmount;
-			// 		} else if (resourceType == RESOURCE_ENERGY) {
-			// 			return target.energy;
-			// 		}
-			// 	} else if (target instanceof StructureNuker) {
-			// 		if (resourceType == RESOURCE_GHODIUM) {
-			// 			return target.ghodium;
-			// 		} else if (resourceType == RESOURCE_ENERGY) {
-			// 			return target.energy;
-			// 		}
-			// 	} else if (target instanceof StructurePowerSpawn) {
-			// 		if (resourceType == RESOURCE_POWER) {
-			// 			return target.power;
-			// 		} else if (resourceType == RESOURCE_ENERGY) {
-			// 			return target.energy;
-			// 		}
-			// 	}
-			// }
 		}
-		// log.warning('Could not determine output amount!');
-		// return 0;
 	}
 
 	// Transporter availability and predictive functions ===============================================================

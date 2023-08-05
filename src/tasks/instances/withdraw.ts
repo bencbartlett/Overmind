@@ -1,6 +1,4 @@
 /* Withdraw a resource from a target */
-
-import {isRuin, isTombstone,} from '../../declarations/typeGuards';
 import {profile} from '../../profiler/decorator';
 import {Task} from '../Task';
 
@@ -31,21 +29,7 @@ export class TaskWithdraw extends Task<withdrawTargetType> {
 
 	isValidTarget() {
 		const amount = this.data.amount || 1;
-		// @ts-ignore
-		return this.target.store.getUsedCapacity(this.data.resourceType) >= amount;
-		// const target = this.target;
-		// if (isTombstone(target) || isRuin(target) || isStoreStructure(target)) {
-		// 	return (target.store[this.data.resourceType] || 0) >= amount;
-		// } else if (isEnergyStructure(target) && this.data.resourceType == RESOURCE_ENERGY) {
-		// 	return target.energy >= amount;
-		// } else {
-		// 	if (target instanceof StructureLab) {
-		// 		return this.data.resourceType == target.mineralType && target.mineralAmount >= amount;
-		// 	} else if (target instanceof StructurePowerSpawn) {
-		// 		return this.data.resourceType == RESOURCE_POWER && target.power >= amount;
-		// 	}
-		// }
-		// return false;
+		return (this.target.store.getUsedCapacity(this.data.resourceType) || 0) >= amount;
 	}
 
 	work() {
