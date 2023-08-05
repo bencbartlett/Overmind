@@ -173,7 +173,9 @@ export class TransportRequestGroup {
 			}
 			for (const request of this.supply[priority]) {
 				if (ignoreEnergy && request.resourceType == RESOURCE_ENERGY) continue;
-				console.log(`    targetID: ${request.target.ref}  amount: ${request.amount}  ` +
+				console.log(`    target: ${request.target.structureType}@${request.target.pos.print} ` +
+							`(${request.target.ref})  `+
+							`amount: ${request.amount}  ` +
 							`resourceType: ${request.resourceType}`);
 			}
 		}
@@ -184,7 +186,9 @@ export class TransportRequestGroup {
 			}
 			for (const request of this.withdraw[priority]) {
 				if (ignoreEnergy && request.resourceType == RESOURCE_ENERGY) continue;
-				console.log(`    targetID: ${request.target.ref}  amount: ${request.amount}  ` +
+				console.log(`    target: ${request.target.structureType}@${request.target.pos.print} ` +
+							`(${request.target.ref})  `+
+							`amount: ${request.amount}  ` +
 							`resourceType: ${request.resourceType}`);
 			}
 		}
