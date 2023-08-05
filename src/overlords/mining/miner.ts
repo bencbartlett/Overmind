@@ -1,5 +1,5 @@
 import {$} from '../../caching/GlobalCache';
-import {ColonyStage} from '../../Colony';
+import {Colony, ColonyStage} from '../../Colony';
 import {log} from '../../console/log';
 import {bodyCost, CreepSetup} from '../../creepSetups/CreepSetup';
 import {Roles, Setups} from '../../creepSetups/setups';
@@ -241,26 +241,28 @@ export class MiningOverlord extends Overlord {
 		$.refresh(this, 'source', 'container', 'link', 'constructionSite');
 	}
 
+	static calculateContainerPos(source: RoomPosition,  dropoffLocation?: RoomPosition): RoomPosition {
+		// log.debug(`Computing container position for mining overlord at ${this.pos.print}...`);
+		if (dropoffLocation) {
+			const path = Pathing.findShortestPath(source, dropoffLocation).path;
+			const pos = _.find(path, pos => pos.getRangeTo(source) == 1);
+			if (pos) return pos;
+		}
+		log.warning(`Last resort container position calculation for ${source.print}!`);
+		return _.first(source.availableNeighbors(true));
+	}
 
 	/**
 	 * Calculate where the container output will be built for this site
 	 */
 	private calculateContainerPos(): RoomPosition {
-		// log.debug(`Computing container position for mining overlord at ${this.pos.print}...`);
-		let originPos: RoomPosition | undefined;
+		let dropoff: RoomPosition | undefined;
 		if (this.colony.storage) {
-			originPos = this.colony.storage.pos;
+			dropoff = this.colony.storage.pos;
 		} else if (this.colony.roomPlanner.storagePos) {
-			originPos = this.colony.roomPlanner.storagePos;
+			dropoff = this.colony.roomPlanner.storagePos;
 		}
-		if (originPos) {
-			const path = Pathing.findShortestPath(this.pos, originPos).path;
-			const pos = _.find(path, pos => pos.getRangeTo(this) == 1);
-			if (pos) return pos;
-		}
-		// Shouldn't ever get here
-		log.warning(`Last resort container position calculation for ${this.print}!`);
-		return _.first(this.pos.availableNeighbors(true));
+		return MiningOverlord.calculateContainerPos(this.pos, dropoff);
 	}
 
 	/**

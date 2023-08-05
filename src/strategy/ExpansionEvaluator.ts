@@ -14,6 +14,8 @@ import {
 	ROOMTYPE_SOURCEKEEPER
 } from '../utilities/Cartographer';
 import set = Reflect.set;
+import { OvermindConsole } from 'console/Console';
+import { MiningOverlord } from 'overlords/mining/miner';
 
 export const EXPANSION_EVALUATION_FREQ = 500;
 export const MIN_EXPANSION_DISTANCE = 2;
@@ -23,6 +25,20 @@ export interface ColonyExpansionData {
 	expiration: number;
 }
 
+export interface ExpansionEvaluatorRoomEfficiency {
+	room: string;
+	type: string;
+	dropoffLocation: RoomPosition;
+	sources: number;
+	unreachableSources: number;
+	unreachableController: boolean;
+	energyPerSource: number;
+	creepEnergyCost: number;
+	spawnTimeCost: number;
+	cpuCost: number;
+	netIncome: number;
+	avgEnergyPerCPU: number;
+};
 
 @profile
 export class ExpansionEvaluator {
@@ -68,89 +84,101 @@ export class ExpansionEvaluator {
 	 * @param room
 	 * @param verbose
 	 */
-	static computeTheoreticalMiningEfficiency(dropoffLocation: RoomPosition, room: string, verbose = false)
-		: boolean|number {
-		const roomName = room;
-		const roomType = Cartographer.roomType(roomName);
-		let cpuCost = 0;
-		let creepEnergyCost = 0;
-		let spawnTimeCost = 0;
+	static computeTheoreticalMiningEfficiency(dropoffLocation: RoomPosition, room: string) {
+		const type = Cartographer.roomType(room);
 		const upkeepEnergyCost = 0; // todo later can factor in road damage from all creeps moving
 
-		const sourcePositions = RoomIntel.getSourceInfo(roomName);
+		const data : ExpansionEvaluatorRoomEfficiency = {
+			room: room,
+			type: type,
+			dropoffLocation: dropoffLocation,
+			sources: 0,
+			unreachableSources: 0,
+			unreachableController: false,
+			energyPerSource: 0,
+			creepEnergyCost: 0,
+			spawnTimeCost: 0,
+			cpuCost: 0,
+			netIncome: 0,
+			avgEnergyPerCPU: 0,
+		};
+
+		const sourcePositions = RoomIntel.getSourceInfo(room);
 		if (sourcePositions == undefined) {
-			if (verbose) log.info(`No memory of outpost room: ${roomName}. Aborting score calculation!`);
-			return false;
+			log.info(`No memory of outpost room: ${room}. Aborting score calculation!`);
+			return data;
 		}
+
 		// Compute Path length
 		// TODO have it track how many swamp/plain/tunnel
 		const sourcePathLengths: {[sourcePos: string]: number} = {};
 		for (const source of sourcePositions) {
-			if (!source.containerPos) {
-				log.info(`Can't find container position for source ${source} during efficiency calc`);
-				return false;
-			}
+			const containerPos = MiningOverlord.calculateContainerPos(source.pos, dropoffLocation);
+
 			// TODO Need to factor in where roads would go
-			const path = Pathing.findShortestPath(dropoffLocation, source.containerPos,
-				{ignoreStructures: true, allowHostile: true});
+			const path = Pathing.findShortestPath(dropoffLocation, containerPos,
+				{ignoreStructures: true, allowHostile: true, blockCreeps: false, avoidSK: false});
 
 			if (path.incomplete) {
-				log.error(`Couldn't find path to source ${source} for mining efficiency calc`);
-				return false;
+				log.error(`Couldn't find path to source ${source.pos.print} for mining efficiency calc`);
+				data.unreachableSources++;
+				continue;
 			}
 
 			sourcePathLengths[source.pos.print] = path.path.length;
 		}
 
 		// Compute Energy Supply
-		const energyPerSource = roomType == ROOMTYPE_CONTROLLER ? SOURCE_ENERGY_CAPACITY : SOURCE_ENERGY_KEEPER_CAPACITY;
+		data.energyPerSource = type == ROOMTYPE_CONTROLLER ? SOURCE_ENERGY_CAPACITY : SOURCE_ENERGY_KEEPER_CAPACITY;
 
 		// Compute miner upkeep
 		for (const source of sourcePositions) {
-			const setup = roomType == ROOMTYPE_CONTROLLER ? Setups.drones.miners.standard.generateMaxedBody()
+			const setup = type == ROOMTYPE_CONTROLLER ? Setups.drones.miners.standard.generateMaxedBody()
 				: Setups.drones.miners.sourceKeeper.generateMaxedBody();
 			const effectiveCreepUptime = (CREEP_LIFE_TIME - sourcePathLengths[source.pos.print]);
-			creepEnergyCost += bodyCost(setup)/effectiveCreepUptime;
-			spawnTimeCost += setup.length*CREEP_SPAWN_TIME/effectiveCreepUptime;
+			data.creepEnergyCost += bodyCost(setup)/effectiveCreepUptime;
+			data.spawnTimeCost += setup.length*CREEP_SPAWN_TIME/effectiveCreepUptime;
 			// Always harvesting, sometimes replacement is moving
-			cpuCost += 0.2 + 0.2*(1-effectiveCreepUptime/CREEP_LIFE_TIME);
+			data.cpuCost += 0.2 + 0.2*(1-effectiveCreepUptime/CREEP_LIFE_TIME);
 		}
 
 		// Compute reserver/skReaper upkeep
-		if (roomType == ROOMTYPE_CONTROLLER) {
-			const controller = RoomIntel.getControllerInfo(roomName);
+		if (type == ROOMTYPE_CONTROLLER) {
+			const controller = RoomIntel.getControllerInfo(room);
 			if (!controller) {
-				log.error(`Expansion Efficiency Calc: Can't find controller for room ${roomName}`);
-				return false;
+				log.error(`Expansion Efficiency Calc: Can't find controller for room ${room}`);
+				data.unreachableController = true;
 			} else {
 				const setup = Setups.infestors.reserve.generateMaxedBody();
 				const controllerPath = Pathing.findShortestPath(dropoffLocation, controller.pos,
 					{ignoreStructures: true, allowHostile: true});
 				if (controllerPath.incomplete) {
 					log.error(`Couldn't find path to controller ${controller} for mining efficiency calc`);
-					return false;
+					data.unreachableController = true;
+				} else {
+					const claimPower = _.filter(setup, (part: BodyPartConstant) => part == CLAIM).length;
+					const effectiveLifetimeReservationGeneration = (CREEP_CLAIM_LIFE_TIME - controllerPath.path.length) * claimPower;
+					data.creepEnergyCost += bodyCost(setup)/effectiveLifetimeReservationGeneration;
+					data.spawnTimeCost += setup.length*CREEP_SPAWN_TIME/effectiveLifetimeReservationGeneration;
+					data.cpuCost += 0.2 * CREEP_CLAIM_LIFE_TIME / effectiveLifetimeReservationGeneration;
 				}
-				const claimPower = _.filter(setup, (part: BodyPartConstant) => part == CLAIM).length;
-				const effectiveLifetimeReservationGeneration = (CREEP_CLAIM_LIFE_TIME - controllerPath.path.length) * claimPower;
-				creepEnergyCost += bodyCost(setup)/effectiveLifetimeReservationGeneration;
-				spawnTimeCost += setup.length*CREEP_SPAWN_TIME/effectiveLifetimeReservationGeneration;
-				cpuCost += 0.2 * CREEP_CLAIM_LIFE_TIME / effectiveLifetimeReservationGeneration;
 			}
-		} else if (roomType == ROOMTYPE_SOURCEKEEPER) {
+		} else if (type == ROOMTYPE_SOURCEKEEPER) {
 			// Handle SK
 			const setup = CombatSetups.zerglings.sourceKeeper.generateMaxedBody();
-			const skPath = Pathing.findPathToRoom(dropoffLocation, roomName,
+			const skPath = Pathing.findPathToRoom(dropoffLocation, room,
 				{ignoreStructures: true, allowHostile: true});
 			if (skPath.incomplete) {
-				log.error(`Couldn't find path to sk room ${roomName} for mining efficiency calc`);
-				return false;
+				log.error(`Couldn't find path to sk room ${room} for mining efficiency calc`);
+				data.unreachableController = true;
+			} else {
+				const effectiveCreepUptime = (CREEP_LIFE_TIME - skPath.path.length);
+				data.creepEnergyCost += bodyCost(setup)/effectiveCreepUptime;
+				data.spawnTimeCost += setup.length*CREEP_SPAWN_TIME/effectiveCreepUptime;
+				//  Increased cost, always moving, frequent attack/move+heal intents, and during overlap 2nd creep moving to room
+				data.cpuCost += 0.2 + 0.15 + 0.2*(1-effectiveCreepUptime/CREEP_LIFE_TIME);
+				// TODO examine for accuracy Increased cost, frequent attack/move+heal intents
 			}
-			const effectiveCreepUptime = (CREEP_LIFE_TIME - skPath.path.length);
-			creepEnergyCost += bodyCost(setup)/effectiveCreepUptime;
-			spawnTimeCost += setup.length*CREEP_SPAWN_TIME/effectiveCreepUptime;
-			//  Increased cost, always moving, frequent attack/move+heal intents, and during overlap 2nd creep moving to room
-			cpuCost += 0.2 + 0.15 + 0.2*(1-effectiveCreepUptime/CREEP_LIFE_TIME);
-			// TODO examine for accuracy Increased cost, frequent attack/move+heal intents
 		}
 
 		// Compute transporter upkeep
@@ -160,20 +188,18 @@ export class ExpansionEvaluator {
 			const transporterCarryParts = _.filter(setup, (part: BodyPartConstant) => part == CARRY).length;
 			const effectiveEnergyTransportedPerTick = transporterCarryParts * CARRY_CAPACITY
 				/ (2 * sourcePathLengths[source.pos.print]); // round trip
-			const transportersPerSource = energyPerSource/ENERGY_REGEN_TIME/effectiveEnergyTransportedPerTick;
+			const transportersPerSource = data.energyPerSource/ENERGY_REGEN_TIME/effectiveEnergyTransportedPerTick;
 
-			creepEnergyCost += bodyCost(setup)*transportersPerSource/CREEP_LIFE_TIME;
-			spawnTimeCost += setup.length*CREEP_SPAWN_TIME*transportersPerSource/CREEP_LIFE_TIME;
-			cpuCost += 0.2 * transportersPerSource;
+			data.creepEnergyCost += bodyCost(setup)*transportersPerSource/CREEP_LIFE_TIME;
+			data.spawnTimeCost += setup.length*CREEP_SPAWN_TIME*transportersPerSource/CREEP_LIFE_TIME;
+			data.cpuCost += 0.2 * transportersPerSource;
 		}
 
-		const netIncome = (energyPerSource*sourcePositions.length/ENERGY_REGEN_TIME)-creepEnergyCost;
+		data.sources = sourcePositions.length;
+		data.netIncome = (data.energyPerSource * sourcePositions.length / ENERGY_REGEN_TIME) - data.creepEnergyCost;
+		data.avgEnergyPerCPU = (data.netIncome / data.cpuCost || 0);
 
-		let msg = `(Potential) Outpost ${room} type ${roomType} evaluated for colony at ${dropoffLocation.roomName} with per tick results \n`;
-		msg += `Income: ${energyPerSource*sourcePositions.length/ENERGY_REGEN_TIME} Net Income: ${netIncome} Net Energy per CPU: ${netIncome/cpuCost}\n`;
-		msg += `Creep Costs: Energy ${creepEnergyCost}, Spawn Time ${spawnTimeCost}, and CPU ${cpuCost} \n`;
-		log.alert(msg);
-		return netIncome/cpuCost;
+		return data;
 	}
 
 	// Compute the total score for a room

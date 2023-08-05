@@ -530,71 +530,55 @@ export class OvermindConsole {
 	}
 
 	static evaluateOutpostEfficiencies(): string {
-		const colonies = getAllColonies();
-		const outpostEfficiencies: {[roomName: string]: number} = {};
-		let avgEnergyPerCPU = 0;
+		const outpostsPerColony = <[Colony, string[]][]>getAllColonies().filter(c => c.bunker)
+			.map(c => [c, c.outposts.map(r => r.name)]);
 
-		colonies.forEach(colony => {
-			if (colony.bunker) {
-				colony.outposts.forEach(outpost => {
-					const res = ExpansionEvaluator.computeTheoreticalMiningEfficiency(colony.bunker!.anchor, outpost.name);
-					if (typeof res === 'boolean') {
-						log.error(`Failed on outpost ${outpost.print}`);
-					} else {
-						outpostEfficiencies[outpost.name] = res;
-						avgEnergyPerCPU += res;
-					}
-				});
-			}
-		});
-
-		avgEnergyPerCPU = avgEnergyPerCPU/Object.keys(outpostEfficiencies).length;
-		let ret = `Suspect Outposts +25% below avg efficiency of ${avgEnergyPerCPU}: \n`;
-
-		for (const outpost in outpostEfficiencies) {
-			if (outpostEfficiencies[outpost] < avgEnergyPerCPU*0.75) {
-				ret += `${outpost} ${outpostEfficiencies[outpost]} \n`;
-			}
-		}
-
-		return ret;
+		return OvermindConsole.reportOutpostEfficiency(outpostsPerColony, (avg, colonyAvg) => avg < colonyAvg * 0.75);
 	}
 
 	static evaluatePotentialOutpostEfficiencies(): string {
-		const colonies = getAllColonies();
-		const outpostEfficiencies: {[roomName: string]: number} = {};
-		let avgEnergyPerCPU = 0;
-
-		colonies.forEach(colony => {
-			if (colony.bunker) {
-				Cartographer.findRoomsInRange(colony.name, 2).forEach(outpost => {
-					if (!colony.outposts.map(room => room.name).includes(outpost)) {
-						const res = ExpansionEvaluator.computeTheoreticalMiningEfficiency(colony.bunker!.anchor, outpost);
-						if (typeof res === 'boolean') {
-							log.error(`Failed on outpost ${outpost}`);
-						} else {
-							outpostEfficiencies[outpost] = res;
-							avgEnergyPerCPU += res;
-						}
-					}
-				});
+		const outpostsPerColony = <[Colony, string[]][]>getAllColonies().filter(c => c.bunker)
+			.map(c => {
+				const outpostNames = c.outposts.map(room => room.name);
+				return [c, Cartographer.findRoomsInRange(c.name, 2).filter(r => !outpostNames.includes(r))];
 			}
-		});
+		);
 
-		avgEnergyPerCPU = avgEnergyPerCPU/Object.keys(outpostEfficiencies).length;
-		let ret = `Possible new outposts above avg efficiency of ${avgEnergyPerCPU}: \n`;
-
-		for (const outpost in outpostEfficiencies) {
-			// 20E/cpu is a good guideline for an efficient room
-			if (outpostEfficiencies[outpost] > avgEnergyPerCPU*1.25 || outpostEfficiencies[outpost] > 20) {
-				ret += `${outpost} ${outpostEfficiencies[outpost]} \n`;
-			}
-		}
-
-		return ret;
+		return OvermindConsole.reportOutpostEfficiency(outpostsPerColony, (avg, colonyAvg) => avg > colonyAvg * 1.25 || avg > 20);
 	}
 
+	static reportOutpostEfficiency(outpostsPerColony: [Colony, string[]][], selectionCallback: (avg: number, colonyAvg: number) => boolean): string {
+		let msg = `Estimated outpost efficiency:\n`;
+		for (const [colony, outposts] of outpostsPerColony) {
+			let avgEnergyPerCPU = 0;
+			const outpostAvgEnergyPerCPU = [];
 
+			msg += ` • Colony at ${colony.room.name}:\n`
+			for (const outpost of outposts) {
+				const d = ExpansionEvaluator.computeTheoreticalMiningEfficiency(colony.bunker!.anchor, outpost);
+
+				msg += `\t - ${d.room} ${`(${d.type})`.padLeft(6)}: ${(d.energyPerSource * d.sources / ENERGY_REGEN_TIME).toFixed(2)} energy/source, Net income: ${d.netIncome.toFixed(2)}, Net energy/CPU: ${(d.netIncome / d.cpuCost).toFixed(2)}\n`;
+				msg += `\t   Creep costs: ${d.creepEnergyCost.toFixed(2)} energy/tick, spawn time: ${d.spawnTimeCost.toFixed(2)}, CPU: ${d.cpuCost.toFixed(2)} cycles/tick\n`;
+				if (d.unreachableSources || d.unreachableController) {
+					const { unreachableSources: s, unreachableController: c } = d;
+					msg += `\t   ${color("Unreachable:", "yellow")} ${s ? `sources: ${s}` : ""}${s && c ? ', ' : ''}${c ? `controller: ${c}` : ""}\n`;
+				}
+
+				outpostAvgEnergyPerCPU.push(d.avgEnergyPerCPU);
+				avgEnergyPerCPU += d.avgEnergyPerCPU;
+			}
+
+			const bestOutposts = outpostAvgEnergyPerCPU.map((avg, idx) => {
+				// 20E/cpu is a good guideline for an efficient room
+				if (selectionCallback(avg, avgEnergyPerCPU)) return idx + 1;
+					return undefined;
+			}).filter(avg => avg);
+
+			msg += `\n   Outposts with above average efficiency of ${avgEnergyPerCPU.toFixed(2)}: ${bestOutposts.join(", ")}\n`;
+		}
+
+		return msg;
+	}
 
 	// Memory management ===============================================================================================
 
