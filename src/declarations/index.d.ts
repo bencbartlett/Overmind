@@ -116,12 +116,12 @@ interface IOvermind {
 	expiration: number;
 	cache: ICache;								// is actually GameCache
 	overseer: IOverseer;						// is actually Overseer
-	directives: { [flagName: string]: any }; 	// is actually { [flagName: string]: Directive }
-	zerg: { [creepName: string]: any };			// is actually { [creepName: string]: Zerg }
-	powerZerg: { [creepName: string]: any };	// is actually { [creepName: string]: PowerZerg }
-	colonies: { [roomName: string]: any }; 		// is actually { [roomName: string]: Colony }
-	overlords: { [ref: string]: any }; 			// is actually { [ref: string]: Overlord }
-	spawnGroups: { [ref: string]: any };		// is actually { [ref: string]: SpawnGroup }
+	directives: { [flagName: string]: import('directives/Directive').Directive };
+	zerg: { [creepName: string]: import('zerg/Zerg').Zerg };
+	powerZerg: { [creepName: string]: import('zerg/PowerZerg').PowerZerg };
+	colonies: { [roomName: string]: import('Colony').Colony };
+	overlords: { [ref: string]: import('overlords/Overlord').Overlord };
+	spawnGroups: { [ref: string]: import('logistics/SpawnGroup').SpawnGroup };
 	colonyMap: { [roomName: string]: string };
 	memory: IOvermindMemory;
 	terminalNetwork: ITerminalNetwork;			// is actually TerminalNetwork

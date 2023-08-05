@@ -315,7 +315,7 @@ export abstract class Overlord {
 		for (const creep of this._creeps[role] || []) {
 			if (!zergNames[creep.name]) {
 				if (Overmind.zerg[creep.name] && (<CombatZerg>Overmind.zerg[creep.name]).isCombatZerg) {
-					this._combatZerg[role].push(Overmind.zerg[creep.name]);
+					this._combatZerg[role].push(<CombatZerg>Overmind.zerg[creep.name]);
 				} else {
 					this._combatZerg[role].push(new CombatZerg(creep, notifyWhenAttacked));
 				}
