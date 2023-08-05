@@ -131,8 +131,7 @@ export class Hatchery extends HiveCluster {
 	}
 
 	spawnMoarOverlords() {
-		if (this.colony.layout == 'bunker' && (this.colony.storage || this.colony.terminal)
-			&& this.colony.assets[RESOURCE_ENERGY] > 10000) {
+		if (BunkerQueenOverlord.canFunction(this.colony)) {
 			this.overlord = new BunkerQueenOverlord(this); // use bunker queen if has storage and enough energy
 		} else {
 			this.overlord = new QueenOverlord(this);
