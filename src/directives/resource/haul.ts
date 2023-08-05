@@ -59,14 +59,13 @@ export class DirectiveHaul extends Directive {
 	}
 
 	get storeStructure(): StructureStorage | StructureTerminal | StructureNuker | StructureContainer | Ruin | undefined {
-		// TODO remove me console.log(`Looking for store struct in ${this.pos.roomName}
-		// with ${this.pos.lookForStructure(STRUCTURE_CONTAINER)}`);
 		if (this.pos.isVisible) {
 			return <StructureStorage>this.pos.lookForStructure(STRUCTURE_STORAGE) ||
 				   <StructureTerminal>this.pos.lookForStructure(STRUCTURE_TERMINAL) ||
 				   <StructureNuker>this.pos.lookForStructure(STRUCTURE_NUKER) ||
 				   <StructureContainer>this.pos.lookForStructure(STRUCTURE_CONTAINER) ||
-				   <Ruin>this.pos.lookFor(LOOK_RUINS).filter(ruin => _.sum(ruin.store) > 0)[0];
+				   <Ruin>this.pos.lookFor(LOOK_RUINS).filter(ruin => ruin.store.getUsedCapacity() > 0)[0] ||
+				   <Tombstone>this.pos.lookFor(LOOK_TOMBSTONES).filter(tombstone => tombstone.store.getUsedCapacity() > 0)[0];
 		}
 		return undefined;
 	}

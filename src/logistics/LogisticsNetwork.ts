@@ -29,7 +29,7 @@ export type LogisticsTarget =
 	| Resource;
 
 export const ALL_RESOURCE_TYPE_ERROR =
-				 `Improper logistics request: 'all' can only be used for store structure or tombstone!`;
+				 `Improper logistics request: 'all' can only be used for store structure, tombstone, or ruin!`;
 
 export type BufferTarget = StructureStorage | StructureTerminal;
 

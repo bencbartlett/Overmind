@@ -144,6 +144,7 @@ export class Colony {
 	observer: StructureObserver | undefined;			// |
 	tombstones: Tombstone[]; 							// | Tombstones in all colony rooms
 	drops: { [resourceType: string]: Resource[] }; 		// | Dropped resources in all colony rooms
+	ruins: Ruin[];										// | Ruins in all colony rooms
 	sources: Source[];									// | Sources in all colony rooms
 	extractors: StructureExtractor[];					// | All extractors in owned and remote rooms
 	flags: Flag[];										// | Flags assigned to the colony
@@ -343,6 +344,7 @@ export class Colony {
 		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites));
 		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
 		this.drops = _.merge(_.map(this.rooms, room => room.drops));
+		this.ruins = _.merge(_.map(this.rooms, room => room.ruins));
 		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
 		this.rechargeables = _.flatten(_.map(this.rooms, room => room.rechargeables));
 		// Register assets
@@ -388,6 +390,7 @@ export class Colony {
 		$.set(this, 'constructionSites', () => _.flatten(_.map(this.rooms, room => room.constructionSites)), 10);
 		$.set(this, 'tombstones', () => _.flatten(_.map(this.rooms, room => room.tombstones)), 5);
 		this.drops = _.merge(_.map(this.rooms, room => room.drops));
+		$.set(this, 'ruins', () => _.flatten(_.map(this.rooms, room => room.ruins)), 5);
 		// Register assets
 		this.assets = this.computeAssets();
 	}
@@ -398,10 +401,11 @@ export class Colony {
 	private refreshRoomObjects(): void {
 		$.refresh(this, 'controller', 'extensions', 'links', 'towers', 'powerSpawn', 'nuker', 'observer', 'spawns',
 				  'storage', 'terminal', 'factory', 'labs', 'sources', 'extractors', 'constructionSites', 'repairables',
-				  'rechargeables');
+				  'rechargeables', 'ruins');
 		$.set(this, 'constructionSites', () => _.flatten(_.map(this.rooms, room => room.constructionSites)), 10);
 		$.set(this, 'tombstones', () => _.flatten(_.map(this.rooms, room => room.tombstones)), 5);
 		this.drops = _.merge(_.map(this.rooms, room => room.drops));
+		$.set(this, 'ruins', () => _.flatten(_.map(this.rooms, room => room.ruins)), 5);
 		// Re-compute assets
 		this.assets = this.computeAssets();
 	}
