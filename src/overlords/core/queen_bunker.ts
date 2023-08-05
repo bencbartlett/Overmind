@@ -208,8 +208,8 @@ export class BunkerQueenOverlord extends Overlord {
 		}
 
 		if (!withdrawTarget && withdrawTasks.length == 0) {
-			log.warning(`Could not find adequate withdraw structure for ${queen.print}! (neededResources: 
-			${neededResources}, queenCarry: ${JSON.stringify(queenCarry)})`);
+			log.warning(`Could not find adequate withdraw structure for ${queen.print}! ` +
+			`(neededResources: ${neededResources}, queenCarry: ${JSON.stringify(queenCarry)})`);
 			return null;
 		}
 		// Step 4: put all the tasks in the correct order, set nextPos for each, and chain them together
@@ -328,7 +328,7 @@ export class BunkerQueenOverlord extends Overlord {
 											 Tasks.withdraw(this.colony.terminal, RESOURCE_GHODIUM, 1000),
 											 Tasks.generateSafeMode(this.colony.controller)
 										 ]);
-				log.alert(`${this.colony.print} has ${this.colony.controller.safeModeAvailable} safemodes avaliable, ` +
+				log.alert(`${this.colony.print} has ${this.colony.controller.safeModeAvailable} safemodes available, ` +
 						  `generating a new one`);
 			}
 		}
