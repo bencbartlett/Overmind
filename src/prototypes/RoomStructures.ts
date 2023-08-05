@@ -3,6 +3,18 @@
 
 import {getCacheExpiration, onPublicServer} from '../utilities/utils';
 
+declare global {
+	interface Room {
+		_storageUnits: StorageUnit[];
+		_sources: Source[];
+		_mineral: Mineral | undefined;
+		_repairables: (Structure | null)[];
+		_rechargeables: rechargeObjectType[];
+		_walkableRamparts: (StructureRampart | null)[];
+		_barriers: (StructureWall | StructureRampart)[] | undefined;
+	}
+}
+
 const roomStructureIDs: { [roomName: string]: { [structureType: string]: string[] } } = {};
 const roomStructuresExpiration: { [roomName: string]: number } = {};
 
@@ -36,7 +48,7 @@ Room.prototype._refreshStructureCache = function() {
 
 multipleList.forEach(function(type) {
 	Object.defineProperty(Room.prototype, type + 's', {
-		get         : function() {
+		get: function() {
 			if (this['_' + type + 's']) {
 				return this['_' + type + 's'];
 			} else {
@@ -55,7 +67,7 @@ multipleList.forEach(function(type) {
 
 singleList.forEach(function(type) {
 	Object.defineProperty(Room.prototype, type, {
-		get         : function() {
+		get: function() {
 			if (this['_' + type]) {
 				return this['_' + type];
 			} else {
@@ -73,9 +85,10 @@ singleList.forEach(function(type) {
 
 
 Object.defineProperty(Room.prototype, 'storageUnits', {
-	get() {
+	get(this: Room) {
 		if (!this._storageUnits) {
-			this._storageUnits = _.compact([this.storage, this.terminal]).concat(this.containers);
+			const special: (StorageUnit | undefined)[] = [this.storage, this.terminal];
+			this._storageUnits = <StorageUnit[]>_.compact(special).concat(<StorageUnit[]>this.containers);
 		}
 		return this._storageUnits;
 	},
@@ -83,7 +96,7 @@ Object.defineProperty(Room.prototype, 'storageUnits', {
 });
 
 Object.defineProperty(Room.prototype, 'sources', {
-	get() {
+	get(this: Room) {
 		if (!this._sources) {
 			this._sources = this.find(FIND_SOURCES);
 		}
@@ -93,7 +106,7 @@ Object.defineProperty(Room.prototype, 'sources', {
 });
 
 Object.defineProperty(Room.prototype, 'mineral', {
-	get() {
+	get(this: Room) {
 		if (!this._mineral) {
 			this._mineral = this.find(FIND_MINERALS)[0];
 		}
@@ -103,25 +116,26 @@ Object.defineProperty(Room.prototype, 'mineral', {
 });
 
 Object.defineProperty(Room.prototype, 'repairables', {
-	get() {
+	get(this: Room) {
 		if (!this._repairables) {
 			this._refreshStructureCache();
 			if (roomStructureIDs[this.name].repairables) {
 				return this._repairables = _.compact(_.map(roomStructureIDs[this.name].repairables,
-														   Game.getObjectById));
+														   o => Game.getObjectById<Structure>(o)));
 			} else {
 				let repairables: Structure[] = [];
 				for (const structureType of singleList) {
-					if (this[structureType]) {
-						repairables.push(this[structureType]);
-					}
+					const o = this[structureType];
+					if (!o) continue;
+					repairables.push(o);
 				}
 				for (const structureType of multipleList) {
 					if (structureType != STRUCTURE_WALL &&
 						structureType != STRUCTURE_RAMPART &&
 						structureType != STRUCTURE_ROAD &&
 						!notRepairable.includes(structureType)) {
-						repairables = repairables.concat(this[structureType + 's']);
+						const obj = <{[p: string]: Structure<StructureConstant>[]}><any>this;
+						repairables = repairables.concat(obj[structureType + 's']);
 					}
 				}
 				roomStructureIDs[this.name].repairables = _.map(repairables, s => s.id);
@@ -136,12 +150,12 @@ Object.defineProperty(Room.prototype, 'repairables', {
 
 // TODO: this is expensive and easy to over-use. Perhaps remove this.
 Object.defineProperty(Room.prototype, 'walkableRamparts', {
-	get() {
+	get(this: Room) {
 		if (!this._walkableRamparts) {
 			this._refreshStructureCache();
 			if (roomStructureIDs[this.name].walkableRamparts) {
 				return this._walkableRamparts = _.compact(_.map(roomStructureIDs[this.name].walkableRamparts,
-																Game.getObjectById));
+																(o) => Game.getObjectById<StructureRampart>(o)));
 			} else {
 				const walkableRamparts = _.filter(this.ramparts,
 												  (r: StructureRampart) => r.pos.isWalkable(true));
@@ -155,7 +169,7 @@ Object.defineProperty(Room.prototype, 'walkableRamparts', {
 });
 
 Object.defineProperty(Room.prototype, 'rechargeables', {
-	get() {
+	get(this: Room) {
 		if (!this._rechargeables) {
 			this._rechargeables = [...this.storageUnits,
 								   ...this.droppedEnergy,
@@ -168,9 +182,9 @@ Object.defineProperty(Room.prototype, 'rechargeables', {
 });
 
 Object.defineProperty(Room.prototype, 'barriers', {
-	get() {
+	get(this: Room) {
 		if (!this._barriers) {
-			this._barriers = [].concat(this.ramparts, this.constructedWalls);
+			this._barriers = (<(StructureRampart | StructureWall)[]>[]).concat(this.ramparts, this.constructedWalls);
 		}
 		return this._barriers;
 	},
@@ -178,7 +192,7 @@ Object.defineProperty(Room.prototype, 'barriers', {
 });
 
 Object.defineProperty(Room.prototype, 'walls', {
-	get() {
+	get(this: Room) {
 		return this.constructedWalls;
 	},
 	configurable: true,

@@ -136,12 +136,10 @@ export abstract class Directive {
 		for (const overlordName in this.overlords) {
 			msg += tab + `${overlordName}:\n`;
 			const olInfo: { [left: string]: string } = {};
-			const overlord = this.overlords[overlordName] as any;
+			const overlord = this.overlords[overlordName];
 			olInfo[tab + tab + 'Creep usage:'] = JSON.stringify(overlord.creepUsageReport);
-			olInfo[tab + tab + 'Zerg:'] = _.mapValues(overlord._zerg,
-													  zergOfRole => _.map(zergOfRole, (zerg: any) => zerg.print));
-			olInfo[tab + tab + 'CombatZerg:'] = _.mapValues(overlord._combatZerg,
-															zergOfRole => _.map(zergOfRole, (zerg: any) => zerg.print));
+			olInfo[tab + tab + 'Zerg:'] = overlord.getAllZerg().map(z => z.print).join(', ');
+			olInfo[tab + tab + 'CombatZerg:'] = overlord.getAllCombatZerg().map(z => z.print).join(', ');
 			msg += toColumns(olInfo).join('\n');
 		}
 		msg += 'Memory:\n' + print(this.memory);
@@ -194,11 +192,10 @@ export abstract class Directive {
 			const ret = Pathing.findPath(this.colony.pos, this.pos, {maxOps: DIRECTIVE_PATH_TIMEOUT});
 			const terrainCache: { [room: string]: RoomTerrain } = {};
 			const terrainWeighted = _.sum(ret.path, pos => {
-				let terrain: RoomTerrain;
 				if (!terrainCache[pos.roomName]) {
 					terrainCache[pos.roomName] = Game.map.getRoomTerrain(pos.roomName);
 				}
-				terrain = terrainCache[pos.roomName];
+				const terrain = terrainCache[pos.roomName];
 				return terrain.get(pos.x, pos.y) == TERRAIN_MASK_SWAMP ? 5 : 1;
 			});
 			this.memory[MEM.DISTANCE] = {
@@ -370,12 +367,12 @@ export abstract class Directive {
 			return true; // usually we want to do something if directive isn't present; so this minimizes bad results
 		}
 		if (typeof posOrRoomName === 'string') {
-			const roomName = posOrRoomName as string;
-			const directivesInRoom = Overmind.overseer.getDirectivesInRoom(roomName) as Directive[];
+			const roomName = posOrRoomName;
+			const directivesInRoom = Overmind.overseer.getDirectivesInRoom(roomName);
 			return _.filter(directivesInRoom, directive => this.filter(directive.flag)).length > 0;
 		} else {
-			const pos = posOrRoomName as RoomPosition;
-			const directivesInRoom = Overmind.overseer.getDirectivesInRoom(pos.roomName) as Directive[];
+			const pos = posOrRoomName;
+			const directivesInRoom = Overmind.overseer.getDirectivesInRoom(pos.roomName);
 			return _.filter(directivesInRoom,
 							directive => this.filter(directive.flag) && equalXYR(pos, directive.pos)).length > 0;
 		}
@@ -456,7 +453,7 @@ export abstract class Directive {
 	 * Map a list of flags to directive using the filter of the subclassed directive
 	 */
 	static findInRoom(roomName: string): Directive[] {
-		const directivesInRoom = Overmind.overseer.getDirectivesInRoom(roomName) as Directive[];
+		const directivesInRoom = Overmind.overseer.getDirectivesInRoom(roomName);
 		return _.filter(directivesInRoom, directive => this.filter(directive.flag));
 	}
 
@@ -464,7 +461,7 @@ export abstract class Directive {
 	 * Map a list of flags to directive using the filter of the subclassed directive
 	 */
 	static findInColony(colony: Colony): Directive[] {
-		const directivesInColony = Overmind.overseer.getDirectivesForColony(colony) as Directive[];
+		const directivesInColony = Overmind.overseer.getDirectivesForColony(colony);
 		return _.filter(directivesInColony, directive => this.filter(directive.flag));
 	}
 

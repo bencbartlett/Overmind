@@ -8,6 +8,12 @@ interface Creep {
 	approxMoveSpeed: number;
 	bodypartCounts: { [bodypart in BodyPartConstant]: number };
 	isHuman: true;
+
+	// private
+	_boosts: ResourceConstant[];
+	_boostCounts: { [boostType: string]: number };
+	_inRampart: boolean;
+	_moveSpeed: number;
 }
 
 interface PowerCreep {
@@ -131,6 +137,26 @@ interface Room {
 	// _priorityMatrices: { [priority: number]: CostMatrix };
 	// _skMatrix: CostMatrix;
 	_kitingMatrix: CostMatrix;
+
+	// private caching
+	_creeps: Creep[];
+	_hostiles: Creep[];
+	_friendlies: Creep[];
+	_invaders: Creep[];
+	_sourceKeepers: Creep[];
+	_dangerousHostiles: Creep[];
+	_playerHostiles: Creep[];
+	_dangerousPlayerHostiles: Creep[];
+	_fleeDefaults: HasPos[];
+	_allStructures: Structure[];
+	_hostileStructures: Structure[];
+	_flags: Flag[];
+	_constructionSites: ConstructionSite[];
+	_allConstructionSites: ConstructionSite[];
+	_hostileConstructionSites: ConstructionSite[];
+	_tombstones: Tombstone[];
+	_ruins: Ruin[];
+	_drops: { [resourceType: string]: Resource[] };
 }
 
 interface RoomObject {
@@ -166,8 +192,6 @@ interface RoomPosition {
 
 	getOffsetPos(dx: number, dy: number): RoomPosition;
 
-	lookFor<T extends keyof AllLookAtTypes>(structureType: T): Array<AllLookAtTypes[T]>;
-
 	lookForStructure(structureType: StructureConstant): Structure | undefined;
 
 	isWalkable(ignoreCreeps?: boolean): boolean;
@@ -178,8 +202,9 @@ interface RoomPosition {
 
 	getMultiRoomRangeTo(pos: RoomPosition): number;
 
-	findClosestByLimitedRange<T>(objects: T[] | RoomPosition[], rangeLimit: number,
-								 opts?: { filter: any | string; }): T | undefined;
+	findClosestByLimitedRange<T extends _HasRoomPosition | RoomPosition>(this: RoomPosition,
+		objects: T[], rangeLimit: number,
+		opts?: { filter: any | string; }): T | undefined;
 
 	findClosestByMultiRoomRange<T extends _HasRoomPosition>(objects: T[]): T | undefined;
 
@@ -187,6 +212,8 @@ interface RoomPosition {
 }
 
 interface RoomVisual {
+	roads: Point[];
+
 	box(x: number, y: number, w: number, h: number, style?: LineStyle): RoomVisual;
 
 	infoBox(info: string[], x: number, y: number, opts?: { [option: string]: any }): RoomVisual;

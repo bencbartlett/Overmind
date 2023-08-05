@@ -91,7 +91,7 @@ Object.defineProperty(StructureController.prototype, 'signedByScreeps', {
 });
 
 
-StructureController.prototype.needsReserving = function(reserveBuffer: number): boolean {
+StructureController.prototype.needsReserving = function(this: StructureController, reserveBuffer: number): boolean {
 	return !this.reservation || (this.reservedByMe && this.reservation.ticksToEnd < reserveBuffer);
 };
 

@@ -3,9 +3,9 @@
 // Boosting logic ------------------------------------------------------------------------------------------------------
 
 Object.defineProperty(Creep.prototype, 'boosts', {
-	get() {
+	get(this: Creep) {
 		if (!this._boosts) {
-			this._boosts = _.compact(_.unique(_.map(this.body as BodyPartDefinition[], bodyPart => bodyPart.boost)));
+			this._boosts = _.compact(_.unique(_.map(this.body, bodyPart => <ResourceConstant>bodyPart.boost)));
 		}
 		return this._boosts;
 	},
@@ -13,9 +13,9 @@ Object.defineProperty(Creep.prototype, 'boosts', {
 });
 
 Object.defineProperty(Creep.prototype, 'boostCounts', {
-	get() {
+	get(this: Creep) {
 		if (!this._boostCounts) {
-			this._boostCounts = _.countBy(this.body as BodyPartDefinition[], bodyPart => bodyPart.boost);
+			this._boostCounts = _.countBy(this.body, bodyPart => bodyPart.boost);
 		}
 		return this._boostCounts;
 	},
@@ -23,16 +23,16 @@ Object.defineProperty(Creep.prototype, 'boostCounts', {
 });
 
 Object.defineProperty(Creep.prototype, 'approxMoveSpeed', {
-	get() {
+	get(this: Creep) {
 		if (this._moveSpeed == undefined) {
-			const movePower = _.sum(this.body, (part: BodyPartDefinition) => {
+			const movePower = _.sum(this.body, (part) => {
 				if (part.type == MOVE && part.boost) {
-					return BOOSTS.move[<'ZO' | 'ZHO2' | 'XZHO2'>part.boost].fatigue;
+					return BOOSTS.move[part.boost].fatigue;
 				} else {
 					return 0;
 				}
 			});
-			const nonMoveParts = _.sum(this.body, (part: BodyPartDefinition) => part.type != MOVE ? 1 : 0);
+			const nonMoveParts = _.sum(this.body, (part) => part.type != MOVE ? 1 : 0);
 			this._moveSpeed = Math.max(movePower / nonMoveParts, 1); // if nonMoveParts == 0, this will be Infinity -> 1
 		}
 		return this._moveSpeed;
@@ -41,7 +41,7 @@ Object.defineProperty(Creep.prototype, 'approxMoveSpeed', {
 });
 
 Object.defineProperty(Creep.prototype, 'inRampart', {
-	get() {
+	get(this: Creep) {
 		return !!this.pos.lookForStructure(STRUCTURE_RAMPART); // this assumes hostile creeps can't stand in my ramparts
 	},
 	configurable: true,
@@ -50,7 +50,7 @@ Object.defineProperty(Creep.prototype, 'inRampart', {
 // Permanently cached properties
 PERMACACHE.bodypartCounts = PERMACACHE.bodypartCounts || {};
 Object.defineProperty(Creep.prototype, 'bodypartCounts', {
-	get() {
+	get(this: Creep) {
 		if (PERMACACHE.bodypartCounts[this.id] === undefined) {
 			PERMACACHE.bodypartCounts[this.id] = _.countBy(this.body, (part: BodyPartDefinition) => part.type);
 			_.defaults(PERMACACHE.bodypartCounts[this.id], {
@@ -71,7 +71,7 @@ Object.defineProperty(Creep.prototype, 'bodypartCounts', {
 
 PERMACACHE.isPlayer = PERMACACHE.isPlayer || {};
 Object.defineProperty(Creep.prototype, 'isPlayer', {
-	get() {
+	get(this: Creep) {
 		if (PERMACACHE.isPlayer[this.id] === undefined) {
 			PERMACACHE.isPlayer[this.id] = this.owner.username != 'Invader' &&
 										  this.owner.username != 'Source Keeper' &&

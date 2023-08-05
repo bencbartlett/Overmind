@@ -1,5 +1,5 @@
 Object.defineProperty(PowerCreep.prototype, 'inRampart', {
-	get() {
+	get(this: PowerCreep) {
 		return !!this.pos.lookForStructure(STRUCTURE_RAMPART); // this assumes hostile creeps can't stand in my ramparts
 	},
 	configurable: true,

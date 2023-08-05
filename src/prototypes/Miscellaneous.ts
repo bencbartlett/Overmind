@@ -1,16 +1,16 @@
-String.prototype.padRight = function(length: number, char = ' '): string {
+String.prototype.padRight = function(this: string, length: number, char = ' '): string {
 	return this + char.repeat(Math.max(length - this.length, 0));
 };
 
-String.prototype.padLeft = function(length: number, char = ' '): string {
+String.prototype.padLeft = function(this: string, length: number, char = ' '): string {
 	return char.repeat(Math.max(length - this.length, 0)) + this;
 };
 
-Number.prototype.toPercent = function(decimals = 0): string {
+Number.prototype.toPercent = function(this: number, decimals = 0): string {
 	return (this * 100).toFixed(decimals) + '%';
 };
 
-Number.prototype.truncate = function(decimals: number): number {
+Number.prototype.truncate = function(this: number, decimals: number): number {
 	const re = new RegExp('(\\d+\\.\\d{' + decimals + '})(\\d)'),
 		  m  = this.toString().match(re);
 	return m ? parseFloat(m[1]) : this.valueOf();
@@ -18,7 +18,7 @@ Number.prototype.truncate = function(decimals: number): number {
 
 PERMACACHE.structureWalkability = PERMACACHE.structureWalkability || {};
 Object.defineProperty(ConstructionSite.prototype, 'isWalkable', {
-	get() {
+	get(this: ConstructionSite) {
 		if (PERMACACHE.structureWalkability[this.id] === undefined) {
 			PERMACACHE.structureWalkability[this.id] = this.structureType == STRUCTURE_ROAD ||
 													   this.structureType == STRUCTURE_CONTAINER ||
