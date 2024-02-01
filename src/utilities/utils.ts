@@ -30,8 +30,23 @@ export function printRoomName(roomName: string, aligned = false): string {
 	}
 }
 
-export function objectToStoreDefinition(obj: { [resource: string]: number }): StoreDefinition {
+// tslint:disable:no-bitwise
+export function stringToColorHash(str: string): string {
+	// A simple hash function
+	let hash = 0;
+	for (let i = 0; i < str.length; i++) {
+		hash = str.charCodeAt(i) + ((hash << 5) - hash);
+		hash = hash & hash; // Convert to 32bit integer
+	}
 
+	// Convert the hash to a 6 digit hexadecimal color
+	let color = '#';
+	for (let i = 0; i < 3; i++) {
+		const value = (hash >> (i * 8)) & 255;
+		color += ('00' + value.toString(16)).substr(-2);
+	}
+
+	return color;
 }
 
 export function color(str: string, color: string): string {

@@ -492,7 +492,9 @@ export class LogisticsNetwork {
 			// If you are targeting the requestor, use current carry for computations
 			carry = transporter.carry;
 		}
-		if (amount > 0) { // requestInput instance, needs refilling
+
+		// requestInput instance, needs refilling
+		if (amount > 0) {
 			if (request.resourceType == 'all') {
 				log.warning(`Improper resourceType in bufferChoices! Type 'all' is only allowable for outputs!`);
 				return [];
@@ -521,7 +523,10 @@ export class LogisticsNetwork {
 								 targetRef: buffer.ref
 							 });
 			}
-		} else if (amount < 0) { // requestOutput instance, needs pickup
+		}
+
+		// requestOutput instance, needs pickup
+		else if (amount < 0) {
 			// Change in resources if transporter goes straight to the output
 			const remainingCarryCapacity = transporter.carryCapacity - _.sum(carry);
 			const dQ_direct = Math.min(Math.abs(amount), remainingCarryCapacity);

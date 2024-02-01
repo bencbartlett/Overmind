@@ -1,12 +1,15 @@
 import {log} from '../console/log';
 import {isCreep, isPowerCreep, isStandardZerg} from '../declarations/typeGuards';
 import {CombatIntel} from '../intel/CombatIntel';
+import {Movement} from '../movement/Movement';
 import {Overlord} from '../overlords/Overlord';
 import {profile} from '../profiler/decorator';
 import {BOOST_PARTS} from '../resources/map_resources';
 import {initializeTask} from '../tasks/initializer';
 import {MIN_LIFETIME_FOR_BOOST} from '../tasks/instances/getBoosted';
 import {Task} from '../tasks/Task';
+import {stringToColorHash} from '../utilities/utils';
+import {Visualizer} from '../visuals/Visualizer';
 import {AnyZerg} from './AnyZerg';
 
 
@@ -607,12 +610,24 @@ export class Zerg extends AnyZerg {
 		return !(this.task && this.task.isValid);
 	}
 
+	private debugger(): void {
+		if (this.task && this.task.targetPos) {
+			const color = stringToColorHash(this.name);
+			Visualizer.circle(this.task.targetPos, color, {radius: 0.45});
+			Visualizer.circle(this.pos, color, {radius: 0.45});
+			Movement.visualizeMemorizedPath(this, color);
+		}
+	}
+
 	/**
 	 * Execute the task you currently have.
 	 */
 	run(): number | undefined {
 		if (this.task) {
 			return this.task.run();
+		}
+		if (this.memory.debug) {
+			this.debugger();
 		}
 	}
 

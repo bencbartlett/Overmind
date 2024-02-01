@@ -5,7 +5,7 @@ import {MatrixLib, MatrixOptions} from '../matrix/MatrixLib';
 import {profile} from '../profiler/decorator';
 import {insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {rightArrow} from '../utilities/stringConstants';
-import {minBy} from '../utilities/utils';
+import {minBy, stringToColorHash} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {AnyZerg, normalizeAnyZerg} from '../zerg/AnyZerg';
 import {Swarm} from '../zerg/Swarm';
@@ -374,6 +374,25 @@ export class Movement {
 		this.serializeState(creep, destination, state, moveData, {x: nextPos.x, y: nextPos.y});
 
 		return creep.move(nextDirection, !!opts.force);
+	}
+
+	static visualizeMemorizedPath(creep: AnyZerg, color: string = 'aqua'): void {
+		// initialize data object
+		if (creep.memory._go && creep.memory._go.path) {
+			const directions = creep.memory._go.path;
+			let pos = creep.pos;
+			const path: RoomPosition[] = [pos];
+			for (const direction of directions) {
+				const nextDirection = parseInt(direction, 10) as DirectionConstant;
+				const nextPos = pos.getPositionAtDirection(nextDirection);
+				path.push(nextPos);
+				pos = nextPos;
+			}
+			const positionsGroupedByRoom = _.groupBy(path, pos => pos.roomName);
+			for (const roomName in positionsGroupedByRoom) {
+				new RoomVisual(roomName).poly(positionsGroupedByRoom[roomName], {fill: color});
+			}
+		}
 	}
 
 	// /**
