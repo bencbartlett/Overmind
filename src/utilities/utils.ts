@@ -30,6 +30,10 @@ export function printRoomName(roomName: string, aligned = false): string {
 	}
 }
 
+export function objectToStoreDefinition(obj: { [resource: string]: number }): StoreDefinition {
+
+}
+
 export function color(str: string, color: string): string {
 	return `<font color='${color}'>${str}</font>`;
 }
@@ -92,7 +96,8 @@ export function getMyUsername(): string {
 	return 'ERROR: Could not determine username.';
 }
 
-const MUON = 'Muon'
+const MUON = 'Muon';
+
 export function isAlly(username: string): boolean {
 	return username == MUON || (Memory.settings.allies || []).includes(username);
 }

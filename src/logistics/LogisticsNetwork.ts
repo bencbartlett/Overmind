@@ -5,7 +5,8 @@ import {Matcher} from '../algorithms/galeShapley';
 import {Colony} from '../Colony';
 import {log} from '../console/log';
 import {Roles} from '../creepSetups/setups';
-import {isResource, isRuin, isTombstone,} from '../declarations/typeGuards';
+import {isCreep, isDirective, isResource, isRuin, isTombstone,} from '../declarations/typeGuards';
+import {DirectiveDrop} from '../directives/logistics/drop';
 import {Mem} from '../memory/Memory';
 import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
@@ -26,7 +27,8 @@ export type LogisticsTarget =
 	| StructureTower
 	| Ruin
 	| Tombstone
-	| Resource;
+	| Resource
+	| DirectiveDrop;
 
 export const ALL_RESOURCE_TYPE_ERROR =
 				 `Improper logistics request: 'all' can only be used for store structure or tombstone!`;
@@ -212,10 +214,12 @@ export class LogisticsNetwork {
 		if (isResource(target) || isTombstone(target) || isRuin(target)) {
 			log.error(`Improper logistics request: should not request input for resource or tombstone!`);
 			return 0;
+		} else if (isDirective(target)) {
+			return target.memory.amount - target.store[resourceType];
+		} else {
+			return target.store.getFreeCapacity(resourceType) || 0;
 		}
 
-		// @ts-ignore
-		return target.store.getFreeCapacity(resourceType) || 0;
 
 		// else if (isStoreStructure(target)) {
 		// 	return target.storeCapacity - _.sum(target.store);
@@ -361,7 +365,9 @@ export class LogisticsNetwork {
 	 * Returns the predicted state of the transporter's carry after completing its current task
 	 */
 	private computePredictedTransporterCarry(transporter: Zerg,
-											 nextAvailability?: [number, RoomPosition]): { [resourceType: string]: number } {
+											 nextAvailability?: [number, RoomPosition]): {
+		[resourceType: string]: number
+	} {
 		if (transporter.task && transporter.task.target) {
 			const requestID = this.targetToRequest[transporter.task.target.ref];
 			if (requestID) {
@@ -636,7 +642,9 @@ export class LogisticsNetwork {
 		let info = [];
 		for (const request of this.requests) {
 			let targetType: string;
-			if (isResource(request.target)) {
+			if (isDirective(request.target)) {
+				targetType = 'directive';
+			} else if (isResource(request.target)) {
 				targetType = 'resource';
 			} else if (isTombstone(request.target)) {
 				targetType = 'tombstone';
@@ -662,7 +670,6 @@ export class LogisticsNetwork {
 						amount = request.target.store[request.resourceType];
 					}
 				}
-
 			}
 			const targetingTprtrNames = _.map(LogisticsNetwork.targetingTransporters(request.target), c => c.name);
 			info.push({

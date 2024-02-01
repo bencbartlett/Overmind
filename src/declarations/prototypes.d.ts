@@ -251,7 +251,7 @@ interface StructureStorage {
 	isEmpty: boolean;
 }
 
-interface StoreBase {
+interface Store {
 	contents: [ResourceConstant, number][];
 }
 
@@ -289,7 +289,6 @@ interface StructureTower {
 
 interface String {
 	padRight(length: number, char?: string): string;
-
 	padLeft(length: number, char?: string): string;
 }
 

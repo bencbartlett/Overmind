@@ -1,3 +1,4 @@
+import {$} from '../../caching/GlobalCache';
 import {HaulingOverlord} from '../../overlords/situational/hauler';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
@@ -107,6 +108,11 @@ export class DirectiveHaul extends Directive {
 			}
 		}
 		return this.memory.totalResources;
+	}
+
+	refresh(): void {
+		super.refresh();
+		this._store = undefined;
 	}
 
 	init(): void {

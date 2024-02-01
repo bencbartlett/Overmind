@@ -246,7 +246,7 @@ export class Colony {
 	}
 
 	/**
-	 * Pretty-print the colony colony name right-padded with spaces to fit E**S** in the console
+	 * Pretty-print the colony name right-padded with spaces to fit E**S** in the console
 	 */
 	get printAligned(): string {
 		const msg = '<a href="#!/room/' + Game.shard.name + '/' + this.room.name + '">[' + this.name + ']</a>';
@@ -296,7 +296,7 @@ export class Colony {
 		// Refresh rooms
 		this.room = Game.rooms[this.room.name];
 		const outpostRoomNames = _.filter(this.roomNames, roomName => this.room.name != roomName);
-		this.outposts =  _.compact(_.map(outpostRoomNames, outpost => Game.rooms[outpost]));
+		this.outposts = _.compact(_.map(outpostRoomNames, outpost => Game.rooms[outpost]));
 		this.rooms = [this.room].concat(this.outposts);
 		// refresh creeps
 		this.creeps = Overmind.cache.creepsByColony[this.name] || [];
@@ -306,6 +306,35 @@ export class Colony {
 		this.registerOperationalState();
 		this.refreshUtilities();
 		this.refreshHiveClusters();
+	}
+
+	/**
+	 * This is used at low levels to request for resources to be dropped in a common pile before containers
+	 * and storage are built
+	 */
+	private registerEnergyReqeusts(): void {
+		if (this.stage == ColonyStage.Larva) {
+			// If there are no containers, request to drop energy at the location that would be the storagePos
+			// if there are also construction sites present in the hatchery
+			const realStructureSites = _.filter(this.constructionSites,
+												c => c.structureType != STRUCTURE_CONTAINER && c.structureType != STRUCTURE_ROAD);
+			if (realStructureSites.length > 0) {
+				if (this.room.containers.length == 0 && !this.storage) {
+					const dropPos = this.roomPlanner.storagePos;
+					if (dropPos) {
+
+					}
+				}
+			} else {
+				if (!this.upgradeSite.battery) {
+					const dropPos = this.upgradeSite.batteryPos;
+					if (dropPos) {
+
+					}
+				}
+			}
+
+		}
 	}
 
 	/**

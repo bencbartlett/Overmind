@@ -38,15 +38,15 @@ export function isSource(obj: Source | Mineral): obj is Source {
 	return (<Source>obj).energy != undefined;
 }
 
-export function isTombstone(obj: RoomObject): obj is Tombstone {
+export function isTombstone(obj: RoomObject | Directive): obj is Tombstone {
 	return (<Tombstone>obj).deathTime != undefined;
 }
 
-export function isRuin(obj: RoomObject): obj is Ruin {
+export function isRuin(obj: RoomObject | Directive): obj is Ruin {
 	return (<Ruin>obj).destroyTime != undefined;
 }
 
-export function isResource(obj: RoomObject): obj is Resource {
+export function isResource(obj: RoomObject | Directive): obj is Resource {
 	return (<Resource>obj).amount != undefined;
 }
 

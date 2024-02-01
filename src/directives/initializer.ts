@@ -10,6 +10,7 @@ import {DirectiveGuard} from './defense/guard';
 import {DirectiveInvasionDefense} from './defense/invasionDefense';
 import {DirectiveOutpostDefense} from './defense/outpostDefense';
 import {Directive} from './Directive';
+import {DirectiveDrop} from './logistics/drop';
 import {DirectiveControllerAttack} from './offense/controllerAttack';
 import {DirectiveHarass} from './offense/harass';
 import {DirectivePairDestroy} from './offense/pairDestroy';
@@ -153,7 +154,15 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			}
 			break;
 
-		// Power directives ====================================================================================
+		// Logistics directives ========================================================================================
+		case COLOR_GREEN:
+			switch (flag.secondaryColor) {
+				case COLOR_GREEN:
+					return new DirectiveDrop(flag);
+			}
+			break;
+
+		// Power directives ============================================================================================
 		case COLOR_CYAN:
 			switch (flag.secondaryColor) {
 				case COLOR_PURPLE:

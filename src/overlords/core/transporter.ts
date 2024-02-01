@@ -1,7 +1,7 @@
 import {Colony} from '../../Colony';
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {isDirective, isResource, isTombstone} from '../../declarations/typeGuards';
+import {isDirective, isResource, isRuin, isTombstone} from '../../declarations/typeGuards';
 import {ALL_RESOURCE_TYPE_ERROR, BufferTarget, LogisticsRequest} from '../../logistics/LogisticsNetwork';
 import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -87,14 +87,16 @@ export class TransportOverlord extends Overlord {
 			const amount = this.colony.logisticsNetwork.predictedRequestAmount(transporter, request);
 			// Target is requesting input
 			if (amount > 0) {
-				if (isResource(request.target) || isTombstone(request.target)) {
-					log.warning(`Improper logistics request: should not request input for resource or tombstone!`);
+				if (isResource(request.target) || isTombstone(request.target) || isRuin(request.target)) {
+					log.warning(`Improper logistics request: should not request input for resource or tombstone or ruin!`);
 					return;
 				} else if (request.resourceType == 'all') {
 					log.error(`${this.print}: cannot request 'all' as input!`);
 					return;
+				} else if (isDirective(request.target)) {
+					task = Tasks.drop(request.target, request.resourceType);
 				} else {
-					task = Tasks.transfer(<TransferrableStoreStructure>request.target, request.resourceType);
+					task = Tasks.transfer(request.target, request.resourceType);
 				}
 				if (bestChoice.targetRef != request.target.ref) {
 					// If we need to go to a buffer first to get more stuff
@@ -112,14 +114,18 @@ export class TransportOverlord extends Overlord {
 				if (isResource(request.target)) {
 					task = Tasks.pickup(request.target);
 				} else {
-					if (request.resourceType == 'all') {
-						if (isResource(request.target)) {
-							log.error(this.print + ALL_RESOURCE_TYPE_ERROR);
-							return;
-						}
-						task = Tasks.withdrawAll(request.target);
+					if (isDirective(request.target)) {
+						log.error(`Directive ${request.target} cannot be used for output request`);
 					} else {
-						task = Tasks.withdraw(request.target, request.resourceType);
+						if (request.resourceType == 'all') {
+							if (isResource(request.target)) {
+								log.error(this.print + ALL_RESOURCE_TYPE_ERROR);
+								return;
+							}
+							task = Tasks.withdrawAll(request.target);
+						} else {
+							task = Tasks.withdraw(request.target, request.resourceType);
+						}
 					}
 				}
 				if (task && bestChoice.targetRef != request.target.ref) {
