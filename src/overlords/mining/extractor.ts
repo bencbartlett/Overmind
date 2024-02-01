@@ -38,7 +38,7 @@ export class ExtractorOverlord extends Overlord {
 
 	// If mineral is ready to be mined, make a container
 	private shouldHaveContainer() {
-		return this.mineral && (this.mineral.mineralAmount > 0 || this.mineral.ticksToRegeneration < 2000);
+		return this.mineral && (this.mineral.mineralAmount > 0 || (this.mineral.ticksToRegeneration || 0) < 2000);
 	}
 
 	private populateStructures() {
