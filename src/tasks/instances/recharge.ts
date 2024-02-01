@@ -1,3 +1,4 @@
+import {ColonyStage} from '../../Colony';
 import {log} from '../../console/log';
 import {isResource} from '../../declarations/typeGuards';
 import {profile} from '../../profiler/decorator';
@@ -27,9 +28,18 @@ export class TaskRecharge extends Task {
 	}
 
 	private rechargeRateForCreep(creep: Zerg, obj: rechargeObjectType): number | false {
-		if (creep.colony && creep.colony.hatchery && creep.colony.hatchery.battery
-			&& obj.id == creep.colony.hatchery.battery.id && creep.roleName != 'queen') {
-			return false; // only queens can use the hatchery battery
+		if (creep.colony && creep.colony.hatchery && creep.colony.hatchery.batteries.length >0 && creep.roleName != 'queen') {
+			if (creep.colony.stage == ColonyStage.Larva) {
+				const MINIMUM_BATTERY_THRESHOLD = 1500;
+				if (_.any(creep.colony.hatchery.batteries,
+						  battery => battery.id == obj.id && battery.energy < MINIMUM_BATTERY_THRESHOLD)) {
+					return false; // at low levels allow others to use hatchery battery if it is almost full
+				}
+			} else {
+				if (_.any(creep.colony.hatchery.batteries, battery => battery.id == obj.id)) {
+					return false; // only queens can use the hatchery batteries
+				}
+			}
 		}
 		let amount = isResource(obj) ? obj.amount : obj.store[RESOURCE_ENERGY];
 		if (amount < this.data.minEnergy) {

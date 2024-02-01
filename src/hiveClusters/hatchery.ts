@@ -71,7 +71,7 @@ export class Hatchery extends HiveCluster {
 	energyStructures: (StructureSpawn | StructureExtension)[]; 	// All spawns and extensions
 	link: StructureLink | undefined; 						// The input link
 	towers: StructureTower[]; 								// All towers that aren't in the command center
-	battery: StructureContainer | undefined;				// The container to provide an energy buffer
+	batteries: StructureContainer[];						// The container to provide an energy buffer
 	transportRequests: TransportRequestGroup;				// Box for energy requests
 	overlord: QueenOverlord | BunkerQueenOverlord;			// Hatchery overlord if past larva stage
 	settings: {												// Settings for hatchery operation
@@ -99,12 +99,14 @@ export class Hatchery extends HiveCluster {
 		this.extensions = colony.extensions;
 		this.towers = colony.commandCenter ? _.difference(colony.towers, colony.commandCenter.towers) : colony.towers;
 		if (this.colony.layout == 'bunker') {
-			this.battery = _.first(_.filter(this.room.containers, cont => insideBunkerBounds(cont.pos, this.colony)));
+			this.batteries = _.filter(this.room.containers, cont => insideBunkerBounds(cont.pos, this.colony));
 			$.set(this, 'energyStructures', () => this.computeEnergyStructures());
 		} else {
+			// Legacy code for very old base format
 			this.link = this.pos.findClosestByLimitedRange(colony.availableLinks, 2);
 			this.colony.linkNetwork.claimLink(this.link);
-			this.battery = this.pos.findClosestByLimitedRange(this.room.containers, 2);
+			const battery = this.pos.findClosestByLimitedRange(this.room.containers, 2);
+			this.batteries = battery ? [battery] : [];
 			this.energyStructures = (<(StructureSpawn | StructureExtension)[]>[]).concat(this.spawns, this.extensions);
 		}
 		this.productionPriorities = [];
@@ -122,7 +124,7 @@ export class Hatchery extends HiveCluster {
 	refresh() {
 		this.memory = Mem.wrap(this.colony.memory, 'hatchery', getDefaultHatcheryMemory);
 		$.refreshRoom(this);
-		$.refresh(this, 'spawns', 'extensions', 'energyStructures', 'link', 'towers', 'battery');
+		$.refresh(this, 'spawns', 'extensions', 'energyStructures', 'link', 'towers', 'batteries');
 		this.availableSpawns = _.filter(this.spawns, spawn => !spawn.spawning);
 		this.productionPriorities = [];
 		this.productionQueue = {};
@@ -183,8 +185,8 @@ export class Hatchery extends HiveCluster {
 
 	// Idle position for queen
 	get idlePos(): RoomPosition {
-		if (this.battery) {
-			return this.battery.pos;
+		if (this.batteries.length>0) {
+			return _.first(this.batteries).pos;
 		} else {
 			return this.spawns[0].pos.availableNeighbors(true)[0];
 		}
@@ -219,14 +221,16 @@ export class Hatchery extends HiveCluster {
 		if (this.link && this.link.isEmpty) {
 			this.colony.linkNetwork.requestReceive(this.link);
 		}
-		if (this.battery) {
-			const threshold = this.colony.stage == ColonyStage.Larva ? 0.75 : 0.5;
-			if (this.battery.energy < threshold * this.battery.storeCapacity) {
-				this.colony.logisticsNetwork.requestInput(this.battery, {multiplier: 1.5});
-			}
-			// get rid of any minerals in the container if present
-			if (hasMinerals(this.battery.store)) {
-				this.colony.logisticsNetwork.requestOutputMinerals(this.battery);
+		if (this.batteries.length>0) {
+			for (const battery of this.batteries) {
+				const threshold = this.colony.stage == ColonyStage.Larva ? 0.75 : 0.5;
+				if (battery.energy < threshold * battery.store.getCapacity()) {
+					this.colony.logisticsNetwork.requestInput(battery, {multiplier: 1.5});
+				}
+				// get rid of any minerals in the container if present
+				if (hasMinerals(battery.store)) {
+					this.colony.logisticsNetwork.requestOutputMinerals(battery);
+				}
 			}
 		}
 		// Register energy transport requests (goes on hatchery store group, which can be colony store group)

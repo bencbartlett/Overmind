@@ -601,10 +601,10 @@ export class Zerg extends AnyZerg {
 	}
 
 	/**
-	 * Creeps are idle if they don't have a task.
+	 * Creeps are idle if they don't have a valid task.
 	 */
 	get isIdle(): boolean {
-		return !this.task || !this.task.isValid();
+		return !(this.task && this.task.isValid);
 	}
 
 	/**

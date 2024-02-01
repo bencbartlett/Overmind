@@ -55,35 +55,38 @@ export class QueenOverlord extends Overlord {
 	private rechargeActions(queen: Zerg): void {
 		if (this.hatchery.link && !this.hatchery.link.isEmpty) {
 			queen.task = Tasks.withdraw(this.hatchery.link);
-		} else if (this.hatchery.battery && this.hatchery.battery.energy > 0) {
-			queen.task = Tasks.withdraw(this.hatchery.battery);
+		} else if (this.hatchery.batteries.length>0) {
+			const target = queen.pos.findClosestByRange(_.filter(this.hatchery.batteries, b => b.energy > 0));
+			if (target) queen.task = Tasks.withdraw(target);
 		} else {
 			queen.task = Tasks.recharge();
 		}
 	}
 
 	private idleActions(queen: Zerg): void {
+		// will only have one battery when this overlord is called
+		const battery = queen.pos.findClosestByRange(this.hatchery.batteries);
 		if (this.hatchery.link) {
 			// Can energy be moved from the link to the battery?
-			if (this.hatchery.battery && !this.hatchery.battery.isFull && !this.hatchery.link.isEmpty) {
+			if (battery && !battery.isFull && !this.hatchery.link.isEmpty) {
 				// Move energy to battery as needed
 				if (queen.carry.energy < queen.carryCapacity) {
 					queen.task = Tasks.withdraw(this.hatchery.link);
 				} else {
-					queen.task = Tasks.transfer(this.hatchery.battery);
+					queen.task = Tasks.transfer(battery);
 				}
 			} else {
 				if (queen.carry.energy < queen.carryCapacity) { // make sure you're recharged
 					if (!this.hatchery.link.isEmpty) {
 						queen.task = Tasks.withdraw(this.hatchery.link);
-					} else if (this.hatchery.battery && !this.hatchery.battery.isEmpty) {
-						queen.task = Tasks.withdraw(this.hatchery.battery);
+					} else if (battery && !battery.isEmpty) {
+						queen.task = Tasks.withdraw(battery);
 					}
 				}
 			}
 		} else {
-			if (this.hatchery.battery && queen.carry.energy < queen.carryCapacity) {
-				queen.task = Tasks.withdraw(this.hatchery.battery);
+			if (battery && queen.carry.energy < queen.carryCapacity) {
+				queen.task = Tasks.withdraw(battery);
 			}
 		}
 	}

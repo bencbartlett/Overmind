@@ -173,6 +173,8 @@ export class Overseer implements IOverseer {
 			// Pick up all nontrivial dropped resources
 			for (const resourceType in room.drops) {
 				for (const drop of room.drops[resourceType]) {
+					const inputRequest = _.find(colony.logisticsNetwork.requests, request => request.amount > 0);
+					if (inputRequest) continue; // early levels may request transporters to drop off at a resource
 					if (drop.amount > LogisticsNetwork.settings.droppedEnergyThreshold
 						|| drop.resourceType != RESOURCE_ENERGY) {
 						colony.logisticsNetwork.requestOutput(drop);
@@ -388,7 +390,11 @@ export class Overseer implements IOverseer {
 											 ? Memory.rooms[roomName][RMEM.SOURCES]!.length
 											 : 0);
 		const numRemotes = numSources - colony.room.sources.length;
-		if (numRemotes < Colony.settings.remoteSourcesByLevel[colony.level]) {
+		let neededRemotes = Colony.settings.remoteSourcesByLevel[colony.level];
+		if (getAllColonies().length <= 2) {
+			neededRemotes = Math.floor(neededRemotes * 1.5);
+		}
+		if (numRemotes < neededRemotes) {
 
 			const possibleOutposts = this.computePossibleOutposts(colony);
 

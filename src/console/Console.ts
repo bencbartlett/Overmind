@@ -326,10 +326,10 @@ export class OvermindConsole {
 		}
 	}
 
-	static closeRoomPlanner(roomName: string): string {
+	static closeRoomPlanner(roomName: string, ignoreRoads=false): string {
 		if (Overmind.colonies[roomName]) {
 			if (Overmind.colonies[roomName].roomPlanner.active) {
-				Overmind.colonies[roomName].roomPlanner.finalize();
+				Overmind.colonies[roomName].roomPlanner.finalize(ignoreRoads);
 				return '';
 			} else {
 				return `RoomPlanner for ${roomName} is not active!`;

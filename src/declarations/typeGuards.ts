@@ -1,6 +1,7 @@
 // Type guards library: this allows for instanceof - like behavior for much lower CPU cost. Each type guard
 // differentiates an ambiguous input by recognizing one or more unique properties.
 
+import {Directive} from '../directives/Directive';
 import {AnyZerg} from '../zerg/AnyZerg';
 import {CombatZerg} from '../zerg/CombatZerg';
 import {NeuralZerg} from '../zerg/NeuralZerg';
@@ -51,6 +52,10 @@ export function isResource(obj: RoomObject): obj is Resource {
 
 export function hasPos(obj: HasPos | RoomPosition): obj is HasPos {
 	return (<HasPos>obj).pos != undefined;
+}
+
+export function isDirective(thing: any): thing is Directive {
+	return (<Directive>thing).isDirective || false;
 }
 
 export function isCreep(obj: RoomObject): obj is Creep {

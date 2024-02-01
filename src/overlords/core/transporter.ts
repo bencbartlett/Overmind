@@ -1,7 +1,7 @@
 import {Colony} from '../../Colony';
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {isResource, isTombstone} from '../../declarations/typeGuards';
+import {isDirective, isResource, isTombstone} from '../../declarations/typeGuards';
 import {ALL_RESOURCE_TYPE_ERROR, BufferTarget, LogisticsRequest} from '../../logistics/LogisticsNetwork';
 import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -26,7 +26,7 @@ export class TransportOverlord extends Overlord {
 	private neededTransportPower(): number {
 
 		if (!this.colony.storage
-			&& !(this.colony.hatchery && this.colony.hatchery.battery)
+			&& !(this.colony.hatchery && this.colony.hatchery.batteries.length > 0)
 			&& !this.colony.upgradeSite.battery) {
 			return 0;
 		}
@@ -68,7 +68,8 @@ export class TransportOverlord extends Overlord {
 
 		const transportPowerEach = setup.getBodyPotential(CARRY, this.colony);
 		const neededTransportPower = this.neededTransportPower();
-		const numTransporters = Math.ceil(neededTransportPower / transportPowerEach + 0.1); // div by zero error
+
+		const numTransporters = Math.ceil(1.2 * neededTransportPower / transportPowerEach + 0.1); // div by zero error
 
 		if (this.transporters.length == 0) {
 			this.wishlist(numTransporters, setup, {priority: OverlordPriority.ownedRoom.firstTransport});
