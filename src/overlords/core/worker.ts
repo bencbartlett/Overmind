@@ -172,8 +172,10 @@ export class WorkerOverlord extends Overlord {
 				}));
 				const transporterSaturation = Math.min(this.colony.overlords.logistics.memory.transporterSaturation, 1);
 				// Average energy per tick when working
-				const energyPerTickPerWorker = 1.1 * workPartsPerWorker * (BUILD_POWER + UPGRADE_CONTROLLER_POWER) / 2;
-				const workerUptime = 1.0;
+				const energySpentPerTickPerWorkPart = _.filter(this.colony.constructionSites,
+															   s => s.structureType != STRUCTURE_ROAD).length > 0 ? BUILD_POWER : 1;
+				const energyPerTickPerWorker = workPartsPerWorker * energySpentPerTickPerWorkPart;
+				const workerUptime = 0.75;
 
 				const numWorkers = Math.ceil((energyMinedPerTick * transporterSaturation) /
 											 (energyPerTickPerWorker * workerUptime)
