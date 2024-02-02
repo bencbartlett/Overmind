@@ -379,7 +379,7 @@ export class Movement {
 	static visualizeMemorizedPath(creep: AnyZerg, color: string = 'aqua'): void {
 		// initialize data object
 		if (creep.memory._go && creep.memory._go.path) {
-			const directions = creep.memory._go.path;
+			const directions = creep.memory._go.path.substr(1);
 			let pos = creep.pos;
 			const path: RoomPosition[] = [pos];
 			for (const direction of directions) {
@@ -390,7 +390,7 @@ export class Movement {
 			}
 			const positionsGroupedByRoom = _.groupBy(path, pos => pos.roomName);
 			for (const roomName in positionsGroupedByRoom) {
-				new RoomVisual(roomName).poly(positionsGroupedByRoom[roomName], {fill: color});
+				new RoomVisual(roomName).poly(positionsGroupedByRoom[roomName], {stroke: color});
 			}
 		}
 	}
