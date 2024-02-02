@@ -390,7 +390,7 @@ export class Movement {
 			}
 			const positionsGroupedByRoom = _.groupBy(path, pos => pos.roomName);
 			for (const roomName in positionsGroupedByRoom) {
-				new RoomVisual(roomName).poly(positionsGroupedByRoom[roomName], {stroke: color});
+				new RoomVisual(roomName).poly(positionsGroupedByRoom[roomName], {stroke: color, lineStyle: 'dotted'});
 			}
 		}
 	}

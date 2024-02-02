@@ -1,7 +1,7 @@
 import {Colony} from '../../Colony';
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {isDirective, isResource, isRuin, isTombstone} from '../../declarations/typeGuards';
+import {isAnyZerg, isDirective, isResource, isRuin, isTombstone} from '../../declarations/typeGuards';
 import {ALL_RESOURCE_TYPE_ERROR, BufferTarget, LogisticsRequest} from '../../logistics/LogisticsNetwork';
 import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -111,6 +111,8 @@ export class TransportOverlord extends Overlord {
 					return;
 				} else if (isDirective(request.target)) {
 					task = Tasks.drop(request.target, request.resourceType);
+				} else if (isAnyZerg(request.target)) {
+					task = Tasks.transfer(request.target.creep, request.resourceType);
 				} else {
 					task = Tasks.transfer(request.target, request.resourceType);
 				}
@@ -132,6 +134,8 @@ export class TransportOverlord extends Overlord {
 				} else {
 					if (isDirective(request.target)) {
 						log.error(`Directive ${request.target} cannot be used for output request`);
+					} else if (isAnyZerg(request.target)) {
+						log.error(`Zerg ${request.target} cannot be used for output request (WIP, maybe future)`);
 					} else {
 						if (request.resourceType == 'all') {
 							if (isResource(request.target)) {

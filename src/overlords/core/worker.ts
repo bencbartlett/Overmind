@@ -6,6 +6,10 @@ import {DirectiveNukeResponse} from '../../directives/situational/nukeResponse';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {BuildPriorities, FortifyPriorities} from '../../priorities/priorities_structures';
 import {profile} from '../../profiler/decorator';
+import {buildTaskName} from '../../tasks/instances/build';
+import {fortifyTaskName} from '../../tasks/instances/fortify';
+import {repairTaskName} from '../../tasks/instances/repair';
+import {upgradeTaskName} from '../../tasks/instances/upgrade';
 import {Tasks} from '../../tasks/Tasks';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {minBy} from '../../utilities/utils';
@@ -152,7 +156,7 @@ export class WorkerOverlord extends Overlord {
 				  'constructionSites', 'nukeDefenseRamparts');
 	}
 
-	init() {
+	private wishlistWorkers() {
 		let setup = this.colony.level == 1 ? Setups.workers.early : Setups.workers.default;
 		const workPartsPerWorker = setup.getBodyPotential(WORK, this.colony);
 		let numWorkers: number;
@@ -167,11 +171,14 @@ export class WorkerOverlord extends Overlord {
 					return overlord.energyPerTick * saturation;
 				}));
 				const transporterSaturation = Math.min(this.colony.overlords.logistics.memory.transporterSaturation, 1);
-				const energyPerTickPerWorker = 1.1 * workPartsPerWorker * BUILD_POWER; // Average energy per tick when working
-				const workerUptime = 0.8;
+				// Average energy per tick when working
+				const energyPerTickPerWorker = 1.1 * workPartsPerWorker * (BUILD_POWER + UPGRADE_CONTROLLER_POWER) / 2;
+				const workerUptime = 1.0;
+
 				const numWorkers = Math.ceil((energyMinedPerTick * transporterSaturation) /
 											 (energyPerTickPerWorker * workerUptime)
 											 + 0.5);
+
 				return Math.min(numWorkers, MAX_WORKERS);
 			});
 		} else {
@@ -215,6 +222,35 @@ export class WorkerOverlord extends Overlord {
 			setup = CreepSetup.boosted(setup, ['construct']);
 		}
 		this.wishlist(numWorkers, setup);
+	}
+
+	/**
+	 * At low RCL workers can request energy directly from transporters
+	 */
+	private registerEnergyRequests() {
+		if (this.colony.stage == ColonyStage.Larva) { // todo: check that there are no drop directives here
+			for (const worker of this.workers) {
+				if (worker.spawning) continue;
+				const workParts = worker.bodypartCounts[WORK];
+				const rechargeThreshold = 25 * workParts;
+				if (worker.store.energy < rechargeThreshold && worker.store.getCapacity() > rechargeThreshold && worker.task) {
+					if (worker.task.name == upgradeTaskName && !this.colony.upgradeSite.battery) {
+						this.colony.logisticsNetwork.requestInput(worker, {dAmountdt: workParts * UPGRADE_CONTROLLER_POWER});
+					} else if (worker.task.name == buildTaskName) {
+						this.colony.logisticsNetwork.requestInput(worker, {dAmountdt: workParts * BUILD_POWER});
+					} else if (worker.task.name == repairTaskName) {
+						this.colony.logisticsNetwork.requestInput(worker, {dAmountdt: workParts * 1});
+					} else if (worker.task.name == fortifyTaskName) {
+						this.colony.logisticsNetwork.requestInput(worker, {dAmountdt: workParts * 1});
+					}
+				}
+			}
+		}
+	}
+
+	init() {
+		this.wishlistWorkers();
+		this.registerEnergyRequests();
 	}
 
 	private repairActions(worker: Zerg): boolean {

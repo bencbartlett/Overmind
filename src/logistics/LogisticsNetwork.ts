@@ -5,7 +5,7 @@ import {Matcher} from '../algorithms/galeShapley';
 import {Colony} from '../Colony';
 import {log} from '../console/log';
 import {Roles} from '../creepSetups/setups';
-import {isCreep, isDirective, isResource, isRuin, isTombstone,} from '../declarations/typeGuards';
+import {isAnyZerg, isCreep, isDirective, isResource, isRuin, isTombstone,} from '../declarations/typeGuards';
 import {DirectiveDrop} from '../directives/logistics/drop';
 import {Mem} from '../memory/Memory';
 import {Pathing} from '../movement/Pathing';
@@ -28,7 +28,8 @@ export type LogisticsTarget =
 	| Ruin
 	| Tombstone
 	| Resource
-	| DirectiveDrop;
+	| DirectiveDrop
+	| Zerg;
 
 export const ALL_RESOURCE_TYPE_ERROR =
 				 `Improper logistics request: 'all' can only be used for store structure or tombstone!`;
@@ -649,6 +650,8 @@ export class LogisticsNetwork {
 			let targetType: string;
 			if (isDirective(request.target)) {
 				targetType = 'directive';
+			} else if (isAnyZerg(request.target)) {
+				targetType = 'zerg';
 			} else if (isResource(request.target)) {
 				targetType = 'resource';
 			} else if (isTombstone(request.target)) {

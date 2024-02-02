@@ -76,7 +76,7 @@ export class Zerg extends AnyZerg {
 	saying: string;						// |
 	spawning: boolean;					// |
 	ticksToLive: number | undefined;	// |
-	lifetime: number;
+	lifetime: number;					// |
 	actionLog: { [actionName: string]: boolean }; // Tracks the actions that a creep has completed this tick
 	blockMovement: boolean; 			// Whether the zerg is allowed to move or not
 
@@ -556,6 +556,10 @@ export class Zerg extends AnyZerg {
 	}
 
 	// Task logic ------------------------------------------------------------------------------------------------------
+
+	get targetedBy(): string[] {
+		return this.creep.targetedBy;
+	}
 
 	/**
 	 * Wrapper for _task

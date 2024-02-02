@@ -32,20 +32,20 @@ export function printRoomName(roomName: string, aligned = false): string {
 
 // tslint:disable:no-bitwise
 export function stringToColorHash(str: string): string {
-	// A simple hash function
 	let hash = 0;
 	for (let i = 0; i < str.length; i++) {
-		hash = str.charCodeAt(i) + ((hash << 5) - hash);
-		hash = hash & hash; // Convert to 32bit integer
+		// Rotate hash to the left before adding the next character code
+		hash = (hash << 5) - hash + str.charCodeAt(i);
+		// Introduce a larger multiplier for character position
+		hash += (i * 123) ^ (hash >> 2);
+		// Ensure we're still working with 32 bits
+		hash = hash & hash;
 	}
-
-	// Convert the hash to a 6 digit hexadecimal color
 	let color = '#';
 	for (let i = 0; i < 3; i++) {
-		const value = (hash >> (i * 8)) & 255;
-		color += ('00' + value.toString(16)).substr(-2);
+		const value = (hash >> (i * 8)) & 0xff;
+		color += value.toString(16).padStart(2, '0');
 	}
-
 	return color;
 }
 

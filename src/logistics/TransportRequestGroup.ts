@@ -155,7 +155,6 @@ export class TransportRequestGroup {
 	// }
 
 	private getInputAmount(target: TransportRequestTarget, resourceType: ResourceConstant): number {
-		// @ts-ignore
 		return target.store.getFreeCapacity(resourceType) || 0;
 
 		// Legacy code from before the structure.store refactor
