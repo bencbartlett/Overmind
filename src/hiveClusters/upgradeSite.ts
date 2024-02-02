@@ -122,11 +122,19 @@ export class UpgradeSite extends HiveCluster {
 		if (this.link && this.link.energy < UpgradeSite.settings.linksRequestBelow) {
 			this.colony.linkNetwork.requestReceive(this.link);
 		}
-		const inThreshold = this.colony.stage > ColonyStage.Larva ? 0.5 : 0.75;
+		const inThreshold = this.colony.stage == ColonyStage.Larva ? 0.75 : 0.5;
 		if (this.battery) {
-			if (this.battery.energy < inThreshold * this.battery.storeCapacity) {
-				const energyPerTick = UPGRADE_CONTROLLER_POWER * this.upgradePowerNeeded;
-				this.colony.logisticsNetwork.requestInput(this.battery, {dAmountdt: energyPerTick});
+			if (this.colony.stage == ColonyStage.Larva) {
+				if (this.battery.energy < inThreshold * this.battery.storeCapacity) {
+					const workers = this.colony.overlords.work.workers;
+					const energyPerTick = UPGRADE_CONTROLLER_POWER * _.sum(workers, worker => worker.getBodyparts(WORK));
+					this.colony.logisticsNetwork.requestInput(this.battery, {dAmountdt: energyPerTick});
+				}
+			} else {
+				if (this.battery.energy < inThreshold * this.battery.storeCapacity) {
+					const energyPerTick = UPGRADE_CONTROLLER_POWER * this.upgradePowerNeeded;
+					this.colony.logisticsNetwork.requestInput(this.battery, {dAmountdt: energyPerTick});
+				}
 			}
 			if (hasMinerals(this.battery.store)) { // get rid of any minerals in the container if present
 				this.colony.logisticsNetwork.requestOutputMinerals(this.battery);
