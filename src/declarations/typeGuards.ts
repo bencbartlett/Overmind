@@ -102,20 +102,20 @@ export function isSource(obj: Source | Mineral): obj is Source {
 	return (<Source>obj).energy != undefined;
 }
 
-export function isTombstone(obj: RoomObject | HasPos): obj is Tombstone {
+export function isTombstone(obj: RoomObject | _HasRoomPosition): obj is Tombstone {
 	return (<Tombstone>obj).deathTime != undefined;
 }
 
-export function isRuin(obj: RoomObject | HasPos): obj is Ruin {
+export function isRuin(obj: RoomObject | _HasRoomPosition): obj is Ruin {
 	return (<Ruin>obj).destroyTime != undefined;
 }
 
-export function isResource(obj: RoomObject | HasPos): obj is Resource {
+export function isResource(obj: RoomObject | _HasRoomPosition): obj is Resource {
 	return (<Resource>obj).amount != undefined;
 }
 
-export function hasPos(obj: HasPos | RoomPosition): obj is HasPos {
-	return (<HasPos>obj).pos != undefined;
+export function hasPos(obj: _HasRoomPosition | RoomPosition): obj is _HasRoomPosition {
+	return (<_HasRoomPosition>obj).pos != undefined;
 }
 
 export function isDirective(thing: any): thing is Directive {

@@ -401,7 +401,7 @@ export class MatrixLib {
 	/**
 	 * Blocks all specified positions, setting their cost to 0xff
 	 */
-	static block(matrix: CostMatrix, positions: (RoomPosition | HasPos)[]): CostMatrix {
+	static block(matrix: CostMatrix, positions: (RoomPosition | _HasRoomPosition)[]): CostMatrix {
 		let pos: RoomPosition;
 		for (let i = 0; i < positions.length; i++) {
 			pos = normalizePos(positions[i]);
@@ -413,7 +413,7 @@ export class MatrixLib {
 	/**
 	 * Sets the cost of all positions to a value if walls are not present and if the value is above the current value
 	 */
-	static softBlock(matrix: CostMatrix, positions: (RoomPosition | HasPos)[],
+	static softBlock(matrix: CostMatrix, positions: (RoomPosition | _HasRoomPosition)[],
 					 roomName: string, cost: number): CostMatrix {
 		let pos: RoomPosition;
 		const terrain = Game.map.getRoomTerrain(roomName);
@@ -473,7 +473,7 @@ export class MatrixLib {
 	 *     0 2 2 2 2 2 0
 	 *     0 0 0 0 0 0 0
 	 */
-	static addPyramidPotential(matrix: CostMatrix, pos: RoomPosition | HasPos, range: number, maxCost: number,
+	static addPyramidPotential(matrix: CostMatrix, pos: RoomPosition | _HasRoomPosition, range: number, maxCost: number,
 							   includeTerrain             = true, // don't use includeTerrain with explicitTerrainCosts!
 							   terrainCosts: TerrainCosts = {plainCost: 1, swampCost: 5}): CostMatrix {
 
@@ -520,7 +520,7 @@ export class MatrixLib {
 	 * Adds a square potential with a specified center and range. If includeTerrainCosts=true (by default) then if the
 	 * cost for a square is zero, the terrain cost of the tile is added using default costs of {plain: 1, swamp: 5}.
 	 */
-	static addSquarePotential(matrix: CostMatrix, pos: RoomPosition | HasPos, range: number, addCost: number,
+	static addSquarePotential(matrix: CostMatrix, pos: RoomPosition | _HasRoomPosition, range: number, addCost: number,
 							  includeTerrain             = true, // don't use includeTerrain with explicitTerrainCosts!
 							  terrainCosts: TerrainCosts = {plainCost: 1, swampCost: 5}): CostMatrix {
 
@@ -588,7 +588,7 @@ export class MatrixLib {
 	 * -> Do not run additional passes of applyMovingMaxPool after doing this!
 	 * -> This method assumes that you have already added explicit terrian costs.
 	 */
-	static blockAfterMaxPooling(matrix: CostMatrix, positions: (RoomPosition | HasPos)[],
+	static blockAfterMaxPooling(matrix: CostMatrix, positions: (RoomPosition | _HasRoomPosition)[],
 								width: number, height: number): CostMatrix {
 		let pos: RoomPosition;
 		let x, y, dx, dy: number;
@@ -619,7 +619,7 @@ export class MatrixLib {
 	 * 0 9 0 0     0 9 5 0     9 9 5 1    |    0 9 0 0     9 9 1 1     9 9 5 1
 	 * 0 0 0 1     0 0 0 1     0 0 1 1    |    0 0 0 1     0 0 1 1     0 0 1 1
 	 */
-	static setToMaxCostAfterMaxPooling(matrix: CostMatrix, positions: (RoomPosition | HasPos)[],
+	static setToMaxCostAfterMaxPooling(matrix: CostMatrix, positions: (RoomPosition | _HasRoomPosition)[],
 									   width: number, height: number, cost: number): CostMatrix {
 		let pos: RoomPosition;
 		let x, y, dx, dy: number;
@@ -655,7 +655,7 @@ export class MatrixLib {
 	 * 0 9 0 0     0 9 5 0     9 9 5 1    |    0 9 0 0     9 9 1 1     9 9 6 1
 	 * 0 0 0 1     0 0 0 1     0 0 1 1    |    0 0 0 1     0 0 1 1     0 0 1 1
 	 */
-	static addCostAfterMaxPooling(matrix: CostMatrix, positions: (RoomPosition | HasPos)[],
+	static addCostAfterMaxPooling(matrix: CostMatrix, positions: (RoomPosition | _HasRoomPosition)[],
 								  width: number, height: number, cost: number): CostMatrix {
 		const addMatrix = new PathFinder.CostMatrix();
 		MatrixLib.setToMaxCostAfterMaxPooling(addMatrix, positions, width, height, cost);
@@ -668,7 +668,7 @@ export class MatrixLib {
 	 * to the existing cost of the tile. If the cost for a square is zero, the terrain cost of the tile is added
 	 * using implicit costs of {plain: 1, swamp: 5}
 	 */
-	static setInRange(matrix: CostMatrix, pos: RoomPosition | HasPos, range: number, cost: number,
+	static setInRange(matrix: CostMatrix, pos: RoomPosition | _HasRoomPosition, range: number, cost: number,
 					  addDefaultTerrainCosts = false): CostMatrix {
 
 		pos = normalizePos(pos);

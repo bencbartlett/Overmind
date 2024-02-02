@@ -3,7 +3,7 @@ import {profile} from '../../profiler/decorator';
 import {Task} from '../Task';
 
 // export type goToTargetType = { pos: RoomPosition } | RoomPosition;
-export type goToTargetType = HasRef & HasPos;  // This is overridden and handled better in the Tasks.goTo() dispatcher
+export type goToTargetType = HasRef & _HasRoomPosition;  // This is overridden and handled better in the Tasks.goTo() dispatcher
 export const goToTaskName = 'goTo';
 
 @profile

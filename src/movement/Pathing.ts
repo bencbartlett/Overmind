@@ -488,7 +488,7 @@ export class Pathing {
 	/**
 	 * Get a kiting path within a room
 	 */
-	static findKitingPath(creepPos: RoomPosition, fleeFrom: (RoomPosition | HasPos)[],
+	static findKitingPath(creepPos: RoomPosition, fleeFrom: (RoomPosition | _HasRoomPosition)[],
 						  opts: PathOptions = {}): PathFinderPath {
 		_.defaults(opts, {
 			fleeRange   : 5,
@@ -511,7 +511,7 @@ export class Pathing {
 	/**
 	 * Get a flee path possibly leaving the room; generally called further in advance of kitingPath
 	 */
-	static findFleePath(creepPos: RoomPosition, fleeFrom: (RoomPosition | HasPos)[],
+	static findFleePath(creepPos: RoomPosition, fleeFrom: (RoomPosition | _HasRoomPosition)[],
 						opts: PathOptions = {}): PathFinderPath {
 		_.defaults(opts, {
 			terrainCosts: {plainCost: 1, swampCost: 5},
@@ -1139,7 +1139,7 @@ export class Pathing {
 	 * Whether another object in the same room can be reached from the current position.
 	 * This method is very expensive and kind of stupid, so use it sparingly!
 	 */
-	static isReachable(startPos: RoomPosition, endPos: RoomPosition, obstacles: (RoomPosition | HasPos)[],
+	static isReachable(startPos: RoomPosition, endPos: RoomPosition, obstacles: (RoomPosition | _HasRoomPosition)[],
 					   options: PathOptions = {}): boolean {
 		_.defaults(options, {
 			blockCreeps: false,
@@ -1182,7 +1182,7 @@ export class Pathing {
 	/**
 	 * Like isReachable(), but returns the first position which should be cleared to find a path to destination
 	 */
-	static findBlockingPos(startPos: RoomPosition, endPos: RoomPosition, obstacles: (RoomPosition | HasPos)[],
+	static findBlockingPos(startPos: RoomPosition, endPos: RoomPosition, obstacles: (RoomPosition | _HasRoomPosition)[],
 						   options: PathOptions = {}): RoomPosition | undefined {
 		_.defaults(options, {
 			blockCreeps: false,

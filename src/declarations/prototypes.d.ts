@@ -74,7 +74,7 @@ interface Room {
 	threatLevel: number;
 	instantaneousThreatLevel: 0 | 0.5 | 1;
 
-	fleeDefaults: HasPos[];
+	fleeDefaults: _HasRoomPosition[];
 
 	structures: Structure[];
 	hostileStructures: Structure[];
