@@ -87,7 +87,7 @@ Object.defineProperty(Room.prototype, 'sources', {
 		if (!this._sources) {
 			this._sources = this.find(FIND_SOURCES);
 		}
-		return this.find(FIND_SOURCES);
+		return this._sources;
 	},
 	configurable: true,
 });
