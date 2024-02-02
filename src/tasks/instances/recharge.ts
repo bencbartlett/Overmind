@@ -28,7 +28,8 @@ export class TaskRecharge extends Task {
 	}
 
 	private rechargeRateForCreep(creep: Zerg, obj: rechargeObjectType): number | false {
-		if (creep.colony && creep.colony.hatchery && creep.colony.hatchery.batteries.length >0 && creep.roleName != 'queen') {
+		if (creep.colony && creep.colony.hatchery && creep.colony.hatchery.batteries.length > 0
+			&& creep.roleName != 'queen') {
 			if (creep.colony.stage == ColonyStage.Larva) {
 				const MINIMUM_BATTERY_THRESHOLD = 1500;
 				if (_.any(creep.colony.hatchery.batteries,
@@ -90,6 +91,7 @@ export class TaskRecharge extends Task {
 			}
 		}
 		if (target) {
+			// log.debug(`target: ${target}`);
 			if (isResource(target)) {
 				creep.task = new TaskPickup(target);
 				return;
