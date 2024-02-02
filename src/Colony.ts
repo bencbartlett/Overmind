@@ -308,34 +308,34 @@ export class Colony {
 		this.refreshHiveClusters();
 	}
 
-	/**
-	 * This is used at low levels to request for resources to be dropped in a common pile before containers
-	 * and storage are built
-	 */
-	private registerEnergyReqeusts(): void {
-		if (this.stage == ColonyStage.Larva) {
-			// If there are no containers, request to drop energy at the location that would be the storagePos
-			// if there are also construction sites present in the hatchery
-			const realStructureSites = _.filter(this.constructionSites,
-												c => c.structureType != STRUCTURE_CONTAINER && c.structureType != STRUCTURE_ROAD);
-			if (realStructureSites.length > 0) {
-				if (this.room.containers.length == 0 && !this.storage) {
-					const dropPos = this.roomPlanner.storagePos;
-					if (dropPos) {
-
-					}
-				}
-			} else {
-				if (!this.upgradeSite.battery) {
-					const dropPos = this.upgradeSite.batteryPos;
-					if (dropPos) {
-
-					}
-				}
-			}
-
-		}
-	}
+	// /**
+	//  * This is used at low levels to request for resources to be dropped in a common pile before containers
+	//  * and storage are built
+	//  */
+	// private registerEnergyReqeusts(): void {
+	// 	if (this.stage == ColonyStage.Larva) {
+	// 		// If there are no containers, request to drop energy at the location that would be the storagePos
+	// 		// if there are also construction sites present in the hatchery
+	// 		const realStructureSites = _.filter(this.constructionSites,
+	// 											c => c.structureType != STRUCTURE_CONTAINER && c.structureType != STRUCTURE_ROAD);
+	// 		if (realStructureSites.length > 0) {
+	// 			if (this.room.containers.length == 0 && !this.storage) {
+	// 				const dropPos = this.roomPlanner.storagePos;
+	// 				if (dropPos) {
+	//
+	// 				}
+	// 			}
+	// 		} else {
+	// 			if (!this.upgradeSite.battery) {
+	// 				const dropPos = this.upgradeSite.batteryPos;
+	// 				if (dropPos) {
+	//
+	// 				}
+	// 			}
+	// 		}
+	//
+	// 	}
+	// }
 
 	/**
 	 * Registers physical game objects to the colony

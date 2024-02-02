@@ -42,6 +42,17 @@ export class TaskRecharge extends Task {
 				}
 			}
 		}
+
+		// Don't allow workers to withdraw from mining containers at lower levels
+		if (creep.colony && creep.colony.stage == ColonyStage.Larva && creep.roleName == 'worker') {
+			const miningSiteContainers = _.compact(_.map(creep.colony.miningSites, site => site.overlords.mine.container));
+			// if this is a mining site container, don't let creeps withdraw from it unless it is sort of full
+			const CONTAINER_THRESHOLD = 1000;
+			if (_.any(miningSiteContainers, (c: StructureContainer) => c.id == obj.id && c.energy < CONTAINER_THRESHOLD)) {
+				return false;
+			}
+		}
+
 		let amount = isResource(obj) ? obj.amount : obj.store[RESOURCE_ENERGY];
 		if (amount < this.data.minEnergy) {
 			return false;

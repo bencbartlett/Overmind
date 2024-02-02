@@ -8,7 +8,15 @@ import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
-import {Overlord} from '../Overlord';
+import {Overlord, OverlordMemory} from '../Overlord';
+
+export interface TransportOverlordMemory extends OverlordMemory {
+	transporterSaturation: number;
+}
+
+const getDefaultTransportOverlordMemory: () => TransportOverlordMemory = () => ({
+	transporterSaturation: .1,
+});
 
 /**
  * The transport overlord handles energy transport throughout a colony
@@ -16,11 +24,12 @@ import {Overlord} from '../Overlord';
 @profile
 export class TransportOverlord extends Overlord {
 
+	memory: TransportOverlordMemory;
+
 	transporters: Zerg[];
-	transporterSaturation: number;
 
 	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.transport) {
-		super(colony, 'logistics', priority);
+		super(colony, 'logistics', priority, getDefaultTransportOverlordMemory);
 		this.transporters = this.zerg(Roles.transport);
 	}
 
@@ -74,7 +83,7 @@ export class TransportOverlord extends Overlord {
 		const neededTransportPower = this.neededTransportPower();
 
 		const currentTransportPower = _.sum(this.transporters, t => t.bodypartCounts[CARRY]);
-		this.transporterSaturation = currentTransportPower / neededTransportPower;
+		this.memory.transporterSaturation = currentTransportPower / neededTransportPower;
 
 		const numTransporters = Math.ceil(1.2 * neededTransportPower / transportPowerEach + 0.1); // div by zero error
 
