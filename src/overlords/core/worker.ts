@@ -163,7 +163,7 @@ export class WorkerOverlord extends Overlord {
 		if (this.colony.stage == ColonyStage.Larva) {
 			numWorkers = $.number(this, 'numWorkers', () => {
 				// At lower levels, try to saturate the energy throughput of the colony
-				const MAX_WORKERS = 15; // Maximum number of workers to spawn
+				const MAX_WORKERS = 30; // Maximum number of workers to spawn
 				const energyMinedPerTick = _.sum(_.map(this.colony.miningSites, function(site) {
 					const overlord = site.overlords.mine;
 					const miningPowerAssigned = _.sum(overlord.miners, miner => miner.getActiveBodyparts(WORK));

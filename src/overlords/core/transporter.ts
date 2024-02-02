@@ -98,7 +98,7 @@ export class TransportOverlord extends Overlord {
 		if (request) {
 			const choices = this.colony.logisticsNetwork.bufferChoices(transporter, request);
 			const bestChoice = _.last(_.sortBy(choices, choice => request.multiplier * choice.dQ
-																  / Math.max(choice.dt, 0.1)));
+																  / Math.max(choice.dt, 0.5)));
 			let task = null;
 			const amount = this.colony.logisticsNetwork.predictedRequestAmount(transporter, request);
 			// Target is requesting input

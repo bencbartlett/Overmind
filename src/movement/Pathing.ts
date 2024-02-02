@@ -1000,7 +1000,7 @@ export class Pathing {
 		for (const position of path) {
 			if (position.roomName == lastPosition.roomName) {
 				new RoomVisual(position.roomName)
-					.line(position, lastPosition, {color: color, lineStyle: 'dashed'});
+					.line(position, lastPosition, {color: color});
 				serializedPath += lastPosition.getDirectionTo(position);
 			}
 			lastPosition = position;
