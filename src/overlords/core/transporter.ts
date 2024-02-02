@@ -17,12 +17,16 @@ import {Overlord} from '../Overlord';
 export class TransportOverlord extends Overlord {
 
 	transporters: Zerg[];
+	transporterSaturation: number;
 
 	constructor(colony: Colony, priority = OverlordPriority.ownedRoom.transport) {
 		super(colony, 'logistics', priority);
 		this.transporters = this.zerg(Roles.transport);
 	}
 
+	/**
+	 * Returns the total number of CARRY bodyparts needed to fully saturate all energy sources in the colony
+	 */
 	private neededTransportPower(): number {
 
 		if (!this.colony.storage
@@ -36,12 +40,12 @@ export class TransportOverlord extends Overlord {
 
 		// Add contributions to transport power from hauling energy from mining sites
 		for (const flagName in this.colony.miningSites) {
-			const o = this.colony.miningSites[flagName].overlords.mine;
-			if (!o.isSuspended && o.miners.length > 0) {
+			const miningOverlord = this.colony.miningSites[flagName].overlords.mine;
+			if (!miningOverlord.isSuspended && miningOverlord.miners.length > 0) {
 				// Only count sites which have a container output and which have at least one miner present
 				// (this helps in difficult "rebooting" situations)
-				if ((o.container && !o.link) || o.allowDropMining) {
-					transportPower += o.energyPerTick * scaling * o.distance;
+				if ((miningOverlord.container && !miningOverlord.link) || miningOverlord.allowDropMining) {
+					transportPower += miningOverlord.energyPerTick * scaling * miningOverlord.distance;
 				}
 			}
 		}
@@ -68,6 +72,9 @@ export class TransportOverlord extends Overlord {
 
 		const transportPowerEach = setup.getBodyPotential(CARRY, this.colony);
 		const neededTransportPower = this.neededTransportPower();
+
+		const currentTransportPower = _.sum(this.transporters, t => t.bodypartCounts[WORK]);
+		this.transporterSaturation = currentTransportPower / neededTransportPower;
 
 		const numTransporters = Math.ceil(1.2 * neededTransportPower / transportPowerEach + 0.1); // div by zero error
 
