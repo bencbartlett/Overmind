@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Fixed
 - Zerg task validation bugfix.
+- Fixed a bug where `Room.sources` wasn't using the cached values which was costing some CPU. (Thanks @zGeneral for pointing this out!)
 
 
 
