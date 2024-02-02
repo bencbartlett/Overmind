@@ -1,6 +1,6 @@
 import {Colony, ColonyStage, getAllColonies} from '../Colony';
 import {log} from '../console/log';
-import {isOwnedStructure} from '../declarations/typeGuards';
+import {isOwnedStructure, isRampart, isStorage, isTerminal, isWall} from '../declarations/typeGuards';
 import {DirectiveTerminalRebuildState} from '../directives/terminalState/terminalState_rebuild';
 import {RoomIntel} from '../intel/RoomIntel';
 import {Energetics} from '../logistics/Energetics';
@@ -580,7 +580,8 @@ export class RoomPlanner {
 		if (getAllColonies().length <= 1 && !this.colony.storage) {
 			return; // Not safe to move structures until you have multiple colonies or a storage
 		}
-		// Start terminal evacuation if it needs to be moved
+
+		// Create a terminal rebuilding directive if terminal needs to be relocated
 		if (this.colony.terminal) {
 			if (this.colony.storage && !this.structureShouldBeHere(STRUCTURE_STORAGE, this.colony.storage.pos)
 				|| !this.structureShouldBeHere(STRUCTURE_TERMINAL, this.colony.terminal.pos)) {
@@ -602,7 +603,7 @@ export class RoomPlanner {
 			this.colony.room.extractor.destroy();
 		}
 
-		// Build missing structures from room plan
+		// Demolish any structures that are misplaced
 		this.memory.relocating = false;
 		for (const priority of DemolishStructurePriorities) {
 			const structureType = priority.structureType;
@@ -619,47 +620,41 @@ export class RoomPlanner {
 			let structures: Structure[] = _.filter(this.colony.room.find(FIND_STRUCTURES),
 												   s => s.structureType == structureType);
 			if (structureType == STRUCTURE_WALL) {
-				structures = _.filter(structures, wall => wall.hits != undefined); // can't destroy newbie walls
+				// Novice zone walls have hits undefined, so filter them out
+				structures = _.filter(structures, wall => wall.hits != undefined);
 			}
 
 			// Loop through all structures and conditionally remove ones which are misplaced
 			for (const structure of structures) {
 
-				if (!this.structureShouldBeHere(structureType, structure.pos) ||
-					(isOwnedStructure(structure) && !structure.my)) {
+				if (!this.structureShouldBeHere(structureType, structure.pos) || (isOwnedStructure(structure) && !structure.my)) {
 
 					// Don't demolish your own ramparts, just let them decay
-					if (skipRamparts && !destroyAllStructureTypes && structure.structureType == STRUCTURE_RAMPART
-						&& (<StructureRampart>structure).my) {
+					if (skipRamparts && !destroyAllStructureTypes && isRampart(structure) && structure.my) {
 						continue;
 					}
 
 					// remove misplaced structures or hostile owned structures, with exceptions below
-					if (this.colony.level < 4
-						&& (structureType == STRUCTURE_STORAGE || structureType == STRUCTURE_TERMINAL)) {
+					if (this.colony.level < 4 && (isStorage(structure) || isTerminal(structure))) {
 						break; // don't destroy terminal or storage when under RCL4 - can use energy inside
 					}
-					if (this.colony.level < 6
-						&& structureType == STRUCTURE_TERMINAL && hasMinerals((<StructureTerminal>structure).store)) {
+					if (this.colony.level < 6 && isTerminal(structure) && hasMinerals(structure.store)) {
 						break; // don't destroy terminal when under RCL6 if there are resources available.
 					}
-					if (structureType != STRUCTURE_WALL && structureType != STRUCTURE_RAMPART) {
+					if (!isWall(structure) && !isRampart(structure)) {
 						this.memory.relocating = true;
 					}
 
 					// Don't remove the terminal until you have rebuilt storage
-					if (this.colony.level >= 6 && structureType == STRUCTURE_TERMINAL) {
+					if (this.colony.level >= 6 && isTerminal(structure)) {
 						if (!this.colony.storage) {
 							log.info(`${this.colony.name}: waiting until storage is built to remove terminal`);
 							return;
-						} else if (this.colony.terminal &&
-								   _.sum(this.colony.terminal.store) - this.colony.terminal.energy > 1000) {
+						} else if (this.colony.terminal && _.sum(this.colony.terminal.store) - this.colony.terminal.energy > 1000) {
 							log.info(`${this.colony.name}: waiting on resources to evacuate before removing terminal`);
 							return;
-						} else if (this.colony.storage &&
-								   this.structureShouldBeHere(STRUCTURE_STORAGE, this.colony.storage.pos) &&
-								   this.colony.storage.energy
-								   < Energetics.settings.storage.energy.destroyTerminalThreshold) {
+						} else if (this.colony.storage && this.structureShouldBeHere(STRUCTURE_STORAGE, this.colony.storage.pos) &&
+								   this.colony.storage.energy < Energetics.settings.storage.energy.destroyTerminalThreshold) {
 							log.info(`${this.colony.name}: waiting to move energy to storage before removing terminal`);
 							return;
 						}
@@ -715,7 +710,7 @@ export class RoomPlanner {
 	 */
 	private buildMissingStructures(): void {
 		// Max buildings that can be placed each tick
-		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
+		let remainingSites = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
 		// Recall the appropriate map
 		this.recallMap();
 		if (!this.map || this.map == {}) { // in case a map hasn't been generated yet
@@ -723,46 +718,34 @@ export class RoomPlanner {
 		}
 		// Build missing structures from room plan
 		for (const structureType of BuildPriorities) {
-			if (this.map[structureType]) {
-				for (const pos of this.map[structureType]) {
-					if ((structureType == STRUCTURE_SPAWN || count > 0) && RoomPlanner.canBuild(structureType, pos)) {
+			if (!this.map[structureType]) continue;
+			for (const pos of this.map[structureType]) {
 
-						// Don't build defensive structures while the room is in safe mode if you are at low RCL
-						if (structureType == STRUCTURE_TOWER || structureType == STRUCTURE_RAMPART || structureType == STRUCTURE_WALL) {
-							if (this.colony.stage == ColonyStage.Larva && (this.colony.controller.safeMode || 0) > 2500) {
-								continue;
-							}
+				if (RoomPlanner.canBuild(structureType, pos) && remainingSites > 0) {
+
+					// Don't build defensive structures while the room is in safe mode if you are at low RCL
+					if (structureType == STRUCTURE_TOWER || structureType == STRUCTURE_RAMPART || structureType == STRUCTURE_WALL) {
+						if (this.colony.stage == ColonyStage.Larva && (this.colony.controller.safeMode || 0) > 2500) {
+							continue;
 						}
+					}
 
-						// Otherwise create the construction site
-						const result = pos.createConstructionSite(structureType);
-						if (result == OK) {
-							count--;
+					// Otherwise create the construction site
+					const result = pos.createConstructionSite(structureType);
+					if (result == OK) {
+						remainingSites--;
+						this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
+					}
+
+					// If we've run into a problem then we might need to remove something
+					else {
+						log.warning(`${this.colony.print}: couldn't create site of type "${structureType}" at ${pos.print}. Result: ${result}`);
+						const destroyResult = this.destroyStructurePreventingBuildingAtPos(pos);
+						if (destroyResult == OK) {
+							log.info(`${this.colony.print}: destroyed ${structureType} at ${pos.print}`);
 							this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
-						}
-
-						// If we've run into a problem then we might need to remove something
-						else {
-							const structures = pos.lookFor(LOOK_STRUCTURES);
-							for (const structure of structures) {
-								const safeTypes: string[] = [STRUCTURE_STORAGE, STRUCTURE_TERMINAL, STRUCTURE_SPAWN];
-								// Destroy the structure if it is less important and not protected
-								if (!this.structureShouldBeHere(structure.structureType, pos)
-									&& !safeTypes.includes(structure.structureType)) {
-									const result = 'destroy() disabled' as any; // structure.destroy();
-									if (result == OK) {
-										log.info(`${this.colony.name}: destroyed ${structure.structureType} at` +
-												 ` ${structure.pos.print}`);
-										this.memory.recheckStructuresAt = Game.time +
-																		  RoomPlanner.settings.recheckAfter;
-									} else {
-										log.warning(`${this.colony.name}: couldn't destroy ${structure.structureType}` +
-													` at ${structure.pos.print}! Result: ${result}`);
-									}
-								}
-							}
-							log.warning(`${this.colony.name}: couldn't create construction site of type ` +
-										`"${structureType}" at ${pos.print}. Result: ${result}`);
+						} else {
+							log.warning(`${this.colony.print}: couldn't destroy ${structureType} at ${pos.print}! Result: ${destroyResult}`);
 						}
 					}
 				}
@@ -777,6 +760,24 @@ export class RoomPlanner {
 				mineral.pos.createConstructionSite(STRUCTURE_EXTRACTOR);
 			}
 		}
+	}
+
+	private destroyStructurePreventingBuildingAtPos(pos: RoomPosition): number | string {
+		const structures = pos.lookFor(LOOK_STRUCTURES);
+		for (const structure of structures) {
+			const safeTypes: string[] = [STRUCTURE_STORAGE, STRUCTURE_TERMINAL, STRUCTURE_SPAWN];
+			// Destroy the structure if it is less important and not protected
+			if (!this.structureShouldBeHere(structure.structureType, pos)) {
+				if (safeTypes.includes(structure.structureType)) {
+					// TODO
+					return `${structure.structureType} is safe type!`;
+				} else {
+					return 'destroy() disabled'; // structure.destroy();
+				}
+			}
+		}
+		log.error(`destroyStructurePreventingBuildingAtPos shouldn't be called here`);
+		return `destroyStructurePreventingBuildingAtPos shouldn't be called here`;
 	}
 
 	/**

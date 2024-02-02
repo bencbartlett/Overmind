@@ -450,6 +450,7 @@ export class LogisticsNetwork {
 				// @ts-ignore
 				predictedAmount = minMax(predictedAmount, 0, request.target.store.getCapacity(request.resourceType));
 			}
+			// TODO: this is incorrect; should incorporate request amount
 			const resourceInflux = _.sum(_.map(otherTargetingTransporters,
 											   other => (other.carry[<ResourceConstant>request.resourceType] || 0)));
 			predictedAmount = Math.max(predictedAmount - resourceInflux, 0);

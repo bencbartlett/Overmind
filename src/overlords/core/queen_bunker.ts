@@ -64,20 +64,19 @@ export class BunkerQueenOverlord extends Overlord {
 										  ...this.batteries,
 										  ...this.links]);
 		this.quadrants = {
-			lowerRight: $.structures(this, 'LR',
-									 () => computeQuadrant(this.colony, quadrantFillOrder.lowerRight)),
-			upperLeft : $.structures(this, 'UL',
-									 () => computeQuadrant(this.colony, quadrantFillOrder.upperLeft)),
-			lowerLeft : $.structures(this, 'LL',
-									 () => computeQuadrant(this.colony, quadrantFillOrder.lowerLeft)),
-			upperRight: $.structures(this, 'UR',
-									 () => computeQuadrant(this.colony, quadrantFillOrder.upperRight)),
+			lowerRight: $.structures(this, 'LR', () => computeQuadrant(this.colony, quadrantFillOrder.lowerRight)),
+			upperLeft : $.structures(this, 'UL', () => computeQuadrant(this.colony, quadrantFillOrder.upperLeft)),
+			lowerLeft : $.structures(this, 'LL', () => computeQuadrant(this.colony, quadrantFillOrder.lowerLeft)),
+			upperRight: $.structures(this, 'UR', () => computeQuadrant(this.colony, quadrantFillOrder.upperRight)),
 		};
 		this.computeQueenAssignments();
 	}
 
+	/**
+	 * Computes "quadrants" of locally grouped structures (the arms on the Overmind spiral)
+	 * and assigns them to the attending queens.
+	 */
 	private computeQueenAssignments() {
-		// Assign quadrants to queens
 		this.assignments = _.zipObject(_.map(this.queens, queen => [queen.name, {}]));
 		const activeQueens = _.filter(this.queens, queen => !queen.spawning);
 		this.numActiveQueens = activeQueens.length;
@@ -118,7 +117,9 @@ export class BunkerQueenOverlord extends Overlord {
 
 	// Builds a series of tasks to empty unnecessary carry contents, withdraw required resources, and supply structures
 	private buildSupplyTaskManifest(queen: Zerg): Task | null {
+
 		let tasks: Task[] = [];
+
 		// Step 1: empty all contents (this shouldn't be necessary since queen is normally empty at this point)
 		let queenPos = queen.pos;
 		if (_.sum(queen.carry) > 0) {
@@ -131,10 +132,10 @@ export class BunkerQueenOverlord extends Overlord {
 				return null;
 			}
 		}
+
 		// Step 2: figure out what you need to supply for and calculate the needed resources
 		const queenCarry = {} as { [resourceType: string]: number };
 		const allStore = mergeSum(_.map(this.storeStructures, s => s.store));
-
 		const supplyRequests: TransportRequest[] = [];
 		for (const priority in this.colony.transportRequests.supply) {
 			for (const request of this.colony.transportRequests.supply[priority]) {
@@ -160,6 +161,7 @@ export class BunkerQueenOverlord extends Overlord {
 			// add a task to supply the target
 			supplyTasks.push(Tasks.transfer(request.target, request.resourceType, amount));
 		}
+
 		// Step 3: make withdraw tasks to get the needed resources
 		const withdrawTasks: Task[] = [];
 		const neededResources = _.keys(queenCarry) as ResourceConstant[];
@@ -199,18 +201,20 @@ export class BunkerQueenOverlord extends Overlord {
 				}
 			}
 		}
-
 		if (!withdrawTarget && withdrawTasks.length == 0) {
 			log.warning(`Could not find adequate withdraw structure for ${queen.print}! (neededResources: 
 			${neededResources}, queenCarry: ${JSON.stringify(queenCarry)})`);
 			return null;
 		}
+
 		// Step 4: put all the tasks in the correct order, set nextPos for each, and chain them together
 		tasks = tasks.concat(withdrawTasks, supplyTasks);
 		return Tasks.chain(tasks);
 	}
 
-	// Builds a series of tasks to withdraw required resources from targets
+	/**
+	 * Builds a series of tasks to withdraw required resources from targets
+	 */
 	private buildWithdrawTaskManifest(queen: Zerg): Task | null {
 		const tasks: Task[] = [];
 		const transferTarget = this.colony.terminal || this.colony.storage || this.batteries[0];
