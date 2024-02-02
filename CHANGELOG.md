@@ -3,6 +3,21 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+### Added
+- 
+
+### Changed
+- Spun up Overmind for the first time in almost 4 years. Had to make a lot of modernization changes to the codebase to get it to run. Good luck merging these into your forks!
+- 
+
+### Fixed
+
+
+
+## Overmind [0.6.0] - 2020.12.9
+
+This was the last release before I took a 3 year break from Screeps after I started [World War 3](https://web.archive.org/web/20210730202852/https://screepsworld.com/2019/03/the-unseen-war-purifiers-ncps-and-open-source-development/) because I tried to network all existing Overminds, which I talk about in [this blog post](https://bencbartlett.com/blog/screeps-6-verifiably-refreshed/). It sat quietly in a dev branch for this whole time. Now it's 2024 and I have a month of being funemployed so I'm finally pushing all these changes to the main branch!
+
 (!) NOTE: This release of Overmind now requires Node 10+ and Rollup 2+ to deploy. You will need to check `node --version` to verify that you have at least 10.0, then you need to run `npm install` to update Rollup and several other key deployment packages.
 
 ### Added
