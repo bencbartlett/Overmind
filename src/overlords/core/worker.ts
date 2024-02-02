@@ -175,7 +175,7 @@ export class WorkerOverlord extends Overlord {
 				const energySpentPerTickPerWorkPart = _.filter(this.colony.constructionSites,
 															   s => s.structureType != STRUCTURE_ROAD).length > 0 ? BUILD_POWER : 1;
 				const energyPerTickPerWorker = workPartsPerWorker * energySpentPerTickPerWorkPart;
-				const workerUptime = 0.75;
+				const workerUptime = 1.0;
 
 				const numWorkers = Math.ceil((energyMinedPerTick * transporterSaturation) /
 											 (energyPerTickPerWorker * workerUptime)
