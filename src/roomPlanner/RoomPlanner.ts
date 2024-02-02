@@ -1,6 +1,6 @@
 import {Colony, ColonyStage, getAllColonies} from '../Colony';
 import {log} from '../console/log';
-import {isOwnedStructure, isRampart, isStorage, isTerminal, isWall} from '../declarations/typeGuards';
+import {isOwnedStructure, isRampart, isSpawn, isStorage, isTerminal, isWall} from '../declarations/typeGuards';
 import {DirectiveTerminalRebuildState} from '../directives/terminalState/terminalState_rebuild';
 import {RoomIntel} from '../intel/RoomIntel';
 import {Energetics} from '../logistics/Energetics';
@@ -50,6 +50,7 @@ export interface RoomPlan {
 
 export interface RoomPlannerMemory {
 	active: boolean;
+	misplacedStructures?: boolean;
 	relocating?: boolean;
 	recheckStructuresAt?: number;
 	bunkerData?: {
@@ -605,6 +606,7 @@ export class RoomPlanner {
 
 		// Demolish any structures that are misplaced
 		this.memory.relocating = false;
+		this.memory.misplacedStructures = false;
 		for (const priority of DemolishStructurePriorities) {
 			const structureType = priority.structureType;
 
@@ -635,6 +637,8 @@ export class RoomPlanner {
 					}
 
 					// remove misplaced structures or hostile owned structures, with exceptions below
+					this.memory.misplacedStructures = true;
+
 					if (this.colony.level < 4 && (isStorage(structure) || isTerminal(structure))) {
 						break; // don't destroy terminal or storage when under RCL4 - can use energy inside
 					}
@@ -664,11 +668,10 @@ export class RoomPlanner {
 					const amountMissing = CONTROLLER_STRUCTURES[structureType][this.colony.level] - structures.length
 										  + removeCount;
 					if (amountMissing < maxRemoved) {
-						if (structureType == STRUCTURE_SPAWN && this.colony.spawns.length == 1) {
+						if (isSpawn(structure) && this.colony.spawns.length == 1) {
 							const spawnCost = 15000;
 							if (this.colony.assets[RESOURCE_ENERGY] < spawnCost) {
-								log.warning(`${this.colony.print}: Unsafe to destroy misplaced spawn: ` +
-											`${this.colony.assets[RESOURCE_ENERGY]}/${spawnCost} energy available`);
+								log.warning(`${this.colony.print}: Unsafe to destroy misplaced spawn: ${this.colony.assets[RESOURCE_ENERGY]}/${spawnCost} energy available`);
 								if (!destroyAllStructureTypes) {
 									return;
 								}
@@ -867,6 +870,9 @@ export class RoomPlanner {
 	init(): void {
 		if (this.active) {
 			Overmind.overseer.notifier.alert(`Room planner active!`, this.colony.room.name);
+		}
+		if (this.memory.misplacedStructures) {
+			Overmind.overseer.notifier.alert(`Misplaced structures!`, this.colony.room.name);
 		}
 		if (this.active && getAutonomyLevel() == Autonomy.Automatic && !this.memory.bunkerData) {
 			let bunkerAnchor: RoomPosition;
