@@ -1,5 +1,5 @@
-# Changelog
-All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+# Overmind Patch Notes
+Changelog format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
@@ -18,7 +18,7 @@ All notable changes to this project will be documented in this file. The format 
     - Upgrade site energy requests now account for dQ/dt at low RCL.
 
 ### Fixed
-- Zerg task validation bugfix.
+- `Zerg.task` validation bugfix.
 - Fixed a bug where `Room.sources` wasn't using the cached values which was costing some CPU. (Thanks @zGeneral for pointing this out!)
 
 
@@ -41,18 +41,18 @@ This was the last release before I took a 3 year break from Screeps after I star
 - Added a remote upgrading directive and overlord: will spawn haulers and upgraders to quickly upgrade a far-away room and integrates with the new portal code. Carriers will also haul valuable resources from un-owned store structures on their return trip to the parent colony.
 - Refactored the Zerg class to extend AnyZerg and added a PowerZerg class which also extends AnyZerg. A number of methods throughout the codebase (especially on Movement) have been changed to take AnyZerg as an argument.
 - Lots of new methods on RoomIntel:
-    - RoomIntel.retrieveRoomObjectData retrieves and de-compresses the stored data on room layouts, including saved owned structures, portals, sources, minerals, SKlairs, and controller info
-    - RoomIntel.getRoomStatus provides a cached version of Game.map.getRoomStatus
-    - RoomIntel.findPortalsInRange searches for open portals within a certain range of any colony
-    - RoomIntel.getMyZoneStatus returns the type of zone that you are currently spawned in. I will use this method to implement novice zone restrictions in the near future
+    - `RoomIntel.retrieveRoomObjectData` retrieves and de-compresses the stored data on room layouts, including saved owned structures, portals, sources, minerals, SKlairs, and controller info
+    - `RoomIntel.getRoomStatus` provides a cached version of Game.map.getRoomStatus
+    - `RoomIntel.findPortalsInRange` searches for open portals within a certain range of any colony
+    - `RoomIntel.getMyZoneStatus` returns the type of zone that you are currently spawned in. I will use this method to implement novice zone restrictions in the near future
     - Methods for working with stored room memory data in human-readable format:
-        - RoomIntel.getExpansionData
-        - RoomIntel.setExpansionData
-        - RoomIntel.getPortalInfo
-        - RoomIntel.getSourceInfo
-        - RoomIntel.getControllerInfo
-        - RoomIntel.getImportantStructureInfo
-        - RoomIntel.getAllRoomObjectInfo
+        - `RoomIntel.getExpansionData`
+        - `RoomIntel.setExpansionData`
+        - `RoomIntel.getPortalInfo`
+        - `RoomIntel.getSourceInfo`
+        - `RoomIntel.getControllerInfo`
+        - `RoomIntel.getImportantStructureInfo`
+        - `RoomIntel.getAllRoomObjectInfo`
 - Merged and modified pull request #156 from @zGeneral, which adds "room poisoner" functionality to wall off sources and controllers in unused rooms
 - Added portal capabilities and automatic portal pathing to the `Pathing` module!
 - Added and plugged in new `CombatCreepSetup` class which creates more flexible creep bodies based on the desired boost types. If lower tier move boosts are the best available, the body ratios are adjusted accordingly to maintain a target move speed.
@@ -124,7 +124,7 @@ This was the last release before I took a 3 year break from Screeps after I star
     - Towers will not repair nuked ramparts unless they calculate that fortifications will not finish in time
     - Workers now prioritize fortifying ramparts covering important structures first
 - Market improvements:
-    - New console method: `cancelmMarketOrders(filter?)`: cancels all market orders matching filter (if provided)
+    - New console method: `cancelMarketOrders(filter?)`: cancels all market orders matching filter (if provided)
     - Will now place and maintain buy orders for energy if average colony energy is too low and player has sufficient credits
     - Reduced terminal equilibrium energy from 100k to 50k
 
