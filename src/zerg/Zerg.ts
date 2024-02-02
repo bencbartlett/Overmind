@@ -607,14 +607,14 @@ export class Zerg extends AnyZerg {
 	 * Creeps are idle if they don't have a valid task.
 	 */
 	get isIdle(): boolean {
-		return !(this.task && this.task.isValid);
+		return !this.task || !this.task.isValid();
 	}
 
 	private debugger(): void {
 		if (this.task && this.task.targetPos) {
 			const color = stringToColorHash(this.name);
 			Visualizer.circle(this.task.targetPos, color, {radius: 0.45});
-			Visualizer.circle(this.pos, color, {radius: 0.45});
+			// Visualizer.circle(this.pos, color, {radius: 0.45});
 			Movement.visualizeMemorizedPath(this, color);
 		}
 	}
@@ -623,11 +623,11 @@ export class Zerg extends AnyZerg {
 	 * Execute the task you currently have.
 	 */
 	run(): number | undefined {
-		if (this.task) {
-			return this.task.run();
-		}
 		if (this.memory.debug) {
 			this.debugger();
+		}
+		if (this.task) {
+			return this.task.run();
 		}
 	}
 
