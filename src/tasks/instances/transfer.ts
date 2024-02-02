@@ -9,9 +9,8 @@ export type transferTargetType =
 export const transferTaskName = 'transfer';
 
 @profile
-export class TaskTransfer extends Task {
+export class TaskTransfer extends Task<transferTargetType> {
 
-	target: transferTargetType;
 	data: {
 		resourceType: ResourceConstant
 		amount: number | undefined
@@ -22,6 +21,7 @@ export class TaskTransfer extends Task {
 		super(transferTaskName, target, options);
 		// Settings
 		this.settings.oneShot = true;
+		this.settings.blind = true;
 		this.data.resourceType = resourceType;
 		this.data.amount = amount;
 	}
@@ -34,8 +34,12 @@ export class TaskTransfer extends Task {
 
 	isValidTarget() {
 		const amount = this.data.amount || 1;
-		// @ts-ignore
-		return this.target.store.getFreeCapacity(this.data.resourceType) >= amount;
+		// TODO: if you don't have vision of the creep (transferring to other creep?)
+		return !!this.target && this.target.store.getFreeCapacity(this.data.resourceType) >= amount;
+
+
+		// LEGACY:
+
 		// const target = this.target;
 		// if (target instanceof Creep) {
 		// 	return _.sum(target.carry) <= target.carryCapacity - amount;
@@ -59,6 +63,7 @@ export class TaskTransfer extends Task {
 	}
 
 	work() {
+		if (!this.target) return ERR_INVALID_TARGET;
 		return this.creep.transfer(this.target, this.data.resourceType, this.data.amount);
 	}
 }

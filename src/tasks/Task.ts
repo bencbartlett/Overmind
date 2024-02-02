@@ -26,12 +26,12 @@ type targetType = { ref: string, pos: ProtoPos }; // overwrite this variable to 
  * to continue.
  */
 @profile
-export abstract class Task {
+export abstract class Task<TargetType extends targetType> {
 
 	static taskName: string;
 
 	name: string;				// Name of the task type, e.g. 'upgrade'
-	_creep: { 					// Data for the creep the task is assigned to"
+	_creep: { 					// Data for the creep the task is assigned to
 		name: string;				// Name of the creep
 	};
 	_target: { 					// Data for the target the task is directed to:
@@ -129,8 +129,8 @@ export abstract class Task {
 	/**
 	 * Dereferences the Task's target
 	 */
-	get target(): RoomObject | null {
-		return deref(this._target.ref);
+	get target(): TargetType | null {
+		return deref(this._target.ref) as TargetType | null;
 	}
 
 	/**
@@ -150,14 +150,14 @@ export abstract class Task {
 	/**
 	 * Get the Task's parent
 	 */
-	get parent(): Task | null {
+	get parent(): Task<any> | null {
 		return (this._parent ? initializeTask(this._parent) : null);
 	}
 
 	/**
 	 * Set the Task's parent
 	 */
-	set parent(parentTask: Task | null) {
+	set parent(parentTask: Task<any> | null) {
 		this._parent = parentTask ? parentTask.proto : null;
 		// If the task is already assigned to a creep, update their memory
 		if (this.creep) {
@@ -168,8 +168,8 @@ export abstract class Task {
 	/**
 	 * Return a list of [this, this.parent, this.parent.parent, ...] as tasks
 	 */
-	get manifest(): Task[] {
-		const manifest: Task[] = [this];
+	get manifest(): Task<any>[] {
+		const manifest: Task<any>[] = [this];
 		let parent = this.parent;
 		while (parent) {
 			manifest.push(parent);
@@ -207,7 +207,7 @@ export abstract class Task {
 	/**
 	 * Fork the task, assigning a new task to the creep with this task as its parent
 	 */
-	fork(newTask: Task): Task {
+	fork(newTask: Task<any>): Task<any> {
 		newTask.parent = this;
 		if (this.creep) {
 			this.creep.task = newTask;

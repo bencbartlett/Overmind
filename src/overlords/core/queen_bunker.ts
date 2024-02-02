@@ -116,9 +116,9 @@ export class BunkerQueenOverlord extends Overlord {
 	}
 
 	// Builds a series of tasks to empty unnecessary carry contents, withdraw required resources, and supply structures
-	private buildSupplyTaskManifest(queen: Zerg): Task | null {
+	private buildSupplyTaskManifest(queen: Zerg): Task<any> | null {
 
-		let tasks: Task[] = [];
+		let tasks: Task<any>[] = [];
 
 		// Step 1: empty all contents (this shouldn't be necessary since queen is normally empty at this point)
 		let queenPos = queen.pos;
@@ -144,7 +144,7 @@ export class BunkerQueenOverlord extends Overlord {
 				}
 			}
 		}
-		const supplyTasks: Task[] = [];
+		const supplyTasks: Task<any>[] = [];
 		for (const request of supplyRequests) {
 			// stop when carry will be full
 			const remainingAmount = queen.carryCapacity - _.sum(queenCarry);
@@ -163,7 +163,7 @@ export class BunkerQueenOverlord extends Overlord {
 		}
 
 		// Step 3: make withdraw tasks to get the needed resources
-		const withdrawTasks: Task[] = [];
+		const withdrawTasks: Task<any>[] = [];
 		const neededResources = _.keys(queenCarry) as ResourceConstant[];
 		const targets: AnyStoreStructure[] = _.filter(this.storeStructures, s =>
 			_.all(neededResources, resource => (s.store[resource] || 0) >= (queenCarry[resource] || 0)));
@@ -215,8 +215,8 @@ export class BunkerQueenOverlord extends Overlord {
 	/**
 	 * Builds a series of tasks to withdraw required resources from targets
 	 */
-	private buildWithdrawTaskManifest(queen: Zerg): Task | null {
-		const tasks: Task[] = [];
+	private buildWithdrawTaskManifest(queen: Zerg): Task<any> | null {
+		const tasks: Task<any>[] = [];
 		const transferTarget = this.colony.terminal || this.colony.storage || this.batteries[0];
 		// Step 1: empty all contents (this shouldn't be necessary since queen is normally empty at this point)
 		if (_.sum(queen.carry) > 0) {

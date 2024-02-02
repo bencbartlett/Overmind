@@ -9,20 +9,20 @@ import {TaskHarvest} from './harvest';
 import {pickupTaskName, TaskPickup} from './pickup';
 import {TaskWithdraw, withdrawTaskName} from './withdraw';
 
-export type rechargeTargetType = null;
+export type rechargeTargetType = HasRef & HasPos;  // This is handled better in the Tasks.recharge() dispatcher
+// export type rechargeTargetType = null;
 export const rechargeTaskName = 'recharge';
 
 // This is a "dispenser task" which is not itself a valid task, but dispenses a task when assigned to a creep.
 
 @profile
-export class TaskRecharge extends Task {
-	target: rechargeTargetType;
+export class TaskRecharge extends Task<rechargeTargetType> {
 
 	data: {
 		minEnergy: number;
 	};
 
-	constructor(target: rechargeTargetType, minEnergy = 0, options = {} as TaskOptions) {
+	constructor(minEnergy = 0, options = {} as TaskOptions) {
 		super(rechargeTaskName, {ref: '', pos: {x: -1, y: -1, roomName: ''}}, options);
 		this.data.minEnergy = minEnergy;
 	}
@@ -60,12 +60,10 @@ export class TaskRecharge extends Task {
 
 		// TODO: generalize this into a getPredictedStore function which includes all targeting creeps
 		const otherTargeters = _.filter(_.map(obj.targetedBy, name => Overmind.zerg[name]),
-										zerg => !!zerg && zerg.memory._task
-												&& (zerg.memory._task.name == withdrawTaskName
-													|| zerg.memory._task.name == pickupTaskName));
+										zerg => !!zerg && zerg.task
+												&& (zerg.task.name == withdrawTaskName || zerg.task.name == pickupTaskName));
 
-		const resourceOutflux = _.sum(_.map(otherTargeters,
-											other => other.carryCapacity - _.sum(other.carry)));
+		const resourceOutflux = _.sum(_.map(otherTargeters, other => other.store.getFreeCapacity()));
 		amount = minMax(amount - resourceOutflux, 0, creep.carryCapacity);
 		const effectiveAmount = amount / (creep.pos.getMultiRoomRangeTo(obj.pos) + 1);
 		if (effectiveAmount <= 0) {

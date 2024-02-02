@@ -5,8 +5,7 @@ export type claimTargetType = StructureController;
 export const claimTaskName = 'claim';
 
 @profile
-export class TaskClaim extends Task {
-	target: claimTargetType;
+export class TaskClaim extends Task<claimTargetType> {
 
 	constructor(target: claimTargetType, options = {} as TaskOptions) {
 		super(claimTaskName, target, options);
@@ -22,6 +21,9 @@ export class TaskClaim extends Task {
 	}
 
 	work() {
+		if (!this.target) {
+			return ERR_INVALID_TARGET;
+		}
 		return this.creep.claimController(this.target);
 	}
 }

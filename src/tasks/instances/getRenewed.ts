@@ -5,8 +5,7 @@ export type getRenewedTargetType = StructureSpawn;
 export const getRenewedTaskName = 'getRenewed';
 
 @profile
-export class TaskGetRenewed extends Task {
-	target: getRenewedTargetType;
+export class TaskGetRenewed extends Task<getRenewedTargetType> {
 
 	constructor(target: getRenewedTargetType, options = {} as TaskOptions) {
 		super(getRenewedTaskName, target, options);
@@ -19,10 +18,11 @@ export class TaskGetRenewed extends Task {
 	}
 
 	isValidTarget() {
-		return this.target.my && !this.target.spawning;
+		return !!this.target && this.target.my && !this.target.spawning;
 	}
 
 	work() {
+		if (!this.target) return ERR_INVALID_TARGET;
 		return this.target.renewCreep(this.creep.creep);
 	}
 }

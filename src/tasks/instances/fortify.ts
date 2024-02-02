@@ -6,8 +6,7 @@ export type fortifyTargetType = StructureWall | StructureRampart;
 export const fortifyTaskName = 'fortify';
 
 @profile
-export class TaskFortify extends Task {
-	target: fortifyTargetType;
+export class TaskFortify extends Task<fortifyTargetType> {
 	data: {
 		hitsMax: number | undefined;
 	};
@@ -26,10 +25,11 @@ export class TaskFortify extends Task {
 	}
 
 	isValidTarget() {
-		return this.target && this.target.hits < (this.data.hitsMax || this.target.hitsMax);
+		return !!this.target && this.target.hits < (this.data.hitsMax || this.target.hitsMax);
 	}
 
 	work() {
+		if (!this.target) return ERR_INVALID_TARGET;
 		return this.creep.repair(this.target);
 	}
 }

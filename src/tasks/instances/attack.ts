@@ -13,8 +13,7 @@ export type attackTargetType = Creep | Structure;
 export const attackTaskName = 'attack';
 
 @profile
-export class TaskAttack extends Task {
-	target: attackTargetType;
+export class TaskAttack extends Task<attackTargetType> {
 
 	constructor(target: attackTargetType, options = {} as TaskOptions) {
 		super(attackTaskName, target, options);
@@ -27,12 +26,15 @@ export class TaskAttack extends Task {
 	}
 
 	isValidTarget(): boolean {
-		return this.target && this.target.hits > 0;
+		return !!this.target && this.target.hits > 0;
 	}
 
 	work() {
 		const creep = this.creep;
 		const target = this.target;
+		if (!target) {
+			return ERR_INVALID_TARGET;
+		}
 		let attackReturn = 0;
 		let rangedAttackReturn = 0;
 		if (creep.getActiveBodyparts(ATTACK) > 0) {

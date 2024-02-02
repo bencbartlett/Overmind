@@ -610,7 +610,7 @@ export class OvermindConsole {
 		}
 		// Suicide any creeps which have no memory
 		for (const i in Game.creeps) {
-			if (<any>Game.creeps[i].memory == {}) {
+			if (_.isEmpty(Game.creeps[i].memory)) {
 				Game.creeps[i].suicide();
 			}
 		}

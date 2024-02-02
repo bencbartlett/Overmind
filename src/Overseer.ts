@@ -89,7 +89,7 @@ export class Overseer implements IOverseer {
 		if (USE_TRY_CATCH) {
 			try {
 				callback();
-			} catch (e) {
+			} catch (e: any) {
 				if (identifier) {
 					e.name = `Caught unhandled exception at ${'' + callback} (identifier: ${identifier}): \n`
 							 + e.name + '\n' + e.stack;

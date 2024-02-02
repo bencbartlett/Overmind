@@ -6,8 +6,7 @@ export type harvestTargetType = Source | Mineral;
 export const harvestTaskName = 'harvest';
 
 @profile
-export class TaskHarvest extends Task {
-	target: harvestTargetType;
+export class TaskHarvest extends Task<harvestTargetType> {
 
 	constructor(target: harvestTargetType, options = {} as TaskOptions) {
 		super(harvestTaskName, target, options);
@@ -18,6 +17,7 @@ export class TaskHarvest extends Task {
 	}
 
 	isValidTarget() {
+		if (!this.target) return false;
 		if (isSource(this.target)) {
 			return this.target.energy > 0;
 		} else {
@@ -26,6 +26,7 @@ export class TaskHarvest extends Task {
 	}
 
 	work() {
+		if (!this.target) return ERR_INVALID_TARGET;
 		return this.creep.harvest(this.target);
 	}
 }

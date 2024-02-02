@@ -33,7 +33,7 @@ import {Task} from './Task';
 /**
  * The task initializer maps serialized prototasks to Task instances
  */
-export function initializeTask(protoTask: ProtoTask): Task {
+export function initializeTask(protoTask: ProtoTask): Task<any> {
 	// Retrieve name and target data from the ProtoTask
 	const taskName = protoTask.name;
 	const target = deref(protoTask._target.ref);
@@ -53,7 +53,7 @@ export function initializeTask(protoTask: ProtoTask): Task {
 			task = new TaskDismantle(target as dismantleTargetType);
 			break;
 		case dropTaskName:
-			task = new TaskDrop(derefRoomPosition(protoTask._target._pos) as dropTargetType);
+			task = new TaskDrop({ref: '', pos: derefRoomPosition(protoTask._target._pos)});
 			break;
 		// case fleeTaskName:
 		// 	task = new TaskFlee(derefRoomPosition(ProtoTask._target._pos) as fleeTargetType);
@@ -73,7 +73,7 @@ export function initializeTask(protoTask: ProtoTask): Task {
 			task = new TaskInvalid();
 			break;
 		case goToRoomTaskName:
-			task = new TaskGoToRoom(protoTask._target._pos.roomName as goToRoomTargetType);
+			task = new TaskGoToRoom({ref: '', pos: derefRoomPosition(protoTask._target._pos)});
 			break;
 		case harvestTaskName:
 			task = new TaskHarvest(target as harvestTargetType);
@@ -91,7 +91,7 @@ export function initializeTask(protoTask: ProtoTask): Task {
 			task = new TaskRangedAttack(target as rangedAttackTargetType);
 			break;
 		case rechargeTaskName:
-			task = new TaskRecharge(null);
+			task = new TaskRecharge();
 			break;
 		case repairTaskName:
 			task = new TaskRepair(target as repairTargetType);

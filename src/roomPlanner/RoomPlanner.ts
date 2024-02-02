@@ -595,7 +595,7 @@ export class RoomPlanner {
 
 		// Recall the appropriate map
 		this.recallMap();
-		if (!this.map || this.map == {}) { // in case a map hasn't been generated yet
+		if (!this.map || _.isEmpty(this.map)) { // in case a map hasn't been generated yet
 			log.info(this.colony.name + ' does not have a room plan yet! Unable to demolish errant structures.');
 		}
 
@@ -716,7 +716,7 @@ export class RoomPlanner {
 		let remainingSites = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
 		// Recall the appropriate map
 		this.recallMap();
-		if (!this.map || this.map == {}) { // in case a map hasn't been generated yet
+		if (!this.map || _.isEmpty(this.map)) { // in case a map hasn't been generated yet
 			log.info(this.colony.name + ' does not have a room plan yet! Unable to build missing structures.');
 		}
 		// Build missing structures from room plan

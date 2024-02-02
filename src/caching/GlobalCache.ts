@@ -100,7 +100,7 @@ export class $ { // $ = cash = cache... get it? :D
 	static set<T extends HasRef, K extends keyof T>(thing: T, key: K,
 													callback: () => (T[K] & (undefined | HasID | HasID[])),
 													timeout = CACHE_TIMEOUT): void {
-		const cacheKey = thing.ref + '$' + key;
+		const cacheKey = thing.ref + '$' + <string>key;
 		if (!_cache.things[cacheKey] || Game.time > _cache.expiration[cacheKey]) {
 			// Recache if new entry or entry is expired
 			_cache.things[cacheKey] = callback();
@@ -138,9 +138,11 @@ export class $ { // $ = cash = cache... get it? :D
 			if (_.isObject(thing[key])) {
 				for (const prop in thing[key]) {
 					if (_.isArray(thing[key][prop])) {
+						// @ts-ignore
 						thing[key][prop] = _.compact(_.map(thing[key][prop] as HasID[],
 														   s => Game.getObjectById(s.id))) as HasID[];
 					} else {
+						// @ts-ignore
 						thing[key][prop] = Game.getObjectById((<HasID>thing[key][prop]).id) as undefined | HasID;
 					}
 				}

@@ -6,8 +6,7 @@ export const upgradeTaskName = 'upgrade';
 
 
 @profile
-export class TaskUpgrade extends Task {
-	target: upgradeTargetType;
+export class TaskUpgrade extends Task<upgradeTargetType> {
 
 	constructor(target: upgradeTargetType, options = {} as TaskOptions) {
 		super(upgradeTaskName, target, options);
@@ -21,10 +20,11 @@ export class TaskUpgrade extends Task {
 	}
 
 	isValidTarget() {
-		return this.target && !!this.target.my;
+		return !!this.target && !!this.target.my;
 	}
 
 	work() {
+		if (!this.target) return ERR_INVALID_TARGET;
 		return this.creep.upgradeController(this.target);
 	}
 }

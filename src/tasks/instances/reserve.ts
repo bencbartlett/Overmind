@@ -6,8 +6,7 @@ export type reserveTargetType = StructureController;
 export const reserveTaskName = 'colony';
 
 @profile
-export class TaskReserve extends Task {
-	target: reserveTargetType;
+export class TaskReserve extends Task<reserveTargetType> {
 
 	constructor(target: reserveTargetType, options = {} as TaskOptions) {
 		super(reserveTaskName, target, options);
@@ -19,10 +18,11 @@ export class TaskReserve extends Task {
 
 	isValidTarget() {
 		const target = this.target;
-		return (target != null && (!target.reservation || target.reservation.ticksToEnd < 4999));
+		return !!target && (!target.reservation || target.reservation.ticksToEnd < 4999);
 	}
 
 	work() {
+		if (!this.target) return ERR_INVALID_TARGET;
 		let ret = this.creep.reserveController(this.target);
 		if (ret == ERR_INVALID_TARGET) {
 			ret = this.creep.attackController(this.target);

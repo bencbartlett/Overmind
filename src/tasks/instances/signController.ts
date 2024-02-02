@@ -5,8 +5,7 @@ export type signControllerTargetType = StructureController;
 export const signControllerTaskName = 'signController';
 
 @profile
-export class TaskSignController extends Task {
-	target: signControllerTargetType;
+export class TaskSignController extends Task<signControllerTargetType> {
 
 	constructor(target: signControllerTargetType, options = {} as TaskOptions) {
 		super(signControllerTaskName, target, options);
@@ -18,10 +17,13 @@ export class TaskSignController extends Task {
 
 	isValidTarget() {
 		const controller = this.target;
-		return (!controller.sign || controller.sign.text != Memory.settings.signature) && !controller.signedByScreeps;
+		return !!controller &&
+			   (!controller.sign || controller.sign.text != Memory.settings.signature) &&
+			   !controller.signedByScreeps;
 	}
 
 	work() {
+		if (!this.target) return ERR_INVALID_TARGET;
 		return this.creep.signController(this.target, Memory.settings.signature);
 	}
 }

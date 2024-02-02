@@ -9,9 +9,7 @@ export const getBoostedTaskName = 'getBoosted';
 export const MIN_LIFETIME_FOR_BOOST = 0.85;
 
 @profile
-export class TaskGetBoosted extends Task {
-
-	target: getBoostedTargetType;
+export class TaskGetBoosted extends Task<getBoostedTargetType> {
 
 	data: {
 		resourceType: ResourceConstant;
@@ -44,9 +42,11 @@ export class TaskGetBoosted extends Task {
 
 	isValidTarget() {
 		const partCount = (this.data.amount || this.creep.getActiveBodyparts(BOOST_PARTS[this.data.resourceType]));
-		return this.target && this.target.mineralType == this.data.resourceType &&
-			   this.target.mineralAmount >= LAB_BOOST_MINERAL * partCount &&
-			   this.target.energy >= LAB_BOOST_ENERGY * partCount;
+		const lab = this.target;
+		return !!lab &&
+			   lab.mineralType == this.data.resourceType &&
+			   lab.store[lab.mineralType] >= LAB_BOOST_MINERAL * partCount &&
+			   lab.store.energy >= LAB_BOOST_ENERGY * partCount;
 	}
 
 	work() {
@@ -58,9 +58,13 @@ export class TaskGetBoosted extends Task {
 		// 	Game.notify(`Bad boosting of move on creep ${this.creep}, exiting work.`);
 		// 	return ERR_INVALID_TARGET;
 		// }
-		if (this.target.mineralType == this.data.resourceType &&
-			this.target.mineralAmount >= LAB_BOOST_MINERAL * partCount &&
-			this.target.energy >= LAB_BOOST_ENERGY * partCount) {
+
+		const lab = this.target;
+		if (!lab) return ERR_INVALID_TARGET;
+
+		if (lab.mineralType == this.data.resourceType &&
+			lab.store[lab.mineralType] >= LAB_BOOST_MINERAL * partCount &&
+			lab.store.energy >= LAB_BOOST_ENERGY * partCount) {
 			const result = this.target.boostCreep(deref(this._creep.name) as Creep, this.data.amount);
 			log.info(`Lab@${this.target.pos.print}: boosting creep ${this.creep.print} with ${this.target.mineralType}!`
 					 + ` Response: ${result}`);

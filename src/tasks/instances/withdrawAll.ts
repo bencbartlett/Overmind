@@ -2,18 +2,19 @@
 
 import {profile} from '../../profiler/decorator';
 import {Task} from '../Task';
+import {withdrawTargetType} from './withdraw';
 
 export type withdrawAllTargetType = AnyStoreStructure;
 
 export const withdrawAllTaskName = 'withdrawAll';
 
 @profile
-export class TaskWithdrawAll extends Task {
+export class TaskWithdrawAll extends Task<withdrawTargetType> {
 
-	target: withdrawAllTargetType;
 
 	constructor(target: withdrawAllTargetType, options = {} as TaskOptions) {
 		super(withdrawAllTaskName, target, options);
+		this.settings.blind = true;
 	}
 
 	isValidTask() {
@@ -21,10 +22,11 @@ export class TaskWithdrawAll extends Task {
 	}
 
 	isValidTarget() {
-		return _.sum(this.target.store) > 0;
+		return !!this.target && _.sum(this.target.store) > 0;
 	}
 
 	work() {
+		if (!this.target) return ERR_INVALID_TARGET;
 		let resourceTransferType;
 		for (const [resourceType, amountInStore] of this.target.store.contents) {
 			if (amountInStore > 0) {

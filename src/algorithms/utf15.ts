@@ -168,7 +168,7 @@ function encode_array(res: string, values: number[]) {
 }
 
 function decode_array(str: string, meta: Codec) {
-	assert(!this.meta || meta.depth > 0 || (meta.depth === 0 && Array.isArray(this.depth)),
+	assert(!this.meta || <number>meta.depth > 0 || (meta.depth === 0 && Array.isArray(this.depth)),
 		   TypeCodecError, 'Array decoding error (check inputs and codec config)');
 
 	meta.depth = meta.depth || this.depth;
@@ -251,7 +251,7 @@ export class Codec {
 
 		if (this.array) {
 			// Effectively packs array of numbers
-			res = encode_array.call(this, res, arg);
+			res = encode_array.call(this, res, <number[]>arg);
 		} else {
 			// Packs single value, inline
 			let x = +arg % POWERS_OF_2[<number>this.depth];
@@ -287,7 +287,7 @@ export class Codec {
 
 		if (this.array) { // output is array of integers
 			const res = decode_array.call(this, str, meta);
-			!!length_out && (length_out.length = length + res[1]);
+			!!length_out && (length_out.length = length + <number>res[1]);
 			return res[0];
 		}
 
@@ -348,6 +348,7 @@ export function testEncoder() {
 	start = Game.cpu.getUsed();
 	const idsUnpacked = [];
 	for (let k = 0, biglen = idsPacked.length; k < biglen; ++k) {
+		// @ts-ignore
 		idsUnpacked.push(idCodec.decode(idsPacked[k]).reduce((acc: string, x: number) => (acc + x.toString(16)), ''));
 	}
 	elapsed = Game.cpu.getUsed() - start;
@@ -434,6 +435,7 @@ export function testEncoder() {
 	start = Game.cpu.getUsed();
 	const posUnpacked = [];
 	for (let k = 0, biglen = posPacked.length; k < biglen; ++k) {
+		// @ts-ignore
 		posUnpacked.push(getRoomPos(posCodec.decode(posPacked[k])));
 	}
 	elapsed = Game.cpu.getUsed() - start;

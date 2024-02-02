@@ -81,7 +81,7 @@ export class Zerg extends AnyZerg {
 	blockMovement: boolean; 			// Whether the zerg is allowed to move or not
 
 	// Cached properties
-	private _task: Task | null;
+	private _task: Task<any> | null;
 	private _neededBoosts: { [boostResource: string]: number } | undefined;
 
 	constructor(creep: Creep, notifyWhenAttacked = true) {
@@ -564,7 +564,7 @@ export class Zerg extends AnyZerg {
 	/**
 	 * Wrapper for _task
 	 */
-	get task(): Task | null {
+	get task(): Task<any> | null {
 		if (!this._task) {
 			this._task = this.memory.task ? initializeTask(this.memory.task) : null;
 		}
@@ -574,7 +574,7 @@ export class Zerg extends AnyZerg {
 	/**
 	 * Assign the creep a task with the setter, replacing creep.assign(Task)
 	 */
-	set task(task: Task | null) {
+	set task(task: Task<any> | null) {
 		// Unregister target from old task if applicable
 		const oldProtoTask = this.memory.task;
 		if (oldProtoTask) {

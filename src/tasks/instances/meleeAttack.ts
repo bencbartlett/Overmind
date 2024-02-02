@@ -5,8 +5,7 @@ export type meleeAttackTargetType = Creep | Structure;
 export const meleeAttackTaskName = 'meleeAttack';
 
 @profile
-export class TaskMeleeAttack extends Task {
-	target: meleeAttackTargetType;
+export class TaskMeleeAttack extends Task<meleeAttackTargetType> {
 
 	constructor(target: meleeAttackTargetType, options = {} as TaskOptions) {
 		super(meleeAttackTaskName, target, options);
@@ -19,11 +18,11 @@ export class TaskMeleeAttack extends Task {
 	}
 
 	isValidTarget() {
-		const target = this.target;
-		return target && target.hits > 0; // && target.my == false);
+		return !!this.target && this.target.hits > 0; // && target.my == false);
 	}
 
 	work() {
+		if (!this.target) return ERR_INVALID_TARGET;
 		return this.creep.attack(this.target);
 	}
 }

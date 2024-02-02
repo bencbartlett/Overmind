@@ -273,7 +273,9 @@ export class Movement {
 		// delete path cache if destination is different
 		if (!destination.isEqualTo(state.destination)) {
 			if (opts.movingTarget && state.destination.isNearTo(destination)) {
-				moveData.path += state.destination.getDirectionTo(destination);
+				if (moveData.path) {
+					moveData.path += state.destination.getDirectionTo(destination);
+				}
 				state.destination = destination;
 			} else {
 				delete moveData.path;
@@ -760,7 +762,7 @@ export class Movement {
 		});
 		if (pos) {
 			const direction = creep.pos.getDirectionTo(pos);
-			creep.debug(`moving off exit toward ${pos.print}, direction ${direction}`)
+			creep.debug(`moving off exit toward ${pos.print}, direction ${direction}`);
 			return creep.move(direction);
 		} else {
 			log.warning(`${creep.print}: cannot move off exit!`);

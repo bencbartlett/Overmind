@@ -2,16 +2,18 @@ import {profile} from '../../profiler/decorator';
 import {Task} from '../Task';
 
 
-export type goToRoomTargetType = string;
+// export type goToRoomTargetType = string;
+export type goToRoomTargetType = HasRef & HasPos;  // This is handled better in the Tasks.goToRoom() dispatcher
+
 export const goToRoomTaskName = 'goToRoom';
 
 @profile
-export class TaskGoToRoom extends Task {
+export class TaskGoToRoom extends Task<goToRoomTargetType> {
 
-	target: null;
+	constructor(hasPosObj: goToRoomTargetType, options = {} as TaskOptions) {
+		super(goToRoomTaskName, {ref: '', pos: hasPosObj.pos}, options);
+		// super(goToRoomTaskName, {ref: '', pos: new RoomPosition(25, 25, roomName)}, options);
 
-	constructor(roomName: goToRoomTargetType, options = {} as TaskOptions) {
-		super(goToRoomTaskName, {ref: '', pos: new RoomPosition(25, 25, roomName)}, options);
 		// Settings
 		this.settings.targetRange = 23; // Target is almost always controller flag, so range of 2 is acceptable
 	}

@@ -5,8 +5,7 @@ export type repairTargetType = Structure;
 export const repairTaskName = 'repair';
 
 @profile
-export class TaskRepair extends Task {
-	target: repairTargetType;
+export class TaskRepair extends Task<repairTargetType> {
 
 	constructor(target: repairTargetType, options = {} as TaskOptions) {
 		super(repairTaskName, target, options);
@@ -20,10 +19,11 @@ export class TaskRepair extends Task {
 	}
 
 	isValidTarget() {
-		return this.target && this.target.hits < this.target.hitsMax;
+		return !!this.target && this.target.hits < this.target.hitsMax;
 	}
 
 	work() {
+		if (!this.target) return ERR_INVALID_TARGET;
 		const result = this.creep.repair(this.target);
 		if (this.target.structureType == STRUCTURE_ROAD) {
 			// prevents workers from idling for a tick before moving to next target

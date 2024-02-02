@@ -5,8 +5,7 @@ export type buildTargetType = ConstructionSite;
 export const buildTaskName = 'build';
 
 @profile
-export class TaskBuild extends Task {
-	target: buildTargetType;
+export class TaskBuild extends Task<buildTargetType> {
 
 	constructor(target: buildTargetType, options = {} as TaskOptions) {
 		super(buildTaskName, target, options);
@@ -20,10 +19,13 @@ export class TaskBuild extends Task {
 	}
 
 	isValidTarget() {
-		return this.target && this.target.my && this.target.progress < this.target.progressTotal;
+		return !!this.target && this.target.my && this.target.progress < this.target.progressTotal;
 	}
 
 	work() {
+		if (!this.target) {
+			return ERR_INVALID_TARGET;
+		}
 		// Fixes issue #9 - workers freeze if creep sitting on square
 		if (!this.target.isWalkable) {
 			const creepOnTarget = this.target.pos.lookFor(LOOK_CREEPS)[0];

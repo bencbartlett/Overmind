@@ -9,9 +9,8 @@ export type withdrawTargetType = AnyStoreStructure
 export const withdrawTaskName = 'withdraw';
 
 @profile
-export class TaskWithdraw extends Task {
+export class TaskWithdraw extends Task<withdrawTargetType> {
 
-	target: withdrawTargetType;
 	data: {
 		resourceType: ResourceConstant,
 		amount: number | undefined,
@@ -22,6 +21,7 @@ export class TaskWithdraw extends Task {
 		super(withdrawTaskName, target, options);
 		// Settings
 		this.settings.oneShot = true;
+		this.settings.blind = true;
 		this.data.resourceType = resourceType;
 		this.data.amount = amount;
 	}
@@ -33,8 +33,8 @@ export class TaskWithdraw extends Task {
 
 	isValidTarget() {
 		const amount = this.data.amount || 1;
-		// @ts-ignore
-		return this.target.store.getUsedCapacity(this.data.resourceType) >= amount;
+		return !!this.target && this.target.store.getUsedCapacity(this.data.resourceType) >= amount;
+
 		// const target = this.target;
 		// if (isTombstone(target) || isRuin(target) || isStoreStructure(target)) {
 		// 	return (target.store[this.data.resourceType] || 0) >= amount;
@@ -51,6 +51,7 @@ export class TaskWithdraw extends Task {
 	}
 
 	work() {
+		if (!this.target) return ERR_INVALID_TARGET;
 		return this.creep.withdraw(this.target, this.data.resourceType, this.data.amount);
 	}
 

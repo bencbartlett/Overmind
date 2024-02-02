@@ -1,3 +1,4 @@
+import {hasPos} from '../declarations/typeGuards';
 import {profile} from '../profiler/decorator';
 import {attackTargetType, TaskAttack} from './instances/attack';
 import {buildTargetType, TaskBuild} from './instances/build';
@@ -9,6 +10,7 @@ import {fortifyTargetType, TaskFortify} from './instances/fortify';
 import {generateSafeModeTargetType, TaskGenerateSafeMode} from './instances/generateSafeMode';
 import {getBoostedTargetType, TaskGetBoosted} from './instances/getBoosted';
 import {getRenewedTargetType, TaskGetRenewed} from './instances/getRenewed';
+import {goToTaskName} from './instances/goTo';
 import {goToRoomTargetType, TaskGoToRoom} from './instances/goToRoom';
 import {harvestTargetType, TaskHarvest} from './instances/harvest';
 import {healTargetType, TaskHeal} from './instances/heal';
@@ -32,7 +34,7 @@ import {Task} from './Task';
 @profile
 export class Tasks {
 
-	static chain(tasks: Task[], setNextPos = true): Task | null {
+	static chain(tasks: Task<any>[], setNextPos = true): Task<any> | null {
 		if (tasks.length == 0) {
 			// log.error(`Tasks.chain was passed an empty array of tasks!`);
 			return null;
@@ -93,8 +95,17 @@ export class Tasks {
 		return new TaskGetRenewed(target, options);
 	}
 
-	static goToRoom(target: goToRoomTargetType, options = {} as TaskOptions): TaskGoToRoom {
-		return new TaskGoToRoom(target, options);
+	// static goTo(target: RoomPosition | HasPos, options = {} as TaskOptions): TaskGoToRoom {
+	// 	if (hasPos(target)) {
+	// 		return new TaskGoToRoom({ref: '', pos: target.pos}, options);
+	// 	} else {
+	// 		return new TaskGoToRoom({ref: '', pos: target}, options);
+	// 	}
+	// }
+
+	static goToRoom(roomName: string, options = {} as TaskOptions): TaskGoToRoom {
+		const fakeTargetPos = {ref: '', pos: new RoomPosition(25, 25, roomName)};
+		return new TaskGoToRoom(fakeTargetPos, options);
 	}
 
 	static harvest(target: harvestTargetType, options = {} as TaskOptions): TaskHarvest {
@@ -118,7 +129,7 @@ export class Tasks {
 	}
 
 	static recharge(minEnergy = 0, options = {} as TaskOptions): TaskRecharge {
-		return new TaskRecharge(null, minEnergy, options);
+		return new TaskRecharge(minEnergy, options);
 	}
 
 	static repair(target: repairTargetType, options = {} as TaskOptions): TaskRepair {
