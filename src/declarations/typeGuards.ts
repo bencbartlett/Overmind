@@ -34,6 +34,70 @@ export function isOwnedStructure(structure: Structure): structure is OwnedStruct
 	return (<OwnedStructure>structure).owner != undefined;
 }
 
+export function isExtension(structure: Structure): structure is StructureExtension {
+	return structure.structureType == STRUCTURE_EXTENSION;
+}
+
+export function isRampart(structure: Structure): structure is StructureRampart {
+	return structure.structureType == STRUCTURE_RAMPART;
+}
+
+export function isRoad(structure: Structure): structure is StructureRoad {
+	return structure.structureType == STRUCTURE_ROAD;
+}
+
+export function isSpawn(structure: Structure): structure is StructureSpawn {
+	return structure.structureType == STRUCTURE_SPAWN;
+}
+
+export function isLink(structure: Structure): structure is StructureLink {
+	return structure.structureType == STRUCTURE_LINK;
+}
+
+export function isWall(structure: Structure): structure is StructureWall {
+	return structure.structureType == STRUCTURE_WALL;
+}
+
+export function isStorage(structure: Structure): structure is StructureStorage {
+	return structure.structureType == STRUCTURE_STORAGE;
+}
+
+export function isTower(structure: Structure): structure is StructureTower {
+	return structure.structureType == STRUCTURE_TOWER;
+}
+
+export function isObserver(structure: Structure): structure is StructureObserver {
+	return structure.structureType == STRUCTURE_OBSERVER;
+}
+
+export function isPowerSpawn(structure: Structure): structure is StructurePowerSpawn {
+	return structure.structureType == STRUCTURE_POWER_SPAWN;
+}
+
+export function isExtractor(structure: Structure): structure is StructureExtractor {
+	return structure.structureType == STRUCTURE_EXTRACTOR;
+}
+
+export function isLab(structure: Structure): structure is StructureLab {
+	return structure.structureType == STRUCTURE_LAB;
+}
+
+export function isTerminal(structure: Structure): structure is StructureTerminal {
+	return structure.structureType == STRUCTURE_TERMINAL;
+}
+
+export function isContainer(structure: Structure): structure is StructureContainer {
+	return structure.structureType == STRUCTURE_CONTAINER;
+}
+
+export function isNuker(structure: Structure): structure is StructureNuker {
+	return structure.structureType == STRUCTURE_NUKER;
+}
+
+export function isFactory(structure: Structure): structure is StructureFactory {
+	return structure.structureType == STRUCTURE_FACTORY;
+}
+
 export function isSource(obj: Source | Mineral): obj is Source {
 	return (<Source>obj).energy != undefined;
 }
