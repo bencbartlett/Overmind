@@ -73,7 +73,7 @@ export class TransportOverlord extends Overlord {
 		const transportPowerEach = setup.getBodyPotential(CARRY, this.colony);
 		const neededTransportPower = this.neededTransportPower();
 
-		const currentTransportPower = _.sum(this.transporters, t => t.bodypartCounts[WORK]);
+		const currentTransportPower = _.sum(this.transporters, t => t.bodypartCounts[CARRY]);
 		this.transporterSaturation = currentTransportPower / neededTransportPower;
 
 		const numTransporters = Math.ceil(1.2 * neededTransportPower / transportPowerEach + 0.1); // div by zero error
