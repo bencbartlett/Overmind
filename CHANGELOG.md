@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file. The format 
     - Upgrade site energy requests now account for dQ/dt at low RCL.
 
 ### Fixed
+- Zerg task validation bugfix.
 
 
 
