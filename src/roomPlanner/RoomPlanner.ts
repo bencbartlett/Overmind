@@ -1,4 +1,4 @@
-import {Colony, getAllColonies} from '../Colony';
+import {Colony, ColonyStage, getAllColonies} from '../Colony';
 import {log} from '../console/log';
 import {isOwnedStructure} from '../declarations/typeGuards';
 import {DirectiveTerminalRebuildState} from '../directives/terminalState/terminalState_rebuild';
@@ -726,13 +726,25 @@ export class RoomPlanner {
 			if (this.map[structureType]) {
 				for (const pos of this.map[structureType]) {
 					if ((structureType == STRUCTURE_SPAWN || count > 0) && RoomPlanner.canBuild(structureType, pos)) {
+
+						// Don't build defensive structures while the room is in safe mode if you are at low RCL
+						if (structureType == STRUCTURE_TOWER || structureType == STRUCTURE_RAMPART || structureType == STRUCTURE_WALL) {
+							if (this.colony.stage == ColonyStage.Larva && (this.colony.controller.safeMode || 0) > 2500) {
+								continue;
+							}
+						}
+
+						// Otherwise create the construction site
 						const result = pos.createConstructionSite(structureType);
-						if (result != OK) {
+						if (result == OK) {
+							count--;
+							this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
+						}
+
+						// If we've run into a problem then we might need to remove something
+						else {
 							const structures = pos.lookFor(LOOK_STRUCTURES);
 							for (const structure of structures) {
-								// let thisImportance = _.findIndex(BuildPriorities, type => type == structureType);
-								// let existingImportance = _.findIndex(BuildPriorities,
-								// 									 type => type == structure.structureType);
 								const safeTypes: string[] = [STRUCTURE_STORAGE, STRUCTURE_TERMINAL, STRUCTURE_SPAWN];
 								// Destroy the structure if it is less important and not protected
 								if (!this.structureShouldBeHere(structure.structureType, pos)
@@ -751,14 +763,12 @@ export class RoomPlanner {
 							}
 							log.warning(`${this.colony.name}: couldn't create construction site of type ` +
 										`"${structureType}" at ${pos.print}. Result: ${result}`);
-						} else {
-							count--;
-							this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
 						}
 					}
 				}
 			}
 		}
+
 		// Build extractor on mineral deposit if not already present
 		const mineral = this.colony.room.find(FIND_MINERALS)[0];
 		if (mineral) {
