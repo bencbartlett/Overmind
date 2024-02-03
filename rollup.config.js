@@ -5,14 +5,17 @@ import commonjs from '@rollup/plugin-commonjs';
 import progress from "rollup-plugin-progress";
 import typescript from "rollup-plugin-typescript2";
 import screeps from "rollup-plugin-screeps";
+import { readFileSync } from 'fs';
 
 let cfg;
 const dest = process.env.DEST;
 if (!dest) {
     console.log('\x1b[46m%s\x1b[0m \x1b[36m%s\x1b[0m', 'Compiling Overmind...', '(deploy destination: none)');
-} else if ((cfg = require("./screeps")[dest]) == null) {
-    throw new Error("Invalid upload destination");
 } else {
+    cfg = JSON.parse(readFileSync("./screeps.json"))[dest];
+    if (!cfg) {
+        throw new Error("Invalid upload destination");
+    }
     console.log('\x1b[46m%s\x1b[0m \x1b[36m%s\x1b[0m', 'Compiling Overmind...', `(deploy destination: ${dest})`);
     console.log(`Pushing at time: ${new Date()})`);
 }
@@ -28,13 +31,7 @@ export default {
     plugins: [
         progress({clearLine: true}),
         resolve(),
-        commonjs({
-                     namedExports: {
-                         'src/Overmind_obfuscated': ['_Overmind'],
-                         'screeps-profiler': ['profiler'],
-                         'columnify': ['columnify']
-                     }
-                 }),
+        commonjs(),
         typescript({tsconfig: "./tsconfig.json"}),
         screeps({config: cfg, dryRun: cfg == null})
     ],
