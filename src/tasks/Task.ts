@@ -81,6 +81,26 @@ export abstract class Task<TargetType extends targetType> {
 	}
 
 	/**
+	 * Task pretty printing
+	 */
+	get print(): string {
+		let descriptor: string = this.name;
+		if (this.targetPos) {
+			descriptor += ' targetPos: ' + this.targetPos.print;
+		}
+		if (this.target) {
+			const targetId = (<any>this.target).id;
+			if (targetId && Game.getObjectById(targetId)) {
+				descriptor += ' target: ' + Game.getObjectById(targetId)!.toString();
+			}
+		}
+		if (this.parent) {
+			descriptor += ' parent:\n' + ' ' + this.parent.print;
+		}
+		return '<a href="#!/room/' + Game.shard.name + '/' + this.creep.pos.roomName + '">[' + descriptor + ']</a>';
+	}
+
+	/**
 	 * Get a serialized ProtoTask from the current task
 	 */
 	get proto(): ProtoTask {
