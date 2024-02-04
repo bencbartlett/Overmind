@@ -340,6 +340,9 @@ export class RoadPlanner {
 		roadPositions = _.sortBy(roadPositions, pos => pos.getMultiRoomRangeTo(origin));
 		let needsRoad = false;
 		for (const pos of roadPositions) {
+			if (!pos.room) {
+				continue; // can't check if there is a road here if you can't see the room
+			}
 			const road = pos.lookForStructure(STRUCTURE_ROAD);
 			if (!road) {
 				needsRoad = true;
