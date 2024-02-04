@@ -1,5 +1,6 @@
 import {Colony} from '../../Colony';
 import {Roles, Setups} from '../../creepSetups/setups';
+import {RoomIntel} from '../../intel/RoomIntel';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
@@ -40,7 +41,7 @@ export class RandomWalkerScoutOverlord extends Overlord {
 			// Pick a new room
 			const neighboringRooms = _.values(Game.map.describeExits(scout.pos.roomName)) as string[];
 			const roomName = _.sample(neighboringRooms);
-			if (Game.map.isRoomAvailable(roomName)) {
+			if (RoomIntel.isRoomAccessible(roomName)) {
 				scout.task = Tasks.goToRoom(roomName);
 			}
 		}

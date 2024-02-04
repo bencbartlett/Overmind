@@ -835,6 +835,14 @@ export class RoomIntel {
 	}
 
 	/**
+	 * Mimics the functionality of Game.map.isRoomAvailable(), but returns false if the room is in a different
+	 * type of zone than you are in, such as if you are in a novice zone and the room is outside of it.
+	 */
+	static isRoomAccessible(roomName: string): boolean {
+		return RoomIntel.getRoomStatus(roomName).status == RoomIntel.getMyZoneStatus();
+	}
+
+	/**
 	 * Returns the type of zone that your empire is in
 	 */
 	static getMyZoneStatus(): 'normal' | 'novice' | 'respawn' {

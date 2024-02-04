@@ -2,6 +2,7 @@ import {assimilationLocked} from '../assimilation/decorator';
 import {Colony, getAllColonies} from '../Colony';
 import {log} from '../console/log';
 import {DirectiveColonize} from '../directives/colony/colonize';
+import {RoomIntel} from '../intel/RoomIntel';
 import {Autonomy, getAutonomyLevel, Mem} from '../memory/Memory';
 import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
@@ -123,7 +124,7 @@ export class ExpansionPlanner implements IExpansionPlanner {
 					}
 				}
 				// Update best choices
-				if (score > bestScore && Game.map.isRoomAvailable(roomName)) {
+				if (score > bestScore && RoomIntel.isRoomAccessible(roomName)) {
 					bestScore = score;
 					bestRoom = roomName;
 				}
