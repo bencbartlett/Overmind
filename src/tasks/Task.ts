@@ -97,7 +97,12 @@ export abstract class Task<TargetType extends targetType> {
 		if (this.parent) {
 			descriptor += ' parent:\n' + ' ' + this.parent.print;
 		}
-		return '<a href="#!/room/' + Game.shard.name + '/' + this.creep.pos.roomName + '">[' + descriptor + ']</a>';
+		// return '<a href="#!/room/' + Game.shard.name + '/' + this.creep.pos.roomName + '">[' + descriptor + ']</a>';
+		return descriptor;
+	}
+
+	toString(): string {
+		return this.print;
 	}
 
 	/**
