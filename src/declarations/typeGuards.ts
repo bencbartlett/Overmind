@@ -8,24 +8,6 @@ import {NeuralZerg} from '../zerg/NeuralZerg';
 import {PowerZerg} from '../zerg/PowerZerg';
 import {Zerg} from '../zerg/Zerg';
 
-// export interface EnergyStructure extends Structure {
-// 	energy: number;
-// 	energyCapacity: number;
-// }
-
-// export interface StoreStructure extends Structure {
-// 	store: StoreDefinition;
-// 	storeCapacity: number;
-// }
-
-// export function isEnergyStructure(obj: RoomObject): obj is EnergyStructure {
-// 	return (<EnergyStructure>obj).energy != undefined && (<EnergyStructure>obj).energyCapacity != undefined;
-// }
-//
-// export function isStoreStructure(obj: RoomObject): obj is StoreStructure {
-// 	return (<StoreStructure>obj).store != undefined && (<StoreStructure>obj).storeCapacity != undefined;
-// }
-
 export function isStructure(obj: RoomObject): obj is Structure {
 	return (<Structure>obj).structureType != undefined;
 }
@@ -98,7 +80,7 @@ export function isFactory(structure: Structure): structure is StructureFactory {
 	return structure.structureType == STRUCTURE_FACTORY;
 }
 
-export function isSource(obj: Source | Mineral): obj is Source {
+export function isSource(obj: RoomObject): obj is Source {
 	return (<Source>obj).energy != undefined;
 }
 
@@ -112,6 +94,19 @@ export function isRuin(obj: RoomObject | HasPos): obj is Ruin {
 
 export function isResource(obj: RoomObject | HasPos): obj is Resource {
 	return (<Resource>obj).amount != undefined;
+}
+
+export function isConstructionSite(obj: RoomObject): obj is ConstructionSite {
+	const site = (<ConstructionSite>obj);
+	return site.progress !== undefined && site.structureType !== undefined;
+}
+
+export function isMineral(obj: RoomObject): obj is Mineral {
+	return (<Mineral>obj).mineralType !== undefined;
+}
+
+export function isDeposit(obj: RoomObject): obj is Deposit {
+	return (<Deposit>obj).depositType !== undefined;
 }
 
 export function hasPos(obj: HasPos | RoomPosition): obj is HasPos {
