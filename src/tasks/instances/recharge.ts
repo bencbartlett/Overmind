@@ -9,7 +9,7 @@ import {TaskHarvest} from './harvest';
 import {pickupTaskName, TaskPickup} from './pickup';
 import {TaskWithdraw, withdrawTaskName} from './withdraw';
 
-export type rechargeTargetType = HasRef & HasPos;  // This is handled better in the Tasks.recharge() dispatcher
+export type rechargeTargetType = HasRef & _HasRoomPosition;  // This is handled better in the Tasks.recharge() dispatcher
 // export type rechargeTargetType = null;
 export const rechargeTaskName = 'recharge';
 

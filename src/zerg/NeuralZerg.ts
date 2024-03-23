@@ -41,7 +41,7 @@ export class NeuralZerg extends CombatZerg {
 		return Movement.combatMove(this, [], avoid);
 	}
 
-	maneuver(approachTargs: HasPos[], avoidTargs: HasPos[]) {
+	maneuver(approachTargs: _HasRoomPosition[], avoidTargs: _HasRoomPosition[]) {
 		const approach = _.map(approachTargs, targ => ({pos: targ.pos, range: APPROACH_RANGE}));
 		const avoid = _.map(avoidTargs, targ => ({pos: targ.pos, range: AVOID_RANGE}));
 		return Movement.combatMove(this, approach, avoid);

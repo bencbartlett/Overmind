@@ -1,7 +1,7 @@
 import {profile} from '../../profiler/decorator';
 import {Task} from '../Task';
 
-export type dropTargetType = HasRef & HasPos; // Currently these are only used with directives
+export type dropTargetType = HasRef & _HasRoomPosition; // Currently these are only used with directives
 export const dropTaskName = 'drop';
 
 @profile

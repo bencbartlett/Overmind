@@ -3,7 +3,7 @@ import {Task} from '../Task';
 
 
 // export type goToRoomTargetType = string;
-export type goToRoomTargetType = HasRef & HasPos;  // This is handled better in the Tasks.goToRoom() dispatcher
+export type goToRoomTargetType = HasRef & _HasRoomPosition;  // This is handled better in the Tasks.goToRoom() dispatcher
 
 export const goToRoomTaskName = 'goToRoom';
 
