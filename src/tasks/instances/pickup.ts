@@ -13,7 +13,7 @@ export class TaskPickup extends Task<pickupTargetType> {
 	}
 
 	isValidTask() {
-		return _.sum(this.creep.carry) < this.creep.carryCapacity;
+		return this.creep.store.getUsedCapacity() < this.creep.store.getCapacity();
 	}
 
 	isValidTarget() {

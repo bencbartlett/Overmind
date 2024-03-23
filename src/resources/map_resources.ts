@@ -354,4 +354,4 @@ export const DEPOSITS_ALL: ResourceConstant[] = [
 	RESOURCE_MIST,
 ];
 
-export const ALL_ZERO_ASSETS: { [resource: string]: number } = _.zipObject(RESOURCES_ALL, _.map(RESOURCES_ALL, i => 0));
+export const ALL_ZERO_ASSETS: StoreContents = _.zipObject(RESOURCES_ALL, _.map(RESOURCES_ALL, i => 0));

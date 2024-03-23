@@ -32,8 +32,8 @@ export class Energetics {
 
 	static lowPowerMode(colony: Colony): boolean {
 		if (colony.stage == ColonyStage.Adult) {
-			if (_.sum(colony.storage!.store) > this.settings.storage.total.cap &&
-				colony.terminal && _.sum(colony.terminal.store) > this.settings.terminal.total.cap) {
+			if (colony.storage!.store.getUsedCapacity() > this.settings.storage.total.cap &&
+				colony.terminal && colony.terminal.store.getUsedCapacity() > this.settings.terminal.total.cap) {
 				return true;
 			}
 		}

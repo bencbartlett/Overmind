@@ -485,7 +485,7 @@ export class EvolutionChamber extends HiveCluster {
 			}
 
 			const amountNeeded = this.neededBoosts[boost] + amountUnavailable;
-			if (amountNeeded > this.colony.assets[boost]) {
+			if (amountNeeded > this.colony.assets[<ResourceConstant>boost]) {
 				this.debug(`Requesting boost from terminal network: ${this.neededBoosts[boost]} ${boost}`);
 				this.terminalNetwork.requestResource(this.colony, <ResourceConstant>boost, amountNeeded);
 			} else {

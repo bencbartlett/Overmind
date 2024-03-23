@@ -302,7 +302,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	private passiveRequestors: { [resourceType: string]: Colony[] };
 	private activeRequestors: { [resourceType: string]: Colony[] };
 
-	private assets: { [resourceType: string]: number };
+	private assets: StoreContents;
 	private notifications: string[];
 
 	private memory: TerminalNetworkMemory;
@@ -342,7 +342,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		this.passiveRequestors = {}; // _.clone(EMPTY_COLONY_TIER);
 		this.activeRequestors = {}; // _.clone(EMPTY_COLONY_TIER);
 
-		this.assets = {}; // populated when getAssets() is called in init()
+		this.assets = <StoreContents>{}; // populated when getAssets() is called in init()
 
 		this.terminalOverload = {};
 		this.notifications = [];
@@ -367,9 +367,9 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		}
 	}
 
-	getAssets(): { [resourceType: string]: number } {
+	getAssets(): StoreContents {
 		if (_.isEmpty(this.assets)) {
-			this.assets = mergeSum(_.map(this.colonies, colony => colony.assets));
+			this.assets = mergeSum(..._.map(this.colonies, colony => colony.assets));
 		}
 		return this.assets;
 	}
@@ -422,8 +422,8 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	private getRemainingSpace(colony: Colony, includeFactoryCapacity = false): number {
 		let totalAssets = _.sum(colony.assets);
 		// Overfilled storage gets counted as just 100% full
-		if (colony.storage && _.sum(colony.storage.store) > STORAGE_CAPACITY) {
-			totalAssets -= (_.sum(colony.storage.store) - STORAGE_CAPACITY);
+		if (colony.storage && colony.storage.store.getUsedCapacity() > STORAGE_CAPACITY) {
+			totalAssets -= (colony.storage.store.getUsedCapacity() - STORAGE_CAPACITY);
 		}
 
 		const roomCapacity = (colony.terminal ? TERMINAL_CAPACITY : 0) +
@@ -1205,7 +1205,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 					`${colony.print} actively requesting ----------------------------------------------------\n` +
 					`${bullet}${activeRequestors[colony.name] || '(None)'}\n`;
 		} else {
-			const resource = resourceOrColony || undefined;
+			const resource = <ResourceConstant>resourceOrColony || undefined;
 			if (resource) {
 				info += `Active providers for ${resource} -----------------------------------------------------\n` +
 						`${bullet}${_.map(this.activeProviders[resource], col =>

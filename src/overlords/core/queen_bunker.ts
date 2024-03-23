@@ -122,7 +122,7 @@ export class BunkerQueenOverlord extends Overlord {
 
 		// Step 1: empty all contents (this shouldn't be necessary since queen is normally empty at this point)
 		let queenPos = queen.pos;
-		if (_.sum(queen.carry) > 0) {
+		if (queen.store.getUsedCapacity() > 0) {
 			const transferTarget = this.colony.terminal || this.colony.storage || this.batteries[0];
 			if (transferTarget) {
 				tasks.push(Tasks.transferAll(transferTarget));
@@ -134,8 +134,9 @@ export class BunkerQueenOverlord extends Overlord {
 		}
 
 		// Step 2: figure out what you need to supply for and calculate the needed resources
-		const queenCarry = {} as { [resourceType: string]: number };
-		const allStore = mergeSum(_.map(this.storeStructures, s => s.store));
+		const queenCarry = <StoreContents>{};
+		const allStore = mergeSum(..._.map(this.storeStructures, s => s.store));
+
 		const supplyRequests: TransportRequest[] = [];
 		for (const priority in this.colony.transportRequests.supply) {
 			for (const request of this.colony.transportRequests.supply[priority]) {
@@ -147,7 +148,7 @@ export class BunkerQueenOverlord extends Overlord {
 		const supplyTasks: Task<any>[] = [];
 		for (const request of supplyRequests) {
 			// stop when carry will be full
-			const remainingAmount = queen.carryCapacity - _.sum(queenCarry);
+			const remainingAmount = queen.store.getCapacity() - _.sum(queenCarry);
 			if (remainingAmount == 0) break;
 			// figure out how much you can withdraw
 			let amount = Math.min(request.amount, remainingAmount);
@@ -219,7 +220,7 @@ export class BunkerQueenOverlord extends Overlord {
 		const tasks: Task<any>[] = [];
 		const transferTarget = this.colony.terminal || this.colony.storage || this.batteries[0];
 		// Step 1: empty all contents (this shouldn't be necessary since queen is normally empty at this point)
-		if (_.sum(queen.carry) > 0) {
+		if (queen.store.getUsedCapacity() > 0) {
 			if (transferTarget) {
 				tasks.push(Tasks.transferAll(transferTarget));
 			} else {
@@ -241,7 +242,7 @@ export class BunkerQueenOverlord extends Overlord {
 		}
 		for (const request of withdrawRequests) {
 			// stop when carry will be full
-			const remainingAmount = queen.carryCapacity - _.sum(queenCarry);
+			const remainingAmount = queen.store.getCapacity() - _.sum(queenCarry);
 			if (remainingAmount == 0) break;
 			// figure out how much you can withdraw
 			const amount = Math.min(request.amount, remainingAmount);
@@ -317,7 +318,7 @@ export class BunkerQueenOverlord extends Overlord {
 		// Do we need safemodes?
 		else if (this.colony.level > 5 && this.colony.controller.safeModeAvailable < 3 &&
 				 this.colony.terminal && this.colony.terminal.store[RESOURCE_GHODIUM] >= 1000 &&
-				 queen.carryCapacity >= 1000) {
+				 queen.store.getCapacity() >= 1000) {
 			// Only use 1 queen to avoid adding 2 safemodes
 			if (queen.name == _.first(_.sortBy(this.queens, q => q.name)).name) {
 				queen.task = Tasks.chain([

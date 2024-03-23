@@ -184,8 +184,8 @@ export class Overseer implements IOverseer {
 		}
 		// Place a logistics request directive for every tombstone with non-empty store that isn't on a container
 		for (const tombstone of colony.tombstones) {
-			if (_.sum(tombstone.store) > LogisticsNetwork.settings.droppedEnergyThreshold
-				|| _.sum(tombstone.store) > tombstone.store.energy) {
+			if (tombstone.store.getUsedCapacity() > LogisticsNetwork.settings.droppedEnergyThreshold
+				|| tombstone.store.getUsedCapacity() > tombstone.store.energy) {
 				if (colony.bunker && tombstone.pos.isEqualTo(colony.bunker.anchor)) continue;
 				colony.logisticsNetwork.requestOutput(tombstone, {resourceType: 'all'});
 			}

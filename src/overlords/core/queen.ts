@@ -74,13 +74,13 @@ export class QueenOverlord extends Overlord {
 			// Can energy be moved from the link to the battery?
 			if (battery && !battery.isFull && !this.hatchery.link.isEmpty) {
 				// Move energy to battery as needed
-				if (queen.carry.energy < queen.carryCapacity) {
+				if (queen.store.energy < queen.store.getCapacity()) {
 					queen.task = Tasks.withdraw(this.hatchery.link);
 				} else {
 					queen.task = Tasks.transfer(battery);
 				}
 			} else {
-				if (queen.carry.energy < queen.carryCapacity) { // make sure you're recharged
+				if (queen.store.energy < queen.store.getCapacity()) { // make sure you're recharged
 					if (!this.hatchery.link.isEmpty) {
 						queen.task = Tasks.withdraw(this.hatchery.link);
 					} else if (battery && !battery.isEmpty) {
@@ -89,14 +89,14 @@ export class QueenOverlord extends Overlord {
 				}
 			}
 		} else {
-			if (battery && queen.carry.energy < queen.carryCapacity) {
+			if (battery && queen.store.energy < queen.store.getCapacity()) {
 				queen.task = Tasks.withdraw(battery);
 			}
 		}
 	}
 
 	private handleQueen(queen: Zerg): void {
-		if (queen.carry.energy > 0) {
+		if (queen.store.energy > 0) {
 			this.supplyActions(queen);
 		} else {
 			this.rechargeActions(queen);

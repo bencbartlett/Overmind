@@ -45,46 +45,64 @@ OwnedStructure.prototype._isActive = OwnedStructure.prototype.isActive;
 // 	return this._isActiveValue;
 // };
 
-// Container prototypes ================================================================================================
+// Storage prototypes ================================================================================================
 
-Object.defineProperty(StructureContainer.prototype, 'energy', {
-	get() {
-		return this.store[RESOURCE_ENERGY];
-	},
-	configurable: true,
-});
+const StorageLikeStructures = [
+	StructureContainer,
+	StructureExtension,
+	StructureLink,
+	StructureStorage,
+	StructureTerminal,
+	StructureSpawn,
+	Tombstone,
+	Ruin,
+];
 
-Object.defineProperty(StructureContainer.prototype, 'isFull', { // if this container-like object is full
-	get() {
-		return _.sum(this.store) >= this.storeCapacity;
-	},
-	configurable: true,
-});
-Object.defineProperty(StructureContainer.prototype, 'isEmpty', { // if this container-like object is empty
-	get() {
-		return _.sum(this.store) == 0;
-	},
-	configurable: true,
-});
+for (const structure of StorageLikeStructures) {
+	if (!structure.prototype.hasOwnProperty('energy')) {
+		Object.defineProperty(structure.prototype, 'energy', {
+			get(this: typeof structure.prototype) {
+				return this.store.getUsedCapacity(RESOURCE_ENERGY);
+			},
+			configurable: true,
+		});
+	}
+
+	Object.defineProperty(structure.prototype, 'isFull', { // if this container-like object is full
+		get(this: typeof structure.prototype) {
+			return this.store.getFreeCapacity() === 0;
+		},
+		configurable: true,
+	});
+
+	Object.defineProperty(structure.prototype, 'isEmpty', { // if this container-like object is empty
+		get(this: StructureContainer) {
+			return this.store.getUsedCapacity() === 0;
+		},
+		configurable: true,
+	});
+}
+
+// Link prototypes =====================================================================================================
 
 // Controller prototypes ===============================================================================================
 
 Object.defineProperty(StructureController.prototype, 'reservedByMe', {
-	get         : function() {
+	get(this: StructureController) {
 		return this.reservation && this.reservation.username == MY_USERNAME;
 	},
 	configurable: true,
 });
 
 Object.defineProperty(StructureController.prototype, 'signedByMe', {
-	get         : function() {
+	get(this: StructureController) {
 		return this.sign && this.sign.username == MY_USERNAME && Game.time - this.sign.time < 250000;
 	},
 	configurable: true,
 });
 
 Object.defineProperty(StructureController.prototype, 'signedByScreeps', {
-	get         : function() {
+	get(this: StructureController) {
 		return this.sign && this.sign.username == 'Screeps';
 	},
 	configurable: true,
@@ -97,43 +115,7 @@ StructureController.prototype.needsReserving = function(reserveBuffer: number): 
 
 // Extension prototypes ================================================================================================
 
-Object.defineProperty(StructureExtension.prototype, 'isFull', { // if this container-like object is full
-	get() {
-		return this.energy >= this.energyCapacity;
-	},
-	configurable: true,
-});
-
-Object.defineProperty(StructureExtension.prototype, 'isEmpty', { // if this container-like object is empty
-	get() {
-		return this.energy == 0;
-	},
-	configurable: true,
-});
-
 // Link prototypes =====================================================================================================
-
-Object.defineProperty(StructureLink.prototype, 'isFull', { // if this container-like object is full
-	get() {
-		return this.energy >= this.energyCapacity;
-	},
-	configurable: true,
-});
-
-Object.defineProperty(StructureLink.prototype, 'isEmpty', { // if this container-like object is empty
-	get() {
-		return this.energy == 0;
-	},
-	configurable: true,
-});
-
-Object.defineProperty(StructureLink.prototype, 'storeCapacity', { // forwards-backwards compatibility
-	get() {
-		return this.energyCapacity;
-	},
-	configurable: true,
-});
-
 
 // Nuker prototypes ====================================================================================================
 
@@ -141,75 +123,19 @@ Object.defineProperty(StructureLink.prototype, 'storeCapacity', { // forwards-ba
 
 // Spawn prototypes ====================================================================================================
 
-Object.defineProperty(StructureSpawn.prototype, 'isFull', { // if this container-like object is full
-	get() {
-		return this.energy >= this.energyCapacity;
-	},
-	configurable: true,
-});
-
-Object.defineProperty(StructureSpawn.prototype, 'isEmpty', { // if this container-like object is empty
-	get() {
-		return this.energy == 0;
-	},
-	configurable: true,
-});
-
 // Storage prototypes ==================================================================================================
+
 declare const Store: any; // Store prototype isn't included in typed-screeps yet
 Object.defineProperty(Store.prototype, 'contents', {
-	get() {
-		return Object.entries(this);
+	get(this: StoreDefinition) {
+		return <StoreContentsArray>Object.entries(this);
 	},
 	configurable: true,
 });
 
 // Storage prototypes ==================================================================================================
 
-Object.defineProperty(StructureStorage.prototype, 'energy', {
-	get() {
-		return this.store[RESOURCE_ENERGY];
-	},
-	configurable: true,
-});
-
-Object.defineProperty(StructureStorage.prototype, 'isFull', { // if this container-like object is full
-	get() {
-		return _.sum(this.store) >= this.storeCapacity;
-	},
-	configurable: true,
-});
-
-Object.defineProperty(StructureStorage.prototype, 'isEmpty', { // if this container-like object is empty
-	get() {
-		return _.sum(this.store) == 0;
-	},
-	configurable: true,
-});
-
-
 // Terminal prototypes =================================================================================================
-
-Object.defineProperty(StructureTerminal.prototype, 'energy', {
-	get() {
-		return this.store[RESOURCE_ENERGY];
-	},
-	configurable: true,
-});
-
-Object.defineProperty(StructureTerminal.prototype, 'isFull', { // if this container-like object is full
-	get() {
-		return _.sum(this.store) >= this.storeCapacity;
-	},
-	configurable: true,
-});
-
-Object.defineProperty(StructureTerminal.prototype, 'isEmpty', { // if this container-like object is empty
-	get() {
-		return _.sum(this.store) == 0;
-	},
-	configurable: true,
-});
 
 Object.defineProperty(StructureTerminal.prototype, 'isReady', { // the terminal is ready to send or deal
 	get() {
@@ -237,28 +163,3 @@ StructureTerminal.prototype.send = function(resourceType: ResourceConstant, amou
 	}
 	return response;
 };
-
-// Tower prototypes
-
-Object.defineProperty(StructureTower.prototype, 'isFull', { // if this container-like object is full
-	get() {
-		return this.energy >= this.energyCapacity;
-	},
-	configurable: true,
-});
-
-Object.defineProperty(StructureTower.prototype, 'isEmpty', { // if this container-like object is empty
-	get() {
-		return this.energy == 0;
-	},
-	configurable: true,
-});
-
-// Tombstone prototypes ================================================================================================
-Object.defineProperty(Tombstone.prototype, 'energy', {
-	get() {
-		return this.store[RESOURCE_ENERGY];
-	},
-	configurable: true,
-});
-

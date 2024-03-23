@@ -358,7 +358,7 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	private handleWorker(worker: Zerg) {
-		if (worker.carry.energy > 0) {
+		if (worker.store.energy > 0) {
 			// TODO Add high priority to block controller with ramparts/walls in case of downgrade attack
 			// FIXME workers get stalled at controller in case of downgrade attack
 			// Upgrade controller if close to downgrade or if getting controller attacked/was downgraded

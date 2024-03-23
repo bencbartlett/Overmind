@@ -120,7 +120,7 @@ export class RemoteUpgradingOverlord extends Overlord {
 			return;
 		}
 		// You're in the room, upgrade if you have energy
-		if (upgrader.carry.energy > 0) {
+		if (upgrader.store.energy > 0) {
 			upgrader.task = Tasks.upgrade(this.upgradeSite.controller);
 			return;
 		}
@@ -135,8 +135,8 @@ export class RemoteUpgradingOverlord extends Overlord {
 		}
 		// Recharge from transporter?
 		const nearbyCarriers = _.filter(this.carriers, carrier => upgrader.pos.getRangeTo(carrier) <= 5);
-		const nearbyCarriersWaitingToUnload = _.filter(nearbyCarriers, carrier => carrier.carry.energy > 0);
-		const lowestEnergyCarrier = minBy(nearbyCarriersWaitingToUnload, carrier => carrier.carry.energy);
+		const nearbyCarriersWaitingToUnload = _.filter(nearbyCarriers, carrier => carrier.store.energy > 0);
+		const lowestEnergyCarrier = minBy(nearbyCarriersWaitingToUnload, carrier => carrier.store.energy);
 		if (lowestEnergyCarrier) {
 			upgrader.goTo(lowestEnergyCarrier);
 			return;
@@ -153,10 +153,10 @@ export class RemoteUpgradingOverlord extends Overlord {
 		}
 
 		// Get energy from the parent colony if you need it
-		if (carrier.carry.energy == 0) {
+		if (carrier.store.energy == 0) {
 			// If you are in the child room and there are valuable resources in a storage/terminal that isn't mine,
 			// then take those back before you go home
-			if (carrier.room == this.childColony.room && carrier.carry.getFreeCapacity() > 0) {
+			if (carrier.room == this.childColony.room && carrier.store.getFreeCapacity() > 0) {
 				const storeStructuresNotMy =
 						  _.filter(_.compact([this.childColony.room.storage,
 											  this.childColony.room.terminal]),
@@ -166,7 +166,7 @@ export class RemoteUpgradingOverlord extends Overlord {
 												  structure => structure.store.getUsedCapacity(resource) > 0);
 					if (withdrawTarget) {
 						const amount = Math.min(withdrawTarget.store.getUsedCapacity(resource),
-												carrier.carry.getFreeCapacity());
+												carrier.store.getFreeCapacity());
 						carrier.task = Tasks.withdraw(withdrawTarget, resource, amount);
 						return;
 					}
@@ -179,12 +179,12 @@ export class RemoteUpgradingOverlord extends Overlord {
 			}
 
 			const target = _.find(_.compact([this.parentColony.storage, this.parentColony.terminal]),
-								  s => s!.store[RESOURCE_ENERGY] >= carrier.carryCapacity);
+								  s => s!.store[RESOURCE_ENERGY] >= carrier.store.getCapacity());
 			if (!target) {
 				log.warning(`${this.print}: no energy withdraw target for ${carrier.print}!`);
 				return;
 			}
-			if (carrier.carry.getUsedCapacity() > carrier.carry.getUsedCapacity(RESOURCE_ENERGY)) {
+			if (carrier.store.getUsedCapacity() > carrier.store.getUsedCapacity(RESOURCE_ENERGY)) {
 				carrier.task = Tasks.transferAll(target);
 			} else {
 				carrier.task = Tasks.withdraw(target);
@@ -202,9 +202,9 @@ export class RemoteUpgradingOverlord extends Overlord {
 			// otherwise put in storage if you can
 			const depositPos = this.upgradeSite.batteryPos || this.upgradeSite.pos;
 			const carriersWaitingToUnload = _.filter(this.carriers, carrier =>
-				carrier.carry.energy > 0 && carrier.pos.inRangeToPos(depositPos, 5));
+				carrier.store.energy > 0 && carrier.pos.inRangeToPos(depositPos, 5));
 			const firstCarrierInQueue = minBy(carriersWaitingToUnload, carrier =>
-				carrier.carry.energy + (carrier.ticksToLive || Infinity) / 10000);
+				carrier.store.energy + (carrier.ticksToLive || Infinity) / 10000);
 
 			// Put in storage if you can
 			if (this.childColony.storage && firstCarrierInQueue && firstCarrierInQueue != carrier) {

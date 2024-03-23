@@ -64,7 +64,7 @@ export class TaskRecharge extends Task<rechargeTargetType> {
 												&& (zerg.task.name == withdrawTaskName || zerg.task.name == pickupTaskName));
 
 		const resourceOutflux = _.sum(_.map(otherTargeters, other => other.store.getFreeCapacity()));
-		amount = minMax(amount - resourceOutflux, 0, creep.carryCapacity);
+		amount = minMax(amount - resourceOutflux, 0, creep.store.getCapacity());
 		const effectiveAmount = amount / (creep.pos.getMultiRoomRangeTo(obj.pos) + 1);
 		if (effectiveAmount <= 0) {
 			return false;
