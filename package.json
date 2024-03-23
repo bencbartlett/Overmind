@@ -1,5 +1,5 @@
 {
-  "name": "Overmind",
+  "name": "overmind",
   "version": "0.6.0",
   "description": "Overmind Screeps AI",
   "author": "Ben Bartlett",
@@ -16,7 +16,7 @@
     "build": "tsc -p .",
     "lint": "tslint \"src/**/*.ts\"",
     "clean": "rm -rf tsc-out && rm -rf dist",
-    "obfuscate": "tsc && javascript-obfuscator tsc-out/Overmind.js --output src/Overmind_obfuscated.js --compact false --self-defending true --string-array true --string-array-threshold 1 --string-array-encoding rc4 && javascript-obfuscator tsc-out/assimilation/Assimilator.js --output src/assimilation/Assimilator_obfuscated.js --compact false --self-defending true --string-array true --string-array-threshold 1 --string-array-encoding rc4",
+    "obfuscate": "tsc && javascript-obfuscator --config obfuscator.config.json tsc-out/Overmind.js --output src/Overmind_obfuscated.js && javascript-obfuscator --config obfuscator.config.json tsc-out/assimilation/Assimilator.js --output src/assimilation/Assimilator_obfuscated.js",
     "compile": "rollup -c",
     "push-main": "rollup -c --environment DEST:main",
     "push-seasonal": "rollup -c --environment DEST:seasonal",
@@ -28,23 +28,24 @@
     "node": "^20.11"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^11.0.2",
-    "@rollup/plugin-node-resolve": "^7.1.1",
+    "@rollup/plugin-commonjs": "^25.0.3",
+    "@rollup/plugin-node-resolve": "^15.1.0",
+    "@types/columnify": "^1.5.1",
     "@types/lodash": "3.10.2",
     "@types/node": "^20.11.16",
     "@types/screeps": "^3.3.7",
     "javascript-obfuscator": "^4.1.0",
-    "rollup": "^2.6.0",
-    "rollup-plugin-progress": "^1.1.1",
-    "rollup-plugin-screeps": "^1.0.0",
-    "rollup-plugin-typescript2": "^0.27.0",
-    "tslint": "^5.20.0",
-    "typedoc": "^0.14.2",
+    "rollup": "^3.27.1",
+    "rollup-plugin-progress": "^1.1.2",
+    "rollup-plugin-screeps": "^1.0.1",
+    "rollup-plugin-typescript2": "^0.35.0",
+    "tslint": "^6.1.3",
+    "typedoc": "^0.25.7",
     "typescript": "5.3.3"
   },
   "dependencies": {
     "@tensorflow/tfjs": "^1.2.11",
-    "columnify": "1.5.4",
+    "columnify": "^1.6.0",
     "onnxjs": "^0.1.6",
     "source-map": "0.7.3"
   }
