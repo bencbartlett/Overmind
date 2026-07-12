@@ -1,5 +1,6 @@
 // Room prototypes - commonly used room properties and methods
 
+import {isFriend} from '../alliance';
 import {MY_USERNAME} from '../~settings';
 
 // Logging =============================================================================================================
@@ -65,7 +66,11 @@ Object.defineProperty(Room.prototype, 'creeps', {
 Object.defineProperty(Room.prototype, 'hostiles', {
 	get() {
 		if (!this._hostiles) {
-			this._hostiles = this.find(FIND_HOSTILE_CREEPS);
+			// Ally creeps are excluded here (static list / ally: flags — see alliance.ts) so every
+			// consumer of room.hostiles (towers, combat overlords, invaders/dangerousHostiles/etc.
+			// below, which all derive from this) automatically spares them. See obsidian ADR 0006.
+			this._hostiles = _.filter(this.find(FIND_HOSTILE_CREEPS),
+									   (creep: Creep) => !isFriend(creep.owner.username));
 		}
 		return this._hostiles;
 	},

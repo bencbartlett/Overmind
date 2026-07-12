@@ -17,7 +17,8 @@
     "allowUnusedLabels": true,
     "allowSyntheticDefaultImports": true,
     "allowUnreachableCode": false,
-    "removeComments": false
+    "removeComments": false,
+    "types": ["screeps", "lodash"]
   },
   "include": [
     "src/**/*"

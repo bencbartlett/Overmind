@@ -1,6 +1,13 @@
 declare const require: (module: string) => any;
 declare var global: any;
 
+// Screeps' sandboxed runtime provides a minimal console; @types/node's fuller
+// Console/NodeJS ambient types are deliberately not depended on (see
+// tsconfig.json's restricted "types" list) to avoid coupling the build to
+// devDependencies' transitive @types/node version, which this repo doesn't
+// pin and which drifts far ahead of the pinned TypeScript 2.9.2 parser.
+declare const console: { log(...args: any[]): void };
+
 declare namespace NodeJS {
 	interface Global {
 
