@@ -9,6 +9,11 @@ import {Cartographer} from '../utilities/Cartographer';
 import {maxBy} from '../utilities/utils';
 import {MAX_OWNED_ROOMS, SHARD3_MAX_OWNED_ROOMS} from '../~settings';
 import {MIN_EXPANSION_DISTANCE} from './ExpansionEvaluator';
+import {
+	defaultExpansionPlannerMemory,
+	ExpansionPlannerMemory,
+	isInitialStartingRoomSafeModeActive
+} from './initialSafeMode';
 
 
 const CHECK_EXPANSION_FREQUENCY = 1000;
@@ -18,12 +23,6 @@ const CATALYST_BONUS = 75;
 const MAX_SCORE_BONUS = _.sum([UNOWNED_MINERAL_BONUS, CATALYST_BONUS]);
 
 const TOO_CLOSE_PENALTY = 100;
-
-interface ExpansionPlannerMemory {
-
-}
-
-const defaultExpansionPlannerMemory: ExpansionPlannerMemory = {};
 
 @assimilationLocked
 @profile
@@ -40,6 +39,9 @@ export class ExpansionPlanner implements IExpansionPlanner {
 	}
 
 	private handleExpansion(): void {
+		if (isInitialStartingRoomSafeModeActive()) {
+			return;
+		}
 		const allColonies = getAllColonies();
 		// If you already have max number of colonies, ignore
 		if (allColonies.length >= Math.min(Game.gcl.level, MAX_OWNED_ROOMS)) {
@@ -139,6 +141,7 @@ export class ExpansionPlanner implements IExpansionPlanner {
 	}
 
 	run(): void {
+		isInitialStartingRoomSafeModeActive();
 		if (Game.time % CHECK_EXPANSION_FREQUENCY == 17 && getAutonomyLevel() == Autonomy.Automatic) {
 			this.handleExpansion();
 		}

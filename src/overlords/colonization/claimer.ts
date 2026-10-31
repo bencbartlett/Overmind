@@ -4,6 +4,7 @@ import {Directive} from '../../directives/Directive';
 import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
+import {isInitialStartingRoomSafeModeActive} from '../../strategy/initialSafeMode';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
@@ -24,6 +25,10 @@ export class ClaimingOverlord extends Overlord {
 	}
 
 	init() {
+		if (isInitialStartingRoomSafeModeActive()) {
+			this.wishlist(0, Setups.infestors.claim);
+			return;
+		}
 		const amount = $.number(this, 'claimerAmount', () => {
 			if (this.room) { // if you have vision
 				if (this.room.my) { // already claimed
@@ -60,6 +65,12 @@ export class ClaimingOverlord extends Overlord {
 	}
 
 	run() {
+		if (isInitialStartingRoomSafeModeActive()) {
+			for (const claimer of this.claimers) {
+				claimer.task = null;
+			}
+			return;
+		}
 		this.autoRun(this.claimers, claimer => this.handleClaimer(claimer));
 	}
 }
